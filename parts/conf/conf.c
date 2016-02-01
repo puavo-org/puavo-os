@@ -156,12 +156,18 @@ int puavo_conf_set(struct puavo_conf *const conf,
 int puavo_conf_list(puavo_conf_t *const conf,
                     char **const keys, char **const vals, size_t *const lenp)
 {
-        DBC *db_cursor;
+        DBC *db_cursor = NULL;
         DBT db_null;
         DBT db_batch;
         int db_err;
         size_t keys_size = 0;
         size_t vals_size = 0;
+        int err = 0;
+
+        /* Prime return values for the empty list case. */
+        *lenp = 0;
+        *vals = NULL;
+        *keys = NULL;
 
         memset(&db_null, 0, sizeof(DBT));
         memset(&db_batch, 0, sizeof(DBT));
@@ -169,20 +175,18 @@ int puavo_conf_list(puavo_conf_t *const conf,
         db_batch.flags = DB_DBT_USERMEM;
         db_batch.ulen  = PUAVO_CONF_DEFAULT_DB_BATCH_SIZE;
         db_batch.data  = malloc(db_batch.ulen);
-        if (!db_batch.data)
-                return -PUAVO_CONF_ERR_SYS;
+        if (!db_batch.data) {
+                err = PUAVO_CONF_ERR_SYS;
+                goto out;
+        }
 
         db_err = conf->db->cursor(conf->db, NULL, &db_cursor, 0);
         if (db_err) {
+                db_cursor = NULL;
                 conf->db_err = db_err;
-                free(db_batch.data);
-                return -PUAVO_CONF_ERR_DB;
+                err = PUAVO_CONF_ERR_DB;
+                goto out;
         }
-
-	/* Prime return values for the empty list case. */
-        *lenp = 0;
-        *vals = NULL;
-        *keys = NULL;
 
 	/* Iterate key/value pairs in batches until all are found. */
         while (1) {
@@ -195,12 +199,11 @@ int puavo_conf_list(puavo_conf_t *const conf,
                 case 0:
                         break;
                 case DB_NOTFOUND:
-                        goto done;
+                        goto out;
                 default:
                         conf->db_err = db_err;
-                        db_cursor->close(db_cursor);
-                        free(db_batch.data);
-                        return -PUAVO_CONF_ERR_DB;
+                        err = PUAVO_CONF_ERR_DB;
+                        goto out;
                 }
 
 		/* Iterate the batch. */
@@ -228,20 +231,15 @@ int puavo_conf_list(puavo_conf_t *const conf,
 
                         new_keys = realloc(*keys, keys_size);
                         if (!new_keys) {
-                                free(*keys);
-                                db_cursor->close(db_cursor);
-                                free(db_batch.data);
-                                return -PUAVO_CONF_ERR_SYS;
+                                err = PUAVO_CONF_ERR_SYS;
+                                goto out;
                         }
                         *keys = new_keys;
 
                         new_vals = realloc(*vals, vals_size);
                         if (!new_vals) {
-                                free(*vals);
-                                free(*keys);
-                                db_cursor->close(db_cursor);
-                                free(db_batch.data);
-                                return -PUAVO_CONF_ERR_SYS;
+                                err = PUAVO_CONF_ERR_SYS;
+                                goto out;
                         }
                         *vals = new_vals;
 
@@ -256,18 +254,21 @@ int puavo_conf_list(puavo_conf_t *const conf,
                         *lenp += 1;
                 }
         }
+out:
+        if (db_cursor) {
+                db_err = db_cursor->close(db_cursor);
+                if (!err && db_err) {
+                        conf->db_err = db_err;
+                        err = PUAVO_CONF_ERR_DB;
+                }
+        }
 
-done:
-        db_err = db_cursor->close(db_cursor);
-        if (db_err) {
+        if (err) {
                 free(*vals);
                 free(*keys);
-                conf->db_err = db_err;
-                free(db_batch.data);
-                return -PUAVO_CONF_ERR_DB;
         }
 
         free(db_batch.data);
 
-        return 0;
+        return -err;
 }
