@@ -40,6 +40,10 @@ installdirs:
 	mkdir -p $(DESTDIR)$(rubylibdir)/puavo
 	mkdir -p $(DESTDIR)$(varlibdir)
 
+.PHONY: test
+test: all
+	$(MAKE) -C test
+
 example: example.o libpuavoconf.la
 	libtool --mode=link gcc $(ldflags) -o $@ $^
 
