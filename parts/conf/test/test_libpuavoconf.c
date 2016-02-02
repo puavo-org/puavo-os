@@ -29,6 +29,15 @@ START_TEST(test_list_empty_db)
 }
 END_TEST
 
+START_TEST(test_get_empty_db)
+{
+	char *value;
+
+	ck_assert_int_eq(-PUAVO_CONF_ERR_DB,
+			 puavo_conf_get(conf, "somekey", &value));
+}
+END_TEST
+
 static Suite *puavo_conf_suite(void)
 {
 	Suite *s;
@@ -41,6 +50,7 @@ static Suite *puavo_conf_suite(void)
 	tcase_add_checked_fixture(tc_empty_db, setup_empty_db,
 				  teardown_empty_db);
 	tcase_add_test(tc_empty_db, test_list_empty_db);
+	tcase_add_test(tc_empty_db, test_get_empty_db);
 
 	suite_add_tcase(s, tc_empty_db);
 
