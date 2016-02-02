@@ -7,13 +7,13 @@
 
 static puavo_conf_t *conf;
 
-START_TEST(test_empty_db_clear)
+START_TEST(test_empty_db_clear_empty)
 {
 	ck_assert_int_eq(0, puavo_conf_clear_db(conf));
 }
 END_TEST
 
-START_TEST(test_empty_db_get)
+START_TEST(test_empty_db_get_from_empty)
 {
 	char *value;
 
@@ -22,7 +22,7 @@ START_TEST(test_empty_db_get)
 }
 END_TEST
 
-START_TEST(test_empty_db_list)
+START_TEST(test_empty_db_list_empty)
 {
 	struct puavo_conf_param *params;
 	size_t len;
@@ -98,9 +98,9 @@ static Suite *libpuavoconf_suite_create(void)
 	tcase_add_checked_fixture(tcase_empty_db, setup_empty_db,
 				  teardown_empty_db);
 
-	tcase_add_test(tcase_empty_db, test_empty_db_clear);
-	tcase_add_test(tcase_empty_db, test_empty_db_get);
-	tcase_add_test(tcase_empty_db, test_empty_db_list);
+	tcase_add_test(tcase_empty_db, test_empty_db_clear_empty);
+	tcase_add_test(tcase_empty_db, test_empty_db_get_from_empty);
+	tcase_add_test(tcase_empty_db, test_empty_db_list_empty);
 	tcase_add_test(tcase_empty_db, test_empty_db_set_same_twice_and_get);
 	tcase_add_test(tcase_empty_db, test_empty_db_set_many_and_list);
 
