@@ -5,28 +5,11 @@
 
 #include "../conf.h"
 
-puavo_conf_t *conf;
+static puavo_conf_t *conf;
 
-void setup_empty_db()
+START_TEST(test_empty_db_clear)
 {
-	ck_assert_int_eq(0, puavo_conf_init(&conf));
-	ck_assert_ptr_ne(conf, NULL);
-	ck_assert_int_eq(0, puavo_conf_open_db(conf, "test.db"));
 	ck_assert_int_eq(0, puavo_conf_clear_db(conf));
-}
-
-void teardown_empty_db()
-{
-	puavo_conf_free(conf);
-}
-
-START_TEST(test_empty_db_list)
-{
-	struct puavo_conf_param *params;
-	size_t len;
-
-	ck_assert_int_eq(0, puavo_conf_list(conf, &params, &len));
-	ck_assert(len == 0);
 }
 END_TEST
 
@@ -36,6 +19,16 @@ START_TEST(test_empty_db_get)
 
 	ck_assert_int_eq(-PUAVO_CONF_ERR_DB,
 			 puavo_conf_get(conf, "somekey", &value));
+}
+END_TEST
+
+START_TEST(test_empty_db_list)
+{
+	struct puavo_conf_param *params;
+	size_t len;
+
+	ck_assert_int_eq(0, puavo_conf_list(conf, &params, &len));
+	ck_assert(len == 0);
 }
 END_TEST
 
@@ -55,44 +48,46 @@ START_TEST(test_empty_db_set)
 }
 END_TEST
 
-START_TEST(test_empty_db_clear)
+static void setup_empty_db()
 {
+	ck_assert_int_eq(0, puavo_conf_init(&conf));
+	ck_assert_ptr_ne(conf, NULL);
+	ck_assert_int_eq(0, puavo_conf_open_db(conf, "test.db"));
 	ck_assert_int_eq(0, puavo_conf_clear_db(conf));
 }
-END_TEST
 
-static Suite *puavo_conf_suite(void)
+static void teardown_empty_db()
 {
-	Suite *s;
-	TCase *tc_empty_db;
+	puavo_conf_free(conf);
+}
 
-	s = suite_create("Puavo Conf");
+static Suite *libpuavoconf_suite_create(void)
+{
+	Suite *suite          = suite_create("Puavo Conf");
+	TCase *tcase_empty_db = tcase_create("Empty database");
 
-	tc_empty_db = tcase_create("Empty database");
-
-	tcase_add_checked_fixture(tc_empty_db, setup_empty_db,
+	tcase_add_checked_fixture(tcase_empty_db, setup_empty_db,
 				  teardown_empty_db);
-	tcase_add_test(tc_empty_db, test_empty_db_list);
-	tcase_add_test(tc_empty_db, test_empty_db_get);
-	tcase_add_test(tc_empty_db, test_empty_db_set);
-	tcase_add_test(tc_empty_db, test_empty_db_clear);
 
-	suite_add_tcase(s, tc_empty_db);
+	tcase_add_test(tcase_empty_db, test_empty_db_clear);
+	tcase_add_test(tcase_empty_db, test_empty_db_get);
+	tcase_add_test(tcase_empty_db, test_empty_db_list);
+	tcase_add_test(tcase_empty_db, test_empty_db_set);
 
-	return s;
+	suite_add_tcase(suite, tcase_empty_db);
+
+	return suite;
 }
 
 int main(void)
 {
-	int number_failed;
-	Suite *s;
-	SRunner *sr;
+	int      fail_count;
+	Suite   *suite       = libpuavoconf_suite_create();
+	SRunner *srunner     = srunner_create(suite);
 
-	s = puavo_conf_suite();
-	sr = srunner_create(s);
+	srunner_run_all(srunner, CK_NORMAL);
+	fail_count = srunner_ntests_failed(srunner);
+	srunner_free(srunner);
 
-	srunner_run_all(sr, CK_NORMAL);
-	number_failed = srunner_ntests_failed(sr);
-	srunner_free(sr);
-	return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
+	return fail_count ? EXIT_FAILURE : EXIT_SUCCESS;
 }
