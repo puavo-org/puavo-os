@@ -39,6 +39,22 @@ START_TEST(test_get_empty_db)
 }
 END_TEST
 
+START_TEST(test_set_empty_db)
+{
+	char *value;
+
+	ck_assert_int_eq(0, puavo_conf_set(conf, "somekey", "someval"));
+	ck_assert_int_eq(0, puavo_conf_get(conf, "somekey", &value));
+	ck_assert_str_eq("someval", value);
+	free(value);
+
+	ck_assert_int_eq(0, puavo_conf_set(conf, "somekey", "otherval"));
+	ck_assert_int_eq(0, puavo_conf_get(conf, "somekey", &value));
+	ck_assert_str_eq("otherval", value);
+	free(value);
+}
+END_TEST
+
 static Suite *puavo_conf_suite(void)
 {
 	Suite *s;
@@ -52,6 +68,7 @@ static Suite *puavo_conf_suite(void)
 				  teardown_empty_db);
 	tcase_add_test(tc_empty_db, test_list_empty_db);
 	tcase_add_test(tc_empty_db, test_get_empty_db);
+	tcase_add_test(tc_empty_db, test_set_empty_db);
 
 	suite_add_tcase(s, tc_empty_db);
 
