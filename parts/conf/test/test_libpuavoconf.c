@@ -55,6 +55,12 @@ START_TEST(test_set_empty_db)
 }
 END_TEST
 
+START_TEST(test_clear_empty_db)
+{
+	ck_assert_int_eq(0, puavo_conf_clear_db(conf));
+}
+END_TEST
+
 static Suite *puavo_conf_suite(void)
 {
 	Suite *s;
@@ -69,6 +75,7 @@ static Suite *puavo_conf_suite(void)
 	tcase_add_test(tc_empty_db, test_list_empty_db);
 	tcase_add_test(tc_empty_db, test_get_empty_db);
 	tcase_add_test(tc_empty_db, test_set_empty_db);
+	tcase_add_test(tc_empty_db, test_clear_empty_db);
 
 	suite_add_tcase(s, tc_empty_db);
 
