@@ -130,7 +130,7 @@ loopmount_image()
         mount -r -t ${FSTYPE} -o loop "/host/${PUAVO_IMAGE_PATH#/}" ${rootmnt}
         ret=$?
 
-        if [ $ret -gt 0 ]; then
+        if [ "$ret" -gt 0 ]; then
             panic "Failed to loop mount /host/${PUAVO_IMAGE_PATH#/} to ${rootmnt}"
         fi
     fi
@@ -261,7 +261,7 @@ write_mtab()
     fi
 }
 
-if [ -n ${PUAVO_LVM_VG} ]; then
+if [ -n "${PUAVO_LVM_VG}" ]; then
     if [ -x "/sbin/vgchange" ]; then
         vgchange -a y "${PUAVO_LVM_VG}"
     else
@@ -269,6 +269,7 @@ if [ -n ${PUAVO_LVM_VG} ]; then
     fi
 fi
 
+loopmount_used=0
 if [ -n "${PUAVO_IMAGE_PATH}" ]; then
     loopmount_image
     loopmount_used=1
@@ -280,27 +281,27 @@ else
     PUAVO_IMAGE_NAME="default"
 fi
 
-if [ $loopmount_used -gt 0 -a -n "${PUAVO_IMAGE_PATH}" -a -n "${PUAVO_IMAGE_OVERLAY}" ]; then
+if [ "$loopmount_used" -gt 0 -a -n "${PUAVO_IMAGE_PATH}" -a -n "${PUAVO_IMAGE_OVERLAY}" ]; then
     {
         mount_puavo_partition imageoverlays \
           && do_union_mount_persistent      \
           && move_puavo_partition imageoverlays
     } || panic "could not mount persistent overlay"
 else
-        do_union_mount_temporary
+    do_union_mount_temporary
 fi
 
 write_fstab
 
 # If using a loopmount image, move the /images partition under loop mounted root
 # and remount the partition as writable
-if [ $loopmount_used -gt 0 ]; then
+if [ "$loopmount_used" -gt 0 ]; then
     mkdir -p "${rootmnt}/images"
     mount -o move /host "${rootmnt}/images"
     mount -o remount,noatime,rw "${rootmnt}/images"
 fi
 
-if [ -n ${PUAVO_LVM_LV_STATE} ]; then
+if [ -n "${PUAVO_LVM_LV_STATE}" ]; then
     mount_puavo_partition state
 fi
 
