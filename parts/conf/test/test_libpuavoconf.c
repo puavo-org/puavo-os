@@ -32,19 +32,48 @@ START_TEST(test_empty_db_list)
 }
 END_TEST
 
-START_TEST(test_empty_db_set)
+START_TEST(test_empty_db_set_same_twice_and_get)
 {
 	char *value;
 
-	ck_assert_int_eq(0, puavo_conf_set(conf, "somekey", "someval"));
+	ck_assert_int_eq(0, puavo_conf_set(conf, "somekey", "someval1"));
 	ck_assert_int_eq(0, puavo_conf_get(conf, "somekey", &value));
-	ck_assert_str_eq("someval", value);
+	ck_assert_str_eq("someval1", value);
 	free(value);
 
-	ck_assert_int_eq(0, puavo_conf_set(conf, "somekey", "otherval"));
+	ck_assert_int_eq(0, puavo_conf_set(conf, "somekey", "someval2"));
 	ck_assert_int_eq(0, puavo_conf_get(conf, "somekey", &value));
-	ck_assert_str_eq("otherval", value);
+	ck_assert_str_eq("someval2", value);
 	free(value);
+}
+END_TEST
+
+START_TEST(test_empty_db_set_many_and_list)
+{
+	struct puavo_conf_param *params;
+	size_t len;
+
+	ck_assert_int_eq(0, puavo_conf_set(conf, "somekey1", "someval1"));
+	ck_assert_int_eq(0, puavo_conf_set(conf, "somekey2", "someval2"));
+	ck_assert_int_eq(0, puavo_conf_set(conf, "somekey3", "someval3"));
+
+	ck_assert_int_eq(0, puavo_conf_list(conf, &params, &len));
+	ck_assert(len == 3);
+
+	ck_assert_str_eq(params[0].key, "somekey1");
+	ck_assert_str_eq(params[0].val, "someval1");
+	ck_assert_str_eq(params[1].key, "somekey2");
+	ck_assert_str_eq(params[1].val, "someval2");
+	ck_assert_str_eq(params[2].key, "somekey3");
+	ck_assert_str_eq(params[2].val, "someval3");
+
+	free(params[0].key);
+	free(params[0].val);
+	free(params[1].key);
+	free(params[1].val);
+	free(params[2].key);
+	free(params[2].val);
+	free(params);
 }
 END_TEST
 
@@ -72,7 +101,8 @@ static Suite *libpuavoconf_suite_create(void)
 	tcase_add_test(tcase_empty_db, test_empty_db_clear);
 	tcase_add_test(tcase_empty_db, test_empty_db_get);
 	tcase_add_test(tcase_empty_db, test_empty_db_list);
-	tcase_add_test(tcase_empty_db, test_empty_db_set);
+	tcase_add_test(tcase_empty_db, test_empty_db_set_same_twice_and_get);
+	tcase_add_test(tcase_empty_db, test_empty_db_set_many_and_list);
 
 	suite_add_tcase(suite, tcase_empty_db);
 
