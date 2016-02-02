@@ -18,7 +18,7 @@ esac
 
 find_puavo_server()
 {
-
+        :
 }
 
 # We support one method to call the init-puavo.d scripts.
@@ -45,3 +45,4 @@ case "${PUAVO_BOOTMODE}" in
         ;;
 esac
 
+chroot ${rootmnt} /usr/local/sbin/puavo-conf-mkdb
