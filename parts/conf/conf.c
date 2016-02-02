@@ -117,7 +117,11 @@ int puavo_conf_get(struct puavo_conf *const conf,
         }
 
         if (db_value.size == 0) {
-                value = NULL;
+                value = calloc(1, sizeof(char));
+                if (!value) {
+                        free(db_value.data);
+                        return -PUAVO_CONF_ERR_SYS;
+                }
         } else {
                 value = strndup(db_value.data, db_value.size);
                 if (!value) {
