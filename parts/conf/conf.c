@@ -263,3 +263,17 @@ out:
 
         return -err;
 }
+
+int puavo_conf_clear_db(struct puavo_conf *const conf)
+{
+	int db_err;
+	unsigned int count;
+
+	db_err = conf->db->truncate(conf->db, NULL, &count, 0);
+	if (db_err) {
+		conf->db_err = db_err;
+		return -PUAVO_CONF_ERR_DB;
+	}
+
+	return 0;
+}

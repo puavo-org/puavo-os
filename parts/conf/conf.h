@@ -141,4 +141,13 @@ int puavo_conf_get(puavo_conf_t *conf, char *key, char **valuep);
 int puavo_conf_list(puavo_conf_t *conf,
                     struct puavo_conf_param **paramsp, size_t *lenp);
 
+/**
+ * puavo_conf_clear_db() - remove all entries from the database
+ *
+ * @conf - an initialized config object pointer
+ *
+ * Return 0 on success, non-zero otherwise.
+ */
+int puavo_conf_clear_db(puavo_conf_t *conf);
+
 #endif /* CONF_H */
