@@ -25,6 +25,11 @@ typedef struct puavo_conf puavo_conf_t;
 #define PUAVO_CONF_ERR_DB  1
 #define PUAVO_CONF_ERR_SYS 2
 
+struct puavo_conf_param {
+        char *key;
+        char *val;
+};
+
 /**
  * puavo_conf_init() - allocate and initialize a config object
  *
@@ -113,26 +118,27 @@ int puavo_conf_get(puavo_conf_t *conf, char *key, char **valuep);
 /**
  * puavo_conf_list() - retrieve a list of all parameters as key/value pairs
  *
- * @conf - an initialized config object pointer
+ * @conf    - an initialized config object pointer
  *
- * @keys - a pointer to an uninitialized char buffer, used for
- *         returning a sequence of NUL-terminated keys
+ * @paramsp - a pointer to an uninitialized buffer, used for returning a
+ *            key/value pairs as parameter structs
  *
- * @vals - a pointer to an uninitialized char buffer, used for
- *         returning a sequence of NUL-terminated values
+ * @lenp    - a pointer to a size variable, used for returning the number
+ *            parameters
  *
- * @lenp - a pointer to a size variable, used for returning the number
- *         of NUL-terminated keys/values
+ * After a successful call, @paramsp point to a heap-allocated buffer
+ * containing parameter structs. Key and value fields of each struct are
+ * heap-allocated NUL-terminated strings. The length of the buffer is
+ * returned via @lenp. The caller is responsible for calling free() on
+ * key and value strings of each parameter struct and on the buffer
+ * itself.
  *
- * After a successful call, @keys and @vals point to heap-allocated
- * char buffers containing keys and values, respectively, as sequences
- * of NUL-terminated strings. Both buffers contain the same number of
- * strings. The number of returned pairs is returned via @lenp. The
- * caller is responsible for calling free() on buffers pointed by
- * @keys and @vals afterwards.
+ * On error, all resources allocated by puavo_conf_list() are freed
+ * automatically.
  *
  * Return 0 on success, non-zero otherwise.
  */
-int puavo_conf_list(puavo_conf_t *conf, char **keys, char **vals, size_t *lenp);
+int puavo_conf_list(puavo_conf_t *conf,
+                    struct puavo_conf_param **paramsp, size_t *lenp);
 
 #endif /* CONF_H */

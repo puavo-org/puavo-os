@@ -83,45 +83,38 @@ int main(int argc, char *argv[])
 int
 print_conf(puavo_conf_t *conf)
 {
-        char *keys, *vals;
         size_t i, keylen, len, max_keylen;
-        int key_offset, val_offset, key_field_width, ret, r;
+        int key_field_width, ret, r;
+        struct puavo_conf_param *params;
 
         ret = 0;
 
-        if (puavo_conf_list(conf, &keys, &vals, &len) != 0)
+        if (puavo_conf_list(conf, &params, &len) != 0)
                 return -1;
 
-        key_offset  = 0;
         max_keylen = 0;
 
         for (i = 0; i < len; i++) {
-                keylen = strlen(&keys[key_offset]);
-                key_offset += strlen(&keys[key_offset]) + 1;
+                keylen = strlen(params[i].key);
                 max_keylen = (keylen > max_keylen) ? keylen : max_keylen;
         }
-
-        key_offset = 0;
-        val_offset = 0;
 
         key_field_width = (max_keylen > 80) ? 80 : max_keylen;
 
         for (i = 0; i < len; i++) {
                 r = printf("%-*s %s\n",
                            key_field_width + 2,
-                           &keys[key_offset],
-                           &vals[val_offset]);
+                           params[i].key,
+                           params[i].val);
                 if (r < 0) {
                         (void) fprintf(stderr, "error in fprintf");
                         ret = -1;
                         break;
                 }
-                key_offset += strlen(&keys[key_offset]) + 1;
-                val_offset += strlen(&vals[val_offset]) + 1;
+                free(params[i].key);
+                free(params[i].val);
         }
-
-        free(keys);
-        free(vals);
+        free(params);
 
         return ret;
 }
