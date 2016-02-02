@@ -20,7 +20,7 @@ void teardown_empty_db()
 	puavo_conf_free(conf);
 }
 
-START_TEST(test_list_empty_db)
+START_TEST(test_empty_db_list)
 {
 	struct puavo_conf_param *params;
 	size_t len;
@@ -30,7 +30,7 @@ START_TEST(test_list_empty_db)
 }
 END_TEST
 
-START_TEST(test_get_empty_db)
+START_TEST(test_empty_db_get)
 {
 	char *value;
 
@@ -39,7 +39,7 @@ START_TEST(test_get_empty_db)
 }
 END_TEST
 
-START_TEST(test_set_empty_db)
+START_TEST(test_empty_db_set)
 {
 	char *value;
 
@@ -55,7 +55,7 @@ START_TEST(test_set_empty_db)
 }
 END_TEST
 
-START_TEST(test_clear_empty_db)
+START_TEST(test_empty_db_clear)
 {
 	ck_assert_int_eq(0, puavo_conf_clear_db(conf));
 }
@@ -72,10 +72,10 @@ static Suite *puavo_conf_suite(void)
 
 	tcase_add_checked_fixture(tc_empty_db, setup_empty_db,
 				  teardown_empty_db);
-	tcase_add_test(tc_empty_db, test_list_empty_db);
-	tcase_add_test(tc_empty_db, test_get_empty_db);
-	tcase_add_test(tc_empty_db, test_set_empty_db);
-	tcase_add_test(tc_empty_db, test_clear_empty_db);
+	tcase_add_test(tc_empty_db, test_empty_db_list);
+	tcase_add_test(tc_empty_db, test_empty_db_get);
+	tcase_add_test(tc_empty_db, test_empty_db_set);
+	tcase_add_test(tc_empty_db, test_empty_db_clear);
 
 	suite_add_tcase(s, tc_empty_db);
 
