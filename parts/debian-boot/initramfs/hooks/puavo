@@ -23,12 +23,6 @@ esac
 . /usr/share/initramfs-tools/hook-functions
 
 manual_add_modules aufs
-manual_add_modules nbd
 manual_add_modules overlay
 manual_add_modules overlayfs
 manual_add_modules squashfs
-
-auto_add_modules net
-
-copy_exec /sbin/nbd-client /sbin
-
