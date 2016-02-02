@@ -9,9 +9,10 @@ puavo_conf_t *conf;
 
 void setup_empty_db()
 {
-	puavo_conf_init(&conf);
-	puavo_conf_open_db(conf, "test.db");
-	puavo_conf_clear_db(conf);
+	ck_assert_int_eq(0, puavo_conf_init(&conf));
+	ck_assert_ptr_ne(conf, NULL);
+	ck_assert_int_eq(0, puavo_conf_open_db(conf, "test.db"));
+	ck_assert_int_eq(0, puavo_conf_clear_db(conf));
 }
 
 void teardown_empty_db()
