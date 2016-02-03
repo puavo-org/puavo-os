@@ -194,14 +194,15 @@ out:
         return -conf->err;
 }
 
-int puavo_conf_list(puavo_conf_t *const conf,
-                    struct puavo_conf_param **const paramsp, size_t *const lenp)
+int puavo_conf_get_list(puavo_conf_t *const conf,
+                        struct puavo_conf_list *const list)
 {
         DBC *db_cursor = NULL;
         DBT db_null;
         DBT db_batch;
-        struct puavo_conf_param *params = NULL;
-        size_t len = 0;
+        size_t length = 0;
+        char **keys = NULL;
+        char **values = NULL;
 
         conf->err = 0;
 
@@ -248,26 +249,36 @@ int puavo_conf_list(puavo_conf_t *const conf,
                         char *val;
                         size_t key_size;
                         size_t val_size;
-                        struct puavo_conf_param *new_params;
+                        char **new_keys;
+                        char **new_values;
 
                         DB_MULTIPLE_KEY_NEXT(batch_iterator, &db_batch,
                                              key, key_size, val, val_size);
                         if (!batch_iterator)
                                 break; /* The batch is empty. */
 
-                        new_params = realloc(params,
-                                             sizeof(struct puavo_conf_param)
-                                             * (len + 1));
-                        if (!new_params) {
+                        new_keys = realloc(keys,
+                                           sizeof(char *) * (length + 1));
+                        if (!new_keys) {
                                 conf->sys_err = errno;
                                 conf->err = PUAVO_CONF_ERR_SYS;
                                 goto out;
                         }
-                        params = new_params;
-                        ++len;
+                        keys = new_keys;
 
-                        params[len - 1].key = strndup(key, key_size);
-                        params[len - 1].val = strndup(val, val_size);
+                        new_values = realloc(values,
+                                           sizeof(char *) * (length + 1));
+                        if (!new_values) {
+                                conf->sys_err = errno;
+                                conf->err = PUAVO_CONF_ERR_SYS;
+                                goto out;
+                        }
+                        values = new_values;
+
+                        ++length;
+
+                        keys[length - 1] = strndup(key, key_size);
+                        values[length - 1] = strndup(val, val_size);
                 }
         }
 out:
@@ -285,15 +296,16 @@ out:
         if (conf->err) {
                 size_t i;
 
-                for (i = 0; i < len; ++i) {
-                        free(params[i].key);
-                        free(params[i].val);
+                for (i = 0; i < length; ++i) {
+                        free(keys[i]);
+                        free(values[i]);
                 }
-                free(params);
+                free(keys);
+                free(values);
         } else {
-                /* Return parameter buffer and its length only on success. */
-                *paramsp = params;
-                *lenp    = len;
+                list->keys = keys;
+                list->values = values;
+                list->length = length;
         }
 
         free(db_batch.data);
@@ -329,4 +341,20 @@ char const *puavo_conf_errstr(struct puavo_conf *const conf)
         }
 
         return errstrs[conf->err];
+}
+
+void puavo_conf_list_free(struct puavo_conf_list *const list)
+{
+	size_t i;
+
+	for (i = 0; i < list->length; ++i) {
+		free(list->keys[i]);
+		free(list->values[i]);
+	}
+	free(list->keys);
+	free(list->values);
+
+	list->keys = NULL;
+	list->values = NULL;
+	list->length = 0;
 }

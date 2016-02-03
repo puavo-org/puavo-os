@@ -83,38 +83,37 @@ int main(int argc, char *argv[])
 int
 print_conf(puavo_conf_t *conf)
 {
-        size_t i, keylen, len, max_keylen;
+        size_t i, keylen, max_keylen;
         int key_field_width, ret, r;
-        struct puavo_conf_param *params;
+        struct puavo_conf_list list;
 
         ret = 0;
 
-        if (puavo_conf_list(conf, &params, &len) != 0)
+        if (puavo_conf_get_list(conf, &list) != 0)
                 return -1;
 
         max_keylen = 0;
 
-        for (i = 0; i < len; i++) {
-                keylen = strlen(params[i].key);
+        for (i = 0; i < list.length; i++) {
+                keylen = strlen(list.keys[i]);
                 max_keylen = (keylen > max_keylen) ? keylen : max_keylen;
         }
 
         key_field_width = (max_keylen > 80) ? 80 : max_keylen;
 
-        for (i = 0; i < len; i++) {
+        for (i = 0; i < list.length; i++) {
                 r = printf("%-*s %s\n",
                            key_field_width + 2,
-                           params[i].key,
-                           params[i].val);
+                           list.keys[i],
+                           list.values[i]);
                 if (r < 0) {
                         (void) fprintf(stderr, "error in fprintf");
                         ret = -1;
                         break;
                 }
-                free(params[i].key);
-                free(params[i].val);
         }
-        free(params);
+
+        puavo_conf_list_free(&list);
 
         return ret;
 }

@@ -21,13 +21,12 @@ START_TEST(test_empty_db_get_from_empty)
 }
 END_TEST
 
-START_TEST(test_empty_db_list_empty)
+START_TEST(test_empty_db_get_list_from_empty)
 {
-	struct puavo_conf_param *params;
-	size_t len;
+	struct puavo_conf_list list;
 
-	ck_assert_int_eq(0, puavo_conf_list(conf, &params, &len));
-	ck_assert(len == 0);
+	ck_assert_int_eq(0, puavo_conf_get_list(conf, &list));
+	ck_assert(list.length == 0);
 }
 END_TEST
 
@@ -47,32 +46,25 @@ START_TEST(test_empty_db_set_same_twice_and_get)
 }
 END_TEST
 
-START_TEST(test_empty_db_set_many_and_list)
+START_TEST(test_empty_db_set_many_and_get_list)
 {
-	struct puavo_conf_param *params;
-	size_t len;
+	struct puavo_conf_list list;
 
 	ck_assert_int_eq(0, puavo_conf_set(conf, "somekey1", "someval1"));
 	ck_assert_int_eq(0, puavo_conf_set(conf, "somekey2", "someval2"));
 	ck_assert_int_eq(0, puavo_conf_set(conf, "somekey3", "someval3"));
 
-	ck_assert_int_eq(0, puavo_conf_list(conf, &params, &len));
-	ck_assert(len == 3);
+	ck_assert_int_eq(0, puavo_conf_get_list(conf, &list));
+	ck_assert(list.length == 3);
 
-	ck_assert_str_eq(params[0].key, "somekey1");
-	ck_assert_str_eq(params[0].val, "someval1");
-	ck_assert_str_eq(params[1].key, "somekey2");
-	ck_assert_str_eq(params[1].val, "someval2");
-	ck_assert_str_eq(params[2].key, "somekey3");
-	ck_assert_str_eq(params[2].val, "someval3");
+	ck_assert_str_eq(list.keys[0], "somekey1");
+	ck_assert_str_eq(list.keys[1], "somekey2");
+	ck_assert_str_eq(list.keys[2], "somekey3");
+	ck_assert_str_eq(list.values[0], "someval1");
+	ck_assert_str_eq(list.values[1], "someval2");
+	ck_assert_str_eq(list.values[2], "someval3");
 
-	free(params[0].key);
-	free(params[0].val);
-	free(params[1].key);
-	free(params[1].val);
-	free(params[2].key);
-	free(params[2].val);
-	free(params);
+	puavo_conf_list_free(&list);
 }
 END_TEST
 
@@ -99,9 +91,9 @@ static Suite *libpuavoconf_suite_create(void)
 
 	tcase_add_test(tcase_empty_db, test_empty_db_clear_empty);
 	tcase_add_test(tcase_empty_db, test_empty_db_get_from_empty);
-	tcase_add_test(tcase_empty_db, test_empty_db_list_empty);
+	tcase_add_test(tcase_empty_db, test_empty_db_get_list_from_empty);
 	tcase_add_test(tcase_empty_db, test_empty_db_set_same_twice_and_get);
-	tcase_add_test(tcase_empty_db, test_empty_db_set_many_and_list);
+	tcase_add_test(tcase_empty_db, test_empty_db_set_many_and_get_list);
 
 	suite_add_tcase(suite, tcase_empty_db);
 

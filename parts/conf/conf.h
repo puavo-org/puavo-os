@@ -22,9 +22,10 @@ static const char *const PUAVO_CONF_DEFAULT_DB_FILEPATH = DEFAULT_DB_FILEPATH;
 
 typedef struct puavo_conf puavo_conf_t;
 
-struct puavo_conf_param {
-        char *key;
-        char *val;
+struct puavo_conf_list {
+        char **keys;
+        char **values;
+        size_t length;
 };
 
 /**
@@ -122,15 +123,11 @@ int puavo_conf_set(puavo_conf_t *conf, char const *key, char const *value);
 int puavo_conf_get(puavo_conf_t *conf, char const *key, char **valuep);
 
 /**
- * puavo_conf_list() - retrieve a list of all parameters as key/value pairs
+ * puavo_conf_get_list() - retrieve a list of all parameters
  *
- * @conf    - an initialized config object pointer
+ * @conf  - initialized config object pointer
  *
- * @paramsp - a pointer to an uninitialized buffer, used for returning a
- *            key/value pairs as parameter structs
- *
- * @lenp    - a pointer to a size variable, used for returning the number
- *            parameters
+ * @listp - pointer to a parameter list
  *
  * After a successful call, @paramsp point to a heap-allocated buffer
  * containing parameter structs. Key and value fields of each struct are
@@ -144,8 +141,15 @@ int puavo_conf_get(puavo_conf_t *conf, char const *key, char **valuep);
  *
  * Return 0 on success, non-zero otherwise.
  */
-int puavo_conf_list(puavo_conf_t *conf,
-                    struct puavo_conf_param **paramsp, size_t *lenp);
+int puavo_conf_get_list(puavo_conf_t *conf,
+			struct puavo_conf_list *listp);
+
+/**
+ * puavo_conf_list_free() - free a parameter list
+ *
+ * @listp - pointer to an initialized parameter list
+ */
+void puavo_conf_list_free(struct puavo_conf_list *listp);
 
 /**
  * puavo_conf_clear_db() - remove all entries from the database
