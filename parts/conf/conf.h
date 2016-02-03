@@ -156,4 +156,14 @@ int puavo_conf_list(puavo_conf_t *conf,
  */
 int puavo_conf_clear_db(puavo_conf_t *conf);
 
+/**
+ * puavo_conf_errstr() - get string describing the error of the last API call
+ *
+ * @conf - an initialized config object pointer
+ *
+ * Return a pointer to a string that describes the error of the last API
+ * call, or NULL if no error has been encountered.
+ */
+char const *puavo_conf_errstr(struct puavo_conf *conf);
+
 #endif /* CONF_H */

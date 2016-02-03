@@ -37,7 +37,8 @@ struct puavo_conf {
 
 enum PUAVO_CONF_ERR {
         PUAVO_CONF_ERR_DB = 1,
-        PUAVO_CONF_ERR_SYS
+        PUAVO_CONF_ERR_SYS,
+        PUAVO_CONF_ERRCOUNT
 };
 
 int puavo_conf_init(struct puavo_conf **const confp)
@@ -292,4 +293,19 @@ int puavo_conf_clear_db(struct puavo_conf *const conf)
         }
 
 	return -conf->err;
+}
+
+char const *puavo_conf_errstr(struct puavo_conf *const conf)
+{
+        static char const *const errstrs[PUAVO_CONF_ERRCOUNT] = {
+                NULL,
+                "database error",
+                "system call error",
+        };
+
+        if (conf->err < 0 || conf->err >= PUAVO_CONF_ERRCOUNT) {
+                return "unknown error";
+        }
+
+        return errstrs[conf->err];
 }
