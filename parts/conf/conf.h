@@ -98,7 +98,7 @@ int puavo_conf_close_db(puavo_conf_t *conf);
  *
  * Return 0 on success, non-zero otherwise.
  */
-int puavo_conf_set(puavo_conf_t *conf, char *key, char *value);
+int puavo_conf_set(puavo_conf_t *conf, char const *key, char const *value);
 
 /**
  * puavo_conf_get() - retrieve the value of a parameter
