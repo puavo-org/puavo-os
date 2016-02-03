@@ -119,7 +119,7 @@ int puavo_conf_set(puavo_conf_t *conf, char const *key, char const *value);
  *
  * Return 0 on success, non-zero otherwise.
  */
-int puavo_conf_get(puavo_conf_t *conf, char *key, char **valuep);
+int puavo_conf_get(puavo_conf_t *conf, char const *key, char **valuep);
 
 /**
  * puavo_conf_list() - retrieve a list of all parameters as key/value pairs
