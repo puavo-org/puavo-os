@@ -25,6 +25,7 @@ all: $(libtool_binaries)
 clean:
 	libtool --mode=clean \
 		rm -f $(libtool_binaries) *.lo *.o
+	$(MAKE) -C test clean
 
 .PHONY: install
 install: installdirs
