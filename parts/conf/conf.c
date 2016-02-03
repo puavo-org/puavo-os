@@ -102,8 +102,9 @@ int puavo_conf_get(struct puavo_conf *const conf,
 {
         DBT db_key;
         DBT db_value;
-        int db_err;
         char *value;
+
+        conf->err = 0;
 
         memset(&db_key, 0, sizeof(DBT));
         memset(&db_value, 0, sizeof(DBT));
@@ -113,23 +114,25 @@ int puavo_conf_get(struct puavo_conf *const conf,
 
         db_value.flags = DB_DBT_MALLOC;
 
-        db_err = conf->db->get(conf->db, NULL, &db_key, &db_value, 0);
-        if (db_err) {
-                conf->db_err = db_err;
-                return -PUAVO_CONF_ERR_DB;
+        conf->db_err = conf->db->get(conf->db, NULL, &db_key, &db_value, 0);
+        if (conf->db_err) {
+                conf->err = PUAVO_CONF_ERR_DB;
+                return -conf->err;
         }
 
         if (db_value.size == 0) {
                 value = calloc(1, sizeof(char));
                 if (!value) {
+                        conf->err = PUAVO_CONF_ERR_SYS;
                         free(db_value.data);
-                        return -PUAVO_CONF_ERR_SYS;
+                        return -conf->err;
                 }
         } else {
                 value = strndup(db_value.data, db_value.size);
                 if (!value) {
+                        conf->err = PUAVO_CONF_ERR_SYS;
                         free(db_value.data);
-                        return -PUAVO_CONF_ERR_SYS;
+                        return -conf->err;
                 }
         }
 
