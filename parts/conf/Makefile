@@ -2,7 +2,7 @@ prefix           = /usr/local
 bindir           = $(prefix)/bin
 sbindir          = $(prefix)/sbin
 libdir           = $(prefix)/lib
-libtool_binaries = libpuavoconf.la example puavo-conf
+libtool_binaries = libpuavoconf.la puavo-conf
 
 ifeq ($(prefix), /usr/local)
 rubylibdir = $(prefix)/lib/site_ruby
@@ -44,9 +44,6 @@ installdirs:
 .PHONY: test
 test: all
 	$(MAKE) -C test
-
-example: example.o libpuavoconf.la
-	libtool --mode=link gcc $(ldflags) -o $@ $^
 
 puavo-conf: puavo-conf.o libpuavoconf.la
 	libtool --mode=link gcc $(LDFLAGS) -o $@ $^
