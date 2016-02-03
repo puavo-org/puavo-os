@@ -53,24 +53,25 @@ int puavo_conf_open_db(struct puavo_conf *const conf,
                        const char *const db_filepath)
 {
         DB *db;
-        int db_err;
+
+        conf->err = 0;
 
         if (conf->db)
                 return 0;
 
-        db_err = db_create(&db, NULL, 0);
-        if (db_err) {
-                conf->db_err = db_err;
-                return -PUAVO_CONF_ERR_DB;
+        conf->db_err = db_create(&db, NULL, 0);
+        if (conf->db_err) {
+                conf->err = PUAVO_CONF_ERR_DB;
+                return -conf->err;
         }
 
-        db_err = db->open(db, NULL,
-                          db_filepath ? db_filepath : PUAVO_CONF_DEFAULT_DB_FILEPATH,
-                          NULL, DB_BTREE, DB_CREATE, 0600);
-        if (db_err) {
-                conf->db_err = db_err;
+        conf->db_err = db->open(db, NULL,
+                                db_filepath ? db_filepath : PUAVO_CONF_DEFAULT_DB_FILEPATH,
+                                NULL, DB_BTREE, DB_CREATE, 0600);
+        if (conf->db_err) {
+                conf->err = PUAVO_CONF_ERR_DB;
                 db->close(db, 0);
-                return -PUAVO_CONF_ERR_DB;
+                return -conf->err;
         }
 
         conf->db = db;
