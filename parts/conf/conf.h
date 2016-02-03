@@ -90,9 +90,9 @@ int puavo_conf_close_db(puavo_conf_t *conf);
  *
  * @conf  - an initialized config object pointer
  *
- * @key   - a nul-terminated string
+ * @key   - a NUL-terminated string
  *
- * @value - a nul-terminated string
+ * @value - a NUL-terminated string
  *
  * If the key already exists in the database, the value is overwritten.
  *
@@ -105,11 +105,11 @@ int puavo_conf_set(puavo_conf_t *conf, char *key, char *value);
  *
  * @conf   - an initialized config object pointer
  *
- * @key    - a nul-terminated string
+ * @key    - a NUL-terminated string
  *
  * @valuep - a pointer to an uninitialized string
  *
- * After a successful call, a nul-terminated string, containing the
+ * After a successful call, a NUL-terminated string, containing the
  * value for @key, is allocated on the heap and its address is returned
  * via @valuep. The caller is responsible for calling free() on the
  * string afterwards.
