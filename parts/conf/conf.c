@@ -35,6 +35,11 @@ struct puavo_conf {
         int sys_err;
 };
 
+enum PUAVO_CONF_ERR {
+        PUAVO_CONF_ERR_DB = 1,
+        PUAVO_CONF_ERR_SYS
+};
+
 int puavo_conf_init(struct puavo_conf **const confp)
 {
         struct puavo_conf *conf;

@@ -17,8 +17,7 @@ START_TEST(test_empty_db_get_from_empty)
 {
 	char *value;
 
-	ck_assert_int_eq(-PUAVO_CONF_ERR_DB,
-			 puavo_conf_get(conf, "somekey", &value));
+	ck_assert_int_ne(0, puavo_conf_get(conf, "somekey", &value));
 }
 END_TEST
 
