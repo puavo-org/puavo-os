@@ -343,7 +343,8 @@ char const *puavo_conf_errstr(struct puavo_conf *const conf)
         return errstrs[conf->err];
 }
 
-void puavo_conf_list_free(struct puavo_conf_list *const list)
+void puavo_conf_list_free(struct puavo_conf *const conf __attribute__((unused)),
+			  struct puavo_conf_list *const list)
 {
 	size_t i;
 

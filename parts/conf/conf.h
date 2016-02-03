@@ -137,9 +137,12 @@ int puavo_conf_get_list(puavo_conf_t *conf,
 /**
  * puavo_conf_list_free() - free a parameter list
  *
+ * @conf - initialized config object
+ *
  * @list - initialized parameter list
  */
-void puavo_conf_list_free(struct puavo_conf_list *list);
+void puavo_conf_list_free(puavo_conf_t *conf,
+			  struct puavo_conf_list *list);
 
 /**
  * puavo_conf_clear_db() - remove all parameters from the database
