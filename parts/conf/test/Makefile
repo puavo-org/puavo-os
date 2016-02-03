@@ -14,4 +14,4 @@ test_libpuavoconf: test_libpuavoconf.o ../conf.o
 
 .PHONY: clean
 clean:
-	rm -f test_libpuavoconf *.o
+	rm -f test_libpuavoconf *.o test.db
