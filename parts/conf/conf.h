@@ -40,6 +40,9 @@ struct puavo_conf_param {
  * responsible for calling puavo_conf_free() on the config object
  * afterwards.
  *
+ * On error, all resources allocated by puavo_conf_init() are freed
+ * automatically.
+ *
  * Return 0 on success, non-zero otherwise.
  */
 int puavo_conf_init(puavo_conf_t **confp);
@@ -65,6 +68,9 @@ void puavo_conf_free(puavo_conf_t *conf);
  * If the database does not exist, it will be created. After a
  * successful call, the caller is responsible for closing the database
  * by calling puavo_conf_close_db().
+ *
+ * On error, all resources allocated by puavo_conf_open_db() are freed
+ * automatically.
  *
  * Return 0 on success, non-zero otherwise.
  */
@@ -110,6 +116,9 @@ int puavo_conf_set(puavo_conf_t *conf, char *key, char *value);
  * value for @key, is allocated on the heap and its address is returned
  * via @valuep. The caller is responsible for calling free() on the
  * string afterwards.
+ *
+ * On error, all resources allocated by puavo_conf_get() are freed
+ * automatically.
  *
  * Return 0 on success, non-zero otherwise.
  */
