@@ -4,7 +4,7 @@ CFLAGS   =
 
 .PHONY: all
 all: test_libpuavoconf
-	./test_libpuavoconf
+	@./test_libpuavoconf
 
 test_libpuavoconf.o: test_libpuavoconf.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(shell pkg-config --cflags check) -c $<
