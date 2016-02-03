@@ -123,6 +123,7 @@ int puavo_conf_get(struct puavo_conf *const conf,
         if (db_value.size == 0) {
                 value = calloc(1, sizeof(char));
                 if (!value) {
+                        conf->sys_err = errno;
                         conf->err = PUAVO_CONF_ERR_SYS;
                         free(db_value.data);
                         return -conf->err;
@@ -130,6 +131,7 @@ int puavo_conf_get(struct puavo_conf *const conf,
         } else {
                 value = strndup(db_value.data, db_value.size);
                 if (!value) {
+                        conf->sys_err = errno;
                         conf->err = PUAVO_CONF_ERR_SYS;
                         free(db_value.data);
                         return -conf->err;
@@ -183,6 +185,7 @@ int puavo_conf_list(puavo_conf_t *const conf,
         db_batch.ulen  = PUAVO_CONF_DEFAULT_DB_BATCH_SIZE;
         db_batch.data  = malloc(db_batch.ulen);
         if (!db_batch.data) {
+                conf->sys_err = errno;
                 conf->err = PUAVO_CONF_ERR_SYS;
                 goto out;
         }
@@ -229,6 +232,7 @@ int puavo_conf_list(puavo_conf_t *const conf,
                                              sizeof(struct puavo_conf_param)
                                              * (len + 1));
                         if (!new_params) {
+                                conf->sys_err = errno;
                                 conf->err = PUAVO_CONF_ERR_SYS;
                                 goto out;
                         }
