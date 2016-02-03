@@ -80,17 +80,16 @@ int puavo_conf_open_db(struct puavo_conf *const conf,
 
 int puavo_conf_close_db(struct puavo_conf *const conf)
 {
-        if (conf->db) {
-                int db_err = conf->db->close(conf->db, 0);
-                conf->db = NULL;
+        conf->err = 0;
 
-                if (db_err) {
-                        conf->db_err = db_err;
-                        return -PUAVO_CONF_ERR_DB;
-                }
+        if (conf->db) {
+                conf->db_err = conf->db->close(conf->db, 0);
+                if (conf->db_err)
+                        conf->err = PUAVO_CONF_ERR_DB;
+                conf->db = NULL;
         }
 
-        return 0;
+        return -conf->err;
 }
 
 void puavo_conf_free(struct puavo_conf *conf)
