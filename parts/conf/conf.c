@@ -146,7 +146,8 @@ int puavo_conf_set(struct puavo_conf *const conf,
 {
         DBT db_key;
         DBT db_value;
-        int db_err;
+
+        conf->err = 0;
 
         memset(&db_key, 0, sizeof(DBT));
         memset(&db_value, 0, sizeof(DBT));
@@ -157,13 +158,11 @@ int puavo_conf_set(struct puavo_conf *const conf,
         db_value.data = value;
         db_value.size = strlen(value) + 1;
 
-        db_err = conf->db->put(conf->db, NULL, &db_key, &db_value, 0);
-        if (db_err) {
-                conf->db_err = db_err;
-                return -PUAVO_CONF_ERR_DB;
-        }
+        conf->db_err = conf->db->put(conf->db, NULL, &db_key, &db_value, 0);
+        if (conf->db_err)
+                conf->err = PUAVO_CONF_ERR_DB;
 
-        return 0;
+        return -conf->err;
 }
 
 int puavo_conf_list(puavo_conf_t *const conf,
