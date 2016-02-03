@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -30,6 +31,8 @@ static const size_t PUAVO_CONF_DEFAULT_DB_BATCH_SIZE = 1048576;
 struct puavo_conf {
         DB *db;
         int db_err;
+        int err;
+        int sys_err;
 };
 
 int puavo_conf_init(struct puavo_conf **const confp)
@@ -266,14 +269,15 @@ out:
 
 int puavo_conf_clear_db(struct puavo_conf *const conf)
 {
-	int db_err;
 	unsigned int count;
 
-	db_err = conf->db->truncate(conf->db, NULL, &count, 0);
-	if (db_err) {
-		conf->db_err = db_err;
-		return -PUAVO_CONF_ERR_DB;
-	}
+        conf->err = 0;
 
-	return 0;
+	conf->db_err = conf->db->truncate(conf->db, NULL, &count, 0);
+	if (conf->db_err) {
+                conf->sys_err = errno;
+		conf->err = PUAVO_CONF_ERR_DB;
+        }
+
+	return -conf->err;
 }
