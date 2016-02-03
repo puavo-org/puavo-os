@@ -171,10 +171,10 @@ int puavo_conf_list(puavo_conf_t *const conf,
         DBC *db_cursor = NULL;
         DBT db_null;
         DBT db_batch;
-        int db_err;
-        int err = 0;
         struct puavo_conf_param *params = NULL;
         size_t len = 0;
+
+        conf->err = 0;
 
         memset(&db_null, 0, sizeof(DBT));
         memset(&db_batch, 0, sizeof(DBT));
@@ -183,15 +183,14 @@ int puavo_conf_list(puavo_conf_t *const conf,
         db_batch.ulen  = PUAVO_CONF_DEFAULT_DB_BATCH_SIZE;
         db_batch.data  = malloc(db_batch.ulen);
         if (!db_batch.data) {
-                err = PUAVO_CONF_ERR_SYS;
+                conf->err = PUAVO_CONF_ERR_SYS;
                 goto out;
         }
 
-        db_err = conf->db->cursor(conf->db, NULL, &db_cursor, 0);
-        if (db_err) {
+        conf->db_err = conf->db->cursor(conf->db, NULL, &db_cursor, 0);
+        if (conf->db_err) {
                 db_cursor = NULL;
-                conf->db_err = db_err;
-                err = PUAVO_CONF_ERR_DB;
+                conf->err = PUAVO_CONF_ERR_DB;
                 goto out;
         }
 
@@ -200,16 +199,15 @@ int puavo_conf_list(puavo_conf_t *const conf,
                 void *batch_iterator;
 
                 /* Get the next batch of key-value pairs. */
-                db_err = db_cursor->get(db_cursor, &db_null, &db_batch,
-                                        DB_MULTIPLE_KEY | DB_NEXT);
-                switch (db_err) {
+                conf->db_err = db_cursor->get(db_cursor, &db_null, &db_batch,
+                                              DB_MULTIPLE_KEY | DB_NEXT);
+                switch (conf->db_err) {
                 case 0:
                         break;
                 case DB_NOTFOUND:
                         goto out;
                 default:
-                        conf->db_err = db_err;
-                        err = PUAVO_CONF_ERR_DB;
+                        conf->err = PUAVO_CONF_ERR_DB;
                         goto out;
                 }
 
@@ -231,7 +229,7 @@ int puavo_conf_list(puavo_conf_t *const conf,
                                              sizeof(struct puavo_conf_param)
                                              * (len + 1));
                         if (!new_params) {
-                                err = PUAVO_CONF_ERR_SYS;
+                                conf->err = PUAVO_CONF_ERR_SYS;
                                 goto out;
                         }
                         params = new_params;
@@ -243,14 +241,17 @@ int puavo_conf_list(puavo_conf_t *const conf,
         }
 out:
         if (db_cursor) {
-                db_err = db_cursor->close(db_cursor);
-                if (!err && db_err) {
+                int db_err = db_cursor->close(db_cursor);
+                /* Obey exit-on-first-error policy: Do not shadow any
+                 * existing error, record close error only if we are
+                 * cleaning up without any earlier errors. */
+                if (!conf->err && db_err) {
                         conf->db_err = db_err;
-                        err = PUAVO_CONF_ERR_DB;
+                        conf->err = PUAVO_CONF_ERR_DB;
                 }
         }
 
-        if (err) {
+        if (conf->err) {
                 size_t i;
 
                 for (i = 0; i < len; ++i) {
@@ -266,7 +267,7 @@ out:
 
         free(db_batch.data);
 
-        return -err;
+        return -conf->err;
 }
 
 int puavo_conf_clear_db(struct puavo_conf *const conf)
