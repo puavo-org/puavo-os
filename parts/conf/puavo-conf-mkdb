@@ -32,12 +32,13 @@
 #   - replace calls for dmidecode, lspci, lsusb with something more efficient
 #
 
+require 'getoptlong'
 require 'json'
 require 'puavo/conf'
 
 $status = 0
 
-def apply_feature_profiles(feature_profiles, lookup_fn)
+def apply_feature_profiles(features, feature_profiles, lookup_fn)
     if !feature_profiles.kind_of?(Array)
         logerr('input type error: feature profiles not in correct format')
         return
@@ -52,7 +53,7 @@ def apply_feature_profiles(feature_profiles, lookup_fn)
         end
 
         if profile['key'] == '*' then
-            merge_features($features, profile['profile'])
+            merge_features(features, profile['profile'])
             next
         end
 
@@ -69,7 +70,7 @@ def apply_feature_profiles(feature_profiles, lookup_fn)
                                               profile['matchmethod'],
                                               profile['pattern'])
             if match_result then
-                merge_features($features, profile['profile'])
+                merge_features(features, profile['profile'])
                 break
             end
         end
@@ -106,7 +107,7 @@ def get_device_setting(key)
              'dmidecode-system-version'
                 cmdarg = key[ "dmidecode-".length .. -1]
                 result = %x(dmidecode -s #{ cmdarg })
-                status = $?.exitstatus 
+                status = $?.exitstatus
                 if status != 0 then
                     logerr("dmidecode -s #{ cmdarg } returned #{ status }")
                     $deviceinfo[key] = nil
@@ -191,126 +192,222 @@ def take_field(cmd, fieldnum)
     result.split("\n").map { |line| (line.split(' '))[fieldnum-1] }
 end
 
+def usage()
+    puts <<-EOF
+Usage:
+    puavo-conf-mkdb [--sources comma-separated-list-of-sources]
+
+By default the list of used sources is
+"defaults profiles hwquirks puavo primaryuser kernelargs"
+and these are the only available configuration sources.
+EOF
+end
+
+class Sources
+    attr_reader :features
+
+    Available = %w(defaults profiles hwquirks puavo primaryuser kernelargs)
+
+    def initialize(sources)
+        @sources = []
+        sources.each do |source|
+            if !Available.include?(source) then
+                warn("source '#{ source }' is unknown")
+                next
+            end
+
+            @sources << source
+        end
+
+        @features_by_source = {}
+
+        @sources.each do |source|
+            next if source == 'profiles'
+            @features_by_source[source] = send(source)
+        end
+
+        # Profiles are special: other sources affect the profiles chosen.
+        # Note that in merge() source order always matters.
+        profile_sources = merge()
+        @features_by_source['profiles'] = profiles(profile_sources)
+
+        @features = merge()
+    end
+
+    def merge
+        features = {}
+        @sources.each do |source|
+            next unless @features_by_source.has_key?(source)
+            features.merge!( @features_by_source[source] )
+        end
+
+        return features
+    end
+
+    # settings from image defaults
+    def defaults
+        features = {}
+
+        image_defaults_globpattern = '/usr/share/puavo/features/*/info.json'
+
+        image_defaults_files = Dir.glob(image_defaults_globpattern) rescue []
+        if image_defaults_files.count == 0 then
+            logerr('No image defaults files found')
+        end
+
+        image_defaults_files.each do |file|
+            begin
+                feature_info = JSON.parse( IO.read(file) )
+                if !feature_info.kind_of?(Hash) then
+                    raise 'input type error: image defaults is not a Hash'
+                end
+
+                if !(feature_info.has_key?('keys') \
+                       && feature_info['keys'].kind_of?(Hash)) then
+                        raise 'input type error: keys value not a Hash'
+                end
+
+                feature_info['keys'].each do |key, keyinfo|
+                    if !keyinfo.kind_of?(Hash) then
+                        logerr('input type error: defaults keyinfo not a hash')
+                        next
+                    end
+                    if !keyinfo.has_key?('default') then
+                        logerr('input type error: keyinfo does not have' \
+                                 + ' a default value')
+                        next
+                    end
+
+                    merge_features(features, { key => keyinfo['default'] })
+                end
+            rescue StandardError => e
+                logerr("Could not read feature defaults from #{ file }: " \
+                         + e.message)
+            end
+        end
+
+        return features
+    end
+
+    # feature-profiles
+    def profiles(feature_configuration)
+        features = {}
+
+        feature_profiles = []
+        feature_profiles_path = '/etc/puavoimage/feature-profiles.json'
+        begin
+            feature_profiles = JSON.parse( IO.read(feature_profiles_path) )
+            feature_lookup = lambda do |key|
+                                 feature_configuration.has_key?(key)  \
+                                     ? [ feature_configuration[key] ] \
+                                     : nil
+                             end
+            apply_feature_profiles(features, feature_profiles, feature_lookup)
+        rescue StandardError => e
+            logerr('Could not apply feature profiles from' \
+                     + " #{ feature_profiles_path }: #{ e.message }")
+        end
+
+        return features
+    end
+
+    # settings based on hardware quirks (dmidecode, pci, usb, ...)
+    def hwquirks
+        features = {}
+
+        hardware_quirks_globpattern = '/usr/share/puavo/hwquirks/*/*.json'
+
+        hwquirk_files = Dir.glob(hardware_quirks_globpattern) rescue []
+        hwquirk_files.each do |hwquirk_file|
+            begin
+                hwquirklist = JSON.parse( IO.read(hwquirk_file) )
+                apply_feature_profiles(features,
+                                       hwquirklist,
+                                       Proc.method(:get_device_setting))
+            rescue StandardError => e
+                logerr('could not read hardware quirks from' \
+                         + " #{ hwquirk_file }: #{  e.message }")
+            end
+        end
+
+        return features
+    end
+
+    # settings from puavo
+    def puavo
+        features = {}
+
+        begin
+            puavo_settings = JSON.parse( IO.read('/etc/puavo/device.json') )
+            if !(puavo_settings.kind_of?(Hash) \
+                   && puavo_settings['features'].kind_of?(Hash)) then
+                raise 'input type error: puavo feature settings' \
+                        + ' not in correct format'
+            end
+
+            puavo_settings['features'].each do |key, value|
+                merge_features(features, { key => value })
+            end
+        rescue StandardError => e
+            logerr('Could not read features from /etc/puavo/device.json: ' \
+                      + e.message)
+        end
+
+        return features
+    end
+
+    # settings from primary user
+    def primaryuser
+        # XXX unimplemented
+        return {}
+    end
+
+    # settings from kernel arguments
+    def kernelargs
+        features = {}
+
+        begin
+            # kernel_cmdline = IO.read('/proc/cmdline') # XXX
+            kernel_cmdline = IO.read('/tmp/cmdline')
+            kernel_cmdline.split.each do |kernel_arg|
+                match = kernel_arg.match(/\Apuavo\.feature\.(.*?)=(.*)\Z/)
+                if match then
+                    merge_features(features, { match[1] => match[2] })
+                end
+            end
+        rescue StandardError => e
+            logerr('could not read kernel command line arguments')
+        end
+
+        return features
+    end
+end
+
 if Process.euid != 0 then
     logerr("#{ File.basename($0) } must be run as root")
     exit 1
 end
 
-Hardware_quirks_globpattern = '/usr/share/puavo/hwquirks/*/*.json'
-Image_defaults_globpattern  = '/usr/share/puavo/features/*/info.json'
-
-$features = {}
 $status = 0
 
-puavo_feature_conf = {}
+conf_sources = %w(defaults profiles hwquirks puavo primaryuser kernelargs)
+
 begin
-    puavo_settings = JSON.parse( IO.read('/etc/puavo/device.json') )
-    if !(puavo_settings.kind_of?(Hash) \
-           && puavo_settings['features'].kind_of?(Hash)) then
-        raise 'input type error: puavo feature settings not in correct format'
-    end
+    opts = GetoptLong.new([ '--sources', GetoptLong::REQUIRED_ARGUMENT ])
 
-    puavo_settings['features'].each do |key, value|
-        merge_features(puavo_feature_conf, { key => value })
-    end
-rescue StandardError => e
-    logerr('Could not read features from /etc/puavo/device.json: ' \
-              + e.message)
-end
-
-kernelargs_conf = {}
-begin
-    kernel_cmdline = IO.read('/proc/cmdline')
-    kernel_cmdline.split.each do |kernel_arg|
-        match = kernel_arg.match(/\Apuavo\.feature\.(.*?)=(.*)\Z/)
-        if match then
-            merge_features(kernelargs_conf, { match[1] => match[2] })
+    opts.each do |opt, arg|
+        case opt
+            when '--sources'
+                conf_sources = arg.split(',')
         end
     end
-rescue StandardError => e
-    logerr('could not read kernel command line arguments')
+
+rescue GetoptLong::InvalidOption => e
+    usage
+    exit 1
 end
 
-# 1. image defaults
-
-image_defaults_files = Dir.glob(Image_defaults_globpattern) rescue []
-if image_defaults_files.count == 0 then
-    logerr('No image defaults files found')
-end
-
-image_defaults_files.each do |file|
-    begin
-        feature_info = JSON.parse( IO.read(file) )
-        if !feature_info.kind_of?(Hash) then
-            raise 'input type error: image defaults is not a Hash'
-        end
-
-        if !(feature_info.has_key?('keys') \
-               && feature_info['keys'].kind_of?(Hash)) then
-                raise 'input type error: keys value not a Hash'
-        end
-
-        feature_info['keys'].each do |key, keyinfo|
-            if !keyinfo.kind_of?(Hash) then
-                logerr('input type error: defaults keyinfo not a hash')
-                next
-            end
-            if !keyinfo.has_key?('default') then
-                logerr('input type error: keyinfo does not have' \
-                         + ' a default value')
-                next
-            end
-
-            merge_features($features, { key => keyinfo['default'] })
-        end
-    rescue StandardError => e
-        logerr("Could not read feature defaults from #{ file }: " \
-                 + e.message)
-    end
-end
-
-# 2. feature-profiles
-
-feature_profiles = []
-feature_profiles_path = '/etc/puavoimage/feature-profiles.json'
-begin
-    feature_profiles = JSON.parse( IO.read(feature_profiles_path) )
-    feature_configuration = puavo_feature_conf.merge(kernelargs_conf)
-    feature_lookup = lambda do |key|
-                         feature_configuration.has_key?(key) \
-                             ? [ feature_configuration[key] ] \
-                             : nil
-                     end
-    apply_feature_profiles(feature_profiles, feature_lookup)
-rescue StandardError => e
-    logerr('Could not apply feature profiles from' \
-             + " #{ feature_profiles_path }: #{ e.message }")
-end
-
-# 3. check settings based on hardware quirks (dmidecode, pci, usb, ...)
-
-hwquirk_files = Dir.glob(Hardware_quirks_globpattern) rescue []
-hwquirk_files.each do |hwquirk_file|
-    begin
-        hwquirklist = JSON.parse( IO.read(hwquirk_file) )
-        apply_feature_profiles(hwquirklist, Proc.method(:get_device_setting))
-    rescue StandardError => e
-        logerr("could not read hardware quirks from #{ hwquirk_file }: " \
-                 + e.message)
-    end
-end
-
-# 4. check settings from puavo
-
-merge_features($features, puavo_feature_conf)
-
-# 5. check primary user preferences
-
-# XXX unimplemented
-
-# 6. merge features kernel arguments
-
-merge_features($features, kernelargs_conf)
+sources = Sources.new(conf_sources)
 
 #
 # make db
@@ -322,15 +419,16 @@ merge_features($features, kernelargs_conf)
 #     those into the database with [].join(',').
 #     this should have been handled previously
 
-puts "> Creating puavo-conf database with the following values:"
+puts '> Creating puavo-conf database with the following values:'
 puavoconf = Puavo::Conf.new()
 
-max_keylength = $features.keys.map { |s| s.length }.max
-$features.sort.each do |key, value|
+features = sources.features
+max_keylength = features.keys.map { |s| s.length }.max
+features.sort.each do |key, value|
     puavoconf.set(key, value)
     printf "    %-*s %s\n", max_keylength + 2, key, value
 end
 puavoconf.close
-puts "> Done!"
+puts '> Done!'
 
 exit($status)
