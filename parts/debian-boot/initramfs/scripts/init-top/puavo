@@ -16,4 +16,4 @@ prereqs)
 esac
 
 mkdir -p /var/local/lib/puavo-conf
-puavo-conf-mkdb
+puavo-conf-mkdb --sources defaults,profiles,hwquirks,kernelargs
