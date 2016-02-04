@@ -20,11 +20,12 @@ test "$BOOT" = "puavo" || exit 0
 
 PUAVO_IMAGE_OVERLAY=
 
-# Set the defaults based on the bootmode. local means using only local disk partitions
-# that have default values for /home, /images, /imageoverlays, /state/, /tmp and swap.
+# Set the defaults based on the bootmode. local means using only local disk
+# partitions that have default values for /home, /images, /imageoverlays,
+# /state/, /tmp and swap.
 #
-# mixed uses an NBD root device, but can mount local partitions if they are defined on 
-# the command line.
+# mixed uses an NBD root device, but can mount local partitions if they are
+# defined on the command line.
 
 case "${PUAVO_BOOTMODE}" in
     local)
