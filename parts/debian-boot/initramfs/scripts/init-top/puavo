@@ -4,16 +4,20 @@ PREREQ=""
 
 prereqs()
 {
-	echo "$PREREQ"
+    echo "$PREREQ"
 }
 
 case $1 in
-# get pre-requisites
-prereqs)
-	prereqs
-	exit 0
-	;;
+    # get pre-requisites
+    prereqs)
+        prereqs
+        exit 0
+        ;;
 esac
 
-mkdir -p /var/local/lib/puavo-conf
-puavo-conf-mkdb --sources defaults,profiles,hwquirks,kernelargs
+if [ "$BOOT" = "puavo" ]; then
+    mkdir -p /var/lib/puavo-conf
+    puavo-conf-mkdb --sources defaults,profiles,hwquirks,kernelargs
+fi
+
+# apply kernel module configurations based on puavo-conf here
