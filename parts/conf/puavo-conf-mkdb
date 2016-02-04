@@ -367,9 +367,21 @@ class Sources
         features = {}
 
         begin
-            # kernel_cmdline = IO.read('/proc/cmdline') # XXX
-            kernel_cmdline = IO.read('/tmp/cmdline')
-            kernel_cmdline.split.each do |kernel_arg|
+            kernel_cmdline = IO.read('/proc/cmdline')
+            kernel_args = kernel_cmdline.split
+
+            # A quirk for backwards compatibility:
+            # "puavo.hosttype=FOO" is the same as "puavo.feature.hosttype=FOO".
+            # If both are specified and conflicting, the value in
+            # "puavo.feature.hosttype" wins.
+            kernel_args.each do |kernel_arg|
+                match = kernel_arg.match(/\Apuavo\.hosttype=(.*)\Z/)
+                if match then
+                    merge_features(features, { 'hosttype' => match[1] })
+                end
+            end
+
+            kernel_args.each do |kernel_arg|
                 match = kernel_arg.match(/\Apuavo\.feature\.(.*?)=(.*)\Z/)
                 if match then
                     merge_features(features, { match[1] => match[2] })
