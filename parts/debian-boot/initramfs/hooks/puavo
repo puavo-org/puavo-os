@@ -30,22 +30,22 @@ manual_add_modules squashfs
 mkdir -p ${DESTDIR}/etc/puavoimage/ \
          ${DESTDIR}/usr/bin/ \
          ${DESTDIR}/usr/lib/ \
+         ${DESTDIR}/usr/lib/ruby/vendor_ruby \
          ${DESTDIR}/usr/lib/x86_64-linux-gnu/ \
-         ${DESTDIR}/usr/local/lib/ \
          ${DESTDIR}/usr/sbin/ \
          ${DESTDIR}/usr/share/puavo/
 
-copy_exec /usr/bin/lspci                  /usr/bin
-copy_exec /usr/bin/lsusb                  /usr/bin
-copy_exec /usr/bin/ruby                   /usr/bin
-copy_exec /usr/local/bin/puavo-conf       /usr/bin
-copy_exec /usr/local/sbin/puavo-conf-mkdb /usr/bin
-copy_exec /usr/sbin/dmidecode             /usr/sbin
+copy_exec /usr/bin/lspci            /usr/bin
+copy_exec /usr/bin/lsusb            /usr/bin
+copy_exec /usr/bin/puavo-conf       /usr/bin
+copy_exec /usr/bin/ruby             /usr/bin
+copy_exec /usr/sbin/dmidecode       /usr/sbin
+copy_exec /usr/sbin/puavo-conf-mkdb /usr/sbin
 
 cp -a /usr/lib/ruby ${DESTDIR}/usr/lib/
 cp -a /usr/lib/x86_64-linux-gnu/libffi* ${DESTDIR}/usr/lib/x86_64-linux-gnu
 cp -a /usr/lib/x86_64-linux-gnu/ruby ${DESTDIR}/usr/lib/x86_64-linux-gnu/
-cp -a /usr/local/lib/site_ruby ${DESTDIR}/usr/local/lib
+cp -a /usr/lib/ruby/vendor_ruby/puavo ${DESTDIR}/usr/lib/ruby/vendor_ruby
 
 for file in /usr/share/puavo/features/*/info.json; do
     test -e "$file" || continue
@@ -56,4 +56,4 @@ install -m 644 -D /etc/puavoimage/feature-profiles.json \
                   ${DESTDIR}/etc/puavoimage/feature-profiles.json
 cp -a /usr/share/puavo/hwquirks/ ${DESTDIR}/usr/share/puavo
 
-ln -s libpuavoconf.so.0 ${DESTDIR}/usr/local/lib/libpuavoconf.so
+ln -s libpuavoconf.so.0 ${DESTDIR}/usr/lib/libpuavoconf.so
