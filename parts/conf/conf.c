@@ -15,6 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define _GNU_SOURCE /* asprintf() */
+
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
@@ -37,6 +39,7 @@ struct puavo_conf {
         int err;
         int sys_err;
         int confd_socket;
+        char *errstr;
 };
 
 enum PUAVO_CONF_ERR {
@@ -139,9 +142,10 @@ int puavo_conf_open(struct puavo_conf *const conf)
         if (!puavo_conf_open_socket(conf))
                 return 0;
 
-        if (conf->err == PUAVO_CONF_ERR_SYS && conf->sys_err == ECONNREFUSED)
+        if (conf->err == PUAVO_CONF_ERR_SYS
+            && (conf->sys_err == ECONNREFUSED || conf->sys_err == ENOENT))
                 return puavo_conf_open_db(conf, NULL);
-
+        printf("hei: %d\n", errno);
         return -1;
 }
 
@@ -184,6 +188,7 @@ int puavo_conf_close(struct puavo_conf *const conf)
 
 void puavo_conf_free(struct puavo_conf *conf)
 {
+        free(conf->errstr);
         free(conf);
 }
 
@@ -417,17 +422,38 @@ int puavo_conf_clear_db(struct puavo_conf *const conf)
 
 char const *puavo_conf_errstr(struct puavo_conf *const conf)
 {
-        static char const *const errstrs[PUAVO_CONF_ERRCOUNT] = {
-                NULL,
-                "database error",
-                "system call error",
-        };
-
-        if (conf->err < 0 || conf->err >= PUAVO_CONF_ERRCOUNT) {
-                return "unknown error";
+        if (conf->errstr) {
+                free(conf->errstr);
+                conf->errstr = NULL;
         }
 
-        return errstrs[conf->err];
+        switch (conf->err) {
+        case 0:
+                break;
+        case PUAVO_CONF_ERR_SYS:
+                if (asprintf(&conf->errstr, "System error: %s",
+                             strerror(conf->sys_err)) == -1) {
+                        conf->errstr = NULL;
+                        return "System error";
+                }
+                break;
+        case PUAVO_CONF_ERR_DB:
+                if (asprintf(&conf->errstr, "Database error: %s",
+                             db_strerror(conf->db_err)) == -1) {
+                        conf->errstr = NULL;
+                        return "Database error";
+                }
+                break;
+        default:
+                if (asprintf(&conf->errstr, "Unknown error: %d",
+                             conf->err)) {
+                        conf->errstr = NULL;
+                        return "Unknown error";
+                }
+                break;
+        }
+
+        return conf->errstr;
 }
 
 void puavo_conf_list_free(struct puavo_conf *const conf __attribute__((unused)),

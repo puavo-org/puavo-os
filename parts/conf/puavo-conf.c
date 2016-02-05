@@ -30,12 +30,16 @@ int main(int argc, char *argv[])
         int ret;
 
         if (puavo_conf_init(&conf)) {
-                (void) fprintf(stderr, "could not init puavo-conf\n");
+                (void) fprintf(stderr,
+                               "error: Failed to init config object: %s\n",
+                               puavo_conf_errstr(conf));
                 return 1;
         }
 
         if (puavo_conf_open(conf)) {
-                (void) fprintf(stderr, "could not open puavo-conf database\n");
+                (void) fprintf(stderr,
+                               "error: Failed to open config backend: %s\n",
+                               puavo_conf_errstr(conf));
                 puavo_conf_free(conf);
                 return 1;
         }
@@ -47,8 +51,9 @@ int main(int argc, char *argv[])
         } else if (argc == 2) {
                 if (puavo_conf_get(conf, argv[1], &returned_value)) {
                         (void) fprintf(stderr,
-                                       "error retrieving '%s'\n",
-                                       argv[1]);
+                                       "error: Failed to get '%s': %s\n",
+                                       argv[1],
+                                       puavo_conf_errstr(conf));
                         (void) puavo_conf_close(conf);
                         puavo_conf_free(conf);
                         return 1;
@@ -60,9 +65,10 @@ int main(int argc, char *argv[])
         } else if (argc == 3) {
                 if (puavo_conf_set(conf, argv[1], argv[2]) == -1) {
                         (void) fprintf(stderr,
-                                       "error setting '%s' to '%s'\n",
+                                       "error: Failed to set '%s' to '%s': %s\n",
                                        argv[1],
-                                       argv[2]);
+                                       argv[2],
+                                       puavo_conf_errstr(conf));
                         (void) puavo_conf_close(conf);
                         puavo_conf_free(conf);
                         return 1;
@@ -73,7 +79,9 @@ int main(int argc, char *argv[])
         }
 
         if (puavo_conf_close(conf) == -1)
-                (void) fprintf(stderr, "error closing puavo-conf database\n");
+                (void) fprintf(stderr,
+                               "error: Failed to close config backend: %s\n",
+                               puavo_conf_errstr(conf));
 
         puavo_conf_free(conf);
 
@@ -89,8 +97,12 @@ print_conf(puavo_conf_t *conf)
 
         ret = 0;
 
-        if (puavo_conf_get_list(conf, &list) != 0)
+        if (puavo_conf_get_list(conf, &list)) {
+                (void) fprintf(stderr,
+                               "error: Failed to get parameter list: %s\n",
+                               puavo_conf_errstr(conf));
                 return -1;
+        }
 
         max_keylen = 0;
 
