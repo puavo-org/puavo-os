@@ -51,8 +51,12 @@ if [ -z "${DEBEMAIL:-}" ]; then
     DEBEMAIL=$(git log -1 --pretty=%ae)
 fi
 
-# Get ubuntu version to $DISTRIB_CODENAME
-. /etc/lsb-release
+# Get Debian version to $DISTRIB_CODENAME
+DISTRIB_CODENAME=$(lsb_release --codename --short)
+if [ -z "$DISTRIB_CODENAME" ]; then
+    echo "Could not determine distribution codename" >&2
+    exit 1
+fi
 
 package_dir=$(pwd)
 repo_name=$(basename $(pwd))
