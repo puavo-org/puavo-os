@@ -58,13 +58,12 @@ int puavo_conf_init(puavo_conf_t **confp);
 void puavo_conf_free(puavo_conf_t *conf);
 
 /**
- * puavo_conf_open() - open connection to the config backend
+ * puavo_conf_open() - open a config backend
  *
  * @conf - initialized config object
  *
- * If the database does not exist, it will be created. After a
- * successful call, the caller is responsible for closing the database
- * by calling puavo_conf_close().
+ * After a successful call, the caller is responsible for calling
+ * puavo_conf_close().
  *
  * Return 0 on success, non-zero otherwise.
  */
