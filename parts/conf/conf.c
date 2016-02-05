@@ -194,7 +194,7 @@ out:
         return -conf->err;
 }
 
-int puavo_conf_get_list(puavo_conf_t *const conf,
+int puavo_conf_get_list(struct puavo_conf *const conf,
                         struct puavo_conf_list *const list)
 {
         DBC *db_cursor = NULL;
