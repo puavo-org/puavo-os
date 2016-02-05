@@ -18,6 +18,8 @@
 #ifndef CONF_H
 #define CONF_H
 
+#include <stddef.h>
+
 static const char *const PUAVO_CONF_DEFAULT_DB_FILEPATH = DEFAULT_DB_FILEPATH;
 
 typedef struct puavo_conf puavo_conf_t;
