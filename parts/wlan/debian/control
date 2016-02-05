@@ -21,6 +21,7 @@ Package: puavo-wlanap
 Architecture: all
 Depends: ${misc:Depends},
  bridge-utils,
+ crda,
  hostapd (>= 2.1),
  isc-dhcp-client,
  iproute2,
@@ -28,7 +29,6 @@ Depends: ${misc:Depends},
  puavo-client (>= 2.1.0),
  ruby-puavowlan,
  vtun,
- wireless-crda,
  wireless-regdb,
  wireless-tools
 Description: host tunneled WLAN accesspoint
