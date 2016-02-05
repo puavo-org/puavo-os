@@ -11,7 +11,7 @@ Build-Depends: debhelper (>= 8.0.0),
  pkg-config,
  pyqt4-dev-tools,
  python3,
- ruby-bundler,
+ bundler,
  ruby1.9.1,
  ruby1.9.1-dev
 Standards-Version: 3.9.3
@@ -41,7 +41,7 @@ Package: puavo-wlancontroller
 Architecture: any
 Depends: ${misc:Depends},
  adduser,
- ruby-bundler,
+ bundler,
  ruby1.9.1
 Description: Puavo's WLAN controller
  puavo-wlancontroller monitors and controls a swarm of puavo-wlanap

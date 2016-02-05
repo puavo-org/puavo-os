@@ -6,7 +6,7 @@ Build-Depends:
  debhelper (>= 8.0.0),
  libgnome-desktop-3-dev,
  pkg-config,
- ruby-bundler,
+ bundler,
  ruby1.9.1,
  ruby1.9.1-dev
 Standards-Version: 3.9.3
@@ -100,7 +100,7 @@ Package: ruby-puavobs
 Architecture: any
 XS-Ruby-Versions: ruby1.9.1
 Depends: ${shlibs:Depends}, ${misc:Depends},
- ruby-bundler,
+ bundler,
  ruby-highline,
  ruby1.9.1,
  puavo-client
