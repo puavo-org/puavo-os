@@ -7,5 +7,5 @@ Standards-Version: 3.9.3
 
 Package: puavo-hw-tools
 Architecture: all
-Depends: ${misc:Depends}, jq, ruby1.9.1
+Depends: ${misc:Depends}, jq, ruby
 Description: Puavo enabled tools and tweaks to enable and fix hardware features

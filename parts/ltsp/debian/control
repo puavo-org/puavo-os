@@ -7,8 +7,8 @@ Build-Depends:
  libgnome-desktop-3-dev,
  pkg-config,
  bundler,
- ruby1.9.1,
- ruby1.9.1-dev
+ ruby,
+ ruby-dev
 Standards-Version: 3.9.3
 Homepage: https://github.com/opinsys/puavo-ltsp
 
@@ -98,11 +98,11 @@ Description: Puavo LTSP bootserver runs infrastructure services for thin/fat
 
 Package: ruby-puavobs
 Architecture: any
-XS-Ruby-Versions: ruby1.9.1
+XS-Ruby-Versions: ruby
 Depends: ${shlibs:Depends}, ${misc:Depends},
  bundler,
  ruby-highline,
- ruby1.9.1,
+ ruby,
  puavo-client
 Description: Puavo Bootserver library for Ruby
  This library provides helper functions for common operations done in

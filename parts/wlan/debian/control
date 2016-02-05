@@ -12,8 +12,8 @@ Build-Depends: debhelper (>= 8.0.0),
  pyqt4-dev-tools,
  python3,
  bundler,
- ruby1.9.1,
- ruby1.9.1-dev
+ ruby,
+ ruby-dev
 Standards-Version: 3.9.3
 Homepage: http://github.com/opinsys/puavo-wlan/
 
@@ -42,7 +42,7 @@ Architecture: any
 Depends: ${misc:Depends},
  adduser,
  bundler,
- ruby1.9.1
+ ruby
 Description: Puavo's WLAN controller
  puavo-wlancontroller monitors and controls a swarm of puavo-wlanap
  instances.
@@ -85,9 +85,9 @@ Description: measure and visualize signal strengths of WLAN access points
 
 Package: ruby-puavowlan
 Architecture: all
-XS-Ruby-Versions: ruby1.9.1
+XS-Ruby-Versions: ruby
 Depends: ${shlibs:Depends}, ${misc:Depends},
- ruby1.9.1
+ ruby
 Description: Puavo's WLAN library for Ruby
  This library provides common library utilities for Puavo's WLAN
  software.

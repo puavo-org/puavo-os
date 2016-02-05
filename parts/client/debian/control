@@ -2,13 +2,13 @@ Source: puavo-client
 Section: misc
 Priority: extra
 Maintainer: Esa-Matti Suuronen <esa-matti.suuronen@opinsys.fi>
-Build-Depends: debhelper (>= 7), ruby1.9.1, ruby1.9.1-dev, bundler
+Build-Depends: debhelper (>= 7), ruby, ruby-dev, bundler
 Standards-Version: 3.9.3
 Homepage: https://github.com/opinsys/puavo-client
 
 Package: puavo-client
 Architecture: any
-Depends: ${misc:Depends}, ruby1.9.1, ruby-ldap, dnsutils
+Depends: ${misc:Depends}, ruby, ruby-ldap, dnsutils
 Replaces: puavo-register
 Conflicts: puavo-register
 Provides: puavo-register

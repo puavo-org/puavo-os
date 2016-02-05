@@ -13,7 +13,7 @@ Architecture: any
 Depends: ${misc:Depends},
  libjansson4,
  ruby-puavobs (>= 0.15.0),
- ruby1.9.1
+ ruby
 Description: Puavo admin intergration
   This project provides following components for intergrating Puavo
   organization admininstrators to the host:
