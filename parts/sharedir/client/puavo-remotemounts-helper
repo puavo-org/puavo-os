@@ -1,4 +1,4 @@
-#!/usr/bin/ruby1.9.1
+#!/usr/bin/ruby
 # encoding: UTF-8
 
 puavo_hosttype = IO.read('/etc/puavo/hosttype').chomp
