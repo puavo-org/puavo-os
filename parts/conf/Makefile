@@ -1,7 +1,8 @@
 prefix           = /usr/local
 bindir           = $(prefix)/bin
-sbindir          = $(prefix)/sbin
 libdir           = $(prefix)/lib
+sbindir          = $(prefix)/sbin
+
 libtool_binaries = libpuavoconf.la puavo-conf
 
 ifeq ($(prefix), /usr/local)
@@ -37,8 +38,10 @@ install: installdirs
 
 .PHONY: installdirs
 installdirs:
+	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(libdir)
 	mkdir -p $(DESTDIR)$(rubylibdir)/puavo
+	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)$(varlibdir)
 
 .PHONY: test
@@ -55,3 +58,6 @@ libpuavoconf.la: conf.lo
 %.lo: %.c %.h
 	libtool --mode=compile \
 		gcc $(CPPFLAGS) $(CFLAGS) -c $<
+
+deb:
+	dpkg-buildpackage -us -uc

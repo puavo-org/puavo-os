@@ -1,0 +1,19 @@
+Source: puavo-conf
+Section: misc
+Priority: extra
+Maintainer: Opinsys Developers <dev@opinsys.fi>
+Build-Depends: check, debhelper, libdb5.3-dev, libtool-bin, make
+Standards-Version: 3.9.3
+Homepage: https://github.com/puavo-org/puavo-os
+
+Package: puavo-conf
+Architecture: any
+Depends: ${misc:Depends},
+ dmidecode,
+ libdb5.3,
+ pciutils,
+ ruby,
+ ruby-ffi,
+ usbutils
+Description: Puavo Conf
+ Puavo Configuration database system for Puavo hosts.
