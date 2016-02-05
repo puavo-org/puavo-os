@@ -88,7 +88,8 @@ int puavo_conf_close(puavo_conf_t *conf);
  *
  * @value - NUL-terminated string constant
  *
- * If @key already exists in the database, the value is overwritten.
+ * If @key already exists in the config backend, the value is
+ * overwritten.
  *
  * Return 0 on success, non-zero otherwise.
  */
