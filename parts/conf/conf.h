@@ -147,7 +147,7 @@ int puavo_conf_get(puavo_conf_t *conf, char const *key, char **valuep);
  * Return 0 on success, non-zero otherwise.
  */
 int puavo_conf_get_list(puavo_conf_t *conf,
-			struct puavo_conf_list *list);
+                        struct puavo_conf_list *list);
 
 /**
  * puavo_conf_list_free() - free a parameter list
@@ -157,7 +157,7 @@ int puavo_conf_get_list(puavo_conf_t *conf,
  * @list - initialized parameter list
  */
 void puavo_conf_list_free(puavo_conf_t *conf,
-			  struct puavo_conf_list *list);
+                          struct puavo_conf_list *list);
 
 /**
  * puavo_conf_clear_db() - remove all parameters from the database
