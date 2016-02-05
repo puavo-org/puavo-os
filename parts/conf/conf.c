@@ -24,6 +24,7 @@
 #include <db.h>
 
 #include "conf.h"
+#include "db.h"
 
 /* TODO: 1MiB should be enough for 1+ key/value pairs, if not, please
  * implement dynamic buffer reallocation on when DB->get() returns

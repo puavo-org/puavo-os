@@ -4,6 +4,7 @@
 #include <check.h>
 
 #include "../conf.h"
+#include "../db.h"
 
 static puavo_conf_t *conf;
 

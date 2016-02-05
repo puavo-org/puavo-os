@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
                 return 1;
         }
 
-        if (puavo_conf_open_db(conf, NULL)) {
+        if (puavo_conf_open(conf)) {
                 (void) fprintf(stderr, "could not open puavo-conf database\n");
                 puavo_conf_free(conf);
                 return 1;
@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
                         (void) fprintf(stderr,
                                        "error retrieving '%s'\n",
                                        argv[1]);
-                        (void) puavo_conf_close_db(conf);
+                        (void) puavo_conf_close(conf);
                         puavo_conf_free(conf);
                         return 1;
                 }
@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
                                        "error setting '%s' to '%s'\n",
                                        argv[1],
                                        argv[2]);
-                        (void) puavo_conf_close_db(conf);
+                        (void) puavo_conf_close(conf);
                         puavo_conf_free(conf);
                         return 1;
                 }
@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
                 return 1;
         }
 
-        if (puavo_conf_close_db(conf) == -1)
+        if (puavo_conf_close(conf) == -1)
                 (void) fprintf(stderr, "error closing puavo-conf database\n");
 
         puavo_conf_free(conf);

@@ -20,8 +20,6 @@
 
 #include <stddef.h>
 
-static const char *const PUAVO_CONF_DEFAULT_DB_FILEPATH = DEFAULT_DB_FILEPATH;
-
 typedef struct puavo_conf puavo_conf_t;
 
 struct puavo_conf_list {
@@ -70,22 +68,6 @@ void puavo_conf_free(puavo_conf_t *conf);
 int puavo_conf_open(puavo_conf_t *conf);
 
 /**
- * puavo_conf_open_db() - open a database
- *
- * @conf        - initialized config object
- *
- * @db_filepath - database filepath string
- *
- * If the database does not exist, it will be created. If @db_filepath
- * is NULL, PUAVO_CONF_DEFAULT_DB_FILEPATH is used instead. After a
- * successful call, the caller is responsible for closing the database
- * by calling puavo_conf_close_db().
- *
- * Return 0 on success, non-zero otherwise.
- */
-int puavo_conf_open_db(puavo_conf_t *conf, const char *db_filepath);
-
-/**
  * puavo_conf_close() - close a config backend
  *
  * @conf - initialized config object
@@ -96,18 +78,6 @@ int puavo_conf_open_db(puavo_conf_t *conf, const char *db_filepath);
  * Return 0 on success, non-zero otherwise.
  */
 int puavo_conf_close(puavo_conf_t *conf);
-
-/**
- * puavo_conf_close_db() - close an open database
- *
- * @conf - initialized config object
- *
- * This function must be called to ensure all database operations get
- * finished and all resources get released properly.
- *
- * Return 0 on success, non-zero otherwise.
- */
-int puavo_conf_close_db(puavo_conf_t *conf);
 
 /**
  * puavo_conf_set() - store a parameter
@@ -169,15 +139,6 @@ int puavo_conf_get_list(puavo_conf_t *conf,
  */
 void puavo_conf_list_free(puavo_conf_t *conf,
                           struct puavo_conf_list *list);
-
-/**
- * puavo_conf_clear_db() - remove all parameters from the database
- *
- * @conf - initialized config object
- *
- * Return 0 on success, non-zero otherwise.
- */
-int puavo_conf_clear_db(puavo_conf_t *conf);
 
 /**
  * puavo_conf_errstr() - get string describing the error of the last API call
