@@ -18,6 +18,8 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/socket.h>
+#include <sys/un.h>
 
 #include <db.h>
 
@@ -33,6 +35,7 @@ struct puavo_conf {
         int db_err;
         int err;
         int sys_err;
+	int confd_socket;
 };
 
 enum PUAVO_CONF_ERR {
@@ -50,9 +53,53 @@ int puavo_conf_init(struct puavo_conf **const confp)
                 return -PUAVO_CONF_ERR_SYS;
         memset(conf, 0, sizeof(struct puavo_conf));
 
+	conf->confd_socket = -1;
+
         *confp = conf;
 
         return 0;
+}
+
+static int puavo_conf_open_socket(struct puavo_conf *const conf)
+{
+	int confd_socket;
+	struct sockaddr_un sockaddr;
+
+	conf->err = 0; /* Reset error indicator. */
+
+	if (conf->confd_socket >= 0)
+		return 0;
+
+	confd_socket = socket(AF_UNIX, SOCK_STREAM, 0);
+	if (confd_socket < 0) {
+		conf->sys_err = errno;
+		conf->err = PUAVO_CONF_ERR_SYS;
+		goto out;
+	}
+
+	memset(&sockaddr, 0, sizeof(struct sockaddr_un));
+	sockaddr.sun_family = AF_UNIX;
+	(void) strncpy(sockaddr.sun_path, "/tmp/puavo-conf.sock",
+		       sizeof(sockaddr.sun_path));
+
+	if (connect(confd_socket, (struct sockaddr *) &sockaddr,
+		    sizeof(struct sockaddr_un))) {
+		conf->sys_err = errno;
+		conf->err = PUAVO_CONF_ERR_SYS;
+		goto out;
+	}
+
+out:
+
+	if (conf->err) {
+		/* Errors ignored, because we have already failed. */
+		(void) close(confd_socket);
+	} else {
+		/* Set return values only on success. */
+		conf->confd_socket = confd_socket;
+	}
+
+	return -conf->err;
 }
 
 int puavo_conf_open_db(struct puavo_conf *const conf,
@@ -82,6 +129,24 @@ int puavo_conf_open_db(struct puavo_conf *const conf,
 
         conf->db = db;
         return 0;
+}
+
+int puavo_conf_open(struct puavo_conf *const conf)
+{
+	if (conf->confd_socket >= 0 || conf->db)
+		return 0;
+
+	puavo_conf_open_socket(conf);
+	switch (conf->err) {
+	case PUAVO_CONF_ERR_SYS:
+		if (conf->sys_err != ECONNREFUSED)
+			return -conf->err;
+		break;
+	default:
+		return -conf->err;
+	}
+
+	return puavo_conf_open_db(conf, NULL);
 }
 
 int puavo_conf_close_db(struct puavo_conf *const conf)
