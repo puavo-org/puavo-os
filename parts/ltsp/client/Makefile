@@ -1,7 +1,3 @@
-subdirs = create_monitors_xml
-install-subdirs = $(subdirs:%=install-%)
-clean-subdirs = $(subdirs:%=clean-%)
-
 prefix = /usr/local
 exec_prefix = $(prefix)
 bindir = $(exec_prefix)/bin
@@ -15,15 +11,7 @@ INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL) -m 644
 
 .PHONY : all
-all : $(subdirs) po/fi/puavo-remote-assistance-applet.mo
-
-.PHONY : $(subdirs)
-$(subdirs) :
-	$(MAKE) -C $@
-
-.PHONY : $(install-subdirs)
-$(install-subdirs) :
-	$(MAKE) -C $(@:install-%=%) install
+all : po/fi/puavo-remote-assistance-applet.mo
 
 puavo-remote-assistance-applet.pot: puavo-remote-assistance-applet
 	xgettext --omit-header --language Python --keyword=_tr -o $@ $^
@@ -98,7 +86,7 @@ installdirs :
 	mkdir -p $(DESTDIR)/var/lib/puavo-desktop/users
 
 .PHONY : install
-install : installdirs $(install-subdirs)
+install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/pam-configs \
 		pam/configs/puavo-local-access
 
@@ -357,11 +345,7 @@ install : installdirs $(install-subdirs)
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/xgreeters \
 		xgreeters/puavo-unity-greeter.desktop
 
-.PHONY : $(clean-subdirs)
-$(clean-subdirs) :
-	$(MAKE) -C $(@:clean-%=%) clean
-
 .PHONY : clean
-clean : $(clean-subdirs)
+clean :
 	rm -rf po/fi/*.mo
 	rm -rf po/*.pot

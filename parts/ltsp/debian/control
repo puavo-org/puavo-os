@@ -4,7 +4,6 @@ Priority: extra
 Maintainer: Opinsys Developers <dev@opinsys.fi>
 Build-Depends:
  debhelper (>= 8.0.0),
- libgnome-desktop-3-dev,
  pkg-config,
  bundler,
  ruby,
