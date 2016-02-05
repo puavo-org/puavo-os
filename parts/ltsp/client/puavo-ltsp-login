@@ -61,7 +61,7 @@ URI		ldap://ldap.example.org
 
 On Ubuntu 12.04 the following packages are needed:
 
-sudo apt-get install libnss-extrausers ruby1.9.3 ruby-ldap ruby-dnsruby
+sudo apt-get install libnss-extrausers ruby ruby-ldap ruby-dnsruby
 
 =end
 

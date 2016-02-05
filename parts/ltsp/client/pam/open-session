@@ -42,13 +42,13 @@ else
   puavo_device_dn="$(cat /etc/puavo/ldap/dn 2>/dev/null || true)"
   puavo_device_password="$(cat /etc/puavo/ldap/password 2>/dev/null || true)"
   if [ -n "$puavo_device_dn" -a -n "$puavo_device_password" ]; then
-    formdata=$(ruby1.9.1 -r uri -e '
+    formdata=$(ruby -r uri -e '
                  puts(URI.encode_www_form("hostname"        => ARGV[0],
                                           "device_dn"       => ARGV[1],
                                           "device_password" => ARGV[2]))
                ' "$PUAVO_HOSTNAME" "$puavo_device_dn" "$puavo_device_password")
   else
-    formdata=$(ruby1.9.1 -r uri \
+    formdata=$(ruby -r uri \
                  -e 'puts(URI.encode_www_form("hostname" => ARGV[0]))' \
                  "$PUAVO_HOSTNAME")
   fi

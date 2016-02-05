@@ -29,7 +29,7 @@ Requirements
 ------------
 
 - libjansson
-- ruby1.9.1
+- ruby
 - ruby-puavobs
 
 Compile and install

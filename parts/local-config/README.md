@@ -8,7 +8,7 @@ with a user interface for end users.
 
 From archive.opinsys.fi
 
-    apt-get install node-webkit puavo-ltsp-client ruby1.9.1 whois
+    apt-get install node-webkit puavo-ltsp-client ruby whois
 
 ## Usage
 
