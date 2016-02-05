@@ -163,6 +163,31 @@ int puavo_conf_close_db(struct puavo_conf *const conf)
         return -conf->err;
 }
 
+static int puavo_conf_close_socket(struct puavo_conf *const conf)
+{
+        conf->err = 0;
+
+        if (conf->confd_socket >= 0 && close(conf->confd_socket)) {
+                conf->sys_err = errno;
+                conf->err = PUAVO_CONF_ERR_SYS;
+                conf->confd_socket = -1;
+        }
+        return -conf->err;
+}
+
+int puavo_conf_close(struct puavo_conf *const conf)
+{
+        conf->err = 0;
+
+        if (conf->db)
+                return puavo_conf_close_db(conf);
+
+        if (conf->confd_socket >= 0)
+                return puavo_conf_close_socket(conf);
+
+        return 0;
+}
+
 void puavo_conf_free(struct puavo_conf *conf)
 {
         free(conf);

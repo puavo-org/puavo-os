@@ -86,6 +86,18 @@ int puavo_conf_open(puavo_conf_t *conf);
 int puavo_conf_open_db(puavo_conf_t *conf, const char *db_filepath);
 
 /**
+ * puavo_conf_close() - close a config backend
+ *
+ * @conf - initialized config object
+ *
+ * This function must be called to ensure all config operations get
+ * finished and all resources get released properly.
+ *
+ * Return 0 on success, non-zero otherwise.
+ */
+int puavo_conf_close(puavo_conf_t *conf);
+
+/**
  * puavo_conf_close_db() - close an open database
  *
  * @conf - initialized config object
