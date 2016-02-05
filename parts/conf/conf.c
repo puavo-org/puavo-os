@@ -51,7 +51,7 @@ int puavo_conf_init(struct puavo_conf **const confp)
 
         conf = (struct puavo_conf *) malloc(sizeof(struct puavo_conf));
         if (!conf)
-                return -PUAVO_CONF_ERR_SYS;
+                return -1;
         memset(conf, 0, sizeof(struct puavo_conf));
 
         conf->confd_socket = -1;
@@ -63,13 +63,14 @@ int puavo_conf_init(struct puavo_conf **const confp)
 
 static int puavo_conf_open_socket(struct puavo_conf *const conf)
 {
+        int ret;
         int confd_socket;
         struct sockaddr_un sockaddr;
 
-        conf->err = 0; /* Reset error indicator. */
-
         if (conf->confd_socket >= 0)
                 return 0;
+
+        ret = -1;
 
         confd_socket = socket(AF_UNIX, SOCK_STREAM, 0);
         if (confd_socket < 0) {
@@ -90,9 +91,9 @@ static int puavo_conf_open_socket(struct puavo_conf *const conf)
                 goto out;
         }
 
+        ret = 0;
 out:
-
-        if (conf->err) {
+        if (ret) {
                 /* Errors ignored, because we have already failed. */
                 (void) close(confd_socket);
         } else {
@@ -100,7 +101,7 @@ out:
                 conf->confd_socket = confd_socket;
         }
 
-        return -conf->err;
+        return ret;
 }
 
 int puavo_conf_open_db(struct puavo_conf *const conf,
@@ -108,15 +109,13 @@ int puavo_conf_open_db(struct puavo_conf *const conf,
 {
         DB *db;
 
-        conf->err = 0;
-
         if (conf->db)
                 return 0;
 
         conf->db_err = db_create(&db, NULL, 0);
         if (conf->db_err) {
                 conf->err = PUAVO_CONF_ERR_DB;
-                return -conf->err;
+                return -1;
         }
 
         conf->db_err = db->open(db, NULL,
@@ -125,7 +124,7 @@ int puavo_conf_open_db(struct puavo_conf *const conf,
         if (conf->db_err) {
                 conf->err = PUAVO_CONF_ERR_DB;
                 db->close(db, 0);
-                return -conf->err;
+                return -1;
         }
 
         conf->db = db;
@@ -137,49 +136,43 @@ int puavo_conf_open(struct puavo_conf *const conf)
         if (conf->confd_socket >= 0 || conf->db)
                 return 0;
 
-        puavo_conf_open_socket(conf);
-        switch (conf->err) {
-        case PUAVO_CONF_ERR_SYS:
-                if (conf->sys_err != ECONNREFUSED)
-                        return -conf->err;
-                break;
-        default:
-                return -conf->err;
-        }
+        if (!puavo_conf_open_socket(conf))
+                return 0;
 
-        return puavo_conf_open_db(conf, NULL);
+        if (conf->err == PUAVO_CONF_ERR_SYS && conf->sys_err == ECONNREFUSED)
+                return puavo_conf_open_db(conf, NULL);
+
+        return -1;
 }
 
 int puavo_conf_close_db(struct puavo_conf *const conf)
 {
-        conf->err = 0;
-
         if (conf->db) {
                 conf->db_err = conf->db->close(conf->db, 0);
-                if (conf->db_err)
-                        conf->err = PUAVO_CONF_ERR_DB;
                 conf->db = NULL;
+                if (conf->db_err) {
+                        conf->err = PUAVO_CONF_ERR_DB;
+                        return -1;
+                }
         }
 
-        return -conf->err;
+        return 0;
 }
 
 static int puavo_conf_close_socket(struct puavo_conf *const conf)
 {
-        conf->err = 0;
-
         if (conf->confd_socket >= 0 && close(conf->confd_socket)) {
                 conf->sys_err = errno;
                 conf->err = PUAVO_CONF_ERR_SYS;
                 conf->confd_socket = -1;
+                return -1;
         }
-        return -conf->err;
+
+        return 0;
 }
 
 int puavo_conf_close(struct puavo_conf *const conf)
 {
-        conf->err = 0;
-
         if (conf->db)
                 return puavo_conf_close_db(conf);
 
@@ -200,8 +193,7 @@ int puavo_conf_get(struct puavo_conf *const conf,
         DBT db_key;
         DBT db_value;
         char *value;
-
-        conf->err = 0;
+        int ret = -1;
 
         memset(&db_key, 0, sizeof(DBT));
         memset(&db_value, 0, sizeof(DBT));
@@ -237,14 +229,15 @@ int puavo_conf_get(struct puavo_conf *const conf,
                         goto out;
                 }
         }
+        ret = 0;
 out:
         free(db_key.data);
         free(db_value.data);
 
-        if (!conf->err)
+        if (!ret)
                 *valuep = value;
 
-        return -conf->err;
+        return ret;
 }
 
 int puavo_conf_set(struct puavo_conf *const conf,
@@ -252,8 +245,7 @@ int puavo_conf_set(struct puavo_conf *const conf,
 {
         DBT db_key;
         DBT db_value;
-
-        conf->err = 0;
+        int ret = -1;
 
         memset(&db_key, 0, sizeof(DBT));
         memset(&db_value, 0, sizeof(DBT));
@@ -275,14 +267,17 @@ int puavo_conf_set(struct puavo_conf *const conf,
         }
 
         conf->db_err = conf->db->put(conf->db, NULL, &db_key, &db_value, 0);
-        if (conf->db_err)
+        if (conf->db_err) {
                 conf->err = PUAVO_CONF_ERR_DB;
+                goto out;
+        }
 
+        ret = 0;
 out:
         free(db_key.data);
         free(db_value.data);
 
-        return -conf->err;
+        return ret;
 }
 
 int puavo_conf_get_list(struct puavo_conf *const conf,
@@ -294,8 +289,7 @@ int puavo_conf_get_list(struct puavo_conf *const conf,
         size_t length = 0;
         char **keys = NULL;
         char **values = NULL;
-
-        conf->err = 0;
+        int ret = -1;
 
         memset(&db_null, 0, sizeof(DBT));
         memset(&db_batch, 0, sizeof(DBT));
@@ -327,6 +321,7 @@ int puavo_conf_get_list(struct puavo_conf *const conf,
                 case 0:
                         break;
                 case DB_NOTFOUND:
+                        ret = 0;
                         goto out;
                 default:
                         conf->err = PUAVO_CONF_ERR_DB;
@@ -372,19 +367,21 @@ int puavo_conf_get_list(struct puavo_conf *const conf,
                         values[length - 1] = strndup(val, val_size);
                 }
         }
+        ret = 0;
 out:
         if (db_cursor) {
                 int db_err = db_cursor->close(db_cursor);
                 /* Obey exit-on-first-error policy: Do not shadow any
                  * existing error, record close error only if we are
                  * cleaning up without any earlier errors. */
-                if (!conf->err && db_err) {
+                if (!ret && db_err) {
+                        ret = -1;
                         conf->db_err = db_err;
                         conf->err = PUAVO_CONF_ERR_DB;
                 }
         }
 
-        if (conf->err) {
+        if (ret) {
                 size_t i;
 
                 for (i = 0; i < length; ++i) {
@@ -401,22 +398,21 @@ out:
 
         free(db_batch.data);
 
-        return -conf->err;
+        return ret;
 }
 
 int puavo_conf_clear_db(struct puavo_conf *const conf)
 {
         unsigned int count;
 
-        conf->err = 0;
-
         conf->db_err = conf->db->truncate(conf->db, NULL, &count, 0);
         if (conf->db_err) {
                 conf->sys_err = errno;
                 conf->err = PUAVO_CONF_ERR_DB;
+                return -1;
         }
 
-        return -conf->err;
+        return 0;
 }
 
 char const *puavo_conf_errstr(struct puavo_conf *const conf)

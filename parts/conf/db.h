@@ -25,7 +25,7 @@ static const char *const PUAVO_CONF_DEFAULT_DB_FILEPATH = DEFAULT_DB_FILEPATH;
  *
  * @conf - initialized config object
  *
- * Return 0 on success, non-zero otherwise.
+ * Return 0 on success and -1 on error.
  */
 int puavo_conf_clear_db(puavo_conf_t *conf);
 
@@ -37,7 +37,7 @@ int puavo_conf_clear_db(puavo_conf_t *conf);
  * This function must be called to ensure all database operations get
  * finished and all resources get released properly.
  *
- * Return 0 on success, non-zero otherwise.
+ * Return 0 on success and -1 on error.
  */
 int puavo_conf_close_db(puavo_conf_t *conf);
 
@@ -53,7 +53,7 @@ int puavo_conf_close_db(puavo_conf_t *conf);
  * successful call, the caller is responsible for closing the database
  * by calling puavo_conf_close_db().
  *
- * Return 0 on success, non-zero otherwise.
+ * Return 0 on success and -1 on error.
  */
 int puavo_conf_open_db(puavo_conf_t *conf, const char *db_filepath);
 

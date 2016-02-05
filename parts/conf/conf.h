@@ -41,7 +41,7 @@ struct puavo_conf_list {
  * On error, all resources allocated by puavo_conf_init() are freed
  * automatically.
  *
- * Return 0 on success, non-zero otherwise.
+ * Return 0 on success and -1 on error.
  */
 int puavo_conf_init(puavo_conf_t **confp);
 
@@ -63,7 +63,7 @@ void puavo_conf_free(puavo_conf_t *conf);
  * After a successful call, the caller is responsible for calling
  * puavo_conf_close().
  *
- * Return 0 on success, non-zero otherwise.
+ * Return 0 on success and -1 on error.
  */
 int puavo_conf_open(puavo_conf_t *conf);
 
@@ -75,7 +75,7 @@ int puavo_conf_open(puavo_conf_t *conf);
  * This function must be called to ensure all config operations get
  * finished and all resources get released properly.
  *
- * Return 0 on success, non-zero otherwise.
+ * Return 0 on success and -1 on error.
  */
 int puavo_conf_close(puavo_conf_t *conf);
 
@@ -91,7 +91,7 @@ int puavo_conf_close(puavo_conf_t *conf);
  * If @key already exists in the config backend, the value is
  * overwritten.
  *
- * Return 0 on success, non-zero otherwise.
+ * Return 0 on success and -1 on error.
  */
 int puavo_conf_set(puavo_conf_t *conf, char const *key, char const *value);
 
@@ -108,7 +108,7 @@ int puavo_conf_set(puavo_conf_t *conf, char const *key, char const *value);
  * NUL-terminated string value for @key. The caller is responsible for
  * calling free() on the string afterwards.
  *
- * Return 0 on success, non-zero otherwise.
+ * Return 0 on success and -1 on error.
  */
 int puavo_conf_get(puavo_conf_t *conf, char const *key, char **valuep);
 
@@ -126,7 +126,7 @@ int puavo_conf_get(puavo_conf_t *conf, char const *key, char **valuep);
  * On error, all resources allocated by puavo_conf_list() are freed
  * automatically.
  *
- * Return 0 on success, non-zero otherwise.
+ * Return 0 on success and -1 on error.
  */
 int puavo_conf_get_list(puavo_conf_t *conf,
                         struct puavo_conf_list *list);
