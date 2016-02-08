@@ -72,20 +72,17 @@ int puavo_conf_init(struct puavo_conf **const confp)
 
 static int puavo_conf_open_socket(struct puavo_conf *const conf)
 {
-        int ret;
         int confd_socket;
         struct sockaddr_un sockaddr;
 
         if (conf->confd_socket >= 0)
                 return 0;
 
-        ret = -1;
-
         confd_socket = socket(AF_UNIX, SOCK_STREAM, 0);
         if (confd_socket < 0) {
                 conf->sys_err = errno;
                 conf->err = PUAVO_CONF_ERR_SYS;
-                goto out;
+                goto err;
         }
 
         memset(&sockaddr, 0, sizeof(struct sockaddr_un));
@@ -97,20 +94,16 @@ static int puavo_conf_open_socket(struct puavo_conf *const conf)
                     sizeof(struct sockaddr_un))) {
                 conf->sys_err = errno;
                 conf->err = PUAVO_CONF_ERR_SYS;
-                goto out;
+                goto err;
         }
 
-        ret = 0;
-out:
-        if (ret) {
-                /* Errors ignored, because we have already failed. */
-                (void) close(confd_socket);
-        } else {
-                /* Set return values only on success. */
-                conf->confd_socket = confd_socket;
-        }
+        conf->confd_socket = confd_socket;
+        return 0;
+err:
+        /* Errors ignored, because we have already failed. */
+        (void) close(confd_socket);
 
-        return ret;
+        return -1;
 }
 
 int puavo_conf_open_db(struct puavo_conf *const conf,
