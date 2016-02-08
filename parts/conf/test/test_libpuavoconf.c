@@ -69,6 +69,16 @@ START_TEST(test_empty_db_set_many_and_get_list)
 }
 END_TEST
 
+START_TEST(test_empty_db_lock_conflict)
+{
+        puavo_conf_t *conf2;
+        ck_assert_int_eq(0, puavo_conf_init(&conf2));
+        ck_assert_ptr_ne(conf2, NULL);
+        ck_assert_int_ne(0, puavo_conf_open_db(conf2, "test.db"));
+        puavo_conf_free(conf2);
+}
+END_TEST
+
 static void setup_empty_db()
 {
         ck_assert_int_eq(0, puavo_conf_init(&conf));
@@ -96,6 +106,7 @@ static Suite *libpuavoconf_suite_create(void)
         tcase_add_test(tcase_empty_db, test_empty_db_get_list_from_empty);
         tcase_add_test(tcase_empty_db, test_empty_db_set_same_twice_and_get);
         tcase_add_test(tcase_empty_db, test_empty_db_set_many_and_get_list);
+        tcase_add_test(tcase_empty_db, test_empty_db_lock_conflict);
 
         suite_add_tcase(suite, tcase_empty_db);
 
