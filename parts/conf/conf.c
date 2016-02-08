@@ -18,9 +18,13 @@
 #define _GNU_SOURCE /* asprintf() */
 
 #include <errno.h>
+#include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/file.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <sys/un.h>
 
 #include <db.h>
@@ -40,6 +44,7 @@ struct puavo_conf {
         int sys_err;
         int confd_socket;
         char *errstr;
+        int lock_fd;
 };
 
 enum PUAVO_CONF_ERR {
@@ -58,6 +63,7 @@ int puavo_conf_init(struct puavo_conf **const confp)
         memset(conf, 0, sizeof(struct puavo_conf));
 
         conf->confd_socket = -1;
+        conf->lock_fd = -1;
 
         *confp = conf;
 
@@ -111,25 +117,54 @@ int puavo_conf_open_db(struct puavo_conf *const conf,
                        const char *const db_filepath)
 {
         DB *db;
+        char const *db_fp;
+        char *lock_fp;
+        int lock_fd;
 
         if (conf->db)
                 return 0;
 
-        conf->db_err = db_create(&db, NULL, 0);
-        if (conf->db_err) {
-                conf->err = PUAVO_CONF_ERR_DB;
+        db_fp = db_filepath ? db_filepath : PUAVO_CONF_DEFAULT_DB_FILEPATH;
+        if (asprintf(&lock_fp, "%s.lock", db_fp) == -1) {
+                conf->sys_err = errno;
+                conf->err = PUAVO_CONF_ERR_SYS;
                 return -1;
         }
 
-        conf->db_err = db->open(db, NULL,
-                                db_filepath ? db_filepath : PUAVO_CONF_DEFAULT_DB_FILEPATH,
+        lock_fd = open(lock_fp, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+        if (lock_fd == -1) {
+                conf->sys_err = errno;
+                conf->err = PUAVO_CONF_ERR_SYS;
+                free(lock_fp);
+                return -1;
+        }
+
+        free(lock_fp);
+
+        if (flock(lock_fd, LOCK_EX | LOCK_NB) == -1) {
+                conf->sys_err = errno;
+                conf->err = PUAVO_CONF_ERR_SYS;
+                close(lock_fd);
+                return -1;
+        }
+
+        conf->db_err = db_create(&db, NULL, 0);
+        if (conf->db_err) {
+                conf->err = PUAVO_CONF_ERR_DB;
+                close(lock_fd);
+                return -1;
+        }
+
+        conf->db_err = db->open(db, NULL, db_fp,
                                 NULL, DB_BTREE, DB_CREATE, 0600);
         if (conf->db_err) {
                 conf->err = PUAVO_CONF_ERR_DB;
+                close(lock_fd);
                 db->close(db, 0);
                 return -1;
         }
 
+        conf->lock_fd = lock_fd;
         conf->db = db;
         return 0;
 }
@@ -151,16 +186,24 @@ int puavo_conf_open(struct puavo_conf *const conf)
 
 int puavo_conf_close_db(struct puavo_conf *const conf)
 {
+        int ret = 0;
+
         if (conf->db) {
                 conf->db_err = conf->db->close(conf->db, 0);
                 conf->db = NULL;
                 if (conf->db_err) {
                         conf->err = PUAVO_CONF_ERR_DB;
-                        return -1;
+                        ret = -1;
                 }
+                if (close(conf->lock_fd) == -1 && !ret) {
+                        conf->sys_err = errno;
+                        conf->err = PUAVO_CONF_ERR_SYS;
+                        ret = -1;
+                }
+                conf->lock_fd = -1;
         }
 
-        return 0;
+        return ret;
 }
 
 static int puavo_conf_close_socket(struct puavo_conf *const conf)
