@@ -75,9 +75,6 @@ static int puavo_conf_open_socket(struct puavo_conf *const conf)
         int confd_socket;
         struct sockaddr_un sockaddr;
 
-        if (conf->confd_socket >= 0)
-                return 0;
-
         confd_socket = socket(AF_UNIX, SOCK_STREAM, 0);
         if (confd_socket < 0) {
                 conf->sys_err = errno;
@@ -113,9 +110,6 @@ int puavo_conf_open_db(struct puavo_conf *const conf,
         char const *db_fp;
         char *lock_fp;
         int lock_fd;
-
-        if (conf->db)
-                return 0;
 
         db_fp = db_filepath ? db_filepath : PUAVO_CONF_DEFAULT_DB_FILEPATH;
         if (asprintf(&lock_fp, "%s.lock", db_fp) == -1) {
@@ -164,9 +158,6 @@ int puavo_conf_open_db(struct puavo_conf *const conf,
 
 int puavo_conf_open(struct puavo_conf *const conf)
 {
-        if (conf->confd_socket >= 0 || conf->db)
-                return 0;
-
         if (!puavo_conf_open_socket(conf))
                 return 0;
 
@@ -181,27 +172,25 @@ int puavo_conf_close_db(struct puavo_conf *const conf)
 {
         int ret = 0;
 
-        if (conf->db) {
-                conf->db_err = conf->db->close(conf->db, 0);
-                conf->db = NULL;
-                if (conf->db_err) {
-                        conf->err = PUAVO_CONF_ERR_DB;
-                        ret = -1;
-                }
-                if (close(conf->lock_fd) == -1 && !ret) {
-                        conf->sys_err = errno;
-                        conf->err = PUAVO_CONF_ERR_SYS;
-                        ret = -1;
-                }
-                conf->lock_fd = -1;
+        conf->db_err = conf->db->close(conf->db, 0);
+        conf->db = NULL;
+        if (conf->db_err) {
+                conf->err = PUAVO_CONF_ERR_DB;
+                ret = -1;
         }
+        if (close(conf->lock_fd) == -1 && !ret) {
+                conf->sys_err = errno;
+                conf->err = PUAVO_CONF_ERR_SYS;
+                ret = -1;
+        }
+        conf->lock_fd = -1;
 
         return ret;
 }
 
 static int puavo_conf_close_socket(struct puavo_conf *const conf)
 {
-        if (conf->confd_socket >= 0 && close(conf->confd_socket)) {
+        if (close(conf->confd_socket)) {
                 conf->sys_err = errno;
                 conf->err = PUAVO_CONF_ERR_SYS;
                 conf->confd_socket = -1;
