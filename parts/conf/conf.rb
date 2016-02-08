@@ -18,6 +18,7 @@ module Puavo
         attach_function :puavo_conf_close, [:pointer], :int
         attach_function :puavo_conf_set, [:pointer, :string, :string], :int
         attach_function :puavo_conf_get, [:pointer, :string, :pointer], :int
+        attach_function :puavo_conf_errstr, [:pointer], :string
 
         def initialize
             puavoconf_p = FFI::MemoryPointer.new(:pointer)
@@ -30,7 +31,7 @@ module Puavo
             puavoconf_p.free
 
             if puavo_conf_open(puavoconf) == -1 then
-                raise Puavo::Conf::Error, 'Could not open puavoconf database'
+                raise Puavo::Conf::Error, puavo_conf_errstr(puavoconf)
             end
 
             @puavoconf = puavoconf
@@ -42,8 +43,7 @@ module Puavo
             value_p = FFI::MemoryPointer.new(:pointer)
 
             if puavo_conf_get(@puavoconf, key, value_p) == -1 then
-                raise Puavo::Conf::Error,
-                      'Error getting a value from puavoconf database'
+                raise Puavo::Conf::Error, puavo_conf_errstr(@puavoconf)
             end
 
             value = value_p.read_pointer.read_string
@@ -56,21 +56,18 @@ module Puavo
             raise Puavo::Conf::Error, 'Puavodb is not open' unless @puavoconf
 
             if puavo_conf_set(@puavoconf, key.to_s, value.to_s) == -1 then
-                raise Puavo::Conf::Error,
-                      'Error setting a value to puavoconf database'
+                raise Puavo::Conf::Error, puavo_conf_errstr(@puavoconf)
             end
         end
 
         def close
             raise Puavo::Conf::Error, 'Puavodb is not open' unless @puavoconf
 
-            ret = puavo_conf_close(@puavoconf)
+            if puavo_conf_close(@puavoconf) == -1 then
+                raise Puavo::Conf::Error, puavo_conf_errstr(@puavoconf)
+            end
             puavo_conf_free(@puavoconf)
             @puavoconf = nil
-
-            if ret == -1 then
-                raise Puavo::Conf::Error, 'Error closing a puavoconf database'
-            end
         end
     end
 end
