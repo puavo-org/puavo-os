@@ -14,8 +14,8 @@ module Puavo
 
         attach_function :puavo_conf_init, [:pointer], :int
         attach_function :puavo_conf_free, [:pointer], :void
-        attach_function :puavo_conf_open_db, [:pointer, :pointer], :int
-        attach_function :puavo_conf_close_db, [:pointer], :int
+        attach_function :puavo_conf_open, [:pointer], :int
+        attach_function :puavo_conf_close, [:pointer], :int
         attach_function :puavo_conf_set, [:pointer, :string, :string], :int
         attach_function :puavo_conf_get, [:pointer, :string, :pointer], :int
 
@@ -29,7 +29,7 @@ module Puavo
             puavoconf = puavoconf_p.read_pointer
             puavoconf_p.free
 
-            if puavo_conf_open_db(puavoconf, FFI::Pointer::NULL) == -1 then
+            if puavo_conf_open(puavoconf) == -1 then
                 raise Puavo::Conf::Error, 'Could not open puavoconf database'
             end
 
@@ -64,7 +64,7 @@ module Puavo
         def close
             raise Puavo::Conf::Error, 'Puavodb is not open' unless @puavoconf
 
-            ret = puavo_conf_close_db(@puavoconf)
+            ret = puavo_conf_close(@puavoconf)
             puavo_conf_free(@puavoconf)
             @puavoconf = nil
 
