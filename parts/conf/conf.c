@@ -103,15 +103,17 @@ err:
         return -1;
 }
 
-int puavo_conf_open_db(struct puavo_conf *const conf,
-                       const char *const db_filepath)
+int puavo_conf_open_db(struct puavo_conf *const conf)
 {
         DB *db;
         char const *db_fp;
         char *lock_fp;
         int lock_fd;
 
-        db_fp = db_filepath ? db_filepath : PUAVO_CONF_DEFAULT_DB_FILEPATH;
+        db_fp = secure_getenv("PUAVO_CONF_DB_FILEPATH");
+        if (!db_fp)
+                db_fp = PUAVO_CONF_DEFAULT_DB_FILEPATH;
+
         if (asprintf(&lock_fp, "%s.lock", db_fp) == -1) {
                 conf->sys_err = errno;
                 conf->err = PUAVO_CONF_ERR_SYS;
@@ -163,7 +165,7 @@ int puavo_conf_open(struct puavo_conf *const conf)
 
         if (conf->err == PUAVO_CONF_ERR_SYS
             && (conf->sys_err == ECONNREFUSED || conf->sys_err == ENOENT))
-                return puavo_conf_open_db(conf, NULL);
+                return puavo_conf_open_db(conf);
         printf("hei: %d\n", errno);
         return -1;
 }

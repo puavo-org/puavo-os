@@ -44,17 +44,16 @@ int puavo_conf_close_db(puavo_conf_t *conf);
 /**
  * puavo_conf_open_db() - open a database
  *
- * @conf        - initialized config object
+ * @conf - initialized config object
  *
- * @db_filepath - database filepath string
- *
- * If the database does not exist, it will be created. If @db_filepath
- * is NULL, PUAVO_CONF_DEFAULT_DB_FILEPATH is used instead. After a
- * successful call, the caller is responsible for closing the database
- * by calling puavo_conf_close_db().
+ * After a successful call, a database is created and opened to file
+ * pointed by PUAVO_CONF_DB_FILEPATH environment variable. If the
+ * variable is not set, PUAVO_CONF_DEFAULT_DB_FILEPATH is used
+ * instead. After a successful call, the caller is responsible for
+ * closing the database by calling puavo_conf_close_db().
  *
  * Return 0 on success and -1 on error.
  */
-int puavo_conf_open_db(puavo_conf_t *conf, const char *db_filepath);
+int puavo_conf_open_db(puavo_conf_t *conf);
 
 #endif /* DB_H */
