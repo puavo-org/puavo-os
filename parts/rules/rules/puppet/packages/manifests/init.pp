@@ -11,7 +11,7 @@ class packages {
   Package { ensure => present, }
 
   #
-  # packages from the ubuntu repositories
+  # packages from the debian repositories
   #
 
   @package {
@@ -49,7 +49,7 @@ class packages {
     , 'whois'
     , 'x11vnc'
     , 'xinput-calibrator' ]:
-      tag => [ 'admin', 'thinclient', 'ubuntu', ];
+      tag => [ 'admin', 'thinclient', 'debian', ];
 
     [ 'clusterssh'
     , 'dconf-tools'
@@ -58,7 +58,7 @@ class packages {
     , 'terminator'
     , 'vinagre'
     , 'xbacklight' ]:
-      tag => [ 'admin', 'ubuntu', ];
+      tag => [ 'admin', 'debian', ];
 
     [ 'libasound2-plugins'
     , 'mumble'
@@ -66,7 +66,7 @@ class packages {
     , 'pavumeter'
     , 'pulseaudio-esound-compat'
     , 'timidity' ]:
-      tag => [ 'audio', 'ubuntu', ];
+      tag => [ 'audio', 'debian', ];
 
     [ 'bash'
     , 'bridge-utils'
@@ -79,32 +79,26 @@ class packages {
     , 'policykit-1'
     , 'pm-utils'
     , 'rng-tools'
-    , 'ubuntu-standard'
     , 'udev'
     , 'vlan' ]:
-      tag => [ 'basic', 'ubuntu', ];
+      tag => [ 'basic', 'debian', ];
 
-    [ 'compizconfig-settings-manager'
-    , 'compiz-plugins-extra'
-    , 'indicator-power'
-    , 'indicator-session'
+    # 'compizconfig-settings-manager'	# XXX missing from Debian
+    # 'compiz-plugins-extra'		# XXX missing from Debian
+    # 'indicator-power'			# XXX missing from Debian
+    [ 'indicator-session'
     , 'lightdm'
     , 'lightdm-gtk-greeter'
     , 'lsb-invalid-mta'
     , 'network-manager-openvpn-gnome'
     , 'notify-osd'
-    , 'onboard'
-    , 'overlay-scrollbar'               # needed by accessibility stuff
+    # , 'onboard'			# XXX missing from Debian (Jessie)
     , 'python-appindicator'
     , 'python-gtk2'
     , 'python-notify'
     , 'shared-mime-info'
     , 'xul-ext-mozvoikko' ]:
-      tag => [ 'desktop', 'ubuntu', ];
-
-    [ 'ubuntu-restricted-addons'
-    , 'ubuntu-restricted-extras' ]:
-      tag => [ 'desktop', 'restricted', 'ubuntu', ];
+      tag => [ 'desktop', 'debian', ];
 
     [ 'acct'
     , 'ack-grep'
@@ -123,36 +117,39 @@ class packages {
     , 'perl-doc'
     , 'pinfo'
     , 'translate-toolkit'
-    , 'unetbootin'
     , 'vim-nox' ]:
-      tag => [ 'devel', 'ubuntu', ];
+      tag => [ 'devel', 'debian', ];
 
-    [ 'bcmwl-kernel-source'
-    , 'dkms'
-    , 'firmware-b43-installer'
+    # [ 'bcmwl-kernel-source'	# XXX missing from Debian
+    [ 'dkms'
     , 'libgl1-mesa-glx'
-    , 'linux-firmware'
-    , 'nvidia-304'
-    , 'nvidia-settings'
-    , 'r8168-dkms'
+    # , 'nvidia-legacy-304xx-driver'	# XXX do not install this yet
+    # , 'nvidia-settings'		# XXX do not install this yet
+    # , 'r8168-dkms'		# XXX missing from Debian
     , 'xserver-xorg-video-all' ]:
-      tag => [ 'drivers', 'ubuntu', ];
+      tag => [ 'drivers', 'debian', ];
 
     [ 'mutt' ]:
-      tag => [ 'email', 'ubuntu', ];
+      tag => [ 'email', 'debian', ];
 
     [ 'wine' ]:
-      tag => [ 'emulation', 'ubuntu', ];
+      tag => [ 'emulation', 'debian', ];
+
+    [ 'firmware-b43-installer'
+    , 'firmware-linux'
+    , 'firmware-linux-free'
+    , 'firmware-linux-nonfree' ]:
+      tag => [ 'firmware', 'debian', ];
 
     [ 'fontconfig'
     , 'ttf-freefont'
     , 'xfonts-utils' ]:
-      tag => [ 'fonts', 'ubuntu', ];
+      tag => [ 'fonts', 'debian', ];
 
     # needs debconf seeds or such to set license accepted,
     # but package itself is okay
     [ 'ttf-mscorefonts-installer' ]:
-      tag => [ 'fonts', 'ubuntu', ];
+      tag => [ 'fonts', 'debian', ];
 
     [ 'billard-gl'
     , 'cuyo'
@@ -193,7 +190,7 @@ class packages {
     , 'tuxpaint-stamps-default'
     , 'warmux'
     , 'xmoto' ]:
-      tag => [ 'games', 'ubuntu', ];
+      tag => [ 'games', 'debian', ];
 
     [ 'consolekit'
     , 'dbus-x11'
@@ -203,19 +200,12 @@ class packages {
     , 'libgnome2-perl'
     , 'libgnomevfs2-bin'
     , 'libgnomevfs2-extra'
-
-    # needed by (gnome|unity)-control-center accessibility settings
-    , 'libunity-core-6.0-9'
-
-    , 'notification-daemon'
-    , 'thunderbird-gnome-support'
-    , 'ubuntu-docs' ]:
-      tag => [ 'gnome', 'ubuntu', ];
+    , 'notification-daemon' ]:
+      tag => [ 'gnome', 'debian', ];
 
     [ 'blender'
     , 'dia'
     , 'dvgrab'
-    , 'f-spot'
     , 'gimp'
     , 'gimp-data-extras'
     , 'gimp-gap'
@@ -234,15 +224,14 @@ class packages {
     , 'libav-tools'
     , 'libsane'
     , 'libsane-extras'
-    , 'luciole'
-    , 'mencoder'
+    # , 'luciole'		# XXX missing from Debian
     , 'mjpegtools'
     , 'mypaint'
     , 'nautilus-image-converter'
     , 'okular'
     , 'openshot'
-    , 'pencil'
-    , 'photofilmstrip'
+    # , 'pencil'		# XXX missing from Debian
+    # , 'photofilmstrip'	# XXX missing from Debian
     , 'pinta'
     , 'pitivi'
     , 'python-lxml'
@@ -252,10 +241,11 @@ class packages {
     , 'synfigstudio'
     , 'xsane'
     , 'xzoom' ]:
-      tag => [ 'graphics', 'ubuntu', ];
+      tag => [ 'graphics', 'debian', ];
 
-    [ 'kdump-tools' ]:
-      tag => [ 'kernelutils', 'ubuntu', ];
+    # XXX some issue on Debian
+    # [ 'kdump-tools' ]:
+    #   tag => [ 'kernelutils', 'debian', ];
 
     [ 'emesene'
     , 'gobby'
@@ -266,13 +256,13 @@ class packages {
     , 'pidgin-plugin-pack'
     , 'sflphone-gnome'
     , 'xchat' ]:
-      tag => [ 'instant_messaging', 'ubuntu', ];
+      tag => [ 'instant_messaging', 'debian', ];
 
     [ 'laptop-mode-tools' ]:
-      tag => [ 'laptop', 'ubuntu', ];
+      tag => [ 'laptop', 'debian', ];
 
     [ 'banshee'
-    , 'clam-chordata'
+    # , 'clam-chordata'		# XXX missing from Debian Jessie
     , 'gnome-mplayer'
     , 'goobox'
     , 'gstreamer1.0-clutter'
@@ -287,13 +277,17 @@ class packages {
     , 'kscd'
     , 'libdvdread4'
     , 'me-tv'
-    , 'ogmrip'
+    # , 'ogmrip'		# XXX missing from Debian
     , 'python-gst0.10'
     , 'vlc'
     , 'vlc-plugin-pulse'
     , 'x264'
     , 'xbmc' ]:
-      tag => [ 'mediaplayer', 'ubuntu', ];
+      tag => [ 'mediaplayer', 'debian', ];
+
+    [ 'ltsp-client'
+    , 'ltsp-server' ]:
+        tag => [ 'misc', 'debian', ];
 
     [ 'ardour'
     , 'audacity'
@@ -312,25 +306,25 @@ class packages {
     , 'sweep'
     , 'tuxguitar'
     , 'tuxguitar-jsa' ]:
-      tag => [ 'music_making', 'ubuntu', ];
+      tag => [ 'music_making', 'debian', ];
 
     [ 'amtterm'
     , 'ipsec-tools'
-    , 'racoon'
-    , 'wsmancli' ]:
-      tag => [ 'network', 'ubuntu', ];
+    , 'racoon' ]:
+    # , 'wsmancli' ]:	# XXX missing from Debian
+      tag => [ 'network', 'debian', ];
 
     [ 'calibre'
     , 'fbreader'
+    , 'icedove'
     , 'librecad'
     , 'libreoffice'
     , 'libreoffice-base'
     , 'scribus'
     , 'scribus-doc'
     , 'tellico'
-    , 'thunderbird'
     , 'vym' ]:
-      tag => [ 'office', 'ubuntu', ];
+      tag => [ 'office', 'debian', ];
 
     [ 'cdparanoia'
     , 'cdrdao'
@@ -338,15 +332,16 @@ class packages {
     , 'eject'
     , 'rhythmbox-plugin-cdrecorder'
     , 'sound-juicer' ]:
-      tag => [ 'optical_media', 'ubuntu', ];
+      tag => [ 'optical_media', 'debian', ];
 
-    [ 'gtklp' ]:
-      tag => [ 'printing', 'ubuntu', ];
+    # XXX missing from Debian
+    # [ 'gtklp' ]:
+    #   tag => [ 'printing', 'debian', ];
 
     [ 'arduino'
     , 'arduino-mk'
     , 'avr-libc'
-    , 'basic256'
+    # 'basic256'		# XXX missing from Debian Jessie
     , 'eclipse'
     , 'emacs24'
     , 'eric'
@@ -373,27 +368,27 @@ class packages {
     , 'renpy'
     , 'scratch'
     , 'spe' ]:
-      tag => [ 'programming', 'ubuntu', ];
+      tag => [ 'programming', 'debian', ];
 
-    [ 'gftp-gtk'
-    , 'libmotif4'	# required by icaclient
+    # 'gftp-gtk'	# XXX missing from Debian
+    [ 'libmotif4'	# required by icaclient
     , 'lftp'
     , 'remmina'
     , 'smbclient'
     , 'unison-gtk'
     , 'wget'
     , 'xtightvncviewer']:
-      tag => [ 'remote_access', 'ubuntu', ];
+      tag => [ 'remote_access', 'debian', ];
 
     [ 'atomix'
     , 'avogadro'
     , 'celestia'
     , 'celestia-common-nonfree'
     , 'celestia-gnome'
-    , 'drgeo'
+    # , 'drgeo'		# XXX missing from Debian
     , 'drgeo-doc'
     , 'gchempaint'
-    , 'ghemical'
+    # , 'ghemical'	# XXX missing from Debian
     , 'gnucap'
     , 'gnuplot'
     , 'gnuplot-x11'
@@ -415,38 +410,28 @@ class packages {
     , 'texlive-latex-extra'
     , 'texlive-latex-recommended'
     , 'wxmaxima' ]:
-      tag => [ 'science', 'ubuntu', ];
+      tag => [ 'science', 'debian', ];
 
-    [ 'ubuntu-mono' ]:
-      tag => [ 'themes', 'thinclient', 'ubuntu', ];
-
-    [ 'breathe-icon-theme'
-    , 'edubuntu-wallpapers'
-    , 'gnome-icon-theme'
+    # 'breathe-icon-theme'		# XXX missing from Debian
+    [ 'gnome-icon-theme'
     , 'gnome-themes-extras'
-    , 'gnome-themes-ubuntu'
     , 'gtk2-engines'
     , 'gtk2-engines-pixbuf'
-    , 'human-theme'
-    , 'light-themes'
+    # , 'human-theme'			# XXX missing from Debian
+    # , 'light-themes'			# XXX missing from Debian
     , 'openclipart'
     , 'oxygen-icon-theme'
     , 'pidgin-themes'
-    , 'screensaver-default-images'
     , 'tangerine-icon-theme'
-    , 'ubuntu-wallpapers'
     , 'xscreensaver-data'
     , 'xscreensaver-data-extra' ]:
-      tag => [ 'themes', 'ubuntu', ];
+      tag => [ 'themes', 'debian', ];
 
-    [ 'ubuntu-wallpapers-precise' ]:
-      tag => [ 'backgroundimages', 'themes', 'ubuntu', 'precise', 'trusty', ];
-
-    [ 'ubuntu-wallpapers-quantal'
-    , 'ubuntu-wallpapers-raring'
-    , 'ubuntu-wallpapers-saucy'
-    , 'ubuntu-wallpapers-trusty' ]:
-      tag => [ 'backgroundimages', 'themes', 'ubuntu', 'trusty', ];
+    [ 'debian-edu-artwork'
+    , 'debian-edu-artwork-joy'
+    , 'debian-edu-artwork-lines'
+    , 'debian-edu-artwork-spacefun' ]:
+      tag => [ 'backgroundimages', 'themes', 'debian', 'jessie', ];
 
     # the dependencies (and recommends) of ubuntu-gnome-desktop package
     # without a few packages that we do not want
@@ -455,21 +440,18 @@ class packages {
     , 'alsa-base'
     , 'alsa-utils'
     , 'anacron'
-    , 'app-install-data-partner'
-    , 'apport-gtk'
     , 'at-spi2-core'
     , 'avahi-autoipd'
     , 'avahi-daemon'
     , 'baobab'
     , 'bc'
     , 'bluez'
-    , 'bluez-alsa'
     , 'bluez-cups'
     , 'brasero'
     , 'brltty'
     , 'ca-certificates'
     , 'cheese'
-    , 'compiz'
+    # , 'compiz'				# XXX missing from Debian
     , 'cups'
     , 'cups-bsd'
     , 'cups-client'
@@ -484,20 +466,18 @@ class packages {
     , 'evince'
     , 'evolution'
     , 'file-roller'
-    , 'firefox'
     , 'fonts-cantarell'
     , 'fonts-dejavu-core'
     , 'fonts-droid'
     , 'fonts-freefont-ttf'
+    , 'fonts-guru'
     , 'fonts-kacst-one'
-    , 'fonts-khmeros-core'
     , 'fonts-lao'
     , 'fonts-liberation'
     , 'fonts-lklug-sinhala'
     , 'fonts-nanum'
     , 'fonts-sil-abyssinica'
     , 'fonts-sil-padauk'
-    , 'fonts-takao-pgothic'
     , 'fonts-thai-tlwg'
     , 'fonts-tibetan-machine'
     , 'foomatic-db-compressed-ppds'
@@ -520,7 +500,6 @@ class packages {
 				# (tracker is purged elsewhere)
     , 'gnome-font-viewer'
     , 'gnome-icon-theme-extras'
-    , 'gnome-icon-theme-full'
     , 'gnome-icon-theme-symbolic'
     , 'gnome-keyring'
     , 'gnome-mahjongg'
@@ -549,7 +528,6 @@ class packages {
     , 'gstreamer1.0-alsa'
     , 'gstreamer1.0-pulseaudio'
     , 'gucharmap'
-    , 'gvfs-backends-goa'
     , 'gvfs-bin'
     , 'gvfs-fuse'
     , 'hplip'
@@ -558,9 +536,9 @@ class packages {
     , 'ibus-gtk3'
     , 'ibus-pinyin'
     , 'ibus-table'
+    , 'iceweasel'
     , 'inputattach'
     , 'itstool'
-    , 'kerneloops-daemon'
     , 'laptop-detect'
     , 'libatk-adaptor'
     , 'libgail-common'
@@ -581,10 +559,8 @@ class packages {
     , 'libreoffice-style-tango'
     , 'libreoffice-writer'
     , 'libsasl2-modules'
-    , 'libwmf0.2-7-gtk'
     , 'libxp6'
     , 'make'
-    , 'mcp-account-manager-goa'
     , 'memtest86+'
     , 'mousetweaks'
     , 'mutter'
@@ -598,7 +574,6 @@ class packages {
     , 'pcmciautils'
     # , 'plymouth-theme-ubuntu-gnome-logo'	# not needed
     # , 'plymouth-theme-ubuntu-gnome-text'	# not needed
-    , 'policykit-desktop-privileges'
     , 'printer-driver-c2esp'
     , 'printer-driver-foo2zjs'
     , 'printer-driver-min12xxw'
@@ -613,46 +588,32 @@ class packages {
     , 'python3-aptdaemon.pkcompat'
     , 'rfkill'
     , 'rhythmbox'
-    , 'rhythmbox-plugin-magnatune'
     , 'rtmpdump'
     , 'rxvt-unicode'
     , 'seahorse'
     , 'shotwell'
     , 'simple-scan'
-    , 'software-center'
     # , 'software-properties-gtk'		# (purged elsewhere)
     , 'speech-dispatcher'
     , 'ssh-askpass-gnome'
-    , 'system-config-printer-gnome'
     , 'telepathy-idle'
     , 'totem'
     # , 'tracker'				# (purged elsewhere)
     , 'transmission-gtk'
-    , 'ttf-indic-fonts-core'
-    , 'ttf-punjabi-fonts'
-    , 'ttf-ubuntu-font-family'
-    , 'ubuntu-drivers-common'
-    , 'ubuntu-extras-keyring'
-    , 'ubuntu-gnome-default-settings'
-    , 'ubuntu-gnome-wallpapers'
-    # , 'ubuntu-release-upgrader-gtk'		# (purged elsewhere)
     , 'unzip'
     # , 'update-manager'			# (purged elsewhere)
     # , 'update-notifier'			# (purged elsewhere)
-    , 'usb-creator-gtk'
+    # , 'usb-creator-gtk'			# XXX missing from Debian
     , 'vino'
-    , 'whoopsie'
     , 'wireless-tools'
     , 'wpasupplicant'
     , 'xdg-user-dirs'
     , 'xdg-user-dirs-gtk'
     , 'xdg-utils'
-    , 'xdiagnose'
     , 'xfce4'
     , 'xkb-data'
     , 'xorg'
     , 'xterm'
-    , 'xul-ext-ubufox'
     , 'yelp'
     , 'yelp-tools'
     , 'yelp-xsl'
@@ -660,7 +621,7 @@ class packages {
     , 'zenity'
     , 'zip'
     , 'zsync' ]:
-      tag => [ 'ubuntu-gnome-desktop', 'ubuntu', ];
+      tag => [ 'ubuntu-gnome-desktop', 'debian', ];
 
     [ 'bindfs'
     , 'desktop-file-utils'
@@ -670,9 +631,8 @@ class packages {
     , 'exfat-utils'
     , 'fuse'
     , 'gconf-editor'
-    , 'ginn'
+    # , 'ginn'			# XXX needs packaging for Debian ?
     , 'gkbd-capplet'
-    , 'gpointing-device-settings'
     , 'ibus-libpinyin'
     , 'kdepasswd'
     , 'keepass2'
@@ -682,28 +642,29 @@ class packages {
     , 'password-gorilla'
     , 'rarian-compat'
     , 'screenlets'
-    , 'touchegg'
+    # , 'touchegg'		# XXX needs packaging for Debian ?
     , 'unace'
     , 'unionfs-fuse'
     , 'unrar'
     , 'x-tile' ]:
-      tag => [ 'utils', 'ubuntu', ];
+      tag => [ 'utils', 'debian', ];
 
     [ 'qemu-kvm' ]:
-      tag => [ 'virtualization', 'ubuntu', ];
+      tag => [ 'virtualization', 'debian', ];
 
     [ 'bluefish'
     , 'browser-plugin-vlc'
-    , 'chromium-browser'
+    , 'chromium'
     , 'epiphany-browser'
+    , 'flashplugin-nonfree'
     , 'icedtea-7-plugin'
     , 'liferea'
-    , 'openjdk-6-jdk'
-    , 'openjdk-6-jre'
+    , 'openjdk-7-jdk'
+    , 'openjdk-7-jre'
     , 'php5-cli'
     , 'php5-sqlite'
     , 'sqlite3' ]:
-      tag => [ 'web', 'ubuntu', ];
+      tag => [ 'web', 'debian', ];
   }
 
   #
@@ -711,131 +672,74 @@ class packages {
   #
 
   @package {
-    [ 'nodejs-bundle'
-    , 'puavo-rules'
-    , 'puavo-devscripts' ]:
-      tag => [ 'devel', 'puavo', ];
+    # XXX not yet packaged for Debian
+    # [ 'nodejs-bundle'
+    # , 'puavo-rules'
+    # , 'puavo-devscripts' ]:
+    #   tag => [ 'devel', 'puavo', ];
 
-    [ 'autopoweroff'
-    , 'ltsp-client'
-    , 'opinsys-ca-certificates'
-    , 'puavo-autopilot'
-    , 'puavo-client'
-    , 'puavo-hw-log'
-    , 'puavo-ltsp-client'
-    , 'puavo-ltsp-install'
-    , 'puavo-monitor'
-    , 'puavo-vpn-client' ]:
-      tag => [ 'misc', 'puavo', 'thinclient', ];
+    # XXX not yet packaged for Debian
+    # [ 'autopoweroff'
+    # , 'opinsys-ca-certificates'
+    # , 'puavo-autopilot'
+    # , 'puavo-client'
+    # , 'puavo-hw-log'
+    # , 'puavo-ltsp-client'
+    # , 'puavo-ltsp-install'
+    # , 'puavo-monitor'
+    # , 'puavo-vpn-client' ]:
+    #   tag => [ 'misc', 'puavo', 'thinclient', ];
 
-    [ 'fluent-plugin-puavo'
-    , 'iivari-client'
-    , 'ltsp-server'
-    , 'puavo-image-tools'
-    , 'puavo-load-reporter'
-    , 'puavo-local-config'
-    , 'puavo-pkg'
-    , 'puavo-sharedir-client'
-    , 'puavo-wlanap'
-    , 'simplescreenrecorder'
-    , 'webmenu'
-    , 'webkiosk-language-selector'
-    , 'xexit' ]:
-      tag => [ 'misc', 'puavo', ];
+    # XXX not yet packaged for Debian
+    # [ 'fluent-plugin-puavo'
+    # , 'iivari-client'
+    # , 'puavo-image-tools'
+    # , 'puavo-load-reporter'
+    # , 'puavo-local-config'
+    # , 'puavo-pkg'
+    # , 'puavo-sharedir-client'
+    # , 'puavo-wlanap'
+    # , 'simplescreenrecorder' ]:
+    # , 'webmenu'
+    # , 'webkiosk-language-selector'
+    # , 'xexit' ]:
+    #   tag => [ 'misc', 'puavo', ];
 
-    [ 'dymo-cups-drivers' ]:
-      tag => [ 'printing', 'puavo', ];
+    # XXX not yet packaged for Debian
+    # [ 'dymo-cups-drivers' ]:
+    #   tag => [ 'printing', 'puavo', ];
 
-    [ 'bluegriffon'
-    , 'enchanting'
-    , 'pycharm'
-    , 'snap4arduino' ]:
-      tag => [ 'programming', 'puavo', ];
+    # XXX not yet packaged for Debian
+    # [ 'bluegriffon'
+    # , 'enchanting'
+    # , 'pycharm'
+    # , 'snap4arduino' ]:
+    #   tag => [ 'programming', 'puavo', ];
 
-    [ 'x2goclient'
-    , 'x2goserver' ]:
+    [ 'x2goclient' ]:
+    # , 'x2goserver'	# XXX not yet packaged for Debian
       tag => [ 'remote_access', 'puavo', ];
 
     [ 'faenza-icon-theme' ]:
       tag => [ 'themes', 'puavo', ];
 
-    [ 'node-webkit'
-    , 'xul-ext-flashblock' ]:
+    # 'node-webkit'	# XXX not yet packaged for Debian
+    [ 'xul-ext-flashblock' ]:
       tag => [ 'web', 'puavo', ];
   }
 
   $bcmwl_dkms_module  = 'bcmwl/6.30.223.248+bdcom'
   $nvidia_dkms_module = 'nvidia-304/304.128'
   $r8168_dkms_module  = 'r8168/8.040.00'
-  $all_dkms_modules   = [ $bcmwl_dkms_module
-                        , $nvidia_dkms_module
-                        , $r8168_dkms_module ]
+  $all_dkms_modules   = []
+			# XXX $nvidia_dkms_module # XXX needs fixing
+			# XXX $bcmwl_dkms_module  # XXX missing from Debian
+			# XXX $r8168_dkms_module  # XXX missing from Debian
 
   case $lsbdistcodename {
-    'precise': {
+    'jessie': {
       packages::kernels::kernel_package {
-        '3.2.0-69-generic':
-          dkms_modules => $all_dkms_modules,
-          package_tag  => 'puavo',
-          with_extra   => false;
-      }
-    }
-    'trusty': {
-      if $architecture == 'i386' {
-        packages::kernels::kernel_package {
-          [ '3.2.0-70-generic-pae' ]:
-            dkms_modules => $all_dkms_modules,
-            package_tag  => 'puavo',
-            with_extra   => false;
-
-          [ '4.0.6.opinsys5', '4.2.5.opinsys1', ]:
-            dkms_modules => $all_dkms_modules,
-            package_tag  => 'puavo',
-            with_dbg     => true,
-            with_extra   => false;
-
-	  # the bcmwl-version does not compile for this kernel
-          [ '4.3.3.opinsys1' ]:
-            dkms_modules => [ $r8168_dkms_module, ],
-            package_tag  => 'puavo',
-            with_dbg     => true,
-            with_extra   => false;
-
-          [ '3.13.0-62-generic' ]:
-            # $bcmwl_dkms_module and $nvidia_dkms_module do not compile
-            # for this kernel (arch issue?)
-            dkms_modules => [ $r8168_dkms_module ],
-            pkgarch      => 'amd64';
-        }
-      }
-
-      packages::kernels::kernel_package {
-        [ '3.13.0-74.118-generic', ]:
-          dkms_modules => $all_dkms_modules,
-          package_tag  => 'puavo';
-
-        [ '3.16.0-52-generic', ]: # utopic backport from Ubuntu
-          dkms_modules => $all_dkms_modules;
-
-        [ '3.19.0-32-generic', ]: # vivid backport from Ubuntu
-          dkms_modules => $all_dkms_modules;
-      }
-    }
-    'utopic': {
-      packages::kernels::kernel_package {
-        '3.16.0-50-generic':
-          dkms_modules => $all_dkms_modules;
-      }
-    }
-    'vivid': {
-      packages::kernels::kernel_package {
-        '3.19.0-32-generic':
-          dkms_modules => $all_dkms_modules;
-      }
-    }
-    'wily': {
-      packages::kernels::kernel_package {
-        '4.1.0-3-generic':
+        '3.16.0-4-amd64':
           dkms_modules => $all_dkms_modules;
       }
     }
@@ -845,16 +749,15 @@ class packages {
   # packages from the canonical/ubuntu partner repository
   #
 
-  @package {
-    [ 'skype' ]:
-      tag => [ 'instant_messaging', 'partner', 'extra', 'restricted' ];
-
-    [ 'vmware-view-client' ]:
-      tag => [ 'remote_access', 'partner', 'restricted' ];
-
-    [ 'adobe-flashplugin' ]:
-      tag => [ 'web', 'partner', 'extra', 'restricted' ];
-  }
+  # XXX missing from Debian
+  # @package {
+  #   [ 'skype' ]:
+  #     tag => [ 'instant_messaging', 'partner', 'extra', 'restricted' ];
+  #
+  #   XXX missing from Debian
+  #   [ 'vmware-view-client' ]:
+  #     tag => [ 'remote_access', 'partner', 'restricted' ];
+  # }
 
   # Packages which are not restricted per se, but which are required by
   # restricted packages. These need to be installed and distributed in
@@ -862,11 +765,7 @@ class packages {
   # "during runtime".
   @package {
     [ 'libnspr4-0d' # spotify
-    , 'libssl0.9.8' # spotify
     , 'lsb-core' ]: # google-earth
-      tag => [ 'ubuntu', 'required-by-restricted' ];
-
-    [ 'libudev0' ]: # spotify
-      tag => [ 'puavo', 'required-by-restricted' ];
+      tag => [ 'debian', 'required-by-restricted' ];
   }
 }
