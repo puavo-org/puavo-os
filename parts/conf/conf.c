@@ -166,7 +166,7 @@ int puavo_conf_open(struct puavo_conf *const conf)
         if (conf->err == PUAVO_CONF_ERR_SYS
             && (conf->sys_err == ECONNREFUSED || conf->sys_err == ENOENT))
                 return puavo_conf_open_db(conf);
-        printf("hei: %d\n", errno);
+
         return -1;
 }
 
