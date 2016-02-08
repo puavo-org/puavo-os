@@ -20,7 +20,7 @@ case "${PUAVO_HOSTTYPE}" in
     gnome-session --session="${session}"
     ;;
   preinstalled)
-    gnome-session --session="gnome-fallback"
+    gnome-session --session="gnome-flashback"
     ;;
   thinclient)
     if [ "`echo $USER | grep guest-`" != "" ]; then
@@ -35,7 +35,7 @@ case "${PUAVO_HOSTTYPE}" in
     PUAVO_SESSION=$(cat $PUAVO_SESSION_PATH)
     PUAVO_SESSION_ID=$(echo $PUAVO_SESSION | jq -r .uuid)
     PREFERRED_SERVER=$(echo $PUAVO_SESSION | jq -r .ltsp_server.state.fqdn)
-    REMOTE_SESSION="\"gnome-session --session=gnome-fallback\""
+    REMOTE_SESSION="\"gnome-session --session=gnome-flashback\""
 
     # Try to keep control socket path under 108 characters (should be under 91
     # for ssh).  We do not need the domain name in control socket.
