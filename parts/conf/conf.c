@@ -192,14 +192,17 @@ int puavo_conf_close_db(struct puavo_conf *const conf)
 
 static int puavo_conf_close_socket(struct puavo_conf *const conf)
 {
+        int ret = 0;
+
         if (close(conf->confd_socket)) {
                 conf->sys_err = errno;
                 conf->err = PUAVO_CONF_ERR_SYS;
-                conf->confd_socket = -1;
-                return -1;
+                ret = -1;
         }
 
-        return 0;
+        conf->confd_socket = -1;
+
+        return ret;
 }
 
 int puavo_conf_close(struct puavo_conf *const conf)
