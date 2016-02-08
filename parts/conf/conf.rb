@@ -12,13 +12,20 @@ module Puavo
             ffi_lib '/usr/lib/libpuavoconf.so'
         end
 
-        attach_function :puavo_conf_init, [:pointer], :int
-        attach_function :puavo_conf_free, [:pointer], :void
-        attach_function :puavo_conf_open, [:pointer], :int
-        attach_function :puavo_conf_close, [:pointer], :int
-        attach_function :puavo_conf_set, [:pointer, :string, :string], :int
-        attach_function :puavo_conf_get, [:pointer, :string, :pointer], :int
-        attach_function :puavo_conf_errstr, [:pointer], :string
+        attach_function(:puavo_conf_init,   [:pointer],
+                        :int)
+        attach_function(:puavo_conf_free,   [:pointer],
+                        :void)
+        attach_function(:puavo_conf_open,   [:pointer],
+                        :int)
+        attach_function(:puavo_conf_close,  [:pointer],
+                        :int)
+        attach_function(:puavo_conf_set,    [:pointer, :string, :string],
+                        :int)
+        attach_function(:puavo_conf_get,    [:pointer, :string, :pointer],
+                        :int)
+        attach_function(:puavo_conf_errstr, [:pointer],
+                        :string)
 
         def initialize
             puavoconf_p = FFI::MemoryPointer.new(:pointer)
