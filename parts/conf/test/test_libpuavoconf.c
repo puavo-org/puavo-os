@@ -79,6 +79,7 @@ static void setup_empty_db()
 
 static void teardown_empty_db()
 {
+        puavo_conf_close_db(conf);
         puavo_conf_free(conf);
 }
 
