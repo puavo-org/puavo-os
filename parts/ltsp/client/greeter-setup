@@ -74,6 +74,7 @@ run_gsettings() {
   su -s /bin/sh lightdm -c "dbus-launch gsettings $1"
 }
 
+# XXX unity-greeter set to gtk-greeter, how about these?
 if [ -n "${puavo_primary_user}" ]; then
   run_gsettings \
     "set com.canonical.unity-greeter default-user ${puavo_primary_user}"
@@ -81,6 +82,7 @@ if [ -n "${puavo_primary_user}" ]; then
     "set com.canonical.unity-greeter exclude-prefixes \"['adm-', 'opinsys']\""
 fi
 
+# XXX unity-greeter set to gtk-greeter, how about these?
 if [ -n "${background}" ]; then
   run_gsettings "set com.canonical.unity-greeter background ${background}"
 else

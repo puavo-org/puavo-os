@@ -220,13 +220,13 @@ install : installdirs
 		puavo-configure-client \
 		puavo-dns-client \
 		puavo-dnssd-printer-client \
+		puavo-gtk-greeter \
 		puavo-handle-external-files-actions \
 		puavo-ltsp-envfeed \
 		puavo-ltsp-init-nfs \
 		puavo-ltsp-login \
 		puavo-ltspserver-create-guest \
 		puavo-report-system-version \
-		puavo-unity-greeter \
 		puavo-update-nm-configurations
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/initramfs-tools/hooks/ \
@@ -343,7 +343,7 @@ install : installdirs
 	ln -fs /usr/sbin/sshd $(DESTDIR)$(sbindir)/ltspguestsshd
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/xgreeters \
-		xgreeters/puavo-unity-greeter.desktop
+		xgreeters/puavo-gtk-greeter.desktop
 
 .PHONY : clean
 clean :
