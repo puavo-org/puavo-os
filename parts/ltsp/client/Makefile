@@ -165,7 +165,8 @@ install : installdirs
 		templates/etc/dbus-1/system.d/org.freedesktop.login1.conf
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/default \
-		templates/etc/default/nfs-common
+		templates/etc/default/nfs-common \
+		templates/etc/default/nfs-common-userprincipal
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/polkit-1/localauthority/50-local.d \
 		templates/etc/polkit-1/localauthority/50-local.d/90.org.freedesktop.networkmanager.deny_in_webkiosk_mode.pkla

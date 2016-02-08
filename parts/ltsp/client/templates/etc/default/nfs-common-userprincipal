@@ -17,3 +17,5 @@ NEED_IDMAPD=
 
 # Do you want to start the gssd daemon? It is required for Kerberos mounts.
 NEED_GSSD=yes
+
+RPCGSSDOPTS="-n"
