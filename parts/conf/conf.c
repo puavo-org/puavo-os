@@ -30,12 +30,12 @@
 #include <db.h>
 
 #include "conf.h"
-#include "db.h"
 
 /* TODO: 1MiB should be enough for 1+ key/value pairs, if not, please
  * implement dynamic buffer reallocation on when DB->get() returns
  * DB_BUFFER_SMALL. */
 static const size_t PUAVO_CONF_DEFAULT_DB_BATCH_SIZE = 1048576;
+static const char *const PUAVO_CONF_DEFAULT_DB_FILEPATH = DEFAULT_DB_FILEPATH;
 
 struct puavo_conf {
         DB *db;
@@ -103,7 +103,7 @@ err:
         return -1;
 }
 
-int puavo_conf_open_db(struct puavo_conf *const conf)
+static int puavo_conf_open_db(struct puavo_conf *const conf)
 {
         DB *db;
         char const *db_filepath;
@@ -170,7 +170,7 @@ int puavo_conf_open(struct puavo_conf *const conf)
         return -1;
 }
 
-int puavo_conf_close_db(struct puavo_conf *const conf)
+static int puavo_conf_close_db(struct puavo_conf *const conf)
 {
         int ret = 0;
 

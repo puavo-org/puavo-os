@@ -4,7 +4,6 @@
 #include <check.h>
 
 #include "../conf.h"
-#include "../db.h"
 
 static puavo_conf_t *conf;
 
@@ -74,7 +73,7 @@ START_TEST(test_empty_db_lock_conflict)
         puavo_conf_t *conf2;
         ck_assert_int_eq(0, puavo_conf_init(&conf2));
         ck_assert_ptr_ne(conf2, NULL);
-        ck_assert_int_ne(0, puavo_conf_open_db(conf2));
+        ck_assert_int_ne(0, puavo_conf_open(conf2));
         puavo_conf_free(conf2);
 }
 END_TEST
@@ -84,13 +83,13 @@ static void setup_empty_db()
         ck_assert_int_eq(0, puavo_conf_init(&conf));
         ck_assert_ptr_ne(conf, NULL);
         setenv("PUAVO_CONF_DB_FILEPATH", "test.db", 1);
-        ck_assert_int_eq(0, puavo_conf_open_db(conf));
+        ck_assert_int_eq(0, puavo_conf_open(conf));
         ck_assert_int_eq(0, puavo_conf_clear(conf));
 }
 
 static void teardown_empty_db()
 {
-        puavo_conf_close_db(conf);
+        puavo_conf_close(conf);
         puavo_conf_free(conf);
 }
 
