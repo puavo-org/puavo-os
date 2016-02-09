@@ -22,6 +22,13 @@
 
 typedef struct puavo_conf puavo_conf_t;
 
+struct puavo_conf_err {
+        int err;
+        int db_err;
+        int sys_err;
+        char msg[1024];
+};
+
 struct puavo_conf_list {
         char **keys;
         char **values;
