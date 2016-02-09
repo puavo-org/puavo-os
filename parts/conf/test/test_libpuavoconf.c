@@ -10,7 +10,7 @@ static puavo_conf_t *conf;
 
 START_TEST(test_empty_db_clear_empty)
 {
-        ck_assert_int_eq(0, puavo_conf_clear_db(conf));
+        ck_assert_int_eq(0, puavo_conf_clear(conf));
 }
 END_TEST
 
@@ -85,7 +85,7 @@ static void setup_empty_db()
         ck_assert_ptr_ne(conf, NULL);
         setenv("PUAVO_CONF_DB_FILEPATH", "test.db", 1);
         ck_assert_int_eq(0, puavo_conf_open_db(conf));
-        ck_assert_int_eq(0, puavo_conf_clear_db(conf));
+        ck_assert_int_eq(0, puavo_conf_clear(conf));
 }
 
 static void teardown_empty_db()

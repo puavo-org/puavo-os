@@ -436,7 +436,7 @@ out:
         return ret;
 }
 
-int puavo_conf_clear_db(struct puavo_conf *const conf)
+int puavo_conf_clear(struct puavo_conf *const conf)
 {
         unsigned int count;
 

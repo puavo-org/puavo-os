@@ -80,6 +80,15 @@ int puavo_conf_open(puavo_conf_t *conf);
 int puavo_conf_close(puavo_conf_t *conf);
 
 /**
+ * puavo_conf_clear() - remove all parameters
+ *
+ * @conf - initialized config object
+ *
+ * Return 0 on success and -1 on error.
+ */
+int puavo_conf_clear(puavo_conf_t *conf);
+
+/**
  * puavo_conf_set() - store a parameter
  *
  * @conf  - initialized config object

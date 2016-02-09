@@ -21,15 +21,6 @@
 static const char *const PUAVO_CONF_DEFAULT_DB_FILEPATH = DEFAULT_DB_FILEPATH;
 
 /**
- * puavo_conf_clear_db() - remove all parameters from the database
- *
- * @conf - initialized config object
- *
- * Return 0 on success and -1 on error.
- */
-int puavo_conf_clear_db(puavo_conf_t *conf);
-
-/**
  * puavo_conf_close_db() - close an open database
  *
  * @conf - initialized config object
