@@ -97,7 +97,7 @@ print_conf(puavo_conf_t *conf)
 
         ret = 0;
 
-        if (puavo_conf_get_list(conf, &list)) {
+        if (puavo_conf_get_all(conf, &list)) {
                 (void) fprintf(stderr,
                                "error: Failed to get parameter list: %s\n",
                                puavo_conf_errstr(conf));

@@ -113,7 +113,7 @@ int puavo_conf_set(puavo_conf_t *conf, char const *key, char const *value);
 int puavo_conf_get(puavo_conf_t *conf, char const *key, char **valuep);
 
 /**
- * puavo_conf_get_list() - get a list of all parameters
+ * puavo_conf_get_all() - get a list of all parameters
  *
  * @conf - initialized config object
  *
@@ -128,8 +128,8 @@ int puavo_conf_get(puavo_conf_t *conf, char const *key, char **valuep);
  *
  * Return 0 on success and -1 on error.
  */
-int puavo_conf_get_list(puavo_conf_t *conf,
-                        struct puavo_conf_list *list);
+int puavo_conf_get_all(puavo_conf_t *conf,
+                       struct puavo_conf_list *list);
 
 /**
  * puavo_conf_list_free() - free a parameter list

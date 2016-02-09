@@ -315,8 +315,8 @@ out:
         return ret;
 }
 
-int puavo_conf_get_list(struct puavo_conf *const conf,
-                        struct puavo_conf_list *const list)
+int puavo_conf_get_all(struct puavo_conf *const conf,
+                       struct puavo_conf_list *const list)
 {
         DBC *db_cursor = NULL;
         DBT db_null;
