@@ -19,6 +19,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/file.h>
@@ -52,6 +53,52 @@ enum PUAVO_CONF_ERR {
         PUAVO_CONF_ERR_SYS,
         PUAVO_CONF_ERRCOUNT
 };
+
+static void puavo_conf_err_set(struct puavo_conf_err *const errp,
+                              int const err,
+                              int const db_err,
+                              char const *const fmt,
+                              ...)
+{
+        char *msg;
+        va_list ap;
+
+        if (!errp)
+                return;
+
+        errp->err = err;
+        errp->db_err = db_err;
+        errp->sys_err = err == PUAVO_CONF_ERR_SYS ? errno : 0;
+
+        va_start(ap, fmt);
+        if (vasprintf(&msg, fmt, ap) == -1)
+                msg = NULL;
+        va_end(ap);
+
+        switch (errp->err) {
+        case 0:
+                snprintf(errp->msg, sizeof(errp->msg),
+                         "This ain't error: %s", msg ? msg : "");
+                break;
+        case PUAVO_CONF_ERR_SYS:
+                snprintf(errp->msg, sizeof(errp->msg),
+                         "%s: %s", msg ? msg : "",
+                         strerror(errp->sys_err));
+                break;
+        case PUAVO_CONF_ERR_DB:
+                snprintf(errp->msg, sizeof(errp->msg),
+                         "%s: %s", msg ? msg : "",
+                         db_strerror(errp->db_err));
+                break;
+        default:
+                snprintf(errp->msg, sizeof(errp->msg),
+                         "Unknown error %d: %s",
+                         errp->err, msg ? msg : "");
+                break;
+        }
+
+        free(msg);
+}
 
 int puavo_conf_init(struct puavo_conf **const confp)
 {
