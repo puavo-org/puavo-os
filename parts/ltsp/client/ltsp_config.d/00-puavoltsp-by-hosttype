@@ -181,7 +181,7 @@ case "$puavo_hosttype" in
     set_lts_var KEEP_SYSTEM_SERVICES "$puavo_tty_services"
     set_lts_var LDM_AUTOLOGIN        False
     set_lts_var LDM_DIRECTX          True
-    set_lts_var LDM_SESSION          'gnome-session --session=gnome-fallback'
+    set_lts_var LDM_SESSION          'gnome-session --session=gnome-flashback'
     set_lts_var LOCALDEV             True
     set_lts_var LTSP_FATCLIENT       False
     set_lts_var SCREEN_07            lightdm
