@@ -108,7 +108,7 @@ static int puavo_conf_init(struct puavo_conf **const confp,
 
         *confp = conf;
 
-        return PUAVO_CONF_ERRNUM_SUCCESS;
+        return 0;
 }
 
 static int puavo_conf_open_socket(struct puavo_conf *const conf,
@@ -138,7 +138,7 @@ static int puavo_conf_open_socket(struct puavo_conf *const conf,
         }
 
         conf->confd_socket = confd_socket;
-        return PUAVO_CONF_ERRNUM_SUCCESS;
+        return 0;
 err:
         /* Errors ignored, because we have already failed. */
         (void) close(confd_socket);
@@ -205,7 +205,7 @@ static int puavo_conf_open_db(struct puavo_conf *const conf,
 
         conf->lock_fd = lock_fd;
         conf->db = db;
-        return PUAVO_CONF_ERRNUM_SUCCESS;
+        return 0;
 err:
         free(lock_filepath);
 
@@ -224,7 +224,7 @@ int puavo_conf_open(struct puavo_conf **const confp,
         if (puavo_conf_init(confp, errp))
                 return -1;
         /* if (!puavo_conf_open_socket(*confp, errp)) */
-        /*         return PUAVO_CONF_ERRNUM_SUCCESS; */
+        /*         return 0; */
 
         return puavo_conf_open_db(*confp, errp);
 }
@@ -522,5 +522,5 @@ int puavo_conf_clear(struct puavo_conf *const conf,
                 return -1;
         }
 
-        return PUAVO_CONF_ERRNUM_SUCCESS;
+        return 0;
 }
