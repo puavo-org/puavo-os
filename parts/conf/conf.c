@@ -535,42 +535,6 @@ int puavo_conf_clear(struct puavo_conf *const conf,
         return 0;
 }
 
-char const *puavo_conf_errstr(struct puavo_conf *const conf)
-{
-        if (conf->errstr) {
-                free(conf->errstr);
-                conf->errstr = NULL;
-        }
-
-        switch (conf->err) {
-        case 0:
-                break;
-        case PUAVO_CONF_ERR_SYS:
-                if (asprintf(&conf->errstr, "System error: %s",
-                             strerror(conf->sys_err)) == -1) {
-                        conf->errstr = NULL;
-                        return "System error";
-                }
-                break;
-        case PUAVO_CONF_ERR_DB:
-                if (asprintf(&conf->errstr, "Database error: %s",
-                             db_strerror(conf->db_err)) == -1) {
-                        conf->errstr = NULL;
-                        return "Database error";
-                }
-                break;
-        default:
-                if (asprintf(&conf->errstr, "Unknown error: %d",
-                             conf->err)) {
-                        conf->errstr = NULL;
-                        return "Unknown error";
-                }
-                break;
-        }
-
-        return conf->errstr;
-}
-
 void puavo_conf_list_free(struct puavo_conf *const conf __attribute__((unused)),
                           struct puavo_conf_list *const list)
 {

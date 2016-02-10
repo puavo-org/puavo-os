@@ -164,14 +164,4 @@ int puavo_conf_get_all(puavo_conf_t *conf,
 void puavo_conf_list_free(puavo_conf_t *conf,
                           struct puavo_conf_list *list);
 
-/**
- * puavo_conf_errstr() - get string describing the error of the last API call
- *
- * @conf - initialized config object
- *
- * Return a NUL-terminated string constant describing the error of the
- * last API call, or NULL if no error has been encountered.
- */
-char const *puavo_conf_errstr(struct puavo_conf *conf);
-
 #endif /* CONF_H */
