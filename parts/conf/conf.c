@@ -323,11 +323,13 @@ out:
 }
 
 int puavo_conf_set(struct puavo_conf *const conf,
-                   char const *const key, char const *const value)
+                   char const *const key, char const *const value,
+                   struct puavo_conf_err *errp)
 {
         DBT db_key;
         DBT db_value;
         int ret = -1;
+        int db_err;
 
         memset(&db_key, 0, sizeof(DBT));
         memset(&db_value, 0, sizeof(DBT));
@@ -335,22 +337,23 @@ int puavo_conf_set(struct puavo_conf *const conf,
         db_key.size = strlen(key) + 1;
         db_key.data = strdup(key);
         if (!db_key.data) {
-                conf->sys_err = errno;
-                conf->err = PUAVO_CONF_ERR_SYS;
+                puavo_conf_err_set(errp, PUAVO_CONF_ERR_SYS, 0,
+                                   "Failed to set parameter");
                 goto out;
         }
 
         db_value.size = strlen(value) + 1;
         db_value.data = strdup(value);
         if (!db_value.data) {
-                conf->sys_err = errno;
-                conf->err = PUAVO_CONF_ERR_SYS;
+                puavo_conf_err_set(errp, PUAVO_CONF_ERR_SYS, 0,
+                                   "Failed to set parameter");
                 goto out;
         }
 
-        conf->db_err = conf->db->put(conf->db, NULL, &db_key, &db_value, 0);
-        if (conf->db_err) {
-                conf->err = PUAVO_CONF_ERR_DB;
+        db_err = conf->db->put(conf->db, NULL, &db_key, &db_value, 0);
+        if (db_err) {
+                puavo_conf_err_set(errp, PUAVO_CONF_ERR_DB, db_err,
+                                   "Failed to set parameter");
                 goto out;
         }
 

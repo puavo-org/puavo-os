@@ -110,12 +110,18 @@ int puavo_conf_clear(puavo_conf_t *conf,
  *
  * @value - NUL-terminated string constant
  *
+ * @errp  - pointer to an error struct or NULL
+ *
  * If @key already exists in the config backend, the value is
  * overwritten.
  *
+ * If @errp is not NULL and an error is encountered, the error struct
+ * pointed by @errp is filled to convey error details.
+ *
  * Return 0 on success and -1 on error.
  */
-int puavo_conf_set(puavo_conf_t *conf, char const *key, char const *value);
+int puavo_conf_set(puavo_conf_t *conf, char const *key, char const *value,
+                   struct puavo_conf_err *errp);
 
 /**
  * puavo_conf_get() - get a parameter value

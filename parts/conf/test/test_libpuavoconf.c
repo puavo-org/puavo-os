@@ -34,12 +34,12 @@ START_TEST(test_empty_db_set_same_twice_and_get)
 {
         char *value;
 
-        ck_assert_int_eq(0, puavo_conf_set(conf, "somekey", "someval1"));
+        ck_assert_int_eq(0, puavo_conf_set(conf, "somekey", "someval1", NULL));
         ck_assert_int_eq(0, puavo_conf_get(conf, "somekey", &value));
         ck_assert_str_eq("someval1", value);
         free(value);
 
-        ck_assert_int_eq(0, puavo_conf_set(conf, "somekey", "someval2"));
+        ck_assert_int_eq(0, puavo_conf_set(conf, "somekey", "someval2", NULL));
         ck_assert_int_eq(0, puavo_conf_get(conf, "somekey", &value));
         ck_assert_str_eq("someval2", value);
         free(value);
@@ -50,9 +50,9 @@ START_TEST(test_empty_db_set_many_and_get_all)
 {
         struct puavo_conf_list list;
 
-        ck_assert_int_eq(0, puavo_conf_set(conf, "somekey1", "someval1"));
-        ck_assert_int_eq(0, puavo_conf_set(conf, "somekey2", "someval2"));
-        ck_assert_int_eq(0, puavo_conf_set(conf, "somekey3", "someval3"));
+        ck_assert_int_eq(0, puavo_conf_set(conf, "somekey1", "someval1", NULL));
+        ck_assert_int_eq(0, puavo_conf_set(conf, "somekey2", "someval2", NULL));
+        ck_assert_int_eq(0, puavo_conf_set(conf, "somekey3", "someval3", NULL));
 
         ck_assert_int_eq(0, puavo_conf_get_all(conf, &list));
         ck_assert(list.length == 3);

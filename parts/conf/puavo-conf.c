@@ -26,6 +26,7 @@ int     print_conf(puavo_conf_t *);
 int main(int argc, char *argv[])
 {
         puavo_conf_t *conf;
+        struct puavo_conf_err err;
         char *returned_value;
         int ret;
 
@@ -63,12 +64,12 @@ int main(int argc, char *argv[])
                 if (ret < 0)
                         return 1;
         } else if (argc == 3) {
-                if (puavo_conf_set(conf, argv[1], argv[2]) == -1) {
+                if (puavo_conf_set(conf, argv[1], argv[2], &err) == -1) {
                         (void) fprintf(stderr,
-                                       "error: Failed to set '%s' to '%s': %s\n",
+                                       "Error: Failed to set '%s' to '%s': %s\n",
                                        argv[1],
                                        argv[2],
-                                       puavo_conf_errstr(conf));
+                                       err.msg);
                         (void) puavo_conf_close(conf);
                         puavo_conf_free(conf);
                         return 1;
