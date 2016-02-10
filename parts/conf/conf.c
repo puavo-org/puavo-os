@@ -524,20 +524,3 @@ int puavo_conf_clear(struct puavo_conf *const conf,
 
         return PUAVO_CONF_ERRNUM_SUCCESS;
 }
-
-void puavo_conf_list_free(struct puavo_conf *const conf __attribute__((unused)),
-                          struct puavo_conf_list *const list)
-{
-        size_t i;
-
-        for (i = 0; i < list->length; ++i) {
-                free(list->keys[i]);
-                free(list->values[i]);
-        }
-        free(list->keys);
-        free(list->values);
-
-        list->keys = NULL;
-        list->values = NULL;
-        list->length = 0;
-}

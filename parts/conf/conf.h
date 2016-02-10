@@ -34,12 +34,6 @@ struct puavo_conf_err {
         char msg[1024];
 };
 
-struct puavo_conf_list {
-        char **keys;
-        char **values;
-        size_t length;
-};
-
 /**
  * puavo_conf_open() - open a config backend
  *
@@ -137,6 +131,12 @@ int puavo_conf_set(puavo_conf_t *conf, char const *key, char const *value,
 int puavo_conf_get(puavo_conf_t *conf, char const *key, char **valuep,
                    struct puavo_conf_err *errp);
 
+struct puavo_conf_list {
+        char **keys;
+        char **values;
+        size_t length;
+};
+
 /**
  * puavo_conf_get_all() - get a list of all parameters
  *
@@ -162,11 +162,22 @@ int puavo_conf_get_all(puavo_conf_t *conf,
 /**
  * puavo_conf_list_free() - free a parameter list
  *
- * @conf - initialized config object
- *
  * @list - initialized parameter list
  */
-void puavo_conf_list_free(puavo_conf_t *conf,
-                          struct puavo_conf_list *list);
+static inline void puavo_conf_list_free(struct puavo_conf_list *const list)
+{
+        size_t i;
+
+        for (i = 0; i < list->length; ++i) {
+                free(list->keys[i]);
+                free(list->values[i]);
+        }
+        free(list->keys);
+        free(list->values);
+
+        list->keys = NULL;
+        list->values = NULL;
+        list->length = 0;
+}
 
 #endif /* CONF_H */

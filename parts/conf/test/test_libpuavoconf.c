@@ -64,7 +64,7 @@ START_TEST(test_empty_db_set_many_and_get_all)
         ck_assert_str_eq(list.values[1], "someval2");
         ck_assert_str_eq(list.values[2], "someval3");
 
-        puavo_conf_list_free(conf, &list);
+        puavo_conf_list_free(&list);
 }
 END_TEST
 

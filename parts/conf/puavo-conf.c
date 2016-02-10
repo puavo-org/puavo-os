@@ -115,7 +115,7 @@ print_conf(puavo_conf_t *conf)
                 }
         }
 
-        puavo_conf_list_free(conf, &list);
+        puavo_conf_list_free(&list);
 
         return ret;
 }
