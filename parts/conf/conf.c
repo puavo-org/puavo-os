@@ -483,14 +483,16 @@ out:
         return ret;
 }
 
-int puavo_conf_clear(struct puavo_conf *const conf)
+int puavo_conf_clear(struct puavo_conf *const conf,
+                     struct puavo_conf_err *errp)
 {
+        int db_err;
         unsigned int count;
 
-        conf->db_err = conf->db->truncate(conf->db, NULL, &count, 0);
-        if (conf->db_err) {
-                conf->sys_err = errno;
-                conf->err = PUAVO_CONF_ERR_DB;
+        db_err = conf->db->truncate(conf->db, NULL, &count, 0);
+        if (db_err) {
+                puavo_conf_err_set(errp, PUAVO_CONF_ERR_DB, db_err,
+                                   "Failed to clear parameters");
                 return -1;
         }
 

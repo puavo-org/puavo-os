@@ -91,9 +91,15 @@ int puavo_conf_close(puavo_conf_t *conf);
  *
  * @conf - initialized config object
  *
+ * @errp - pointer to an error struct or NULL
+ *
+ * If @errp is not NULL and an error is encountered, the error struct
+ * pointed by @errp is filled to convey error details.
+ *
  * Return 0 on success and -1 on error.
  */
-int puavo_conf_clear(puavo_conf_t *conf);
+int puavo_conf_clear(puavo_conf_t *conf,
+                     struct puavo_conf_err *errp);
 
 /**
  * puavo_conf_set() - store a parameter
