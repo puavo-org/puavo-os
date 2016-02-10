@@ -23,7 +23,12 @@
 typedef struct puavo_conf puavo_conf_t;
 
 struct puavo_conf_err {
-        int errnum;
+        enum {
+                PUAVO_CONF_ERRNUM_SUCCESS,
+                PUAVO_CONF_ERRNUM_DB,
+                PUAVO_CONF_ERRNUM_SYS,
+                PUAVO_CONF_ERRNUMCOUNT
+        } errnum;
         int db_error;
         int sys_errno;
         char msg[1024];

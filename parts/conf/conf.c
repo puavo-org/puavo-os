@@ -44,12 +44,6 @@ struct puavo_conf {
         int lock_fd;
 };
 
-enum PUAVO_CONF_ERRNUM {
-        PUAVO_CONF_ERRNUM_DB = 1,
-        PUAVO_CONF_ERRNUM_SYS,
-        PUAVO_CONF_ERRNUMCOUNT
-};
-
 static void puavo_conf_err_set(struct puavo_conf_err *const errp,
                               int const errnum,
                               int const db_error,
@@ -72,7 +66,7 @@ static void puavo_conf_err_set(struct puavo_conf_err *const errp,
         va_end(ap);
 
         switch (errp->errnum) {
-        case 0:
+        case PUAVO_CONF_ERRNUM_SUCCESS:
                 snprintf(errp->msg, sizeof(errp->msg),
                          "This ain't error: %s", msg ? msg : "");
                 break;
@@ -114,7 +108,7 @@ static int puavo_conf_init(struct puavo_conf **const confp,
 
         *confp = conf;
 
-        return 0;
+        return PUAVO_CONF_ERRNUM_SUCCESS;
 }
 
 static int puavo_conf_open_socket(struct puavo_conf *const conf,
@@ -144,7 +138,7 @@ static int puavo_conf_open_socket(struct puavo_conf *const conf,
         }
 
         conf->confd_socket = confd_socket;
-        return 0;
+        return PUAVO_CONF_ERRNUM_SUCCESS;
 err:
         /* Errors ignored, because we have already failed. */
         (void) close(confd_socket);
@@ -211,7 +205,7 @@ static int puavo_conf_open_db(struct puavo_conf *const conf,
 
         conf->lock_fd = lock_fd;
         conf->db = db;
-        return 0;
+        return PUAVO_CONF_ERRNUM_SUCCESS;
 err:
         free(lock_filepath);
 
@@ -230,7 +224,7 @@ int puavo_conf_open(struct puavo_conf **const confp,
         if (puavo_conf_init(confp, errp))
                 return -1;
         /* if (!puavo_conf_open_socket(*confp, errp)) */
-        /*         return 0; */
+        /*         return PUAVO_CONF_ERRNUM_SUCCESS; */
 
         return puavo_conf_open_db(*confp, errp);
 }
@@ -528,7 +522,7 @@ int puavo_conf_clear(struct puavo_conf *const conf,
                 return -1;
         }
 
-        return 0;
+        return PUAVO_CONF_ERRNUM_SUCCESS;
 }
 
 void puavo_conf_list_free(struct puavo_conf *const conf __attribute__((unused)),
