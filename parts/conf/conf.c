@@ -44,10 +44,10 @@ struct puavo_conf {
         int lock_fd;
 };
 
-enum PUAVO_CONF_ERR {
-        PUAVO_CONF_ERR_DB = 1,
-        PUAVO_CONF_ERR_SYS,
-        PUAVO_CONF_ERRCOUNT
+enum PUAVO_CONF_ERRNUM {
+        PUAVO_CONF_ERRNUM_DB = 1,
+        PUAVO_CONF_ERRNUM_SYS,
+        PUAVO_CONF_ERRNUMCOUNT
 };
 
 static void puavo_conf_err_set(struct puavo_conf_err *const errp,
@@ -64,7 +64,7 @@ static void puavo_conf_err_set(struct puavo_conf_err *const errp,
 
         errp->errnum = errnum;
         errp->db_errnum = db_errnum;
-        errp->sys_errnum = errnum == PUAVO_CONF_ERR_SYS ? errno : 0;
+        errp->sys_errnum = errnum == PUAVO_CONF_ERRNUM_SYS ? errno : 0;
 
         va_start(ap, fmt);
         if (vasprintf(&msg, fmt, ap) == -1)
@@ -76,12 +76,12 @@ static void puavo_conf_err_set(struct puavo_conf_err *const errp,
                 snprintf(errp->msg, sizeof(errp->msg),
                          "This ain't error: %s", msg ? msg : "");
                 break;
-        case PUAVO_CONF_ERR_SYS:
+        case PUAVO_CONF_ERRNUM_SYS:
                 snprintf(errp->msg, sizeof(errp->msg),
                          "%s: %s", msg ? msg : "",
                          strerror(errp->sys_errnum));
                 break;
-        case PUAVO_CONF_ERR_DB:
+        case PUAVO_CONF_ERRNUM_DB:
                 snprintf(errp->msg, sizeof(errp->msg),
                          "%s: %s", msg ? msg : "",
                          db_strerror(errp->db_errnum));
@@ -103,7 +103,7 @@ static int puavo_conf_init(struct puavo_conf **const confp,
 
         conf = (struct puavo_conf *) malloc(sizeof(struct puavo_conf));
         if (!conf) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERR_SYS, 0,
+                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_SYS, 0,
                                    "Failed to allocate memory for a config object");
                 return -1;
         }
@@ -125,7 +125,7 @@ static int puavo_conf_open_socket(struct puavo_conf *const conf,
 
         confd_socket = socket(AF_UNIX, SOCK_STREAM, 0);
         if (confd_socket < 0) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERR_SYS, 0,
+                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_SYS, 0,
                                    "Failed to create a local socket");
                 goto err;
         }
@@ -137,7 +137,7 @@ static int puavo_conf_open_socket(struct puavo_conf *const conf,
 
         if (connect(confd_socket, (struct sockaddr *) &sockaddr,
                     sizeof(struct sockaddr_un))) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERR_SYS, 0,
+                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_SYS, 0,
                                    "Failed to connect the socket to %s",
                                    sockaddr.sun_path);
                 goto err;
@@ -166,7 +166,7 @@ static int puavo_conf_open_db(struct puavo_conf *const conf,
                 db_filepath = PUAVO_CONF_DEFAULT_DB_FILEPATH;
 
         if (asprintf(&lock_filepath, "%s.lock", db_filepath) == -1) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERR_SYS, 0,
+                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_SYS, 0,
                                    "Failed to allocate memory for a db lock "
                                    "file path string");
                 lock_filepath = NULL;
@@ -175,7 +175,7 @@ static int puavo_conf_open_db(struct puavo_conf *const conf,
 
         lock_fd = open(lock_filepath, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
         if (lock_fd == -1) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERR_SYS, 0,
+                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_SYS, 0,
                                    "Failed to open the db lock file '%s'",
                                    lock_filepath);
                 goto err;
@@ -185,7 +185,7 @@ static int puavo_conf_open_db(struct puavo_conf *const conf,
         lock_filepath = NULL;
 
         if (flock(lock_fd, LOCK_EX | LOCK_NB) == -1) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERR_SYS, 0,
+                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_SYS, 0,
                                    "Failed to lock the db lock file '%s'",
                                    lock_filepath);
                 goto err;
@@ -193,7 +193,7 @@ static int puavo_conf_open_db(struct puavo_conf *const conf,
 
         db_errnum = db_create(&db, NULL, 0);
         if (db_errnum) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERR_DB, db_errnum,
+                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DB, db_errnum,
                                    "Failed to create a db object");
                 db = NULL;
                 goto err;
@@ -203,7 +203,7 @@ static int puavo_conf_open_db(struct puavo_conf *const conf,
         db_errnum = db->open(db, NULL, db_filepath,
                           NULL, DB_BTREE, DB_CREATE, 0600);
         if (db_errnum) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERR_DB, db_errnum,
+                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DB, db_errnum,
                                    "Failed to open the db file '%s'",
                                    db_filepath);
                 goto err;
@@ -244,12 +244,12 @@ static int puavo_conf_close_db(struct puavo_conf *const conf,
         db_errnum = conf->db->close(conf->db, 0);
         conf->db = NULL;
         if (db_errnum) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERR_DB, db_errnum,
+                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DB, db_errnum,
                                    "Failed to close the db");
                 ret = -1;
         }
         if (close(conf->lock_fd) == -1 && !ret) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERR_SYS, 0,
+                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_SYS, 0,
                                    "Failed to close the db lock file");
                 ret = -1;
         }
@@ -264,7 +264,7 @@ static int puavo_conf_close_socket(struct puavo_conf *const conf,
         int ret = 0;
 
         if (close(conf->confd_socket)) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERR_SYS, 0,
+                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_SYS, 0,
                                    "Failed to close a socket");
                 ret = -1;
         }
@@ -305,7 +305,7 @@ int puavo_conf_get(struct puavo_conf *const conf,
         db_key.size = strlen(key) + 1;
         db_key.data = strdup(key);
         if (!db_key.data) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERR_SYS, 0,
+                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_SYS, 0,
                                    "Failed to allocate memory for a db key '%s'",
                                    key);
                 goto out;
@@ -315,7 +315,7 @@ int puavo_conf_get(struct puavo_conf *const conf,
 
         db_errnum = conf->db->get(conf->db, NULL, &db_key, &db_value, 0);
         if (db_errnum) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERR_DB, db_errnum,
+                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DB, db_errnum,
                                    "Failed to get a value from the db for a key '%s'",
                                    key);
                 goto out;
@@ -324,14 +324,14 @@ int puavo_conf_get(struct puavo_conf *const conf,
         if (db_value.size == 0) {
                 value = calloc(1, sizeof(char));
                 if (!value) {
-                        puavo_conf_err_set(errp, PUAVO_CONF_ERR_SYS, 0,
+                        puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_SYS, 0,
                                            "Failed to allocate memory for the value of parameter '%s'", key);
                         goto out;
                 }
         } else {
                 value = strndup(db_value.data, db_value.size);
                 if (!value) {
-                        puavo_conf_err_set(errp, PUAVO_CONF_ERR_SYS, 0,
+                        puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_SYS, 0,
                                            "Failed to allocate memory for the value of parameter '%s'", key);
                         goto out;
                 }
@@ -362,7 +362,7 @@ int puavo_conf_set(struct puavo_conf *const conf,
         db_key.size = strlen(key) + 1;
         db_key.data = strdup(key);
         if (!db_key.data) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERR_SYS, 0,
+                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_SYS, 0,
                                    "Failed to set parameter");
                 goto out;
         }
@@ -370,14 +370,14 @@ int puavo_conf_set(struct puavo_conf *const conf,
         db_value.size = strlen(value) + 1;
         db_value.data = strdup(value);
         if (!db_value.data) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERR_SYS, 0,
+                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_SYS, 0,
                                    "Failed to set parameter");
                 goto out;
         }
 
         db_errnum = conf->db->put(conf->db, NULL, &db_key, &db_value, 0);
         if (db_errnum) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERR_DB, db_errnum,
+                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DB, db_errnum,
                                    "Failed to set parameter");
                 goto out;
         }
@@ -410,7 +410,7 @@ int puavo_conf_get_all(struct puavo_conf *const conf,
         db_batch.ulen  = PUAVO_CONF_DEFAULT_DB_BATCH_SIZE;
         db_batch.data  = malloc(db_batch.ulen);
         if (!db_batch.data) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERR_SYS, 0,
+                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_SYS, 0,
                                    "Failed to get all parameters");
                 goto out;
         }
@@ -418,7 +418,7 @@ int puavo_conf_get_all(struct puavo_conf *const conf,
         db_errnum = conf->db->cursor(conf->db, NULL, &db_cursor, 0);
         if (db_errnum) {
                 db_cursor = NULL;
-                puavo_conf_err_set(errp, PUAVO_CONF_ERR_DB, db_errnum,
+                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DB, db_errnum,
                                    "Failed to get all parameters");
                 goto out;
         }
@@ -437,7 +437,7 @@ int puavo_conf_get_all(struct puavo_conf *const conf,
                         ret = 0;
                         goto out;
                 default:
-                        puavo_conf_err_set(errp, PUAVO_CONF_ERR_DB, db_errnum,
+                        puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DB, db_errnum,
                                            "Failed to get all parameters");
                         goto out;
                 }
@@ -460,7 +460,7 @@ int puavo_conf_get_all(struct puavo_conf *const conf,
                         new_keys = realloc(keys,
                                            sizeof(char *) * (length + 1));
                         if (!new_keys) {
-                                puavo_conf_err_set(errp, PUAVO_CONF_ERR_SYS, 0,
+                                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_SYS, 0,
                                                    "Failed to get all parameters");
                                 goto out;
                         }
@@ -469,7 +469,7 @@ int puavo_conf_get_all(struct puavo_conf *const conf,
                         new_values = realloc(values,
                                            sizeof(char *) * (length + 1));
                         if (!new_values) {
-                                puavo_conf_err_set(errp, PUAVO_CONF_ERR_SYS, 0,
+                                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_SYS, 0,
                                                    "Failed to get all parameters");
                                 goto out;
                         }
@@ -490,7 +490,7 @@ out:
                  * cleaning up without any earlier errors. */
                 if (!ret && db_errnum) {
                         ret = -1;
-                        puavo_conf_err_set(errp, PUAVO_CONF_ERR_DB, db_errnum,
+                        puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DB, db_errnum,
                                            "Failed to get all parameters");
                 }
         }
@@ -523,7 +523,7 @@ int puavo_conf_clear(struct puavo_conf *const conf,
 
         db_errnum = conf->db->truncate(conf->db, NULL, &count, 0);
         if (db_errnum) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERR_DB, db_errnum,
+                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DB, db_errnum,
                                    "Failed to clear parameters");
                 return -1;
         }
