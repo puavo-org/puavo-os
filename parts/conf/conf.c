@@ -270,12 +270,14 @@ void puavo_conf_free(struct puavo_conf *conf)
 }
 
 int puavo_conf_get(struct puavo_conf *const conf,
-                   char const *const key, char **const valuep)
+                   char const *const key, char **const valuep,
+                   struct puavo_conf_err *errp)
 {
         DBT db_key;
         DBT db_value;
         char *value;
         int ret = -1;
+        int db_err;
 
         memset(&db_key, 0, sizeof(DBT));
         memset(&db_value, 0, sizeof(DBT));
@@ -283,31 +285,34 @@ int puavo_conf_get(struct puavo_conf *const conf,
         db_key.size = strlen(key) + 1;
         db_key.data = strdup(key);
         if (!db_key.data) {
-                conf->sys_err = errno;
-                conf->err = PUAVO_CONF_ERR_SYS;
+                puavo_conf_err_set(errp, PUAVO_CONF_ERR_SYS, 0,
+                                   "Failed to allocate memory for a db key '%s'",
+                                   key);
                 goto out;
         }
 
         db_value.flags = DB_DBT_MALLOC;
 
-        conf->db_err = conf->db->get(conf->db, NULL, &db_key, &db_value, 0);
-        if (conf->db_err) {
-                conf->err = PUAVO_CONF_ERR_DB;
+        db_err = conf->db->get(conf->db, NULL, &db_key, &db_value, 0);
+        if (db_err) {
+                puavo_conf_err_set(errp, PUAVO_CONF_ERR_DB, db_err,
+                                   "Failed to get a value from the db for a key '%s'",
+                                   key);
                 goto out;
         }
 
         if (db_value.size == 0) {
                 value = calloc(1, sizeof(char));
                 if (!value) {
-                        conf->sys_err = errno;
-                        conf->err = PUAVO_CONF_ERR_SYS;
+                        puavo_conf_err_set(errp, PUAVO_CONF_ERR_SYS, 0,
+                                           "Failed to allocate memory for the value of parameter '%s'", key);
                         goto out;
                 }
         } else {
                 value = strndup(db_value.data, db_value.size);
                 if (!value) {
-                        conf->sys_err = errno;
-                        conf->err = PUAVO_CONF_ERR_SYS;
+                        puavo_conf_err_set(errp, PUAVO_CONF_ERR_SYS, 0,
+                                           "Failed to allocate memory for the value of parameter '%s'", key);
                         goto out;
                 }
         }

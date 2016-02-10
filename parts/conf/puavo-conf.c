@@ -50,11 +50,11 @@ int main(int argc, char *argv[])
                 if (ret == -1)
                         return 1;
         } else if (argc == 2) {
-                if (puavo_conf_get(conf, argv[1], &returned_value)) {
+                if (puavo_conf_get(conf, argv[1], &returned_value, &err)) {
                         (void) fprintf(stderr,
-                                       "error: Failed to get '%s': %s\n",
+                                       "Error: Failed to get '%s': %s\n",
                                        argv[1],
-                                       puavo_conf_errstr(conf));
+                                       err.msg);
                         (void) puavo_conf_close(conf);
                         puavo_conf_free(conf);
                         return 1;

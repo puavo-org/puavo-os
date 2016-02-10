@@ -132,13 +132,19 @@ int puavo_conf_set(puavo_conf_t *conf, char const *key, char const *value,
  *
  * @valuep - pointer to an uninitialized string
  *
+ * @errp  - pointer to an error struct or NULL
+ *
  * After a successful call, @valuep points to a heap-allocated
  * NUL-terminated string value for @key. The caller is responsible for
  * calling free() on the string afterwards.
  *
+ * If @errp is not NULL and an error is encountered, the error struct
+ * pointed by @errp is filled to convey error details.
+ *
  * Return 0 on success and -1 on error.
  */
-int puavo_conf_get(puavo_conf_t *conf, char const *key, char **valuep);
+int puavo_conf_get(puavo_conf_t *conf, char const *key, char **valuep,
+                   struct puavo_conf_err *errp);
 
 /**
  * puavo_conf_get_all() - get a list of all parameters

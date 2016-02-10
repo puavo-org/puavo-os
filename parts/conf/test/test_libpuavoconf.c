@@ -17,7 +17,7 @@ START_TEST(test_empty_db_get_from_empty)
 {
         char *value;
 
-        ck_assert_int_ne(0, puavo_conf_get(conf, "somekey", &value));
+        ck_assert_int_ne(0, puavo_conf_get(conf, "somekey", &value, NULL));
 }
 END_TEST
 
@@ -35,12 +35,12 @@ START_TEST(test_empty_db_set_same_twice_and_get)
         char *value;
 
         ck_assert_int_eq(0, puavo_conf_set(conf, "somekey", "someval1", NULL));
-        ck_assert_int_eq(0, puavo_conf_get(conf, "somekey", &value));
+        ck_assert_int_eq(0, puavo_conf_get(conf, "somekey", &value, NULL));
         ck_assert_str_eq("someval1", value);
         free(value);
 
         ck_assert_int_eq(0, puavo_conf_set(conf, "somekey", "someval2", NULL));
-        ck_assert_int_eq(0, puavo_conf_get(conf, "somekey", &value));
+        ck_assert_int_eq(0, puavo_conf_get(conf, "somekey", &value, NULL));
         ck_assert_str_eq("someval2", value);
         free(value);
 }
