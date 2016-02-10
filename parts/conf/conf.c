@@ -64,7 +64,7 @@ static void puavo_conf_err_set(struct puavo_conf_err *const errp,
 
         errp->errnum = errnum;
         errp->db_error = db_error;
-        errp->sys_errnum = errnum == PUAVO_CONF_ERRNUM_SYS ? errno : 0;
+        errp->sys_errno = errnum == PUAVO_CONF_ERRNUM_SYS ? errno : 0;
 
         va_start(ap, fmt);
         if (vasprintf(&msg, fmt, ap) == -1)
@@ -79,7 +79,7 @@ static void puavo_conf_err_set(struct puavo_conf_err *const errp,
         case PUAVO_CONF_ERRNUM_SYS:
                 snprintf(errp->msg, sizeof(errp->msg),
                          "%s: %s", msg ? msg : "",
-                         strerror(errp->sys_errnum));
+                         strerror(errp->sys_errno));
                 break;
         case PUAVO_CONF_ERRNUM_DB:
                 snprintf(errp->msg, sizeof(errp->msg),
