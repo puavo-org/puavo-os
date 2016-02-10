@@ -30,18 +30,10 @@ int main(int argc, char *argv[])
         char *returned_value;
         int ret;
 
-        if (puavo_conf_init(&conf)) {
+        if (puavo_conf_open(&conf, &err)) {
                 (void) fprintf(stderr,
-                               "error: Failed to init config object: %s\n",
-                               puavo_conf_errstr(conf));
-                return 1;
-        }
-
-        if (puavo_conf_open(conf)) {
-                (void) fprintf(stderr,
-                               "error: Failed to open config backend: %s\n",
-                               puavo_conf_errstr(conf));
-                puavo_conf_free(conf);
+                               "Error: Failed to open config backend: %s\n",
+                               err.msg);
                 return 1;
         }
 
@@ -55,8 +47,7 @@ int main(int argc, char *argv[])
                                        "Error: Failed to get '%s': %s\n",
                                        argv[1],
                                        err.msg);
-                        (void) puavo_conf_close(conf);
-                        puavo_conf_free(conf);
+                        (void) puavo_conf_close(conf, NULL);
                         return 1;
                 }
                 ret = printf("%s\n", returned_value);
@@ -70,8 +61,7 @@ int main(int argc, char *argv[])
                                        argv[1],
                                        argv[2],
                                        err.msg);
-                        (void) puavo_conf_close(conf);
-                        puavo_conf_free(conf);
+                        (void) puavo_conf_close(conf, NULL);
                         return 1;
                 }
         } else {
@@ -79,12 +69,10 @@ int main(int argc, char *argv[])
                 return 1;
         }
 
-        if (puavo_conf_close(conf) == -1)
+        if (puavo_conf_close(conf, &err) == -1)
                 (void) fprintf(stderr,
-                               "error: Failed to close config backend: %s\n",
-                               puavo_conf_errstr(conf));
-
-        puavo_conf_free(conf);
+                               "Error: Failed to close config backend: %s\n",
+                               err.msg);
 
         return 0;
 }

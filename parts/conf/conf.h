@@ -36,55 +36,41 @@ struct puavo_conf_list {
 };
 
 /**
- * puavo_conf_init() - initialize a config object
- *
- * @confp - pointer to an uninitialized config object
- *
- * After a successful call, an initialized config object is allocated on
- * the heap and its address is returned via @confp. The caller is
- * responsible for calling puavo_conf_free() on the config object
- * afterwards.
- *
- * On error, all resources allocated by puavo_conf_init() are freed
- * automatically.
- *
- * Return 0 on success and -1 on error.
- */
-int puavo_conf_init(puavo_conf_t **confp);
-
-/**
- * puavo_conf_free() - free an initialized config object
- *
- * @conf - initialized config object
- *
- * Calling puavo_conf_free() multiple times on the same object is a
- * programming error and leads to undefined behavior.
- */
-void puavo_conf_free(puavo_conf_t *conf);
-
-/**
  * puavo_conf_open() - open a config backend
  *
  * @conf - initialized config object
  *
+ * @errp - pointer to an error struct or NULL
+ *
  * After a successful call, the caller is responsible for calling
  * puavo_conf_close().
  *
+ * If @errp is not NULL and an error is encountered, the error struct
+ * pointed by @errp is filled to convey error details.
+ *
  * Return 0 on success and -1 on error.
  */
-int puavo_conf_open(puavo_conf_t *conf);
+int puavo_conf_open(puavo_conf_t **confp,
+                    struct puavo_conf_err *errp);
 
 /**
  * puavo_conf_close() - close a config backend
  *
  * @conf - initialized config object
  *
- * This function must be called to ensure all config operations get
- * finished and all resources get released properly.
+ * @errp - pointer to an error struct or NULL
+ *
+ * This function must be called on every succesfully opened config
+ * backend object to ensure all config operations get finished and all
+ * resources get released properly.
+ *
+ * If @errp is not NULL and an error is encountered, the error struct
+ * pointed by @errp is filled to convey error details.
  *
  * Return 0 on success and -1 on error.
  */
-int puavo_conf_close(puavo_conf_t *conf);
+int puavo_conf_close(puavo_conf_t *conf,
+                     struct puavo_conf_err *errp);
 
 /**
  * puavo_conf_clear() - remove all parameters

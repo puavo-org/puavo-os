@@ -100,13 +100,17 @@ static void puavo_conf_err_set(struct puavo_conf_err *const errp,
         free(msg);
 }
 
-int puavo_conf_init(struct puavo_conf **const confp)
+static int puavo_conf_init(struct puavo_conf **const confp,
+                           struct puavo_conf_err *errp)
 {
         struct puavo_conf *conf;
 
         conf = (struct puavo_conf *) malloc(sizeof(struct puavo_conf));
-        if (!conf)
+        if (!conf) {
+                puavo_conf_err_set(errp, PUAVO_CONF_ERR_SYS, 0,
+                                   "Failed to allocate memory for a config object");
                 return -1;
+        }
         memset(conf, 0, sizeof(struct puavo_conf));
 
         conf->confd_socket = -1;
@@ -117,15 +121,16 @@ int puavo_conf_init(struct puavo_conf **const confp)
         return 0;
 }
 
-static int puavo_conf_open_socket(struct puavo_conf *const conf)
+static int puavo_conf_open_socket(struct puavo_conf *const conf,
+                                  struct puavo_conf_err *errp)
 {
         int confd_socket;
         struct sockaddr_un sockaddr;
 
         confd_socket = socket(AF_UNIX, SOCK_STREAM, 0);
         if (confd_socket < 0) {
-                conf->sys_err = errno;
-                conf->err = PUAVO_CONF_ERR_SYS;
+                puavo_conf_err_set(errp, PUAVO_CONF_ERR_SYS, 0,
+                                   "Failed to create a local socket");
                 goto err;
         }
 
@@ -136,8 +141,9 @@ static int puavo_conf_open_socket(struct puavo_conf *const conf)
 
         if (connect(confd_socket, (struct sockaddr *) &sockaddr,
                     sizeof(struct sockaddr_un))) {
-                conf->sys_err = errno;
-                conf->err = PUAVO_CONF_ERR_SYS;
+                puavo_conf_err_set(errp, PUAVO_CONF_ERR_SYS, 0,
+                                   "Failed to connect the socket to %s",
+                                   sockaddr.sun_path);
                 goto err;
         }
 
@@ -150,86 +156,105 @@ err:
         return -1;
 }
 
-static int puavo_conf_open_db(struct puavo_conf *const conf)
+static int puavo_conf_open_db(struct puavo_conf *const conf,
+                              struct puavo_conf_err *errp)
 {
-        DB *db;
+        DB *db = NULL;
         char const *db_filepath;
-        char *lock_filepath;
-        int lock_fd;
+        char *lock_filepath = NULL;
+        int lock_fd = -1;
+        int db_err;
 
         db_filepath = secure_getenv("PUAVO_CONF_DB_FILEPATH");
         if (!db_filepath)
                 db_filepath = PUAVO_CONF_DEFAULT_DB_FILEPATH;
 
         if (asprintf(&lock_filepath, "%s.lock", db_filepath) == -1) {
-                conf->sys_err = errno;
-                conf->err = PUAVO_CONF_ERR_SYS;
-                return -1;
+                puavo_conf_err_set(errp, PUAVO_CONF_ERR_SYS, 0,
+                                   "Failed to allocate memory for a db lock "
+                                   "file path string");
+                lock_filepath = NULL;
+                goto err;
         }
 
         lock_fd = open(lock_filepath, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
         if (lock_fd == -1) {
-                conf->sys_err = errno;
-                conf->err = PUAVO_CONF_ERR_SYS;
-                free(lock_filepath);
-                return -1;
+                puavo_conf_err_set(errp, PUAVO_CONF_ERR_SYS, 0,
+                                   "Failed to open the db lock file '%s'",
+                                   lock_filepath);
+                goto err;
         }
 
         free(lock_filepath);
+        lock_filepath = NULL;
 
         if (flock(lock_fd, LOCK_EX | LOCK_NB) == -1) {
-                conf->sys_err = errno;
-                conf->err = PUAVO_CONF_ERR_SYS;
-                close(lock_fd);
-                return -1;
+                puavo_conf_err_set(errp, PUAVO_CONF_ERR_SYS, 0,
+                                   "Failed to lock the db lock file '%s'",
+                                   lock_filepath);
+                goto err;
         }
 
-        conf->db_err = db_create(&db, NULL, 0);
-        if (conf->db_err) {
-                conf->err = PUAVO_CONF_ERR_DB;
-                close(lock_fd);
-                return -1;
+        db_err = db_create(&db, NULL, 0);
+        if (db_err) {
+                puavo_conf_err_set(errp, PUAVO_CONF_ERR_DB, db_err,
+                                   "Failed to create a db object");
+                db = NULL;
+                goto err;
         }
 
-        conf->db_err = db->open(db, NULL, db_filepath,
-                                NULL, DB_BTREE, DB_CREATE, 0600);
-        if (conf->db_err) {
-                conf->err = PUAVO_CONF_ERR_DB;
-                close(lock_fd);
-                db->close(db, 0);
-                return -1;
+
+        db_err = db->open(db, NULL, db_filepath,
+                          NULL, DB_BTREE, DB_CREATE, 0600);
+        if (db_err) {
+                puavo_conf_err_set(errp, PUAVO_CONF_ERR_DB, db_err,
+                                   "Failed to open the db file '%s'",
+                                   db_filepath);
+                goto err;
         }
 
         conf->lock_fd = lock_fd;
         conf->db = db;
         return 0;
-}
+err:
+        free(lock_filepath);
 
-int puavo_conf_open(struct puavo_conf *const conf)
-{
-        if (!puavo_conf_open_socket(conf))
-                return 0;
+        if (lock_fd >= 0)
+                close(lock_fd);
 
-        if (conf->err == PUAVO_CONF_ERR_SYS
-            && (conf->sys_err == ECONNREFUSED || conf->sys_err == ENOENT))
-                return puavo_conf_open_db(conf);
+        if (db)
+                db->close(db, 0);
 
         return -1;
 }
 
-static int puavo_conf_close_db(struct puavo_conf *const conf)
+int puavo_conf_open(struct puavo_conf **const confp,
+                    struct puavo_conf_err *errp)
+{
+        if (puavo_conf_init(confp, errp))
+                return -1;
+        /* if (!puavo_conf_open_socket(*confp, errp)) */
+        /*         return 0; */
+
+        return puavo_conf_open_db(*confp, errp);
+}
+
+static int puavo_conf_close_db(struct puavo_conf *const conf,
+                               struct puavo_conf_err *errp)
 {
         int ret = 0;
+        int db_err;
 
-        conf->db_err = conf->db->close(conf->db, 0);
+        db_err = conf->db->close(conf->db, 0);
         conf->db = NULL;
-        if (conf->db_err) {
-                conf->err = PUAVO_CONF_ERR_DB;
+        if (db_err) {
+                puavo_conf_err_set(errp, PUAVO_CONF_ERR_DB, db_err,
+                                   "Failed to close the db");
                 ret = -1;
         }
         if (close(conf->lock_fd) == -1 && !ret) {
-                conf->sys_err = errno;
-                conf->err = PUAVO_CONF_ERR_SYS;
+                puavo_conf_err_set(errp, PUAVO_CONF_ERR_SYS, 0,
+                                   "Failed to close the db lock file");
                 ret = -1;
         }
         conf->lock_fd = -1;
@@ -237,13 +262,14 @@ static int puavo_conf_close_db(struct puavo_conf *const conf)
         return ret;
 }
 
-static int puavo_conf_close_socket(struct puavo_conf *const conf)
+static int puavo_conf_close_socket(struct puavo_conf *const conf,
+                                   struct puavo_conf_err *errp)
 {
         int ret = 0;
 
         if (close(conf->confd_socket)) {
-                conf->sys_err = errno;
-                conf->err = PUAVO_CONF_ERR_SYS;
+                puavo_conf_err_set(errp, PUAVO_CONF_ERR_SYS, 0,
+                                   "Failed to close a socket");
                 ret = -1;
         }
 
@@ -252,21 +278,19 @@ static int puavo_conf_close_socket(struct puavo_conf *const conf)
         return ret;
 }
 
-int puavo_conf_close(struct puavo_conf *const conf)
+int puavo_conf_close(struct puavo_conf *const conf,
+                     struct puavo_conf_err *errp)
 {
+        int ret = 0;
+
         if (conf->db)
-                return puavo_conf_close_db(conf);
+                ret = puavo_conf_close_db(conf, errp);
+        else
+                ret = puavo_conf_close_socket(conf, errp);
 
-        if (conf->confd_socket >= 0)
-                return puavo_conf_close_socket(conf);
-
-        return 0;
-}
-
-void puavo_conf_free(struct puavo_conf *conf)
-{
-        free(conf->errstr);
         free(conf);
+
+        return ret;
 }
 
 int puavo_conf_get(struct puavo_conf *const conf,
