@@ -24,7 +24,7 @@ typedef struct puavo_conf puavo_conf_t;
 
 struct puavo_conf_err {
         int errnum;
-        int db_errnum;
+        int db_error;
         int sys_errnum;
         char msg[1024];
 };

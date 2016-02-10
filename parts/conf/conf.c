@@ -52,7 +52,7 @@ enum PUAVO_CONF_ERRNUM {
 
 static void puavo_conf_err_set(struct puavo_conf_err *const errp,
                               int const errnum,
-                              int const db_errnum,
+                              int const db_error,
                               char const *const fmt,
                               ...)
 {
@@ -63,7 +63,7 @@ static void puavo_conf_err_set(struct puavo_conf_err *const errp,
                 return;
 
         errp->errnum = errnum;
-        errp->db_errnum = db_errnum;
+        errp->db_error = db_error;
         errp->sys_errnum = errnum == PUAVO_CONF_ERRNUM_SYS ? errno : 0;
 
         va_start(ap, fmt);
@@ -84,7 +84,7 @@ static void puavo_conf_err_set(struct puavo_conf_err *const errp,
         case PUAVO_CONF_ERRNUM_DB:
                 snprintf(errp->msg, sizeof(errp->msg),
                          "%s: %s", msg ? msg : "",
-                         db_strerror(errp->db_errnum));
+                         db_strerror(errp->db_error));
                 break;
         default:
                 snprintf(errp->msg, sizeof(errp->msg),
@@ -159,7 +159,7 @@ static int puavo_conf_open_db(struct puavo_conf *const conf,
         char const *db_filepath;
         char *lock_filepath = NULL;
         int lock_fd = -1;
-        int db_errnum;
+        int db_error;
 
         db_filepath = secure_getenv("PUAVO_CONF_DB_FILEPATH");
         if (!db_filepath)
@@ -191,19 +191,19 @@ static int puavo_conf_open_db(struct puavo_conf *const conf,
                 goto err;
         }
 
-        db_errnum = db_create(&db, NULL, 0);
-        if (db_errnum) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DB, db_errnum,
+        db_error = db_create(&db, NULL, 0);
+        if (db_error) {
+                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DB, db_error,
                                    "Failed to create a db object");
                 db = NULL;
                 goto err;
         }
 
 
-        db_errnum = db->open(db, NULL, db_filepath,
+        db_error = db->open(db, NULL, db_filepath,
                           NULL, DB_BTREE, DB_CREATE, 0600);
-        if (db_errnum) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DB, db_errnum,
+        if (db_error) {
+                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DB, db_error,
                                    "Failed to open the db file '%s'",
                                    db_filepath);
                 goto err;
@@ -239,12 +239,12 @@ static int puavo_conf_close_db(struct puavo_conf *const conf,
                                struct puavo_conf_err *errp)
 {
         int ret = 0;
-        int db_errnum;
+        int db_error;
 
-        db_errnum = conf->db->close(conf->db, 0);
+        db_error = conf->db->close(conf->db, 0);
         conf->db = NULL;
-        if (db_errnum) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DB, db_errnum,
+        if (db_error) {
+                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DB, db_error,
                                    "Failed to close the db");
                 ret = -1;
         }
@@ -297,7 +297,7 @@ int puavo_conf_get(struct puavo_conf *const conf,
         DBT db_value;
         char *value;
         int ret = -1;
-        int db_errnum;
+        int db_error;
 
         memset(&db_key, 0, sizeof(DBT));
         memset(&db_value, 0, sizeof(DBT));
@@ -313,9 +313,9 @@ int puavo_conf_get(struct puavo_conf *const conf,
 
         db_value.flags = DB_DBT_MALLOC;
 
-        db_errnum = conf->db->get(conf->db, NULL, &db_key, &db_value, 0);
-        if (db_errnum) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DB, db_errnum,
+        db_error = conf->db->get(conf->db, NULL, &db_key, &db_value, 0);
+        if (db_error) {
+                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DB, db_error,
                                    "Failed to get a value from the db for a key '%s'",
                                    key);
                 goto out;
@@ -354,7 +354,7 @@ int puavo_conf_set(struct puavo_conf *const conf,
         DBT db_key;
         DBT db_value;
         int ret = -1;
-        int db_errnum;
+        int db_error;
 
         memset(&db_key, 0, sizeof(DBT));
         memset(&db_value, 0, sizeof(DBT));
@@ -375,9 +375,9 @@ int puavo_conf_set(struct puavo_conf *const conf,
                 goto out;
         }
 
-        db_errnum = conf->db->put(conf->db, NULL, &db_key, &db_value, 0);
-        if (db_errnum) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DB, db_errnum,
+        db_error = conf->db->put(conf->db, NULL, &db_key, &db_value, 0);
+        if (db_error) {
+                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DB, db_error,
                                    "Failed to set parameter");
                 goto out;
         }
@@ -401,7 +401,7 @@ int puavo_conf_get_all(struct puavo_conf *const conf,
         char **keys = NULL;
         char **values = NULL;
         int ret = -1;
-        int db_errnum;
+        int db_error;
 
         memset(&db_null, 0, sizeof(DBT));
         memset(&db_batch, 0, sizeof(DBT));
@@ -415,10 +415,10 @@ int puavo_conf_get_all(struct puavo_conf *const conf,
                 goto out;
         }
 
-        db_errnum = conf->db->cursor(conf->db, NULL, &db_cursor, 0);
-        if (db_errnum) {
+        db_error = conf->db->cursor(conf->db, NULL, &db_cursor, 0);
+        if (db_error) {
                 db_cursor = NULL;
-                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DB, db_errnum,
+                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DB, db_error,
                                    "Failed to get all parameters");
                 goto out;
         }
@@ -428,16 +428,16 @@ int puavo_conf_get_all(struct puavo_conf *const conf,
                 void *batch_iterator;
 
                 /* Get the next batch of key-value pairs. */
-                db_errnum = db_cursor->get(db_cursor, &db_null, &db_batch,
+                db_error = db_cursor->get(db_cursor, &db_null, &db_batch,
                                         DB_MULTIPLE_KEY | DB_NEXT);
-                switch (db_errnum) {
+                switch (db_error) {
                 case 0:
                         break;
                 case DB_NOTFOUND:
                         ret = 0;
                         goto out;
                 default:
-                        puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DB, db_errnum,
+                        puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DB, db_error,
                                            "Failed to get all parameters");
                         goto out;
                 }
@@ -484,13 +484,13 @@ int puavo_conf_get_all(struct puavo_conf *const conf,
         ret = 0;
 out:
         if (db_cursor) {
-                db_errnum = db_cursor->close(db_cursor);
+                db_error = db_cursor->close(db_cursor);
                 /* Obey exit-on-first-error policy: Do not shadow any
                  * existing error, record close error only if we are
                  * cleaning up without any earlier errors. */
-                if (!ret && db_errnum) {
+                if (!ret && db_error) {
                         ret = -1;
-                        puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DB, db_errnum,
+                        puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DB, db_error,
                                            "Failed to get all parameters");
                 }
         }
@@ -518,12 +518,12 @@ out:
 int puavo_conf_clear(struct puavo_conf *const conf,
                      struct puavo_conf_err *errp)
 {
-        int db_errnum;
+        int db_error;
         unsigned int count;
 
-        db_errnum = conf->db->truncate(conf->db, NULL, &count, 0);
-        if (db_errnum) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DB, db_errnum,
+        db_error = conf->db->truncate(conf->db, NULL, &count, 0);
+        if (db_error) {
+                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DB, db_error,
                                    "Failed to clear parameters");
                 return -1;
         }
