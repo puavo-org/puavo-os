@@ -153,17 +153,20 @@ int puavo_conf_get(puavo_conf_t *conf, char const *key, char **valuep,
  *
  * @list - uninitialized parameter list
  *
+ * @errp  - pointer to an error struct or NULL
+ *
  * After a successful call, @list contains two heap-allocated vectors
  * of heap-allocated NUL-terminated strings. The caller is responsible
  * for calling puavo_conf_list_free() on @list afterwards.
  *
- * On error, all resources allocated by puavo_conf_list() are freed
- * automatically.
+ * If @errp is not NULL and an error is encountered, the error struct
+ * pointed by @errp is filled to convey error details.
  *
  * Return 0 on success and -1 on error.
  */
 int puavo_conf_get_all(puavo_conf_t *conf,
-                       struct puavo_conf_list *list);
+                       struct puavo_conf_list *list,
+                       struct puavo_conf_err *errp);
 
 /**
  * puavo_conf_list_free() - free a parameter list

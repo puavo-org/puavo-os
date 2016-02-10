@@ -371,7 +371,8 @@ out:
 }
 
 int puavo_conf_get_all(struct puavo_conf *const conf,
-                       struct puavo_conf_list *const list)
+                       struct puavo_conf_list *const list,
+                       struct puavo_conf_err *errp)
 {
         DBC *db_cursor = NULL;
         DBT db_null;
@@ -380,6 +381,7 @@ int puavo_conf_get_all(struct puavo_conf *const conf,
         char **keys = NULL;
         char **values = NULL;
         int ret = -1;
+        int db_err;
 
         memset(&db_null, 0, sizeof(DBT));
         memset(&db_batch, 0, sizeof(DBT));
@@ -388,15 +390,16 @@ int puavo_conf_get_all(struct puavo_conf *const conf,
         db_batch.ulen  = PUAVO_CONF_DEFAULT_DB_BATCH_SIZE;
         db_batch.data  = malloc(db_batch.ulen);
         if (!db_batch.data) {
-                conf->sys_err = errno;
-                conf->err = PUAVO_CONF_ERR_SYS;
+                puavo_conf_err_set(errp, PUAVO_CONF_ERR_SYS, 0,
+                                   "Failed to get all parameters");
                 goto out;
         }
 
-        conf->db_err = conf->db->cursor(conf->db, NULL, &db_cursor, 0);
-        if (conf->db_err) {
+        db_err = conf->db->cursor(conf->db, NULL, &db_cursor, 0);
+        if (db_err) {
                 db_cursor = NULL;
-                conf->err = PUAVO_CONF_ERR_DB;
+                puavo_conf_err_set(errp, PUAVO_CONF_ERR_DB, db_err,
+                                   "Failed to get all parameters");
                 goto out;
         }
 
@@ -405,16 +408,17 @@ int puavo_conf_get_all(struct puavo_conf *const conf,
                 void *batch_iterator;
 
                 /* Get the next batch of key-value pairs. */
-                conf->db_err = db_cursor->get(db_cursor, &db_null, &db_batch,
-                                              DB_MULTIPLE_KEY | DB_NEXT);
-                switch (conf->db_err) {
+                db_err = db_cursor->get(db_cursor, &db_null, &db_batch,
+                                        DB_MULTIPLE_KEY | DB_NEXT);
+                switch (db_err) {
                 case 0:
                         break;
                 case DB_NOTFOUND:
                         ret = 0;
                         goto out;
                 default:
-                        conf->err = PUAVO_CONF_ERR_DB;
+                        puavo_conf_err_set(errp, PUAVO_CONF_ERR_DB, db_err,
+                                           "Failed to get all parameters");
                         goto out;
                 }
 
@@ -436,8 +440,8 @@ int puavo_conf_get_all(struct puavo_conf *const conf,
                         new_keys = realloc(keys,
                                            sizeof(char *) * (length + 1));
                         if (!new_keys) {
-                                conf->sys_err = errno;
-                                conf->err = PUAVO_CONF_ERR_SYS;
+                                puavo_conf_err_set(errp, PUAVO_CONF_ERR_SYS, 0,
+                                                   "Failed to get all parameters");
                                 goto out;
                         }
                         keys = new_keys;
@@ -445,8 +449,8 @@ int puavo_conf_get_all(struct puavo_conf *const conf,
                         new_values = realloc(values,
                                            sizeof(char *) * (length + 1));
                         if (!new_values) {
-                                conf->sys_err = errno;
-                                conf->err = PUAVO_CONF_ERR_SYS;
+                                puavo_conf_err_set(errp, PUAVO_CONF_ERR_SYS, 0,
+                                                   "Failed to get all parameters");
                                 goto out;
                         }
                         values = new_values;
@@ -460,14 +464,14 @@ int puavo_conf_get_all(struct puavo_conf *const conf,
         ret = 0;
 out:
         if (db_cursor) {
-                int db_err = db_cursor->close(db_cursor);
+                db_err = db_cursor->close(db_cursor);
                 /* Obey exit-on-first-error policy: Do not shadow any
                  * existing error, record close error only if we are
                  * cleaning up without any earlier errors. */
                 if (!ret && db_err) {
                         ret = -1;
-                        conf->db_err = db_err;
-                        conf->err = PUAVO_CONF_ERR_DB;
+                        puavo_conf_err_set(errp, PUAVO_CONF_ERR_DB, db_err,
+                                           "Failed to get all parameters");
                 }
         }
 

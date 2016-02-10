@@ -25,7 +25,7 @@ START_TEST(test_empty_db_get_all_from_empty)
 {
         struct puavo_conf_list list;
 
-        ck_assert_int_eq(0, puavo_conf_get_all(conf, &list));
+        ck_assert_int_eq(0, puavo_conf_get_all(conf, &list, NULL));
         ck_assert(list.length == 0);
 }
 END_TEST
@@ -54,7 +54,7 @@ START_TEST(test_empty_db_set_many_and_get_all)
         ck_assert_int_eq(0, puavo_conf_set(conf, "somekey2", "someval2", NULL));
         ck_assert_int_eq(0, puavo_conf_set(conf, "somekey3", "someval3", NULL));
 
-        ck_assert_int_eq(0, puavo_conf_get_all(conf, &list));
+        ck_assert_int_eq(0, puavo_conf_get_all(conf, &list, NULL));
         ck_assert(list.length == 3);
 
         ck_assert_str_eq(list.keys[0], "somekey1");

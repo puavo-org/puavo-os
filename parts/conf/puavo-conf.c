@@ -95,13 +95,14 @@ print_conf(puavo_conf_t *conf)
         size_t i, keylen, max_keylen;
         int key_field_width, ret, r;
         struct puavo_conf_list list;
+        struct puavo_conf_err err;
 
         ret = 0;
 
-        if (puavo_conf_get_all(conf, &list)) {
+        if (puavo_conf_get_all(conf, &list, &err)) {
                 (void) fprintf(stderr,
-                               "error: Failed to get parameter list: %s\n",
-                               puavo_conf_errstr(conf));
+                               "Error: Failed to get parameter list: %s\n",
+                               err.msg);
                 return -1;
         }
 
