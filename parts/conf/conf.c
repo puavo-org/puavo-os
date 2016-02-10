@@ -40,11 +40,7 @@ static const char *const PUAVO_CONF_DEFAULT_DB_FILEPATH = DEFAULT_DB_FILEPATH;
 
 struct puavo_conf {
         DB *db;
-        int db_err;
-        int err;
-        int sys_err;
         int confd_socket;
-        char *errstr;
         int lock_fd;
 };
 
