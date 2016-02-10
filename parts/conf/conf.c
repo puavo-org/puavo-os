@@ -91,7 +91,7 @@ static void puavo_conf_err_set(struct puavo_conf_err *const errp,
 }
 
 static int puavo_conf_init(struct puavo_conf **const confp,
-                           struct puavo_conf_err *errp)
+                           struct puavo_conf_err *const errp)
 {
         struct puavo_conf *conf;
 
@@ -112,7 +112,7 @@ static int puavo_conf_init(struct puavo_conf **const confp,
 }
 
 static int puavo_conf_open_socket(struct puavo_conf *const conf,
-                                  struct puavo_conf_err *errp)
+                                  struct puavo_conf_err *const errp)
 {
         int confd_socket;
         struct sockaddr_un sockaddr;
@@ -147,7 +147,7 @@ err:
 }
 
 static int puavo_conf_open_db(struct puavo_conf *const conf,
-                              struct puavo_conf_err *errp)
+                              struct puavo_conf_err *const errp)
 {
         DB *db = NULL;
         char const *db_filepath;
@@ -219,7 +219,7 @@ err:
 }
 
 int puavo_conf_open(struct puavo_conf **const confp,
-                    struct puavo_conf_err *errp)
+                    struct puavo_conf_err *const errp)
 {
         if (puavo_conf_init(confp, errp))
                 return -1;
@@ -253,7 +253,7 @@ static int puavo_conf_close_db(struct puavo_conf *const conf,
 }
 
 static int puavo_conf_close_socket(struct puavo_conf *const conf,
-                                   struct puavo_conf_err *errp)
+                                   struct puavo_conf_err *const errp)
 {
         int ret = 0;
 
@@ -269,7 +269,7 @@ static int puavo_conf_close_socket(struct puavo_conf *const conf,
 }
 
 int puavo_conf_close(struct puavo_conf *const conf,
-                     struct puavo_conf_err *errp)
+                     struct puavo_conf_err *const errp)
 {
         int ret = 0;
 
@@ -285,7 +285,7 @@ int puavo_conf_close(struct puavo_conf *const conf,
 
 int puavo_conf_get(struct puavo_conf *const conf,
                    char const *const key, char **const valuep,
-                   struct puavo_conf_err *errp)
+                   struct puavo_conf_err *const errp)
 {
         DBT db_key;
         DBT db_value;
@@ -343,7 +343,7 @@ out:
 
 int puavo_conf_set(struct puavo_conf *const conf,
                    char const *const key, char const *const value,
-                   struct puavo_conf_err *errp)
+                   struct puavo_conf_err *const errp)
 {
         DBT db_key;
         DBT db_value;
@@ -386,7 +386,7 @@ out:
 
 int puavo_conf_get_all(struct puavo_conf *const conf,
                        struct puavo_conf_list *const list,
-                       struct puavo_conf_err *errp)
+                       struct puavo_conf_err *const errp)
 {
         DBC *db_cursor = NULL;
         DBT db_null;
@@ -510,7 +510,7 @@ out:
 }
 
 int puavo_conf_clear(struct puavo_conf *const conf,
-                     struct puavo_conf_err *errp)
+                     struct puavo_conf_err *const errp)
 {
         int db_error;
         unsigned int count;
