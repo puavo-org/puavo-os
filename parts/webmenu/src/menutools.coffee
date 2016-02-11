@@ -111,6 +111,9 @@ injectDesktopData = (menu, options) ->
   if menu.inactiveByDeviceType and menu.inactiveByDeviceType is options.hostType
     menu.status = "inactive"
 
+  if menu.onlyForArch and menu.onlyForArch isnt options.kernelArch
+    menu.status = "inactive"
+
   if menu.type is "desktop"
     if not menu.source
       throw new Error("'desktop' item in menu.json item is missing " +

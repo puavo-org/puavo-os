@@ -102,6 +102,7 @@ config_data = configJSONPaths.reduce((current, configPath) ->
 config = new Backbone.Model config_data
 config.set("hostname", os.hostname())
 config.set("hostType", require "./hosttype")
+config.set("kernelArch", require "./kernelarch")
 config.set("feedback", logger.active and process.env.WM_FEEDBACK_ACTIVE)
 config.set("guestSession", (process.env.GUEST_SESSION is "true"))
 config.set("webkioskMode", (process.env.WM_WEBKIOSK_MODE is "true"))
@@ -147,6 +148,7 @@ menutools.injectDesktopData(menuJSON, {
     iconSearchPaths: config.get("iconSearchPaths")
     fallbackIcon: config.get("fallbackIcon")
     hostType: config.get("hostType")
+    kernelArch: config.get("kernelArch")
     installerIcon: config.get("installerIcon") || "kentoo"
     desktopItems: desktopItems
 })
