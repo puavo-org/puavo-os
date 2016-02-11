@@ -20,9 +20,13 @@ override_dh_auto_install:
 	$(MAKE) -C ruby-puavobs install prefix=/usr DESTDIR=$(CURDIR)/debian/ruby-puavobs
 
 override_dh_installcron:
+	dh_installcron --name=puavo-bootserver-sync-images
 	dh_installcron --name=puavo-update-airprint-ddns
 
 override_dh_install:
+
+override_dh_installinit:
+	dh_installinit --name=puavo-bootserver-sync-images
 
 PACKAGE = $(shell dpkg-parsechangelog | sed -ne 's/^Source: //p')
 SRC_VERSION := $(shell dpkg-parsechangelog | sed -ne 's/^Version: \(\([0-9]\+\):\)\?\(.*\)-.*/\3/p')

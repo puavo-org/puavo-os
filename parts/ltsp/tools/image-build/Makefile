@@ -30,7 +30,6 @@ install : installdirs
 	
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-build-image \
-		puavo-build-rdiffs \
 		puavo-setup-imagebuild
 
 .PHONY : clean
