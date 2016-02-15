@@ -126,8 +126,12 @@ def get_device_setting(key)
     return $deviceinfo[key]
 end
 
-def logerr(msg)
+def logwarn(msg)
     warn(msg)
+end
+
+def logerr(msg)
+    logwarn(msg)
     $status = 1
 end
 
