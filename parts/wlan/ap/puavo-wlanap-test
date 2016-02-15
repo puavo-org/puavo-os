@@ -24,7 +24,7 @@
 set -eu
 
 while true; do
-    ifaces=$(sed -r -n 's/^interface=//p' /var/run/puavo-wlanap/*_hostapd.conf)
+    ifaces=$(sed -r -n 's/^interface=//p' /var/run/puavo-wlanap/hostapd_*.conf)
     echo "${ifaces}" | while read iface; do
 	read usbid < <(sed -r -n 's|^PRODUCT=(.*)/(.*)/.*$|\1:\2|p' \
 	    "/sys/class/net/${iface}/device/uevent")
@@ -58,13 +58,13 @@ read streams   < <(iw phy "${phy}" info \
 read kernel    < <(uname -a)
 read timestamp < <(date --utc '+%Y-%m-%d %H:%M:%S %z')
 
-read bssid     < <(sed -r -n 's/^bssid=//p' \
-                  "/run/puavo-wlanap/${iface}_hostapd.conf")
+read bssid     < <(wpa_cli -i "${iface}" -p /run/puavo-wlanap/hostapd status \
+                  | sed -r -n 's/^bssid\[0\]=//p')
 read brif      < <(sed -r -n 's/INTERFACE=//p' "${netdev}/master/uevent")
 read ipaddr    < <(ifconfig "${brif}" \
                   | sed -r -n 's/^.*inet addr:([0-9.]+) .*$/\1/p')
 read password  < <(sed -r -n 's/^wpa_passphrase=//p' \
-                   "/run/puavo-wlanap/${iface}_hostapd.conf")
+                   "/run/puavo-wlanap/hostapd_${iface}.conf")
 read channel   < <(wpa_cli -i "${iface}" -p /run/puavo-wlanap/hostapd status \
                   | sed -r -n 's/^channel=//p')
 
