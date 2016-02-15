@@ -36,39 +36,39 @@ require 'getoptlong'
 require 'json'
 require 'puavo/conf'
 
-def apply_feature_profiles(features, feature_profiles, lookup_fn)
-    if !feature_profiles.kind_of?(Array)
-        logerr('input type error: feature profiles not in correct format')
+def apply_parameter_profiles(parameters, parameter_profiles, lookup_fn)
+    if !parameter_profiles.kind_of?(Array)
+        logerr('input type error: parameter profiles not in correct format')
         return
     end
 
-    feature_profiles.each do |profile|
+    parameter_profiles.each do |profile|
         if !(profile.kind_of?(Hash) \
                && profile['key'].kind_of?(String) \
                && profile['profile'].kind_of?(Hash)) then
-            logerr('input type error: feature profile not in correct format')
+            logerr('input type error: parameter profile not in correct format')
             next
         end
 
         if profile['key'] == '*' then
-            merge_features(features, profile['profile'])
+            merge_parameters(parameters, profile['profile'])
             next
         end
 
         if !(profile['matchmethod'].kind_of?(String)) then
-            logerr('input type error: feature profile not in correct format')
+            logerr('input type error: parameter profile not in correct format')
             next
         end
 
-        feature_values = lookup_fn.call(profile['key'])
-        next if feature_values.nil?
+        parameter_values = lookup_fn.call(profile['key'])
+        next if parameter_values.nil?
 
-        feature_values.each do |value|
+        parameter_values.each do |value|
             match_result = match_puavopattern(value,
                                               profile['matchmethod'],
                                               profile['pattern'])
             if match_result then
-                merge_features(features, profile['profile'])
+                merge_parameters(parameters, profile['profile'])
                 break
             end
         end
@@ -160,13 +160,13 @@ def match_puavopattern(target, matchmethod, pattern)
     return false
 end
 
-def merge_features(features, featureconf)
-    if !featureconf.kind_of?(Hash) then
-        logerr('input type error: featureconf is not a hash')
+def merge_parameters(parameters, parameterconf)
+    if !parameterconf.kind_of?(Hash) then
+        logerr('input type error: parameterconf is not a hash')
         return
     end
 
-    featureconf.each do |key, value|
+    parameterconf.each do |key, value|
         if !key.kind_of?(String) then
             logerr('input type error: key not a string')
             next
@@ -179,7 +179,7 @@ def merge_features(features, featureconf)
             next
         end
 
-        features[key] = value.to_s
+        parameters[key] = value.to_s
     end
 end
 
@@ -206,7 +206,7 @@ EOF
 end
 
 class Sources
-    attr_reader :features
+    attr_reader :parameters
 
     Available = %w(defaults profiles hwquirks puavo primaryuser kernelargs)
 
@@ -221,53 +221,53 @@ class Sources
             @sources << source
         end
 
-        @features_by_source = {}
+        @parameters_by_source = {}
 
         @sources.each do |source|
             next if source == 'profiles'
-            @features_by_source[source] = send(source)
+            @parameters_by_source[source] = send(source)
         end
 
         # Profiles are special: other sources affect the profiles chosen.
         # Note that in merge() source order always matters.
         profile_sources = merge()
-        @features_by_source['profiles'] = profiles(profile_sources)
+        @parameters_by_source['profiles'] = profiles(profile_sources)
 
-        @features = merge()
+        @parameters = merge()
     end
 
     def merge
-        features = {}
+        parameters = {}
         @sources.each do |source|
-            next unless @features_by_source.has_key?(source)
-            features.merge!( @features_by_source[source] )
+            next unless @parameters_by_source.has_key?(source)
+            parameters.merge!( @parameters_by_source[source] )
         end
 
-        return features
+        return parameters
     end
 
     # settings from image defaults
     def defaults
-        features = {}
+        parameters = {}
 
-        image_defaults_globpattern = '/usr/share/puavo/features/*/info.json'
+        image_defaults_globpattern = '/usr/share/puavo/parameters/*/info.json'
 
         image_defaults_files = Dir.glob(image_defaults_globpattern) rescue []
         logwarn('No image defaults files found') if image_defaults_files.empty?
 
         image_defaults_files.each do |file|
             begin
-                feature_info = JSON.parse( IO.read(file) )
-                if !feature_info.kind_of?(Hash) then
+                parameter_info = JSON.parse( IO.read(file) )
+                if !parameter_info.kind_of?(Hash) then
                     raise 'input type error: image defaults is not a Hash'
                 end
 
-                if !(feature_info.has_key?('keys') \
-                       && feature_info['keys'].kind_of?(Hash)) then
+                if !(parameter_info.has_key?('keys') \
+                       && parameter_info['keys'].kind_of?(Hash)) then
                         raise 'input type error: keys value not a Hash'
                 end
 
-                feature_info['keys'].each do |key, keyinfo|
+                parameter_info['keys'].each do |key, keyinfo|
                     if !keyinfo.kind_of?(Hash) then
                         logerr('input type error: defaults keyinfo not a hash')
                         next
@@ -278,42 +278,42 @@ class Sources
                         next
                     end
 
-                    merge_features(features, { key => keyinfo['default'] })
+                    merge_parameters(parameters, { key => keyinfo['default'] })
                 end
             rescue StandardError => e
-                logerr("Could not read feature defaults from #{ file }: " \
+                logerr("Could not read parameter defaults from #{ file }: " \
                          + e.message)
             end
         end
 
-        return features
+        return parameters
     end
 
-    # feature-profiles
-    def profiles(feature_configuration)
-        features = {}
+    # parameter-profiles
+    def profiles(parameter_configuration)
+        parameters = {}
 
-        feature_profiles = []
-        feature_profiles_path = '/etc/puavoimage/feature-profiles.json'
+        parameter_profiles = []
+        parameter_profiles_path = '/etc/puavoimage/parameter-profiles.json'
         begin
-            feature_profiles = JSON.parse( IO.read(feature_profiles_path) )
-            feature_lookup = lambda do |key|
-                                 feature_configuration.has_key?(key)  \
-                                     ? [ feature_configuration[key] ] \
+            parameter_profiles = JSON.parse( IO.read(parameter_profiles_path) )
+            parameter_lookup = lambda do |key|
+                                 parameter_configuration.has_key?(key)  \
+                                     ? [ parameter_configuration[key] ] \
                                      : nil
                              end
-            apply_feature_profiles(features, feature_profiles, feature_lookup)
+            apply_parameter_profiles(parameters, parameter_profiles, parameter_lookup)
         rescue StandardError => e
-            logerr('Could not apply feature profiles from' \
-                     + " #{ feature_profiles_path }: #{ e.message }")
+            logerr('Could not apply parameter profiles from' \
+                     + " #{ parameter_profiles_path }: #{ e.message }")
         end
 
-        return features
+        return parameters
     end
 
     # settings based on hardware quirks (dmidecode, pci, usb, ...)
     def hwquirks
-        features = {}
+        parameters = {}
 
         hardware_quirks_globpattern = '/usr/share/puavo/hwquirks/*/*.json'
 
@@ -321,7 +321,7 @@ class Sources
         hwquirk_files.each do |hwquirk_file|
             begin
                 hwquirklist = JSON.parse( IO.read(hwquirk_file) )
-                apply_feature_profiles(features,
+                apply_parameter_profiles(parameters,
                                        hwquirklist,
                                        Proc.method(:get_device_setting))
             rescue StandardError => e
@@ -330,30 +330,30 @@ class Sources
             end
         end
 
-        return features
+        return parameters
     end
 
     # settings from puavo
     def puavo
-        features = {}
+        parameters = {}
 
         begin
             puavo_settings = JSON.parse( IO.read('/etc/puavo/device.json') )
             if !(puavo_settings.kind_of?(Hash) \
-                   && puavo_settings['features'].kind_of?(Hash)) then
-                raise 'input type error: puavo feature settings' \
+                   && puavo_settings['parameters'].kind_of?(Hash)) then
+                raise 'input type error: puavo parameter settings' \
                         + ' not in correct format'
             end
 
-            puavo_settings['features'].each do |key, value|
-                merge_features(features, { key => value })
+            puavo_settings['parameters'].each do |key, value|
+                merge_parameters(parameters, { key => value })
             end
         rescue StandardError => e
-            logerr('Could not read features from /etc/puavo/device.json: ' \
+            logerr('Could not read parameters from /etc/puavo/device.json: ' \
                       + e.message)
         end
 
-        return features
+        return parameters
     end
 
     # settings from primary user
@@ -364,34 +364,34 @@ class Sources
 
     # settings from kernel arguments
     def kernelargs
-        features = {}
+        parameters = {}
 
         begin
             kernel_cmdline = IO.read('/proc/cmdline')
             kernel_args = kernel_cmdline.split
 
             # A quirk for backwards compatibility:
-            # "puavo.hosttype=FOO" is the same as "puavo.feature.hosttype=FOO".
+            # "puavo.hosttype=FOO" is the same as "puavo.parameter.hosttype=FOO".
             # If both are specified and conflicting, the value in
-            # "puavo.feature.hosttype" wins.
+            # "puavo.parameter.hosttype" wins.
             kernel_args.each do |kernel_arg|
                 match = kernel_arg.match(/\Apuavo\.hosttype=(.*)\Z/)
                 if match then
-                    merge_features(features, { 'hosttype' => match[1] })
+                    merge_parameters(parameters, { 'hosttype' => match[1] })
                 end
             end
 
             kernel_args.each do |kernel_arg|
-                match = kernel_arg.match(/\Apuavo\.feature\.(.*?)=(.*)\Z/)
+                match = kernel_arg.match(/\Apuavo\.parameter\.(.*?)=(.*)\Z/)
                 if match then
-                    merge_features(features, { match[1] => match[2] })
+                    merge_parameters(parameters, { match[1] => match[2] })
                 end
             end
         rescue StandardError => e
             logerr('could not read kernel command line arguments')
         end
 
-        return features
+        return parameters
     end
 end
 
@@ -434,9 +434,9 @@ sources = Sources.new(conf_sources)
 puts '> Creating puavo-conf database with the following values:'
 puavoconf = Puavo::Conf.new()
 
-features = sources.features
-max_keylength = features.keys.map { |s| s.length }.max
-features.sort.each do |key, value|
+parameters = sources.parameters
+max_keylength = parameters.keys.map { |s| s.length }.max
+parameters.sort.each do |key, value|
     puavoconf.set(key, value)
     printf "    %-*s %s\n", max_keylength + 2, key, value
 end
