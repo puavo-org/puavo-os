@@ -33,14 +33,23 @@ terminal_output gfxterm
 set timeout=5
 ### END /usr/local/etc/grub.d/00_header ###
 
-function pathname { regexp -s 2:"$2" '^(\(.*\))?(/.*)$'    "$1"; }
+function get_kernelarch { regexp -s 2:"$2" '^(.*)-(i386|amd64)$' "$1"; }
+function get_pathname { regexp -s 2:"$2" '^(\(.*\))?(/.*)$' "$1"; }
+
+function get_kernelversion {
+  if regexp -s 1:"$2" '^(.*)-(i386|amd64)$' "$1"; then
+    :
+  else
+    set $2="$1"
+  fi
+}
 
 function ltsp_image_entry {
   set imagefile="$1"
   set description="$2"
   set kernelparameters="$3"
 
-  pathname $imagefile imagepath
+  get_pathname $imagefile imagepath
 
   # if changing menuentry description, update correspondingly on
   # puavo-local-config configure_grub_default()
@@ -56,12 +65,33 @@ function ltsp_image_entry {
     loopback loop "${imagefile}"
     set root='(loop)'
 
+    set kernelarch=""
+    set kernelversion=""
+
+    if test -n "${puavo_kernel_version}"; then
+      get_kernelarch    "${puavo_kernel_version}" kernelarch
+      get_kernelversion "${puavo_kernel_version}" kernelversion
+    fi
+
+    if test -z "${kernelarch}"; then
+      if cpuid -l; then
+        set kernelarch="amd64"
+      else
+        set kernelarch="i386"
+      fi
+    fi
+
+    if test -n "${kernelversion}"; then
+      set kernelversion_with_arch="${kernelversion}-${kernelarch}"
+    else
+      set kernelversion_with_arch="${kernelarch}"
+    fi
+
     # ${puavo_kernel_version} comes from a grub environment file
     # (if it is defined there)
-    if test -n "${puavo_kernel_version}" \
-         -a -e "(loop)/boot/vmlinuz-${puavo_kernel_version}" \
-         -a -e "(loop)/boot/initrd.img-${puavo_kernel_version}"; then
-      set kernelversion="-${puavo_kernel_version}"
+    if test -e "(loop)/boot/vmlinuz-${kernelversion_with_arch}" \
+         -a -e "(loop)/boot/initrd.img-${kernelversion_with_arch}"; then
+      set kernelversion="-${kernelversion_with_arch}"
     else
       set kernelversion=""
     fi
