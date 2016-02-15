@@ -36,8 +36,6 @@ require 'getoptlong'
 require 'json'
 require 'puavo/conf'
 
-$status = 0
-
 def apply_feature_profiles(features, feature_profiles, lookup_fn)
     if !feature_profiles.kind_of?(Array)
         logerr('input type error: feature profiles not in correct format')
