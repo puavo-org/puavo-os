@@ -253,9 +253,7 @@ class Sources
         image_defaults_globpattern = '/usr/share/puavo/features/*/info.json'
 
         image_defaults_files = Dir.glob(image_defaults_globpattern) rescue []
-        if image_defaults_files.count == 0 then
-            logerr('No image defaults files found')
-        end
+        logwarn('No image defaults files found') if image_defaults_files.empty?
 
         image_defaults_files.each do |file|
             begin
