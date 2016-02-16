@@ -250,7 +250,7 @@ class Sources
     def defaults
         parameters = {}
 
-        image_defaults_globpattern = '/usr/share/puavo/parameters/*/info.json'
+        image_defaults_globpattern = '/usr/share/puavo-conf/parameters/*.json'
 
         image_defaults_files = Dir.glob(image_defaults_globpattern) rescue []
         logwarn('No image defaults files found') if image_defaults_files.empty?
