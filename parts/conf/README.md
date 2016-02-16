@@ -49,7 +49,7 @@ hardware quirks database.
 ### settings from image defaults
 
 Default image values are looked from files that match the glob pattern
-`/usr/share/puavo-conf/features/*.json`. There should be files in
+`/usr/share/puavo-conf/parameters/*.json`. There should be files in
 JSON-format like this:
 
     {
