@@ -73,25 +73,11 @@ file with the following JSON-format:
 
     [
       {
-        "key": "*",
-        "profile": {
-          "nfshomes": "true"
-        }
-      },
-      {
         "key": "hosttype",
         "matchmethod": "exact",
         "pattern": "thinclient",
         "profile": {
           "nfshomes": "false"
-        }
-      },
-      {
-        "key": "infotv",
-        "matchmethod": "exact",
-        "pattern": "true",
-        "profile": {
-          "gnome": "false"
         }
       }
     ]
