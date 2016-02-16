@@ -8,11 +8,11 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <stdio.h>
@@ -21,80 +21,22 @@
 
 #include "conf.h"
 
-int     print_conf(puavo_conf_t *);
-
-int main(int argc, char *argv[])
+static int list_params(puavo_conf_t *const conf)
 {
-        puavo_conf_t *conf;
-        struct puavo_conf_err err;
-        char *returned_value;
-        int ret;
-
-        if (puavo_conf_open(&conf, &err)) {
-                (void) fprintf(stderr,
-                               "Error: Failed to open config backend: %s\n",
-                               err.msg);
-                return 1;
-        }
-
-        if (argc == 1) {
-                ret = print_conf(conf);
-                if (ret == -1)
-                        return 1;
-        } else if (argc == 2) {
-                if (puavo_conf_get(conf, argv[1], &returned_value, &err)) {
-                        (void) fprintf(stderr,
-                                       "Error: Failed to get '%s': %s\n",
-                                       argv[1],
-                                       err.msg);
-                        (void) puavo_conf_close(conf, NULL);
-                        return 1;
-                }
-                ret = printf("%s\n", returned_value);
-                free(returned_value);
-                if (ret < 0)
-                        return 1;
-        } else if (argc == 3) {
-                if (puavo_conf_set(conf, argv[1], argv[2], &err) == -1) {
-                        (void) fprintf(stderr,
-                                       "Error: Failed to set '%s' to '%s': %s\n",
-                                       argv[1],
-                                       argv[2],
-                                       err.msg);
-                        (void) puavo_conf_close(conf, NULL);
-                        return 1;
-                }
-        } else {
-                (void) fprintf(stderr, "usage: puavo-conf key [value]\n");
-                return 1;
-        }
-
-        if (puavo_conf_close(conf, &err) == -1)
-                (void) fprintf(stderr,
-                               "Error: Failed to close config backend: %s\n",
-                               err.msg);
-
-        return 0;
-}
-
-int
-print_conf(puavo_conf_t *conf)
-{
-        size_t i, keylen, max_keylen;
-        int key_field_width, ret, r;
+        size_t i;
+        size_t keylen;
+        size_t max_keylen = 0;
+        int key_field_width;
         struct puavo_conf_list list;
         struct puavo_conf_err err;
-
-        ret = 0;
+        int ret = 1;
 
         if (puavo_conf_get_all(conf, &list, &err)) {
                 (void) fprintf(stderr,
                                "Error: Failed to get parameter list: %s\n",
                                err.msg);
-                return -1;
+                return 1;
         }
-
-        max_keylen = 0;
 
         for (i = 0; i < list.length; i++) {
                 keylen = strlen(list.keys[i]);
@@ -104,18 +46,105 @@ print_conf(puavo_conf_t *conf)
         key_field_width = (max_keylen > 80) ? 80 : max_keylen;
 
         for (i = 0; i < list.length; i++) {
-                r = printf("%-*s %s\n",
+                if (printf("%-*s %s\n",
                            key_field_width + 2,
                            list.keys[i],
-                           list.values[i]);
-                if (r < 0) {
-                        (void) fprintf(stderr, "error in fprintf");
-                        ret = -1;
-                        break;
+                           list.values[i]) < 0) {
+                        (void) fprintf(stderr,
+                                       "Error: printf failed while listing "
+                                       "parameters");
+                        goto err;
                 }
         }
-
+        ret = 0;
+err:
         puavo_conf_list_free(&list);
 
         return ret;
+}
+
+static int get_param(puavo_conf_t *const conf, char const *const key)
+{
+        struct puavo_conf_err err;
+        char *value;
+
+        if (puavo_conf_get(conf, key, &value, &err)) {
+                (void) fprintf(stderr, "Error: Failed to get '%s': %s\n",
+                               key, err.msg);
+                (void) puavo_conf_close(conf, NULL);
+                return 1;
+        }
+
+        if (printf("%s\n", value) < 0) {
+                free(value);
+                (void) fprintf(stderr,
+                               "Error: printf failed while getting "
+                               "a parameter");
+                return 1;
+        }
+
+        free(value);
+
+        return 0;
+}
+
+static int set_param(puavo_conf_t *const conf, char const *const key,
+                     char const *const value)
+{
+        struct puavo_conf_err err;
+
+        if (puavo_conf_set(conf, key, value, &err) == -1) {
+                (void) fprintf(stderr, "Error: Failed to set '%s' to '%s': %s\n",
+                               key, value, err.msg);
+                (void) puavo_conf_close(conf, NULL);
+                return 1;
+        }
+
+        return 0;
+}
+
+int main(int argc, char *argv[])
+{
+        puavo_conf_t *conf;
+        struct puavo_conf_err err;
+        int exitval;
+
+        if (puavo_conf_open(&conf, &err)) {
+                (void) fprintf(stderr,
+                               "Error: Failed to open config backend: %s\n",
+                               err.msg);
+                return EXIT_FAILURE;
+        }
+
+        exitval = EXIT_FAILURE;
+
+        switch (argc) {
+        case 1:
+                if (list_params(conf))
+                        goto err;
+                break;
+        case 2:
+                if (get_param(conf, argv[1]))
+                        goto err;
+                break;
+        case 3:
+                if (set_param(conf, argv[1], argv[2]))
+                        goto err;
+                break;
+        default:
+                (void) fprintf(stderr,
+                               "Error: invalid number of arguments (%d)",
+                               argc - 1);
+                goto err;
+        }
+        exitval = EXIT_SUCCESS;
+err:
+        if (puavo_conf_close(conf, &err) == -1) {
+                (void) fprintf(stderr,
+                               "Error: Failed to close config backend: %s\n",
+                               err.msg);
+                exitval = EXIT_FAILURE;
+        }
+
+        return exitval;
 }
