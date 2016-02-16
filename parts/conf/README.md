@@ -111,7 +111,7 @@ will override that).
 ### settings from hardware quirks database
 
 Hardware quirks are looked from files that match the glob pattern
-`/usr/share/puavo/hwquirks/*/*.json`.  These files are searched
+`/usr/share/puavo-conf/hwquirks/*.json`. These files are searched
 in lexicographical order so that values with matched keys that are in
 later files override the previously matched ones.  Each file is a feature
 template file that has the same format as in feature profiles,

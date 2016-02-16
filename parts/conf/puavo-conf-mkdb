@@ -315,7 +315,7 @@ class Sources
     def hwquirks
         parameters = {}
 
-        hardware_quirks_globpattern = '/usr/share/puavo/hwquirks/*/*.json'
+        hardware_quirks_globpattern = '/usr/share/puavo-conf/hwquirks/*.json'
 
         hwquirk_files = Dir.glob(hardware_quirks_globpattern) rescue []
         hwquirk_files.each do |hwquirk_file|
