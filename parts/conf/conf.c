@@ -106,7 +106,8 @@ static int puavo_conf_init(struct puavo_conf **const confp,
         conf = (struct puavo_conf *) malloc(sizeof(struct puavo_conf));
         if (!conf) {
                 puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_SYS, 0,
-                                   "Failed to allocate memory for a config object");
+                                   "Failed to allocate memory for "
+                                   "a config object");
                 return -1;
         }
         memset(conf, 0, sizeof(struct puavo_conf));
@@ -318,7 +319,8 @@ int puavo_conf_get(struct puavo_conf *const conf,
         db_error = conf->db->get(conf->db, NULL, &db_key, &db_value, 0);
         if (db_error) {
                 puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DB, db_error,
-                                   "Failed to get a value from the db for a key '%s'",
+                                   "Failed to get a value from the db for "
+                                   "a key '%s'",
                                    key);
                 goto out;
         }
@@ -327,14 +329,16 @@ int puavo_conf_get(struct puavo_conf *const conf,
                 value = calloc(1, sizeof(char));
                 if (!value) {
                         puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_SYS, 0,
-                                           "Failed to allocate memory for the value of parameter '%s'", key);
+                                           "Failed to allocate memory for "
+                                           "the value of parameter '%s'", key);
                         goto out;
                 }
         } else {
                 value = strndup(db_value.data, db_value.size);
                 if (!value) {
                         puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_SYS, 0,
-                                           "Failed to allocate memory for the value of parameter '%s'", key);
+                                           "Failed to allocate memory for "
+                                           "the value of parameter '%s'", key);
                         goto out;
                 }
         }
@@ -519,8 +523,9 @@ int puavo_conf_get_all(struct puavo_conf *const conf,
                         new_keys = realloc(keys,
                                            sizeof(char *) * (length + 1));
                         if (!new_keys) {
-                                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_SYS, 0,
-                                                   "Failed to get all parameters");
+                                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_SYS,
+                                                   0, "Failed to get all "
+                                                   "parameters");
                                 goto out;
                         }
                         keys = new_keys;
@@ -528,8 +533,9 @@ int puavo_conf_get_all(struct puavo_conf *const conf,
                         new_values = realloc(values,
                                            sizeof(char *) * (length + 1));
                         if (!new_values) {
-                                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_SYS, 0,
-                                                   "Failed to get all parameters");
+                                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_SYS,
+                                                   0, "Failed to get all "
+                                                   "parameters");
                                 goto out;
                         }
                         values = new_values;
