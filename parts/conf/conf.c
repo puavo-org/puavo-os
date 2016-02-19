@@ -84,6 +84,10 @@ static void puavo_conf_err_set(struct puavo_conf_err *const errp,
                 snprintf(errp->msg, sizeof(errp->msg),
                          "%s: Key already exists", msg ? msg : "");
                 break;
+        case PUAVO_CONF_ERRNUM_KEYNOTFOUND:
+                snprintf(errp->msg, sizeof(errp->msg),
+                         "%s: Key does not exist", msg ? msg : "");
+                break;
         default:
                 snprintf(errp->msg, sizeof(errp->msg),
                          "Unknown error %d: %s",
