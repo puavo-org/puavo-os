@@ -27,6 +27,8 @@ module Puavo
                         :int)
         attach_function(:puavo_conf_get,    [:pointer, :string, :pointer, ConfErr.by_ref],
                         :int)
+        attach_function(:puavo_conf_add,    [:pointer, :string, :pointer, ConfErr.by_ref],
+                        :int)
 
         def initialize
             puavoconf_p = FFI::MemoryPointer.new(:pointer)
@@ -78,5 +80,16 @@ module Puavo
             end
             @puavoconf = nil
         end
+
+        def add(key, value)
+            raise Puavo::Conf::Error, 'Puavodb is not open' unless @puavoconf
+
+            conf_err = ConfErr.new
+
+            if puavo_conf_add(@puavoconf, key.to_s, value.to_s, conf_err) == -1 then
+                raise Puavo::Conf::Error, conf_err[:msg].to_ptr.read_string
+            end
+        end
+
     end
 end
