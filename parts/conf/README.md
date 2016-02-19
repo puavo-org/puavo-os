@@ -105,7 +105,7 @@ lexicographical order and must have the following structure:
             "key": "puavo.hosttype",
             "matchmethod": "exact",
             "pattern": "laptop",
-            "assignments": {
+            "parameters": {
                 "puavo.nethomes.enable": false
             }
         },
@@ -113,7 +113,7 @@ lexicographical order and must have the following structure:
             "key": "puavo.hosttype",
             "matchmethod": "exact",
             "pattern": "fatclient",
-            "assignments": {
+            "parameters": {
                 "puavo.nethomes.enable": true,
                 "puavo.nethomes.protocol": "nfs"
             }
@@ -128,7 +128,7 @@ Field `key` determines the name of the parameter the filter is matched
 against. Field `matchmethod` determines the method for matching:
 `exact`, `glob` and `regex` are supported. Value is tested against the
 value of field `pattern`, and if a match is successful, parameters
-listed in `assignments` field will be set.
+listed in `parameters` field will be set.
 
 ### Parameter overrides from hardware quirks
 
@@ -141,7 +141,7 @@ in lexicographical order and must have the following structure:
         "key": "dmidecode-system-product-name",
         "matchmethod": "exact",
         "pattern": "Aspire ES1-111",
-        "assignments": {
+        "parameters": {
           "puavo.intel_backlight": true
         }
       }
@@ -158,7 +158,7 @@ characteristic key names are `dmidecode-*` (with keywords supported by
 ### Puavo Web
 
 Currently, configuration definitions (`/etc/puavo/device.json` et al.)
-from Puavo Web is converted to parameter assignments by
+from Puavo Web are converted to parameter assignments by
 `puavo-conf-mkdb`. In future, Puavo Web will support Puavo Conf natively
 and just provide a list of parameter assignments to configurable hosts.
 
