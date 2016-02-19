@@ -1,17 +1,30 @@
 # Puavo Conf
 
-Puavo Conf is a database of parameters that control how a Puavo
-host/device behaves. There is a library `libpuavoconf` that can be used
-by programs, and a simple program `puavo-conf` that can be used to
-get/set values on database. Database consists of key/value-pairs. Both
-keys and values are character strings (can not contain NUL-byte).
+Puavo Conf is the configuration system of Puavo OS. It consists of a
+parameter database, a C library (`libpuavoconf`) and a set of programs
+(`puavo-conf` and `puavo-conf-mkdb`) manipulating the database through
+the library. Parameters define how various Puavo OS components behave
+and can be tuned from multiple sources, such as Puavo Web, local
+administrative tools or kernel command line.
 
-## Build dependencies
+## Buildtime dependencies
 
 - libdb-dev
 - libtool-bin
 
+## Runtime dependencies
+
+- dmidecode
+- libdb5.3
+- pciutils (lspci)
+- ruby-ffi
+- ruby1.9.1 or newer
+- usbutils (lsusb)
+
 ## Building
+
+    make
+    sudo make install
 
 By default, builds are targeted to `/usr/local` prefix. To make a build
 targeted to `/usr` instead, run:
@@ -19,148 +32,142 @@ targeted to `/usr` instead, run:
     make prefix=/usr
     sudo make install
 
+`Makefile` supports also `DESTDIR=/path/to/install/dir` parameter for
+staged installs. See
+https://www.gnu.org/prep/standards/html_node/DESTDIR.html for more info.
+
 ## Usage
 
-    puavo-conf key       # retrieves value for key
-    puavo-conf key value # sets the value of key to "value"
+    puavo-conf-mkdb      # create and populate a database
+    puavo-conf           # list all keys and values
+    puavo-conf key       # print the value of a key
+    puavo-conf key value # set the value of a key
 
-    puavo-conf-mkdb      # creates puavo-conf database for this host
+## Parameters
 
-## `puavo-conf-mkdb` sources and source formats
+Parameters are key-value pairs. Both keys and values are stored in the
+database as NUL-terminated strings. It is up to the user to decide how
+to interpret parameter values.
 
-`puavo-conf-mkdb` reads feature configuration parameters from various
-sources and constructs a puavo-conf database from those.  This database
-is customized for each host and runtime.  Normally `puavo-conf-mkdb`
-should be run at an boottime.
+Parameter values can be assigned from different sources with varying
+precedences. The following list defines the currently supported sources
+in ascending precedence order:
 
-`puavo-conf-mkdb` looks up these sources in this order:
+    1. Parameter definitions
+    2. Parameter assignments from parameter filters
+    3. Parameter assignments from hardware quirks
+    4. Parameter assignments from Puavo Web
+    5. Parameter assignments from local configuration
+    6. Parameter assignments from kernel command line
 
-    1. image defaults
-    2. feature-profiles
-    3. hardware quirks database
-    4. settings from puavo
-    5. primary user preferences (currently unimplemented)
-    6. kernel arguments
+Thus, for example, values assigned on the kernel command line overwrite
+values assigned by hardware quirks.
 
-Values set by later sources override values set by previous ones.  Thus,
-for example, settings set in kernel arguments overwrite settings from
-hardware quirks database.
+Parameter sources are read by `puavo-conf-mkdb` in the given order and
+together they construct the parameter database. The database must be
+constructed before any configurable Puavo OS component is executing.
 
-### settings from image defaults
+### Parameter definitions
 
-Default image values are looked from files that match the glob pattern
-`/usr/share/puavo-conf/parameters/*.json`. There should be files in
-JSON-format like this:
+Parameters must be defined in JSON files located in
+`/usr/share/puavo-conf/parameters/*.json`. These files will be processed
+in lexicographical order and must have the following structure:
 
     {
-      "keys": {
-        "gnome": {
-          "default": false,
-          "description": "Gnome desktop environment",
-          "type": "boolean"
+        "puavo.hosttype": {
+            "type": "string",
+            "choices": ["fatclient", "thinclient", "laptop"],
+            "default": "fatclient",
+            "description": "Type of the device"
+        },
+        "puavo.nethomes.enabled": {
+            "type": "bool",
+            "default": true,
+            "description": "Toggle network mounted home directories"
+        },
+        "puavo.nethomes.protocol": {
+            "type": "string",
+            "choices": ["nfs", "samba"],
+            "default": "nfs",
+            "description": "Network filesystem protocol used for network mounted home directories"
         }
-      }
     }
 
-Here we define key `gnome` to be of type boolean and that has a default
-value `false`.
+### Parameter filters
 
-### feature profiles
-
-It is possible to write feature profiles to
-`/etc/puavoimage/feature-profiles.json`.  This is a feature template
-file with the following JSON-format:
+It is possible to overwrite default parameter values with parameter
+filters. Filters must be defined in JSON files located in
+`/usr/share/puavo-conf/filters/*.json`. These files will be processed in
+lexicographical order and must have the following structure:
 
     [
-      {
-        "key": "hosttype",
-        "matchmethod": "exact",
-        "pattern": "thinclient",
-        "profile": {
-          "nfshomes": "false"
+        {
+            "key": "puavo.hosttype",
+            "matchmethod": "exact",
+            "pattern": "laptop",
+            "assignments": {
+                "puavo.nethomes.enable": false
+            }
+        },
+        {
+            "key": "puavo.hosttype",
+            "matchmethod": "exact",
+            "pattern": "fatclient",
+            "assignments": {
+                "puavo.nethomes.enable": true,
+                "puavo.nethomes.protocol": "nfs"
+            }
         }
-      }
     ]
 
-`key` determines the parameter key that is used to look up parameters
-from Puavo-settings and kernel arguments (kernel arguments override
-Puavo-settings).  Key `matchmethod` determines the method for matching:
-`exact`, `glob` and `regex` are supported.  Value is tested against the
-value set in `pattern`, and if a match is successful, settings under
-`profile` are put to use.
+In the above example, two filters are defined which disable network
+mounted home directories on laptops and enable on fatclients using NFS,
+respectively.
 
-For example, if we provide `puavo.feature.infotv=true` on kernel
-command-line, with the above configuration also `gnome` will
-be set to `false` (unless some other settings that have priority
-will override that).
+Field `key` determines the name of the parameter the filter is matched
+against. Field `matchmethod` determines the method for matching:
+`exact`, `glob` and `regex` are supported. Value is tested against the
+value of field `pattern`, and if a match is successful, parameters
+listed in `assignments` field will be set.
 
-### settings from hardware quirks database
+### Parameter overrides from hardware quirks
 
-Hardware quirks are looked from files that match the glob pattern
-`/usr/share/puavo-conf/hwquirks/*.json`. These files are searched
-in lexicographical order so that values with matched keys that are in
-later files override the previously matched ones.  Each file is a feature
-template file that has the same format as in feature profiles,
-except keys are not matched against Puavo-settings and kernel-arguments
-but against device characteristics.  For example:
+Hardware quirks must be defined in JSON files located in
+`/usr/share/puavo-conf/hwquirks/*.json`. These files will be processed
+in lexicographical order and must have the following structure:
 
     [
-      {
-        "key": "dmidecode-system-product-name",
-        "matchmethod": "exact",
-        "pattern": "20D9S01U00",
-        "profile": {
-          "intel_backlight": true
-        }
-      },
       {
         "key": "dmidecode-system-product-name",
         "matchmethod": "exact",
         "pattern": "Aspire ES1-111",
-        "profile": {
-          "intel_backlight": true
-        }
-      },
-      {
-        "key": "pci-id",
-        "matchmethod": "glob",
-        "pattern": "8086:*",
-        "profile": {
-          "guestlogin": true,
-          "intel_backlight": true
+        "assignments": {
+          "puavo.intel_backlight": true
         }
       }
     ]
 
-In each hash we have `key` whose value tells the hardware characteristic
-we are matching.  `dmidecode-*` (with keywords supported by `dmidecode`)
-are supported, as well as `pci-id` and `usb-id`.  Otherwise the behaviour
-is the same as with feature profiles.  These settings will override
-values set in feature profiles.
+In this example, we enable intel_backlight on a specific Asus Aspire
+device.
 
-### settings from Puavo
+In contrast to parameter filters, here `key` determines the name of the
+*hardware characteristic* the filter is matched against. Valid hardware
+characteristic key names are `dmidecode-*` (with keywords supported by
+`dmidecode`), `pci-id` and `usb-id`.
 
-Settings from Puavo are looked up from `/etc/puavo/device.json`, that
-should contain key "features", like this:
+### Puavo Web
 
-    {
-      ...,
-      "features": {
-        "autopilot.mode": "off",
-        "gnome": true
-      }
-      ...
-    }
+Currently, configuration definitions (`/etc/puavo/device.json` et al.)
+from Puavo Web is converted to parameter assignments by
+`puavo-conf-mkdb`. In future, Puavo Web will support Puavo Conf natively
+and just provide a list of parameter assignments to configurable hosts.
 
-Values specified here override the settings in previous sections.
+### Local configuration
 
-### settings from primary user preferences
+Not implemented yet.
 
-Not implemented yet.  (We should maybe also define somewhere
-which values are overridable by primary user.)
+### Kernel command line arguments
 
-### settings from kernel command-line arguments
-
-Values set from kernel command-line override everything else.
-Features can be set with `puavo.feature.key=value`, for example
-`puavo.feature.gnome=false`.
+Parameter assignments from the kernel command line overwrite everything
+else. Parameters can be assigned with the following syntax:
+`puavo.feature.key=value`.
