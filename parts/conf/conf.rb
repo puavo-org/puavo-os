@@ -29,6 +29,8 @@ module Puavo
                         :int)
         attach_function(:puavo_conf_add,    [:pointer, :string, :pointer, ConfErr.by_ref],
                         :int)
+        attach_function(:puavo_conf_overwrite, [:pointer, :string, :pointer, ConfErr.by_ref],
+                        :int)
 
         def initialize
             puavoconf_p = FFI::MemoryPointer.new(:pointer)
@@ -87,6 +89,16 @@ module Puavo
             conf_err = ConfErr.new
 
             if puavo_conf_add(@puavoconf, key.to_s, value.to_s, conf_err) == -1 then
+                raise Puavo::Conf::Error, conf_err[:msg].to_ptr.read_string
+            end
+        end
+
+        def overwrite(key, value)
+            raise Puavo::Conf::Error, 'Puavodb is not open' unless @puavoconf
+
+            conf_err = ConfErr.new
+
+            if puavo_conf_overwrite(@puavoconf, key.to_s, value.to_s, conf_err) == -1 then
                 raise Puavo::Conf::Error, conf_err[:msg].to_ptr.read_string
             end
         end
