@@ -399,7 +399,8 @@ int puavo_conf_has_key(struct puavo_conf *const conf, char const *const key,
                 return 0;
         }
 
-        memcpy(errp, &err, sizeof(struct puavo_conf_err));
+        if (errp)
+                memcpy(errp, &err, sizeof(struct puavo_conf_err));
 
         return -1;
 }
