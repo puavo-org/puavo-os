@@ -384,6 +384,26 @@ out:
         return ret;
 }
 
+int puavo_conf_has_key(struct puavo_conf *const conf, char const *const key,
+                       bool *const haskey, struct puavo_conf_err *const errp)
+{
+        struct puavo_conf_err err;
+
+        if (!puavo_conf_get(conf, key, NULL, &err)) {
+                *haskey = true;
+                return 0;
+        }
+
+        if (err.errnum == PUAVO_CONF_ERRNUM_DB && err.db_error == DB_NOTFOUND) {
+                *haskey = false;
+                return 0;
+        }
+
+        memcpy(errp, &err, sizeof(struct puavo_conf_err));
+
+        return -1;
+}
+
 int puavo_conf_get_all(struct puavo_conf *const conf,
                        struct puavo_conf_list *const list,
                        struct puavo_conf_err *const errp)

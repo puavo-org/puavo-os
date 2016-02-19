@@ -18,6 +18,7 @@
 #ifndef CONF_H
 #define CONF_H
 
+#include <stdbool.h>
 #include <stddef.h>
 
 typedef struct puavo_conf puavo_conf_t;
@@ -107,6 +108,28 @@ int puavo_conf_clear(puavo_conf_t *conf,
  */
 int puavo_conf_set(puavo_conf_t *conf, char const *key, char const *value,
                    struct puavo_conf_err *errp);
+
+/**
+ * puavo_conf_has_key() - check if the parameter exists
+ *
+ * @conf   - initialized config object
+ *
+ * @key    - NUL-terminated string constant
+ *
+ * @haskey - pointer to a boolean
+ *
+ * @errp   - pointer to an error struct or NULL
+ *
+ * If @key exists in the config backend, @haskey is set to true,
+ * otherwise to false.
+ *
+ * If @errp is not NULL and an error is encountered, the error struct
+ * pointed by @errp is filled to convey error details.
+ *
+ * Return 0 on success and -1 on error.
+ */
+int puavo_conf_has_key(puavo_conf_t *conf, char const *key, bool *haskey,
+                       struct puavo_conf_err *errp);
 
 /**
  * puavo_conf_get() - get a parameter value
