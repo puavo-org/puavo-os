@@ -112,6 +112,29 @@ int puavo_conf_set(puavo_conf_t *conf, char const *key, char const *value,
                    struct puavo_conf_err *errp);
 
 /**
+ * puavo_conf_overwrite() - overwrite a parameter value
+ *
+ * @conf  - initialized config object
+ *
+ * @key   - NUL-terminated string constant
+ *
+ * @value - NUL-terminated string constant
+ *
+ * @errp  - pointer to an error struct or NULL
+ *
+ * If @errp is not NULL and an error is encountered, the error struct
+ * pointed by @errp is filled to convey error details.
+ *
+ * Errnums:
+ *
+ * PUAVO_CONF_ERRNUM_KEYNOTFOUND - @key does not exist in the config backend
+ *
+ * Return 0 on success and -1 on error.
+ */
+int puavo_conf_add(puavo_conf_t *conf, char const *key, char const *value,
+                   struct puavo_conf_err *errp);
+
+/**
  * puavo_conf_has_key() - check if the parameter exists
  *
  * @conf   - initialized config object
