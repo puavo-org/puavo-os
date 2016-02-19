@@ -28,6 +28,7 @@ struct puavo_conf_err {
                 PUAVO_CONF_ERRNUM_SUCCESS,
                 PUAVO_CONF_ERRNUM_DB,
                 PUAVO_CONF_ERRNUM_SYS,
+                PUAVO_CONF_ERRNUM_KEYFOUND,
                 PUAVO_CONF_ERRNUMCOUNT
         } errnum;
         int db_error;
