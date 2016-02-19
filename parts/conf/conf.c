@@ -335,7 +335,7 @@ out:
         free(db_key.data);
         free(db_value.data);
 
-        if (!ret)
+        if (!ret && valuep)
                 *valuep = value;
 
         return ret;

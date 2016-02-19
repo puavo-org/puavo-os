@@ -115,13 +115,13 @@ int puavo_conf_set(puavo_conf_t *conf, char const *key, char const *value,
  *
  * @key    - NUL-terminated string constant
  *
- * @valuep - pointer to an uninitialized string
+ * @valuep - pointer to an uninitialized string or NULL
  *
  * @errp  - pointer to an error struct or NULL
  *
- * After a successful call, @valuep points to a heap-allocated
- * NUL-terminated string value for @key. The caller is responsible for
- * calling free() on the string afterwards.
+ * After a successful call, if @valuep is not NULL, @valuep points to a
+ * heap-allocated NUL-terminated string value for @key. The caller is
+ * responsible for calling free() on the string afterwards.
  *
  * If @errp is not NULL and an error is encountered, the error struct
  * pointed by @errp is filled to convey error details.
