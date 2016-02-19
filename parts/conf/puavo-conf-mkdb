@@ -200,7 +200,7 @@ Usage:
     puavo-conf-mkdb [--sources comma-separated-list-of-sources]
 
 By default the list of used sources is
-"defaults filters hwquirks puavo primaryuser kernelargs"
+"defaults filters hwquirks puavo localconf kernelargs"
 and these are the only available configuration sources.
 EOF
 end
@@ -208,7 +208,7 @@ end
 class Sources
     attr_reader :parameters
 
-    Available = %w(defaults filters hwquirks puavo primaryuser kernelargs)
+    Available = %w(defaults filters hwquirks puavo localconf kernelargs)
 
     def initialize(sources)
         @sources = []
@@ -357,7 +357,7 @@ class Sources
     end
 
     # settings from primary user
-    def primaryuser
+    def localconf
         # XXX unimplemented
         return {}
     end
@@ -402,7 +402,7 @@ end
 
 $status = 0
 
-conf_sources = %w(defaults filters hwquirks puavo primaryuser kernelargs)
+conf_sources = %w(defaults filters hwquirks puavo localconf kernelargs)
 
 begin
     opts = GetoptLong.new([ '--sources', GetoptLong::REQUIRED_ARGUMENT ])
