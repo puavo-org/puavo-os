@@ -36,39 +36,39 @@ require 'getoptlong'
 require 'json'
 require 'puavo/conf'
 
-def apply_parameter_profiles(parameters, parameter_profiles, lookup_fn)
-    if !parameter_profiles.kind_of?(Array)
-        logerr('input type error: parameter profiles not in correct format')
+def apply_parameter_filters(parameters, parameter_filters, lookup_fn)
+    if !parameter_filters.kind_of?(Array)
+        logerr('input type error: parameter filters not in correct format')
         return
     end
 
-    parameter_profiles.each do |profile|
-        if !(profile.kind_of?(Hash) \
-               && profile['key'].kind_of?(String) \
-               && profile['profile'].kind_of?(Hash)) then
-            logerr('input type error: parameter profile not in correct format')
+    parameter_filters.each do |filter|
+        if !(filter.kind_of?(Hash) \
+               && filter['key'].kind_of?(String) \
+               && filter['assignments'].kind_of?(Hash)) then
+            logerr('input type error: parameter filter not in correct format')
             next
         end
 
-        if profile['key'] == '*' then
-            merge_parameters(parameters, profile['profile'])
+        if filter['key'] == '*' then
+            merge_parameters(parameters, filter['assignments'])
             next
         end
 
-        if !(profile['matchmethod'].kind_of?(String)) then
-            logerr('input type error: parameter profile not in correct format')
+        if !(filter['matchmethod'].kind_of?(String)) then
+            logerr('input type error: parameter filter not in correct format')
             next
         end
 
-        parameter_values = lookup_fn.call(profile['key'])
+        parameter_values = lookup_fn.call(filter['key'])
         next if parameter_values.nil?
 
         parameter_values.each do |value|
             match_result = match_puavopattern(value,
-                                              profile['matchmethod'],
-                                              profile['pattern'])
+                                              filter['matchmethod'],
+                                              filter['pattern'])
             if match_result then
-                merge_parameters(parameters, profile['profile'])
+                merge_parameters(parameters, filter['assignments'])
                 break
             end
         end
@@ -200,7 +200,7 @@ Usage:
     puavo-conf-mkdb [--sources comma-separated-list-of-sources]
 
 By default the list of used sources is
-"defaults profiles hwquirks puavo primaryuser kernelargs"
+"defaults filters hwquirks puavo primaryuser kernelargs"
 and these are the only available configuration sources.
 EOF
 end
@@ -208,7 +208,7 @@ end
 class Sources
     attr_reader :parameters
 
-    Available = %w(defaults profiles hwquirks puavo primaryuser kernelargs)
+    Available = %w(defaults filters hwquirks puavo primaryuser kernelargs)
 
     def initialize(sources)
         @sources = []
@@ -224,14 +224,14 @@ class Sources
         @parameters_by_source = {}
 
         @sources.each do |source|
-            next if source == 'profiles'
+            next if source == 'filters'
             @parameters_by_source[source] = send(source)
         end
 
-        # Profiles are special: other sources affect the profiles chosen.
+        # Filters are special: other sources affect the filters chosen.
         # Note that in merge() source order always matters.
-        profile_sources = merge()
-        @parameters_by_source['profiles'] = profiles(profile_sources)
+        filter_sources = merge()
+        @parameters_by_source['filters'] = filters(filter_sources)
 
         @parameters = merge()
     end
@@ -289,23 +289,23 @@ class Sources
         return parameters
     end
 
-    # parameter-profiles
-    def profiles(parameter_configuration)
+    # parameter-filters
+    def filters(parameter_configuration)
         parameters = {}
 
-        parameter_profiles = []
-        parameter_profiles_path = '/etc/puavoimage/parameter-profiles.json'
+        parameter_filters = []
+        parameter_filters_path = '/etc/puavoimage/parameter-filters.json'
         begin
-            parameter_profiles = JSON.parse( IO.read(parameter_profiles_path) )
+            parameter_filters = JSON.parse( IO.read(parameter_filters_path) )
             parameter_lookup = lambda do |key|
                                  parameter_configuration.has_key?(key)  \
                                      ? [ parameter_configuration[key] ] \
                                      : nil
                              end
-            apply_parameter_profiles(parameters, parameter_profiles, parameter_lookup)
+            apply_parameter_filters(parameters, parameter_filters, parameter_lookup)
         rescue StandardError => e
-            logerr('Could not apply parameter profiles from' \
-                     + " #{ parameter_profiles_path }: #{ e.message }")
+            logerr('Could not apply parameter filters from' \
+                     + " #{ parameter_filters_path }: #{ e.message }")
         end
 
         return parameters
@@ -321,7 +321,7 @@ class Sources
         hwquirk_files.each do |hwquirk_file|
             begin
                 hwquirklist = JSON.parse( IO.read(hwquirk_file) )
-                apply_parameter_profiles(parameters,
+                apply_parameter_filters(parameters,
                                        hwquirklist,
                                        Proc.method(:get_device_setting))
             rescue StandardError => e
@@ -402,7 +402,7 @@ end
 
 $status = 0
 
-conf_sources = %w(defaults profiles hwquirks puavo primaryuser kernelargs)
+conf_sources = %w(defaults filters hwquirks puavo primaryuser kernelargs)
 
 begin
     opts = GetoptLong.new([ '--sources', GetoptLong::REQUIRED_ARGUMENT ])
