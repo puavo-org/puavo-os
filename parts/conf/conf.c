@@ -410,6 +410,24 @@ int puavo_conf_overwrite(struct puavo_conf *const conf,
         return puavo_conf_set(conf, key, value, errp);
 }
 
+int puavo_conf_add(struct puavo_conf *const conf,
+                   char const *const key, char const *const value,
+                   struct puavo_conf_err *const errp)
+{
+        bool haskey;
+
+        if (puavo_conf_has_key(conf, key, &haskey, errp) == -1)
+                return -1;
+
+        if (haskey) {
+                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_KEYFOUND, 0,
+                                   "Failed to add parameter");
+                return -1;
+        }
+
+        return puavo_conf_set(conf, key, value, errp);
+}
+
 int puavo_conf_has_key(struct puavo_conf *const conf, char const *const key,
                        bool *const haskey, struct puavo_conf_err *const errp)
 {
