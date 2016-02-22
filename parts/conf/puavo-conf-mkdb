@@ -131,7 +131,7 @@ def logwarn(msg)
 end
 
 def logerr(msg)
-    logwarn(msg)
+    warn("Error: #{msg}")
     $status = 1
 end
 
