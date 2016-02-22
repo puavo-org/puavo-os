@@ -127,7 +127,7 @@ def get_device_setting(key)
 end
 
 def logwarn(msg)
-    warn(msg)
+    warn("Warning: #{msg}")
 end
 
 def logerr(msg)
