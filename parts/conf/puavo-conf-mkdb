@@ -324,28 +324,13 @@ class Sources
         parameters = {}
 
         begin
-            kernel_cmdline = IO.read('/proc/cmdline')
-            kernel_args = kernel_cmdline.split
-
-            # A quirk for backwards compatibility:
-            # "puavo.hosttype=FOO" is the same as "puavo.parameter.hosttype=FOO".
-            # If both are specified and conflicting, the value in
-            # "puavo.parameter.hosttype" wins.
-            kernel_args.each do |kernel_arg|
-                match = kernel_arg.match(/\Apuavo\.hosttype=(.*)\Z/)
-                if match then
-                    merge_parameters(parameters, { 'hosttype' => match[1] })
-                end
-            end
-
-            kernel_args.each do |kernel_arg|
-                match = kernel_arg.match(/\Apuavo\.parameter\.(.*?)=(.*)\Z/)
-                if match then
-                    merge_parameters(parameters, { match[1] => match[2] })
+            IO.read('/proc/cmdline').split.each do |kernel_arg|
+                if kernel_arg =~ /\A(puavo\..*)=(.*)\Z/
+                    merge_parameters(parameters, { $1 => $2 })
                 end
             end
         rescue StandardError => e
-            logerr('could not read kernel command line arguments')
+            logerr('Failed to parameters from the kernel command line')
         end
 
         return parameters
