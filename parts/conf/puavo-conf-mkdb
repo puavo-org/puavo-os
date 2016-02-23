@@ -457,27 +457,29 @@ rescue GetoptLong::InvalidOption => e
 end
 
 puavoconf = Puavo::Conf.new()
+begin
+    parameters = get_parameter_definitions()
 
-parameters = get_parameter_definitions()
-
-parameters.sort.each do |key, value|
-    begin
-        puavoconf.add(key, value)
-    rescue StandardError => e
-        logerr("Failed to add a new parameter: #{key}=#{value}: #{e.message}")
+    parameters.sort.each do |key, value|
+        begin
+            puavoconf.add(key, value)
+        rescue StandardError => e
+            logerr("Failed to add a new parameter: #{key}=#{value}: #{e.message}")
+        end
     end
-end
 
-sources = Sources.new(conf_sources, parameters)
+    sources = Sources.new(conf_sources, parameters)
 
-parameters = sources.parameters
-parameters.sort.each do |key, value|
-    begin
-        puavoconf.overwrite(key, value)
-    rescue StandardError => e
-        logerr("Failed to overwrite a parameter: #{key}=#{value}: #{e.message}")
+    parameters = sources.parameters
+    parameters.sort.each do |key, value|
+        begin
+            puavoconf.overwrite(key, value)
+        rescue StandardError => e
+            logerr("Failed to overwrite a parameter: #{key}=#{value}: #{e.message}")
+        end
     end
+ensure
+    puavoconf.close
 end
-puavoconf.close
 
 exit($status)
