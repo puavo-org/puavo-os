@@ -1,19 +1,177 @@
 #!/bin/sh
 #
 # Get pxelinux.cfg configuration data from th puavo-rest server.
-# 
-# Usage: [sudo] ltspboot-config [PXE GET URL]
 #
-# eg. sudo ltspboot-config pxelinux.cfg/01-78-e7-d1-d4-0f-5f
+# Usage: puavo-ltspboot-config [PXE GET URL]
+#
+# eg. puavo-ltspboot-config pxelinux.cfg/01-78-e7-d1-d4-0f-5f
 
-mac_address=$(echo $1 | sed -r -n 's/.*01[-:](([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2})$/\1/p' | sed -e 's/-/:/g')
+set -e
 
-pxe_config=$(curl --cacert /etc/puavo/certs/rootca.pem --silent --fail -H "Authorization: Bootserver" $(puavo-resolve-api-server)/v3/$mac_address/boot_configuration)
-status_code=$?
+tftpbase="/var/lib/tftpboot/ltsp"
 
-if [ "$status_code" -eq 0 ]; then
-  echo "$pxe_config"
-else
-  # FIXME: error message with pxelinux syntax?
-  echo "Couldn't connect to puavo-rest server"
+boot_label() {
+  arch=$1
+  preferred_boot_image=$2
+  kernel_version_suffix=$3
+  kernel_arguments=$4
+  hosttype=$5
+
+  cat <<EOF
+label ltsp-NBD-${arch}
+  menu label LTSP, using NBD with ${arch}-kernel
+  kernel ltsp/${preferred_boot_image}/vmlinuz${kernel_version_suffix}-${arch}
+  append ro initrd=ltsp/${preferred_boot_image}/initrd.img${kernel_version_suffix}-${arch} init=/sbin/init-puavo puavo.hosttype=${hosttype} root=/dev/nbd0 nbdroot=:${preferred_boot_image} ${kernel_arguments}
+EOF
+}
+
+boot_nbd_label() {
+  arch=$1
+  cat <<EOF
+label ltsp-NBD-${arch}
+  menu label LTSP, using NBD with ${arch}-kernel
+  kernel ltsp/${preferred_boot_image}/vmlinuz#{grub_kernel_version}-#{arch}
+  append ro initrd=ltsp/#{preferred_boot_image}/initrd.img#{grub_kernel_version}-#{arch} init=/sbin/init-puavo puavo.hosttype=#{grub_type} root=/dev/nbd0 nbdroot=:#{preferred_boot_image} #{grub_kernel_arguments}
+EOF
+}
+
+get_bootparams() {
+  puavo-rest-client --user-bootserver "v3/bootparams_by_mac/$1"
+}
+
+pxe_error() {
+  errorstring=$1
+  cat <<EOF
+default menu.c32
+menu title ERROR
+
+label error
+        menu label $errorstring
+EOF
+  exit 1
+}
+
+pxegeturl=$1
+
+set -u
+
+if [ -z "$pxegeturl" ]; then
+  pxe_error 'PXE url missing'
 fi
+
+mac_address=$(echo "$pxegeturl" \
+  | sed -nr 's/.*01[-:](([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2})$/\1/p' \
+  | tr - :)
+
+if [ -z "$mac_address" ]; then
+  pxe_error 'PXEGETURL not valid'
+fi
+
+if ! host_bootparams=$(get_bootparams "$mac_address"); then
+  pxe_error "No configuration for $mac_address"
+fi
+
+boot_mode=$(echo "$host_bootparams" | jq -r .boot_mode)
+hosttype=$(echo "$host_bootparams" | jq -r .type)
+kernel_arguments=$(echo "$host_bootparams" | jq -r .kernel_arguments)
+kernel_version=$(echo "$host_bootparams" | jq -r .kernel_version)
+preferred_boot_image=$(echo "$host_bootparams" | jq -r .preferred_boot_image)
+
+[ "$kernel_arguments" = "null" ] && kernel_arguments=''
+[ "$kernel_version"   = "null" ] && kernel_version=''
+
+tftpdir="${tftpbase}/${preferred_boot_image}"
+
+if [ ! -d "$tftpdir" ]; then
+  pxe_error "Missing ${preferred_boot_image}"
+fi
+
+# XXX these could be used when hosttype = unregistered
+# available_kernels=$(echo ${tftpdir}/vmlinuz-* \
+#                       | xargs -n 1 basename \
+#                       | sed 's/^vmlinuz-//')
+
+use_if64cpu=false
+
+kernel_version_suffix=''
+if [ -n "$kernel_version" ]; then
+  if echo "$kernel_version" | grep -Eq -- '-(amd64|i386)$'; then
+    # kernel_version set to particular arch
+    if test -e "${tftpdir}/vmlinuz-${kernel_version}"; then
+      kernel_version_suffix="-$kernel_version"
+    else
+      : # ... but kernel not available, so just use default
+    fi
+  elif test -e "${tftpdir}/vmlinuz-${kernel_version}-amd64" \
+         -a -e "${tftpdir}/vmlinuz-${kernel_version}-i386"; then
+    use_if64cpu=true
+    kernel_version_suffix="-$kernel_version"
+  elif test -e "${tftpdir}/vmlinuz-${kernel_version}"; then
+    # no kernels for both archs, but some kernel exists, so use that
+    kernel_version_suffix="-$kernel_version"
+  fi
+elif test -e "${tftpdir}/vmlinuz-amd64" -a -e "${tftpdir}/vmlinuz-i386"; then
+  use_if64cpu=true
+elif test -e "${tftpdir}/vmlinuz"; then
+  : # okay, use default kernel
+else
+  pxe_error 'No kernel found'
+fi
+
+boot_header=''
+if [ "$boot_mode" = "dualboot" ]; then
+  boot_header=$(cat <<'HEADER_EOF'
+default menu.c32
+menu title Choose a system
+prompt 0
+timeout 100
+
+label local
+  menu label Local OS
+  localboot 0
+HEADER_EOF
+)
+elif $use_if64cpu; then
+  boot_header=$(cat <<'HEADER_EOF'
+default ltsp-NBD-ifcpu64
+ontimeout ltsp-NBD-ifcpu64
+HEADER_EOF
+)
+  else
+  boot_header=$(cat <<'HEADER_EOF'
+default ltsp-NBD
+ontimeout ltsp-NBD
+HEADER_EOF
+)
+fi
+
+if $use_if64cpu; then
+  boot_labels=$(cat <<EOF
+label ltsp-NBD-ifcpu64
+  menu label LTSP, using NBD, autodetect 64-bit or 32-bit kernels
+  menu default
+  kernel ifcpu64.c32
+  append ltsp-NBD-amd64 -- ltsp-NBD-i386
+
+$(boot_label amd64 "$preferred_boot_image" "$kernel_version_suffix" \
+             "$kernel_arguments" "$hosttype")
+
+$(boot_label i386 "$preferred_boot_image" "$kernel_version_suffix" \
+             "$kernel_arguments" "$hosttype")
+EOF
+)
+else
+  boot_labels=$(cat <<EOF
+label ltsp-NBD
+  menu label LTSP, using NBD
+  menu default
+  kernel ltsp/${preferred_boot_image}/vmlinuz${kernel_version_suffix}
+  append ro initrd=ltsp/${preferred_boot_image}/initrd.img${kernel_version_suffix} init=/sbin/init-puavo puavo.hosttype=${hosttype} root=/dev/nbd0 nbdroot=:${preferred_boot_image} ${kernel_arguments}
+  ipappend 2
+EOF
+)
+fi
+
+echo "$boot_header"
+echo ""
+echo "$boot_labels"
