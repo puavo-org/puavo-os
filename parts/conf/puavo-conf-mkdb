@@ -385,6 +385,23 @@ def get_parameter_definitions
     return result
 end
 
+def get_parameter_overwrites_from_hwquirks(parameter_definitions)
+    parameters = {}
+    files      = Dir.glob('/usr/share/puavo-conf/hwquirks/*.json') rescue []
+
+    files.each do |file|
+        begin
+            apply_parameter_filters(parameters,
+                                    read_json_obj(file, Array),
+                                    Proc.method(:get_device_setting))
+        rescue StandardError => e
+            logerr("Failed to apply hardware quirks from #{file}: #{e.message}")
+        end
+    end
+
+    return parameters
+end
+
 def get_parameter_overwrites_from_kernelargs(parameter_definitions)
     parameters = {}
 
