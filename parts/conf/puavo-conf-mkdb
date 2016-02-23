@@ -402,6 +402,15 @@ def get_parameter_overwrites_from_hwquirks(parameter_definitions)
     return parameters
 end
 
+def get_parameter_overwrites_from_puavo(parameter_definitions)
+    begin
+        device_json = IO.read('/etc/puavo/device.json')
+    rescue Errno::ENOENT
+        return {}
+    end
+    JSON.parse(device_json)['parameters'] or {}
+end
+
 def get_parameter_overwrites_from_kernelargs(parameter_definitions)
     parameters = {}
 
