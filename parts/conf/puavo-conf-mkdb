@@ -258,7 +258,7 @@ Usage:
     puavo-conf-mkdb [--sources comma-separated-list-of-sources]
 
 By default the list of used sources is
-"filters hwquirks puavo localconf kernelargs"
+"hwquirks puavo localconf kernelargs"
 and these are the only available configuration sources.
 EOF
 end
@@ -266,7 +266,7 @@ end
 class Sources
     attr_reader :parameters
 
-    Available = %w(filters hwquirks puavo localconf kernelargs)
+    Available = %w(hwquirks puavo localconf kernelargs)
 
     def initialize(sources, parameters)
         @sources = []
@@ -279,51 +279,9 @@ class Sources
             @sources << source
         end
 
-        @parameters_by_source = {}
-
         @sources.each do |source|
-            next if source == 'filters'
-            @parameters_by_source[source] = send(source)
+            @parameters.merge!(send(source))
         end
-
-        # Filters are special: other sources affect the filters chosen.
-        # Note that in merge() source order always matters.
-        filter_sources = merge()
-        @parameters_by_source['filters'] = filters(filter_sources)
-
-        @parameters = merge()
-    end
-
-    def merge
-        parameters = {}
-        @sources.each do |source|
-            next unless @parameters_by_source.has_key?(source)
-            parameters.merge!( @parameters_by_source[source] )
-        end
-
-        return parameters
-    end
-
-    # parameter-filters
-    def filters(parameter_configuration)
-        parameters = {}
-
-        parameter_filters = []
-        parameter_filters_path = '/etc/puavoimage/parameter-filters.json'
-        begin
-            parameter_filters = JSON.parse( IO.read(parameter_filters_path) )
-            parameter_lookup = lambda do |key|
-                                 parameter_configuration.has_key?(key)  \
-                                     ? [ parameter_configuration[key] ] \
-                                     : nil
-                             end
-            apply_parameter_filters(parameters, parameter_filters, parameter_lookup)
-        rescue StandardError => e
-            logerr('Could not apply parameter filters from' \
-                     + " #{ parameter_filters_path }: #{ e.message }")
-        end
-
-        return parameters
     end
 
     # settings based on hardware quirks (dmidecode, pci, usb, ...)
@@ -436,7 +394,7 @@ end
 
 $status = 0
 
-conf_sources = %w(filters hwquirks puavo localconf kernelargs)
+conf_sources = %w(hwquirks puavo localconf kernelargs)
 
 begin
     opts = GetoptLong.new([ '--sources', GetoptLong::REQUIRED_ARGUMENT ])

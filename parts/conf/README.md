@@ -54,11 +54,10 @@ precedences. The following list defines the currently supported sources
 in ascending precedence order:
 
     1. Parameter definitions
-    2. Parameter assignments from parameter filters
-    3. Parameter assignments from hardware quirks
-    4. Parameter assignments from Puavo Web
-    5. Parameter assignments from local configuration
-    6. Parameter assignments from kernel command line
+    2. Parameter assignments from hardware quirks
+    3. Parameter assignments from Puavo Web
+    4. Parameter assignments from local configuration
+    5. Parameter assignments from kernel command line
 
 Thus, for example, values assigned on the kernel command line overwrite
 values assigned by hardware quirks.
@@ -93,43 +92,6 @@ in lexicographical order and must have the following structure:
         }
     }
 
-### Parameter filters
-
-It is possible to overwrite default parameter values with parameter
-filters. Filters must be defined in JSON files located in
-`/usr/share/puavo-conf/filters/*.json`. These files will be processed in
-lexicographical order and must have the following structure:
-
-    [
-        {
-            "key": "puavo.hosttype",
-            "matchmethod": "exact",
-            "pattern": "laptop",
-            "parameters": {
-                "puavo.nethomes.enable": false
-            }
-        },
-        {
-            "key": "puavo.hosttype",
-            "matchmethod": "exact",
-            "pattern": "fatclient",
-            "parameters": {
-                "puavo.nethomes.enable": true,
-                "puavo.nethomes.protocol": "nfs"
-            }
-        }
-    ]
-
-In the above example, two filters are defined which disable network
-mounted home directories on laptops and enable on fatclients using NFS,
-respectively.
-
-Field `key` determines the name of the parameter the filter is matched
-against. Field `matchmethod` determines the method for matching:
-`exact`, `glob` and `regex` are supported. Value is tested against the
-value of field `pattern`, and if a match is successful, parameters
-listed in `parameters` field will be set.
-
 ### Parameter overrides from hardware quirks
 
 Hardware quirks must be defined in JSON files located in
@@ -150,10 +112,14 @@ in lexicographical order and must have the following structure:
 In this example, we enable intel_backlight on a specific Asus Aspire
 device.
 
-In contrast to parameter filters, here `key` determines the name of the
-*hardware characteristic* the filter is matched against. Valid hardware
-characteristic key names are `dmidecode-*` (wildcard expands to any keyword
-supported by `dmidecode`), `pci-id` and `usb-id`.
+Field `key` determines the name of the hardware characteristic the
+filter is matched against. Valid hardware characteristic key names are
+`dmidecode-*` (wildcard expands to any keyword supported by
+`dmidecode`), `pci-id` and `usb-id`. Field `matchmethod` determines
+the method for matching: `exact`, `glob` and `regex` are
+supported. Value is tested against the value of field `pattern`, and
+if a match is successful, parameters listed in `parameters` field will
+be set.
 
 ### Puavo Web
 
