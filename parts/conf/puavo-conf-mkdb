@@ -75,6 +75,14 @@ def apply_parameter_filters(parameters, parameter_filters, lookup_fn)
     end
 end
 
+def read_json_array(file)
+    obj = JSON.parse(IO.read(file))
+    unless obj.kind_of?(Array)
+        raise "Top-level JSON object of #{file} is not an array"
+    end
+    obj
+end
+
 $deviceinfo = {}
 def get_device_setting(key)
     # returns nil in case there was a failure
