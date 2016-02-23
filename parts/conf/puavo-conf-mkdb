@@ -93,6 +93,41 @@ def validate_parameter_definition(obj)
     true
 end
 
+def validate_parameter_filter(obj)
+    unless obj.kind_of?(Hash)
+        raise "Parameter filters must be an hash"
+    end
+    %w(key matchmethod pattern parameters).each do |required_key|
+        unless obj.has_key?(required_key)
+            raise "Parameter filter is missing required key '#{required_key}'"
+        end
+    end
+    unless obj['key'].kind_of?(String)
+        raise "Parameter filter's key is of wrong type"
+    end
+    unless %w(exact glob regex).include?(obj['matchmethod'])
+        raise "Parameter filter's matchmethod has unknown value"
+    end
+    unless obj['pattern'].kind_of?(String)
+        raise "Parameter filter's pattern is of wrong type"
+    end
+    unless obj['parameters'].kind_of?(Hash)
+        raise "Parameter filter's parameters is of wrong type"
+    end
+    if obj['parameters'].is_empty?
+        raise "Parameter filter's parameters is empty"
+    end
+    obj['parameters'].each do |key, value|
+        unless key.kind_of?(String)
+            raise "Parameter key must be a string"
+        end
+        unless value.kind_of(String)
+            raise "Parameter value must be a string"
+        end
+    end
+    true
+end
+
 def read_json_array(file)
     obj = JSON.parse(IO.read(file))
     unless obj.kind_of?(Array)
