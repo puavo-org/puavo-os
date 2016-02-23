@@ -25,16 +25,6 @@ label ltsp-NBD-${arch}
 EOF
 }
 
-boot_nbd_label() {
-  arch=$1
-  cat <<EOF
-label ltsp-NBD-${arch}
-  menu label LTSP, using NBD with ${arch}-kernel
-  kernel ltsp/${preferred_boot_image}/vmlinuz#{grub_kernel_version}-#{arch}
-  append ro initrd=ltsp/#{preferred_boot_image}/initrd.img#{grub_kernel_version}-#{arch} init=/sbin/init-puavo puavo.hosttype=#{grub_type} root=/dev/nbd0 nbdroot=:#{preferred_boot_image} #{grub_kernel_arguments}
-EOF
-}
-
 get_bootparams() {
   puavo-rest-client --user-bootserver "v3/bootparams_by_mac/$1"
 }
@@ -49,6 +39,54 @@ label error
         menu label $errorstring
 EOF
   exit 1
+}
+
+show_image_menu() {
+  preferred_boot_image=$1
+
+  available_images=$(echo ${tftpbase}/*/vmlinuz \
+                        | xargs -n 1 dirname   \
+                        | xargs -n 1 basename  \
+                        | sort)
+
+  if [ -z "$available_images" ]; then
+    pxe_error 'No images on bootserver'
+  fi
+
+  image="$preferred_boot_image"
+  cat <<HEADER_EOF
+default menu.c32
+menu title Choose a system
+prompt 0
+timeout 100
+
+label ltsp-NBD-${image}
+  menu label ${image}
+  menu default
+  kernel ltsp/${image}/vmlinuz
+  append ro initrd=ltsp/${image}/initrd.img init=/sbin/init-puavo puavo.hosttype=unregistered root=/dev/nbd0 nbdroot=:${image}
+  ipappend 2
+
+HEADER_EOF
+
+  for image in $available_images; do
+    test "$image" != "$preferred_boot_image" || continue
+
+    cat <<EOF
+label ltsp-NBD-${image}
+  menu label ${image}
+  kernel ltsp/${image}/vmlinuz
+  append ro initrd=ltsp/${image}/initrd.img init=/sbin/init-puavo puavo.hosttype=unregistered root=/dev/nbd0 nbdroot=:${image}
+  ipappend 2
+
+EOF
+  done
+
+  cat <<'EOF'
+label local
+  menu label Local OS
+  localboot 0
+EOF
 }
 
 pxegeturl=$1
@@ -77,6 +115,7 @@ kernel_arguments=$(echo "$host_bootparams" | jq -r .kernel_arguments)
 kernel_version=$(echo "$host_bootparams" | jq -r .kernel_version)
 preferred_boot_image=$(echo "$host_bootparams" | jq -r .preferred_boot_image)
 
+[ "$hosttype"         = "null" ] && hosttype='unregistered'
 [ "$kernel_arguments" = "null" ] && kernel_arguments=''
 [ "$kernel_version"   = "null" ] && kernel_version=''
 
@@ -86,10 +125,10 @@ if [ ! -d "$tftpdir" ]; then
   pxe_error "Missing ${preferred_boot_image}"
 fi
 
-# XXX these could be used when hosttype = unregistered
-# available_kernels=$(echo ${tftpdir}/vmlinuz-* \
-#                       | xargs -n 1 basename \
-#                       | sed 's/^vmlinuz-//')
+if [ "$hosttype" = "unregistered" ]; then
+  show_image_menu "${preferred_boot_image}"
+  exit 0
+fi
 
 use_if64cpu=false
 
