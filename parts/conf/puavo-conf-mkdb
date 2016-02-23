@@ -111,14 +111,14 @@ def validate_parameter_filter(obj)
     unless obj['parameters'].kind_of?(Hash)
         raise "Parameter filter's parameters is of wrong type"
     end
-    if obj['parameters'].is_empty?
+    if obj['parameters'].empty?
         raise "Parameter filter's parameters is empty"
     end
     obj['parameters'].each do |key, value|
         unless key.kind_of?(String)
             raise "Parameter key must be a string"
         end
-        unless value.kind_of(String)
+        unless value.kind_of?(String)
             raise "Parameter value must be a string"
         end
     end
