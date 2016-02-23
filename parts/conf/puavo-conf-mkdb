@@ -411,6 +411,11 @@ def get_parameter_overwrites_from_puavo(parameter_definitions)
     JSON.parse(device_json)['parameters'] or {}
 end
 
+def get_parameter_overwrites_from_localconf(parameter_definitions)
+    # XXX unimplemented
+    return {}
+end
+
 def get_parameter_overwrites_from_kernelargs(parameter_definitions)
     parameters = {}
 
