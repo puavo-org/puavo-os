@@ -75,6 +75,24 @@ def apply_parameter_filters(parameters, parameter_filters, lookup_fn)
     end
 end
 
+def validate_parameter_definition(obj)
+    unless obj.kind_of?(Hash)
+        raise "Parameter definition must be an hash"
+    end
+    %w(key default).each do |required_key|
+        unless obj.has_key?(required_key)
+            raise "Parameter definition is missing required key '#{required_key}'"
+        end
+    end
+    unless obj['key'].kind_of?(String)
+        raise "Parameter definition's key is of wrong type"
+    end
+    unless obj['default'].kind_of?(String)
+        raise "Parameter definition's default value is of wrong type"
+    end
+    true
+end
+
 def read_json_array(file)
     obj = JSON.parse(IO.read(file))
     unless obj.kind_of?(Array)
