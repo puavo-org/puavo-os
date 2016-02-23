@@ -140,14 +140,14 @@ Hardware quirks must be defined in JSON files located in
 in lexicographical order and must have the following structure:
 
     [
-      {
-        "key": "dmidecode-system-product-name",
-        "matchmethod": "exact",
-        "pattern": "Aspire ES1-111",
-        "parameters": {
-          "puavo.intel_backlight": true
+        {
+            "key": "dmidecode-system-product-name",
+            "matchmethod": "exact",
+            "pattern": "Aspire ES1-111",
+            "parameters": {
+                "puavo.intel_backlight": true
+            }
         }
-      }
     ]
 
 In this example, we enable intel_backlight on a specific Asus Aspire
