@@ -155,8 +155,8 @@ device.
 
 In contrast to parameter filters, here `key` determines the name of the
 *hardware characteristic* the filter is matched against. Valid hardware
-characteristic key names are `dmidecode-*` (with keywords supported by
-`dmidecode`), `pci-id` and `usb-id`.
+characteristic key names are `dmidecode-*` (wildcard expands to any keyword
+supported by `dmidecode`), `pci-id` and `usb-id`.
 
 ### Puavo Web
 
