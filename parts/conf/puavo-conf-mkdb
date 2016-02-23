@@ -382,6 +382,22 @@ def get_parameter_definitions
         end
     end
 
+    return result
+end
+
+def get_parameter_overwrites_from_kernelargs(parameter_definitions)
+    parameters = {}
+
+    begin
+        IO.read('/proc/cmdline').split.each do |kernel_arg|
+            if kernel_arg =~ /\A(puavo\..*)=(.*)\Z/
+                parameters[$1] = $2
+            end
+        end
+    rescue StandardError => e
+        logerr('Failed to read parameters from the kernel command line')
+    end
+
     return parameters
 end
 
