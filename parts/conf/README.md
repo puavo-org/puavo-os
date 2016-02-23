@@ -173,4 +173,4 @@ Not implemented yet.
 
 Parameter assignments from the kernel command line overwrite everything
 else. Parameters can be assigned with the following syntax:
-`puavo.feature.key=value`.
+`puavo.parameter=value`.
