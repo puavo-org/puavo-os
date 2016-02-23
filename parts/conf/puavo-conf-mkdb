@@ -37,26 +37,11 @@ require 'json'
 require 'puavo/conf'
 
 def apply_parameter_filters(parameters, parameter_filters, lookup_fn)
-    if !parameter_filters.kind_of?(Array)
-        logerr('input type error: parameter filters not in correct format')
-        return
-    end
-
     parameter_filters.each do |filter|
-        if !(filter.kind_of?(Hash) \
-               && filter['key'].kind_of?(String) \
-               && filter['parameters'].kind_of?(Hash)) then
-            logerr('input type error: parameter filter not in correct format')
-            next
-        end
+        validate_parameter_filter(filter)
 
         if filter['key'] == '*' then
-            merge_parameters(parameters, filter['parameters'])
-            next
-        end
-
-        if !(filter['matchmethod'].kind_of?(String)) then
-            logerr('input type error: parameter filter not in correct format')
+            parameters.update(filter['parameters'])
             next
         end
 
@@ -68,7 +53,7 @@ def apply_parameter_filters(parameters, parameter_filters, lookup_fn)
                                               filter['matchmethod'],
                                               filter['pattern'])
             if match_result then
-                merge_parameters(parameters, filter['parameters'])
+                parameters.update(filter['parameters'])
                 break
             end
         end
