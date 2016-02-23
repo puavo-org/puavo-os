@@ -73,28 +73,25 @@ Parameters must be defined in JSON files located in
 `/usr/share/puavo-conf/parameters/*.json`. These files will be processed
 in lexicographical order and must have the following structure:
 
-    [
-        {
-            "key": "puavo.hosttype",
+    {
+        "puavo.hosttype": {
             "type": "string",
             "choices": ["fatclient", "thinclient", "laptop"],
             "default": "fatclient",
             "description": "Type of the device"
         },
-        {
-            "key": "puavo.nethomes.enabled",
+        "puavo.nethomes.enabled": {
             "type": "bool",
             "default": true,
             "description": "Toggle network mounted home directories"
         },
-        {
-            "key": "puavo.nethomes.protocol",
+        "puavo.nethomes.protocol": {
             "type": "string",
             "choices": ["nfs", "samba"],
             "default": "nfs",
             "description": "Network filesystem protocol used for network mounted home directories"
         }
-    ]
+    }
 
 ### Parameter filters
 
