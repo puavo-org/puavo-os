@@ -347,23 +347,26 @@ def get_parameter_definitions
 
     files.each do |file|
         begin
-            parameter_definitions = JSON.parse(IO.read(file))
+            parameter_definitions = read_json_obj(file, Hash)
 
-            parameter_definitions.each_pair do |key, info|
-                unless info.kind_of?(Hash)
-                    logerr('Parameter definition must be a hash')
+            parameter_definitions.each do |key, parameter_definition|
+                begin
+                    validate_parameter_definition(parameter_definition)
+
+                    if result.has_key?(key)
+                        raise "Parameter #{key} is already defined"
+                    end
+
+                    result[key] = parameter_definition
+                rescue StandardError => e
+                    logerr("Invalid parameter definition for #{key}: #{e.message}")
                     next
                 end
-                unless info.has_key?('default')
-                    logerr('Parameter definition must have a default value')
-                    next
-                end
-
-                merge_parameters(parameters, { key => info['default'] })
             end
+
         rescue StandardError => e
-            logerr("Could not read parameter definitions from #{ file }: " \
-                   + e.message)
+            logerr("Failed to read parameter definitions from #{file}: #{e.message}")
+            next
         end
     end
 
@@ -426,7 +429,8 @@ end
 
 $status = 0
 
-conf_sources = %w(hwquirks puavo localconf kernelargs)
+SUPPORTED_SOURCES = %w(hwquirks puavo localconf kernelargs)
+conf_sources = SUPPORTED_SOURCES
 
 begin
     opts = GetoptLong.new([ '--sources', GetoptLong::REQUIRED_ARGUMENT ])
@@ -445,24 +449,31 @@ end
 
 puavoconf = Puavo::Conf.new()
 begin
-    parameters = get_parameter_definitions()
+    parameter_definitions = get_parameter_definitions()
 
-    parameters.sort.each do |key, value|
+    parameter_definitions.each do |key, parameter|
         begin
+            value = parameter.fetch('default')
             puavoconf.add(key, value)
         rescue StandardError => e
-            logerr("Failed to add a new parameter: #{key}=#{value}: #{e.message}")
+            logerr("Failed to add a new parameter: #{key}: #{e.message}")
+            next
         end
     end
 
-    sources = Sources.new(conf_sources, parameters)
+    # Iterate well-defined source list to ensure the correct order.
+    SUPPORTED_SOURCES.each do |source|
+        next unless conf_sources.include?(source)
+        parameter_overwrites = send("get_parameter_overwrites_from_#{source}",
+                                    parameter_definitions)
 
-    parameters = sources.parameters
-    parameters.sort.each do |key, value|
-        begin
-            puavoconf.overwrite(key, value)
-        rescue StandardError => e
-            logerr("Failed to overwrite a parameter: #{key}=#{value}: #{e.message}")
+        parameter_overwrites.each do |key, value|
+            begin
+                puavoconf.overwrite(key, value)
+            rescue StandardError => e
+                logerr("Failed to overwrite a parameter: " \
+                       "#{key}=#{value}: #{e.message}")
+            end
         end
     end
 ensure
