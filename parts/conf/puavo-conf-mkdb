@@ -203,29 +203,6 @@ def match_puavopattern(target, matchmethod, pattern)
     return false
 end
 
-def merge_parameters(parameters, parameterconf)
-    if !parameterconf.kind_of?(Hash) then
-        logerr('input type error: parameterconf is not a hash')
-        return
-    end
-
-    parameterconf.each do |key, value|
-        if !key.kind_of?(String) then
-            logerr('input type error: key not a string')
-            next
-        end
-
-        if !(value == true || value == false \
-               || value.kind_of?(Integer) \
-               || value.kind_of?(String)) then
-            logerr('input type error: value not valid')
-            next
-        end
-
-        parameters[key] = value.to_s
-    end
-end
-
 def take_field(cmd, fieldnum)
     result = %x(#{ cmd })
     status = $?.exitstatus
@@ -246,96 +223,6 @@ By default the list of used sources is
 "hwquirks puavo localconf kernelargs"
 and these are the only available configuration sources.
 EOF
-end
-
-class Sources
-    attr_reader :parameters
-
-    Available = %w(hwquirks puavo localconf kernelargs)
-
-    def initialize(sources, parameters)
-        @sources = []
-        sources.each do |source|
-            if !Available.include?(source) then
-                warn("source '#{ source }' is unknown")
-                next
-            end
-
-            @sources << source
-        end
-
-        @sources.each do |source|
-            @parameters.merge!(send(source))
-        end
-    end
-
-    # settings based on hardware quirks (dmidecode, pci, usb, ...)
-    def hwquirks
-        parameters = {}
-
-        hardware_quirks_globpattern = '/usr/share/puavo-conf/hwquirks/*.json'
-
-        hwquirk_files = Dir.glob(hardware_quirks_globpattern) rescue []
-        hwquirk_files.each do |hwquirk_file|
-            begin
-                hwquirklist = JSON.parse( IO.read(hwquirk_file) )
-                apply_parameter_filters(parameters,
-                                       hwquirklist,
-                                       Proc.method(:get_device_setting))
-            rescue StandardError => e
-                logerr('could not read hardware quirks from' \
-                         + " #{ hwquirk_file }: #{  e.message }")
-            end
-        end
-
-        return parameters
-    end
-
-    # settings from puavo
-    def puavo
-        parameters = {}
-
-        begin
-            puavo_settings = JSON.parse( IO.read('/etc/puavo/device.json') )
-            if !(puavo_settings.kind_of?(Hash) \
-                   && puavo_settings['parameters'].kind_of?(Hash)) then
-                raise 'input type error: puavo parameter settings' \
-                        + ' not in correct format'
-            end
-
-            puavo_settings['parameters'].each do |key, value|
-                merge_parameters(parameters, { key => value })
-            end
-        rescue StandardError => e
-            logerr('Could not read parameters from /etc/puavo/device.json: ' \
-                      + e.message)
-        end
-
-        return parameters
-    end
-
-    # settings from primary user
-    def localconf
-        # XXX unimplemented
-        return {}
-    end
-
-    # settings from kernel arguments
-    def kernelargs
-        parameters = {}
-
-        begin
-            IO.read('/proc/cmdline').split.each do |kernel_arg|
-                if kernel_arg =~ /\A(puavo\..*)=(.*)\Z/
-                    merge_parameters(parameters, { $1 => $2 })
-                end
-            end
-        rescue StandardError => e
-            logerr('Failed to parameters from the kernel command line')
-        end
-
-        return parameters
-    end
 end
 
 def get_parameter_definitions
