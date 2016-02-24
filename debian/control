@@ -3,6 +3,7 @@ Section: misc
 Priority: extra
 Maintainer: Opinsys Developers <dev@opinsys.fi>
 Build-Depends: debhelper (>= 8),
+ libdb-dev,
  libgnome-desktop-3-dev,
  libjansson-dev,
  libncurses5-dev,
@@ -10,6 +11,7 @@ Build-Depends: debhelper (>= 8),
  libnl-genl-3-dev,
  libsqlite3-dev,
  libssl-dev,
+ libtool-bin | libtool,
  make,
  nodejs-bundle,
  pkg-config,
@@ -67,6 +69,23 @@ Conflicts: puavo-register
 Provides: puavo-register
 Description: Ruby lib for Puavo
  Simple ruby wrapper for the Puavo HTTP API
+ .
+
+Package: puavo-conf
+Architecture: any
+Depends: ${misc:Depends},
+ dmidecode,
+ libdb5.3,
+ pciutils,
+ ruby-ffi,
+ ruby1.9.1,
+ usbutils
+Description: Puavo configuration
+ Puavo Conf is the configuration system of Puavo OS. It consists of a parameter
+ database, a C library (`libpuavoconf`) and a set of programs (`puavo-conf` and
+ `puavo-conf-mkdb`) manipulating the database through the library. Parameters
+ define how various Puavo OS components behave and can be tuned from multiple
+ sources, such as Puavo Web, local administrative tools or kernel command line.
  .
 
 Package: puavo-devscripts
