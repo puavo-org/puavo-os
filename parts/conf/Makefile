@@ -6,15 +6,11 @@ libtool_binaries = libpuavoconf.la puavo-conf
 
 ifeq ($(prefix), /usr/local)
 rubylibdir = $(prefix)/lib/site_ruby
-varprefix  = /var/local
 else
 rubylibdir = $(prefix)/lib/ruby/vendor_ruby
-varprefix  = /var
 endif
 
-varlibdir = $(varprefix)/lib/puavo-conf
-
-CPPFLAGS = -std=c99 -Wall -Wextra -DDEFAULT_DB_FILEPATH=\"$(varlibdir)/parameters.db\"
+CPPFLAGS = -std=c99 -Wall -Wextra
 CFLAGS   = -std=c99 -Wpedantic
 LDFLAGS  = -g -O
 

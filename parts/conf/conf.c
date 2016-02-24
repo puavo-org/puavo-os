@@ -36,7 +36,7 @@
  * implement dynamic buffer reallocation on when DB->get() returns
  * DB_BUFFER_SMALL. */
 static const size_t PUAVO_CONF_DEFAULT_DB_BATCH_SIZE = 1048576;
-static const char *const PUAVO_CONF_DEFAULT_DB_FILEPATH = DEFAULT_DB_FILEPATH;
+static const char *const PUAVO_CONF_DEFAULT_DB_FILEPATH = "/run/puavo-conf.db";
 
 struct puavo_conf {
         DB *db;

@@ -1,4 +1,4 @@
-CPPFLAGS = -Wall -Wextra -DDEFAULT_DB_FILEPATH=\"test.db\"
+CPPFLAGS = -Wall -Wextra
 LDFLAGS  = -g -O
 CFLAGS   =
 
