@@ -115,9 +115,25 @@ kernel_arguments=$(echo "$host_bootparams" | jq -r .kernel_arguments)
 kernel_version=$(echo "$host_bootparams" | jq -r .kernel_version)
 preferred_boot_image=$(echo "$host_bootparams" | jq -r .preferred_boot_image)
 
-[ "$hosttype"         = "null" ] && hosttype='unregistered'
+[ "$hosttype" = "null" -o "$hosttype" = '' ] && hosttype='unregistered'
 [ "$kernel_arguments" = "null" ] && kernel_arguments=''
 [ "$kernel_version"   = "null" ] && kernel_version=''
+
+if [ -z "$kernel_arguments" ]; then
+  kernel_arguments='quiet splash'
+fi
+
+# XXX Some hosttype specific special tricks... these are mostly hacks whose
+# XXX value should be re-evaluated or possibly solved through some other
+# XXX means.
+case "$hosttype" in
+  fatclient|thinclient)
+    kernel_arguments="$kernel_arguments usbcore.autosuspend=-1"
+    ;;
+  laptop|unregistered|wirelessaccesspoint)
+    kernel_arguments=''
+    ;;
+esac
 
 tftpdir="${tftpbase}/${preferred_boot_image}"
 
