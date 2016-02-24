@@ -21,16 +21,16 @@ administrative tools or kernel command line.
 - ruby1.9.1 or newer
 - usbutils (lsusb)
 
-## Building
+## Building and installing
 
     make
     sudo make install
 
-By default, builds are targeted to `/usr/local` prefix. To make a build
-targeted to `/usr` instead, run:
+By default, files are installed to `/usr/local` prefix. To install to another
+prefix, for example to `/usr`, run:
 
-    make prefix=/usr
-    sudo make install
+    make
+    sudo make install prefix=/usr
 
 `Makefile` supports also `DESTDIR=/path/to/install/dir` parameter for
 staged installs. See
