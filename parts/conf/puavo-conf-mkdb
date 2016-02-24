@@ -61,7 +61,7 @@ def apply_parameter_filters(parameters, parameter_filters, lookup_fn)
 end
 
 def validate_value(value)
-    [String].each do |c|
+    [String, Integer, Float, TrueClass, FalseClass].each do |c|
         return true if value.kind_of?(c)
     end
     raise "Value has unknown type"
