@@ -152,6 +152,10 @@ if [ "$hosttype" = "unregistered" ]; then
   exit 0
 fi
 
+#
+# this mirrors code in puavo-install-grub (in puavo-ltsp-install)
+#
+
 use_if64cpu=false
 
 kernel_version_suffix=''
@@ -177,6 +181,15 @@ elif test -e "${tftpdir}/vmlinuz"; then
   : # okay, use default kernel
 else
   pxe_error 'No kernel found'
+fi
+
+# one more sanity test (also checks the corresponding initrd.img)
+if test -e "${tftpdir}/initrd.img${kernel_version_suffix}" \
+     -a -e "${tftpdir}/vmlinuz${kernel_version_suffix}"; then
+  : # all is okay
+else
+  # something is wrong, use the default kernel
+  kernel_version_suffix=''
 fi
 
 boot_header=''
