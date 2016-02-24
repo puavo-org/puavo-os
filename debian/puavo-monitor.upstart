@@ -1,0 +1,14 @@
+description "puavo-monitor"
+
+start on runlevel [23]
+stop on shutdown
+
+env NODE_ENV=production
+
+script
+    exec 2>>/var/log/puavo-monitor.log
+    exec 1>&2
+    sudo -E -u nobody puavo-monitor
+end script
+
+respawn
