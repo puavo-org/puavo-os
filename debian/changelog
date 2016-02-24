@@ -1,3 +1,14 @@
+puavo-os (0.1.1) trusty; urgency=medium
+
+  * New release
+  * Add puavo-conf debian package
+  * parts/conf: update README
+  * parts/conf: fix Makefile to install sbindir
+  * parts/conf: change the default db filepath to /run/puavo-conf.db
+  * Git(7026b489418489b21695d96bb988c4a8ea45a7c4)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Wed, 24 Feb 2016 15:08:52 +0200
+
 puavo-os (0.1.0) trusty; urgency=medium
 
   * Initial release
