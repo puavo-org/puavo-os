@@ -12,9 +12,6 @@ INSTALL_DATA = $(INSTALL) -m 644
 
 all:
 
-deb:
-	dpkg-buildpackage -us -uc
-
 bin/puavo-autopilot-env: Makefile
 	echo "#!/bin/sh" > $@
 	echo "export PUAVO_AUTOPILOT_SHAREDIR=$(datarootdir)/puavo-autopilot" >> $@
@@ -38,9 +35,6 @@ install: bin/puavo-autopilot-env installdirs
 
 	rm -f bin/puavo-autopilot-env
 
-install-build-deps:
-	mk-build-deps -i -r debian/control
-
 installdirs:
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/xinitrc.d
@@ -50,7 +44,5 @@ installdirs:
 
 .PHONY: all			\
         bin/puavo-autopilot-env \
-	deb			\
 	install			\
-	install-build-deps	\
 	installdirs

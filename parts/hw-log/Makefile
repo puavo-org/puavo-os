@@ -13,11 +13,3 @@ installdirs:
 .PHONY: install
 install: installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) puavo-hw-log
-
-.PHONY: install-build-deps
-install-build-deps:
-	mk-build-deps -i -t "apt-get --yes --force-yes" -r debian/control
-
-.PHONY: deb
-deb:
-	dpkg-buildpackage -us -uc

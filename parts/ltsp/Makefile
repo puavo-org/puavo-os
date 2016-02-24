@@ -16,17 +16,9 @@ $(install-subdirs) :
 .PHONY : install
 install : $(install-subdirs)
 
-.PHONY: install-build-deps
-install-build-deps:
-	mk-build-deps -i -t "apt-get --yes --force-yes" -r debian/control
-
 .PHONY : $(clean-subdirs)
 $(clean-subdirs) :
 	$(MAKE) -C $(@:clean-%=%) clean
 
 .PHONY : clean
 clean : $(clean-subdirs)
-
-.PHONY : deb
-deb :
-	dpkg-buildpackage -us -uc

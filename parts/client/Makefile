@@ -54,10 +54,3 @@ test-etc:
 
 .PHONY: test
 test: test-rest-client
-
-install-build-deps:
-	mk-build-deps --install debian/control \
-		--tool "apt-get --yes --force-yes" --remove
-
-deb:
-	dpkg-buildpackage -us -uc

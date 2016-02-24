@@ -28,11 +28,3 @@ install : installdirs
 
 .PHONY : clean
 clean :
-
-.PHONY : install-build-deps
-install-build-deps:
-	mk-build-deps -i -t "apt-get --yes --force-yes" -r debian/control
-
-.PHONY : deb
-deb:
-	dpkg-buildpackage -us -uc

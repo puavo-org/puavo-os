@@ -29,13 +29,5 @@ install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/init \
 		upstart/hpfancontrol.conf
 
-.PHONY: install-build-deps
-install-build-deps:
-	mk-build-deps -i -t "apt-get --yes --force-yes" -r debian/control
-
 .PHONY : clean
 clean :
-
-.PHONY : deb
-deb :
-	dpkg-buildpackage -us -uc
