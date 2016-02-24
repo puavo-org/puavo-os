@@ -60,6 +60,13 @@ def apply_parameter_filters(parameters, parameter_filters, lookup_fn)
     end
 end
 
+def validate_value(value)
+    [String].each do |c|
+        return true if value.kind_of?(c)
+    end
+    raise "Value has unknown type"
+end
+
 def validate_parameter_definition(obj)
     unless obj.kind_of?(Hash)
         raise "Parameter definition must be Hash"
@@ -69,9 +76,7 @@ def validate_parameter_definition(obj)
             raise "Required key '#{required_key}' is missing"
         end
     end
-    unless obj['default'].kind_of?(String)
-        raise "Default value is of wrong type"
-    end
+    validate_value(obj['default'])
     true
 end
 
@@ -103,9 +108,7 @@ def validate_parameter_filter(obj)
         unless key.kind_of?(String)
             raise "Parameter key must be a string"
         end
-        unless value.kind_of?(String)
-            raise "Parameter value must be a string"
-        end
+        validate_value(value)
     end
     true
 end
