@@ -1,16 +1,12 @@
 (
   set -e
 
-  ## Pick one autopilot configuration randomly. If only one has been
-  ## defined, that one will of course be picked.
-  autopilot_line=$(jq --raw-output '.tags[]' /etc/puavo/device.json \
-		     | grep ^autopilot \
-		     | shuf \
-		     | head -1)
+  is_enabled=$(puavo-conf puavo.autopilot.enabled)
+  [ "${is_enabled}" = true ] || exit 0
 
-  mode=$(    echo "$autopilot_line" | cut -d : -f 2)
-  user=$(    echo "$autopilot_line" | cut -d : -f 3)
-  password=$(echo "$autopilot_line" | cut -d : -f 4)
+  mode=$(puavo-conf puavo.autopilot.mode)
+  username=$(puavo-conf puavo.autopilot.username)
+  password=$(puavo-conf puavo.autopilot.password)
 
   if [ -n "$user" -a -n "$password" ]; then
     if [ "${mode}" = "smoke" ]; then

@@ -20,50 +20,16 @@
 
 require 'json'
 
+require 'puavo/conf'
+
 AVAILABLE_MODES = %w(releasetest smoke stress)
 
-def get_autopilot_mode
-  conffile_path = ENV['PUAVO_SESSION_PATH']
-  conf = JSON.parse( IO.read(conffile_path) )["device"]
+puavoconf = Puavo::Conf.new
 
-  if not conf.has_key?('tags') then
-    puts "No tags defined in #{ conffile_path }"
-    return ''
-  end
+mode     = puavoconf.get('puavo.autopilot.mode')
+username = puavoconf.get('puavo.autopilot.username')
 
-  # Mode must match user, so we check out autopilot tags and find the mode
-  # for this user.  If the mode is not found nothing gets done.
-  # This is also needed so that ordinary users can login to hosts
-  # (especially ltspservers) and use the system in a normal way.
-
-  autopilot_tags = conf['tags'].select { |s| s.match(/^autopilot/) }
-
-  mode            = ''
-
-  autopilot_tags.each do |autopilot_tag|
-    autopilot_string, maybe_mode, username, password \
-      = * autopilot_tag.split(':')
-
-    if autopilot_string != 'autopilot'                                  \
-         || maybe_mode.nil? || (! AVAILABLE_MODES.include?(maybe_mode)) \
-         || username.nil?   || username.empty?                          \
-         || password.nil?   || password.empty? then
-      warn "Autopilot tag '#{ autopilot_tag }' is not sensible."
-      next
-    end
-
-    if username == ENV['USER']
-      # found the mode we where looking for.
-      mode = maybe_mode
-      break
-    end
-  end
-
-  mode
-end
-
-mode = get_autopilot_mode()
-if AVAILABLE_MODES.include?(mode)
+if AVAILABLE_MODES.include?(mode) && username == ENV['USER']
   session_command = "puavo-autopilot-session-#{mode}"
   system(session_command)
   exit $?.exitstatus
