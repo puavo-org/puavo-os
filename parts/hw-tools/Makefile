@@ -15,6 +15,7 @@ all :
 
 .PHONY : installdirs
 installdirs :
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/parameters
 	mkdir -p $(DESTDIR)$(libdir)
 	mkdir -p $(DESTDIR)$(libdir)/puavo-hw-tools/
 	mkdir -p $(DESTDIR)$(sbindir)
@@ -28,6 +29,9 @@ install : installdirs
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/init \
 		upstart/hpfancontrol.conf
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-conf/parameters \
+		share/puavo-conf/parameters/puavo-hw-tools.json
 
 .PHONY : clean
 clean :
