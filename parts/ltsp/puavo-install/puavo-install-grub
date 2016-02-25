@@ -76,7 +76,7 @@ function ltsp_image_entry {
 
     set kernel_version_suffix=''
     if test -n "${puavo_kernel_version}"; then
-      if regexp '-(amd64|i386)$' "${puavo_kernel_version}"; then
+      if regexp -- '-(amd64|i386)$' "${puavo_kernel_version}"; then
         # kernel_version set to particular arch
         if test -e "(loop)/boot/vmlinuz-${puavo_kernel_version}"; then
           set kernel_version_suffix="-${puavo_kernel_version}"
