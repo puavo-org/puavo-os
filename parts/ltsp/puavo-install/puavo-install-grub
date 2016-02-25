@@ -90,6 +90,9 @@ function ltsp_image_entry {
       elif test -e "(loop)/boot/vmlinuz-${puavo_kernel_version}"; then
         # no kernels for both archs, but some kernel exists, so use that
         set kernel_version_suffix="-${puavo_kernel_version}"
+      else
+        # requested kernel not found, use default
+        true
       fi
     elif test -e '(loop)/boot/vmlinuz-amd64' \
            -a -e '(loop)/boot/vmlinuz-i386'; then
