@@ -174,6 +174,8 @@ if [ -n "$kernel_version" ]; then
   elif test -e "${tftpdir}/vmlinuz-${kernel_version}"; then
     # no kernels for both archs, but some kernel exists, so use that
     kernel_version_suffix="-$kernel_version"
+  else
+    : # requested kernel not found, use default
   fi
 elif test -e "${tftpdir}/vmlinuz-amd64" -a -e "${tftpdir}/vmlinuz-i386"; then
   use_if64cpu=true
