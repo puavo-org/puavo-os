@@ -21,7 +21,7 @@ Description: TFTP server for LTSP environments
 
 Package: puavo-tftpd-hooks
 Architecture: all
-Depends: ${misc:Depends}, puavo-tftpd (>= 0.3.2-0+opinsys2), puavo-client (>= 1.1.4), curl
+Depends: ${misc:Depends}, puavo-tftpd (>= 0.3.2-0+opinsys2), puavo-client (>= 1.1.4), curl, puavo-rest (>= 0.11.1)
 Description: Puavo-service hooks for Puavo TFTP server
  puavo-tftp provides a TFTP server which dynamically queries ldap server
  for pxelinux boot configuration.
