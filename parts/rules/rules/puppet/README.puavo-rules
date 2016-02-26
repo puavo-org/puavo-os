@@ -129,9 +129,6 @@ puavo
 puavo_external_files
     Some helper definitions for setting up links to /state/external_files.
 
-puavo_wlan
-    Configurations for puavo-wlanap.
-
 ssh_client
     Settings for openssh client.  XXX these actually weaken security from
     default, should find a way to do this in a smarter way.
