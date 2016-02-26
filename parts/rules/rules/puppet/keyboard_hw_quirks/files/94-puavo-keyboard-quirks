@@ -1,14 +1,8 @@
-puavo_device_tags=$(jq -r '.tags[]' /etc/puavo/device.json 2>/dev/null)
-
-for puavo_tag in $puavo_device_tags; do
-  case "$puavo_tag" in
-    force_release_keys:*)
-      echo "${puavo_tag#force_release_keys:}" \
-        | awk -F, '{
+keys=$(puavo-conf puavo.kbd.force_release_keys)
+if [ -n "${keys}" ]; then
+    echo "${keys}" | awk -F, '{
             print "keyboard:dmi:bvn*:bvr*:bd*:svn*:pn*:pvr*"
             for (i = 1; i <= NF; i++) { printf " KEYBOARD_KEY_%s=!\n", $i }
           }' > /lib/udev/hwdb.d/60-puavo-keyboard-from-tags.hwdb
-      udevadm hwdb --update
-    ;;
-  esac
-done
+    udevadm hwdb --update
+fi
