@@ -641,7 +641,6 @@ class Host
 
     @ctrlserv = UNIXServer.new(CTRLSOCKET)
 
-    setup_bridges
     setup_phys
 
     Log.info('started')
@@ -823,20 +822,20 @@ class Host
   end
 
   def setup_bridge(ssid)
-    bridge = "puavowlanbr#{@bridges.length}"
-    run_or_fail('brctl', 'addbr', bridge)
-    @bridges[ssid] = bridge
-    run_or_fail('brctl', 'setfd', bridge, '0')
-    run_or_fail('ip', 'link', 'set', 'dev', bridge, 'up')
+    begin
+      @bridges.fetch(ssid)
+    rescue KeyError
+      bridge = "puavowlanbr#{@bridges.length}"
+      run_or_fail('brctl', 'addbr', bridge)
+      @bridges[ssid] = bridge
+      run_or_fail('brctl', 'setfd', bridge, '0')
+      run_or_fail('ip', 'link', 'set', 'dev', bridge, 'up')
 
-    spawn_service(Services::Vtund.new(:bridge  => bridge,
-                                      :address => @vtun_address,
-                                      :port    => @vtun_port))
-    bridge
-  end
-
-  def setup_bridges
-    @nets.each { |net| setup_bridge(net['ssid']) }
+      spawn_service(Services::Vtund.new(:bridge  => bridge,
+                                        :address => @vtun_address,
+                                        :port    => @vtun_port))
+      bridge
+    end
   end
 
   def select_channel(vif)
@@ -882,7 +881,8 @@ class Host
 
       select_channel(vif)
 
-      bridge = @bridges.fetch(net['ssid'])
+      bridge = setup_bridge(net['ssid'])
+
       hostapd     = Services::Hostapd.new(:bridge => bridge,
                                           :phy    => phy,
                                           :vif    => vif,
