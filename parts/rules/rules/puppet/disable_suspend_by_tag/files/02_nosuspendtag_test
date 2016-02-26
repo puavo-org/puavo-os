@@ -2,10 +2,7 @@
 
 set -eu
 
-has_device_tag() {
-  jq -r .tags[] /etc/puavo/device.json | grep -qx "$1"
-}
-
-if has_device_tag nosuspend && ! has_device_tag no_nosuspend; then
-  exit 1
+is_enabled=$(puavo-conf puavo.suspend.enabled)
+if [ "${is_enabled}" != true ]; then
+    exit 1
 fi
