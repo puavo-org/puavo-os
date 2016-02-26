@@ -389,6 +389,8 @@ module Services
   class Dhclient
     include Services::Spawnable
 
+    attr_reader :bridge
+
     def initialize(kwargs = {})
       @bridge  = kwargs.fetch(:bridge)
 
@@ -403,6 +405,7 @@ module Services
   class Hostapd
     include Services::Spawnable
 
+    attr_reader :bridge
     attr_reader :phy
     attr_reader :vif
 
@@ -461,6 +464,8 @@ module Services
 
   class Vtund
     include Services::Spawnable
+
+    attr_reader :bridge
 
     def initialize(kwargs = {})
       @address = kwargs.fetch(:address)
@@ -654,7 +659,11 @@ class Host
         return 1
 
       when :CHLD
-        child_pid = Process.wait(0, Process::WNOHANG)
+        begin
+          child_pid = Process.wait(0, Process::WNOHANG)
+        rescue Errno::ECHILD => e
+          ## The child has been waited in Spawnable::kill()
+        end
         if @services.has_key?(child_pid)
           child_name = @services[child_pid].name
           Log.error("child service #{child_name} died")
@@ -896,8 +905,11 @@ class Host
   end
 
   def remove_phy(phy)
+    affected_bridges   = []
+    dying_dhclients    = []
     dying_hostapds     = []
     dying_hostapd_clis = []
+    dying_vtunds       = []
 
     @vifs.delete_if { |vif| vif.phy.name == phy.name }
 
@@ -906,6 +918,7 @@ class Host
     @services.reject! do |pid, service|
       if service.class == Services::Hostapd && phy.name == service.phy.name
         dying_hostapds << service
+        affected_bridges << service.bridge
         true
       elsif service.class == Services::HostapdCli && phy.name == service.hostapd.phy.name
         dying_hostapd_clis << service
@@ -915,9 +928,35 @@ class Host
       end
     end
 
+    @services.each do |pid, service|
+      if service.class == Services::Hostapd && affected_bridges.include?(service.bridge)
+        affected_bridges.delete(service.bridge)
+      end
+    end
+
+    @services.reject! do |pid, service|
+      if service.class == Services::Vtund && affected_bridges.include?(service.bridge)
+        dying_vtunds << service
+        true
+      elsif service.class == Services::Dhclient && affected_bridges.include?(service.bridge)
+        dying_dhclients << service
+        true
+      else
+        false
+      end
+    end
+
     dying_hostapd_clis.each { |hostapd_cli| hostapd_cli.kill }
     dying_hostapds.each { |hostapd| hostapd.kill }
+    dying_dhclients.each { |dhclient| dhclient.kill }
+    dying_vtunds.each { |vtund| vtund.kill }
 
+    affected_bridges.each do |bridge|
+      @bridges.reject! { |k, v| v == bridge }
+      # Ignore errors, we are already exiting.
+      system('ip', 'link', 'set', 'dev', bridge, 'down')
+      system('brctl', 'delbr', bridge)
+    end
   end
 
   def setup_phys
