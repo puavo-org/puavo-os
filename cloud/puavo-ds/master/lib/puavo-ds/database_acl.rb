@@ -351,9 +351,7 @@ class LdapAcl
       [ People.subtree,		attrs(%w(puavoAcceptedTerms)),		Rule.write(Set.admin),			Rule.read(PuavoUid.puavo, PuavoUid.puavo_ticket),		Rule.write('self'),			],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ People.subtree,		attrs(%w(puavoSchool puavoLocked)),			Rule.write(Set.admin),			Rule.read('self',
-																	  PuavoUid.puavo_ticket,
-																	  Set.getent,
-)				],
+																	  PuavoUid.puavo_ticket)				],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ People.subtree,		attrs(%w(sambaNTPassword
 					 sambaLMPassword)),												Rule.perms('=az', Set.admin),		],
