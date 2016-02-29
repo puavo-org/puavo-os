@@ -691,7 +691,6 @@ class packages {
 
     [ 'fluent-plugin-puavo'
     , 'iivari-client'
-    , 'ltsp-server'
     , 'puavo-image-tools'
     , 'puavo-load-reporter'
     , 'puavo-local-config'
