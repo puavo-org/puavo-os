@@ -37,7 +37,7 @@ Package: puavoadmins
 Architecture: any
 Depends: ${misc:Depends},
  libjansson4,
- ruby-puavobs (>= 0.15.0),
+ ruby-puavobs (>= 0.1.1),
  ruby
 Description: Puavo admin intergration
   This project provides following components for intergrating Puavo
@@ -360,14 +360,14 @@ Package: puavo-wlanap
 Architecture: all
 Depends: ${misc:Depends},
  bridge-utils,
+ crda,
  hostapd (>= 2.1),
  isc-dhcp-client,
  iproute2,
  iw,
- puavo-client (>= 2.1.0),
+ puavo-client (>= 0.1.1),
  ruby-puavowlan,
  vtun,
- wireless-crda,
  wireless-regdb,
  wireless-tools
 Description: host tunneled WLAN accesspoint
