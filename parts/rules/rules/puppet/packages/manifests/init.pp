@@ -679,7 +679,7 @@ class packages {
 
     [ 'autopoweroff'
     , 'opinsys-ca-certificates'
-    , 'puavo-autopilot'
+    # , 'puavo-autopilot'       # XXX not yet packaged for Debian
     , 'puavo-client'
     , 'puavo-conf'
     , 'puavo-hw-log'
@@ -689,31 +689,33 @@ class packages {
     , 'puavo-vpn-client' ]:
       tag => [ 'misc', 'puavo', 'thinclient', ];
 
-    [ 'fluent-plugin-puavo'
-    , 'iivari-client'
-    , 'puavo-image-tools'
-    , 'puavo-load-reporter'
+    # [ 'fluent-plugin-puavo'   # XXX not yet packaged for Debian
+    # , 'iivari-client'         # XXX not yet packaged for Debian
+    [ 'puavo-image-tools'
+    # , 'puavo-load-reporter'   # XXX not yet packaged for Debian
     , 'puavo-local-config'
     , 'puavo-pkg'
     , 'puavo-sharedir-client'
     , 'puavo-wlanap'
-    , 'simplescreenrecorder'
-    , 'webmenu'
-    , 'webkiosk-language-selector'
-    , 'xexit' ]:
+    # , 'simplescreenrecorder'          # XXX not yet packaged for Debian
+    , 'webmenu' ]:
+    # , 'webkiosk-language-selector'    # XXX not yet packaged for Debian
+    # , 'xexit' ]:                      # XXX not yet packaged for Debian
       tag => [ 'misc', 'puavo', ];
 
-    [ 'dymo-cups-drivers' ]:
-      tag => [ 'printing', 'puavo', ];
+    # XXX not yet packaged for Debian
+    # [ 'dymo-cups-drivers' ]:
+    #   tag => [ 'printing', 'puavo', ];
 
-    [ 'bluegriffon'
-    , 'enchanting'
-    , 'pycharm'
-    , 'snap4arduino' ]:
-      tag => [ 'programming', 'puavo', ];
+    # XXX not yet packaged for Debian
+    # [ 'bluegriffon'
+    # , 'enchanting'
+    # , 'pycharm'
+    # , 'snap4arduino' ]:
+    #   tag => [ 'programming', 'puavo', ];
 
-    [ 'x2goclient'
-    , 'x2goserver' ]:
+    'x2goclient':
+    # 'x2goserver' # XXX not yet packaged for Debian
       tag => [ 'remote_access', 'puavo', ];
 
     [ 'faenza-icon-theme' ]:
