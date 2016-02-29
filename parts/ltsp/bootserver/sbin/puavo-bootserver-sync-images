@@ -1,0 +1,1409 @@
+#!/usr/bin/ruby1.9.3
+
+###############################################################################
+#
+# Copyright (C) 2015 Opinsys Oy
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+# This script manages system images on a bootserver for use with thinclients,
+# fatclients, and for locally installed clients such as laptops that can
+# download images/diffs for their use.
+#
+# Managed images and diffs are images/diffs downloaded by this script.
+# Their paths are stored in /var/lib/puavo/images.json.  This script may
+# delete the images/diffs specified there once those are no longer needed.
+#
+# Unmanaged images/diffs are other images and diffs in download paths
+# ("/opt/ltsp/images" and "/opt/ltsp/images/rdiffs" by default).
+#
+# By default the script handles only the managed images and unmanaged images
+# are left untouched.  The script can be asked to delete unmanaged images with
+# two command line options: "--delete-unmanaged-interactively" asks for each
+# unmanaged image/diff if it can be deleted, and "--force-delete-unmanaged"
+# removes those unconditionally after images/diffs are synced.
+# Note that these options are not needed to delete unused _managed_ images,
+# which happens automatically.
+#
+# Steps done by the script:
+#
+# 1. Check image series source URLs from Puavo (or given as --url parameter)
+# 2. Load image series description JSON files from specified URLs
+#    (or from paths given by --file parameter)
+# 3. Determine wanted full images and start syncing them one by one,
+#    going from oldest to newest
+#      3.1 For each image, check if there is an older image available and
+#          a diff which can be used to create the target image from
+#          the old one: use those to create the target image
+# 3. Download diffs needed by locally installed client devices
+#    (laptops and such)
+# 4. Delete old unused managed images and diffs
+# 5. If asked with ----force-delete-unmanaged, delete unmanaged images/diffs
+#
+###############################################################################
+
+require "digest"
+require 'digest/sha2'
+require 'fileutils'
+require 'highline/import'
+require 'json'
+require 'net/http'
+require 'open3'
+require 'puavo'
+require 'puavo/etc'
+require 'puavo/rest-client'
+require 'rest-client'
+require 'syslog'
+
+def log(level, channel, priority, msg, color)
+  logmsg = prefixed_logmsg(level, msg)
+
+  Syslog.log(priority, "%s", logmsg)
+
+  outmsg = color  ?  HighLine.new.color(logmsg, color)  :  logmsg
+  channel.puts(outmsg)
+end
+
+def prefixed_logmsg(level, msg)
+  spacecount = [5, [5-level, 0].max ].min       # (5-level between [0,5])
+  arrowcount = [0, [  level, 5].min ].max       # (  level between [0,5])
+  return "%s %s" % [ (" " * spacecount  +  ">" * arrowcount),
+                     msg ]
+end
+
+def info(level, msg, color=nil)
+  log(level, STDOUT, Syslog::LOG_INFO, msg, color)
+end
+
+def warning(level, msg)
+  log(level, STDERR, Syslog::LOG_WARNING, "WARNING: #{ msg }", HighLine::RED)
+end
+
+class Series
+  attr_reader :series_name
+
+  def initialize(name)
+    @series_name = name
+
+    @by_id = Hash.new
+    @by_version = Hash.new
+  end
+
+  def add_image(image)
+    @by_id[image.id] = @by_version[image.version] = image
+  end
+
+  def get_by_id(id)
+    return @by_id[id]
+  end
+
+  def get_by_version(version)
+    return @by_version[version]
+  end
+
+  def mark_image_in_use(image_id, managed_images)
+    image = @by_id[image_id]
+    return nil unless image
+
+    return image.mark_in_use(@series_name, managed_images)
+  end
+
+  def mark_imagediff_in_use(old_image_id, new_image_id, managed_images)
+    old_image = @by_id[old_image_id]
+    new_image = @by_id[new_image_id]
+    return nil unless old_image && new_image
+
+    return new_image.mark_diff_in_use(old_image, @series_name, managed_images)
+  end
+
+  def add_diff(from_version, to_version, filename, sha256, size, urls)
+    baseimage = get_by_version(from_version)
+    targetimage = get_by_version(to_version)
+
+    if baseimage && targetimage
+      diff = Diff.new(baseimage, targetimage, filename, sha256, size, urls)
+      targetimage.add_diff(diff)
+    end
+  end
+
+  # Query puavo-rest for all devices and check used images.
+  # Images and diffs are marked, required images returned.
+  def get_images_used_by_puavo_devices(bootserver_data, managed_images)
+    info(5, "Checking which images/diffs are needed by bootserver/devices")
+
+    needed_images = []
+
+    client = PuavoRestClient.new :auth => :etc
+
+    res = client.get("/v3/devices")
+    devices = res.parse()
+
+    # devices_for_syncfiles this is for logging purposes only
+    devices_for_syncfiles = {}
+
+    bootserver_school_dn_list = Array(bootserver_data["school_dns"])
+
+    if bootserver_data["preferred_image"]
+      image = mark_image_in_use(bootserver_data["preferred_image"],
+                                managed_images)
+      if image
+        info(5, "  #{ image.filename } is wanted by this bootserver itself.")
+        needed_images << image
+      end
+    end
+
+    devices.each do |device|
+      current_image        = device["current_image"]
+      hostname             = device["hostname"]
+      preferred_boot_image = device["preferred_boot_image"]
+      preferred_image      = device["preferred_image"]
+      school_dn            = device["school_dn"]
+
+      if !hostname || hostname.empty?
+        warning(3, "There is a device in Puavo that does not have a hostname")
+        next
+      end
+
+      # XXX It should be possible to lookup bootmode from device["boot_mode"]
+      # XXX and it should be either netboot or localboot, but because of
+      # XXX bugs in Puavo some localboot devices may be set to "netboot".
+      # XXX Thus, check out object classes to figure out the correct bootmode.
+      object_classes = device["object_classes"]
+      if !object_classes.kind_of?(Array)
+        warning(3, "Could not determine object classes for #{ hostname }")
+        next
+      end
+      bootmode = object_classes.include?("puavoNetbootDevice") \
+                   ? "netboot"                                           \
+                   : "localboot"
+
+      if !school_dn || school_dn.empty?
+        warning(3, "Host #{ hostname } is not associated with any school," \
+                     + " ignoring.")
+        next
+      end
+
+      # Skip hosts that are not served by this bootserver.
+      next unless bootserver_school_dn_list.include?(school_dn)
+
+      add_to_devices_for_syncfiles = lambda do |syncfile|
+        devices_for_syncfiles[syncfile.filename] ||= {}
+        devices_for_syncfiles[syncfile.filename][ hostname ] = 1
+      end
+
+      # Netboot devices do not need diffs, but want preferred
+      # boot/desktop images.
+      if bootmode == "netboot"
+        [ preferred_boot_image, preferred_image ].each do |image_id|
+          next unless image_id
+          image = mark_image_in_use(image_id, managed_images)
+          if image
+            needed_images << image
+            add_to_devices_for_syncfiles.call(image)
+          end
+        end
+        next
+      end
+
+      # Other devices need diffs from current image to preferred.
+      if current_image && preferred_image && current_image != preferred_image
+        diff = mark_imagediff_in_use(current_image,
+                                     preferred_image,
+                                     managed_images)
+        add_to_devices_for_syncfiles.call(diff) if diff
+      end
+    end
+
+    devices_for_syncfiles.keys.sort.each do |syncfilename|
+      hostnames = devices_for_syncfiles[syncfilename]
+      hostcount = hostnames.keys.count
+      first_hostnames = hostnames.keys.sort.slice(0,3)
+      if hostcount > 3
+        first_hostnames << "..."
+      end
+      hostnames_string = first_hostnames.join(", ")
+      info(5, "  #{ syncfilename } is wanted by #{ hostcount }" \
+                + (hostcount == 1 ? " device" : " devices")     \
+                + " (#{ hostnames_string }).")
+    end
+
+    return needed_images
+  end
+
+  def images
+    return @by_version.values
+  end
+
+  # Returns specified number of newest images in an array.  The images are
+  # sorted oldest first so that when fetching the images, newer images can
+  # be created using diffs from older images.
+  def newest_images(managed_images, options)
+    # We want to always download X number of newest images with Y number
+    # of diffs from newest images.
+    return @by_version.sort.map { |version, image| image } \
+             .reverse.slice(0, options[:image_limit]).reverse
+  end
+
+  def sync(bootserver_data, managed_images, options)
+    if options[:image]
+      image = get_by_id(options[:image])
+      if !image
+        info(4, "Could not find image #{ options[:image] }" \
+                  + " from series #{ @series_name }")
+        return false
+      end
+
+      image_list = [ image ]
+    else
+      # Check latest images.
+      newest_images = newest_images(managed_images, options)
+
+      # Check which images (and diffs) are needed by devices in Puavo.
+      used_images = get_images_used_by_puavo_devices(bootserver_data,
+                                                     managed_images)
+
+      image_list = (newest_images + used_images) \
+                     .uniq.sort_by { |image| image.version }
+
+      if image_list.empty?
+        warning(5, "Image list for series #{ @series_name } is empty," \
+                     + " doing nothing")
+        return false
+      end
+    end
+
+    info(5, "Syncing series #{ @series_name } with the following images:")
+    image_list.each { |image| info(5, "  #{ image.id }") }
+
+    FileUtils.mkdir_p(Image.basedir)
+    FileUtils.mkdir_p(Diff.basedir)
+
+    all_syncs_ok = true
+
+    image_list.each do |image|
+      info(4, "Syncing #{ image.id }")
+
+      if image.materialize(@series_name, managed_images)
+        info(3, "Image sync OK: #{ image.statemsg }", HighLine::GREEN)
+      else
+        all_syncs_ok = false
+        warning(3, "Image sync FAILED: #{ image.statemsg }")
+      end
+
+      if !options[:image]
+        image.download_newest_diffs(@series_name,
+                                    managed_images,
+                                    options[:diff_limit])
+      end
+    end
+
+    # Do not download client diffs if --image was given.
+    return all_syncs_ok if options[:image]
+
+    info(4, "Downloading client diffs")
+
+    images.each do |image|
+      image.diffs.each do |diff|
+        # We want only diffs that have been marked are in use.
+        next unless diff.in_use
+
+        if diff.materialize(@series_name, managed_images)
+          info(3, "Diff sync OK: #{ diff.statemsg }", HighLine::GREEN)
+        else
+          all_syncs_ok = false
+          warning(3, "Diff sync FAILED: #{ diff.statemsg }")
+        end
+      end
+    end
+
+    if !all_syncs_ok
+      warning(4, "Some image/diff sync failed for series #{ @series_name }")
+      return false
+    end
+
+    return all_syncs_ok
+  end
+
+  def cleanup_tempfiles
+    images.each { |image| image.cleanup_tempfiles }
+  end
+end
+
+class SyncState
+  StatesAndMessages = {
+    :missing    => "%s is missing",
+    :downloaded => "%s has been downloaded",
+    :unverified => "%s is unverified",
+    :inplace    => "%s is inplace",
+    :deleted    => "%s has been deleted",
+    :unknown    => "%s state is unknown",
+  }
+
+  def initialize()
+    @state = :unknown
+  end
+
+  def message(filename)
+    return (StatesAndMessages[@state] || StatesAndMessages[:unknown]) \
+             % [ filename ]
+  end
+
+  def state=(new_state)
+    raise "Unsupported state #{ new_state }" \
+      unless StatesAndMessages.has_key?(new_state)
+
+    @state = new_state
+  end
+end
+
+class SyncFile
+  attr_reader :filename
+
+  def initialize(filename, dir=nil)
+    raise 'filename is not set' \
+      unless filename && filename.kind_of?(String) && !filename.empty?
+
+    @basedir  = dir || self.class.basedir
+    @filename = File.basename(filename)
+  end
+
+  def all_possible_paths
+    return [ download_path,
+             partial_unverified_path,
+             unverified_path,
+             final_path ]
+  end
+
+  def download_path
+    return "#{ final_path }.partial"
+  end
+
+  def final_path
+    return "#{ @basedir }/#{ @filename }"
+  end
+
+  def partial_unverified_path
+    return "#{ unverified_path }.partial"
+  end
+
+  def unverified_path
+    return "#{ final_path }.unverified"
+  end
+
+  def inplace?
+    return File.exists?(final_path)
+  end
+
+  def delete
+    return delete_files(all_possible_paths)
+  end
+
+  def delete_files(filelist)
+    all_deleted_ok = true
+
+    filelist.each do |path|
+      next unless File.exists?(path)
+
+      infolevel = (path == final_path) ? 3 : 2
+
+      if File.exists?("#{ path }.lock")
+        warning(infolevel, "Not deleting #{ path } because it has .lock")
+        all_deleted_ok = false
+        next
+      end
+
+      info(infolevel, "Deleting #{ path }")
+      begin
+        File.delete(path)
+      rescue StandardError => e
+        all_deleted_ok = false
+        warning(2, "Could not delete #{ path }: #{ e.message }")
+      end
+    end
+
+    return all_deleted_ok
+  end
+
+  def cleanup_tempfiles
+    tempfiles_to_delete = [ download_path, partial_unverified_path ]
+    tempfiles_to_delete << unverified_path if inplace?
+
+    delete_files(tempfiles_to_delete)
+  end
+end
+
+class SyncFileWithMetadata < SyncFile
+  attr_reader :in_use, :size
+
+  def initialize(filename, sha256, size, urls)
+    super(filename)
+
+    raise 'sha256 is not set' \
+      unless sha256 && sha256.kind_of?(String) && !sha256.empty?
+    raise 'size is not set' \
+      unless size && size.kind_of?(Integer)
+    raise 'urls are not set' \
+      unless urls && urls.kind_of?(Array) && !urls.empty? \
+                  && urls.all? { |url| url.kind_of?(String) }
+
+    @sha256 = sha256
+    @size   = size
+    @urls   = urls
+
+    @in_use        = false
+    @mtime         = nil
+    @state         = SyncState.new
+    @verified      = false
+    @verify_result = false
+  end
+
+  def delete
+    super
+    @state.state = :deleted
+  end
+
+  def download
+    @state.state = :missing
+
+    ensure_enough_diskspace or return false
+
+    # Go through all @urls in order and try to download from each in turn
+    # (we could also do some load balancing by first choosing one randomly?).
+    @urls.each do |url|
+      download_from_url(url) and return true
+    end
+
+    return false
+  end
+
+  # Download file from specified url and check that the size and the checksum
+  # of the downloaded file matches what we expect.  If the file was downloaded
+  # successfully and those checks are okay, true is returned, otherwise false
+  # is returned.
+  # Development idea: it might be nice if this could support partial downloads
+  # (appending to an existing file on later download attempts).
+  def download_from_url(url)
+    uri = URI.parse(url)
+
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.ca_file = "/etc/puavo/certs/rootca.pem"
+    http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+    http.use_ssl = true
+
+    http.request_get(uri.path) do |response|
+      case response
+      when Net::HTTPNotFound
+        warning(2, "404 - Not Found (#{url})")
+        return false
+
+      when Net::HTTPOK
+        hash = Digest::SHA2.new
+        received_size = 0
+
+        info(2, "Downloading from #{ url } to #{ download_path }")
+
+        File.open(download_path, "w") do |temp_file|
+          temp_file.binmode
+
+          progress = 0
+          total = response.header["Content-Length"].to_i
+
+          response.read_body do |chunk|
+            hash      << chunk
+            temp_file << chunk
+
+            received_size += chunk.size
+            new_progress = (received_size * 100) / total
+            if progress != new_progress
+              progress = new_progress
+              msg = "Download progress: %3d%%" % [progress]
+              print("\r" + prefixed_logmsg(1, msg))
+            end
+          end
+        end
+
+        puts "" # output newline after Download progress has gone to 100%
+
+        @state.state = :downloaded
+
+        if received_size != @size
+          warning(2, "Received size (#{ received_size }) did not match" \
+                       + " the expected size (#{ @size })")
+          File.delete(download_path)
+          info(2, "Deleted #{ download_path }")
+          return false
+        end
+
+        if hash.to_s != @sha256
+          warning(2, "Checksum mismatch for #{ download_path }" \
+                       + " (calculated while downloading)," \
+                       + " expected #{ @sha256 }, received #{ hash.to_s }")
+          File.delete(download_path)
+          info(2, "Deleted #{ download_path }")
+          return false
+        end
+
+        info(2, "Checksum verified for #{ download_path }" \
+                  + " (calculated while downloading)")
+        File.rename(download_path, final_path)
+        info(1, "Moved #{ download_path } to #{ final_path }")
+
+        # This can fail and that might be only a temporary error,
+        # so ignore errors.
+        self.class.run_syncfile_install_hooks
+
+        @state.state = :inplace
+        return true
+      else
+        warning(2, "puavo-rest-client error, received response" \
+                     + " #{response.code}")
+        return false
+      end
+    end
+
+    return false
+  end
+
+  def ensure_enough_diskspace
+    directory = File.dirname(final_path)
+
+    block_size, bs_status \
+      = Open3.capture2("stat", "--file-system", "--format", "%S", directory)
+    free_blocks, fb_status \
+      = Open3.capture2("stat", "--file-system", "--format", "%a", directory)
+
+    unless bs_status.success? && fb_status.success?
+      warning(2, "Could not stat directory for #{ final_path }" \
+                   + " when checking disk space")
+      return false
+    end
+
+    begin
+      diskspace = Integer(block_size) * Integer(free_blocks)
+    rescue StandardError => e
+      warning(2, "Could not determine free disk space for #{ final_path }")
+      return false
+    end
+
+    if @size > diskspace
+      warning(2, "Not enough available disk space for #{ final_path }:" \
+                   + " needing #{ @size } bytes, #{ diskspace } available")
+      return false
+    end
+
+    return true
+  end
+
+  def mark_in_use(series_name, managed_images)
+    @in_use = true
+    managed_images.add_syncfile(series_name, self)
+    return self
+  end
+
+  def materialize(series_name, managed_images)
+    mark_in_use(series_name, managed_images)
+
+    verify         and return true
+    patch_from_old and return true
+    download       and return true
+
+    return false
+  end
+
+  def self.run_syncfile_install_hooks
+    # by default do nothing... (subclasses can override this)
+  end
+
+  def statemsg
+    return @state.message(@filename)
+  end
+
+  # Checks if the file in the filesystem has the same sha256 as the metadata.
+  # To speed up things, the filesize needs to match before sha256 is
+  # calculated.  The results are cached and rechecked only if file mtime
+  # changes.
+  def verify
+    # We can speed things up by assuming that all files in proper place have
+    # been verified before (but if $options[:force_verify] is true we will
+    # verify anyway).
+    if inplace?
+      @state.state = :inplace
+      return true unless $options[:force_verify]
+      path_to_verify = final_path
+    else
+      path_to_verify = unverified_path
+    end
+
+    begin
+      current_mtime = File.mtime(path_to_verify)
+      current_size  = File.size(path_to_verify)
+    rescue StandardError => e
+      warning(2, "Problem in inspecting #{ path_to_verify }:" \
+                   + " #{ e.message }")                       \
+        unless e.kind_of?(Errno::ENOENT)
+      @state.state = :unverified
+      return @verified = @verify_result = false
+    end
+
+    if @verified && @mtime && @mtime == current_mtime
+      return @verify_result
+    end
+
+    info(2, "Verifying #{ path_to_verify }")
+
+    @verify_result = false
+    @state.state = :unverified
+
+    if current_size == @size
+      @mtime = current_mtime
+      digest = Digest::SHA2.file(path_to_verify).hexdigest
+      @verify_result = (digest == @sha256)
+      if @verify_result
+        info(2, "Checksum verified for #{ path_to_verify }")
+        if path_to_verify != final_path
+          File.rename(path_to_verify, final_path)
+          info(1, "Moved #{ path_to_verify } to #{ final_path }")
+
+          # This can fail and that might be only a temporary error,
+          # so ignore errors.
+          self.class.run_syncfile_install_hooks
+        end
+        @state.state = :inplace
+      else
+        warning(2, "Checksum mismatch for #{ path_to_verify }, " \
+                     + " expected #{ @sha256 }, received #{ digest }")
+        if path_to_verify == unverified_path
+          File.delete(path_to_verify)
+          info(2, "Deleted #{ path_to_verify }")
+        else
+          # Do not delete in case the file is in final_path... even though
+          # the file is probably broken, it is probably better to leave it
+          # and try to patch/download a new one in its place.
+          # (Verified this might happen if --force-verify option was given.)
+        end
+      end
+    end
+
+    @verified = true
+
+    return @verify_result
+  end
+end
+
+class Image < SyncFileWithMetadata
+  attr_reader :id, :version
+
+  def initialize(filename, id, sha256, size, urls, version)
+    super(filename, sha256, size, urls)
+
+    raise 'id is not set' \
+      unless id && id.kind_of?(String) && !id.empty?
+    raise 'version is not set' \
+      unless version && version.kind_of?(String) && !version.empty?
+
+    @id = id
+    @version = version
+
+    @diffs_from_by_version = Hash.new
+  end
+
+  def self.basedir; $options[:download_path]; end
+
+  def mark_diff_in_use(from_image, series_name, managed_images)
+    diff = @diffs_from_by_version[from_image.version]
+    return false unless diff
+
+    return diff.mark_in_use(series_name, managed_images)
+  end
+
+  def add_diff(diff)
+    return unless diff.targetimage.version == @version
+
+    if diff.baseimage.version != @version
+      @diffs_from_by_version[diff.baseimage.version] = diff
+    end
+  end
+
+  def diffs
+    @diffs_from_by_version.values
+  end
+
+  def download_newest_diffs(series_name, managed_images, limit=0)
+    newest_diffs = @diffs_from_by_version.sort.map { |version, diff| diff } \
+                     .reverse.slice(0, limit).reverse
+
+    newest_diffs.each do |diff|
+      diff.materialize(series_name, managed_images)
+    end
+  end
+
+  # Create the current image from an old image by using a patch.  First
+  # all the possible diffs are sorted by size and the list is scanned twice:
+  # first to check if there is an existing baseimage that has a patch
+  # available and if none is found, then the smallest sized diff for an
+  # existing baseimage is downloaded.
+  def patch_from_old
+    mindiffs = diffs.sort_by { |diff| diff.size }
+
+    apply_diffs = lambda do |download_wanted|
+                    mindiffs.each do |diff|
+                      diff.apply(download_wanted) \
+                        and verify                \
+                        and return true
+                    end
+                    return false
+                  end
+
+    info(3, "Trying to patch a new image from existing images and diffs")
+    apply_diffs.call(false) and return true
+    info(3, "Trying to patch a new image by downloading rdiffs and patching")
+    apply_diffs.call(true)  and return true
+
+    info(3, "(Did not succeed in patching from an old image)")
+    return false
+  end
+
+  def self.run_syncfile_install_hooks
+    info(5, "Running image install hooks")
+
+    all_ok = true
+
+    run_command = lambda do |cmd|
+      if system(cmd)
+        info(3, %Q{"#{ cmd }" ran successfully})
+      else
+        all_ok = false
+        warning(3, %Q{"#{ cmd }" returned error code #{ $?.exitstatus }})
+      end
+    end
+
+    # These are needed to run for each image so that those can be used by
+    # netboot (diskless) clients.
+    run_command.call('/usr/sbin/puavo-bootserver-generate-nbd-exports')
+    run_command.call('/usr/sbin/puavo-bootserver-update-tftpboot --prune')
+
+    return all_ok
+  end
+
+  def delete
+    diffs.each { |diff| diff.delete }
+    super
+  end
+
+  def cleanup_tempfiles
+    diffs.each { |diff| diff.cleanup_tempfiles }
+    super
+  end
+end
+
+class Diff < SyncFileWithMetadata
+  attr_reader :baseimage, :targetimage
+
+  def initialize(baseimage, targetimage, filename, sha256, size, urls)
+    super(filename, sha256, size, urls)
+
+    @baseimage   = baseimage
+    @targetimage = targetimage
+  end
+
+  def self.basedir; "#{ $options[:download_path] }/rdiffs"; end
+
+  def apply(download_wanted)
+    @baseimage.verify                               \
+      and ((download_wanted or verify) or download) \
+      and do_patching                               \
+      and return true
+
+    return false
+  end
+
+  def do_patching
+    @targetimage.ensure_enough_diskspace or return false
+
+    source      = @baseimage.final_path
+    target      = @targetimage.unverified_path
+    temp_target = @targetimage.partial_unverified_path
+
+    info(2, "Patching from #{ source } to #{ temp_target }")
+
+    if !system("rdiff", "patch", source, final_path, temp_target)
+      warning(2, "rdiff failed with exit code: #{ $?.exitstatus }" \
+                   + " when using #{ final_path }")
+      return false
+    end
+
+    info(3, "Patched #{ temp_target } successfully")
+
+    File.rename(temp_target, target)
+
+    info(1, "Moved #{ temp_target } to #{ target }")
+
+    return true
+  end
+
+  def patch_from_old
+    # Diffs can not be patched from old/anything, so just return failure.
+    return false
+  end
+end
+
+class ManagedImages
+  Filepath = '/var/lib/puavo/images.json'
+
+  def initialize
+    @file = open_file_with_lock(Filepath)
+    @old_by_series = JSON.parse( @file.read )
+    @current_by_series = @old_by_series.clone
+
+    @new_by_series = {}
+  end
+
+  def add_syncfile(series_name, syncfile)
+    [ @current_by_series, @new_by_series ].each do |by_series|
+      by_series[series_name] ||= []
+      by_series[series_name] \
+        = (by_series[series_name] + [ syncfile.final_path ]) \
+            .sort.uniq
+    end
+
+    update(@current_by_series)
+  end
+
+  def close
+    # also releases flock
+    @file.close if @file
+  end
+
+  def open_file_with_lock(path)
+    FileUtils.mkdir_p( File.dirname(path) )
+    begin
+      file = File.open(path)
+    rescue Errno::ENOENT
+      raise "Unexpected problem opening #{ path }" if path != Filepath
+
+      # If path == Filepath and it does not exist we should initialize it
+      # with an empty hash/json.
+      file = File.open(path, 'w')
+      file.write( {}.to_json )
+      file.close
+      file = File.open(path)
+    end
+
+    if !file.flock(File::LOCK_NB|File::LOCK_EX)
+      raise "Could not get a lock on #{ Filepath }"
+    end
+
+    return file
+  end
+
+  # Removing files deals with all series at once... this is important,
+  # because some image may be in several series... that image should not be
+  # removed even if one series is removed where it is within.
+  # (The images that may be in several series may be "branching" or "merging"
+  # images... for example some image might be in the middle of series "Ubuntu",
+  # yet at the same time be at the beginning of a series "Gentoo", or
+  # some production image series might contain a subset of development images).
+  def remove_unused(all_series, synced_series, force_delete_unmanaged)
+    info(5, "Removing all unused images/diffs from series")
+    failed_series_names \
+      = (all_series.map &:series_name) - (synced_series.map &:series_name)
+
+    failed_series_names.each do |series_name|
+      warning(4, "Not removing anything from series #{ series_name }" \
+                    + " because of failed sync")
+    end
+
+    deletable_series_names = @old_by_series.keys - failed_series_names
+
+    old_files = deletable_series_names.map { |name| @old_by_series[name] } \
+                  .flatten
+    new_files = @new_by_series.values.flatten
+
+    files_to_delete = (old_files - new_files).uniq
+
+    all_deleted_ok = true
+
+    files_to_delete.each do |filepath|
+      # these paths we trust, so we pass the dirname as well
+      syncfile = SyncFile.new(File.basename(filepath), File.dirname(filepath))
+      if !syncfile.delete
+        all_deleted_ok = false
+      end
+    end
+
+    if !all_deleted_ok || !failed_series_names.empty?
+      # If we failed at deleting some stuff, do not remove any paths from
+      # Filepath, we should try again some later time.
+      warning(4, "Not updating #{ Filepath } due to sync/deletion errors")
+      return false
+    end
+
+    info(4, "Removing old filepaths from #{ Filepath }")
+    update(@new_by_series)
+
+    if force_delete_unmanaged && !delete_unmanaged(false)
+      all_deleted_ok = false
+    end
+
+    return all_deleted_ok
+  end
+
+  def delete_unmanaged(ask_interactively)
+    managed_files = @current_by_series.values.flatten.uniq
+
+    error_occurred = false
+
+    ask_and_delete = lambda do |path|
+      return true if managed_files.include?(path)
+
+      answer = "yes"
+      if ask_interactively
+        answer = HighLine.ask("Delete #{ path }? [yes/no] ").strip
+      end
+
+      if !answer.empty? && "yes".start_with?(answer)
+        syncfile = SyncFile.new(File.basename(path), File.dirname(path))
+        if !syncfile.delete then
+          error_occurred = true
+        end
+        return true
+      elsif !answer.empty? && "no".start_with?(answer)
+        return true
+      else
+        puts "Please answer yes or no"
+        return false
+      end
+    end
+
+    info(5, "Deleting unmanaged images")
+    Dir.glob("#{ Image.basedir }/*.img").sort.each do |imagepath|
+      until ask_and_delete.call(imagepath)
+        true
+      end
+    end
+
+    info(5, "Deleting unmanaged diffs")
+    Dir.glob("#{ Diff.basedir }/*.rdiff").sort.each do |rdiffpath|
+      until ask_and_delete.call(rdiffpath)
+        true
+      end
+    end
+
+    return error_occurred
+  end
+
+  def update(by_series)
+    # update Filepath safely without releasing lock on Filepath
+    tempfile_path = "#{ Filepath }.tmp"
+    File.open(tempfile_path, 'w') do |tempfile|
+      tempfile.write( by_series.to_json )
+    end
+    newfile = open_file_with_lock(tempfile_path)
+    File.rename(tempfile_path, Filepath)
+    @file.close
+    @file = newfile
+  end
+end
+
+module SeriesControl
+  def self.sync_all_series(managed_images, options)
+    statuscode = 0
+    synced_series = []
+
+    bootserver_data = get_bootserver_data()
+
+    all_series = get_all_series(bootserver_data, options)
+
+    info(5, "Cleaning up temporary files")
+    all_series.each do |series|
+      series.cleanup_tempfiles
+    end
+
+    all_series.each do |series|
+      result = series.sync(bootserver_data, managed_images, options)
+      if result
+        synced_series << series
+      elsif !options[:image]
+        warning(5, "Error occurred in syncing #{ series.series_name }")
+      end
+    end
+
+    if options[:image]
+      if !synced_series.empty?
+        info(5,
+             "Image #{ options[:image] } was synchronized successfully",
+             HighLine::GREEN)
+      else
+        warning(5, "Failed to synchronize image #{ options[:image] }")
+        statuscode = 1
+      end
+    elsif all_series.count == synced_series.count
+      info(5, "All series synchronized without a problem", HighLine::GREEN)
+    else
+      warning(5, "Some series could not be synchronized fully")
+      statuscode = 1
+    end
+
+    if options[:image]
+      info(5, "Given --image option, not removing unused images/diffs")
+    elsif options[:keep_unused]
+      info(5, "Given --keep-unused option, not removing unused images/diffs")
+    elsif options[:image]
+      info(5, "Given --image option, not removing unused images/diffs")
+    elsif options[:no_puavo_series_url_lookup]
+      info(5, "Given --no-puavo-series-url-lookup option," \
+                + " not removing unused images/diffs")
+    elsif options[:series]
+      info(5, "Given --series option, not removing unused images/diffs")
+    else
+      if !managed_images.remove_unused(all_series,
+                                       synced_series,
+                                       options[:force_delete_unmanaged])
+        statuscode = 1
+      end
+    end
+
+    return statuscode
+  end
+
+  def self.get_all_series(bootserver_data, options)
+    # Load series information from various sources: lookup urls from
+    # --url parameters and from Puavo, and fetch series information from those
+    # urls.   Check series information from --file parameters as well,
+    # and add up all these sources.
+    all_series_list = []
+
+    series_urls = options[:url]
+    if !options[:no_puavo_series_url_lookup]
+      bootserver_series_urls \
+        = Array(bootserver_data["image_series_source_urls"])
+      raise "Sources urls from Puavo has a bad type" \
+        unless bootserver_series_urls.kind_of?(Array)
+
+      series_urls += bootserver_series_urls
+    end
+
+    if series_urls.empty?
+      info(5, "No series urls were defined")
+    else
+      series_urls.each do |series_url|
+        all_series_list << fetch_and_parse_series_data(series_url)
+      end
+    end
+
+    options[:file].each do |series_file|
+      info(5, "Using file #{ series_file }")
+      series_data_json = IO.read(series_file)
+      all_series_list << parse_series_data( JSON.parse(series_data_json) )
+    end
+
+    all_series = all_series_list.reduce(&:merge) || []
+
+    if options[:series]
+      series_name = options[:series]
+      if all_series[series_name]
+        info(5, "Using only series #{series_name}")
+        return [ all_series[series_name] ]
+      end
+
+      raise "No series named #{ series_name } found" \
+              + " (given as --series parameter)"
+    end
+
+    if all_series.empty?
+      raise "No series information, can not do anything"
+    end
+
+    return all_series.values
+  end
+
+  def self.get_bootserver_data
+    etc = PuavoEtc.new
+    client = PuavoRestClient.new :auth => :etc
+
+    url = "/v3/boot_servers/#{ etc.hostname }"
+
+    info(5, "Loading bootserver data from puavo-rest url: #{ url }")
+    res = client.get(url)
+    return res.parse()
+  end
+
+  # Load series json definition files
+  def self.fetch_and_parse_series_data(source_url)
+    info(5, "Using image series source url #{ source_url }")
+
+    uri = URI.parse(source_url)
+
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.ca_file = "/etc/puavo/certs/rootca.pem"
+    http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+    http.use_ssl = true
+
+    series_by_name = {}
+    http.request_get(uri.path) do |response|
+      if !response.kind_of?(Net::HTTPOK)
+        # Do not let a failed fetch slip out as empty series... otherwise
+        # temporary download failure might result in removing all images/diffs
+        # in this series.
+        raise "Error in fetching #{ source_url }," \
+                + " response code #{ response.code }"
+      end
+
+      series_by_name = parse_series_data( JSON.parse( response.body ) )
+    end
+
+    return series_by_name
+  end
+
+  def self.parse_series_data(series_data)
+    result = Hash.new
+
+    series_data.each_pair do |series_name, data|
+      series = Series.new(series_name)
+
+      data["images"].each do |imagedata|
+        image = Image.new(imagedata["filename"],
+                          imagedata["id"],
+                          imagedata["sha256"],
+                          imagedata["size"],
+                          imagedata["urls"],
+                          imagedata["version"])
+        series.add_image(image)
+      end
+
+      data["images"].each do |image|
+        if image["diffs"]
+          image["diffs"].each do |diffdata|
+            series.add_diff(diffdata["version"],
+                            image["version"],
+                            diffdata["filename"],
+                            diffdata["sha256"],
+                            diffdata["size"],
+                            diffdata["urls"])
+          end
+        end
+      end
+
+      result[series_name] = series
+    end
+
+    result
+  end
+end
+
+# set a low priority for this script
+Process.setpriority(Process::PRIO_PROCESS, 0, 19)
+system('ionice', '-c', '3', '-p', $$.to_s) \
+  or warning(5, 'Could not set process I/O scheduling class to Idle')
+
+script_name = File.basename(__FILE__)
+
+Syslog.open(script_name, Syslog::LOG_CONS)
+
+$options = Hash.new
+
+parser = OptionParser.new do |opts|
+  opts.banner = <<BANNER_EOF
+  Image sync tool for bootservers to download client images from image server.
+  This tool touches only files that have .img or .rdiff ending.
+
+  Image series is a collection of images that are based on same underlying
+  system.  They are versioned and updates from older to newer versions are
+  supported.
+
+  Images are downloaded from an image server.  The series is defined by a JSON
+  file that contains information about images and diffs.  The image source
+  URL is defined in bootserver settings in Puavo and the script queries the
+  information from puavo-rest by default.  Series information is parsed from
+  the JSON files and by default the following images and diffs are downloaded:
+
+  * Two newest images from each series
+  * Diffs from 2nd and 3rd newest image in the series
+  * All images used by netboot devices
+  * All preferred images used by non-netboot devices
+  * All diffs needed by non-netboot devices to update from the current image
+    to preferred images
+
+  All files have checksums that are checked before they are actually used.
+
+  An example that defines two images and a diff between them:
+
+{
+  "ltsp-lukiolaiskannettava-trusty-i386": {
+    "images": [
+      {
+        "version": "20150811123012",
+        "urls": [
+          "https://images.opinsys.fi/ltsp-lukiolaiskannettava-trusty-2015-08-11-123012-i386.img"
+        ],
+        "size": 7375872000,
+        "sha256": "e46708056a43e85280b2e6544d080697762e2c6efd0bb1d287439747758ffa5b",
+        "id": "ltsp-lukiolaiskannettava-trusty-2015-08-11-123012-i386",
+        "filename": "ltsp-lukiolaiskannettava-trusty-2015-08-11-123012-i386.img",
+        "diffs": []
+      },
+      {
+        "version": "20150828091345",
+        "urls": [
+          "https://images.opinsys.fi/ltsp-lukiolaiskannettava-trusty-2015-08-28-091345-i386.img"
+        ],
+        "size": 7558434816,
+        "sha256": "08970fb71ce87d676729c6f6ecf8be9092558d2e55e2c09bc20c404389b35d94",
+        "id": "ltsp-lukiolaiskannettava-trusty-2015-08-28-091345-i386",
+        "filename": "ltsp-lukiolaiskannettava-trusty-2015-08-28-091345-i386.img",
+        "diffs": [
+          {
+            "version": "20150811123012",
+            "urls": [
+              "https://images.opinsys.fi/rdiffs/ltsp-lukiolaiskannettava-trusty-2015-08-11-123012--2015-08-28-091345-i386.rdiff"
+            ],
+            "size": 984242918,
+            "sha256": "1e7a67e554e74df6fcc651dec2ccf26be9949b25e951656f9043d43bc269f51f",
+            "filename": "ltsp-lukiolaiskannettava-trusty-2015-08-11-123012--2015-08-28-091345-i386.rdiff"
+          }
+        ]
+      }
+    ]
+  }
+}
+
+  Usage: #{script_name} [options]
+
+  Options:
+BANNER_EOF
+
+  $options[:delete_unmanaged_interactively] = false
+  opts.on("--delete-unmanaged-interactively",
+          "Delete unmanaged images/diffs (interactively)") do
+    $options[:delete_unmanaged_interactively] = true
+  end
+
+  $options[:diff_limit] = 2
+  opts.on("--diff-limit NUMBER",
+          "Number of newest diffs to sync for synced images even if there are no clients using them. (Default: 2)") do |limit|
+    $options[:diff_limit] = Integer(limit)
+  end
+
+  $options[:download_path] = "/opt/ltsp/images"
+  opts.on("--download-path PATH") do |path|
+    $options[:download_path] = path
+  end
+
+  $options[:file] = []
+  opts.on("--file PATH",
+          "JSON series information file to read (many accepted)") do |file|
+    $options[:file] << file
+  end
+
+  $options[:force_delete_unmanaged] = false
+  opts.on("--force-delete-unmanaged",
+          "Delete unmanaged images/diffs without asking") do
+    $options[:force_delete_unmanaged] = true
+  end
+
+  $options[:force_verify] = false
+  opts.on("--force-verify", "Force verification of each image/rdiff") do
+    $options[:force_verify] = true
+  end
+
+  $options[:image] = nil
+  opts.on("--image IMAGEID",
+          "Sync only the specified image (no .img suffix)") do |image|
+    $options[:image] = image
+  end
+
+  $options[:image_limit] = 2
+  opts.on("--image-limit NUMBER",
+          "Number of newest images to sync from all specified series (Default: 2)") do |limit|
+    $options[:image_limit] = Integer(limit)
+  end
+
+  $options[:keep_unused] = false
+  opts.on("--keep-unused",
+          "Do no delete images that are not currently used by any client") do
+    $options[:keep_unused] = true
+  end
+
+  $options[:no_puavo_series_url_lookup] = false
+  opts.on("--no-puavo-series-url-lookup",
+          "Do not lookup series URLs from Puavo") do
+    $options[:no_puavo_series_url_lookup] = true
+  end
+
+  $options[:series] = nil
+  opts.on("--series NAME",
+          "Download only specified series instead of all series specified by the sources") do |series|
+    $options[:series] = series
+  end
+
+  $options[:url] = []
+  opts.on("--url URL",
+          "Source URL to load JSON series information (many accepted)") do |url|
+    $options[:url] << url
+  end
+
+  opts.on_tail("-h", "--help", "Show this message") do
+    puts opts
+    exit
+  end
+end
+
+parser.parse!
+
+at_exit do
+  if !$options[:delete_unmanaged_interactively]
+    status_stampfile \
+      = "#{ $options[:download_path] }/.puavo-bootserver-sync-images-ok"
+    all_okay = ($!.kind_of?(SystemExit) && $!.success?)
+    if all_okay
+      FileUtils.touch(status_stampfile)
+    else
+      begin
+        File.delete(status_stampfile)
+      rescue Errno::ENOENT
+      end
+    end
+  end
+end
+
+managed_images = nil
+statuscode = 0
+
+begin
+  managed_images = ManagedImages.new
+
+  if $options[:delete_unmanaged_interactively]
+    if !managed_images.delete_unmanaged(true)
+      statuscode = 1
+    end
+  else
+    statuscode = SeriesControl::sync_all_series(managed_images, $options)
+  end
+
+  if !Image.run_syncfile_install_hooks
+    statuscode = 1
+  end
+
+rescue StandardError => e
+  warning(5, "ERROR: #{ e.message }")
+  raise e
+ensure
+  managed_images.close if managed_images
+end
+
+Syslog.close()
+
+exit(statuscode)

@@ -1,7 +1,6 @@
 class image::wirelessaccesspoint {
   include image::bundle::basic,
-	  packages,
-	  puavo_wlan
+	  packages
 
   Apt::Key        <| title == "opinsys-repo.gpgkey" |>
   Apt::Repository <| title == archive

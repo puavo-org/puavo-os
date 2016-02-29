@@ -3,15 +3,12 @@
 set -eu
 
 puavo_domain=$(cat /etc/puavo/domain)
-puavo_hosttype=$(cat /etc/puavo/hosttype)
 
 user_primary_group=$(id -gn)
 
-has_device_tag() {
-  jq -r .tags[] /etc/puavo/device.json | grep -qx "$1"
-}
-
-use_sambahomes() { has_device_tag sambahomes; }
+is_remotemounts_enabled=$(puavo-conf puavo.remotemounts.enabled)
+is_nethomes_enabled=$(puavo-conf puavo.nethomes.enabled)
+nethomes_protocol=$(puavo-conf puavo.nethomes.protocol)
 
 filter_out_our_bookmarks() {
   local domain_re_pattern
@@ -45,21 +42,25 @@ update_bookmarks() {
 
   filter_out_our_bookmarks < "${bookmarksfile}" > "${tmpfile}"
 
-  case "$puavo_hosttype" in
-    fatclient|ltspserver)
-      if use_sambahomes; then
-	echo "file://${HOME}/.puavo-sharedir.schooldir/${sharename}/${user_primary_group} ${schooldir_displayname}" >> "${tmpfile}"
-      else
-	echo "file:///home/share/${sharename}/${user_primary_group} ${schooldir_displayname}" >> "${tmpfile}"
-      fi
-      ;;
-    laptop)
+  if [ "${is_nethomes_enabled}" = true ]; then
+      case "${nethomes_protocol}" in
+          samba)
+	      echo "file://${HOME}/.puavo-sharedir.schooldir/${sharename}/${user_primary_group} ${schooldir_displayname}" >> "${tmpfile}"
+              ;;
+          nfs)
+	      echo "file:///home/share/${sharename}/${user_primary_group} ${schooldir_displayname}" >> "${tmpfile}"
+              ;;
+          *)
+              ;;
+      esac
+  fi
+
+  if [ "${is_remotemounts_enabled}" = true ]; then
       {
-        echo "smb://homedir.${puavo_domain}/${USER} ${userdir_displayname}"
-        echo "smb://homedir.${puavo_domain}/share/${sharename}/${user_primary_group} ${schooldir_displayname}"
+          echo "smb://homedir.${puavo_domain}/${USER} ${userdir_displayname}"
+          echo "smb://homedir.${puavo_domain}/share/${sharename}/${user_primary_group} ${schooldir_displayname}"
       } >> "${tmpfile}"
-      ;;
-  esac
+  fi
 
   mv "${tmpfile}" "${bookmarksfile}"
 }
@@ -99,19 +100,19 @@ for linkname in 'Yhteiset'     'Delade filer' 'Share' \
   [ -h ~/"$linkname" ] && rm -f ~/"$linkname"
 done
 
-case "$puavo_hosttype" in
-  fatclient|ltspserver)
-    if use_sambahomes; then
-      ln -ns ~/.puavo-sharedir.schooldir ~/"${schooldir_displayname}" || true
-    else
-      rmdir ~/.puavo-sharedir.schooldir 2>/dev/null || true
-      ln -ns "/home/share/${sharename}/${user_primary_group}" \
-             ~/"${schooldir_displayname}" || true
-    fi
-    ;;
-  laptop)
-    # old stuff, remove
-    rmdir ~/.puavo-sharedir.schooldir \
-          ~/.puavo-sharedir.userdir 2>/dev/null || true
-    ;;
-esac
+if [ "${is_nethomes_enabled}" = true ]; then
+    case "${nethomes_protocol}" in
+        samba)
+            ln -ns ~/.puavo-sharedir.schooldir ~/"${schooldir_displayname}" || true
+            ;;
+        nfs)
+            rmdir ~/.puavo-sharedir.schooldir 2>/dev/null || true
+            ln -ns "/home/share/${sharename}/${user_primary_group}" \
+                ~/"${schooldir_displayname}" || true
+            ;;
+        *)
+            echo "Unknown puavo.nethomes.protocol: ${nethomes_protocol}" >&2
+            exit 1
+            ;;
+    esac
+fi

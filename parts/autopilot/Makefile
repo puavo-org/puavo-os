@@ -12,9 +12,6 @@ INSTALL_DATA = $(INSTALL) -m 644
 
 all:
 
-deb:
-	dpkg-buildpackage -us -uc
-
 bin/puavo-autopilot-env: Makefile
 	echo "#!/bin/sh" > $@
 	echo "export PUAVO_AUTOPILOT_SHAREDIR=$(datarootdir)/puavo-autopilot" >> $@
@@ -34,23 +31,22 @@ install: bin/puavo-autopilot-env installdirs
 		lib/*
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-autopilot \
-		share/*
+		share/*.png
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-conf/parameters \
+		share/puavo-conf/parameters/puavo-autopilot.json
 
 	rm -f bin/puavo-autopilot-env
-
-install-build-deps:
-	mk-build-deps -i -r debian/control
 
 installdirs:
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/xinitrc.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-autopilot
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/parameters
 	mkdir -p $(DESTDIR)$(libdir)/puavo-autopilot
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
 
 .PHONY: all			\
         bin/puavo-autopilot-env \
-	deb			\
 	install			\
-	install-build-deps	\
 	installdirs

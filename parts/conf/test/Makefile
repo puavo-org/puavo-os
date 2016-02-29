@@ -1,4 +1,4 @@
-CPPFLAGS = -Wall -Wextra -DDEFAULT_DB_FILEPATH=\"test.db\"
+CPPFLAGS = -Wall -Wextra
 LDFLAGS  = -g -O
 CFLAGS   =
 
@@ -16,4 +16,4 @@ test_libpuavoconf: test_libpuavoconf.o ../conf.o
 
 .PHONY: clean
 clean:
-	rm -f test_libpuavoconf *.o test.db
+	rm -f test_libpuavoconf *.o test.db test.db.lock

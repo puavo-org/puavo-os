@@ -1,5 +1,14 @@
 #!/usr/bin/ruby
 
+# puavo-build-image can be used to build images, as well as to create rdiffs
+# between images.  Depending on switches, it may invoke
+# /usr/lib/puavo-image-tools/puavo-imgbuild-tool for hard image building work,
+# or it may generate a Makefile (for GNU Make) to create images/rdiffs.
+#
+# XXX Note: instead of generating a makefile, it would probably more cleaner
+# XXX to split this into two scripts, and the other would be a Rakefile for
+# XXX rake (and generating Makefiles could be dropped from this).
+
 require 'fileutils'
 require 'getoptlong'
 require 'json'
@@ -52,10 +61,10 @@ def build_config_target(config_target,
     or raise "Problem in building '#{ config_target }'"
 end
 
-def builder_confs(builder_confs_path)
+def get_builder_confs()
+  builder_confs_path = "#{ ENV['HOME'] }/.config/puavo-build-image/defaults"
   Hash[ IO.readlines(builder_confs_path).map { |line| line.split } ]
 end
-
 
 def flatten_imageconfs(prefix, inherited_conf, imageconf)
   imageconfs = []
@@ -109,17 +118,18 @@ def image_configurations(config_files)
 end
 
 def ensure_string_sanity(string)
-  return if string.kind_of?(String) && string.match(/^[.a-zA-Z0-9-]+$/)
+  return if string.kind_of?(String) && string.match(/\A[.\w-]+\z/)
 
   raise "String '#{ string }' is not sane enough"
 end
 
 def rdiff_files_for(imagelist)
-  target_image = imagelist.last
-
-  image_regexp = /^(.*?)-([0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{6})-(.*?).img$/
-
   rdiffs_by_source_image = {}
+
+  return rdiffs_by_source_image if imagelist.count == 0
+
+  target_image = imagelist.last
+  image_regexp = /^(.*?)-(\d{4}-\d{2}-\d{2}-\d{6})-(.*?).img$/
 
   imagelist[0 .. -2].map do |source_image|
     source_match = source_image.match(image_regexp)
@@ -147,6 +157,36 @@ def validate_and_list_image_filenames(image_confs)
     images.each { |s| ensure_string_sanity(s) }
     images
   end.flatten.uniq
+end
+
+def get_metadata_info(image_confs)
+  series_metadata_files_ap_list = []
+  series_metadata_make_snippets = []
+
+  image_confs.each do |image_series, series_settings|
+    ensure_string_sanity(image_series)
+
+    series_metadata_file_ap = "${METADATA_DIR}/#{ image_series }.json"
+    series_metadata_files_ap_list << series_metadata_file_ap
+ 
+    series_images = series_settings['images']
+    next unless series_images.kind_of?(Array)
+
+    rdiff_files = rdiff_files_for(series_images).values
+
+    checksum_files = [ series_images, rdiff_files ].flatten \
+                     .map { |file| "${CKSUMS_DIR}/#{ file }.sha256sum" }
+    
+    series_metadata_make_snippets << <<EOF
+#{ series_metadata_file_ap }: images.json #{ series_images.join(' ') } #{ rdiff_files.join(' ') } #{ checksum_files.join(' ') } | ${METADATA_DIR}
+	puavo-build-image --images-config images.json \\
+                          --make-series-json #{ image_series } > $@.tmp
+	mv $@.tmp $@
+EOF
+  end
+
+  [ series_metadata_files_ap_list,
+    series_metadata_make_snippets ]
 end
 
 def get_rdiff_targets_info(image_confs)
@@ -189,10 +229,11 @@ def get_rdiff_targets_info(image_confs)
       target_image_path = "${IMAGES_DIR}/#{ target_image }"
 
       rdiff_make_snippets << <<EOF
-#{ rdiff_full_path }: #{ image_signature_path } #{ target_image_path } #{ rdiff_target_dir }
+#{ rdiff_full_path }: #{ image_signature_path } #{ target_image_path } | #{ rdiff_target_dir }
 	rdiff delta "#{ image_signature_path }" \\
 	            "#{ target_image_path }" \\
-	            $@
+	            $@.tmp
+	mv $@.tmp $@
 EOF
     end
 
@@ -206,7 +247,9 @@ EOF
     rdiff_make_snippets ]
 end
 
-def output_makefile(builder_confs, config_files)
+def output_makefile(config_files)
+  builder_confs = get_builder_confs()
+
   image_confs = image_configurations(config_files)
 
   image_series_list = image_confs.keys
@@ -225,21 +268,26 @@ def output_makefile(builder_confs, config_files)
     rdiff_target_dirs,
     rdiff_make_snippets = * get_rdiff_targets_info(image_confs)
 
+  series_metadata_files_ap_list,
+    series_metadata_make_snippets = * get_metadata_info(image_confs)
+
   puts <<EOF
 IMAGES_DIR        = #{ images_dir }
 RDIFFS_DIR        = #{ rdiffs_dir }
 CKSUMS_DIR        = ${IMAGES_DIR}/.cksums
 MIRROR_DIR        = ${IMAGES_DIR}/mirror
+METADATA_DIR      = ${MIRROR_DIR}/meta
 SIGNATURES_DIR    = ${IMAGES_DIR}/.signatures
 RDIFF_TARGET_DIRS = #{ rdiff_target_dirs.join(' ') }
 
-ALL_DIRS = ${CKSUMS_DIR} ${MIRROR_DIR} ${MIRROR_DIR}/rdiffs \\
+ALL_DIRS = ${CKSUMS_DIR} ${METADATA_DIR} ${MIRROR_DIR} ${MIRROR_DIR}/rdiffs \\
            ${RDIFF_TARGET_DIRS} ${SIGNATURES_DIR}
 
 CHROOT_TARGETS = apply-buildrules chroot cleanup-chroot image \\
                  install-packages update-chroot
 
-COMMON_TARGETS = all-new-images all-rdiffs cksums cleanup-mirror update-mirror
+COMMON_TARGETS = all-new-images all-rdiffs cksums cleanup-mirror \\
+                 update-metadata-files update-mirror
 
 IMAGE_FILES = #{ image_files.join(' ') }
 
@@ -248,8 +296,8 @@ IMAGE_SIGNATURE_FILES_AP \\
   = $(addprefix ${SIGNATURES_DIR}/,${IMAGE_SIGNATURE_FILES})
 
 IMAGE_SERIES = #{ image_series_list.join(' ') }
-
 IMAGE_SERIES_RDIFF_TARGETS = #{ image_series_rdiff_targets.join(' ') }
+IMAGE_SERIES_METADATA_FILES_AP = #{ series_metadata_files_ap_list.join(' ') }
 
 RDIFF_FILES_AP = #{ all_rdiff_files.join(' ') }
 RDIFF_FILES = $(notdir ${RDIFF_FILES_AP})
@@ -261,8 +309,10 @@ CKSUM_FILES_AP = $(addprefix ${CKSUMS_DIR}/,${CKSUM_FILES})
 MIRROR_DIR_IMAGES = $(addprefix ${MIRROR_DIR}/,${IMAGE_FILES})
 MIRROR_DIR_RDIFFS = $(addprefix ${MIRROR_DIR}/rdiffs/,${RDIFF_FILES})
 
-vpath %.img   ${IMAGES_DIR}
-vpath %.rdiff ${RDIFF_TARGET_DIRS}
+vpath %.cksum     ${CKSUMS_DIR}
+vpath %.img       ${IMAGES_DIR}
+vpath %.rdiff     ${RDIFF_TARGET_DIRS}
+vpath %.sha256sum ${CKSUMS_DIR}
 
 help:
 	@echo "Available image series targets are:"
@@ -286,8 +336,12 @@ all-rdiffs: ${RDIFF_FILES_AP}
 .PHONY: cksums
 cksums: ${IMAGES_DIR}/CKSUMS
 
+.PHONY: update-metadata-files
+update-metadata-files: ${IMAGE_SERIES_METADATA_FILES_AP}
+
 .PHONY: update-mirror
-update-mirror: ${MIRROR_DIR}/CKSUMS ${MIRROR_DIR_IMAGES} ${MIRROR_DIR_RDIFFS}
+update-mirror: ${MIRROR_DIR}/CKSUMS ${MIRROR_DIR_IMAGES} \\
+               ${MIRROR_DIR_RDIFFS} ${IMAGE_SERIES_METADATA_FILES_AP}
 
 .PHONY: cleanup-mirror
 cleanup-mirror:
@@ -312,15 +366,26 @@ ${CKSUMS_DIR}/%.img.cksum: %.img | ${CKSUMS_DIR}
 	cksum $< > $@.tmp
 	mv $@.tmp $@
 
+${CKSUMS_DIR}/%.img.sha256sum: %.img | ${CKSUMS_DIR}
+	sha256sum $< > $@.tmp
+	mv $@.tmp $@
+
 ${CKSUMS_DIR}/%.rdiff.cksum: %.rdiff | ${CKSUMS_DIR}
 	cksum $< > $@.tmp
 	mv $@.tmp $@
 
+${CKSUMS_DIR}/%.rdiff.sha256sum: %.rdiff | ${CKSUMS_DIR}
+	sha256sum $< > $@.tmp
+	mv $@.tmp $@
+
 ${IMAGES_DIR}/CKSUMS: ${CKSUM_FILES_AP} | ${MIRROR_DIR}
-	awk '{ "basename " $$3 | getline $$3; print }' ${CKSUM_FILES_AP} > $@
+	awk '{ "basename " $$3 | getline $$3; print }' \\
+	  ${CKSUM_FILES_AP} > $@.tmp
+	mv $@.tmp $@
 
 ${MIRROR_DIR}/CKSUMS: ${IMAGES_DIR}/CKSUMS
-	cp $< $@
+	cp $< $@.tmp
+	mv $@.tmp $@
 
 # link ${MIRROR_DIR_IMAGES}
 ${MIRROR_DIR}/%.img: %.img | ${MIRROR_DIR}
@@ -331,14 +396,122 @@ ${MIRROR_DIR}/rdiffs/%.rdiff: %.rdiff | ${MIRROR_DIR}/rdiffs
 	@ln -f $< $@
 
 ${SIGNATURES_DIR}/%.rdiff_signature: %.img | ${SIGNATURES_DIR}
-	rdiff signature $< $@
+	rdiff signature $< $@.tmp
+	mv $@.tmp $@
 
 #
 # rdiff targets
 #
 
 #{ rdiff_make_snippets.join("\n") }
+
+#{ series_metadata_make_snippets.join("\n") }
 EOF
+end
+
+def output_series_json(series_name, config_files)
+  builder_confs = get_builder_confs()
+
+  image_confs = image_configurations(config_files)
+
+  if !image_confs.has_key?(series_name) then
+    raise "No series name '#{ series_name }' in config files"
+  end
+
+  images_dir = builder_confs['images-dir']
+  raise 'Images directory is not set' if images_dir.nil? || images_dir.empty?
+
+  rdiffs_dir = builder_confs['rdiffs-dir']
+  raise 'Rdiffs directory is not set' if rdiffs_dir.nil? || rdiffs_dir.empty?
+
+  # XXX where should we get these from?
+  images_baseurl = 'https://images.opinsys.fi'
+  rdiffs_baseurl = "#{ images_baseurl }/rdiffs"
+
+  imageseries = image_confs[series_name]
+  imagenamelist = imageseries['images']
+
+  images \
+    = imagenamelist.map do |imagename|
+	rdiff_files = (imagename == imagenamelist.last)         \
+			? rdiff_files_for(imagenamelist).values \
+			: []
+
+	get_size = lambda do |path|
+	  begin
+	    File.size(path)
+	  rescue Errno::ENOENT
+	    raise "Image #{ path } does not exist"
+	  end
+	end
+
+        get_imagepath = lambda { "#{ images_dir }/#{ imagename }" }
+        get_rdiffpath = lambda do |rdiff|
+                          [ rdiffs_dir,
+                            series_name,
+                            File.basename(imagename, '.img'),
+                            rdiff,
+                          ].join('/')
+                        end
+	get_imagesize = lambda do
+                          get_size.call( get_imagepath.call() )
+                        end
+	get_rdiffsize = lambda do |rdiff|
+                          get_size.call( get_rdiffpath.call(rdiff) )
+                        end
+
+	get_sha256 = lambda do |file|
+	  begin
+	    path = "#{ images_dir }/.cksums/#{ file }.sha256sum"
+	    (IO.read(path).split)[0]
+	  rescue Errno::ENOENT
+	    raise "Checksum file #{ path } does not exist"
+	  end
+	end
+
+        get_version = lambda do |name, version_re|
+	  versionmatch = name.match(version_re)
+	  raise "Could not determine version for #{ name }" \
+	    unless versionmatch
+	  versionmatch[1..4].join('')
+        end
+
+        get_imageversion = lambda do
+	  get_version.call(imagename, /-(\d+)-(\d+)-(\d+)-(\d+).*\.img\z/)
+        end
+
+        get_rdiffversion = lambda do |rdiff_file|
+	  get_version.call(rdiff_file, /-(\d+)-(\d+)-(\d+)-(\d+)--.*\.rdiff\z/)
+        end
+
+	diffs = rdiff_files.map do |rdiff_file|
+		  {
+                    'filename' => rdiff_file,
+	            'sha256'   => get_sha256.call(rdiff_file),
+                    'size'     => get_rdiffsize.call(rdiff_file),
+                    'urls'     => [ "#{ rdiffs_baseurl }/#{ rdiff_file }" ],
+	            'version'  => get_rdiffversion.call(rdiff_file),
+                  }
+		end
+
+	{
+	  'diffs'    => diffs,
+	  'filename' => imagename,
+	  'id'       => File.basename(imagename, '.img'),
+	  'sha256'   => get_sha256.call(imagename),
+	  'size'     => get_imagesize.call(),
+	  'urls'     => [ "#{ images_baseurl }/#{ imagename }" ],
+	  'version'  => get_imageversion.call(),
+	}
+      end
+
+  output = {
+    series_name => {
+      'images' => images,
+    }
+  }
+
+  puts(output.to_json)
 end
 
 def get_mountinfo()
@@ -419,16 +592,18 @@ Usage:
                     --use-tmpfs
                     -- (arguments for puavo-imgbuild-tool ...)
 
+  puavo-build-image --make-series-json series-name
+                    --images-config images_config
+
   puavo-build-image --output-makefile
                     --images-config images_config
 
-  --images-config with argument can be given many times, and all the image
-  config files will be combined/merged, later image targets override previous
-  targets if conflicts exist.
+  --images-config is mandatory.  It can also be given many times, and all the
+  image config files will be combined/merged, later image targets override
+  previous targets if conflicts exist.
 
   The last argument for puavo-build-image can be "--", after that all arguments
-  are passed to puavo-imgbuild-tool as they are, when --config-target is set
-  and --output-makefile is not set.
+  are passed to puavo-imgbuild-tool as they are, when --config-target is set.
 EOF
   exit(1)
 end
@@ -436,6 +611,7 @@ end
 apply_configure_bootstrap = false
 config_files              = []
 config_target             = nil
+make_series_json_target   = nil
 mount_device              = nil
 mount_dir                 = nil
 mounts                    = {}
@@ -457,6 +633,7 @@ begin
            [ '--apply-configure-bootstrap', GetoptLong::NO_ARGUMENT       ],
            [ '--config-target',             GetoptLong::REQUIRED_ARGUMENT ],
            [ '--images-config',             GetoptLong::REQUIRED_ARGUMENT ],
+           [ '--make-series-json',          GetoptLong::REQUIRED_ARGUMENT ],
            [ '--mount-device',              GetoptLong::REQUIRED_ARGUMENT ],
            [ '--mount-dir',                 GetoptLong::REQUIRED_ARGUMENT ],
            [ '--output-makefile',           GetoptLong::NO_ARGUMENT       ],
@@ -473,6 +650,8 @@ begin
         config_target = arg
       when '--images-config'
         config_files << arg
+      when '--make-series-json'
+        make_series_json_target = arg
       when '--mount-device'
         mount_device = arg
         maybe_add_to_mounts.call()
@@ -495,30 +674,35 @@ rescue GetoptLong::InvalidOption => e
   usage
 end
 
+
+usage() if config_files.empty?
+
+mode_switch_count = [ config_target,
+                      output_makefile,
+                      make_series_json_target ].count { |x| x }
+usage() if mode_switch_count > 1
+
 # pass the rest of the command line arguments to puavo-imgbuild-tool
 # (the ones after "--")
 puavo_imgbuild_args = ARGV
 
-if output_makefile && !config_files.empty? then
-  # special --output-makefile mode was invoked
-  builder_confs_path = "#{ ENV['HOME'] }/.config/puavo-build-image/defaults"
-  builder_confs = builder_confs(builder_confs_path)
-  output_makefile(builder_confs, config_files)
-  exit(0)
-end
-
-if !config_files.empty? && config_target then
+if config_target then
   handle_mounts(mounts)
   if use_tmpfs then
     setup_tmpfs(tmpfs_inode_count || '5m',
                 tmpfs_path        || '/virtualtmp',
-                tmpfs_size        || '28g')
+                tmpfs_size        || '32g')
   end
   build_config_target(config_target,
                       config_files,
                       puavo_imgbuild_args,
                       apply_configure_bootstrap)
-  exit(0)
+elsif output_makefile then
+  output_makefile(config_files)
+elsif make_series_json_target then
+  output_series_json(make_series_json_target, config_files)
+else
+  usage()
 end
 
-usage()
+exit(0)

@@ -4,13 +4,12 @@
 #include <check.h>
 
 #include "../conf.h"
-#include "../db.h"
 
 static puavo_conf_t *conf;
 
 START_TEST(test_empty_db_clear_empty)
 {
-        ck_assert_int_eq(0, puavo_conf_clear_db(conf));
+        ck_assert_int_eq(0, puavo_conf_clear(conf, NULL));
 }
 END_TEST
 
@@ -18,15 +17,15 @@ START_TEST(test_empty_db_get_from_empty)
 {
         char *value;
 
-        ck_assert_int_ne(0, puavo_conf_get(conf, "somekey", &value));
+        ck_assert_int_ne(0, puavo_conf_get(conf, "somekey", &value, NULL));
 }
 END_TEST
 
-START_TEST(test_empty_db_get_list_from_empty)
+START_TEST(test_empty_db_get_all_from_empty)
 {
         struct puavo_conf_list list;
 
-        ck_assert_int_eq(0, puavo_conf_get_list(conf, &list));
+        ck_assert_int_eq(0, puavo_conf_get_all(conf, &list, NULL));
         ck_assert(list.length == 0);
 }
 END_TEST
@@ -35,27 +34,27 @@ START_TEST(test_empty_db_set_same_twice_and_get)
 {
         char *value;
 
-        ck_assert_int_eq(0, puavo_conf_set(conf, "somekey", "someval1"));
-        ck_assert_int_eq(0, puavo_conf_get(conf, "somekey", &value));
+        ck_assert_int_eq(0, puavo_conf_set(conf, "somekey", "someval1", NULL));
+        ck_assert_int_eq(0, puavo_conf_get(conf, "somekey", &value, NULL));
         ck_assert_str_eq("someval1", value);
         free(value);
 
-        ck_assert_int_eq(0, puavo_conf_set(conf, "somekey", "someval2"));
-        ck_assert_int_eq(0, puavo_conf_get(conf, "somekey", &value));
+        ck_assert_int_eq(0, puavo_conf_set(conf, "somekey", "someval2", NULL));
+        ck_assert_int_eq(0, puavo_conf_get(conf, "somekey", &value, NULL));
         ck_assert_str_eq("someval2", value);
         free(value);
 }
 END_TEST
 
-START_TEST(test_empty_db_set_many_and_get_list)
+START_TEST(test_empty_db_set_many_and_get_all)
 {
         struct puavo_conf_list list;
 
-        ck_assert_int_eq(0, puavo_conf_set(conf, "somekey1", "someval1"));
-        ck_assert_int_eq(0, puavo_conf_set(conf, "somekey2", "someval2"));
-        ck_assert_int_eq(0, puavo_conf_set(conf, "somekey3", "someval3"));
+        ck_assert_int_eq(0, puavo_conf_set(conf, "somekey1", "someval1", NULL));
+        ck_assert_int_eq(0, puavo_conf_set(conf, "somekey2", "someval2", NULL));
+        ck_assert_int_eq(0, puavo_conf_set(conf, "somekey3", "someval3", NULL));
 
-        ck_assert_int_eq(0, puavo_conf_get_list(conf, &list));
+        ck_assert_int_eq(0, puavo_conf_get_all(conf, &list, NULL));
         ck_assert(list.length == 3);
 
         ck_assert_str_eq(list.keys[0], "somekey1");
@@ -65,21 +64,28 @@ START_TEST(test_empty_db_set_many_and_get_list)
         ck_assert_str_eq(list.values[1], "someval2");
         ck_assert_str_eq(list.values[2], "someval3");
 
-        puavo_conf_list_free(conf, &list);
+        puavo_conf_list_free(&list);
+}
+END_TEST
+
+START_TEST(test_empty_db_lock_conflict)
+{
+        puavo_conf_t *conf2;
+        ck_assert_int_ne(0, puavo_conf_open(&conf2, NULL));
 }
 END_TEST
 
 static void setup_empty_db()
 {
-        ck_assert_int_eq(0, puavo_conf_init(&conf));
+        setenv("PUAVO_CONF_DB_FILEPATH", "test.db", 1);
+        ck_assert_int_eq(0, puavo_conf_open(&conf, NULL));
         ck_assert_ptr_ne(conf, NULL);
-        ck_assert_int_eq(0, puavo_conf_open_db(conf, "test.db"));
-        ck_assert_int_eq(0, puavo_conf_clear_db(conf));
+        ck_assert_int_eq(0, puavo_conf_clear(conf, NULL));
 }
 
 static void teardown_empty_db()
 {
-        puavo_conf_free(conf);
+        puavo_conf_close(conf, NULL);
 }
 
 static Suite *libpuavoconf_suite_create(void)
@@ -92,9 +98,10 @@ static Suite *libpuavoconf_suite_create(void)
 
         tcase_add_test(tcase_empty_db, test_empty_db_clear_empty);
         tcase_add_test(tcase_empty_db, test_empty_db_get_from_empty);
-        tcase_add_test(tcase_empty_db, test_empty_db_get_list_from_empty);
+        tcase_add_test(tcase_empty_db, test_empty_db_get_all_from_empty);
         tcase_add_test(tcase_empty_db, test_empty_db_set_same_twice_and_get);
-        tcase_add_test(tcase_empty_db, test_empty_db_set_many_and_get_list);
+        tcase_add_test(tcase_empty_db, test_empty_db_set_many_and_get_all);
+        tcase_add_test(tcase_empty_db, test_empty_db_lock_conflict);
 
         suite_add_tcase(suite, tcase_empty_db);
 

@@ -54,25 +54,10 @@ install-dch-suffix: installdirs
 
 clean:
 
-clean-deb:
-	rm -f ../puavo-devscripts_*.deb
-	rm -f ../puavo-devscripts_*.changes
-	rm -f ../puavo-devscripts_*.dsc
-	rm -f ../puavo-devscripts_*.tar.gz
-
-install-build-debs:
-	mk-build-deps -i -t "apt-get --yes --force-yes" -r debian/control
-
-deb:
-	dpkg-buildpackage -us -uc
-
 .PHONY: all			 \
 	bin/puavo-devscripts-env \
 	clean			 \
-	clean-deb		 \
-	deb			 \
 	install			 \
 	install-dch-suffix	 \
-	install-build-deps	 \
 	install-lxc-tools	 \
 	installdirs

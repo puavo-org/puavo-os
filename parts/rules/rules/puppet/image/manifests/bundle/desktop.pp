@@ -14,7 +14,6 @@ class image::bundle::desktop {
           laptop_mode_tools,
           # libreoffice,		# XXX needs fixing for Debian
           network_manager,
-          puavo_wlan,
           # pycharm,	# XXX pycharm needs to be packaged for Debian
           # tuxpaint,	# XXX needs fixing for Debian
           wacom,

@@ -69,10 +69,6 @@ graphics_drivers
     Setup proprietary nvidia drivers in a such a way they can be used
     (without breaking everything else).
 
-graphics_stack_hacks
-    Different hacks, alternative debs for X drivers and such, to fix
-    graphics bugs.
-
 image
     Collections of other modules.
 
@@ -129,9 +125,6 @@ puavo
 
 puavo_external_files
     Some helper definitions for setting up links to /state/external_files.
-
-puavo_wlan
-    Configurations for puavo-wlanap.
 
 ssh_client
     Settings for openssh client.  XXX these actually weaken security from

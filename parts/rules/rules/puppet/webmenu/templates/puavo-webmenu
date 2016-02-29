@@ -7,8 +7,9 @@ if [ "$PUAVO_TAG_WEBKIOSK" ]; then
   webmenu_args="--webkiosk"
 fi
 
-puavo_personally_administered=$(jq -r .personally_administered \
-				      /etc/puavo/device.json)
+puavo_personally_administered=$(puavo-conf puavo.localadmin.enabled) || {
+    puavo_personally_administered=false
+}
 
 if [ "$puavo_personally_administered" = "true" ]; then
   PUAVO_PERSONALLY_ADMINISTERED=true

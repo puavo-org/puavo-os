@@ -1,8 +1,8 @@
 #!/bin/sh
 
-HOSTTYPE="$(cat /etc/puavo/hosttype)"
+hosttype=$(puavo-conf puavo.hosttype)
 
-case "$HOSTTYPE" in
+case "$hosttype" in
   ltspserver)
     TERMINAL="$LTSP_CLIENT_HOSTNAME"
     lookup_processes() {

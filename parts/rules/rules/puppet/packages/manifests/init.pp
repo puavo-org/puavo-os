@@ -672,52 +672,50 @@ class packages {
   #
 
   @package {
-    # XXX not yet packaged for Debian
-    # [ 'nodejs-bundle'
-    # , 'puavo-rules'
-    # , 'puavo-devscripts' ]:
-    #   tag => [ 'devel', 'puavo', ];
+    [ 'nodejs-bundle'
+    , 'puavo-rules'
+    , 'puavo-devscripts' ]:
+      tag => [ 'devel', 'puavo', ];
 
-    # XXX not yet packaged for Debian
-    # [ 'autopoweroff'
-    # , 'opinsys-ca-certificates'
-    # , 'puavo-autopilot'
-    # , 'puavo-client'
-    # , 'puavo-hw-log'
-    # , 'puavo-ltsp-client'
-    # , 'puavo-ltsp-install'
-    # , 'puavo-monitor'
-    # , 'puavo-vpn-client' ]:
-    #   tag => [ 'misc', 'puavo', 'thinclient', ];
+    [ 'autopoweroff'
+    , 'ltsp-client'
+    , 'opinsys-ca-certificates'
+    , 'puavo-autopilot'
+    , 'puavo-client'
+    , 'puavo-conf'
+    , 'puavo-hw-log'
+    , 'puavo-ltsp-client'
+    , 'puavo-ltsp-install'
+    , 'puavo-monitor'
+    , 'puavo-vpn-client' ]:
+      tag => [ 'misc', 'puavo', 'thinclient', ];
 
-    # XXX not yet packaged for Debian
-    # [ 'fluent-plugin-puavo'
-    # , 'iivari-client'
-    # , 'puavo-image-tools'
-    # , 'puavo-load-reporter'
-    # , 'puavo-local-config'
-    # , 'puavo-pkg'
-    # , 'puavo-sharedir-client'
-    # , 'puavo-wlanap'
-    # , 'simplescreenrecorder' ]:
-    # , 'webmenu'
-    # , 'webkiosk-language-selector'
-    # , 'xexit' ]:
-    #   tag => [ 'misc', 'puavo', ];
+    [ 'fluent-plugin-puavo'
+    , 'iivari-client'
+    , 'ltsp-server'
+    , 'puavo-image-tools'
+    , 'puavo-load-reporter'
+    , 'puavo-local-config'
+    , 'puavo-pkg'
+    , 'puavo-sharedir-client'
+    , 'puavo-wlanap'
+    , 'simplescreenrecorder'
+    , 'webmenu'
+    , 'webkiosk-language-selector'
+    , 'xexit' ]:
+      tag => [ 'misc', 'puavo', ];
 
-    # XXX not yet packaged for Debian
-    # [ 'dymo-cups-drivers' ]:
-    #   tag => [ 'printing', 'puavo', ];
+    [ 'dymo-cups-drivers' ]:
+      tag => [ 'printing', 'puavo', ];
 
-    # XXX not yet packaged for Debian
-    # [ 'bluegriffon'
-    # , 'enchanting'
-    # , 'pycharm'
-    # , 'snap4arduino' ]:
-    #   tag => [ 'programming', 'puavo', ];
+    [ 'bluegriffon'
+    , 'enchanting'
+    , 'pycharm'
+    , 'snap4arduino' ]:
+      tag => [ 'programming', 'puavo', ];
 
-    [ 'x2goclient' ]:
-    # , 'x2goserver'	# XXX not yet packaged for Debian
+    [ 'x2goclient'
+    , 'x2goserver' ]:
       tag => [ 'remote_access', 'puavo', ];
 
     [ 'faenza-icon-theme' ]:

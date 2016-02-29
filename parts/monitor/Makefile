@@ -1,4 +1,3 @@
-
 prefix ?= /usr/local
 
 build:
@@ -13,11 +12,3 @@ install: install-dirs
 	cp -r package.json node_modules/ lib/ bin/ $(DESTDIR)$(prefix)/lib/node_modules/puavo-monitor
 	install -m 644 config.json $(DESTDIR)/etc/puavo-monitor.json
 	ln -fs ../lib/node_modules/puavo-monitor/bin/puavo-monitor $(DESTDIR)$(prefix)/bin/puavo-monitor
-
-.PHONY: install-build-deps
-install-build-deps:
-	mk-build-deps -i -t "apt-get --yes --force-yes" -r debian.default/control
-
-.PHONY: deb
-deb:
-	dpkg-buildpackage -us -uc

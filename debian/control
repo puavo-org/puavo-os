@@ -1,0 +1,446 @@
+Source: puavo-os
+Section: misc
+Priority: extra
+Maintainer: Opinsys Developers <dev@opinsys.fi>
+Build-Depends: debhelper (>= 8),
+ libdb-dev,
+ libgnome-desktop-3-dev,
+ libjansson-dev,
+ libncurses5-dev,
+ libnl-3-dev,
+ libnl-genl-3-dev,
+ libsqlite3-dev,
+ libssl-dev,
+ libtool-bin | libtool,
+ make,
+ nodejs-bundle,
+ pkg-config,
+ pyqt4-dev-tools,
+ python3,
+ ruby-bundler,
+ ruby1.9.1,
+ ruby1.9.1-dev
+Standards-Version: 3.9.3
+Homepage: http://github.com/puavo-org/puavo-os/
+
+Package: dch-suffix
+Architecture: all
+Depends: ${misc:Depends},
+ python3-apt,
+ python3-debian
+Description: Generate new block for debian/changelog file
+ The block will get version number from the previous block with the
+ VERSION_SUFFIX added
+ .
+
+Package: puavoadmins
+Architecture: any
+Depends: ${misc:Depends},
+ libjansson4,
+ ruby-puavobs (>= 0.15.0),
+ ruby1.9.1
+Description: Puavo admin intergration
+  This project provides following components for intergrating Puavo
+  organization admininstrators to the host:
+    - NSS module which provides group and passwd databases.
+      - Supports getpwnam(), getpwuid(), getpwent(), getgrnam(),
+        getgrgid(), getgrent() and their reentrant counterparts.
+  - Command for feeding public SSH keys of Puavo administrators to sshd
+    via AuthorizedKeysCommand (requires OpenSSH 6.1 or newer).
+ .
+
+Package: puavo-autopilot
+Architecture: all
+Depends: ${misc:Depends},
+ coreutils,
+ escrotum,
+ imagemagick,
+ ruby1.9.1,
+ xautomation (>= 1.05)
+Description: Automatic Puavo Desktop testing tool
+ Provides scripts for testing various parts of Puavo desktop.
+ .
+
+Package: puavo-client
+Architecture: any
+Depends: ${misc:Depends}, ruby1.9.1, ruby-ldap, dnsutils
+Replaces: puavo-register
+Conflicts: puavo-register
+Provides: puavo-register
+Description: Ruby lib for Puavo
+ Simple ruby wrapper for the Puavo HTTP API
+ .
+
+Package: puavo-conf
+Architecture: any
+Depends: ${misc:Depends},
+ dmidecode,
+ libdb5.3,
+ pciutils,
+ ruby-ffi,
+ ruby1.9.1,
+ usbutils
+Description: Puavo configuration
+ Puavo Conf is the configuration system of Puavo OS. It consists of a parameter
+ database, a C library (`libpuavoconf`) and a set of programs (`puavo-conf` and
+ `puavo-conf-mkdb`) manipulating the database through the library. Parameters
+ define how various Puavo OS components behave and can be tuned from multiple
+ sources, such as Puavo Web, local administrative tools or kernel command line.
+ .
+
+Package: puavo-devscripts
+Architecture: all
+Depends: ${misc:Depends},
+ bash,
+ devscripts,
+ equivs,
+ git-core,
+ qemu-utils,
+ squashfs-tools,
+ wget
+Recommends: quilt
+Description: Puavo developer tools
+ Scripts to make the life of a Opinsys developer easier
+ .
+
+Package: puavo-devscripts-lxc
+Architecture: all
+Depends: ${misc:Depends},
+ lxc
+Description: Puavo lxc developer tools
+ Few scripts to manage lxc containers
+ .
+
+Package: puavo-hw-log
+Architecture: any
+Depends: ${misc:Depends}, ruby1.9.1, ohai
+Description: Log hardware information to fluentd
+ Log hardware information to fluentd
+ .
+
+Package: puavo-hw-tools
+Architecture: all
+Depends: ${misc:Depends}, jq, ruby1.9.1
+Description: Puavo enabled tools and tweaks to enable and fix hardware features
+ Puavo enabled tools and tweaks to enable and fix hardware features
+ .
+
+Package: puavo-image-tools
+Architecture: all
+Depends: ${misc:Depends},
+ debootstrap,
+ git,
+ make,
+ rdiff,
+ ruby-json,
+ ruby1.9.3,
+ squashfs-tools
+Description: Tools for building images.
+ Tools for building images.
+ .
+
+Package: puavo-local-config
+Architecture: all
+Depends: ${misc:Depends}, node-webkit, puavo-ltsp-client, puavo-pkg, ruby1.9.1,
+ whois
+Description: Puavo configuration tool for local (host-specific) features.
+ Puavo configuration tool for local (host-specific) features.
+ .
+
+Package: puavo-ltsp-bootserver
+Architecture: all
+Depends: ${misc:Depends},
+ bind9,
+ bridge-utils,
+ cifs-utils,
+ cups,
+ curl,
+ dnsmasq,
+ elinks,
+ emacs23-nox,
+ etherwake,
+ ethtool,
+ foomatic-db,
+ foomatic-db-engine,
+ foomatic-filters,
+ fping,
+ git,
+ hping3,
+ hplip,
+ iftop,
+ iperf,
+ iproute,
+ ipsec-tools,
+ isc-dhcp-server,
+ jq,
+ libsasl2-modules-gssapi-mit,
+ libvirt-bin,
+ linux-image-server,
+ logrotate,
+ lynx,
+ nbd-server,
+ nfs-kernel-server,
+ nfs-kernel-server,
+ nginx,
+ nmap,
+ ntp,
+ openbsd-inetd,
+ openprinting-ppds,
+ openssh-server,
+ openvpn,
+ pnm2ppa,
+ printer-driver-gutenprint,
+ puavo-client,
+ puavo-devscripts,
+ puavo-ds-slave,
+ puavo-logrelay,
+ puavo-register,
+ puavo-rest-bootserver,
+ puavo-sharedir-manager,
+ puavo-tftpd,
+ puavo-tftpd-hooks,
+ puavo-wlangw,
+ pxljr,
+ qemu-kvm,
+ racoon,
+ rsyslog-relp,
+ ruby-dnsruby,
+ ruby-highline,
+ ruby-ipaddress,
+ ruby-puavobs,
+ ruby-uuidtools,
+ ruby1.9.3,
+ samba,
+ screen,
+ shorewall,
+ splix,
+ syslinux,
+ sysstat,
+ tmux,
+ tshark,
+ vim,
+ w3m
+Recommends:
+ gdisk,
+ ifenslave,
+ puavo-wlancontroller,
+ smartmontools
+Conflicts:
+ ltsp-server,
+ tftpd-hpa
+Description: Puavo LTSP bootserver runs infrastructure services for thin/fat
+ clients and LTSP servers. No user sessions are run on the server itself.
+ .
+
+Package: puavo-ltsp-client
+Architecture: all
+Conflicts: ltsp-lightdm
+Depends: ${misc:Depends},
+ autofs,
+ cowsay,
+ daemon,
+ dnsutils,
+ gnome-session-flashback,
+ imagemagick,
+ jq,
+ krb5-user,
+ libnss-extrausers,
+ libnss-ldapd,
+ libpam-envfeed,
+ libpam-krb5,
+ libpam-runtime,
+ libsasl2-modules-gssapi-mit,
+ libsasl2-modules-ldap,
+ lightdm,
+ lightdm-gtk-greeter,
+ ltsp-client-core,
+ ltspfs,
+ ltspfsd,
+ nfs-common,
+ nslcd,
+ ntp,
+ perl,
+ puavo-client,
+ puavo-hw-tools,
+ puavo-vpn-client,
+ python,
+ python-appindicator,
+ python-gtk2,
+ ratpoison,
+ rdate,
+ rsyslog-relp,
+ ruby-dnsruby,
+ ruby-json,
+ ruby-ldap,
+ ruby-rest-client,
+ ruby-trollop,
+ ruby-uuidtools,
+ ruby1.9.3,
+ sssd,
+ xautolock
+Suggests: webkiosk-language-selector
+Description: Bits and pieces needed inside the LTSP chroot image.
+
+Package: puavo-ltsp-install
+Architecture: all
+Depends: ${misc:Depends},
+ curl,
+ expect-dev,
+ jq,
+ m4,
+ nbd-client,
+ nwipe,
+ puavo-client,
+ puavo-pkg,
+ pv,
+ python,
+ python-appindicator,
+ python-dbus,
+ python-gtk2,
+ python-notify,
+ rdiff,
+ ruby-dbus,
+ ruby-highline,
+ wget
+Description: Bits and pieces needed inside the LTSP chroot image.
+ Bits and pieces needed inside the LTSP chroot image.
+ .
+
+Package: puavo-monitor
+Architecture: any
+Depends: ${misc:Depends}, nodejs-bundle
+Description: Uptime socket keeping track of client usage 
+ Monitor daemon for fat- and thinclients. Keeps active tcp connection open to
+ the logrelay daemon. Logrelay uses that connection to determine whether the
+ client is up and running.
+ .
+
+Package: puavo-pkg
+Architecture: all
+Depends: ${misc:Depends},
+ bash,
+ coreutils,
+ findutils,
+ gawk,
+ tar,
+ wget
+Description: Package manager for Puavo packages
+ Scripts to make the life of a Opinsys developer easier
+ .
+
+Package: puavo-rules
+Architecture: all
+Depends: ${misc:Depends}
+Description: Puppet-rules for configuring stuff
+ Puppet-rules for configuring stuff
+ .
+
+Package: puavo-sharedir-client
+Architecture: all
+Depends: ${misc:Depends}, cifs-utils
+Description: Puavo shared directory client
+ Puavo shared directory client
+ .
+
+Package: puavo-sharedir-manager
+Architecture: all
+Depends: ${misc:Depends}, ruby, acl, libinotify-ruby, librb-inotify-ruby
+Description: Puavo shared directory manager
+ Puavo shared directory manager
+ .
+
+Package: puavo-vpn-client
+Architecture: all
+Depends: ${misc:Depends}, coreutils, openvpn
+Description: Puavo VPN client
+ Puavo VPN client
+ .
+
+Package: puavo-wlanap
+Architecture: all
+Depends: ${misc:Depends},
+ bridge-utils,
+ hostapd (>= 2.1),
+ isc-dhcp-client,
+ iproute2,
+ iw,
+ puavo-client (>= 2.1.0),
+ ruby-puavowlan,
+ vtun,
+ wireless-crda,
+ wireless-regdb,
+ wireless-tools
+Description: host tunneled WLAN accesspoint
+ puavo-wlanap glues together hostapd, vtun and bridge tools to make
+ hosting a tunneled WLAN accespoint easy. Optionally, accesspoint can be
+ configured from Puavo.
+ .
+
+Package: puavo-wlancontroller
+Architecture: any
+Depends: ${misc:Depends},
+ adduser,
+ ruby-bundler,
+ ruby1.9.1
+Description: Puavo's WLAN controller
+ puavo-wlancontroller monitors and controls a swarm of puavo-wlanap
+ instances.
+ .
+
+Package: puavo-wlangw
+Architecture: all
+Depends: ${misc:Depends},
+ bash,
+ bridge-utils,
+ daemon,
+ net-tools,
+ nmap,
+ vtun
+Description: host tunneled WLAN accesspoint
+ puavo-wlangw glues together vtun and bridge tools to make
+ hosting a tunneled WLAN gateway easy.
+ .
+
+Package: puavo-wlanmapper
+Architecture: any
+Depends: ${misc:Depends},
+ libncurses5,
+ libnl-3-200,
+ libnl-genl-3-200,
+ libtinfo5,
+ python3,
+ python3-dateutil,
+ python3-matplotlib,
+ python3-numpy,
+ python3-pyqt4,
+ python3-scipy,
+ net-tools,
+ wireless-tools
+Description: measure and visualize signal strengths of WLAN access points
+ Monitor 802.11 channels and measure received signal strengths of beacon
+ frames to visualize coverage areas of access points as heatmap overlays
+ on top of layout images.
+ .
+
+Package: ruby-puavobs
+Architecture: any
+XS-Ruby-Versions: ruby1.9.1
+Depends: ${shlibs:Depends}, ${misc:Depends},
+ ruby-bundler,
+ ruby-highline,
+ ruby1.9.1,
+ puavo-client
+Description: Puavo Bootserver library for Ruby
+ This library provides helper functions for common operations done in
+ Puavo Bootservers.
+ .
+
+Package: ruby-puavowlan
+Architecture: all
+XS-Ruby-Versions: ruby1.9.1
+Depends: ${shlibs:Depends}, ${misc:Depends},
+ ruby1.9.1
+Description: Puavo's WLAN library for Ruby
+ This library provides common library utilities for Puavo's WLAN
+ software.
+ .

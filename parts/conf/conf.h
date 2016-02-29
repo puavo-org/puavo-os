@@ -18,66 +18,76 @@
 #ifndef CONF_H
 #define CONF_H
 
+#include <stdbool.h>
 #include <stddef.h>
 
 typedef struct puavo_conf puavo_conf_t;
 
-struct puavo_conf_list {
-        char **keys;
-        char **values;
-        size_t length;
+struct puavo_conf_err {
+        enum {
+                PUAVO_CONF_ERRNUM_SUCCESS,
+                PUAVO_CONF_ERRNUM_DB,
+                PUAVO_CONF_ERRNUM_SYS,
+                PUAVO_CONF_ERRNUM_KEYFOUND,
+                PUAVO_CONF_ERRNUM_KEYNOTFOUND,
+                PUAVO_CONF_ERRNUMCOUNT
+        } errnum;
+        int db_error;
+        int sys_errno;
+        char msg[1024];
 };
-
-/**
- * puavo_conf_init() - initialize a config object
- *
- * @confp - pointer to an uninitialized config object
- *
- * After a successful call, an initialized config object is allocated on
- * the heap and its address is returned via @confp. The caller is
- * responsible for calling puavo_conf_free() on the config object
- * afterwards.
- *
- * On error, all resources allocated by puavo_conf_init() are freed
- * automatically.
- *
- * Return 0 on success and -1 on error.
- */
-int puavo_conf_init(puavo_conf_t **confp);
-
-/**
- * puavo_conf_free() - free an initialized config object
- *
- * @conf - initialized config object
- *
- * Calling puavo_conf_free() multiple times on the same object is a
- * programming error and leads to undefined behavior.
- */
-void puavo_conf_free(puavo_conf_t *conf);
 
 /**
  * puavo_conf_open() - open a config backend
  *
  * @conf - initialized config object
  *
+ * @errp - pointer to an error struct or NULL
+ *
  * After a successful call, the caller is responsible for calling
  * puavo_conf_close().
  *
+ * If @errp is not NULL and an error is encountered, the error struct
+ * pointed by @errp is filled to convey error details.
+ *
  * Return 0 on success and -1 on error.
  */
-int puavo_conf_open(puavo_conf_t *conf);
+int puavo_conf_open(puavo_conf_t **confp,
+                    struct puavo_conf_err *errp);
 
 /**
  * puavo_conf_close() - close a config backend
  *
  * @conf - initialized config object
  *
- * This function must be called to ensure all config operations get
- * finished and all resources get released properly.
+ * @errp - pointer to an error struct or NULL
+ *
+ * This function must be called on every succesfully opened config
+ * backend object to ensure all config operations get finished and all
+ * resources get released properly.
+ *
+ * If @errp is not NULL and an error is encountered, the error struct
+ * pointed by @errp is filled to convey error details.
  *
  * Return 0 on success and -1 on error.
  */
-int puavo_conf_close(puavo_conf_t *conf);
+int puavo_conf_close(puavo_conf_t *conf,
+                     struct puavo_conf_err *errp);
+
+/**
+ * puavo_conf_clear() - remove all parameters
+ *
+ * @conf - initialized config object
+ *
+ * @errp - pointer to an error struct or NULL
+ *
+ * If @errp is not NULL and an error is encountered, the error struct
+ * pointed by @errp is filled to convey error details.
+ *
+ * Return 0 on success and -1 on error.
+ */
+int puavo_conf_clear(puavo_conf_t *conf,
+                     struct puavo_conf_err *errp);
 
 /**
  * puavo_conf_set() - store a parameter
@@ -88,12 +98,86 @@ int puavo_conf_close(puavo_conf_t *conf);
  *
  * @value - NUL-terminated string constant
  *
+ * @errp  - pointer to an error struct or NULL
+ *
  * If @key already exists in the config backend, the value is
  * overwritten.
  *
+ * If @errp is not NULL and an error is encountered, the error struct
+ * pointed by @errp is filled to convey error details.
+ *
  * Return 0 on success and -1 on error.
  */
-int puavo_conf_set(puavo_conf_t *conf, char const *key, char const *value);
+int puavo_conf_set(puavo_conf_t *conf, char const *key, char const *value,
+                   struct puavo_conf_err *errp);
+
+/**
+ * puavo_conf_overwrite() - overwrite a parameter value
+ *
+ * @conf  - initialized config object
+ *
+ * @key   - NUL-terminated string constant
+ *
+ * @value - NUL-terminated string constant
+ *
+ * @errp  - pointer to an error struct or NULL
+ *
+ * If @errp is not NULL and an error is encountered, the error struct
+ * pointed by @errp is filled to convey error details.
+ *
+ * Errnums:
+ *
+ * PUAVO_CONF_ERRNUM_KEYNOTFOUND - @key does not exist in the config backend
+ *
+ * Return 0 on success and -1 on error.
+ */
+int puavo_conf_add(puavo_conf_t *conf, char const *key, char const *value,
+                   struct puavo_conf_err *errp);
+
+/**
+ * puavo_conf_add() - add a new parameter
+ *
+ * @conf  - initialized config object
+ *
+ * @key   - NUL-terminated string constant
+ *
+ * @value - NUL-terminated string constant
+ *
+ * @errp  - pointer to an error struct or NULL
+ *
+ * If @errp is not NULL and an error is encountered, the error struct
+ * pointed by @errp is filled to convey error details.
+ *
+ * Errnums:
+ *
+ * PUAVO_CONF_ERRNUM_KEYFOUND - @key already exists in the config backend
+ *
+ * Return 0 on success and -1 on error.
+ */
+int puavo_conf_add(puavo_conf_t *conf, char const *key, char const *value,
+                   struct puavo_conf_err *errp);
+
+/**
+ * puavo_conf_has_key() - check if the parameter exists
+ *
+ * @conf   - initialized config object
+ *
+ * @key    - NUL-terminated string constant
+ *
+ * @haskey - pointer to a boolean
+ *
+ * @errp   - pointer to an error struct or NULL
+ *
+ * If @key exists in the config backend, @haskey is set to true,
+ * otherwise to false.
+ *
+ * If @errp is not NULL and an error is encountered, the error struct
+ * pointed by @errp is filled to convey error details.
+ *
+ * Return 0 on success and -1 on error.
+ */
+int puavo_conf_has_key(puavo_conf_t *conf, char const *key, bool *haskey,
+                       struct puavo_conf_err *errp);
 
 /**
  * puavo_conf_get() - get a parameter value
@@ -102,53 +186,69 @@ int puavo_conf_set(puavo_conf_t *conf, char const *key, char const *value);
  *
  * @key    - NUL-terminated string constant
  *
- * @valuep - pointer to an uninitialized string
+ * @valuep - pointer to an uninitialized string or NULL
  *
- * After a successful call, @valuep points to a heap-allocated
- * NUL-terminated string value for @key. The caller is responsible for
- * calling free() on the string afterwards.
+ * @errp  - pointer to an error struct or NULL
+ *
+ * After a successful call, if @valuep is not NULL, @valuep points to a
+ * heap-allocated NUL-terminated string value for @key. The caller is
+ * responsible for calling free() on the string afterwards.
+ *
+ * If @errp is not NULL and an error is encountered, the error struct
+ * pointed by @errp is filled to convey error details.
  *
  * Return 0 on success and -1 on error.
  */
-int puavo_conf_get(puavo_conf_t *conf, char const *key, char **valuep);
+int puavo_conf_get(puavo_conf_t *conf, char const *key, char **valuep,
+                   struct puavo_conf_err *errp);
+
+struct puavo_conf_list {
+        char **keys;
+        char **values;
+        size_t length;
+};
 
 /**
- * puavo_conf_get_list() - get a list of all parameters
+ * puavo_conf_get_all() - get a list of all parameters
  *
  * @conf - initialized config object
  *
  * @list - uninitialized parameter list
  *
+ * @errp  - pointer to an error struct or NULL
+ *
  * After a successful call, @list contains two heap-allocated vectors
  * of heap-allocated NUL-terminated strings. The caller is responsible
  * for calling puavo_conf_list_free() on @list afterwards.
  *
- * On error, all resources allocated by puavo_conf_list() are freed
- * automatically.
+ * If @errp is not NULL and an error is encountered, the error struct
+ * pointed by @errp is filled to convey error details.
  *
  * Return 0 on success and -1 on error.
  */
-int puavo_conf_get_list(puavo_conf_t *conf,
-                        struct puavo_conf_list *list);
+int puavo_conf_get_all(puavo_conf_t *conf,
+                       struct puavo_conf_list *list,
+                       struct puavo_conf_err *errp);
 
 /**
  * puavo_conf_list_free() - free a parameter list
  *
- * @conf - initialized config object
- *
  * @list - initialized parameter list
  */
-void puavo_conf_list_free(puavo_conf_t *conf,
-                          struct puavo_conf_list *list);
+static inline void puavo_conf_list_free(struct puavo_conf_list *const list)
+{
+        size_t i;
 
-/**
- * puavo_conf_errstr() - get string describing the error of the last API call
- *
- * @conf - initialized config object
- *
- * Return a NUL-terminated string constant describing the error of the
- * last API call, or NULL if no error has been encountered.
- */
-char const *puavo_conf_errstr(struct puavo_conf *conf);
+        for (i = 0; i < list->length; ++i) {
+                free(list->keys[i]);
+                free(list->values[i]);
+        }
+        free(list->keys);
+        free(list->values);
+
+        list->keys = NULL;
+        list->values = NULL;
+        list->length = 0;
+}
 
 #endif /* CONF_H */
