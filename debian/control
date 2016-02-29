@@ -2,7 +2,8 @@ Source: puavo-os
 Section: misc
 Priority: extra
 Maintainer: Opinsys Developers <dev@opinsys.fi>
-Build-Depends: debhelper (>= 8),
+Build-Depends: bundler,
+ debhelper (>= 8),
  libdb-dev,
  libgnome-desktop-3-dev,
  libjansson-dev,
@@ -17,9 +18,8 @@ Build-Depends: debhelper (>= 8),
  pkg-config,
  pyqt4-dev-tools,
  python3,
- ruby-bundler,
- ruby1.9.1,
- ruby1.9.1-dev
+ ruby,
+ ruby-dev
 Standards-Version: 3.9.3
 Homepage: http://github.com/puavo-org/puavo-os/
 
@@ -38,7 +38,7 @@ Architecture: any
 Depends: ${misc:Depends},
  libjansson4,
  ruby-puavobs (>= 0.15.0),
- ruby1.9.1
+ ruby
 Description: Puavo admin intergration
   This project provides following components for intergrating Puavo
   organization admininstrators to the host:
@@ -55,7 +55,7 @@ Depends: ${misc:Depends},
  coreutils,
  escrotum,
  imagemagick,
- ruby1.9.1,
+ ruby,
  xautomation (>= 1.05)
 Description: Automatic Puavo Desktop testing tool
  Provides scripts for testing various parts of Puavo desktop.
@@ -63,7 +63,7 @@ Description: Automatic Puavo Desktop testing tool
 
 Package: puavo-client
 Architecture: any
-Depends: ${misc:Depends}, ruby1.9.1, ruby-ldap, dnsutils
+Depends: ${misc:Depends}, ruby, ruby-ldap, dnsutils
 Replaces: puavo-register
 Conflicts: puavo-register
 Provides: puavo-register
@@ -78,7 +78,7 @@ Depends: ${misc:Depends},
  libdb5.3,
  pciutils,
  ruby-ffi,
- ruby1.9.1,
+ ruby,
  usbutils
 Description: Puavo configuration
  Puavo Conf is the configuration system of Puavo OS. It consists of a parameter
@@ -113,14 +113,14 @@ Description: Puavo lxc developer tools
 
 Package: puavo-hw-log
 Architecture: any
-Depends: ${misc:Depends}, ruby1.9.1, ohai
+Depends: ${misc:Depends}, ruby, ohai
 Description: Log hardware information to fluentd
  Log hardware information to fluentd
  .
 
 Package: puavo-hw-tools
 Architecture: all
-Depends: ${misc:Depends}, jq, ruby1.9.1
+Depends: ${misc:Depends}, jq, ruby
 Description: Puavo enabled tools and tweaks to enable and fix hardware features
  Puavo enabled tools and tweaks to enable and fix hardware features
  .
@@ -133,7 +133,7 @@ Depends: ${misc:Depends},
  make,
  rdiff,
  ruby-json,
- ruby1.9.3,
+ ruby,
  squashfs-tools
 Description: Tools for building images.
  Tools for building images.
@@ -141,7 +141,7 @@ Description: Tools for building images.
 
 Package: puavo-local-config
 Architecture: all
-Depends: ${misc:Depends}, node-webkit, puavo-ltsp-client, puavo-pkg, ruby1.9.1,
+Depends: ${misc:Depends}, node-webkit, puavo-ltsp-client, puavo-pkg, ruby,
  whois
 Description: Puavo configuration tool for local (host-specific) features.
  Puavo configuration tool for local (host-specific) features.
@@ -209,7 +209,7 @@ Depends: ${misc:Depends},
  ruby-ipaddress,
  ruby-puavobs,
  ruby-uuidtools,
- ruby1.9.3,
+ ruby,
  samba,
  screen,
  shorewall,
@@ -275,7 +275,7 @@ Depends: ${misc:Depends},
  ruby-rest-client,
  ruby-trollop,
  ruby-uuidtools,
- ruby1.9.3,
+ ruby,
  sssd,
  xautolock
 Suggests: webkiosk-language-selector
@@ -380,8 +380,8 @@ Package: puavo-wlancontroller
 Architecture: any
 Depends: ${misc:Depends},
  adduser,
- ruby-bundler,
- ruby1.9.1
+ bundler,
+ ruby
 Description: Puavo's WLAN controller
  puavo-wlancontroller monitors and controls a swarm of puavo-wlanap
  instances.
@@ -424,11 +424,11 @@ Description: measure and visualize signal strengths of WLAN access points
 
 Package: ruby-puavobs
 Architecture: any
-XS-Ruby-Versions: ruby1.9.1
+XS-Ruby-Versions: ruby
 Depends: ${shlibs:Depends}, ${misc:Depends},
- ruby-bundler,
+ bundler,
  ruby-highline,
- ruby1.9.1,
+ ruby,
  puavo-client
 Description: Puavo Bootserver library for Ruby
  This library provides helper functions for common operations done in
@@ -437,9 +437,9 @@ Description: Puavo Bootserver library for Ruby
 
 Package: ruby-puavowlan
 Architecture: all
-XS-Ruby-Versions: ruby1.9.1
+XS-Ruby-Versions: ruby
 Depends: ${shlibs:Depends}, ${misc:Depends},
- ruby1.9.1
+ ruby
 Description: Puavo's WLAN library for Ruby
  This library provides common library utilities for Puavo's WLAN
  software.
