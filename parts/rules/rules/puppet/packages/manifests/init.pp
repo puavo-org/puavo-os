@@ -678,7 +678,6 @@ class packages {
       tag => [ 'devel', 'puavo', ];
 
     [ 'autopoweroff'
-    , 'ltsp-client'
     , 'opinsys-ca-certificates'
     , 'puavo-autopilot'
     , 'puavo-client'
