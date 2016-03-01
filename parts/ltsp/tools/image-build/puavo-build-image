@@ -353,11 +353,12 @@ cleanup-mirror:
 
 .PHONY: ${CHROOT_TARGETS}
 ${CHROOT_TARGETS}:
-	sudo /usr/lib/puavo-image-tools/puavo-imgbuild-tool --$@
+	sudo HOME="$$HOME" /usr/lib/puavo-image-tools/puavo-imgbuild-tool --$@
 
 .PHONY: ${IMAGE_SERIES}
 ${IMAGE_SERIES}: images.json
-	sudo puavo-build-image --config-target $@ --images-config $<
+	sudo HOME="$$HOME" puavo-build-image --config-target $@ \
+		--images-config $<
 
 ${ALL_DIRS}:
 	mkdir -p $@
