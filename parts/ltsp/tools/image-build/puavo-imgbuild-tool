@@ -64,7 +64,7 @@ Usage:
     --apt-proxy    [default is "localhost:3142", "no" may be used to turn off]
     --arch         [default is chroot architecture or "i386"]
     --distribution [default is "trusty"]
-    --mirror       [default is "archive.ubuntu.com"]
+    --mirror       [default is "ftp.debian.org"]
 
 EOF
     exit 1
@@ -107,7 +107,7 @@ mirror="$(get_default_for mirror)"
 
 [ -z "$apt_proxy"           ] && apt_proxy="localhost:3142"
 [ -z "$images_dir"          ] && images_dir="/opt/ltsp/images"
-[ -z "$mirror"              ] && mirror="archive.ubuntu.com"
+[ -z "$mirror"              ] && mirror="ftp.debian.org"
 [ -z "$image_excludes_file" ] \
   && image_excludes_file="/etc/puavo-image-tools/ltsp-image.excludes"
 
@@ -182,9 +182,9 @@ done
 
 [ "$apt_proxy" = "no" ] && apt_proxy=
 if [ -n "$apt_proxy" ]; then
-  mirror_maybe_proxied="http://${apt_proxy}/${mirror}/ubuntu/"
+  mirror_maybe_proxied="http://${apt_proxy}/${mirror}/debian/"
 else
-  mirror_maybe_proxied="http://${mirror}/ubuntu/"
+  mirror_maybe_proxied="http://${mirror}/debian/"
 fi
 
 chroot_arch=$(run_configure_chroot -- --get-arch 2>/dev/null || true)

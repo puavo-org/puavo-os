@@ -74,9 +74,9 @@ read -p "Apt proxy address? [$apt_proxy] " apt_proxy
 [ -z "$apt_proxy" ] && apt_proxy="localhost:3142"
 
 
-mirror="archive.ubuntu.com"
-read -p "Ubuntu mirror? [$mirror] " mirror
-[ -z "$mirror" ] && mirror="archive.ubuntu.com"
+mirror="ftp.debian.org"
+read -p "Debian mirror? [$mirror] " mirror
+[ -z "$mirror" ] && mirror="ftp.debian.org"
 
 
 builds_dir=${imagebuild_sources_dir}/builds
