@@ -8,8 +8,8 @@ class desktop::puavodesktop {
           desktop::dconf::turn_off_xrandrplugin,
           # desktop::enable_indicator_power_service,	# XXX needs fixing
           desktop::mimedefaults,
-          packages
-          # webmenu	# XXX needs packaging for Debian
+          packages,
+          webmenu
 
   file {
     '/etc/dconf/db/puavodesktop.d/locks/session_locks':
@@ -19,9 +19,9 @@ class desktop::puavodesktop {
     '/etc/dconf/db/puavodesktop.d/session_profile':
       content => template('desktop/dconf_session_profile'),
       notify  => Exec['update dconf'],
-      require => [ Package['faenza-icon-theme'] ];
+      require => [ Package['faenza-icon-theme']
                  # , Package['light-themes'] ];	# XXX needs packaging
-                 # , Package['webmenu'] ];	# XXX for Debian
+                 , Package['webmenu'] ];
 
     # webmenu takes care of the equivalent functionality
     '/etc/xdg/autostart/indicator-session.desktop':

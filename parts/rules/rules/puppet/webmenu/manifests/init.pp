@@ -30,10 +30,10 @@ class webmenu {
 
     '/etc/webmenu/tab.d/ops.yaml':
       content => template('webmenu/tab.d/ops.yaml'),
-      require => [ Package['breathe-icon-theme']
-                 , Package['faenza-icon-theme']
-                 , Package['tuxpaint-stamps-default']
+      require => # XXX no Debian package for breathe-icon-theme
+                 [ Package['faenza-icon-theme']
                  , Package['oxygen-icon-theme']
+                 , Package['tuxpaint-stamps-default']
                  , Package['webmenu'] ];
 
     '/etc/xdg/autostart/webmenu.desktop':
