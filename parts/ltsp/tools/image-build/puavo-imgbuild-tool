@@ -252,7 +252,6 @@ build_chroot() {
   log_phase 'debootstrap'
   debootstrap --arch="$arch"                                   \
               --components=main,restricted,universe,multiverse \
-              --include=linux-image-generic                    \
               "$distribution" "$target_dir" "$mirror_maybe_proxied"
 }
 
