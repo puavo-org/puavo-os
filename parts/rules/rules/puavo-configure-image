@@ -109,7 +109,10 @@ do_cleanup_buildrules() {
 do_install_packages() {
   # use gdebi instead of dpkg, dpkg is dumb with dependencies
   apt-get -y install gdebi-core
-  gdebi -n /var/tmp/puavo-build-debs/*
+  for deb in /var/tmp/puavo-build-debs/*.deb; do
+    echo "installing $(basename "${deb}") from /var/tmp/puavo-build-debs"
+    gdebi -nq "$deb"
+  done
 }
 
 do_prepare_image() {
