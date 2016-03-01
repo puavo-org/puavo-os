@@ -62,8 +62,8 @@ Usage:
   --build takes optional arguments:
 
     --apt-proxy    [default is "localhost:3142", "no" may be used to turn off]
-    --arch         [default is chroot architecture or "i386"]
-    --distribution [default is "trusty"]
+    --arch         [default is the same as in buildhost]
+    --distribution [default is the same as in buildhost]
     --mirror       [default is "ftp.debian.org"]
 
 EOF
@@ -84,9 +84,9 @@ if ! args=$(getopt -n "$0" -o + \
 fi
 
 # defaults for these parameters (can be overridden on the command line args)
-arch=
+arch=$(dpkg --print-architecture)
 distribution=$(lsb_release -cs) # take the buildhost distribution as default
-                                # (precise, trusty, ...)
+                                # (jessie, stretch, ...)
 
 buildrules=
 extra_packages_dir=
@@ -196,8 +196,6 @@ if [ -n "$chroot_arch" ]; then
   arch=$chroot_arch
 fi
 
-[ -z "$arch" ] && arch=i386
-
 if [ -z "$target_dir" ]; then
   if [ -z "$builds_dir" ]; then
     echo 'Cannot determine target dir, set --target-dir or --builds-dir' >&2
@@ -270,8 +268,9 @@ apply_buildrules() {
 install_packages() {
   log_phase 'install-packages'
 
-  package_dirs="$(dirs_with_postfix "${buildrule_dirs}" \
-                                    "/packages/$(get_imagetype)")"
+  package_dirs="$(dirs_with_postfix \
+                    "${buildrule_dirs}" \
+                    "/packages/$(get_imagetype)-${distribution}-${arch}")"
   package_dirs="$package_dirs $extra_packages_dir"
 
   run_configure_chroot --install-packages "$package_dirs"
