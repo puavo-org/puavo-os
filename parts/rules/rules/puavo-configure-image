@@ -106,15 +106,6 @@ do_cleanup_buildrules() {
   rm -rf /etc/puavo-image-build/rules/*
 }
 
-do_install_packages() {
-  # use gdebi instead of dpkg, dpkg is dumb with dependencies
-  apt-get -y install gdebi-core
-  for deb in /var/tmp/puavo-build-debs/*.deb; do
-    echo "installing $(basename "${deb}") from /var/tmp/puavo-build-debs"
-    gdebi -nq "$deb"
-  done
-}
-
 do_prepare_image() {
   image_release_name=$1
 
@@ -237,7 +228,6 @@ Usage:
   puavo-configure-image --get-arch
   puavo-configure-image --get-imagename
   puavo-configure-image --get-imagetype
-  puavo-configure-image --install-packages
   puavo-configure-image --prepare-image [--image-release image-release]
   puavo-configure-image --update-buildrules-from-buildhost
   puavo-configure-image --update-buildrules-from-filesystem
@@ -247,7 +237,7 @@ EOF
   exit 1
 }
 
-if ! args=$(getopt -n "$0" -o + -l 'apply-buildrules,apt-dist-upgrade,apt-proxy:,apt-update,bootstrap,buildrule-dirs:,buildrules:,cleanup-buildrules,get-arch,get-config-value:,get-imagename,get-imagetype,image-release:,imagetype:,install-packages,mirror:,prepare-image,shell,update-buildrules-from-buildhost,update-buildrules-from-filesystem,verify-rule-stability' -- "$@"); then
+if ! args=$(getopt -n "$0" -o + -l 'apply-buildrules,apt-dist-upgrade,apt-proxy:,apt-update,bootstrap,buildrule-dirs:,buildrules:,cleanup-buildrules,get-arch,get-config-value:,get-imagename,get-imagetype,image-release:,imagetype:,mirror:,prepare-image,shell,update-buildrules-from-buildhost,update-buildrules-from-filesystem,verify-rule-stability' -- "$@"); then
   usage
 fi
 
@@ -274,7 +264,6 @@ while [ $# -ne 0 ]; do
     | --get-arch                         \
     | --get-imagename                    \
     | --get-imagetype                    \
-    | --install-packages                 \
     | --prepare-image                    \
     | --shell                            \
     | --update-buildrules-from-buildhost \
@@ -344,9 +333,6 @@ case "$action" in
     ;;
   get-imagetype)
     get_imagetype
-    ;;
-  install-packages)
-    do_install_packages
     ;;
   prepare-image)
     do_prepare_image "$image_release_name"

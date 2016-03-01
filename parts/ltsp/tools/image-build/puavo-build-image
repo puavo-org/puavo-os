@@ -284,7 +284,7 @@ ALL_DIRS = ${CKSUMS_DIR} ${METADATA_DIR} ${MIRROR_DIR} ${MIRROR_DIR}/rdiffs \\
            ${RDIFF_TARGET_DIRS} ${SIGNATURES_DIR}
 
 CHROOT_TARGETS = apply-buildrules chroot cleanup-chroot image \\
-                 install-packages update-chroot
+                 setup-local-packages update-chroot
 
 COMMON_TARGETS = all-new-images all-rdiffs cksums cleanup-mirror \\
                  update-metadata-files update-mirror

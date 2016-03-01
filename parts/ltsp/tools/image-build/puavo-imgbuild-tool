@@ -23,7 +23,7 @@ Usage:
                       --image-configure-script image-configure-script
                       --target-dir target-dir
 
-  puavo-imgbuild-tool --install-packages
+  puavo-imgbuild-tool --setup-local-packages
                       --buildrule-dirs buildrule-dirs
                       --chroot-configure-script chroot-configure-script
                       --image-configure-script image-configure-script
@@ -78,7 +78,7 @@ get_default_for() {
 }
 
 if ! args=$(getopt -n "$0" -o + \
-              -l 'apply-buildrules,apt-proxy:,arch:,build:,buildrules:,buildrule-dirs:,builds-dir:,chroot,chroot-configure-script:,cleanup-chroot,configure-bootstrap-rules:,distribution:,extra-packages-dir:,image,image-configure-script:,image-excludes-file:,images-dir:,install-packages,mirror:,release-name:,target-dir:,update-chroot' \
+              -l 'apply-buildrules,apt-proxy:,arch:,build:,buildrules:,buildrule-dirs:,builds-dir:,chroot,chroot-configure-script:,cleanup-chroot,configure-bootstrap-rules:,distribution:,extra-packages-dir:,image,image-configure-script:,image-excludes-file:,images-dir:,setup-local-packages,mirror:,release-name:,target-dir:,update-chroot' \
               -- "$@"); then
   usage
 fi
@@ -114,11 +114,11 @@ mirror="$(get_default_for mirror)"
 eval "set -- $args"
 while [ $# -ne 0 ]; do
   case "$1" in
-    --apply-buildrules   \
-    | --chroot           \
-    | --cleanup-chroot   \
-    | --image            \
-    | --install-packages \
+    --apply-buildrules       \
+    | --chroot               \
+    | --cleanup-chroot       \
+    | --image                \
+    | --setup-local-packages \
     | --update-chroot)
       action=${1#--}; shift
       ;;
@@ -265,15 +265,15 @@ apply_buildrules() {
                        "$@"
 }
 
-install_packages() {
-  log_phase 'install-packages'
+setup_local_packages() {
+  log_phase 'setup-local-packages'
 
   package_dirs="$(dirs_with_postfix \
                     "${buildrule_dirs}" \
                     "/packages/$(get_imagetype)-${distribution}-${arch}")"
   package_dirs="$package_dirs $extra_packages_dir"
 
-  run_configure_chroot --install-packages "$package_dirs"
+  run_configure_chroot --setup-local-packages "$package_dirs"
 }
 
 apt_dist_upgrade() {
@@ -304,11 +304,11 @@ bootstrap_configure() {
 update_chroot() {
   buildrules=$1
 
+  setup_local_packages
   apt_update
   apply_buildrules "$buildrules"
   apt_dist_upgrade
   apply_buildrules "$buildrules" --verify-rule-stability
-  install_packages
 
   touch "${target_dir}/tmp/.update_chroot_done"
 }
@@ -363,8 +363,8 @@ case "$action" in
   image)
     make_image "$release_name"
     ;;
-  install-packages)
-    install_packages
+  setup-local-packages)
+    setup_local_packages
     ;;
   update-chroot)
     update_chroot "$buildrules"

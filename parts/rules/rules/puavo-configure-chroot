@@ -43,26 +43,27 @@ do_bootstrap() {
   puavo_configure_image --bootstrap "$@"
 }
 
-do_install_packages() {
+do_setup_local_packages() {
   package_dirs=$1; shift
 
   rm -f ${target_dir}/var/tmp/puavo-build-debs/*
-
-  there_are_packages_to_install=false
+  mkdir -p "${target_dir}/var/tmp/puavo-build-debs"
 
   for package_dir in $package_dirs; do
-    mkdir -p "${target_dir}/var/tmp/puavo-build-debs"
     for deb in ${package_dir}/*.deb; do
       test -e "$deb" || continue
-      cp "$deb" "${target_dir}/var/tmp/puavo-build-debs"
-      there_are_packages_to_install=true
+      cp $deb "${target_dir}/var/tmp/puavo-build-debs/"
     done
   done
 
-  if $there_are_packages_to_install; then
-    puavo_configure_image --install-packages "$@"
-    rm -f ${target_dir}/var/tmp/puavo-build-debs/*
-  fi
+  # setup apt
+  (
+    cd "${target_dir}/var/tmp/puavo-build-debs"
+    apt-ftparchive packages . > Packages
+    gzip Packages
+    echo 'deb [trusted=yes] file:///var/tmp/puavo-build-debs /' \
+      > "${target_dir}/etc/apt/sources.list.d/puavo-build-debs.list"
+  )
 }
 
 do_mounts() {
@@ -136,7 +137,7 @@ Usage:
                          --buildrule-dirs buildrule-dirs
                          --buildrules buildrules
                          -- (image-configure-script args)
-  puavo-configure-chroot --install-packages package-dirs
+  puavo-configure-chroot --setup-local-packages package-dirs
                          --target-dir target-dir
                          -- (image-configure-script args)
   puavo-configure-chroot --wipe-chroot --target-dir target-dir
@@ -149,7 +150,7 @@ EOF
 trap cleanup 0 INT TERM
 
 if ! args=$(getopt -n "$0" -o + \
-              -l 'apply-buildrules,bootstrap,buildrule-dirs:,image-configure-script:,install-packages:,target-dir:,wipe-chroot' \
+              -l 'apply-buildrules,bootstrap,buildrule-dirs:,image-configure-script:,setup-local-packages:,target-dir:,wipe-chroot' \
               -- "$@"); then
   usage
 fi
@@ -169,9 +170,9 @@ while [ $# -ne 0 ]; do
     | --wipe-chroot)
       action=${1#--}; shift
       ;;
-    --install-packages)
+    --setup-local-packages)
       package_dirs=$2; shift; shift
-      action=install-packages
+      action=setup-local-packages
       ;;
 
     --buildrule-dirs)
@@ -206,8 +207,8 @@ case "$action" in
   bootstrap)
     do_bootstrap "$image_configure_script" "$@"
     ;;
-  install-packages)
-    do_install_packages "$package_dirs" "$@"
+  setup-local-packages)
+    do_setup_local_packages "$package_dirs" "$@"
     ;;
   wipe-chroot)
     if [ -d "$target_dir" ]; then
