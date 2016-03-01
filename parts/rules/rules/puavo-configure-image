@@ -96,7 +96,7 @@ EOF
   chmod 755 /usr/sbin/policy-rc.d
 
   apt-get -qq -y update
-  apt-get -qq -y install language-pack-en puppet-common
+  apt-get -qq -y install locales-all puppet-common
 
   mkdir -p /etc/puavo-image-build
   echo "$imagetype" > /etc/puavo-image-build/imagetype
