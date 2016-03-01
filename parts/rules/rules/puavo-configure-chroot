@@ -56,14 +56,7 @@ do_setup_local_packages() {
     done
   done
 
-  # setup apt
-  (
-    cd "${target_dir}/var/tmp/puavo-build-debs"
-    apt-ftparchive packages . > Packages
-    gzip Packages
-    echo 'deb [trusted=yes] file:///var/tmp/puavo-build-debs /' \
-      > "${target_dir}/etc/apt/sources.list.d/puavo-build-debs.list"
-  )
+  puavo_configure_image --setup-local-packages "$@"
 }
 
 do_mounts() {
