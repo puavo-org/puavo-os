@@ -85,7 +85,7 @@ acquire::http::proxy "http://$apt_proxy";
 EOF
     # url in sources.list may be with proxy-prefix, so now clean this up:
     cat <<EOF > /etc/apt/sources.list
-deb http://${mirror}/ubuntu $distribution main restricted universe multiverse
+deb http://${mirror}/debian $distribution main contrib non-free
 EOF
   fi
 
