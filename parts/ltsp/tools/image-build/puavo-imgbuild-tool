@@ -252,6 +252,7 @@ build_chroot() {
   log_phase 'debootstrap'
   debootstrap --arch="$arch"                                   \
               --components=main,restricted,universe,multiverse \
+              --include=lsb-release                            \
               "$distribution" "$target_dir" "$mirror_maybe_proxied"
 }
 
