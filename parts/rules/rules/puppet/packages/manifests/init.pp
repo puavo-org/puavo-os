@@ -285,9 +285,6 @@ class packages {
     , 'xbmc' ]:
       tag => [ 'mediaplayer', 'debian', ];
 
-    'ltsp-server':
-        tag => [ 'misc', 'debian', ];
-
     [ 'ardour'
     , 'audacity'
     , 'denemo'
