@@ -47,8 +47,6 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/applications
 	mkdir -p $(DESTDIR)$(datarootdir)/icons/hicolor/scalable/status
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/hooks
-	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-bottom
-	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-premount
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-top
 	mkdir -p $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/ltsp_config.d
@@ -231,12 +229,7 @@ install : installdirs
 		puavo-update-nm-configurations
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/initramfs-tools/hooks/ \
-		initramfs/hooks/ethtool \
-		initramfs/hooks/puavo
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-premount \
-		initramfs/scripts/init-premount/puavo_udhcp
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-bottom \
-		initramfs/scripts/init-bottom/puavo_ltsp
+		initramfs/hooks/ethtool
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-top \
 		initramfs/scripts/init-top/blacklist-r816x
 
