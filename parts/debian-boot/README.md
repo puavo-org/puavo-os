@@ -49,7 +49,7 @@ Puavo specific boot parameters are prefixed with "puavo."
 The boot process is initiated by setting boot=puavo parameter that replaces
 the normal boot script named "local".
 
-boot=puavo
+init=/sbin/init-puavo
   Required to initiate the Puavo specific boot process. Without this normal 
   boot is run.
 
@@ -145,11 +145,3 @@ puavo script calls all scripts under directory:
 
 These scripts take care of mounting the overlay filesystem and the local 
 partitions.
-
-
-
-When building the initramfs the following hooks copy the required files 
-to the initrd image:
-
-/usr/share/initramfs-tools/hooks/puavo-udhcp
-/usr/share/initramfs-tools/hooks/puavo-nbd
