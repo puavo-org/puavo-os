@@ -34,8 +34,8 @@ if [ "${TAGS}" != "null" ]; then
   done
 fi
 
-if [ ${brightness} -gt 0 ]; then
-  xbacklight -set ${brightness}
+if [ "${brightness}" -gt 0 ]; then
+  xbacklight -set "${brightness}"
 fi
 
 exec /usr/share/ltsp/xinitrc
