@@ -91,7 +91,8 @@ Description: Puavo configuration
 Package: puavo-debian-boot
 Architecture: all
 Depends: ${misc:Depends},
- initramfs-tools
+ initramfs-tools,
+ puavo-conf
 Description: Puavo Debian Boot
  Puavo integrations to Debian boot, required by Puavo images.
  .
