@@ -1,41 +1,16 @@
 #!/bin/sh
 
-# Sets display backlight brightness using xbacklight command.
-#
-# If there's a xbacklight:XX tag, the brightness is set to specified
-# level. Otherwise hosttype specific defaults are used (100 on thin / fat 
-# clients and 40 on laptops).
-
 . /usr/share/ltsp/ltsp_config
 
-PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
-TAGS=$(jq -r '.tags' /etc/puavo/device.json)
+is_xbacklight_enabled=$(puavo-conf puavo.xbacklight.enabled)
+if [ "${is_xbacklight_enabled}" = true ]; then
+    xbacklight_brightness=$(puavo-conf puavo.xbacklight.brightness)
 
-# Hosttype specific defaults
-
-case  "$PUAVO_HOSTTYPE" in
-  fatclient|thinclient)
-    brightness=100
-    ;;
-  laptop)
-    brightness=40
-    ;;
-esac
-
-# Check if tags have xbacklight:XX tag
-
-if [ "${TAGS}" != "null" ]; then
-  for TAG in $(echo ${TAGS}|jq -r '.[]')
-  do
-    TMP=$(echo ${TAG} | grep "^xbacklight:")
-    if [ "${TMP}" != "" ]; then
-      brightness=$(echo ${TAG}|awk -F ':' '{print $2}')
+    if [ "${xbacklight_brightness}" -gt 0 ]; then
+        xbacklight -set "${xbacklight_brightness}"
+    else
+        echo "puavo.xbacklight.brightness has invalid value" >&2
     fi
-  done
-fi
-
-if [ "${brightness}" -gt 0 ]; then
-  xbacklight -set "${brightness}"
 fi
 
 exec /usr/share/ltsp/xinitrc

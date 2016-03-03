@@ -53,6 +53,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/screen.d
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/xinitrc.d
 	mkdir -p $(DESTDIR)$(datarootdir)/pam-configs
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/parameters
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/cron.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/cups
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/dbus-1/system.d
@@ -87,6 +88,9 @@ installdirs :
 install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/pam-configs \
 		pam/configs/puavo-local-access
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-conf/parameters \
+		puavo-conf-parameters.json
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp/init-puavo.d \
 		init-puavo.d/*-*
