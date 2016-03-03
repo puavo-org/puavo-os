@@ -206,9 +206,6 @@ install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/xsessions \
 		xsessions/puavo-desktop-session.desktop
 
-	$(INSTALL_PROGRAM) -t $(DESTDIR)/sbin \
-		init-puavo 
-
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
 		puavo-ltsp-client-action \
 		puavo-pulseaudio-setup \

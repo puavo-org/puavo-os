@@ -88,6 +88,14 @@ Description: Puavo configuration
  sources, such as Puavo Web, local administrative tools or kernel command line.
  .
 
+Package: puavo-debian-boot
+Architecture: all
+Depends: ${misc:Depends},
+ initramfs-tools
+Description: Puavo Debian Boot
+ Puavo integrations to Debian boot, required by Puavo images.
+ .
+
 Package: puavo-devscripts
 Architecture: all
 Depends: ${misc:Depends},
@@ -260,6 +268,7 @@ Depends: ${misc:Depends},
  ntp,
  perl,
  puavo-client,
+ puavo-debian-boot,
  puavo-hw-tools,
  puavo-vpn-client,
  python,

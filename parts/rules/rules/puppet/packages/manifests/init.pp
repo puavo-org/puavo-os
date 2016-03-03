@@ -678,6 +678,7 @@ class packages {
     # , 'puavo-autopilot'       # XXX not yet packaged for Debian
     , 'puavo-client'
     , 'puavo-conf'
+    , 'puavo-debian-boot'
     , 'puavo-hw-log'
     , 'puavo-ltsp-client'
     , 'puavo-ltsp-install'
