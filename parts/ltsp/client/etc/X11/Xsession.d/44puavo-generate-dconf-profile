@@ -27,8 +27,8 @@ has_device_tag() {
   # If xrandr settings from puavo are forced (whether or not those are set to
   # anything), turn off the gnome-settings-daemon xrandr plugin.  But do
   # nothing they are not forced.
-  if has_device_tag force_puavo_xrandr \
-       && ! has_device_tag no_force_puavo_xrandr; then
+  is_xrandr_forced=$(puavo-conf -b puavo.xrandr.forced)
+  if [ "${is_xrandr_forced}" = true ]; then
     echo "system-db:turn_off_xrandrplugin"
   fi
 
