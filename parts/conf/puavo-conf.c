@@ -120,6 +120,27 @@ static int set_param(puavo_conf_t *const conf, char const *const key,
         return 0;
 }
 
+int print_help(void)
+{
+        int ret = 0;
+
+        ret |= printf("Usage: puavo-conf [OPTIONS]... [--] [KEY [VALUE]]\n");
+        ret |= printf("\n");
+        ret |= printf("Get and set Puavo Configuration parameters.\n");
+        ret |= printf("\n");
+        ret |= printf("Options:\n");
+        ret |= printf("  -b, --type-bool       fail if VALUE is not boolean\n");
+        ret |= printf("  -h, --help            display this help and exit\n");
+        ret |= printf("\n");
+        ret |= printf("If both KEY and VALUE are given, set the value of\n");
+        ret |= printf("KEY to VALUE. If only KEY is given, display its\n");
+        ret |= printf("value. If no arguments are given, display all\n");
+        ret |= printf("parameters.\n");
+        ret |= printf("\n");
+
+        return ret;
+}
+
 int main(int argc, char *argv[])
 {
         puavo_conf_t *conf;
@@ -131,10 +152,11 @@ int main(int argc, char *argv[])
                 int optval;
                 static struct option long_options[] = {
                         {"type-bool", no_argument, 0, 'b' },
+                        {"help"     , no_argument, 0, 'h' },
                         {0          , 0          , 0, 0   }
                 };
 
-                optval = getopt_long(argc, argv, "b", long_options, NULL);
+                optval = getopt_long(argc, argv, "bh", long_options, NULL);
 
                 if (optval == -1)
                         break;
@@ -143,6 +165,9 @@ int main(int argc, char *argv[])
                 case 'b':
                         type = PUAVO_CONF_TYPE_BOOL;
                         break;
+
+                case 'h':
+                        return print_help();
 
                 case '?':
                         return EXIT_FAILURE;
