@@ -5,8 +5,9 @@ set -eu
 CMD=$1
 TYPE=$2
 
-if ! egrep -q thinclient\|fatclient /etc/puavo/hosttype; then
-  jq -r .tags[] /etc/puavo/device.json | grep -q -x jetpipe || exit 0
+is_enabled=$(puavo-conf -b puavo.jetpipe.enabled)
+if [ "${is_enabled}" = false ]; then
+    exit 0
 fi
 
 if [ ${CMD} = "add" ]; then
