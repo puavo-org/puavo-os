@@ -129,12 +129,12 @@ class Series
     return new_image.mark_diff_in_use(old_image, @series_name, managed_images)
   end
 
-  def add_diff(from_version, to_version, filename, sha256, size, urls)
+  def add_diff(cksum, from_version, to_version, filename, sha256, size, urls)
     baseimage = get_by_version(from_version)
     targetimage = get_by_version(to_version)
 
     if baseimage && targetimage
-      diff = Diff.new(baseimage, targetimage, filename, sha256, size, urls)
+      diff = Diff.new(cksum, baseimage, targetimage, filename, sha256, size, urls)
       targetimage.add_diff(diff)
     end
   end
@@ -446,9 +446,9 @@ class SyncFile
 end
 
 class SyncFileWithMetadata < SyncFile
-  attr_reader :in_use, :size
+  attr_reader :cksum, :in_use, :size
 
-  def initialize(filename, sha256, size, urls)
+  def initialize(cksum, filename, sha256, size, urls)
     super(filename)
 
     raise 'sha256 is not set' \
@@ -459,6 +459,7 @@ class SyncFileWithMetadata < SyncFile
       unless urls && urls.kind_of?(Array) && !urls.empty? \
                   && urls.all? { |url| url.kind_of?(String) }
 
+    @cksum  = cksum
     @sha256 = sha256
     @size   = size
     @urls   = urls
@@ -706,8 +707,8 @@ end
 class Image < SyncFileWithMetadata
   attr_reader :id, :version
 
-  def initialize(filename, id, sha256, size, urls, version)
-    super(filename, sha256, size, urls)
+  def initialize(cksum, filename, id, sha256, size, urls, version)
+    super(cksum, filename, sha256, size, urls)
 
     raise 'id is not set' \
       unless id && id.kind_of?(String) && !id.empty?
@@ -812,8 +813,8 @@ end
 class Diff < SyncFileWithMetadata
   attr_reader :baseimage, :targetimage
 
-  def initialize(baseimage, targetimage, filename, sha256, size, urls)
-    super(filename, sha256, size, urls)
+  def initialize(cksum, baseimage, targetimage, filename, sha256, size, urls)
+    super(cksum, filename, sha256, size, urls)
 
     @baseimage   = baseimage
     @targetimage = targetimage
@@ -1027,6 +1028,12 @@ module SeriesControl
 
     all_series = get_all_series(bootserver_data, options)
 
+    begin
+      write_cksums_for_laptops(all_series)
+    rescue StandardError => e
+      warning(5, "Could not write CKSUMS file for laptops: #{ e.message }")
+    end
+
     info(5, "Cleaning up temporary files")
     all_series.each do |series|
       series.cleanup_tempfiles
@@ -1175,7 +1182,8 @@ module SeriesControl
       series = Series.new(series_name)
 
       data["images"].each do |imagedata|
-        image = Image.new(imagedata["filename"],
+        image = Image.new(imagedata["cksum"],
+                          imagedata["filename"],
                           imagedata["id"],
                           imagedata["sha256"],
                           imagedata["size"],
@@ -1187,7 +1195,8 @@ module SeriesControl
       data["images"].each do |image|
         if image["diffs"]
           image["diffs"].each do |diffdata|
-            series.add_diff(diffdata["version"],
+            series.add_diff(diffdata["cksum"],
+                            diffdata["version"],
                             image["version"],
                             diffdata["filename"],
                             diffdata["sha256"],
@@ -1201,6 +1210,33 @@ module SeriesControl
     end
 
     result
+  end
+
+  def self.write_cksums_for_laptops(all_series)
+    syncfiles = {}
+
+    all_series.each do |series|
+      series.images.each do |image|
+        next unless image.cksum && image.filename && image.size
+        syncfiles[ image.filename ] = image
+        image.diffs.each { |diff| syncfiles[ diff.filename ] = diff }
+      end
+    end
+
+    cksums_file_contents \
+      = syncfiles.values \
+                 .map { |sf| [sf.cksum, sf.size, sf.filename].join(' ') } \
+                 .uniq.map { |s| "#{ s }\n" }.join
+
+    raise "Download path #{ $options[:download_path] } is not a directory" \
+      unless File.directory?($options[:download_path])
+
+    cksums_file = "#{ $options[:download_path] }/CKSUMS"
+    tmpfile = "#{ cksums_file }.tmp"
+    File.open(tmpfile, 'w') { |f| f.write cksums_file_contents }
+    File.rename(tmpfile, cksums_file)
+
+    info(5, "Wrote #{ cksums_file }")
   end
 end
 
@@ -1245,36 +1281,39 @@ parser = OptionParser.new do |opts|
   "ltsp-lukiolaiskannettava-trusty-i386": {
     "images": [
       {
-        "version": "20150811123012",
+        "version": "20160121120716",
         "urls": [
-          "https://images.opinsys.fi/ltsp-lukiolaiskannettava-trusty-2015-08-11-123012-i386.img"
+          "https://images.opinsys.fi/ltsp-lukiolaiskannettava-trusty-2016-01-21-120716-i386.img"
         ],
-        "size": 7375872000,
-        "sha256": "e46708056a43e85280b2e6544d080697762e2c6efd0bb1d287439747758ffa5b",
-        "id": "ltsp-lukiolaiskannettava-trusty-2015-08-11-123012-i386",
-        "filename": "ltsp-lukiolaiskannettava-trusty-2015-08-11-123012-i386.img",
-        "diffs": []
+        "size": 8438857728,
+        "sha256": "b2efc0f546cc6aaa84c75dd4ac1a519d90f74561faa04c66ea71ab69c0f563dd",
+        "id": "ltsp-lukiolaiskannettava-trusty-2016-01-21-120716-i386",
+        "filename": "ltsp-lukiolaiskannettava-trusty-2016-01-21-120716-i386.img",
+        "diffs": [],
+        "cksum": "425150505"
       },
       {
-        "version": "20150828091345",
+        "version": "20160303082253",
         "urls": [
-          "https://images.opinsys.fi/ltsp-lukiolaiskannettava-trusty-2015-08-28-091345-i386.img"
+          "https://images.opinsys.fi/ltsp-lukiolaiskannettava-trusty-2016-03-03-082253-i386.img"
         ],
-        "size": 7558434816,
-        "sha256": "08970fb71ce87d676729c6f6ecf8be9092558d2e55e2c09bc20c404389b35d94",
-        "id": "ltsp-lukiolaiskannettava-trusty-2015-08-28-091345-i386",
-        "filename": "ltsp-lukiolaiskannettava-trusty-2015-08-28-091345-i386.img",
+        "size": 8692178944,
+        "sha256": "74afeb7458299e30647660bd0a68eca8a20aec9495f60314390cb0384fe4805c",
+        "id": "ltsp-lukiolaiskannettava-trusty-2016-03-03-082253-i386",
+        "filename": "ltsp-lukiolaiskannettava-trusty-2016-03-03-082253-i386.img",
         "diffs": [
           {
-            "version": "20150811123012",
+            "version": "20150623102329",
             "urls": [
-              "https://images.opinsys.fi/rdiffs/ltsp-lukiolaiskannettava-trusty-2015-08-11-123012--2015-08-28-091345-i386.rdiff"
+              "https://images.opinsys.fi/rdiffs/ltsp-lukiolaiskannettava-trusty-2015-06-23-102329--2016-03-03-082253-i386.rdiff"
             ],
-            "size": 984242918,
-            "sha256": "1e7a67e554e74df6fcc651dec2ccf26be9949b25e951656f9043d43bc269f51f",
-            "filename": "ltsp-lukiolaiskannettava-trusty-2015-08-11-123012--2015-08-28-091345-i386.rdiff"
+            "size": 3167354864,
+            "sha256": "0b0180004a357aaff3129e8f01d00bc2a38c529c1778be1f3b9262d9d14848fb",
+            "filename": "ltsp-lukiolaiskannettava-trusty-2015-06-23-102329--2016-03-03-082253-i386.rdiff",
+            "cksum": "3910449267"
           }
-        ]
+        ],
+        "cksum": "2211076372"
       }
     ]
   }
