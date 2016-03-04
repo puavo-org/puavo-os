@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -eu
+
 CMD=$1
 TYPE=$2
 
