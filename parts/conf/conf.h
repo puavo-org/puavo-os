@@ -30,11 +30,17 @@ struct puavo_conf_err {
                 PUAVO_CONF_ERRNUM_SYS,
                 PUAVO_CONF_ERRNUM_KEYFOUND,
                 PUAVO_CONF_ERRNUM_KEYNOTFOUND,
+                PUAVO_CONF_ERRNUM_TYPE,
                 PUAVO_CONF_ERRNUMCOUNT
         } errnum;
         int db_error;
         int sys_errno;
         char msg[1024];
+};
+
+enum puavo_conf_type {
+        PUAVO_CONF_TYPE_ANY,
+        PUAVO_CONF_TYPE_BOOL
 };
 
 /**
@@ -250,5 +256,24 @@ static inline void puavo_conf_list_free(struct puavo_conf_list *const list)
         list->values = NULL;
         list->length = 0;
 }
+
+/**
+ * puavo_conf_check_type() - check if the value is of given type
+ *
+ * @value - NUL-terminated string constant
+ *
+ * @type  - type descriptor
+ *
+ * @errp  - pointer to an error struct or NULL
+ *
+ * If @errp is not NULL and an error is encountered, the error struct
+ * pointed by @errp is filled to convey error details.
+ *
+ * Return 0 on success and -1 on error.
+ *
+ */
+int puavo_conf_check_type(char const *value,
+                          enum puavo_conf_type type,
+                          struct puavo_conf_err *errp);
 
 #endif /* CONF_H */
