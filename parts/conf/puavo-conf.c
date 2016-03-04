@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
                 break;
         default:
                 (void) fprintf(stderr,
-                               "Error: invalid number of arguments (%d)",
+                               "Error: Invalid number of arguments (%d)\n",
                                argc - 1);
                 goto err;
         }
