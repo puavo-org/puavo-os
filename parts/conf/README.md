@@ -76,18 +76,18 @@ in lexicographical order and must have the following structure:
 
     {
         "puavo.hosttype": {
-            "type": "string",
+            "typehint": "string",
             "choices": ["fatclient", "thinclient", "laptop"],
             "default": "fatclient",
             "description": "Type of the device"
         },
         "puavo.nethomes.enabled": {
-            "type": "bool",
-            "default": true,
+            "typehint": "bool",
+            "default": "true",
             "description": "Toggle network mounted home directories"
         },
         "puavo.nethomes.protocol": {
-            "type": "string",
+            "typehint": "string",
             "choices": ["nfs", "samba"],
             "default": "nfs",
             "description": "Network filesystem protocol used for network mounted home directories"
