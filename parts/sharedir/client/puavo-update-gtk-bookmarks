@@ -6,8 +6,8 @@ puavo_domain=$(cat /etc/puavo/domain)
 
 user_primary_group=$(id -gn)
 
-is_remotemounts_enabled=$(puavo-conf puavo.remotemounts.enabled)
-is_nethomes_enabled=$(puavo-conf puavo.nethomes.enabled)
+is_remotemounts_enabled=$(puavo-conf -b puavo.remotemounts.enabled)
+is_nethomes_enabled=$(puavo-conf -b puavo.nethomes.enabled)
 nethomes_protocol=$(puavo-conf puavo.nethomes.protocol)
 
 filter_out_our_bookmarks() {

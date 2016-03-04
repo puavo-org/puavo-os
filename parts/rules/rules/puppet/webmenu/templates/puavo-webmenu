@@ -7,7 +7,7 @@ if [ "$PUAVO_TAG_WEBKIOSK" ]; then
   webmenu_args="--webkiosk"
 fi
 
-puavo_personally_administered=$(puavo-conf puavo.localadmin.enabled) || {
+puavo_personally_administered=$(puavo-conf -b puavo.localadmin.enabled) || {
     puavo_personally_administered=false
 }
 
