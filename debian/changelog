@@ -1,3 +1,75 @@
+puavo-os (0.1.2) trusty; urgency=medium
+
+  * New release
+  * parts/conf: add --help to puavo-conf
+  * parts/conf: add -b/--type-bool flag to check if the value boolean
+  * parts/conf: add library function for checking value types
+  * parts/conf: fix error message format
+  * Adapt puavo-conf-mkdb initramfs-setup to match what current version
+    provides.
+  * Fix puavo-debian-boot README.md to match the current reality.
+  * parts/ltsp: client: get xbacklight parameters via puavo-conf
+  * parts/ltsp: client: quote shell variable
+  * puavo-debian-boot depends on puavo-conf.
+  * Add "puavo-debian-boot"-package, that contains /sbin/init-puavo and
+    initramfs-scripts for Puavo integration.
+  * Now that we are in it, drop the "ltsp-server" package as well.
+  * puavo-ltsp-client does not setup initramfs-stuff anymore (we have a
+    separate package for that, incoming...).
+  * Do not install ltsp-client to images.
+  * Drop the ltsp-client-core dependency from puavo-ltsp-client, we are
+    going to go without it.  Goodbye, LTSP, don't be sad, we had some
+    good times! ;-)
+  * Enable webmenu puppet-module.
+  * Move setup-local-package partially to image, I think it is nicer to
+    run "apt-get update" after packages in sources have changed.
+  * Remove ltsp/client/init-puavo.d/98-configure-xorg, it links to ltsp-
+    stuff and currently just breaks things (sets Xorg-driver to "null",
+    and X is not pleased).  We probably need the driver-setting
+    functionality, though.
+  * Do not install custom/local packages with gdebi.  Instead, setup
+    things so that apt-get can handle them.
+  * gdebi apparently installs only the first deb-package on command
+    line, unlike what manual page suggests.  Dealing with that...
+  * Fix some package directory paths and use the buildhost architecture
+    as the default build architecture, not "i386".
+  * Install "locales-all" instead of "language-pack-en" on Debian
+    (Debian does not have the latter package).  This is so that puppet-
+    rules with UTF-8 characters work (setting LANG=en_US.UTF-8 works).
+  * Still one more place to change in "Ubuntu" --> "Debian" conversion.
+  * Do include lsb-release package in debootstrap phase.  Our current
+    image build scripts need that, and besides, I do think it is nice in
+    general.
+  * Debian does not have a package named "linux-image-generic", so do
+    not try to install that in bootstrap.
+  * Change default image build mirrors from Ubuntu to Debian.
+  * Set HOME="$$HOME" for sudo explicitly so that it works in Debian
+    Jessie (and other places probably).
+  * Do not try to install some software which we do not yet have in
+    Debian.
+  * Remove duplicate ltsp-server definition.
+  * Remove duplicate ltsp-client definition.
+  * Fix puavo-os package dependencies.
+  * Do not depend on specific ruby version.  "ruby-bundler" -->
+    "bundler".
+  * parts/wlan: ap: kill empty vtunds on PHY remove
+  * parts/wlan: ap: setup bridges just-in-time
+  * parts/rules: motd: use puavo-conf
+  * parts/rules: xexit: use puavo-conf
+  * parts/rules: remove puavo_wlan because of new era
+  * parts/rules: remove graphics_stack_hacks because of new era
+  * parts/rules: disable_suspend_by_tag: use puavo-conf
+  * parts/rules: keyboard_hw_quirks: use puavo-conf
+  * parts/rules: webmenu: use puavo-conf
+  * parts/rules: console: use puavo-conf
+  * parts/rules: packages: add puavo-conf package
+  * parts/sharedir: client: use puavo-conf
+  * parts/hw-tools: use puavo-conf
+  * parts/autopilot: use puavo-conf
+  * Git(5670d7b725887558dfddefe1436d614c9b3fb379)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Fri, 04 Mar 2016 10:59:00 +0200
+
 puavo-os (0.1.1) trusty; urgency=medium
 
   * New release
