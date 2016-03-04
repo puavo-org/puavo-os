@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -eu
+
 # This script is called from udev rules when udev detects a change in 
 # monitor configuration. All xrandr commands are called to restore 
 # the configuration. This is needed e.g. with document cameras that 
