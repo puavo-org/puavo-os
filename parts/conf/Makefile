@@ -38,7 +38,6 @@ installdirs:
 	mkdir -p $(DESTDIR)$(libdir)
 	mkdir -p $(DESTDIR)$(rubylibdir)/puavo
 	mkdir -p $(DESTDIR)$(sbindir)
-	mkdir -p $(DESTDIR)$(varlibdir)
 
 .PHONY: test
 test: all
