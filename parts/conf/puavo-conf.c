@@ -15,6 +15,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -63,12 +64,21 @@ err:
         return ret;
 }
 
-static int get_param(puavo_conf_t *const conf, char const *const key)
+static int get_param(puavo_conf_t *const conf, char const *const key,
+                     enum puavo_conf_type const type)
 {
         struct puavo_conf_err err;
         char *value;
 
         if (puavo_conf_get(conf, key, &value, &err)) {
+                (void) fprintf(stderr, "Error: Failed to get '%s': %s\n",
+                               key, err.msg);
+                (void) puavo_conf_close(conf, NULL);
+                return 1;
+        }
+
+        if (puavo_conf_check_type(value, type, &err)) {
+                free(value);
                 (void) fprintf(stderr, "Error: Failed to get '%s': %s\n",
                                key, err.msg);
                 (void) puavo_conf_close(conf, NULL);
@@ -89,9 +99,16 @@ static int get_param(puavo_conf_t *const conf, char const *const key)
 }
 
 static int set_param(puavo_conf_t *const conf, char const *const key,
-                     char const *const value)
+                     char const *const value, enum puavo_conf_type const type)
 {
         struct puavo_conf_err err;
+
+        if (puavo_conf_check_type(value, type, &err)) {
+                (void) fprintf(stderr, "Error: Failed to get '%s': %s\n",
+                               key, err.msg);
+                (void) puavo_conf_close(conf, NULL);
+                return 1;
+        }
 
         if (puavo_conf_set(conf, key, value, &err) == -1) {
                 (void) fprintf(stderr, "Error: Failed to set '%s' to '%s': %s\n",
@@ -108,6 +125,35 @@ int main(int argc, char *argv[])
         puavo_conf_t *conf;
         struct puavo_conf_err err;
         int exitval;
+        enum puavo_conf_type type = PUAVO_CONF_TYPE_ANY;
+
+        while (1) {
+                int optval;
+                static struct option long_options[] = {
+                        {"type-bool", no_argument, 0, 'b' },
+                        {0          , 0          , 0, 0   }
+                };
+
+                optval = getopt_long(argc, argv, "b", long_options, NULL);
+
+                if (optval == -1)
+                        break;
+
+                switch (optval) {
+                case 'b':
+                        type = PUAVO_CONF_TYPE_BOOL;
+                        break;
+
+                case '?':
+                        return EXIT_FAILURE;
+
+                default:
+                        (void) fprintf(stderr,
+                                       "Error: Unexpected return value from "
+                                       "getopt_long(): %d\n", optval);
+                        return EXIT_FAILURE;
+                }
+        }
 
         if (puavo_conf_open(&conf, &err)) {
                 (void) fprintf(stderr,
@@ -118,23 +164,23 @@ int main(int argc, char *argv[])
 
         exitval = EXIT_FAILURE;
 
-        switch (argc) {
-        case 1:
+        switch (argc - optind) {
+        case 0:
                 if (list_params(conf))
                         goto err;
                 break;
-        case 2:
-                if (get_param(conf, argv[1]))
+        case 1:
+                if (get_param(conf, argv[argc - 1], type))
                         goto err;
                 break;
-        case 3:
-                if (set_param(conf, argv[1], argv[2]))
+        case 2:
+                if (set_param(conf, argv[argc - 2], argv[argc - 1], type))
                         goto err;
                 break;
         default:
                 (void) fprintf(stderr,
                                "Error: Invalid number of arguments (%d)\n",
-                               argc - 1);
+                               argc - optind);
                 goto err;
         }
         exitval = EXIT_SUCCESS;

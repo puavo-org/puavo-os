@@ -38,10 +38,12 @@ https://www.gnu.org/prep/standards/html_node/DESTDIR.html for more info.
 
 ## Usage
 
-    puavo-conf-mkdb      # create and populate a database
-    puavo-conf           # list all keys and values
-    puavo-conf key       # print the value of a key
-    puavo-conf key value # set the value of a key
+    puavo-conf-mkdb         # create and populate a database
+    puavo-conf              # list all keys and values
+    puavo-conf key          # print the value of a key
+    puavo-conf -b key       # print the value of a key, fail if it isn't bool
+    puavo-conf key value    # set the value of a key
+    puavo-conf -b key value # set the value of a key, fail if it is isn't bool
 
 ## Parameters
 
