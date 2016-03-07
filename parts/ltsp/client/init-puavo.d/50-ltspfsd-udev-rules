@@ -1,7 +1,0 @@
-# configure ltspfs udev rules.
-if boolean_is_true "$LOCALDEV" ; then
-    if [ -f /usr/share/ltspfs/udev/ltspfsd.rules ]; then
-        mkdir -p /etc/udev/rules.d/
-        ln -s /usr/share/ltspfs/udev/ltspfsd.rules /etc/udev/rules.d/ltspfsd.rules
-    fi
-fi
