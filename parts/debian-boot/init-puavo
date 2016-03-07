@@ -8,10 +8,8 @@ initscripts=$(find /usr/share/puavo-ltsp/init-puavo.d -mindepth 1 -maxdepth 1 \
 
 (
   echo "Handling init-puavo-scripts:"
-  sleep 1
   for script in $initscripts; do
     echo "  $script"
-    sleep 1
     . /usr/share/puavo-ltsp/init-puavo.d/${script}
   done
 )
