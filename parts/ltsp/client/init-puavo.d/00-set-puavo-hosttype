@@ -1,0 +1,4 @@
+PUAVO_HOSTTYPE=$(puavo-conf puavo.hosttype)
+
+mkdir -p /etc/puavo
+echo "$PUAVO_HOSTTYPE" > /etc/puavo/hosttype
