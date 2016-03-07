@@ -1,5 +1,19 @@
 #!/bin/sh
 
+echo Running puavo-conf-mkdb
 puavo-conf-mkdb
+
+initscripts=$(find /usr/share/puavo-ltsp/init-puavo.d -mindepth 1 -maxdepth 1 \
+                | sed -n '/.*\/[0-9a-zA-Z_\-]\{1,\}$/p' | sort -n)
+
+(
+  echo "Handling init-puavo-scripts:"
+  sleep 1
+  for script in $initscripts; do
+    echo "  $script"
+    sleep 1
+    . /usr/share/puavo-ltsp/init-puavo.d/${script}
+  done
+)
 
 exec /sbin/init
