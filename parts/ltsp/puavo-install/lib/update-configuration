@@ -43,7 +43,14 @@ def run(*args)
 end
 
 def grubedit(*args)
-  run('grub-editenv', '/images/boot/grub/grubenv', *args)
+  grubenv_path = '/images/boot/grub/grubenv'
+  begin
+    run('grub-editenv', grubenv_path, *args)
+  rescue StandardError => e
+    logerr(Syslog::LOG_ERR, "Creating new grubenv because of an error: %s\n", e.message)
+    run('grub-editenv', grubenv_path, 'create')
+    run('grub-editenv', grubenv_path, *args)
+  end
 end
 
 def send_changed_primary_user_to_puavo(primary_user)
