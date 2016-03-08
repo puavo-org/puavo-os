@@ -1,7 +1,5 @@
 #!/bin/sh
 
-. /usr/share/ltsp/ltsp_config
-
 is_xbacklight_enabled=$(puavo-conf -b puavo.xbacklight.enabled)
 if [ "${is_xbacklight_enabled}" = true ]; then
     xbacklight_brightness=$(puavo-conf puavo.xbacklight.brightness)
@@ -13,4 +11,4 @@ if [ "${is_xbacklight_enabled}" = true ]; then
     fi
 fi
 
-exec /usr/share/ltsp/xinitrc
+exec /usr/bin/xinit
