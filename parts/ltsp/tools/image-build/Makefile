@@ -30,6 +30,7 @@ install : installdirs
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-build-image \
+		puavo-freeze-system-to-image \
 		puavo-setup-imagebuild
 
 .PHONY : clean
