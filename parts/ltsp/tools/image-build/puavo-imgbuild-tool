@@ -51,7 +51,7 @@ Usage:
   --target-dir is not set but --builds-dir is, --target-dir is asked
   interactively.
 
-  --image-excludes-file defaults to /etc/puavo-image-tools/ltsp-image.excludes
+  --image-excludes-file defaults to /etc/puavo-image-tools/puavoimage.excludes
 
   --buildrule-dirs is a comma-separated list of directories
     that contain rules for building images
@@ -109,7 +109,7 @@ mirror="$(get_default_for mirror)"
 [ -z "$images_dir"          ] && images_dir="/opt/ltsp/images"
 [ -z "$mirror"              ] && mirror="ftp.debian.org"
 [ -z "$image_excludes_file" ] \
-  && image_excludes_file="/etc/puavo-image-tools/ltsp-image.excludes"
+  && image_excludes_file="/etc/puavo-image-tools/puavoimage.excludes"
 
 eval "set -- $args"
 while [ $# -ne 0 ]; do

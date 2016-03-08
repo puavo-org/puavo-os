@@ -22,12 +22,12 @@ installdirs :
 .PHONY : install
 install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-image-tools \
-		config/ltsp-image.excludes
-	
+		config/puavoimage.excludes
+
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-image-tools \
 		puavo-ask-buildtarget-dir \
 		puavo-imgbuild-tool
-	
+
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-build-image \
 		puavo-setup-imagebuild
