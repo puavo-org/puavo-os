@@ -74,7 +74,8 @@ class Aptirepo:
     >>> repo.import_changes("/var/cache/pbuilder/results/sl_3.03-17_i386.changes")
     """
 
-    def __init__(self, rootdir, confdir="", timeout_secs=0):
+    def __init__(self, rootdir, confdir="", timeout_secs=0, log_stdout=False):
+        self.__log_stdout = log_stdout
         self.__rootdir = os.path.abspath(rootdir)
         self.__confdir = confdir
         if not self.__confdir:
@@ -108,7 +109,10 @@ class Aptirepo:
 
     def __log(self, msg):
         ts = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%m:%S.%fZ")
-        print("%s  %s" % (ts, msg), file=self.__logfile)
+        line = "%s  %s" % (ts, msg)
+        print(line, file=self.__logfile)
+        if self.__log_stdout:
+            print(line)
 
     def __create_dists(self, dists_dirname):
         for codename, dist in self.__dists.items():
