@@ -46,7 +46,10 @@ installdirs:
 	mkdir -p $(DESTDIR)$(libdir)/puavo-autopilot
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
 
-.PHONY: all			\
+clean:
+
+.PHONY: all                     \
+        clean                   \
         bin/puavo-autopilot-env \
-	install			\
+	install                 \
 	installdirs
