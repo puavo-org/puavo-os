@@ -24,11 +24,14 @@ import gzip
 import hashlib
 import os
 import os.path
+import sets
 import shutil
 import signal
 import subprocess
 
 import debian.debfile
+
+from debian.debian_support import version_compare as dpkg_version_cmp
 
 from ._dcf import parse_distributions
 
@@ -38,6 +41,9 @@ class ChangesError(Error):
     pass
 
 class PoolError(Error):
+    pass
+
+class DistsError(Error):
     pass
 
 def _gz(filepath_in):
@@ -249,6 +255,52 @@ class Aptirepo:
                 raise ChangesError("md5 checksum mismatch '%s': '%s' != '%s'" % (filename, md5, real_md5))
 
             self.__copy_to_pool(filepath, codename, source_name, section)
+
+    def prune_pool(self, leave_count=1):
+        if leave_count < 0:
+            raise ValueError('leave_count cannot be less than zero')
+
+        pruned_filepaths = sets.Set()
+
+        for codename, dist in self.__dists.items():
+            packages = {}
+            package_filenames = {}
+
+            for dirpath, dirnames, filenames in os.walk(self.__join("dists", codename)):
+
+                if "Packages" in filenames:
+                    with open(os.path.join(dirpath, "Packages")) as pkgs_file:
+                        for pkg in debian.deb822.Packages.iter_paragraphs(pkgs_file):
+                            pkg_name = pkg["Package"]
+                            pkg_version = pkg["Version"]
+                            pkg_filename = pkg["Filename"]
+                            pkg_arch = pkg["Architecture"]
+                            key = (pkg_name, pkg_version, pkg_arch)
+                            try:
+                                filename = package_filenames[key]
+                            except KeyError:
+                                pass
+                            else:
+                                if filename != pkg_filename:
+                                    raise DistsError("package %s appears to "
+                                                     "exist already at %s",
+                                                     key, pkg_filename)
+
+                            packages.setdefault((pkg_name, pkg_arch),
+                                                []).append(pkg_version)
+
+                            package_filenames[key] = pkg_filename
+
+            for (pkg_name, pkg_arch), pkg_versions in packages.items():
+                sorted_versions = sorted(pkg_versions, cmp=dpkg_version_cmp,
+                                         reverse=True)
+                for pruned_version in sorted_versions[leave_count:]:
+                    key = (pkg_name, pruned_version, pkg_arch)
+                    pruned_filepaths.add(package_filenames[key])
+
+        for filepath in [self.__join(f) for f in sorted(pruned_filepaths)]:
+            self.__log("remove '%s'" % filepath)
+            os.remove(filepath)
 
     def update_dists(self, do_prune=False, do_sign=False):
         try:
