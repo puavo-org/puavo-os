@@ -74,7 +74,9 @@ class Aptirepo:
     >>> repo.import_changes("/var/cache/pbuilder/results/sl_3.03-17_i386.changes")
     """
 
-    def __init__(self, rootdir, confdir="", timeout_secs=0, log_stdout=False):
+    def __init__(self, rootdir, confdir="", timeout_secs=0, log_stdout=False,
+                 dry_run=False):
+        self.__dry_run = dry_run
         self.__log_stdout = log_stdout
         self.__rootdir = os.path.abspath(rootdir)
         self.__confdir = confdir
@@ -110,9 +112,10 @@ class Aptirepo:
     def __log(self, msg):
         ts = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%m:%S.%fZ")
         line = "%s  %s" % (ts, msg)
-        print(line, file=self.__logfile)
+        if not self.__dry_run:
+            print(line, file=self.__logfile)
         if self.__log_stdout:
-            print(line)
+            print(msg)
 
     def __create_dists(self, dists_dirname):
         for codename, dist in self.__dists.items():
@@ -122,6 +125,10 @@ class Aptirepo:
                     if arch == "source":
                         archdir = "source"
                     p = self.__join(dists_dirname, codename, comp, archdir)
+
+                    if self.__dry_run:
+                        continue
+
                     try:
                         os.makedirs(p)
                     except OSError as e:
@@ -134,6 +141,10 @@ class Aptirepo:
         for codename, dist in self.__dists.items():
             for comp in dist["Components"]:
                 p = self.__join(dist["Pool"], comp)
+
+                if self.__dry_run:
+                    continue
+
                 try:
                     os.makedirs(p)
                 except OSError  as e:
@@ -147,6 +158,10 @@ class Aptirepo:
 
     def __write_contents(self, pool, codename, comp, dists_dirname):
         path = self.__join(dists_dirname, codename, comp, "Contents.gz")
+        if self.__dry_run:
+            self.__log("would write '%s'" % path)
+            return
+
         with gzip.open(path, 'wb') as f:
             subprocess.check_call(["apt-ftparchive", "--db", "db",
                                    "contents", os.path.join(pool, comp)],
@@ -156,6 +171,11 @@ class Aptirepo:
     def __write_packages(self, pool, codename, comp, arch, dists_dirname):
         path = self.__join(dists_dirname, codename, comp, "binary-%s" % arch,
                            "Packages")
+        if self.__dry_run:
+            self.__log("would write '%s'" % path)
+            self.__log("would write '%s.gz'" % path)
+            return
+
         with open(path, "w") as f:
             subprocess.check_call(["apt-ftparchive", "--db", "db",
                                    "packages", os.path.join(pool, comp)],
@@ -166,6 +186,10 @@ class Aptirepo:
 
     def __write_release(self, codename, comps, archs, dists_dirname):
         path = self.__join(dists_dirname, codename, "Release")
+        if self.__dry_run:
+            self.__log("would write '%s'" % path)
+            return
+
         with open(path, "w") as f:
             subprocess.check_call(["apt-ftparchive", "--db", "db",
                                    "-o", "APT::FTPArchive::Release::Codename=%s" % codename,
@@ -177,6 +201,11 @@ class Aptirepo:
 
     def __write_sources(self, pool, codename, comp, dists_dirname):
         path = self.__join(dists_dirname, codename, comp, "source", "Sources")
+        if self.__dry_run:
+            self.__log("would write '%s'" % path)
+            self.__log("would write '%s.gz'" % path)
+            return
+
         with open(path, "w") as f:
             subprocess.check_call(["apt-ftparchive",
                                    "sources", os.path.join(pool, comp)],
@@ -195,14 +224,16 @@ class Aptirepo:
 
         abbrevdir = self.__join(dist["Pool"], component, _abbrev(source_name))
         try:
-            os.mkdir(abbrevdir)
+            if not self.__dry_run:
+                os.mkdir(abbrevdir)
         except OSError as e:
             if e.errno != errno.EEXIST:
                 raise e
 
         packagedir = os.path.join(abbrevdir, source_name)
         try:
-            os.mkdir(packagedir)
+            if not self.__dry_run:
+                os.mkdir(packagedir)
         except OSError as e:
             if e.errno != errno.EEXIST:
                 raise e
@@ -213,8 +244,11 @@ class Aptirepo:
                 raise PoolError("'%s' already exists in the repository with different checksum" % filename)
             return
 
-        shutil.copyfile(filepath, target_filepath)
-        self.__log("copied '%s' to '%s'" % (filepath, target_filepath))
+        if self.__dry_run:
+            self.__log("would copy '%s' to '%s'" % (filepath, target_filepath))
+        else:
+            shutil.copyfile(filepath, target_filepath)
+            self.__log("copied '%s' to '%s'" % (filepath, target_filepath))
 
     def import_deb(self, deb_filepath, codename="", section=""):
         debfile = debian.debfile.DebFile(deb_filepath)
@@ -303,18 +337,24 @@ class Aptirepo:
                     pruned_filepaths.add(package_filenames[key])
 
         for filepath in [self.__join(f) for f in sorted(pruned_filepaths)]:
-            self.__log("remove '%s'" % filepath)
-            os.remove(filepath)
+            if self.__dry_run:
+                self.__log("would remove '%s'" % filepath)
+            else:
+                self.__log("remove '%s'" % filepath)
+                os.remove(filepath)
 
     def update_dists(self, do_prune=False, do_sign=False):
         try:
-            old_dists_dirname = "dists"
-            new_dists_dirname = "dists.tmp"
+            old_dists_dirname = self.__join("dists")
+            new_dists_dirname = self.__join("dists.tmp")
             if do_prune:
                 self.__create_dists(new_dists_dirname)
             else:
-                shutil.copytree(self.__join(old_dists_dirname),
-                                self.__join(new_dists_dirname))
+                if self.__dry_run:
+                    self.__log("would copy directory '%s' to '%s'"
+                               % (old_dists_dirname, new_dists_dirname))
+                else:
+                    shutil.copytree(old_dists_dirname, new_dists_dirname)
 
             for codename, dist in self.__dists.items():
                 pool = dist["Pool"]
@@ -338,7 +378,10 @@ class Aptirepo:
 
             # Finally, do the real updating.
             try:
-                shutil.rmtree(self.__join(old_dists_dirname))
+                if self.__dry_run:
+                    self.__log("would remove '%s'" % old_dists_dirname)
+                else:
+                    shutil.rmtree(old_dists_dirname)
             except OSError, e:
                 if e.errno != errno.ENOENT:
                     raise e
@@ -346,13 +389,17 @@ class Aptirepo:
                            "old dists is missing. This seems like a programming "
                            "error, but don't worry, it is not fatal. Just "
                            "inform the maintainer about it. Thanks!")
-            os.rename(self.__join(new_dists_dirname),
-                      self.__join(old_dists_dirname))
+            if self.__dry_run:
+                self.__log("would rename '%s' to '%s'"
+                           % (new_dists_dirname, old_dists_dirname))
+            else:
+                os.rename(new_dists_dirname, old_dists_dirname)
 
         finally:
             # Ensure the temporary directory is removed afterwards.
             try:
-                shutil.rmtree(self.__join(new_dists_dirname))
+                if not self.__dry_run:
+                    shutil.rmtree(new_dists_dirname)
             except OSError, e:
                 if e.errno != errno.ENOENT:
                     raise e
@@ -362,6 +409,11 @@ class Aptirepo:
             release_path = self.__join(dists_dirname, codename, "Release")
             signature_path = release_path + ".gpg"
             tmp_signature_path = release_path + ".gpg.tmp"
+
+            if self.__dry_run:
+                self.__log("would sign '%s'" % release_path)
+                return
+
             try:
                 with open(tmp_signature_path, "w") as signature_file:
                     subprocess.check_call(["gpg", "--output", "-", "-a", "-b", release_path],
