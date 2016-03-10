@@ -12,7 +12,7 @@ rubylibdir = $(prefix)/lib/ruby/vendor_ruby
 endif
 
 CPPFLAGS = -std=c99 -Wall -Wextra
-CFLAGS   = -std=c99 -Wpedantic
+CFLAGS   = -std=c99 -pedantic
 LDFLAGS  = -g -O
 
 .PHONY: all
