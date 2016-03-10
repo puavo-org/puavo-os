@@ -75,7 +75,7 @@ Package: puavo-conf
 Architecture: any
 Depends: ${misc:Depends},
  dmidecode,
- libdb5.3,
+ libdb5.1,
  pciutils,
  ruby-ffi,
  ruby,
