@@ -59,6 +59,8 @@ def main():
                         help="fail if the repository lock could not be "
                         "obtained in SECONDS, negative value means infinite "
                         "timeout")
+    parser.add_argument("--dry-run", default=False, action="store_true",
+                        help="do nothing, just print what would get done")
 
     subparsers = parser.add_subparsers(dest="cmd", title="commands")
 
@@ -92,7 +94,7 @@ def main():
     rootdir = os.environ.get("APTIREPO_ROOTDIR", ".")
     confdir = os.environ.get("APTIREPO_CONFDIR")
     repo = aptirepo.Aptirepo(rootdir, confdir, timeout_secs=args.timeout,
-                             log_stdout=True)
+                             log_stdout=True, dry_run=args.dry_run)
 
     args.func(repo, args)
 
