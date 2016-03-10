@@ -3,7 +3,7 @@ prefix = /usr/local
 INSTALL = install
 INSTALL_DATA = $(INSTALL) -m 644
 
-version = $(shell dpkg-parsechangelog -l../debian/changelog | sed -r -n 's/^Version: //p')
+version = $(shell dpkg-parsechangelog -l../../../debian/changelog | sed -r -n 's/^Version: //p')
 version_file = puavowlan/version.rb
 
 # For some reason ruby lib directory is different under /usr and /usr/local
