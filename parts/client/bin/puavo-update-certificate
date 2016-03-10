@@ -99,7 +99,7 @@ host = JSON.parse(response.body)
 if host["userCertificate"]
   puts "Update host certificate:"
 
-  orgcabundle = File.readlines(orgcabundle_file)
+  orgcabundle = File.open(orgcabundle_file).read
 
   puts "\t* " + certificate_file
   File.open(certificate_file, 'w', 0400) { |f| f.print host["userCertificate"] }
