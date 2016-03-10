@@ -13,3 +13,6 @@ installdirs:
 .PHONY: install
 install: installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) puavo-hw-log
+
+.PHONY: clean
+clean:
