@@ -15,7 +15,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define _GNU_SOURCE /* asprintf() */
+#define _GNU_SOURCE /* asprintf(), secure_getenv() */
+
+/* Function __secure_getenv() was renamed to secure_getenv() in glibc
+   version 2.17. Define to support compiling also on older systems. */
+#ifndef secure_getenv
+#define secure_getenv __secure_getenv
+#endif
 
 #include <errno.h>
 #include <fcntl.h>
