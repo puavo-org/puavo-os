@@ -36,6 +36,9 @@ def _importdeb(repo, args):
 
     repo.update_dists(do_sign=args.sign_releases)
 
+def _prunepool(repo, args):
+    repo.prune_pool(leave_count=args.leave_count)
+
 def _importchanges(repo, args):
     if not args.changesfile.endswith(".changes"):
         print("failed to import Debian package changes '%s': "
@@ -79,6 +82,10 @@ def main():
                                     "architecture and component directories")
     parser_updatedists.add_argument("--sign-releases", action="store_true", default=False, help="sign Release files after update")
     parser_updatedists.set_defaults(func=_updatedists)
+
+    parser_prunepool = subparsers.add_parser("prunepool", help="remove old packages from the pool")
+    parser_prunepool.add_argument("--leave-count", default=3, type=int, help="how many versions of each package should be left, defaults to 3")
+    parser_prunepool.set_defaults(func=_prunepool)
 
     args = parser.parse_args()
 
