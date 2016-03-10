@@ -106,4 +106,10 @@ if host["userCertificate"]
   puts "\t* " + hostorgcabundle_file
   File.open(hostorgcabundle_file, 'w', 0400) { |f| f.print host["userCertificate"] + orgcabundle }
 
+  if File.directory?("/state")
+    puts "\t* " + "/state" + certificate_file
+    File.open("/state" + certificate_file, 'w', 0400) { |f| f.print host["userCertificate"] }
+    puts "\t* " + "/state" + hostorgcabundle_file
+    File.open("/state" + hostorgcabundle_file, 'w', 0400) { |f| f.print host["userCertificate"] + orgcabundle }
+  end
 end
