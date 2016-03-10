@@ -2,7 +2,7 @@ Source: puavo-os
 Section: misc
 Priority: extra
 Maintainer: Opinsys Developers <dev@opinsys.fi>
-Build-Depends: bundler,
+Build-Depends: bundler | ruby-bundler,
  debhelper (>= 8),
  libdb-dev,
  libgnome-desktop-3-dev,
@@ -389,7 +389,7 @@ Package: puavo-wlancontroller
 Architecture: any
 Depends: ${misc:Depends},
  adduser,
- bundler,
+ bundler | ruby-bundler,
  ruby
 Description: Puavo's WLAN controller
  puavo-wlancontroller monitors and controls a swarm of puavo-wlanap
@@ -435,7 +435,7 @@ Package: ruby-puavobs
 Architecture: any
 XS-Ruby-Versions: ruby
 Depends: ${shlibs:Depends}, ${misc:Depends},
- bundler,
+ bundler | ruby-bundler,
  ruby-highline,
  ruby,
  puavo-client
