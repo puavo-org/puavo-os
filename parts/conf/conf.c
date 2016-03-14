@@ -17,9 +17,11 @@
 
 #define _GNU_SOURCE /* asprintf(), secure_getenv() */
 
+#include <features.h>
+
 /* Function __secure_getenv() was renamed to secure_getenv() in glibc
    version 2.17. Define to support compiling also on older systems. */
-#ifndef secure_getenv
+#if ! __GLIBC_PREREQ(2, 17)
 #define secure_getenv __secure_getenv
 #endif
 
