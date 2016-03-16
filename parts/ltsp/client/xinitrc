@@ -10,3 +10,5 @@ if [ "${is_xbacklight_enabled}" = true ]; then
         echo "puavo.xbacklight.brightness has invalid value" >&2
     fi
 fi
+
+true
