@@ -276,6 +276,7 @@ class HostapdConf < Conf
     @wpa            = kwargs.fetch(:wpa)
     @wpa_passphrase = kwargs.fetch(:wpa_passphrase)
     @hw_mode        = Dot11::CHANNELS_5G.include?(@channel) ? 'a' : 'g'
+    @basic_rates    = kwargs.fetch(:basic_rates)
 
     phy_name = File.read("/sys/class/net/#{@interface}/phy80211/name").strip
 
@@ -326,7 +327,8 @@ eapol_key_index_workaround=1
 eap_reauth_period=0
 wpa_strict_rekey=0
 wpa_group_rekey=0
-wpa_gmk_rekey=0<% end %>
+wpa_gmk_rekey=0<% end %><% unless @basic_rates.empty? %>
+basic_rates=<%= @basic_rates.join(' ') %><% end %>
 EOF
   end
 
@@ -410,10 +412,11 @@ module Services
     attr_reader :vif
 
     def initialize(kwargs = {})
-      @bridge = kwargs.fetch(:bridge)
-      @net    = kwargs.fetch(:net)
-      @phy    = kwargs.fetch(:phy)
-      @vif    = kwargs.fetch(:vif)
+      @bridge      = kwargs.fetch(:bridge)
+      @net         = kwargs.fetch(:net)
+      @phy         = kwargs.fetch(:phy)
+      @vif         = kwargs.fetch(:vif)
+      @basic_rates = kwargs.fetch(:basic_rates)
 
       @command  = 'hostapd'
       @name     = "#{@command}_#{@vif.name}"
@@ -426,7 +429,8 @@ module Services
                       :interface      => @vif.name,
                       :ssid           => @net['ssid'],
                       :wpa            => @net['type'] == 'open' ? 0 : 2,
-                      :wpa_passphrase => @net['password']).write(@conffile)
+                      :wpa_passphrase => @net['password'],
+                      :basic_rates    => @basic_rates).write(@conffile)
     end
 
   end
@@ -565,6 +569,8 @@ class Host
         store_min(conf, :tx_power_5g, $1.to_i)
       when /^wlanap_channels:((\d+:)*(\d+))$/
         store_longest(conf, :channels, $1.split(':').map { |ch| ch.to_i })
+      when /^wlanap_basic_rates:((\d+:)*(\d+))$/
+        conf[:basic_rates] = $1.split(':').map { |rate| rate.to_i }
       end
     end
 
@@ -892,10 +898,11 @@ class Host
 
       bridge = setup_bridge(net['ssid'])
 
-      hostapd     = Services::Hostapd.new(:bridge => bridge,
-                                          :phy    => phy,
-                                          :vif    => vif,
-                                          :net    => net)
+      hostapd     = Services::Hostapd.new(:bridge      => bridge,
+                                          :phy         => phy,
+                                          :vif         => vif,
+                                          :net         => net,
+                                          :basic_rates => @conf.fetch(:basic_rates, []))
       hostapd_cli = Services::HostapdCli.new(:hostapd => hostapd)
       spawn_service(hostapd)
       spawn_service(hostapd_cli)
