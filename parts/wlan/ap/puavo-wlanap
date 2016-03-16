@@ -902,7 +902,8 @@ class Host
                                           :phy         => phy,
                                           :vif         => vif,
                                           :net         => net,
-                                          :basic_rates => @conf.fetch(:basic_rates, []))
+                                          :basic_rates => @conf.fetch(:basic_rates,
+                                                                      [10, 20, 55, 110, 60, 120, 240]))
       hostapd_cli = Services::HostapdCli.new(:hostapd => hostapd)
       spawn_service(hostapd)
       spawn_service(hostapd_cli)
