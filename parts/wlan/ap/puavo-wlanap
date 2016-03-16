@@ -569,6 +569,8 @@ class Host
         store_min(conf, :tx_power_5g, $1.to_i)
       when /^wlanap_channels:((\d+:)*(\d+))$/
         store_longest(conf, :channels, $1.split(':').map { |ch| ch.to_i })
+      when /^wlanap_basic_rates:$/
+        conf[:basic_rates] = []
       when /^wlanap_basic_rates:((\d+:)*(\d+))$/
         conf[:basic_rates] = $1.split(':').map { |rate| rate.to_i }
       end
