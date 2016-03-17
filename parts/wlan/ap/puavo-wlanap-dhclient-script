@@ -1,9 +1,18 @@
 #!/bin/sh
 
-ip -4 addr add ${new_ip_address}${new_subnet_mask:+/$new_subnet_mask} \
-                ${new_broadcast_address:+broadcast $new_broadcast_address} \
-                dev ${interface} label ${interface}
+case $reason in
+BOUND|RENEW|REBIND|REBOOT)
+    ip -4 addr add ${new_ip_address}${new_subnet_mask:+/$new_subnet_mask} \
+                   ${new_broadcast_address:+broadcast $new_broadcast_address} \
+                   dev ${interface} label ${interface}
 
-if [ -n "$new_interface_mtu" ]; then
-    ip link set dev ${interface} mtu ${new_interface_mtu}
-fi
+    if [ -n "$new_interface_mtu" ]; then
+        ip link set dev ${interface} mtu ${new_interface_mtu}
+    fi
+    ;;
+EXPIRE|FAIL|STOP|RELEASE)
+    if [ -n "$old_ip_address" ]; then
+        ip -4 addr flush dev ${interface} label ${interface}
+    fi
+    ;;
+esac
