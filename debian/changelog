@@ -1,3 +1,30 @@
+puavo-os (0.2.0~85399917fe20545bdd932ccacb39c5d8d4e91654) trusty; urgency=medium
+
+  * New release
+  * parts/devscripts: let user approve the new release commit by just
+    hitting ENTER
+  * parts/devscripts: remove git hook support from git-update-debian-
+    changelog
+  * parts/devscripts: fix git-update-debian-changelog status codes for
+    non-hook mode
+  * parts/devscripts: make git-update-debian-changelog a bit less
+    verbose
+  * Add Makefile target 'release' to update debian/changelog
+  * parts/devscripts: publish pre-push hook as a normal script
+  * parts/devscripts: fix pre-push hook to ask the new version
+  * parts/ltsp: client: remove r816x hacks
+  * parts/ltsp: client: use puavo-conf to enable/disable DNS-SD printing
+  * parts/ltsp: client: remove unused files
+  * parts/sharedir: client: use puavo-conf to disable/enable ipsec
+  * Move samba-specific ipsec stuff from ltsp to sharedir
+  * parts/wlan: ap: set bridge IP only when reason is BOUND, RENEW,
+    REBIND or REBOOT
+  * parts/wlan: ap: use custom dhclient-script
+  * parts/wlan: ap: use the default route interface for IAPP broadcasts
+  * Git(85399917fe20545bdd932ccacb39c5d8d4e91654)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Thu, 17 Mar 2016 17:23:13 +0200
+
 puavo-os (0.1.3~6406f8afa3310a10c17ac6b6d09fb51c210399ae1) trusty; urgency=medium
 
   * New release
