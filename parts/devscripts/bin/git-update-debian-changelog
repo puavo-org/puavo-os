@@ -45,8 +45,14 @@ on_exit()
     exit $exitvalue
 }
 
+is_hook=false
+if [ $# -eq 2 ]; then
+    is_hook=true
+fi
+
 git diff-index --quiet HEAD -- debian/changelog || {
     echo 'warning: there are uncommitted changes in debian/changelog, not creating a release commit' >&2
+    $is_hook || exit 1
     exit 0
 }
 
@@ -57,6 +63,7 @@ fi
 
 if [ ! -f debian/changelog ]; then
     echo 'error: debian/changelog is missing' >&2
+    $is_hook || exit 0
     exit 1
 fi
 
@@ -136,10 +143,19 @@ while true; do
             cp "${tmpdir}/changelog" debian/changelog
             version=$(dpkg-parsechangelog | sed -r -n 's/^Version: //p')
             git commit debian/changelog -m "RELEASE: ${version}"
+	    if $is_hook; then
+		exitvalue=1
+	    else
+		exitvalue=0
+	    fi
             break
             ;;
         n)
-            exitvalue=0
+	    if $is_hook; then
+		exitvalue=0
+	    else
+		exitvalue=1
+	    fi
             break
             ;;
         *)
