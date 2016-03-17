@@ -277,6 +277,10 @@ class HostapdConf < Conf
     @wpa_passphrase = kwargs.fetch(:wpa_passphrase)
     @hw_mode        = Dot11::CHANNELS_5G.include?(@channel) ? 'a' : 'g'
     @basic_rates    = kwargs.fetch(:basic_rates)
+    @iapp_interface = File.foreach('/proc/net/route') do |line|
+      fields = line.split()
+      break fields[0] if fields[1] == '00000000' # Default route
+    end
 
     phy_name = File.read("/sys/class/net/#{@interface}/phy80211/name").strip
 
@@ -329,6 +333,7 @@ wpa_strict_rekey=0
 wpa_group_rekey=0
 wpa_gmk_rekey=0<% end %><% unless @basic_rates.empty? %>
 basic_rates=<%= @basic_rates.join(' ') %><% end %>
+iapp_interface=<%= @iapp_interface %>
 EOF
   end
 
