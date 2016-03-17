@@ -1,3 +1,54 @@
+puavo-os (0.1.3~6406f8afa3310a10c17ac6b6d09fb51c210399ae1) trusty; urgency=medium
+
+  * New release
+  * parts/devscripts: include git commit id in changelog versions
+  * parts/wlan: ap: accept empty wlanap_basic_rates tag
+  * parts/wlan: ap: forbid 802.11b stations
+  * parts/wlan: ap: configure basic rates via device tags
+  * parts/ltsp: client: fix lightdm setup script to exit successfully
+  * parts/ltsp: client: do not run xinit to setup the lightdm display
+  * parts/conf: fix secure_getenv test
+  * parts/wlan: gw: use keepalive for vtund sessions
+  * parts/conf: remove debian dir
+  * parts/wlan: rubylib: fix version generation
+  * parts/conf: make secure_getenv an alias for __secure_getenv
+  * parts/conf: use -pedantic instead -Wpedantic
+  * parts/monitor: add clean target to Makefile
+  * parts/hw-log: add clean target to Makefile
+  * parts/autopilot: add clean target to Makefile
+  * Downgrade libdb dependency 5.3 => 5.1
+  * Depend on bundler or ruby-bundler, they are the same thing
+  * Add puavo-freeze-system-to-image, that might be used to create a
+    device image from a live system.
+  * Add quite a bit more stuff to puavoimage.excludes, so that it might
+    be more suitable for generating images from a live system.
+  * Rename ltsp-image.excludes to puavoimage.excludes.
+  * Do not try to run /usr/share/ltsp/xinitrc, it no longer exists, go
+    straight to /usr/bin/xinit as it should be.
+  * Setup /etc/puavo/hosttype.
+  * Remove some init-puavo.d scripts that are currently broken.
+  * In update-configuration, if grub-editenv fails for some reason,
+    retry with a freshly created grubenv file.  Apparently grub-editenv
+    can not deal with corrupted files, even those which it has likely
+    corrupted itself (maybe?, truncated to zero files in case filesystem
+    has been full?). This is bandaid solution, of course.
+  * Fix init-puavo.
+  * Remove pointless sleeps from init-puavo.
+  * Run some initscripts from under /usr/share/puavo-ltsp/init-puavo.d
+    (this mechanism will probably go away, but we need this for now).
+  * Fix initramfs-path.
+  * parts/ltsp: client get xrandr force parameter via puavo-conf
+  * parts/ltsp: client: make udev-hotplug-monitor exit on error
+  * parts/ltsp: client: get jetpipe parameters via puavo-conf
+  * parts/ltsp: client: make udev-jetpipe exit on error
+  * parts/conf: test: add tests for type checks
+  * parts/conf: remove remnants of varlibdir-stuff from Makefile
+  * parts/conf: treat all parameter values as strings
+  * parts: use puavo-conf -b when retrieving boolean values
+  * Git(6406f8afa3310a10c17ac6b6d09fb51c210399ae)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Thu, 17 Mar 2016 10:25:15 +0200
+
 puavo-os (0.1.2) trusty; urgency=medium
 
   * New release
