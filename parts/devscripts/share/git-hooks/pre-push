@@ -98,7 +98,7 @@ echo "${lines}" \
           fi
           dch -c "${tmpdir}/changelog" "${line}"
       done
-dch -c "${tmpdir}/changelog" "Git(${head_commit})"
+dch -c "${tmpdir}/changelog" -l "~${head_commit}" "Git(${head_commit})"
 dch -c "${tmpdir}/changelog" --release ''
 
 dpkg-parsechangelog -l"${tmpdir}/changelog" -n1 | sed -n '/^Changes:/,$p'
