@@ -12,5 +12,7 @@ install:
 		'$(DESTDIR)$(prefix)/sbin/puavo-wlanap-hostapd-action'
 	install -D -m 755 puavo-wlanap-udev-action \
 		'$(DESTDIR)$(prefix)/sbin/puavo-wlanap-udev-action'
+	install -D -m 755 puavo-wlanap-dhclient-script \
+		'$(DESTDIR)$(prefix)/sbin/puavo-wlanap-dhclient-script'
 
 .PHONY: all clean install

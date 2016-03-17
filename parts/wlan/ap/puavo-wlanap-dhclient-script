@@ -1,0 +1,9 @@
+#!/bin/sh
+
+ip -4 addr add ${new_ip_address}${new_subnet_mask:+/$new_subnet_mask} \
+                ${new_broadcast_address:+broadcast $new_broadcast_address} \
+                dev ${interface} label ${interface}
+
+if [ -n "$new_interface_mtu" ]; then
+    ip link set dev ${interface} mtu ${new_interface_mtu}
+fi

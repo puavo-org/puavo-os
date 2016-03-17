@@ -247,6 +247,7 @@ CTRLSOCKET                 = File.join(RUNDIR, 'ctrlsocket')
 THIS_SCRIPT                = Pathname.new($0).realpath
 HOSTAPD_ACTION_SCRIPT      = THIS_SCRIPT.dirname.join('puavo-wlanap-hostapd-action')
 HOSTAPD_CTRL_INTERFACE_DIR = File.join(RUNDIR, 'hostapd')
+DHCLIENT_SCRIPT            = THIS_SCRIPT.dirname.join('puavo-wlanap-dhclient-script').to_s
 
 def run_or_fail(cmd, *args)
   cmd_string = ([cmd] + args).join(' ')
@@ -401,7 +402,7 @@ module Services
     def initialize(kwargs = {})
       @bridge  = kwargs.fetch(:bridge)
 
-      @args    = ['-d', @bridge]
+      @args    = ['-d', @bridge, '-sf', DHCLIENT_SCRIPT]
       @command = 'dhclient'
       @name    = "#{@command}_#{@bridge}"
 
