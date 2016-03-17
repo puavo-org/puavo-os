@@ -1,3 +1,22 @@
+puavo-os (0.3.0~b79811a78c8be9545f9d3d0319bc0a7e200be109) jessie; urgency=medium
+
+  * New release
+  * parts/wlan: rubylib: simplify version.rb generation
+  * Update .gitignores
+  * parts/devscripts: disallow uncommitted changes when updating
+    debian/changelog
+  * Add release to deb prerequisities
+  * Remove make from build dependencies
+  * Build-depend on npm, not on nodejs-bundle
+  * Remove redundant files
+  * Add LICENSE
+  * Update Standards-Version to 3.9.6
+  * Add puavo-conf to dependencies of several packages
+  * parts/ltsp: client: rename jetpipe configuration parameter
+  * Git(b79811a78c8be9545f9d3d0319bc0a7e200be109)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Thu, 17 Mar 2016 23:22:38 +0200
+
 puavo-os (0.2.0~85399917fe20545bdd932ccacb39c5d8d4e91654) trusty; urgency=medium
 
   * New release
