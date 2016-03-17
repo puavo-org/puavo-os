@@ -2,11 +2,11 @@
     "puavo.hosttype": {
         "default": ""
     },
-    "puavo.jetpipe.enabled": {
-        "default": "false"
-    },
     "puavo.printing.dnssd.enabled": {
 	"default": "true"
+    },
+    "puavo.printing.jetpipe.enabled": {
+        "default": "false"
     },
     "puavo.xbacklight.enabled": {
         "default": "true"

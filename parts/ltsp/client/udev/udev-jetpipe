@@ -5,7 +5,7 @@ set -eu
 CMD=$1
 TYPE=$2
 
-is_enabled=$(puavo-conf -b puavo.jetpipe.enabled)
+is_enabled=$(puavo-conf -b puavo.printing.jetpipe.enabled)
 if [ "${is_enabled}" = false ]; then
     exit 0
 fi
