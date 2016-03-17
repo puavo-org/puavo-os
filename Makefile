@@ -9,7 +9,7 @@ install            : $(install-subdirs)
 apt-get-build-dep:
 	mk-build-deps -i -t "apt-get --yes --force-yes" -r debian/control
 
-deb:
+deb: release
 	dpkg-buildpackage -us -uc
 
 release:
