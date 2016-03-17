@@ -1,9 +1,18 @@
 #!/bin/sh
 
-PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
+is_nethomes_enabled=$(puavo-conf -b puavo.nethomes.enabled)
+if [ "${is_nethomes_enabled}" != true ]; then
+    exit 0
+fi
 
-if [ "$PUAVO_HOSTTYPE" != "laptop" ]; then
-  exit 0
+is_ipsec_enabled=$(puavo-conf -b puavo.nethomes.samba.ipsec.enabled)
+if [ "${is_ipsec_enabled}" != true ]; then
+    exit 0
+fi
+
+nethomes_protocol=$(puavo-conf puavo.nethomes.protocol)
+if [ "${nethomes_protocol}" != samba ]; then
+    exit 0
 fi
 
 # Enable IPSec tunneling for CIFS traffic on ports TCP 139 and 445
