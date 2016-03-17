@@ -45,8 +45,6 @@ on_exit()
     exit $exitvalue
 }
 
-echo "Executing $0"
-
 git diff-index --quiet HEAD -- debian/changelog || {
     echo 'warning: there are uncommitted changes in debian/changelog, not creating a release commit' >&2
     exit 0
