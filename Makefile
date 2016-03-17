@@ -12,6 +12,9 @@ apt-get-build-dep:
 deb:
 	dpkg-buildpackage -us -uc
 
+release:
+	@parts/devscripts/bin/git-update-debian-changelog
+
 $(subdirs):
 	$(MAKE) -C $@
 
@@ -28,4 +31,5 @@ $(install-subdirs):
         clean                         \
 	deb                           \
         apt-get-build-dep             \
-        install
+        install                       \
+        release
