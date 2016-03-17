@@ -90,7 +90,30 @@ if [ -n "${email}" -a -z "${DEBEMAIL:-}" ]; then
     export DEBEMAIL
 fi
 
-dch -c "${tmpdir}/changelog" -U 'New release'
+new_version=
+old_version=$(dpkg-parsechangelog -l"${tmpdir}/changelog" | sed -r -n 's/^Version: //p')
+if [[ "${old_version}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)~([0-9a-f]+)$ ]]; then
+    old_major_version="${BASH_REMATCH[1]}"
+    old_minor_version="${BASH_REMATCH[2]}"
+    new_version="${old_major_version}.$((old_minor_version + 1)).0~${head_commit}"
+fi
+
+## Ask for version
+exec < /dev/tty
+while true; do
+    read -p "New version number? [${new_version}] " answer || break
+    if [ -z "${answer}" ]; then
+	answer="${new_version}"
+    fi
+    if [[ "${answer}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)~([0-9a-f]+)$ ]]; then
+	new_version="${answer}"
+	break
+    fi
+
+    echo "Invalid version." >&2
+done
+
+dch -c "${tmpdir}/changelog" -v"${new_version}" -U 'New release'
 echo "${lines}" \
     | while read line; do
           if echo "${line}" | egrep -q '^RELEASE: '; then
@@ -98,7 +121,7 @@ echo "${lines}" \
           fi
           dch -c "${tmpdir}/changelog" "${line}"
       done
-dch -c "${tmpdir}/changelog" -l "~${head_commit}" "Git(${head_commit})"
+dch -c "${tmpdir}/changelog" "Git(${head_commit})"
 dch -c "${tmpdir}/changelog" --release ''
 
 dpkg-parsechangelog -l"${tmpdir}/changelog" -n1 | sed -n '/^Changes:/,$p'
