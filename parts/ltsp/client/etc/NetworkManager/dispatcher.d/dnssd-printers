@@ -4,9 +4,9 @@ IFACE=$1
 COMMAND=$2
 
 if [ "${COMMAND}" = "up" ]; then
-  PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
+    is_dnssd_enabled=$(puavo-conf -b puavo.printing.dnssd.enabled)
 
-  if [ "${PUAVO_HOSTTYPE}" = "laptop" ]; then
-    /usr/sbin/puavo-dnssd-printer-client --retries 6 --retry-delay 15 --delay 10 >/dev/null 2>&1 &
-  fi
+    if [ "${is_dnssd_enabled}" = "laptop" ]; then
+	/usr/sbin/puavo-dnssd-printer-client --retries 6 --retry-delay 15 --delay 10 >/dev/null 2>&1 &
+    fi
 fi
