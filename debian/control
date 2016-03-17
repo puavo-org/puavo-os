@@ -55,6 +55,7 @@ Depends: ${misc:Depends},
  coreutils,
  escrotum,
  imagemagick,
+ puavo-conf,
  ruby,
  xautomation (>= 1.05)
 Description: Automatic Puavo Desktop testing tool
@@ -129,7 +130,10 @@ Description: Log hardware information to fluentd
 
 Package: puavo-hw-tools
 Architecture: all
-Depends: ${misc:Depends}, jq, ruby
+Depends: ${misc:Depends},
+ jq,
+ puavo-conf,
+ ruby
 Description: Puavo enabled tools and tweaks to enable and fix hardware features
  Puavo enabled tools and tweaks to enable and fix hardware features
  .
@@ -269,6 +273,7 @@ Depends: ${misc:Depends},
  ntp,
  perl,
  puavo-client,
+ puavo-conf,
  puavo-debian-boot,
  puavo-hw-tools,
  puavo-vpn-client,
@@ -346,7 +351,9 @@ Description: Puppet-rules for configuring stuff
 
 Package: puavo-sharedir-client
 Architecture: all
-Depends: ${misc:Depends}, cifs-utils
+Depends: ${misc:Depends},
+ cifs-utils,
+ puavo-conf
 Description: Puavo shared directory client
  Puavo shared directory client
  .
