@@ -17,7 +17,6 @@ bin/puavo-devscripts-env: Makefile
 
 installdirs:
 	mkdir -p $(DESTDIR)$(bindir)
-	mkdir -p $(DESTDIR)$(sharedir)/git-hooks
 
 install: bin/puavo-devscripts-env installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
@@ -26,6 +25,7 @@ install: bin/puavo-devscripts-env installdirs
 		bin/adm-xrandr \
 		bin/db2fig.kdc \
 		bin/dpkg-diff-img \
+		bin/git-update-debian-changelog \
 		bin/log2db.kdc \
 		bin/puavo-build-debian-dir \
 		bin/puavo-dch \
@@ -34,11 +34,7 @@ install: bin/puavo-devscripts-env installdirs
 		bin/puavo-img-clone \
 		bin/puavo-img-chroot \
 		bin/puavo-install-deps \
-		bin/puavo-install-git-hooks \
 		bin/puavo-passwd
-
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sharedir)/git-hooks \
-		share/git-hooks/*
 
 	rm -f bin/puavo-devscripts-env
 

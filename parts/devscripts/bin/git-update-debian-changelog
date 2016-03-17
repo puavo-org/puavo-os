@@ -19,13 +19,16 @@
 ##
 
 ##
-## This Git hook automates the maintenance of debian/changelog.
+## This script automates the maintenance of debian/changelog in Git
+## repositories.
 ##
-## If there are new commits on top of the last release commit, the user
-## is prompted with a suggestion to create a release commit. If the user
-## accepts, debian/changelog is updated, commited and the current push
-## is canceled. If the user rejects, the current push continues
-## normally, without any changes.
+## If there are new commits on top of the last release commit, the
+## user is prompted with a suggestion to create a release commit. If
+## the user accepts, debian/changelog is updated, commited and the
+## script exits with non-zero status code. If the user rejects, the
+## scripts exits with zero status code without making any
+## changes. This status code scheme allows this script to be used as a
+## pre-push hook.
 ##
 ## A commit is identified as a release commit if its message matches
 ## with '^RELEASE: '.
