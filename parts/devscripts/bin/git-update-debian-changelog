@@ -44,8 +44,8 @@ on_exit()
     exit $exitvalue
 }
 
-git diff-index --quiet HEAD -- debian/changelog || {
-    echo 'warning: there are uncommitted changes in debian/changelog, not creating a release commit' >&2
+git diff-index --quiet HEAD -- || {
+    echo 'error: there are uncommitted changes, please stash or commit them first' >&2
     exit 1
 }
 
