@@ -45,8 +45,6 @@ installdirs :
 	mkdir -p $(DESTDIR)$(sysconfdir)/X11/Xsession.d
 	mkdir -p $(DESTDIR)$(datarootdir)/applications
 	mkdir -p $(DESTDIR)$(datarootdir)/icons/hicolor/scalable/status
-	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/hooks
-	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-top
 	mkdir -p $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/ltsp_config.d
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/screen.d
@@ -223,11 +221,6 @@ install : installdirs
 		puavo-ltspserver-create-guest \
 		puavo-report-system-version \
 		puavo-update-nm-configurations
-
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/initramfs-tools/hooks/ \
-		initramfs/hooks/ethtool
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-top \
-		initramfs/scripts/init-top/blacklist-r816x
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES \
 		po/fi/puavo-remote-assistance-applet.mo
