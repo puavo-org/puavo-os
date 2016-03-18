@@ -2,6 +2,8 @@ subdirs                    := parts
 clean-subdirs              := $(subdirs:%=clean-%)
 install-subdirs            := $(subdirs:%=install-%)
 
+changes_file = ../$(shell dpkg-parsechangelog -SSource)_$(shell dpkg-parsechangelog -SVersion)_$(shell dpkg-architecture -qDEB_BUILD_ARCH).changes
+
 all                : $(subdirs)
 clean              : $(clean-subdirs)
 install            : $(install-subdirs)
@@ -9,8 +11,10 @@ install            : $(install-subdirs)
 apt-get-build-dep:
 	mk-build-deps -i -t "apt-get --yes --force-yes" -r debian/control
 
-deb: release
+debs: release
 	dpkg-buildpackage -us -uc
+	parts/devscripts/bin/cp-changes "$(changes_file)" debs
+	@echo Done.
 
 release:
 	@parts/devscripts/bin/git-update-debian-changelog
@@ -29,7 +33,7 @@ $(install-subdirs):
         $(install-subdirs)            \
         all                           \
         clean                         \
-	deb                           \
+        debs                          \
         apt-get-build-dep             \
         install                       \
         release
