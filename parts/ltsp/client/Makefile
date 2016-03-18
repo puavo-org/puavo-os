@@ -285,9 +285,9 @@ install : installdirs
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-client \
 		lightdm-greeter-setup \
+		lightdm-session-cleanup \
 		puavo-admin-remote-connections \
 		puavo-desktop-session \
-		puavo-desktop-session-cleanup \
 		puavo-display-setup \
 		puavo-force-plaintext-keyring \
 		puavo-handle-image-build-request \
