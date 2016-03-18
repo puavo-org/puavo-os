@@ -9,7 +9,10 @@ disable_system_services() {
 
     case "${hosttype}" in
 	fatclient)
-	    services='nscd'
+	    services='
+avahi-daemon
+nscd
+'
 	    ;;
 	*)
 	    ;;
