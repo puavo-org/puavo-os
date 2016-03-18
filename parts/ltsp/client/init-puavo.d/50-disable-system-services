@@ -1,0 +1,20 @@
+disable_system_services() {
+    local hosttype
+    local service
+    local services
+
+    hosttype=$(puavo-conf puavo.hosttype)
+
+    services=
+
+    case "${hosttype}" in
+	*)
+	    ;;
+    esac
+
+    for service in ${services}; do
+	systemctl disable "${service}"
+    done
+}
+
+disable_system_services
