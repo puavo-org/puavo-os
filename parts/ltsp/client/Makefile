@@ -284,6 +284,7 @@ install : installdirs
 		etc/X11/Xsession.d/90puavo-setup-printers
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-client \
+		lightdm-display-setup \
 		lightdm-greeter-setup \
 		lightdm-session-cleanup \
 		puavo-admin-remote-connections \
@@ -298,8 +299,7 @@ install : installdirs
 		puavo-thin-guest-account \
 		udev/udev-disable-wifi-powersave \
 		udev/udev-hotplug-monitor \
-		udev/udev-jetpipe \
-		xinitrc
+		udev/udev-jetpipe
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-client/pam \
 		pam/check-if-account-is-locked \
