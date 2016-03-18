@@ -284,7 +284,7 @@ install : installdirs
 		etc/X11/Xsession.d/90puavo-setup-printers
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-client \
-		greeter-setup \
+		lightdm-greeter-setup \
 		puavo-admin-remote-connections \
 		puavo-desktop-session \
 		puavo-desktop-session-cleanup \
