@@ -18,3 +18,5 @@ mkdir -p "${target_dir}"
 awk -v"source_dir=${source_dir}" \
     'NR == 1, /^Files:$/ { next } { printf "%s/%s%c", source_dir, $5, 0 }' \
     "${changes_file}" | xargs -0 cp -v -a -n -t "${target_dir}"
+
+cp -v -a -n -t "${target_dir}" "${changes_file}"
