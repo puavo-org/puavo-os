@@ -1,12 +1,12 @@
-subdirs                    := parts
-clean-subdirs              := $(subdirs:%=clean-%)
-install-subdirs            := $(subdirs:%=install-%)
+subdirs         := parts
+clean-subdirs   := $(subdirs:%=clean-%)
+install-subdirs := $(subdirs:%=install-%)
 
 changes_file = ../$(shell dpkg-parsechangelog -SSource)_$(shell dpkg-parsechangelog -SVersion)_$(shell dpkg-architecture -qDEB_BUILD_ARCH).changes
 
-all                : $(subdirs)
-clean              : $(clean-subdirs)
-install            : $(install-subdirs)
+all: $(subdirs)
+clean: $(clean-subdirs)
+install: $(install-subdirs)
 
 apt-get-build-dep:
 	mk-build-deps -i -t "apt-get --yes --force-yes" -r debian/control
