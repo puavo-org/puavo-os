@@ -8,6 +8,9 @@ disable_system_services() {
     services=
 
     case "${hosttype}" in
+	fatclient)
+	    services='nscd'
+	    ;;
 	*)
 	    ;;
     esac
