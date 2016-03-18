@@ -12,7 +12,7 @@ apt-get-build-dep:
 	mk-build-deps -i -t "apt-get --yes --force-yes" -r debian/control
 
 debs: release
-	dpkg-buildpackage -us -uc
+	dpkg-buildpackage -b -uc
 	parts/devscripts/bin/cp-changes "$(changes_file)" debs
 	@echo Done.
 
