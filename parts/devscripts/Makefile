@@ -23,6 +23,7 @@ install: bin/puavo-devscripts-env installdirs
 		bin/adm-x \
 		bin/adm-x11vnc \
 		bin/adm-xrandr \
+		bin/cp-changes \
 		bin/db2fig.kdc \
 		bin/dpkg-diff-img \
 		bin/git-update-debian-changelog \
