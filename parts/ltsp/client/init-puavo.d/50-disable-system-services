@@ -12,6 +12,7 @@ disable_system_services() {
 	    services='
 avahi-daemon
 nscd
+nslcd
 '
 	    ;;
 	*)
