@@ -89,7 +89,7 @@ distribution=$(lsb_release -cs) # take the buildhost distribution as default
                                 # (jessie, stretch, ...)
 
 buildrules=
-extra_packages_dir=
+extra_packages_dirs=
 imagetype=
 release_name=
 target_dir=
@@ -151,7 +151,12 @@ while [ $# -ne 0 ]; do
       distribution=$2; shift; shift
       ;;
     --extra-packages-dir)
-      extra_packages_dir=$2; shift; shift
+      if [ -z "${extra_packages_dirs}" ]; then
+	  extra_packages_dirs=$2
+      else
+	  extra_packages_dirs="${extra_packages_dirs},$2"
+      fi
+      shift; shift
       ;;
     --image-configure-script)
       image_configure_script=$2; shift; shift
@@ -271,6 +276,7 @@ setup_local_packages() {
   package_dirs="$(dirs_with_postfix \
                     "${buildrule_dirs}" \
                     "/packages/$(get_imagetype)-${distribution}-${arch}")"
+  extra_packages_dir=$(echo "${extra_packages_dirs}" | tr , ' ')
   package_dirs="$package_dirs $extra_packages_dir"
 
   run_configure_chroot --setup-local-packages "$package_dirs"
