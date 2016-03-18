@@ -1,3 +1,18 @@
+puavo-os (0.4.0~671e58eefda7421a9ffef136ff859789739d43be) jessie; urgency=medium
+
+  * New release
+  * parts/ltsp: imgbuild-tool: read extra-packages-dir config option
+  * parts/ltsp: imgbuild-tool: allow multiple --extra-package-dir
+    options
+  * Format Makefile
+  * Sort .PHONY targets
+  * parts/devscripts: cp-changes: copy .changes file too
+  * Copy all built debian packages to debs/
+  * parts/devscripts: add new script for copying .changes to a dir
+  * Git(671e58eefda7421a9ffef136ff859789739d43be)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Fri, 18 Mar 2016 13:44:25 +0200
+
 puavo-os (0.3.0~b79811a78c8be9545f9d3d0319bc0a7e200be109) jessie; urgency=medium
 
   * New release
