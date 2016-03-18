@@ -104,6 +104,7 @@ image_configure_script=$(get_default_for image-configure-script)
 image_excludes_file=$(get_default_for image-excludes-file)
 images_dir="$(get_default_for images-dir)"
 mirror="$(get_default_for mirror)"
+extra_packages_dirs=$(get_default_for extra-packages-dirs)
 
 [ -z "$apt_proxy"           ] && apt_proxy="localhost:3142"
 [ -z "$images_dir"          ] && images_dir="/opt/ltsp/images"
