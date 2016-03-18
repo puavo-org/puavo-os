@@ -1,9 +1,20 @@
 disable_session_services()
 {
+    local hosttype
     local service
     local services
 
+    hosttype=$(puavo-conf puavo.hosttype)
+
     services=
+
+    case "${hosttype}" in
+	fatclient)
+	    services='nm-applet'
+	    ;;
+	*)
+	    ;;
+    esac
 
     for service in ${services}; do
 	rm -f "/etc/xdg/autostart/${service}.desktop"
