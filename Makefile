@@ -32,8 +32,8 @@ $(install-subdirs):
         $(clean-subdirs)              \
         $(install-subdirs)            \
         all                           \
+        apt-get-build-dep             \
         clean                         \
         debs                          \
-        apt-get-build-dep             \
         install                       \
         release
