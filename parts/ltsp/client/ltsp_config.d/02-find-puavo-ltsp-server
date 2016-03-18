@@ -1,9 +1,0 @@
-# Get LDM_SERVER from the Puavo bootserver load balancer
-
-case "$(cat /etc/puavo/hosttype)" in
-  thinclient)
-    TMP_SERVER=$(jq -r .ltsp_server.state.fqdn "${PUAVO_SESSION_PATH}")
-
-    set_lts_var LDM_SERVER "${TMP_SERVER}"
-    ;;
-esac

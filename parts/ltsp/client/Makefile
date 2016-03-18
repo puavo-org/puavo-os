@@ -46,9 +46,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/applications
 	mkdir -p $(DESTDIR)$(datarootdir)/icons/hicolor/scalable/status
 	mkdir -p $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES
-	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/ltsp_config.d
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/screen.d
-	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/xinitrc.d
 	mkdir -p $(DESTDIR)$(datarootdir)/pam-configs
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/parameters
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/cron.d
@@ -230,14 +228,6 @@ install : installdirs
 		screen.d/lightdm \
 		screen.d/ltspserver \
 		screen.d/wirelessaccesspoint
-
-	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/ltsp/ltsp_config.d \
-		ltsp_config.d/00-puavoltsp-by-hosttype \
-		ltsp_config.d/02-find-puavo-ltsp-server
-
-	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/ltsp/xinitrc.d \
-		xinitrc.d/I10-puavo-xrandr \
-		xinitrc.d/I95-set-lightdm-state
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/default \
 		etc/default/ltspssh \
