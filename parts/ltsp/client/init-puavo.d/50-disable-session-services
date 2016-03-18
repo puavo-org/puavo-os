@@ -1,0 +1,13 @@
+disable_session_services()
+{
+    local service
+    local services
+
+    services=
+
+    for service in ${services}; do
+	rm -f "/etc/xdg/autostart/${service}.desktop"
+    done
+}
+
+disable_session_services
