@@ -1,8 +1,0 @@
-#!/bin/sh
-
-set -e
-
-# make sure user exists (the format for $PAM_USER cannot be nonsense)
-getent passwd "$PAM_USER" > /dev/null 2>&1 || exit 1
-
-cat "/var/lib/puavo-desktop/users/${PAM_USER}/environment"
