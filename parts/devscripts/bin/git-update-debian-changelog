@@ -101,7 +101,7 @@ fi
 ## Ask for version
 exec < /dev/tty
 while true; do
-    read -p "New version number? [${new_version}] " answer || break
+    read -e -p "New version number? [${new_version}] " answer || break
     if [ -z "${answer}" ]; then
 	answer="${new_version}"
     fi
@@ -129,7 +129,7 @@ dpkg-parsechangelog -l"${tmpdir}/changelog" -n1 | sed -n '/^Changes:/,$p'
 ## Ask for confirmation.
 exec < /dev/tty
 while true; do
-    read -p 'Make a release? [Y/n] ' answer || break
+    read -e -p 'Make a release? [Y/n] ' answer || break
     case "${answer}" in
         ''|Y|y)
             cp "${tmpdir}/changelog" debian/changelog
