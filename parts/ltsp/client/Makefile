@@ -292,12 +292,12 @@ install : installdirs
 		lib/monitor-nbd-connection \
 		lib/run-xrandr \
 		lib/thin-guest-account \
-		lightdm-display-setup \
-		lightdm-greeter-setup \
-		lightdm-session-cleanup \
-		udev/udev-disable-wifi-powersave \
-		udev/udev-hotplug-monitor \
-		udev/udev-jetpipe
+		lib/lightdm-display-setup \
+		lib/lightdm-greeter-setup \
+		lib/lightdm-session-cleanup \
+		lib/udev-disable-wifi-powersave \
+		lib/udev-hotplug-monitor \
+		lib/udev-jetpipe
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-client/pam \
 		pam/check-if-account-is-locked \
