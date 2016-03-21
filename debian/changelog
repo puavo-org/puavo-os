@@ -1,3 +1,27 @@
+puavo-os (0.5.0~ab678b6a95917cc9fae0f34fb19449f399246560) jessie; urgency=medium
+
+  * New release
+  * Add libdb5.3 as an alternative dependency to puavo-conf
+  * parts/ltsp: client: remove unused puavo-ltsp-envfeed
+  * parts/pkg: remove redundant license file
+  * Change `make debs` to build just binary packages
+  * parts/ltsp: client: rename xinitrc => lightdm-display-setup
+  * parts/ltsp: client: rename puavo-desktop-session-cleanup => lightdm-
+    session-cleanup
+  * parts/ltsp: client: rename greeter-setup => lightdm-greeter-setup
+  * parts/ltsp: client: make xinitrc executable
+  * parts/ltsp: client: remove more old unused LTSP stuff
+  * parts/ltsp: client: remove old script for disabling session services
+  * parts/ltsp: client: disable nm-applet on fatclients
+  * parts/ltsp: client: add support for disabling session services
+  * parts/ltsp: client: disable nslcd on fatclients
+  * parts/ltsp: client: disable avahi-daemon on fatclients
+  * parts/ltsp: client: disable nscd on fatclients
+  * parts/ltsp: client: add support for disabling system services
+  * Git(ab678b6a95917cc9fae0f34fb19449f399246560)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Mon, 21 Mar 2016 09:49:01 +0200
+
 puavo-os (0.4.0~671e58eefda7421a9ffef136ff859789739d43be) jessie; urgency=medium
 
   * New release
