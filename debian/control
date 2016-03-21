@@ -4,6 +4,7 @@ Priority: extra
 Maintainer: Opinsys Developers <dev@opinsys.fi>
 Build-Depends: bundler | ruby-bundler,
  debhelper (>= 8),
+ dh-systemd (>= 1.5),
  libdb-dev,
  libgnome-desktop-3-dev,
  libjansson-dev,
