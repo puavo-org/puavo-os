@@ -1,0 +1,8 @@
+[Unit]
+Description=Monitor NBD connection and reboot if it fails
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+ExecStart=/usr/lib/puavo-ltsp-client/monitor-nbd-connection

@@ -78,6 +78,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/xsessions
 	mkdir -p $(DESTDIR)/var/lib/puavo-desktop/shared
 	mkdir -p $(DESTDIR)/var/lib/puavo-desktop/users
+	mkdir -p $(DESTDIR)/lib/systemd/system
 
 .PHONY : install
 install : installdirs
@@ -300,6 +301,9 @@ install : installdirs
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/xgreeters \
 		xgreeters/puavo-gtk-greeter.desktop
+
+	$(INSTALL_DATA) -t $(DESTDIR)/lib/systemd/system \
+		systemd/puavo-monitor-nbd-connection.service
 
 .PHONY : clean
 clean :
