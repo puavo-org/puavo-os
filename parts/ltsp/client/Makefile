@@ -282,22 +282,7 @@ install : installdirs
 		etc/X11/Xsession.d/90puavo-setup-printers
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-client \
-		lib/admin-remote-connections \
-		lib/desktop-session \
-		lib/display-setup \
-		lib/force-plaintext-keyring \
-		lib/handle-image-build-request \
-		lib/ltspserver-create-guest \
-		lib/make-release-logos \
-		lib/monitor-nbd-connection \
-		lib/run-xrandr \
-		lib/thin-guest-account \
-		lib/lightdm-display-setup \
-		lib/lightdm-greeter-setup \
-		lib/lightdm-session-cleanup \
-		lib/udev-disable-wifi-powersave \
-		lib/udev-hotplug-monitor \
-		lib/udev-jetpipe
+		lib/*
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-client/pam \
 		pam/check-if-account-is-locked \
