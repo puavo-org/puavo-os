@@ -1,3 +1,15 @@
+puavo-os (0.6.0~cabc169065ed456c9ccfe0519b22a64b9fda7c6c) jessie; urgency=medium
+
+  * New release
+  * parts/devscripts: use Readline to get input from prompts
+  * parts/ltsp: client: install all files from lib/ to libdir
+  * parts/ltsp: client: move all lib scripts to lib/
+  * parts/ltsp: client: strip off redundant puavo- prefix from lib
+    scripts
+  * Git(cabc169065ed456c9ccfe0519b22a64b9fda7c6c)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Mon, 21 Mar 2016 11:18:07 +0200
+
 puavo-os (0.5.0~ab678b6a95917cc9fae0f34fb19449f399246560) jessie; urgency=medium
 
   * New release
