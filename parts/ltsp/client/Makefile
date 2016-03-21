@@ -215,7 +215,6 @@ install : installdirs
 		puavo-handle-external-files-actions \
 		puavo-ltsp-init-nfs \
 		puavo-ltsp-login \
-		puavo-ltspserver-create-guest \
 		puavo-report-system-version \
 		puavo-update-nm-configurations
 
@@ -283,19 +282,19 @@ install : installdirs
 		etc/X11/Xsession.d/90puavo-setup-printers
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-client \
+		lib/admin-remote-connections \
+		lib/desktop-session \
+		lib/display-setup \
+		lib/force-plaintext-keyring \
+		lib/handle-image-build-request \
+		lib/ltspserver-create-guest \
+		lib/make-release-logos \
+		lib/monitor-nbd-connection \
+		lib/run-xrandr \
+		lib/thin-guest-account \
 		lightdm-display-setup \
 		lightdm-greeter-setup \
 		lightdm-session-cleanup \
-		puavo-admin-remote-connections \
-		puavo-desktop-session \
-		puavo-display-setup \
-		puavo-force-plaintext-keyring \
-		puavo-handle-image-build-request \
-		puavo-ltspserver-create-guest \
-		puavo-make-release-logos \
-		puavo-monitor-nbd-connection \
-		puavo-run-xrandr \
-		puavo-thin-guest-account \
 		udev/udev-disable-wifi-powersave \
 		udev/udev-hotplug-monitor \
 		udev/udev-jetpipe

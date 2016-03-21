@@ -39,7 +39,7 @@ allowed_logins | fgrep -qx "${PAM_USER}" && exit 0
 
 if is_admin_user; then
     incoming_accepted=$(
-      /usr/lib/puavo-ltsp-client/puavo-admin-remote-connections \
+      /usr/lib/puavo-ltsp-client/admin-remote-connections \
         --is-incoming-accepted)
 
     if [ "$incoming_accepted" = 'yes' ]; then

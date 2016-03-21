@@ -233,7 +233,7 @@ case @puavo_device_type
     end
 
     # Temporary hack until ltsp-lightdm is not used anymore
-    `cp /usr/lib/puavo-ltsp-client/puavo-thin-guest-account /usr/sbin/guest-account`
+    `cp /usr/lib/puavo-ltsp-client/thin-guest-account /usr/sbin/guest-account`
 #    `cp /usr/lib/puavo-ltsp-client/puavo-desktop-guest-session /usr/share/ltsp-lightdm/xsession-stub`
 
     # Temporary hack to get ltspfs working with thin guest sessions
@@ -267,7 +267,7 @@ case @puavo_device_type
       end
     end
 
-    `cp /usr/lib/puavo-ltsp-client/puavo-thin-guest-account /usr/sbin/guest-account`
+    `cp /usr/lib/puavo-ltsp-client/thin-guest-account /usr/sbin/guest-account`
 #    `cp /usr/lib/puavo-ltsp-client/puavo-desktop-guest-session /usr/share/ltsp-lightdm/xsession-stub`
 
     delete_file('/usr/share/dbus-1/system-services/fi.epitest.hostap.WPASupplicant.service')
@@ -303,7 +303,7 @@ case @puavo_device_type
     delete_file('/usr/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service')
 
     File.open('/etc/inetd.conf', 'a') do |f|
-      f.write("908  stream  tcp     nowait  root    /usr/sbin/tcpd  /usr/lib/puavo-ltsp-client/puavo-ltspserver-create-guest\n")
+      f.write("908  stream  tcp     nowait  root    /usr/sbin/tcpd  /usr/lib/puavo-ltsp-client/ltspserver-create-guest\n")
     end
 
     try_writing_puavomounts()

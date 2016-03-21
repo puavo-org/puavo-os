@@ -132,7 +132,7 @@ class RemoteAccessHandler:
 
 
     def call_puavo_admin_remote_connections(self, cmdargs):
-        cmdpath = '/usr/lib/puavo-ltsp-client/puavo-admin-remote-connections'
+        cmdpath = '/usr/lib/puavo-ltsp-client/admin-remote-connections'
         return subprocess.check_output([ cmdpath ] + cmdargs)
 
 
@@ -345,10 +345,10 @@ try:
           time_when_ssh_was_enabled)
 
 except subprocess.CalledProcessError:
-    # /usr/lib/puavo-ltsp-client/puavo-admin-remote-connections
+    # /usr/lib/puavo-ltsp-client/admin-remote-connections
     # does not behave properly, so do not handle ssh
     # (indicates misconfiguration)
-    print("puavo-admin-remote-connections returned failure," \
+    print("admin-remote-connections returned failure," \
             + " check your configuration",
           file=sys.stderr)
     config['show_accesscontrols_for'] \

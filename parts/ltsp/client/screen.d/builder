@@ -27,7 +27,7 @@ echo
 echo 'This host is a Puavo device image builder' | /usr/games/cowsay
 echo
 
-if ! /usr/lib/puavo-ltsp-client/puavo-handle-image-build-request; then
+if ! /usr/lib/puavo-ltsp-client/handle-image-build-request; then
   # if image build failed, wait five minutes and try again
   # (this script should be called again on upper levels)
   sleep 300

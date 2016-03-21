@@ -6,10 +6,10 @@ usage() {
   cat <<'EOF'
 Usage:
 
-  puavo-admin-remote-connections --accept-incoming
-                                 --is-incoming-accepted
-                                 --reject-incoming
-                                 --show-enable-time
+  admin-remote-connections --accept-incoming
+                           --is-incoming-accepted
+                           --reject-incoming
+                           --show-enable-time
 
   Give one of "--accept-incoming", "--is-incoming-accepted",
   "--reject-incoming" or "--show-enable-time" options.
@@ -34,7 +34,7 @@ if [ "$personally_administered" != "true" ]; then
   exit 1
 fi
 
-config_file_path="/var/lib/puavo-desktop/shared/puavo-admin-remote-connections.conf"
+config_file_path="/var/lib/puavo-desktop/shared/admin-remote-connections.conf"
 
 case "$action" in
   --accept-incoming)

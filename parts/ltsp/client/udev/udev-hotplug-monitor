@@ -12,7 +12,7 @@ set -eu
 # ACTION=="change", SUBSYSTEM=="drm", RUN+="/usr/bin/udev-hotplug-monitor"
 
 there_is_a_desktop_session() {
-  pgrep -fx '/bin/sh /usr/lib/puavo-ltsp-client/puavo-desktop-session' \
+  pgrep -fx '/bin/sh /usr/lib/puavo-ltsp-client/desktop-session' \
     >/dev/null
 }
 
@@ -26,4 +26,4 @@ fi
 export DISPLAY=:0.0
 export XAUTHORITY=/var/run/lightdm/root/:0
 
-/usr/lib/puavo-ltsp-client/puavo-run-xrandr
+/usr/lib/puavo-ltsp-client/run-xrandr

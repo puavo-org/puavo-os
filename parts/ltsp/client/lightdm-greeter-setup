@@ -90,6 +90,6 @@ else
 fi
 
 su -s /bin/sh lightdm \
-   -c /usr/lib/puavo-ltsp-client/puavo-force-plaintext-keyring
+   -c /usr/lib/puavo-ltsp-client/force-plaintext-keyring
 
 exit 0
