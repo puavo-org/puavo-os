@@ -92,10 +92,19 @@ fi
 
 new_version=
 old_version=$(dpkg-parsechangelog -l"${tmpdir}/changelog" | sed -r -n 's/^Version: //p')
-if [[ "${old_version}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)~([0-9a-f]+)$ ]]; then
+if [[ "${old_version}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)\+([0-9a-f]+)$ ]]; then
     old_major_version="${BASH_REMATCH[1]}"
     old_minor_version="${BASH_REMATCH[2]}"
-    new_version="${old_major_version}.$((old_minor_version + 1)).0~${head_commit}"
+    new_version="${old_major_version}.$((old_minor_version + 1)).0~rc1+${head_commit}"
+elif [[ "${old_version}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)~([0-9a-f]+)$ ]]; then
+    old_major_version="${BASH_REMATCH[1]}"
+    old_minor_version="${BASH_REMATCH[2]}"
+    new_version="${old_major_version}.$((old_minor_version + 1)).0~rc1+${head_commit}"
+elif [[ "${old_version}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)~rc([0-9]+)+([0-9a-f]+)$ ]]; then
+    old_major_version="${BASH_REMATCH[1]}"
+    old_minor_version="${BASH_REMATCH[2]}"
+    old_patch_version="${BASH_REMATCH[3]}"
+    new_version="${old_major_version}.${old_minor_version}.${old_patch_version}~rc$((old_rc_version + 1))+${head_commit}"
 fi
 
 ## Ask for version
@@ -105,7 +114,7 @@ while true; do
     if [ -z "${answer}" ]; then
 	answer="${new_version}"
     fi
-    if [[ "${answer}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)~([0-9a-f]+)$ ]]; then
+    if [[ "${answer}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)(~rc[0-9]+)?\+([0-9a-f]+)$ ]]; then
 	new_version="${answer}"
 	break
     fi
