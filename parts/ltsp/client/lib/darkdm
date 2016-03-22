@@ -2,19 +2,25 @@
 
 set -eu
 
-darkdm_install()
+
+darkdm_reboot()
 {
     local i
 
-    /usr/sbin/puavo-install || return 1
-
     for i in $(seq 5 -1 1); do
-        echo -n -e "\rRebooting in ${i}s..."
+        echo -n -e "\rRebooting in ${i}s. (Press Ctrl-C to cancel)"
         sleep 1 || return 1
     done
-    echo -e "\rRebooting now!    "
+    echo -e "\rRebooting now!                              "
 
     reboot
+}
+
+darkdm_install()
+{
+    /usr/sbin/puavo-install || return 1
+
+    darkdm_reboot
 }
 
 darkdm_print_help()
@@ -22,7 +28,7 @@ darkdm_print_help()
     echo "Commands:"
     echo "  help     -  show this help"
     echo "  install  -  install Puavo OS to this device"
-    echo "  reboot   -  reboot the system immediately"
+    echo "  reboot   -  reboot the system in 5 seconds"
 }
 
 darkdm_main()
@@ -53,7 +59,7 @@ darkdm_main()
 		darkdm_install
 		;;
 	    'reboot')
-		reboot
+		darkdm_reboot
 		;;
 	    *)
 		echo "Error: Invalid command '${command}'. Try 'help'." >&2
