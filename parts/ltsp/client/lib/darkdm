@@ -2,11 +2,30 @@
 
 set -eu
 
+install()
+{
+    local i
+
+    /usr/sbin/puavo-install || {
+        echo 'Error: Installation failed.' >&2
+        return 1
+    }
+
+    for i in $(seq 5 -1 1); do
+        echo -n -e "\rRebooting in ${i}s..."
+        sleep 1
+    done
+    echo -e "\rRebooting now!    "
+
+    reboot
+}
+
 print_help()
 {
     echo "Commands:"
-    echo "  help   - show this help"
-    echo "  reboot - reboot the system immediately"
+    echo "  help     -  show this help"
+    echo "  install  -  install Puavo OS to this device"
+    echo "  reboot   -  reboot the system immediately"
 }
 
 trap '' SIGINT
@@ -28,6 +47,9 @@ while true; do
     }
 
     case "${command}" in
+        'install')
+	    install
+            ;;
 	'reboot')
 	    reboot
 	    ;;
