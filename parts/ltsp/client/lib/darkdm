@@ -26,7 +26,7 @@ while true; do
     }
 
     case "${command}" in
-	reboot)
+	'reboot')
 	    reboot
 	    ;;
 	'help')
