@@ -34,8 +34,6 @@ main()
     local tty_dev
     local tty_n
 
-    trap '' SIGINT
-
     tty_dev=$(tty)
     tty_n=$(echo "${tty_dev}" | sed -r -n 's|/dev/tty||p')
 
