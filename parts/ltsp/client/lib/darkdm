@@ -28,8 +28,10 @@ darkdm_print_help()
     echo "Puavo OS Command Shell"
     echo
     echo "Commands:"
+    echo "  build    -  build Puavo OS image and poweroff"
     echo "  help     -  show this help"
     echo "  install  -  install Puavo OS to this device"
+    echo "  poweroff -  poweroff the system in 5 seconds"
     echo "  reboot   -  reboot the system in 5 seconds"
     echo "  update   -  update the local Puavo OS installation"
 }
@@ -59,6 +61,13 @@ darkdm_poweroff()
     poweroff
 }
 
+darkdm_build()
+{
+    /usr/lib/puavo-ltsp-client/handle-image-build-request || return 1
+
+    darkdm_poweroff
+}
+
 darkdm_main()
 {
     local command
@@ -78,6 +87,9 @@ darkdm_main()
 	read -e -p "> " command
 
 	case "${command}" in
+	    'build')
+		darkdm_build
+		;;
 	    'help')
 		darkdm_print_help
 		;;
