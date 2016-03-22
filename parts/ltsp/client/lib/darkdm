@@ -6,14 +6,11 @@ install()
 {
     local i
 
-    /usr/sbin/puavo-install || {
-        echo 'Error: Installation failed.' >&2
-        return 1
-    }
+    /usr/sbin/puavo-install || return 1
 
     for i in $(seq 5 -1 1); do
         echo -n -e "\rRebooting in ${i}s..."
-        sleep 1
+        sleep 1 || return 1
     done
     echo -e "\rRebooting now!    "
 
@@ -38,7 +35,7 @@ main()
     tty_n=$(echo "${tty_dev}" | sed -r -n 's|/dev/tty||p')
 
     if [ -n "${tty_n}" ]; then
-	chvt "${tty_n}"
+	chvt "${tty_n}" || return 1
     fi
 
     echo 'Welcome to the Dark side!' | /usr/games/cowsay -b
