@@ -1,3 +1,15 @@
+puavo-os (0.7.0~rc2+e0e617c99e62098e9c2ae742ba8d49c37ccf95a9) jessie; urgency=medium
+
+  * New release
+  * parts/devscripts: fix rc version handling
+  * parts/ltsp: client: just style fix
+  * parts/ltsp: client: fix cowsay path
+  * parts/ltsp: client: fix darkdm to print command help at the
+    beginning
+  * Git(e0e617c99e62098e9c2ae742ba8d49c37ccf95a9)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Tue, 22 Mar 2016 14:34:27 +0200
+
 puavo-os (0.7.0~rc1+12c77dd9022a82d814b7db81fd184a5803109358) jessie; urgency=medium
 
   * New release
