@@ -46,9 +46,7 @@ main()
     print_help
 
     while true; do
-	read -e -p "> " command || {
-	    echo
-	}
+	read -e -p "> " command
 
 	case "${command}" in
 	    'help')
