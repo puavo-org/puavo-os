@@ -16,7 +16,7 @@ tty_n=$(echo "${tty_dev}" | sed -r -n 's|/dev/tty/||')
 
 ch_vt "${tty_n}"
 
-echo 'Welcome to the Dark side!' | cowsay -b
+echo 'Welcome to the Dark side!' | /usr/games/cowsay -b
 
 print_help
 
