@@ -9,6 +9,6 @@ WantedBy=multi-user.target
 ExecStart=/usr/lib/puavo-ltsp-client/darkdm
 StandardInput=tty
 StandardOutput=tty
-TTYPath=/dev/tty7
+TTYPath=/dev/tty8
 TTYReset=yes
 TTYVHangup=yes
