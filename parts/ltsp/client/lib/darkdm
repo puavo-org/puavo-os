@@ -31,6 +31,19 @@ darkdm_print_help()
     echo "  help     -  show this help"
     echo "  install  -  install Puavo OS to this device"
     echo "  reboot   -  reboot the system in 5 seconds"
+    echo "  update   -  update the local Puavo OS installation"
+}
+
+darkdm_update()
+{
+    local image_name
+
+    image_name=$(cat /etc/ltsp/this_ltspimage_name) || return 1
+
+    /usr/sbin/puavo-install-and-update-ltspimages \
+	--install-from-nbd /dev/nbd0 "${image_name}" || return 1
+
+    darkdm_reboot
 }
 
 darkdm_main()
@@ -60,6 +73,9 @@ darkdm_main()
 		;;
 	    'reboot')
 		darkdm_reboot
+		;;
+	    'update')
+		darkdm_update
 		;;
 	    *)
 		echo "Error: Invalid command '${command}'. Try 'help'." >&2
