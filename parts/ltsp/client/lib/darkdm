@@ -2,6 +2,13 @@
 
 set -eu
 
+print_help()
+{
+    echo "Commands:"
+    echo "  help   - show this help"
+    echo "  reboot - reboot the system immediately"
+}
+
 trap '' SIGINT
 
 tty_dev=$(tty)
@@ -10,6 +17,8 @@ tty_n=$(echo "${tty_dev}" | sed -r -n 's|/dev/tty/||')
 ch_vt "${tty_n}"
 
 echo 'Welcome to the Dark side!' | cowsay -b
+
+print_help
 
 while true; do
     read -e -p "> " command || {
@@ -21,9 +30,7 @@ while true; do
 	    reboot
 	    ;;
 	'help')
-	    echo "Commands:"
-	    echo "  help   - show this help"
-	    echo "  reboot - reboot the system immediately"
+	    print_help
 	    ;;
 	*)
 	    echo "Invalid command '${command}'"
