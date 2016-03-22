@@ -1,3 +1,22 @@
+puavo-os (0.7.0~rc1+12c77dd9022a82d814b7db81fd184a5803109358) jessie; urgency=medium
+
+  * New release
+  * parts/ltsp: client: run darkdm in tty8 to avoid systemd pollution
+  * parts/ltsp: client: make darkdm change the current virtual terminal
+    to its own
+  * parts/ltsp: client: change systemd's default target based on
+    puavo.mode
+  * parts/ltsp: client: add puavo.mode parameter
+  * parts/ltsp: client: run text prompt when not in graphical mode
+  * parts/conf: add -x/--match-exact option
+  * parts/devscripts: add support for updating changelog with rcX
+    versions
+  * parts/ltsp: client: add service unit for NBD connection monitor
+  * debian: use dh-systemd
+  * Git(12c77dd9022a82d814b7db81fd184a5803109358)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Tue, 22 Mar 2016 13:57:32 +0200
+
 puavo-os (0.6.0~cabc169065ed456c9ccfe0519b22a64b9fda7c6c) jessie; urgency=medium
 
   * New release
