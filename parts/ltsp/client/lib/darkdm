@@ -14,7 +14,7 @@ trap '' SIGINT
 tty_dev=$(tty)
 tty_n=$(echo "${tty_dev}" | sed -r -n 's|/dev/tty/||')
 
-ch_vt "${tty_n}"
+chvt "${tty_n}"
 
 echo 'Welcome to the Dark side!' | /usr/games/cowsay -b
 
