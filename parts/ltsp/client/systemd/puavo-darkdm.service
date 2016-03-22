@@ -6,7 +6,6 @@ Conflicts=graphical.target
 WantedBy=multi-user.target
 
 [Service]
-ExecPreStart=chvt 7
 ExecStart=/usr/lib/puavo-ltsp-client/darkdm
 StandardInput=tty
 StandardOutput=tty
