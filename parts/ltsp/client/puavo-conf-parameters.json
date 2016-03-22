@@ -2,6 +2,17 @@
     "puavo.hosttype": {
         "default": ""
     },
+    "puavo.mode": {
+	"default": "login",
+	"choices": [
+	    "builder",
+	    "infotv",
+	    "login",
+	    "register",
+	    "update",
+	    "webkiosk"
+	]
+    }
     "puavo.printing.dnssd.enabled": {
 	"default": "true"
     },
