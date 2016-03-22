@@ -25,6 +25,8 @@ darkdm_install()
 
 darkdm_print_help()
 {
+    echo "Puavo OS Command Shell"
+    echo
     echo "Commands:"
     echo "  help     -  show this help"
     echo "  install  -  install Puavo OS to this device"
@@ -43,8 +45,6 @@ darkdm_main()
     if [ -n "${tty_n}" ]; then
 	chvt "${tty_n}" || return 1
     fi
-
-    echo 'Welcome to the Dark side!' | /usr/games/cowsay -b
 
     darkdm_print_help
 
