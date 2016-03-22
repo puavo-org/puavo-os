@@ -1,0 +1,15 @@
+[Unit]
+Description=Text prompt
+Conflicts=graphical.target
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+ExecPreStart=chvt 7
+ExecStart=/usr/lib/puavo-ltsp-client/darkdm
+StandardInput=tty
+StandardOutput=tty
+TTYPath=/dev/tty7
+TTYReset=yes
+TTYVHangup=yes

@@ -303,7 +303,7 @@ install : installdirs
 		xgreeters/puavo-gtk-greeter.desktop
 
 	$(INSTALL_DATA) -t $(DESTDIR)/lib/systemd/system \
-		systemd/puavo-monitor-nbd-connection.service
+		systemd/*
 
 .PHONY : clean
 clean :

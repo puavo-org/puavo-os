@@ -1,0 +1,28 @@
+#!/bin/bash
+
+set -eu
+
+trap '' SIGINT
+
+echo 'Welcome to the Dark side!' | cowsay -b
+
+while true; do
+    read -e -p "> " command || {
+	echo
+    }
+
+    case "${command}" in
+	reboot)
+	    reboot
+	    ;;
+	'help')
+	    echo "Commands:"
+	    echo "  help   - show this help"
+	    echo "  reboot - reboot the system immediately"
+	    ;;
+	*)
+	    echo "Invalid command '${command}'"
+	    echo "Type 'help' to get help"
+	;;
+    esac
+done
