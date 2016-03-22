@@ -28,36 +28,45 @@ print_help()
     echo "  reboot   -  reboot the system immediately"
 }
 
-trap '' SIGINT
+main()
+{
+    local command
+    local tty_dev
+    local tty_n
 
-tty_dev=$(tty)
-tty_n=$(echo "${tty_dev}" | sed -r -n 's|/dev/tty||p')
+    trap '' SIGINT
 
-if [ -n "${tty_n}" ]; then
-    chvt "${tty_n}"
-fi
+    tty_dev=$(tty)
+    tty_n=$(echo "${tty_dev}" | sed -r -n 's|/dev/tty||p')
 
-echo 'Welcome to the Dark side!' | /usr/games/cowsay -b
+    if [ -n "${tty_n}" ]; then
+	chvt "${tty_n}"
+    fi
 
-print_help
+    echo 'Welcome to the Dark side!' | /usr/games/cowsay -b
 
-while true; do
-    read -e -p "> " command || {
-	echo
-    }
+    print_help
 
-    case "${command}" in
-        'install')
-	    install
-            ;;
-	'reboot')
-	    reboot
-	    ;;
-	'help')
-	    print_help
-	    ;;
-	*)
-	    echo "Error: Invalid command '${command}'. Try 'help'." >&2
-	;;
-    esac
-done
+    while true; do
+	read -e -p "> " command || {
+	    echo
+	}
+
+	case "${command}" in
+            'install')
+		install
+		;;
+	    'reboot')
+		reboot
+		;;
+	    'help')
+		print_help
+		;;
+	    *)
+		echo "Error: Invalid command '${command}'. Try 'help'." >&2
+		;;
+	esac
+    done
+}
+
+main
