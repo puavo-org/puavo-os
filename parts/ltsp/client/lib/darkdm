@@ -53,14 +53,14 @@ main()
 	}
 
 	case "${command}" in
+	    'help')
+		print_help
+		;;
             'install')
 		install
 		;;
 	    'reboot')
 		reboot
-		;;
-	    'help')
-		print_help
 		;;
 	    *)
 		echo "Error: Invalid command '${command}'. Try 'help'." >&2
