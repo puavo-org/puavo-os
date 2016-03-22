@@ -12,3 +12,4 @@ StandardOutput=tty
 TTYPath=/dev/tty8
 TTYReset=yes
 TTYVHangup=yes
+Restart=always
