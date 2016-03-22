@@ -30,10 +30,10 @@ darkdm_print_help()
     echo "Commands:"
     echo "  build    -  build Puavo OS image and poweroff"
     echo "  help     -  show this help"
-    echo "  install  -  install Puavo OS to this device"
+    echo "  install  -  install Puavo OS to this device and reboot"
     echo "  poweroff -  poweroff the system in 5 seconds"
     echo "  reboot   -  reboot the system in 5 seconds"
-    echo "  update   -  update the local Puavo OS installation"
+    echo "  update   -  update the local Puavo OS installation and reboot"
 }
 
 darkdm_update()
