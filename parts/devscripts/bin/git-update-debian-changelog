@@ -100,10 +100,11 @@ elif [[ "${old_version}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)~([0-9a-f]+)$ ]]; then
     old_major_version="${BASH_REMATCH[1]}"
     old_minor_version="${BASH_REMATCH[2]}"
     new_version="${old_major_version}.$((old_minor_version + 1)).0~rc1+${head_commit}"
-elif [[ "${old_version}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)~rc([0-9]+)+([0-9a-f]+)$ ]]; then
+elif [[ "${old_version}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)~rc([0-9]+)\+([0-9a-f]+)$ ]]; then
     old_major_version="${BASH_REMATCH[1]}"
     old_minor_version="${BASH_REMATCH[2]}"
     old_patch_version="${BASH_REMATCH[3]}"
+    old_rc_version="${BASH_REMATCH[4]}"
     new_version="${old_major_version}.${old_minor_version}.${old_patch_version}~rc$((old_rc_version + 1))+${head_commit}"
 fi
 
