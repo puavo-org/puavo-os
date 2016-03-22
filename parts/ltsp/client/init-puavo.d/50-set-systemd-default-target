@@ -1,0 +1,17 @@
+set_systemd_default_target()
+{
+    local mode
+
+    mode=$(puavo-conf puavo.mode)
+
+    case "${mode}" in
+	login|infotv|webkiosk)
+	    systemctl set-default graphical.target
+	    ;;
+	*)
+	    systemctl set-default multi-user.target
+	    ;;
+    esac
+}
+
+set_systemd_default_target
