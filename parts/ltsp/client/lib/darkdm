@@ -35,8 +35,7 @@ while true; do
 	    print_help
 	    ;;
 	*)
-	    echo "Invalid command '${command}'"
-	    echo "Type 'help' to get help"
+	    echo "Error: Invalid command '${command}'. Try 'help'." >&2
 	;;
     esac
 done
