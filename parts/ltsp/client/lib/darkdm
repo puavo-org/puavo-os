@@ -12,7 +12,7 @@ print_help()
 trap '' SIGINT
 
 tty_dev=$(tty)
-tty_n=$(echo "${tty_dev}" | sed -r -n 's|/dev/tty/||')
+tty_n=$(echo "${tty_dev}" | sed -r -n 's|/dev/tty||p')
 
 chvt "${tty_n}"
 
