@@ -1,11 +1,11 @@
 set_systemd_default_target()
 {
-    local mode
+    local hosttype
 
-    mode=$(puavo-conf puavo.mode)
+    hosttype=$(puavo-conf puavo.hosttype)
 
-    case "${mode}" in
-	login|infotv|webkiosk)
+    case "${hosttype}" in
+	fatclient|thinclient|laptop)
 	    systemctl set-default graphical.target
 	    ;;
 	*)
