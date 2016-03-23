@@ -1,52 +1,62 @@
 GEM
   remote: http://rubygems.org/
   specs:
-    addressable (2.3.8)
-    columnize (0.9.0)
-    crack (0.4.2)
+    CFPropertyList (2.2.8)
+    addressable (2.4.0)
+    crack (0.4.3)
       safe_yaml (~> 1.0.0)
-    facter (1.7.6)
-    ffi (1.9.8)
+    domain_name (0.5.20160310)
+      unf (>= 0.0.5, < 1.0.0)
+    facter (2.4.6)
+      CFPropertyList (~> 2.2.6)
+    ffi (1.9.10)
     gssapi (1.2.0)
       ffi (>= 1.0.1)
-    highline (1.6.21)
-    http (0.8.3)
+    hashdiff (0.3.0)
+    highline (1.7.8)
+    http (1.0.4)
       addressable (~> 2.3)
+      http-cookie (~> 1.0)
       http-form_data (~> 1.0.1)
       http_parser.rb (~> 0.6.0)
+    http-cookie (1.0.2)
+      domain_name (~> 0.5)
     http-form_data (1.0.1)
     http_parser.rb (0.6.0)
-    httparty (0.11.0)
-      multi_json (~> 1.0)
+    httparty (0.13.7)
+      json (~> 1.8)
       multi_xml (>= 0.5.2)
-    json (1.7.7)
-    mime-types (1.25.1)
-    minitest (5.6.0)
+    json (1.8.3)
+    mime-types (2.99.1)
+    minitest (5.8.4)
     minitest-stub_any_instance (1.0.1)
-    multi_json (1.11.0)
     multi_xml (0.5.5)
-    rdoc (4.2.0)
-      json (~> 1.4)
-    rest-client (1.6.8)
-      mime-types (~> 1.16)
-      rdoc (>= 2.4.2)
+    netrc (0.11.0)
+    rest-client (1.8.0)
+      http-cookie (>= 1.0.2, < 2.0)
+      mime-types (>= 1.16, < 3.0)
+      netrc (~> 0.7)
     safe_yaml (1.0.4)
-    webmock (1.21.0)
+    unf (0.1.4)
+      unf_ext
+    unf_ext (0.0.7.2)
+    webmock (1.24.2)
       addressable (>= 2.3.6)
       crack (>= 0.3.2)
+      hashdiff
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
-  addressable (~> 2.3.5)
-  facter (~> 1.7.3)
+  addressable
+  facter
   gssapi
-  highline (~> 1.6.19)
+  highline
   http
-  httparty (~> 0.11.0)
-  json (~> 1.7.7)
+  httparty
+  json
   minitest
   minitest-stub_any_instance
-  rest-client (~> 1.6.7)
-  webmock (~> 1.21.0)
+  rest-client
+  webmock
