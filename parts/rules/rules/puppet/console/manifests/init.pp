@@ -2,6 +2,10 @@ class console {
   include packages
 
   file {
+    '/etc/default/console-setup':
+      content => template('console/console-setup.default'),
+      require => Package['console-setup'];
+
     '/etc/init/ttyS0.conf':
       content => template('console/ttyS0.conf');
 
@@ -10,5 +14,6 @@ class console {
       require => Package['puavo-conf'];
   }
 
+  Package <| title == console-setup |>
   Package <| title == puavo-conf |>
 }

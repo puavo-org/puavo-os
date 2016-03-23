@@ -16,6 +16,7 @@ class packages {
 
   @package {
     [ 'cpufreqd'
+    , 'console-setup'
     , 'elinks'
     , 'ethtool'
     , 'expect'
