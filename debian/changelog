@@ -1,3 +1,30 @@
+puavo-os (0.7.0~rc3+31764c6149feb2fdf2bdc8947a8afe4b43f88fa7) jessie; urgency=medium
+
+  * New release
+  * parts/ltsp: client/darkdm: fix help messages
+  * parts/ltsp: client/darkdm: add build command
+  * parts/ltsp: client/darkdm: add poweroff command
+  * parts/ltsp: client/darkdm: add update command
+  * parts/ltsp: client/darkdm: remove the annoying cowsay
+  * parts/ltsp: client/darkdm: wait always 5 seconds before rebooting
+  * parts/ltsp: client/darkdm: prefix all functions with darkdm_
+  * parts/ltsp: client/darkdm: use /bin/sh instead of /bin/bash
+  * parts/ltsp: client/darkdm: return 1 if when functions fail
+  * parts/ltsp: client/darkdm: let it fail if prompt read fails
+  * parts/ltsp: client/darkdm: do not trap SIGINT, let it fail
+  * parts/ltsp: client/darkdm: style fix
+  * parts/ltsp: client/darkdm: move main code to main()
+  * parts/ltsp: client/darkdm: add install command
+  * parts/ltsp: client: darkdm: output error messages to stderr
+  * parts/ltsp: client: change vt only if it was parsed successfully
+  * parts/ltsp: client: fix tty number parsing
+  * parts/ltsp: client: fix syntax errors
+  * parts/ltsp: client: change the default mode to 'register'
+  * parts/ltsp: client: restart puavo-darkdm always
+  * Git(31764c6149feb2fdf2bdc8947a8afe4b43f88fa7)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Wed, 23 Mar 2016 08:45:10 +0200
+
 puavo-os (0.7.0~rc2+e0e617c99e62098e9c2ae742ba8d49c37ccf95a9) jessie; urgency=medium
 
   * New release
