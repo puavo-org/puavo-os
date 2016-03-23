@@ -2,7 +2,6 @@
 
 set -eu
 
-
 darkdm_reboot()
 {
     local i
@@ -80,6 +79,9 @@ darkdm_main()
     if [ -n "${tty_n}" ]; then
 	chvt "${tty_n}" || return 1
     fi
+
+    export LANG=en_US.UTF-8
+    setupcon
 
     darkdm_print_help
 
