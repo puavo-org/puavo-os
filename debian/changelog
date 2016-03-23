@@ -1,3 +1,13 @@
+puavo-os (0.7.0~rc4+f551e77f6dfe61c92d0207fe6e429f54bda285dc) jessie; urgency=medium
+
+  * New release
+  * parts/client: unbind Gemfile versions and update Gemfile.lock
+  * parts/ltsp: client/darkdm: use /bin/bash
+  * parts/ltsp: remove old screen scripts
+  * Git(f551e77f6dfe61c92d0207fe6e429f54bda285dc)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Wed, 23 Mar 2016 10:47:03 +0200
+
 puavo-os (0.7.0~rc3+31764c6149feb2fdf2bdc8947a8afe4b43f88fa7) jessie; urgency=medium
 
   * New release
