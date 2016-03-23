@@ -1,7 +1,0 @@
-#!/bin/sh
-
-# Lightdm starts from Upstart, but we need a dummy script so that
-# /usr/share/ltsp/screen_session keeps distracted.
-while true; do
-  read answer
-done

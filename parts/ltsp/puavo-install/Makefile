@@ -31,7 +31,6 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/icons/hicolor/scalable/status
 	mkdir -p $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES
 	mkdir -p $(DESTDIR)$(datarootdir)/locale/sv/LC_MESSAGES
-	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/screen.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-install
 	mkdir -p $(DESTDIR)$(libdir)/puavo-ltsp-install
 	mkdir -p $(DESTDIR)$(sbindir)
@@ -71,18 +70,12 @@ install : installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/locale/sv/LC_MESSAGES \
 		po/sv/puavo-client-updater-applet.mo
 
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/ltsp/screen.d \
-		screen.d/ltspimage-update \
-		screen.d/register
-
 	cp -R preseeds $(DESTDIR)$(datarootdir)/puavo-ltsp-install/
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-install \
 		lib/is-update-available \
 		lib/ls-old-images \
 		lib/puavo-image-preinst \
-		lib/screen-ltspimage-update \
-		lib/screen-register \
 		lib/update-configuration \
 		lib/update-images \
 		lib/update-ltspimage-update-stats
