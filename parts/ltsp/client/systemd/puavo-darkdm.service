@@ -1,6 +1,6 @@
 [Unit]
 Description=Puavo OS Command Shell
-Conflicts=graphical.target
+Conflicts=graphical.target getty@tty6.service
 After=multi-user.target
 Requires=multi-user.target
 
@@ -8,7 +8,7 @@ Requires=multi-user.target
 ExecStart=/usr/lib/puavo-ltsp-client/darkdm
 StandardInput=tty
 StandardOutput=tty
-TTYPath=/dev/tty8
+TTYPath=/dev/tty6
 TTYReset=yes
 TTYVHangup=yes
 Restart=always
