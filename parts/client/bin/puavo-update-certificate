@@ -1,88 +1,35 @@
 #!/usr/bin/ruby
 
-require 'net/https'
-require "socket"
-require 'openssl'
-require 'highline/import'
-require 'json'
-require 'resolv'
+require "openssl"
+require "puavo/rest-client"
 
 certificate_private_key = "/etc/puavo/certs/host.key"
 certificate_file = "/etc/puavo/certs/host.crt"
 orgcabundle_file = "/etc/puavo/certs/orgcabundle.pem"
 hostorgcabundle_file = "/etc/puavo/certs/hostorgcabundle.pem"
 
-def resolv_puavo_server
-  if @ubuntu_release == "lucid"
-    begin
-      Resolv::DNS.open do |dns|
-        r = dns.getresources( "_puavo._tcp",
-                              Resolv::DNS::Resource::IN::SRV )
-        "https://" + r[0].target.to_s
-      end
-    rescue StandardError => e
-      puts "Could not lookup default puavoserver. (#{ e })"
-      puts "Usage: puavo-update-certificate https://<server hostname>"
-      exit
-    end
-  else
-    PUAVO_ETC.resolve_puavo_url
-  end
-end
+cert = OpenSSL::X509::Certificate.new( File.read(certificate_file) )
 
-def hostname
-  Socket.gethostname
-end
-
-def detect_ubuntu_release
-  issue = File.open("/etc/issue.net").readlines.first.strip
-  ubuntu_version = issue.match(/^Ubuntu ([0-9\.]+)/)[1]
-  case ubuntu_version
-  when /^10.04/
-    "lucid"
-  when /^12.10/
-    "quantal"
-  else
-    "unknow"
-  end
-end
-
-@ubuntu_release = detect_ubuntu_release
-
-require "puavo/etc" if @ubuntu_release != "lucid"
-
-puavo_server = ( ARGV[0] || resolv_puavo_server ).strip
-
-HighLine.say "\nUpdate certificate for Puavo device\n\n"
-HighLine.say "Puavo server: #{ puavo_server }"
-@username = HighLine.ask("Username: [admin] ").strip
-@username = "admin" if @username.empty?
-@password = HighLine.ask("Password: ") { |q| q.echo = '*' }.strip
-
-# Read old private key
-key_pem = File.read certificate_private_key
-@key = OpenSSL::PKey::RSA.new key_pem
-@csr = OpenSSL::X509::Request.new
-@csr.version = 0
-@csr.public_key = @key.public_key
-
-begin
-  server_uri = URI(puavo_server)
-  @http              = Net::HTTP.new(server_uri.host, server_uri.port)
-  @http.use_ssl      = server_uri.scheme == "https"
-  @http.ca_path      = '/etc/ssl/certs'
-  @http.verify_mode  = OpenSSL::SSL::VERIFY_PEER
-  @http.verify_depth = 5
-  request = Net::HTTP::Post.new( "/api/v2/hosts/sign_certificate",
-                                 { 'Content-Type' => 'application/json' })
-  request.basic_auth(@username, @password)
-  response = @http.request( request,
-                            { "hostname" => hostname,
-                              "host_certificate_request" => @csr.to_pem }.to_json )
-rescue Errno::ECONNREFUSED
-  puts "Can't connect to puavo server (#{ puavo_server })"
+if (cert.not_after - 60 * 60 * 24 * 180) > Time.now
+  # Certificate is valid, not need to update
   exit
 end
+
+# Read old private key and create certificate request
+key_pem = File.read certificate_private_key
+key = OpenSSL::PKey::RSA.new key_pem
+csr = OpenSSL::X509::Request.new
+csr.version = 0
+csr.public_key = key.public_key
+
+client = PuavoRestClient.new( :auth => :etc,
+                              :dns => :no )
+
+response = client.post("/v3/hosts/certs/sign",
+                       :json => {
+                         "certificate_request" => csr.to_pem,
+                         "hostname" => Socket.gethostname
+                       })
 
 if response.code.to_i != 200
   puts "Unable to sign certificate"
@@ -91,25 +38,25 @@ if response.code.to_i != 200
   rescue Exception => e
     puts "Unable to parse response! (#{ e })"
   end
-  exit
+  exit 1
 end
 
 host = JSON.parse(response.body)
 
-if host["userCertificate"]
+if host["certificate"]
   puts "Update host certificate:"
 
   orgcabundle = File.open(orgcabundle_file).read
 
   puts "\t* " + certificate_file
-  File.open(certificate_file, 'w', 0400) { |f| f.print host["userCertificate"] }
+  File.open(certificate_file, 'w', 0400) { |f| f.print host["certificate"] }
   puts "\t* " + hostorgcabundle_file
-  File.open(hostorgcabundle_file, 'w', 0400) { |f| f.print host["userCertificate"] + orgcabundle }
+  File.open(hostorgcabundle_file, 'w', 0400) { |f| f.print host["certificate"] + orgcabundle }
 
   if File.directory?("/state/etc/puavo/certs")
     puts "\t* " + "/state" + certificate_file
-    File.open("/state" + certificate_file, 'w', 0400) { |f| f.print host["userCertificate"] }
+    File.open("/state" + certificate_file, 'w', 0400) { |f| f.print host["certificate"] }
     puts "\t* " + "/state" + hostorgcabundle_file
-    File.open("/state" + hostorgcabundle_file, 'w', 0400) { |f| f.print host["userCertificate"] + orgcabundle }
+    File.open("/state" + hostorgcabundle_file, 'w', 0400) { |f| f.print host["certificate"] + orgcabundle }
   end
 end
