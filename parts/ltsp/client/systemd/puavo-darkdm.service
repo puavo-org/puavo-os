@@ -1,9 +1,8 @@
 [Unit]
 Description=Puavo OS Command Shell
 Conflicts=graphical.target
-
-[Install]
-WantedBy=multi-user.target
+After=multi-user.target
+Requires=multi-user.target
 
 [Service]
 ExecStart=/usr/lib/puavo-ltsp-client/darkdm
