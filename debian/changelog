@@ -1,3 +1,12 @@
+puavo-os (0.8.0~rc2+86f672689d4978e822f35ffebf135384b0f1197c) jessie; urgency=medium
+
+  * New release
+  * parts/ltsp: client: disable ModemManager on fatclients
+  * parts/ltsp: client: disable NetworkManager on fatclients
+  * Git(86f672689d4978e822f35ffebf135384b0f1197c)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Thu, 24 Mar 2016 16:14:34 +0200
+
 puavo-os (0.8.0~rc1+7c7eaffa5fe2f1183277183c1bcc29967499deac) jessie; urgency=medium
 
   * New release
