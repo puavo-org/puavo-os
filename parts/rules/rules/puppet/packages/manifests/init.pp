@@ -137,6 +137,7 @@ class packages {
       tag => [ 'emulation', 'debian', ];
 
     [ 'firmware-b43-installer'
+    , 'firmware-iwlwifi'
     , 'firmware-linux'
     , 'firmware-linux-free'
     , 'firmware-linux-nonfree' ]:
