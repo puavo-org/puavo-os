@@ -2,5 +2,7 @@ deb http://<%= @mirror %><%= @mirror_path %>/debian <%= @lsbdistcodename %> main
 deb-src http://<%= @mirror %><%= @mirror_path %>/debian <%= @lsbdistcodename %> main contrib non-free
 deb http://<%= @mirror %><%= @mirror_path %>/debian <%= @lsbdistcodename %>-updates main contrib non-free
 deb-src http://<%= @mirror %><%= @mirror_path %>/debian <%= @lsbdistcodename %>-updates main contrib non-free
+deb http://<%= @mirror %><%= @mirror_path %>/debian <%= @lsbdistcodename %>-backports main contrib non-free
+deb-src http://<%= @mirror %><%= @mirror_path %>/debian <%= @lsbdistcodename %>-backports main contrib non-free
 deb http://<%= @securitymirror %><%= @securitymirror_path %>/ <%= @lsbdistcodename %>/updates main contrib non-free
 deb-src http://<%= @securitymirror %><%= @securitymirror_path %>/ <%= @lsbdistcodename %>/updates main contrib non-free
