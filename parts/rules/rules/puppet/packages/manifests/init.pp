@@ -569,8 +569,7 @@ class packages {
     , 'network-manager-pptp-gnome'
     , 'openprinting-ppds'
     , 'pcmciautils'
-    # , 'plymouth-theme-ubuntu-gnome-logo'	# not needed
-    # , 'plymouth-theme-ubuntu-gnome-text'	# not needed
+    , 'plymouth-themes'
     , 'printer-driver-c2esp'
     , 'printer-driver-foo2zjs'
     , 'printer-driver-min12xxw'
