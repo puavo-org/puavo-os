@@ -69,10 +69,20 @@ darkdm_build()
 
 darkdm_menu()
 {
+    local initial_command
     local command
 
+    initial_command=$1
+    shift
+
     while true; do
-	read -e -p "> " command
+	if [ -n "${initial_command}" ]; then
+	    echo "> ${initial_command}"
+	    command="${initial_command}"
+	    initial_command=
+	else
+	    read -e -p "> " command
+	fi
 
 	case "${command}" in
 	    'build')
@@ -102,6 +112,8 @@ darkdm_menu()
 
 darkdm_main()
 {
+    local hosttype
+    local initial_command
     local tty_dev
     local tty_n
 
@@ -117,7 +129,17 @@ darkdm_main()
 
     darkdm_print_help
 
-    darkdm_menu
+    hosttype=$(puavo-conf puavo.hosttype)
+    case "${hosttype}" in
+	unregistered)
+	    initial_command='install'
+	    ;;
+	*)
+	    initial_command=
+	    ;;
+    esac
+
+    darkdm_menu "${initial_command}"
 }
 
 darkdm_main
