@@ -263,10 +263,6 @@ class PuavoRestClient
     verbose_log_headers(headers)
 
     if @options[:timeout]
-      # Global timeout options for http.rb are super weird. The global is the
-      # sum of write, connect and read.
-      # See: https://github.com/httprb/http.rb/blob/b5e79661e5f440e64ab6c90e4a2e08e8764686f2/lib/http/timeout/global.rb#L13
-      # So divide the time out by 3 and pass it to options
       timeout = @options[:timeout] / 3.0
       http = HTTP.timeout(:global,
                           :write   => timeout,
