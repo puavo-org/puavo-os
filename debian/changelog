@@ -1,3 +1,12 @@
+puavo-os (0.7.0+f3ad80e2e84473b18eb88a3226b55cc49950e81f) jessie; urgency=medium
+
+  * New release
+  * parts/client: remove confusing comment
+  * parts/client: fix rest-client to match the newer http-gem API
+  * Git(f3ad80e2e84473b18eb88a3226b55cc49950e81f)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Thu, 24 Mar 2016 10:08:40 +0200
+
 puavo-os (0.7.0~rc7+26b49a090e10117daf2e113662cc10fccf099d01) jessie; urgency=medium
 
   * New release
