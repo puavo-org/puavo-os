@@ -67,23 +67,9 @@ darkdm_build()
     darkdm_poweroff
 }
 
-darkdm_main()
+darkdm_menu()
 {
     local command
-    local tty_dev
-    local tty_n
-
-    tty_dev=$(tty)
-    tty_n=$(echo "${tty_dev}" | sed -r -n 's|/dev/tty||p')
-
-    if [ -n "${tty_n}" ]; then
-	chvt "${tty_n}" || return 1
-    fi
-
-    export LANG=en_US.UTF-8
-    setupcon
-
-    darkdm_print_help
 
     while true; do
 	read -e -p "> " command
@@ -112,6 +98,26 @@ darkdm_main()
 		;;
 	esac
     done
+}
+
+darkdm_main()
+{
+    local tty_dev
+    local tty_n
+
+    tty_dev=$(tty)
+    tty_n=$(echo "${tty_dev}" | sed -r -n 's|/dev/tty||p')
+
+    if [ -n "${tty_n}" ]; then
+	chvt "${tty_n}" || return 1
+    fi
+
+    export LANG=en_US.UTF-8
+    setupcon
+
+    darkdm_print_help
+
+    darkdm_menu
 }
 
 darkdm_main
