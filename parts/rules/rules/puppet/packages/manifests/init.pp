@@ -659,6 +659,8 @@ class packages {
     , 'liferea'
     , 'openjdk-7-jdk'
     , 'openjdk-7-jre'
+    , 'openjdk-8-jdk'
+    , 'openjdk-8-jre'
     , 'php5-cli'
     , 'php5-sqlite'
     , 'sqlite3' ]:
