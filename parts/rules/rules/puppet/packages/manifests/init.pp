@@ -140,7 +140,8 @@ class packages {
     , 'firmware-iwlwifi'
     , 'firmware-linux'
     , 'firmware-linux-free'
-    , 'firmware-linux-nonfree' ]:
+    , 'firmware-linux-nonfree'
+    , 'firmware-ralink' ]:
       tag => [ 'firmware', 'debian', ];
 
     [ 'fontconfig'
