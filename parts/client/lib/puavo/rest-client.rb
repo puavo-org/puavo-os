@@ -254,46 +254,41 @@ class PuavoRestClient
   def client(host)
     headers = @headers.dup
 
+    # Add custom header overrides given by the user
+    headers.merge!(@header_overrides)
 
-    client_options = {}
+    http = HTTP.headers(headers)
+
+    verbose("Request headers:")
+    verbose_log_headers(headers)
+
     if @options[:timeout]
       # Global timeout options for http.rb are super weird. The global is the
       # sum of write, connect and read.
       # See: https://github.com/httprb/http.rb/blob/b5e79661e5f440e64ab6c90e4a2e08e8764686f2/lib/http/timeout/global.rb#L13
       # So divide the time out by 3 and pass it to options
       timeout = @options[:timeout] / 3.0
-      client_options[:timeout_options] = {
-        :write_timeout => timeout,
-        :connect_timeout => timeout,
-        :read_timeout => timeout
-      }
-      client_options[:timeout_class] = HTTP::Timeout::Global
+      http = HTTP.timeout(:global,
+                          :write   => timeout,
+                          :connect => timeout,
+                          :read    => timeout)
     end
-
-    _client = HTTP::Client.new(client_options)
 
     if @options[:auth] == :kerberos
       gsscli = GSSAPI::Simple.new(host, "HTTP")
       token = gsscli.init_context(nil, :delegate => true)
-      headers["authorization"] = "Negotiate #{Base64.strict_encode64(token)}"
+      http = http.auth("Negotiate #{Base64.strict_encode64(token)}")
     end
 
-    # Add custom header overrides given by the user
-    headers.merge!(@header_overrides)
-
-    _client = _client.with_headers(headers)
-    verbose("Request headers:")
-    verbose_log_headers(headers)
-
     if @options[:basic_auth]
-      _client = _client.basic_auth(@options[:basic_auth])
+      http = http.basic_auth(@options[:basic_auth])
     end
 
     if @options[:location]
-      _client = _client.follow
+      http = http.follow
     end
 
-    return _client
+    http
   end
 
 end
