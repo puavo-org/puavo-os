@@ -3,56 +3,20 @@
 require 'json'
 require 'shellwords'
 
-device = JSON.parse( File.read('/etc/puavo/device.json') )
+require 'puavo/conf'
 
-if device['xrandr_disable'] then
-  exit 0
-end
+puavoconf = Puavo::Conf.new
+
+exit 0 unless puavoconf.get('puavo.xrandr.enabled') == 'true'
+
+xrandr_args = Shellwords.shellwords(puavoconf.get('puavo.xrandr.args'))
+puavoconf.close
 
 connected_displays \
   = %x(xrandr -q).split("\n")                                               \
                  .map { |s| a = s.split; a[1] == "connected" ? a[0] : nil } \
                  .compact
 
-device['xrandr'].each do |xrandconf|
-  xrandr_args                = []
-  xrandr_direct_command_args = []
+system('xrandr', *xrandr_args)
 
-  command_spec = Hash[ * Shellwords.shellwords(xrandconf)      \
-                                   .map { |s| s.split('=',2) } \
-                                   .flatten ]
-
-  command_spec.each do |key, value|
-    case key
-      when 'command'
-        xrandr_direct_command_args = Shellwords.shellwords(value)
-      when 'dpi',
-           'mode',
-           'newmode',
-           'orientation',
-           'output',
-           'rate',
-           'reflect',
-           'rotate',
-           'size'
-        xrandr_args += [ "--#{ key }", Shellwords.shellwords(value) ].flatten
-    end
-  end
-
-  if ! xrandr_args.empty? then
-    if command_spec['output'] then
-      system('xrandr', * xrandr_args)
-    else
-      connected_displays.each do |display|
-	system('xrandr', '--output', display, * xrandr_args)
-      end
-    end
-  end
-
-  if ! xrandr_direct_command_args.empty? then
-    if xrandr_direct_command_args[0] == 'xrandr' then
-      xrandr_direct_command_args.slice!(0)
-    end
-    system('xrandr', * xrandr_direct_command_args)
-  end
-end
+exit $?.exitstatus
