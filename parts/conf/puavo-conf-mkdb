@@ -34,7 +34,10 @@
 
 require 'getoptlong'
 require 'json'
+
 require 'puavo/conf'
+require 'puavo/etc'
+require 'puavo/rest-client'
 
 def apply_parameter_filters(parameters, parameter_filters, lookup_fn)
     parameter_filters.each do |filter|
@@ -279,12 +282,9 @@ def get_parameter_overwrites_from_hwquirks(parameter_definitions)
 end
 
 def get_parameter_overwrites_from_puavo(parameter_definitions)
-    begin
-        device_json = IO.read('/etc/puavo/device.json')
-    rescue Errno::ENOENT
-        return {}
-    end
-    JSON.parse(device_json)['parameters'] or {}
+    hostname = PuavoEtc.new.get('hostname')
+    rest_client = PuavoRestClient.new
+    JSON.parse(rest_client.get("/v3/devices/#{hostname}/conf"))
 end
 
 def get_parameter_overwrites_from_localconf(parameter_definitions)
