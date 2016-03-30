@@ -11,4 +11,4 @@ if [ "${is_xbacklight_enabled}" = true ]; then
     fi
 fi
 
-true
+/usr/lib/puavo-ltsp-client/run-xrandr || true
