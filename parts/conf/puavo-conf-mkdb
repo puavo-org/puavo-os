@@ -224,7 +224,7 @@ Usage:
     puavo-conf-mkdb [--sources comma-separated-list-of-sources]
 
 By default the list of used sources is
-"hwquirks puavo localconf kernelargs"
+  #{SUPPORTED_SOURCES.join(',')}
 and these are the only available configuration sources.
 EOF
 end
