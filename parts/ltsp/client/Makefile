@@ -211,7 +211,6 @@ install : installdirs
 		puavo-configure-client \
 		puavo-dns-client \
 		puavo-dnssd-printer-client \
-		puavo-gtk-greeter \
 		puavo-handle-external-files-actions \
 		puavo-ltsp-init-nfs \
 		puavo-ltsp-login \
