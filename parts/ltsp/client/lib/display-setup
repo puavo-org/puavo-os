@@ -13,26 +13,3 @@ if [ -n "${X2GO_SESSION:-}" ]; then
 
     exit 0
 fi
-
-there_are_puavo_xrandr_settings() {
-  puavo_xrandr_settings=$(jq -r .device.xrandr "$PUAVO_SESSION_PATH" || true)
-  [ "$puavo_xrandr_settings" != "null" \
-    -a "$puavo_xrandr_settings" != "[]" \
-    -a "$puavo_xrandr_settings" != "" ]
-}
-
-puavo_hosttype="$(cat /etc/puavo/hosttype)"
-
-# If there are xrandr settings from puavo, setup user monitors.xml to match
-# those if there are no custom settings.  But with fatclients/ltspservers we do
-# not respect those, because they are meant to be host specific, and user
-# home directories are not.
-
-if [ "$puavo_hosttype" != "laptop" ]; then
-  rm -f ~/.config/monitors.xml
-fi
-
-if there_are_puavo_xrandr_settings; then
-  # creates ~/.config/monitors.xml to match the current display settings
-  /usr/lib/puavo-ltsp-client/create_monitors_xml
-fi
