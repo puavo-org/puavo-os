@@ -1,1 +1,8 @@
-/usr/lib/puavo-ltsp-client/display-setup
+if [ -n "${X2GO_SESSION:-}" ]; then
+    x2go_session_display_geometry=$(perl -F, -ane 'for (@F) { /^geometry=(.*)$/ && print $1 }' \
+	"~/.x2go/C-${X2GO_SESSION}/options")
+
+    if [ -n "${x2go_session_display_geometry}" ]; then
+        xrandr --output default --mode "${x2go_session_display_geometry}"
+    fi
+fi
