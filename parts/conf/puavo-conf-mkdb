@@ -282,9 +282,14 @@ def get_parameter_overwrites_from_hwquirks(parameter_definitions)
 end
 
 def get_parameter_overwrites_from_puavo(parameter_definitions)
-    hostname = PuavoEtc.new.get('hostname')
-    rest_client = PuavoRestClient.new
-    JSON.parse(rest_client.get("/v3/devices/#{hostname}/conf"))
+    begin
+      hostname = PuavoEtc.new.get('hostname')
+      rest_client = PuavoRestClient.new
+      JSON.parse(rest_client.get("/v3/devices/#{hostname}/conf"))
+    rescue StandardError => e
+      logerr("Failed to get configuration from Puavo: #{e.message}")
+      {}
+    end
 end
 
 def get_parameter_overwrites_from_localconf(parameter_definitions)
