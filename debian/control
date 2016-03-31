@@ -377,7 +377,7 @@ Architecture: all
 Depends: ${misc:Depends},
  bridge-utils,
  crda,
- hostapd (>= 2.1),
+ hostapd (>= 2.5-0+opinsys2),
  isc-dhcp-client,
  iproute2,
  iw,
