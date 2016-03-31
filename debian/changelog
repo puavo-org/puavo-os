@@ -1,3 +1,20 @@
+puavo-os (0.8.0~rc3+5d57e5a0b566f05a7b418724337d7579c9474675) jessie; urgency=medium
+
+  * New release
+  * parts/wlan: ap: depend on specific IAPP-patched version of hostapd
+  * parts/ltsp: client: remove so far unused puavo.mode parameter
+  * parts/conf: avoid duplication
+  * parts/ltsp: client: inline xsession display setup
+  * parts/ltsp: client: apply xrandr configuration on lightdm startup
+  * parts/conf: get parameter overrides from Puavo
+  * parts/ltsp: client: move puavo-gtk-greeter to lib/
+  * parts/ltsp: client: use puavo-conf to convey xrandr conf
+  * parts/ltsp: client: fix shell variable expansion
+  * parts/ltsp: client: remove the remnants fo monitors.xml hack
+  * Git(5d57e5a0b566f05a7b418724337d7579c9474675)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Thu, 31 Mar 2016 12:59:39 +0300
+
 puavo-os (0.8.0~rc2+86f672689d4978e822f35ffebf135384b0f1197c) jessie; urgency=medium
 
   * New release
