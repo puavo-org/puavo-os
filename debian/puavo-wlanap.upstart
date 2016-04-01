@@ -1,8 +1,0 @@
-description "Puavo's Tunneled WLAN Access Point"
-
-start on (local-filesystems and net-device-up IFACE!=lo)
-
-exec puavo-wlanap
-
-respawn
-respawn limit 3 30
