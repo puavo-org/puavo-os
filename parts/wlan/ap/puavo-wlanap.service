@@ -1,0 +1,10 @@
+[Unit]
+Description=Puavo WLAN Access Point
+After=network.target
+Wants=network.target
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+ExecStart=/usr/sbin/puavo-wlanap

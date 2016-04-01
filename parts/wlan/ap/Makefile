@@ -15,4 +15,7 @@ install:
 	install -D -m 755 puavo-wlanap-dhclient-script \
 		'$(DESTDIR)$(prefix)/sbin/puavo-wlanap-dhclient-script'
 
+	install -D -m 644 -t '$(DESTDIR)/lib/systemd/system' \
+		puavo-wlanap.service
+
 .PHONY: all clean install
