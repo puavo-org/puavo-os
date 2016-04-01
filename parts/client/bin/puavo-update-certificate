@@ -1,6 +1,7 @@
 #!/usr/bin/ruby
 
 require "openssl"
+require "syslog"
 require "puavo/rest-client"
 
 certificate_private_key = "/etc/puavo/certs/host.key"
@@ -8,12 +9,22 @@ certificate_file = "/etc/puavo/certs/host.crt"
 orgcabundle_file = "/etc/puavo/certs/orgcabundle.pem"
 hostorgcabundle_file = "/etc/puavo/certs/hostorgcabundle.pem"
 
+def syslog(channel, priority, *args)
+  Syslog.log(priority, *args)
+  channel.printf(*args)
+end
+
+def log(*args)   ; syslog(STDOUT, *args); end
+def logerr(*args); syslog(STDERR, *args); end
+
 cert = OpenSSL::X509::Certificate.new( File.read(certificate_file) )
 
 if (cert.not_after - 60 * 60 * 24 * 180) > Time.now
   # Certificate is valid, not need to update
   exit
 end
+
+Syslog.open(File.basename($0), Syslog::LOG_CONS)
 
 # Read old private key and create certificate request
 key_pem = File.read certificate_private_key
@@ -32,11 +43,11 @@ response = client.post("/v3/hosts/certs/sign",
                        })
 
 if response.code.to_i != 200
-  puts "Unable to sign certificate"
+  logerr(Syslog::LOG_ERR, "Unable to sign certificate\n")
   begin
-    puts "ERROR: " + JSON.parse(response.body)["error"]
+    logerr(Syslog::LOG_ERR, "ERROR: %s\n", JSON.parse(response.body)["error"])
   rescue Exception => e
-    puts "Unable to parse response! (#{ e })"
+    logerr(Syslog::LOG_ERR, "Unable to parse response! (%s)\n", e)
   end
   exit 1
 end
@@ -44,25 +55,27 @@ end
 host = JSON.parse(response.body)
 
 if host["certificate"]
-  puts "Update host certificate:"
+  log(Syslog::LOG_INFO, "Update host certificate\n")
 
   orgcabundle = File.open(orgcabundle_file).read
 
   File.open(certificate_file + ".tmp", 'w', 0400) { |f| f.print host["certificate"] }
   File.open(hostorgcabundle_file + ".tmp", 'w', 0400) { |f| f.print host["certificate"] + orgcabundle }
 
-  puts "\t* " + certificate_file
+  log(Syslog::LOG_INFO, "Write: %s\n", certificate_file)
   File.rename(certificate_file + ".tmp", certificate_file)
-  puts "\t* " + hostorgcabundle_file
+  log(Syslog::LOG_INFO, "Write: %s\n", hostorgcabundle_file)
   File.rename(hostorgcabundle_file + ".tmp", hostorgcabundle_file)
 
   if File.directory?("/state/etc/puavo/certs")
     File.open("/state" + certificate_file + ".tmp", 'w', 0400) { |f| f.print host["certificate"] }
     File.open("/state" + hostorgcabundle_file + ".tmp", 'w', 0400) { |f| f.print host["certificate"] + orgcabundle }
 
-    puts "\t* " + "/state" + certificate_file
+    log(Syslog::LOG_INFO, "Write: %s\n", "/state" + certificate_file)
     File.rename("/state" + certificate_file + ".tmp", "/state" + certificate_file)
-    puts "\t* " + "/state" + hostorgcabundle_file
+    log(Syslog::LOG_INFO, "Write: %s\n", "/state" + hostorgcabundle_file)
     File.rename("/state" + hostorgcabundle_file + ".tmp", "/state" + hostorgcabundle_file)
   end
 end
+
+Syslog.close()
