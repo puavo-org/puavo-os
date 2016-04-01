@@ -704,6 +704,9 @@ class packages {
     # , 'xexit' ]:                      # XXX not yet packaged for Debian
       tag => [ 'misc', 'puavo', ];
 
+    'vtun':
+      ensure => '3.0.2-5+trusty.amd64+master.531cf0dbc32b3c20a22e783612e968055ffb1d1e';
+
     # XXX not yet packaged for Debian
     # [ 'dymo-cups-drivers' ]:
     #   tag => [ 'printing', 'puavo', ];
