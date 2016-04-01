@@ -7,4 +7,4 @@ Wants=network.target
 WantedBy=multi-user.target
 
 [Service]
-ExecStart=/usr/sbin/puavo-wlanap
+ExecStart=#FILLED BY MAKEFILE DURING INSTALL
