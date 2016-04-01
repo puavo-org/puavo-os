@@ -48,15 +48,21 @@ if host["certificate"]
 
   orgcabundle = File.open(orgcabundle_file).read
 
+  File.open(certificate_file + ".tmp", 'w', 0400) { |f| f.print host["certificate"] }
+  File.open(hostorgcabundle_file + ".tmp", 'w', 0400) { |f| f.print host["certificate"] + orgcabundle }
+
   puts "\t* " + certificate_file
-  File.open(certificate_file, 'w', 0400) { |f| f.print host["certificate"] }
+  File.rename(certificate_file + ".tmp", certificate_file)
   puts "\t* " + hostorgcabundle_file
-  File.open(hostorgcabundle_file, 'w', 0400) { |f| f.print host["certificate"] + orgcabundle }
+  File.rename(hostorgcabundle_file + ".tmp", hostorgcabundle_file)
 
   if File.directory?("/state/etc/puavo/certs")
+    File.open("/state" + certificate_file + ".tmp", 'w', 0400) { |f| f.print host["certificate"] }
+    File.open("/state" + hostorgcabundle_file + ".tmp", 'w', 0400) { |f| f.print host["certificate"] + orgcabundle }
+
     puts "\t* " + "/state" + certificate_file
-    File.open("/state" + certificate_file, 'w', 0400) { |f| f.print host["certificate"] }
+    File.rename("/state" + certificate_file + ".tmp", "/state" + certificate_file)
     puts "\t* " + "/state" + hostorgcabundle_file
-    File.open("/state" + hostorgcabundle_file, 'w', 0400) { |f| f.print host["certificate"] + orgcabundle }
+    File.rename("/state" + hostorgcabundle_file + ".tmp", "/state" + hostorgcabundle_file)
   end
 end
