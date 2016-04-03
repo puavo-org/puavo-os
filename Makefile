@@ -15,13 +15,13 @@ apt-get-build-dep:
 
 jessie-amd64-rootfs:
 	debootstrap --arch=amd64 --include=devscripts \
-		jessie jessie-amd64-rootfs.tmp $(mirror)
+		jessie jessie-amd64-rootfs.tmp '$(mirror)'
 	git clone . jessie-amd64-rootfs.tmp/opt/puavo-os
 	mv jessie-amd64-rootfs.tmp jessie-amd64-rootfs
 
 debs: release
 	dpkg-buildpackage -b -uc
-	parts/devscripts/bin/cp-changes "$(changes_file)" debs
+	parts/devscripts/bin/cp-changes '$(changes_file)' debs
 	@echo Done.
 
 release:
