@@ -194,6 +194,10 @@ def update_puavopkg_installers(restclient)
   run('puavo-pkg-updater',  '--update-installers')
 end
 
+def update_certificate(restclient)
+  run('puavo-update-certificate')
+end
+
 Syslog.open(File.basename($0), Syslog::LOG_CONS)
 
 restclient = PuavoRestClient.new(:auth => :etc, :timeout => 30)
@@ -214,6 +218,7 @@ update_functions = [
   :update_wlan_configurations,
   :update_grub_environment,
   :update_puavopkg_installers,
+  :update_certificate,
 ]
 
 exitcode = 0
