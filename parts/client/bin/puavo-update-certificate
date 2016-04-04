@@ -55,26 +55,28 @@ end
 host = JSON.parse(response.body)
 
 if host["certificate"]
-  log(Syslog::LOG_INFO, "Update host certificate\n")
+  log(Syslog::LOG_INFO, "Updating host certificate\n")
 
   orgcabundle = File.open(orgcabundle_file).read
 
   File.open(certificate_file + ".tmp", 'w', 0400) { |f| f.print host["certificate"] }
   File.open(hostorgcabundle_file + ".tmp", 'w', 0400) { |f| f.print host["certificate"] + orgcabundle }
 
-  log(Syslog::LOG_INFO, "Write: %s\n", certificate_file)
   File.rename(certificate_file + ".tmp", certificate_file)
-  log(Syslog::LOG_INFO, "Write: %s\n", hostorgcabundle_file)
+  log(Syslog::LOG_INFO, "Wrote %s\n", certificate_file)
+
   File.rename(hostorgcabundle_file + ".tmp", hostorgcabundle_file)
+  log(Syslog::LOG_INFO, "Wrote %s\n", hostorgcabundle_file)
 
   if File.directory?("/state/etc/puavo/certs")
     File.open("/state" + certificate_file + ".tmp", 'w', 0400) { |f| f.print host["certificate"] }
     File.open("/state" + hostorgcabundle_file + ".tmp", 'w', 0400) { |f| f.print host["certificate"] + orgcabundle }
 
-    log(Syslog::LOG_INFO, "Write: %s\n", "/state" + certificate_file)
     File.rename("/state" + certificate_file + ".tmp", "/state" + certificate_file)
-    log(Syslog::LOG_INFO, "Write: %s\n", "/state" + hostorgcabundle_file)
+    log(Syslog::LOG_INFO, "Wrote %s\n", "/state" + certificate_file)
+
     File.rename("/state" + hostorgcabundle_file + ".tmp", "/state" + hostorgcabundle_file)
+    log(Syslog::LOG_INFO, "Wrote %s\n", "/state" + hostorgcabundle_file)
   end
 end
 
