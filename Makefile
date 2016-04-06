@@ -4,6 +4,15 @@ mirror :=
 
 all:
 
+help:
+	@echo 'Puavo OS Build System'
+	@echo
+	@echo 'Targets:'
+	@echo '    deb-pkg-install-deps  -  install build dependencies of Debian packages (requires root)'
+	@echo '    deb-pkg               -  build Debian packages'
+	@echo '    release               -  make release commit'
+	@echo '    rootfs                -  build Puavo OS root filesystem directory (requires root)'
+
 deb-pkg-install-deps:
 	mk-build-deps -i -t "apt-get --yes --force-yes" -r debian/control
 
@@ -23,4 +32,5 @@ release:
 .PHONY: all                           \
         apt-get-build-dep             \
         debs                          \
+        help                          \
         release
