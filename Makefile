@@ -12,7 +12,7 @@ rootfs:
 	git clone . rootfs.tmp/opt/puavo-os
 	mv rootfs.tmp rootfs
 
-debs: release
+deb-pkg: release
 	dpkg-buildpackage -b -uc
 	parts/devscripts/bin/cp-changes '$(changes_file)' debs
 	@echo Done.
