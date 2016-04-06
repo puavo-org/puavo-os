@@ -24,7 +24,6 @@ rootfs:
 deb-pkg: release
 	dpkg-buildpackage -b -uc
 	parts/devscripts/bin/cp-changes '$(changes_file)' debs
-	@echo Done.
 
 release:
 	@parts/devscripts/bin/git-update-debian-changelog
