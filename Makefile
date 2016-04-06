@@ -1,6 +1,6 @@
 changes_file = $(shell dpkg-parsechangelog -SSource)_$(shell dpkg-parsechangelog -SVersion)_$(shell dpkg-architecture -qDEB_BUILD_ARCH).changes
 
-mirror := $(shell awk '/^\s*deb .+ jessie main.*$$/ {print $$2; exit}' /etc/apt/sources.list 2>/dev/null)
+rootfs_mirror := $(shell awk '/^\s*deb .+ jessie main.*$$/ {print $$2; exit}' /etc/apt/sources.list 2>/dev/null)
 
 all:
 
@@ -17,7 +17,7 @@ deb-pkg-install-deps:
 	mk-build-deps -i -t "apt-get --yes --force-yes" -r debian/control
 
 rootfs:
-	debootstrap --arch=amd64 --include=devscripts jessie rootfs.tmp '$(mirror)'
+	debootstrap --arch=amd64 --include=devscripts jessie rootfs.tmp '$(rootfs_mirror)'
 	git clone . rootfs.tmp/opt/puavo-os
 	mv rootfs.tmp rootfs
 
