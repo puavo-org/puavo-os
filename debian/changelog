@@ -1,3 +1,29 @@
+puavo-os (0.9.0~rc1+05f317ae935560fc27dbdabf42ea815436bb0e83) jessie; urgency=medium
+
+  * New release
+  * make: move .changes to debs instead of copying it
+  * parts/devscripts: add script for moving .changes file and its
+    references
+  * make: build all in the default target
+  * make: build rootfs to /var/tmp/puavo-os/rootfs by default
+  * make: rename variable: mirror => rootfs_mirror
+  * parts/ltsp: client: start puavo-darkdm.service by multi-user.target
+  * make: get default rootfs mirror from host's APT sources
+  * make: rename .PHONY targets
+  * make: build debian packages only once for each release
+  * make: remove useless progress message
+  * make: add help target
+  * make: rename target apt-get-build-dep => deb-pkg-install-deps
+  * make: rename target debs => deb-pkg
+  * make: rename jessie-amd64-rootfs => rootfs
+  * make: change mirror variable to simple expanded variable
+  * make: remove clean and install targets
+  * Fix quoting in Makefile recipes
+  * Add jessie-amd64-rootfs target to top-level Makefile
+  * Git(05f317ae935560fc27dbdabf42ea815436bb0e83)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Wed, 06 Apr 2016 22:37:23 +0300
+
 puavo-os (0.8.0+448d8c3b1fc541b053df16d9435ece92d5b1aa2c) jessie; urgency=medium
 
   * New release
