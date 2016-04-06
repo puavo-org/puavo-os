@@ -4,7 +4,7 @@ mirror :=
 
 all:
 
-apt-get-build-dep:
+deb-pkg-install-deps:
 	mk-build-deps -i -t "apt-get --yes --force-yes" -r debian/control
 
 rootfs:
