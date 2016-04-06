@@ -1,4 +1,4 @@
-changes_file = ../$(shell dpkg-parsechangelog -SSource)_$(shell dpkg-parsechangelog -SVersion)_$(shell dpkg-architecture -qDEB_BUILD_ARCH).changes
+changes_file = $(shell dpkg-parsechangelog -SSource)_$(shell dpkg-parsechangelog -SVersion)_$(shell dpkg-architecture -qDEB_BUILD_ARCH).changes
 
 mirror :=
 
@@ -22,8 +22,8 @@ rootfs:
 	mv rootfs.tmp rootfs
 
 deb-pkg: release
-	dpkg-buildpackage -b -uc
-	parts/devscripts/bin/cp-changes '$(changes_file)' debs
+	test -e '../$(changes_file)' || dpkg-buildpackage -b -uc
+	test -e 'debs/$(changes_file)' || parts/devscripts/bin/cp-changes '../$(changes_file)' debs
 
 release:
 	@parts/devscripts/bin/git-update-debian-changelog
