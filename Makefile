@@ -3,7 +3,12 @@ changes_file = $(shell dpkg-parsechangelog -SSource)_$(shell dpkg-parsechangelog
 rootfs_dir    := /var/tmp/puavo-os/rootfs
 rootfs_mirror := $(shell awk '/^\s*deb .+ jessie main.*$$/ {print $$2; exit}' /etc/apt/sources.list 2>/dev/null)
 
-all:
+subdirs := parts
+
+all: $(subdirs)
+
+$(subdirs):
+	make -C $@
 
 help:
 	@echo 'Puavo OS Build System'
@@ -37,4 +42,5 @@ release:
 	deb-pkg			\
 	help			\
 	release			\
-	rootfs
+	rootfs			\
+	$(subdirs)
