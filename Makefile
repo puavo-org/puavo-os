@@ -7,11 +7,10 @@ all:
 apt-get-build-dep:
 	mk-build-deps -i -t "apt-get --yes --force-yes" -r debian/control
 
-jessie-amd64-rootfs:
-	debootstrap --arch=amd64 --include=devscripts \
-		jessie jessie-amd64-rootfs.tmp '$(mirror)'
-	git clone . jessie-amd64-rootfs.tmp/opt/puavo-os
-	mv jessie-amd64-rootfs.tmp jessie-amd64-rootfs
+rootfs:
+	debootstrap --arch=amd64 --include=devscripts jessie rootfs.tmp '$(mirror)'
+	git clone . rootfs.tmp/opt/puavo-os
+	mv rootfs.tmp rootfs
 
 debs: release
 	dpkg-buildpackage -b -uc
