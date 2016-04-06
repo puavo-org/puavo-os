@@ -32,7 +32,7 @@ $(rootfs_dir):
 
 deb-pkg: release
 	test -e '../$(changes_file)' || dpkg-buildpackage -b -uc
-	test -e 'debs/$(changes_file)' || parts/devscripts/bin/cp-changes '../$(changes_file)' debs
+	test -e 'debs/$(changes_file)' || parts/devscripts/bin/mv-changes '../$(changes_file)' debs
 
 release:
 	@parts/devscripts/bin/git-update-debian-changelog
