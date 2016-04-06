@@ -4,6 +4,9 @@ Conflicts=graphical.target getty@tty6.service
 After=multi-user.target
 Requires=multi-user.target
 
+[Install]
+WantedBy=multi-user.target
+
 [Service]
 ExecStart=/usr/lib/puavo-ltsp-client/darkdm
 StandardInput=tty

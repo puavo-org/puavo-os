@@ -78,6 +78,7 @@ installdirs :
 	mkdir -p $(DESTDIR)/var/lib/puavo-desktop/shared
 	mkdir -p $(DESTDIR)/var/lib/puavo-desktop/users
 	mkdir -p $(DESTDIR)/lib/systemd/system
+	mkdir -p $(DESTDIR)/lib/systemd/system/multi-user.target.wants
 
 .PHONY : install
 install : installdirs
@@ -296,6 +297,9 @@ install : installdirs
 
 	$(INSTALL_DATA) -t $(DESTDIR)/lib/systemd/system \
 		systemd/*
+
+	ln -fs -t $(DESTDIR)/lib/systemd/system/multi-user.target.wants \
+		../puavo-darkdm.service
 
 .PHONY : clean
 clean :
