@@ -28,6 +28,7 @@ install: bin/puavo-devscripts-env installdirs
 		bin/dpkg-diff-img \
 		bin/git-update-debian-changelog \
 		bin/log2db.kdc \
+		bin/mv-changes \
 		bin/puavo-build-debian-dir \
 		bin/puavo-dch \
 		bin/puavo-debuild \
