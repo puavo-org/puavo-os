@@ -28,8 +28,8 @@ deb-pkg: release
 release:
 	@parts/devscripts/bin/git-update-debian-changelog
 
-.PHONY: all                           \
-        apt-get-build-dep             \
-        debs                          \
-        help                          \
-        release
+.PHONY: all			\
+	deb-pkg-install-deps	\
+	deb-pkg			\
+	help			\
+	release
