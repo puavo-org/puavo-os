@@ -32,6 +32,9 @@ $(rootfs_dir):
 		>'$(rootfs_dir).tmp/etc/apt/sources.list.d/puavo-os.list'
 	mv '$(rootfs_dir).tmp' '$(rootfs_dir)'
 
+release:
+	@parts/devscripts/bin/git-update-debian-changelog
+
 debs/buildstamp: release
 	test -e 'debs/$(changes_file)' || {                                     \
 		dpkg-buildpackage -b -uc                                        \
@@ -45,9 +48,6 @@ debs/Packages.gz: debs/Packages
 	gzip -f -k $<
 
 deb-pkg: debs/Packages.gz
-
-release:
-	@parts/devscripts/bin/git-update-debian-changelog
 
 .PHONY: all			\
 	deb-pkg-install-deps	\
