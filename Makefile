@@ -27,7 +27,7 @@ rootfs: $(rootfs_dir)
 $(rootfs_dir):
 	mkdir -p '$(rootfs_dir).tmp'
 	debootstrap --arch=amd64 --include=devscripts jessie '$(rootfs_dir).tmp' '$(rootfs_mirror)'
-	git clone . '$(rootfs_dir).tmp/opt/puavo-os'
+	git clone . '$(rootfs_dir).tmp/usr/local/src/puavo-os'
 	mv '$(rootfs_dir).tmp' '$(rootfs_dir)'
 
 deb-pkg: release
