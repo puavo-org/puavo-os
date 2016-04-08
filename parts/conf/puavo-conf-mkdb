@@ -36,8 +36,6 @@ require 'getoptlong'
 require 'json'
 
 require 'puavo/conf'
-require 'puavo/etc'
-require 'puavo/rest-client'
 
 def apply_parameter_filters(parameters, parameter_filters, lookup_fn)
     parameter_filters.each do |filter|
@@ -283,6 +281,9 @@ end
 
 def get_parameter_overwrites_from_puavo(parameter_definitions)
     begin
+      require 'puavo/etc'
+      require 'puavo/rest-client'
+
       hostname = PuavoEtc.new.get('hostname')
       rest_client = PuavoRestClient.new
       JSON.parse(rest_client.get("/v3/devices/#{hostname}/conf"))
