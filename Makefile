@@ -30,9 +30,19 @@ $(rootfs_dir):
 	git clone . '$(rootfs_dir).tmp/usr/local/src/puavo-os'
 	mv '$(rootfs_dir).tmp' '$(rootfs_dir)'
 
-deb-pkg: release
-	test -e '../$(changes_file)' || dpkg-buildpackage -b -uc
-	test -e 'debs/$(changes_file)' || parts/devscripts/bin/mv-changes '../$(changes_file)' debs
+debs/buildstamp: release
+	test -e 'debs/$(changes_file)' || {                                     \
+		dpkg-buildpackage -b -uc                                        \
+		&& parts/devscripts/bin/cp-changes '../$(changes_file)' debs    \
+		&& touch debs/buildstamp; }
+
+debs/Packages: debs/buildstamp
+	apt-ftparchive packages debs >$@
+
+debs/Packages.gz: debs/Packages
+	gzip -f -k $<
+
+deb-pkg: debs/Packages.gz
 
 release:
 	@parts/devscripts/bin/git-update-debian-changelog
@@ -40,6 +50,7 @@ release:
 .PHONY: all			\
 	deb-pkg-install-deps	\
 	deb-pkg			\
+	deb-pkg-build		\
 	help			\
 	release			\
 	rootfs			\
