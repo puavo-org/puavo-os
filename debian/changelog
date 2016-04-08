@@ -1,3 +1,14 @@
+puavo-os (0.9.0~rc2+d432c7574d90042645ef2ac78959ccf78fd81f3a) jessie; urgency=medium
+
+  * New release
+  * make: refactor
+  * make: add local APT repository to rootfs APT sources
+  * make: re-build APT archive when deb packages are updated
+  * make: clone puavo-os to /usr/local/src instead of /opt
+  * Git(d432c7574d90042645ef2ac78959ccf78fd81f3a)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Fri, 08 Apr 2016 11:56:46 +0300
+
 puavo-os (0.9.0~rc1+05f317ae935560fc27dbdabf42ea815436bb0e83) jessie; urgency=medium
 
   * New release
