@@ -52,7 +52,6 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/cups
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/dbus-1/system.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/default
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/init
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/ldap
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/lightdm
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/network/if-up.d
@@ -90,9 +89,6 @@ install : installdirs
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp/init-puavo.d \
 		init-puavo.d/*-*
-
-	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/init \
-		templates/etc/init/gssd.conf-userprincipal
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc \
 		templates/etc/rsyslog.conf
@@ -236,17 +232,6 @@ install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/init.d \
 		etc/init.d/ltspssh \
 		etc/init.d/ltspguestssh
-
-	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/init \
-		upstart/lightdm.override \
-		upstart/ltspssh.conf \
-		upstart/ltspguestssh.conf \
-		upstart/puavo-kdump-plymouth-message.conf \
-		upstart/puavo-ltsp-client.conf \
-		upstart/puavo-monitor-nbd-connection.conf \
-		upstart/puavo-report-system-version.conf \
-		upstart/puavo-set-sane-date.conf \
-		upstart/puavo-sync-external-files.conf
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/NetworkManager/dispatcher.d \
 		etc/NetworkManager/dispatcher.d/dnssd-printers

@@ -1,4 +1,0 @@
-pre-start script
-    grep -q puavo_kdump_kernel /proc/cmdline && stop
-    exit 0
-end script

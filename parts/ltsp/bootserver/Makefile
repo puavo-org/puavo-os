@@ -18,7 +18,6 @@ all :
 installdirs :
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(sbindir)
-	mkdir -p $(DESTDIR)$(sysconfdir)/init
 	mkdir -p $(DESTDIR)$(sysconfdir)/logrotate.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/nginx/sites-available
 	mkdir -p $(DESTDIR)$(sysconfdir)/sudoers.d
@@ -26,7 +25,6 @@ installdirs :
 	mkdir -p $(DESTDIR)$(templatedir)/etc/bind
 	mkdir -p $(DESTDIR)$(templatedir)/etc/default
 	mkdir -p $(DESTDIR)$(templatedir)/etc/dhcp
-	mkdir -p $(DESTDIR)$(templatedir)/etc/init
 	mkdir -p $(DESTDIR)$(templatedir)/etc/init.d
 	mkdir -p $(DESTDIR)$(templatedir)/etc/network
 	mkdir -p $(DESTDIR)$(templatedir)/etc/pam.d
@@ -37,9 +35,6 @@ installdirs :
 
 .PHONY : install
 install : installdirs
-	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/init \
-		upstart/puavo-redirect-freenx.conf
-
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/logrotate.d \
 		etc/logrotate.d/hosts
 
