@@ -146,6 +146,7 @@ class packages {
 
     [ 'fontconfig'
     , 'ttf-freefont'
+    , 'ttf-ubuntu-font-family'
     , 'xfonts-utils' ]:
       tag => [ 'fonts', 'debian', ];
 
