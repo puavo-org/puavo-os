@@ -11,15 +11,6 @@ class autopoweroff {
       before  => Package['autopoweroff'],
       content => "",
       replace => false;         # do not replace, may be set at ltsp boot
-
-    '/etc/init.d/autopoweroff':
-      ensure  => link,
-      target  => '/lib/init/upstart-job',
-      require => File['/etc/init/autopoweroff.conf'];
-
-    '/etc/init/autopoweroff.conf':
-      content => template('autopoweroff/init_autopoweroff.conf'),
-      require => Package['autopoweroff'];
   }
 
   Package <| title == autopoweroff |>

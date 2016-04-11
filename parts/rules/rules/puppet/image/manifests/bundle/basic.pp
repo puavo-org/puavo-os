@@ -1,5 +1,5 @@
 class image::bundle::basic {
-  include # autopoweroff,	# XXX needs packaging for Debian
+  include autopoweroff,
 	  console,
 	  disable_suspend_by_tag,
 	  disable_suspend_on_halt,
