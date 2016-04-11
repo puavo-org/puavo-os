@@ -1,9 +1,0 @@
-CRON_FILE=/etc/cron.d/ltsp
-if ! /usr/bin/test -w "/etc/cron.d" ; then
-    echo "Warning: /etc/cron.d is not writeable."
-    return 1
-fi
-if [ -n "$SHUTDOWN_TIME" ] ; then
-    echo $SHUTDOWN_TIME | awk -F : '{print $2" "$1" * * * root test ! -S \"$(ls -1 /var/run/ldm_socket_* | head -1)\" && PATH=\$PATH:/sbin/ poweroff" }' >> $CRON_FILE
-fi
-env | sed -n 's/^CRONTAB_[0-9][0-9]=//p' >> $CRON_FILE

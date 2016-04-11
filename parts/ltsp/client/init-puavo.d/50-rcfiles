@@ -1,4 +1,0 @@
-# Sample rc.local may end with "exit 0", remove it if it's in the last line
-sed '${/^exit 0$/d;}' -i /etc/rc.local
-
-env | sed -n 's/^RCFILE_[0-9][0-9]=//p' >> /etc/rc.local
