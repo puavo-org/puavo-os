@@ -29,7 +29,6 @@ if [ -e /etc/puavo/domain -a -e /etc/puavo/hosttype ]; then
            > /etc/puavo/device.json.tmp; then
         mv /etc/puavo/device.json.tmp /etc/puavo/device.json
       fi
-      break
       ;;
     *)
       if curl --cacert /etc/puavo/certs/rootca.pem \
@@ -41,7 +40,6 @@ if [ -e /etc/puavo/domain -a -e /etc/puavo/hosttype ]; then
            > /etc/puavo/device.json.tmp; then
         mv /etc/puavo/device.json.tmp /etc/puavo/device.json
       fi
-      break
       ;;
   esac
 fi
