@@ -17,7 +17,7 @@ has_device_tag() {
     echo "system-db:locale-en"
   fi
 
-  PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
+  PUAVO_HOSTTYPE=$(puavo-conf puavo.hosttype)
   case "$PUAVO_HOSTTYPE" in
     laptop)
       echo "system-db:laptop"

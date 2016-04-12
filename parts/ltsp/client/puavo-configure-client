@@ -3,6 +3,7 @@
 require 'erb'
 require 'json'
 require 'fileutils'
+require 'puavo/conf'
 
 def delete_file(file)
   if File.exists?(file)
@@ -57,11 +58,9 @@ end
 
 @puavo_device_type = ARGV[0]
 
-if (!@puavo_device_type)
-  if File.exists?("/etc/puavo/hosttype")
-    @puavo_device_type = File.read('/etc/puavo/hosttype').chomp
-  end
-end
+@puavoconf = Puavo::Conf.new
+@puavo_device_type = @puavoconf.get('puavo.hosttype')
+@puavoconf.close
 
 @default_xsession = 'puavo-desktop-session'
 @device = {}

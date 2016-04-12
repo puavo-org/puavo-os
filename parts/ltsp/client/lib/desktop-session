@@ -5,7 +5,7 @@
 # so if you change the interpreter or the script name, please make sure to
 # change that as well.  Thank you!
 
-PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
+PUAVO_HOSTTYPE=$(puavo-conf puavo.hosttype)
 
 case "${PUAVO_HOSTTYPE}" in
   fatclient|laptop)

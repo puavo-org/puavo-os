@@ -28,7 +28,7 @@ is_mounted() {
           '
 }
 
-PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
+PUAVO_HOSTTYPE=$(puavo-conf puavo.hosttype)
 PUAVO_DOMAIN=$(cat /etc/puavo/domain)
 HOMEDIR_SERVER="homedir.${PUAVO_DOMAIN}"
 

@@ -7,11 +7,11 @@ if [ -n "$SERVER" ]; then
     # unregistered hosts), and puavo-resolve-api-server needs it, so this has
     # to be run after that.
     #
-    if [ -e /etc/puavo/domain -a -e /etc/puavo/hosttype ]; then
+    if [ -e /etc/puavo/domain ]; then
 	# set --max-time to 30 seconds to allow the boot to continue in case of
 	# failure; so we can check out later (with ssh or some such) what went wrong.
 
-	PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
+	PUAVO_HOSTTYPE=$(puavo-conf puavo.hosttype)
 
 	case "${PUAVO_HOSTTYPE}" in
 	    ltspserver)

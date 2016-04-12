@@ -1,4 +1,4 @@
-HOSTTYPE="$(cat /etc/puavo/hosttype)"
+HOSTTYPE="$(puavo-conf puavo.hosttype)"
 
 case "$HOSTTYPE" in
   ltspserver)
