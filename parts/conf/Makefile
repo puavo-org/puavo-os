@@ -29,7 +29,7 @@ install: installdirs
 	libtool --mode=install \
 		install libpuavoconf.la $(DESTDIR)$(libdir)
 	libtool --mode=install install puavo-conf $(DESTDIR)$(bindir)
-	install -t $(DESTDIR)$(sbindir) puavo-conf-mkdb
+	install -t $(DESTDIR)$(sbindir) puavo-conf-mkdb puavo-conf-daemon
 	install -m 644 -t $(DESTDIR)$(rubylibdir)/puavo conf.rb
 
 .PHONY: installdirs
