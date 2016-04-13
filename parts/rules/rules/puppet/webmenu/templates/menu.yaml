@@ -17,9 +17,9 @@ items:
   items:
   - source: eleet
     type: desktop
-  - source: gcalctool
+  - source: gnome-calculator
     type: desktop
-  - source: gedit
+  - source: org.gnome.gedit
     type: desktop
   - source: gucharmap
     type: desktop
@@ -32,7 +32,7 @@ items:
     type: desktop
   - source: gnome-search-tool
     type: desktop
-  - source: file-roller
+  - source: org.gnome.FileRoller
     type: desktop
   - source: gnome-terminal
     type: desktop
@@ -42,7 +42,7 @@ items:
     type: desktop
   - source: vino-preferences
     type: desktop
-  - source: gnome-screenshot
+  - source: org.gnome.Screenshot
     type: desktop
   - source: simplescreenrecorder
     type: desktop
@@ -103,13 +103,13 @@ items:
     de: Interent Programme
   osIcon: applications-internet
   items:
-  - source: firefox
+  - source: iceweasel
     type: desktop
-  - source: chromium-browser
+  - source: chromium
     type: desktop
   - source: google-chrome
     type: desktop
-  - source: thunderbird
+  - source: icedove
     type: desktop
   - source: evolution
     type: desktop
@@ -361,7 +361,7 @@ items:
     type: desktop
   - source: spotify
     type: desktop
-  - source: cheese
+  - source: org.gnome.Cheese
     type: desktop
     inactiveByDeviceType: thinclient
   - type: custom
