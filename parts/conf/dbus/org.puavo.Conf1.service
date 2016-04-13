@@ -1,0 +1,4 @@
+[D-BUS Service]
+Name=org.puavo.Conf1
+Exec=/usr/sbin/puavo-conf-daemon
+User=root
