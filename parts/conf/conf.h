@@ -138,8 +138,8 @@ int puavo_conf_set(puavo_conf_t *conf, char const *key, char const *value,
  *
  * Return 0 on success and -1 on error.
  */
-int puavo_conf_add(puavo_conf_t *conf, char const *key, char const *value,
-                   struct puavo_conf_err *errp);
+int puavo_conf_overwrite(puavo_conf_t *conf, char const *key, char const *value,
+                         struct puavo_conf_err *errp);
 
 /**
  * puavo_conf_add() - add a new parameter
