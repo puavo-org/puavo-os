@@ -644,3 +644,11 @@ int puavo_conf_check_type(char const *const value,
 
         return 0;
 }
+
+enum puavo_conf_conn puavo_conf_get_conn(puavo_conf_t const *const conf)
+{
+        if (conf->db)
+                return PUAVO_CONF_CONN_DB;
+
+        return PUAVO_CONF_CONN_DBUS;
+}

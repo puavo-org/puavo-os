@@ -277,4 +277,20 @@ int puavo_conf_check_type(char const *value,
                           enum puavo_conf_type type,
                           struct puavo_conf_err *errp);
 
+
+enum puavo_conf_conn {
+        PUAVO_CONF_CONN_DB,
+        PUAVO_CONF_CONN_DBUS
+};
+
+/**
+ * puavo_conf_get_conn() - get connection type
+ *
+ * Return PUAVO_CONF_CONN_DB if @conf is connected directly to the
+ * database or PUAVO_CONF_CONN_DBUS if @conf relies on DBus to
+ * communicate with the database manager.
+ *
+ */
+enum puavo_conf_conn puavo_conf_get_conn(puavo_conf_t const *conf);
+
 #endif /* CONF_H */
