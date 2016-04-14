@@ -135,7 +135,7 @@ static int puavo_conf_init(struct puavo_conf **const confp,
         return 0;
 }
 
-static int puavo_conf_open_db(struct puavo_conf *const conf,
+static int puavo_conf_db_open(struct puavo_conf *const conf,
                               struct puavo_conf_err *const errp)
 {
         DB *db = NULL;
@@ -207,7 +207,7 @@ err:
         return -1;
 }
 
-static int puavo_conf_open_dbus(struct puavo_conf *const conf,
+static int puavo_conf_dbus_open(struct puavo_conf *const conf,
                                 struct puavo_conf_err *const errp)
 {
         DBusConnection* dbus_conn;
@@ -245,7 +245,7 @@ int puavo_conf_open(struct puavo_conf **const confp,
                 return -1;
 
         /* Prioritize direct DB access ... */
-        if (puavo_conf_open_db(*confp, &err) == -1) {
+        if (puavo_conf_db_open(*confp, &err) == -1) {
                 if (errp)
                         memcpy(errp, &err, sizeof(err));
 
@@ -254,7 +254,7 @@ int puavo_conf_open(struct puavo_conf **const confp,
                          * database is already locked. It is most
                          * probably locked by our DBus-capable daemon
                          * summoned to help us. */
-                        retval = puavo_conf_open_dbus(*confp, errp);
+                        retval = puavo_conf_dbus_open(*confp, errp);
                 }
 
                 goto out;
@@ -270,7 +270,7 @@ out:
         return retval;
 }
 
-static int puavo_conf_close_db(struct puavo_conf *const conf,
+static int puavo_conf_db_close(struct puavo_conf *const conf,
                                struct puavo_conf_err *errp)
 {
         int ret = 0;
@@ -293,7 +293,7 @@ static int puavo_conf_close_db(struct puavo_conf *const conf,
         return ret;
 }
 
-static int puavo_conf_close_dbus(struct puavo_conf *const conf,
+static int puavo_conf_dbus_close(struct puavo_conf *const conf,
                                  struct puavo_conf_err *const errp  __attribute__ ((unused)))
 {
         dbus_connection_unref(conf->dbus_conn);
@@ -308,9 +308,9 @@ int puavo_conf_close(struct puavo_conf *const conf,
         int ret = 0;
 
         if (conf->db)
-                ret = puavo_conf_close_db(conf, errp);
+                ret = puavo_conf_db_close(conf, errp);
         else
-                ret = puavo_conf_close_dbus(conf, errp);
+                ret = puavo_conf_dbus_close(conf, errp);
 
         free(conf);
 
