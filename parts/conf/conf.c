@@ -317,9 +317,9 @@ int puavo_conf_close(struct puavo_conf *const conf,
         return ret;
 }
 
-int puavo_conf_get(struct puavo_conf *const conf,
-                   char const *const key, char **const valuep,
-                   struct puavo_conf_err *const errp)
+static int puavo_conf_db_get(struct puavo_conf *const conf,
+                             char const *const key, char **const valuep,
+                             struct puavo_conf_err *const errp)
 {
         DBT db_key;
         DBT db_value;
@@ -378,9 +378,16 @@ out:
         return ret;
 }
 
-int puavo_conf_set(struct puavo_conf *const conf,
-                   char const *const key, char const *const value,
+int puavo_conf_get(struct puavo_conf *const conf,
+                   char const *const key, char **const valuep,
                    struct puavo_conf_err *const errp)
+{
+        return puavo_conf_db_get(conf, key, valuep, errp);
+}
+
+static int puavo_conf_db_set(struct puavo_conf *const conf,
+                             char const *const key, char const *const value,
+                             struct puavo_conf_err *const errp)
 {
         DBT db_key;
         DBT db_value;
@@ -421,9 +428,16 @@ out:
         return ret;
 }
 
-int puavo_conf_overwrite(struct puavo_conf *const conf,
-                         char const *const key, char const *const value,
-                         struct puavo_conf_err *const errp)
+int puavo_conf_set(struct puavo_conf *const conf,
+                   char const *const key, char const *const value,
+                   struct puavo_conf_err *const errp)
+{
+        return puavo_conf_db_set(conf, key, value, errp);
+}
+
+static int puavo_conf_db_overwrite(struct puavo_conf *const conf,
+                                   char const *const key, char const *const value,
+                                   struct puavo_conf_err *const errp)
 {
         bool haskey;
 
@@ -439,9 +453,16 @@ int puavo_conf_overwrite(struct puavo_conf *const conf,
         return puavo_conf_set(conf, key, value, errp);
 }
 
-int puavo_conf_add(struct puavo_conf *const conf,
-                   char const *const key, char const *const value,
-                   struct puavo_conf_err *const errp)
+int puavo_conf_overwrite(struct puavo_conf *const conf,
+                         char const *const key, char const *const value,
+                         struct puavo_conf_err *const errp)
+{
+        return puavo_conf_db_overwrite(conf, key, value, errp);
+}
+
+static int puavo_conf_db_add(struct puavo_conf *const conf,
+                             char const *const key, char const *const value,
+                             struct puavo_conf_err *const errp)
 {
         bool haskey;
 
@@ -457,8 +478,15 @@ int puavo_conf_add(struct puavo_conf *const conf,
         return puavo_conf_set(conf, key, value, errp);
 }
 
-int puavo_conf_has_key(struct puavo_conf *const conf, char const *const key,
-                       bool *const haskey, struct puavo_conf_err *const errp)
+int puavo_conf_add(struct puavo_conf *const conf,
+                   char const *const key, char const *const value,
+                   struct puavo_conf_err *const errp)
+{
+        return puavo_conf_db_add(conf, key, value, errp);
+}
+
+static int puavo_conf_db_has_key(struct puavo_conf *const conf, char const *const key,
+                                 bool *const haskey, struct puavo_conf_err *const errp)
 {
         struct puavo_conf_err err;
 
@@ -478,9 +506,15 @@ int puavo_conf_has_key(struct puavo_conf *const conf, char const *const key,
         return -1;
 }
 
-int puavo_conf_get_all(struct puavo_conf *const conf,
-                       struct puavo_conf_list *const list,
-                       struct puavo_conf_err *const errp)
+int puavo_conf_has_key(struct puavo_conf *const conf, char const *const key,
+                       bool *const haskey, struct puavo_conf_err *const errp)
+{
+        return puavo_conf_db_has_key(conf, key, haskey, errp);
+}
+
+static int puavo_conf_db_get_all(struct puavo_conf *const conf,
+                                 struct puavo_conf_list *const list,
+                                 struct puavo_conf_err *const errp)
 {
         DBC *db_cursor = NULL;
         DBT db_null;
@@ -605,8 +639,15 @@ out:
         return ret;
 }
 
-int puavo_conf_clear(struct puavo_conf *const conf,
-                     struct puavo_conf_err *const errp)
+int puavo_conf_get_all(struct puavo_conf *const conf,
+                       struct puavo_conf_list *const list,
+                       struct puavo_conf_err *const errp)
+{
+        return puavo_conf_db_get_all(conf, list, errp);
+}
+
+static int puavo_conf_db_clear(struct puavo_conf *const conf,
+                               struct puavo_conf_err *const errp)
 {
         int db_error;
         unsigned int count;
@@ -619,6 +660,12 @@ int puavo_conf_clear(struct puavo_conf *const conf,
         }
 
         return 0;
+}
+
+int puavo_conf_clear(struct puavo_conf *const conf,
+                     struct puavo_conf_err *const errp)
+{
+        return puavo_conf_db_clear(conf, errp);
 }
 
 int puavo_conf_check_type(char const *const value,
