@@ -51,10 +51,10 @@ struct puavo_conf {
 };
 
 static void puavo_conf_err_set(struct puavo_conf_err *const errp,
-                              int const errnum,
-                              int const db_error,
-                              char const *const fmt,
-                              ...)
+                               int const errnum,
+                               int const db_error,
+                               char const *const fmt,
+                               ...)
 {
         char *msg;
         va_list ap;
@@ -178,7 +178,7 @@ static int puavo_conf_open_db(struct puavo_conf *const conf,
 
 
         db_error = db->open(db, NULL, db_filepath,
-                          NULL, DB_BTREE, DB_CREATE, 0600);
+                            NULL, DB_BTREE, DB_CREATE, 0600);
         if (db_error) {
                 puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DB, db_error,
                                    "Failed to open the db file '%s'",
@@ -446,7 +446,7 @@ int puavo_conf_get_all(struct puavo_conf *const conf,
 
                 /* Get the next batch of key-value pairs. */
                 db_error = db_cursor->get(db_cursor, &db_null, &db_batch,
-                                        DB_MULTIPLE_KEY | DB_NEXT);
+                                          DB_MULTIPLE_KEY | DB_NEXT);
                 switch (db_error) {
                 case 0:
                         break;
@@ -485,7 +485,7 @@ int puavo_conf_get_all(struct puavo_conf *const conf,
                         keys = new_keys;
 
                         new_values = realloc(values,
-                                           sizeof(char *) * (length + 1));
+                                             sizeof(char *) * (length + 1));
                         if (!new_values) {
                                 puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_SYS,
                                                    0, "Failed to get all "
