@@ -46,10 +46,29 @@
 static const size_t PUAVO_CONF_DEFAULT_DB_BATCH_SIZE = 1048576;
 static const char *const PUAVO_CONF_DEFAULT_DB_FILEPATH = "/run/puavo-conf.db";
 
+struct puavo_conf_ops {
+        int (*add)       (struct puavo_conf *, char const *,
+                          char const *, struct puavo_conf_err *);
+        int (*clear)     (struct puavo_conf *, struct puavo_conf_err *);
+        int (*close)     (struct puavo_conf *, struct puavo_conf_err *);
+        int (*get)       (struct puavo_conf *, char const *, char **,
+                          struct puavo_conf_err *);
+        int (*get_all)   (struct puavo_conf *, struct puavo_conf_list *,
+                          struct puavo_conf_err *);
+        int (*has_key)   (struct puavo_conf *, char const *, bool *,
+                          struct puavo_conf_err *);
+        int (*open)      (struct puavo_conf *, struct puavo_conf_err *);
+        int (*overwrite) (struct puavo_conf *, char const *,
+                          char const *, struct puavo_conf_err *);
+        int (*set)       (struct puavo_conf *, char const *,
+                          char const *, struct puavo_conf_err *);
+};
+
 struct puavo_conf {
         DB *db;
         DBusConnection *dbus_conn;
         int lock_fd;
+        struct puavo_conf_ops const *ops;
 };
 
 static void puavo_conf_err_set(struct puavo_conf_err *const errp,
@@ -134,6 +153,7 @@ static int puavo_conf_init(struct puavo_conf **const confp,
 
         return 0;
 }
+
 
 static int puavo_conf_db_open(struct puavo_conf *const conf,
                               struct puavo_conf_err *const errp)
@@ -233,19 +253,26 @@ out:
         return retval;
 }
 
+static const struct puavo_conf_ops PUAVO_CONF_OPS_DB;
+static const struct puavo_conf_ops PUAVO_CONF_OPS_DBUS;
+
 int puavo_conf_open(struct puavo_conf **const confp,
                     struct puavo_conf_err *const errp)
 {
         int retval;
         struct puavo_conf_err err;
+        struct puavo_conf *conf;
 
         retval = -1;
 
         if (puavo_conf_init(confp, errp))
                 return -1;
 
+        conf = (*confp);
+
         /* Prioritize direct DB access ... */
-        if (puavo_conf_db_open(*confp, &err) == -1) {
+        conf->ops = &PUAVO_CONF_OPS_DB;
+        if (conf->ops->open(conf, &err) == -1) {
                 if (errp)
                         memcpy(errp, &err, sizeof(err));
 
@@ -254,7 +281,8 @@ int puavo_conf_open(struct puavo_conf **const confp,
                          * database is already locked. It is most
                          * probably locked by our DBus-capable daemon
                          * summoned to help us. */
-                        retval = puavo_conf_dbus_open(*confp, errp);
+                        conf->ops = &PUAVO_CONF_OPS_DBUS;
+                        retval = conf->ops->open(conf, errp);
                 }
 
                 goto out;
@@ -305,13 +333,9 @@ static int puavo_conf_dbus_close(struct puavo_conf *const conf,
 int puavo_conf_close(struct puavo_conf *const conf,
                      struct puavo_conf_err *const errp)
 {
-        int ret = 0;
+        int ret;
 
-        if (conf->db)
-                ret = puavo_conf_db_close(conf, errp);
-        else
-                ret = puavo_conf_dbus_close(conf, errp);
-
+        ret = conf->ops->close(conf, errp);
         free(conf);
 
         return ret;
@@ -382,7 +406,7 @@ int puavo_conf_get(struct puavo_conf *const conf,
                    char const *const key, char **const valuep,
                    struct puavo_conf_err *const errp)
 {
-        return puavo_conf_db_get(conf, key, valuep, errp);
+        return conf->ops->get(conf, key, valuep, errp);
 }
 
 static int puavo_conf_db_set(struct puavo_conf *const conf,
@@ -432,7 +456,7 @@ int puavo_conf_set(struct puavo_conf *const conf,
                    char const *const key, char const *const value,
                    struct puavo_conf_err *const errp)
 {
-        return puavo_conf_db_set(conf, key, value, errp);
+        return conf->ops->set(conf, key, value, errp);
 }
 
 static int puavo_conf_db_overwrite(struct puavo_conf *const conf,
@@ -457,7 +481,7 @@ int puavo_conf_overwrite(struct puavo_conf *const conf,
                          char const *const key, char const *const value,
                          struct puavo_conf_err *const errp)
 {
-        return puavo_conf_db_overwrite(conf, key, value, errp);
+        return conf->ops->overwrite(conf, key, value, errp);
 }
 
 static int puavo_conf_db_add(struct puavo_conf *const conf,
@@ -482,7 +506,7 @@ int puavo_conf_add(struct puavo_conf *const conf,
                    char const *const key, char const *const value,
                    struct puavo_conf_err *const errp)
 {
-        return puavo_conf_db_add(conf, key, value, errp);
+        return conf->ops->add(conf, key, value, errp);
 }
 
 static int puavo_conf_db_has_key(struct puavo_conf *const conf, char const *const key,
@@ -509,7 +533,7 @@ static int puavo_conf_db_has_key(struct puavo_conf *const conf, char const *cons
 int puavo_conf_has_key(struct puavo_conf *const conf, char const *const key,
                        bool *const haskey, struct puavo_conf_err *const errp)
 {
-        return puavo_conf_db_has_key(conf, key, haskey, errp);
+        return conf->ops->has_key(conf, key, haskey, errp);
 }
 
 static int puavo_conf_db_get_all(struct puavo_conf *const conf,
@@ -643,7 +667,7 @@ int puavo_conf_get_all(struct puavo_conf *const conf,
                        struct puavo_conf_list *const list,
                        struct puavo_conf_err *const errp)
 {
-        return puavo_conf_db_get_all(conf, list, errp);
+        return conf->ops->get_all(conf, list, errp);
 }
 
 static int puavo_conf_db_clear(struct puavo_conf *const conf,
@@ -665,7 +689,7 @@ static int puavo_conf_db_clear(struct puavo_conf *const conf,
 int puavo_conf_clear(struct puavo_conf *const conf,
                      struct puavo_conf_err *const errp)
 {
-        return puavo_conf_db_clear(conf, errp);
+        return conf->ops->clear(conf, errp);
 }
 
 int puavo_conf_check_type(char const *const value,
@@ -699,3 +723,20 @@ enum puavo_conf_conn puavo_conf_get_conn(puavo_conf_t const *const conf)
 
         return PUAVO_CONF_CONN_DBUS;
 }
+
+static const struct puavo_conf_ops PUAVO_CONF_OPS_DB = {
+        .add       = puavo_conf_db_add,
+        .clear     = puavo_conf_db_clear,
+        .close     = puavo_conf_db_close,
+        .get       = puavo_conf_db_get,
+        .get_all   = puavo_conf_db_get_all,
+        .has_key   = puavo_conf_db_has_key,
+        .open      = puavo_conf_db_open,
+        .overwrite = puavo_conf_db_overwrite,
+        .set       = puavo_conf_db_set,
+};
+
+static const struct puavo_conf_ops PUAVO_CONF_OPS_DBUS = {
+        .close     = puavo_conf_dbus_close,
+        .open      = puavo_conf_dbus_open,
+};
