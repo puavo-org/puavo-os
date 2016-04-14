@@ -36,6 +36,7 @@
 #include <sys/un.h>
 
 #include <db.h>
+#include <dbus/dbus.h>
 
 #include "conf.h"
 
@@ -47,6 +48,7 @@ static const char *const PUAVO_CONF_DEFAULT_DB_FILEPATH = "/run/puavo-conf.db";
 
 struct puavo_conf {
         DB *db;
+        DBusConnection *dbus_conn;
         int lock_fd;
 };
 
@@ -97,6 +99,10 @@ static void puavo_conf_err_set(struct puavo_conf_err *const errp,
         case PUAVO_CONF_ERRNUM_TYPE:
                 snprintf(errp->msg, sizeof(errp->msg),
                          "%s: Invalid type", msg ? msg : "");
+                break;
+        case PUAVO_CONF_ERRNUM_DBUS:
+                snprintf(errp->msg, sizeof(errp->msg),
+                         "DBus error: %s", msg ? msg : "");
                 break;
         default:
                 snprintf(errp->msg, sizeof(errp->msg),
@@ -201,13 +207,67 @@ err:
         return -1;
 }
 
+static int puavo_conf_open_dbus(struct puavo_conf *const conf,
+                                struct puavo_conf_err *const errp)
+{
+        DBusConnection* dbus_conn;
+        DBusError dbus_err;
+        int retval;
+
+        retval = -1;
+        dbus_error_init(&dbus_err);
+
+        dbus_conn = dbus_bus_get(DBUS_BUS_SYSTEM, &dbus_err);
+        if (!dbus_conn) {
+                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
+                                   "Failed to connect to system bus: %s",
+                                   dbus_err.message);
+                goto out;
+        }
+        conf->dbus_conn = dbus_conn;
+
+        retval = 0;
+out:
+        dbus_error_free(&dbus_err);
+
+        return retval;
+}
+
 int puavo_conf_open(struct puavo_conf **const confp,
                     struct puavo_conf_err *const errp)
 {
+        int retval;
+        struct puavo_conf_err err;
+
+        retval = -1;
+
         if (puavo_conf_init(confp, errp))
                 return -1;
 
-        return puavo_conf_open_db(*confp, errp);
+        /* Prioritize direct DB access ... */
+        if (puavo_conf_open_db(*confp, &err) == -1) {
+                if (errp)
+                        memcpy(errp, &err, sizeof(err));
+
+                if (err.sys_errno == EWOULDBLOCK) {
+                        /* ... but fall back to DBus access if the
+                         * database is already locked. It is most
+                         * probably locked by our DBus-capable daemon
+                         * summoned to help us. */
+                        retval = puavo_conf_open_dbus(*confp, errp);
+                }
+
+                goto out;
+        }
+
+        retval = 0;
+out:
+        if (retval) {
+                free(*confp);
+                *confp = NULL;
+        }
+
+        return retval;
 }
 
 static int puavo_conf_close_db(struct puavo_conf *const conf,
@@ -233,6 +293,15 @@ static int puavo_conf_close_db(struct puavo_conf *const conf,
         return ret;
 }
 
+static int puavo_conf_close_dbus(struct puavo_conf *const conf,
+                                 struct puavo_conf_err *const errp  __attribute__ ((unused)))
+{
+        dbus_connection_unref(conf->dbus_conn);
+        conf->dbus_conn = NULL;
+
+        return 0;
+}
+
 int puavo_conf_close(struct puavo_conf *const conf,
                      struct puavo_conf_err *const errp)
 {
@@ -240,6 +309,8 @@ int puavo_conf_close(struct puavo_conf *const conf,
 
         if (conf->db)
                 ret = puavo_conf_close_db(conf, errp);
+        else
+                ret = puavo_conf_close_dbus(conf, errp);
 
         free(conf);
 

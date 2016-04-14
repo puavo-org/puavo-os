@@ -63,11 +63,11 @@ puavo-conf: puavo-conf.o libpuavoconf.la
 
 libpuavoconf.la: conf.lo
 	libtool --mode=link \
-		gcc $(LDFLAGS) -ldb -rpath $(libdir) -version-info 0:0:0 -o $@ $^
+		gcc $(LDFLAGS) -ldb $(shell pkg-config --libs dbus-1) -rpath $(libdir) -version-info 0:0:0 -o $@ $^
 
 %.lo: %.c %.h
 	libtool --mode=compile \
-		gcc $(CPPFLAGS) $(CFLAGS) -c $<
+		gcc $(CPPFLAGS) $(CFLAGS) $(shell pkg-config --cflags dbus-1) -c $<
 
 deb:
 	dpkg-buildpackage -us -uc
