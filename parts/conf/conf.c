@@ -31,7 +31,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/file.h>
-#include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/un.h>
@@ -48,7 +47,6 @@ static const char *const PUAVO_CONF_DEFAULT_DB_FILEPATH = "/run/puavo-conf.db";
 
 struct puavo_conf {
         DB *db;
-        int confd_socket;
         int lock_fd;
 };
 
@@ -124,47 +122,11 @@ static int puavo_conf_init(struct puavo_conf **const confp,
         }
         memset(conf, 0, sizeof(struct puavo_conf));
 
-        conf->confd_socket = -1;
         conf->lock_fd = -1;
 
         *confp = conf;
 
         return 0;
-}
-
-static int puavo_conf_open_socket(struct puavo_conf *const conf,
-                                  struct puavo_conf_err *const errp)
-{
-        int confd_socket;
-        struct sockaddr_un sockaddr;
-
-        confd_socket = socket(AF_UNIX, SOCK_STREAM, 0);
-        if (confd_socket < 0) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_SYS, 0,
-                                   "Failed to create a local socket");
-                goto err;
-        }
-
-        memset(&sockaddr, 0, sizeof(struct sockaddr_un));
-        sockaddr.sun_family = AF_UNIX;
-        (void) strncpy(sockaddr.sun_path, "/tmp/puavo-conf.sock",
-                       sizeof(sockaddr.sun_path));
-
-        if (connect(confd_socket, (struct sockaddr *) &sockaddr,
-                    sizeof(struct sockaddr_un))) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_SYS, 0,
-                                   "Failed to connect the socket to %s",
-                                   sockaddr.sun_path);
-                goto err;
-        }
-
-        conf->confd_socket = confd_socket;
-        return 0;
-err:
-        /* Errors ignored, because we have already failed. */
-        (void) close(confd_socket);
-
-        return -1;
 }
 
 static int puavo_conf_open_db(struct puavo_conf *const conf,
@@ -244,8 +206,6 @@ int puavo_conf_open(struct puavo_conf **const confp,
 {
         if (puavo_conf_init(confp, errp))
                 return -1;
-        /* if (!puavo_conf_open_socket(*confp, errp)) */
-        /*         return 0; */
 
         return puavo_conf_open_db(*confp, errp);
 }
@@ -273,22 +233,6 @@ static int puavo_conf_close_db(struct puavo_conf *const conf,
         return ret;
 }
 
-static int puavo_conf_close_socket(struct puavo_conf *const conf,
-                                   struct puavo_conf_err *const errp)
-{
-        int ret = 0;
-
-        if (close(conf->confd_socket)) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_SYS, 0,
-                                   "Failed to close a socket");
-                ret = -1;
-        }
-
-        conf->confd_socket = -1;
-
-        return ret;
-}
-
 int puavo_conf_close(struct puavo_conf *const conf,
                      struct puavo_conf_err *const errp)
 {
@@ -296,8 +240,6 @@ int puavo_conf_close(struct puavo_conf *const conf,
 
         if (conf->db)
                 ret = puavo_conf_close_db(conf, errp);
-        else
-                ret = puavo_conf_close_socket(conf, errp);
 
         free(conf);
 
