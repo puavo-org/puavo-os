@@ -71,7 +71,7 @@ END_TEST
 START_TEST(test_empty_db_lock_conflict)
 {
         puavo_conf_t *conf2;
-        ck_assert_int_ne(0, puavo_conf_open(&conf2, NULL));
+        ck_assert_int_eq(0, puavo_conf_open(&conf2, NULL));
 }
 END_TEST
 
