@@ -64,7 +64,7 @@ int puavo_conf_db_clear(struct puavo_conf *const conf,
 }
 
 int puavo_conf_db_close(struct puavo_conf *const conf,
-                        struct puavo_conf_err *errp)
+                        struct puavo_conf_err *const errp)
 {
         int ret = 0;
         int db_error;
