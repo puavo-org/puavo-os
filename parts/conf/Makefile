@@ -61,7 +61,7 @@ test: all
 puavo-conf: puavo-conf.o libpuavoconf.la
 	libtool --mode=link gcc $(LDFLAGS) -o $@ $^
 
-libpuavoconf.la: conf.lo common.lo dbus.lo
+libpuavoconf.la: conf.lo common.lo db.lo dbus.lo
 	libtool --mode=link \
 		gcc $(LDFLAGS) -ldb $(shell pkg-config --libs dbus-1) -rpath $(libdir) -version-info 0:0:0 -o $@ $^
 
