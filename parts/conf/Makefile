@@ -8,7 +8,7 @@ libtool_binaries = libpuavoconf.la puavo-conf
 
 ifeq ($(prefix), /usr/local)
 rubylibdir = $(prefix)/lib/site_ruby
-sysconfdir = $(prefox)/etc
+sysconfdir = $(prefix)/etc
 else
 rubylibdir = $(prefix)/lib/ruby/vendor_ruby
 sysconfdir = /etc
