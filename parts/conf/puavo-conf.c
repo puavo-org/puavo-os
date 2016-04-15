@@ -83,10 +83,10 @@ static int get_param(puavo_conf_t *const conf, char const *const key,
         }
 
         if (exact_match && strcmp(value, exact_match)) {
-                free(value);
                 (void) fprintf(stderr,
                                "Error: Value '%s' does not match '%s'\n",
                                value, exact_match);
+                free(value);
                 return 1;
         }
 
