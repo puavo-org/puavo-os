@@ -21,9 +21,9 @@ require 'puavo/conf'
 
 class Conf1 < DBus::Object
 
-  def initialize(object_path)
+  def initialize(object_path, puavoconf)
     super(object_path)
-    @puavoconf = Puavo::Conf.new
+    @puavoconf = puavoconf
   end
 
   dbus_interface "org.puavo.Conf1" do
@@ -51,9 +51,14 @@ end
 bus = DBus::SystemBus.instance
 
 service = bus.request_service("org.puavo.Conf1")
-
-service.export(Conf1.new('/org/puavo/Conf1'))
+puavoconf = Puavo::Conf.new
+service.export(Conf1.new('/org/puavo/Conf1', puavoconf))
 
 loop = DBus::Main.new
 loop << bus
-loop.run
+
+begin
+  loop.run
+ensure
+  puavoconf.close
+end
