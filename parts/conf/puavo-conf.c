@@ -73,7 +73,6 @@ static int get_param(puavo_conf_t *const conf, char const *const key,
         if (puavo_conf_get(conf, key, &value, &err)) {
                 (void) fprintf(stderr, "Error: Failed to get '%s': %s\n",
                                key, err.msg);
-                (void) puavo_conf_close(conf, NULL);
                 return 1;
         }
 
@@ -81,7 +80,6 @@ static int get_param(puavo_conf_t *const conf, char const *const key,
                 free(value);
                 (void) fprintf(stderr, "Error: Failed to get '%s': %s\n",
                                key, err.msg);
-                (void) puavo_conf_close(conf, NULL);
                 return 1;
         }
 
@@ -115,7 +113,6 @@ static int set_param(puavo_conf_t *const conf, char const *const key,
         if (puavo_conf_check_type(value, type, &err)) {
                 (void) fprintf(stderr, "Error: Failed to get '%s': %s\n",
                                key, err.msg);
-                (void) puavo_conf_close(conf, NULL);
                 return 1;
         }
 
@@ -123,14 +120,12 @@ static int set_param(puavo_conf_t *const conf, char const *const key,
                 (void) fprintf(stderr,
                                "Error: Value '%s' does not match '%s'\n",
                                value, exact_match);
-                (void) puavo_conf_close(conf, NULL);
                 return 1;
         }
 
         if (puavo_conf_set(conf, key, value, &err) == -1) {
                 (void) fprintf(stderr, "Error: Failed to set '%s' to '%s': %s\n",
                                key, value, err.msg);
-                (void) puavo_conf_close(conf, NULL);
                 return 1;
         }
 
