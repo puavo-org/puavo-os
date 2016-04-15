@@ -35,103 +35,13 @@
 #include <sys/types.h>
 #include <sys/un.h>
 
-#include <db.h>
-#include <dbus/dbus.h>
-
-#include "conf.h"
+#include "common.h"
 
 /* TODO: 1MiB should be enough for 1+ key/value pairs, if not, please
  * implement dynamic buffer reallocation on when DB->get() returns
  * DB_BUFFER_SMALL. */
 static const size_t PUAVO_CONF_DEFAULT_DB_BATCH_SIZE = 1048576;
 static const char *const PUAVO_CONF_DEFAULT_DB_FILEPATH = "/run/puavo-conf.db";
-
-struct puavo_conf_ops {
-        int (*add)       (struct puavo_conf *, char const *,
-                          char const *, struct puavo_conf_err *);
-        int (*clear)     (struct puavo_conf *, struct puavo_conf_err *);
-        int (*close)     (struct puavo_conf *, struct puavo_conf_err *);
-        int (*get)       (struct puavo_conf *, char const *, char **,
-                          struct puavo_conf_err *);
-        int (*get_all)   (struct puavo_conf *, struct puavo_conf_list *,
-                          struct puavo_conf_err *);
-        int (*has_key)   (struct puavo_conf *, char const *, bool *,
-                          struct puavo_conf_err *);
-        int (*open)      (struct puavo_conf *, struct puavo_conf_err *);
-        int (*overwrite) (struct puavo_conf *, char const *,
-                          char const *, struct puavo_conf_err *);
-        int (*set)       (struct puavo_conf *, char const *,
-                          char const *, struct puavo_conf_err *);
-};
-
-struct puavo_conf {
-        DB *db;
-        DBusConnection *dbus_conn;
-        int lock_fd;
-        struct puavo_conf_ops const *ops;
-};
-
-static void puavo_conf_err_set(struct puavo_conf_err *const errp,
-                               int const errnum,
-                               int const db_error,
-                               char const *const fmt,
-                               ...)
-{
-        char *msg;
-        va_list ap;
-
-        if (!errp)
-                return;
-
-        errp->errnum = errnum;
-        errp->db_error = db_error;
-        errp->sys_errno = errnum == PUAVO_CONF_ERRNUM_SYS ? errno : 0;
-
-        va_start(ap, fmt);
-        if (vasprintf(&msg, fmt, ap) == -1)
-                msg = NULL;
-        va_end(ap);
-
-        switch (errp->errnum) {
-        case PUAVO_CONF_ERRNUM_SUCCESS:
-                snprintf(errp->msg, sizeof(errp->msg),
-                         "This ain't error: %s", msg ? msg : "");
-                break;
-        case PUAVO_CONF_ERRNUM_SYS:
-                snprintf(errp->msg, sizeof(errp->msg),
-                         "%s: %s", msg ? msg : "",
-                         strerror(errp->sys_errno));
-                break;
-        case PUAVO_CONF_ERRNUM_DB:
-                snprintf(errp->msg, sizeof(errp->msg),
-                         "%s: %s", msg ? msg : "",
-                         db_strerror(errp->db_error));
-                break;
-        case PUAVO_CONF_ERRNUM_KEYFOUND:
-                snprintf(errp->msg, sizeof(errp->msg),
-                         "%s: Key already exists", msg ? msg : "");
-                break;
-        case PUAVO_CONF_ERRNUM_KEYNOTFOUND:
-                snprintf(errp->msg, sizeof(errp->msg),
-                         "%s: Key does not exist", msg ? msg : "");
-                break;
-        case PUAVO_CONF_ERRNUM_TYPE:
-                snprintf(errp->msg, sizeof(errp->msg),
-                         "%s: Invalid type", msg ? msg : "");
-                break;
-        case PUAVO_CONF_ERRNUM_DBUS:
-                snprintf(errp->msg, sizeof(errp->msg),
-                         "DBus error: %s", msg ? msg : "");
-                break;
-        default:
-                snprintf(errp->msg, sizeof(errp->msg),
-                         "Unknown error %d: %s",
-                         errp->errnum, msg ? msg : "");
-                break;
-        }
-
-        free(msg);
-}
 
 static int puavo_conf_init(struct puavo_conf **const confp,
                            struct puavo_conf_err *const errp)
