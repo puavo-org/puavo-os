@@ -17,13 +17,8 @@
 
 #define _GNU_SOURCE /* asprintf(), secure_getenv() */
 
-#include <features.h>
-
-#include <fcntl.h>
 #include <string.h>
 #include <sys/file.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 
 #include "db.h"
 

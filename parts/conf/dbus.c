@@ -17,10 +17,7 @@
 
 #define _GNU_SOURCE /* asprintf(), secure_getenv() */
 
-#include <features.h>
-
 #include "dbus.h"
-#include "common.h"
 
 int puavo_conf_dbus_close(struct puavo_conf *const conf,
                           struct puavo_conf_err *const errp  __attribute__ ((unused)))
