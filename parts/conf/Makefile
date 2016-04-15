@@ -15,8 +15,8 @@ sysconfdir = /etc
 endif
 
 CPPFLAGS = -std=c99 -Wall -Wextra
-CFLAGS   = -std=c99 -pedantic
-LDFLAGS  = -g -O
+CFLAGS   = -std=c99 -pedantic -g
+LDFLAGS  =
 
 .PHONY: all
 all: $(libtool_binaries)
