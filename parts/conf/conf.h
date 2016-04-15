@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef CONF_H
-#define CONF_H
+#ifndef PUAVO_CONF_H
+#define PUAVO_CONF_H
 
 #include <stdbool.h>
 #include <stdlib.h>
@@ -293,4 +293,4 @@ enum puavo_conf_conn {
  */
 enum puavo_conf_conn puavo_conf_get_conn(puavo_conf_t const *conf);
 
-#endif /* CONF_H */
+#endif /* PUAVO_CONF_H */

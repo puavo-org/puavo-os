@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef COMMON_H
-#define COMMON_H
+#ifndef PUAVO_CONF_COMMON_H
+#define PUAVO_CONF_COMMON_H
 
 #include <db.h>
 #include <dbus/dbus.h>
@@ -52,4 +52,4 @@ struct puavo_conf {
 void puavo_conf_err_set(struct puavo_conf_err *errp, int errnum, int db_error, 
                         char const *fmt, ...);
 
-#endif /* COMMON_H */
+#endif /* PUAVO_CONF_COMMON_H */
