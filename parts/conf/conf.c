@@ -36,6 +36,7 @@
 #include <sys/un.h>
 
 #include "common.h"
+#include "dbus.h"
 
 /* TODO: 1MiB should be enough for 1+ key/value pairs, if not, please
  * implement dynamic buffer reallocation on when DB->get() returns
@@ -137,34 +138,7 @@ err:
         return -1;
 }
 
-static int puavo_conf_dbus_open(struct puavo_conf *const conf,
-                                struct puavo_conf_err *const errp)
-{
-        DBusConnection* dbus_conn;
-        DBusError dbus_err;
-        int retval;
-
-        retval = -1;
-        dbus_error_init(&dbus_err);
-
-        dbus_conn = dbus_bus_get(DBUS_BUS_SYSTEM, &dbus_err);
-        if (!dbus_conn) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
-                                   "Failed to connect to system bus: %s",
-                                   dbus_err.message);
-                goto out;
-        }
-        conf->dbus_conn = dbus_conn;
-
-        retval = 0;
-out:
-        dbus_error_free(&dbus_err);
-
-        return retval;
-}
-
 static const struct puavo_conf_ops PUAVO_CONF_OPS_DB;
-static const struct puavo_conf_ops PUAVO_CONF_OPS_DBUS;
 
 int puavo_conf_open(struct puavo_conf **const confp,
                     struct puavo_conf_err *const errp)
@@ -229,15 +203,6 @@ static int puavo_conf_db_close(struct puavo_conf *const conf,
         conf->lock_fd = -1;
 
         return ret;
-}
-
-static int puavo_conf_dbus_close(struct puavo_conf *const conf,
-                                 struct puavo_conf_err *const errp  __attribute__ ((unused)))
-{
-        dbus_connection_unref(conf->dbus_conn);
-        conf->dbus_conn = NULL;
-
-        return 0;
 }
 
 int puavo_conf_close(struct puavo_conf *const conf,
@@ -310,83 +275,6 @@ out:
                 *valuep = value;
 
         return ret;
-}
-
-static int puavo_conf_dbus_get(struct puavo_conf *const conf,
-                               char const *const key, char **const valuep,
-                               struct puavo_conf_err *const errp)
-{
-        DBusError        dbus_err;
-        DBusMessage     *dbus_msg_call        = NULL;
-        DBusMessageIter  dbus_msg_call_args;
-        DBusMessage     *dbus_msg_reply       = NULL;
-        DBusMessageIter  dbus_msg_reply_args;
-        int              retval               = -1;
-
-        dbus_error_init(&dbus_err);
-
-        dbus_msg_call = dbus_message_new_method_call("org.puavo.Conf1",
-                                                     "/org/puavo/Conf1",
-                                                     "org.puavo.Conf1",
-                                                     "Get");
-        if (!dbus_msg_call) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
-                                   "Failed to create a method call message");
-                goto out;
-        }
-
-        dbus_message_iter_init_append(dbus_msg_call, &dbus_msg_call_args);
-        if (!dbus_message_iter_append_basic(&dbus_msg_call_args,
-                                            DBUS_TYPE_STRING,
-                                            &key)) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
-                                   "Failed to add a parameter to a method "
-                                   "call message due to lack of memory");
-                goto out;
-        }
-
-        dbus_msg_reply = dbus_connection_send_with_reply_and_block(
-                conf->dbus_conn,
-                dbus_msg_call,
-                DBUS_TIMEOUT_USE_DEFAULT,
-                &dbus_err);
-        if (!dbus_msg_reply) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
-                                   "Failed to call a method: %s",
-                                   dbus_err.message);
-                goto out;
-        }
-        dbus_message_unref(dbus_msg_call);
-        dbus_msg_call = NULL;
-
-        if (!dbus_message_iter_init(dbus_msg_reply, &dbus_msg_reply_args)) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
-                                   "Received invalid reply with no arguments");
-                goto out;
-        }
-
-        if (dbus_message_iter_get_arg_type(&dbus_msg_reply_args) != DBUS_TYPE_STRING) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
-                                   "Received invalid reply with wrong type");
-                goto out;
-        }
-        dbus_message_iter_get_basic(&dbus_msg_reply_args, valuep);
-
-        if (dbus_message_iter_next(&dbus_msg_reply_args)) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
-                                   "Received invalid reply with too many arguments");
-                goto out;
-        }
-
-        retval = 0;
-out:
-        if (dbus_msg_reply)
-                dbus_message_unref(dbus_msg_reply);
-
-        if (dbus_msg_call)
-                dbus_message_unref(dbus_msg_call);
-
-        return retval;
 }
 
 int puavo_conf_get(struct puavo_conf *const conf,
@@ -721,10 +609,4 @@ static const struct puavo_conf_ops PUAVO_CONF_OPS_DB = {
         .open      = puavo_conf_db_open,
         .overwrite = puavo_conf_db_overwrite,
         .set       = puavo_conf_db_set,
-};
-
-static const struct puavo_conf_ops PUAVO_CONF_OPS_DBUS = {
-        .close     = puavo_conf_dbus_close,
-        .get       = puavo_conf_dbus_get,
-        .open      = puavo_conf_dbus_open,
 };
