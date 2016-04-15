@@ -21,8 +21,12 @@
 #include "common.h"
 
 int puavo_conf_dbus_close(struct puavo_conf *conf, struct puavo_conf_err *errp);
-int puavo_conf_dbus_get(struct puavo_conf *conf, char const *key, char **valuep,
+
+int puavo_conf_dbus_get(struct puavo_conf *conf,
+                        char const *key,
+                        char **valuep,
                         struct puavo_conf_err *errp);
+
 int puavo_conf_dbus_open(struct puavo_conf *conf, struct puavo_conf_err *errp);
 
 static const struct puavo_conf_ops PUAVO_CONF_OPS_DBUS = {

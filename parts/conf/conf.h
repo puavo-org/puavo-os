@@ -115,7 +115,9 @@ int puavo_conf_clear(puavo_conf_t *conf,
  *
  * Return 0 on success and -1 on error.
  */
-int puavo_conf_set(puavo_conf_t *conf, char const *key, char const *value,
+int puavo_conf_set(puavo_conf_t *conf,
+                   char const *key,
+                   char const *value,
                    struct puavo_conf_err *errp);
 
 /**
@@ -138,7 +140,9 @@ int puavo_conf_set(puavo_conf_t *conf, char const *key, char const *value,
  *
  * Return 0 on success and -1 on error.
  */
-int puavo_conf_overwrite(puavo_conf_t *conf, char const *key, char const *value,
+int puavo_conf_overwrite(puavo_conf_t *conf,
+                         char const *key,
+                         char const *value,
                          struct puavo_conf_err *errp);
 
 /**
@@ -161,7 +165,9 @@ int puavo_conf_overwrite(puavo_conf_t *conf, char const *key, char const *value,
  *
  * Return 0 on success and -1 on error.
  */
-int puavo_conf_add(puavo_conf_t *conf, char const *key, char const *value,
+int puavo_conf_add(puavo_conf_t *conf,
+                   char const *key,
+                   char const *value,
                    struct puavo_conf_err *errp);
 
 /**
@@ -183,7 +189,9 @@ int puavo_conf_add(puavo_conf_t *conf, char const *key, char const *value,
  *
  * Return 0 on success and -1 on error.
  */
-int puavo_conf_has_key(puavo_conf_t *conf, char const *key, bool *haskey,
+int puavo_conf_has_key(puavo_conf_t *conf,
+                       char const *key,
+                       bool *haskey,
                        struct puavo_conf_err *errp);
 
 /**
@@ -206,7 +214,9 @@ int puavo_conf_has_key(puavo_conf_t *conf, char const *key, bool *haskey,
  *
  * Return 0 on success and -1 on error.
  */
-int puavo_conf_get(puavo_conf_t *conf, char const *key, char **valuep,
+int puavo_conf_get(puavo_conf_t *conf,
+                   char const *key,
+                   char **valuep,
                    struct puavo_conf_err *errp);
 
 struct puavo_conf_list {

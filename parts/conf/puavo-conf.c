@@ -63,8 +63,10 @@ err:
         return ret;
 }
 
-static int get_param(puavo_conf_t *const conf, char const *const key,
-                     enum puavo_conf_type const type, char const *const exact_match)
+static int get_param(puavo_conf_t *const conf,
+                     char const *const key,
+                     enum puavo_conf_type const type,
+                     char const *const exact_match)
 {
         struct puavo_conf_err err;
         char *value;
@@ -103,8 +105,10 @@ static int get_param(puavo_conf_t *const conf, char const *const key,
         return 0;
 }
 
-static int set_param(puavo_conf_t *const conf, char const *const key,
-                     char const *const value, enum puavo_conf_type const type,
+static int set_param(puavo_conf_t *const conf,
+                     char const *const key,
+                     char const *const value,
+                     enum puavo_conf_type const type,
                      char const *const exact_match)
 {
         struct puavo_conf_err err;

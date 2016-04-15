@@ -31,7 +31,8 @@ int puavo_conf_dbus_close(struct puavo_conf *const conf,
 }
 
 int puavo_conf_dbus_get(struct puavo_conf *const conf,
-                        char const *const key, char **const valuep,
+                        char const *const key,
+                        char **const valuep,
                         struct puavo_conf_err *const errp)
 {
         char            *value;
@@ -84,7 +85,8 @@ int puavo_conf_dbus_get(struct puavo_conf *const conf,
                 goto out;
         }
 
-        if (dbus_message_iter_get_arg_type(&dbus_msg_reply_args) != DBUS_TYPE_STRING) {
+        if (DBUS_TYPE_STRING !=
+            dbus_message_iter_get_arg_type(&dbus_msg_reply_args)) {
                 puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
                                    "Received invalid reply with wrong type");
                 goto out;
@@ -99,7 +101,8 @@ int puavo_conf_dbus_get(struct puavo_conf *const conf,
 
         if (dbus_message_iter_next(&dbus_msg_reply_args)) {
                 puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
-                                   "Received invalid reply with too many arguments");
+                                   "Received invalid reply with too many "
+                                   "arguments");
                 goto out;
         }
 

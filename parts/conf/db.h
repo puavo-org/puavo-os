@@ -20,21 +20,40 @@
 
 #include "common.h"
 
-int puavo_conf_db_add(struct puavo_conf *conf, char const *key,
-                      char const *value, struct puavo_conf_err *errp);
-int puavo_conf_db_clear(struct puavo_conf *conf, struct puavo_conf_err *errp);
-int puavo_conf_db_close(struct puavo_conf *conf, struct puavo_conf_err *errp);
-int puavo_conf_db_get(struct puavo_conf *conf, char const *key, char **valuep,
+int puavo_conf_db_add(struct puavo_conf *conf,
+                      char const *key,
+                      char const *value,
                       struct puavo_conf_err *errp);
-int puavo_conf_db_get_all(struct puavo_conf *conf, struct puavo_conf_list *list,
+
+int puavo_conf_db_clear(struct puavo_conf *conf, struct puavo_conf_err *errp);
+
+int puavo_conf_db_close(struct puavo_conf *conf, struct puavo_conf_err *errp);
+
+int puavo_conf_db_get(struct puavo_conf *conf,
+                      char const *key,
+                      char **valuep,
+                      struct puavo_conf_err *errp);
+
+int puavo_conf_db_get_all(struct puavo_conf *conf,
+                          struct puavo_conf_list *list,
                           struct puavo_conf_err *errp);
-int puavo_conf_db_has_key(struct puavo_conf *conf, char const *key,
-                          bool *haskey, struct puavo_conf_err *errp);
+
+int puavo_conf_db_has_key(struct puavo_conf *conf,
+                          char const *key,
+                          bool *haskey,
+                          struct puavo_conf_err *errp);
+
 int puavo_conf_db_open(struct puavo_conf *conf, struct puavo_conf_err *errp);
-int puavo_conf_db_overwrite(struct puavo_conf *conf, char const *key,
-                            char const *value, struct puavo_conf_err *errp);
-int puavo_conf_db_set(struct puavo_conf *conf, char const *key,
-                      char const *value, struct puavo_conf_err *errp);
+
+int puavo_conf_db_overwrite(struct puavo_conf *conf,
+                            char const *key,
+                            char const *value,
+                            struct puavo_conf_err *errp);
+
+int puavo_conf_db_set(struct puavo_conf *conf,
+                      char const *key,
+                      char const *value,
+                      struct puavo_conf_err *errp);
 
 static const struct puavo_conf_ops PUAVO_CONF_OPS_DB = {
         .add       = puavo_conf_db_add,

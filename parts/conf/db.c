@@ -29,7 +29,8 @@ static const size_t PUAVO_CONF_DEFAULT_DB_BATCH_SIZE = 1048576;
 static const char *const PUAVO_CONF_DEFAULT_DB_FILEPATH = "/run/puavo-conf.db";
 
 int puavo_conf_db_add(struct puavo_conf *const conf,
-                      char const *const key, char const *const value,
+                      char const *const key,
+                      char const *const value,
                       struct puavo_conf_err *const errp)
 {
         bool haskey;
@@ -86,7 +87,8 @@ int puavo_conf_db_close(struct puavo_conf *const conf,
 }
 
 int puavo_conf_db_get(struct puavo_conf *const conf,
-                      char const *const key, char **const valuep,
+                      char const *const key,
+                      char **const valuep,
                       struct puavo_conf_err *const errp)
 {
         DBT db_key;
@@ -273,8 +275,10 @@ out:
         return ret;
 }
 
-int puavo_conf_db_has_key(struct puavo_conf *const conf, char const *const key,
-                          bool *const haskey, struct puavo_conf_err *const errp)
+int puavo_conf_db_has_key(struct puavo_conf *const conf,
+                          char const *const key,
+                          bool *const haskey,
+                          struct puavo_conf_err *const errp)
 {
         struct puavo_conf_err err;
 
@@ -367,7 +371,8 @@ err:
 }
 
 int puavo_conf_db_overwrite(struct puavo_conf *const conf,
-                            char const *const key, char const *const value,
+                            char const *const key,
+                            char const *const value,
                             struct puavo_conf_err *const errp)
 {
         bool haskey;
@@ -385,7 +390,8 @@ int puavo_conf_db_overwrite(struct puavo_conf *const conf,
 }
 
 int puavo_conf_db_set(struct puavo_conf *const conf,
-                      char const *const key, char const *const value,
+                      char const *const key,
+                      char const *const value,
                       struct puavo_conf_err *const errp)
 {
         DBT db_key;

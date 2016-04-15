@@ -107,35 +107,41 @@ int puavo_conf_close(struct puavo_conf *const conf,
 }
 
 int puavo_conf_get(struct puavo_conf *const conf,
-                   char const *const key, char **const valuep,
+                   char const *const key,
+                   char **const valuep,
                    struct puavo_conf_err *const errp)
 {
         return conf->ops->get(conf, key, valuep, errp);
 }
 
 int puavo_conf_set(struct puavo_conf *const conf,
-                   char const *const key, char const *const value,
+                   char const *const key,
+                   char const *const value,
                    struct puavo_conf_err *const errp)
 {
         return conf->ops->set(conf, key, value, errp);
 }
 
 int puavo_conf_overwrite(struct puavo_conf *const conf,
-                         char const *const key, char const *const value,
+                         char const *const key,
+                         char const *const value,
                          struct puavo_conf_err *const errp)
 {
         return conf->ops->overwrite(conf, key, value, errp);
 }
 
 int puavo_conf_add(struct puavo_conf *const conf,
-                   char const *const key, char const *const value,
+                   char const *const key,
+                   char const *const value,
                    struct puavo_conf_err *const errp)
 {
         return conf->ops->add(conf, key, value, errp);
 }
 
-int puavo_conf_has_key(struct puavo_conf *const conf, char const *const key,
-                       bool *const haskey, struct puavo_conf_err *const errp)
+int puavo_conf_has_key(struct puavo_conf *const conf,
+                       char const *const key,
+                       bool *const haskey,
+                       struct puavo_conf_err *const errp)
 {
         return conf->ops->has_key(conf, key, haskey, errp);
 }

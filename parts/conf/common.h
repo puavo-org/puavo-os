@@ -24,21 +24,40 @@
 #include "conf.h"
 
 struct puavo_conf_ops {
-        int (*add)       (struct puavo_conf *, char const *,
-                          char const *, struct puavo_conf_err *);
+        int (*add)       (struct puavo_conf *,
+                          char const *,
+                          char const *,
+                          struct puavo_conf_err *);
+
         int (*clear)     (struct puavo_conf *, struct puavo_conf_err *);
+
         int (*close)     (struct puavo_conf *, struct puavo_conf_err *);
-        int (*get)       (struct puavo_conf *, char const *, char **,
+
+        int (*get)       (struct puavo_conf *,
+                          char const *,
+                          char **,
                           struct puavo_conf_err *);
-        int (*get_all)   (struct puavo_conf *, struct puavo_conf_list *,
+
+        int (*get_all)   (struct puavo_conf *,
+                          struct puavo_conf_list *,
                           struct puavo_conf_err *);
-        int (*has_key)   (struct puavo_conf *, char const *, bool *,
+
+        int (*has_key)   (struct puavo_conf *,
+                          char const *,
+                          bool *,
                           struct puavo_conf_err *);
+
         int (*open)      (struct puavo_conf *, struct puavo_conf_err *);
-        int (*overwrite) (struct puavo_conf *, char const *,
-                          char const *, struct puavo_conf_err *);
-        int (*set)       (struct puavo_conf *, char const *,
-                          char const *, struct puavo_conf_err *);
+
+        int (*overwrite) (struct puavo_conf *,
+                          char const *,
+                          char const *,
+                          struct puavo_conf_err *);
+
+        int (*set)       (struct puavo_conf *,
+                          char const *,
+                          char const *,
+                          struct puavo_conf_err *);
 };
 
 struct puavo_conf {
@@ -49,7 +68,10 @@ struct puavo_conf {
 };
 
 
-void puavo_conf_err_set(struct puavo_conf_err *errp, int errnum, int db_error, 
-                        char const *fmt, ...);
+void puavo_conf_err_set(struct puavo_conf_err *errp,
+                        int errnum,
+                        int db_error,
+                        char const *fmt,
+                        ...);
 
 #endif /* PUAVO_CONF_COMMON_H */
