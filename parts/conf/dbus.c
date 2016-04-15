@@ -17,6 +17,8 @@
 
 #define _GNU_SOURCE /* asprintf(), secure_getenv() */
 
+#include <string.h>
+
 #include "dbus.h"
 
 int puavo_conf_dbus_close(struct puavo_conf *const conf,
@@ -32,6 +34,7 @@ int puavo_conf_dbus_get(struct puavo_conf *const conf,
                         char const *const key, char **const valuep,
                         struct puavo_conf_err *const errp)
 {
+        char            *value;
         DBusError        dbus_err;
         DBusMessage     *dbus_msg_call        = NULL;
         DBusMessageIter  dbus_msg_call_args;
@@ -86,7 +89,13 @@ int puavo_conf_dbus_get(struct puavo_conf *const conf,
                                    "Received invalid reply with wrong type");
                 goto out;
         }
-        dbus_message_iter_get_basic(&dbus_msg_reply_args, valuep);
+        dbus_message_iter_get_basic(&dbus_msg_reply_args, &value);
+
+        if ((*valuep = strdup(value)) == NULL) {
+                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_SYS, 0,
+                                   "Failed to duplicate a string");
+                goto out;
+        }
 
         if (dbus_message_iter_next(&dbus_msg_reply_args)) {
                 puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
