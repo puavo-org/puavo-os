@@ -28,6 +28,10 @@ class Conf1 < DBus::Object
 
   dbus_interface "org.puavo.Conf1" do
 
+    dbus_method :Add, 'in name:s, in value:s' do |name, value|
+      @puavoconf.add(name, value)
+    end
+
     dbus_method :Get, 'in name:s, out s' do |name|
       @puavoconf.get(name)
     end
