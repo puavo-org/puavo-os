@@ -32,6 +32,11 @@ int puavo_conf_dbus_get(struct puavo_conf *conf,
                         char **valuep,
                         struct puavo_conf_err *errp);
 
+int puavo_conf_dbus_has_key(struct puavo_conf *conf,
+                            char const *key,
+                            bool *haskey,
+                            struct puavo_conf_err *errp);
+
 int puavo_conf_dbus_open(struct puavo_conf *conf, struct puavo_conf_err *errp);
 
 int puavo_conf_dbus_overwrite(struct puavo_conf *conf, char const *key,
@@ -46,6 +51,7 @@ static const struct puavo_conf_ops PUAVO_CONF_OPS_DBUS = {
         .clear     = puavo_conf_dbus_clear,
         .close     = puavo_conf_dbus_close,
         .get       = puavo_conf_dbus_get,
+        .has_key   = puavo_conf_dbus_has_key,
         .open      = puavo_conf_dbus_open,
         .overwrite = puavo_conf_dbus_overwrite,
         .set       = puavo_conf_dbus_set,
