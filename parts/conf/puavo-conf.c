@@ -174,7 +174,7 @@ int main(int argc, char *argv[])
                         {0            , 0                , 0, 0   }
                 };
 
-                optval = getopt_long(argc, argv, "bhx", long_options, NULL);
+                optval = getopt_long(argc, argv, "bhx:", long_options, NULL);
 
                 if (optval == -1)
                         break;
