@@ -40,6 +40,10 @@ class Conf1 < DBus::Object
       @puavoconf.get(name)
     end
 
+    dbus_method :HasKey, 'in name:s, out b' do |name|
+      @puavoconf.has_key?(name)
+    end
+
     dbus_method :Overwrite, 'in name:s, in value:s' do |name, value|
       @puavoconf.overwrite(name, value)
     end
