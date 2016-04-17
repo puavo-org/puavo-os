@@ -32,6 +32,10 @@ class Conf1 < DBus::Object
       @puavoconf.get(name)
     end
 
+    dbus_method :Set, 'in name:s, in value:s' do |name, value|
+      @puavoconf.set(name, value)
+    end
+
   end
 
 end
