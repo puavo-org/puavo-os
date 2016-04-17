@@ -21,6 +21,73 @@
 
 #include "dbus.h"
 
+int puavo_conf_dbus_add(struct puavo_conf *const conf,
+                              char const *const key,
+                              char const *const value,
+                              struct puavo_conf_err *const errp)
+{
+        DBusError        dbus_err;
+        DBusMessage     *dbus_msg_call        = NULL;
+        DBusMessageIter  dbus_msg_call_args;
+        DBusMessage     *dbus_msg_reply       = NULL;
+        int              retval               = -1;
+
+        dbus_error_init(&dbus_err);
+
+        dbus_msg_call = dbus_message_new_method_call("org.puavo.Conf1",
+                                                     "/org/puavo/Conf1",
+                                                     "org.puavo.Conf1",
+                                                     "Add");
+        if (!dbus_msg_call) {
+                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
+                                   "Failed to create a method call message");
+                goto out;
+        }
+
+        dbus_message_iter_init_append(dbus_msg_call, &dbus_msg_call_args);
+        if (!dbus_message_iter_append_basic(&dbus_msg_call_args,
+                                            DBUS_TYPE_STRING,
+                                            &key)) {
+                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
+                                   "Failed to add a parameter to a method "
+                                   "call message due to lack of memory");
+                goto out;
+        }
+
+        if (!dbus_message_iter_append_basic(&dbus_msg_call_args,
+                                            DBUS_TYPE_STRING,
+                                            &value)) {
+                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
+                                   "Failed to add a parameter to a method "
+                                   "call message due to lack of memory");
+                goto out;
+        }
+
+        dbus_msg_reply = dbus_connection_send_with_reply_and_block(
+                conf->dbus_conn,
+                dbus_msg_call,
+                DBUS_TIMEOUT_USE_DEFAULT,
+                &dbus_err);
+        if (!dbus_msg_reply) {
+                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
+                                   "Failed to call a method: %s",
+                                   dbus_err.message);
+                goto out;
+        }
+        dbus_message_unref(dbus_msg_call);
+        dbus_msg_call = NULL;
+
+        retval = 0;
+out:
+        if (dbus_msg_reply)
+                dbus_message_unref(dbus_msg_reply);
+
+        if (dbus_msg_call)
+                dbus_message_unref(dbus_msg_call);
+
+        return retval;
+}
+
 int puavo_conf_dbus_close(struct puavo_conf *const conf,
                           struct puavo_conf_err *const errp  __attribute__ ((unused)))
 {
