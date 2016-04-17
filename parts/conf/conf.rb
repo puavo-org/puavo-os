@@ -22,6 +22,9 @@ module Puavo
         attach_function(:puavo_conf_open,
                         [:pointer, ConfErr.by_ref],
                         :int)
+        attach_function(:puavo_conf_clear,
+                        [:pointer, ConfErr.by_ref],
+                        :int)
         attach_function(:puavo_conf_close,
                         [:pointer, ConfErr.by_ref],
                         :int)
@@ -74,6 +77,16 @@ module Puavo
             err = ConfErr.new
 
             if puavo_conf_set(@puavoconf, key.to_s, value.to_s, err) == -1
+                raise Puavo::Conf::Error, err[:msg].to_ptr.read_string
+            end
+        end
+
+        def clear
+            raise Puavo::Conf::Error, 'Puavodb is not open' unless @puavoconf
+
+            err = ConfErr.new
+
+            if puavo_conf_clear(@puavoconf, err) == -1
                 raise Puavo::Conf::Error, err[:msg].to_ptr.read_string
             end
         end
