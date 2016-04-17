@@ -8,6 +8,12 @@ module Puavo
       :msg, [:char, 1024]
     end
 
+    class ConfList < FFI::Struct
+      layout :keys  , :pointer,
+             :values, :pointer,
+             :length, :size_t
+    end
+
     class Conf
         class Error < StandardError
         end
@@ -34,6 +40,9 @@ module Puavo
         attach_function(:puavo_conf_get,
                         [:pointer, :string, :pointer, ConfErr.by_ref],
                         :int)
+        attach_function(:puavo_conf_get_all,
+                        [:pointer, ConfList.by_ref, ConfErr.by_ref],
+                        :int)
         attach_function(:puavo_conf_has_key,
                         [:pointer, :string, :pointer, ConfErr.by_ref],
                         :int)
@@ -43,6 +52,9 @@ module Puavo
         attach_function(:puavo_conf_overwrite,
                         [:pointer, :string, :pointer, ConfErr.by_ref],
                         :int)
+        attach_function(:puavo_conf_list_free,
+                        [ConfList.by_ref],
+                        :void)
 
         def initialize
             puavoconf_p = FFI::MemoryPointer.new(:pointer)
@@ -72,6 +84,26 @@ module Puavo
             value_p.free
 
             return value
+        end
+
+        def get_all()
+            raise Puavo::Conf::Error, 'Puavodb is not open' unless @puavoconf
+
+            list = ConfList.new
+            err  = ConfErr.new
+
+            if puavo_conf_get_all(@puavoconf, list, err) == -1
+                raise Puavo::Conf::Error, err[:msg].to_ptr.read_string
+            end
+
+            return [], [] if list[:length] == 0
+
+            keys   = list[:keys].get_array_of_string(0, list[:length]).compact
+            values = list[:values].get_array_of_string(0, list[:length]).compact
+
+            puavo_conf_list_free(list)
+
+            return keys, values
         end
 
         def has_key?(key)
