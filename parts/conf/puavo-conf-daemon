@@ -40,6 +40,11 @@ class Conf1 < DBus::Object
       @puavoconf.get(name)
     end
 
+    dbus_method :GetAll, 'out t, out as, out as' do
+      keys, values = @puavoconf.get_all()
+      [keys.length, keys, values]
+    end
+
     dbus_method :HasKey, 'in name:s, out b' do |name|
       @puavoconf.has_key?(name)
     end
