@@ -252,21 +252,7 @@ int puavo_conf_get_all(puavo_conf_t *conf,
  *
  * @list - initialized parameter list
  */
-static inline void puavo_conf_list_free(struct puavo_conf_list *const list)
-{
-        size_t i;
-
-        for (i = 0; i < list->length; ++i) {
-                free(list->keys[i]);
-                free(list->values[i]);
-        }
-        free(list->keys);
-        free(list->values);
-
-        list->keys = NULL;
-        list->values = NULL;
-        list->length = 0;
-}
+void puavo_conf_list_free(struct puavo_conf_list *list);
 
 /**
  * puavo_conf_check_type() - check if the value is of given type

@@ -190,3 +190,19 @@ enum puavo_conf_conn puavo_conf_get_conn(puavo_conf_t const *const conf)
 
         return PUAVO_CONF_CONN_DBUS;
 }
+
+void puavo_conf_list_free(struct puavo_conf_list *const list)
+{
+        size_t i;
+
+        for (i = 0; i < list->length; ++i) {
+                free(list->keys[i]);
+                free(list->values[i]);
+        }
+        free(list->keys);
+        free(list->values);
+
+        list->keys = NULL;
+        list->values = NULL;
+        list->length = 0;
+}
