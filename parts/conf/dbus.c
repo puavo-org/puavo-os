@@ -285,6 +285,10 @@ int puavo_conf_dbus_get_all(struct puavo_conf *const conf,
         size_t            keys_count       = 0;
         size_t            values_count     = 0;
 
+        list->keys   = NULL;
+        list->values = NULL;
+        list->length = 0;
+
         dbus_call = puavo_conf_dbus_new_call("GetAll", NULL, errp);
         if (!dbus_call)
                 goto out;
