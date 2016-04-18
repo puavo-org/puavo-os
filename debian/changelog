@@ -1,3 +1,14 @@
+puavo-os (0.10.0~rc1+59ce95b531ddf0f33e12b97341db1d5efb78e741) jessie; urgency=medium
+
+  * New release
+  * parts/conf: test: add simple test script for puavo-conf CLI
+  * parts/conf: fix --help exit status
+  * parts/conf: rename local variables
+  * parts/conf: allow anyone to call org.puavo.Conf1.{Get,GetAll,HasKey}
+  * Git(59ce95b531ddf0f33e12b97341db1d5efb78e741)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Mon, 18 Apr 2016 15:30:10 +0300
+
 puavo-os (0.9.0+4dc351f7479566f3a748c94bf16dbf7226254628) jessie; urgency=medium
 
   * New release
