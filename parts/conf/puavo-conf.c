@@ -137,24 +137,27 @@ static int set_param(puavo_conf_t *const conf,
 
 int print_help(void)
 {
-        int ret = 0;
+        int err;
 
-        ret |= printf("Usage: puavo-conf [OPTIONS]... [--] [KEY [VALUE]]\n");
-        ret |= printf("\n");
-        ret |= printf("Get and set Puavo Configuration parameters.\n");
-        ret |= printf("\n");
-        ret |= printf("Options:\n");
-        ret |= printf("  -b, --type-bool               fail if VALUE is not boolean\n");
-        ret |= printf("  -h, --help                    display this help and exit\n");
-        ret |= printf("  -x STR, --match-exact STR     fail if value does not match STR exactly\n");
-        ret |= printf("\n");
-        ret |= printf("If both KEY and VALUE are given, set the value of\n");
-        ret |= printf("KEY to VALUE. If only KEY is given, display its\n");
-        ret |= printf("value. If no arguments are given, display all\n");
-        ret |= printf("parameters.\n");
-        ret |= printf("\n");
+        err = printf("Usage: puavo-conf [OPTIONS]... [--] [KEY [VALUE]]\n"
+                     "\n"
+                     "Get and set Puavo Configuration parameters.\n"
+                     "\n"
+                     "Options:\n"
+                     "  -b, --type-bool               fail if VALUE is not boolean\n"
+                     "  -h, --help                    display this help and exit\n"
+                     "  -x STR, --match-exact STR     fail if value does not match STR exactly\n"
+                     "\n"
+                     "If both KEY and VALUE are given, set the value of\n"
+                     "KEY to VALUE. If only KEY is given, display its\n"
+                     "value. If no arguments are given, display all\n"
+                     "parameters.\n"
+                     "\n");
 
-        return ret;
+        if (err < 0)
+                return EXIT_FAILURE;
+
+        return EXIT_SUCCESS;
 }
 
 int main(int argc, char *argv[])
