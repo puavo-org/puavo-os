@@ -1,7 +1,4 @@
-# If "infotv"-tag is defined, startup iivari-kiosk instead of
-# normal desktop session.
-
-jq -r .tags[] /etc/puavo/device.json | grep -q -x infotv && {
+puavo-conf -x infotv puavo.desktop.mode && {
   iivari_kiosk_domain="$(cat /etc/puavo/domain)"
   STARTUP="iivari-kiosk --urlbase https://${iivari_kiosk_domain}/infotv/conductor"
 }

@@ -1,8 +1,4 @@
-# If webkiosk tag is defined, open a language selector dialog 
-# and start xautolock to kill the session automatically if 
-# the session has not been used in 10 minutes.
-
-jq -r .tags[] /etc/puavo/device.json | grep -q -x webkiosk && {
+puavo-conf -x webkiosk puavo.desktop.mode && {
   /usr/bin/ratpoison &
   RATPOISON_PID=$!
 
