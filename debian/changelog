@@ -1,3 +1,79 @@
+puavo-os (0.9.0+4dc351f7479566f3a748c94bf16dbf7226254628) jessie; urgency=medium
+
+  * New release
+  * parts/conf: allow puavodesktop group to call org.puavo.Conf1.HasKey
+  * parts/conf: allow puavodesktop group to call org.puavo.Conf1.GetAll
+  * parts/conf: fix error handling in puavo_conf_dbus_set()
+  * parts/conf: fallback to DBus connection if connecting to DB fails
+  * parts/conf: initialize list before usage
+  * parts/conf: cleanup whitespace
+  * parts/conf: refactor common DBus method execution code
+  * parts/conf: rename few local variables
+  * parts/conf: refactor common DBus method call initialization code
+  * parts/conf: refactor common DBus array iteration code
+  * parts/conf: implement puavo_conf_dbus_get_all()
+  * parts/conf: fix parsing of -x option
+  * parts/conf: daemon: implement org.puavo.Conf1.GetAll
+  * parts/conf: ruby: implement Puavo::Conf.get_all()
+  * parts/conf: de-inline puavo_conf_list_free() to include it in shlib
+  * parts/conf: implement puavo_conf_dbus_has_key()
+  * parts/conf: daemon: implement org.puavo.Conf1.HasKey
+  * parts/conf: ruby: implement Puavo::Conf.has_key?()
+  * parts/conf: implement puavo_conf_dbus_clear()
+  * parts/conf: daemon: implement org.puavo.Conf1.Clear
+  * parts/conf: ruby: implement Puavo::Conf.clear()
+  * parts/conf: fix typo in Makefile
+  * parts/conf: ensure puavo-conf-daemon closes DB properly on exit
+  * parts/conf: implement puavo_conf_dbus_add()
+  * parts/conf: daemon: implement org.puavo.Conf1.Add
+  * parts/conf: implement puavo_conf_dbus_overwrite()
+  * parts/conf: daemon: implement org.puavo.Conf1.Overwrite
+  * parts/conf: implement puavo_conf_dbus_set()
+  * parts/conf: daemon: implement org.puavo.Conf1.Set
+  * parts/conf: fix basic compiler flags
+  * parts/conf: add missing const
+  * parts/conf: code formatting
+  * parts/conf: fix another use-after-free
+  * parts/conf: fix use-after-free
+  * parts/conf: rename few include guards
+  * parts/conf: remove redundant includes
+  * parts/conf: move all db stuff to a separate compilation unit
+  * parts/conf: test: link common.o and dbus.o to test binary
+  * parts/conf: move all dbus stuff to a separate compilation unit
+  * parts/conf: move private common stuff to a separate compilation unit
+  * parts/conf: add missing include
+  * parts/conf: remove double invocation of puavo_conf_close()
+  * parts/conf: implement puavo_conf_dbus_get()
+  * parts/conf: gitignore test executable and lock file
+  * parts/conf: encapsulate all operations in ops object as function
+    pointers
+  * parts/conf: rename all DB-specific functions
+  * parts/conf: rename static functions
+  * parts/conf: add function for getting the connection type
+  * parts/conf: test: adapt to meet the dbus functionality
+  * parts/conf: fix accidental double declaration of puavo_conf_add()
+  * parts/conf: open dbus connection if db connection fails
+  * parts/conf: whitespace cleanup
+  * parts/conf: remove socket stuff, we'll be using DBus instead
+  * parts/conf: install supplementary DBus files
+  * parts/conf: add simple DBus daemon
+  * Fix broken launchers: web browsers and gnome core apps.
+  * parts/wlan: gitignore generated puavo-wlanap.service
+  * parts/local-config: use puavo-conf to query the hosttype
+  * parts/ltsp: client: use puavo-conf to query the hosttype
+  * parts/ltsp: client: run puavo-conf-mkdb after DNS has been
+    configured
+  * parts/ltsp: client: remove broken breaks
+  * parts/ltsp: client: remove more of the same redundant LTSP heritage
+  * parts/rules: re-include autopoweroff module
+  * Remove upstart job files
+  * parts/rules: add ttf-ubuntu-font-family package
+  * parts/ltsp: client: remove some of the redundant LTSP heritage
+  * parts/conf: require puavo/etc and puavo/rest-client on-demand
+  * Git(4dc351f7479566f3a748c94bf16dbf7226254628)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Mon, 18 Apr 2016 13:06:37 +0300
+
 puavo-os (0.9.0~rc2+d432c7574d90042645ef2ac78959ccf78fd81f3a) jessie; urgency=medium
 
   * New release
