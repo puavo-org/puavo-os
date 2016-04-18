@@ -57,7 +57,6 @@ int puavo_conf_open(struct puavo_conf **const confp,
                     struct puavo_conf_err *const errp)
 {
         int retval;
-        struct puavo_conf_err err;
         struct puavo_conf *conf;
 
         retval = -1;
@@ -69,19 +68,12 @@ int puavo_conf_open(struct puavo_conf **const confp,
 
         /* Prioritize direct DB access ... */
         conf->ops = &PUAVO_CONF_OPS_DB;
-        if (conf->ops->open(conf, &err) == -1) {
-                if (errp)
-                        memcpy(errp, &err, sizeof(err));
-
-                if (err.sys_errno == EWOULDBLOCK) {
-                        /* ... but fall back to DBus access if the
-                         * database is already locked. It is most
-                         * probably locked by our DBus-capable daemon
-                         * summoned to help us. */
-                        conf->ops = &PUAVO_CONF_OPS_DBUS;
-                        retval = conf->ops->open(conf, errp);
-                }
-
+        if (conf->ops->open(conf, errp) == -1) {
+                /* ... but fall back to DBus access if the database is
+                 * already locked. It is most probably locked by our
+                 * DBus-capable daemon summoned to help us. */
+                conf->ops = &PUAVO_CONF_OPS_DBUS;
+                retval = conf->ops->open(conf, errp);
                 goto out;
         }
 
