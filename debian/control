@@ -89,13 +89,13 @@ Description: Puavo configuration
  sources, such as Puavo Web, local administrative tools or kernel command line.
  .
 
-Package: puavo-debian-boot
+Package: puavo-core
 Architecture: all
 Depends: ${misc:Depends},
  initramfs-tools,
  puavo-conf
-Description: Puavo Debian Boot
- Puavo integrations to Debian boot, required by Puavo images.
+Description: Puavo Core Infrastructure
+ Bolts and nuts for Puavo OS.
  .
 
 Package: puavo-devscripts
@@ -274,7 +274,7 @@ Depends: ${misc:Depends},
  perl,
  puavo-client,
  puavo-conf,
- puavo-debian-boot,
+ puavo-core,
  puavo-hw-tools,
  puavo-vpn-client,
  python,

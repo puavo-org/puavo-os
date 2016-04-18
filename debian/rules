@@ -23,9 +23,9 @@ override_dh_auto_install:
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-conf
 
-	$(MAKE) -C parts/debian-boot				\
+	$(MAKE) -C parts/core					\
 		install prefix=/usr sysconfdir=/etc		\
-		DESTDIR=$(CURDIR)/debian/puavo-debian-boot
+		DESTDIR=$(CURDIR)/debian/puavo-core
 
 	$(MAKE) -C parts/devscripts				\
 		install prefix=/usr sysconfdir=/etc		\
