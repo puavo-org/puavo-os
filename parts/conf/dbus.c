@@ -535,6 +535,8 @@ int puavo_conf_dbus_set(struct puavo_conf *const conf,
         }
 
         dbus_reply = puavo_conf_dbus_call(conf->dbus_conn, &dbus_call, errp);
+        if (!dbus_reply)
+                goto out;
 
         retval = 0;
 out:
