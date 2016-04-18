@@ -229,6 +229,64 @@ out:
         return retval;
 }
 
+static int puavo_conf_dbus_iter_str_array(DBusMessageIter *const iterp,
+                                          size_t *const countp,
+                                          char **const array,
+                                          const size_t length,
+                                          struct puavo_conf_err *const errp)
+{
+        DBusMessageIter array_iter;
+        int             retval      = -1;
+        size_t          count       =  0;
+
+        if (!dbus_message_iter_next(iterp)) {
+                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
+                                   "Received invalid reply with missing "
+                                   "arguments");
+                goto out;
+        }
+
+        if (DBUS_TYPE_ARRAY !=
+            dbus_message_iter_get_arg_type(iterp)) {
+                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
+                                   "Received invalid reply with wrong type");
+                goto out;
+        }
+
+        dbus_message_iter_recurse(iterp, &array_iter);
+
+        while (dbus_message_iter_get_arg_type(&array_iter) != DBUS_TYPE_INVALID) {
+                char *str;
+                if (DBUS_TYPE_STRING !=
+                    dbus_message_iter_get_arg_type(&array_iter)) {
+                        puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
+                                           "Received invalid reply with wrong type");
+                        goto out;
+                }
+                dbus_message_iter_get_basic(&array_iter, &str);
+
+                if (count >= length) {
+                        puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
+                                           "Received invalid reply with wrong "
+                                           "number of keys");
+                        goto out;
+                }
+
+                if ((array[count] = strdup(str)) == NULL) {
+                        puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_SYS, 0,
+                                           "Failed to duplicate a string");
+                        goto out;
+                }
+                ++count;
+
+                dbus_message_iter_next(&array_iter);
+        }
+        retval  = 0;
+        *countp = count;
+out:
+        return retval;
+}
+
 int puavo_conf_dbus_get_all(struct puavo_conf *const conf,
                             struct puavo_conf_list *const list,
                             struct puavo_conf_err *const errp)
@@ -237,7 +295,6 @@ int puavo_conf_dbus_get_all(struct puavo_conf *const conf,
         DBusMessage      *dbus_msg_call        = NULL;
         DBusMessage      *dbus_msg_reply       = NULL;
         DBusMessageIter   dbus_msg_reply_args;
-        DBusMessageIter   dbus_msg_iter_array;
         int               retval               = -1;
         size_t            keys_count           = 0;
         size_t            values_count         = 0;
@@ -296,91 +353,13 @@ int puavo_conf_dbus_get_all(struct puavo_conf *const conf,
                 goto out;
         }
 
-        if (!dbus_message_iter_next(&dbus_msg_reply_args)) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
-                                   "Received invalid reply with missing "
-                                   "arguments");
+        if (puavo_conf_dbus_iter_str_array(&dbus_msg_reply_args, &keys_count,
+                                           list->keys, list->length, errp))
                 goto out;
-        }
 
-        if (DBUS_TYPE_ARRAY !=
-            dbus_message_iter_get_arg_type(&dbus_msg_reply_args)) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
-                                   "Received invalid reply with wrong type");
+        if (puavo_conf_dbus_iter_str_array(&dbus_msg_reply_args, &values_count,
+                                           list->values, list->length, errp))
                 goto out;
-        }
-
-        dbus_message_iter_recurse(&dbus_msg_reply_args, &dbus_msg_iter_array);
-
-        while (dbus_message_iter_get_arg_type(&dbus_msg_iter_array) != DBUS_TYPE_INVALID) {
-                char *key;
-                if (DBUS_TYPE_STRING !=
-                    dbus_message_iter_get_arg_type(&dbus_msg_iter_array)) {
-                        puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
-                                           "Received invalid reply with wrong type");
-                        goto out;
-                }
-                dbus_message_iter_get_basic(&dbus_msg_iter_array, &key);
-
-                if (keys_count >= list->length) {
-                        puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
-                                           "Received invalid reply with wrong "
-                                           "number of keys");
-                        goto out;
-                }
-
-                if ((list->keys[keys_count] = strdup(key)) == NULL) {
-                        puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_SYS, 0,
-                                           "Failed to duplicate a string");
-                        goto out;
-                }
-                ++keys_count;
-
-                dbus_message_iter_next(&dbus_msg_iter_array);
-        }
-
-        if (!dbus_message_iter_next(&dbus_msg_reply_args)) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
-                                   "Received invalid reply with missing "
-                                   "arguments");
-                goto out;
-        }
-
-        if (DBUS_TYPE_ARRAY !=
-            dbus_message_iter_get_arg_type(&dbus_msg_reply_args)) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
-                                   "Received invalid reply with wrong type");
-                goto out;
-        }
-
-        dbus_message_iter_recurse(&dbus_msg_reply_args, &dbus_msg_iter_array);
-
-        while (dbus_message_iter_get_arg_type(&dbus_msg_iter_array) != DBUS_TYPE_INVALID) {
-                char *value;
-                if (DBUS_TYPE_STRING !=
-                    dbus_message_iter_get_arg_type(&dbus_msg_iter_array)) {
-                        puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
-                                           "Received invalid reply with wrong type");
-                        goto out;
-                }
-                dbus_message_iter_get_basic(&dbus_msg_iter_array, &value);
-
-                if (values_count >= list->length) {
-                        puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
-                                           "Received invalid reply with wrong "
-                                           "number of values");
-                        goto out;
-                }
-
-                if ((list->values[values_count] = strdup(value)) == NULL) {
-                        puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_SYS, 0,
-                                           "Failed to duplicate a string");
-                        goto out;
-                }
-                ++values_count;
-
-                dbus_message_iter_next(&dbus_msg_iter_array);
-        }
 
         if (dbus_message_iter_next(&dbus_msg_reply_args)) {
                 puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
