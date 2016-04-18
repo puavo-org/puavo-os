@@ -28,16 +28,16 @@ class Conf1 < DBus::Object
 
   dbus_interface "org.puavo.Conf1" do
 
-    dbus_method :Add, 'in name:s, in value:s' do |name, value|
-      @puavoconf.add(name, value)
+    dbus_method :Add, 'in key:s, in value:s' do |key, value|
+      @puavoconf.add(key, value)
     end
 
     dbus_method :Clear, '' do
       @puavoconf.clear()
     end
 
-    dbus_method :Get, 'in name:s, out s' do |name|
-      @puavoconf.get(name)
+    dbus_method :Get, 'in key:s, out s' do |key|
+      @puavoconf.get(key)
     end
 
     dbus_method :GetAll, 'out t, out as, out as' do
@@ -45,16 +45,16 @@ class Conf1 < DBus::Object
       [keys.length, keys, values]
     end
 
-    dbus_method :HasKey, 'in name:s, out b' do |name|
-      @puavoconf.has_key?(name)
+    dbus_method :HasKey, 'in key:s, out b' do |key|
+      @puavoconf.has_key?(key)
     end
 
-    dbus_method :Overwrite, 'in name:s, in value:s' do |name, value|
-      @puavoconf.overwrite(name, value)
+    dbus_method :Overwrite, 'in key:s, in value:s' do |key, value|
+      @puavoconf.overwrite(key, value)
     end
 
-    dbus_method :Set, 'in name:s, in value:s' do |name, value|
-      @puavoconf.set(name, value)
+    dbus_method :Set, 'in key:s, in value:s' do |key, value|
+      @puavoconf.set(key, value)
     end
 
   end
