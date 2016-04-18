@@ -21,6 +21,26 @@
 
 #include "dbus.h"
 
+static DBusMessage *puavo_conf_dbus_new_call(const char *const method,
+                                             DBusMessageIter *msg_args,
+                                             struct puavo_conf_err *const errp)
+{
+        DBusMessage *msg;
+
+        msg = dbus_message_new_method_call("org.puavo.Conf1",
+                                           "/org/puavo/Conf1",
+                                           "org.puavo.Conf1",
+                                           method);
+        if (!msg)
+                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
+                                   "Failed to create a method call message");
+
+        if (msg_args)
+                dbus_message_iter_init_append(msg, msg_args);
+
+        return msg;
+}
+
 int puavo_conf_dbus_add(struct puavo_conf *const conf,
                               char const *const key,
                               char const *const value,
@@ -34,17 +54,10 @@ int puavo_conf_dbus_add(struct puavo_conf *const conf,
 
         dbus_error_init(&dbus_err);
 
-        dbus_msg_call = dbus_message_new_method_call("org.puavo.Conf1",
-                                                     "/org/puavo/Conf1",
-                                                     "org.puavo.Conf1",
-                                                     "Add");
-        if (!dbus_msg_call) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
-                                   "Failed to create a method call message");
+        dbus_msg_call = puavo_conf_dbus_new_call("Add", &dbus_msg_call_args, errp);
+        if (!dbus_msg_call)
                 goto out;
-        }
 
-        dbus_message_iter_init_append(dbus_msg_call, &dbus_msg_call_args);
         if (!dbus_message_iter_append_basic(&dbus_msg_call_args,
                                             DBUS_TYPE_STRING,
                                             &key)) {
@@ -98,15 +111,9 @@ int puavo_conf_dbus_clear(struct puavo_conf *const conf,
 
         dbus_error_init(&dbus_err);
 
-        dbus_msg_call = dbus_message_new_method_call("org.puavo.Conf1",
-                                                     "/org/puavo/Conf1",
-                                                     "org.puavo.Conf1",
-                                                     "Clear");
-        if (!dbus_msg_call) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
-                                   "Failed to create a method call message");
+        dbus_msg_call = puavo_conf_dbus_new_call("Clear", NULL, errp);
+        if (!dbus_msg_call)
                 goto out;
-        }
 
         dbus_msg_reply = dbus_connection_send_with_reply_and_block(
                 conf->dbus_conn,
@@ -157,17 +164,10 @@ int puavo_conf_dbus_get(struct puavo_conf *const conf,
 
         dbus_error_init(&dbus_err);
 
-        dbus_msg_call = dbus_message_new_method_call("org.puavo.Conf1",
-                                                     "/org/puavo/Conf1",
-                                                     "org.puavo.Conf1",
-                                                     "Get");
-        if (!dbus_msg_call) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
-                                   "Failed to create a method call message");
+        dbus_msg_call = puavo_conf_dbus_new_call("Get", &dbus_msg_call_args, errp);
+        if (!dbus_msg_call)
                 goto out;
-        }
 
-        dbus_message_iter_init_append(dbus_msg_call, &dbus_msg_call_args);
         if (!dbus_message_iter_append_basic(&dbus_msg_call_args,
                                             DBUS_TYPE_STRING,
                                             &key)) {
@@ -301,15 +301,9 @@ int puavo_conf_dbus_get_all(struct puavo_conf *const conf,
 
         dbus_error_init(&dbus_err);
 
-        dbus_msg_call = dbus_message_new_method_call("org.puavo.Conf1",
-                                                     "/org/puavo/Conf1",
-                                                     "org.puavo.Conf1",
-                                                     "GetAll");
-        if (!dbus_msg_call) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
-                                   "Failed to create a method call message");
+        dbus_msg_call = puavo_conf_dbus_new_call("GetAll", NULL, errp);
+        if (!dbus_msg_call)
                 goto out;
-        }
 
         dbus_msg_reply = dbus_connection_send_with_reply_and_block(
                 conf->dbus_conn,
@@ -412,17 +406,10 @@ int puavo_conf_dbus_has_key(struct puavo_conf *const conf,
 
         dbus_error_init(&dbus_err);
 
-        dbus_msg_call = dbus_message_new_method_call("org.puavo.Conf1",
-                                                     "/org/puavo/Conf1",
-                                                     "org.puavo.Conf1",
-                                                     "HasKey");
-        if (!dbus_msg_call) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
-                                   "Failed to create a method call message");
+        dbus_msg_call = puavo_conf_dbus_new_call("HasKey", &dbus_msg_call_args, errp);
+        if (!dbus_msg_call)
                 goto out;
-        }
 
-        dbus_message_iter_init_append(dbus_msg_call, &dbus_msg_call_args);
         if (!dbus_message_iter_append_basic(&dbus_msg_call_args,
                                             DBUS_TYPE_STRING,
                                             &key)) {
@@ -517,17 +504,10 @@ int puavo_conf_dbus_overwrite(struct puavo_conf *const conf,
 
         dbus_error_init(&dbus_err);
 
-        dbus_msg_call = dbus_message_new_method_call("org.puavo.Conf1",
-                                                     "/org/puavo/Conf1",
-                                                     "org.puavo.Conf1",
-                                                     "Overwrite");
-        if (!dbus_msg_call) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
-                                   "Failed to create a method call message");
+        dbus_msg_call = puavo_conf_dbus_new_call("Overwrite", &dbus_msg_call_args, errp);
+        if (!dbus_msg_call)
                 goto out;
-        }
 
-        dbus_message_iter_init_append(dbus_msg_call, &dbus_msg_call_args);
         if (!dbus_message_iter_append_basic(&dbus_msg_call_args,
                                             DBUS_TYPE_STRING,
                                             &key)) {
@@ -584,17 +564,10 @@ int puavo_conf_dbus_set(struct puavo_conf *const conf,
 
         dbus_error_init(&dbus_err);
 
-        dbus_msg_call = dbus_message_new_method_call("org.puavo.Conf1",
-                                                     "/org/puavo/Conf1",
-                                                     "org.puavo.Conf1",
-                                                     "Set");
-        if (!dbus_msg_call) {
-                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
-                                   "Failed to create a method call message");
+        dbus_msg_call = puavo_conf_dbus_new_call("Set", &dbus_msg_call_args, errp);
+        if (!dbus_msg_call)
                 goto out;
-        }
 
-        dbus_message_iter_init_append(dbus_msg_call, &dbus_msg_call_args);
         if (!dbus_message_iter_append_basic(&dbus_msg_call_args,
                                             DBUS_TYPE_STRING,
                                             &key)) {
