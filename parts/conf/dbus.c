@@ -47,18 +47,18 @@ int puavo_conf_dbus_add(struct puavo_conf *const conf,
                               struct puavo_conf_err *const errp)
 {
         DBusError        dbus_err;
-        DBusMessage     *dbus_msg_call        = NULL;
-        DBusMessageIter  dbus_msg_call_args;
-        DBusMessage     *dbus_msg_reply       = NULL;
-        int              retval               = -1;
+        DBusMessage     *dbus_call        = NULL;
+        DBusMessageIter  dbus_call_args;
+        DBusMessage     *dbus_reply       = NULL;
+        int              retval           = -1;
 
         dbus_error_init(&dbus_err);
 
-        dbus_msg_call = puavo_conf_dbus_new_call("Add", &dbus_msg_call_args, errp);
-        if (!dbus_msg_call)
+        dbus_call = puavo_conf_dbus_new_call("Add", &dbus_call_args, errp);
+        if (!dbus_call)
                 goto out;
 
-        if (!dbus_message_iter_append_basic(&dbus_msg_call_args,
+        if (!dbus_message_iter_append_basic(&dbus_call_args,
                                             DBUS_TYPE_STRING,
                                             &key)) {
                 puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
@@ -67,7 +67,7 @@ int puavo_conf_dbus_add(struct puavo_conf *const conf,
                 goto out;
         }
 
-        if (!dbus_message_iter_append_basic(&dbus_msg_call_args,
+        if (!dbus_message_iter_append_basic(&dbus_call_args,
                                             DBUS_TYPE_STRING,
                                             &value)) {
                 puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
@@ -76,27 +76,27 @@ int puavo_conf_dbus_add(struct puavo_conf *const conf,
                 goto out;
         }
 
-        dbus_msg_reply = dbus_connection_send_with_reply_and_block(
+        dbus_reply = dbus_connection_send_with_reply_and_block(
                 conf->dbus_conn,
-                dbus_msg_call,
+                dbus_call,
                 DBUS_TIMEOUT_USE_DEFAULT,
                 &dbus_err);
-        if (!dbus_msg_reply) {
+        if (!dbus_reply) {
                 puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
                                    "Failed to call a method: %s",
                                    dbus_err.message);
                 goto out;
         }
-        dbus_message_unref(dbus_msg_call);
-        dbus_msg_call = NULL;
+        dbus_message_unref(dbus_call);
+        dbus_call = NULL;
 
         retval = 0;
 out:
-        if (dbus_msg_reply)
-                dbus_message_unref(dbus_msg_reply);
+        if (dbus_reply)
+                dbus_message_unref(dbus_reply);
 
-        if (dbus_msg_call)
-                dbus_message_unref(dbus_msg_call);
+        if (dbus_call)
+                dbus_message_unref(dbus_call);
 
         return retval;
 }
@@ -105,37 +105,37 @@ int puavo_conf_dbus_clear(struct puavo_conf *const conf,
                           struct puavo_conf_err *const errp)
 {
         DBusError        dbus_err;
-        DBusMessage     *dbus_msg_call        = NULL;
-        DBusMessage     *dbus_msg_reply       = NULL;
-        int              retval               = -1;
+        DBusMessage     *dbus_call        = NULL;
+        DBusMessage     *dbus_reply       = NULL;
+        int              retval           = -1;
 
         dbus_error_init(&dbus_err);
 
-        dbus_msg_call = puavo_conf_dbus_new_call("Clear", NULL, errp);
-        if (!dbus_msg_call)
+        dbus_call = puavo_conf_dbus_new_call("Clear", NULL, errp);
+        if (!dbus_call)
                 goto out;
 
-        dbus_msg_reply = dbus_connection_send_with_reply_and_block(
+        dbus_reply = dbus_connection_send_with_reply_and_block(
                 conf->dbus_conn,
-                dbus_msg_call,
+                dbus_call,
                 DBUS_TIMEOUT_USE_DEFAULT,
                 &dbus_err);
-        if (!dbus_msg_reply) {
+        if (!dbus_reply) {
                 puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
                                    "Failed to call a method: %s",
                                    dbus_err.message);
                 goto out;
         }
-        dbus_message_unref(dbus_msg_call);
-        dbus_msg_call = NULL;
+        dbus_message_unref(dbus_call);
+        dbus_call = NULL;
 
         retval = 0;
 out:
-        if (dbus_msg_reply)
-                dbus_message_unref(dbus_msg_reply);
+        if (dbus_reply)
+                dbus_message_unref(dbus_reply);
 
-        if (dbus_msg_call)
-                dbus_message_unref(dbus_msg_call);
+        if (dbus_call)
+                dbus_message_unref(dbus_call);
 
         return retval;
 }
@@ -156,19 +156,19 @@ int puavo_conf_dbus_get(struct puavo_conf *const conf,
 {
         char            *value;
         DBusError        dbus_err;
-        DBusMessage     *dbus_msg_call        = NULL;
-        DBusMessageIter  dbus_msg_call_args;
-        DBusMessage     *dbus_msg_reply       = NULL;
-        DBusMessageIter  dbus_msg_reply_args;
-        int              retval               = -1;
+        DBusMessage     *dbus_call        = NULL;
+        DBusMessageIter  dbus_call_args;
+        DBusMessage     *dbus_reply       = NULL;
+        DBusMessageIter  dbus_reply_args;
+        int              retval           = -1;
 
         dbus_error_init(&dbus_err);
 
-        dbus_msg_call = puavo_conf_dbus_new_call("Get", &dbus_msg_call_args, errp);
-        if (!dbus_msg_call)
+        dbus_call = puavo_conf_dbus_new_call("Get", &dbus_call_args, errp);
+        if (!dbus_call)
                 goto out;
 
-        if (!dbus_message_iter_append_basic(&dbus_msg_call_args,
+        if (!dbus_message_iter_append_basic(&dbus_call_args,
                                             DBUS_TYPE_STRING,
                                             &key)) {
                 puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
@@ -177,33 +177,33 @@ int puavo_conf_dbus_get(struct puavo_conf *const conf,
                 goto out;
         }
 
-        dbus_msg_reply = dbus_connection_send_with_reply_and_block(
+        dbus_reply = dbus_connection_send_with_reply_and_block(
                 conf->dbus_conn,
-                dbus_msg_call,
+                dbus_call,
                 DBUS_TIMEOUT_USE_DEFAULT,
                 &dbus_err);
-        if (!dbus_msg_reply) {
+        if (!dbus_reply) {
                 puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
                                    "Failed to call a method: %s",
                                    dbus_err.message);
                 goto out;
         }
-        dbus_message_unref(dbus_msg_call);
-        dbus_msg_call = NULL;
+        dbus_message_unref(dbus_call);
+        dbus_call = NULL;
 
-        if (!dbus_message_iter_init(dbus_msg_reply, &dbus_msg_reply_args)) {
+        if (!dbus_message_iter_init(dbus_reply, &dbus_reply_args)) {
                 puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
                                    "Received invalid reply with no arguments");
                 goto out;
         }
 
         if (DBUS_TYPE_STRING !=
-            dbus_message_iter_get_arg_type(&dbus_msg_reply_args)) {
+            dbus_message_iter_get_arg_type(&dbus_reply_args)) {
                 puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
                                    "Received invalid reply with wrong type");
                 goto out;
         }
-        dbus_message_iter_get_basic(&dbus_msg_reply_args, &value);
+        dbus_message_iter_get_basic(&dbus_reply_args, &value);
 
         if ((*valuep = strdup(value)) == NULL) {
                 puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_SYS, 0,
@@ -211,7 +211,7 @@ int puavo_conf_dbus_get(struct puavo_conf *const conf,
                 goto out;
         }
 
-        if (dbus_message_iter_next(&dbus_msg_reply_args)) {
+        if (dbus_message_iter_next(&dbus_reply_args)) {
                 puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
                                    "Received invalid reply with too many "
                                    "arguments");
@@ -220,11 +220,11 @@ int puavo_conf_dbus_get(struct puavo_conf *const conf,
 
         retval = 0;
 out:
-        if (dbus_msg_reply)
-                dbus_message_unref(dbus_msg_reply);
+        if (dbus_reply)
+                dbus_message_unref(dbus_reply);
 
-        if (dbus_msg_call)
-                dbus_message_unref(dbus_msg_call);
+        if (dbus_call)
+                dbus_message_unref(dbus_call);
 
         return retval;
 }
@@ -292,46 +292,46 @@ int puavo_conf_dbus_get_all(struct puavo_conf *const conf,
                             struct puavo_conf_err *const errp)
 {
         DBusError         dbus_err;
-        DBusMessage      *dbus_msg_call        = NULL;
-        DBusMessage      *dbus_msg_reply       = NULL;
-        DBusMessageIter   dbus_msg_reply_args;
-        int               retval               = -1;
-        size_t            keys_count           = 0;
-        size_t            values_count         = 0;
+        DBusMessage      *dbus_call        = NULL;
+        DBusMessage      *dbus_reply       = NULL;
+        DBusMessageIter   dbus_reply_args;
+        int               retval           = -1;
+        size_t            keys_count       = 0;
+        size_t            values_count     = 0;
 
         dbus_error_init(&dbus_err);
 
-        dbus_msg_call = puavo_conf_dbus_new_call("GetAll", NULL, errp);
-        if (!dbus_msg_call)
+        dbus_call = puavo_conf_dbus_new_call("GetAll", NULL, errp);
+        if (!dbus_call)
                 goto out;
 
-        dbus_msg_reply = dbus_connection_send_with_reply_and_block(
+        dbus_reply = dbus_connection_send_with_reply_and_block(
                 conf->dbus_conn,
-                dbus_msg_call,
+                dbus_call,
                 DBUS_TIMEOUT_USE_DEFAULT,
                 &dbus_err);
-        if (!dbus_msg_reply) {
+        if (!dbus_reply) {
                 puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
                                    "Failed to call a method: %s",
                                    dbus_err.message);
                 goto out;
         }
-        dbus_message_unref(dbus_msg_call);
-        dbus_msg_call = NULL;
+        dbus_message_unref(dbus_call);
+        dbus_call = NULL;
 
-        if (!dbus_message_iter_init(dbus_msg_reply, &dbus_msg_reply_args)) {
+        if (!dbus_message_iter_init(dbus_reply, &dbus_reply_args)) {
                 puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
                                    "Received invalid reply with no arguments");
                 goto out;
         }
 
         if (DBUS_TYPE_UINT64 !=
-            dbus_message_iter_get_arg_type(&dbus_msg_reply_args)) {
+            dbus_message_iter_get_arg_type(&dbus_reply_args)) {
                 puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
                                    "Received invalid reply with wrong type");
                 goto out;
         }
-        dbus_message_iter_get_basic(&dbus_msg_reply_args, &list->length);
+        dbus_message_iter_get_basic(&dbus_reply_args, &list->length);
 
         list->keys = malloc(sizeof(char *) * list->length);
         if (!list->keys) {
@@ -347,15 +347,15 @@ int puavo_conf_dbus_get_all(struct puavo_conf *const conf,
                 goto out;
         }
 
-        if (puavo_conf_dbus_iter_str_array(&dbus_msg_reply_args, &keys_count,
+        if (puavo_conf_dbus_iter_str_array(&dbus_reply_args, &keys_count,
                                            list->keys, list->length, errp))
                 goto out;
 
-        if (puavo_conf_dbus_iter_str_array(&dbus_msg_reply_args, &values_count,
+        if (puavo_conf_dbus_iter_str_array(&dbus_reply_args, &values_count,
                                            list->values, list->length, errp))
                 goto out;
 
-        if (dbus_message_iter_next(&dbus_msg_reply_args)) {
+        if (dbus_message_iter_next(&dbus_reply_args)) {
                 puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
                                    "Received invalid reply with too many "
                                    "arguments");
@@ -383,11 +383,11 @@ out:
                 }
         }
 
-        if (dbus_msg_reply)
-                dbus_message_unref(dbus_msg_reply);
+        if (dbus_reply)
+                dbus_message_unref(dbus_reply);
 
-        if (dbus_msg_call)
-                dbus_message_unref(dbus_msg_call);
+        if (dbus_call)
+                dbus_message_unref(dbus_call);
 
         return retval;
 }
@@ -398,19 +398,19 @@ int puavo_conf_dbus_has_key(struct puavo_conf *const conf,
                             struct puavo_conf_err *const errp)
 {
         DBusError        dbus_err;
-        DBusMessage     *dbus_msg_call        = NULL;
-        DBusMessageIter  dbus_msg_call_args;
-        DBusMessage     *dbus_msg_reply       = NULL;
-        DBusMessageIter  dbus_msg_reply_args;
-        int              retval               = -1;
+        DBusMessage     *dbus_call        = NULL;
+        DBusMessageIter  dbus_call_args;
+        DBusMessage     *dbus_reply       = NULL;
+        DBusMessageIter  dbus_reply_args;
+        int              retval           = -1;
 
         dbus_error_init(&dbus_err);
 
-        dbus_msg_call = puavo_conf_dbus_new_call("HasKey", &dbus_msg_call_args, errp);
-        if (!dbus_msg_call)
+        dbus_call = puavo_conf_dbus_new_call("HasKey", &dbus_call_args, errp);
+        if (!dbus_call)
                 goto out;
 
-        if (!dbus_message_iter_append_basic(&dbus_msg_call_args,
+        if (!dbus_message_iter_append_basic(&dbus_call_args,
                                             DBUS_TYPE_STRING,
                                             &key)) {
                 puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
@@ -419,35 +419,35 @@ int puavo_conf_dbus_has_key(struct puavo_conf *const conf,
                 goto out;
         }
 
-        dbus_msg_reply = dbus_connection_send_with_reply_and_block(
+        dbus_reply = dbus_connection_send_with_reply_and_block(
                 conf->dbus_conn,
-                dbus_msg_call,
+                dbus_call,
                 DBUS_TIMEOUT_USE_DEFAULT,
                 &dbus_err);
-        if (!dbus_msg_reply) {
+        if (!dbus_reply) {
                 puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
                                    "Failed to call a method: %s",
                                    dbus_err.message);
                 goto out;
         }
-        dbus_message_unref(dbus_msg_call);
-        dbus_msg_call = NULL;
+        dbus_message_unref(dbus_call);
+        dbus_call = NULL;
 
-        if (!dbus_message_iter_init(dbus_msg_reply, &dbus_msg_reply_args)) {
+        if (!dbus_message_iter_init(dbus_reply, &dbus_reply_args)) {
                 puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
                                    "Received invalid reply with no arguments");
                 goto out;
         }
 
         if (DBUS_TYPE_BOOLEAN !=
-            dbus_message_iter_get_arg_type(&dbus_msg_reply_args)) {
+            dbus_message_iter_get_arg_type(&dbus_reply_args)) {
                 puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
                                    "Received invalid reply with wrong type");
                 goto out;
         }
-        dbus_message_iter_get_basic(&dbus_msg_reply_args, haskey);
+        dbus_message_iter_get_basic(&dbus_reply_args, haskey);
 
-        if (dbus_message_iter_next(&dbus_msg_reply_args)) {
+        if (dbus_message_iter_next(&dbus_reply_args)) {
                 puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
                                    "Received invalid reply with too many "
                                    "arguments");
@@ -456,11 +456,11 @@ int puavo_conf_dbus_has_key(struct puavo_conf *const conf,
 
         retval = 0;
 out:
-        if (dbus_msg_reply)
-                dbus_message_unref(dbus_msg_reply);
+        if (dbus_reply)
+                dbus_message_unref(dbus_reply);
 
-        if (dbus_msg_call)
-                dbus_message_unref(dbus_msg_call);
+        if (dbus_call)
+                dbus_message_unref(dbus_call);
 
         return retval;
 }
@@ -497,18 +497,18 @@ int puavo_conf_dbus_overwrite(struct puavo_conf *const conf,
                               struct puavo_conf_err *const errp)
 {
         DBusError        dbus_err;
-        DBusMessage     *dbus_msg_call        = NULL;
-        DBusMessageIter  dbus_msg_call_args;
-        DBusMessage     *dbus_msg_reply       = NULL;
-        int              retval               = -1;
+        DBusMessage     *dbus_call        = NULL;
+        DBusMessageIter  dbus_call_args;
+        DBusMessage     *dbus_reply       = NULL;
+        int              retval           = -1;
 
         dbus_error_init(&dbus_err);
 
-        dbus_msg_call = puavo_conf_dbus_new_call("Overwrite", &dbus_msg_call_args, errp);
-        if (!dbus_msg_call)
+        dbus_call = puavo_conf_dbus_new_call("Overwrite", &dbus_call_args, errp);
+        if (!dbus_call)
                 goto out;
 
-        if (!dbus_message_iter_append_basic(&dbus_msg_call_args,
+        if (!dbus_message_iter_append_basic(&dbus_call_args,
                                             DBUS_TYPE_STRING,
                                             &key)) {
                 puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
@@ -517,7 +517,7 @@ int puavo_conf_dbus_overwrite(struct puavo_conf *const conf,
                 goto out;
         }
 
-        if (!dbus_message_iter_append_basic(&dbus_msg_call_args,
+        if (!dbus_message_iter_append_basic(&dbus_call_args,
                                             DBUS_TYPE_STRING,
                                             &value)) {
                 puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
@@ -526,27 +526,27 @@ int puavo_conf_dbus_overwrite(struct puavo_conf *const conf,
                 goto out;
         }
 
-        dbus_msg_reply = dbus_connection_send_with_reply_and_block(
+        dbus_reply = dbus_connection_send_with_reply_and_block(
                 conf->dbus_conn,
-                dbus_msg_call,
+                dbus_call,
                 DBUS_TIMEOUT_USE_DEFAULT,
                 &dbus_err);
-        if (!dbus_msg_reply) {
+        if (!dbus_reply) {
                 puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
                                    "Failed to call a method: %s",
                                    dbus_err.message);
                 goto out;
         }
-        dbus_message_unref(dbus_msg_call);
-        dbus_msg_call = NULL;
+        dbus_message_unref(dbus_call);
+        dbus_call = NULL;
 
         retval = 0;
 out:
-        if (dbus_msg_reply)
-                dbus_message_unref(dbus_msg_reply);
+        if (dbus_reply)
+                dbus_message_unref(dbus_reply);
 
-        if (dbus_msg_call)
-                dbus_message_unref(dbus_msg_call);
+        if (dbus_call)
+                dbus_message_unref(dbus_call);
 
         return retval;
 }
@@ -557,18 +557,18 @@ int puavo_conf_dbus_set(struct puavo_conf *const conf,
                         struct puavo_conf_err *const errp)
 {
         DBusError        dbus_err;
-        DBusMessage     *dbus_msg_call        = NULL;
-        DBusMessageIter  dbus_msg_call_args;
-        DBusMessage     *dbus_msg_reply       = NULL;
-        int              retval               = -1;
+        DBusMessage     *dbus_call        = NULL;
+        DBusMessageIter  dbus_call_args;
+        DBusMessage     *dbus_reply       = NULL;
+        int              retval           = -1;
 
         dbus_error_init(&dbus_err);
 
-        dbus_msg_call = puavo_conf_dbus_new_call("Set", &dbus_msg_call_args, errp);
-        if (!dbus_msg_call)
+        dbus_call = puavo_conf_dbus_new_call("Set", &dbus_call_args, errp);
+        if (!dbus_call)
                 goto out;
 
-        if (!dbus_message_iter_append_basic(&dbus_msg_call_args,
+        if (!dbus_message_iter_append_basic(&dbus_call_args,
                                             DBUS_TYPE_STRING,
                                             &key)) {
                 puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
@@ -577,7 +577,7 @@ int puavo_conf_dbus_set(struct puavo_conf *const conf,
                 goto out;
         }
 
-        if (!dbus_message_iter_append_basic(&dbus_msg_call_args,
+        if (!dbus_message_iter_append_basic(&dbus_call_args,
                                             DBUS_TYPE_STRING,
                                             &value)) {
                 puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
@@ -586,27 +586,27 @@ int puavo_conf_dbus_set(struct puavo_conf *const conf,
                 goto out;
         }
 
-        dbus_msg_reply = dbus_connection_send_with_reply_and_block(
+        dbus_reply = dbus_connection_send_with_reply_and_block(
                 conf->dbus_conn,
-                dbus_msg_call,
+                dbus_call,
                 DBUS_TIMEOUT_USE_DEFAULT,
                 &dbus_err);
-        if (!dbus_msg_reply) {
+        if (!dbus_reply) {
                 puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_DBUS, 0,
                                    "Failed to call a method: %s",
                                    dbus_err.message);
                 goto out;
         }
-        dbus_message_unref(dbus_msg_call);
-        dbus_msg_call = NULL;
+        dbus_message_unref(dbus_call);
+        dbus_call = NULL;
 
         retval = 0;
 out:
-        if (dbus_msg_reply)
-                dbus_message_unref(dbus_msg_reply);
+        if (dbus_reply)
+                dbus_message_unref(dbus_reply);
 
-        if (dbus_msg_call)
-                dbus_message_unref(dbus_msg_call);
+        if (dbus_call)
+                dbus_message_unref(dbus_call);
 
         return retval;
 }
