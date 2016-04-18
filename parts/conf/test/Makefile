@@ -4,7 +4,8 @@ CFLAGS   =
 
 .PHONY: all
 all: test_libpuavoconf
-	@./test_libpuavoconf
+	./test_libpuavoconf
+	./test_puavo-conf
 
 %.o: %.c
 

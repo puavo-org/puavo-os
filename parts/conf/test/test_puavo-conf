@@ -1,0 +1,83 @@
+#!/bin/sh
+
+set -eu
+
+export PUAVO_CONF_DB_FILEPATH=test_puavo-conf.db
+rm -f "${PUAVO_CONF_DB_FILEPATH}"
+
+empty_list=$(../puavo-conf)
+[ -z "${empty_list}" ] || {
+    echo 'TestError: empty_list is not empty' >&2
+    exit 1
+}
+
+../puavo-conf var1 value1
+
+var1=$(../puavo-conf -x value1 var1)
+[ "${var1}" = value1 ] || {
+    echo "TestError: ${var1} != value1" >&2
+    exit 1
+}
+
+../puavo-conf -x value1 var1 value1 || {
+    echo "TestError: -x flag is broken" >&2
+    exit 1
+}
+
+../puavo-conf --match-exact value2 var1 value1 2>/dev/null && {
+    echo "TestError: --match-exact flag is broken" >&2
+    exit 1
+}
+
+../puavo-conf --help >/dev/null || {
+    echo "TestError: --help exited with status $? status" >&2
+    exit 1
+}
+
+../puavo-conf var2 true
+
+var2=$(../puavo-conf -b var2) || {
+    echo "TestError: -b failed when getting true" >&2
+    exit 1
+}
+
+var2=$(../puavo-conf --type-bool var2) || {
+    echo "TestError: --type-bool failed when getting true" >&2
+    exit 1
+}
+
+../puavo-conf --type-bool var2 True 2>/dev/null && {
+    echo "TestError: --type-bool did not fail with invalid boolean value" >&2
+    exit 1
+}
+
+../puavo-conf --type-bool var2 yes 2>/dev/null && {
+    echo "TestError: --type-bool did not fail with invalid boolean value" >&2
+    exit 1
+}
+
+../puavo-conf --type-bool var2 no 2>/dev/null && {
+    echo "TestError: --type-bool did not fail with invalid boolean value" >&2
+    exit 1
+}
+
+../puavo-conf --type-bool var2 No 2>/dev/null && {
+    echo "TestError: --type-bool did not fail with invalid boolean value" >&2
+    exit 1
+}
+
+../puavo-conf --type-bool var2 FALSE 2>/dev/null && {
+    echo "TestError: --type-bool did not fail with invalid boolean value" >&2
+    exit 1
+}
+
+../puavo-conf var2 false
+
+var2=$(../puavo-conf -b var2) || {
+    echo "TestError: -b failed when getting false" >&2
+    exit 1
+}
+
+echo "puavo-conf is OK"
+
+true
