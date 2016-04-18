@@ -45,8 +45,8 @@ static DBusMessage *puavo_conf_dbus_call(DBusConnection *const dbus_conn,
                                          DBusMessage **const dbus_callp,
                                          struct puavo_conf_err *const errp)
 {
-        DBusError dbus_err;
-        DBusMessage *dbus_call = *dbus_callp;
+        DBusError    dbus_err;
+        DBusMessage *dbus_call   = *dbus_callp;
         DBusMessage *dbus_reply;
 
         dbus_error_init(&dbus_err);
@@ -72,10 +72,10 @@ int puavo_conf_dbus_add(struct puavo_conf *const conf,
                               char const *const value,
                               struct puavo_conf_err *const errp)
 {
-        DBusMessage     *dbus_call        = NULL;
+        DBusMessage     *dbus_call       = NULL;
         DBusMessageIter  dbus_call_args;
-        DBusMessage     *dbus_reply       = NULL;
-        int              retval           = -1;
+        DBusMessage     *dbus_reply      = NULL;
+        int              retval          = -1;
 
         dbus_call = puavo_conf_dbus_new_call("Add", &dbus_call_args, errp);
         if (!dbus_call)
@@ -117,9 +117,9 @@ out:
 int puavo_conf_dbus_clear(struct puavo_conf *const conf,
                           struct puavo_conf_err *const errp)
 {
-        DBusMessage     *dbus_call        = NULL;
-        DBusMessage     *dbus_reply       = NULL;
-        int              retval           = -1;
+        DBusMessage *dbus_call  = NULL;
+        DBusMessage *dbus_reply = NULL;
+        int          retval     = -1;
 
         dbus_call = puavo_conf_dbus_new_call("Clear", NULL, errp);
         if (!dbus_call)
@@ -429,11 +429,10 @@ out:
 int puavo_conf_dbus_open(struct puavo_conf *const conf,
                          struct puavo_conf_err *const errp)
 {
-        DBusConnection* dbus_conn;
-        DBusError dbus_err;
-        int retval;
+        DBusConnection *dbus_conn;
+        DBusError       dbus_err;
+        int             retval     = -1;
 
-        retval = -1;
         dbus_error_init(&dbus_err);
 
         dbus_conn = dbus_bus_get(DBUS_BUS_SYSTEM, &dbus_err);
@@ -457,10 +456,10 @@ int puavo_conf_dbus_overwrite(struct puavo_conf *const conf,
                               char const *const value,
                               struct puavo_conf_err *const errp)
 {
-        DBusMessage     *dbus_call        = NULL;
+        DBusMessage     *dbus_call       = NULL;
         DBusMessageIter  dbus_call_args;
-        DBusMessage     *dbus_reply       = NULL;
-        int              retval           = -1;
+        DBusMessage     *dbus_reply      = NULL;
+        int              retval          = -1;
 
         dbus_call = puavo_conf_dbus_new_call("Overwrite", &dbus_call_args, errp);
         if (!dbus_call)
@@ -504,10 +503,10 @@ int puavo_conf_dbus_set(struct puavo_conf *const conf,
                         char const *const value,
                         struct puavo_conf_err *const errp)
 {
-        DBusMessage     *dbus_call        = NULL;
+        DBusMessage     *dbus_call       = NULL;
         DBusMessageIter  dbus_call_args;
-        DBusMessage     *dbus_reply       = NULL;
-        int              retval           = -1;
+        DBusMessage     *dbus_reply      = NULL;
+        int              retval          = -1;
 
         dbus_call = puavo_conf_dbus_new_call("Set", &dbus_call_args, errp);
         if (!dbus_call)
