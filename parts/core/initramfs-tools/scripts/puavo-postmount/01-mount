@@ -90,7 +90,7 @@ loopmount_image()
     fi
 
     mkdir -p /host
-    mount -o move ${rootmnt} /host
+    mount -o move "${rootmnt}" /host
 
     # Get the loop filesystem type if not set
     # fstype command sets FSTYPE and FSSIZE variables
@@ -107,9 +107,9 @@ loopmount_image()
     [ -z "$FSTYPE" ] && FSTYPE="unknown"
 
     modprobe loop
-    modprobe ${FSTYPE}
+    modprobe "${FSTYPE}"
 
-    mount -r -t ${FSTYPE} -o loop "/host/${PUAVO_IMAGE_PATH#/}" ${rootmnt}
+    mount -r -t "${FSTYPE}" -o loop "/host/${PUAVO_IMAGE_PATH#/}" "${rootmnt}"
     ret=$?
 
     if [ "$ret" -gt 0 ]; then
@@ -204,7 +204,7 @@ write_fstab_partition()
 
 write_fstab()
 {
-    cat <<EOF >${rootmnt}/etc/fstab
+    cat <<EOF >"${rootmnt}/etc/fstab"
 # <file system> <mount point>   <type>  <options>       <dump>  <pass>
 proc            /proc           proc    nodev,noexec,nosuid 0       0
 EOF
