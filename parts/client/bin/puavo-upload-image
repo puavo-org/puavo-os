@@ -43,7 +43,6 @@ upload_file = File.open(upload_file_path, 'rb') do |io|
   end
 end
 
-puts sha256.hexdigest
 client = HTTPClient.new()
 
 client.send_timeout = 60 * 60 * 2
