@@ -43,30 +43,50 @@ upload_file = File.open(upload_file_path, 'rb') do |io|
   end
 end
 
-client = HTTPClient.new()
-
-client.send_timeout = 60 * 60 * 2
-client.receive_timeout = 60 * 60 * 2
-
-res = client.post(options[:puavo_image_series_server] + "/series/" + options[:image_series] + "/image",
-                  { :sha256 => sha256.hexdigest })
-image = JSON.parse(res.body)
-
-upload_file = File.open(upload_file_path)
-res = client.post(image["upload_url"], {
-                    'Content-Transfer-Encoding' => 'binary',
-                    :content => upload_file } )
-upload_file.close
-
-begin
-  res_data = JSON.parse(res.body)
-rescue JSON::ParserError
-  puts "An invalid response was received: " + res.body
-  Process.exit(1)
+def post(*args)
+  request("post", *args)
 end
 
-if res.status == 200 && res_data["status"] == "successfully"
+def put(*args)
+  request("put", *args)
+end
+
+def request(method, *args)
+  response = @client.send(method, *args)
+
+  if response.status =! 200
+    puts "Something went wrong! Response status: #{ response.status }, body: #{ response.body }"
+    Process.exit(1)
+  end
+
+  begin
+    response_data = JSON.parse(response.body)
+  rescue JSON::ParserError
+    puts "Request: #{ method }: #{ args.first }"
+    puts "An invalid response data was received: " + response.body
+    Process.exit(1)
+  end
+
+  return response_data
+end
+
+
+@client = HTTPClient.new()
+@client.send_timeout = 60 * 60 * 2
+@client.receive_timeout = 60 * 60 * 2
+
+image = post(options[:puavo_image_series_server] + "/series/" + options[:image_series] + "/image",
+             { :sha256 => sha256.hexdigest })
+
+upload_file = File.open(upload_file_path)
+upload = post(image["upload_url"], {
+                'Content-Transfer-Encoding' => 'binary',
+                :content => upload_file } )
+upload_file.close
+
+if upload["status"] == "successfully"
   puts "Image has been sent successfully"
 else
-  puts "Something went wrong: " + res_data["error"]
+  puts "Something went wrong: "
+  puts upload["error"] if upload.has_key?("error")
 end
