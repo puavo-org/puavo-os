@@ -59,7 +59,12 @@ res = client.post(image["upload_url"], {
                     :content => upload_file } )
 upload_file.close
 
-res_data = JSON.parse(res.body)
+begin
+  res_data = JSON.parse(res.body)
+rescue JSON::ParserError
+  puts "An invalid response was received: " + res.body
+  Process.exit(1)
+end
 
 if res.status == 200 && res_data["status"] == "successfully"
   puts "Image has been sent successfully"
