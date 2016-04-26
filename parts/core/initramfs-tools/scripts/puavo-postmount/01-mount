@@ -85,37 +85,35 @@ done
 
 loopmount_image()
 {
-    if [ -n "${PUAVO_IMAGE_PATH}" ]; then
-        if [ ! -f "/host/${PUAVO_IMAGE_PATH}"]; then
-            panic "/host/${PUAVO_IMAGE_PATH} does not exist!"
-        fi
+    if [ ! -f "/host/${PUAVO_IMAGE_PATH}"]; then
+        panic "/host/${PUAVO_IMAGE_PATH} does not exist!"
+    fi
 
-        mkdir -p /host
-        mount -o move ${rootmnt} /host
+    mkdir -p /host
+    mount -o move ${rootmnt} /host
 
-        # Get the loop filesystem type if not set
-        # fstype command sets FSTYPE and FSSIZE variables
-        if [ -z "${PUAVO_IMAGE_FSTYPE}" ]; then
-            eval $(/bin/fstype < "/host/${PUAVO_IMAGE_PATH#/}")
-        else
-            FSTYPE="${PUAVO_IMAGE_FSTYPE}"
-        fi
+    # Get the loop filesystem type if not set
+    # fstype command sets FSTYPE and FSSIZE variables
+    if [ -z "${PUAVO_IMAGE_FSTYPE}" ]; then
+        eval $(/bin/fstype < "/host/${PUAVO_IMAGE_PATH#/}")
+    else
+        FSTYPE="${PUAVO_IMAGE_FSTYPE}"
+    fi
 
-        if [ "$FSTYPE" = "unknown" -o "$FSTYPE" = "" ] && [ -x /sbin/blkid ]; then
-            FSTYPE=$(/sbin/blkid -s TYPE -o value "/host/${PUAVO_IMAGE_PATH#/}")
-        fi
+    if [ "$FSTYPE" = "unknown" -o "$FSTYPE" = "" ] && [ -x /sbin/blkid ]; then
+        FSTYPE=$(/sbin/blkid -s TYPE -o value "/host/${PUAVO_IMAGE_PATH#/}")
+    fi
 
-        [ -z "$FSTYPE" ] && FSTYPE="unknown"
+    [ -z "$FSTYPE" ] && FSTYPE="unknown"
 
-        modprobe loop
-        modprobe ${FSTYPE}
+    modprobe loop
+    modprobe ${FSTYPE}
 
-        mount -r -t ${FSTYPE} -o loop "/host/${PUAVO_IMAGE_PATH#/}" ${rootmnt}
-        ret=$?
+    mount -r -t ${FSTYPE} -o loop "/host/${PUAVO_IMAGE_PATH#/}" ${rootmnt}
+    ret=$?
 
-        if [ "$ret" -gt 0 ]; then
-            panic "Failed to loop mount /host/${PUAVO_IMAGE_PATH#/} to ${rootmnt}"
-        fi
+    if [ "$ret" -gt 0 ]; then
+        panic "Failed to loop mount /host/${PUAVO_IMAGE_PATH#/} to ${rootmnt}"
     fi
 }
 
