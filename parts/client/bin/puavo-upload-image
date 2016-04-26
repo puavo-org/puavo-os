@@ -85,6 +85,9 @@ upload = post(image["upload_url"], {
 upload_file.close
 
 if upload["status"] == "successfully"
+  image = put(options[:puavo_image_series_server] + "/series/" + options[:image_series] + "/image/" + image["s3_key"],
+              { :upload_status => "ready" })
+
   puts "Image has been sent successfully"
 else
   puts "Something went wrong: "
