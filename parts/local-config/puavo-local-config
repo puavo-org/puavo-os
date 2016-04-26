@@ -1,5 +1,5 @@
 #!/usr/bin/ruby
-# encoding: UTF-8
+# encoding: utf-8
 
 # puavo-local-config configures system according to admin user preferences.
 # See puavo-local-config-ui for the user interface.  puavo-local-config
@@ -228,9 +228,9 @@ def configure_grub_default()
     return
   end
 
-  match = kernel_cmdline.match(/loop=(.*?)\.img/)
-  raise 'Could not figure out loop= device' unless match
-  loop_img = "#{ match[1] }.img"
+  match = kernel_cmdline.match(/puavo.image.path=(.*?)\.img/)
+  raise 'Could not find puavo.image.path= kernel argument' unless match
+  image_path = "#{ match[1] }.img"
 
   this_ltspimage_name = IO.read('/etc/ltsp/this_ltspimage_name').chomp
 
@@ -245,12 +245,12 @@ def configure_grub_default()
   }
 
   msg \
-    = messages[loop_img] \
-        ? messages[loop_img][superlaptop_mode?] \
+    = messages[image_path] \
+        ? messages[image_path][superlaptop_mode?] \
         : messages[nil][superlaptop_mode?]
 
   description \
-    = "#{ msg } - (lvm/puavo-images)/#{ this_ltspimage_name } (#{ loop_img })"
+    = "#{ msg } - (lvm/puavo-images)/#{ this_ltspimage_name } (#{ image_path })"
 
   system('/usr/bin/grub-editenv',
          '/images/boot/grub/grubenv',
