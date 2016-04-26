@@ -1,0 +1,68 @@
+#!/usr/bin/ruby2.0
+
+require 'puavo/gems'
+require 'optparse'
+require 'http'
+require 'puavo/etc'
+require "httpclient"
+
+options = {
+  :puavo_image_series_server => "https://images.opinsys.fi"
+}
+
+parser = OptionParser.new do |opts|
+  opts.banner = "Usage: puavo-upload-image [options] <file>"
+
+  opts.on("--server SERVER", "Puavo Image Series server host") do |server|
+    options[:puavo_image_series_server] = server
+  end
+
+  opts.on("--image-series IMAGE_SERIES") do |image_series|
+    options[:image_series] = image_series
+  end
+
+  opts.on_tail("-h", "--help", "Show this message") do
+    STDERR.puts opts
+    Process.exit
+  end
+end
+
+parser.parse!
+
+unless ARGV[0]
+  puts "Set upload file!"
+  Process.exit(1)
+end
+
+upload_file_path = ARGV[0]
+
+sha256 = Digest::SHA256.new
+upload_file = File.open(upload_file_path, 'rb') do |io|
+  while (buffer = io.read(4096))
+    sha256.update(buffer)
+  end
+end
+
+puts sha256.hexdigest
+client = HTTPClient.new()
+
+client.send_timeout = 60 * 60 * 2
+client.receive_timeout = 60 * 60 * 2
+
+res = client.post(options[:puavo_image_series_server] + "/series/" + options[:image_series] + "/image",
+                  { :sha256 => sha256.hexdigest })
+image = JSON.parse(res.body)
+
+upload_file = File.open(upload_file_path)
+res = client.post(image["upload_url"], {
+                    'Content-Transfer-Encoding' => 'binary',
+                    :content => upload_file } )
+upload_file.close
+
+res_data = JSON.parse(res.body)
+
+if res.status == 200 && res_data["status"] == "successfully"
+  puts "Image has been sent successfully"
+else
+  puts "Something went wrong: " + res_data["error"]
+end

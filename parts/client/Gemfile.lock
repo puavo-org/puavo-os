@@ -3,6 +3,7 @@ GEM
   specs:
     CFPropertyList (2.2.8)
     addressable (2.4.0)
+    byebug (8.2.4)
     crack (0.4.3)
       safe_yaml (~> 1.0.0)
     domain_name (0.5.20160310)
@@ -26,6 +27,7 @@ GEM
     httparty (0.13.7)
       json (~> 1.8)
       multi_xml (>= 0.5.2)
+    httpclient (2.7.1)
     json (1.8.3)
     mime-types (2.99.1)
     minitest (5.8.4)
@@ -40,7 +42,7 @@ GEM
     unf (0.1.4)
       unf_ext
     unf_ext (0.0.7.2)
-    webmock (1.24.2)
+    webmock (1.24.3)
       addressable (>= 2.3.6)
       crack (>= 0.3.2)
       hashdiff
@@ -50,11 +52,13 @@ PLATFORMS
 
 DEPENDENCIES
   addressable
+  byebug
   facter
   gssapi
   highline
   http
   httparty
+  httpclient
   json
   minitest
   minitest-stub_any_instance
