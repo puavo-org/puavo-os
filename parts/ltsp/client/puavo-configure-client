@@ -60,7 +60,7 @@ end
 
 @puavoconf = Puavo::Conf.new
 @puavo_device_type = @puavoconf.get('puavo.hosttype')
-@puavo_desktop_mode = @puavoconf.conf.get('puavo.desktop.mode')
+@puavo_desktop_mode = @puavoconf.get('puavo.desktop.mode')
 @puavoconf.close
 
 @default_xsession = 'puavo-desktop-session'
