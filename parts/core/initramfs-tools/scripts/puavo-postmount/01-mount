@@ -50,9 +50,6 @@ for x in $(cat /proc/cmdline); do
         puavo.image.overlay=*)
             PUAVO_IMAGE_OVERLAY="${x#puavo.image.overlay=}"
             ;;
-	puavo.image.path=*)
-	    PUAVO_IMAGE_PATH="${x#puavo.image.path=}"
-	;;
 	puavo.image.fstype=*)
 	    PUAVO_IMAGE_FSTYPE="${x#puavo.image.fstype=}"
 	;;
