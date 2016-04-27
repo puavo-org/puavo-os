@@ -1,9 +1,10 @@
 #!/usr/bin/ruby2.0
 
-require 'puavo/gems'
+require './lib/puavo/gems'
 require 'optparse'
 require 'http'
-require 'puavo/etc'
+require './lib/puavo/etc'
+require './lib/puavo/image_client'
 
 options = {}
 parser = OptionParser.new do |opts|
@@ -41,18 +42,12 @@ if options[:url].nil?
   Process.exit(1)
 end
 
-sha256 = Digest::SHA256.new
-response = HTTP.get(options[:url])
 
-File.open(options[:file], "w") do |file|
-  while buffer = response.readpartial(4096)
-    sha256.update(buffer) if options.has_key?(:sha256)
-    file.write(buffer)
-  end
-end
-
-if options.has_key?(:sha256) && sha256.hexdigest != options[:sha256]
-  puts "Hashing String does not match!"
-  puts "Download file hexdigest: #{ sha256.hexdigest }"
+begin
+  PuavoImageClient.download( :sha256 => options[:sha256],
+                             :download_url => options[:url],
+                             :output_file => options[:file] )
+rescue PuavoImageClient::SHA256MismatchError => error
+  puts error.to_s
   Process.exit(1)
 end
