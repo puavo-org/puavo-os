@@ -1,1 +1,6 @@
 # PuavoOS sysctl configurations.
+
+# NetworkManager fails to configure IPv4 on wired interfaces when IPv6
+# is enabled. Nice.
+net.ipv6.conf.all.disable_ipv6 = 1
+net.ipv6.conf.default.disable_ipv6 = 1
