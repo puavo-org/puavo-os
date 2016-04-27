@@ -1,9 +1,6 @@
 #!/usr/bin/ruby2.0
 
-require './lib/puavo/gems'
 require 'optparse'
-require 'http'
-require './lib/puavo/etc'
 require './lib/puavo/image_client'
 
 options = {}

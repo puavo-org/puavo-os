@@ -1,7 +1,5 @@
 require 'puavo/gems'
-require 'optparse'
 require 'http'
-require 'puavo/etc'
 
 class PuavoImageClient
 
