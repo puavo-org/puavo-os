@@ -1,7 +1,7 @@
 #!/usr/bin/ruby2.0
 
 require 'optparse'
-require './lib/puavo/image_client'
+require 'puavo/image_client'
 
 options = {}
 parser = OptionParser.new do |opts|
