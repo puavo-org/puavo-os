@@ -24,7 +24,6 @@ class PuavoImageClient
     end
 
     if options[:output_file].class == String
-      puts "Close file"
       file.close
     end
 
