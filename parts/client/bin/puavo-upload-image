@@ -76,7 +76,8 @@ end
 @client.receive_timeout = 60 * 60 * 2
 
 image = post(options[:puavo_image_series_server] + "/series/" + options[:image_series] + "/image",
-             { :sha256 => sha256.hexdigest })
+             { :sha256 => sha256.hexdigest,
+               :size => File.stat(upload_file_path).size })
 
 upload_file = File.open(upload_file_path)
 upload = post(image["upload_url"], {
