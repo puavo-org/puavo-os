@@ -18,6 +18,7 @@ class image::bundle::basic {
 	  packages::languages::sv,
 	  picaxe_udev_rules,
 	  ssh_client,
+	  sysctl,
 	  udev,
 	  use_urandom
 

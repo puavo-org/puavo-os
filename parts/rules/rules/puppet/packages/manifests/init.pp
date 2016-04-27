@@ -36,6 +36,7 @@ class packages {
     , 'moreutils'
     , 'nmap'
     , 'powertop'
+    , 'procps'
     , 'pv'
     , 'pwgen'
     , 'pwman3'
