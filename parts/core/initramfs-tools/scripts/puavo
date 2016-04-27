@@ -1,15 +1,15 @@
 puavo_postmount_root()
 {
-        if [ "${puavo_postmount_used}" != "yes" ]; then
-                [ "$quiet" != "y" ] && log_begin_msg "Running /scripts/puavo-postmount"
-                run_scripts /scripts/puavo-postmount
-                [ "$quiet" != "y" ] && log_end_msg
-        fi
-        puavo_postmount_used=yes
+    if [ "${puavo_postmount_used}" != "yes" ]; then
+        [ "$quiet" != "y" ] && log_begin_msg "Running /scripts/puavo-postmount"
+        run_scripts /scripts/puavo-postmount
+        [ "$quiet" != "y" ] && log_end_msg
+    fi
+    puavo_postmount_used=yes
 }
 
 mountroot()
 {
-        local_mount_root
-	puavo_postmount_root
+    local_mount_root
+    puavo_postmount_root
 }

@@ -12,8 +12,8 @@ prereqs()
 case "$1" in
     prereqs)
         prereqs
-    exit 0
-    ;;
+        exit 0
+        ;;
 esac
 
 test "$BOOT" = "puavo" || exit 0
@@ -46,34 +46,34 @@ for x in $(cat /proc/cmdline); do
     case "$x" in
         puavo.image.path=*)
             PUAVO_IMAGE_PATH="${x#puavo.image.path=}"
-	    ;;
+            ;;
         puavo.image.overlay=*)
             PUAVO_IMAGE_OVERLAY="${x#puavo.image.overlay=}"
             ;;
-	puavo.image.fstype=*)
-	    PUAVO_IMAGE_FSTYPE="${x#puavo.image.fstype=}"
-	;;
-	puavo.lvm.vg=*)
-	    PUAVO_LVM_VG="${x#puavo.lvm.vg=}"
-	;;
-	puavo.lvm.lv.home=*)
-	    PUAVO_LVM_LV_HOME="${x#puavo.lvm.lv.home=}"
-	;;
-	puavo.lvm.lv.images=*)
-	    PUAVO_LVM_LV_IMAGES="${x#puavo.lvm.lv.images=}"
-	;;
-	puavo.lvm.lv.imageoverlays=*)
-	    PUAVO_LVM_LV_IMAGEOVERLAYS="${x#puavo.lvm.lv.imageoverlays=}"
-	;;
-	puavo.lvm.lv.state=*)
-	    PUAVO_LVM_LV_STATE="${x#puavo.lvm.lv.state=}"
-	;;
-	puavo.lvm.lv.swap=*)
-	    PUAVO_LVM_LV_SWAP="${x#puavo.lvm.lv.swap=}"
-	;;
-	puavo.lvm.lv.tmp=*)
-	    PUAVO_LVM_LV_TMP="${x#puavo.lvm.lv.tmp=}"
-	;;
+        puavo.image.fstype=*)
+            PUAVO_IMAGE_FSTYPE="${x#puavo.image.fstype=}"
+            ;;
+        puavo.lvm.vg=*)
+            PUAVO_LVM_VG="${x#puavo.lvm.vg=}"
+            ;;
+        puavo.lvm.lv.home=*)
+            PUAVO_LVM_LV_HOME="${x#puavo.lvm.lv.home=}"
+            ;;
+        puavo.lvm.lv.images=*)
+            PUAVO_LVM_LV_IMAGES="${x#puavo.lvm.lv.images=}"
+            ;;
+        puavo.lvm.lv.imageoverlays=*)
+            PUAVO_LVM_LV_IMAGEOVERLAYS="${x#puavo.lvm.lv.imageoverlays=}"
+            ;;
+        puavo.lvm.lv.state=*)
+            PUAVO_LVM_LV_STATE="${x#puavo.lvm.lv.state=}"
+            ;;
+        puavo.lvm.lv.swap=*)
+            PUAVO_LVM_LV_SWAP="${x#puavo.lvm.lv.swap=}"
+            ;;
+        puavo.lvm.lv.tmp=*)
+            PUAVO_LVM_LV_TMP="${x#puavo.lvm.lv.tmp=}"
+            ;;
     esac
 done
 
@@ -123,17 +123,17 @@ do_union_mount()
 
     if modprobe overlayfs; then
         mount -t overlayfs \
-            -o "upperdir=${cow},lowerdir=/rofs" overlayfs "${rootmnt}" || {
+              -o "upperdir=${cow},lowerdir=/rofs" overlayfs "${rootmnt}" || {
             mkdir "${cow}/rootdir" "${cow}/workdir"
             mount -t overlayfs \
-                -o "upperdir=${cow}/rootdir,lowerdir=/rofs,workdir=${cow}/workdir" \
-                overlayfs "${rootmnt}"
+                  -o "upperdir=${cow}/rootdir,lowerdir=/rofs,workdir=${cow}/workdir" \
+                  overlayfs "${rootmnt}"
         }
     elif modprobe overlay; then
         mkdir "${cow}/rootdir" "${cow}/workdir"
         mount -t overlay \
-            -o "upperdir=${cow}/rootdir,lowerdir=/rofs,workdir=${cow}/workdir" \
-            overlay "${rootmnt}"
+              -o "upperdir=${cow}/rootdir,lowerdir=/rofs,workdir=${cow}/workdir" \
+              overlay "${rootmnt}"
     elif modprobe aufs; then
         mount -t aufs -o "dirs=${cow}=rw:/rofs=ro" aufs "${rootmnt}"
     else
@@ -164,14 +164,14 @@ do_union_mount_persistent()
 }
 
 mount_puavo_partition() {
-  name=$1
-  if [ -b "/dev/mapper/${PUAVO_LVM_VG}-${name}" ]; then
-    mkdir -p "/${name}"
+    name=$1
+    if [ -b "/dev/mapper/${PUAVO_LVM_VG}-${name}" ]; then
+        mkdir -p "/${name}"
 
-    OPTIONS="-o noatime"
+        OPTIONS="-o noatime"
 
-    mount ${OPTIONS} "/dev/mapper/${PUAVO_LVM_VG}-${name}" "/${name}"
-  fi
+        mount ${OPTIONS} "/dev/mapper/${PUAVO_LVM_VG}-${name}" "/${name}"
+    fi
 }
 
 move_puavo_partition()
@@ -184,19 +184,19 @@ move_puavo_partition()
 
 write_fstab_partition()
 {
-	partition=$1
-	mntpoint=$2
-	extra_options=$3
+    partition=$1
+    mntpoint=$2
+    extra_options=$3
 
-	eval $(/bin/fstype < "${partition}")
+    eval $(/bin/fstype < "${partition}")
 
-	OPTIONS="noatime"
+    OPTIONS="noatime"
 
-	if [ -n "${extra_options}" ]; then
-		OPTIONS="${OPTIONS},${extra_options}"
-	fi
+    if [ -n "${extra_options}" ]; then
+        OPTIONS="${OPTIONS},${extra_options}"
+    fi
 
-	echo "${partition}	${mntpoint}	${FSTYPE}	${OPTIONS}	0	2" >> "${rootmnt}/etc/fstab"
+    echo "${partition}	${mntpoint}	${FSTYPE}	${OPTIONS}	0	2" >> "${rootmnt}/etc/fstab"
 }
 
 write_fstab()
@@ -262,8 +262,8 @@ fi
 if [ "$loopmount_used" -gt 0 -a -n "${PUAVO_IMAGE_PATH}" -a -n "${PUAVO_IMAGE_OVERLAY}" ]; then
     {
         mount_puavo_partition imageoverlays \
-          && do_union_mount_persistent      \
-          && move_puavo_partition imageoverlays
+            && do_union_mount_persistent      \
+            && move_puavo_partition imageoverlays
     } || panic "could not mount persistent overlay"
 else
     do_union_mount_temporary

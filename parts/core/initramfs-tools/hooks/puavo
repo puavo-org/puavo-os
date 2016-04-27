@@ -16,7 +16,7 @@ case "$1" in
     prereqs)
         prereqs
         exit 0
-    ;;
+        ;;
 esac
 
 
@@ -28,11 +28,11 @@ manual_add_modules overlayfs
 manual_add_modules squashfs
 
 mkdir -p ${DESTDIR}/usr/bin/                  \
-         ${DESTDIR}/usr/lib/                  \
-         ${DESTDIR}/usr/lib/ruby/vendor_ruby/ \
-         ${DESTDIR}/usr/lib/x86_64-linux-gnu/ \
-         ${DESTDIR}/usr/sbin/                 \
-         ${DESTDIR}/usr/share/puavo/
+      ${DESTDIR}/usr/lib/                  \
+      ${DESTDIR}/usr/lib/ruby/vendor_ruby/ \
+      ${DESTDIR}/usr/lib/x86_64-linux-gnu/ \
+      ${DESTDIR}/usr/sbin/                 \
+      ${DESTDIR}/usr/share/puavo/
 
 copy_exec /usr/bin/lspci            /usr/bin
 copy_exec /usr/bin/lsusb            /usr/bin
