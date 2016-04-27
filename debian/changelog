@@ -1,3 +1,17 @@
+puavo-os (0.10.0~rc4+3116b82f1ed69fe9732152b6fc1137b8bde1f011) jessie; urgency=medium
+
+  * New release
+  * parts/rules: disable IPv6 via sysctl
+  * parts/rules: add sysctl Puppet module
+  * parts/core: initramfs: fix loopmount_image() guard statement
+  * parts/core: initramfs: fix shell syntax
+  * parts/ltsp: client: disable nslcd on laptops
+  * parts/ltsp: client: disable nscd on laptops
+  * parts/ltsp: fix couple of typos
+  * Git(3116b82f1ed69fe9732152b6fc1137b8bde1f011)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Wed, 27 Apr 2016 15:41:30 +0300
+
 puavo-os (0.10.0~rc3+f1d250198e53d75ee523090a4c32404c2899adfd) jessie; urgency=medium
 
   * New release
