@@ -17,6 +17,11 @@ nscd
 nslcd
 '
 	    ;;
+        laptop)
+            services='
+nscd
+'
+            ;;
 	*)
 	    ;;
     esac
