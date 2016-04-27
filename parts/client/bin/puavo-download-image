@@ -50,4 +50,7 @@ begin
 rescue PuavoImageClient::SHA256MismatchError => error
   puts error.to_s
   Process.exit(1)
+rescue PuavoImageClient::OutputFileError => error
+  puts error.to_s
+  Process.exit(1)
 end
