@@ -1,4 +1,4 @@
-puavo-conf -x webkiosk puavo.desktop.mode && {
+puavo-conf -x webkiosk puavo.screen.mode && {
   /usr/bin/ratpoison &
   RATPOISON_PID=$!
 
