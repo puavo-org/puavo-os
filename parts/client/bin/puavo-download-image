@@ -1,0 +1,58 @@
+#!/usr/bin/ruby2.0
+
+require 'puavo/gems'
+require 'optparse'
+require 'http'
+require 'puavo/etc'
+
+options = {}
+parser = OptionParser.new do |opts|
+  opts.banner = "Usage: puavo-download-image <url>"
+
+  opts.on("--output-file FILE", "Output file") do |file|
+    options[:file] = file
+  end
+
+  opts.on("--download-url URL", "Download url") do |url|
+    options[:url] = url
+  end
+
+  opts.on("--sha256 SHA256", "Hashing String (sha256)") do |sha256|
+    options[:sha256] = sha256
+  end
+
+  opts.on_tail("-h", "--help", "Show this message") do
+    STDERR.puts opts
+    Process.exit
+  end
+end
+
+parser.parse!
+
+if options[:file].nil?
+  puts "Missing argument: --output-file\n\n"
+  puts parser.help
+  Process.exit(1)
+end
+
+if options[:url].nil?
+  puts "Missing argument: --download-url\n\n"
+  puts parser.help
+  Process.exit(1)
+end
+
+sha256 = Digest::SHA256.new
+response = HTTP.get(options[:url])
+
+File.open(options[:file], "w") do |file|
+  while buffer = response.readpartial(4096)
+    sha256.update(buffer) if options.has_key?(:sha256)
+    file.write(buffer)
+  end
+end
+
+if options.has_key?(:sha256) && sha256.hexdigest != options[:sha256]
+  puts "Hashing String does not match!"
+  puts "Download file hexdigest: #{ sha256.hexdigest }"
+  Process.exit(1)
+end
