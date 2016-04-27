@@ -85,8 +85,8 @@ done
 
 loopmount_image()
 {
-    if [ ! -f "/host/${PUAVO_IMAGE_PATH}" ]; then
-        panic "/host/${PUAVO_IMAGE_PATH} does not exist!"
+    if [ ! -f "${rootmnt}${PUAVO_IMAGE_PATH}" ]; then
+        panic "${rootmnt}${PUAVO_IMAGE_PATH} does not exist!"
     fi
 
     mkdir -p /host
