@@ -5,38 +5,15 @@
 for x in $(cat /proc/cmdline); do
     if [ "$x" = "init=/sbin/init-puavo" ]; then
         BOOT=puavo
+        export PUAVO_BOOT_MODE=
+
+        case "${ROOT}" in
+            /dev/nbd*)
+                PUAVO_BOOT_MODE=net
+                ;;
+            *)
+                PUAVO_BOOT_MODE=local
+                ;;
+        esac
     fi
 done
-
-if [ "$BOOT" = "puavo" ]; then
-    export PUAVO_BOOTMODE=
-
-    # Set default PUAVO_BOOTMODE based on "puavo.hosttype".
-    # In the future we can probably drop support for "puavo.hosttype"
-    # once we can rely puavo.bootmode is always set.
-    PUAVO_HOSTTYPE=
-    for x in $(cat /proc/cmdline); do
-        case $x in
-            puavo.hosttype=*)
-                PUAVO_HOSTTYPE="${x#puavo.hosttype=}"
-                ;;
-        esac
-    done
-    case $PUAVO_HOSTTYPE in
-        bootserver|diskinstaller|laptop|preinstalled|wirelessaccesspoint)
-            PUAVO_BOOTMODE=local
-            ;;
-        fatclient|ltspserver|thinclient|unregistered)
-            PUAVO_BOOTMODE=net
-            ;;
-    esac
-
-    # explicitly set "puavo.bootmode" is always effective
-    for x in $(cat /proc/cmdline); do
-        case $x in
-            puavo.bootmode=*)
-                PUAVO_BOOTMODE="${x#puavo.bootmode=}"
-                ;;
-        esac
-    done
-fi

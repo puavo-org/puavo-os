@@ -27,7 +27,7 @@ PUAVO_IMAGE_OVERLAY=
 # mixed uses an NBD root device, but can mount local partitions if they are
 # defined on the command line.
 
-case "${PUAVO_BOOTMODE}" in
+case "${PUAVO_BOOT_MODE}" in
     local)
         PUAVO_LVM_VG="puavo"
         PUAVO_LVM_LV_HOME="home"
