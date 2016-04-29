@@ -1,3 +1,33 @@
+[org/cinnamon]
+alttab-switcher-style='coverflow'
+desktop-effects-close-effect='fade'
+desktop-effects-minimize-effect='traditional'
+desktop-effects=true
+desktop-effects-map-effect='fade'
+desktop-layout='traditional'
+number-workspaces=2
+panel-launchers=['nemo.desktop', 'iceweasel.desktop', 'cinnamon-custom-launcher-1.desktop']
+enabled-applets=['panel1:left:0:commandLauncher@scollins:75', 'panel1:left:4:show-desktop@cinnamon.org:78', 'panel1:left:2:expo@cinnamon.org:15', 'panel1:left:3:recent@cinnamon.org:30', 'panel1:left:5:panel-launchers@cinnamon.org:76', 'panel1:left:6:window-list@cinnamon.org:3', 'panel1:right:0:separator@cinnamon.org:32', 'panel1:right:2:removable-drives@cinnamon.org:6', 'panel1:right:3:notifications@cinnamon.org:4', 'panel1:right:4:keyboard@cinnamon.org:7', 'panel1:right:5:network@cinnamon.org:9', 'panel1:right:6:sound@cinnamon.org:10', 'panel1:right:7:power@cinnamon.org:11', 'panel1:right:8:systray@cinnamon.org:12', 'panel1:right:9:calendar@cinnamon.org:13', 'panel1:right:10:commandLauncher@scollins:72']
+panel-scale-text-icons=true
+panel-bottom-height=31
+
+[org/cinnamon/desktop/lockdown]
+disable-user-switching=true
+
+[org/cinnamon/desktop/background]
+picture-uri='file:///usr/share/backgrounds/opinsys-varikyna-small.jpg'
+
+[org/cinnamon/desktop/interface]
+icon-theme='Faenza'
+gtk-theme='Adwaita'
+
+[org/cinnamon/desktop/wm/preferences]
+theme='Adwaita'
+num-workspaces=2
+
+[org/cinnamon/theme]
+name='BlueMenta'
+
 [org/gnome/desktop/background]
 show-desktop-icons=true
 
