@@ -5,6 +5,7 @@ require 'optparse'
 require 'http'
 require 'puavo/etc'
 require "httpclient"
+require "highline/import"
 
 @options = {
   :puavo_image_series_server => "https://images.opinsys.fi"
@@ -52,7 +53,19 @@ def put(*args)
 end
 
 def request(method, *args)
-  response = @client.send(method, *args)
+  counter = 0
+  while response = @client.send(method, *args)
+    if response.status == 401
+      puts "Invalid username or password!" if counter > 0
+      username = ask("Enter your username: ") { |q| q.echo = true }
+      password = ask("Enter your password: ") { |q| q.echo = "*" }
+      @client.set_auth(@options[:puavo_image_series_server], username, password)
+      counter += 1
+      next
+    end
+
+    break
+  end
 
   if response.status =! 200
     puts "Something went wrong! Response status: #{ response.status }, body: #{ response.body }"
