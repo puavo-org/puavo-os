@@ -288,9 +288,5 @@ if [ "$loopmount_used" -gt 0 ]; then
     mount -o remount,noatime,rw "${rootmnt}/images"
 fi
 
-if [ -n "${PUAVO_LVM_LV_STATE}" ]; then
-    mount_puavo_partition state
-fi
-
 [ -z "${rootmnt}" ] && panic "rootmnt unknown in init-bottom"
 [ -d "${rootmnt}/proc" ] || panic "rootmnt not mounted in init-bottom"
