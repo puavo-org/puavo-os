@@ -6,7 +6,7 @@ require 'http'
 require 'puavo/etc'
 require "httpclient"
 
-options = {
+@options = {
   :puavo_image_series_server => "https://images.opinsys.fi"
 }
 
@@ -14,11 +14,11 @@ parser = OptionParser.new do |opts|
   opts.banner = "Usage: puavo-upload-image [options] <file>"
 
   opts.on("--server SERVER", "Puavo Image Series server host") do |server|
-    options[:puavo_image_series_server] = server
+    @options[:puavo_image_series_server] = server
   end
 
   opts.on("--image-series IMAGE_SERIES") do |image_series|
-    options[:image_series] = image_series
+    @options[:image_series] = image_series
   end
 
   opts.on_tail("-h", "--help", "Show this message") do
@@ -72,10 +72,11 @@ end
 
 
 @client = HTTPClient.new()
+@client.force_basic_auth = true
 @client.send_timeout = 60 * 60 * 2
 @client.receive_timeout = 60 * 60 * 2
 
-image = post(options[:puavo_image_series_server] + "/series/" + options[:image_series] + "/image",
+image = post(@options[:puavo_image_series_server] + "/series/" + @options[:image_series] + "/image",
              { :sha256 => sha256.hexdigest,
                :size => File.stat(upload_file_path).size })
 
@@ -86,7 +87,7 @@ upload = post(image["upload_url"], {
 upload_file.close
 
 if upload["status"] == "successfully"
-  image = put(options[:puavo_image_series_server] + "/series/" + options[:image_series] + "/image/" + image["s3_key"],
+  image = put(@options[:puavo_image_series_server] + "/series/" + @options[:image_series] + "/image/" + image["s3_key"],
               { :upload_status => "ready" })
 
   puts "Image has been sent successfully"
