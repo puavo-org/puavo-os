@@ -22,6 +22,10 @@ parser = OptionParser.new do |opts|
     @options[:image_series] = image_series
   end
 
+  opts.on("--organisation-domain DOMAIN") do |domain|
+    @options[:domain] = domain
+  end
+
   opts.on_tail("-h", "--help", "Show this message") do
     STDERR.puts opts
     Process.exit
@@ -54,12 +58,14 @@ end
 
 def request(method, *args)
   counter = 0
-  while response = @client.send(method, *args)
+  headers = {}
+  while response = @client.send(method, *args, headers)
     if response.status == 401
       puts "Invalid username or password!" if counter > 0
       username = ask("Enter your username: ") { |q| q.echo = true }
       password = ask("Enter your password: ") { |q| q.echo = "*" }
       @client.set_auth(@options[:puavo_image_series_server], username, password)
+      headers = { :host => @options[:domain] }
       counter += 1
       next
     end
