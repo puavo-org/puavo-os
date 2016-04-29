@@ -5,15 +5,6 @@
 for x in $(cat /proc/cmdline); do
     if [ "$x" = "init=/sbin/init-puavo" ]; then
         BOOT=puavo
-        export PUAVO_BOOT_MODE=
-
-        case "${ROOT}" in
-            /dev/nbd*)
-                PUAVO_BOOT_MODE=net
-                ;;
-            *)
-                PUAVO_BOOT_MODE=local
-                ;;
-        esac
+        break
     fi
 done
