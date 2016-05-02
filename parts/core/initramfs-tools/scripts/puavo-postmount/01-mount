@@ -18,6 +18,9 @@ esac
 
 test "$BOOT" = "puavo" || exit 0
 
+# contains definition for "panic"
+. /scripts/functions
+
 PUAVO_IMAGE_PATH=
 PUAVO_IMAGE_FSTYPE=
 PUAVO_IMAGE_OVERLAY=
@@ -38,9 +41,6 @@ for x in $(cat /proc/cmdline); do
             ;;
     esac
 done
-
-# contains definition for "panic"
-. /scripts/functions
 
 loopmount_image()
 {
