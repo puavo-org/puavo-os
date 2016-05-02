@@ -191,63 +191,6 @@ move_puavo_partition()
     mount -o move "/${name}" "${rootmnt}/${name}"
 }
 
-write_fstab_partition()
-{
-    partition=$1
-    mntpoint=$2
-    extra_options=$3
-
-    eval $(/bin/fstype < "${partition}")
-
-    OPTIONS="noatime"
-
-    if [ -n "${extra_options}" ]; then
-        OPTIONS="${OPTIONS},${extra_options}"
-    fi
-
-    echo "${partition}	${mntpoint}	${FSTYPE}	${OPTIONS}	0	2" >> "${rootmnt}/etc/fstab"
-}
-
-write_fstab()
-{
-    cat <<EOF >"${rootmnt}/etc/fstab"
-# <file system> <mount point>   <type>  <options>       <dump>  <pass>
-proc            /proc           proc    nodev,noexec,nosuid 0       0
-EOF
-
-    if [ -n "${PUAVO_LVM_LV_HOME}" ]; then
-        write_fstab_partition "/dev/mapper/${PUAVO_LVM_VG}-${PUAVO_LVM_LV_HOME}" "/home" "acl"
-    fi
-
-    if [ -n "${PUAVO_LVM_LV_IMAGES}" ]; then
-        write_fstab_partition "/dev/mapper/${PUAVO_LVM_VG}-${PUAVO_LVM_LV_IMAGES}" "/images" ""
-    fi
-
-    if [ -n "${PUAVO_LVM_LV_IMAGEOVERLAYS}" ]; then
-        write_fstab_partition "/dev/mapper/${PUAVO_LVM_VG}-${PUAVO_LVM_LV_IMAGEOVERLAYS}" "/imageoverlays" ""
-    fi
-
-    if [ -n "${PUAVO_LVM_LV_STATE}" ]; then
-        write_fstab_partition "/dev/mapper/${PUAVO_LVM_VG}-${PUAVO_LVM_LV_STATE}" "/state" ""
-    fi
-
-    if [ -n "${PUAVO_LVM_LV_TMP}" ]; then
-        write_fstab_partition "/dev/mapper/${PUAVO_LVM_VG}-${PUAVO_LVM_LV_TMP}" "/tmp" ""
-    fi
-
-    if [ -n "${PUAVO_LVM_LV_SWAP}" ]; then
-        echo "/dev/mapper/${PUAVO_LVM_VG}-${PUAVO_LVM_LV_SWAP}	none	swap	sw	0	0" >> "${rootmnt}/etc/fstab"
-    fi
-}
-
-write_mtab()
-{
-    if [ -L /etc/mtab ]; then
-        rm /etc/mtab
-        :>/etc/mtab
-    fi
-}
-
 if [ -n "${PUAVO_LVM_VG}" ]; then
     if [ -x "/sbin/vgchange" ]; then
         vgchange -a y "${PUAVO_LVM_VG}"
@@ -277,8 +220,6 @@ if [ "$loopmount_used" -gt 0 -a -n "${PUAVO_IMAGE_PATH}" -a -n "${PUAVO_IMAGE_OV
 else
     do_union_mount_temporary
 fi
-
-write_fstab
 
 # If using a loopmount image, move the /images partition under loop mounted root
 # and remount the partition as writable
