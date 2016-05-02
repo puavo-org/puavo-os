@@ -59,10 +59,11 @@ end
 @puavo_device_type = ARGV[0]
 
 @puavoconf = Puavo::Conf.new
-@puavo_device_type       = @puavoconf.get('puavo.hosttype')
-@puavo_screen_mode       = @puavoconf.get('puavo.screen.mode')
-@puavo_xsessions_default = @puavoconf.get('puavo.xsessions.default')
-@puavo_xsessions_locked  = @puavoconf.get('puavo.xsessions.locked') == 'true'
+@puavo_device_type        = @puavoconf.get('puavo.hosttype')
+@puavo_guestlogin_enabled = @puavoconf.get('puavo.guestlogin.enabled') == 'true'
+@puavo_screen_mode        = @puavoconf.get('puavo.screen.mode')
+@puavo_xsessions_default  = @puavoconf.get('puavo.xsessions.default')
+@puavo_xsessions_locked   = @puavoconf.get('puavo.xsessions.locked') == 'true'
 @puavoconf.close
 
 @device = {}
