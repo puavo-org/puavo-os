@@ -36,7 +36,7 @@ add_account ()
     fi
   else
     # does not exist, so create it
-    adduser --system --no-create-home --home / --gecos "Guest" --group --shell /bin/bash $USER || {
+    adduser --conf /etc/adduser-guest.conf --system --no-create-home --home / --gecos "Guest" --group --shell /bin/bash $USER || {
         umount "$HOME"
         rm -rf "$HOME"
         exit 1

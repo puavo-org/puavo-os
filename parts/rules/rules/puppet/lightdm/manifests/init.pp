@@ -4,6 +4,9 @@ class lightdm {
   require packages
 
   file {
+    '/etc/adduser-guest.conf':
+      source => 'puppet:///modules/lightdm/adduser-guest.conf';
+
     [ '/etc/dconf/db/lightdm.d'
     , '/etc/dconf/db/lightdm.d/locks' ]:
       ensure => directory;
