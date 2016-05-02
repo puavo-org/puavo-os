@@ -59,11 +59,12 @@ end
 @puavo_device_type = ARGV[0]
 
 @puavoconf = Puavo::Conf.new
-@puavo_device_type = @puavoconf.get('puavo.hosttype')
-@puavo_screen_mode = @puavoconf.get('puavo.screen.mode')
+@puavo_device_type       = @puavoconf.get('puavo.hosttype')
+@puavo_screen_mode       = @puavoconf.get('puavo.screen.mode')
+@puavo_xsessions_default = @puavoconf.get('puavo.xsessions.default')
+@puavo_xsessions_locked  = @puavoconf.get('puavo.xsessions.locked') == 'true'
 @puavoconf.close
 
-@default_xsession = 'puavo-desktop-session'
 @device = {}
 @tags = []
 
@@ -98,13 +99,6 @@ if File.exists?("/etc/puavo/device.json")
   @tags   = @device["tags"] || []
 
   append_tags_to_environment(@tags)
-end
-
-@tags.each() do |tag|
-  if tag.start_with? 'default_xsession:' then
-    @default_xsession = tag.sub(/^default_xsession:/, '')
-    break
-  end
 end
 
 @enable_suspend =                \
