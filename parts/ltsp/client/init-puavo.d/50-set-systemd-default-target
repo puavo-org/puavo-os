@@ -1,6 +1,7 @@
 set_systemd_default_target()
 {
     local screen_mode
+    local hosttype
 
     screen_mode=$(puavo-conf puavo.screen.mode)
 
@@ -8,9 +9,23 @@ set_systemd_default_target()
         infotv|webkiosk|login)
 	    systemctl set-default graphical.target
 	    ;;
-	*)
+	darkdm)
 	    systemctl set-default multi-user.target
 	    ;;
+        auto)
+            hosttype=$(puavo-conf puavo.hosttype)
+            case "${hosttype}" in
+                fatclient|laptop|thinclient)
+                    systemctl set-default graphical.target
+                    ;;
+                *)
+                    systemctl set-default multi-user.target
+                    ;;
+            esac
+            ;;
+        *)
+            echo "Error: invalid puavo.screen.mode value '${screen_mode}'" >&2
+            ;;
     esac
 }
 
