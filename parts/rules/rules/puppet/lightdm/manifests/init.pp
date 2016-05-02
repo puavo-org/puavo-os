@@ -18,6 +18,17 @@ class lightdm {
 
     '/etc/dconf/profile/lightdm':
       content => template('lightdm/dconf_profile_lightdm');
+
+    '/usr/lib/lightdm':
+      ensure => directory;
+
+    '/usr/lib/lightdm/guest-session-auto.sh':
+      mode   => 0755,
+      source => 'puppet:///modules/lightdm/guest-session-auto.sh';
+
+    '/usr/sbin/guest-account':
+      mode   => 0755,
+      source => 'puppet:///modules/lightdm/guest-account';
   }
 
   # lightdm also likes language packages
