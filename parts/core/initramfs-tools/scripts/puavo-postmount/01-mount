@@ -18,38 +18,12 @@ esac
 
 test "$BOOT" = "puavo" || exit 0
 
+PUAVO_IMAGE_PATH=
+PUAVO_IMAGE_FSTYPE=
 PUAVO_IMAGE_OVERLAY=
+PUAVO_LVM_VG="puavo"
 
-# Set the defaults based on the bootmode. local means using only local disk
-# partitions that have default values for /home, /images, /imageoverlays,
-# /state/, /tmp and swap.
-#
-# mixed uses an NBD root device, but can mount local partitions if they are
-# defined on the command line.
-
-case "${ROOT}" in
-    /dev/nbd*)
-        PUAVO_BOOT_MODE=net
-        ;;
-    *)
-        PUAVO_BOOT_MODE=local
-        ;;
-esac
-
-case "${PUAVO_BOOT_MODE}" in
-    local)
-        PUAVO_LVM_VG="puavo"
-        PUAVO_LVM_LV_HOME="home"
-        PUAVO_LVM_LV_IMAGES="images"
-        PUAVO_LVM_LV_IMAGEOVERLAYS="imageoverlays"
-        PUAVO_LVM_LV_STATE="state"
-        PUAVO_LVM_LV_SWAP="swap"
-        PUAVO_LVM_LV_TMP="tmp"
-        ;;
-    mixed)
-        PUAVO_LVM_VG="puavo"
-        ;;
-esac
+vgchange -a y "${PUAVO_LVM_VG}"
 
 for x in $(cat /proc/cmdline); do
     case "$x" in
@@ -61,27 +35,6 @@ for x in $(cat /proc/cmdline); do
             ;;
         puavo.image.fstype=*)
             PUAVO_IMAGE_FSTYPE="${x#puavo.image.fstype=}"
-            ;;
-        puavo.lvm.vg=*)
-            PUAVO_LVM_VG="${x#puavo.lvm.vg=}"
-            ;;
-        puavo.lvm.lv.home=*)
-            PUAVO_LVM_LV_HOME="${x#puavo.lvm.lv.home=}"
-            ;;
-        puavo.lvm.lv.images=*)
-            PUAVO_LVM_LV_IMAGES="${x#puavo.lvm.lv.images=}"
-            ;;
-        puavo.lvm.lv.imageoverlays=*)
-            PUAVO_LVM_LV_IMAGEOVERLAYS="${x#puavo.lvm.lv.imageoverlays=}"
-            ;;
-        puavo.lvm.lv.state=*)
-            PUAVO_LVM_LV_STATE="${x#puavo.lvm.lv.state=}"
-            ;;
-        puavo.lvm.lv.swap=*)
-            PUAVO_LVM_LV_SWAP="${x#puavo.lvm.lv.swap=}"
-            ;;
-        puavo.lvm.lv.tmp=*)
-            PUAVO_LVM_LV_TMP="${x#puavo.lvm.lv.tmp=}"
             ;;
     esac
 done
@@ -190,14 +143,6 @@ move_puavo_partition()
     mkdir -p "${rootmnt}/${name}"
     mount -o move "/${name}" "${rootmnt}/${name}"
 }
-
-if [ -n "${PUAVO_LVM_VG}" ]; then
-    if [ -x "/sbin/vgchange" ]; then
-        vgchange -a y "${PUAVO_LVM_VG}"
-    else
-        panic "initrd missing /sbin/vgchange!"
-    fi
-fi
 
 loopmount_used=0
 if [ -n "${PUAVO_IMAGE_PATH}" ]; then
