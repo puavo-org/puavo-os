@@ -698,8 +698,8 @@ class packages {
     , 'puavo-sharedir-client'
     , 'puavo-wlanap'
     # , 'simplescreenrecorder'          # XXX not yet packaged for Debian
-    , 'webmenu' ]:
-    # , 'webkiosk-language-selector'    # XXX not yet packaged for Debian
+    , 'webmenu'
+    , 'webkiosk-language-selector']:
     # , 'xexit' ]:                      # XXX not yet packaged for Debian
       tag => [ 'misc', 'puavo', ];
 
