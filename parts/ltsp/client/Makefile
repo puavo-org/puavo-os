@@ -193,14 +193,10 @@ install : installdirs
 		templates/var/lib/polkit-1/localauthority/10-vendor.d/com.ubuntu.desktop.pkla
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/xsessions \
-		xsessions/puavo-desktop-session.desktop \
-		xsessions/puavo-infotv-session.desktop \
-		xsessions/puavo-webkiosk-session.desktop
+		xsessions/*
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/xsessions \
-		xsessions/puavo-desktop-session.desktop \
-		xsessions/puavo-infotv-session.desktop \
-		xsessions/puavo-webkiosk-session.desktop
+		xsessions/*
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
 		puavo-ltsp-client-action \
