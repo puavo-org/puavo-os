@@ -194,10 +194,12 @@ install : installdirs
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/xsessions \
 		xsessions/puavo-desktop-session.desktop \
+		xsessions/puavo-infotv-session.desktop \
 		xsessions/puavo-webkiosk-session.desktop
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/xsessions \
 		xsessions/puavo-desktop-session.desktop \
+		xsessions/puavo-infotv-session.desktop \
 		xsessions/puavo-webkiosk-session.desktop
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
@@ -250,7 +252,6 @@ install : installdirs
 		udev/rules.d/95-monitor-hotplug.rules
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/X11/Xsession.d \
-		etc/X11/Xsession.d/40puavo-infotv \
 		etc/X11/Xsession.d/40puavo-retrieve-thinclient-session \
 		etc/X11/Xsession.d/41puavo-set-locale \
 		etc/X11/Xsession.d/42puavo-set-browser-homepage \

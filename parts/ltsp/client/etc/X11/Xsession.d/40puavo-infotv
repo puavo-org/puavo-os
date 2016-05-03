@@ -1,4 +1,0 @@
-puavo-conf -x infotv puavo.screen.mode && {
-  iivari_kiosk_domain="$(cat /etc/puavo/domain)"
-  STARTUP="iivari-kiosk --urlbase https://${iivari_kiosk_domain}/infotv/conductor"
-}

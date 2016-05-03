@@ -4,13 +4,6 @@ set -eu
 
 # This script is run as root (from lightdm).
 
-# This is for triggering autologin on infotv mode.
-if puavo-conf puavo.screen.mode | grep -Eqx '(infotv)'; then
-  trap '' HUP INT TERM
-  /bin/systemctl restart lightdm
-  exit 0
-fi
-
 # This is for shutting down thin clients.  "puavo-ltsp-client-action" in the
 # thin client case sets up an X property, kills the desktop session, and this
 # script then picks up this and may trigger either a reboot or a shutdown.

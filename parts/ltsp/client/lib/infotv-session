@@ -1,0 +1,7 @@
+#!/bin/sh
+
+set -eu
+
+iivari_kiosk_domain="$(cat /etc/puavo/domain)"
+
+iivari-kiosk --urlbase "https://${iivari_kiosk_domain}/infotv/conductor"

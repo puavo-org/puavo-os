@@ -372,7 +372,7 @@ case @puavo_device_type
     write_config("/etc/ntp.conf")
 
     # turn infotv displays on and off
-    if @puavo_screen_mode == 'infotv' then
+    if @puavo_xsessions_default == 'puavo-infotv-session' then
       write_config("/etc/cron.d/infotv_display_control")
     end
 end

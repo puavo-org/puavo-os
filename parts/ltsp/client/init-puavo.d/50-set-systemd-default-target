@@ -6,7 +6,7 @@ set_systemd_default_target()
     screen_mode=$(puavo-conf puavo.screen.mode)
 
     case "${screen_mode}" in
-        infotv|login)
+        login)
 	    systemctl set-default graphical.target
 	    ;;
 	darkdm)
