@@ -8,18 +8,7 @@
 PUAVO_HOSTTYPE=$(puavo-conf puavo.hosttype)
 
 case "${PUAVO_HOSTTYPE}" in
-  fatclient|laptop)
-    session=gnome-flashback
-    # XXX does this work?  how to support this?
-    # if jq -r .tags[] /etc/puavo/device.json | grep -q -x enable_compiz; then
-    #   session=gnome-flashback-compiz
-    # fi
-    if jq -r .tags[] /etc/puavo/device.json | grep -q -x disable_compiz; then
-      session=gnome-flashback
-    fi
-    gnome-session --session="${session}"
-    ;;
-  preinstalled)
+  fatclient|laptop|preinstalled)
     gnome-session --session="gnome-flashback"
     ;;
   thinclient)

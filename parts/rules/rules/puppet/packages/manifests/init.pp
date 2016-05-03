@@ -85,8 +85,6 @@ class packages {
     , 'vlan' ]:
       tag => [ 'basic', 'debian', ];
 
-    # 'compizconfig-settings-manager'	# XXX missing from Debian
-    # 'compiz-plugins-extra'		# XXX missing from Debian
     # 'indicator-power'			# XXX missing from Debian
     [ 'indicator-session'
     , 'lightdm'
@@ -452,7 +450,6 @@ class packages {
     , 'brltty'
     , 'ca-certificates'
     , 'cheese'
-    # , 'compiz'				# XXX missing from Debian
     , 'cups'
     , 'cups-bsd'
     , 'cups-client'
