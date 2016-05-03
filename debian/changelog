@@ -1,3 +1,43 @@
+puavo-os (0.10.0+496ab5f9569ee99f99eef24d7c975865d1fc561f) jessie; urgency=medium
+
+  * New release
+  * parts/rules: packages: add iivari-client
+  * parts/rules: packages: add webkiosk-language-selector
+  * parts/ltsp: client re-login automatically autologin session exits
+  * parts/ltsp: client: merge puavo.guestlogin.enabled and
+    puavo.autologin.enabled
+  * parts/ltsp: client: use puavo.guestlogin.auto to control automatic
+    guest login
+  * parts/ltsp: get rid useless of puavo.screen.mode
+  * parts/ltsp: client: simplify Makefile by installing xsessions/*
+  * parts/ltsp: client: implement infotv as a separate xsession
+  * parts/ltsp: client: implement webkiosk as a separate xsession
+  * parts/ltsp: client: use systemctl restart instead of upstart restart
+  * parts/ltsp: drop compiz support
+  * parts/ltsp: client: bring netbooted laptop to darkdm
+  * parts/ltsp: client: add puavo.guestlogin.enabled parameter
+  * parts/ltsp: client: deduce the default screen mode from hosttype
+  * parts/ltsp: client: add puavo.xsessions.{default,locked} parameters
+  * parts/rules: lightdm: use modified NAME_REGEX for guest users
+  * parts/rules: lightdm: add Jessie's default adduser.conf
+  * parts/rules: lightdm: add guest login support
+  * parts/core: initramfs: source common functions before processing
+    anything
+  * parts/core: initramfs: ignore all secondary puavo partitions
+  * parts/core: initramfs: do not write fstab, init-puavo does it
+  * parts/core: initramfs: do not mount /state, init-puavo does it
+  * parts/core: initramfs: determine the boot mode as late as possible
+  * parts/core: initramfs: let rootfs source determine the boot mode
+  * parts/core: initramfs: fix whitespace and indentation
+  * parts/core: initramfs: remove redundant case block
+  * parts/ltsp: client: set the default puavo.screen.mode to darkdm
+  * parts/ltsp: client: determine systemd target from puavo.screen.mode
+  * parts/ltsp: client: rename puavo.desktop.mode => puavo.screen.mode
+  * Add default settings for Cinnamon desktop.
+  * Git(496ab5f9569ee99f99eef24d7c975865d1fc561f)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Tue, 03 May 2016 16:01:57 +0300
+
 puavo-os (0.10.0~rc4+3116b82f1ed69fe9732152b6fc1137b8bde1f011) jessie; urgency=medium
 
   * New release
