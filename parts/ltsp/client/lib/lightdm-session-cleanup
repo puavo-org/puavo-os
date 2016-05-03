@@ -4,6 +4,12 @@ set -eu
 
 # This script is run as root (from lightdm).
 
+puavo_guestlogin_mode=$(puavo-conf puavo.guestlogin.mode)
+if [ "${puavo_guestlogin_mode}" = automatic ]; then
+    /bin/systemctl try-restart lightdm
+    exit $?
+fi
+
 # This is for shutting down thin clients.  "puavo-ltsp-client-action" in the
 # thin client case sets up an X property, kills the desktop session, and this
 # script then picks up this and may trigger either a reboot or a shutdown.
