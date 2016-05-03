@@ -4,8 +4,8 @@ set -eu
 
 # This script is run as root (from lightdm).
 
-# This is for triggering autologin on infotv and webkiosk modes.
-if puavo-conf puavo.screen.mode | grep -Eqx '(infotv|webkiosk)'; then
+# This is for triggering autologin on infotv mode.
+if puavo-conf puavo.screen.mode | grep -Eqx '(infotv)'; then
   trap '' HUP INT TERM
   /bin/systemctl restart lightdm
   exit 0

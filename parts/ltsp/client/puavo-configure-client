@@ -249,7 +249,7 @@ case @puavo_device_type
     write_config("/etc/rsyslog.conf")
     write_config("/etc/rsyslog.d/send_to_syslogserver.conf")
 
-    if @puavo_screen_mode == 'webkiosk' then
+    if @puavo_xsessions_default == 'puavo-webkiosk-session' then
       write_config("/etc/polkit-1/localauthority/50-local.d/90.org.freedesktop.networkmanager.deny_in_webkiosk_mode.pkla")
     end
 
@@ -321,7 +321,7 @@ case @puavo_device_type
     write_config("/etc/systemd/logind.conf")
     write_config("/var/lib/polkit-1/localauthority/10-vendor.d/com.ubuntu.desktop.pkla")
 
-    if @puavo_screen_mode == 'webkiosk' then
+    if @puavo_xsessions_default == 'puavo-webkiosk-session' then
       write_config("/etc/polkit-1/localauthority/50-local.d/90.org.freedesktop.networkmanager.deny_in_webkiosk_mode.pkla")
     end
 

@@ -1,0 +1,17 @@
+#!/bin/sh
+
+/usr/bin/ratpoison &
+RATPOISON_PID=$!
+
+export PUAVO_SESSION_LANGUAGE=$(webkiosk-language-selector)
+
+kill -9 ${RATPOISON_PID}
+
+# Logout user automatically if nothing has been done in 10 minutes
+xautolock -locker "kill -9 -1" -time 10 &
+
+# Automatically start firefox after session is opened
+mkdir -p ~/.config/autostart
+cp /usr/share/applications/firefox.desktop ~/.config/autostart/
+
+gnome-session --session="gnome-flashback"
