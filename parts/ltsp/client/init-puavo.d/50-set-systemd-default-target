@@ -1,40 +1,24 @@
 set_systemd_default_target()
 {
-    local screen_mode
     local hosttype
 
-    screen_mode=$(puavo-conf puavo.screen.mode)
-
-    case "${screen_mode}" in
-        login)
-	    systemctl set-default graphical.target
-	    ;;
-	darkdm)
-	    systemctl set-default multi-user.target
-	    ;;
-        auto)
-            hosttype=$(puavo-conf puavo.hosttype)
-            case "${hosttype}" in
-                fatclient|thinclient)
-                    systemctl set-default graphical.target
-                    ;;
-                laptop)
-                    if awk '$2 == "/rofs" && $1 ~ /\/dev\/nbd[0-9]+/ {exit 1}' /etc/mtab; then
-                        systemctl set-default graphical.target
-                    else
-                        # Laptop having its root filesystem mounted
-                        # from network goes to admin menu. It provides
-                        # tools to update the system etc.
-                        systemctl set-default multi-user.target
-                    fi
-                    ;;
-                *)
-                    systemctl set-default multi-user.target
-                    ;;
-            esac
+    hosttype=$(puavo-conf puavo.hosttype)
+    case "${hosttype}" in
+        fatclient|thinclient)
+            systemctl set-default graphical.target
+            ;;
+        laptop)
+            if awk '$2 == "/rofs" && $1 ~ /\/dev\/nbd[0-9]+/ {exit 1}' /etc/mtab; then
+                systemctl set-default graphical.target
+            else
+                # Laptop having its root filesystem mounted
+                # from network goes to admin menu. It provides
+                # tools to update the system etc.
+                systemctl set-default multi-user.target
+            fi
             ;;
         *)
-            echo "Error: invalid puavo.screen.mode value '${screen_mode}'" >&2
+            systemctl set-default multi-user.target
             ;;
     esac
 }
