@@ -7,8 +7,7 @@ set -eu
 # This is for triggering autologin on infotv and webkiosk modes.
 if puavo-conf puavo.screen.mode | grep -Eqx '(infotv|webkiosk)'; then
   trap '' HUP INT TERM
-  PATH=$PATH:/sbin:/usr/sbin
-  restart lightdm
+  /bin/systemctl restart lightdm
   exit 0
 fi
 
