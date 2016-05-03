@@ -690,8 +690,8 @@ class packages {
       tag => [ 'misc', 'puavo', 'thinclient', ];
 
     # [ 'fluent-plugin-puavo'   # XXX not yet packaged for Debian
-    # , 'iivari-client'         # XXX not yet packaged for Debian
-    [ 'puavo-image-tools'
+    [ 'iivari-client'
+    , 'puavo-image-tools'
     # , 'puavo-load-reporter'   # XXX not yet packaged for Debian
     , 'puavo-local-config'
     , 'puavo-pkg'
