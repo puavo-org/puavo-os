@@ -16,50 +16,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-#
-# for documentation see README.md
-#
-
-#
-# tested speed on Lenovo ThinkCentre Edge (1578D7G)
-#   with 100 hardware-quirks.json files, with 1000 pci-id keys on each:
-#   took about 0.8 seconds (not to be taken as an exact value, code may
-#   have changed)
-#
-# ways to optimize:
-#   - rewrite in C
-#   - have only a few json-files to parse
-#   - replace calls for dmidecode, lspci, lsusb with something more efficient
-#
-
-require 'getoptlong'
 require 'json'
 
 require 'puavo/conf'
-
-def apply_parameter_filters(parameters, parameter_filters, lookup_fn)
-    parameter_filters.each do |filter|
-        validate_parameter_filter(filter)
-
-        if filter['key'] == '*' then
-            parameters.update(filter['parameters'])
-            next
-        end
-
-        parameter_values = lookup_fn.call(filter['key'])
-        next if parameter_values.nil?
-
-        parameter_values.each do |value|
-            match_result = match_puavopattern(value,
-                                              filter['matchmethod'],
-                                              filter['pattern'])
-            if match_result then
-                parameters.update(filter['parameters'])
-                break
-            end
-        end
-    end
-end
 
 def validate_value(value)
     return true if value.kind_of?(String)
@@ -79,96 +38,12 @@ def validate_parameter_definition(obj)
     true
 end
 
-def validate_parameter_filter(obj)
-    unless obj.kind_of?(Hash)
-        raise "Parameter filters must be an hash"
-    end
-    %w(key matchmethod pattern parameters).each do |required_key|
-        unless obj.has_key?(required_key)
-            raise "Parameter filter is missing required key '#{required_key}'"
-        end
-    end
-    unless obj['key'].kind_of?(String)
-        raise "Parameter filter's key is of wrong type"
-    end
-    unless %w(exact glob regex).include?(obj['matchmethod'])
-        raise "Parameter filter's matchmethod has unknown value"
-    end
-    unless obj['pattern'].kind_of?(String)
-        raise "Parameter filter's pattern is of wrong type"
-    end
-    unless obj['parameters'].kind_of?(Hash)
-        raise "Parameter filter's parameters is of wrong type"
-    end
-    if obj['parameters'].empty?
-        raise "Parameter filter's parameters is empty"
-    end
-    obj['parameters'].each do |key, value|
-        unless key.kind_of?(String)
-            raise "Parameter key must be a string"
-        end
-        validate_value(value)
-    end
-    true
-end
-
 def read_json_obj(file, type)
     obj = JSON.parse(IO.read(file))
     unless obj.kind_of?(type)
         raise "Top-level JSON object of #{file} is not #{type}"
     end
     obj
-end
-
-$deviceinfo = {}
-def get_device_setting(key)
-    # returns nil in case there was a failure
-    return $deviceinfo[key] if $deviceinfo.has_key?(key)
-
-    case key
-        when 'dmidecode-baseboard-asset-tag',
-             'dmidecode-baseboard-manufacturer',
-             'dmidecode-baseboard-product-name',
-             'dmidecode-baseboard-serial-number',
-             'dmidecode-baseboard-version',
-             'dmidecode-bios-release-date',
-             'dmidecode-bios-vendor',
-             'dmidecode-bios-version',
-             'dmidecode-chassis-asset-tag',
-             'dmidecode-chassis-manufacturer',
-             'dmidecode-chassis-serial-number',
-             'dmidecode-chassis-type',
-             'dmidecode-chassis-version',
-             'dmidecode-processor-family',
-             'dmidecode-processor-frequency',
-             'dmidecode-processor-manufacturer',
-             'dmidecode-processor-version',
-             'dmidecode-system-manufacturer',
-             'dmidecode-system-product-name',
-             'dmidecode-system-serial-number',
-             'dmidecode-system-uuid',
-             'dmidecode-system-version'
-                cmdarg = key[ "dmidecode-".length .. -1]
-                result = %x(dmidecode -s #{ cmdarg })
-                status = $?.exitstatus
-                if status != 0 then
-                    logerr("dmidecode -s #{ cmdarg } returned #{ status }")
-                    $deviceinfo[key] = nil
-                else
-                    $deviceinfo[key] = [ result.strip ]
-                end
-        when 'pci-id'
-            # might return nil, that is okay
-            $deviceinfo[key] = take_field('lspci -n', 3)
-        when 'usb-id'
-            # might return nil, that is okay
-            $deviceinfo[key] = take_field('lsusb', 6)
-        else
-            logerr("Unknown device key #{ key }")
-            $deviceinfo[key] = nil
-    end
-
-    return $deviceinfo[key]
 end
 
 def logwarn(msg)
@@ -178,53 +53,6 @@ end
 def logerr(msg)
     warn("Error: #{msg}")
     $status = 1
-end
-
-def match_puavopattern(target, matchmethod, pattern)
-    # XXX if 'logic' matchmethod is going to be implemented
-    # XXX pattern might not be a string?
-    if !pattern.kind_of?(String) then
-        logerr('input type error: match pattern is not a string')
-        return
-    end
-
-    case matchmethod
-        when 'exact'
-            return target == pattern
-        when 'glob'
-            return File.fnmatch(pattern, target)
-        when 'logic'
-            logerr("Match method logic not implemented yet")
-            return false
-        when 'regex'
-            return target.match(pattern) ? true : false
-        else
-            logerr("Match method #{ matchmethod } is unsupported")
-    end
-
-    return false
-end
-
-def take_field(cmd, fieldnum)
-    result = %x(#{ cmd })
-    status = $?.exitstatus
-    if status != 0 then
-        logerr("#{ cmd } returned #{ status }")
-        return nil
-    end
-
-    result.split("\n").map { |line| (line.split(' '))[fieldnum-1] }
-end
-
-def usage()
-    puts <<-EOF
-Usage:
-    puavo-conf-mkdb [--sources comma-separated-list-of-sources]
-
-By default the list of used sources is
-  #{SUPPORTED_SOURCES.join(',')}
-and these are the only available configuration sources.
-EOF
 end
 
 def get_parameter_definitions
@@ -262,84 +90,9 @@ def get_parameter_definitions
     return result
 end
 
-def get_parameter_overwrites_from_hwquirks(parameter_definitions)
-    parameters = {}
-    files      = Dir.glob('/usr/share/puavo-conf/hwquirks/*.json') rescue []
-
-    files.each do |file|
-        begin
-            apply_parameter_filters(parameters,
-                                    read_json_obj(file, Array),
-                                    Proc.method(:get_device_setting))
-        rescue StandardError => e
-            logerr("Failed to apply hardware quirks from #{file}: #{e.message}")
-        end
-    end
-
-    return parameters
-end
-
-def get_parameter_overwrites_from_puavo(parameter_definitions)
-    begin
-      require 'puavo/etc'
-      require 'puavo/rest-client'
-
-      hostname = PuavoEtc.new.get('hostname')
-      rest_client = PuavoRestClient.new
-      JSON.parse(rest_client.get("/v3/devices/#{hostname}/conf"))
-    rescue StandardError => e
-      logerr("Failed to get configuration from Puavo: #{e.message}")
-      {}
-    end
-end
-
-def get_parameter_overwrites_from_localconf(parameter_definitions)
-    # XXX unimplemented
-    return {}
-end
-
-def get_parameter_overwrites_from_kernelargs(parameter_definitions)
-    parameters = {}
-
-    begin
-        IO.read('/proc/cmdline').split.each do |kernel_arg|
-            if kernel_arg =~ /\A(puavo\..*)=(.*)\Z/
-                parameters[$1] = $2
-            end
-        end
-    rescue StandardError => e
-        logerr('Failed to read parameters from the kernel command line')
-    end
-
-    return parameters
-end
-
 ## Main
 
-if Process.euid != 0 then
-    logerr("#{ File.basename($0) } must be run as root")
-    exit 1
-end
-
 $status = 0
-
-SUPPORTED_SOURCES = %w(hwquirks puavo localconf kernelargs)
-conf_sources = SUPPORTED_SOURCES
-
-begin
-    opts = GetoptLong.new([ '--sources', GetoptLong::REQUIRED_ARGUMENT ])
-
-    opts.each do |opt, arg|
-        case opt
-            when '--sources'
-                conf_sources = arg.split(',')
-        end
-    end
-
-rescue GetoptLong::InvalidOption => e
-    usage
-    exit 1
-end
 
 puavoconf = Puavo::Conf.new()
 begin
@@ -352,22 +105,6 @@ begin
         rescue StandardError => e
             logerr("Failed to add a new parameter: #{key}: #{e.message}")
             next
-        end
-    end
-
-    # Iterate well-defined source list to ensure the correct order.
-    SUPPORTED_SOURCES.each do |source|
-        next unless conf_sources.include?(source)
-        parameter_overwrites = send("get_parameter_overwrites_from_#{source}",
-                                    parameter_definitions)
-
-        parameter_overwrites.each do |key, value|
-            begin
-                puavoconf.overwrite(key, value)
-            rescue StandardError => e
-                logerr("Failed to overwrite a parameter: " \
-                       "#{key}=#{value}: #{e.message}")
-            end
         end
     end
 ensure
