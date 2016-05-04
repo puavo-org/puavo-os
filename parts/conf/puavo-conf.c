@@ -208,7 +208,7 @@ int main(int argc, char *argv[])
         int exitval;
         enum puavo_conf_type type = PUAVO_CONF_TYPE_ANY;
         char *exact_match = NULL;
-        enum set_mode set_mode = FORCE;
+        enum set_mode set_mode = OVERWRITE;
 
         while (1) {
                 int optval;

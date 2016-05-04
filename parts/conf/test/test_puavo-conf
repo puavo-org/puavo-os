@@ -11,7 +11,12 @@ empty_list=$(../puavo-conf)
     exit 1
 }
 
-../puavo-conf var1 value1
+../puavo-conf var1 value1 2>/dev/null && {
+    echo "TestError: overwriting a parameter with an empty db did not fail" >&2
+    exit 1
+}
+
+../puavo-conf --set-mode=add var1 value1
 
 var1=$(../puavo-conf -x value1 var1)
 [ "${var1}" = value1 ] || {
@@ -34,7 +39,7 @@ var1=$(../puavo-conf -x value1 var1)
     exit 1
 }
 
-../puavo-conf var2 true
+../puavo-conf --set-mode=add var2 true
 
 var2=$(../puavo-conf -b var2) || {
     echo "TestError: -b failed when getting true" >&2
