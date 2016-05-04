@@ -105,11 +105,18 @@ static int get_param(puavo_conf_t *const conf,
         return 0;
 }
 
+enum set_mode {
+        OVERWRITE,
+        ADD,
+        FORCE
+};
+
 static int set_param(puavo_conf_t *const conf,
                      char const *const key,
                      char const *const value,
                      enum puavo_conf_type const type,
-                     char const *const exact_match)
+                     char const *const exact_match,
+                     enum set_mode const set_mode)
 {
         struct puavo_conf_err err;
 
@@ -126,9 +133,35 @@ static int set_param(puavo_conf_t *const conf,
                 return 1;
         }
 
-        if (puavo_conf_set(conf, key, value, &err) == -1) {
-                (void) fprintf(stderr, "Error: Failed to set '%s' to '%s': %s\n",
-                               key, value, err.msg);
+        switch (set_mode) {
+        case OVERWRITE:
+                if (puavo_conf_overwrite(conf, key, value, &err) == -1) {
+                        (void) fprintf(stderr,
+                                       "Error: Failed to overwrite "
+                                       "'%s' with value '%s': %s\n",
+                                       key, value, err.msg);
+                        return 1;
+                }
+                break;
+        case ADD:
+                if (puavo_conf_add(conf, key, value, &err) == -1) {
+                        (void) fprintf(stderr, "Error: Failed to add "
+                                       "'%s' with value '%s': %s\n",
+                                       key, value, err.msg);
+                        return 1;
+                }
+                break;
+        case FORCE:
+                if (puavo_conf_set(conf, key, value, &err) == -1) {
+                        (void) fprintf(stderr, "Error: Failed to set "
+                                       "'%s' to '%s': %s\n",
+                                       key, value, err.msg);
+                        return 1;
+                }
+                break;
+        default:
+                (void) fprintf(stderr, "Error: Invalid set mode %d\n",
+                               set_mode);
                 return 1;
         }
 
@@ -147,11 +180,19 @@ int print_help(void)
                      "  -b, --type-bool               fail if VALUE is not boolean\n"
                      "  -h, --help                    display this help and exit\n"
                      "  -x STR, --match-exact STR     fail if value does not match STR exactly\n"
+                     "  --set-mode MODE               how to set the value, see MODE below\n"
                      "\n"
                      "If both KEY and VALUE are given, set the value of\n"
                      "KEY to VALUE. If only KEY is given, display its\n"
                      "value. If no arguments are given, display all\n"
                      "parameters.\n"
+                     "\n"
+                     "MODE\n"
+                     "  overwrite    overwrite the value but fail if KEY does not exist\n"
+                     "  add          add a new parameter but fail if KEY exists\n"
+                     "  force        add a new parameter or overwrite if KEY exists\n"
+                     "\n"
+                     "  If --set-mode is not given, --set-mode=overwrite is implied.\n"
                      "\n");
 
         if (err < 0)
@@ -167,6 +208,7 @@ int main(int argc, char *argv[])
         int exitval;
         enum puavo_conf_type type = PUAVO_CONF_TYPE_ANY;
         char *exact_match = NULL;
+        enum set_mode set_mode = FORCE;
 
         while (1) {
                 int optval;
@@ -174,6 +216,7 @@ int main(int argc, char *argv[])
                         {"match-exact", required_argument, 0, 'x' },
                         {"type-bool"  , no_argument      , 0, 'b' },
                         {"help"       , no_argument      , 0, 'h' },
+                        {"set-mode"   , required_argument, 0, 's' },
                         {0            , 0                , 0, 0   }
                 };
 
@@ -192,6 +235,22 @@ int main(int argc, char *argv[])
 
                 case 'x':
                         exact_match = optarg;
+                        break;
+
+                case 's':
+                        if (!strcmp("overwrite", optarg)) {
+                                set_mode = OVERWRITE;
+                        } else if (!strcmp("add", optarg)) {
+                                set_mode = ADD;
+                        } else if (!strcmp("force", optarg)) {
+                                set_mode = FORCE;
+                        } else {
+                                (void) fprintf(stderr,
+                                               "Error: Invalid MODE '%s', "
+                                               "expected 'overwrite', 'add' or "
+                                               "'force'.\n", optarg);
+                                return EXIT_FAILURE;
+                        }
                         break;
 
                 case '?':
@@ -225,7 +284,7 @@ int main(int argc, char *argv[])
                 break;
         case 2:
                 if (set_param(conf, argv[argc - 2], argv[argc - 1], type,
-                              exact_match))
+                              exact_match, set_mode))
                         goto err;
                 break;
         default:
