@@ -119,6 +119,8 @@ def update_device_json(restclient)
         "Removing primary user override (it is the same in Puavo)\n")
     FileUtils.rm_f('/state/etc/puavo/primary_user_override')
   end
+
+  run('puavo-conf-updatedb')
 end
 
 def update_external_files(restclient)
