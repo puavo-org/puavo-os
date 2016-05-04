@@ -231,18 +231,15 @@ def get_parameter_overwrites_from_hwquirks()
     return parameters
 end
 
-def get_parameter_overwrites_from_puavo()
+def get_parameter_overwrites_from_devicejson()
     begin
-      require 'puavo/etc'
-      require 'puavo/rest-client'
-
-      hostname = PuavoEtc.new.get('hostname')
-      rest_client = PuavoRestClient.new
-      JSON.parse(rest_client.get("/v3/devices/#{hostname}/conf"))
+        device = read_json_obj('/state/etc/puavo/device.json', Hash)
     rescue StandardError => e
-      logerr("Failed to get configuration from Puavo: #{e.message}")
-      {}
+        logerr("Failed to read device json: #{e.message}")
+        device = {}
     end
+
+    device['conf'] or {}
 end
 
 def get_parameter_overwrites_from_localconf()
@@ -275,7 +272,7 @@ end
 
 $status = 0
 
-SUPPORTED_SOURCES = %w(hwquirks puavo localconf kernelargs)
+SUPPORTED_SOURCES = %w(hwquirks devicejson localconf kernelargs)
 conf_sources = SUPPORTED_SOURCES
 
 begin
