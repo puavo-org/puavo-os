@@ -207,14 +207,14 @@ def configure_admins()
                          /^puavolocaladmins:/,
                          "puavolocaladmins:!::#{ admin }")
 
-  File.open('/etc/sudoers.d/puavolocaladmins.pcltmp', 'w') do |f|
+  File.open('/etc/sudoers.d/puavolocaladmins.plctmp', 'w') do |f|
     if superlaptop_mode? then
       f.write("%puavolocaladmins ALL=(ALL) ALL\n")
     end
     f.write('%puavolocaladmins ALL=(ALL) NOPASSWD: ' \
             + "/usr/sbin/puavo-local-config, /usr/sbin/getweb\n")
   end
-  File.rename('/etc/sudoers.d/puavolocaladmins.pcltmp',
+  File.rename('/etc/sudoers.d/puavolocaladmins.plctmp',
               '/etc/sudoers.d/puavolocaladmins')
 end
 
