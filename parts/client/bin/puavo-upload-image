@@ -48,65 +48,21 @@ upload_file = File.open(upload_file_path, 'rb') do |io|
   end
 end
 
-def post(*args)
-  request("post", *args)
-end
+client = PuavoImageClient::Upload.new( :meta_server => @options[:puavo_image_series_server],
+                                       :domain => @options[:domain] )
 
-def put(*args)
-  request("put", *args)
-end
-
-def request(method, *args)
-  counter = 0
-  headers = {}
-  while response = @client.send(method, *args, headers)
-    if response.status == 401
-      puts "Invalid username or password!" if counter > 0
-      username = ask("Enter your username: ") { |q| q.echo = true }
-      password = ask("Enter your password: ") { |q| q.echo = "*" }
-      @client.set_auth(@options[:puavo_image_series_server], username, password)
-      headers = { :host => @options[:domain] }
-      counter += 1
-      next
-    end
-
-    break
-  end
-
-  if response.status =! 200
-    puts "Something went wrong! Response status: #{ response.status }, body: #{ response.body }"
-    Process.exit(1)
-  end
-
-  begin
-    response_data = JSON.parse(response.body)
-  rescue JSON::ParserError
-    puts "Request: #{ method }: #{ args.first }"
-    puts "An invalid response data was received: " + response.body
-    Process.exit(1)
-  end
-
-  return response_data
-end
-
-
-@client = HTTPClient.new()
-@client.force_basic_auth = true
-@client.send_timeout = 60 * 60 * 2
-@client.receive_timeout = 60 * 60 * 2
-
-image = post(@options[:puavo_image_series_server] + "/series/" + @options[:image_series] + "/image",
+image = client.post(@options[:puavo_image_series_server] + "/series/" + @options[:image_series] + "/image",
              { :sha256 => sha256.hexdigest,
                :size => File.stat(upload_file_path).size })
 
 upload_file = File.open(upload_file_path)
-upload = post(image["upload_url"], {
+upload = client.post(image["upload_url"], {
                 'Content-Transfer-Encoding' => 'binary',
                 :content => upload_file } )
 upload_file.close
 
 if upload["status"] == "successfully"
-  image = put(@options[:puavo_image_series_server] + "/series/" + @options[:image_series] + "/image/" + image["s3_key"],
+  image = client.put(@options[:puavo_image_series_server] + "/series/" + @options[:image_series] + "/image/" + image["uuid"],
               { :upload_status => "ready" })
 
   puts "Image has been sent successfully"
