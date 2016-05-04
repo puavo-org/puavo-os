@@ -34,12 +34,13 @@ mkdir -p ${DESTDIR}/usr/bin/                  \
       ${DESTDIR}/usr/sbin/                 \
       ${DESTDIR}/usr/share/puavo/
 
-copy_exec /usr/bin/lspci            /usr/bin
-copy_exec /usr/bin/lsusb            /usr/bin
-copy_exec /usr/bin/puavo-conf       /usr/bin
-copy_exec /usr/bin/ruby             /usr/bin
-copy_exec /usr/sbin/dmidecode       /usr/sbin
-copy_exec /usr/sbin/puavo-conf-mkdb /usr/sbin
+copy_exec /usr/bin/lspci                /usr/bin
+copy_exec /usr/bin/lsusb                /usr/bin
+copy_exec /usr/bin/puavo-conf           /usr/bin
+copy_exec /usr/bin/ruby                 /usr/bin
+copy_exec /usr/sbin/dmidecode           /usr/sbin
+copy_exec /usr/sbin/puavo-conf-mkdb     /usr/sbin
+copy_exec /usr/sbin/puavo-conf-updatedb /usr/sbin
 
 cp -a /usr/lib/ruby ${DESTDIR}/usr/lib/
 cp -a /usr/lib/ruby/vendor_ruby/puavo ${DESTDIR}/usr/lib/ruby/vendor_ruby

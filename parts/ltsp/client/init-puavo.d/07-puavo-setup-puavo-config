@@ -42,4 +42,4 @@ if [ -n "$SERVER" ]; then
     rm -f /etc/puavo/device.json.tmp
 fi
 
-puavo-conf-mkdb
+puavo-conf-updatedb

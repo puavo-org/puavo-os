@@ -17,7 +17,8 @@ esac
 
 if [ "$BOOT" = "puavo" ]; then
     mkdir -p /var/lib/puavo-conf
-    puavo-conf-mkdb --sources hwquirks,kernelargs
+    puavo-conf-mkdb
+    puavo-conf-updatedb --sources hwquirks,kernelargs
 fi
 
 # apply kernel module configurations based on puavo-conf here
