@@ -24,6 +24,10 @@ parser = OptionParser.new do |opts|
     @options[:domain] = domain
   end
 
+  opts.on("--version VERSION") do |version|
+    @options[:version] = version
+  end
+
   opts.on_tail("-h", "--help", "Show this message") do
     STDERR.puts opts
     Process.exit
@@ -50,8 +54,10 @@ client = PuavoImageClient::Upload.new( :meta_server => @options[:puavo_image_ser
                                        :domain => @options[:domain] )
 
 image = client.post(@options[:puavo_image_series_server] + "/series/" + @options[:image_series] + "/image",
-             { :sha256 => sha256.hexdigest,
-               :size => File.stat(upload_file_path).size })
+                    { :sha256 => sha256.hexdigest,
+                      :version => @options[:version],
+                      :filename => Pathname.new(upload_file_path).basename.to_s,
+                      :size => File.stat(upload_file_path).size })
 
 upload_file = File.open(upload_file_path)
 upload = client.post(image["upload_url"], {
