@@ -1,5 +1,6 @@
 require 'puavo/gems'
 require 'http'
+require "httpclient"
 
 class PuavoImageClient
 
