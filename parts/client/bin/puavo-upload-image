@@ -3,6 +3,7 @@
 require 'puavo/gems'
 require 'optparse'
 require "highline/import"
+require "puavo/image_client"
 
 @options = {
   :puavo_image_series_server => "https://images.opinsys.fi"
