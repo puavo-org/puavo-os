@@ -1,3 +1,22 @@
+puavo-os (0.11.0+482ad6c90f84a86e5c62a9c230ca49ac86984896) jessie; urgency=medium
+
+  * New release
+  * parts/ltsp: client: add puavo.image.path parameter
+  * parts/local-config: fix typo
+  * parts/ltsp: install: update conf db whenever device.json is updated
+  * parts/conf: read Puavo conf from device.json instead of making a
+    HTTP query
+  * parts/conf: change the default set mode of puavo-conf to 'overwrite'
+  * parts/conf: add --set-mode option to puavo-conf
+  * Create conf db just once, and then update it on demand
+  * parts/conf: add tool for updating the database
+  * parts/conf: dedicate puavo-conf-mkdb to just creating the database
+  * parts/ltsp: client: remove unused init-puavo.d/49-puavo-control-
+    services-by-tags script
+  * Git(482ad6c90f84a86e5c62a9c230ca49ac86984896)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Mon, 09 May 2016 10:04:34 +0300
+
 puavo-os (0.10.0+496ab5f9569ee99f99eef24d7c975865d1fc561f) jessie; urgency=medium
 
   * New release
