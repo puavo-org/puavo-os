@@ -1,3 +1,12 @@
+puavo-os (0.12.0~rc1+4687a8ab316885772525d6169cb69c9f70861c6e) jessie; urgency=medium
+
+  * New release
+  * parts/ltsp: client: check /rofs dev from /proc/mounts
+  * parts/ltsp: client: remove useless init-puavo script
+  * Git(4687a8ab316885772525d6169cb69c9f70861c6e)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Mon, 09 May 2016 10:53:28 +0300
+
 puavo-os (0.11.0+482ad6c90f84a86e5c62a9c230ca49ac86984896) jessie; urgency=medium
 
   * New release
