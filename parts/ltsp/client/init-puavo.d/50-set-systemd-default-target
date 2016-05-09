@@ -8,7 +8,7 @@ set_systemd_default_target()
             systemctl set-default graphical.target
             ;;
         laptop)
-            if awk '$2 == "/rofs" && $1 ~ /\/dev\/nbd[0-9]+/ {exit 1}' /etc/mtab; then
+            if awk '$2 == "/rofs" && $1 ~ /\/dev\/nbd[0-9]+/ {exit 1}' /proc/mounts; then
                 systemctl set-default graphical.target
             else
                 # Laptop having its root filesystem mounted
