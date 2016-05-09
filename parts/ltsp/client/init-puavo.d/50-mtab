@@ -1,9 +1,0 @@
-# This file is sourced
-
-# make the chroot's /etc/mtab a file rather than a link
-# because mountall.conf complains loudly
-if [ -L /etc/mtab ]; then
-    rm /etc/mtab
-    :>/etc/mtab
-fi
-
