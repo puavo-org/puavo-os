@@ -2,9 +2,6 @@
 
 require 'puavo/gems'
 require 'optparse'
-require 'http'
-require 'puavo/etc'
-require "httpclient"
 require "highline/import"
 
 @options = {
