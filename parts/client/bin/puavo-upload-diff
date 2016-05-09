@@ -1,0 +1,75 @@
+#!/usr/bin/ruby2.0
+
+require 'puavo/gems'
+require 'optparse'
+require "highline/import"
+require "puavo/image_client"
+
+@options = {
+  :puavo_image_series_server => "https://images.opinsys.fi"
+}
+
+parser = OptionParser.new do |opts|
+  opts.banner = "Usage: puavo-upload-diff [options] <file>"
+
+  opts.on("--server SERVER", "Puavo Image Series server host") do |server|
+    @options[:puavo_image_series_server] = server
+  end
+
+  opts.on("--source-image-uuid UUID") do |uuid|
+    @options[:source_image_uuid] = uuid
+  end
+
+  opts.on("--destination-image-uuid UUID") do |uuid|
+    @options[:destination_image_uuid] = uuid
+  end
+
+  opts.on("--organisation-domain DOMAIN") do |domain|
+    @options[:domain] = domain
+  end
+
+  opts.on_tail("-h", "--help", "Show this message") do
+    STDERR.puts opts
+    Process.exit
+  end
+end
+
+parser.parse!
+
+unless ARGV[0]
+  puts "Set upload file!"
+  Process.exit(1)
+end
+
+upload_file_path = ARGV[0]
+
+sha256 = Digest::SHA256.new
+upload_file = File.open(upload_file_path, 'rb') do |io|
+  while (buffer = io.read(4096))
+    sha256.update(buffer)
+  end
+end
+
+client = PuavoImageClient::Upload.new( :meta_server => @options[:puavo_image_series_server],
+                                       :domain => @options[:domain] )
+
+diff = client.post(@options[:puavo_image_series_server] + "/images/" + @options[:destination_image_uuid] + "/diffs",
+                    { :sha256 => sha256.hexdigest,
+                      :size => File.stat(upload_file_path).size,
+                      :source_image_uuid => @options[:source_image_uuid] })
+
+upload_file = File.open(upload_file_path)
+upload = client.post(diff["upload_url"], {
+                       'Content-Transfer-Encoding' => 'binary',
+                       :content => upload_file } )
+upload_file.close
+
+if upload["status"] == "successfully"
+  diff = client.put(@options[:puavo_image_series_server] + "/diffs/" + diff["uuid"],
+                     { :upload_status => "ready" })
+
+  puts "Diff has been sent successfully"
+else
+  puts "Something went wrong: "
+  puts upload["error"] if upload.has_key?("error")
+end
