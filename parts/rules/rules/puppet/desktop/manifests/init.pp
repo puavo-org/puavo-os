@@ -1,4 +1,4 @@
 class desktop {
   include desktop::puavodesktop
-  include desktop::puavo-bats
+  include desktop::puavo-desktop-bigtouch
 }
