@@ -1,2 +1,27 @@
 [org/gnome/shell]
-enabled-extensions=['hide-panel@puavo.org']
+enabled-extensions=['hide-panel@puavo.org', 'workspaces-to-dock@passingthru67.gmail.com']
+
+[org/gnome/shell/extensions/workspaces-to-dock]
+intellihide-option=1
+customize-thumbnail=true
+workspace-caption-taskbar-icon-size=23.0
+dashtodock-hover=true
+extend-height=true
+shortcuts-panel-orientation='OUTSIDE'
+dock-fixed=true
+dock-edge-visible=false
+shortcuts-panel-appsbutton-at-bottom=true
+shortcuts-panel-popupmenu-arrow-at-top=false
+shortcuts-panel-show-running=false
+workspace-caption-items=['number:false', 'spacer:true']
+show-shortcuts-panel=true
+shortcuts-panel-show-window-count-indicators=false
+thumbnail-size=0.10000000000000001
+toggle-overview=true
+workspace-caption-menu-icon-size=21.0
+shortcuts-panel-icon-size=50.0
+shortcuts-panel-show-places=false
+dock-position='LEFT'
+background-opacity=0.19
+top-margin=0.16500000000000001
+opaque-background-always=true
