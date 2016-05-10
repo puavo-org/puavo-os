@@ -17,8 +17,8 @@ class desktop::dconf::puavodesktop {
   locale { [ 'ar', 'de', 'en', 'fi', 'fr', 'sv', ]: ; }
 
   file {
-    [ '/etc/dconf/db/puavodesktop.d'
-    , '/etc/dconf/db/puavodesktop.d/locks' ]:
+    [ '/etc/dconf/db/puavo-desktop.d'
+    , '/etc/dconf/db/puavo-desktop.d/locks' ]:
       ensure => directory;
 
     '/etc/dconf/profile/user':

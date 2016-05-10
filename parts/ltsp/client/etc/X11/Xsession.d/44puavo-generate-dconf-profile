@@ -53,7 +53,10 @@ has_device_tag() {
   echo "system-db:keyboard"
   echo "system-db:desktopbackground"
   echo "system-db:scalingfactor"
-  echo "system-db:puavodesktop"
+
+  if [ -r "/etc/dconf/db/${DESKTOP_SESSION}" ]; then
+      echo "system-db:${DESKTOP_SESSION}"
+  fi
 } > $puavo_dconf_profile_path || return 1
 
 DCONF_PROFILE=$puavo_dconf_profile_path
