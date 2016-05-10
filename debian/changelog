@@ -1,3 +1,19 @@
+puavo-os (0.12.0+bf73982aaa33928f3de9e75d2189fa2c959a1c19) jessie; urgency=medium
+
+  * New release
+  * parts/rules: rename puavo-bats => puavo-desktop-bigtouch
+  * parts/ltsp: add xsession file for bigtouch desktops
+  * parts/rules: enable workspaces-to-dock in puavo-bats desktop
+  * parts/rules: add workspaces-to-dock gnome shell extension
+  * parts/rules: add desktop::puavo-bats module
+  * parts/rules: add gnome-shell-extension for hiding the panel
+  * Use xsession-specific dconf databases
+  * parts/ltsp: client: rename xsession files
+  * parts/ltsp: client: drop support for metacity_compositing tag
+  * Git(bf73982aaa33928f3de9e75d2189fa2c959a1c19)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Tue, 10 May 2016 15:44:02 +0300
+
 puavo-os (0.12.0~rc1+4687a8ab316885772525d6169cb69c9f70861c6e) jessie; urgency=medium
 
   * New release
