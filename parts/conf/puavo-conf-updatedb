@@ -285,20 +285,22 @@ rescue GetoptLong::InvalidOption => e
     exit 1
 end
 
+parameter_overwrites = {}
+
+# Iterate well-defined source list to ensure the correct order.
+SUPPORTED_SOURCES.each do |source|
+    next unless conf_sources.include?(source)
+    parameter_overwrites.update(send("get_parameter_overwrites_from_#{source}"))
+end
+
 puavoconf = Puavo::Conf.new()
 begin
-    # Iterate well-defined source list to ensure the correct order.
-    SUPPORTED_SOURCES.each do |source|
-        next unless conf_sources.include?(source)
-        parameter_overwrites = send("get_parameter_overwrites_from_#{source}")
-
-        parameter_overwrites.each do |key, value|
-            begin
-                puavoconf.overwrite(key, value)
-            rescue StandardError => e
-                logerr("Failed to overwrite a parameter: " \
-                       "#{key}=#{value}: #{e.message}")
-            end
+    parameter_overwrites.each do |key, value|
+        begin
+            puavoconf.overwrite(key, value)
+        rescue StandardError => e
+            logerr("Failed to overwrite a parameter: " \
+                   "#{key}=#{value}: #{e.message}")
         end
     end
 ensure
