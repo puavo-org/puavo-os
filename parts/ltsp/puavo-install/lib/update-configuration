@@ -120,7 +120,8 @@ def update_device_json(restclient)
     FileUtils.rm_f('/state/etc/puavo/primary_user_override')
   end
 
-  run('puavo-conf-updatedb')
+  run('puavo-conf-updatedb',
+      '--devicejson-path', '/state/etc/puavo/device.json')
 end
 
 def update_external_files(restclient)

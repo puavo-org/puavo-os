@@ -263,7 +263,7 @@ $status = 0
 
 SUPPORTED_SOURCES = %w(hwquirks devicejson localconf kernelargs)
 $conf_sources = SUPPORTED_SOURCES
-$devicejson_path = '/state/etc/puavo/device.json'
+$devicejson_path = '/etc/puavo/device.json'
 
 begin
     opts = GetoptLong.new(['--help', '-h',      GetoptLong::NO_ARGUMENT],
