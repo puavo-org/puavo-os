@@ -7,8 +7,8 @@ class desktop::puavo-desktop-bigtouch {
     '/etc/dconf/db/puavo-desktop-bigtouch.d':
       ensure => directory;
 
-    '/etc/dconf/db/puavo-desktop-bigtouch.d/extensions':
-      content => template('desktop/puavo-desktop-bigtouch/extensions'),
+    '/etc/dconf/db/puavo-desktop-bigtouch.d/profile':
+      content => template('desktop/puavo-desktop-bigtouch/profile'),
       notify  => Exec['update dconf'];
   }
 
