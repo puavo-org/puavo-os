@@ -92,7 +92,8 @@ class packages {
     , 'lsb-invalid-mta'
     , 'network-manager-openvpn-gnome'
     , 'notify-osd'
-    # , 'onboard'			# XXX missing from Debian (Jessie)
+    , 'onboard'
+    , 'onboard-data'
     , 'python-appindicator'
     , 'python-gtk2'
     , 'python-notify'
