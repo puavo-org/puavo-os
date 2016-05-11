@@ -51,7 +51,7 @@ class kernels {
   }
 
   $edge_kernel = $lsbdistcodename ? {
-    'jessie' => $default_kernel,
+    'jessie' => '4.5.0-0.bpo.1-amd64',
     default  => $default_kernel,
   }
 
