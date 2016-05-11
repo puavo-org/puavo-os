@@ -219,26 +219,16 @@ def get_parameter_overwrites_from_hwquirks()
     files      = Dir.glob('/usr/share/puavo-conf/hwquirks/*.json') rescue []
 
     files.each do |file|
-        begin
-            apply_parameter_filters(parameters,
-                                    read_json_obj(file, Array),
-                                    Proc.method(:get_device_setting))
-        rescue StandardError => e
-            logerr("Failed to apply hardware quirks from #{file}: #{e.message}")
-        end
+        apply_parameter_filters(parameters,
+                                read_json_obj(file, Array),
+                                Proc.method(:get_device_setting))
     end
 
     return parameters
 end
 
 def get_parameter_overwrites_from_devicejson()
-    begin
-        device = read_json_obj('/state/etc/puavo/device.json', Hash)
-    rescue StandardError => e
-        logerr("Failed to read device json: #{e.message}")
-        device = {}
-    end
-
+    device = read_json_obj('/state/etc/puavo/device.json', Hash)
     device['conf'] or {}
 end
 
@@ -250,14 +240,10 @@ end
 def get_parameter_overwrites_from_kernelargs()
     parameters = {}
 
-    begin
-        IO.read('/proc/cmdline').split.each do |kernel_arg|
-            if kernel_arg =~ /\A(puavo\..*)=(.*)\Z/
-                parameters[$1] = $2
-            end
+    IO.read('/proc/cmdline').split.each do |kernel_arg|
+        if kernel_arg =~ /\A(puavo\..*)=(.*)\Z/
+            parameters[$1] = $2
         end
-    rescue StandardError => e
-        logerr('Failed to read parameters from the kernel command line')
     end
 
     return parameters
