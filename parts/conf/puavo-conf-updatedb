@@ -210,13 +210,15 @@ Usage:
 
 Options:
   --help, -h                  display this help and exit
-  --sources SOURCES           comma-separated list of sources
-  --devicejson-path FILE      filepath of the device.json, defaults
-                              to '#{$devicejson_path}'
 
-By default the list of used sources is
-  #{SUPPORTED_SOURCES.join(',')}
-and these are the only available configuration sources.
+  --sources SOURCES           comma-separated list of sources, defaults to
+                              '#{$conf_sources.join(',')}'
+
+  --devicejson-path FILE      filepath of the device.json, defaults to
+                              '#{$devicejson_path}'
+
+Available sources: #{SUPPORTED_SOURCES.join(',')}
+
 EOF
 end
 
@@ -260,7 +262,7 @@ end
 $status = 0
 
 SUPPORTED_SOURCES = %w(hwquirks devicejson localconf kernelargs)
-conf_sources = SUPPORTED_SOURCES
+$conf_sources = SUPPORTED_SOURCES
 $devicejson_path = '/state/etc/puavo/device.json'
 
 begin
@@ -274,7 +276,7 @@ begin
                 usage
                 exit 0
             when '--sources'
-                conf_sources = arg.split(',')
+                $conf_sources = arg.split(',')
             when '--devicejson-path'
                 $devicejson_path = arg
         end
@@ -289,7 +291,7 @@ parameter_overwrites = {}
 
 # Iterate well-defined source list to ensure the correct order.
 SUPPORTED_SOURCES.each do |source|
-    next unless conf_sources.include?(source)
+    next unless $conf_sources.include?(source)
     parameter_overwrites.update(send("get_parameter_overwrites_from_#{source}"))
 end
 
