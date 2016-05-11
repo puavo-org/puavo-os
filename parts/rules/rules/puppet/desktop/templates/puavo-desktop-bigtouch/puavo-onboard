@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -eu
+
+puavo_onscreenkeyboard_enabled=$(puavo-conf -b puavo.onscreenkeyboard.enabled)
+
+if [ "${puavo_onscreenkeyboard_enabled}" != true ]; then
+    exit 1
+fi
+
+onboard &
