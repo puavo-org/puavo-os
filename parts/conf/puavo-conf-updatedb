@@ -209,6 +209,7 @@ Usage:
     puavo-conf-updatedb [OPTION]...
 
 Options:
+  --help, -h                  display this help and exit
   --sources SOURCES           comma-separated list of sources
   --devicejson-path FILE      filepath of the device.json, defaults
                               to '#{$devicejson_path}'
@@ -263,11 +264,15 @@ conf_sources = SUPPORTED_SOURCES
 $devicejson_path = '/state/etc/puavo/device.json'
 
 begin
-    opts = GetoptLong.new(['--sources', GetoptLong::REQUIRED_ARGUMENT],
+    opts = GetoptLong.new(['--help', '-h',      GetoptLong::NO_ARGUMENT],
+                          ['--sources',         GetoptLong::REQUIRED_ARGUMENT],
                           ['--devicejson-path', GetoptLong::REQUIRED_ARGUMENT])
 
     opts.each do |opt, arg|
         case opt
+            when '--help'
+                usage
+                exit 0
             when '--sources'
                 conf_sources = arg.split(',')
             when '--devicejson-path'
