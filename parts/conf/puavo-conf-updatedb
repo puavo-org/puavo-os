@@ -206,7 +206,12 @@ end
 def usage()
     puts <<-EOF
 Usage:
-    puavo-conf-updatedb [--sources comma-separated-list-of-sources]
+    puavo-conf-updatedb [OPTION]...
+
+Options:
+  --sources SOURCES           comma-separated list of sources
+  --devicejson-path FILE      filepath of the device.json, defaults
+                              to '#{$devicejson_path}'
 
 By default the list of used sources is
   #{SUPPORTED_SOURCES.join(',')}
@@ -228,7 +233,7 @@ def get_parameter_overwrites_from_hwquirks()
 end
 
 def get_parameter_overwrites_from_devicejson()
-    device = read_json_obj('/state/etc/puavo/device.json', Hash)
+    device = read_json_obj($devicejson_path, Hash)
     device['conf'] or {}
 end
 
@@ -255,14 +260,18 @@ $status = 0
 
 SUPPORTED_SOURCES = %w(hwquirks devicejson localconf kernelargs)
 conf_sources = SUPPORTED_SOURCES
+$devicejson_path = '/state/etc/puavo/device.json'
 
 begin
-    opts = GetoptLong.new([ '--sources', GetoptLong::REQUIRED_ARGUMENT ])
+    opts = GetoptLong.new(['--sources', GetoptLong::REQUIRED_ARGUMENT],
+                          ['--devicejson-path', GetoptLong::REQUIRED_ARGUMENT])
 
     opts.each do |opt, arg|
         case opt
             when '--sources'
                 conf_sources = arg.split(',')
+            when '--devicejson-path'
+                $devicejson_path = arg
         end
     end
 
