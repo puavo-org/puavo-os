@@ -491,6 +491,7 @@ class packages {
     , 'gnome-bluetooth'
     , 'gnome-calculator'
     , 'gnome-color-manager'
+    , 'gnome-clocks'
     , 'gnome-contacts'
     , 'gnome-control-center'
     , 'gnome-disk-utility'
