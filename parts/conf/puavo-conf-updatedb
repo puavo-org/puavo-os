@@ -265,11 +265,6 @@ end
 
 ## Main
 
-if Process.euid != 0 then
-    logerr("#{ File.basename($0) } must be run as root")
-    exit 1
-end
-
 $status = 0
 
 SUPPORTED_SOURCES = %w(hwquirks devicejson localconf kernelargs)
