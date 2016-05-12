@@ -264,7 +264,7 @@ class PuavoRestClient
 
     if @options[:timeout]
       timeout = @options[:timeout] / 3.0
-      http = HTTP.timeout(:global,
+      http = http.timeout(:global,
                           :write   => timeout,
                           :connect => timeout,
                           :read    => timeout)
