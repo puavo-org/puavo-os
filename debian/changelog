@@ -1,3 +1,20 @@
+puavo-os (0.14.0+774bb6e9c1ccac1c6faef89b420b171c51668916) jessie; urgency=medium
+
+  * New release
+  * parts/client: rest-client: do not overwrite HTTP headers if timeout
+    is used
+  * parts/rules: autostart onboard if puavo.onscreenkeyboard.enabled ==
+    true
+  * parts/rules: add onboard and onboard-data packages
+  * Add gnome-clocks needed for the bigtouch-desktop.
+  * Change apps in the bigtouch-desktop panel.
+  * parts/rules: rename dconf key file
+  * parts/rules: make set edge kernel to '4.5.0-0.bpo.1-amd64' on jessie
+  * parts/rules: add kernel 4.5.0-0.bpo.1-amd64
+  * Git(774bb6e9c1ccac1c6faef89b420b171c51668916)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Fri, 13 May 2016 09:11:42 +0300
+
 puavo-os (0.13.0+31b0c66489c9599a9be51c02638bd7810ff98a53) jessie; urgency=medium
 
   * New release
