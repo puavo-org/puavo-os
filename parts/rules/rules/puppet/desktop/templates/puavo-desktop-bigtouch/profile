@@ -1,8 +1,6 @@
-/org/gnome/shell/favorite-apps
-  ['chromium.desktop', 'org.gnome.clocks.desktop', 'org.gnome.Nautilus.desktop', 'webmenu-spawn.desktop']
-
 [org/gnome/shell]
 enabled-extensions=['hide-panel@puavo.org', 'workspaces-to-dock@passingthru67.gmail.com']
+favorite-apps=['chromium.desktop', 'org.gnome.clocks.desktop', 'org.gnome.Nautilus.desktop', 'webmenu-spawn.desktop']
 
 [org/gnome/shell/extensions/workspaces-to-dock]
 intellihide-option=1
