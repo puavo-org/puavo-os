@@ -57,8 +57,8 @@ function enable() {
     // Save the original state so that we can rollback when this
     // extension is disabled.
     old_state = {
-        activities_visibility    : activities_actor.get_paint_visibility(),
-        aggregateMenu_visibility : aggregateMenu_actor.get_paint_visibility(),
+        activities_visibility    : activities_actor.visible,
+        aggregateMenu_visibility : aggregateMenu_actor.visible,
         appMenu_parent           : appMenu_actor.get_parent(),
         dateMenu_parent          : dateMenu.actor.get_parent(),
         dateMenu_sensitivity     : dateMenu.actor.can_focus,
