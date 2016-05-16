@@ -7,8 +7,8 @@ class gnome_shell_extensions {
       recurse => true,
       require => Package['gnome-shell-extensions'];
 
-    '/usr/share/gnome-shell/extensions/workspaces-to-dock@passingthru67.gmail.com':
-      source  => 'puppet:///modules/gnome_shell_extensions/workspaces-to-dock',
+    '/usr/share/gnome-shell/extensions/dash-to-dock@micxgx.gmail.com':
+      source  => 'puppet:///modules/gnome_shell_extensions/dash-to-dock',
       recurse => true,
       require => Package['gnome-shell-extensions'];
   }
