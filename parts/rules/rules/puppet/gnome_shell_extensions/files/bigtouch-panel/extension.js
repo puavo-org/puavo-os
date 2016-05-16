@@ -5,7 +5,7 @@ const St                  = imports.gi.St;
 const panelBox            = Main.layoutManager.panelBox;
 const activities_actor    = Main.panel.statusArea.activities.actor;
 const aggregateMenu_actor = Main.panel.statusArea.aggregateMenu.actor;
-const dateMenu_actor      = Main.panel.statusArea.dateMenu.actor;
+const dateMenu            = Main.panel.statusArea.dateMenu;
 
 const OnboardInterface = '                        \
 <node>                                            \
@@ -57,7 +57,7 @@ function enable() {
     old_state = {
         activities_visibility    : activities_actor.get_paint_visibility(),
         aggregateMenu_visibility : aggregateMenu_actor.get_paint_visibility(),
-        dateMenu_visibility      : dateMenu_actor.get_paint_visibility(),
+        dateMenu_sensitivity     : dateMenu.actor.can_focus,
         panelBox_anchor_point    : panelBox.get_anchor_point()
     };
 
@@ -68,7 +68,7 @@ function enable() {
     // Unnecessary elements must go. Less is more.
     activities_actor.hide();
     aggregateMenu_actor.hide();
-    dateMenu_actor.hide();
+    dateMenu.setSensitive(false);
 
     Main.panel._centerBox.add_child(toggleKeyboardButton);
 }
@@ -83,8 +83,7 @@ function disable() {
     if (old_state.aggregateMenu_visibility)
         aggregateMenu_actor.show();
 
-    if (old_state.dateMenu_visibility)
-        dateMenu_actor.show();
+    dateMenu.setSensitive(old_state.dateMenu_sensitivity);
 
     Main.panel._centerBox.remove_child(toggleKeyboardButton);
 }
