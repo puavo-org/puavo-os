@@ -57,6 +57,7 @@ function enable() {
     old_state = {
         activities_visibility    : activities_actor.get_paint_visibility(),
         aggregateMenu_visibility : aggregateMenu_actor.get_paint_visibility(),
+        dateMenu_parent          : dateMenu.actor.get_parent(),
         dateMenu_sensitivity     : dateMenu.actor.can_focus,
         panelBox_anchor_point    : panelBox.get_anchor_point()
     };
@@ -69,6 +70,8 @@ function enable() {
     activities_actor.hide();
     aggregateMenu_actor.hide();
     dateMenu.setSensitive(false);
+
+    dateMenu.actor.reparent(Main.panel._leftBox);
 
     Main.panel._centerBox.add_child(toggleKeyboardButton);
 }
@@ -84,6 +87,7 @@ function disable() {
         aggregateMenu_actor.show();
 
     dateMenu.setSensitive(old_state.dateMenu_sensitivity);
+    dateMenu.actor.reparent(old_state.dateMenu_parent);
 
     Main.panel._centerBox.remove_child(toggleKeyboardButton);
 }
