@@ -1,9 +1,12 @@
+[org/gnome/desktop/background]
+picture-uri='file:///usr/share/images/desktop-base/joy.xml'
+
+[org/gnome/desktop/wm/preferences]
+num-workspaces=1
+
 [org/gnome/shell]
 enabled-extensions=['bigtouch-panel@puavo.org', 'dash-to-dock@micxgx.gmail.com']
 favorite-apps=['chromium.desktop', 'org.gnome.clocks.desktop', 'org.gnome.Nautilus.desktop', 'webmenu-spawn.desktop']
-
-[org/gnome/desktop/background]
-picture-uri='file:///usr/share/images/desktop-base/joy.xml'
 
 [org/gnome/shell/extensions/dash-to-dock]
 opaque-background=true
@@ -38,3 +41,8 @@ dock-position='LEFT'
 background-opacity=0.19
 top-margin=0.16500000000000001
 opaque-background-always=true
+
+[org/gnome/shell/overrides]
+dynamic-workspaces=false
+
+
