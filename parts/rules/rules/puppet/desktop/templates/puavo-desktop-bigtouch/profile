@@ -2,6 +2,18 @@
 enabled-extensions=['bigtouch-panel@puavo.org', 'dash-to-dock@micxgx.gmail.com']
 favorite-apps=['chromium.desktop', 'org.gnome.clocks.desktop', 'org.gnome.Nautilus.desktop', 'webmenu-spawn.desktop']
 
+[org/gnome/desktop/background]
+picture-uri='file:///usr/share/images/desktop-base/joy.xml'
+
+[org/gnome/shell/extensions/dash-to-dock]
+opaque-background=true
+background-opacity=0.2
+dock-fixed=true
+click-action='launch'
+dock-position='RIGHT'
+dash-max-icon-size=32
+show-running=false
+
 [org/gnome/shell/extensions/workspaces-to-dock]
 intellihide-option=1
 customize-thumbnail=true
