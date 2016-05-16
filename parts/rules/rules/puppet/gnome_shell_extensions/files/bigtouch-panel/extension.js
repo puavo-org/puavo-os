@@ -63,7 +63,8 @@ function enable() {
         dateMenu_parent          : dateMenu.actor.get_parent(),
         dateMenu_sensitivity     : dateMenu.actor.can_focus,
         keyboard_parent          : keyboard_actor.get_parent(),
-        panelBox_anchor_point    : panelBox.get_anchor_point()
+        panelBox_anchor_point    : panelBox.get_anchor_point(),
+        searchEntryVisibility    : Main.overview._searchEntry.visible
     };
 
     // Bottom is the best for big/huge screens, short users might not
@@ -74,6 +75,7 @@ function enable() {
     activities_actor.hide();
     aggregateMenu_actor.hide();
     dateMenu.setSensitive(false);
+    Main.overview._searchEntry.hide();
 
     appMenu_actor.reparent(Main.panel._rightBox);
     dateMenu.actor.reparent(Main.panel._leftBox);
@@ -91,6 +93,9 @@ function disable() {
 
     if (old_state.aggregateMenu_visibility)
         aggregateMenu_actor.show();
+
+    if (old_state.searchEntry_visibility)
+        Main.overview._searchEntry.show();
 
     dateMenu.setSensitive(old_state.dateMenu_sensitivity);
     dateMenu.actor.reparent(old_state.dateMenu_parent);
