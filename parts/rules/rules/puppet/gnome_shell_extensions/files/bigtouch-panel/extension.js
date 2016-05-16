@@ -7,6 +7,7 @@ const activities_actor    = Main.panel.statusArea.activities.actor;
 const aggregateMenu_actor = Main.panel.statusArea.aggregateMenu.actor;
 const appMenu_actor       = Main.panel.statusArea.appMenu.actor;
 const dateMenu            = Main.panel.statusArea.dateMenu;
+const keyboard_actor      = Main.panel.statusArea.keyboard.actor;
 
 const OnboardInterface = '                        \
 <node>                                            \
@@ -61,6 +62,7 @@ function enable() {
         appMenu_parent           : appMenu_actor.get_parent(),
         dateMenu_parent          : dateMenu.actor.get_parent(),
         dateMenu_sensitivity     : dateMenu.actor.can_focus,
+        keyboard_parent          : keyboard_actor.get_parent(),
         panelBox_anchor_point    : panelBox.get_anchor_point()
     };
 
@@ -75,6 +77,7 @@ function enable() {
 
     appMenu_actor.reparent(Main.panel._rightBox);
     dateMenu.actor.reparent(Main.panel._leftBox);
+    keyboard_actor.reparent(Main.panel._centerBox);
 
     Main.panel._centerBox.add_child(toggleKeyboardButton);
 }
@@ -92,6 +95,7 @@ function disable() {
     dateMenu.setSensitive(old_state.dateMenu_sensitivity);
     dateMenu.actor.reparent(old_state.dateMenu_parent);
     appMenu_actor.reparent(old_state.appMenu_parent);
+    keyboard_actor.reparent(old_state.keyboard_parent);
 
     Main.panel._centerBox.remove_child(toggleKeyboardButton);
 }
