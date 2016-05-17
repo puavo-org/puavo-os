@@ -74,7 +74,7 @@ function enable() {
     Main.overview._searchEntry.hide();
 
     appMenu_actor.reparent(Main.panel._rightBox);
-    dateMenu.actor.reparent(Main.panel._leftBox);
+    dateMenu.actor.reparent(Main.panel._centerBox);
     keyboard_actor.reparent(Main.panel._centerBox);
 
     Main.panel._centerBox.add_child(toggleKeyboardButton);
