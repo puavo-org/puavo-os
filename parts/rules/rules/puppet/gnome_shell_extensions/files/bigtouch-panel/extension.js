@@ -75,7 +75,7 @@ function enable() {
 
     appMenu_actor.reparent(Main.panel._rightBox);
     dateMenu.actor.reparent(Main.panel._centerBox);
-    keyboard_actor.reparent(Main.panel._centerBox);
+    keyboard_actor.reparent(Main.panel._leftBox);
 
     Main.panel._centerBox.add_child(toggleKeyboardButton);
 }
