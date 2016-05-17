@@ -29,6 +29,9 @@ class desktop::puavo-desktop-bigtouch {
     '/usr/share/applications/onboard-toggle.json':
       content => template('desktop/puavo-desktop-bigtouch/onboard-toggle.desktop');
 
+    '/usr/share/applications/overview-toggle.json':
+      content => template('desktop/puavo-desktop-bigtouch/overview-toggle.desktop');
+
     '/usr/share/puavo-conf/parameters/puavo-onboard.json':
       content => template('desktop/puavo-desktop-bigtouch/puavo-conf-parameters.json');
   }
