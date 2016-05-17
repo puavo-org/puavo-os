@@ -67,10 +67,6 @@ function enable() {
         searchEntryVisibility    : Main.overview._searchEntry.visible
     };
 
-    // Bottom is the best for big/huge screens, short users might not
-    // be able to reach the top.
-    panelBox.set_anchor_point(0, -primaryMonitorHeight + panelBox.height);
-
     // Unnecessary elements must go. Less is more.
     activities_actor.hide();
     aggregateMenu_actor.hide();
