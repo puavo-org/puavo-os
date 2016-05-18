@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=Toggle Onboard
-Exec=dbus-send --session --type=method_call --dest=org.onboard.Onboard /org/onboard/Onboard/Keyboard org.onboard.Onboard.Keyboard.ToggleVisible
+Exec=/usr/local/lib/onboard-toggle
 Type=Application
 Terminal=false
 Icon=input-keyboard-symbolic

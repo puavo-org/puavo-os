@@ -1,0 +1,7 @@
+#!/bin/sh
+
+set -eu
+
+dbus-send --session --type=method_call --dest=org.onboard.Onboard \
+          /org/onboard/Onboard/Keyboard                           \
+          org.onboard.Onboard.Keyboard.ToggleVisible
