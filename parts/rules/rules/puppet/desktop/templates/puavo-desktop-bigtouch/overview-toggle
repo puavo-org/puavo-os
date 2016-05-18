@@ -2,10 +2,19 @@
 
 set -eu
 
-dbus-send --session --type=method_call --dest=org.gnome.Shell \
-          /org/gnome/Shell org.gnome.Shell.Eval 'string:
+timestamppath=~/.overview-toggle.invoked
+
+current_time=$(date +%s)
+latest_invocation=$(stat -c %Y "$timestamppath" 2>/dev/null || echo 0)
+
+if [ "$(($current_time - $latest_invocation))" -ge 2 ]; then
+    touch "$timestamppath"
+
+    dbus-send --session --type=method_call --dest=org.gnome.Shell \
+              /org/gnome/Shell org.gnome.Shell.Eval 'string:
 if (Main.overview.visible)
     Main.overview.hide();
 else
     Main.overview.show();
 '
+fi
