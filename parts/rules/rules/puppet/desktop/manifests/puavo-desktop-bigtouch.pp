@@ -30,6 +30,10 @@ class desktop::puavo-desktop-bigtouch {
       content => template('desktop/puavo-desktop-bigtouch/onboard-toggle'),
       mode    => 0755;
 
+    '/usr/local/lib/overview-toggle':
+      content => template('desktop/puavo-desktop-bigtouch/overview-toggle'),
+      mode    => 0755;
+
     '/usr/share/applications/onboard-toggle.desktop':
       content => template('desktop/puavo-desktop-bigtouch/onboard-toggle.desktop');
 
