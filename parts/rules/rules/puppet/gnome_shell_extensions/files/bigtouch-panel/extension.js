@@ -1,5 +1,6 @@
 const Main                = imports.ui.main;
 const St                  = imports.gi.St;
+const Util                = imports.misc.util;
 
 const panelBox            = Main.layoutManager.panelBox;
 const activities_actor    = Main.panel.statusArea.activities.actor;
@@ -22,6 +23,18 @@ function enable() {
             name: "launcherBox",
             vertical: true
         });
+
+    let launchChromiumIcon = new St.Icon(
+        {
+            icon_name: "chromium",
+            reactive: true,
+            track_hover: true,
+            style_class: "launcher-box-item"
+        });
+    launchChromiumIcon.connect('button-press-event',
+                               function() { Util.spawn(["chromium"]) });
+
+    launcherBox.add_child(launchChromiumIcon);
 
     Main.layoutManager.addChrome(launcherBox);
     launcherBox.width = 80;
