@@ -12,6 +12,14 @@ const keyboard_actor      = Main.panel.statusArea.keyboard.actor;
 let old_state;
 let launcherBox;
 
+function _toggleOverview()
+{
+    if (Main.overview.visible)
+        Main.overview.hide();
+    else
+        Main.overview.show();
+}
+
 function init() {
 }
 
@@ -74,11 +82,21 @@ function enable() {
     toggleOnboardIcon.connect('button-press-event',
                               function() { Util.spawn(["/usr/local/lib/onboard-toggle"]) });
 
+    let toggleOverviewIcon = new St.Icon(
+        {
+            icon_name: "preferences-system-windows",
+            reactive: true,
+            track_hover: true,
+            style_class: "launcher-box-item"
+        });
+    toggleOverviewIcon.connect('button-press-event', _toggleOverview);
+
     launcherBox.add_child(launchChromiumIcon);
     launcherBox.add_child(launchGnomeClocksIcon);
     launcherBox.add_child(launchNautilusIcon);
     launcherBox.add_child(launchWebmenuIcon);
     launcherBox.add_child(toggleOnboardIcon);
+    launcherBox.add_child(toggleOverviewIcon);
 
     Main.layoutManager.addChrome(launcherBox);
     launcherBox.width = 80;
