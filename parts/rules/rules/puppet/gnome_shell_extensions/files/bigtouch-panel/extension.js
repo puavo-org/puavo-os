@@ -46,7 +46,7 @@ function init() {
 function enable() {
     let primaryMonitor = Main.layoutManager.primaryMonitor;
 
-    let launcherBox = new St.BoxLayout(
+    launcherBox = new St.BoxLayout(
         {
             name: "launcherBox",
             vertical: true
