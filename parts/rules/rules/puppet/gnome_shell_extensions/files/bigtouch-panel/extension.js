@@ -1,3 +1,4 @@
+const Gio                 = imports.gi.Gio;
 const Main                = imports.ui.main;
 const St                  = imports.gi.St;
 const Util                = imports.misc.util;
@@ -9,8 +10,22 @@ const appMenu_actor       = Main.panel.statusArea.appMenu.actor;
 const dateMenu            = Main.panel.statusArea.dateMenu;
 const keyboard_actor      = Main.panel.statusArea.keyboard.actor;
 
+const OnboardInterface = '                        \
+<node>                                            \
+  <interface name="org.onboard.Onboard.Keyboard"> \
+    <method name="ToggleVisible">                 \
+    </method>                                     \
+    <method name="Show">                          \
+    </method>                                     \
+    <method name="Hide">                          \
+    </method>                                     \
+  </interface>                                    \
+</node>                                           \
+'
+
 let old_state;
 let launcherBox;
+let onboardProxy;
 
 function _toggleOverview()
 {
@@ -21,6 +36,11 @@ function _toggleOverview()
 }
 
 function init() {
+    onboardProxy = new Gio.DBusProxy.makeProxyWrapper(OnboardInterface)(
+        Gio.DBus.session,
+        "org.onboard.Onboard",
+        "/org/onboard/Onboard/Keyboard"
+    );
 }
 
 function enable() {
@@ -80,7 +100,7 @@ function enable() {
             style_class: "launcher-box-item"
         });
     toggleOnboardIcon.connect('button-press-event',
-                              function() { Util.spawn(["/usr/local/lib/onboard-toggle"]) });
+                              function() { onboardProxy.ToggleVisibleSync() });
 
     let toggleOverviewIcon = new St.Icon(
         {
