@@ -34,7 +34,18 @@ function enable() {
     launchChromiumIcon.connect('button-press-event',
                                function() { Util.spawn(["chromium"]) });
 
+    let launchGnomeClocksIcon = new St.Icon(
+        {
+            icon_name: "gnome-clocks",
+            reactive: true,
+            track_hover: true,
+            style_class: "launcher-box-item"
+        });
+    launchGnomeClocksIcon.connect('button-press-event',
+                                  function() { Util.spawn(["gnome-clocks"]) });
+
     launcherBox.add_child(launchChromiumIcon);
+    launcherBox.add_child(launchGnomeClocksIcon);
 
     Main.layoutManager.addChrome(launcherBox);
     launcherBox.width = 80;
