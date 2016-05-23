@@ -130,6 +130,7 @@ function enable() {
         appMenu_parent           : appMenu_actor.get_parent(),
         dateMenu_parent          : dateMenu.actor.get_parent(),
         dateMenu_sensitivity     : dateMenu.actor.can_focus,
+        dashVisible              : Main.overview._dash.actor.visible,
         keyboard_parent          : keyboard_actor.get_parent(),
         panelBox_anchor_point    : panelBox.get_anchor_point(),
         searchEntryVisibility    : Main.overview._searchEntry.visible
@@ -140,6 +141,7 @@ function enable() {
     aggregateMenu_actor.hide();
     dateMenu.setSensitive(false);
     Main.overview._searchEntry.hide();
+    Main.overview._dash.actor.hide();
 
     appMenu_actor.reparent(Main.panel._rightBox);
     dateMenu.actor.reparent(Main.panel._centerBox);
@@ -158,6 +160,9 @@ function disable() {
 
     if (old_state.searchEntry_visibility)
         Main.overview._searchEntry.show();
+
+    if (old_state.dashVisible)
+        Main.overview._dash.actor.show();
 
     dateMenu.setSensitive(old_state.dateMenu_sensitivity);
     dateMenu.actor.reparent(old_state.dateMenu_parent);
