@@ -147,6 +147,8 @@ function enable() {
 }
 
 function disable() {
+    Main.layoutManager.removeChrome(launcherBox);
+
     if (old_state.activities_visibility)
         activities_actor.show();
 
