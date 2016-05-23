@@ -3,7 +3,6 @@ const Main                = imports.ui.main;
 const St                  = imports.gi.St;
 const Util                = imports.misc.util;
 
-const panelBox            = Main.layoutManager.panelBox;
 const activities_actor    = Main.panel.statusArea.activities.actor;
 const aggregateMenu_actor = Main.panel.statusArea.aggregateMenu.actor;
 const appMenu_actor       = Main.panel.statusArea.appMenu.actor;
@@ -132,7 +131,6 @@ function enable() {
         dateMenu_sensitivity     : dateMenu.actor.can_focus,
         dashVisible              : Main.overview._dash.actor.visible,
         keyboard_parent          : keyboard_actor.get_parent(),
-        panelBox_anchor_point    : panelBox.get_anchor_point(),
         searchEntryVisibility    : Main.overview._searchEntry.visible
     };
 
@@ -149,9 +147,6 @@ function enable() {
 }
 
 function disable() {
-    panelBox.set_anchor_point(old_state.panelBox_anchor_point[0],
-                              old_state.panelBox_anchor_point[1]);
-
     if (old_state.activities_visibility)
         activities_actor.show();
 
