@@ -26,20 +26,6 @@ class desktop::puavo-desktop-bigtouch {
       mode    => 0755,
       require => Package['onboard'];
 
-    '/usr/local/lib/onboard-toggle':
-      content => template('desktop/puavo-desktop-bigtouch/onboard-toggle'),
-      mode    => 0755;
-
-    '/usr/local/lib/overview-toggle':
-      content => template('desktop/puavo-desktop-bigtouch/overview-toggle'),
-      mode    => 0755;
-
-    '/usr/share/applications/onboard-toggle.desktop':
-      content => template('desktop/puavo-desktop-bigtouch/onboard-toggle.desktop');
-
-    '/usr/share/applications/overview-toggle.desktop':
-      content => template('desktop/puavo-desktop-bigtouch/overview-toggle.desktop');
-
     '/usr/share/puavo-conf/parameters/puavo-onboard.json':
       content => template('desktop/puavo-desktop-bigtouch/puavo-conf-parameters.json');
   }

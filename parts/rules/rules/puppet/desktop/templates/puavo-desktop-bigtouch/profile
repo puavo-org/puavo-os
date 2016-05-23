@@ -6,7 +6,7 @@ num-workspaces=1
 
 [org/gnome/shell]
 enabled-extensions=['bigtouch-panel@puavo.org', 'dash-to-dock@micxgx.gmail.com']
-favorite-apps=['chromium.desktop', 'org.gnome.clocks.desktop', 'org.gnome.Nautilus.desktop', 'webmenu-spawn.desktop', 'onboard-toggle.desktop', 'overview-toggle.desktop']
+favorite-apps=['chromium.desktop', 'org.gnome.clocks.desktop', 'org.gnome.Nautilus.desktop', 'webmenu-spawn.desktop']
 
 [org/gnome/shell/extensions/dash-to-dock]
 opaque-background=true
