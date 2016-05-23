@@ -44,8 +44,19 @@ function enable() {
     launchGnomeClocksIcon.connect('button-press-event',
                                   function() { Util.spawn(["gnome-clocks"]) });
 
+    let launchNautilusIcon = new St.Icon(
+        {
+            icon_name: "system-file-manager",
+            reactive: true,
+            track_hover: true,
+            style_class: "launcher-box-item"
+        });
+    launchNautilusIcon.connect('button-press-event',
+                               function() { Util.spawn(["nautilus"]) });
+
     launcherBox.add_child(launchChromiumIcon);
     launcherBox.add_child(launchGnomeClocksIcon);
+    launcherBox.add_child(launchNautilusIcon);
 
     Main.layoutManager.addChrome(launcherBox);
     launcherBox.width = 80;
