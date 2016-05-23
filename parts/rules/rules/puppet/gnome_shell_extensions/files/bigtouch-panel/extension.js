@@ -54,9 +54,20 @@ function enable() {
     launchNautilusIcon.connect('button-press-event',
                                function() { Util.spawn(["nautilus"]) });
 
+    let launchWebmenuIcon = new St.Icon(
+        {
+            icon_name: "webmenu",
+            reactive: true,
+            track_hover: true,
+            style_class: "launcher-box-item"
+        });
+    launchWebmenuIcon.connect('button-press-event',
+                              function() { Util.spawn(["webmenu-spawn"]) })
+
     launcherBox.add_child(launchChromiumIcon);
     launcherBox.add_child(launchGnomeClocksIcon);
     launcherBox.add_child(launchNautilusIcon);
+    launcherBox.add_child(launchWebmenuIcon);
 
     Main.layoutManager.addChrome(launcherBox);
     launcherBox.width = 80;
