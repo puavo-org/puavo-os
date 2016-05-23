@@ -1,4 +1,5 @@
 const Main                = imports.ui.main;
+const St                  = imports.gi.St;
 
 const panelBox            = Main.layoutManager.panelBox;
 const activities_actor    = Main.panel.statusArea.activities.actor;
@@ -8,12 +9,23 @@ const dateMenu            = Main.panel.statusArea.dateMenu;
 const keyboard_actor      = Main.panel.statusArea.keyboard.actor;
 
 let old_state;
+let launcherBox;
 
 function init() {
 }
 
 function enable() {
-    let primaryMonitorHeight = Main.layoutManager.primaryMonitor.height;
+    let primaryMonitor = Main.layoutManager.primaryMonitor;
+
+    let launcherBox = new St.BoxLayout(
+        {
+            name: "launcherBox",
+            vertical: true
+        });
+
+    Main.layoutManager.addChrome(launcherBox);
+    launcherBox.width = 80;
+    launcherBox.set_position(primaryMonitor.width - launcherBox.width, 100);
 
     // Save the original state so that we can rollback when this
     // extension is disabled.
