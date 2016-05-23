@@ -64,10 +64,21 @@ function enable() {
     launchWebmenuIcon.connect('button-press-event',
                               function() { Util.spawn(["webmenu-spawn"]) })
 
+    let toggleOnboardIcon = new St.Icon(
+        {
+            icon_name: "input-keyboard-symbolic",
+            reactive: true,
+            track_hover: true,
+            style_class: "launcher-box-item"
+        });
+    toggleOnboardIcon.connect('button-press-event',
+                              function() { Util.spawn(["/usr/local/lib/onboard-toggle"]) });
+
     launcherBox.add_child(launchChromiumIcon);
     launcherBox.add_child(launchGnomeClocksIcon);
     launcherBox.add_child(launchNautilusIcon);
     launcherBox.add_child(launchWebmenuIcon);
+    launcherBox.add_child(toggleOnboardIcon);
 
     Main.layoutManager.addChrome(launcherBox);
     launcherBox.width = 80;
