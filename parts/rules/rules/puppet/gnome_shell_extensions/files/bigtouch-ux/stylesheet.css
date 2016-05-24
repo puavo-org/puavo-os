@@ -4,6 +4,10 @@
     padding: 10px;
 }
 
+.launcher-box-item {
+    padding: 6px;
+}
+
 .launcher-box-item:hover {
     border-radius: 4px 4px 4px 4px;
     background: rgba(128, 128, 128, 0.5);
