@@ -1,3 +1,64 @@
+puavo-os (0.15.0+70dbc0f57d909eb6695efe345dd2a18dfa4af966) jessie; urgency=medium
+
+  * New release
+  * desktop-bigtouch: round launcher box's corners a bit more
+  * desktop-bigtouch: add some padding to launcher box items
+  * desktop-bigtouch: move launcher box to the middle east
+  * desktop-bigtouch: fix launcher box to affect wm's struts
+  * parts/rules: update edge kernel to 4.5.0-0.bpo.2-amd64
+  * desktop-bigtouch: cleanup cruft from the dconf profile
+  * desktop-bigtouch: do not enable dash-to-dock anymore
+  * desktop-bigtouch: rename extension: Bigtouch panel => Bigtouch User
+    Experience
+  * desktop-bigtouch: remove launcher box when the extension is disabled
+  * desktop-bigtouch: do not reset panel's anchor point
+  * desktop-bigtouch: fix variable shadowing
+  * desktop-bigtouch: hide the dash when bigtouch extension is enabled
+  * desktop-bigtouch: add stylesheet for the launcher box
+  * parts/rules: remove unused files
+  * desktop-bigtouch: use Gio DBusProxy instead of a wrapper script
+  * desktop-bigtouch: add Overview launcher to the launcher box
+  * desktop-bigtouch: add Onboard launcher to the launcher box
+  * desktop-bigtouch: add Webmenu launcher to the launcher box
+  * desktop-bigtouch: add Nautilus launcher to the launcher box
+  * desktop-bigtouch: add GNOME Clocks launcher to the launcher box
+  * desktop-bigtouch: add Chromium launcher to the launcher box
+  * desktop-bigtouch: show own launcher panel on the right-side
+  * desktop-bigtouch: limit the invokefrequency of overview-toggle
+  * desktop-bigtouch: limit the invokefrequency of onboard-toggle
+  * desktop-bigtouch: move overview-toggle command to a separate script
+  * desktop-bigtouch: move onboard-toggle command to a separate script
+  * Change Dash opacity to 0.75.
+  * desktop-bigtouch: fix a stupid naming mistake
+  * parts/rules: fix PuavoOS art paths
+  * Set new Puavo-os wallpaper.
+  * Move images to a new folder.
+  * Add puavo os wallpapers/art.
+  * desktop-bigtouch: toggle overview from dash
+  * desktop-bigtouch: toggle onboard from dash instead of the panel
+  * desktop-bigtouch: move keyboard layout menu to the left
+  * desktop-bigtouch: move dateMenu to the center
+  * desktop-bigtouch: move panel back to the top
+  * desktop-bigtouch: use .visible instead of .get_paint_visibility()
+  * desktop-bigtouch: hide search entry from the overview
+  * desktop-bigtouch: move keyboard menu to the center of the panel
+  * desktop-bigtouch: move app menu to the right side of the panel
+  * desktop-bigtouch: move date menu to the left side of the panel
+  * desktop-bigtouch: do not hide dateMenu, just disable it
+  * parts/rules: install dash-to-dock GNOME Shell extension
+  * Remove "show apps" button from dash.
+  * Set number of workspaces to one and mode to static.
+  * Add backgound image and a configuration for the dash to dock
+    extension.
+  * puavo-desktop-bigtouch: toggle onboard keyboard with a panel button
+  * desktop-bigtouch: use dash-to-dock instead of workspaces-to-dock
+  * desktop-bigtouch: add dash-to-dock gnome shell extension
+  * desktop-bigtouch: optimize GNOME panel for big touch screens
+  * desktop-bigtouch: fix dconf keyfile syntax
+  * Git(70dbc0f57d909eb6695efe345dd2a18dfa4af966)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Tue, 24 May 2016 16:21:52 +0300
+
 puavo-os (0.14.0+774bb6e9c1ccac1c6faef89b420b171c51668916) jessie; urgency=medium
 
   * New release
