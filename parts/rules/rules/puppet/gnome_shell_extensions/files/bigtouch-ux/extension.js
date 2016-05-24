@@ -1,3 +1,4 @@
+const Clutter             = imports.gi.Clutter;
 const Gio                 = imports.gi.Gio;
 const Main                = imports.ui.main;
 const St                  = imports.gi.St;
@@ -118,8 +119,8 @@ function enable() {
     launcherBox.add_child(toggleOverviewIcon);
 
     Main.layoutManager.addChrome(launcherBox, { affectsStruts: true });
-    launcherBox.width = 80;
-    launcherBox.set_position(primaryMonitor.width - launcherBox.width, 100);
+    launcherBox.set_anchor_point_from_gravity(Clutter.Gravity.EAST);
+    launcherBox.set_position(primaryMonitor.width, primaryMonitor.height / 2);
 
     // Save the original state so that we can rollback when this
     // extension is disabled.
