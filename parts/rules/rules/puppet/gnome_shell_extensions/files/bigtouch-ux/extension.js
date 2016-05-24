@@ -117,7 +117,7 @@ function enable() {
     launcherBox.add_child(toggleOnboardIcon);
     launcherBox.add_child(toggleOverviewIcon);
 
-    Main.layoutManager.addChrome(launcherBox);
+    Main.layoutManager.addChrome(launcherBox, { affectsStruts: true });
     launcherBox.width = 80;
     launcherBox.set_position(primaryMonitor.width - launcherBox.width, 100);
 
