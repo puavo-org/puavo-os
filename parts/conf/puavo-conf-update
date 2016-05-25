@@ -258,6 +258,16 @@ def get_kernelarg_params()
     return parameters
 end
 
+def get_hosttype_params(hosttype)
+    return {} if hosttype.nil?
+
+    begin
+        read_json_obj("/usr/share/puavo-conf/hosttypes/#{hosttype}.json", Hash)
+    rescue Errno::ENOENT
+        {}
+    end
+end
+
 ## Main
 
 $status = 0
@@ -288,7 +298,9 @@ params = {}
 hwquirk_params    = get_hwquirk_params
 devicejson_params = get_devicejson_params
 kernelarg_params  = get_kernelarg_params
+hosttype_params   = get_hosttype_params(kernelarg_params['puavo.hosttype')
 
+params.update(hosttype_params)
 params.update(hwquirk_params)
 params.update(devicejson_params)
 params.update(kernelarg_params)
