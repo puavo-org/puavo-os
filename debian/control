@@ -82,11 +82,13 @@ Depends: ${misc:Depends},
  ruby,
  usbutils
 Description: Puavo configuration
- Puavo Conf is the configuration system of Puavo OS. It consists of a parameter
- database, a C library (`libpuavoconf`) and a set of programs (`puavo-conf` and
- `puavo-conf-mkdb`) manipulating the database through the library. Parameters
- define how various Puavo OS components behave and can be tuned from multiple
- sources, such as Puavo Web, local administrative tools or kernel command line.
+ Puavo Conf is the configuration system of Puavo OS. It consists of a
+ parameter database, a C library (`libpuavoconf`) and a set of
+ programs (`puavo-conf`, `puavo-conf-mkdb` and `puavo-conf-update`)
+ manipulating the database through the library. Parameters define how
+ various Puavo OS components behave and can be tuned from multiple
+ sources, such as Puavo Web, local administrative tools or kernel
+ command line.
  .
 
 Package: puavo-core
