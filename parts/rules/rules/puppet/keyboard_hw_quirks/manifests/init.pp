@@ -14,7 +14,7 @@ class keyboard_hw_quirks {
       require => Package['udev'],
       source  => 'puppet:///modules/keyboard_hw_quirks/60-puavo-keyboard.hwdb';
 
-    '/usr/share/puavo-conf/parameters/puavo-rules-keyboard_hw_quirks.json':
+    '/usr/share/puavo-conf/definitions/puavo-rules-keyboard_hw_quirks.json':
       notify  => Exec['initramfs::update'],
       require => Package['puavo-conf'],
       source  => 'puppet:///modules/keyboard_hw_quirks/puavo-conf-parameters.json';

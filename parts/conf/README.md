@@ -70,7 +70,7 @@ constructed before any configurable Puavo OS component is executing.
 ### Parameter definitions
 
 Parameters must be defined in JSON files located in
-`/usr/share/puavo-conf/parameters/*.json`. These files will be processed
+`/usr/share/puavo-conf/definitions/*.json`. These files will be processed
 in lexicographical order and must have the following structure:
 
     {

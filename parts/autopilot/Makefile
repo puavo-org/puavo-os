@@ -33,8 +33,8 @@ install: bin/puavo-autopilot-env installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-autopilot \
 		share/*.png
 
-	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-conf/parameters \
-		share/puavo-conf/parameters/puavo-autopilot.json
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-conf/definitions \
+		share/puavo-conf/definitions/puavo-autopilot.json
 
 	rm -f bin/puavo-autopilot-env
 
@@ -42,7 +42,7 @@ installdirs:
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/xinitrc.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-autopilot
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/parameters
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/definitions
 	mkdir -p $(DESTDIR)$(libdir)/puavo-autopilot
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
 

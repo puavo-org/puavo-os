@@ -57,7 +57,7 @@ end
 
 def get_parameter_definitions
     result      = {}
-    globpattern = '/usr/share/puavo-conf/parameters/*.json'
+    globpattern = '/usr/share/puavo-conf/definitions/*.json'
 
     files = Dir.glob(globpattern) rescue []
     logwarn('No parameter definitions found') if files.empty?

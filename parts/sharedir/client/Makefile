@@ -17,7 +17,7 @@ install-dirs:
 	mkdir -p $(DESTDIR)$(sysconfdir)/network/if-up.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
 	mkdir -p $(DESTDIR)$(sysconfdir)/X11/Xsession.d
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/parameters
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/definitions
 
 install: install-dirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
@@ -31,7 +31,7 @@ install: install-dirs
 		puavo-remotemounts-helper.desktop
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/X11/Xsession.d \
 		etc/X11/Xsession.d/46puavo-update-gtk-bookmarks
-	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-conf/parameters \
-		share/puavo-conf/parameters/puavo-sharedir-client.json
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-conf/definitions \
+		share/puavo-conf/definitions/puavo-sharedir-client.json
 
 clean:
