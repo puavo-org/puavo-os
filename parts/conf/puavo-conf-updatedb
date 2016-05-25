@@ -236,7 +236,11 @@ def get_parameter_overwrites_from_hwquirks()
 end
 
 def get_parameter_overwrites_from_devicejson()
-    device = read_json_obj($devicejson_path, Hash)
+    begin
+        device = read_json_obj($devicejson_path, Hash)
+    rescue Errno::ENOENT
+        return {}
+    end
     device['conf'] or {}
 end
 
