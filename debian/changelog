@@ -1,3 +1,30 @@
+puavo-os (0.16.0+1e8dda99fec6436df818a9b7699b570d6fb10a50) jessie; urgency=medium
+
+  * New release
+  * parts/conf: update README.md
+  * parts/conf: rename term hosttype => profile
+  * parts/conf: fix typo
+  * Rename /usr/share/puavo-conf/hosttypes => hosttype-overwrites
+  * Rename /usr/share/puavo-conf/hwquirks => hwquirk-overwrites
+  * Rename /usr/share/puavo-conf/parameters => definitions
+  * parts/conf: add support for hosttype specific parameter overwrites
+  * parts/conf: refactor for simplicity
+  * parts/conf: rename puavo-conf-mkdb => puavo-conf-init
+  * debian: update puavo-conf description
+  * parts/conf: rename puavo-conf-updatedb => puavo-conf-update
+  * parts/conf: remove --sources flag from the update command
+  * parts/conf: try overwrite params from device.json only if it exists
+  * parts/conf: remove references to unimplemented localconf source
+  * parts/rules: update initramfs whenever any puavo conf json changes
+  * parts/rules: remove workspaces-to-dock GNOME Shell extension sources
+  * parts/rules: remove dash-to-dock GNOME Shell extension
+  * parts/rules: remove hide-panel GNOME Shell extension sources
+  * Fine-tune
+  * fine-tune logo and backgrounds
+  * Git(1e8dda99fec6436df818a9b7699b570d6fb10a50)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Wed, 25 May 2016 15:46:34 +0300
+
 puavo-os (0.15.0+70dbc0f57d909eb6695efe345dd2a18dfa4af966) jessie; urgency=medium
 
   * New release
