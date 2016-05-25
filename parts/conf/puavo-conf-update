@@ -224,7 +224,7 @@ Options:
 EOF
 end
 
-def get_parameter_overwrites_from_hwquirks()
+def get_hwquirk_params()
     parameters = {}
     files      = Dir.glob('/usr/share/puavo-conf/hwquirks/*.json') rescue []
 
@@ -237,7 +237,7 @@ def get_parameter_overwrites_from_hwquirks()
     return parameters
 end
 
-def get_parameter_overwrites_from_devicejson()
+def get_devicejson_params()
     begin
         device = read_json_obj($devicejson_path, Hash)
     rescue Errno::ENOENT
@@ -246,7 +246,7 @@ def get_parameter_overwrites_from_devicejson()
     device['conf'] or {}
 end
 
-def get_parameter_overwrites_from_kernelargs()
+def get_kernelarg_params()
     parameters = {}
 
     IO.read('/proc/cmdline').split.each do |kernel_arg|
@@ -283,15 +283,19 @@ rescue GetoptLong::InvalidOption => e
     exit 1
 end
 
-parameter_overwrites = {}
+params = {}
 
-%w(hwquirks devicejson kernelargs).each do |source|
-    parameter_overwrites.update(send("get_parameter_overwrites_from_#{source}"))
-end
+hwquirk_params    = get_hwquirk_params
+devicejson_params = get_devicejson_params
+kernelarg_params  = get_kernelarg_params
+
+params.update(hwquirk_params)
+params.update(devicejson_params)
+params.update(kernelarg_params)
 
 puavoconf = Puavo::Conf.new()
 begin
-    parameter_overwrites.each do |key, value|
+    params.each do |key, value|
         begin
             puavoconf.overwrite(key, value)
         rescue StandardError => e
