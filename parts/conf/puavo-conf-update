@@ -298,7 +298,7 @@ params = {}
 hwquirk_params    = get_hwquirk_params
 devicejson_params = get_devicejson_params
 kernelarg_params  = get_kernelarg_params
-hosttype_params   = get_hosttype_params(kernelarg_params['puavo.hosttype')
+hosttype_params   = get_hosttype_params(kernelarg_params['puavo.hosttype'])
 
 params.update(hosttype_params)
 params.update(hwquirk_params)
