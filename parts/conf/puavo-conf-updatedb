@@ -208,16 +208,18 @@ def usage()
 Usage:
     puavo-conf-updatedb [OPTION]...
 
+Update configuration database by overwriting parameter values from the
+following sources, in the given order:
+
+  1. hardware quirks
+  2. device specific settings from '#{$devicejson_path}'
+  3. kernel command line
+
 Options:
   --help, -h                  display this help and exit
 
-  --sources SOURCES           comma-separated list of sources, defaults to
-                              '#{$conf_sources.join(',')}'
-
   --devicejson-path FILE      filepath of the device.json, defaults to
                               '#{$devicejson_path}'
-
-Available sources: #{SUPPORTED_SOURCES.join(',')}
 
 EOF
 end
@@ -260,13 +262,10 @@ end
 
 $status = 0
 
-SUPPORTED_SOURCES = %w(hwquirks devicejson kernelargs)
-$conf_sources = SUPPORTED_SOURCES
 $devicejson_path = '/etc/puavo/device.json'
 
 begin
     opts = GetoptLong.new(['--help', '-h',      GetoptLong::NO_ARGUMENT],
-                          ['--sources',         GetoptLong::REQUIRED_ARGUMENT],
                           ['--devicejson-path', GetoptLong::REQUIRED_ARGUMENT])
 
     opts.each do |opt, arg|
@@ -274,8 +273,6 @@ begin
             when '--help'
                 usage
                 exit 0
-            when '--sources'
-                $conf_sources = arg.split(',')
             when '--devicejson-path'
                 $devicejson_path = arg
         end
@@ -288,9 +285,7 @@ end
 
 parameter_overwrites = {}
 
-# Iterate well-defined source list to ensure the correct order.
-SUPPORTED_SOURCES.each do |source|
-    next unless $conf_sources.include?(source)
+%w(hwquirks devicejson kernelargs).each do |source|
     parameter_overwrites.update(send("get_parameter_overwrites_from_#{source}"))
 end
 
