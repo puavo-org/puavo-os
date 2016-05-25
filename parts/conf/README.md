@@ -2,10 +2,10 @@
 
 Puavo Conf is the configuration system of Puavo OS. It consists of a
 parameter database, a C library (`libpuavoconf`) and a set of programs
-(`puavo-conf`, `puavo-conf-init` and `puavo-conf-update`) manipulating
-the database through the library. Parameters define how various Puavo
-OS components behave and can be tuned from multiple sources, such as
-Puavo Web, local administrative tools or kernel command line.
+(`puavo-conf`, `puavo-conf-daemon`, `puavo-conf-init` and
+`puavo-conf-update`) manipulating the database through the
+library. Parameters define how various Puavo OS components behave and
+can be tuned from multiple sources.
 
 ## Buildtime dependencies
 
@@ -34,38 +34,33 @@ prefix, for example to `/usr`, run:
 
 `Makefile` supports also `DESTDIR=/path/to/install/dir` parameter for
 staged installs. See
-https://www.gnu.org/prep/standards/html_node/DESTDIR.html for more info.
-
-## Usage
-
-    puavo-conf-init         # create and populate a database
-    puavo-conf              # list all keys and values
-    puavo-conf key          # print the value of a key
-    puavo-conf -b key       # print the value of a key, fail if it isn't bool
-    puavo-conf key value    # set the value of a key
-    puavo-conf -b key value # set the value of a key, fail if it is isn't bool
+https://www.gnu.org/prep/standards/html_node/DESTDIR.html for more
+info.
 
 ## Parameters
 
-Parameters are key-value pairs. Both keys and values are stored in the
-database as NUL-terminated strings. It is up to the user to decide how
-to interpret parameter values.
+Parameters are key-value pairs. Both keys and values are stored as
+NUL-terminated strings. It is up to the user to decide how to
+interpret the values.
 
 Parameter values can be assigned from different sources with varying
-precedences. The following list defines the currently supported sources
-in ascending precedence order:
+precedences. The following list defines the sources in ascending
+precedence order:
 
     1. Parameter definitions
-    2. Parameter assignments from hardware quirks
-    3. Parameter assignments from Puavo Web
-    4. Parameter assignments from kernel command line
+    2. Parameter overwrites from the configuration profile
+    3. Parameter overwrites from hardware quirks
+    4. Parameter overwrites from device settings
+    5. Parameter overwrites from the kernel command line
 
-Thus, for example, values assigned on the kernel command line overwrite
-values assigned by hardware quirks.
+Thus, for example, values assigned on the kernel command line
+overwrite values assigned by hardware quirks.
 
-Parameter sources are read by `puavo-conf-init` in the given order and
-together they construct the parameter database. The database must be
-constructed before any configurable Puavo OS component is executing.
+The configuration system is initialized by running `puavo-conf-init`,
+which reads parameter definitions and creates new parameters with
+default values. The configuration can then be updated by running
+`puavo-conf-update` which reads parameter overwrites and assigns new
+values to parameters in the order defined above.
 
 ### Parameter definitions
 
@@ -105,13 +100,10 @@ in lexicographical order and must have the following structure:
             "matchmethod": "exact",
             "pattern": "Aspire ES1-111",
             "parameters": {
-                "puavo.intel_backlight": true
+                "puavo.intel_backlight.enabled": true
             }
         }
     ]
-
-In this example, we enable intel_backlight on a specific Asus Aspire
-device.
 
 Field `key` determines the name of the hardware characteristic the
 filter is matched against. Valid hardware characteristic key names are
