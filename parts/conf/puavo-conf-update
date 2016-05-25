@@ -226,7 +226,7 @@ end
 
 def get_hwquirk_params()
     parameters = {}
-    files      = Dir.glob('/usr/share/puavo-conf/hwquirks/*.json') rescue []
+    files      = Dir.glob('/usr/share/puavo-conf/hwquirk-overwrites/*.json') rescue []
 
     files.each do |file|
         apply_parameter_filters(parameters,

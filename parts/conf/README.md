@@ -96,7 +96,7 @@ in lexicographical order and must have the following structure:
 ### Parameter overrides from hardware quirks
 
 Hardware quirks must be defined in JSON files located in
-`/usr/share/puavo-conf/hwquirks/*.json`. These files will be processed
+`/usr/share/puavo-conf/hwquirk-overwrites/*.json`. These files will be processed
 in lexicographical order and must have the following structure:
 
     [
