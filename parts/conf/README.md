@@ -58,8 +58,7 @@ in ascending precedence order:
     1. Parameter definitions
     2. Parameter assignments from hardware quirks
     3. Parameter assignments from Puavo Web
-    4. Parameter assignments from local configuration
-    5. Parameter assignments from kernel command line
+    4. Parameter assignments from kernel command line
 
 Thus, for example, values assigned on the kernel command line overwrite
 values assigned by hardware quirks.
@@ -129,10 +128,6 @@ Currently, configuration definitions (`/etc/puavo/device.json` et al.)
 from Puavo Web are converted to parameter assignments by
 `puavo-conf-mkdb`. In future, Puavo Web will support Puavo Conf natively
 and just provide a list of parameter assignments to configurable hosts.
-
-### Local configuration
-
-Not implemented yet.
 
 ### Kernel command line arguments
 

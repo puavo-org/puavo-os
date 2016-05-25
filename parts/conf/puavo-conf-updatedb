@@ -240,11 +240,6 @@ def get_parameter_overwrites_from_devicejson()
     device['conf'] or {}
 end
 
-def get_parameter_overwrites_from_localconf()
-    # XXX unimplemented
-    return {}
-end
-
 def get_parameter_overwrites_from_kernelargs()
     parameters = {}
 
@@ -261,7 +256,7 @@ end
 
 $status = 0
 
-SUPPORTED_SOURCES = %w(hwquirks devicejson localconf kernelargs)
+SUPPORTED_SOURCES = %w(hwquirks devicejson kernelargs)
 $conf_sources = SUPPORTED_SOURCES
 $devicejson_path = '/etc/puavo/device.json'
 
