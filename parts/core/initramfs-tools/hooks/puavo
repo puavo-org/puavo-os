@@ -39,7 +39,7 @@ copy_exec /usr/bin/lsusb              /usr/bin
 copy_exec /usr/bin/puavo-conf         /usr/bin
 copy_exec /usr/bin/ruby               /usr/bin
 copy_exec /usr/sbin/dmidecode         /usr/sbin
-copy_exec /usr/sbin/puavo-conf-mkdb   /usr/sbin
+copy_exec /usr/sbin/puavo-conf-init   /usr/sbin
 copy_exec /usr/sbin/puavo-conf-update /usr/sbin
 
 cp -a /usr/lib/ruby ${DESTDIR}/usr/lib/

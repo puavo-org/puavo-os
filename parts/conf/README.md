@@ -2,10 +2,10 @@
 
 Puavo Conf is the configuration system of Puavo OS. It consists of a
 parameter database, a C library (`libpuavoconf`) and a set of programs
-(`puavo-conf` and `puavo-conf-mkdb`) manipulating the database through
-the library. Parameters define how various Puavo OS components behave
-and can be tuned from multiple sources, such as Puavo Web, local
-administrative tools or kernel command line.
+(`puavo-conf`, `puavo-conf-init` and `puavo-conf-update`) manipulating
+the database through the library. Parameters define how various Puavo
+OS components behave and can be tuned from multiple sources, such as
+Puavo Web, local administrative tools or kernel command line.
 
 ## Buildtime dependencies
 
@@ -38,7 +38,7 @@ https://www.gnu.org/prep/standards/html_node/DESTDIR.html for more info.
 
 ## Usage
 
-    puavo-conf-mkdb         # create and populate a database
+    puavo-conf-init         # create and populate a database
     puavo-conf              # list all keys and values
     puavo-conf key          # print the value of a key
     puavo-conf -b key       # print the value of a key, fail if it isn't bool
@@ -63,7 +63,7 @@ in ascending precedence order:
 Thus, for example, values assigned on the kernel command line overwrite
 values assigned by hardware quirks.
 
-Parameter sources are read by `puavo-conf-mkdb` in the given order and
+Parameter sources are read by `puavo-conf-init` in the given order and
 together they construct the parameter database. The database must be
 constructed before any configurable Puavo OS component is executing.
 
@@ -126,8 +126,9 @@ be set.
 
 Currently, configuration definitions (`/etc/puavo/device.json` et al.)
 from Puavo Web are converted to parameter assignments by
-`puavo-conf-mkdb`. In future, Puavo Web will support Puavo Conf natively
-and just provide a list of parameter assignments to configurable hosts.
+`puavo-conf-init`. In future, Puavo Web will support Puavo Conf
+natively and just provide a list of parameter assignments to
+configurable hosts.
 
 ### Kernel command line arguments
 

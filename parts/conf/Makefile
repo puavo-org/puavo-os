@@ -34,7 +34,7 @@ install: installdirs
 	libtool --mode=install install puavo-conf $(DESTDIR)$(bindir)
 	install -t $(DESTDIR)$(sbindir) \
 		puavo-conf-daemon	\
-		puavo-conf-mkdb		\
+		puavo-conf-init		\
 		puavo-conf-update
 	install -m 644 -t $(DESTDIR)$(rubylibdir)/puavo conf.rb
 
