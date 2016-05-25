@@ -206,7 +206,7 @@ end
 def usage()
     puts <<-EOF
 Usage:
-    puavo-conf-updatedb [OPTION]...
+    puavo-conf-update [OPTION]...
 
 Update configuration database by overwriting parameter values from the
 following sources, in the given order:

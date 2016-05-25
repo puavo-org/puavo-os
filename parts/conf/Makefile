@@ -35,7 +35,7 @@ install: installdirs
 	install -t $(DESTDIR)$(sbindir) \
 		puavo-conf-daemon	\
 		puavo-conf-mkdb		\
-		puavo-conf-updatedb
+		puavo-conf-update
 	install -m 644 -t $(DESTDIR)$(rubylibdir)/puavo conf.rb
 
 	install -m 644 -t $(DESTDIR)$(sysconfdir)/dbus-1/system.d \
