@@ -2,6 +2,7 @@ class desktop::puavo-desktop-bigtouch {
   include desktop::dconf,
           dpkg,
           gnome_shell_extensions,
+          initramfs,
           packages
 
   dpkg::simpledivert {
@@ -27,7 +28,8 @@ class desktop::puavo-desktop-bigtouch {
       require => Package['onboard'];
 
     '/usr/share/puavo-conf/parameters/puavo-onboard.json':
-      content => template('desktop/puavo-desktop-bigtouch/puavo-conf-parameters.json');
+      content => template('desktop/puavo-desktop-bigtouch/puavo-conf-parameters.json'),
+      notify  => Exec['initramfs::update'];
   }
 
   Package <| title == onboard |>

@@ -1,5 +1,6 @@
 class console {
-  include packages
+  include initramfs,
+          packages
 
   file {
     '/etc/default/console-setup':
@@ -11,6 +12,7 @@ class console {
 
     '/usr/share/puavo-conf/parameters/puavo-rules-console.json':
       content => template('console/puavo-conf-parameters.json'),
+      notify  => Exec['initramfs::update'],
       require => Package['puavo-conf'];
   }
 

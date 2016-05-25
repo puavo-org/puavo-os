@@ -1,5 +1,6 @@
 class disable_suspend_by_tag {
-  include packages
+  include initramfs,
+          packages
 
   file {
     '/etc/pm/sleep.d/02_nosuspendtag_test':
@@ -8,6 +9,7 @@ class disable_suspend_by_tag {
       source  => 'puppet:///modules/disable_suspend_by_tag/02_nosuspendtag_test';
 
     '/usr/share/puavo-conf/parameters/puavo-rules-disable_suspend_by_tag.json':
+      notify  => Exec['initramfs::update'],
       require => Package['puavo-conf'],
       source  => 'puppet:///modules/disable_suspend_by_tag/puavo-conf-parameters.json';
   }
