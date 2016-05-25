@@ -262,7 +262,7 @@ def get_hosttype_params(hosttype)
     return {} if hosttype.nil?
 
     begin
-        read_json_obj("/usr/share/puavo-conf/hosttypes/#{hosttype}.json", Hash)
+        read_json_obj("/usr/share/puavo-conf/hosttype-overwrites/#{hosttype}.json", Hash)
     rescue Errno::ENOENT
         {}
     end
