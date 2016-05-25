@@ -3,7 +3,7 @@
 # Don't do anything for the lo interface
 test "$IFACE" != lo || exit 0
 
-PUAVO_HOSTTYPE=$(puavo-conf puavo.hosttype)
+PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
 PUAVO_DOMAIN=$(cat /etc/puavo/domain)
 
 if [ "$PUAVO_HOSTTYPE" != "laptop" ]; then

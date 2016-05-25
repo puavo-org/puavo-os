@@ -15,7 +15,7 @@ CACHE_DIR="/var/lib/puavo-desktop/users/${PAM_USER}"
 CACHE_FILE="${CACHE_DIR}/puavo_session.json"
 
 PUAVO_HOSTNAME=$(cat /etc/puavo/hostname)
-PUAVO_HOSTTYPE=$(puavo-conf puavo.hosttype)
+PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
 
 if [ "$1" = "guest" ]; then
   if PUAVO_SESSION=$(

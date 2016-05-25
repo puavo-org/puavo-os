@@ -68,7 +68,7 @@ puavo.bootmode
   using netboot or mixed mode all partitions defined on the command 
   line using puavo.lvm.lv.xxx directives are mounted.
 
-puavo.hosttype [optional]
+puavo.hosttype
   Force hosttype. The image itself defines which hosttypes are allowed and 
   what the hosttype actually means. Normally the hosttype is defined in Puavo,
   but this value can be used to override the setting. This can be useful in 

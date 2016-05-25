@@ -41,7 +41,7 @@ handle_shutdown() {
   fi
 }
 
-hosttype=$(puavo-conf puavo.hosttype)
+hosttype=$(cat /etc/puavo/hosttype)
 
 case "$1" in
   --reboot)   handle_restart  $hosttype;;

@@ -4,7 +4,7 @@ disable_session_services()
     local service
     local services
 
-    hosttype=$(puavo-conf puavo.hosttype)
+    hosttype=$(cat /etc/puavo/hosttype)
 
     services=
 

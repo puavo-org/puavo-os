@@ -2,7 +2,7 @@ set_systemd_default_target()
 {
     local hosttype
 
-    hosttype=$(puavo-conf puavo.hosttype)
+    hosttype=$(cat /etc/puavo/hosttype)
     case "${hosttype}" in
         fatclient|thinclient)
             systemctl set-default graphical.target

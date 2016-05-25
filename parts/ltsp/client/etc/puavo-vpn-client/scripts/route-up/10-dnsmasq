@@ -19,7 +19,7 @@ fi
 
 KERBEROS_MASTER=$(cat /etc/puavo/kerberos/master)
 TOPDOMAIN=$(cat /etc/puavo/topdomain)
-HOSTTYPE=$(puavo-conf puavo.hosttype)
+HOSTTYPE=$(cat /etc/puavo/hosttype)
 PARAMS=""
 
 if [ -n "$LDAP_MASTER" ]; then

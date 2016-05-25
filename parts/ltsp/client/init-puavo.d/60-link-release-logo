@@ -1,6 +1,6 @@
 # This file is sourced.
 
-hosttype=$(puavo-conf puavo.hosttype)
+hosttype=$(cat /etc/puavo/hosttype)
 
 if [ -f "/usr/share/icons/release_logo.${hosttype}.png" ]; then
   ln -fs "/usr/share/icons/release_logo.${hosttype}.png" \

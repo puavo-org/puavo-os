@@ -1,6 +1,6 @@
 #!/bin/sh
 
-hosttype=$(puavo-conf puavo.hosttype)
+hosttype=$(cat /etc/puavo/hosttype)
 
 case "$hosttype" in
   ltspserver)

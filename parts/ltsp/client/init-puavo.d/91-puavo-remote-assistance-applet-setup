@@ -1,4 +1,4 @@
-PUAVO_HOSTTYPE=$(puavo-conf puavo.hosttype)
+PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
 
 case "$PUAVO_HOSTTYPE" in
   laptop|ltspserver|wirelessaccesspoint)

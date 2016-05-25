@@ -2,7 +2,7 @@
 
 set -e
 
-puavo_hosttype="$(puavo-conf puavo.hosttype         2>/dev/null || true)"
+puavo_hosttype="$(cat /etc/puavo/hosttype           2>/dev/null || true)"
 ltspimage_name="$(cat /etc/ltsp/this_ltspimage_name 2>/dev/null || true)"
 
 if [ -n "$puavo_hosttype" ]; then

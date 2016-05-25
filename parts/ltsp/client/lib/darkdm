@@ -129,7 +129,7 @@ darkdm_main()
 
     darkdm_print_help
 
-    hosttype=$(puavo-conf puavo.hosttype)
+    hosttype=$(cat /etc/puavo/hosttype)
     case "${hosttype}" in
 	unregistered)
 	    initial_command='install'

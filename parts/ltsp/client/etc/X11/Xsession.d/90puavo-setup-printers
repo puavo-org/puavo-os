@@ -48,7 +48,7 @@ set_default_printer()
     [ "${default_printer_name}" != null ] && lpadmin -d "${default_printer_name}"
 }
 
-hosttype=$(puavo-conf puavo.hosttype)
+hosttype=$(cat /etc/puavo/hosttype)
 
 case "${hosttype}" in
     ltspserver)

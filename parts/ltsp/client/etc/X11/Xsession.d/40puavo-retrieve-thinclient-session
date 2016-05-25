@@ -1,4 +1,4 @@
-PUAVO_HOSTTYPE=$(puavo-conf puavo.hosttype)
+PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
 PUAVO_HOSTNAME=$(cat /etc/puavo/hostname)
 API_SERVER=$(puavo-resolve-api-server)
 

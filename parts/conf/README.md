@@ -69,12 +69,6 @@ Parameters must be defined in JSON files located in
 in lexicographical order and must have the following structure:
 
     {
-        "puavo.hosttype": {
-            "typehint": "string",
-            "choices": ["fatclient", "thinclient", "laptop"],
-            "default": "fatclient",
-            "description": "Type of the device"
-        },
         "puavo.nethomes.enabled": {
             "typehint": "bool",
             "default": "true",
