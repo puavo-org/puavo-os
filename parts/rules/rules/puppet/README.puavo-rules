@@ -41,11 +41,6 @@ disable_suspend_on_nbd_devices
 disable_unclutter
     Disable unclutter, causes problems on some hardware.
 
-disable_update_notifications
-    Disable some functionality in update-notifier-common package
-    (just removing the package would be nice, but ttf-mscorefonts-installer
-    package depends on it).
-
 dpkg
     A helper module for dealing with dpkg.
 
