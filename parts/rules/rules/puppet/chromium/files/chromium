@@ -1,7 +1,7 @@
 #!/bin/sh
 
 browser_running() {
-  pgrep -f -U "$USER" '^/usr/lib/chromium-browser/chromium-browser' >/dev/null
+  pgrep -f -U "$USER" '^/usr/lib/chromium/chromium' >/dev/null
 }
 
 homepage_args() { echo "$HOMEPAGE" | sed 's/|/ /g'; }
@@ -9,8 +9,8 @@ homepage_args() { echo "$HOMEPAGE" | sed 's/|/ /g'; }
 default_args="--no-default-browser-check"
 
 if ! browser_running || [ $# -eq 0 ]; then
-  exec /usr/bin/chromium-browser.distrib --new-window $default_args \
+  exec /usr/bin/chromium.distrib --new-window $default_args \
                                          "$@" $(homepage_args)
 else
-  exec /usr/bin/chromium-browser.distrib $default_args "$@"
+  exec /usr/bin/chromium.distrib $default_args "$@"
 fi

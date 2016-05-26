@@ -2,16 +2,12 @@ class chromium {
   include dpkg,
           packages
 
-  dpkg::simpledivert { '/usr/bin/chromium-browser': ; }
+  dpkg::simpledivert { '/usr/bin/chromium': ; }
 
   file {
-    '/etc/chromium-browser/default':
-      source  => 'puppet:///modules/chromium/etc_chromium_browser_default',
-      require => [ Package['chromium'] ];
-
-    '/usr/bin/chromium-browser':
+    '/usr/bin/chromium':
       mode   => 755,
-      source => 'puppet:///modules/chromium/chromium-browser';
+      source => 'puppet:///modules/chromium/chromium';
   }
 
   Package <| title == chromium |>
