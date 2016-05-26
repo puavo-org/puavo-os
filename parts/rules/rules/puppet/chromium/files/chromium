@@ -6,7 +6,7 @@ browser_running() {
 
 homepage_args() { echo "$HOMEPAGE" | sed 's/|/ /g'; }
 
-default_args="--no-default-browser-check"
+default_args="--disable-infobars"
 
 if ! browser_running || [ $# -eq 0 ]; then
   exec /usr/bin/chromium.distrib --new-window $default_args \
