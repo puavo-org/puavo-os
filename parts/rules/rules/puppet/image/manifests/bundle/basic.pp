@@ -8,7 +8,6 @@ class image::bundle::basic {
 	  kernels,
 	  # keyboard_hw_quirks,		  # XXX do we need this for Debian?
 	  lightdm,
-	  # motd,			  # XXX needs fixing for Debian
 	  packages,
 	  packages::languages::de,
 	  packages::languages::en,

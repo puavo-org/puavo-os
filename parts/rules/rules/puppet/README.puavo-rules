@@ -93,10 +93,6 @@ libreoffice
 lightdm
     Some lightdm configurations (some of these come from ltsp-lightdm package).
 
-motd
-    Add stuff to MOTD, that means at least host type and ltsp image
-    name/version.
-
 network_manager
     Allow users to modify network manager connections, but clean them
     up so that those modifications are (normally) only temporary.
