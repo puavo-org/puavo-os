@@ -248,7 +248,8 @@ Depends: ${misc:Depends},
  tmux,
  tshark,
  vim,
- w3m
+ w3m,
+ winbind
 Recommends:
  gdisk,
  ifenslave,
