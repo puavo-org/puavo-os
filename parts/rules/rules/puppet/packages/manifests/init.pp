@@ -117,6 +117,7 @@ class packages {
     , 'manpages-dev'
     , 'perl-doc'
     , 'pinfo'
+    , 'sloccount'
     , 'translate-toolkit'
     , 'vim-nox' ]:
       tag => [ 'devel', 'debian', ];
