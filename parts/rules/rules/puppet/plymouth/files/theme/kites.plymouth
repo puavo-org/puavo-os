@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=Kites, the default Puavo OS theme
+Description=A theme that features a background image with a logo and progressing dots.
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/kites
+ScriptFile=/usr/share/plymouth/themes/kites/kites.script

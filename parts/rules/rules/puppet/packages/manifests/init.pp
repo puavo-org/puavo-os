@@ -573,6 +573,7 @@ class packages {
     , 'network-manager-pptp-gnome'
     , 'openprinting-ppds'
     , 'pcmciautils'
+    , 'plymouth'
     , 'plymouth-themes'
     , 'printer-driver-c2esp'
     , 'printer-driver-foo2zjs'
