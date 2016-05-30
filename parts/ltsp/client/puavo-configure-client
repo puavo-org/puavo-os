@@ -354,17 +354,6 @@ case @puavo_device_type
     # host types that do not need this.
     system('puavo-update-nm-configurations')
   when "wirelessaccesspoint"
-    wired_interfaces                                                 \
-      = Dir.glob('/sys/class/net/eth*')                              \
-           .select { |path| not File.exists?("#{ path }/phy80211") } \
-           .map    { |path| File.basename(path) }
-
-    File.open('/etc/network/interfaces', 'a') do |file|
-      wired_interfaces.each do |interface|
-        file.write("\nauto #{ interface }\niface #{ interface } inet dhcp\n")
-      end
-    end
-
     # wirelessaccesspoints may be used as infotv devices depending on device
     # tags.
     write_config("/etc/lightdm/lightdm.conf")
