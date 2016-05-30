@@ -60,7 +60,7 @@ function enable() {
             style_class: "launcher-box-item"
         });
     launchChromiumIcon.connect('button-press-event',
-                               function() { Util.spawn(["chromium"]) });
+                               function() { Util.spawn(["chromium-bigtouch"]) });
 
     let launchGnomeClocksIcon = new St.Icon(
         {
