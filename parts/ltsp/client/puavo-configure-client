@@ -61,6 +61,7 @@ end
 @puavoconf = Puavo::Conf.new
 @puavo_device_type       = read_file('/etc/puavo/hosttype')
 @puavo_guestlogin_mode   = @puavoconf.get('puavo.guestlogin.mode')
+@puavo_autoeth_enabled   = @puavoconf.get('puavo.autoeth.enabled') == 'true'
 @puavo_xsessions_default = @puavoconf.get('puavo.xsessions.default')
 @puavo_xsessions_locked  = @puavoconf.get('puavo.xsessions.locked') == 'true'
 @puavoconf.close
@@ -373,6 +374,19 @@ case @puavo_device_type
     # turn infotv displays on and off
     if @puavo_xsessions_default == 'puavo-infotv' then
       write_config("/etc/cron.d/infotv_display_control")
+    end
+end
+
+if @puavo_autoeth_enabled
+    wired_interfaces                                                 \
+      = Dir.glob('/sys/class/net/eth*')                              \
+           .select { |path| not File.exists?("#{ path }/phy80211") } \
+           .map    { |path| File.basename(path) }
+
+    File.open('/etc/network/interfaces.d/puavo-autoeth', 'w') do |file|
+      wired_interfaces.each do |interface|
+        file.write("\nauto #{ interface }\niface #{ interface } inet dhcp\n")
+      end
     end
 end
 
