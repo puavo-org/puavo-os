@@ -1,3 +1,34 @@
+puavo-os (0.17.0~rc2+244df3033eb2331121de7ece22345cd2478b3517) jessie; urgency=medium
+
+  * New release
+  * Enable autoeth on wirelessaccesspoints by default
+  * Add parameter for enabling auto-configuration of all eth devices
+    (autoeth)
+  * parts/rules: force libssl1.0.0 and openssl to a specific version
+  * Revert "Script to execute Chromium with big touch specific
+    parameter(s)."
+  * Revert "Add rule for chromium-bigtouch."
+  * Revert "Change launcher for web browser to chromium-bigtouch."
+  * Change launcher for web browser to chromium-bigtouch.
+  * Add rule for chromium-bigtouch.
+  * Script to execute Chromium with big touch specific parameter(s).
+  * parts/rules: add plymouth theme
+  * parts/rules: cleanup whitespace
+  * puavo-art: move splash background kites a bit lower
+  * puavo-art: remove logo from the splash background
+  * Add settings for virtual keyboard.
+  * parts/rules: chromium: disable annoying info bars/popups
+  * parts/rules: chromium: use native Gtk frame
+  * parts/rules: webmenu: chromium has different name in Debian than in
+    Ubuntu
+  * parts/rules: adapt chromium Puppet module to Debian
+  * parts/rules: remove motd Puppet module
+  * parts/rules: remove disable_update_notifications Puppet module
+  * parts/rules: add sloccount package
+  * Git(244df3033eb2331121de7ece22345cd2478b3517)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Mon, 30 May 2016 17:09:28 +0300
+
 puavo-os (0.17.0~rc1+f9cce6c5f6c47e8f97afcb6e07284979975b8e59) jessie; urgency=medium
 
   * New release
