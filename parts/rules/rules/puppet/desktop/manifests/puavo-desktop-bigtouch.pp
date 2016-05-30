@@ -30,6 +30,10 @@ class desktop::puavo-desktop-bigtouch {
     '/usr/share/puavo-conf/definitions/puavo-onboard.json':
       content => template('desktop/puavo-desktop-bigtouch/puavo-conf-parameters.json'),
       notify  => Exec['initramfs::update'];
+
+    '/usr/local/bin/chromium-bigtouch':
+      source  => 'puppet:///modules/desktop/chromium-bigtouch',
+      mode    => 755;
   }
 
   Package <| title == onboard |>
