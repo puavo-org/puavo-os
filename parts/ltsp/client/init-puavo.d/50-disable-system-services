@@ -1,34 +1,17 @@
 disable_system_services() {
-    local hosttype
+    local enabled
     local service
     local services
 
-    hosttype=$(cat /etc/puavo/hosttype)
-
-    services=
-
-    case "${hosttype}" in
-	fatclient)
-	    services='
-avahi-daemon
-ModemManager
-NetworkManager
-nscd
-nslcd
-'
-	    ;;
-        laptop)
-            services='
-nscd
-nslcd
-'
-            ;;
-	*)
-	    ;;
-    esac
+    services='avahi-daemon ModemManager NetworkManager nscd nslcd'
 
     for service in ${services}; do
-	systemctl disable "${service}"
+        enabled=$(puavo-conf -b "puavo.service.${service}.enabled")
+        if [ "${enabled}" = true ]; then
+	    systemctl enable "${service}"
+        else
+            systemctl disable "${service}"
+        fi
     done
 }
 

@@ -14,6 +14,21 @@
     "puavo.printing.jetpipe.enabled": {
         "default": "false"
     },
+    "puavo.service.ModemManager.enabled": {
+        "default": "true"
+    },
+    "puavo.service.NetworkManager.enabled": {
+        "default": "true"
+    },
+    "puavo.service.avahi-daemon.enabled": {
+        "default": "true"
+    },
+    "puavo.service.nscd.enabled": {
+        "default": "true"
+    },
+    "puavo.service.nslcd.enabled": {
+        "default": "true"
+    },
     "puavo.xbacklight.enabled": {
         "default": "true"
     },
