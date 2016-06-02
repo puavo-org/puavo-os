@@ -29,26 +29,13 @@ MAKEVARS	:= STRIP=
 VERSION = $(shell dpkg-parsechangelog |grep Version| sed 's/.*: //;s/-.*//')
 URL     = http://www.openldap.org/software/download/OpenLDAP/openldap-release/
 
-# Download the upstream source and make changes as required for DFSG reasons.
-# Assumes wget is available, as this is generally only used by the package
-# maintainers.
 get-orig-source:
 	@if [ ! -d "debian/schema" ] ; then \
 	    echo 'Run this from the top directory of the Debian source' >&2; \
 	    exit 1; \
 	fi
-	wget $(URL)/openldap-$(VERSION).tgz
-	tar xzf openldap-$(VERSION).tgz
-	rm -r openldap-$(VERSION)/doc/drafts
-	rm -r openldap-$(VERSION)/doc/rfc
-	set -e; for schema in debian/schema/*.schema debian/schema/*.ldif ; do \
-	    file=`basename "$$schema"`; \
-	    rm openldap-$(VERSION)/servers/slapd/schema/$$file; \
-	done
-	mv openldap-$(VERSION) openldap_$(VERSION).orig
-	tar cf openldap_$(VERSION).orig.tar openldap_$(VERSION).orig
-	rm -r openldap_$(VERSION).orig
-	gzip -9 openldap_$(VERSION).orig.tar
+	wget $(URL)/openldap-$(VERSION).tgz -O openldap_$(VERSION).orig.tar.gz
+	tar xzf openldap_$(VERSION).orig.tar.gz --strip-components=1 -C .
 
 %:
 	dh $@ --with quilt,autoreconf --builddirectory=$(builddir) --parallel
