@@ -14,7 +14,7 @@ Build-Depends: debhelper (>= 8.9.0~),
  libgnutls28-dev, unixodbc-dev, libncurses5-dev, libperl-dev (>= 5.8.0),
  libsasl2-dev, libslp-dev, libltdl-dev | libltdl3-dev (>= 1.4.3),
  libwrap0-dev, perl, po-debconf, quilt (>= 0.46-7),
- groff-base, time, heimdal-multidev,
+ groff-base, time, libheimdal-multidev, krb5-multidev, libssl-dev, 
  dh-autoreconf
 Build-Conflicts: libbind-dev, bind-dev, libicu-dev, autoconf2.13
 Standards-Version: 3.9.1
