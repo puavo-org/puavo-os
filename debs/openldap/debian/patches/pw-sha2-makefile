@@ -1,8 +1,8 @@
---- a/contrib/slapd-modules/autogroup/Makefile
-+++ b/contrib/slapd-modules/autogroup/Makefile
+--- a/contrib/slapd-modules/passwd/sha2/Makefile
++++ b/contrib/slapd-modules/passwd/sha2/Makefile
 @@ -2,11 +2,11 @@
  
- LDAP_SRC = ../../..
+ LDAP_SRC = ../../../..
  LDAP_BUILD = $(LDAP_SRC)
 -LDAP_INC = -I$(LDAP_BUILD)/include -I$(LDAP_SRC)/include -I$(LDAP_SRC)/servers/slapd
 -LDAP_LIB = $(LDAP_BUILD)/libraries/libldap_r/libldap_r.la \
@@ -16,8 +16,8 @@
  CC = gcc
  OPT = -g -O2 -Wall
  DEFS = 
-@@ -16,13 +16,13 @@ LIBS = $(LDAP_LIB)
- PROGRAMS = autogroup.la
+@@ -17,13 +17,13 @@
+ PROGRAMS = pw-sha2.la
  LTVER = 0:0:0
  
 -prefix=/usr/local

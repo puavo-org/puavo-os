@@ -2,11 +2,9 @@
 
 # Set this variable if you're building packages outside of Debian and don't
 # want the checks for DFSG-freeness.
-#DFSG_NONFREE = 1
+DFSG_NONFREE = 1
 
-export DEB_BUILD_HARDENING=1
-
-export DEB_CFLAGS_MAINT_APPEND := -Wall -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE -DLDAP_CONNECTIONLESS
+export DEB_CFLAGS_MAINT_APPEND := -Wall -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE
 export DEB_BUILD_MAINT_OPTIONS := hardening=+pie,+bindnow
 
 # Workaround for bad glibc behavior when resolving localhost
@@ -26,15 +24,43 @@ slapddir	:= $(CURDIR)/debian/slapd/usr/sbin
 
 MAKEVARS	:= STRIP=
 
-VERSION = 2.4.40
-URL     = http://ftp.debian.org/debian/pool/main/o/openldap
-TARBALL = openldap_$(VERSION).orig.tar.gz
+# These variables are used only by get-orig-source, which will normally only
+# be run by maintainers.
+VERSION = $(shell dpkg-parsechangelog |grep Version| sed 's/.*: //;s/-.*//')
+URL     = http://www.openldap.org/software/download/OpenLDAP/openldap-release/
+
+# Download the upstream source and make changes as required for DFSG reasons.
+# Assumes wget is available, as this is generally only used by the package
+# maintainers.
 get-orig-source:
-	wget $(URL)/$(TARBALL) -O ../$(TARBALL)
-	tar xzf ../$(TARBALL) --strip-components=1 -C .
+	@if [ ! -d "debian/schema" ] ; then \
+	    echo 'Run this from the top directory of the Debian source' >&2; \
+	    exit 1; \
+	fi
+	wget $(URL)/openldap-$(VERSION).tgz
+	tar xzf openldap-$(VERSION).tgz
+	rm -r openldap-$(VERSION)/doc/drafts
+	rm -r openldap-$(VERSION)/doc/rfc
+	set -e; for schema in debian/schema/*.schema debian/schema/*.ldif ; do \
+	    file=`basename "$$schema"`; \
+	    rm openldap-$(VERSION)/servers/slapd/schema/$$file; \
+	done
+	mv openldap-$(VERSION) openldap_$(VERSION).orig
+	tar cf openldap_$(VERSION).orig.tar openldap_$(VERSION).orig
+	rm -r openldap_$(VERSION).orig
+	gzip -9 openldap_$(VERSION).orig.tar
 
 %:
-	dh $@ --with quilt,autoreconf --builddirectory=$(builddir)
+	dh $@ --with quilt,autoreconf --builddirectory=$(builddir) --parallel
+
+# Only contrib/ldapc++ uses Automake, so special care is needed to update
+# config.guess and config.sub at the top level.
+autoreconf:
+	autoreconf -f -i . contrib/ldapc++
+	cp -f /usr/share/misc/config.guess /usr/share/misc/config.sub build/
+
+override_dh_autoreconf:
+	dh_autoreconf debian/rules -- autoreconf
 
 override_dh_auto_configure:
 	# Check if we include the RFCs, Internet-Drafts, or upstream schemas
@@ -62,22 +88,24 @@ override_dh_auto_configure:
 override_dh_auto_build:
 	dh_auto_build -- $(MAKEVARS)
 	$(MAKE) -C contrib/slapd-modules/smbk5pwd
-	$(MAKE) -C contrib/slapd-modules/nssov/ $(MAKEVARS) nssov.la
-	$(MAKE) -C contrib/slapd-modules/autogroup
 	$(MAKE) -C contrib/slapd-modules/smbkrb5pwd
+	$(MAKE) -C contrib/slapd-modules/autogroup
+	$(MAKE) -C contrib/slapd-modules/lastbind
+	$(MAKE) -C contrib/slapd-modules/passwd/sha2
 
 override_dh_auto_install:
 	dh_auto_install -- $(MAKEVARS)
 	$(MAKE) -C contrib/slapd-modules/smbk5pwd install DESTDIR=$(installdir)
-	$(MAKE) -C contrib/slapd-modules/nssov install DESTDIR=$(installdir)
-	$(MAKE) -C contrib/slapd-modules/autogroup install DESTDIR=$(installdir)
 	$(MAKE) -C contrib/slapd-modules/smbkrb5pwd install DESTDIR=$(installdir)
+	$(MAKE) -C contrib/slapd-modules/autogroup install DESTDIR=$(installdir)
+	$(MAKE) -C contrib/slapd-modules/lastbind install DESTDIR=$(installdir)
+	$(MAKE) -C contrib/slapd-modules/passwd/sha2 install DESTDIR=$(installdir)
 
 	# Empty the dependency_libs file in the .la files.
 	for F in $(installdir)/usr/lib/ldap/*.la; do \
 		sed -i "s/^dependency_libs=.*/dependency_libs=''/" $$F; \
 	done
-
+	
 	# Check all built libraries for unresolved symbols except for the
 	# libslapi library.  It is a special case since the SLAPI interface
 	# depends on symbols defined in slapd itself.  Those symbols will
@@ -105,16 +133,8 @@ override_dh_install:
 	rm -rf $(CURDIR)/debian/slapd/usr/lib/ldap/smbkrb5pwd*
 	chmod 0755 $(CURDIR)/debian/slapd/usr/share/slapd/ldiftopasswd
 
-	# install AppArmor profile
-	install -D -m 644 $(CURDIR)/debian/apparmor-profile $(CURDIR)/debian/slapd/etc/apparmor.d/usr.sbin.slapd
-
-	# install ufw profile
-	install -D -m 644 $(CURDIR)/debian/slapd.ufw.profile $(CURDIR)/debian/slapd/etc/ufw/applications.d/slapd
-
-	dh_apparmor -pslapd --profile-name=usr.sbin.slapd
-
 override_dh_installinit:
-	dh_installinit --upstart-only
+	dh_installinit -- "defaults 19 80"
 
 override_dh_strip:
 	dh_strip -plibldap-2.4-2 --dbg-package=libldap-2.4-2-dbg
@@ -138,6 +158,8 @@ override_dh_makeshlibs:
 	# at all, but that requires adjusting the build scripts first to
 	# link against libldap_r, otherwise dh_shlibdeps fails
 	#dh_makeshlibs -plibldap-2.4-2 -V 'libldap-2.4-2 (>= 2.4.7)'
+	mkdir -p debian/libldap-2.4-2/DEBIAN
+	cp -p debian/libldap-2.4-2.shlibs debian/libldap-2.4-2/DEBIAN/shlibs
 	echo "slapd:Provides=$$(objdump -p debian/slapd/usr/lib/$(DEB_HOST_MULTIARCH)/libslapi-*.so.* \
 		| sed -ne '/SONAME/ { s/[[:space:]]*SONAME[[:space:]]*//; \
 		                      s/\.so\./-/; p; q }' \
@@ -159,17 +181,24 @@ override_dh_auto_clean:
 	    done; \
 	fi
 
-	rm -f contrib/slapd-modules/nssov/nss-pam-ldapd/config.sub contrib/slapd-modules/nssov/nss-pam-ldapd/config.guess
-
 	# Clean the contrib directory
 	rm -rf contrib/slapd-modules/smbk5pwd/.libs \
 		contrib/slapd-modules/smbk5pwd/smbk5pwd.lo \
 		contrib/slapd-modules/smbk5pwd/smbk5pwd.la \
 		contrib/slapd-modules/smbk5pwd/smbk5pwd.o
+	rm -rf contrib/slapd-modules/smbkrb5pwd/.libs \
+		contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.lo \
+		contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.la \
+		contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.o
 	rm -rf contrib/slapd-modules/autogroup/.libs \
 		contrib/slapd-modules/autogroup/autogroup.lo \
 		contrib/slapd-modules/autogroup/autogroup.la \
 		contrib/slapd-modules/autogroup/autogroup.o
-
-override_dh_auto_test:
-	@echo "No tests today."
+	rm -rf contrib/slapd-modules/lastbind/.libs \
+		contrib/slapd-modules/lastbind/lastbind.lo \
+		contrib/slapd-modules/lastbind/lastbind.la \
+		contrib/slapd-modules/lastbind/lastbind.o
+	rm -rf contrib/slapd-modules/passwd/sha2/.libs \
+		contrib/slapd-modules/passwd/sha2/pw-sha2.lo \
+		contrib/slapd-modules/passwd/sha2/pw-sha2.la \
+		contrib/slapd-modules/passwd/sha2/pw-sha2.o

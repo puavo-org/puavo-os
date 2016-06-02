@@ -1,22 +1,22 @@
-# translation of openldap_2.4.23-3exp1_eu.po to Basque
+# Basque translation for openldap_2.4.40-2_eu.po
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 #
 # Piarres Beobide <pi@beobide.net>, 2008.
-# Iñaki Larrañaga Murgoitio <dooteo@euskalgnu.org>, 2010.
+# Iñaki Larrañaga Murgoitio <dooteo@zundan.com>, 2010, 2014.
 msgid ""
 msgstr ""
-"Project-Id-Version: openldap_2.4.23-3exp1_eu\n"
+"Project-Id-Version: openldap_2.4.40-2_eu\n"
 "Report-Msgid-Bugs-To: openldap@packages.debian.org\n"
-"POT-Creation-Date: 2010-07-15 22:05+0200\n"
-"PO-Revision-Date: 2010-07-27 10:35+0200\n"
-"Last-Translator: Iñaki Larrañaga Murgoitio <dooteo@euskalgnu.org>\n"
+"POT-Creation-Date: 2014-10-20 22:17-0700\n"
+"PO-Revision-Date: 2014-10-28 10:15+0100\n"
+"Last-Translator: Iñaki Larrañaga Murgoitio <dooteo@zundan.com>\n"
 "Language-Team: Basque <debian-l10n-basque@lists.debian.org>\n"
-"Language: \n"
+"Language: eu\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: KBabel 1.11.4\n"
+"X-Generator: Lokalize 1.4\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. Type: boolean
@@ -261,7 +261,7 @@ msgstr "slapcat-ek huts egin du bertsio-berritzean"
 #. Description
 #: ../slapd.templates:15001
 msgid "An error occurred while upgrading the LDAP directory."
-msgstr "Errore bat gertatu da LDAP direktorioa bertsio-berritzean."
+msgstr "Errorea gertatu da LDAP direktorioa bertsio-berritzean."
 
 #. Type: error
 #. Description
@@ -314,21 +314,68 @@ msgstr "Datu-basearen motorra:"
 #. Description
 #: ../slapd.templates:16001
 msgid ""
-"The HDB backend is recommended. HDB and BDB use similar storage formats, but "
-"HDB adds support for subtree renames. Both support the same configuration "
-"options."
+"HDB and BDB use similar storage formats, but HDB adds support for subtree "
+"renames. Both support the same configuration options."
 msgstr ""
-"HDB motorra gomendatzen da. HDB eta BDB motorrek antzeko biltegiratze "
-"formatuak erabiltzen dituzte, baina HDB-ek azpizuhaitzak berrizendatzeko "
-"euskarria dauka. Biek konfigurazioko aukera berdinak onartzen dituzte."
+"HDB eta BDB motorrek antzeko biltegiratze formatuak erabiltzen dituzte, "
+"baina HDB-ek azpizuhaitzak berrizendatzeko euskarria dauka. Biek "
+"konfigurazioko aukera berdinak onartzen dituzte."
 
 #. Type: select
 #. Description
 #: ../slapd.templates:16001
 msgid ""
-"In either case, you should review the resulting database configuration for "
-"your needs. See /usr/share/doc/slapd/README.DB_CONFIG.gz for more details."
+"The MDB backend is recommended. MDB uses a new storage format and requires "
+"less configuration than BDB or HDB."
 msgstr ""
-"Edozein kasutan, sortutako datu-basearen konfigurazioa begiratu beharko "
+"MDB motorra gomendatzen da. MDB-ek biltegiratze formatu berri bat erabiltzen "
+"du, eta BDB edo HDB baino konfigurazio gutxiago eskatzen du."
+
+#. Type: select
+#. Description
+#: ../slapd.templates:16001
+msgid ""
+"In any case, you should review the resulting database configuration for your "
+"needs. See /usr/share/doc/slapd/README.Debian.gz for more details."
+msgstr ""
+"Edozein kasutan, sortutako datu-basearen konfigurazioa gainbegiratu beharko "
 "zenuke zure beharrei erantzuten diela ziurtatzeko. Irakurri /usr/share/doc/"
-"slapd/README.DB_CONFIG.gz xehetasun gehiagorako."
+"slapd/README.Debian.gz xehetasun gehiagorako."
+
+#. Type: note
+#. Description
+#: ../slapd.templates:17001
+msgid "Potentially unsafe slapd access control configuration"
+msgstr "Potentzialki ez-segurua den slapd atzitzeko kontrolaren konfigurazioa"
+
+#. Type: note
+#. Description
+#: ../slapd.templates:17001
+msgid ""
+"One or more of the configured databases has an access control rule that "
+"allows users to modify most of their own attributes. This may be unsafe, "
+"depending on how the database is used."
+msgstr ""
+"Konfiguratutako datu-base batek (edo gehiagok) erabiltzaileek beraien "
+"atributu gehienak aldatzeko baimentzen duen atzipeneko kontrol-arau bat du. "
+"Hau ez-segurua izan daiteke, datu-basea nola erabiltzen den arabera."
+
+#. Type: note
+#. Description
+#. Translators: keep "by self write" and "to *" unchanged. These are part
+#. of the slapd configuration and are not translatable.
+#: ../slapd.templates:17001
+msgid ""
+"In the case of slapd access rules that begin with \"to *\", it is "
+"recommended to remove any instances of \"by self write\", so that users are "
+"only able to modify specifically allowed attributes."
+msgstr ""
+"slapd-ren \"to *\"-rekin hasten diren atzipen arauen kasuan, \"by self write"
+"\"-ren instantziak kentzea gomendatzen da. Horrela, erabiltzaileek bereziki "
+"baimendutako atributuak soilik alda ditzakete."
+
+#. Type: note
+#. Description
+#: ../slapd.templates:17001
+msgid "See /usr/share/doc/slapd/README.Debian.gz for more details."
+msgstr "Irakurri /usr/share/doc/slapd/README.Debian.gz xehetasun gehiagorako."

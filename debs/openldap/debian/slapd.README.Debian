@@ -7,6 +7,10 @@ Notes about Debian's slapd package
   reportbug and not to upstream; upstream is not responsible for changes
   made in the Debian package.
 
+  In addition to the man pages shipped with this package, please consult
+  the OpenLDAP Admin Guide for more information, including configuration
+  examples for common use cases. <http://www.openldap.org/doc/admin24/>
+
 The OpenLDAP configuration
 
   Since version 2.4.23-3 the configuration of OpenLDAP has been changed to
@@ -26,10 +30,25 @@ The OpenLDAP configuration
   For configuration options see the several manpages that exist or the
   documentation provided upstream.
 
+Using the MDB Backend
+
+  MDB is a new database backend using the LMDB library created by the
+  OpenLDAP developers. The MDB backend has fewer configuration
+  parameters than HDB/BDB and generally does not require hand tuning.
+
+  The database is stored in a sparse file with a specified maximum size.
+  The size should be set larger than the database is ever anticipated to
+  grow, but can be increased later if needed. When the MDB backend is
+  chosen during initial configuration, the Debian package configures the
+  automatically created database with a maximum size of 1 GiB.
+
+  The space currently used by the database can be found using du(1); for
+  example: du -h /var/lib/ldap/data.mdb
+
 Using BDB/HDB Backends
 
-  HDB is the recommended database backend.  It's the same as BDB but
-  allows some additional operations.
+  HDB was the recommended backend before MDB was developed. It's the
+  same as BDB but allows some additional operations.
    
   slapd BDB and HDB backends rely on libdb to store data on your disks.
   libdb uses a configuration file to tune database specific
@@ -45,15 +64,31 @@ Using BDB/HDB Backends
 
 BerkeleyDB Version
 
-  slapd has been built against version 4.8.30 of BerkeleyDB. This version is
-  supported by the upstream developers.
+  slapd has been built against version 5.3.28 of BerkeleyDB.
 
   slapd will automatically handle database recovery, so you generally do
   not need the BerkeleyDB utilities.  However, if you want to perform
   other operations directly on the raw database without using the slapd
-  tools, install db4.8-util and use those BerkeleyDB utilities. Utilities
+  tools, install db5.3-util and use those BerkeleyDB utilities. Utilities
   from other db*-util packages will not work correctly and may render the
   database unusable by slapd.
+
+BerkeleyDB database format upgrades
+
+  When upgrading slapd to a new version where the Berkeley DB library's
+  storage format has changed, the database has to be backed up using
+  slapcat(8) before upgrading and restored using slapadd(8) afterwards.
+  Normally the maintainer scripts will handle this automatically,
+  performing the dump and restore as needed.
+
+  If, after upgrading, slapd fails to start and you see the message
+  "Program version doesn't match environment version" in syslog, then
+  the DB version may have changed without a dump and reload. This should
+  be reported as a bug in the slapd package. In this case you will have
+  to downgrade slapd to the previous version as the new tools are unable
+  to dump the old database, and the same error would prevent you from
+  upgrading to the fixed version. Old package versions can be
+  found at <http://snapshot.debian.org> if needed.
 
 Logging
 
@@ -109,8 +144,8 @@ Running slapd under a Different UID/GID
 
   - Tell linux slapd can access configuration files -- usually:
 
-      chgrp -R <group> /etc/ldap/slapd.d
-      chmod -R g+rX /etc/ldap/slapd.d
+      chgrp <group> /etc/ldap/slapd.conf
+      chmod 0640 /etc/ldap/slapd.conf
 
   - Tell linux slapd can access /var/run/slapd and write a PID file:
 
@@ -201,13 +236,46 @@ Modifications Compared to Upstream
 
  -- Russ Allbery <rra@debian.org>, Thu, 14 Feb 2008 18:47:07 -0800
 
-Apparmor Profile
-----------------
+Unsafe access control rule installed by default in previous versions
 
-  If your system uses AppArmor, please note that the shipped enforcing profile
-  works with the default installation, and changes in your configuration may
-  require changes to the installed apparmor profile. Please see
-  https://wiki.ubuntu.com/DebuggingApparmor before filing a bug against this
-  software.
+  Versions of slapd before 2.4.40-1 configured the default database with 
+  an access control rule of the form:
 
- -- Jamie Strandboge <jamie@ubuntu.com>, Mon,  4 Feb 2008 21:18:21 -0500
+  to *
+    by self write
+    by dn="cn=admin,dc=example,dc=com" write
+    by * read
+
+  Depending on how the database and client applications are configured, 
+  users might be able to impersonate others by editing attributes such 
+  as their Unix user and group numbers, or other application-specific 
+  attributes.
+
+  New installations no longer include "by self write", but existing 
+  configurations will not be automatically modified.
+
+  To list your current access control rules, use the command:
+
+    ldapsearch -Y EXTERNAL -H ldapi:/// -b 'cn=config' '(olcAccess=*)' olcAccess
+
+  To fix the problem, create an LDIF file to replace the rules as 
+  needed. For example:
+
+    dn: olcDatabase={1}hdb,cn=config
+    delete: olcAccess
+    olcAccess: {2}
+    -
+    add: olcAccess
+    olcAccess: {2}to * by dn="cn=admin,dc=example,dc=com" write by * read
+
+  Adjust the database DN, the administrative DN, and the rule numbers 
+  according to your configuration, following the output from ldapsearch.
+
+  Next, apply the configuration changes from the file:
+
+    ldapmodify -Y EXTERNAL -H ldapi:/// -f mods.ldif
+
+  For more information about access control rules, refer to the 
+  slapd.access(5) man page.
+
+ -- Ryan Tandy <ryan@nardis.ca>, Mon, 20 Oct 2014 11:45:20 -0700

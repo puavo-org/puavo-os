@@ -4,13 +4,13 @@ Author: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
 
 Index: openldap/contrib/slapd-modules/nssov/Makefile
 ===================================================================
---- openldap.orig/contrib/slapd-modules/nssov/Makefile	2013-11-14 09:26:36.986928991 +0200
-+++ openldap/contrib/slapd-modules/nssov/Makefile	2013-11-14 09:28:54.598932329 +0200
+--- a/contrib/slapd-modules/nssov/Makefile
++++ b/contrib/slapd-modules/nssov/Makefile
 @@ -17,7 +17,7 @@
  
  # Path to the OpenLDAP object tree - same as above unless
  # you're doing out-of-tree builds.
--LDAP_BUILD=../../..
+-LDAP_BUILD=$(LDAP_SRC)
 +LDAP_BUILD=$(LDAP_SRC)/debian/build
  
  LDAP_INC = -I$(LDAP_BUILD)/include -I$(LDAP_SRC)/include -I$(LDAP_SRC)/servers/slapd

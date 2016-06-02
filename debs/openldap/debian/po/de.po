@@ -1,13 +1,13 @@
 # Translation of openldap debconf templates to German
-# Copyright (C) Helge Kreutzmann <debian@helgefjell.de>, 2006-2008, 2010.
+# Copyright (C) Helge Kreutzmann <debian@helgefjell.de>, 2006-2008, 2010, 2014.
 # This file is distributed under the same license as the openldap package.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: openldap 2.4.21-1\n"
 "Report-Msgid-Bugs-To: openldap@packages.debian.org\n"
-"POT-Creation-Date: 2010-07-15 22:05+0200\n"
-"PO-Revision-Date: 2010-04-28 21:19+0200\n"
+"POT-Creation-Date: 2014-10-20 22:17-0700\n"
+"PO-Revision-Date: 2014-11-01 18:34+0100\n"
 "Last-Translator: Helge Kreutzmann <debian@helgefjell.de>\n"
 "Language-Team: de <debian-l10n-german@lists.debian.org>\n"
 "Language: \n"
@@ -19,7 +19,7 @@ msgstr ""
 #. Description
 #: ../slapd.templates:1001
 msgid "Omit OpenLDAP server configuration?"
-msgstr "Soll die OpenLDAP-Server-Konfiguration ausgelassen werden?"
+msgstr "OpenLDAP-Server-Konfiguration auslassen?"
 
 #. Type: boolean
 #. Description
@@ -104,7 +104,7 @@ msgstr ""
 "erstellt, die zu den im Server befindlichen Suchbasen korrespondieren. "
 "Stellen Sie sicher, dass Sie genug freien Platz auf der Partition haben, auf "
 "der sich das Verzeichnis befindet. Das erste Auftreten der Zeichenkette "
-"»VERSION« wird mit der Server-Version ersetzt, von der aus Sie das Upgrade "
+"»VERSION« wird durch die Server-Version ersetzt, von der aus Sie das Upgrade "
 "durchführen."
 
 #. Type: boolean
@@ -227,8 +227,8 @@ msgstr "Passwörter stimmen nicht überein"
 #: ../slapd.templates:10001
 msgid "The two passwords you entered were not the same. Please try again."
 msgstr ""
-"Die beiden Passwörter, die Sie eingegeben haben, sind nicht gleich. Bitte "
-"versuchen Sie es noch einmal."
+"Die beiden eingegebenen Passwörter sind nicht gleich. Bitte versuchen Sie es "
+"noch einmal."
 
 #. Type: boolean
 #. Description
@@ -310,8 +310,8 @@ msgid ""
 "Then move the database files back to a backup area and then try running "
 "slapadd from ${location}."
 msgstr ""
-"Verschieben Sie dann die Datenbankdateien zurück in den Backup-Bereich und "
-"versuche Sie, slapadd von ${location} auszuführen."
+"Verschieben Sie dann die Datenbankdateien zurück in den Sicherungsbereich und "
+"versuchen Sie, Slapadd von ${location} auszuführen."
 
 #. Type: select
 #. Description
@@ -323,11 +323,10 @@ msgstr "Zu verwendendes Datenbank-Backend:"
 #. Description
 #: ../slapd.templates:16001
 msgid ""
-"The HDB backend is recommended. HDB and BDB use similar storage formats, but "
-"HDB adds support for subtree renames. Both support the same configuration "
-"options."
+"HDB and BDB use similar storage formats, but HDB adds support for subtree "
+"renames. Both support the same configuration options."
 msgstr ""
-"Das HDB-Backend wird empfohlen. HDB und BDB verwenden ähnliche "
+"HDB und BDB verwenden ähnliche "
 "Speicherformate, aber HDB enthält zusätzlich Unterstützung für Teilbaum-"
 "Umbenennungen. Beide unterstützen die gleichen Konfigurationsoptionen."
 
@@ -335,12 +334,61 @@ msgstr ""
 #. Description
 #: ../slapd.templates:16001
 msgid ""
-"In either case, you should review the resulting database configuration for "
-"your needs. See /usr/share/doc/slapd/README.DB_CONFIG.gz for more details."
+"The MDB backend is recommended. MDB uses a new storage format and requires "
+"less configuration than BDB or HDB."
 msgstr ""
-"In jedem Fall sollten Sie die erstellte Datenbankkonfiguration in Hinblick "
+"Das MDB-Backend wird empfohlen. MDB verwendet ein neues Speicherformat und "
+"benötigt weniger Konfiguration als BDB oder HDB."
+
+#. Type: select
+#. Description
+#: ../slapd.templates:16001
+msgid ""
+"In any case, you should review the resulting database configuration for your "
+"needs. See /usr/share/doc/slapd/README.Debian.gz for more details."
+msgstr ""
+"In jedem Fall sollten Sie die erstellte Datenbankkonfiguration im Hinblick "
 "auf Ihre Anforderungen prüfen. Lesen Sie /usr/share/doc/slapd/README."
-"DB_CONFIG.gz für weitere Details."
+"Debian.gz für weitere Details."
+
+#. Type: note
+#. Description
+#: ../slapd.templates:17001
+msgid "Potentially unsafe slapd access control configuration"
+msgstr "Möglicherweise unsichere Slapd-Zugriffssteuerkonfiguration"
+
+#. Type: note
+#. Description
+#: ../slapd.templates:17001
+msgid ""
+"One or more of the configured databases has an access control rule that "
+"allows users to modify most of their own attributes. This may be unsafe, "
+"depending on how the database is used."
+msgstr ""
+"Eine oder mehrere der konfigurierten Datenbanken hat eine Zugriffssteuerregel, "
+"die Benutzern erlaubt, die meisten ihrer eigenen Konfigurationsoptionen zu "
+"verändern. Dies kann unsicher sein, abhängig davon, wie die Datenbank "
+"verwandt wird."
+
+#. Type: note
+#. Description
+#. Translators: keep "by self write" and "to *" unchanged. These are part
+#. of the slapd configuration and are not translatable.
+#: ../slapd.templates:17001
+msgid ""
+"In the case of slapd access rules that begin with \"to *\", it is "
+"recommended to remove any instances of \"by self write\", so that users are "
+"only able to modify specifically allowed attributes."
+msgstr ""
+"Im Falle der mit »to *« beginnenden Slapd-Zugriffsregeln, wird empfohlen, "
+"alle Instanzen von »by self write« zu entfernen, so dass Benutzer nur in der "
+"Lage sind, speziell erlaubte Attribute zu ändern."
+
+#. Type: note
+#. Description
+#: ../slapd.templates:17001
+msgid "See /usr/share/doc/slapd/README.Debian.gz for more details."
+msgstr "Lesen Sie /usr/share/doc/slapd/README.Debian.gz für weitere Details."
 
 #~ msgid "slurpd is obsolete; replicas must be reconfigured by hand"
 #~ msgstr "Slurpd ist veraltet; Replikas müssen von Hand rekonfiguriert werden"

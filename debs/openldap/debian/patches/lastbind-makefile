@@ -1,6 +1,6 @@
---- a/contrib/slapd-modules/autogroup/Makefile
-+++ b/contrib/slapd-modules/autogroup/Makefile
-@@ -2,11 +2,11 @@
+--- a/contrib/slapd-modules/lastbind/Makefile
++++ b/contrib/slapd-modules/lastbind/Makefile
+@@ -12,11 +12,11 @@
  
  LDAP_SRC = ../../..
  LDAP_BUILD = $(LDAP_SRC)
@@ -15,9 +15,9 @@
 +LIBTOOL = $(LDAP_BUILD)/debian/build/libtool
  CC = gcc
  OPT = -g -O2 -Wall
- DEFS = 
-@@ -16,13 +16,13 @@ LIBS = $(LDAP_LIB)
- PROGRAMS = autogroup.la
+ DEFS = -DSLAPD_OVER_LASTBIND=SLAPD_MOD_DYNAMIC
+@@ -26,13 +26,13 @@
+ PROGRAMS = lastbind.la
  LTVER = 0:0:0
  
 -prefix=/usr/local

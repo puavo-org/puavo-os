@@ -1,37 +1,172 @@
-openldap (2.4.40-33+opinsys2) precise; urgency=medium
-
-  * Rebuild.
-
- -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Tue, 03 Feb 2015 14:56:25 +0200
-
-openldap (2.4.40-33+opinsys1) precise; urgency=medium
-
-  * Fix multiarch builds by not generating debian/changelog
-
-  * Version number is semantically wrong now: this package is not
-    packaged 33 times in Debian. It should be 2.4.40-0+opinsys2. But
-    previous production version was
-    2.4.40-32+precise+master.21fcec099230abffa0181ee8ac21e6f11630bb85
-    so this just tries to be a bit newer. Version number must be fixed
-    when a newer upstream version is packaged.
-
- -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Mon, 02 Feb 2015 11:01:42 +0200
-
-openldap (2.4.40-0+opinsys1) precise; urgency=high
+openldap (2.4.44+opinsys1) precise; urgency=medium
 
   * New upstream version
-  * debian/ based on Debian's 2.4.39 packaging
-  * Included Opinsys patches:
-    - opinsys-increase-max-number-of-ldap-keys
-      To increase the maximum number of databases
-    - opinsys-increase-max-rewrite-passes
-      To increase the maximum number of olcAuthzRegexp attributes in cn=config
-    - opinsys-smbkrb5pwd
-      https://github.com/opinsys/smbkrb5pwd/ @ 049d3b1661
-    - opinsys-fix-smbkrb5pwd-makefile
-      Fix upstream paths to match debian build environment
 
- -- Veli-Matti Lintu <veli-matti.lintu@opinsys.fi>  Thu, 02 Oct 2014 17:34:44 +0300
+ -- Veli-Matti Lintu <veli-matti.lintu@opinsys.fi>  Wed, 01 Jun 2016 17:04:12 +0300
+
+openldap (2.4.40+dfsg-1+deb8u2) jessie; urgency=medium
+
+  * debian/patches/ITS8003-fix-off-by-one-in-LDIF-length.patch: Import
+    upstream patch to fix a crash when adding a large attribute value with the
+    auditlog overlay enabled. (Closes: #806909)
+
+ -- Ryan Tandy <ryan@nardis.ca>  Sat, 12 Dec 2015 16:11:38 -0800
+
+openldap (2.4.40+dfsg-1+deb8u1) jessie-security; urgency=high
+
+  * Non-maintainer upload by the Security Team.
+  * Add ITS8240-remove-obsolete-assert.patch patch.
+    Import upstream patch to remove an unnecessary assert(0) that could be
+    triggered remotely by an unauthenticated user by sending a malformed BER
+    element. (CVE-2015-6908, Closes: #798622)
+
+ -- Salvatore Bonaccorso <carnil@debian.org>  Fri, 11 Sep 2015 10:30:43 +0200
+
+openldap (2.4.40+dfsg-1) unstable; urgency=medium
+
+  * Remove inetorgperson.schema from the upstream source. Replace it with a
+    copy stripped of RFC text. (Closes: #780283)
+  * Adjust debian/watch for +dfsg versioning.
+  * debian/patches/ITS7975-fix-mdb-onelevel-search.patch: Import upstream
+    patch to fix scope=onelevel searches wrongly including the search base in
+    results under the MDB backend. (ITS#7975) (Closes: #782212)
+
+ -- Ryan Tandy <ryan@nardis.ca>  Thu, 09 Apr 2015 08:38:38 -0700
+
+openldap (2.4.40-4) unstable; urgency=medium
+
+  * debian/patches/ITS8027-deref-reject-empty-attr-list.patch: Import upstream 
+    patch to fix a crash when a search includes the Deref control with an 
+    empty attribute list. (ITS#8027) (CVE-2015-1545, Closes: #776988)
+  * debian/patches/ITS8046-fix-vrFilter_free-crash.patch: Import upstream 
+    patch to fix a double free triggered by certain search queries using the 
+    Matched Values control. (ITS#8046) (CVE-2015-1546, Closes: #776991)
+
+ -- Ryan Tandy <ryan@nardis.ca>  Sun, 08 Feb 2015 20:19:11 +0000
+
+openldap (2.4.40-3) unstable; urgency=medium
+
+  * Remove trailing spaces from slapd.templates.
+  * Update Vietnamese debconf translation.
+    Thanks to Trần Ngọc Quân.
+  * Update Danish debconf translation.
+    Thanks to Joe Hansen. (Closes: #766848)
+  * Update Japanese debconf translation.
+    Thanks to Kenshi Muto. (Closes: #766824)
+  * Update Russian debconf translation.
+    Thanks to Yuri Kozlov. (Closes: #766825)
+  * Update Basque translation.
+    Thanks to Iñaki Larrañaga Murgoitio. (Closes: #767070)
+  * Update French debconf translation.
+    Thanks to Christian Perrier. (Closes: #767634)
+  * Update German debconf translation.
+    Thanks to Helge Kreutzmann. (Closes: #767686)
+  * Update Portuguese debconf translation.
+    Thanks to Ricardo Silva. (Closes: #768085)
+  * Update Italian debconf translation.
+    Thanks to Luca Monducci. (Closes: #768195)
+  * Update Turkish debconf translation.
+    Thanks to Atila KOÇ. (Closes: #768409)
+  * Update Czech debconf translation.
+    Thanks to Miroslav Kure. (Closes: #768591)
+  * Update Catalan debconf translation.
+    Thanks to Innocent De Marchi. (Closes: #768605)
+  * Update Dutch debconf translation.
+    Thanks to Frans Spiesschaert. (Closes: #769024)
+  * Update Brazilian Portuguese debconf translation.
+    Thanks to Adriano Rafael Gomes. (Closes: #769717)
+  * Update Galician debconf translation.
+    Thanks to Jorge Barreiro.
+  * Update Swedish debconf translation.
+    Thanks to Martin Bagge / brother. (Closes: #769867)
+  * Update Spanish debconf translation.
+    Thanks to Camaleón. (Closes: #770715)
+  * Fix doubled spaces in po files, caused by trailing spaces in the templates
+    file.
+  * Run debconf-updatepo to refresh PO files.
+
+ -- Ryan Tandy <ryan@nardis.ca>  Sun, 23 Nov 2014 10:33:10 -0800
+
+openldap (2.4.40-2) unstable; urgency=medium
+
+  * Fix typo (chmod/chgrp) in previous changelog, spotted by Ferenc Wagner.
+  * debian/patches/contrib-modules-use-dpkg-buildflags: Also use CPPFLAGS from
+    dpkg-buildflags. Spotted by Lintian.
+  * debian/slapd.init.ldif: Don't bother explicitly granting rights to the
+    rootdn, since it already has unlimited privileges. Thanks Ferenc Wagner.
+  * Recommend MDB for new installations, per upstream's recommendation.
+  * Don't re-create the default DB_CONFIG if there wasn't one in the backup,
+    for example if the active backend doesn't use it. Thanks Ferenc Wagner.
+  * On upgrade, if an access rule begins with "to * by self write", show a 
+    debconf note warning that it should be changed. (Closes: #761406)
+  * Build and install the lastbind contrib module. (Closes: #701111)
+  * Build and install the passwd/sha2 contrib module. (Closes: #746727)
+
+ -- Ryan Tandy <ryan@nardis.ca>  Mon, 20 Oct 2014 22:19:24 -0700
+
+openldap (2.4.40-1) unstable; urgency=low
+
+  [ Ryan Tandy ]
+  * New upstream release.
+    - fixed ldap_get_dn(3) ldap_ava definition (ITS#7860) (Closes: #465024)
+    - fixed slapcat with external schema (ITS#7895) (Closes: #599235)
+    - fixed double free with invalid ciphersuite (ITS#7500) (Closes: #640384)
+    - fixed modrdn crash on naming attr with no matching rule (ITS#7850)
+      (Closes: #666515)
+    - fixed slapacl causing unclean database (ITS#7827) (Closes: #741248)
+  * slapd.scripts-common:
+    - Anchor grep patterns to avoid matching commented lines in ldif files 
+      under cn=config. (Closes: #723957)
+    - Don't silently ignore nonexistent directories that should be dumped.
+    - Invoke find, chown, and chgrp with -H in case /var/lib/ldap is a 
+      symlink. (Closes: #742862)
+    - When upgrading a database, ignore extra nested directories as they might 
+      contain other databases. Patch from Kenny Millington. (LP: #1003854)
+    - Fix dumping and reloading when multiple databases hold the same suffix,
+      thanks Peder Stray. (Closes: #759596, LP: #1362481)
+    - Remove trailing dot from slapd/domain. (Closes: #637996)
+  * debian/rules:
+    - Enable parallel building.
+    - Copy libldap-2.4-2.shlibs into place manually, as a workaround for
+      #676168. (Closes: #742841)
+  * debian/slapd.README.Debian: Add a note about database format upgrades and 
+    the consequences of missing one. (Closes: #594711)
+  * Build with GnuTLS 3 (Closes: #745231, #760559).
+  * Drop debian/patches/fix-ftbfs-binutils-gold, no longer needed.
+  * Drop debconf-utils from Build-Depends, no longer used (replaced by 
+    po-debconf). Thanks Johannes Schauer.
+  * Acknowledge NMU fixing #729367, thanks to Michael Gilbert.
+  * Offer the MDB backend as a choice during initial configuration. (Closes:
+    #750022)
+  * debian/slapd.init.ldif:
+    - Disallow modifying one's own entry by default, except specific
+      attributes. (Closes: #761406)
+    - Index some more common search attributes by default. (Closes: #762111)
+  * Introduce a symbols file for libldap-2.4-2.
+  * debian/schema/pmi.schema: Add a copyright clarification. There does not
+    appear to be any copyrighted text in this file, only ASN.1 assignments and
+    LDAP schema definitions. Fixes a Lintian error on the original.
+  * debian/schema/duaconf.schema: Strip Internet-Draft text from
+    duaconf.schema.
+  * Drop debian/patches/CVE-2013-4449.patch, applied upstream.
+  * Update debian/patches/no-AM_INIT_AUTOMAKE with upstream changes.
+  * debian/schema/ppolicy.schema: Update with ordering rules added in
+    draft-behera-ldap-password-policy-11.
+  * Suggest GSSAPI SASL modules. (Closes: #762424)
+  * debian/patches/ITS6035-olcauthzregex-needs-restart.patch: Document in 
+    slapd-config.5 the fact that changes to olcAuthzRegexp only take effect 
+    after the server is restarted. (Closes: #761407)
+  * Add myself to Uploaders.
+
+  [ Jelmer Vernooij ]
+  * Depend on heimdal-multidev rather than heimdal-dev. (Closes: #745356, 
+    #706123)
+
+  [ Updated debconf translations ]
+  * Turkish, thanks to Atila KOÇ <akoc@artielektronik.com.tr>.
+    (Closes: #661641)
+
+ -- Ryan Tandy <ryan@nardis.ca>  Fri, 17 Oct 2014 08:19:28 -0700
 
 openldap (2.4.39-1.1) unstable; urgency=high
 

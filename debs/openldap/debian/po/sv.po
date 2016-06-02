@@ -8,18 +8,16 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openldap_2.4.10-2_sv\n"
 "Report-Msgid-Bugs-To: openldap@packages.debian.org\n"
-"POT-Creation-Date: 2010-07-15 22:05+0200\n"
-"PO-Revision-Date: 2010-05-03 22:26+0100\n"
-"Last-Translator: Martin Bagge <brother@bsnet.se>\n"
+"POT-Creation-Date: 2014-10-20 22:17-0700\n"
+"PO-Revision-Date: 2014-11-17 10:35+0100\n"
+"Last-Translator: Martin Bagge / brother <brother@bsnet.se>\n"
 "Language-Team: Swedish <debian-l10n-swedish@lists.debian.org>\n"
 "Language: sv\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: KBabel 1.11.4\n"
+"X-Generator: Poedit 1.6.10\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Poedit-Language: Swedish\n"
-"X-Poedit-Country: Sweden\n"
 
 #. Type: boolean
 #. Description
@@ -127,7 +125,7 @@ msgid ""
 msgstr ""
 "Det finns fortfarande filer i /var/lib/ldap/ som troligen kommer göra att "
 "konfigurationsprocessen inte fungerar. Om du aktiverar detta val, kommer "
-"adminstrationsskripten att flytta den gamla databasfilen ur vägen innan en "
+"administrationsskripten att flytta den gamla databasfilen ur vägen innan en "
 "ny databas skapas."
 
 #. Type: boolean
@@ -148,8 +146,8 @@ msgid ""
 msgstr ""
 "Konfigurationen du angav är ogiltig. Säkerställ att DNS-domännamnet är "
 "syntaktiskt giltigt, att organisationsfältet inte lämnats tomt och att "
-"administratörslösenorden överrensstämmer. Om du väljer att inte försöka "
-"konfigurera igen kommer LDAP-servern inte att ha korrekta instääkningar. Kör "
+"administratörslösenorden överensstämmer. Om du väljer att inte försöka "
+"konfigurera igen kommer LDAP-servern inte att ha korrekta inställningar. Kör "
 "\"dpkg-reconfigure slapd\" om du vill försöka igen senare."
 
 #. Type: string
@@ -314,24 +312,69 @@ msgstr "Databasbakända att använda:"
 #. Description
 #: ../slapd.templates:16001
 msgid ""
-"The HDB backend is recommended. HDB and BDB use similar storage formats, but "
-"HDB adds support for subtree renames. Both support the same configuration "
-"options."
+"HDB and BDB use similar storage formats, but HDB adds support for subtree "
+"renames. Both support the same configuration options."
 msgstr ""
-"HDB-bakändan är rekommenderad. HDB och BDB använder liknande lagringsformat, "
-"men HDB lägger till stöd för namnbyten på underträd. Båda stödjer samma "
-"konfigurationsalternativ."
+"HDB och BDB använder liknande lagringsformat, men HDB lägger till stöd för "
+"namnbyten på underträd. Båda stödjer samma konfigurationsalternativ."
 
 #. Type: select
 #. Description
 #: ../slapd.templates:16001
 msgid ""
-"In either case, you should review the resulting database configuration for "
-"your needs. See /usr/share/doc/slapd/README.DB_CONFIG.gz for more details."
+"The MDB backend is recommended. MDB uses a new storage format and requires "
+"less configuration than BDB or HDB."
+msgstr ""
+"MDB-bakändan är rekommenderad. MDB använder ett nytt lagringsformat och "
+"behöver mindre inställningar än BDB eller HDB."
+
+#. Type: select
+#. Description
+#: ../slapd.templates:16001
+msgid ""
+"In any case, you should review the resulting database configuration for your "
+"needs. See /usr/share/doc/slapd/README.Debian.gz for more details."
 msgstr ""
 "I vilket fall, behöver du se över den resulterande databaskonfigurationen "
-"för dina behov. Se /usr/share/doc/slapd/README.DB_CONFIG.gz för fler "
-"detaljer."
+"för dina behov. Se /usr/share/doc/slapd/README.Debian.gz för fler detaljer."
+
+#. Type: note
+#. Description
+#: ../slapd.templates:17001
+msgid "Potentially unsafe slapd access control configuration"
+msgstr "Potentiellt osäker rättighetsinställning för slapd"
+
+#. Type: note
+#. Description
+#: ../slapd.templates:17001
+msgid ""
+"One or more of the configured databases has an access control rule that "
+"allows users to modify most of their own attributes. This may be unsafe, "
+"depending on how the database is used."
+msgstr ""
+"En eller flera av de inställda databaserna har rättighetsinställningar som "
+"innebär att användare tillåts att ändra de flesta av sina attribut. Detta "
+"kan vara osäkert, beroende på hur databasen används."
+
+#. Type: note
+#. Description
+#. Translators: keep "by self write" and "to *" unchanged. These are part
+#. of the slapd configuration and are not translatable.
+#: ../slapd.templates:17001
+msgid ""
+"In the case of slapd access rules that begin with \"to *\", it is "
+"recommended to remove any instances of \"by self write\", so that users are "
+"only able to modify specifically allowed attributes."
+msgstr ""
+"I fallen där rättighetsinställningarna börjar med \"to *\" är det "
+"rekommenderat att ta bort \"by self write\" i förekommande fall. Det får "
+"till följd att användare bara får justera specifikt tillåtna attribut."
+
+#. Type: note
+#. Description
+#: ../slapd.templates:17001
+msgid "See /usr/share/doc/slapd/README.Debian.gz for more details."
+msgstr "Läs /usr/share/doc/slapd/README.Debian.gz för detaljerad information."
 
 #~ msgid "slurpd is obsolete; replicas must be reconfigured by hand"
 #~ msgstr "slurpd är inte aktuell; repliker måste konfigureras för hand"

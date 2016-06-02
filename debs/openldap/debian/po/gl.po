@@ -3,26 +3,27 @@
 # This file is distributed under the same license as the openldap package.
 #
 # Jacobo Tarrio <jtarrio@debian.org>, 2006.
-# Jorge Barreiro <yortx.barry@gmail.com>, 2010.
+# Jorge Barreiro <yortx.barry@gmail.com>, 2010, 2014.
 msgid ""
 msgstr ""
-"Project-Id-Version: openldap_2.4.23-2_gl\n"
+"Project-Id-Version: openldap_2.4.40-2_gl\n"
 "Report-Msgid-Bugs-To: openldap@packages.debian.org\n"
-"POT-Creation-Date: 2010-07-15 22:05+0200\n"
-"PO-Revision-Date: 2010-08-13 02:40+0200\n"
+"POT-Creation-Date: 2014-10-20 22:17-0700\n"
+"PO-Revision-Date: 2014-11-17 00:40+0100\n"
 "Last-Translator: Jorge Barreiro <yortx.barry@gmail.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
 "Language: gl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: KBabel 1.11.4\n"
+"X-Generator: Lokalize 1.4\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
 
 #. Type: boolean
 #. Description
 #: ../slapd.templates:1001
 msgid "Omit OpenLDAP server configuration?"
-msgstr "¿Omitir a configuración do servidor OpenLDAP?"
+msgstr "Omitir a configuración do servidor OpenLDAP?"
 
 #. Type: boolean
 #. Description
@@ -31,8 +32,8 @@ msgid ""
 "If you enable this option, no initial configuration or database will be "
 "created for you."
 msgstr ""
-"Se resposta afirmativamente aquí, non se ha crear ningunha configuración ou "
-"base de datos inicial."
+"Se escolle esta opción non se creará ningunha configuración ou base de datos "
+"inicial."
 
 #. Type: select
 #. Choices
@@ -66,7 +67,7 @@ msgid ""
 "LDAP directories can be dumped into plain text files in the standard LDAP "
 "Data Interchange Format."
 msgstr ""
-"Antes de se actualizar a unha nova versión do servidor OpenLDAP, pódense "
+"Antes de actualizar a unha nova versión do servidor OpenLDAP, pódense "
 "envorcar os datos dos seus directorios LDAP a ficheiros de texto normal no "
 "formato estándar LDIF, formato de intercambio de datos LDAP."
 
@@ -79,11 +80,11 @@ msgid ""
 "the new version is incompatible with the old database format and it needs to "
 "be reimported. If you select \"never\", no dump will be done."
 msgstr ""
-"Se escolle \"sempre\" ha facer que as bases de datos se envorquen "
-"incondicionalmente antes de as actualizar. Se escolle \"cando se precise\" "
-"só se ha envorcar a base de datos se a nova versión é incompatible co "
-"formato antigo da base de datos e hai que reimportala. Se escolle \"nunca\" "
-"non se ha envorcar a base de datos."
+"A opción «sempre» fará que as bases de datos se envorquen incondicionalmente "
+"antes dunha actualización. Se escolle «cando se precise» só se ha envorcar a "
+"base de datos se a nova versión é incompatíbel co formato antigo da base de "
+"datos e hai que reimportala. Se escolle «nunca» non se ha envorcar a base de "
+"datos."
 
 #. Type: string
 #. Description
@@ -104,16 +105,16 @@ msgid ""
 msgstr ""
 "Especifique o directorio no que se han exportar as bases de datos LDAP. "
 "Neste directorio hanse crear varios ficheiros LDIF que se corresponden coas "
-"bases de busca armacenadas no servidor. Asegúrese de ter espazo libre "
+"bases de busca almacenadas no servidor. Asegúrese de ter espazo libre "
 "dabondo na partición na que reside o directorio. A primeira aparición da "
-"cadea \"VERSION\" substitúese pola versión do servidor a partires da que se "
+"cadea «VERSION» substitúese pola versión do servidor a partires da que se "
 "actualiza."
 
 #. Type: boolean
 #. Description
 #: ../slapd.templates:4001
 msgid "Move old database?"
-msgstr "¿Trasladar a base de datos antiga?"
+msgstr "Trasladar a base de datos antiga?"
 
 #. Type: boolean
 #. Description
@@ -124,16 +125,16 @@ msgid ""
 "will move the old database files out of the way before creating a new "
 "database."
 msgstr ""
-"Aínda hai ficheiros en /var/lib/ldap que probablemente vaian romper o "
-"proceso de configuración. Se activa esta opción, os scripts do mantedor han "
-"apartar os ficheiros da base de datos antiga antes de crear unha nova base "
+"Aínda hai ficheiros en /var/lib/ldap que probablemente fagan fallar o "
+"proceso de configuración. Se activa esta opción, os «scripts» do mantedor "
+"apartarán os ficheiros da base de datos antiga antes de crear unha nova base "
 "de datos."
 
 #. Type: boolean
 #. Description
 #: ../slapd.templates:5001
 msgid "Retry configuration?"
-msgstr "¿Volver tentar a configuración?"
+msgstr "Volver tentar a configuración?"
 
 #. Type: boolean
 #. Description
@@ -148,8 +149,8 @@ msgstr ""
 "A configuración que introduciu non é válida. Asegúrese de que o nome de "
 "dominio DNS teña unha sintaxe válida, o campo para a organización non quede "
 "baleiro e os contrasinais do administrador coincidan. Se decide non volver "
-"tentar a configuración non se ha configurar o servidor LDAP. Executar \"dpkg-"
-"reconfigure slapd\" se quere volver tentala."
+"tentar a configuración non se ha configurar o servidor LDAP. Execute «dpkg-"
+"reconfigure slapd» se quere volver a tentalo noutro momento."
 
 #. Type: string
 #. Description
@@ -166,8 +167,8 @@ msgid ""
 "dc=example, dc=org' as base DN."
 msgstr ""
 "O nome de dominio DNS emprégase para construír o DN base do directorio LDAP. "
-"Por exemplo, \"foo.example.org\" ha crear o directorio con \"dc=foo, "
-"dc=example, dc=org\" coma DN base."
+"Por exemplo, «foo.example.org» creará o directorio con «dc=foo, dc=example, "
+"dc=org» coma DN base."
 
 #. Type: string
 #. Description
@@ -211,7 +212,7 @@ msgid ""
 "Please enter the admin password for your LDAP directory again to verify that "
 "you have typed it correctly."
 msgstr ""
-"Volva introducir o contrasinal do administrator do seu directorio LDAP para "
+"Volva introducir o contrasinal do administrador do seu directorio LDAP para "
 "comprobar que o introduciu correctamente."
 
 #. Type: note
@@ -230,13 +231,13 @@ msgstr "Os dous contrasinais que introduciu non son iguais. Volva tentalo."
 #. Description
 #: ../slapd.templates:11001
 msgid "Do you want the database to be removed when slapd is purged?"
-msgstr "¿Quere que se elimine a base de datos ao purgar slapd?"
+msgstr "Quere que se elimine a base de datos ao purgar slapd?"
 
 #. Type: boolean
 #. Description
 #: ../slapd.templates:14001
 msgid "Allow LDAPv2 protocol?"
-msgstr "¿Admitir o protocolo LDAPv2?"
+msgstr "Admitir o protocolo LDAPv2?"
 
 #. Type: boolean
 #. Description
@@ -249,8 +250,8 @@ msgid ""
 msgstr ""
 "O protocolo obsoleto LDAPv2 está desactivado por defecto en slapd. Os "
 "programas e os usuarios deberíanse actualizar a LDAPv3. Se ten programas "
-"antigos que non poidan empregar LDAPv3, debería escoller esta opción, que "
-"fará que se engada \"allow bind_v2\" ao ficheiro slapd.conf ."
+"antigos que non poidan empregar LDAPv3 debería escoller esta opción, que "
+"fará que se engada «allow bind_v2» ao ficheiro slapd.conf ."
 
 #. Type: error
 #. Description
@@ -262,7 +263,7 @@ msgstr "Fallou a execución de slapcat durante a actualización"
 #. Description
 #: ../slapd.templates:15001
 msgid "An error occurred while upgrading the LDAP directory."
-msgstr "Houbo un erro ao actualizar o directorio LDAP."
+msgstr "Produciuse un erro ao actualizar o directorio LDAP."
 
 #. Type: error
 #. Description
@@ -272,9 +273,9 @@ msgid ""
 "be caused by an incorrect configuration file (for example, missing "
 "'moduleload' lines to support the backend database)."
 msgstr ""
-"O programa \"slapcat\" fallou ao extraer o directorio LDAP. Isto pode estar "
+"O programa «slapcat» fallou ao extraer o directorio LDAP. Isto pode estar "
 "causado por un ficheiro de configuración incorrecto (por exemplo, se non hai "
-"liñas \"moduleload\" para soporte da base de datos)."
+"liñas «moduleload» para o uso da base de datos)."
 
 #. Type: error
 #. Description
@@ -287,8 +288,8 @@ msgid ""
 "you should move the old database files back into place, fix whatever caused "
 "slapcat to fail, and run:"
 msgstr ""
-"Este fallo ha facer que \"slapadd\" tamén falle. Hanse trasladar os "
-"ficheiros de base de datos antigos a /var/backups. Se quere volver tentar a "
+"Este fallo fará que «slapadd» tamén falle. Trasladaranse os ficheiros de "
+"base de datos antigos a /var/backups. Se quere volver tentar a "
 "actualización, debería mover os ficheiros da base de datos antiga ao seu "
 "sitio, arranxar o que fixo que fallara slapcat, e executar:"
 
@@ -301,8 +302,8 @@ msgid ""
 "Then move the database files back to a backup area and then try running "
 "slapadd from ${location}."
 msgstr ""
-"Volva trasladar os ficheiros da base de datos a unha zona de copias de "
-"seguridade e probe a executar slapadd desde ${location}."
+"Despois volva trasladar os ficheiros da base de datos a unha zona de copias "
+"de seguridade e probe a executar slapadd desde ${location}."
 
 #. Type: select
 #. Description
@@ -314,24 +315,72 @@ msgstr "Motor de base de datos a empregar:"
 #. Description
 #: ../slapd.templates:16001
 msgid ""
-"The HDB backend is recommended. HDB and BDB use similar storage formats, but "
-"HDB adds support for subtree renames. Both support the same configuration "
-"options."
+"HDB and BDB use similar storage formats, but HDB adds support for subtree "
+"renames. Both support the same configuration options."
 msgstr ""
-"Recoméndase o motor HDB. HDB e BDB empregan formatos de armacenamento "
-"similares, pero HDB engade soporte para os cambios de nome das subárbores. "
-"Ámbolos dous soportan as mesmas opcións de configuración."
+"HDB e BDB empregan formatos de almacenamento semellantes, pero HDB permite "
+"ademais o cambio de nome de subárbores. Ámbolos dous permiten usar as mesmas "
+"opcións de configuración."
 
 #. Type: select
 #. Description
 #: ../slapd.templates:16001
 msgid ""
-"In either case, you should review the resulting database configuration for "
-"your needs. See /usr/share/doc/slapd/README.DB_CONFIG.gz for more details."
+"The MDB backend is recommended. MDB uses a new storage format and requires "
+"less configuration than BDB or HDB."
 msgstr ""
-"En calquera caso, debería revisar se a configuración da base de datos se "
-"axusta ás súas necesidades. Consulte /usr/share/doc/slapd/README.DB_CONFIG."
-"gz para máis detalles."
+"Recoméndase o motor MDB. MDB usa un formato de almacenamento novo e precisa "
+"menos configuración que BDB ou HDB."
+
+#. Type: select
+#. Description
+#: ../slapd.templates:16001
+msgid ""
+"In any case, you should review the resulting database configuration for your "
+"needs. See /usr/share/doc/slapd/README.Debian.gz for more details."
+msgstr ""
+"En calquera caso, debería revisar que a configuración da base de datos se "
+"axusta ás súas necesidades. Pode obter máis información en /usr/share/doc/"
+"slapd/README.Debian.gz ."
+
+#. Type: note
+#. Description
+#: ../slapd.templates:17001
+msgid "Potentially unsafe slapd access control configuration"
+msgstr ""
+"A configuración de control de acceso de slapd é potencialmente insegura"
+
+#. Type: note
+#. Description
+#: ../slapd.templates:17001
+msgid ""
+"One or more of the configured databases has an access control rule that "
+"allows users to modify most of their own attributes. This may be unsafe, "
+"depending on how the database is used."
+msgstr ""
+"Polo menos unha das bases de datos configuradas ten unha regra de control de "
+"acceso que permite aos usuarios modificar a maioría dos atributos. Isto pode "
+"ser inseguro dependendo da maneira en que se use a base de datos."
+
+#. Type: note
+#. Description
+#. Translators: keep "by self write" and "to *" unchanged. These are part
+#. of the slapd configuration and are not translatable.
+#: ../slapd.templates:17001
+msgid ""
+"In the case of slapd access rules that begin with \"to *\", it is "
+"recommended to remove any instances of \"by self write\", so that users are "
+"only able to modify specifically allowed attributes."
+msgstr ""
+"No caso das regras de acceso de «slapd» que comezan con «to *», "
+"recoméndaselle eliminar calquera instancia de «by self write», de maneira "
+"que os usuarios só poidan modificar os atributos especificamente permitidos."
+
+#. Type: note
+#. Description
+#: ../slapd.templates:17001
+msgid "See /usr/share/doc/slapd/README.Debian.gz for more details."
+msgstr "Pode obter máis información en /usr/share/doc/slapd/README.Debian.gz ."
 
 #~ msgid "Back up current database and create a new one?"
 #~ msgstr "¿Facer unha copia da base de datos actual e crear unha nova?"

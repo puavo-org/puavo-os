@@ -119,6 +119,7 @@
 #    --enable-dnssrv	  enable dnssrv backend no|yes|mod [no]
 #    --enable-hdb	  enable Hierarchical DB backend no|yes|mod [yes]
 #    --enable-ldap	  enable ldap backend no|yes|mod [no]
+#    --enable-mdb	  enable mdb database backend no|yes|mod [yes]
 #    --enable-meta	  enable metadirectory backend no|yes|mod [no]
 #    --enable-monitor	  enable monitor backend no|yes|mod [yes]
 #    --enable-ndb	  enable MySQL NDB Cluster backend no|yes|mod [no]
@@ -174,9 +175,8 @@
 #  --with-fetch		  with fetch(3) URL support [auto]
 #  --with-threads	  with threads [auto]
 --with-threads
---with-gssapi
 #  --with-tls		  with TLS/SSL support auto|openssl|gnutls|moznss [auto]
---with-tls=openssl
+--with-tls=gnutls
 #  --with-yielding-select  with implicitly yielding select [auto]
 #  --with-mp               with multiple precision statistics auto|longlong|long|bignum|gmp [auto]
 #  --with-odbc             with specific ODBC support iodbc|unixodbc|odbc32|auto [auto]

@@ -5,46 +5,49 @@
 # This file is distributed under the same license as the openldap package.
 #
 # Changes:
-#   - Initial translation
-#       Rudy Godoy <rudy@kernel-panik.org>, 2006
+# - Initial translation
+# Rudy Godoy <rudy@kernel-panik.org>, 2006
 #
-#   - Reviewer
-#       Javier Fernandez-Sanguino
+# - Reviewer
+# Javier Fernandez-Sanguino
 #
-#   - Updates
-#       Steve Langasek <vorlon@debian.org>, 2008
-#       Francisco Javier Cuadrado <fcocuadrado@gmail.com>, 2009, 2010
+# - Updates
+# Steve Langasek <vorlon@debian.org>, 2008
+# Francisco Javier Cuadrado <fcocuadrado@gmail.com>, 2009, 2010
+# Camaleón <noelamac@gmail.com>, 2014
 #
 # Traductores, si no conocen el formato PO, merece la pena leer la
 # documentación de gettext, especialmente las secciones dedicadas a este
 # formato, por ejemplo ejecutando:
-#       info -n '(gettext)PO Files'
-#       info -n '(gettext)Header Entry'
+# info -n '(gettext)PO Files'
+# info -n '(gettext)Header Entry'
 #
 # Equipo de traducción al español, por favor lean antes de traducir
 # los siguientes documentos:
 #
-#   - El proyecto de traducción de Debian al español
-#     http://www.debian.org/intl/spanish/coordinacion
-#     especialmente las notas de traducción en
-#     http://www.debian.org/intl/spanish/notas
+# - El proyecto de traducción de Debian al español
+# http://www.debian.org/intl/spanish/coordinacion
+# especialmente las notas de traducción en
+# http://www.debian.org/intl/spanish/notas
 #
-#   - La guía de traducción de po's de debconf:
-#     /usr/share/doc/po-debconf/README-trans
-#     o http://www.debian.org/intl/l10n/po-debconf/README-trans
+# - La guía de traducción de po's de debconf:
+# /usr/share/doc/po-debconf/README-trans
+# o http://www.debian.org/intl/l10n/po-debconf/README-trans
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: openldap 2.4.23-3exp1\n"
 "Report-Msgid-Bugs-To: openldap@packages.debian.org\n"
-"POT-Creation-Date: 2010-07-15 22:05+0200\n"
-"PO-Revision-Date: 2011-10-08 23:27-0700\n"
-"Last-Translator: Steve Langasek <vorlon@debian.org>\n"
-"Language-Team: Debian l10n Spanish <debian-l10n-spanish@lists.debian.org>\n"
+"POT-Creation-Date: 2014-10-20 22:17-0700\n"
+"PO-Revision-Date: 2014-11-20 17:45+0100\n"
+"Last-Translator: Camaleón <noelamac@gmail.com>\n"
+"Language-Team: Debian Spanish <debian-l10n-spanish@lists.debian.org>\n"
 "Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Virtaal 0.7.1\n"
 
 #. Type: boolean
 #. Description
@@ -96,8 +99,8 @@ msgid ""
 msgstr ""
 "Antes de que actualice a una nueva versión del servidor OpenLDAP, se puede "
 "volcar la información de sus directorios LDAP en ficheros de texto plano en "
-"el formato estandarizado «LDAP Data Interchange Format», -formato de "
-"intercambio de datos de LDAP-."
+"el formato estandarizado «LDAP Data Interchange Format» (formato de "
+"intercambio de datos de LDAP)."
 
 #. Type: select
 #. Description
@@ -108,11 +111,11 @@ msgid ""
 "the new version is incompatible with the old database format and it needs to "
 "be reimported. If you select \"never\", no dump will be done."
 msgstr ""
-"Si selecciona «siempre» se volcarán sus bases de datos antes de que se "
-"actualice de forma incondicional. Si selecciona «cuando se necesite» sólo se "
-"hará un volcado si la nueva versión es incompatible con el formato de la "
-"base de datos antigua y la información se debe volver a importar. Si "
-"selecciona «nunca» no se hará ningún volcado."
+"Si selecciona «siempre» se volcarán sus bases de datos de forma "
+"incondicional antes de cada actualización. Si selecciona «cuando se "
+"necesite» sólo se hará un volcado si la nueva versión es incompatible con el "
+"formato de la base de datos antigua y la información se debe volver a "
+"importar. Si selecciona «nunca» no se hará ningún volcado."
 
 #. Type: string
 #. Description
@@ -131,12 +134,12 @@ msgid ""
 "string \"VERSION\" is replaced with the server version you are upgrading "
 "from."
 msgstr ""
-"Por favor especifique el directorio donde se exportarán las bases de datos "
-"de LDAP.  En éste se crearán diversos ficheros LDIF que corresponden a las "
-"bases de datos ubicadas en el servidor. Asegúrese de que tiene suficiente "
-"espacio libre en la partición donde se ubica el directorio. La primera "
-"ocurrencia de la cadena «VERSION» se reemplaza con la versión del servidor "
-"desde la cual va a actualizar."
+"Especifique el directorio donde se exportarán las bases de datos de LDAP. En "
+"éste se crearán diversos ficheros LDIF que corresponden a las bases de datos "
+"ubicadas en el servidor. Asegúrese de que tiene suficiente espacio libre en "
+"la partición donde se ubica el directorio. La primera ocurrencia de la "
+"cadena «VERSION» se reemplaza con la versión del servidor desde la cual va a "
+"actualizar."
 
 #. Type: boolean
 #. Description
@@ -154,8 +157,8 @@ msgid ""
 "database."
 msgstr ""
 "Existen ficheros en «/var/lib/ldap» que probablemente interrumpan el proceso "
-"de configuración. Si activa esta opción, se moverá los ficheros de las bases "
-"de datos antiguas antes de crear una nueva base de datos."
+"de configuración. Si activa esta opción, se moverán los ficheros de las "
+"bases de datos antiguas antes de crear una nueva base de datos."
 
 #. Type: boolean
 #. Description
@@ -174,16 +177,16 @@ msgid ""
 "retry later."
 msgstr ""
 "La configuración que ha introducido no es válida. Asegúrese de que el nombre "
-"de dominio del DNS es válido, que el campo de la organización no está en "
-"blanco y que las claves del administrador coinciden. El servidor LDAP "
-"quedará sin configurar si decide no volver a intentar la configuración. "
-"Ejecute «dpkg-reconfigure slapd» si desea volver a intentarlo más tarde."
+"de dominio DNS es válido, que el campo de la organización no está en blanco "
+"y que las claves del administrador coinciden. El servidor LDAP quedará sin "
+"configurar si decide no volver a intentar la configuración. Ejecute «dpkg-"
+"reconfigure slapd» si desea volver a intentarlo más tarde."
 
 #. Type: string
 #. Description
 #: ../slapd.templates:6001
 msgid "DNS domain name:"
-msgstr "Introduzca su nombre de dominio DNS:"
+msgstr "Introduzca el nombre de dominio DNS:"
 
 #. Type: string
 #. Description
@@ -194,8 +197,8 @@ msgid ""
 "dc=example, dc=org' as base DN."
 msgstr ""
 "El nombre de dominio DNS se utiliza para construir el DN base del directorio "
-"LDAP. Por ejemplo, si introduce «mi.dominio.org» el directorio se creará con "
-"un DN base de «dc=mi, dc=dominio, dc=org»."
+"LDAP. Por ejemplo, si introduce «foo.example.org» el directorio se creará "
+"con un DN base de «dc=foo, dc=example, dc=org»."
 
 #. Type: string
 #. Description
@@ -224,14 +227,14 @@ msgstr "Contraseña del administrador:"
 #: ../slapd.templates:8001
 msgid "Please enter the password for the admin entry in your LDAP directory."
 msgstr ""
-"Por favor introduzca la contraseña para la entrada de administrador de su "
-"directorio LDAP."
+"Introduzca la contraseña para la entrada de administrador de su directorio "
+"LDAP."
 
 #. Type: password
 #. Description
 #: ../slapd.templates:9001
 msgid "Confirm password:"
-msgstr "Verificación de contraseña:"
+msgstr "Confirme la contraseña:"
 
 #. Type: password
 #. Description
@@ -240,8 +243,8 @@ msgid ""
 "Please enter the admin password for your LDAP directory again to verify that "
 "you have typed it correctly."
 msgstr ""
-"Por favor, introduzca de nuevo la misma contraseña de administrador para su "
-"directorio LDAP para verificar que la introdujo correctamente."
+"Introduzca de nuevo la misma contraseña de administrador para su directorio "
+"LDAP para verificar que la introdujo correctamente."
 
 #. Type: note
 #. Description
@@ -254,8 +257,7 @@ msgstr "Las contraseñas no coinciden"
 #: ../slapd.templates:10001
 msgid "The two passwords you entered were not the same. Please try again."
 msgstr ""
-"Las dos contraseñas que ha introducido son distintas. Por favor, intente de "
-"nuevo."
+"Las dos contraseñas que ha introducido son distintas. Inténtelo de nuevo."
 
 #. Type: boolean
 #. Description
@@ -295,7 +297,7 @@ msgstr "fallo de slapcat durante la actualización"
 #. Description
 #: ../slapd.templates:15001
 msgid "An error occurred while upgrading the LDAP directory."
-msgstr "Se produjo un error mientras se actualizaba su directorio LDAP. "
+msgstr "Se produjo un error mientras se actualizaba su directorio LDAP."
 
 #. Type: error
 #. Description
@@ -335,7 +337,7 @@ msgid ""
 "slapadd from ${location}."
 msgstr ""
 "Mueva los ficheros de la base de datos de nuevo al área de la copia de "
-"seguridad e intente ejecutar «slapadd» desde «${locatio}n»."
+"seguridad e intente ejecutar «slapadd» desde «${location}»."
 
 #. Type: select
 #. Description
@@ -347,24 +349,71 @@ msgstr "Motor de base de datos a utilizar:"
 #. Description
 #: ../slapd.templates:16001
 msgid ""
-"The HDB backend is recommended. HDB and BDB use similar storage formats, but "
-"HDB adds support for subtree renames. Both support the same configuration "
-"options."
+"HDB and BDB use similar storage formats, but HDB adds support for subtree "
+"renames. Both support the same configuration options."
 msgstr ""
-"Se recomienda el motor HDB. Los motores HDB y BDB utilizan formatos de "
-"almacenamiento semejantes, pero HDB permite realizar cambios de nombre de "
-"subárboles («subtree renames»).  Ambos tienen las mismas opciones de "
-"configuración."
+"Los motores HDB y BDB utilizan formatos de almacenamiento semejantes, pero "
+"HDB permite realizar cambios de nombre de subárboles («subtree renames»). "
+"Los dos permiten las mismas opciones de configuración."
 
 #. Type: select
 #. Description
 #: ../slapd.templates:16001
 msgid ""
-"In either case, you should review the resulting database configuration for "
-"your needs. See /usr/share/doc/slapd/README.DB_CONFIG.gz for more details."
+"The MDB backend is recommended. MDB uses a new storage format and requires "
+"less configuration than BDB or HDB."
 msgstr ""
-"En cualquier caso, debe revisar la configuración de la base de datos. Vea en "
-"«/usr/share/doc/slapd/README.DB_CONFIG.gz» para más detalles."
+"Se recomienda utilizar MDB. El motor MDB utiliza un nuevo formato de "
+"almacenamiento y requiere menos configuración que BDB o HDB."
+
+#. Type: select
+#. Description
+#: ../slapd.templates:16001
+msgid ""
+"In any case, you should review the resulting database configuration for your "
+"needs. See /usr/share/doc/slapd/README.Debian.gz for more details."
+msgstr ""
+"En cualquier caso, debe revisar la configuración de la base de datos. "
+"Consulte «/usr/share/doc/slapd/README.Debian.gz» para más detalles."
+
+#. Type: note
+#. Description
+#: ../slapd.templates:17001
+msgid "Potentially unsafe slapd access control configuration"
+msgstr "Configuración potencialmente insegura en el control de acceso de slapd"
+
+#. Type: note
+#. Description
+#: ../slapd.templates:17001
+msgid ""
+"One or more of the configured databases has an access control rule that "
+"allows users to modify most of their own attributes. This may be unsafe, "
+"depending on how the database is used."
+msgstr ""
+"Una o varias de las bases de datos configuradas contiene una regla de "
+"control de acceso que permite a los usuarios modificar la mayoría de sus "
+"propios atributos. Esta configuración puede ser insegura dependiendo de cómo "
+"se utilice la base de datos."
+
+#. Type: note
+#. Description
+#. Translators: keep "by self write" and "to *" unchanged. These are part
+#. of the slapd configuration and are not translatable.
+#: ../slapd.templates:17001
+msgid ""
+"In the case of slapd access rules that begin with \"to *\", it is "
+"recommended to remove any instances of \"by self write\", so that users are "
+"only able to modify specifically allowed attributes."
+msgstr ""
+"Se recomienda que elimine cualquier instancia «by self write» en las reglas "
+"de acceso de slapd que empiecen con «to *» para que los usuarios sólo puedan "
+"modificar los atributos que se hayan permitido expresamente."
+
+#. Type: note
+#. Description
+#: ../slapd.templates:17001
+msgid "See /usr/share/doc/slapd/README.Debian.gz for more details."
+msgstr "Consulte «/usr/share/doc/slapd/README.Debian.gz» para más detalles."
 
 #~ msgid "slurpd is obsolete; replicas must be reconfigured by hand"
 #~ msgstr "slurpd es obsoleto; hay que configurar las réplicas a mano"

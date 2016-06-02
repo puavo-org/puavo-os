@@ -1,15 +1,15 @@
 # Danish translation openldap.
-# Copyright (C) 2010 openldap & nedenstående oversættere.
+# Copyright (C) 2014 openldap & nedenstående oversættere.
 # This file is distributed under the same license as the openldap package.
 # Claus Hindsgaul <claus.hindsgaul@gmail.com>, 2005, 2006.
-# Joe Hansen <joedalton2@yahoo.dk>, 2010.
+# Joe Hansen <joedalton2@yahoo.dk>, 2010, 2014.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: openldap\n"
 "Report-Msgid-Bugs-To: openldap@packages.debian.org\n"
-"POT-Creation-Date: 2010-07-15 22:05+0200\n"
-"PO-Revision-Date: 2010-10-11 05:26+0100\n"
+"POT-Creation-Date: 2014-10-20 22:17-0700\n"
+"PO-Revision-Date: 2014-10-26 05:26+0100\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <debian-l10n-danish@lists.debian.org> \n"
 "Language: \n"
@@ -310,20 +310,67 @@ msgstr "Databasemotor at bruge:"
 #. Description
 #: ../slapd.templates:16001
 msgid ""
-"The HDB backend is recommended. HDB and BDB use similar storage formats, but "
-"HDB adds support for subtree renames. Both support the same configuration "
-"options."
+"HDB and BDB use similar storage formats, but HDB adds support for subtree "
+"renames. Both support the same configuration options."
 msgstr ""
-"HDB-motoren anbefales. HDB og BDB bruger lignende lagerformater, men HDB "
-"tilføjer understøttelse af omdøbning af undertræer. Begge understøtter de "
-"samme konfigurationsindstillinger."
+"HDB og BDB bruger lignende lagerformater, men HDB tilføjer understøttelse "
+"af omdøbning af undertræer. Begge understøtter de samme "
+"konfigurationsindstillinger."
 
 #. Type: select
 #. Description
 #: ../slapd.templates:16001
 msgid ""
-"In either case, you should review the resulting database configuration for "
-"your needs. See /usr/share/doc/slapd/README.DB_CONFIG.gz for more details."
+"The MDB backend is recommended. MDB uses a new storage format and requires "
+"less configuration than BDB or HDB."
+msgstr ""
+"MDB-motoren anbefales. MDB bruger et nyt lagerformat og kræver mindre "
+"konfiguration end BDB eller HDB."
+
+#. Type: select
+#. Description
+#: ../slapd.templates:16001
+msgid ""
+"In any case, you should review the resulting database configuration for your "
+"needs. See /usr/share/doc/slapd/README.Debian.gz for more details."
 msgstr ""
 "Uanset hvad bør du gennemse databasekonfigurationen for dine behov. Se /usr/"
-"share/doc/slapd/README.DB_CONFIG.gz for yderligere detaljer."
+"share/doc/slapd/README.Debian.gz for yderligere detaljer."
+
+#. Type: note
+#. Description
+#: ../slapd.templates:17001
+msgid "Potentially unsafe slapd access control configuration"
+msgstr "Potentiel usikker slapd-adgangskontrolkonfiguration"
+
+#. Type: note
+#. Description
+#: ../slapd.templates:17001
+msgid ""
+"One or more of the configured databases has an access control rule that "
+"allows users to modify most of their own attributes. This may be unsafe, "
+"depending on how the database is used."
+msgstr ""
+"En eller flere af de konfigurerede databaser har en adgangskontrolregel, "
+"som giver brugere mulighed for at ændre deres egne attributter. Dette kan "
+"være usikkert, afhængig af hvordan databasen bruges."
+
+#. Type: note
+#. Description
+#. Translators: keep "by self write" and "to *" unchanged. These are part
+#. of the slapd configuration and are not translatable.
+#: ../slapd.templates:17001
+msgid ""
+"In the case of slapd access rules that begin with \"to *\", it is "
+"recommended to remove any instances of \"by self write\", so that users are "
+"only able to modify specifically allowed attributes."
+msgstr ""
+"I tilfældet med slapd-adgangsregler som begynder med »to *«, anbefales det "
+"at fjerne alle instanser af »by self write«, så at brugerne kun kan "
+"ændre specifikt tilladte attributter."
+
+#. Type: note
+#. Description
+#: ../slapd.templates:17001
+msgid "See /usr/share/doc/slapd/README.Debian.gz for more details."
+msgstr "Se /usr/share/doc/slapd/README.Debian.gz for yderligere detaljer."

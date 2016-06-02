@@ -11,9 +11,10 @@ do-not-second-guess-sonames
 contrib-modules-use-dpkg-buildflags
 smbk5pwd-makefile
 autogroup-makefile
+lastbind-makefile
+pw-sha2-makefile
 ldap-conf-tls-cacertdir
 add-tlscacert-option-to-ldap-conf
-fix-ftbfs-binutils-gold
 fix-build-top-mk
 no-AM_INIT_AUTOMAKE
 switch-to-lt_dlopenadvise-to-get-RTLD_GLOBAL-set.diff
@@ -23,4 +24,3 @@ opinsys-increase-max-number-of-ldap-keys
 opinsys-increase-max-rewrite-passes
 opinsys-smbkrb5pwd
 opinsys-fix-smbkrb5pwd-makefile
-opinsys-fix-nssov-makefile

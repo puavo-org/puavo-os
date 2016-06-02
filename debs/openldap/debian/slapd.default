@@ -12,7 +12,7 @@ SLAPD_USER="openldap"
 SLAPD_GROUP="openldap"
 
 # Path to the pid file of the slapd server. If not set the init.d script
-# will try to figure it out from $SLAPD_CONF (/etc/ldap/slapd.d by
+# will try to figure it out from $SLAPD_CONF (/etc/ldap/slapd.conf by
 # default)
 SLAPD_PIDFILE=
 
@@ -27,7 +27,7 @@ SLAPD_SERVICES="ldap:/// ldapi:///"
 # slapd (but stop will still work).  Uncomment this if you are
 # starting slapd via some other means or if you don't want slapd normally
 # started at boot.
-SLAPD_NO_START=1
+#SLAPD_NO_START=1
 
 # If SLAPD_SENTINEL_FILE is set to path to a file and that file exists,
 # the init script will not start or restart slapd (but stop will still

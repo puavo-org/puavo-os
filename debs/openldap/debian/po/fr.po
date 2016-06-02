@@ -2,20 +2,21 @@
 # Copyright (C) 2006-2010 Christian Perrier <bubulle@debian.org>
 # This file is distributed under the same license as the openldap package.
 #
-# Christian Perrier <bubulle@debian.org>, 2006-2010.
+# Christian Perrier <bubulle@debian.org>, 2006-2010, 2014.
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: openldap@packages.debian.org\n"
-"POT-Creation-Date: 2010-07-15 22:05+0200\n"
-"PO-Revision-Date: 2010-04-26 08:17+0200\n"
+"POT-Creation-Date: 2014-10-20 22:17-0700\n"
+"PO-Revision-Date: 2014-10-26 10:15+0100\n"
 "Last-Translator: Christian Perrier <bubulle@debian.org>\n"
 "Language-Team: French <debian-l10n-french@lists.debian.org>\n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: KBabel 1.11.4\n"
+"X-Generator: Lokalize 1.5\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
 #. Type: boolean
 #. Description
@@ -186,7 +187,7 @@ msgid ""
 "Please enter the name of the organization to use in the base DN of your LDAP "
 "directory."
 msgstr ""
-"Veuillez indiquer la valeur que sera utilisée comme nom d'entité "
+"Veuillez indiquer la valeur qui sera utilisée comme nom d'entité "
 "(« organization ») dans le nom distinctif de base de l'annuaire LDAP."
 
 #. Type: password
@@ -236,7 +237,7 @@ msgstr ""
 #. Description
 #: ../slapd.templates:11001
 msgid "Do you want the database to be removed when slapd is purged?"
-msgstr "Faut-il supprimer la base de données à la purge du paquet ?"
+msgstr "Faut-il supprimer la base de données lors de la purge du paquet ?"
 
 #. Type: boolean
 #. Description
@@ -254,7 +255,7 @@ msgid ""
 "your slapd.conf file."
 msgstr ""
 "L'ancien protocole LDAPv2 est désactivé dans slapd. Il est conseillé de "
-"migrer les programmes et les utilisateurs vers la version LDAPv3 . Si vous "
+"migrer les programmes et les utilisateurs vers la version LDAPv3. Si vous "
 "utilisez d'anciens programmes qui ne gèrent pas encore LDAPv3, vous devriez "
 "choisir cette option, ce qui ajoutera l'option « allow bind_v2 » au fichier "
 "slapd.conf."
@@ -296,7 +297,7 @@ msgid ""
 "slapcat to fail, and run:"
 msgstr ""
 "Cet échec provoquera l'échec ultérieur de « slapadd ». Les anciens fichiers "
-"de bases de données seront déplacées dans /var/backups. Si vous souhaitez "
+"de bases de données seront déplacés dans /var/backups. Si vous souhaitez "
 "tenter à nouveau la mise à jour, vous devrez les remettre en place, corriger "
 "l'erreur qui a provoqué l'échec de slapcat et utiliser la commande suivante :"
 
@@ -322,24 +323,74 @@ msgstr "Module de base de données à utiliser :"
 #. Description
 #: ../slapd.templates:16001
 msgid ""
-"The HDB backend is recommended. HDB and BDB use similar storage formats, but "
-"HDB adds support for subtree renames. Both support the same configuration "
-"options."
+"HDB and BDB use similar storage formats, but HDB adds support for subtree "
+"renames. Both support the same configuration options."
 msgstr ""
-"Le module HDB est recommandé. HDB et BDB utilisent des formats de stockage "
-"analogues. Par contre, HDB gère les renommages de sous-arbres. Les deux "
-"formats utilisent les mêmes options de configuration."
+"HDB et BDB utilisent des formats de stockage analogues. Par contre, HDB gère "
+"les renommages de sous-arbres. Les deux formats utilisent les mêmes options "
+"de configuration."
 
 #. Type: select
 #. Description
 #: ../slapd.templates:16001
 msgid ""
-"In either case, you should review the resulting database configuration for "
-"your needs. See /usr/share/doc/slapd/README.DB_CONFIG.gz for more details."
+"The MDB backend is recommended. MDB uses a new storage format and requires "
+"less configuration than BDB or HDB."
 msgstr ""
-"Quel que soit votre choix, vous devriez adapter les options de configuration "
-"à vos besoins. Pour plus d'informations, veuillez consulter le fichier /usr/"
-"share/doc/slapd/README.DB_CONFIG.gz."
+"Le module MDB est recommandé. Il utilise un nouveau format de stockage et "
+"est plus simple à configurer que BDB ou HDB."
+
+#. Type: select
+#. Description
+#: ../slapd.templates:16001
+msgid ""
+"In any case, you should review the resulting database configuration for your "
+"needs. See /usr/share/doc/slapd/README.Debian.gz for more details."
+msgstr ""
+"Quel que soit votre choix, vous devriez vérifier les options de "
+"configuration de la base de données. Pour plus d'informations, veuillez "
+"consulter le fichier /usr/share/doc/slapd/README.Debian.gz."
+
+#. Type: note
+#. Description
+#: ../slapd.templates:17001
+msgid "Potentially unsafe slapd access control configuration"
+msgstr "Configuration éventuellement peu sûre du contrôle d'accès de slapd"
+
+#. Type: note
+#. Description
+#: ../slapd.templates:17001
+msgid ""
+"One or more of the configured databases has an access control rule that "
+"allows users to modify most of their own attributes. This may be unsafe, "
+"depending on how the database is used."
+msgstr ""
+"Une ou plusieurs des bases de données configurées comportent une règle de "
+"contrôle d'accès qui permet aux utilisateurs de modifier un ou plusieurs de "
+"leurs propres paramètres. Cela peut être peu sûr, selon la façon dont la "
+"base de données est configurée."
+
+#. Type: note
+#. Description
+#. Translators: keep "by self write" and "to *" unchanged. These are part
+#. of the slapd configuration and are not translatable.
+#: ../slapd.templates:17001
+msgid ""
+"In the case of slapd access rules that begin with \"to *\", it is "
+"recommended to remove any instances of \"by self write\", so that users are "
+"only able to modify specifically allowed attributes."
+msgstr ""
+"Pour les règles d'accès à slapd qui commencent par « to * », il est "
+"recommandé de supprimer toute occurrence de « by self write », afin que les "
+"utilisateurs ne puissent modifier que des paramètres explicitement autorisés."
+
+#. Type: note
+#. Description
+#: ../slapd.templates:17001
+msgid "See /usr/share/doc/slapd/README.Debian.gz for more details."
+msgstr ""
+"Veuillez consulter le fichier /usr/share/doc/slapd/README.Debian.gz pour "
+"plus d'informations."
 
 #~ msgid "slurpd is obsolete; replicas must be reconfigured by hand"
 #~ msgstr "Programme slurpd obsolète : reconfiguration manuelle des réplicats"

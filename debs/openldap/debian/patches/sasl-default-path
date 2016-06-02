@@ -48,8 +48,8 @@ interest upstream.
  #ifdef HAVE_CYRUS_SASL
  	int rc;
  	static sasl_callback_t server_callbacks[] = {
- 		{ SASL_CB_LOG, &slap_sasl_log, NULL },
-+		{ SASL_CB_GETCONFPATH, &slap_sasl_getconfpath, NULL },
- 		{ SASL_CB_GETOPT, &slap_sasl_getopt, NULL },
- 		{ SASL_CB_LIST_END, NULL, NULL }
+		{ SASL_CB_LOG, (slap_sasl_cb_ft)&slap_sasl_log, NULL },
++		{ SASL_CB_GETCONFPATH, (slap_sasl_cb_ft)&slap_sasl_getconfpath, NULL },
+		{ SASL_CB_GETOPT, (slap_sasl_cb_ft)&slap_sasl_getopt, NULL },
+		{ SASL_CB_LIST_END, NULL, NULL }
  	};
