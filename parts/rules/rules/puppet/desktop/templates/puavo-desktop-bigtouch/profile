@@ -4,6 +4,9 @@ picture-uri='file:///usr/share/backgrounds/puavo-art/puavo-os_wallpaper-dark.svg
 [org/gnome/desktop/wm/preferences]
 num-workspaces=1
 
+[org/gnome/nautilus/window-state]
+start-with-sidebar=false
+
 [org/gnome/shell]
 enabled-extensions=['bigtouch-ux@puavo.org']
 
