@@ -1,0 +1,113 @@
+gnome-clocks (3.14.1-1) unstable; urgency=medium
+
+  * New upstream release.
+  * debian/control.in:
+    - Bump Standards-Version to 3.9.6 (no further changes)
+    - Update the Homepage URL
+
+ -- Laurent Bigonville <bigon@debian.org>  Sun, 19 Oct 2014 22:50:31 +0200
+
+gnome-clocks (3.14.0-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Bump libgweather-3-dev build-dependency to >= 3.13.91
+    - according to configure.ac changes
+  * Bump gtk+ build-dependency to 3.13.8 and valac >= 0.25.3
+    - Usage of Gtk.StateFlags.CHECKED
+
+ -- Andreas Henriksson <andreas@fatal.se>  Wed, 24 Sep 2014 16:31:57 +0200
+
+gnome-clocks (3.12.0-2) unstable; urgency=medium
+
+  * debian/control.in:
+    + Bump libgtk-3-dev to 3.12, needed for GtkActionBar.
+  * Upload to unstable.
+
+ -- Emilio Pozuelo Monfort <pochu@debian.org>  Sat, 26 Apr 2014 14:07:08 +0200
+
+gnome-clocks (3.12.0-1) experimental; urgency=medium
+
+  * New upstream release.
+  * Bump build-dependencies according to configure.ac changes:
+    - Bump valac 0.23.3, add glib 2.39 and drop libnotify.
+
+ -- Andreas Henriksson <andreas@fatal.se>  Wed, 26 Mar 2014 19:13:23 +0100
+
+gnome-clocks (3.10.1-1) unstable; urgency=low
+
+  [ Andreas Henriksson ]
+  * Fix Vcs-* fields in debian/control*
+  * New upstream release.
+  * Update build-dependencies according to configure.ac:
+    - Bump libgweather-3-dev to >= 3.9.91
+    - Add libgeocode-glib-dev (>= 0.99.4)
+    - Bump valac to >= 0.21.2
+    - Bump libgtk-3-dev to >= 3.9.11
+    - Add geoclue (>= 2.0)
+  * Add gnome-clocks dependency on geoclue (>= 2.0)
+  * Add blurb in debian/rules that forces rebuild from vala source
+  * Bump build-dependency on libgweather-3-dev to >= 3.10.1-1~
+    - vala bindings got enabled in that package revision
+
+  [ Jackson Doak ]
+  * Add --disable-silent-rules to configure call, gives verbose buildlogs
+  * Update homepage. Closes: #728997
+
+  [ Laurent Bigonville ]
+  * debian/control.in: {Build-}depends against geoclue-2.0 instead of geoclue
+    (>= 2.0)
+
+  [ Emilio Pozuelo Monfort ]
+  * Upload to unstable.
+
+ -- Emilio Pozuelo Monfort <pochu@debian.org>  Sat, 22 Feb 2014 19:16:43 +0100
+
+gnome-clocks (3.8.2-2) unstable; urgency=low
+
+  [ Jeremy Bicha ]
+  * Update homepage
+
+  [ Andreas Henriksson ]
+  * Upload to unstable
+
+ -- Andreas Henriksson <andreas@fatal.se>  Mon, 14 Oct 2013 01:23:37 +0200
+
+gnome-clocks (3.8.2-1) experimental; urgency=low
+
+  [ Jeremy Bicha ]
+  * New upstream release
+  * debian/control.in:
+    - Drop alternate build-depends on valac-0.18 since it's no longer in
+      Debian and unnecessary
+
+  [ Andreas Henriksson ]
+  * Add missing Licence field to debian/copyright as required
+    by the spec for machine readable copyright file. Thanks lintian.
+  * Drop "Added runtime dependency to libgweather-common"
+    - libgweather-3-3 has been fixed to depend on newer libgweather-common
+
+ -- Andreas Henriksson <andreas@fatal.se>  Mon, 17 Jun 2013 23:06:05 +0200
+
+gnome-clocks (3.8.0-1) experimental; urgency=low
+
+  [ Jean Schurger ]
+  * New upstream version.
+  * Added runtime dependency to libgweather-common (the schema file is needed).
+  * Updated Standards-Version to 3.9.4.
+  * Updated Vcs-Svn.
+
+  [ Sjoerd Simons ]
+  * debian/copyright: Add libgd copyright
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Sun, 07 Apr 2013 10:19:52 +0200
+
+gnome-clocks (3.7.92-1) experimental; urgency=low
+
+  [ Jeremy Bicha ]
+  * Initial release
+
+  [ Sjoerd Simons ]
+  * New upstream release (Update build-depends)
+  * debian/control: Use standard gnome-pkg-tools rules
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Sun, 24 Mar 2013 16:17:14 +0100
