@@ -1,0 +1,47 @@
+From c3b01edeeec02ced0ed5ce1eb3f41278fb912536 Mon Sep 17 00:00:00 2001
+Message-Id: <c3b01edeeec02ced0ed5ce1eb3f41278fb912536.1464946119.git.tuomasjjrasanen@tjjr.fi>
+From: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
+Date: Fri, 3 Jun 2016 12:16:56 +0300
+Subject: [PATCH] Fix the incorrect order of timer's time labels using RTL
+ locale
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Previously, with RTL locale and when the timer was running, time
+labels were displayed in incorrect order, [ss]:[mm]:[hh]. Spinbuttons
+had already been forced to LTR order, but labels were not.
+
+This commit fixes the issue by forcing the order of time labels to LTR
+also when the timer is running.
+
+Closes #743821
+
+Signed-off-by: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
+---
+ src/timer.vala | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/timer.vala b/src/timer.vala
+index adc557f..783e452 100644
+--- a/src/timer.vala
++++ b/src/timer.vala
+@@ -88,6 +88,8 @@ public class Face : Gtk.Stack, Clocks.Clock {
+     [GtkChild]
+     private Gtk.Grid grid_spinbuttons;
+     [GtkChild]
++    private Gtk.Grid grid_labels;
++    [GtkChild]
+     private Gtk.SpinButton h_spinbutton;
+     [GtkChild]
+     private Gtk.SpinButton m_spinbutton;
+@@ -127,6 +129,7 @@ public class Face : Gtk.Stack, Clocks.Clock {
+ 
+         // Force LTR since we do not want to reverse [hh] : [mm] : [ss]
+         grid_spinbuttons.set_direction (Gtk.TextDirection.LTR);
++        grid_labels.set_direction (Gtk.TextDirection.LTR);
+ 
+         reset ();
+     }
+-- 
+2.1.4
