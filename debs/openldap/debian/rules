@@ -47,7 +47,7 @@ get-orig-source:
 	wget $(URL)/openldap-$(VERSION).tgz -O ../openldap_$(VERSION).orig.tar.gz
 	tar xzf ../openldap_$(VERSION).orig.tar.gz --strip-components=1 -C .
 
-DH = dh $@ --with autoreconf --builddirectory=$(builddir) --parallel
+DH = dh $@ --with quilt,autoreconf,systemd --builddirectory=$(builddir) --parallel
 .PHONY: build
 build:
 	$(DH)
