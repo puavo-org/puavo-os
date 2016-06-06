@@ -38,7 +38,7 @@ get-orig-source:
 	tar xzf openldap_$(VERSION).orig.tar.gz --strip-components=1 -C .
 
 %:
-	dh $@ --with quilt,autoreconf --builddirectory=$(builddir) --parallel
+	dh $@ --with quilt,autoreconf,systemd --builddirectory=$(builddir) --parallel
 
 # Only contrib/ldapc++ uses Automake, so special care is needed to update
 # config.guess and config.sub at the top level.
