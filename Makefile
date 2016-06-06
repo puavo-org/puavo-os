@@ -14,17 +14,18 @@ help:
 	@echo 'Puavo OS Build System'
 	@echo
 	@echo 'Targets:'
-	@echo '    deb-pkg-build         -  build Debian packages'
-	@echo '    deb-pkg-install-deps  -  install build dependencies of Debian packages (requires root)'
-	@echo '    release               -  make release commit'
-	@echo '    rootfs                -  build Puavo OS root filesystem directory (requires root)'
+	@echo '    deb-pkg-build               -  build Debian packages'
+	@echo '    deb-pkg-install-build-deps  -  install build dependencies of Debian packages (requires root)'
+	@echo '    release                     -  make release commit'
+	@echo '    rootfs                      -  build Puavo OS root filesystem directory (requires root)'
 
-deb-pkg-install-deps: .deb-pkg-install-deps-parts .deb-pkg-install-deps-ports
+deb-pkg-install-build-deps: .deb-pkg-install-build-deps-parts \
+	.deb-pkg-install-build-deps-ports
 
-.deb-pkg-install-deps-parts:
+.deb-pkg-install-build-deps-parts:
 	mk-build-deps -i -t "apt-get --yes --force-yes" -r debian/control
 
-.deb-pkg-install-deps-ports:
+.deb-pkg-install-build-deps-ports:
 	$(MAKE) -C ports deb-pkg-install-build-deps
 
 rootfs: $(rootfs_dir)
@@ -57,13 +58,13 @@ deb-pkg-build: .deb-pkg-build-parts .deb-pkg-build-ports
 
 deb-pkg-update-repo: debs/Packages.gz
 
-.PHONY: all			\
-	deb-pkg-build		\
-	.deb-pkg-build-parts	\
-	.deb-pkg-build-ports	\
-	deb-pkg-install-deps	\
-	deb-pkg-update-repo	\
-	help			\
-	release			\
-	rootfs			\
+.PHONY: all				\
+	deb-pkg-build			\
+	.deb-pkg-build-parts		\
+	.deb-pkg-build-ports		\
+	deb-pkg-install-build-deps	\
+	deb-pkg-update-repo		\
+	help				\
+	release				\
+	rootfs				\
 	$(subdirs)
