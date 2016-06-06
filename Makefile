@@ -51,7 +51,10 @@ deb-pkg-update-repo: debs/Packages.gz
 
 .PHONY: all			\
 	deb-pkg-build		\
+	deb-pkg-build-parts	\
+	deb-pkg-build-ports	\
 	deb-pkg-install-deps	\
+	deb-pkg-update-repo	\
 	help			\
 	release			\
 	rootfs			\
