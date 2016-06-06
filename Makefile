@@ -33,17 +33,19 @@ $(rootfs_dir):
 release:
 	@parts/devscripts/bin/git-update-debian-changelog
 
-debs/Packages: deb-pkg-build-and-copy
+debs/Packages: deb-pkg-build
 	apt-ftparchive --db debs/db packages debs >$@
 
 debs/Packages.gz: debs/Packages
 	gzip -f -k $<
 
-deb-pkg-build: release
-	dpkg-buildpackage -b -uc
+deb-pkg-build: deb-pkg-build-parts deb-pkg-build-ports
 
-deb-pkg-build-and-copy: deb-pkg-build
-	parts/devscripts/bin/cp-changes debs
+deb-pkg-build-parts: release
+	dpkg-buildpackage -b -uc && parts/devscripts/bin/cp-changes debs
+
+deb-pkg-build-ports:
+	$(MAKE) -C ports deb-pkg-build changes_dir=$(shell readlink -e debs)
 
 deb-pkg-update-repo: debs/Packages.gz
 
