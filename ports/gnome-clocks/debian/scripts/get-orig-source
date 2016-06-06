@@ -6,6 +6,10 @@ upstream_version=$(dpkg-parsechangelog -S Version | sed -r -n 's/^(.*)-.*$/\1/p'
 upstream_dir=$(dpkg-parsechangelog -S Version | sed -r -n 's/^([0-9]+\.[0-9]+)\..*$/\1/p')
 orig_tarball="../gnome-clocks_${upstream_version}.orig.tar.xz"
 
-wget -O "${orig_tarball}" \
-     "http://download.gnome.org/sources/gnome-clocks/${upstream_dir}/gnome-clocks-${upstream_version}.tar.xz"
+if [ ! -e "${orig_tarball}" ]; then
+    wget -O "${orig_tarball}.tmp" \
+         "http://download.gnome.org/sources/gnome-clocks/${upstream_dir}/gnome-clocks-${upstream_version}.tar.xz"
+    mv "${orig_tarball}.tmp" "${orig_tarball}"
+fi
+
 tar -J -x -f "${orig_tarball}" --strip-components=1
