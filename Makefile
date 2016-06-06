@@ -1,5 +1,7 @@
 rootfs_dir    := /var/tmp/puavo-os/rootfs
-rootfs_mirror := $(shell awk '/^\s*deb .+ jessie main.*$$/ {print $$2; exit}' /etc/apt/sources.list 2>/dev/null)
+rootfs_mirror := $(shell 					\
+	awk '/^\s*deb .+ jessie main.*$$/ {print $$2; exit}'	\
+	/etc/apt/sources.list 2>/dev/null)
 
 subdirs := parts
 
@@ -24,7 +26,8 @@ rootfs: $(rootfs_dir)
 
 $(rootfs_dir):
 	mkdir -p '$(rootfs_dir).tmp'
-	debootstrap --arch=amd64 --include=devscripts jessie '$(rootfs_dir).tmp' '$(rootfs_mirror)'
+	debootstrap --arch=amd64 --include=devscripts jessie \
+		'$(rootfs_dir).tmp' '$(rootfs_mirror)'
 	git clone . '$(rootfs_dir).tmp/usr/local/src/puavo-os'
 	echo 'deb [trusted=yes] file:///usr/local/src/puavo-os/debs /' \
 		>'$(rootfs_dir).tmp/etc/apt/sources.list.d/puavo-os.list'
