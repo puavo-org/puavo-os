@@ -42,20 +42,20 @@ debs/Packages: deb-pkg-build
 debs/Packages.gz: debs/Packages
 	gzip -f -k $<
 
-deb-pkg-build: deb-pkg-build-parts deb-pkg-build-ports
+deb-pkg-build: .deb-pkg-build-parts .deb-pkg-build-ports
 
-deb-pkg-build-parts: release
+.deb-pkg-build-parts: release
 	dpkg-buildpackage -b -uc && parts/devscripts/bin/cp-changes debs
 
-deb-pkg-build-ports:
+.deb-pkg-build-ports:
 	$(MAKE) -C ports deb-pkg-build
 
 deb-pkg-update-repo: debs/Packages.gz
 
 .PHONY: all			\
 	deb-pkg-build		\
-	deb-pkg-build-parts	\
-	deb-pkg-build-ports	\
+	.deb-pkg-build-parts	\
+	.deb-pkg-build-ports	\
 	deb-pkg-install-deps	\
 	deb-pkg-update-repo	\
 	help			\
