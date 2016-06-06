@@ -1,3 +1,33 @@
+puavo-os (0.17.0~rc3+69d7b31b9d953973f14ea5b58a61a0dd75a49ed2) jessie; urgency=medium
+
+  * New release
+  * Rename make target: deb-pkg-install-deps => deb-pkg-install-build-
+    deps
+  * Install builddeps of ports in deb-pkg-install-deps target
+  * Hide deb-pkg-build-{parts, ports} targets
+  * Simplify ports builds
+  * Wrap long Makefile lines
+  * Add some .PHONY targets
+  * Build both ports and parts with deb-pkg-build target
+  * Simplify debian package building
+  * Rename make target: deb-pkg => deb-pkg-build
+  * ports: add Makefile
+  * parts/devscripts: make cp-changes deduce the changes file if not
+    given
+  * ports/gnome-clocks: fetch upstream tarball only if it does not yet
+    exist
+  * ports/gnome-clocks: 3.14.1-1opinsys1
+  * ports/gnome-clocks: add script for downloading the upstream source
+  * ports/gnome-clocks: add patch for fixing the timer's time label
+    order
+  * ports/gnome-clocks: import 3.14.1-1
+  * parts/ltsp client: remove session service disabling technology
+  * Add parameters for enabling/disabling few system services
+  * Make Nautilus window simpler for bigtouch session.
+  * Git(69d7b31b9d953973f14ea5b58a61a0dd75a49ed2)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Mon, 06 Jun 2016 15:24:14 +0300
+
 puavo-os (0.17.0~rc2+244df3033eb2331121de7ece22345cd2478b3517) jessie; urgency=medium
 
   * New release
