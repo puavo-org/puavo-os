@@ -48,7 +48,7 @@ deb-pkg-build-parts: release
 	dpkg-buildpackage -b -uc && parts/devscripts/bin/cp-changes debs
 
 deb-pkg-build-ports:
-	$(MAKE) -C ports deb-pkg-build changes_dir=$(shell readlink -e debs)
+	$(MAKE) -C ports deb-pkg-build
 
 deb-pkg-update-repo: debs/Packages.gz
 
