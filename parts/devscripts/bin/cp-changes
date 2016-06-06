@@ -2,14 +2,21 @@
 
 set -eu
 
-if [ $# -ne 2 ]; then
+if [ $# -eq 1 ]; then
+    pkg_name=$(dpkg-parsechangelog -SSource)
+    pkg_version=$(dpkg-parsechangelog -SVersion)
+    pkg_arch=$(dpkg-architecture -qDEB_BUILD_ARCH)
+    changes_file="../${pkg_name}_${pkg_version}_${pkg_arch}.changes"
+    target_dir=$1
+elif [ $# -eq 2 ]; then
+    changes_file=$1
+    target_dir=$2
+else
     echo "Error: Invalid number of arguments ($#), expected 2" >&2
     echo "Usage: $0 CHANGES_FILE TARGET_DIR" >&2
+    echo "Usage: $0 TARGET_DIR" >&2
     exit 1
 fi
-
-changes_file=$1
-target_dir=$2
 
 source_dir=$(dirname "${changes_file}")
 
