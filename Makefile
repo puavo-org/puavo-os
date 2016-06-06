@@ -14,8 +14,8 @@ help:
 	@echo 'Puavo OS Build System'
 	@echo
 	@echo 'Targets:'
+	@echo '    deb-pkg-build         -  build Debian packages'
 	@echo '    deb-pkg-install-deps  -  install build dependencies of Debian packages (requires root)'
-	@echo '    deb-pkg               -  build Debian packages'
 	@echo '    release               -  make release commit'
 	@echo '    rootfs                -  build Puavo OS root filesystem directory (requires root)'
 
@@ -47,12 +47,11 @@ debs/Packages: debs/buildstamp
 debs/Packages.gz: debs/Packages
 	gzip -f -k $<
 
-deb-pkg: debs/Packages.gz
+deb-pkg-build: debs/Packages.gz
 
 .PHONY: all			\
-	deb-pkg-install-deps	\
-	deb-pkg			\
 	deb-pkg-build		\
+	deb-pkg-install-deps	\
 	help			\
 	release			\
 	rootfs			\
