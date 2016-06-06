@@ -1,5 +1,3 @@
-changes_file = $(shell dpkg-parsechangelog -SSource)_$(shell dpkg-parsechangelog -SVersion)_$(shell dpkg-architecture -qDEB_BUILD_ARCH).changes
-
 rootfs_dir    := /var/tmp/puavo-os/rootfs
 rootfs_mirror := $(shell awk '/^\s*deb .+ jessie main.*$$/ {print $$2; exit}' /etc/apt/sources.list 2>/dev/null)
 
@@ -35,19 +33,19 @@ $(rootfs_dir):
 release:
 	@parts/devscripts/bin/git-update-debian-changelog
 
-debs/buildstamp: release
-	test -e 'debs/$(changes_file)' || {                                     \
-		dpkg-buildpackage -b -uc                                        \
-		&& parts/devscripts/bin/cp-changes '../$(changes_file)' debs    \
-		&& touch debs/buildstamp; }
-
-debs/Packages: debs/buildstamp
-	apt-ftparchive packages debs >$@
+debs/Packages: deb-pkg-build-and-copy
+	apt-ftparchive --db debs/db packages debs >$@
 
 debs/Packages.gz: debs/Packages
 	gzip -f -k $<
 
-deb-pkg-build: debs/Packages.gz
+deb-pkg-build: release
+	dpkg-buildpackage -b -uc
+
+deb-pkg-build-and-copy: deb-pkg-build
+	parts/devscripts/bin/cp-changes debs
+
+deb-pkg-update-repo: debs/Packages.gz
 
 .PHONY: all			\
 	deb-pkg-build		\
