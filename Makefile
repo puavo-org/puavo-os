@@ -19,8 +19,13 @@ help:
 	@echo '    release               -  make release commit'
 	@echo '    rootfs                -  build Puavo OS root filesystem directory (requires root)'
 
-deb-pkg-install-deps:
+deb-pkg-install-deps: .deb-pkg-install-deps-parts .deb-pkg-install-deps-ports
+
+.deb-pkg-install-deps-parts:
 	mk-build-deps -i -t "apt-get --yes --force-yes" -r debian/control
+
+.deb-pkg-install-deps-ports:
+	$(MAKE) -C ports deb-pkg-install-build-deps
 
 rootfs: $(rootfs_dir)
 
