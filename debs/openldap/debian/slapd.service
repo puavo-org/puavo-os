@@ -8,6 +8,7 @@ ExecStart = /usr/sbin/slapd -u openldap -g openldap -h "ldap:/// ldapi:/// ldaps
 Restart = always
 RestartSec = 180
 ExecStop = rm -rf /var/run/slapd
+LimitNOFILE = 100000
 
 [Install]
 WantedBy = multi-user.target
