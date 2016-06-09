@@ -145,6 +145,11 @@ function enable() {
     appMenu_actor.reparent(Main.panel._rightBox);
     dateMenu.actor.reparent(Main.panel._centerBox);
     keyboard_actor.reparent(Main.panel._leftBox);
+
+    global.stage.get_actions().forEach(function(action) {
+        if (action instanceof imports.ui.edgeDragAction.EdgeDragAction)
+            action.enabled = false;
+    });
 }
 
 function disable() {
