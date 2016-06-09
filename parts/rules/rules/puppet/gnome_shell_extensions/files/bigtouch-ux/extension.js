@@ -132,7 +132,8 @@ function enable() {
         dateMenu_sensitivity     : dateMenu.actor.can_focus,
         dashVisible              : Main.overview._dash.actor.visible,
         keyboard_parent          : keyboard_actor.get_parent(),
-        searchEntryVisibility    : Main.overview._searchEntry.visible
+        searchEntryVisibility    : Main.overview._searchEntry.visible,
+        keyboard_show_function   : Main.keyboard.Show
     };
 
     // Unnecessary elements must go. Less is more.
@@ -150,6 +151,8 @@ function enable() {
         if (action instanceof imports.ui.edgeDragAction.EdgeDragAction)
             action.enabled = false;
     });
+
+    Main.keyboard.Show = function() {};
 }
 
 function disable() {
@@ -171,4 +174,6 @@ function disable() {
     dateMenu.actor.reparent(old_state.dateMenu_parent);
     appMenu_actor.reparent(old_state.appMenu_parent);
     keyboard_actor.reparent(old_state.keyboard_parent);
+
+    Main.keyboard.Show = old_state.keyboard_show_function;
 }
