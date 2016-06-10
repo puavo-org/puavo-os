@@ -58,9 +58,46 @@ class LineTool:
 
         return True
 
+class PencilTool:
+
+    def __init__(self):
+        self.__path  = None
+        self.__scene = None
+
+    def start(self, scene, pos):
+        if self.__scene is not None:
+            return False
+
+        self.__scene = scene
+
+        self.__path = QGraphicsPathItem()
+        self.__path.setPen(QPen(Qt.white, 1, Qt.SolidLine))
+        painterPath = QPainterPath()
+        painterPath.moveTo(pos)
+        self.__path.setPath(painterPath)
+        scene.addItem(self.__path)
+        self.__scene = scene
+
+        return True
+
+    def move(self, pos):
+        if self.__scene is None:
+            return False
+
+        painterPath = self.__path.path()
+        painterPath.lineTo(pos)
+        self.__path.setPath(painterPath)
+
+        return True
+
+    def stop(self, pos):
+        self.__path  = None
+        self.__scene = None
+
 class Canvas(QGraphicsScene):
 
-    TOOL_LINE = LineTool()
+    TOOL_LINE   = LineTool()
+    TOOL_PENCIL = PencilTool()
 
     def __init__(self, *args):
         super().__init__(*args)
@@ -104,8 +141,14 @@ class MainWindow(QMainWindow):
         self.__lineAction.setCheckable(True)
         self.__lineAction.setChecked(True)
 
+        self.__pencilAction = self.__toolBar.addAction("Pencil")
+        self.__pencilAction.setActionGroup(self.__penActionGroup)
+        self.__pencilAction.setCheckable(True)
+
         self.__lineAction.triggered.connect(
             lambda: self.__canvas.setTool(Canvas.TOOL_LINE))
+        self.__pencilAction.triggered.connect(
+            lambda: self.__canvas.setTool(Canvas.TOOL_PENCIL))
 
         self.addToolBar(self.__toolBar)
 
