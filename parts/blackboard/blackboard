@@ -152,7 +152,7 @@ class MainWindow(QMainWindow):
         self.__pencilAction.triggered.connect(
             lambda: self.__canvas.setTool(Canvas.TOOL_PENCIL))
 
-        self.addToolBar(self.__toolBar)
+        self.addToolBar(Qt.BottomToolBarArea, self.__toolBar)
 
         self.setCentralWidget(self.__canvasView)
 
