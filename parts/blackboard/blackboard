@@ -32,7 +32,7 @@ class LineTool:
             return False
 
         self.__line = QGraphicsLineItem()
-        self.__line.setPen(QPen(Qt.white, 5, Qt.SolidLine))
+        self.__line.setPen(QPen(Qt.white, 5, Qt.SolidLine, Qt.RoundCap))
         self.__line.setPos(pos)
         scene.addItem(self.__line)
         self.__scene = scene
@@ -71,7 +71,7 @@ class PencilTool:
         self.__scene = scene
 
         self.__path = QGraphicsPathItem()
-        self.__path.setPen(QPen(Qt.white, 5, Qt.SolidLine))
+        self.__path.setPen(QPen(Qt.white, 5, Qt.SolidLine, Qt.RoundCap))
         painterPath = QPainterPath()
         painterPath.moveTo(pos)
         self.__path.setPath(painterPath)
