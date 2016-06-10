@@ -129,8 +129,8 @@ class MainWindow(QMainWindow):
         self.__canvasView = QGraphicsView(self.__canvas)
         self.__canvasView.setRenderHints(QPainter.Antialiasing)
 
-        self.__penActionGroup = QActionGroup(self)
-        self.__penActionGroup.setExclusive(True)
+        self.__toolActionGroup = QActionGroup(self)
+        self.__toolActionGroup.setExclusive(True)
 
         self.__toolBar = QToolBar("Tools")
         self.__clearAction = self.__toolBar.addAction("Clear")
@@ -139,12 +139,12 @@ class MainWindow(QMainWindow):
         self.__toolBar.addSeparator()
 
         self.__lineAction = self.__toolBar.addAction("Line")
-        self.__lineAction.setActionGroup(self.__penActionGroup)
+        self.__lineAction.setActionGroup(self.__toolActionGroup)
         self.__lineAction.setCheckable(True)
         self.__lineAction.setChecked(True)
 
         self.__pencilAction = self.__toolBar.addAction("Pencil")
-        self.__pencilAction.setActionGroup(self.__penActionGroup)
+        self.__pencilAction.setActionGroup(self.__toolActionGroup)
         self.__pencilAction.setCheckable(True)
 
         self.__lineAction.triggered.connect(
