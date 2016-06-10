@@ -21,6 +21,9 @@ from PyQt5.QtCore    import *
 from PyQt5.QtGui     import *
 from PyQt5.QtWidgets import *
 
+_PEN   = QPen(Qt.white, 5, Qt.SolidLine, Qt.RoundCap)
+_BRUSH = QBrush(QColor(27, 51, 40), Qt.SolidPattern)
+
 class LineTool:
 
     def __init__(self):
@@ -32,7 +35,7 @@ class LineTool:
             return False
 
         self.__line = QGraphicsLineItem()
-        self.__line.setPen(QPen(Qt.white, 5, Qt.SolidLine, Qt.RoundCap))
+        self.__line.setPen(_PEN)
         self.__line.setPos(pos)
         scene.addItem(self.__line)
         self.__scene = scene
@@ -71,7 +74,7 @@ class PencilTool:
         self.__scene = scene
 
         self.__path = QGraphicsPathItem()
-        self.__path.setPen(QPen(Qt.white, 5, Qt.SolidLine, Qt.RoundCap))
+        self.__path.setPen(_PEN)
         painterPath = QPainterPath()
         painterPath.moveTo(pos)
         self.__path.setPath(painterPath)
@@ -103,7 +106,7 @@ class Canvas(QGraphicsScene):
         super().__init__(*args)
 
         self.__tool = Canvas.TOOL_PENCIL
-        self.setBackgroundBrush(QBrush(QColor(27, 51, 40), Qt.SolidPattern))
+        self.setBackgroundBrush(_BRUSH)
 
     def mousePressEvent(self, event):
         self.__tool.start(self, event.scenePos())
