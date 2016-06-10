@@ -26,6 +26,11 @@ class MainWindow(QMainWindow):
         super().__init__(*args)
 
 def main():
+    if len(sys.argv) - 1 != 0:
+        print("error: invalid number of arguments (%d), expected 0"
+              % (len(sys.argv) - 1), file=sys.stderr)
+        return 1
+
     app = QApplication(sys.argv)
     win = MainWindow()
 
