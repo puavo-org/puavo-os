@@ -57,6 +57,7 @@ class MainWindow(QMainWindow):
 
         self.__canvas = Canvas(0, 0, 640, 480, self)
         self.__canvasView = QGraphicsView(self.__canvas)
+        self.__canvasView.setRenderHints(QPainter.Antialiasing)
 
         self.__toolBar = QToolBar("Tools")
         self.__clearAction = self.__toolBar.addAction("Clear")
