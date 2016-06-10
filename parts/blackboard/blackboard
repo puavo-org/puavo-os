@@ -27,11 +27,12 @@ class Canvas(QGraphicsScene):
         super().__init__(*args)
 
         self.__line = None
+        self.setBackgroundBrush(QBrush(QColor(27, 51, 40), Qt.SolidPattern))
 
     def mousePressEvent(self, event):
         if self.__line is None:
             self.__line = QGraphicsLineItem()
-            self.__line.setPen(QPen(Qt.black, 1, Qt.SolidLine))
+            self.__line.setPen(QPen(Qt.white, 1, Qt.SolidLine))
             self.__line.setPos(event.scenePos())
             self.addItem(self.__line)
         super().mousePressEvent(event)
