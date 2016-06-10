@@ -129,35 +129,33 @@ class MainWindow(QMainWindow):
         super().__init__(*args)
 
         self.__canvas = Canvas(0, 0, 640, 480, self)
-        self.__canvasView = QGraphicsView(self.__canvas)
-        self.__canvasView.setRenderHints(QPainter.Antialiasing)
+        view = QGraphicsView(self.__canvas)
+        view.setRenderHints(QPainter.Antialiasing)
+        self.setCentralWidget(view)
+
+        self.__toolBar = QToolBar("Tools")
+        self.addToolBar(Qt.BottomToolBarArea, self.__toolBar)
+
+        self.__clearAction = self.__toolBar.addAction("Clear")
+        self.__toolBar.addSeparator()
+        self.__lineAction = self.__toolBar.addAction("Line")
+        self.__pencilAction = self.__toolBar.addAction("Pencil")
+
+        self.__clearAction.triggered.connect(self.__canvas.clear)
+        self.__lineAction.toggled.connect(
+            lambda: self.__canvas.setTool(Canvas.TOOL_LINE))
+        self.__pencilAction.toggled.connect(
+            lambda: self.__canvas.setTool(Canvas.TOOL_PENCIL))
 
         self.__toolActionGroup = QActionGroup(self)
         self.__toolActionGroup.setExclusive(True)
+        self.__toolActionGroup.addAction(self.__lineAction)
+        self.__toolActionGroup.addAction(self.__pencilAction)
 
-        self.__toolBar = QToolBar("Tools")
-        self.__clearAction = self.__toolBar.addAction("Clear")
-        self.__clearAction.triggered.connect(self.__canvas.clear)
-
-        self.__toolBar.addSeparator()
-
-        self.__lineAction = self.__toolBar.addAction("Line")
-        self.__lineAction.toggled.connect(
-            lambda: self.__canvas.setTool(Canvas.TOOL_LINE))
-        self.__lineAction.setActionGroup(self.__toolActionGroup)
         self.__lineAction.setCheckable(True)
 
-        self.__pencilAction = self.__toolBar.addAction("Pencil")
-        self.__pencilAction.toggled.connect(
-            lambda: self.__canvas.setTool(Canvas.TOOL_PENCIL))
-        self.__pencilAction.setActionGroup(self.__toolActionGroup)
         self.__pencilAction.setCheckable(True)
-
         self.__pencilAction.setChecked(True)
-
-        self.addToolBar(Qt.BottomToolBarArea, self.__toolBar)
-
-        self.setCentralWidget(self.__canvasView)
 
 def main():
     if len(sys.argv) - 1 != 0:
