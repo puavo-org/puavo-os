@@ -23,10 +23,13 @@ from PyQt5.QtWidgets import *
 
 class Canvas(QGraphicsScene):
 
+    TOOL_LINE = 1
+
     def __init__(self, *args):
         super().__init__(*args)
 
         self.__line = None
+        self.__tool = Canvas.TOOL_LINE
         self.setBackgroundBrush(QBrush(QColor(27, 51, 40), Qt.SolidPattern))
 
     def mousePressEvent(self, event):
@@ -50,6 +53,9 @@ class Canvas(QGraphicsScene):
         self.__line = None
         super().mouseReleaseEvent(event)
 
+    def setTool(self, tool):
+        self.__tool = tool
+
 class MainWindow(QMainWindow):
 
     def __init__(self, *args):
@@ -59,9 +65,21 @@ class MainWindow(QMainWindow):
         self.__canvasView = QGraphicsView(self.__canvas)
         self.__canvasView.setRenderHints(QPainter.Antialiasing)
 
+        self.__penActionGroup = QActionGroup(self)
+        self.__penActionGroup.setExclusive(True)
+
         self.__toolBar = QToolBar("Tools")
         self.__clearAction = self.__toolBar.addAction("Clear")
         self.__clearAction.triggered.connect(self.__canvas.clear)
+
+        self.__lineAction = self.__toolBar.addAction("Line")
+        self.__lineAction.setActionGroup(self.__penActionGroup)
+        self.__lineAction.setCheckable(True)
+        self.__lineAction.setChecked(True)
+
+        self.__lineAction.toggled.connect(
+            lambda: self.__canvas.setTool(Canvas.TOOL_LINE))
+
         self.addToolBar(self.__toolBar)
 
         self.setCentralWidget(self.__canvasView)
