@@ -136,6 +136,8 @@ class MainWindow(QMainWindow):
         self.__clearAction = self.__toolBar.addAction("Clear")
         self.__clearAction.triggered.connect(self.__canvas.clear)
 
+        self.__toolBar.addSeparator()
+
         self.__lineAction = self.__toolBar.addAction("Line")
         self.__lineAction.setActionGroup(self.__penActionGroup)
         self.__lineAction.setCheckable(True)
