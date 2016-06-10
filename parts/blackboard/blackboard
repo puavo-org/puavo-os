@@ -21,36 +21,63 @@ from PyQt5.QtCore    import *
 from PyQt5.QtGui     import *
 from PyQt5.QtWidgets import *
 
+class LineTool:
+
+    def __init__(self):
+        self.__line  = None
+        self.__scene = None
+
+    def start(self, scene, pos):
+        if self.__scene is not None:
+            return False
+
+        self.__line = QGraphicsLineItem()
+        self.__line.setPen(QPen(Qt.white, 1, Qt.SolidLine))
+        self.__line.setPos(pos)
+        scene.addItem(self.__line)
+        self.__scene = scene
+
+        return True
+
+    def move(self, pos):
+        if self.__scene is None:
+            return False
+
+        self.__line.setLine(0, 0,
+                            pos.x() - self.__line.pos().x(),
+                            pos.y() - self.__line.pos().y())
+
+        return True
+
+    def stop(self, pos):
+        if self.__scene is None:
+            return False
+
+        self.__line  = None
+        self.__scene = None
+
+        return True
+
 class Canvas(QGraphicsScene):
 
-    TOOL_LINE = 1
+    TOOL_LINE = LineTool()
 
     def __init__(self, *args):
         super().__init__(*args)
 
-        self.__line = None
         self.__tool = Canvas.TOOL_LINE
         self.setBackgroundBrush(QBrush(QColor(27, 51, 40), Qt.SolidPattern))
 
     def mousePressEvent(self, event):
-        if self.__line is None:
-            self.__line = QGraphicsLineItem()
-            self.__line.setPen(QPen(Qt.white, 1, Qt.SolidLine))
-            self.__line.setPos(event.scenePos())
-            self.addItem(self.__line)
+        self.__tool.start(self, event.scenePos())
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
-        if self.__line is None:
-            super().mouseMoveEvent(event)
-            return
-
-        self.__line.setLine(0, 0,
-                            event.scenePos().x() - self.__line.pos().x(),
-                            event.scenePos().y() - self.__line.pos().y())
+        self.__tool.move(event.scenePos())
+        super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
-        self.__line = None
+        self.__tool.stop(event.scenePos())
         super().mouseReleaseEvent(event)
 
     def setTool(self, tool):
@@ -77,7 +104,7 @@ class MainWindow(QMainWindow):
         self.__lineAction.setCheckable(True)
         self.__lineAction.setChecked(True)
 
-        self.__lineAction.toggled.connect(
+        self.__lineAction.triggered.connect(
             lambda: self.__canvas.setTool(Canvas.TOOL_LINE))
 
         self.addToolBar(self.__toolBar)
