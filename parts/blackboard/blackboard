@@ -105,7 +105,7 @@ class Canvas(QGraphicsScene):
     def __init__(self, *args):
         super().__init__(*args)
 
-        self.__tool = Canvas.TOOL_PENCIL
+        self.__tool = None
         self.setBackgroundBrush(_BRUSH)
 
     def mousePressEvent(self, event):
@@ -142,18 +142,18 @@ class MainWindow(QMainWindow):
         self.__toolBar.addSeparator()
 
         self.__lineAction = self.__toolBar.addAction("Line")
+        self.__lineAction.toggled.connect(
+            lambda: self.__canvas.setTool(Canvas.TOOL_LINE))
         self.__lineAction.setActionGroup(self.__toolActionGroup)
         self.__lineAction.setCheckable(True)
 
         self.__pencilAction = self.__toolBar.addAction("Pencil")
+        self.__pencilAction.toggled.connect(
+            lambda: self.__canvas.setTool(Canvas.TOOL_PENCIL))
         self.__pencilAction.setActionGroup(self.__toolActionGroup)
         self.__pencilAction.setCheckable(True)
-        self.__pencilAction.setChecked(True)
 
-        self.__lineAction.triggered.connect(
-            lambda: self.__canvas.setTool(Canvas.TOOL_LINE))
-        self.__pencilAction.triggered.connect(
-            lambda: self.__canvas.setTool(Canvas.TOOL_PENCIL))
+        self.__pencilAction.setChecked(True)
 
         self.addToolBar(Qt.BottomToolBarArea, self.__toolBar)
 
