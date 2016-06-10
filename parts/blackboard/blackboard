@@ -17,13 +17,47 @@
 
 import sys
 
+from PyQt5.QtCore    import *
 from PyQt5.QtGui     import *
 from PyQt5.QtWidgets import *
+
+class Canvas(QGraphicsScene):
+
+    def __init__(self, *args):
+        super().__init__(*args)
+
+        self.__line = None
+
+    def mousePressEvent(self, event):
+        if self.__line is None:
+            self.__line = QGraphicsLineItem()
+            self.__line.setPen(QPen(Qt.black, 1, Qt.SolidLine))
+            self.__line.setPos(event.scenePos())
+            self.addItem(self.__line)
+        super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):
+        if self.__line is None:
+            super().mouseMoveEvent(event)
+            return
+
+        self.__line.setLine(0, 0,
+                            event.scenePos().x() - self.__line.pos().x(),
+                            event.scenePos().y() - self.__line.pos().y())
+
+    def mouseReleaseEvent(self, event):
+        self.__line = None
+        super().mouseReleaseEvent(event)
 
 class MainWindow(QMainWindow):
 
     def __init__(self, *args):
         super().__init__(*args)
+
+        self.__canvas = Canvas(0, 0, 640, 480, self)
+        self.__canvasView = QGraphicsView(self.__canvas)
+
+        self.setCentralWidget(self.__canvasView)
 
 def main():
     if len(sys.argv) - 1 != 0:
