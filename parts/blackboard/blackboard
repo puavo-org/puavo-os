@@ -102,7 +102,7 @@ class Canvas(QGraphicsScene):
     def __init__(self, *args):
         super().__init__(*args)
 
-        self.__tool = Canvas.TOOL_LINE
+        self.__tool = Canvas.TOOL_PENCIL
         self.setBackgroundBrush(QBrush(QColor(27, 51, 40), Qt.SolidPattern))
 
     def mousePressEvent(self, event):
@@ -141,11 +141,11 @@ class MainWindow(QMainWindow):
         self.__lineAction = self.__toolBar.addAction("Line")
         self.__lineAction.setActionGroup(self.__toolActionGroup)
         self.__lineAction.setCheckable(True)
-        self.__lineAction.setChecked(True)
 
         self.__pencilAction = self.__toolBar.addAction("Pencil")
         self.__pencilAction.setActionGroup(self.__toolActionGroup)
         self.__pencilAction.setCheckable(True)
+        self.__pencilAction.setChecked(True)
 
         self.__lineAction.triggered.connect(
             lambda: self.__canvas.setTool(Canvas.TOOL_LINE))
