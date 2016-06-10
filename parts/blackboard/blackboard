@@ -57,6 +57,11 @@ class MainWindow(QMainWindow):
         self.__canvas = Canvas(0, 0, 640, 480, self)
         self.__canvasView = QGraphicsView(self.__canvas)
 
+        self.__toolBar = QToolBar("Tools")
+        self.__clearAction = self.__toolBar.addAction("Clear")
+        self.__clearAction.triggered.connect(self.__canvas.clear)
+        self.addToolBar(self.__toolBar)
+
         self.setCentralWidget(self.__canvasView)
 
 def main():
