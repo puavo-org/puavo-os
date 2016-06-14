@@ -1,9 +1,9 @@
-all: icons.py
+all: puavo/blackboard/icons.py
 
-icons.py: icons.qrc icons/*.svg
+puavo/blackboard/icons.py: icons.qrc icons/*.svg
 	pyrcc5 $< >$@
 
 clean:
-	rm -f icons.py
+	rm -f puavo/blackboard/icons.py
 
 .PHONY: all clean

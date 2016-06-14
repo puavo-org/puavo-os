@@ -21,7 +21,7 @@ from PyQt5.QtCore    import *
 from PyQt5.QtGui     import *
 from PyQt5.QtWidgets import *
 
-import icons
+import puavo.blackboard.icons
 
 _PEN             = QPen(Qt.white, 5, Qt.SolidLine, Qt.RoundCap)
 _PEN_COLOR_NAMES = ("black", "maroon", "green", "olive",
