@@ -60,8 +60,8 @@ class PuavoImageClient
       while response = @client.send(method, *args, @headers) do
         if response.status == 401
           puts "Invalid username or password!" if counter > 0
-          self.username = ask("Enter your username: ") { |q| q.echo = true } if self.username.nil?
-          self.password = ask("Enter your password: ") { |q| q.echo = "*" } if self.password.nil?
+          self.username = ask("Enter your username: ") { |q| q.echo = true }
+          self.password = ask("Enter your password: ") { |q| q.echo = "*" }
           @client.set_auth(self.meta_server, username, password)
           counter += 1
           next
