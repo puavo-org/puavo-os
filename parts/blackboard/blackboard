@@ -37,12 +37,12 @@ def penWidthIcon(width, iconWidth=16, iconHeight=16):
 
     return QIcon(pixmap)
 
-def colorIcon(colorName):
-    pixmap = QPixmap(16, 16)
+def colorIcon(colorName, iconWidth=16, iconHeight=16):
+    pixmap = QPixmap(iconWidth, iconHeight)
     painter = QPainter(pixmap)
     painter.setPen(Qt.NoPen)
     painter.setBrush(QColor(colorName))
-    painter.drawRect(0, 0, 16, 16)
+    painter.drawRect(0, 0, iconWidth, iconHeight)
     painter.end()
 
     return QIcon(pixmap)
