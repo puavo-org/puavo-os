@@ -26,6 +26,17 @@ _PEN_COLOR_NAMES = ("red", "green", "blue", "yellow", "aqua", "magenta",
                     "orange", "lime", "lightpink", "khaki", "black", "white")
 _BRUSH           = QBrush(QColor(27, 51, 40), Qt.SolidPattern)
 
+
+def colorIcon(colorName):
+    pixmap = QPixmap(16, 16)
+    painter = QPainter(pixmap)
+    painter.setPen(Qt.NoPen)
+    painter.setBrush(QColor(colorName))
+    painter.drawRect(0, 0, 16, 16)
+    painter.end()
+
+    return QIcon(pixmap)
+
 class LineTool:
 
     def __init__(self):
@@ -169,7 +180,8 @@ class MainWindow(QMainWindow):
 
         colorSignalMapper = QSignalMapper(self)
         for colorName in _PEN_COLOR_NAMES:
-            colorAction = self.__colorActionGroup.addAction(colorName.capitalize())
+            colorAction = self.__colorActionGroup.addAction(colorIcon(colorName),
+                                                            colorName.capitalize())
             colorAction.setCheckable(True)
             colorAction.toggled.connect(colorSignalMapper.map)
             colorSignalMapper.setMapping(colorAction, colorName)
