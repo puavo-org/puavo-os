@@ -125,44 +125,70 @@ class FreehandTool:
         self.__path  = None
         self.__scene = None
 
-class Canvas(QGraphicsScene):
+class Artist:
 
-    TOOL_LINE   = LineTool()
+    TOOL_LINE     = LineTool()
     TOOL_FREEHAND = FreehandTool()
+
+    def __init__(self):
+        self.__tool = None
+        self.__pen  = QPen(_PEN)
+
+    def setPenColor(self, colorName):
+        self.__pen.setColor(QColor(colorName))
+
+    def setPenWidth(self, width):
+        self.__pen.setWidth(width)
+
+    def setTool(self, tool):
+        self.__tool = tool
+
+    def start(self, canvas, pos):
+        self.__tool.start(canvas, pos, self.__pen)
+
+    def move(self, pos):
+        self.__tool.move(pos)
+
+    def stop(self, pos):
+        self.__tool.stop(pos)
+
+class Canvas(QGraphicsScene):
 
     def __init__(self, *args):
         super().__init__(*args)
 
-        self.__tool = None
+        self.__artist = None
         self.setBackgroundBrush(QBrush(QColor(27, 51, 40), Qt.SolidPattern))
 
-    def setPenColor(self, colorName):
-        _PEN.setColor(QColor(colorName))
-
-    def setPenWidth(self, width):
-        _PEN.setWidth(width)
-
     def mousePressEvent(self, event):
-        self.__tool.start(self, event.scenePos(), _PEN)
+        if self.__artist is not None:
+            self.__artist.start(self, event.scenePos())
+
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
-        self.__tool.move(event.scenePos())
+        if self.__artist is not None:
+            self.__artist.move(event.scenePos())
+
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
-        self.__tool.stop(event.scenePos())
+        if self.__artist is not None:
+            self.__artist.stop(event.scenePos())
+
         super().mouseReleaseEvent(event)
 
-    def setTool(self, tool):
-        self.__tool = tool
+    def setArtist(self, artist):
+        self.__artist = artist
 
 class MainWindow(QMainWindow):
 
     def __init__(self, *args):
         super().__init__(*args)
 
+        self.__artist = Artist()
         self.__canvas = Canvas(0, 0, 1920, 1080, self)
+        self.__canvas.setArtist(self.__artist)
         view = QGraphicsView(self.__canvas)
         view.setRenderHints(QPainter.Antialiasing)
         self.setCentralWidget(view)
@@ -177,9 +203,9 @@ class MainWindow(QMainWindow):
 
         self.__clearAction.triggered.connect(self.__canvas.clear)
         self.__lineAction.toggled.connect(
-            lambda: self.__canvas.setTool(Canvas.TOOL_LINE))
+            lambda: self.__artist.setTool(Artist.TOOL_LINE))
         self.__freehandAction.toggled.connect(
-            lambda: self.__canvas.setTool(Canvas.TOOL_FREEHAND))
+            lambda: self.__artist.setTool(Artist.TOOL_FREEHAND))
 
         self.__toolActionGroup = QActionGroup(self)
         self.__toolActionGroup.setExclusive(True)
@@ -204,7 +230,7 @@ class MainWindow(QMainWindow):
             colorAction.toggled.connect(colorSignalMapper.map)
             colorSignalMapper.setMapping(colorAction, colorName)
             self.__toolBar.addAction(colorAction)
-        colorSignalMapper.mapped[str].connect(self.__canvas.setPenColor)
+        colorSignalMapper.mapped[str].connect(self.__artist.setPenColor)
         colorAction.setChecked(True)
 
         self.__penWidthActionGroup = QActionGroup(self)
@@ -220,7 +246,7 @@ class MainWindow(QMainWindow):
             penWidthAction.toggled.connect(penWidthSignalMapper.map)
             penWidthSignalMapper.setMapping(penWidthAction, penWidth)
             self.__toolBar.addAction(penWidthAction)
-        penWidthSignalMapper.mapped[int].connect(self.__canvas.setPenWidth)
+        penWidthSignalMapper.mapped[int].connect(self.__artist.setPenWidth)
         penWidthAction.setChecked(True)
 
 def main():
