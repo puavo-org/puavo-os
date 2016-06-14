@@ -90,7 +90,7 @@ class LineTool:
 
         return True
 
-class PencilTool:
+class FreehandTool:
 
     def __init__(self):
         self.__path  = None
@@ -129,7 +129,7 @@ class PencilTool:
 class Canvas(QGraphicsScene):
 
     TOOL_LINE   = LineTool()
-    TOOL_PENCIL = PencilTool()
+    TOOL_FREEHAND = FreehandTool()
 
     def __init__(self, *args):
         super().__init__(*args)
@@ -174,23 +174,23 @@ class MainWindow(QMainWindow):
         self.__clearAction = self.__toolBar.addAction("Clear")
         self.__toolBar.addSeparator()
         self.__lineAction = self.__toolBar.addAction("Line")
-        self.__pencilAction = self.__toolBar.addAction("Pencil")
+        self.__freehandAction = self.__toolBar.addAction("Freehand")
 
         self.__clearAction.triggered.connect(self.__canvas.clear)
         self.__lineAction.toggled.connect(
             lambda: self.__canvas.setTool(Canvas.TOOL_LINE))
-        self.__pencilAction.toggled.connect(
-            lambda: self.__canvas.setTool(Canvas.TOOL_PENCIL))
+        self.__freehandAction.toggled.connect(
+            lambda: self.__canvas.setTool(Canvas.TOOL_FREEHAND))
 
         self.__toolActionGroup = QActionGroup(self)
         self.__toolActionGroup.setExclusive(True)
         self.__toolActionGroup.addAction(self.__lineAction)
-        self.__toolActionGroup.addAction(self.__pencilAction)
+        self.__toolActionGroup.addAction(self.__freehandAction)
 
         self.__lineAction.setCheckable(True)
 
-        self.__pencilAction.setCheckable(True)
-        self.__pencilAction.setChecked(True)
+        self.__freehandAction.setCheckable(True)
+        self.__freehandAction.setChecked(True)
 
         self.__colorActionGroup = QActionGroup(self)
         self.__colorActionGroup.setExclusive(True)
