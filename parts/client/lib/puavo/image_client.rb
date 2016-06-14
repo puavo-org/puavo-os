@@ -35,7 +35,7 @@ class PuavoImageClient
 
   class Upload
 
-    attr_accessor :username, :password, :meta_server, :domain
+    attr_accessor :username, :password, :meta_server, :headers
 
     def initialize(args)
       @client = HTTPClient.new()
@@ -44,7 +44,7 @@ class PuavoImageClient
       @client.receive_timeout = 60 * 60 * 2
 
       @meta_server = args[:meta_server]
-      @domain = args[:domain]
+      @headers = { "X-Auth-Host" => args[:domain] }
     end
 
     def post(*args)
@@ -57,14 +57,12 @@ class PuavoImageClient
 
     def request(method, *args)
       counter = 0
-      headers = {}
-      while response = @client.send(method, *args, headers) do
+      while response = @client.send(method, *args, @headers) do
         if response.status == 401
           puts "Invalid username or password!" if counter > 0
           self.username = ask("Enter your username: ") { |q| q.echo = true } if self.username.nil?
           self.password = ask("Enter your password: ") { |q| q.echo = "*" } if self.password.nil?
           @client.set_auth(self.meta_server, username, password)
-          headers = { :host => self.domain }
           counter += 1
           next
         end
