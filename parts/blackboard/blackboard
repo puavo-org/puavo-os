@@ -58,22 +58,22 @@ class LineTool:
 
     def __init__(self):
         self.__line  = None
-        self.__scene = None
+        self.__canvas = None
 
-    def start(self, scene, pos, pen):
-        if self.__scene is not None:
+    def start(self, canvas, pos, pen):
+        if self.__canvas is not None:
             return False
 
         self.__line = QGraphicsLineItem()
         self.__line.setPen(pen)
         self.__line.setPos(pos)
-        scene.addItem(self.__line)
-        self.__scene = scene
+        canvas.addItem(self.__line)
+        self.__canvas = canvas
 
         return True
 
     def move(self, pos):
-        if self.__scene is None:
+        if self.__canvas is None:
             return False
 
         self.__line.setLine(0, 0,
@@ -83,11 +83,11 @@ class LineTool:
         return True
 
     def stop(self, pos):
-        if self.__scene is None:
+        if self.__canvas is None:
             return False
 
         self.__line  = None
-        self.__scene = None
+        self.__canvas = None
 
         return True
 
@@ -95,26 +95,26 @@ class FreehandTool:
 
     def __init__(self):
         self.__path  = None
-        self.__scene = None
+        self.__canvas = None
 
-    def start(self, scene, pos, pen):
-        if self.__scene is not None:
+    def start(self, canvas, pos, pen):
+        if self.__canvas is not None:
             return False
 
-        self.__scene = scene
+        self.__canvas = canvas
 
         self.__path = QGraphicsPathItem()
         self.__path.setPen(pen)
         painterPath = QPainterPath()
         painterPath.moveTo(pos)
         self.__path.setPath(painterPath)
-        scene.addItem(self.__path)
-        self.__scene = scene
+        canvas.addItem(self.__path)
+        self.__canvas = canvas
 
         return True
 
     def move(self, pos):
-        if self.__scene is None:
+        if self.__canvas is None:
             return False
 
         painterPath = self.__path.path()
@@ -125,7 +125,7 @@ class FreehandTool:
 
     def stop(self, pos):
         self.__path  = None
-        self.__scene = None
+        self.__canvas = None
 
 class Artist:
 
