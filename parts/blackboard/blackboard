@@ -27,7 +27,6 @@ _PEN_COLOR_NAMES = ("black", "maroon", "green", "olive",
                     "gray", "red", "lime", "yellow",
                     "blu", "fuchsia", "aqua", "white")
 _PEN_WIDTHS      = (2, 5, 8, 11, 14)
-_BRUSH           = QBrush(QColor(27, 51, 40), Qt.SolidPattern)
 
 def penWidthIcon(width):
     pixmap = QPixmap(16, 16)
@@ -135,7 +134,7 @@ class Canvas(QGraphicsScene):
         super().__init__(*args)
 
         self.__tool = None
-        self.setBackgroundBrush(_BRUSH)
+        self.setBackgroundBrush(QBrush(QColor(27, 51, 40), Qt.SolidPattern))
 
     def setPenColor(self, colorName):
         _PEN.setColor(QColor(colorName))
