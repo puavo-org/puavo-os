@@ -21,6 +21,8 @@ from PyQt5.QtCore    import *
 from PyQt5.QtGui     import *
 from PyQt5.QtWidgets import *
 
+import icons
+
 _PEN             = QPen(Qt.white, 5, Qt.SolidLine, Qt.RoundCap)
 _PEN_COLOR_NAMES = ("black", "maroon", "green", "olive",
                     "navy", "purple", "teal", "silver",
@@ -198,8 +200,8 @@ class MainWindow(QMainWindow):
 
         self.__clearAction = self.__toolBar.addAction("Clear")
         self.__toolBar.addSeparator()
-        self.__lineAction = self.__toolBar.addAction("Line")
-        self.__freehandAction = self.__toolBar.addAction("Freehand")
+        self.__lineAction = self.__toolBar.addAction(QIcon(":icons/line16.png"), "Line")
+        self.__freehandAction = self.__toolBar.addAction(QIcon(":icons/freehand16.png"), "Freehand")
 
         self.__clearAction.triggered.connect(self.__canvas.clear)
         self.__lineAction.toggled.connect(
