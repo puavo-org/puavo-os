@@ -163,7 +163,7 @@ class MainWindow(QMainWindow):
     def __init__(self, *args):
         super().__init__(*args)
 
-        self.__canvas = Canvas(0, 0, 640, 480, self)
+        self.__canvas = Canvas(0, 0, 1920, 1080, self)
         view = QGraphicsView(self.__canvas)
         view.setRenderHints(QPainter.Antialiasing)
         self.setCentralWidget(view)
