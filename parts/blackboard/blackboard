@@ -24,8 +24,22 @@ from PyQt5.QtWidgets import *
 _PEN             = QPen(Qt.white, 5, Qt.SolidLine, Qt.RoundCap)
 _PEN_COLOR_NAMES = ("red", "green", "blue", "yellow", "aqua", "magenta",
                     "orange", "lime", "lightpink", "khaki", "black", "white")
+_PEN_WIDTHS      = (2, 5, 8, 11, 14)
 _BRUSH           = QBrush(QColor(27, 51, 40), Qt.SolidPattern)
 
+def penWidthIcon(width):
+    pixmap = QPixmap(16, 16)
+    painter = QPainter(pixmap)
+    painter.setRenderHint(QPainter.Antialiasing)
+    painter.setPen(Qt.NoPen)
+    painter.setBrush(Qt.white)
+    painter.drawRect(0, 0, 16, 16)
+    painter.setBrush(Qt.black)
+    x = y = (16 - width) / 2
+    painter.drawEllipse(x, y, width, width)
+    painter.end()
+
+    return QIcon(pixmap)
 
 def colorIcon(colorName):
     pixmap = QPixmap(16, 16)
@@ -124,6 +138,9 @@ class Canvas(QGraphicsScene):
     def setPenColor(self, colorName):
         _PEN.setColor(QColor(colorName))
 
+    def setPenWidth(self, width):
+        _PEN.setWidth(width)
+
     def mousePressEvent(self, event):
         self.__tool.start(self, event.scenePos())
         super().mousePressEvent(event)
@@ -188,6 +205,22 @@ class MainWindow(QMainWindow):
             self.__toolBar.addAction(colorAction)
         colorSignalMapper.mapped[str].connect(self.__canvas.setPenColor)
         colorAction.setChecked(True)
+
+        self.__penWidthActionGroup = QActionGroup(self)
+        self.__penWidthActionGroup.setExclusive(True)
+
+        self.__toolBar.addSeparator()
+
+        penWidthSignalMapper = QSignalMapper(self)
+        for penWidth in _PEN_WIDTHS:
+            penWidthAction = self.__penWidthActionGroup.addAction(penWidthIcon(penWidth),
+                                                                  str(penWidth).capitalize())
+            penWidthAction.setCheckable(True)
+            penWidthAction.toggled.connect(penWidthSignalMapper.map)
+            penWidthSignalMapper.setMapping(penWidthAction, penWidth)
+            self.__toolBar.addAction(penWidthAction)
+        penWidthSignalMapper.mapped[int].connect(self.__canvas.setPenWidth)
+        penWidthAction.setChecked(True)
 
 def main():
     if len(sys.argv) - 1 != 0:
