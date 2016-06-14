@@ -23,13 +23,6 @@ from PyQt5.QtWidgets import *
 
 import puavo.blackboard.icons
 
-_PEN             = QPen(Qt.white, 5, Qt.SolidLine, Qt.RoundCap)
-_PEN_COLOR_NAMES = ("black", "maroon", "green", "olive",
-                    "navy", "purple", "teal", "silver",
-                    "gray", "red", "lime", "yellow",
-                    "blue", "fuchsia", "aqua", "white")
-_PEN_WIDTHS      = (2, 5, 8, 11, 14)
-
 def penWidthIcon(width):
     pixmap = QPixmap(16, 16)
     painter = QPainter(pixmap)
@@ -134,7 +127,7 @@ class Artist:
 
     def __init__(self):
         self.__tool = None
-        self.__pen  = QPen(_PEN)
+        self.__pen  = QPen(Qt.white, 5, Qt.SolidLine, Qt.RoundCap)
 
     def setPenColor(self, colorName):
         self.__pen.setColor(QColor(colorName))
@@ -227,7 +220,10 @@ class MainWindow(QMainWindow):
         self.__toolBar.addSeparator()
 
         colorSignalMapper = QSignalMapper(self)
-        for colorName in _PEN_COLOR_NAMES:
+        for colorName in ("black", "maroon", "green", "olive",
+                          "navy", "purple", "teal", "silver",
+                          "gray", "red", "lime", "yellow",
+                          "blue", "fuchsia", "aqua", "white"):
             colorAction = self.__colorActionGroup.addAction(colorIcon(colorName),
                                                             colorName.capitalize())
             colorAction.setCheckable(True)
@@ -243,7 +239,7 @@ class MainWindow(QMainWindow):
         self.__toolBar.addSeparator()
 
         penWidthSignalMapper = QSignalMapper(self)
-        for penWidth in _PEN_WIDTHS:
+        for penWidth in (2, 5, 8, 11, 14):
             penWidthAction = self.__penWidthActionGroup.addAction(penWidthIcon(penWidth),
                                                                   str(penWidth).capitalize())
             penWidthAction.setCheckable(True)
