@@ -1,6 +1,6 @@
 all: icons.py
 
-icons.py: icons.qrc icons/*.png
+icons.py: icons.qrc icons/*.svg
 	pyrcc5 $< >$@
 
 clean:
