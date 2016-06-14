@@ -58,12 +58,12 @@ class LineTool:
         self.__line  = None
         self.__scene = None
 
-    def start(self, scene, pos):
+    def start(self, scene, pos, pen):
         if self.__scene is not None:
             return False
 
         self.__line = QGraphicsLineItem()
-        self.__line.setPen(_PEN)
+        self.__line.setPen(pen)
         self.__line.setPos(pos)
         scene.addItem(self.__line)
         self.__scene = scene
@@ -95,14 +95,14 @@ class FreehandTool:
         self.__path  = None
         self.__scene = None
 
-    def start(self, scene, pos):
+    def start(self, scene, pos, pen):
         if self.__scene is not None:
             return False
 
         self.__scene = scene
 
         self.__path = QGraphicsPathItem()
-        self.__path.setPen(_PEN)
+        self.__path.setPen(pen)
         painterPath = QPainterPath()
         painterPath.moveTo(pos)
         self.__path.setPath(painterPath)
@@ -143,7 +143,7 @@ class Canvas(QGraphicsScene):
         _PEN.setWidth(width)
 
     def mousePressEvent(self, event):
-        self.__tool.start(self, event.scenePos())
+        self.__tool.start(self, event.scenePos(), _PEN)
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
