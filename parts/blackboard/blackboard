@@ -27,7 +27,7 @@ _PEN             = QPen(Qt.white, 5, Qt.SolidLine, Qt.RoundCap)
 _PEN_COLOR_NAMES = ("black", "maroon", "green", "olive",
                     "navy", "purple", "teal", "silver",
                     "gray", "red", "lime", "yellow",
-                    "blu", "fuchsia", "aqua", "white")
+                    "blue", "fuchsia", "aqua", "white")
 _PEN_WIDTHS      = (2, 5, 8, 11, 14)
 
 def penWidthIcon(width):
