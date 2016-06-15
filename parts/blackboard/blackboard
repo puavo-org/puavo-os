@@ -291,14 +291,11 @@ class MainWindow(QMainWindow):
         self.__toolBar = QToolBar("Tools")
         self.addToolBar(Qt.BottomToolBarArea, self.__toolBar)
 
-        self.__clearAction = self.__toolBar.addAction("Clear")
-        self.__toolBar.addSeparator()
         self.__lineAction = self.__toolBar.addAction(
             QIcon(":icons/line.svg"), "Line")
         self.__freehandAction = self.__toolBar.addAction(
             QIcon(":icons/freehand.svg"), "Freehand")
 
-        self.__clearAction.triggered.connect(self.__canvas.clear)
         self.__lineAction.toggled.connect(
             lambda: self.__artist.setTool(Artist.TOOL_LINE))
         self.__freehandAction.toggled.connect(
