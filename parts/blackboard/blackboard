@@ -176,17 +176,117 @@ class Canvas(QGraphicsScene):
     def setArtist(self, artist):
         self.__artist = artist
 
+class CanvasView(QGraphicsView):
+
+    pressed = pyqtSignal()
+
+    def __init__(self, *args):
+        super().__init__(*args)
+
+        self.__isSelected = False
+
+        self.setScene(Canvas(0, 0, 1920, 1080, self))
+        self.setInteractive(False)
+
+        self.setMinimumSize(QSize(192, 108))
+        self.setMaximumSize(QSize(192, 108))
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        if self.scene() is not None:
+            self.fitInView(self.scene().sceneRect(), Qt.KeepAspectRatio)
+
+    def paintEvent(self, event):
+        super().paintEvent(event)
+        if self.__isSelected:
+            painter = QPainter(self.viewport())
+            penWidth = 5
+            painter.setPen(QPen(Qt.blue, penWidth))
+            painter.drawRect(0, 0,
+                             self.width() - penWidth, self.height() - penWidth)
+
+    def mousePressEvent(self, event):
+        self.pressed.emit()
+
+    def setSelected(self, isSelected):
+        self.__isSelected = isSelected
+        self.viewport().update()
+
+class CanvasBrowser(QWidget):
+
+    currentCanvasViewChanged = pyqtSignal()
+
+    def __init__(self, *args):
+        super().__init__(*args)
+
+        self.__currentCanvasView = None
+
+        layout = QVBoxLayout(self)
+
+        self.__canvasViewLayout = QVBoxLayout()
+
+        newButton = QPushButton("New")
+        newButton.clicked.connect(self.__addNewBoard)
+        newButton.setMinimumSize(QSize(192, 108))
+        newButton.setMaximumSize(QSize(192, 108))
+
+        layout.addLayout(self.__canvasViewLayout)
+        layout.addWidget(newButton)
+        layout.addStretch()
+
+        self.__addNewBoard()
+
+    def __addNewBoard(self):
+        canvasView = CanvasView()
+        canvasView.pressed.connect(self.__canvasViewPressed)
+        self.__canvasViewLayout.addWidget(canvasView)
+        self.__changeCurrentCanvasView(canvasView)
+
+    def __canvasViewPressed(self):
+        canvasView = self.sender()
+        self.__changeCurrentCanvasView(canvasView)
+
+    def __changeCurrentCanvasView(self, canvasView):
+        if self.__currentCanvasView is not None:
+            self.__currentCanvasView.setSelected(False)
+        self.__currentCanvasView = canvasView
+        self.__currentCanvasView.setSelected(True)
+        self.currentCanvasViewChanged.emit()
+
+    def currentView(self):
+        return self.__currentCanvasView
+
 class MainWindow(QMainWindow):
 
     def __init__(self, *args):
         super().__init__(*args)
 
         self.__artist = Artist()
-        self.__canvas = Canvas(0, 0, 1920, 1080, self)
-        self.__canvas.setArtist(self.__artist)
-        view = QGraphicsView(self.__canvas)
+
+        view = QGraphicsView()
         view.setRenderHints(QPainter.Antialiasing)
         self.setCentralWidget(view)
+
+        self.__canvasBrowser = CanvasBrowser(self)
+        self.__changeCanvas()
+        self.__canvasBrowser.currentCanvasViewChanged.connect(self.__changeCanvas)
+
+        self.__scrollArea = QScrollArea(self)
+        self.__scrollArea.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        self.__scrollArea.setWidget(self.__canvasBrowser)
+        self.__scrollArea.setWidgetResizable(True)
+
+        # Scroll to the bottom everytime a canvas view is added or
+        # removed.
+        self.__scrollArea.verticalScrollBar().rangeChanged.connect(
+            lambda min, max: self.__scrollArea.verticalScrollBar().setValue(max))
+
+        self.__canvasBrowserDockWidget = QDockWidget(self)
+        self.__canvasBrowserDockWidget.setFeatures(QDockWidget.NoDockWidgetFeatures)
+        self.__canvasBrowserDockWidget.setWidget(self.__scrollArea)
+        self.__canvasBrowserDockWidget.setWindowTitle("Boards")
+
+        self.addDockWidget(Qt.LeftDockWidgetArea, self.__canvasBrowserDockWidget)
 
         self.__toolBar = QToolBar("Tools")
         self.addToolBar(Qt.BottomToolBarArea, self.__toolBar)
@@ -248,6 +348,11 @@ class MainWindow(QMainWindow):
             self.__toolBar.addAction(penWidthAction)
         penWidthSignalMapper.mapped[int].connect(self.__artist.setPenWidth)
         penWidthAction.setChecked(True)
+
+    def __changeCanvas(self):
+        canvas = self.__canvasBrowser.currentView().scene()
+        canvas.setArtist(self.__artist)
+        self.centralWidget().setScene(canvas)
 
 def main():
     if len(sys.argv) - 1 != 0:
