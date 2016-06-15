@@ -1,7 +1,7 @@
 all: puavo/blackboard/icons.py
 
 puavo/blackboard/icons.py: icons.qrc icons/*.svg
-	pyrcc5 $< >$@
+	pyrcc5 -o "$@" "$<"
 
 clean:
 	rm -f puavo/blackboard/icons.py
