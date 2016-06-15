@@ -260,6 +260,7 @@ def main():
     win.setWindowTitle("Blackboard")
 
     win.show()
+    win.showMaximized()
 
     return app.exec_()
 
