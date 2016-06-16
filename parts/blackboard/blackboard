@@ -188,9 +188,6 @@ class CanvasView(QGraphicsView):
         self.setScene(Canvas(0, 0, 1920, 1080, self))
         self.setInteractive(False)
 
-        self.setMinimumSize(QSize(192, 108))
-        self.setMaximumSize(QSize(192, 108))
-
     def resizeEvent(self, event):
         super().resizeEvent(event)
         if self.scene() is not None:
@@ -221,25 +218,24 @@ class CanvasBrowser(QWidget):
 
         self.__currentCanvasView = None
 
-        layout = QVBoxLayout(self)
+        self.__listWidget = QListWidget(self)
 
-        self.__canvasViewLayout = QVBoxLayout()
+        layout = QVBoxLayout(self)
 
         newButton = QPushButton("New")
         newButton.clicked.connect(self.__addNewBoard)
-        newButton.setMinimumSize(QSize(192, 108))
-        newButton.setMaximumSize(QSize(192, 108))
 
-        layout.addLayout(self.__canvasViewLayout)
+        layout.addWidget(self.__listWidget)
         layout.addWidget(newButton)
-        layout.addStretch()
 
         self.__addNewBoard()
 
     def __addNewBoard(self):
         canvasView = CanvasView()
         canvasView.pressed.connect(self.__canvasViewPressed)
-        self.__canvasViewLayout.addWidget(canvasView)
+        item = QListWidgetItem(self.__listWidget)
+        item.setSizeHint(QSize(192, 108))
+        self.__listWidget.setItemWidget(item, canvasView)
         self.__changeCurrentCanvasView(canvasView)
 
     def __canvasViewPressed(self):
@@ -271,19 +267,9 @@ class MainWindow(QMainWindow):
         self.__changeCanvas()
         self.__canvasBrowser.currentCanvasViewChanged.connect(self.__changeCanvas)
 
-        self.__scrollArea = QScrollArea(self)
-        self.__scrollArea.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-        self.__scrollArea.setWidget(self.__canvasBrowser)
-        self.__scrollArea.setWidgetResizable(True)
-
-        # Scroll to the bottom everytime a canvas view is added or
-        # removed.
-        self.__scrollArea.verticalScrollBar().rangeChanged.connect(
-            lambda min, max: self.__scrollArea.verticalScrollBar().setValue(max))
-
         self.__canvasBrowserDockWidget = QDockWidget(self)
         self.__canvasBrowserDockWidget.setFeatures(QDockWidget.NoDockWidgetFeatures)
-        self.__canvasBrowserDockWidget.setWidget(self.__scrollArea)
+        self.__canvasBrowserDockWidget.setWidget(self.__canvasBrowser)
         self.__canvasBrowserDockWidget.setWindowTitle("Boards")
 
         self.addDockWidget(Qt.LeftDockWidgetArea, self.__canvasBrowserDockWidget)
