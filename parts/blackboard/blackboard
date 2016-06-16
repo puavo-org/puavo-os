@@ -223,14 +223,14 @@ class CanvasBrowser(QWidget):
         layout = QVBoxLayout(self)
 
         newButton = QPushButton("New")
-        newButton.clicked.connect(self.__addNewBoard)
+        newButton.clicked.connect(self.__addNewCanvas)
 
         layout.addWidget(self.__listWidget)
         layout.addWidget(newButton)
 
-        self.__addNewBoard()
+        self.__addNewCanvas()
 
-    def __addNewBoard(self):
+    def __addNewCanvas(self):
         canvasView = CanvasView()
         canvasView.pressed.connect(self.__canvasViewPressed)
         item = QListWidgetItem(self.__listWidget)
