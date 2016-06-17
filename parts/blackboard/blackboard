@@ -176,81 +176,63 @@ class Canvas(QGraphicsScene):
     def setArtist(self, artist):
         self.__artist = artist
 
-class CanvasView(QGraphicsView):
-
-    pressed = pyqtSignal()
-
-    def __init__(self, *args):
-        super().__init__(*args)
-
-        self.__isSelected = False
-
-        self.setScene(Canvas(0, 0, 1920, 1080, self))
-        self.setInteractive(False)
-
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        if self.scene() is not None:
-            self.fitInView(self.scene().sceneRect(), Qt.KeepAspectRatio)
-
-    def paintEvent(self, event):
-        super().paintEvent(event)
-        if self.__isSelected:
-            painter = QPainter(self.viewport())
-            penWidth = 5
-            painter.setPen(QPen(Qt.blue, penWidth))
-            painter.drawRect(0, 0,
-                             self.width() - penWidth, self.height() - penWidth)
-
-    def mousePressEvent(self, event):
-        self.pressed.emit()
-
-    def setSelected(self, isSelected):
-        self.__isSelected = isSelected
-        self.viewport().update()
-
 class CanvasBrowser(QWidget):
 
-    currentCanvasViewChanged = pyqtSignal()
+    currentChanged = pyqtSignal()
 
     def __init__(self, *args):
         super().__init__(*args)
 
-        self.__currentCanvasView = None
-
-        self.__listWidget = QListWidget(self)
-
-        layout = QVBoxLayout(self)
+        self.__listWidget = QListWidget()
+        self.__listWidget.setDragDropMode(QAbstractItemView.InternalMove)
+        self.__listWidget.currentItemChanged.connect(self.currentChanged)
 
         newButton = QPushButton("New")
         newButton.clicked.connect(self.__addNewCanvas)
 
+        layout = QVBoxLayout(self)
         layout.addWidget(self.__listWidget)
         layout.addWidget(newButton)
 
         self.__addNewCanvas()
 
     def __addNewCanvas(self):
-        canvasView = CanvasView()
-        canvasView.pressed.connect(self.__canvasViewPressed)
+        thumbnailSize = QSize(192, 108)
+
+        canvas = Canvas(0, 0, 1920, 1080, self)
+
+        pixmap = QPixmap(thumbnailSize)
+        painter = QPainter(pixmap)
+        canvas.render(painter)
+        painter.end()
+
+        label = QLabel()
+        label.setMargin(5)
+        label.setPixmap(pixmap)
+        label.setAlignment(Qt.AlignHCenter)
+
         item = QListWidgetItem(self.__listWidget)
-        item.setSizeHint(QSize(192, 108))
-        self.__listWidget.setItemWidget(item, canvasView)
-        self.__changeCurrentCanvasView(canvasView)
+        item.setData(Qt.UserRole, canvas)
+        item.setSizeHint(thumbnailSize)
 
-    def __canvasViewPressed(self):
-        canvasView = self.sender()
-        self.__changeCurrentCanvasView(canvasView)
+        def updateThumbnail():
+            pixmap = QPixmap(thumbnailSize)
+            painter = QPainter(pixmap)
+            canvas.render(painter)
+            painter.end()
+            label.setPixmap(pixmap)
 
-    def __changeCurrentCanvasView(self, canvasView):
-        if self.__currentCanvasView is not None:
-            self.__currentCanvasView.setSelected(False)
-        self.__currentCanvasView = canvasView
-        self.__currentCanvasView.setSelected(True)
-        self.currentCanvasViewChanged.emit()
+        canvas.changed.connect(updateThumbnail)
 
-    def currentView(self):
-        return self.__currentCanvasView
+        self.__listWidget.setItemWidget(item, label)
+        self.__listWidget.setCurrentItem(item)
+
+    def currentCanvas(self):
+        currentItem = self.__listWidget.currentItem()
+        if currentItem is not None:
+            return currentItem.data(Qt.UserRole)
+
+        return None
 
 class MainWindow(QMainWindow):
 
@@ -265,7 +247,7 @@ class MainWindow(QMainWindow):
 
         self.__canvasBrowser = CanvasBrowser(self)
         self.__changeCanvas()
-        self.__canvasBrowser.currentCanvasViewChanged.connect(self.__changeCanvas)
+        self.__canvasBrowser.currentChanged.connect(self.__changeCanvas)
 
         self.__canvasBrowserDockWidget = QDockWidget(self)
         self.__canvasBrowserDockWidget.setFeatures(QDockWidget.NoDockWidgetFeatures)
@@ -333,8 +315,9 @@ class MainWindow(QMainWindow):
         penWidthAction.setChecked(True)
 
     def __changeCanvas(self):
-        canvas = self.__canvasBrowser.currentView().scene()
-        canvas.setArtist(self.__artist)
+        canvas = self.__canvasBrowser.currentCanvas()
+        if canvas is not None:
+            canvas.setArtist(self.__artist)
         self.centralWidget().setScene(canvas)
 
 def main():
