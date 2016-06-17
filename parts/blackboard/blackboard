@@ -120,10 +120,36 @@ class FreehandTool:
         self.__path  = None
         self.__canvas = None
 
+class MoveTool:
+
+    def __init__(self):
+        self.__canvas = None
+
+    def start(self, canvas, pos, pen):
+        self.__canvas = canvas
+
+        for item in canvas.items():
+            item.setFlag(QGraphicsItem.ItemIsMovable, True)
+            item.setFlag(QGraphicsItem.ItemIsSelectable, True)
+
+    def move(self, pos):
+        pass
+
+    def stop(self, pos):
+        if self.__canvas is None:
+            return
+
+        for item in self.__canvas.items():
+            item.setFlag(QGraphicsItem.ItemIsMovable, False)
+            item.setFlag(QGraphicsItem.ItemIsSelectable, False)
+
+        self.__canvas = None
+
 class Artist:
 
     TOOL_LINE     = LineTool()
     TOOL_FREEHAND = FreehandTool()
+    TOOL_MOVE     = MoveTool()
 
     def __init__(self):
         self.__tool = None
@@ -267,24 +293,28 @@ class MainWindow(QMainWindow):
             QIcon(":icons/line.svg"), "Line")
         self.__freehandAction = self.__toolBar.addAction(
             QIcon(":icons/freehand.svg"), "Freehand")
+        self.__moveAction = self.__toolBar.addAction("Move")
 
         self.__lineAction.toggled.connect(
             lambda: self.__artist.setTool(Artist.TOOL_LINE))
         self.__freehandAction.toggled.connect(
             lambda: self.__artist.setTool(Artist.TOOL_FREEHAND))
+        self.__moveAction.toggled.connect(
+            lambda: self.__artist.setTool(Artist.TOOL_MOVE))
 
         self.__toolActionGroup = QActionGroup(self)
         self.__toolActionGroup.setExclusive(True)
         self.__toolActionGroup.addAction(self.__lineAction)
         self.__toolActionGroup.addAction(self.__freehandAction)
+        self.__toolActionGroup.addAction(self.__moveAction)
 
         self.__lineAction.setCheckable(True)
-
+        self.__moveAction.setCheckable(True)
         self.__freehandAction.setCheckable(True)
-        self.__freehandAction.setChecked(True)
 
         self.__colorActionGroup = QActionGroup(self)
         self.__colorActionGroup.setExclusive(True)
+        self.__colorActionGroup.setEnabled(False)
 
         self.__toolBar.addSeparator()
 
@@ -304,6 +334,7 @@ class MainWindow(QMainWindow):
 
         self.__penWidthActionGroup = QActionGroup(self)
         self.__penWidthActionGroup.setExclusive(True)
+        self.__penWidthActionGroup.setEnabled(False)
 
         self.__toolBar.addSeparator()
 
@@ -316,6 +347,13 @@ class MainWindow(QMainWindow):
             penWidthSignalMapper.setMapping(penWidthAction, penWidth)
             self.__toolBar.addAction(penWidthAction)
         penWidthSignalMapper.mapped[int].connect(self.__artist.setPenWidth)
+
+        self.__lineAction.toggled.connect(self.__colorActionGroup.setEnabled)
+        self.__freehandAction.toggled.connect(self.__colorActionGroup.setEnabled)
+        self.__lineAction.toggled.connect(self.__penWidthActionGroup.setEnabled)
+        self.__freehandAction.toggled.connect(self.__penWidthActionGroup.setEnabled)
+
+        self.__freehandAction.setChecked(True)
         penWidthAction.setChecked(True)
 
     def __changeCanvas(self):
