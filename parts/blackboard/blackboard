@@ -222,7 +222,11 @@ class CanvasBrowser(QWidget):
             painter.end()
             label.setPixmap(pixmap)
 
-        canvas.changed.connect(updateThumbnail)
+        timer = QTimer(self)
+        timer.setInterval(250)
+        timer.timeout.connect(updateThumbnail)
+
+        canvas.changed.connect(timer.start)
 
         self.__listWidget.setItemWidget(item, label)
         self.__listWidget.setCurrentItem(item)
