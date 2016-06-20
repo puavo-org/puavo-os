@@ -218,15 +218,15 @@ class CanvasBrowser(QWidget):
         self.__listWidget.currentItemChanged.connect(self.currentChanged)
 
         newButton = QPushButton("New")
-        newButton.clicked.connect(self.__addNewCanvas)
+        newButton.clicked.connect(self.addNewCanvas)
 
         layout = QVBoxLayout(self)
         layout.addWidget(self.__listWidget)
         layout.addWidget(newButton)
 
-        self.__addNewCanvas()
+        self.addNewCanvas()
 
-    def __addNewCanvas(self):
+    def addNewCanvas(self):
         thumbnailSize = QSize(192, 108)
 
         canvas = Canvas(0, 0, 1920, 1080, self)
