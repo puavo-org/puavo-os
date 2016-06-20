@@ -468,7 +468,7 @@ Package: puavo-blackboard
 Architecture: any
 Depends: ${misc:Depends},
  python3,
- python3-dbus.mainloop.qt5,
+ python3-dbus.mainloop.pyqt5,
  python3-pyqt5,
  python3-pyqt5.qtsvg
 Description: simple drawing application
