@@ -182,6 +182,9 @@ class Canvas(QGraphicsScene):
         self.__artist = None
         self.setBackgroundBrush(QBrush(QColor(27, 51, 40), Qt.SolidPattern))
 
+    def setBackgroundImage(self, fileName):
+        self.setBackgroundBrush(QBrush(QPixmap(fileName)))
+
     def mousePressEvent(self, event):
         if self.__artist is not None:
             self.__artist.start(self, event.scenePos())
@@ -372,7 +375,7 @@ class MainWindow(QMainWindow):
         if not result:
             return
 
-        canvas.setBackgroundBrush(QBrush(QPixmap(result)))
+        canvas.setBackgroundImage(result)
 
     def __changeCanvas(self):
         canvas = self.__canvasBrowser.currentCanvas()
