@@ -189,7 +189,9 @@ class Canvas(QGraphicsScene):
         self.setBackgroundBrush(QBrush(QColor(27, 51, 40), Qt.SolidPattern))
 
     def setBackgroundImage(self, fileName):
-        self.setBackgroundBrush(QBrush(QPixmap(fileName)))
+        pixmap = QPixmap(fileName)
+        if not pixmap.isNull():
+            self.setBackgroundBrush(QBrush(pixmap))
 
     def mousePressEvent(self, event):
         if self.__artist is not None:
