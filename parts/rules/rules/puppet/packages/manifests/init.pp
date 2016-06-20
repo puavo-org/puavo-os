@@ -694,6 +694,7 @@ class packages {
 
     # [ 'fluent-plugin-puavo'   # XXX not yet packaged for Debian
     [ 'iivari-client'
+    , 'puavo-blackboard'
     , 'puavo-image-tools'
     # , 'puavo-load-reporter'   # XXX not yet packaged for Debian
     , 'puavo-local-config'
