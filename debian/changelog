@@ -1,3 +1,71 @@
+puavo-os (0.17.0~rc4+c90996930c652fe394352685c24c696e2d977f0f) jessie; urgency=medium
+
+  * New release
+  * Add Debian packaging to puavo-blackboard
+  * blackboard: add install target to Makefile
+  * blackboard: rename the top-level library package
+  * blackboard: add a basic sanity check to Canvas.setBackgroundImage()
+  * blackboard: add support for adding new canvas via D-Bus
+  * blackboard: rename CanvasBrowser.__addNewCanvas() => addNewCanvas()
+  * blackboard: add Canvas.setBackgroundImage()
+  * blackboard: add tool for setting custom background images
+  * blackboard: add tool for moving objects
+  * blackboard: reduce the number of thumbnail rendering operations
+  * blackboard: use just QLabels instead of QGraphicsViews as item
+    widgets
+  * blackboard: rename a private method
+  * blackboard: use QListWidget to display board snapshots
+  * blackboard: remove clear action
+  * blackboard: add support for multiple boards
+  * blackboard: open in maximized mode
+  * blackboard: use -o instead of stdout redirect
+  * blackboard: colorIcon(): remove hard-coded dimensions
+  * blackboard: penWidthIcon(): remove hard-coded dimensions
+  * blackboard: cleanup
+  * blackboard: fix typo
+  * blackboard: rename some private and local variables
+  * blackboard: move icons module to puavo.blackboard package module
+  * blackboard: use SVG icons instead
+  * Git ignore all __pycache__ dirs
+  * blackboard: git ignore generated icons.py
+  * blackboard: add icons for line and freehand tools
+  * blackboard: add Artist class to control all tools
+  * blackboard: pass the current pen to the tool when drawing starts
+  * blackboard: remove useless global constant
+  * blackboard: rename term: pencil => freehand
+  * blackboard: set the default board size to 1920x1080
+  * blackboard: provide "the standard" 16-color palette
+  * blackboard: add stroke width buttons to the tool bar
+  * blackboard: add color icons to color buttons
+  * blackboard: add color buttons to the tool bar
+  * blackboard: re-order main window's initialization code
+  * blackboard: select the default drawing tool by setting it checked
+  * blackboard: define common brushes and pens as global constants
+  * blackboard: use round cap instead of square
+  * blackboard: increase the width of the stroke
+  * blackboard: make pencil to the default tool
+  * blackboard: rename private variable
+  * blackboard: move tool bar to the bottom
+  * blackboard: add separator between drawing tools and other tools
+  * blackboard: add freehand pencil tool
+  * blackboard: move the responsibility of drawing to specific tool
+    objects
+  * blackboard: add tool action group and a tool bar
+  * blackboard: turn on antialiasing
+  * blackboard: change colors: dark background and white pen
+  * blackboard: set window title
+  * blackboard: add tool for clearing the canvas
+  * blackboard: add basic line drawing capability
+  * blackboard: fail early if given invalid number of arguments
+  * blackboard: add initial script which displays just a plain main
+    window
+  * blackboard: initial commit
+  * desktop-bigtouch: disable GNOME's on-screen keyboard for good
+  * desktop-bigtouch: disable edge drag gestures
+  * Git(c90996930c652fe394352685c24c696e2d977f0f)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Mon, 20 Jun 2016 15:05:29 +0300
+
 puavo-os (0.17.0~rc3+69d7b31b9d953973f14ea5b58a61a0dd75a49ed2) jessie; urgency=medium
 
   * New release
