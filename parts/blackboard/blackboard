@@ -18,6 +18,12 @@
 import os.path
 import sys
 
+import dbus
+import dbus.service
+import dbus.mainloop.pyqt5
+
+dbus.mainloop.pyqt5.DBusQtMainLoop(set_as_default=True)
+
 from PyQt5.QtCore    import *
 from PyQt5.QtGui     import *
 from PyQt5.QtWidgets import *
@@ -261,6 +267,8 @@ class CanvasBrowser(QWidget):
         self.__listWidget.setItemWidget(item, label)
         self.__listWidget.setCurrentItem(item)
 
+        return canvas
+
     def currentCanvas(self):
         currentItem = self.__listWidget.currentItem()
         if currentItem is not None:
@@ -268,9 +276,20 @@ class CanvasBrowser(QWidget):
 
         return None
 
+class CanvasBrowserService(dbus.service.Object):
+
+    def __init__(self, busName, canvasBrowser):
+        dbus.service.Object.__init__(self, busName, '/canvasbrowser')
+        self.__canvasBrowser = canvasBrowser
+
+    @dbus.service.method('org.puavo.blackboard.CanvasBrowser', in_signature='s')
+    def addNewCanvas(self, backgroundImageFileName):
+        canvas = self.__canvasBrowser.addNewCanvas()
+        canvas.setBackgroundImage(backgroundImageFileName)
+
 class MainWindow(QMainWindow):
 
-    def __init__(self, *args):
+    def __init__(self, busName, *args):
         super().__init__(*args)
 
         self.__artist = Artist()
@@ -280,6 +299,8 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(view)
 
         self.__canvasBrowser = CanvasBrowser(self)
+        self.__canvasBrowserService = CanvasBrowserService(busName, self.__canvasBrowser)
+
         self.__changeCanvas()
         self.__canvasBrowser.currentChanged.connect(self.__changeCanvas)
 
@@ -390,7 +411,11 @@ def main():
         return 1
 
     app = QApplication(sys.argv)
-    win = MainWindow()
+
+    busName  = dbus.service.BusName('org.puavo.blackboard',
+                                    bus=dbus.SessionBus())
+
+    win = MainWindow(busName)
     win.setWindowTitle("Blackboard")
 
     win.show()
