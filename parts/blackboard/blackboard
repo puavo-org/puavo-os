@@ -28,7 +28,7 @@ from PyQt5.QtCore    import *
 from PyQt5.QtGui     import *
 from PyQt5.QtWidgets import *
 
-import puavo.blackboard.icons
+import puavoblackboard.icons
 
 def penWidthIcon(width, iconWidth=16, iconHeight=16):
     pixmap = QPixmap(iconWidth, iconHeight)
