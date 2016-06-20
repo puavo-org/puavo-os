@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import os.path
 import sys
 
 from PyQt5.QtCore    import *
@@ -355,6 +356,23 @@ class MainWindow(QMainWindow):
 
         self.__freehandAction.setChecked(True)
         penWidthAction.setChecked(True)
+
+        self.__toolBar.addSeparator()
+        self.__changeBackgroundImageAction = self.__toolBar.addAction(
+            QIcon.fromTheme('insert-image'), "Change background image")
+        self.__changeBackgroundImageAction.triggered.connect(
+            self.__changeBackgroundImage)
+
+
+    def __changeBackgroundImage(self):
+        canvas = self.__canvasBrowser.currentCanvas()
+        result = QFileDialog.getOpenFileName(self,
+                                             "Choose background image file",
+                                             "", "Images (*.png *.jpg)")[0]
+        if not result:
+            return
+
+        canvas.setBackgroundBrush(QBrush(QPixmap(result)))
 
     def __changeCanvas(self):
         canvas = self.__canvasBrowser.currentCanvas()
