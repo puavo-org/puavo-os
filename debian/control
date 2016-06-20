@@ -17,6 +17,7 @@ Build-Depends: bundler | ruby-bundler,
  npm,
  pkg-config,
  pyqt4-dev-tools,
+ pyqt5-dev-tools,
  python3,
  ruby,
  ruby-dev
@@ -461,4 +462,16 @@ Depends: ${shlibs:Depends}, ${misc:Depends},
 Description: Puavo's WLAN library for Ruby
  This library provides common library utilities for Puavo's WLAN
  software.
+ .
+
+Package: puavo-blackboard
+Architecture: any
+Depends: ${misc:Depends},
+ python3,
+ python3-dbus.mainloop.qt5,
+ python3-pyqt5,
+ python3-pyqt5.qtsvg
+Description: simple drawing application
+ Puavo Blackboard is a simple drawing application primarily targeted
+ to big touch screen devices.
  .
