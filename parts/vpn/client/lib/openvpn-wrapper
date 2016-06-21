@@ -1,0 +1,21 @@
+#!/bin/sh
+
+set -eu
+
+/usr/sbin/openvpn                                         \
+    --client                                              \
+    --dev tap                                             \
+    --proto tcp-client                                    \
+    --ca /etc/puavo/certs/orgcabundle.pem                 \
+    --cert /etc/puavo/certs/host.crt                      \
+    --key /etc/puavo/certs/host.key                       \
+    --ns-cert-type server                                 \
+    --verb 3                                              \
+    --keepalive 10 60                                     \
+    --up-delay                                            \
+    --script-security 2                                   \
+    --route-up '/usr/lib/puavo-vpn-client/runme route-up' \
+    --writepid /run/puavo-vpn-client-openvpn.pid          \
+    --status /run/puavo-vpn-client-openvpn.status 10      \
+    --config /etc/puavo-vpn-client/openvpn.conf           \
+    $(sed 's/^/--remote /' /etc/puavo/vpn/servers)

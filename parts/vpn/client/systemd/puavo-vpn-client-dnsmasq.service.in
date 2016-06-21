@@ -1,0 +1,8 @@
+[Unit]
+Description=Puavo VPN Client (Dnsmasq)
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+ExecStart=#FILLED BY MAKEFILE DURING INSTALL
