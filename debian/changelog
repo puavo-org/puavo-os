@@ -1,3 +1,16 @@
+puavo-os (0.19.0+2639524a247c46635d838e844c0acbaf9e50bb62) jessie; urgency=medium
+
+  * New release
+  * Enable puavo-vpn-client-{dnsmasq,openvpn} services on laptops
+  * Enable puavo-vpn-client-openvpn service on wirelessaccesspoints
+  * parts/vpn: client: generate systemd service units during install
+  * Wrap long lines
+  * Add parameter for controlling puavo-vpn-client-openvpn service
+  * Add parameter for controlling puavo-vpn-client-dnsmasq service
+  * Git(2639524a247c46635d838e844c0acbaf9e50bb62)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Wed, 22 Jun 2016 13:27:40 +0300
+
 puavo-os (0.18.0+3ccb4ce4d7c89e9b93561f5fb527f256e01057a6) jessie; urgency=medium
 
   * New release
