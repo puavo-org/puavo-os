@@ -14,7 +14,7 @@ else
 endif
 
 .PHONY : all
-all : systemd/puavo-vpn-client-dnsmasq.service systemd/puavo-vpn-client-openvpn.service
+all :
 
 .PHONY : installdirs
 installdirs :
@@ -23,7 +23,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(libdir)/puavo-vpn-client
 
 .PHONY : install
-install : installdirs
+install : installdirs systemd/puavo-vpn-client-dnsmasq.service systemd/puavo-vpn-client-openvpn.service
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/dbus-1/system.d \
 		dbus/org.puavo.VPN.conf
 
@@ -37,11 +37,14 @@ install : installdirs
 		systemd/puavo-vpn-client-dnsmasq.service		\
 		systemd/puavo-vpn-client-openvpn.service
 
-systemd/puavo-vpn-client-dnsmasq.service: systemd/puavo-vpn-client-dnsmasq.service.in
+systemd/puavo-vpn-client-dnsmasq.service: systemd/puavo-vpn-client-dnsmasq.service.in FORCE
 	sed -r 's|^ExecStart=.*$$|ExecStart=$(libdir)/puavo-vpn-client/dnsmasq-wrapper|' $< >$@
 
-systemd/puavo-vpn-client-openvpn.service: systemd/puavo-vpn-client-openvpn.service.in
+systemd/puavo-vpn-client-openvpn.service: systemd/puavo-vpn-client-openvpn.service.in FORCE
 	sed -r 's|^ExecStart=.*$$|ExecStart=$(libdir)/puavo-vpn-client/openvpn-wrapper|' $< >$@
+
+FORCE:
 
 .PHONY : clean
 clean :
+	rm -f systemd/puavo-vpn-client-dnsmasq.service systemd/puavo-vpn-client-openvpn.service
