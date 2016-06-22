@@ -1,6 +1,6 @@
 {
-    "puavo.service.nscd.enabled"             : "false",
-    "puavo.service.nslcd.enabled"            : "false",
-    "puavo.service.puavo-vpn-client-dnsmasq" : "true",
-    "puavo.service.puavo-vpn-client-openvpn" : "true"
+    "puavo.service.nscd.enabled"                     : "false",
+    "puavo.service.nslcd.enabled"                    : "false",
+    "puavo.service.puavo-vpn-client-dnsmasq.enabled" : "true",
+    "puavo.service.puavo-vpn-client-openvpn.enabled" : "true"
 }
