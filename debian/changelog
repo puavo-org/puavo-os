@@ -1,3 +1,13 @@
+puavo-os (0.18.0+3ccb4ce4d7c89e9b93561f5fb527f256e01057a6) jessie; urgency=medium
+
+  * New release
+  * Git-ignore debian/puavo-blackboard/
+  * parts/vpn: client: add systemd service units
+  * parts/rules: add puavo-blackboard package
+  * Git(3ccb4ce4d7c89e9b93561f5fb527f256e01057a6)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Wed, 22 Jun 2016 11:05:57 +0300
+
 puavo-os (0.17.0~rc5+19f17c903c715702d8eb836f140f6e303d680e8a) jessie; urgency=medium
 
   * New release
