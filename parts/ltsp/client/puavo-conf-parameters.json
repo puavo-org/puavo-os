@@ -32,6 +32,9 @@
     "puavo.service.puavo-vpn-client-dnsmasq.enabled": {
         "default": "false"
     },
+    "puavo.service.puavo-vpn-client-openvpn.enabled": {
+        "default": "false"
+    },
     "puavo.xbacklight.enabled": {
         "default": "true"
     },

@@ -3,7 +3,7 @@ disable_system_services() {
     local service
     local services
 
-    services='avahi-daemon ModemManager NetworkManager nscd nslcd puavo-vpn-client-dnsmasq'
+    services='avahi-daemon ModemManager NetworkManager nscd nslcd puavo-vpn-client-dnsmasq puavo-vpn-client-openvpn'
 
     for service in ${services}; do
         enabled=$(puavo-conf -b "puavo.service.${service}.enabled")
