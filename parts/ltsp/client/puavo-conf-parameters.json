@@ -29,6 +29,9 @@
     "puavo.service.nslcd.enabled": {
         "default": "true"
     },
+    "puavo.service.puavo-vpn-client-dnsmasq.enabled": {
+        "default": "false"
+    },
     "puavo.xbacklight.enabled": {
         "default": "true"
     },
