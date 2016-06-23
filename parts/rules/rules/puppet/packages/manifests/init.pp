@@ -86,7 +86,8 @@ class packages {
       tag => [ 'basic', 'debian', ];
 
     # 'indicator-power'			# XXX missing from Debian
-    [ 'indicator-session'
+    [ 'cinnamon'
+    , 'indicator-session'
     , 'lightdm'
     , 'lightdm-gtk-greeter'
     , 'lsb-invalid-mta'
