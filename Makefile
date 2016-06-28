@@ -32,7 +32,7 @@ rootfs: $(rootfs_dir)
 
 $(rootfs_dir):
 	mkdir -p '$(rootfs_dir).tmp'
-	debootstrap --arch=amd64 --include=devscripts jessie \
+	debootstrap --arch=amd64 --include=devscripts,git jessie \
 		'$(rootfs_dir).tmp' '$(rootfs_mirror)'
 	git clone . '$(rootfs_dir).tmp/usr/local/src/puavo-os'
 	echo 'deb [trusted=yes] file:///usr/local/src/puavo-os/debs /' \
