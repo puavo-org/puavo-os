@@ -35,8 +35,13 @@ $(rootfs_dir):
 	debootstrap --arch=amd64 --include=devscripts,git jessie \
 		'$(rootfs_dir).tmp' '$(rootfs_mirror)'
 	git clone . '$(rootfs_dir).tmp/usr/local/src/puavo-os'
+
+	mkdir '$(rootfs_dir).tmp/usr/local/src/puavo-os/debs'
+	touch '$(rootfs_dir).tmp/usr/local/src/puavo-os/debs/Packages'
+
 	echo 'deb [trusted=yes] file:///usr/local/src/puavo-os/debs /' \
 		>'$(rootfs_dir).tmp/etc/apt/sources.list.d/puavo-os.list'
+
 	mv '$(rootfs_dir).tmp' '$(rootfs_dir)'
 
 release:
