@@ -5,11 +5,14 @@ rootfs_mirror := $(shell 					\
 
 subdirs := parts
 
+.PHONY: all
 all: $(subdirs)
 
+.PHONY: $(subdirs)
 $(subdirs):
 	make -C $@
 
+.PHONY: help
 help:
 	@echo 'Puavo OS Build System'
 	@echo
@@ -19,15 +22,19 @@ help:
 	@echo '    release                     -  make release commit'
 	@echo '    rootfs                      -  build Puavo OS root filesystem directory (requires root)'
 
+.PHONY: deb-pkg-install-build-deps
 deb-pkg-install-build-deps: .deb-pkg-install-build-deps-parts \
 	.deb-pkg-install-build-deps-ports
 
+.PHONY: .deb-pkg-install-build-deps-parts
 .deb-pkg-install-build-deps-parts:
 	mk-build-deps -i -t "apt-get --yes --force-yes" -r debian/control
 
+.PHONY: .deb-pkg-install-build-deps-ports
 .deb-pkg-install-build-deps-ports:
 	$(MAKE) -C ports deb-pkg-install-build-deps
 
+.PHONY: rootfs
 rootfs: $(rootfs_dir)
 
 $(rootfs_dir):
@@ -44,6 +51,7 @@ $(rootfs_dir):
 
 	mv '$(rootfs_dir).tmp' '$(rootfs_dir)'
 
+.PHONY: release
 release:
 	@parts/devscripts/bin/git-update-debian-changelog
 
@@ -53,23 +61,16 @@ debs/Packages: deb-pkg-build
 debs/Packages.gz: debs/Packages
 	gzip -f -k $<
 
+.PHONY: deb-pkg-build
 deb-pkg-build: .deb-pkg-build-parts .deb-pkg-build-ports
 
+.PHONY: .deb-pkg-build-parts
 .deb-pkg-build-parts: release
 	dpkg-buildpackage -b -uc && parts/devscripts/bin/cp-changes debs
 
+.PHONY: .deb-pkg-build-ports
 .deb-pkg-build-ports:
 	$(MAKE) -C ports deb-pkg-build
 
+.PHONY: deb-pkg-update-repo
 deb-pkg-update-repo: debs/Packages.gz
-
-.PHONY: all				\
-	deb-pkg-build			\
-	.deb-pkg-build-parts		\
-	.deb-pkg-build-ports		\
-	deb-pkg-install-build-deps	\
-	deb-pkg-update-repo		\
-	help				\
-	release				\
-	rootfs				\
-	$(subdirs)
