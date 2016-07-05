@@ -39,7 +39,7 @@ rootfs-create: $(rootfs_dir)
 
 $(rootfs_dir):
 	mkdir -p '$(rootfs_dir).tmp'
-	debootstrap --arch=amd64 --include=devscripts,git jessie \
+	debootstrap --arch=amd64 --include=make jessie \
 		'$(rootfs_dir).tmp' '$(rootfs_mirror)'
 	git clone . '$(rootfs_dir).tmp/usr/local/src/puavo-os'
 
