@@ -3,7 +3,7 @@ rootfs_mirror := $(shell 					\
 	awk '/^\s*deb .+ jessie main.*$$/ {print $$2; exit}'	\
 	/etc/apt/sources.list 2>/dev/null)
 
-subdirs := parts
+subdirs := parts debs
 
 .PHONY: all
 all: $(subdirs)
@@ -40,9 +40,6 @@ $(rootfs_dir):
 		'$(rootfs_dir).tmp' '$(rootfs_mirror)'
 	git clone . '$(rootfs_dir).tmp/usr/local/src/puavo-os'
 
-	mkdir '$(rootfs_dir).tmp/usr/local/src/puavo-os/debs'
-	touch '$(rootfs_dir).tmp/usr/local/src/puavo-os/debs/Packages'
-
 	echo 'deb [trusted=yes] file:///usr/local/src/puavo-os/debs /' \
 		>'$(rootfs_dir).tmp/etc/apt/sources.list.d/puavo-os.list'
 
@@ -68,7 +65,7 @@ rootfs-update: $(rootfs_dir)
 	systemd-nspawn -D '$(rootfs_dir)' make -C /usr/local/src/puavo-os update
 
 .PHONY: update
-update: /puavo-os
+update: /puavo-os debs
 	apt-get update
 
 	apt-get install -V -y				\
@@ -79,12 +76,6 @@ update: /puavo-os
 	apt-get dist-upgrade -V -y			\
 		-o Dpkg::Options::="--force-confdef"	\
 		-o Dpkg::Options::="--force-confold"	\
-
-debs/Packages: deb-pkg-build
-	apt-ftparchive --db debs/db packages debs >$@
-
-debs/Packages.gz: debs/Packages
-	gzip -f -k $<
 
 .PHONY: deb-pkg-build
 deb-pkg-build: .deb-pkg-build-parts .deb-pkg-build-ports
@@ -97,5 +88,3 @@ deb-pkg-build: .deb-pkg-build-parts .deb-pkg-build-ports
 .deb-pkg-build-ports:
 	$(MAKE) -C ports deb-pkg-build
 
-.PHONY: deb-pkg-update-repo
-deb-pkg-update-repo: debs/Packages.gz
