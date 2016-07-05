@@ -72,6 +72,10 @@ rootfs-update: $(rootfs_dir)
 
 	systemd-nspawn -D '$(rootfs_dir)' make -C /usr/local/src/puavo-os update
 
+.PHONY: rootfs-shell
+rootfs-shell:
+	systemd-nspawn -D '$(rootfs_dir)'
+
 .PHONY: update
 update: /puavo-os debs
 	apt-get update
