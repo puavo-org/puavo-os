@@ -3,7 +3,7 @@ rootfs_mirror := $(shell 					\
 	awk '/^\s*deb .+ jessie main.*$$/ {print $$2; exit}'	\
 	/etc/apt/sources.list 2>/dev/null)
 
-subdirs       := debs parts
+subdirs       := debs parts ports
 clean-subdirs := $(subdirs:%=clean-%)
 
 .PHONY: all
