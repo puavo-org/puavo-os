@@ -34,8 +34,8 @@ deb-pkg-install-build-deps: .deb-pkg-install-build-deps-parts \
 .deb-pkg-install-build-deps-ports:
 	$(MAKE) -C ports deb-pkg-install-build-deps
 
-.PHONY: rootfs
-rootfs: $(rootfs_dir)
+.PHONY: rootfs-create
+rootfs-create: $(rootfs_dir)
 
 $(rootfs_dir):
 	mkdir -p '$(rootfs_dir).tmp'
