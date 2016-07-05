@@ -49,6 +49,8 @@ $(rootfs_dir):
 	echo 'deb [trusted=yes] file:///usr/local/src/puavo-os/debs /' \
 		>'$(rootfs_dir).tmp/etc/apt/sources.list.d/puavo-os.list'
 
+	mkdir '$(rootfs_dir).tmp/puavo-os'
+
 	mv '$(rootfs_dir).tmp' '$(rootfs_dir)'
 
 .PHONY: release
