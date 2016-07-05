@@ -3,7 +3,8 @@ rootfs_mirror := $(shell 					\
 	awk '/^\s*deb .+ jessie main.*$$/ {print $$2; exit}'	\
 	/etc/apt/sources.list 2>/dev/null)
 
-subdirs := parts debs
+subdirs       := debs parts
+clean-subdirs := $(subdirs:%=clean-%)
 
 .PHONY: all
 all: $(subdirs)
@@ -11,6 +12,13 @@ all: $(subdirs)
 .PHONY: $(subdirs)
 $(subdirs):
 	make -C $@
+
+.PHONY: $(clean-subdirs)
+$(clean-subdirs):
+	$(MAKE) -C $(@:clean-%=%) clean
+
+.PHONY: clean
+clean: $(clean-subdirs)
 
 .PHONY: help
 help:
