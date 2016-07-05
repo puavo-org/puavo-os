@@ -1,23 +1,25 @@
-subdirs                    := $(sort $(shell find . -mindepth 1 -maxdepth 1 -type d -printf '%f\n'))
-clean-subdirs              := $(subdirs:%=clean-%)
-install-subdirs            := $(subdirs:%=install-%)
+subdirs         := $(sort $(shell \
+	find . -mindepth 1 -maxdepth 1 -type d -printf '%f\n'))
+clean-subdirs   := $(subdirs:%=clean-%)
+install-subdirs := $(subdirs:%=install-%)
 
-all                : $(subdirs)
-clean              : $(clean-subdirs)
-install            : $(install-subdirs)
+.PHONY: all
+all: $(subdirs)
 
+.PHONY: clean
+clean: $(clean-subdirs)
+
+.PHONY: install
+install: $(install-subdirs)
+
+.PHONY: $(subdirs)
 $(subdirs):
 	$(MAKE) -C $@
 
+.PHONY: $(clean-subdirs)
 $(clean-subdirs):
 	$(MAKE) -C $(@:clean-%=%) clean
 
+.PHONY: $(install-subdirs)
 $(install-subdirs):
 	$(MAKE) -C $(@:install-%=%) install
-
-.PHONY: $(subdirs)                    \
-        $(clean-subdirs)              \
-        $(install-subdirs)            \
-        all                           \
-        clean                         \
-        install

@@ -25,7 +25,7 @@ help:
 	@echo 'Puavo OS Build System'
 	@echo
 	@echo 'Targets:'
-	@echo '    deb-pkg-build               -  build Debian packages'
+	@echo '    build                       -  build all components'
 	@echo '    install-build-deps          -  install build dependencies (requires root)'
 	@echo '    release                     -  make release commit'
 	@echo '    rootfs                      -  build Puavo OS root filesystem directory (requires root)'
@@ -85,14 +85,13 @@ update: /puavo-os debs
 		-o Dpkg::Options::="--force-confdef"	\
 		-o Dpkg::Options::="--force-confold"	\
 
-.PHONY: deb-pkg-build
-deb-pkg-build: .deb-pkg-build-parts .deb-pkg-build-ports
+.PHONY: build
+build: .build-parts .build-ports
 
-.PHONY: .deb-pkg-build-parts
-.deb-pkg-build-parts: release
+.PHONY: .build-parts
+.build-parts: release
 	dpkg-buildpackage -b -uc && parts/devscripts/bin/cp-changes debs
 
-.PHONY: .deb-pkg-build-ports
-.deb-pkg-build-ports:
-	$(MAKE) -C ports deb-pkg-build
-
+.PHONY: .build-ports
+.build-ports:
+	$(MAKE) -C ports build
