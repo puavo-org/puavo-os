@@ -1,7 +1,9 @@
+debs := $(wildcard *.deb)
+
 .PHONY: all
 all: Packages.gz
 
-Packages:
+Packages: $(debs)
 	apt-ftparchive --db db packages . >$@
 
 Packages.gz: Packages
