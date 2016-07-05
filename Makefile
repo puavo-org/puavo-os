@@ -34,9 +34,6 @@ deb-pkg-install-build-deps: .deb-pkg-install-build-deps-parts \
 .deb-pkg-install-build-deps-ports:
 	$(MAKE) -C ports deb-pkg-install-build-deps
 
-.PHONY: rootfs-create
-rootfs-create: $(rootfs_dir)
-
 $(rootfs_dir):
 	mkdir -p '$(rootfs_dir).tmp'
 	debootstrap --arch=amd64 --include=make jessie \
@@ -58,7 +55,7 @@ release:
 	@parts/devscripts/bin/git-update-debian-changelog
 
 .PHONY: rootfs-update
-rootfs-update:
+rootfs-update: $(rootfs_dir)
 	git                                                             \
 		--git-dir='$(rootfs_dir)/usr/local/src/puavo-os/.git'   \
 		--work-tree='$(rootfs_dir)/usr/local/src/puavo-os'      \
