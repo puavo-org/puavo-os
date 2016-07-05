@@ -26,21 +26,21 @@ help:
 	@echo
 	@echo 'Targets:'
 	@echo '    deb-pkg-build               -  build Debian packages'
-	@echo '    deb-pkg-install-build-deps  -  install build dependencies of Debian packages (requires root)'
+	@echo '    install-build-deps          -  install build dependencies (requires root)'
 	@echo '    release                     -  make release commit'
 	@echo '    rootfs                      -  build Puavo OS root filesystem directory (requires root)'
 
-.PHONY: deb-pkg-install-build-deps
-deb-pkg-install-build-deps: .deb-pkg-install-build-deps-parts \
-	.deb-pkg-install-build-deps-ports
+.PHONY: install-build-deps
+install-build-deps: .install-build-deps-parts \
+	.install-build-deps-ports
 
-.PHONY: .deb-pkg-install-build-deps-parts
-.deb-pkg-install-build-deps-parts:
+.PHONY: .install-build-deps-parts
+.install-build-deps-parts:
 	mk-build-deps -i -t "apt-get --yes --force-yes" -r debian/control
 
-.PHONY: .deb-pkg-install-build-deps-ports
-.deb-pkg-install-build-deps-ports:
-	$(MAKE) -C ports deb-pkg-install-build-deps
+.PHONY: .install-build-deps-ports
+.install-build-deps-ports:
+	$(MAKE) -C ports install-build-deps
 
 $(rootfs_dir):
 	mkdir -p '$(rootfs_dir).tmp'
