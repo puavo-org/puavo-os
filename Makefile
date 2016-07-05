@@ -59,10 +59,16 @@ release:
 
 .PHONY: rootfs-update
 rootfs-update:
-	GIT_DIR='$(rootfs_dir)/usr/local/src/puavo-os/.git' git fetch origin
-	GIT_DIR='$(rootfs_dir)/usr/local/src/puavo-os/.git' git reset --hard origin/HEAD
+	git                                                             \
+		--git-dir='$(rootfs_dir)/usr/local/src/puavo-os/.git'   \
+		--work-tree='$(rootfs_dir)/usr/local/src/puavo-os'      \
+		fetch origin
+	git                                                             \
+		--git-dir='$(rootfs_dir)/usr/local/src/puavo-os/.git'   \
+		--work-tree='$(rootfs_dir)/usr/local/src/puavo-os'      \
+		reset --hard origin/HEAD
 
-	systemd-nspawn -D '$(rootfs_dir)' 'make -C /usr/local/src/puavo-os/Makefile update'
+	systemd-nspawn -D '$(rootfs_dir)' make -C /usr/local/src/puavo-os update
 
 .PHONY: update
 update: /puavo-os
