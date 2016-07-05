@@ -1,3 +1,30 @@
+puavo-os (0.20.0~rc1+d58a7d6cb66e17eaa4c90f6953bb579038960441) jessie; urgency=medium
+
+  * New release
+  * debs: make: update Packages whenever any .deb has changed
+  * make: add rootfs-shell target for entering rootfs shell, yo
+  * make: renames and cleanups
+  * make: rename deb-pkg-install-build-deps => install-build-deps
+  * make: add ports to subdirs
+  * make: add clean target
+  * make: move all debs targets to debs/Makefile
+  * make: remove rootfs-create, it is equivalent with rootfs-update
+  * make: fix rootfs-update
+  * make: add update and rootfs-update targets
+  * make: include nothing but 'make' in fresh rootfs
+  * make: create a marker directory (/puavo-os) inside rootfs
+  * make: rename rootfs target => rootfs-create
+  * bootserver_ddns: do not add any iface facts if ipaddress module is
+    missing
+  * make: declare .PHONY targets separately
+  * make: initialize local repository in debootstrap phase
+  * make: install git to the rootfs in debootstrap phase
+  * Add cinnamon to package list.
+  * Fix typos
+  * Git(d58a7d6cb66e17eaa4c90f6953bb579038960441)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Tue, 05 Jul 2016 14:01:22 +0300
+
 puavo-os (0.19.0+2639524a247c46635d838e844c0acbaf9e50bb62) jessie; urgency=medium
 
   * New release
