@@ -57,6 +57,26 @@ $(rootfs_dir):
 release:
 	@parts/devscripts/bin/git-update-debian-changelog
 
+.PHONY: rootfs-update
+rootfs-update:
+	GIT_DIR='$(rootfs_dir)/usr/local/src/puavo-os/.git' git fetch origin
+	GIT_DIR='$(rootfs_dir)/usr/local/src/puavo-os/.git' git reset --hard origin/HEAD
+
+	systemd-nspawn -D '$(rootfs_dir)' 'make -C /usr/local/src/puavo-os/Makefile update'
+
+.PHONY: update
+update: /puavo-os
+	apt-get update
+
+	apt-get install -V -y				\
+		-o Dpkg::Options::="--force-confdef"	\
+		-o Dpkg::Options::="--force-confold"	\
+		devscripts equivs git
+
+	apt-get dist-upgrade -V -y			\
+		-o Dpkg::Options::="--force-confdef"	\
+		-o Dpkg::Options::="--force-confold"	\
+
 debs/Packages: deb-pkg-build
 	apt-ftparchive --db debs/db packages debs >$@
 
