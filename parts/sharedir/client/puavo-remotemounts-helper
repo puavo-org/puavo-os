@@ -224,19 +224,25 @@ def get_our_gvfsmounts
   user_id = Process.uid
   user_primary_group = Etc.getgrgid( Etc.getpwuid.gid ).name
 
-  remote_host = "homedir.#{ puavo_domain }"
+  remote_host = Resolv::DNS.open do |dns|
+    dns.getresources("_sambaserver._tcp.#{puavo_domain}",
+                     Resolv::DNS::Resource::IN::SRV).each do |srv|
+      break srv.target if srv.port == 139
+      nil
+    end
+  end
 
   [
     GvfsMount.new(
       remote_host,
       "smb://#{ remote_host }/#{ user }/",
-      "/run/user/#{ user_id }/gvfs/smb-share:server=homedir.#{ puavo_domain },share=#{ user }",
+      "/run/user/#{ user_id }/gvfs/smb-share:server=#{ remote_host },share=#{ user }",
       userdir_label),
 
     GvfsMount.new(
       remote_host,
       "smb://#{ remote_host }/share/#{ sharename }/#{ user_primary_group }/",
-      "/run/user/#{ user_id }/gvfs/smb-share:server=homedir.#{ puavo_domain },share=share/#{ sharename }/#{ user_primary_group }",
+      "/run/user/#{ user_id }/gvfs/smb-share:server=#{ remote_host },share=share/#{ sharename }/#{ user_primary_group }",
       schooldir_label),
   ]
 end

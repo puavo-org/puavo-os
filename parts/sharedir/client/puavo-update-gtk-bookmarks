@@ -11,14 +11,13 @@ is_nethomes_enabled=$(puavo-conf -b puavo.nethomes.enabled)
 nethomes_protocol=$(puavo-conf puavo.nethomes.protocol)
 
 filter_out_our_bookmarks() {
-  local domain_re_pattern
-  domain_re_pattern=$(echo "^smb://homedir.${puavo_domain}" \
-			| sed 's/\./\\./g')
+  local domain_regexp
+  domain_regexp=$(echo "${puavo_domain}" | sed 's/\./\\./g')
 
   # Grep fails if the file is empty or missing, which is ok in this
   # situation: it just means that there is not anything to preserve
   # (or maybe means something else, but probably not serious).
-  egrep -v "\.puavo-sharedir|^file:///home/share/|${domain_re_pattern}" \
+  egrep -v "\.puavo-sharedir|^file:///home/share/|^smb://.*\.${domain_regexp}" \
     || true
 }
 
@@ -29,6 +28,7 @@ update_bookmarks() {
   local sharename
   local tmpfile
   local userdir_displayname
+  local remote_host
 
   userdir_displayname=$1
   schooldir_displayname=$2
@@ -56,10 +56,12 @@ update_bookmarks() {
   fi
 
   if [ "${is_remotemounts_enabled}" = true ]; then
-      {
-          echo "smb://homedir.${puavo_domain}/${USER} ${userdir_displayname}"
-          echo "smb://homedir.${puavo_domain}/share/${sharename}/${user_primary_group} ${schooldir_displayname}"
-      } >> "${tmpfile}"
+      remote_host=$(dig SRV "_sambaserver._tcp.${puavo_domain}" +short \
+          | sed -r -n 's/^[0-9]+ [0-9]+ 139 (.*)\./\1/p' | head -n1)
+      if [ -n "${remote_host}" ]; then
+          echo "smb://${remote_host}/${USER} ${userdir_displayname}"
+          echo "smb://${remote_host}/share/${sharename}/${user_primary_group} ${schooldir_displayname}"
+      fi >>"${tmpfile}"
   fi
 
   mv "${tmpfile}" "${bookmarksfile}"
