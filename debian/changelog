@@ -1,3 +1,17 @@
+puavo-os (0.20.0~rc2+af572f0f14b079c9cdbc9c48280abecac7106abd) trusty; urgency=medium
+
+  * New release
+  * sharedir: client: do not update GTK bookmarks on X session init
+    phase
+  * ltsp: client: do not write smb.conf anymore
+  * sharedir: client: keep GTK bookmarks updated continuously
+  * sharedir: client: use SRV _sambaserver._tcp instead of hard-coded
+    hostname
+  * bootserver: dnsmasq: add samba server SRV records
+  * Git(af572f0f14b079c9cdbc9c48280abecac7106abd)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Thu, 07 Jul 2016 13:25:40 +0300
+
 puavo-os (0.20.0~rc1+d58a7d6cb66e17eaa4c90f6953bb579038960441) jessie; urgency=medium
 
   * New release
