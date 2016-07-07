@@ -1,3 +1,12 @@
+puavo-os (0.20.0~rc3+31bc78e38673a400ac3ab0bbc5beac944bb56091) trusty; urgency=medium
+
+  * New release
+  * ltsp: client: disable SPNEGO principal exchange
+  * Revert "ltsp: client: do not write smb.conf anymore"
+  * Git(31bc78e38673a400ac3ab0bbc5beac944bb56091)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Thu, 07 Jul 2016 14:48:39 +0300
+
 puavo-os (0.20.0~rc2+af572f0f14b079c9cdbc9c48280abecac7106abd) trusty; urgency=medium
 
   * New release
