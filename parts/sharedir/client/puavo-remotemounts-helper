@@ -117,6 +117,8 @@ class GvfsMount
   end
 
   def ensure_link(shouldbe)
+    system('puavo-update-gtk-bookmarks')
+
     linksrc = "#{ ENV['HOME'] }/#{ @linkname }"
 
     if shouldbe; then
