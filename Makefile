@@ -3,7 +3,7 @@ rootfs_mirror := $(shell 					\
 	awk '/^\s*deb .+ jessie main.*$$/ {print $$2; exit}'	\
 	/etc/apt/sources.list 2>/dev/null)
 
-subdirs       := debs parts ports
+subdirs       := debs parts
 build-subdirs := $(subdirs:%=build-%)
 clean-subdirs := $(subdirs:%=clean-%)
 
@@ -32,16 +32,11 @@ help:
 	@echo '    rootfs                      -  build Puavo OS root filesystem directory (requires root)'
 
 .PHONY: install-build-deps
-install-build-deps: .install-build-deps-parts \
-	.install-build-deps-ports
+install-build-deps: .install-build-deps-parts
 
 .PHONY: .install-build-deps-parts
 .install-build-deps-parts:
 	mk-build-deps -i -t "apt-get --yes --force-yes" -r debian/control
-
-.PHONY: .install-build-deps-ports
-.install-build-deps-ports:
-	$(MAKE) -C ports install-build-deps
 
 $(rootfs_dir):
 	mkdir -p '$(rootfs_dir).tmp'

@@ -1,4 +1,5 @@
 debs                    := $(wildcard pool/*.deb)
+subdirs                 := gnome-clocks
 get-orig-source-subdirs := $(subdirs:%=get-orig-source-%)
 build-subdirs           := $(subdirs:%=build-%)
 
