@@ -1,5 +1,5 @@
-subdirs         := $(sort $(shell \
-	find . -mindepth 1 -maxdepth 1 -type d -printf '%f\n'))
+subdirs         := admins autopilot blackboard client conf core devscripts \
+	hw-log hw-tools local-config ltsp monitor pkg rules sharedir vpn wlan
 clean-subdirs   := $(subdirs:%=clean-%)
 install-subdirs := $(subdirs:%=install-%)
 
