@@ -1,4 +1,4 @@
-subdirs                   := gnome-clocks
+subdirs                   := gnome-clocks puavo-os
 get-orig-source-subdirs   := $(subdirs:%=get-orig-source-%)
 dpkg-buildpackage-subdirs := $(subdirs:%=dpkg-buildpackage-%)
 

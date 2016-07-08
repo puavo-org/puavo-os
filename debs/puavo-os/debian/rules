@@ -7,115 +7,115 @@ export GEM_HOME := $(CURDIR)/debian/tmp
 export PATH := $(GEM_HOME)/bin:$(PATH)
 
 override_dh_auto_install:
-	$(MAKE) -C parts/admins					\
+	$(MAKE) -C admins					\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-admins
 
-	$(MAKE) -C parts/autopilot				\
+	$(MAKE) -C autopilot				\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-autopilot
 
-	$(MAKE) -C parts/blackboard				\
+	$(MAKE) -C blackboard				\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-blackboard
 
-	$(MAKE) -C parts/client					\
+	$(MAKE) -C client					\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-client
 
-	$(MAKE) -C parts/conf					\
+	$(MAKE) -C conf					\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-conf
 
-	$(MAKE) -C parts/core					\
+	$(MAKE) -C core					\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-core
 
-	$(MAKE) -C parts/devscripts				\
+	$(MAKE) -C devscripts				\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-devscripts
 
-	$(MAKE) -C parts/devscripts				\
+	$(MAKE) -C devscripts				\
 		install-lxc-tools prefix=/usr sysconfdir=/etc	\
 		DESTDIR=$(CURDIR)/debian/puavo-devscripts-lxc
 
-	$(MAKE) -C parts/devscripts				\
+	$(MAKE) -C devscripts				\
 		install-dch-suffix prefix=/usr sysconfdir=/etc	\
 		DESTDIR=$(CURDIR)/debian/dch-suffix
 
-	$(MAKE) -C parts/hw-log					\
+	$(MAKE) -C hw-log					\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-hw-log
 
-	$(MAKE) -C parts/hw-tools				\
+	$(MAKE) -C hw-tools				\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-hw-tools
 
-	$(MAKE) -C parts/local-config				\
+	$(MAKE) -C local-config				\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-local-config
 
-	$(MAKE) -C parts/ltsp/bootserver			\
+	$(MAKE) -C ltsp/bootserver			\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-ltsp-bootserver
 
-	$(MAKE) -C parts/ltsp/client				\
+	$(MAKE) -C ltsp/client				\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-ltsp-client
 
-	$(MAKE) -C parts/ltsp/puavo-install			\
+	$(MAKE) -C ltsp/puavo-install			\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-ltsp-install
 
-	$(MAKE) -C parts/ltsp/tools				\
+	$(MAKE) -C ltsp/tools				\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-image-tools
 
-	$(MAKE) -C parts/ltsp/ruby-puavobs			\
+	$(MAKE) -C ltsp/ruby-puavobs			\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/ruby-puavobs
 
-	$(MAKE) -C parts/monitor				\
+	$(MAKE) -C monitor				\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-monitor
 
-	$(MAKE) -C parts/pkg					\
+	$(MAKE) -C pkg					\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-pkg
 
-	$(MAKE) -C parts/rules					\
+	$(MAKE) -C rules					\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-rules
 
-	$(MAKE) -C parts/sharedir/client			\
+	$(MAKE) -C sharedir/client			\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-sharedir-client
 
-	$(MAKE) -C parts/sharedir/manager			\
+	$(MAKE) -C sharedir/manager			\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-sharedir-manager
 
-	$(MAKE) -C parts/vpn/client				\
+	$(MAKE) -C vpn/client				\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-vpn-client
 
-	$(MAKE) -C parts/wlan/ap				\
+	$(MAKE) -C wlan/ap				\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-wlanap
 
-	$(MAKE) -C parts/wlan/gw				\
+	$(MAKE) -C wlan/gw				\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-wlangw
 
-	$(MAKE) -C parts/wlan/mapper				\
+	$(MAKE) -C wlan/mapper				\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-wlanmapper
 
-	$(MAKE) -C parts/wlan/controller			\
+	$(MAKE) -C wlan/controller			\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-wlancontroller
 
-	$(MAKE) -C parts/wlan/ruby-puavowlan			\
+	$(MAKE) -C wlan/ruby-puavowlan			\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/ruby-puavowlan
 

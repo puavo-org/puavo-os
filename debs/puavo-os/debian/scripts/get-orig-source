@@ -1,0 +1,6 @@
+#!/bin/sh
+
+set -eu
+
+cd ../../
+git archive HEAD parts | { cd debs/puavo-os; tar --strip-components=1 -x -f -; }
