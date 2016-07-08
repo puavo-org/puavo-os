@@ -4,10 +4,11 @@ rootfs_mirror := $(shell 					\
 	/etc/apt/sources.list 2>/dev/null)
 
 subdirs       := debs parts ports
+build-subdirs := $(subdirs:%=build-%)
 clean-subdirs := $(subdirs:%=clean-%)
 
 .PHONY: all
-all: $(subdirs)
+all: build
 
 .PHONY: $(subdirs)
 $(subdirs):
@@ -89,13 +90,9 @@ update: /puavo-os debs
 		-o Dpkg::Options::="--force-confdef"	\
 		-o Dpkg::Options::="--force-confold"	\
 
+.PHONY: $(build-subdirs)
+$(build-subdirs):
+	$(MAKE) -C $(@:build-%=%) build
+
 .PHONY: build
-build: .build-parts .build-ports
-
-.PHONY: .build-parts
-.build-parts: release
-	dpkg-buildpackage -b -uc && parts/devscripts/bin/cp-changes debs
-
-.PHONY: .build-ports
-.build-ports:
-	$(MAKE) -C ports build
+build: $(build-subdirs)
