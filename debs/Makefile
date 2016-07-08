@@ -1,12 +1,11 @@
-debs                    := $(wildcard pool/*.deb)
-subdirs                 := gnome-clocks
-get-orig-source-subdirs := $(subdirs:%=get-orig-source-%)
-build-subdirs           := $(subdirs:%=build-%)
+subdirs                   := gnome-clocks
+get-orig-source-subdirs   := $(subdirs:%=get-orig-source-%)
+dpkg-buildpackage-subdirs := $(subdirs:%=dpkg-buildpackage-%)
 
 .PHONY: all
 all: Packages.gz
 
-Packages: $(debs)
+Packages: $(dpkg-buildpackage-subdirs)
 	apt-ftparchive --db db packages pool >$@
 
 Packages.gz: Packages
@@ -16,11 +15,8 @@ Packages.gz: Packages
 clean:
 	rm -f db Packages Packages.gz
 
-.PHONY: build
-build: $(build-subdirs)
-
-.PHONY: $(build-subdirs)
-$(build-subdirs): build-%: % get-orig-source-%
+.PHONY: $(dpkg-buildpackage-subdirs)
+$(dpkg-buildpackage-subdirs): dpkg-buildpackage-%: % get-orig-source-%
 	cd $< && dpkg-buildpackage -b -uc && \
 		../../parts/devscripts/bin/cp-changes ../pool
 

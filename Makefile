@@ -4,11 +4,10 @@ rootfs_mirror := $(shell 					\
 	/etc/apt/sources.list 2>/dev/null)
 
 subdirs       := debs parts
-build-subdirs := $(subdirs:%=build-%)
 clean-subdirs := $(subdirs:%=clean-%)
 
 .PHONY: all
-all: build
+all: $(subdirs)
 
 .PHONY: $(subdirs)
 $(subdirs):
@@ -26,7 +25,7 @@ help:
 	@echo 'Puavo OS Build System'
 	@echo
 	@echo 'Targets:'
-	@echo '    build                       -  build all components'
+	@echo '    all                         -  build all components'
 	@echo '    install-build-deps          -  install build dependencies (requires root)'
 	@echo '    release                     -  make release commit'
 	@echo '    rootfs                      -  build Puavo OS root filesystem directory (requires root)'
@@ -84,10 +83,3 @@ update: /puavo-os debs
 	apt-get dist-upgrade -V -y			\
 		-o Dpkg::Options::="--force-confdef"	\
 		-o Dpkg::Options::="--force-confold"	\
-
-.PHONY: $(build-subdirs)
-$(build-subdirs):
-	$(MAKE) -C $(@:build-%=%) build
-
-.PHONY: build
-build: $(build-subdirs)
