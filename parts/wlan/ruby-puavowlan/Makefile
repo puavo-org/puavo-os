@@ -3,7 +3,8 @@ prefix = /usr/local
 INSTALL = install
 INSTALL_DATA = $(INSTALL) -m 644
 
-version = $(shell dpkg-parsechangelog -l../../../debian/changelog | sed -r -n 's/^Version: //p')
+git_root = $(shell git rev-parse --show-toplevel)
+version = $(shell dpkg-parsechangelog -l$(git_root)/debs/puavo-os/debian/changelog | sed -r -n 's/^Version: //p')
 
 # For some reason ruby lib directory is different under /usr and /usr/local
 ifeq ($(prefix),/usr/local)
