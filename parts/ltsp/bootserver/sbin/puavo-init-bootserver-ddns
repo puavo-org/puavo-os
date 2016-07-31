@@ -71,7 +71,11 @@ end
 @puavo_topdomain   = File.read('/etc/puavo/topdomain'      ).chomp
 @arpazone = "10.in-addr.arpa"
 
-def write_config(filename, version=nil, secure=false)
+def write_config(filename, version=nil, secure=false, overwrite=true)
+  if !overwrite and File.exists?(filename)
+    return
+  end
+
   template_file = filename
 
   if version
@@ -123,6 +127,7 @@ write_config("/var/lib/bind/puavo_domain")
 write_config("/var/lib/bind/puavo_domain_reverse")
 write_config("/etc/dnsmasq.conf")
 write_config("/etc/dhcp/dhcpd.conf")
+write_config("/etc/dhcp/ubnt.conf", nil, false, false)
 write_config("/etc/apparmor.d/local/usr.sbin.dhcpd")
 
 `chown bind.bind /var/lib/bind/puavo_domain`
