@@ -56,7 +56,8 @@ install : installdirs
 		templates/etc/rsyslog.conf \
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/etc/dhcp \
-		templates/etc/dhcp/dhcpd.conf
+		templates/etc/dhcp/dhcpd.conf \
+		templates/etc/dhcp/ubnt.conf
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/etc/bind \
 		templates/etc/bind/named.conf.local \
