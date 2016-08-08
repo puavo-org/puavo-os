@@ -37,7 +37,7 @@ install-build-deps:
 
 $(rootfs_dir):
 	mkdir -p '$(rootfs_dir).tmp'
-	debootstrap --arch=amd64 --include=make jessie \
+	debootstrap --arch=amd64 --include=make,devscripts,equivs,git jessie \
 		'$(rootfs_dir).tmp' '$(rootfs_mirror)'
 	git clone . '$(rootfs_dir).tmp/usr/local/src/puavo-os'
 
@@ -63,21 +63,16 @@ rootfs-update: $(rootfs_dir)
 		--work-tree='$(rootfs_dir)/usr/local/src/puavo-os'      \
 		reset --hard origin/HEAD
 
-	systemd-nspawn -D '$(rootfs_dir)' make -C /usr/local/src/puavo-os update
+	systemd-nspawn -D '$(rootfs_dir)' make -C /usr/local/src/puavo-os/debs \
+		install-build-deps
+
+	systemd-nspawn -D '$(rootfs_dir)' make -C /usr/local/src/puavo-os/debs
+
+	systemd-nspawn -D '$(rootfs_dir)' apt-get update
+	systemd-nspawn -D '$(rootfs_dir)' apt-get dist-upgrade -V -y	\
+		-o Dpkg::Options::="--force-confdef"			\
+		-o Dpkg::Options::="--force-confold"
 
 .PHONY: rootfs-shell
 rootfs-shell: $(rootfs_dir)
 	systemd-nspawn -D '$(rootfs_dir)'
-
-.PHONY: update
-update: /puavo-os
-	apt-get update
-
-	apt-get install -V -y				\
-		-o Dpkg::Options::="--force-confdef"	\
-		-o Dpkg::Options::="--force-confold"	\
-		devscripts equivs git
-
-	apt-get dist-upgrade -V -y			\
-		-o Dpkg::Options::="--force-confdef"	\
-		-o Dpkg::Options::="--force-confold"
