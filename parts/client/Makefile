@@ -17,7 +17,7 @@ else
 	RUBY_LIB_DIR = $(prefix)/lib/ruby/vendor_ruby
 endif
 
-build:
+all:
 	bundle install --standalone --path lib/puavo-client-vendor
 
 install-dirs:
