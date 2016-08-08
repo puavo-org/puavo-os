@@ -82,4 +82,4 @@ update: /puavo-os debs
 
 	apt-get dist-upgrade -V -y			\
 		-o Dpkg::Options::="--force-confdef"	\
-		-o Dpkg::Options::="--force-confold"	\
+		-o Dpkg::Options::="--force-confold"
