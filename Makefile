@@ -32,11 +32,8 @@ help:
 	@echo '    rootfs                      -  build Puavo OS root filesystem directory (requires root)'
 
 .PHONY: install-build-deps
-install-build-deps: .install-build-deps-parts
-
-.PHONY: .install-build-deps-parts
-.install-build-deps-parts:
-	mk-build-deps -i -t "apt-get --yes --force-yes" -r debian/control
+install-build-deps:
+	$(MAKE) -C debs install-build-deps
 
 $(rootfs_dir):
 	mkdir -p '$(rootfs_dir).tmp'
