@@ -1,6 +1,6 @@
 prefix ?= /usr/local
 
-build:
+all:
 	npm install --registry http://registry.npmjs.org
 
 install-dirs:
