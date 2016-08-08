@@ -4,18 +4,19 @@ rootfs_mirror := $(shell 					\
 	/etc/apt/sources.list 2>/dev/null)
 
 subdirs       := debs parts
-clean-subdirs := $(subdirs:%=clean-%)
+all-subdirs   := $(subdirs:%=.all-%)
+clean-subdirs := $(subdirs:%=.clean-%)
 
 .PHONY: all
-all: $(subdirs)
+all: $(all-subdirs)
 
-.PHONY: $(subdirs)
-$(subdirs):
-	make -C $@
+.PHONY: $(all-subdirs)
+$(all-subdirs):
+	$(MAKE) -C $(@:.all-%=%)
 
 .PHONY: $(clean-subdirs)
 $(clean-subdirs):
-	$(MAKE) -C $(@:clean-%=%) clean
+	$(MAKE) -C $(@:.clean-%=%) clean
 
 .PHONY: clean
 clean: $(clean-subdirs)
@@ -72,7 +73,7 @@ rootfs-shell: $(rootfs_dir)
 	systemd-nspawn -D '$(rootfs_dir)'
 
 .PHONY: update
-update: /puavo-os debs
+update: /puavo-os
 	apt-get update
 
 	apt-get install -V -y				\
