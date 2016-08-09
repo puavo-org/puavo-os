@@ -157,7 +157,7 @@ while true; do
 	break
     fi
 
-    echo "Invalid version." >&2
+    echo "Invalid version format, expected X.Y.Z or X.Y.Z~rcN" >&2
 done
 
 new_version="${new_version_number}+${head_commit}"
