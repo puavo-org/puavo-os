@@ -3,23 +3,8 @@ rootfs_mirror := $(shell 					\
 	awk '/^\s*deb .+ jessie main.*$$/ {print $$2; exit}'	\
 	/etc/apt/sources.list 2>/dev/null)
 
-subdirs       := debs parts
-all-subdirs   := $(subdirs:%=.all-%)
-clean-subdirs := $(subdirs:%=.clean-%)
-
 .PHONY: all
-all: $(all-subdirs)
-
-.PHONY: $(all-subdirs)
-$(all-subdirs):
-	$(MAKE) -C $(@:.all-%=%)
-
-.PHONY: $(clean-subdirs)
-$(clean-subdirs):
-	$(MAKE) -C $(@:.clean-%=%) clean
-
-.PHONY: clean
-clean: $(clean-subdirs)
+all: debs
 
 .PHONY: debs
 debs:
@@ -31,7 +16,6 @@ help:
 	@echo
 	@echo 'Targets:'
 	@echo '    all                         -  build everything'
-	@echo '    clean                       -  clean all build products'
 	@echo '    debs                        -  build all Debian packages'
 	@echo '    install-build-deps          -  install build dependencies (requires root)'
 	@echo '    release                     -  make a release commit'
