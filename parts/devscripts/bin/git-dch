@@ -132,33 +132,35 @@ old_version=$(dpkg-parsechangelog -l"${tmpdir}/changelog" | sed -r -n 's/^Versio
 if [[ "${old_version}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)\+([0-9a-f]+)$ ]]; then
     old_major_version="${BASH_REMATCH[1]}"
     old_minor_version="${BASH_REMATCH[2]}"
-    new_version="${old_major_version}.$((old_minor_version + 1)).0~rc1+${head_commit}"
+    new_version_number="${old_major_version}.$((old_minor_version + 1)).0~rc1"
 elif [[ "${old_version}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)~([0-9a-f]+)$ ]]; then
     old_major_version="${BASH_REMATCH[1]}"
     old_minor_version="${BASH_REMATCH[2]}"
-    new_version="${old_major_version}.$((old_minor_version + 1)).0~rc1+${head_commit}"
+    new_version_number="${old_major_version}.$((old_minor_version + 1)).0~rc1"
 elif [[ "${old_version}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)~rc([0-9]+)\+([0-9a-f]+)$ ]]; then
     old_major_version="${BASH_REMATCH[1]}"
     old_minor_version="${BASH_REMATCH[2]}"
     old_patch_version="${BASH_REMATCH[3]}"
     old_rc_version="${BASH_REMATCH[4]}"
-    new_version="${old_major_version}.${old_minor_version}.${old_patch_version}~rc$((old_rc_version + 1))+${head_commit}"
+    new_version_number="${old_major_version}.${old_minor_version}.${old_patch_version}~rc$((old_rc_version + 1))"
 fi
 
 ## Ask for version
 exec < /dev/tty
 while true; do
-    read -e -p "New version number? [${new_version}] " answer || break
+    read -e -p "New version number? [${new_version_number}] " answer || break
     if [ -z "${answer}" ]; then
-	answer="${new_version}"
+	answer="${new_version_number}"
     fi
-    if [[ "${answer}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)(~rc[0-9]+)?\+([0-9a-f]+)$ ]]; then
-	new_version="${answer}"
+    if [[ "${answer}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)(~rc[0-9]+)?$ ]]; then
+	new_version_number="${answer}"
 	break
     fi
 
     echo "Invalid version." >&2
 done
+
+new_version="${new_version_number}+${head_commit}"
 
 dch -c "${tmpdir}/changelog" -v"${new_version}" -U 'New release'
 echo "${lines}" \
