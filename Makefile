@@ -26,10 +26,13 @@ help:
 	@echo 'Puavo OS Build System'
 	@echo
 	@echo 'Targets:'
-	@echo '    all                         -  build all components'
+	@echo '    all                         -  build everything'
+	@echo '    clean                       -  clean all build products'
 	@echo '    install-build-deps          -  install build dependencies (requires root)'
-	@echo '    release                     -  make release commit'
-	@echo '    rootfs                      -  build Puavo OS root filesystem directory (requires root)'
+	@echo '    release                     -  make a release commit'
+	@echo '    rootfs-bootstrap            -  build Puavo OS root filesystem directory (requires root)'
+	@echo '    rootfs-shell                -  spawn shell from Puavo OS root filesystem (requires root)'
+	@echo '    rootfs-update               -  update Puavo OS root filesystem (requires root)'
 
 .PHONY: install-build-deps
 install-build-deps:
@@ -47,6 +50,9 @@ $(rootfs_dir):
 	mkdir '$(rootfs_dir).tmp/puavo-os'
 
 	mv '$(rootfs_dir).tmp' '$(rootfs_dir)'
+
+.PHONY: rootfs-bootstrap
+rootfs-bootstrap: $(rootfs_dir)
 
 .PHONY: release
 release:
