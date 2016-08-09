@@ -2,19 +2,26 @@
 
 set -eu
 
+do_move=false
+
 while [ $# -gt 0 ]; do
     case $1 in
         -h|--help)
             shift
             echo "Usage: $0 [OPTION]... [CHANGES_FILE] DIR"
             echo
-            echo 'Copy files listed in .changes file to the target directory.'
+            echo 'Copy or move files listed in .changes file to the target directory.'
             echo 'If CHANGES_FILE is omitted, it will be deduced from debian/changelog.'
             echo
             echo "Options:"
             echo "    -h, --help                   print help and exit"
+            echo "    -m, --move FILE              move files instead of copying"
             echo
             exit 0
+            ;;
+        -m|--move)
+            shift
+            do_move=true
             ;;
         --)
             shift
@@ -50,8 +57,16 @@ source_dir=$(dirname "${changes_file}")
 
 mkdir -p "${target_dir}"
 
-awk -v"source_dir=${source_dir}" \
-    'NR == 1, /^Files:$/ { next } { printf "%s/%s%c", source_dir, $5, 0 }' \
-    "${changes_file}" | xargs -0 cp -v -a -n -t "${target_dir}"
+if $do_move; then
+    awk -v"source_dir=${source_dir}" \
+        'NR == 1, /^Files:$/ { next } { printf "%s/%s%c", source_dir, $5, 0 }' \
+        "${changes_file}" | xargs -0 mv -v -n -t "${target_dir}"
 
-cp -v -a -n -t "${target_dir}" "${changes_file}"
+    mv -v -n -t "${target_dir}" "${changes_file}"
+else
+    awk -v"source_dir=${source_dir}" \
+        'NR == 1, /^Files:$/ { next } { printf "%s/%s%c", source_dir, $5, 0 }' \
+        "${changes_file}" | xargs -0 cp -v -a -n -t "${target_dir}"
+
+    cp -v -a -n -t "${target_dir}" "${changes_file}"
+fi
