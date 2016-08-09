@@ -1,3 +1,12 @@
+puavo-os (0.22.0~rc2+6b27874ef1d03b2406b2ab73a38b3c547cda8359) trusty; urgency=medium
+
+  * Git(6b27874ef1d03b2406b2ab73a38b3c547cda8359)
+  * make: link debs to pool instead of copying them
+  * cp-changes: add -l to link instead of copy
+  * Revert "make: move debs to pool instead of copying them"
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Tue, 09 Aug 2016 13:18:55 +0300
+
 puavo-os (0.22.0~rc1+d56668345eb011688fc619e01306512821065506) trusty; urgency=medium
 
   * Git(d56668345eb011688fc619e01306512821065506)
