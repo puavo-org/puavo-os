@@ -50,7 +50,7 @@ $(rootfs_dir):
 
 .PHONY: release
 release:
-	@parts/devscripts/bin/git-update-debian-changelog -f debs/puavo-os/debian/changelog
+	@parts/devscripts/bin/git-dch -f debs/puavo-os/debian/changelog
 
 .PHONY: rootfs-update
 rootfs-update: $(rootfs_dir)
