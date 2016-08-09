@@ -18,21 +18,6 @@
 ## Author: Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>
 ##
 
-##
-## This script automates the maintenance of debian/changelog in Git
-## repositories.
-##
-## If there are new commits on top of the last release commit, the
-## user is prompted with a suggestion to create a release commit. If
-## the user accepts, debian/changelog is updated, commited and the
-## script exits with zero status code. If the user rejects, or the
-## script fails, the scripts exits with zero status code without
-## making any changes.
-##
-## A commit is identified as a release commit if its message matches
-## with '^RELEASE: '.
-##
-
 set -eu
 
 on_exit()
@@ -43,6 +28,46 @@ on_exit()
 
     exit $exitvalue
 }
+
+while [ $# -gt 0 ]; do
+    case $1 in
+        -h|--help)
+            shift
+            echo "Usage: $0 [OPTION]..."
+            echo
+            echo 'This script automates the maintenance of debian/changelog in Git'
+            echo 'repositories.'
+            echo
+            echo 'If there are new commits on top of the last release commit, the'
+            echo 'user is prompted with a suggestion to create a release commit. If'
+            echo 'the user accepts, debian/changelog is updated, commited and the'
+            echo 'script exits with zero status code. If the user rejects, or the'
+            echo 'script fails, the scripts exits with zero status code without'
+            echo 'making any changes.'
+            echo
+            echo "Options:"
+            echo "    -h, --help                   print help and exit"
+            echo
+            exit 0
+            ;;
+        --)
+            shift
+            break
+            ;;
+        -*)
+            echo "error: invalid argument '$1'" >&2
+            exit 1
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+if [ $# -ne 0 ]; then
+    echo "error: invalid number of arguments ($#), expected 0" >&2
+    exit 1
+fi
 
 git diff-index --quiet HEAD -- || {
     echo 'error: there are uncommitted changes, please stash or commit them first' >&2
