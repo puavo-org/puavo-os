@@ -29,26 +29,38 @@ on_exit()
     exit $exitvalue
 }
 
+changelog_file=debian/changelog
+
 while [ $# -gt 0 ]; do
     case $1 in
         -h|--help)
             shift
             echo "Usage: $0 [OPTION]..."
             echo
-            echo 'This script automates the maintenance of debian/changelog in Git'
+            echo 'This script automates the maintenance of Debian changelog file in Git'
             echo 'repositories.'
             echo
             echo 'If there are new commits on top of the last release commit, the'
             echo 'user is prompted with a suggestion to create a release commit. If'
-            echo 'the user accepts, debian/changelog is updated, commited and the'
+            echo 'the user accepts, changelog is updated, commited and the'
             echo 'script exits with zero status code. If the user rejects, or the'
             echo 'script fails, the scripts exits with zero status code without'
             echo 'making any changes.'
             echo
             echo "Options:"
             echo "    -h, --help                   print help and exit"
+            echo "    -f, --changelog FILE         edit FILE instead of ${changelog_file}"
             echo
             exit 0
+            ;;
+        -f|--changelog)
+            shift
+            if [ $# -eq 0 ]; then
+                echo 'error: option -f requires an argument' >&2
+                exit 1
+            fi
+            changelog_file=$1
+            shift
             ;;
         --)
             shift
@@ -74,13 +86,13 @@ git diff-index --quiet HEAD -- || {
     exit 1
 }
 
-if [ -z "$(git ls-tree HEAD debian/changelog)" ]; then
-    echo 'error: debian/changelog is not part of the HEAD tree' >&2
+if [ -z "$(git ls-tree HEAD "${changelog_file}")" ]; then
+    echo "error: changelog file '${changelog_file}' is not part of the HEAD tree" >&2
     exit 1
 fi
 
-if [ ! -f debian/changelog ]; then
-    echo 'error: debian/changelog is missing' >&2
+if [ ! -f "${changelog_file}" ]; then
+    echo "error: changelog file '${changelog_file}' is missing" >&2
     exit 1
 fi
 
@@ -90,7 +102,7 @@ if git log -n1 --format='%s' | egrep -q '^RELEASE: '; then
 fi
 
 ## Update the changelog.
-commit=$(sed -r -n 's/^  \* Git\(([a-z0-9]+)\)$/\1/p' debian/changelog | head -n1)
+commit=$(sed -r -n 's/^  \* Git\(([a-z0-9]+)\)$/\1/p' "${changelog_file}" | head -n1)
 lines=$(git log --oneline --no-merges --format=format:'%s' "${commit}...HEAD")
 head_commit=$(git rev-parse HEAD)
 
@@ -101,7 +113,7 @@ trap on_exit EXIT
 
 tmpdir=$(mktemp -d)
 
-cp -a debian/changelog "${tmpdir}"
+cp -a "${changelog_file}" "${tmpdir}"
 
 user=$(git config user.name)
 if [ -n "${user}" -a -z "${DEBFULLNAME:-}" ]; then
@@ -167,9 +179,9 @@ while true; do
     read -e -p 'Make a release? [Y/n] ' answer || break
     case "${answer}" in
         ''|Y|y)
-            cp "${tmpdir}/changelog" debian/changelog
-            version=$(dpkg-parsechangelog | sed -r -n 's/^Version: //p')
-            git commit debian/changelog -m "RELEASE: ${version}"
+            cp "${tmpdir}/changelog" "${changelog_file}"
+            version=$(dpkg-parsechangelog "-l${changelog_file}" | sed -r -n 's/^Version: //p')
+            git commit "${changelog_file}" -m "RELEASE: ${version}"
 	    exitvalue=0
             break
             ;;
