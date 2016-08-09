@@ -34,6 +34,6 @@ installdirs:
 	mkdir -p $(DESTDIR)$(vardir)
 
 clean:
-	rm -rf .bundle vendor
+	rm -rf .bundle
 
 .PHONY: all clean install installdirs

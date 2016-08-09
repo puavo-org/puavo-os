@@ -43,7 +43,6 @@ update-gemfile-lock: clean
 
 clean:
 	rm -rf .bundle
-	rm -rf lib/puavo-client-vendor
 
 test-rest-client:
 	bundle exec ruby -Ilib test/rest_client_test.rb
