@@ -3,6 +3,7 @@
 set -eu
 
 do_move=false
+cp_flags='-v -a -n'
 
 while [ $# -gt 0 ]; do
     case $1 in
@@ -15,9 +16,14 @@ while [ $# -gt 0 ]; do
             echo
             echo "Options:"
             echo "    -h, --help                   print help and exit"
+            echo "    -l, --link FILE              link files instead of copying"
             echo "    -m, --move FILE              move files instead of copying"
             echo
             exit 0
+            ;;
+        -l|--link)
+            shift
+            cp_flags="${cp_flags} -l"
             ;;
         -m|--move)
             shift
@@ -66,7 +72,7 @@ if $do_move; then
 else
     awk -v"source_dir=${source_dir}" \
         'NR == 1, /^Files:$/ { next } { printf "%s/%s%c", source_dir, $5, 0 }' \
-        "${changes_file}" | xargs -0 cp -v -a -n -t "${target_dir}"
+        "${changes_file}" | xargs -0 cp ${cp_flags} -t "${target_dir}"
 
-    cp -v -a -n -t "${target_dir}" "${changes_file}"
+    cp ${cp_flags} -t "${target_dir}" "${changes_file}"
 fi
