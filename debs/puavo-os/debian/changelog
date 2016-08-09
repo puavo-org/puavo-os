@@ -1,3 +1,15 @@
+puavo-os (0.21.0+4a45e200dc3e638489423cb656e60a2fc9938c52) trusty; urgency=medium
+
+  * Git(4a45e200dc3e638489423cb656e60a2fc9938c52)
+  * git-dch: allow empty releases, but issue a warning
+  * git-dch: simplify release entry format
+  * git-dch: give version format hint after invalid input
+  * git-dch: do not allow commit id to be modified
+  * Rename a script
+  * make: do not remove bundled gems in clean target
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Tue, 09 Aug 2016 11:12:28 +0300
+
 puavo-os (0.20.0~rc4+58bb3a40086ba378166acf0d0aa2583ee881d0d0) trusty; urgency=medium
 
   * New release
