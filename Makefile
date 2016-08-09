@@ -42,12 +42,10 @@ $(rootfs_dir):
 	mkdir -p '$(rootfs_dir).tmp'
 	debootstrap --arch=amd64 --include=make,devscripts,equivs,git jessie \
 		'$(rootfs_dir).tmp' '$(rootfs_mirror)'
-	git clone . '$(rootfs_dir).tmp/usr/local/src/puavo-os'
+	git clone . '$(rootfs_dir).tmp/puavo-os'
 
-	echo 'deb [trusted=yes] file:///usr/local/src/puavo-os/debs /' \
+	echo 'deb [trusted=yes] file:///puavo-os/debs /' \
 		>'$(rootfs_dir).tmp/etc/apt/sources.list.d/puavo-os.list'
-
-	mkdir '$(rootfs_dir).tmp/puavo-os'
 
 	mv '$(rootfs_dir).tmp' '$(rootfs_dir)'
 
@@ -60,19 +58,19 @@ release:
 
 .PHONY: rootfs-update
 rootfs-update: $(rootfs_dir)
-	git                                                             \
-		--git-dir='$(rootfs_dir)/usr/local/src/puavo-os/.git'   \
-		--work-tree='$(rootfs_dir)/usr/local/src/puavo-os'      \
+	git                                             \
+		--git-dir='$(rootfs_dir)/puavo-os/.git' \
+		--work-tree='$(rootfs_dir)/puavo-os'    \
 		fetch origin
-	git                                                             \
-		--git-dir='$(rootfs_dir)/usr/local/src/puavo-os/.git'   \
-		--work-tree='$(rootfs_dir)/usr/local/src/puavo-os'      \
+	git                                             \
+		--git-dir='$(rootfs_dir)/puavo-os/.git' \
+		--work-tree='$(rootfs_dir)/puavo-os'    \
 		reset --hard origin/HEAD
 
-	systemd-nspawn -D '$(rootfs_dir)' make -C /usr/local/src/puavo-os/debs \
+	systemd-nspawn -D '$(rootfs_dir)' make -C /puavo-os \
 		install-build-deps
 
-	systemd-nspawn -D '$(rootfs_dir)' make -C /usr/local/src/puavo-os/debs
+	systemd-nspawn -D '$(rootfs_dir)' make -C /puavo-os/debs
 
 	systemd-nspawn -D '$(rootfs_dir)' apt-get update
 	systemd-nspawn -D '$(rootfs_dir)' apt-get dist-upgrade -V -y	\
