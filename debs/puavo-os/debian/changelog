@@ -1,3 +1,13 @@
+puavo-os (0.22.0~rc3+2be1d4da1278c65ecb76bbda98672084681fc2f6) trusty; urgency=medium
+
+  * Git(2be1d4da1278c65ecb76bbda98672084681fc2f6)
+  * make: remove useless top-level targets
+  * make: add debs target
+  * make: maintain puavo-os repo in rootfs's /puavo-os
+  * make: update help target
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Tue, 09 Aug 2016 16:24:20 +0300
+
 puavo-os (0.22.0~rc2+6b27874ef1d03b2406b2ab73a38b3c547cda8359) trusty; urgency=medium
 
   * Git(6b27874ef1d03b2406b2ab73a38b3c547cda8359)
