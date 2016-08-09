@@ -21,6 +21,10 @@ $(clean-subdirs):
 .PHONY: clean
 clean: $(clean-subdirs)
 
+.PHONY: debs
+debs:
+	$(MAKE) -C debs
+
 .PHONY: help
 help:
 	@echo 'Puavo OS Build System'
@@ -28,6 +32,7 @@ help:
 	@echo 'Targets:'
 	@echo '    all                         -  build everything'
 	@echo '    clean                       -  clean all build products'
+	@echo '    debs                        -  build all Debian packages'
 	@echo '    install-build-deps          -  install build dependencies (requires root)'
 	@echo '    release                     -  make a release commit'
 	@echo '    rootfs-bootstrap            -  build Puavo OS root filesystem directory (requires root)'
