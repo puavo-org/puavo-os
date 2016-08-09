@@ -1,3 +1,31 @@
+puavo-os (0.20.0~rc4+58bb3a40086ba378166acf0d0aa2583ee881d0d0) trusty; urgency=medium
+
+  * New release
+  * make: fix release target
+  * Add option to override the default debian/changelog filepath
+  * Add --help to git-update-debian-changelog
+  * make: simplify rootfs updating
+  * make: fix install-build-deps target
+  * parts/conf: build-depend on libtool-bin
+  * parts/monitor: make phony targets .PHONY
+  * parts/client: rename default Makefile target
+  * parts/monitor: rename default Makefile target
+  * make: hide all auxillary targets
+  * debs: add symlinks to parts
+  * make: trivial cleanup
+  * make: add rootfs dir to rootfs-shell prerequisities
+  * make: move all debian packaging stuff to debs/
+  * parts/wlan: fix version number parsing
+  * make: remove build target, use the default target for building
+  * make: move ports to debs
+  * make: use build target for building everything
+  * make: add build target for parts
+  * make: add build target for debs
+  * make: list all subparts explicitly
+  * Git(58bb3a40086ba378166acf0d0aa2583ee881d0d0)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Tue, 09 Aug 2016 10:15:25 +0300
+
 puavo-os (0.20.0~rc3+31bc78e38673a400ac3ab0bbc5beac944bb56091) trusty; urgency=medium
 
   * New release
