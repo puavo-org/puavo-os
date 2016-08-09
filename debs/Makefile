@@ -22,7 +22,7 @@ install-build-deps: $(install-build-deps-subdirs)
 .PHONY: $(dpkg-buildpackage-subdirs)
 $(dpkg-buildpackage-subdirs): .dpkg-buildpackage-%: % .get-orig-source-%
 	cd $< && dpkg-buildpackage -b -uc && \
-		../../parts/devscripts/bin/cp-changes ../pool
+		../../parts/devscripts/bin/cp-changes -l ../pool
 
 .PHONY: $(get-orig-source-subdirs)
 $(get-orig-source-subdirs): .get-orig-source-%: %
