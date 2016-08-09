@@ -1,3 +1,14 @@
+puavo-os (0.22.0~rc1+d56668345eb011688fc619e01306512821065506) trusty; urgency=medium
+
+  * Git(d56668345eb011688fc619e01306512821065506)
+  * make: move debs to pool instead of copying them
+  * Remove useless mv-changes script
+  * cp-changes: add -m flag to move instead of copy
+  * cp-changes: add --help flag
+  * make: remove install target from parts
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Tue, 09 Aug 2016 12:39:15 +0300
+
 puavo-os (0.21.0+4a45e200dc3e638489423cb656e60a2fc9938c52) trusty; urgency=medium
 
   * Git(4a45e200dc3e638489423cb656e60a2fc9938c52)
