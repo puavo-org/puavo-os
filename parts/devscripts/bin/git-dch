@@ -97,8 +97,7 @@ if [ ! -f "${changelog_file}" ]; then
 fi
 
 if git log -n1 --format='%s' | egrep -q '^RELEASE: '; then
-    ## No commits since the last release, nothing to do.
-    exit 0
+    echo "warning: there aren't any commits since the last relase" >&2
 fi
 
 ## Update the changelog.
