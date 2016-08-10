@@ -1,3 +1,22 @@
+puavo-os (0.22.0~rc4+2ea03b01576e3a748826f2040e1ad92303df93c1) trusty; urgency=medium
+
+  * Git(2ea03b01576e3a748826f2040e1ad92303df93c1)
+  * debs: disable binary package caching db
+  * make: generate en_US.UTF-8 locale during rootfs bootstrap
+  * parts/rules: disable kernels module
+  * parts/rules: do not use apt module for anything
+  * make: apply basic Puppet rules to rootfs during update
+  * parts/rules: add image rules for basic images
+  * make: ensure HEAD is a release commit before updating rootfs
+  * make: install puppet-common to rootfs during bootstrap
+  * make: ensure HEAD is release before building debs
+  * make: add target for ensuring HEAD is a release commit
+  * Gitignore some temporary deb side-products
+  * git-dch: add -z to exit success on empty release
+  * make: cleanup and formatting
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Wed, 10 Aug 2016 18:04:58 +0300
+
 puavo-os (0.22.0~rc3+2be1d4da1278c65ecb76bbda98672084681fc2f6) trusty; urgency=medium
 
   * Git(2be1d4da1278c65ecb76bbda98672084681fc2f6)
