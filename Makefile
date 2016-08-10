@@ -6,6 +6,10 @@ rootfs_mirror := $(shell 					\
 .PHONY: all
 all: debs
 
+.PHONY: .ensure-head-is-release
+.ensure-head-is-release:
+	@parts/devscripts/bin/git-dch -f debs/puavo-os/debian/changelog -z
+
 .PHONY: debs
 debs:
 	$(MAKE) -C debs
