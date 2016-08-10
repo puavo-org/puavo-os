@@ -1,7 +1,7 @@
 class apt::default_repositories {
   include apt::repositories
 
-  $mirror = 'archive.debian.org'
+  $mirror = 'ftp.fi.debian.org'
   $securitymirror = 'security.debian.org'
 
   apt::repositories::setup {

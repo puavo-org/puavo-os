@@ -1,11 +1,5 @@
 class packages {
-  require apt::default_repositories,
-          apt::multiarch,
-          opinsys_apt_repositories,
-          packages::proposed_updates
-
-  include packages::kernels,
-	  packages::purged
+  include packages::purged
 
   # install packages by default
   Package { ensure => present, }
