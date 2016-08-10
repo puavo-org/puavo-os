@@ -14,7 +14,7 @@ clean:
 install-build-deps: $(subdirs-install-build-deps)
 
 Packages: $(subdirs-dpkg-buildpackage)
-	apt-ftparchive --db db packages pool >$@
+	apt-ftparchive packages pool >$@
 
 Packages.gz: Packages
 	gzip -f -k $<
