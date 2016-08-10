@@ -37,7 +37,7 @@ release:
 
 $(rootfs_dir):
 	mkdir -p '$(rootfs_dir).tmp'
-	debootstrap --arch=amd64 --include=make,devscripts,equivs,git jessie \
+	debootstrap --arch=amd64 --include=make,devscripts,equivs,git,puppet-common jessie \
 		'$(rootfs_dir).tmp' '$(rootfs_mirror)'
 	git clone . '$(rootfs_dir).tmp/puavo-os'
 
