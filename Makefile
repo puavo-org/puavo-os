@@ -54,7 +54,7 @@ rootfs-shell: $(rootfs_dir)
 	systemd-nspawn -D '$(rootfs_dir)'
 
 .PHONY: rootfs-update
-rootfs-update: $(rootfs_dir)
+rootfs-update: $(rootfs_dir) .ensure-head-is-release
 	git                                             \
 		--git-dir='$(rootfs_dir)/puavo-os/.git' \
 		--work-tree='$(rootfs_dir)/puavo-os'    \
