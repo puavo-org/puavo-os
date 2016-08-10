@@ -27,6 +27,10 @@ help:
 install-build-deps:
 	$(MAKE) -C debs install-build-deps
 
+.PHONY: release
+release:
+	@parts/devscripts/bin/git-dch -f debs/puavo-os/debian/changelog
+
 $(rootfs_dir):
 	mkdir -p '$(rootfs_dir).tmp'
 	debootstrap --arch=amd64 --include=make,devscripts,equivs,git jessie \
@@ -41,9 +45,9 @@ $(rootfs_dir):
 .PHONY: rootfs-bootstrap
 rootfs-bootstrap: $(rootfs_dir)
 
-.PHONY: release
-release:
-	@parts/devscripts/bin/git-dch -f debs/puavo-os/debian/changelog
+.PHONY: rootfs-shell
+rootfs-shell: $(rootfs_dir)
+	systemd-nspawn -D '$(rootfs_dir)'
 
 .PHONY: rootfs-update
 rootfs-update: $(rootfs_dir)
@@ -65,7 +69,3 @@ rootfs-update: $(rootfs_dir)
 	systemd-nspawn -D '$(rootfs_dir)' apt-get dist-upgrade -V -y	\
 		-o Dpkg::Options::="--force-confdef"			\
 		-o Dpkg::Options::="--force-confold"
-
-.PHONY: rootfs-shell
-rootfs-shell: $(rootfs_dir)
-	systemd-nspawn -D '$(rootfs_dir)'

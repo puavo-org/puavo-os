@@ -1,18 +1,19 @@
 subdirs         := admins autopilot blackboard client conf core devscripts \
-	hw-log hw-tools local-config ltsp monitor pkg rules sharedir vpn wlan
-all-subdirs     := $(subdirs:%=.all-%)
-clean-subdirs   := $(subdirs:%=.clean-%)
+                   hw-log hw-tools local-config ltsp monitor pkg rules sharedir \
+                   vpn wlan
+subdirs-all     := $(subdirs:%=.all-%)
+subdirs-clean   := $(subdirs:%=.clean-%)
 
 .PHONY: all
-all: $(all-subdirs)
+all: $(subdirs-all)
 
 .PHONY: clean
-clean: $(clean-subdirs)
+clean: $(subdirs-clean)
 
-.PHONY: $(all-subdirs)
-$(all-subdirs):
+.PHONY: $(subdirs-all)
+$(subdirs-all):
 	$(MAKE) -C $(@:.all-%=%)
 
-.PHONY: $(clean-subdirs)
-$(clean-subdirs):
+.PHONY: $(subdirs-clean)
+$(subdirs-clean):
 	$(MAKE) -C $(@:.clean-%=%) clean
