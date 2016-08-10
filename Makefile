@@ -37,12 +37,15 @@ release:
 
 $(rootfs_dir):
 	mkdir -p '$(rootfs_dir).tmp'
-	debootstrap --arch=amd64 --include=make,devscripts,equivs,git,puppet-common jessie \
+	debootstrap --arch=amd64 --include=make,devscripts,equivs,git,puppet-common,locales jessie \
 		'$(rootfs_dir).tmp' '$(rootfs_mirror)'
 	git clone . '$(rootfs_dir).tmp/puavo-os'
 
 	echo 'deb [trusted=yes] file:///puavo-os/debs /' \
 		>'$(rootfs_dir).tmp/etc/apt/sources.list.d/puavo-os.list'
+
+	echo 'en_US.UTF-8 UTF-8' >'$(rootfs_dir).tmp/etc/locale.gen'
+	systemd-nspawn -D '$(rootfs_dir).tmp' locale-gen
 
 	mv '$(rootfs_dir).tmp' '$(rootfs_dir)'
 
