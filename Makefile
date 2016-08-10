@@ -11,7 +11,7 @@ all: debs
 	@parts/devscripts/bin/git-dch -f debs/puavo-os/debian/changelog -z
 
 .PHONY: debs
-debs:
+debs: .ensure-head-is-release
 	$(MAKE) -C debs
 
 .PHONY: help
