@@ -73,3 +73,11 @@ rootfs-update: $(rootfs_dir) .ensure-head-is-release
 	systemd-nspawn -D '$(rootfs_dir)' apt-get dist-upgrade -V -y	\
 		-o Dpkg::Options::="--force-confdef"			\
 		-o Dpkg::Options::="--force-confold"
+
+	systemd-nspawn -D '$(rootfs_dir)' --setenv=LANG=en_US.UTF-8	\
+		puppet apply						\
+		--detailed-exitcodes					\
+		--execute 'include image::basic'			\
+		--logdest /var/log/puavo-os/puppet.log			\
+		--logdest console					\
+		--modulepath '/puavo-os/parts/rules/rules/puppet'
