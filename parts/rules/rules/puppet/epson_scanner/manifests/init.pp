@@ -19,5 +19,5 @@ class epson_scanner {
       mode    => 755;
   }
 
-  Package <| tag == libsane |>
+  Package <| tag == 'tag_libsane' |>
 }

@@ -45,7 +45,7 @@ class packages {
     , 'whois'
     , 'x11vnc'
     , 'xinput-calibrator' ]:
-      tag => [ 'admin', 'thinclient', 'debian', ];
+      tag => [ 'tag_admin', 'tag_thinclient', 'tag_debian', ];
 
     [ 'clusterssh'
     , 'dconf-tools'
@@ -54,7 +54,7 @@ class packages {
     , 'terminator'
     , 'vinagre'
     , 'xbacklight' ]:
-      tag => [ 'admin', 'debian', ];
+      tag => [ 'tag_admin', 'tag_debian', ];
 
     [ 'libasound2-plugins'
     , 'mumble'
@@ -62,7 +62,7 @@ class packages {
     , 'pavumeter'
     , 'pulseaudio-esound-compat'
     , 'timidity' ]:
-      tag => [ 'audio', 'debian', ];
+      tag => [ 'tag_audio', 'tag_debian', ];
 
     [ 'bash'
     , 'bridge-utils'
@@ -77,7 +77,7 @@ class packages {
     , 'rng-tools'
     , 'udev'
     , 'vlan' ]:
-      tag => [ 'basic', 'debian', ];
+      tag => [ 'tag_basic', 'tag_debian', ];
 
     # 'indicator-power'			# XXX missing from Debian
     [ 'cinnamon'
@@ -94,7 +94,7 @@ class packages {
     , 'python-notify'
     , 'shared-mime-info'
     , 'xul-ext-mozvoikko' ]:
-      tag => [ 'desktop', 'debian', ];
+      tag => [ 'tag_desktop', 'tag_debian', ];
 
     [ 'acct'
     , 'ack-grep'
@@ -114,7 +114,7 @@ class packages {
     , 'sloccount'
     , 'translate-toolkit'
     , 'vim-nox' ]:
-      tag => [ 'devel', 'debian', ];
+      tag => [ 'tag_devel', 'tag_debian', ];
 
     # [ 'bcmwl-kernel-source'	# XXX missing from Debian
     [ 'dkms'
@@ -123,13 +123,13 @@ class packages {
     # , 'nvidia-settings'		# XXX do not install this yet
     # , 'r8168-dkms'		# XXX missing from Debian
     , 'xserver-xorg-video-all' ]:
-      tag => [ 'drivers', 'debian', ];
+      tag => [ 'tag_drivers', 'tag_debian', ];
 
     [ 'mutt' ]:
-      tag => [ 'email', 'debian', ];
+      tag => [ 'tag_email', 'tag_debian', ];
 
     [ 'wine' ]:
-      tag => [ 'emulation', 'debian', ];
+      tag => [ 'tag_emulation', 'tag_debian', ];
 
     [ 'firmware-b43-installer'
     , 'firmware-iwlwifi'
@@ -137,18 +137,18 @@ class packages {
     , 'firmware-linux-free'
     , 'firmware-linux-nonfree'
     , 'firmware-ralink' ]:
-      tag => [ 'firmware', 'debian', ];
+      tag => [ 'tag_firmware', 'tag_debian', ];
 
     [ 'fontconfig'
     , 'ttf-freefont'
     , 'ttf-ubuntu-font-family'
     , 'xfonts-utils' ]:
-      tag => [ 'fonts', 'debian', ];
+      tag => [ 'tag_fonts', 'tag_debian', ];
 
     # needs debconf seeds or such to set license accepted,
     # but package itself is okay
     [ 'ttf-mscorefonts-installer' ]:
-      tag => [ 'fonts', 'debian', ];
+      tag => [ 'tag_fonts', 'tag_debian', ];
 
     [ 'billard-gl'
     , 'cuyo'
@@ -189,7 +189,7 @@ class packages {
     , 'tuxpaint-stamps-default'
     , 'warmux'
     , 'xmoto' ]:
-      tag => [ 'games', 'debian', ];
+      tag => [ 'tag_games', 'tag_debian', ];
 
     [ 'consolekit'
     , 'dbus-x11'
@@ -200,7 +200,7 @@ class packages {
     , 'libgnomevfs2-bin'
     , 'libgnomevfs2-extra'
     , 'notification-daemon' ]:
-      tag => [ 'gnome', 'debian', ];
+      tag => [ 'tag_gnome', 'tag_debian', ];
 
     [ 'blender'
     , 'dia'
@@ -240,11 +240,11 @@ class packages {
     , 'synfigstudio'
     , 'xsane'
     , 'xzoom' ]:
-      tag => [ 'graphics', 'debian', ];
+      tag => [ 'tag_graphics', 'tag_debian', ];
 
     # XXX some issue on Debian
     # [ 'kdump-tools' ]:
-    #   tag => [ 'kernelutils', 'debian', ];
+    #   tag => [ 'tag_kernelutils', 'tag_debian', ];
 
     [ 'emesene'
     , 'gobby'
@@ -255,10 +255,10 @@ class packages {
     , 'pidgin-plugin-pack'
     , 'sflphone-gnome'
     , 'xchat' ]:
-      tag => [ 'instant_messaging', 'debian', ];
+      tag => [ 'tag_instant_messaging', 'tag_debian', ];
 
     [ 'laptop-mode-tools' ]:
-      tag => [ 'laptop', 'debian', ];
+      tag => [ 'tag_laptop', 'tag_debian', ];
 
     [ 'banshee'
     # , 'clam-chordata'		# XXX missing from Debian Jessie
@@ -282,7 +282,7 @@ class packages {
     , 'vlc-plugin-pulse'
     , 'x264'
     , 'xbmc' ]:
-      tag => [ 'mediaplayer', 'debian', ];
+      tag => [ 'tag_mediaplayer', 'tag_debian', ];
 
     [ 'ardour'
     , 'audacity'
@@ -301,13 +301,13 @@ class packages {
     , 'sweep'
     , 'tuxguitar'
     , 'tuxguitar-jsa' ]:
-      tag => [ 'music_making', 'debian', ];
+      tag => [ 'tag_music_making', 'tag_debian', ];
 
     [ 'amtterm'
     , 'ipsec-tools'
     , 'racoon' ]:
     # , 'wsmancli' ]:	# XXX missing from Debian
-      tag => [ 'network', 'debian', ];
+      tag => [ 'tag_network', 'tag_debian', ];
 
     [ 'calibre'
     , 'fbreader'
@@ -319,7 +319,7 @@ class packages {
     , 'scribus-doc'
     , 'tellico'
     , 'vym' ]:
-      tag => [ 'office', 'debian', ];
+      tag => [ 'tag_office', 'tag_debian', ];
 
     [ 'cdparanoia'
     , 'cdrdao'
@@ -327,11 +327,11 @@ class packages {
     , 'eject'
     , 'rhythmbox-plugin-cdrecorder'
     , 'sound-juicer' ]:
-      tag => [ 'optical_media', 'debian', ];
+      tag => [ 'tag_optical_media', 'tag_debian', ];
 
     # XXX missing from Debian
     # [ 'gtklp' ]:
-    #   tag => [ 'printing', 'debian', ];
+    #   tag => [ 'tag_printing', 'tag_debian', ];
 
     [ 'arduino'
     , 'arduino-mk'
@@ -363,7 +363,7 @@ class packages {
     , 'renpy'
     , 'scratch'
     , 'spe' ]:
-      tag => [ 'programming', 'debian', ];
+      tag => [ 'tag_programming', 'tag_debian', ];
 
     # 'gftp-gtk'	# XXX missing from Debian
     [ 'libmotif4'	# required by icaclient
@@ -373,7 +373,7 @@ class packages {
     , 'unison-gtk'
     , 'wget'
     , 'xtightvncviewer']:
-      tag => [ 'remote_access', 'debian', ];
+      tag => [ 'tag_remote_access', 'tag_debian', ];
 
     [ 'atomix'
     , 'avogadro'
@@ -405,7 +405,7 @@ class packages {
     , 'texlive-latex-extra'
     , 'texlive-latex-recommended'
     , 'wxmaxima' ]:
-      tag => [ 'science', 'debian', ];
+      tag => [ 'tag_science', 'tag_debian', ];
 
     # 'breathe-icon-theme'		# XXX missing from Debian
     [ 'gnome-icon-theme'
@@ -420,13 +420,13 @@ class packages {
     , 'tangerine-icon-theme'
     , 'xscreensaver-data'
     , 'xscreensaver-data-extra' ]:
-      tag => [ 'themes', 'debian', ];
+      tag => [ 'tag_themes', 'tag_debian', ];
 
     [ 'debian-edu-artwork'
     , 'debian-edu-artwork-joy'
     , 'debian-edu-artwork-lines'
     , 'debian-edu-artwork-spacefun' ]:
-      tag => [ 'backgroundimages', 'themes', 'debian', 'jessie', ];
+      tag => [ 'tag_backgroundimages', 'tag_themes', 'tag_debian', 'tag_jessie', ];
 
     # the dependencies (and recommends) of ubuntu-gnome-desktop package
     # without a few packages that we do not want
@@ -616,7 +616,7 @@ class packages {
     , 'zenity'
     , 'zip'
     , 'zsync' ]:
-      tag => [ 'ubuntu-gnome-desktop', 'debian', ];
+      tag => [ 'tag_ubuntu-gnome-desktop', 'tag_debian', ];
 
     [ 'bindfs'
     , 'desktop-file-utils'
@@ -642,10 +642,10 @@ class packages {
     , 'unionfs-fuse'
     , 'unrar'
     , 'x-tile' ]:
-      tag => [ 'utils', 'debian', ];
+      tag => [ 'tag_utils', 'tag_debian', ];
 
     [ 'qemu-kvm' ]:
-      tag => [ 'virtualization', 'debian', ];
+      tag => [ 'tag_virtualization', 'tag_debian', ];
 
     [ 'bluefish'
     , 'browser-plugin-vlc'
@@ -661,7 +661,7 @@ class packages {
     , 'php5-cli'
     , 'php5-sqlite'
     , 'sqlite3' ]:
-      tag => [ 'web', 'debian', ];
+      tag => [ 'tag_web', 'tag_debian', ];
   }
 
   #
@@ -672,7 +672,7 @@ class packages {
     [ 'nodejs-bundle'
     , 'puavo-rules'
     , 'puavo-devscripts' ]:
-      tag => [ 'devel', 'puavo', ];
+      tag => [ 'tag_devel', 'tag_puavo', ];
 
     [ 'autopoweroff'
     , 'opinsys-ca-certificates'
@@ -685,7 +685,7 @@ class packages {
     , 'puavo-ltsp-install'
     , 'puavo-monitor'
     , 'puavo-vpn-client' ]:
-      tag => [ 'misc', 'puavo', 'thinclient', ];
+      tag => [ 'tag_misc', 'tag_puavo', 'tag_thinclient', ];
 
     # [ 'fluent-plugin-puavo'   # XXX not yet packaged for Debian
     [ 'iivari-client'
@@ -700,7 +700,7 @@ class packages {
     , 'webmenu'
     , 'webkiosk-language-selector']:
     # , 'xexit' ]:                      # XXX not yet packaged for Debian
-      tag => [ 'misc', 'puavo', ];
+      tag => [ 'tag_misc', 'tag_puavo', ];
 
     'libssl-dev':
       ensure => '1.0.1e-2+deb7u20',
@@ -718,25 +718,25 @@ class packages {
 
     # XXX not yet packaged for Debian
     # [ 'dymo-cups-drivers' ]:
-    #   tag => [ 'printing', 'puavo', ];
+    #   tag => [ 'tag_printing', 'tag_puavo', ];
 
     # XXX not yet packaged for Debian
     # [ 'bluegriffon'
     # , 'enchanting'
     # , 'pycharm'
     # , 'snap4arduino' ]:
-    #   tag => [ 'programming', 'puavo', ];
+    #   tag => [ 'tag_programming', 'tag_puavo', ];
 
     'x2goclient':
     # 'x2goserver' # XXX not yet packaged for Debian
-      tag => [ 'remote_access', 'puavo', ];
+      tag => [ 'tag_remote_access', 'tag_puavo', ];
 
     [ 'faenza-icon-theme' ]:
-      tag => [ 'themes', 'puavo', ];
+      tag => [ 'tag_themes', 'tag_puavo', ];
 
     # 'node-webkit'	# XXX not yet packaged for Debian
     [ 'xul-ext-flashblock' ]:
-      tag => [ 'web', 'puavo', ];
+      tag => [ 'tag_web', 'tag_puavo', ];
   }
 
   $bcmwl_dkms_module  = 'bcmwl/6.30.223.248+bdcom'
@@ -766,11 +766,11 @@ class packages {
   # XXX missing from Debian
   # @package {
   #   [ 'skype' ]:
-  #     tag => [ 'instant_messaging', 'partner', 'extra', 'restricted' ];
+  #     tag => [ 'tag_instant_messaging', 'tag_partner', 'tag_extra', 'tag_restricted' ];
   #
   #   XXX missing from Debian
   #   [ 'vmware-view-client' ]:
-  #     tag => [ 'remote_access', 'partner', 'restricted' ];
+  #     tag => [ 'tag_remote_access', 'tag_partner', 'tag_restricted' ];
   # }
 
   # Packages which are not restricted per se, but which are required by
@@ -780,6 +780,6 @@ class packages {
   @package {
     [ 'libnspr4-0d' # spotify
     , 'lsb-core' ]: # google-earth
-      tag => [ 'debian', 'required-by-restricted' ];
+      tag => [ 'tag_debian', 'tag_required-by-restricted' ];
   }
 }

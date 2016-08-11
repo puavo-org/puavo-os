@@ -10,5 +10,5 @@ class image::thinclient {
                   or title == xorg-updates |>
 
   # apply only thinclient package definitions listed in packages
-  Package <| tag == thinclient |>
+  Package <| tag == 'tag_thinclient' |>
 }

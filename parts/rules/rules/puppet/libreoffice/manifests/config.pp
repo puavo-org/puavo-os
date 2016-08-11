@@ -7,5 +7,5 @@ class libreoffice::config {
       mode    => 755;
   }
 
-  Package <| tag == libreoffice-writer |>
+  Package <| tag == 'tag_libreoffice-writer' |>
 }

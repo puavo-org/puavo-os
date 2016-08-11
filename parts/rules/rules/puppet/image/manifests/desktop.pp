@@ -11,13 +11,12 @@ class image::desktop {
                   or title == x2go
                   or title == xorg-updates |>
 
-  # apply package definitions listed in packages with "puavo" or "ubuntu" tags
-  Package <| tag == puavo
-          or tag == ubuntu |>
+  Package <| tag == 'tag_puavo'
+          or tag == 'tag_ubuntu' |>
 
-  # keep the "extra", "opinsys", "partner" and "restricted" packages out
-  Package <| tag == extra
-          or tag == opinsys
-          or tag == partner
-          or tag == restricted |> { ensure => purged, }
+  # keep these pacakges out
+  Package <| tag == 'tag_extra'
+          or tag == 'tag_opinsys'
+          or tag == 'tag_partner'
+          or tag == 'tag_restricted' |> { ensure => purged, }
 }

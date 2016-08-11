@@ -1,6 +1,6 @@
 class image::basic {
   include packages
 
-  Package <| tag == basic |>
+  Package <| tag == 'tag_basic' |>
 
 }

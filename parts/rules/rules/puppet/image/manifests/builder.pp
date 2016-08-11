@@ -8,8 +8,8 @@ class image::builder {
                   or title == proposed
                   or title == repo |>
 
-  Package <| tag == admin
-          or tag == basic
+  Package <| tag == 'tag_admin'
+          or tag == 'tag_basic'
           or title == puavo-devscripts
           or title == puavo-image-tools
           or title == puavo-rules |>
