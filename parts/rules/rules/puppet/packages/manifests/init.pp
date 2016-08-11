@@ -752,8 +752,9 @@ class packages {
       packages::kernels::kernel_package {
         '3.16.0-4-amd64':
           dkms_modules => $all_dkms_modules;
-        '4.5.0-0.bpo.2-amd64':
-          dkms_modules => $all_dkms_modules;
+        # XXX disabled due to linux-base 4.3 dependency
+        # '4.6.0-0.bpo.1-amd64':
+        #   dkms_modules => $all_dkms_modules;
       }
     }
   }
