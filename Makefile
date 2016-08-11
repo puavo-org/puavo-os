@@ -79,7 +79,7 @@ rootfs-update: $(rootfs_dir) .ensure-head-is-release
 
 	systemd-nspawn -D '$(rootfs_dir)' --setenv=LANG=en_US.UTF-8	\
 		puppet apply						\
-		--execute 'include image::basic'			\
+		--execute 'include image::allinone'			\
 		--logdest /var/log/puavo-os/puppet.log			\
 		--logdest console					\
 		--modulepath '/puavo-os/parts/rules/rules/puppet'
