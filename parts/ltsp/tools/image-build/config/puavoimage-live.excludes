@@ -5,6 +5,8 @@ etc/apt/apt.conf.d/00imagebuild-proxy
 etc/epoptes/server.key
 etc/mysql/debian.cnf
 etc/NetworkManager/system-connections/*
+etc/ssh/ssh_host_*_key
+etc/ssh/ssh_host_*_key.pub
 etc/udev/rules.d/??-persistent-*.rules
 home/*
 images/*

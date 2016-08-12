@@ -13,7 +13,7 @@ imagename=$(/root/puavo-configure-image --get-imagename)
 
 mkdir -p /images
 mksquashfs / "/images/${imagename}.tmp" -noappend \
-           -ef /etc/puavo-image-tools/ltsp-image.excludes -wildcards
+           -ef /etc/puavo-image-tools/puavoimage-live.excludes -wildcards
 mv "/images/${imagename}.tmp" "/images/${imagename}"
 
 echo "Image $imagename has been created and installed to /images/${imagename}"

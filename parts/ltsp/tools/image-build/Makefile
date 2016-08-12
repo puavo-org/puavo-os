@@ -22,7 +22,7 @@ installdirs :
 .PHONY : install
 install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-image-tools \
-		config/puavoimage.excludes
+		config/puavoimage.excludes config/puavoimage-live.excludes
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-image-tools \
 		puavo-ask-buildtarget-dir \
