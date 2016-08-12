@@ -1,4 +1,4 @@
-subdirs                    := gnome-clocks puavo-os
+subdirs                    := gnome-clocks libpam-envfeed puavo-os
 subdirs-get-orig-source    := $(subdirs:%=.get-orig-source-%)
 subdirs-dpkg-buildpackage  := $(subdirs:%=.dpkg-buildpackage-%)
 subdirs-install-build-deps := $(subdirs:%=.install-build-deps-%)

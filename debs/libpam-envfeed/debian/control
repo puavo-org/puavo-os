@@ -1,0 +1,18 @@
+Source: libpam-envfeed
+Priority: extra
+Maintainer: Opinsys Developers <dev@opinsys.fi>
+Build-Depends: debhelper (>= 8), libpam0g-dev
+Standards-Version: 3.9.3
+Section: libs
+Homepage: http://freecode.com/projects/pam_envfeed
+
+Package: libpam-envfeed
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libpam0g
+Description: A PAM module that runs an external program
+ pam_envfeed is a PAM module that runs an external program,
+ grabs its output, and then defines the environment variables
+ this program has emitted. It is especially useful for dynamically
+ setting up a PATH that depends on many circumstances (such as
+ whether the user is root, or whether a directory exists or not).
