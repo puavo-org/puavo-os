@@ -9,6 +9,7 @@ all: Packages.gz
 .PHONY: clean
 clean:
 	rm -f db Packages Packages.gz
+	rm -rf pool
 
 .PHONY: install-build-deps
 install-build-deps: $(subdirs-install-build-deps)
