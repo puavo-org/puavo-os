@@ -75,10 +75,6 @@ override_dh_auto_install:
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/ruby-puavobs
 
-	$(MAKE) -C monitor				\
-		install prefix=/usr sysconfdir=/etc		\
-		DESTDIR=$(CURDIR)/debian/puavo-monitor
-
 	$(MAKE) -C pkg					\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-pkg

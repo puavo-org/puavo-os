@@ -323,15 +323,6 @@ Description: Bits and pieces needed inside the LTSP chroot image.
  Bits and pieces needed inside the LTSP chroot image.
  .
 
-Package: puavo-monitor
-Architecture: any
-Depends: ${misc:Depends}, nodejs-bundle
-Description: Uptime socket keeping track of client usage 
- Monitor daemon for fat- and thinclients. Keeps active tcp connection open to
- the logrelay daemon. Logrelay uses that connection to determine whether the
- client is up and running.
- .
-
 Package: puavo-pkg
 Architecture: all
 Depends: ${misc:Depends},

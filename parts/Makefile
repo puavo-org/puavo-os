@@ -1,5 +1,5 @@
 subdirs         := admins autopilot blackboard client conf core devscripts \
-                   hw-log hw-tools local-config ltsp monitor pkg rules sharedir \
+                   hw-log hw-tools local-config ltsp pkg rules sharedir \
                    vpn wlan
 subdirs-all     := $(subdirs:%=.all-%)
 subdirs-clean   := $(subdirs:%=.clean-%)
