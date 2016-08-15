@@ -65,13 +65,13 @@ mkdir -p "${target_dir}"
 
 if $do_move; then
     awk -v"source_dir=${source_dir}" \
-        'NR == 1, /^Files:$/ { next } { printf "%s/%s%c", source_dir, $5, 0 }' \
+        'NR == 1, /^Files:$/ { next } /^ / { printf "%s/%s%c", source_dir, $5, 0 }' \
         "${changes_file}" | xargs -0 mv -v -n -t "${target_dir}"
 
     mv -v -n -t "${target_dir}" "${changes_file}"
 else
     awk -v"source_dir=${source_dir}" \
-        'NR == 1, /^Files:$/ { next } { printf "%s/%s%c", source_dir, $5, 0 }' \
+        'NR == 1, /^Files:$/ { next } /^ / { printf "%s/%s%c", source_dir, $5, 0 }' \
         "${changes_file}" | xargs -0 cp ${cp_flags} -t "${target_dir}"
 
     cp ${cp_flags} -t "${target_dir}" "${changes_file}"
