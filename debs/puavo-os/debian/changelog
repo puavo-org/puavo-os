@@ -1,3 +1,36 @@
+puavo-os (0.23.0+72c327959cccc46a4d7d2053b6bb576340b15af0) trusty; urgency=medium
+
+  * Git(72c327959cccc46a4d7d2053b6bb576340b15af0)
+  * debs: copy files to pool in a separate target
+  * debs: build packages only if they do not yet exist
+  * debs: add script for building packages
+  * cp-changes: match only lines in Files: section
+  * debs: add onboard to build list
+  * debs/onboard: 1.0.1-0+puavo1
+  * debs/onboard: add script for downloading upstream source
+  * debs/onboard: import 1.0.1-0ubuntu1
+  * Remove remnants of LTSP server and thinclient support
+  * parts/client: remove unused script
+  * parts/client: remove unused script
+  * parts: remove puavo-monitor
+  * debs: add libpam-envfeed 0.5
+  * make: boostrap rootfs with contrib and non-free components
+  * make: fix clean target to cleanup debs pool as well
+  * make: apply image::allinone instead of just basic
+  * parts/rules: add image::allinone class
+  * make: do not use detailed exitcodes with puppet apply
+  * parts/rules: prepend all tags with tag_ -prefix
+  * parts/rules: do not include basic bundle in basic images
+  * Allow adding /etc/ssh/ssh_host_*_key to images.  Except do exclude
+    ssh server keys when building image from a live system, to prevent
+    mistakes.  Perhaps this should be revisited, but it's probably
+    better that puavo-freeze-system-to-image is not unsafe by default.
+  * Linux kernel 4.5.0-0.bpo.2-amd64 is no more on linux-backports, so
+    do not try to install it.  Installing 4.6.0-0.bpo.1-amd64 did not
+    work due to dependency on linux-base 4.3.
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Mon, 15 Aug 2016 16:28:42 +0300
+
 puavo-os (0.22.0~rc4+2ea03b01576e3a748826f2040e1ad92303df93c1) trusty; urgency=medium
 
   * Git(2ea03b01576e3a748826f2040e1ad92303df93c1)
