@@ -1,6 +1,4 @@
 subdirs                    := gnome-clocks libpam-envfeed onboard puavo-os
-subdirs-get-orig-source    := $(subdirs:%=.get-orig-source-%)
-subdirs-dpkg-buildpackage  := $(subdirs:%=.dpkg-buildpackage-%)
 subdirs-install-build-deps := $(subdirs:%=.install-build-deps-%)
 
 .PHONY: all
@@ -24,10 +22,6 @@ Packages.gz: Packages
 $(subdirs-dpkg-buildpackage): .dpkg-buildpackage-%: % .get-orig-source-%
 	cd $< && dpkg-buildpackage -b -uc && \
 		../../parts/devscripts/bin/cp-changes -l ../pool
-
-.PHONY: $(subdirs-get-orig-source)
-$(subdirs-get-orig-source): .get-orig-source-%: %
-	cd $< && debian/scripts/get-orig-source
 
 .PHONY: $(subdirs-install-build-deps)
 $(subdirs-install-build-deps): .install-build-deps-%: %
