@@ -105,16 +105,12 @@ install : installdirs
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/pam.d \
 		templates/etc/pam.d/gnome-screensaver-laptop \
-		templates/etc/pam.d/ltspsshd \
-		templates/etc/pam.d/ltspguestsshd \
 		templates/etc/pam.d/lightdm-autologin-fatclient \
 		templates/etc/pam.d/lightdm-autologin-laptop \
 		templates/etc/pam.d/lightdm-autologin-preinstalled \
-		templates/etc/pam.d/lightdm-autologin-thinclient \
 		templates/etc/pam.d/lightdm-autologin-wirelessaccesspoint \
 		templates/etc/pam.d/lightdm-fatclient \
 		templates/etc/pam.d/lightdm-laptop \
-		templates/etc/pam.d/lightdm-thinclient \
 		templates/etc/pam.d/sudo-laptop
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/ldap \
@@ -136,7 +132,6 @@ install : installdirs
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc \
 		templates/etc/hosts \
-		templates/etc/hosts-ltspserver \
 		templates/etc/idmapd.conf \
 		templates/etc/krb5.conf \
 		templates/etc/krb5.conf-laptop \
@@ -187,9 +182,6 @@ install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/xdg/autostart \
 		templates/etc/xdg/autostart/puavo-install.desktop
 
-	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/lib/udev \
-		templates/lib/udev/ltspfs_entry
-
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/usr/share/X11/xorg.conf.d \
 		templates/usr/share/X11/xorg.conf.d/99-hitachicalib.conf
 
@@ -221,10 +213,6 @@ install : installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES \
 		po/fi/puavo-remote-assistance-applet.mo
 
-	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/default \
-		etc/default/ltspssh \
-		etc/default/ltspguestssh
-
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-remote-assistance-applet \
 		etc/puavo-remote-assistance-applet/config.json
 
@@ -233,16 +221,8 @@ install : installdirs
 		etc/puavo-vpn-client/scripts/route-up/20-sssd \
 		etc/puavo-vpn-client/scripts/route-up/30-ntpdate
 
-	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/init.d \
-		etc/init.d/ltspssh \
-		etc/init.d/ltspguestssh
-
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/NetworkManager/dispatcher.d \
 		etc/NetworkManager/dispatcher.d/dnssd-printers
-
-	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/ssh \
-		etc/ssh/ltspsshd_config \
-		etc/ssh/ltspguestsshd_config
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
 		etc/xdg/autostart/*
@@ -252,7 +232,6 @@ install : installdirs
 		udev/rules.d/95-monitor-hotplug.rules
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/X11/Xsession.d \
-		etc/X11/Xsession.d/40puavo-retrieve-thinclient-session \
 		etc/X11/Xsession.d/41puavo-set-locale \
 		etc/X11/Xsession.d/42puavo-set-browser-homepage \
 		etc/X11/Xsession.d/43puavo-set-guest-session-quirks \
@@ -268,16 +247,12 @@ install : installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-client/pam \
 		pam/check-if-account-is-locked \
 		pam/chown-session-dir \
-		pam/ltspserver-guest-login \
 		pam/make-session-dir \
 		pam/open-session \
 		pam/puavo-local-config-setup \
 		pam/populate-extrausers \
 		pam/restrict-logins-by-local-config \
 		pam/setup-guest-session
-
-	ln -fs /usr/sbin/sshd $(DESTDIR)$(sbindir)/ltspsshd
-	ln -fs /usr/sbin/sshd $(DESTDIR)$(sbindir)/ltspguestsshd
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/xgreeters \
 		xgreeters/puavo-gtk-greeter.desktop

@@ -554,7 +554,7 @@ class Control
     rui  = RegisterUserInterface.new(cmdline_params, cert)
     info = rui.register_to_server()
 
-    return if ['fatclient', 'thinclient'].include?( info['registration']['puavoDeviceType'] )
+    return if ['fatclient'].include?( info['registration']['puavoDeviceType'] )
 
     organisation_info = rui.connection.get("/users/organisation.json")
     # org["ldap_host"], org["domain"]
@@ -619,7 +619,7 @@ class Control
   def self.update
     puavo = Puavo::Client::Base.new
 
-    if ["ltspserver", "bootserver"].include?(PUAVO_ETC.hosttype)
+    if ["bootserver"].include?(PUAVO_ETC.hosttype)
       device_info = puavo.servers.find_by_id(PUAVO_ETC.id)
     else
       device_info = puavo.devices.find_by_id(PUAVO_ETC.id)

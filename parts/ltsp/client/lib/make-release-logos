@@ -3,7 +3,7 @@
 set -eu
 
 release=$(cat /etc/ltsp/this_ltspimage_release)
-hosttypes="fatclient laptop ltspserver thinclient wirelessaccesspoint"
+hosttypes="fatclient laptop wirelessaccesspoint"
 
 uppercase() { echo -n "$1" | tr [:lower:] [:upper:]; }
 

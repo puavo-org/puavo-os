@@ -45,7 +45,7 @@ class packages {
     , 'whois'
     , 'x11vnc'
     , 'xinput-calibrator' ]:
-      tag => [ 'tag_admin', 'tag_thinclient', 'tag_debian', ];
+      tag => [ 'tag_admin', 'tag_debian', ];
 
     [ 'clusterssh'
     , 'dconf-tools'
@@ -684,7 +684,7 @@ class packages {
     , 'puavo-ltsp-client'
     , 'puavo-ltsp-install'
     , 'puavo-vpn-client' ]:
-      tag => [ 'tag_misc', 'tag_puavo', 'tag_thinclient', ];
+      tag => [ 'tag_misc', 'tag_puavo', ];
 
     # [ 'fluent-plugin-puavo'   # XXX not yet packaged for Debian
     [ 'iivari-client'

@@ -51,10 +51,6 @@ set_default_printer()
 hosttype=$(cat /etc/puavo/hosttype)
 
 case "${hosttype}" in
-    ltspserver)
-        export PRINTER_LIST=$(get_printer_list)
-        export PRINTER=$(jq -r .device.default_printer_name "${PUAVO_SESSION_PATH}")
-        ;;
     fatclient)
         remove_remote_printers
         add_remote_printers

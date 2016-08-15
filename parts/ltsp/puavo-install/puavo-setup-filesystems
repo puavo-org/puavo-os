@@ -48,11 +48,6 @@ module DiskHandler
       'imageoverlays' => { 'size' => '5G',       'type' => 'ext4' },
       'home'          => { 'size' => '100%FREE', 'type' => 'ext4' },
     },
-    'ltspserver' => {
-      'swap'          => { 'size' => '16G',      'type' => 'swap' },
-      'tmp'           => { 'size' => '6G',       'type' => 'ext4' },
-      'state'         => { 'size' => '100%FREE', 'type' => 'ext4' },
-    },
     'wirelessaccesspoint' => {
       'swap'          => { 'size' => '2G',       'type' => 'swap' },
       'tmp'           => { 'size' => '3G',       'type' => 'ext4' },
@@ -563,7 +558,7 @@ vgname = (hosttype == 'diskinstaller') ? 'puavoinstaller' : 'puavo'
 DiskHandler::cleanup_disk_environment(hosttype, vgname)
 
 case hosttype
-  when 'diskinstaller', 'laptop', 'ltspserver', 'wirelessaccesspoint'
+  when 'diskinstaller', 'laptop', 'wirelessaccesspoint'
     conf = QueryDiskInfo::ask_device_and_partition_with_confirmation(hosttype)
     DiskHandler::do_fs_setup(conf, vgname)
   else

@@ -1,7 +1,7 @@
 PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
 
 case "$PUAVO_HOSTTYPE" in
-  laptop|ltspserver|wirelessaccesspoint)
+  laptop|wirelessaccesspoint)
     puavo_admin_tunnel_interface="tap0"
     ;;
   *)

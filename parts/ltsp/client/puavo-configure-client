@@ -201,39 +201,6 @@ FileUtils.chown('puavodesktop',
                 '/var/lib/puavo-desktop/shared')
 
 case @puavo_device_type
-  when "thinclient"
-    write_config("/etc/nsswitch.conf", "extrausers")
-    write_config("/etc/pam.d/lightdm", "thinclient")
-    write_config("/etc/pam.d/lightdm-autologin", "thinclient")
-    write_config("/etc/ldap/ldap.conf")
-    write_config("/etc/lightdm/lightdm.conf")
-    write_config("/etc/krb5.conf")
-    write_config("/etc/idmapd.conf")
-    write_config("/etc/default/nfs-common", "userprincipal")
-    write_config("/etc/cups/client.conf")
-    write_config("/etc/dbus-1/system.d/org.freedesktop.login1.conf")
-    write_config("/etc/rsyslog.conf")
-    write_config("/etc/rsyslog.d/send_to_syslogserver.conf")
-
-    delete_file('/usr/share/dbus-1/system-services/fi.epitest.hostap.WPASupplicant.service')
-    delete_file('/usr/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service')
-
-    @tags.each do |tag|
-      match = /^hitachicalib:(\d+):(\d+):(\d+):(\d+)$/.match(tag)
-      if match then
-        @hitachicalib_values = match.captures.join(' ')
-        write_config('/usr/share/X11/xorg.conf.d/99-hitachicalib.conf')
-        break
-      end
-    end
-
-    # Temporary hack until ltsp-lightdm is not used anymore
-    `cp /usr/lib/puavo-ltsp-client/thin-guest-account /usr/sbin/guest-account`
-#    `cp /usr/lib/puavo-ltsp-client/puavo-desktop-guest-session /usr/share/ltsp-lightdm/xsession-stub`
-
-    # Temporary hack to get ltspfs working with thin guest sessions
-    write_config("/lib/udev/ltspfs_entry")
-    File.chmod(0755, "/lib/udev/ltspfs_entry")
   when "fatclient"
     write_config("/etc/nsswitch.conf", "extrausers")
     write_config("/etc/pam.d/lightdm", "fatclient")
@@ -262,44 +229,10 @@ case @puavo_device_type
       end
     end
 
-    `cp /usr/lib/puavo-ltsp-client/thin-guest-account /usr/sbin/guest-account`
 #    `cp /usr/lib/puavo-ltsp-client/puavo-desktop-guest-session /usr/share/ltsp-lightdm/xsession-stub`
 
     delete_file('/usr/share/dbus-1/system-services/fi.epitest.hostap.WPASupplicant.service')
     delete_file('/usr/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service')
-
-    try_writing_puavomounts()
-  when "ltspserver"
-    write_config("/etc/hosts", "ltspserver")
-    write_config("/etc/nsswitch.conf", "ldap")
-    write_config("/etc/pam.d/ltspguestsshd")
-    write_config("/etc/pam.d/ltspsshd")
-    write_config("/etc/ldap/ldap.conf")
-    write_config("/etc/krb5.conf")
-    write_config("/etc/idmapd.conf")
-    write_config("/etc/default/nfs-common")
-    write_config("/etc/ssh/sshd_config")
-    write_config("/etc/cups/client.conf")
-    write_config("/etc/ntp.conf")
-    write_config("/etc/dbus-1/system.d/org.freedesktop.login1.conf")
-
-    @ldap_binddn       = read_file('/etc/puavo/ldap/dn')
-    @ldap_bindpw       = read_file('/etc/puavo/ldap/password')
-    write_config("/etc/nscd.conf")
-    write_config("/etc/nslcd.conf", nil, true)
-    File.chmod(0640, "/etc/nslcd.conf")
-    FileUtils.chown("root", "nslcd", "/etc/nslcd.conf")
-
-    # http://askubuntu.com/questions/117127/flash-video-appears-blue
-    # FIXME - do this in ruby instead of perl
-    `perl -pi -e 's/libvdpau/lixvdpau/g' /usr/lib/adobe-flashplugin/libflashplayer.so`
-
-    delete_file('/usr/share/dbus-1/system-services/fi.epitest.hostap.WPASupplicant.service')
-    delete_file('/usr/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service')
-
-    File.open('/etc/inetd.conf', 'a') do |f|
-      f.write("908  stream  tcp     nowait  root    /usr/sbin/tcpd  /usr/lib/puavo-ltsp-client/ltspserver-create-guest\n")
-    end
 
     try_writing_puavomounts()
   when "laptop"

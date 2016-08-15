@@ -30,7 +30,7 @@ responsive it is used more heavily, and if load gets higher user slows
 down a bit.  This is to prevent users from completely trashing the system,
 which would be easy, but unrealistic.
 
-Puavo-autopilot can be used with thin clients, fat clients and laptops.
+Puavo-autopilot can be used with fat clients and laptops.
 Fat clients and laptops are simpler cases.  If one or more puavo-tags
 are found which are of the format "autopilot:$mode:$username:$password",
 for example "autopilot:stress:heikki.hepuli:kukkuu", puavo-autopilot
@@ -47,38 +47,21 @@ possible).
 
 Some other modes than "stress" are planned to be used in the future.
 
-In thin client and ltsp server case, thin clients behave like fatclients
-and laptops at login stage.  However, as a desktop session starts, 
-ltsp servers must also have corresponding tags set so that puavo-autopilot
-activates on the desktop session.  This is to allow an ltsp server to be
-used from other hosts (and with other logins) while other hosts function as
-testing hosts.  One must add autopilot tags for every autopilot login to
-ltspserver to test thin client desktop sessions with puavo-autopilot.
-
 For example, presume we have hosts:
 
   test-fatclient-01
   test-laptop-01
-  test-ltspserver-01
-  test-thinclient-01
-  test-thinclient-02
 
 and logins:
 
   test-user-01 (with password "test1")
   test-user-02 (with password "test2")
   test-user-03 (with password "test3")
-  test-user-04 (with password "test4")
-  test-user-05 (with password "test5")
 
 We want to configure
 
   "test-user-01"                    to "test-fatclient-01"
   "test-user-02" and "test-user-03" to "test-laptop-01"
-  "test-user-04"                    to "test-thinclient-01"
-				          and "test-ltspserver-01"
-  "test-user-05"                    to "test-thinclient-02"
-					  and "test-ltspserver-01"
 
 The following tags will do this:
 
@@ -87,12 +70,3 @@ The following tags will do this:
 
   test-laptop-01:
     autopilot:stress:test-user-02:test2 autopilot:stress:test-user-03:test3
-
-  test-ltspserver-01:
-    autopilot:stress:test-user-04:test4 autopilot:stress:test-user-05:test5
-
-  test-thinclient-01: 
-    autopilot:stress:test-user-04:test4
-
-  test-thinclient-02:
-    autopilot:stress:test-user-05:test5

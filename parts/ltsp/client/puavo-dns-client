@@ -19,8 +19,7 @@
 
 PUAVO_DEVICE_TYPE=$(cat /etc/puavo/hosttype)
 
-if [ "thinclient" = "${PUAVO_DEVICE_TYPE}" -o \
-     "fatclient" = "${PUAVO_DEVICE_TYPE}" ]; then
+if [ "fatclient" = "${PUAVO_DEVICE_TYPE}" ]; then
 
   PUAVO_DOMAIN=$(dig +time=2 +tries=1 TXT _puavo +search +short | sed 's/^"//; s/"$//;')
   echo "PUAVO DOMAIN: ${PUAVO_DOMAIN}"

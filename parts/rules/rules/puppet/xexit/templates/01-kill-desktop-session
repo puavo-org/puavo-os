@@ -2,24 +2,10 @@
 
 hosttype=$(cat /etc/puavo/hosttype)
 
-case "$hosttype" in
-  ltspserver)
-    TERMINAL="$LTSP_CLIENT_HOSTNAME"
-    lookup_processes() {
-      ps eww -u "$USER" \
-        | grep -w "LTSP_CLIENT_HOSTNAME=$LTSP_CLIENT_HOSTNAME" \
-        | awk '{ print $1 }' \
-        | fgrep -vw $$ \
-        | xargs
-    }
-    ;;
-  *)
-    TERMINAL="$(hostname)"
-    lookup_processes() {
-      pgrep -u "$USER" | fgrep -vw $$ | xargs
-    }
-    ;;
-esac
+TERMINAL="$(hostname)"
+lookup_processes() {
+    pgrep -u "$USER" | fgrep -vw $$ | xargs
+}
 
 logger "kill_desktop_session: $$ killing all session processes of user $USER on $TERMINAL"
 

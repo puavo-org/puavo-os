@@ -181,7 +181,6 @@ do_umounts() {
 
   case "$puavo_hosttype" in
     laptop)              umount /state /images /imageoverlays /tmp /home ;;
-    ltspserver)          umount /state                                   ;;
     wirelessaccesspoint) umount /state /images /imageoverlays /tmp       ;;
   esac
 }
@@ -194,7 +193,7 @@ get_accepted_hosttypes() {
     return 0
   fi
 
-  echo 'fatclient,laptop,ltspserver,thinclient,wirelessaccesspoint'
+  echo 'fatclient,laptop,wirelessaccesspoint'
 }
 
 get_install_hosttype() {
@@ -281,16 +280,6 @@ install_localbootdevice() {
 
   update_configuration
 
-  do_umounts "$puavo_install_hosttype" "$puavo_hosttype"
-}
-
-install_ltspserver() {
-  puavo_install_hosttype=$1
-  puavo_hosttype=$2
-  puavo_preseed_setup_filesystems_args=$3
-
-  puavo-setup-filesystems $puavo_preseed_setup_filesystems_args
-  setup_state
   do_umounts "$puavo_install_hosttype" "$puavo_hosttype"
 }
 
@@ -404,18 +393,13 @@ if is_preinstalled "$puavo_install_hosttype"; then
   exit 0
 fi
 
-# Host is not preinstalled, so do the full install if hosttype so requires
-# (for thinclients/fatclients nothing needs to be done).
+# Host is not preinstalled, so do the full install if hosttype so
+# requires (for fatclients nothing needs to be done).
 
 case "$puavo_hosttype" in
   laptop|wirelessaccesspoint)
     install_localbootdevice "$puavo_install_hosttype"               \
                             "$puavo_hosttype"                       \
                             "$puavo_preseed_setup_filesystems_args"
-    ;;
-  ltspserver)
-    install_ltspserver "$puavo_install_hosttype"               \
-                       "$puavo_hosttype"                       \
-                       "$puavo_preseed_setup_filesystems_args"
     ;;
 esac

@@ -35,7 +35,7 @@ HOMEDIR_SERVER="homedir.${PUAVO_DOMAIN}"
 SAMBAHOMES=$(jq -r '.tags[] | select(. == "sambahomes")' /etc/puavo/device.json)
 
 case "${PUAVO_HOSTTYPE}" in
-  fatclient|ltspserver)
+  fatclient)
     MOUNT_OPTIONS=",soft"
     DO_MOUNT=true
     ;;

@@ -25,20 +25,12 @@ send_to_Xserver_and_logout() {
 
 handle_restart() {
   _hosttype=$1
-  if [ "$_hosttype" = "ltspserver" ]; then
-    send_to_Xserver_and_logout REBOOT
-  else
-    send_to_dbus org.freedesktop.ConsoleKit.Manager.Restart
-  fi
+  send_to_dbus org.freedesktop.ConsoleKit.Manager.Restart
 }
 
 handle_shutdown() {
   _hosttype=$1
-  if [ "$_hosttype" = "ltspserver" ]; then
-    send_to_Xserver_and_logout HALT
-  else
-    send_to_dbus org.freedesktop.ConsoleKit.Manager.Stop
-  fi
+  send_to_dbus org.freedesktop.ConsoleKit.Manager.Stop
 }
 
 hosttype=$(cat /etc/puavo/hosttype)

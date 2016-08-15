@@ -13,30 +13,15 @@ if [ -n "$SERVER" ]; then
 
 	PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
 
-	case "${PUAVO_HOSTTYPE}" in
-	    ltspserver)
-		if curl --cacert /etc/puavo/certs/rootca.pem \
-			--header "Authorization: Bootserver" \
-			--fail \
-			--max-time 30 \
-			--silent \
-			"$(puavo-resolve-api-server)/v3/ltsp_servers/$(hostname -s)" \
-			> /etc/puavo/device.json.tmp; then
-		    mv /etc/puavo/device.json.tmp /etc/puavo/device.json
-		fi
-		;;
-	    *)
-		if curl --cacert /etc/puavo/certs/rootca.pem \
-			--header "Authorization: Bootserver" \
-			--fail \
-			--max-time 30 \
-			--silent \
-			"$(puavo-resolve-api-server)/v3/devices/$(hostname -s)" \
-			> /etc/puavo/device.json.tmp; then
-		    mv /etc/puavo/device.json.tmp /etc/puavo/device.json
-		fi
-		;;
-	esac
+        if curl --cacert /etc/puavo/certs/rootca.pem \
+		--header "Authorization: Bootserver" \
+		--fail \
+		--max-time 30 \
+		--silent \
+		"$(puavo-resolve-api-server)/v3/devices/$(hostname -s)" \
+		> /etc/puavo/device.json.tmp; then
+	    mv /etc/puavo/device.json.tmp /etc/puavo/device.json
+	fi
     fi
 
     rm -f /etc/puavo/device.json.tmp

@@ -10,7 +10,7 @@ module Puavo
         end
 
         def prettify_attributes
-          # Note: value of attribute may be raw ldap value eg. { puavoHostname => ["thinclient-01"] }
+          # Note: value of attribute may be raw ldap value eg. { puavoHostname => ["device-01"] }
           [
            { :original_attribute_name => "objectClass",
              :new_attribute_name => "classes",

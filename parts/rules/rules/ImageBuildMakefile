@@ -1,17 +1,19 @@
-IMAGES_DIR        = /opt/ltsp/images
-RDIFFS_DIR        = /opt/ltsp/images/rdiffs
+IMAGES_DIR        = /opt/puavo/images
+RDIFFS_DIR        = /opt/puavo/images/rdiffs
 CKSUMS_DIR        = ${IMAGES_DIR}/.cksums
 MIRROR_DIR        = ${IMAGES_DIR}/mirror
+METADATA_DIR      = ${MIRROR_DIR}/meta
 SIGNATURES_DIR    = ${IMAGES_DIR}/.signatures
 RDIFF_TARGET_DIRS = 
 
-ALL_DIRS = ${CKSUMS_DIR} ${MIRROR_DIR} ${MIRROR_DIR}/rdiffs \
+ALL_DIRS = ${CKSUMS_DIR} ${METADATA_DIR} ${MIRROR_DIR} ${MIRROR_DIR}/rdiffs \
            ${RDIFF_TARGET_DIRS} ${SIGNATURES_DIR}
 
 CHROOT_TARGETS = apply-buildrules chroot cleanup-chroot image \
-                 install-packages update-chroot
+                 setup-local-packages update-chroot
 
-COMMON_TARGETS = all-new-images all-rdiffs cksums cleanup-mirror update-mirror
+COMMON_TARGETS = all-new-images all-rdiffs cksums cleanup-mirror \
+                 update-metadata-files update-mirror
 
 IMAGE_FILES = 
 
@@ -19,9 +21,9 @@ IMAGE_SIGNATURE_FILES = $(patsubst %.img,%.rdiff_signature,${IMAGE_FILES})
 IMAGE_SIGNATURE_FILES_AP \
   = $(addprefix ${SIGNATURES_DIR}/,${IMAGE_SIGNATURE_FILES})
 
-IMAGE_SERIES = ltsp-builder-trusty-i386 ltsp-desktop-trusty-i386 ltsp-thinclient-precise-i386 ltsp-wirelessaccesspoint-trusty-i386
-
+IMAGE_SERIES = ltsp-builder-trusty-i386 ltsp-desktop-trusty-i386 ltsp-wirelessaccesspoint-trusty-i386
 IMAGE_SERIES_RDIFF_TARGETS = 
+IMAGE_SERIES_METADATA_FILES_AP = ${METADATA_DIR}/ltsp-builder-trusty-i386.json ${METADATA_DIR}/ltsp-desktop-trusty-i386.json ${METADATA_DIR}/ltsp-wirelessaccesspoint-trusty-i386.json
 
 RDIFF_FILES_AP = 
 RDIFF_FILES = $(notdir ${RDIFF_FILES_AP})
@@ -33,8 +35,10 @@ CKSUM_FILES_AP = $(addprefix ${CKSUMS_DIR}/,${CKSUM_FILES})
 MIRROR_DIR_IMAGES = $(addprefix ${MIRROR_DIR}/,${IMAGE_FILES})
 MIRROR_DIR_RDIFFS = $(addprefix ${MIRROR_DIR}/rdiffs/,${RDIFF_FILES})
 
-vpath %.img   ${IMAGES_DIR}
-vpath %.rdiff ${RDIFF_TARGET_DIRS}
+vpath %.cksum     ${CKSUMS_DIR}
+vpath %.img       ${IMAGES_DIR}
+vpath %.rdiff     ${RDIFF_TARGET_DIRS}
+vpath %.sha256sum ${CKSUMS_DIR}
 
 help:
 	@echo "Available image series targets are:"
@@ -58,8 +62,12 @@ all-rdiffs: ${RDIFF_FILES_AP}
 .PHONY: cksums
 cksums: ${IMAGES_DIR}/CKSUMS
 
+.PHONY: update-metadata-files
+update-metadata-files: ${IMAGE_SERIES_METADATA_FILES_AP}
+
 .PHONY: update-mirror
-update-mirror: ${MIRROR_DIR}/CKSUMS ${MIRROR_DIR_IMAGES} ${MIRROR_DIR_RDIFFS}
+update-mirror: ${MIRROR_DIR}/CKSUMS ${MIRROR_DIR_IMAGES} \
+               ${MIRROR_DIR_RDIFFS} ${IMAGE_SERIES_METADATA_FILES_AP}
 
 .PHONY: cleanup-mirror
 cleanup-mirror:
@@ -67,11 +75,11 @@ cleanup-mirror:
 
 .PHONY: ${CHROOT_TARGETS}
 ${CHROOT_TARGETS}:
-	sudo /usr/lib/puavo-image-tools/puavo-imgbuild-tool --$@
+	sudo HOME="$$HOME" /usr/lib/puavo-image-tools/puavo-imgbuild-tool --$@
 
 .PHONY: ${IMAGE_SERIES}
 ${IMAGE_SERIES}: images.json
-	sudo puavo-build-image --config-target $@ --images-config $<
+	sudo HOME="$$HOME" puavo-build-image --config-target $@ 		--images-config $<
 
 ${ALL_DIRS}:
 	mkdir -p $@
@@ -80,15 +88,26 @@ ${CKSUMS_DIR}/%.img.cksum: %.img | ${CKSUMS_DIR}
 	cksum $< > $@.tmp
 	mv $@.tmp $@
 
+${CKSUMS_DIR}/%.img.sha256sum: %.img | ${CKSUMS_DIR}
+	sha256sum $< > $@.tmp
+	mv $@.tmp $@
+
 ${CKSUMS_DIR}/%.rdiff.cksum: %.rdiff | ${CKSUMS_DIR}
 	cksum $< > $@.tmp
 	mv $@.tmp $@
 
+${CKSUMS_DIR}/%.rdiff.sha256sum: %.rdiff | ${CKSUMS_DIR}
+	sha256sum $< > $@.tmp
+	mv $@.tmp $@
+
 ${IMAGES_DIR}/CKSUMS: ${CKSUM_FILES_AP} | ${MIRROR_DIR}
-	awk '{ "basename " $$3 | getline $$3; print }' ${CKSUM_FILES_AP} > $@
+	awk '{ "basename " $$3 | getline $$3; print }' \
+	  ${CKSUM_FILES_AP} > $@.tmp
+	mv $@.tmp $@
 
 ${MIRROR_DIR}/CKSUMS: ${IMAGES_DIR}/CKSUMS
-	cp $< $@
+	cp $< $@.tmp
+	mv $@.tmp $@
 
 # link ${MIRROR_DIR_IMAGES}
 ${MIRROR_DIR}/%.img: %.img | ${MIRROR_DIR}
@@ -99,10 +118,27 @@ ${MIRROR_DIR}/rdiffs/%.rdiff: %.rdiff | ${MIRROR_DIR}/rdiffs
 	@ln -f $< $@
 
 ${SIGNATURES_DIR}/%.rdiff_signature: %.img | ${SIGNATURES_DIR}
-	rdiff signature $< $@
+	rdiff signature $< $@.tmp
+	mv $@.tmp $@
 
 #
 # rdiff targets
 #
 
+
+
+${METADATA_DIR}/ltsp-builder-trusty-i386.json: images.json    | ${METADATA_DIR}
+	puavo-build-image --images-config images.json \
+                          --make-series-json ltsp-builder-trusty-i386 > $@.tmp
+	mv $@.tmp $@
+
+${METADATA_DIR}/ltsp-desktop-trusty-i386.json: images.json    | ${METADATA_DIR}
+	puavo-build-image --images-config images.json \
+                          --make-series-json ltsp-desktop-trusty-i386 > $@.tmp
+	mv $@.tmp $@
+
+${METADATA_DIR}/ltsp-wirelessaccesspoint-trusty-i386.json: images.json    | ${METADATA_DIR}
+	puavo-build-image --images-config images.json \
+                          --make-series-json ltsp-wirelessaccesspoint-trusty-i386 > $@.tmp
+	mv $@.tmp $@
 

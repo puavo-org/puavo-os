@@ -18,7 +18,7 @@ install_image() {
 }
 
 case "$puavo_hosttype" in
-  fatclient|ltspserver|thinclient|unregistered)
+  fatclient|unregistered)
     install_args="--install-from-nbd /dev/nbd0"
     ;;
   laptop|preinstalled|wirelessaccesspoint)

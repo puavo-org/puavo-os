@@ -11,10 +11,6 @@
         "puppet-classes": "image::desktop",
         "images": { "i386": { "trusty": [] } }
       },
-      "thinclient": {
-        "puppet-classes": "image::thinclient",
-        "images": { "i386": { "precise": [] } }
-      },
       "wirelessaccesspoint": {
         "puppet-classes": "image::wirelessaccesspoint",
         "images": { "i386": { "trusty": [] } }

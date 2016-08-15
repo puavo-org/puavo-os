@@ -106,7 +106,7 @@ if [ -x "/sbin/vgchange" ]; then
   esac
 
   case "$PUAVO_HOSTTYPE" in
-    laptop|ltspserver|wirelessaccesspoint)
+    laptop|wirelessaccesspoint)
       if [ -b "/dev/mapper/puavo-state" ]; then
 	puavo_mount_partition puavo-state /state
 
@@ -138,7 +138,7 @@ if [ -x "/sbin/vgchange" ]; then
               fi
             done
 	    ;;
-	  ltspserver|wirelessaccesspoint)
+	  wirelessaccesspoint)
 	    puavo_link_to_state /var/lib/logrotate /var/log /var/spool/anacron
 	    puavo_enable_utmp
 	    ;;
