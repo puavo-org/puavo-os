@@ -24,7 +24,7 @@ $(changes_files):
 	./build '$@'
 
 pool/%.changes: %.changes
-	../parts/devscripts/bin/cp-changes '$<' pool
+	../parts/devscripts/bin/do-changes -l pool '$<'
 
 .PHONY: $(subdirs-install-build-deps)
 $(subdirs-install-build-deps): .install-build-deps-%: %
