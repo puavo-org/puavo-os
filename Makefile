@@ -29,11 +29,14 @@ help:
 	@echo '    all                         -  build everything'
 	@echo '    debs                        -  build all Debian packages'
 	@echo '    apply                       -  apply all rules to localhost'
-	@echo '    install-build-deps          -  install build dependencies (requires root)'
+	@echo '    install-build-deps          -  install build dependencies to localhost'
 	@echo '    release                     -  make a release commit'
-	@echo '    rootfs-bootstrap            -  build Puavo OS root filesystem directory (requires root)'
-	@echo '    rootfs-shell                -  spawn shell from Puavo OS root filesystem (requires root)'
-	@echo '    rootfs-update               -  update Puavo OS root filesystem (requires root)'
+	@echo '    rootfs-bootstrap            -  build Puavo OS root filesystem directory'
+	@echo '    rootfs-shell                -  spawn shell from Puavo OS root filesystem'
+	@echo '    rootfs-update               -  update Puavo OS root filesystem'
+	@echo
+	@echo 'Variables:'
+	@echo '    rootfs_dir                  -  set Puavo OS root filesystem directory [$(rootfs_dir)]'
 
 .PHONY: install-build-deps
 install-build-deps:
