@@ -8,7 +8,7 @@ while [ $# -gt 0 ]; do
     case $1 in
         -h|--help)
             shift
-            echo "Usage: $0 [OPTION]... [CHANGES_FILE]"
+            echo "Usage: $0 [OPTION]... [CHANGES_FILE]..."
             echo
             echo 'Do things to files listed in .changes file. If CHANGES_FILE is'
             echo 'omitted, it will be deduced from debian/changelog.'
@@ -62,23 +62,21 @@ if [ $# -eq 0 ]; then
     pkg_name=$(dpkg-parsechangelog -SSource)
     pkg_version=$(dpkg-parsechangelog -SVersion)
     pkg_arch=$(dpkg-architecture -qDEB_BUILD_ARCH)
-    changes_file="../${pkg_name}_${pkg_version}_${pkg_arch}.changes"
-elif [ $# -eq 1 ]; then
+    set - "../${pkg_name}_${pkg_version}_${pkg_arch}.changes"
+fi
+
+while [ $# -gt 0 ]; do
     changes_file=$1
-else
-    echo "Error: Invalid number of arguments ($#), expected at most 1" >&2
-    echo "Usage: $0 [CHANGES_FILE]" >&2
-    exit 1
-fi
+    shift
+    source_dir=$(dirname "${changes_file}")
 
-source_dir=$(dirname "${changes_file}")
+    if [ -n "${target_dir}" ]; then
+        mkdir -p "${target_dir}"
+    fi
 
-if [ -n "${target_dir}" ]; then
-    mkdir -p "${target_dir}"
-fi
+    awk -v"source_dir=${source_dir}" \
+        'NR == 1, /^Files:$/ { next } /^ / { printf "%s/%s%c", source_dir, $5, 0 }' \
+        "${changes_file}" | xargs -0 ${cmd}
 
-awk -v"source_dir=${source_dir}" \
-    'NR == 1, /^Files:$/ { next } /^ / { printf "%s/%s%c", source_dir, $5, 0 }' \
-    "${changes_file}" | xargs -0 ${cmd}
-
-${cmd} "${changes_file}"
+    ${cmd} "${changes_file}"
+done
