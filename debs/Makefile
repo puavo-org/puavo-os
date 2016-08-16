@@ -1,7 +1,6 @@
 subdirs                    := gnome-clocks libpam-envfeed onboard puavo-os
 subdirs-install-build-deps := $(subdirs:%=.install-build-deps-%)
 changes_files              := $(foreach subdir,$(subdirs),$(subdir)_$(shell dpkg-parsechangelog -SVersion -l$(subdir)/debian/changelog)_$(shell dpkg-architecture -qDEB_BUILD_ARCH).changes)
-pooled_changes_files       := $(changes_files:%=pool/%)
 
 .PHONY: all
 all: Packages.gz
@@ -15,7 +14,7 @@ clean:
 .PHONY: install-build-deps
 install-build-deps: $(subdirs-install-build-deps)
 
-Packages: $(pooled_changes_files)
+Packages: $(changes_files:%=pool/%)
 	apt-ftparchive packages pool >$@
 
 Packages.gz: Packages
