@@ -10,6 +10,7 @@ all: Packages.gz
 clean:
 	rm -f db Packages Packages.gz
 	rm -rf pool
+	git clean -f -d -x -- $(subdirs)
 
 .PHONY: install-build-deps
 install-build-deps: $(subdirs-install-build-deps)
