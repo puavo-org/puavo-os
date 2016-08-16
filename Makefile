@@ -21,6 +21,7 @@ help:
 	@echo 'Targets:'
 	@echo '    all                         -  build everything'
 	@echo '    debs                        -  build all Debian packages'
+	@echo '    apply                       -  apply all rules to localhost'
 	@echo '    install-build-deps          -  install build dependencies (requires root)'
 	@echo '    release                     -  make a release commit'
 	@echo '    rootfs-bootstrap            -  build Puavo OS root filesystem directory (requires root)'
@@ -80,9 +81,13 @@ rootfs-update: $(rootfs_dir) .ensure-head-is-release
 		-o Dpkg::Options::="--force-confdef"			\
 		-o Dpkg::Options::="--force-confold"
 
-	systemd-nspawn -D '$(rootfs_dir)' --setenv=LANG=en_US.UTF-8	\
-		puppet apply						\
-		--execute 'include image::allinone'			\
-		--logdest /var/log/puavo-os/puppet.log			\
-		--logdest console					\
+	systemd-nspawn -D '$(rootfs_dir)' --setenv=LANG=en_US.UTF-8     \
+		make -C /puavo-os apply
+
+.PHONY: apply
+apply:
+	puppet apply					\
+		--execute 'include image::allinone'	\
+		--logdest /var/log/puavo-os/puppet.log	\
+		--logdest console			\
 		--modulepath '/puavo-os/parts/rules/rules/puppet'
