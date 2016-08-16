@@ -33,6 +33,16 @@ class image::allinone {
           ::use_urandom,
           ::wacom
 
+  stage {
+    'pre-main':
+      before => Stage['main'];
+  }
+
+  class {
+    'apt::default_repositories':
+      stage => pre-main;
+  }
+
   Package <| tag == 'tag_debian'
           or tag == 'tag_puavo' |>
 }
