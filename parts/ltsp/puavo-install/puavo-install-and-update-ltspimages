@@ -543,14 +543,20 @@ lookup_size_from_cksums() {
   ' "$checksums_file"
 }
 
+lookup_image_server_by_dns() {
+  host -t SRV -W 5 "_imageserver._tcp.${puavo_domain}" \
+    | awk '$2 == "has" && $3 == "SRV" && $4 == "record" {
+        sub(/\.$/, "", $8)
+        printf "%s:%s", $8, $7
+      }'
+}
+
 # this is mostly reimplemented in Ruby in puavo-pkg-updater
 lookup_image_servers() {
   all_image_servers=
 
   puavo_domain=$(cat /etc/puavo/domain)
-  image_server_by_dns=$(
-    dig SRV "_imageserver._tcp.${puavo_domain}" +search +short \
-      | awk '{ sub(/\.$/, ""); printf "%s:%s", $4, $3 }')
+  image_server_by_dns=$(lookup_image_server_by_dns)
 
   if [ -z "$image_server_by_dns" ]; then
     log info 'could not find the image server from DNS'
