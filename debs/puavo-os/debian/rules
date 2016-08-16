@@ -51,6 +51,10 @@ override_dh_auto_install:
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-hw-tools
 
+	$(MAKE) -C iivari/client \
+		install prefix=/usr sysconfdir=/etc \
+		DESTDIR=$(CURDIR)/debian/iivari-client
+
 	$(MAKE) -C local-config				\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-local-config
