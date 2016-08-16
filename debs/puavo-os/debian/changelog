@@ -1,3 +1,24 @@
+puavo-os (0.24.0+58384b5be667c1077b71ecb242f0c729274b25bc) trusty; urgency=medium
+
+  * Git(58384b5be667c1077b71ecb242f0c729274b25bc)
+  * make: run apt-get commands with sudo
+  * make: rename local variables
+  * make: improve help target
+  * make: use sudo inside make targets
+  * parts/rules: declare apt::default_repositories before main stage
+  * make: trivial cleanup
+  * make: add local-apply target for applying all rules to localhost
+  * debs: add symlink to iivari source dir
+  * debs: adopt iivari-client
+  * debs: remove build products (.debs and .changes) on clean target
+  * debs: trivial Makefile cleanup
+  * debs: clean subdirs tool on clean target
+  * do-changes: accept multiple changes file parameters
+  * do-changes: add -r flag for removing files
+  * Generalize cp-changes script
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Tue, 16 Aug 2016 16:08:16 +0300
+
 puavo-os (0.23.0+72c327959cccc46a4d7d2053b6bb576340b15af0) trusty; urgency=medium
 
   * Git(72c327959cccc46a4d7d2053b6bb576340b15af0)
