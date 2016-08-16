@@ -3,12 +3,14 @@
 # doing anything as a super user.
 $(shell sudo -k)
 
-rootfs_dir    := /var/tmp/puavo-os/rootfs
-rootfs_mirror := $(shell 					\
+# Configurable parameters
+rootfs_dir := /var/tmp/puavo-os/rootfs
+
+_rootfs_bootstrap_mirror := $(shell				\
 	awk '/^\s*deb .+ jessie main.*$$/ {print $$2; exit}'	\
 	/etc/apt/sources.list 2>/dev/null)
 
-systemd_nspawn := systemd-nspawn -D '$(rootfs_dir)' --setenv=LANG=en_US.UTF-8
+_systemd_nspawn_cmd := systemd-nspawn -D '$(rootfs_dir)' --setenv=LANG=en_US.UTF-8
 
 .PHONY: all
 all: debs
@@ -51,7 +53,7 @@ $(rootfs_dir):
 		--arch=amd64							\
 		--include=make,devscripts,equivs,git,puppet-common,locales,sudo	\
 		--components=main,contrib,non-free				\
-		jessie '$(rootfs_dir).tmp' '$(rootfs_mirror)'
+		jessie '$(rootfs_dir).tmp' '$(_rootfs_bootstrap_mirror)'
 	sudo git clone . '$(rootfs_dir).tmp/puavo-os'
 
 	sudo echo 'deb [trusted=yes] file:///puavo-os/debs /' \
@@ -67,7 +69,7 @@ rootfs-bootstrap: $(rootfs_dir)
 
 .PHONY: rootfs-shell
 rootfs-shell: $(rootfs_dir)
-	sudo $(systemd_nspawn)
+	sudo $(_systemd_nspawn_cmd)
 
 .PHONY: rootfs-update
 rootfs-update: $(rootfs_dir) .ensure-head-is-release
@@ -80,14 +82,14 @@ rootfs-update: $(rootfs_dir) .ensure-head-is-release
 		--work-tree='$(rootfs_dir)/puavo-os'    \
 		reset --hard origin/HEAD
 
-	sudo $(systemd_nspawn) make -C /puavo-os install-build-deps
-	sudo $(systemd_nspawn) make -C /puavo-os/debs
-	sudo $(systemd_nspawn) apt-get update
-	sudo $(systemd_nspawn) apt-get dist-upgrade -V -y	\
+	sudo $(_systemd_nspawn_cmd) make -C /puavo-os install-build-deps
+	sudo $(_systemd_nspawn_cmd) make -C /puavo-os/debs
+	sudo $(_systemd_nspawn_cmd) apt-get update
+	sudo $(_systemd_nspawn_cmd) apt-get dist-upgrade -V -y	\
 		-o Dpkg::Options::="--force-confdef"		\
 		-o Dpkg::Options::="--force-confold"
 
-	sudo $(systemd_nspawn) make -C /puavo-os apply
+	sudo $(_systemd_nspawn_cmd) make -C /puavo-os apply
 
 .PHONY: apply
 apply:
