@@ -3,6 +3,8 @@ rootfs_mirror := $(shell 					\
 	awk '/^\s*deb .+ jessie main.*$$/ {print $$2; exit}'	\
 	/etc/apt/sources.list 2>/dev/null)
 
+systemd_nspawn := systemd-nspawn -D '$(rootfs_dir)' --setenv=LANG=en_US.UTF-8
+
 .PHONY: all
 all: debs
 
@@ -58,7 +60,7 @@ rootfs-bootstrap: $(rootfs_dir)
 
 .PHONY: rootfs-shell
 rootfs-shell: $(rootfs_dir)
-	systemd-nspawn -D '$(rootfs_dir)'
+	$(systemd_nspawn)
 
 .PHONY: rootfs-update
 rootfs-update: $(rootfs_dir) .ensure-head-is-release
@@ -71,18 +73,14 @@ rootfs-update: $(rootfs_dir) .ensure-head-is-release
 		--work-tree='$(rootfs_dir)/puavo-os'    \
 		reset --hard origin/HEAD
 
-	systemd-nspawn -D '$(rootfs_dir)' make -C /puavo-os \
-		install-build-deps
-
-	systemd-nspawn -D '$(rootfs_dir)' make -C /puavo-os/debs
-
-	systemd-nspawn -D '$(rootfs_dir)' apt-get update
-	systemd-nspawn -D '$(rootfs_dir)' apt-get dist-upgrade -V -y	\
-		-o Dpkg::Options::="--force-confdef"			\
+	$(systemd_nspawn) make -C /puavo-os install-build-deps
+	$(systemd_nspawn) make -C /puavo-os/debs
+	$(systemd_nspawn) apt-get update
+	$(systemd_nspawn) apt-get dist-upgrade -V -y	\
+		-o Dpkg::Options::="--force-confdef"	\
 		-o Dpkg::Options::="--force-confold"
 
-	systemd-nspawn -D '$(rootfs_dir)' --setenv=LANG=en_US.UTF-8     \
-		make -C /puavo-os apply
+	$(systemd_nspawn) make -C /puavo-os apply
 
 .PHONY: apply
 apply:
