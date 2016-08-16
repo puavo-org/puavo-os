@@ -2,6 +2,8 @@
 
 set -eu
 
+target_dir=
+
 while [ $# -gt 0 ]; do
     case $1 in
         -h|--help)
@@ -16,6 +18,7 @@ while [ $# -gt 0 ]; do
             echo "    -c, --copy DIR               copy files to DIR"
             echo "    -l, --link DIR               link files to DIR"
             echo "    -m, --move DIR               move files to DIR"
+            echo "    -r, --remove                 remove files"
             echo
             exit 0
             ;;
@@ -36,6 +39,10 @@ while [ $# -gt 0 ]; do
             target_dir=$1
             shift
             cmd="mv -v -a -n -t ${target_dir}"
+            ;;
+        -r|--remove)
+            shift
+            cmd="rm -f"
             ;;
         --)
             shift
@@ -66,7 +73,9 @@ fi
 
 source_dir=$(dirname "${changes_file}")
 
-mkdir -p "${target_dir}"
+if [ -n "${target_dir}" ]; then
+    mkdir -p "${target_dir}"
+fi
 
 awk -v"source_dir=${source_dir}" \
     'NR == 1, /^Files:$/ { next } /^ / { printf "%s/%s%c", source_dir, $5, 0 }' \
