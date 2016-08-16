@@ -29,6 +29,6 @@ pool/%.changes: %.changes
 
 .PHONY: $(subdirs-install-build-deps)
 $(subdirs-install-build-deps): .install-build-deps-%: %
-	mk-build-deps -i -r -t						\
+	sudo mk-build-deps -i -r -t					\
 		'apt-get --yes --force-yes --no-install-recommends'	\
 		'$</debian/control'

@@ -1,3 +1,8 @@
+# Revoke cached credentials before proceeding. Many targets mix sudo
+# and non-sudo commands, we want to make sure user is prompted before
+# doing anything as a super user.
+$(shell sudo -k)
+
 rootfs_dir    := /var/tmp/puavo-os/rootfs
 rootfs_mirror := $(shell 					\
 	awk '/^\s*deb .+ jessie main.*$$/ {print $$2; exit}'	\
@@ -39,52 +44,51 @@ release:
 	@parts/devscripts/bin/git-dch -f debs/puavo-os/debian/changelog
 
 $(rootfs_dir):
-	mkdir -p '$(rootfs_dir).tmp'
-	debootstrap								\
+	sudo debootstrap							\
 		--arch=amd64							\
-		--include=make,devscripts,equivs,git,puppet-common,locales	\
+		--include=make,devscripts,equivs,git,puppet-common,locales,sudo	\
 		--components=main,contrib,non-free				\
 		jessie '$(rootfs_dir).tmp' '$(rootfs_mirror)'
-	git clone . '$(rootfs_dir).tmp/puavo-os'
+	sudo git clone . '$(rootfs_dir).tmp/puavo-os'
 
-	echo 'deb [trusted=yes] file:///puavo-os/debs /' \
+	sudo echo 'deb [trusted=yes] file:///puavo-os/debs /' \
 		>'$(rootfs_dir).tmp/etc/apt/sources.list.d/puavo-os.list'
 
 	echo 'en_US.UTF-8 UTF-8' >'$(rootfs_dir).tmp/etc/locale.gen'
-	systemd-nspawn -D '$(rootfs_dir).tmp' locale-gen
+	sudo systemd-nspawn -D '$(rootfs_dir).tmp' locale-gen
 
-	mv '$(rootfs_dir).tmp' '$(rootfs_dir)'
+	sudo mv '$(rootfs_dir).tmp' '$(rootfs_dir)'
 
 .PHONY: rootfs-bootstrap
 rootfs-bootstrap: $(rootfs_dir)
 
 .PHONY: rootfs-shell
 rootfs-shell: $(rootfs_dir)
-	$(systemd_nspawn)
+	sudo $(systemd_nspawn)
 
 .PHONY: rootfs-update
 rootfs-update: $(rootfs_dir) .ensure-head-is-release
-	git                                             \
+	sudo git                                        \
 		--git-dir='$(rootfs_dir)/puavo-os/.git' \
 		--work-tree='$(rootfs_dir)/puavo-os'    \
 		fetch origin
-	git                                             \
+	sudo git                                        \
 		--git-dir='$(rootfs_dir)/puavo-os/.git' \
 		--work-tree='$(rootfs_dir)/puavo-os'    \
 		reset --hard origin/HEAD
 
-	$(systemd_nspawn) make -C /puavo-os install-build-deps
-	$(systemd_nspawn) make -C /puavo-os/debs
-	$(systemd_nspawn) apt-get update
-	$(systemd_nspawn) apt-get dist-upgrade -V -y	\
-		-o Dpkg::Options::="--force-confdef"	\
+	sudo $(systemd_nspawn) make -C /puavo-os install-build-deps
+	sudo $(systemd_nspawn) make -C /puavo-os/debs
+	sudo $(systemd_nspawn) apt-get update
+	sudo $(systemd_nspawn) apt-get dist-upgrade -V -y	\
+		-o Dpkg::Options::="--force-confdef"		\
 		-o Dpkg::Options::="--force-confold"
 
-	$(systemd_nspawn) make -C /puavo-os apply
+	sudo $(systemd_nspawn) make -C /puavo-os apply
 
 .PHONY: apply
 apply:
-	puppet apply					\
+	sudo puppet apply				\
 		--execute 'include image::allinone'	\
 		--logdest /var/log/puavo-os/puppet.log	\
 		--logdest console			\
