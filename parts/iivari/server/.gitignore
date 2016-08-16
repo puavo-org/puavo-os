@@ -1,0 +1,8 @@
+.bundle
+db/*.sqlite3
+log/*.log
+tmp/**/*
+config/organisations.yml
+public/javascripts/tiny_mce
+config/database.yml
+config/initializers/secret_token.rb

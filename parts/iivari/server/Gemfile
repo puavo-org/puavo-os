@@ -1,0 +1,32 @@
+source 'http://rubygems.org'
+
+gem 'rails', '3.0.19'
+
+gem 'jquery-rails'
+gem "simple_form"
+gem "responders"
+gem 'tiny_mce'
+gem 'acts_as_list'
+gem 'rmagick', :require => 'RMagick'
+gem 'ruby-ldap', :require => 'ldap'
+gem "authlogic"
+gem 'httparty'
+gem 'puavo-client'
+gem 'declarative_authorization'
+gem 'json'
+
+group :development do
+  gem 'sqlite3-ruby', :require => 'sqlite3'
+  gem "ruby-debug"
+  gem 'mongrel'
+  gem 'rspec-rails'
+  gem 'cucumber'
+  gem 'cucumber-rails'
+  gem 'database_cleaner'
+  gem 'capybara'
+  gem 'sinatra'
+end
+
+group :production do
+  gem "pg"
+end

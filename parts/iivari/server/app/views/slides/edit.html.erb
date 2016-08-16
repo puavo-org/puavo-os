@@ -1,0 +1,13 @@
+<% content_for :javascript do %>
+  <%= include_tiny_mce_if_needed :content_css => stylesheet_path("slides/editor_content") %>
+<% end %>
+
+<h1><%= t('.title') %></h1>
+
+<div class="slide">
+<%= render :partial => 'form', :locals => { :url => channel_slide_path(@school.puavo_id, @channel, @slide)} %>
+</div>
+
+<% content_for :tools do %>
+<div><%= link_to t('links.show'), channel_slide_path(@school.puavo_id, @channel, @slide), :class => "show"  %></div>
+<% end %>

@@ -1,0 +1,67 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+Copyright © 2011 Opinsys Oy
+
+This program is free software; you can redistribute it and/or modify it 
+under the terms of the GNU General Public License as published by the 
+Free Software Foundation; either version 2 of the License, or (at your 
+option) any later version.
+
+This program is distributed in the hope that it will be useful, but 
+WITHOUT ANY WARRANTY; without even the implied warranty of 
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General 
+Public License for more details.
+
+You should have received a copy of the GNU General Public License along 
+with this program; if not, write to the Free Software Foundation, Inc., 
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+"""
+import signal
+import os, sys
+import urlparse
+import time
+from logging import getLogger
+import PySide
+import iivari
+
+if __name__ == "__main__":
+    logger = getLogger(__name__)
+
+    # ensure that the application quits using CTRL-C
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
+
+    # Prints PySide and the Qt version used to compile PySide
+    logger.info(' *\n * Initialising display test pattern\n * PySide version %s\n * Qt version %s\n *' % (
+        PySide.__version__,
+        PySide.QtCore.__version__))
+
+    # initialize Qt application and MainWindow
+    QT_APP = PySide.QtGui.QApplication(sys.argv)
+
+    # start with the test pattern
+    assets_path = "/usr/share/iivari/assets"
+
+    url = os.path.join(assets_path, 'standby.html')
+
+    # create the main window
+    window = iivari.MainWindow(url=url, use_repl=True)
+
+    size = QT_APP.desktop().availableGeometry().size()
+    width = size.width()
+    height = size.height()
+
+    # set fullscreen mode and resize the WebView to proper resolution
+    window.showFullScreen()
+    window.webView.setGeometry(PySide.QtCore.QRect(0, 0, width, height))
+
+    # show the window
+    window.show()
+    # raise it to the front
+    window.raise_()
+
+    logger.info("""\n
+ * Telefunken test pattern should be visible on the display screen.
+    """)
+    sys.exit(QT_APP.exec_())
+

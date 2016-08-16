@@ -1,0 +1,59 @@
+<% content_for :javascript do %>
+  <%= javascript_include_tag "slides/index" %>
+<% end %>
+
+<h1><%= t('.title', :name => h(@channel.name)).html_safe %></h1>
+
+
+<ul id="slides">
+<% @slides.each do |slide| %>
+  <li id="slide_<%= slide.id %>" class="slide_item">
+    <table>
+      <tr>
+	<td rowspan="2" class="transform_move">
+	  <span>
+            <%= image_tag('transform-move.png', :title => t('.drag'), :class => "action" ) %>
+	  </span>
+        </td>
+	<td rowspan="2">
+	  <% content_tag("iframe",
+                  { :style => "z-index: -1;",
+                    :scrolling => "no",
+                    :height => "150",
+                    :width => "250",
+                    :src => conductor_screen_path( :cache => "false",
+                                                   :slide_id => slide.id,
+                                                   :resolution => "250x150" ) } ) do %>
+          <% end %>
+	</td>
+      
+	<td class="title">
+	  <%= slide.title %>
+	</td>
+      </tr>
+      <tr>
+	<td class="action">
+	  <%= link_to image_tag( 'video-display.png', :title => t('links.show') ), channel_slide_path(@school.puavo_id, @channel, slide), :title => t('links.show') %>
+	  <%= link_to image_tag('preferences-system.png', :title => t('links.edit') ), edit_channel_slide_path(@school.puavo_id, @channel, slide), :title => t('links.edit') %>
+	  <%= link_to image_tag('edit-delete.png', :title => t('links.destroy') ), channel_slide_path(@school.puavo_id, @channel, slide), :confirm => t('.confirm'), :method => :delete, :title => t('links.destroy') %>
+	</td>
+      </tr>
+    </table>
+    <hr />
+  </li>
+<% end %>
+
+</ul>
+
+<br />
+
+<% content_for :tools do %>
+<div>
+<%= link_to( t('links.preview_channel_slides'),
+             conductor_screen_path( :cache => "false",
+                                    :channel_id => @channel.id,
+                                    :resolution => "720x405" ),
+             :id => "previewSlides" )  %>
+</div>
+<div><%= link_to t('links.new_slides'), new_channel_slide_path %></div>
+<% end %>

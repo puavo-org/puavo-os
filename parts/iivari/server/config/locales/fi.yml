@@ -1,0 +1,187 @@
+fi:
+  time:
+    formats:
+      default: "%H:%M"
+      datetime: "%d.%m.%Y %H:%M"
+  value_true: Kyllä
+  value_false: Ei
+  display_non_active_body: Aktivoi näyttö hallintaliittymästä ja aseta näytettävä kanava
+  confirm: Oletko varma?
+  flash:
+    actions:
+      create:
+        success: "Uusi %{resource_name} on luotu onnistuneesti."
+      update:
+        success: "%{resource_name}tietojen päivitys onnistui."
+      destroy:
+        success: "%{resource_name} poistettiin."
+        error: "%{resource_name}n poistaminen epäonnistui."
+    user_sessions:
+      create:
+        success: Kirjautuminen onnistui
+    slides:
+      create:
+        success: Uuden ruudun lisäys onnistui!
+      update:
+        success: Ruuduntietojen päivitys onnistui
+  activerecord:
+    models:
+      channel: Kanava
+      slide: Ruutu
+      slide_timer: Ajastus
+      display: Näyttö
+    attributes:
+      channel:
+        name: Nimi
+        slide_delay: Ruudunnäyttöaika (sekuntia)
+        theme: Teema
+      slide:
+        title: Otsikko
+        body: Teksti
+      display:
+        hostname: Nimi
+        active: Aktiivinen
+        channel: Kanava
+      slide_timer:
+        start_datetime: Alkupäivä ja -aika
+        end_datetime: Loppupäivä ja -aika
+        start_time: Näytä alkaen
+        end_time: Lopeta näyttäminen
+        weekday_0: Su
+        weekday_1: Ma
+        weekday_2: Ti
+        weekday_3: Ke
+        weekday_4: To
+        weekday_5: Pe
+        weekday_6: La
+    errors:
+      messages:
+        blank: Ei voi olla tyhjä!
+      models:
+        channel:
+          attributes:
+            slide_delay:
+              inclusion: Virheellinen ruudunnäyttöaika. Arvon pitää olla välillä 2-600 sekuntia.
+  helpers:
+    submit:
+      create: "Lisää %{model}"
+      update: "Tallenna"
+      slide:
+        create: Tallenna
+      channel:
+        create: Lisää uusi kanava
+      user_session:
+        create: Kirjaudu
+  links:
+    edit: Muokkaa
+    back: Takaisin
+    show: Näytä
+    slides: Ruutulista
+    destroy: Poista
+    new_channel: Uusi kanava
+    new_slides: Lisää uusi ruutu
+    logout: Kirjaudu ulos
+    channels: Kanavat
+    displays: Näytöt
+    preview_channel_slides: Ruutujen esikatselu
+    or_cancel: tai
+    cancel: Peruuta
+    back_to_slides: Takaisin ruutulistaan
+    back_to_channels: Takaisin kanavalistaan
+    next: Seuraava
+    previous: Edellinen
+    new_display: Uusi näyttö
+    management: Hallinta
+    slide_timers: Ajastukset
+    active: Aktivoi ruutu
+    deactive: Poista ruutu käytöstä
+    digital_signage: Info-TV
+    admins: Ylläpitäjät
+  channels:
+    show:
+      name: Nimi
+    new:
+      title: Uusi kanava
+    index:
+      title: Lista kanavista
+      confirm: Haluatko varmasti poistaa kanavan?
+    edit:
+      title: Kanavan tietojen muokkaus
+    form:
+      gold: Kulta
+      green: Vihreä
+      cyan: Sinivihreä
+  slides:
+    show:
+      confirm: Haluatko varmasti poistaa ruudun?
+      status_title: Ruudun tila
+    index:
+      title: "<b>%{name}</b> kanavan ruudut"
+      confirm: Haluatko varmasti poistaa ruudun?
+      drag: Raahaa
+    new:
+      title: Uusi ruutu
+    template:
+      select_slide_template: Valitse ruututyyppi
+      link_text: Vain teksti
+      link_right_image: Kuva oikealla
+      link_left_image: Kuva vasemmalla
+      link_only_image: Vain kuva
+      link_web_page: Web-sivu
+    edit:
+      title: Ruudun muokkaus
+    template_web_page:
+      label_of_body: Ulkoisen Web-sivun osoite
+    status:
+      slide_is_active: Ruutu on aktiivisena
+      slide_is_not_active: Ruutu ei ole aktiivisena, eikä sitä näytetä esityksissä
+  user_sessions:
+    new:
+      error_title: Kirjautuminen epäonnistui
+  displays:
+    show:
+      channel_not_selected: Ei valittu
+    edit:
+      title: Näytön tietojen muokkaus
+    new:
+      title: Uus näyttö
+    index:
+      title: Lista näytöistä
+  slide_timers:
+    list:
+      empty: Ei määritetty
+  school_admin_groups:
+    index:
+      access_group_title: Ylläpitoryhmät
+      access_group_description: Ryhmien käyttäjät ovat info-järjestelmän ylläpitäjänä tässä koulussa
+      group_name: Ryhmän nimi
+      group_abbreviation: Ryhmän lyhenne
+      school: Koulu
+      add: Lisää
+      delete: Poista
+      other_group_title: Muut organisaation ryhmät
+  authlogic:
+    error_messages:
+      login_blank: ei voi olla tyhjä
+      login_not_found: on virheellinen
+      # login_invalid: should use only letters, numbers, spaces, and .-_@ please.
+      # consecutive_failed_logins_limit_exceeded: Consecutive failed logins limit exceeded, account is disabled.
+      # email_invalid: should look like an email address.
+      password_blank: ei voi olla tyhjä
+      password_invalid: on virheellinen
+      # not_active: Your account is not active
+      # not_confirmed: Your account is not confirmed
+      # not_approved: Your account is not approved
+      no_authentication_details: Kirjautumiseen tarvitaan käyttäjätunnus ja salasana
+    attributes:
+      user_session:
+        login: Käyttäjätunnus
+        password: Salasana
+  layouts:
+    application:
+      logged_in_as: Kirjauduttu sisään käyttäjänä
+      tools: Työkalut
+      schools: Koulut
+  notices:
+    login_required: Sinun täytyy kirjautua päästäksesi tälle sivulle
+    not_access: Sinulla ei ole riittäviä oikeuksia toiminnon suorittamiseksi

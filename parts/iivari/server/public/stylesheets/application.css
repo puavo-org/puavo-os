@@ -1,0 +1,111 @@
+.delete_timer {
+display:none;
+}
+
+div.field, div.actions {
+  margin-bottom: 10px;
+}
+
+.notice {
+  color: green;
+}
+
+.alert {
+  color: red;
+}
+
+.fieldWithErrors {
+  padding: 2px;
+  background-color: red;
+  display: table;
+}
+
+#errorExplanation {
+  width: 450px;
+  border: 2px solid red;
+  padding: 7px;
+  padding-bottom: 0;
+  margin-bottom: 20px;
+  background-color: #f0f0f0;
+}
+
+#errorExplanation h2 {
+  text-align: left;
+  font-weight: bold;
+  padding: 5px 5px 5px 15px;
+  font-size: 12px;
+  margin: -7px;
+  margin-bottom: 0px;
+  background-color: #c00;
+  color: #fff;
+}
+
+#errorExplanation ul li {
+  font-size: 12px;
+  list-style: square;
+}
+
+.slide {
+}
+
+.full {
+    width: 100%;
+}
+
+.lefthalf {
+    float: left;
+    width: 50%;
+    height: 350px;
+}
+
+.righthalf {
+    float: right;
+    width: 50%;
+    height: 350px;
+}
+
+#slides * {
+    vertical-align: middle;
+    list-style: none;
+}
+
+#slides li {
+    margin: 10px;
+}
+
+#slides iframe {
+    border: 5px inset;
+}
+
+#slides td.title {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+#slides .action img{
+    padding-right: 15px;
+    vertical-align: top;
+    padding-bottom: 28px;
+}
+
+#slides .action {
+    display: none;
+}
+
+#slides td.transform_move {
+    width: 48px;
+}
+
+.slide_navigation {
+    text-align: center;
+}
+
+label.string {
+display:block;
+    margin-right: 5px;
+}
+
+iframe.slide_show {
+    z-index: -1;
+    border: 10px ridge #94AA29;
+}

@@ -1,0 +1,7 @@
+<h1><%= t('.title') %></h1>
+
+<%= render( :partial => 'form', :locals => { :url => channel_path(@school.puavo_id, @channel) } ) %>
+
+<% content_for :tools do %>
+<div><%= link_to t('links.show'), @channel, :class => "show" %></div>
+<% end %>

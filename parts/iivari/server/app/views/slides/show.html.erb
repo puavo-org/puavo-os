@@ -1,0 +1,61 @@
+<% content_for :javascript do %>
+  <%= javascript_include_tag "slides/show" %>
+  <%= javascript_tag "var root_path = '#{root_path}#{@school.puavo_id}/'"%>
+  <%= javascript_tag "var slide_id = #{@slide.id}"%>
+  <%= javascript_tag "var channel_id = #{@channel.id}"%>
+  <%= javascript_tag "var application_locale = '#{I18n.locale}'"%>
+  <%= javascript_include_tag "datetimepicker/jquery-ui-timepicker-addon.js" %>
+  <%= javascript_include_tag "datetimepicker/jquery.ui.datepicker-fi.js" %>
+<% end %>
+
+<div class="slide_navigation">
+<% if @slide.first? == false %>
+<%= link_to t('links.previous'), channel_slide_path(@school.puavo_id, @channel, @slide.higher_item) %>
+<% end %>
+
+<%= if @slide.first? == false && @slide.last? == false then " - " end %> 
+
+<% if @slide.last? == false %>
+       <%= link_to t('links.next'), channel_slide_path(@school.puavo_id, @channel, @slide.lower_item) %>
+<% end %>
+<%= "(#{@slide.position}/#{@channel.slides.count})" %>
+</div>
+
+<div>
+<% content_tag("iframe",
+               { :class => "slide_show",
+                 :scrolling => "no",
+                 :height => "400",
+                 :width => "650",
+                 :src => conductor_screen_path( :cache => "false",
+                                                :slide_id => @slide.id,
+                                                :resolution => "650x400" ) } ) do %>
+<% end %>
+</div>
+
+<% if @slide.slide_timers.empty? %>
+<h2><%= link_to t('links.slide_timers'), slide_slide_timers_path(@school.puavo_id, @slide), :remote => true, :class => 'link_slide_timers' %></h2>
+<% else %>
+<h2><%= t('links.slide_timers') %></h2>
+<% end %>
+<div class="slide_timers">
+
+</div>
+
+<% content_for :tools do %>
+<div><%= link_to t('links.edit'), edit_channel_slide_path(@school.puavo_id, @channel, @slide) %></div>
+<div>
+<%= link_to( t('links.destroy'),
+ channel_slide_path(@school.puavo_id, @channel, @slide),
+ :confirm => t('.confirm'),
+ :method => :delete ) %>
+</div>
+<div><%= link_to t('links.slides'), channel_slides_path %></div>
+<% end %>
+
+<% content_for :sidebar_2 do %>
+<h1><%= t('.status_title') %></h1>
+<p id="slide_status">
+</p>
+
+<% end %>

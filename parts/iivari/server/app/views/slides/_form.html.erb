@@ -1,0 +1,10 @@
+<%= form_for([@channel, @slide], :url => url, :html => { :multipart => true }) do |f| %>
+
+<%= render :partial => "template_" + @slide.template, :locals => { :f => f } %>
+
+<%= f.hidden_field :template, :value => @slide.template %>
+
+<%= f.submit %>
+<%= t('links.or_cancel') %> <%= link_to t('links.cancel'), channel_slides_path(@school.puavo_id, @channel) %>
+
+<% end %>

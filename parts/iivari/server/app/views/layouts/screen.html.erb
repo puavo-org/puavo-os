@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<% if @cache == "true" %>
+<html manifest="<%= manifest_screen_path( :resolution => ( params.has_key?(:resolution) ?
+                                                           params[:resolution].to_s :
+                                                           "") ) %>">
+<% else %>
+<html>
+<% end %>
+<head>
+  <meta charset=utf-8 />
+  <title>Iivari</title>
+
+  <%= javascript_include_tag :defaults %>
+  <%= csrf_meta_tag %>
+</head>
+<body>
+
+  <%= yield %>
+
+</body>
+</html>

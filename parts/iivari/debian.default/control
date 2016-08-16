@@ -1,0 +1,14 @@
+Source: iivari
+Section: web
+Priority: extra
+Maintainer: Opinsys Developers <dev@opinsys.fi>
+Build-Depends: debhelper (>= 8.0.0), python-all-dev, python-pyside
+Standards-Version: 3.9.3
+Homepage: http://github.com/opinsys/iivari/
+
+Package: iivari-client
+Architecture: all
+Depends: ${misc:Depends}, python, python-pyside, unclutter
+Description: A custom stand-alone WebKit display.
+ A custom stand-alone WebKit display.
+ .

@@ -1,0 +1,6 @@
+<h1><%= t('.title') %></h1>
+
+<%= render :partial => 'form', :locals => { :url => display_path(@school.puavo_id, @display) } %>
+
+<%= link_to t('links.show'), display_path(@school.puavo_id, @display) %> |
+<%= link_to t('links.back'), displays_path  %>

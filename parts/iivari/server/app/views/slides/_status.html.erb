@@ -1,0 +1,14 @@
+<div
+<% if @slide.status %>
+ class="active">
+<%= t('.slide_is_active') %>
+<% else %>
+ class="not_active">
+<%= t('.slide_is_not_active') %>
+<% end %>
+</div>
+<%= link_to( @slide.status ? t('links.deactive') : t('links.active'),
+             toggle_status_channel_slide_path(@school.puavo_id, @channel, @slide),
+	     :method => :put,
+	     :remote => true,
+	     :id => 'slide_status_button' ) %>

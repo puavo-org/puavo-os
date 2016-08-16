@@ -1,0 +1,223 @@
+html, body, .footer{
+    margin: 0;
+    padding: 0;
+    font-family: sans-serif;
+}
+
+.footer_container {
+    width: 100%;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    z-index: 5;
+    background-color: #00cfc3;
+    font-size: 0.9em;
+    font-weight: normal
+}
+.footer {
+    padding: 0.3em 1em 0.3em 1em;
+    font-size: 0.9em;
+    font-weight: normal
+}
+
+.footer > * {
+    margin: 0;
+    padding: 0;
+    font-size: 0.75em;
+}
+
+.slide {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    color: #000;
+}
+
+.slide .title {
+    display: block;
+    position: relative;
+    margin: 0;
+    padding: 0.1em 0em 0.1em 0.5em;
+}
+
+.title_container {
+    background-color: #00cfc3;
+}
+
+.title_container img {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: auto;
+    
+}
+
+.slide .content {
+}
+
+.slide > * {
+}
+
+.content .lefthalf {
+    position: fixed;
+    top: 3.2em;
+    left: 0.4em;
+    margin: 0;
+    padding: 0;
+    width: 48%;
+    height: 75%;
+}
+
+.content .righthalf {
+    position: fixed;
+    top: 3.2em;
+    left: 50.5%;
+    margin: 0;
+    width: 48%;
+    height: 75%;
+}
+
+
+.content img {
+    position:absolute;
+    top:0;
+    bottom:0;
+    left: 0;
+    right: 0;
+    margin:auto;
+}
+
+
+.content .full {
+    position: fixed;
+    top: 3.2em;
+    left: 0.4em;
+    width: 98%;
+    height: 75%;
+}
+
+a {
+    text-decoration: none;
+    color: #00a;
+}
+
+
+.tgradient0{
+    background-color: #00bfb4;
+    width: 100%;
+    height: 0.2em;
+    clear: both;
+    left: 0;
+    position: relative;
+    top: 0;
+    z-index: -2;
+}
+.tgradient1{
+    background-color: #00b1a7;
+    width: 100%;
+    height: 0.15em;
+    clear: both;
+    left: 0;
+    position: relative;
+    bottom: 0;
+    z-index: -2;
+}
+
+.tgradient2{
+    background-color: #00a69c;
+    width: 100%;
+    height: 0.1em;
+    clear: both;
+    left: 0;
+    position: relative;
+    bottom: 0;
+    z-index: -2;
+}
+
+.tgradient3{
+    background-color: #009f96;
+    width: 100%;
+    height: 0.1em;
+    clear: both;
+    left: 0;
+    position: relative;
+    bottom: 0;
+    z-index: -2;
+}
+
+.tgradient4{
+    background-color: #00938a;
+    width: 100%;
+    height: 0.05em;
+    clear: both;
+    left: 0;
+    position: relative;
+    bottom: 0;
+    z-index: -2;
+}
+
+.tgradient5{
+    background-color: #008a82;
+    width: 100%;
+    height: 0.1em;
+    clear: both;
+    left: 0;
+    position: relative;
+    bottom: 0;
+    z-index: -2;
+}
+.bgradient0{
+    background-color: #00bfb4;
+    width: 100%;
+    height: 0.2em;
+    clear: both;
+    left: 0;
+    position: relative;
+    top: 0;
+}
+.bgradient1{
+    background-color: #00b1a7;
+    width: 100%;
+    height: 0.15em;
+    clear: both;
+    left: 0;
+    position: relative;
+    top: 0;
+}
+
+.bgradient2{
+    background-color: #00a69c;
+    width: 100%;
+    height: 0.1em;
+    clear: both;
+    left: 0;
+    position: relative;
+    top: 0;
+}
+
+.bgradient3{
+    background-color: #009f96;
+    width: 100%;
+    height: 0.05em;
+    clear: both;
+    left: 0;
+    position: relative;
+    top: 0;
+}
+
+.bgradient4{
+    background-color: #00938a;
+    width: 100%;
+    height: 0.05em;
+    clear: both;
+    left: 0;
+    position: relative;
+    top: 0;
+}
+
+.bgradient5{
+    background-color: #008a82;
+    width: 100%;
+    height: 0.05em;
+}

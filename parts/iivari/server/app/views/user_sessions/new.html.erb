@@ -1,0 +1,20 @@
+<%= form_for @user_session do |f| %>
+  <% if @user_session.errors.any? %>
+  <div id="errorExplanation">
+    <h2><%= t('.error_title') %>:</h2>
+    <ul>
+    <% @user_session.errors.full_messages.each do |msg| %>
+      <li><%= msg %></li>
+    <% end %>
+    </ul>
+  </div>
+  <% end %>
+
+<%= f.label :login %><br />
+<%= f.text_field :login %><br />
+<br />
+<%= f.label :password %><br />
+<%= f.password_field :password %><br />
+<br />
+<%= f.submit %>
+<% end %>

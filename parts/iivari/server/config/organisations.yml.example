@@ -1,0 +1,15 @@
+# Default organisation configurations.
+# This is used to if browser request host not matched with other settings.
+default:
+  name: Default organisation
+  host: *
+  ldap_host: localhost
+  ldap_base: dc=edu,dc=example,dc=com
+  uid_search_dn: uid=puavo,o=puavo
+  uid_search_password: xxxxxxxx
+  # fi/en
+  locale: fi
+  # none/tls
+  ldap_method: none
+  # The number of seconds between update checks (data of slides)
+  data_update_interval: 60

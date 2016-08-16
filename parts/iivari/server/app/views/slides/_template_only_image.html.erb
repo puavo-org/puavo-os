@@ -1,0 +1,11 @@
+<div class="slide_title">
+  <%= f.label :title %><br />
+  <%= f.text_field :title %>
+</div>
+
+<div class="full">
+  <%= f.file_field :image %>
+  <% if @slide.image %>
+  <img src="<%= root_path %>image/<%= @slide.template %>/<%= @slide.image %>?resolution=720x350" />
+  <% end %>
+</div>

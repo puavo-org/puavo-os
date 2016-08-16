@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset=utf-8 />
+  <title>Iivari</title>
+  <%= stylesheet_link_tag "application" %>
+  <%= stylesheet_link_tag "gray/screen.css", :media => 'screen, projection' %>
+  <%= stylesheet_link_tag "gray/print.css", :media => 'print' %>
+  <%= stylesheet_link_tag "gray/iivari.css" %>
+  <%= javascript_include_tag :defaults %>
+  <%= csrf_meta_tag %>
+</head>
+<body>
+
+    <hr class="space" />
+    <div class="login_container">
+    <div class="login_content">
+      <h1>Iivari</h1>
+      <% if message_keys = flash.keys.select { |key| [:error, :notice, :success].include?(key) } %>
+      <% message_keys.each do |key| %>
+      <p class="<%= key %>">
+	<%= flash[key] %>
+      </p>
+      <% end %>
+      <% end %>
+      <%= yield %>
+    </div>
+  </div>
+</body>
+</html>

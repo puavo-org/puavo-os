@@ -1,0 +1,7 @@
+
+<%= simple_form_for @channel, :url => url do |f| %>
+<%= f.input :name, :required => false %>
+<%= f.input :slide_delay %>
+<%= f.button :submit %>
+-<%= t('links.or_cancel') %> <%= link_to t('links.cancel'), channels_path %>
+<% end %>

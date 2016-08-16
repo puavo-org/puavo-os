@@ -1,0 +1,55 @@
+<%= form_for(@slide_timer, :url => slide_slide_timers_path(@school.puavo_id, @slide), :remote => true) do |f| %>
+<table class="table_slide_timers">
+  <tr>
+    <th><%= SlideTimer.human_attribute_name :start_datetime %></th>
+    <th><%= SlideTimer.human_attribute_name :end_datetime %></th>
+    <th><%= SlideTimer.human_attribute_name :start_time %></th>
+    <th><%= SlideTimer.human_attribute_name :end_time %></th>
+  </tr>
+
+<% @slide_timers.each do |slide_timer| %>
+<tr class="timer">
+  <td><%= l(slide_timer.start_datetime, :format => :datetime) rescue t('.empty') %></td>
+  <td><%= l(slide_timer.end_datetime, :format => :datetime) rescue t('.empty') %></td>
+  <td><%= l(slide_timer.start_time) %></td>
+  <td><%= l(slide_timer.end_time) %></td>
+  <td rowspan="2" class="td_delete_timer" width="48">
+    <%= link_to image_tag( 'edit-delete.png', :title => t('links.destroy') ),
+                           slide_slide_timer_path(@school.puavo_id, @slide, slide_timer),
+                           :confirm => t('confirm'),
+                           :method => :delete,
+                           :remote => true,
+                           :class => "delete_timer" %>
+  </td>
+</tr>
+<tr class="weekday_and_action">
+  <td></td>
+  <td></td>
+  <td colspan="2">
+  <table>
+    <tr>
+      <th><%= SlideTimer.human_attribute_name :weekday_1 %></th>
+      <th><%= SlideTimer.human_attribute_name :weekday_2 %></th>
+      <th><%= SlideTimer.human_attribute_name :weekday_3 %></th>
+      <th><%= SlideTimer.human_attribute_name :weekday_4 %></th>
+      <th><%= SlideTimer.human_attribute_name :weekday_5 %></th>
+      <th><%= SlideTimer.human_attribute_name :weekday_6 %></th>
+      <th><%= SlideTimer.human_attribute_name :weekday_0 %></th>
+    </tr>
+    <tr>
+      <td><%= slide_timer.weekday_1 ? "X" : "" %></td>
+      <td><%= slide_timer.weekday_2 ? "X" : "" %></td>
+      <td><%= slide_timer.weekday_3 ? "X" : "" %></td>
+      <td><%= slide_timer.weekday_4 ? "X" : "" %></td>
+      <td><%= slide_timer.weekday_5 ? "X" : "" %></td>
+      <td><%= slide_timer.weekday_6 ? "X" : "" %></td>
+      <td><%= slide_timer.weekday_0 ? "X" : "" %></td>
+    </tr>
+  </table>
+</td></tr>
+
+<% end %>
+
+<%= render :partial => 'form', :locals => { :f => f } %>
+</table>
+<% end %>

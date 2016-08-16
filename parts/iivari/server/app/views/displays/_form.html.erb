@@ -1,0 +1,11 @@
+<%= simple_form_for(@display, :url => url) do |f| %>
+  <div class="inputs">
+    <%= f.input :active %>
+    <%= f.association :channel, :collection => Channel.find_all_by_school_id(@school.puavo_id) %>
+    <%= f.input :hostname %>
+  </div>
+
+  <div class="actions">
+    <%= f.button :submit %>
+  </div>
+<% end %>

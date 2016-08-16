@@ -1,0 +1,23 @@
+<h1><%= t('.title') %></h1>
+
+<table>
+  <tr>
+    <th><%= Display.human_attribute_name :hostname %></th>
+    <th><%= Display.human_attribute_name :active %></th>
+    <th><%= Display.human_attribute_name :channel %></th>
+    <th></th>
+    <th></th>
+  </tr>
+
+<% @displays.each do |display| %>
+  <tr>
+    <td><%= link_to display.hostname, display_path(@school.puavo_id, display) %></td>
+    <td><%= display.active ? "X" : "" %></td>
+    <td><%= display.channel.name rescue "" %></td>
+    <td><%= link_to t('links.edit'), edit_display_path(@school.puavo_id, display) %></td>
+    <td><%= link_to t('links.destroy'), display_path(@school.puavo_id, display), :confirm => t('confirm'), :method => :delete %></td>
+  </tr>
+<% end %>
+</table>
+
+<br />

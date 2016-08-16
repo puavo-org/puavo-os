@@ -1,0 +1,32 @@
+#!/bin/sh
+
+# turn info-tv display on (may be called as root from cron or from
+# iivari-kiosk)
+
+set -e
+
+iivari_user=$(ps -C iivari-kiosk -o user=)
+
+[ -n "$iivari_user" ] || exit 1
+
+export DISPLAY=:0
+export XAUTHORITY=/run/lightdm/${iivari_user}/xauthority
+
+xset s reset
+xset s 0 0
+xset s off
+xset s noblank
+xset dpms 0 0 0
+xset -dpms
+xset dpms force on
+
+# write status to hidden text file (for tests)
+if [ "$(id -u)" = "0" ]; then
+  sudo -H -u "$iivari_user" sh -c '
+    mkdir -p ~/.iivari
+    echo on > ~/.iivari/power-status
+  '
+else
+  mkdir -p ~/.iivari
+  echo on > ~/.iivari/power-status
+fi

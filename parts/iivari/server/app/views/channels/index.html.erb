@@ -1,0 +1,26 @@
+<h1><%= t('.title') %></h1>
+
+<table class="channels">
+  <tr>
+    <th><%=  Channel.human_attribute_name(:name) %></th>
+    <th></th>
+    <th></th>
+    <th></th>
+  </tr>
+
+<% @channels.each do |channel| %>
+  <tr>
+    <td><%= channel.name %></td>
+    <td><%= link_to t('links.slides'), channel_slides_path(@school.puavo_id, channel) %></td>
+    <td><%= link_to t('links.show'), channel_path(@school.puavo_id, channel) %></td>
+    <td><%= link_to t('links.edit'), edit_channel_path(@school.puavo_id, channel) %></td>
+    <td><%= link_to t('links.destroy'), channel_path(@school.puavo_id, channel), :confirm => t('.confirm'), :method => :delete %></td>
+  </tr>
+<% end %>
+</table>
+
+<br />
+
+<% content_for :tools do %>
+<div><%= link_to t('links.new_channel'), new_channel_path %></div>
+<% end %>

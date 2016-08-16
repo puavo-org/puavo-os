@@ -1,0 +1,31 @@
+<h1>Listing slide_timers</h1>
+
+<table>
+  <tr>
+    <th>Start datetime</th>
+    <th>End datetime</th>
+    <th>Start time</th>
+    <th>End time</th>
+    <th>Slide</th>
+    <th></th>
+    <th></th>
+    <th></th>
+  </tr>
+
+<% @slide_timers.each do |slide_timer| %>
+  <tr>
+    <td><%= slide_timer.start_datetime %></td>
+    <td><%= slide_timer.end_datetime %></td>
+    <td><%= slide_timer.start_time %></td>
+    <td><%= slide_timer.end_time %></td>
+    <td><%= slide_timer.slide_id %></td>
+    <td><%= link_to 'Show', slide_slide_timer_path(@slide, slide_timer) %></td>
+    <td><%= link_to 'Edit', edit_slide_slide_timer_path(@slide, slide_timer) %></td>
+    <td><%= link_to 'Destroy', slide_slide_timer_path(@slide, slide_timer), :confirm => 'Are you sure?', :method => :delete %></td>
+  </tr>
+<% end %>
+</table>
+
+<br />
+
+<%= link_to 'New Slide timer', new_slide_slide_timer_path(@slide) %>

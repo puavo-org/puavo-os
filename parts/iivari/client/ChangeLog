@@ -1,0 +1,66 @@
+= 1.3.4
+ * Migrate to new Opinsys build system.
+
+= 1.3.3
+ * Add start_infotv script and .desktop file
+ * Log file is configurable
+ * Minor logging tuning
+
+= 1.3.2
+Maintenance release.
+
+ * Fix log stream release on Python >2.6.
+ * Create debian package using python-stdeb.
+
+
+= 1.3.1
+Support for screen rotation.
+
+
+= 1.3.0
+Authentication.
+
+ * Authentication key is read from $HOME/.iivari/auth
+   and added to request header X-Iivari-Auth.
+
+
+= 1.2.5
+Maintenance release.
+
+ * Set SERVER_BASE to "http://localhost:3000/conductor" by default.
+
+ * Read global iivarirc configuration first, override from user config.
+
+ * Fixed log WARNINGs because of status 304: Not Modified
+
+
+= 1.2.3
+Added settings flexibility and leaner start script.
+
+ * Moved start script into kiosk module.
+
+ * Offline cache and cookie jar are initialised only if
+   settings.CACHE_PATH and COOKIE_PATH are set.
+
+ * Fixed desktop geometry detection to use availableGeometry.
+   Multiple display setups should report only one display geometry.
+
+ * Removed cache_path argument from MainNetworkAccessManager.
+
+ * Less verbose logging without any cookies.
+
+= 1.2.2
+Fixed minor test regressions.
+
+= 1.2.1
+Debian packaging proper, including numerous fixes to library loading
+and settings.
+
+= 1.2.0
+Initial import of iivari-client into master branch.
+
+Since v1.1.1 the client has been refactored to be more coherent.
+
+= 1.1.1
+Initial alpha version bubbling in lamikae branch.
+

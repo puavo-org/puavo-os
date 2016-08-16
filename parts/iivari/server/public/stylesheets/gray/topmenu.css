@@ -1,0 +1,235 @@
+#top-menu-right {
+    float: right;
+}
+
+#top-menu { 
+  width: 100%;
+}
+
+/* first level */
+ul.menu {
+        float: left;
+        height: 100%;
+        margin: 0px 0;
+        padding: 0;
+        border-left: 0px solid #d7d7d7;
+        border-right: 0px solid #d7d7d7;
+        list-style: none;
+        background: #292829;
+	-moz-border-radius-bottomleft: 12px;
+	-moz-border-radius-bottomright: 12px;
+	-webkit-border-bottom-right-radius: 12px;
+	-webkit-border-bottom-left-radius: 12px;
+	font-size:12px;
+}
+
+ul.menu li {
+        position: relative;
+        float: left;
+        line-height: 1.1;
+}
+
+ul.menu li span{
+        display: block;
+        width: auto;
+	color: red;
+        padding: 10px 0px 10px 10px;
+        text-decoration: none;
+        color: #ffffff;
+}
+
+ul.menu li a {
+        display: block;
+        width: auto;
+        padding: 10px;
+        text-decoration: none;
+        color: #ffffff;
+        font-weight: bolder;
+}
+ul.menu li.last a {
+        background: transparent;
+}
+
+ul.menu li a.sub {
+        padding-right: 15px;
+        text-transform:uppercase;
+}
+
+ul.menu li span.sub {
+    padding-right: 10px;
+    text-transform:uppercase;
+    color: gray;
+    font-weight: bolder;
+}
+
+ul.menu li:hover,
+ul.menu li.hover /* protofish */ {
+//        background: #b6e3ec;
+}
+
+ul.menu li:hover a,
+ul.menu li.hover /* protofish */ a {
+        background: #94aa29;
+}
+
+ul.menu li.active a {
+        color: #b6e3ec;
+}
+
+/* second level */
+ul.menu ul {
+        padding: 0;
+        margin: 0;
+        list-style: none;
+        top: 32px;
+        width: 168px;
+        border-top: 1px solid #d7d7d7;
+}
+
+/* resetting first level */
+ul.menu ul ul {
+        
+}
+
+ul.menu li:hover li,
+ul.menu li:hover li a,
+ul.menu li.hover /* protofish */ li,
+ul.menu li.hover /* protofish */ li a {
+        background: #fff;
+        color: #000;
+}
+
+/* submenu markup */
+ul.menu li li {
+        width: 100%;
+        border-left: 1px solid #d7d7d7;
+        border-right: 1px solid #d7d7d7;
+}
+ul.menu li li.last {
+        border-bottom: 1px solid #d7d7d7;
+}
+
+ul.menu li li a {
+        padding: 5px 5px 5px 10px;
+}
+
+ul.menu li:hover li:hover a,
+ul.menu li.hover li.hover /* protofish */ a {
+        background: #f6f6f6;
+        color: #4a4d4a;
+}
+
+ul.menu li:hover li.active a,
+ul.menu li.hover /* protofish */ li.active a {
+        color: #f15c30;
+}
+
+ul.menu li li a.sub {
+        padding-right: 15px;
+}
+
+ul.menu li:hover li:hover a.sub,
+ul.menu li.hover li.hover /* protofish */ a.sub {
+        background: #f6f6f6;
+}
+
+/* third level */
+/* resetting second level */
+ul.menu ul ul{
+        top: -1px;
+        margin-left: 169px;
+        background: #fff;
+}
+
+ul.menu li:hover li:hover li,
+ul.menu li:hover li:hover li a, {
+ul.menu li.hover li.hover /* protofish */ li,
+ul.menu li.hover li.hover /* protofish */ li a
+        color: #7c7c7c;
+}
+
+/* subsubmenu markup */
+ul.menu li:hover li:hover li:hover a,
+ul.menu li.hover li.hover li.hover /* protofish */ a {
+        background: #e6e6e6;
+        color: #000;
+}
+
+ul.menu li:hover li:hover li.active a,
+ul.menu li.hover li.hover /* protofish */ li.active a {
+        color: #f15c30;
+}
+
+ul.menu li:hover li:hover li:hover a.sub,
+ul.menu li.hover li.hover li.hover /* protofish */ a.sub {
+}
+
+/* fourth level */
+/* resetting second level */
+ul.menu li:hover li:hover li:hover li,
+ul.menu li:hover li:hover li:hover li a,
+ul.menu li.hover li.hover li.hover /* protofish */ li,
+ul.menu li.hover li.hover li.hover /* protofish */ li a {
+        color: #7c7c7c;
+}
+
+/* subsubmenu markup */
+ul.menu li:hover li:hover li:hover li:hover a,
+ul.menu li.hover li.hover li.hover li.hover /* protofish */ a {
+        background: #ccc;
+        color: #000;
+}
+
+ul.menu li:hover li:hover li:hover li.active a,
+ul.menu li.hover li.hover li.hover /* protofish */ li.active a {
+        color: #f15c30;
+}
+
+ul.menu li:hover li:hover li:hover li a.sub,
+ul.menu li.hover li.hover li.hover /* protofish */ li a.sub {
+        background: #e6e6e6;
+}
+
+ul.menu li:hover li:hover li:hover li:hover a.sub,
+ul.menu li.hover li.hover li.hover li.hover /* protofish */ a.sub {
+        background: #ccc;
+}
+/* hiding fifth level */
+div#nav ul ul ul ul ul {
+        display: none;
+}
+
+/* show hide behaviour */
+ul.menu ul,
+ul.menu li:hover ul ul,
+ul.menu ul ul,
+ul.menu li:hover ul ul ul,
+ul.menu ul ul ul,
+ul.menu li:hover ul ul ul ul {
+        position: absolute;
+        left: -999em;
+}
+
+ul.menu li:hover ul,
+ul.menu li li:hover ul,
+ul.menu li li li:hover ul,
+ul.menu li li li li:hover ul {
+        left: -1px;
+        z-index: 999;
+}
+
+/* show hide behaviour with protofish */
+ul.menu li.hover ul ul,
+ul.menu li.hover ul ul ul,
+ul.menu li.hover ul ul ul ul {
+        position: absolute;
+        left: -999em;
+}
+
+ul.menu li.hover ul,
+ul.menu li li.hover ul,
+ul.menu li li li.hover ul,
+ul.menu li li li li.hover ul {
+        left: -1px;
+        z-index: 999;
+}

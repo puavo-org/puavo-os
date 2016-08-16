@@ -1,0 +1,30 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <b>Start datetime:</b>
+  <%= @slide_timer.start_datetime %>
+</p>
+
+<p>
+  <b>End datetime:</b>
+  <%= @slide_timer.end_datetime %>
+</p>
+
+<p>
+  <b>Start time:</b>
+  <%= @slide_timer.start_time %>
+</p>
+
+<p>
+  <b>End time:</b>
+  <%= @slide_timer.end_time %>
+</p>
+
+<p>
+  <b>Slide:</b>
+  <%= @slide_timer.slide_id %>
+</p>
+
+
+<%= link_to 'Edit', edit_slide_slide_timer_path(@slide, @slide_timer) %> |
+<%= link_to 'Back', slide_slide_timers_path(@slide) %>

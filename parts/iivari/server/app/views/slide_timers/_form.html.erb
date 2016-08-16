@@ -1,0 +1,31 @@
+<tr class="form">
+  <td><%= f.text_field :start_datetime, :size => '15' %></td>
+  <td><%= f.text_field :end_datetime, :size => '15' %></td>
+  <td><%= f.text_field :start_time, :size => '6', :value => I18n.l(Time.local(0)) %></td>
+  <td><%= f.text_field :end_time, :size => '6', :value => I18n.l(Time.local(0) + 23.hours + 59.minutes) %></td>
+</tr>
+<tr><td colspan="4">
+<table align="right">
+<tr>
+      <th><%= SlideTimer.human_attribute_name :weekday_1 %></th>
+      <th><%= SlideTimer.human_attribute_name :weekday_2 %></th>
+      <th><%= SlideTimer.human_attribute_name :weekday_3 %></th>
+      <th><%= SlideTimer.human_attribute_name :weekday_4 %></th>
+      <th><%= SlideTimer.human_attribute_name :weekday_5 %></th>
+      <th><%= SlideTimer.human_attribute_name :weekday_6 %></th>
+      <th><%= SlideTimer.human_attribute_name :weekday_0 %></th>
+</tr>
+<tr>
+      <td><%= f.check_box :weekday_1 %></td>
+      <td><%= f.check_box :weekday_2 %></td>
+      <td><%= f.check_box :weekday_3 %></td>
+      <td><%= f.check_box :weekday_4 %></td>
+      <td><%= f.check_box :weekday_5 %></td>
+      <td><%= f.check_box :weekday_6 %></td>
+      <td><%= f.check_box :weekday_0 %></td>
+</tr>
+</table>
+</td></tr>
+<tr>
+    <td colspan="2"><%= f.submit %></td>
+</tr>

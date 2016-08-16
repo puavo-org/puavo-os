@@ -1,0 +1,162 @@
+# Sample localization file for English. Add more files in this directory for other locales.
+# See http://github.com/svenfuchs/rails-i18n/tree/master/rails%2Flocale for starting points.
+
+en:
+  time:
+    formats:
+      default: "%I:%M %p"
+      datetime: "%m/%d/%Y %I:%M %p"
+  value_true: true
+  value_false: false
+  display_non_active_body: Activate the display from the management interface and set to show channel
+  confirm: Are you sure?
+  flash:
+    actions:
+      create:
+        success: "%{resource_name} was successfully created."
+      update:
+        success: "%{resource_name} was successfully updated."
+      destroy:
+        success: "%{resource_name} was successfully destroyed."
+        error: "%{resource_name} could not be destroyed."
+    user_sessions:
+      create:
+        success: Login successful!
+  activerecord:
+    attributes:
+      channel:
+        slide_delay: Slide delay (seconds)
+      slide_timer:
+        start_datetime: Start date and time
+        end_datetime: End date and time
+        start_time: Start showing at
+        end_time: Stop showing at
+        weekday_0: Su
+        weekday_1: Mo
+        weekday_2: Tu
+        weekday_3: We
+        weekday_4: Th
+        weekday_5: Fr
+        weekday_6: Sa
+    errors:
+      models:
+        channel:
+          attributes:
+            slide_delay:
+              inclusion: Incorrect slide delay. The value should be between 2-600 seconds.
+  helpers:
+    submit:
+      create: "Create a %{model}"
+      update: "Save"
+      user_session:
+        create: Login
+  links:
+    edit: Edit
+    back: Back
+    show: Show
+    slides: Slides
+    destroy: Destroy
+    new_channel: New Channel
+    new_slides: New Slide
+    logout: Logout
+    channels: Channels
+    displays: Displays
+    preview_channel_slides: Preview
+    or_cancel: or
+    cancel: Cancel
+    back_to_slides: Back
+    back_to_channels: Back
+    next: Next
+    previous: Previous
+    new_display: New Display
+    management: Management
+    slide_timers: Slide timers
+    active: Activate slide
+    deactive: Make slide inactive
+    digital_signage: Digital Signage
+    admins: Admins
+  channels:
+    show:
+      name: Name
+    new:
+      title: New channel
+    index:
+      title: Listing channels
+      confirm: Are you sure?
+    edit:
+      title: Editing channel
+    form:
+      gold: Gold
+      green: Green
+      cyan: Cyan
+  slides:
+    show:
+      confirm: Are you sure?
+      status_title: Slide status
+    index:
+      title: Listing slides
+      confirm: Are you sure?
+      drag: [Drag]
+    new:
+      title: New slide
+    template:
+      select_slide_template: Select slide type
+      link_text: Text only
+      link_right_image: Image on right
+      link_left_image: Image on left
+      link_only_image: Image only
+      link_web_page: Web page
+    edit:
+      title: Editing slide
+    template_web_page:
+      label_of_body: External Web page URL
+    status:
+      slide_is_active: Slide is currently active
+      slide_is_not_active: Slide is currently inactive and it is not shown in the presentations
+  displays:
+    show:
+      channel_not_selected: Not selected
+    edit:
+      title: Editing display
+    new:
+      title: New display
+    index:
+      title: Listing displays
+  slide_timers:
+    list:
+      empty: not defined
+  school_admin_groups:
+    index:
+      access_group_title: Administration groups
+      access_group_description: Users in the following groups is administrator on this school
+      group_name: Group name
+      group_abbreviation: Group abbreviation
+      school: School
+      add: Add
+      delete: Delete
+      other_group_title: Other groups of organisation
+  authlogic:
+    error_messages:
+      login_blank: can not be blank
+      login_not_found: is not valid
+      login_invalid: should use only letters, numbers, spaces, and .-_@ please.
+      consecutive_failed_logins_limit_exceeded: Consecutive failed logins limit exceeded, account is disabled.
+      email_invalid: should look like an email address.
+      password_blank: can not be blank
+      password_invalid: is not valid
+      not_active: Your account is not active
+      not_confirmed: Your account is not confirmed
+      not_approved: Your account is not approved
+      no_authentication_details: You did not provide any details for authentication.
+    attributes:
+      user_session:
+        login: Login
+        password: password
+  layouts:
+    application:
+      logged_in_as: Logged in as
+      tools: Tools
+      schools: Schools
+  notices:
+    login_required: You must be logged in to access this page
+    not_access: You are not allowed to access this action.

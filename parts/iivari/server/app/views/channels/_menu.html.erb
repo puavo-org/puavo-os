@@ -1,0 +1,18 @@
+<ul id="jsddm">
+  <li <%= controller_name.match(/channels|slides/) ? "class='current'" : "" %>>
+  <%= link_to t('links.channels'), channels_path(@school.puavo_id) %>
+  <ul class="submenu">
+    <% channels.each do |channel| %>
+    <li><%= link_to channel.name, channel_slides_path(@school.puavo_id, channel) %></li>
+    <% end %>
+  </ul>
+  </li>
+  <li <%= controller_name.match(/displays/) ? "class='current'" : "" %>>
+    <%= link_to t('links.displays'), displays_path %>
+  </li>
+  <% permitted_to? :index, :school_admin_groups do %>
+  <li <%= controller_name.match(/school_admin_groups/) ? "class='current'" : "" %>>
+    <%= link_to t('links.admins'), school_admin_groups_path %>
+  </li>
+  <% end %>
+</ul>

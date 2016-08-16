@@ -1,0 +1,12 @@
+<h2><%= t('.select_slide_template') %>:</h2>
+
+<%= link_to image_tag("only_text.png", :title => t('.link_text')), new_channel_slide_url(:template => "only_text"), :title => t('.link_text') %>
+<%= link_to image_tag("right_image.png", :title => t('.link_right_image')), new_channel_slide_url(:template => "right_image"), :title => t('.link_right_image') %>
+<%= link_to image_tag("left_image.png", :title => t('.link_left_image')), new_channel_slide_url(:template => "left_image"), :title => t('.link_left_image') %>
+<%= link_to image_tag("only_image.png", :title => t('.link_only_image')), new_channel_slide_url(:template => "only_image"), :title => t('.link_only_image') %>
+<%= link_to( image_tag("web_page.png",
+             :title => t('.link_web_page')),
+             new_channel_slide_url(:template => "web_page"),
+             :title => t('.link_web_page') ) %>
+
+<div><%= link_to t('links.back_to_slides'), channel_slides_path(@channel) %></div>
