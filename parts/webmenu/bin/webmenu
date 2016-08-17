@@ -1,0 +1,202 @@
+#!/bin/sh
+
+if [ "$WM_HOME" = "" ]; then
+    export WM_HOME="$HOME/.config/webmenu"
+fi
+
+
+set -eu
+
+
+help(){
+    echo "
+    Usage: $(basename $0) [options]
+
+    Start Webmenu
+
+    -b --daemonize  Daemonize the process to background.
+                    Cannot be used with --no-mon
+    --no-mon        Disable automatic restarting with mon
+    --log           Enable fluentd logging
+    --feedback      Enable feedback. Implies --log
+    -x --use-xdg    Generating menu content using the Desktop Menu Specification
+    --webkiosk      Enable webkiosk mode.
+    -s --stop       Stop the running Webmenu process
+    -r --restart    Restart while preserving environment variables. Works only when mon is used.
+    -n --no-build   Skip asset building in development mode
+    --first-run     Remove existing pid files if any. Use when starting from login script
+
+    Hacking options
+
+    -d --devtools   Start with developer tools
+    --test          Run tests
+
+    Environment variables
+
+    WM_MENU_JSON_PATH   Colon separated list of paths where to search for menu.json
+    WM_CONFIG_JSON_PATH Colon separated list of additional paths where to
+                        search for config.json. By default config.json is read
+                        from
+                            $HOME/.config/webmenu/config.json
+                            /etc/webmenu/config.json
+                            /opt/webmenu/config.json
+    WM_HOME             Webmenu config home
+    WM_FEEDBACK_ACTIVE  Activate anonymous usage statistics
+    WM_WEBKIOSK_MODE    Activate webkiosk mode
+    "
+}
+
+mkdir -p $WM_HOME
+# Save startup time to a file to log start up times
+date +%s > "$WM_HOME/started"
+
+# Webmenu installation path
+if [ -f package.json ]; then
+    export PATH="$(pwd)/bin:$PATH"
+    WM_PATH=$(pwd)
+    build_assets=true
+    echo "Development environment detected."
+else
+    build_assets=false
+    WM_PATH="/opt/webmenu"
+fi
+
+. webmenu-env
+
+# Remove old useless socket files. Webmenu has changed the socket file name few
+# times...
+for file in "$WM_HOME/"*; do
+    if [ -S "$file" ]; then
+        rm "$file"
+    fi
+done
+
+# https://github.com/visionmedia/mon
+mon_args=""
+mon_pidfile="$WM_HOME/mon.pid"
+nw_pidfile="$WM_HOME/nw.pid"
+
+wm_args=""
+
+use_mon=true
+use_xdg=false
+stop_wm=false
+
+
+while true; do
+    case "${1:-}" in
+        -h|--help)
+            help && exit 0
+        ;;
+        -b|--daemon|--daemonize)
+            # Enable error reporting to fluentd only in daemon mode
+            mon_args="$mon_args --daemonize"
+            shift
+        ;;
+        -r|--restart)
+            kill $(cat $nw_pidfile)
+            exit 0
+        ;;
+        -d)
+            wm_args="$wm_args --devtools"
+            shift
+        ;;
+        --log)
+            export WM_FLUENTD_ACTIVE=true
+            shift
+        ;;
+        --feedback)
+            export WM_FLUENTD_ACTIVE=true
+            export WM_FEEDBACK_ACTIVE=true
+            shift
+        ;;
+        --webkiosk)
+            export WM_WEBKIOSK_MODE=true
+            shift
+        ;;
+        --no-mon)
+            use_mon=false
+            shift
+        ;;
+        -n|--no-build)
+            build_assets=false
+            shift
+        ;;
+        -x|--use-xdg)
+            use_xdg=true
+            shift
+        ;;
+        -s|--stop)
+            stop_wm=true
+            shift
+        ;;
+        --first-run)
+            rm -f "$mon_pidfile" "$nw_pidfile"
+            shift
+        ;;
+        "")
+            break
+        ;;
+        *)
+            wm_args="$wm_args $1"
+            shift
+        ;;
+    esac
+done
+
+# Kill previous webmenu if any
+if [ -f "$mon_pidfile" ]; then
+    kill $(cat $mon_pidfile) || true
+fi
+
+if $stop_wm; then
+    exit 0
+fi
+
+generated_menu_json="$WM_HOME/menu-generated.json"
+
+if $use_xdg; then
+    echo "Generating $generated_menu_json"
+    webmenu-xdg > "$generated_menu_json"
+else
+    rm -f "$generated_menu_json"
+fi
+
+if $build_assets; then
+    echo "Compiling i18n and CoffeeScript for node.js"
+    make assets
+fi
+
+cd $WM_PATH
+
+# Truncate log file to avoid excess disk usage
+if [ -f "$WM_LOG_FILE" ]; then
+    tail --lines 1000 "$WM_LOG_FILE" > "${WM_LOG_FILE}.tmp"
+    mv "${WM_LOG_FILE}.tmp" "$WM_LOG_FILE"
+fi
+
+
+
+echo "Starting webmenu from $WM_PATH"
+echo "Logging to $WM_LOG_FILE"
+
+restart_script="$(pwd)/bin/webmenu-on-restart"
+error_script="$(pwd)/bin/webmenu-on-error"
+
+
+set -x
+
+if $use_mon; then
+    exec mon $mon_args \
+        --log $WM_LOG_FILE \
+        --attempts 2 \
+        --mon-pidfile "$mon_pidfile" \
+        --pidfile "$nw_pidfile" \
+        --on-restart $restart_script \
+        --on-error $error_script \
+        "nw . $wm_args"
+else
+    echo $$ > "$nw_pidfile"
+    rm -f "$mon_pidfile"
+    exec nw . $wm_args
+fi

@@ -1,0 +1,213 @@
+#!/usr/bin/env python
+"""
+Generate Webmenu menu.json from freedesktop.org Desktop Menu Specification
+
+http://standards.freedesktop.org/menu-spec/latest/
+http://pyxdg.readthedocs.org/en/latest/index.html
+"""
+
+
+from __future__ import print_function
+
+import os
+import sys
+import json
+import base64
+import argparse
+from tempfile import NamedTemporaryFile
+from os import path
+
+import gtk
+from xdg import Menu
+from xdg.DesktopEntry import DesktopEntry
+from xdg.Exceptions import ParsingError
+
+SCRIPT_NAME = path.basename(__file__)
+DEBUG = False
+
+def d(*a):
+    "Print when --verbose is set"
+    if DEBUG:
+        print(*a, file=sys.stderr)
+
+
+def to_data_uri(filename):
+    """
+    Convert filename to png data uri
+
+    http://en.wikipedia.org/wiki/Data_URI_scheme
+    """
+    pixbuf = gtk.gdk.pixbuf_new_from_file(filename)
+    with NamedTemporaryFile() as tmp:
+        pixbuf.save(tmp.name, "png")
+        b64 = base64.b64encode(tmp.read())
+        return "data:image/png;base64," + b64
+
+def to_webmenu_format(icon):
+    "Convert gtk.IconInfo or filename string to a format understood by Webmenu"
+    if isinstance(icon, basestring):
+        full_icon_path = icon
+    else:
+        full_icon_path = icon.get_filename()
+
+    icon_name, ext = path.splitext(full_icon_path)
+    # node-webkit does not understand xpm files
+    if ext == ".xpm":
+        return to_data_uri(full_icon_path)
+
+    return full_icon_path
+
+
+
+class MenuJSON(object):
+
+    def __init__(self, menu_source, theme, **opts):
+        self._menu_source = menu_source
+        self._theme = theme
+        self._fallback_icon_name = opts["fallback_icon_name"]
+
+    def to_dict(self):
+        res = self._walk(self._menu_source, {
+            "items": []
+        })
+        return res["items"][0]
+
+    def to_json(self):
+        return json.dumps(
+            self.to_dict(),
+            sort_keys=True,
+            indent=2,
+        )
+
+    def get_icon(self, name, prefered_size=48):
+        "Get icon by name with prefered size"
+
+        icon = self._theme.lookup_icon(name, prefered_size, 0)
+        if icon:
+            return icon
+
+        sizes = self._theme.get_icon_sizes(name)
+        if sizes:
+            return self._theme.lookup_icon(name, max(sizes), 0)
+
+    def _get_fallback_icon(self):
+        icon = self.get_icon(self._fallback_icon_name)
+        if not icon:
+            raise Exception("Invalid fallback icon " + self._fallback_icon_name)
+        return icon
+
+
+    def _resolve_icon_path(self, raw_name):
+        icon_name, _ = path.splitext(raw_name)
+
+        # Just return if absolute path to a icon
+        if path.exists(raw_name):
+            return to_webmenu_format(raw_name)
+
+        # Otherwise look it up from the theme
+        if self._theme.has_icon(icon_name):
+            icon_ob = self.get_icon(icon_name)
+            if icon_ob:
+                return to_webmenu_format(icon_ob)
+            else:
+                d("WTF", icon_name, "exists but still not here?")
+
+        d("Using fallback icon", self._fallback_icon_name, "for", raw_name)
+        return to_webmenu_format(self._get_fallback_icon())
+
+
+    def _walk(self, menu, menu_json):
+        """
+        Walk xdg menu recursively to Webmenu menu.json format
+        """
+
+        if isinstance(menu, Menu.MenuEntry):
+            de = menu.DesktopEntry
+            menu_json["items"].append({
+                "type": "custom",
+                "name": de.getName(),
+                "description": de.getComment(),
+                "command": de.getExec().encode("utf-8"),
+                "osIconPath": self._resolve_icon_path(de.getIcon())
+            })
+            return menu_json
+
+        if isinstance(menu, Menu.Menu):
+            submenu = {
+                "type": "menu",
+                "name": menu.getName(),
+                "items": [],
+                "osIconPath": self._resolve_icon_path(menu.getIcon())
+            }
+
+            menu_json["items"].append(submenu)
+
+            for e in menu.getEntries():
+                self._walk(e, submenu)
+
+            return menu_json
+
+        d("Unknown menu item", menu)
+        return menu_json
+
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawTextHelpFormatter,
+        description="""
+        Generate Webmenu menu.json from freedesktop.org Desktop Menu Specification
+
+        http://standards.freedesktop.org/menu-spec/latest/
+
+        XDG_CONFIG_DIRS and XDG_MENU_PREFIX environment variables are used find
+        correct .menu file according to the specification.
+
+        Example:
+
+            {script} > ~/.config/webmenu/menu.json
+
+        Set LANGUAGE to generate menu for custom languages:
+
+            LANGUAGE=de_CH {script} > ~/.config/webmenu/menu.json
+
+        """.format(script=SCRIPT_NAME)
+    )
+
+    parser.add_argument("-v", "--verbose",
+        action="store_true",
+        help="Print debug information"
+    )
+
+    parser.add_argument("-t", "--theme",
+        help="Use custom theme"
+    )
+
+    parser.add_argument("-f", "--fallback",
+        default="gnome-terminal",
+        help="Fallback icon name for items with missing or invalid icon. Must exists in the current theme."
+    )
+
+    args = parser.parse_args()
+    global DEBUG
+    DEBUG = args.verbose
+
+    if args.theme:
+        icon_theme = gtk.IconTheme()
+        icon_theme.set_custom_theme(args.theme)
+    else:
+        icon_theme = gtk.icon_theme_get_default()
+
+    menu = Menu.parse()
+    d("Using menu file", menu.Filename)
+
+    menu_json = MenuJSON(
+        menu,
+        icon_theme,
+        fallback_icon_name=args.fallback
+    )
+
+    print(menu_json.to_json())
+
+
+main()

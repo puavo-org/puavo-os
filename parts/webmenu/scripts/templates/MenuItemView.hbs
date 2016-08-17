@@ -1,0 +1,37 @@
+<button class="delete">x</button>
+
+<div class="description" >
+  {{#if menu}}
+  <span class="arrow icon-up-bold"></span>
+  {{else}}
+  <span class="arrow icon-forward"></span>
+  {{/if}}
+  {{description}}
+</div>
+
+<div class="thumbnail">
+  {{#if cssIcon}}
+  <i class="cssIcon {{cssIcon}}"></i>
+  {{/if}}
+  {{#if osIconPath}}
+  <div clas="osIcon">
+    <img src="{{osIconPath}}">
+  </div>
+  {{/if}}
+  <h1 class="item-name" >
+    {{#unless useInstaller}}
+      {{i18nPick name}}
+    {{/unless}}
+
+    {{#if useInstaller}}
+      {{ i18n "menuitem.install" }} {{ i18nPick name }}
+    {{/if}}
+  </h1>
+</div>
+
+{{#if status}}
+<div class="inactiveNotify">
+{{ i18n "menuitem.slow-notification" }}
+</div>
+{{/if}}
+

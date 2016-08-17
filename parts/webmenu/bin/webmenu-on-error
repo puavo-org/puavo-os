@@ -1,0 +1,14 @@
+#!/bin/sh
+
+if [ "${WM_FLUENTD_ACTIVE:-}" = "" ]; then
+    exit 0
+fi
+
+zenity --title Menu --error --text "Sorry but the Menu has crashed :[
+
+Please contact support with the error ids below and we will fix it! :]
+
+Error ids:
+
+$(tail --lines=2 "$WM_HOME/crash_uuids")
+"

@@ -1,0 +1,21 @@
+{
+  "author": "Esa-Matti Suuronen <esa-matti.suuronen@opinsys.fi>",
+  "name": "gnu-gettext",
+  "description": "Node.JS bindings to GNU Gettext",
+  "homepage": "http://github.com/opinsys/node-gnu-gettext/",
+  "bugs": {
+    "url": "https://github.com/opinsys/node-gnu-gettext/issues"
+  },
+  "version": "0.1.0",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/opinsys/node-gnu-gettext.git"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "ffi": ""
+  }
+}

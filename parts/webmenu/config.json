@@ -1,0 +1,163 @@
+{
+  "dotDesktopSearchPaths": [
+    "/usr/local/share/applications",
+    "/usr/share/applications",
+    "/usr/share/applications/kde4"
+  ],
+  "iconSearchPaths": [
+    "/usr/share/app-install/icons",
+    "/usr/share/pixmaps",
+    "/usr/share/icons/hicolor/128x128/apps",
+    "/usr/share/icons/Neu/128x128/categories",
+    "/usr/share/icons/Faenza/categories/64",
+    "/usr/share/icons/Faenza/apps/96"
+  ],
+  "fallbackIcon":  "/usr/share/icons/Gion/128x128/apps/gnome-terminal.png",
+  "settingsCMD": {
+    "type": "desktop",
+    "command": ["gnome-control-center"],
+    "name": {
+      "fi": "Järjestelmäasetukset",
+      "en": "System Settings",
+      "sv": "Systeminställningar",
+      "de": "Systemeinstellungen"
+    },
+    "osIconPath": "/usr/share/icons/Faenza/categories/96/applications-system.png"
+  },
+  "profileCMD": {
+    "type": "webWindow",
+    "url": "https://{{puavoDomain}}/users/profile/edit",
+    "name": {
+      "fi": "Profiili",
+      "en": "Profile",
+      "sv": "Profil",
+      "de": "Profil"
+    },
+    "osIconPath": "/usr/share/icons/Faenza/emblems/96/emblem-personal.png"
+  },
+  "supportCMD": {
+    "type": "web",
+    "url": "http://tuki.opinsys.fi",
+    "name": {
+      "fi": "Tukisivusto",
+      "en": "Support",
+      "sv": "Stöd",
+      "de": "Support"
+    },
+    "osIconPath": "/usr/share/icons/Faenza/status/96/dialog-question.png"
+  },
+  "passwordCMD": { 
+    "type": "webWindow",
+    "url": "https://{{puavoDomain}}/users/password/own",
+    "osIconPath": "/usr/share/icons/Faenza/emblems/96/emblem-readonly.png",
+    "name": {
+      "fi": "Salasana",
+      "en": "Password",
+      "sv": "Lösenord",
+      "de": "Passwort"
+      }
+  },
+  "shutdownCMD": {
+      "type": "custom",
+      "osIconPath": "/usr/share/icons/Faenza/actions/96/system-shutdown.png",
+      "name": {
+          "en": "Shutdown",
+          "fi": "Sammuta",
+          "sv": "Stäng av",
+          "de": "Abscahlten"
+      },
+      "command": [
+          "dbus-send",
+          "--system",
+          "--print-reply",
+          "--dest=org.freedesktop.ConsoleKit",
+          "/org/freedesktop/ConsoleKit/Manager",
+          "org.freedesktop.ConsoleKit.Manager.Stop"
+      ],
+      "confirm": true
+  },
+  "restartCMD": {
+      "type": "custom",
+      "osIconPath": "/usr/share/icons/Faenza/apps/96/system-restart.png",
+      "name": {
+          "en": "Restart",
+          "fi": "Käynnistä uudelleen",
+          "sv": "Starta om",
+          "de": "Neustarten"
+      },
+      "command": [
+          "dbus-send",
+          "--system",
+          "--print-reply",
+          "--dest=org.freedesktop.ConsoleKit",
+          "/org/freedesktop/ConsoleKit/Manager",
+          "org.freedesktop.ConsoleKit.Manager.Restart"
+      ],
+      "confirm": true
+  },
+  "sleepCMD": {
+      "type": "custom",
+      "osIconPath": "/usr/share/icons/Faenza/apps/96/system-suspend.png",
+      "name": {
+          "en": "Sleep",
+          "fi": "Unitila",
+          "sv": "Strömsparläge",
+          "de": "Schlafen"
+      },
+      "command": [
+          "dbus-send",
+          "--system",
+          "--print-reply",
+          "--dest=org.freedesktop.login1",
+          "/org/freedesktop/login1",
+          "org.freedesktop.login1.Manager.Suspend",
+          "boolean:true"
+      ]
+  },
+  "hibernateCMD": [
+    "dbus-send",
+    "--system",
+    "--print-reply",
+    "--dest=org.freedesktop.UPower",
+    "/org/freedesktop/UPower",
+    "org.freedesktop.UPower.Hibernate"
+  ],
+  "logoutCMD": {
+      "type": "custom",
+      "osIconPath": "/usr/share/icons/Faenza/actions/96/gnome-logout.png",
+      "name": {
+          "en": "Logout",
+          "fi": "Kirjaudu ulos",
+          "sv": "Logga ut",
+          "de": "Abmelden"
+      },
+      "command": [
+          "dbus-send",
+          "--session",
+          "--type=method_call",
+          "--print-reply",
+          "--dest=org.gnome.SessionManager",
+          "/org/gnome/SessionManager",
+          "org.gnome.SessionManager.Logout",
+          "uint32:1"
+      ],
+      "confirm": true
+  },
+  "lockCMD": {
+      "type": "custom",
+      "osIconPath": "/usr/share/icons/Faenza/actions/96/system-lock-screen.png",
+      "name": {
+          "en": "Lock Screen",
+          "fi": "Lukitse näyttö",
+          "sv": "Lås skärmen",
+          "de": "Bildschirm sperren"
+      },
+      "command": [
+          "gnome-screensaver-command",
+          "--lock"
+      ]
+  },
+  "feedCMD": "puavo-feed",
+  "maxFavorites": 5,
+  "port": 1337
+}

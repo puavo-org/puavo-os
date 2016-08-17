@@ -1,0 +1,61 @@
+
+
+@import "sizes"
+
+.bb-menu-layout
+  &,
+  .sidebar,
+  .footer,
+  .main-area,
+  .header,
+  .border
+    position absolute
+
+  top borderMargin
+  left borderMargin
+  right borderMargin
+  bottom borderMargin
+
+  .main-area,
+  .footer
+    right sideBarWidth
+
+  .main-area
+    disable-select()
+    left borderMargin
+    top 90px
+    bottom footerHeight
+
+  .search-container
+    disable-select()
+    top topMargin
+    position absolute
+    right sideBarWidth + contentRightMargin
+
+  .folder-title-container
+    position: absolute;
+    top headerHeight
+    left: 20px;
+    z-index: 10;
+    right: 320px;
+    height: 40px;
+
+  .border
+    width 1px
+    background-color black
+    top 0px
+    bottom 0px
+    right sideBarWidth
+
+
+  .sidebar
+    width sideBarWidth
+    top borderMargin
+    bottom borderMargin
+    right borderMargin
+
+  .footer
+    disable-select()
+    height footerHeight
+    left borderMargin
+    bottom borderMargin

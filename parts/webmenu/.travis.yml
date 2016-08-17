@@ -1,0 +1,14 @@
+language: node_js
+node_js:
+  - 0.10
+install: "make"
+script: "extra/travis-ci-run.sh"
+notifications:
+  email:
+    - dev@opinsys.fi
+    - esa-matti@suuronen.org
+  irc: "irc.freenode.org#opinsys"
+branches:
+  only:
+    - master
+

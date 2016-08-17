@@ -1,0 +1,23 @@
+#!/bin/sh
+#
+# Download user photo from the puavo api server. Save it to the user's home directory
+# (.config/webmenu/user-photo.jpg).
+#
+
+[ "$1" = "--help" -o "$1" = "-h" ] && {
+    echo "
+usage: puavo-download-user-photo
+
+Download and save user photo to the home directory
+$HOME/.config/webmenu/user-photo.jpg
+
+--help       display this help and exit
+
+"
+} && exit 0
+
+set -eu
+
+curl --fail -o $HOME/.config/webmenu/user-photo.jpg \
+  --negotiate --delegation always --user : \
+  $(puavo-resolve-api-server)/v3/users/$USER/profile.jpg

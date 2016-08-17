@@ -1,0 +1,13 @@
+
+export WM_HOME=$HOME/.config/webmenu
+
+# Webmenu spawn socket path. Create unique for each X instance
+export WM_SOCK="$WM_HOME/spawn.$(hostname)-$(echo $DISPLAY | sed -r s/[.][0-9]*$//).sock"
+
+if [ "${XDG_RUNTIME_DIR:-}" != "" ]; then
+    export WM_SOCK="$XDG_RUNTIME_DIR/webmenu-spawn.sock"
+fi
+
+# Log file for the current Webmenu instance
+export WM_LOG_FILE="$WM_HOME/current.log"
+

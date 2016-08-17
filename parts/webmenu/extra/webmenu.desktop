@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Name=Webmenu Start
+Comment=A desktop menu application
+Exec=webmenu --log --first-run
+Terminal=false
+Type=Application
+Icon=webmenu
+Categories=Utility;
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
+X-GNOME-Autostart-Phase=Initialization

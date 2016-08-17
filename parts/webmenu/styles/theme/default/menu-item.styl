@@ -1,0 +1,29 @@
+
+// Default theme
+
+@import "colors"
+
+.bb-menu-item
+  border-radius 5px
+
+  &.type-app:hover, &.type-hover-btn:hover
+    background-color itemHovercolor
+
+  &.selectHighlight
+    background-color itemHovercolor
+
+.bb-favorites .bb-menu-item .delete
+  background-color transparent
+  border 2px solid #DDD
+  color black
+  border 0px
+  font-size 18px
+  font-weight bold
+  margin-top 5px
+  margin-right 5px
+  width 30px
+  height 30px
+  &:hover
+    cursor pointer
+    border-radius 20px
+    background-color darken(itemHovercolor, 30%)

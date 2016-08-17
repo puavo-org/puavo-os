@@ -1,0 +1,47 @@
+#!/usr/bin/ruby1.9.1
+
+require "json"
+require "net/http"
+require "uri"
+
+if not ENV["WM_FLUENTD_ACTIVE"]
+  puts "WM_FLUENTD_ACTIVE not set. Not sending crash report."
+  exit 0
+end
+
+`notify-send --urgency=critical "The Menu crashed" "restarting..."`
+
+uuid = (0...25).map{ ('a'..'z').to_a[rand(26)] }.join
+record = {
+  :msg => "unhandled exception",
+  :capturedFrom => "wrapper script",
+  :error => {
+    :uuid => uuid,
+    :message => "webmenu crash"
+  },
+}
+
+puts "Crash! Error uuid: #{ uuid }"
+
+record[:error][:log] = `tail --lines=50 #{ ENV["WM_LOG_FILE"] }`.split("\n")
+
+
+res = Net::HTTP.post_form(
+  URI("http://127.0.0.1:8888/webmenu"),
+  :json => record.to_json
+)
+
+if res.code != "200"
+  puts "Bad HTTP Response #{ res.code.inspect }: #{ res.body }"
+else
+  puts "Error report sent ok"
+end
+
+File.open(ENV["WM_HOME"] + "/crash_uuids", "a") do |f|
+  f.puts(uuid)
+end
+
+puts "Sleeping for 5s"
+sleep 5
+
+

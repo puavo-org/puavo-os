@@ -1,0 +1,48 @@
+
+@import "sizes"
+
+.bb-sidebar
+
+  .logo
+    position absolute
+    bottom 5px
+    right 5px
+
+  .settings-wrapper
+    disable-select()
+    width 100%
+
+  .settings-container
+    overflow auto
+    width 85% // shitty magic number
+    margin-top 10px
+    margin-left auto
+    margin-right auto
+    .bb-menu-item
+      display inline-block
+      width 50%
+
+  .profile
+    background-color #dfd7cf
+    padding 0px
+    margin 0px
+    line-height 0px
+    height headerHeight
+    cursor pointer
+
+    img
+      vertical-align middle
+      height 100%
+
+    span
+      padding 0px 0px 0px 10px
+
+
+.bb-profile .edit-action
+  display none
+  color blue
+  font-size small
+.bb-profile :hover .edit-action
+  display inline
+
+

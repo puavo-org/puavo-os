@@ -1,0 +1,58 @@
+<!doctype html>
+<html class=thin-client >
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>Webmenu</title>
+    <script>
+      (function() {
+        var gui = require('nw.gui');
+        var Window = gui.Window.get();
+
+        // node-webkit boot up starts here.
+        if (gui.App.argv.indexOf("--test") !== -1) {
+           window.location = "tests.html";
+           return;
+        }
+        if (gui.App.argv.indexOf("--devtools") !== -1) {
+          Window.showDevTools();
+        }
+
+        // Prevent any links from opening inside the node-webkit window. We
+        // will handle these manually.
+        // https://github.com/rogerwang/node-webkit/wiki/Window#new-win-policy
+        Window.on("new-win-policy", function(frame, url, policy) {
+          policy.ignore();
+        });
+
+        console.log("It's now " + new Date());
+        require("./lib/logStartTime")("plain node-webkit started");
+
+        var scripts = ["i18n/en/i18n.js"];
+
+        // English is always loaded, but if user has prefers another language load
+        // that too. It will nicely override english if it loads and silently
+        // fallbacks to english if missing
+        window.LANG = window.process.env.i18n || navigator.language.slice(0, 2)
+        if (window.LANG !== "en") {
+          scripts.push("i18n/" + window.LANG + "/i18n.js");
+        }
+        scripts.push("bundle.js");
+
+        window.nodejs = require("./lib/native")(gui, Window);
+
+        scripts.forEach(function(src) {
+          var script = document.createElement('script');
+          script.src = src;
+          script.async = false;
+          document.head.appendChild(script);
+        });
+
+    }())
+    </script>
+    <link rel="stylesheet" href="styles/vendor/font/iconfont.css">
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    Loading...
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Mocha Tests</title>
+  <link rel="stylesheet" href="node_modules/mocha/mocha.css" />
+  <style type="text/css" media="all">
+    html {
+      border: 1px solid black;
+    }
+    #docs {
+      font-size: small;
+    }
+  </style>
+</head>
+<body>
+  <a href="#" onclick="window.location.reload()">Restart</a>
+  <div id=docs>
+    <h1>Docs</h1>
+    <ul>
+      <li><a href="http://visionmedia.github.com/mocha/">Mocha</a></li>
+      <li><a href="http://chaijs.com/api/bdd/">Chai assertions</a></li>
+      <li><a href="http://chaijs.com/plugins/chai-jquery">Chai jQuery</a></li>
+    </ul>
+  </div>
+  <div id="mocha"></div>
+
+  <script>
+    (function() {
+      var gui = window.require('nw.gui');
+      if (gui.App.argv.indexOf("--exit") !== -1) {
+        var p = window.process;
+        window.EXIT = function(code) {
+          p.exit(code);
+        }
+      }
+      else {
+        var win = gui.Window.get();
+        if (win) {
+          win.show()
+          win.showDevTools()
+        }
+      }
+    }());
+  </script>
+
+  <script src="i18n/en/i18n.js"></script>
+  <script src="node_modules/mocha/mocha.js"></script>
+  <script src="scripts/vendor/jquery.js"></script>
+  <script src="scripts/vendor/tests/chai.js"></script>
+  <script src="scripts/vendor/tests/chai-jquery.js"></script>
+  <script src="scripts/vendor/tests/chai-spies.js"></script>
+
+  <script src="scripts/tests/bundle.js"></script>
+
+  <a href="#" onclick="window.location.reload()">Restart</a>
+  <!-- <script>document.write('<script src="http://' -->
+  <!-- + (location.host || 'localhost').split(':')[0] -->
+  <!-- + ':35729/livereload.js"></' -->
+  <!-- + 'script>')</script> -->
+</body>
+</html>

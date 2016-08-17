@@ -1,0 +1,9 @@
+{{#unless isTab}}
+<a href="#" class="arrow">
+  <img alt=back src="file:///usr/share/icons/Faenza/actions/48/back.png">
+</a>
+
+<span class="title">{{i18nPick name}}</span>
+{{/unless}}
+
+<span class="description {{#if isTab}}no-name{{/if}}">{{i18nPick description}}</span>

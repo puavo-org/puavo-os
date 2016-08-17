@@ -1,0 +1,125 @@
+
+width = 150px
+height = 110px
+iconSize = 50px
+
+
+.delete
+  display none
+
+.bb-favorites .bb-menu-item:hover .delete
+  position absolute
+  display block
+  float right
+  right 0px
+
+
+
+.bb-menu-item
+  cursor pointer
+  position relative
+
+
+  word-wrap break-word
+  overflow hidden
+
+  width width
+  height height
+
+  .osIcon, .cssIcon
+    display block
+    clear both
+    margin auto 0
+
+  img
+    height 45px
+
+  .thumbnail
+    margin-top 22px
+
+  .cssIcon
+    font-size iconSize
+
+  .item-name
+    width 128px
+    font-size 12px
+    font-weight normal
+    margin 0 auto
+
+  .thumbnail
+    text-align center
+
+  .description
+    display none
+
+  &.selectHighlight
+    background-color red
+
+  &.inactive
+    .thumbnail
+      opacity 0.3
+
+  .inactiveNotify
+    display none
+    position absolute
+    top 0px
+    left 0px
+    margin-top 10px
+    text-align center
+    color white
+
+
+  &.type-menu
+    background-repeat no-repeat
+    background-image url(theme/default/folder.png)
+    background-size 100% 100%
+
+  &.type-menu:hover
+    background-image url(theme/default/folder-dark.png)
+
+
+.rotate-loading
+  -webit-transition-timing-function: none
+  -webkit-animation-name rotate
+  -webkit-animation-duration 0.8s
+  -webkit-animation-iteration-count 10
+
+
+@keyframes rotate {
+
+  0% {
+    -webkit-transform: rotate(0deg)
+  }
+
+  100% {
+    -webkit-transform: rotate(1080deg)
+  }
+}
+
+
+// Use only if env animate=1 is set
+.animate .bb-menu-item.type-menu:hover
+    -webkit-animation-name open-folder
+    -webkit-animation-duration 0.5s
+    -webkit-animation-iteration-count 1
+    -webkit-animation-fill-mode forwards
+
+@keyframes open-folder {
+
+  0% {
+    -webkit-transform: matrix3d(
+            1, 0, 0, 0,
+            0, 1, 0, 0.000,
+            0, 0, 1, 0,
+            0, 0, 0, 1);
+  }
+
+  100% {
+    -webkit-transform: matrix3d(
+            1, 0, 0, 0,
+            0, 1, 0, 0.003,
+            0, 0, 1, 0,
+            0, 10, 0, 1);
+  }
+
+}
