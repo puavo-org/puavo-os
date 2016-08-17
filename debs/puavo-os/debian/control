@@ -14,6 +14,7 @@ Build-Depends: bundler | ruby-bundler,
  libsqlite3-dev,
  libssl-dev,
  libtool-bin,
+ nodejs-bundle (>= 0.10.22),
  npm,
  pkg-config,
  pyqt4-dev-tools,
@@ -472,4 +473,23 @@ Depends: ${misc:Depends},
 Description: simple drawing application
  Puavo Blackboard is a simple drawing application primarily targeted
  to big touch screen devices.
+ .
+
+Package: webmenu
+Architecture: all
+Depends: ${misc:Depends},
+ faenza-icon-theme,
+ fluentd,
+ gnome-themes-standard,
+ libgettextpo0,
+ libnotify-bin,
+ netcat-openbsd, 
+ node-webkit (>= 0.8.5),
+ ruby,
+ socat,
+ visionmedia-mon,
+ wmctrl,
+ zenity
+Description: Webmenu
+ Next generation desktop menu
  .
