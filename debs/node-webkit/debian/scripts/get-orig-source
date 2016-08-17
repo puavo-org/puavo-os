@@ -1,0 +1,15 @@
+#!/bin/sh
+
+set -eu
+
+upstream_version=$(dpkg-parsechangelog -S Version | sed -r -n 's/^(.*)-.*$/\1/p')
+upstream_dir=$(dpkg-parsechangelog -S Version | sed -r -n 's/^([0-9]+\.[0-9]+)\..*$/\1/p')
+orig_tarball="../node-webkit_${upstream_version}.orig.tar.gz"
+
+if [ ! -e "${orig_tarball}" ]; then
+    wget -O "${orig_tarball}.tmp" \
+         "https://s3.amazonaws.com/node-webkit/v${upstream_version}/node-webkit-v${upstream_version}-linux-x64.tar.gz"
+    mv "${orig_tarball}.tmp" "${orig_tarball}"
+fi
+
+tar -z -x -f "${orig_tarball}" --strip-components=1
