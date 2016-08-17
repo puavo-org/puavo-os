@@ -23,9 +23,6 @@ class kernels {
       "initrd.img-${kernel}-${subname}":
         kernel => $kernel, linkname => 'initrd.img', linksuffix => $linksuffix;
 
-      "nbi.img-${kernel}-${subname}":
-        kernel => $kernel, linkname => 'nbi.img', linksuffix => $linksuffix;
-
       "vmlinuz-${kernel}-${subname}":
         kernel => $kernel, linkname => 'vmlinuz', linksuffix => $linksuffix;
     }
