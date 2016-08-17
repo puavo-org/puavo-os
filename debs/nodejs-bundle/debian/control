@@ -7,7 +7,7 @@ Standards-Version: 3.9.6
 Homepage: http://nodejs.org/
 
 Package: nodejs-bundle
-Conflicts: node, nodejs, npm
+Conflicts: nodejs, npm
 Architecture: any
 Depends: ${misc:Depends}, openssl
 Description: node.js with npm
