@@ -35,35 +35,14 @@ class kernels {
     'jessie' => '3.16.0-4-amd64',
   }
 
-  $hwgen2_kernel = $lsbdistcodename ? {
-    'jessie' => $default_kernel,
-    default  => $default_kernel,
-  }
-
-  $hwgen3_kernel = $lsbdistcodename ? {
-    'jessie' => $default_kernel,
-    default  => $default_kernel,
-  }
-
-  $legacy_kernel = $lsbdistcodename ? {
-    'jessie' => $default_kernel,
-    default  => $default_kernel,
-  }
-
   $edge_kernel = $lsbdistcodename ? {
     # XXX disabled due to linux-base 4.3 dependency
     # 'jessie' => '4.6.0-0.bpo.1-amd64',
     default  => $default_kernel,
   }
 
-  $stable_kernel = $default_kernel
-
   all_kernel_links {
     'default': kernel => $default_kernel;
-    'edge':    kernel => $edge_kernel;
-    'hwgen2':  kernel => $hwgen2_kernel;
-    'hwgen3':  kernel => $hwgen3_kernel;
-    'legacy':  kernel => $legacy_kernel;
-    'stable':  kernel => $stable_kernel;
+    # 'edge':  kernel => $edge_kernel;
   }
 }

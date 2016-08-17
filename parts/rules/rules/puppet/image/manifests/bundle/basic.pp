@@ -5,7 +5,7 @@ class image::bundle::basic {
 	  disable_suspend_on_halt,
 	  disable_suspend_on_nbd_devices,
 	  disable_unclutter,
-          # kernels,                      # TJJR: do we need this for Debian?
+          kernels,
 	  # keyboard_hw_quirks,		  # XXX do we need this for Debian?
 	  lightdm,
 	  packages,
