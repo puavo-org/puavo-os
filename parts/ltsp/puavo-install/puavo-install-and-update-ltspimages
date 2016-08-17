@@ -545,9 +545,17 @@ lookup_size_from_cksums() {
 
 lookup_image_server_by_dns() {
   host -t SRV -W 5 "_imageserver._tcp.${puavo_domain}" \
-    | awk '$2 == "has" && $3 == "SRV" && $4 == "record" {
-        sub(/\.$/, "", $8)
-        printf "%s:%s", $8, $7
+    | awk -v puavo_domain="$puavo_domain" '
+        $2 == "has" && $3 == "SRV" && $4 == "record" {
+          sub(/\.$/, "", $8)
+
+          # check that $8 has puavo_domain-suffix
+          i = index($8, puavo_domain)
+          if (i == 0) { next }
+          if ($8 == (substr($8, 0, i-1) puavo_domain)) {
+            printf "https://%s:%s\n", $8, $7
+            exit(0)
+          }
       }'
 }
 
