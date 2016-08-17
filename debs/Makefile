@@ -24,7 +24,7 @@ clean:
 install-build-deps: install-build-deps-stage1 install-build-deps-stage2
 
 .PHONY: update-repo
-update-repo: $(_changes_files:%=pool/%)
+update-repo:
 	$(MAKE) Packages.gz
 
 Packages: $(wildcard pool/*.deb)
@@ -41,11 +41,11 @@ pool/%.changes: %.changes
 	../parts/devscripts/bin/do-changes -l pool '$<'
 
 .PHONY: stage1
-stage1: $(_changes_files_stage1)
+stage1: $(_changes_files_stage1:%=pool/%)
 	$(MAKE) update-repo
 
 .PHONY: stage2
-stage2: $(_changes_files_stage2)
+stage2: $(_changes_files_stage2:%=pool/%)
 	$(MAKE) update-repo
 
 .PHONY: install-build-deps-stage1

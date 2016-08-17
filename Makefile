@@ -81,12 +81,18 @@ rootfs-update: $(rootfs_dir) .ensure-head-is-release
 
 .PHONY: update
 update: /puavo-os
-	make install-build-deps
-	make debs
+	make -C debs install-build-deps-stage1
+	make -C debs stage1
 	sudo apt-get update
+
+	make -C debs install-build-deps-stage2
+	make -C debs stage2
+	sudo apt-get update
+
 	sudo apt-get dist-upgrade -V -y			\
 		-o Dpkg::Options::="--force-confdef"	\
 		-o Dpkg::Options::="--force-confold"
+
 	make apply
 
 .PHONY: apply
