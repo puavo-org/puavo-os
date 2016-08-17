@@ -1,0 +1,9 @@
+#!/bin/sh
+
+set -eu
+
+upstream_version=$(dpkg-parsechangelog -S Version | sed -r -n 's/^(.*)-.*$/\1/p')
+orig_tarball="../nodejs-bundle_${upstream_version}.orig.tar.gz"
+
+uscan --download-current-version
+tar -z -x -f "${orig_tarball}" --strip-components=1
