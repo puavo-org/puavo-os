@@ -92,7 +92,7 @@ rootfs-update: $(rootfs_dir) .ensure-head-is-release
 	sudo $(_systemd_nspawn_cmd) make -C /puavo-os apply
 
 .PHONY: apply
-apply:
+apply: /puavo-os
 	sudo puppet apply				\
 		--execute 'include image::allinone'	\
 		--logdest /var/log/puavo-os/puppet.log	\
