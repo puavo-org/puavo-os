@@ -82,14 +82,17 @@ rootfs-update: $(rootfs_dir) .ensure-head-is-release
 		--work-tree='$(rootfs_dir)/puavo-os'    \
 		reset --hard origin/HEAD
 
-	sudo $(_systemd_nspawn_cmd) make -C /puavo-os install-build-deps
-	sudo $(_systemd_nspawn_cmd) make -C /puavo-os debs
-	sudo $(_systemd_nspawn_cmd) sudo apt-get update
-	sudo $(_systemd_nspawn_cmd) sudo apt-get dist-upgrade -V -y	\
-		-o Dpkg::Options::="--force-confdef"			\
-		-o Dpkg::Options::="--force-confold"
+	sudo $(_systemd_nspawn_cmd) make -C /puavo-os update
 
-	sudo $(_systemd_nspawn_cmd) make -C /puavo-os apply
+.PHONY: update
+update: /puavo-os
+	make install-build-deps
+	make debs
+	sudo apt-get update
+	sudo apt-get dist-upgrade -V -y			\
+		-o Dpkg::Options::="--force-confdef"	\
+		-o Dpkg::Options::="--force-confold"
+	make apply
 
 .PHONY: apply
 apply: /puavo-os
