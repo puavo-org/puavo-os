@@ -1,3 +1,34 @@
+puavo-os (0.25.0+f0a9683b30cbff233ff20c7fe5eac0d1baba20df) trusty; urgency=medium
+
+  * Git(f0a9683b30cbff233ff20c7fe5eac0d1baba20df)
+  * make: build packages in stages when updating
+  * make: remove useless install-build-deps target
+  * debs: provide staged builds
+  * debs/puavo-os: add symlink to webmenu sources
+  * debs: add phony target for updating the repository
+  * make: separate update target from rootfs-update target
+  * make: require /puavo-os before applying
+  * debs: cleanup Makefile
+  * debs/puavo-os: remove conflicting build dependency: npm
+  * debs/nodejs-bundle: remove invalid conflict: node
+  * parts: adopt webmenu
+  * debs: add node-webkit
+  * debs/node-webkit: add script for downloading the upstream source
+  * debs: add packaging for node-webkit
+  * debs: add nodejs-bundle
+  * debs/nodejs-bundle: add script for downloading the upstream source
+  * debs: add initial packaging for nodejs-bundle
+  * Do not link nbi.img, kernel package does not contain it.
+  * Some node-module needs "libgettextpo0"-package.
+  * gnome-themes-extras is no more (on Debian Jessie), gnome-themes-
+    standard is. I do not know if that fits the bill, but let's try...
+  * Drop ruby version from webmenu dependencies.
+  * Build webmenu for Debian (Jessie).
+  * Enable "kernels"-module for Debian.  We need it at least for default
+    kernel links, perhaps more to come in the future.
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Wed, 17 Aug 2016 17:15:48 +0300
+
 puavo-os (0.24.0+58384b5be667c1077b71ecb242f0c729274b25bc) trusty; urgency=medium
 
   * Git(58384b5be667c1077b71ecb242f0c729274b25bc)
