@@ -15,6 +15,12 @@ clean:
 .PHONY: install-build-deps
 install-build-deps: $(_install_build_deps_targets)
 
+.PHONY: update-repo
+update-repo:
+	mkdir -p pool
+	apt-ftparchive packages pool >Packages
+	gzip -f -k Packages
+
 Packages: $(_changes_files:%=pool/%)
 	apt-ftparchive packages pool >$@
 
