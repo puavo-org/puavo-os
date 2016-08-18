@@ -6,18 +6,15 @@ class packages::purged {
 
   @package {
     # the functionality in these is not for our end users
-    [ 'gnome-media'			# broken software
 
     # slows down login considerably
     # (runs dpkg-query without speed considerations)
-    , 'im-config'
+    [ 'im-config'
 
     , 'linux-image-generic'             # we want to choose kernels explicitly
 
     , 'samba'				# not needed, gets into system as
 					# some recommendation through winbind
-
-    , 'synaptic'
 
     , 'tftpd-hpa'               # this is suggested by ltsp-server, but
                                 # we do not actually use tftpd on ltsp-server

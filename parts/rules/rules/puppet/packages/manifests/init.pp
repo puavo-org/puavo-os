@@ -80,7 +80,8 @@ class packages {
       tag => [ 'tag_basic', 'tag_debian', ];
 
     # 'indicator-power'			# XXX missing from Debian
-    [ 'cinnamon'
+    [ 'cinnamon-desktop-environment'
+    , 'cinnamon-doc'
     , 'indicator-session'
     , 'lightdm'
     , 'lightdm-gtk-greeter'
