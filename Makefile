@@ -22,7 +22,7 @@ help:
 	@echo '    container-shell             -  spawn shell from Puavo OS container'
 	@echo '    container-update            -  update Puavo OS container'
 	@echo '    local-update                -  update Puavo OS localhost'
-	@echo '    release                     -  make a release commit'
+	@echo '    push-release                -  make a release commit and publish it'
 	@echo
 	@echo 'Variables:'
 	@echo '    container_dir               -  set Puavo OS container directory [$(container_dir)]'
@@ -30,10 +30,6 @@ help:
 .PHONY: .ensure-head-is-release
 .ensure-head-is-release:
 	@parts/devscripts/bin/git-dch -f debs/puavo-os/debian/changelog -z
-
-.PHONY: release
-release:
-	@parts/devscripts/bin/git-dch -f debs/puavo-os/debian/changelog
 
 $(container_dir):
 	sudo debootstrap							\
@@ -95,5 +91,5 @@ local-update: /puavo-os
 .PHONY: push-release
 push-release:
 	EDITOR=.aux/drop-release-commits git rebase -i origin/master
-	$(MAKE) release
+	@parts/devscripts/bin/git-dch -f debs/puavo-os/debian/changelog
 	git push origin master:master
