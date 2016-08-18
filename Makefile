@@ -4,13 +4,13 @@
 $(shell sudo -k)
 
 # Configurable parameters
-rootfs_dir := /var/tmp/puavo-os/rootfs
+container_dir := /var/tmp/puavo-os/container
 
-_rootfs_bootstrap_mirror := $(shell				\
+_container_bootstrap_mirror := $(shell				\
 	awk '/^\s*deb .+ jessie main.*$$/ {print $$2; exit}'	\
 	/etc/apt/sources.list 2>/dev/null)
 
-_systemd_nspawn_cmd := systemd-nspawn -D '$(rootfs_dir)' --setenv=LANG=en_US.UTF-8
+_systemd_nspawn_cmd := systemd-nspawn -D '$(container_dir)' --setenv=LANG=en_US.UTF-8
 
 .PHONY: all
 all: debs
@@ -32,51 +32,51 @@ help:
 	@echo '    debs                        -  build all Debian packages'
 	@echo '    apply                       -  apply all rules to Puavo OS localhost'
 	@echo '    release                     -  make a release commit'
-	@echo '    rootfs-bootstrap            -  build Puavo OS root filesystem directory'
-	@echo '    rootfs-shell                -  spawn shell from Puavo OS root filesystem'
-	@echo '    rootfs-update               -  update Puavo OS root filesystem'
+	@echo '    container-bootstrap         -  build Puavo OS container'
+	@echo '    container-shell             -  spawn shell from Puavo OS container'
+	@echo '    container-update            -  update Puavo OS container'
 	@echo '    update                      -  update Puavo OS localhost'
 	@echo
 	@echo 'Variables:'
-	@echo '    rootfs_dir                  -  set Puavo OS root filesystem directory [$(rootfs_dir)]'
+	@echo '    container_dir               -  set Puavo OS container directory [$(container_dir)]'
 
 .PHONY: release
 release:
 	@parts/devscripts/bin/git-dch -f debs/puavo-os/debian/changelog
 
-$(rootfs_dir):
+$(container_dir):
 	sudo debootstrap							\
 		--arch=amd64							\
 		--include='make,devscripts,equivs,git,puppet-common,locales,    \
 			sudo,lsb-release'					\
 		--components=main,contrib,non-free				\
-		jessie '$(rootfs_dir).tmp' '$(_rootfs_bootstrap_mirror)'
-	sudo git clone . '$(rootfs_dir).tmp/puavo-os'
+		jessie '$(container_dir).tmp' '$(_container_bootstrap_mirror)'
+	sudo git clone . '$(container_dir).tmp/puavo-os'
 
 	sudo echo 'deb [trusted=yes] file:///puavo-os/debs /' \
-		>'$(rootfs_dir).tmp/etc/apt/sources.list.d/puavo-os.list'
+		>'$(container_dir).tmp/etc/apt/sources.list.d/puavo-os.list'
 
-	echo 'en_US.UTF-8 UTF-8' >'$(rootfs_dir).tmp/etc/locale.gen'
-	sudo systemd-nspawn -D '$(rootfs_dir).tmp' locale-gen
+	echo 'en_US.UTF-8 UTF-8' >'$(container_dir).tmp/etc/locale.gen'
+	sudo systemd-nspawn -D '$(container_dir).tmp' locale-gen
 
-	sudo mv '$(rootfs_dir).tmp' '$(rootfs_dir)'
+	sudo mv '$(container_dir).tmp' '$(container_dir)'
 
-.PHONY: rootfs-bootstrap
-rootfs-bootstrap: $(rootfs_dir)
+.PHONY: container-bootstrap
+container-bootstrap: $(container_dir)
 
-.PHONY: rootfs-shell
-rootfs-shell: $(rootfs_dir)
+.PHONY: container-shell
+container-shell: $(container_dir)
 	sudo $(_systemd_nspawn_cmd)
 
-.PHONY: rootfs-update
-rootfs-update: $(rootfs_dir) .ensure-head-is-release
-	sudo git                                        \
-		--git-dir='$(rootfs_dir)/puavo-os/.git' \
-		--work-tree='$(rootfs_dir)/puavo-os'    \
+.PHONY: container-update
+container-update: $(container_dir) .ensure-head-is-release
+	sudo git						\
+		--git-dir='$(container_dir)/puavo-os/.git'	\
+		--work-tree='$(container_dir)/puavo-os'		\
 		fetch origin
-	sudo git                                        \
-		--git-dir='$(rootfs_dir)/puavo-os/.git' \
-		--work-tree='$(rootfs_dir)/puavo-os'    \
+	sudo git						\
+		--git-dir='$(container_dir)/puavo-os/.git'	\
+		--work-tree='$(container_dir)/puavo-os'		\
 		reset --hard origin/HEAD
 
 	sudo $(_systemd_nspawn_cmd) make -C /puavo-os update
