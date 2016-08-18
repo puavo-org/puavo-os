@@ -97,7 +97,8 @@ install-dirs:
 
 install: install-dirs
 	cp -r GIT_COMMIT lib node_modules bin docs scripts vendor styles extra i18n *.js *.json *.md *.html $(DESTDIR)/opt/webmenu
-	cp -r extra/cinnamon/applets $(DESTDIR)$(datarootdir)/cinnamon/applets
+	cp -r extra/cinnamon/applets/* \
+                $(DESTDIR)$(datarootdir)/cinnamon/applets
 	$(INSTALL_DATA) -t $(DESTDIR)/etc/xdg/autostart \
 		extra/webmenu.desktop
 	$(INSTALL_DATA) -t $(DESTDIR)/etc/xdg/autostart \
