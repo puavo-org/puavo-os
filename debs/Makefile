@@ -56,6 +56,7 @@ install-build-deps-stage2: $(_install_build_deps_targets_stage2)
 
 .PHONY: $(_install_build_deps_targets)
 $(_install_build_deps_targets): .install-build-deps-%: %
+	sudo apt-get update
 	sudo mk-build-deps -i -r -t					\
 		'apt-get --yes --force-yes --no-install-recommends'	\
 		'$</debian/control'
