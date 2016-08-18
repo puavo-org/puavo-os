@@ -39,7 +39,7 @@ Packages.gz: Packages
 	gzip -f -k $<
 
 $(_changes_files):
-	./build '$@'
+	./build-changes '$@'
 
 pool/%.changes: %.changes
 	../parts/devscripts/bin/do-changes -l pool '$<'
