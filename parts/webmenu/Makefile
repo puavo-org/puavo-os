@@ -114,14 +114,14 @@ install: install-dirs
 		bin/puavo-download-user-photo
 
 uninstall:
-	rm $(DESTDIR)$(bindir)/webmenu-spawn
-	rm $(DESTDIR)$(bindir)/webmenu
-	rm $(DESTDIR)$(bindir)/puavo-download-user-photo
+	rm -f $(DESTDIR)$(bindir)/webmenu-spawn
+	rm -f $(DESTDIR)$(bindir)/webmenu
+	rm -f $(DESTDIR)$(bindir)/puavo-download-user-photo
 	rm -rf $(DESTDIR)/opt/webmenu
-	rm $(DESTDIR)$(datarootdir)/applications/webmenu-spawn.desktop
-	rm $(DESTDIR)/etc/xdg/autostart/webmenu.desktop
-	rm $(DESTDIR)/etc/xdg/autostart/download-user-photo.desktop
-	rm $(DESTDIR)$(datarootdir)/icons/webmenu.png
+	rm -f $(DESTDIR)$(datarootdir)/applications/webmenu-spawn.desktop
+	rm -f $(DESTDIR)/etc/xdg/autostart/webmenu.desktop
+	rm -f $(DESTDIR)/etc/xdg/autostart/download-user-photo.desktop
+	rm -f $(DESTDIR)$(datarootdir)/icons/webmenu.png
 
 test-nw:
 	bin/webmenu --test
