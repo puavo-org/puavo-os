@@ -46,7 +46,8 @@ release:
 $(rootfs_dir):
 	sudo debootstrap							\
 		--arch=amd64							\
-		--include=make,devscripts,equivs,git,puppet-common,locales,sudo	\
+		--include='make,devscripts,equivs,git,puppet-common,locales,    \
+			sudo,lsb-release'					\
 		--components=main,contrib,non-free				\
 		jessie '$(rootfs_dir).tmp' '$(_rootfs_bootstrap_mirror)'
 	sudo git clone . '$(rootfs_dir).tmp/puavo-os'
