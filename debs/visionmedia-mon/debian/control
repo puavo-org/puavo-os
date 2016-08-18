@@ -1,0 +1,16 @@
+Source: visionmedia-mon
+Section: utils
+Priority: optional
+Maintainer: Opinsys Developers <dev@opinsys.fi>
+Build-Depends: debhelper (>= 8)
+Standards-Version: 3.9.6
+
+Package: visionmedia-mon
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: super-simple monitoring program
+ visionmedia-mon spawned from the needlessly complex frustration that
+ tools like monit provide, with their awkward DSLs and setup. mon is
+ written in C, uses less than 400kb of memory, and is incredibly
+ simple to set up.
+ .

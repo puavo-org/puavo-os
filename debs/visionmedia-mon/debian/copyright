@@ -1,0 +1,12 @@
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: mon
+Source: mon <https://github.com/visionmedia/mon>
+
+Files: *
+Copyright: 2012 TJ Holowaychuk
+License: MIT
+
+Files: debian/*
+Copyright: 2016 Opinsys
+License:
+ GPLv2
