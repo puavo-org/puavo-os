@@ -1,0 +1,15 @@
+Source: fluentd
+Section: utils
+Priority: optional
+Maintainer: Opinsys Developers <dev@opinsys.fi>
+Build-Depends: debhelper (>= 8), ruby, ruby-dev
+Standards-Version: 3.9.6
+
+Package: fluentd
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ruby
+Description: tool to collect events and logs
+ "Fluentd" is an open-source tool to collect events and logs. 150+ plugins
+ instantly enables you to store the massive data for Log Search (like
+ ElasticSearch), Big Data Analytics, and Archiving (MongoDB, S3, Hadoop).
+ .

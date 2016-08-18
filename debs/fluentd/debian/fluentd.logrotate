@@ -1,0 +1,8 @@
+/var/log/fluentd/*.log {
+        daily
+        rotate 7
+        size=500M
+        copytruncate
+        compress
+        missingok
+}

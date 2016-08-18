@@ -1,0 +1,12 @@
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: fluentd
+Source: fluend <http://fluentd.org/>
+
+Files: *
+Copyright: 2011 FURUHASHI Sadayuki
+License: The Apache License, Version 2.0
+
+Files: debian/*
+Copyright: 2016 Opinsys <dev@opinsys.fi>
+License:
+ GPLv2
