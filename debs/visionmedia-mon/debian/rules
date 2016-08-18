@@ -4,5 +4,5 @@
 	dh  $@
 
 override_dh_auto_install:
-	mkdir -p '$(CURDIR)/debian/visionmedia-mon/usr/bin'
-	$(MAKE) install 'PREFIX=$(CURDIR)/debian/visionmedia-mon/usr'
+	$(MAKE) install prefix=/usr \
+		DESTDIR=$(CURDIR)/debian/visionmedia-mon
