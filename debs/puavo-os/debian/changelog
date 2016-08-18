@@ -1,3 +1,30 @@
+puavo-os (0.28.0~rc1+579715436dd8ccc3bd4f0981963328f35e7fb774) trusty; urgency=medium
+
+  * Git(579715436dd8ccc3bd4f0981963328f35e7fb774)
+  * make: add target for pushing release clean sets
+  * debs/visionmedia-mon: fix debian install rules
+  * debs/visionmedia-mon: add patch for fixing Makefile
+  * debs/visionmedia-mon: add script for downloading upstream sources
+  * debs: add visionmedia-mon 1.2.2
+  * debs: move auxillary build scripts to .aux/
+  * debs/fluentd: fix installation
+  * debs/fluentd: add script for downloading upstream sources
+  * debs: add fluentd 0.10.57
+  * Install a more complete cinnamon-desktop environment.  The packages
+    want to pull in "gnome-media"- and "synaptic"-packages as well, so
+    let them come.
+  * Show icons for home, trashcan and mounted volumes on the desktop.
+  * Use "timeline" as Alt+Tab -switcher style.
+  * Put these applications to panel-launcher: nemo, iceweasel/firefox,
+    chromium, google-chrome.
+  * Make cinnamon panel applet list more like the list in our previous
+    desktop.
+  * webmenu: do not install webmenu twice (I should learn the
+    alphabets).
+  * Add webmenu applets to cinnamon panel.
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Thu, 18 Aug 2016 16:22:32 +0300
+
 puavo-os (0.27.1+176e41d5bf8e51c2b8adf35d96c6639b2fd8eb5d) trusty; urgency=medium
 
   * Git(176e41d5bf8e51c2b8adf35d96c6639b2fd8eb5d)
