@@ -1,0 +1,29 @@
+Index: visionmedia-mon/Makefile
+===================================================================
+--- visionmedia-mon.orig/Makefile
++++ visionmedia-mon/Makefile
+@@ -1,4 +1,6 @@
+-PREFIX ?= /usr/local
++prefix = /usr/local
++bindir = $(prefix)/bin
++
+ SRC = src/mon.c deps/ms.c deps/commander.c
+ OBJ = $(SRC:.c=.o)
+ CFLAGS = -D_GNU_SOURCE -std=c99 -I deps/
+@@ -10,7 +12,8 @@ mon: $(OBJ)
+ 	$(CC) $< $(CFLAGS) -c -o $@
+ 
+ install: mon
+-	cp -f mon $(PREFIX)/bin/mon
++	install -D -m 755 -t $(DESTDIR)$(bindir) \
++		mon
+ 
+ uninstall:
+ 	rm -f $(PREFIX)/bin/mon
+@@ -18,4 +21,4 @@ uninstall:
+ clean:
+ 	rm -f mon $(OBJ)
+ 
+-.PHONY: clean install uninstall
+\ No newline at end of file
++.PHONY: clean install uninstall
