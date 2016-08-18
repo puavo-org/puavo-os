@@ -1,3 +1,11 @@
+puavo-os (0.25.1+5bc813356a597bcd5c477ec337816f93c79f49e1) trusty; urgency=medium
+
+  * Git(5bc813356a597bcd5c477ec337816f93c79f49e1)
+  * make: include lsb-release in boostrap phase
+  * debs/nodejs-bundle: add libwww-perl to build-deps
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Thu, 18 Aug 2016 08:55:07 +0300
+
 puavo-os (0.25.0+f0a9683b30cbff233ff20c7fe5eac0d1baba20df) trusty; urgency=medium
 
   * Git(f0a9683b30cbff233ff20c7fe5eac0d1baba20df)
