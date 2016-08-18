@@ -21,7 +21,6 @@ help:
 	@echo '    help                        -  display this help and exit'
 	@echo '    container-shell             -  spawn shell from Puavo OS container'
 	@echo '    container-update            -  update Puavo OS container'
-	@echo '    debs                        -  build all Debian packages'
 	@echo '    local-update                -  update Puavo OS localhost'
 	@echo '    release                     -  make a release commit'
 	@echo
@@ -31,10 +30,6 @@ help:
 .PHONY: .ensure-head-is-release
 .ensure-head-is-release:
 	@parts/devscripts/bin/git-dch -f debs/puavo-os/debian/changelog -z
-
-.PHONY: debs
-debs: .ensure-head-is-release
-	$(MAKE) -C debs
 
 .PHONY: release
 release:
