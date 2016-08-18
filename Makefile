@@ -29,13 +29,13 @@ help:
 	@echo
 	@echo 'Targets:'
 	@echo '    all                         -  build everything'
-	@echo '    debs                        -  build all Debian packages'
-	@echo '    local-apply                 -  apply all rules to Puavo OS localhost'
-	@echo '    release                     -  make a release commit'
 	@echo '    container-bootstrap         -  build Puavo OS container'
 	@echo '    container-shell             -  spawn shell from Puavo OS container'
 	@echo '    container-update            -  update Puavo OS container'
+	@echo '    debs                        -  build all Debian packages'
+	@echo '    local-apply                 -  apply all rules to Puavo OS localhost'
 	@echo '    local-update                -  update Puavo OS localhost'
+	@echo '    release                     -  make a release commit'
 	@echo
 	@echo 'Variables:'
 	@echo '    container_dir               -  set Puavo OS container directory [$(container_dir)]'
