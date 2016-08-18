@@ -206,3 +206,10 @@ name='XZoom'
 [org/gnome/settings-daemon/plugins/xrandr]
 active=true
 default-monitors-setup='do-nothing'
+
+[org/nemo/desktop]
+computer-icon-visible=false
+home-icon-visible=true
+network-icon-visible=false
+trash-icon-visible=true
+volumes-visible=true
