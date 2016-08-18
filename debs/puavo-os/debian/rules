@@ -103,6 +103,10 @@ override_dh_auto_install:
 		install prefix=/usr sysconfdir=/etc	\
 		DESTDIR=$(CURDIR)/debian/webkiosk-language-selector
 
+	$(MAKE) -C webmenu				\
+		install prefix=/usr sysconfdir=/etc	\
+		DESTDIR=$(CURDIR)/debian/webmenu
+
 	$(MAKE) -C wlan/ap				\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-wlanap
