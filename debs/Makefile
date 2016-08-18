@@ -1,13 +1,13 @@
-_pkgdirs_stage1 := nodejs-bundle
-_pkgdirs_stage2 := gnome-clocks libpam-envfeed node-webkit onboard puavo-os
-_pkgdirs        := $(_pkgdirs_stage1) $(_pkgdirs_stage2)
+_pkgs_stage1 := nodejs-bundle
+_pkgs_stage2 := gnome-clocks libpam-envfeed node-webkit onboard puavo-os
+_pkgs        := $(_pkgs_stage1) $(_pkgs_stage2)
 
-_install_build_deps_targets_stage1 := $(_pkgdirs_stage1:%=.install-build-deps-%)
-_install_build_deps_targets_stage2 := $(_pkgdirs_stage2:%=.install-build-deps-%)
+_install_build_deps_targets_stage1 := $(_pkgs_stage1:%=.install-build-deps-%)
+_install_build_deps_targets_stage2 := $(_pkgs_stage2:%=.install-build-deps-%)
 _install_build_deps_targets        := $(_install_build_deps_targets_stage1) $(_install_build_deps_targets_stage2)
 
-_changes_files_stage1 := $(foreach _pkgdir,$(_pkgdirs_stage1),$(_pkgdir)_$(shell dpkg-parsechangelog -SVersion -l$(_pkgdir)/debian/changelog)_$(shell dpkg-architecture -qDEB_BUILD_ARCH).changes)
-_changes_files_stage2 := $(foreach _pkgdir,$(_pkgdirs_stage2),$(_pkgdir)_$(shell dpkg-parsechangelog -SVersion -l$(_pkgdir)/debian/changelog)_$(shell dpkg-architecture -qDEB_BUILD_ARCH).changes)
+_changes_files_stage1 := $(foreach _pkg,$(_pkgs_stage1),$(_pkg)_$(shell dpkg-parsechangelog -SVersion -l$(_pkg)/debian/changelog)_$(shell dpkg-architecture -qDEB_BUILD_ARCH).changes)
+_changes_files_stage2 := $(foreach _pkg,$(_pkgs_stage2),$(_pkg)_$(shell dpkg-parsechangelog -SVersion -l$(_pkg)/debian/changelog)_$(shell dpkg-architecture -qDEB_BUILD_ARCH).changes)
 _changes_files        := $(_changes_files_stage1) $(_changes_files_stage2)
 
 .PHONY: all
@@ -17,7 +17,7 @@ all: stage1 stage2
 clean:
 	rm -f db Packages Packages.gz
 	rm -rf pool
-	git clean -f -d -x -- $(_pkgdirs)
+	git clean -f -d -x -- $(_pkgs)
 	../parts/devscripts/bin/do-changes -r $(_changes_files)
 
 .PHONY: install-build-deps
