@@ -474,6 +474,13 @@ Description: simple drawing application
  to big touch screen devices.
  .
 
+Package: webkiosk-language-selector
+Architecture: all
+Depends: ${misc:Depends}, node-webkit
+Description: Webkiosk language selector
+ Helper for webkiosks to select session language.
+ .
+
 Package: webmenu
 Architecture: all
 Depends: ${misc:Depends},
