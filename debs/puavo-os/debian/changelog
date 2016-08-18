@@ -1,3 +1,19 @@
+puavo-os (0.26.0+cb1d95135e004a2b9614545a6c880f0e01f73bd1) trusty; urgency=medium
+
+  * Git(cb1d95135e004a2b9614545a6c880f0e01f73bd1)
+  * debs: rename build => build-changes
+  * debs: build and install build-deps only if they have changed
+  * debs: rename local Makefile variables
+  * make: remove debs from top-level targets
+  * make: display help by defualt
+  * make: print error if trying to target other than Puavo OS systems
+  * make: remove useless top-level targets
+  * make: sort help output in alphabetical order
+  * make: prefix all targets modifying localhost with local-
+  * make: rename term: rootfs => container
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Thu, 18 Aug 2016 11:38:53 +0300
+
 puavo-os (0.25.2+7da328a424259e8dc563eb949129ee5a48b7b238) trusty; urgency=medium
 
   * Git(7da328a424259e8dc563eb949129ee5a48b7b238)
