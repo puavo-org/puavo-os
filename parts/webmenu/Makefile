@@ -91,11 +91,13 @@ install-dirs:
 	mkdir -p $(DESTDIR)$(datarootdir)/applications
 	mkdir -p $(DESTDIR)/etc/xdg/autostart
 	mkdir -p $(DESTDIR)/opt/webmenu/extra/icons/apps/
+	mkdir -p $(DESTDIR)/usr/share/cinnamon/applets
 	mkdir -p $(DESTDIR)/usr/share/icons
 	mkdir -p $(DESTDIR)/etc/webmenu
 
 install: install-dirs
 	cp -r GIT_COMMIT lib node_modules bin docs scripts vendor styles extra i18n *.js *.json *.md *.html $(DESTDIR)/opt/webmenu
+	cp -r extra/cinnamon/applets $(DESTDIR)$(datarootdir)/cinnamon/applets
 	$(INSTALL_DATA) -t $(DESTDIR)/etc/xdg/autostart \
 		extra/webmenu.desktop
 	$(INSTALL_DATA) -t $(DESTDIR)/etc/xdg/autostart \
