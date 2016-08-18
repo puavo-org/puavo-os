@@ -100,7 +100,7 @@ install: install-dirs
 		extra/webmenu.desktop
 	$(INSTALL_DATA) -t $(DESTDIR)/etc/xdg/autostart \
 		extra/download-user-photo.desktop
-	$(INSTALL_DATA) -t $(DESTDIR)/usr/share/icons \
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/icons \
 		extra/icons/webmenu.png
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/applications \
 		extra/webmenu-spawn.desktop
@@ -118,10 +118,10 @@ uninstall:
 	rm $(DESTDIR)$(bindir)/webmenu
 	rm $(DESTDIR)$(bindir)/puavo-download-user-photo
 	rm -rf $(DESTDIR)/opt/webmenu
-	rm $(DESTDIR)$(datarootdir)/applications/webmenu-spawn.desktop 
+	rm $(DESTDIR)$(datarootdir)/applications/webmenu-spawn.desktop
 	rm $(DESTDIR)/etc/xdg/autostart/webmenu.desktop
 	rm $(DESTDIR)/etc/xdg/autostart/download-user-photo.desktop
-	rm $(DESTDIR)/usr/share/icons/webmenu.png
+	rm $(DESTDIR)$(datarootdir)/icons/webmenu.png
 
 test-nw:
 	bin/webmenu --test
