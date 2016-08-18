@@ -119,4 +119,8 @@ override_dh_auto_install:
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/ruby-puavowlan
 
+	$(MAKE) -C webmenu				\
+		install prefix=/usr sysconfdir=/etc		\
+		DESTDIR=$(CURDIR)/debian/webmenu
+
 override_dh_install:
