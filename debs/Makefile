@@ -39,7 +39,7 @@ Packages.gz: Packages
 	gzip -f -k $<
 
 $(_changes_files):
-	./build-changes '$@'
+	./.aux/build-changes '$@'
 
 pool/%.changes: %.changes
 	../parts/devscripts/bin/do-changes -l pool '$<'
@@ -65,4 +65,4 @@ install-build-deps-stage2: $(_install_stamps_build_deps_stage2)
 	touch $@
 
 $(_build_deps):
-	./build-build-deps '$@'
+	./.aux/build-build-deps '$@'
