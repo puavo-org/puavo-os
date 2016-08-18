@@ -86,7 +86,7 @@ local-update: /puavo-os
 		--execute 'include image::allinone'	\
 		--logdest /var/log/puavo-os/puppet.log	\
 		--logdest console			\
-		--modulepath '/puavo-os/parts/rules/rules/puppet'
+		--modulepath 'parts/rules/rules/puppet'
 
 /puavo-os:
 	@echo ERROR: localhost is not Puavo OS system >&2
