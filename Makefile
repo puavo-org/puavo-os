@@ -30,12 +30,12 @@ help:
 	@echo 'Targets:'
 	@echo '    all                         -  build everything'
 	@echo '    debs                        -  build all Debian packages'
-	@echo '    apply                       -  apply all rules to Puavo OS localhost'
+	@echo '    local-apply                 -  apply all rules to Puavo OS localhost'
 	@echo '    release                     -  make a release commit'
 	@echo '    container-bootstrap         -  build Puavo OS container'
 	@echo '    container-shell             -  spawn shell from Puavo OS container'
 	@echo '    container-update            -  update Puavo OS container'
-	@echo '    update                      -  update Puavo OS localhost'
+	@echo '    local-update                -  update Puavo OS localhost'
 	@echo
 	@echo 'Variables:'
 	@echo '    container_dir               -  set Puavo OS container directory [$(container_dir)]'
@@ -79,10 +79,10 @@ container-update: $(container_dir) .ensure-head-is-release
 		--work-tree='$(container_dir)/puavo-os'		\
 		reset --hard origin/HEAD
 
-	sudo $(_systemd_nspawn_cmd) make -C /puavo-os update
+	sudo $(_systemd_nspawn_cmd) make -C /puavo-os local-update
 
-.PHONY: update
-update: /puavo-os
+.PHONY: local-update
+local-update: /puavo-os
 	make -C debs install-build-deps-stage1
 	make -C debs stage1
 
@@ -94,10 +94,10 @@ update: /puavo-os
 		-o Dpkg::Options::="--force-confdef"	\
 		-o Dpkg::Options::="--force-confold"
 
-	make apply
+	make local-apply
 
-.PHONY: apply
-apply: /puavo-os
+.PHONY: local-apply
+local-apply: /puavo-os
 	sudo puppet apply				\
 		--execute 'include image::allinone'	\
 		--logdest /var/log/puavo-os/puppet.log	\
