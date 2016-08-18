@@ -89,11 +89,11 @@ clean:
 install-dirs:
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(datarootdir)/applications
-	mkdir -p $(DESTDIR)/etc/xdg/autostart
-	mkdir -p $(DESTDIR)/opt/webmenu/extra/icons/apps/
-	mkdir -p $(DESTDIR)/usr/share/cinnamon/applets
-	mkdir -p $(DESTDIR)/usr/share/icons
+	mkdir -p $(DESTDIR)$(datarootdir)/cinnamon/applets
+	mkdir -p $(DESTDIR)$(datarootdir)/icons
 	mkdir -p $(DESTDIR)/etc/webmenu
+	mkdir -p $(DESTDIR)/etc/xdg/autostart
+	mkdir -p $(DESTDIR)/opt/webmenu/extra/icons/apps
 
 install: install-dirs
 	cp -r GIT_COMMIT lib node_modules bin docs scripts vendor styles extra i18n *.js *.json *.md *.html $(DESTDIR)/opt/webmenu
