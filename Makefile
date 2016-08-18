@@ -29,11 +29,9 @@ help:
 	@echo
 	@echo 'Targets:'
 	@echo '    all                         -  build everything'
-	@echo '    container-bootstrap         -  build Puavo OS container'
 	@echo '    container-shell             -  spawn shell from Puavo OS container'
 	@echo '    container-update            -  update Puavo OS container'
 	@echo '    debs                        -  build all Debian packages'
-	@echo '    local-apply                 -  apply all rules to Puavo OS localhost'
 	@echo '    local-update                -  update Puavo OS localhost'
 	@echo '    release                     -  make a release commit'
 	@echo
@@ -60,9 +58,6 @@ $(container_dir):
 	sudo systemd-nspawn -D '$(container_dir).tmp' locale-gen
 
 	sudo mv '$(container_dir).tmp' '$(container_dir)'
-
-.PHONY: container-bootstrap
-container-bootstrap: $(container_dir)
 
 .PHONY: container-shell
 container-shell: $(container_dir)
@@ -94,10 +89,6 @@ local-update: /puavo-os
 		-o Dpkg::Options::="--force-confdef"	\
 		-o Dpkg::Options::="--force-confold"
 
-	make local-apply
-
-.PHONY: local-apply
-local-apply: /puavo-os
 	sudo puppet apply				\
 		--execute 'include image::allinone'	\
 		--logdest /var/log/puavo-os/puppet.log	\
