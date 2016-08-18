@@ -2,7 +2,7 @@ Source: nodejs-bundle
 Section: utils
 Priority: extra
 Maintainer: Opinsys Developers <dev@opinsys.fi>
-Build-Depends: debhelper (>= 8), libssl-dev, python
+Build-Depends: debhelper (>= 8), libssl-dev, python, libwww-perl
 Standards-Version: 3.9.6
 Homepage: http://nodejs.org/
 
