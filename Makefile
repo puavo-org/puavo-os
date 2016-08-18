@@ -12,23 +12,13 @@ _container_bootstrap_mirror := $(shell				\
 
 _systemd_nspawn_cmd := systemd-nspawn -D '$(container_dir)' --setenv=LANG=en_US.UTF-8
 
-.PHONY: all
-all: debs
-
-.PHONY: .ensure-head-is-release
-.ensure-head-is-release:
-	@parts/devscripts/bin/git-dch -f debs/puavo-os/debian/changelog -z
-
-.PHONY: debs
-debs: .ensure-head-is-release
-	$(MAKE) -C debs
 
 .PHONY: help
 help:
 	@echo 'Puavo OS Build System'
 	@echo
 	@echo 'Targets:'
-	@echo '    all                         -  build everything'
+	@echo '    help                        -  display this help and exit'
 	@echo '    container-shell             -  spawn shell from Puavo OS container'
 	@echo '    container-update            -  update Puavo OS container'
 	@echo '    debs                        -  build all Debian packages'
@@ -37,6 +27,14 @@ help:
 	@echo
 	@echo 'Variables:'
 	@echo '    container_dir               -  set Puavo OS container directory [$(container_dir)]'
+
+.PHONY: .ensure-head-is-release
+.ensure-head-is-release:
+	@parts/devscripts/bin/git-dch -f debs/puavo-os/debian/changelog -z
+
+.PHONY: debs
+debs: .ensure-head-is-release
+	$(MAKE) -C debs
 
 .PHONY: release
 release:
