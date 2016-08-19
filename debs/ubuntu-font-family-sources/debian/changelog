@@ -1,3 +1,11 @@
+ubuntu-font-family-sources (1:0.83-0+puavo1) stable; urgency=medium
+
+  * Import from Ubuntu.
+  * Update Standards-Version.
+  * Add script for downloading upstream sources.
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Fri, 19 Aug 2016 10:21:54 +0300
+
 ubuntu-font-family-sources (1:0.83-0ubuntu2) xenial; urgency=medium
 
   * Revert back to the previous 0.83 version: 0.84 has visual regressions.
