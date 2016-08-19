@@ -2,16 +2,16 @@ _pkgs_stage1 := nodejs-bundle
 _pkgs_stage2 := autopoweroff fluentd gnome-clocks libpam-envfeed node-webkit onboard puavo-os ubuntu-font-family-sources visionmedia-mon
 _pkgs        := $(_pkgs_stage1) $(_pkgs_stage2)
 
-_build_deps_stage1 := $(foreach _pkg,$(_pkgs_stage1),$(_pkg)-build-deps_$(shell dpkg-parsechangelog -SVersion -l$(_pkg)/debian/changelog)_all.deb)
-_build_deps_stage2 := $(foreach _pkg,$(_pkgs_stage2),$(_pkg)-build-deps_$(shell dpkg-parsechangelog -SVersion -l$(_pkg)/debian/changelog)_all.deb)
+_build_deps_stage1 := $(foreach _pkg,$(_pkgs_stage1),$(_pkg)-build-deps_$(shell dpkg-parsechangelog -SVersion -l$(_pkg)/debian/changelog | sed -r -n 's/^([0-9]+:)?//p')_all.deb)
+_build_deps_stage2 := $(foreach _pkg,$(_pkgs_stage2),$(_pkg)-build-deps_$(shell dpkg-parsechangelog -SVersion -l$(_pkg)/debian/changelog | sed -r -n 's/^([0-9]+:)?//p')_all.deb)
 _build_deps        := $(_build_deps_stage1) $(_build_deps_stage2)
 
 _install_stamps_build_deps_stage1 := $(_build_deps_stage1:%=.install-stamp-%)
 _install_stamps_build_deps_stage2 := $(_build_deps_stage2:%=.install-stamp-%)
 _install_stamps_build_deps        := $(_install_stamps_build_deps_stage1) $(_install_stamps_build_deps_stage2)
 
-_changes_files_stage1 := $(foreach _pkg,$(_pkgs_stage1),$(_pkg)_$(shell dpkg-parsechangelog -SVersion -l$(_pkg)/debian/changelog)_$(shell dpkg-architecture -qDEB_BUILD_ARCH).changes)
-_changes_files_stage2 := $(foreach _pkg,$(_pkgs_stage2),$(_pkg)_$(shell dpkg-parsechangelog -SVersion -l$(_pkg)/debian/changelog)_$(shell dpkg-architecture -qDEB_BUILD_ARCH).changes)
+_changes_files_stage1 := $(foreach _pkg,$(_pkgs_stage1),$(_pkg)_$(shell dpkg-parsechangelog -SVersion -l$(_pkg)/debian/changelog | sed -r -n 's/^([0-9]+:)?//p').changes)
+_changes_files_stage2 := $(foreach _pkg,$(_pkgs_stage2),$(_pkg)_$(shell dpkg-parsechangelog -SVersion -l$(_pkg)/debian/changelog | sed -r -n 's/^([0-9]+:)?//p').changes)
 _changes_files        := $(_changes_files_stage1) $(_changes_files_stage2)
 
 .PHONY: all
