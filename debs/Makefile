@@ -60,7 +60,7 @@ install-build-deps-stage2: $(_install_stamps_build_deps_stage2)
 
 .install-stamp-%: %
 	sudo apt-get update
-	sudo dpkg -i '$<'
+	sudo dpkg -i '$<' || true
 	sudo apt-get -f -y --force-yes --no-install-recommends install
 	touch $@
 
