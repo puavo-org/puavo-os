@@ -1,3 +1,21 @@
+puavo-os (0.28.0~rc3+3fb7fec08889502e0af7a8cbdeed6717b5b3a366) trusty; urgency=medium
+
+  * Git(3fb7fec08889502e0af7a8cbdeed6717b5b3a366)
+  * debs: fix Makefile to not generate filename targets with colons
+  * debs: add autopoweroff 2.9.1-0+puavo1
+  * debs/ubuntu-font-family-sources: 1:0.83-0+puavo1
+  * debs/ubuntu-font-family-sources: add script for downloading upstream
+    sources
+  * debs/ubuntu-font-family-sources: update Standards-Version
+  * debs: import ubuntu-font-family-sources (1:0.83-0ubuntu2)
+  * Fix typo.
+  * We need to change our default background sometimes.  Ideas welcome.
+  * Use only one workspace by default.
+  * Make Gnome backgrounds show up in Cinnamon settings.
+  * Maximize windows when dragged to top.
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Fri, 19 Aug 2016 12:48:49 +0300
+
 puavo-os (0.28.0~rc2+2bac228d83fb6ed33bd774ac4b92e4f91cd246e4) trusty; urgency=medium
 
   * Git(2bac228d83fb6ed33bd774ac4b92e4f91cd246e4)
