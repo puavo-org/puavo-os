@@ -5,6 +5,10 @@ $(shell sudo -k)
 
 # Configurable parameters
 container_dir := /var/tmp/puavo-os/container
+image_dir     := /srv/puavo-os-images
+
+_image_class := allinone
+_image_file  := $(image_dir)/puavo-os-$(_image_class)-$(shell date -u +%Y-%m-%d-%H%M%S)_amd64.img
 
 _container_bootstrap_mirror := $(shell				\
 	awk '/^\s*deb .+ jessie main.*$$/ {print $$2; exit}'	\
@@ -12,13 +16,13 @@ _container_bootstrap_mirror := $(shell				\
 
 _systemd_nspawn_cmd := systemd-nspawn -D '$(container_dir)' --setenv=LANG=en_US.UTF-8
 
-
 .PHONY: help
 help:
 	@echo 'Puavo OS Build System'
 	@echo
 	@echo 'Targets:'
 	@echo '    help                        -  display this help and exit'
+	@echo '    image                       -  pack container to a squashfs image'
 	@echo '    container-shell             -  spawn shell from Puavo OS container'
 	@echo '    container-update            -  update Puavo OS container'
 	@echo '    local-update                -  update Puavo OS localhost'
@@ -26,6 +30,7 @@ help:
 	@echo
 	@echo 'Variables:'
 	@echo '    container_dir               -  set Puavo OS container directory [$(container_dir)]'
+	@echo '    image_dir                   -  set Puavo OS image directory [$(image_dir)]'
 
 .PHONY: .ensure-head-is-release
 .ensure-head-is-release:
@@ -47,6 +52,11 @@ $(container_dir):
 	sudo systemd-nspawn -D '$(container_dir).tmp' locale-gen
 
 	sudo mv '$(container_dir).tmp' '$(container_dir)'
+
+.PHONY: image
+image: $(container_dir)
+	sudo mkdir -p '$(image_dir)'
+	sudo mksquashfs '$(container_dir)' '$(_image_file)' -noappend -no-recovery
 
 .PHONY: container-shell
 container-shell: $(container_dir)
@@ -78,10 +88,10 @@ local-update: /puavo-os
 		-o Dpkg::Options::="--force-confdef"	\
 		-o Dpkg::Options::="--force-confold"
 
-	sudo puppet apply				\
-		--execute 'include image::allinone'	\
-		--logdest /var/log/puavo-os/puppet.log	\
-		--logdest console			\
+	sudo puppet apply					\
+		--execute 'include image::$(_image_class)'	\
+		--logdest /var/log/puavo-os/puppet.log		\
+		--logdest console				\
 		--modulepath 'parts/rules/rules/puppet'
 
 /puavo-os:
