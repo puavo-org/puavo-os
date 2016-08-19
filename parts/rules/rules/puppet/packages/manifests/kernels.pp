@@ -33,8 +33,8 @@ class packages::kernels {
     @package {
       $packages:
         tag => $package_tag ? {
-                 ''      => 'kernel',
-                 default => [ 'kernel', $package_tag, ],
+                 ''      => 'tag_kernel',
+                 default => [ 'tag_kernel', $package_tag, ],
                };
     }
   }

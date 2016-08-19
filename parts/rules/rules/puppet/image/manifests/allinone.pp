@@ -13,6 +13,7 @@ class image::allinone {
           ::gnome_terminal,
           ::image::bundle::basic,
           ::kaffeine,
+          ::kernels,
           ::keyutils,
           ::ktouch,
           ::laptop_mode_tools,
@@ -44,5 +45,6 @@ class image::allinone {
   }
 
   Package <| tag == 'tag_debian'
+          or tag == 'tag_kernel'
           or tag == 'tag_puavo' |>
 }
