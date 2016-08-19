@@ -37,6 +37,10 @@ class desktop::puavodesktop {
       source  => 'puppet:///modules/desktop/art',
       recurse => true;
 
+    # add this link so that Gnome backgrounds show up in Cinnamon settings
+    '/usr/share/cinnamon-background-properties':
+      ensure => link,
+      target => 'gnome-background-properties';
   }
 
   Package <| title == faenza-icon-theme
