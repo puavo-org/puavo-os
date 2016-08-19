@@ -79,6 +79,10 @@ override_dh_auto_install:
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/ruby-puavobs
 
+	$(MAKE) -C opinsys-ca-certificates			\
+		install prefix=/usr sysconfdir=/etc		\
+		DESTDIR=$(CURDIR)/debian/opinsys-ca-certificates
+
 	$(MAKE) -C pkg					\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-pkg

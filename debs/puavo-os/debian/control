@@ -43,6 +43,13 @@ Description: A custom stand-alone WebKit display.
  A custom stand-alone WebKit display.
  .
 
+Package: opinsys-ca-certificates
+Architecture: all
+Depends: ${misc:Depends}
+Description: Opinsys CA certificate files for client usage.
+ Opinsys CA certificate files for client usage.
+ .
+
 Package: puavoadmins
 Architecture: any
 Depends: ${misc:Depends},

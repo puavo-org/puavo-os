@@ -1,6 +1,7 @@
 subdirs         := admins autopilot blackboard client conf core devscripts \
-                   hw-log hw-tools local-config ltsp pkg rules sharedir \
-                   vpn webkiosk-language-selector webmenu wlan
+                   hw-log hw-tools local-config ltsp opinsys-ca-certificates \
+                   pkg rules sharedir vpn webkiosk-language-selector webmenu \
+                   wlan
 subdirs-all     := $(subdirs:%=.all-%)
 subdirs-clean   := $(subdirs:%=.clean-%)
 
