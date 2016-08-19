@@ -1,0 +1,13 @@
+Source: opinsys-ca-certificates
+Section: admin
+Priority: extra
+Maintainer: Veli-Matti Lintu <veli-matti.lintu@opinsys.fi>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.2
+Homepage: https://github.com/opinsys/opinsys-ca-certificates
+
+Package: opinsys-ca-certificates
+Architecture: all
+Depends: ${misc:Depends}
+Description: Opinsys CA certificate files for client usage.
+ Opinsys CA certificate files for client usage.
