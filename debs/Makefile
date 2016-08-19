@@ -10,8 +10,8 @@ _install_stamps_build_deps_stage1 := $(_build_deps_stage1:%=.install-stamp-%)
 _install_stamps_build_deps_stage2 := $(_build_deps_stage2:%=.install-stamp-%)
 _install_stamps_build_deps        := $(_install_stamps_build_deps_stage1) $(_install_stamps_build_deps_stage2)
 
-_changes_files_stage1 := $(foreach _pkg,$(_pkgs_stage1),$(_pkg)_$(shell dpkg-parsechangelog -SVersion -l$(_pkg)/debian/changelog | sed -r -n 's/^([0-9]+:)?//p').changes)
-_changes_files_stage2 := $(foreach _pkg,$(_pkgs_stage2),$(_pkg)_$(shell dpkg-parsechangelog -SVersion -l$(_pkg)/debian/changelog | sed -r -n 's/^([0-9]+:)?//p').changes)
+_changes_files_stage1 := $(foreach _pkg,$(_pkgs_stage1),$(_pkg)_$(shell dpkg-parsechangelog -SVersion -l$(_pkg)/debian/changelog | sed -r -n 's/^([0-9]+:)?//p')_$(shell dpkg-architecture -qDEB_BUILD_ARCH).changes)
+_changes_files_stage2 := $(foreach _pkg,$(_pkgs_stage2),$(_pkg)_$(shell dpkg-parsechangelog -SVersion -l$(_pkg)/debian/changelog | sed -r -n 's/^([0-9]+:)?//p')_$(shell dpkg-architecture -qDEB_BUILD_ARCH).changes)
 _changes_files        := $(_changes_files_stage1) $(_changes_files_stage2)
 
 .PHONY: all
