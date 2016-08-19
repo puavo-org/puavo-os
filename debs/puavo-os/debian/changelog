@@ -1,3 +1,18 @@
+puavo-os (0.28.0+ca6554da732422af6f36b33787562ad99c871f71) trusty; urgency=medium
+
+  * Git(ca6554da732422af6f36b33787562ad99c871f71)
+  * parts/rules: include kernels in image::allinone
+  * make: add 'image' target for packing container to a squashfs file
+  * Do not center the window-list applet, put it to the left side.
+  * Lock screen when computer goes to suspend.
+  * Use the default cinnamon theme, because "BlueMenta" requires
+    precision clicking to the icons in the panel.
+  * Change gtk-theme to "Menta" so that "Home" and "Trash" texts can be
+    seen, whatever the background is.
+  * Set panel size and scale icons in it, independently from theme.
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Fri, 19 Aug 2016 16:36:00 +0300
+
 puavo-os (0.28.0~rc6+2e4327ac640e521d52b263d1bd90b2a6d5629da8) trusty; urgency=medium
 
   * Git(2e4327ac640e521d52b263d1bd90b2a6d5629da8)
