@@ -1,0 +1,14 @@
+#!/bin/sh
+
+set -eu
+
+upstream_version=$(dpkg-parsechangelog -S Version | sed -r -n 's/^(.*)-.*$/\1/p')
+orig_tarball="../autopoweroff_${upstream_version}.orig.tar.gz"
+
+if [ ! -e "${orig_tarball}" ]; then
+    wget -O "${orig_tarball}.tmp" \
+         "https://github.com/deragon/autopoweroff/archive/${upstream_version}.tar.gz"
+    mv "${orig_tarball}.tmp" "${orig_tarball}"
+fi
+
+tar -z -x -f "${orig_tarball}" --strip-components=1

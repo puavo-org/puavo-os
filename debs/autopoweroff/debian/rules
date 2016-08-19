@@ -1,0 +1,13 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	autoreconf
+	./configure prefix=/usr sysconfdir=/etc
+
+override_dh_auto_install:
+	$(MAKE) install-etcDATA DESTDIR=$(CURDIR)/debian/autopoweroff
+	$(MAKE) install-sbinSCRIPTS DESTDIR=$(CURDIR)/debian/autopoweroff
+	$(MAKE) install-pythonDATA DESTDIR=$(CURDIR)/debian/autopoweroff

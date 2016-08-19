@@ -1,5 +1,5 @@
 _pkgs_stage1 := nodejs-bundle
-_pkgs_stage2 := fluentd gnome-clocks libpam-envfeed node-webkit onboard puavo-os ubuntu-font-family-sources visionmedia-mon
+_pkgs_stage2 := autopoweroff fluentd gnome-clocks libpam-envfeed node-webkit onboard puavo-os ubuntu-font-family-sources visionmedia-mon
 _pkgs        := $(_pkgs_stage1) $(_pkgs_stage2)
 
 _build_deps_stage1 := $(foreach _pkg,$(_pkgs_stage1),$(_pkg)-build-deps_$(shell dpkg-parsechangelog -SVersion -l$(_pkg)/debian/changelog)_all.deb)
