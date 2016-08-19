@@ -90,6 +90,6 @@ local-update: /puavo-os
 
 .PHONY: push-release
 push-release:
-	EDITOR=.aux/drop-release-commits git rebase -i origin/master
+	EDITOR=.aux/drop-release-commits git rebase -p -i origin/master
 	@parts/devscripts/bin/git-dch -f debs/puavo-os/debian/changelog
 	git push origin master:master
