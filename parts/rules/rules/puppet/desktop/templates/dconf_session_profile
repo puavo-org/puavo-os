@@ -30,6 +30,9 @@ num-workspaces=2
 [org/cinnamon/muffin]
 tile-maximize=true
 
+[org/cinnamon/settings-daemon/plugins/power]
+lock-on-suspend=true
+
 [org/cinnamon/theme]
 name=''
 
