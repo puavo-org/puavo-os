@@ -104,8 +104,11 @@ local-update: /puavo-os
 	@echo ERROR: localhost is not Puavo OS system >&2
 	@false
 
-.PHONY: push-release
-push-release:
+.PHONY: .release
+.release:
 	EDITOR=.aux/drop-release-commits git rebase -p -i origin/master
 	@parts/devscripts/bin/git-dch -f debs/puavo-os/debian/changelog
+
+.PHONY: push-release
+push-release: .release
 	git push origin master:master
