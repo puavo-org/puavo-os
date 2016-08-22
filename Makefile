@@ -86,6 +86,8 @@ container-update: container-sync
 
 .PHONY: local-update
 local-update: /puavo-os
+	make -C debs update-repo
+
 	make -C debs install-build-deps-stage1
 	make -C debs stage1
 
