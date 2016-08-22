@@ -1,3 +1,12 @@
+puavo-os (0.29.0~rc1+d4f5474691e3b5882520eb8306ddd20f0430f6ff) trusty; urgency=medium
+
+  * Git(d4f5474691e3b5882520eb8306ddd20f0430f6ff)
+  * make: exclude unnecessary stuff from image
+  * make: fix shell redirection issues
+  * make: fix deboostrap --include flag usage
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Mon, 22 Aug 2016 11:07:38 +0300
+
 puavo-os (0.28.0+ca6554da732422af6f36b33787562ad99c871f71) trusty; urgency=medium
 
   * Git(ca6554da732422af6f36b33787562ad99c871f71)
