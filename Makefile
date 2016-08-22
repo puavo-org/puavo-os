@@ -45,12 +45,14 @@ $(container_dir):
 		--include='$(_container_bootstrap_packages)'	\
 		--components=main,contrib,non-free		\
 		jessie '$(container_dir).tmp' '$(_container_bootstrap_mirror)'
+
 	sudo git clone . '$(container_dir).tmp/puavo-os'
 
-	sudo echo 'deb [trusted=yes] file:///puavo-os/debs /' \
-		>'$(container_dir).tmp/etc/apt/sources.list.d/puavo-os.list'
+	echo 'deb [trusted=yes] file:///puavo-os/debs /' \
+	| sudo tee '$(container_dir).tmp/etc/apt/sources.list.d/puavo-os.list'
 
-	echo 'en_US.UTF-8 UTF-8' >'$(container_dir).tmp/etc/locale.gen'
+	sudo sed -r -i 's/^# (en_US.UTF-8 UTF-8)$$/\1/' \
+		'$(container_dir).tmp/etc/locale.gen'
 	sudo systemd-nspawn -D '$(container_dir).tmp' locale-gen
 
 	sudo mv '$(container_dir).tmp' '$(container_dir)'
