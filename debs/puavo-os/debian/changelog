@@ -1,3 +1,15 @@
+puavo-os (0.29.0~rc2+71807ae0de82f30b07564f28b6f621145d7c7560) trusty; urgency=medium
+
+  * Git(71807ae0de82f30b07564f28b6f621145d7c7560)
+  * make: add separate target for syncing container repo
+  * make: extract puppet configuration phase to a separate private
+    target
+  * part/rules: use ftp.debian.org as the backup if mirror is not set
+  * parts/rules: retrieve current debian mirror as a facter fact
+  * make: add separate private target for creating a release commit
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Mon, 22 Aug 2016 16:59:49 +0300
+
 puavo-os (0.29.0~rc1+d4f5474691e3b5882520eb8306ddd20f0430f6ff) trusty; urgency=medium
 
   * Git(d4f5474691e3b5882520eb8306ddd20f0430f6ff)
