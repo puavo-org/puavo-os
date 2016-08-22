@@ -60,7 +60,9 @@ $(container_dir):
 .PHONY: image
 image: $(container_dir)
 	sudo mkdir -p '$(image_dir)'
-	sudo mksquashfs '$(container_dir)' '$(_image_file)' -noappend -no-recovery
+	sudo mksquashfs '$(container_dir)' '$(_image_file)'	\
+		-noappend -no-recovery -wildcards		\
+		-ef parts/ltsp/tools/image-build/config/puavoimage.excludes
 
 .PHONY: container-shell
 container-shell: $(container_dir)
