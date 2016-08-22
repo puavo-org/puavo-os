@@ -14,6 +14,9 @@ _container_bootstrap_mirror := $(shell				\
 	awk '/^\s*deb .+ jessie main.*$$/ {print $$2; exit}'	\
 	/etc/apt/sources.list 2>/dev/null)
 
+_container_bootstrap_packages := devscripts,equivs,git,locales,lsb-release,\
+                                 make,puppet-common,sudo
+
 _systemd_nspawn_cmd := systemd-nspawn -D '$(container_dir)' --setenv=LANG=en_US.UTF-8
 
 .PHONY: help
@@ -37,11 +40,10 @@ help:
 	@parts/devscripts/bin/git-dch -f debs/puavo-os/debian/changelog -z
 
 $(container_dir):
-	sudo debootstrap							\
-		--arch=amd64							\
-		--include='make,devscripts,equivs,git,puppet-common,locales,    \
-			sudo,lsb-release'					\
-		--components=main,contrib,non-free				\
+	sudo debootstrap					\
+		--arch=amd64					\
+		--include='$(_container_bootstrap_packages)'	\
+		--components=main,contrib,non-free		\
 		jessie '$(container_dir).tmp' '$(_container_bootstrap_mirror)'
 	sudo git clone . '$(container_dir).tmp/puavo-os'
 
