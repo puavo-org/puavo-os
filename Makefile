@@ -94,6 +94,10 @@ local-update: /puavo-os
 		-o Dpkg::Options::="--force-confdef"	\
 		-o Dpkg::Options::="--force-confold"
 
+	make .local-configure
+
+.PHONY: .local-configure
+.local-configure: /puavo-os
 	sudo puppet apply					\
 		--execute 'include image::$(_image_class)'	\
 		--logdest /var/log/puavo-os/puppet.log		\
