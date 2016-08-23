@@ -25,6 +25,7 @@ help:
 	@echo
 	@echo 'Targets:'
 	@echo '    help                        -  display this help and exit'
+	@echo '    container-build             -  build Puavo OS container from scratch'
 	@echo '    image                       -  pack container to a squashfs image'
 	@echo '    container-shell             -  spawn shell from Puavo OS container'
 	@echo '    container-update            -  update Puavo OS container'
@@ -41,6 +42,13 @@ help:
 	@parts/devscripts/bin/git-dch -f debs/puavo-os/debian/changelog -z
 
 $(container_dir):
+	@echo ERROR: container does not exist, make container-build first >&2
+	@false
+
+.PHONY: container-build
+container-build:
+	@[ ! -e '$(container_dir)' ] || \
+		{ echo ERROR: container directory '$(container_dir)' already exists >&2; false; }
 	sudo debootstrap					\
 		--arch=amd64					\
 		--include='$(_container_bootstrap_packages)'	\
