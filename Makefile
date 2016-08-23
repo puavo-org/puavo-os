@@ -61,9 +61,12 @@ $(container_dir):
 .PHONY: image
 image: $(container_dir)
 	sudo mkdir -p '$(image_dir)'
-	sudo mksquashfs '$(container_dir)' '$(_image_file)'	\
-		-noappend -no-recovery -wildcards		\
-		-ef parts/ltsp/tools/image-build/config/puavoimage.excludes
+	sudo mksquashfs '$(container_dir)' '$(_image_file).tmp'			\
+		-noappend -no-recovery -wildcards				\
+		-ef parts/ltsp/tools/image-build/config/puavoimage.excludes	\
+		|| { rm -f '$(_image_file).tmp'; false; }
+	sudo mv '$(_image_file).tmp' '$(_image_file)'
+	@echo Built '$(image_file)' successfully.
 
 .PHONY: container-shell
 container-shell: $(container_dir)
