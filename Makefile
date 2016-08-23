@@ -1,8 +1,3 @@
-# Revoke cached credentials before proceeding. Many targets mix sudo
-# and non-sudo commands, we want to make sure user is prompted before
-# doing anything as a super user.
-$(shell sudo -k)
-
 # Configurable parameters
 rootfs_dir := /var/tmp/puavo-os/rootfs
 image_dir     := /srv/puavo-os-images
