@@ -12,7 +12,7 @@ _debootstrap_mirror := $(shell				\
 _debootstrap_packages := devscripts,equivs,git,locales,lsb-release,make,\
                          puppet-common,sudo
 
-_systemd_nspawn_cmd := systemd-nspawn -D '$(rootfs_dir)' --setenv=LANG=en_US.UTF-8
+_systemd_nspawn_cmd := systemd-nspawn -D '$(rootfs_dir)'
 
 .PHONY: help
 help:
@@ -54,10 +54,6 @@ rootfs:
 
 	echo 'deb [trusted=yes] file:///puavo-os/debs /' \
 	| sudo tee '$(rootfs_dir).tmp/etc/apt/sources.list.d/puavo-os.list'
-
-	sudo sed -r -i 's/^# (en_US.UTF-8 UTF-8)$$/\1/' \
-		'$(rootfs_dir).tmp/etc/locale.gen'
-	sudo systemd-nspawn -D '$(rootfs_dir).tmp' locale-gen
 
 	sudo mv '$(rootfs_dir).tmp' '$(rootfs_dir)'
 
