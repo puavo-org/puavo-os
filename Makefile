@@ -27,7 +27,7 @@ help:
 	@echo '    help                        -  display this help and exit'
 	@echo '    rootfs                      -  build Puavo OS rootfs from scratch'
 	@echo '    image                       -  pack container to a squashfs image'
-	@echo '    container-shell             -  spawn shell from Puavo OS container'
+	@echo '    spawn-rootfs-shell          -  spawn shell from Puavo OS rootfs'
 	@echo '    container-update            -  update Puavo OS container'
 	@echo '    container-sync              -  synchronize Puavo OS container repository with the current repository'
 	@echo '    local-update                -  update Puavo OS localhost'
@@ -80,8 +80,8 @@ image: $(rootfs_dir) $(image_dir)
 	sudo mv '$(_image_file).tmp' '$(_image_file)'
 	@echo Built '$(image_file)' successfully.
 
-.PHONY: container-shell
-container-shell: $(rootfs_dir)
+.PHONY: spawn-rootfs-shell
+spawn-rootfs-shell: $(rootfs_dir)
 	sudo $(_systemd_nspawn_cmd)
 
 .PHONY: rootfs
