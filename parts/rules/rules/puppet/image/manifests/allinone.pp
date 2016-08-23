@@ -35,6 +35,9 @@ class image::allinone {
           ::wacom
 
   stage {
+    'init':
+      before => Stage['pre-main'];
+
     'pre-main':
       before => Stage['main'];
   }
@@ -42,6 +45,9 @@ class image::allinone {
   class {
     'apt::default_repositories':
       stage => pre-main;
+
+    'sysv::policy-rc':
+      stage => init;
   }
 
   Package <| tag == 'tag_debian'

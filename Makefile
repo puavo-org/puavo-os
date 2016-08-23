@@ -12,7 +12,7 @@ _debootstrap_mirror := $(shell				\
 _debootstrap_packages := devscripts,equivs,git,locales,lsb-release,make,\
                          puppet-common,sudo
 
-_systemd_nspawn_cmd := systemd-nspawn -D '$(rootfs_dir)'
+_systemd_nspawn_cmd := systemd-nspawn -D '$(rootfs_dir)' --setenv=DISABLE_DAEMONS=1
 
 .PHONY: help
 help:
