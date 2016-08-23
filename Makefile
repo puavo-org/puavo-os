@@ -58,9 +58,11 @@ $(container_dir):
 
 	sudo mv '$(container_dir).tmp' '$(container_dir)'
 
-.PHONY: image
-image: $(container_dir)
+$(image_dir):
 	sudo mkdir -p '$(image_dir)'
+
+.PHONY: image
+image: $(container_dir) $(image_dir)
 	sudo mksquashfs '$(container_dir)' '$(_image_file).tmp'			\
 		-noappend -no-recovery -wildcards				\
 		-ef parts/ltsp/tools/image-build/config/puavoimage.excludes	\
