@@ -84,7 +84,7 @@ image: $(container_dir) $(image_dir)
 container-shell: $(container_dir)
 	sudo $(_systemd_nspawn_cmd)
 
-.PHONY: container-container
+.PHONY: container-build
 container-sync: $(container_dir) .ensure-head-is-release
 	sudo git						\
 		--git-dir='$(container_dir)/puavo-os/.git'	\
