@@ -52,9 +52,6 @@ rootfs:
 
 	sudo git clone . '$(rootfs_dir).tmp/puavo-os'
 
-	echo 'deb [trusted=yes] file:///puavo-os/debs /' \
-	| sudo tee '$(rootfs_dir).tmp/etc/apt/sources.list.d/puavo-os.list'
-
 	sudo mv '$(rootfs_dir).tmp' '$(rootfs_dir)'
 
 	make update-rootfs
@@ -93,6 +90,12 @@ update-rootfs: update-rootfs-repo
 .PHONY: update-localhost
 update-localhost: /puavo-os
 	make -C debs update-repo
+
+	sudo puppet apply						\
+		--execute 'include image::$(_image_class)::prepare'	\
+		--logdest /var/log/puavo-os/puppet.log			\
+		--logdest console					\
+		--modulepath 'parts/rules/rules/puppet'
 
 	make -C debs install-build-deps-stage1
 	make -C debs stage1
