@@ -29,8 +29,10 @@ class desktop::puavo-desktop-bigtouch {
 
     '/usr/share/puavo-conf/definitions/puavo-onboard.json':
       content => template('desktop/puavo-desktop-bigtouch/puavo-conf-parameters.json'),
-      notify  => Exec['initramfs::update'];
+      notify  => Exec['initramfs::update'],
+      require => Package['puavo-conf'];
   }
 
-  Package <| title == onboard |>
+  Package <| title == onboard
+          or title == puavo-conf |>
 }
