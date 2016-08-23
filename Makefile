@@ -25,7 +25,7 @@ help:
 	@echo
 	@echo 'Targets:'
 	@echo '    help                        -  display this help and exit'
-	@echo '    container-build             -  build Puavo OS container from scratch'
+	@echo '    rootfs                      -  build Puavo OS rootfs from scratch'
 	@echo '    image                       -  pack container to a squashfs image'
 	@echo '    container-shell             -  spawn shell from Puavo OS container'
 	@echo '    container-update            -  update Puavo OS container'
@@ -42,11 +42,11 @@ help:
 	@parts/devscripts/bin/git-dch -f debs/puavo-os/debian/changelog -z
 
 $(rootfs_dir):
-	@echo ERROR: container does not exist, make container-build first >&2
+	@echo ERROR: container does not exist, make rootfs first >&2
 	@false
 
-.PHONY: container-build
-container-build:
+.PHONY: rootfs
+rootfs:
 	@[ ! -e '$(rootfs_dir)' ] || \
 		{ echo ERROR: container directory '$(rootfs_dir)' already exists >&2; false; }
 	sudo debootstrap					\
@@ -84,7 +84,7 @@ image: $(rootfs_dir) $(image_dir)
 container-shell: $(rootfs_dir)
 	sudo $(_systemd_nspawn_cmd)
 
-.PHONY: container-build
+.PHONY: rootfs
 container-sync: $(rootfs_dir) .ensure-head-is-release
 	sudo git						\
 		--git-dir='$(rootfs_dir)/puavo-os/.git'	\
