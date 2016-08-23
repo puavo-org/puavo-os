@@ -26,15 +26,15 @@ help:
 	@echo 'Targets:'
 	@echo '    help                        -  display this help and exit'
 	@echo '    rootfs                      -  build Puavo OS rootfs from scratch'
-	@echo '    image                       -  pack container to a squashfs image'
+	@echo '    image                       -  pack rootfs to a squashfs image'
 	@echo '    spawn-rootfs-shell          -  spawn shell from Puavo OS rootfs'
-	@echo '    update-rootfs               -  update Puavo OS container'
-	@echo '    update-rootfs-repo          -  synchronize Puavo OS container repository with the current repository'
+	@echo '    update-rootfs               -  update Puavo OS rootfs'
+	@echo '    update-rootfs-repo          -  synchronize Puavo OS rootfs repository with the current repository'
 	@echo '    update-localhost            -  update Puavo OS localhost'
 	@echo '    push-release                -  make a release commit and publish it'
 	@echo
 	@echo 'Variables:'
-	@echo '    rootfs_dir               -  set Puavo OS container directory [$(rootfs_dir)]'
+	@echo '    rootfs_dir                  -  set Puavo OS rootfs directory [$(rootfs_dir)]'
 	@echo '    image_dir                   -  set Puavo OS image directory [$(image_dir)]'
 
 .PHONY: .ensure-head-is-release
@@ -42,13 +42,13 @@ help:
 	@parts/devscripts/bin/git-dch -f debs/puavo-os/debian/changelog -z
 
 $(rootfs_dir):
-	@echo ERROR: container does not exist, make rootfs first >&2
+	@echo ERROR: rootfs does not exist, make rootfs first >&2
 	@false
 
 .PHONY: rootfs
 rootfs:
 	@[ ! -e '$(rootfs_dir)' ] || \
-		{ echo ERROR: container directory '$(rootfs_dir)' already exists >&2; false; }
+		{ echo ERROR: rootfs directory '$(rootfs_dir)' already exists >&2; false; }
 	sudo debootstrap					\
 		--arch=amd64					\
 		--include='$(_debootstrap_packages)'	\
