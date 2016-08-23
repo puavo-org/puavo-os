@@ -30,7 +30,7 @@ help:
 	@echo '    spawn-rootfs-shell          -  spawn shell from Puavo OS rootfs'
 	@echo '    update-rootfs               -  update Puavo OS container'
 	@echo '    update-rootfs-repo          -  synchronize Puavo OS container repository with the current repository'
-	@echo '    local-update                -  update Puavo OS localhost'
+	@echo '    update-localhost            -  update Puavo OS localhost'
 	@echo '    push-release                -  make a release commit and publish it'
 	@echo
 	@echo 'Variables:'
@@ -97,10 +97,10 @@ update-rootfs-repo: $(rootfs_dir) .ensure-head-is-release
 
 .PHONY: update-rootfs
 update-rootfs: update-rootfs-repo
-	sudo $(_systemd_nspawn_cmd) make -C /puavo-os local-update
+	sudo $(_systemd_nspawn_cmd) make -C /puavo-os update-localhost
 
-.PHONY: local-update
-local-update: /puavo-os
+.PHONY: update-localhost
+update-localhost: /puavo-os
 	make -C debs update-repo
 
 	make -C debs install-build-deps-stage1
