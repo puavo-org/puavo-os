@@ -4,7 +4,7 @@
 $(shell sudo -k)
 
 # Configurable parameters
-container_dir := /var/tmp/puavo-os/container
+rootfs_dir := /var/tmp/puavo-os/rootfs
 image_dir     := /srv/puavo-os-images
 
 _image_class := allinone
@@ -17,7 +17,7 @@ _debootstrap_mirror := $(shell				\
 _debootstrap_packages := devscripts,equivs,git,locales,lsb-release,make,\
                          puppet-common,sudo
 
-_systemd_nspawn_cmd := systemd-nspawn -D '$(container_dir)' --setenv=LANG=en_US.UTF-8
+_systemd_nspawn_cmd := systemd-nspawn -D '$(rootfs_dir)' --setenv=LANG=en_US.UTF-8
 
 .PHONY: help
 help:
@@ -34,37 +34,37 @@ help:
 	@echo '    push-release                -  make a release commit and publish it'
 	@echo
 	@echo 'Variables:'
-	@echo '    container_dir               -  set Puavo OS container directory [$(container_dir)]'
+	@echo '    rootfs_dir               -  set Puavo OS container directory [$(rootfs_dir)]'
 	@echo '    image_dir                   -  set Puavo OS image directory [$(image_dir)]'
 
 .PHONY: .ensure-head-is-release
 .ensure-head-is-release:
 	@parts/devscripts/bin/git-dch -f debs/puavo-os/debian/changelog -z
 
-$(container_dir):
+$(rootfs_dir):
 	@echo ERROR: container does not exist, make container-build first >&2
 	@false
 
 .PHONY: container-build
 container-build:
-	@[ ! -e '$(container_dir)' ] || \
-		{ echo ERROR: container directory '$(container_dir)' already exists >&2; false; }
+	@[ ! -e '$(rootfs_dir)' ] || \
+		{ echo ERROR: container directory '$(rootfs_dir)' already exists >&2; false; }
 	sudo debootstrap					\
 		--arch=amd64					\
 		--include='$(_debootstrap_packages)'	\
 		--components=main,contrib,non-free		\
-		jessie '$(container_dir).tmp' '$(_debootstrap_mirror)'
+		jessie '$(rootfs_dir).tmp' '$(_debootstrap_mirror)'
 
-	sudo git clone . '$(container_dir).tmp/puavo-os'
+	sudo git clone . '$(rootfs_dir).tmp/puavo-os'
 
 	echo 'deb [trusted=yes] file:///puavo-os/debs /' \
-	| sudo tee '$(container_dir).tmp/etc/apt/sources.list.d/puavo-os.list'
+	| sudo tee '$(rootfs_dir).tmp/etc/apt/sources.list.d/puavo-os.list'
 
 	sudo sed -r -i 's/^# (en_US.UTF-8 UTF-8)$$/\1/' \
-		'$(container_dir).tmp/etc/locale.gen'
-	sudo systemd-nspawn -D '$(container_dir).tmp' locale-gen
+		'$(rootfs_dir).tmp/etc/locale.gen'
+	sudo systemd-nspawn -D '$(rootfs_dir).tmp' locale-gen
 
-	sudo mv '$(container_dir).tmp' '$(container_dir)'
+	sudo mv '$(rootfs_dir).tmp' '$(rootfs_dir)'
 
 	make container-update
 
@@ -72,8 +72,8 @@ $(image_dir):
 	sudo mkdir -p '$(image_dir)'
 
 .PHONY: image
-image: $(container_dir) $(image_dir)
-	sudo mksquashfs '$(container_dir)' '$(_image_file).tmp'			\
+image: $(rootfs_dir) $(image_dir)
+	sudo mksquashfs '$(rootfs_dir)' '$(_image_file).tmp'			\
 		-noappend -no-recovery -wildcards				\
 		-ef parts/ltsp/tools/image-build/config/puavoimage.excludes	\
 		|| { rm -f '$(_image_file).tmp'; false; }
@@ -81,18 +81,18 @@ image: $(container_dir) $(image_dir)
 	@echo Built '$(image_file)' successfully.
 
 .PHONY: container-shell
-container-shell: $(container_dir)
+container-shell: $(rootfs_dir)
 	sudo $(_systemd_nspawn_cmd)
 
 .PHONY: container-build
-container-sync: $(container_dir) .ensure-head-is-release
+container-sync: $(rootfs_dir) .ensure-head-is-release
 	sudo git						\
-		--git-dir='$(container_dir)/puavo-os/.git'	\
-		--work-tree='$(container_dir)/puavo-os'		\
+		--git-dir='$(rootfs_dir)/puavo-os/.git'	\
+		--work-tree='$(rootfs_dir)/puavo-os'		\
 		fetch origin
 	sudo git						\
-		--git-dir='$(container_dir)/puavo-os/.git'	\
-		--work-tree='$(container_dir)/puavo-os'		\
+		--git-dir='$(rootfs_dir)/puavo-os/.git'	\
+		--work-tree='$(rootfs_dir)/puavo-os'		\
 		reset --hard origin/HEAD
 
 .PHONY: container-update
