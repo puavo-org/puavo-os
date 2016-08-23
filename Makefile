@@ -66,6 +66,8 @@ container-build:
 
 	sudo mv '$(container_dir).tmp' '$(container_dir)'
 
+	make container-update
+
 $(image_dir):
 	sudo mkdir -p '$(image_dir)'
 
