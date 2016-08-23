@@ -1,6 +1,6 @@
-# Configurable parameters
+# Public, configurable variables
 rootfs_dir := /var/tmp/puavo-os/rootfs
-image_dir     := /srv/puavo-os-images
+image_dir  := /srv/puavo-os-images
 
 _image_class := allinone
 _image_file  := $(image_dir)/puavo-os-$(_image_class)-$(shell date -u +%Y-%m-%d-%H%M%S)_amd64.img
@@ -29,8 +29,8 @@ help:
 	@echo '    push-release                -  make a release commit and publish it'
 	@echo
 	@echo 'Variables:'
-	@echo '    rootfs_dir                  -  set Puavo OS rootfs directory [$(rootfs_dir)]'
-	@echo '    image_dir                   -  set Puavo OS image directory [$(image_dir)]'
+	@echo '    rootfs_dir                  -  Puavo OS rootfs directory [$(rootfs_dir)]'
+	@echo '    image_dir                   -  directory where images are built [$(image_dir)]'
 
 .PHONY: .ensure-head-is-release
 .ensure-head-is-release:
