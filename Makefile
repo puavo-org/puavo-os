@@ -28,7 +28,7 @@ help:
 	@echo '    rootfs                      -  build Puavo OS rootfs from scratch'
 	@echo '    image                       -  pack container to a squashfs image'
 	@echo '    spawn-rootfs-shell          -  spawn shell from Puavo OS rootfs'
-	@echo '    container-update            -  update Puavo OS container'
+	@echo '    update-rootfs               -  update Puavo OS container'
 	@echo '    container-sync              -  synchronize Puavo OS container repository with the current repository'
 	@echo '    local-update                -  update Puavo OS localhost'
 	@echo '    push-release                -  make a release commit and publish it'
@@ -66,7 +66,7 @@ rootfs:
 
 	sudo mv '$(rootfs_dir).tmp' '$(rootfs_dir)'
 
-	make container-update
+	make update-rootfs
 
 $(image_dir):
 	sudo mkdir -p '$(image_dir)'
@@ -95,8 +95,8 @@ container-sync: $(rootfs_dir) .ensure-head-is-release
 		--work-tree='$(rootfs_dir)/puavo-os'		\
 		reset --hard origin/HEAD
 
-.PHONY: container-update
-container-update: container-sync
+.PHONY: update-rootfs
+update-rootfs: container-sync
 	sudo $(_systemd_nspawn_cmd) make -C /puavo-os local-update
 
 .PHONY: local-update
