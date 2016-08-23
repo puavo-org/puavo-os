@@ -10,12 +10,12 @@ image_dir     := /srv/puavo-os-images
 _image_class := allinone
 _image_file  := $(image_dir)/puavo-os-$(_image_class)-$(shell date -u +%Y-%m-%d-%H%M%S)_amd64.img
 
-_container_bootstrap_mirror := $(shell				\
+_debootstrap_mirror := $(shell				\
 	awk '/^\s*deb .+ jessie main.*$$/ {print $$2; exit}'	\
 	/etc/apt/sources.list 2>/dev/null)
 
-_container_bootstrap_packages := devscripts,equivs,git,locales,lsb-release,\
-                                 make,puppet-common,sudo
+_debootstrap_packages := devscripts,equivs,git,locales,lsb-release,make,\
+                         puppet-common,sudo
 
 _systemd_nspawn_cmd := systemd-nspawn -D '$(container_dir)' --setenv=LANG=en_US.UTF-8
 
@@ -51,9 +51,9 @@ container-build:
 		{ echo ERROR: container directory '$(container_dir)' already exists >&2; false; }
 	sudo debootstrap					\
 		--arch=amd64					\
-		--include='$(_container_bootstrap_packages)'	\
+		--include='$(_debootstrap_packages)'	\
 		--components=main,contrib,non-free		\
-		jessie '$(container_dir).tmp' '$(_container_bootstrap_mirror)'
+		jessie '$(container_dir).tmp' '$(_debootstrap_mirror)'
 
 	sudo git clone . '$(container_dir).tmp/puavo-os'
 
