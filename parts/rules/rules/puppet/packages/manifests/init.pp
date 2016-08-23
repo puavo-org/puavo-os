@@ -72,7 +72,6 @@ class packages {
     , 'nfs-common'
     , 'openssh-client'
     , 'openssh-server'
-    , 'policykit-1'
     , 'pm-utils'
     , 'rng-tools'
     , 'udev'
@@ -151,44 +150,27 @@ class packages {
     [ 'ttf-mscorefonts-installer' ]:
       tag => [ 'tag_fonts', 'tag_debian', ];
 
-    [ 'billard-gl'
-    , 'cuyo'
-    , 'dosbox'
+    [ 'dosbox'
     , 'extremetuxracer'
     , 'freeciv-client-gtk'
-    , 'frozen-bubble'
-    , 'gbrainy'
     , 'gcompris'
     , 'gcompris-sound-en'
     , 'gcompris-sound-fi'
     , 'gcompris-sound-sv'
-    , 'gnibbles'
-    , 'gnotski'
     , 'gnubg'
     , 'gnuchess'
-    , 'icebreaker'
-    , 'kanagram'
-    , 'kdeedu'
     , 'khangman'
-    , 'kolf'
     , 'ktouch'
-    , 'ktuberling'
     , 'kwordquiz'
-    , 'laby'
-    , 'lincity-ng'
     , 'luola'
     , 'neverball'
     , 'neverputt'
     , 'openttd'
-    , 'pacman'
-    , 'pingus'
     , 'realtimebattle'
-    , 'sgt-puzzles'
     , 'supertuxkart'
     , 'tuxmath'
     , 'tuxpaint'
     , 'tuxpaint-stamps-default'
-    , 'warmux'
     , 'xmoto' ]:
       tag => [ 'tag_games', 'tag_debian', ];
 
@@ -211,12 +193,8 @@ class packages {
     , 'gimp-gap'
     , 'gimp-plugin-registry'
     , 'gimp-ufraw'
-    , 'gocr'
     , 'gthumb'
-    , 'gtkam'
-    , 'hugin'
     , 'inkscape'
-    , 'jhead'
     , 'kdenlive'
     , 'kino'
     , 'kolourpaint4'
@@ -236,26 +214,18 @@ class packages {
     , 'pitivi'
     , 'python-lxml'
     , 'sane-utils'
-    , 'stopmotion'
-    , 'synfig'
-    , 'synfigstudio'
-    , 'xsane'
-    , 'xzoom' ]:
+    , 'xsane' ]:
       tag => [ 'tag_graphics', 'tag_debian', ];
 
     # XXX some issue on Debian
     # [ 'kdump-tools' ]:
     #   tag => [ 'tag_kernelutils', 'tag_debian', ];
 
-    [ 'emesene'
-    , 'gobby'
-    , 'irssi'
+    [ 'irssi'
     , 'irssi-plugin-xmpp'
     , 'pidgin'
     , 'pidgin-libnotify'
-    , 'pidgin-plugin-pack'
-    , 'sflphone-gnome'
-    , 'xchat' ]:
+    , 'pidgin-plugin-pack' ]:
       tag => [ 'tag_instant_messaging', 'tag_debian', ];
 
     [ 'laptop-mode-tools' ]:
@@ -274,32 +244,25 @@ class packages {
     , 'gstreamer1.0-tools'
     , 'gtk-recordmydesktop'
     , 'kaffeine'
-    , 'kscd'
     , 'libdvdread4'
-    , 'me-tv'
     # , 'ogmrip'		# XXX missing from Debian
     , 'python-gst0.10'
     , 'vlc'
     , 'vlc-plugin-pulse'
-    , 'x264'
-    , 'xbmc' ]:
+    , 'x264' ]:
       tag => [ 'tag_mediaplayer', 'tag_debian', ];
 
-    [ 'ardour'
-    , 'audacity'
+    [ 'audacity'
     , 'denemo'
     , 'fmit'
     , 'hydrogen'
     , 'lmms'
-    , 'mixxx'
     , 'musescore'
     , 'musescore-soundfont-gm'
     , 'qsynth'
-    , 'rakarrack'
     , 'rosegarden'
     , 'solfege'
     , 'soundconverter'
-    , 'sweep'
     , 'tuxguitar'
     , 'tuxguitar-jsa' ]:
       tag => [ 'tag_music_making', 'tag_debian', ];
@@ -311,9 +274,7 @@ class packages {
       tag => [ 'tag_network', 'tag_debian', ];
 
     [ 'calibre'
-    , 'fbreader'
     , 'icedove'
-    , 'librecad'
     , 'libreoffice'
     , 'libreoffice-base'
     , 'scribus'
@@ -322,11 +283,7 @@ class packages {
     , 'vym' ]:
       tag => [ 'tag_office', 'tag_debian', ];
 
-    [ 'cdparanoia'
-    , 'cdrdao'
-    , 'cue2toc'
-    , 'eject'
-    , 'rhythmbox-plugin-cdrecorder'
+    [ 'eject'
     , 'sound-juicer' ]:
       tag => [ 'tag_optical_media', 'tag_debian', ];
 
@@ -348,7 +305,6 @@ class packages {
     , 'idle'
     , 'idle-python2.7'
     , 'idle-python3.4'
-    , 'kompare'
     , 'kturtle'
     , 'lokalize'
     , 'pyqt4-dev-tools'
@@ -356,12 +312,10 @@ class packages {
     , 'python-jsonpickle' # a dependency for
                           # http://meetedison.com/robot-programming-software/
     , 'python-pygame'
-    , 'python-renpy'
     , 'pythontracer'
     , 'qt4-designer'
     , 'qt4-doc'
     , 'racket'
-    , 'renpy'
     , 'scratch'
     , 'spe' ]:
       tag => [ 'tag_programming', 'tag_debian', ];
@@ -371,35 +325,27 @@ class packages {
     , 'lftp'
     , 'remmina'
     , 'smbclient'
-    , 'unison-gtk'
     , 'wget'
     , 'xtightvncviewer']:
       tag => [ 'tag_remote_access', 'tag_debian', ];
 
-    [ 'atomix'
-    , 'avogadro'
+    [ 'avogadro'
     , 'celestia'
     , 'celestia-common-nonfree'
     , 'celestia-gnome'
     # , 'drgeo'		# XXX missing from Debian
-    , 'drgeo-doc'
-    , 'gchempaint'
     # , 'ghemical'	# XXX missing from Debian
     , 'gnucap'
     , 'gnuplot'
     , 'gnuplot-x11'
-    , 'gretl'
     , 'kalzium'
     , 'kbruch'
     , 'kgeography'
-    , 'kig'
     , 'kmplot'
     , 'kstars'
     , 'mandelbulber'
     , 'marble-qt'
-    , 'pspp'
     , 'qgis'
-    , 'rkward'
     , 'stellarium'
     , 'texlive-fonts-extra'
     , 'texlive-fonts-recommended'
@@ -417,8 +363,6 @@ class packages {
     # , 'light-themes'			# XXX missing from Debian
     , 'openclipart'
     , 'oxygen-icon-theme'
-    , 'pidgin-themes'
-    , 'tangerine-icon-theme'
     , 'xscreensaver-data'
     , 'xscreensaver-data-extra' ]:
       tag => [ 'tag_themes', 'tag_debian', ];
@@ -432,7 +376,6 @@ class packages {
     # the dependencies (and recommends) of ubuntu-gnome-desktop package
     # without a few packages that we do not want
     [ 'acpi-support'
-    , 'aisleriot'
     , 'alsa-base'
     , 'alsa-utils'
     , 'anacron'
@@ -465,16 +408,6 @@ class packages {
     , 'fonts-dejavu-core'
     , 'fonts-droid'
     , 'fonts-freefont-ttf'
-    , 'fonts-guru'
-    , 'fonts-kacst-one'
-    , 'fonts-lao'
-    , 'fonts-liberation'
-    , 'fonts-lklug-sinhala'
-    , 'fonts-nanum'
-    , 'fonts-sil-abyssinica'
-    , 'fonts-sil-padauk'
-    , 'fonts-thai-tlwg'
-    , 'fonts-tibetan-machine'
     , 'foomatic-db-compressed-ppds'
     , 'gcc'
     , 'gcr'
@@ -494,22 +427,17 @@ class packages {
     , 'gnome-disk-utility'
     # , 'gnome-documents'	# forces tracker to be installed
 				# (tracker is purged elsewhere)
-    , 'gnome-font-viewer'
     , 'gnome-icon-theme-extras'
     , 'gnome-icon-theme-symbolic'
     , 'gnome-keyring'
-    , 'gnome-mahjongg'
     , 'gnome-menus'
-    , 'gnome-mines'
     , 'gnome-online-accounts'
-    , 'gnome-orca'
     , 'gnome-screenshot'
     , 'gnome-session'
     , 'gnome-session-canberra'
     , 'gnome-settings-daemon'
     , 'gnome-shell'
     , 'gnome-shell-extensions'
-    , 'gnome-sudoku'
     , 'gnome-sushi'
     , 'gnome-system-log'
     , 'gnome-system-monitor'
@@ -583,7 +511,6 @@ class packages {
     , 'pulseaudio-module-x11'
     , 'python3-aptdaemon.pkcompat'
     , 'rfkill'
-    , 'rhythmbox'
     , 'rtmpdump'
     , 'rxvt-unicode'
     , 'seahorse'
@@ -615,34 +542,21 @@ class packages {
     , 'yelp-xsl'
     , 'youtube-dl'
     , 'zenity'
-    , 'zip'
-    , 'zsync' ]:
+    , 'zip' ]:
       tag => [ 'tag_ubuntu-gnome-desktop', 'tag_debian', ];
 
     [ 'bindfs'
     , 'desktop-file-utils'
-    , 'devilspie'
     , 'duplicity'
     , 'exfat-fuse'
     , 'exfat-utils'
     , 'fuse'
     , 'gconf-editor'
     # , 'ginn'			# XXX needs packaging for Debian ?
-    , 'gkbd-capplet'
-    , 'ibus-libpinyin'
-    , 'kdepasswd'
-    , 'keepass2'
-    , 'keepassx'
-    , 'keychain'
-    , 'khelpcenter4'
-    , 'password-gorilla'
-    , 'rarian-compat'
-    , 'screenlets'
     # , 'touchegg'		# XXX needs packaging for Debian ?
     , 'unace'
-    , 'unionfs-fuse'
-    , 'unrar'
-    , 'x-tile' ]:
+    , 'unionfs-fuse' # Ekapeli might need this.
+    , 'unrar' ]:
       tag => [ 'tag_utils', 'tag_debian', ];
 
     [ 'qemu-kvm' ]:
