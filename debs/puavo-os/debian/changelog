@@ -1,3 +1,32 @@
+puavo-os (0.29.0~rc3+5051f7735aea1ae9897495b782932716a4a9d266) trusty; urgency=medium
+
+  * Git(5051f7735aea1ae9897495b782932716a4a9d266)
+  * make: use sysv RC policy to disable daemons in rootfs
+  * part/rules: add sysv::policy-rc
+  * part/rules: remove useless/unnecessary packages
+  * make: setup local puavo-os debs APT repo by Puppet
+  * make: rename target: .local-configure => .configure-localhost
+  * Remove UTF-8 locale requirement
+  * make: minor cosmetic tweaks
+  * make: remove sudo revocation
+  * make: rename term: container => rootfs
+  * make: rename target: local-update => update-localhost
+  * make: rename target: container-sync => update-rootfs-repo
+  * make: rename target: container-update => update-rootfs
+  * make: rename target: container-shell => spawn-rootfs-shell
+  * make: rename target: container-build => rootfs
+  * make: rename container_dir => rootfs_dir
+  * make: rename private variables
+  * make: rename invalid .PHONY target
+  * make: update container after it has been built
+  * make: add container-build target for creating container dir
+  * make: try to mkdir image dir only if it does not exist
+  * make: build images via temporary files
+  * parts/rules: require puavo-conf package for puavo-onboard parameters
+  * make: update debs repository before using apt-get
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Tue, 23 Aug 2016 17:08:01 +0300
+
 puavo-os (0.29.0~rc2+71807ae0de82f30b07564f28b6f621145d7c7560) trusty; urgency=medium
 
   * Git(71807ae0de82f30b07564f28b6f621145d7c7560)
