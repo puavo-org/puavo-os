@@ -1,9 +1,25 @@
+prefix = /usr
+datarootdir = $(prefix)/share
+
+INSTALL = install
+INSTALL_DATA = $(INSTALL) -m 644
+
 packagedirs = adobe-flashplugin/ adobe-reader/ cmaptools/ dropbox/  \
 	      geogebra/ google-chrome/ google-earth/ msttcorefonts/ \
 	      oracle-java/ skype/ spotify-client/ vstloggerpro/
 packagefiles = $(packagedirs:%/=%.tar.gz)
 
+.PHONY: all
 all: $(packagefiles) puavo-pkg-installers-bundle.tar
+
+.PHONY: installdirs
+installdirs:
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-pkg/packages
+
+.PHONY: install
+install: installdirs
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-pkg/packages \
+		$(packagefiles)
 
 puavo-pkg-installers-bundle.tar: $(packagefiles)
 	tar cf "$@" $^
@@ -14,7 +30,6 @@ puavo-pkg-installers-bundle.tar: $(packagefiles)
 %.tar.gz: %/ %/*
 	tar --mtime='2000-01-01 00:00:00 +00:00' -c -f - $< | gzip -n > "$@"
 
+.PHONY: clean
 clean:
 	rm -rf $(packagefiles) puavo-pkg-installers-bundle.tar
-
-.PHONY: all clean
