@@ -1,11 +1,10 @@
 # Public, configurable variables
-rootfs_dir := /var/tmp/puavo-os/rootfs
-image_dir  := /srv/puavo-os-images
+debootstrap_mirror	:= http://httpredir.debian.org/debian/
+image_dir		:= /srv/puavo-os-images
+rootfs_dir		:= /var/tmp/puavo-os/rootfs
 
 _image_class := allinone
 _image_file  := $(image_dir)/puavo-os-$(_image_class)-$(shell date -u +%Y-%m-%d-%H%M%S)_amd64.img
-
-_debootstrap_mirror := http://httpredir.debian.org/debian/
 
 _debootstrap_packages := devscripts,equivs,git,locales,lsb-release,make,\
                          puppet-common,sudo
@@ -27,8 +26,9 @@ help:
 	@echo '    push-release                -  make a release commit and publish it'
 	@echo
 	@echo 'Variables:'
-	@echo '    rootfs_dir                  -  Puavo OS rootfs directory [$(rootfs_dir)]'
+	@echo '    debootstrap_mirror          -  debootstrap mirror [$(debootstrap_mirror)]'
 	@echo '    image_dir                   -  directory where images are built [$(image_dir)]'
+	@echo '    rootfs_dir                  -  Puavo OS rootfs directory [$(rootfs_dir)]'
 
 .PHONY: .ensure-head-is-release
 .ensure-head-is-release:
