@@ -5,9 +5,7 @@ image_dir  := /srv/puavo-os-images
 _image_class := allinone
 _image_file  := $(image_dir)/puavo-os-$(_image_class)-$(shell date -u +%Y-%m-%d-%H%M%S)_amd64.img
 
-_debootstrap_mirror := $(shell				\
-	awk '/^\s*deb .+ jessie main.*$$/ {print $$2; exit}'	\
-	/etc/apt/sources.list 2>/dev/null)
+_debootstrap_mirror := http://httpredir.debian.org/debian/
 
 _debootstrap_packages := devscripts,equivs,git,locales,lsb-release,make,\
                          puppet-common,sudo
