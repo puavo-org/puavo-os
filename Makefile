@@ -4,7 +4,7 @@ image_dir		:= /srv/puavo-os-images
 rootfs_dir		:= /var/tmp/puavo-os/rootfs
 
 _image_class := allinone
-_image_file  := $(image_dir)/puavo-os-$(_image_class)-$(shell date -u +%Y-%m-%d-%H%M%S)_amd64.img
+_image_file  := $(image_dir)/puavo-os-$(_image_class)-$(shell date -u +%Y-%m-%d-%H%M%S)-amd64.img
 
 _debootstrap_packages := devscripts,equivs,git,locales,lsb-release,make,\
                          puppet-common,sudo
