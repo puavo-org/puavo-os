@@ -46,7 +46,7 @@ rootfs:
 		--arch=amd64					\
 		--include='$(_debootstrap_packages)'	\
 		--components=main,contrib,non-free		\
-		jessie '$(rootfs_dir).tmp' '$(_debootstrap_mirror)'
+		jessie '$(rootfs_dir).tmp' '$(debootstrap_mirror)'
 
 	sudo git clone . '$(rootfs_dir).tmp/puavo-os'
 
