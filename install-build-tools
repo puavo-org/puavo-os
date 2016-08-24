@@ -3,4 +3,4 @@
 set -eu
 
 apt-get update
-apt-get install dbus debootstrap git make squashfs-tools systemd
+apt-get install dbus debootstrap git make squashfs-tools sudo systemd
