@@ -1,3 +1,11 @@
+puavo-os (0.30.1+4095cb9d101e996a612dbaa172cc5b4e354ca3ba) trusty; urgency=medium
+
+  * Git(4095cb9d101e996a612dbaa172cc5b4e354ca3ba)
+  * make: fix mksquashfs exclude file syntax
+  * make: change the default debootstrap mirror to httpredir.debian.org
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Wed, 24 Aug 2016 12:34:42 +0300
+
 puavo-os (0.30.0+318d768e789ae4afb6d79860885b79441028a31a) trusty; urgency=medium
 
   * Git(318d768e789ae4afb6d79860885b79441028a31a)
