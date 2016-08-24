@@ -12,7 +12,7 @@ _debootstrap_mirror := $(shell				\
 _debootstrap_packages := devscripts,equivs,git,locales,lsb-release,make,\
                          puppet-common,sudo
 
-_systemd_nspawn_cmd := systemd-nspawn -D '$(rootfs_dir)' --setenv=DISABLE_DAEMONS=1
+_systemd_nspawn_cmd := systemd-nspawn -D '$(rootfs_dir)'
 
 .PHONY: help
 help:
@@ -52,6 +52,8 @@ rootfs:
 
 	sudo git clone . '$(rootfs_dir).tmp/puavo-os'
 
+	sudo ln -s /puavo-os/.aux/policy-rc.d '$(rootfs_dir).tmp/usr/sbin/policy-rc.d'
+
 	sudo mv '$(rootfs_dir).tmp' '$(rootfs_dir)'
 
 	make update-rootfs
@@ -61,9 +63,9 @@ $(image_dir):
 
 .PHONY: image
 image: $(rootfs_dir) $(image_dir)
-	sudo mksquashfs '$(rootfs_dir)' '$(_image_file).tmp'			\
-		-noappend -no-recovery -wildcards				\
-		-ef parts/ltsp/tools/image-build/config/puavoimage.excludes	\
+	sudo mksquashfs '$(rootfs_dir)' '$(_image_file).tmp'	\
+		-noappend -no-recovery -wildcards		\
+		-ef '.aux/$(_image_class).excludes'		\
 		|| { rm -f '$(_image_file).tmp'; false; }
 	sudo mv '$(_image_file).tmp' '$(_image_file)'
 	@echo Built '$(image_file)' successfully.

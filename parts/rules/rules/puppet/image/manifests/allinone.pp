@@ -45,9 +45,6 @@ class image::allinone {
   class {
     'apt::default_repositories':
       stage => pre-main;
-
-    'sysv::policy-rc':
-      stage => init;
   }
 
   Package <| tag == 'tag_debian'
