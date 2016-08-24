@@ -1,3 +1,12 @@
+puavo-os (0.31.0~rc1+d67659b4c382cd33c7cac8b3d6688dde36f523cf) trusty; urgency=medium
+
+  * Git(d67659b4c382cd33c7cac8b3d6688dde36f523cf)
+  * Add sudo to the list of build tools
+  * make: fix image arch suffix
+  * Install puavo-packages to /usr/share/puavo-pkg/packages.
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Wed, 24 Aug 2016 16:05:24 +0300
+
 puavo-os (0.30.3+e34f566092a5ccf53c7d66db88a60b5de1f382af) trusty; urgency=medium
 
   * Git(e34f566092a5ccf53c7d66db88a60b5de1f382af)
