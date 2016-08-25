@@ -6,6 +6,7 @@ class apt::default_repositories {
 
   apt::repositories::setup {
     'apt':
+      localmirror    => $localmirror,
       mirror         => $mirror,
       securitymirror => $securitymirror;
   }

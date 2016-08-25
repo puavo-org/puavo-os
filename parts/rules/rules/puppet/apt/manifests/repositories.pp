@@ -1,7 +1,8 @@
 class apt::repositories {
   include apt
 
-  define setup ($mirror,
+  define setup ($localmirror='',
+                $mirror,
                 $mirror_path='',
                 $securitymirror,
                 $securitymirror_path='') {

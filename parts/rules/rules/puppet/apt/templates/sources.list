@@ -6,5 +6,6 @@ deb http://<%= @mirror %><%= @mirror_path %>/debian <%= @lsbdistcodename %>-back
 deb-src http://<%= @mirror %><%= @mirror_path %>/debian <%= @lsbdistcodename %>-backports main contrib non-free
 deb http://<%= @securitymirror %><%= @securitymirror_path %>/ <%= @lsbdistcodename %>/updates main contrib non-free
 deb-src http://<%= @securitymirror %><%= @securitymirror_path %>/ <%= @lsbdistcodename %>/updates main contrib non-free
-
-deb [trusted=yes] file:///puavo-os/debs /
+<% unless @localmirror.empty? %>
+deb [trusted=yes] file://<%= @localmirror %> /
+<% end %>
