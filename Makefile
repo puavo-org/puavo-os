@@ -11,6 +11,8 @@ _debootstrap_packages := devscripts,equivs,git,locales,lsb-release,make,\
 
 _systemd_nspawn_cmd := systemd-nspawn -D '$(rootfs_dir)'
 
+include .opinsys/defaults.mk
+
 .PHONY: help
 help:
 	@echo 'Puavo OS Build System'
