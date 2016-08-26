@@ -1,3 +1,13 @@
+# Disable duplicate DN creation checks as the hdb database creation 
+# fails otherwise. A better workaround should be figured out for this.
+module ActiveLdap
+  module Validations
+    def validate_duplicated_dn_creation
+      true
+    end
+  end
+end
+
 class Overlay < ActiveLdap::Base
 
   def self.ldap_mapping(args)
