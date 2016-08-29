@@ -1,3 +1,19 @@
+puavo-os (0.31.0+716fc994d96935fe66da3d6b887ab8a0317031fb) trusty; urgency=medium
+
+  * Git(716fc994d96935fe66da3d6b887ab8a0317031fb)
+  * parts/rules: adm: allow admins to gain root without password
+  * parts/rules: image: include adm in allinone
+  * parts/rules: adm: add all adm users to a common supplementary group
+  * parts/vpn: get remote host from puavo-conf
+  * parts/vpn: remove openvpn.conf
+  * parts/rules: bash: require bash package
+  * parts/rules: use existing separate bash module for bash
+    configuration
+  * parts/rules: adm: define one common adm user
+  * parts/rules: add class for managing adm users
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Mon, 29 Aug 2016 16:03:48 +0300
+
 puavo-os (0.31.0~rc2+1894b5186c15d077560b0965699d76a178538723) trusty; urgency=medium
 
   * Git(1894b5186c15d077560b0965699d76a178538723)
