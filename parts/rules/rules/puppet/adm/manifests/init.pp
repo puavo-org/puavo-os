@@ -64,6 +64,10 @@ class adm {
   }
 
   file {
+    '/etc/sudoers.d/puavo-os-adm':
+      content => template('adm/sudoers.d/puavo-os-adm'),
+      mode    => 440;
+
     $adm::home_basedir:
       ensure  => directory;
   }
@@ -74,5 +78,6 @@ class adm {
       gid    => $adm::common_group_gid;
   }
 
-  Package <| title == "cups-client" |>
+  Package <| title == "cups-client"
+          or title == "sudo" |>
 }
