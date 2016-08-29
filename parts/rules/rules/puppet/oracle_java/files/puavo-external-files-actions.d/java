@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -eu
+
+external_file=/state/external_files/DeploymentRuleSet.jar
+
+if [ ! -f "${external_file}" ]; then
+    exit 0
+fi
+
+install -m 644 -T "${external_file}" /etc/.java/deployment/DeploymentRuleSet.jar

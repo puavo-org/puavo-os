@@ -1,0 +1,131 @@
+<ruleset version="1.0+">
+	<rule>
+		<id location="https://*.sanomapro.fi" />
+		<action permission="run" />
+	</rule>
+	<rule>
+		<id location="http://*.sanomapro.fi" />
+		<action permission="run" />
+	</rule>
+	<rule>
+		<id location="https://*.oulunkaupunki.fi" />
+		<action permission="run" />
+	</rule>
+	<rule>
+		<id location="http://*.oulunkaupunki.fi" />
+		<action permission="run" />
+	</rule>
+	<rule>
+		<id location="https://*.lukimat.fi" />
+		<action permission="run" />
+	</rule>
+	<rule>
+		<id location="http://*.lukimat.fi" />
+		<action permission="run" />
+	</rule>
+	<rule>
+		<id location="https://*.edu.fi" />
+		<action permission="run" />
+	</rule>
+	<rule>
+		<id location="http://*.edu.fi" />
+		<action permission="run" />
+	</rule>
+	<rule>
+		<id location="https://*.maanmittauslaitos.fi" />
+		<action permission="run" />
+	</rule>
+	<rule>
+		<id location="http://*.maanmittauslaitos.fi" />
+		<action permission="run" />
+	</rule>
+	<rule>
+		<id location="https://*.geogebra.org" />
+		<action permission="run" />
+	</rule>	
+	<rule>
+		<id location="http://*.geogebra.org" />
+		<action permission="run" />
+	</rule>
+	<rule>
+		<id location="https://*.monetra.fi" />
+		<action permission="run" />
+	</rule>
+	<rule>
+		<id location="http://*.monetra.fi" />
+		<action permission="run" />
+	</rule>
+	<rule>
+		<id location="https://*.uoregon.edu" />
+		<action permission="run" />
+	</rule>
+	<rule>
+		<id location="http://*.uoregon.edu" />
+		<action permission="run" />
+	</rule>	
+	<rule>
+		<id location="https://*.otavanoppimateriaalit.net" />
+		<action permission="run" />
+	</rule>
+        <rule>
+                <id location="http://*.otavanoppimateriaalit.net" />
+                <action permission="run" />
+        </rule>
+	<rule>
+		<id location="https://*.ibiblio.org" />
+		<action permission="run" />
+	</rule>
+        <rule>
+                <id location="http://*.ibiblio.org" />
+                <action permission="run" />
+        </rule>
+        <rule>
+                <id location="https://*.walter-fendt.de" />
+                <action permission="run" />
+        </rule>
+        <rule>
+                <id location="http://*.walter-fendt.de" />
+                <action permission="run" />
+        </rule>
+        <rule>
+                <id location="http://geonext.uni-bayreuth.de" />
+                <action permission="run" />
+        </rule>       
+        <rule>
+                <id location="https://geonext.uni-bayreuth.de" />
+                <action permission="run" />
+        </rule>  
+        <rule>
+                <id location="http://meeting2.mmg.fi" />
+                <action permission="run" />
+        </rule>
+        <rule>
+                <id location="https://meeting2.mmg.fi" />
+                <action permission="run" />
+        </rule>
+        <rule>
+                <id location="http://www-users.math.umn.edu" />
+                <action permission="run" />
+        </rule>
+        <rule>
+                <id location="https://www-users.math.umn.edu" />
+                <action permission="run" />
+        </rule>
+        <rule>
+                <id location="https://webstation21.evalvomo.fi" />
+                <action permission="run" />
+        </rule>
+        <rule>
+                <id location="http://webstation21.evalvomo.fi" />
+                <action permission="run" />
+        </rule>
+        <rule>
+                <id location="https://maanystavat.fi" />
+                <action permission="run" />
+        </rule>
+        <rule>
+                <id location="http://maanystavat.fi" />
+                <action permission="run" />
+        </rule>
+</ruleset>
+

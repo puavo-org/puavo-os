@@ -1,0 +1,29 @@
+#!/bin/bash
+
+set -eu
+
+on_exit()
+{
+    exitval=$?
+
+    if [ -n "${tmpdir}" ]; then
+        rm -rf "${tmpdir}"
+    fi
+
+    return $exitval
+}
+
+tmpdir=
+
+trap on_exit EXIT
+
+tmpdir=$(mktemp -d --tmpdir)
+tmpfile="${tmpdir}/DeploymentRuleSet.jar"
+
+jar -cf "${tmpfile}" -C /opt/java ruleset.xml
+jarsigner -keystore /opt/java/opinsys.keystore \
+    -storepass changeit -keypass changeit \
+    "${tmpfile}" opinsys-java
+
+mkdir -p /etc/.java/deployment
+install -m 644 -T "${tmpfile}" /etc/.java/deployment/DeploymentRuleSet.jar

@@ -1,0 +1,17 @@
+#!/bin/sh
+
+if [ $# -eq 0 ]; then
+    set -- /opt/java/jre*
+fi
+
+for jredir in "$@"; do
+    LANG=C keytool -list -keystore "${jredir}/lib/security/cacerts" \
+        -storepass changeit | grep -q opinsys-java || {
+        LANG=C keytool -importkeystore \
+            -destkeystore "${jredir}/lib/security/cacerts" \
+            -deststorepass changeit \
+            -srckeystore /opt/java/opinsys.keystore \
+            -srcstorepass changeit \
+            -alias opinsys-java
+    }
+done
