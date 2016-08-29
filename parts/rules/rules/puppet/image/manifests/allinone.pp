@@ -1,5 +1,6 @@
 class image::allinone {
-  include ::autopoweroff,
+  include ::adm::users,
+          ::autopoweroff,
           ::chromium,
           ::console,
           ::desktop,
