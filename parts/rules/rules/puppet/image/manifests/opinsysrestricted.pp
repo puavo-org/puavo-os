@@ -1,3 +1,4 @@
 class image::opinsysrestricted {
-  include ::image::allinone
+  include ::image::allinone,
+          ::ssh_server
 }
