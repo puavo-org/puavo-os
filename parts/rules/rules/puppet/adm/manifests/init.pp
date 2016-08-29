@@ -1,5 +1,6 @@
 class adm {
-  include packages
+  include bash,
+          packages
 
   $home_basedir = '/adm-home'
   $uid_min      = '1000'
@@ -61,12 +62,6 @@ class adm {
   }
 
   file {
-    '/etc/bash.bashrc':
-      content => template('adm/bash.bashrc');
-
-    '/etc/skel/.bashrc':
-      content => template('adm/etc_skel_.bashrc');
-
     $adm::home_basedir:
       ensure  => directory;
   }

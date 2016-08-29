@@ -18,29 +18,56 @@ fi
 # set a fancy prompt (non-color, overwrite the one in /etc/profile)
 PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
 
-# if the command-not-found package is installed, use it
-if [ -x /usr/lib/command-not-found -o -x /usr/share/command-not-found ]; then
-	function command_not_found_handle {
-	        # check because c-n-f could've been removed in the meantime
-                if [ -x /usr/lib/command-not-found ]; then
-		   /usr/bin/python /usr/lib/command-not-found -- $1
-                   return $?
-                elif [ -x /usr/share/command-not-found ]; then
-		   /usr/bin/python /usr/share/command-not-found -- $1
-                   return $?
-		else
-		   return 127
-		fi
-	}
+# Commented out, don't overwrite xterm -T "title" -n "icontitle" by default.
+# If this is an xterm set the title to user@host:dir
+#case "$TERM" in
+#xterm*|rxvt*)
+#    PROMPT_COMMAND='echo -ne "\033]0;${USER}@${HOSTNAME}: ${PWD}\007"'
+#    ;;
+#*)
+#    ;;
+#esac
+
+# enable bash completion in interactive shells
+#if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
+#    . /etc/bash_completion
+#fi
+
+# sudo hint
+if [ ! -e "$HOME/.sudo_as_admin_successful" ]; then
+    case " $(groups) " in *\ admin\ *)
+    if [ -x /usr/bin/sudo ]; then
+        cat <<-EOF
+        To run a command as administrator (user "root"), use "sudo <command>".
+        See "man sudo_root" for details.
+EOF
+    fi
+    esac
 fi
 
-if [ "$(id -u)" = 0 ] || (groups | fgrep -qw puavoadmins); then
+# if the command-not-found package is installed, use it
+if [ -x /usr/lib/command-not-found -o -x /usr/share/command-not-found ]; then
+        function command_not_found_handle {
+                # check because c-n-f could've been removed in the meantime
+                if [ -x /usr/lib/command-not-found ]; then
+                   /usr/bin/python /usr/lib/command-not-found -- $1
+                   return $?
+                elif [ -x /usr/share/command-not-found ]; then
+                   /usr/bin/python /usr/share/command-not-found -- $1
+                   return $?
+                else
+                   return 127
+                fi
+        }
+fi
+
+if [ "$(id -u)" = 0 ] || (groups | fgrep -qw adm); then
   if [ "$(id -u)" = 0 ]; then
-    # Red prompt for root.
-    PS1="\[\e[1;31m\][<%= scope.lookupvar('config::organisation') %>] \u@\h:\w\$\[\e[0m\] "
+    # red prompt for root
+    PS1="\[\e[1;31m\] \u@\h:\w\$\[\e[0m\] "
   else
-    # Magenta prompt for puavoadmins.
-    PS1="\[\e[1;35m\][<%= scope.lookupvar('config::organisation') %>] \u@\h:\w\$\[\e[0m\] "
+    # magenta prompt for adm users
+    PS1="\[\e[1;35m\] \u@\h:\w\$\[\e[0m\] "
   fi
 
   # automatic logout if shell is idle for 30 minutes
