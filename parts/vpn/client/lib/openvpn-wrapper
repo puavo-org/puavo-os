@@ -17,5 +17,4 @@ set -eu
     --route-up '/usr/lib/puavo-vpn-client/runme route-up' \
     --writepid /run/puavo-vpn-client-openvpn.pid          \
     --status /run/puavo-vpn-client-openvpn.status 10      \
-    --config /etc/puavo-vpn-client/openvpn.conf           \
     $(sed 's/^/--remote /' /etc/puavo/vpn/servers)

@@ -27,9 +27,6 @@ install : installdirs systemd/puavo-vpn-client-dnsmasq.service systemd/puavo-vpn
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/dbus-1/system.d \
 		dbus/org.puavo.VPN.conf
 
-	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-vpn-client \
-		openvpn.conf
-
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-vpn-client \
 		lib/*
 
