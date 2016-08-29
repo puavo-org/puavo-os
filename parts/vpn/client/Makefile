@@ -2,6 +2,7 @@ prefix = /usr/local
 exec_prefix = $(prefix)
 libdir = $(exec_prefix)/lib
 sysconfdir = $(prefix)/etc
+datarootdir = $(prefix)/share
 
 INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
@@ -21,11 +22,15 @@ installdirs :
 	mkdir -p $(DESTDIR)$(sysconfdir)/dbus-1/system.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-vpn-client/scripts/route-up
 	mkdir -p $(DESTDIR)$(libdir)/puavo-vpn-client
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/definitions
 
 .PHONY : install
 install : installdirs systemd/puavo-vpn-client-dnsmasq.service systemd/puavo-vpn-client-openvpn.service
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/dbus-1/system.d \
 		dbus/org.puavo.VPN.conf
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-conf/definitions \
+		puavo-vpn-client.json
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-vpn-client \
 		lib/*

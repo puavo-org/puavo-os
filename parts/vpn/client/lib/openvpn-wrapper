@@ -2,6 +2,8 @@
 
 set -eu
 
+remote_host=$(puavo-conf puavo.vpn.client.remote_host)
+
 /usr/sbin/openvpn                                         \
     --client                                              \
     --dev tap                                             \
@@ -17,4 +19,4 @@ set -eu
     --route-up '/usr/lib/puavo-vpn-client/runme route-up' \
     --writepid /run/puavo-vpn-client-openvpn.pid          \
     --status /run/puavo-vpn-client-openvpn.status 10      \
-    $(sed 's/^/--remote /' /etc/puavo/vpn/servers)
+    --remote "${remote_host}"
