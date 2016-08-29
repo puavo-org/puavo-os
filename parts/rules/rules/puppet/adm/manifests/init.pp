@@ -2,9 +2,11 @@ class adm {
   include bash,
           packages
 
-  $home_basedir = '/adm-home'
-  $uid_min      = '1000'
-  $uid_max      = '1099'
+  $common_group     = 'puavo-os-adm'
+  $common_group_gid = 555
+  $home_basedir     = '/adm-home'
+  $uid_max          = '1099'
+  $uid_min          = '1000'
 
   define user ($uid, $sshkey=undef, $sshkey_type=undef, $shell='/bin/bash') {
     $username   = $title
@@ -51,7 +53,7 @@ class adm {
         ensure     => present,
         uid        => $uid,
         gid        => $uid,
-        groups     => [ 'adm', 'lpadmin' ],
+        groups     => [ 'adm', 'lpadmin', $adm::common_group ],
         home       => $homedir,
         require    => [ File['/etc/skel/.bashrc']
                       , Group[$username]
@@ -64,6 +66,12 @@ class adm {
   file {
     $adm::home_basedir:
       ensure  => directory;
+  }
+
+  group {
+    $adm::common_group:
+      ensure => present,
+      gid    => $adm::common_group_gid;
   }
 
   Package <| title == "cups-client" |>
