@@ -1,0 +1,9 @@
+set -o vi
+export EDITOR=vi
+
+cat <<'EOF' > ~/.vimrc
+highlight ExtraWhitespace ctermbg=darkgreen guibg=lightgreen
+match ExtraWhitespace /\s\+$/
+set expandtab
+set sw=2
+EOF
