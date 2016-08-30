@@ -69,6 +69,7 @@ class adm {
         gid        => $uid,
         groups     => [ 'adm', 'lpadmin', $adm::common_group ],
         home       => $homedir,
+        managehome => true,
         require    => [ File['/etc/skel/.bashrc']
                       , Group[$username]
                       , Package['cups-client'] ],
