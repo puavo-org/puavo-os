@@ -37,6 +37,13 @@ class adm {
         mode    => 644,
         source  => [ "puppet:///modules/adm/users/$username/.bash_by_puppet"
                    , "puppet:///modules/adm/common/.bash_by_puppet" ];
+
+      "$homedir/.gitconfig":
+        owner   => $username,
+        group   => $username,
+        mode    => 644,
+        source  => [ "puppet:///modules/adm/users/$username/.gitconfig"
+                   , "puppet:///modules/adm/common/.gitconfig" ];
     }
 
     group {
