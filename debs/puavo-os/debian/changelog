@@ -1,3 +1,23 @@
+puavo-os (0.33.0~rc1+127d33c04b8997dc38ddad2c3abc2716686dd10a) trusty; urgency=medium
+
+  * Git(127d33c04b8997dc38ddad2c3abc2716686dd10a)
+  * I do not think adm-jokor wants a vi-environment.
+  * parts/rules: adm: add .bash_by_puppet for adm-jokor
+  * parts/rules: adm: add .bash_by_puppet for adm-juhaerk
+  * parts/rules: adm: add .gitconfig for adm-juhaerk
+  * parts/rules: adm: add .bash_by_puppet for adm-tuomasjjrasanen
+  * parts/rules: adm: add .gitconfig for adm-tuomasjjrasanen
+  * parts/rules: adm: add our admin users
+  * parts/rules: include oracle_java in opinsysrestricted images
+  * parts/rules: include ssh_server in opinsysrestricted images
+  * make: build opinsysrestricted images by default
+  * parts/rules: image: add opinsysrestricted image class
+  * parts/rules: add module for configuring Oracle Java
+  * parts/rules: add module for configuring ssh server
+  * make: overwrite Makefile variable defaults
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Tue, 30 Aug 2016 15:34:12 +0300
+
 puavo-os (0.32.0+16c1c5471f06d64afaab1456b725832b669f843e) trusty; urgency=medium
 
   * Git(16c1c5471f06d64afaab1456b725832b669f843e)
