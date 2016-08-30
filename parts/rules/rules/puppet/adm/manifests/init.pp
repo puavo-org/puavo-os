@@ -30,6 +30,13 @@ class adm {
         owner   => $username,
         group   => $username,
         mode    => 700;
+
+      "$homedir/.bash_by_puppet":
+        owner   => $username,
+        group   => $username,
+        mode    => 644,
+        source  => [ "puppet:///modules/adm/users/$username/.bash_by_puppet"
+                   , "puppet:///modules/adm/common/.bash_by_puppet" ];
     }
 
     group {
