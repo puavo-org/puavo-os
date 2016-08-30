@@ -1,3 +1,14 @@
+puavo-os (0.32.0+16c1c5471f06d64afaab1456b725832b669f843e) trusty; urgency=medium
+
+  * Git(16c1c5471f06d64afaab1456b725832b669f843e)
+  * parts/rules: adm: let Puppet manage home directories
+  * parts/rules: adm: add mechanism for distributing user-specific git
+    config file
+  * parts/rules: adm: add mechanism for distributing user-specific bash
+    rc file
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Tue, 30 Aug 2016 12:15:10 +0300
+
 puavo-os (0.31.0+716fc994d96935fe66da3d6b887ab8a0317031fb) trusty; urgency=medium
 
   * Git(716fc994d96935fe66da3d6b887ab8a0317031fb)
