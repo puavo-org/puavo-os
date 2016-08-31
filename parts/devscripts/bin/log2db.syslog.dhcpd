@@ -97,6 +97,7 @@ def main():
         for i, line in enumerate(logfile):
             line_match = LINE_PATTERN.match(line)
             if not line_match:
+                print("ERROR: invalid data on line %d" % i, file=sys.stderr)
                 continue
 
             date, hostname, process, data = line_match.groups()
