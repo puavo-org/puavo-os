@@ -122,7 +122,6 @@ def main():
                 VALUES(NULL, ?, ?, ?, ?, ?, ?);
                 ''', (name, timestamp, ipaddr, macaddr, hostname, interface))
             except:
-                print(i, name, hostname, ipaddr, macaddr, interface, timestamp)
                 raise
 
     conn.commit()
