@@ -20,8 +20,10 @@ print Puavo::Client::Base.new_by_ldap_entry(
   }
 
   exec {
-    '/usr/sbin/puavo-init-samba-server':
-      creates => '/etc/samba/cifs.keytab';
+    'fetch cifs.keytab':
+      command => "/usr/bin/smbpasswd -w '${puavo_ldap_password}' && /usr/sbin/kadmin.local -q 'ktadd -norandkey -k /etc/samba/cifs.keytab cifs/${puavo_hostname}.${puavo_domain}'",
+      creates => '/etc/samba/cifs.keytab',
+      notify  => [ Service['nmbd'], Service['smbd'] ];
   }
 
   package {
