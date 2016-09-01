@@ -4,14 +4,14 @@ image_class		:= allinone
 image_dir		:= /srv/puavo-os-images
 rootfs_dir		:= /var/tmp/puavo-os/rootfs
 
+include .opinsys/defaults.mk
+
 _image_file  := $(image_dir)/puavo-os-$(image_class)-$(shell date -u +%Y-%m-%d-%H%M%S)-amd64.img
 
 _debootstrap_packages := devscripts,equivs,git,locales,lsb-release,make,\
                          puppet-common,sudo
 
 _systemd_nspawn_cmd := systemd-nspawn -D '$(rootfs_dir)'
-
-include .opinsys/defaults.mk
 
 .PHONY: help
 help:
