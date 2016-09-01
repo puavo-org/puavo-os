@@ -1,3 +1,19 @@
+puavo-os (0.33.0~rc1+0454f0952eb491c1d8657f3963ec07dba5d07e46) trusty; urgency=medium
+
+  * Git(0454f0952eb491c1d8657f3963ec07dba5d07e46)
+  * db2fig.syslog.dhcpd: rename function
+  * db2fig.syslog.dhcpd: remove useless figure
+  * log2db.syslog.dhcpd: try to deduce the year from rtc_cmos kernel
+    message
+  * log2db.syslog.dhcpd: remove debug print statement
+  * log2db.syslog.dhcpd: print error if invalid line is encountered
+  * Use a generated machine name for systemd-nspawn so that we can get
+    to the same container simultaneously from different shells/actions.
+  * It's nicer when help messages fit 80 columns.
+  * Make image_class public.
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Thu, 01 Sep 2016 17:18:39 +0300
+
 puavo-os (0.32.0+16c1c5471f06d64afaab1456b725832b669f843e) trusty; urgency=medium
 
   * Git(16c1c5471f06d64afaab1456b725832b669f843e)
