@@ -14,11 +14,26 @@ print Puavo::Client::Base.new_by_ldap_entry(
 
     '/etc/samba/smb.conf':
       content => template('bootserver_samba/smb.conf'),
-      mode    => 0644;
+      mode    => 0644,
+      notify  => [ Service['nmbd'], Service['smbd'] ],
+      require => Package['samba'];
   }
 
   exec {
     '/usr/sbin/puavo-init-samba-server':
       creates => '/etc/samba/cifs.keytab';
+  }
+
+  package {
+    'samba':
+      ensure => present;
+  }
+
+  service {
+    [ 'nmbd'
+    , 'smbd' ]:
+      enable  => true,
+      ensure  => running,
+      require => Package['samba'];
   }
 }
