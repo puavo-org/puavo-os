@@ -27,7 +27,8 @@ print Puavo::Client::Base.new_by_ldap_entry(
   }
 
   package {
-    'samba':
+    [ 'samba'
+    , 'winbind' ]:
       ensure => present;
   }
 
@@ -37,5 +38,10 @@ print Puavo::Client::Base.new_by_ldap_entry(
       enable  => true,
       ensure  => running,
       require => Package['samba'];
+
+    'winbind':
+      enable  => true,
+      ensure  => running,
+      require => Package['winbind'];
   }
 }
