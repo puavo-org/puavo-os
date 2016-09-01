@@ -28,8 +28,6 @@ installdirs :
 	mkdir -p $(DESTDIR)$(templatedir)/etc/init.d
 	mkdir -p $(DESTDIR)$(templatedir)/etc/network
 	mkdir -p $(DESTDIR)$(templatedir)/etc/pam.d
-	mkdir -p $(DESTDIR)$(templatedir)/etc/racoon
-	mkdir -p $(DESTDIR)$(templatedir)/etc/samba
 	mkdir -p $(DESTDIR)$(templatedir)/var/lib/bind
 	mkdir -p $(DESTDIR)$(libdir)/puavo-ltsp-bootserver
 
@@ -62,12 +60,6 @@ install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/etc/bind \
 		templates/etc/bind/named.conf.local \
 		templates/etc/bind/named.conf.options
-
-	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/etc/racoon \
-		templates/etc/racoon/racoon.conf
-
-	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/etc/samba \
-		templates/etc/samba/smb.conf
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/var/lib/bind \
 		templates/var/lib/bind/puavo_domain \
