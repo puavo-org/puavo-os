@@ -11,6 +11,14 @@ $LOAD_PATH.unshift(
 require 'optparse'
 require 'puavo-ds'
 
+module ActiveLdap
+  class SupportedControl
+    def initialize(controls)
+      @controls = controls
+    end
+  end
+end
+
 def newpass( len )
   chars = ("a".."z").to_a + ("A".."Z").to_a + ("0".."9").to_a
   newpass = ""
