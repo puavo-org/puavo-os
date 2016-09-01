@@ -16,19 +16,19 @@ help:
 	@echo 'Puavo OS Build System'
 	@echo
 	@echo 'Targets:'
-	@echo '    help                        -  display this help and exit'
-	@echo '    rootfs                      -  build Puavo OS rootfs from scratch'
-	@echo '    image                       -  pack rootfs to a squashfs image'
-	@echo '    spawn-rootfs-shell          -  spawn shell from Puavo OS rootfs'
-	@echo '    update-rootfs               -  update Puavo OS rootfs'
-	@echo '    update-rootfs-repo          -  synchronize Puavo OS rootfs repository with the current repository'
-	@echo '    update-localhost            -  update Puavo OS localhost'
-	@echo '    push-release                -  make a release commit and publish it'
+	@echo '    help                 display this help and exit'
+	@echo '    rootfs               build Puavo OS rootfs from scratch'
+	@echo '    image                pack rootfs to a squashfs image'
+	@echo '    spawn-rootfs-shell   spawn shell from Puavo OS rootfs'
+	@echo '    update-rootfs        update Puavo OS rootfs'
+	@echo '    update-rootfs-repo   sync Puavo OS rootfs repo with the current repo'
+	@echo '    update-localhost     update Puavo OS localhost'
+	@echo '    push-release         make a release commit and publish it'
 	@echo
 	@echo 'Variables:'
-	@echo '    debootstrap_mirror          -  debootstrap mirror [$(debootstrap_mirror)]'
-	@echo '    image_dir                   -  directory where images are built [$(image_dir)]'
-	@echo '    rootfs_dir                  -  Puavo OS rootfs directory [$(rootfs_dir)]'
+	@echo '    debootstrap_mirror   debootstrap mirror [$(debootstrap_mirror)]'
+	@echo '    image_dir            directory where images are built [$(image_dir)]'
+	@echo '    rootfs_dir           Puavo OS rootfs directory [$(rootfs_dir)]'
 
 .PHONY: .ensure-head-is-release
 .ensure-head-is-release:
