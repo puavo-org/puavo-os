@@ -1,10 +1,10 @@
 # Public, configurable variables
 debootstrap_mirror	:= http://httpredir.debian.org/debian/
+image_class		:= allinone
 image_dir		:= /srv/puavo-os-images
 rootfs_dir		:= /var/tmp/puavo-os/rootfs
 
-_image_class := allinone
-_image_file  := $(image_dir)/puavo-os-$(_image_class)-$(shell date -u +%Y-%m-%d-%H%M%S)-amd64.img
+_image_file  := $(image_dir)/puavo-os-$(image_class)-$(shell date -u +%Y-%m-%d-%H%M%S)-amd64.img
 
 _debootstrap_packages := devscripts,equivs,git,locales,lsb-release,make,\
                          puppet-common,sudo
@@ -63,7 +63,7 @@ $(image_dir):
 image: $(rootfs_dir) $(image_dir)
 	sudo mksquashfs '$(rootfs_dir)' '$(_image_file).tmp'	\
 		-noappend -no-recovery -wildcards		\
-		-ef '.aux/$(_image_class).excludes'		\
+		-ef '.aux/$(image_class).excludes'		\
 		|| { rm -f '$(_image_file).tmp'; false; }
 	sudo mv '$(_image_file).tmp' '$(_image_file)'
 	@echo Built '$(image_file)' successfully.
@@ -92,7 +92,7 @@ update-localhost: /puavo-os
 	make -C debs update-repo
 
 	sudo puppet apply						\
-		--execute 'include image::$(_image_class)::prepare'	\
+		--execute 'include image::$(image_class)::prepare'	\
 		--logdest /var/log/puavo-os/puppet.log			\
 		--logdest console					\
 		--modulepath 'parts/rules/rules/puppet'
@@ -113,7 +113,7 @@ update-localhost: /puavo-os
 .PHONY: .configure-localhost
 .configure-localhost: /puavo-os
 	sudo puppet apply					\
-		--execute 'include image::$(_image_class)'	\
+		--execute 'include image::$(image_class)'	\
 		--logdest /var/log/puavo-os/puppet.log		\
 		--logdest console				\
 		--modulepath 'parts/rules/rules/puppet'
