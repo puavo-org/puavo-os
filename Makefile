@@ -9,7 +9,10 @@ _image_file  := $(image_dir)/puavo-os-$(image_class)-$(shell date -u +%Y-%m-%d-%
 _debootstrap_packages := devscripts,equivs,git,locales,lsb-release,make,\
                          puppet-common,sudo
 
-_systemd_nspawn_cmd := systemd-nspawn -D '$(rootfs_dir)'
+_systemd_nspawn_machine_name := \
+  $(notdir $(rootfs_dir))-$(shell tr -dc A-Za-z0-9 < /dev/urandom | head -c8)
+_systemd_nspawn_cmd := systemd-nspawn -D '$(rootfs_dir)' \
+			 -M '$(_systemd_nspawn_machine_name)'
 
 .PHONY: help
 help:
