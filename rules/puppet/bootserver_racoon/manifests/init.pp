@@ -1,19 +1,9 @@
 class bootserver_racoon {
-  file {
-    '/etc/racoon/racoon.conf':
-      content => template('bootserver_racoon/racoon.conf'),
-      mode    => 0644,
-      notify  => Service['racoon'];
-  }
-
   package {
     'racoon':
-      ensure => present;
-  }
-
-  service {
-    'racoon':
-      enable  => true,
-      require => Package['racoon'];
+      ensure => purged; # IPSec was never configured properly and was
+                        # never used in production. Nevertheless,
+                        # racoon and all other ipsec-related stuff was
+                        # installed. Now we get rid of it.
   }
 }
