@@ -11,7 +11,7 @@ class puavo_pkg {
     $pkgname = $title
 
     exec {
-      "/usr/sbin/puavo-pkg install ${pkgbasedir}/${pkgname}.tar.gz":
+      "/usr/sbin/puavo-pkg install ${puavo_pkg::pkgbasedir}/${pkgname}.tar.gz":
         creates => "${pkgrootdir}/packages/${pkgname}/installed",
         require => Package['puavo-pkg'];
     }
