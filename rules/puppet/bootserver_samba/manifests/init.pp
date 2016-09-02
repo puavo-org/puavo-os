@@ -15,7 +15,9 @@ print Puavo::Client::Base.new_by_ldap_entry(
     '/etc/samba/smb.conf':
       content => template('bootserver_samba/smb.conf'),
       mode    => 0644,
-      notify  => [ Service['nmbd'], Service['smbd'] ],
+      notify  => [ Service['nmbd']
+                 , Service['smbd']
+                 , Service['winbind'] ],
       require => Package['samba'];
   }
 
