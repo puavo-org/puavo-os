@@ -35,29 +35,7 @@ import matplotlib
 matplotlib.use('Qt4Agg')
 import matplotlib.pyplot as plt
 
-def draw_hist_dhcpacks_all(subplot, conn, name, iface):
-    sql = '''
-SELECT strftime("%s", timestamp) FROM Event
-WHERE name == ?
-  AND interface == ?
-ORDER BY timestamp
-    '''
-    xs = [int(timestamp) for (timestamp,) in conn.execute(sql, (name, iface))]
-
-    xmin, xmax = min(xs), max(xs)
-    bins = (xmax - xmin) // 3600 # hours
-
-    subplot.hist(xs, histtype='bar', bins=bins, linewidth=0)
-    xticklabels = []
-    for timestamp in subplot.get_xticks():
-        xticklabels.append(datetime.datetime.utcfromtimestamp(timestamp)
-                           .strftime("%-d.%-m.\n%H:%M"))
-
-    subplot.set_xlim(xmin, xmax)
-    subplot.set_xticklabels(xticklabels)
-    subplot.set_title("The number of %ss grouped by hours" % name)
-
-def draw_hist_dhcpacks_uniqmacs(subplot, conn, name, iface):
+def draw_hist_dhcpevents_uniqmacs(subplot, conn, name, iface):
     sql = '''
 SELECT macaddr, count() as c FROM Event
 WHERE name == ?
@@ -96,8 +74,7 @@ def main():
     fig = plt.figure()
 
     with sqlite3.connect(dbfilepath) as conn:
-        draw_hist_dhcpacks_all(fig.add_subplot(2, 1, 1), conn, name, iface)
-        draw_hist_dhcpacks_uniqmacs(fig.add_subplot(2, 1, 2), conn, name, iface)
+        draw_hist_dhcpevents_uniqmacs(plt.subplot(), conn, name, iface)
 
     plt.tight_layout()
     plt.show()

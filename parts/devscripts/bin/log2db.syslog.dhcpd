@@ -32,7 +32,7 @@ import datetime
 import sqlite3
 
 LINE_PATTERN = re.compile(r'^([A-Za-z]{3} \d{1,2} \d\d:\d\d:\d\d) '
-                          r'([^ ]+) ([^:]+): (.*)$')
+                          r'(.*) ([^:]+): (.*)$')
 
 DATA_PATTERNS = {
     "DHCPACK"     : re.compile(r'^DHCPACK on (.+) to (.+) \((.+)\) via (.+)$'),
@@ -41,6 +41,8 @@ DATA_PATTERNS = {
     "DHCPOFFER"   : re.compile(r'^DHCPOFFER on (.+) to (.+) \((.+)\) via (.+)$'),
     "DHCPREQUEST" : re.compile(r'^DHCPREQUEST for (.+) from (.+) \((.+)\) via (.+)$'),
 }
+
+RTC_CMOS_PATTERN = re.compile(r'.*rtc_cmos [0-9:]+ setting system clock to .* UTC \(([0-9]+)\)$')
 
 def dhcp(timestamp, ipaddr, macaddr, hostname, interface):
     return timestamp, ipaddr, macaddr, hostname, interface
@@ -94,14 +96,24 @@ def main():
         
 
     with open(logfilepath) as logfile:
+        current_year = 1970
         for i, line in enumerate(logfile):
             line_match = LINE_PATTERN.match(line)
             if not line_match:
+                print("ERROR: invalid data on line %d" % i, file=sys.stderr)
                 continue
 
             date, hostname, process, data = line_match.groups()
 
+            if process == "kernel":
+                match = RTC_CMOS_PATTERN.match(data)
+                if match:
+                    current_year = datetime.datetime.utcfromtimestamp(
+                        int(match.group(1))).year
+                    continue
+
             timestamp = datetime.datetime.strptime(date, "%b %d %H:%M:%S")
+            timestamp = timestamp.replace(year=current_year)
 
             for name, pattern in DATA_PATTERNS.items():
                 data_match = pattern.match(data)
@@ -121,7 +133,6 @@ def main():
                 VALUES(NULL, ?, ?, ?, ?, ?, ?);
                 ''', (name, timestamp, ipaddr, macaddr, hostname, interface))
             except:
-                print(i, name, hostname, ipaddr, macaddr, interface, timestamp)
                 raise
 
     conn.commit()

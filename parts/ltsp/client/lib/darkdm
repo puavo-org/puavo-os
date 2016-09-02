@@ -32,7 +32,13 @@ darkdm_print_help()
     echo "  install  -  install Puavo OS to this device and reboot"
     echo "  poweroff -  poweroff the system in 5 seconds"
     echo "  reboot   -  reboot the system in 5 seconds"
+    echo "  shell    -  spawn a shell"
     echo "  update   -  update the local Puavo OS installation and reboot"
+}
+
+darkdm_shell()
+{
+    /bin/bash
 }
 
 darkdm_update()
@@ -99,6 +105,9 @@ darkdm_menu()
 		;;
 	    'reboot')
 		darkdm_reboot
+		;;
+	    'shell')
+		darkdm_shell
 		;;
 	    'update')
 		darkdm_update
