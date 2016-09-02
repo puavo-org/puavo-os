@@ -4,7 +4,8 @@ image_class		:= allinone
 image_dir		:= /srv/puavo-os-images
 rootfs_dir		:= /var/tmp/puavo-os/rootfs
 
-_image_file  := $(image_dir)/puavo-os-$(image_class)-$(shell date -u +%Y-%m-%d-%H%M%S)-amd64.img
+_repo_name   := $(shell basename $(shell git rev-parse --show-toplevel))
+_image_file  := $(image_dir)/$(_repo_name)-$(image_class)-$(shell date -u +%Y-%m-%d-%H%M%S)-amd64.img
 
 _debootstrap_packages := devscripts,equivs,git,locales,lsb-release,make,\
                          puppet-common,sudo
@@ -35,7 +36,7 @@ help:
 
 .PHONY: .ensure-head-is-release
 .ensure-head-is-release:
-	@parts/devscripts/bin/git-dch -f debs/puavo-os/debian/changelog -z
+	@parts/devscripts/bin/git-dch -f 'debs/$(_repo_name)/debian/changelog' -z
 
 $(rootfs_dir):
 	@echo ERROR: rootfs does not exist, make rootfs first >&2
@@ -51,9 +52,9 @@ rootfs:
 		--components=main,contrib,non-free		\
 		jessie '$(rootfs_dir).tmp' '$(debootstrap_mirror)'
 
-	sudo git clone . '$(rootfs_dir).tmp/puavo-os'
+	sudo git clone . '$(rootfs_dir).tmp/$(_repo_name)'
 
-	sudo ln -s /puavo-os/.aux/policy-rc.d '$(rootfs_dir).tmp/usr/sbin/policy-rc.d'
+	sudo ln -s '/$(_repo_name)/.aux/policy-rc.d' '$(rootfs_dir).tmp/usr/sbin/policy-rc.d'
 
 	sudo mv '$(rootfs_dir).tmp' '$(rootfs_dir)'
 
@@ -78,25 +79,25 @@ spawn-rootfs-shell: $(rootfs_dir)
 .PHONY: rootfs
 update-rootfs-repo: $(rootfs_dir) .ensure-head-is-release
 	sudo git						\
-		--git-dir='$(rootfs_dir)/puavo-os/.git'	\
-		--work-tree='$(rootfs_dir)/puavo-os'		\
+		--git-dir='$(rootfs_dir)/$(_repo_name)/.git'	\
+		--work-tree='$(rootfs_dir)/$(_repo_name)'	\
 		fetch origin
 	sudo git						\
-		--git-dir='$(rootfs_dir)/puavo-os/.git'	\
-		--work-tree='$(rootfs_dir)/puavo-os'		\
+		--git-dir='$(rootfs_dir)/$(_repo_name)/.git'	\
+		--work-tree='$(rootfs_dir)/$(_repo_name)'	\
 		reset --hard origin/HEAD
 
 .PHONY: update-rootfs
 update-rootfs: update-rootfs-repo
-	sudo $(_systemd_nspawn_cmd) make -C /puavo-os update-localhost
+	sudo $(_systemd_nspawn_cmd) make -C '/$(_repo_name)' update-localhost
 
 .PHONY: update-localhost
-update-localhost: /puavo-os
+update-localhost: /$(_repo_name)
 	make -C debs update-repo
 
 	sudo puppet apply						\
 		--execute 'include image::$(image_class)::prepare'	\
-		--logdest /var/log/puavo-os/puppet.log			\
+		--logdest '/var/log/$(_repo_name)/puppet.log'		\
 		--logdest console					\
 		--modulepath 'parts/rules/rules/puppet'
 
@@ -114,21 +115,21 @@ update-localhost: /puavo-os
 	make .configure-localhost
 
 .PHONY: .configure-localhost
-.configure-localhost: /puavo-os
+.configure-localhost: /$(_repo_name)
 	sudo puppet apply					\
 		--execute 'include image::$(image_class)'	\
-		--logdest /var/log/puavo-os/puppet.log		\
+		--logdest '/var/log/$(_repo_name)/puppet.log'	\
 		--logdest console				\
 		--modulepath 'parts/rules/rules/puppet'
 
-/puavo-os:
+/$(_repo_name):
 	@echo ERROR: localhost is not Puavo OS system >&2
 	@false
 
 .PHONY: .release
 .release:
 	EDITOR=.aux/drop-release-commits git rebase -p -i origin/master
-	@parts/devscripts/bin/git-dch -f debs/puavo-os/debian/changelog
+	@parts/devscripts/bin/git-dch -f 'debs/$(_repo_name)/debian/changelog'
 
 .PHONY: push-release
 push-release: .release
