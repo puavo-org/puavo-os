@@ -1,11 +1,12 @@
 # Public, configurable variables
 debootstrap_mirror	:= http://httpredir.debian.org/debian/
+debootstrap_suite	:= jessie
 image_class		:= allinone
 image_dir		:= /srv/puavo-os-images
 rootfs_dir		:= /var/tmp/puavo-os/rootfs
 
 _repo_name   := $(shell basename $(shell git rev-parse --show-toplevel))
-_image_file  := $(image_dir)/$(_repo_name)-$(image_class)-$(shell date -u +%Y-%m-%d-%H%M%S)-amd64.img
+_image_file  := $(image_dir)/$(_repo_name)-$(image_class)-$(debootstrap_suite)-$(shell date -u +%Y-%m-%d-%H%M%S)-amd64.img
 
 _debootstrap_packages := devscripts,equivs,git,locales,lsb-release,make,\
                          puppet-common,sudo
@@ -50,7 +51,8 @@ rootfs:
 		--arch=amd64					\
 		--include='$(_debootstrap_packages)'	\
 		--components=main,contrib,non-free		\
-		jessie '$(rootfs_dir).tmp' '$(debootstrap_mirror)'
+		'$(debootstrap_suite)'				\
+		'$(rootfs_dir).tmp' '$(debootstrap_mirror)'
 
 	sudo git clone . '$(rootfs_dir).tmp/$(_repo_name)'
 
