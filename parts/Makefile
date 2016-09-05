@@ -4,12 +4,16 @@ subdirs         := admins autopilot blackboard client conf core devscripts \
                    wlan
 subdirs-all     := $(subdirs:%=.all-%)
 subdirs-clean   := $(subdirs:%=.clean-%)
+subdirs-install := $(subdirs:%=.install-%)
 
 .PHONY: all
 all: $(subdirs-all)
 
 .PHONY: clean
 clean: $(subdirs-clean)
+
+.PHONY: install
+install: $(subdirs-install)
 
 .PHONY: $(subdirs-all)
 $(subdirs-all):
@@ -18,3 +22,7 @@ $(subdirs-all):
 .PHONY: $(subdirs-clean)
 $(subdirs-clean):
 	$(MAKE) -C $(@:.clean-%=%) clean
+
+.PHONY: $(subdirs-install)
+$(subdirs-install):
+	$(MAKE) -C $(@:.install-%=%) install
