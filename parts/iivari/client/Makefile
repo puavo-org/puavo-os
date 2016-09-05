@@ -8,3 +8,5 @@ install:
 
 .PHONY: clean
 clean:
+	rm -rf build
+	find iivari -type f -name '*.pyc' -delete
