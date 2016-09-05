@@ -43,11 +43,11 @@ help:
 	@echo '    all                  build all'
 	@echo '    configure            configure all'
 	@echo '    help                 display this help and exit'
-	@echo '    image                pack rootfs to a squashfs image'
 	@echo '    install              install all'
 	@echo '    install-build-deps   install all build dependencies'
 	@echo '    push-release         make a release commit and publish it'
 	@echo '    rootfs-debootstrap   build Puavo OS rootfs from scratch'
+	@echo '    rootfs-image         pack rootfs to a squashfs image'
 	@echo '    rootfs-shell         spawn shell from Puavo OS rootfs'
 	@echo '    rootfs-update        update Puavo OS rootfs'
 	@echo '    rootfs-update-repo   sync Puavo OS rootfs repo with the current repo'
@@ -86,8 +86,8 @@ rootfs-debootstrap:
 $(image_dir):
 	sudo mkdir -p '$(image_dir)'
 
-.PHONY: image
-image: $(rootfs_dir) $(image_dir)
+.PHONY: rootfs-image
+rootfs-image: $(rootfs_dir) $(image_dir)
 	sudo mksquashfs '$(rootfs_dir)' '$(_image_file).tmp'	\
 		-noappend -no-recovery -wildcards		\
 		-ef '.aux/$(image_class).excludes'		\
