@@ -131,14 +131,15 @@ prepare: /$(_repo_name)
 
 .PHONY: update
 update: install-build-deps
-	make -C debs
+	make debs
+	make parts
 
 	sudo apt-get update
 	sudo apt-get dist-upgrade -V -y			\
 		-o Dpkg::Options::="--force-confdef"	\
 		-o Dpkg::Options::="--force-confold"
 
-	make configure
+	make install
 
 	sudo updatedb
 
