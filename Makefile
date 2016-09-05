@@ -30,7 +30,7 @@ install: /$(_repo_name)
 	make -C parts install prefix=/usr sysconfdir=/etc
 
 .PHONY: install-build-deps
-install-build-deps: /$(_repo_name)
+install-build-deps: prepare
 	make -C debs install-build-deps-toolchain
 	make -C debs toolchain
 	make -C debs install-build-deps
