@@ -34,6 +34,7 @@ help:
 	@echo '    install              install all'
 	@echo '    debootstrap-rootfs   build Puavo OS rootfs from scratch'
 	@echo '    image                pack rootfs to a squashfs image'
+	@echo '    configure            configure all'
 	@echo '    spawn-rootfs-shell   spawn shell from Puavo OS rootfs'
 	@echo '    update-rootfs        update Puavo OS rootfs'
 	@echo '    update-rootfs-repo   sync Puavo OS rootfs repo with the current repo'
@@ -122,10 +123,10 @@ update-localhost: /$(_repo_name)
 		-o Dpkg::Options::="--force-confdef"	\
 		-o Dpkg::Options::="--force-confold"
 
-	make .configure-localhost
+	make configure
 
-.PHONY: .configure-localhost
-.configure-localhost: /$(_repo_name)
+.PHONY: configure
+configure: /$(_repo_name)
 	sudo puppet apply					\
 		--execute 'include image::$(image_class)'	\
 		--logdest '/var/log/$(_repo_name)/puppet.log'	\
