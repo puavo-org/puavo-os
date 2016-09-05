@@ -25,7 +25,7 @@ install: horst installdirs puavowlanmapper/icons.py
 
 clean:
 	make -C horst clean
-	rm -f puavo-wlanmapper-horst
+	rm -f puavo-wlanmapper-horst puavowlanmapper/icons.py
 
 .PHONY: all	    \
 	clean	    \
