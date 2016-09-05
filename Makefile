@@ -60,8 +60,6 @@ debootstrap-rootfs:
 
 	sudo mv '$(rootfs_dir).tmp' '$(rootfs_dir)'
 
-	make update-rootfs
-
 $(image_dir):
 	sudo mkdir -p '$(image_dir)'
 
