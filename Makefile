@@ -55,7 +55,7 @@ help:
 	@echo '    rootfs-image         pack rootfs to a squashfs image'
 	@echo '    rootfs-shell         spawn shell from Puavo OS rootfs'
 	@echo '    rootfs-update        update Puavo OS rootfs'
-	@echo '    rootfs-update-repo   sync Puavo OS rootfs repo with the current repo'
+	@echo '    rootfs-sync-repo     sync Puavo OS rootfs repo with the current repo'
 	@echo '    update               update Puavo OS localhost'
 	@echo
 	@echo 'Variables:'
@@ -104,19 +104,12 @@ rootfs-image: $(rootfs_dir) $(image_dir)
 rootfs-shell: $(rootfs_dir)
 	sudo $(_systemd_nspawn_cmd)
 
-.PHONY: rootfs
-rootfs-update-repo: $(rootfs_dir) .ensure-head-is-release
-	sudo git						\
-		--git-dir='$(rootfs_dir)/$(_repo_name)/.git'	\
-		--work-tree='$(rootfs_dir)/$(_repo_name)'	\
-		fetch origin
-	sudo git						\
-		--git-dir='$(rootfs_dir)/$(_repo_name)/.git'	\
-		--work-tree='$(rootfs_dir)/$(_repo_name)'	\
-		reset --hard origin/HEAD
+.PHONY: rootfs-sync-repo
+rootfs-sync-repo: $(rootfs_dir)
+	sudo rsync -rl . '$(rootfs_dir)/$(_repo_name)/'
 
 .PHONY: rootfs-update
-rootfs-update: rootfs-update-repo
+rootfs-update: rootfs-sync-repo
 	sudo $(_systemd_nspawn_cmd) make -C '/$(_repo_name)' update
 
 .PHONY: prepare
