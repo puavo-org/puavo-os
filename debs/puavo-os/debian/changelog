@@ -1,3 +1,30 @@
+puavo-os (0.33.0~rc2+80b4f9260072500755f157b594d8f8778d0e693f) trusty; urgency=medium
+
+  * Git(80b4f9260072500755f157b594d8f8778d0e693f)
+  * make: fix invalid path to debian/changelog
+  * parts/wlan: mapper: remove build dir in clean target
+  * parts/wlan: mapper: run setup.py build in all target
+  * parts/wlan: rubylib: remove version in clean target
+  * parts/wlan: mapper: remove puavowlanmapper/icons.py in clean target
+  * parts/wlan: ap: remove puavo-wlanap.service from build dir after
+    install
+  * parts: add iivari to subdir list
+  * parts: define one subdir per line
+  * parts/iivari: client: clean everything in clean target
+  * parts/iivari: client: build everything in all target
+  * parts/iivari: client: add .PHONY targets
+  * opinsys-ca-certificates: add clean target
+  * opinsys-ca-certificates: add .PHONY targets to Makefile
+  * parts: add install target
+  * Add on option on darkdm to start a shell.
+  * make: make debootstrap suite configurable via parameter
+  * make: replace hardcoded puavo-os with the current repository name
+  * Use full variable name for $puavo_pkg::pkgbasedir.
+  * Fix issues in puavo_pkg puppet module.
+  * Add module for helping with puavo-pkg installations.
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Mon, 05 Sep 2016 11:51:58 +0300
+
 puavo-os (0.33.0~rc1+0454f0952eb491c1d8657f3963ec07dba5d07e46) trusty; urgency=medium
 
   * Git(0454f0952eb491c1d8657f3963ec07dba5d07e46)
