@@ -39,12 +39,12 @@ help:
 	@echo '    help                 display this help and exit'
 	@echo '    install              install all'
 	@echo '    install-build-deps   install all build dependencies'
-	@echo '    debootstrap-rootfs   build Puavo OS rootfs from scratch'
+	@echo '    rootfs-debootstrap   build Puavo OS rootfs from scratch'
 	@echo '    image                pack rootfs to a squashfs image'
 	@echo '    configure            configure all'
-	@echo '    spawn-rootfs-shell   spawn shell from Puavo OS rootfs'
-	@echo '    update-rootfs        update Puavo OS rootfs'
-	@echo '    update-rootfs-repo   sync Puavo OS rootfs repo with the current repo'
+	@echo '    rootfs-shell         spawn shell from Puavo OS rootfs'
+	@echo '    rootfs-update        update Puavo OS rootfs'
+	@echo '    rootfs-update-repo   sync Puavo OS rootfs repo with the current repo'
 	@echo '    update               update Puavo OS localhost'
 	@echo '    push-release         make a release commit and publish it'
 	@echo
@@ -61,8 +61,8 @@ $(rootfs_dir):
 	@echo ERROR: rootfs does not exist, make rootfs first >&2
 	@false
 
-.PHONY: debootstrap-rootfs
-debootstrap-rootfs:
+.PHONY: rootfs-debootstrap
+rootfs-debootstrap:
 	@[ ! -e '$(rootfs_dir)' ] || \
 		{ echo ERROR: rootfs directory '$(rootfs_dir)' already exists >&2; false; }
 	sudo debootstrap					\
@@ -90,12 +90,12 @@ image: $(rootfs_dir) $(image_dir)
 	sudo mv '$(_image_file).tmp' '$(_image_file)'
 	@echo Built '$(image_file)' successfully.
 
-.PHONY: spawn-rootfs-shell
-spawn-rootfs-shell: $(rootfs_dir)
+.PHONY: rootfs-shell
+rootfs-shell: $(rootfs_dir)
 	sudo $(_systemd_nspawn_cmd)
 
 .PHONY: rootfs
-update-rootfs-repo: $(rootfs_dir) .ensure-head-is-release
+rootfs-update-repo: $(rootfs_dir) .ensure-head-is-release
 	sudo git						\
 		--git-dir='$(rootfs_dir)/$(_repo_name)/.git'	\
 		--work-tree='$(rootfs_dir)/$(_repo_name)'	\
@@ -105,8 +105,8 @@ update-rootfs-repo: $(rootfs_dir) .ensure-head-is-release
 		--work-tree='$(rootfs_dir)/$(_repo_name)'	\
 		reset --hard origin/HEAD
 
-.PHONY: update-rootfs
-update-rootfs: update-rootfs-repo
+.PHONY: rootfs-update
+rootfs-update: rootfs-update-repo
 	sudo $(_systemd_nspawn_cmd) make -C '/$(_repo_name)' update
 
 .PHONY: update
