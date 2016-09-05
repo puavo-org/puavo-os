@@ -63,10 +63,6 @@ help:
 	@echo '    image_dir            directory where images are built [$(image_dir)]'
 	@echo '    rootfs_dir           Puavo OS rootfs directory [$(rootfs_dir)]'
 
-.PHONY: .ensure-head-is-release
-.ensure-head-is-release:
-	@parts/devscripts/bin/git-dch -f 'debs/puavo-os/debian/changelog' -z
-
 $(rootfs_dir):
 	@echo ERROR: rootfs does not exist, make rootfs first >&2
 	@false
@@ -148,11 +144,8 @@ configure: /$(_repo_name)
 	@echo ERROR: localhost is not Puavo OS system >&2
 	@false
 
-.PHONY: .release
-.release:
+.PHONY: push-release
+push-release:
 	EDITOR=.aux/drop-release-commits git rebase -p -i origin/master
 	@parts/devscripts/bin/git-dch -f 'debs/puavo-os/debian/changelog'
-
-.PHONY: push-release
-push-release: .release
 	git push origin master:master
