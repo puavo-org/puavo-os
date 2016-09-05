@@ -22,7 +22,7 @@ help:
 	@echo
 	@echo 'Targets:'
 	@echo '    help                 display this help and exit'
-	@echo '    rootfs               build Puavo OS rootfs from scratch'
+	@echo '    debootstrap-rootfs   build Puavo OS rootfs from scratch'
 	@echo '    image                pack rootfs to a squashfs image'
 	@echo '    spawn-rootfs-shell   spawn shell from Puavo OS rootfs'
 	@echo '    update-rootfs        update Puavo OS rootfs'
@@ -43,8 +43,8 @@ $(rootfs_dir):
 	@echo ERROR: rootfs does not exist, make rootfs first >&2
 	@false
 
-.PHONY: rootfs
-rootfs:
+.PHONY: debootstrap-rootfs
+debootstrap-rootfs:
 	@[ ! -e '$(rootfs_dir)' ] || \
 		{ echo ERROR: rootfs directory '$(rootfs_dir)' already exists >&2; false; }
 	sudo debootstrap					\
