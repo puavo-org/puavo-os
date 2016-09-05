@@ -109,8 +109,8 @@ rootfs-update-repo: $(rootfs_dir) .ensure-head-is-release
 rootfs-update: rootfs-update-repo
 	sudo $(_systemd_nspawn_cmd) make -C '/$(_repo_name)' update
 
-.PHONY: update
-update: /$(_repo_name)
+.PHONY: prepare
+prepare: /$(_repo_name)
 	make -C debs update-repo
 
 	sudo puppet apply						\
@@ -119,6 +119,8 @@ update: /$(_repo_name)
 		--logdest console					\
 		--modulepath 'parts/rules/rules/puppet'
 
+.PHONY: update
+update: prepare
 	make -C debs install-build-deps-stage1
 	make -C debs stage1
 
