@@ -135,6 +135,8 @@ update: install-build-deps
 
 	make configure
 
+	sudo updatedb
+
 .PHONY: configure
 configure: /$(_repo_name)
 	sudo puppet apply					\
