@@ -37,7 +37,7 @@ help:
 
 .PHONY: .ensure-head-is-release
 .ensure-head-is-release:
-	@parts/devscripts/bin/git-dch -f 'debs/$(_repo_name)/debian/changelog' -z
+	@parts/devscripts/bin/git-dch -f 'debs/puavo-os/debian/changelog' -z
 
 $(rootfs_dir):
 	@echo ERROR: rootfs does not exist, make rootfs first >&2
@@ -131,7 +131,7 @@ update-localhost: /$(_repo_name)
 .PHONY: .release
 .release:
 	EDITOR=.aux/drop-release-commits git rebase -p -i origin/master
-	@parts/devscripts/bin/git-dch -f 'debs/$(_repo_name)/debian/changelog'
+	@parts/devscripts/bin/git-dch -f 'debs/puavo-os/debian/changelog'
 
 .PHONY: push-release
 push-release: .release
