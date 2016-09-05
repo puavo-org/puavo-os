@@ -12,3 +12,5 @@ install:
 	ln -fs opinsys-ca.crt $(DESTDIR)/etc/ssl/certs/33bd8bf8.0
 	ln -fs /usr/share/ca-certificates/opinsys/opinsys-ca.crt \
 	       $(DESTDIR)/etc/ssl/certs/opinsys-ca.crt
+.PHONY: clean
+clean:
