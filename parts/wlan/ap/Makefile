@@ -22,6 +22,8 @@ install: puavo-wlanap.service
 	install -D -m 644 -t '$(DESTDIR)$(systemdsystemunitdir)' \
 		puavo-wlanap.service
 
+	rm -f puavo-wlanap.service
+
 puavo-wlanap.service: puavo-wlanap.service.in FORCE
 	sed -r 's|^ExecStart=.*$$|ExecStart=$(sbindir)/puavo-wlanap|' $< >$@
 
