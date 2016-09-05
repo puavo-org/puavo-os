@@ -1,7 +1,9 @@
 prefix ?= /usr
 
+.PHONY: all
 all:
 
+.PHONY: install
 install:
 	mkdir -p $(DESTDIR)$(prefix)/share/ca-certificates/opinsys \
 		 $(DESTDIR)/etc/ssl/certs
