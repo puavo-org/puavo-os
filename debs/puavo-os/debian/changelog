@@ -1,3 +1,15 @@
+puavo-os (0.33.0~rc3+b68cfa9b9e3a997aee8de8e52a6427c5e9a99149) trusty; urgency=medium
+
+  * Git(b68cfa9b9e3a997aee8de8e52a6427c5e9a99149)
+  * make: add configure to target to configure all
+  * make: add install target to install all
+  * make: change the default target to all to build everything
+  * make: do not update rootfs in debootstrap-rootfs target
+  * make: rename target: rootfs => debootstrap-rootfs
+  * debs: build all changes files in one batch in all target
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Mon, 05 Sep 2016 13:58:04 +0300
+
 puavo-os (0.33.0~rc2+80b4f9260072500755f157b594d8f8778d0e693f) trusty; urgency=medium
 
   * Git(80b4f9260072500755f157b594d8f8778d0e693f)
