@@ -15,7 +15,8 @@ _changes_files_stage2 := $(foreach _pkg,$(_pkgs_stage2),$(_pkg)_$(shell dpkg-par
 _changes_files        := $(_changes_files_stage1) $(_changes_files_stage2)
 
 .PHONY: all
-all: stage1 stage2
+all: $(_changes_files:%=pool/%)
+	$(MAKE) update-repo
 
 .PHONY: clean
 clean:
@@ -23,9 +24,6 @@ clean:
 	rm -rf pool
 	git clean -f -d -x -- $(_pkgs)
 	../parts/devscripts/bin/do-changes -r $(_changes_files)
-
-.PHONY: install-build-deps
-install-build-deps: install-build-deps-stage1 install-build-deps-stage2
 
 .PHONY: update-repo
 update-repo:
