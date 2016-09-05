@@ -8,6 +8,7 @@ class image::bundle::basic {
           kernels,
 	  # keyboard_hw_quirks,		  # XXX do we need this for Debian?
 	  lightdm,
+	  locales,
 	  packages,
 	  packages::languages::de,
 	  packages::languages::en,

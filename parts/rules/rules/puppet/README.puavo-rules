@@ -93,6 +93,9 @@ libreoffice
 lightdm
     Some lightdm configurations (some of these come from ltsp-lightdm package).
 
+locales
+    Configure needed locales and language support.
+
 network_manager
     Allow users to modify network manager connections, but clean them
     up so that those modifications are (normally) only temporary.
