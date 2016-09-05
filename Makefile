@@ -20,6 +20,10 @@ _systemd_nspawn_cmd := systemd-nspawn -D '$(rootfs_dir)' \
 all:
 	make -C parts
 
+.PHONY: install
+install: /$(_repo_name)
+	make -C parts install prefix=/usr sysconfdir=/etc
+
 .PHONY: help
 help:
 	@echo 'Puavo OS Build System'
@@ -27,6 +31,7 @@ help:
 	@echo 'Targets:'
 	@echo '    all                  build all'
 	@echo '    help                 display this help and exit'
+	@echo '    install              install all'
 	@echo '    debootstrap-rootfs   build Puavo OS rootfs from scratch'
 	@echo '    image                pack rootfs to a squashfs image'
 	@echo '    spawn-rootfs-shell   spawn shell from Puavo OS rootfs'
