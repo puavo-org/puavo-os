@@ -25,6 +25,10 @@ all: $(_subdirs)
 $(_subdirs):
 	make -C $@
 
+.PHONY: install
+install: install-parts
+	make configure
+
 .PHONY: install-parts
 install-parts: /$(_repo_name)
 	make -C parts install prefix=/usr sysconfdir=/etc
@@ -43,6 +47,7 @@ help:
 	@echo '    all                  build all'
 	@echo '    configure            configure all'
 	@echo '    help                 display this help and exit'
+	@echo '    install              install all'
 	@echo '    install-build-deps   install all build dependencies'
 	@echo '    install-parts        install all parts'
 	@echo '    push-release         make a release commit and publish it'
