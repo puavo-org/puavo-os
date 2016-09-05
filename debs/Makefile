@@ -1,31 +1,36 @@
-_pkgs_stage1 := nodejs-bundle
-_pkgs_stage2 := autopoweroff fluentd gnome-clocks libpam-envfeed node-webkit onboard puavo-os ubuntu-font-family-sources visionmedia-mon
-_pkgs        := $(_pkgs_stage1) $(_pkgs_stage2)
+_pkgs_toolchain := nodejs-bundle
+_pkgs           := autopoweroff                 \
+                   fluentd                      \
+                   gnome-clocks                 \
+                   libpam-envfeed               \
+                   node-webkit                  \
+                   onboard                      \
+                   ubuntu-font-family-sources   \
+                   visionmedia-mon
 
-_build_deps_stage1 := $(foreach _pkg,$(_pkgs_stage1),$(_pkg)-build-deps_$(shell dpkg-parsechangelog -SVersion -l$(_pkg)/debian/changelog | sed -r -n 's/^([0-9]+:)?//p')_all.deb)
-_build_deps_stage2 := $(foreach _pkg,$(_pkgs_stage2),$(_pkg)-build-deps_$(shell dpkg-parsechangelog -SVersion -l$(_pkg)/debian/changelog | sed -r -n 's/^([0-9]+:)?//p')_all.deb)
-_build_deps        := $(_build_deps_stage1) $(_build_deps_stage2)
+_dpkg_buildpackage_toolchain := $(_pkgs_toolchain:%=.dpkg-buildpackage-%)
+_dpkg_buildpackage           := $(_pkgs:%=.dpkg-buildpackage-%)
 
-_install_stamps_build_deps_stage1 := $(_build_deps_stage1:%=.install-stamp-%)
-_install_stamps_build_deps_stage2 := $(_build_deps_stage2:%=.install-stamp-%)
-_install_stamps_build_deps        := $(_install_stamps_build_deps_stage1) $(_install_stamps_build_deps_stage2)
-
-_changes_files_stage1 := $(foreach _pkg,$(_pkgs_stage1),$(_pkg)_$(shell dpkg-parsechangelog -SVersion -l$(_pkg)/debian/changelog | sed -r -n 's/^([0-9]+:)?//p')_$(shell dpkg-architecture -qDEB_BUILD_ARCH).changes)
-_changes_files_stage2 := $(foreach _pkg,$(_pkgs_stage2),$(_pkg)_$(shell dpkg-parsechangelog -SVersion -l$(_pkg)/debian/changelog | sed -r -n 's/^([0-9]+:)?//p')_$(shell dpkg-architecture -qDEB_BUILD_ARCH).changes)
-_changes_files        := $(_changes_files_stage1) $(_changes_files_stage2)
+_install_build_deps_toolchain := $(_pkgs_toolchain:%=.install-build-deps-%)
+_install_build_deps           := $(_pkgs:%=.install-build-deps-%)
 
 .PHONY: all
-all: stage1 stage2
+all: $(_dpkg_buildpackage)
+	$(MAKE) Packages.gz
+
+.PHONY: toolchain
+toolchain: $(_dpkg_buildpackage_toolchain)
+	$(MAKE) Packages.gz
 
 .PHONY: clean
 clean:
-	rm -f db Packages Packages.gz
-	rm -rf pool
-	git clean -f -d -x -- $(_pkgs)
-	../parts/devscripts/bin/do-changes -r $(_changes_files)
+	git clean -f -d -x
 
-.PHONY: install-build-deps
-install-build-deps: install-build-deps-stage1 install-build-deps-stage2
+.dpkg-buildpackage-%: %
+	cd $<						\
+		&& debian/scripts/get-orig-source	\
+		&& dpkg-buildpackage -b -uc		\
+		&& ../../parts/devscripts/bin/do-changes -l ../pool
 
 .PHONY: update-repo
 update-repo:
@@ -38,31 +43,12 @@ Packages: $(wildcard pool/*.deb)
 Packages.gz: Packages
 	gzip -f -k $<
 
-$(_changes_files):
-	./.aux/build-changes '$@'
+.PHONY: install-build-deps-toolchain
+install-build-deps-toolchain: $(_install_build_deps_toolchain)
 
-pool/%.changes: %.changes
-	../parts/devscripts/bin/do-changes -l pool '$<'
+.PHONY: install-build-deps
+install-build-deps: $(_install_build_deps)
 
-.PHONY: stage1
-stage1: $(_changes_files_stage1:%=pool/%)
-	$(MAKE) update-repo
-
-.PHONY: stage2
-stage2: $(_changes_files_stage2:%=pool/%)
-	$(MAKE) update-repo
-
-.PHONY: install-build-deps-stage1
-install-build-deps-stage1: $(_install_stamps_build_deps_stage1)
-
-.PHONY: install-build-deps-stage2
-install-build-deps-stage2: $(_install_stamps_build_deps_stage2)
-
-.install-stamp-%: %
-	sudo apt-get update
-	sudo dpkg -i '$<' || true
-	sudo apt-get -f -y --force-yes --no-install-recommends install
-	touch $@
-
-$(_build_deps):
-	./.aux/build-build-deps '$@'
+.PHONY: $(_install_build_deps) $(_install_build_deps_toolchain)
+.install-build-deps-%: %
+	mk-build-deps -i "$</debian/control"

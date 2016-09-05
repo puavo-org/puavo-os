@@ -18,35 +18,59 @@ _systemd_nspawn_machine_name := \
 _systemd_nspawn_cmd := systemd-nspawn -D '$(rootfs_dir)' \
 			 -M '$(_systemd_nspawn_machine_name)'
 
+_subdirs := debs parts
+
+.PHONY: all
+all: $(_subdirs)
+
+.PHONY: $(_subdirs)
+$(_subdirs):
+	$(MAKE) -C $@
+
+.PHONY: install
+install: install-parts
+	$(MAKE) configure
+
+.PHONY: install-parts
+install-parts: /$(_repo_name)
+	$(MAKE) -C parts install prefix=/usr sysconfdir=/etc
+
+.PHONY: install-build-deps
+install-build-deps: prepare
+	$(MAKE) -C debs install-build-deps-toolchain
+	$(MAKE) -C debs toolchain
+	$(MAKE) -C debs install-build-deps
+
 .PHONY: help
 help:
 	@echo 'Puavo OS Build System'
 	@echo
 	@echo 'Targets:'
+	@echo '    all                  build all'
+	@echo '    configure            configure all'
 	@echo '    help                 display this help and exit'
-	@echo '    rootfs               build Puavo OS rootfs from scratch'
-	@echo '    image                pack rootfs to a squashfs image'
-	@echo '    spawn-rootfs-shell   spawn shell from Puavo OS rootfs'
-	@echo '    update-rootfs        update Puavo OS rootfs'
-	@echo '    update-rootfs-repo   sync Puavo OS rootfs repo with the current repo'
-	@echo '    update-localhost     update Puavo OS localhost'
+	@echo '    install              install all'
+	@echo '    install-build-deps   install all build dependencies'
+	@echo '    install-parts        install all parts'
 	@echo '    push-release         make a release commit and publish it'
+	@echo '    rootfs-debootstrap   build Puavo OS rootfs from scratch'
+	@echo '    rootfs-image         pack rootfs to a squashfs image'
+	@echo '    rootfs-shell         spawn shell from Puavo OS rootfs'
+	@echo '    rootfs-update        update Puavo OS rootfs'
+	@echo '    rootfs-sync-repo     sync Puavo OS rootfs repo with the current repo'
+	@echo '    update               update Puavo OS localhost'
 	@echo
 	@echo 'Variables:'
 	@echo '    debootstrap_mirror   debootstrap mirror [$(debootstrap_mirror)]'
 	@echo '    image_dir            directory where images are built [$(image_dir)]'
 	@echo '    rootfs_dir           Puavo OS rootfs directory [$(rootfs_dir)]'
 
-.PHONY: .ensure-head-is-release
-.ensure-head-is-release:
-	@parts/devscripts/bin/git-dch -f 'debs/puavo-os/debian/changelog' -z
-
 $(rootfs_dir):
 	@echo ERROR: rootfs does not exist, make rootfs first >&2
 	@false
 
-.PHONY: rootfs
-rootfs:
+.PHONY: rootfs-debootstrap
+rootfs-debootstrap:
 	@[ ! -e '$(rootfs_dir)' ] || \
 		{ echo ERROR: rootfs directory '$(rootfs_dir)' already exists >&2; false; }
 	sudo debootstrap					\
@@ -62,13 +86,11 @@ rootfs:
 
 	sudo mv '$(rootfs_dir).tmp' '$(rootfs_dir)'
 
-	make update-rootfs
-
 $(image_dir):
 	sudo mkdir -p '$(image_dir)'
 
-.PHONY: image
-image: $(rootfs_dir) $(image_dir)
+.PHONY: rootfs-image
+rootfs-image: $(rootfs_dir) $(image_dir)
 	sudo mksquashfs '$(rootfs_dir)' '$(_image_file).tmp'	\
 		-noappend -no-recovery -wildcards		\
 		-ef '.aux/$(image_class).excludes'		\
@@ -76,28 +98,21 @@ image: $(rootfs_dir) $(image_dir)
 	sudo mv '$(_image_file).tmp' '$(_image_file)'
 	@echo Built '$(image_file)' successfully.
 
-.PHONY: spawn-rootfs-shell
-spawn-rootfs-shell: $(rootfs_dir)
+.PHONY: rootfs-shell
+rootfs-shell: $(rootfs_dir)
 	sudo $(_systemd_nspawn_cmd)
 
-.PHONY: rootfs
-update-rootfs-repo: $(rootfs_dir) .ensure-head-is-release
-	sudo git						\
-		--git-dir='$(rootfs_dir)/$(_repo_name)/.git'	\
-		--work-tree='$(rootfs_dir)/$(_repo_name)'	\
-		fetch origin
-	sudo git						\
-		--git-dir='$(rootfs_dir)/$(_repo_name)/.git'	\
-		--work-tree='$(rootfs_dir)/$(_repo_name)'	\
-		reset --hard origin/HEAD
+.PHONY: rootfs-sync-repo
+rootfs-sync-repo: $(rootfs_dir)
+	sudo rsync -rl . '$(rootfs_dir)/$(_repo_name)/'
 
-.PHONY: update-rootfs
-update-rootfs: update-rootfs-repo
-	sudo $(_systemd_nspawn_cmd) make -C '/$(_repo_name)' update-localhost
+.PHONY: rootfs-update
+rootfs-update: rootfs-sync-repo
+	sudo $(_systemd_nspawn_cmd) $(MAKE) -C '/$(_repo_name)' update
 
-.PHONY: update-localhost
-update-localhost: /$(_repo_name)
-	make -C debs update-repo
+.PHONY: prepare
+prepare: /$(_repo_name)
+	$(MAKE) -C debs update-repo
 
 	sudo puppet apply						\
 		--execute 'include image::$(image_class)::prepare'	\
@@ -105,21 +120,21 @@ update-localhost: /$(_repo_name)
 		--logdest console					\
 		--modulepath 'parts/rules/rules/puppet'
 
-	make -C debs install-build-deps-stage1
-	make -C debs stage1
-
-	make -C debs install-build-deps-stage2
-	make -C debs stage2
+.PHONY: update
+update: install-build-deps
+	$(MAKE)
 
 	sudo apt-get update
 	sudo apt-get dist-upgrade -V -y			\
 		-o Dpkg::Options::="--force-confdef"	\
 		-o Dpkg::Options::="--force-confold"
 
-	make .configure-localhost
+	$(MAKE) install
 
-.PHONY: .configure-localhost
-.configure-localhost: /$(_repo_name)
+	sudo updatedb
+
+.PHONY: configure
+configure: /$(_repo_name)
 	sudo puppet apply					\
 		--execute 'include image::$(image_class)'	\
 		--logdest '/var/log/$(_repo_name)/puppet.log'	\
@@ -130,11 +145,8 @@ update-localhost: /$(_repo_name)
 	@echo ERROR: localhost is not Puavo OS system >&2
 	@false
 
-.PHONY: .release
-.release:
+.PHONY: push-release
+push-release:
 	EDITOR=.aux/drop-release-commits git rebase -p -i origin/master
 	@parts/devscripts/bin/git-dch -f 'debs/puavo-os/debian/changelog'
-
-.PHONY: push-release
-push-release: .release
 	git push origin master:master
