@@ -7,6 +7,7 @@ subdirs         := admins                       \
                    devscripts                   \
                    hw-log                       \
                    hw-tools                     \
+                   iivari                       \
                    local-config                 \
                    ltsp                         \
                    opinsys-ca-certificates      \
