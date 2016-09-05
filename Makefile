@@ -16,11 +16,16 @@ _systemd_nspawn_machine_name := \
 _systemd_nspawn_cmd := systemd-nspawn -D '$(rootfs_dir)' \
 			 -M '$(_systemd_nspawn_machine_name)'
 
+.PHONY: all
+all:
+	make -C parts
+
 .PHONY: help
 help:
 	@echo 'Puavo OS Build System'
 	@echo
 	@echo 'Targets:'
+	@echo '    all                  build all'
 	@echo '    help                 display this help and exit'
 	@echo '    debootstrap-rootfs   build Puavo OS rootfs from scratch'
 	@echo '    image                pack rootfs to a squashfs image'
