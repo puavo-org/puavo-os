@@ -31,9 +31,9 @@ install: /$(_repo_name)
 
 .PHONY: install-build-deps
 install-build-deps: /$(_repo_name)
-	make -C debs install-build-deps-stage1
-	make -C debs stage1
-	make -C debs install-build-deps-stage2
+	make -C debs install-build-deps-toolchain
+	make -C debs toolchain
+	make -C debs install-build-deps
 
 .PHONY: help
 help:
@@ -126,11 +126,11 @@ prepare: /$(_repo_name)
 
 .PHONY: update
 update: prepare
-	make -C debs install-build-deps-stage1
-	make -C debs stage1
+	make -C debs install-build-deps-toolchain
+	make -C debs toolchain
 
-	make -C debs install-build-deps-stage2
-	make -C debs stage2
+	make -C debs install-build-deps
+	make -C debs
 
 	sudo apt-get update
 	sudo apt-get dist-upgrade -V -y			\
