@@ -125,11 +125,7 @@ prepare: /$(_repo_name)
 		--modulepath 'parts/rules/rules/puppet'
 
 .PHONY: update
-update: prepare
-	make -C debs install-build-deps-toolchain
-	make -C debs toolchain
-
-	make -C debs install-build-deps
+update: install-build-deps
 	make -C debs
 
 	sudo apt-get update
