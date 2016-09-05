@@ -16,7 +16,7 @@ _systemd_nspawn_machine_name := \
 _systemd_nspawn_cmd := systemd-nspawn -D '$(rootfs_dir)' \
 			 -M '$(_systemd_nspawn_machine_name)'
 
-_subdirs := parts
+_subdirs := debs parts
 
 .PHONY: all
 all: $(_subdirs)
