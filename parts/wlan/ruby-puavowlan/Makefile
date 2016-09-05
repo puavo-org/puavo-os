@@ -30,5 +30,6 @@ install: installdirs
 		version.rb
 
 clean:
+	rm -f version.rb
 
 .PHONY: all installdirs install clean version
