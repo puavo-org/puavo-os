@@ -1,5 +1,6 @@
 .PHONY: all
 all:
+	python setup.py build
 
 .PHONY: install
 install:
