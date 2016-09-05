@@ -24,6 +24,12 @@ all:
 install: /$(_repo_name)
 	make -C parts install prefix=/usr sysconfdir=/etc
 
+.PHONY: install-build-deps
+install-build-deps: /$(_repo_name)
+	make -C debs install-build-deps-stage1
+	make -C debs stage1
+	make -C debs install-build-deps-stage2
+
 .PHONY: help
 help:
 	@echo 'Puavo OS Build System'
@@ -32,6 +38,7 @@ help:
 	@echo '    all                  build all'
 	@echo '    help                 display this help and exit'
 	@echo '    install              install all'
+	@echo '    install-build-deps   install all build dependencies'
 	@echo '    debootstrap-rootfs   build Puavo OS rootfs from scratch'
 	@echo '    image                pack rootfs to a squashfs image'
 	@echo '    configure            configure all'
