@@ -7,6 +7,7 @@ INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL) -m 644
 
 all: horst puavowlanmapper/icons.py
+	python setup.py build
 
 horst:
 	make -C horst
