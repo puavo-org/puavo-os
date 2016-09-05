@@ -23,21 +23,21 @@ all: $(_subdirs)
 
 .PHONY: $(_subdirs)
 $(_subdirs):
-	make -C $@
+	$(MAKE) -C $@
 
 .PHONY: install
 install: install-parts
-	make configure
+	$(MAKE) configure
 
 .PHONY: install-parts
 install-parts: /$(_repo_name)
-	make -C parts install prefix=/usr sysconfdir=/etc
+	$(MAKE) -C parts install prefix=/usr sysconfdir=/etc
 
 .PHONY: install-build-deps
 install-build-deps: prepare
-	make -C debs install-build-deps-toolchain
-	make -C debs toolchain
-	make -C debs install-build-deps
+	$(MAKE) -C debs install-build-deps-toolchain
+	$(MAKE) -C debs toolchain
+	$(MAKE) -C debs install-build-deps
 
 .PHONY: help
 help:
@@ -106,11 +106,11 @@ rootfs-sync-repo: $(rootfs_dir)
 
 .PHONY: rootfs-update
 rootfs-update: rootfs-sync-repo
-	sudo $(_systemd_nspawn_cmd) make -C '/$(_repo_name)' update
+	sudo $(_systemd_nspawn_cmd) $(MAKE) -C '/$(_repo_name)' update
 
 .PHONY: prepare
 prepare: /$(_repo_name)
-	make -C debs update-repo
+	$(MAKE) -C debs update-repo
 
 	sudo puppet apply						\
 		--execute 'include image::$(image_class)::prepare'	\
@@ -120,15 +120,14 @@ prepare: /$(_repo_name)
 
 .PHONY: update
 update: install-build-deps
-	make debs
-	make parts
+	$(MAKE)
 
 	sudo apt-get update
 	sudo apt-get dist-upgrade -V -y			\
 		-o Dpkg::Options::="--force-confdef"	\
 		-o Dpkg::Options::="--force-confold"
 
-	make install
+	$(MAKE) install
 
 	sudo updatedb
 
