@@ -75,7 +75,7 @@ help:
 	@echo '    rootfs_dir           Puavo OS rootfs directory [$(rootfs_dir)]'
 
 $(rootfs_dir):
-	@echo ERROR: rootfs does not exist, make rootfs first >&2
+	@echo ERROR: rootfs does not exist, make rootfs-debootstrap first >&2
 	@false
 
 .PHONY: rootfs-debootstrap
