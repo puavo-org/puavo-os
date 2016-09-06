@@ -45,7 +45,7 @@ darkdm_update()
 {
     local image_name
 
-    image_name=$(cat /etc/ltsp/this_ltspimage_name) || return 1
+    image_name=$(cat /etc/puavo-image/name) || return 1
 
     /usr/sbin/puavo-install-and-update-ltspimages \
 	--install-from-nbd /dev/nbd0 "${image_name}" || return 1

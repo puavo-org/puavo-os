@@ -337,7 +337,7 @@ class Updater < DBus::Object
     available_images \
       = (Dir.glob('/images/*.img').map { |p| File.basename(p, '.img') } \
            - %w(ltsp ltsp-backup)).sort
-    current_image_with_img = IO.readlines('/etc/ltsp/this_ltspimage_name') \
+    current_image_with_img = IO.readlines('/etc/puavo-image/name') \
                                .first.chomp
     current_image = File.basename(current_image_with_img, '.img')
 

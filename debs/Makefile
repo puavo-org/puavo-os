@@ -49,6 +49,6 @@ install-build-deps-toolchain: $(_install_build_deps_toolchain)
 .PHONY: install-build-deps
 install-build-deps: $(_install_build_deps)
 
-.PHONY: $(_install_build_deps) $(_install_build_deps_toolchain)
 .install-build-deps-%: %
-	mk-build-deps -i "$</debian/control"
+	mk-build-deps -i "$</debian/control" \
+		-t 'apt-get -y --force-yes --no-install-recommends'

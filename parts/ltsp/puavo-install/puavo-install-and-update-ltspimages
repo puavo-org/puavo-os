@@ -282,7 +282,7 @@ ensure_enough_available_diskspace() {
 }
 
 ensure_that_default_image_is_the_current_one() {
-  booted_image=$(cat /etc/ltsp/this_ltspimage_name || true)
+  booted_image=$(cat /etc/puavo-image/name || true)
   default_image=$(lookup_ltspimage_name_by_alias ltsp.img || true)
 
   if [ -z "$booted_image" ]; then

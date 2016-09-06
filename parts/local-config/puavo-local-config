@@ -232,7 +232,7 @@ def configure_grub_default()
   raise 'Could not find puavo.image.path= kernel argument' unless match
   image_path = "#{ match[1] }.img"
 
-  this_ltspimage_name = IO.read('/etc/ltsp/this_ltspimage_name').chomp
+  this_puavoimage_name = IO.read('/etc/puavo-image/name').chomp
 
   # XXX need localizations for these
   messages = {
@@ -250,7 +250,7 @@ def configure_grub_default()
         : messages[nil][superlaptop_mode?]
 
   description \
-    = "#{ msg } - (lvm/puavo-images)/#{ this_ltspimage_name } (#{ image_path })"
+    = "#{ msg } - (lvm/puavo-images)/#{ this_puavoimage_name } (#{ image_path })"
 
   system('/usr/bin/grub-editenv',
          '/images/boot/grub/grubenv',
