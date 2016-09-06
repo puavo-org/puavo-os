@@ -10,10 +10,8 @@ class disable_suspend_by_tag {
 
     '/usr/share/puavo-conf/definitions/puavo-rules-disable_suspend_by_tag.json':
       notify  => Exec['initramfs::update'],
-      require => Package['puavo-conf'],
       source  => 'puppet:///modules/disable_suspend_by_tag/puavo-conf-parameters.json';
   }
 
   Package <| title == pm-utils |>
-  Package <| title == puavo-conf |>
 }

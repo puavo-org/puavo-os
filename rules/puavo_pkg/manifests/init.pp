@@ -12,10 +12,7 @@ class puavo_pkg {
 
     exec {
       "/usr/sbin/puavo-pkg install ${puavo_pkg::pkgbasedir}/${pkgname}.tar.gz":
-        creates => "${puavo_pkg::pkgrootdir}/${pkgname}/installed",
-        require => Package['puavo-pkg'];
+        creates => "${puavo_pkg::pkgrootdir}/${pkgname}/installed";
     }
   }
-
-  Package <| title == puavo-pkg |>
 }

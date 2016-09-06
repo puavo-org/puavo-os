@@ -20,7 +20,6 @@ class firefox {
       require => File['/etc/firefox/puavodesktop.js'];
 
     '/etc/puavo-external-files-actions.d/firefox':
-      require => Package['puavo-ltsp-client'],
       content => template('firefox/puavo-external-files-actions.d/firefox'),
       mode    => 755;
   }
