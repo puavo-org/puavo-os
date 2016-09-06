@@ -36,7 +36,7 @@ if [ "${current_ltspimage_filename}" != "${next_ltspimage_name}.img" ]; then
   exit 0
 fi
 
-booted_ltspimage_filename=$(cat /etc/ltsp/this_ltspimage_name)
+booted_ltspimage_filename=$(cat /etc/puavo-image/name)
 
 if [ "${booted_ltspimage_filename}" = "${current_ltspimage_filename}" ]; then
   # we are up-to-date!

@@ -1,0 +1,26 @@
+#!/bin/sh
+
+set -eu
+
+rootfs=${1:-}
+image_class=${2:-}
+image_filename=${3:-}
+
+if [ -z "$rootfs" -o -z "$image_class" -o -z "$image_filename" ]; then
+  echo "Usage: $(basename $0) rootfs image_class image_filename" >&2
+  exit 1
+fi
+
+old_release_name=$(cat "${rootfs}/etc/puavo-image/release" 2>/dev/null || true)
+
+while true; do
+  read -p "Release name [${old_release_name}]: " release_name
+  release_name=${release_name:-${old_release_name}}
+  [ -n "$release_name" ] && break
+  echo 'Give a release name!' >&2
+done
+
+mkdir -p "${rootfs}/etc/puavo-image"
+echo "$image_class"    > "${rootfs}/etc/puavo-image/class"
+echo "$image_filename" > "${rootfs}/etc/puavo-image/name"
+echo "$release_name"   > "${rootfs}/etc/puavo-image/release"

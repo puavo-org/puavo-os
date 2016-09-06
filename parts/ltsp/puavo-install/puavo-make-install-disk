@@ -3,7 +3,7 @@
 set -eu
 
 images_dir=/installimages
-ltspimage_name=$(cat /etc/ltsp/this_ltspimage_name)
+ltspimage_name=$(cat /etc/puavo-image/name)
 puavo_hosttype=$(cat /etc/puavo/hosttype)
 
 install_image() {

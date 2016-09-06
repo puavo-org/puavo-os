@@ -147,7 +147,7 @@ set_image_release() {
     new_release_name=$image_release_name
   else
     old_release_name=$(
-      cat /etc/ltsp/this_ltspimage_release 2>/dev/null || true)
+      cat /etc/puavo-image/release 2>/dev/null || true)
 
     while true; do
       read -p "Release name [${old_release_name}]: " new_release_name
@@ -158,11 +158,11 @@ set_image_release() {
   fi
 
   mkdir -p /etc/ltsp
-  echo "$image_filename"   > /etc/ltsp/this_ltspimage_name
-  echo "$new_release_name" > /etc/ltsp/this_ltspimage_release
+  echo "$image_filename"   > /etc/puavo-image/name
+  echo "$new_release_name" > /etc/puavo-image/release
 
   sed 's/^ltsp-//' /etc/puavo-image-build/imagetype \
-    > /etc/ltsp/this_ltspimage_series
+    > /etc/puavo-image/class
 }
 
 make_release_logos() {
@@ -210,7 +210,7 @@ get_and_cache_puppet_classes() {
   echo "$puppet_classes" | tee "$puppet_classes_cache_path"
 }
 
-get_imagename() { cat /etc/ltsp/this_ltspimage_name; }
+get_imagename() { cat /etc/puavo-image/name; }
 
 get_imagetype() {
   if [ -z "$imagetype" ]; then

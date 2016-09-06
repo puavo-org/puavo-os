@@ -4,16 +4,16 @@ set -eu
 
 kernel_args=$(cat /proc/cmdline)
 tags=$(jq -r '.tags[]' /etc/puavo/device.json 2>/dev/null | xargs)
-this_ltspimage_name=$(cat /etc/ltsp/this_ltspimage_name)
-this_ltspimage_release=$(cat /etc/ltsp/this_ltspimage_release)
-this_ltspimage_series=$(cat /etc/ltsp/this_ltspimage_series)
+this_puavoimage_name=$(cat /etc/puavo-image/name)
+this_puavoimage_release=$(cat /etc/puavo-image/release)
+this_puavoimage_class=$(cat /etc/puavo-image/class)
 kernel=$(uname -a)
 
 [ -z "$tags" ] && tags='(empty)'
 
 cat <<EOF | logger -s -t "$(basename $0)"
-image is $this_ltspimage_name (from $this_ltspimage_series)
-release is $this_ltspimage_release
+image is $this_puavoimage_name (from $this_puavoimage_class)
+release is $this_puavoimage_release
 kernel is $kernel
 kernel args are $kernel_args
 tags are $tags

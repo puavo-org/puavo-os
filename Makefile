@@ -89,6 +89,8 @@ $(image_dir):
 
 .PHONY: rootfs-image
 rootfs-image: $(rootfs_dir) $(image_dir)
+	sudo '.aux/set-image-release' '$(rootfs_dir)' '$(image_class)' \
+	    '$(notdir $(_image_file))'
 	sudo mksquashfs '$(rootfs_dir)' '$(_image_file).tmp'	\
 		-noappend -no-recovery -wildcards		\
 		-ef '.aux/$(image_class).excludes'		\

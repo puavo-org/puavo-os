@@ -238,7 +238,7 @@ install_grub() {
 install_image() {
   puavo_install_hosttype=$1; shift
 
-  ltspimage_name=$(cat /etc/ltsp/this_ltspimage_name 2>/dev/null || true)
+  ltspimage_name=$(cat /etc/puavo-image/name 2>/dev/null || true)
   if [ -z "$ltspimage_name" ]; then
     echo 'Could not determine the current ltsp image' >&2
     return 1

@@ -2,7 +2,7 @@
 
 set -eu
 
-release=$(cat /etc/ltsp/this_ltspimage_release)
+release=$(cat /etc/puavo-image/release)
 hosttypes="fatclient laptop wirelessaccesspoint"
 
 uppercase() { echo -n "$1" | tr [:lower:] [:upper:]; }
