@@ -36,7 +36,15 @@ install-parts: /$(_repo_name)
 	$(MAKE) -C parts install prefix=/usr sysconfdir=/etc
 
 .PHONY: install-build-deps
-install-build-deps: prepare
+install-build-deps: /$(_repo_name)
+	$(MAKE) -C debs update-repo
+
+	sudo puppet apply						\
+		--execute 'include image::$(image_class)::prepare'	\
+		--logdest '/var/log/$(_repo_name)/puppet.log'		\
+		--logdest console					\
+		--modulepath 'rules'
+
 	$(MAKE) -C debs install-build-deps-toolchain
 	$(MAKE) -C debs toolchain
 	$(MAKE) -C debs install-build-deps
@@ -112,16 +120,6 @@ rootfs-sync-repo: $(rootfs_dir)
 .PHONY: rootfs-update
 rootfs-update: rootfs-sync-repo
 	sudo $(_systemd_nspawn_cmd) $(MAKE) -C '/$(_repo_name)' update
-
-.PHONY: prepare
-prepare: /$(_repo_name)
-	$(MAKE) -C debs update-repo
-
-	sudo puppet apply						\
-		--execute 'include image::$(image_class)::prepare'	\
-		--logdest '/var/log/$(_repo_name)/puppet.log'		\
-		--logdest console					\
-		--modulepath 'rules'
 
 .PHONY: update
 update: install-build-deps
