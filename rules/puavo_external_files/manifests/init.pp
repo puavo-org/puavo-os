@@ -10,8 +10,4 @@ class puavo_external_files {
         target => "/state/external_files/${external_file_name}";
     }
   }
-
-  # puavo-ltsp-client implements the actual mechanism of putting the
-  # files into correct place.
-  Package <| title == puavo-ltsp-client |>
 }

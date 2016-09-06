@@ -584,37 +584,16 @@ class packages {
   #
 
   @package {
-    [ 'nodejs-bundle'
-    , 'puavo-rules'
-    , 'puavo-devscripts' ]:
+    'nodejs-bundle':
       tag => [ 'tag_devel', 'tag_puavo', ];
 
-    [ 'autopoweroff'
-    , 'opinsys-ca-certificates'
-    # , 'puavo-autopilot'       # XXX not yet packaged for Debian
-    , 'puavo-client'
-    , 'puavo-conf'
-    , 'puavo-core'
-    , 'puavo-hw-log'
-    , 'puavo-ltsp-client'
-    , 'puavo-ltsp-install'
-    , 'puavo-vpn-client' ]:
+    'autopoweroff':
       tag => [ 'tag_misc', 'tag_puavo', ];
 
     # [ 'fluent-plugin-puavo'   # XXX not yet packaged for Debian
-    [ 'iivari-client'
-    , 'puavo-blackboard'
-    , 'puavo-image-tools'
     # , 'puavo-load-reporter'   # XXX not yet packaged for Debian
-    , 'puavo-local-config'
-    , 'puavo-pkg'
-    , 'puavo-sharedir-client'
-    , 'puavo-wlanap'
     # , 'simplescreenrecorder'          # XXX not yet packaged for Debian
-    , 'webmenu'
-    , 'webkiosk-language-selector']:
     # , 'xexit' ]:                      # XXX not yet packaged for Debian
-      tag => [ 'tag_misc', 'tag_puavo', ];
 
     'libssl-dev':
       ensure => '1.0.1e-2+deb7u20',

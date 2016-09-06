@@ -9,8 +9,4 @@ class image::builder {
                   or title == repo |>
 
   Package <| tag == 'tag_admin'
-          or tag == 'tag_basic'
-          or title == puavo-devscripts
-          or title == puavo-image-tools
-          or title == puavo-rules |>
-}
+          or tag == 'tag_basic' |>

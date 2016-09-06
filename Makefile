@@ -18,20 +18,20 @@ _systemd_nspawn_machine_name := \
 _systemd_nspawn_cmd := systemd-nspawn -D '$(rootfs_dir)' \
 			 -M '$(_systemd_nspawn_machine_name)'
 
-.PHONY: all
-all: parts debs
+.PHONY: build
+build: build-debs-ports build-parts
 
-.PHONY: parts
-parts:
-	$(MAKE) -C $@
-
-.PHONY: debs
-debs:
+.PHONY: build-debs-ports
+build-debs-ports:
 	$(MAKE) -C $@ ports
+
+.PHONY: build-parts
+build-parts:
+	$(MAKE) -C $@
 
 .PHONY: install
 install: install-parts
-	$(MAKE) configure
+	$(MAKE) install-rules
 
 .PHONY: install-parts
 install-parts: /$(_repo_name)
@@ -48,20 +48,19 @@ help:
 	@echo 'Puavo OS Build System'
 	@echo
 	@echo 'Targets:'
-	@echo '    all                  build all'
-	@echo '    configure            configure all'
-	@echo '    debs                 build all debian packages'
+	@echo '    [build]              build all'
+	@echo '    build-debs-ports     build all external Debian packages'
+	@echo '    build-parts          build all parts'
 	@echo '    help                 display this help and exit'
 	@echo '    install              install all'
 	@echo '    install-build-deps   install all build dependencies'
 	@echo '    install-parts        install all parts'
-	@echo '    parts                build all parts'
-	@echo '    push-release         make a release commit and publish it'
+	@echo '    install-rules        install all Puppet rules'
 	@echo '    rootfs-debootstrap   build Puavo OS rootfs from scratch'
 	@echo '    rootfs-image         pack rootfs to a squashfs image'
 	@echo '    rootfs-shell         spawn shell from Puavo OS rootfs'
-	@echo '    rootfs-update        update Puavo OS rootfs'
 	@echo '    rootfs-sync-repo     sync Puavo OS rootfs repo with the current repo'
+	@echo '    rootfs-update        update Puavo OS rootfs'
 	@echo '    update               update Puavo OS localhost'
 	@echo
 	@echo 'Variables:'
@@ -139,8 +138,8 @@ update: install-build-deps
 
 	sudo updatedb
 
-.PHONY: configure
-configure: /$(_repo_name)
+.PHONY: install-rules
+install-rules: /$(_repo_name)
 	sudo puppet apply					\
 		--execute 'include image::$(image_class)'	\
 		--logdest '/var/log/$(_repo_name)/puppet.log'	\
@@ -150,9 +149,3 @@ configure: /$(_repo_name)
 /$(_repo_name):
 	@echo ERROR: localhost is not Puavo OS system >&2
 	@false
-
-.PHONY: push-release
-push-release:
-	EDITOR=.aux/drop-release-commits git rebase -p -i origin/master
-	@parts/devscripts/bin/git-dch -f 'debs/puavo-os/debian/changelog'
-	git push origin master:master

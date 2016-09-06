@@ -8,7 +8,6 @@ class packages::sssd_install_workaround {
       ensure => directory;
 
     '/etc/sssd/sssd.conf':
-      ensure => present,
-      before => Package['puavo-ltsp-client'];
+      ensure => present;
   }
 }

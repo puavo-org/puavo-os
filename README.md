@@ -6,7 +6,8 @@ To install build tools on Debian Jessie, run:
 
 To build Puavo OS image, run:
 
-    make rootfs
-    make image
+    make rootfs-debootstrap
+    make rootfs-update
+    make rootfs-image
 
 Run `make help` to get help.
