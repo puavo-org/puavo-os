@@ -50,4 +50,5 @@ install-build-deps-toolchain: $(_install_build_deps_toolchain)
 install-build-deps: $(_install_build_deps)
 
 .install-build-deps-%: %
-	mk-build-deps -i "$</debian/control"
+	mk-build-deps -i "$</debian/control" \
+		-t 'apt-get -y --force-yes --no-install-recommends'
