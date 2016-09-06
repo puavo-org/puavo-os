@@ -21,11 +21,11 @@ build: build-debs-ports build-parts
 
 .PHONY: build-debs-ports
 build-debs-ports:
-	$(MAKE) -C $@ ports
+	$(MAKE) -C debs ports
 
 .PHONY: build-parts
 build-parts:
-	$(MAKE) -C $@
+	$(MAKE) -C parts
 
 .PHONY: install
 install: install-parts
