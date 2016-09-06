@@ -122,7 +122,7 @@ prepare: /$(_repo_name)
 		--execute 'include image::$(image_class)::prepare'	\
 		--logdest '/var/log/$(_repo_name)/puppet.log'		\
 		--logdest console					\
-		--modulepath 'parts/rules/rules/puppet'
+		--modulepath 'rules'
 
 .PHONY: update
 update: install-build-deps
@@ -143,7 +143,7 @@ configure: /$(_repo_name)
 		--execute 'include image::$(image_class)'	\
 		--logdest '/var/log/$(_repo_name)/puppet.log'	\
 		--logdest console				\
-		--modulepath 'parts/rules/rules/puppet'
+		--modulepath 'rules'
 
 /$(_repo_name):
 	@echo ERROR: localhost is not Puavo OS system >&2
