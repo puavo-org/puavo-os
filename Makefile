@@ -54,7 +54,6 @@ help:
 	@echo '    install-build-deps   install all build dependencies'
 	@echo '    install-parts        install all parts'
 	@echo '    parts                build all parts'
-	@echo '    push-release         make a release commit and publish it'
 	@echo '    rootfs-debootstrap   build Puavo OS rootfs from scratch'
 	@echo '    rootfs-image         pack rootfs to a squashfs image'
 	@echo '    rootfs-shell         spawn shell from Puavo OS rootfs'
@@ -148,9 +147,3 @@ configure: /$(_repo_name)
 /$(_repo_name):
 	@echo ERROR: localhost is not Puavo OS system >&2
 	@false
-
-.PHONY: push-release
-push-release:
-	EDITOR=.aux/drop-release-commits git rebase -p -i origin/master
-	@parts/devscripts/bin/git-dch -f 'debs/puavo-os/debian/changelog'
-	git push origin master:master
