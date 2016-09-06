@@ -18,14 +18,16 @@ _systemd_nspawn_machine_name := \
 _systemd_nspawn_cmd := systemd-nspawn -D '$(rootfs_dir)' \
 			 -M '$(_systemd_nspawn_machine_name)'
 
-_subdirs := debs parts
-
 .PHONY: all
-all: $(_subdirs)
+all: parts debs
 
-.PHONY: $(_subdirs)
-$(_subdirs):
+.PHONY: parts
+parts:
 	$(MAKE) -C $@
+
+.PHONY: debs
+debs:
+	$(MAKE) -C $@ ports
 
 .PHONY: install
 install: install-parts
@@ -48,10 +50,12 @@ help:
 	@echo 'Targets:'
 	@echo '    all                  build all'
 	@echo '    configure            configure all'
+	@echo '    debs                 build all debian packages'
 	@echo '    help                 display this help and exit'
 	@echo '    install              install all'
 	@echo '    install-build-deps   install all build dependencies'
 	@echo '    install-parts        install all parts'
+	@echo '    parts                build all parts'
 	@echo '    push-release         make a release commit and publish it'
 	@echo '    rootfs-debootstrap   build Puavo OS rootfs from scratch'
 	@echo '    rootfs-image         pack rootfs to a squashfs image'
@@ -120,7 +124,7 @@ prepare: /$(_repo_name)
 		--execute 'include image::$(image_class)::prepare'	\
 		--logdest '/var/log/$(_repo_name)/puppet.log'		\
 		--logdest console					\
-		--modulepath 'parts/rules/rules/puppet'
+		--modulepath 'rules'
 
 .PHONY: update
 update: install-build-deps
@@ -141,7 +145,7 @@ configure: /$(_repo_name)
 		--execute 'include image::$(image_class)'	\
 		--logdest '/var/log/$(_repo_name)/puppet.log'	\
 		--logdest console				\
-		--modulepath 'parts/rules/rules/puppet'
+		--modulepath 'rules'
 
 /$(_repo_name):
 	@echo ERROR: localhost is not Puavo OS system >&2

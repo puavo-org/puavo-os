@@ -1,13 +1,5 @@
-.PHONY: all
-all:
+.DELETE_ON_ERROR: ImageBuildMakefile
+ImageBuildMakefile: images.json
+	puavo-build-image --images-config $< --output-makefile > $@
 
-.PHONY: installdirs
-installdirs:
-	$(MAKE) -C rules -f Makefile.install installdirs
-
-.PHONY: install
-install: installdirs
-	$(MAKE) -C rules -f Makefile.install install
-
-.PHONY: clean
-clean:
+include ImageBuildMakefile
