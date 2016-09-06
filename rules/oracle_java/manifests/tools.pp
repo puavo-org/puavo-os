@@ -3,9 +3,8 @@ class oracle_java::tools {
 
   file {
     '/etc/puavo-external-files-actions.d/java':
-      mode    => 755,
-      require => Package['puavo-ltsp-client'],
-      source  => 'puppet:///modules/oracle_java/puavo-external-files-actions.d/java';
+      mode   => 755,
+      source => 'puppet:///modules/oracle_java/puavo-external-files-actions.d/java';
 
     '/opt/java':
       ensure => directory;
@@ -27,6 +26,4 @@ class oracle_java::tools {
     '/opt/java/ruleset.xml':
       source => 'puppet:///modules/oracle_java/ruleset.xml';
   }
-
-  Package <| title == puavo-ltsp-client |>
 }
