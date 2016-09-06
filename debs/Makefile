@@ -70,5 +70,6 @@ install-build-deps-ports: $(_install_build_deps_ports)
 install-build-deps: $(_install_build_deps)
 
 .install-build-deps-%: %
-	mk-build-deps -i "$</debian/control" \
+	sudo apt-get update
+	sudo mk-build-deps -i "$</debian/control" \
 		-t 'apt-get -y --force-yes --no-install-recommends'
