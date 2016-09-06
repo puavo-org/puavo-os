@@ -57,8 +57,8 @@ help:
 	@echo '    rootfs-debootstrap   build Puavo OS rootfs from scratch'
 	@echo '    rootfs-image         pack rootfs to a squashfs image'
 	@echo '    rootfs-shell         spawn shell from Puavo OS rootfs'
-	@echo '    rootfs-update        update Puavo OS rootfs'
 	@echo '    rootfs-sync-repo     sync Puavo OS rootfs repo with the current repo'
+	@echo '    rootfs-update        update Puavo OS rootfs'
 	@echo '    update               update Puavo OS localhost'
 	@echo
 	@echo 'Variables:'
