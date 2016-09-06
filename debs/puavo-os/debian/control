@@ -350,13 +350,6 @@ Description: Package manager for Puavo packages
  Scripts to make the life of a Opinsys developer easier
  .
 
-Package: puavo-rules
-Architecture: all
-Depends: ${misc:Depends}
-Description: Puppet-rules for configuring stuff
- Puppet-rules for configuring stuff
- .
-
 Package: puavo-sharedir-client
 Architecture: all
 Depends: ${misc:Depends},

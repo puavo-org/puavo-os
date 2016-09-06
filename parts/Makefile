@@ -12,7 +12,6 @@ subdirs         := admins                       \
                    ltsp                         \
                    opinsys-ca-certificates      \
                    pkg                          \
-                   rules                        \
                    sharedir                     \
                    vpn                          \
                    webkiosk-language-selector   \
