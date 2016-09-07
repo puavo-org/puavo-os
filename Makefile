@@ -114,7 +114,7 @@ rootfs-image: $(rootfs_dir) $(image_dir)
 
 .PHONY: rootfs-shell
 rootfs-shell: $(rootfs_dir)
-	sudo $(_systemd_nspawn_cmd)
+	sudo $(_systemd_nspawn_cmd) -u admin
 
 .PHONY: rootfs-sync-repo
 rootfs-sync-repo: $(rootfs_dir)
