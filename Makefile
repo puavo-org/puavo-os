@@ -23,11 +23,11 @@ build: build-debs-ports build-parts
 
 .PHONY: build-debs-ports
 build-debs-ports:
-	$(MAKE) -C $@ ports
+	$(MAKE) -C debs ports
 
 .PHONY: build-parts
 build-parts:
-	$(MAKE) -C $@
+	$(MAKE) -C parts
 
 .PHONY: install
 install: install-parts
@@ -38,7 +38,15 @@ install-parts: /$(_repo_name)
 	$(MAKE) -C parts install prefix=/usr sysconfdir=/etc
 
 .PHONY: install-build-deps
-install-build-deps: prepare
+install-build-deps: /$(_repo_name)
+	$(MAKE) -C debs update-repo
+
+	sudo puppet apply						\
+		--execute 'include image::$(image_class)::prepare'	\
+		--logdest '/var/log/$(_repo_name)/puppet.log'		\
+		--logdest console					\
+		--modulepath 'rules'
+
 	$(MAKE) -C debs install-build-deps-toolchain
 	$(MAKE) -C debs toolchain
 	$(MAKE) -C debs install-build-deps
@@ -69,7 +77,7 @@ help:
 	@echo '    rootfs_dir           Puavo OS rootfs directory [$(rootfs_dir)]'
 
 $(rootfs_dir):
-	@echo ERROR: rootfs does not exist, make rootfs first >&2
+	@echo ERROR: rootfs does not exist, make rootfs-debootstrap first >&2
 	@false
 
 .PHONY: rootfs-debootstrap
@@ -114,16 +122,6 @@ rootfs-sync-repo: $(rootfs_dir)
 .PHONY: rootfs-update
 rootfs-update: rootfs-sync-repo
 	sudo $(_systemd_nspawn_cmd) $(MAKE) -C '/$(_repo_name)' update
-
-.PHONY: prepare
-prepare: /$(_repo_name)
-	$(MAKE) -C debs update-repo
-
-	sudo puppet apply						\
-		--execute 'include image::$(image_class)::prepare'	\
-		--logdest '/var/log/$(_repo_name)/puppet.log'		\
-		--logdest console					\
-		--modulepath 'rules'
 
 .PHONY: update
 update: install-build-deps
