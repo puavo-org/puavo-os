@@ -1,4 +1,4 @@
-subdirs = ap gw mapper ruby-puavowlan
+subdirs = ap gw mapper ruby-puavowlan controller-munin-plugin
 install-subdirs = $(subdirs:%=install-%)
 clean-subdirs = $(subdirs:%=clean-%)
 
