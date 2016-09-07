@@ -19,3 +19,10 @@ fi
 if ! grep -q '^admin:' "${rootfs_dir}/etc/passwd"; then
   useradd -R "$rootfs_dir" -d "$home_dir" -g puavoadmins -u "$uid" admin
 fi
+
+cat > "${rootfs_dir}/etc/sudoers.d/puavoadmins" <<'EOF'
+# Puavo OS admins may gain root privileges without password
+admin ALL=(ALL) NOPASSWD: ALL
+%puavoadmins ALL=(ALL) NOPASSWD: ALL
+EOF
+chmod 440 "${rootfs_dir}/etc/sudoers.d/puavoadmins"
