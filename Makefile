@@ -17,7 +17,7 @@ _debootstrap_packages := devscripts,equivs,git,locales,lsb-release,make,\
 _systemd_nspawn_machine_name := \
   $(notdir $(rootfs_dir))-$(shell tr -dc A-Za-z0-9 < /dev/urandom | head -c8)
 _systemd_nspawn_cmd := systemd-nspawn -D '$(rootfs_dir)' \
-			 -M '$(_systemd_nspawn_machine_name)'
+			 -M '$(_systemd_nspawn_machine_name)' -u admin
 
 .PHONY: build
 build: build-debs-ports build-parts
@@ -114,7 +114,7 @@ rootfs-image: $(rootfs_dir) $(image_dir)
 
 .PHONY: rootfs-shell
 rootfs-shell: $(rootfs_dir)
-	sudo $(_systemd_nspawn_cmd) -u admin
+	sudo $(_systemd_nspawn_cmd)
 
 .PHONY: rootfs-sync-repo
 rootfs-sync-repo: $(rootfs_dir)
