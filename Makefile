@@ -107,7 +107,7 @@ rootfs-image: $(rootfs_dir) $(image_dir)
 		-ef '.aux/$(image_class).excludes'		\
 		|| { rm -f '$(_image_file).tmp'; false; }
 	sudo mv '$(_image_file).tmp' '$(_image_file)'
-	@echo Built '$(image_file)' successfully.
+	@echo Built '$(_image_file)' successfully.
 
 .PHONY: rootfs-shell
 rootfs-shell: $(rootfs_dir)
