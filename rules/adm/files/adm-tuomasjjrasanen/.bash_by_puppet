@@ -1,4 +1,10 @@
-export EDITOR=emacs
+# shell configurations configured by puppet
 
 PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/games:/usr/games"
 export PATH
+
+# puavoadmins have a more relaxed umask to facilitate collaboration under
+# "/puavo-os"
+umask 002
+
+export EDITOR=emacs
