@@ -1,2 +1,3 @@
 # Puavo OS admins may gain root privileges without password
+admin ALL=(ALL) NOPASSWD: ALL
 %<%= scope.lookupvar('adm::common_group') %> ALL=(ALL) NOPASSWD: ALL

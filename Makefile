@@ -7,6 +7,11 @@ rootfs_dir		:= /var/tmp/puavo-os/rootfs
 
 include .opinsys/defaults.mk
 
+_adm_user	:= puavo-os
+_adm_group	:= puavoadmins
+_adm_uid	:= 1000
+_adm_gid	:= 1000
+
 _repo_name   := $(shell basename $(shell git rev-parse --show-toplevel))
 _image_file  := $(image_dir)/$(_repo_name)-$(image_class)-$(debootstrap_suite)-$(shell date -u +%Y-%m-%d-%H%M%S)-amd64.img
 
@@ -16,7 +21,7 @@ _debootstrap_packages := devscripts,equivs,git,locales,lsb-release,make,\
 _systemd_nspawn_machine_name := \
   $(notdir $(rootfs_dir))-$(shell tr -dc A-Za-z0-9 < /dev/urandom | head -c8)
 _systemd_nspawn_cmd := systemd-nspawn -D '$(rootfs_dir)' \
-			 -M '$(_systemd_nspawn_machine_name)'
+			 -M '$(_systemd_nspawn_machine_name)' -u '$(_adm_user)'
 
 .PHONY: build
 build: build-debs-ports build-parts
@@ -102,7 +107,7 @@ $(image_dir):
 
 .PHONY: rootfs-image
 rootfs-image: $(rootfs_dir) $(image_dir)
-	sudo '.aux/set-image-release' '$(rootfs_dir)' '$(image_class)' \
+	sudo .aux/set-image-release '$(rootfs_dir)' '$(image_class)' \
 	    '$(notdir $(_image_file))'
 	sudo mksquashfs '$(rootfs_dir)' '$(_image_file).tmp'	\
 		-noappend -no-recovery -wildcards		\
@@ -117,7 +122,10 @@ rootfs-shell: $(rootfs_dir)
 
 .PHONY: rootfs-sync-repo
 rootfs-sync-repo: $(rootfs_dir)
-	sudo rsync -rl . '$(rootfs_dir)/$(_repo_name)/'
+	sudo .aux/create-adm-user '$(rootfs_dir)' '/$(_repo_name)' \
+	    '$(_adm_user)' '$(_adm_group)' '$(_adm_uid)' '$(_adm_gid)'
+	sudo rsync "--chown=$(_adm_uid):$(_adm_gid)" --chmod=Dg+s,ug+w \
+	    -glopr . '$(rootfs_dir)/$(_repo_name)/'
 
 .PHONY: rootfs-update
 rootfs-update: rootfs-sync-repo

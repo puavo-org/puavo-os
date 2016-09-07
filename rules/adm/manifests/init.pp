@@ -2,11 +2,11 @@ class adm {
   include bash,
           packages
 
-  $common_group     = 'puavo-os-adm'
-  $common_group_gid = 555
+  $common_group     = 'puavoadmins'
+  $common_group_gid = 1000
   $home_basedir     = '/adm-home'
   $uid_max          = '1099'
-  $uid_min          = '1000'
+  $uid_min          = '1001'
 
   define user ($uid, $sshkey=undef, $sshkey_type=undef, $shell='/bin/bash') {
     $username   = $title
@@ -79,8 +79,8 @@ class adm {
   }
 
   file {
-    '/etc/sudoers.d/puavo-os-adm':
-      content => template('adm/sudoers.d/puavo-os-adm'),
+    '/etc/sudoers.d/puavoadmins':
+      content => template('adm/sudoers.d/puavoadmins'),
       mode    => 440;
 
     $adm::home_basedir:
