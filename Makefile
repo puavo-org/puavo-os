@@ -46,11 +46,11 @@ install-parts: /$(_repo_name)
 install-build-deps: /$(_repo_name)
 	$(MAKE) -C debs update-repo
 
-	sudo puppet apply						\
-		--execute 'include image::$(image_class)::prepare'	\
-		--logdest '/var/log/$(_repo_name)/puppet.log'		\
-		--logdest console					\
-		--modulepath 'rules'
+	sudo env FACTER_puavoruleset=prepare puppet apply	\
+		--logdest '/var/log/$(_repo_name)/puppet.log'	\
+		--logdest console				\
+		--modulepath 'rules'				\
+		rules/site.pp
 
 	$(MAKE) -C debs install-build-deps-toolchain
 	$(MAKE) -C debs toolchain
@@ -146,11 +146,11 @@ update: install-build-deps
 
 .PHONY: install-rules
 install-rules: /$(_repo_name)
-	sudo puppet apply					\
-		--execute 'include image::$(image_class)'	\
-		--logdest '/var/log/$(_repo_name)/puppet.log'	\
-		--logdest console				\
-		--modulepath 'rules'
+	sudo env 'FACTER_puavoruleset=$(image_class)' puppet apply	\
+		--logdest '/var/log/$(_repo_name)/puppet.log'		\
+		--logdest console					\
+		--modulepath 'rules'					\
+		rules/site.pp
 
 /$(_repo_name):
 	@echo ERROR: localhost is not Puavo OS system >&2
