@@ -46,15 +46,17 @@ module PuavoWlanController
     register PuavoWlanController::Routes::Root
     register PuavoWlanController::Routes::V1
 
-    def prettify_bytes(bytes)
-      return "NaN" if bytes.nil?
+    def prettify_byterate(byterate)
+      return "NaN" if byterate.nil?
 
-      return "#{(bytes / 1024.0 ** 4).round(1)} TiB" if bytes.abs >= 1024 ** 4
-      return "#{(bytes / 1024.0 ** 3).round(1)} GiB" if bytes.abs >= 1024 ** 3
-      return "#{(bytes / 1024.0 ** 2).round(1)} MiB" if bytes.abs >= 1024 ** 2
-      return "#{(bytes / 1024.0 ** 1).round(1)} KiB" if bytes.abs >= 1024 ** 1
+      bitrate = byterate * 8
 
-      "#{bytes.round(1)} B"
+      return "#{(bitrate / 1000.0 ** 4).round(1)} Tbit/s" if bitrate.abs >= 1000 ** 4
+      return "#{(bitrate / 1000.0 ** 3).round(1)} Gbit/s" if bitrate.abs >= 1000 ** 3
+      return "#{(bitrate / 1000.0 ** 2).round(1)} Mbit/s" if bitrate.abs >= 1000 ** 2
+      return "#{(bitrate / 1000.0 ** 1).round(1)} Kbit/s" if bitrate.abs >= 1000 ** 1
+
+      "#{bitrate.round(1)} bit/s"
     end
 
     def prettify_seconds(seconds)
