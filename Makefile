@@ -5,6 +5,9 @@ image_class		:= allinone
 image_dir		:= /srv/puavo-os-images
 rootfs_dir		:= /var/tmp/puavo-os/rootfs
 
+_admin_uid	:= 10000
+_admin_gid	:= 555
+
 _repo_name   := $(shell basename $(shell git rev-parse --show-toplevel))
 _image_file  := $(image_dir)/$(_repo_name)-$(image_class)-$(debootstrap_suite)-$(shell date -u +%Y-%m-%d-%H%M%S)-amd64.img
 
@@ -100,7 +103,7 @@ $(image_dir):
 
 .PHONY: rootfs-image
 rootfs-image: $(rootfs_dir) $(image_dir)
-	sudo '.aux/set-image-release' '$(rootfs_dir)' '$(image_class)' \
+	sudo .aux/set-image-release '$(rootfs_dir)' '$(image_class)' \
 	    '$(notdir $(_image_file))'
 	sudo mksquashfs '$(rootfs_dir)' '$(_image_file).tmp'	\
 		-noappend -no-recovery -wildcards		\
@@ -115,7 +118,10 @@ rootfs-shell: $(rootfs_dir)
 
 .PHONY: rootfs-sync-repo
 rootfs-sync-repo: $(rootfs_dir)
-	sudo rsync -rl . '$(rootfs_dir)/$(_repo_name)/'
+	sudo .aux/create-admin-user '$(rootfs_dir)' '/$(_repo_name)' \
+	    '$(_admin_uid)' '$(_admin_gid)'
+	sudo rsync "--chown=$(_admin_uid):$(_admin_gid)" --chmod=Dg+s,ug+w \
+	    -glopr . '$(rootfs_dir)/$(_repo_name)/'
 
 .PHONY: rootfs-update
 rootfs-update: rootfs-sync-repo
