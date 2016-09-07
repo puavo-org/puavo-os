@@ -54,9 +54,8 @@ module PuavoWlanController
       return "#{(bitrate / 1000.0 ** 4).round(1)} Tbit/s" if bitrate.abs >= 1000 ** 4
       return "#{(bitrate / 1000.0 ** 3).round(1)} Gbit/s" if bitrate.abs >= 1000 ** 3
       return "#{(bitrate / 1000.0 ** 2).round(1)} Mbit/s" if bitrate.abs >= 1000 ** 2
-      return "#{(bitrate / 1000.0 ** 1).round(1)} Kbit/s" if bitrate.abs >= 1000 ** 1
 
-      "#{bitrate.round(1)} bit/s"
+      "#{(bitrate / 1000.0).round(1)} Kbit/s"
     end
 
     def prettify_seconds(seconds)
