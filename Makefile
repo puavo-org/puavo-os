@@ -5,8 +5,10 @@ image_class		:= allinone
 image_dir		:= /srv/puavo-os-images
 rootfs_dir		:= /var/tmp/puavo-os/rootfs
 
-_admin_uid	:= 10000
-_admin_gid	:= 555
+_adm_user	:= puavo-os
+_adm_group	:= puavoadmins
+_adm_uid	:= 1000
+_adm_gid	:= 1000
 
 _repo_name   := $(shell basename $(shell git rev-parse --show-toplevel))
 _image_file  := $(image_dir)/$(_repo_name)-$(image_class)-$(debootstrap_suite)-$(shell date -u +%Y-%m-%d-%H%M%S)-amd64.img
@@ -17,7 +19,7 @@ _debootstrap_packages := devscripts,equivs,git,locales,lsb-release,make,\
 _systemd_nspawn_machine_name := \
   $(notdir $(rootfs_dir))-$(shell tr -dc A-Za-z0-9 < /dev/urandom | head -c8)
 _systemd_nspawn_cmd := systemd-nspawn -D '$(rootfs_dir)' \
-			 -M '$(_systemd_nspawn_machine_name)' -u admin
+			 -M '$(_systemd_nspawn_machine_name)' -u '$(_adm_user)'
 
 .PHONY: build
 build: build-debs-ports build-parts
@@ -118,9 +120,9 @@ rootfs-shell: $(rootfs_dir)
 
 .PHONY: rootfs-sync-repo
 rootfs-sync-repo: $(rootfs_dir)
-	sudo .aux/create-admin-user '$(rootfs_dir)' '/$(_repo_name)' \
-	    '$(_admin_uid)' '$(_admin_gid)'
-	sudo rsync "--chown=$(_admin_uid):$(_admin_gid)" --chmod=Dg+s,ug+w \
+	sudo .aux/create-adm-user '$(rootfs_dir)' '/$(_repo_name)' \
+	    '$(_adm_user)' '$(_adm_group)' '$(_adm_uid)' '$(_adm_gid)'
+	sudo rsync "--chown=$(_adm_uid):$(_adm_gid)" --chmod=Dg+s,ug+w \
 	    -glopr . '$(rootfs_dir)/$(_repo_name)/'
 
 .PHONY: rootfs-update

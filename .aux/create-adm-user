@@ -1,0 +1,31 @@
+#!/bin/sh
+
+set -eu
+
+rootfs_dir=${1:-}
+home_dir=${2:-}
+adm_user=${3:-}
+adm_group=${4:-}
+uid=${5:-}
+gid=${6:-}
+
+if [ -z "$rootfs_dir" -o -z "$home_dir" -o -z "$adm_user" -o -z "$adm_group" \
+  -o -z "$uid" -o -z "$gid" ]; then
+    echo "Usage: $(basename $0) rootfs home adm_user adm_group uid gid" >&2
+    exit 1
+fi
+
+if ! grep -q "^${adm_group}:" "${rootfs_dir}/etc/group"; then
+  groupadd -R "$rootfs_dir" -g "$gid" "$adm_group"
+fi
+
+if ! grep -q "^${adm_user}:" "${rootfs_dir}/etc/passwd"; then
+  useradd -R "$rootfs_dir" -d "$home_dir" -g "$adm_group" -u "$uid" "$adm_user"
+fi
+
+cat > "${rootfs_dir}/etc/sudoers.d/puavoadmins" <<EOF
+# Puavo OS admins may gain root privileges without password
+${adm_user} ALL=(ALL) NOPASSWD: ALL
+%${adm_group} ALL=(ALL) NOPASSWD: ALL
+EOF
+chmod 440 "${rootfs_dir}/etc/sudoers.d/puavoadmins"

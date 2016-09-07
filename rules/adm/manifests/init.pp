@@ -3,10 +3,10 @@ class adm {
           packages
 
   $common_group     = 'puavoadmins'
-  $common_group_gid = 555
+  $common_group_gid = 1000
   $home_basedir     = '/adm-home'
   $uid_max          = '1099'
-  $uid_min          = '1000'
+  $uid_min          = '1001'
 
   define user ($uid, $sshkey=undef, $sshkey_type=undef, $shell='/bin/bash') {
     $username   = $title
