@@ -8,21 +8,26 @@ class adm {
   $uid_max          = '1099'
   $uid_min          = '1000'
 
-  define user ($uid, $sshkey=undef, $sshkey_type=undef, $shell='/bin/bash') {
-    $username   = $title
-    $homedir    = "${adm::home_basedir}/${username}"
-    $ssh_subdir = "$homedir/.ssh"
+  define user ($uid, $sshkey=undef, $sshkey_type=undef, $homedir=undef,
+               $shell='/bin/bash', $home_mode=750) {
+    $username = $title
+
+    $user_homedir = $homedir ? {
+		      undef   => "${adm::home_basedir}/${username}",
+		      default => $homedir,
+		    }
+    $ssh_subdir = "${user_homedir}/.ssh"
 
     if ($uid < $adm::uid_min) or ($adm::uid_max < $uid) {
       fail("adm::user uid parameter must be between $adm::uid_min and $adm::uid_max (was $uid)")
     }
 
     file {
-      $homedir:
+      $user_homedir:
         ensure  => directory,
         owner   => $username,
         group   => $username,
-        mode    => 750,
+        mode    => $home_mode,
         require => User[$username];
 
       $ssh_subdir:
@@ -31,14 +36,14 @@ class adm {
         group   => $username,
         mode    => 700;
 
-      "$homedir/.bash_by_puppet":
+      "${user_homedir}/.bash_by_puppet":
         owner   => $username,
         group   => $username,
         mode    => 644,
         source  => [ "puppet:///modules/adm/users/$username/.bash_by_puppet"
                    , "puppet:///modules/adm/common/.bash_by_puppet" ];
 
-      "$homedir/.gitconfig":
+      "${user_homedir}/.gitconfig":
         owner   => $username,
         group   => $username,
         mode    => 644,
@@ -68,7 +73,7 @@ class adm {
         uid        => $uid,
         gid        => $uid,
         groups     => [ 'adm', 'lpadmin', $adm::common_group ],
-        home       => $homedir,
+        home       => $user_homedir,
         managehome => true,
         require    => [ File['/etc/skel/.bashrc']
                       , Group[$username]
@@ -90,7 +95,9 @@ class adm {
   # sets up $common_group as well.
   adm::user {
     'puavo-os':
-      uid => 1000;
+      homedir   => '/puavo-os',
+      home_mode => 2775,
+      uid       => 1000;
   }
 
   Package <| title == "cups-client"
