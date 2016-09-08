@@ -72,4 +72,4 @@ install-build-deps: $(_install_build_deps)
 .install-build-deps-%: %
 	sudo apt-get update
 	sudo mk-build-deps -i "$</debian/control" \
-		-t 'apt-get -y --force-yes --no-install-recommends'
+		-t 'apt-get -y --force-yes'
