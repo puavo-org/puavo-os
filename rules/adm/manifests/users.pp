@@ -1,8 +1,9 @@
 class adm::users {
   include adm
 
-  adm::user {
-    'puavo-os':
-      uid => 1000;
-  }
+  # Add more users here as needed.
+  # adm::user {
+  #   'adm-mr-clutterbuck':
+  #     uid => 1001;
+  # }
 }
