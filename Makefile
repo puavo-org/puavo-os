@@ -8,7 +8,7 @@ rootfs_dir		:= /var/tmp/puavo-os/rootfs
 include .opinsys/defaults.mk
 
 _adm_user	:= puavo-os
-_adm_group	:= puavoadmins
+_adm_group	:= puavo-os
 _adm_uid	:= 1000
 _adm_gid	:= 1000
 
@@ -40,7 +40,7 @@ install: install-parts
 
 .PHONY: install-parts
 install-parts: /$(_repo_name)
-	$(MAKE) -C parts install prefix=/usr sysconfdir=/etc
+	sudo $(MAKE) -C parts install prefix=/usr sysconfdir=/etc
 
 .PHONY: install-build-deps
 install-build-deps: /$(_repo_name)
