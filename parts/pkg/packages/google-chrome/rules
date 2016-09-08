@@ -39,10 +39,12 @@ case "${command}" in
             /usr/share/icons/hicolor/256x256/apps/google-chrome.png
         ln -sf "${upstream_dir}/usr/share/man/man1/google-chrome.1" \
             /usr/share/man/man1/google-chrome.1
-        ln -sf "${upstream_dir}/usr/share/applications/google-chrome.desktop" \
-            /usr/share/applications/google-chrome.desktop
         ln -sf "${upstream_dir}/opt/google/chrome/google-chrome" \
             /usr/bin/google-chrome-stable
+
+        sed '/^MimeType=/a\
+StartupNotify=true' "${upstream_dir}/usr/share/applications/google-chrome.desktop" \
+            > /usr/share/applications/google-chrome.desktop
 
         export PEPPER_FLASH_VERSION=$(grep '"version":' "${upstream_dir}/opt/google/chrome/PepperFlash/manifest.json"| grep -Po '(?<=version": ")(?:\d|\.)*')
 
@@ -75,17 +77,24 @@ EOF
         chmod 0755 "${upstream_dir}"
         ;;
     download)
-        # Tested with version 44.0.2403.125.
+        # Tested with version 52.0.2743.116-1.
         upstream_pack=$1
         baseurl="https://dl.google.com/linux/chrome/deb"
         tmpfile=$(mktemp)
+
+        dpkg_arch=$(dpkg --print-architecture)
+        if [ "$dpkg_arch" != "amd64" ]; then
+            echo 'Google Chrome is for amd64 only.' >&2
+            exit 1
+        fi
+
         wget \
             --no-use-server-timestamps \
             --no-check-certificate \
             --no-cookies \
             --output-document "${tmpfile}" \
             --progress=dot:mega \
-            "${baseurl}/dists/stable/main/binary-i386/Packages" || {
+            "${baseurl}/dists/stable/main/binary-${dpkg_arch}/Packages" || {
             wget_err=$?
             rm -f "${tmpfile}" || true
             [ ${wget_err} -eq 4 ] && exit 2 ## Network failure.
