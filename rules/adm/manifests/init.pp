@@ -87,10 +87,10 @@ class adm {
       ensure  => directory;
   }
 
-  group {
-    $adm::common_group:
-      ensure => present,
-      gid    => $adm::common_group_gid;
+  # sets up $common_group as well.
+  adm::user {
+    'puavo-os':
+      uid => 1000;
   }
 
   Package <| title == "cups-client"
