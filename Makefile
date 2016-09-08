@@ -6,7 +6,7 @@ image_dir		:= /srv/puavo-os-images
 rootfs_dir		:= /var/tmp/puavo-os/rootfs
 
 _adm_user	:= puavo-os
-_adm_group	:= puavoadmins
+_adm_group	:= puavo-os
 _adm_uid	:= 1000
 _adm_gid	:= 1000
 

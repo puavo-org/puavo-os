@@ -24,9 +24,9 @@ if ! grep -q "^${adm_user}:" "${rootfs_dir}/etc/passwd"; then
     -s /bin/bash "$adm_user"
 fi
 
-cat > "${rootfs_dir}/etc/sudoers.d/puavoadmins" <<EOF
+cat > "${rootfs_dir}/etc/sudoers.d/puavo-os" <<EOF
 # Puavo OS admins may gain root privileges without password
 ${adm_user} ALL=(ALL) NOPASSWD: ALL
 %${adm_group} ALL=(ALL) NOPASSWD: ALL
 EOF
-chmod 440 "${rootfs_dir}/etc/sudoers.d/puavoadmins"
+chmod 440 "${rootfs_dir}/etc/sudoers.d/puavo-os"

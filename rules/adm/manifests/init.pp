@@ -2,7 +2,7 @@ class adm {
   include bash,
           packages
 
-  $common_group     = 'puavoadmins'
+  $common_group     = 'puavo-os'
   $common_group_gid = 1000
   $home_basedir     = '/adm-home'
   $uid_max          = '1099'
@@ -79,8 +79,8 @@ class adm {
   }
 
   file {
-    '/etc/sudoers.d/puavoadmins':
-      content => template('adm/sudoers.d/puavoadmins'),
+    '/etc/sudoers.d/puavo-os':
+      content => template('adm/sudoers.d/puavo-os'),
       mode    => 440;
 
     $adm::home_basedir:
