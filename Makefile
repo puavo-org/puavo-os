@@ -38,7 +38,7 @@ install: install-parts
 
 .PHONY: install-parts
 install-parts: /$(_repo_name)
-	$(MAKE) -C parts install prefix=/usr sysconfdir=/etc
+	sudo $(MAKE) -C parts install prefix=/usr sysconfdir=/etc
 
 .PHONY: install-build-deps
 install-build-deps: /$(_repo_name)
