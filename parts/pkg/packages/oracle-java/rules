@@ -49,7 +49,7 @@ case "${command}" in
             --header "Cookie: oraclelicense=accept-securebackup-cookie" \
             --output-document "${upstream_pack}" \
             --progress=dot:mega \
-            http://download.oracle.com/otn-pub/java/jdk/8u66-b17/jre-8u66-linux-i586.tar.gz || {
+            http://download.oracle.com/otn-pub/java/jdk/8u102-b14/jre-8u102-linux-i586.tar.gz || {
             [ $? -eq 4 ] && exit 2 ## Network failure.
             exit 1
             }
