@@ -2,9 +2,6 @@ class adm::users {
   include adm
 
   adm::user {
-    'puavo-os':
-      uid => 1000;
-
     'adm-vmlintu':
       sshkey      => 'AAAAB3NzaC1kc3MAAACBAKt2fmhYJOHT7dS/3GPv3MSp6NuCOpWpSdan5apzEc4BPz6ouxwneR/KudMvy4HsZn7MBiqLnAV/Dq1K8MBWtxU3VKviBskXyugcBBrjHiwfUYuGM5tqKR7VJ/GSV2S2fKdAN/F5QrWUmZfTlVFOVFvWd5fDfmMDPcXExEh+iZB1AAAAFQCQJJpJEH1nulob2MnNUk4S62hbBQAAAIBI/Unwn94+c5P0mhnQ1V65KVKNAy2zBMs9x4ykHHZiSR7yrRP4k4qjeSXZytaXxevzQk+sB2bHIsBYxXhixUedjxT72v429iZiaYGEj8lkDdHCVqBmMg7wfR7TTEopbvclcxOGHITWhSKN+2PHhRN2rKJFLp5ByaRpw4rRlWfeBQAAAIBiGncHnSwTiVHpWhw+7uYD3eJsGu8EBFubfQ7ldLuhnF3mTREXLbgryrS2dcSSlXws5qGQ+eXilSD09+CznlDL84zdFs5w2JhRXEl1vA6J+7Xj+EGtkk4c+gJ9rlWKYpHEUe8wqewRuXAIBVu8gYEoS74P2tOl9vWrBflT07jDfw==',
       sshkey_type => 'dsa',
