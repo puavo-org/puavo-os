@@ -4,4 +4,6 @@
 2. Plug in a removable disk (minimum size 1 GiB), here we assume it will
    be /dev/sdb.
 
-2. Run puavo-bootserver-make-installer /dev/sdb /path/to/ubuntu-image.iso
+3. Run:
+
+    sudo ./puavo-bootserver-make-installer /dev/sdb /path/to/ubuntu-image.iso
