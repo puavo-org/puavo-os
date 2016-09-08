@@ -20,7 +20,8 @@ if ! grep -q "^${adm_group}:" "${rootfs_dir}/etc/group"; then
 fi
 
 if ! grep -q "^${adm_user}:" "${rootfs_dir}/etc/passwd"; then
-  useradd -R "$rootfs_dir" -d "$home_dir" -g "$adm_group" -u "$uid" "$adm_user"
+  useradd -M -R "$rootfs_dir" -d "$home_dir" -g "$adm_group" -u "$uid" \
+    -s /bin/bash "$adm_user"
 fi
 
 cat > "${rootfs_dir}/etc/sudoers.d/puavoadmins" <<EOF
