@@ -5,7 +5,36 @@ class packages {
   Package { ensure => present, }
 
   #
-  # packages from the debian repositories
+  # Puavo OS packages
+  #
+
+  @package {
+    [ 'iivari-client'
+    , 'opinsys-ca-certificates'
+    , 'puavo-autopilot'
+    , 'puavo-blackboard'
+    , 'puavo-client'
+    , 'puavo-conf'
+    , 'puavo-core'
+    , 'puavo-devscripts'
+    , 'puavo-hw-log'
+    , 'puavo-hw-tools'
+    , 'puavo-local-config'
+    , 'puavo-ltsp-client'
+    , 'puavo-ltsp-install'
+    , 'puavo-pkg'
+    , 'puavo-sharedir-client'
+    , 'puavo-vpn-client'
+    , 'puavo-wlanap'
+    , 'puavo-wlanmapper'
+    , 'ruby-puavowlan'
+    , 'webkiosk-language-selector'
+    , 'webmenu' ]:
+      ensure => present;
+  }
+
+  #
+  # packages from the Debian repositories
   #
 
   @package {
