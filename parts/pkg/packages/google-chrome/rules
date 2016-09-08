@@ -46,18 +46,14 @@ case "${command}" in
 StartupNotify=true' "${upstream_dir}/usr/share/applications/google-chrome.desktop" \
             > /usr/share/applications/google-chrome.desktop
 
-        export PEPPER_FLASH_VERSION=$(grep '"version":' "${upstream_dir}/opt/google/chrome/PepperFlash/manifest.json"| grep -Po '(?<=version": ")(?:\d|\.)*')
-
-        cat <<EOF >/etc/chromium-browser/default
-# Default settings for chromium-browser. This file is sourced by /bin/sh from
-# /usr/bin/chromium-browser
-
+        PEPPER_FLASH_VERSION=$(grep '"version":' "${upstream_dir}/opt/google/chrome/PepperFlash/manifest.json"| grep -Po '(?<=version": ")(?:\d|\.)*')
+        cat <<EOF >/etc/chromium.d/set_ppapi_flash_path
 # Options to pass to chromium-browser
-
-CHROMIUM_FLAGS="--ppapi-flash-path=${upstream_dir}/opt/google/chrome/PepperFlash/libpepflashplayer.so --ppapi-flash-version=$PEPPER_FLASH_VERSION"
+CHROMIUM_FLAGS="\${CHROMIUM_FLAGS} --ppapi-flash-path=${upstream_dir}/opt/google/chrome/PepperFlash/libpepflashplayer.so --ppapi-flash-version=$PEPPER_FLASH_VERSION"
 EOF
         ;;
     unconfigure)
+        rm -f /etc/chromium.d/set_ppapi_flash_path
         rm -f /usr/bin/google-chrome-stable
         rm -f /usr/share/applications/google-chrome.desktop
         rm -f /usr/share/man/man1/google-chrome.1
@@ -77,7 +73,7 @@ EOF
         chmod 0755 "${upstream_dir}"
         ;;
     download)
-        # Tested with version 52.0.2743.116-1.
+        # Tested with version 53.0.2785.101-1.
         upstream_pack=$1
         baseurl="https://dl.google.com/linux/chrome/deb"
         tmpfile=$(mktemp)
