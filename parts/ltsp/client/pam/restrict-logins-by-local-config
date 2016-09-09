@@ -15,10 +15,8 @@ deny()
 
 is_admin_user()
 {
-    # No one is admin if reading the admin group name fails.
-    admin_group=$(cat /etc/ltsp/admin_group) || return 1
-
-    getent group "${admin_group}" | cut -d ':' -f4 | tr , '\n' \
+    # Check if user belongs to "puavo-os"-group, which is for administrators.
+    getent group puavo-os | cut -d ':' -f4 | tr , '\n' \
 	| grep -x -q "${PAM_USER}"
 }
 
