@@ -11,5 +11,6 @@ class image::wirelessaccesspoint {
   # wirelessaccesspoint should be able to function as a wireless accesspoint
   # (puavo-wlanap*) and as a digital signage system (iivari-client)
   Package <| tag == 'tag_admin'
-          or tag == 'tag_basic' |>
+          or tag == 'tag_basic'
+          or title == iivari-client |>
 }

@@ -2,13 +2,12 @@ class webmenu {
   include dpkg,
           packages
 
+  File { require => Package['webmenu'], }
   file {
-    '/etc/puavo-external-files-actions.d':
-      ensure => directory;
-
     '/etc/puavo-external-files-actions.d/webmenu':
       content => template('webmenu/puavo-external-files-actions.d/webmenu'),
-      mode    => 755;
+      mode    => 755,
+      require => Package['puavo-ltsp-client'];
 
     [ '/etc/webmenu'
     , '/etc/webmenu/desktop.d'
@@ -21,7 +20,7 @@ class webmenu {
 
     '/etc/webmenu/desktop.d/default-overrides.yaml':
       content => template('webmenu/desktop.d/default-overrides.yaml'),
-      require => [ Package['gnome-themes-extras'], ];
+      require => Package['gnome-themes-extras'];
 
     '/etc/webmenu/menu.yaml':
       content => template('webmenu/menu.yaml');
@@ -45,10 +44,10 @@ class webmenu {
       mode    => 755;
   }
 
-  Package <|
-       title == breathe-icon-theme
-    or title == faenza-icon-theme
-    or title == oxygen-icon-theme
-    or title == tuxpaint-stamps-default
-  |>
+  Package <| title == breathe-icon-theme
+          or title == faenza-icon-theme
+          or title == oxygen-icon-theme
+          or title == puavo-ltsp-client
+          or title == tuxpaint-stamps-default
+          or title == webmenu |>
 }

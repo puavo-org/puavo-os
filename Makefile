@@ -24,7 +24,11 @@ _systemd_nspawn_cmd := systemd-nspawn -D '$(rootfs_dir)' \
 			 -M '$(_systemd_nspawn_machine_name)' -u '$(_adm_user)'
 
 .PHONY: build
-build: build-debs-ports build-parts
+build: build-debs-ports build-debs-parts
+
+.PHONY: build-debs-parts
+build-debs-parts:
+	$(MAKE) -C debs parts
 
 .PHONY: build-debs-ports
 build-debs-ports:
@@ -62,6 +66,7 @@ help:
 	@echo
 	@echo 'Targets:'
 	@echo '    [build]              build all'
+	@echo '    build-debs-parts     build Puavo OS Debian packages'
 	@echo '    build-debs-ports     build all external Debian packages'
 	@echo '    build-parts          build all parts'
 	@echo '    help                 display this help and exit'
