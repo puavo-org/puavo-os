@@ -8,8 +8,10 @@ class xexit {
 
     '/etc/Xexit.d/01-kill-desktop-session':
       content => template('xexit/01-kill-desktop-session'),
-      require => Package['xexit'];
+      require => [ Package['puavo-ltsp-client']
+		 , Package['xexit'] ];
   }
 
-  Package <| title == xexit |>
+  Package <| title == puavo-ltsp-client
+          or title == xexit |>
 }

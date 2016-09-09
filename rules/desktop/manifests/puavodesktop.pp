@@ -19,7 +19,8 @@ class desktop::puavodesktop {
     '/etc/dconf/db/puavo-desktop.d/session_profile':
       content => template('desktop/dconf_session_profile'),
       notify  => Exec['update dconf'],
-      require => Package['faenza-icon-theme'];
+      require => [ Package['faenza-icon-theme']
+		 , Package['webmenu'] ];
                  # , Package['light-themes'] ];	# XXX needs packaging
 
     # webmenu takes care of the equivalent functionality
@@ -44,5 +45,6 @@ class desktop::puavodesktop {
 
   Package <| title == faenza-icon-theme
           or title == indicator-session
-          or title == light-themes      |>
+          or title == light-themes
+          or title == webmenu |>
 }
