@@ -1,1 +1,1 @@
-* * * * * root /usr/local/sbin/munin-node-autoconf
+* * * * * root /usr/local/sbin/munin-node-configure-all
