@@ -3,7 +3,7 @@
 set -eu
 
 device_config_path=/state/etc/puavo/device.json
-local_config_path=/state/etc/puavo/local/config.json 
+local_config_path=/state/etc/puavo/local/config.json
 
 allowed_logins() { jq -r .allow_logins_for[] "$local_config_path"; }
 
