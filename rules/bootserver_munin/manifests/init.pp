@@ -38,7 +38,8 @@ class bootserver_munin {
 
   service {
     'munin-node':
-      ensure => running;
+      ensure  => running,
+      require => Package['munin-node'];
   }
 
   tidy {
