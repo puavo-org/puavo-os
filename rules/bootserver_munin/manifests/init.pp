@@ -41,4 +41,10 @@ class bootserver_munin {
       ensure => running;
   }
 
+  tidy {
+    '/etc/munin/plugins':
+      matches => [ 'if_err_tap*', 'if_tap*' ],
+      notify  => Service['munin-node'],
+      recurse => true;
+  }
 }
