@@ -1,0 +1,138 @@
+#!/usr/bin/env python
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301 USA.
+
+# Multigraph plugin for showing Puavo WLAN traffic totals and per AP.
+
+#%# family=auto contrib
+#%# capabilities=autoconf
+
+from __future__ import print_function
+
+# Standard library modules
+import sys
+
+# Third-party modules
+import json
+import redis
+
+def _main():
+    if len(sys.argv) == 1:
+        redisconn     = redis.Redis()
+        keys          = redisconn.keys("puavo-wlancontroller:status:*")
+
+        total_rxbytes = 0
+        total_txbytes = 0
+
+        output_lines  = []
+
+        for key in keys:
+            status         = json.loads(redisconn.get(key))
+            radios         = status["radios"]
+            _, _, hostname = key.partition("puavo-wlancontroller:status:")
+
+            host_rxbytes   = 0
+            host_txbytes   = 0
+
+            for radio in radios:
+                for accesspoint in radio["accesspoints"]:
+                    ap_rxbytes = accesspoint["rx_bytes"]
+                    ap_txbytes = accesspoint["tx_bytes"]
+
+                    host_rxbytes  += ap_rxbytes
+                    host_txbytes  += ap_txbytes
+                    total_rxbytes += ap_rxbytes
+                    total_txbytes += ap_txbytes
+
+            # Munin uses dash ('-') for separating components in its
+            # .rrd files, so we need to replace all dashes to not
+            # break anything.
+            multigraph_key = hostname.replace("-", "_")
+
+            output_lines.append("multigraph puavo_wlan_traffic.%s" % multigraph_key)
+            output_lines.append("rx.value %d" % (host_rxbytes * 8))
+            output_lines.append("tx.value %d" % (host_txbytes * 8))
+
+        output_lines.insert(0, "multigraph puavo_wlan_traffic")
+        output_lines.insert(1, "rx.value %d" % (total_rxbytes * 8))
+        output_lines.insert(2, "tx.value %d" % (total_txbytes * 8))
+
+        for output_line in output_lines:
+            print(output_line)
+
+        return 0
+
+    if len(sys.argv) == 2:
+        if sys.argv[1] == 'autoconf':
+            print("yes")
+            return 0
+
+        elif sys.argv[1] == 'config':
+            print("multigraph puavo_wlan_traffic")
+
+            print("graph_title Puavo WLAN traffic")
+            print("graph_order rx tx")
+            print("graph_args --base 1000")
+            print("graph_vlabel bits in (-) / out (+) per ${graph_period}")
+            print("graph_category network")
+            print("graph_info This graph shows the total Puavo WLAN traffic.")
+
+            print("tx.info Bits sent/received")
+            print("rx.label rx")
+            print("rx.type DERIVE")
+            print("rx.graph no")
+            print("rx.min 0")
+            print("tx.label bps")
+            print("tx.type DERIVE")
+            print("tx.negative rx")
+            print("tx.min 0")
+
+            redisconn = redis.Redis()
+            keys      = redisconn.keys("puavo-wlancontroller:status:*")
+
+            for key in sorted(keys):
+                _, _, hostname = key.partition("puavo-wlancontroller:status:")
+
+                # Munin uses dash ('-') for separating components in its
+                # .rrd files, so we need to replace all dashes to not
+                # break anything.
+                multigraph_key = hostname.replace("-", "_")
+
+                print("multigraph puavo_wlan_traffic.%s" % multigraph_key)
+
+                print("graph_title Puavo WLAN traffic of %s" % hostname)
+                print("graph_order rx tx")
+                print("graph_args --base 1000")
+                print("graph_vlabel bits in (-) / out (+) per ${graph_period}")
+                print("graph_category network")
+                print("graph_info This graph shows the Puavo WLAN traffic of %s." % hostname)
+
+                print("tx.info Bits sent/received")
+                print("rx.label rx")
+                print("rx.type DERIVE")
+                print("rx.graph no")
+                print("rx.min 0")
+                print("tx.label bps")
+                print("tx.type DERIVE")
+                print("tx.negative rx")
+                print("tx.min 0")
+
+            return 0
+
+    return 1
+
+if __name__ == "__main__":
+    sys.exit(_main())
