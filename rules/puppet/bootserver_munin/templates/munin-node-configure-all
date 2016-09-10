@@ -1,5 +1,0 @@
-#!/bin/sh
-
-set -eu
-
-/usr/sbin/munin-node-configure --shell | /bin/sh -
