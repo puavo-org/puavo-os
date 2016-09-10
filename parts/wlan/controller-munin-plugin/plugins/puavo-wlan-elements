@@ -15,6 +15,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301 USA.
 
+# Multigraph plugin for showing Puavo WLAN elements totals and per AP.
+
 #%# family=auto contrib
 #%# capabilities=autoconf
 
@@ -29,29 +31,52 @@ import redis
 
 def _main():
     if len(sys.argv) == 1:
-        r = redis.Redis()
-        keys = r.keys("puavo-wlancontroller:status:*")
+        redisconn     = redis.Redis()
+        keys          = redisconn.keys("puavo-wlancontroller:status:*")
 
-        ap_count    = 0
-        radio_count = 0
-        sta_count   = 0
+        total_ap_count    = 0
+        total_radio_count = 0
+        total_sta_count   = 0
+
+        output_lines  = []
 
         for key in keys:
-            status = json.loads(r.get(key))
+            status         = json.loads(redisconn.get(key))
+            radios         = status["radios"]
+            _, _, hostname = key.partition("puavo-wlancontroller:status:")
 
-            radios = status["radios"]
-            radio_count += len(radios)
+            total_radio_count += len(radios)
+
+            host_ap_count    = 0
+            host_sta_count   = 0
 
             for radio in radios:
                 accesspoints = radio["accesspoints"]
-                ap_count += len(accesspoints)
 
-                for accesspoint in accesspoints:
-                    sta_count += len(accesspoint["stations"])
+                host_ap_count  += len(accesspoints)
+                total_ap_count += len(accesspoints)
 
-        print("accesspoints.value %d" % ap_count)
-        print("radios.value %d" % radio_count)
-        print("stations.value %d" % sta_count)
+                for accesspoint in radio["accesspoints"]:
+                    host_sta_count  += len(accesspoint["stations"])
+                    total_sta_count += len(accesspoint["stations"])
+
+            # Munin uses dash ('-') for separating components in its
+            # .rrd files, so we need to replace all dashes to not
+            # break anything.
+            multigraph_key = hostname.replace("-", "_")
+
+            output_lines.append("multigraph puavo_wlan_elements.{}".format(multigraph_key))
+            output_lines.append("accesspoints.value {}".format(host_ap_count))
+            output_lines.append("radios.value {}".format(len(radios)))
+            output_lines.append("stations.value {}".format(host_sta_count))
+
+        output_lines.insert(0, "multigraph puavo_wlan_elements")
+        output_lines.insert(1, "accesspoints.value {}".format(total_ap_count))
+        output_lines.insert(2, "radios.value {}".format(total_radio_count))
+        output_lines.insert(3, "stations.value {}".format(total_sta_count))
+
+        for output_line in output_lines:
+            print(output_line)
 
         return 0
 
@@ -61,27 +86,62 @@ def _main():
             return 0
 
         elif sys.argv[1] == 'config':
+            print("multigraph puavo_wlan_elements")
+
             print("graph_title Puavo WLAN elements")
             print("graph_args --base 1000 -l 0")
             print("graph_vlabel Count")
             print("graph_category network")
-            print("graph_scale no")
-            print("graph_info This graph displays the number of different network elements of Puavo WLAN.")
+            print("graph_info This graph shows the number of Puavo WLAN elements.")
 
             print("accesspoints.label accesspoints")
             print("accesspoints.min 0")
             print("accesspoints.draw LINE2")
-            print("accesspoints.info The number of Puavo WLAN accesspoints.")
+            print("accesspoints.info The number of accesspoints.")
 
             print("radios.label radios")
             print("radios.min 0")
             print("radios.draw LINE2")
-            print("radios.info The number of radios in Puavo WLAN accesspoints.")
+            print("radios.info The number of radios.")
 
             print("stations.label stations")
             print("stations.min 0")
             print("stations.draw LINE2")
-            print("stations.info The number of stations connected to Puavo WLAN accesspoints.")
+            print("stations.info The number of stations.")
+
+            redisconn = redis.Redis()
+            keys      = redisconn.keys("puavo-wlancontroller:status:*")
+
+            for key in sorted(keys):
+                _, _, hostname = key.partition("puavo-wlancontroller:status:")
+
+                # Munin uses dash ('-') for separating components in its
+                # .rrd files, so we need to replace all dashes to not
+                # break anything.
+                multigraph_key = hostname.replace("-", "_")
+
+                print("multigraph puavo_wlan_elements.{}".format(multigraph_key))
+
+                print("graph_title Puavo WLAN elements on host {}".format(hostname))
+                print("graph_args --base 1000 -l 0")
+                print("graph_vlabel Count")
+                print("graph_category network")
+                print("graph_info This graph shows the number of Puavo WLAN elements on host {}.".format(hostname))
+
+                print("accesspoints.label accesspoints")
+                print("accesspoints.min 0")
+                print("accesspoints.draw LINE2")
+                print("accesspoints.info The number of accesspoints running on {}.".format(hostname))
+
+                print("radios.label radios")
+                print("radios.min 0")
+                print("radios.draw LINE2")
+                print("radios.info The number of radios on host {}.".format(hostname))
+
+                print("stations.label stations")
+                print("stations.min 0")
+                print("stations.draw LINE2")
+                print("stations.info The number of stations connected to {}.".format(hostname))
 
             return 0
 
