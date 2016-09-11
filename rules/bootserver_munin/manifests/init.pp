@@ -31,6 +31,14 @@ class bootserver_munin {
   }
 
   plugin {
+    [ 'if_altvpn1'
+    , 'if_eth0'
+    , 'if_eth1'
+    , 'if_ltsp0'
+    , 'if_vpn1'
+    , 'if_wlan0' ]:
+      wildcard => true;
+
     [ 'puavo-wlan-elements'
     , 'puavo-wlan-traffic' ]:
       require => Package['puavo-wlancontroller-munin-plugin'];
