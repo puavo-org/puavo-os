@@ -57,8 +57,7 @@ class bootserver_munin {
 
   package {
     [ 'munin'
-    , 'munin-node'
-    , 'puavo-wlancontroller-munin-plugin' ]:
+    , 'munin-node' ]:
       ensure => present;
   }
 
