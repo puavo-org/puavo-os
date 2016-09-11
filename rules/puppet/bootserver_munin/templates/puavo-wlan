@@ -61,12 +61,15 @@ def _refresh_cached_hostnames(new_hostnames):
 
     return new_cached_hostnames
 
+def _get_available_statuses():
+    r    = redis.Redis()
+    keys = r.keys("puavo-wlancontroller:status:*")
+
+    return [json.loads(r.get(key)) for key in keys]
 
 def _main():
-    redisconn             = redis.Redis()
-    keys                  = redisconn.keys("puavo-wlancontroller:status:*")
-    statuses              = [json.loads(redisconn.get(key)) for key in keys]
-    available_hostnames   = set([s["hostname"] for s in statuses])
+    available_statuses    = _get_available_statuses()
+    available_hostnames   = set([s["hostname"] for s in available_statuses])
     cached_hostnames      = _refresh_cached_hostnames(available_hostnames)
     unavailable_hostnames = cached_hostnames - available_hostnames
 
@@ -78,7 +81,7 @@ def _main():
         total_tx_bytes    = 0
         output_lines      = []
 
-        for status in statuses:
+        for status in available_statuses:
             host_ap_count    = 0
             host_radio_count = 0
             host_sta_count   = 0
