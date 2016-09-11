@@ -34,6 +34,9 @@ class bootserver_munin {
     , 'puavo-wlan-traffic' ]:
       enabled => true,
       require => Package['puavo-wlancontroller-munin-plugin'];
+
+    'users':
+      enabled => true;
   }
 
   bootserver_nginx::enable { 'munin': ; }
