@@ -30,7 +30,7 @@ class bootserver_munin {
       require => [ Package['munin'], Package['munin-node'] ];
   }
 
-  plugin {
+  bootserver_munin::plugin {
     [ 'if_altvpn1'
     , 'if_eth0'
     , 'if_eth1'
