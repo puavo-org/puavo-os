@@ -48,16 +48,19 @@ class bootserver_munin {
       wildcard => true;
 
     [ 'puavo-bootserver-clients'
-    , 'puavo-wlan'
     , 'users' ]:
       ;
+
+    'puavo-wlan':
+      require => Package['python-redis'];
   }
 
   bootserver_nginx::enable { 'munin': ; }
 
   package {
     [ 'munin'
-    , 'munin-node' ]:
+    , 'munin-node'
+    , 'python-redis' ]:
       ensure => present;
   }
 
