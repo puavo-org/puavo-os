@@ -28,6 +28,10 @@ class bootserver_munin {
       mode    => '0644',
       notify  => Exec['reload nginx'],
       require => [ Package['munin'], Package['munin-node'] ];
+
+    '/usr/share/munin/plugins/puavo-bootserver-clients':
+      content => template('bootserver_munin/puavo-bootserver-clients'),
+      mode    => 0755;
   }
 
   bootserver_munin::plugin {
@@ -38,6 +42,9 @@ class bootserver_munin {
     , 'if_vpn1'
     , 'if_wlan0' ]:
       wildcard => true;
+
+    'puavo-bootserver-clients':
+      ;
 
     [ 'puavo-wlan-elements'
     , 'puavo-wlan-traffic' ]:

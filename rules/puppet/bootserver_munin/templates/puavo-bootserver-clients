@@ -1,0 +1,87 @@
+#!/usr/bin/env python
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301 USA.
+
+# Multigraph plugin for showing the number of connected Puavo
+# Bootserver clients.
+
+#%# family=auto contrib
+#%# capabilities=autoconf
+
+from __future__ import print_function
+
+# Standard library modules
+import subprocess
+import sys
+
+# Third-party modules
+import json
+import redis
+
+def _main():
+    counts = {
+        "NBD": 0,
+        "NFS": 0,
+        "SMB": 0,
+        }
+    
+    if len(sys.argv) == 1:
+        out = subprocess.check_output(['/usr/bin/puavo-bootserver-list-clients',
+                                       '--no-resolve'])
+
+        total = 0
+
+        for line in out.splitlines():
+            protocol, _ = line.split('\t')
+            counts[protocol] += 1
+            total += 1
+
+        print("total.value {}".format(total))
+
+        for protocol, count in sorted(counts.items()):
+            print("{}.value {}".format(protocol.lower(), count))
+
+        return 0
+
+    if len(sys.argv) == 2:
+        if sys.argv[1] == 'autoconf':
+            print("yes")
+            return 0
+
+        elif sys.argv[1] == 'config':
+            print("graph_title Puavo Bootserver clients")
+            print("graph_args --base 1000 -l 0")
+            print("graph_vlabel Count")
+            print("graph_category network")
+            print("graph_info This graph shows the number of Puavo Bootserver clients.")
+
+            print("total.label total")
+            print("total.min 0")
+            print("total.draw LINE2")
+            print("total.info The total number of clients.")
+
+            for protocol in sorted(counts.keys()):
+                print("{}.label {}".format(protocol.lower(), protocol.lower()))
+                print("{}.min 0".format(protocol.lower()))
+                print("{}.draw LINE2".format(protocol.lower()))
+                print("{}.info The number of {} clients.".format(protocol.lower(), protocol))
+
+            return 0
+
+    return 1
+
+if __name__ == "__main__":
+    sys.exit(_main())
