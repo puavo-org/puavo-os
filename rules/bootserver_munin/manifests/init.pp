@@ -1,15 +1,12 @@
 class bootserver_munin {
   include bootserver_nginx
 
-  define plugin($enabled) {
+  define plugin() {
     $plugin_name = $title
 
     file {
       "/etc/munin/plugins/$plugin_name":
-        ensure  => $enabled ? {
-          false   => absent,
-          true    => link,
-        },
+        ensure  => link,
         notify  => Service['munin-node'],
         target  => "/usr/share/munin/plugins/$plugin_name",
     }
@@ -32,11 +29,10 @@ class bootserver_munin {
   plugin {
     [ 'puavo-wlan-elements'
     , 'puavo-wlan-traffic' ]:
-      enabled => true,
       require => Package['puavo-wlancontroller-munin-plugin'];
 
     'users':
-      enabled => true;
+      ;
   }
 
   bootserver_nginx::enable { 'munin': ; }
