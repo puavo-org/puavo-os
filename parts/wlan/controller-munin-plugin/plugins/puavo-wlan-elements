@@ -29,10 +29,13 @@ import sys
 import json
 import redis
 
+_KEY_PREFIX = "puavo-wlancontroller:status:"
+
 def _main():
     if len(sys.argv) == 1:
         redisconn     = redis.Redis()
-        keys          = redisconn.keys("puavo-wlancontroller:status:*")
+        keys          = redisconn.keys("%s*" % _KEY_PREFIX)
+        hostnames     = [k.partition(_KEY_PREFIX)[2] for k in keys]
 
         total_ap_count    = 0
         total_radio_count = 0
@@ -40,10 +43,10 @@ def _main():
 
         output_lines  = []
 
-        for key in keys:
+        for hostname in hostnames:
+            key            = "%s%s" % (_KEY_PREFIX, hostname)
             status         = json.loads(redisconn.get(key))
             radios         = status["radios"]
-            _, _, hostname = key.partition("puavo-wlancontroller:status:")
 
             total_radio_count += len(radios)
 
@@ -110,10 +113,10 @@ def _main():
             print("stations.info The number of stations.")
 
             redisconn = redis.Redis()
-            keys      = redisconn.keys("puavo-wlancontroller:status:*")
+            keys      = redisconn.keys("%s*" % _KEY_PREFIX)
 
             for key in sorted(keys):
-                _, _, hostname = key.partition("puavo-wlancontroller:status:")
+                _, _, hostname = key.partition(_KEY_PREFIX)
 
                 # Munin uses dash ('-') for separating components in its
                 # .rrd files, so we need to replace all dashes to not
