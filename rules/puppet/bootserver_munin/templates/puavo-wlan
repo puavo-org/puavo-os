@@ -125,10 +125,9 @@ def _main():
 
         for hostname in unavailable_hostnames:
             multigraph_key = _get_multigraph_key(hostname)
-            output_lines.append("multigraph puavo_wlan_elements.{}".format(multigraph_key))
-            output_lines.append("accesspoints.value U")
-            output_lines.append("radios.value U")
-            output_lines.append("stations.value U")
+            output_lines.append("multigraph puavo_wlan_traffic.{}".format(multigraph_key))
+            output_lines.append("rx.value U")
+            output_lines.append("tx.value U")
 
             output_lines.append("multigraph puavo_wlan_elements.{}".format(multigraph_key))
             output_lines.append("accesspoints.value U")
