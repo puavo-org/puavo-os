@@ -56,7 +56,7 @@ class bootserver_munin {
 
   tidy {
     '/etc/munin/plugins':
-      matches => [ 'if_err_tap*', 'if_tap*' ],
+      matches => [ 'if_err_tap*', 'if_tap*', 'nfsd', 'nfs_client' ],
       notify  => Service['munin-node'],
       recurse => true;
   }
