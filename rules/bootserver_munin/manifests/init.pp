@@ -22,23 +22,18 @@ class bootserver_munin {
       notify  => Service['munin-node'],
       require => Package['munin-node'];
 
-    '/etc/munin/plugins/puavo-wlan-elements':
-      ensure  => link,
-      notify  => Service['munin-node'],
-      require => Package['puavo-wlancontroller-munin-plugin'],
-      target  => '/usr/share/munin/plugins/puavo-wlan-elements';
-    
-    '/etc/munin/plugins/puavo-wlan-traffic':
-      ensure  => link,
-      notify  => Service['munin-node'],
-      require => Package['puavo-wlancontroller-munin-plugin'],
-      target  => '/usr/share/munin/plugins/puavo-wlan-traffic';
-    
     '/etc/nginx/sites-available/munin':
       content => template('bootserver_munin/nginx_conf'),
       mode    => '0644',
       notify  => Exec['reload nginx'],
       require => [ Package['munin'], Package['munin-node'] ];
+  }
+
+  plugin {
+    [ 'puavo-wlan-elements'
+    , 'puavo-wlan-traffic' ]:
+      enabled => true,
+      require => Package['puavo-wlancontroller-munin-plugin'];
   }
 
   bootserver_nginx::enable { 'munin': ; }
