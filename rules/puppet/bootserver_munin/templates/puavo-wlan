@@ -37,17 +37,21 @@ def _get_multigraph_key(hostname):
     # break anything.
     return hostname.replace("-", "_")
 
-def _refresh_cached_hostnames(new_hostnames):
-    old_cached_hostnames = set()
+def _get_cached_hostnames():
+    cached_hostnames = set()
 
     try:
         with open(os.environ['MUNIN_STATEFILE']) as state_file:
             for line in state_file:
-                old_cached_hostnames.add(line.strip())
+                cached_hostnames.add(line.strip())
     except IOError, e:
         if e.errno != errno.ENOENT:
             raise
 
+    return cached_hostnames
+
+def _refresh_cached_hostnames(new_hostnames):
+    old_cached_hostnames = _get_cached_hostnames()
     new_cached_hostnames = old_cached_hostnames | new_hostnames
 
     if old_cached_hostnames != new_cached_hostnames:
