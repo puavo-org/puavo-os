@@ -31,15 +31,13 @@ import sys
 import json
 import redis
 
-_KEY_PREFIX = "puavo-wlancontroller:status:"
-
 def _get_multigraph_key(hostname):
     # Munin uses dash ('-') for separating components in its
     # .rrd files, so we need to replace all dashes to not
     # break anything.
     return hostname.replace("-", "_")
 
-def _refresh_cached_hostnames(new_hostnames=set()):
+def _refresh_cached_hostnames(new_hostnames):
     old_cached_hostnames = set()
 
     try:
@@ -61,11 +59,14 @@ def _refresh_cached_hostnames(new_hostnames=set()):
 
 
 def _main():
-    if len(sys.argv) == 1:
-        redisconn           = redis.Redis()
-        keys                = redisconn.keys("%s*" % _KEY_PREFIX)
-        available_hostnames = set([k.partition(_KEY_PREFIX)[2] for k in keys])
+    redisconn             = redis.Redis()
+    keys                  = redisconn.keys("puavo-wlancontroller:status:*")
+    statuses              = [json.loads(redisconn.get(key)) for key in keys]
+    available_hostnames   = set([s["hostname"] for s in statuses])
+    cached_hostnames      = _refresh_cached_hostnames(available_hostnames)
+    unavailable_hostnames = cached_hostnames - available_hostnames
 
+    if len(sys.argv) == 1:
         total_rxbytes = 0
         total_txbytes = 0
 
@@ -75,9 +76,8 @@ def _main():
 
         output_lines  = []
 
-        for hostname in available_hostnames:
-            key            = "%s%s" % (_KEY_PREFIX, hostname)
-            status         = json.loads(redisconn.get(key))
+        for status in statuses:
+            hostname       = status["hostname"]
             radios         = status["radios"]
 
             total_radio_count += len(radios)
@@ -125,9 +125,6 @@ def _main():
         output_lines.insert(1, "accesspoints.value {}".format(total_ap_count))
         output_lines.insert(2, "radios.value {}".format(total_radio_count))
         output_lines.insert(3, "stations.value {}".format(total_sta_count))
-
-        cached_hostnames      = _refresh_cached_hostnames(available_hostnames)
-        unavailable_hostnames = cached_hostnames - available_hostnames
 
         for hostname in unavailable_hostnames:
             multigraph_key = _get_multigraph_key(hostname)
@@ -194,7 +191,7 @@ def _main():
             print("tx.negative rx")
             print("tx.min 0")
 
-            for hostname in sorted(_refresh_cached_hostnames()):
+            for hostname in sorted(cached_hostnames):
                 multigraph_key = _get_multigraph_key(hostname)
 
                 print("multigraph puavo_wlan_elements.{}".format(multigraph_key))
