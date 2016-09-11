@@ -66,6 +66,9 @@ def _main():
         keys                = redisconn.keys("%s*" % _KEY_PREFIX)
         available_hostnames = set([k.partition(_KEY_PREFIX)[2] for k in keys])
 
+        total_rxbytes = 0
+        total_txbytes = 0
+
         total_ap_count    = 0
         total_radio_count = 0
         total_sta_count   = 0
@@ -82,6 +85,9 @@ def _main():
             host_ap_count    = 0
             host_sta_count   = 0
 
+            host_rxbytes   = 0
+            host_txbytes   = 0
+
             for radio in radios:
                 accesspoints = radio["accesspoints"]
 
@@ -92,10 +98,28 @@ def _main():
                     host_sta_count  += len(accesspoint["stations"])
                     total_sta_count += len(accesspoint["stations"])
 
-            output_lines.append("multigraph puavo_wlan_elements.{}".format(_get_multigraph_key(hostname)))
+                    ap_rxbytes = accesspoint["rx_bytes"]
+                    ap_txbytes = accesspoint["tx_bytes"]
+
+                    host_rxbytes  += ap_rxbytes
+                    host_txbytes  += ap_txbytes
+                    total_rxbytes += ap_rxbytes
+                    total_txbytes += ap_txbytes
+
+            multigraph_key = _get_multigraph_key(hostname)
+
+            output_lines.append("multigraph puavo_wlan_traffic.{}".format(multigraph_key))
+            output_lines.append("rx.value {}".format(host_rxbytes * 8))
+            output_lines.append("tx.value {}".format(host_txbytes * 8))
+
+            output_lines.append("multigraph puavo_wlan_elements.{}".format(multigraph_key))
             output_lines.append("accesspoints.value {}".format(host_ap_count))
             output_lines.append("radios.value {}".format(len(radios)))
             output_lines.append("stations.value {}".format(host_sta_count))
+
+        output_lines.insert(0, "multigraph puavo_wlan_traffic")
+        output_lines.insert(1, "rx.value {}".format(total_rxbytes * 8))
+        output_lines.insert(2, "tx.value {}".format(total_txbytes * 8))
 
         output_lines.insert(0, "multigraph puavo_wlan_elements")
         output_lines.insert(1, "accesspoints.value {}".format(total_ap_count))
@@ -106,7 +130,13 @@ def _main():
         unavailable_hostnames = cached_hostnames - available_hostnames
 
         for hostname in unavailable_hostnames:
-            output_lines.append("multigraph puavo_wlan_elements.{}".format(_get_multigraph_key(hostname)))
+            multigraph_key = _get_multigraph_key(hostname)
+            output_lines.append("multigraph puavo_wlan_elements.{}".format(multigraph_key))
+            output_lines.append("accesspoints.value U")
+            output_lines.append("radios.value U")
+            output_lines.append("stations.value U")
+
+            output_lines.append("multigraph puavo_wlan_elements.{}".format(multigraph_key))
             output_lines.append("accesspoints.value U")
             output_lines.append("radios.value U")
             output_lines.append("stations.value U")
@@ -145,8 +175,29 @@ def _main():
             print("stations.draw LINE2")
             print("stations.info The number of stations.")
 
+            print("multigraph puavo_wlan_traffic")
+
+            print("graph_title Puavo WLAN traffic")
+            print("graph_order rx tx")
+            print("graph_args --base 1000")
+            print("graph_vlabel bits in (-) / out (+) per ${graph_period}")
+            print("graph_category network")
+            print("graph_info This graph shows the total Puavo WLAN traffic.")
+
+            print("tx.info Bits sent/received")
+            print("rx.label rx")
+            print("rx.type DERIVE")
+            print("rx.graph no")
+            print("rx.min 0")
+            print("tx.label bps")
+            print("tx.type DERIVE")
+            print("tx.negative rx")
+            print("tx.min 0")
+
             for hostname in sorted(_refresh_cached_hostnames()):
-                print("multigraph puavo_wlan_elements.{}".format(_get_multigraph_key(hostname)))
+                multigraph_key = _get_multigraph_key(hostname)
+
+                print("multigraph puavo_wlan_elements.{}".format(multigraph_key))
 
                 print("graph_title Puavo WLAN elements on host {}".format(hostname))
                 print("graph_args --base 1000 -l 0")
@@ -168,6 +219,25 @@ def _main():
                 print("stations.min 0")
                 print("stations.draw LINE2")
                 print("stations.info The number of stations connected to {}.".format(hostname))
+
+                print("multigraph puavo_wlan_traffic.{}".format(multigraph_key))
+
+                print("graph_title Puavo WLAN traffic of {}".format(hostname))
+                print("graph_order rx tx")
+                print("graph_args --base 1000")
+                print("graph_vlabel bits in (-) / out (+) per ${graph_period}")
+                print("graph_category network")
+                print("graph_info This graph shows the Puavo WLAN traffic of {}.".format(hostname))
+
+                print("tx.info Bits sent/received")
+                print("rx.label rx")
+                print("rx.type DERIVE")
+                print("rx.graph no")
+                print("rx.min 0")
+                print("tx.label bps")
+                print("tx.type DERIVE")
+                print("tx.negative rx")
+                print("tx.min 0")
 
             return 0
 

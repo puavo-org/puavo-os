@@ -15,7 +15,7 @@ installdirs:
 
 .PHONY: install
 install: installdirs
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/munin/plugins plugins/*
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/munin/plugins puavo-wlan
 
 .PHONY: clean
 clean:
