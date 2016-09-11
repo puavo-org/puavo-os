@@ -32,6 +32,10 @@ class bootserver_munin {
     '/usr/share/munin/plugins/puavo-bootserver-clients':
       content => template('bootserver_munin/puavo-bootserver-clients'),
       mode    => 0755;
+
+    '/usr/share/munin/plugins/puavo-wlan':
+      content => template('bootserver_munin/puavo-wlan'),
+      mode    => 0755;
   }
 
   bootserver_munin::plugin {
@@ -43,14 +47,9 @@ class bootserver_munin {
     , 'if_wlan0' ]:
       wildcard => true;
 
-    'puavo-bootserver-clients':
-      ;
-
-    [ 'puavo-wlan-elements'
-    , 'puavo-wlan-traffic' ]:
-      require => Package['puavo-wlancontroller-munin-plugin'];
-
-    'users':
+    [ 'puavo-bootserver-clients'
+    , 'puavo-wlan'
+    , 'users' ]:
       ;
   }
 
