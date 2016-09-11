@@ -1,6 +1,20 @@
 class bootserver_munin {
   include bootserver_nginx
 
+  define plugin($enabled) {
+    $plugin_name = $title
+
+    file {
+      "/etc/munin/plugins/$plugin_name":
+        ensure  => $enabled ? {
+          false   => absent,
+          true    => link,
+        },
+        notify  => Service['munin-node'],
+        target  => "/usr/share/munin/plugins/$plugin_name",
+    }
+  }
+
   file {
     '/etc/munin/munin-node.conf':
       content => template('bootserver_munin/munin-node.conf'),
