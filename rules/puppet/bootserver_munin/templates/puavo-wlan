@@ -15,7 +15,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301 USA.
 
-# Multigraph plugin for showing Puavo WLAN elements totals and per AP.
+# Multigraph plugin for showing Puavo WLAN statistics.
 
 #%# family=auto contrib
 #%# capabilities=autoconf
@@ -67,59 +67,49 @@ def _main():
     unavailable_hostnames = cached_hostnames - available_hostnames
 
     if len(sys.argv) == 1:
-        total_rxbytes = 0
-        total_txbytes = 0
-
         total_ap_count    = 0
         total_radio_count = 0
         total_sta_count   = 0
-
-        output_lines  = []
+        total_rx_bytes    = 0
+        total_tx_bytes    = 0
+        output_lines      = []
 
         for status in statuses:
-            hostname       = status["hostname"]
-            radios         = status["radios"]
-
-            total_radio_count += len(radios)
-
             host_ap_count    = 0
+            host_radio_count = 0
             host_sta_count   = 0
+            host_rx_bytes    = 0
+            host_tx_bytes    = 0
 
-            host_rxbytes   = 0
-            host_txbytes   = 0
-
-            for radio in radios:
-                accesspoints = radio["accesspoints"]
-
-                host_ap_count  += len(accesspoints)
-                total_ap_count += len(accesspoints)
+            for radio in status["radios"]:
+                host_radio_count += 1
 
                 for accesspoint in radio["accesspoints"]:
-                    host_sta_count  += len(accesspoint["stations"])
-                    total_sta_count += len(accesspoint["stations"])
+                    host_ap_count  += 1
+                    host_sta_count += len(accesspoint["stations"])
+                    host_rx_bytes  += accesspoint["rx_bytes"]
+                    host_tx_bytes  += accesspoint["tx_bytes"]
 
-                    ap_rxbytes = accesspoint["rx_bytes"]
-                    ap_txbytes = accesspoint["tx_bytes"]
+            total_ap_count    += host_ap_count
+            total_radio_count += host_radio_count
+            total_sta_count   += host_sta_count
+            total_rx_bytes    += host_rx_bytes
+            total_tx_bytes    += host_tx_bytes
 
-                    host_rxbytes  += ap_rxbytes
-                    host_txbytes  += ap_txbytes
-                    total_rxbytes += ap_rxbytes
-                    total_txbytes += ap_txbytes
-
-            multigraph_key = _get_multigraph_key(hostname)
+            multigraph_key = _get_multigraph_key(status["hostname"])
 
             output_lines.append("multigraph puavo_wlan_traffic.{}".format(multigraph_key))
-            output_lines.append("rx.value {}".format(host_rxbytes * 8))
-            output_lines.append("tx.value {}".format(host_txbytes * 8))
+            output_lines.append("rx.value {}".format(host_rx_bytes * 8))
+            output_lines.append("tx.value {}".format(host_tx_bytes * 8))
 
             output_lines.append("multigraph puavo_wlan_elements.{}".format(multigraph_key))
             output_lines.append("accesspoints.value {}".format(host_ap_count))
-            output_lines.append("radios.value {}".format(len(radios)))
+            output_lines.append("radios.value {}".format(host_radio_count))
             output_lines.append("stations.value {}".format(host_sta_count))
 
         output_lines.insert(0, "multigraph puavo_wlan_traffic")
-        output_lines.insert(1, "rx.value {}".format(total_rxbytes * 8))
-        output_lines.insert(2, "tx.value {}".format(total_txbytes * 8))
+        output_lines.insert(1, "rx.value {}".format(total_rx_bytes * 8))
+        output_lines.insert(2, "tx.value {}".format(total_tx_bytes * 8))
 
         output_lines.insert(0, "multigraph puavo_wlan_elements")
         output_lines.insert(1, "accesspoints.value {}".format(total_ap_count))
