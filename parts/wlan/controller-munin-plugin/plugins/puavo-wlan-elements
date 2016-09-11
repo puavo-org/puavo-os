@@ -33,6 +33,12 @@ import redis
 
 _KEY_PREFIX = "puavo-wlancontroller:status:"
 
+def _get_multigraph_key(hostname):
+    # Munin uses dash ('-') for separating components in its
+    # .rrd files, so we need to replace all dashes to not
+    # break anything.
+    return hostname.replace("-", "_")
+
 def _refresh_cached_hostnames(new_hostnames=set()):
     old_cached_hostnames = set()
 
@@ -86,12 +92,7 @@ def _main():
                     host_sta_count  += len(accesspoint["stations"])
                     total_sta_count += len(accesspoint["stations"])
 
-            # Munin uses dash ('-') for separating components in its
-            # .rrd files, so we need to replace all dashes to not
-            # break anything.
-            multigraph_key = hostname.replace("-", "_")
-
-            output_lines.append("multigraph puavo_wlan_elements.{}".format(multigraph_key))
+            output_lines.append("multigraph puavo_wlan_elements.{}".format(_get_multigraph_key(hostname)))
             output_lines.append("accesspoints.value {}".format(host_ap_count))
             output_lines.append("radios.value {}".format(len(radios)))
             output_lines.append("stations.value {}".format(host_sta_count))
@@ -105,12 +106,7 @@ def _main():
         unavailable_hostnames = cached_hostnames - available_hostnames
 
         for hostname in unavailable_hostnames:
-            # Munin uses dash ('-') for separating components in its
-            # .rrd files, so we need to replace all dashes to not
-            # break anything.
-            multigraph_key = hostname.replace("-", "_")
-
-            output_lines.append("multigraph puavo_wlan_elements.{}".format(multigraph_key))
+            output_lines.append("multigraph puavo_wlan_elements.{}".format(_get_multigraph_key(hostname)))
             output_lines.append("accesspoints.value U")
             output_lines.append("radios.value U")
             output_lines.append("stations.value U")
@@ -150,12 +146,7 @@ def _main():
             print("stations.info The number of stations.")
 
             for hostname in sorted(_refresh_cached_hostnames()):
-                # Munin uses dash ('-') for separating components in its
-                # .rrd files, so we need to replace all dashes to not
-                # break anything.
-                multigraph_key = hostname.replace("-", "_")
-
-                print("multigraph puavo_wlan_elements.{}".format(multigraph_key))
+                print("multigraph puavo_wlan_elements.{}".format(_get_multigraph_key(hostname)))
 
                 print("graph_title Puavo WLAN elements on host {}".format(hostname))
                 print("graph_args --base 1000 -l 0")
