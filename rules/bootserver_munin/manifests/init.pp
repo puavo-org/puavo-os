@@ -1,14 +1,18 @@
 class bootserver_munin {
   include bootserver_nginx
 
-  define plugin() {
+  define plugin($wildcard = false) {
     $plugin_name = $title
+    $real_plugin_name = $wildcard ? {
+      true  => regsubst($plugin_name, '([^_]+)_.+', '\1_'),
+      false => $plugin_name,
+    }
 
     file {
       "/etc/munin/plugins/$plugin_name":
         ensure  => link,
         notify  => Service['munin-node'],
-        target  => "/usr/share/munin/plugins/$plugin_name",
+        target  => "/usr/share/munin/plugins/$real_plugin_name",
     }
   }
 
