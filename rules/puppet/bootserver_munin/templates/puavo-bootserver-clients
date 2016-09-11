@@ -71,6 +71,7 @@ def _main():
             print("total.label total")
             print("total.min 0")
             print("total.draw LINE2")
+            print("total.colour 000000")
             print("total.info The total number of clients.")
 
             for protocol in sorted(counts.keys()):
