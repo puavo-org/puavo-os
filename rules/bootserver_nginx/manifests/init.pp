@@ -27,6 +27,10 @@ class bootserver_nginx {
       content => template('bootserver_nginx/default_site'),
       mode    => 0644,
       notify  => Exec['reload nginx'];
+
+    '/usr/share/nginx/www/index.html':
+      content => template('bootserver_nginx/index.html'),
+      mode    => 0644;
   }
 
   service {
