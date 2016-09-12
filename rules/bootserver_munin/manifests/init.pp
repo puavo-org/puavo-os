@@ -42,6 +42,7 @@ class bootserver_munin {
     [ 'if_altvpn1'
     , 'if_eth0'
     , 'if_eth1'
+    , 'if_inet0'
     , 'if_ltsp0'
     , 'if_vpn1'
     , 'if_wlan0' ]:
