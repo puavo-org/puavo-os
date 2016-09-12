@@ -74,10 +74,10 @@ case "${command}" in
         upstream_pack=$1
         upstream_dir=$2
         tar --no-same-owner -z -x -f "${upstream_pack}" -C "${upstream_dir}"
-        dpkg -x "${upstream_dir}/vstloggerpro_3.8.4.6_i386.deb" "${upstream_dir}/vstloggerpro"
-        dpkg -x "${upstream_dir}/vstdrivers_1.5.1.1_i386.deb" "${upstream_dir}/vstdrivers"
-        rm -f "${upstream_dir}/vstloggerpro_3.8.4.6_i386.deb"
-        rm -f "${upstream_dir}/vstdrivers_1.5.1.1_i386.deb"
+        dpkg -x "${upstream_dir}/vstloggerpro_3.8.4.6_amd64.deb" "${upstream_dir}/vstloggerpro"
+        dpkg -x "${upstream_dir}/vstdrivers_1.5.1.1_amd64.deb" "${upstream_dir}/vstdrivers"
+        rm -f "${upstream_dir}/vstloggerpro_3.8.4.6_amd64.deb"
+        rm -f "${upstream_dir}/vstdrivers_1.5.1.1_amd64.deb"
         ;;
     *)
         ;;
