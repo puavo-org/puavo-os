@@ -31,12 +31,6 @@ import sys
 import json
 import redis
 
-def _get_multigraph_key(hostname):
-    # Munin uses dash ('-') for separating components in its
-    # .rrd files, so we need to replace all dashes to not
-    # break anything.
-    return hostname.replace("-", "_")
-
 def _get_configured_hostnames():
     configured_hostnames = set()
 
@@ -77,7 +71,11 @@ def _get_available_hosts():
 
 def _print_multigraph(prefix, hostname=''):
     if hostname:
-        hostname = '.{}'.format(_get_multigraph_key(hostname))
+        # Munin uses dash ('-') for separating components in its
+        # .rrd files, so we need to replace all dashes to not
+        # break anything.
+        multigraph_key = hostname.replace("-", "_")
+        hostname = '.{}'.format(multigraph_key)
 
     print("multigraph {}{}".format(prefix, hostname))
 
