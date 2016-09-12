@@ -114,6 +114,7 @@ class packages {
     , 'lightdm'
     , 'lightdm-gtk-greeter'
     , 'lsb-invalid-mta'
+    , 'nautilus-dropbox'
     , 'network-manager-openvpn-gnome'
     , 'notify-osd'
     , 'onboard'
@@ -655,10 +656,6 @@ class packages {
 
     [ 'faenza-icon-theme' ]:
       tag => [ 'tag_themes', 'tag_puavo', ];
-
-    # 'node-webkit'	# XXX not yet packaged for Debian
-    [ 'xul-ext-flashblock' ]:
-      tag => [ 'tag_web', 'tag_puavo', ];
   }
 
   $bcmwl_dkms_module  = 'bcmwl/6.30.223.248+bdcom'
