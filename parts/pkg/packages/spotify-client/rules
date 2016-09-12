@@ -32,7 +32,7 @@ case "${command}" in
         ;;
 
     download)
-        # tested with 1:1.0.23.93.gd6cfae15-5
+        # tested with 1.0.37.152.gc83ea995-42
 
         upstream_pack=$1
         baseurl="http://repository-origin.spotify.com"
@@ -43,7 +43,7 @@ case "${command}" in
             --no-cookies \
             --output-document "${tmpfile}" \
             --progress=dot:mega \
-            "${baseurl}/dists/stable/non-free/binary-i386/Packages" || {
+            "${baseurl}/dists/stable/non-free/binary-amd64/Packages" || {
             wget_err=$?
             rm -f "${tmpfile}" || true
             [ ${wget_err} -eq 4 ] && exit 2 ## Network failure.
