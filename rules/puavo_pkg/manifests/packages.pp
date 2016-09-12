@@ -2,7 +2,7 @@ class puavo_pkg::packages {
   include puavo_pkg
 
   $available_packages = [ 'adobe-flashplugin'
-			, 'adobe-reader'
+			# , 'adobe-reader'	# no 64-bit version
 			, 'cmaptools'
 			, 'dropbox'
 			, 'geogebra'
@@ -10,7 +10,7 @@ class puavo_pkg::packages {
 			, 'google-earth'
 			, 'msttcorefonts'
 			, 'oracle-java'
-			, 'skype'
+			# , 'skype'		# no 64-bit version
 			, 'spotify-client'
 			, 'vstloggerpro' ]
 
