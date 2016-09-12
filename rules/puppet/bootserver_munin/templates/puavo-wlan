@@ -90,6 +90,7 @@ def _print_elements_graph_config(hostname=''):
         hostname = " on host {}".format(hostname)
 
     print("graph_title Puavo WLAN elements{}".format(hostname))
+    print("graph_order stations accesspoints radios")
     print("graph_args --base 1000 -l 0")
     print("graph_vlabel Count")
     print("graph_category network")
