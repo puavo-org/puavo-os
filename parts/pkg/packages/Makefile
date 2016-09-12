@@ -13,7 +13,7 @@ packagedirs += google-chrome/
 packagedirs += google-earth/
 packagedirs += msttcorefonts/
 packagedirs += oracle-java/
-packagedirs += skype/
+# packagedirs += skype/			# no 64-bit version (their "multiarch" is 32-bit)
 packagedirs += spotify-client/
 packagedirs += vstloggerpro/
 
