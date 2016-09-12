@@ -114,6 +114,7 @@ class packages {
     , 'lightdm'
     , 'lightdm-gtk-greeter'
     , 'lsb-invalid-mta'
+    , 'nautilus-dropbox'
     , 'network-manager-openvpn-gnome'
     , 'notify-osd'
     , 'onboard'
