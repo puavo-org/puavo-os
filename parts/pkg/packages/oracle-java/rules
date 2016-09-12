@@ -11,7 +11,7 @@ case "${command}" in
 
         update-alternatives \
             --install /usr/lib/mozilla/plugins/libjavaplugin.so mozilla-javaplugin.so \
-            "${upstream_dir}/lib/i386/libnpjp2.so" 1100
+            "${upstream_dir}/lib/amd64/libnpjp2.so" 1100
 
         update-alternatives \
             --install /usr/bin/javaws javaws \
@@ -49,7 +49,7 @@ case "${command}" in
             --header "Cookie: oraclelicense=accept-securebackup-cookie" \
             --output-document "${upstream_pack}" \
             --progress=dot:mega \
-            http://download.oracle.com/otn-pub/java/jdk/8u102-b14/jre-8u102-linux-i586.tar.gz || {
+            http://download.oracle.com/otn-pub/java/jdk/8u102-b14/jre-8u102-linux-x64.tar.gz || {
             [ $? -eq 4 ] && exit 2 ## Network failure.
             exit 1
             }
