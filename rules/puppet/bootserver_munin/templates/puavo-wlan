@@ -149,6 +149,56 @@ def _print_traffic_config(hostname=''):
     _print_traffic_graph_config(hostname)
     _print_traffic_field_config()
 
+def _print_load_values(loadavg5, hostname=''):
+    _print_multigraph("puavo_wlan_host_load", hostname)
+    print("loadavg5.value {}".format(loadavg5))
+
+def _print_load_summary_values(avg_loadavg5, max_loadavg5, min_loadavg5):
+    _print_multigraph("puavo_wlan_host_load")
+    print("avg_loadavg5.value {}".format(avg_loadavg5))
+    print("max_loadavg5.value {}".format(max_loadavg5))
+    print("min_loadavg5.value {}".format(min_loadavg5))
+
+def _print_load_graph_config(hostname=''):
+    if hostname:
+        hostname = " {}".format(hostname)
+    else:
+        hostname = "s"
+
+    print("graph_title Load average of Puavo WLAN accesspoint host{}".format(hostname))
+    print("graph_args --base 1000 -l 0")
+    print("graph_vlabel Load")
+    print("graph_scale no")
+    print("graph_category network")
+    print("graph_info Load describes how many processes are in the run-queue (running or waiting to run).")
+
+def _print_load_field_config(hostname=''):
+    if hostname:
+        print("loadavg5.label loadavg5")
+        print("loadavg5.min 0")
+        print("loadavg5.draw LINE2")
+        print("loadavg5.info Average 5 minute load")
+    else:
+        print("avg_loadavg5.label avg_loadavg5")
+        print("avg_loadavg5.min 0")
+        print("avg_loadavg5.draw LINE2")
+        print("avg_loadavg5.info Average 5 minute load average")
+
+        print("max_loadavg5.label max_loadavg5")
+        print("max_loadavg5.min 0")
+        print("max_loadavg5.draw LINE2")
+        print("max_loadavg5.info Maximum 5 minute load average")
+
+        print("min_loadavg5.label min_loadavg5")
+        print("min_loadavg5.min 0")
+        print("min_loadavg5.draw LINE2")
+        print("min_loadavg5.info Minimum 5 minute load average")
+
+def _print_load_config(hostname=''):
+    _print_multigraph("puavo_wlan_host_load", hostname)
+    _print_load_graph_config(hostname)
+    _print_load_field_config(hostname)
+
 def _main():
     if len(sys.argv) == 1:
         available_hosts     = _get_available_hosts()
@@ -159,12 +209,15 @@ def _main():
         total_rx_bytes      = 0
         total_tx_bytes      = 0
 
+        all_loadavg5      = []
+
         for hostname in _get_configured_hostnames():
             try:
                 host = available_hosts[hostname]
             except KeyError:
                 _print_traffic_values("U", "U", hostname)
                 _print_elements_values("U", "U", "U", hostname)
+                _print_load_values("U", hostname)
                 continue
 
             host_ap_count    = 0
@@ -172,6 +225,7 @@ def _main():
             host_sta_count   = 0
             host_rx_bytes    = 0
             host_tx_bytes    = 0
+            host_loadavg5    = host["loadavg5"]
 
             for radio in host["radios"]:
                 host_radio_count += 1
@@ -188,11 +242,15 @@ def _main():
             total_rx_bytes    += host_rx_bytes
             total_tx_bytes    += host_tx_bytes
 
+            all_loadavg5.append(host_loadavg5)
+
             _print_traffic_values(host_rx_bytes * 8, host_tx_bytes * 8, hostname)
             _print_elements_values(host_ap_count, host_radio_count, host_sta_count, hostname)
+            _print_load_values(host_loadavg5, hostname)
 
         _print_traffic_values(total_rx_bytes * 8, total_tx_bytes * 8)
         _print_elements_values(total_ap_count, total_radio_count, total_sta_count)
+        _print_load_summary_values(sum(all_loadavg5) / len(all_loadavg5), max(all_loadavg5), min(all_loadavg5))
 
         return 0
 
@@ -207,10 +265,12 @@ def _main():
 
             _print_elements_config()
             _print_traffic_config()
+            _print_load_config()
 
             for hostname in sorted(configured_hostnames):
                 _print_elements_config(hostname)
                 _print_traffic_config(hostname)
+                _print_load_config(hostname)
 
             return 0
 
