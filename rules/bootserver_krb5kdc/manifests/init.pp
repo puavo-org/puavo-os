@@ -5,12 +5,12 @@ class bootserver_krb5kdc {
       source => 'puppet:///modules/bootserver_krb5kdc/krb5-kdc.override';
 
     '/etc/krb5kdc/kdc.conf':
-      mode    => 0644,
+      mode    => '0644',
       notify  => Service['krb5-kdc'],
       content => template('bootserver_krb5kdc/kdc.conf');
 
     '/etc/krb5.conf':
-      mode    => 0644,
+      mode    => '0644',
       notify  => Service['krb5-kdc'],
       content => template('bootserver_krb5kdc/krb5.conf');
 

@@ -10,7 +10,7 @@ class chrome {
       source  => 'puppet:///modules/chrome/google-chrome.list';
 
     '/usr/bin/google-chrome-stable':
-      mode   => 755,
+      mode   => '0755',
       source => 'puppet:///modules/chrome/google-chrome-stable';
   }
 }

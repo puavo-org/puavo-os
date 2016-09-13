@@ -10,7 +10,7 @@ class install_hp_plugins {
 
   file {
     '/usr/local/sbin/puavo-download-hp-plugins':
-      mode    => 755,
+      mode    => '0755',
       require => [ Package['expect'], Package['hplip'] ],
       source  => 'puppet:///modules/install_hp_plugins/puavo-download-hp-plugins';
   }

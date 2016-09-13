@@ -26,11 +26,11 @@ class lightdm {
       ensure => directory;
 
     '/usr/lib/lightdm/guest-session-auto.sh':
-      mode   => 0755,
+      mode   => '0755',
       source => 'puppet:///modules/lightdm/guest-session-auto.sh';
 
     '/usr/sbin/guest-account':
-      mode   => 0755,
+      mode   => '0755',
       source => 'puppet:///modules/lightdm/guest-account';
   }
 

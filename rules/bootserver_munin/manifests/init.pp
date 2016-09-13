@@ -4,13 +4,13 @@ class bootserver_munin {
   file {
     '/etc/munin/munin-node.conf':
       content => template('bootserver_munin/munin-node.conf'),
-      mode    => 0644,
+      mode    => '0644',
       notify  => Service['munin-node'],
       require => Package['munin-node'];
 
     '/etc/nginx/sites-available/munin':
       content => template('bootserver_munin/nginx_conf'),
-      mode    => 0644,
+      mode    => '0644',
       notify  => Exec['reload nginx'],
       require => [ Package['munin'], Package['munin-node'] ];
   }

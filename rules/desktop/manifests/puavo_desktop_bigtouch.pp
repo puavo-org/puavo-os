@@ -1,4 +1,4 @@
-class desktop::puavo-desktop-bigtouch {
+class desktop::puavo_desktop_bigtouch {
   include desktop::dconf,
           dpkg,
           gnome_shell_extensions,
@@ -24,7 +24,7 @@ class desktop::puavo-desktop-bigtouch {
 
     '/usr/local/lib/puavo-onboard':
       content => template('desktop/puavo-desktop-bigtouch/puavo-onboard'),
-      mode    => 0755,
+      mode    => '0755',
       require => Package['onboard'];
 
     '/usr/share/puavo-conf/definitions/puavo-onboard.json':

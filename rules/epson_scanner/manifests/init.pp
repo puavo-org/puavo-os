@@ -10,13 +10,13 @@ class epson_scanner {
   file {
     '/usr/local/bin/enable_epson_perfection_1650':
       content => template('epson_scanner/enable_epson_perfection_1650'),
-      mode    => 755;
+      mode    => '0755';
   }
 
   file {
     '/usr/local/bin/disable_epson_perfection_1650':
       content => template('epson_scanner/disable_epson_perfection_1650'),
-      mode    => 755;
+      mode    => '0755';
   }
 
   Package <| tag == 'tag_libsane' |>
