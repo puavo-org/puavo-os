@@ -1,5 +1,6 @@
 class packages {
-  include packages::purged
+  require ::apt::multiarch
+  include ::packages::purged
 
   # install packages by default
   Package { ensure => present, }
