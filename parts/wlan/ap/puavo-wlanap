@@ -515,17 +515,17 @@ class Host
                                                 CONTROLLER_ADDRESS),
                                    kwargs.fetch(:controller_port,
                                                 CONTROLLER_PORT))
-    @ctrlconn         = nil
-    @ctrlconn_time    = nil
-    @ctrlserv         = nil
-    @last_reconf_time = Time.at(0)
-    @last_report_time = Time.at(0)
-    @nets             = nil
-    @puavo_client     = PuavoRestClient.new
-    @services         = {}
-    @vifs             = []
-    @vtun_address     = kwargs.fetch(:vtun_address, VTUN_ADDRESS)
-    @vtun_port        = kwargs.fetch(:vtun_port, VTUN_PORT)
+    @ctrlconn                = nil
+    @ctrlconn_time           = nil
+    @ctrlserv                = nil
+    @last_reconf_time        = Time.at(0)
+    @last_status_report_time = Time.at(0)
+    @nets                    = nil
+    @puavo_client            = PuavoRestClient.new
+    @services                = {}
+    @vifs                    = []
+    @vtun_address            = kwargs.fetch(:vtun_address, VTUN_ADDRESS)
+    @vtun_port               = kwargs.fetch(:vtun_port, VTUN_PORT)
   end
 
   def run
@@ -689,7 +689,7 @@ class Host
         timeouts = []
 
         timeouts << @conf.fetch(:reconf_interval, RECONF_INTERVAL) - (Time.now - @last_reconf_time)
-        timeouts << @conf.fetch(:report_interval, REPORT_INTERVAL) - (Time.now - @last_report_time)
+        timeouts << @conf.fetch(:report_interval, REPORT_INTERVAL) - (Time.now - @last_status_report_time)
 
         unless @ctrlconn.nil?
           timeouts << 5 - (Time.now - @ctrlconn_time)
@@ -703,9 +703,10 @@ class Host
             reconf
           end
 
-          if Time.now - @last_report_time > @conf.fetch(:report_interval, REPORT_INTERVAL)
+          if Time.now - @last_status_report_time > @conf.fetch(:report_interval, REPORT_INTERVAL)
             @vifs.each { |vif| vif.update_stats }
             controller_send_report('status', get_status)
+            @last_status_report_time = Time.now
           end
 
           if @ctrlconn && Time.now - @ctrlconn_time > 5
@@ -1008,7 +1009,6 @@ class Host
 
   def controller_send_report(name, data = {})
     begin
-      @last_report_time = Time.now
       response = @controller.send_request('POST', '/v1/report',
                                           {
                                             :name      => name,
