@@ -8,7 +8,7 @@ class dpkg {
   }
 
   define simpledivert () {
-    divert { $title: dest => "${title}.distrib"; }
+    ::dpkg::divert { $title: dest => "${title}.distrib"; }
   }
 
   define statoverride ($owner, $group, $mode) {
