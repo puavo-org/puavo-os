@@ -5,8 +5,8 @@ class adm {
   $common_group     = 'puavo-os'
   $common_group_gid = 1000
   $home_basedir     = '/adm-home'
-  $uid_max          = '1099'
-  $uid_min          = '1000'
+  $uid_max          = 1099
+  $uid_min          = 1000
 
   define user ($uid, $sshkey=undef, $sshkey_type=undef, $homedir=undef,
                $shell='/bin/bash', $home_mode='0750') {
