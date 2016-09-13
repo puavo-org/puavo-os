@@ -714,9 +714,7 @@ class packages {
   # software packages: adobereader-enu, skype, smartboard.
   if $architecture == 'amd64' {
     @package {
-      [ 'debianutils:i386'
-      , 'init-system-helpers:i386'
-      , 'libasound2:i386'
+      [ 'libasound2:i386'
       , 'libasound2-plugins:i386'
       , 'libbluetooth3:i386'
       , 'libc6:i386'
@@ -755,7 +753,6 @@ class packages {
       , 'libxss1:i386'
       , 'libxtst6:i386'
       , 'libxv1:i386'
-      , 'lsb-base:i386'
       , 'zlib1g:i386' ]:
         ensure => present,
         tag    => [ 'tag_debian', 'tag_i386' ];
