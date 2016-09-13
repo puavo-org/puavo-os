@@ -19,7 +19,7 @@ class kernels {
 
     $linksuffix = $subname ? { 'default' => '', default => "-$subname", }
 
-    kernel_link {
+    ::kernels::kernel_link {
       "initrd.img-${kernel}-${subname}":
         kernel => $kernel, linkname => 'initrd.img', linksuffix => $linksuffix;
 

@@ -676,6 +676,12 @@ class packages {
         #   dkms_modules => $all_dkms_modules;
       }
     }
+    'stretch': {
+      packages::kernels::kernel_package {
+        '4.6.0-1-amd64':
+          dkms_modules => $all_dkms_modules;
+      }
+    }
   }
 
   #
