@@ -12,6 +12,6 @@ class apt::multiarch {
   }
 
   if $architecture == 'amd64' {
-    addarch { 'i386': ; }
+    ::apt::multiarch::addarch { 'i386': ; }
   }
 }
