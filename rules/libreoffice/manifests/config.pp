@@ -4,7 +4,7 @@ class libreoffice::config {
   file {
     '/etc/puavo-external-files-actions.d/libreoffice':
       content => template('libreoffice/puavo-external-files-actions.d/libreoffice'),
-      mode    => 755;
+      mode    => '0755';
   }
 
   Package <| tag == 'tag_libreoffice-writer' |>

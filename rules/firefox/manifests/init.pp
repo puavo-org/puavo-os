@@ -21,7 +21,7 @@ class firefox {
 
     '/etc/puavo-external-files-actions.d/firefox':
       content => template('firefox/puavo-external-files-actions.d/firefox'),
-      mode    => 755,
+      mode    => '0755',
       require => Package['puavo-ltsp-client'];
   }
 

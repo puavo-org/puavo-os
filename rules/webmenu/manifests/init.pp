@@ -6,7 +6,7 @@ class webmenu {
   file {
     '/etc/puavo-external-files-actions.d/webmenu':
       content => template('webmenu/puavo-external-files-actions.d/webmenu'),
-      mode    => 755,
+      mode    => '0755',
       require => Package['puavo-ltsp-client'];
 
     [ '/etc/webmenu'
@@ -41,7 +41,7 @@ class webmenu {
 
     '/usr/local/bin/puavo-webmenu':
       content => template('webmenu/puavo-webmenu'),
-      mode    => 755;
+      mode    => '0755';
   }
 
   Package <| title == breathe-icon-theme

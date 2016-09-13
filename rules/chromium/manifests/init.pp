@@ -15,7 +15,7 @@ class chromium {
       source => 'puppet:///modules/chromium/master_preferences';
 
     '/usr/bin/chromium':
-      mode   => 755,
+      mode   => '0755',
       source => 'puppet:///modules/chromium/chromium';
   }
 

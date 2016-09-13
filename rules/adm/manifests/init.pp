@@ -9,7 +9,7 @@ class adm {
   $uid_min          = '1000'
 
   define user ($uid, $sshkey=undef, $sshkey_type=undef, $homedir=undef,
-               $shell='/bin/bash', $home_mode=750) {
+               $shell='/bin/bash', $home_mode='0750') {
     $username = $title
 
     $user_homedir = $homedir ? {
@@ -34,19 +34,19 @@ class adm {
         ensure  => directory,
         owner   => $username,
         group   => $username,
-        mode    => 700;
+        mode    => '0700';
 
       "${user_homedir}/.bash_by_puppet":
         owner   => $username,
         group   => $username,
-        mode    => 644,
+        mode    => '0644',
         source  => [ "puppet:///modules/adm/users/$username/.bash_by_puppet"
                    , "puppet:///modules/adm/common/.bash_by_puppet" ];
 
       "${user_homedir}/.gitconfig":
         owner   => $username,
         group   => $username,
-        mode    => 644,
+        mode    => '0644',
         source  => [ "puppet:///modules/adm/users/$username/.gitconfig"
                    , "puppet:///modules/adm/common/.gitconfig" ];
     }
@@ -86,7 +86,7 @@ class adm {
   file {
     '/etc/sudoers.d/puavo-os':
       content => template('adm/sudoers.d/puavo-os'),
-      mode    => 440;
+      mode    => '0440';
 
     $adm::home_basedir:
       ensure  => directory;
@@ -96,7 +96,7 @@ class adm {
   adm::user {
     'puavo-os':
       homedir   => '/puavo-os',
-      home_mode => 2775,
+      home_mode => '02775',
       uid       => 1000;
   }
 

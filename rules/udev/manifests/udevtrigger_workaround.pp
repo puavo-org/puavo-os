@@ -42,7 +42,7 @@ class udev::udevtrigger_workaround {
   file {
     '/etc/rc.local':
       content => template('udev/rc.local'),
-      mode    => 755;
+      mode    => '0755';
 
     '/etc/init/udevtrigger.conf':
       content => template('udev/udevtrigger.conf'),
@@ -50,12 +50,12 @@ class udev::udevtrigger_workaround {
 
     '/lib/udev/write_cd_rules':
       content => template('udev/write_cd_rules'),
-      mode    => 755,
+      mode    => '0755',
       require => Dpkg::Divert['/lib/udev/write_cd_rules'];
 
     '/lib/udev/write_net_rules':
       content => template('udev/write_net_rules'),
-      mode    => 755,
+      mode    => '0755',
       require => Dpkg::Divert['/lib/udev/write_net_rules'];
   }
 

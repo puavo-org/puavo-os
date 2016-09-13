@@ -7,7 +7,7 @@ class disable_geoclue {
     , '/usr/lib/ubuntu-geoip/ubuntu-geoip-provider' ]:
       owner => 'root',
       group => 'root',
-      mode  => 000;
+      mode  => '0000';
   }
 
   # indicator-datetime depends on geoclue and geoclue-ubuntu-geoip,

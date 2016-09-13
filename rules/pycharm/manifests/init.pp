@@ -10,7 +10,7 @@ class pycharm {
 
   file {
     '/opt/pycharm/bin/pycharm-wrapper':
-      mode    => 0755,
+      mode    => '0755',
       require => File['/opt/pycharm/opinsys-default-options'],
       source  => 'puppet:///modules/pycharm/pycharm-wrapper';
   }
