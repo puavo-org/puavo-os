@@ -14,7 +14,7 @@ class image::desktop {
   Package <| tag == 'tag_puavo'
           or tag == 'tag_ubuntu' |>
 
-  # keep these pacakges out
+  # keep these packages out
   Package <| tag == 'tag_extra'
           or tag == 'tag_opinsys'
           or tag == 'tag_partner'

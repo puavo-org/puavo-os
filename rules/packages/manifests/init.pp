@@ -757,7 +757,8 @@ class packages {
       , 'libxv1:i386'
       , 'lsb-base:i386'
       , 'zlib1g:i386' ]:
-        ensure => present;
+        ensure => present,
+        tag    => [ 'tag_debian', 'tag_i386' ];
     }
   }
 }
