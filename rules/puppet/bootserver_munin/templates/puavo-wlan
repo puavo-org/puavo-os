@@ -63,8 +63,12 @@ def _get_available_hosts():
 
     for key in keys:
         host             = json.loads(r.get(key))
-        hostname         = host["hostname"]
 
+        # Consider host unavailable if it does not have any radios.
+        if len(host["radios"]) == 0:
+            continue
+
+        hostname         = host["hostname"]
         result[hostname] = host
 
     return result
