@@ -66,6 +66,8 @@ module PuavoWlanController
             host_service_uptime     = time_now - host_service_start_time
             host_ap_count           = 0
 
+            next if host_radios.empty?
+
             host_radios.each do |radio|
               radio_accesspoints = radio.fetch('accesspoints')
               radio_ap_count     = radio_accesspoints.length
