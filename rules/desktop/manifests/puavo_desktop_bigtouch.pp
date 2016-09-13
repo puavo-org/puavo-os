@@ -1,4 +1,4 @@
-class desktop::puavo-desktop-bigtouch {
+class desktop::puavo_desktop_bigtouch {
   include desktop::dconf,
           dpkg,
           gnome_shell_extensions,
