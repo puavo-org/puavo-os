@@ -29,7 +29,8 @@ class kernels {
   }
 
   $default_kernel = $lsbdistcodename ? {
-    'jessie' => '3.16.0-4-amd64',
+    'jessie'  => '3.16.0-4-amd64',
+    'stretch' => '4.6.0-1-amd64',
   }
 
   $edge_kernel = $lsbdistcodename ? {
@@ -38,7 +39,7 @@ class kernels {
     default  => $default_kernel,
   }
 
-  all_kernel_links {
+  ::kernels::all_kernel_links {
     'default': kernel => $default_kernel;
     # 'edge':  kernel => $edge_kernel;
   }
