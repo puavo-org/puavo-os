@@ -43,6 +43,10 @@ module PuavoWlanController
       @redis.del(get_key_for_status(hostname))
     end
 
+    def update_ttl(hostname)
+      @redis.expire(get_key_for_status(hostname), STATUS_EXPIRATION_TIME)
+    end
+
     def get_status_state(hostname)
       key = get_key_for_status(hostname)
       ttl = @redis.ttl(key)
