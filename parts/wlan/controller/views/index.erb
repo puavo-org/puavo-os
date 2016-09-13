@@ -12,7 +12,7 @@
     <input id="autoreload_checkbox" type="checkbox" onclick="toggleAutoReload();">
     <label for="autoreload_checkbox">Reload this page automatically every 5 seconds</label>
     <% unless hosts.empty? %>
-    <h2>Hosts</h2>
+    <h2>Hosts (<%= hosts.length %>)</h2>
     <table class="sortable">
       <thead>
         <tr>
@@ -58,7 +58,7 @@
     <% end %>
 
     <% unless radios.empty? %>
-    <h2>Radios</h2>
+    <h2>Radios (<%= radios.length %>)</h2>
     <table class="sortable">
       <thead>
         <tr>
@@ -103,7 +103,7 @@
     <% end %>
 
     <% unless accesspoints.empty? %>
-    <h2>Access points</h2>
+    <h2>Access points (<%= accesspoints.length %>)</h2>
     <table class="sortable">
       <thead>
         <tr>
@@ -143,7 +143,7 @@
     <% end %>
 
     <% unless stations.empty? %>
-    <h2>Stations</h2>
+    <h2>Stations (<%= stations.length %>)</h2>
     <table class="sortable">
       <thead>
         <tr>
