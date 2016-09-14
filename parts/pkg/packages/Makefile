@@ -8,6 +8,7 @@ packagedirs  = adobe-flashplugin/
 packagedirs += adobe-reader/
 packagedirs += cmaptools/
 packagedirs += dropbox/
+packagedirs += ekapeli-alku/
 packagedirs += geogebra/
 packagedirs += google-chrome/
 packagedirs += google-earth/

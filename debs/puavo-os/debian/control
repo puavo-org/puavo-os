@@ -344,7 +344,9 @@ Depends: ${misc:Depends},
  coreutils,
  findutils,
  gawk,
+ sharutils,
  tar,
+ unzip,
  wget
 Description: Package manager for Puavo packages
  Scripts to make the life of a Opinsys developer easier
