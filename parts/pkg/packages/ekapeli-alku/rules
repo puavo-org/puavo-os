@@ -8,6 +8,7 @@ shift
 extract_icon() {
   upstream_dir=$1
 
+  # from http://www.lukimat.fi/lukeminen/materiaalit/ekapeli/ekapeli-alku/ekapeli_alku_title.png
   uudecode -o "${upstream_dir}/ekapeli_alku_title.png" <<'EOF'
 begin 664 ekapeli_alku_title.png
 M_]C_X0`817AI9@``24DJ``@``````````````/_L`!%$=6-K>0`!``0```!'
