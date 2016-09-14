@@ -113,12 +113,16 @@ tmpdir=$(mktemp -d)
 image_filepaths="${tmpdir}/image_filepaths"
 image_dir="${PUAVO_IMAGE_DIR:-/opt/ltsp/images}"
 
-# Save the list of image filepaths to a temporary file.
-find "${image_dir}"  \
-    -mindepth 1 -maxdepth 1            \
-    \( -type f -o -type l \)           \
-    -name '*.img'                      \
-    >"${image_filepaths}"
+if [ -e "${image_dir}" ]; then
+    # Save the list of image filepaths to a temporary file.
+    find "${image_dir}"  \
+        -mindepth 1 -maxdepth 1            \
+        \( -type f -o -type l \)           \
+        -name '*.img'                      \
+        >"${image_filepaths}"
+else
+    echo >"${image_filepath}"
+fi
 
 while read image_filepath; do
     image_name=$(basename "${image_filepath}" '.img')
@@ -132,9 +136,14 @@ done <"${image_filepaths}"
 
 if $do_prune; then
     bootdirs="${tmpdir}/bootdirs"
-    # Save the list of boot directories to a temporary file.
-    find "${PUAVO_TFTP_BOOT_DIR:-/var/lib/tftpboot/ltsp}"  \
-        -mindepth 1 -maxdepth 1 -type d >"${bootdirs}"
+
+    if [ -e "${PUAVO_TFTP_BOOT_DIR:-/var/lib/tftpboot/ltsp}" ]; then
+        # Save the list of boot directories to a temporary file.
+        find "${PUAVO_TFTP_BOOT_DIR:-/var/lib/tftpboot/ltsp}"  \
+            -mindepth 1 -maxdepth 1 -type d >"${bootdirs}"
+    else
+        echo >"${bootdirs}"
+    fi
 
     while read bootdir; do
         image_name=$(basename "${bootdir}")
