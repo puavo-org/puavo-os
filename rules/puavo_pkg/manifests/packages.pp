@@ -5,6 +5,7 @@ class puavo_pkg::packages {
 			, 'adobe-reader'
 			, 'cmaptools'
 			, 'dropbox'
+			, 'ekapeli-alku'
 			, 'geogebra'
 			, 'google-chrome'
 			, 'google-earth'
