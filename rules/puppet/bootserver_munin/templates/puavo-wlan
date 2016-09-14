@@ -254,7 +254,10 @@ def _main():
 
         _print_traffic_values(total_rx_bytes * 8, total_tx_bytes * 8)
         _print_elements_values(total_ap_count, total_radio_count, total_sta_count)
-        _print_load_summary_values(sum(all_loadavg5) / len(all_loadavg5), max(all_loadavg5), min(all_loadavg5))
+        if len(all_loadavg5) == 0:
+            _print_load_summary_values("U", "U", "U")
+        else:
+            _print_load_summary_values(sum(all_loadavg5) / len(all_loadavg5), max(all_loadavg5), min(all_loadavg5))
 
         return 0
 
