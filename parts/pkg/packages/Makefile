@@ -5,7 +5,7 @@ INSTALL = install
 INSTALL_DATA = $(INSTALL) -m 644
 
 packagedirs  = adobe-flashplugin/
-# packagedirs += adobe-reader/		# no 64-bit version
+packagedirs += adobe-reader/
 packagedirs += cmaptools/
 packagedirs += dropbox/
 packagedirs += geogebra/
@@ -13,7 +13,7 @@ packagedirs += google-chrome/
 packagedirs += google-earth/
 packagedirs += msttcorefonts/
 packagedirs += oracle-java/
-# packagedirs += skype/			# no 64-bit version (their "multiarch" is 32-bit)
+packagedirs += skype/
 packagedirs += spotify-client/
 packagedirs += vstloggerpro/
 
