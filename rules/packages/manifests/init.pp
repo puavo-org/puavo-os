@@ -173,6 +173,7 @@ class packages {
     [ 'fontconfig'
     , 'ttf-freefont'
     , 'ttf-ubuntu-font-family'
+    , 'xfonts-terminus'
     , 'xfonts-utils' ]:
       tag => [ 'tag_fonts', 'tag_debian', ];
 
