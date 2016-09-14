@@ -16,12 +16,14 @@ class bootserver_munin {
     }
   }
 
-  $puavo_wlan_statefile = '/var/lib/munin-node/plugin-state/nobody/puavo-wlan-127.0.0.1'
+  $statefile = '/var/lib/munin-node/plugin-state/nobody/puavo-wlan-127.0.0.1'
   
   exec {
-    'remove puavo-wlan state file':
-      onlyif  => "/usr/bin/test ! -f '${puavo_wlan_statefile}.moved_by_puppet'",
-      command => "/bin/mv '${puavo_wlan_statefile}' '${puavo_wlan_statefile}.moved_by_puppet'";
+    'reset puavo-wlan state':
+      command => "/usr/bin/test -e '${statefile}' &&         \
+      /bin/mv '${statefile}' '${statefile}.reset_by_puppet'; \
+      /usr/bin/touch '${statefile}.reset_by_puppet'",
+      creates => "${statefile}.reset_by_puppet";
   }
 
   file {
