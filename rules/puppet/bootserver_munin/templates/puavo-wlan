@@ -122,7 +122,7 @@ def _print_elements_config(hostname=''):
     _print_elements_field_config()
 
 def _print_traffic_values(rx, tx, hostname=''):
-    _print_multigraph("puavo_wlan_traffic", hostname)
+    _print_multigraph("puavo_wlan_traffic2", hostname)
     print("rx.value {}".format(rx))
     print("tx.value {}".format(tx))
 
@@ -149,7 +149,7 @@ def _print_traffic_field_config():
     print("tx.min 0")
 
 def _print_traffic_config(hostname=''):
-    _print_multigraph("puavo_wlan_traffic", hostname)
+    _print_multigraph("puavo_wlan_traffic2", hostname)
     _print_traffic_graph_config(hostname)
     _print_traffic_field_config()
 
