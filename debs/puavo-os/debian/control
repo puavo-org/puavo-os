@@ -345,6 +345,8 @@ Depends: ${misc:Depends},
  findutils,
  gawk,
  tar,
+ uudecode,
+ unzip,
  wget
 Description: Package manager for Puavo packages
  Scripts to make the life of a Opinsys developer easier
