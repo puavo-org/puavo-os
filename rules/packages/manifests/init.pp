@@ -71,6 +71,7 @@ class packages {
     , 'sysstat'
     , 'tmux'
     , 'tshark'
+    , 'vrms'
     , 'w3m'
     , 'whois'
     , 'x11vnc'
