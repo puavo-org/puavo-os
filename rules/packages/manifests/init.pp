@@ -116,7 +116,6 @@ class packages {
     , 'lightdm'
     , 'lightdm-gtk-greeter'
     , 'lsb-invalid-mta'
-    , 'nautilus-dropbox'
     , 'network-manager-openvpn-gnome'
     , 'notify-osd'
     , 'onboard'
@@ -163,12 +162,7 @@ class packages {
     [ 'wine' ]:
       tag => [ 'tag_emulation', 'tag_debian', ];
 
-    [ 'firmware-b43-installer'
-    , 'firmware-iwlwifi'
-    , 'firmware-linux'
-    , 'firmware-linux-free'
-    , 'firmware-linux-nonfree'
-    , 'firmware-ralink' ]:
+    'firmware-linux-free':
       tag => [ 'tag_firmware', 'tag_debian', ];
 
     [ 'fontconfig'
@@ -176,11 +170,6 @@ class packages {
     , 'ttf-ubuntu-font-family'
     , 'xfonts-terminus'
     , 'xfonts-utils' ]:
-      tag => [ 'tag_fonts', 'tag_debian', ];
-
-    # needs debconf seeds or such to set license accepted,
-    # but package itself is okay
-    [ 'ttf-mscorefonts-installer' ]:
       tag => [ 'tag_fonts', 'tag_debian', ];
 
     [ 'dosbox'
@@ -311,7 +300,6 @@ class packages {
     , 'libreoffice'
     , 'libreoffice-base'
     , 'scribus'
-    , 'scribus-doc'
     , 'tellico'
     , 'vym' ]:
       tag => [ 'tag_office', 'tag_debian', ];
@@ -364,7 +352,6 @@ class packages {
 
     [ 'avogadro'
     , 'celestia'
-    , 'celestia-common-nonfree'
     , 'celestia-gnome'
     # , 'drgeo'		# XXX missing from Debian
     # , 'ghemical'	# XXX missing from Debian
@@ -588,8 +575,7 @@ class packages {
     # , 'ginn'			# XXX needs packaging for Debian ?
     # , 'touchegg'		# XXX needs packaging for Debian ?
     , 'unace'
-    , 'unionfs-fuse' # Ekapeli might need this.
-    , 'unrar' ]:
+    , 'unionfs-fuse' ]: # Ekapeli might need this.
       tag => [ 'tag_utils', 'tag_debian', ];
 
     [ 'qemu-kvm' ]:
@@ -599,7 +585,6 @@ class packages {
     , 'browser-plugin-vlc'
     , 'chromium'
     , 'epiphany-browser'
-    , 'flashplugin-nonfree'
     , 'icedtea-7-plugin'
     , 'liferea'
     , 'openjdk-7-jdk'
@@ -706,6 +691,55 @@ class packages {
     [ 'libnspr4-0d' # spotify
     , 'lsb-core' ]: # google-earth
       tag => [ 'tag_debian', 'tag_required-by-restricted' ];
+  }
+
+  # various contrib/non-free stuff, firmwares and such
+  @package {
+    'nautilus-dropbox':
+      tag => [ 'tag_desktop', 'tag_debian_nonfree', ];
+
+    [ 'amd64-microcode'
+    , 'b43-fwcutter'
+    , 'firmware-adi'
+    , 'firmware-atheros'
+    , 'firmware-b43-installer'
+    , 'firmware-b43legacy-installer'
+    , 'firmware-bnx2'
+    , 'firmware-bnx2x'
+    , 'firmware-brcm80211'
+    , 'firmware-cavium'
+    , 'firmware-crystalhd'
+    , 'firmware-intel-sound'
+    , 'firmware-intelwimax'
+    , 'firmware-ipw2x00'
+    , 'firmware-ivtv'
+    , 'firmware-iwlwifi'
+    , 'firmware-libertas'
+    , 'firmware-linux'
+    , 'firmware-linux-nonfree'
+    , 'firmware-myricom'
+    , 'firmware-netxen'
+    , 'firmware-qlogic'
+    , 'firmware-ralink'
+    , 'firmware-realtek'
+    , 'firmware-samsung'
+    , 'firmware-siano'
+    , 'firmware-ti-connectivity'
+    , 'firmware-zd1211'
+    , 'intel-microcode'
+    , 'iucode-tool' ]:
+      ensure => present,
+      tag    => [ 'tag_firmware', 'tag_debian_nonfree', ];
+
+    'scribus-doc':
+      tag => [ 'tag_office', 'tag_debian_nonfree', ];
+
+    'celestia-common-nonfree':
+      ensure => present,
+      tag    => [ 'tag_science', 'tag_debian_nonfree', ];
+
+    'unrar':
+      tag => [ 'tag_utils', 'tag_debian_nonfree', ];
   }
 
   # i386-support packages for the amd64-architecture.
