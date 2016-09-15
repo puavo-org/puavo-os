@@ -692,9 +692,6 @@ class packages {
 
   # XXX missing from Debian
   # @package {
-  #   [ 'skype' ]:
-  #     tag => [ 'tag_instant_messaging', 'tag_partner', 'tag_extra', 'tag_restricted' ];
-  #
   #   XXX missing from Debian
   #   [ 'vmware-view-client' ]:
   #     tag => [ 'tag_remote_access', 'tag_partner', 'tag_restricted' ];
