@@ -178,22 +178,22 @@ def _print_load_graph_config(hostname=''):
 
 def _print_load_field_config(hostname=''):
     if hostname:
-        print("loadavg5.label loadavg5")
+        print("loadavg5.label load")
         print("loadavg5.min 0")
         print("loadavg5.draw LINE2")
-        print("loadavg5.info Average 5 minute load")
+        print("loadavg5.info 5 minute load average")
     else:
-        print("avg_loadavg5.label avg_loadavg5")
+        print("avg_loadavg5.label avg load")
         print("avg_loadavg5.min 0")
         print("avg_loadavg5.draw LINE2")
         print("avg_loadavg5.info Average 5 minute load average")
 
-        print("max_loadavg5.label max_loadavg5")
+        print("max_loadavg5.label max load")
         print("max_loadavg5.min 0")
         print("max_loadavg5.draw LINE2")
         print("max_loadavg5.info Maximum 5 minute load average")
 
-        print("min_loadavg5.label min_loadavg5")
+        print("min_loadavg5.label min load")
         print("min_loadavg5.min 0")
         print("min_loadavg5.draw LINE2")
         print("min_loadavg5.info Minimum 5 minute load average")
