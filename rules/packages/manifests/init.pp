@@ -698,6 +698,9 @@ class packages {
     'nautilus-dropbox':
       tag => [ 'tag_desktop', 'tag_debian_nonfree', ];
 
+    'broadcom-sta-dkms':
+      tag => [ 'tag_drivers', 'tag_debian_nonfree', ];
+
     [ 'amd64-microcode'
     , 'b43-fwcutter'
     , 'firmware-adi'
