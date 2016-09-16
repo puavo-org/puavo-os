@@ -376,8 +376,8 @@ module Services
     attr_reader :name
     attr_reader :pid
 
-    def spawn
-      @pid = Process.spawn(@command, *@args)
+    def spawn(kwargs = {})
+      @pid = Process.spawn(@command, *@args, kwargs)
     end
 
     def kill(sigterm_timeout=3)
@@ -457,7 +457,7 @@ module Services
                   "-a#{HOSTAPD_ACTION_SCRIPT}"]
     end
 
-    def spawn
+    def spawn(kwargs = {})
       hostapd_socket = "#{HOSTAPD_CTRL_INTERFACE_DIR}/#{@vif.name}"
       Timeout.timeout(5) do
         loop do
@@ -467,7 +467,7 @@ module Services
         end
       end
       Log.info("found hostapd control socket #{hostapd_socket}")
-      super
+      super(kwargs)
     end
 
   end
@@ -839,8 +839,8 @@ class Host
     end
   end
 
-  def spawn_service(service)
-    pid = service.spawn
+  def spawn_service(service, kwargs = {})
+    pid = service.spawn(kwargs)
     @services[pid] = service
     Log.info("spawned #{service.name}")
   end
