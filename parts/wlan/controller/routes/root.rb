@@ -116,6 +116,7 @@ module PuavoWlanController
                   sta_rx_rate                        = station.fetch('rx_rate')
                   sta_tx_rate                        = station.fetch('tx_rate')
                   sta_start_time                     = Time.parse(station.fetch('start_time'))
+                  sta_rssi                           = station.fetch('rssi', '?')
 
                   erb_locals[:total_sta_rx_bytes] += sta_rx_bytes
                   erb_locals[:total_sta_tx_bytes] += sta_tx_bytes
@@ -133,6 +134,7 @@ module PuavoWlanController
                     :tx_bytes => sta_tx_bytes,
                     :rx_rate  => sta_rx_rate,
                     :tx_rate  => sta_tx_rate,
+                    :rssi     => sta_rssi,
                   }
                 end
                 erb_locals[:accesspoints] << {

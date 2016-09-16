@@ -151,6 +151,7 @@
           <th>MAC</th>
           <th>IPv4 address</th>
           <th>BSSID</th>
+          <th>RSSI</th>
           <th>Uptime</th>
           <th>Rx rate</th>
           <th>Tx rate</th>
@@ -163,6 +164,7 @@
           <td><%= station[:mac] %></td>
           <td><%= station[:ipaddr] %></td>
           <td><%= station[:bssid] %></td>
+          <td><%= station[:rssi] %></td>
           <td sorttable_customkey="<%= station[:uptime] %>"><%= prettify_seconds(station[:uptime]) %></td>
           <!-- Tx and Rx switched, because station's Rx is Access point's Tx. -->
           <td sorttable_customkey="<%= station[:tx_rate] %>"><%= prettify_byterate(station[:tx_rate]) %></td>
@@ -172,7 +174,7 @@
       </tbody>
       <tfoot>
         <tr>
-          <th colspan="5">Totals</th>
+          <th colspan="6">Totals</th>
           <!-- Tx and Rx switched, because station's Rx is Access point's Tx. -->
           <td><%= prettify_byterate(total_sta_tx_rate) %></td>
           <td><%= prettify_byterate(total_sta_rx_rate) %></td>
