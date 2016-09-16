@@ -1082,7 +1082,10 @@ class Host
     stations = {}
     IO.popen(['hostapd_cli', '-i', vif.name,
               '-p', HOSTAPD_CTRL_INTERFACE_DIR, 'all_sta']) do |io|
-      new_sta = {}
+      new_sta = {
+        :rx_rate => 0,
+        :tx_rate => 0,
+      }
 
       io.each_line do |line|
         line =~ /^(([0-9a-f]{2}:){5}([0-9a-f]{2}))$/ and new_sta[:mac]            = $1
@@ -1100,32 +1103,20 @@ class Host
             old_sta = vif.stations.fetch(new_sta[:mac])
 
             if new_sta[:connection_age] < old_sta[:connection_age]
-              new_sta[:rate_interval] = new_sta[:connection_age]
-              if new_sta[:rate_interval] == 0
-                new_sta[:rx_rate] = 0
-                new_sta[:tx_rate] = 0
-              else
-                new_sta[:rx_rate] = new_sta[:rx_bytes] / new_sta[:rate_interval]
-                new_sta[:tx_rate] = new_sta[:tx_bytes] / new_sta[:rate_interval]
+              if new_sta[:connection_age] > 0
+                new_sta[:rx_rate] = new_sta[:rx_bytes] / new_sta[:connection_age]
+                new_sta[:tx_rate] = new_sta[:tx_bytes] / new_sta[:connection_age]
               end
             else
-              new_sta[:rate_interval] = new_sta[:connection_age] - old_sta[:connection_age]
-              if new_sta[:rate_interval] == 0
-                new_sta[:rx_rate] = 0
-                new_sta[:tx_rate] = 0
-              else
-                new_sta[:rx_rate] = (new_sta[:rx_bytes] - old_sta[:rx_bytes]) / new_sta[:rate_interval]
-                new_sta[:tx_rate] = (new_sta[:tx_bytes] - old_sta[:tx_bytes]) / new_sta[:rate_interval]
+              if new_sta[:connection_age] - old_sta[:connection_age] > 0
+                new_sta[:rx_rate] = (new_sta[:rx_bytes] - old_sta[:rx_bytes]) / (new_sta[:connection_age] - old_sta[:connection_age])
+                new_sta[:tx_rate] = (new_sta[:tx_bytes] - old_sta[:tx_bytes]) / (new_sta[:connection_age] - old_sta[:connection_age])
               end
             end
           else
-            new_sta[:rate_interval] = new_sta[:connection_age]
-            if new_sta[:rate_interval] == 0
-              new_sta[:rx_rate] = 0
-              new_sta[:tx_rate] = 0
-            else
-              new_sta[:rx_rate] = new_sta[:rx_bytes] / new_sta[:rate_interval]
-              new_sta[:tx_rate] = new_sta[:tx_bytes] / new_sta[:rate_interval]
+            if new_sta[:connection_age] > 0
+              new_sta[:rx_rate] = new_sta[:rx_bytes] / new_sta[:connection_age]
+              new_sta[:tx_rate] = new_sta[:tx_bytes] / new_sta[:connection_age]
             end
           end
 
