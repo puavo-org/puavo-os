@@ -394,6 +394,42 @@ module Services
 
   end
 
+  class Horst
+    include Services::Spawnable
+
+    attr_reader :outpipe_r
+    attr_reader :outpipe_w
+
+    def initialize(kwargs = {})
+      @vif                   = kwargs.fetch(:vif)
+      @outpipe_r, @outpipe_w = IO.pipe
+      @outbuf                = ""
+
+      @args                  = ["-i#{@vif.name}", '-q', '-o/dev/stdout', '-a', '-mSTA']
+      @command               = 'puavo-wlanmapper-horst'
+      @name                  = "#{@command}_#{@vif.name}"
+    end
+
+    def update_rssi
+      @outbuf += @outpipe_r.sysread(1024)
+      @outbuf.lines do |line|
+        if line[-1] != "\n"
+          @outbuf = line
+          break
+        end
+
+        next if line.start_with?("DATE")
+
+        columns    = line.split
+        src_mac    = columns[4].chomp(',')
+        rssi       = columns[8].to_i
+        sta        = @vif.stations[src_mac]
+        sta[:rssi] = rssi unless sta.nil?
+      end
+    end
+
+  end
+
   class Dhclient
     include Services::Spawnable
 
@@ -526,6 +562,7 @@ class Host
     @vifs                    = []
     @vtun_address            = kwargs.fetch(:vtun_address, VTUN_ADDRESS)
     @vtun_port               = kwargs.fetch(:vtun_port, VTUN_PORT)
+    @horsts                  = []
   end
 
   def run
@@ -688,6 +725,8 @@ class Host
         reads    = [selfpipe_r, @ctrlconn.nil? ? @ctrlserv : @ctrlconn]
         timeouts = []
 
+        reads += @horsts.map { |h| h.outpipe_r }
+
         timeouts << @conf.fetch(:reconf_interval, RECONF_INTERVAL) - (Time.now - @last_reconf_time)
         timeouts << @conf.fetch(:report_interval, REPORT_INTERVAL) - (Time.now - @last_status_report_time)
 
@@ -715,6 +754,10 @@ class Host
           end
 
           next
+        end
+
+        @horsts.each do |horst|
+          horst.update_rssi if ready[0].map { |e| e.fileno }.include?(horst.outpipe_r.fileno)
         end
 
         selfpipe_r.read_nonblock(1) if ready[0].include?(selfpipe_r)
@@ -916,6 +959,10 @@ class Host
       hostapd_cli = Services::HostapdCli.new(:hostapd => hostapd)
       spawn_service(hostapd)
       spawn_service(hostapd_cli)
+
+      horst = Services::Horst.new(:vif => vif)
+      spawn_service(horst, :out => horst.outpipe_w)
+      @horsts << horst
     end
 
     update_tx_powers
@@ -923,12 +970,15 @@ class Host
 
   def remove_phy(phy)
     affected_bridges   = []
+    dying_horsts       = []
     dying_dhclients    = []
     dying_hostapds     = []
     dying_hostapd_clis = []
     dying_vtunds       = []
 
     @vifs.delete_if { |vif| vif.phy.name == phy.name }
+
+    @horsts.delete_if { |horst| horst.vif.phy.name == phy.name }
 
     # Remove all soon-to-be-killed services from the array before
     # killing any to avoid dependent services to die and interrupt us.
@@ -939,6 +989,9 @@ class Host
         true
       elsif service.class == Services::HostapdCli && phy.name == service.hostapd.phy.name
         dying_hostapd_clis << service
+        true
+      elsif service.class == Services::Horst && phy.name == service.vif.phy.name
+        dying_horsts << service
         true
       else
         false
@@ -963,6 +1016,7 @@ class Host
       end
     end
 
+    dying_horsts.each { |horst| horst.kill }
     dying_hostapd_clis.each { |hostapd_cli| hostapd_cli.kill }
     dying_hostapds.each { |hostapd| hostapd.kill }
     dying_dhclients.each { |dhclient| dhclient.kill }
@@ -1029,6 +1083,7 @@ class Host
     IO.popen(['hostapd_cli', '-i', vif.name,
               '-p', HOSTAPD_CTRL_INTERFACE_DIR, 'all_sta']) do |io|
       new_sta = {}
+
       io.each_line do |line|
         line =~ /^(([0-9a-f]{2}:){5}([0-9a-f]{2}))$/ and new_sta[:mac]            = $1
         line =~ /^connected_time=(.*)$/              and new_sta[:connection_age] = $1.to_i
@@ -1073,11 +1128,18 @@ class Host
               new_sta[:tx_rate] = new_sta[:tx_bytes] / new_sta[:rate_interval]
             end
           end
+
           stations[new_sta[:mac]] = new_sta
           new_sta = {}
         end
       end
     end
+
+    # Preserve measured RSSI values.
+    stations.each do |mac, sta|
+      sta[:rssi] = vif.stations.fetch(mac, {})[:rssi]
+    end
+
     vif.stations = stations
   end
 
