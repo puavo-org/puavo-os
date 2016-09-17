@@ -450,13 +450,11 @@ module Services
     include Services::Spawnable
 
     attr_reader :bridge
-    attr_reader :phy
     attr_reader :vif
 
     def initialize(kwargs = {})
       @bridge      = kwargs.fetch(:bridge)
       @net         = kwargs.fetch(:net)
-      @phy         = kwargs.fetch(:phy)
       @vif         = kwargs.fetch(:vif)
       @basic_rates = kwargs.fetch(:basic_rates)
 
@@ -466,7 +464,7 @@ module Services
       @args     = [@conffile]
 
       HostapdConf.new(:bridge         => @bridge,
-                      :channel        => @phy.channel,
+                      :channel        => @vif.phy.channel,
                       :ctrl_interface => HOSTAPD_CTRL_INTERFACE_DIR,
                       :interface      => @vif.name,
                       :ssid           => @net['ssid'],
@@ -951,7 +949,6 @@ class Host
       bridge = setup_bridge(net['ssid'])
 
       hostapd     = Services::Hostapd.new(:bridge      => bridge,
-                                          :phy         => phy,
                                           :vif         => vif,
                                           :net         => net,
                                           :basic_rates => @conf.fetch(:basic_rates,
@@ -983,11 +980,11 @@ class Host
     # Remove all soon-to-be-killed services from the array before
     # killing any to avoid dependent services to die and interrupt us.
     @services.reject! do |pid, service|
-      if service.class == Services::Hostapd && phy.name == service.phy.name
+      if service.class == Services::Hostapd && phy.name == service.vif.phy.name
         dying_hostapds << service
         affected_bridges << service.bridge
         true
-      elsif service.class == Services::HostapdCli && phy.name == service.hostapd.phy.name
+      elsif service.class == Services::HostapdCli && phy.name == service.hostapd.vif.phy.name
         dying_hostapd_clis << service
         true
       elsif service.class == Services::Horst && phy.name == service.vif.phy.name
