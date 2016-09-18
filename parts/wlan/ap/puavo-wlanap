@@ -166,7 +166,7 @@ module Dot11
       @stations          = {}
     end
 
-    def update_stats
+    def update_status
       File.read('/proc/net/dev') =~ /^\s*#{@name}:(.*)$/
 
       stats_update_time  = Time.now
@@ -742,7 +742,7 @@ class Host
           end
 
           if Time.now - @last_status_report_time > @conf.fetch(:report_interval, REPORT_INTERVAL)
-            @vifs.each { |vif| vif.update_stats }
+            @vifs.each { |vif| vif.update_status }
             controller_send_report('status', get_status)
             @last_status_report_time = Time.now
           end
