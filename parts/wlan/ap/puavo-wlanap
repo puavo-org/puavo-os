@@ -147,34 +147,12 @@ module Dot11
 
   class Vif
 
-    attr_accessor :stations
     attr_reader :name
     attr_reader :phy
-    attr_reader :rx_bytes
-    attr_reader :tx_bytes
-    attr_reader :rx_rate
-    attr_reader :tx_rate
 
     def initialize(name, phy)
       @name              = name
       @phy               = phy
-      @rx_rate           = 0
-      @tx_rate           = 0
-      @rx_bytes          = 0
-      @tx_bytes          = 0
-      @stations          = {}
-    end
-
-    def update_status
-      File.read('/proc/net/dev') =~ /^\s*#{@name}:(.*)$/
-
-      secs               = Time.now - File.mtime("/sys/class/net/#{@name}")
-      rx_bytes           = $1.split[0].to_i
-      tx_bytes           = $1.split[8].to_i
-      @rx_rate           = (rx_bytes - @rx_bytes) / secs
-      @tx_rate           = (tx_bytes - @tx_bytes) / secs
-      @rx_bytes          = rx_bytes
-      @tx_bytes          = tx_bytes
     end
 
     def del
@@ -407,7 +385,7 @@ module Services
       @name                  = "#{@command}_#{@vif.name}"
     end
 
-    def update_rssi
+    def read_measurements
       @outbuf += @outpipe_r.sysread(1024)
       @outbuf.lines do |line|
         if line[-1] != "\n"
@@ -420,8 +398,8 @@ module Services
         columns    = line.split
         src_mac    = columns[4].chomp(',')
         rssi       = columns[8].to_i
-        sta        = @vif.stations[src_mac]
-        sta[:rssi] = rssi unless sta.nil?
+
+        yield src_mac, rssi
       end
     end
 
@@ -559,6 +537,7 @@ class Host
     @vtun_port               = kwargs.fetch(:vtun_port, VTUN_PORT)
     @horsts                  = []
     @hostapds                = {}
+    @rssimap                 = {}
   end
 
   def run
@@ -739,9 +718,13 @@ class Host
           end
 
           if Time.now - @last_status_report_time > @conf.fetch(:report_interval, REPORT_INTERVAL)
-            @vifs.each { |vif| vif.update_status }
-            controller_send_report('status', get_status)
-            @last_status_report_time = Time.now
+            begin
+              controller_send_report('status', get_status)
+            rescue StandardError => e
+              Log.exception('failed to report status', e)
+            else
+              @last_status_report_time = Time.now
+            end
           end
 
           if @ctrlconn && Time.now - @ctrlconn_time > 5
@@ -753,7 +736,9 @@ class Host
         end
 
         @horsts.each do |horst|
-          horst.update_rssi if ready[0].map { |e| e.fileno }.include?(horst.outpipe_r.fileno)
+          if ready[0].map { |e| e.fileno }.include?(horst.outpipe_r.fileno)
+            horst.read_measurements { |mac, rssi| @rssimap[mac] = rssi }
+          end
         end
 
         selfpipe_r.read_nonblock(1) if ready[0].include?(selfpipe_r)
@@ -952,7 +937,7 @@ class Host
                                           :basic_rates => @conf.fetch(:basic_rates,
                                                                       [10, 20, 55, 110, 60, 120, 240]))
       spawn_service(hostapd)
-      @hostapds[vif.name] << hostapd
+      @hostapds[vif.name] = hostapd
 
       hostapd_cli = Services::HostapdCli.new(:hostapd => hostapd)
       spawn_service(hostapd_cli)
@@ -1077,119 +1062,112 @@ class Host
     end
   end
 
-  def update_station_stats(vif)
-    stations = {}
-    IO.popen(['hostapd_cli', '-i', vif.name,
-              '-p', HOSTAPD_CTRL_INTERFACE_DIR, 'all_sta']) do |io|
-      new_sta = {
-        :rx_rate => 0,
-        :tx_rate => 0,
-      }
+  def get_stations(vif_name)
+    def add_station_if_complete(stations, station)
+      # Add only complete/valid station entries. In some cases
+      # (probably when STA has just disassociated), hostapd_cli
+      # all_sta does not print all fields. Just ignore all incomplete
+      # entries.
+      if Set.new(station.keys) == Set.new([:mac, :connection_age, :rx_bytes, :tx_bytes])
+        mac                  = station[:mac]
 
-      io.each_line do |line|
-        line =~ /^(([0-9a-f]{2}:){5}([0-9a-f]{2}))$/ and new_sta[:mac]            = $1
-        line =~ /^connected_time=(.*)$/              and new_sta[:connection_age] = $1.to_i
-        line =~ /^rx_bytes=(.*)$/                    and new_sta[:rx_bytes]       = $1.to_i
-        line =~ /^tx_bytes=(.*)$/                    and new_sta[:tx_bytes]       = $1.to_i
+        station[:start_time] = Time.now - station[:connection_age]
+        station[:rx_rate]    = station[:rx_bytes] / station[:connection_age]
+        station[:tx_rate]    = station[:tx_bytes] / station[:connection_age]
+        station[:rssi]       = @rssimap[mac]
 
-        # Add only complete/valid station entries. In some cases
-        # (probably when STA has just disassociated), hostapd_cli
-        # all_sta does not print all fields.
-        if Set.new(new_sta.keys) == Set.new([:mac, :connection_age, :rx_bytes, :tx_bytes])
-          new_sta[:start_time]  = Time.now - new_sta[:connection_age]
-
-          if vif.stations.has_key?(new_sta[:mac])
-            old_sta = vif.stations.fetch(new_sta[:mac])
-
-            if new_sta[:connection_age] < old_sta[:connection_age]
-              if new_sta[:connection_age] > 0
-                new_sta[:rx_rate] = new_sta[:rx_bytes] / new_sta[:connection_age]
-                new_sta[:tx_rate] = new_sta[:tx_bytes] / new_sta[:connection_age]
-              end
-            else
-              if new_sta[:connection_age] - old_sta[:connection_age] > 0
-                new_sta[:rx_rate] = (new_sta[:rx_bytes] - old_sta[:rx_bytes]) / (new_sta[:connection_age] - old_sta[:connection_age])
-                new_sta[:tx_rate] = (new_sta[:tx_bytes] - old_sta[:tx_bytes]) / (new_sta[:connection_age] - old_sta[:connection_age])
-              end
-            end
-          else
-            if new_sta[:connection_age] > 0
-              new_sta[:rx_rate] = new_sta[:rx_bytes] / new_sta[:connection_age]
-              new_sta[:tx_rate] = new_sta[:tx_bytes] / new_sta[:connection_age]
-            end
-          end
-
-          stations[new_sta[:mac]] = new_sta
-          new_sta = {}
-        end
+        stations << station
       end
     end
 
-    # Preserve measured RSSI values.
-    stations.each do |mac, sta|
-      sta[:rssi] = vif.stations.fetch(mac, {})[:rssi]
+    stations = []
+    IO.popen(['hostapd_cli', '-i', vif_name,
+              '-p', HOSTAPD_CTRL_INTERFACE_DIR, 'all_sta']) do |io|
+
+      station = {}
+      io.each_line do |line|
+        if line =~ /^(([0-9a-f]{2}:){5}([0-9a-f]{2}))$/
+          add_station_if_complete(stations, station)
+          station = { :mac => $1 }
+        end
+        line =~ /^connected_time=(.*)$/ and station[:connection_age] = $1.to_i
+        line =~ /^rx_bytes=(.*)$/       and station[:rx_bytes]       = $1.to_i
+        line =~ /^tx_bytes=(.*)$/       and station[:tx_bytes]       = $1.to_i
+      end
+      add_station_if_complete(stations, station)
     end
 
-    vif.stations = stations
+    stations
   end
 
-  def get_status
-    radios       = {}
-    @vifs.each do |vif|
-      bssid    = nil
-      channel  = nil
-      ssid     = nil
+  def get_accesspoint(vif)
+    bssid   = nil
+    channel = nil
+    ssid    = nil
 
-      if radios.has_key?(vif.phy.mac)
-        radio = radios.fetch(vif.phy.mac)
-      else
-        radio = {
+    IO.popen(['wpa_cli', '-i', vif.name,
+              '-p', HOSTAPD_CTRL_INTERFACE_DIR, 'status']) do |io|
+      io.each_line do |line|
+        line =~ /^bssid\[0\]=(.*)$/ and bssid   = $1
+        line =~ /^channel=(.*)$/    and channel = $1.to_i
+        line =~ /^ssid\[0\]=(.*)$/  and ssid    = $1
+        break unless [bssid, channel, ssid].map { |s| s.nil? }.any?
+      end
+    end
+
+    if [bssid, channel, ssid].map { |s| s.nil? }.any?
+      fail "failed to query hostapd status of #{vif.name}"
+    end
+
+    File.read('/proc/net/dev') =~ /^\s*#{vif.name}:(.*)$/
+    seconds  = Time.now - File.mtime("/sys/class/net/#{vif.name}")
+    rx_bytes = $1.split[0].to_i
+    tx_bytes = $1.split[8].to_i
+    rx_rate  = rx_bytes / seconds
+    tx_rate  = tx_bytes / seconds
+
+    start_time = File.mtime("#{HOSTAPD_CTRL_INTERFACE_DIR}/#{vif.name}")
+
+    {
+      :radio_mac          => vif.phy.mac,
+      :start_time         => start_time,
+      :bssid              => bssid,
+      :channel            => channel,
+      :rx_bytes           => rx_bytes,
+      :rx_rate            => rx_rate,
+      :ssid               => ssid,
+      :stations           => get_stations(vif.name),
+      :tx_bytes           => tx_bytes,
+      :tx_power_limit_dBm => vif.tx_power,
+      :tx_rate            => tx_rate,
+    }
+  end
+
+  def get_radios
+    radios = {}
+
+    @vifs.each do |vif|
+      begin
+        radios.fetch(vif.phy.mac)
+      rescue KeyError
+        radios[vif.phy.mac] = {
           :accesspoints => [],
           :driver       => vif.phy.driver,
           :product      => vif.phy.product,
           :mac          => vif.phy.mac,
           :name         => vif.phy.name,
         }
-        radios[vif.phy.mac] = radio
-      end
-
-      begin
-
-        # Get access point stats
-        IO.popen(['wpa_cli', '-i', vif.name,
-                  '-p', HOSTAPD_CTRL_INTERFACE_DIR, 'status']) do |io|
-          io.each_line do |line|
-            line =~ /^bssid\[0\]=(.*)$/   and bssid   = $1
-            line =~ /^channel=(.*)$/      and channel = $1.to_i
-            line =~ /^ssid\[0\]=(.*)$/    and ssid    = $1
-          end
-        end
-
-        update_station_stats(vif)
-
-        start_time = File.mtime("#{HOSTAPD_CTRL_INTERFACE_DIR}/#{vif.name}")
-      rescue StandardError => e
-        Log.exception("failed to query hostapd status (#{vif.name})", e)
-      else
-        radio[:accesspoints] << {
-          :radio_mac          => vif.phy.mac,
-          :start_time         => start_time,
-          :bssid              => bssid,
-          :channel            => channel,
-          :rx_bytes           => vif.rx_bytes,
-          :rx_rate            => vif.rx_rate,
-          :ssid               => ssid,
-          :stations           => vif.stations.values,
-          :tx_bytes           => vif.tx_bytes,
-          :tx_power_limit_dBm => vif.tx_power,
-          :tx_rate            => vif.tx_rate,
-        }
-      end
+      end[:accesspoints] << get_accesspoint(vif)
     end
+
+    radios.values
+  end
+
+  def get_status
     l1, l5, l15 = IO.read('/proc/loadavg').split.take(3).map { |s| s.to_f }
     {
       :hostname           => PUAVO_ETC.hostname,
-      :radios             => radios.values,
+      :radios             => get_radios,
       :version            => PuavoWLAN::VERSION,
       :system_start_time  => Time.now - IO.read('/proc/uptime').split[0].to_i,
       :service_start_time => Time.parse(IO.popen(['ps', '-p', $$.to_s, '-o', 'lstart=']).read),
