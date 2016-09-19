@@ -162,22 +162,19 @@ module Dot11
       @tx_rate           = 0
       @rx_bytes          = 0
       @tx_bytes          = 0
-      @stats_update_time = Time.at(0)
       @stations          = {}
     end
 
     def update_status
       File.read('/proc/net/dev') =~ /^\s*#{@name}:(.*)$/
 
-      stats_update_time  = Time.now
-      secs               = stats_update_time - @stats_update_time
+      secs               = Time.now - File.mtime("/sys/class/net/#{@name}")
       rx_bytes           = $1.split[0].to_i
       tx_bytes           = $1.split[8].to_i
       @rx_rate           = (rx_bytes - @rx_bytes) / secs
       @tx_rate           = (tx_bytes - @tx_bytes) / secs
       @rx_bytes          = rx_bytes
       @tx_bytes          = tx_bytes
-      @stats_update_time = stats_update_time
     end
 
     def del
