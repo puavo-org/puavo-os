@@ -341,6 +341,7 @@ Package: puavo-pkg
 Architecture: all
 Depends: ${misc:Depends},
  bash,
+ cabextract,
  coreutils,
  findutils,
  gawk,
