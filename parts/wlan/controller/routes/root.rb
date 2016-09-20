@@ -137,6 +137,7 @@ module PuavoWlanController
                     :tx_rate  => sta_tx_rate,
                     :rssi     => sta_rssi,
                     :vendor   => get_vendor(sta_mac),
+                    :ap_host  => host_hostname,
                   }
                 end
                 erb_locals[:accesspoints] << {
