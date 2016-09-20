@@ -147,7 +147,6 @@ class packages {
     , 'vim-nox' ]:
       tag => [ 'tag_devel', 'tag_debian', ];
 
-    # [ 'bcmwl-kernel-source'	# XXX missing from Debian
     [ 'dkms'
     , 'libgl1-mesa-glx'
     # , 'nvidia-legacy-304xx-driver'	# XXX do not install this yet
@@ -613,17 +612,6 @@ class packages {
     # , 'simplescreenrecorder'          # XXX not yet packaged for Debian
     # , 'xexit' ]:                      # XXX not yet packaged for Debian
 
-    'libssl-dev':
-      ensure => '1.0.1e-2+deb7u20',
-      require => Package['libssl1.0.0'];
-
-    'libssl1.0.0':
-      ensure => '1.0.1e-2+deb7u20',
-      require => Package['openssl'];
-
-    'openssl':
-      ensure  => '1.0.1e-2+deb7u20';
-
     'vtun':
       ensure => '3.0.2-5+trusty.amd64+master.531cf0dbc32b3c20a22e783612e968055ffb1d1e';
 
@@ -659,9 +647,10 @@ class packages {
       packages::kernels::kernel_package {
         '3.16.0-4-amd64':
           dkms_modules => $all_dkms_modules;
-        # XXX disabled due to linux-base 4.3 dependency
-        # '4.6.0-0.bpo.1-amd64':
-        #   dkms_modules => $all_dkms_modules;
+
+        '4.7.0-0.bpo.1-amd64':
+          dkms_modules => $all_dkms_modules,
+          package_name => 'linux-image-4.7.0-0.bpo.1-amd64-unsigned';
       }
     }
     'stretch': {

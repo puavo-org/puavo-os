@@ -49,6 +49,7 @@ class image::allinone {
   }
 
   Package <| tag == 'tag_debian'
+          or tag == 'tag_debian_backports'
           or tag == 'tag_kernel'
           or tag == 'tag_puavo' |>
 }

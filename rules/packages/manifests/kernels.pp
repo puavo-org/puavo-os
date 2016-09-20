@@ -2,21 +2,24 @@ class packages::kernels {
   include kernels::dkms,
           packages
 
-  define kernel_package ($package_tag='',
+  define kernel_package ($package_name='',
+                         $package_tag='',
                          $with_dbg=false,
-                         $pkgarch='',
                          $dkms_modules=[]) {
     $version = $title
 
-    $pkgarch_postfix = $pkgarch ? { '' => '', default => ":$pkgarch", }
-
     $dbg_packages = $with_dbg ? {
-      true  => [ "linux-image-${version}-dbg${pkgarch_postfix}" ],
+      true  => [ "linux-image-${version}-dbg" ],
       false => [],
     }
 
-    $packages = [ "linux-headers-${version}${pkgarch_postfix}"
-                , "linux-image-${version}${pkgarch_postfix}"
+    $image_package = $package_name ? {
+                       ''      => [ "linux-image-${version}" ],
+                       default => [ $package_name ],
+                     }
+
+    $packages = [ "linux-headers-${version}"
+                , $image_package
                 , $dbg_packages ]
 
     # Clunky tricks to retain compatibility the Puppet version (2.7.11)
