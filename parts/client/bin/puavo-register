@@ -104,7 +104,7 @@ class HttpAuthError < StandardError; end
 
 class HostCertificate
   def initialize
-    @key = OpenSSL::PKey::RSA.new(1024)
+    @key = OpenSSL::PKey::RSA.new(2048)
     @csr = OpenSSL::X509::Request.new
     @csr.version = 0
     @csr.public_key = @key.public_key
