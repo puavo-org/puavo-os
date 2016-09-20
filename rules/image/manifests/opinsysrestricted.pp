@@ -6,4 +6,6 @@ class image::opinsysrestricted {
 
   # Realize all available puavo-pkg packages
   Puavo_pkg::Install <| |>
+
+  Package <| tag == 'tag_debian_nonfree' |>
 }
