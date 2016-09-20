@@ -109,8 +109,7 @@ class HostCertificate
     @csr.version = 0
     @csr.public_key = @key.public_key
 
-    digest = OpenSSL::Digest::SHA256.new
-    @csr.sign(@key, digest)
+    @csr.sign(@key, OpenSSL::Digest::SHA256.new)
   end
 
   def accept_signed_certificate(certificate, rootca, orgcabundle)
