@@ -34,13 +34,12 @@ class kernels {
   }
 
   $edge_kernel = $lsbdistcodename ? {
-    # XXX disabled due to linux-base 4.3 dependency
-    # 'jessie' => '4.6.0-0.bpo.1-amd64',
+    'jessie' => '4.7.0-0.bpo.1-amd64',
     default  => $default_kernel,
   }
 
   ::kernels::all_kernel_links {
     'default': kernel => $default_kernel;
-    # 'edge':  kernel => $edge_kernel;
+    'edge':    kernel => $edge_kernel;
   }
 }
