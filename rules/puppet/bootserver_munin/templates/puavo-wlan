@@ -29,7 +29,10 @@ import sys
 
 # Third-party modules
 import json
+import numpy
 import redis
+
+_RSSI_PERCENTILES = [10, 50, 90]
 
 def _get_configured_hostnames():
     configured_hostnames = set()
@@ -215,6 +218,40 @@ def _print_load_config(hostname=''):
     _print_load_graph_config(hostname)
     _print_load_field_config(hostname)
 
+def _print_rssi_values(rssis, hostname=''):
+    _print_multigraph("puavo_wlan_host_rssi", hostname)
+
+    for q in _RSSI_PERCENTILES:
+        if len(rssis) > 0:
+            pct = numpy.percentile(rssis, q)
+        else:
+            pct = "U"
+        print("rssi_{}th_pct.value {}".format(q, pct))
+
+def _print_rssi_graph_config(hostname=''):
+    if hostname:
+        hostname = " associated to {}".format(hostname)
+    else:
+        hostname = ""
+
+    print("graph_title RSSI of Puavo WLAN stations{}".format(hostname))
+    print("graph_args --base 1000 -l -99 -u 0")
+    print("graph_vlabel RSSI [dBmW]")
+    print("graph_scale no")
+    print("graph_category network")
+    print("graph_info RSSI describes the signal strength of received 802.11 frames.")
+
+def _print_rssi_field_config(hostname=''):
+    for pct in _RSSI_PERCENTILES:
+        print("rssi_{}th_pct.label {}th pct".format(pct, pct))
+        print("rssi_{}th_pct.draw LINE2".format(pct))
+        print("rssi_{}th_pct.info {}th percentile of RSSIs".format(pct, pct))
+
+def _print_rssi_config(hostname=''):
+    _print_multigraph("puavo_wlan_host_rssi", hostname)
+    _print_rssi_graph_config(hostname)
+    _print_rssi_field_config(hostname)
+
 def _main():
     if len(sys.argv) == 1:
         available_hosts     = _get_available_hosts()
@@ -227,6 +264,7 @@ def _main():
         total_tx_bytes      = 0
 
         all_loadavg5      = []
+        all_rssis         = []
 
         for hostname in _get_configured_hostnames():
             try:
@@ -235,6 +273,7 @@ def _main():
                 _print_traffic_values("U", "U", hostname)
                 _print_elements_values("U", "U", "U", 0, hostname)
                 _print_load_values("U", hostname)
+                _print_rssi_values([], hostname)
                 continue
 
             host_ap_count    = 0
@@ -243,6 +282,7 @@ def _main():
             host_rx_bytes    = 0
             host_tx_bytes    = 0
             host_loadavg5    = host["loadavg5"]
+            host_rssis       = []
 
             for radio in host["radios"]:
                 host_radio_count += 1
@@ -253,6 +293,13 @@ def _main():
                     host_rx_bytes  += accesspoint["rx_bytes"]
                     host_tx_bytes  += accesspoint["tx_bytes"]
 
+                    for station in accesspoint["stations"]:
+                        try:
+                            host_rssis.append(station["rssi"])
+                        except KeyError:
+                            pass
+
+
             total_ap_count    += host_ap_count
             total_radio_count += host_radio_count
             total_sta_count   += host_sta_count
@@ -260,10 +307,12 @@ def _main():
             total_tx_bytes    += host_tx_bytes
 
             all_loadavg5.append(host_loadavg5)
+            all_rssis.extend(host_rssis)
 
             _print_traffic_values(host_rx_bytes * 8, host_tx_bytes * 8, hostname)
             _print_elements_values(host_ap_count, host_radio_count, host_sta_count, 1, hostname)
             _print_load_values(host_loadavg5, hostname)
+            _print_rssi_values(host_rssis, hostname)
 
         _print_traffic_values(total_rx_bytes * 8, total_tx_bytes * 8)
         _print_elements_values(total_ap_count, total_radio_count, total_sta_count, total_host_count)
@@ -271,6 +320,7 @@ def _main():
             _print_load_summary_values("U", "U", "U")
         else:
             _print_load_summary_values(sum(all_loadavg5) / len(all_loadavg5), max(all_loadavg5), min(all_loadavg5))
+        _print_rssi_values(all_rssis)
 
         return 0
 
@@ -286,11 +336,13 @@ def _main():
             _print_elements_config()
             _print_traffic_config()
             _print_load_config()
+            _print_rssi_config()
 
             for hostname in sorted(configured_hostnames):
                 _print_elements_config(hostname)
                 _print_traffic_config(hostname)
                 _print_load_config(hostname)
+                _print_rssi_config(hostname)
 
             return 0
 
