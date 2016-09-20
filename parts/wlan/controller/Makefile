@@ -15,7 +15,8 @@ install: all installdirs
 		config.ru			\
 		permstore.rb			\
 		app.rb				\
-		tempstore.rb
+		tempstore.rb			\
+		oui.txt
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(appdir)/public	\
 		public/*

@@ -34,9 +34,20 @@ require_relative './tempstore.rb'
 require_relative './routes/root.rb'
 require_relative './routes/v1.rb'
 
+def parse_oui
+  oui_table = {}
+  File.read('oui.txt').lines.each do |line|
+    oui, vendor = line.split("\t")
+    oui_table[oui.scan(/../).join(':').downcase] = vendor.strip
+  end
+  oui_table
+end
+
 module PuavoWlanController
 
   TEMPSTORE = TempStore.new
+
+  OUI_TABLE = parse_oui
 
   MAX_REPORT_INTERVAL    = 30
   STATUS_EXPIRATION_TIME = MAX_REPORT_INTERVAL * 2
@@ -92,6 +103,10 @@ module PuavoWlanController
         end
       end
       arp_table
+    end
+
+    def get_vendor(mac)
+      OUI_TABLE.fetch(mac.downcase[0..7], '?')
     end
 
   end
