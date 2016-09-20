@@ -98,7 +98,7 @@ module PuavoWlanController
           ipaddr = fields[1][1..-2] # Omit leading and trailing parens.
           mac = fields[3]
           next if mac == '<incomplete>'
-          hostname = fqdn == '?' ? '?' : fqdn.split('.')[0]
+          hostname = fqdn == '?' ? nil : fqdn.split('.')[0]
           arp_table[mac] = [hostname, fqdn, ipaddr]
         end
       end
