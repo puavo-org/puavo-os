@@ -612,17 +612,6 @@ class packages {
     # , 'simplescreenrecorder'          # XXX not yet packaged for Debian
     # , 'xexit' ]:                      # XXX not yet packaged for Debian
 
-    'libssl-dev':
-      ensure => '1.0.1e-2+deb7u20',
-      require => Package['libssl1.0.0'];
-
-    'libssl1.0.0':
-      ensure => '1.0.1e-2+deb7u20',
-      require => Package['openssl'];
-
-    'openssl':
-      ensure  => '1.0.1e-2+deb7u20';
-
     'vtun':
       ensure => '3.0.2-5+trusty.amd64+master.531cf0dbc32b3c20a22e783612e968055ffb1d1e';
 
