@@ -140,7 +140,7 @@ module PuavoWlanController
                   }
                 end
                 erb_locals[:accesspoints] << {
-                  :radio_mac => accesspoint.fetch('radio_mac'),
+                  :radio_mac => radio_mac,
                   :bssid     => ap_bssid,
                   :hostname  => host_hostname,
                   :rx_bytes  => ap_rx_bytes,
