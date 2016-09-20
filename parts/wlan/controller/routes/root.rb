@@ -69,6 +69,7 @@ module PuavoWlanController
             next if host_radios.empty?
 
             host_radios.each do |radio|
+              radio_mac          = radio.fetch('mac')
               radio_accesspoints = radio.fetch('accesspoints')
               radio_ap_count     = radio_accesspoints.length
               radio_rx_bytes     = 0
@@ -135,6 +136,7 @@ module PuavoWlanController
                     :rx_rate  => sta_rx_rate,
                     :tx_rate  => sta_tx_rate,
                     :rssi     => sta_rssi,
+                    :vendor   => get_vendor(sta_mac),
                   }
                 end
                 erb_locals[:accesspoints] << {
@@ -153,7 +155,7 @@ module PuavoWlanController
               erb_locals[:radios] << {
                 :hostname  => host_hostname,
                 :driver    => radio.fetch('driver'),
-                :mac       => radio.fetch('mac'),
+                :mac       => radio_mac,
                 :product   => radio.fetch('product'),
                 :ap_count  => radio_ap_count,
                 :rx_bytes  => radio_rx_bytes,
@@ -163,6 +165,7 @@ module PuavoWlanController
                 :channel   => radio_channel,
                 :tx_power  => radio_tx_power,
                 :sta_count => radio_sta_count,
+                :vendor    => get_vendor(radio_mac),
 
               }
             end

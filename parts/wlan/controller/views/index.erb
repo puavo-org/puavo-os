@@ -66,6 +66,7 @@
           <th>MAC</th>
           <th>Driver</th>
           <th>Product</th>
+          <th>Vendor</th>
           <th>Channel</th>
           <th>Tx power</th>
           <th>APs</th>
@@ -81,6 +82,7 @@
           <td><%= radio[:mac] %></td>
           <td><%= radio[:driver] %></td>
           <td><%= radio[:product] %></td>
+          <td><%= radio[:vendor] %></td>
           <td><%= radio[:channel] %></td>
           <td sorttable_customkey="<%= radio[:tx_power] %>"><%= radio[:tx_power] %> dBm</td>
           <td><%= radio[:ap_count] %></td>
@@ -92,7 +94,7 @@
       </tbody>
       <tfoot>
         <tr>
-          <th colspan="6">Totals</th>
+          <th colspan="7">Totals</th>
           <td><%= accesspoints.length %></td>
           <td><%= stations.length %></td>
           <td><%= prettify_byterate(total_ap_rx_rate) %></td>
@@ -149,6 +151,7 @@
         <tr>
           <th>Hostname</th>
           <th>MAC</th>
+          <th>Vendor</th>
           <th>IPv4 address</th>
           <th>BSSID</th>
           <th>RSSI</th>
@@ -162,6 +165,7 @@
         <tr>
           <td><%= station[:hostname] %></td>
           <td><%= station[:mac] %></td>
+          <td><%= station[:vendor] %></td>
           <td><%= station[:ipaddr] %></td>
           <td><%= station[:bssid] %></td>
           <td><%= station[:rssi] %></td>
@@ -174,7 +178,7 @@
       </tbody>
       <tfoot>
         <tr>
-          <th colspan="6">Totals</th>
+          <th colspan="7">Totals</th>
           <!-- Tx and Rx switched, because station's Rx is Access point's Tx. -->
           <td><%= prettify_byterate(total_sta_tx_rate) %></td>
           <td><%= prettify_byterate(total_sta_rx_rate) %></td>
