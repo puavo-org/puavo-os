@@ -65,7 +65,6 @@
           <th>Host</th>
           <th>MAC</th>
           <th>Driver</th>
-          <th>Product</th>
           <th>Vendor</th>
           <th>Channel</th>
           <th>Tx power</th>
@@ -81,7 +80,6 @@
           <td><%= radio[:hostname] %></td>
           <td><%= radio[:mac] %></td>
           <td><%= radio[:driver] %></td>
-          <td><%= radio[:product] %></td>
           <td><%= radio[:vendor] %></td>
           <td><%= radio[:channel] %></td>
           <td sorttable_customkey="<%= radio[:tx_power] %>"><%= radio[:tx_power] %> dBm</td>
@@ -94,7 +92,7 @@
       </tbody>
       <tfoot>
         <tr>
-          <th colspan="7">Totals</th>
+          <th colspan="6">Totals</th>
           <td><%= accesspoints.length %></td>
           <td><%= stations.length %></td>
           <td><%= prettify_byterate(total_ap_rx_rate) %></td>
