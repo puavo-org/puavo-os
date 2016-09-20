@@ -147,7 +147,6 @@
     <table class="sortable">
       <thead>
         <tr>
-          <th>Hostname</th>
           <th>MAC</th>
           <th>Vendor</th>
           <th>AP host</th>
@@ -161,8 +160,7 @@
       <tbody>
         <% stations.each do |station| %>
         <tr>
-          <td><%= station[:hostname] %></td>
-          <td><%= station[:mac] %></td>
+          <td><%= station[:hostname] or station[:mac] %></td>
           <td><%= station[:vendor] %></td>
           <td><%= station[:ap_host] %></td>
           <td><%= station[:bssid] %></td>
@@ -176,7 +174,7 @@
       </tbody>
       <tfoot>
         <tr>
-          <th colspan="7">Totals</th>
+          <th colspan="6">Totals</th>
           <!-- Tx and Rx switched, because station's Rx is Access point's Tx. -->
           <td><%= prettify_byterate(total_sta_tx_rate) %></td>
           <td><%= prettify_byterate(total_sta_rx_rate) %></td>
