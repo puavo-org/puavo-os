@@ -83,9 +83,11 @@ def _print_multigraph(prefix, hostname=''):
 
     print("multigraph {}{}".format(prefix, hostname))
 
-def _print_elements_values(accesspoints, radios, stations, hostname=''):
+def _print_elements_values(accesspoints, radios, stations, hosts, hostname=''):
     _print_multigraph("puavo_wlan_elements", hostname)
     print("accesspoints.value {}".format(accesspoints))
+    if not hostname:
+        print("hosts.value {}".format(hosts))
     print("radios.value {}".format(radios))
     print("stations.value {}".format(stations))
 
@@ -94,17 +96,27 @@ def _print_elements_graph_config(hostname=''):
         hostname = " on host {}".format(hostname)
 
     print("graph_title Puavo WLAN elements{}".format(hostname))
-    print("graph_order stations accesspoints radios")
+    if not hostname:
+        print("graph_order stations accesspoints radios hosts")
+    else:
+        print("graph_order stations accesspoints radios")
     print("graph_args --base 1000 -l 0")
     print("graph_vlabel Count")
     print("graph_category network")
     print("graph_info This graph shows the number of Puavo WLAN elements{}.".format(hostname))
 
-def _print_elements_field_config():
+def _print_elements_field_config(hostname=''):
     print("accesspoints.label accesspoints")
     print("accesspoints.min 0")
     print("accesspoints.draw LINE2")
     print("accesspoints.info The number of accesspoints.")
+
+    if not hostname:
+        print("hosts.label hosts")
+        print("hosts.min 0")
+        print("hosts.draw LINE2")
+        print("hosts.colour 000000")
+        print("hosts.info The number of accesspoint hosts.")
 
     print("radios.label radios")
     print("radios.min 0")
@@ -119,7 +131,7 @@ def _print_elements_field_config():
 def _print_elements_config(hostname=''):
     _print_multigraph("puavo_wlan_elements", hostname)
     _print_elements_graph_config(hostname)
-    _print_elements_field_config()
+    _print_elements_field_config(hostname)
 
 def _print_traffic_values(rx, tx, hostname=''):
     _print_multigraph("puavo_wlan_traffic2", hostname)
@@ -208,6 +220,7 @@ def _main():
         available_hosts     = _get_available_hosts()
 
         total_ap_count      = 0
+        total_host_count    = len(available_hosts)
         total_radio_count   = 0
         total_sta_count     = 0
         total_rx_bytes      = 0
@@ -220,7 +233,7 @@ def _main():
                 host = available_hosts[hostname]
             except KeyError:
                 _print_traffic_values("U", "U", hostname)
-                _print_elements_values("U", "U", "U", hostname)
+                _print_elements_values("U", "U", "U", 0, hostname)
                 _print_load_values("U", hostname)
                 continue
 
@@ -249,11 +262,11 @@ def _main():
             all_loadavg5.append(host_loadavg5)
 
             _print_traffic_values(host_rx_bytes * 8, host_tx_bytes * 8, hostname)
-            _print_elements_values(host_ap_count, host_radio_count, host_sta_count, hostname)
+            _print_elements_values(host_ap_count, host_radio_count, host_sta_count, 1, hostname)
             _print_load_values(host_loadavg5, hostname)
 
         _print_traffic_values(total_rx_bytes * 8, total_tx_bytes * 8)
-        _print_elements_values(total_ap_count, total_radio_count, total_sta_count)
+        _print_elements_values(total_ap_count, total_radio_count, total_sta_count, total_host_count)
         if len(all_loadavg5) == 0:
             _print_load_summary_values("U", "U", "U")
         else:
