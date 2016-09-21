@@ -1,8 +1,0 @@
-Package: *
-Pin: release a=<%= @lsbdistcodename %>-backports
-Pin-Priority: 50
-
-# needed by linux-image backports
-Package: linux-base
-Pin: release a=<%= @lsbdistcodename %>-backports
-Pin-Priority: 995

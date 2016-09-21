@@ -22,6 +22,7 @@ class image::allinone {
           ::network_manager,
           ::packages,
           ::packages,
+          ::packages::backports,
           ::packages::languages::de,
           ::packages::languages::en,
           ::packages::languages::fi,

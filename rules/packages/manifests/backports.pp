@@ -1,4 +1,4 @@
-class packages::proposed_updates {
+class packages::backports {
   define for_packages ($packagelist) {
     $filename = $title
 
@@ -7,13 +7,13 @@ class packages::proposed_updates {
         content =>
           sprintf("%s%s%s",
                   inline_template("Package: <%= @packagelist.join(' ') %>\n"),
-                  "Pin: release a=${lsbdistcodename}-proposed\n",
-                  "Pin-Priority: 600\n");
+                  "Pin: release a=${lsbdistcodename}-backports\n",
+                  "Pin-Priority: 995\n");
     }
   }
 
-  for_packages {
-    'libwnck3':
-      packagelist => [ 'libwnck-3-0', 'libwnck-3-common', ];
+  ::packages::backports::for_packages {
+    'linux-image':
+      packagelist => [ 'linux-base', ];
   }
 }
