@@ -374,6 +374,7 @@ module Services
 
     attr_reader :outpipe_r
     attr_reader :outpipe_w
+    attr_reader :vif
 
     def initialize(kwargs = {})
       @vif                   = kwargs.fetch(:vif)
