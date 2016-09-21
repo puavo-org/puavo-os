@@ -7,8 +7,8 @@ class apt::repositories {
                 $securitymirror,
                 $securitymirror_path='') {
     file {
-      '/etc/apt/preferences.d/backports.pref':
-	content => template('apt/backports.pref'),
+      '/etc/apt/preferences.d/00-backports.pref':
+	content => template('apt/00-backports.pref'),
 	notify  => Exec['apt update'];
 
       '/etc/apt/sources.list':

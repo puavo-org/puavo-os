@@ -22,6 +22,7 @@ class image::allinone {
           ::network_manager,
           ::packages,
           ::packages,
+          ::packages::backports,
           ::packages::languages::de,
           ::packages::languages::en,
           ::packages::languages::fi,
@@ -52,4 +53,7 @@ class image::allinone {
           or tag == 'tag_debian_backports'
           or tag == 'tag_kernel'
           or tag == 'tag_puavo' |>
+
+  # get all backports defined in packages::backports
+  Packages::Backports::For_Packages <| |>
 }
