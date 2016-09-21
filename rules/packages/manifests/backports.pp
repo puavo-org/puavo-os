@@ -29,6 +29,30 @@ class packages::backports {
                      , 'nemo'
                      , 'nemo-data' ];
 
+    'firmware':
+      packagelist => [ 'firmware-amd-graphics'
+                     , 'firmware-atheros'
+                     , 'firmware-bnx2'
+                     , 'firmware-bnx2x'
+                     , 'firmware-brcm80211'
+                     , 'firmware-cavium'
+                     , 'firmware-intel-sound'
+                     , 'firmware-intelwimax'
+                     , 'firmware-ipw2x00'
+                     , 'firmware-ivtv'
+                     , 'firmware-iwlwifi'
+                     , 'firmware-libertas'
+                     , 'firmware-linux'
+                     , 'firmware-linux-nonfree'
+                     , 'firmware-misc-nonfree'
+                     , 'firmware-myricom'
+                     , 'firmware-netxen'
+                     , 'firmware-qlogic'
+                     , 'firmware-realtek'
+                     , 'firmware-samsung'
+                     , 'firmware-siano'
+                     , 'firmware-ti-connectivity' ];
+
     'libreoffice':
       packagelist => [ 'libreoffice'
                      , 'libreoffice-*'
