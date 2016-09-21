@@ -509,19 +509,23 @@ class Host
   CONTROLLER_PORT     = 45046
   VTUN_ADDRESS        = 'wlangw'
   VTUN_PORT           = 45045
-  RECONF_INTERVAL     = 900
-  REPORT_INTERVAL     = 30
-  TX_POWER_MAX        = 27
-  RSSI_KICK_THRESHOLD = -99
-  RSSI_KICK_INTERVAL  = 300
+
+  CONF = {
+    :basic_rates         => [10, 20, 55, 110, 60, 120, 240],
+    :channels            => [],
+    :reconf_interval     => 900,
+    :report_interval     => 30,
+    :rssi_kick_interval  => 300,
+    :rssi_kick_threshold => -99,
+    :tx_power            => 27,
+    :tx_power_2g         => 27,
+    :tx_power_5g         => 27,
+  }
 
   def initialize(kwargs = {})
     @bridges       = {}
     @bss_index     = -1
-    @conf          = {
-      :reconf_interval => RECONF_INTERVAL,
-      :report_interval => REPORT_INTERVAL,
-    }
+    @conf          = {}.update(CONF)
     @controller    = Net::HTTP.new(kwargs.fetch(:controller_address,
                                                 CONTROLLER_ADDRESS),
                                    kwargs.fetch(:controller_port,
@@ -575,7 +579,9 @@ class Host
 
     response = @puavo_client.get("/v3/devices/#{PUAVO_ETC.hostname}")
 
-    conf = {}
+    # Prime with default values, because tags are used just for
+    # overriding defaults.
+    conf = {}.update(CONF)
 
     # NOTE: Multiple tags with same prefixes might be given (e.g. zero
     # or more wlanap_tx_power tags in organization, school and/or
@@ -633,7 +639,7 @@ class Host
   end
 
   def rssi_kick(status)
-    rssi_kick_threshold = @conf.fetch(:rssi_kick_threshold, RSSI_KICK_THRESHOLD)
+    rssi_kick_threshold = @conf[:rssi_kick_threshold]
     status[:radios].each do |radio|
       radio[:accesspoints].each do |accesspoint|
         iface = accesspoint[:interface]
@@ -643,7 +649,7 @@ class Host
             rssi           = station[:rssi]
             last_kick_time = @rssi_kick_timestamps[mac]
 
-            if last_kick_time.nil? || Time.now >= last_kick_time + @conf.fetch(:rssi_kick_interval, RSSI_KICK_INTERVAL)
+            if last_kick_time.nil? || Time.now >= last_kick_time + @conf[:rssi_kick_interval]
               if system('hostapd_cli',
                         '-i', iface, '-p', HOSTAPD_CTRL_INTERFACE_DIR,
                         'deauthenticate', mac, :out => :close)
@@ -742,8 +748,8 @@ class Host
 
         reads += @horsts.map { |h| h.outpipe_r }
 
-        timeouts << @conf.fetch(:reconf_interval, RECONF_INTERVAL) - (Time.now - @last_reconf_time)
-        timeouts << @conf.fetch(:report_interval, REPORT_INTERVAL) - (Time.now - @last_status_report_time)
+        timeouts << @conf[:reconf_interval] - (Time.now - @last_reconf_time)
+        timeouts << @conf[:report_interval] - (Time.now - @last_status_report_time)
 
         unless @ctrlconn.nil?
           timeouts << 5 - (Time.now - @ctrlconn_time)
@@ -753,11 +759,11 @@ class Host
 
         if ready.nil?
 
-          if Time.now - @last_reconf_time > @conf.fetch(:reconf_interval, RECONF_INTERVAL)
+          if Time.now - @last_reconf_time > @conf[:reconf_interval]
             reconf
           end
 
-          if Time.now - @last_status_report_time > @conf.fetch(:report_interval, REPORT_INTERVAL)
+          if Time.now - @last_status_report_time > @conf[:report_interval]
             begin
               status = get_status
             rescue StandardError => e
@@ -806,13 +812,13 @@ class Host
   def update_tx_powers
     @vifs.each do |vif|
       if Dot11::CHANNELS_2G.include?(vif.phy.channel)
-        tx_power    = @conf.fetch(:tx_power   , TX_POWER_MAX)
-        tx_power_2g = @conf.fetch(:tx_power_2g, TX_POWER_MAX)
+        tx_power    = @conf[:tx_power]
+        tx_power_2g = @conf[:tx_power_2g]
         vif.set_tx_power([tx_power, tx_power_2g].min)
       end
       if Dot11::CHANNELS_5G.include?(vif.phy.channel)
-        tx_power    = @conf.fetch(:tx_power   , TX_POWER_MAX)
-        tx_power_5g = @conf.fetch(:tx_power_5g, TX_POWER_MAX)
+        tx_power    = @conf[:tx_power]
+        tx_power_5g = @conf[:tx_power_5g]
         vif.set_tx_power([tx_power, tx_power_5g].min)
       end
     end
@@ -943,7 +949,7 @@ class Host
   def select_channel(vif)
     return vif.phy.channel unless vif.phy.channel.nil?
 
-    predefined_channels    = @conf.fetch(:channels, []) & vif.phy.supported_channels
+    predefined_channels    = @conf[:channels] & vif.phy.supported_channels
     scanned_channels       = vif.scan
 
     selectable_channels    = predefined_channels + (scanned_channels - predefined_channels)
@@ -988,8 +994,7 @@ class Host
       hostapd     = Services::Hostapd.new(:bridge      => bridge,
                                           :vif         => vif,
                                           :net         => net,
-                                          :basic_rates => @conf.fetch(:basic_rates,
-                                                                      [10, 20, 55, 110, 60, 120, 240]))
+                                          :basic_rates => @conf[:basic_rates])
       spawn_service(hostapd)
       @hostapds[vif.name] = hostapd
 
