@@ -1126,9 +1126,15 @@ class Host
         mac                  = station[:mac]
 
         station[:start_time] = Time.now - station[:connection_age]
-        station[:rx_rate]    = station[:rx_bytes] / station[:connection_age]
-        station[:tx_rate]    = station[:tx_bytes] / station[:connection_age]
         station[:rssi]       = @rssimap[mac]
+
+	if station[:connection_age] == 0
+          station[:rx_rate] = 0
+          station[:tx_rate] = 0
+        else
+          station[:rx_rate] = station[:rx_bytes] / station[:connection_age]
+          station[:tx_rate] = station[:tx_bytes] / station[:connection_age]
+        end
 
         stations << station
       end
