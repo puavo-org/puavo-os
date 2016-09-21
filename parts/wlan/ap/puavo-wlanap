@@ -558,6 +558,11 @@ class Host
   private
 
   def get_conf()
+    def store_max(hash, key, new_value)
+      old_value = hash.fetch(key, new_value)
+      hash[key] = new_value > old_value ? new_value : old_value
+    end
+
     def store_min(hash, key, new_value)
       old_value = hash.fetch(key, new_value)
       hash[key] = new_value < old_value ? new_value : old_value
@@ -594,6 +599,10 @@ class Host
         conf[:basic_rates] = []
       when /^wlanap_basic_rates:((\d+:)*(\d+))$/
         conf[:basic_rates] = $1.split(':').map { |rate| rate.to_i }
+      when /^wlanap_rssi_kick_threshold:(-\d+)$/
+        store_max(conf, :rssi_kick_threshold, $1.to_i)
+      when /^wlanap_rssi_kick_interval:(\d+)$/
+        store_max(conf, :rssi_kick_interval, $1.to_i)
       end
     end
 
@@ -624,21 +633,22 @@ class Host
   end
 
   def rssi_kick(status)
+    rssi_kick_threshold = @conf.fetch(:rssi_kick_threshold, RSSI_KICK_THRESHOLD)
     status[:radios].each do |radio|
       radio[:accesspoints].each do |accesspoint|
         iface = accesspoint[:interface]
         accesspoint[:stations].each do |station|
-          if station[:rssi] < RSSI_KICK_THRESHOLD
+          if station[:rssi] < rssi_kick_threshold
             mac            = station[:mac]
             rssi           = station[:rssi]
             last_kick_time = @rssi_kick_timestamps[mac]
 
-            if last_kick_time.nil? || Time.now >= last_kick_time + RSSI_KICK_INTERVAL
+            if last_kick_time.nil? || Time.now >= last_kick_time + @conf.fetch(:rssi_kick_interval, RSSI_KICK_INTERVAL)
               if system('hostapd_cli',
                         '-i', iface, '-p', HOSTAPD_CTRL_INTERFACE_DIR,
                         'deauthenticate', mac, :out => :close)
                 Log.info("deauthenticated STA #{mac} due to low " \
-                         "RSSI (#{rssi}dBm < #{RSSI_KICK_THRESHOLD}dBm)")
+                         "RSSI (#{rssi}dBm < #{rssi_kick_threshold}dBm)")
                 @rssi_kick_timestamps[mac] = Time.now
               else
                 Log.warning("failed to deauthenticate #{mac} from #{iface}")
