@@ -12,7 +12,30 @@ class packages::backports {
     }
   }
 
-  ::packages::backports::for_packages {
+  @::packages::backports::for_packages {
+    'cinnamon':
+      packagelist => [ 'cinnamon'
+                     , 'cinnamon-*'
+                     , 'cjs'
+                     , 'gir1.2-cinnamondesktop-3.0'
+                     , 'gir1.2-cmenu-3.0'
+                     , 'gir1.2-meta-muffin-0.0'
+                     , 'libcinnamon-*'
+                     , 'libcjs0'
+                     , 'libmuffin0'
+                     , 'libnemo-extension1'
+                     , 'muffin'
+                     , 'muffin-common'
+                     , 'nemo'
+                     , 'nemo-data' ];
+
+    'libreoffice':
+      packagelist => [ 'libreoffice'
+                     , 'libreoffice-*'
+                     , 'python3-uno'
+                     , 'uno-libs3'
+                     , 'ure' ];
+
     'linux-image':
       packagelist => [ 'linux-base', ];
   }
