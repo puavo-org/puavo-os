@@ -505,13 +505,15 @@ end
 
 class Host
 
-  CONTROLLER_ADDRESS = 'wlangw'
-  CONTROLLER_PORT    = 45046
-  VTUN_ADDRESS       = 'wlangw'
-  VTUN_PORT          = 45045
-  RECONF_INTERVAL    = 900
-  REPORT_INTERVAL    = 30
-  TX_POWER_MAX       = 27
+  CONTROLLER_ADDRESS  = 'wlangw'
+  CONTROLLER_PORT     = 45046
+  VTUN_ADDRESS        = 'wlangw'
+  VTUN_PORT           = 45045
+  RECONF_INTERVAL     = 900
+  REPORT_INTERVAL     = 30
+  TX_POWER_MAX        = 27
+  RSSI_KICK_THRESHOLD = -99
+  RSSI_KICK_INTERVAL  = 300
 
   def initialize(kwargs = {})
     @bridges       = {}
@@ -538,6 +540,7 @@ class Host
     @horsts                  = []
     @hostapds                = {}
     @rssimap                 = {}
+    @rssi_kick_timestamps    = {}
   end
 
   def run
@@ -618,6 +621,33 @@ class Host
     end
 
     nets
+  end
+
+  def rssi_kick(status)
+    status[:radios].each do |radio|
+      radio[:accesspoints].each do |accesspoint|
+        iface = accesspoint[:interface]
+        accesspoint[:stations].each do |station|
+          if station[:rssi] < RSSI_KICK_THRESHOLD
+            mac            = station[:mac]
+            rssi           = station[:rssi]
+            last_kick_time = @rssi_kick_timestamps[mac]
+
+            if last_kick_time.nil? || Time.now >= last_kick_time + RSSI_KICK_INTERVAL
+              if system('hostapd_cli',
+                        '-i', iface, '-p', HOSTAPD_CTRL_INTERFACE_DIR,
+                        'deauthenticate', mac, :out => :close)
+                Log.info("deauthenticated STA #{mac} due to low " \
+                         "RSSI (#{rssi}dBm < #{RSSI_KICK_THRESHOLD}dBm)")
+                @rssi_kick_timestamps[mac] = Time.now
+              else
+                Log.warning("failed to deauthenticate #{mac} from #{iface}")
+              end
+            end
+          end
+        end
+      end
+    end
   end
 
   def reconf
@@ -719,11 +749,25 @@ class Host
 
           if Time.now - @last_status_report_time > @conf.fetch(:report_interval, REPORT_INTERVAL)
             begin
-              controller_send_report('status', get_status)
+              status = get_status
             rescue StandardError => e
-              Log.exception('failed to report status', e)
+              Log.exception('failed to get current status', e)
             else
-              @last_status_report_time = Time.now
+
+              begin
+                controller_send_report('status', status)
+              rescue StandardError => e
+                Log.exception('failed to report status', e)
+              else
+                @last_status_report_time = Time.now
+              end
+
+              begin
+                rssi_kick(status)
+              rescue StandardError => e
+                Log.exception('RSSI kick failed', e)
+              end
+
             end
           end
 
@@ -1140,6 +1184,7 @@ class Host
       :tx_bytes           => tx_bytes,
       :tx_power_limit_dBm => vif.tx_power,
       :tx_rate            => tx_rate,
+      :interface          => vif.name,
     }
   end
 
