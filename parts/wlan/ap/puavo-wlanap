@@ -672,6 +672,14 @@ class Host
     new_conf = get_conf
     return unless new_conf != @conf
 
+    Log.info("configuration changed:")
+    new_conf.each do |key, new_value|
+      old_value = @conf[key]
+      if old_value != new_value
+        Log.info("  #{key}: #{old_value} => #{new_value}")
+      end
+    end
+
     @conf = new_conf
 
     update_tx_powers
