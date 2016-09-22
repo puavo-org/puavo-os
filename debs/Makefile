@@ -1,11 +1,20 @@
+_lsb_release	:= $(shell lsb_release -c | awk '{ print $$2 }')
+
+ifeq ($(_lsb_release),jessie)
+  _lsb_release_ports := onboard
+else
+  _lsb_release_ports :=
+endif
+
 _pkgs_parts     := puavo-os
+
 _pkgs_ports     := autopoweroff               \
                    fluentd                    \
                    libpam-envfeed             \
                    node-webkit                \
-                   onboard                    \
                    ubuntu-font-family-sources \
-                   visionmedia-mon
+                   visionmedia-mon            \
+                   $(_lsb_release_ports)
 _pkgs           := $(_pkgs_parts) $(_pkgs_ports)
 
 _dpkg_buildpackage_parts := $(_pkgs_parts:%=.dpkg-buildpackage-%)
