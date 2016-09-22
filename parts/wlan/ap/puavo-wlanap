@@ -958,24 +958,31 @@ class Host
   def select_channel(vif)
     return vif.phy.channel unless vif.phy.channel.nil?
 
-    predefined_channels    = @conf[:channels] & vif.phy.supported_channels
-    scanned_channels       = vif.scan
+    predefined_channels = @conf[:channels] & vif.phy.supported_channels
+    selected_channels   = @vifs.map { |v| v.phy.channel }
+    selectable_channels = predefined_channels - selected_channels
 
-    selectable_channels    = predefined_channels + (scanned_channels - predefined_channels)
-    selectable_channels_2g = selectable_channels & Dot11::CHANNELS_2G
-    selectable_channels_5g = selectable_channels & Dot11::CHANNELS_5G
+    # Enter automatic channel selection, because manually configured
+    # channel list is empty or exhausted.
+    if selectable_channels.empty?
+      scanned_channels       = vif.scan
+      selectable_channels    = scanned_channels - selected_channels
 
-    selected_channels      = Set.new(@vifs.map { |v| v.phy.channel })
-    selected_channels_2g   = selected_channels & Dot11::CHANNELS_2G
-    selected_channels_5g   = selected_channels & Dot11::CHANNELS_5G
+      selectable_channels_2g = selectable_channels & Dot11::CHANNELS_2G
+      selectable_channels_5g = selectable_channels & Dot11::CHANNELS_5G
 
-    if selected_channels_2g.empty? && !selectable_channels_2g.empty?
-      vif.phy.channel = selectable_channels_2g[0]
-    elsif selected_channels_5g.empty? && !selectable_channels_5g.empty?
-      vif.phy.channel = selectable_channels_5g[0]
-    else
-      vif.phy.channel = selectable_channels[0]
+      selected_channels_2g   = selected_channels & Dot11::CHANNELS_2G
+      selected_channels_5g   = selected_channels & Dot11::CHANNELS_5G
+
+      if selected_channels_2g.empty? && !selectable_channels_2g.empty?
+        selectable_channels = selectable_channels_2g
+      elsif selected_channels_5g.empty? && !selectable_channels_5g.empty?
+        selectable_channels = selectable_channels_5g
+      end
+
     end
+
+    vif.phy.channel = selectable_channels[0]
   end
 
   def add_phy(phy)
