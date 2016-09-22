@@ -1149,7 +1149,7 @@ class Host
         station[:start_time] = Time.now - station[:connection_age]
         station[:rssi]       = @rssimap[mac]
 
-	if station[:connection_age] == 0
+        if station[:connection_age] == 0
           station[:rx_rate] = 0
           station[:tx_rate] = 0
         else
