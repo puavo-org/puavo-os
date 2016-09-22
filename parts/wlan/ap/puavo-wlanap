@@ -540,6 +540,7 @@ class Host
     @puavo_client            = PuavoRestClient.new
     @services                = {}
     @vifs                    = []
+    @vif_rxtx_stats          = {}
     @vtun_address            = kwargs.fetch(:vtun_address, VTUN_ADDRESS)
     @vtun_port               = kwargs.fetch(:vtun_port, VTUN_PORT)
     @horsts                  = []
@@ -1200,12 +1201,24 @@ class Host
       fail "failed to query hostapd status of #{vif.name}"
     end
 
+    time = Time.now
     File.read('/proc/net/dev') =~ /^\s*#{vif.name}:(.*)$/
-    seconds  = Time.now - File.mtime("/sys/class/net/#{vif.name}")
     rx_bytes = $1.split[0].to_i
     tx_bytes = $1.split[8].to_i
-    rx_rate  = rx_bytes / seconds
-    tx_rate  = tx_bytes / seconds
+
+    stats = [rx_bytes, tx_bytes, time]
+    last_stats = @vif_rxtx_stats.fetch(vif.name, stats)
+    last_rx_bytes, last_tx_bytes, last_time = last_stats
+    @vif_rxtx_stats[vif.name] = stats
+
+    seconds_since_last_time = time - last_time
+    if seconds_since_last_time == 0
+      rx_rate = 0
+      tx_rate = 0
+    else
+      rx_rate = (rx_bytes - last_rx_bytes) / seconds_since_last_time
+      tx_rate = (tx_bytes - last_tx_bytes) / seconds_since_last_time
+    end
 
     start_time = File.mtime("#{HOSTAPD_CTRL_INTERFACE_DIR}/#{vif.name}")
 
@@ -1216,11 +1229,13 @@ class Host
       :channel            => channel,
       :rx_bytes           => rx_bytes,
       :rx_rate            => rx_rate,
+      :rx_rate_interval   => seconds_since_last_time,
       :ssid               => ssid,
       :stations           => get_stations(vif.name),
       :tx_bytes           => tx_bytes,
       :tx_power_limit_dBm => vif.tx_power,
       :tx_rate            => tx_rate,
+      :tx_rate_interval   => seconds_since_last_time,
       :interface          => vif.name,
     }
   end
