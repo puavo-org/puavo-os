@@ -6,18 +6,18 @@ class ssh_server {
 
     file {
       "/etc/ssh/${key_name}":
-        mode    => 600,
+        mode    => '0600',
         require => Package['openssh-server'],
         source  => "puppet:///modules/ssh_server/${key_name}";
 
       "/etc/ssh/${key_name}.pub":
-        mode    => 644,
+        mode    => '0644',
         require => Package['openssh-server'],
         source  => "puppet:///modules/ssh_server/${key_name}.pub";
     }
   }
 
-  key {
+  ::ssh_server::key {
     [ 'ssh_host_dsa_key', 'ssh_host_ecdsa_key', 'ssh_host_rsa_key', ]:
       ;
   }
