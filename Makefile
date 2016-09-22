@@ -56,8 +56,6 @@ install-build-deps: /$(_repo_name)
 		--modulepath 'rules'				\
 		rules/site.pp
 
-	$(MAKE) -C debs install-build-deps-toolchain
-	$(MAKE) -C debs toolchain
 	$(MAKE) -C debs install-build-deps
 
 .PHONY: help
