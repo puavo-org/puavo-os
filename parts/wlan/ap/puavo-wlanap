@@ -1257,6 +1257,7 @@ class Host
       :loadavg1           => l1,
       :loadavg5           => l5,
       :loadavg15          => l15,
+      :conf               => @conf.clone,
     }
   end
 
