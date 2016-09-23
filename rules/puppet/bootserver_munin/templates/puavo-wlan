@@ -32,7 +32,7 @@ import json
 import numpy
 import redis
 
-_RSSI_PERCENTILES = [10, 50, 90]
+_RSSI_PERCENTILES = [90, 50, 10]
 
 def _get_configured_hostnames():
     configured_hostnames = set()
