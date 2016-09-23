@@ -32,7 +32,7 @@ import json
 import numpy
 import redis
 
-_RSSI_PERCENTILES = [90, 50, 10]
+_PERCENTILES = [90, 50, 10]
 
 def _get_configured_hostnames():
     configured_hostnames = set()
@@ -172,11 +172,15 @@ def _print_load_values(loadavg5, hostname=''):
     _print_multigraph("puavo_wlan_host_load", hostname)
     print("loadavg5.value {}".format(loadavg5))
 
-def _print_load_summary_values(avg_loadavg5, max_loadavg5, min_loadavg5):
+def _print_load_summary_values(all_loadavg5):
     _print_multigraph("puavo_wlan_host_load")
-    print("avg_loadavg5.value {}".format(avg_loadavg5))
-    print("max_loadavg5.value {}".format(max_loadavg5))
-    print("min_loadavg5.value {}".format(min_loadavg5))
+
+    for q in _PERCENTILES:
+        if len(all_loadavg5) > 0:
+            pct = numpy.percentile(all_loadavg5, q)
+        else:
+            pct = "U"
+        print("loadavg5_{}th_pct.value {}".format(q, pct))
 
 def _print_load_graph_config(hostname=''):
     if hostname:
@@ -198,20 +202,11 @@ def _print_load_field_config(hostname=''):
         print("loadavg5.draw LINE1")
         print("loadavg5.info 5 minute load average")
     else:
-        print("avg_loadavg5.label avg load")
-        print("avg_loadavg5.min 0")
-        print("avg_loadavg5.draw LINE1")
-        print("avg_loadavg5.info Average 5 minute load average")
-
-        print("max_loadavg5.label max load")
-        print("max_loadavg5.min 0")
-        print("max_loadavg5.draw LINE1")
-        print("max_loadavg5.info Maximum 5 minute load average")
-
-        print("min_loadavg5.label min load")
-        print("min_loadavg5.min 0")
-        print("min_loadavg5.draw LINE1")
-        print("min_loadavg5.info Minimum 5 minute load average")
+        for pct in _PERCENTILES:
+            print("loadavg5_{}th_pct.min 0".format(pct))
+            print("loadavg5_{}th_pct.label {}th pct".format(pct, pct))
+            print("loadavg5_{}th_pct.draw LINE1".format(pct))
+            print("loadavg5_{}th_pct.info {}th percentile of 5 minute load averages".format(pct, pct))
 
 def _print_load_config(hostname=''):
     _print_multigraph("puavo_wlan_host_load", hostname)
@@ -221,7 +216,7 @@ def _print_load_config(hostname=''):
 def _print_rssi_values(rssis, hostname=''):
     _print_multigraph("puavo_wlan_host_rssi", hostname)
 
-    for q in _RSSI_PERCENTILES:
+    for q in _PERCENTILES:
         if len(rssis) > 0:
             pct = numpy.percentile(rssis, q)
         else:
@@ -242,7 +237,7 @@ def _print_rssi_graph_config(hostname=''):
     print("graph_info RSSI describes the signal strength of received 802.11 frames.")
 
 def _print_rssi_field_config(hostname=''):
-    for pct in _RSSI_PERCENTILES:
+    for pct in _PERCENTILES:
         print("rssi_{}th_pct.label {}th pct".format(pct, pct))
         print("rssi_{}th_pct.draw LINE1".format(pct))
         print("rssi_{}th_pct.info {}th percentile of RSSIs".format(pct, pct))
@@ -316,10 +311,7 @@ def _main():
 
         _print_traffic_values(total_rx_bytes * 8, total_tx_bytes * 8)
         _print_elements_values(total_ap_count, total_radio_count, total_sta_count, total_host_count)
-        if len(all_loadavg5) == 0:
-            _print_load_summary_values("U", "U", "U")
-        else:
-            _print_load_summary_values(sum(all_loadavg5) / len(all_loadavg5), max(all_loadavg5), min(all_loadavg5))
+        _print_load_summary_values(all_loadavg5)
         _print_rssi_values(all_rssis)
 
         return 0
