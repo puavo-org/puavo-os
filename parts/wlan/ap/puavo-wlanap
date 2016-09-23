@@ -547,6 +547,7 @@ class Host
     @hostapds                = {}
     @rssimap                 = {}
     @rssi_kick_timestamps    = {}
+    @station_rxtx_stats      = {}
   end
 
   def run
@@ -1146,16 +1147,42 @@ class Host
       # entries.
       if Set.new(station.keys) == Set.new([:mac, :connection_age, :rx_bytes, :tx_bytes])
         mac                  = station[:mac]
+        rx_bytes             = station[:rx_bytes]
+        tx_bytes             = station[:tx_bytes]
+        connection_age       = station[:connection_age]
 
-        station[:start_time] = Time.now - station[:connection_age]
+        station[:start_time] = Time.now - connection_age
         station[:rssi]       = @rssimap[mac]
 
-        if station[:connection_age] == 0
-          station[:rx_rate] = 0
-          station[:tx_rate] = 0
+        stats                    = [rx_bytes, tx_bytes, connection_age]
+        last_stats               = @station_rxtx_stats.fetch(mac, stats)
+        @station_rxtx_stats[mac] = stats
+
+        last_rx_bytes, last_tx_bytes, last_connection_age = last_stats
+
+        seconds_since_last_stats = connection_age - last_connection_age
+        if seconds_since_last_stats > 0
+          interval                   = seconds_since_last_stats
+          station[:rx_rate]          = (rx_bytes - last_rx_bytes) / interval
+          station[:tx_rate]          = (tx_bytes - last_tx_bytes) / interval
+          station[:rx_rate_interval] = interval
+          station[:tx_rate_interval] = interval
+        elsif seconds_since_last_stats < 0 && 0 < connection_age
+          # Because the connection age of the current connection is
+          # less than the connection age we checked last time, the
+          # station must have reassociated between our measurements
+          # and hence connection stats have been reset.
+          station[:rx_rate]          = rx_bytes / connection_age
+          station[:tx_rate]          = tx_bytes / connection_age
+          station[:rx_rate_interval] = connection_age
+          station[:tx_rate_interval] = connection_age
         else
-          station[:rx_rate] = station[:rx_bytes] / station[:connection_age]
-          station[:tx_rate] = station[:tx_bytes] / station[:connection_age]
+          # Either the connection age is zero, or zero seconds has
+          # passed since last stats check, it does not really matter.
+          station[:rx_rate]          = 0
+          station[:tx_rate]          = 0
+          station[:rx_rate_interval] = 0
+          station[:tx_rate_interval] = 0
         end
 
         stations << station
