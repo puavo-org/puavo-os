@@ -247,6 +247,40 @@ def _print_rssi_config(hostname=''):
     _print_rssi_graph_config(hostname)
     _print_rssi_field_config(hostname)
 
+def _print_connage_values(connages, hostname=''):
+    _print_multigraph("puavo_wlan_host_connage", hostname)
+
+    for q in _PERCENTILES:
+        if len(connages) > 0:
+            pct = numpy.percentile(connages, q)
+        else:
+            pct = "U"
+        print("connage_{}th_pct.value {}".format(q, pct))
+
+def _print_connage_graph_config(hostname=''):
+    if hostname:
+        hostname = " associated to {}".format(hostname)
+    else:
+        hostname = ""
+
+    print("graph_title Connection age of Puavo WLAN stations{}".format(hostname))
+    print("graph_args --base 1000 -l 0")
+    print("graph_vlabel Connection age [seconds]")
+    print("graph_scale no")
+    print("graph_category network")
+    print("graph_info Connection age describes how long station has been associated to an accesspoint.")
+
+def _print_connage_field_config(hostname=''):
+    for pct in _PERCENTILES:
+        print("connage_{}th_pct.label {}th pct".format(pct, pct))
+        print("connage_{}th_pct.draw LINE1".format(pct))
+        print("connage_{}th_pct.info {}th percentile of connection ages".format(pct, pct))
+
+def _print_connage_config(hostname=''):
+    _print_multigraph("puavo_wlan_host_connage", hostname)
+    _print_connage_graph_config(hostname)
+    _print_connage_field_config(hostname)
+
 def _main():
     if len(sys.argv) == 1:
         available_hosts     = _get_available_hosts()
@@ -260,6 +294,7 @@ def _main():
 
         all_loadavg5      = []
         all_rssis         = []
+        all_connages      = []
 
         for hostname in _get_configured_hostnames():
             try:
@@ -269,6 +304,7 @@ def _main():
                 _print_elements_values("U", "U", "U", 0, hostname)
                 _print_load_values("U", hostname)
                 _print_rssi_values([], hostname)
+                _print_connage_values([], hostname)
                 continue
 
             host_ap_count    = 0
@@ -278,6 +314,7 @@ def _main():
             host_tx_bytes    = 0
             host_loadavg5    = host["loadavg5"]
             host_rssis       = []
+            host_connages    = []
 
             for radio in host["radios"]:
                 host_radio_count += 1
@@ -293,7 +330,7 @@ def _main():
                             host_rssis.append(station["rssi"])
                         except KeyError:
                             pass
-
+                        host_connages.append(station["connection_age"])
 
             total_ap_count    += host_ap_count
             total_radio_count += host_radio_count
@@ -303,16 +340,19 @@ def _main():
 
             all_loadavg5.append(host_loadavg5)
             all_rssis.extend(host_rssis)
+            all_connages.extend(host_connages)
 
             _print_traffic_values(host_rx_bytes * 8, host_tx_bytes * 8, hostname)
             _print_elements_values(host_ap_count, host_radio_count, host_sta_count, 1, hostname)
             _print_load_values(host_loadavg5, hostname)
             _print_rssi_values(host_rssis, hostname)
+            _print_connage_values(host_connages, hostname)
 
         _print_traffic_values(total_rx_bytes * 8, total_tx_bytes * 8)
         _print_elements_values(total_ap_count, total_radio_count, total_sta_count, total_host_count)
         _print_load_summary_values(all_loadavg5)
         _print_rssi_values(all_rssis)
+        _print_connage_values(all_connages)
 
         return 0
 
@@ -329,12 +369,14 @@ def _main():
             _print_traffic_config()
             _print_load_config()
             _print_rssi_config()
+            _print_connage_config()
 
             for hostname in sorted(configured_hostnames):
                 _print_elements_config(hostname)
                 _print_traffic_config(hostname)
                 _print_load_config(hostname)
                 _print_rssi_config(hostname)
+                _print_connage_config(hostname)
 
             return 0
 
