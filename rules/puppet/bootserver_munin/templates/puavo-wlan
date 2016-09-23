@@ -111,24 +111,24 @@ def _print_elements_graph_config(hostname=''):
 def _print_elements_field_config(hostname=''):
     print("accesspoints.label accesspoints")
     print("accesspoints.min 0")
-    print("accesspoints.draw LINE2")
+    print("accesspoints.draw LINE1")
     print("accesspoints.info The number of accesspoints.")
 
     if not hostname:
         print("hosts.label hosts")
         print("hosts.min 0")
-        print("hosts.draw LINE2")
+        print("hosts.draw LINE1")
         print("hosts.colour 000000")
         print("hosts.info The number of accesspoint hosts.")
 
     print("radios.label radios")
     print("radios.min 0")
-    print("radios.draw LINE2")
+    print("radios.draw LINE1")
     print("radios.info The number of radios.")
 
     print("stations.label stations")
     print("stations.min 0")
-    print("stations.draw LINE2")
+    print("stations.draw LINE1")
     print("stations.info The number of stations.")
 
 def _print_elements_config(hostname=''):
@@ -195,22 +195,22 @@ def _print_load_field_config(hostname=''):
     if hostname:
         print("loadavg5.label load")
         print("loadavg5.min 0")
-        print("loadavg5.draw LINE2")
+        print("loadavg5.draw LINE1")
         print("loadavg5.info 5 minute load average")
     else:
         print("avg_loadavg5.label avg load")
         print("avg_loadavg5.min 0")
-        print("avg_loadavg5.draw LINE2")
+        print("avg_loadavg5.draw LINE1")
         print("avg_loadavg5.info Average 5 minute load average")
 
         print("max_loadavg5.label max load")
         print("max_loadavg5.min 0")
-        print("max_loadavg5.draw LINE2")
+        print("max_loadavg5.draw LINE1")
         print("max_loadavg5.info Maximum 5 minute load average")
 
         print("min_loadavg5.label min load")
         print("min_loadavg5.min 0")
-        print("min_loadavg5.draw LINE2")
+        print("min_loadavg5.draw LINE1")
         print("min_loadavg5.info Minimum 5 minute load average")
 
 def _print_load_config(hostname=''):
@@ -244,7 +244,7 @@ def _print_rssi_graph_config(hostname=''):
 def _print_rssi_field_config(hostname=''):
     for pct in _RSSI_PERCENTILES:
         print("rssi_{}th_pct.label {}th pct".format(pct, pct))
-        print("rssi_{}th_pct.draw LINE2".format(pct))
+        print("rssi_{}th_pct.draw LINE1".format(pct))
         print("rssi_{}th_pct.info {}th percentile of RSSIs".format(pct, pct))
 
 def _print_rssi_config(hostname=''):
