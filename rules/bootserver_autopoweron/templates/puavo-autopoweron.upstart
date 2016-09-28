@@ -1,0 +1,7 @@
+description "Wake-on-LAN tagged Puavo devices"
+
+task
+
+script
+    sudo -u nobody /usr/local/lib/puavo-autopoweron | /usr/bin/ts
+end script
