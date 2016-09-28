@@ -16,4 +16,8 @@ class puavo_pkg::packages {
 			, 'vstloggerpro' ]
 
   @puavo_pkg::install { $available_packages: ; }
+
+  # Downloading cmaptools might take a longer time.
+  # Some cache for these might be nice... ?
+  Puavo_Pkg::Install <| title == 'cmaptools' |> { timeout => 1800, }
 }
