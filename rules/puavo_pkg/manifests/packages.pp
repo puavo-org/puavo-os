@@ -19,5 +19,5 @@ class puavo_pkg::packages {
 
   # Downloading cmaptools might take a longer time.
   # Some cache for these might be nice... ?
-  Puavo_Pkg::Install <| title == 'cmaptools' |> { timeout => 1800, }
+  Puavo_Pkg::Install <| title == 'cmaptools' |> { timeout => 3600, }
 }
