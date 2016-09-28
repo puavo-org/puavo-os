@@ -12,17 +12,7 @@ INSTALL_DATA = $(INSTALL) -m 644
 
 export PATH := node_modules/.bin:$(PATH)
 
-# node-webkit version
-NW_VERSION=0.8.2
-# https://github.com/rogerwang/nw-gyp
-NW_GYP=$(CURDIR)/node_modules/.bin/nw-gyp
-define nw-build
-	@echo "Building node.js module '$1' for node-webkit"
-	cd node_modules/$1/ && $(NW_GYP) configure --target=$(NW_VERSION) && $(NW_GYP) build --arch=ia32
-endef
-
-
-build: npm-install nw-gyp assets
+build: npm-install assets
 	git rev-parse HEAD > GIT_COMMIT
 
 # Build node-webkit package
@@ -33,20 +23,8 @@ nw: build
 clean-nw:
 	rm -r ../webmenu-*.nw
 
-nw-gyp:
-	$(call nw-build,fluent-logger/node_modules/msgpack)
-	$(call nw-build,ffi/node_modules/ref)
-	$(call nw-build,ffi)
-	$(call nw-build,posix)
-	$(call nw-build,execSync)
-
 npm-install:
 	npm install
-	# WTF! execSync is as a dependency in package.json but it does not get
-	# installed with plain "npm install". Workaround it by installing it manually.
-	# XXX: remove this asap
-	npm install execSync
-	make nw-gyp
 
 assets: i18n browserify browserify-test stylus node-coffee
 
