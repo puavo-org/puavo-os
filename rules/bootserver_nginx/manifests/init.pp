@@ -10,11 +10,27 @@ class bootserver_nginx {
     }
   }
 
+  bootserver_nginx::enable {
+    'default':
+      ;
+  }
+
   exec {
     'reload nginx':
       command     => '/usr/sbin/service nginx reload',
       refreshonly => true,
       require     => Service['nginx'];
+  }
+
+  file {
+    '/etc/nginx/sites-available/default':
+      content => template('bootserver_nginx/default_site'),
+      mode    => 0644,
+      notify  => Exec['reload nginx'];
+
+    '/usr/share/nginx/www/index.html':
+      content => template('bootserver_nginx/index.html'),
+      mode    => 0644;
   }
 
   service {

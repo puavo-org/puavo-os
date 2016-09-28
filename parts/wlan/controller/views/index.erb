@@ -10,9 +10,9 @@
   <body onload="checkAutoReload();">
     <h1>Status</h1>
     <input id="autoreload_checkbox" type="checkbox" onclick="toggleAutoReload();">
-    <label for="autoreload_checkbox">Reload automatically</label>
+    <label for="autoreload_checkbox">Reload this page automatically every 5 seconds</label>
     <% unless hosts.empty? %>
-    <h2>Hosts</h2>
+    <h2>Hosts (<%= hosts.length %>)</h2>
     <table class="sortable">
       <thead>
         <tr>
@@ -20,9 +20,7 @@
           <th>Version</th>
           <th>System uptime</th>
           <th>Service uptime</th>
-          <th>Load 1min</th>
           <th>Load 5min</th>
-          <th>Load 15min</th>
           <th>PHYs</th>
           <th>APs</th>
           <th>STAs</th>
@@ -37,39 +35,37 @@
           <td><%= host[:version] %></td>
           <td sorttable_customkey="<%= host[:system_uptime] %>"><%= prettify_seconds(host[:system_uptime]) %></td>
           <td sorttable_customkey="<%= host[:service_uptime] %>"><%= prettify_seconds(host[:service_uptime]) %></td>
-          <td><%= host[:loadavg1] %></td>
           <td><%= host[:loadavg5] %></td>
-          <td><%= host[:loadavg15] %></td>
           <td><%= host[:phy_count] %></td>
           <td><%= host[:ap_count] %></td>
           <td><%= host[:sta_count] %></td>
-          <td sorttable_customkey="<%= host[:rx_rate] %>"><%= prettify_bytes(host[:rx_rate]) %>/s</td>
-          <td sorttable_customkey="<%= host[:tx_rate] %>"><%= prettify_bytes(host[:tx_rate]) %>/s</td>
+          <td sorttable_customkey="<%= host[:rx_rate] %>"><%= prettify_byterate(host[:rx_rate]) %></td>
+          <td sorttable_customkey="<%= host[:tx_rate] %>"><%= prettify_byterate(host[:tx_rate]) %></td>
         </tr>
         <% end %>
       </tbody>
       <tfoot>
         <tr>
-          <th colspan="7">Totals</th>
+          <th colspan="5">Totals</th>
           <td><%= radios.length %></td>
           <td><%= accesspoints.length %></td>
           <td><%= stations.length %></td>
-          <td><%= prettify_bytes(total_ap_rx_rate) %>/s</td>
-          <td><%= prettify_bytes(total_ap_tx_rate) %>/s</td>
+          <td><%= prettify_byterate(total_ap_rx_rate) %></td>
+          <td><%= prettify_byterate(total_ap_tx_rate) %></td>
         </tr>
       </tfoot>
     </table>
     <% end %>
 
     <% unless radios.empty? %>
-    <h2>Radios</h2>
+    <h2>Radios (<%= radios.length %>)</h2>
     <table class="sortable">
       <thead>
         <tr>
           <th>Host</th>
           <th>MAC</th>
           <th>Driver</th>
-          <th>Product</th>
+          <th>Vendor</th>
           <th>Channel</th>
           <th>Tx power</th>
           <th>APs</th>
@@ -84,13 +80,13 @@
           <td><%= radio[:hostname] %></td>
           <td><%= radio[:mac] %></td>
           <td><%= radio[:driver] %></td>
-          <td><%= radio[:product] %></td>
+          <td><%= radio[:vendor] %></td>
           <td><%= radio[:channel] %></td>
           <td sorttable_customkey="<%= radio[:tx_power] %>"><%= radio[:tx_power] %> dBm</td>
           <td><%= radio[:ap_count] %></td>
           <td><%= radio[:sta_count] %></td>
-          <td sorttable_customkey="<%= radio[:rx_rate] %>"><%= prettify_bytes(radio[:rx_rate]) %>/s</td>
-          <td sorttable_customkey="<%= radio[:tx_rate] %>"><%= prettify_bytes(radio[:tx_rate]) %>/s</td>
+          <td sorttable_customkey="<%= radio[:rx_rate] %>"><%= prettify_byterate(radio[:rx_rate]) %></td>
+          <td sorttable_customkey="<%= radio[:tx_rate] %>"><%= prettify_byterate(radio[:tx_rate]) %></td>
         </tr>
         <% end %>
       </tbody>
@@ -99,15 +95,15 @@
           <th colspan="6">Totals</th>
           <td><%= accesspoints.length %></td>
           <td><%= stations.length %></td>
-          <td><%= prettify_bytes(total_ap_rx_rate) %>/s</td>
-          <td><%= prettify_bytes(total_ap_tx_rate) %>/s</td>
+          <td><%= prettify_byterate(total_ap_rx_rate) %></td>
+          <td><%= prettify_byterate(total_ap_tx_rate) %></td>
         </tr>
       </tfoot>
     </table>
     <% end %>
 
     <% unless accesspoints.empty? %>
-    <h2>Access points</h2>
+    <h2>Access points (<%= accesspoints.length %>)</h2>
     <table class="sortable">
       <thead>
         <tr>
@@ -130,8 +126,8 @@
           <td><%= accesspoint[:ssid] %></td>
           <td sorttable_customkey="<%= accesspoint[:uptime] %>"><%= prettify_seconds(accesspoint[:uptime]) %></td>
           <td><%= accesspoint[:sta_count] %></td>
-          <td sorttable_customkey="<%= accesspoint[:rx_rate] %>"><%= prettify_bytes(accesspoint[:rx_rate]) %>/s</td>
-          <td sorttable_customkey="<%= accesspoint[:tx_rate] %>"><%= prettify_bytes(accesspoint[:tx_rate]) %>/s</td>
+          <td sorttable_customkey="<%= accesspoint[:rx_rate] %>"><%= prettify_byterate(accesspoint[:rx_rate]) %></td>
+          <td sorttable_customkey="<%= accesspoint[:tx_rate] %>"><%= prettify_byterate(accesspoint[:tx_rate]) %></td>
         </tr>
         <% end %>
       </tbody>
@@ -139,22 +135,23 @@
         <tr>
           <th colspan="5">Totals</th>
           <td><%= stations.length %></td>
-          <td><%= prettify_bytes(total_ap_rx_rate) %>/s</td>
-          <td><%= prettify_bytes(total_ap_tx_rate) %>/s</td>
+          <td><%= prettify_byterate(total_ap_rx_rate) %></td>
+          <td><%= prettify_byterate(total_ap_tx_rate) %></td>
         </tr>
       </tfoot>
     </table>
     <% end %>
 
     <% unless stations.empty? %>
-    <h2>Stations</h2>
+    <h2>Stations (<%= stations.length %>)</h2>
     <table class="sortable">
       <thead>
         <tr>
-          <th>Hostname</th>
           <th>MAC</th>
-          <th>IPv4 address</th>
+          <th>Vendor</th>
+          <th>AP host</th>
           <th>BSSID</th>
+          <th>RSSI</th>
           <th>Uptime</th>
           <th>Rx rate</th>
           <th>Tx rate</th>
@@ -163,23 +160,24 @@
       <tbody>
         <% stations.each do |station| %>
         <tr>
-          <td><%= station[:hostname] %></td>
-          <td><%= station[:mac] %></td>
-          <td><%= station[:ipaddr] %></td>
+          <td><%= station[:hostname] or station[:mac] %></td>
+          <td><%= station[:vendor] %></td>
+          <td><%= station[:ap_host] %></td>
           <td><%= station[:bssid] %></td>
+          <td><%= station[:rssi] %></td>
           <td sorttable_customkey="<%= station[:uptime] %>"><%= prettify_seconds(station[:uptime]) %></td>
           <!-- Tx and Rx switched, because station's Rx is Access point's Tx. -->
-          <td sorttable_customkey="<%= station[:tx_rate] %>"><%= prettify_bytes(station[:tx_rate]) %>/s</td>
-          <td sorttable_customkey="<%= station[:rx_rate] %>"><%= prettify_bytes(station[:rx_rate]) %>/s</td>
+          <td sorttable_customkey="<%= station[:tx_rate] %>"><%= prettify_byterate(station[:tx_rate]) %></td>
+          <td sorttable_customkey="<%= station[:rx_rate] %>"><%= prettify_byterate(station[:rx_rate]) %></td>
         </tr>
         <% end %>
       </tbody>
       <tfoot>
         <tr>
-          <th colspan="5">Totals</th>
+          <th colspan="6">Totals</th>
           <!-- Tx and Rx switched, because station's Rx is Access point's Tx. -->
-          <td><%= prettify_bytes(total_sta_tx_rate) %>/s</td>
-          <td><%= prettify_bytes(total_sta_rx_rate) %>/s</td>
+          <td><%= prettify_byterate(total_sta_tx_rate) %></td>
+          <td><%= prettify_byterate(total_sta_rx_rate) %></td>
         </tr>
       </tfoot>
     </table>

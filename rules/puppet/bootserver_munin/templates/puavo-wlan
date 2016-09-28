@@ -1,0 +1,386 @@
+#!/usr/bin/env python
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301 USA.
+
+# Multigraph plugin for showing Puavo WLAN statistics.
+
+#%# family=auto contrib
+#%# capabilities=autoconf
+
+from __future__ import print_function
+
+# Standard library modules
+import errno
+import os
+import sys
+
+# Third-party modules
+import json
+import numpy
+import redis
+
+_PERCENTILES = [90, 50, 10]
+
+def _get_configured_hostnames():
+    configured_hostnames = set()
+
+    try:
+        with open(os.environ['MUNIN_STATEFILE']) as state_file:
+            for line in state_file:
+                configured_hostnames.add(line.strip())
+    except IOError, e:
+        if e.errno != errno.ENOENT:
+            raise
+
+    return configured_hostnames
+
+def _refresh_configured_hostnames(new_hostnames):
+    old_configured_hostnames = _get_configured_hostnames()
+    new_configured_hostnames = old_configured_hostnames | set(new_hostnames)
+
+    if old_configured_hostnames != new_configured_hostnames:
+        with open(os.environ['MUNIN_STATEFILE'], "w") as state_file:
+            for hostname in new_configured_hostnames:
+                state_file.write("%s\n" % hostname)
+
+    return new_configured_hostnames
+
+def _get_available_hosts():
+    r    = redis.Redis()
+    keys = r.keys("puavo-wlancontroller:status:*")
+
+    result = {}
+
+    for key in keys:
+        host             = json.loads(r.get(key))
+
+        # Consider host unavailable if it does not have any radios.
+        if len(host["radios"]) == 0:
+            continue
+
+        hostname         = host["hostname"]
+        result[hostname] = host
+
+    return result
+
+def _print_multigraph(prefix, hostname=''):
+    if hostname:
+        # Munin uses dash ('-') for separating components in its
+        # .rrd files, so we need to replace all dashes to not
+        # break anything.
+        multigraph_key = hostname.replace("-", "_")
+        hostname = '.{}'.format(multigraph_key)
+
+    print("multigraph {}{}".format(prefix, hostname))
+
+def _print_elements_values(accesspoints, radios, stations, hosts, hostname=''):
+    _print_multigraph("puavo_wlan_elements", hostname)
+    print("accesspoints.value {}".format(accesspoints))
+    if not hostname:
+        print("hosts.value {}".format(hosts))
+    print("radios.value {}".format(radios))
+    print("stations.value {}".format(stations))
+
+def _print_elements_graph_config(hostname=''):
+    if hostname:
+        hostname = " on host {}".format(hostname)
+
+    print("graph_title Puavo WLAN elements{}".format(hostname))
+    if not hostname:
+        print("graph_order stations accesspoints radios hosts")
+    else:
+        print("graph_order stations accesspoints radios")
+    print("graph_args --base 1000 -l 0")
+    print("graph_vlabel Count")
+    print("graph_category puavo-wlan")
+    print("graph_info This graph shows the number of Puavo WLAN elements{}.".format(hostname))
+
+def _print_elements_field_config(hostname=''):
+    print("accesspoints.label accesspoints")
+    print("accesspoints.min 0")
+    print("accesspoints.draw LINE1")
+    print("accesspoints.info The number of accesspoints.")
+
+    if not hostname:
+        print("hosts.label hosts")
+        print("hosts.min 0")
+        print("hosts.draw LINE1")
+        print("hosts.colour 000000")
+        print("hosts.info The number of accesspoint hosts.")
+
+    print("radios.label radios")
+    print("radios.min 0")
+    print("radios.draw LINE1")
+    print("radios.info The number of radios.")
+
+    print("stations.label stations")
+    print("stations.min 0")
+    print("stations.draw LINE1")
+    print("stations.info The number of stations.")
+
+def _print_elements_config(hostname=''):
+    _print_multigraph("puavo_wlan_elements", hostname)
+    _print_elements_graph_config(hostname)
+    _print_elements_field_config(hostname)
+
+def _print_traffic_values(rx, tx, hostname=''):
+    _print_multigraph("puavo_wlan_traffic2", hostname)
+    print("rx.value {}".format(rx))
+    print("tx.value {}".format(tx))
+
+def _print_traffic_graph_config(hostname=''):
+    if hostname:
+        hostname = " on host {}".format(hostname)
+
+    print("graph_title Puavo WLAN traffic{}".format(hostname))
+    print("graph_order rx tx")
+    print("graph_args --base 1000")
+    print("graph_vlabel bits in (-) / out (+) per ${graph_period}")
+    print("graph_category puavo-wlan")
+    print("graph_info This graph shows the Puavo WLAN traffic{}.".format(hostname))
+
+def _print_traffic_field_config():
+    print("tx.info Bits sent/received")
+    print("rx.label rx")
+    print("rx.type DERIVE")
+    print("rx.graph no")
+    print("rx.min 0")
+    print("tx.label bps")
+    print("tx.type DERIVE")
+    print("tx.negative rx")
+    print("tx.min 0")
+
+def _print_traffic_config(hostname=''):
+    _print_multigraph("puavo_wlan_traffic2", hostname)
+    _print_traffic_graph_config(hostname)
+    _print_traffic_field_config()
+
+def _print_load_values(loadavg5, hostname=''):
+    _print_multigraph("puavo_wlan_host_load", hostname)
+    print("loadavg5.value {}".format(loadavg5))
+
+def _print_load_summary_values(all_loadavg5):
+    _print_multigraph("puavo_wlan_host_load")
+
+    for q in _PERCENTILES:
+        if len(all_loadavg5) > 0:
+            pct = numpy.percentile(all_loadavg5, q)
+        else:
+            pct = "U"
+        print("loadavg5_{}th_pct.value {}".format(q, pct))
+
+def _print_load_graph_config(hostname=''):
+    if hostname:
+        hostname = " {}".format(hostname)
+    else:
+        hostname = "s"
+
+    print("graph_title Load average of Puavo WLAN accesspoint host{}".format(hostname))
+    print("graph_args --base 1000 -l 0")
+    print("graph_vlabel Load")
+    print("graph_scale no")
+    print("graph_category puavo-wlan")
+    print("graph_info Load describes how many processes are in the run-queue (running or waiting to run).")
+
+def _print_load_field_config(hostname=''):
+    if hostname:
+        print("loadavg5.label load")
+        print("loadavg5.min 0")
+        print("loadavg5.draw LINE1")
+        print("loadavg5.info 5 minute load average")
+    else:
+        for pct in _PERCENTILES:
+            print("loadavg5_{}th_pct.min 0".format(pct))
+            print("loadavg5_{}th_pct.label {}th pct".format(pct, pct))
+            print("loadavg5_{}th_pct.draw LINE1".format(pct))
+            print("loadavg5_{}th_pct.info {}th percentile of 5 minute load averages".format(pct, pct))
+
+def _print_load_config(hostname=''):
+    _print_multigraph("puavo_wlan_host_load", hostname)
+    _print_load_graph_config(hostname)
+    _print_load_field_config(hostname)
+
+def _print_rssi_values(rssis, hostname=''):
+    _print_multigraph("puavo_wlan_host_rssi", hostname)
+
+    for q in _PERCENTILES:
+        if len(rssis) > 0:
+            pct = numpy.percentile(rssis, q)
+        else:
+            pct = "U"
+        print("rssi_{}th_pct.value {}".format(q, pct))
+
+def _print_rssi_graph_config(hostname=''):
+    if hostname:
+        hostname = " associated to {}".format(hostname)
+    else:
+        hostname = ""
+
+    print("graph_title RSSI of Puavo WLAN stations{}".format(hostname))
+    print("graph_args --base 1000 -l -99 -u 0")
+    print("graph_vlabel RSSI [dBmW]")
+    print("graph_scale no")
+    print("graph_category puavo-wlan")
+    print("graph_info RSSI describes the signal strength of received 802.11 frames.")
+
+def _print_rssi_field_config(hostname=''):
+    for pct in _PERCENTILES:
+        print("rssi_{}th_pct.label {}th pct".format(pct, pct))
+        print("rssi_{}th_pct.draw LINE1".format(pct))
+        print("rssi_{}th_pct.info {}th percentile of RSSIs".format(pct, pct))
+
+def _print_rssi_config(hostname=''):
+    _print_multigraph("puavo_wlan_host_rssi", hostname)
+    _print_rssi_graph_config(hostname)
+    _print_rssi_field_config(hostname)
+
+def _print_connage_values(connages, hostname=''):
+    _print_multigraph("puavo_wlan_host_connage", hostname)
+
+    for q in _PERCENTILES:
+        if len(connages) > 0:
+            pct = numpy.percentile(connages, q)
+        else:
+            pct = "U"
+        print("connage_{}th_pct.value {}".format(q, pct))
+
+def _print_connage_graph_config(hostname=''):
+    if hostname:
+        hostname = " associated to {}".format(hostname)
+    else:
+        hostname = ""
+
+    print("graph_title Connection age of Puavo WLAN stations{}".format(hostname))
+    print("graph_args --base 1000 -l 0")
+    print("graph_vlabel Connection age [minutes]")
+    print("graph_scale no")
+    print("graph_category puavo-wlan")
+    print("graph_info Connection age describes how long station has been associated to an accesspoint.")
+
+def _print_connage_field_config(hostname=''):
+    for pct in _PERCENTILES:
+        print("connage_{}th_pct.label {}th pct".format(pct, pct))
+        print("connage_{}th_pct.draw LINE1".format(pct))
+        print("connage_{}th_pct.info {}th percentile of connection ages".format(pct, pct))
+
+def _print_connage_config(hostname=''):
+    _print_multigraph("puavo_wlan_host_connage", hostname)
+    _print_connage_graph_config(hostname)
+    _print_connage_field_config(hostname)
+
+def _main():
+    if len(sys.argv) == 1:
+        available_hosts     = _get_available_hosts()
+
+        total_ap_count      = 0
+        total_host_count    = len(available_hosts)
+        total_radio_count   = 0
+        total_sta_count     = 0
+        total_rx_bytes      = 0
+        total_tx_bytes      = 0
+
+        all_loadavg5      = []
+        all_rssis         = []
+        all_connages      = []
+
+        for hostname in _get_configured_hostnames():
+            try:
+                host = available_hosts[hostname]
+            except KeyError:
+                _print_traffic_values("U", "U", hostname)
+                _print_elements_values("U", "U", "U", 0, hostname)
+                _print_load_values("U", hostname)
+                _print_rssi_values([], hostname)
+                _print_connage_values([], hostname)
+                continue
+
+            host_ap_count    = 0
+            host_radio_count = 0
+            host_sta_count   = 0
+            host_rx_bytes    = 0
+            host_tx_bytes    = 0
+            host_loadavg5    = host["loadavg5"]
+            host_rssis       = []
+            host_connages    = []
+
+            for radio in host["radios"]:
+                host_radio_count += 1
+
+                for accesspoint in radio["accesspoints"]:
+                    host_ap_count  += 1
+                    host_sta_count += len(accesspoint["stations"])
+                    host_rx_bytes  += accesspoint["rx_bytes"]
+                    host_tx_bytes  += accesspoint["tx_bytes"]
+
+                    for station in accesspoint["stations"]:
+                        try:
+                            host_rssis.append(station["rssi"])
+                        except KeyError:
+                            pass
+                        host_connages.append(station["connection_age"] / 60.0)
+
+            total_ap_count    += host_ap_count
+            total_radio_count += host_radio_count
+            total_sta_count   += host_sta_count
+            total_rx_bytes    += host_rx_bytes
+            total_tx_bytes    += host_tx_bytes
+
+            all_loadavg5.append(host_loadavg5)
+            all_rssis.extend(host_rssis)
+            all_connages.extend(host_connages)
+
+            _print_traffic_values(host_rx_bytes * 8, host_tx_bytes * 8, hostname)
+            _print_elements_values(host_ap_count, host_radio_count, host_sta_count, 1, hostname)
+            _print_load_values(host_loadavg5, hostname)
+            _print_rssi_values(host_rssis, hostname)
+            _print_connage_values(host_connages, hostname)
+
+        _print_traffic_values(total_rx_bytes * 8, total_tx_bytes * 8)
+        _print_elements_values(total_ap_count, total_radio_count, total_sta_count, total_host_count)
+        _print_load_summary_values(all_loadavg5)
+        _print_rssi_values(all_rssis)
+        _print_connage_values(all_connages)
+
+        return 0
+
+    if len(sys.argv) == 2:
+        if sys.argv[1] == 'autoconf':
+            print("yes")
+            return 0
+
+        elif sys.argv[1] == 'config':
+            available_hostnames  = _get_available_hosts().keys()
+            configured_hostnames = _refresh_configured_hostnames(available_hostnames)
+
+            _print_elements_config()
+            _print_traffic_config()
+            _print_load_config()
+            _print_rssi_config()
+            _print_connage_config()
+
+            for hostname in sorted(configured_hostnames):
+                _print_elements_config(hostname)
+                _print_traffic_config(hostname)
+                _print_load_config(hostname)
+                _print_rssi_config(hostname)
+                _print_connage_config(hostname)
+
+            return 0
+
+    return 1
+
+if __name__ == "__main__":
+    sys.exit(_main())

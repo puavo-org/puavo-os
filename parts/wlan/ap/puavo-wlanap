@@ -147,37 +147,12 @@ module Dot11
 
   class Vif
 
-    attr_accessor :stations
     attr_reader :name
     attr_reader :phy
-    attr_reader :rx_bytes
-    attr_reader :tx_bytes
-    attr_reader :rx_rate
-    attr_reader :tx_rate
 
     def initialize(name, phy)
       @name              = name
       @phy               = phy
-      @rx_rate           = 0
-      @tx_rate           = 0
-      @rx_bytes          = 0
-      @tx_bytes          = 0
-      @stats_update_time = Time.at(0)
-      @stations          = {}
-    end
-
-    def update_stats
-      File.read('/proc/net/dev') =~ /^\s*#{@name}:(.*)$/
-
-      stats_update_time  = Time.now
-      secs               = stats_update_time - @stats_update_time
-      rx_bytes           = $1.split[0].to_i
-      tx_bytes           = $1.split[8].to_i
-      @rx_rate           = (rx_bytes - @rx_bytes) / secs
-      @tx_rate           = (tx_bytes - @tx_bytes) / secs
-      @rx_bytes          = rx_bytes
-      @tx_bytes          = tx_bytes
-      @stats_update_time = stats_update_time
     end
 
     def del
@@ -376,8 +351,8 @@ module Services
     attr_reader :name
     attr_reader :pid
 
-    def spawn
-      @pid = Process.spawn(@command, *@args)
+    def spawn(kwargs = {})
+      @pid = Process.spawn(@command, *@args, kwargs)
     end
 
     def kill(sigterm_timeout=3)
@@ -389,6 +364,43 @@ module Services
       rescue Timeout::Error
         Process.kill('SIGKILL', @pid)
         Process.waitpid(@pid)
+      end
+    end
+
+  end
+
+  class Horst
+    include Services::Spawnable
+
+    attr_reader :outpipe_r
+    attr_reader :outpipe_w
+    attr_reader :vif
+
+    def initialize(kwargs = {})
+      @vif                   = kwargs.fetch(:vif)
+      @outpipe_r, @outpipe_w = IO.pipe
+      @outbuf                = ""
+
+      @args                  = ["-i#{@vif.name}", '-q', '-o/dev/stdout', '-a', '-mSTA']
+      @command               = 'puavo-wlanmapper-horst'
+      @name                  = "#{@command}_#{@vif.name}"
+    end
+
+    def read_measurements
+      @outbuf += @outpipe_r.sysread(1024)
+      @outbuf.lines do |line|
+        if line[-1] != "\n"
+          @outbuf = line
+          break
+        end
+
+        next if line.start_with?("DATE")
+
+        columns    = line.split
+        src_mac    = columns[4].chomp(',')
+        rssi       = columns[8].to_i
+
+        yield src_mac, rssi
       end
     end
 
@@ -414,13 +426,11 @@ module Services
     include Services::Spawnable
 
     attr_reader :bridge
-    attr_reader :phy
     attr_reader :vif
 
     def initialize(kwargs = {})
       @bridge      = kwargs.fetch(:bridge)
       @net         = kwargs.fetch(:net)
-      @phy         = kwargs.fetch(:phy)
       @vif         = kwargs.fetch(:vif)
       @basic_rates = kwargs.fetch(:basic_rates)
 
@@ -430,7 +440,7 @@ module Services
       @args     = [@conffile]
 
       HostapdConf.new(:bridge         => @bridge,
-                      :channel        => @phy.channel,
+                      :channel        => @vif.phy.channel,
                       :ctrl_interface => HOSTAPD_CTRL_INTERFACE_DIR,
                       :interface      => @vif.name,
                       :ssid           => @net['ssid'],
@@ -457,7 +467,7 @@ module Services
                   "-a#{HOSTAPD_ACTION_SCRIPT}"]
     end
 
-    def spawn
+    def spawn(kwargs = {})
       hostapd_socket = "#{HOSTAPD_CTRL_INTERFACE_DIR}/#{@vif.name}"
       Timeout.timeout(5) do
         loop do
@@ -467,7 +477,7 @@ module Services
         end
       end
       Log.info("found hostapd control socket #{hostapd_socket}")
-      super
+      super(kwargs)
     end
 
   end
@@ -496,36 +506,48 @@ end
 
 class Host
 
-  CONTROLLER_ADDRESS = 'wlangw'
-  CONTROLLER_PORT    = 45046
-  VTUN_ADDRESS       = 'wlangw'
-  VTUN_PORT          = 45045
-  RECONF_INTERVAL    = 900
-  REPORT_INTERVAL    = 30
-  TX_POWER_MAX       = 27
+  CONTROLLER_ADDRESS  = 'wlangw'
+  CONTROLLER_PORT     = 45046
+  VTUN_ADDRESS        = 'wlangw'
+  VTUN_PORT           = 45045
+
+  CONF = {
+    :basic_rates         => [10, 20, 55, 110, 60, 120, 240],
+    :channels            => [],
+    :reconf_interval     => 900,
+    :report_interval     => 30,
+    :rssi_kick_interval  => 300,
+    :rssi_kick_threshold => -99,
+    :tx_power            => 27,
+    :tx_power_2g         => 27,
+    :tx_power_5g         => 27,
+  }
 
   def initialize(kwargs = {})
     @bridges       = {}
     @bss_index     = -1
-    @conf          = {
-      :reconf_interval => RECONF_INTERVAL,
-      :report_interval => REPORT_INTERVAL,
-    }
+    @conf          = {}.update(CONF)
     @controller    = Net::HTTP.new(kwargs.fetch(:controller_address,
                                                 CONTROLLER_ADDRESS),
                                    kwargs.fetch(:controller_port,
                                                 CONTROLLER_PORT))
-    @ctrlconn         = nil
-    @ctrlconn_time    = nil
-    @ctrlserv         = nil
-    @last_reconf_time = Time.at(0)
-    @last_report_time = Time.at(0)
-    @nets             = nil
-    @puavo_client     = PuavoRestClient.new
-    @services         = {}
-    @vifs             = []
-    @vtun_address     = kwargs.fetch(:vtun_address, VTUN_ADDRESS)
-    @vtun_port        = kwargs.fetch(:vtun_port, VTUN_PORT)
+    @ctrlconn                = nil
+    @ctrlconn_time           = nil
+    @ctrlserv                = nil
+    @last_reconf_time        = Time.at(0)
+    @last_status_report_time = Time.at(0)
+    @nets                    = nil
+    @puavo_client            = PuavoRestClient.new
+    @services                = {}
+    @vifs                    = []
+    @vif_rxtx_stats          = {}
+    @vtun_address            = kwargs.fetch(:vtun_address, VTUN_ADDRESS)
+    @vtun_port               = kwargs.fetch(:vtun_port, VTUN_PORT)
+    @horsts                  = []
+    @hostapds                = {}
+    @rssimap                 = {}
+    @rssi_kick_timestamps    = {}
+    @station_rxtx_stats      = {}
   end
 
   def run
@@ -543,6 +565,11 @@ class Host
   private
 
   def get_conf()
+    def store_max(hash, key, new_value)
+      old_value = hash.fetch(key, new_value)
+      hash[key] = new_value > old_value ? new_value : old_value
+    end
+
     def store_min(hash, key, new_value)
       old_value = hash.fetch(key, new_value)
       hash[key] = new_value < old_value ? new_value : old_value
@@ -555,7 +582,9 @@ class Host
 
     response = @puavo_client.get("/v3/devices/#{PUAVO_ETC.hostname}")
 
-    conf = {}
+    # Prime with default values, because tags are used just for
+    # overriding defaults.
+    conf = {}.update(CONF)
 
     # NOTE: Multiple tags with same prefixes might be given (e.g. zero
     # or more wlanap_tx_power tags in organization, school and/or
@@ -579,6 +608,10 @@ class Host
         conf[:basic_rates] = []
       when /^wlanap_basic_rates:((\d+:)*(\d+))$/
         conf[:basic_rates] = $1.split(':').map { |rate| rate.to_i }
+      when /^wlanap_rssi_kick_threshold:(-\d+)$/
+        store_max(conf, :rssi_kick_threshold, $1.to_i)
+      when /^wlanap_rssi_kick_interval:(\d+)$/
+        store_max(conf, :rssi_kick_interval, $1.to_i)
       end
     end
 
@@ -608,11 +641,47 @@ class Host
     nets
   end
 
+  def rssi_kick(status)
+    rssi_kick_threshold = @conf[:rssi_kick_threshold]
+    status[:radios].each do |radio|
+      radio[:accesspoints].each do |accesspoint|
+        iface = accesspoint[:interface]
+        accesspoint[:stations].each do |station|
+          if station[:rssi] < rssi_kick_threshold
+            mac            = station[:mac]
+            rssi           = station[:rssi]
+            last_kick_time = @rssi_kick_timestamps[mac]
+
+            if last_kick_time.nil? || Time.now >= last_kick_time + @conf[:rssi_kick_interval]
+              if system('hostapd_cli',
+                        '-i', iface, '-p', HOSTAPD_CTRL_INTERFACE_DIR,
+                        'deauthenticate', mac, :out => :close)
+                Log.info("deauthenticated STA #{mac} due to low " \
+                         "RSSI (#{rssi}dBm < #{rssi_kick_threshold}dBm)")
+                @rssi_kick_timestamps[mac] = Time.now
+              else
+                Log.warning("failed to deauthenticate #{mac} from #{iface}")
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+
   def reconf
     @last_reconf_time = Time.now
 
     new_conf = get_conf
     return unless new_conf != @conf
+
+    Log.info("configuration changed:")
+    new_conf.each do |key, new_value|
+      old_value = @conf[key]
+      if old_value != new_value
+        Log.info("  #{key}: #{old_value} => #{new_value}")
+      end
+    end
 
     @conf = new_conf
 
@@ -688,8 +757,10 @@ class Host
         reads    = [selfpipe_r, @ctrlconn.nil? ? @ctrlserv : @ctrlconn]
         timeouts = []
 
-        timeouts << @conf.fetch(:reconf_interval, RECONF_INTERVAL) - (Time.now - @last_reconf_time)
-        timeouts << @conf.fetch(:report_interval, REPORT_INTERVAL) - (Time.now - @last_report_time)
+        reads += @horsts.map { |h| h.outpipe_r }
+
+        timeouts << @conf[:reconf_interval] - (Time.now - @last_reconf_time)
+        timeouts << @conf[:report_interval] - (Time.now - @last_status_report_time)
 
         unless @ctrlconn.nil?
           timeouts << 5 - (Time.now - @ctrlconn_time)
@@ -699,13 +770,32 @@ class Host
 
         if ready.nil?
 
-          if Time.now - @last_reconf_time > @conf.fetch(:reconf_interval, RECONF_INTERVAL)
+          if Time.now - @last_reconf_time > @conf[:reconf_interval]
             reconf
           end
 
-          if Time.now - @last_report_time > @conf.fetch(:report_interval, REPORT_INTERVAL)
-            @vifs.each { |vif| vif.update_stats }
-            controller_send_report('status', get_status)
+          if Time.now - @last_status_report_time > @conf[:report_interval]
+            begin
+              status = get_status
+            rescue StandardError => e
+              Log.exception('failed to get current status', e)
+            else
+
+              begin
+                controller_send_report('status', status)
+              rescue StandardError => e
+                Log.exception('failed to report status', e)
+              else
+                @last_status_report_time = Time.now
+              end
+
+              begin
+                rssi_kick(status)
+              rescue StandardError => e
+                Log.exception('RSSI kick failed', e)
+              end
+
+            end
           end
 
           if @ctrlconn && Time.now - @ctrlconn_time > 5
@@ -714,6 +804,12 @@ class Host
           end
 
           next
+        end
+
+        @horsts.each do |horst|
+          if ready[0].map { |e| e.fileno }.include?(horst.outpipe_r.fileno)
+            horst.read_measurements { |mac, rssi| @rssimap[mac] = rssi }
+          end
         end
 
         selfpipe_r.read_nonblock(1) if ready[0].include?(selfpipe_r)
@@ -727,13 +823,13 @@ class Host
   def update_tx_powers
     @vifs.each do |vif|
       if Dot11::CHANNELS_2G.include?(vif.phy.channel)
-        tx_power    = @conf.fetch(:tx_power   , TX_POWER_MAX)
-        tx_power_2g = @conf.fetch(:tx_power_2g, TX_POWER_MAX)
+        tx_power    = @conf[:tx_power]
+        tx_power_2g = @conf[:tx_power_2g]
         vif.set_tx_power([tx_power, tx_power_2g].min)
       end
       if Dot11::CHANNELS_5G.include?(vif.phy.channel)
-        tx_power    = @conf.fetch(:tx_power   , TX_POWER_MAX)
-        tx_power_5g = @conf.fetch(:tx_power_5g, TX_POWER_MAX)
+        tx_power    = @conf[:tx_power]
+        tx_power_5g = @conf[:tx_power_5g]
         vif.set_tx_power([tx_power, tx_power_5g].min)
       end
     end
@@ -838,8 +934,8 @@ class Host
     end
   end
 
-  def spawn_service(service)
-    pid = service.spawn
+  def spawn_service(service, kwargs = {})
+    pid = service.spawn(kwargs)
     @services[pid] = service
     Log.info("spawned #{service.name}")
   end
@@ -864,24 +960,31 @@ class Host
   def select_channel(vif)
     return vif.phy.channel unless vif.phy.channel.nil?
 
-    predefined_channels    = @conf.fetch(:channels, []) & vif.phy.supported_channels
-    scanned_channels       = vif.scan
+    predefined_channels = @conf[:channels] & vif.phy.supported_channels
+    selected_channels   = @vifs.map { |v| v.phy.channel }
+    selectable_channels = predefined_channels - selected_channels
 
-    selectable_channels    = predefined_channels + (scanned_channels - predefined_channels)
-    selectable_channels_2g = selectable_channels & Dot11::CHANNELS_2G
-    selectable_channels_5g = selectable_channels & Dot11::CHANNELS_5G
+    # Enter automatic channel selection, because manually configured
+    # channel list is empty or exhausted.
+    if selectable_channels.empty?
+      scanned_channels       = vif.scan
+      selectable_channels    = scanned_channels - selected_channels
 
-    selected_channels      = Set.new(@vifs.map { |v| v.phy.channel })
-    selected_channels_2g   = selected_channels & Dot11::CHANNELS_2G
-    selected_channels_5g   = selected_channels & Dot11::CHANNELS_5G
+      selectable_channels_2g = selectable_channels & Dot11::CHANNELS_2G
+      selectable_channels_5g = selectable_channels & Dot11::CHANNELS_5G
 
-    if selected_channels_2g.empty? && !selectable_channels_2g.empty?
-      vif.phy.channel = selectable_channels_2g[0]
-    elsif selected_channels_5g.empty? && !selectable_channels_5g.empty?
-      vif.phy.channel = selectable_channels_5g[0]
-    else
-      vif.phy.channel = selectable_channels[0]
+      selected_channels_2g   = selected_channels & Dot11::CHANNELS_2G
+      selected_channels_5g   = selected_channels & Dot11::CHANNELS_5G
+
+      if selected_channels_2g.empty? && !selectable_channels_2g.empty?
+        selectable_channels = selectable_channels_2g
+      elsif selected_channels_5g.empty? && !selectable_channels_5g.empty?
+        selectable_channels = selectable_channels_5g
+      end
+
     end
+
+    vif.phy.channel = selectable_channels[0]
   end
 
   def add_phy(phy)
@@ -907,14 +1010,18 @@ class Host
       bridge = setup_bridge(net['ssid'])
 
       hostapd     = Services::Hostapd.new(:bridge      => bridge,
-                                          :phy         => phy,
                                           :vif         => vif,
                                           :net         => net,
-                                          :basic_rates => @conf.fetch(:basic_rates,
-                                                                      [10, 20, 55, 110, 60, 120, 240]))
-      hostapd_cli = Services::HostapdCli.new(:hostapd => hostapd)
+                                          :basic_rates => @conf[:basic_rates])
       spawn_service(hostapd)
+      @hostapds[vif.name] = hostapd
+
+      hostapd_cli = Services::HostapdCli.new(:hostapd => hostapd)
       spawn_service(hostapd_cli)
+
+      horst = Services::Horst.new(:vif => vif)
+      spawn_service(horst, :out => horst.outpipe_w)
+      @horsts << horst
     end
 
     update_tx_powers
@@ -922,6 +1029,7 @@ class Host
 
   def remove_phy(phy)
     affected_bridges   = []
+    dying_horsts       = []
     dying_dhclients    = []
     dying_hostapds     = []
     dying_hostapd_clis = []
@@ -929,15 +1037,22 @@ class Host
 
     @vifs.delete_if { |vif| vif.phy.name == phy.name }
 
+    @horsts.delete_if { |horst| horst.vif.phy.name == phy.name }
+
+    @hostapds.delete_if { |vif_name, hostapd| hostapd.vif.phy.name == phy.name }
+
     # Remove all soon-to-be-killed services from the array before
     # killing any to avoid dependent services to die and interrupt us.
     @services.reject! do |pid, service|
-      if service.class == Services::Hostapd && phy.name == service.phy.name
+      if service.class == Services::Hostapd && phy.name == service.vif.phy.name
         dying_hostapds << service
         affected_bridges << service.bridge
         true
-      elsif service.class == Services::HostapdCli && phy.name == service.hostapd.phy.name
+      elsif service.class == Services::HostapdCli && phy.name == service.hostapd.vif.phy.name
         dying_hostapd_clis << service
+        true
+      elsif service.class == Services::Horst && phy.name == service.vif.phy.name
+        dying_horsts << service
         true
       else
         false
@@ -962,6 +1077,7 @@ class Host
       end
     end
 
+    dying_horsts.each { |horst| horst.kill }
     dying_hostapd_clis.each { |hostapd_cli| hostapd_cli.kill }
     dying_hostapds.each { |hostapd| hostapd.kill }
     dying_dhclients.each { |dhclient| dhclient.kill }
@@ -1008,7 +1124,6 @@ class Host
 
   def controller_send_report(name, data = {})
     begin
-      @last_report_time = Time.now
       response = @controller.send_request('POST', '/v1/report',
                                           {
                                             :name      => name,
@@ -1024,120 +1139,159 @@ class Host
     end
   end
 
-  def update_station_stats(vif)
-    stations = {}
-    IO.popen(['hostapd_cli', '-i', vif.name,
-              '-p', HOSTAPD_CTRL_INTERFACE_DIR, 'all_sta']) do |io|
-      new_sta = {}
-      io.each_line do |line|
-        line =~ /^(([0-9a-f]{2}:){5}([0-9a-f]{2}))$/ and new_sta[:mac]            = $1
-        line =~ /^connected_time=(.*)$/              and new_sta[:connection_age] = $1.to_i
-        line =~ /^rx_bytes=(.*)$/                    and new_sta[:rx_bytes]       = $1.to_i
-        line =~ /^tx_bytes=(.*)$/                    and new_sta[:tx_bytes]       = $1.to_i
+  def get_stations(vif_name)
+    def add_station_if_complete(stations, station)
+      # Add only complete/valid station entries. In some cases
+      # (probably when STA has just disassociated), hostapd_cli
+      # all_sta does not print all fields. Just ignore all incomplete
+      # entries.
+      if Set.new(station.keys) == Set.new([:mac, :connection_age, :rx_bytes, :tx_bytes])
+        mac                  = station[:mac]
+        rx_bytes             = station[:rx_bytes]
+        tx_bytes             = station[:tx_bytes]
+        connection_age       = station[:connection_age]
 
-        # Add only complete/valid station entries. In some cases
-        # (probably when STA has just disassociated), hostapd_cli
-        # all_sta does not print all fields.
-        if Set.new(new_sta.keys) == Set.new([:mac, :connection_age, :rx_bytes, :tx_bytes])
-          new_sta[:start_time]  = Time.now - new_sta[:connection_age]
+        station[:start_time] = Time.now - connection_age
+        station[:rssi]       = @rssimap[mac]
 
-          if vif.stations.has_key?(new_sta[:mac])
-            old_sta = vif.stations.fetch(new_sta[:mac])
+        stats                    = [rx_bytes, tx_bytes, connection_age]
+        last_stats               = @station_rxtx_stats.fetch(mac, stats)
+        @station_rxtx_stats[mac] = stats
 
-            if new_sta[:connection_age] < old_sta[:connection_age]
-              new_sta[:rate_interval] = new_sta[:connection_age]
-              if new_sta[:rate_interval] == 0
-                new_sta[:rx_rate] = 0
-                new_sta[:tx_rate] = 0
-              else
-                new_sta[:rx_rate] = new_sta[:rx_bytes] / new_sta[:rate_interval]
-                new_sta[:tx_rate] = new_sta[:tx_bytes] / new_sta[:rate_interval]
-              end
-            else
-              new_sta[:rate_interval] = new_sta[:connection_age] - old_sta[:connection_age]
-              if new_sta[:rate_interval] == 0
-                new_sta[:rx_rate] = 0
-                new_sta[:tx_rate] = 0
-              else
-                new_sta[:rx_rate] = (new_sta[:rx_bytes] - old_sta[:rx_bytes]) / new_sta[:rate_interval]
-                new_sta[:tx_rate] = (new_sta[:tx_bytes] - old_sta[:tx_bytes]) / new_sta[:rate_interval]
-              end
-            end
-          else
-            new_sta[:rate_interval] = new_sta[:connection_age]
-            if new_sta[:rate_interval] == 0
-              new_sta[:rx_rate] = 0
-              new_sta[:tx_rate] = 0
-            else
-              new_sta[:rx_rate] = new_sta[:rx_bytes] / new_sta[:rate_interval]
-              new_sta[:tx_rate] = new_sta[:tx_bytes] / new_sta[:rate_interval]
-            end
-          end
-          stations[new_sta[:mac]] = new_sta
-          new_sta = {}
+        last_rx_bytes, last_tx_bytes, last_connection_age = last_stats
+
+        seconds_since_last_stats = connection_age - last_connection_age
+        if seconds_since_last_stats > 0
+          interval                   = seconds_since_last_stats
+          station[:rx_rate]          = (rx_bytes - last_rx_bytes) / interval
+          station[:tx_rate]          = (tx_bytes - last_tx_bytes) / interval
+          station[:rx_rate_interval] = interval
+          station[:tx_rate_interval] = interval
+        elsif seconds_since_last_stats < 0 && 0 < connection_age
+          # Because the connection age of the current connection is
+          # less than the connection age we checked last time, the
+          # station must have reassociated between our measurements
+          # and hence connection stats have been reset.
+          station[:rx_rate]          = rx_bytes / connection_age
+          station[:tx_rate]          = tx_bytes / connection_age
+          station[:rx_rate_interval] = connection_age
+          station[:tx_rate_interval] = connection_age
+        else
+          # Either the connection age is zero, or zero seconds has
+          # passed since last stats check, it does not really matter.
+          station[:rx_rate]          = 0
+          station[:tx_rate]          = 0
+          station[:rx_rate_interval] = 0
+          station[:tx_rate_interval] = 0
         end
+
+        stations << station
       end
     end
-    vif.stations = stations
+
+    stations = []
+    IO.popen(['hostapd_cli', '-i', vif_name,
+              '-p', HOSTAPD_CTRL_INTERFACE_DIR, 'all_sta']) do |io|
+
+      station = {}
+      io.each_line do |line|
+        if line =~ /^(([0-9a-f]{2}:){5}([0-9a-f]{2}))$/
+          add_station_if_complete(stations, station)
+          station = { :mac => $1 }
+        end
+        line =~ /^connected_time=(.*)$/ and station[:connection_age] = $1.to_i
+        line =~ /^rx_bytes=(.*)$/       and station[:rx_bytes]       = $1.to_i
+        line =~ /^tx_bytes=(.*)$/       and station[:tx_bytes]       = $1.to_i
+      end
+      add_station_if_complete(stations, station)
+    end
+
+    stations
   end
 
-  def get_status
-    radios       = {}
-    @vifs.each do |vif|
-      bssid    = nil
-      channel  = nil
-      ssid     = nil
+  def get_accesspoint(vif)
+    bssid   = nil
+    channel = nil
+    ssid    = nil
 
-      if radios.has_key?(vif.phy.mac)
-        radio = radios.fetch(vif.phy.mac)
-      else
-        radio = {
+    IO.popen(['wpa_cli', '-i', vif.name,
+              '-p', HOSTAPD_CTRL_INTERFACE_DIR, 'status']) do |io|
+      io.each_line do |line|
+        line =~ /^bssid\[0\]=(.*)$/ and bssid   = $1
+        line =~ /^channel=(.*)$/    and channel = $1.to_i
+        line =~ /^ssid\[0\]=(.*)$/  and ssid    = $1
+        break unless [bssid, channel, ssid].map { |s| s.nil? }.any?
+      end
+    end
+
+    if [bssid, channel, ssid].map { |s| s.nil? }.any?
+      fail "failed to query hostapd status of #{vif.name}"
+    end
+
+    time = Time.now
+    File.read('/proc/net/dev') =~ /^\s*#{vif.name}:(.*)$/
+    rx_bytes = $1.split[0].to_i
+    tx_bytes = $1.split[8].to_i
+
+    stats = [rx_bytes, tx_bytes, time]
+    last_stats = @vif_rxtx_stats.fetch(vif.name, stats)
+    last_rx_bytes, last_tx_bytes, last_time = last_stats
+    @vif_rxtx_stats[vif.name] = stats
+
+    seconds_since_last_time = time - last_time
+    if seconds_since_last_time == 0
+      rx_rate = 0
+      tx_rate = 0
+    else
+      rx_rate = (rx_bytes - last_rx_bytes) / seconds_since_last_time
+      tx_rate = (tx_bytes - last_tx_bytes) / seconds_since_last_time
+    end
+
+    start_time = File.mtime("#{HOSTAPD_CTRL_INTERFACE_DIR}/#{vif.name}")
+
+    {
+      :radio_mac          => vif.phy.mac,
+      :start_time         => start_time,
+      :bssid              => bssid,
+      :channel            => channel,
+      :rx_bytes           => rx_bytes,
+      :rx_rate            => rx_rate,
+      :rx_rate_interval   => seconds_since_last_time,
+      :ssid               => ssid,
+      :stations           => get_stations(vif.name),
+      :tx_bytes           => tx_bytes,
+      :tx_power_limit_dBm => vif.tx_power,
+      :tx_rate            => tx_rate,
+      :tx_rate_interval   => seconds_since_last_time,
+      :interface          => vif.name,
+    }
+  end
+
+  def get_radios
+    radios = {}
+
+    @vifs.each do |vif|
+      begin
+        radios.fetch(vif.phy.mac)
+      rescue KeyError
+        radios[vif.phy.mac] = {
           :accesspoints => [],
           :driver       => vif.phy.driver,
           :product      => vif.phy.product,
           :mac          => vif.phy.mac,
           :name         => vif.phy.name,
         }
-        radios[vif.phy.mac] = radio
-      end
-
-      begin
-
-        # Get access point stats
-        IO.popen(['wpa_cli', '-i', vif.name,
-                  '-p', HOSTAPD_CTRL_INTERFACE_DIR, 'status']) do |io|
-          io.each_line do |line|
-            line =~ /^bssid\[0\]=(.*)$/   and bssid   = $1
-            line =~ /^channel=(.*)$/      and channel = $1.to_i
-            line =~ /^ssid\[0\]=(.*)$/    and ssid    = $1
-          end
-        end
-
-        update_station_stats(vif)
-
-        start_time = File.mtime("#{HOSTAPD_CTRL_INTERFACE_DIR}/#{vif.name}")
-      rescue StandardError => e
-        Log.exception("failed to query hostapd status (#{vif.name})", e)
-      else
-        radio[:accesspoints] << {
-          :radio_mac          => vif.phy.mac,
-          :start_time         => start_time,
-          :bssid              => bssid,
-          :channel            => channel,
-          :rx_bytes           => vif.rx_bytes,
-          :rx_rate            => vif.rx_rate,
-          :ssid               => ssid,
-          :stations           => vif.stations.values,
-          :tx_bytes           => vif.tx_bytes,
-          :tx_power_limit_dBm => vif.tx_power,
-          :tx_rate            => vif.tx_rate,
-        }
-      end
+      end[:accesspoints] << get_accesspoint(vif)
     end
+
+    radios.values
+  end
+
+  def get_status
     l1, l5, l15 = IO.read('/proc/loadavg').split.take(3).map { |s| s.to_f }
     {
       :hostname           => PUAVO_ETC.hostname,
-      :radios             => radios.values,
+      :radios             => get_radios,
       :version            => PuavoWLAN::VERSION,
       :system_start_time  => Time.now - IO.read('/proc/uptime').split[0].to_i,
       :service_start_time => Time.parse(IO.popen(['ps', '-p', $$.to_s, '-o', 'lstart=']).read),
@@ -1145,6 +1299,7 @@ class Host
       :loadavg1           => l1,
       :loadavg5           => l5,
       :loadavg15          => l15,
+      :conf               => @conf.clone,
     }
   end
 

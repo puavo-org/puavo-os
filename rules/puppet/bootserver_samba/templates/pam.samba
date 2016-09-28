@@ -1,0 +1,4 @@
+@include common-auth
+@include common-account
+session optional        pam_mkhomedir.so skel=/etc/skel/ umask=0077
+@include common-session-noninteractive

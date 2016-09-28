@@ -288,9 +288,7 @@ class packages {
     , 'tuxguitar-jsa' ]:
       tag => [ 'tag_music_making', 'tag_debian', ];
 
-    [ 'amtterm'
-    , 'ipsec-tools'
-    , 'racoon' ]:
+    [ 'amtterm' ]:
     # , 'wsmancli' ]:	# XXX missing from Debian
       tag => [ 'tag_network', 'tag_debian', ];
 

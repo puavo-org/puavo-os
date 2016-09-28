@@ -55,6 +55,8 @@ module PuavoWlanController
             TEMPSTORE.del_status(hostname)
           when 'status'
             TEMPSTORE.set_status(hostname, data)
+          else
+            TEMPSTORE.update_ttl(hostname)
           end
 
           { :max_report_interval => MAX_REPORT_INTERVAL }.to_json

@@ -66,7 +66,10 @@ module PuavoWlanController
             host_service_uptime     = time_now - host_service_start_time
             host_ap_count           = 0
 
+            next if host_radios.empty?
+
             host_radios.each do |radio|
+              radio_mac          = radio.fetch('mac')
               radio_accesspoints = radio.fetch('accesspoints')
               radio_ap_count     = radio_accesspoints.length
               radio_rx_bytes     = 0
@@ -114,6 +117,7 @@ module PuavoWlanController
                   sta_rx_rate                        = station.fetch('rx_rate')
                   sta_tx_rate                        = station.fetch('tx_rate')
                   sta_start_time                     = Time.parse(station.fetch('start_time'))
+                  sta_rssi                           = station.fetch('rssi', '?')
 
                   erb_locals[:total_sta_rx_bytes] += sta_rx_bytes
                   erb_locals[:total_sta_tx_bytes] += sta_tx_bytes
@@ -131,10 +135,13 @@ module PuavoWlanController
                     :tx_bytes => sta_tx_bytes,
                     :rx_rate  => sta_rx_rate,
                     :tx_rate  => sta_tx_rate,
+                    :rssi     => sta_rssi,
+                    :vendor   => get_vendor(sta_mac),
+                    :ap_host  => host_hostname,
                   }
                 end
                 erb_locals[:accesspoints] << {
-                  :radio_mac => accesspoint.fetch('radio_mac'),
+                  :radio_mac => radio_mac,
                   :bssid     => ap_bssid,
                   :hostname  => host_hostname,
                   :rx_bytes  => ap_rx_bytes,
@@ -149,7 +156,7 @@ module PuavoWlanController
               erb_locals[:radios] << {
                 :hostname  => host_hostname,
                 :driver    => radio.fetch('driver'),
-                :mac       => radio.fetch('mac'),
+                :mac       => radio_mac,
                 :product   => radio.fetch('product'),
                 :ap_count  => radio_ap_count,
                 :rx_bytes  => radio_rx_bytes,
@@ -159,6 +166,7 @@ module PuavoWlanController
                 :channel   => radio_channel,
                 :tx_power  => radio_tx_power,
                 :sta_count => radio_sta_count,
+                :vendor    => get_vendor(radio_mac),
 
               }
             end
