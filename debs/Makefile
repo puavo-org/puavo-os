@@ -11,7 +11,7 @@ _pkgs_parts     := puavo-os
 _pkgs_ports     := autopoweroff               \
                    fluentd                    \
                    libpam-envfeed             \
-                   node-webkit                \
+                   nwjs                       \
                    ubuntu-font-family-sources \
                    visionmedia-mon            \
                    $(_lsb_release_ports)
