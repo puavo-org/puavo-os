@@ -67,7 +67,7 @@
         },
         "optimist": {
           "version": "0.3.7",
-          "from": "optimist@~0.3.5",
+          "from": "optimist@~0.3",
           "resolved": "https://registry.npmjs.org/optimist/-/optimist-0.3.7.tgz",
           "dependencies": {
             "wordwrap": {
@@ -91,32 +91,6 @@
               "version": "1.2.1",
               "from": "sax@>=0.1.1",
               "resolved": "https://registry.npmjs.org/sax/-/sax-1.2.1.tgz"
-            }
-          }
-        }
-      }
-    },
-    "execSync": {
-      "version": "1.0.2",
-      "from": "execSync@~1.0.1-pre",
-      "resolved": "https://registry.npmjs.org/execSync/-/execSync-1.0.2.tgz",
-      "dependencies": {
-        "temp": {
-          "version": "0.5.1",
-          "from": "temp@~0.5.1",
-          "resolved": "https://registry.npmjs.org/temp/-/temp-0.5.1.tgz",
-          "dependencies": {
-            "rimraf": {
-              "version": "2.1.4",
-              "from": "rimraf@~2.1.4",
-              "resolved": "https://registry.npmjs.org/rimraf/-/rimraf-2.1.4.tgz",
-              "dependencies": {
-                "graceful-fs": {
-                  "version": "1.2.3",
-                  "from": "graceful-fs@~1",
-                  "resolved": "https://registry.npmjs.org/graceful-fs/-/graceful-fs-1.2.3.tgz"
-                }
-              }
             }
           }
         }
@@ -1405,6 +1379,11 @@
       "version": "0.3.0",
       "from": "shelljs@~0.3.0",
       "resolved": "https://registry.npmjs.org/shelljs/-/shelljs-0.3.0.tgz"
+    },
+    "sync-exec": {
+      "version": "0.6.2",
+      "from": "sync-exec@^0.6.2",
+      "resolved": "https://registry.npmjs.org/sync-exec/-/sync-exec-0.6.2.tgz"
     },
     "underscore": {
       "version": "1.6.0",

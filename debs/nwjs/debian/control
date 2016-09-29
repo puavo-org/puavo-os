@@ -1,4 +1,4 @@
-Source: node-webkit
+Source: nwjs
 Section: utils
 Priority: extra
 Maintainer: Opinsys Developers <dev@opinsys.fi>
@@ -6,12 +6,11 @@ Build-Depends: debhelper (>= 8)
 Standards-Version: 3.9.6
 Homepage: https://github.com/rogerwang/node-webkit
 
-Package: node-webkit
+Package: nwjs
 Architecture: amd64
 Depends: ${misc:Depends}, openssl, zlib1g, libnss3
 Description: Call all Node.js modules directly from DOM
- node-webkit is an app runtime based on Chromium and node.js. You can write
- native apps in HTML and Javascript with node-webkit. It also lets you to call
- Node.js modules directly from DOM and enables a new way of writing native
- applications with all Web technologies.
+ NW.js (previously known as node-webkit) lets you call all Node.js modules
+ directly from DOM and enables a new way of writing applications with
+ all Web technologies.
  .

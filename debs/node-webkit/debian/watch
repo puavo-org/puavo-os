@@ -1,4 +1,0 @@
-version=3
-
-opts=filenamemangle=s/.*\/(.*)\.tar\.gz/puavo-tftp_$1.orig.tar.gz/ \
-    http://githubredir.debian.net/github/opinsys/puavo-tftp/(.+)\.tar\.gz
