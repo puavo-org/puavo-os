@@ -3,4 +3,12 @@
 set -eu
 
 apt-get update
-apt-get install dbus debootstrap git make rsync squashfs-tools sudo systemd
+apt-get install        \
+        dbus           \
+        debootstrap    \
+        git            \
+        make           \
+        rsync          \
+        squashfs-tools \
+        sudo           \
+        systemd
