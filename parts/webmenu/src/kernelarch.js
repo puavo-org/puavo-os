@@ -8,7 +8,7 @@ var kernelArch;
 
 var result = exec('uname -m');
 
-if (result.code !== 0) {
+if (result.status !== 0) {
   throw('uname -m failed');
 }
 
