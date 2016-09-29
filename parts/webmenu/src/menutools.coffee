@@ -4,7 +4,7 @@
 path = require "path"
 stringify = require "json-stable-stringify"
 fs = require "fs"
-execSync = require "execSync"
+exec = require "sync-exec"
 crypto = require "crypto"
 vm = require "vm"
 
@@ -92,7 +92,7 @@ injectDesktopData = (menu, options) ->
       throw new Error("Bad command in: #{ JSON.stringify(menu) }")
 
 
-    code = execSync.run("which '#{ command[0] }' > /dev/null 2>&1")
+    code = exec("which '#{ command[0] }' > /dev/null 2>&1")
     if code isnt 0
       if menu.installer
         menu.useInstaller = true
