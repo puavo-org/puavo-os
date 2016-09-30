@@ -1,5 +1,5 @@
 Description: Add Makefile
- Add Makefile with install to /opt/node-webkit
+ Add Makefile with install to /opt/nwjs
  .
  node-webkit (0.3.4-0+opinsys1) quantal; urgency=low
  .
@@ -26,6 +26,6 @@ Index: node-webkit/Makefile
 +
 +install:
 +	mkdir -p $(DESTDIR)/opt/node-webkit
-+	install -o root -g root -m 755 nw $(DESTDIR)/opt/node-webkit
-+	install -o root -g root -m 644 libffmpegsumo.so $(DESTDIR)/opt/node-webkit
-+	install -o root -g root -m 644 nw.pak $(DESTDIR)/opt/node-webkit
++	install -o root -g root -m 755 nw $(DESTDIR)/opt/nwjs
++	install -o root -g root -m 644 libffmpegsumo.so $(DESTDIR)/opt/nwjs
++	install -o root -g root -m 644 nw.pak $(DESTDIR)/opt/nwjs
