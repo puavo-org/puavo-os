@@ -12,6 +12,7 @@ class bootserver_munin {
       "/etc/munin/plugins/$plugin_name":
         ensure  => link,
         notify  => Service['munin-node'],
+        require => Package['munin-node'],
         target  => "/usr/share/munin/plugins/$real_plugin_name",
     }
   }
