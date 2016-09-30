@@ -1,9 +1,9 @@
 _lsb_release	:= $(shell lsb_release -c | awk '{ print $$2 }')
 
 ifeq ($(_lsb_release),jessie)
-  _lsb_release_ports := onboard
+  _lsb_release_ports := node-webkit onboard
 else
-  _lsb_release_ports :=
+  _lsb_release_ports := nwjs
 endif
 
 _pkgs_parts     := puavo-os

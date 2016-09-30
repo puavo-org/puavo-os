@@ -1,0 +1,82 @@
+node-webkit (0.8.6-0+puavo1) stable; urgency=medium
+
+  * Bumped up standards version to 3.9.6
+  * Updated debhelper version
+  * Changed maintainer
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Wed, 17 Aug 2016 10:39:48 +0300
+
+node-webkit (0.8.6-0+opinsys1) quantal; urgency=low
+
+  * Release 0.8.6
+  * https://groups.google.com/forum/#!msg/node-webkit/CLPkgfV-i7s/hwkkQuJ1kngJ
+  * Add libudev.so.0 workaroud for Ubuntu Trusty
+  * https://github.com/rogerwang/node-webkit/wiki/The-solution-of-lacking-libudev.so.0
+
+ -- Esa-Matti Suuronen <esa-matti.suuronen@opinsys.fi>  Fri, 25 Apr 2014 12:54:40 +0000
+
+node-webkit (0.8.5-0+opinsys1) quantal; urgency=low
+
+  * Release 0.8.5
+  * https://groups.google.com/forum/#!msg/node-webkit/Izwu5icHFOQ/0A-3uEKfldkJ
+
+ -- Esa-Matti Suuronen <esa-matti.suuronen@opinsys.fi>  Wer, 26 Mar 2014 12:39:38 +0000
+
+node-webkit (0.8.4-0+opinsys1) quantal; urgency=low
+
+  * Release 0.8.4
+  * https://groups.google.com/forum/#!msg/node-webkit/ywebTZOA_cM/Aqv180nFYIcJ
+  * https://groups.google.com/forum/#!msg/node-webkit/bPjur7aFaQc/4TP6o3SM-8sJ
+
+ -- Esa-Matti Suuronen <esa-matti.suuronen@opinsys.fi>  Wed, 29 Jan 2014 12:39:38 +0000
+
+node-webkit (0.8.2-0+opinsys1) quantal; urgency=low
+
+  * Release 0.8.2
+  * https://groups.google.com/forum/#!msg/node-webkit/LBLk6otGJ4Q/-3e0CT0HuJcJ
+
+ -- Esa-Matti Suuronen <esa-matti.suuronen@opinsys.fi>  Tue, 10 Dec 2013 12:58:55 +0200
+
+node-webkit (0.6.3-0+opinsys2) precise; urgency=low
+
+  * Depend on libnss3
+
+ -- Esa-Matti Suuronen <esa-matti.suuronen@opinsys.fi>  Mon, 14 Oct 2013 10:21:50 +0300
+
+node-webkit (0.6.3-0+opinsys1ubuntu1) precise; urgency=low
+
+  * Release 0.6.3
+  * https://groups.google.com/forum/#!msg/node-webkit/OfJwV1aFdxw/aP6V9IX60_AJ
+
+ -- Esa-Matti Suuronen <esa-matti.suuronen@opinsys.fi>  Wed, 31 Jul 2013 09:56:05 +0300
+
+node-webkit (0.6.2-0+opinsys1) quantal; urgency=low
+
+  * Release 0.6.2
+  * https://groups.google.com/forum/#!msg/node-webkit/x2iBCBBnHt0/BrQVFyU-weQJ
+  * https://groups.google.com/d/msg/node-webkit/YC01gRQqwk4/bb5_1bw4ZwkJ
+  * https://groups.google.com/d/msg/node-webkit/c9YS5ChkgfI/82aBVN1ttQsJ
+  * https://groups.google.com/d/msg/node-webkit/lwyXSWA3GDI/aKjtw1oKcKIJ
+
+ -- Esa-Matti Suuronen <esa-matti.suuronen@opinsys.fi>  Mon, 04 Feb 2013 15:36:38 +0200
+
+node-webkit (0.4.1-0+opinsys1) quantal; urgency=low
+
+  * Release 0.4.1
+  * https://groups.google.com/forum/#!msg/node-webkit/1JgTNLOEpIs/e2e0FwH9TE4J
+  * https://groups.google.com/forum/#!msg/node-webkit/bTqRSmcfJ_E/9njVffk-k4cJ
+  * https://groups.google.com/forum/#!msg/node-webkit/Ia0HHY8BWLA/kJWM6Hw6CwcJ
+
+ -- Esa-Matti Suuronen <esa-matti.suuronen@opinsys.fi>  Mon, 04 Feb 2013 15:36:38 +0200
+
+node-webkit (0.3.6-0+opinsys1) quantal; urgency=low
+
+  * Release 0.3.6
+
+ -- Esa-Matti Suuronen <esa-matti.suuronen@opinsys.fi>  Mon, 17 Dec 2012 10:17:44 +0200
+
+node-webkit (0.3.4-0+opinsys1) quantal; urgency=low
+
+  * Initial release.
+
+ -- Esa-Matti Suuronen <esa-matti.suuronen@opinsys.fi>  Tue, 11 Dec 2012 14:27:43 +0200
