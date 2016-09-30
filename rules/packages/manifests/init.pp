@@ -651,8 +651,9 @@ class packages {
     }
     'stretch': {
       packages::kernels::kernel_package {
-        '4.6.0-1-amd64':
-          dkms_modules => $all_dkms_modules;
+        '4.7.0-1-amd64':
+          dkms_modules => $all_dkms_modules,
+          package_name => 'linux-image-4.7.0-1-amd64-unsigned';
       }
     }
   }
