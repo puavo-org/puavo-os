@@ -24,6 +24,13 @@ clean-nw:
 	rm -r ../webmenu-*.nw
 
 npm-install:
+	if nodejs -v | grep -q '^v0.10'; then \
+	  cp npm-shrinkwrap.json-node-v0.10 npm-shrinkwrap.json \
+	    && cp package.json-node-v0.10 package.json; \
+	else \
+	  cp npm-shrinkwrap.json-default npm-shrinkwrap.json \
+	    && cp package.json-default package.json; \
+	fi
 	npm install
 
 assets: i18n browserify browserify-test stylus node-coffee
