@@ -1,5 +1,5 @@
---- /dev/null	2016-09-29 10:02:21.270254245 +0300
-+++ nwjs/Makefile	2016-09-29 12:50:36.848966404 +0300
+--- /dev/null	2016-09-30 14:45:18.895006702 +0300
++++ nwjs/Makefile	2016-09-30 15:11:10.424017369 +0300
 @@ -0,0 +1,21 @@
 +prefix ?= /usr/local
 +
@@ -16,7 +16,7 @@
 +
 +	install -o root -g root -m 644 -t $(DESTDIR)/opt/nwjs \
 +	    credits.html icudtl.dat natives_blob.bin nw_100_percent.pak \
-+	    nw_200_percent.pak resources.pak snapshot_blob.bin
++	    resources.pak snapshot_blob.bin
 +	install -o root -g root -m 755 -t $(DESTDIR)/opt/nwjs/lib \
 +	    lib/libffmpeg.so lib/libnode.so lib/libnw.so
 +	install -o root -g root -m 644 -t $(DESTDIR)/opt/nwjs/locales \
