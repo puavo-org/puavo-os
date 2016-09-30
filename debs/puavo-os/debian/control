@@ -175,7 +175,7 @@ Description: Tools for building images.
 
 Package: puavo-local-config
 Architecture: all
-Depends: ${misc:Depends}, node-webkit, puavo-ltsp-client, puavo-pkg, ruby,
+Depends: ${misc:Depends}, nwjs, puavo-ltsp-client, puavo-pkg, ruby,
  whois
 Description: Puavo configuration tool for local (host-specific) features.
  Puavo configuration tool for local (host-specific) features.
@@ -482,7 +482,7 @@ Description: simple drawing application
 
 Package: webkiosk-language-selector
 Architecture: all
-Depends: ${misc:Depends}, node-webkit
+Depends: ${misc:Depends}, nwjs
 Description: Webkiosk language selector
  Helper for webkiosks to select session language.
  .
@@ -498,7 +498,7 @@ Depends: ${misc:Depends},
  netcat-openbsd,
  nodejs,
  nodejs-legacy,
- node-webkit (>= 0.8.5),
+ nwjs,
  ruby,
  socat,
  visionmedia-mon,
