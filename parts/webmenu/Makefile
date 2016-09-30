@@ -12,17 +12,7 @@ INSTALL_DATA = $(INSTALL) -m 644
 
 export PATH := node_modules/.bin:$(PATH)
 
-# node-webkit version
-NW_VERSION=0.17.5
-# https://github.com/rogerwang/nw-gyp
-NW_GYP=$(CURDIR)/node_modules/.bin/nw-gyp
-define nw-build
-	@echo "Building node.js module '$1' for node-webkit"
-	cd node_modules/$1/ && $(NW_GYP) configure --target=$(NW_VERSION) && $(NW_GYP) build
-endef
-
-
-build: npm-install nw-gyp assets
+build: npm-install assets
 	git rev-parse HEAD > GIT_COMMIT
 
 # Build node-webkit package
@@ -33,15 +23,8 @@ nw: build
 clean-nw:
 	rm -r ../webmenu-*.nw
 
-nw-gyp:
-	$(call nw-build,fluent-logger/node_modules/msgpack)
-	$(call nw-build,ffi/node_modules/ref)
-	$(call nw-build,ffi)
-	$(call nw-build,posix)
-
 npm-install:
 	npm install
-	make nw-gyp
 
 assets: i18n browserify browserify-test stylus node-coffee
 
