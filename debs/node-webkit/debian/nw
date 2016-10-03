@@ -1,0 +1,4 @@
+#!/bin/sh
+# https://github.com/rogerwang/node-webkit/wiki/The-solution-of-lacking-libudev.so.0
+export LD_LIBRARY_PATH="/opt/nwjs:$LD_LIBRARY_PATH"
+exec /opt/nwjs/nw "$@"

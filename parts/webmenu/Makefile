@@ -1,3 +1,5 @@
+_lsb_release	:= $(shell lsb_release -c | awk '{ print $$2 }')
+
 export PATH := node_modules/.bin:$(PATH)
 
 prefix ?= /usr/local
@@ -12,7 +14,26 @@ INSTALL_DATA = $(INSTALL) -m 644
 
 export PATH := node_modules/.bin:$(PATH)
 
-build: npm-install assets
+# Jessie-related tweaks
+ifeq ($(_lsb_release),jessie)
+  NPM_PACKAGE_JSON=package.json-jessie
+  NPM_SHRINKWRAP_JSON=npm-shrinkwrap.json-jessie
+  NW_VERSION=0.8.6
+else
+  NPM_PACKAGE_JSON=package.json-default
+  NPM_SHRINKWRAP_JSON=npm-shrinkwrap.json-default
+  NW_VERSION=0.14.7
+endif
+
+# https://github.com/rogerwang/nw-gyp
+NW_GYP=$(CURDIR)/node_modules/.bin/nw-gyp
+define nw-build
+	@echo "Building node.js module '$1' for node-webkit"
+	cd node_modules/$1/ && $(NW_GYP) configure --target=$(NW_VERSION) && $(NW_GYP) build
+endef
+
+
+build: npm-install nw-gyp assets
 	git rev-parse HEAD > GIT_COMMIT
 
 # Build node-webkit package
@@ -23,15 +44,16 @@ nw: build
 clean-nw:
 	rm -r ../webmenu-*.nw
 
+nw-gyp:
+	$(call nw-build,ffi)
+	$(call nw-build,posix)
+	$(call nw-build,ref)
+
 npm-install:
-	if nodejs -v | grep -q '^v0.10'; then \
-	  cp npm-shrinkwrap.json-node-v0.10 npm-shrinkwrap.json \
-	    && cp package.json-node-v0.10 package.json; \
-	else \
-	  cp npm-shrinkwrap.json-default npm-shrinkwrap.json \
-	    && cp package.json-default package.json; \
-	fi
+	cp $(NPM_PACKAGE_JSON) package.json
+	cp $(NPM_SHRINKWRAP_JSON) npm-shrinkwrap.json
 	npm install
+	make nw-gyp
 
 assets: i18n browserify browserify-test stylus node-coffee
 

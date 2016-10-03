@@ -1,6 +1,6 @@
---- /dev/null	2016-09-29 10:02:21.270254245 +0300
-+++ nwjs/Makefile	2016-09-29 12:50:36.848966404 +0300
-@@ -0,0 +1,21 @@
+--- /dev/null	2016-09-30 15:25:59.694822212 +0300
++++ nwjs/Makefile	2016-09-30 15:58:34.057714432 +0300
+@@ -0,0 +1,38 @@
 +prefix ?= /usr/local
 +
 +.PHONY: build
@@ -12,13 +12,30 @@
 +	mkdir -p $(DESTDIR)/opt/nwjs
 +	mkdir -p $(DESTDIR)/opt/nwjs/lib
 +	mkdir -p $(DESTDIR)/opt/nwjs/locales
++	mkdir -p $(DESTDIR)/opt/nwjs/pnacl
 +	mkdir -p $(DESTDIR)$(prefix)/bin
 +
-+	install -o root -g root -m 644 -t $(DESTDIR)/opt/nwjs \
-+	    credits.html icudtl.dat natives_blob.bin nw_100_percent.pak \
-+	    nw_200_percent.pak resources.pak snapshot_blob.bin
++	install -o root -g root -m 755 -t $(DESTDIR)/opt/nwjs \
++	    chromedriver minidump_stackwalk nacl_helper nacl_helper_bootstrap \
++	    nacl_irt_x86_64.nexe nw nwjc payload
++	install -o root -g root -m 644 -t $(DESTDIR)/opt/nwjs credits.html \
++	    icudtl.dat natives_blob.bin nw_100_percent.pak resources.pak \
++	    snapshot_blob.bin
 +	install -o root -g root -m 755 -t $(DESTDIR)/opt/nwjs/lib \
 +	    lib/libffmpeg.so lib/libnode.so lib/libnw.so
 +	install -o root -g root -m 644 -t $(DESTDIR)/opt/nwjs/locales \
-+	    locales/*.pak
++	    locales/*
++	install -o root -g root -m 755 -t $(DESTDIR)/opt/nwjs/pnacl \
++	    pnacl/pnacl_public_x86_64_ld_nexe \
++	    pnacl/pnacl_public_x86_64_pnacl_llc_nexe \
++	    pnacl/pnacl_public_x86_64_pnacl_sz_nexe
++	install -o root -g root -m 644 -t $(DESTDIR)/opt/nwjs/pnacl \
++	    pnacl/pnacl_public_pnacl_json \
++	    pnacl/pnacl_public_x86_64_crtbegin_for_eh_o \
++	    pnacl/pnacl_public_x86_64_crtbegin_o \
++	    pnacl/pnacl_public_x86_64_crtend_o \
++	    pnacl/pnacl_public_x86_64_libcrt_platform_a \
++	    pnacl/pnacl_public_x86_64_libgcc_a \
++	    pnacl/pnacl_public_x86_64_libpnacl_irt_shim_a \
++	    pnacl/pnacl_public_x86_64_libpnacl_irt_shim_dummy_a
 +	install -o root -g root -m 755 -t $(DESTDIR)/opt/nwjs nw
