@@ -22,6 +22,10 @@ class bootserver_ddns {
   }
 
   service {
+    'bind9':
+      enable => true,
+      ensure => 'running';
+
     'dnsmasq':
       enable => true,
       ensure => 'running';
