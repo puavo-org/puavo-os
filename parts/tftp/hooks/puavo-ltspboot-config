@@ -17,11 +17,13 @@ boot_label() {
   kernel_arguments=$4
   hosttype=$5
 
+  # XXX "root=/dev/nbd0" could be dropped, but there is code in use that
+  # XXX greps /proc/cmdline for it and changes behaviour based on that.
   cat <<EOF
 label ltsp-NBD-${arch}
   menu label LTSP, using NBD with ${arch}-kernel
   kernel ltsp/${preferred_boot_image}/vmlinuz${kernel_version_suffix}-${arch}
-  append ro initrd=ltsp/${preferred_boot_image}/initrd.img${kernel_version_suffix}-${arch} init=/sbin/init-puavo puavo.hosttype=${hosttype} root=/dev/nbd0 nbdroot=:${preferred_boot_image} ${kernel_arguments}
+  append ro initrd=ltsp/${preferred_boot_image}/initrd.img${kernel_version_suffix}-${arch} init=/sbin/init-puavo puavo.hosttype=${hosttype} root=/dev/nbd0 nbdroot=dhcp,${preferred_boot_image},nbd0 ${kernel_arguments}
 EOF
 }
 
@@ -70,7 +72,7 @@ label ltsp-NBD-${image}
   menu label ${image}
   menu default
   kernel ltsp/${image}/vmlinuz
-  append ro initrd=ltsp/${image}/initrd.img init=/sbin/init-puavo puavo.hosttype=unregistered root=/dev/nbd0 nbdroot=:${image}
+  append ro initrd=ltsp/${image}/initrd.img init=/sbin/init-puavo puavo.hosttype=unregistered root=/dev/nbd0 nbdroot=dhcp,${image},nbd0
   ipappend 2
 
 HEADER_EOF
@@ -82,7 +84,7 @@ HEADER_EOF
 label ltsp-NBD-${image}
   menu label ${image}
   kernel ltsp/${image}/vmlinuz
-  append ro initrd=ltsp/${image}/initrd.img init=/sbin/init-puavo puavo.hosttype=unregistered root=/dev/nbd0 nbdroot=:${image}
+  append ro initrd=ltsp/${image}/initrd.img init=/sbin/init-puavo puavo.hosttype=unregistered root=/dev/nbd0 nbdroot=dhcp,${image},nbd0
   ipappend 2
 
 EOF
@@ -242,7 +244,7 @@ label ltsp-NBD
   menu label LTSP, using NBD
   menu default
   kernel ltsp/${preferred_boot_image}/vmlinuz${kernel_version_suffix}
-  append ro initrd=ltsp/${preferred_boot_image}/initrd.img${kernel_version_suffix} init=/sbin/init-puavo puavo.hosttype=${hosttype} root=/dev/nbd0 nbdroot=:${preferred_boot_image} ${kernel_arguments}
+  append ro initrd=ltsp/${preferred_boot_image}/initrd.img${kernel_version_suffix} init=/sbin/init-puavo puavo.hosttype=${hosttype} root=/dev/nbd0 nbdroot=dhcp,${preferred_boot_image},nbd0 ${kernel_arguments}
   ipappend 2
 EOF
 )
