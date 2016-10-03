@@ -14,7 +14,7 @@ link_libudev(){
     do
       if [ -f $i ]
       then
-        ln -sf "$i" /opt/node-webkit/libudev.so.0
+        ln -sf "$i" /opt/nwjs/libudev.so.0
         break
       fi
     done

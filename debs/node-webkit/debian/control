@@ -1,4 +1,4 @@
-Source: node-webkit
+Source: nwjs
 Section: utils
 Priority: extra
 Maintainer: Opinsys Developers <dev@opinsys.fi>
@@ -6,7 +6,7 @@ Build-Depends: debhelper (>= 8)
 Standards-Version: 3.9.6
 Homepage: https://github.com/rogerwang/node-webkit
 
-Package: node-webkit
+Package: nwjs
 Architecture: amd64
 Depends: ${misc:Depends}, openssl, zlib1g, libnss3
 Description: Call all Node.js modules directly from DOM

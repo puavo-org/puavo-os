@@ -1,3 +1,11 @@
+nwjs (0.8.6-0+puavo1) stable; urgency=low
+
+  * Change package name to nwjs, because it is the new name for this
+    and that name is used as a dependency for other packages
+    (webmenu and...).
+
+ -- Juha Erkkilä <Juha.Erkkila@opinsys.fi>  Mon, 03 Oct 2016 10:26:24 +0300
+
 node-webkit (0.8.6-0+puavo1) stable; urgency=medium
 
   * Bumped up standards version to 3.9.6

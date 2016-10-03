@@ -25,7 +25,7 @@ Index: node-webkit/Makefile
 +	echo :\)
 +
 +install:
-+	mkdir -p $(DESTDIR)/opt/node-webkit
++	mkdir -p $(DESTDIR)/opt/nwjs
 +	install -o root -g root -m 755 nw $(DESTDIR)/opt/nwjs
 +	install -o root -g root -m 644 libffmpegsumo.so $(DESTDIR)/opt/nwjs
 +	install -o root -g root -m 644 nw.pak $(DESTDIR)/opt/nwjs
