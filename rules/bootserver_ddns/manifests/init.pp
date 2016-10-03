@@ -7,18 +7,27 @@ class bootserver_ddns {
   exec {
     'ensure ubnt.conf exists':
       command => '/bin/echo \#option ubnt.unifi-address xxx.xxx.xxx.xxx; >/etc/dhcp/ubnt.conf',
-      onlyif  => '/usr/bin/test ! -e /etc/dhcp/ubnt.conf';
+      onlyif  => '/usr/bin/test ! -e /etc/dhcp/ubnt.conf',
+      require => Package['isc-dhcp-server'];
   }
 
   file {
     '/etc/dhcp/dhcpd.conf':
       notify  => Service['isc-dhcp-server'],
       content => template('bootserver_ddns/dhcpd.conf'),
-      require => Exec['ensure ubnt.conf exists'];
-    
+      require => [ Package['isc-dhcp-server']
+                 , Exec['ensure ubnt.conf exists'] ];
     '/etc/dnsmasq.conf':
       notify  => Service['dnsmasq'],
-      content => template('bootserver_ddns/dnsmasq.conf');
+      content => template('bootserver_ddns/dnsmasq.conf'),
+      require => Package['dnsmasq'];
+  }
+  
+  package {
+    [ 'bind9'
+    , 'dnsmasq'
+    , 'isc-dhcp-server' ]:
+      ensure => present;
   }
 
   service {
