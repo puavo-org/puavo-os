@@ -1,0 +1,24 @@
+#!/bin/bash
+
+set -eu
+
+zonefile_src=$1
+shift
+zonefile_dst=$1
+shift
+
+tmpfile=
+
+trap 'rm -f "${tmpfile}"' EXIT
+
+rndc status >/dev/null && rndc stop
+
+[ -e "${zonefile_dst}.jnl" ] && rm -f "${zonefile_dst}.jnl"
+
+zonefile_dst_dir=$(dirname "${zonefile_dst}")
+mkdir -p "${zonefile_dst_dir}"
+
+tmpfile=$(mktemp "--tmpdir=${zonefile_dst_dir}")
+
+cp -p "${zonefile_src}" "${tmpfile}" 
+mv "${tmpfile}" "${zonefile_dst}"

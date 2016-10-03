@@ -1,0 +1,13 @@
+$ORIGIN .
+$TTL 0		; no TTL
+<%= @puavo_domain %>	IN SOA	ns1.<%= @puavo_domain %>. 20101209. (
+				2010088447 ; serial
+				28800      ; refresh (8 hours)
+				3600       ; retry (1 hour)
+				604800     ; expire (1 week)
+				38400      ; minimum (10 hours 40 minutes)
+				)
+			NS      ns1.<%= @puavo_domain %>.
+$ORIGIN <%= @puavo_domain %>.
+ns1			A	<%= @ipaddress_ltsp0 %>
+
