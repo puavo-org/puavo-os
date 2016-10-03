@@ -1,0 +1,12 @@
+#!/bin/bash
+
+set -eu
+
+tmpfile=
+
+trap 'rm -f "${tmpfile}"' EXIT
+
+tmpfile=$(mktemp)
+
+echo \#option ubnt.unifi-address xxx.xxx.xxx.xxx >/etc/dhcp/ubnt.conf.tmp
+mv /etc/dhcp/ubnt.conf.tmp /etc/dhcp/ubnt.conf

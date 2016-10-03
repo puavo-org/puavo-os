@@ -6,12 +6,22 @@ class bootserver_ddns {
 
   exec {
     'ensure ubnt.conf exists':
-      command => '/bin/echo \#option ubnt.unifi-address xxx.xxx.xxx.xxx; >/etc/dhcp/ubnt.conf',
-      onlyif  => '/usr/bin/test ! -e /etc/dhcp/ubnt.conf',
+      command => '/usr/local/lib/create-dummy-ubnt-conf',
+      creates => '/etc/dhcp/ubnt.conf',
       require => Package['isc-dhcp-server'];
   }
 
   file {
+    '/usr/local/lib/create-dummy-ubnt-conf':
+      content => template('bootserver_ddns/create-dummy-ubnt-conf'),
+      mode    => 0755;
+
+    '/etc/apparmor.d/local/usr.sbin.dhcpd':
+      content => template('bootserver_ddns/dhcpd.apparmor'),
+      mode    => 0644,
+      notify  => Service['apparmor'],
+      require => Package['apparmor'];
+    
     '/etc/dhcp/dhcpd.conf':
       notify  => Service['isc-dhcp-server'],
       content => template('bootserver_ddns/dhcpd.conf'),
