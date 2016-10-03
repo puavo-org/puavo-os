@@ -86,12 +86,13 @@ node-coffee:
 
 
 clean:
-	rm -f styles/main.css
-	rm -rf node_modules
 	rm -rf build/
-	rm -rf lib/
 	rm -rf i18n/*/i18n.js
+	rm -rf lib/
+	rm -rf node_modules
+	rm -rf npm-shrinkwrap.json package.json
 	rm -rf scripts/bundle.js
+	rm -f  styles/main.css
 
 install-dirs:
 	mkdir -p $(DESTDIR)$(bindir)
