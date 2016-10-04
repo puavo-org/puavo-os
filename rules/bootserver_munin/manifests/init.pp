@@ -21,7 +21,7 @@ class bootserver_munin {
   
   exec {
     'reset puavo-wlan state':
-      command => "/usr/bin/test -e '${statefile}' &&         \
+      command => "/usr/bin/test ! -e '${statefile}' ||       \
       /bin/mv '${statefile}' '${statefile}.reset_by_puppet'; \
       /usr/bin/touch '${statefile}.reset_by_puppet'",
       creates => "${statefile}.reset_by_puppet";
