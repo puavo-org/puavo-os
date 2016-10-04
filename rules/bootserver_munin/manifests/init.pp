@@ -21,10 +21,11 @@ class bootserver_munin {
   
   exec {
     'reset puavo-wlan state':
-      command => "/usr/bin/test ! -e '${statefile}' ||       \
-      /bin/mv '${statefile}' '${statefile}.reset_by_puppet'; \
+      command => "/bin/mv '${statefile}' '${statefile}.reset_by_puppet'; \
       /usr/bin/touch '${statefile}.reset_by_puppet'",
-      creates => "${statefile}.reset_by_puppet";
+      creates => "${statefile}.reset_by_puppet",
+      onlyif  => "/usr/bin/test -e '${statefile}'",
+      require => Package['munin-node'];
   }
 
   file {
