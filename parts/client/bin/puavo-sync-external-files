@@ -4,12 +4,9 @@ require "digest/sha1"
 require "fileutils"
 require "json"
 require "optparse"
-require "uri"
-
-# puavo lib must loaded before rest-client because rest-client is bundled into
-# puavo lib
 require "puavo"
-require "rest-client"
+require "puavo/rest-client"
+require "uri"
 
 options = {}
 
@@ -66,24 +63,14 @@ def read_current_files(dirpath)
 end
 
 class ExternalFiles
-  def initialize(base_uri)
-    @base_uri = base_uri
-
-    case PUAVO_ETC.hosttype
-      when 'laptop','wirelessaccesspoint'
-        @username = PUAVO_ETC.ldap_dn
-	@password = PUAVO_ETC.ldap_password
-    end
+  def initialize(base_path)
+    @base_path = base_path
+    @client = PuavoRestClient.new
   end
 
   def data(name='')
-    uri =  name != ''  ?  "#{ @base_uri }/#{ name }"  :  @base_uri
-
-    rc = @username && @password \
-           ? RestClient::Resource.new(uri, @username, @password) \
-           : RestClient::Resource.new(uri)
-
-    rc.get
+    uri =  name != ''  ?  "#{ @base_path }/#{ name }"  :  @base_path
+    @client.get(uri)
   end
 
   def index
@@ -100,12 +87,8 @@ def main(options)
 
   current_files = read_current_files(options[:target])
 
-  ef_root = URI.join(options[:server],
-		     "/v3/devices/#{ options[:hostname] }/",
-		     'external_files').to_s
-
-  puts "Connecting to #{ ef_root }"
-  ef = ExternalFiles.new(ef_root)
+  ef_urlpath = "/v3/devices/#{ options[:hostname] }/external_files"
+  ef = ExternalFiles.new(ef_urlpath)
 
   ef.index.each do |meta|
     file_path = File.join(options[:target], meta["name"])
