@@ -93,6 +93,11 @@ end
 
 def main(options)
   FileUtils.mkdir_p(options[:target])
+
+  files_to_remove = Hash[
+    Dir.glob("#{ options[:target] }/*").map { |k| [ k, 1 ] }
+  ]
+
   current_files = read_current_files(options[:target])
 
   ef_root = URI.join(options[:server],
@@ -105,6 +110,8 @@ def main(options)
   ef.index.each do |meta|
     file_path = File.join(options[:target], meta["name"])
 
+    files_to_remove.delete(file_path)
+
     if current_files.include?(meta)
       puts "OK #{ file_path } #{ meta["data_hash"] }"
       next
@@ -113,6 +120,15 @@ def main(options)
     File.open(file_path, "w") do |f|
       puts "Writing #{ file_path } #{ meta["data_hash"] }"
       f.write(ef.data(meta["name"]))
+    end
+  end
+
+  files_to_remove.each_key do |path|
+    begin
+      puts "Removing #{ path }"
+      File.unlink(path)
+    rescue StandardError => e
+      warn("Could not unlink #{ path }: #{ e.message }")
     end
   end
 end
