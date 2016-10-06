@@ -1,0 +1,6 @@
+#!/bin/sh
+
+set -eu
+
+[ -e /sys/class/net/dummywlan0 ] || ip link add name dummywlan0 type dummy
+[ -e /sys/class/net/wlan0/lower_dummywlan0 ] || brctl addif wlan0 dummywlan0
