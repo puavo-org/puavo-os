@@ -9,6 +9,7 @@ class bootserver_dummywlan {
 
   exec {
     '/usr/local/lib/dummywlan':
+      onlyif  => '/usr/bin/test ! -e /sys/class/net/wlan0/lower_dummywlan0',
       notify  => Service['isc-dhcp-server'],
       require => Bootserver_kernel_modules::Add['dummy'];
   }
