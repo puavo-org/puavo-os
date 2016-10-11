@@ -118,6 +118,10 @@ class bootserver_ddns {
       content => template('bootserver_ddns/dnsmasq.conf'),
       notify  => Service['dnsmasq'],
       require => Package['dnsmasq'];
+
+    '/etc/sudoers.d/puavo-bootserver':
+      content => template('bootserver_ddns/sudoers'),
+      mode    => 0440;
   }
 
   package {
@@ -142,6 +146,7 @@ class bootserver_ddns {
       enable => true,
       ensure => 'running',
       require => [ Bootserver_ddns::Scriptfile['puavo-update-ddns']
+                 , File['/etc/sudoers.d/puavo-bootserver']
                  , Service['bind9']
                  , Service['dnsmasq'] ];
   }
