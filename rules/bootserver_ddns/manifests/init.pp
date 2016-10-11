@@ -50,6 +50,7 @@ class bootserver_ddns {
   ::bootserver_ddns::scriptfile {
     [ 'create-dummy-ubnt-conf'
     , 'create-ddns-key'
+    , 'puavo-update-ddns'
     , 'reset-zone']:
       type => 'lib';
 
@@ -140,6 +141,8 @@ class bootserver_ddns {
     'isc-dhcp-server':
       enable => true,
       ensure => 'running',
-      require => [ Service['bind9'], Service['dnsmasq'] ];
+      require => [ Bootserver_ddns::Scriptfile['puavo-update-ddns']
+                 , Service['bind9']
+                 , Service['dnsmasq'] ];
   }
 }
