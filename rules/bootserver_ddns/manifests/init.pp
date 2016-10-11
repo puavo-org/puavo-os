@@ -52,6 +52,9 @@ class bootserver_ddns {
     , 'create-ddns-key'
     , 'reset-zone']:
       type => 'lib';
+
+    'puavo-update-airprint-ddns':
+      type => 'sbin';
   }
 
   ::bootserver_ddns::zonefile {
@@ -98,6 +101,11 @@ class bootserver_ddns {
       require => [ File[$ddns_key]
                  , Package['bind9'] ],
       source  => "file://${ddns_key}";
+
+    '/etc/cron.d/puavo-update-airprint-ddns':
+      content => template('bootserver_ddns/puavo-update-airprint-ddns.cron'),
+      mode    => 0644,
+      require => Bootserver_ddns::Scriptfile['puavo-update-airprint-ddns'];
 
     '/etc/dhcp/dhcpd.conf':
       content => template('bootserver_ddns/dhcpd.conf'),

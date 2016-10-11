@@ -1,0 +1,108 @@
+#!/usr/bin/ruby1.9.3
+#
+# Copyright 2013 Opinsys Oy
+#
+# Helper script to update DNS entries needed by AirPrint to print to CUPS
+# printers.
+
+require 'puavo'
+require 'rest-client'
+require 'yaml'
+require 'dnsruby'
+
+if File.exists?("/etc/dhcp/ddns-keys/nsupdate.key")
+  tmp = File.read("/etc/dhcp/ddns-keys/nsupdate.key")
+  if /key "(.*?)"/.match(tmp)
+    nsupdate_key_name = $1
+  end
+
+  if /secret "(.*?)"/.match(tmp)
+    nsupdate_key = $1
+  end
+end
+
+dns_server_host = "127.0.0.1"
+dns_server_port = 553
+
+# Get printer queues from the puavo-rest (bootserver)
+puavo_api_server = `puavo-resolve-api-server`.chomp
+response = RestClient.get( puavo_api_server +
+                           "/v3/boot_servers/" +
+                           PUAVO_ETC.hostname +
+                           "/wireless_printer_queues",
+                           :authorization => "Bootserver")
+
+printer_queues = []
+if response.code == 200
+  printer_queues = JSON.parse response.to_str
+end
+
+# FIXME: set tsig by initialize
+dns_server = Dnsruby::Resolver.new({ :nameserver => dns_server_host,
+                                     :port => dns_server_port })
+dns_server.tsig = [nsupdate_key_name, nsupdate_key]
+
+current_ipp_record_strings = []
+# Get current value of _universal._sub._ipp._tcp.<domain of organisation>"
+begin
+  current_ipp_records = dns_server.query( "_universal._sub._ipp._tcp.#{ PUAVO_ETC.domain }",
+                                          Dnsruby::Types.PTR )
+
+  current_ipp_record_strings = current_ipp_records.answer.map do |r|
+    r.rdata_to_string
+  end
+rescue Dnsruby::NXDomain
+  puts "PTR records not found"
+end
+
+new_ipp_record_strings = printer_queues.map do |printer_queue|
+  "#{ printer_queue['name'] }._ipp._tcp.#{ PUAVO_ETC.domain }."
+end
+
+dns_update_packet = Dnsruby::Update.new(PUAVO_ETC.domain)
+
+# Update PTR record only if detect new printer queues
+if current_ipp_record_strings.sort != new_ipp_record_strings.sort
+  puts "Update PTR Records (_universal._sub._ipp._tcp.<doamin>)"
+  # Remove current _universal._sub._ipp._tcp.<domain> record
+  dns_update_packet.delete("_universal._sub._ipp._tcp.#{ PUAVO_ETC.domain }")
+  # Add all printer queues to _universal._sub._ipp._tcp.<domain> record
+  printer_queues.each do |printer_queue|
+    dns_update_packet.add("_universal._sub._ipp._tcp.#{ PUAVO_ETC.domain }", 'PTR', 60, "#{ printer_queue['name'] }._ipp._tcp.#{ PUAVO_ETC.domain }.")
+  end
+end
+
+printer_queues.each do |printer_queue|
+  # Add srv-host record
+  puts "Add SRV records (<printer queue name>._ipp._tcp.<domain>)"
+  srv_resource_record = Dnsruby::RR.create(
+    "#{ printer_queue['name'] }._ipp._tcp.#{ PUAVO_ETC.domain } IN SRV 0 0 631 cups.#{ PUAVO_ETC.domain }"
+  )
+  dns_update_packet.add(srv_resource_record)
+  # Add txt record
+  puts "Add TXT records (<printer queue name>._ipp._tcp.<domain>)"
+  dns_update_packet.add( "#{ printer_queue['name'] }._ipp._tcp.#{ PUAVO_ETC.domain }",
+    'TXT',
+    60,
+    [ "txtvers=1",
+      "qtotal=1",
+      "Transparent=T",
+      "URF=DM3",
+      "rp=printers/#{ printer_queue['name'] }",
+      "note=#{ printer_queue['name'] }",
+      "product=(GPL Ghostscript)",
+      "printer-state=3",
+      "printer-type=0x803014",
+      "pdl=application/octet-stream,application/pdf,application/postscript,image/gif,image/jpeg,image/png,image/tiff,image/urf,text/html,text/plain,application/vnd.cups-banner,application/vnd.cups-pdf,application/vnd.cups-postscript,application/vnd.cups-raw" ] 
+  )
+end
+
+begin
+  if dns_update_packet.update_counts > 0
+    # Update dns server
+    puts "Send update packet to DNS server"
+    dns_server.send_message(dns_update_packet)
+  end
+rescue Exception => e
+  puts "DNS server (#{ dns_server_host }) update failed (new universal ipp records): #{e.inspect}"
+end
