@@ -1,5 +1,6 @@
 class bootserver_munin {
-  include bootserver_nginx
+  include bootserver_helpers,
+          bootserver_nginx
 
   define plugin($wildcard = false) {
     $plugin_name = $title
@@ -44,7 +45,8 @@ class bootserver_munin {
     '/usr/share/munin/plugins/puavo-bootserver-clients':
       content => template('bootserver_munin/puavo-bootserver-clients'),
       mode    => 0755,
-      require => Package['munin-node'];
+      require => [ File['/usr/local/bin/puavo-bootserver-list-clients']
+                 , Package['munin-node'] ];
 
     '/usr/share/munin/plugins/puavo-wlan':
       content => template('bootserver_munin/puavo-wlan'),
