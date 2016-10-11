@@ -65,7 +65,15 @@ end
 class ExternalFiles
   def initialize(base_path)
     @base_path = base_path
-    @client = PuavoRestClient.new
+
+    case PUAVO_ETC.hosttype
+      when 'laptop', 'wirelessaccesspoint'
+        auth_type = :etc
+      else
+        auth_type = :bootserver
+    end
+
+    @client = PuavoRestClient.new :auth => auth_type
   end
 
   def data(name='')
