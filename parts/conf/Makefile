@@ -65,7 +65,7 @@ puavo-conf: puavo-conf.o libpuavoconf.la
 	libtool --mode=link gcc $(LDFLAGS) -o $@ $^
 
 puavo-conf-init: puavo-conf-init.o libpuavoconf.la
-	libtool --mode=link gcc $(LDFLAGS) -o $@ $^
+	libtool --mode=link gcc $(LDFLAGS) -ljansson -o $@ $^
 
 libpuavoconf.la: conf.lo common.lo db.lo dbus.lo
 	libtool --mode=link \
