@@ -1,0 +1,4 @@
+PATH=/bin:/sbin
+
+# Trim SSD-cached /home every night at 03:00
+00 03 * * * root grep -q '^/dev/mapper/cache-home /home ext4' && fstrim /home >/dev/null
