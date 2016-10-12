@@ -1,36 +1,124 @@
-#!/usr/bin/ruby
+/* puavo-conf-update
+ * Copyright (C) 2016 Opinsys Oy
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 
-# Copyright (C) 2016 Opinsys Oy
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 2 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
+#include <sys/types.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
 
-#
-# for documentation see README.md
-#
+#include <err.h>
+#include <fcntl.h>
+#include <getopt.h>
+#include <glob.h>
+#include <jansson.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
 
-#
-# tested speed on Lenovo ThinkCentre Edge (1578D7G)
-#   with 100 hardware-quirks.json files, with 1000 pci-id keys on each:
-#   took about 0.8 seconds (not to be taken as an exact value, code may
-#   have changed)
-#
-# ways to optimize:
-#   - rewrite in C
-#   - have only a few json-files to parse
-#   - replace calls for dmidecode, lspci, lsusb with something more efficient
-#
+#include "conf.h"
+
+#define DEVICEJSON_PATH "/etc/puavo/device.json"
+
+static void	usage(void);
+
+int
+main(int argc, char *argv[])
+{
+	puavo_conf_t *conf;
+	struct puavo_conf_err err;
+	const char *device_json_path;
+	static struct option long_options[] = {
+	    { "devicejson-path", required_argument, 0, 0 },
+	    { "help",            no_argument,       0, 0 },
+	};
+	int c, option_index, status;
+
+	status = 0;
+
+	device_json_path = DEVICEJSON_PATH;
+
+	for (;;) {
+		option_index = 0;
+		c = getopt_long(argc, argv, "", long_options, &option_index);
+		if (c == -1)
+			break;
+
+		if (c != 0) {
+			usage();
+			return 1;
+		}
+
+		switch (option_index) {
+		case 0:
+			device_json_path = optarg;
+			break;
+		case 1:
+			usage();
+			return 0;
+		default:
+			usage();
+			return 1;
+		}
+	}
+
+	if (optind < argc) {
+		usage();
+		return 1;
+	}
+
+	if (puavo_conf_open(&conf, &err))
+		errx(1, "Failed to open config backend: %s", err.msg);
+
+	/* XXX */
+	printf("Got device json path %s\n", device_json_path);
+
+	if (puavo_conf_close(conf, &err) == -1) {
+		warnx("Failed to close config backend: %s", err.msg);
+		status = EXIT_FAILURE;
+	}
+
+	return status;
+
+	return 0;
+}
+
+static void
+usage(void)
+{
+	printf("Usage:\n"
+	       "    puavo-conf-update [OPTION]...\n"
+	       "\n"
+	       "Update configuration database by overwriting parameter values\n"
+	       "from the following sources, in the given order:\n"
+	       "\n"
+	       "  1. hardware quirks\n"
+	       "  2. device specific settings from " DEVICEJSON_PATH "\n"
+	       "  3. kernel command line\n"
+	       "\n"
+	       "Options:\n"
+	       "  --help, -h                display this help and exit\n"
+	       "\n"
+	       "  --devicejson-path FILE    filepath of the device.json,\n"
+	       "                            defaults to " DEVICEJSON_PATH "\n"
+	       "\n");
+}
+
+#if 0
+
+  #!/usr/bin/ruby
 
 require 'getoptlong'
 require 'json'
@@ -268,7 +356,7 @@ def get_profile_params(profile)
     end
 end
 
-## Main
+  ## Main
 
 $status = 0
 
@@ -320,3 +408,5 @@ ensure
 end
 
 exit($status)
+
+#endif
