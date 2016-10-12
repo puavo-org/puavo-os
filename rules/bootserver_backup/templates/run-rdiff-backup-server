@@ -1,0 +1,19 @@
+#!/bin/sh
+
+set -e
+
+maybe_run_command() {
+  command=$1
+  if [ "$SSH_ORIGINAL_COMMAND" = "$command" ]; then
+    exec $command
+  fi
+}
+
+backuppable_dirs="/etc /home"
+
+for dir in $backuppable_dirs; do
+  maybe_run_command "rdiff-backup --server --restrict-read-only $dir"
+done
+
+echo 'Access not allowed' >&2
+exit 1

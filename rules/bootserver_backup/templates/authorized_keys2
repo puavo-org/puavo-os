@@ -1,0 +1,1 @@
+from="<%= scope.lookupvar('bootserver_config::backup_server1_ip') %>,<%= scope.lookupvar('bootserver_config::backup_server2_ip') %>",command="/root/run-rdiff-backup-server" <%= scope.lookupvar('bootserver_config::backup_ssh_pubkey') %>
