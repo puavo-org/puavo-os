@@ -1,0 +1,8 @@
+description "cups-watchdog"
+
+start on started cups
+stop on stopped cups
+
+exec /usr/local/lib/cups-watchdog
+
+respawn

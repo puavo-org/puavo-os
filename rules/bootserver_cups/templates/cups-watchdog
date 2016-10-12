@@ -1,0 +1,22 @@
+#!/bin/sh
+
+set -eu
+
+echo "$(date --rfc-3339=seconds) started" >&2
+
+while true; do
+    sleep 30
+
+    lpstat -a >/dev/null &
+    lpstatpid=$!
+    sleep 4
+
+    kill -0 "${lpstatpid}" 2>/dev/null || continue
+
+    kill "${lpstatpid}"
+    restart cups
+
+    echo "$(date --rfc-3339=seconds) cups restarted" >&2
+    curl -d 'json={"msg": "cups restarted"}' \
+        http://localhost:8888/cups-watchdog || true
+done

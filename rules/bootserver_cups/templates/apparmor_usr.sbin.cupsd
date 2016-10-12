@@ -1,0 +1,6 @@
+# Site-specific additions and overrides for usr.sbin.cupsd.
+# For more details, please see /etc/apparmor.d/local/README.
+/etc/puavo/certs/* r,
+/etc/puavo/org.json r,
+/usr/lib/puavoadmins-validate-pam-user ixr,
+/var/lib/puavoadmins/org.json.lock kr,
