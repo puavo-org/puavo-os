@@ -1,0 +1,2 @@
+/export *(rw,fsid=0,async,subtree_check,no_root_squash,sec=krb5p:krb5i:krb5:sys:null)
+/export/home *(rw,async,subtree_check,no_root_squash,sec=krb5p:krb5i:krb5)
