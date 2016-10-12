@@ -6,6 +6,10 @@ class bootserver_syslog {
       ensure => link,
       target => '/etc/cron.daily/logrotate';
 
+    '/etc/logrotate.d/hosts':
+      content => template('bootserver_syslog/hosts.logrotate'),
+      mode    => 0644;
+
     '/etc/rsyslog.conf':
       content => template('bootserver_syslog/rsyslog.conf'),
       mode    => '0644',
