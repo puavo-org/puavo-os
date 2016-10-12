@@ -15,6 +15,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define _BSD_SOURCE
+
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -32,7 +34,16 @@
 
 #define DEVICEJSON_PATH "/etc/puavo/device.json"
 
-static void	usage(void);
+char *puavo_hosttype;
+
+static int	 apply_device_settings(puavo_conf_t *, char *);
+static int	 apply_hosttype_profile(puavo_conf_t *, char *);
+static int	 apply_hwquirks(puavo_conf_t *);
+static int	 apply_kernel_arguments(puavo_conf_t *, char *);
+static char	*get_cmdline(void);
+static char	*get_puavo_hosttype(char *);
+static int	 update_puavoconf(puavo_conf_t *, const char *);
+static void	 usage(void);
 
 int
 main(int argc, char *argv[])
@@ -82,8 +93,10 @@ main(int argc, char *argv[])
 	if (puavo_conf_open(&conf, &err))
 		errx(1, "Failed to open config backend: %s", err.msg);
 
-	/* XXX */
-	printf("Got device json path %s\n", device_json_path);
+	if (update_puavoconf(conf, device_json_path) != 0) {
+		warnx("problem in updating puavoconf");
+		status = EXIT_FAILURE;
+	}
 
 	if (puavo_conf_close(conf, &err) == -1) {
 		warnx("Failed to close config backend: %s", err.msg);
@@ -114,6 +127,133 @@ usage(void)
 	       "  --devicejson-path FILE    filepath of the device.json,\n"
 	       "                            defaults to " DEVICEJSON_PATH "\n"
 	       "\n");
+}
+
+static int
+update_puavoconf(puavo_conf_t *conf, const char *device_json_path)
+{
+	char *cmdline;
+	char *hosttype;
+	int ret;
+
+	ret = 0;
+
+	cmdline = get_cmdline();
+	if (cmdline == NULL) {
+		warnx("could not read /proc/cmdline");
+		ret = 1;
+	}
+
+	hosttype = NULL;
+	if (cmdline != NULL)
+		hosttype = get_puavo_hosttype(cmdline);
+
+	if (hosttype != NULL) {
+		if (apply_hosttype_profile(conf, hosttype) != 0)
+			ret = 1;
+	} else {
+		warnx("skipping hosttype profile because hosttype not known");
+		ret = 1;
+	}
+
+	if (apply_hwquirks(conf) != 0)
+		ret = 1;
+
+	if (apply_device_settings(conf, device_json_path) != 0)
+		ret = 1;
+
+	if (cmdline != 0) {
+		if (apply_kernel_arguments(conf, cmdline) != 0)
+			ret = 1;
+	} else {
+		warnx("skipping kernel arguments because those are not known");
+		ret = 1;
+	}
+
+	free(cmdline);
+	free(hosttype);
+
+	return ret;
+}
+
+static char *
+get_puavo_hosttype(char *cmdline)
+{
+	char *cmdarg, *hosttype;
+	size_t prefix_len;
+	int c;
+
+	hosttype = NULL;
+
+	prefix_len = sizeof("puavo.hosttype=") - 1;
+
+	while ((cmdarg = strsep(&cmdline, " \t\n")) != NULL) {
+		c = strncmp(cmdarg, "puavo.hosttype=", prefix_len);
+		if (c == 0) {
+			hosttype = strdup(&cmdarg[prefix_len]);
+			if (hosttype == NULL)
+				warn("strdup() error");
+			break;
+		}
+	}
+
+	if (hosttype == NULL)
+		warnx("could not determine puavo hosttype");
+
+	return hosttype;
+}
+
+static char *
+get_cmdline(void)
+{
+	FILE *cmdline;
+	char *line;
+	size_t n;
+
+	if ((cmdline = fopen("/proc/cmdline", "r")) == NULL) {
+		warn("fopen /proc/cmdline");
+		return NULL;
+	}
+
+	line = NULL;
+	n = 0;
+	if (getline(&line, &n, cmdline) == -1) {
+		warn("getline() on /proc/cmdline");
+		free(line);
+		return NULL;
+	}
+
+	(void) fclose(cmdline);
+
+	return line;
+}
+
+static int
+apply_device_settings(puavo_conf_t *conf, char *device_json_path)
+{
+	/* XXX */
+	return 0;
+}
+
+static int
+apply_hosttype_profile(puavo_conf_t *conf, char *hosttype)
+{
+	/* XXX */
+	return 0;
+}
+
+static int
+apply_hwquirks(puavo_conf_t *conf)
+{
+	/* XXX */
+	return 0;
+}
+
+static int
+apply_kernel_arguments(puavo_conf_t *conf, char *cmdline)
+{
+	/* XXX */
+	return 0;
 }
 
 #if 0
