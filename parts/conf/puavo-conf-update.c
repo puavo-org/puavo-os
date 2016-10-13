@@ -36,14 +36,16 @@
 
 char *puavo_hosttype;
 
-static int	 apply_device_settings(puavo_conf_t *, const char *);
-static int	 apply_hosttype_profile(puavo_conf_t *, const char *);
-static int	 apply_hwquirks(puavo_conf_t *);
-static int	 apply_kernel_arguments(puavo_conf_t *, char *);
+static int	 apply_device_settings(puavo_conf_t *, const char *, int);
+static int	 apply_hosttype_profile(puavo_conf_t *, const char *, int);
+static int	 apply_hwquirks(puavo_conf_t *, int);
+static int	 apply_kernel_arguments(puavo_conf_t *, char *, int);
 static char	*get_cmdline(void);
 static char	*get_puavo_hosttype(const char *);
+static int	 overwrite_value(puavo_conf_t *, const char *, const char *,
+    int);
 static json_t	*parse_json_file(const char *);
-static int	 update_puavoconf(puavo_conf_t *, const char *);
+static int	 update_puavoconf(puavo_conf_t *, const char *, int);
 static void	 usage(void);
 
 int
@@ -55,10 +57,12 @@ main(int argc, char *argv[])
 	static struct option long_options[] = {
 	    { "devicejson-path", required_argument, 0, 0 },
 	    { "help",            no_argument,       0, 0 },
+	    { "verbose",         no_argument,       0, 0 },
 	};
-	int c, option_index, status;
+	int c, option_index, status, verbose;
 
 	status = 0;
+	verbose = 0;
 
 	device_json_path = DEVICEJSON_PATH;
 
@@ -80,6 +84,9 @@ main(int argc, char *argv[])
 		case 1:
 			usage();
 			return 0;
+		case 2:
+			verbose = 1;
+			break;
 		default:
 			usage();
 			return 1;
@@ -94,7 +101,7 @@ main(int argc, char *argv[])
 	if (puavo_conf_open(&conf, &err))
 		errx(1, "Failed to open config backend: %s", err.msg);
 
-	if (update_puavoconf(conf, device_json_path) != 0) {
+	if (update_puavoconf(conf, device_json_path, verbose) != 0) {
 		warnx("problem in updating puavoconf");
 		status = EXIT_FAILURE;
 	}
@@ -131,7 +138,7 @@ usage(void)
 }
 
 static int
-update_puavoconf(puavo_conf_t *conf, const char *device_json_path)
+update_puavoconf(puavo_conf_t *conf, const char *device_json_path, int verbose)
 {
 	char *cmdline;
 	char *hosttype;
@@ -150,7 +157,7 @@ update_puavoconf(puavo_conf_t *conf, const char *device_json_path)
 		hosttype = get_puavo_hosttype(cmdline);
 
 	if (hosttype != NULL) {
-		if (apply_hosttype_profile(conf, hosttype) != 0) {
+		if (apply_hosttype_profile(conf, hosttype, verbose) != 0) {
 			warnx("could not apply hosttype profile %s", hosttype);
 			ret = 1;
 		}
@@ -159,14 +166,14 @@ update_puavoconf(puavo_conf_t *conf, const char *device_json_path)
 		ret = 1;
 	}
 
-	if (apply_hwquirks(conf) != 0)
+	if (apply_hwquirks(conf, verbose) != 0)
 		ret = 1;
 
-	if (apply_device_settings(conf, device_json_path) != 0)
+	if (apply_device_settings(conf, device_json_path, verbose) != 0)
 		ret = 1;
 
 	if (cmdline != 0) {
-		if (apply_kernel_arguments(conf, cmdline) != 0)
+		if (apply_kernel_arguments(conf, cmdline, verbose) != 0)
 			ret = 1;
 	} else {
 		warnx("skipping kernel arguments because those are not known");
@@ -220,7 +227,7 @@ get_cmdline(void)
 	char *line;
 	size_t n;
 
-	if ((cmdline = fopen("/proc/cmdline", "r")) == NULL) {
+	if ((cmdline = fopen("/tmp/cmdline", "r")) == NULL) {
 		warn("fopen /proc/cmdline");
 		return NULL;
 	}
@@ -239,16 +246,16 @@ get_cmdline(void)
 }
 
 static int
-apply_device_settings(puavo_conf_t *conf, const char *device_json_path)
+apply_device_settings(puavo_conf_t *conf, const char *device_json_path,
+    int verbose)
 {
 	/* XXX */
 	return 0;
 }
 
 static int
-apply_hosttype_profile(puavo_conf_t *conf, const char *hosttype)
+apply_hosttype_profile(puavo_conf_t *conf, const char *hosttype, int verbose)
 {
-	struct puavo_conf_err err;
 	json_t *root, *node_value;
 	const char *param_name, *param_value;
 	char *hosttype_profile_path;
@@ -285,12 +292,9 @@ apply_hosttype_profile(puavo_conf_t *conf, const char *hosttype)
 			retvalue = 1;
 			continue;
 		}
-		ret = puavo_conf_overwrite(conf, param_name, param_value, &err);
-		if (ret != 0) {
-			warnx("error overwriting %s --> %s : %s", param_name,
-			    param_value, err.msg);
+		ret = overwrite_value(conf, param_name, param_value, verbose);
+		if (ret != 0)
 			retvalue = 1;
-		}
 	}
 
 finish:
@@ -303,16 +307,15 @@ finish:
 }
 
 static int
-apply_hwquirks(puavo_conf_t *conf)
+apply_hwquirks(puavo_conf_t *conf, int verbose)
 {
 	/* XXX */
 	return 0;
 }
 
 static int
-apply_kernel_arguments(puavo_conf_t *conf, char *cmdline)
+apply_kernel_arguments(puavo_conf_t *conf, char *cmdline, int verbose)
 {
-	struct puavo_conf_err err;
 	char *cmdarg, *param_name, *param_value;
 	size_t prefix_len;
 	int ret, retvalue;
@@ -330,15 +333,29 @@ apply_kernel_arguments(puavo_conf_t *conf, char *cmdline)
 		if (param_value == NULL)
 			continue;
 
-		ret = puavo_conf_overwrite(conf, param_name, param_value, &err);
-		if (ret != 0) {
-			warnx("error overwriting %s --> %s : %s", param_name,
-			    param_value, err.msg);
+		ret = overwrite_value(conf, param_name, param_value, verbose);
+		if (ret != 0)
 			retvalue = 1;
-		}
 	}
 
 	return retvalue;
+}
+
+static int
+overwrite_value(puavo_conf_t *conf, const char *key, const char *value,
+    int verbose)
+{
+	struct puavo_conf_err err;
+	int ret;
+
+	ret = puavo_conf_overwrite(conf, key, value, &err);
+
+	if (ret != 0) {
+		warnx("error overwriting %s --> %s : %s", key, value, err.msg);
+	} else if (verbose) {
+		(void) printf("puavo-conf-update: setting puavo conf key %s"
+		    " --> %s\n", key, value);
+	}
 }
 
 static json_t *
