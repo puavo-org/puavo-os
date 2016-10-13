@@ -42,6 +42,7 @@ static int	 apply_hwquirks(puavo_conf_t *);
 static int	 apply_kernel_arguments(puavo_conf_t *, char *);
 static char	*get_cmdline(void);
 static char	*get_puavo_hosttype(const char *);
+static json_t	*parse_json_file(const char *);
 static int	 update_puavoconf(puavo_conf_t *, const char *);
 static void	 usage(void);
 
@@ -149,8 +150,10 @@ update_puavoconf(puavo_conf_t *conf, const char *device_json_path)
 		hosttype = get_puavo_hosttype(cmdline);
 
 	if (hosttype != NULL) {
-		if (apply_hosttype_profile(conf, hosttype) != 0)
+		if (apply_hosttype_profile(conf, hosttype) != 0) {
+			warnx("could not apply hosttype profile %s", hosttype);
 			ret = 1;
+		}
 	} else {
 		warnx("skipping hosttype profile because hosttype not known");
 		ret = 1;
@@ -181,7 +184,6 @@ get_puavo_hosttype(const char *cmdline)
 {
 	char *cmdarg, *cmdline_copy, *cmdline_iter, *hosttype;
 	size_t prefix_len;
-	int c;
 
 	hosttype = NULL;
 
@@ -246,8 +248,58 @@ apply_device_settings(puavo_conf_t *conf, const char *device_json_path)
 static int
 apply_hosttype_profile(puavo_conf_t *conf, const char *hosttype)
 {
-	/* XXX */
-	return 0;
+	struct puavo_conf_err err;
+	json_t *root, *node_value;
+	const char *param_name, *param_value;
+	char *hosttype_profile_path;
+	int ret, retvalue;
+
+	retvalue = 0;
+	root = NULL;
+
+	ret = asprintf(&hosttype_profile_path,
+	    "/usr/share/puavo-conf/profile-overwrites/%s.json",
+	    hosttype);
+	if (ret == -1) {
+		warnx("asprintf() error in apply_hosttype_profile()");
+		return 1;
+	}
+
+	if ((root = parse_json_file(hosttype_profile_path)) == NULL) {
+		warnx("parse_json_file() failed");
+		retvalue = 1;
+		goto finish;
+	}
+
+	if (!json_is_object(root)) {
+		warnx("hosttype profile %s is not in correct format",
+		    hosttype_profile_path);
+		retvalue = 1;
+		goto finish;
+	}
+
+	json_object_foreach(root, param_name, node_value) {
+		if ((param_value = json_string_value(node_value)) == NULL) {
+			warnx("hosttype profile %s has a non-string value",
+			    hosttype_profile_path);
+			retvalue = 1;
+			continue;
+		}
+		ret = puavo_conf_overwrite(conf, param_name, param_value, &err);
+		if (ret != 0) {
+			warnx("error overwriting %s --> %s : %s", param_name,
+			    param_value, err.msg);
+			retvalue = 1;
+		}
+	}
+
+finish:
+	if (root != NULL)
+		json_decref(root);
+
+	free(hosttype_profile_path);
+
+	return retvalue;
 }
 
 static int
@@ -287,6 +339,43 @@ apply_kernel_arguments(puavo_conf_t *conf, char *cmdline)
 	}
 
 	return retvalue;
+}
+
+static json_t *
+parse_json_file(const char *filepath)
+{
+	json_t *root;
+	json_error_t error;
+	const char *json;
+	off_t len;
+	int fd;
+
+	root = NULL;
+
+	if ((fd = open(filepath, O_RDONLY)) == -1) {
+		warn("open() on %s", filepath);
+		return NULL;
+	}
+
+	if ((len = lseek(fd, 0, SEEK_END)) == -1) {
+		warn("lseek() on %s", filepath);
+		goto finish;
+	}
+
+	if ((json = mmap(0, len, PROT_READ, MAP_PRIVATE, fd, 0)) == NULL) {
+		warn("mmap() on %s", filepath);
+		goto finish;
+	}
+
+	if ((root = json_loads(json, 0, &error)) == NULL) {
+		warnx("error parsing json file %s line %d: %s", filepath,
+		    error.line, error.text);
+	}
+
+finish:
+	(void) close(fd);
+
+	return root;
 }
 
 #if 0
