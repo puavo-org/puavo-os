@@ -196,7 +196,8 @@ handle_one_paramdef(puavo_conf_t *conf, const char *param_name,
 	}
 
 	if (puavo_conf_add(conf, param_name, value, &err) != 0) {
-		warnx("error setting %s=%s : %s", param_name, value, err.msg);
+		warnx("error adding %s --> %s : %s", param_name, value,
+		    err.msg);
 		return 1;
 	}
 

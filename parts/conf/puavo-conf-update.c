@@ -15,7 +15,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define _BSD_SOURCE
+#define _GNU_SOURCE
 
 #include <sys/types.h>
 #include <sys/mman.h>
@@ -36,12 +36,12 @@
 
 char *puavo_hosttype;
 
-static int	 apply_device_settings(puavo_conf_t *, char *);
-static int	 apply_hosttype_profile(puavo_conf_t *, char *);
+static int	 apply_device_settings(puavo_conf_t *, const char *);
+static int	 apply_hosttype_profile(puavo_conf_t *, const char *);
 static int	 apply_hwquirks(puavo_conf_t *);
 static int	 apply_kernel_arguments(puavo_conf_t *, char *);
 static char	*get_cmdline(void);
-static char	*get_puavo_hosttype(char *);
+static char	*get_puavo_hosttype(const char *);
 static int	 update_puavoconf(puavo_conf_t *, const char *);
 static void	 usage(void);
 
@@ -177,28 +177,36 @@ update_puavoconf(puavo_conf_t *conf, const char *device_json_path)
 }
 
 static char *
-get_puavo_hosttype(char *cmdline)
+get_puavo_hosttype(const char *cmdline)
 {
-	char *cmdarg, *hosttype;
+	char *cmdarg, *cmdline_copy, *cmdline_iter, *hosttype;
 	size_t prefix_len;
 	int c;
 
 	hosttype = NULL;
 
+	if ((cmdline_copy = strdup(cmdline)) == NULL) {
+		warn("strdup() error in get_puavo_hosttype()");
+		return NULL;
+	}
+
 	prefix_len = sizeof("puavo.hosttype=") - 1;
 
-	while ((cmdarg = strsep(&cmdline, " \t\n")) != NULL) {
-		c = strncmp(cmdarg, "puavo.hosttype=", prefix_len);
-		if (c == 0) {
-			hosttype = strdup(&cmdarg[prefix_len]);
-			if (hosttype == NULL)
-				warn("strdup() error");
-			break;
-		}
+	cmdline_iter = cmdline_copy;
+	while ((cmdarg = strsep(&cmdline_iter, " \t\n")) != NULL) {
+		if (strncmp(cmdarg, "puavo.hosttype=", prefix_len) != 0)
+			continue;
+
+		hosttype = strdup(&cmdarg[prefix_len]);
+		if (hosttype == NULL)
+			warn("strdup() error in get_puavo_hosttype()");
+		break;
 	}
 
 	if (hosttype == NULL)
 		warnx("could not determine puavo hosttype");
+
+	free(cmdline_copy);
 
 	return hosttype;
 }
@@ -229,14 +237,14 @@ get_cmdline(void)
 }
 
 static int
-apply_device_settings(puavo_conf_t *conf, char *device_json_path)
+apply_device_settings(puavo_conf_t *conf, const char *device_json_path)
 {
 	/* XXX */
 	return 0;
 }
 
 static int
-apply_hosttype_profile(puavo_conf_t *conf, char *hosttype)
+apply_hosttype_profile(puavo_conf_t *conf, const char *hosttype)
 {
 	/* XXX */
 	return 0;
@@ -252,8 +260,33 @@ apply_hwquirks(puavo_conf_t *conf)
 static int
 apply_kernel_arguments(puavo_conf_t *conf, char *cmdline)
 {
-	/* XXX */
-	return 0;
+	struct puavo_conf_err err;
+	char *cmdarg, *param_name, *param_value;
+	size_t prefix_len;
+	int ret, retvalue;
+
+	retvalue = 0;
+
+	prefix_len = sizeof("puavo.") - 1;
+
+	while ((cmdarg = strsep(&cmdline, " \t\n")) != NULL) {
+		if (strncmp(cmdarg, "puavo.", prefix_len) != 0)
+			continue;
+
+		param_value = cmdarg;
+		param_name = strsep(&param_value, "=");
+		if (param_value == NULL)
+			continue;
+
+		ret = puavo_conf_overwrite(conf, param_name, param_value, &err);
+		if (ret != 0) {
+			warnx("error overwriting %s --> %s : %s", param_name,
+			    param_value, err.msg);
+			retvalue = 1;
+		}
+	}
+
+	return retvalue;
 }
 
 #if 0
