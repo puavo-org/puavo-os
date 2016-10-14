@@ -249,8 +249,47 @@ static int
 apply_device_settings(puavo_conf_t *conf, const char *device_json_path,
     int verbose)
 {
-	/* XXX */
-	return 0;
+	json_t *root, *device_conf, *node_value;
+	const char *param_name, *param_value;
+	int ret, retvalue;
+
+	retvalue = 0;
+
+	if ((root = parse_json_file(device_json_path)) == NULL) {
+		warnx("parse_json_file() failed for %s", device_json_path);
+		return 1;
+	}
+
+	if (!json_is_object(root)) {
+		warnx("device settings in %s are not in correct format",
+		    device_json_path);
+		retvalue = 1;
+		goto finish;
+	}
+
+	if ((device_conf = json_object_get(root, "conf")) == NULL) {
+		warnx("device settings in %s are lacking configuration values",
+		    device_json_path);
+		retvalue = 1;
+		goto finish;
+	}
+
+	json_object_foreach(device_conf, param_name, node_value) {
+		if ((param_value = json_string_value(node_value)) == NULL) {
+			warnx("device settings in %s has a non-string value"
+			    " for key %s", device_json_path, param_name);
+			retvalue = 1;
+			continue;
+		}
+		ret = overwrite_value(conf, param_name, param_value, verbose);
+		if (ret != 0)
+			retvalue = 1;
+	}
+
+finish:
+	json_decref(root);
+
+	return retvalue;
 }
 
 static int
@@ -273,7 +312,7 @@ apply_hosttype_profile(puavo_conf_t *conf, const char *hosttype, int verbose)
 	}
 
 	if ((root = parse_json_file(hosttype_profile_path)) == NULL) {
-		warnx("parse_json_file() failed");
+		warnx("parse_json_file() failed for %s", hosttype_profile_path);
 		retvalue = 1;
 		goto finish;
 	}
@@ -287,8 +326,8 @@ apply_hosttype_profile(puavo_conf_t *conf, const char *hosttype, int verbose)
 
 	json_object_foreach(root, param_name, node_value) {
 		if ((param_value = json_string_value(node_value)) == NULL) {
-			warnx("hosttype profile %s has a non-string value",
-			    hosttype_profile_path);
+			warnx("hosttype profile %s has a non-string value"
+			    " for key %s", hosttype_profile_path, param_name);
 			retvalue = 1;
 			continue;
 		}
