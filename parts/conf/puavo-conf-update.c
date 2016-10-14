@@ -64,6 +64,7 @@ main(int argc, char *argv[])
 	    { "help",            no_argument,       0, 0 },
 	    { "init",            no_argument,       0, 0 },
 	    { "verbose",         no_argument,       0, 0 },
+	    { 0,                 0,                 0, 0 },
 	};
 	int c, init, option_index, status, verbose;
 
