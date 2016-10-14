@@ -27,25 +27,13 @@ manual_add_modules overlay
 manual_add_modules overlayfs
 manual_add_modules squashfs
 
-mkdir -p ${DESTDIR}/usr/bin/                  \
-      ${DESTDIR}/usr/lib/                  \
-      ${DESTDIR}/usr/lib/ruby/vendor_ruby/ \
-      ${DESTDIR}/usr/lib/x86_64-linux-gnu/ \
-      ${DESTDIR}/usr/sbin/                 \
-      ${DESTDIR}/usr/share/puavo/
+mkdir -p ${DESTDIR}/usr/bin/ ${DESTDIR}/usr/sbin/ ${DESTDIR}/usr/share/
 
 copy_exec /usr/bin/lspci              /usr/bin
 copy_exec /usr/bin/lsusb              /usr/bin
 copy_exec /usr/bin/puavo-conf         /usr/bin
-copy_exec /usr/bin/ruby               /usr/bin
 copy_exec /usr/sbin/dmidecode         /usr/sbin
-copy_exec /usr/sbin/puavo-conf-init   /usr/sbin
 copy_exec /usr/sbin/puavo-conf-update /usr/sbin
-
-cp -a /usr/lib/ruby ${DESTDIR}/usr/lib/
-cp -a /usr/lib/ruby/vendor_ruby/puavo ${DESTDIR}/usr/lib/ruby/vendor_ruby
-cp -a /usr/lib/x86_64-linux-gnu/libffi* ${DESTDIR}/usr/lib/x86_64-linux-gnu
-cp -a /usr/lib/x86_64-linux-gnu/ruby ${DESTDIR}/usr/lib/x86_64-linux-gnu/
 
 cp -a /usr/share/puavo-conf ${DESTDIR}/usr/share/
 
