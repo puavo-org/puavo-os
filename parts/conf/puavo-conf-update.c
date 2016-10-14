@@ -358,8 +358,7 @@ get_cmdline(void)
 	char *line;
 	size_t n;
 
-	/* XXX change to /proc/cmdline */
-	if ((cmdline = fopen("/tmp/cmdline", "r")) == NULL) {
+	if ((cmdline = fopen("/proc/cmdline", "r")) == NULL) {
 		warn("fopen /proc/cmdline");
 		return NULL;
 	}
