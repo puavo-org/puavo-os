@@ -42,6 +42,11 @@ static int	 apply_hwquirks(puavo_conf_t *, int);
 static int	 apply_kernel_arguments(puavo_conf_t *, char *, int);
 static char	*get_cmdline(void);
 static char	*get_puavo_hosttype(const char *);
+static int	 glob_error(const char *, int);
+static int	 handle_one_paramdef(puavo_conf_t *, const char *, json_t *,
+    int);
+static int	 handle_paramdef_file(puavo_conf_t *, const char *, int);
+static int	 init_with_parameter_definitions(puavo_conf_t *, int);
 static int	 overwrite_value(puavo_conf_t *, const char *, const char *,
     int);
 static json_t	*parse_json_file(const char *);
@@ -57,10 +62,12 @@ main(int argc, char *argv[])
 	static struct option long_options[] = {
 	    { "devicejson-path", required_argument, 0, 0 },
 	    { "help",            no_argument,       0, 0 },
+	    { "init",            no_argument,       0, 0 },
 	    { "verbose",         no_argument,       0, 0 },
 	};
-	int c, option_index, status, verbose;
+	int c, init, option_index, status, verbose;
 
+	init = 0;
 	status = 0;
 	verbose = 0;
 
@@ -85,6 +92,9 @@ main(int argc, char *argv[])
 			usage();
 			return 0;
 		case 2:
+			init = 1;
+			break;
+		case 3:
 			verbose = 1;
 			break;
 		default:
@@ -100,6 +110,13 @@ main(int argc, char *argv[])
 
 	if (puavo_conf_open(&conf, &err))
 		errx(1, "Failed to open config backend: %s", err.msg);
+
+	if (init) {
+		if (init_with_parameter_definitions(conf, verbose) != 0) {
+			warnx("failure in initializing puavo conf db");
+			status = EXIT_FAILURE;
+		}
+	}
 
 	if (update_puavoconf(conf, device_json_path, verbose) != 0) {
 		warnx("problem in updating puavoconf");
@@ -135,6 +152,119 @@ usage(void)
 	       "  --devicejson-path FILE    filepath of the device.json,\n"
 	       "                            defaults to " DEVICEJSON_PATH "\n"
 	       "\n");
+}
+
+static int
+init_with_parameter_definitions(puavo_conf_t *conf, int verbose)
+{
+	glob_t globbuf;
+	size_t i;
+	int ret, retvalue;
+
+	retvalue = 0;
+
+	ret = glob("/usr/share/puavo-conf/definitions/*.json", 0, glob_error,
+	    &globbuf);
+	if (ret != 0) {
+		warnx("glob() failure in init_with_parameter_definitions()");
+		globfree(&globbuf);
+		return 1;
+	}
+
+	for (i = 0; i < globbuf.gl_pathc; i++) {
+		ret = handle_paramdef_file(conf, globbuf.gl_pathv[i], verbose);
+		if (ret != 0) {
+			warnx("error handling %s", globbuf.gl_pathv[i]);
+			/* Return error, but try other files. */
+			retvalue = 1;
+		}
+	}
+
+	globfree(&globbuf);
+
+	return retvalue;
+}
+
+static int
+glob_error(const char *epath, int errno)
+{
+	warnx("glob error with %s: %s", epath, strerror(errno));
+
+	return 1;
+}
+
+static int
+handle_paramdef_file(puavo_conf_t *conf, const char *filepath, int verbose)
+{
+	json_t *root, *param_value;
+	const char *param_name;
+	int ret, retvalue;
+
+	retvalue = 0;
+
+	if ((root = parse_json_file(filepath)) == NULL) {
+		warnx("parse_json_file() failed for %s", filepath);
+		return 1;
+	}
+
+	if (!json_is_object(root)) {
+		warnx("root is not a json object in %s", filepath);
+		retvalue = 1;
+		goto finish;
+	}
+
+	json_object_foreach(root, param_name, param_value) {
+		ret = handle_one_paramdef(conf, param_name, param_value,
+		    verbose);
+		if (ret != 0) {
+			warnx("error handling %s in %s", param_name, filepath);
+			/* Return error, but try other keys. */
+			retvalue = 1;
+		}
+	}
+
+finish:
+	json_decref(root);
+
+	return retvalue;
+}
+
+static int
+handle_one_paramdef(puavo_conf_t *conf, const char *param_name,
+    json_t *param_value, int verbose)
+{
+	json_t *default_node;
+	struct puavo_conf_err err;
+	const char *value;
+
+	if (!json_is_object(param_value)) {
+		warnx("parameter %s does not have an object as value",
+		    param_name);
+		return 1;
+	}
+
+	if ((default_node = json_object_get(param_value, "default")) == NULL) {
+		warnx("parameter %s does not have a default value", param_name);
+		return 1;
+	}
+
+	if ((value = json_string_value(default_node)) == NULL) {
+		warnx("parameter %s default is not a string", param_name);
+		return 1;
+	}
+
+	if (puavo_conf_add(conf, param_name, value, &err) != 0) {
+		warnx("error adding %s --> '%s' : %s", param_name, value,
+		    err.msg);
+		return 1;
+	}
+
+	if (verbose) {
+		(void) printf("puavo-conf-update: initialized puavo conf key"
+		    " %s --> %s\n", param_name, value);
+	}
+
+	return 0;
 }
 
 static int
@@ -227,6 +357,7 @@ get_cmdline(void)
 	char *line;
 	size_t n;
 
+	/* XXX change to /proc/cmdline */
 	if ((cmdline = fopen("/tmp/cmdline", "r")) == NULL) {
 		warn("fopen /proc/cmdline");
 		return NULL;
@@ -387,11 +518,17 @@ overwrite_value(puavo_conf_t *conf, const char *key, const char *value,
 	struct puavo_conf_err err;
 
 	if (puavo_conf_overwrite(conf, key, value, &err) != 0) {
-		warnx("error overwriting %s --> %s : %s", key, value, err.msg);
-	} else if (verbose) {
+		warnx("error overwriting %s --> '%s' : %s", key, value,
+		    err.msg);
+		return 1;
+	}
+
+	if (verbose) {
 		(void) printf("puavo-conf-update: setting puavo conf key %s"
 		    " --> %s\n", key, value);
 	}
+
+	return 0;
 }
 
 static json_t *
@@ -432,6 +569,7 @@ finish:
 }
 
 #if 0
+  /* OLD RUBY CODE, STILL IMPLEMENTING THINGS MISSING FROM ABOVE: */
 
   #!/usr/bin/ruby
 
