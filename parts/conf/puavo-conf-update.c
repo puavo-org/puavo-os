@@ -142,14 +142,14 @@ update_puavoconf(puavo_conf_t *conf, const char *device_json_path, int verbose)
 {
 	char *cmdline;
 	char *hosttype;
-	int ret;
+	int retvalue;
 
-	ret = 0;
+	retvalue = 0;
 
 	cmdline = get_cmdline();
 	if (cmdline == NULL) {
 		warnx("could not read /proc/cmdline");
-		ret = 1;
+		retvalue = 1;
 	}
 
 	hosttype = NULL;
@@ -159,31 +159,31 @@ update_puavoconf(puavo_conf_t *conf, const char *device_json_path, int verbose)
 	if (hosttype != NULL) {
 		if (apply_hosttype_profile(conf, hosttype, verbose) != 0) {
 			warnx("could not apply hosttype profile %s", hosttype);
-			ret = 1;
+			retvalue = 1;
 		}
 	} else {
 		warnx("skipping hosttype profile because hosttype not known");
-		ret = 1;
+		retvalue = 1;
 	}
 
 	if (apply_hwquirks(conf, verbose) != 0)
-		ret = 1;
+		retvalue = 1;
 
 	if (apply_device_settings(conf, device_json_path, verbose) != 0)
-		ret = 1;
+		retvalue = 1;
 
 	if (cmdline != 0) {
 		if (apply_kernel_arguments(conf, cmdline, verbose) != 0)
-			ret = 1;
+			retvalue = 1;
 	} else {
 		warnx("skipping kernel arguments because those are not known");
-		ret = 1;
+		retvalue = 1;
 	}
 
 	free(cmdline);
 	free(hosttype);
 
-	return ret;
+	return retvalue;
 }
 
 static char *
@@ -385,11 +385,8 @@ overwrite_value(puavo_conf_t *conf, const char *key, const char *value,
     int verbose)
 {
 	struct puavo_conf_err err;
-	int ret;
 
-	ret = puavo_conf_overwrite(conf, key, value, &err);
-
-	if (ret != 0) {
+	if (puavo_conf_overwrite(conf, key, value, &err) != 0) {
 		warnx("error overwriting %s --> %s : %s", key, value, err.msg);
 	} else if (verbose) {
 		(void) printf("puavo-conf-update: setting puavo conf key %s"
