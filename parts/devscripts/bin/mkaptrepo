@@ -32,6 +32,7 @@ usage_error()
 }
 
 clone_from=
+do_link=false
 cp_flags='-n'
 
 while [ $# -gt 0 ]; do
@@ -59,6 +60,7 @@ while [ $# -gt 0 ]; do
             ;;
         -l|--link)
             shift
+            do_link=true
             cp_flags="${cp_flags} -l"
             ;;
         --)
@@ -76,6 +78,10 @@ done
 
 if [ $# -ne 1 ]; then
     usage_error "invalid number of arguments: got $#, expected 1"
+fi
+
+if ${do_link} && [ -z "${clone_from}" ]; then
+    usage_error "--link cannot be used without --clone"
 fi
 
 repopath=$1
