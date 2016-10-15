@@ -32,6 +32,7 @@ usage_error()
 }
 
 clone_from=
+cp_flags='-n'
 
 while [ $# -gt 0 ]; do
     case $1 in
@@ -50,10 +51,15 @@ while [ $# -gt 0 ]; do
             echo "Create a very simple APT repository."
             echo
             echo "Options:"
-            echo "    -c, --clone REPOSITORY       clone REPOSITORY, including packages"
+            echo "    -c, --clone REPOSITORY       copy packages from REPOSITORY"
             echo "    -h, --help                   print help and exit"
+            echo "    -l, --link                   hard link package files instead of copying"
             echo
             exit 0
+            ;;
+        -l|--link)
+            shift
+            cp_flags="${cp_flags} -l"
             ;;
         --)
             shift
@@ -104,7 +110,7 @@ EOF
 
 if [ -n "${clone_from}" ]; then
     find -L "${clone_from}/pool" -type f -name '*.deb' \
-	-exec cp -n {} "${repopath}/pool" \;
+        -exec cp ${cp_flags} {} "${repopath}/pool" \;
 fi
 
 make -C "${repopath}"
