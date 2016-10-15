@@ -128,8 +128,9 @@ clean:
 EOF
 
 if [ -n "${clone_from}" ]; then
-    find -L "${clone_from}/pool" -type f -name '*.deb' \
-        -exec cp ${cp_flags} {} "${repopath}/pool" \;
+    while read -d '' filepath; do
+        cp ${cp_flags} "${filepath}" "${repopath}/pool"
+    done < <(find -L "${clone_from}/pool" -type f -print0)
 fi
 
 make -C "${repopath}"
