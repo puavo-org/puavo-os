@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # ##############################################################################
 #
@@ -23,6 +23,15 @@
 #
 
 set -eu
+
+on_exit()
+{
+    if [ ${exitval} -ne 0 ]; then
+	rm -rf "${repopath}"
+    fi
+
+    exit ${exitval}
+}
 
 usage_error()
 {
@@ -88,6 +97,10 @@ repopath=$1
 shift
 
 mkdir "${repopath}"
+
+exitval=1
+trap on_exit EXIT
+
 mkdir "${repopath}/pool"
 
 cat >"${repopath}/Makefile" <<'EOF'
@@ -120,3 +133,5 @@ if [ -n "${clone_from}" ]; then
 fi
 
 make -C "${repopath}"
+
+exitval=0
