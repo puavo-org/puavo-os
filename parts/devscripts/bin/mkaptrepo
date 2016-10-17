@@ -130,7 +130,7 @@ EOF
 if [ -n "${copy_src_dir}" ]; then
     while read -d '' filepath; do
         cp ${cp_flags} "${filepath}" "${repopath}/pool"
-    done < <(find "${copy_src_dir}" -type f -print0)
+    done < <(find "${copy_src_dir}" -mindepth 1 -maxdepth 1 -type f -print0)
 fi
 
 make -C "${repopath}"
