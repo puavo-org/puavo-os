@@ -42,7 +42,9 @@ usage_error()
 
 copy_src_dir=
 do_link=false
+do_recursive=false
 cp_flags='-n'
+find_depth_flags='-mindepth 1 -maxdepth 1'
 
 while [ $# -gt 0 ]; do
     case $1 in
@@ -64,6 +66,7 @@ while [ $# -gt 0 ]; do
             echo "    -c, --copy-from DIR          copy packages from DIR"
             echo "    -h, --help                   print help and exit"
             echo "    -l, --link                   hard link package files instead of copying"
+            echo "    -r, --recursive              copy files recursively"
             echo
             exit 0
             ;;
@@ -71,6 +74,11 @@ while [ $# -gt 0 ]; do
             shift
             do_link=true
             cp_flags="${cp_flags} -l"
+            ;;
+        -r|--recursive)
+            shift
+            do_recursive=true
+            find_depth_flags=''
             ;;
         --)
             shift
@@ -91,6 +99,10 @@ fi
 
 if ${do_link} && [ -z "${copy_src_dir}" ]; then
     usage_error "--link cannot be used without --copy-from"
+fi
+
+if ${do_recursive} && [ -z "${copy_src_dir}" ]; then
+    usage_error "--recursive cannot be used without --copy-from"
 fi
 
 repopath=$1
@@ -130,7 +142,7 @@ EOF
 if [ -n "${copy_src_dir}" ]; then
     while read -d '' filepath; do
         cp ${cp_flags} "${filepath}" "${repopath}/pool"
-    done < <(find "${copy_src_dir}" -mindepth 1 -maxdepth 1 -type f -print0)
+    done < <(find "${copy_src_dir}" ${find_depth_flags} -type f -print0)
 fi
 
 make -C "${repopath}"
