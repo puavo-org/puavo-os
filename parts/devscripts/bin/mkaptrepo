@@ -40,18 +40,18 @@ usage_error()
     return 1
 }
 
-clone_from=
+copy_src_dir=
 do_link=false
 cp_flags='-n'
 
 while [ $# -gt 0 ]; do
     case $1 in
-        -c|--clone)
+        -c|--copy-from)
             shift
-            clone_from=$1
+            copy_src_dir=$1
             shift
-            if [ ! -d "${clone_from}/pool" ]; then
-                usage_error "source repository does not have pool directory"
+            if [ ! -d "${copy_src_dir}" ]; then
+                usage_error "copy source directory does not exist"
             fi
             ;;
         -h|--help)
@@ -61,7 +61,7 @@ while [ $# -gt 0 ]; do
             echo "Create a very simple APT repository."
             echo
             echo "Options:"
-            echo "    -c, --clone REPOSITORY       copy packages from REPOSITORY"
+            echo "    -c, --copy-from DIR          copy packages from DIR"
             echo "    -h, --help                   print help and exit"
             echo "    -l, --link                   hard link package files instead of copying"
             echo
@@ -89,8 +89,8 @@ if [ $# -ne 1 ]; then
     usage_error "invalid number of arguments: got $#, expected 1"
 fi
 
-if ${do_link} && [ -z "${clone_from}" ]; then
-    usage_error "--link cannot be used without --clone"
+if ${do_link} && [ -z "${copy_src_dir}" ]; then
+    usage_error "--link cannot be used without --copy-from"
 fi
 
 repopath=$1
@@ -127,10 +127,10 @@ clean:
 	rm -rf Packages Packages.gz Release Release.gpg Sources Sources.gz
 EOF
 
-if [ -n "${clone_from}" ]; then
+if [ -n "${copy_src_dir}" ]; then
     while read -d '' filepath; do
         cp ${cp_flags} "${filepath}" "${repopath}/pool"
-    done < <(find -L "${clone_from}/pool" -type f -print0)
+    done < <(find -L "${copy_src_dir}" -type f -print0)
 fi
 
 make -C "${repopath}"
