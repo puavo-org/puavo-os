@@ -44,7 +44,7 @@ copy_src_dirs=()
 include_from=
 do_link=false
 do_recursive=false
-cp_flags=''
+cp_flags='-n'
 find_depth_flags='-mindepth 1 -maxdepth 1'
 
 while [ $# -gt 0 ]; do
