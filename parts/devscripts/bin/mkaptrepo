@@ -43,7 +43,6 @@ usage_error()
 copy_src_dirs=()
 include_from=
 do_link=false
-do_no_clobber=false
 do_recursive=false
 cp_flags=''
 find_depth_flags='-mindepth 1 -maxdepth 1'
@@ -68,7 +67,6 @@ while [ $# -gt 0 ]; do
             echo "    -c, --copy-from DIR          copy package files from DIR"
             echo "    -h, --help                   print help and exit"
             echo "    -l, --link                   hard link files instead of copying"
-            echo "    -n, --no-clobber             do not overwrite an existing file"
             echo "    -r, --recursive              copy files recursively"
             echo "    -I, --include-from FILE      include only files listed in FILE"
             echo
@@ -89,11 +87,6 @@ while [ $# -gt 0 ]; do
             shift
             do_link=true
             cp_flags="${cp_flags} -l"
-            ;;
-        -n|--no-clobber)
-            shift
-            do_no_clobber=true
-            cp_flags="${cp_flags} -n"
             ;;
         -r|--recursive)
             shift
@@ -123,10 +116,6 @@ fi
 
 if ${do_link} && [ ${#copy_src_dirs[@]} -eq 0 ]; then
     usage_error "--link cannot be used without --copy-from"
-fi
-
-if ${do_no_clobber} && [ ${#copy_src_dirs[@]} -eq 0 ]; then
-    usage_error "--no-clobber cannot be used without --copy-from"
 fi
 
 if ${do_recursive} && [ ${#copy_src_dirs[@]} -eq 0 ]; then
