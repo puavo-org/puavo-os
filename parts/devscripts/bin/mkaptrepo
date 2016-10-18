@@ -163,6 +163,6 @@ if [ -n "${copy_src_dir}" ]; then
     done
 fi
 
-make -C "${repopath}"
+make -s -C "${repopath}"
 
 exitval=0
