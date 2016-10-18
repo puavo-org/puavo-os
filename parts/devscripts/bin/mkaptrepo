@@ -153,7 +153,7 @@ EOF
 if [ -n "${copy_src_dir}" ]; then
     while read -d '' filepath; do
         cp ${cp_flags} "${filepath}" "${repopath}/pool"
-    done < <(find "${copy_src_dir}" ${find_depth_flags} -type f -print0)
+    done < <(find "${copy_src_dir}" ${find_depth_flags} -type f -name '*.deb' -print0)
 fi
 
 make -C "${repopath}"
