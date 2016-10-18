@@ -40,7 +40,7 @@ usage_error()
     return 1
 }
 
-copy_src_dir=
+copy_src_dirs=()
 include_from=
 do_link=false
 do_no_clobber=false
@@ -52,11 +52,11 @@ while [ $# -gt 0 ]; do
     case $1 in
         -c|--copy-from)
             shift
-            copy_src_dir=$1
-            shift
-            if [ ! -d "${copy_src_dir}" ]; then
-                usage_error "copy source directory does not exist"
+            if [ ! -d "$1" ]; then
+                usage_error "copy source directory '$1' does not exist"
             fi
+            copy_src_dirs+=($1)
+            shift
             ;;
         -h|--help)
             shift
@@ -117,19 +117,19 @@ if [ $# -ne 1 ]; then
     usage_error "invalid number of arguments: got $#, expected 1"
 fi
 
-if [ -n "${include_from}" -a -z "${copy_src_dir}" ]; then
+if [ -n "${include_from}" -a ${#copy_src_dirs[@]} -eq 0 ]; then
     usage_error "--include-file cannot be used without --copy-from"
 fi
 
-if ${do_link} && [ -z "${copy_src_dir}" ]; then
+if ${do_link} && [ ${#copy_src_dirs[@]} -eq 0 ]; then
     usage_error "--link cannot be used without --copy-from"
 fi
 
-if ${do_no_clobber} && [ -z "${copy_src_dir}" ]; then
+if ${do_no_clobber} && [ ${#copy_src_dirs[@]} -eq 0 ]; then
     usage_error "--no-clobber cannot be used without --copy-from"
 fi
 
-if ${do_recursive} && [ -z "${copy_src_dir}" ]; then
+if ${do_recursive} && [ ${#copy_src_dirs[@]} -eq 0 ]; then
     usage_error "--recursive cannot be used without --copy-from"
 fi
 
@@ -167,8 +167,8 @@ clean:
 	rm -rf Packages Packages.gz Release Release.gpg Sources Sources.gz
 EOF
 
-if [ -n "${copy_src_dir}" ]; then
-    find "${copy_src_dir}" ${find_depth_flags} -type f -name '*.deb' -print0 | \
+if [ ${#copy_src_dirs[@]} -gt 0 ]; then
+    find ${copy_src_dirs[@]} ${find_depth_flags} -type f -name '*.deb' -print0 | \
         while read -d '' filepath; do
             name=$(dpkg -f "${filepath}" Package)
             vers=$(dpkg -f "${filepath}" Version)
