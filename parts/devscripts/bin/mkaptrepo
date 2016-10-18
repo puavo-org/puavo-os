@@ -64,9 +64,9 @@ while [ $# -gt 0 ]; do
             echo "Create a very simple APT repository."
             echo
             echo "Options:"
-            echo "    -c, --copy-from DIR          copy packages from DIR"
+            echo "    -c, --copy-from DIR          copy package files from DIR"
             echo "    -h, --help                   print help and exit"
-            echo "    -l, --link                   hard link package files instead of copying"
+            echo "    -l, --link                   hard link files instead of copying"
             echo "    -n, --no-clobber             do not overwrite an existing file"
             echo "    -r, --recursive              copy files recursively"
             echo
