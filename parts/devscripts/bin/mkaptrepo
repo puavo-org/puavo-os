@@ -43,7 +43,7 @@ usage_error()
 copy_src_dir=
 do_link=false
 do_recursive=false
-cp_flags='-n'
+cp_flags=''
 find_depth_flags='-mindepth 1 -maxdepth 1'
 
 while [ $# -gt 0 ]; do
