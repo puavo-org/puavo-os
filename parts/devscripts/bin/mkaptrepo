@@ -75,6 +75,9 @@ while [ $# -gt 0 ]; do
             exit 0
             ;;
         -I|--include-from)
+            if [ -n "${include_from}" ]; then
+                usage_error "--include-from can be given only once"
+            fi
             shift
             include_from=$1
             shift
