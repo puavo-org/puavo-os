@@ -166,7 +166,12 @@ if [ ${#copy_src_dirs[@]} -gt 0 ]; then
             src_filename=$(basename "${filepath}")
             dst_filename="${name}_${vers}_${arch}.deb"
             if [ -z "${include_from}" ] || grep -q -x "${dst_filename}" "${include_from}"; then
-                cp ${cp_flags} "${filepath}" "${repopath}/pool/${dst_filename}"
+                dst_filepath="${repopath}/pool/${dst_filename}"
+                if [ -e "${dst_filepath}" ]; then
+                    echo "WARNING: destination file '${dst_filepath}' already exists, skipping" >&2
+                else
+                    cp ${cp_flags} "${filepath}" "${dst_filepath}"
+                fi
             fi
     done
 fi
