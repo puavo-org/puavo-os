@@ -151,9 +151,16 @@ clean:
 EOF
 
 if [ -n "${copy_src_dir}" ]; then
-    while read -d '' filepath; do
-        cp ${cp_flags} "${filepath}" "${repopath}/pool"
-    done < <(find "${copy_src_dir}" ${find_depth_flags} -type f -name '*.deb' -print0)
+    find "${copy_src_dir}" ${find_depth_flags} -type f -name '*.deb' -print0 | \
+        while read -d '' filepath; do
+            name=$(dpkg -f "${filepath}" Package)
+            vers=$(dpkg -f "${filepath}" Version)
+            arch=$(dpkg -f "${filepath}" Architecture)
+            vers=$(echo "${vers}" | sed -r -n 's/^([0-9]+:)?(.+)$/\2/p') # strip colons
+            src_filename=$(basename "${filepath}")
+            dst_filename="${name}_${vers}_${arch}.deb"
+            cp ${cp_flags} "${filepath}" "${repopath}/pool/${dst_filename}"
+    done
 fi
 
 make -C "${repopath}"
