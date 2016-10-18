@@ -1,0 +1,2 @@
+# Remove all CUPS jobs every night at 03:00
+00 03 * * * root /usr/bin/cancel -a >/dev/null

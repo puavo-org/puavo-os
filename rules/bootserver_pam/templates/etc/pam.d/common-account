@@ -1,0 +1,19 @@
+#
+# /etc/pam.d/common-account - authorization settings common to all services
+#
+# This file comes from opinsys-bootserver package
+#
+
+# here are the per-package modules (the "Primary" block)
+account [success=2 new_authtok_reqd=done default=ignore]        pam_exec.so quiet /usr/lib/puavoadmins-validate-pam-user
+account	[success=1 new_authtok_reqd=done default=ignore]	pam_unix.so 
+# here's the fallback if no module succeeds
+account	requisite			pam_deny.so
+# prime the stack with a positive return value if there isn't one already;
+# this avoids us returning an error just because nothing sets a success code
+# since the modules above will each just jump around
+account	required			pam_permit.so
+# and here are more per-package modules (the "Additional" block)
+account required                        pam_krb5.so minimum_uid=10000
+account	sufficient					pam_localuser.so 
+# end of pam-auth-update config

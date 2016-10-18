@@ -1,0 +1,22 @@
+#!/bin/sh
+
+ifconfig $1 up
+#ip link set dev $1 mtu 1400
+brctl addif $2 $1
+
+# First make sure that there are no tc rules
+tc qdisc del root dev $1
+
+tc qdisc add dev $1 root handle 1: htb default 10
+# Limit traffic for a single tunnel to 50Mbps
+tc class add dev $1 parent 1: classid 1:1 htb rate 50mbit burst 15k
+
+# Give 45Mbps to normal traffic
+tc class add dev $1 parent 1:1 classid 1:10 htb rate 45mbit burst 15k
+
+# Give 15Mbps to image sync traffic
+tc class add dev $1 parent 1:1 classid 1:20 htb rate 15mbit burst 15k
+
+# Image sync traffic originates from bootserver's port 872 only
+tc filter add dev $1 parent 1: protocol ip prio 1 u32 match ip src <%= scope.lookupvar('bootserver_config::ltsp_iface_ip') %>/32 match ip sport 872 0xffff flowid 1:20
+tc filter add dev $1 parent 1: protocol ip prio 1 u32 match ip src <%= scope.lookupvar('bootserver_config::wlan_iface_ip') %>/32 match ip sport 872 0xffff flowid 1:20

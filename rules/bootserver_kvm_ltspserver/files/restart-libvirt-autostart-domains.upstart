@@ -1,0 +1,28 @@
+description "Restart autostarted virtual domains on startup."
+
+start on startup                  \
+      and nbd-server-started      \
+      and started puavo-tftpd     \
+      and started isc-dhcp-server
+
+task
+
+script
+    date -u
+    find /etc/libvirt/qemu/autostart -type l -exec basename {} .xml \; | {
+        exitval=0
+        while read domain; do
+            echo "Destroying ${domain}"
+            virsh destroy "${domain}" || echo "Failed to destroy ${domain}, but it is ok."
+            echo "Starting ${domain}"
+            virsh start "${domain}" || {
+                exitval=1
+                echo "Failed to start ${domain}, continuing to next domain."
+            }
+        done
+        if [ $exitval -ne 0 ]; then
+            echo "Failed to restart some of the domains."
+        fi
+        exit $exitval
+    }
+end script

@@ -1,0 +1,101 @@
+#!/bin/sh
+
+## List NFS/NBD/SMB clients (ESTABLISHED TCP connections).
+
+set -eu
+
+usage_error()
+{
+    echo "ERROR: $1" >&2
+    echo "Try '$0 --help' for more information". >&2
+    return 1
+}
+
+interface=
+network=255.255.255.255/0
+do_resolve=true
+
+print_help()
+{
+    echo "Usage: $0 [OPTIONS]"
+    echo
+    echo 'List NFS/NBD/SMB clients.'
+    echo
+    echo 'Options:'
+    echo '    -i, --interface IFACE   limit listing to interface'
+    echo '    -n, --network CIDR      limit listing to network'
+    echo '        --no-resolve        do not resolve host names'
+    echo '    -h, --help              print help and exit'
+    echo
+}
+
+while [ $# -gt 0 ]; do
+    case $1 in
+	-h|--help)
+	    shift
+	    print_help
+	    exit 0
+	    ;;
+	-i|--interface)
+	    shift
+	    [ $# -gt 0 ] || usage_error 'option -i requires an argument'
+	    interface=$1
+	    shift
+	    ;;
+	-n|--network)
+	    shift
+	    [ $# -gt 0 ] || usage_error 'option -n requires an argument'
+	    network=$1
+	    shift
+	    ;;
+	--no-resolve)
+	    shift
+	    do_resolve=false
+	    ;;
+	--)
+	    shift
+	    break
+	    ;;
+	-*)
+	    usage_error "invalid argument '$1'"
+	    ;;
+	*)
+	    break
+	    ;;
+    esac
+done
+
+if [ $# -ne 0 ]; then
+    echo "ERROR: invalid number of arguments ($#), expected 0" >&2
+    exit 1
+fi
+
+if [ -n "${interface}" ]; then
+    network=$(ip route | awk -v "iface={interface}" '$3 == iface {print $1}')
+fi
+
+ss -t -n state established dst "${network}": | tail -n+2 \
+    | while read recvq sendq local_addr remote_addr; do
+    local_port=$(echo "${local_addr}" | cut -d: -f2)
+
+    case "${local_port}" in
+	2049)
+	    conn_type="NFS"
+	    ;;
+	10809)
+	    conn_type="NBD"
+	    ;;
+	445)
+	    conn_type="SMB"
+	    ;;
+	*)
+	    continue
+	    ;;
+    esac
+
+    remote_host=$(echo "${remote_addr}" | cut -d: -f1)
+    if $do_resolve; then
+	remote_host=$(dig +short -x "${remote_host}")
+    fi
+    printf "%s\t%s\n" "${conn_type}" "${remote_host}"
+done | sort -u

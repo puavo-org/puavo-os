@@ -1,0 +1,52 @@
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+# The primary network interface
+auto eth0
+iface eth0 inet manual
+
+auto eth1
+iface eth1 inet manual
+
+# XXX static is preferred, but you need to fill these in.
+# XXX Remove the "inet0 inet dhcp" once this is done
+# XXX (or remove these lines if dhcp is good.)
+# auto inet0
+# iface inet0 inet static
+#	address XXX.XXX.XXX.XXX
+#	netmask XXX.XXX.XXX.XXX
+#	gateway XXX.XXX.XXX.XXX
+#	dns-nameservers XXX.XXX.XXX.XXX XXX.XXX.XXX.XXX
+#	bridge_ports eth0
+#	bridge_stp off
+#	bridge_fd 0
+#	bridge_maxwait 0
+
+auto inet0
+iface inet0 inet dhcp
+	bridge_ports eth0
+	bridge_stp off
+	bridge_fd 0
+	bridge_maxwait 0
+
+auto ltsp0
+iface ltsp0 inet static
+	address <%= scope.lookupvar('bootserver_config::ltsp_iface_ip') %>
+	netmask <%= scope.lookupvar('bootserver_config::ltsp_iface_netmask') %>
+	bridge_ports eth1
+	bridge_stp off
+	bridge_fd 0
+	bridge_maxwait 0
+
+auto wlan0
+iface wlan0 inet static
+	address <%= scope.lookupvar('bootserver_config::wlan_iface_ip') %>
+	netmask <%= scope.lookupvar('bootserver_config::wlan_iface_netmask') %>
+	bridge_ports none
+	bridge_stp off
+	bridge_fd 0
+	bridge_maxwait 0

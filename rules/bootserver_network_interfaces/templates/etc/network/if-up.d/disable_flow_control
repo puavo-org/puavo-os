@@ -1,0 +1,5 @@
+#!/bin/bash
+
+if [[ "$IFACE" =~ ^eth[0-9.]+$ ]]; then
+  /sbin/ethtool -A $IFACE autoneg off rx off tx off
+fi

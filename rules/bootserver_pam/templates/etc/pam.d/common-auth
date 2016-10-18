@@ -1,0 +1,16 @@
+#
+# /etc/pam.d/common-auth - authentication settings common to all services
+#
+# This file comes from opinsys-bootserver package
+
+auth    [success=2 default=ignore]      pam_unix.so nullok_secure
+auth    [success=1 default=ignore]	pam_krb5.so use_first_pass minimum_uid=10000
+# here's the fallback if no module succeeds
+auth    requisite                       pam_deny.so
+# prime the stack with a positive return value if there isn't one already;
+# this avoids us returning an error just because nothing sets a success code
+# since the modules above will each just jump around
+auth    required                        pam_permit.so
+# and here are more per-package modules (the "Additional" block)
+auth    optional                        pam_cap.so 
+# end of pam-auth-update config

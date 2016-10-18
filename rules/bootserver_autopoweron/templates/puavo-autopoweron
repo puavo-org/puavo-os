@@ -1,0 +1,28 @@
+#!/usr/bin/env ruby1.9.1
+
+require 'puavo/rest-client'
+
+bcast_ip = IO.popen(['ifconfig', 'ltsp0']) do |io|
+  $1 if io.read.match /Bcast:([0-9.]+)/
+end
+
+if bcast_ip.nil?
+  STDERR.puts('ERROR: failed to determine the broadcast IP address of ltsp0')
+  exit(1)
+end
+
+client  = PuavoRestClient.new :auth => :bootserver
+devices = client.get('/v3/devices').parse
+
+devices.each do |device|
+  tags = device['tags']
+
+  next if tags.include?('no_autopoweron')
+  next unless tags.include?('autopoweron')
+  next unless ['fatclient', 'wirelessaccesspoint'].include?(device['type'])
+
+  device['mac_addresses'].each do |mac_address|
+    system('/usr/bin/wakeonlan', '-i', bcast_ip, mac_address)
+  end
+
+end

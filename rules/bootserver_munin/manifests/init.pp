@@ -1,5 +1,6 @@
 class bootserver_munin {
-  include bootserver_nginx
+  include bootserver_helpers,
+          bootserver_nginx
 
   define plugin($wildcard = false) {
     $plugin_name = $title
@@ -12,6 +13,7 @@ class bootserver_munin {
       "/etc/munin/plugins/$plugin_name":
         ensure  => link,
         notify  => Service['munin-node'],
+        require => Package['munin-node'],
         target  => "/usr/share/munin/plugins/$real_plugin_name",
     }
   }
@@ -20,10 +22,11 @@ class bootserver_munin {
   
   exec {
     'reset puavo-wlan state':
-      command => "/usr/bin/test -e '${statefile}' &&         \
-      /bin/mv '${statefile}' '${statefile}.reset_by_puppet'; \
+      command => "/bin/mv '${statefile}' '${statefile}.reset_by_puppet'; \
       /usr/bin/touch '${statefile}.reset_by_puppet'",
-      creates => "${statefile}.reset_by_puppet";
+      creates => "${statefile}.reset_by_puppet",
+      onlyif  => "/usr/bin/test -e '${statefile}'",
+      require => Package['munin-node'];
   }
 
   file {
@@ -41,11 +44,14 @@ class bootserver_munin {
 
     '/usr/share/munin/plugins/puavo-bootserver-clients':
       content => template('bootserver_munin/puavo-bootserver-clients'),
-      mode    => 0755;
+      mode    => 0755,
+      require => [ File['/usr/local/bin/puavo-bootserver-list-clients']
+                 , Package['munin-node'] ];
 
     '/usr/share/munin/plugins/puavo-wlan':
       content => template('bootserver_munin/puavo-wlan'),
-      mode    => 0755;
+      mode    => 0755,
+      require => Package['munin-node'];
   }
 
   bootserver_munin::plugin {

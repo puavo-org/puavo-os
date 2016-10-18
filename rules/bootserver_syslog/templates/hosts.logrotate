@@ -1,0 +1,9 @@
+/var/log/hosts/*.log {
+	compress
+	copytruncate
+	missingok
+	nocreate
+	notifempty
+	rotate 8
+	size 10M
+}

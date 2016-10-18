@@ -1,0 +1,18 @@
+#!/bin/bash
+
+set -eu
+
+ddns_key=$1
+shift
+
+tmpfile=
+
+trap 'rm -f "${tmpfile}"' EXIT
+
+ddns_key_dir=$(dirname "${ddns_key}")
+mkdir -p "${ddns_key_dir}"
+
+tmpfile=$(mktemp "--tmpdir=${ddns_key_dir}")
+
+ddns-confgen -a hmac-md5 -q >"${tmpfile}"
+mv "${tmpfile}" "${ddns_key}"

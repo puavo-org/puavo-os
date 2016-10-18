@@ -1,0 +1,11 @@
+$ORIGIN .
+$TTL 0		; no TTL
+<%= @arpazone %>	IN SOA	<%= @puavo_domain %>. root.<%= @puavo_domain %>. (
+				2010088664 ; serial
+				604800     ; refresh (1 week)
+				86400      ; retry (1 day)
+				2419200    ; expire (4 weeks)
+				604800     ; minimum (1 week)
+				)
+			NS	<%= @puavo_domain %>.
+$ORIGIN .

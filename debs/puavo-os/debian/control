@@ -96,6 +96,7 @@ Architecture: any
 Depends: ${misc:Depends},
  dmidecode,
  libdb5.1 | libdb5.3,
+ libjansson4,
  pciutils,
  ruby-ffi,
  ruby,

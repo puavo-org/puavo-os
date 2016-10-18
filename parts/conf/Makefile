@@ -4,7 +4,7 @@ libdir           = $(prefix)/lib
 sbindir          = $(prefix)/sbin
 datarootdir      = $(prefix)/share
 
-libtool_binaries = libpuavoconf.la puavo-conf
+libtool_binaries = libpuavoconf.la puavo-conf puavo-conf-update
 
 ifeq ($(prefix), /usr/local)
 rubylibdir = $(prefix)/lib/site_ruby
@@ -32,9 +32,9 @@ install: installdirs
 	libtool --mode=install \
 		install libpuavoconf.la $(DESTDIR)$(libdir)
 	libtool --mode=install install puavo-conf $(DESTDIR)$(bindir)
+	libtool --mode=install install puavo-conf-update $(DESTDIR)$(sbindir)
 	install -t $(DESTDIR)$(sbindir) \
 		puavo-conf-daemon	\
-		puavo-conf-init		\
 		puavo-conf-update
 	install -m 644 -t $(DESTDIR)$(rubylibdir)/puavo conf.rb
 
@@ -63,6 +63,9 @@ test: all
 
 puavo-conf: puavo-conf.o libpuavoconf.la
 	libtool --mode=link gcc $(LDFLAGS) -o $@ $^
+
+puavo-conf-update: puavo-conf-update.o libpuavoconf.la
+	libtool --mode=link gcc $(LDFLAGS) -ljansson -o $@ $^
 
 libpuavoconf.la: conf.lo common.lo db.lo dbus.lo
 	libtool --mode=link \

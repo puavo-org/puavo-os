@@ -1,0 +1,519 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<web-app xmlns="http://java.sun,com/xml/ns/j2ee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd" version="2.4">
+    <display-name>IntegraTUM WebDisk</display-name>
+    <description>IntegraTUM WebDisk by Thomas Bley 2005-2007</description>
+    <servlet>
+        <servlet-name>Controller</servlet-name>
+        <servlet-class>webdisk.Controller</servlet-class>
+		<init-param>
+			<!--
+				Prefix to place in browsers title bar
+			-->
+			<param-name>titleprefix</param-name>
+			<param-value>WebDisk</param-value>
+		</init-param>
+		<init-param>
+			<!--
+				Default language used to present the user interface
+				for available languages, see webdisk_src/languages/
+				e.g. "lang_en_us.properties" results in "en_us"
+			-->
+			<param-name>defaultlang</param-name>
+			<param-value>en_us</param-value>
+		</init-param>
+		<init-param>
+			<!--
+				Force a redirect to https:// if url is http://
+				1=force SSL, 0=user can choose http or https
+			-->
+			<param-name>forcessl</param-name>
+			<param-value>0</param-value>
+		</init-param>
+		<init-param>
+			<!--
+				Available languages in the language selectbox in the user interface
+				for available languages, see webdisk_src/languages/
+				List is comma separated, key=value
+				e.g. "en_us=English (US),de_de=Deutsch"
+			-->
+			<param-name>languages</param-name>
+			<param-value>en_us=English</param-value>
+		</init-param>
+        <init-param>
+			<!-- 
+				Comma separated list of servers to appear in lefthand navigation tree 
+			-->
+        	<param-name>servers</param-name>
+        	<param-value>localhost</param-value>
+        </init-param>
+        <init-param>
+			<!-- 
+				Comma separated list of servers not listed in nav tree, to which
+				users are allowed to navigate to manually or via favorites.
+				A value of * enable access to any server.
+
+				WARNING: Be careful to use * here. Users might copy your files to any other server in the world.
+			-->
+        	<param-name>unlistedservers</param-name>
+        	<param-value></param-value>
+        </init-param>
+        <init-param>
+			<!-- 
+				Comma separated list of smb-urls not allowed for all users.
+				If you defined the servers-parameter as IP addresses then use these IP addresses here, too.
+				If you defined the servers-parameter as DNS names then use these DNS addresses here, too.
+				e.g. smb://YOUR_SERVER_IP/notallowed/
+				e.g. smb://YOUR_SERVER_IP/c$/
+			-->
+        	<param-name>blacklisturls</param-name>
+        	<param-value></param-value>
+        </init-param>
+        <init-param>
+			<!--
+				Should NTLM authentication be used.
+				This setting should be "0" if you have a Windows 2003 server that has
+				"Digitally sign communications (always)" enabled in the local security settings
+				(under "/Local policies/Security Options/"). By default, "Digitally sign communications"
+				is not enabled in Windows 2003, so you should be able to activate "usentlm" if you need it.
+				1=use ntlm, 0=do not use ntlm
+			-->
+        	<param-name>usentlm</param-name>
+        	<param-value>0</param-value>
+        </init-param>
+        <init-param>
+			<!--
+				Comma separated list of domains user can use to authenticate
+			-->
+        	<param-name>domains</param-name>
+        	<param-value></param-value>
+        </init-param>
+        <init-param>
+			<!--
+				If specified, only users having read access to this directory
+				will be able to login to the webdisk
+				use smb://...
+			-->
+        	<param-name>accessdir</param-name>
+        	<param-value></param-value>
+        </init-param>
+        <init-param>
+			<!--
+				Users home directories. If populated, this is the default directory
+				displayed when logging in.  %username% will be replaced by the logged
+				in user's username.
+				use smb://...
+			-->
+        	<param-name>homedir</param-name>
+        	<param-value>smb://localhost/%username%/</param-value>
+        </init-param>
+        <init-param>
+			<!--
+				If populated enables the Project field, allowing fast access to
+				project directories.
+				%project% will be replaced by the argument passed in by the user.
+				Very useful for limiting browsing when combined with blocking users'
+				access to read/list contents of %project%'s parent directory.
+				use smb://...
+			-->
+        	<param-name>projectdir</param-name>
+        	<param-value>smb://localhost/share/</param-value>
+        </init-param>
+        <init-param>
+			<!--
+				Toggles display of project field at login
+				This field allows you to jump directly to a project directory after login
+			 	1=display, 0=do not display
+			-->
+        	<param-name>show_projectdir_login</param-name>
+        	<param-value>0</param-value>
+        </init-param>
+        <init-param>
+			<!--
+				Toggles display of the directory tree
+				This field allows you to disable the directory tree
+				Note: if the tree is disabled, the favorites will still be visible
+			 	1=display, 0=do not display
+			-->
+        	<param-name>showtree</param-name>
+        	<param-value>1</param-value>
+        </init-param>
+        <init-param>
+			<!--
+				Directory to store bookmarked 'favorite' paths, will be created
+				if needed. Favorites feature is not displayed if this is not populated.
+				%username% will be replaced by the logged in user's username.
+				use smb://...
+			-->
+        	<param-name>favoritesdir</param-name>
+        	<param-value>smb://localhost/%username%/Favorites/</param-value>
+        </init-param>
+        <init-param>
+			<!--
+				Automatically expands the favorites on the screen
+			 	1=always expand, 0=do not epxand by default
+			-->
+        	<param-name>alwaysopenfavorites</param-name>
+        	<param-value>0</param-value>
+        </init-param>
+        <init-param>
+			<!--
+				Temp path where application/service user (tomcat/apache/etc) user
+				temporarily saves uploads, dowloads, zip files - must be read and
+				writeable for application/service user.
+				If path does not exist,	defaults to java.io.tmppath
+				If path does not start with a slash ('/' or '\' based on file.separator)
+				it is assumed relative to WEB-INF 
+			-->
+        	<param-name>uploadpath</param-name>
+        	<param-value>/tmp/webdisk</param-value>
+        </init-param>
+        <init-param>
+			<!--
+				Limit on size of files that can be uploaded 
+				default is 1MB = 10485760
+			-->
+        	<param-name>uploadlimit</param-name>
+        	<param-value>1048576000</param-value>
+        </init-param>
+		<init-param>
+			<!--
+				Limit on number of files that can be downloaded at one time.
+				Setting to 0 disables downloading, setting to less 
+				than 0 allows unlimited. NOTE: Allowing unlimited means
+				a user could attempt to download the entire contents of one or
+				more shares on a server. On large shares (with many/large files)
+				this will likely cause noticable performance issues and may
+				consume all available disk space from 'uploadpath'
+			-->
+			<param-name>maxfilesdownload</param-name>
+			<param-value>-1</param-value>
+		</init-param>
+		<init-param>
+			<!--
+				Limit the compression level used to make zip files for storage or download.
+				Can be a numeric value between 0 and 9
+				0 reduces the load on the CPU, 9 reduces the bandwidth to the cifs server, but has a high load on the CPU.
+				I recommend a compression level of 1 or 2
+				0 = no compression, 9 = maximum
+			-->
+			<param-name>zipcompressionlevel</param-name>
+			<param-value>2</param-value>
+		</init-param>
+		<init-param>
+			<!--
+				If 1, "download as zip" send the file directly without saving it locally.
+				If 1, MakeZip writes the file directly to the cifs server without saving it locally.
+				If 1, this option saves time and resources on the webserver. But if an error occurs when creating the
+				zip file, the user won't see it.
+				If 1, the download for "Download as Zip" starts immediately, the browser doesn't get the final filesize,
+				progress bars for downloading won't work.
+				However if you need to download iso files as uncompressed zip files, this is the option for you.
+				
+			 	1=direct download, 0=save locally first
+				WARNING: If 1, errors won't be shown to the user, created zip files may be broken or incomplete.
+			-->
+			<param-name>zipdirectdownload</param-name>
+			<param-value>0</param-value>
+		</init-param>
+		<init-param>
+			<!--
+				Limit on number of files that can be extracted at one time.
+				Setting to 0 disables extracting, setting to less 
+				than 0 allows unlimited. NOTE: Allowing unlimited means
+				a user could attempt to extract very huge archives on a server.
+				This will likely cause noticable performance issues and may
+				consume all available disk space
+			-->
+			<param-name>maxfilesextract</param-name>
+			<param-value>-1</param-value>
+		</init-param>
+		<init-param>
+			<!--
+				Toggles display of 'Edit' button
+				This buttons allows you to edit text files within the webdisk
+			 	1=display, 0=do not display
+			-->
+			<param-name>showedit</param-name>
+			<param-value>0</param-value>
+		</init-param>
+		<init-param>
+			<!--
+				Toggles display of 'Previous Version' button
+			 	1=display, 0=do not display
+			-->
+			<param-name>showpreviousversion</param-name>
+			<param-value>0</param-value>
+		</init-param>
+		<init-param>
+			<!--
+				Toggles display of 'Add to favorites' button for the file list
+			 	1=display, 0=do not display
+			-->
+			<param-name>showaddfavorites</param-name>
+			<param-value>0</param-value>
+		</init-param>
+		<init-param>
+			<!--
+				Toggles display of 'Search' field
+				Too many concurrent searches can slow down your server.
+			 	1=display, 0=do not display
+			-->
+			<param-name>showsearch</param-name>
+			<param-value>1</param-value>
+		</init-param>
+		<init-param>
+			<!--
+				Limit on number of levels that can be searched
+			 	-1=no limit
+			-->
+			<param-name>searchlimit</param-name>
+			<param-value>-1</param-value>
+		</init-param>
+		<init-param>
+			<!--
+				Toggles display of 'Download as zip' button
+			 	1=display, 0=do not display
+			-->
+			<param-name>showdownloadaszip</param-name>
+			<param-value>1</param-value>
+		</init-param>
+		<init-param>
+			<!--
+				Toggles display of 'Make Zip' button
+			 	1=display, 0=do not display
+			-->
+			<param-name>showmakezip</param-name>
+			<param-value>1</param-value>
+		</init-param>
+		<init-param>
+			<!--
+				Toggles display of 'Extract Zip' button
+			 	1=display, 0=do not display
+			-->
+			<param-name>showextractzip</param-name>
+			<param-value>1</param-value>
+		</init-param>
+		<init-param>
+			<!--
+				Toggles display of hidden shares in content window
+				1=display, 0=do not display
+			-->
+			<param-name>showhiddenshares</param-name>
+			<param-value>1</param-value>
+		</init-param>
+		<init-param>
+			<!--
+				Toggles display of printer shares in the content window
+				1=display, 0=do not display
+			-->
+			<param-name>showprintshares</param-name>
+			<param-value>0</param-value>
+		</init-param>
+		<init-param>
+			<!--
+				Toggles display of hidden files and directories in the content window
+				1=display, 0=do not display
+			-->
+			<param-name>showhiddenfilesdirectories</param-name>
+			<param-value>1</param-value>
+		</init-param>
+		<init-param>
+			<!--
+				Toggles display of folder description files named dirinfo.txt.
+				When a folder contains an dirinfo.txt, this file is automatically
+				displayed together with the folder contents
+				1=display, 0=do not display
+			-->
+			<param-name>showfolderdescriptions</param-name>
+			<param-value>1</param-value>
+		</init-param>
+		<init-param>
+			<!--
+				Path to file containing message to display after login.
+				If path does not start with a slash ('/' or '\' based on file.separator)
+				it is assumed relative to WEB-INF.
+				You can define "../welcome.html" to use "webapp/welcome.html".
+				This file is read once when the webapp gets started.
+			-->
+			<param-name>welcomemessage</param-name>
+			<param-value></param-value>
+		</init-param>
+		<init-param>
+			<!--
+				Path to file containing message to display on the login page.
+				If path does not start with a slash ('/' or '\' based on file.separator)
+				it is assumed relative to WEB-INF.
+				The default is "../login.html" which points to "webapp/login.html".
+				This file is read once when the webapp gets started
+			-->
+			<param-name>loginmessage</param-name>
+			<param-value>../login.html</param-value>
+		</init-param>
+		<init-param>
+			<!--
+				Redirect to the login page (e.g. /ba/base/) after logout instead
+				of continueing at the current path as guest user
+			 	1=redirect, 0=do not redirect
+			-->
+			<param-name>logout_redirect_login</param-name>
+			<param-value>0</param-value>
+		</init-param>
+		<init-param>
+			<!--
+				Location of log4j configuation file for user activity logging.
+				If path does not start with a slash ('/' or '\' based on file.separator)
+				it is assumed relative to WEB-INF 
+			-->			
+			<param-name>log4jconf</param-name>
+			<param-value>log4j.properties</param-value>
+		</init-param>
+		<init-param>
+			<!--
+				Toggles display of 'Permissions' button
+			 	1=display, 0=do not display
+			-->
+			<param-name>showpermissions</param-name>
+			<param-value>0</param-value>
+		</init-param>
+		
+		<init-param>
+			<!--
+				Toggles display of the current path in the UNC style
+				1 = \\server\share\directory\
+				0 = /server/share/directory/
+			 	1=display, 0=do not display
+			-->
+			<param-name>useuncpaths</param-name>
+			<param-value>0</param-value>
+		</init-param>
+		<init-param>
+			<!--
+				jCIFS loglevel, jcifs.util.loglevel
+				2 should be ok in production
+				set to 10 to see full logs
+			-->
+			<param-name>jcifsloglevel</param-name>
+			<param-value>2</param-value>
+		</init-param>
+		<init-param>
+			<!--
+				jCIFS encoding for share names, jcifs.encoding
+				Cp850 is required for German Umlaute in share names
+				CP850 is not supported in JRE, use JDK instead
+				see http://java.sun.com/j2se/1.5.0/docs/guide/intl/encoding.doc.html
+			-->
+			<param-name>jcifsencoding</param-name>
+			<param-value>Cp850</param-value>
+		</init-param>
+		
+		<init-param>
+			<!--
+				use builtin resolving SIDs for usernames and groups
+			 	1=display, 0=do not display
+
+				(only needed for servers not supporting RPCs like Novell)
+			-->			
+			<param-name>resolve_sid_builtin</param-name>
+			<param-value>1</param-value>
+		</init-param>
+		<init-param>
+			<!--
+				active directory or ldap server being contacted to resolve SIDs
+				(only needed for servers not supporting RPCs like Novell)
+			-->			
+			<param-name>ldap_server</param-name>
+			<param-value></param-value>
+		</init-param>
+		<init-param>
+			<!--
+				active directory domain being used to resolve SIDs
+				e.g. if the complete domain name is testadw2k3.local
+				the put in "testadw2k3"
+				(only needed for servers not supporting RPCs like Novell)
+			-->			
+			<param-name>ldap_domain</param-name>
+			<param-value></param-value>
+		</init-param>
+		<init-param>
+			<!--
+				active directory username being used for the ldap connection
+				(only needed for servers not supporting RPCs like Novell)
+			-->			
+			<param-name>ldap_user</param-name>
+			<param-value></param-value>
+		</init-param>
+		<init-param>
+			<!--
+				active directory password being used for the ldap connection
+				(only needed for servers not supporting RPCs like Novell)
+			-->			
+			<param-name>ldap_pass</param-name>
+			<param-value></param-value>
+		</init-param>
+		<init-param>
+			<!--
+				ldap dc string being used for the ldap connection
+				e.g. if your domain is testadw2k3.local
+				the dc string is DC=testadw2k3,DC=local
+				(only needed for servers not supporting RPCs like Novell)
+			-->			
+			<param-name>ldap_dc</param-name>
+			<param-value></param-value>
+		</init-param>
+		<init-param>
+			<!--
+				ldap field containing the SID
+				for Active Directory it is "objectSID" by default, for Samba it is "sambaSID"
+				for a different setup, please check your LDAP schemas
+				(only needed for servers not supporting RPCs like Novell)
+			-->			
+			<param-name>ldap_sid_field</param-name>
+			<param-value>objectSID</param-value>
+		</init-param>
+		<init-param>
+			<!--
+				Toggles usage of SSL during ldap connection
+				1=use SSL, 0=do not use SSL
+				(only needed for servers not supporting RPCs like Novell)
+			-->			
+			<param-name>ldap_use_ssl</param-name>
+			<param-value>0</param-value>
+		</init-param>
+		
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>Controller</servlet-name>
+        <url-pattern>/base/*</url-pattern>
+    </servlet-mapping>
+
+	<!--
+		To enable test cases, uncomment this
+	-->			
+	<!--
+    <servlet>
+        <servlet-name>testing</servlet-name>
+        <servlet-class>webdisk.testing</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>testing</servlet-name>
+        <url-pattern>/testing</url-pattern>
+    </servlet-mapping>
+	-->
+	
+    <session-config>
+		<!--
+			session-timeout in minutes
+		-->			
+		<session-timeout>30</session-timeout>
+    </session-config>
+	<listener>
+		<display-name>SessionLogger</display-name>
+		<listener-class>webdisk.SessionLogger</listener-class>
+	</listener>
+    <welcome-file-list>
+      <welcome-file>Controller</welcome-file>
+    </welcome-file-list>
+</web-app>

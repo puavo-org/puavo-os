@@ -1,0 +1,9 @@
+#!/bin/sh
+
+set -eu
+
+logpath="/var/log/$1"
+
+touch "${logpath}"
+chmod 644 "${logpath}"
+chgrp utmp "/var/log/${logname}"

@@ -2,4 +2,4 @@
 # For more details, please see /etc/apparmor.d/local/README.
 
 # allow to run a script to update dns information
-/usr/sbin/puavo-update-ddns Uxr,
+/usr/local/lib/puavo-update-ddns Uxr,
