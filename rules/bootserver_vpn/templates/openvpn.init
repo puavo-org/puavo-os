@@ -106,6 +106,22 @@ stop_vpn () {
   log_end_msg 0
 }
 
+reload_vpn () {
+  PID=$(cat "${PIDFILE}")
+  # If openvpn is running under a different user than root we'll need to restart
+  if egrep '^[[:blank:]]*user[[:blank:]]' $CONFIG_DIR/$NAME.conf > /dev/null 2>&1 ; then
+    log_daemon_msg "  Stopping VPN '$NAME'"
+    stop_vpn
+    sleep 1
+    log_daemon_msg "  Starting VPN '$NAME'"
+    start_vpn
+  else
+    log_daemon_msg "  Sending SIGHUP to PID ${PID}"
+    kill -HUP "${PID}" || true
+    log_end_msg 0
+  fi
+}
+
 case "$1" in
 start)
   log_action_begin_msg "Starting $DESC"
@@ -183,25 +199,29 @@ stop)
 # Only 'reload' running VPNs. New ones will only start with 'start' or 'restart'.
 reload|force-reload)
   log_action_begin_msg "Reloading $DESC"
-  PIDFILE=
-  for PIDFILE in `ls /var/run/openvpn.*.pid 2> /dev/null`; do
-    NAME=`echo $PIDFILE | cut -c18-`
-    NAME=${NAME%%.pid}
-# If openvpn if running under a different user than root we'll need to restart
-    if egrep '^[[:blank:]]*user[[:blank:]]' $CONFIG_DIR/$NAME.conf > /dev/null 2>&1 ; then
-      log_daemon_msg "  Stopping VPN '$NAME'"
-      stop_vpn
-      sleep 1
-      log_daemon_msg "  Restarting VPN '$NAME'"
-      start_vpn
-    else
-      log_daemon_msg "  Restarting VPN '$NAME'"
-      kill -HUP `cat $PIDFILE` || true
-      log_end_msg 0
+  if test -z "$2" ; then
+    PIDFILE=
+    for PIDFILE in `ls /var/run/openvpn.*.pid 2> /dev/null`; do
+      NAME=`echo $PIDFILE | cut -c18-`
+      NAME=${NAME%%.pid}
+      reload_vpn
+    done
+    if test -z "$PIDFILE" ; then
+      log_warning_msg "  No VPN is running."
     fi
-  done
-  if test -z "$PIDFILE" ; then
-    log_warning_msg "  No VPN is running."
+  else
+    while shift ; do
+      [ -z "$1" ] && break
+      if test -e /var/run/openvpn.$1.pid ; then
+        log_daemon_msg "  Reloading VPN '$1'"
+        PIDFILE=`ls /var/run/openvpn.$1.pid 2> /dev/null`
+        NAME=`echo $PIDFILE | cut -c18-`
+        NAME=${NAME%%.pid}
+	reload_vpn
+      else
+        log_failure_msg "  Reloading VPN '$1': No such VPN is running."
+      fi
+    done
   fi
   ;;
 # Only 'soft-restart' running VPNs. New ones will only start with 'start' or 'restart'.
