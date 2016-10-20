@@ -21,6 +21,8 @@ devices.each do |device|
   next unless tags.include?('autopoweron')
   next unless ['fatclient', 'wirelessaccesspoint'].include?(device['type'])
 
+  puts "Waking up #{device['hostname']}"
+
   # Do not wake all devices at once to avoid overloading the network
   # and netboot services and to even avoid power surges!
   sleep 3
