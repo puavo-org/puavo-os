@@ -2,10 +2,9 @@
 
 Puavo Conf is the configuration system of Puavo OS. It consists of a
 parameter database, a C library (`libpuavoconf`) and a set of programs
-(`puavo-conf`, `puavo-conf-daemon`, `puavo-conf-init` and
-`puavo-conf-update`) manipulating the database through the
-library. Parameters define how various Puavo OS components behave and
-can be tuned from multiple sources.
+(`puavo-conf`, `puavo-conf-daemon` and `puavo-conf-update`) manipulating
+the database through the library. Parameters define how various Puavo OS
+components behave and can be tuned from multiple sources.
 
 ## Buildtime dependencies
 
@@ -56,9 +55,9 @@ precedence order:
 Thus, for example, values assigned on the kernel command line
 overwrite values assigned by hardware quirks.
 
-The configuration system is initialized by running `puavo-conf-init`,
+The configuration system is initialized by running `puavo-conf-update --init`,
 which reads parameter definitions and creates new parameters with
-default values. The configuration can then be updated by running
+default values.  The configuration can then be updated by running
 `puavo-conf-update` which reads parameter overwrites and assigns new
 values to parameters in the order defined above.
 
@@ -112,9 +111,9 @@ be set.
 
 Currently, configuration definitions (`/etc/puavo/device.json` et al.)
 from Puavo Web are converted to parameter assignments by
-`puavo-conf-init`. In future, Puavo Web will support Puavo Conf
-natively and just provide a list of parameter assignments to
-configurable hosts.
+`puavo-conf-update --init`. In future, Puavo Web will support
+Puavo Conf natively and just provide a list of parameter assignments
+to configurable hosts.
 
 ### Kernel command line arguments
 
