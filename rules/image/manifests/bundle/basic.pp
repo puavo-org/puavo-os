@@ -17,6 +17,7 @@ class image::bundle::basic {
 	  packages::languages::sv,
 	  picaxe_udev_rules,
           ::plymouth,
+	  ::rpcgssd,
 	  ssh_client,
 	  sysctl,
 	  udev,
