@@ -18,9 +18,11 @@ CONFFILE="/etc/dnsmasq.d/10-puavo-vpn.conf"
 
 LDAP_MASTER=$(cat /etc/puavo/ldap/master)
 KERBEROS_MASTER=$(cat /etc/puavo/kerberos/master)
+PUAVO_TOPDOMAIN=$(cat /etc/puavo/topdomain)
 
 echo "server=/${LDAP_MASTER}/${route_vpn_gateway}" > $TMPFILE
 echo "server=/${KERBEROS_MASTER}/${route_vpn_gateway}" >> $TMPFILE
+echo "server=/ntp.${PUAVO_TOPDOMAIN}/${route_vpn_gateway}" >> $TMPFILE
 
 DIFF=`diff -q $TMPFILE $CONFFILE`
 
