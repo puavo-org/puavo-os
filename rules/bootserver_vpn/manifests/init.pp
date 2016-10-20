@@ -6,6 +6,10 @@ class bootserver_vpn {
 
     '/etc/openvpn/puavo.conf':
       content => template('bootserver_vpn/puavo.conf');
+
+    '/usr/local/lib/puavo-openvpn-up':
+      content => template('bootserver_vpn/puavo-openvpn-up'),
+      mode    => 0755;
   }
 
   service {
@@ -19,7 +23,8 @@ class bootserver_vpn {
 
     'vpn1':
       ensure  => running,
-      require => File['/etc/openvpn/puavo.conf'],
+      require => [ File['/etc/openvpn/puavo.conf']
+                 , File['/usr/local/lib/puavo-openvpn-up'] ],
       restart => '/usr/sbin/service openvpn restart puavo',
       start   => '/usr/sbin/service openvpn start puavo',
       status  => '/usr/sbin/service openvpn status puavo',
