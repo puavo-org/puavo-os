@@ -73,6 +73,10 @@ class bootserver_ddns {
     'create ddns key':
       command => "/usr/local/lib/create-ddns-key '${ddns_key}'",
       creates => $ddns_key;
+
+    'trim /etc/hosts':
+      command => "/bin/sed -i -r 's/^\s+//' /etc/hosts",
+      unless  => "/bin/sed -r -n '/^\s+/q1' /etc/hosts";
   }
 
   file {
@@ -122,6 +126,24 @@ class bootserver_ddns {
     '/etc/sudoers.d/puavo-bootserver':
       content => template('bootserver_ddns/sudoers'),
       mode    => 0440;
+  }
+
+  # We need to trim /etc/hosts lines first, becuase Puppet 2.7 fails
+  # to parse /etc/hosts if lines begin with whitespace.
+  Host {
+    require => Exec['trim /etc/hosts'],
+    notify  => Service['dnsmasq'],
+  }
+
+  host {
+    'images.opinsys.fi':
+      ensure => absent;
+
+    'private-archive.opinsys.fi':
+      ensure => absent;
+
+    'ldap1.opinsys.fi':
+      ensure => absent;
   }
 
   package {
