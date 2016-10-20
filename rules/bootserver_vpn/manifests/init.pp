@@ -1,4 +1,5 @@
 class bootserver_vpn {
+  include bootserver_config
 
   file {
     '/etc/openvpn/altvpn1.conf':
