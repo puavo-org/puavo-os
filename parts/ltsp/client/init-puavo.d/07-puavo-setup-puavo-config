@@ -13,6 +13,13 @@ if [ -n "$SERVER" ]; then
 
 	PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
 
+	# run dd to get entropy from network device interrupts
+	# (so that kernel random generation works and curl getrandom() calls
+	# can actually return)
+	dd if=/dev/nbd0 of=/dev/null &
+	PUAVO_NBD_ENTROPY_HARVESTER_PID=$!
+
+	# get device settings
         if curl --cacert /etc/puavo/certs/rootca.pem \
 		--header "Authorization: Bootserver" \
 		--fail \
@@ -22,6 +29,8 @@ if [ -n "$SERVER" ]; then
 		> /etc/puavo/device.json.tmp; then
 	    mv /etc/puavo/device.json.tmp /etc/puavo/device.json
 	fi
+
+	kill $PUAVO_NBD_ENTROPY_HARVESTER_PID
     fi
 
     rm -f /etc/puavo/device.json.tmp
