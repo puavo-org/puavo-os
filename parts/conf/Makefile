@@ -33,9 +33,7 @@ install: installdirs
 		install libpuavoconf.la $(DESTDIR)$(libdir)
 	libtool --mode=install install puavo-conf $(DESTDIR)$(bindir)
 	libtool --mode=install install puavo-conf-update $(DESTDIR)$(sbindir)
-	install -t $(DESTDIR)$(sbindir) \
-		puavo-conf-daemon	\
-		puavo-conf-update
+	install -t $(DESTDIR)$(sbindir) puavo-conf-daemon
 	install -m 644 -t $(DESTDIR)$(rubylibdir)/puavo conf.rb
 
 	install -m 644 -t $(DESTDIR)$(sysconfdir)/dbus-1/system.d \
