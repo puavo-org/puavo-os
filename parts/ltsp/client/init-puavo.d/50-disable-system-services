@@ -11,6 +11,7 @@ nscd
 nslcd
 puavo-vpn-client-dnsmasq
 puavo-vpn-client-openvpn
+rpc-gssd
 '
 
     for service in ${services}; do
