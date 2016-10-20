@@ -75,8 +75,8 @@ class bootserver_ddns {
       creates => $ddns_key;
 
     'trim /etc/hosts':
-      command => "/bin/sed -i -r 's/^\s+//' /etc/hosts",
-      unless  => "/bin/sed -r -n '/^\s+/q1' /etc/hosts";
+      command => "/bin/sed -i -r 's/^[\s\t]+//' /etc/hosts",
+      unless  => "/bin/sed -r -n '/^[\s\t]+/q1' /etc/hosts";
   }
 
   file {
