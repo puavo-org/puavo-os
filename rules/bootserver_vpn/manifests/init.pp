@@ -3,14 +3,17 @@ class bootserver_vpn {
 
   file {
     '/etc/openvpn/altvpn1.conf':
-      content => template('bootserver_vpn/altvpn1.conf');
+      content => template('bootserver_vpn/altvpn1.conf'),
+      notify  => Service['altvpn1'];
 
     '/etc/openvpn/puavo.conf':
-      content => template('bootserver_vpn/puavo.conf');
+      content => template('bootserver_vpn/puavo.conf'),
+      notify  => Service['vpn1'];
 
     '/usr/local/lib/puavo-openvpn-up':
       content => template('bootserver_vpn/puavo-openvpn-up'),
-      mode    => 0755;
+      mode    => 0755,
+      notify  => Service['vpn1'];
   }
 
   service {
