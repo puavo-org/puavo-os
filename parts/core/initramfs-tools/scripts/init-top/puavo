@@ -16,7 +16,6 @@ case $1 in
 esac
 
 if [ "$BOOT" = "puavo" ]; then
-    mkdir -p /var/lib/puavo-conf
     puavo-conf-update --init --verbose
 fi
 
