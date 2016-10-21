@@ -144,6 +144,10 @@ class bootserver_ddns {
 
     'ldap1.opinsys.fi':
       ensure => absent;
+
+    'localhost':
+      ensure => present,
+      ip     => '127.0.0.1';
   }
 
   package {
