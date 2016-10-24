@@ -158,19 +158,19 @@ EOF
 
 if [ ${#copy_src_dirs[@]} -gt 0 ]; then
     find ${copy_src_dirs[@]} ${find_depth_flags} -type f -name '*.deb' -print0 | \
-        while read -d '' filepath; do
-            name=$(dpkg -f "${filepath}" Package)
-            vers=$(dpkg -f "${filepath}" Version)
-            arch=$(dpkg -f "${filepath}" Architecture)
+        while read -d '' src_filepath; do
+            name=$(dpkg -f "${src_filepath}" Package)
+            vers=$(dpkg -f "${src_filepath}" Version)
+            arch=$(dpkg -f "${src_filepath}" Architecture)
             vers=$(echo "${vers}" | sed -r -n 's/^([0-9]+:)?(.+)$/\2/p') # strip colons
-            src_filename=$(basename "${filepath}")
+            src_filename=$(basename "${src_filepath}")
             dst_filename="${name}_${vers}_${arch}.deb"
             if [ -z "${include_from}" ] || grep -q -x "${dst_filename}" "${include_from}"; then
                 dst_filepath="${repopath}/pool/${dst_filename}"
                 if [ -e "${dst_filepath}" ]; then
                     echo "WARNING: destination file '${dst_filepath}' already exists, skipping" >&2
                 else
-                    cp ${cp_flags} "${filepath}" "${dst_filepath}"
+                    cp ${cp_flags} "${src_filepath}" "${dst_filepath}"
                 fi
             fi
     done
