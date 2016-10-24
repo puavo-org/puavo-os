@@ -8,7 +8,7 @@ Homepage: http://github.com/opinsys/puavo-tftp/
 
 Package: puavo-tftpd
 Architecture: all
-Depends: ${misc:Depends}, ruby1.9.3, ruby-eventmachine, libldap-ruby1.8, adduser
+Depends: ${misc:Depends}, ruby1.9.3, ruby-eventmachine, ruby-ldap, adduser
 Replaces: puavo-tftp (<< 0.3.2-0+opinsys2)
 Breaks: puavo-tftp (<< 0.3.2-0+opinsys2)
 Recommends: ruby-minitest
