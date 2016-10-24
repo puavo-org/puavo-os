@@ -168,7 +168,9 @@ if [ ${#copy_src_dirs[@]} -gt 0 ]; then
             if [ -z "${include_from}" ] || grep -q -x "${dst_filename}" "${include_from}"; then
                 dst_filepath="${repopath}/pool/${dst_filename}"
                 if [ -e "${dst_filepath}" ]; then
-                    echo "WARNING: destination file '${dst_filepath}' already exists, skipping" >&2
+		    if ! cmp "${src_filepath}" "${dst_filepath}"; then
+			echo "WARNING: destination file '${dst_filepath}' already exists and is different than source file '${src_filepath}', skipping" >&2
+		    fi
                 else
                     cp ${cp_flags} "${src_filepath}" "${dst_filepath}"
                 fi
