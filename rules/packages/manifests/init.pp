@@ -112,6 +112,7 @@ class packages {
 
     [ 'gdm3'
     , 'network-manager-openvpn-gnome'
+    , 'network-manager-vpnc-gnome'
     , 'notify-osd'
     , 'onboard'
     , 'onboard-data'
