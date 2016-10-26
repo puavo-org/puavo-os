@@ -638,7 +638,7 @@ class packages {
 			# XXX $bcmwl_dkms_module  # XXX missing from Debian
 			# XXX $r8168_dkms_module  # XXX missing from Debian
 
-  case $lsbdistcodename {
+  case $debianversioncodename {
     'jessie': {
       packages::kernels::kernel_package {
         '3.16.0-4-amd64':

@@ -7,12 +7,12 @@ class packages::backports {
         content =>
           sprintf("%s%s%s",
                   inline_template("Package: <%= @packagelist.join(' ') %>\n"),
-                  "Pin: release a=${lsbdistcodename}-backports\n",
+                  "Pin: release a=${debianversioncodename}-backports\n",
                   "Pin-Priority: 995\n");
     }
   }
 
-  if $lsbdistcodename == 'jessie' {
+  if $debianversioncodename == 'jessie' {
     @::packages::backports::for_packages {
       'cinnamon':
 	packagelist => [ 'cinnamon'

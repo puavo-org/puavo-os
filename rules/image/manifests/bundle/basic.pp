@@ -23,7 +23,7 @@ class image::bundle::basic {
 	  udev,
 	  use_urandom
 
-  case $lsbdistcodename {
+  case $debianversioncodename {
     'precise': {
       include packages::sssd_install_workaround
     }

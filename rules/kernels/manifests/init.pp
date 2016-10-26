@@ -28,12 +28,12 @@ class kernels {
     }
   }
 
-  $default_kernel = $lsbdistcodename ? {
+  $default_kernel = $debianversioncodename ? {
     'jessie'  => '3.16.0-4-amd64',
     'stretch' => '4.7.0-1-amd64',
   }
 
-  $edge_kernel = $lsbdistcodename ? {
+  $edge_kernel = $debianversioncodename ? {
     'jessie' => '4.7.0-0.bpo.1-amd64',
     default  => $default_kernel,
   }
