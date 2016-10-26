@@ -111,9 +111,7 @@ class packages {
       tag => [ 'tag_basic', 'tag_debian', ];
 
     # 'indicator-power'			# XXX missing from Debian
-    [ 'cinnamon-desktop-environment'
-    , 'cinnamon-doc'
-    , 'indicator-session'
+    [ 'indicator-session'
     , 'lightdm'
     , 'lightdm-gtk-greeter'
     , 'lsb-invalid-mta'
