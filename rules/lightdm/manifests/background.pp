@@ -3,14 +3,8 @@ class lightdm::background {
 	  lightdm,
           packages
 
-  $image_path = $lsbdistcodename ? {
-    'precise' => '/usr/share/backgrounds/Golden_Bloom_by_Twinmama.jpg',
-    default   => '/usr/share/backgrounds/Nylon_Rainbow_by_Sam_Hewitt.jpg',
-  }
-
-  $image_package = $lsbdistcodename ? {
-    default => 'debian-edu-artwork',
-  }
+  $image_package = 'debian-edu-artwork'
+  $image_path    = '/usr/share/backgrounds/Golden_Bloom_by_Twinmama.jpg'
 
   $backgrounds_dir = '/usr/share/backgrounds/puavo-greeter/default'
 
@@ -26,8 +20,8 @@ class lightdm::background {
       require => Package[$image_package];
   }
 
-  File    <| tag == 'tag_backgroundimages' and tag == "tag_$lsbdistcodename" |>
-  Package <| tag == 'tag_backgroundimages' and tag == "tag_$lsbdistcodename" |>
+  File    <| tag == 'tag_backgroundimages' and tag == "tag_$debianversioncodename" |>
+  Package <| tag == 'tag_backgroundimages' and tag == "tag_$debianversioncodename" |>
 
   Package <| title == $image_package |>
 }

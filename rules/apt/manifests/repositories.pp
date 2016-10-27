@@ -6,7 +6,7 @@ class apt::repositories {
                 $mirror_path='',
                 $securitymirror,
                 $securitymirror_path='') {
-    if $lsbdistcodename == 'jessie' {
+    if $debianversioncodename == 'jessie' {
       file {
         '/etc/apt/preferences.d/00-backports.pref':
 	  content => template('apt/00-backports.pref'),

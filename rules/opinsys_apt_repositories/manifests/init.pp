@@ -1,7 +1,7 @@
 class opinsys_apt_repositories {
   include apt
 
-  $subdir = $lsbdistcodename ? {
+  $subdir = $debianversioncodename ? {
               'jessie' => 'git-jessie',
               default  => "git-master",
             }
@@ -19,22 +19,22 @@ class opinsys_apt_repositories {
 # XXX disable until we have some of these archives for Debian or just remove
 # @apt::repository {
 #     'archive':
-#       aptline => "http://archive.opinsys.fi/$subdir $lsbdistcodename main contrib non-free";
+#       aptline => "http://archive.opinsys.fi/$subdir $debianversioncodename main contrib non-free";
 #
 #     'kernels':
-#       aptline => "http://archive.opinsys.fi/kernels $lsbdistcodename main contrib non-free";
+#       aptline => "http://archive.opinsys.fi/kernels $debianversioncodename main contrib non-free";
 #
 #     'libreoffice-5-0':
-#       aptline => "http://archive.opinsys.fi/libreoffice-5-0 $lsbdistcodename main contrib non-free";
+#       aptline => "http://archive.opinsys.fi/libreoffice-5-0 $debianversioncodename main contrib non-free";
 #
 #     'repo':
-#       aptline => "http://archive.opinsys.fi/blobs $lsbdistcodename main contrib non-free";
+#       aptline => "http://archive.opinsys.fi/blobs $debianversioncodename main contrib non-free";
 #
 #     'x2go':
-#       aptline => "http://archive.opinsys.fi/x2go $lsbdistcodename main contrib non-free";
+#       aptline => "http://archive.opinsys.fi/x2go $debianversioncodename main contrib non-free";
 #
 #     'xorg-updates':
-#       aptline => "http://archive.opinsys.fi/git-xorg-updates $lsbdistcodename main contrib non-free";
+#       aptline => "http://archive.opinsys.fi/git-xorg-updates $debianversioncodename main contrib non-free";
 # }
 
   file {

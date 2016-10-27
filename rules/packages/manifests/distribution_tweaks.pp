@@ -1,5 +1,5 @@
 class packages::distribution_tweaks {
-  case $lsbdistcodename {
+  case $debianversioncodename {
     'stretch': {
       # These packages appear to be missing from Debian Stretch currently
       # (as of 2016-09-28).

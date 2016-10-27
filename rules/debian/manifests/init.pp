@@ -1,0 +1,3 @@
+class debian {
+	# nothing
+}

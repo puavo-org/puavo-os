@@ -9,6 +9,6 @@ PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
 
 case "${PUAVO_HOSTTYPE}" in
   fatclient|laptop|preinstalled)
-    cinnamon-session
+    /usr/lib/gnome-flashback/gnome-flashback-metacity "$@"
     ;;
 esac

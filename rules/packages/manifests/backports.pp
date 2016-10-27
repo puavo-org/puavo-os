@@ -7,29 +7,13 @@ class packages::backports {
         content =>
           sprintf("%s%s%s",
                   inline_template("Package: <%= @packagelist.join(' ') %>\n"),
-                  "Pin: release a=${lsbdistcodename}-backports\n",
+                  "Pin: release a=${debianversioncodename}-backports\n",
                   "Pin-Priority: 995\n");
     }
   }
 
-  if $lsbdistcodename == 'jessie' {
+  if $debianversioncodename == 'jessie' {
     @::packages::backports::for_packages {
-      'cinnamon':
-	packagelist => [ 'cinnamon'
-		       , 'cinnamon-*'
-		       , 'cjs'
-		       , 'gir1.2-cinnamondesktop-3.0'
-		       , 'gir1.2-cmenu-3.0'
-		       , 'gir1.2-meta-muffin-0.0'
-		       , 'libcinnamon-*'
-		       , 'libcjs0'
-		       , 'libmuffin0'
-		       , 'libnemo-extension1'
-		       , 'muffin'
-		       , 'muffin-common'
-		       , 'nemo'
-		       , 'nemo-data' ];
-
       'firmware':
 	packagelist => [ 'firmware-amd-graphics'
 		       , 'firmware-atheros'
