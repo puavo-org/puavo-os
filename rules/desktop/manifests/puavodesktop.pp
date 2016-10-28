@@ -9,6 +9,7 @@ class desktop::puavodesktop {
           # desktop::enable_indicator_power_service,	# XXX needs fixing
           desktop::mimedefaults,
           packages,
+          ::themes,
           webmenu
 
   file {
