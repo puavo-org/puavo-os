@@ -64,5 +64,23 @@ default-monitors-setup='do-nothing'
 [org/gnome/shell]
 enabled-extensions=['alternate-tab@gnome-shell-extensions.gcampax.github.com', 'appindicatorsupport@rgcjonas.gmail.com', 'bottom-panel@sharats.me', 'launch-new-instance@gnome-shell-extensions.gcampax.github.com', 'Move_Clock@rmy.pobox.com', 'TaskBar@zpydr', 'user-theme@gnome-shell-extensions.gcampax.github.com', 'webmenu@opinsys.fi', 'workspace-indicator@gnome-shell-extensions.gcampax.github.com']
 
+[org/gnome/shell/extensions/TaskBar]
+active-task-background-color='rgb(138,226,52)'
+active-task-background-color-set=true
+activities-button=false
+application-menu=false
+dash=false
+display-favorites=true
+display-showapps-button=false
+display-tasks-label-color=true
+display-workspace-button=false
+hover-switch-task=true
+inactive-task-background-color='rgb(164,221,200)'
+inactive-task-background-color-set=true
+tasks-all-workspaces=true
+tasks-label-color='rgb(46,52,54)'
+tasks-label=true
+top-panel-original-background-color='rgba(233, 233, 233, 255)'
+
 [org/gnome/shell/extensions/user-theme]
 name='Puavo'
