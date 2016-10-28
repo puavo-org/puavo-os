@@ -14,7 +14,9 @@ class gnome_shell_extensions {
 
 
   ::gnome_shell_extensions::add_extension {
-    'bigtouch-ux@puavo.org': ;
+    [ 'appindicatorsupport@rgcjonas.gmail.com'
+    , 'bigtouch-ux@puavo.org' ]:
+      ;
   }
 
   Package <| title == gnome-shell-extensions |>
