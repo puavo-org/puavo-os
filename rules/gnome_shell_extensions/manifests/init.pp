@@ -16,7 +16,8 @@ class gnome_shell_extensions {
   ::gnome_shell_extensions::add_extension {
     [ 'appindicatorsupport@rgcjonas.gmail.com'
     , 'bigtouch-ux@puavo.org'
-    , 'bottom-panel@sharats.me' ]:
+    , 'bottom-panel@sharats.me'
+    , 'Move_Clock@rmy.pobox.com' ]:
       ;
   }
 
