@@ -9,6 +9,6 @@ PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
 
 case "${PUAVO_HOSTTYPE}" in
   fatclient|laptop|preinstalled)
-    /usr/lib/gnome-flashback/gnome-flashback-metacity "$@"
+    gnome-session "$@"
     ;;
 esac
