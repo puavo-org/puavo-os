@@ -17,7 +17,8 @@ class gnome_shell_extensions {
     [ 'appindicatorsupport@rgcjonas.gmail.com'
     , 'bigtouch-ux@puavo.org'
     , 'bottom-panel@sharats.me'
-    , 'Move_Clock@rmy.pobox.com' ]:
+    , 'Move_Clock@rmy.pobox.com'
+    , 'TaskBar@zpydr' ]:
       ;
   }
 
