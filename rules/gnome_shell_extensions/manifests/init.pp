@@ -18,7 +18,8 @@ class gnome_shell_extensions {
     , 'bigtouch-ux@puavo.org'
     , 'bottom-panel@sharats.me'
     , 'Move_Clock@rmy.pobox.com'
-    , 'TaskBar@zpydr' ]:
+    , 'TaskBar@zpydr'
+    , 'webmenu@puavo.org' ]:
       ;
   }
 
