@@ -131,14 +131,14 @@
       }
     },
     "fluent-logger": {
-      "version": "2.1.0",
-      "from": "fluent-logger@^2.1.0",
-      "resolved": "https://registry.npmjs.org/fluent-logger/-/fluent-logger-2.1.0.tgz",
+      "version": "1.2.1",
+      "from": "fluent-logger@~1.2.1",
+      "resolved": "https://registry.npmjs.org/fluent-logger/-/fluent-logger-1.2.1.tgz",
       "dependencies": {
         "msgpack-lite": {
-          "version": "0.1.20",
+          "version": "0.1.26",
           "from": "msgpack-lite@*",
-          "resolved": "https://registry.npmjs.org/msgpack-lite/-/msgpack-lite-0.1.20.tgz",
+          "resolved": "https://registry.npmjs.org/msgpack-lite/-/msgpack-lite-0.1.26.tgz",
           "dependencies": {
             "event-lite": {
               "version": "0.1.1",
@@ -146,13 +146,13 @@
               "resolved": "https://registry.npmjs.org/event-lite/-/event-lite-0.1.1.tgz"
             },
             "ieee754": {
-              "version": "1.1.6",
-              "from": "ieee754@^1.1.6",
-              "resolved": "https://registry.npmjs.org/ieee754/-/ieee754-1.1.6.tgz"
+              "version": "1.1.8",
+              "from": "ieee754@^1.1.8",
+              "resolved": "https://registry.npmjs.org/ieee754/-/ieee754-1.1.8.tgz"
             },
             "int64-buffer": {
               "version": "0.1.9",
-              "from": "int64-buffer@^0.1.6",
+              "from": "int64-buffer@^0.1.9",
               "resolved": "https://registry.npmjs.org/int64-buffer/-/int64-buffer-0.1.9.tgz"
             },
             "isarray": {
@@ -1392,7 +1392,7 @@
         },
         "debug": {
           "version": "2.2.0",
-          "from": "debug@*",
+          "from": "debug@2",
           "resolved": "https://registry.npmjs.org/debug/-/debug-2.2.0.tgz",
           "dependencies": {
             "ms": {
@@ -1452,9 +1452,9 @@
           }
         },
         "glob": {
-          "version": "7.1.0",
+          "version": "7.1.1",
           "from": "glob@^7.0.5",
-          "resolved": "https://registry.npmjs.org/glob/-/glob-7.1.0.tgz",
+          "resolved": "https://registry.npmjs.org/glob/-/glob-7.1.1.tgz",
           "dependencies": {
             "fs.realpath": {
               "version": "1.0.0",
@@ -1462,9 +1462,9 @@
               "resolved": "https://registry.npmjs.org/fs.realpath/-/fs.realpath-1.0.0.tgz"
             },
             "inflight": {
-              "version": "1.0.5",
+              "version": "1.0.6",
               "from": "inflight@^1.0.4",
-              "resolved": "https://registry.npmjs.org/inflight/-/inflight-1.0.5.tgz",
+              "resolved": "https://registry.npmjs.org/inflight/-/inflight-1.0.6.tgz",
               "dependencies": {
                 "wrappy": {
                   "version": "1.0.2",
