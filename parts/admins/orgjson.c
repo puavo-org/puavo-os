@@ -152,6 +152,38 @@ void orgjson_free(struct orgjson *const orgjson)
         free(orgjson);
 }
 
+static int orgjson_get_owner_field(struct json_object *const owner,
+                                   const char *const key,
+                                   const enum json_type type,
+                                   struct json_object **resultp,
+                                   struct orgjson_error *const error)
+{
+        struct json_object *result;
+
+        result = json_object_object_get(owner, key);
+        if (!result) {
+                if (error) {
+                        error->code = ORGJSON_ERROR_CODE_JSON;
+                        snprintf(error->text, ORGJSON_ERROR_TEXT_SIZE,
+                                 "owner is missing %s field", key);
+                }
+                return 0;
+        }
+
+        if (!json_object_is_type(result, type)) {
+                if (error) {
+                        error->code = ORGJSON_ERROR_CODE_JSON;
+                        snprintf(error->text, ORGJSON_ERROR_TEXT_SIZE,
+                                 "owner.%s is not not %s", key, json_type_to_name(type));
+                }
+                return 0;
+        }
+
+        *resultp = result;
+
+        return 1;
+}
+
 struct orgjson_owner *orgjson_get_owner(const struct orgjson *const orgjson,
                                         const size_t i,
                                         struct orgjson_owner *const owner,
@@ -184,102 +216,28 @@ struct orgjson_owner *orgjson_get_owner(const struct orgjson *const orgjson,
                 return NULL;
         }
 
-        username = json_object_object_get(user, "username");
-        if (!username) {
-                if (error) {
-                        error->code = ORGJSON_ERROR_CODE_JSON;
-                        snprintf(error->text, ORGJSON_ERROR_TEXT_SIZE,
-                                 "owner (i=%zd) is missing username", i);
-
-                }
+        if (!orgjson_get_owner_field(user, "username", json_type_string,
+                                     &username, error))
                 return NULL;
-        }
 
-        if (!json_object_is_type(username, json_type_string)) {
-                if (error) {
-                        error->code = ORGJSON_ERROR_CODE_JSON;
-                        snprintf(error->text, ORGJSON_ERROR_TEXT_SIZE,
-                                 "owner (i=%zd) username is not not a string", i);
-                }
+        if (!orgjson_get_owner_field(user, "uid_number", json_type_int,
+                                     &uid_number, error))
                 return NULL;
-        }
 
-        uid_number = json_object_object_get(user, "uid_number");
-        if (!uid_number) {
-                if (error) {
-                        error->code = ORGJSON_ERROR_CODE_JSON;
-                        snprintf(error->text, ORGJSON_ERROR_TEXT_SIZE,
-                                 "owner (i=%zd) is missing uid_number", i);
-                }
+        if (!orgjson_get_owner_field(user, "gid_number", json_type_int,
+                                     &gid_number, error))
                 return NULL;
-        }
 
-        if (!json_object_is_type(uid_number, json_type_int)) {
-                if (error) {
-                        error->code = ORGJSON_ERROR_CODE_JSON;
-                        snprintf(error->text, ORGJSON_ERROR_TEXT_SIZE,
-                                 "owner (i=%zd) uid_number is not not an integer", i);
-                }
+        if (!orgjson_get_owner_field(user, "first_name", json_type_string,
+                                     &first_name, error))
                 return NULL;
-        }
 
-        gid_number = json_object_object_get(user, "gid_number");
-        if (!gid_number) {
-                if (error) {
-                        error->code = ORGJSON_ERROR_CODE_JSON;
-                        snprintf(error->text, ORGJSON_ERROR_TEXT_SIZE,
-                                 "owner (i=%zd) is missing gid_number", i);
-                }
+        if (!orgjson_get_owner_field(user, "last_name", json_type_string,
+                                     &last_name, error))
                 return NULL;
-        }
 
-        if (!json_object_is_type(gid_number, json_type_int)) {
-                if (error) {
-                        error->code = ORGJSON_ERROR_CODE_JSON;
-                        snprintf(error->text, ORGJSON_ERROR_TEXT_SIZE,
-                                 "owner (i=%zd) gid_number is not not an integer", i);
-                }
-                return NULL;
-        }
-
-        first_name = json_object_object_get(user, "first_name");
-        if (!first_name) {
-                if (error) {
-                        error->code = ORGJSON_ERROR_CODE_JSON;
-                        snprintf(error->text, ORGJSON_ERROR_TEXT_SIZE,
-                                 "owner (i=%zd) is missing first_name", i);
-                }
-                return NULL;
-        }
-
-        if (!json_object_is_type(first_name, json_type_string)) {
-                if (error) {
-                        error->code = ORGJSON_ERROR_CODE_JSON;
-                        snprintf(error->text, ORGJSON_ERROR_TEXT_SIZE,
-                                 "owner (i=%zd) first_name is not not a string", i);
-                }
-                return NULL;
-        }
-
-        last_name = json_object_object_get(user, "last_name");
-        if (!last_name) {
-                if (error) {
-                        error->code = ORGJSON_ERROR_CODE_JSON;
-                        snprintf(error->text, ORGJSON_ERROR_TEXT_SIZE,
-                                 "owner (i=%zd) is missing last_name", i);
-                }
-                return NULL;
-        }
-
-        if (!json_object_is_type(last_name, json_type_string)) {
-                if (error) {
-                        error->code = ORGJSON_ERROR_CODE_JSON;
-                        snprintf(error->text, ORGJSON_ERROR_TEXT_SIZE,
-                                 "owner (i=%zd) last_name is not not a string", i);
-                }
-                return NULL;
-        }
-
+	/* ssh_public_key is not mandatory field, it is allowed to be
+	 * missing, null or a string */
         ssh_public_key = json_object_object_get(user, "ssh_public_key");
         if (ssh_public_key && !json_object_is_type(ssh_public_key, json_type_string)) {
                 if (error) {
