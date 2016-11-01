@@ -9,6 +9,10 @@ INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL) -m 644
 
+
+CFLAGS = -g -fPIC -std=gnu99 -Wall -Wextra
+LDFLAGS = -ljansson -lm
+
 # For some reason ruby lib directory is different under /usr and /usr/local
 ifeq ($(prefix),/usr/local)
 	RUBY_LIB_DIR = $(prefix)/lib/site_ruby
@@ -20,19 +24,19 @@ all: $(binaries)
 	bundle install --standalone --path lib/puavoadmins-vendor
 
 puavoadmins-validate-orgjson: puavoadmins-validate-orgjson.o orgjson.o
-	gcc -o $@ $^ -ljansson -lm
+	gcc -o $@ $^ $(LDFLAGS)
 
 puavoadmins-ssh-authorized-keys: puavoadmins-ssh-authorized-keys.o orgjson.o
-	gcc -o $@ $^ -ljansson -lm
+	gcc -o $@ $^ $(LDFLAGS)
 
 libnss_puavoadmins.so.2: passwd.o group.o orgjson.o
-	gcc -shared -o $@ -Wl,-soname,$@ $^ -ljansson -lm
+	gcc -shared -o $@ -Wl,-soname,$@ $^ $(LDFLAGS)
 
 %.o: %.c %.h common.h
-	gcc -g -fPIC -std=gnu99 -Wall -Wextra -c $< -o $@
+	gcc $(CFLAGS) -c $< -o $@
 
 %.o: %.c common.h
-	gcc -g -fPIC -std=gnu99 -Wall -Wextra -c $< -o $@
+	gcc $(CFLAGS) -c $< -o $@
 
 installdirs:
 	mkdir -p $(DESTDIR)$(sbindir)
