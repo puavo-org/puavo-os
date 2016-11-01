@@ -22,7 +22,7 @@
 #include <stdio.h>
 
 /* Third-party includes. */
-#include <json-c/json.h>
+#include <json/json.h>
 
 /* Local includes. */
 #include "orgjson.h"
@@ -174,7 +174,7 @@ static int orgjson_get_owner_field(struct json_object *const owner,
                 if (error) {
                         error->code = ORGJSON_ERROR_CODE_JSON;
                         snprintf(error->text, ORGJSON_ERROR_TEXT_SIZE,
-                                 "owner.%s is not not %s", key, json_type_to_name(type));
+                                 "owner.%s has invalid type", key);
                 }
                 return 0;
         }
