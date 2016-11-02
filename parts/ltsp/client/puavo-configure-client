@@ -252,7 +252,9 @@ case @puavo_device_type
     write_config("/etc/samba/smb.conf", "laptop")
     write_config("/etc/ntp.conf")
     write_config("/etc/systemd/logind.conf")
-    write_config("/var/lib/polkit-1/localauthority/10-vendor.d/com.ubuntu.desktop.pkla")
+
+    # XXX should this Ubuntu-specific file be used in Debian?
+    # write_config("/var/lib/polkit-1/localauthority/10-vendor.d/com.ubuntu.desktop.pkla")
 
     if @puavo_xsessions_default == 'puavo-webkiosk' then
       write_config("/etc/polkit-1/localauthority/50-local.d/90.org.freedesktop.networkmanager.deny_in_webkiosk_mode.pkla")
