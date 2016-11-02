@@ -304,6 +304,9 @@ class Aptirepo:
             bin_packages = {}
             bin_package_filenames = {}
 
+            src_packages = {}
+            src_package_filenames = {}
+
             for dirpath, dirnames, filenames in os.walk(self.__join("dists", codename)):
 
                 if "Packages" in filenames:
@@ -329,12 +332,39 @@ class Aptirepo:
 
                             bin_package_filenames[key] = bin_pkg_filename
 
+                if "Sources" in filenames:
+                    with open(os.path.join(dirpath, "Sources")) as sources_file:
+                        for src_pkg in debian.deb822.Sources.iter_paragraphs(sources_file):
+                            src_pkg_name = src_pkg["Package"]
+                            src_pkg_version = src_pkg["Version"]
+                            src_pkg_versions = src_packages.setdefault(src_pkg_name, sets.Set())
+
+                            if src_pkg_version in src_pkg_versions:
+                                raise DistsError("source package %s of version %s appears to "
+                                                 "be defined twice", src_pkg_name, src_pkg_version)
+
+                            src_pkg_versions.add(src_pkg_version)
+
+                            src_pkg_files = []
+                            src_pkg_directory = src_pkg["Directory"]
+                            for filename in [e["name"] for e in src_pkg["Files"]]:
+                                src_pkg_files.append(os.path.join(src_pkg_directory, filename))
+
+                            src_package_filenames[(src_pkg_name, src_pkg_version)] = src_pkg_files
+
             for (bin_pkg_name, bin_pkg_arch), bin_pkg_versions in bin_packages.items():
                 sorted_versions = sorted(bin_pkg_versions, cmp=dpkg_version_cmp,
                                          reverse=True)
                 for pruned_bin_pkg_version in sorted_versions[leave_count:]:
                     key = (bin_pkg_name, pruned_bin_pkg_version, bin_pkg_arch)
                     pruned_filepaths.add(bin_package_filenames[key])
+
+            for src_pkg_name, src_pkg_versions in src_packages.items():
+                sorted_versions = sorted(src_pkg_versions, cmp=dpkg_version_cmp,
+                                         reverse=True)
+                for pruned_src_pkg_version in sorted_versions[leave_count:]:
+                    key = (src_pkg_name, pruned_src_pkg_version)
+                    pruned_filepaths.update(src_package_filenames[key])
 
         for filepath in [self.__join(f) for f in sorted(pruned_filepaths)]:
             if self.__dry_run:
