@@ -33,7 +33,9 @@ case "$1" in
 	fi
 	chown puavodesktop:puavodesktop /var/lib/puavo-desktop/shared
 	chmod 2775 /var/lib/puavo-desktop/shared
-	usermod -a -G puavodesktop lightdm
+
+	# XXX is this needed and why?
+	# usermod -a -G puavodesktop lightdm
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
