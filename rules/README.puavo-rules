@@ -159,3 +159,6 @@ xexit
     Configurations (a killing script) for xexit (xexit is triggered, if a
     connection to X is broken.  This is basically used to kill processes
     that stay behind when they should not).
+
+zram_configuration
+    Add configurations for compressing memory (zram).
