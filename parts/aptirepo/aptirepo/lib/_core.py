@@ -301,40 +301,40 @@ class Aptirepo:
         pruned_filepaths = sets.Set()
 
         for codename, dist in self.__dists.items():
-            packages = {}
-            package_filenames = {}
+            bin_packages = {}
+            bin_package_filenames = {}
 
             for dirpath, dirnames, filenames in os.walk(self.__join("dists", codename)):
 
                 if "Packages" in filenames:
-                    with open(os.path.join(dirpath, "Packages")) as pkgs_file:
-                        for pkg in debian.deb822.Packages.iter_paragraphs(pkgs_file):
-                            pkg_name = pkg["Package"]
-                            pkg_version = pkg["Version"]
-                            pkg_filename = pkg["Filename"]
-                            pkg_arch = pkg["Architecture"]
-                            key = (pkg_name, pkg_version, pkg_arch)
+                    with open(os.path.join(dirpath, "Packages")) as packages_file:
+                        for bin_pkg in debian.deb822.Packages.iter_paragraphs(packages_file):
+                            bin_pkg_name = bin_pkg["Package"]
+                            bin_pkg_version = bin_pkg["Version"]
+                            bin_pkg_filename = bin_pkg["Filename"]
+                            bin_pkg_arch = bin_pkg["Architecture"]
+                            key = (bin_pkg_name, bin_pkg_version, bin_pkg_arch)
                             try:
-                                filename = package_filenames[key]
+                                filename = bin_package_filenames[key]
                             except KeyError:
                                 pass
                             else:
-                                if filename != pkg_filename:
+                                if filename != bin_pkg_filename:
                                     raise DistsError("package %s appears to "
                                                      "exist already at %s",
-                                                     key, pkg_filename)
+                                                     key, bin_pkg_filename)
 
-                            packages.setdefault((pkg_name, pkg_arch),
-                                                sets.Set()).add(pkg_version)
+                            bin_packages.setdefault((bin_pkg_name, bin_pkg_arch),
+                                                    sets.Set()).add(bin_pkg_version)
 
-                            package_filenames[key] = pkg_filename
+                            bin_package_filenames[key] = bin_pkg_filename
 
-            for (pkg_name, pkg_arch), pkg_versions in packages.items():
-                sorted_versions = sorted(pkg_versions, cmp=dpkg_version_cmp,
+            for (bin_pkg_name, bin_pkg_arch), bin_pkg_versions in bin_packages.items():
+                sorted_versions = sorted(bin_pkg_versions, cmp=dpkg_version_cmp,
                                          reverse=True)
-                for pruned_version in sorted_versions[leave_count:]:
-                    key = (pkg_name, pruned_version, pkg_arch)
-                    pruned_filepaths.add(package_filenames[key])
+                for pruned_bin_pkg_version in sorted_versions[leave_count:]:
+                    key = (bin_pkg_name, pruned_bin_pkg_version, bin_pkg_arch)
+                    pruned_filepaths.add(bin_package_filenames[key])
 
         for filepath in [self.__join(f) for f in sorted(pruned_filepaths)]:
             if self.__dry_run:
