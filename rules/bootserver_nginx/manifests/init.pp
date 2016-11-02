@@ -28,9 +28,20 @@ class bootserver_nginx {
       mode    => 0644,
       notify  => Exec['reload nginx'];
 
-    '/usr/share/nginx/www/index.html':
+    # Newer version of nginx ships the default index.html file in
+    # /usr/share/nginx/html directory instead of
+    # /usr/share/nginx/www.
+    [ '/usr/share/nginx/html'
+    , '/usr/share/nginx/www' ]:
+      ensure => directory;
+
+    '/usr/share/nginx/html/index.html':
       content => template('bootserver_nginx/index.html'),
       mode    => 0644;
+
+    '/usr/share/nginx/www/index.html':
+      ensure => link,
+      target => '/usr/share/nginx/html/index.html';
   }
 
   service {
