@@ -21,7 +21,8 @@ class image::bundle::basic {
 	  ssh_client,
 	  sysctl,
 	  udev,
-	  use_urandom
+	  use_urandom,
+	  zram_configuration
 
   case $debianversioncodename {
     'precise': {

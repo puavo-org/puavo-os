@@ -1,0 +1,11 @@
+[Unit]
+Description=Initializes zram swaping
+
+[Service]
+ExecStart=/usr/local/bin/init-zram-swapping
+ExecStop=/usr/local/bin/end-zram-swapping
+Type=oneshot
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target
