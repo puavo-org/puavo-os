@@ -110,10 +110,9 @@ class packages {
     , 'vlan' ]:
       tag => [ 'tag_basic', 'tag_debian', ];
 
-    # 'indicator-power'			# XXX missing from Debian
-    [ 'indicator-session'
-    , 'lightdm'
-    , 'lightdm-gtk-greeter'
+    [ 'gdm3'
+    , 'indicator-power'			# XXX missing from Debian
+    , 'indicator-session'
     , 'lsb-invalid-mta'
     , 'network-manager-openvpn-gnome'
     , 'notify-osd'

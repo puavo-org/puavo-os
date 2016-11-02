@@ -269,12 +269,12 @@ Description: Puavo LTSP bootserver runs infrastructure services for thin/fat
 
 Package: puavo-ltsp-client
 Architecture: all
-Conflicts: ltsp-lightdm
 Depends: ${misc:Depends},
  autofs,
  cowsay,
  daemon,
  dnsutils,
+ gdm3,
  gnome-session-flashback,
  imagemagick,
  jq,
@@ -286,8 +286,6 @@ Depends: ${misc:Depends},
  libpam-runtime,
  libsasl2-modules-gssapi-mit,
  libsasl2-modules-ldap,
- lightdm,
- lightdm-gtk-greeter,
  nfs-common,
  nslcd,
  ntp,
