@@ -325,7 +325,7 @@ class Aptirepo:
                                                      key, pkg_filename)
 
                             packages.setdefault((pkg_name, pkg_arch),
-                                                []).append(pkg_version)
+                                                sets.Set()).add(pkg_version)
 
                             package_filenames[key] = pkg_filename
 
