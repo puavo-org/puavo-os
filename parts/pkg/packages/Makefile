@@ -5,6 +5,7 @@ INSTALL = install
 INSTALL_DATA = $(INSTALL) -m 644
 
 packagedirs  = adobe-flashplugin/
+packagedirs += adobe-pepperflashplugin/
 packagedirs += adobe-reader/
 packagedirs += cmaptools/
 packagedirs += dropbox/

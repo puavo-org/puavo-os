@@ -1,0 +1,37 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "${command}" in
+    configure)
+        upstream_dir=$1
+        mkdir -p /usr/lib/adobe-flashplugin
+        ln -fns "${upstream_dir}/libpepflashplayer.so" \
+            /usr/lib/adobe-flashplugin/libpepflashplayer.so
+        mkdir -p /etc/chromium-browser/customizations
+        cat <<'EOF' > /etc/chromium-browser/customizations/10-flash
+flashso="/usr/lib/adobe-flashplugin/libpepflashplayer.so"
+if test -f "$flashso"; then
+        CHROMIUM_FLAGS="$CHROMIUM_FLAGS --ppapi-flash-path=$flashso --ppapi-flash-version="
+        echo "Using PPAPI flash."
+else
+        echo "PPAPI flash has config file in /etc, but library does not exist and won't be used. Package is uninstalled, not purged."
+fi
+EOF
+        ;;
+    unconfigure)
+        rm -f /etc/chromium-browser/customizations/10-flash \
+              /usr/lib/adobe-flashplugin/libpepflashplayer.so
+        rmdir /usr/lib/adobe-flashplugin 2>/dev/null || true
+        ;;
+    unpack)
+        upstream_pack=$1
+        upstream_dir=$2
+        tar --no-same-owner -z -x -f "${upstream_pack}" -C "${upstream_dir}"
+        ;;
+    *)
+        ;;
+esac

@@ -2,6 +2,7 @@ class puavo_pkg::packages {
   include puavo_pkg
 
   $available_packages = [ 'adobe-flashplugin'
+			, 'adobe-pepperflashplugin'
 			, 'adobe-reader'
 			, 'cmaptools'
 			, 'dropbox'
