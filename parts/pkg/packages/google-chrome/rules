@@ -45,15 +45,8 @@ case "${command}" in
         sed '/^MimeType=/a\
 StartupNotify=true' "${upstream_dir}/usr/share/applications/google-chrome.desktop" \
             > /usr/share/applications/google-chrome.desktop
-
-        PEPPER_FLASH_VERSION=$(grep '"version":' "${upstream_dir}/opt/google/chrome/PepperFlash/manifest.json"| grep -Po '(?<=version": ")(?:\d|\.)*')
-        cat <<EOF >/etc/chromium.d/set_ppapi_flash_path
-# Options to pass to chromium-browser
-CHROMIUM_FLAGS="\${CHROMIUM_FLAGS} --ppapi-flash-path=${upstream_dir}/opt/google/chrome/PepperFlash/libpepflashplayer.so --ppapi-flash-version=$PEPPER_FLASH_VERSION"
-EOF
         ;;
     unconfigure)
-        rm -f /etc/chromium.d/set_ppapi_flash_path
         rm -f /usr/bin/google-chrome-stable
         rm -f /usr/share/applications/google-chrome.desktop
         rm -f /usr/share/man/man1/google-chrome.1
