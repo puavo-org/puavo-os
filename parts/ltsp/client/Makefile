@@ -104,13 +104,13 @@ install : installdirs
 		templates/etc/ssh/sshd_config
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/pam.d \
+		templates/etc/pam.d/dm-autologin-fatclient \
+		templates/etc/pam.d/dm-autologin-laptop \
+		templates/etc/pam.d/dm-autologin-preinstalled \
+		templates/etc/pam.d/dm-autologin-wirelessaccesspoint \
+		templates/etc/pam.d/dm-fatclient \
+		templates/etc/pam.d/dm-laptop \
 		templates/etc/pam.d/gnome-screensaver-laptop \
-		templates/etc/pam.d/lightdm-autologin-fatclient \
-		templates/etc/pam.d/lightdm-autologin-laptop \
-		templates/etc/pam.d/lightdm-autologin-preinstalled \
-		templates/etc/pam.d/lightdm-autologin-wirelessaccesspoint \
-		templates/etc/pam.d/lightdm-fatclient \
-		templates/etc/pam.d/lightdm-laptop \
 		templates/etc/pam.d/sudo-laptop
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/ldap \
