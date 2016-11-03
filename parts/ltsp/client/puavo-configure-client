@@ -202,19 +202,19 @@ FileUtils.chown('puavodesktop',
 
 case @puavo_device_type
   when "fatclient"
+    write_config("/etc/cups/cupsd.conf")
+    write_config("/etc/dbus-1/system.d/org.freedesktop.login1.conf")
+    write_config("/etc/default/nfs-common", "userprincipal")
+    write_config("/etc/idmapd.conf")
+    write_config("/etc/krb5.conf")
+    write_config("/etc/ldap/ldap.conf")
+    write_config("/etc/lightdm/lightdm.conf")
     write_config("/etc/nsswitch.conf", "extrausers")
     write_config("/etc/pam.d/gdm-autologin", "fatclient")
     write_config("/etc/pam.d/gdm-password", "fatclient")
-    write_config("/etc/ldap/ldap.conf")
-    write_config("/etc/lightdm/lightdm.conf")
-    write_config("/etc/krb5.conf")
-    write_config("/etc/idmapd.conf")
-    write_config("/etc/default/nfs-common", "userprincipal")
-    write_config("/etc/cups/cupsd.conf")
-    write_config("/etc/security/group.conf")
-    write_config("/etc/dbus-1/system.d/org.freedesktop.login1.conf")
     write_config("/etc/rsyslog.conf")
     write_config("/etc/rsyslog.d/send_to_syslogserver.conf")
+    write_config("/etc/security/group.conf")
 
     if @puavo_xsessions_default == 'puavo-webkiosk' then
       write_config("/etc/polkit-1/localauthority/50-local.d/90.org.freedesktop.networkmanager.deny_in_webkiosk_mode.pkla")
@@ -238,19 +238,19 @@ case @puavo_device_type
   when "laptop"
     write_config("/etc/cups/cupsd.conf")
     write_config("/etc/dbus-1/system.d/org.freedesktop.login1.conf")
-    write_config("/etc/nsswitch.conf", "sss-extrausers")
-    write_config("/etc/krb5.conf", "laptop")
     write_config("/etc/idmapd.conf")
+    write_config("/etc/krb5.conf", "laptop")
     write_config("/etc/ldap/ldap.conf", "laptop")
     write_config("/etc/lightdm/lightdm.conf")
+    write_config("/etc/nsswitch.conf", "sss-extrausers")
+    write_config("/etc/ntp.conf")
     write_config("/etc/pam.d/gdm-autologin", "laptop")
     write_config("/etc/pam.d/gdm-password", "laptop")
     write_config("/etc/pam.d/gnome-screensaver", "laptop")
     write_config("/etc/pam.d/sudo", "laptop")
     write_config("/etc/racoon/racoon.conf")
-    write_config("/etc/security/group.conf")
     write_config("/etc/samba/smb.conf", "laptop")
-    write_config("/etc/ntp.conf")
+    write_config("/etc/security/group.conf")
     write_config("/etc/systemd/logind.conf")
 
     # XXX should this Ubuntu-specific file be used in Debian?
@@ -292,8 +292,8 @@ case @puavo_device_type
     # wirelessaccesspoints may be used as infotv devices depending on device
     # tags.
     write_config("/etc/lightdm/lightdm.conf")
-    write_config("/etc/pam.d/gdm-autologin", "wirelessaccesspoint")
     write_config("/etc/ntp.conf")
+    write_config("/etc/pam.d/gdm-autologin", "wirelessaccesspoint")
 
     # turn infotv displays on and off
     if @puavo_xsessions_default == 'puavo-infotv' then
