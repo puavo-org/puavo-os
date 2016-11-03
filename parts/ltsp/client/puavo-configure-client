@@ -77,7 +77,7 @@ if Uninstalled_device_types.include?(@puavo_device_type) then
 
   if @puavo_device_type == 'preinstalled' then
     write_config("/etc/lightdm/lightdm.conf")
-    write_config("/etc/pam.d/lightdm-autologin", "preinstalled")
+    write_config("/etc/pam.d/gdm-autologin", "preinstalled")
     write_config("/etc/sudoers.d/puavo-install-when-preinstalled")
     write_config("/etc/xdg/autostart/puavo-install.desktop")
   end
@@ -203,8 +203,8 @@ FileUtils.chown('puavodesktop',
 case @puavo_device_type
   when "fatclient"
     write_config("/etc/nsswitch.conf", "extrausers")
-    write_config("/etc/pam.d/lightdm", "fatclient")
-    write_config("/etc/pam.d/lightdm-autologin", "fatclient")
+    write_config("/etc/pam.d/gdm-autologin", "fatclient")
+    write_config("/etc/pam.d/gdm-password", "fatclient")
     write_config("/etc/ldap/ldap.conf")
     write_config("/etc/lightdm/lightdm.conf")
     write_config("/etc/krb5.conf")
@@ -243,9 +243,9 @@ case @puavo_device_type
     write_config("/etc/idmapd.conf")
     write_config("/etc/ldap/ldap.conf", "laptop")
     write_config("/etc/lightdm/lightdm.conf")
+    write_config("/etc/pam.d/gdm-autologin", "laptop")
+    write_config("/etc/pam.d/gdm-password", "laptop")
     write_config("/etc/pam.d/gnome-screensaver", "laptop")
-    write_config("/etc/pam.d/lightdm", "laptop")
-    write_config("/etc/pam.d/lightdm-autologin", "laptop")
     write_config("/etc/pam.d/sudo", "laptop")
     write_config("/etc/racoon/racoon.conf")
     write_config("/etc/security/group.conf")
@@ -292,7 +292,7 @@ case @puavo_device_type
     # wirelessaccesspoints may be used as infotv devices depending on device
     # tags.
     write_config("/etc/lightdm/lightdm.conf")
-    write_config("/etc/pam.d/lightdm-autologin", "wirelessaccesspoint")
+    write_config("/etc/pam.d/gdm-autologin", "wirelessaccesspoint")
     write_config("/etc/ntp.conf")
 
     # turn infotv displays on and off
