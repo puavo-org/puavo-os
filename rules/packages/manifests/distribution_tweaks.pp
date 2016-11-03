@@ -17,7 +17,6 @@ class packages::distribution_tweaks {
 	or title == 'gstreamer0.10-pulseaudio'
 	or title == 'icedtea-7-plugin'
 	or title == 'idle-python3.4'
-	or title == 'indicator-session'
 	or title == 'krita'
 	or title == 'libmotif4'
 	or title == 'libreoffice-presentation-minimizer'
