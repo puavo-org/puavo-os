@@ -6,6 +6,6 @@ class packages::languages::fi {
     , 'libreoffice-help-fi'
     , 'libreoffice-l10n-fi'
     , 'libreoffice-voikko' ]:
-      tag => [ 'language-fi', 'ubuntu', ];
+      tag => [ 'tag_debian', 'tag_language_fi', ];
   }
 }

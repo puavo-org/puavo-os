@@ -10,6 +10,6 @@ class packages::languages::de {
     , 'myspell-de-de'
     , 'mythes-de'
     , 'mythes-de-ch' ]:
-      tag => [ 'language-de', 'ubuntu', ];
+      tag => [ 'tag_debian', 'tag_language_de', ];
   }
 }
