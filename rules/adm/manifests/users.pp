@@ -1,5 +1,5 @@
 class adm::users {
-  include adm
+  include ::adm
 
   adm::user {
     'adm-vmlintu':

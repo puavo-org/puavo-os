@@ -1,5 +1,5 @@
 class desktop::dconf::turn_off_xrandrplugin {
-  include desktop::dconf
+  include ::desktop::dconf
 
   file {
     '/etc/dconf/db/turn_off_xrandrplugin.d':

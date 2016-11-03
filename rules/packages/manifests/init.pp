@@ -1,7 +1,7 @@
 class packages {
   require ::apt::multiarch
-  include ::packages::distribution_tweaks,
-          ::packages::purged
+  include ::packages::distribution_tweaks
+  include ::packages::purged
 
   # install packages by default
   Package { ensure => present, }

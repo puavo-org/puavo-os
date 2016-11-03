@@ -1,6 +1,6 @@
 class bootserver_dummywlan {
-  include bootserver_ddns,
-          bootserver_kernel_modules
+  include ::bootserver_ddns
+  include ::bootserver_kernel_modules
 
   bootserver_kernel_modules::add {
     'dummy':

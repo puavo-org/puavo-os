@@ -1,6 +1,6 @@
 class epson_scanner {
-  include packages
-  
+  include ::packages
+
   file {
     '/lib/udev/rules.d/40-epson-scanner.rules':
       content => template('epson_scanner/udev.rules'),

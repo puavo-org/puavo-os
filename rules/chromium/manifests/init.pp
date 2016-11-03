@@ -1,6 +1,6 @@
 class chromium {
-  include dpkg,
-          packages
+  include ::dpkg
+  include ::packages
 
   dpkg::simpledivert {
     '/usr/bin/chromium':

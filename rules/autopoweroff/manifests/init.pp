@@ -1,5 +1,5 @@
 class autopoweroff {
-  include packages
+  include ::packages
 
   # XXX Ideally, the autopoweroff package would do the right thing,
   # XXX but it is easier to fix it here rather than fix the package.

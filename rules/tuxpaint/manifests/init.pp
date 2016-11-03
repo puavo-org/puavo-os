@@ -1,5 +1,5 @@
 class tuxpaint {
-  include packages
+  include ::packages
 
   file {
     '/etc/tuxpaint/tuxpaint.conf':

@@ -1,5 +1,5 @@
 class install_hp_plugins {
-  include packages
+  include ::packages
 
   exec {
     'puavo-download-hp-plugins':

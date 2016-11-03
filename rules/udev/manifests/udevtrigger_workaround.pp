@@ -1,6 +1,6 @@
 class udev::udevtrigger_workaround {
-  include dpkg,
-    packages
+  include ::dpkg
+  include ::packages
 
   # XXX The default /etc/init/udevtrigger.conf does not always do its
   # job properly, probably because some of the rule files have been

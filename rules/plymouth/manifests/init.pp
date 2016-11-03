@@ -1,5 +1,5 @@
 class plymouth {
-  include packages
+  include ::packages
 
   exec {
     'plymouth::set-default-theme':

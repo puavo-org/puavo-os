@@ -1,6 +1,6 @@
 class webmenu {
-  include dpkg,
-          packages
+  include ::dpkg
+  include ::packages
 
   File { require => Package['webmenu'], }
   file {

@@ -1,6 +1,6 @@
 class packages::kernels {
-  include kernels::dkms,
-          packages
+  include ::kernels::dkms
+  include ::packages
 
   define kernel_package ($package_name='',
                          $package_tag='',

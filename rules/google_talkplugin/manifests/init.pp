@@ -1,5 +1,5 @@
 class google_talkplugin {
-  include packages
+  include ::packages
 
   file {
     '/etc/default/google-talkplugin':

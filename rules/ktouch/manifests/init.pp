@@ -1,6 +1,6 @@
 class ktouch {
-  include dpkg
-  require packages
+  include ::dpkg
+  require ::packages
 
   $ktouch_dir = '/usr/share/kde4/apps/ktouch'
 

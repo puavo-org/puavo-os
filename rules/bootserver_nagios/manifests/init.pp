@@ -1,6 +1,6 @@
 class bootserver_nagios {
-  include ::bootserver_config,
-          nagios
+  include ::bootserver_config
+  include ::nagios
 
   file {
     '/etc/nagios/nrpe.cfg':

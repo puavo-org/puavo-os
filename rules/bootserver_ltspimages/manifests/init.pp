@@ -1,5 +1,5 @@
 class bootserver_ltspimages {
-  include bootserver_nginx
+  include ::bootserver_nginx
 
   bootserver_nginx::enable { 'ltsp-images': ; }
 

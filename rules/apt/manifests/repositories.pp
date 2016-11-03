@@ -1,5 +1,5 @@
 class apt::repositories {
-  include apt
+  include ::apt
 
   define setup ($localmirror='',
                 $mirror,

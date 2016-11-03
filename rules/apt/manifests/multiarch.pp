@@ -1,5 +1,5 @@
 class apt::multiarch {
-  include apt
+  include ::apt
 
   define addarch () {
     $foreign_arch = $title

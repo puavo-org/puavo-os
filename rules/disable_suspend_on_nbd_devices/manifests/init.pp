@@ -1,5 +1,5 @@
 class disable_suspend_on_nbd_devices {
-  include packages
+  include ::packages
 
   file {
     '/etc/pm/sleep.d/01_nbd_test':

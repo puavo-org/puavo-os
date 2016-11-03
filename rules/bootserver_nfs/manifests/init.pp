@@ -1,5 +1,5 @@
 class bootserver_nfs {
-  include puavo
+  include ::puavo
 
   augeas {
     'add /export/home to /etc/fstab':

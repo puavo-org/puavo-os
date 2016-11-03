@@ -1,5 +1,5 @@
 class image::bundle::bootstrap_configure {
-  include packages
+  include ::packages
 
   Apt::Key        <| title == "opinsys-repo.gpgkey" |>
   Apt::Repository <| title == archive |>

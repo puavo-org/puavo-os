@@ -1,41 +1,41 @@
 class image::allinone {
-  include ::adm::users,
-          ::autopoweroff,
-          ::chromium,
-          ::console,
-          ::desktop,
-          ::disable_accounts_service,
-          ::disable_geoclue,
-          ::disable_suspend_by_tag,
-          ::disable_suspend_on_halt,
-          ::disable_suspend_on_nbd_devices,
-          ::disable_unclutter,
-          ::fontconfig,
-          ::gdm,
-          ::gnome_terminal,
-          ::image::bundle::basic,
-          ::kaffeine,
-          ::kernels,
-          ::keyutils,
-          ::ktouch,
-          ::laptop_mode_tools,
-          ::network_manager,
-          ::packages,
-          ::packages,
-          ::packages::backports,
-          ::packages::languages::de,
-          ::packages::languages::en,
-          ::packages::languages::fi,
-          ::packages::languages::fr,
-          ::packages::languages::sv,
-          ::picaxe_udev_rules,
-          ::plymouth,
-          ::ssh_client,
-          ::sysctl,
-          ::udev,
-          ::use_urandom,
-          ::wacom
 
+  include ::adm::users
+  include ::autopoweroff
+  include ::chromium
+  include ::console
+  include ::desktop
+  include ::disable_accounts_service
+  include ::disable_geoclue
+  include ::disable_suspend_by_tag
+  include ::disable_suspend_on_halt
+  include ::disable_suspend_on_nbd_devices
+  include ::disable_unclutter
+  include ::fontconfig
+  include ::gdm
+  include ::gnome_terminal
+  include ::image::bundle::basic
+  include ::kaffeine
+  include ::kernels
+  include ::keyutils
+  include ::ktouch
+  include ::laptop_mode_tools
+  include ::network_manager
+  include ::packages
+  include ::packages
+  include ::packages::backports
+  include ::packages::languages::de
+  include ::packages::languages::en
+  include ::packages::languages::fi
+  include ::packages::languages::fr
+  include ::packages::languages::sv
+  include ::picaxe_udev_rules
+  include ::plymouth
+  include ::ssh_client
+  include ::sysctl
+  include ::udev
+  include ::use_urandom
+  include ::wacom
   stage {
     'init':
       before => Stage['pre-main'];

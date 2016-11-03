@@ -1,5 +1,5 @@
 class desktop::dconf::disable_lidsuspend {
-  include desktop::dconf
+  include ::desktop::dconf
 
   file {
     [ '/etc/dconf/db/disable_lidsuspend.d'

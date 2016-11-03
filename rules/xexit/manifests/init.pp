@@ -1,5 +1,5 @@
 class xexit {
-  include packages
+  include ::packages
 
   file {
     '/etc/Xexit.d/01examplexexit':

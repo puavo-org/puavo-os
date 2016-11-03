@@ -1,5 +1,5 @@
 class google-earth-stable {
-  include packages
+  include ::packages
 
   file {
     '/etc/default/google-earth':

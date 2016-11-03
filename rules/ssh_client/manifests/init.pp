@@ -1,5 +1,5 @@
 class ssh_client {
-  include packages
+  include ::packages
 
   file {
     '/etc/ssh/ssh_config':

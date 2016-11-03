@@ -1,7 +1,7 @@
 class lightdm::background {
-  include desktop::dconf,
-	  lightdm,
-          packages
+  include ::desktop::dconf
+  include ::lightdm
+  include ::packages
 
   $image_package = 'debian-edu-artwork'
   $image_path    = '/usr/share/backgrounds/Golden_Bloom_by_Twinmama.jpg'

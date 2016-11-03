@@ -1,5 +1,5 @@
 class image::basic {
-  include packages
+  include ::packages
 
   Package <| tag == 'tag_basic' |>
 }

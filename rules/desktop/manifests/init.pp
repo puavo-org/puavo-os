@@ -1,4 +1,4 @@
 class desktop {
-  include ::desktop::puavodesktop,
-          ::desktop::puavo_desktop_bigtouch
+  include ::desktop::puavodesktop
+  include ::desktop::puavo_desktop_bigtouch
 }

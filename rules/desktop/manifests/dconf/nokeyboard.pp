@@ -1,5 +1,5 @@
 class desktop::dconf::nokeyboard {
-  include desktop::dconf
+  include ::desktop::dconf
 
   file {
     [ '/etc/dconf/db/nokeyboard.d'

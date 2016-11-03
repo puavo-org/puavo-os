@@ -1,5 +1,5 @@
 class desktop::dconf {
-  include packages
+  include ::packages
 
   exec {
     'update dconf':

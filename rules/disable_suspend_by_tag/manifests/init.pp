@@ -1,6 +1,6 @@
 class disable_suspend_by_tag {
-  include initramfs,
-          packages
+  include ::initramfs
+  include ::packages
 
   file {
     '/etc/pm/sleep.d/02_nosuspendtag_test':

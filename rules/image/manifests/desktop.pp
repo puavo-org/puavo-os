@@ -1,6 +1,6 @@
 class image::desktop {
-  include image::bundle::desktop,
-          packages
+  include ::image::bundle::desktop
+  include ::packages
 
   Apt::Key        <| title == "opinsys-repo.gpgkey" |>
   Apt::Repository <| title == archive

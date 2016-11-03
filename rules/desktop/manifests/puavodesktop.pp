@@ -1,16 +1,16 @@
 class desktop::puavodesktop {
-  include desktop::dconf::desktopbackgroundlock,
-          desktop::dconf::disable_lidsuspend,
-          desktop::dconf::disable_suspend,
-          desktop::dconf::laptop,
-          desktop::dconf::nokeyboard,
-          desktop::dconf::puavodesktop,
-          desktop::dconf::turn_off_xrandrplugin,
-          # desktop::enable_indicator_power_service,	# XXX needs fixing
-          desktop::mimedefaults,
-          packages,
-          ::themes,
-          webmenu
+  include ::desktop::dconf::desktopbackgroundlock
+  include ::desktop::dconf::disable_lidsuspend
+  include ::desktop::dconf::disable_suspend
+  include ::desktop::dconf::laptop
+  include ::desktop::dconf::nokeyboard
+  include ::desktop::dconf::puavodesktop
+  include ::desktop::dconf::turn_off_xrandrplugin
+  # include ::desktop::enable_indicator_power_service	# XXX needs fixing
+  include ::desktop::mimedefaults
+  include ::packages
+  include ::themes
+  include ::webmenu
 
   file {
     '/etc/dconf/db/puavo-desktop.d/locks/session_locks':

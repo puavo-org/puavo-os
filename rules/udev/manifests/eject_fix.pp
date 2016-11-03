@@ -1,6 +1,6 @@
 class udev::eject_fix {
-  include dpkg,
-    packages
+  include ::dpkg
+  include ::packages
 
   file {
     '/etc/udev/rules.d/60-eject.rules':
