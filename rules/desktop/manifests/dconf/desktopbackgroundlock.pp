@@ -1,5 +1,5 @@
 class desktop::dconf::desktopbackgroundlock {
-  include desktop::dconf
+  include ::desktop::dconf
 
   file {
     [ '/etc/dconf/db/desktopbackgroundlock.d'

@@ -1,5 +1,5 @@
 class promethean {
-  include puavo_external_files
+  include ::puavo_external_files
 
   # XXX These directories are probably set up by the Promethean packages, but
   # XXX currently we do not have those as a standard part of the device image,

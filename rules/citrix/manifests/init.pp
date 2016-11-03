@@ -1,5 +1,5 @@
 class citrix {
-  include packages
+  include ::packages
 
   $certs_copied_stamp = '/opt/Citrix/ICAClient/keystore/cacerts/.certs_copied'
   exec {

@@ -1,7 +1,7 @@
 class lightdm {
-  include desktop::dconf
-  include lightdm::background
-  require packages
+  include ::desktop::dconf
+  include ::lightdm::background
+  require ::packages
 
   file {
     '/etc/adduser-guest.conf':

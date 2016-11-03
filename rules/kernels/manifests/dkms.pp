@@ -1,5 +1,5 @@
 class kernels::dkms {
-  include packages
+  include ::packages
 
   define install_dkms_module_for_kernel ($kernel_packages, $kernel_version) {
     $titlearray  = split($title, ' ')

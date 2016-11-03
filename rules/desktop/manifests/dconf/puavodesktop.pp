@@ -1,5 +1,5 @@
 class desktop::dconf::puavodesktop {
-  include desktop::dconf
+  include ::desktop::dconf
 
   define locale {
     $lang = $title

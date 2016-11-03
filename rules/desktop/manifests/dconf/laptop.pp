@@ -1,5 +1,5 @@
 class desktop::dconf::laptop {
-  include desktop::dconf
+  include ::desktop::dconf
 
   file {
     '/etc/dconf/db/laptop.d':

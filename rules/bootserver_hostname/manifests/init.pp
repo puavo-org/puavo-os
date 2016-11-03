@@ -1,5 +1,5 @@
 class bootserver_hostname {
-  include puavo
+  include ::puavo
 
   exec {
     'set hostname':
@@ -11,6 +11,6 @@ class bootserver_hostname {
   file {
     '/etc/hostname':
       content => "${puavo_hostname}\n",
-      notify  => Exec['set hostname'];       
+      notify  => Exec['set hostname'];
   }
 }

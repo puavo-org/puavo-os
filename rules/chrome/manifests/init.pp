@@ -1,6 +1,6 @@
 class chrome {
-  include dpkg,
-          packages
+  include ::dpkg
+  include ::packages
 
   dpkg::simpledivert { '/usr/bin/google-chrome-stable': ; }
 

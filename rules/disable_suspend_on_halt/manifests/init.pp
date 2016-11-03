@@ -1,5 +1,5 @@
 class disable_suspend_on_halt {
-  include packages
+  include ::packages
 
   file {
     '/etc/pm/sleep.d/00_runlevel_test':

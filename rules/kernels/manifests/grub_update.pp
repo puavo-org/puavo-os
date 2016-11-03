@@ -1,5 +1,5 @@
 class kernels::grub_update {
-  include packages
+  include ::packages
 
   # Make sure grub-pc is installed, and then remove some update-grub
   # configurations that are unnecessary in ltsp clients, but prevent the

@@ -1,5 +1,5 @@
 class sysctl {
-  include packages
+  include ::packages
 
   file {
     '/etc/sysctl.d/88-puavo.conf':

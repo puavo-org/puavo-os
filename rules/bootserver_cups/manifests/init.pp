@@ -1,7 +1,7 @@
 class bootserver_cups {
-  include apparmor,
-          puavo
-  require bootserver_nss
+  include ::apparmor
+  include ::puavo
+  require ::bootserver_nss
 
   file {
     '/etc/apparmor.d/local/usr.sbin.cupsd':

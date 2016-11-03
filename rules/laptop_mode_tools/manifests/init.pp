@@ -1,6 +1,6 @@
 class laptop_mode_tools {
-  include dpkg,
-          packages
+  include ::dpkg
+  include ::packages
 
   dpkg::simpledivert {
     '/etc/laptop-mode/conf.d/usb-autosuspend.conf':

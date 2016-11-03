@@ -1,5 +1,5 @@
 class crash_reporting {
-  include packages
+  include ::packages
 
   file {
     '/etc/default/whoopsie':

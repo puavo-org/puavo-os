@@ -1,5 +1,5 @@
 class bootserver_kvm_ltspserver {
-  include puavo
+  include ::puavo
 
   $default_ltsp_servername = "${puavo_hostname}-ltsp1"
 

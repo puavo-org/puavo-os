@@ -1,6 +1,6 @@
 class adm {
-  include bash,
-          packages
+  include ::bash
+  include ::packages
 
   $common_group     = 'puavo-os'
   $common_group_gid = 1000

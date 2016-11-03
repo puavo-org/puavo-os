@@ -1,5 +1,5 @@
 class desktop::enable_indicator_power_service {
-  include packages
+  include ::packages
 
   file {
     '/etc/xdg/autostart/indicator-power.desktop':

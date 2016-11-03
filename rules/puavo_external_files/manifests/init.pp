@@ -1,5 +1,5 @@
 class puavo_external_files {
-  include packages
+  include ::packages
 
   define external_file ($external_file_name) {
     $original_path = $title

@@ -1,8 +1,8 @@
 class nagios {
-  include dpkg,
-	  nagios::check,
-	  puavo
-  search nagios::check
+  include ::dpkg
+  include ::nagios::check
+  include ::puavo
+  search ::nagios::check
 
   # makes checks that are virtual (defined with @check)
   check_disk {

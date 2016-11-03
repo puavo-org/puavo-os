@@ -1,6 +1,6 @@
 class bootserver_munin {
-  include bootserver_helpers,
-          bootserver_nginx
+  include ::bootserver_helpers
+  include ::bootserver_nginx
 
   define plugin($wildcard = false) {
     $plugin_name = $title

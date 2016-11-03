@@ -1,5 +1,5 @@
 class bootserver_wlan {
-  include bootserver_config
+  include ::bootserver_config
 
   file {
     '/etc/puavo-wlangw/vtund.conf':

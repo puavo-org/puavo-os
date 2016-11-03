@@ -1,9 +1,9 @@
 class desktop::puavo_desktop_bigtouch {
-  include desktop::dconf,
-          dpkg,
-          gnome_shell_extensions,
-          initramfs,
-          packages
+  include ::desktop::dconf
+  include ::dpkg
+  include ::gnome_shell_extensions
+  include ::initramfs
+  include ::packages
 
   dpkg::simpledivert {
     '/etc/xdg/autostart/onboard-autostart.desktop':

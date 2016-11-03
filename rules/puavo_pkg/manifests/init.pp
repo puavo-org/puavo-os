@@ -1,5 +1,5 @@
 class puavo_pkg {
-  include packages
+  include ::packages
 
   $pkgbasedir = '/usr/share/puavo-pkg/packages'
 

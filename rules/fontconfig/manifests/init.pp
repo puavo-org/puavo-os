@@ -1,5 +1,5 @@
 class fontconfig {
-  include packages
+  include ::packages
 
   exec {
     'configure fonts':

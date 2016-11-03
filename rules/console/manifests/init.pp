@@ -1,6 +1,6 @@
 class console {
-  include initramfs,
-          packages
+  include ::initramfs
+  include ::packages
 
   file {
     '/etc/default/console-setup':

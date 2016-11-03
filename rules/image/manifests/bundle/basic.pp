@@ -1,28 +1,28 @@
 class image::bundle::basic {
-  include autopoweroff,
-	  console,
-	  disable_suspend_by_tag,
-	  disable_suspend_on_halt,
-	  disable_suspend_on_nbd_devices,
-	  disable_unclutter,
-	  ::gdm,
-          kernels,
-	  # keyboard_hw_quirks,		  # XXX do we need this for Debian?
-	  locales,
-	  packages,
-	  packages::languages::de,
-	  packages::languages::en,
-	  packages::languages::fi,
-	  packages::languages::fr,
-	  packages::languages::sv,
-	  picaxe_udev_rules,
-          ::plymouth,
-	  ::rpcgssd,
-	  ssh_client,
-	  sysctl,
-	  udev,
-	  use_urandom,
-	  zram_configuration
+  include ::autopoweroff
+  include ::console
+  include ::disable_suspend_by_tag
+  include ::disable_suspend_on_halt
+  include ::disable_suspend_on_nbd_devices
+  include ::disable_unclutter
+  include ::gdm
+  include ::kernels
+  # include ::keyboard_hw_quirks        # XXX do we need this for Debian?
+  include ::locales
+  include ::packages
+  include ::packages::languages::de
+  include ::packages::languages::en
+  include ::packages::languages::fi
+  include ::packages::languages::fr
+  include ::packages::languages::sv
+  include ::picaxe_udev_rules
+  include ::plymouth
+  include ::rpcgssd
+  include ::ssh_client
+  include ::sysctl
+  include ::udev
+  include ::use_urandom
+  include ::zram_configuration
 
   case $debianversioncodename {
     'precise': {

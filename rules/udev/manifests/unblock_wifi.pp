@@ -1,6 +1,6 @@
 class udev::unblock_wifi {
-  include dpkg,
-    packages
+  include ::dpkg
+  include ::packages
 
   file {
     '/etc/udev/rules.d/80-unblock-wifi.rules':

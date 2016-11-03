@@ -1,5 +1,5 @@
 class bootserver_nss {
-  include puavo
+  include ::puavo
 
   ## For some unknown reason, nslcd seems to occasionally spawn twice
   ## causing ldap NSS service to fail. In normal condition, there's two

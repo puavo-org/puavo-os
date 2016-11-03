@@ -1,6 +1,6 @@
 class workaround_firefox_local_swf_bug {
-  include dpkg,
-          packages
+  include ::dpkg
+  include ::packages
 
   $mimexml_file = '/usr/share/mime/packages/freedesktop.org.xml'
 

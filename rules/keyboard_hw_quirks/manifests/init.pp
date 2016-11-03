@@ -1,6 +1,6 @@
 class keyboard_hw_quirks {
-  include initramfs,
-          packages
+  include ::initramfs
+  include ::packages
 
   exec {
     '/bin/udevadm hwdb --update':

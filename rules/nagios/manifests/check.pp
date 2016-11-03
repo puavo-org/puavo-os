@@ -1,5 +1,5 @@
 class nagios::check {
-  include nagios
+  include ::nagios
 
   define check ($cmdline) {
     $checkname = $title

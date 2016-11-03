@@ -1,6 +1,6 @@
 class acroread {
-  include dpkg,
-          packages
+  include ::dpkg
+  include ::packages
 
   dpkg::divert {
     '/usr/share/applications/acroread.desktop':

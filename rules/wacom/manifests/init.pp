@@ -1,5 +1,5 @@
 class wacom {
-  include packages
+  include ::packages
 
   file {
     '/etc/udev/rules.d/60-wacom.rules':

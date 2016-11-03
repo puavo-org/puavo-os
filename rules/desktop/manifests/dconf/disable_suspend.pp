@@ -1,5 +1,5 @@
 class desktop::dconf::disable_suspend {
-  include desktop::dconf
+  include ::desktop::dconf
 
   file {
     [ '/etc/dconf/db/disable_suspend.d'

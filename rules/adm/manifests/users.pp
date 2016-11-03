@@ -1,5 +1,5 @@
 class adm::users {
-  include adm
+  include ::adm
 
   # Add more users here as needed.
   # adm::user {

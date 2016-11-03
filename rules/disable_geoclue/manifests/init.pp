@@ -1,6 +1,6 @@
 class disable_geoclue {
-  include dpkg
-  require packages
+  include ::dpkg
+  require ::packages
 
   dpkg::statoverride {
     [ '/usr/lib/geoclue/geoclue-master'

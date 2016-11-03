@@ -1,5 +1,5 @@
 class bash {
-  include packages
+  include ::packages
 
   File { require => Package['bash'], }
 

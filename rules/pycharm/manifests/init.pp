@@ -1,5 +1,5 @@
 class pycharm {
-  include packages
+  include ::packages
 
   file {
     '/opt/pycharm/opinsys-default-options':

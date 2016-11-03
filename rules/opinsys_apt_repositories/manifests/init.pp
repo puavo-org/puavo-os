@@ -1,5 +1,5 @@
 class opinsys_apt_repositories {
-  include apt
+  include ::apt
 
   $subdir = $debianversioncodename ? {
               'jessie' => 'git-jessie',
