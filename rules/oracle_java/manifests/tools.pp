@@ -1,5 +1,5 @@
 class oracle_java::tools {
-  include packages
+  include ::packages
 
   file {
     '/etc/puavo-external-files-actions.d/java':

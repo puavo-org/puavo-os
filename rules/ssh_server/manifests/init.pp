@@ -1,5 +1,5 @@
 class ssh_server {
-  include packages
+  include ::packages
 
   define key {
     $key_name = $title
