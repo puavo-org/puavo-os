@@ -111,8 +111,6 @@ class packages {
       tag => [ 'tag_basic', 'tag_debian', ];
 
     [ 'gdm3'
-    , 'indicator-power'			# XXX missing from Debian
-    , 'indicator-session'
     , 'lsb-invalid-mta'
     , 'network-manager-openvpn-gnome'
     , 'notify-osd'
