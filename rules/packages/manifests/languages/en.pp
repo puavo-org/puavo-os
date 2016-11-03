@@ -9,6 +9,6 @@ class packages::languages::en {
     , 'libreoffice-l10n-en-za'
     , 'myspell-en-gb'
     , 'mythes-en-us' ]:
-      tag => [ 'language-en', 'ubuntu', ];
+      tag => [ 'tag_debian', 'tag_language_en', ];
   }
 }

@@ -7,6 +7,6 @@ class packages::languages::sv {
     , 'libreoffice-l10n-sv'
     , 'myspell-sv-se'
     , 'mythes-sv' ]:
-      tag => [ 'language-sv', 'ubuntu', ];
+      tag => [ 'tag_debian', 'tag_language_sv', ];
   }
 }
