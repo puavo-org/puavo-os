@@ -13,7 +13,7 @@ class plymouth {
       notify  => Exec['plymouth::set-default-theme'],
       recurse => true,
       require => Package['plymouth'],
-      source  => 'puppet:///modules/plymouth/theme';
+      source  => 'puppet:///modules/plymouth/theme/kites';
   }
 
   Package <| title == plymouth |>
