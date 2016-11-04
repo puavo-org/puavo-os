@@ -1,0 +1,15 @@
+puavo_xserver_driver=$(puavo-conf puavo.xserver.driver)
+
+# XXX OLD CODE, WHAT SHOULD BE CLEANED UP NOW?
+# Clean up blacklists we do not want at this stage of boot
+# (these block nouveau and radeon and these are required at an earlier
+# stage for the fglrx and nvidia drivers to work).  However, we may want
+# to use nouveau or radeon that are the default drivers for some chips.
+# rm -f /etc/modprobe.d/fglrx.conf \
+#       /etc/modprobe.d/nvidia-304_hybrid.conf
+
+case "$puavo_xserver_driver" in
+  nvidia)
+    update-alternatives --set glx /usr/lib/nvidia
+    ;;
+esac
