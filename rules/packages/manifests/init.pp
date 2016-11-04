@@ -145,8 +145,8 @@ class packages {
 
     [ 'dkms'
     , 'libgl1-mesa-glx'
-    # , 'nvidia-legacy-304xx-driver'	# XXX do not install this yet
-    # , 'nvidia-settings'		# XXX do not install this yet
+    , 'nvidia-kernel-dkms'
+    , 'nvidia-settings'
     # , 'r8168-dkms'		# XXX missing from Debian
     , 'xserver-xorg-video-all' ]:
       tag => [ 'tag_drivers', 'tag_debian', ];
