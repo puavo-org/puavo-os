@@ -7,7 +7,7 @@ class image::bundle::desktop {
   # include ::firefox			# XXX iceweasel in Debian
   include ::fontconfig
   include ::gnome_terminal
-  # include ::graphics_drivers		# XXX needs fixing for Debian
+  include ::graphics_drivers
   include ::image::bundle::basic
   include ::kaffeine
   include ::keyutils
