@@ -1,7 +1,7 @@
 class plymouth {
   include ::packages
 
-  $default_theme = 'kites'
+  $default_theme = 'opinsys'
 
   define install_theme () {
     $theme_name = $title
@@ -24,7 +24,7 @@ class plymouth {
   }
 
   ::plymouth::install_theme {
-    'kites': ;
+    [ 'kites', 'opinsys', ]: ;
   }
 
   Package <| title == plymouth |>
