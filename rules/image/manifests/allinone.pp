@@ -15,6 +15,7 @@ class image::allinone {
   include ::gdm
   include ::gnome_terminal
   include ::image::bundle::basic
+  include ::image::bundle::desktop
   include ::kaffeine
   include ::kernels
   include ::keyutils
