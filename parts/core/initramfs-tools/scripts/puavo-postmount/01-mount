@@ -150,8 +150,8 @@ if [ -n "${PUAVO_IMAGE_PATH}" ]; then
     loopmount_used=1
 fi
 
-if [ -f "${rootmnt}/usr/share/puavo-image/image-name" ]; then
-    PUAVO_IMAGE_NAME=$(cat "${rootmnt}/usr/share/puavo-image/image-name")
+if [ -f "${rootmnt}/etc/puavo-image/name" ]; then
+    PUAVO_IMAGE_NAME=$(cat "${rootmnt}/etc/puavo-image/name")
 else
     PUAVO_IMAGE_NAME="default"
 fi
