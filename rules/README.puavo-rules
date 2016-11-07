@@ -62,10 +62,6 @@ gdm
 google-earth-stable
     Settings for a particular version of Google Earth.
 
-google_talkplugin
-    Install google talkplugin, but do not install its apt repository key
-    and apt source.
-
 graphics_drivers
     Setup proprietary nvidia drivers in a such a way they can be used
     (without breaking everything else).
