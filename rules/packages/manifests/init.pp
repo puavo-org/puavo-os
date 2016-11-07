@@ -287,6 +287,7 @@ class packages {
     , 'icedove'
     , 'libreoffice'
     , 'libreoffice-base'
+    , 'libreoffice-kde'
     , 'scribus'
     , 'tellico'
     , 'vym' ]:
