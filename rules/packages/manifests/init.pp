@@ -527,7 +527,7 @@ class packages {
     , 'xdg-user-dirs'
     , 'xdg-user-dirs-gtk'
     , 'xdg-utils'
-    , 'xfce4'
+    , 'xdiagnose'
     , 'xkb-data'
     , 'xorg'
     , 'xterm'
