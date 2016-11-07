@@ -12,6 +12,7 @@ class bootserver_kvm_ltspserver {
   file {
     '/etc/init/restart-libvirt-autostart-domains.conf':
       group   => 'root',
+      mode    => 0644,
       owner   => 'root',
       source  => 'puppet:///modules/bootserver_kvm_ltspserver/restart-libvirt-autostart-domains.upstart';
 
