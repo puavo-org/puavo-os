@@ -180,6 +180,7 @@ class packages {
     , 'khangman'
     , 'ktouch'
     , 'kwordquiz'
+    , 'laby'
     , 'luola'
     , 'neverball'
     , 'neverputt'
