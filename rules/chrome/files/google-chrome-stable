@@ -6,7 +6,7 @@ browser_running() {
 
 homepage_args() { echo "$HOMEPAGE" | sed 's/|/ /g'; }
 
-default_args="--no-default-browser-check"
+default_args="--no-first-run"
 
 if ! browser_running || [ $# -eq 0 ]; then
   exec /opt/google/chrome/google-chrome --new-window $default_args \
