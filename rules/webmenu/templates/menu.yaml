@@ -271,7 +271,7 @@ items:
     type: desktop
   - source: ti_nspire_cx_cas
     type: desktop
-    condition: "env.PUAVO_PERSONALLY_ADMINISTERED"
+    condition: "env.PUAVO_TAG_TI_NSPIRE_CX_CAS"
   - source: ghemical
     type: desktop
     inactiveByDeviceType: thinclient
