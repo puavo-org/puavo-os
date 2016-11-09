@@ -269,6 +269,9 @@ items:
     type: desktop
   - source: wxmaxima
     type: desktop
+  - source: ti_nspire_cx_cas
+    type: desktop
+    condition: "env.PUAVO_PERSONALLY_ADMINISTERED"
   - source: ghemical
     type: desktop
     inactiveByDeviceType: thinclient
