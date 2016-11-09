@@ -480,6 +480,9 @@ items:
     type: desktop
   - source: wxmaxima
     type: desktop
+  - source: ti_nspire_cx_cas
+    type: desktop
+    condition: "env.PUAVO_TAG_TI_NSPIRE_CX_CAS"
   - source: LoggerPro
     type: desktop
   - source: dia
