@@ -20,7 +20,6 @@ class image::allinone {
   include ::kernels
   include ::keyutils
   include ::ktouch
-  include ::laptop_mode_tools
   include ::network_manager
   include ::packages
   include ::packages

@@ -245,8 +245,9 @@ class packages {
     , 'pidgin-plugin-pack' ]:
       tag => [ 'tag_instant_messaging', 'tag_debian', ];
 
-    [ 'laptop-mode-tools' ]:
-      tag => [ 'tag_laptop', 'tag_debian', ];
+    # XXX enable if issues are fixed
+    # [ 'laptop-mode-tools' ]:
+    #   tag => [ 'tag_laptop', 'tag_debian', ];
 
     [ 'banshee'
     # , 'clam-chordata'		# XXX missing from Debian Jessie
