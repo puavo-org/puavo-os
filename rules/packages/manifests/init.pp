@@ -146,6 +146,7 @@ class packages {
     [ 'dkms'
     , 'libgl1-mesa-glx'
     , 'nvidia-kernel-dkms'
+    , 'nvidia-legacy-304xx-kernel-dkms'
     , 'nvidia-settings'
     # , 'r8168-dkms'		# XXX missing from Debian
     , 'xserver-xorg-video-all' ]:
@@ -626,12 +627,13 @@ class packages {
       tag => [ 'tag_themes', 'tag_puavo', ];
   }
 
-  $bcmwl_dkms_module  = 'bcmwl/6.30.223.248+bdcom'
-  $nvidia_dkms_module = 'nvidia-current/340.96'
-  $r8168_dkms_module  = 'r8168/8.040.00'
-  $all_dkms_modules   = [ $nvidia_dkms_module ]
-			# XXX $bcmwl_dkms_module  # XXX missing from Debian
-			# XXX $r8168_dkms_module  # XXX missing from Debian
+  $bcmwl_dkms_module      = 'bcmwl/6.30.223.248+bdcom'
+  $nvidia_dkms_304_module = 'nvidia-legacy-304xx/304.131'
+  $nvidia_dkms_340_module = 'nvidia-current/340.96'
+  $r8168_dkms_module      = 'r8168/8.040.00'
+  $all_dkms_modules       = [ $nvidia_dkms_304_module, $nvidia_dkms_340_module ]
+			    # XXX $bcmwl_dkms_module  # XXX missing from Debian
+			    # XXX $r8168_dkms_module  # XXX missing from Debian
 
   case $debianversioncodename {
     'jessie': {
