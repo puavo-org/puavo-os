@@ -641,14 +641,14 @@ class packages {
 
         '4.7.0-0.bpo.1-amd64':
           dkms_modules => [],
-          package_name => 'linux-image-4.7.0-0.bpo.1-amd64-unsigned';
+          package_name => 'linux-image-4.7.0-0.bpo.1-amd64';
       }
     }
     'stretch': {
       packages::kernels::kernel_package {
         '4.7.0-1-amd64':
           dkms_modules => $all_dkms_modules,
-          package_name => 'linux-image-4.7.0-1-amd64-unsigned';
+          package_name => 'linux-image-4.7.0-1-amd64';
       }
     }
   }
