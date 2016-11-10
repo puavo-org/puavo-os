@@ -12,7 +12,6 @@ class image::bundle::desktop {
   include ::kaffeine
   include ::keyutils
   include ::ktouch
-  include ::laptop_mode_tools
   # include ::libreoffice		# XXX needs fixing for Debian
   include ::network_manager
   # include ::pycharm	                # XXX pycharm needs to be packaged

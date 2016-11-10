@@ -14,5 +14,4 @@ class laptop_mode_tools {
   }
 
   Package <| title == laptop-mode-tools |>
-
 }
