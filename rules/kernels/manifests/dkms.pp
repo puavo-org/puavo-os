@@ -8,7 +8,10 @@ class kernels::dkms {
     case $dkms_module {
       /^bcmwl\//:          { $dkms_module_package = 'bcmwl-kernel-source' }
       /^nvidia-current\//: { $dkms_module_package = 'nvidia-kernel-dkms'  }
-      /^r8168\//:          { $dkms_module_package = 'r8168-dkms'          }
+      /^nvidia-legacy-304xx\//: {
+        $dkms_module_package = 'nvidia-legacy-304xx-kernel-dkms'
+      }
+      /^r8168\//: { $dkms_module_package = 'r8168-dkms' }
       default: {
         fail("Unknown package dependency for dkms module ${dkms_module}")
       }
