@@ -148,10 +148,11 @@ usage(void)
 	       "  3. kernel command line\n"
 	       "\n"
 	       "Options:\n"
-	       "  --help, -h                display this help and exit\n"
-	       "\n"
+	       "  --help                    display this help and exit\n"
 	       "  --devicejson-path FILE    filepath of the device.json,\n"
 	       "                            defaults to " DEVICEJSON_PATH "\n"
+	       "  --init                    initialize the database\n"
+	       "  --verbose                 verbose output\n"
 	       "\n");
 }
 
