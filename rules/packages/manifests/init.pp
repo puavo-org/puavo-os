@@ -627,10 +627,9 @@ class packages {
   }
 
   $bcmwl_dkms_module  = 'bcmwl/6.30.223.248+bdcom'
-  $nvidia_dkms_module = 'nvidia-304/304.128'
+  $nvidia_dkms_module = 'nvidia-current/340.96'
   $r8168_dkms_module  = 'r8168/8.040.00'
-  $all_dkms_modules   = []
-			# XXX $nvidia_dkms_module # XXX needs fixing
+  $all_dkms_modules   = [ $nvidia_dkms_module ]
 			# XXX $bcmwl_dkms_module  # XXX missing from Debian
 			# XXX $r8168_dkms_module  # XXX missing from Debian
 
@@ -641,15 +640,15 @@ class packages {
           dkms_modules => $all_dkms_modules;
 
         '4.7.0-0.bpo.1-amd64':
-          dkms_modules => $all_dkms_modules,
-          package_name => 'linux-image-4.7.0-0.bpo.1-amd64-unsigned';
+          dkms_modules => [],
+          package_name => 'linux-image-4.7.0-0.bpo.1-amd64';
       }
     }
     'stretch': {
       packages::kernels::kernel_package {
         '4.7.0-1-amd64':
           dkms_modules => $all_dkms_modules,
-          package_name => 'linux-image-4.7.0-1-amd64-unsigned';
+          package_name => 'linux-image-4.7.0-1-amd64';
       }
     }
   }
