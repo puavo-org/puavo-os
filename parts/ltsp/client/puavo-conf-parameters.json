@@ -2,6 +2,9 @@
     "puavo.autoeth.enabled": {
         "default": "false"
     },
+    "puavo.graphics.driver": {
+        "default": ""
+    },
     "puavo.guestlogin.mode": {
         "default": "off"
     },
@@ -55,9 +58,6 @@
     },
     "puavo.xrandr.forced": {
         "default": "false"
-    },
-    "puavo.xserver.driver": {
-        "default": ""
     },
     "puavo.xsessions.locked": {
         "default": "true"

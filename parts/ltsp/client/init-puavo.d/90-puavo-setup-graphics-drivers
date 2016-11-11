@@ -1,4 +1,4 @@
-puavo_xserver_driver=$(puavo-conf puavo.xserver.driver)
+puavo_graphics_driver=$(puavo-conf puavo.graphics.driver)
 
 # XXX OLD CODE, WHAT SHOULD BE CLEANED UP NOW?
 # Clean up blacklists we do not want at this stage of boot
@@ -8,7 +8,7 @@ puavo_xserver_driver=$(puavo-conf puavo.xserver.driver)
 # rm -f /etc/modprobe.d/fglrx.conf \
 #       /etc/modprobe.d/nvidia-304_hybrid.conf
 
-case "$puavo_xserver_driver" in
+case "$puavo_graphics_driver" in
   nvidia)
     update-alternatives --set glx /usr/lib/nvidia
     ;;
