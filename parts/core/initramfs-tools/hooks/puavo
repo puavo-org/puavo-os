@@ -22,10 +22,18 @@ esac
 
 . /usr/share/initramfs-tools/hook-functions
 
+#
+# support for basic system image
+#
+
 manual_add_modules aufs
 manual_add_modules overlay
 manual_add_modules overlayfs
 manual_add_modules squashfs
+
+#
+# puavo-conf
+#
 
 mkdir -p ${DESTDIR}/usr/bin/ ${DESTDIR}/usr/sbin/ ${DESTDIR}/usr/share/
 
@@ -38,3 +46,16 @@ copy_exec /usr/sbin/puavo-conf-update /usr/sbin
 cp -a /usr/share/puavo-conf ${DESTDIR}/usr/share/
 
 ln -s libpuavoconf.so.0 ${DESTDIR}/usr/lib/libpuavoconf.so
+
+#
+# nvidia graphics drivers
+#
+
+rm -f ${DESTDIR}/etc/modprobe.d/nvidia-blacklists-nouveau.conf \
+      ${DESTDIR}/etc/modprobe.d/nvidia.conf                    \
+      ${DESTDIR}/etc/modprobe.d/nvidia-kernel-common.conf
+
+if [ -d /etc/nvidia ]; then
+  mkdir -p ${DESTDIR}/etc/nvidia
+  cp -t ${DESTDIR}/etc/nvidia /etc/nvidia/*
+fi
