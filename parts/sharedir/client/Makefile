@@ -29,7 +29,11 @@ install: install-dirs
 		etc/network/if-up.d/ipsec
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
 		puavo-remotemounts-helper.desktop
+
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-conf/definitions \
 		share/puavo-conf/definitions/puavo-sharedir-client.json
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/X11/Xsession.d \
+		etc/X11/Xsession.d/46puavo-update-gtk-bookmarks
 
 clean:
