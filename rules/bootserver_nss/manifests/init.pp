@@ -9,7 +9,7 @@ class bootserver_nss {
     'kill redundant nslcd instances':
       command => '/usr/bin/pkill -x nslcd',
       notify  => Service['nslcd'],
-      onlyif  => '/usr/bin/test "$(/usr/bin/pgrep -x -c nslcd)" -ne 2';
+      onlyif  => '/usr/bin/test "$(/usr/bin/pgrep -x -c nslcd)" -gt 2';
   }
 
   file {
