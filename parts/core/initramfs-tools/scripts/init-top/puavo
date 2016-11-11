@@ -24,7 +24,7 @@ fi
 puavo_blacklist_nouveau=false
 puavo_nvidia_modprobe_file=
 
-case "$(puavo-conf puavo.xserver.driver)" in
+case "$(puavo-conf puavo.graphics.driver)" in
   nvidia)
     puavo_blacklist_nouveau=true
     puavo_nvidia_modprobe_file=nvidia-modprobe.conf
