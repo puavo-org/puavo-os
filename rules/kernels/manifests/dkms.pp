@@ -11,6 +11,9 @@ class kernels::dkms {
       /^nvidia-legacy-304xx\//: {
         $dkms_module_package = 'nvidia-legacy-304xx-kernel-dkms'
       }
+      /^nvidia-legacy-340xx\//: {
+        $dkms_module_package = 'nvidia-legacy-340xx-kernel-dkms'
+      }
       /^r8168\//: { $dkms_module_package = 'r8168-dkms' }
       default: {
         fail("Unknown package dependency for dkms module ${dkms_module}")
