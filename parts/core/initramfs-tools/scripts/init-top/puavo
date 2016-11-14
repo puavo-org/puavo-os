@@ -24,8 +24,9 @@ fi
 puavo_blacklist_nouveau=false
 puavo_nvidia_modprobe_file=
 
+# XXX these are Stretch-specific
 case "$(puavo-conf puavo.graphics.driver)" in
-  nvidia)
+  nvidia|nvidia-367)
     puavo_blacklist_nouveau=true
     puavo_nvidia_modprobe_file=nvidia-modprobe.conf
     ;;
