@@ -29,7 +29,7 @@ class kernels::dkms {
     }
 
     Package <| title == dkms
-            or title == $dkms_package
+            or title == $dkms_module_package
             or title == $kernel_packages |>
   }
 }
