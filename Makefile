@@ -1,6 +1,6 @@
 # Public, configurable variables
 debootstrap_mirror	:= http://httpredir.debian.org/debian/
-debootstrap_suite	:= jessie
+debootstrap_suite	:= stretch
 image_class		:= allinone
 image_dir		:= /srv/puavo-os-images
 rootfs_dir		:= /var/tmp/puavo-os/rootfs

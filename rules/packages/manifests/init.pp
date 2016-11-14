@@ -111,7 +111,6 @@ class packages {
       tag => [ 'tag_basic', 'tag_debian', ];
 
     [ 'gdm3'
-    , 'lsb-invalid-mta'
     , 'network-manager-openvpn-gnome'
     , 'notify-osd'
     , 'onboard'
@@ -145,8 +144,6 @@ class packages {
 
     [ 'dkms'
     , 'libgl1-mesa-glx'
-    , 'nvidia-kernel-dkms'
-    , 'nvidia-legacy-304xx-kernel-dkms'
     , 'nvidia-settings'
     # , 'r8168-dkms'		# XXX missing from Debian
     , 'xserver-xorg-video-all' ]:
@@ -184,7 +181,6 @@ class packages {
     , 'neverball'
     , 'neverputt'
     , 'openttd'
-    , 'realtimebattle'
     , 'supertuxkart'
     , 'tuxmath'
     , 'tuxpaint'
@@ -226,7 +222,7 @@ class packages {
     , 'nautilus-image-converter'
     , 'okular'
     , 'openshot'
-    # , 'pencil'		# XXX missing from Debian
+    , 'pencil2d'
     # , 'photofilmstrip'	# XXX missing from Debian
     , 'pinta'
     , 'pitivi'
@@ -250,10 +246,8 @@ class packages {
     # [ 'laptop-mode-tools' ]:
     #   tag => [ 'tag_laptop', 'tag_debian', ];
 
-    [ 'banshee'
     # , 'clam-chordata'		# XXX missing from Debian Jessie
-    , 'gnome-mplayer'
-    , 'goobox'
+    [ 'goobox'
     , 'gstreamer1.0-clutter'
     , 'gstreamer1.0-libav'
     , 'gstreamer1.0-plugins-bad'
@@ -264,10 +258,8 @@ class packages {
     , 'gtk-recordmydesktop'
     , 'kaffeine'
     , 'libdvdread4'
-    # , 'ogmrip'		# XXX missing from Debian
-    , 'python-gst0.10'
+    , 'ogmrip'
     , 'vlc'
-    , 'vlc-plugin-pulse'
     , 'x264' ]:
       tag => [ 'tag_mediaplayer', 'tag_debian', ];
 
@@ -287,7 +279,6 @@ class packages {
       tag => [ 'tag_music_making', 'tag_debian', ];
 
     [ 'amtterm' ]:
-    # , 'wsmancli' ]:	# XXX missing from Debian
       tag => [ 'tag_network', 'tag_debian', ];
 
     [ 'calibre'
@@ -303,14 +294,13 @@ class packages {
     , 'sound-juicer' ]:
       tag => [ 'tag_optical_media', 'tag_debian', ];
 
-    # XXX missing from Debian
-    # [ 'gtklp' ]:
-    #   tag => [ 'tag_printing', 'tag_debian', ];
+    [ 'gtklp' ]:
+      tag => [ 'tag_printing', 'tag_debian', ];
 
     [ 'arduino'
     , 'arduino-mk'
     , 'avr-libc'
-    # 'basic256'		# XXX missing from Debian Jessie
+    # XXX 'basic256'		# XXX missing from Debian Jessie
     , 'eclipse'
     , 'emacs24'
     , 'eric'
@@ -320,7 +310,6 @@ class packages {
     , 'geany'
     , 'idle'
     , 'idle-python2.7'
-    , 'idle-python3.4'
     , 'kturtle'
     , 'lokalize'
     , 'pyqt4-dev-tools'
@@ -337,8 +326,7 @@ class packages {
       tag => [ 'tag_programming', 'tag_debian', ];
 
     # 'gftp-gtk'	# XXX missing from Debian
-    [ 'libmotif4'	# required by icaclient
-    , 'lftp'
+    [ 'lftp'
     , 'remmina'
     , 'smbclient'
     , 'wget'
@@ -371,7 +359,6 @@ class packages {
 
     # 'breathe-icon-theme'		# XXX missing from Debian
     [ 'gnome-icon-theme'
-    , 'gnome-themes-extras'
     , 'gtk2-engines'
     , 'gtk2-engines-pixbuf'
     # , 'human-theme'			# XXX missing from Debian
@@ -421,12 +408,10 @@ class packages {
     , 'file-roller'
     , 'fonts-cantarell'
     , 'fonts-dejavu-core'
-    , 'fonts-droid'
     , 'fonts-freefont-ttf'
     , 'foomatic-db-compressed-ppds'
     , 'gcc'
     , 'gcr'
-    # , 'gdm'					# not needed
     , 'gedit'
     , 'genisoimage'
     , 'ghostscript-x'
@@ -462,8 +447,6 @@ class packages {
     , 'gnome-user-share'
     , 'gnome-video-effects'
     , 'gsettings-desktop-schemas'
-    , 'gstreamer0.10-alsa'
-    , 'gstreamer0.10-pulseaudio'
     , 'gstreamer1.0-alsa'
     , 'gstreamer1.0-pulseaudio'
     , 'gucharmap'
@@ -494,11 +477,9 @@ class packages {
     , 'libreoffice-math'
     , 'libreoffice-ogltrans'
     , 'libreoffice-pdfimport'
-    , 'libreoffice-presentation-minimizer'
     , 'libreoffice-style-tango'
     , 'libreoffice-writer'
     , 'libsasl2-modules'
-    , 'libxp6'
     , 'make'
     , 'memtest86+'
     , 'mousetweaks'
@@ -523,8 +504,6 @@ class packages {
     , 'printer-driver-splix'
     , 'pulseaudio'
     , 'pulseaudio-module-bluetooth'
-    , 'pulseaudio-module-x11'
-    , 'python3-aptdaemon.pkcompat'
     , 'rfkill'
     , 'rtmpdump'
     , 'rxvt-unicode'
@@ -567,8 +546,6 @@ class packages {
     , 'exfat-utils'
     , 'fuse'
     , 'gconf-editor'
-    # , 'ginn'			# XXX needs packaging for Debian ?
-    # , 'touchegg'		# XXX needs packaging for Debian ?
     , 'unace'
     , 'unionfs-fuse' ]: # Ekapeli might need this.
       tag => [ 'tag_utils', 'tag_debian', ];
@@ -580,16 +557,57 @@ class packages {
     , 'browser-plugin-vlc'
     , 'chromium'
     , 'epiphany-browser'
-    , 'icedtea-7-plugin'
     , 'liferea'
-    , 'openjdk-7-jdk'
-    , 'openjdk-7-jre'
     , 'openjdk-8-jdk'
     , 'openjdk-8-jre'
-    , 'php5-cli'
-    , 'php5-sqlite'
     , 'sqlite3' ]:
       tag => [ 'tag_web', 'tag_debian', ];
+  }
+
+  #
+  # packages with differing names on distribution versions
+  #
+
+  @package {
+    'idle-python3':
+      name => $debianversioncodename ? {
+                'jessie' => 'idle-python3.4',
+                default  => 'idle-python3.5',
+              },
+      tag => [ 'tag_programming', 'tag_debian', ];
+
+    'nvidia-304xx-kernel-dkms':
+      name => 'nvidia-legacy-304xx-kernel-dkms',
+      tag  => [ 'tag_drivers', 'tag_debian', ];
+
+    'nvidia-340xx-kernel-dkms':
+      name => $debianversioncodename ? {
+                'jessie' => 'nvidia-kernel-dkms',
+                default  => 'nvidia-legacy-340xx-kernel-dkms',
+              },
+      tag  => [ 'tag_drivers', 'tag_debian', ];
+
+    'php-cli':
+      name => $debianversioncodename ? {
+                'jessie' => 'php5-cli',
+                default  => 'php-cli',
+              },
+      tag => [ 'tag_web', 'tag_debian', ];
+
+    'php-sqlite':
+      name => $debianversioncodename ? {
+                'jessie' => 'php5-sqlite',
+                default  => 'php-sqlite3',
+              },
+      tag => [ 'tag_web', 'tag_debian', ];
+  }
+
+  if $debianversioncodename == 'stretch' {
+    @package {
+      'nvidia-367xx-kernel-dkms':
+        name => 'nvidia-kernel-dkms',
+        tag  => [ 'tag_drivers', 'tag_debian', ];
+    }
   }
 
   #
@@ -627,13 +645,34 @@ class packages {
       tag => [ 'tag_themes', 'tag_puavo', ];
   }
 
-  $bcmwl_dkms_module      = 'bcmwl/6.30.223.248+bdcom'
-  $nvidia_dkms_304_module = 'nvidia-legacy-304xx/304.131'
-  $nvidia_dkms_340_module = 'nvidia-current/340.96'
-  $r8168_dkms_module      = 'r8168/8.040.00'
-  $all_dkms_modules       = [ $nvidia_dkms_304_module, $nvidia_dkms_340_module ]
-			    # XXX $bcmwl_dkms_module  # XXX missing from Debian
-			    # XXX $r8168_dkms_module  # XXX missing from Debian
+  case $debianversioncodename {
+    'jessie': {
+      # XXX $bcmwl_dkms_module      = 'bcmwl/6.30.223.248+bdcom'
+      $nvidia_dkms_304_module = 'nvidia-legacy-304xx/304.131'
+      $nvidia_dkms_340_module = 'nvidia-current/340.96'
+      # XXX $r8168_dkms_module      = 'r8168/8.040.00'
+
+      $all_dkms_modules = [ $nvidia_dkms_304_module
+			  , $nvidia_dkms_340_module ]
+
+      # XXX $bcmwl_dkms_module  # XXX missing from Debian
+      # XXX $r8168_dkms_module  # XXX missing from Debian
+    }
+    'stretch': {
+      # XXX $bcmwl_dkms_module      = 'bcmwl/6.30.223.248+bdcom'
+      $nvidia_dkms_304_module = 'nvidia-legacy-304xx/304.132'
+      $nvidia_dkms_340_module = 'nvidia-legacy-340xx/340.98'
+      $nvidia_dkms_367_module = 'nvidia-current/367.57'
+      # XXX $r8168_dkms_module      = 'r8168/8.040.00'
+
+      $all_dkms_modules = [ $nvidia_dkms_304_module
+			  , $nvidia_dkms_340_module
+			  , $nvidia_dkms_367_module ]
+
+      # XXX $bcmwl_dkms_module  # XXX missing from Debian
+      # XXX $r8168_dkms_module  # XXX missing from Debian
+    }
+  }
 
   case $debianversioncodename {
     'jessie': {

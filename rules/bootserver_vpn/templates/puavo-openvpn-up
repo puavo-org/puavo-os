@@ -1,0 +1,36 @@
+#!/bin/sh
+#
+# Copyright 2013 Opinsys Oy
+#
+# This script is called from OpenVPN when client connection to VPN 
+# server is established. The script writes a configuration file 
+# /etc/dnsmasq.d/10-puavo-vpn.conf that redirects DNS queries for ldap 
+# and kerberos master servers to go to nameserver at the gateway 
+# address.
+#
+# This makes it possible to have multiple VPN gateways where each 
+# gateway has its own endpoint address. When the client connects to 
+# different VPN server, the settings change and dnsmasq is restarted for 
+# the changes to take effect.
+
+TMPFILE=`mktemp`
+CONFFILE="/etc/dnsmasq.d/10-puavo-vpn.conf"
+
+LDAP_MASTER=$(cat /etc/puavo/ldap/master)
+KERBEROS_MASTER=$(cat /etc/puavo/kerberos/master)
+PUAVO_TOPDOMAIN=$(cat /etc/puavo/topdomain)
+
+echo "server=/${LDAP_MASTER}/${route_vpn_gateway}" > $TMPFILE
+echo "server=/${KERBEROS_MASTER}/${route_vpn_gateway}" >> $TMPFILE
+echo "server=/ntp.${PUAVO_TOPDOMAIN}/${route_vpn_gateway}" >> $TMPFILE
+echo "server=/private-archive.${PUAVO_TOPDOMAIN}/${route_vpn_gateway}" >> $TMPFILE
+echo "server=/images.${PUAVO_TOPDOMAIN}/${route_vpn_gateway}" >> $TMPFILE
+
+DIFF=`diff -q $TMPFILE $CONFFILE`
+
+if [ ! -e $CONFFILE -o "${DIFF}x" != "x" ]; then
+  install -m 0644 $TMPFILE $CONFFILE
+  /etc/init.d/dnsmasq restart
+fi
+
+rm -f $TMPFILE

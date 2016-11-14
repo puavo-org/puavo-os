@@ -37,6 +37,10 @@ case "$(puavo-conf puavo.graphics.driver)" in
     puavo_blacklist_nouveau=true
     puavo_nvidia_modprobe_file=nvidia-legacy-340xx-modprobe.conf
     ;;
+  nvidia-367)
+    puavo_blacklist_nouveau=true
+    puavo_nvidia_modprobe_file=nvidia-legacy-367xx-modprobe.conf
+    ;;
 esac
 
 if $puavo_blacklist_nouveau; then
