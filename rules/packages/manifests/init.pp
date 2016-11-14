@@ -111,7 +111,6 @@ class packages {
       tag => [ 'tag_basic', 'tag_debian', ];
 
     [ 'gdm3'
-    , 'lsb-invalid-mta'
     , 'network-manager-openvpn-gnome'
     , 'notify-osd'
     , 'onboard'
@@ -182,7 +181,6 @@ class packages {
     , 'neverball'
     , 'neverputt'
     , 'openttd'
-    , 'realtimebattle'
     , 'supertuxkart'
     , 'tuxmath'
     , 'tuxpaint'
@@ -248,10 +246,8 @@ class packages {
     # [ 'laptop-mode-tools' ]:
     #   tag => [ 'tag_laptop', 'tag_debian', ];
 
-    [ 'banshee'
     # , 'clam-chordata'		# XXX missing from Debian Jessie
-    , 'gnome-mplayer'
-    , 'goobox'
+    [ 'goobox'
     , 'gstreamer1.0-clutter'
     , 'gstreamer1.0-libav'
     , 'gstreamer1.0-plugins-bad'
@@ -263,9 +259,7 @@ class packages {
     , 'kaffeine'
     , 'libdvdread4'
     # , 'ogmrip'		# XXX missing from Debian
-    , 'python-gst0.10'
     , 'vlc'
-    , 'vlc-plugin-pulse'
     , 'x264' ]:
       tag => [ 'tag_mediaplayer', 'tag_debian', ];
 
@@ -318,7 +312,6 @@ class packages {
     , 'geany'
     , 'idle'
     , 'idle-python2.7'
-    , 'idle-python3.4'
     , 'kturtle'
     , 'lokalize'
     , 'pyqt4-dev-tools'
@@ -335,8 +328,7 @@ class packages {
       tag => [ 'tag_programming', 'tag_debian', ];
 
     # 'gftp-gtk'	# XXX missing from Debian
-    [ 'libmotif4'	# required by icaclient
-    , 'lftp'
+    [ 'lftp'
     , 'remmina'
     , 'smbclient'
     , 'wget'
@@ -369,7 +361,6 @@ class packages {
 
     # 'breathe-icon-theme'		# XXX missing from Debian
     [ 'gnome-icon-theme'
-    , 'gnome-themes-extras'
     , 'gtk2-engines'
     , 'gtk2-engines-pixbuf'
     # , 'human-theme'			# XXX missing from Debian
@@ -419,7 +410,6 @@ class packages {
     , 'file-roller'
     , 'fonts-cantarell'
     , 'fonts-dejavu-core'
-    , 'fonts-droid'
     , 'fonts-freefont-ttf'
     , 'foomatic-db-compressed-ppds'
     , 'gcc'
@@ -460,8 +450,6 @@ class packages {
     , 'gnome-user-share'
     , 'gnome-video-effects'
     , 'gsettings-desktop-schemas'
-    , 'gstreamer0.10-alsa'
-    , 'gstreamer0.10-pulseaudio'
     , 'gstreamer1.0-alsa'
     , 'gstreamer1.0-pulseaudio'
     , 'gucharmap'
@@ -492,11 +480,9 @@ class packages {
     , 'libreoffice-math'
     , 'libreoffice-ogltrans'
     , 'libreoffice-pdfimport'
-    , 'libreoffice-presentation-minimizer'
     , 'libreoffice-style-tango'
     , 'libreoffice-writer'
     , 'libsasl2-modules'
-    , 'libxp6'
     , 'make'
     , 'memtest86+'
     , 'mousetweaks'
@@ -521,8 +507,6 @@ class packages {
     , 'printer-driver-splix'
     , 'pulseaudio'
     , 'pulseaudio-module-bluetooth'
-    , 'pulseaudio-module-x11'
-    , 'python3-aptdaemon.pkcompat'
     , 'rfkill'
     , 'rtmpdump'
     , 'rxvt-unicode'
@@ -578,14 +562,9 @@ class packages {
     , 'browser-plugin-vlc'
     , 'chromium'
     , 'epiphany-browser'
-    , 'icedtea-7-plugin'
     , 'liferea'
-    , 'openjdk-7-jdk'
-    , 'openjdk-7-jre'
     , 'openjdk-8-jdk'
     , 'openjdk-8-jre'
-    , 'php5-cli'
-    , 'php5-sqlite'
     , 'sqlite3' ]:
       tag => [ 'tag_web', 'tag_debian', ];
   }
@@ -595,16 +574,37 @@ class packages {
   #
 
   @package {
+    'idle-python3':
+      name => $debianversioncodename ? {
+                'jessie' => 'idle-python3.4',
+                default  => 'idle-python3.5',
+              },
+      tag => [ 'tag_programming', 'tag_debian', ];
+
     'nvidia-304xx-kernel-dkms':
       name => 'nvidia-legacy-304xx-kernel-dkms',
       tag  => [ 'tag_drivers', 'tag_debian', ];
 
     'nvidia-340xx-kernel-dkms':
       name => $debianversioncodename ? {
-                'jessie'  => 'nvidia-kernel-dkms',
-                'stretch' => 'nvidia-legacy-340xx-kernel-dkms',
+                'jessie' => 'nvidia-kernel-dkms',
+                default  => 'nvidia-legacy-340xx-kernel-dkms',
               },
       tag  => [ 'tag_drivers', 'tag_debian', ];
+
+    'php-cli':
+      name => $debianversioncodename ? {
+                'jessie' => 'php5-cli',
+                default  => 'php-cli',
+              },
+      tag => [ 'tag_web', 'tag_debian', ];
+
+    'php-sqlite':
+      name => $debianversioncodename ? {
+                'jessie' => 'php5-sqlite',
+                default  => 'php-sqlite3',
+              },
+      tag => [ 'tag_web', 'tag_debian', ];
   }
 
   if $debianversioncodename == 'stretch' {
