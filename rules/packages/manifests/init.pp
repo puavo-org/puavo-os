@@ -222,7 +222,7 @@ class packages {
     , 'nautilus-image-converter'
     , 'okular'
     , 'openshot'
-    # , 'pencil'		# XXX missing from Debian
+    , 'pencil2d'
     # , 'photofilmstrip'	# XXX missing from Debian
     , 'pinta'
     , 'pitivi'
@@ -258,7 +258,7 @@ class packages {
     , 'gtk-recordmydesktop'
     , 'kaffeine'
     , 'libdvdread4'
-    # , 'ogmrip'		# XXX missing from Debian
+    , 'ogmrip'
     , 'vlc'
     , 'x264' ]:
       tag => [ 'tag_mediaplayer', 'tag_debian', ];
@@ -279,7 +279,6 @@ class packages {
       tag => [ 'tag_music_making', 'tag_debian', ];
 
     [ 'amtterm' ]:
-    # , 'wsmancli' ]:	# XXX missing from Debian
       tag => [ 'tag_network', 'tag_debian', ];
 
     [ 'calibre'
@@ -295,14 +294,13 @@ class packages {
     , 'sound-juicer' ]:
       tag => [ 'tag_optical_media', 'tag_debian', ];
 
-    # XXX missing from Debian
-    # [ 'gtklp' ]:
-    #   tag => [ 'tag_printing', 'tag_debian', ];
+    [ 'gtklp' ]:
+      tag => [ 'tag_printing', 'tag_debian', ];
 
     [ 'arduino'
     , 'arduino-mk'
     , 'avr-libc'
-    # 'basic256'		# XXX missing from Debian Jessie
+    # XXX 'basic256'		# XXX missing from Debian Jessie
     , 'eclipse'
     , 'emacs24'
     , 'eric'
@@ -414,7 +412,6 @@ class packages {
     , 'foomatic-db-compressed-ppds'
     , 'gcc'
     , 'gcr'
-    # , 'gdm'					# not needed
     , 'gedit'
     , 'genisoimage'
     , 'ghostscript-x'
@@ -549,8 +546,6 @@ class packages {
     , 'exfat-utils'
     , 'fuse'
     , 'gconf-editor'
-    # , 'ginn'			# XXX needs packaging for Debian ?
-    # , 'touchegg'		# XXX needs packaging for Debian ?
     , 'unace'
     , 'unionfs-fuse' ]: # Ekapeli might need this.
       tag => [ 'tag_utils', 'tag_debian', ];
