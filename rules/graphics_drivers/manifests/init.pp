@@ -1,17 +1,21 @@
 class graphics_drivers {
   include ::packages
 
+  $nvidia_packages = $debianversioncodename ? {
+                       'jessie'  => [ 'nvidia-304xx-kernel-dkms'
+                                    , 'nvidia-340xx-kernel-dkms' ],
+                       default => [ 'nvidia-304xx-kernel-dkms'
+                                    , 'nvidia-340xx-kernel-dkms'
+                                    , 'nvidia-367xx-kernel-dkms' ],
+                     }
+
   exec {
     '/usr/bin/update-alternatives --set glx /usr/lib/mesa-diverted':
       require => [ Package['libgl1-mesa-glx']
-                 , Package['nvidia-kernel-dkms']
-                 , Package['nvidia-legacy-304xx-kernel-dkms']
-                 , Package['nvidia-legacy-340xx-kernel-dkms'] ],
+                 , Package[$nvidia_packages] ],
       unless  => '/usr/bin/update-alternatives --query glx | grep -Fqx "Value: /usr/lib/mesa-diverted"';
   }
 
   Package <| title == libgl1-mesa-glx
-          or title == nvidia-kernel-dkms
-          or title == nvidia-legacy-304xx-kernel-dkms
-          or title == nvidia-legacy-340xx-kernel-dkms |>
+          or title == $nvidia_packages |>
 }

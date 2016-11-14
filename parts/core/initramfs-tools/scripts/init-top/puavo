@@ -26,7 +26,7 @@ puavo_nvidia_modprobe_file=
 
 # XXX these are Stretch-specific
 case "$(puavo-conf puavo.graphics.driver)" in
-  nvidia|nvidia-367)
+  nvidia)
     puavo_blacklist_nouveau=true
     puavo_nvidia_modprobe_file=nvidia-modprobe.conf
     ;;
@@ -37,6 +37,10 @@ case "$(puavo-conf puavo.graphics.driver)" in
   nvidia-340)
     puavo_blacklist_nouveau=true
     puavo_nvidia_modprobe_file=nvidia-legacy-340xx-modprobe.conf
+    ;;
+  nvidia-367)
+    puavo_blacklist_nouveau=true
+    puavo_nvidia_modprobe_file=nvidia-legacy-367xx-modprobe.conf
     ;;
 esac
 

@@ -145,9 +145,6 @@ class packages {
 
     [ 'dkms'
     , 'libgl1-mesa-glx'
-    , 'nvidia-kernel-dkms'
-    , 'nvidia-legacy-304xx-kernel-dkms'
-    , 'nvidia-legacy-340xx-kernel-dkms'
     , 'nvidia-settings'
     # , 'r8168-dkms'		# XXX missing from Debian
     , 'xserver-xorg-video-all' ]:
@@ -594,6 +591,31 @@ class packages {
   }
 
   #
+  # packages with differing names on distribution versions
+  #
+
+  @package {
+    'nvidia-304xx-kernel-dkms':
+      name => 'nvidia-legacy-304xx-kernel-dkms',
+      tag  => [ 'tag_drivers', 'tag_debian', ];
+
+    'nvidia-340xx-kernel-dkms':
+      name => $debianversioncodename ? {
+                'jessie'  => 'nvidia-kernel-dkms',
+                'stretch' => 'nvidia-legacy-340xx-kernel-dkms',
+              },
+      tag  => [ 'tag_drivers', 'tag_debian', ];
+  }
+
+  if $debianversioncodename == 'stretch' {
+    @package {
+      'nvidia-367xx-kernel-dkms':
+        name => 'nvidia-kernel-dkms',
+        tag  => [ 'tag_drivers', 'tag_debian', ];
+    }
+  }
+
+  #
   # packages from the (Opinsys) puavo repository
   #
 
@@ -628,16 +650,34 @@ class packages {
       tag => [ 'tag_themes', 'tag_puavo', ];
   }
 
-  $bcmwl_dkms_module      = 'bcmwl/6.30.223.248+bdcom'
-  $nvidia_dkms_304_module = 'nvidia-legacy-304xx/304.132'
-  $nvidia_dkms_340_module = 'nvidia-legacy-340xx/340.98'
-  $nvidia_dkms_367_module = 'nvidia-current/367.57'
-  $r8168_dkms_module      = 'r8168/8.040.00'
-  $all_dkms_modules       = [ $nvidia_dkms_304_module
-			    , $nvidia_dkms_340_module
-			    , $nvidia_dkms_367_module ]
-			    # XXX $bcmwl_dkms_module  # XXX missing from Debian
-			    # XXX $r8168_dkms_module  # XXX missing from Debian
+  case $debianversioncodename {
+    'jessie': {
+      # XXX $bcmwl_dkms_module      = 'bcmwl/6.30.223.248+bdcom'
+      $nvidia_dkms_304_module = 'nvidia-legacy-304xx/304.131'
+      $nvidia_dkms_340_module = 'nvidia-current/340.96'
+      # XXX $r8168_dkms_module      = 'r8168/8.040.00'
+
+      $all_dkms_modules = [ $nvidia_dkms_304_module
+			  , $nvidia_dkms_340_module ]
+
+      # XXX $bcmwl_dkms_module  # XXX missing from Debian
+      # XXX $r8168_dkms_module  # XXX missing from Debian
+    }
+    'stretch': {
+      # XXX $bcmwl_dkms_module      = 'bcmwl/6.30.223.248+bdcom'
+      $nvidia_dkms_304_module = 'nvidia-legacy-304xx/304.132'
+      $nvidia_dkms_340_module = 'nvidia-legacy-340xx/340.98'
+      $nvidia_dkms_367_module = 'nvidia-current/367.57'
+      # XXX $r8168_dkms_module      = 'r8168/8.040.00'
+
+      $all_dkms_modules = [ $nvidia_dkms_304_module
+			  , $nvidia_dkms_340_module
+			  , $nvidia_dkms_367_module ]
+
+      # XXX $bcmwl_dkms_module  # XXX missing from Debian
+      # XXX $r8168_dkms_module  # XXX missing from Debian
+    }
+  }
 
   case $debianversioncodename {
     'jessie': {
