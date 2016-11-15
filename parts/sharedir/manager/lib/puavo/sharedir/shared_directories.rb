@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 class PuavoSharedDirectories
   def self.description(dirtype, lang, schoolname, groupname='')
     translations = {
