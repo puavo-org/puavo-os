@@ -55,6 +55,7 @@ installdirs:
 	mkdir -p $(DESTDIR)$(rubylibdir)/puavo
 	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)$(sysconfdir)/dbus-1/system.d
+	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-conf/scripts
 
 .PHONY: test
 test: all
