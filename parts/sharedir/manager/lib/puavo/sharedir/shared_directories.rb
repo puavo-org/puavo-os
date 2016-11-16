@@ -30,7 +30,7 @@ class PuavoSharedDirectories
   end
 
   def self.detox(toxic)
-    toxic.scan(/[[:alnum:]åäöÅÄÖ._-]/).join
+    toxic.force_encoding("UTF-8").scan(/[[:alnum:]åäöÅÄÖ._-]/).join
   end
 
   def self.dirname(dirtype, lang)
