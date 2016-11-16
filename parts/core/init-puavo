@@ -11,4 +11,16 @@ initscripts=$(find /usr/share/puavo-ltsp/init-puavo.d -mindepth 1 -maxdepth 1 \
   done
 )
 
+puavo_conf_scripts="$(cat /etc/puavo-conf/scripts/.preinit 2>/dev/null || true)"
+if [ -n "$puavo_conf_scripts" ]; then
+  echo '  <<< puavo-conf running preinit scripts >>>'
+  for script in $puavo_conf_scripts; do
+    echo "  <<< puavo-conf >>> ${script}"
+    /etc/puavo-conf/scripts/${script} || true
+  done
+  echo '  <<< puavo-conf preinit scripts done >>>'
+else
+  echo 'ERROR: no scripts found in /etc/puavo-conf/scripts/.preinit' >&2
+fi
+
 exec /sbin/init
