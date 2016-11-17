@@ -3,9 +3,9 @@ class gdm {
   include ::puavo_conf
 
   ::puavo_conf::script {
-    'xsessions_lock':
+    'setup_xsessions':
       require => Package['puavo-ltsp-client'],
-      source  => 'puppet:///modules/gdm/xsessions_lock';
+      source  => 'puppet:///modules/gdm/setup_xsessions';
   }
 
   Package <| title == puavo-ltsp-client |>
