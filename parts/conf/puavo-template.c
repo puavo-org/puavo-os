@@ -15,6 +15,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*
+ * puavo-template is a templating system which uses CTPL
+ * (https://ctpl.tuxfamily.org/) as a template engine, and where
+ * puavo-conf variables are available (with '.' characters converted
+ * to '_').  It reads templates from standard input, and outputs
+ * to standard output, or alternatively to a file when given an argument.
+ */
+
 #define _GNU_SOURCE
 
 #include <ctpl/ctpl.h>
