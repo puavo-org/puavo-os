@@ -36,6 +36,12 @@ class bootserver_munin {
       notify  => Service['munin-node'],
       require => Package['munin-node'];
 
+    '/etc/munin/plugin-conf.d/cupsys_pages':
+      content => template('bootserver_munin/cupsys_pages_conf'),
+      mode    => 0644,
+      notify  => Service['munin-node'],
+      require => Package['munin-node'];
+
     '/etc/nginx/sites-available/munin':
       content => template('bootserver_munin/nginx_conf'),
       mode    => '0644',
@@ -55,6 +61,9 @@ class bootserver_munin {
   }
 
   bootserver_munin::plugin {
+    [ 'cupsys_pages' ]:
+      require => File['/etc/munin/plugin-conf.d/cupsys_pages'];
+
     [ 'if_altvpn1'
     , 'if_eth0'
     , 'if_eth1'
