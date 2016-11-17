@@ -120,6 +120,9 @@ puavo
     Contains a plugin for getting some variables from /etc/puavo into
     puppet variables.
 
+puavo_conf
+    Support module for puavo-conf integrations.
+
 puavo_external_files
     Some helper definitions for setting up links to /state/external_files.
 
