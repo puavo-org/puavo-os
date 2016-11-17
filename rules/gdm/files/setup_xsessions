@@ -1,0 +1,56 @@
+#!/bin/sh
+
+set -eu
+
+xsession_dirs="
+  /usr/share/gdm/BuiltInSessions
+  /usr/share/xsessions
+  /usr/share/wayland-sessions
+"
+
+puavo_xsessions_dir="/usr/share/puavo-ltsp-client/xsessions"
+
+#
+# setup default xsession
+#
+
+default_xsession=$(puavo-conf puavo.xsessions.default)
+
+mkdir -p /etc/X11/sessions
+
+default_xsession_desktop=
+for xsession_dir in $puavo_xsessions_dir $xsession_dirs; do
+  default_xsession_desktop="${xsession_dir}/${default_xsession}.desktop"
+  if [ -e "${default_xsession_desktop}.puavo_disabled" ]; then
+    mv "${default_xsession_desktop}.puavo_disabled" \
+       "${default_xsession_desktop}"
+  fi
+
+  # This does not really set the default, but if sessions are locked (below),
+  # this is the only one that will remain effective.
+  if [ -e "$default_xsession_desktop" ]; then
+    ln -fns "$default_xsession_desktop" /etc/X11/sessions/puavo-default.desktop
+    break
+  fi
+done
+
+#
+# (maybe) setup session locks
+#
+
+if [ "$(puavo-conf puavo.xsessions.locked)" = "true" ]; then
+  for xsession_dir in $xsession_dirs; do
+    for desktopfile in ${xsession_dir}/*.desktop; do
+      test -e "$desktopfile" || continue
+      [ "$desktopfile" = "$default_xsession_desktop" ] && continue
+      mv "${desktopfile}" "${desktopfile}.puavo_disabled"
+    done
+  done
+else
+  for xsession_dir in $xsession_dirs; do
+    for disabled_desktopfile in ${xsession_dir}/*.desktop.puavo_disabled; do
+      test -e "$disabled_desktopfile" || continue
+      mv "${disabled_desktopfile}" "${disabled_desktopfile%.puavo_disabled}"
+    done
+  done
+fi

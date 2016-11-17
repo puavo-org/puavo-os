@@ -15,6 +15,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*
+ * puavo-template is a templating system which uses CTPL
+ * (https://ctpl.tuxfamily.org/) as a template engine, and where
+ * puavo-conf variables are available (with '.' characters converted
+ * to '_').  It reads templates from standard input, and outputs
+ * to standard output, or alternatively to a file when given an argument.
+ */
+
 #define _GNU_SOURCE
 
 #include <ctpl/ctpl.h>
@@ -24,6 +32,7 @@
 #include <gio/gunixoutputstream.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "conf.h"
 
@@ -34,17 +43,18 @@ static gboolean		 handle_template(CtplEnviron *, const char *);
 int
 main(int argc, char *argv[])
 {
-	puavo_conf_t *conf;
-	struct puavo_conf_list list;
-	struct puavo_conf_err err;
-	CtplEnviron *ctpl_env;
-	size_t i, j;
-	int status;
+	puavo_conf_t		*conf;
+	struct puavo_conf_list	 list;
+	struct puavo_conf_err	 err;
+	CtplEnviron		*ctpl_env;
+	const char		*outputpath;
+	size_t			 i, j;
+	int			 status;
 
 	status = EXIT_SUCCESS;
 
-	if (argc != 2)
-		errx(1, "Usage: puavo-template outputfile");
+	if (argc > 2)
+		errx(1, "Usage: puavo-template [outputfile]");
 
 	if (puavo_conf_open(&conf, &err))
 		errx(1, "Failed to open config backend: %s", err.msg);
@@ -71,7 +81,8 @@ main(int argc, char *argv[])
 		    list.values[i]);
 	}
 
-	if (!handle_template(ctpl_env, argv[1]))
+	outputpath = (argc == 1) ? NULL : argv[1];
+	if (!handle_template(ctpl_env, outputpath))
 		status = EXIT_FAILURE;
 
 finish:
@@ -114,14 +125,17 @@ handle_template(CtplEnviron *ctpl_env, const char *outputpath)
 		return FALSE;
 	}
 
-	if ((tmp_outputpath = get_tempfile_path(outputpath)) == NULL) {
+	tmp_outputpath = NULL;
+	if (outputpath != NULL &&
+	    (tmp_outputpath = get_tempfile_path(outputpath)) == NULL) {
 		ctpl_token_free(tree);
 		return FALSE;
 	}
 
 	outstream = get_outputstream(tmp_outputpath);
 	if (outstream == NULL) {
-		free(tmp_outputpath);
+		if (tmp_outputpath != NULL)
+			free(tmp_outputpath);
 		ctpl_token_free(tree);
 		return FALSE;
 	}
@@ -133,12 +147,14 @@ handle_template(CtplEnviron *ctpl_env, const char *outputpath)
 
 	ctpl_output_stream_unref(outstream);
 
-	if (rename(tmp_outputpath, outputpath) == -1) {
+	if (outputpath != NULL && tmp_outputpath != NULL &&
+	    rename(tmp_outputpath, outputpath) == -1) {
 		warn("could not rename %s to %s", tmp_outputpath, outputpath);
 		rv = FALSE;
 	}
 
-	free(tmp_outputpath);
+	if (tmp_outputpath != NULL)
+		free(tmp_outputpath);
 	ctpl_token_free(tree);
 
 	return rv;
@@ -172,21 +188,25 @@ get_outputstream(const char *outputpath)
 	GFileOutputStream	*gfostream;
 	GOutputStream   	*gostream;
 
-	err = NULL;
+	if (outputpath == NULL) {
+		gostream = g_unix_output_stream_new(STDOUT_FILENO, FALSE);
+	} else {
+		err = NULL;
 
-	file = g_file_new_for_commandline_arg(outputpath);
-	gfostream = g_file_replace(file, NULL, FALSE, 0, NULL, &err);
-	if (!gfostream) {
-		warnx("could not open %s for writing: %s", outputpath,
-		    err->message);
+		file = g_file_new_for_commandline_arg(outputpath);
+		gfostream = g_file_replace(file, NULL, FALSE, 0, NULL, &err);
+		if (!gfostream) {
+			warnx("could not open %s for writing: %s", outputpath,
+			    err->message);
+			g_object_unref(file);
+			return NULL;
+		}
+		gostream = G_OUTPUT_STREAM(gfostream);
 		g_object_unref(file);
-		return NULL;
 	}
 
-	gostream = G_OUTPUT_STREAM(gfostream);
 	outstream = ctpl_output_stream_new(gostream);
 	g_object_unref(gostream);
-	g_object_unref(file);
 
 	return outstream;
 }
