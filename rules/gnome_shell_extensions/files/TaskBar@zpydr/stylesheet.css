@@ -2,7 +2,7 @@
   GNOME Shell Extension TaskBar
   Copyright (C) 2016 zpydr
 
-  Version 52
+  Version 53
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -46,50 +46,40 @@
     border: 1px;
 }
 
+.tkb-task-button-bottom
+{
+    padding-left: 3px;
+    padding-right: 3px;
+    padding-top: 3px;
+    padding-bottom: 3px;
+    border: 1px;
+}
+
+.tkb-task-button-bottom-label
+{
+    padding-left: 3px;
+    padding-right: 3px;
+    padding-top: 1px;
+    padding-bottom: 1px;
+    border: 1px;
+}
+
 .tkb-task-button:active-task-frame
 {
-    border: 1px solid gray;
-    border-radius: 5px;
-    background-image: url("images/active-task-background.svg");
+
 }
 
 .tkb-task-button:active-task-no-frame
 {
-    border-radius: 5px;
+
 }
 
 .tkb-task-button:inactive-task-frame
 {
-    border: 1px solid gray;
-    border-radius: 5px;
-    background-image: url("images/active-task-background.svg");
+
 }
 
 .tkb-task-button:inactive-task-no-frame
 {
-    border-radius: 5px;
-}
 
-.tkb-preview
-{
-    background-color: rgba(0,0,0,0.9);
-    padding: 5px;
-    border-radius: 8px;
-    -y-offset: 6px;
-}
-
-.tkb-preview-name
-{
-    color: white;
-    font-weight: bold;
-    font-size: 9pt;
-    text-align: center;
-}
-
-.tkb-preview-title
-{
-    color: white;
-    font-weight: bold;
-    font-size: 9pt;
-    text-align: center;
 }

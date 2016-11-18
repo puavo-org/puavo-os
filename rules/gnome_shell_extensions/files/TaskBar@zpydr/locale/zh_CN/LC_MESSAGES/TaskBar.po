@@ -1,6 +1,6 @@
 #  GNOME Shell Extension TaskBar
 #  Copyright (C) 2016 zpydr
-#  Copyright (C) 2016 jonnius (German translation)
+#  Copyright (C) 2016 wsxy162 (Chinese translation)
 #
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -16,292 +16,292 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 #  zpydr@openmailbox.org
-#  Jonatan Zeidler <jonatan_zeidler@gmx.de> German translation
+#  tuhaihe <1132321739qq@gmail.com> Chinese translation 2014
+#  Dingzhong Chen <wsxy162@gmail.com> Chinese translation 2016
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: GNOME Shell Extension TaskBar\n"
+"Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-10-29 12:00+0200\n"
-"PO-Revision-Date: 2016-10-30 16:19+0100\n"
-"Last-Translator: Jonatan Hatakeyama Zeidler <jonatan_zeidler@gmx.de>\n"
+"POT-Creation-Date: 2016-10-25 04:03+0800\n"
+"PO-Revision-Date: 2016-10-25 14:24+0800\n"
+"Last-Translator: Dingzhong Chen <wsxy162@gmail.com>\n"
 "Language-Team: \n"
-"Language: de\n"
+"Language: zh_CN\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 1.8.7.1\n"
-"X-Poedit-SourceCharset: UTF-8\n"
+"X-Generator: Poedit 1.8.9\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
 
 #: prefs.js:121
 msgid "About"
-msgstr "Info"
+msgstr "关于"
 
 #: prefs.js:133
 msgid "Version"
-msgstr "Version"
+msgstr "版本"
 
 #: prefs.js:135
 msgid "GNOME Shell Version"
-msgstr "GNOME Shell-Version"
+msgstr "GNOME Shell 版本"
 
 #: prefs.js:149
 msgid "Report a Bug"
-msgstr "Einen Fehler melden"
+msgstr "报告错误"
 
 #: prefs.js:153
 msgid "Donate for TaskBar"
-msgstr "Für TaskBar spenden"
+msgstr "为本项目捐款"
 
 #: prefs.js:157
 msgid "Become a Friend of GNOME"
-msgstr "GNOME-Freund werden"
+msgstr "成为 GNOME 的朋友"
 
 #: prefs.js:161
 msgid "Free Software Foundation"
-msgstr "Stiftung für freie Software (FSF)"
+msgstr "自由软件基金会"
 
 #: prefs.js:166
 msgid "RESET ALL !"
-msgstr "Alles zurücksetzen"
+msgstr "重置全部 ！"
 
 #: prefs.js:169
 msgid "Reset All TaskBar Settings to the Original TaskBar Settings"
-msgstr ""
-"Alle Einstellungen der Anwendungen-Leiste auf Vorgabewerte zurücksetzen"
+msgstr "重置所有 任务栏 设置为初始设置"
 
 #: prefs.js:176 prefs.js:960
 msgid "TaskBar"
-msgstr "Anwendungen-Leiste"
+msgstr "任务栏"
 
 #: prefs.js:189 prefs.js:275
 msgid "Overview"
-msgstr "Übersicht"
+msgstr "概览"
 
 #: prefs.js:192 prefs.js:225
 msgid "Tasks"
-msgstr "Laufende Anwendungen"
+msgstr "任务"
 
 #: prefs.js:198 prefs.js:226 prefs.js:986
 msgid "Desktop Button"
-msgstr "Schreibtischschaltfläche"
+msgstr "桌面按钮"
 
 #: prefs.js:204 prefs.js:227 prefs.js:999
 msgid "Workspace Button"
-msgstr "Arbeitsflächenumschalter"
+msgstr "工作区按钮"
 
 #: prefs.js:210 prefs.js:228 prefs.js:1012
 msgid "Appview Button"
-msgstr "Schaltfläche Anwendungen"
+msgstr "应用视图按钮"
 
 #: prefs.js:216 prefs.js:229 prefs.js:1025
 msgid "Favorites"
-msgstr "Favoriten"
+msgstr "收藏"
 
 #: prefs.js:223
 msgid "Align"
-msgstr "Anordnen"
+msgstr "对齐"
 
 #: prefs.js:252 prefs.js:291
 msgid "Top Panel"
-msgstr "Obere Leiste"
+msgstr "顶部面板"
 
 #: prefs.js:258 prefs.js:293
 msgid "Bottom Panel"
-msgstr "Fußleiste"
+msgstr "底部面板"
 
 #: prefs.js:264
 msgid "Reset Overview Tab"
-msgstr "Reiter Übersicht zurücksetzen"
+msgstr "重置 概览 选项卡"
 
 #: prefs.js:267
 msgid "Reset the Overview Tab to the Original Overview Settings"
-msgstr "Reiter Übersicht auf Vorgabewerte zurücksetzen"
+msgstr "重置 概览 选项卡为初始设置"
 
 #: prefs.js:288 prefs.js:413
 msgid "Panels"
-msgstr "Leisten"
+msgstr "面板"
 
 #: prefs.js:296
 msgid "Align TaskBar"
-msgstr "Anwendungen-Leiste positionieren"
+msgstr "对齐任务栏"
 
 #: prefs.js:311
 msgid "Panel Size"
-msgstr "Leistengröße"
+msgstr "面板大小"
 
 #: prefs.js:324
 msgid "Adjust TaskBar Icon Size"
-msgstr "Symbolgröße der Anwendungen-Leiste anpassen"
+msgstr "调整任务栏图标大小"
 
 #: prefs.js:337
 msgid "Adjust TaskBar Label Size"
-msgstr "Beschriftungsgröße der Anwendungen-Leiste anpassen"
+msgstr "调整任务栏标签大小"
 
 #: prefs.js:350
 msgid "Adjust Panel Content Size"
-msgstr "Inhaltsgröße der Anwendungen-Leiste anpassen"
+msgstr "调整面板内容大小"
 
 #: prefs.js:358
 msgid "Anchor Point"
-msgstr "Ankerpunkt"
+msgstr "定位点"
 
 #: prefs.js:366
 msgid ""
 "Panel Background\n"
 "Color & Opacity"
 msgstr ""
-"Leistenhintergrund\n"
-"Farbe & Deckkraft"
+"面板背景颜色\n"
+"和不透明度"
 
 #: prefs.js:394 prefs.js:397
 msgid "Reset Color"
-msgstr "Farbe zurücksetzen"
+msgstr "重置颜色"
 
 #: prefs.js:401
 msgid "Reset Panels Tab"
-msgstr "Reiter Leisten zurücksetzen"
+msgstr "重置 面板 选项卡"
 
 #: prefs.js:404
 msgid "Reset the Panels Tab to the Original Panels Settings"
-msgstr "Reiter Leisten auf Vorgabewerte zurücksetzen"
+msgstr "重置 面板 选项卡为初始设置"
 
 #: prefs.js:426 prefs.js:511
 msgid "Tasks (I)"
-msgstr "Laufende Anwendungen (I)"
+msgstr "任务 (I)"
 
 #: prefs.js:429
 msgid "Tasks on All Workspaces"
-msgstr "Anwendungen aller Arbeitsflächen"
+msgstr "所有工作区上的任务"
 
 #: prefs.js:435
 msgid "Sort Tasks by Application"
-msgstr "Anwendungen nach Programm sortieren"
+msgstr "排列任务"
 
 #: prefs.js:438 prefs.js:448 prefs.js:482 prefs.js:492 prefs.js:530
 #: prefs.js:809 prefs.js:893 prefs.js:1073 prefs.js:1090
 msgid "OFF"
-msgstr "AUS"
+msgstr "无/关闭"
 
 #: prefs.js:439
 msgid "Sort"
-msgstr "Sortieren"
+msgstr "按应用程序"
 
 #: prefs.js:440
 msgid "Sort Workspace"
-msgstr "Arbeitsflächen sortieren"
+msgstr "按工作区"
 
 #: prefs.js:445
 msgid "Tasks Label"
-msgstr "Programmname anzeigen"
+msgstr "任务标签"
 
 #: prefs.js:449 prefs.js:1075
 msgid "Window Title"
-msgstr "Fenstertitel"
+msgstr "窗口标题"
 
 #: prefs.js:450 prefs.js:1074 prefs.js:1091
 msgid "App Name"
-msgstr "Programmname"
+msgstr "应用名称"
 
 #: prefs.js:455
 msgid "Tasks Label Width (150 px)"
-msgstr "Breite der Anwendungsbezeichnungen (150 px)"
+msgstr "任务标签宽度 (150 px)"
 
 #: prefs.js:463
 msgid "Tasks Container Width (0 Tasks)"
-msgstr "Breite Laufende Anwendungen (0 Anwendungen)"
+msgstr "任务容器宽度 (0 个任务)"
 
 #: prefs.js:471
 msgid "Space between Tasks (4 px)"
-msgstr "Raum zwischen Anwendungen (4 px) "
+msgstr "任务中的空间 (4 px)"
 
 #: prefs.js:479
 msgid "Tasks Application Menu"
-msgstr "Anwendungsmenü"
+msgstr "任务应用程序菜单"
 
 #: prefs.js:483 prefs.js:493
 msgid "Middle Click"
-msgstr "Mittelklick"
+msgstr "中键点击"
 
 #: prefs.js:484 prefs.js:494
 msgid "Right Click"
-msgstr "Rechtsklick"
+msgstr "右键点击"
 
 #: prefs.js:489
 msgid "Close Tasks"
-msgstr "Anwendungen schließen"
+msgstr "关闭任务"
 
 #: prefs.js:499
 msgid "Reset Tasks (I) Tab"
-msgstr "Reiter Laufende Anwendungen (I) zurücksetzen"
+msgstr "重置 任务 (I) 选项卡"
 
 #: prefs.js:502
 msgid "Reset the Tasks (I) Tab to the Original Tasks Settings"
-msgstr "Den Reiter Anwendungen (I) auf Vorgabewerte zurücksetzen"
+msgstr "重置 任务 (I) 选项卡为初始设置"
 
 #: prefs.js:524 prefs.js:602
 msgid "Tasks (II)"
-msgstr "Laufende Anwendungen (II)"
+msgstr "任务 (II)"
 
 #: prefs.js:527
 msgid "Scroll Tasks"
-msgstr "Durch Anwendungen scrollen"
+msgstr "滚动任务"
 
 #: prefs.js:531 prefs.js:810
 msgid "Standard"
-msgstr "Vorgabe"
+msgstr "标准"
 
 #: prefs.js:532 prefs.js:811
 msgid "Invert"
-msgstr "Invertieren"
+msgstr "反向"
 
 #: prefs.js:537
 msgid "Active Task Frame"
-msgstr "Rahmen der aktiven Anwendung"
+msgstr "活动任务框架"
 
 #: prefs.js:543
 msgid "Inactive Task Frame"
-msgstr "Rahmen bei inaktiven Anwendungen"
+msgstr "非活动任务框架"
 
 #: prefs.js:549
 msgid "Activate Tasks on Hover"
-msgstr "Anwendungen beim Überfahren aktivieren"
+msgstr "悬停时激活任务"
 
 #: prefs.js:555
 msgid "Hover Delay"
-msgstr "Überfahr-Verzögerung"
+msgstr "悬停延迟"
 
 #: prefs.js:563
 msgid "Blink Tasks on Alert"
-msgstr "Anwendungen bei Ereignissen blinken lassen"
+msgstr "通知时闪烁任务"
 
 #: prefs.js:569
 msgid "Blink Rate"
-msgstr "Blinkgeschwindigkeit"
+msgstr "闪烁速率"
 
 #: prefs.js:577
 msgid "Blink Color"
-msgstr "Blinkfarbe"
+msgstr "闪烁颜色"
 
 #: prefs.js:590
 msgid "Reset Tasks (II) Tab"
-msgstr "Reiter Anwendungen (II) zurücksetzen"
+msgstr "重置 任务 (II) 选项卡"
 
 #: prefs.js:593
 msgid "Reset the Tasks II Tab to the Original Tasks II Settings"
-msgstr "Reiter Laufende Anwendungen (II) auf Vorgabewerte zurücksetzen"
+msgstr "重置 任务 (II) 选项卡为初始设置"
 
 #: prefs.js:615 prefs.js:764
 msgid "Tasks (III)"
-msgstr "Laufende Anwendungen (III)"
+msgstr "任务 (III)"
 
 #: prefs.js:618
 msgid ""
 "Active Task Background\n"
 "Color & Opacity"
 msgstr ""
-"Hintergrund der aktiven Anwendung\n"
-"Farbe & Deckkraft"
+"活动任务背景的\n"
+"颜色和不透明度"
 
 #: prefs.js:619
 msgid ""
@@ -318,28 +318,23 @@ msgid ""
 "deactivate the background color.\n"
 "Toggle tasks at the 'Overview' tab."
 msgstr ""
-"Hintergrund der aktiven Anwendung - Farbe & Deckkraft\n"
-"Die Farbschaltfläche anklicken, um Hintergrundfarbe und Deckkraft der "
-"aktiven Anwendung festzulegen. Dies öffnet ein Fenster mit einer "
-"Farbpalette. Mit der Schaltfläche '+' unter 'Benutzerdefiniert' können Farbe "
-"und Deckkraft angepasst werden. Ein Klick auf '+' verändert das Fenster. In "
-"der Mitte befindet sich eine Farbauswahl, der linke Schieberegler ändert die "
-"Farbe und der untere Schieberegler ändert die Deckkraft. Der Indikator und "
-"das Eingabefeld oben zeigen die Farbe und den Hexadezimalwert in der Form "
-"#RRGGBB an, wo RR (rot), gg (grün) und bb (blau) Werte zwischen 00 und FF "
-"sind. Wenn einmal ausgewählt, wird die Farbe in allen Farbeinstellungen "
-"verfügbar sein. Mit dem Schiebeschalter hinter dieser Einstellung kann die "
-"Farbe aktiviert und deaktiviert werden.\n"
-"'Laufende Anwendungen' im Reiter 'Übersicht' muss aktiviert sein, damit "
-"diese Einstellung greift."
+"活动任务背景的颜色和不透明度\n"
+"点击颜色区块以设置活动任务背景的颜色和不透明度。这将打开一个新窗口，其中有一"
+"个预设颜色表供您选择。 单击“自定义”下的“+”按钮以定制颜色和不透明度。 点"
+"击“+”更改窗口。 中间是颜色选择器，左滑块用来改变颜色，底滑块改变不透明度。 在"
+"顶部有指示器和以下列形式显示十六进制值的输入字段：#RRGGBB，其中 RR（红色）、"
+"GG（绿色）和 BB（蓝色）是介于 00 和 FF 之间的值。 选择后，自定义颜色就可用于"
+"所有的颜色设置中。 回到“任务 (III)”选项卡上，转动颜色按钮旁边的开关以激活/停"
+"用背景颜色。\n"
+"任务显示切换在“概览”选项卡中。"
 
 #: prefs.js:636
 msgid ""
 "Inactive Tasks Background\n"
 "Color & Opacity"
 msgstr ""
-"Hintergrund inaktiver Anwendungen\n"
-"Farbe & Deckkraft"
+"非活动任务背景的\n"
+"颜色和不透明度"
 
 #: prefs.js:637
 msgid ""
@@ -356,24 +351,19 @@ msgid ""
 "deactivate the background color.\n"
 "Toggle tasks at the 'Overview' tab."
 msgstr ""
-"Hintergrund inaktiver Anwendungen - Farbe & Deckkraft\n"
-"Die Farbschaltfläche anklicken, um Hintergrundfarbe und Deckkraft inaktiver "
-"Anwendungen festzulegen. Dies öffnet ein Fenster mit einer Farbpalette. Mit "
-"der Schaltfläche '+' unter 'Benutzerdefiniert' können Farbe und Deckkraft "
-"angepasst werden. Ein Klick auf '+' verändert das Fenster. In der Mitte "
-"befindet sich eine Farbauswahl, der linke Schieberegler ändert die Farbe und "
-"der untere Schieberegler ändert die Deckkraft. Der Indikator und das "
-"Eingabefeld oben zeigen die Farbe und den Hexadezimalwert in der Form "
-"#RRGGBB an, wo RR (rot), gg (grün) und bb (blau) Werte zwischen 00 und FF "
-"sind. Wenn einmal ausgewählt, wird die Farbe in allen Farbeinstellungen "
-"verfügbar sein. Mit dem Schiebeschalter hinter dieser Einstellung kann die "
-"Farbe aktiviert und deaktiviert werden.\n"
-"'Laufende Anwendungen' im Reiter 'Übersicht' muss aktiviert sein, damit "
-"diese Einstellung greift."
+"非活动任务背景的颜色和不透明度\n"
+"点击颜色区块以设置非活动任务背景的颜色和不透明度。这将打开一个新窗口，其中有"
+"一个预设颜色表供您选择。 单击“自定义”下的“+”按钮以定制颜色和不透明度。 点"
+"击“+”更改窗口。 中间是颜色选择器，左滑块用来改变颜色，底滑块改变不透明度。 在"
+"顶部有指示器和以下列形式显示十六进制值的输入字段：#RRGGBB，其中 RR（红色）、"
+"GG（绿色）和 BB（蓝色）是介于 00 和 FF 之间的值。 选择后，自定义颜色就可用于"
+"所有的颜色设置中。 回到“任务 (III)”选项卡上，转动颜色按钮旁边的开关以激活/停"
+"用背景颜色。\n"
+"任务显示切换在“概览”选项卡中。"
 
 #: prefs.js:654
 msgid "Active Task Label Color"
-msgstr "Beschriftungsfarbe der aktiven Anwendung"
+msgstr "活动任务标签颜色"
 
 #: prefs.js:655
 msgid ""
@@ -391,24 +381,20 @@ msgid ""
 "Toggle task labels at the 'Tasks (I)' tab.\n"
 "Toggle tasks at the 'Overview' tab."
 msgstr ""
-"Beschriftungsfarbe der aktiven Anwendung - Farbe & Deckkraft\n"
-"Die Farbschaltfläche anklicken, um Beschriftungsfarbe und Deckkraft der "
-"aktiven Anwendung festzulegen. Dies öffnet ein Fenster mit einer "
-"Farbpalette. Mit der Schaltfläche '+' unter 'Benutzerdefiniert' können Farbe "
-"und Deckkraft angepasst werden. Ein Klick auf '+' verändert das Fenster. In "
-"der Mitte befindet sich eine Farbauswahl, der linke Schieberegler ändert die "
-"Farbe und der untere Schieberegler ändert die Deckkraft. Der Indikator und "
-"das Eingabefeld oben zeigen die Farbe und den Hexadezimalwert in der Form "
-"#RRGGBB an, wo RR (rot), gg (grün) und bb (blau) Werte zwischen 00 und FF "
-"sind. Wenn einmal ausgewählt, wird die Farbe in allen Farbeinstellungen "
-"verfügbar sein. Mit dem Schiebeschalter hinter dieser Einstellung kann die "
-"Farbe aktiviert und deaktiviert werden.\n"
-"'Laufende Anwendungen' im Reiter 'Übersicht' muss aktiviert sein, damit "
-"diese Einstellung greift."
+"活动任务标签的颜色和不透明度\n"
+"点击颜色区块以设置活动任务标签的颜色和不透明度。这将打开一个新窗口，其中有一"
+"个预设颜色表供您选择。 单击“自定义”下的“+”按钮以定制颜色和不透明度。 点"
+"击“+”更改窗口。 中间是颜色选择器，左滑块用来改变颜色，底滑块改变不透明度。 在"
+"顶部有指示器和以下列形式显示十六进制值的输入字段：#RRGGBB，其中 RR（红色）、"
+"GG（绿色）和 BB（蓝色）是介于 00 和 FF 之间的值。 选择后，自定义颜色就可用于"
+"所有的颜色设置中。 回到“任务 (III)”选项卡上，转动颜色按钮旁边的开关以激活/停"
+"用背景颜色。\n"
+"任务标签显示切换在“任务 (I)”选项卡中。\n"
+"任务显示切换在“概览”选项卡中。"
 
 #: prefs.js:672
 msgid "Inactive Tasks Label Color"
-msgstr "Beschriftungsfarbe inaktiver Anwendungen"
+msgstr "非活动任务标签颜色"
 
 #: prefs.js:673
 msgid ""
@@ -426,24 +412,20 @@ msgid ""
 "Toggle task labels at the 'Tasks (I)' tab.\n"
 "Toggle tasks at the 'Overview' tab."
 msgstr ""
-"Beschriftungsfarbe inaktiver Anwendungen - Farbe & Deckkraft\n"
-"Die Farbschaltfläche anklicken, um Beschriftungsfarbe und Deckkraft "
-"inaktiver Anwendungen festzulegen. Dies öffnet ein Fenster mit einer "
-"Farbpalette. Mit der Schaltfläche '+' unter 'Benutzerdefiniert' können Farbe "
-"und Deckkraft angepasst werden. Ein Klick auf '+' verändert das Fenster. In "
-"der Mitte befindet sich eine Farbauswahl, der linke Schieberegler ändert die "
-"Farbe und der untere Schieberegler ändert die Deckkraft. Der Indikator und "
-"das Eingabefeld oben zeigen die Farbe und den Hexadezimalwert in der Form "
-"#RRGGBB an, wo RR (rot), gg (grün) und bb (blau) Werte zwischen 00 und FF "
-"sind. Wenn einmal ausgewählt, wird die Farbe in allen Farbeinstellungen "
-"verfügbar sein. Mit dem Schiebeschalter hinter dieser Einstellung kann die "
-"Farbe aktiviert und deaktiviert werden.\n"
-"'Laufende Anwendungen' im Reiter 'Übersicht' muss aktiviert sein, damit "
-"diese Einstellung greift."
+"非活动任务标签的颜色和不透明度\n"
+"点击颜色区块以设置非活动任务的标签颜色和不透明度。这将打开一个新窗口，其中有"
+"一个预设颜色表供您选择。 单击“自定义”下的“+”按钮以定制颜色和不透明度。 点"
+"击“+”更改窗口。 中间是颜色选择器，左滑块用来改变颜色，底滑块改变不透明度。 在"
+"顶部有指示器和以下列形式显示十六进制值的输入字段：#RRGGBB，其中 RR（红色）、"
+"GG（绿色）和 BB（蓝色）是介于 00 和 FF 之间的值。 选择后，自定义颜色就可用于"
+"所有的颜色设置中。 回到“任务 (III)”选项卡上，转动颜色按钮旁边的开关以激活/停"
+"用背景颜色。\n"
+"任务标签显示切换在“任务 (I)”选项卡中。\n"
+"任务显示切换在“概览”选项卡中。"
 
 #: prefs.js:690
 msgid "Active Task Frame Color"
-msgstr "Rahmenfarbe der aktiven Anwendung"
+msgstr "活动任务框架颜色"
 
 #: prefs.js:691
 msgid ""
@@ -461,24 +443,20 @@ msgid ""
 "Toggle the active task frame at the 'Tasks (II)' tab.\n"
 "Toggle tasks at the 'Overview' tab."
 msgstr ""
-"Rahmenfarbe der aktiven Anwendung - Farbe & Deckkraft\n"
-"Die Farbschaltfläche anklicken, um Rahmenfarbe und Deckkraft der aktiven "
-"Anwendung festzulegen. Dies öffnet ein Fenster mit einer Farbpalette. Mit "
-"der Schaltfläche '+' unter 'Benutzerdefiniert' können Farbe und Deckkraft "
-"angepasst werden. Ein Klick auf '+' verändert das Fenster. In der Mitte "
-"befindet sich eine Farbauswahl, der linke Schieberegler ändert die Farbe und "
-"der untere Schieberegler ändert die Deckkraft. Der Indikator und das "
-"Eingabefeld oben zeigen die Farbe und den Hexadezimalwert in der Form "
-"#RRGGBB an, wo RR (rot), gg (grün) und bb (blau) Werte zwischen 00 und FF "
-"sind. Wenn einmal ausgewählt, wird die Farbe in allen Farbeinstellungen "
-"verfügbar sein. Mit dem Schiebeschalter hinter dieser Einstellung kann die "
-"Farbe aktiviert und deaktiviert werden.\n"
-"'Laufende Anwendungen' im Reiter 'Übersicht' muss aktiviert sein, damit "
-"diese Einstellung greift."
+"活动任务框架的颜色和不透明度\n"
+"点击颜色区块以设置活动任务框架的颜色和不透明度。这将打开一个新窗口，其中有一"
+"个预设颜色表供您选择。 单击“自定义”下的“+”按钮以定制颜色和不透明度。 点"
+"击“+”更改窗口。 中间是颜色选择器，左滑块用来改变颜色，底滑块改变不透明度。 在"
+"顶部有指示器和以下列形式显示十六进制值的输入字段：#RRGGBB，其中 RR（红色）、"
+"GG（绿色）和 BB（蓝色）是介于 00 和 FF 之间的值。 选择后，自定义颜色就可用于"
+"所有的颜色设置中。 回到“任务 (III)”选项卡上，转动颜色按钮旁边的开关以激活/停"
+"用背景颜色。\n"
+"任务框架显示切换在“任务 (II)”选项卡中。\n"
+"任务显示切换在“概览”选项卡中。"
 
 #: prefs.js:708
 msgid "Inactive Tasks Frame Color"
-msgstr "Rahmenfarbe inaktiver Anwendungen"
+msgstr "非活动任务框架颜色"
 
 #: prefs.js:709
 msgid ""
@@ -496,24 +474,20 @@ msgid ""
 "Toggle inactive task frames at the 'Tasks (II)' tab.\n"
 "Toggle tasks at the 'Overview' tab."
 msgstr ""
-"Rahmenfarbe inaktiver Anwendungen - Farbe & Deckkraft\n"
-"Die Farbschaltfläche anklicken, um Rahmenfarbe und Deckkraft inaktiver "
-"Anwendungen festzulegen. Dies öffnet ein Fenster mit einer Farbpalette. Mit "
-"der Schaltfläche '+' unter 'Benutzerdefiniert' können Farbe und Deckkraft "
-"angepasst werden. Ein Klick auf '+' verändert das Fenster. In der Mitte "
-"befindet sich eine Farbauswahl, der linke Schieberegler ändert die Farbe und "
-"der untere Schieberegler ändert die Deckkraft. Der Indikator und das "
-"Eingabefeld oben zeigen die Farbe und den Hexadezimalwert in der Form "
-"#RRGGBB an, wo RR (rot), gg (grün) und bb (blau) Werte zwischen 00 und FF "
-"sind. Wenn einmal ausgewählt, wird die Farbe in allen Farbeinstellungen "
-"verfügbar sein. Mit dem Schiebeschalter hinter dieser Einstellung kann die "
-"Farbe aktiviert und deaktiviert werden.\n"
-"'Laufende Anwendungen' im Reiter 'Übersicht' muss aktiviert sein, damit "
-"diese Einstellung greift."
+"非活动任务框架的颜色和不透明度\n"
+"点击颜色区块以设置非活动任务框架的颜色和不透明度。这将打开一个新窗口，其中有"
+"一个预设颜色表供您选择。 单击“自定义”下的“+”按钮以定制颜色和不透明度。 点"
+"击“+”更改窗口。 中间是颜色选择器，左滑块用来改变颜色，底滑块改变不透明度。 在"
+"顶部有指示器和以下列形式显示十六进制值的输入字段：#RRGGBB，其中 RR（红色）、"
+"GG（绿色）和 BB（蓝色）是介于 00 和 FF 之间的值。 选择后，自定义颜色就可用于"
+"所有的颜色设置中。 回到“任务 (III)”选项卡上，转动颜色按钮旁边的开关以激活/停"
+"用背景颜色。\n"
+"任务框架显示切换在“任务 (II)”选项卡中。\n"
+"任务显示切换在“概览”选项卡中。"
 
 #: prefs.js:726
 msgid "Blacklist Apps"
-msgstr "Anwendungen ausschließen"
+msgstr "禁用应用列表"
 
 #: prefs.js:727
 msgid ""
@@ -527,142 +501,141 @@ msgid ""
 "blacklist.\n"
 "Toggle tasks at the 'Overview' tab."
 msgstr ""
-"Anwendungen ausschließen\n"
-"Um Anwendungsnamen zu finden, öffnet man den Reiter 'Vorschau' und setzt "
-"'Programmname anzeigen' auf 'Programmname'. Dann führt man die Maus über die "
-"Anwendung, die ausgeschlossen werden soll. Die Groß- und Kleinschreibung ist "
-"bei den Programmnamen relevant. Sollen mehrere Anwendungen ausgeschlossen "
-"werden, müssen diese mit Komma und Leerzeichen getrennt sein:\n"
+"禁用应用列表\n"
+"可以切换到“预览”选项卡并将“任务标签”设置为“应用名称”来查找应用程序的名称。 然"
+"后将鼠标悬停到要列入禁用列表的任务上。 应用名称区分大小写。 如果您想将多个应"
+"用列入禁用列表，请以半角逗号和空格分隔应用名称：\n"
 "Terminal, gedit, Tweak Tool, GNU Image Manipulation Program, Files\n"
-"Das Ausschließen kann mit dem Schalter aktiviert und deaktiviert werden.\n"
-"'Laufende Anwendungen' im Reiter 'Übersicht' muss aktiviert sein, damit "
-"diese Einstellung greift."
+"转动输入字段旁边的开关以激活/停用禁用列表。\n"
+"任务显示切换在“概览”选项卡中。"
 
 #: prefs.js:752
 msgid "Reset Tasks (III) Tab"
-msgstr "Reiter Laufende Anwendungen (III) zurücksetzen"
+msgstr "重置 任务 (III) 选项卡"
 
 #: prefs.js:755
 msgid "Reset All Settings on this Tab"
-msgstr "Alle Einstellungen dieses Reiters zurücksetzen."
+msgstr "重置此选项卡上的所有设置"
 
 #: prefs.js:777 prefs.js:872
 msgid "Buttons"
-msgstr "Schaltflächen"
+msgstr "按钮"
 
 #: prefs.js:780
 msgid ""
 "Desktop Button Right Click\n"
 "opens Preferences (this)"
 msgstr ""
-"Rechtsklick auf Schreibtischschaltfläche\n"
-"öffnet diese Einstellungen"
+"桌面按钮右键点击\n"
+"打开此首选项窗口"
 
 #: prefs.js:786
 msgid "Desktop Button Icon"
-msgstr "Symbol der Schreibtischschaltfläche"
+msgstr "桌面按钮图标"
 
 #: prefs.js:797
 msgid "Workspace Button Index"
-msgstr "Arbeitsflächenumschalter zeigt"
+msgstr "工作区按钮索引"
 
 #: prefs.js:800 prefs.js:895
 msgid "Index"
-msgstr "Index"
+msgstr "当前位置"
 
 #: prefs.js:801
 msgid "Index/Total"
-msgstr "Index/Gesamt"
+msgstr "当前位置/总数"
 
 #: prefs.js:806
 msgid "Scroll Workspaces"
-msgstr "Durch Arbeitsflächen scrollen"
+msgstr "工作区滚动"
 
 #: prefs.js:816
 msgid "Workspace Button Color"
-msgstr "Farbe des Arbeitsflächenumschalters"
+msgstr "工作区按钮颜色"
 
 #: prefs.js:832
 msgid "Adjust Workspace Button Width"
-msgstr "Breite des Arbeitsflächenumschalters anpassen"
+msgstr "调整工作区按钮宽度"
 
 #: prefs.js:840
 msgid ""
 "Appview Button\n"
 "Left & Right Click Toggle"
 msgstr ""
-"Schaltfläche Anwendungen\n"
-"Links- & Rechtsklick-Zuordnung"
+"应用视图按钮\n"
+"左右键点击切换"
 
 #: prefs.js:843
 msgid ""
 "L Appview\n"
 "R Overview"
 msgstr ""
-"L Anwendungen\n"
-"R Übersicht"
+"左：应用视图\n"
+"右：活动概览"
 
 #: prefs.js:844
 msgid ""
 "L Overview\n"
 "R Appview"
 msgstr ""
-"L Übersicht\n"
-"R Anwendungen"
+"左：活动概览\n"
+"右：应用视图"
 
 #: prefs.js:849
 msgid "Appview Button Icon"
-msgstr "Symbol der Schaltfläche Anwendungen"
+msgstr "应用视图按钮图标"
 
 #: prefs.js:860
 msgid "Reset Buttons Tab"
-msgstr "Reiter Schaltflächen zurücksetzen"
+msgstr "重置 按钮 选项卡"
 
 #: prefs.js:863
 msgid ""
 "Reset the Buttons Tab except the Icons to the Original Buttons Settings.\n"
 "The Icons can be Reset within their own Settings."
-msgstr "Reiter Schaltflächen auf Vorgabewerte zurücksetzen"
+msgstr ""
+"重置 按钮 选项卡除了图标的设置为初始设置。\n"
+"图标可以从它自己的设置中重置。"
 
 #: prefs.js:885 prefs.js:939
 msgid "Tray Button"
-msgstr "Benachrichtigungssymbol"
+msgstr "托盘按钮"
 
 #: prefs.js:890
 msgid "Bottom Panel Tray Button"
-msgstr "Benachrichtigungssymbol in der Fußleiste"
+msgstr "底部面板托盘按钮"
 
 #: prefs.js:894
 msgid "Icon"
-msgstr "Symbol"
+msgstr "图标"
 
 #: prefs.js:900
 msgid "When Tray is Empty"
-msgstr "Wenn keine Benachrichtigungen"
+msgstr "当托盘为空时"
 
 #: prefs.js:903
 msgid "Show Icon"
-msgstr "Symbol anzeigen"
+msgstr "显示图标"
 
 #: prefs.js:904
 msgid "Show 0"
-msgstr "0 anzeigen"
+msgstr "显示 0"
 
 #: prefs.js:905
 msgid "Hide"
-msgstr "Verbergen"
+msgstr "隐藏"
 
 #: prefs.js:910
 msgid "Tray Button Icon"
-msgstr "Benachrichtigungssymbol"
+msgstr "托盘底部图标"
 
 #: prefs.js:921
 msgid "Activate Tray on Hover"
-msgstr "Benachrichtigungsbereich beim Überfahren aktivieren"
+msgstr "悬停时激活托盘"
 
 #: prefs.js:927
 msgid "Reset Tray Button Tab"
-msgstr "Reiter Benachrichtigungssymbol zurücksetzen"
+msgstr "重置 托盘按钮 选项卡"
 
 #: prefs.js:930
 msgid ""
@@ -670,217 +643,168 @@ msgid ""
 "Settings.\n"
 "The Icon can be Reset within its own Settings."
 msgstr ""
-"Reiter Benachrichtigungssymbol zurücksetzen, außer das Symbol zu den "
-"originalen Benachrichtigungssymboleinstellungen.\n"
-"Das Symbol kann in seinen eigenen Einstellungen zurückgesetzt werden."
+"重置 托盘按钮 选项卡除了图标的设置为初始设置。\n"
+"图标可以从它自己的设置中重置。"
 
 #: prefs.js:952 prefs.js:1054
 msgid "Separators"
-msgstr "Platzhalter"
+msgstr "分隔"
 
 #: prefs.js:955
 msgid "Left (px)"
-msgstr "Links (px)"
+msgstr "左 (px)"
 
 #: prefs.js:957
 msgid "Right (px)"
-msgstr "Rechts (px)"
+msgstr "右 (px)"
 
 #: prefs.js:973
 msgid "Tasks Container"
-msgstr "Laufende Anwendungen"
+msgstr "任务容器"
 
 #: prefs.js:1038
 msgid "Reset Separators Tab"
-msgstr "Reiter Platzhalter zurücksetzen"
+msgstr "重置 分隔 选项卡"
 
 #: prefs.js:1041
 msgid "Reset the Separators Tab to the Original Separators Settings"
-msgstr "Reiter Platzhalter auf Vorgabewerte zurücksetzen"
+msgstr "重置 分隔 选项卡为初始设置"
 
 #: prefs.js:1067 prefs.js:1158
 msgid "Preview"
-msgstr "Vorschau"
+msgstr "预览"
 
 #: prefs.js:1070
 msgid "Tasks Label Preview"
-msgstr "Vorschaubeschriftung der Anwendungen"
+msgstr "任务标签预览"
 
 #: prefs.js:1076
 msgid ""
 "App Name &\n"
 "Window Title"
 msgstr ""
-"Programmname &\n"
-"Fenstertitel"
+"应用名称和\n"
+"窗口标题"
 
 #: prefs.js:1081
 msgid "Tasks Thumbnail Preview"
-msgstr "Vorschaubild der Anwendung"
+msgstr "任务缩略图预览"
 
 #: prefs.js:1087
 msgid "Favorites Label Preview"
-msgstr "Vorschaubeschriftung der Favoriten"
+msgstr "收藏标签预览"
 
 #: prefs.js:1092
 msgid "Description"
-msgstr "Beschreibung"
+msgstr "描述"
 
 #: prefs.js:1093
 msgid ""
 "App Name &\n"
 "Description"
 msgstr ""
-"Programmname &\n"
-"Beschreibung"
+"应用名称\n"
+"和描述"
 
 #: prefs.js:1098
 msgid "Thumbnail Preview Size"
-msgstr "Vorschaubildgröße"
+msgstr "缩略图预览大小"
 
 #: prefs.js:1106
 msgid "Preview Delay"
-msgstr "Vorschauverzögerung"
+msgstr "预览延迟"
 
 #: prefs.js:1114
 msgid "Preview Background Color"
-msgstr "Hintergrundfarbe der Vorschau"
+msgstr "预览背景颜色"
 
 #: prefs.js:1130
 msgid "Preview Label Color"
-msgstr "Farbe der Vorschaubeschriftung"
+msgstr "预览标签颜色"
 
 #: prefs.js:1146
 msgid "Reset Preview Tab"
-msgstr "Reiter Vorschau zurücksetzen"
+msgstr "重置 预览 选项卡"
 
 #: prefs.js:1149
 msgid "Reset the Preview Tab to the Original Preview Settings"
-msgstr "Reiter Vorschau auf Vorgabewerte zurücksetzen"
+msgstr "重置 预览 选项卡为初始设置"
 
 #: prefs.js:1171 prefs.js:1287
 msgid "Misc"
-msgstr "Verschiedenes"
+msgstr "杂项"
 
 #: prefs.js:1174
 msgid "Color & Opacity"
-msgstr "Farbe & Deckkraft"
+msgstr "颜色和不透明度"
 
 #: prefs.js:1177
 msgid "Activities Button"
-msgstr "Aktivitäten-Schaltfläche"
+msgstr "活动按钮"
 
 #: prefs.js:1192 prefs.js:1211 prefs.js:1230 prefs.js:1249
 msgid "Reset"
-msgstr "Zurücksetzen"
+msgstr "重置"
 
 #: prefs.js:1196
 msgid "Application Menu"
-msgstr "Anwendungsmenü"
+msgstr "应用程序菜单"
 
 #: prefs.js:1215
 msgid "Date Menu"
-msgstr "Kalendermenü"
+msgstr "日期菜单"
 
 #: prefs.js:1234
 msgid "System Menu"
-msgstr "Systemmenü"
+msgstr "系统菜单"
 
 #: prefs.js:1253
 msgid "Hot Corner"
-msgstr "„Hot Corner“"
+msgstr "热区"
 
 #: prefs.js:1259
 msgid "Dash (Activities Overview)"
-msgstr "Dash (Aktivitätenübersicht)"
+msgstr "Dash（活动概览）"
 
 #: prefs.js:1265
 msgid "Workspace Selector (Activities Overview)"
-msgstr "Arbeitsflächenauswahl (Aktivitätenübersicht)"
+msgstr "工作区选择器（活动概览）"
 
 #: prefs.js:1271
 msgid "TaskBar (Activities Overview)"
-msgstr "Anwendungen-Leiste (Aktivitätenübersicht)"
+msgstr "任务栏（活动概览）"
 
 #: prefs.js:1277
 msgid "Reset Misc Tab"
-msgstr "Reiter Verschiedenes zurücksetzen"
+msgstr "重置 杂项 选项卡"
 
 #: prefs.js:1280
 msgid "Reset the Misc Tab to the Original Misc Settings"
-msgstr "Reiter Verschiedenes auf Vorgabewerte zurücksetzen"
+msgstr "重置 杂项 选项卡为初始设置"
 
 #: prefs.js:1302
 msgid "GNU GPL"
-msgstr "Lizenz (GNU GPL)"
+msgstr "GNU GPL"
 
 #: prefs.js:1322
 msgid "GNU General Public License"
-msgstr "GNU General Public License"
+msgstr "GNU 通用公共许可证"
 
 #: prefs.js:1728
 msgid "TaskBar - Set Desktop Button Icon"
-msgstr "TaskBar - Symbol der Schreibtischschaltfläche wählen"
+msgstr "任务栏 - 设置桌面按钮图标"
 
 #: prefs.js:1741 prefs.js:1858 prefs.js:1948
 msgid "Images"
-msgstr "Bilder"
+msgstr "图像"
 
 #: prefs.js:1845
 msgid "TaskBar - Set Appview Button Icon"
-msgstr "TaskBar - Symbol der Schaltfläche Anwendungen wählen"
+msgstr "任务栏 - 设置应用视图按钮图标"
 
 #: prefs.js:1935
 msgid "TaskBar - Set Tray Button Icon"
-msgstr "TaskBar - Benachrichtigungssymbol wählen"
-
-#~ msgid "Panel Height"
-#~ msgstr "Leistenhöhe"
-
-#~ msgid "Tasks Label Color"
-#~ msgstr "Schriftfarbe Anwendungen"
-
-#~ msgid "Tasks Container Width (6 Tasks)"
-#~ msgstr "Breite des Bereichs der laufenden Anwendungen (6 Anwendungen)"
-
-#~ msgid "Reset the Tasks Tab to the Original Tasks Settings"
-#~ msgstr "Reiter Anwendungen (I) auf die Vorgabewerte zurücksetzen"
-
-#~ msgid ""
-#~ "Inactive Task Background\n"
-#~ "Color & Opacity"
-#~ msgstr ""
-#~ "Hintergrund inaktiver Anwendungen\n"
-#~ "Farbe & Deckkraft"
+msgstr "任务栏 - 设置托盘按钮图标"
 
 #~ msgid "TrayButton"
-#~ msgstr "Benachrichtigungssymbol"
-
-#~ msgid "Tasks Thumbnail"
-#~ msgstr "Vorschaubild anzeigen"
-
-#~ msgid "Favorites Label"
-#~ msgstr "Bei Favoriten Name anzeigen"
-
-#~ msgid "Thumbnail Size"
-#~ msgstr "Vorschaubildgröße"
-
-#~ msgid "Dash (Overview)"
-#~ msgstr "Dash (Übersicht)"
-
-#~ msgid "Workspace Selector (Overview)"
-#~ msgstr "Arbeitsflächenauswahl (Übersicht)"
-
-#~ msgid "TaskBar (Overview)"
-#~ msgstr "Anwendungen-Leiste (Übersicht)"
-
-#~ msgid "TaskBar Preferences - Desktop Button Icon"
-#~ msgstr ""
-#~ "Einstellungen der Anwendungen-Leiste - Symbol der Schreibtischschaltfläche"
-
-#~ msgid "TaskBar Preferences - Appview Button Icon"
-#~ msgstr ""
-#~ "Einstellungen der Anwendungen-Leiste - Symbol der Schaltfläche Anwendungen"
-
-#~ msgid "TaskBar Preferences - Tray Button Icon"
-#~ msgstr "Einstellungen der Anwendungen-Leiste - Benachrichtigungssymbol"
+#~ msgstr "托盘按钮"

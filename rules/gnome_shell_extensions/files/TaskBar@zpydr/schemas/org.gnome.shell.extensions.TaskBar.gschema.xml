@@ -3,7 +3,7 @@
   GNOME Shell Extension TaskBar
   Copyright (C) 2016 zpydr
 
-  Version 52
+  Version 53
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -21,6 +21,11 @@
   zpydr@openmailbox.org
 -->
 <schemalist gettext-domain="gnome-shell-extensions-TaskBar">
+    <enum id="org.gnome.shell.extensions.TaskBar.sort-tasks-style">
+        <value value="0" nick="off"/>
+        <value value="1" nick="sort"/>
+        <value value="2" nick="workspace"/>
+    </enum>
     <enum id="org.gnome.shell.extensions.TaskBar.task-menu-style">
         <value value="0" nick="off"/>
         <value value="1" nick="middle"/>
@@ -36,6 +41,11 @@
         <value value="1" nick="standard"/>
         <value value="2" nick="invert"/>
     </enum>
+    <enum id="org.gnome.shell.extensions.TaskBar.tasks-label-style">
+        <value value="0" nick="off"/>
+        <value value="1" nick="window"/>
+        <value value="2" nick="app"/>
+    </enum>
     <enum id="org.gnome.shell.extensions.TaskBar.workspace-button-index-style">
         <value value="0" nick="index"/>
         <value value="1" nick="total"/>
@@ -48,6 +58,18 @@
     <enum id="org.gnome.shell.extensions.TaskBar.showapps-button-toggle-style">
         <value value="0" nick="leftclickappview"/>
         <value value="1" nick="leftclickoverview"/>
+    </enum>
+    <enum id="org.gnome.shell.extensions.TaskBar.display-label-style">
+        <value value="0" nick="off"/>
+        <value value="1" nick="app"/>
+        <value value="2" nick="window"/>
+        <value value="3" nick="both"/>
+    </enum>
+    <enum id="org.gnome.shell.extensions.TaskBar.display-favorites-label-style">
+        <value value="0" nick="off"/>
+        <value value="1" nick="app"/>
+        <value value="2" nick="description"/>
+        <value value="3" nick="both"/>
     </enum>
     <enum id="org.gnome.shell.extensions.TaskBar.appearance-style">
         <value value="0" nick="tasks"/>
@@ -72,7 +94,7 @@
             <summary>Display Preferences on the first start of TaskBar</summary>
             <description/>
         </key>
-       <key name="extension-path" type="s">
+        <key name="extension-path" type="s">
             <default>'unset'</default>
             <summary>Extension Path</summary>
             <description/>
@@ -155,16 +177,46 @@
             <summary>Hover Event</summary>
             <description/>
         </key>
-        <key name="icon-size" type="i">
+        <key name="panel-size" type="i">
             <range min="1" max="96"/>
-            <default>22</default>
-            <summary>Icon Size</summary>
+            <default>27</default>
+            <summary>Panel Size</summary>
             <description/>
         </key>
-        <key name="icon-size-bottom" type="i">
+        <key name="panel-size-bottom" type="i">
             <range min="1" max="96"/>
-            <default>22</default>
-            <summary>Icon Size</summary>
+            <default>27</default>
+            <summary>Bottom Panel Size</summary>
+            <description/>
+        </key>
+        <key name="tb-icon-size" type="i">
+            <range min="-96" max="96"/>
+            <default>0</default>
+            <summary>Adjust TaskBar Icon Size</summary>
+            <description/>
+        </key>
+        <key name="tb-icon-size-bottom" type="i">
+            <range min="-96" max="96"/>
+            <default>0</default>
+            <summary>Adjust TaskBar Icon Size Bottom</summary>
+            <description/>
+        </key>
+        <key name="tb-label-size" type="i">
+            <range min="-96" max="96"/>
+            <default>0</default>
+            <summary>Adjust TaskBar Label Size</summary>
+            <description/>
+        </key>
+        <key name="tb-label-size-bottom" type="i">
+            <range min="-96" max="96"/>
+            <default>0</default>
+            <summary>Adjust TaskBar Label Size Bottom</summary>
+            <description/>
+        </key>
+        <key name="content-size" type="i">
+            <range min="-96" max="96"/>
+            <default>0</default>
+            <summary>Adjust Other Panel Content Size</summary>
             <description/>
         </key>
         <key name="font-size-bottom" type="i">
@@ -178,9 +230,14 @@
             <summary>Display Tasks from all Workspaces</summary>
             <description/>
         </key>
-        <key name="task-menu" enum="org.gnome.shell.extensions.TaskBar.task-menu-style">
+        <key name="sort-tasks" enum="org.gnome.shell.extensions.TaskBar.sort-tasks-style">
+            <default>'off'</default>
+            <summary>Sort Tasks by Application</summary>
+            <description/>
+        </key>
+	<key name="task-menu" enum="org.gnome.shell.extensions.TaskBar.task-menu-style">
             <default>'right'</default>
-           <summary>Middle/Right Click to Show Tasks Menu</summary>
+            <summary>Middle/Right Click to Show Tasks Menu</summary>
             <description/>
         </key>
         <key name="tasks-container-width-new" type="i">
@@ -229,8 +286,8 @@
             <summary>Inactive Task Background Color</summary>
             <description/>
         </key>
-        <key name="tasks-label" type="b">
-            <default>false</default>
+        <key name="tasks-label" enum="org.gnome.shell.extensions.TaskBar.tasks-label-style">
+            <default>'off'</default>
             <summary>Tasks Label</summary>
             <description/>
         </key>
@@ -244,6 +301,36 @@
             <summary>Display Tasks Label Color</summary>
             <description/>
         </key>
+        <key name="inactive-tasks-label-color" type="s">
+            <default>'unset'</default>
+            <summary>Inactive Tasks Label Color</summary>
+            <description/>
+        </key>
+        <key name="display-inactive-tasks-label-color" type="b">
+            <default>false</default>
+            <summary>Display Inactive Tasks Label Color</summary>
+            <description/>
+        </key>
+        <key name="tasks-frame-color" type="s">
+            <default>'unset'</default>
+            <summary>Tasks Frame Color</summary>
+            <description/>
+        </key>
+        <key name="display-tasks-frame-color" type="b">
+            <default>false</default>
+            <summary>Display Tasks Frame Color</summary>
+            <description/>
+        </key>
+        <key name="inactive-tasks-frame-color" type="s">
+            <default>'unset'</default>
+            <summary>Inactive Tasks Frame Color</summary>
+            <description/>
+        </key>
+        <key name="display-inactive-tasks-frame-color" type="b">
+            <default>false</default>
+            <summary>Display Inactive Tasks Frame Color</summary>
+            <description/>
+        </key>
         <key name="tasks-width" type="i">
             <range min="1" max="1000"/>
             <default>150</default>
@@ -254,6 +341,37 @@
             <range min="0" max="1000"/>
             <default>4</default>
             <summary>Tasks Spaces Width</summary>
+            <description/>
+        </key>
+        <key name="blink-tasks" type="b">
+            <default>false</default>
+            <summary>Blink Tasks on Alert</summary>
+            <description/>
+        </key>
+        <key name="blink-rate" type="i">
+            <range min="0" max="10000"/>
+            <default>750</default>
+            <summary>Tasks Blink Rate</summary>
+            <description/>
+        </key>
+        <key name="blink-color" type="s">
+            <default>'rgba(255,0,0,1)'</default>
+            <summary>Tasks Blink Color</summary>
+            <description/>
+        </key>
+        <key name="blacklist" type="as">
+            <default>[]</default>
+            <summary>Tasks Blacklist</summary>
+            <description/>
+        </key>
+        <key name="blacklist-set" type="b">
+            <default>false</default>
+            <summary>Tasks Blacklist Set</summary>
+            <description/>
+        </key>
+        <key name="find-apps" type="b">
+            <default>false</default>
+            <summary>Find Apps</summary>
             <description/>
         </key>
         <key name="top-panel-background-color" type="s">
@@ -320,6 +438,12 @@
         <key name="display-workspace-button-color" type="b">
             <default>false</default>
             <summary>Display Workspace Button Color</summary>
+            <description/>
+        </key>
+        <key name="workspace-button-width" type="i">
+            <range min="-96" max="96"/>
+            <default>0</default>
+            <summary>Adjust Workspace Button Width</summary>
             <description/>
         </key>
         <key name="showapps-button-toggle" enum="org.gnome.shell.extensions.TaskBar.showapps-button-toggle-style">
@@ -479,8 +603,8 @@
             <summary>Workspace Selector</summary>
             <description/>
         </key>
-        <key name="display-label" type="b">
-            <default>true</default>
+        <key name="display-label" enum="org.gnome.shell.extensions.TaskBar.display-label-style">
+            <default>'both'</default>
             <summary>Display Label</summary>
             <description/>
         </key>
@@ -489,8 +613,8 @@
             <summary>Display Thumbnail</summary>
             <description/>
         </key>
-        <key name="display-favorites-label" type="b">
-            <default>true</default>
+        <key name="display-favorites-label" enum="org.gnome.shell.extensions.TaskBar.display-favorites-label-style">
+            <default>'both'</default>
             <summary>Display Favorites Label</summary>
             <description/>
         </key>
@@ -504,6 +628,26 @@
             <range min="0" max="3000"/>
             <default>500</default>
             <summary>Delay before Preview</summary>
+            <description/>
+        </key>
+        <key name="preview-background-color" type="s">
+            <default>'unset'</default>
+            <summary>Preview Background Color</summary>
+            <description/>
+        </key>
+        <key name="display-preview-background-color" type="b">
+            <default>false</default>
+            <summary>Display Preview Background Color</summary>
+            <description/>
+        </key>
+        <key name="preview-label-color" type="s">
+            <default>'unset'</default>
+            <summary>Preview Label Color</summary>
+            <description/>
+        </key>
+        <key name="display-preview-label-color" type="b">
+            <default>false</default>
+            <summary>Display Preview Label Color</summary>
             <description/>
         </key>
         <key name="appearance-selection" enum="org.gnome.shell.extensions.TaskBar.appearance-style">
