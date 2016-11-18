@@ -13,8 +13,11 @@ _adm_gid	:= 1000
 _repo_name   := $(shell basename $(shell git rev-parse --show-toplevel))
 _image_file  := $(image_dir)/$(_repo_name)-$(image_class)-$(debootstrap_suite)-$(shell date -u +%Y-%m-%d-%H%M%S)-amd64.img
 
-_debootstrap_packages := devscripts,equivs,git,locales,lsb-release,make,\
-                         puppet-common,sudo
+# Some basic dependencies for our build system.  "python3" is on this list,
+# because installing "devscripts" fails if "python3" has not been installed
+# earlier, working around some bug in Debian (on 2016-11-18).
+_debootstrap_packages := python3,devscripts,equivs,git,locales,lsb-release,\
+			 make,puppet-common,sudo
 
 _systemd_nspawn_machine_name := \
   $(notdir $(rootfs_dir))-$(shell tr -dc A-Za-z0-9 < /dev/urandom | head -c8)
