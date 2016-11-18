@@ -1,7 +1,7 @@
 //  GNOME Shell Extension TaskBar
 //  Copyright (C) 2016 zpydr
 //
-//  Version 52
+//  Version 53
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -81,9 +81,15 @@ TaskBar.prototype =
     appMenuColor: null,
     appMenuContainer: null,
     appMenuStyle: null,
+    appname: null,
+    attentionStyle: null,
+    attentionStyleChanged: null,
+    attentionStyleChangeTimeout: null,
     backgroundColor: null,
     backgroundStyleColor: null,
     barriers: null,
+    blacklist: [],
+    blacklistapp: null,
     bottomPanelActor: null,
     bottomPanelBackgroundColor: null,
     bottomPanelBackgroundStyle: null,
@@ -135,7 +141,7 @@ TaskBar.prototype =
     iconDesktop: null,
     iconPath: null,
     iconShowApps: null,
-    iconSize: null,
+    panelSize: null,
     iconTask: null,
     iconThemeChangedId: null,
     iconTray: null,
@@ -147,6 +153,8 @@ TaskBar.prototype =
     i: null,
     itemHeight: null,
     itemWidth: null,
+    j: null,
+    k: null,
     labelHeight: null,
     labelNamePreview: null,
     labelTask: null,
@@ -187,7 +195,7 @@ TaskBar.prototype =
     panelIconSize: null,
     panelPosition: null,
     panelSet: null,
-    panelSize: null,
+    fontSize: null,
     panelStyleChangedId: null,
     pbchildren: null,
     positionAppearance: null,
@@ -267,6 +275,7 @@ TaskBar.prototype =
     userTime: null,
     variant: null,
     width: null,
+    windowDemandsAttentionId: null,
     windows: null,
     windowsList: [],
     windowTask: null,
@@ -536,6 +545,13 @@ TaskBar.prototype =
             this.globalThemeChangedId = null;
         }
 
+        //Disconnect Window Demands Attention Signals
+        if (this.windowDemandsAttentionId !== null)
+        {
+            global.display.disconnect(this.windowDemandsAttentionId);
+            this.windowDemandsAttentionId = null;
+        }
+
         //Disconnect Lock Screen Signals
         if (this.screenShieldLockId !== null)
         {
@@ -607,8 +623,13 @@ TaskBar.prototype =
         //Reinit Extension on Param Change
         this.settingSignals =
         [
-            this.settings.connect("changed::icon-size", Lang.bind(this, this.onParamChanged)),
-            this.settings.connect("changed::icon-size-bottom", Lang.bind(this, this.onParamChanged)),
+            this.settings.connect("changed::panel-size", Lang.bind(this, this.onParamChanged)),
+            this.settings.connect("changed::panel-size-bottom", Lang.bind(this, this.onParamChanged)),
+            this.settings.connect("changed::tb-icon-size", Lang.bind(this, this.onParamChanged)),
+            this.settings.connect("changed::tb-icon-size-bottom", Lang.bind(this, this.onParamChanged)),
+            this.settings.connect("changed::tb-label-size", Lang.bind(this, this.onParamChanged)),
+            this.settings.connect("changed::tb-label-size-bottom", Lang.bind(this, this.onParamChanged)),
+            this.settings.connect("changed::content-size", Lang.bind(this, this.onParamChanged)),
             this.settings.connect("changed::font-size-bottom", Lang.bind(this, this.onParamChanged)),
             this.settings.connect("changed::panel-box", Lang.bind(this, this.onBoxChanged)),
             this.settings.connect("changed::panel-position", Lang.bind(this, this.onParamChanged)),
@@ -618,6 +639,7 @@ TaskBar.prototype =
             this.settings.connect("changed::workspace-button-index", Lang.bind(this, this.onParamChanged)),
             this.settings.connect("changed::workspace-button-color", Lang.bind(this, this.onParamChanged)),
             this.settings.connect("changed::display-workspace-button-color", Lang.bind(this, this.onParamChanged)),
+            this.settings.connect("changed::workspace-button-width", Lang.bind(this, this.onParamChanged)),
             this.settings.connect("changed::display-desktop-button", Lang.bind(this, this.onParamChanged)),
             this.settings.connect("changed::overview", Lang.bind(this, this.setOverview)),
             this.settings.connect("changed::tray-button", Lang.bind(this, this.onParamChanged)),
@@ -625,6 +647,7 @@ TaskBar.prototype =
             this.settings.connect("changed::desktop-button-icon", Lang.bind(this, this.onParamChanged)),
             this.settings.connect("changed::appview-button-icon", Lang.bind(this, this.onParamChanged)),
             this.settings.connect("changed::tray-button-icon", Lang.bind(this, this.onParamChanged)),
+            this.settings.connect("changed::sort-tasks", Lang.bind(this, this.onParamChanged)),
             this.settings.connect("changed::active-task-frame", Lang.bind(this, this.onParamChanged)),
             this.settings.connect("changed::inactive-task-frame", Lang.bind(this, this.onParamChanged)),
             this.settings.connect("changed::active-task-background-color", Lang.bind(this, this.onParamChanged)),
@@ -634,8 +657,16 @@ TaskBar.prototype =
             this.settings.connect("changed::tasks-label", Lang.bind(this, this.onParamChanged)),
             this.settings.connect("changed::tasks-label-color", Lang.bind(this, this.onParamChanged)),
             this.settings.connect("changed::display-tasks-label-color", Lang.bind(this, this.onParamChanged)),
+            this.settings.connect("changed::inactive-tasks-label-color", Lang.bind(this, this.onParamChanged)),
+            this.settings.connect("changed::display-inactive-tasks-label-color", Lang.bind(this, this.onParamChanged)),
+            this.settings.connect("changed::tasks-frame-color", Lang.bind(this, this.onParamChanged)),
+            this.settings.connect("changed::display-tasks-frame-color", Lang.bind(this, this.onParamChanged)),
+            this.settings.connect("changed::inactive-tasks-frame-color", Lang.bind(this, this.onParamChanged)),
+            this.settings.connect("changed::display-inactive-tasks-frame-color", Lang.bind(this, this.onParamChanged)),
             this.settings.connect("changed::tasks-width", Lang.bind(this, this.onParamChanged)),
             this.settings.connect("changed::tasks-spaces", Lang.bind(this, this.onParamChanged)),
+            this.settings.connect("changed::blink-tasks", Lang.bind(this, this.onParamChanged)),
+            this.settings.connect("changed::blacklist-set", Lang.bind(this, this.onParamChanged)),
             this.settings.connect("changed::top-panel-background-color", Lang.bind(this, this.onParamChanged)),
             this.settings.connect("changed::top-panel-background-alpha", Lang.bind(this, this.onParamChanged)),
             this.settings.connect("changed::bottom-panel-background-color", Lang.bind(this, this.onParamChanged)),
@@ -671,6 +702,10 @@ TaskBar.prototype =
             this.settings.connect("changed::tasks-all-workspaces", Lang.bind(this, this.onParamChanged)),
             this.settings.connect("changed::tasks-container-width-new", Lang.bind(this, this.onParamChanged)),
             this.settings.connect("changed::hover-event", Lang.bind(this, this.hoverEvent)),
+            this.settings.connect("changed::blacklist", Lang.bind(this, this.onParamChanged)),
+            this.settings.connect("changed::find-apps", Lang.bind(this, this.findApps)),
+            this.settings.connect("changed::display-preview-background-color", Lang.bind(this, this.onParamChanged)),
+            this.settings.connect("changed::display-preview-label-color", Lang.bind(this, this.onParamChanged)),
             this.settings.connect("changed::reset-all", Lang.bind(this, this.resetAll)),
             this.settings.connect("changed::reset-flag", Lang.bind(this, this.onParamChanged))
         ];
@@ -682,6 +717,7 @@ TaskBar.prototype =
         this.monitorChangedId = null;
         this.iconThemeChangedId = null;
         this.globalThemeChangedId = null;
+        this.windowDemandsAttentionId = null;
         this.screenShieldLockId = null;
         this.panelStyleChangedId = null;
         this.mainBox = null;
@@ -690,6 +726,8 @@ TaskBar.prototype =
         this.monitorChangedId = Main.layoutManager.connect('monitors-changed', Lang.bind(this, this.onParamChanged));
         this.iconThemeChangedId = St.TextureCache.get_default().connect('icon-theme-changed', Lang.bind(this, this.onParamChanged));
         this.globalThemeChangedId = St.ThemeContext.get_for_stage(global.stage).connect('changed', Lang.bind(this, this.onParamChanged));
+        if ((this.settings.get_boolean("display-tasks")) && (this.settings.get_boolean("blink-tasks")))
+            this.windowDemandsAttentionId = global.display.connect('window-demands-attention', Lang.bind(this, this.onWindowDemandsAttention));
         if (Main.screenShield !== null)
             this.screenShieldLockId = Main.screenShield.connect('lock-status-changed', Lang.bind(this, this.onParamChanged));
 	this.setOverview();
@@ -732,10 +770,11 @@ TaskBar.prototype =
         }
         if ((this.settings.get_boolean("first-start")) && (Main.sessionMode.currentMode === 'user'))
         {
+            //Comment out the next line to disable the preferences window from opening at the first start
             Main.Util.trySpawnCommandLine('gnome-shell-extension-prefs ' + Extension.metadata.uuid);
             this.settings.set_boolean("first-start", false);
         }
-	// Find out if the bottom panel extension is enabled
+        //Find out if the bottom panel extension is enabled
 	this.tbp = false;
 	let schemaSettings = new Gio.Settings({ schema: 'org.gnome.shell' });
 	let enabled_extensions = schemaSettings.get_strv('enabled-extensions');
@@ -827,6 +866,17 @@ TaskBar.prototype =
         if (this.settings.get_boolean("reset-all"))
         {
             Main.Util.trySpawnCommandLine('dconf reset -f /org/gnome/shell/extensions/TaskBar/');
+        }
+    },
+
+    //Find Apps
+    findApps: function()
+    {
+        if (this.settings.get_boolean("find-apps"))
+        {
+            Main.overview.show();
+            Main.overview.viewSelector._showAppsButton.checked = true;
+            this.settings.set_boolean("find-apps", false);
         }
     },
 
@@ -958,7 +1008,7 @@ TaskBar.prototype =
                 {
                     continue;
                 }
-                let buttonfavorite = new St.Button({ style_class: "tkb-task-button", child: favoriteapp.create_icon_texture(this.iconSize) });
+                let buttonfavorite = new St.Button({ style_class: "tkb-task-button", child: favoriteapp.create_icon_texture(this.panelSize) });
                 buttonfavorite.connect('clicked', Lang.bind(this, function()
                 {
                     favoriteapp.open_new_window(-1);
@@ -967,7 +1017,7 @@ TaskBar.prototype =
                 {
                     //Hide current preview if necessary
                     this.hidePreview();
-                    if (this.settings.get_boolean("display-favorites-label"))
+                    if (this.settings.get_enum("display-favorites-label") !== 0)
                     {
                         if (this.settings.get_int("preview-delay") === 0)
                             this.showFavoritesPreview(buttonfavorite, favoriteapp);
@@ -994,7 +1044,7 @@ TaskBar.prototype =
             this.iconShowApps = new St.Icon(
             {
                 gicon: this.showAppsIcon,
-                icon_size: (this.iconSize),
+                icon_size: (this.panelSize),
                 style_class: "tkb-desktop-icon"
             });
             this.buttonShowApps = new St.Button({ style_class: "tkb-task-button" });
@@ -1036,14 +1086,21 @@ TaskBar.prototype =
     updateWorkspaces: function()
     {
         this.activeWorkspaceIndex = global.screen.get_active_workspace().index();
+	let workspaceButtonWidth = this.settings.get_int("workspace-button-width");
         this.totalWorkspace = global.screen.n_workspaces - 1;
         let labelWorkspaceIndex = this.activeWorkspaceIndex + 1;
         let labelTotalWorkspace = this.totalWorkspace + 1;
         if (this.settings.get_enum("workspace-button-index") === 1)
+        {
             this.labelWorkspace = new St.Label({ text: (labelWorkspaceIndex + "/" + labelTotalWorkspace) });
+            this.labelWorkspace.set_width((this.panelSize * 2) + 2 + this.adjustTBLabelSize - this.adjustTBIconSize + workspaceButtonWidth);
+        }
         else if (this.settings.get_enum("workspace-button-index") === 0)
+        {
             this.labelWorkspace = new St.Label({ text: (labelWorkspaceIndex+"") });
-        this.labelWorkspace.style = 'font-size: ' + (this.iconSize * 2 / 3) + 'px' + ';';
+            this.labelWorkspace.set_width(this.panelSize - 2 + this.adjustTBLabelSize - this.adjustTBIconSize + workspaceButtonWidth);
+        }
+        this.labelWorkspace.style = 'font-size: ' + (this.panelSize - 5 + this.adjustTBLabelSize - this.adjustTBIconSize) + 'px' + '; text-align: center;';
         this.buttonWorkspace.set_child(this.labelWorkspace);
     },
 
@@ -1059,7 +1116,7 @@ TaskBar.prototype =
             let iconDesktop = new St.Icon(
             {
                 gicon: this.desktopButtonIcon,
-                icon_size: (this.iconSize),
+                icon_size: (this.panelSize),
                 style_class: "tkb-desktop-icon"
             });
             let buttonDesktop = new St.Button({ style_class: "tkb-task-button" });
@@ -1125,7 +1182,7 @@ TaskBar.prototype =
         this.iconTray = new St.Icon(
         {
             gicon: this.trayIcon,
-            icon_size: (this.iconSize),
+            icon_size: (this.panelSize),
             style_class: "tkb-desktop-icon"
         });
         this.buttonTray.set_child(this.iconTray);
@@ -1404,44 +1461,43 @@ TaskBar.prototype =
     activeTaskFrame: function()
     {
         this.backgroundColor = this.settings.get_string("active-task-background-color");
+        this.activeTasksFrameColor = this.settings.get_string("tasks-frame-color");
         this.margin = this.settings.get_int("tasks-spaces");
-        if ((this.settings.get_boolean("active-task-background-color-set")) && (this.settings.get_int("tasks-spaces") !== 0))
-            this.backgroundStyleColor = "background-color: " + this.backgroundColor + "; margin-right: " + this.margin + "px;";
-        else if (this.settings.get_int("tasks-spaces") !== 0)
-            this.backgroundStyleColor = "margin-right: " + this.margin + "px;";
-        else if (this.settings.get_boolean("active-task-background-color-set"))
-            this.backgroundStyleColor = "background-color: " + this.backgroundColor + ";";
-        else
-            this.backgroundStyleColor = "None";
-        if (this.settings.get_boolean("active-task-frame"))
-            this.activeTask = "active-task-frame";
-        else
-            this.activeTask = "active-task-no-frame";
+        this.backgroundStyleColor = "border-radius: 5px; ";
+        if (this.settings.get_boolean("active-task-background-color-set"))
+            this.backgroundStyleColor += "background-color: " + this.backgroundColor + "; ";
+        if ((this.settings.get_boolean("active-task-frame")) && (this.settings.get_boolean("display-tasks-frame-color")))
+            this.backgroundStyleColor += "border: 1px " + this.activeTasksFrameColor + "; background-image: url('" + Extension.path + "/images/active-task-background.svg'); ";
+        else if ((this.settings.get_boolean("active-task-frame")) && (! this.settings.get_boolean("display-tasks-frame-color")))
+            this.backgroundStyleColor += "border: 1px solid gray; background-image: url('" + Extension.path + "/images/active-task-background.svg'); ";
+        if (this.settings.get_int("tasks-spaces") !== 0)
+            this.backgroundStyleColor += "margin-right: " + this.margin + "px;";
     },
 
     //Inactive Task Frame / Background Color
     inactiveTaskFrame: function()
     {
         this.inactiveBackgroundColor = this.settings.get_string("inactive-task-background-color");
+        this.inactiveTasksFrameColor = this.settings.get_string("inactive-tasks-frame-color");
         this.inactiveMargin = this.settings.get_int("tasks-spaces");
-        if ((this.settings.get_boolean("inactive-task-background-color-set")) && (this.settings.get_int("tasks-spaces") !== 0))
-            this.inactiveBackgroundStyleColor = "background-color: " + this.inactiveBackgroundColor + "; margin-right: " + this.inactiveMargin + "px;";
-        else if (this.settings.get_int("tasks-spaces") !== 0)
-            this.inactiveBackgroundStyleColor = "margin-right: " + this.inactiveMargin + "px;";
-        else if (this.settings.get_boolean("inactive-task-background-color-set"))
-            this.inactiveBackgroundStyleColor = "background-color: " + this.inactiveBackgroundColor + ";";
-        else
-            this.inactiveBackgroundStyleColor = "None";
-        if (this.settings.get_boolean("inactive-task-frame"))
-            this.inactiveTask = "inactive-task-frame";
-        else
-            this.inactiveTask = "inactive-task-no-frame";
+        this.inactiveBackgroundStyleColor = "border-radius: 5px; ";
+        if (this.settings.get_boolean("inactive-task-background-color-set"))
+            this.inactiveBackgroundStyleColor += "background-color: " + this.inactiveBackgroundColor + "; ";
+        if ((this.settings.get_boolean("inactive-task-frame")) && (this.settings.get_boolean("display-inactive-tasks-frame-color")))
+            this.inactiveBackgroundStyleColor += "border: 1px " + this.inactiveTasksFrameColor + "; background-image: url('" + Extension.path + "/images/active-task-background.svg'); ";
+        else if ((this.settings.get_boolean("inactive-task-frame")) && (! this.settings.get_boolean("display-inactive-tasks-frame-color")))
+            this.inactiveBackgroundStyleColor += "border: 1px solid gray; background-image: url('" + Extension.path + "/images/active-task-background.svg'); ";
+        if (this.settings.get_int("tasks-spaces") !== 0)
+            this.inactiveBackgroundStyleColor += "margin-right: " + this.inactiveMargin + "px;";
     },
 
-    //Top Panel Background Color
+    //Top Panel Background Color and (Font) Size
     changeTopPanelBackgroundColor: function()
     {
-        this.iconSize = this.settings.get_int('icon-size');
+        this.panelSize = this.settings.get_int('panel-size');
+        this.adjustTBIconSize = this.settings.get_int('tb-icon-size');
+        this.adjustTBLabelSize = this.settings.get_int('tb-label-size');
+        this.adjustContentSize = this.settings.get_int('content-size');
         this.panelSet = false;
         this.originalTopPanelStyle = Main.panel.actor.get_style();
         this.originalLeftPanelCornerStyle = Main.panel._leftCorner.actor.get_style();
@@ -1455,22 +1511,19 @@ TaskBar.prototype =
         {
             this.settings.set_string("bottom-panel-original-background-color", topPanelOriginalBackgroundColor);
         }
-        if (this.iconSize !== 22)
+        if ((this.panelSize !== 27) || (this.adjustContentSize !== 0) || (this.adjustLabelSize !== 0))
         {
             //Set Font Size
-            this.panelIconSize = Math.round(this.iconSize * 2 / 3);
-            this.panelSize = 'font-size: ' + this.panelIconSize + 'px;';
-            Main.panel.actor.set_style(this.panelSize);
+            this.panelLabelSize = (this.panelSize - 12 + this.adjustContentSize);
+            this.fontSize = 'font-size: ' + this.panelLabelSize + 'px; height: ' + this.panelSize + 'px;';
+            Main.panel.actor.set_style(this.fontSize);
             this.panelSet = true;
         }
         this.topPanelBackgroundColor = this.settings.get_string("top-panel-background-color");
         if (this.topPanelBackgroundColor !== 'unset')
         {
             this.topPanelBackgroundStyle = "background-color: " + this.topPanelBackgroundColor + ";";
-            if (this.iconSize !== 22)
-                Main.panel.actor.set_style(this.panelSize + ' ' + this.topPanelBackgroundStyle);
-            else
-                Main.panel.actor.set_style(this.topPanelBackgroundStyle);
+            Main.panel.actor.set_style(this.fontSize + ' ' + this.topPanelBackgroundStyle);
             if ((this.settings.get_boolean("top-panel-background-alpha")) && (ShellVersion[1] <= 16))
             {
                 Main.panel._leftCorner.actor.hide();
@@ -1488,22 +1541,27 @@ TaskBar.prototype =
             }
             this.panelSet = true;
         }
+        this.panelSize = ((this.settings.get_int('panel-size')) - 6 + (this.settings.get_int('tb-icon-size')));
     },
 
     //Bottom Panel
     bottomPanel: function()
     {
+        this.adjustTBIconSize = this.settings.get_int('tb-icon-size-bottom');
+        this.adjustTBLabelSize = this.settings.get_int('tb-label-size-bottom');
+        this.adjustContentSize = 0;
         let bottomPanelHeight = null;
         let newShowTray = null;
-        this.iconSize = this.settings.get_int('icon-size-bottom');
-        this.panelSize = 'font-size: ' + (this.iconSize * 2 / 3) + 'px;';
+        this.panelSize = this.settings.get_int('panel-size-bottom');
+        this.panelLabelSize = (this.panelSize - 12 + this.adjustTBLabelSize);
+        this.fontSize = 'font-size: ' + this.panelLabelSize + 'px; height: ' + this.panelSize + 'px;';
         this.bottomPanelVertical = this.settings.get_int('bottom-panel-vertical');
         this.bottomPanelBackgroundColor = this.settings.get_string("bottom-panel-background-color");
         if (this.bottomPanelBackgroundColor === "unset")
             this.bottomPanelBackgroundColor = this.settings.get_string("bottom-panel-original-background-color");
         this.bottomPanelBackgroundStyle = "background-color: " + this.bottomPanelBackgroundColor + ";";
         this.bottomPanelActor = new St.BoxLayout({name: 'bottomPanel'});
-        this.bottomPanelActor.set_style(this.panelSize + ' ' + this.bottomPanelBackgroundStyle);
+        this.bottomPanelActor.set_style(this.fontSize + ' ' + this.bottomPanelBackgroundStyle);
         this.bottomPanelActor.set_reactive(false);
         this.positionBoxBottomStart = new St.Bin({ x_fill: false, x_expand: true, x_align: St.Align.START });
         this.positionBoxBottomMiddle = new St.Bin({ x_fill: false, x_expand: true, x_align: St.Align.MIDDLE });
@@ -1525,7 +1583,7 @@ TaskBar.prototype =
         this.bottomPanelActor.add_actor(this.positionBoxBottomMiddle);
         this.bottomPanelActor.add_actor(this.positionBoxBottomEnd);
         let primary = Main.layoutManager.primaryMonitor;
-        this.height = (this.iconSize + this.bottomPanelVertical + 2);
+        this.height = (this.panelSize + this.bottomPanelVertical);
         this.bottomPanelActor.set_position(primary.x, primary.y+primary.height-this.height);
         this.bottomPanelActor.set_size(primary.width, -1);
         if (ShellVersion[1] <= 14)
@@ -1543,6 +1601,7 @@ TaskBar.prototype =
                 this.setAnchorPoint = true;
             }));
         }
+        this.panelSize = ((this.settings.get_int('panel-size-bottom')) - 6 + (this.settings.get_int('tb-icon-size-bottom')));
     },
 
     //Click Events
@@ -1847,6 +1906,45 @@ TaskBar.prototype =
         }
     },
 
+    //Window Demands Attention
+    onWindowDemandsAttention: function(display, window)
+    {
+        if ((this.settings.get_boolean("display-tasks")) && (this.settings.get_boolean("blink-tasks")))
+        {
+            this.tasksList.forEach(
+                function(task)
+                {
+                    let [windowTask, buttonTask, signalsTask] = task;
+                    if ((windowTask === window) && (! windowTask.has_focus()))
+                    {
+                        this.attentionStyleChanged = false;
+                        this.attentionStyle = "background-color: " + this.settings.get_string("blink-color") + "; margin-right: " + this.inactiveMargin + "px;";
+                        this.attentionStyleChangeTimeout = Mainloop.timeout_add(this.settings.get_int("blink-rate"), Lang.bind(this, this.changeAttentionStyle, windowTask, buttonTask));
+                    }
+                },
+                this
+            );
+        }
+    },
+
+    changeAttentionStyle: function(windowTask, buttonTask)
+    {
+        if ((! this.attentionStyleChanged) && (! windowTask.has_focus()))
+        {
+            buttonTask.set_style(this.attentionStyle);
+            this.attentionStyleChanged = true;
+            return true;
+        }
+        else if ((this.attentionStyleChanged) && (! windowTask.has_focus()))
+        {
+            buttonTask.set_style(this.inactiveBackgroundStyleColor);
+            this.attentionStyleChanged = false;
+            return true;
+        }
+        else
+            return false;
+    },
+
     //Init Windows Manage Callbacks
     initWindows: function(windowsList, type, window)
     {
@@ -1869,7 +1967,6 @@ TaskBar.prototype =
     {
             if (type === 0) //Add all windows (On init or workspace change)
             {
-                this.countTasks = null;
                 this.cleanTasksList();
                 windowsList.forEach(
                     function(window)
@@ -1895,7 +1992,7 @@ TaskBar.prototype =
     //Tasks Container
     tasksContainer: function(window)
     {
-        if ((this.tasksContainerWidth !== 0) && (this.countTasks > this.tasksContainerWidth))
+        if ((this.tasksContainerWidth > 0) && (this.countTasks > 0) && (this.countTasks > this.tasksContainerWidth))
         {
             let totalWidth = this.boxMainTasks.get_width();
             let spaces = this.settings.get_int("tasks-spaces");
@@ -1914,15 +2011,15 @@ TaskBar.prototype =
     //Tasks Container Size
     tasksContainerSize: function()
     {
-        if (this.tasksContainerWidth !== 0)
+        if (this.tasksContainerWidth > 0)
         {
             let spaces = this.settings.get_int("tasks-spaces");
             let buttonTaskWidth = 0;
             this.tasksWidth = this.settings.get_int("tasks-width");
-            if (this.settings.get_boolean("tasks-label"))
+            if (this.settings.get_enum("tasks-label") !== 0)
                 buttonTaskWidth = this.tasksWidth;
             else
-                buttonTaskWidth = (this.iconSize + 8);
+                buttonTaskWidth = (this.panelSize + 8);
             this.newTasksContainerWidth = (this.tasksContainerWidth * (buttonTaskWidth + spaces));
             this.boxMainTasks.set_width(this.newTasksContainerWidth);
         }
@@ -1957,24 +2054,52 @@ TaskBar.prototype =
             this.tasksList.forEach(
                 function(task)
                 {
-                    let [windowTask, buttonTask, signalsTask] = task;
+                    let [windowTask, buttonTask, signalsTask, labelTask] = task;
                     if (windowTask === window)
                     {
-                        buttonTask.remove_style_pseudo_class(this.inactiveTask);
-                        buttonTask.add_style_pseudo_class(this.activeTask);
                         buttonTask.set_style(this.backgroundStyleColor);
+                        if ((this.settings.get_enum("tasks-label") !== 0) && (this.settings.get_boolean("display-tasks-label-color")))
+                        {
+                            this.tasksLabelColor = this.settings.get_string("tasks-label-color");
+                            if (this.tasksLabelColor !== "unset")
+                            {
+                                this.tasksLabelStyle = 'font-size: ' + (this.panelSize - 5 + this.adjustTBLabelSize - this.adjustTBIconSize) + 'px; color: ' + this.tasksLabelColor + ';';
+                                labelTask.set_style(this.tasksLabelStyle);
+                            }
+                            else
+                                labelTask.set_style("None");
+                        }
+                        else if (this.settings.get_enum("tasks-label") !== 0)
+                        {
+                            this.tasksLabelStyle = 'font-size: ' + (this.panelSize - 5 + this.adjustTBLabelSize - this.adjustTBIconSize) + 'px;';
+                            labelTask.set_style(this.tasksLabelStyle);
+                        }
                     }
                     else
                     {
-                        buttonTask.remove_style_pseudo_class(this.activeTask);
-                        buttonTask.add_style_pseudo_class(this.inactiveTask);
                         buttonTask.set_style(this.inactiveBackgroundStyleColor);
+                        if ((this.settings.get_enum("tasks-label") !== 0) && (this.settings.get_boolean("display-inactive-tasks-label-color")))
+                        {
+                            this.inactiveTasksLabelColor = this.settings.get_string("inactive-tasks-label-color");
+                            if (this.inactiveTasksLabelColor !== "unset")
+                            {
+                                this.inactiveTasksLabelStyle = 'font-size: ' + (this.panelSize - 5 + this.adjustTBLabelSize - this.adjustTBIconSize) + 'px; color: ' + this.inactiveTasksLabelColor + ';';
+                                labelTask.set_style(this.inactiveTasksLabelStyle);
+                            }
+                            else
+                                labelTask.set_style("None");
+                        }
+                        else if (this.settings.get_enum("tasks-label") !== 0)
+                        {
+                            this.tasksLabelStyle = 'font-size: ' + (this.panelSize - 5 + this.adjustTBLabelSize - this.adjustTBIconSize) + 'px;';
+                            labelTask.set_style(this.tasksLabelStyle);
+                        }
                     }
                 },
                 this
             );
         }
-        else if ((type === 1) && (this.settings.get_boolean("tasks-label"))) //Title Change
+        else if ((type === 1) && (this.settings.get_enum("tasks-label") === 1)) //Title Change
         {
             this.tasksList.forEach(
                 function(task)
@@ -1993,12 +2118,26 @@ TaskBar.prototype =
             this.tasksList.forEach(
                 function(task)
                 {
-                    let [windowTask, buttonTask, signalsTask] = task;
+                    let [windowTask, buttonTask, signalsTask, labelTask] = task;
                     if (windowTask === window)
                     {
-                        buttonTask.remove_style_pseudo_class(this.activeTask);
-                        buttonTask.add_style_pseudo_class(this.inactiveTask);
                         buttonTask.set_style(this.inactiveBackgroundStyleColor);
+                        if ((this.settings.get_enum("tasks-label") !== 0) && (this.settings.get_boolean("display-inactive-tasks-label-color")))
+                        {
+                            this.inactiveTasksLabelColor = this.settings.get_string("inactive-tasks-label-color");
+                            if (this.inactiveTasksLabelColor !== "unset")
+                            {
+                                this.inactiveTasksLabelStyle = 'font-size: ' + (this.panelSize - 5 + this.adjustTBLabelSize - this.adjustTBIconSize) + 'px; color: ' + this.inactiveTasksLabelColor + ';';
+                                labelTask.set_style(this.inactiveTasksLabelStyle);
+                            }
+                            else
+                                labelTask.set_style("None");
+                        }
+                        else if (this.settings.get_enum("tasks-label") !== 0)
+                        {
+                            this.tasksLabelStyle = 'font-size: ' + (this.panelSize - 5 + this.adjustTBLabelSize - this.adjustTBIconSize) + 'px;';
+                            labelTask.set_style(this.tasksLabelStyle);
+                        }
                     }
                 },
                 this
@@ -2028,32 +2167,51 @@ TaskBar.prototype =
         let app = Shell.WindowTracker.get_default().get_window_app(window);
         let buttonTask = null;
         let labelTask = null;
-        if (app)
+        if (app !== null)
         {
-            if (this.settings.get_boolean("tasks-label"))
+            let appname = app.get_name();
+            //Check Blacklisted Apps
+            if (this.settings.get_boolean("blacklist-set"))
             {
-                let buttonTaskLayout = new St.BoxLayout({ style_class: "tkb-task-button" });
-                let iconTask = app.create_icon_texture(this.iconSize - 2);
-                buttonTaskLayout.add_actor(iconTask);
-                labelTask = new St.Label({ text: (" " + window.get_title() + " ") });
-                buttonTaskLayout.add_actor(labelTask);
-                if (this.settings.get_boolean("display-tasks-label-color"))
+                let blacklist = this.settings.get_strv("blacklist");
+                if (blacklist.length > 0)
                 {
-                    this.tasksLabelColor = this.settings.get_string("tasks-label-color");
-                    if (this.tasksLabelColor !== "unset")
+                    for (let j = 0; j < blacklist.length; j++)
                     {
-                        this.tasksLabelStyle = "color: " + this.tasksLabelColor + ";";
-                        labelTask.set_style(this.tasksLabelStyle);
+                        let blacklistapp = blacklist[j];
+                        if (appname === blacklistapp)
+                            return;
                     }
                 }
+            }
+            //Tasks Label
+            if (this.settings.get_enum("tasks-label") !== 0)
+            {
+                let buttonTaskLayout = null;
+                if (this.settings.get_boolean("bottom-panel"))
+                    buttonTaskLayout = new St.BoxLayout({ style_class: "tkb-task-button-bottom-label" });
+		else
+                    buttonTaskLayout = new St.BoxLayout({ style_class: "tkb-task-button" });
+                let iconTask = app.create_icon_texture(this.panelSize);
+                buttonTaskLayout.add_actor(iconTask);
+                if (this.settings.get_enum("tasks-label") === 1)
+                    labelTask = new St.Label({ text: (" " + window.get_title() + " ") });
+                else
+                    labelTask = new St.Label({ text: (" " + appname + " ") });
+		labelTask.set_style('font-size: ' + (this.panelSize - 5 + this.adjustTBLabelSize - this.adjustTBIconSize) + 'px;');
+                buttonTaskLayout.add_actor(labelTask);
                 buttonTask = new St.Button({ style_class: "tkb-task-button", child: buttonTaskLayout, x_align: St.Align.START });
                 this.tasksWidth = this.settings.get_int("tasks-width");
                 buttonTask.set_width(this.tasksWidth);
             }
             else
             {
-                buttonTask = new St.Button({ style_class: "tkb-task-button", child: app.create_icon_texture(this.iconSize) });
+                if (this.settings.get_boolean("bottom-panel"))
+                    buttonTask = new St.Button({ style_class: "tkb-task-button-bottom", child: app.create_icon_texture(this.panelSize) });
+		else
+                    buttonTask = new St.Button({ style_class: "tkb-task-button", child: app.create_icon_texture(this.panelSize) });
             }
+            //Signals
             let signalsTask = [
                 buttonTask.connect("button-press-event", Lang.bind(this, this.onClickTaskButton, window)),
                 buttonTask.connect("enter-event", Lang.bind(this, this.showPreview, window)),
@@ -2068,18 +2226,68 @@ TaskBar.prototype =
             }
             if (window.has_focus())
             {
-                buttonTask.add_style_pseudo_class(this.activeTask);
                 buttonTask.set_style(this.backgroundStyleColor);
+                if ((this.settings.get_enum("tasks-label") !== 0) && (this.settings.get_boolean("display-tasks-label-color")))
+                {
+                    this.tasksLabelColor = this.settings.get_string("tasks-label-color");
+                    if (this.tasksLabelColor !== "unset")
+                    {
+                        this.tasksLabelStyle = 'font-size: ' + (this.panelSize - 5 + this.adjustTBLabelSize - this.adjustTBIconSize) + 'px; color: ' + this.tasksLabelColor + ';';
+                        labelTask.set_style(this.tasksLabelStyle);
+                    }
+                    else
+                        labelTask.set_style("None");
+                }
             }
             else
             {
-                buttonTask.add_style_pseudo_class(this.inactiveTask);
                 buttonTask.set_style(this.inactiveBackgroundStyleColor);
+                if ((this.settings.get_enum("tasks-label") !== 0) && (this.settings.get_boolean("display-inactive-tasks-label-color")))
+                {
+                    this.inactiveTasksLabelColor = this.settings.get_string("inactive-tasks-label-color");
+                    if (this.inactiveTasksLabelColor !== "unset")
+                    {
+                        this.inactiveTasksLabelStyle  = 'font-size: ' + (this.panelSize - 5 + this.adjustTBLabelSize - this.adjustTBIconSize) + 'px; color: ' + this.inactiveTasksLabelColor + ';';
+                        labelTask.set_style(this.inactiveTasksLabelStyle);
+                    }
+                    else
+                        labelTask.set_style("None");
+                }
             }
             if ((buttonTask.visible) || (this.settings.get_boolean("tasks-all-workspaces")))
                 this.countTasks ++;
-            this.boxMainTasks.add_actor(buttonTask);
-            this.tasksList.push([ window, buttonTask, signalsTask, labelTask ]);
+            //Sort Tasks
+            let inserted = false;
+            if (this.settings.get_enum("sort-tasks") !== 0)
+            {
+                for (let i = this.tasksList.length - 1; i >= 0; i--)
+                {
+                    let [_windowTask, _buttonTask, _signalsTask] = this.tasksList[i];
+                    			
+                    let _app_name = Shell.WindowTracker.get_default().get_window_app(_windowTask).get_name();
+                    if ( appname === _app_name )
+                    {
+                        if (this.settings.get_enum("sort-tasks") === 2)
+                        {
+                            let _workspaceTask = _windowTask.get_workspace();
+		            let workspaceTask = window.get_workspace();
+                            if (workspaceTask !== _workspaceTask)
+                            {
+                                break;
+                            }
+                        }
+                        this.boxMainTasks.insert_child_above(buttonTask,_buttonTask);
+                        this.tasksList.splice(i+1,0,[ window, buttonTask, signalsTask, labelTask ]);
+                        inserted = true;
+                        break;
+                    }
+                }
+            }
+            if (! inserted)
+            {
+                this.boxMainTasks.add_child(buttonTask);
+                this.tasksList.push([ window, buttonTask, signalsTask, labelTask ]);
+            }
         }
     },
 
@@ -2100,8 +2308,10 @@ TaskBar.prototype =
             buttonTask.destroy();
             this.tasksList.splice(index, 1);
             this.countTasks --;
-            if (this.countTasks <= 0)
+            if (this.countTasks < 0)
                 this.countTasks = 0;
+            if (this.countTasks === 0)
+                this.cleanTasksList();
             return true;
         }
         else
@@ -2123,9 +2333,9 @@ TaskBar.prototype =
             );
             buttonTask.destroy();
             this.tasksList.splice(i, 1);
-            if (this.countTasks !== null)
-                this.countTasks = null;
         }
+        this.tasksList = [];
+        this.countTasks = 0;
     },
 
     //Preview
@@ -2157,7 +2367,7 @@ TaskBar.prototype =
         }
         //Hide current preview if necessary
         this.hidePreview();
-        if ((this.settings.get_boolean("display-label")) || (this.settings.get_boolean("display-thumbnail")))
+        if ((this.settings.get_enum("display-label") !== 0) || (this.settings.get_boolean("display-thumbnail")))
         {
             if (this.settings.get_int("preview-delay") === 0)
                 this.showPreview2(button, window);
@@ -2172,21 +2382,60 @@ TaskBar.prototype =
         //Hide current preview if necessary
         this.hidePreview();
         let app = Shell.WindowTracker.get_default().get_window_app(window);
-        this.preview = new St.BoxLayout({ style_class: "tkb-preview", vertical: true});
-        if (this.settings.get_boolean("display-label"))
+        this.preview = new St.BoxLayout({ vertical: true });
+        if (this.settings.get_enum("display-label") !== 0)
         {
-            let labelNamePreview = new St.Label({ text: app.get_name(), style_class: "tkb-preview-name" });
-            this.preview.add_actor(labelNamePreview);
-            let title = window.get_title();
-            if ((title.length > 50) && (this.settings.get_boolean("display-thumbnail")))
+            if (this.settings.get_enum("display-label") !== 2)
+            {
+                let labelNamePreview = new St.Label({ text: app.get_name() });
+                if ((this.settings.get_string("preview-label-color") !== 'unset') && (this.settings.get_boolean("display-preview-label-color")))
+                {
+                    this.previewLabelColor = this.settings.get_string("preview-label-color");
+                    this.labelNamePreviewStyle = "color: " + this.previewLabelColor + "; font-weight: bold; font-size: 9pt; text-align: center;";
+                    labelNamePreview.set_style(this.labelNamePreviewStyle);
+                }
+                else
+                {
+                    this.labelNamePreviewStyle = "color: rgba(255,255,255,1); font-weight: bold; font-size: 9pt; text-align: center;";
+                    labelNamePreview.set_style(this.labelNamePreviewStyle);
+                }
+                this.preview.add_actor(labelNamePreview);
+            }
+            if (this.settings.get_enum("display-label") !== 1)
+            {
+                let title = window.get_title();
+                if ((title.length > 50) && (this.settings.get_boolean("display-thumbnail")))
 	            title = title.substr(0, 47) + "...";
-            let labelTitlePreview = new St.Label({ text: title, style_class: "tkb-preview-title" });
-            this.preview.add_actor(labelTitlePreview);
+                let labelTitlePreview = new St.Label({ text: title });
+                if ((this.settings.get_string("preview-label-color") !== 'unset') && (this.settings.get_boolean("display-preview-label-color")))
+                {
+                    this.previewLabelColor = this.settings.get_string("preview-label-color");
+                    this.labelTitlePreviewStyle = "color: " + this.previewLabelColor + "; font-weight: bold; font-size: 9pt; text-align: center;";
+                    labelTitlePreview.set_style(this.labelTitlePreviewStyle);
+                }
+                else
+                {
+                    this.labelTitlePreviewStyle = "color: rgba(255,255,255,1.0); font-weight: bold; font-size: 9pt; text-align: center;";
+                    labelTitlePreview.set_style(this.labelTitlePreviewStyle);
+                }
+                this.preview.add_actor(labelTitlePreview);
+            }
         }
         if (this.settings.get_boolean("display-thumbnail"))
         {
             let thumbnail = this.getThumbnail(window, this.settings.get_int("preview-size"));
             this.preview.add_actor(thumbnail);
+        }
+        if ((this.settings.get_string("preview-background-color") !== 'unset') && (this.settings.get_boolean("display-preview-background-color")))
+        {
+            this.previewBackgroundColor = this.settings.get_string("preview-background-color");
+            this.previewStyle = "background-color: " + this.previewBackgroundColor + "; padding: 5px; border-radius: 8px; -y-offset: 6px;";
+            this.preview.set_style(this.previewStyle);
+        }
+        else
+        {
+            this.previewStyle = "background-color: rgba(0,0,0,0.9); padding: 5px; border-radius: 8px; -y-offset: 6px;";
+            this.preview.set_style(this.previewStyle);
         }
         global.stage.add_actor(this.preview);
         this.button = button;
@@ -2197,14 +2446,39 @@ TaskBar.prototype =
     {
         //Hide current preview if necessary
         this.hidePreview();
-        this.favoritesPreview = new St.BoxLayout({ style_class: "tkb-preview", vertical: true});
+        this.favoritesPreview = new St.BoxLayout({ vertical: true });
         let favoriteappName = favoriteapp.get_name();
         if (favoriteapp.get_description())
         {
-            favoriteappName += '\n' + favoriteapp.get_description();
+            if (this.settings.get_enum("display-favorites-label") === 2)
+                favoriteappName = favoriteapp.get_description();
+            if (this.settings.get_enum("display-favorites-label") === 3)
+                favoriteappName += '\n' + favoriteapp.get_description();
         }
-        let labelNamePreview = new St.Label({ text: favoriteappName, style_class: "tkb-preview-name" });
+        let labelNamePreview = new St.Label({ text: favoriteappName });
+        if ((this.settings.get_string("preview-label-color") !== 'unset') && (this.settings.get_boolean("display-preview-label-color")))
+        {
+            this.previewLabelColor = this.settings.get_string("preview-label-color");
+            this.labelNamePreviewStyle = "color: " + this.previewLabelColor + "; font-weight: bold; font-size: 9pt; text-align: center;";
+            labelNamePreview.set_style(this.labelNamePreviewStyle);
+        }
+        else
+        {
+            this.labelNamePreviewStyle = "color: rgba(255,255,255,1.0); font-weight: bold; font-size: 9pt; text-align: center;";
+            labelNamePreview.set_style(this.labelNamePreviewStyle);
+        }
         this.favoritesPreview.add_actor(labelNamePreview);
+        if ((this.settings.get_string("preview-background-color") !== 'unset') && (this.settings.get_boolean("display-preview-background-color")))
+        {
+            this.previewBackgroundColor = this.settings.get_string("preview-background-color");
+            this.favoritesPreviewStyle = "background-color: " + this.previewBackgroundColor + "; padding: 5px; border-radius: 8px; -y-offset: 6px;";
+            this.favoritesPreview.set_style(this.favoritesPreviewStyle);
+        }
+        else
+        {
+            this.favoritesPreviewStyle = "background-color: rgba(0,0,0,0.9); padding: 5px; border-radius: 8px; -y-offset: 6px;";
+            this.favoritesPreview.set_style(this.favoritesPreviewStyle);
+        }
         global.stage.add_actor(this.favoritesPreview);
         this.button = buttonfavorite;
         this.preview = this.favoritesPreview;
