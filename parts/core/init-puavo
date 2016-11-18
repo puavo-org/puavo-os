@@ -13,7 +13,7 @@ initscripts=$(find /usr/share/puavo-ltsp/init-puavo.d -mindepth 1 -maxdepth 1 \
 
 puavo_conf_scripts="$(cat /etc/puavo-conf/scripts/.preinit 2>/dev/null || true)"
 if [ -n "$puavo_conf_scripts" ]; then
-  echo '  <<< PUAVO-CONF RUNNING PREINIT SCRIPTS >>>'
+  echo "  <<< puavo-conf running preinit scripts at $(date +%T.%N) >>>"
   for script in $puavo_conf_scripts; do
     echo -n "  <<< puavo-conf >>> ${script} ... "
     if /etc/puavo-conf/scripts/${script}; then
@@ -22,7 +22,7 @@ if [ -n "$puavo_conf_scripts" ]; then
       echo FAILED.
     fi
   done
-  echo '  <<< PUAVO-CONF PREINIT SCRIPTS DONE >>>'
+  echo "  <<< puavo-conf preinit scripts done at $(date +%T.%N) >>>"
 fi
 
 exec /sbin/init
