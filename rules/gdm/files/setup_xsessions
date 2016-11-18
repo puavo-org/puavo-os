@@ -29,7 +29,8 @@ for xsession_dir in $puavo_xsessions_dir $xsession_dirs; do
   # This does not really set the default, but if sessions are locked (below),
   # this is the only one that will remain effective.
   if [ -e "$default_xsession_desktop" ]; then
-    ln -fns "$default_xsession_desktop" /etc/X11/sessions/puavo-default.desktop
+    rm -f /etc/X11/sessions/*
+    ln -fns "$default_xsession_desktop" /etc/X11/sessions/
     break
   fi
 done
