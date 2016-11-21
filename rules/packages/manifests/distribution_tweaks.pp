@@ -16,6 +16,5 @@ class packages::distribution_tweaks {
 	or title == 'tellico'
       |> { ensure => absent, }
     }
-    default: {}
   }
 }
