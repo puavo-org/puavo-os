@@ -19,7 +19,8 @@ class webmenu {
       content => template('webmenu/config.json');
 
     '/etc/webmenu/desktop.d/default-overrides.yaml':
-      content => template('webmenu/desktop.d/default-overrides.yaml');
+      content => template('webmenu/desktop.d/default-overrides.yaml'),
+      require => Package['gnome-themes-extras'];
 
     '/etc/webmenu/menu.yaml':
       content => template('webmenu/menu.yaml');
@@ -45,6 +46,7 @@ class webmenu {
 
   Package <| title == breathe-icon-theme
           or title == faenza-icon-theme
+          or title == gnome-themes-extras
           or title == oxygen-icon-theme
           or title == puavo-ltsp-client
           or title == tuxpaint-stamps-default

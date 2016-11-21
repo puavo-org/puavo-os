@@ -359,6 +359,7 @@ class packages {
 
     # 'breathe-icon-theme'		# XXX missing from Debian
     [ 'gnome-icon-theme'
+    , 'gnome-themes-extras'
     , 'gtk2-engines'
     , 'gtk2-engines-pixbuf'
     # , 'human-theme'			# XXX missing from Debian
