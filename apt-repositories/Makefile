@@ -10,6 +10,7 @@ install:
 	install -m 0755 -t $(DESTDIR)$(bindir) \
 		bs-release-create \
 		bs-release-publish \
+		bs-release-rename \
 		bs-release-set-latest
 
 .PHONY: clean
