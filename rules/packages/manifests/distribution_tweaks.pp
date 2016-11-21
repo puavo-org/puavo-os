@@ -10,7 +10,7 @@ class packages::distribution_tweaks {
         or title == 'pencil2d'
       |> { ensure => absent, }
     }
-    'stretch': {
+    default: {
       Package <|
 	   title == 'celestia'
 	or title == 'celestia-gnome'
