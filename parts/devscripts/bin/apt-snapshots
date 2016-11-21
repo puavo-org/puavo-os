@@ -32,7 +32,7 @@ REPOSITORY_BASE_DIR=/var/www/ubuntuarchive
 
 find_snapshots()
 {
-    find "${SNAPSHOT_BASE_DIR}" -mindepth 1 -maxdepth 1 -name '*Z' \( -type d -o -type l \)
+    find "${SNAPSHOT_BASE_DIR}" -mindepth 1 -maxdepth 1 -name '*Z' \( -type d -o -type l \) -printf '%f\n'
 }
 
 print_usage()
@@ -77,24 +77,25 @@ check_args_count()
 	create)
 	    check_args_count $# 0
 
-	    new_snapshot="${SNAPSHOT_BASE_DIR}/$(date --utc +%Y%m%dT%H%M%SZ)"
+	    new_snapshot="$(date --utc +%Y%m%dT%H%M%SZ)"
+	    new_snapshot_dir="${SNAPSHOT_BASE_DIR}/${new_snapshot}"
 	    {
-		mkdir "${new_snapshot}.tmp"
-		cp -a -l "${REPOSITORY_BASE_DIR}/pool" "${new_snapshot}.tmp"
-		cp -a -l "${REPOSITORY_BASE_DIR}/indices" "${new_snapshot}.tmp"
-		cp -a -l "${REPOSITORY_BASE_DIR}/ls-lR.gz" "${new_snapshot}.tmp"
-		cp -a -l "${REPOSITORY_BASE_DIR}/ubuntu" "${new_snapshot}.tmp"
-		cp -a -l "${REPOSITORY_BASE_DIR}/dists" "${new_snapshot}.tmp"
+		mkdir "${new_snapshot_dir}.tmp"
+		cp -a -l "${REPOSITORY_BASE_DIR}/pool" "${new_snapshot_dir}.tmp"
+		cp -a -l "${REPOSITORY_BASE_DIR}/indices" "${new_snapshot_dir}.tmp"
+		cp -a -l "${REPOSITORY_BASE_DIR}/ls-lR.gz" "${new_snapshot_dir}.tmp"
+		cp -a -l "${REPOSITORY_BASE_DIR}/ubuntu" "${new_snapshot_dir}.tmp"
+		cp -a -l "${REPOSITORY_BASE_DIR}/dists" "${new_snapshot_dir}.tmp"
 
                 ## Special case: we do not hard-link anything inside
                 ## this directory, because its contents change during
                 ## sync because project/trace/HOSTNAME -file is
                 ## updated.
-		cp -a "${REPOSITORY_BASE_DIR}/project" "${new_snapshot}.tmp"
-		mv "${new_snapshot}.tmp" "${new_snapshot}"
+		cp -a "${REPOSITORY_BASE_DIR}/project" "${new_snapshot_dir}.tmp"
+		mv "${new_snapshot_dir}.tmp" "${new_snapshot_dir}"
 	    } || {
 		echo "ERROR: failed to create a snapshot '${new_snapshot}'" >&2
-		rm -r "${new_snapshot}.tmp"
+		rm -r "${new_snapshot_dir}.tmp"
 		exit 1
 	    }
 	    ;;
@@ -104,9 +105,9 @@ check_args_count()
 	    {
 		find_snapshots
 		cat "${SNAPSHOT_LOCK_INDEX}"
-	    } | sort | uniq -u | head -n-3 | while read snapshotdir; do
-		echo "Removing ${snapshotdir}"
-		rm -rf "${snapshotdir}"
+	    } | sort | uniq -u | head -n-3 | while read snapshot; do
+		echo "Removing ${snapshot}"
+		rm -rf "${SNAPSHOT_BASE_DIR}/${snapshot}"
 	    done
 	    ;;
 	help)
