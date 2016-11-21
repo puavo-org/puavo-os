@@ -1,7 +1,4 @@
 class packages::distribution_tweaks {
-  # These packages appear to be missing from Debian versions currently
-  # (as of 2016-11-14).
-
   case $debianversioncodename {
     'jessie': {
       Package <|
@@ -10,17 +7,18 @@ class packages::distribution_tweaks {
         or title == 'pencil2d'
       |> { ensure => absent, }
     }
-    'stretch': {
+    default: {
+      # These packages appear to be missing from Stretch currently
+      # (as of 2016-11-21) or there installation problems.
+
       Package <|
-	   title == 'celestia'
-	or title == 'celestia-gnome'
-	or title == 'denemo'
+	   title == 'calibre'
 	or title == 'krita'
-	or title == 'libssl1.0.0:i386'
-	or title == 'supertuxkart'
+	or title == 'libnspr4-0d'
+	or title == 'libnspr4-0d:i386'
+	or title == 'myspell-sv-se'
 	or title == 'tellico'
       |> { ensure => absent, }
     }
-    default: {}
   }
 }

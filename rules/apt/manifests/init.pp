@@ -1,4 +1,17 @@
 class apt {
+  define debian_repository ($localmirror='',
+                            $mirror='',
+                            $mirror_path='',
+                            $securitymirror='',
+                            $securitymirror_path='') {
+    $distrib_version = $title
+
+    file {
+      "/etc/apt/sources.list.d/${distrib_version}.list":
+        content => template('apt/debian_apt_sources.list');
+    }
+  }
+
   define key ($key_id, $key_source) {
     $keyname = $title
     $keypath = "/etc/apt/trusted.gpg.d/$keyname"
@@ -30,5 +43,10 @@ class apt {
     'apt update':
       command     => '/usr/bin/apt-get update',
       refreshonly => true;
+  }
+
+  file {
+    '/etc/apt/apt.conf.d/00default-release':
+      content => "APT::Default-Release \"${debianversioncodename}\";\n";
   }
 }

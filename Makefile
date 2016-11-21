@@ -152,6 +152,7 @@ update: install-build-deps
 
 .PHONY: install-rules
 install-rules: /$(_repo_name)
+	sudo .aux/setup-debconf
 	sudo env 'FACTER_puavoruleset=$(image_class)' puppet apply	\
 		--logdest '/var/log/$(_repo_name)/puppet.log'		\
 		--logdest console					\

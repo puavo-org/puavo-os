@@ -359,6 +359,7 @@ class packages {
 
     # 'breathe-icon-theme'		# XXX missing from Debian
     [ 'gnome-icon-theme'
+    , 'gnome-themes-extras'
     , 'gtk2-engines'
     , 'gtk2-engines-pixbuf'
     # , 'human-theme'			# XXX missing from Debian
@@ -602,7 +603,7 @@ class packages {
       tag => [ 'tag_web', 'tag_debian', ];
   }
 
-  if $debianversioncodename == 'stretch' {
+  if $debianversioncodename != 'jessie' {
     @package {
       'nvidia-367xx-kernel-dkms':
         name => 'nvidia-kernel-dkms',
@@ -658,7 +659,7 @@ class packages {
       # XXX $bcmwl_dkms_module  # XXX missing from Debian
       # XXX $r8168_dkms_module  # XXX missing from Debian
     }
-    'stretch': {
+    default: {
       # XXX $bcmwl_dkms_module      = 'bcmwl/6.30.223.248+bdcom'
       $nvidia_dkms_304_module = 'nvidia-legacy-304xx/304.132'
       $nvidia_dkms_340_module = 'nvidia-legacy-340xx/340.98'
@@ -685,7 +686,7 @@ class packages {
           package_name => 'linux-image-4.7.0-0.bpo.1-amd64';
       }
     }
-    'stretch': {
+    default: {
       packages::kernels::kernel_package {
         '4.8.0-1-amd64':
           dkms_modules => $all_dkms_modules,
