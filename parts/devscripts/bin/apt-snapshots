@@ -35,6 +35,22 @@ find_snapshots()
     find "${SNAPSHOT_BASE_DIR}" -mindepth 1 -maxdepth 1 -name '*Z' \( -type d -o -type l \)
 }
 
+check_args_count()
+{
+    count=$1
+    expected_count=$2
+
+    if [ ${count} -ne ${expected_count} ]; then
+	echo "ERROR: invalid number of arguments ($#), expected ${expected_count}" >&2
+	echo "Usage: apt-snapshots create" >&2
+	echo "Usage: apt-snapshots gc" >&2
+	echo "Usage: apt-snapshots list" >&2
+	echo "Usage: apt-snapshots lock [SNAPSHOT]" >&2
+	echo "Usage: apt-snapshots unlock SNAPSHOT" >&2
+	exit 1
+    fi
+}
+
 (
     flock -n 9 || {
 	echo "ERROR: another instance of this command is already running" >&2
@@ -44,17 +60,13 @@ find_snapshots()
     mkdir -p "${SNAPSHOT_BASE_DIR}"
     touch -a "${SNAPSHOT_LOCK_INDEX}"
 
-    if [ $# -ne 1 ]; then
-	echo "ERROR: invalid number of arguments ($#), expected 1" >&2
-	echo "Usage: $0 create|gc|list|lock" >&2
-	exit 1
-    fi
-
     cmd=$1
     shift
 
     case "${cmd}" in
 	create)
+	    check_args_count $# 0
+
 	    new_snapshot="${SNAPSHOT_BASE_DIR}/$(date --utc +%Y%m%dT%H%M%SZ)"
 	    {
 		mkdir "${new_snapshot}.tmp"
@@ -77,6 +89,8 @@ find_snapshots()
 	    }
 	    ;;
 	gc)
+	    check_args_count $# 0
+
 	    {
 		find_snapshots
 		cat "${SNAPSHOT_LOCK_INDEX}"
@@ -86,6 +100,8 @@ find_snapshots()
 	    done
 	    ;;
 	list)
+	    check_args_count $# 0
+
 	    find_snapshots | sort -V | while read snapshot; do
 		if grep -xq "${snapshot}" "${SNAPSHOT_LOCK_INDEX}"; then
 		    echo "R ${snapshot}"
@@ -95,6 +111,8 @@ find_snapshots()
 	    done
 	    ;;
 	lock)
+	    check_args_count $# 0
+
 	    latest_snapshot=$(find_snapshots | sort -V | tail -n1)
 	    if grep -xq "${latest_snapshot}" "${SNAPSHOT_LOCK_INDEX}"; then
 		echo "ERROR: latest snapshot dir ${latest_snapshot} is already locked" >&2
