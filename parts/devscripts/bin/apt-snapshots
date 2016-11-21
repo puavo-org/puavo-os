@@ -35,6 +35,16 @@ find_snapshots()
     find "${SNAPSHOT_BASE_DIR}" -mindepth 1 -maxdepth 1 -name '*Z' \( -type d -o -type l \)
 }
 
+print_usage()
+{
+    echo "Usage: apt-snapshots create"
+    echo "Usage: apt-snapshots gc"
+    echo "Usage: apt-snapshots help"
+    echo "Usage: apt-snapshots list"
+    echo "Usage: apt-snapshots lock [SNAPSHOT]"
+    echo "Usage: apt-snapshots unlock SNAPSHOT"
+}
+
 check_args_count()
 {
     count=$1
@@ -42,11 +52,7 @@ check_args_count()
 
     if [ ${count} -ne ${expected_count} ]; then
 	echo "ERROR: invalid number of arguments ($#), expected ${expected_count}" >&2
-	echo "Usage: apt-snapshots create" >&2
-	echo "Usage: apt-snapshots gc" >&2
-	echo "Usage: apt-snapshots list" >&2
-	echo "Usage: apt-snapshots lock [SNAPSHOT]" >&2
-	echo "Usage: apt-snapshots unlock SNAPSHOT" >&2
+	print_usage >&2
 	exit 1
     fi
 }
@@ -60,8 +66,12 @@ check_args_count()
     mkdir -p "${SNAPSHOT_BASE_DIR}"
     touch -a "${SNAPSHOT_LOCK_INDEX}"
 
-    cmd=$1
-    shift
+    if [ $# -eq 0 ]; then
+	cmd=help
+    else
+	cmd=$1
+	shift
+    fi
 
     case "${cmd}" in
 	create)
@@ -98,6 +108,9 @@ check_args_count()
 		echo "Removing ${snapshotdir}"
 		rm -rf "${snapshotdir}"
 	    done
+	    ;;
+	help)
+	    print_usage
 	    ;;
 	list)
 	    check_args_count $# 0
