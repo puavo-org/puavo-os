@@ -12,12 +12,7 @@ class packages::distribution_tweaks {
     }
     default: {
       Package <|
-	   title == 'celestia'
-	or title == 'celestia-gnome'
-	or title == 'denemo'
-	or title == 'krita'
-	or title == 'libssl1.0.0:i386'
-	or title == 'supertuxkart'
+	   title == 'krita'
 	or title == 'tellico'
       |> { ensure => absent, }
     }
