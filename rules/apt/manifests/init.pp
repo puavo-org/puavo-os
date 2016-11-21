@@ -31,4 +31,9 @@ class apt {
       command     => '/usr/bin/apt-get update',
       refreshonly => true;
   }
+
+  file {
+    '/etc/apt/apt.conf.d/00default-release':
+      content => "APT::Default-Release \"${debianversioncodename}\";\n";
+  }
 }
