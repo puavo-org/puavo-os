@@ -1,0 +1,88 @@
+#!/bin/bash
+
+set -eu
+
+set -o pipefail
+
+SNAPSHOT_BASE_DIR=/var/www/snapshots
+SNAPSHOT_LOCK_INDEX="${SNAPSHOT_BASE_DIR}/locked_snapshots.txt"
+REPOSITORY_BASE_DIR=/var/www/ubuntuarchive
+
+find_snapshots()
+{
+    find "${SNAPSHOT_BASE_DIR}" -mindepth 1 -maxdepth 1 -name '*Z' \( -type d -o -type l \)
+}
+
+(
+    flock -n 9 || {
+	echo "ERROR: another instance of this command is already running" >&2
+	exit 1
+    }
+
+    mkdir -p "${SNAPSHOT_BASE_DIR}"
+    touch -a "${SNAPSHOT_LOCK_INDEX}"
+
+    if [ $# -ne 1 ]; then
+	echo "ERROR: invalid number of arguments ($#), expected 1" >&2
+	echo "Usage: $0 create|gc|list|lock" >&2
+	exit 1
+    fi
+
+    cmd=$1
+    shift
+
+    case "${cmd}" in
+	create)
+	    new_snapshot="${SNAPSHOT_BASE_DIR}/$(date --utc +%Y%m%dT%H%M%SZ)"
+	    {
+		mkdir "${new_snapshot}.tmp"
+		cp -a -l "${REPOSITORY_BASE_DIR}/pool" "${new_snapshot}.tmp"
+		cp -a -l "${REPOSITORY_BASE_DIR}/indices" "${new_snapshot}.tmp"
+		cp -a -l "${REPOSITORY_BASE_DIR}/ls-lR.gz" "${new_snapshot}.tmp"
+		cp -a -l "${REPOSITORY_BASE_DIR}/ubuntu" "${new_snapshot}.tmp"
+		cp -a -l "${REPOSITORY_BASE_DIR}/dists" "${new_snapshot}.tmp"
+
+                ## Special case: we do not hard-link anything inside
+                ## this directory, because its contents change during
+                ## sync because project/trace/HOSTNAME -file is
+                ## updated.
+		cp -a "${REPOSITORY_BASE_DIR}/project" "${new_snapshot}.tmp"
+		mv "${new_snapshot}.tmp" "${new_snapshot}"
+	    } || {
+		echo "ERROR: failed to create a snapshot '${new_snapshot}'" >&2
+		rm -r "${new_snapshot}.tmp"
+		exit 1
+	    }
+	    ;;
+	gc)
+	    {
+		find_snapshots
+		cat "${SNAPSHOT_LOCK_INDEX}"
+	    } | sort | uniq -u | head -n-3 | while read snapshotdir; do
+		echo "Removing ${snapshotdir}"
+		rm -rf "${snapshotdir}"
+	    done
+	    ;;
+	list)
+	    find_snapshots | sort -V | while read snapshot; do
+		if grep -xq "${snapshot}" "${SNAPSHOT_LOCK_INDEX}"; then
+		    echo "R ${snapshot}"
+		else
+		    echo "  ${snapshot}"
+		fi
+	    done
+	    ;;
+	lock)
+	    latest_snapshot=$(find_snapshots | sort -V | tail -n1)
+	    if grep -xq "${latest_snapshot}" "${SNAPSHOT_LOCK_INDEX}"; then
+		echo "ERROR: latest snapshot dir ${latest_snapshot} is already locked" >&2
+		exit 1
+	    fi
+	    echo "${latest_snapshot}" >>"${SNAPSHOT_LOCK_INDEX}"
+	    ;;
+	*)
+	    echo "ERROR: invalid command (${cmd})" >&2
+	    exit 1
+	    ;;
+    esac
+) 9>/run/apt-snapshots.lock
