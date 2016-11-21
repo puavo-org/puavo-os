@@ -120,6 +120,20 @@ check_args_count()
 	    fi
 	    echo "${latest_snapshot}" >>"${SNAPSHOT_LOCK_INDEX}"
 	    ;;
+	unlock)
+	    check_args_count $# 1
+
+	    snapshot=$1
+	    shift
+
+	    if ! grep -xq "${snapshot}" "${SNAPSHOT_LOCK_INDEX}"; then
+		echo "ERROR: snapshot ${snapshot} is not locked" >&2
+		exit 1
+	    fi
+
+	    sed -r -e "\|^${snapshot}$| d" "${SNAPSHOT_LOCK_INDEX}" >"${SNAPSHOT_LOCK_INDEX}.tmp"
+	    mv "${SNAPSHOT_LOCK_INDEX}.tmp" "${SNAPSHOT_LOCK_INDEX}"
+	    ;;
 	*)
 	    echo "ERROR: invalid command (${cmd})" >&2
 	    exit 1
