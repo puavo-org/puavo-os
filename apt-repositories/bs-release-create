@@ -1,0 +1,22 @@
+#!/bin/bash
+
+set -eu
+
+if [ $# -ne 0 ]; then
+    echo "E: invalid number of arguments ($#), expected 0" >&2
+    exit 1
+fi
+
+cd /srv/aptirepo
+
+old_version=$(readlink latest)
+new_version=$((old_version + 1))
+
+if [ -e "${new_version}" ]; then
+    echo "E: version ${new_version} already exists" >&2
+    exit 1
+fi
+
+cp -n -a "${old_version}" "${new_version}"
+
+echo "Created new repository: /srv/aptirepo/${new_version}"

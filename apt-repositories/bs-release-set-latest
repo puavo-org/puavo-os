@@ -1,0 +1,25 @@
+#!/bin/sh
+
+set -eu
+
+if [ $# -ne 1 ]; then
+    echo "E: invalid number of arguments ($#), expected 1" >&2
+    exit 1
+fi
+
+version=$1
+shift
+
+cd /srv/aptirepo
+
+if [ ! -d "${version}" ]; then
+    echo "E: version ${version} does not exist" >&2
+    exit 1
+fi
+
+rm -f latest
+ln -s "${version}" latest
+
+echo "${version}" >version
+
+echo "Set latest version to ${version}"
