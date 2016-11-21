@@ -41,7 +41,7 @@ print_usage()
     echo "Usage: apt-snapshots gc"
     echo "Usage: apt-snapshots help"
     echo "Usage: apt-snapshots list"
-    echo "Usage: apt-snapshots lock [SNAPSHOT]"
+    echo "Usage: apt-snapshots lock SNAPSHOT"
     echo "Usage: apt-snapshots unlock SNAPSHOT"
 }
 
@@ -125,14 +125,16 @@ check_args_count()
 	    done
 	    ;;
 	lock)
-	    check_args_count $# 0
+	    check_args_count $# 1
 
-	    latest_snapshot=$(find_snapshots | sort -V | tail -n1)
-	    if grep -xq "${latest_snapshot}" "${SNAPSHOT_LOCK_INDEX}"; then
-		echo "ERROR: latest snapshot dir ${latest_snapshot} is already locked" >&2
+	    snapshot=$1
+	    shift
+
+	    if grep -xq "${snapshot}" "${SNAPSHOT_LOCK_INDEX}"; then
+		echo "ERROR: snapshot ${snapshot} is already locked" >&2
 		exit 1
 	    fi
-	    echo "${latest_snapshot}" >>"${SNAPSHOT_LOCK_INDEX}"
+	    echo "${snapshot}" >>"${SNAPSHOT_LOCK_INDEX}"
 	    ;;
 	unlock)
 	    check_args_count $# 1
