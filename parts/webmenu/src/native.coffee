@@ -183,7 +183,7 @@ module.exports = (gui, Window) ->
     ###*
     # Make menu visible and bring it to current desktop
     ###
-    displayMenu = ->
+    displayMenu = (viewName) ->
         fs.exists userPhotoPath, (exists) ->
           if exists
             config.set("userPhoto", "file://#{ userPhotoPath }")
@@ -192,10 +192,24 @@ module.exports = (gui, Window) ->
 
         menuVisible = true
         console.log "Displaying menu"
+
+        alignWindow(viewName)
         Window.show()
         Window.focus()
         Window.setAlwaysOnTop(true)
         forceFocus(pkg.window.title, 50, 100, 350, 500)
+
+    alignWindow = (viewName) ->
+        if viewName == 'logout'
+            # put to right/bottom
+            x = window.window.screen.width  - Window.width
+            y = window.window.screen.height - Window.height
+        else
+            # put to left/bottom
+            x = 0
+            y = window.window.screen.height - Window.height
+
+        Window.moveTo(x,y)
 
     ###*
     # Toggle menu visibility with given view name
@@ -218,14 +232,14 @@ module.exports = (gui, Window) ->
                     Window.hide()
                     setTimeout(displayMenu, 1) # Allow menu to disappear
                 else
-                    displayMenu()
+                    displayMenu(currentView)
                 return
 
             # When view is not changing just toggle menu visibility
             if menuVisible
                 hideWindow()
             else
-                displayMenu()
+                displayMenu(currentView)
 
 
     ###*
