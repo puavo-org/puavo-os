@@ -323,9 +323,8 @@ class Aptirepo:
                                 pass
                             else:
                                 if filename != bin_pkg_filename:
-                                    raise DistsError("package %s appears to "
-                                                     "exist already at %s",
-                                                     key, bin_pkg_filename)
+                                    pruned_filepaths.add(filename)
+                                    continue
 
                             bin_packages.setdefault((bin_pkg_name, bin_pkg_arch),
                                                     sets.Set()).add(bin_pkg_version)
