@@ -56,102 +56,101 @@ check_args_count()
     fi
 }
 
-(
-    flock -n "${lockfd}" || {
-	echo "ERROR: another instance of this command is already running" >&2
-	exit 1
-    }
+exec {lockfd}>/run/apt-snapshots.lock
+flock -n "${lockfd}" || {
+    echo "ERROR: another instance of this command is already running" >&2
+    exit 1
+}
 
-    mkdir -p "${SNAPSHOT_BASE_DIR}"
-    touch -a "${SNAPSHOT_LOCK_INDEX}"
+mkdir -p "${SNAPSHOT_BASE_DIR}"
+touch -a "${SNAPSHOT_LOCK_INDEX}"
 
-    if [ $# -eq 0 ]; then
-	cmd=help
-    else
-	cmd=$1
-	shift
-    fi
+if [ $# -eq 0 ]; then
+    cmd=help
+else
+    cmd=$1
+    shift
+fi
 
-    case "${cmd}" in
-	create)
-	    check_args_count $# 0
+case "${cmd}" in
+    create)
+	check_args_count $# 0
 
-	    new_snapshot="$(date --utc +%Y%m%dT%H%M%SZ)"
-	    new_snapshot_dir="${SNAPSHOT_BASE_DIR}/${new_snapshot}"
-	    {
-		mkdir "${new_snapshot_dir}.tmp"
-		cp -a -l "${REPOSITORY_BASE_DIR}/pool" "${new_snapshot_dir}.tmp"
-		cp -a -l "${REPOSITORY_BASE_DIR}/indices" "${new_snapshot_dir}.tmp"
-		cp -a -l "${REPOSITORY_BASE_DIR}/ls-lR.gz" "${new_snapshot_dir}.tmp"
-		cp -a -l "${REPOSITORY_BASE_DIR}/ubuntu" "${new_snapshot_dir}.tmp"
-		cp -a -l "${REPOSITORY_BASE_DIR}/dists" "${new_snapshot_dir}.tmp"
+	new_snapshot="$(date --utc +%Y%m%dT%H%M%SZ)"
+	new_snapshot_dir="${SNAPSHOT_BASE_DIR}/${new_snapshot}"
+	{
+	    mkdir "${new_snapshot_dir}.tmp"
+	    cp -a -l "${REPOSITORY_BASE_DIR}/pool" "${new_snapshot_dir}.tmp"
+	    cp -a -l "${REPOSITORY_BASE_DIR}/indices" "${new_snapshot_dir}.tmp"
+	    cp -a -l "${REPOSITORY_BASE_DIR}/ls-lR.gz" "${new_snapshot_dir}.tmp"
+	    cp -a -l "${REPOSITORY_BASE_DIR}/ubuntu" "${new_snapshot_dir}.tmp"
+	    cp -a -l "${REPOSITORY_BASE_DIR}/dists" "${new_snapshot_dir}.tmp"
 
-                ## Special case: we do not hard-link anything inside
-                ## this directory, because its contents change during
-                ## sync because project/trace/HOSTNAME -file is
-                ## updated.
-		cp -a "${REPOSITORY_BASE_DIR}/project" "${new_snapshot_dir}.tmp"
-		mv "${new_snapshot_dir}.tmp" "${new_snapshot_dir}"
-	    } || {
-		echo "ERROR: failed to create a snapshot '${new_snapshot}'" >&2
-		rm -r "${new_snapshot_dir}.tmp"
-		exit 1
-	    }
-	    ;;
-	gc)
-	    check_args_count $# 0
-
-	    {
-		find_snapshots
-		cat "${SNAPSHOT_LOCK_INDEX}"
-	    } | sort | uniq -u | head -n-3 | while read snapshot; do
-		echo "Removing ${snapshot}"
-		rm -rf "${SNAPSHOT_BASE_DIR}/${snapshot}"
-	    done
-	    ;;
-	help)
-	    print_usage
-	    ;;
-	list)
-	    check_args_count $# 0
-
-	    find_snapshots | sort -V | while read snapshot; do
-		if grep -xq "${snapshot}" "${SNAPSHOT_LOCK_INDEX}"; then
-		    echo "R ${snapshot}"
-		else
-		    echo "  ${snapshot}"
-		fi
-	    done
-	    ;;
-	lock)
-	    check_args_count $# 1
-
-	    snapshot=$1
-	    shift
-
-	    if grep -xq "${snapshot}" "${SNAPSHOT_LOCK_INDEX}"; then
-		echo "ERROR: snapshot ${snapshot} is already locked" >&2
-		exit 1
-	    fi
-	    echo "${snapshot}" >>"${SNAPSHOT_LOCK_INDEX}"
-	    ;;
-	unlock)
-	    check_args_count $# 1
-
-	    snapshot=$1
-	    shift
-
-	    if ! grep -xq "${snapshot}" "${SNAPSHOT_LOCK_INDEX}"; then
-		echo "ERROR: snapshot ${snapshot} is not locked" >&2
-		exit 1
-	    fi
-
-	    sed -r -e "\|^${snapshot}$| d" "${SNAPSHOT_LOCK_INDEX}" >"${SNAPSHOT_LOCK_INDEX}.tmp"
-	    mv "${SNAPSHOT_LOCK_INDEX}.tmp" "${SNAPSHOT_LOCK_INDEX}"
-	    ;;
-	*)
-	    echo "ERROR: invalid command (${cmd})" >&2
+	    ## Special case: we do not hard-link anything inside
+	    ## this directory, because its contents change during
+	    ## sync because project/trace/HOSTNAME -file is
+	    ## updated.
+	    cp -a "${REPOSITORY_BASE_DIR}/project" "${new_snapshot_dir}.tmp"
+	    mv "${new_snapshot_dir}.tmp" "${new_snapshot_dir}"
+	} || {
+	    echo "ERROR: failed to create a snapshot '${new_snapshot}'" >&2
+	    rm -r "${new_snapshot_dir}.tmp"
 	    exit 1
-	    ;;
-    esac
-) {lockfd}>/run/apt-snapshots.lock
+	}
+	;;
+    gc)
+	check_args_count $# 0
+
+	{
+	    find_snapshots
+	    cat "${SNAPSHOT_LOCK_INDEX}"
+	} | sort | uniq -u | head -n-3 | while read snapshot; do
+	    echo "Removing ${snapshot}"
+	    rm -rf "${SNAPSHOT_BASE_DIR}/${snapshot}"
+	done
+	;;
+    help)
+	print_usage
+	;;
+    list)
+	check_args_count $# 0
+
+	find_snapshots | sort -V | while read snapshot; do
+	    if grep -xq "${snapshot}" "${SNAPSHOT_LOCK_INDEX}"; then
+		echo "R ${snapshot}"
+	    else
+		echo "  ${snapshot}"
+	    fi
+	done
+	;;
+    lock)
+	check_args_count $# 1
+
+	snapshot=$1
+	shift
+
+	if grep -xq "${snapshot}" "${SNAPSHOT_LOCK_INDEX}"; then
+	    echo "ERROR: snapshot ${snapshot} is already locked" >&2
+	    exit 1
+	fi
+	echo "${snapshot}" >>"${SNAPSHOT_LOCK_INDEX}"
+	;;
+    unlock)
+	check_args_count $# 1
+
+	snapshot=$1
+	shift
+
+	if ! grep -xq "${snapshot}" "${SNAPSHOT_LOCK_INDEX}"; then
+	    echo "ERROR: snapshot ${snapshot} is not locked" >&2
+	    exit 1
+	fi
+
+	sed -r -e "\|^${snapshot}$| d" "${SNAPSHOT_LOCK_INDEX}" >"${SNAPSHOT_LOCK_INDEX}.tmp"
+	mv "${SNAPSHOT_LOCK_INDEX}.tmp" "${SNAPSHOT_LOCK_INDEX}"
+	;;
+    *)
+	echo "ERROR: invalid command (${cmd})" >&2
+	exit 1
+	;;
+esac
