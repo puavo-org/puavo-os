@@ -1,3 +1,11 @@
+aptirepo (0.7.2) trusty; urgency=medium
+
+  * New release
+  * aptirepo: prune orphaned .debs during when pruning the pool
+  * Git(77dcc45c07abb6971629457b3c430561cacd0adc)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Tue, 22 Nov 2016 13:23:41 +0200
+
 aptirepo (0.7.1) trusty; urgency=medium
 
   * New release
