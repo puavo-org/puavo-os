@@ -23,7 +23,6 @@
 #
 
 set -eu
-
 set -o pipefail
 
 SNAPSHOT_BASE_DIR=/var/www/snapshots
@@ -58,7 +57,7 @@ check_args_count()
 }
 
 (
-    flock -n 9 || {
+    flock -n "${lockfd}" || {
 	echo "ERROR: another instance of this command is already running" >&2
 	exit 1
     }
@@ -155,4 +154,4 @@ check_args_count()
 	    exit 1
 	    ;;
     esac
-) 9>/run/apt-snapshots.lock
+) {lockfd}>/run/apt-snapshots.lock
