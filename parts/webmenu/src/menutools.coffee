@@ -30,8 +30,8 @@ findOsIcon = (id, options) ->
 
   try
     # Return if id is a real path
-    r = fs.realpathSync(id)
-    return r
+    filePath = fs.realpathSync(id)
+    return "file://#{ filePath }"
   catch e
     # Otherwise just continue searching
 
