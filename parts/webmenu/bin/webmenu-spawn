@@ -7,6 +7,14 @@ fi
 
 . webmenu-env
 
+# set webmenu window type to be menu
+# (actually running this once for each webmenu startup should be enough)
+webmenu_xwin_id=$(xdotool search --name Webmenu)
+if [ -n "$webmenu_xwin_id" ]; then
+  xprop -id "$webmenu_xwin_id" -f _NET_WM_WINDOW_TYPE 32a \
+    -set _NET_WM_WINDOW_TYPE _NET_WM_WINDOW_TYPE_MENU
+fi
+
 default_spawn_sock=~/.config/webmenu/spawn.sock
 
 args="$@"
