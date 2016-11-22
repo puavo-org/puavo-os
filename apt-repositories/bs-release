@@ -1,0 +1,231 @@
+#!/bin/bash
+
+set -eu
+set -o pipefail
+
+BS_RELEASE_BASE_DIR=/srv/aptirepo
+BS_RELEASE_VERSIONS_FILE="${BS_RELEASE_BASE_DIR}/versions"
+
+bs_release_print_usage()
+{
+    echo "Usage: bs-release copy-repo OLD_VERSION NEW_VERSION"
+    echo "Usage: bs-release help"
+    echo "Usage: bs-release publish VERSION SNAPSHOT"
+    echo "Usage: bs-release rename OLD_VERSION NEW_VERSION"
+    echo "Usage: bs-release set-latest VERSION"
+}
+
+bs_release_check_args_count()
+{
+    count=$1
+    expected_count=$2
+
+    if [ ${count} -ne ${expected_count} ]; then
+        echo "ERROR: invalid number of arguments ($#), expected ${expected_count}" >&2
+        bs_release_print_usage >&2
+        return 1
+    fi
+
+    return 0
+}
+
+bs_release_copy_repo()
+{
+    local old_version new_version old_repository new_repository
+
+    old_version=$1
+    new_version=$2
+
+    old_repository="${BS_RELEASE_BASE_DIR}/${old_version}"
+    new_repository="${BS_RELEASE_BASE_DIR}/${new_version}"
+
+    if [ ! -e "${old_repository}" ]; then
+	echo "ERROR: source repository ${old_repository} does not exist" >&2
+	return 1
+    fi
+
+    if [ -e "${new_repository}" ]; then
+	echo "ERROR: destination repository ${new_repository} already exists" >&2
+	return 1
+    fi
+
+    cp -n -a "${old_repository}" "${new_repository}"
+    echo "Copied repository ${old_repository} to ${new_repository}"
+
+    return 0
+}
+
+bs_release_publish()
+{
+    local version snapshot repository archive_url snapshot_url
+
+    version=$1
+    snapshot=$2
+
+    repository="${BS_RELEASE_BASE_DIR}/${version}"
+
+    if grep -qx "${version}" "${BS_RELEASE_BASE_DIR}/versions"; then
+	echo "ERROR: version ${version} is already published" >&2
+	return 1
+    fi
+
+    if [ ! -e "${repository}" ]; then
+	echo "ERROR: repository ${repository} does not exist" >&2
+	return 1
+    fi
+
+    archive_url="http://archive-internal.opinsys.fi/${version}"
+    if ! wget -q "${archive_url}" -O /dev/null; then
+	echo "ERROR: archive ${archive_url} does not exist" >&2
+	return 1
+    fi
+
+    snapshot_url="http://mirror.opinsys.fi/snapshots/${snapshot}"
+    if ! wget -q "${snapshot_url}" -O /dev/null; then
+	echo "ERROR: mirror snapshot ${snapshot_url} does not exist" >&2
+	return 1
+    fi
+
+    echo "${snapshot}" >"${BS_RELEASE_BASE_DIR}/${version}.mirror_snapshot"
+
+    sed "\$a${version}" "${BS_RELEASE_VERSIONS_FILE}" >"${BS_RELEASE_VERSIONS_FILE}.tmp"
+    mv "${BS_RELEASE_VERSIONS_FILE}.tmp" "${BS_RELEASE_VERSIONS_FILE}"
+
+    echo "Published version ${version}"
+
+    return 0
+}
+
+bs_release_rename()
+{
+    local old_version new_version old_repository new_repository
+
+    old_version=$1
+    new_version=$2
+
+    old_repository="${BS_RELEASE_BASE_DIR}/${old_version}"
+    new_repository="${BS_RELEASE_BASE_DIR}/${new_version}"
+
+    if [ ! -d "${old_repository}" ]; then
+	echo "ERROR: old repository ${old_repository} does not exist" >&2
+	return 1
+    fi
+
+    if [ -e "${new_repository}" ]; then
+	echo "ERROR: new repository ${new_repository} already exists exist" >&2
+	return 1
+    fi
+
+    mv -n -T "${old_repository}" "${new_repository}"
+
+    if [ -e "${old_repository}.mirror_snapshot" ]; then
+	mv "${old_repository}.mirror_snapshot" "${new_repository}.mirror_snapshot"
+    fi
+
+    if [ -e "${BS_RELEASE_VERSIONS_FILE}" ]; then
+	awk -v "old_version=${old_version}" -v "new_version=${new_version}"         \
+	    '$0 == old_version {print new_version}; $0 != old_version {print $0}'   \
+	    "${BS_RELEASE_VERSIONS_FILE}" >"${BS_RELEASE_VERSIONS_FILE}.tmp"
+	mv "${BS_RELEASE_VERSIONS_FILE}.tmp" "${BS_RELEASE_VERSIONS_FILE}"
+    fi
+
+    if grep -xq "${old_version}" "${BS_RELEASE_BASE_DIR}/version"; then
+	bs_release_set_latest "${new_version}"
+    fi
+
+    echo "Renamed version ${old_version} => ${new_version}"
+
+    return 0
+}
+
+bs_release_set_latest()
+{
+    local version repository
+
+    version=$1
+    repository="${BS_RELEASE_BASE_DIR}/${version}"
+
+    if ! grep -qx "${version}" "${BS_RELEASE_BASE_DIR}/versions"; then
+	echo "ERROR: version ${version} is not yet published" >&2
+	return 1
+    fi
+
+    if [ ! -e "${repository}" ]; then
+	echo "ERROR: repository ${repository} does not exist" >&2
+	return 1
+    fi
+
+    rm -f "${BS_RELEASE_BASE_DIR}/latest"
+    ln -s "${repository}" "${BS_RELEASE_BASE_DIR}/latest"
+    echo "${version}" >"${BS_RELEASE_BASE_DIR}/version"
+
+    echo "Set latest version to ${version}"
+
+    return 0
+}
+
+exec {lockfd}>"${BS_RELEASE_BASE_DIR}/bs-release.lock"
+if ! flock -n "${lockfd}"; then
+    echo "ERROR: another instance of this command is already running" >&2
+    exit 1
+fi
+
+if [ $# -eq 0 ]; then
+    cmd=help
+else
+    cmd=$1
+    shift
+fi
+
+case "${cmd}" in
+    copy-repo)
+	bs_release_check_args_count $# 2
+
+	old_version=$1
+	shift
+
+	new_version=$1
+	shift
+
+	bs_release_copy_repo "${old_version}" "${new_version}"
+	;;
+    help)
+	bs_release_check_args_count $# 0
+
+	bs_release_print_usage
+	;;
+    publish)
+	bs_release_check_args_count $# 2
+
+	version=$1
+	shift
+
+	snapshot=$1
+	shift
+
+	bs_release_publish "${version}" "${snapshot}"
+	;;
+    rename)
+	bs_release_check_args_count $# 2
+
+	old_version=$1
+	shift
+
+	new_version=$1
+	shift
+
+	bs_release_rename "${old_version}" "${new_version}"
+	;;
+    set-latest)
+	bs_release_check_args_count $# 1
+
+	version=$1
+	shift
+
+	bs_release_set_latest "${version}"
+	;;
+    *)
+      	echo "ERROR: invalid command (${cmd})" >&2
+	exit 1
+	;;
+esac
