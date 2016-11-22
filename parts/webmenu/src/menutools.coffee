@@ -35,15 +35,13 @@ findOsIcon = (id, options) ->
   catch e
     # Otherwise just continue searching
 
-  osIconFilePath = options.fallbackIcon
-
-  options.iconSearchPaths.forEach (p) ->
-    ["svg", "png", "jpg"].forEach (ext) ->
+  for p in options.iconSearchPaths
+    for ext in ["svg", "png", "jpg"]
       filePath = "#{ p }/#{ id }.#{ ext }"
       if fs.existsSync(filePath)
-        osIconFilePath = "file://#{ filePath }"
+        return "file://#{ filePath }"
 
-  return osIconFilePath
+  return options.fallbackIcon
 
 
 normalizeIconPath = (p) ->
