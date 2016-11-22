@@ -34,7 +34,7 @@ items:
     type: desktop
   - source: org.gnome.FileRoller
     type: desktop
-  - source: gnome-terminal
+  - source: org.gnome.Terminal
     type: desktop
   - source: seahorse
     type: desktop
@@ -60,7 +60,7 @@ items:
     de: Grafikprogramme
   osIcon: applications-graphics
   items:
-  - source: kolourpaint
+  - source: org.kde.kolourpaint
     type: desktop
   - source: tuxpaint
     type: desktop
@@ -183,7 +183,7 @@ items:
     type: desktop
   - source: geany
     type: desktop
-  - source: kturtle
+  - source: org.kde.kturtle
     type: desktop
   - source: scratch
     type: desktop
@@ -234,22 +234,22 @@ items:
     type: desktop
     inactiveByDeviceType: thinclient
     condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
-  - source: kbruch
+  - source: org.kde.kbruch
     type: desktop
   - source: geogebra
     type: desktop
-  - source: kmplot
+  - source: org.kde.kmplot
     type: desktop
   - source: marble-qt
     type: desktop
-  - source: kgeography
+  - source: org.kde.kgeography
     type: desktop
     condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
   - source: kanagram
     type: desktop
-  - source: kwordquiz
+  - source: org.kde.kwordquiz
     type: desktop
-  - source: khangman
+  - source: org.kde.khangman
     type: desktop
   - source: ktouch
     type: desktop
@@ -259,7 +259,7 @@ items:
   - source: stellarium
     type: desktop
     inactiveByDeviceType: thinclient
-  - source: kstars
+  - source: org.kde.kstars
     type: desktop
   - source: step
     type: desktop
@@ -355,7 +355,7 @@ items:
     type: desktop
   - source: gnome-mplayer
     type: desktop
-  - source: kaffeine
+  - source: org.kde.kaffeine
     type: desktop
   - source: banshee
     type: desktop
@@ -371,7 +371,7 @@ items:
     inactiveByDeviceType: thinclient
   - source: openshot
     type: desktop
-  - source: kdenlive
+  - source: org.kde.kdenlive
     type: desktop
   - type: custom
     name:
@@ -600,7 +600,7 @@ items:
     name: Viope
     url: https://www.viope.com/
     osIconPath: /usr/share/icons/Faenza/mimetypes/96/text-html.png
-- source: nautilus-home
+- source: org.gnome.Nautilus
   type: desktop
 - type: custom
   command: puavo-local-config-ui
