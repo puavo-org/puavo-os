@@ -1,0 +1,2 @@
+# Fix home directory permissions every morning at 06:13
+13 06 * * * root /usr/local/sbin/puavo-fix-homedir-permissions
