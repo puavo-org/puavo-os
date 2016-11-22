@@ -41,7 +41,7 @@ findOsIcon = (id, options) ->
     ["svg", "png", "jpg"].forEach (ext) ->
       filePath = "#{ p }/#{ id }.#{ ext }"
       if fs.existsSync(filePath)
-        osIconFilePath = filePath
+        osIconFilePath = "file://#{ filePath }"
 
   return osIconFilePath
 
