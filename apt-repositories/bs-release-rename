@@ -27,7 +27,9 @@ if [ -e "${old_version}.mirror_snapshot" ]; then
 fi
 
 if [ -e versions ]; then
-    sed -r "s/^${old_version}$$/${new_version}/" versions >versions.tmp
+    awk -v "old_version=${old_version}" -v "new_version=${new_version}"         \
+        '$0 == old_version {print new_version}; $0 != old_version {print $0}'   \
+        versions >versions.tmp
     mv versions.tmp versions
 fi
 
