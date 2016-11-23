@@ -57,5 +57,5 @@ rm -f ${DESTDIR}/etc/modprobe.d/nvidia-blacklists-nouveau.conf \
 
 if [ -d /etc/nvidia ]; then
   mkdir -p ${DESTDIR}/etc/nvidia
-  cp -R -t ${DESTDIR}/etc/nvidia /etc/nvidia/*
+  cp -LR -t ${DESTDIR}/etc/nvidia /etc/nvidia/*
 fi
