@@ -1,0 +1,57 @@
+aptirepo (0.7.2) trusty; urgency=medium
+
+  * New release
+  * aptirepo: prune orphaned .debs during when pruning the pool
+  * Git(77dcc45c07abb6971629457b3c430561cacd0adc)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Tue, 22 Nov 2016 13:23:41 +0200
+
+aptirepo (0.7.1) trusty; urgency=medium
+
+  * New release
+  * aptirepo: update copyright years
+  * Git(d5451d9d7916486f96a79269d463c2d2a2b8ef82)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Tue, 11 Oct 2016 10:43:12 +0300
+
+aptirepo (0.7.0) trusty; urgency=medium
+
+  * New release
+  * aptirepo: add --dry-run command line option
+  * aptirepo/lib: add dry_run parameter to Aptirepo initializer
+  * aptirepo: log also to stdout when using the command line tool
+  * aptirepo/lib: add option to log to stdout as well
+  * aptirepo: add prunepool command
+  * aptirepo/lib: add prune_pool() method to Aptirepo
+  * Git(c306071c6570f1906459bad240330a1f8faaecf5)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Thu, 10 Mar 2016 10:29:22 +0200
+
+aptirepo (0.6.3) trusty; urgency=medium
+
+  * New release
+  * Do not use dpkg-parsechangelog --show-field
+  * Git(0a8f84878fc41328de7b774d22e1c50ab568626a)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Sat, 27 Jun 2015 16:38:41 +0300
+
+aptirepo (0.6.2) trusty; urgency=medium
+
+  * New release
+  * ci.sh: use install-deb-deps target to install, well, deb-deps
+  * Git(caf741552a87a87059dd793acf233bc06a097741)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Sat, 27 Jun 2015 16:22:15 +0300
+
+aptirepo (0.6.1) trusty; urgency=medium
+
+  * New release
+  * Git(08d1903ecaf407403a906fa795b3cd616f9b65f7)
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Wed, 24 Jun 2015 13:39:21 +0300
+
+aptirepo (0.6.0) trusty; urgency=medium
+
+  * Initial changelog entry.
+
+ -- Tuomas Räsänen <tuomasjjrasanen@tjjr.fi>  Wed, 24 Jun 2015 13:08:45 +0300

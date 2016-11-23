@@ -1,0 +1,31 @@
+Source: aptirepo
+Section: utils
+Priority: extra
+Maintainer: Opinsys Developers <dev@opinsys.fi>
+Build-Depends: debhelper (>= 8.0.0), python-all-dev
+Standards-Version: 3.9.3
+Homepage: http://github.com/opinsys/aptirepo/
+
+Package: aptirepo
+Architecture: all
+Depends: ${misc:Depends}, python, apt-utils, python-debian, gnupg
+Description: simple APT repository tool
+ simple APT repository tool
+ .
+
+Package: aptirepo-http
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}, aptirepo (>=0.3.0-21), python-flask, gunicorn
+Breaks: debbox
+Replaces: debbox
+Recommends: nginx
+Description: Http interface for aptirepo
+ Http interface for aptirepo
+ .
+
+Package: aptirepo-upload
+Architecture: all
+Depends: ${misc:Depends}, curl
+Description: aptirepo package uploader
+ aptirepo package uploader
+ .

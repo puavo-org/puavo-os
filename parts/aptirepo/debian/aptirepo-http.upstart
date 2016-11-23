@@ -1,0 +1,10 @@
+description "aptirepo-http"
+
+start on runlevel [23]
+stop on shutdown
+
+chdir /usr/lib/aptirepo-http
+
+exec sudo -E -u aptirepo-http gunicorn --bind 0.0.0.0:8080 --timeout 300 --workers 4 --error-logfile - --access-logfile - server:app
+
+respawn

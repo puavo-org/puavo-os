@@ -1,0 +1,65 @@
+#!/bin/bash
+
+set -eu
+
+assert_find()
+{
+    local path=$1
+    local expected_listing=$2
+    local find_opts=$3
+
+    local expected_output=$(echo "${expected_listing}" | sort -g) || return 2
+    local output=$(find "${path}" ${find_opts} | sort -g) || return 2
+
+    [ "${expected_output}" = "${output}" ] || {
+        echo "unexpected content in directory tree '${path}':" >&2
+        diff -t -y <(echo "${expected_output}") <(echo "${output}") >&2
+        return 1
+    }
+
+    return 0
+}
+export -f assert_find
+
+on_exit()
+{
+    local exitval=$?
+
+    set +e
+
+    cd "${origdir}"
+
+    [ -n "${workdir}" ] && rm -rf "${workdir}"
+
+    return $exitval
+}
+
+origdir=$(readlink -e "$(pwd)")
+thisdir=$(dirname "$(readlink -e $0)")
+workdir=
+
+trap on_exit EXIT
+
+workdir=$(readlink -e "$(mktemp -d testrun.XXXXXXXXXXXX)")
+
+cd "${workdir}"
+
+while read testscript; do
+    testname=$(basename "${testscript}")
+    testname=${testname#test_}
+
+    mkdir "${testname}.d"
+
+    (
+        cd "${testname}.d"
+
+        printf "TEST '${testname}' "
+        "${testscript}" 2>testerr >/dev/null || {
+            printf "\033[31mFAIL\033[0m\n"
+            sed -e 's/.*/  &/' testerr
+            continue
+        }
+        printf "\033[32mOK\033[0m\n"
+    )
+
+done < <(find "${thisdir}" -maxdepth 1 -type f -executable -name 'test_*')

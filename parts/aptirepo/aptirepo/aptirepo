@@ -1,0 +1,102 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# aptirepo - Simple APT Repository Tool
+# Copyright (C) 2013,2014,2015,2016 Opinsys
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+from __future__ import print_function
+
+import argparse
+import os
+import sys
+
+import aptirepo
+
+def _importdeb(repo, args):
+    if not args.debfile.endswith(".deb"):
+        print("failed to import Debian binary package '%s': "
+              "extension of the imported file must be '.deb'" % args.debfile,
+              file=sys.stderr)
+        sys.exit(1)
+
+    repo.import_deb(args.debfile, codename=args.codename, section=args.section)
+
+    repo.update_dists(do_sign=args.sign_releases)
+
+def _prunepool(repo, args):
+    repo.prune_pool(leave_count=args.leave_count)
+
+def _importchanges(repo, args):
+    if not args.changesfile.endswith(".changes"):
+        print("failed to import Debian package changes '%s': "
+              "extension of the imported file must be '.changes'" % args.changesfile,
+              file=sys.stderr)
+        sys.exit(1)
+
+    repo.import_changes(args.changesfile, codename=args.codename)
+
+    repo.update_dists(do_sign=args.sign_releases)
+
+def _updatedists(repo, args):
+    repo.update_dists(do_prune=args.prune, do_sign=args.sign_releases)
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--timeout", default=0, type=int, metavar="SECONDS",
+                        help="fail if the repository lock could not be "
+                        "obtained in SECONDS, negative value means infinite "
+                        "timeout")
+    parser.add_argument("--dry-run", default=False, action="store_true",
+                        help="do nothing, just print what would get done")
+
+    subparsers = parser.add_subparsers(dest="cmd", title="commands")
+
+    parser_importdeb = subparsers.add_parser("importdeb", help="import a single .deb file")
+    parser_importdeb.add_argument("debfile", metavar="FILE.deb")
+    parser_importdeb.add_argument("--codename", default="", help="target codename, defaults to codename defined in FILE.deb")
+    parser_importdeb.add_argument("--section", default="", help="target section, defaults to section defined in FILE.deb")
+    parser_importdeb.add_argument("--sign-releases", action="store_true", default=False, help="sign Release files after update")
+    parser_importdeb.set_defaults(func=_importdeb)
+
+    parser_importchanges = subparsers.add_parser("importchanges", help="import all files listed in a .changes file")
+    parser_importchanges.add_argument("changesfile", metavar="FILE.changes")
+    parser_importchanges.add_argument("--codename", default="", help="target codename, defaults to codename defined in FILE.changes")
+    parser_importchanges.add_argument("--sign-releases", action="store_true", default=False, help="sign Release files after update")
+    parser_importchanges.set_defaults(func=_importchanges)
+
+    parser_updatedists = subparsers.add_parser("updatedists", help="update dists to match the contents of the pool")
+    parser_updatedists.add_argument("--prune", action="store_true",
+                                    default=False,
+                                    help="remove unconfigured codename, "
+                                    "architecture and component directories")
+    parser_updatedists.add_argument("--sign-releases", action="store_true", default=False, help="sign Release files after update")
+    parser_updatedists.set_defaults(func=_updatedists)
+
+    parser_prunepool = subparsers.add_parser("prunepool", help="remove old packages from the pool")
+    parser_prunepool.add_argument("--leave-count", default=3, type=int, help="how many versions of each package should be left, defaults to 3")
+    parser_prunepool.set_defaults(func=_prunepool)
+
+    args = parser.parse_args()
+
+    rootdir = os.environ.get("APTIREPO_ROOTDIR", ".")
+    confdir = os.environ.get("APTIREPO_CONFDIR")
+    repo = aptirepo.Aptirepo(rootdir, confdir, timeout_secs=args.timeout,
+                             log_stdout=True, dry_run=args.dry_run)
+
+    args.func(repo, args)
+
+if __name__ == "__main__":
+    main()

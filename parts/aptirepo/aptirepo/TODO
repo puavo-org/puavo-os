@@ -1,0 +1,6 @@
+- save imported .changes (not just files listed in .changes) to allow
+  easy cross-repository transfers
+
+- add support for importing .dsc files in addition to .deb and .changes
+
+- tests: unit tests (pytest or nose), python-tox as a test-runner
