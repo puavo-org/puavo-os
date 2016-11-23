@@ -1,0 +1,110 @@
+#!/bin/sh
+# aptirepo - Simple APT Repository Tool
+# Copyright (C) 2013, 2014, 2015 Opinsys
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+set -eu
+
+parse_multiline()
+{
+    local file field
+
+    file=$1
+    field=$2
+
+    ## Print all lines of the multiline field.
+    sed -r -n -e "
+/^${field}:/{    ## This line has only the field name...
+    :next_line
+    n            ## ... append the next line to the pattern space.
+    /^[ \t]*$/ q ## Stop if the line is empty.
+    /^[^ \t]/ q  ## Stop if the line does not start with whitespace.
+    s|^[ \t]+||p ## Remove preceding whitespace and print the line.
+    b next_line  ## Continue to the next line.
+}" "${file}"
+}
+
+APTIREPO_REMOTE=${APTIREPO_REMOTE:-}
+APTIREPO_BRANCH=''
+APTIREPO_CODENAME=''
+
+while getopts "r:b:c:" flag; do
+    case $flag in
+        r)
+            # TODO: validate input
+            APTIREPO_REMOTE="${OPTARG}"
+            ;;
+        b)
+            if [ -n "${APTIREPO_BRANCH}" ]; then
+                echo "-b can be used only once" >&2
+                exit 1
+            fi
+            # TODO: validate input
+            APTIREPO_BRANCH="${OPTARG}"
+            ;;
+        c)
+            if [ -n "${APTIREPO_CODENAME}" ]; then
+                echo '-c can be used only once' >&2
+                exit 1
+            fi
+            APTIREPO_CODENAME="${OPTARG}"
+            ;;
+        ?)
+            exit 1
+            ;;
+        *)
+            echo "getopts failed catastrophically" >&2
+            exit 1
+            ;;
+    esac
+done
+
+shift $((OPTIND-1))
+
+if [ $# -ne 1 ]; then
+    echo "wrong number of arguments" >&2
+    echo "Usage: $(basename $0) [-r REMOTE] [-b BRANCH] [-c CODENAME] FILE" >&2
+    exit 1
+fi
+
+if [ "$APTIREPO_REMOTE" = "" ]; then
+    echo "No remote defined. Use -r or set APTIREPO_REMOTE environment variable" >&2
+    exit 1
+fi
+
+changes_file="$1"
+curl_args=""
+
+if [ "${APTIREPO_BRANCH}" != "" ]; then
+    curl_args="$curl_args -F branch=${APTIREPO_BRANCH}"
+fi
+
+if [ "${APTIREPO_CODENAME}" != "" ]; then
+    curl_args="$curl_args -F codename=${APTIREPO_CODENAME}"
+fi
+
+cd $(dirname "${changes_file}")
+changes_file="$(basename "${changes_file}")"
+
+curl_args="$curl_args -F changes=@$(basename $changes_file)"
+
+for filename in $(parse_multiline "${changes_file}" Files | cut -d " " -f 5)
+do
+    curl_args="$curl_args -F file=@${filename}"
+done
+
+set -x
+curl --noproxy "*" --fail -v $curl_args "${APTIREPO_REMOTE}"

@@ -1,0 +1,170 @@
+#!/usr/bin/env python
+# aptirepo - Simple APT Repository Tool
+# Copyright (C) 2014,2015 Opinsys
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+from __future__ import print_function
+
+import argparse
+import errno
+import os
+import select
+import socket
+import sys
+import threading
+import time
+
+import aptirepo
+
+# Global time variable to keep track of the last time work was done.
+# Needs to be locked because it is accessed from multiple threads.
+last_work_time_rlock = threading.RLock()
+last_work_time = 0
+
+def _work(repodirs, repodirs_rlock, **aptirepo_kwargs):
+    global last_work_time_rlock
+    global last_work_time
+
+    # Make aptirepo.Aptirepo() to fail right away if the repository lock
+    # cannot be acquired.
+    aptirepo_kwargs["timeout_secs"] = 0
+
+    # Make a copy of the repodirs to allow us to iterate through the
+    # copy and remove updated repos from the original set
+    # simultaneously.
+    with repodirs_rlock:
+        repodirs_tmp = set(repodirs)
+
+    # All repositories are updated sequentially in a single thread. It
+    # is suboptimal, but sufficient. Until some one needs to improve
+    # it.
+    for repodir in repodirs_tmp:
+        try:
+            print("Updating aptirepo repository '%s'" % repodir, file=sys.stderr)
+            repo = aptirepo.Aptirepo(repodir, **aptirepo_kwargs)
+        except IOError, e:
+            if e.errno != errno.EAGAIN:
+                with repodirs_rlock:
+                    # Unexpected error, remove from the update queue.
+                    repodirs.remove(repodir)
+                raise e
+            # Aptirepo timeouted because it is locked. Fine, just
+            # continue to update other repositories. The repository is
+            # removed from the set only if everything went
+            # succesfully.
+            print("Aptirepo repository '%s' was locked" % repodir, file=sys.stderr)
+            continue
+        repo.update_dists(do_sign=True)
+
+        with repodirs_rlock:
+            # Everything went fine, remove the just updated repodir
+            # from the set of repos requiring update.
+            repodirs.remove(repodir)
+
+    with last_work_time_rlock:
+        last_work_time = time.time()
+
+def _recv_all(sock):
+    all_data = ""
+
+    while True:
+        data = sock.recv(4096)
+        if not data:
+            break
+        all_data += data
+
+    return all_data
+
+def _parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--aptirepo-confdir",
+                        help="global aptirepo configuration directory")
+    parser.add_argument("--aptirepo-rootdir",
+                        default="/srv/aptirepo",
+                        help="root directory which contains all repositories, default: %(default)s")
+    parser.add_argument("--socket-file",
+                        default="/srv/aptirepo/updatedistsd.sock",
+                        help="socket file to listen to, default: %(default)s")
+
+    return parser.parse_args()
+
+def _main():
+    global last_work_time_rlock
+    global last_work_time
+
+    args = _parse_args()
+
+    aptirepo_kwargs = {}
+    if args.aptirepo_confdir is not None:
+        aptirepo_kwargs["confdir"] = args.aptirepo_confdir
+
+    min_work_interval_secs = 60
+
+    worker = threading.Thread()
+
+    repodirs = set()
+    repodirs_rlock = threading.RLock()
+
+    serv_sock = None
+    try:
+        serv_sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+
+        serv_sock.bind(args.socket_file)
+        serv_sock.listen(1)
+
+        while True:
+            rfds, _, _ = select.select([serv_sock], [], [], 5)
+
+            if serv_sock in rfds:
+                conn_sock = None
+                try:
+                    conn_sock, _ = serv_sock.accept()
+                    data = _recv_all(conn_sock)
+                    if data.endswith("\n"):
+                        reponame = data[:-1]
+                        repodir = os.path.join(args.aptirepo_rootdir, reponame)
+                        with repodirs_rlock:
+                            repodirs.add(repodir)
+                        print("Received request to update aptirepo repository '%s'" % repodir, file=sys.stderr)
+                        conn_sock.sendall("OK\n")
+                    else:
+                        print("Received unknown request '%s'" % data, file=sys.stderr)
+                        conn_sock.sendall("FAIL\n")
+                finally:
+                    if conn_sock is not None:
+                        conn_sock.close()
+
+            with last_work_time_rlock:
+                do_start_worker = (
+                    time.time() > last_work_time + min_work_interval_secs
+                    and not worker.is_alive())
+
+            if do_start_worker:
+                worker = threading.Thread(target=_work,
+                                          args=(repodirs, repodirs_rlock),
+                                          kwargs=aptirepo_kwargs)
+                worker.start()
+                print("Started worker thread to update aptirepo repositories {%s}" %
+                      ",".join([repr(r) for r in repodirs]), file=sys.stderr)
+    finally:
+        if serv_sock is not None:
+            try:
+                serv_sock.close()
+            finally:
+                os.unlink(args.socket_file)
+
+if __name__ == "__main__":
+    _main()
