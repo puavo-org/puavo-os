@@ -28,13 +28,13 @@ case "$graphics_driver" in
     ;;
 esac
 
-update-glx --set glx "$glx_alternative"
-
 if [ -n "$nvidia_alternative" ]; then
   if [ -d "/usr/lib/nvidia/${nvidia_alternative}" ]; then
-    update-glx --set nvidia "/usr/lib/nvidia/${nvidia_alternative}"
+    update-glx --set nvidia "/usr/lib/nvidia/${nvidia_alternative}" \
+      >/dev/null 2>&1
   else
-    update-glx --set nvidia /usr/lib/nvidia/current
+    update-glx --set nvidia /usr/lib/nvidia/current \
+      >/dev/null 2>&1
   fi
 fi
 
