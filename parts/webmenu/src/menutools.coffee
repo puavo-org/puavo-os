@@ -1,7 +1,6 @@
 
 # Inject .desktop to menu structure
 
-path = require "path"
 stringify = require "json-stable-stringify"
 fs = require "fs"
 exec = require "sync-exec"
@@ -41,19 +40,6 @@ findOsIcon = (id, options) ->
         return filePath
 
   return options.fallbackIcon
-
-
-normalizeIconPath = (p) ->
-  return p if not p
-
-  # skip if already has a protocol
-  if /^[a-z]+\:.+$/.test(p)
-    return p
-
-  if p[0] is"/"
-    return "file://#{ p }"
-
-  return "file://" + path.join(__dirname, "..", p)
 
 
 isValidMenuLauncher = (o) -> o.name && o.command
@@ -156,8 +142,6 @@ injectDesktopData = (menu, options) ->
       injectDesktopData(menu_, options)
   else
     menu.id = json2hash(menu)
-
-  menu.osIconPath = normalizeIconPath(menu.osIconPath)
 
 module.exports =
   injectDesktopData: injectDesktopData
