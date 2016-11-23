@@ -66,6 +66,6 @@ fi
     fi
   else
     rm -fv /etc/modprobe.d/nvidia-blacklists-nouveau.conf \
-           /etc/modprobe.d/nvidia-modprobe.conf
+           /etc/modprobe.d/nvidia.conf
   fi
 } >> /run/puavo-initrd.log
