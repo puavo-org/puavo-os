@@ -2,11 +2,11 @@ class graphics_drivers {
   include ::packages
 
   $nvidia_packages = $debianversioncodename ? {
-                       'jessie'  => [ 'nvidia-304xx-kernel-dkms'
-                                    , 'nvidia-340xx-kernel-dkms' ],
-                       default => [ 'nvidia-304xx-kernel-dkms'
-                                    , 'nvidia-340xx-kernel-dkms'
-                                    , 'nvidia-367xx-kernel-dkms' ],
+                       'jessie' => [ 'nvidia-304xx-kernel-dkms'
+                                   , 'nvidia-340xx-kernel-dkms' ],
+                       default  => [ 'nvidia-304xx-kernel-dkms'
+                                   , 'nvidia-340xx-kernel-dkms'
+                                   , 'nvidia-367xx-kernel-dkms' ],
                      }
 
   exec {
