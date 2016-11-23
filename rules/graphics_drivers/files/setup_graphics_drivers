@@ -2,47 +2,47 @@
 
 set -eu
 
-puavo_graphics_driver=$(puavo-conf puavo.graphics.driver)
+graphics_driver=$(puavo-conf puavo.graphics.driver)
 
-puavo_glx_alternative=/usr/lib/mesa-diverted
-puavo_nvidia_alternative=
+glx_alternative=/usr/lib/mesa-diverted
+nvidia_alternative=
 
-case "$puavo_graphics_driver" in
+case "$graphics_driver" in
   nvidia)
-    puavo_glx_alternative=/usr/lib/nvidia
-    puavo_nvidia_alternative=current
-    puavo_xserver_driver=nvidia
+    glx_alternative=/usr/lib/nvidia
+    nvidia_alternative=current
+    xserver_driver=nvidia
     ;;
   nvidia-304)
-    puavo_glx_alternative=/usr/lib/nvidia
-    puavo_nvidia_alternative=legacy-304xx
-    puavo_xserver_driver=nvidia
+    glx_alternative=/usr/lib/nvidia
+    nvidia_alternative=legacy-304xx
+    xserver_driver=nvidia
     ;;
   nvidia-340)
-    puavo_glx_alternative=/usr/lib/nvidia
-    puavo_nvidia_alternative=legacy-340xx
-    puavo_xserver_driver=nvidia
+    glx_alternative=/usr/lib/nvidia
+    nvidia_alternative=legacy-340xx
+    xserver_driver=nvidia
     ;;
   *)
-    puavo_xserver_driver=${puavo_graphics_driver}
+    xserver_driver=${graphics_driver}
     ;;
 esac
 
-update-glx --set glx "$puavo_glx_alternative"
+update-glx --set glx "$glx_alternative"
 
-if [ -n "$puavo_nvidia_alternative" ]; then
-  if [ -d "/usr/lib/nvidia/${puavo_nvidia_alternative}" ]; then
-    update-glx --set nvidia "/usr/lib/nvidia/${puavo_nvidia_alternative}"
+if [ -n "$nvidia_alternative" ]; then
+  if [ -d "/usr/lib/nvidia/${nvidia_alternative}" ]; then
+    update-glx --set nvidia "/usr/lib/nvidia/${nvidia_alternative}"
   else
     update-glx --set nvidia /usr/lib/nvidia/current
   fi
 fi
 
-if [ -n "$puavo_graphics_driver" ]; then
+if [ -n "$graphics_driver" ]; then
   cat <<EOF > /etc/X11/xorg.conf.tmp
 Section "Device"
     Identifier "Device0"
-    Driver "${puavo_xserver_driver}"
+    Driver "${xserver_driver}"
 EndSection
 EOF
   mv /etc/X11/xorg.conf.tmp /etc/X11/xorg.conf
