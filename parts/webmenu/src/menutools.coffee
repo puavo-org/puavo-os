@@ -30,8 +30,7 @@ findOsIcon = (id, options) ->
 
   try
     # Return if id is a real path
-    filePath = fs.realpathSync(id)
-    return "file://#{ filePath }"
+    return fs.realpathSync(id)
   catch e
     # Otherwise just continue searching
 
@@ -39,7 +38,7 @@ findOsIcon = (id, options) ->
     for ext in ["svg", "png", "jpg"]
       filePath = "#{ p }/#{ id }.#{ ext }"
       if fs.existsSync(filePath)
-        return "file://#{ filePath }"
+        return filePath
 
   return options.fallbackIcon
 
@@ -136,8 +135,6 @@ injectDesktopData = (menu, options) ->
     _.defaults(menu, desktopEntry)
 
     menu.osIconPath ?= findOsIcon(menu.osIcon, options)
-    menu.osIconPath = normalizeIconPath(menu.osIconPath)
-
 
     if not isValidMenuLauncher(menu) and menu.installer
       menu.useInstaller = true
@@ -159,6 +156,8 @@ injectDesktopData = (menu, options) ->
       injectDesktopData(menu_, options)
   else
     menu.id = json2hash(menu)
+
+  menu.osIconPath = normalizeIconPath(menu.osIconPath)
 
 module.exports =
   injectDesktopData: injectDesktopData
