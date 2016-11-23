@@ -1,3 +1,7 @@
+#!/bin/sh
+
+set -eu
+
 puavo_graphics_driver=$(puavo-conf puavo.graphics.driver)
 
 puavo_glx_alternative=/usr/lib/mesa-diverted
