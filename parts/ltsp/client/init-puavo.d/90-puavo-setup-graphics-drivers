@@ -24,14 +24,13 @@ case "$puavo_graphics_driver" in
     ;;
 esac
 
-update-alternatives --set glx "$puavo_glx_alternative"
+update-glx --set glx "$puavo_glx_alternative"
 
 if [ -n "$puavo_nvidia_alternative" ]; then
   if [ -d "/usr/lib/nvidia/${puavo_nvidia_alternative}" ]; then
-    update-alternatives --set nvidia \
-		        "/usr/lib/nvidia/${puavo_nvidia_alternative}"
+    update-glx --set nvidia "/usr/lib/nvidia/${puavo_nvidia_alternative}"
   else
-    update-alternatives --set nvidia /usr/lib/nvidia/current
+    update-glx --set nvidia /usr/lib/nvidia/current
   fi
 fi
 
