@@ -6,7 +6,7 @@ class kernels::dkms {
     $dkms_module = $titlearray[0]
 
     case $dkms_module {
-      /^bcmwl\//: { $dkms_module_package = 'bcmwl-kernel-source' }
+      /^broadcom-sta\//: { $dkms_module_package = 'broadcom-sta-dkms' }
 
       /^nvidia-current\//: {
         $dkms_module_package = $debianversioncodename ? {

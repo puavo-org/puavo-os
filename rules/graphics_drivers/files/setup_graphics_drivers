@@ -1,0 +1,51 @@
+#!/bin/sh
+
+set -eu
+
+graphics_driver=$(puavo-conf puavo.graphics.driver)
+
+glx_alternative=/usr/lib/mesa-diverted
+nvidia_alternative=
+
+case "$graphics_driver" in
+  nvidia)
+    glx_alternative=/usr/lib/nvidia
+    nvidia_alternative=current
+    xserver_driver=nvidia
+    ;;
+  nvidia-304)
+    glx_alternative=/usr/lib/nvidia
+    nvidia_alternative=legacy-304xx
+    xserver_driver=nvidia
+    ;;
+  nvidia-340)
+    glx_alternative=/usr/lib/nvidia
+    nvidia_alternative=legacy-340xx
+    xserver_driver=nvidia
+    ;;
+  *)
+    xserver_driver=${graphics_driver}
+    ;;
+esac
+
+if [ -n "$nvidia_alternative" ]; then
+  if [ -d "/usr/lib/nvidia/${nvidia_alternative}" ]; then
+    update-glx --set nvidia "/usr/lib/nvidia/${nvidia_alternative}" \
+      >/dev/null 2>&1
+  else
+    update-glx --set nvidia /usr/lib/nvidia/current \
+      >/dev/null 2>&1
+  fi
+fi
+
+if [ -n "$graphics_driver" ]; then
+  cat <<EOF > /etc/X11/xorg.conf.tmp
+Section "Device"
+    Identifier "Device0"
+    Driver "${xserver_driver}"
+EndSection
+EOF
+  mv /etc/X11/xorg.conf.tmp /etc/X11/xorg.conf
+else
+  rm -f /etc/X11/xorg.conf
+fi

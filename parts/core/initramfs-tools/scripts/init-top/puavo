@@ -21,44 +21,51 @@ fi
 
 # apply kernel module configurations based on puavo-conf here
 
-puavo_blacklist_nouveau=false
-puavo_nvidia_modprobe_file=
+puavo_nvidia_driver=
 
 case "$(puavo-conf puavo.graphics.driver)" in
   nvidia)
-    puavo_blacklist_nouveau=true
-    puavo_nvidia_modprobe_file=nvidia-modprobe.conf
+    puavo_nvidia_driver=current
     ;;
   nvidia-304)
-    puavo_blacklist_nouveau=true
-    puavo_nvidia_modprobe_file=nvidia-legacy-304xx-modprobe.conf
+    puavo_nvidia_driver=legacy-304xx
     ;;
   nvidia-340)
-    puavo_blacklist_nouveau=true
-    puavo_nvidia_modprobe_file=nvidia-legacy-340xx-modprobe.conf
+    puavo_nvidia_driver=legacy-340xx
     ;;
   nvidia-367)
-    puavo_blacklist_nouveau=true
-    puavo_nvidia_modprobe_file=nvidia-legacy-367xx-modprobe.conf
+    puavo_nvidia_driver=legacy-367xx
     ;;
 esac
 
-if $puavo_blacklist_nouveau; then
-  if [ -e /etc/nvidia/nvidia-blacklists-nouveau.conf ]; then
-    cp /etc/nvidia/nvidia-blacklists-nouveau.conf \
-       /etc/modprobe.d/nvidia-blacklists-nouveau.conf
-  fi
-else
-  rm -f /etc/modprobe.d/nvidia-blacklists-nouveau.conf
+if [ -n "$puavo_nvidia_driver" ]; then
+  puavo_nvidia_dir="/etc/nvidia/${puavo_nvidia_driver}"
 fi
 
-if [ -n "$puavo_nvidia_modprobe_file" ]; then
-  if [ -e "/etc/nvidia/${puavo_nvidia_modprobe_file}" ]; then
-    cp "/etc/nvidia/${puavo_nvidia_modprobe_file}" \
-       /etc/modprobe.d/nvidia.conf
-  elif [ -e "/etc/nvidia/nvidia-modprobe.conf" ]; then
-    cp /etc/nvidia/nvidia-modprobe.conf /etc/modprobe.d/nvidia.conf
+{
+  if [ -n "$puavo_nvidia_driver" ]; then
+    if [ -e "${puavo_nvidia_dir}/nvidia-blacklists-nouveau.conf" ]; then
+      cp -v "${puavo_nvidia_dir}/nvidia-blacklists-nouveau.conf" \
+            /etc/modprobe.d/nvidia-blacklists-nouveau.conf
+    elif [ -e /etc/nvidia/nvidia-blacklists-nouveau.conf ]; then
+      cp -v /etc/nvidia/nvidia-blacklists-nouveau.conf \
+            /etc/modprobe.d/nvidia-blacklists-nouveau.conf
+    else
+      echo 'ERROR: should blacklist nouveau,' \
+           "but ${puavo_nvidia_dir}/nvidia-blacklists-nouveau.conf is missing"
+    fi
+
+    if [ -e "${puavo_nvidia_dir}/nvidia-modprobe.conf" ]; then
+      cp -v "${puavo_nvidia_dir}/nvidia-modprobe.conf" \
+            /etc/modprobe.d/nvidia.conf
+    elif [ -e "/etc/nvidia/nvidia-modprobe.conf" ]; then
+      cp -v /etc/nvidia/nvidia-modprobe.conf /etc/modprobe.d/nvidia.conf
+    else
+      echo 'ERROR: should use nvidia,' \
+           "but ${puavo_nvidia_dir}/nvidia-modprobe.conf is missing"
+    fi
+  else
+    rm -fv /etc/modprobe.d/nvidia-blacklists-nouveau.conf \
+           /etc/modprobe.d/nvidia.conf
   fi
-else
-  rm -f /etc/modprobe.d/nvidia.conf
-fi
+} >> /run/puavo-initrd.log

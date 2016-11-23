@@ -1,12 +1,18 @@
 class graphics_drivers {
   include ::packages
+  include ::puavo_conf
+
+  ::puavo_conf::script {
+    'setup_graphics_drivers':
+      source => 'puppet:///modules/graphics_drivers/setup_graphics_drivers';
+  }
 
   $nvidia_packages = $debianversioncodename ? {
-                       'jessie'  => [ 'nvidia-304xx-kernel-dkms'
-                                    , 'nvidia-340xx-kernel-dkms' ],
-                       default => [ 'nvidia-304xx-kernel-dkms'
-                                    , 'nvidia-340xx-kernel-dkms'
-                                    , 'nvidia-367xx-kernel-dkms' ],
+                       'jessie' => [ 'nvidia-304xx-kernel-dkms'
+                                   , 'nvidia-340xx-kernel-dkms' ],
+                       default  => [ 'nvidia-304xx-kernel-dkms'
+                                   , 'nvidia-340xx-kernel-dkms'
+                                   , 'nvidia-367xx-kernel-dkms' ],
                      }
 
   exec {
