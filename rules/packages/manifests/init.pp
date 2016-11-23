@@ -648,29 +648,29 @@ class packages {
 
   case $debianversioncodename {
     'jessie': {
-      # XXX $bcmwl_dkms_module      = 'bcmwl/6.30.223.248+bdcom'
-      $nvidia_dkms_304_module = 'nvidia-legacy-304xx/304.131'
-      $nvidia_dkms_340_module = 'nvidia-current/340.96'
-      # XXX $r8168_dkms_module      = 'r8168/8.040.00'
+      $broadcom_sta_dkms_module = 'broadcom-sta/6.30.223.271'
+      $nvidia_dkms_304_module   = 'nvidia-legacy-304xx/304.131'
+      $nvidia_dkms_340_module   = 'nvidia-current/340.96'
+      # XXX $r8168_dkms_module        = 'r8168/8.040.00'
 
-      $all_dkms_modules = [ $nvidia_dkms_304_module
+      $all_dkms_modules = [ $broadcom_sta_dkms_module
+			  , $nvidia_dkms_304_module
 			  , $nvidia_dkms_340_module ]
 
-      # XXX $bcmwl_dkms_module  # XXX missing from Debian
       # XXX $r8168_dkms_module  # XXX missing from Debian
     }
     default: {
-      # XXX $bcmwl_dkms_module      = 'bcmwl/6.30.223.248+bdcom'
-      $nvidia_dkms_304_module = 'nvidia-legacy-304xx/304.132'
-      $nvidia_dkms_340_module = 'nvidia-legacy-340xx/340.98'
-      $nvidia_dkms_367_module = 'nvidia-current/367.57'
-      # XXX $r8168_dkms_module      = 'r8168/8.040.00'
+      $broadcom_sta_dkms_module = 'broadcom-sta/6.30.223.271'
+      $nvidia_dkms_304_module   = 'nvidia-legacy-304xx/304.132'
+      $nvidia_dkms_340_module   = 'nvidia-legacy-340xx/340.98'
+      $nvidia_dkms_367_module   = 'nvidia-current/367.57'
+      # XXX $r8168_dkms_module        = 'r8168/8.040.00'
 
-      $all_dkms_modules = [ $nvidia_dkms_304_module
+      $all_dkms_modules = [ $broadcom_sta_dkms_module
+			  , $nvidia_dkms_304_module
 			  , $nvidia_dkms_340_module
 			  , $nvidia_dkms_367_module ]
 
-      # XXX $bcmwl_dkms_module  # XXX missing from Debian
       # XXX $r8168_dkms_module  # XXX missing from Debian
     }
   }
