@@ -53,6 +53,8 @@ require 'trollop'
 Encoding.default_external = 'utf-8'
 ENV['LANG'] = "C"
 
+MANAGED_PRINTERS_LIST_FILEPATH = "/var/lib/puavo-desktop/dnssd_printers"
+
 class DNSException < RuntimeError
 
 end
@@ -221,8 +223,8 @@ begin
 
   managed_printers = Hash.new
 
-  if File.exists?("/var/lib/puavo-desktop/dnssd_printers")
-    json = JSON.parse(File.read("/var/lib/puavo-desktop/dnssd_printers"))
+  if File.exists?(MANAGED_PRINTERS_LIST_FILEPATH)
+    json = JSON.parse(File.read(MANAGED_PRINTERS_LIST_FILEPATH))
 
     json.each do |o|
       printer = Printer.json_create(o)
@@ -301,7 +303,7 @@ begin
 
       # Write new list of managed entries to the disk
 
-      File.open("/var/lib/puavo-desktop/dnssd_printers", "w") do |file|
+      File.open(MANAGED_PRINTERS_LIST_FILEPATH, "w") do |file|
         file.puts printers.values.to_json
       end
 
