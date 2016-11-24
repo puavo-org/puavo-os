@@ -38,10 +38,7 @@ class kernels {
     default  => $default_kernel,
   }
 
-  $legacy_kernel = $debianversioncodename ? {
-    'jessie' => '3.16.0-4-amd64',
-    default  => $default_kernel,
-  }
+  $legacy_kernel = '3.16.0-4-amd64'
 
   ::kernels::all_kernel_links {
     'default': kernel => $default_kernel;
