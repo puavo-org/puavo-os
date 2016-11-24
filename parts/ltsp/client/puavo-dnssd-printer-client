@@ -223,13 +223,16 @@ begin
 
   managed_printers = Hash.new
 
-  if File.exists?(MANAGED_PRINTERS_LIST_FILEPATH)
+  begin
     json = JSON.parse(File.read(MANAGED_PRINTERS_LIST_FILEPATH))
 
     json.each do |o|
       printer = Printer.json_create(o)
       managed_printers[printer.name] = printer
     end
+  rescue Exception => e
+    log "Error: failed to read printers from #{MANAGED_PRINTERS_LIST_FILEPATH}: #{e}"
+    managed_printers.clear
   end
 
   # Get list of printers currently configured in CUPS
