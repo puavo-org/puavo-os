@@ -775,6 +775,8 @@ class Host
           end
 
           if Time.now - @last_status_report_time > @conf[:report_interval]
+            @last_status_report_time = Time.now
+
             begin
               status = get_status
             rescue StandardError => e
@@ -785,8 +787,6 @@ class Host
                 controller_send_report('status', status)
               rescue StandardError => e
                 Log.exception('failed to report status', e)
-              else
-                @last_status_report_time = Time.now
               end
 
               begin
