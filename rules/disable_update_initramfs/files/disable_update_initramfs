@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -eu
+
+mv /usr/sbin/update-initramfs /usr/sbin/update-initramfs.distrib
+
+cat <<'EOF' > /usr/sbin/update-initramfs
+#!/bin/sh
+
+echo 'update-initramfs disabled, doing nothing.'
+exit 0
+EOF
+chmod 755 /usr/sbin/update-initramfs
