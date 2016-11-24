@@ -41,6 +41,9 @@ disable_suspend_on_nbd_devices
 disable_unclutter
     Disable unclutter, causes problems on some hardware.
 
+disable_update_initramfs
+    Disable initramfs generation.
+
 dpkg
     A helper module for dealing with dpkg.
 

@@ -5,6 +5,7 @@ class image::bundle::basic {
   include ::disable_suspend_on_halt
   include ::disable_suspend_on_nbd_devices
   include ::disable_unclutter
+  include ::disable_update_initramfs
   include ::gdm
   include ::kernels
   # include ::keyboard_hw_quirks        # XXX do we need this for Debian?
