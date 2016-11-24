@@ -4,7 +4,7 @@ set -eu
 
 graphics_driver=$(puavo-conf puavo.graphics.driver)
 
-glx_alternative=/usr/lib/mesa-diverted
+glx_alternative=
 nvidia_alternative=
 
 case "$graphics_driver" in
@@ -27,6 +27,10 @@ case "$graphics_driver" in
     xserver_driver=${graphics_driver}
     ;;
 esac
+
+if [ -n "$glx_alternative" ]; then
+  update-glx --set glx "$glx_alternative" >/dev/null 2>&1
+fi
 
 if [ -n "$nvidia_alternative" ]; then
   if [ -d "/usr/lib/nvidia/${nvidia_alternative}" ]; then
