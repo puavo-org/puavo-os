@@ -29,7 +29,7 @@ case "$graphics_driver" in
 esac
 
 if [ -n "$glx_alternative" ]; then
-  update-glx --set glx "$glx_alternative"
+  update-glx --set glx "$glx_alternative" >/dev/null 2>&1
 fi
 
 if [ -n "$nvidia_alternative" ]; then
