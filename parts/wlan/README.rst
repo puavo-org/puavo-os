@@ -26,3 +26,17 @@ it just gathers status reports and stores them temporarily in Redis.
 Mapper is poor man's site survey tool. Currently, it does not have any Puavo
 integration; it is totally independent tool used for scanning nearby
 accesspoints and for graphing coverage heat maps based on signal strengths.
+
+=============
+ Accesspoint
+=============
+
+Acesspoint is the basic building block of Puavo WLAN networks. It uses
+
+- hostapd for providing the actual IEEE 802.11 accesspoint
+- vtund for connecting accesspoint to the gateway
+- horst for monitoring RSSIs of connected stations
+
+To run accesspoint, simply run::
+
+  sudo puavo-wlanap
