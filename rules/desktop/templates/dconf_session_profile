@@ -65,7 +65,7 @@ default-monitors-setup='do-nothing'
 overrides={'Gtk/ShellShowsAppMenu': <0>, 'Gtk/ShellShowsMenubar': <1>, 'Gtk/DecorationLayout': <'menu:minimize,maximize,close'>}
 
 [org/gnome/shell]
-enabled-extensions=['alternate-tab@gnome-shell-extensions.gcampax.github.com', 'appindicatorsupport@rgcjonas.gmail.com', 'bottompanel@tmoer93', 'launch-new-instance@gnome-shell-extensions.gcampax.github.com', 'Move_Clock@rmy.pobox.com', 'TaskBar@zpydr', 'user-theme@gnome-shell-extensions.gcampax.github.com', 'webmenu@puavo.org', 'workspace-indicator@gnome-shell-extensions.gcampax.github.com']
+enabled-extensions=['alternate-tab@gnome-shell-extensions.gcampax.github.com', 'appindicatorsupport@rgcjonas.gmail.com', 'bottompanel@tmoer93', 'launch-new-instance@gnome-shell-extensions.gcampax.github.com', 'Move_Clock@rmy.pobox.com', 'user-theme@gnome-shell-extensions.gcampax.github.com', 'webmenu@puavo.org', 'workspace-indicator@gnome-shell-extensions.gcampax.github.com']
 
 [org/gnome/shell/extensions/TaskBar]
 active-task-background-color='rgb(138,226,52)'

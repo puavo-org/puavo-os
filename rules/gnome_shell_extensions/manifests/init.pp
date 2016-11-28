@@ -12,13 +12,14 @@ class gnome_shell_extensions {
     }
   }
 
+  # XXX disabled 'TaskBar@zpydr', triggers a bug in some hosts when used with
+  # XXX user-theme@gnome-shell-extensions.gcampax.github.com
 
   ::gnome_shell_extensions::add_extension {
     [ 'appindicatorsupport@rgcjonas.gmail.com'
     , 'bigtouch-ux@puavo.org'
     , 'bottompanel@tmoer93'
     , 'Move_Clock@rmy.pobox.com'
-    , 'TaskBar@zpydr'
     , 'webmenu@puavo.org' ]:
       ;
   }
