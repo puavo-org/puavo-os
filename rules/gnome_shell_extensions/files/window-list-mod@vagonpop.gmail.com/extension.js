@@ -776,9 +776,11 @@ function enablePanel(bEnable){
    Main.panel.actor.remove_actor(Main.panel._rightBox);
    gbox.add_actor(Main.panel._rightBox);
    gbox.add_actor(Main.panel._centerBox);
+   gbox.add_actor(Main.panel._leftBox);
    Main.panel.actor.height = 1;
   }
   else{
+   gbox.remove_actor(Main.panel._leftBox);
    gbox.remove_actor(Main.panel._centerBox);
    gbox.remove_actor(Main.panel._rightBox);
    Main.panel.actor.add_actor(Main.panel._leftBox);
