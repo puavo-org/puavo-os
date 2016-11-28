@@ -956,7 +956,7 @@ const WindowList = new Lang.Class({
 
     _updatePosition: function() {
         this.actor.set_position(this._monitor.x,
-                                this._monitor.y /*+ this._monitor.height - this.actor.height*/);
+                                this._monitor.y + this._monitor.height - this.actor.height);
     },
 
     _updateWorkspaceIndicatorVisibility: function() {
