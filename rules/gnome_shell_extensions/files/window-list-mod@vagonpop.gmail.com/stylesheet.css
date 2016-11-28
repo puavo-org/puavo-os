@@ -1,0 +1,102 @@
+.bottom-panel {
+  /* .window-button-icon height +
+     .window-button vertical padding +
+     .window-button > StWidget vertical padding) */
+  height: 2.25em;
+
+
+}
+
+.bottom-panel > StWidget {
+  /* .window-button-icon height +
+     .window-button vertical padding +
+     .window-button > StWidget vertical padding) */
+  /*background-color:#101010;*/
+  background-color: rgba(47, 52, 64, 0.0);
+
+}
+
+.window-list {
+  spacing: 0px;
+  font-size: 8pt;
+  
+}
+
+.window-button {
+  padding: 0px;
+}
+
+.window-button:first-child:ltr {
+  padding-left: 0px;
+}
+
+.window-button:last-child:rtl {
+  padding-right: 0px;
+}
+
+.window-button-box {
+  spacing: 4px;
+}
+
+.window-button > StWidget {
+  -st-natural-width: 10.75em;
+  max-width: 18.75em;
+  color: #bbb;
+  background-color: rgba(0,0,0,0.0);
+  border-radius: 0px;
+  padding: 3px 6px 1px;
+  /*box-shadow: inset 1px 1px 4px rgba(255,255,255,0.5);*/
+  /*text-shadow: 1px 1px 4px rgba(0,0,0,0.8);*/
+}
+
+.window-button:hover > StWidget {
+  color: white;
+  background-color: rgba(0, 0, 0, 0.2);
+  /*background-color: rgba(47, 52, 64, 0.4);*/
+}
+
+.window-button:active > StWidget,
+.window-button:focus > StWidget {
+  /*box-shadow: inset 2px 2px 4px rgba(255,255,255,0.5);*/
+}
+
+.window-button.focused > StWidget {
+  color: white;
+  background-color: #5294e2;
+  /*background-color: #383c4a;*/
+  
+  /*box-shadow: inset 1px 1px 4px rgba(255,255,255,0.7);*/
+  /*border: 1px solid #252a33;*/
+  border: 1px solid #101010;
+}
+
+.window-button.focused:active > StWidget {
+  /*box-shadow: inset 2px 2px 4px rgba(255,255,255,0.7);*/
+}
+
+.window-button.minimized > StWidget {
+  color: #666;
+  /*box-shadow: inset -1px -1px 4px rgba(255,255,255,0.5);*/
+}
+
+.window-button.minimized:active > StWidget {
+  /*box-shadow: inset -2px -2px 4px rgba(255,255,255,0.5);*/
+}
+
+.window-button-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.window-list-workspace-indicator {
+  padding: 0px;
+}
+
+.window-list-workspace-indicator > StWidget {
+  background-color: rgba(0, 0, 0, 1.);
+  /*border: 1px solid #cccccc;*/
+}
+
+.notification {
+  font-weight: normal;
+}

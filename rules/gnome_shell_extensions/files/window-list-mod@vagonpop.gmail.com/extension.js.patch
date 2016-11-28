@@ -1,0 +1,124 @@
+--- extension.js	2016-03-22 23:21:23.000000000 +0300
++++ extension.js.new	2016-05-07 17:52:38.085308397 +0300
+@@ -19,7 +19,10 @@
+ const Gettext = imports.gettext.domain('gnome-shell-extensions');
+ const _ = Gettext.gettext;
+ 
+-const ICON_TEXTURE_SIZE = 24;
++const ICON_TEXTURE_SIZE = 16;
++gbox = 0;
++bAdded = 0;
++panelh = 0;
+ const DND_ACTIVATE_TIMEOUT = 500;
+ 
+ const GroupingMode = {
+@@ -765,6 +768,26 @@
+     }
+ });
+ 
++
++function enablePanel(bEnable){
++  if(bEnable){
++   Main.panel.actor.remove_actor(Main.panel._leftBox);
++   Main.panel.actor.remove_actor(Main.panel._centerBox);
++   Main.panel.actor.remove_actor(Main.panel._rightBox);
++   gbox.add_actor(Main.panel._rightBox);
++   gbox.add_actor(Main.panel._centerBox);
++   Main.panel.actor.height = 1;
++  }
++  else{
++   gbox.remove_actor(Main.panel._centerBox);
++   gbox.remove_actor(Main.panel._rightBox);
++   Main.panel.actor.add_actor(Main.panel._leftBox);
++   Main.panel.actor.add_actor(Main.panel._centerBox);
++   Main.panel.actor.add_actor(Main.panel._rightBox);
++   Main.panel.actor.height = panelh;
++  }
++}
++
+ const WindowList = new Lang.Class({
+     Name: 'WindowList',
+ 
+@@ -776,10 +799,13 @@
+                                      style_class: 'bottom-panel',
+                                      reactive: true,
+                                      track_hover: true,
+-                                     layout_manager: new Clutter.BinLayout()});
++                                     layout_manager: new Clutter.BinLayout(),
++                                     height: 24});
+         this.actor.connect('destroy', Lang.bind(this, this._onDestroy));
+ 
+         let box = new St.BoxLayout({ x_expand: true, y_expand: true });
++        gbox=box;
++        panelh=Main.panel.actor.height;
+         this.actor.add_actor(box);
+ 
+         let layout = new Clutter.BoxLayout({ homogeneous: true });
+@@ -796,11 +822,15 @@
+                 let node = this._windowList.get_theme_node();
+                 let spacing = node.get_length('spacing');
+                 this._windowList.layout_manager.spacing = spacing;
++                if(!bAdded){
++                  bAdded=1;
++                  enablePanel(1);
++                }
+             }));
+         this._windowList.connect('scroll-event', Lang.bind(this, this._onScrollEvent));
+ 
+         let indicatorsBox = new St.BoxLayout({ x_align: Clutter.ActorAlign.END });
+-        box.add(indicatorsBox);
++        //box.add(indicatorsBox);
+ 
+         this._workspaceIndicator = new WorkspaceIndicator();
+         indicatorsBox.add(this._workspaceIndicator.container, { expand: false, y_fill: true });
+@@ -856,12 +886,14 @@
+             Main.overview.connect('showing', Lang.bind(this, function() {
+                 this.actor.hide();
+                 this._updateKeyboardAnchor();
++                enablePanel(0);
+             }));
+ 
+         this._overviewHidingId =
+             Main.overview.connect('hiding', Lang.bind(this, function() {
+                 this.actor.visible = !Main.layoutManager.primaryMonitor.inFullscreen;
+                 this._updateKeyboardAnchor();
++                enablePanel(1);
+             }));
+ 
+         this._fullscreenChangedId =
+@@ -924,7 +956,7 @@
+ 
+     _updatePosition: function() {
+         this.actor.set_position(this._monitor.x,
+-                                this._monitor.y + this._monitor.height - this.actor.height);
++                                this._monitor.y /*+ this._monitor.height - this.actor.height*/);
+     },
+ 
+     _updateWorkspaceIndicatorVisibility: function() {
+@@ -1168,6 +1200,10 @@
+     },
+ 
+     _onDestroy: function() {
++        if(gbox){
++          enablePanel(0);
++          bAdded=0;
++        }
+         this._workspaceSettings.disconnect(this._workspacesOnlyOnPrimaryChangedId);
+ 
+         this._workspaceIndicator.destroy();
+@@ -1215,6 +1251,7 @@
+     },
+ 
+     enable: function() {
++
+         this._windowLists = [];
+ 
+         this._settings = Convenience.getSettings();
+@@ -1244,6 +1281,7 @@
+     },
+ 
+     disable: function() {
++
+         if (!this._windowLists)
+             return;
+ 
