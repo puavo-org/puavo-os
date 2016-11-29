@@ -20,9 +20,6 @@ const Gettext = imports.gettext.domain('gnome-shell-extensions');
 const _ = Gettext.gettext;
 
 const ICON_TEXTURE_SIZE = 16;
-gbox = 0;
-bAdded = 0;
-panelh = 0;
 const DND_ACTIVATE_TIMEOUT = 500;
 
 const GroupingMode = {
@@ -769,27 +766,6 @@ const WorkspaceIndicator = new Lang.Class({
 });
 
 
-function enablePanel(bEnable){
-  if(bEnable){
-   Main.panel.actor.remove_actor(Main.panel._leftBox);
-   Main.panel.actor.remove_actor(Main.panel._centerBox);
-   Main.panel.actor.remove_actor(Main.panel._rightBox);
-   gbox.add_actor(Main.panel._rightBox);
-   gbox.add_actor(Main.panel._centerBox);
-   gbox.add_actor(Main.panel._leftBox);
-   Main.panel.actor.height = 1;
-  }
-  else{
-   gbox.remove_actor(Main.panel._leftBox);
-   gbox.remove_actor(Main.panel._centerBox);
-   gbox.remove_actor(Main.panel._rightBox);
-   Main.panel.actor.add_actor(Main.panel._leftBox);
-   Main.panel.actor.add_actor(Main.panel._centerBox);
-   Main.panel.actor.add_actor(Main.panel._rightBox);
-   Main.panel.actor.height = panelh;
-  }
-}
-
 const WindowList = new Lang.Class({
     Name: 'WindowList',
 
@@ -797,18 +773,8 @@ const WindowList = new Lang.Class({
         this._perMonitor = perMonitor;
         this._monitor = monitor;
 
-        this.actor = new St.Widget({ name: 'panel',
-                                     style_class: 'bottom-panel',
-                                     reactive: true,
-                                     track_hover: true,
-                                     layout_manager: new Clutter.BinLayout(),
-                                     height: 24});
+        this.actor = new St.BoxLayout({ x_expand: true, y_expand: true });
         this.actor.connect('destroy', Lang.bind(this, this._onDestroy));
-
-        let box = new St.BoxLayout({ x_expand: true, y_expand: true });
-        gbox=box;
-        panelh=Main.panel.actor.height;
-        this.actor.add_actor(box);
 
         let layout = new Clutter.BoxLayout({ homogeneous: true });
         this._windowList = new St.Widget({ style_class: 'window-list',
@@ -817,17 +783,15 @@ const WindowList = new Lang.Class({
                                            x_align: Clutter.ActorAlign.START,
                                            x_expand: true,
                                            y_expand: true });
-        box.add(this._windowList, { expand: true });
+        this.actor.add(this._windowList, { expand: true });
+
+        Main.panel._leftBox.add_actor(this.actor);
 
         this._windowList.connect('style-changed', Lang.bind(this,
             function() {
                 let node = this._windowList.get_theme_node();
                 let spacing = node.get_length('spacing');
                 this._windowList.layout_manager.spacing = spacing;
-                if(!bAdded){
-                  bAdded=1;
-                  enablePanel(1);
-                }
             }));
         this._windowList.connect('scroll-event', Lang.bind(this, this._onScrollEvent));
 
@@ -888,14 +852,12 @@ const WindowList = new Lang.Class({
             Main.overview.connect('showing', Lang.bind(this, function() {
                 this.actor.hide();
                 this._updateKeyboardAnchor();
-                enablePanel(0);
             }));
 
         this._overviewHidingId =
             Main.overview.connect('hiding', Lang.bind(this, function() {
                 this.actor.visible = !Main.layoutManager.primaryMonitor.inFullscreen;
                 this._updateKeyboardAnchor();
-                enablePanel(1);
             }));
 
         this._fullscreenChangedId =
@@ -1202,10 +1164,6 @@ const WindowList = new Lang.Class({
     },
 
     _onDestroy: function() {
-        if(gbox){
-          enablePanel(0);
-          bAdded=0;
-        }
         this._workspaceSettings.disconnect(this._workspacesOnlyOnPrimaryChangedId);
 
         this._workspaceIndicator.destroy();
