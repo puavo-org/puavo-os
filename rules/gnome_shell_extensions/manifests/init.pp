@@ -18,7 +18,7 @@ class gnome_shell_extensions {
     , 'bottompanel@tmoer93'
     , 'Move_Clock@rmy.pobox.com'
     , 'webmenu@puavo.org'
-    , 'window-list-mod@opinsys.fi' ]:
+    , 'window-list-mod@puavo.org' ]:
       ;
   }
 
