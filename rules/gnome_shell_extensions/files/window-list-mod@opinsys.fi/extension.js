@@ -780,15 +780,8 @@ const WindowList = new Lang.Class({
         this._perMonitor = perMonitor;
         this._monitor = monitor;
 
-        this.actor = new St.Widget({ name: 'panel',
-                                     style_class: 'bottom-panel',
-                                     reactive: true,
-                                     track_hover: true,
-                                     layout_manager: new Clutter.BinLayout()});
+        this.actor = new St.BoxLayout({ x_expand: true, y_expand: true });
         this.actor.connect('destroy', Lang.bind(this, this._onDestroy));
-
-        let box = new St.BoxLayout({ x_expand: true, y_expand: true });
-        this.actor.add_actor(box);
 
         let layout = new Clutter.BoxLayout({ homogeneous: true });
         this._windowList = new St.Widget({ style_class: 'window-list',
@@ -797,7 +790,9 @@ const WindowList = new Lang.Class({
                                            x_align: Clutter.ActorAlign.START,
                                            x_expand: true,
                                            y_expand: true });
-        box.add(this._windowList, { expand: true });
+        this.actor.add(this._windowList, { expand: true });
+
+        Main.panel._leftBox.add_actor(this.actor);
 
         this._windowList.connect('style-changed', Lang.bind(this,
             function() {
