@@ -803,7 +803,8 @@ const WindowList = new Lang.Class({
         this._windowList.connect('scroll-event', Lang.bind(this, this._onScrollEvent));
 
         let indicatorsBox = new St.BoxLayout({ x_align: Clutter.ActorAlign.END });
-        box.add(indicatorsBox);
+        // do not add indicators (we only show the window list)
+        // box.add(indicatorsBox);
 
         this._workspaceIndicator = new WorkspaceIndicator();
         indicatorsBox.add(this._workspaceIndicator.container, { expand: false, y_fill: true });
