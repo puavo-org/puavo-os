@@ -792,8 +792,6 @@ const WindowList = new Lang.Class({
                                            y_expand: true });
         this.actor.add(this._windowList, { expand: true });
 
-        Main.panel._leftBox.add_actor(this.actor);
-
         this._windowList.connect('style-changed', Lang.bind(this,
             function() {
                 let node = this._windowList.get_theme_node();
@@ -818,12 +816,9 @@ const WindowList = new Lang.Class({
         this._menuManager = new PopupMenu.PopupMenuManager(this);
         this._menuManager.addMenu(this._workspaceIndicator.menu);
 
-        Main.layoutManager.addChrome(this.actor, { affectsStruts: true,
-                                                   trackFullscreen: true });
-        Main.uiGroup.set_child_above_sibling(this.actor, Main.layoutManager.panelBox);
+        Main.panel._leftBox.add_actor(this.actor);
         Main.ctrlAltTabManager.addGroup(this.actor, _("Window List"), 'start-here-symbolic');
 
-        this.actor.width = this._monitor.width;
         this.actor.connect('notify::height', Lang.bind(this, this._updatePosition));
         this._updatePosition();
 
