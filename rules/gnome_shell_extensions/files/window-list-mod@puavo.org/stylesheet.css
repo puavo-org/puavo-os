@@ -1,0 +1,83 @@
+.bottom-panel {
+  /* .window-button-icon height +
+     .window-button vertical padding +
+     .window-button > StWidget vertical padding) */
+  height: 2.25em;
+}
+
+.bottom-panel > StWidget {
+  /* .window-button-icon height +
+     .window-button vertical padding +
+     .window-button > StWidget vertical padding) */
+  background-color: rgba(47, 52, 64, 0.0);
+}
+
+.window-list {
+  spacing: 2px;
+  font-size: 10pt;
+}
+
+.window-button {
+  padding: 1px;
+}
+
+.window-button:first-child:ltr {
+  padding-left: 2px;
+}
+
+.window-button:last-child:rtl {
+  padding-right: 2px;
+}
+
+.window-button-box {
+  spacing: 4px;
+}
+
+.window-button > StWidget {
+  -st-natural-width: 18.75em;
+  max-width: 18.75em;
+  color: black;
+  background-color: rgba(0,0,0,0.0);
+  border-radius: 0px;
+  padding: 3px 6px 1px;
+}
+
+.window-button:hover > StWidget {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.window-button:active > StWidget,
+.window-button:focus > StWidget {
+}
+
+.window-button.focused > StWidget {
+  background-color: #5da7ff;
+  border: 1px solid #101010;
+}
+
+.window-button.focused:active > StWidget {
+}
+
+.window-button.minimized > StWidget {
+  color: #666;
+}
+
+.window-button.minimized:active > StWidget {
+}
+
+.window-button-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.window-list-workspace-indicator {
+  padding: 0px;
+}
+
+.window-list-workspace-indicator > StWidget {
+  background-color: rgba(0, 0, 0, 1.);
+}
+
+.notification {
+  font-weight: normal;
+}
