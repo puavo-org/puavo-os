@@ -36,14 +36,13 @@
 .window-button > StWidget {
   -st-natural-width: 18.75em;
   max-width: 18.75em;
-  color: #bbb;
+  color: black;
   background-color: rgba(0,0,0,0.0);
   border-radius: 0px;
   padding: 3px 6px 1px;
 }
 
 .window-button:hover > StWidget {
-  color: white;
   background-color: rgba(0, 0, 0, 0.2);
 }
 
@@ -52,7 +51,6 @@
 }
 
 .window-button.focused > StWidget {
-  color: white;
   background-color: #5294e2;
   border: 1px solid #101010;
 }
