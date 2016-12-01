@@ -10,6 +10,7 @@ Build-Depends: bundler | ruby-bundler,
  libglib2.0-dev,
  libgnome-desktop-3-dev,
  libjansson-dev,
+ libjson-c-dev,
  libncurses5-dev,
  libnl-3-dev,
  libnl-genl-3-dev,
@@ -57,7 +58,7 @@ Description: Opinsys CA certificate files for client usage.
 Package: puavoadmins
 Architecture: any
 Depends: ${misc:Depends},
- libjansson4,
+ libjson-c2,
  ruby-puavobs (>= 0.1.1),
  ruby
 Description: Puavo admin intergration

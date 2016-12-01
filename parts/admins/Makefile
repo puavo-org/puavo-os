@@ -12,8 +12,8 @@ INSTALL_DATA = $(INSTALL) -m 644
 CFLAGS = -g -fPIC -std=gnu99 -Wall -Wextra
 LDFLAGS = -lm
 
-CFLAGS += $(shell pkg-config --cflags json)
-LDFLAGS += $(shell pkg-config --libs json)
+CFLAGS += $(shell pkg-config --cflags json-c)
+LDFLAGS += $(shell pkg-config --libs json-c)
 
 # For some reason ruby lib directory is different under /usr and /usr/local
 ifeq ($(prefix),/usr/local)

@@ -22,7 +22,7 @@
 #include <stdio.h>
 
 /* Third-party includes. */
-#include <json/json.h>
+#include <json-c/json.h>
 
 /* Local includes. */
 #include "orgjson.h"
