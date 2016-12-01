@@ -12,14 +12,13 @@ class gnome_shell_extensions {
     }
   }
 
-
   ::gnome_shell_extensions::add_extension {
     [ 'appindicatorsupport@rgcjonas.gmail.com'
     , 'bigtouch-ux@puavo.org'
     , 'bottompanel@tmoer93'
     , 'Move_Clock@rmy.pobox.com'
-    , 'TaskBar@zpydr'
-    , 'webmenu@puavo.org' ]:
+    , 'webmenu@puavo.org'
+    , 'window-list-mod@puavo.org' ]:
       ;
   }
 

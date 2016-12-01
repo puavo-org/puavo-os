@@ -35,15 +35,13 @@ class PuavoShareSpec
 	        :sharepath,
 	        :writegroups
 
-  def initialize(*args)
-    spec = *args
-
-    @automatic_acls = spec[:automatic_acls]
-    @group          = spec[:group]
-    @readgroups     = spec[:readgroups]
-    @school         = spec[:school]
-    @sharepath      = spec[:sharepath]
-    @writegroups    = spec[:writegroups]
+  def initialize(kwargs = {})
+    @automatic_acls = kwargs[:automatic_acls]
+    @group          = kwargs[:group]
+    @readgroups     = kwargs[:readgroups]
+    @school         = kwargs[:school]
+    @sharepath      = kwargs[:sharepath]
+    @writegroups    = kwargs[:writegroups]
   end
 
   def linkpath(lang)

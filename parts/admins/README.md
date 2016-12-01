@@ -28,7 +28,7 @@ organization owners to the host:
 Requirements
 ------------
 
-- libjansson
+- libjson-c
 - ruby
 - ruby-puavobs
 
