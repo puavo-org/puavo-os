@@ -407,8 +407,11 @@ Package: puavo-wlancontroller
 Architecture: any
 Depends: ${misc:Depends},
  adduser,
- bundler | ruby-bundler,
- ruby
+ puma,
+ ruby,
+ ruby-redis,
+ ruby-sinatra,
+ ruby-sqlite3
 Description: Puavo's WLAN controller
  puavo-wlancontroller monitors and controls a swarm of puavo-wlanap
  instances.
