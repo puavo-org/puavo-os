@@ -5,13 +5,9 @@ appdir = /opt/puavo-wlancontroller
 vardir = /var/opt/puavo-wlancontroller
 
 all:
-	bundle install --deployment
 
 install: all installdirs
-	cp -r .bundle vendor $(DESTDIR)$(appdir)
 	$(INSTALL_DATA) -t $(DESTDIR)$(appdir)	\
-		Gemfile				\
-		Gemfile.lock			\
 		config.ru			\
 		permstore.rb			\
 		app.rb				\
@@ -35,6 +31,5 @@ installdirs:
 	mkdir -p $(DESTDIR)$(vardir)
 
 clean:
-	rm -rf .bundle
 
 .PHONY: all clean install installdirs
