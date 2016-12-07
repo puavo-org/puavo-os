@@ -21,7 +21,6 @@ menutools = require "./menutools"
 {load, readDirectoryD} = require "./load"
 logStartTime = require "./logStartTime"
 dbusRegister = require "./dbusRegister"
-forceFocus = require "./forceFocus"
 createSpawnSocket = require "./createSpawnSocket"
 logger = require "./fluent-logger"
 pkg = require "../package.json"
@@ -197,7 +196,6 @@ module.exports = (gui, Window) ->
         Window.show()
         Window.focus()
         Window.setAlwaysOnTop(true)
-        forceFocus(pkg.window.title, 50, 100, 350, 500)
 
     alignWindow = (viewName) ->
         if viewName == 'logout'
