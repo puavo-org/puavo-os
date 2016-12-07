@@ -43,5 +43,10 @@ class adm::users {
       uid         => 1008;
 
     # 1009-1013 were reserved before
+
+    'adm-toinonen':
+      sshkey      => 'AAAAB3NzaC1yc2EAAAADAQABAAACAQDdHKONM33p5tP9/UPBk22sgVN53iAlvh4YEpeDm/yAXvIz3mqB2+P7NP8sejiEWPWwW4kzqZUD0B3fVeq8ighZ3WP767m1iS+3s9pc95IiI0M/Owm3pgBW0QzaJId4Kl3O0I42moTiDZ+7d26zJC9fFGCzFw2Til+7fFUOPjtfWatWTNvYdIzYJQRx+zdObaJ5CfegohTPyRrSjtPgH/V2Lh6dVMqKjZXm18dwxM6pS464oedJrFXcWHg8mNWGP2Ver/BX/d2oQYi846ur1ElZSgcZqZWgewBE1aQ0x0a4MsPM2eOg9ioSslDTyfV8dg5ZhppFqLQQ7o/eUlu9m5IyZHQ3rtqJSkZic4tVj9s9e6YEcR7iXBRtb7gVrA2ZpQ38c6RmP9jXDBjb3UqXdQP8SuqlCtQGC3ZRnasd3YnK2oX1L+WL67pO0LGbMRaFvnmjcQ81JxCQZg845V0yYneWlyJlu341sy1O9ysuzJKDDUD5yNVEK+ry2mQgdxGcSIjxD2Fp7DNFfdMqu5XxfzPDecTqfhua96gTQc3V1Dnp3JAVTMoPMy0O6lUksAf1PlYdlvWW8c0XbIMnqPxTz19JQ1uJXOj4UkQ6Av4w+igQcxoxVK4+mxe1rAF6v9bZDMZAOX70FWqINx7LKaWQVLw/CsxE9iqekTUoR/qvt8Pqgw==',
+      sshkey_type => 'rsa',
+      uid         => 1014;
   }
 }
