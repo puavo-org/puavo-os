@@ -6,3 +6,6 @@ deb-src http://<%= @mirror %><%= @mirror_path %>/debian <%= @distrib_version %>-
 
 deb http://<%= @securitymirror %><%= @securitymirror_path %>/ <%= @distrib_version %>/updates main contrib non-free
 deb-src http://<%= @securitymirror %><%= @securitymirror_path %>/ <%= @distrib_version %>/updates main contrib non-free
+
+deb http://<%= @mirror %><%= @mirror_path %>/debian <%= @distrib_version %>-backports main contrib non-free
+deb-src http://<%= @mirror %><%= @mirror_path %>/debian <%= @distrib_version %>-backports main contrib non-free
