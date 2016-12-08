@@ -1,5 +1,4 @@
 class image::allinone {
-
   include ::adm::users
   include ::autopoweroff
   include ::chromium
@@ -22,8 +21,6 @@ class image::allinone {
   include ::ktouch
   include ::network_manager
   include ::packages
-  include ::packages
-  include ::packages::backports
   include ::packages::languages::de
   include ::packages::languages::en
   include ::packages::languages::fi
@@ -36,6 +33,7 @@ class image::allinone {
   include ::udev
   include ::use_urandom
   include ::wacom
+
   stage {
     'init':
       before => Stage['pre-main'];
@@ -53,7 +51,4 @@ class image::allinone {
           or tag == 'tag_debian_backports'
           or tag == 'tag_kernel'
           or tag == 'tag_puavo' |>
-
-  # get all backports defined in packages::backports
-  Packages::Backports::For_Packages <| |>
 }

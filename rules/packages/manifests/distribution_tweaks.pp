@@ -1,4 +1,6 @@
 class packages::distribution_tweaks {
+  include ::packages::pinning
+
   case $debianversioncodename {
     'jessie': {
       Package <|
