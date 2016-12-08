@@ -17,6 +17,7 @@ class gnome_shell_extensions {
     , 'bigtouch-ux@puavo.org'
     , 'bottompanel@tmoer93'
     , 'Move_Clock@rmy.pobox.com'
+    , 'Panel_Favorites@rmy.pobox.com'
     , 'webmenu@puavo.org'
     , 'window-list-mod@puavo.org' ]:
       ;
