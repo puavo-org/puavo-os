@@ -7,8 +7,8 @@ class apt {
     $distrib_version = $title
 
     file {
-      "/etc/apt/preferences.d/00-${distrib_version}-backports.pref":
-        content => template('apt/00-distrib_version-backports.pref'),
+      "/etc/apt/preferences.d/00-${distrib_version}.pref":
+        content => template('apt/00-distrib_version.pref'),
         notify  => Exec['apt update'];
 
       "/etc/apt/sources.list.d/${distrib_version}.list":
