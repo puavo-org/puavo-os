@@ -1,0 +1,15 @@
+Package: *
+Pin: release a=<%= @distrib_version %>
+Pin-Priority: 50
+
+Package: *
+Pin: release a=<%= @distrib_version %>-updates
+Pin-Priority: 50
+
+Package: *
+Pin: release a=<%= @distrib_version %>/updates
+Pin-Priority: 50
+
+Package: *
+Pin: release a=<%= @distrib_version %>-backports
+Pin-Priority: 50

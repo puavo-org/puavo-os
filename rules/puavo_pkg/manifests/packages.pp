@@ -7,7 +7,7 @@ class puavo_pkg::packages {
 			, 'cmaptools'
 			, 'dropbox'
 			, 'ekapeli-alku'
-			, 'geogebra'
+			# , 'geogebra'		# XXX timeout issues
 			, 'google-chrome'
 			, 'google-earth'
 			, 'msttcorefonts'
