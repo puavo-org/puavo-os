@@ -18,6 +18,7 @@ class gnome_shell_extensions {
     , 'bottompanel@tmoer93'
     , 'extend-left-box2@linuxdeepin.com'
     , 'hide-activities-button@gnome-shell-extensions.bookmarkd.xyz'
+    , 'hide-dash@xenatt.github.com'
     , 'Move_Clock@rmy.pobox.com'
     , 'Panel_Favorites@rmy.pobox.com'
     , 'webmenu@puavo.org'
