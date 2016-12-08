@@ -16,6 +16,7 @@ class gnome_shell_extensions {
     [ 'appindicatorsupport@rgcjonas.gmail.com'
     , 'bigtouch-ux@puavo.org'
     , 'bottompanel@tmoer93'
+    , 'extend-left-box2@linuxdeepin.com'
     , 'Move_Clock@rmy.pobox.com'
     , 'Panel_Favorites@rmy.pobox.com'
     , 'webmenu@puavo.org'
