@@ -65,7 +65,7 @@ default-monitors-setup='do-nothing'
 overrides={'Gtk/ShellShowsAppMenu': <0>, 'Gtk/ShellShowsMenubar': <1>, 'Gtk/DecorationLayout': <'menu:minimize,maximize,close'>}
 
 [org/gnome/shell]
-enabled-extensions=['alternate-tab@gnome-shell-extensions.gcampax.github.com', 'appindicatorsupport@rgcjonas.gmail.com', 'bottompanel@tmoer93', 'extend-left-box2@linuxdeepin.com', 'launch-new-instance@gnome-shell-extensions.gcampax.github.com', 'Move_Clock@rmy.pobox.com', 'Panel_Favorites@rmy.pobox.com', 'user-theme@gnome-shell-extensions.gcampax.github.com', 'webmenu@puavo.org', 'window-list-mod@puavo.org', 'workspace-indicator@gnome-shell-extensions.gcampax.github.com']
+enabled-extensions=['alternate-tab@gnome-shell-extensions.gcampax.github.com', 'appindicatorsupport@rgcjonas.gmail.com', 'bottompanel@tmoer93', 'extend-left-box2@linuxdeepin.com', 'hide-activities-button@gnome-shell-extensions.bookmarkd.xyz', 'launch-new-instance@gnome-shell-extensions.gcampax.github.com', 'Move_Clock@rmy.pobox.com', 'Panel_Favorites@rmy.pobox.com', 'user-theme@gnome-shell-extensions.gcampax.github.com', 'webmenu@puavo.org', 'window-list-mod@puavo.org', 'workspace-indicator@gnome-shell-extensions.gcampax.github.com']
 
 [org/gnome/shell/extensions/user-theme]
 name='Puavo'
