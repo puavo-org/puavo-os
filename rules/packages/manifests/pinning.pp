@@ -31,7 +31,7 @@ class packages::pinning {
                           , 'nvidia-settings-legacy-304xx'
                           , 'xserver-xorg-video-nvidia-legacy-304xx' ],
         priority       => 1000,
-        target_release => 'jessie';
+        target_release => 'jessie-backports';
     }
   }
 }
