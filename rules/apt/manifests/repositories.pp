@@ -19,5 +19,11 @@ class apt::repositories {
         securitymirror      => $securitymirror,
         securitymirror_path => $securitymirror_path;
     }
+
+    file {
+      '/etc/apt/sources.list':
+        content => template('apt/sources.list'),
+        notify  => Exec['apt update'];
+    }
   }
 }
