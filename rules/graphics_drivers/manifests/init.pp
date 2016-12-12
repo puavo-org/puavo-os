@@ -12,7 +12,7 @@ class graphics_drivers {
                                    , 'nvidia-340xx-kernel-dkms' ],
                        default  => [ # XXX broken 'nvidia-304xx-kernel-dkms'
                                      'nvidia-340xx-kernel-dkms'
-                                   , 'nvidia-367xx-kernel-dkms' ],
+                                   , 'nvidia-375xx-kernel-dkms' ],
                      }
 
   exec {

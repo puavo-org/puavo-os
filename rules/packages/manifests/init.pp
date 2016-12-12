@@ -604,7 +604,7 @@ class packages {
 
   if $debianversioncodename != 'jessie' {
     @package {
-      'nvidia-367xx-kernel-dkms':
+      'nvidia-375xx-kernel-dkms':
         name => 'nvidia-kernel-dkms',
         tag  => [ 'tag_drivers', 'tag_debian', ];
     }
@@ -663,13 +663,13 @@ class packages {
       # XXX currently broken
       # XXX $nvidia_dkms_304_module   = 'nvidia-legacy-304xx/304.132'
       $nvidia_dkms_340_module   = 'nvidia-legacy-340xx/340.98'
-      $nvidia_dkms_367_module   = 'nvidia-current/367.57'
+      $nvidia_dkms_375_module   = 'nvidia-current/375.20'
       # XXX $r8168_dkms_module        = 'r8168/8.040.00'
 
       $all_dkms_modules = [ $broadcom_sta_dkms_module
 			  # XXX , $nvidia_dkms_304_module
 			  , $nvidia_dkms_340_module
-			  , $nvidia_dkms_367_module ]
+			  , $nvidia_dkms_375_module ]
 
       # XXX $r8168_dkms_module  # XXX missing from Debian
     }
