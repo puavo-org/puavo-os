@@ -195,7 +195,6 @@ module.exports = (gui, Window) ->
         alignWindow(viewName)
         Window.show()
         Window.focus()
-        Window.setAlwaysOnTop(true)
 
     alignWindow = (viewName) ->
         if viewName == 'logout'
@@ -278,15 +277,13 @@ module.exports = (gui, Window) ->
             )
         )
 
-        Window.setAlwaysOnTop(false)
-
         # Use node-webkit to open toolbarless web window
         if cmd.type is "webWindow"
             console.info "Opening web window", cmd.url
             gui.Window.open? cmd.url,
                 width: cmd.width or 1000
                 height: cmd.height or 800
-                "always-on-top": false
+                "always-on-top": true
                 toolbar: false
                 frame: true
                 title: cmd.name
