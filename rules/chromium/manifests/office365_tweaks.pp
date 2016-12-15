@@ -1,4 +1,6 @@
 class chromium::office365_tweaks {
+  include ::chromium
+
   # Microsoft Office 365 is broken with Chrome/Chromium when the default
   # user-agent string is used (containing "Linux").
   # Our Chrome (on Linux) user agent string is normally
@@ -27,22 +29,5 @@ class chromium::office365_tweaks {
   # See http://superuser.com/questions/303929/does-office-365-work-properly-on-ubuntu-chrome-os
   # for more information.
 
-  file {
-    [ '/etc/chromium'
-    , '/etc/chromium/policies'
-    , '/etc/chromium/policies/managed'
-    , '/etc/opt'
-    , '/etc/opt/chrome'
-    , '/etc/opt/chrome/policies'
-    , '/etc/opt/chrome/policies/managed' ]:
-      ensure => directory;
-
-    '/etc/chromium/policies/managed/office365_tweaks.json':
-      content => template('chromium/office365_tweaks.json');
-
-    '/etc/opt/chrome/policies/managed/office365_tweaks.json':
-      ensure  => link,
-      require => File['/etc/chromium/policies/managed/office365_tweaks.json'],
-      target  => '/etc/chromium/policies/managed/office365_tweaks.json';
-  }
+  ::chromium::install_policy { 'office365_tweaks': ; }
 }
