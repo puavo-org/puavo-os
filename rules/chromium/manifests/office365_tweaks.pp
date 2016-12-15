@@ -29,5 +29,8 @@ class chromium::office365_tweaks {
   # See http://superuser.com/questions/303929/does-office-365-work-properly-on-ubuntu-chrome-os
   # for more information.
 
-  ::chromium::install_policy { 'office365_tweaks': ; }
+  chromium::install_policy {
+    'office365_tweaks':
+      require => Chromium::Install_policy['extension_install_forcelist'];
+  }
 }

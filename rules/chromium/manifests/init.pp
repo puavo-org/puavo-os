@@ -8,6 +8,10 @@ class chromium {
       before => File['/usr/bin/chromium'];
   }
 
+  # this installs extensions "User-Agent Switcher for Chrome" (for
+  # "chromium::office365_tweaks"), and "Google Cast for Education".
+  ::chromium::install_policy { 'extension_install_forcelist': ; }
+
   file {
     [ '/etc/chromium'
     , '/etc/chromium/policies'
