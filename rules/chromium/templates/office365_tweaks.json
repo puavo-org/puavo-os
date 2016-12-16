@@ -10,11 +10,20 @@
               "title": "ChromeOS",
               "ua_string": "<%= scope.lookupvar('chromium::office365_tweaks::user_agent') %>",
               "vendor": "Chrome",
-              "badge": "CRO",
+              "badge": "CHR",
               "append": false
             }
           },
 <% end %>
+        ],
+        "UserAgents": [
+          {
+            "title": "ChromeOS",
+            "ua_string": "<%= scope.lookupvar('chromium::office365_tweaks::user_agent') %>",
+            "vendor": "Chrome",
+            "badge": "CHR",
+            "append": false
+          }
         ]
       }
     }
