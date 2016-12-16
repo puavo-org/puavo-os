@@ -198,6 +198,9 @@ items:
     name: Processing
     command: /opt/processing/processing
     osIconPath: /opt/processing/lib/icons/pde-48.png
+  - source: robboscratch2
+    type: desktop
+    inactiveByDeviceType: thinclient
 - type: menu
   name:
     en: Education
