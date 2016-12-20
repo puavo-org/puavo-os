@@ -10,7 +10,10 @@ class chromium {
 
   # this installs extensions "User-Agent Switcher for Chrome" (for
   # "chromium::office365_tweaks"), and "Google Cast for Education".
-  ::chromium::install_policy { 'extension_install_forcelist': ; }
+  chromium::install_policy { 'extension_install_forcelist': ; }
+
+  # configuration for Puavo single sign-on
+  chromium::install_policy { 'puavo-sso': ; }
 
   file {
     [ '/etc/chromium'
