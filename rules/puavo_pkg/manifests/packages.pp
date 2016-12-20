@@ -7,7 +7,7 @@ class puavo_pkg::packages {
 			, 'cmaptools'
 			, 'dropbox'
 			, 'ekapeli-alku'
-			# , 'geogebra'		# XXX timeout issues
+			, 'geogebra'
 			, 'google-chrome'
 			, 'google-earth'
 			, 'msttcorefonts'
@@ -20,5 +20,8 @@ class puavo_pkg::packages {
 
   # Downloading cmaptools might take a longer time.
   # Some cache for these might be nice... ?
-  Puavo_Pkg::Install <| title == 'cmaptools' |> { timeout => 3600, }
+  Puavo_Pkg::Install <| title == 'cmaptools'
+                     or title == 'geobebra' |> {
+    timeout => 3600,
+  }
 }

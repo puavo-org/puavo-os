@@ -53,9 +53,5 @@ class apt {
   file {
     '/etc/apt/apt.conf.d/00default-release':
       content => "APT::Default-Release \"${debianversioncodename}\";\n";
-
-    '/etc/apt/sources.list':
-      content => template('apt/sources.list'),
-      notify  => Exec['apt update'];
   }
 }

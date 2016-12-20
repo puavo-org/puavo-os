@@ -14,6 +14,7 @@ class gnome_shell_extensions {
 
   ::gnome_shell_extensions::add_extension {
     [ 'appindicatorsupport@rgcjonas.gmail.com'
+    , 'audio-switcher@AndresCidoncha'
     , 'bigtouch-ux@puavo.org'
     , 'bottompanel@tmoer93'
     , 'extend-left-box2@linuxdeepin.com'

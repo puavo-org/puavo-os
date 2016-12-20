@@ -11,7 +11,7 @@ class kernels::dkms {
       /^nvidia-current\//: {
         $dkms_module_package = $debianversioncodename ? {
                                  'jessie' => 'nvidia-340xx-kernel-dkms',
-                                 default  => 'nvidia-367xx-kernel-dkms',
+                                 default  => 'nvidia-375xx-kernel-dkms',
                                }
       }
 

@@ -19,6 +19,7 @@ class packages::distribution_tweaks {
 	or title == 'libnspr4-0d'
 	or title == 'libnspr4-0d:i386'
 	or title == 'myspell-sv-se'
+	or title == 'nvidia-304xx-kernel-dkms'
 	or title == 'tellico'
       |> { ensure => absent, }
     }

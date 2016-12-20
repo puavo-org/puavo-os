@@ -70,9 +70,10 @@
           "dbus-send",
           "--system",
           "--print-reply",
-          "--dest=org.freedesktop.ConsoleKit",
-          "/org/freedesktop/ConsoleKit/Manager",
-          "org.freedesktop.ConsoleKit.Manager.Stop"
+          "--dest=org.freedesktop.login1",
+          "/org/freedesktop/login1",
+          "org.freedesktop.login1.Manager.PowerOff",
+          "boolean:true"
       ],
       "confirm": true
   },
@@ -89,9 +90,10 @@
           "dbus-send",
           "--system",
           "--print-reply",
-          "--dest=org.freedesktop.ConsoleKit",
-          "/org/freedesktop/ConsoleKit/Manager",
-          "org.freedesktop.ConsoleKit.Manager.Restart"
+          "--dest=org.freedesktop.login1",
+          "/org/freedesktop/login1",
+          "org.freedesktop.login1.Manager.Reboot",
+          "boolean:true"
       ],
       "confirm": true
   },
