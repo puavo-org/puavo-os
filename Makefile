@@ -78,6 +78,7 @@ help:
 	@echo '    rootfs-shell         spawn shell from Puavo OS rootfs'
 	@echo '    rootfs-sync-repo     sync Puavo OS rootfs repo with the current repo'
 	@echo '    rootfs-update        update Puavo OS rootfs'
+	@echo '    setup-buildhost      some optional setup for buildhost'
 	@echo '    update               update Puavo OS localhost'
 	@echo
 	@echo 'Variables:'
@@ -134,6 +135,10 @@ rootfs-sync-repo: $(rootfs_dir)
 .PHONY: rootfs-update
 rootfs-update: rootfs-sync-repo
 	sudo $(_systemd_nspawn_cmd) $(MAKE) -C '/$(_repo_name)' update
+
+.PHONY: setup-buildhost
+setup-buildhost:
+	sudo .aux/setup-buildhost
 
 .PHONY: update
 update: install-build-deps
