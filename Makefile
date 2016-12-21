@@ -21,8 +21,12 @@ _debootstrap_packages := python3,devscripts,equivs,git,locales,lsb-release,\
 
 _cache_configured := $(shell grep -qs puavo-os /etc/squid3/squid.conf \
 			 && echo true || echo false)
-ifeq ($(_cache_configured),true)
-_proxy_address := localhost:3128
+ifdef PUAVO_CACHE_PROXY
+  _proxy_address := ${PUAVO_CACHE_PROXY}
+else ifeq ($(_cache_configured),true)
+  _proxy_address := localhost:3128
+endif
+ifdef _proxy_address
 _proxywrap_cmd := .aux/proxywrap --with-proxy $(_proxy_address)
 else
 _proxywrap_cmd := .aux/proxywrap
