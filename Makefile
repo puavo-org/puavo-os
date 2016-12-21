@@ -23,21 +23,19 @@ _cache_configured := $(shell grep -q puavo-os /etc/squid3/squid.conf \
 			 && echo true || echo false)
 ifeq ($(_cache_configured),true)
 _proxy_address := localhost:3128
-_system_nspawn_environment_args := \
-	--setenv=ftp_proxy=$(_proxy_address)   \
-	--setenv=http_proxy=$(_proxy_address)  \
-	--setenv=https_proxy=$(_proxy_address) \
-	--setenv=FTP_PROXY=$(_proxy_address)   \
-	--setenv=HTTP_PROXY=$(_proxy_address)  \
-	--setenv=HTTPS_PROXY=$(_proxy_address)
+_proxywrap_cmd := .aux/proxywrap --with-proxy $(_proxy_address)
+else
+_proxywrap_cmd := .aux/proxywrap
 endif
 
 _systemd_nspawn_machine_name := \
   $(notdir $(rootfs_dir))-$(shell tr -dc A-Za-z0-9 < /dev/urandom | head -c8)
-_systemd_nspawn_cmd := systemd-nspawn -D '$(rootfs_dir)'      \
+_systemd_nspawn_cmd := sudo systemd-nspawn -D '$(rootfs_dir)' \
 			 -M '$(_systemd_nspawn_machine_name)' \
 			 -u '$(_adm_user)'                    \
-			 $(_system_nspawn_environment_args)
+			 --setenv="PUAVO_CACHE_PROXY=$(_proxy_address)"
+
+_sudo := sudo $(_proxywrap_cmd)
 
 .PHONY: build
 build: build-debs-ports build-debs-parts
@@ -60,13 +58,13 @@ install: install-parts
 
 .PHONY: install-parts
 install-parts: /$(_repo_name)
-	sudo $(MAKE) -C parts install prefix=/usr sysconfdir=/etc
+	$(_sudo) $(MAKE) -C parts install prefix=/usr sysconfdir=/etc
 
 .PHONY: install-build-deps
 install-build-deps: /$(_repo_name)
 	$(MAKE) -C debs update-repo
 
-	sudo env FACTER_puavoruleset=prepare puppet apply	\
+	$(_sudo) env FACTER_puavoruleset=prepare puppet apply	\
 		--logdest '/var/log/$(_repo_name)/puppet.log'	\
 		--logdest console				\
 		--modulepath 'rules'				\
@@ -109,69 +107,70 @@ $(rootfs_dir):
 rootfs-debootstrap:
 	@[ ! -e '$(rootfs_dir)' ] || \
 		{ echo ERROR: rootfs directory '$(rootfs_dir)' already exists >&2; false; }
-	sudo debootstrap					\
+	$(_sudo) debootstrap					\
 		--arch=amd64					\
 		--include='$(_debootstrap_packages)'	\
 		--components=main,contrib,non-free		\
 		'$(debootstrap_suite)'				\
 		'$(rootfs_dir).tmp' '$(debootstrap_mirror)'
 
-	sudo git clone . '$(rootfs_dir).tmp/$(_repo_name)'
+	$(_sudo) git clone . '$(rootfs_dir).tmp/$(_repo_name)'
 
-	sudo ln -s '/$(_repo_name)/.aux/policy-rc.d' '$(rootfs_dir).tmp/usr/sbin/policy-rc.d'
+	$(_sudo) ln -s '/$(_repo_name)/.aux/policy-rc.d' \
+		'$(rootfs_dir).tmp/usr/sbin/policy-rc.d'
 
-	sudo mv '$(rootfs_dir).tmp' '$(rootfs_dir)'
+	$(_sudo) mv '$(rootfs_dir).tmp' '$(rootfs_dir)'
 
 $(image_dir):
-	sudo mkdir -p '$(image_dir)'
+	$(_sudo) mkdir -p '$(image_dir)'
 
 .PHONY: rootfs-image
 rootfs-image: $(rootfs_dir) $(image_dir)
-	sudo .aux/set-image-release '$(rootfs_dir)' '$(image_class)' \
+	$(_sudo) .aux/set-image-release '$(rootfs_dir)' '$(image_class)' \
 	    '$(notdir $(_image_file))'
-	sudo mksquashfs '$(rootfs_dir)' '$(_image_file).tmp'	\
+	$(_sudo) mksquashfs '$(rootfs_dir)' '$(_image_file).tmp'	\
 		-noappend -no-recovery -wildcards		\
 		-ef '.aux/$(image_class).excludes'		\
 		|| { rm -f '$(_image_file).tmp'; false; }
-	sudo mv '$(_image_file).tmp' '$(_image_file)'
+	$(_sudo) mv '$(_image_file).tmp' '$(_image_file)'
 	@echo Built '$(_image_file)' successfully.
 
 .PHONY: rootfs-shell
 rootfs-shell: $(rootfs_dir)
-	sudo $(_systemd_nspawn_cmd)
+	$(_systemd_nspawn_cmd) '/$(_repo_name)/.aux/proxywrap' bash
 
 .PHONY: rootfs-sync-repo
 rootfs-sync-repo: $(rootfs_dir)
-	sudo .aux/create-adm-user '$(rootfs_dir)' '/$(_repo_name)' \
+	$(_sudo) .aux/create-adm-user '$(rootfs_dir)' '/$(_repo_name)' \
 	    '$(_adm_user)' '$(_adm_group)' '$(_adm_uid)' '$(_adm_gid)'
-	sudo rsync "--chown=$(_adm_uid):$(_adm_gid)" --chmod=Dg+s,ug+w \
+	$(_sudo) rsync "--chown=$(_adm_uid):$(_adm_gid)" --chmod=Dg+s,ug+w \
 	    -glopr . '$(rootfs_dir)/$(_repo_name)/'
 
 .PHONY: rootfs-update
 rootfs-update: rootfs-sync-repo
-	sudo $(_systemd_nspawn_cmd) $(MAKE) -C '/$(_repo_name)' update
+	$(_systemd_nspawn_cmd) $(MAKE) -C '/$(_repo_name)' update
 
 .PHONY: setup-buildhost
 setup-buildhost:
-	sudo .aux/setup-buildhost
+	$(_sudo) .aux/setup-buildhost
 
 .PHONY: update
 update: install-build-deps
 	$(MAKE)
 
-	sudo apt-get update
-	sudo apt-get dist-upgrade -V -y			\
+	$(_sudo) apt-get update
+	$(_sudo) apt-get dist-upgrade -V -y			\
 		-o Dpkg::Options::="--force-confdef"	\
 		-o Dpkg::Options::="--force-confold"
 
 	$(MAKE) install
 
-	sudo updatedb
+	$(_sudo) updatedb
 
 .PHONY: install-rules
 install-rules: /$(_repo_name)
-	sudo .aux/setup-debconf
-	sudo env 'FACTER_puavoruleset=$(image_class)' puppet apply	\
+	$(_sudo) .aux/setup-debconf
+	$(_sudo) env 'FACTER_puavoruleset=$(image_class)' puppet apply	\
 		--logdest '/var/log/$(_repo_name)/puppet.log'		\
 		--logdest console					\
 		--modulepath 'rules'					\

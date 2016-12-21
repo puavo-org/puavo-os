@@ -1,0 +1,32 @@
+#!/bin/sh
+
+# wrapper to setup *_proxy based on PUAVO_CACHE_PROXY environment variable
+# or given command-line arguments
+
+set -eu
+
+puavo_cache_proxy=
+
+if [ -n "${PUAVO_CACHE_PROXY:-}" ]; then
+  puavo_cache_proxy=${PUAVO_CACHE_PROXY}
+fi
+
+if [ "${1:-}" = '--with-proxy' ]; then
+  shift
+  puavo_cache_proxy=${1:-}
+  if [ -z "$puavo_cache_proxy" ]; then
+    echo 'Got --with-proxy but no proxy address given.' >&2
+    exit 1
+  fi
+  shift
+fi
+
+if [ -z "$puavo_cache_proxy" ]; then
+  exec "$@"
+fi
+
+exec env FTP_PROXY="$puavo_cache_proxy"   ftp_proxy="$puavo_cache_proxy"   \
+         HTTP_PROXY="$puavo_cache_proxy"  http_proxy="$puavo_cache_proxy"  \
+         HTTPS_PROXY="$puavo_cache_proxy" https_proxy="$puavo_cache_proxy" \
+         PUAVO_CACHE_PROXY="$puavo_cache_proxy"                            \
+  "$@"
