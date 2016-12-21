@@ -25,8 +25,11 @@ if [ -z "$puavo_cache_proxy" ]; then
   exec "$@"
 fi
 
-exec env FTP_PROXY="$puavo_cache_proxy"   ftp_proxy="$puavo_cache_proxy"   \
-         HTTP_PROXY="$puavo_cache_proxy"  http_proxy="$puavo_cache_proxy"  \
-         HTTPS_PROXY="$puavo_cache_proxy" https_proxy="$puavo_cache_proxy" \
+exec env ftp_proxy="ftp://puavo_cache_proxy"      \
+         FTP_PROXY="ftp://$puavo_cache_proxy"     \
+         http_proxy="http://$puavo_cache_proxy"   \
+         HTTP_PROXY="http://$puavo_cache_proxy"   \
+         https_proxy="https://$puavo_cache_proxy" \
+         HTTPS_PROXY="https://$puavo_cache_proxy" \
          PUAVO_CACHE_PROXY="$puavo_cache_proxy"                            \
   "$@"
