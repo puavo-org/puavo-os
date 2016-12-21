@@ -19,7 +19,7 @@ _image_file  := $(image_dir)/$(_repo_name)-$(image_class)-$(debootstrap_suite)-$
 _debootstrap_packages := python3,devscripts,equivs,git,locales,lsb-release,\
 			 make,puppet-common,sudo
 
-_cache_configured := $(shell grep -q puavo-os /etc/squid3/squid.conf \
+_cache_configured := $(shell grep -qs puavo-os /etc/squid3/squid.conf \
 			 && echo true || echo false)
 ifeq ($(_cache_configured),true)
 _proxy_address := localhost:3128
