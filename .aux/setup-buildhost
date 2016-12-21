@@ -13,6 +13,7 @@ if [ -e /etc/squid3/squid.conf -a ! -e /etc/squid3/squid.conf.orig ]; then
 fi
 
 cat <<'EOF' > /etc/squid3/squid.conf
+# puavo-os build cache/proxy
 acl SSL_ports port 443
 acl Safe_ports port 80		# http
 acl Safe_ports port 21		# ftp

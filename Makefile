@@ -19,10 +19,25 @@ _image_file  := $(image_dir)/$(_repo_name)-$(image_class)-$(debootstrap_suite)-$
 _debootstrap_packages := python3,devscripts,equivs,git,locales,lsb-release,\
 			 make,puppet-common,sudo
 
+_cache_configured := $(shell grep -q puavo-os /etc/squid3/squid.conf \
+			 && echo true || echo false)
+ifeq ($(_cache_configured),true)
+_proxy_address := localhost:3128
+_system_nspawn_environment_args := \
+	--setenv=ftp_proxy=$(_proxy_address)   \
+	--setenv=http_proxy=$(_proxy_address)  \
+	--setenv=https_proxy=$(_proxy_address) \
+	--setenv=FTP_PROXY=$(_proxy_address)   \
+	--setenv=HTTP_PROXY=$(_proxy_address)  \
+	--setenv=HTTPS_PROXY=$(_proxy_address)
+endif
+
 _systemd_nspawn_machine_name := \
   $(notdir $(rootfs_dir))-$(shell tr -dc A-Za-z0-9 < /dev/urandom | head -c8)
-_systemd_nspawn_cmd := systemd-nspawn -D '$(rootfs_dir)' \
-			 -M '$(_systemd_nspawn_machine_name)' -u '$(_adm_user)'
+_systemd_nspawn_cmd := systemd-nspawn -D '$(rootfs_dir)'      \
+			 -M '$(_systemd_nspawn_machine_name)' \
+			 -u '$(_adm_user)'                    \
+			 $(_system_nspawn_environment_args)
 
 .PHONY: build
 build: build-debs-ports build-debs-parts
