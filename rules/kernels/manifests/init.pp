@@ -30,7 +30,7 @@ class kernels {
 
   $default_kernel = $debianversioncodename ? {
     'jessie' => '4.7.0-0.bpo.1-amd64',
-    default  => '4.8.0-1-amd64',
+    default  => '4.8.0-2-amd64',
   }
 
   $edge_kernel = $debianversioncodename ? {
