@@ -7,14 +7,14 @@ class puavo_pkg {
   # in /etc/puavo-pkg/puavo-pkg.conf.
   $pkgrootdir = '/var/lib/puavo-pkg/packages'
 
-  define install ($timeout=300) {
+  define install () {
     $pkgname = $title
 
     exec {
       "/usr/sbin/puavo-pkg install ${puavo_pkg::pkgbasedir}/${pkgname}.tar.gz":
         creates => "${puavo_pkg::pkgrootdir}/${pkgname}/installed",
         require => Package['puavo-pkg'],
-        timeout => $timeout;
+        timeout => 7200;	# 2 hours = 7200 seconds, should be enough
     }
   }
 
