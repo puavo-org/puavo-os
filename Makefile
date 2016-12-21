@@ -142,7 +142,7 @@ rootfs-image: $(rootfs_dir) $(image_dir)
 .PHONY: rootfs-shell
 rootfs-shell: $(rootfs_dir)
 	$(_systemd_nspawn_cmd) '/$(_repo_name)/.aux/proxywrap' \
-	   sh -c 'cd ~ && exec bash -l'
+	   sh -c 'cd ~ && exec bash'
 
 .PHONY: rootfs-sync-repo
 rootfs-sync-repo: $(rootfs_dir)
