@@ -30,6 +30,9 @@ class desktop::puavodesktop {
       require => Package['faenza-icon-theme'],
       target  => 'evolution-calendar.png';
 
+    '/usr/share/backgrounds':
+      ensure => directory;
+
     '/usr/share/backgrounds/puavo-art':
       source  => 'puppet:///modules/desktop/art',
       recurse => true;
