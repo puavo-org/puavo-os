@@ -34,8 +34,20 @@ def parse_image_series(json_path)
   return image_series
 end
 
-def find_rdiff_file(source_image_file, target_image_file)
-  return 'XXX.rdiff'
+def find_rdiff_file(source_image, target_image)
+  image_regexp = /^(.*?)-(\d{4}-\d{2}-\d{2}-\d{6})-(.*?).img$/
+
+  source_match = source_image.match(image_regexp)
+  raise "Bad image format '#{ source_image }'" unless source_match
+
+  target_match = target_image.match(image_regexp)
+  raise "Bad image format '#{ target_image }'" unless target_match
+
+  return sprintf('%s-%s--%s-%s.rdiff',
+		 source_match[1],
+		 source_match[2],
+		 target_match[2],
+		 source_match[3])
 end
 
 #
