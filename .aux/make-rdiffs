@@ -11,9 +11,13 @@ raise '"image_dir" environment variable not defined' \
 raise '"mirror_dir" environment variable not defined' \
   if mirror_dir.nil? || mirror_dir.empty?
 
+checksums_dir  = "#{ mirror_dir }/.checksums"
 rdiffs_dir     = "#{ mirror_dir }/rdiffs"
 signatures_dir = "#{ mirror_dir }/.signatures"
 
+checksums_file = "#{ mirror_dir }/CKSUMS"
+
+directory checksums_dir
 directory rdiffs_dir
 directory signatures_dir
 
@@ -65,9 +69,15 @@ end
 # tasks
 #
 
-task :default => :all_series
+task :default => checksums_file
+
+task checksums_file => :all_series
 
 task :all_series
+
+file checksums_file do |t|
+  # XXX use filelist from all checksums files to generate checksums_file
+end
 
 image_series.each do |series_name, image_list|
   task series_name
@@ -81,6 +91,21 @@ image_series.each do |series_name, image_list|
 
     target_image_file_copy = "#{ mirror_dir }/#{ target_image_file }"
     target_image_file_fp   = "#{ image_dir }/#{ target_image_file }"
+
+    target_image_cksum_file = "#{ checksums_dir }/#{ target_image_file }.cksum"
+    file checksums_file => target_image_cksum_file
+
+    # XXX use this for meta-files...
+    target_image_sha256sum_file =
+      "#{ checksums_dir }/#{ target_image_file }.sha256sum"
+
+    file target_image_cksum_file => [ checksums_dir, target_image_file_copy ]
+    file target_image_cksum_file do |t|
+      # XXX replace sh with something more secure
+      tmpfile = "#{ target_image_cksum_file }.tmp"
+      sh "cksum #{ target_image_file_copy } > #{ tmpfile }"
+      mv tmpfile, target_image_cksum_file
+    end
 
     task target_image_rdiff_target
     task series_name => target_image_rdiff_target
