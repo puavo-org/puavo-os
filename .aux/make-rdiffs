@@ -32,12 +32,6 @@ def find_rdiff_file(source_image_file, target_image_file)
   return 'XXX.rdiff'
 end
 
-def run_or_fail(cmd, *args)
-  cmd_string = ([cmd] + args).join(' ')
-  system(cmd, *args)
-  $?.success? or fail "command '#{cmd_string}' failed"
-end
-
 #
 # main
 #
@@ -61,13 +55,14 @@ image_series.each do |series_name, image_list|
   task series_name
   task :all_rdiffs => series_name
 
-  next if image_list.empty?
+  target_image_rdiff_target = nil
 
   image_list.each_index do |i|
     target_image_file = image_list[i]
-    task series_name => target_image_file
-
     target_image_rdiff_target = "#{ target_image_file }-rdiffs"
+
+    task target_image_rdiff_target
+    task series_name => target_image_rdiff_target
 
     image_list.each_index do |j|
       # make rdiffs only to one direction (from earlier to later)
@@ -81,21 +76,23 @@ image_series.each do |series_name, image_list|
 
       file source_image_signature_file => source_image_file do |t|
 	tmpfile = "#{ source_image_signature_file }.tmp"
-	run_or_fail('rdiff', 'signature', source_image_file, tmpfile)
-	mv(tmpfile, t.name)
+	sh 'rdiff', 'signature', source_image_file, tmpfile
+	mv tmpfile, t.name
       end
 
       rdiff_dependencies = [ source_image_signature_file, target_image_file ]
       file rdiff_file => rdiff_dependencies do |t|
 	tmpfile = "#{ rdiff_file }.tmp"
-	run_or_fail('rdiff', 'delta', source_image_signature_file,
-	    target_image_file, tmpfile)
-	mv(tmpfile, t.name)
+	sh 'rdiff', 'delta', source_image_signature_file, target_image_file,
+	    tmpfile
+	mv tmpfile, t.name
       end
 
       task target_image_rdiff_target => rdiff_file
     end
   end
 
-  task "latest-#{ series_name }" => image_list.last
+  if target_image_rdiff_target then
+    task "latest-#{ series_name }" => target_image_rdiff_target
+  end
 end
