@@ -1,0 +1,5 @@
+#!/usr/bin/rake -f
+
+task :default do
+  puts 'Running the default task'
+end
