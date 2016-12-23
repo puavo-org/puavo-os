@@ -13,13 +13,38 @@ raise '"rdiffs_dir" environment variable not defined' \
 
 image_series_json_path = 'images.json'
 
-image_series = JSON.parse( File.read(image_series_json_path) )
+def parse_image_series(json_path)
+  image_series = JSON.parse( File.read(json_path) )
+
+  raise 'expecting hash' unless image_series.kind_of?(Hash)
+  image_series.each do |key, value|
+    raise 'expecting string as key' unless key.kind_of?(String)
+    raise 'expecting list as value' unless value.kind_of?(Array)
+    value.each do |item|
+      raise 'expecting string as list value' unless item.kind_of?(String)
+    end
+  end
+
+  return image_series
+end
+
+begin
+  image_series = parse_image_series(image_series_json_path)
+rescue StandardError => err
+  warn "Error in parsing #{ image_series_json_path }: #{ err.message }"
+  exit 1
+end
+
 
 #
 # tasks
 #
 
 task :default => :rdiffs
+
+image_series.each do |series_name, image_list|
+  # puts
+end
 
 task :rdiffs => image_series_json_path do |t|
   # this is the rdiff task
