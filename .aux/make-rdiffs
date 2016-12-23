@@ -3,13 +3,19 @@
 require 'json'
 
 image_dir  = ENV['image_dir']
-rdiffs_dir = ENV['rdiffs_dir']
+mirror_dir = ENV['mirror_dir']
 
 raise '"image_dir" environment variable not defined' \
   if image_dir.nil? || image_dir.empty?
 
-raise '"rdiffs_dir" environment variable not defined' \
-  if rdiffs_dir.nil? || rdiffs_dir.empty?
+raise '"mirror_dir" environment variable not defined' \
+  if mirror_dir.nil? || mirror_dir.empty?
+
+rdiffs_dir     = "#{ mirror_dir }/rdiffs"
+signatures_dir = "#{ mirror_dir }/.signatures"
+
+directory rdiffs_dir
+directory signatures_dir
 
 image_series_json_path = 'images.json'
 
@@ -47,13 +53,13 @@ end
 # tasks
 #
 
-task :default => :all_rdiffs
+task :default => :all_series
 
-task :all_rdiffs
+task :all_series
 
 image_series.each do |series_name, image_list|
   task series_name
-  task :all_rdiffs => series_name
+  task :all_series => series_name
 
   target_image_rdiff_target = nil
 
@@ -61,30 +67,48 @@ image_series.each do |series_name, image_list|
     target_image_file = image_list[i]
     target_image_rdiff_target = "#{ target_image_file }-rdiffs"
 
+    target_image_file_copy = "#{ mirror_dir }/#{ target_image_file }"
+    target_image_file_fp   = "#{ image_dir }/#{ target_image_file }"
+
     task target_image_rdiff_target
     task series_name => target_image_rdiff_target
+    task series_name => target_image_file_copy
+
+    file target_image_file_copy => target_image_file_fp do |t|
+      # This presumes that source and target are in the same filesystem.
+      # If this is not the case, fix your configuration.
+      ln target_image_file_fp, t.name
+    end
 
     image_list.each_index do |j|
       # make rdiffs only to one direction (from earlier to later)
       next if i <= j
 
       source_image_file = image_list[j]
+      source_image_file_fp = "#{ image_dir }/#{ image_list[j] }"
 
       rdiff_file = find_rdiff_file(source_image_file, target_image_file)
+      rdiff_file_fp = "#{ rdiffs_dir }/#{ rdiff_file }"
 
       source_image_signature_file = "#{ source_image_file }.rdiff_signature"
+      source_image_signature_file_fp =
+	  "#{ signatures_dir }/#{ source_image_signature_file }"
 
-      file source_image_signature_file => source_image_file do |t|
-	tmpfile = "#{ source_image_signature_file }.tmp"
-	sh 'rdiff', 'signature', source_image_file, tmpfile
+      file source_image_signature_file_fp => signatures_dir
+      file source_image_signature_file_fp => source_image_file_fp do |t|
+	tmpfile = "#{ source_image_signature_file_fp }.tmp"
+	sh 'rdiff', 'signature', source_image_file_fp, tmpfile
 	mv tmpfile, t.name
       end
 
-      rdiff_dependencies = [ source_image_signature_file, target_image_file ]
-      file rdiff_file => rdiff_dependencies do |t|
-	tmpfile = "#{ rdiff_file }.tmp"
-	sh 'rdiff', 'delta', source_image_signature_file, target_image_file,
-	    tmpfile
+      task rdiff_file => rdiff_file_fp
+      file rdiff_file_fp => [ rdiffs_dir,
+			      source_image_signature_file_fp,
+			      target_image_file_fp ]
+      file rdiff_file_fp do |t|
+	tmpfile = "#{ rdiff_file_fp }.tmp"
+	sh 'rdiff', 'delta', source_image_signature_file_fp,
+	    target_image_file_fp, tmpfile
 	mv tmpfile, t.name
       end
 
