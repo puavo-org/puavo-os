@@ -91,7 +91,7 @@ help:
 	@echo '    install-build-deps   install all build dependencies'
 	@echo '    install-parts        install all parts'
 	@echo '    install-rules        install all Puppet rules'
-	@echo '    rdiffs               make rdiffs for image series'
+	@echo '    rdiffs               make rdiffs for images (uses "rdiff_targets"-variable)'
 	@echo '    rootfs-debootstrap   build Puavo OS rootfs from scratch'
 	@echo '    rootfs-image         pack rootfs to a squashfs image'
 	@echo '    rootfs-shell         spawn shell from Puavo OS rootfs'
@@ -186,7 +186,7 @@ install-rules: /$(_repo_name)
 .PHONY: rdiffs
 rdiffs: $(rdiffs_dir)
 	.aux/make-rdiffs image_dir="$(image_dir)" rdiffs_dir="$(rdiffs_dir)" \
-		$(rdiffs_target)
+		$(rdiff_targets)
 
 $(rdiffs_dir):
 	$(_sudo) install -d -o "$$(id -u)" -g "$$(id -g)" $(rdiffs_dir)

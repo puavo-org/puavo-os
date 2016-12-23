@@ -1,4 +1,4 @@
-#!/usr/bin/rake -f
+#!/usr/bin/rake -mf
 
 require 'json'
 
@@ -28,6 +28,20 @@ def parse_image_series(json_path)
   return image_series
 end
 
+def find_rdiff_file(source_image_file, target_image_file)
+  return 'XXX.rdiff'
+end
+
+def run_or_fail(cmd, *args)
+  cmd_string = ([cmd] + args).join(' ')
+  system(cmd, *args)
+  $?.success? or fail "command '#{cmd_string}' failed"
+end
+
+#
+# main
+#
+
 begin
   image_series = parse_image_series(image_series_json_path)
 rescue StandardError => err
@@ -35,17 +49,53 @@ rescue StandardError => err
   exit 1
 end
 
-
 #
 # tasks
 #
 
-task :default => :rdiffs
+task :default => :all_rdiffs
+
+task :all_rdiffs
 
 image_series.each do |series_name, image_list|
-  # puts
-end
+  task series_name
+  task :all_rdiffs => series_name
 
-task :rdiffs => image_series_json_path do |t|
-  # this is the rdiff task
+  next if image_list.empty?
+
+  image_list.each_index do |i|
+    target_image_file = image_list[i]
+    task series_name => target_image_file
+
+    target_image_rdiff_target = "#{ target_image_file }-rdiffs"
+
+    image_list.each_index do |j|
+      # make rdiffs only to one direction (from earlier to later)
+      next if i <= j
+
+      source_image_file = image_list[j]
+
+      rdiff_file = find_rdiff_file(source_image_file, target_image_file)
+
+      source_image_signature_file = "#{ source_image_file }.rdiff_signature"
+
+      file source_image_signature_file => source_image_file do |t|
+	tmpfile = "#{ source_image_signature_file }.tmp"
+	run_or_fail('rdiff', 'signature', source_image_file, tmpfile)
+	mv(tmpfile, t.name)
+      end
+
+      rdiff_dependencies = [ source_image_signature_file, target_image_file ]
+      file rdiff_file => rdiff_dependencies do |t|
+	tmpfile = "#{ rdiff_file }.tmp"
+	run_or_fail('rdiff', 'delta', source_image_signature_file,
+	    target_image_file, tmpfile)
+	mv(tmpfile, t.name)
+      end
+
+      task target_image_rdiff_target => rdiff_file
+    end
+  end
+
+  task "latest-#{ series_name }" => image_list.last
 end
