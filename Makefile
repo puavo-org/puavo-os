@@ -90,7 +90,7 @@ help:
 	@echo '    install-build-deps   install all build dependencies'
 	@echo '    install-parts        install all parts'
 	@echo '    install-rules        install all Puppet rules'
-	@echo '    make-rdiffs          make rdiffs for image series'
+	@echo '    rdiffs               make rdiffs for image series'
 	@echo '    rootfs-debootstrap   build Puavo OS rootfs from scratch'
 	@echo '    rootfs-image         pack rootfs to a squashfs image'
 	@echo '    rootfs-shell         spawn shell from Puavo OS rootfs'
@@ -182,9 +182,10 @@ install-rules: /$(_repo_name)
 		--modulepath 'rules'					\
 		rules/site.pp
 
-.PHONY: make-rdiffs
-make-rdiffs:
-	$(_sudo) .aux/make-rdiffs
+.PHONY: rdiffs
+rdiffs:
+	$(_sudo) image_class="$(image_class)" image_dir="$(image_dir)" \
+		.aux/make-rdiffs
 
 /$(_repo_name):
 	@echo ERROR: localhost is not Puavo OS system >&2

@@ -1,5 +1,24 @@
 #!/usr/bin/rake -f
 
-task :default do
-  puts 'Running the default task'
+require 'json'
+
+image_class = ENV['image_class']
+image_dir   = ENV['image_dir']
+
+raise 'image_class environment variable not defined' \
+  if image_class.nil? || image_class.empty?
+
+raise 'image_dir environment variable not defined' \
+  if image_dir.nil? || image_dir.empty?
+
+image_series_json_path = 'images.json'
+
+image_series = JSON.parse( File.read(image_series_json_path) )
+
+task :default => :rdiffs do
+  # this is the default task
+end
+
+task :rdiffs => image_series_json_path do |t|
+  # this is the rdiff task
 end
