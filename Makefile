@@ -3,6 +3,7 @@ debootstrap_mirror	:= http://httpredir.debian.org/debian/
 debootstrap_suite	:= stretch
 image_class		:= allinone
 image_dir		:= /srv/puavo-os-images
+rdiffs_dir		:= $(image_dir)/rdiffs
 rootfs_dir		:= /var/tmp/puavo-os/rootfs
 
 _adm_user	:= puavo-os
@@ -183,9 +184,12 @@ install-rules: /$(_repo_name)
 		rules/site.pp
 
 .PHONY: rdiffs
-rdiffs:
-	$(_sudo) image_class="$(image_class)" image_dir="$(image_dir)" \
-		.aux/make-rdiffs
+rdiffs: $(rdiffs_dir)
+	.aux/make-rdiffs image_dir="$(image_dir)" rdiffs_dir="$(rdiffs_dir)" \
+		$(rdiffs_target)
+
+$(rdiffs_dir):
+	$(_sudo) install -d -o "$$(id -u)" -g "$$(id -g)" $(rdiffs_dir)
 
 /$(_repo_name):
 	@echo ERROR: localhost is not Puavo OS system >&2
