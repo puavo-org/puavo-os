@@ -15,7 +15,7 @@ checksums_dir  = "#{ mirror_dir }/.checksums"
 rdiffs_dir     = "#{ mirror_dir }/rdiffs"
 signatures_dir = "#{ mirror_dir }/.signatures"
 
-checksums_file = "#{ mirror_dir }/CKSUMS"
+cksums_file = "#{ mirror_dir }/CKSUMS"
 
 directory checksums_dir
 directory rdiffs_dir
@@ -76,14 +76,11 @@ end
 # tasks
 #
 
-task :default => checksums_file
+task :default => cksums_file
 
-file checksums_file
+all_cksum_files = []
 
-file checksums_file do |t|
-  # XXX can I get a list of all direct dependencies? (checksum files)
-  # XXX use filelist from all checksums files to generate checksums_file
-end
+file cksums_file
 
 image_series.each do |series_name, image_list|
   task series_name
@@ -98,7 +95,7 @@ image_series.each do |series_name, image_list|
     target_image_file_fp   = "#{ image_dir }/#{ target_image_file }"
 
     target_image_cksum_file = "#{ checksums_dir }/#{ target_image_file }.cksum"
-    file checksums_file => target_image_cksum_file
+    all_cksum_files << target_image_cksum_file
 
     # XXX use this for meta-files...
     target_image_sha256sum_file =
@@ -157,11 +154,25 @@ image_series.each do |series_name, image_list|
       file rdiff_cksum_file => rdiff_file_fp do |t|
         calc_cksum rdiff_file_fp, t.name
       end
-      file checksums_file => rdiff_cksum_file
+      all_cksum_files << rdiff_cksum_file
     end
   end
 
   if target_image_rdiff_target then
     task "latest-#{ series_name }" => target_image_rdiff_target
   end
+end
+
+file cksums_file => all_cksum_files do |t|
+  tmpfile = "#{ cksums_file }.tmp"
+  File.open(tmpfile, 'w') do |f|
+    all_cksum_files.each do |cksum_file|
+      cksum_output = IO.read(cksum_file)
+      cksum_fields = cksum_output.split
+      cksum_fields[2] = File.basename(cksum_fields[2])
+      f.write(cksum_fields.join(' ') + "\n")
+    end
+  end
+
+  mv tmpfile, cksums_file
 end
