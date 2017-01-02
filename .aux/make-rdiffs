@@ -23,19 +23,11 @@ directory signatures_dir
 
 image_series_json_path = 'images.json'
 
-def parse_image_series(json_path)
-  image_series = JSON.parse( File.read(json_path) )
-
-  raise 'expecting hash' unless image_series.kind_of?(Hash)
-  image_series.each do |key, value|
-    raise 'expecting string as key' unless key.kind_of?(String)
-    raise 'expecting list as value' unless value.kind_of?(Array)
-    value.each do |item|
-      raise 'expecting string as list value' unless item.kind_of?(String)
-    end
-  end
-
-  return image_series
+def calc_cksum(source_file_path, cksum_file_path)
+  # XXX replace sh with something more secure
+  tmpfile = "#{ cksum_file_path }.tmp"
+  sh "cksum #{ source_file_path } > #{ tmpfile }"
+  mv tmpfile, cksum_file_path
 end
 
 def find_rdiff_file(source_image, target_image)
@@ -52,6 +44,21 @@ def find_rdiff_file(source_image, target_image)
 		 source_match[2],
 		 target_match[2],
 		 source_match[3])
+end
+
+def parse_image_series(json_path)
+  image_series = JSON.parse( File.read(json_path) )
+
+  raise 'expecting hash' unless image_series.kind_of?(Hash)
+  image_series.each do |key, value|
+    raise 'expecting string as key' unless key.kind_of?(String)
+    raise 'expecting list as value' unless value.kind_of?(Array)
+    value.each do |item|
+      raise 'expecting string as list value' unless item.kind_of?(String)
+    end
+  end
+
+  return image_series
 end
 
 #
@@ -71,17 +78,15 @@ end
 
 task :default => checksums_file
 
-task checksums_file => :all_series
-
-task :all_series
+file checksums_file
 
 file checksums_file do |t|
+  # XXX can I get a list of all direct dependencies? (checksum files)
   # XXX use filelist from all checksums files to generate checksums_file
 end
 
 image_series.each do |series_name, image_list|
   task series_name
-  task :all_series => series_name
 
   target_image_rdiff_target = nil
 
@@ -101,10 +106,7 @@ image_series.each do |series_name, image_list|
 
     file target_image_cksum_file => [ checksums_dir, target_image_file_copy ]
     file target_image_cksum_file do |t|
-      # XXX replace sh with something more secure
-      tmpfile = "#{ target_image_cksum_file }.tmp"
-      sh "cksum #{ target_image_file_copy } > #{ tmpfile }"
-      mv tmpfile, target_image_cksum_file
+      calc_cksum target_image_file_copy, t.name
     end
 
     task target_image_rdiff_target
@@ -150,6 +152,12 @@ image_series.each do |series_name, image_list|
       end
 
       task target_image_rdiff_target => rdiff_file
+
+      rdiff_cksum_file = "#{ checksums_dir }/#{ rdiff_file }.cksum"
+      file rdiff_cksum_file => rdiff_file_fp do |t|
+        calc_cksum rdiff_file_fp, t.name
+      end
+      file checksums_file => rdiff_cksum_file
     end
   end
 
