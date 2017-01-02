@@ -29,18 +29,18 @@ directory signatures_dir
 
 image_series_json_path = 'images.json'
 
-def calc_cksum(source_file_path, cksum_file_path)
-  # XXX replace sh with something more secure
-  tmpfile = "#{ cksum_file_path }.tmp"
-  sh "cksum #{ source_file_path } > #{ tmpfile }"
-  mv tmpfile, cksum_file_path
-end
+def calc_checksum(cmd, source_file_path, output_path)
+  basename = File.basename(source_file_path)
+  dirname  = File.dirname(source_file_path)
 
-def calc_sha256sum(source_file_path, sha256sum_file_path)
-  # XXX replace sh with something more secure
-  tmpfile = "#{ sha256sum_file_path }.tmp"
-  sh "sha256sum #{ source_file_path } > #{ tmpfile }"
-  mv tmpfile, sha256sum_file_path
+  tmpfile = "#{ output_path }.tmp"
+
+  pid = spawn(cmd, basename, :chdir => dirname, :out => tmpfile)
+  Process.wait(pid)
+  raise "Error running command #{ cmd } #{ source_file_path }" \
+    unless $?.exitstatus == 0
+
+  mv tmpfile, output_path
 end
 
 def find_rdiff_file(source_image, target_image)
@@ -86,6 +86,14 @@ def parse_image_series(json_path)
   end
 
   return image_series
+end
+
+def read_checksum_from_file(path)
+  data = IO.read(path)
+  checksum = (data.split)[0]
+  raise "Could not read checksum from file '#{ path }'" \
+    if checksum.nil? || checksum.empty?
+  return checksum
 end
 
 #
@@ -137,7 +145,7 @@ image_series.each do |series_name, image_list|
 
     file target_image_cksum_file => [ checksums_dir, target_image_file_copy ]
     file target_image_cksum_file do |t|
-      calc_cksum target_image_file_copy, t.name
+      calc_checksum('cksum', target_image_file_copy, t.name)
     end
 
     target_image_sha256sum_file =
@@ -147,7 +155,7 @@ image_series.each do |series_name, image_list|
     file target_image_sha256sum_file =>
       [ checksums_dir, target_image_file_copy ]
     file target_image_sha256sum_file do |t|
-      calc_sha256sum target_image_file_copy, t.name
+      calc_checksum('sha256sum', target_image_file_copy, t.name)
     end
 
     task target_image_rdiff_target
@@ -210,13 +218,13 @@ image_series.each do |series_name, image_list|
 
       rdiff_cksum_file = "#{ checksums_dir }/#{ rdiff_file }.cksum"
       file rdiff_cksum_file => rdiff_file_fp do |t|
-        calc_cksum rdiff_file_fp, t.name
+        calc_checksum('cksum', rdiff_file_fp, t.name)
       end
       all_cksum_files << rdiff_cksum_file
 
       rdiff_sha256sum_file = "#{ checksums_dir }/#{ rdiff_file }.sha256sum"
       file rdiff_sha256sum_file => rdiff_file_fp do |t|
-	calc_sha256sum rdiff_file_fp, t.name
+	calc_checksum('sha256sum', rdiff_file_fp, t.name)
       end
 
       rdiff_metadata = {
@@ -236,21 +244,19 @@ image_series.each do |series_name, image_list|
 
   file series_metadata_file do |t|
     series_metadata['images'].each do |image_metadata|
-      # XXX error handling
       imagename = image_metadata['filename']
       cksum_file = "#{ checksums_dir }/#{ imagename }.cksum"
       sha256sum_file = "#{ checksums_dir }/#{ imagename }.sha256sum"
-      image_metadata['cksum'] = (IO.read(cksum_file).split)[0]
-      image_metadata['sha256sum'] = (IO.read(sha256sum_file).split)[0]
+      image_metadata['cksum'] = read_checksum_from_file(cksum_file)
+      image_metadata['sha256sum'] = read_checksum_from_file(sha256sum_file)
 
       image_metadata['diffs'].each do |rdiff_metadata|
-        # XXX error handling
         rdiff_file = rdiff_metadata['filename']
         cksum_file = "#{ checksums_dir }/#{ rdiff_file }.cksum"
         sha256sum_file = "#{ checksums_dir }/#{ rdiff_file }.sha256sum"
         rdiff_metadata['size'] = File.size("#{ rdiffs_dir }/#{ rdiff_file }")
-        rdiff_metadata['cksum'] = (IO.read(cksum_file).split)[0]
-        rdiff_metadata['sha256sum'] = (IO.read(sha256sum_file).split)[0]
+        rdiff_metadata['cksum'] = read_checksum_from_file(cksum_file)
+        rdiff_metadata['sha256sum'] = read_checksum_from_file(sha256sum_file)
       end
     end
 
@@ -270,12 +276,8 @@ file cksums_file => all_cksum_files do |t|
   tmpfile = "#{ cksums_file }.tmp"
   File.open(tmpfile, 'w') do |f|
     all_cksum_files.each do |cksum_file|
-      cksum_output = IO.read(cksum_file)
-      cksum_fields = cksum_output.split
-      cksum_fields[2] = File.basename(cksum_fields[2])
-      f.write(cksum_fields.join(' ') + "\n")
+      f.write( IO.read(cksum_file) )
     end
   end
-
   mv tmpfile, cksums_file
 end
