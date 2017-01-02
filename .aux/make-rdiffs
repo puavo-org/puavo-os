@@ -2,22 +2,28 @@
 
 require 'json'
 
-image_dir  = ENV['image_dir']
-mirror_dir = ENV['mirror_dir']
+image_dir      = ENV['image_dir']
+images_urlbase = ENV['images_urlbase']
+mirror_dir     = ENV['mirror_dir']
 
 raise '"image_dir" environment variable not defined' \
   if image_dir.nil? || image_dir.empty?
+
+raise '"images_urlbase" environment variable not defined' \
+  if images_urlbase.nil? || images_urlbase.empty?
 
 raise '"mirror_dir" environment variable not defined' \
   if mirror_dir.nil? || mirror_dir.empty?
 
 checksums_dir  = "#{ mirror_dir }/.checksums"
+metadata_dir   = "#{ mirror_dir }/meta"
 rdiffs_dir     = "#{ mirror_dir }/rdiffs"
 signatures_dir = "#{ mirror_dir }/.signatures"
 
 cksums_file = "#{ mirror_dir }/CKSUMS"
 
 directory checksums_dir
+directory metadata_dir
 directory rdiffs_dir
 directory signatures_dir
 
@@ -28,6 +34,13 @@ def calc_cksum(source_file_path, cksum_file_path)
   tmpfile = "#{ cksum_file_path }.tmp"
   sh "cksum #{ source_file_path } > #{ tmpfile }"
   mv tmpfile, cksum_file_path
+end
+
+def calc_sha256sum(source_file_path, sha256sum_file_path)
+  # XXX replace sh with something more secure
+  tmpfile = "#{ sha256sum_file_path }.tmp"
+  sh "sha256sum #{ source_file_path } > #{ tmpfile }"
+  mv tmpfile, sha256sum_file_path
 end
 
 def find_rdiff_file(source_image, target_image)
@@ -44,6 +57,20 @@ def find_rdiff_file(source_image, target_image)
 		 source_match[2],
 		 target_match[2],
 		 source_match[3])
+end
+
+def get_image_version(image_name)
+  return get_version(image_name, /-(\d+)-(\d+)-(\d+)-(\d+).*\.img\z/)
+end
+
+def get_rdiff_version(rdiff_file)
+  return get_version(rdiff_file, /-(\d+)-(\d+)-(\d+)-(\d+)--.*\.rdiff\z/)
+end
+
+def get_version(name, version_re)
+  versionmatch = name.match(version_re)
+  raise "Could not determine version for #{ name }" unless versionmatch
+  return versionmatch[1..4].join
 end
 
 def parse_image_series(json_path)
@@ -76,14 +103,25 @@ end
 # tasks
 #
 
-task :default => cksums_file
+task :default => [ cksums_file, :all_series ]
 
 all_cksum_files = []
+all_sha256sum_files = []
 
 file cksums_file
 
+task :all_series
+
 image_series.each do |series_name, image_list|
   task series_name
+  task :all_series => series_name
+
+  series_metadata = { 'images' => [] }
+
+  series_metadata_file = "#{ metadata_dir }/#{ series_name }.json"
+  task series_name => series_metadata_file
+
+  file series_metadata_file
 
   target_image_rdiff_target = nil
 
@@ -97,13 +135,19 @@ image_series.each do |series_name, image_list|
     target_image_cksum_file = "#{ checksums_dir }/#{ target_image_file }.cksum"
     all_cksum_files << target_image_cksum_file
 
-    # XXX use this for meta-files...
-    target_image_sha256sum_file =
-      "#{ checksums_dir }/#{ target_image_file }.sha256sum"
-
     file target_image_cksum_file => [ checksums_dir, target_image_file_copy ]
     file target_image_cksum_file do |t|
       calc_cksum target_image_file_copy, t.name
+    end
+
+    target_image_sha256sum_file =
+      "#{ checksums_dir }/#{ target_image_file }.sha256sum"
+    all_sha256sum_files << target_image_cksum_file
+
+    file target_image_sha256sum_file =>
+      [ checksums_dir, target_image_file_copy ]
+    file target_image_sha256sum_file do |t|
+      calc_sha256sum target_image_file_copy, t.name
     end
 
     task target_image_rdiff_target
@@ -115,6 +159,20 @@ image_series.each do |series_name, image_list|
       # If this is not the case, fix your configuration.
       ln target_image_file_fp, t.name
     end
+
+    image_metadata = {
+      'diffs'    => [],
+      'filename' => target_image_file,
+      'id'       => File.basename(target_image_file, '.img'),
+      'size'     => File.size(target_image_file_fp),
+      'urls'     => "#{ images_urlbase }/#{ target_image_file }",
+      'version'  => get_image_version(target_image_file),
+     }
+
+    file series_metadata_file => [ metadata_dir,
+                                   target_image_cksum_file,
+                                   target_image_file_copy,
+                                   target_image_sha256sum_file ]
 
     image_list.each_index do |j|
       # make rdiffs only to one direction (from earlier to later)
@@ -155,7 +213,52 @@ image_series.each do |series_name, image_list|
         calc_cksum rdiff_file_fp, t.name
       end
       all_cksum_files << rdiff_cksum_file
+
+      rdiff_sha256sum_file = "#{ checksums_dir }/#{ rdiff_file }.sha256sum"
+      file rdiff_sha256sum_file => rdiff_file_fp do |t|
+	calc_sha256sum rdiff_file_fp, t.name
+      end
+
+      rdiff_metadata = {
+        'filename' => rdiff_file,
+        'urls'     => "#{ images_urlbase }/rdiffs/#{ rdiff_file }",
+        'version'  => get_rdiff_version(rdiff_file),
+       }
+
+      file series_metadata_file => [ rdiff_file_fp,
+                                     rdiff_cksum_file,
+                                     rdiff_sha256sum_file ]
+      image_metadata['diffs'] << rdiff_metadata
     end
+
+    series_metadata['images'] << image_metadata
+  end
+
+  file series_metadata_file do |t|
+    series_metadata['images'].each do |image_metadata|
+      # XXX error handling
+      imagename = image_metadata['filename']
+      cksum_file = "#{ checksums_dir }/#{ imagename }.cksum"
+      sha256sum_file = "#{ checksums_dir }/#{ imagename }.sha256sum"
+      image_metadata['cksum'] = (IO.read(cksum_file).split)[0]
+      image_metadata['sha256sum'] = (IO.read(sha256sum_file).split)[0]
+
+      image_metadata['diffs'].each do |rdiff_metadata|
+        # XXX error handling
+        rdiff_file = rdiff_metadata['filename']
+        cksum_file = "#{ checksums_dir }/#{ rdiff_file }.cksum"
+        sha256sum_file = "#{ checksums_dir }/#{ rdiff_file }.sha256sum"
+        rdiff_metadata['size'] = File.size("#{ rdiffs_dir }/#{ rdiff_file }")
+        rdiff_metadata['cksum'] = (IO.read(cksum_file).split)[0]
+        rdiff_metadata['sha256sum'] = (IO.read(sha256sum_file).split)[0]
+      end
+    end
+
+    tmpfile = "#{ series_metadata_file }.tmp"
+    File.open(tmpfile, 'w') do |f|
+      f.write(series_metadata.to_json)
+    end
+    mv tmpfile, series_metadata_file
   end
 
   if target_image_rdiff_target then

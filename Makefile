@@ -3,6 +3,7 @@ debootstrap_mirror	:= http://httpredir.debian.org/debian/
 debootstrap_suite	:= stretch
 image_class		:= allinone
 image_dir		:= /srv/puavo-os-images
+images_urlbase		:= https://images.puavo.org
 mirror_dir		:= $(image_dir)/mirror
 rootfs_dir		:= /var/tmp/puavo-os/rootfs
 
@@ -103,6 +104,8 @@ help:
 	@echo 'Variables:'
 	@echo '    debootstrap_mirror   debootstrap mirror [$(debootstrap_mirror)]'
 	@echo '    image_dir            directory where images are built [$(image_dir)]'
+	@echo '    images_urlbase       Prefix for image urls (https://...)
+	@echo '    mirror_dir           Mirror directory (for images and rdiffs)
 	@echo '    rootfs_dir           Puavo OS rootfs directory [$(rootfs_dir)]'
 
 $(rootfs_dir):
@@ -184,8 +187,9 @@ install-rules: /$(_repo_name)
 		rules/site.pp
 
 .PHONY: rdiffs
-rdiffs: $(mirror_dir)
+rdiffs: $(image_dir) $(mirror_dir)
 	$(_sudo) .aux/make-rdiffs image_dir="$(image_dir)" \
+		images_urlbase="$(images_urlbase)" \
 		mirror_dir="$(mirror_dir)" $(rdiff_targets)
 
 $(mirror_dir):
