@@ -114,7 +114,6 @@ end
 task :default => [ Cksums_file, :all_series ]
 
 all_cksum_files = []
-all_sha256sum_files = []
 
 file Cksums_file
 
@@ -150,7 +149,6 @@ image_series.each do |series_name, image_list|
 
     target_image_sha256sum_file =
       "#{ Checksums_dir }/#{ target_image_file }.sha256sum"
-    all_sha256sum_files << target_image_cksum_file
 
     file target_image_sha256sum_file =>
       [ Checksums_dir, target_image_file_copy ]
