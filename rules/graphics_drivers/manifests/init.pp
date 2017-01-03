@@ -4,13 +4,9 @@ class graphics_drivers {
 
   $glx_packages = [ 'glx-alternative-mesa', 'libgl1-mesa-glx', 'update-glx' ]
 
-  $nvidia_packages = $debianversioncodename ? {
-                       'jessie' => [ 'nvidia-304xx-kernel-dkms'
-                                   , 'nvidia-340xx-kernel-dkms' ],
-                       default  => [ 'nvidia-304xx-kernel-dkms'
-                                   , 'nvidia-340xx-kernel-dkms'
-                                   , 'nvidia-375xx-kernel-dkms' ],
-                     }
+  $nvidia_packages = [ 'nvidia-legacy-304xx-kernel-dkms'
+                     , 'nvidia-legacy-340xx-kernel-dkms'
+                     , 'nvidia-kernel-dkms' ]
 
   ::puavo_conf::script {
     'setup_graphics_drivers':
