@@ -3,6 +3,8 @@ debootstrap_mirror	:= http://httpredir.debian.org/debian/
 debootstrap_suite	:= stretch
 image_class		:= allinone
 image_dir		:= /srv/puavo-os-images
+images_urlbase		:= https://images.puavo.org
+mirror_dir		:= $(image_dir)/mirror
 rootfs_dir		:= /var/tmp/puavo-os/rootfs
 
 _adm_user	:= puavo-os
@@ -90,6 +92,7 @@ help:
 	@echo '    install-build-deps   install all build dependencies'
 	@echo '    install-parts        install all parts'
 	@echo '    install-rules        install all Puppet rules'
+	@echo '    rdiffs               make rdiffs for images (uses "rdiff_targets"-variable)'
 	@echo '    rootfs-debootstrap   build Puavo OS rootfs from scratch'
 	@echo '    rootfs-image         pack rootfs to a squashfs image'
 	@echo '    rootfs-shell         spawn shell from Puavo OS rootfs'
@@ -101,6 +104,8 @@ help:
 	@echo 'Variables:'
 	@echo '    debootstrap_mirror   debootstrap mirror [$(debootstrap_mirror)]'
 	@echo '    image_dir            directory where images are built [$(image_dir)]'
+	@echo '    images_urlbase       Prefix for image urls (https://...)
+	@echo '    mirror_dir           Mirror directory (for images and rdiffs)
 	@echo '    rootfs_dir           Puavo OS rootfs directory [$(rootfs_dir)]'
 
 $(rootfs_dir):
@@ -180,6 +185,15 @@ install-rules: /$(_repo_name)
 		--logdest console					\
 		--modulepath 'rules'					\
 		rules/site.pp
+
+.PHONY: rdiffs
+rdiffs: $(image_dir) $(mirror_dir)
+	$(_sudo) .aux/make-rdiffs image_dir="$(image_dir)" \
+		images_urlbase="$(images_urlbase)" \
+		mirror_dir="$(mirror_dir)" $(rdiff_targets)
+
+$(mirror_dir):
+	$(_sudo) mkdir -p '$(mirror_dir)'
 
 /$(_repo_name):
 	@echo ERROR: localhost is not Puavo OS system >&2
