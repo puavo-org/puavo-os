@@ -311,6 +311,7 @@ class packages {
     , 'geany'
     , 'idle'
     , 'idle-python2.7'
+    , 'idle-python3.5'
     , 'kturtle'
     , 'lokalize'
     , 'pyqt4-dev-tools'
@@ -375,7 +376,7 @@ class packages {
     , 'debian-edu-artwork-joy'
     , 'debian-edu-artwork-lines'
     , 'debian-edu-artwork-spacefun' ]:
-      tag => [ 'tag_backgroundimages', 'tag_themes', 'tag_debian', 'tag_jessie', ];
+      tag => [ 'tag_backgroundimages', 'tag_themes', 'tag_debian', ];
 
     # the dependencies (and recommends) of ubuntu-gnome-desktop package
     # without a few packages that we do not want
@@ -562,54 +563,10 @@ class packages {
     , 'liferea'
     , 'openjdk-8-jdk'
     , 'openjdk-8-jre'
+    , 'php-cli'
+    , 'php-sqlite3'
     , 'sqlite3' ]:
       tag => [ 'tag_web', 'tag_debian', ];
-  }
-
-  #
-  # packages with differing names on distribution versions
-  #
-
-  @package {
-    'idle-python3':
-      name => $debianversioncodename ? {
-                'jessie' => 'idle-python3.4',
-                default  => 'idle-python3.5',
-              },
-      tag => [ 'tag_programming', 'tag_debian', ];
-
-    'nvidia-304xx-kernel-dkms':
-      name => 'nvidia-legacy-304xx-kernel-dkms',
-      tag  => [ 'tag_drivers', 'tag_debian', ];
-
-    'nvidia-340xx-kernel-dkms':
-      name => $debianversioncodename ? {
-                'jessie' => 'nvidia-kernel-dkms',
-                default  => 'nvidia-legacy-340xx-kernel-dkms',
-              },
-      tag  => [ 'tag_drivers', 'tag_debian', ];
-
-    'php-cli':
-      name => $debianversioncodename ? {
-                'jessie' => 'php5-cli',
-                default  => 'php-cli',
-              },
-      tag => [ 'tag_web', 'tag_debian', ];
-
-    'php-sqlite':
-      name => $debianversioncodename ? {
-                'jessie' => 'php5-sqlite',
-                default  => 'php-sqlite3',
-              },
-      tag => [ 'tag_web', 'tag_debian', ];
-  }
-
-  if $debianversioncodename != 'jessie' {
-    @package {
-      'nvidia-375xx-kernel-dkms':
-        name => 'nvidia-kernel-dkms',
-        tag  => [ 'tag_drivers', 'tag_debian', ];
-    }
   }
 
   #
@@ -647,57 +604,26 @@ class packages {
       tag => [ 'tag_themes', 'tag_puavo', ];
   }
 
-  case $debianversioncodename {
-    'jessie': {
-      $broadcom_sta_dkms_module = 'broadcom-sta/6.30.223.271'
-      $nvidia_dkms_304_module   = 'nvidia-legacy-304xx/304.131'
-      $nvidia_dkms_340_module   = 'nvidia-current/340.96'
-      # XXX $r8168_dkms_module        = 'r8168/8.040.00'
+  $broadcom_sta_dkms_module = 'broadcom-sta/6.30.223.271'
+  $nvidia_dkms_304_module   = 'nvidia-legacy-304xx/304.134'
+  $nvidia_dkms_340_module   = 'nvidia-legacy-340xx/340.101'
+  $nvidia_dkms_375_module   = 'nvidia-current/375.26'
+  # XXX $r8168_dkms_module  = 'r8168/8.040.00'
 
-      $all_dkms_modules = [ $broadcom_sta_dkms_module
-			  , $nvidia_dkms_304_module
-			  , $nvidia_dkms_340_module ]
+  $all_dkms_modules = [ $broadcom_sta_dkms_module
+		      , $nvidia_dkms_304_module
+		      , $nvidia_dkms_340_module
+		      , $nvidia_dkms_375_module ]
+                      # XXX $r8168_dkms_module  # XXX missing from Debian
 
-      # XXX $r8168_dkms_module  # XXX missing from Debian
-    }
-    default: {
-      $broadcom_sta_dkms_module = 'broadcom-sta/6.30.223.271'
-      $nvidia_dkms_304_module   = 'nvidia-legacy-304xx/304.134'
-      $nvidia_dkms_340_module   = 'nvidia-legacy-340xx/340.101'
-      $nvidia_dkms_375_module   = 'nvidia-current/375.26'
-      # XXX $r8168_dkms_module        = 'r8168/8.040.00'
+  packages::kernels::kernel_package {
+    '3.16.0-4-amd64':
+      dkms_modules => $all_dkms_modules,
+      package_name => 'linux-image-3.16.0-4-amd64';
 
-      $all_dkms_modules = [ $broadcom_sta_dkms_module
-			  , $nvidia_dkms_304_module
-			  , $nvidia_dkms_340_module
-			  , $nvidia_dkms_375_module ]
-
-      # XXX $r8168_dkms_module  # XXX missing from Debian
-    }
-  }
-
-  case $debianversioncodename {
-    'jessie': {
-      packages::kernels::kernel_package {
-        '3.16.0-4-amd64':
-          dkms_modules => $all_dkms_modules;
-
-        '4.7.0-0.bpo.1-amd64':
-          dkms_modules => [],
-          package_name => 'linux-image-4.7.0-0.bpo.1-amd64';
-      }
-    }
-    default: {
-      packages::kernels::kernel_package {
-        '3.16.0-4-amd64':
-          dkms_modules => $all_dkms_modules,
-          package_name => 'linux-image-3.16.0-4-amd64';
-
-        '4.8.0-2-amd64':
-          dkms_modules => $all_dkms_modules,
-          package_name => 'linux-image-4.8.0-2-amd64';
-      }
-    }
+    '4.8.0-2-amd64':
+      dkms_modules => $all_dkms_modules,
+      package_name => 'linux-image-4.8.0-2-amd64';
   }
 
   #
@@ -726,7 +652,13 @@ class packages {
     'nautilus-dropbox':
       tag => [ 'tag_desktop', 'tag_debian_nonfree', ];
 
-    'broadcom-sta-dkms':
+    [ 'broadcom-sta-dkms'
+    , 'libgl1-nvidia-glx'
+    , 'libgl1-nvidia-legacy-304xx-glx'
+    , 'libgl1-nvidia-legacy-340xx-glx'
+    , 'nvidia-kernel-dkms'
+    , 'nvidia-legacy-304xx-kernel-dkms'
+    , 'nvidia-legacy-340xx-kernel-dkms' ]:
       tag => [ 'tag_drivers', 'tag_debian_nonfree', ];
 
     [ 'amd64-microcode'
