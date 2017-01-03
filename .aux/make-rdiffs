@@ -135,6 +135,25 @@ def read_sha256sum(filename)
   read_checksum_from_file( get_sha256sum_path(filename) )
 end
 
+def setup_checksum_tasks(filename, absolute_source_path)
+  cksum_file = get_cksum_path(filename)
+  $all_cksum_files << cksum_file
+
+  file cksum_file => [ Checksums_dir, absolute_source_path ]
+  file cksum_file do |t|
+    calc_checksum('cksum', absolute_source_path, t.name)
+  end
+
+  sha256sum_file = get_sha256sum_path(filename)
+
+  file sha256sum_file => [ Checksums_dir, absolute_source_path ]
+  file sha256sum_file do |t|
+    calc_checksum('sha256sum', absolute_source_path, t.name)
+  end
+
+  return [ cksum_file, sha256sum_file ]
+end
+
 def setup_rdiff_tasks(source_image_file, target_image_file, metadata_file)
   source_image_file_fp = "#{ Image_dir }/#{ source_image_file }"
 
@@ -165,20 +184,9 @@ def setup_rdiff_tasks(source_image_file, target_image_file, metadata_file)
     mv tmpfile, t.name
   end
 
-  rdiff_cksum_file = get_cksum_path(rdiff_file)
-  file rdiff_cksum_file => rdiff_file_fp do |t|
-    calc_checksum('cksum', rdiff_file_fp, t.name)
-  end
-  $all_cksum_files << rdiff_cksum_file
+  checksum_files = setup_checksum_tasks(rdiff_file, rdiff_file_fp)
 
-  rdiff_sha256sum_file = get_sha256sum_path(rdiff_file)
-  file rdiff_sha256sum_file => rdiff_file_fp do |t|
-    calc_checksum('sha256sum', rdiff_file_fp, t.name)
-  end
-
-  file metadata_file => [ rdiff_file_fp,
-                          rdiff_cksum_file,
-                          rdiff_sha256sum_file ]
+  file metadata_file => [ rdiff_file_fp ] + checksum_files
 
   return {
     'filename' => rdiff_file,
@@ -228,21 +236,8 @@ image_series.each do |series_name, image_list|
     target_image_file_copy = "#{ Mirror_dir }/#{ target_image_file }"
     target_image_file_fp   = "#{ Image_dir }/#{ target_image_file }"
 
-    target_image_cksum_file = get_cksum_path(target_image_file)
-    $all_cksum_files << target_image_cksum_file
-
-    file target_image_cksum_file => [ Checksums_dir, target_image_file_copy ]
-    file target_image_cksum_file do |t|
-      calc_checksum('cksum', target_image_file_copy, t.name)
-    end
-
-    target_image_sha256sum_file = get_sha256sum_path(target_image_file)
-
-    file target_image_sha256sum_file =>
-      [ Checksums_dir, target_image_file_copy ]
-    file target_image_sha256sum_file do |t|
-      calc_checksum('sha256sum', target_image_file_copy, t.name)
-    end
+    checksum_files = setup_checksum_tasks(target_image_file,
+      target_image_file_copy)
 
     task target_image_rdiff_target
     task series_name => target_image_rdiff_target
@@ -263,9 +258,7 @@ image_series.each do |series_name, image_list|
       'version'  => get_image_version(target_image_file),
      }
 
-    file series_metadata_file => [ target_image_cksum_file,
-                                   target_image_file_copy,
-                                   target_image_sha256sum_file ]
+    file series_metadata_file => [ target_image_file_copy ] + checksum_files
 
     image_list.each_index do |j|
       # make rdiffs only to one direction (from earlier to later)
