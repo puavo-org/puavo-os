@@ -73,6 +73,31 @@ def get_version(name, version_re)
   return versionmatch[1..4].join
 end
 
+def make_metadata_file(series_metadata, series_metadata_file)
+  series_metadata['images'].each do |image_metadata|
+    imagename = image_metadata['filename']
+    cksum_file = "#{ Checksums_dir }/#{ imagename }.cksum"
+    sha256sum_file = "#{ Checksums_dir }/#{ imagename }.sha256sum"
+    image_metadata['cksum'] = read_checksum_from_file(cksum_file)
+    image_metadata['sha256sum'] = read_checksum_from_file(sha256sum_file)
+
+    image_metadata['diffs'].each do |rdiff_metadata|
+      rdiff_file = rdiff_metadata['filename']
+      cksum_file = "#{ Checksums_dir }/#{ rdiff_file }.cksum"
+      sha256sum_file = "#{ Checksums_dir }/#{ rdiff_file }.sha256sum"
+      rdiff_metadata['size'] = File.size("#{ Rdiffs_dir }/#{ rdiff_file }")
+      rdiff_metadata['cksum'] = read_checksum_from_file(cksum_file)
+      rdiff_metadata['sha256sum'] = read_checksum_from_file(sha256sum_file)
+    end
+  end
+
+  tmpfile = "#{ series_metadata_file }.tmp"
+  File.open(tmpfile, 'w') do |f|
+    f.write(series_metadata.to_json)
+  end
+  mv tmpfile, series_metadata_file
+end
+
 def parse_image_series(json_path)
   image_series = JSON.parse( File.read(json_path) )
 
@@ -240,28 +265,7 @@ image_series.each do |series_name, image_list|
   end
 
   file series_metadata_file do |t|
-    series_metadata['images'].each do |image_metadata|
-      imagename = image_metadata['filename']
-      cksum_file = "#{ Checksums_dir }/#{ imagename }.cksum"
-      sha256sum_file = "#{ Checksums_dir }/#{ imagename }.sha256sum"
-      image_metadata['cksum'] = read_checksum_from_file(cksum_file)
-      image_metadata['sha256sum'] = read_checksum_from_file(sha256sum_file)
-
-      image_metadata['diffs'].each do |rdiff_metadata|
-        rdiff_file = rdiff_metadata['filename']
-        cksum_file = "#{ Checksums_dir }/#{ rdiff_file }.cksum"
-        sha256sum_file = "#{ Checksums_dir }/#{ rdiff_file }.sha256sum"
-        rdiff_metadata['size'] = File.size("#{ Rdiffs_dir }/#{ rdiff_file }")
-        rdiff_metadata['cksum'] = read_checksum_from_file(cksum_file)
-        rdiff_metadata['sha256sum'] = read_checksum_from_file(sha256sum_file)
-      end
-    end
-
-    tmpfile = "#{ series_metadata_file }.tmp"
-    File.open(tmpfile, 'w') do |f|
-      f.write(series_metadata.to_json)
-    end
-    mv tmpfile, series_metadata_file
+    make_metadata_file(series_metadata, series_metadata_file)
   end
 
   if target_image_rdiff_target then
