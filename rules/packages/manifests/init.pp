@@ -658,7 +658,10 @@ class packages {
     , 'libgl1-nvidia-legacy-340xx-glx'
     , 'nvidia-kernel-dkms'
     , 'nvidia-legacy-304xx-kernel-dkms'
-    , 'nvidia-legacy-340xx-kernel-dkms' ]:
+    , 'nvidia-legacy-340xx-kernel-dkms'
+    , 'xserver-xorg-video-nvidia'
+    , 'xserver-xorg-video-nvidia-legacy-304xx'
+    , 'xserver-xorg-video-nvidia-legacy-340xx' ]:
       tag => [ 'tag_drivers', 'tag_debian_nonfree', ];
 
     [ 'amd64-microcode'
