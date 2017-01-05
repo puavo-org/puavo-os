@@ -62,7 +62,7 @@ fi
 
 # Then do the real mounts
 if ! is_mounted /home; then
-  mount -t nfs4 -o sec=krb5,nodev,nosuid,minorversion=0,soft ${HOMEDIR_SERVER}:/home /home
+  mount -t nfs4 -o sec=krb5,nodev,nosuid,soft ${HOMEDIR_SERVER}:/home /home
 fi
 
 exit 0
