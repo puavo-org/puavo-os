@@ -204,8 +204,8 @@ install : installdirs
 		puavo-dns-client \
 		puavo-dnssd-printer-client \
 		puavo-handle-external-files-actions \
-		puavo-ltsp-init-nfs \
 		puavo-ltsp-login \
+		puavo-netboot-init-nfs \
 		puavo-report-system-version \
 		puavo-update-nm-configurations
 
