@@ -11,14 +11,17 @@ is_nethomes_enabled=$(puavo-conf -b puavo.nethomes.enabled)
 nethomes_protocol=$(puavo-conf puavo.nethomes.protocol)
 
 filter_out_our_bookmarks() {
+  local bookmarksfile
   local domain_regexp
+
+  bookmarksfile=$1
   domain_regexp=$(echo "${puavo_domain}" | sed 's/\./\\./g')
 
   # Grep fails if the file is empty or missing, which is ok in this
   # situation: it just means that there is not anything to preserve
   # (or maybe means something else, but probably not serious).
   egrep -v "\.puavo-sharedir|^file:///home/share/|^smb://.*\.${domain_regexp}" \
-    || true
+    "$bookmarksfile" || true
 }
 
 update_bookmarks() {
@@ -40,7 +43,7 @@ update_bookmarks() {
 
   tmpfile="${bookmarksfile}.tmp"
 
-  filter_out_our_bookmarks < "${bookmarksfile}" > "${tmpfile}"
+  filter_out_our_bookmarks "${bookmarksfile}" > "${tmpfile}"
 
   if [ "${is_nethomes_enabled}" = true ]; then
       case "${nethomes_protocol}" in
