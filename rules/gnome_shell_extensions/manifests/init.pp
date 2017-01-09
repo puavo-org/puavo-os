@@ -22,6 +22,7 @@ class gnome_shell_extensions {
     , 'hide-dash@xenatt.github.com'
     , 'Move_Clock@rmy.pobox.com'
     , 'Panel_Favorites@rmy.pobox.com'
+    , 'TopIcons@phocean.net'
     , 'webmenu@puavo.org'
     , 'window-list-mod@puavo.org' ]:
       ;
