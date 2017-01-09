@@ -21,7 +21,7 @@ idle-delay=uint32 0
 
 [org/gnome/desktop/wm/preferences]
 button-layout='menu:minimize,maximize,close'
-num-workspaces=2
+num-workspaces=1
 
 [org/gnome/desktop/wm/keybindings]
 panel-main-menu=['']
@@ -69,3 +69,6 @@ enabled-extensions=['alternate-tab@gnome-shell-extensions.gcampax.github.com', '
 
 [org/gnome/shell/extensions/user-theme]
 name='Puavo'
+
+[org/gnome/shell/overrides]
+dynamic-workspaces=false
