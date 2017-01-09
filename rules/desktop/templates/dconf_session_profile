@@ -12,6 +12,13 @@ disable-user-switching=true
 [org/gnome/desktop/media-handling]
 autorun-x-content-start-app=['x-content/unix-software', 'x-content/video-dvd', 'x-content/audio-player', 'x-content/audio-cdda']
 
+[org/gnome/desktop/peripherals/mouse]
+left-handed=false
+
+[org/gnome/desktop/peripherals/touchpad]
+natural-scroll=false
+tap-to-click=true
+
 [org/gnome/desktop/screensaver]
 lock-enabled=false
 user-switch-enabled=false
@@ -21,7 +28,7 @@ idle-delay=uint32 0
 
 [org/gnome/desktop/wm/preferences]
 button-layout='menu:minimize,maximize,close'
-num-workspaces=2
+num-workspaces=1
 
 [org/gnome/desktop/wm/keybindings]
 panel-main-menu=['']
@@ -65,7 +72,13 @@ default-monitors-setup='do-nothing'
 overrides={'Gtk/ShellShowsAppMenu': <0>, 'Gtk/ShellShowsMenubar': <1>, 'Gtk/DecorationLayout': <'menu:minimize,maximize,close'>}
 
 [org/gnome/shell]
-enabled-extensions=['alternate-tab@gnome-shell-extensions.gcampax.github.com', 'appindicatorsupport@rgcjonas.gmail.com', 'audio-switcher@AndresCidoncha', 'bottompanel@tmoer93', 'extend-left-box2@linuxdeepin.com', 'hide-activities-button@gnome-shell-extensions.bookmarkd.xyz', 'hide-dash@xenatt.github.com', 'launch-new-instance@gnome-shell-extensions.gcampax.github.com', 'Move_Clock@rmy.pobox.com', 'Panel_Favorites@rmy.pobox.com', 'user-theme@gnome-shell-extensions.gcampax.github.com', 'webmenu@puavo.org', 'window-list-mod@puavo.org', 'workspace-indicator@gnome-shell-extensions.gcampax.github.com']
+enabled-extensions=['alternate-tab@gnome-shell-extensions.gcampax.github.com', 'appindicatorsupport@rgcjonas.gmail.com', 'audio-switcher@AndresCidoncha', 'bottompanel@tmoer93', 'extend-left-box2@linuxdeepin.com', 'hide-activities-button@gnome-shell-extensions.bookmarkd.xyz', 'hide-dash@xenatt.github.com', 'launch-new-instance@gnome-shell-extensions.gcampax.github.com', 'Move_Clock@rmy.pobox.com', 'Panel_Favorites@rmy.pobox.com', 'TopIcons@phocean.net', 'user-theme@gnome-shell-extensions.gcampax.github.com', 'webmenu@puavo.org', 'window-list-mod@puavo.org']
+
+[org/gnome/shell/extensions/topicons]
+tray-pos='center'
 
 [org/gnome/shell/extensions/user-theme]
 name='Puavo'
+
+[org/gnome/shell/overrides]
+dynamic-workspaces=false
