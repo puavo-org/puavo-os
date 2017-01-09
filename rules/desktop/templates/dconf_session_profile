@@ -12,6 +12,13 @@ disable-user-switching=true
 [org/gnome/desktop/media-handling]
 autorun-x-content-start-app=['x-content/unix-software', 'x-content/video-dvd', 'x-content/audio-player', 'x-content/audio-cdda']
 
+[org/gnome/desktop/peripherals/mouse]
+left-handed=false
+
+[org/gnome/desktop/peripherals/touchpad]
+natural-scroll=false
+tap-to-click=true
+
 [org/gnome/desktop/screensaver]
 lock-enabled=false
 user-switch-enabled=false
