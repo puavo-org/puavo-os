@@ -3,7 +3,7 @@ class puavo_pkg::packages {
 
   $available_packages = [ 'adobe-flashplugin'
 			, 'adobe-pepperflashplugin'
-			, 'adobe-reader'
+			# , 'adobe-reader'      # XXX old, broken software
 			, 'cmaptools'
 			, 'dropbox'
 			, 'ekapeli-alku'
