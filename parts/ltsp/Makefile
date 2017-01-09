@@ -1,4 +1,4 @@
-subdirs = bootserver client puavo-install tools ruby-puavobs
+subdirs = bootserver client puavo-install ruby-puavobs
 install-subdirs = $(subdirs:%=install-%)
 clean-subdirs = $(subdirs:%=clean-%)
 
