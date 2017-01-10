@@ -14,6 +14,8 @@ require 'timeout'
 options = {}
 options[:verbose] = false
 
+Timeout_seconds = 900
+
 OptionParser.new do |opts|
   opts.banner = "Usage: puavo-restore-all-databases [options]"
 
@@ -48,11 +50,12 @@ end
 
 databases = []
 
-Timeout::timeout(900) do
+Timeout::timeout(Timeout_seconds) do
   # Dump cn=config database
   puts "> dump cn=config to " + File.join(options[:destdir], "cn=config.ldif")
   response = Puavo::Execute.run(
-	       ["/usr/sbin/slapcat",
+	       ["/usr/bin/timeout", "-k", "20", Timeout_seconds.to_s,
+		"/usr/sbin/slapcat",
 		"-b",
 		"cn=config",
 		"-l", File.join(options[:destdir], "cn=config.ldif")])
@@ -81,7 +84,7 @@ exitstatus = 0
 # Backup all databases
 databases.each do |base|
   begin
-    Timeout::timeout(900) do
+    Timeout::timeout(Timeout_seconds) do
       next if base == options[:excludedb]
 
       backup_file = File.join(options[:destdir], "#{base}.ldif")
@@ -89,7 +92,8 @@ databases.each do |base|
       puts "> dump #{base} database to #{ backup_file } file"
 
       response = Puavo::Execute.run(
-		   ["/usr/sbin/slapcat",
+		   ["/usr/bin/timeout", "-k", "20", Timeout_seconds.to_s,
+		    "/usr/sbin/slapcat",
 		    "-b", base,
 		    "-l", backup_file ])
       $stderr.puts response.stderr if options[:verbose]
