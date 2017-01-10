@@ -46,7 +46,7 @@ if not File.directory?(options[:destdir])
 end
 
 # Dump cn=config database
-puts "Dump cn=config to " + File.join(options[:destdir], "cn=config.ldif")
+puts "> dump cn=config to " + File.join(options[:destdir], "cn=config.ldif")
 response = Puavo::Execute.run(
              ["/usr/sbin/slapcat",
               "-b",
@@ -72,18 +72,33 @@ end
 
 raise "Can't find any databases: #{filter}" if databases.empty?
 
+exitstatus = 0
+
 # Backup all databases
 databases.each do |base|
-  next if base == options[:excludedb]
+  begin
+    next if base == options[:excludedb]
 
-  backup_file = File.join(options[:destdir], "#{base}.ldif")
+    backup_file = File.join(options[:destdir], "#{base}.ldif")
 
-  puts "Dump #{base} database to #{ backup_file } file"
+    puts "> dump #{base} database to #{ backup_file } file"
 
-  response = Puavo::Execute.run(
-               ["/usr/sbin/slapcat",
-                "-b", base,
-                "-l", backup_file ])
-  $stderr.puts response.stderr if options[:verbose]
+    response = Puavo::Execute.run(
+		 ["/usr/sbin/slapcat",
+		  "-b", base,
+		  "-l", backup_file ])
+    $stderr.puts response.stderr if options[:verbose]
 
+  rescue Puavo::ExitStatusError => err
+    $stderr.puts ">> error when dumping #{ base }:"
+    $stderr.puts ">> slapcat returned error code #{ err.response.exit_status }"
+    $stderr.puts err.response.stderr unless err.response.stderr.empty?
+    exitstatus = 1
+  rescue StandardError => err
+    $stderr.puts ">> error when dumping #{ base }:"
+    $stderr.puts err.message
+    exitstatus = 1
+  end
 end
+
+exit(exitstatus)
