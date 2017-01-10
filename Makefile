@@ -177,6 +177,7 @@ update: install-build-deps
 
 	$(MAKE) install
 
+	$(_sudo) update-initramfs -u -k all
 	$(_sudo) updatedb
 
 .PHONY: install-rules
