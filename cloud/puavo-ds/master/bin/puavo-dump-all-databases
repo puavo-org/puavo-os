@@ -9,6 +9,7 @@ require 'ldap'
 require 'optparse'
 require 'puavo/etc'
 require 'puavo/execute'
+require 'timeout'
 
 options = {}
 options[:verbose] = false
@@ -45,50 +46,54 @@ if not File.directory?(options[:destdir])
   exit 2
 end
 
-# Dump cn=config database
-puts "> dump cn=config to " + File.join(options[:destdir], "cn=config.ldif")
-response = Puavo::Execute.run(
-             ["/usr/sbin/slapcat",
-              "-b",
-              "cn=config",
-              "-l", File.join(options[:destdir], "cn=config.ldif")])
-$stderr.puts response.stderr if options[:verbose]
-
-# Find all databases
-conn = LDAP::SSLConn.new(host=PUAVO_ETC.ldap_master, port=636)
-conn.set_option(LDAP::LDAP_OPT_PROTOCOL_VERSION, 3)
-
 databases = []
-filter = "(&(objectClass=olcDatabaseConfig)(objectClass=olcHdbConfig))"
-conn.bind(PUAVO_ETC.ldap_dn, PUAVO_ETC.ldap_password) do
-  conn.search("cn=config",
-              LDAP::LDAP_SCOPE_SUBTREE,
-              filter,
-              ["olcSuffix"]) do |result|
 
-    databases.push(result["olcSuffix"].first)
+Timeout::timeout(900) do
+  # Dump cn=config database
+  puts "> dump cn=config to " + File.join(options[:destdir], "cn=config.ldif")
+  response = Puavo::Execute.run(
+	       ["/usr/sbin/slapcat",
+		"-b",
+		"cn=config",
+		"-l", File.join(options[:destdir], "cn=config.ldif")])
+  $stderr.puts response.stderr if options[:verbose]
+
+  # Find all databases
+  conn = LDAP::SSLConn.new(host=PUAVO_ETC.ldap_master, port=636)
+  conn.set_option(LDAP::LDAP_OPT_PROTOCOL_VERSION, 3)
+
+  filter = "(&(objectClass=olcDatabaseConfig)(objectClass=olcHdbConfig))"
+  conn.bind(PUAVO_ETC.ldap_dn, PUAVO_ETC.ldap_password) do
+    conn.search("cn=config",
+		LDAP::LDAP_SCOPE_SUBTREE,
+		filter,
+		["olcSuffix"]) do |result|
+
+      databases.push(result["olcSuffix"].first)
+    end
   end
-end
 
-raise "Can't find any databases: #{filter}" if databases.empty?
+  raise "Can't find any databases: #{filter}" if databases.empty?
+end
 
 exitstatus = 0
 
 # Backup all databases
 databases.each do |base|
   begin
-    next if base == options[:excludedb]
+    Timeout::timeout(900) do
+      next if base == options[:excludedb]
 
-    backup_file = File.join(options[:destdir], "#{base}.ldif")
+      backup_file = File.join(options[:destdir], "#{base}.ldif")
 
-    puts "> dump #{base} database to #{ backup_file } file"
+      puts "> dump #{base} database to #{ backup_file } file"
 
-    response = Puavo::Execute.run(
-		 ["/usr/sbin/slapcat",
-		  "-b", base,
-		  "-l", backup_file ])
-    $stderr.puts response.stderr if options[:verbose]
-
+      response = Puavo::Execute.run(
+		   ["/usr/sbin/slapcat",
+		    "-b", base,
+		    "-l", backup_file ])
+      $stderr.puts response.stderr if options[:verbose]
+    end
   rescue Puavo::ExitStatusError => err
     $stderr.puts ">> error when dumping #{ base }:"
     $stderr.puts ">> slapcat returned error code #{ err.response.exit_status }"
