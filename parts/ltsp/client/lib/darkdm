@@ -136,6 +136,9 @@ darkdm_main()
     export LANG=en_US.UTF-8
     setupcon
 
+    # suppress most kernel messages from this terminal
+    dmesg -n2
+
     darkdm_print_help
 
     hosttype=$(cat /etc/puavo/hosttype)
