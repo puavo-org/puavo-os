@@ -1,4 +1,5 @@
-disable_update_initramfs
 set_puavo_hosttype
+setup_disk_partitions
+disable_update_initramfs
 setup_graphics_drivers
 setup_xsessions

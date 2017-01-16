@@ -1,9 +1,15 @@
+#!/bin/sh
+
+set -eu
+
 # Mount Puavo partitions from local hard drive and use files created by
 # puavo-register script.  Used by Puavo LTSP servers to get registration
 # information needed for sssd and kerberos principal for NFS mounts.
 # Images partition are used by laptops and need it mounted to update
 # the ltsp images.
-#
+
+PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
+
 # Checks if LVM partitions /dev/mapper/puavo-home, /dev/mapper/puavo-images,
 # /dev/mapper/puavo-state and /dev/mapper/puavo-tmp and mounts those as 
 # /home, /images, /state or /tmp correspondingly.  Also copy necessary 
