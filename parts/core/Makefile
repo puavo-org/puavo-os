@@ -21,6 +21,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-top
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/puavo-postmount
+	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-conf/scripts
 
 .PHONY : install
 install : installdirs
@@ -38,6 +39,11 @@ install : installdirs
                 initramfs-tools/conf.d/puavo
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/initramfs-tools/scripts \
                 initramfs-tools/scripts/puavo
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-conf/scripts \
+                scripts/.preinit
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/puavo-conf/scripts \
+                scripts/*
 
 .PHONY : clean
 clean :
