@@ -1,3 +1,7 @@
+#!/bin/sh
+
+set -eu
+
 # XXX This is not good, find the certificate to
 # XXX /etc/puavo/certs/rootca.pem some other way.
 # XXX (The problem is that this is Opinsys-specific.)

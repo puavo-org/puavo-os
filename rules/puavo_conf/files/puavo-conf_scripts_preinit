@@ -1,5 +1,6 @@
 set_puavo_hosttype
 setup_disk_partitions
 disable_update_initramfs
+opinsys_certificate_setup
 setup_graphics_drivers
 setup_xsessions
