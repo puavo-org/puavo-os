@@ -123,11 +123,18 @@ darkdm_main()
 {
     local hosttype
     local initial_command
+    local tty_arg
     local tty_dev
     local tty_n
 
-    tty_dev=$(tty)
-    tty_n=$(echo "${tty_dev}" | sed -r -n 's|/dev/tty||p')
+    tty_arg=${1:-}
+
+    if [ -n "$tty_arg" ]; then
+	tty_n=$tty_arg
+    else
+        tty_dev=$(tty)
+        tty_n=$(echo "${tty_dev}" | sed -r -n 's|/dev/tty||p')
+    fi
 
     if [ -n "${tty_n}" ]; then
 	chvt "${tty_n}" || return 1
@@ -154,4 +161,4 @@ darkdm_main()
     darkdm_menu "${initial_command}"
 }
 
-darkdm_main
+darkdm_main "$@"
