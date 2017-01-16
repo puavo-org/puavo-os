@@ -1,16 +1,5 @@
 #!/bin/sh
 
-initscripts=$(find /usr/share/puavo-ltsp/init-puavo.d -mindepth 1 -maxdepth 1 \
-                | sed -n '/.*\/[0-9a-zA-Z_\-]\{1,\}$/p' | sort -n)
-
-(
-  echo "Handling init-puavo-scripts:"
-  for script in $initscripts; do
-    echo "  ${script##*/}"
-    . $script
-  done
-)
-
 puavo_conf_scripts="$(cat /etc/puavo-conf/scripts/.preinit 2>/dev/null || true)"
 if [ -n "$puavo_conf_scripts" ]; then
   echo "  <<< puavo-conf running preinit scripts at $(date +%T.%N) >>>"
