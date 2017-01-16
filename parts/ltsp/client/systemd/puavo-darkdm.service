@@ -8,7 +8,7 @@ Requires=multi-user.target
 WantedBy=multi-user.target
 
 [Service]
-ExecStart=/usr/bin/tmux new-session /usr/lib/puavo-ltsp-client/darkdm 6
+ExecStart=/usr/lib/puavo-ltsp-client/darkdm_on_tty
 StandardInput=tty
 StandardOutput=tty
 TTYPath=/dev/tty6
