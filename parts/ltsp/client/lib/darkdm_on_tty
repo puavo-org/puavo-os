@@ -1,0 +1,21 @@
+#!/bin/sh
+
+set -eu
+
+tty_dev=$(tty)
+tty_n=$(echo "${tty_dev}" | sed -r -n 's|/dev/tty||p')
+
+if [ -n "${tty_n}" ]; then
+  if ! chvt "${tty_n}"; then
+    echo "Could not chvt to ${tty_n}" >&2
+    exit 1
+  fi
+fi
+
+export LANG=en_US.UTF-8
+setupcon
+
+# suppress most kernel messages from this terminal
+dmesg -n2
+
+exec tmux new-session /usr/lib/puavo-ltsp-client/darkdm
