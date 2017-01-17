@@ -1,6 +1,9 @@
 set_puavo_hosttype
 setup_disk_partitions
-disable_update_initramfs
 opinsys_certificate_setup
+setup_etc_puavo_from_dns
+setup_device_json
+update_puavoconf_values
+disable_update_initramfs
 setup_graphics_drivers
 setup_xsessions
