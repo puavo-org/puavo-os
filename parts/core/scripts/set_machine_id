@@ -1,9 +1,13 @@
+#!/bin/sh
+
 # The dbus machine id should be unique for each client, otherwise problems may
 # occur, e.g. if a thin client has the same id as the server, then `sudo gedit`
 # on the client session which runs on the server gives "access denied"!
 # It also helps if it's constant, so we generate it from the client MAC
 # address, or FQDN as a fallback.  That way we don't pollute e.g. ~/.pulse/*
 # with random entries on fat clients.
+
+set -eu
 
 rm -f /var/lib/dbus/machine-id
 

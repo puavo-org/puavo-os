@@ -6,6 +6,7 @@ setup_device_json
 update_puavoconf_values
 disable_cronjobs
 manage_system_services
+set_machine_id
 disable_update_initramfs
 setup_graphics_drivers
 setup_xsessions
