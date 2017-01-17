@@ -1,6 +1,10 @@
+#!/bin/sh
+
 # Disable most cronjobs (those mostly cause unnecessary load), but logrotate
 # is actually useful when /state is used.  On hosts that do not need cron
 # anacron+cron are disabled, so extra jobs should not matter.
+
+set -eu
 
 for cronjobfile in /etc/cron.d/*       \
                    /etc/cron.hourly/*  \
