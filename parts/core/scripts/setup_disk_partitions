@@ -11,8 +11,8 @@ set -eu
 PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
 
 # Checks if LVM partitions /dev/mapper/puavo-home, /dev/mapper/puavo-images,
-# /dev/mapper/puavo-state and /dev/mapper/puavo-tmp and mounts those as 
-# /home, /images, /state or /tmp correspondingly.  Also copy necessary 
+# /dev/mapper/puavo-state and /dev/mapper/puavo-tmp and mounts those as
+# /home, /images, /state or /tmp correspondingly.  Also copy necessary
 # directory hierarchies under /state in case those are missing.
 
 puavo_enable_utmp() {
@@ -38,14 +38,14 @@ puavo_enable_utmp() {
 # when booting. Locally configured printers should stay configured
 # this way and PPDs are placed under /state/etc/cups/ppd.
 puavo_setup_cups_dir() {
-  find "/etc/cups/" -type d -print0 | cpio -0dpm --quiet /state 
+  find "/etc/cups/" -type d -print0 | cpio -0dpm --quiet /state
 
   cp -a -t /state/etc/cups/ \
      /etc/cups/cupsd.conf \
      /etc/cups/cups-files.conf \
      /etc/cups/raw.convs \
      /etc/cups/raw.types \
-     /etc/cups/snmp.conf 
+     /etc/cups/snmp.conf
 
   mv -T "/etc/cups" "/etc/cups.rofs" 2>/dev/null || true
   ln -fns "/state/etc/cups" "/etc/cups"
@@ -54,9 +54,9 @@ puavo_setup_cups_dir() {
 puavo_link_to_state() {
   for dir in "$@"; do
     # Before linking the directory, make sure that the /state partition has
-    # the same directory structure as the image so that applications do 
+    # the same directory structure as the image so that applications do
     # not freak out because something was be missing. The original directory
-    # is renamed to $dir.rofs before replacing the directory with a 
+    # is renamed to $dir.rofs before replacing the directory with a
     # symbolic link to the /state partition.
     find "$dir" -type d -print0 | cpio -0dpm --quiet /state
     mv -T "$dir" "$dir.rofs" 2>/dev/null || true
