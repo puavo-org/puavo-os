@@ -5,8 +5,11 @@ setup_etc_puavo_from_dns
 setup_device_json
 update_puavoconf_values
 disable_cronjobs
+link_release_logo
 manage_system_services
 set_machine_id
+set_systemd_default_target
+setup_swap
 disable_update_initramfs
 setup_graphics_drivers
 setup_xsessions
