@@ -165,20 +165,6 @@ Description: Puavo enabled tools and tweaks to enable and fix hardware features
  Puavo enabled tools and tweaks to enable and fix hardware features
  .
 
-Package: puavo-image-tools
-Architecture: all
-Depends: ${misc:Depends},
- debootstrap,
- git,
- make,
- rdiff,
- ruby-json,
- ruby,
- squashfs-tools
-Description: Tools for building images.
- Tools for building images.
- .
-
 Package: puavo-local-config
 Architecture: all
 Depends: ${misc:Depends}, nwjs, puavo-ltsp-client, puavo-pkg, ruby,
