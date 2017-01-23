@@ -1,3 +1,0 @@
-if [ -x /usr/bin/rdate -a -n "$SERVER" ]; then
-  rdate $SERVER
-fi

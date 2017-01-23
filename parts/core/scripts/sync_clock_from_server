@@ -1,0 +1,9 @@
+#!/bin/sh
+
+set -eu
+
+test -e /run/puavo/nbd-server || exit 0
+
+server=$(cat /run/puavo/run/puavo/nbd-server)
+
+rdate "$server"
