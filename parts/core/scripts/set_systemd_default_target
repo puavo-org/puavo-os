@@ -10,7 +10,7 @@ case "$hosttype" in
     default_target='graphical.target'
     ;;
   laptop)
-    if grep '\<nbdroot=' /proc/cmdline; then
+    if [ -e /run/puavo/nbd-server ]; then
       : # Laptop that has been booted from NBD should go to admin menu.
         # It provides tools to update the system etc.
     else

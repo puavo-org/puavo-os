@@ -1,4 +1,5 @@
 set_puavo_hosttype
+find_nbd_server_address
 setup_disk_partitions
 opinsys_certificate_setup
 setup_etc_puavo_from_dns

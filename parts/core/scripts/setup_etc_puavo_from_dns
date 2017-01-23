@@ -20,7 +20,7 @@
 set -eu
 
 # Setup /etc/puavo only if we have booted with NBD.
-grep '\<nbdroot=' /proc/cmdline || exit 0
+test -e /run/puavo/nbd-server || exit 0
 
 query_dns() {
   if ! query_dns_answer=$(host -R 3 -W 5 "$@") \

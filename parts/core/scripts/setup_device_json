@@ -5,7 +5,7 @@ set -eu
 # This script fetches device.json for netbooting devices.
 
 # Do nothing unless we have booted with NBD.
-grep '\<nbdroot=' /proc/cmdline || exit 0
+test -e /run/puavo/nbd-server || exit 0
 
 status=1
 
