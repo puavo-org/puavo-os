@@ -38,6 +38,8 @@ case "$(puavo-conf puavo.graphics.driver)" in
     ;;
 esac
 
+mkdir -p /run/puavo
+
 {
   if [ -n "$puavo_nvidia_driver" ]; then
     puavo_nvidia_dir="/etc/nvidia/${puavo_nvidia_driver}"
@@ -76,4 +78,4 @@ esac
     rm -fv /etc/modprobe.d/nvidia-blacklists-nouveau.conf \
            /etc/modprobe.d/nvidia.conf
   fi
-} >> /run/puavo-initrd.log
+} >> /run/puavo/initrd.log

@@ -217,7 +217,7 @@ module Dot11
 
 end
 
-RUNDIR                     = '/run/puavo-wlanap'
+RUNDIR                     = '/run/puavo/wlanap'
 CTRLSOCKET                 = File.join(RUNDIR, 'ctrlsocket')
 THIS_SCRIPT                = Pathname.new($0).realpath
 HOSTAPD_ACTION_SCRIPT      = THIS_SCRIPT.dirname.join('puavo-wlanap-hostapd-action')
