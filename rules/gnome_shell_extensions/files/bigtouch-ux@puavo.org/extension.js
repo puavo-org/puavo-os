@@ -90,7 +90,7 @@ function enable() {
 
     let launchOpenboardIcon = new St.Icon(
         {
-            icon_name: "openboard",
+            icon_name: "OpenBoard",
             reactive: true,
             track_hover: true,
             style_class: "launcher-box-item"
