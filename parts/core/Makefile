@@ -4,7 +4,12 @@ bindir = $(exec_prefix)/bin
 libdir = $(prefix)/lib
 sbindir = $(exec_prefix)/sbin
 datarootdir = $(prefix)/share
+
+ifeq ($(prefix), /usr/local)
 sysconfdir = $(prefix)/etc
+else
+sysconfdir = /etc
+endif
 
 INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
