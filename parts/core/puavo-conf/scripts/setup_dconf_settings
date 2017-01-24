@@ -68,3 +68,24 @@ if [ -s "${dconf_profile}.tmp" ]; then
 else
   rm -f "${dconf_profile}.tmp"
 fi
+
+#
+# setup desktop background as a special case
+#
+
+puavo_desktop_background=$(puavo-conf puavo.desktop.background)
+
+if [ -n "$puavo_desktop_background" \
+     -a -e "/usr/share/backgrounds/${puavo_desktop_background}" ]; then
+  mkdir -p /etc/dconf/db/puavo-desktopbackground.d
+  cat <<EOF > /etc/dconf/db/puavo-desktopbackground.d/background_profile.tmp
+[org/gnome/desktop/background]
+picture-uri='file:///usr/share/backgrounds/${puavo_desktop_background}'
+EOF
+  mv /etc/dconf/db/puavo-desktopbackground.d/background_profile.tmp \
+     /etc/dconf/db/puavo-desktopbackground.d/background_profile
+  dconf compile /etc/dconf/db/puavo-desktopbackground \
+                /etc/dconf/db/puavo-desktopbackground.d
+else
+  rm -f /etc/dconf/db/puavo-desktopbackground
+fi
