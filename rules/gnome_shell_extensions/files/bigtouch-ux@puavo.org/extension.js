@@ -68,19 +68,50 @@ function enable() {
             vertical: true
         });
 
-    let launchChromiumIcon = new St.Icon(
+    let launchGnomeCalculatorIcon = new St.Icon(
         {
-            icon_name: "chromium",
+            icon_name: "gnome-calculator",
             reactive: true,
             track_hover: true,
             style_class: "launcher-box-item"
         });
-    launchChromiumIcon.connect('button-press-event',
-                               function() { Util.spawn(["chromium"]) });
+    launchGnomeCalculatorIcon.connect('button-press-event',
+                                  function() { Util.spawn(["gnome-calculator"]) });
+
+    let launchCheeseIcon = new St.Icon(
+        {
+            icon_name: "org.gnome.Cheese",
+            reactive: true,
+            track_hover: true,
+            style_class: "launcher-box-item"
+        });
+    launchCheeseIcon.connect('button-press-event',
+                                  function() { Util.spawn(["gnome-calculator"]) });
+
+    let launchOpenboardIcon = new St.Icon(
+        {
+            icon_name: "OpenBoard",
+            reactive: true,
+            track_hover: true,
+            style_class: "launcher-box-item"
+        });
+    launchOpenboardIcon.connect('button-press-event',
+                                  function() { Util.spawn(["openboard"]) });
+
+
+    let launchChromeIcon = new St.Icon(
+        {
+            icon_name: "google-chrome",
+            reactive: true,
+            track_hover: true,
+            style_class: "launcher-box-item"
+        });
+    launchChromeIcon.connect('button-press-event',
+                               function() { Util.spawn(["google-chrome-stable"]) });
 
     let launchGnomeClocksIcon = new St.Icon(
         {
-            icon_name: "gnome-clocks",
+            icon_name: "org.gnome.clocks",
             reactive: true,
             track_hover: true,
             style_class: "launcher-box-item"
@@ -98,15 +129,15 @@ function enable() {
     launchNautilusIcon.connect('button-press-event',
                                function() { Util.spawn(["nautilus"]) });
 
-    let launchWebmenuIcon = new St.Icon(
+    let launchQuitIcon = new St.Icon(
         {
-            icon_name: "webmenu",
+            icon_name: "system-log-out",
             reactive: true,
             track_hover: true,
             style_class: "launcher-box-item"
         });
-    launchWebmenuIcon.connect('button-press-event',
-                              function() { Util.spawn(["webmenu-spawn"]) })
+    launchQuitIcon.connect('button-press-event',
+                              function() { Util.spawn(["gnome-session-quit"]) });
 
     let toggleOnboardIcon = new St.Icon(
         {
@@ -127,10 +158,12 @@ function enable() {
         });
     toggleOverviewIcon.connect('button-press-event', _toggleOverview);
 
-    launcherBox.add_child(launchChromiumIcon);
+    launcherBox.add_child(launchGnomeCalculatorIcon);
+    launcherBox.add_child(launchCheeseIcon);
+    launcherBox.add_child(launchChromeIcon);
     launcherBox.add_child(launchGnomeClocksIcon);
     launcherBox.add_child(launchNautilusIcon);
-    launcherBox.add_child(launchWebmenuIcon);
+    launcherBox.add_child(launchQuitIcon);
     launcherBox.add_child(toggleOnboardIcon);
     launcherBox.add_child(toggleOverviewIcon);
 
@@ -158,10 +191,11 @@ function enable() {
     dateMenu.setSensitive(false);
     Main.overview._searchEntry.hide();
     Main.overview._dash.actor.hide();
-
-    appMenu_actor.reparent(Main.panel._rightBox);
-    dateMenu.actor.reparent(Main.panel._centerBox);
-    keyboard_actor.reparent(Main.panel._leftBox);
+    Main.panel.actor.hide();
+    // XXX Uncomment following code if top panel is needed back
+    // appMenu_actor.reparent(Main.panel._rightBox);
+    // dateMenu.actor.reparent(Main.panel._centerBox);
+    // keyboard_actor.reparent(Main.panel._leftBox);
 
     global.stage.get_actions().forEach(function(action) {
         if (action instanceof imports.ui.edgeDragAction.EdgeDragAction)
