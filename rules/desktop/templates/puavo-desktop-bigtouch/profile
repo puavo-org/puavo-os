@@ -1,5 +1,17 @@
 [org/gnome/desktop/background]
-picture-uri='file:///usr/share/backgrounds/puavo-art/puavo-os_wallpaper-dark.svg'
+picture-uri='file:///usr/share/backgrounds/gnome/Godafoss_Iceland.jpg'
+
+[org/gnome/desktop/interface]
+icon-theme='Faenza'
+
+[org/gnome/desktop/screensaver]
+picture-uri='file:///usr/share/backgrounds/gnome/Waterfalls.jpg'
+user-switch-enabled=false
+picture-options='zoom'
+lock-enabled=false
+
+[org/gnome/desktop/session]
+idle-delay=uint32 0
 
 [org/gnome/desktop/wm/preferences]
 num-workspaces=1
