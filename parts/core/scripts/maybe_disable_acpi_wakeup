@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -eu
+
+# Only touch ACPI wakeup settings if "enabled" is set to false
+# (so we must disable something that is enabled by default).
+test "$(puavo-conf puavo.acpi.wakeup.enabled)" = "false" || exit 0
+
+for acpi_device in $(awk '$3 ~ /enabled/ { print $1 }' /proc/acpi/wakeup); do
+  echo "$acpi_device" > /proc/acpi/wakeup
+done

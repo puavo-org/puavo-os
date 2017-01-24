@@ -12,6 +12,7 @@ sync_clock_from_server
 set_machine_id
 set_systemd_default_target
 setup_swap
+maybe_disable_acpi_wakeup
 disable_update_initramfs
 setup_graphics_drivers
 setup_xsessions
