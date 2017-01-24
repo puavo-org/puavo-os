@@ -191,10 +191,11 @@ function enable() {
     dateMenu.setSensitive(false);
     Main.overview._searchEntry.hide();
     Main.overview._dash.actor.hide();
-
-    appMenu_actor.reparent(Main.panel._rightBox);
-    dateMenu.actor.reparent(Main.panel._centerBox);
-    keyboard_actor.reparent(Main.panel._leftBox);
+    Main.panel.actor.hide();
+    // XXX Uncomment following code if top panel is needed back
+    // appMenu_actor.reparent(Main.panel._rightBox);
+    // dateMenu.actor.reparent(Main.panel._centerBox);
+    // keyboard_actor.reparent(Main.panel._leftBox);
 
     global.stage.get_actions().forEach(function(action) {
         if (action instanceof imports.ui.edgeDragAction.EdgeDragAction)
