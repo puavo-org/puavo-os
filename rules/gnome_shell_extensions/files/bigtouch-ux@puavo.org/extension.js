@@ -86,7 +86,7 @@ function enable() {
             style_class: "launcher-box-item"
         });
     launchCheeseIcon.connect('button-press-event',
-                                  function() { Util.spawn(["gnome-calculator"]) });
+                                  function() { Util.spawn(["cheese"]) });
 
     let launchOpenboardIcon = new St.Icon(
         {
