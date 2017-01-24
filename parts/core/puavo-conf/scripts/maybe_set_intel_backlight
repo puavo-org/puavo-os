@@ -4,7 +4,7 @@ set -eu
 
 config_path=/usr/share/X11/xorg.conf.d/80-puavo-intel-backlight.conf
 
-if [ "$(puavo-conf puavo.graphics.intel_backlight)" = "true" ]; then
+if [ "$(puavo-conf puavo.xorg.intel_backlight)" = "true" ]; then
   cat <<'EOF' > "${config_path}.tmp"
 Section "Device"
     Identifier  "Intel Graphics"
