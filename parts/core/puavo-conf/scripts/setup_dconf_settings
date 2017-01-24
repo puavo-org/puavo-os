@@ -1,0 +1,70 @@
+#!/bin/sh
+
+set -eu
+
+# Set up dconf settings from puavo-conf.  We will also clean up previous
+# configuration in case settings are empty, in case we are using persistent
+# overlay (and etc/X11/Xsession.d/44puavo-generate-dconf-profile expects this
+# to exist).
+
+dconf_dbfile=/etc/dconf/db/puavo-conf
+dconf_dir=/etc/dconf/db/puavo-conf.d
+
+mkdir -p "$dconf_dir" "${dconf_dir}/locks"
+
+dconf_locks="${dconf_dir}/locks/puavo-conf-locks"
+dconf_profile="${dconf_dir}/puavo-conf-profile"
+
+# puavo.desktop.dconf.settings example that this interprets:
+#   "/org/gnome/desktop/interface/scaling-factor=uint32 1 | /org/gnome/desktop/screensaver/lock-enabled=false"
+
+puavo-conf puavo.desktop.dconf.settings \
+  | awk -v dconf_locks="${dconf_locks}.tmp" \
+        -v dconf_profile="${dconf_profile}.tmp" '
+      BEGIN {
+        RS = "|"
+        FS = "="
+
+        printf "" > dconf_locks
+        printf "" > dconf_profile
+      }
+      {
+        dconf_key   = $1
+        dconf_value = $2
+
+        sub(/^ */, "", dconf_key);   sub(/ *$/, "", dconf_key)
+        sub(/^ */, "", dconf_value); sub(/ *$/, "", dconf_value)
+
+        fieldcount = split(dconf_key, key_fields, "/")
+        if (fieldcount < 3) { next }
+
+        for (i = 1; i <= fieldcount; i++) {
+          if (i == 1) { continue }
+
+          if (i == 2) {
+            printf "[%s", key_fields[i] >> dconf_profile
+          } else if (i < fieldcount) {
+            printf "/%s", key_fields[i] >> dconf_profile
+          } else {
+            printf "]\n%s=%s\n\n", key_fields[i], dconf_value >> dconf_profile
+          }
+        }
+
+        print dconf_key >> dconf_locks
+      }
+    '
+
+rm -f "$dconf_dbfile"
+
+if [ -s "${dconf_locks}.tmp" ]; then
+  mv "${dconf_locks}.tmp" "${dconf_locks}"
+else
+  rm -f "${dconf_locks}.tmp"
+fi
+
+if [ -s "${dconf_profile}.tmp" ]; then
+  mv "${dconf_profile}.tmp" "${dconf_profile}"
+  dconf compile "$dconf_dbfile" "$dconf_dir"
+else
+  rm -f "${dconf_profile}.tmp"
+fi
