@@ -13,7 +13,7 @@ set_machine_id
 set_systemd_default_target
 setup_swap
 maybe_disable_acpi_wakeup
-maybe_set_intel_backlight
+setup_xorg
 setup_dconf_settings
 disable_update_initramfs
 setup_graphics_drivers
