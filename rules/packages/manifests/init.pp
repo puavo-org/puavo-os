@@ -372,12 +372,6 @@ class packages {
     , 'xscreensaver-data-extra' ]:
       tag => [ 'tag_themes', 'tag_debian', ];
 
-    [ 'debian-edu-artwork'
-    , 'debian-edu-artwork-joy'
-    , 'debian-edu-artwork-lines'
-    , 'debian-edu-artwork-spacefun' ]:
-      tag => [ 'tag_backgroundimages', 'tag_themes', 'tag_debian', ];
-
     # the dependencies (and recommends) of ubuntu-gnome-desktop package
     # without a few packages that we do not want
     [ 'acpi-support'
