@@ -26,6 +26,8 @@ if [ -n "$HOMEPAGE" ]; then
     '.session.startup_urls = [ $homepage ]' || true
 fi
 
+manage_preferences '.browser.custom_chrome_frame = false' || true
+
 pepperflash_path="/usr/lib/adobe-flashplugin/libpepflashplayer.so"
 
 if [ -s "$pepperflash_path" ]; then

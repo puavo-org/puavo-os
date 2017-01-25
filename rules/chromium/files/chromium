@@ -26,4 +26,6 @@ if [ -n "$HOMEPAGE" ]; then
     '.session.startup_urls = [ $homepage ]' || true
 fi
 
+manage_preferences '.browser.custom_chrome_frame = false' || true
+
 exec /usr/bin/chromium.distrib $default_args "$@"
