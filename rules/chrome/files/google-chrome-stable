@@ -7,7 +7,7 @@ browser_running() {
 homepage_args() { echo "$HOMEPAGE" | sed 's/|/ /g'; }
 
 default_args="--no-default-browser-check --no-first-run"
-pepperflash_path="/usr/lib/adobe-flashplugin/libpepflashplayer-amd64.so"
+pepperflash_path="/usr/lib/adobe-flashplugin/libpepflashplayer.so"
 
 if [ -s "$pepperflash_path" ]; then
   default_args="$default_args --ppapi-flash-path=$pepperflash_path --ppapi-flash-version="
