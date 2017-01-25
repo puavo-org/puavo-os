@@ -198,6 +198,9 @@ items:
     name: Processing
     command: /opt/processing/processing
     osIconPath: /opt/processing/lib/icons/pde-48.png
+  - source: robboscratch2
+    type: desktop
+    inactiveByDeviceType: thinclient
 - type: menu
   name:
     en: Education
@@ -269,6 +272,9 @@ items:
     type: desktop
   - source: wxmaxima
     type: desktop
+  - source: ti_nspire_cx_cas
+    type: desktop
+    condition: "env.PUAVO_TAG_TI_NSPIRE_CX_CAS"
   - source: ghemical
     type: desktop
     inactiveByDeviceType: thinclient
@@ -405,6 +411,8 @@ items:
     type: desktop
   - source: fmit
     type: desktop
+  - source: stopmotion
+    type: desktop
   - source: luciole
     type: desktop
   - source: qsynth
@@ -475,6 +483,9 @@ items:
     type: desktop
   - source: wxmaxima
     type: desktop
+  - source: ti_nspire_cx_cas
+    type: desktop
+    condition: "env.PUAVO_TAG_TI_NSPIRE_CX_CAS"
   - source: LoggerPro
     type: desktop
   - source: dia

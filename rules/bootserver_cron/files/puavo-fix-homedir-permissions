@@ -1,0 +1,7 @@
+#!/bin/sh
+
+set -eu
+
+find /home -maxdepth 1 -mindepth 1 -type d \
+  ! '(' -name kdump -or -name opinsys -or -name share -or -perm 0700 ')' \
+  -exec chmod 0700 \{} \;

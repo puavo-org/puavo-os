@@ -16,8 +16,11 @@ idle-delay=uint32 0
 [org/gnome/desktop/wm/preferences]
 num-workspaces=1
 
-[org/gnome/nautilus/window-state]
-start-with-sidebar=false
+[org/gnome/desktop/wm/preferences]
+button-layout='appmenu:maximize,close'
+
+[org/gnome/settings-daemon/plugins/xsettings]
+overrides={'Gtk/ShellShowsAppMenu': <0>, 'Gtk/ShellShowsMenubar': <1>, 'Gtk/DecorationLayout': <'menu:maximize,close'>}
 
 [org/gnome/shell]
 enabled-extensions=['bigtouch-ux@puavo.org']

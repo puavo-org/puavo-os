@@ -20,6 +20,17 @@ LDAP_MASTER=$(cat /etc/puavo/ldap/master)
 KERBEROS_MASTER=$(cat /etc/puavo/kerberos/master)
 PUAVO_TOPDOMAIN=$(cat /etc/puavo/topdomain)
 
+# XXX ${KERBEROS_MASTER} should be independent from ${LDAP_MASTER},
+# XXX but in our typical configuration these are the same.
+# XXX This should not be the case here.  puavo-register should be fixed
+# XXX to not fallback to ${LDAP_MASTER} in case "kerberos_host" is missing
+# XXX in organisation information, so that /etc/puavo/kerberos/master
+# XXX could have the correct value.  Meanwhile, apply this workaround
+# XXX to use "kerberos.${PUAVO_TOPDOMAIN}" as the kerberos server.
+if [ "${KERBEROS_MASTER}" = "${LDAP_MASTER}" ]; then
+  KERBEROS_MASTER="kerberos.${PUAVO_TOPDOMAIN}"
+fi
+
 echo "server=/${LDAP_MASTER}/${route_vpn_gateway}" > $TMPFILE
 echo "server=/${KERBEROS_MASTER}/${route_vpn_gateway}" >> $TMPFILE
 echo "server=/ntp.${PUAVO_TOPDOMAIN}/${route_vpn_gateway}" >> $TMPFILE

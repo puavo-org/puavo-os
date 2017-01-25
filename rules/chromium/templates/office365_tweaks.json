@@ -1,0 +1,31 @@
+{
+  "3rdparty": {
+    "extensions": {
+      "djflhoibgkdhkhhcedjiklpkjnoahfmg": {
+        "PermanentSpoofs": [
+<% scope.lookupvar('chromium::office365_tweaks::office365_domains').each do |domain| %>
+          {
+            "domain": "<%= domain %>",
+            "user_agent": {
+              "title": "ChromeOS",
+              "ua_string": "<%= scope.lookupvar('chromium::office365_tweaks::user_agent') %>",
+              "vendor": "Chrome",
+              "badge": "CHR",
+              "append": false
+            }
+          },
+<% end %>
+        ],
+        "UserAgents": [
+          {
+            "title": "ChromeOS",
+            "ua_string": "<%= scope.lookupvar('chromium::office365_tweaks::user_agent') %>",
+            "vendor": "Chrome",
+            "badge": "CHR",
+            "append": false
+          }
+        ]
+      }
+    }
+  }
+}

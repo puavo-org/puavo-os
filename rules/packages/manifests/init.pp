@@ -112,6 +112,7 @@ class packages {
 
     [ 'gdm3'
     , 'network-manager-openvpn-gnome'
+    , 'network-manager-vpnc-gnome'
     , 'notify-osd'
     , 'onboard'
     , 'onboard-data'
@@ -179,6 +180,7 @@ class packages {
     , 'khangman'
     , 'ktouch'
     , 'kwordquiz'
+    , 'laby'
     , 'luola'
     , 'neverball'
     , 'neverputt'
@@ -286,6 +288,7 @@ class packages {
     , 'icedove'
     , 'libreoffice'
     , 'libreoffice-base'
+    , 'libreoffice-kde'
     , 'scribus'
     , 'tellico'
     , 'vym' ]:
@@ -524,7 +527,6 @@ class packages {
     , 'xdg-user-dirs'
     , 'xdg-user-dirs-gtk'
     , 'xdg-utils'
-    , 'xfce4'
     , 'xkb-data'
     , 'xorg'
     , 'xterm'

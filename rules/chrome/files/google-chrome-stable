@@ -1,16 +1,42 @@
 #!/bin/sh
 
-browser_running() {
-  pgrep -f -U "$USER" '^/opt/google/chrome/chrome' >/dev/null
+set -eu
+
+manage_preferences() {
+  tmpfile="${preferences_file}.tmp"
+
+  if [ -e "$preferences_file" ]; then
+    jq "$@" "$preferences_file" > "$tmpfile" || return 1
+  else
+    jq --null-input "$@" > "$tmpfile" || return 1
+  fi
+
+  mv "$tmpfile" "$preferences_file"
 }
 
-homepage_args() { echo "$HOMEPAGE" | sed 's/|/ /g'; }
+default_args="--disable-infobars --no-default-browser-check --no-first-run"
 
-default_args="--no-default-browser-check"
+preferences_dir=~/.config/google-chrome/Default
+preferences_file="${preferences_dir}/Preferences"
 
-if ! browser_running || [ $# -eq 0 ]; then
-  exec /opt/google/chrome/google-chrome --new-window $default_args \
-                                        "$@" $(homepage_args)
-else
-  exec /opt/google/chrome/google-chrome $default_args "$@"
+mkdir -p "$preferences_dir"
+
+if [ -n "$HOMEPAGE" ]; then
+  manage_preferences --arg homepage "$HOMEPAGE" '
+    .browser.show_home_button = true
+    | .homepage = $homepage
+    | .homepage_is_newtabpage = false
+    | .session.restore_on_startup = 4
+    | .session.startup_urls = [ $homepage ]
+  ' || true
 fi
+
+manage_preferences '.browser.custom_chrome_frame = false' || true
+
+pepperflash_path="/usr/lib/adobe-flashplugin/libpepflashplayer.so"
+
+if [ -s "$pepperflash_path" ]; then
+  default_args="$default_args --ppapi-flash-path=$pepperflash_path --ppapi-flash-version="
+fi
+
+exec /opt/google/chrome/google-chrome $default_args "$@"
