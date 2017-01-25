@@ -6,7 +6,7 @@ browser_running() {
 
 homepage_args() { echo "$HOMEPAGE" | sed 's/|/ /g'; }
 
-default_args="--no-default-browser-check --no-first-run"
+default_args="--disable-infobars --no-default-browser-check --no-first-run"
 pepperflash_path="/usr/lib/adobe-flashplugin/libpepflashplayer.so"
 
 if [ -s "$pepperflash_path" ]; then
