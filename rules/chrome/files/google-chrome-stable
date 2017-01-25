@@ -23,7 +23,8 @@ mkdir -p "$preferences_dir"
 
 if [ -n "$HOMEPAGE" ]; then
   manage_preferences --arg homepage "$HOMEPAGE" \
-    '.session.startup_urls = [ $homepage ]' || true
+    '.session.startup_urls = [ $homepage ] | .session.restore_on_startup = 4' \
+    || true
 fi
 
 manage_preferences '.browser.custom_chrome_frame = false' || true
