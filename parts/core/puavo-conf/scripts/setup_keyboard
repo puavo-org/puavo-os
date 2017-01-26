@@ -1,25 +1,12 @@
-# This file is sourced
+#!/bin/sh
 
-puavo_keyboard_layout=$( jq -r .keyboard_layout  /etc/puavo/device.json)
-puavo_keyboard_variant=$(jq -r .keyboard_variant /etc/puavo/device.json)
+set -eu
 
-# XXX We use a special "fi" layout mode as default, because that
-# XXX was our historical default.  May be removed once we can
-# XXX set the correct multiple layout to Puavo (once all old clients
-# XXX are no longer in use).
-if [ -z "$puavo_keyboard_layout" \
-     -o "$puavo_keyboard_layout" = "null" \
-     -o "$puavo_keyboard_layout" = "fi" ]; then
-  puavo_keyboard_layout="fi,ru,ru,gb"
-  puavo_keyboard_variant=",,phonetic,dvorak"
-fi
-
-if [ "$puavo_keyboard_variant" = "null" ]; then
-  puavo_keyboard_variant=""
-fi
+puavo_keyboard_layout=$( puavo-conf puavo.desktop.keyboard.layout)
+puavo_keyboard_variant=$(puavo-conf puavo.desktop.keyboard.variant)
 
 puavo_generate_dconf_keyboard_layouts() {
-  mkdir -p /etc/dconf/db/keyboard.d || return 1
+  mkdir -p /etc/dconf/db/puavo-keyboard.d || return 1
 
   echo "$puavo_keyboard_layout" "$puavo_keyboard_variant" \
     | awk "$(cat <<'EOF'
@@ -73,13 +60,13 @@ puavo_generate_dconf_keyboard_layouts() {
         exit(0)
       }
 EOF
-)" > /etc/dconf/db/keyboard.d/keyboard_profile || return 1
+)" > /etc/dconf/db/puavo-keyboard.d/puavo-keyboard || return 1
 
-  rm -f /etc/dconf/db/keyboard || return 1
-  dconf update                 || return 1
+  dconf compile /etc/dconf/db/puavo-keyboard \
+                /etc/dconf/db/puavo-keyboard.d/puavo-keyboard
 }
 
-puavo_generate_dconf_keyboard_layouts || return 1
+puavo_generate_dconf_keyboard_layouts
 
 # Do console setup after dconf, puavo_generate_dconf_keyboard_layouts
 # should have validated that inputs are okay.
@@ -99,7 +86,9 @@ for file in /etc/default/console-setup /etc/default/keyboard; do
           }
         }
         { print }
-      ' "$file" > "$file.tmp" \
-        && mv "$file.tmp" "$file"
+      ' "$file" > "${file}.tmp" \
+        && mv "${file}.tmp" "$file"
   fi
 done
+
+exit 0
