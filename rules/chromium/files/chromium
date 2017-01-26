@@ -2,6 +2,10 @@
 
 set -eu
 
+browser_running() {
+  pgrep -x -U "$USER" chromium >/dev/null
+}
+
 manage_preferences() {
   tmpfile="${preferences_file}.tmp"
 
@@ -16,21 +20,23 @@ manage_preferences() {
 
 default_args="--disable-infobars --no-default-browser-check --no-first-run"
 
-preferences_dir=~/.config/chromium/Default
-preferences_file="${preferences_dir}/Preferences"
+if ! browser_running; then
+  preferences_dir=~/.config/chromium/Default
+  preferences_file="${preferences_dir}/Preferences"
 
-mkdir -p "$preferences_dir"
+  mkdir -p "$preferences_dir"
 
-if [ -n "$HOMEPAGE" ]; then
-  manage_preferences --arg homepage "$HOMEPAGE" '
-    .browser.show_home_button = true
-    | .homepage = $homepage
-    | .homepage_is_newtabpage = false
-    | .session.restore_on_startup = 4
-    | .session.startup_urls = [ $homepage ]
-  ' || true
+  if [ -n "$HOMEPAGE" ]; then
+    manage_preferences --arg homepage "$HOMEPAGE" '
+      .browser.show_home_button = true
+      | .homepage = $homepage
+      | .homepage_is_newtabpage = false
+      | .session.restore_on_startup = 4
+      | .session.startup_urls = [ $homepage ]
+    ' || true
+  fi
+
+  manage_preferences '.browser.custom_chrome_frame = false' || true
 fi
-
-manage_preferences '.browser.custom_chrome_frame = false' || true
 
 exec /usr/bin/chromium.distrib $default_args "$@"
