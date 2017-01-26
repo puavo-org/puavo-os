@@ -38,8 +38,8 @@ if ! browser_running; then
 
   mkdir -p "$preferences_dir"
 
-  first_homepage=$(echo "$HOMEPAGE" | cut -d '|' -f 1)
-  second_homepage=$(echo "$HOMEPAGE" | cut -d '|' -f 2)
+  first_homepage=$( echo "$HOMEPAGE" | awk -F '|' '{ print $1 }')
+  second_homepage=$(echo "$HOMEPAGE" | awk -F '|' '{ print $2 }')
 
   if [ -n "$first_homepage" ]; then
     if set_first_homepage "$first_homepage"; then
