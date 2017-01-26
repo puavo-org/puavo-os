@@ -1,0 +1,10 @@
+#!/bin/sh
+
+set -eu
+
+puavo_timezone=$(puavo-conf puavo.time.timezone)
+
+if [ -e "/usr/share/zoneinfo/${puavo_timezone}" ]; then
+  ln -fns "/usr/share/zoneinfo/${puavo_timezone}" /etc/localtime 2>/dev/null
+  echo "${puavo_timezone}" > /etc/timezone
+fi
