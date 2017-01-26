@@ -1,3 +1,0 @@
-jq -r .tags[] /etc/puavo/device.json | grep -q -x enable_webmenu_feedback && {
-    echo 'WM_FEEDBACK_ACTIVE=true' >>/etc/environment
-}
