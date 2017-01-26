@@ -18,6 +18,18 @@ manage_preferences() {
   mv "$tmpfile" "$preferences_file"
 }
 
+set_first_homepage() {
+  first_homepage=$1
+
+  manage_preferences --arg first_homepage "$first_homepage" '
+    .browser.show_home_button = true
+    | .homepage = $first_homepage
+    | .homepage_is_newtabpage = false
+    | .session.restore_on_startup = 4
+    | .session.startup_urls = [ $first_homepage ]
+  '
+}
+
 default_args="--disable-infobars --no-default-browser-check --no-first-run"
 
 if ! browser_running; then
@@ -26,14 +38,17 @@ if ! browser_running; then
 
   mkdir -p "$preferences_dir"
 
-  if [ -n "$HOMEPAGE" ]; then
-    manage_preferences --arg homepage "$HOMEPAGE" '
-      .browser.show_home_button = true
-      | .homepage = $homepage
-      | .homepage_is_newtabpage = false
-      | .session.restore_on_startup = 4
-      | .session.startup_urls = [ $homepage ]
-    ' || true
+  first_homepage=$(echo "$HOMEPAGE" | cut -d '|' -f 1)
+  second_homepage=$(echo "$HOMEPAGE" | cut -d '|' -f 2)
+
+  if [ -n "$first_homepage" ]; then
+    if set_first_homepage "$first_homepage"; then
+      if [ -n "$second_homepage" ]; then
+        manage_preferences --arg second_homepage "$second_homepage" '
+          .session.startup_urls += [ $second_homepage ]
+        ' || true
+      fi
+    fi
   fi
 
   manage_preferences '.browser.custom_chrome_frame = false' || true
