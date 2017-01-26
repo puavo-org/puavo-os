@@ -60,4 +60,4 @@ if [ -s "$pepperflash_path" ]; then
   default_args="$default_args --ppapi-flash-path=$pepperflash_path --ppapi-flash-version="
 fi
 
-exec /opt/google/chrome/google-chrome $default_args "$@"
+exec /usr/bin/google-chrome-stable.distrib $default_args "$@"
