@@ -1,0 +1,25 @@
+#!/bin/sh
+
+set -eu
+
+# XXX get rid of hosttype handling
+
+puavo_hosttype=$(cat /etc/puavo/hosttype)
+
+case "$puavo_hosttype" in
+  laptop|wirelessaccesspoint)
+    puavo_admin_tunnel_interface='tap0'
+    ;;
+  *)
+    puavo_admin_tunnel_interface='eth0'
+    ;;
+esac
+
+file=/etc/puavo-remote-assistance-applet/config.json
+tmpfile="${file}.tmp"
+
+jq --arg interface "$puavo_admin_tunnel_interface" '
+    . + { vino_network_interface: $interface }
+  ' "$file" > "$tmpfile"
+
+mv "$tmpfile" "$file"
