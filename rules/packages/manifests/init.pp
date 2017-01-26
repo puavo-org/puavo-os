@@ -545,6 +545,7 @@ class packages {
     , 'exfat-utils'
     , 'fuse'
     , 'gconf-editor'
+    , 'pass'
     , 'unace'
     , 'unionfs-fuse' ]: # Ekapeli might need this.
       tag => [ 'tag_utils', 'tag_debian', ];
