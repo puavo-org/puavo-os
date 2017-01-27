@@ -63,7 +63,7 @@ EOF
 )" > /etc/dconf/db/puavo-keyboard.d/puavo-keyboard || return 1
 
   dconf compile /etc/dconf/db/puavo-keyboard \
-                /etc/dconf/db/puavo-keyboard.d/puavo-keyboard
+                /etc/dconf/db/puavo-keyboard.d
 }
 
 puavo_generate_dconf_keyboard_layouts
