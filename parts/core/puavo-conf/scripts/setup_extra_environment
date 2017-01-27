@@ -1,0 +1,5 @@
+#!/bin/sh
+
+set -eu
+
+puavo-conf puavo.desktop.environment > /etc/environment.puavo
