@@ -1,0 +1,8 @@
+#!/bin/sh
+
+set -eu
+
+find /var/crash/ -mindepth 1 -maxdepth 1 -type d -regex '^/var/crash/[0-9]+$' \
+  | sort \
+  | head -n -1 \
+  | xargs rm -rf

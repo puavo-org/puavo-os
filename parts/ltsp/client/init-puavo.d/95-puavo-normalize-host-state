@@ -3,11 +3,6 @@ puavo_get_device_param() {
   jq --raw-output ".${param_name}" /etc/puavo/device.json 2>/dev/null
 }
 
-# Regardless of the hosttype, remove all crash dumps except the latest
-# to save state partition space.
-find /var/crash/ -mindepth 1 -maxdepth 1 -type d \
-    -regex '^/var/crash/[0-9]+$' | sort | head -n-1 | xargs rm -rf
-
 case "$PUAVO_HOSTTYPE" in
   laptop)
     # Clean up the network connections made in login screen

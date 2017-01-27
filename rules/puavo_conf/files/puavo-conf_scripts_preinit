@@ -22,6 +22,7 @@ set_timezone
 setup_locale
 setup_powersave
 manage_module_blacklist
+cleanup_crash_dumps
 disable_update_initramfs
 setup_graphics_drivers
 setup_xsessions
