@@ -1,0 +1,19 @@
+#!/bin/sh
+
+set -eu
+
+blacklist_filepath='/etc/modprobe.d/blacklist-by-puavo-conf.conf'
+
+puavo_blacklist=$(puavo-conf puavo.kernel.modules.blacklist)
+
+if [ -z "$puavo_blacklist" ]; then
+  rm -f "$blacklist_filepath"
+  exit 0
+fi
+
+cat /dev/null > "$blacklist_filepath"
+
+IFS=','
+for module in $puavo_blacklist; do
+  echo "blacklist $module" >> "$blacklist_filepath"
+done
