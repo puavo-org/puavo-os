@@ -1,0 +1,67 @@
+#!/bin/sh
+
+set -eu
+
+status=0
+
+nmi_watchdog() {
+  nmi_watchdog_param=''
+  case "$(puavo-conf puavo.powersave.nmi_watchdog.mode)" in
+    disable) nmi_watchdog_param=0 ;;
+    enable)  nmi_watchdog_param=1 ;;
+  esac
+
+  if [ -n "$nmi_watchdog_param" ]; then
+    echo "$nmi_watchdog_param" > /proc/sys/kernel/nmi_watchdog
+  fi
+}
+
+sata_alpm() {
+  sata_alpm_param=''
+  case "$(puavo-conf puavo.powersave.sata_alpm.mode)" in
+    disable) sata_alpm_param=false ;;
+    enable)  sata_alpm_param=true  ;;
+  esac
+
+  if [ -n "$sata_alpm_param" ] ; then
+    mkdir -p /etc/pm/config.d || return 1
+    echo "SATA_ALPM_ENABLE=${sata_alpm_param}" > /etc/pm/config.d/sata_alpm
+  else
+    rm -f /etc/pm/config.d/sata_alpm
+  fi
+}
+
+wireless() {
+  if [ "$(puavo-conf puavo.powersave.wireless.mode)" = 'disable' ]; then
+    if [ -e /etc/pm/power.d/wireless ]; then
+      mkdir -p /etc/pm/power.d.disabled || return 1
+      mv /etc/pm/power.d/wireless /etc/pm/power.d.disabled/wireless || return 1
+    fi
+
+    mkdir -p /etc/laptop-mode/conf.d /etc/udev/rules.d || return 1
+    cat <<'EOF' > /etc/laptop-mode/conf.d/wireless-power.conf || return 1
+CONTROL_WIRELESS_POWER_SAVING="auto"
+
+WIRELESS_AC_POWER_SAVING=0
+WIRELESS_BATT_POWER_SAVING=0
+EOF
+    cat <<'EOF' > /etc/udev/rules.d/80-wifi-powersave.rules || return 1
+KERNEL=="eth*|ath*|wlan*[0-9]|ra*|sta*", SUBSYSTEM=="net", ENV{DEVTYPE}=="wlan", ACTION=="add|change" RUN+="/usr/lib/puavo-ltsp-client/udev-disable-wifi-powersave"
+EOF
+  else
+    rm -f /etc/laptop-mode/conf.d/wireless-power.conf \
+          /etc/udev/rules.d/80-wifi-powersave.rules
+
+    if [ -e /etc/pm/power.d.disabled/wireless ]; then
+      mv /etc/pm/power.d.disabled/wireless /etc/pm/power.d/wireless || return 1
+    fi
+  fi
+}
+
+status=0
+
+nmi_watchdog || status=1
+sata_alpm    || status=1
+wireless     || status=1
+
+exit $status
