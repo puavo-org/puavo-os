@@ -1,6 +1,6 @@
 #!/bin/sh
 
-set -eu
+# XXX not using "set -eu" for now, no proper error handling in this script
 
 # Mount Puavo partitions from local hard drive and use files created by
 # puavo-register script.  Used by Puavo LTSP servers to get registration
