@@ -15,9 +15,11 @@ case $1 in
         ;;
 esac
 
-if [ "$BOOT" = "puavo" ]; then
-    puavo-conf-update --init --verbose
+if [ "$BOOT" != "puavo" ]; then
+  exit 0
 fi
+
+puavo-conf-update --init --verbose
 
 # apply kernel module configurations based on puavo-conf here
 
