@@ -5,21 +5,6 @@ puavo_get_device_param() {
 
 case "$PUAVO_HOSTTYPE" in
   laptop)
-    # Clean up the network connections made in login screen
-    # (made by "lightdm"-user).  Normal users are allowed to have their
-    # own networks and we want that information to persist.
-    awk '
-      BEGIN { FS = "="; ORS = "\0" }
-      $1 == "permissions" {
-	split($2, userlist, /;/)
-	for (i in userlist) {
-	  if (userlist[i] == "user:lightdm:") {
-	    print FILENAME
-	  }
-	}
-      }' /etc/NetworkManager/system-connections/* \
-      | xargs -0 rm -f
-
     if [ "$(puavo_get_device_param personal_device)" = "true" ]; then
       # A personal device, nothing to do!
       true
