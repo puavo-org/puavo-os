@@ -2,6 +2,10 @@
 
 set -eu
 
+browser_running() {
+  pgrep -x -U "$USER" chrome >/dev/null
+}
+
 manage_preferences() {
   tmpfile="${preferences_file}.tmp"
 
@@ -14,24 +18,41 @@ manage_preferences() {
   mv "$tmpfile" "$preferences_file"
 }
 
-default_args="--disable-infobars --no-default-browser-check --no-first-run"
+set_first_homepage() {
+  first_homepage=$1
 
-preferences_dir=~/.config/google-chrome/Default
-preferences_file="${preferences_dir}/Preferences"
-
-mkdir -p "$preferences_dir"
-
-if [ -n "$HOMEPAGE" ]; then
-  manage_preferences --arg homepage "$HOMEPAGE" '
+  manage_preferences --arg first_homepage "$first_homepage" '
     .browser.show_home_button = true
-    | .homepage = $homepage
+    | .homepage = $first_homepage
     | .homepage_is_newtabpage = false
     | .session.restore_on_startup = 4
-    | .session.startup_urls = [ $homepage ]
-  ' || true
-fi
+    | .session.startup_urls = [ $first_homepage ]
+  '
+}
 
-manage_preferences '.browser.custom_chrome_frame = false' || true
+default_args="--disable-infobars --no-default-browser-check --no-first-run"
+
+if ! browser_running; then
+  preferences_dir=~/.config/google-chrome/Default
+  preferences_file="${preferences_dir}/Preferences"
+
+  mkdir -p "$preferences_dir"
+
+  first_homepage=$( echo "$HOMEPAGE" | awk -F '|' '{ print $1 }')
+  second_homepage=$(echo "$HOMEPAGE" | awk -F '|' '{ print $2 }')
+
+  if [ -n "$first_homepage" ]; then
+    if set_first_homepage "$first_homepage"; then
+      if [ -n "$second_homepage" ]; then
+        manage_preferences --arg second_homepage "$second_homepage" '
+          .session.startup_urls += [ $second_homepage ]
+        ' || true
+      fi
+    fi
+  fi
+
+  manage_preferences '.browser.custom_chrome_frame = false' || true
+fi
 
 pepperflash_path="/usr/lib/adobe-flashplugin/libpepflashplayer.so"
 
@@ -39,4 +60,4 @@ if [ -s "$pepperflash_path" ]; then
   default_args="$default_args --ppapi-flash-path=$pepperflash_path --ppapi-flash-version="
 fi
 
-exec /opt/google/chrome/google-chrome $default_args "$@"
+exec /usr/bin/google-chrome-stable.distrib $default_args "$@"

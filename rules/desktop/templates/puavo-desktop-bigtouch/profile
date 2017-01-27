@@ -1,3 +1,11 @@
+[org/gnome/cheese]
+photo-y-resolution=720
+burst-delay=1000
+video-y-resolution=720
+video-x-resolution=1280
+countdown=false
+photo-x-resolution=1280
+
 [org/gnome/desktop/background]
 picture-uri='file:///usr/share/backgrounds/gnome/Godafoss_Iceland.jpg'
 
@@ -11,10 +19,10 @@ picture-options='zoom'
 lock-enabled=false
 
 [org/gnome/desktop/session]
-idle-delay=uint32 0
+idle-delay='uint32 0'
 
 [org/gnome/desktop/wm/preferences]
-num-workspaces=1
+num-workspaces=2
 
 [org/gnome/desktop/wm/preferences]
 button-layout='appmenu:maximize,close'
@@ -31,6 +39,7 @@ dynamic-workspaces=false
 [org/onboard]
 theme='/usr/share/onboard/themes/Droid.theme'
 layout='/usr/share/onboard/layouts/Full Keyboard.onboard'
+system-theme-associations={'Default': '', 'Adwaita': '/usr/share/onboard/themes/Droid.theme', 'HighContrastInverse': 'HighContrastInverse', 'LowContrast': 'LowContrast', 'HighContrast': 'HighContrast'}
 
 [org/onboard/keyboard]
 touch-feedback-enabled=true

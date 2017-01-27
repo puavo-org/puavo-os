@@ -1,5 +1,6 @@
 class image::bundle::desktop {
   # include ::acroread			# XXX needs fixing for Debian
+  include ::chrome
   include ::chromium
   include ::desktop
   include ::disable_accounts_service

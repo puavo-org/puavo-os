@@ -42,6 +42,10 @@ home-icon-visible=true
 trash-icon-visible=true
 volumes-visible=true
 
+[org/gnome/shell]
+favorite-apps=['org.gnome.Nautilus.desktop', 'firefox-esr.desktop', 'google-chrome.desktop', 'chromium.desktop', 'libreoffice-writer.desktop']
+
+
 [org/gnome/settings-daemon/peripherals/touchpad]
 scroll-method='two-finger-scrolling'
 
