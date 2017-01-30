@@ -2,7 +2,7 @@ set_puavo_hosttype
 find_nbd_server_address
 setup_disk_partitions
 opinsys_certificate_setup
-setup_etc_puavo_from_dns
+setup_resolv_conf_and_etc_puavo
 setup_device_json
 update_puavoconf_values
 disable_cronjobs
