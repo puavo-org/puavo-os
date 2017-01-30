@@ -50,7 +50,7 @@ has_device_tag() {
     echo "system-db:desktopbackgroundlock"
   fi
 
-  echo "system-db:keyboard"
+  echo "system-db:puavo-keyboard"
 
   if [ -e /etc/dconf/db/puavo-desktopbackground ]; then
     echo "system-db:puavo-desktopbackground"
