@@ -1,6 +1,7 @@
 set_puavo_hosttype
 find_nbd_server_address
-setup_disk_partitions
+mount_local_partitions
+enable_utmp_logs
 opinsys_certificate_setup
 setup_resolv_conf_and_etc_puavo
 setup_device_json
