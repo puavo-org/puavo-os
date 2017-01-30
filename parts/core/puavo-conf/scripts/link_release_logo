@@ -2,9 +2,10 @@
 
 set -eu
 
-hosttype=$(cat /etc/puavo/hosttype)
-if [ -f "/usr/share/icons/release_logo.${hosttype}.png" ]; then
-  ln -fs "/usr/share/icons/release_logo.${hosttype}.png" \
+read puavo_hosttype < /etc/puavo/hosttype
+
+if [ -f "/usr/share/icons/release_logo.${puavo_hosttype}.png" ]; then
+  ln -fs "/usr/share/icons/release_logo.${puavo_hosttype}.png" \
          /usr/share/icons/release_logo.png
 
   mkdir -p /opt/webmenu/styles/theme/default/img
