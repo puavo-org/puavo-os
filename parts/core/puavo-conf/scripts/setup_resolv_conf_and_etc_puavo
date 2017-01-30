@@ -45,7 +45,7 @@ query_srv() {
           sub(/\.$/, "", $8)
           if (withport) {
             printf "%s:%s\n", $8, $7
-          else {
+          } else {
             printf "%s\n", $8
           }
           status = 0
