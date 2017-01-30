@@ -7,7 +7,7 @@ set -eu
 # (GPLv2)
 
 # do nothing if nbdroot= is not on a command line
-grep '\<nbdroot=' /proc/cmdline || exit 0
+grep -q '\<nbdroot=' /proc/cmdline || exit 0
 
 mkdir -p /run/puavo
 
