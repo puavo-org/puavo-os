@@ -2,16 +2,19 @@
 
 puavo_conf_scripts="$(cat /etc/puavo-conf/scripts/.preinit 2>/dev/null || true)"
 if [ -n "$puavo_conf_scripts" ]; then
-  echo "  <<< puavo-conf running preinit scripts at $(date +%T.%N) >>>"
+  read seconds _ < /proc/uptime
+  echo "  <<< puavo-conf running preinit scripts at $seconds >>>"
   for script in $puavo_conf_scripts; do
-    echo -n "  <<< puavo-conf >>> ${script} ... "
+    read seconds _ < /proc/uptime
+    echo -n "  <<< puavo-conf >>> $seconds ${script} ... "
     if /etc/puavo-conf/scripts/${script}; then
       echo OK.
     else
       echo FAILED.
     fi
   done
-  echo "  <<< puavo-conf preinit scripts done at $(date +%T.%N) >>>"
+  read seconds _ < /proc/uptime
+  echo "  <<< puavo-conf preinit scripts done at $seconds >>>"
 fi
 
 exec /sbin/init
