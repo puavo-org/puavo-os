@@ -1,0 +1,35 @@
+#!/bin/sh
+
+set -eu
+
+# ----------------------------------------------------------------------
+
+config_path=/usr/share/X11/xorg.conf.d/80-puavo-intel-backlight.conf
+
+if [ "$(puavo-conf puavo.xorg.intel_backlight)" = "true" ]; then
+  cat <<'EOF' > "${config_path}.tmp"
+Section "Device"
+    Identifier  "Intel Graphics"
+    Option      "Backlight"       "intel_backlight"
+EndSection
+EOF
+  mv "${config_path}.tmp" "$config_path"
+else
+  rm -f "$config_path"
+fi
+
+# ----------------------------------------------------------------------
+
+config_path=/usr/share/X11/xorg.conf.d/80-puavo-noaccel.conf
+
+if [ "$(puavo-conf puavo.xorg.noaccel)" = "true" ]; then
+  cat <<'EOF' > "${config_path}.tmp"
+Section "Device"
+    Identifier  "No Hardware Acceleration"
+    Option      "NoAccel"       "true"
+EndSection
+EOF
+  mv "${config_path}.tmp" "$config_path"
+else
+  rm -f "$config_path"
+fi

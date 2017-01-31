@@ -1,0 +1,35 @@
+#!/bin/sh
+
+set -eu
+
+# This script fetches device.json for netbooting devices.
+
+# Do nothing unless we have booted with NBD.
+test -e /run/puavo/nbd-server || exit 0
+
+status=1
+
+# run dd to get entropy from network device interrupts
+# (so that kernel random generation works and curl getrandom() calls
+# can actually return)
+dd if=/dev/nbd0 of=/dev/null & puavo_nbd_entropy_harvester_pid=$!
+
+# Get device settings.
+# Set --max-time to 30 seconds to allow the boot to continue in case of
+# failure; so we can check out later (with ssh or some such) what went wrong.
+if curl --cacert /etc/puavo/certs/rootca.pem \
+        --header 'Authorization: Bootserver' \
+        --fail \
+        --max-time 30 \
+        --silent \
+        "$(puavo-resolve-api-server)/v3/devices/$(hostname -s)" \
+        > /etc/puavo/device.json.tmp; then
+  mv /etc/puavo/device.json.tmp /etc/puavo/device.json
+  status=0
+else
+  rm -f /etc/puavo/device.json.tmp
+fi
+
+kill $puavo_nbd_entropy_harvester_pid
+
+exit $status

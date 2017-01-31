@@ -1,0 +1,23 @@
+#!/bin/sh
+
+set -eu
+
+default_target='multi-user.target'
+
+read puavo_hosttype < /etc/puavo/hosttype
+
+case "$puavo_hosttype" in
+  fatclient)
+    default_target='graphical.target'
+    ;;
+  laptop)
+    if [ -e /run/puavo/nbd-server ]; then
+      : # Laptop that has been booted from NBD should go to admin menu.
+        # It provides tools to update the system etc.
+    else
+      default_target='graphical.target'
+    fi
+    ;;
+esac
+
+systemctl set-default "$default_target"

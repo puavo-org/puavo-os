@@ -1,5 +1,0 @@
-# Broadcom Corporation BCM4311 802.11b/g WLAN (rev 01) requires b43 to
-# work. Used at least in HP Compaq nx6310 models.
-if [ -n "$(lspci -d 14e4:4311)" ]; then
-   modprobe b43
-fi

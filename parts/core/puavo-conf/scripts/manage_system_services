@@ -1,0 +1,33 @@
+#!/bin/sh
+
+set -eu
+
+services='
+  avahi-daemon
+  ModemManager
+  NetworkManager
+  nscd
+  nslcd
+  puavo-vpn-client-dnsmasq
+  puavo-vpn-client-openvpn
+  rpc-gssd
+'
+
+status=0
+
+for service in ${services}; do
+  enabled=$(puavo-conf -b "puavo.service.${service}.enabled")
+  if [ "${enabled}" = true ]; then
+    if ! systemctl enable "${service}"; then
+      echo "Could not enable ${service}" >&2
+      status=1
+    fi
+  else
+    if ! systemctl disable "${service}"; then
+      echo "Could not disable ${service}" >&2
+      status=1
+    fi
+  fi
+done
+
+exit $status

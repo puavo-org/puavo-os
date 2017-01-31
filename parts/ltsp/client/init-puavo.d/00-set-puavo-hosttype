@@ -1,4 +1,0 @@
-PUAVO_HOSTTYPE=$(sed -r -n 's/.*puavo\.hosttype=([a-z]+).*/\1/p' /proc/cmdline)
-
-mkdir -p /etc/puavo
-echo "$PUAVO_HOSTTYPE" > /etc/puavo/hosttype

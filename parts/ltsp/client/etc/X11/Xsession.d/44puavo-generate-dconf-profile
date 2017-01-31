@@ -50,12 +50,18 @@ has_device_tag() {
     echo "system-db:desktopbackgroundlock"
   fi
 
-  echo "system-db:keyboard"
-  echo "system-db:desktopbackground"
-  echo "system-db:scalingfactor"
+  echo "system-db:puavo-keyboard"
+
+  if [ -e /etc/dconf/db/puavo-desktopbackground ]; then
+    echo "system-db:puavo-desktopbackground"
+  fi
+
+  if [ -e /etc/dconf/db/puavo-conf ]; then
+    echo "system-db:puavo-conf"
+  fi
 
   if [ -r "/etc/dconf/db/${DESKTOP_SESSION}" ]; then
-      echo "system-db:${DESKTOP_SESSION}"
+    echo "system-db:${DESKTOP_SESSION}"
   fi
 } > $puavo_dconf_profile_path || return 1
 

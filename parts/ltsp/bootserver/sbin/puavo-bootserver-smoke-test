@@ -349,7 +349,7 @@ def run_test(admin_username, admin_password,
   true
 end
 
-lockfile = File.open('/run/puavo-bootserver-smoke-test.lock',
+lockfile = File.open('/run/puavo/bootserver-smoke-test.lock',
                      File::RDWR|File::CREAT, 0644)
 if !lockfile.flock(File::LOCK_NB|File::LOCK_EX) then
   STDERR.puts('ERROR: failed to obtain an exclusive run lock, ' \

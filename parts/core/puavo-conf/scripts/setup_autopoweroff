@@ -1,0 +1,23 @@
+#!/bin/sh
+
+set -eu
+
+if [ "$(puavo-conf puavo.autopoweroff.enabled)" = "true" ]; then
+  puavo_daytime_start_hour=$(puavo-conf puavo.autopoweroff.daytime_start_hour)
+  puavo_daytime_end_hour=$(puavo-conf puavo.autopoweroff.daytime_end_hour)
+
+  cat <<-EOF > /etc/autopoweroff.conf
+	[NO_SHUTDOWN_TIME_RANGE]
+	StartHour=$puavo_daytime_start_hour
+	EndHour=$puavo_daytime_end_hour
+	
+	[TIMEOUTS]
+	StartupDelay=30
+	IdleTime=30
+	
+	[DEPENDANTS]
+	Hosts=
+	EOF
+else
+  cat /dev/null > /etc/autopoweroff.conf
+fi

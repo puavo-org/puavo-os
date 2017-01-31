@@ -1,23 +1,24 @@
 #!/bin/sh
 
-set -e
+set -eu
 
-webmenu_args=""
-if [ "$PUAVO_TAG_WEBKIOSK" ]; then
-  webmenu_args="--webkiosk"
-fi
+webmenu_args=''
 
-puavo_personally_administered=$(puavo-conf -b puavo.localadmin.enabled) || {
-    puavo_personally_administered=false
-}
-
-if [ "$puavo_personally_administered" = "true" ]; then
+if [ "$(puavo-conf puavo.localadmin.enabled)" = 'true' ]; then
   PUAVO_PERSONALLY_ADMINISTERED=true
   WM_CONFIG_JSON_PATH=/etc/webmenu/personally-administered-device/config.json
   export PUAVO_PERSONALLY_ADMINISTERED WM_CONFIG_JSON_PATH
 else
   : # Do not set PUAVO_PERSONALLY_ADMINISTERED at all (to 0 or false),
     # webmenu/menu.yaml only checks if variable is set and not at its value.
+fi
+
+if [ "$(puavo-conf puavo.webmenu.feedback.enabled)" = 'true' ]; then
+  export WM_FEEDBACK_ACTIVE=true
+fi
+
+if [ "$(puavo-conf puavo.webmenu.webkiosk)" = 'true' ]; then
+  webmenu_args="${webmenu_args} --webkiosk"
 fi
 
 exec webmenu $webmenu_args "$@"

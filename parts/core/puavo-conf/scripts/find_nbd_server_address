@@ -1,0 +1,30 @@
+#!/bin/sh
+
+set -eu
+
+# The idea is copied from
+# http://bazaar.launchpad.net/~ltsp-upstream/ltsp/ltsp-trunk/view/head:/client/share/ltsp/init-ltsp.d/04-server
+# (GPLv2)
+
+# do nothing if nbdroot= is not on a command line
+grep -q '\<nbdroot=' /proc/cmdline || exit 0
+
+mkdir -p /run/puavo
+
+while read MOUNTED_DEVICE MOUNTPOINT _ _ _ _; do
+  case "$MOUNTED_DEVICE" in
+    /dev/nbd[0-9]*)
+      if [ "$MOUNTPOINT" = "/" ] \
+        || [ "${MOUNTPOINT%/rofs}" != "${MOUNTPOINT}" ]; then
+          # check for NBD devices
+          pid=$(nbd-client -c "$MOUNTED_DEVICE")
+          server=$(cut -d '' -f 2 /proc/${pid}/cmdline)
+          echo "$server" > /run/puavo/nbd-server
+          exit 0
+      fi
+      ;;
+  esac
+done < /proc/mounts
+
+# could not find nbd-server, even though we should have
+exit 1

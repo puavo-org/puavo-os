@@ -47,7 +47,7 @@ module Log
 
 end
 
-CTRLSOCKET = '/run/puavo-wlanap/ctrlsocket'
+CTRLSOCKET = '/run/puavo/wlanap/ctrlsocket'
 
 def main
   GetoptLong.new(
