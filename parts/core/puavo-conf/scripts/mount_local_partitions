@@ -17,6 +17,11 @@ puavo_mount_partition() {
     return 1
   fi
 
+  # presume, if $puavo_mntpoint is already mounted, there is nothing to do
+  if mountpoint -q "$puavo_mntpoint"; then
+    return 0
+  fi
+
   mkdir -p "$puavo_mntpoint"
 
   rotational_value=$(cat /sys/block/sda/queue/rotational 2>/dev/null || true)
@@ -72,10 +77,13 @@ if [ "$puavo_hosttype" = 'laptop' ]; then
   puavo_mount_partition puavo-home /home || status=1
 fi
 
-if [ "$puavo_hosttype" = 'laptop' \
-  -o "$puavo_hosttype" = 'wirelessaccesspoint' ]; then
-    puavo_mount_partition puavo-state /state || status=1
-fi
+# These are needed for system updates when on NBD.
+case "$puavo_hosttype" in
+  laptop|preinstalled|wirelessaccesspoint)
+    puavo_mount_partition puavo-images /images || status=1
+    puavo_mount_partition puavo-state  /state  || status=1
+    ;;
+esac
 
 if [ -b /dev/mapper/puavo-tmp ]; then
   { puavo_mount_partition puavo-tmp /tmp && chmod 1777 /tmp; } || status=1
