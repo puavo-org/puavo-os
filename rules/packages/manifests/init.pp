@@ -540,6 +540,7 @@ class packages {
 
     [ 'bindfs'
     , 'desktop-file-utils'
+    , 'devilspie2'
     , 'duplicity'
     , 'exfat-fuse'
     , 'exfat-utils'
@@ -618,9 +619,9 @@ class packages {
       dkms_modules => $all_dkms_modules,
       package_name => 'linux-image-3.16.0-4-amd64';
 
-    '4.8.0-2-amd64':
+    '4.9.0-1-amd64':
       dkms_modules => $all_dkms_modules,
-      package_name => 'linux-image-4.8.0-2-amd64';
+      package_name => 'linux-image-4.9.0-1-amd64';
   }
 
   #
