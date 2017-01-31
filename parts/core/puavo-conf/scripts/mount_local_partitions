@@ -7,8 +7,6 @@ set -eu
 # /dev/mapper/puavo-state and /dev/mapper/puavo-tmp and mounts those as
 # /home, /state or /tmp correspondingly.
 
-read puavo_hosttype < /etc/puavo/hosttype
-
 puavo_mount_partition() {
   local puavo_partition puavo_mntpoint
 
@@ -28,8 +26,35 @@ puavo_mount_partition() {
     mount_opts='-o noatime'
   fi
 
+  if [ -e /images/forcefsck ]; then
+    # FORCE fsck if /images/forcefsck exists
+    if ! fsck -fpv "/dev/mapper/${puavo_partition}"; then
+      fsck -fvy "/dev/mapper/${puavo_partition}" || true
+    fi
+  fi
+
+  if mount $mount_opts "/dev/mapper/${puavo_partition}" "$puavo_mntpoint"; then
+    return 0
+  fi
+
+  # fsck if mount failed (first try automatic, then -y)
+  if ! fsck -pv "/dev/mapper/${puavo_partition}"; then
+    fsck -vy "/dev/mapper/${puavo_partition}" || true
+  fi
+
+  if mount $mount_opts "/dev/mapper/${puavo_partition}" "$puavo_mntpoint"; then
+    return 0
+  fi
+
+  # FORCE fsck if mount failed again (first try automatic, then -y)
+  if ! fsck -fpv "/dev/mapper/${puavo_partition}"; then
+    fsck -fvy "/dev/mapper/${puavo_partition}" || true
+  fi
+
   mount $mount_opts "/dev/mapper/${puavo_partition}" "$puavo_mntpoint"
 }
+
+read puavo_hosttype < /etc/puavo/hosttype
 
 if [ "$puavo_hosttype" = 'diskinstaller' ]; then
   vgchange -a y puavoinstaller
@@ -55,5 +80,7 @@ fi
 if [ -b /dev/mapper/puavo-tmp ]; then
   { puavo_mount_partition puavo-tmp /tmp && chmod 1777 /tmp; } || status=1
 fi
+
+rm -f /images/forcefsck
 
 exit $status
