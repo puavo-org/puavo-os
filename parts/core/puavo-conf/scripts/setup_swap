@@ -1,0 +1,22 @@
+#!/bin/sh
+
+set -eu
+
+puavo_swap_devices=''
+
+if [ "$(puavo-conf puavo.swap.local.enabled)" = "true" ]; then
+  # Enable local swap partition if found on local disk
+  for part in $(sfdisk -l 2>/dev/null | awk '/ 82 / { print $1 }'); do
+    puavo_swap_devices="$puavo_swap_devices $part"
+  done
+
+  # Add puavo-swap as well, if it exists.
+  # (The above check does not catch it, because it is on an LVM partition.)
+  if [ -b /dev/mapper/puavo-swap ]; then
+    puavo_swap_devices="$puavo_swap_devices /dev/mapper/puavo-swap"
+  fi
+fi
+
+for swap in $puavo_swap_devices; do
+  swapon "$swap" || true
+done

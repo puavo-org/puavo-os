@@ -1,8 +1,0 @@
-# XXX This is not good, find the certificate to
-# XXX /etc/puavo/certs/rootca.pem some other way.
-# XXX (The problem is that this is Opinsys-specific.)
-if [ ! -e /etc/puavo/certs/rootca.pem ]; then
-  mkdir -p /etc/puavo/certs
-  cp /usr/share/ca-certificates/opinsys/opinsys-ca.crt \
-     /etc/puavo/certs/rootca.pem
-fi

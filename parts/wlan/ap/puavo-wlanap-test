@@ -58,14 +58,14 @@ read streams   < <(iw phy "${phy}" info \
 read kernel    < <(uname -a)
 read timestamp < <(date --utc '+%Y-%m-%d %H:%M:%S %z')
 
-read bssid     < <(wpa_cli -i "${iface}" -p /run/puavo-wlanap/hostapd status \
+read bssid     < <(wpa_cli -i "${iface}" -p /run/puavo/wlanap/hostapd status \
                   | sed -r -n 's/^bssid\[0\]=//p')
 read brif      < <(sed -r -n 's/INTERFACE=//p' "${netdev}/master/uevent")
 read ipaddr    < <(ifconfig "${brif}" \
                   | sed -r -n 's/^.*inet addr:([0-9.]+) .*$/\1/p')
 read password  < <(sed -r -n 's/^wpa_passphrase=//p' \
-                   "/run/puavo-wlanap/hostapd_${iface}.conf")
-read channel   < <(wpa_cli -i "${iface}" -p /run/puavo-wlanap/hostapd status \
+                   "/run/puavo/wlanap/hostapd_${iface}.conf")
+read channel   < <(wpa_cli -i "${iface}" -p /run/puavo/wlanap/hostapd status \
                   | sed -r -n 's/^channel=//p')
 
 echo "Launching iperf server, run following commands on your station:"

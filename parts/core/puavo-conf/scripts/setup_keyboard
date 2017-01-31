@@ -1,0 +1,94 @@
+#!/bin/sh
+
+set -eu
+
+puavo_keyboard_layout=$( puavo-conf puavo.desktop.keyboard.layout)
+puavo_keyboard_variant=$(puavo-conf puavo.desktop.keyboard.variant)
+
+puavo_generate_dconf_keyboard_layouts() {
+  mkdir -p /etc/dconf/db/puavo-keyboard.d || return 1
+
+  echo "$puavo_keyboard_layout" "$puavo_keyboard_variant" \
+    | awk "$(cat <<'EOF'
+        function dconfize(a, size, i) {
+          str = "["
+          for (i = 1; i < size; i++) { str = str a[i] ", " }
+          if (i == size) { str = str a[i] }
+          str = str "]"
+          return str
+        }
+
+        NR == 1 {
+          layouts_str = $1; variants_str = $2
+
+          layouts_count = split(layouts_str, layouts, ",")
+          split(variants_str, variants, ",")
+
+          if (layouts_count == 0) { exit(0) }
+
+          for (i = 1; i <= layouts_count; i++) {
+            layout = layouts[i]
+
+            if (layouts[i] !~ /^[a-z]+$/) {
+              print "Layout", layouts[i], "is badly formed" > "/dev/stderr"
+              exit(1)
+            }
+
+            if (i in variants && variants[i] != "") {
+              if (variants[i] !~ /^[a-z]+$/) {
+                print "Variant", variants[i], "is badly formed" > "/dev/stderr"
+                exit(1)
+              }
+              layout_variant = "\\t" variants[i]
+              input_variant  = "+" variants[i]
+            } else {
+              layout_variant = ""
+              input_variant  = ""
+            }
+
+            layouts_with_variants[i] = sprintf("'%s%s'", layout, layout_variant)
+            input_sources[i] = sprintf("('xkb','%s%s')", layout, input_variant)
+        }
+
+        print "[org/gnome/libgnomekbd/keyboard]"
+        print "layouts=" dconfize(layouts_with_variants, layouts_count)
+        print ""
+        print "[org/gnome/desktop/input-sources]"
+        print "current=uint32 0"
+        print "sources=" dconfize(input_sources, layouts_count)
+
+        exit(0)
+      }
+EOF
+)" > /etc/dconf/db/puavo-keyboard.d/puavo-keyboard || return 1
+
+  dconf compile /etc/dconf/db/puavo-keyboard \
+                /etc/dconf/db/puavo-keyboard.d
+}
+
+puavo_generate_dconf_keyboard_layouts
+
+# Do console setup after dconf, puavo_generate_dconf_keyboard_layouts
+# should have validated that inputs are okay.
+
+for file in /etc/default/console-setup /etc/default/keyboard; do
+  if [ -f "$file" ]; then
+    awk -v puavo_keyboard_layout="$puavo_keyboard_layout" \
+        -v puavo_keyboard_variant="$puavo_keyboard_variant" '
+        /^XKBLAYOUT=/ {
+          if (puavo_keyboard_layout && puavo_keyboard_layout != "null") {
+            printf "XKBLAYOUT=\"%s\"\n", puavo_keyboard_layout; next
+          }
+        }
+        /^XKBVARIANT=/ {
+          if (puavo_keyboard_variant && puavo_keyboard_variant != "null") {
+            printf "XKBVARIANT=\"%s\"\n", puavo_keyboard_variant; next
+          }
+        }
+        { print }
+      ' "$file" > "${file}.tmp" \
+        && mv "${file}.tmp" "$file"
+  fi
+done
+
+exit 0

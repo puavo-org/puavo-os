@@ -1,0 +1,34 @@
+#!/bin/sh
+
+# The dbus machine id should be unique for each client, otherwise problems may
+# occur, e.g. if a thin client has the same id as the server, then `sudo gedit`
+# on the client session which runs on the server gives "access denied"!
+# It also helps if it's constant, so we generate it from the client MAC
+# address, or FQDN as a fallback.  That way we don't pollute e.g. ~/.pulse/*
+# with random entries on fat clients.
+
+set -eu
+
+rm -f /var/lib/dbus/machine-id
+
+puavo_dbus_machine_id=$(
+  ip link show \
+    | awk '$1 == "link/ether" && \
+        $2 ~ /^[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}$/ {
+          gsub(/:/, "", $2)
+          print $2 "00000000000000000000"
+          exit(0)
+        }
+      ')
+
+if [ -z "$puavo_dbus_machine_id" ]; then
+  puavo_dbus_machine_id=$(hostname -f | md5sum | awk '{ print $1 }')
+fi
+
+if [ -n "$puavo_dbus_machine_id" ]; then
+  echo "$puavo_dbus_machine_id" > /var/lib/dbus/machine-id
+else
+  if [ -x /bin/dbus-uuidgen ]; then
+    dbus-uuidgen --ensure
+  fi
+fi

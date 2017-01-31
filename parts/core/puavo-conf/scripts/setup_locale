@@ -1,0 +1,24 @@
+#!/bin/sh
+
+set -eu
+
+puavo_locale=$(puavo-conf puavo.l10n.locale)
+
+{
+  if [ -n "$puavo_locale" ]; then
+    puavo_language_short_form=$(echo "$puavo_locale" | cut -c 1-2)
+    echo "LANG=${puavo_locale}"
+    echo "LANGUAGE=${puavo_language_short_form}"
+
+    puavo_dconf_profile="user-${puavo_language_short_form}"
+    if [ -e "/etc/dconf/profile/${puavo_dconf_profile}" ]; then
+      echo "DCONF_PROFILE=${puavo_dconf_profile}"
+    fi
+  fi
+} > /etc/default/locale.tmp
+
+if [ -s /etc/default/locale.tmp ]; then
+  mv /etc/default/locale.tmp /etc/default/locale
+else
+  rm -f /etc/default/locale.tmp
+fi

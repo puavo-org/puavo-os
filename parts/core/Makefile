@@ -4,7 +4,12 @@ bindir = $(exec_prefix)/bin
 libdir = $(prefix)/lib
 sbindir = $(exec_prefix)/sbin
 datarootdir = $(prefix)/share
+
+ifeq ($(prefix), /usr/local)
 sysconfdir = $(prefix)/etc
+else
+sysconfdir = /etc
+endif
 
 INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
@@ -21,6 +26,8 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-top
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/puavo-postmount
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/definitions
+	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-conf/scripts
 
 .PHONY : install
 install : installdirs
@@ -38,6 +45,13 @@ install : installdirs
                 initramfs-tools/conf.d/puavo
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/initramfs-tools/scripts \
                 initramfs-tools/scripts/puavo
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-conf/definitions \
+                puavo-conf/definitions/*.json
+	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-conf/scripts \
+                puavo-conf/scripts/.preinit
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/puavo-conf/scripts \
+                puavo-conf/scripts/*
 
 .PHONY : clean
 clean :

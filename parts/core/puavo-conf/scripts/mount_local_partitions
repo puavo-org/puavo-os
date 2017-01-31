@@ -1,0 +1,94 @@
+#!/bin/sh
+
+set -eu
+
+# Mount Puavo partitions from local hard drive and use files created by
+# puavo-register script.  Checks if LVM partitions /dev/mapper/puavo-home,
+# /dev/mapper/puavo-state and /dev/mapper/puavo-tmp and mounts those as
+# /home, /state or /tmp correspondingly.
+
+puavo_mount_partition() {
+  local puavo_partition puavo_mntpoint
+
+  puavo_partition=$1
+  puavo_mntpoint=$2
+
+  if ! [ -b "/dev/mapper/${puavo_partition}" ]; then
+    return 1
+  fi
+
+  # presume, if $puavo_mntpoint is already mounted, there is nothing to do
+  if mountpoint -q "$puavo_mntpoint"; then
+    return 0
+  fi
+
+  mkdir -p "$puavo_mntpoint"
+
+  rotational_value=$(cat /sys/block/sda/queue/rotational 2>/dev/null || true)
+  if [ "$rotational_value" = '0' ]; then
+    mount_opts='-o discard,noatime'
+  else
+    mount_opts='-o noatime'
+  fi
+
+  if [ -e /images/forcefsck ]; then
+    # FORCE fsck if /images/forcefsck exists
+    if ! fsck -fpv "/dev/mapper/${puavo_partition}"; then
+      fsck -fvy "/dev/mapper/${puavo_partition}" || true
+    fi
+  fi
+
+  if mount $mount_opts "/dev/mapper/${puavo_partition}" "$puavo_mntpoint"; then
+    return 0
+  fi
+
+  # fsck if mount failed (first try automatic, then -y)
+  if ! fsck -pv "/dev/mapper/${puavo_partition}"; then
+    fsck -vy "/dev/mapper/${puavo_partition}" || true
+  fi
+
+  if mount $mount_opts "/dev/mapper/${puavo_partition}" "$puavo_mntpoint"; then
+    return 0
+  fi
+
+  # FORCE fsck if mount failed again (first try automatic, then -y)
+  if ! fsck -fpv "/dev/mapper/${puavo_partition}"; then
+    fsck -fvy "/dev/mapper/${puavo_partition}" || true
+  fi
+
+  mount $mount_opts "/dev/mapper/${puavo_partition}" "$puavo_mntpoint"
+}
+
+read puavo_hosttype < /etc/puavo/hosttype
+
+if [ "$puavo_hosttype" = 'diskinstaller' ]; then
+  vgchange -a y puavoinstaller
+else
+  vgchange -a y puavo
+fi
+
+status=0
+
+if [ "$puavo_hosttype" = 'diskinstaller' ]; then
+  puavo_mount_partition puavoinstaller-installimages /installimages || status=1
+fi
+
+if [ "$puavo_hosttype" = 'laptop' ]; then
+  puavo_mount_partition puavo-home /home || status=1
+fi
+
+# These are needed for system updates when on NBD.
+case "$puavo_hosttype" in
+  laptop|preinstalled|wirelessaccesspoint)
+    puavo_mount_partition puavo-images /images || status=1
+    puavo_mount_partition puavo-state  /state  || status=1
+    ;;
+esac
+
+if [ -b /dev/mapper/puavo-tmp ]; then
+  { puavo_mount_partition puavo-tmp /tmp && chmod 1777 /tmp; } || status=1
+fi
+
+rm -f /images/forcefsck
+
+exit $status

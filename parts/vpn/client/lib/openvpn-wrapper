@@ -17,6 +17,6 @@ remote_host=$(puavo-conf puavo.vpn.client.remote_host)
     --up-delay                                            \
     --script-security 2                                   \
     --route-up '/usr/lib/puavo-vpn-client/runme route-up' \
-    --writepid /run/puavo-vpn-client-openvpn.pid          \
-    --status /run/puavo-vpn-client-openvpn.status 10      \
+    --writepid /run/puavo/vpn-client-openvpn.pid          \
+    --status /run/puavo/vpn-client-openvpn.status 10      \
     --remote "${remote_host}"
