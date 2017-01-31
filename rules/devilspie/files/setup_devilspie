@@ -1,0 +1,22 @@
+#!/bin/sh
+
+set -eu
+
+status=0
+
+devilspie_scripts=$(puavo-conf puavo.desktop.devilspie.scripts)
+
+IFS=','
+
+for script in $devilspie_scripts; do
+  off_script_path="/etc/devilspie2/${script}.lua.off"
+  on_script_path="/etc/devilspie2/${script}.lua"
+  if [ -e "$off_script_path" ]; then
+    mv "$off_script_path" "$on_script_path" || status=1
+  elif ! [ -e "$on_script_path" ]; then
+    echo "No script named ${script} in devilspie scripts" >&2
+    status=1
+  fi
+done
+
+exit $status

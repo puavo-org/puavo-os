@@ -540,6 +540,7 @@ class packages {
 
     [ 'bindfs'
     , 'desktop-file-utils'
+    , 'devilspie2'
     , 'duplicity'
     , 'exfat-fuse'
     , 'exfat-utils'
