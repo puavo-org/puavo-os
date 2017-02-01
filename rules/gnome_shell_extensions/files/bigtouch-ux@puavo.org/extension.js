@@ -90,7 +90,7 @@ function enable() {
 
     let launchOpenboardIcon = new St.Icon(
         {
-            icon_name: "OpenBoard",
+            icon_name: "glade",
             reactive: true,
             track_hover: true,
             style_class: "launcher-box-item"
@@ -151,7 +151,7 @@ function enable() {
 
     let toggleOverviewIcon = new St.Icon(
         {
-            icon_name: "preferences-system-windows",
+            icon_name: "edit-copy",
             reactive: true,
             track_hover: true,
             style_class: "launcher-box-item"
@@ -160,6 +160,7 @@ function enable() {
 
     launcherBox.add_child(launchGnomeCalculatorIcon);
     launcherBox.add_child(launchCheeseIcon);
+    launcherBox.add_child(launchOpenboardIcon);
     launcherBox.add_child(launchChromeIcon);
     launcherBox.add_child(launchGnomeClocksIcon);
     launcherBox.add_child(launchNautilusIcon);
