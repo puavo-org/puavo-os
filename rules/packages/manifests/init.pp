@@ -558,6 +558,7 @@ class packages {
     , 'browser-plugin-vlc'
     , 'chromium'
     , 'epiphany-browser'
+    , 'firefox-esr'
     , 'liferea'
     , 'openjdk-8-jdk'
     , 'openjdk-8-jre'
