@@ -90,7 +90,7 @@ function enable() {
 
     let launchOpenboardIcon = new St.Icon(
         {
-            icon_name: "OpenBoard",
+            icon_name: "glade",
             reactive: true,
             track_hover: true,
             style_class: "launcher-box-item"
@@ -129,7 +129,12 @@ function enable() {
     launchNautilusIcon.connect('button-press-event',
                                function() { Util.spawn(["nautilus"]) });
 
-    let launchQuitIcon = new St.Icon(
+    let makeEmptySpace = new St.Label(
+        {
+            text: ""
+        });
+
+   let launchQuitIcon = new St.Icon(
         {
             icon_name: "system-log-out",
             reactive: true,
@@ -151,7 +156,7 @@ function enable() {
 
     let toggleOverviewIcon = new St.Icon(
         {
-            icon_name: "preferences-system-windows",
+            icon_name: "edit-copy",
             reactive: true,
             track_hover: true,
             style_class: "launcher-box-item"
@@ -160,9 +165,11 @@ function enable() {
 
     launcherBox.add_child(launchGnomeCalculatorIcon);
     launcherBox.add_child(launchCheeseIcon);
+    launcherBox.add_child(launchOpenboardIcon);
     launcherBox.add_child(launchChromeIcon);
     launcherBox.add_child(launchGnomeClocksIcon);
     launcherBox.add_child(launchNautilusIcon);
+    launcherBox.add_child(makeEmptySpace);
     launcherBox.add_child(launchQuitIcon);
     launcherBox.add_child(toggleOnboardIcon);
     launcherBox.add_child(toggleOverviewIcon);

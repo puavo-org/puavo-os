@@ -2,8 +2,8 @@ class desktop::puavo_desktop_bigtouch {
   include ::desktop::dconf
   include ::dpkg
   include ::gnome_shell_extensions
-  include ::initramfs
   include ::packages
+  include ::puavo_conf
 
   dpkg::simpledivert {
     '/etc/xdg/autostart/onboard-autostart.desktop':
@@ -27,12 +27,12 @@ class desktop::puavo_desktop_bigtouch {
       mode    => '0755',
       require => Package['onboard'];
 
-    '/usr/share/puavo-conf/definitions/puavo-onboard.json':
-      content => template('desktop/puavo-desktop-bigtouch/puavo-conf-parameters.json'),
-      notify  => Exec['initramfs::update'],
-      require => Package['puavo-conf'];
   }
 
-  Package <| title == onboard
-          or title == puavo-conf |>
+  ::puavo_conf::definition {
+    'puavo-onboard.json':
+      source => 'puppet:///modules/desktop/puavo-onboard.json';
+  }
+
+  Package <| title == onboard |>
 }

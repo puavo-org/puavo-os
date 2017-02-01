@@ -5,7 +5,7 @@ class image::bundle::desktop {
   include ::desktop
   include ::disable_accounts_service
   include ::disable_geoclue
-  # include ::firefox			# XXX iceweasel in Debian
+  include ::firefox
   include ::fontconfig
   include ::gnome_terminal
   include ::graphics_drivers
