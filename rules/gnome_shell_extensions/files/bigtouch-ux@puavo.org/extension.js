@@ -129,7 +129,12 @@ function enable() {
     launchNautilusIcon.connect('button-press-event',
                                function() { Util.spawn(["nautilus"]) });
 
-    let launchQuitIcon = new St.Icon(
+    let makeEmptySpace = new St.Label(
+        {
+            text: ""
+        });
+
+   let launchQuitIcon = new St.Icon(
         {
             icon_name: "system-log-out",
             reactive: true,
@@ -164,6 +169,7 @@ function enable() {
     launcherBox.add_child(launchChromeIcon);
     launcherBox.add_child(launchGnomeClocksIcon);
     launcherBox.add_child(launchNautilusIcon);
+    launcherBox.add_child(makeEmptySpace);
     launcherBox.add_child(launchQuitIcon);
     launcherBox.add_child(toggleOnboardIcon);
     launcherBox.add_child(toggleOverviewIcon);
