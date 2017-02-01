@@ -66,7 +66,7 @@ StartupNotify=true' "${upstream_dir}/usr/share/applications/google-chrome.deskto
         chmod 0755 "${upstream_dir}"
         ;;
     download)
-        # Tested with version 53.0.2785.101-1.
+        # Tested with version 56.0.2924.76-1.
         upstream_pack=$1
         baseurl="https://dl.google.com/linux/chrome/deb"
         tmpfile=$(mktemp)
