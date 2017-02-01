@@ -30,6 +30,9 @@ button-layout='appmenu:maximize,close'
 [org/gnome/settings-daemon/plugins/xsettings]
 overrides={'Gtk/ShellShowsAppMenu': <0>, 'Gtk/ShellShowsMenubar': <1>, 'Gtk/DecorationLayout': <'menu:maximize,close'>}
 
+[org/gnome/nautilus/preferences]
+click-policy='single'
+
 [org/gnome/shell]
 enabled-extensions=['bigtouch-ux@puavo.org']
 
