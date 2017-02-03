@@ -164,8 +164,13 @@ rootfs-update: rootfs-sync-repo
 setup-buildhost:
 	$(_sudo) .aux/setup-buildhost
 
+/etc/puavo-image/puavo-conf.json: config.json
+	mkdir -p $(@D)
+	jq .puavo_conf config.json > $@.tmp
+	mv $@.tmp $@
+
 .PHONY: update
-update: install-build-deps
+update: /etc/puavo-image/puavo-conf.json install-build-deps
 	$(MAKE)
 
 	$(_sudo) apt-get update
