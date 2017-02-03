@@ -33,6 +33,7 @@
 #include "conf.h"
 
 #define DEVICEJSON_PATH "/etc/puavo/device.json"
+#define IMAGE_CONF_PATH "/etc/puavo-conf/image.json"
 
 char *puavo_hosttype;
 
@@ -40,6 +41,7 @@ static int	 apply_device_settings(puavo_conf_t *, const char *, int);
 static int	 apply_hosttype_profile(puavo_conf_t *, const char *, int);
 static int	 apply_hwquirks(puavo_conf_t *, int);
 static int	 apply_kernel_arguments(puavo_conf_t *, char *, int);
+static int	 apply_profile(puavo_conf_t *, const char *, int);
 static char	*get_cmdline(void);
 static char	*get_puavo_hosttype(const char *);
 static int	 glob_error(const char *, int);
@@ -273,7 +275,6 @@ static int
 update_puavoconf(puavo_conf_t *conf, const char *device_json_path, int verbose)
 {
 	char *cmdline;
-	char *hosttype;
 	int retvalue;
 
 	retvalue = 0;
@@ -284,19 +285,11 @@ update_puavoconf(puavo_conf_t *conf, const char *device_json_path, int verbose)
 		retvalue = 1;
 	}
 
-	hosttype = NULL;
-	if (cmdline != NULL)
-		hosttype = get_puavo_hosttype(cmdline);
-
-	if (hosttype != NULL) {
-		if (apply_hosttype_profile(conf, hosttype, verbose) != 0) {
-			warnx("could not apply hosttype profile %s", hosttype);
-			retvalue = 1;
-		}
-	} else {
-		warnx("skipping hosttype profile because hosttype not known");
+	if (apply_profile(conf, IMAGE_CONF_PATH, verbose) != 0)
 		retvalue = 1;
-	}
+
+	if (apply_hosttype_profile(conf, cmdline, verbose) != 0)
+		retvalue = 1;
 
 	if (apply_hwquirks(conf, verbose) != 0)
 		retvalue = 1;
@@ -304,7 +297,7 @@ update_puavoconf(puavo_conf_t *conf, const char *device_json_path, int verbose)
 	if (apply_device_settings(conf, device_json_path, verbose) != 0)
 		retvalue = 1;
 
-	if (cmdline != 0) {
+	if (cmdline != NULL) {
 		if (apply_kernel_arguments(conf, cmdline, verbose) != 0)
 			retvalue = 1;
 	} else {
@@ -312,8 +305,46 @@ update_puavoconf(puavo_conf_t *conf, const char *device_json_path, int verbose)
 		retvalue = 1;
 	}
 
-	free(cmdline);
+	if (cmdline != NULL)
+		free(cmdline);
+
+	return retvalue;
+}
+
+static int
+apply_hosttype_profile(puavo_conf_t *conf, const char *cmdline, int verbose)
+{
+	char *hosttype;
+	char *hosttype_profile_path;
+	int ret, retvalue;
+
+	hosttype = NULL;
+	if (cmdline != NULL)
+		hosttype = get_puavo_hosttype(cmdline);
+
+	if (hosttype == NULL) {
+		warnx("skipping hosttype profile because hosttype not known");
+		return 1;
+	}
+
+	ret = asprintf(&hosttype_profile_path,
+	    "/usr/share/puavo-conf/profile-overwrites/%s.json",
+	    hosttype);
+	if (ret == -1) {
+		warnx("asprintf() error in apply_hosttype_profile()");
+		free(hosttype);
+		return 1;
+	}
+
+	retvalue = 0;
+
+	if (apply_profile(conf, hosttype_profile_path, verbose) != 0) {
+		warnx("could not apply profile %s", hosttype_profile_path);
+		retvalue = 1;
+	}
+
 	free(hosttype);
+	free(hosttype_profile_path);
 
 	return retvalue;
 }
@@ -425,41 +456,31 @@ finish:
 }
 
 static int
-apply_hosttype_profile(puavo_conf_t *conf, const char *hosttype, int verbose)
+apply_profile(puavo_conf_t *conf, const char *profile_path, int verbose)
 {
 	json_t *root, *node_value;
 	const char *param_name, *param_value;
-	char *hosttype_profile_path;
 	int ret, retvalue;
 
 	retvalue = 0;
 	root = NULL;
 
-	ret = asprintf(&hosttype_profile_path,
-	    "/usr/share/puavo-conf/profile-overwrites/%s.json",
-	    hosttype);
-	if (ret == -1) {
-		warnx("asprintf() error in apply_hosttype_profile()");
-		return 1;
-	}
-
-	if ((root = parse_json_file(hosttype_profile_path)) == NULL) {
-		warnx("parse_json_file() failed for %s", hosttype_profile_path);
+	if ((root = parse_json_file(profile_path)) == NULL) {
+		warnx("parse_json_file() failed for %s", profile_path);
 		retvalue = 1;
 		goto finish;
 	}
 
 	if (!json_is_object(root)) {
-		warnx("hosttype profile %s is not in correct format",
-		    hosttype_profile_path);
+		warnx("profile %s is not in correct format", profile_path);
 		retvalue = 1;
 		goto finish;
 	}
 
 	json_object_foreach(root, param_name, node_value) {
 		if ((param_value = json_string_value(node_value)) == NULL) {
-			warnx("hosttype profile %s has a non-string value"
-			    " for key %s", hosttype_profile_path, param_name);
+			warnx("profile %s has a non-string value for key %s",
+			    profile_path, param_name);
 			retvalue = 1;
 			continue;
 		}
@@ -471,8 +492,6 @@ apply_hosttype_profile(puavo_conf_t *conf, const char *hosttype, int verbose)
 finish:
 	if (root != NULL)
 		json_decref(root);
-
-	free(hosttype_profile_path);
 
 	return retvalue;
 }
