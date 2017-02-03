@@ -517,6 +517,8 @@ apply_kernel_arguments(puavo_conf_t *conf, int verbose)
 	size_t prefix_len;
 	int ret, retvalue;
 
+	(void) printf("puavo-conf-update: applying kernel arguments\n");
+
 	cmdline = get_cmdline();
 	if (cmdline == NULL) {
 		warnx("could not read /proc/cmdline");
