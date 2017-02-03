@@ -52,37 +52,29 @@ puavo_setup_cups_dir() {
   return $cups_status
 }
 
+mountpoint -q /state || exit 0
+
 status=0
 
 # must fix in case puavo gid has changed...
 chgrp puavo /state/etc/puavo/ldap/password || status=1
 cp -aT /state/etc/puavo /etc/puavo         || status=1
 
-if [ "$puavo_hosttype" = 'laptop' ]; then
-  statedirlist='
-    /etc/NetworkManager/system-connections
-    /var/crash
-    /var/lib/extrausers
-    /var/lib/logrotate
-    /var/lib/puavo-desktop
-    /var/lib/sss
-    /var/log
-    /var/spool/anacron
-  '
-else
-  statedirlist='
-    /var/lib/logrotate
-    /var/log
-    /var/spool/anacron
-  '
-fi
+statedirlist='
+  /etc/NetworkManager/system-connections
+  /var/crash
+  /var/lib/extrausers
+  /var/lib/logrotate
+  /var/lib/puavo-desktop
+  /var/lib/sss
+  /var/log
+  /var/spool/anacron
+'
 
 for statedir in $statedirlist; do
   puavo_link_to_state "$statedir" || status=1
 done
 
-if [ "$puavo_hosttype" = 'laptop' ]; then
-  puavo_setup_cups_dir || status=1
-fi
+puavo_setup_cups_dir || status=1
 
 exit $status

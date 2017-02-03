@@ -2,7 +2,8 @@
 
 set -eu
 
-puavo_hosttype=$(sed -r -n 's/.*puavo\.hosttype=([a-z]+).*/\1/p' /proc/cmdline)
-
 mkdir -p /etc/puavo
-echo "$puavo_hosttype" > /etc/puavo/hosttype
+
+# get rid of hosttype handling?
+# (this is still needed by some old code)
+puavo-conf puavo.hosttype > /etc/puavo/hosttype

@@ -2,7 +2,8 @@
 
 set -eu
 
-read puavo_hosttype < /etc/puavo/hosttype
+# get rid of hosttype handling?
+puavo_hosttype=$(puavo-conf puavo.hosttype)
 
 if [ -f "/usr/share/icons/release_logo.${puavo_hosttype}.png" ]; then
   ln -fs "/usr/share/icons/release_logo.${puavo_hosttype}.png" \

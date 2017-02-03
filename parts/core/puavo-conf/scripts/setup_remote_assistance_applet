@@ -2,18 +2,13 @@
 
 set -eu
 
-# XXX get rid of hosttype handling
+vpn_enabled=$(puavo-conf puavo.service.puavo-vpn-client-openvpn.enabled)
 
-read puavo_hosttype < /etc/puavo/hosttype
-
-case "$puavo_hosttype" in
-  laptop|wirelessaccesspoint)
-    puavo_admin_tunnel_interface='tap0'
-    ;;
-  *)
-    puavo_admin_tunnel_interface='eth0'
-    ;;
-esac
+if [ "$vpn_enabled" = 'true' ]; then
+  puavo_admin_tunnel_interface='tap0'
+else
+  puavo_admin_tunnel_interface='eth0'
+fi
 
 file=/etc/puavo-remote-assistance-applet/config.json
 tmpfile="${file}.tmp"

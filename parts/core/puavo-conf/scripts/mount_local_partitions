@@ -59,7 +59,8 @@ puavo_mount_partition() {
   mount $mount_opts "/dev/mapper/${puavo_partition}" "$puavo_mntpoint"
 }
 
-read puavo_hosttype < /etc/puavo/hosttype
+# get rid of hosttype handling?
+puavo_hosttype=$(puavo-conf puavo.hosttype)
 
 if [ "$puavo_hosttype" = 'diskinstaller' ]; then
   vgchange -a y puavoinstaller
