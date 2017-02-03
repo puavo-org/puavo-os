@@ -38,12 +38,11 @@
 char *puavo_hosttype;
 
 static int	 apply_device_settings(puavo_conf_t *, const char *, int);
-static int	 apply_hosttype_profile(puavo_conf_t *, const char *, int);
+static int	 apply_hosttype_profile(puavo_conf_t *, int);
 static int	 apply_hwquirks(puavo_conf_t *, int);
-static int	 apply_kernel_arguments(puavo_conf_t *, char *, int);
+static int	 apply_kernel_arguments(puavo_conf_t *, int);
 static int	 apply_profile(puavo_conf_t *, const char *, int);
 static char	*get_cmdline(void);
-static char	*get_puavo_hosttype(const char *);
 static int	 glob_error(const char *, int);
 static int	 handle_one_paramdef(puavo_conf_t *, const char *, json_t *,
     int);
@@ -275,21 +274,19 @@ handle_one_paramdef(puavo_conf_t *conf, const char *param_name,
 static int
 update_puavoconf(puavo_conf_t *conf, const char *device_json_path, int verbose)
 {
-	char *cmdline;
 	int retvalue;
 
 	retvalue = 0;
 
-	cmdline = get_cmdline();
-	if (cmdline == NULL) {
-		warnx("could not read /proc/cmdline");
+	/* First apply kernel arguments, because we get puavo.hosttype
+	 * and puavo.profiles from there, which affect subsequent settings. */
+	if (apply_kernel_arguments(conf, verbose) != 0)
 		retvalue = 1;
-	}
 
 	if (apply_profile(conf, IMAGE_CONF_PATH, verbose) != 0)
 		retvalue = 1;
 
-	if (apply_hosttype_profile(conf, cmdline, verbose) != 0)
+	if (apply_hosttype_profile(conf, verbose) != 0)
 		retvalue = 1;
 
 	if (apply_hwquirks(conf, verbose) != 0)
@@ -298,33 +295,24 @@ update_puavoconf(puavo_conf_t *conf, const char *device_json_path, int verbose)
 	if (apply_device_settings(conf, device_json_path, verbose) != 0)
 		retvalue = 1;
 
-	if (cmdline != NULL) {
-		if (apply_kernel_arguments(conf, cmdline, verbose) != 0)
-			retvalue = 1;
-	} else {
-		warnx("skipping kernel arguments because those are not known");
+	/* Apply kernel arguments again,
+	 * because those override everything else. */
+	if (apply_kernel_arguments(conf, verbose) != 0)
 		retvalue = 1;
-	}
-
-	if (cmdline != NULL)
-		free(cmdline);
 
 	return retvalue;
 }
 
 static int
-apply_hosttype_profile(puavo_conf_t *conf, const char *cmdline, int verbose)
+apply_hosttype_profile(puavo_conf_t *conf, int verbose)
 {
 	char *hosttype;
 	char *hosttype_profile_path;
 	int ret, retvalue;
+	struct puavo_conf_err err;
 
-	hosttype = NULL;
-	if (cmdline != NULL)
-		hosttype = get_puavo_hosttype(cmdline);
-
-	if (hosttype == NULL) {
-		warnx("skipping hosttype profile because hosttype not known");
+	if (puavo_conf_get(conf, "puavo.hosttype", &hosttype, &err) == -1) {
+		warnx("error getting puavo.hosttype: %s", err.msg);
 		return 1;
 	}
 
@@ -348,40 +336,6 @@ apply_hosttype_profile(puavo_conf_t *conf, const char *cmdline, int verbose)
 	free(hosttype_profile_path);
 
 	return retvalue;
-}
-
-static char *
-get_puavo_hosttype(const char *cmdline)
-{
-	char *cmdarg, *cmdline_copy, *cmdline_iter, *hosttype;
-	size_t prefix_len;
-
-	hosttype = NULL;
-
-	if ((cmdline_copy = strdup(cmdline)) == NULL) {
-		warn("strdup() error in get_puavo_hosttype()");
-		return NULL;
-	}
-
-	prefix_len = sizeof("puavo.hosttype=") - 1;
-
-	cmdline_iter = cmdline_copy;
-	while ((cmdarg = strsep(&cmdline_iter, " \t\n")) != NULL) {
-		if (strncmp(cmdarg, "puavo.hosttype=", prefix_len) != 0)
-			continue;
-
-		hosttype = strdup(&cmdarg[prefix_len]);
-		if (hosttype == NULL)
-			warn("strdup() error in get_puavo_hosttype()");
-		break;
-	}
-
-	if (hosttype == NULL)
-		warnx("could not determine puavo hosttype");
-
-	free(cmdline_copy);
-
-	return hosttype;
 }
 
 static char *
@@ -505,11 +459,17 @@ apply_hwquirks(puavo_conf_t *conf, int verbose)
 }
 
 static int
-apply_kernel_arguments(puavo_conf_t *conf, char *cmdline, int verbose)
+apply_kernel_arguments(puavo_conf_t *conf, int verbose)
 {
-	char *cmdarg, *param_name, *param_value;
+	char *cmdarg, *cmdline, *param_name, *param_value;
 	size_t prefix_len;
 	int ret, retvalue;
+
+	cmdline = get_cmdline();
+	if (cmdline == NULL) {
+		warnx("could not read /proc/cmdline");
+		return 1;
+	}
 
 	retvalue = 0;
 
@@ -528,6 +488,8 @@ apply_kernel_arguments(puavo_conf_t *conf, char *cmdline, int verbose)
 		if (ret != 0)
 			retvalue = 1;
 	}
+
+	free(cmdline);
 
 	return retvalue;
 }
