@@ -2,9 +2,8 @@
 
 set -eu
 
-# XXX get rid of hosttype handling
-
-read puavo_hosttype < /etc/puavo/hosttype
+# get rid of hosttype handling?
+puavo_hosttype=$(puavo-conf puavo.hosttype)
 
 case "$puavo_hosttype" in
   laptop|wirelessaccesspoint)

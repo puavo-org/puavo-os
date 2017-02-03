@@ -58,6 +58,9 @@ status=0
 chgrp puavo /state/etc/puavo/ldap/password || status=1
 cp -aT /state/etc/puavo /etc/puavo         || status=1
 
+# get rid of hosttype handling?
+puavo_hosttype=$(puavo-conf puavo.hosttype)
+
 if [ "$puavo_hosttype" = 'laptop' ]; then
   statedirlist='
     /etc/NetworkManager/system-connections
