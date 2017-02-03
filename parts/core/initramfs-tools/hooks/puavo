@@ -35,7 +35,12 @@ manual_add_modules squashfs
 # puavo-conf
 #
 
-mkdir -p ${DESTDIR}/usr/bin/ ${DESTDIR}/usr/sbin/ ${DESTDIR}/usr/share/
+mkdir -p ${DESTDIR}/etc/puavo-conf/ \
+         ${DESTDIR}/usr/bin/        \
+         ${DESTDIR}/usr/sbin/       \
+         ${DESTDIR}/usr/share/
+
+cp -p /etc/puavo-conf/image.json ${DESTDIR}/etc/puavo-conf/
 
 copy_exec /usr/bin/lspci              /usr/bin
 copy_exec /usr/bin/lsusb              /usr/bin

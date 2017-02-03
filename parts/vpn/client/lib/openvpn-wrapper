@@ -2,7 +2,25 @@
 
 set -eu
 
-remote_host=$(puavo-conf puavo.vpn.client.remote_host)
+convert_remoteservers_for_openvpn() {
+  echo "$1" | awk '{
+                for (i = 1; i <= NF; i++) {
+                  gsub(/\|/, " ", $i); print "--remote", $i
+                }
+              }'
+}
+
+# puavo.vpn.client.remote_servers should contain servers in form:
+# "192.0.2.16|443|tcp 203.0.113.4|443|tcp" ...
+remote_servers=$(puavo-conf puavo.vpn.client.remote_servers)
+
+if [ -z "$remote_servers" ]; then
+  cat <<'EOF' >&2
+No remote servers were configured for OpenVPN.
+Check the "puavo.vpn.client.remote_servers" puavo-conf parameter.
+EOF
+  exit 1
+fi
 
 /usr/sbin/openvpn                                         \
     --client                                              \
@@ -19,4 +37,4 @@ remote_host=$(puavo-conf puavo.vpn.client.remote_host)
     --route-up '/usr/lib/puavo-vpn-client/runme route-up' \
     --writepid /run/puavo/vpn-client-openvpn.pid          \
     --status /run/puavo/vpn-client-openvpn.status 10      \
-    --remote "${remote_host}"
+    $(convert_remoteservers_for_openvpn "$remote_servers")

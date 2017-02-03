@@ -33,15 +33,18 @@
 #include "conf.h"
 
 #define DEVICEJSON_PATH "/etc/puavo/device.json"
+#define IMAGE_CONF_PATH "/etc/puavo-conf/image.json"
+#define PROFILES_DIR    "/usr/share/puavo-conf/profile-overwrites"
 
 char *puavo_hosttype;
 
 static int	 apply_device_settings(puavo_conf_t *, const char *, int);
-static int	 apply_hosttype_profile(puavo_conf_t *, const char *, int);
+static int	 apply_hosttype_profile(puavo_conf_t *, int);
 static int	 apply_hwquirks(puavo_conf_t *, int);
-static int	 apply_kernel_arguments(puavo_conf_t *, char *, int);
+static int	 apply_kernel_arguments(puavo_conf_t *, int);
+static int	 apply_one_profile(puavo_conf_t *, const char *, int);
+static int	 apply_profiles(puavo_conf_t *, int);
 static char	*get_cmdline(void);
-static char	*get_puavo_hosttype(const char *);
 static int	 glob_error(const char *, int);
 static int	 handle_one_paramdef(puavo_conf_t *, const char *, json_t *,
     int);
@@ -143,9 +146,10 @@ usage(void)
 	       "Update configuration database by overwriting parameter values\n"
 	       "from the following sources, in the given order:\n"
 	       "\n"
-	       "  1. hardware quirks\n"
-	       "  2. device specific settings from " DEVICEJSON_PATH "\n"
-	       "  3. kernel command line\n"
+	       "  1. image specific settings from " IMAGE_CONF_PATH "\n"
+	       "  2. hardware quirks\n"
+	       "  3. device specific settings from " DEVICEJSON_PATH "\n"
+	       "  4. kernel command line\n"
 	       "\n"
 	       "Options:\n"
 	       "  --help                    display this help and exit\n"
@@ -272,31 +276,21 @@ handle_one_paramdef(puavo_conf_t *conf, const char *param_name,
 static int
 update_puavoconf(puavo_conf_t *conf, const char *device_json_path, int verbose)
 {
-	char *cmdline;
-	char *hosttype;
 	int retvalue;
 
 	retvalue = 0;
 
-	cmdline = get_cmdline();
-	if (cmdline == NULL) {
-		warnx("could not read /proc/cmdline");
+	/* First apply kernel arguments, because we get puavo.hosttype
+	 * and puavo.profiles.list from there, which affect subsequent
+	 * settings. */
+	if (apply_kernel_arguments(conf, verbose) != 0)
 		retvalue = 1;
-	}
 
-	hosttype = NULL;
-	if (cmdline != NULL)
-		hosttype = get_puavo_hosttype(cmdline);
-
-	if (hosttype != NULL) {
-		if (apply_hosttype_profile(conf, hosttype, verbose) != 0) {
-			warnx("could not apply hosttype profile %s", hosttype);
-			retvalue = 1;
-		}
-	} else {
-		warnx("skipping hosttype profile because hosttype not known");
+	if (apply_one_profile(conf, IMAGE_CONF_PATH, verbose) != 0)
 		retvalue = 1;
-	}
+
+	if (apply_profiles(conf, verbose) != 0)
+		retvalue = 1;
 
 	if (apply_hwquirks(conf, verbose) != 0)
 		retvalue = 1;
@@ -304,52 +298,93 @@ update_puavoconf(puavo_conf_t *conf, const char *device_json_path, int verbose)
 	if (apply_device_settings(conf, device_json_path, verbose) != 0)
 		retvalue = 1;
 
-	if (cmdline != 0) {
-		if (apply_kernel_arguments(conf, cmdline, verbose) != 0)
-			retvalue = 1;
-	} else {
-		warnx("skipping kernel arguments because those are not known");
+	/* Apply kernel arguments again,
+	 * because those override everything else. */
+	if (apply_kernel_arguments(conf, verbose) != 0)
 		retvalue = 1;
-	}
-
-	free(cmdline);
-	free(hosttype);
 
 	return retvalue;
 }
 
-static char *
-get_puavo_hosttype(const char *cmdline)
+static int
+apply_profiles(puavo_conf_t *conf, int verbose)
 {
-	char *cmdarg, *cmdline_copy, *cmdline_iter, *hosttype;
-	size_t prefix_len;
+	struct puavo_conf_err err;
+	char *profile, *profiles, *profile_path;
+	int retvalue, ret;
 
-	hosttype = NULL;
-
-	if ((cmdline_copy = strdup(cmdline)) == NULL) {
-		warn("strdup() error in get_puavo_hosttype()");
-		return NULL;
+	ret = puavo_conf_get(conf, "puavo.profiles.list", &profiles, &err);
+	if (ret == -1) {
+		warnx("error getting puavo.profiles.list: %s", err.msg);
+		return 1;
 	}
 
-	prefix_len = sizeof("puavo.hosttype=") - 1;
+	/*
+	 * If no profiles have been set, use puavo.hosttype variable as
+	 * the profile name.
+	 */
+	if (strcmp(profiles, "") == 0) {
+		if (verbose) {
+			(void) printf("puavo-conf-update: applying hosttype"
+			    " profile because puavo.profiles.list is not"
+			    " set\n");
+		}
 
-	cmdline_iter = cmdline_copy;
-	while ((cmdarg = strsep(&cmdline_iter, " \t\n")) != NULL) {
-		if (strncmp(cmdarg, "puavo.hosttype=", prefix_len) != 0)
+		free(profiles);
+		return apply_hosttype_profile(conf, verbose);
+	}
+
+	retvalue = 0;
+
+	while ((profile = strsep(&profiles, ",")) != NULL) {
+		ret = asprintf(&profile_path, PROFILES_DIR "/%s.json",
+		    profile);
+		if (ret == -1) {
+			warnx("asprintf() error in apply_hosttype_profile()");
+			retvalue = 1;
 			continue;
+		}
 
-		hosttype = strdup(&cmdarg[prefix_len]);
-		if (hosttype == NULL)
-			warn("strdup() error in get_puavo_hosttype()");
-		break;
+		if (apply_one_profile(conf, profile_path, verbose) != 0)
+			retvalue = 1;
+		free(profile_path);
 	}
 
-	if (hosttype == NULL)
-		warnx("could not determine puavo hosttype");
+	free(profiles);
 
-	free(cmdline_copy);
+	return retvalue;
+}
 
-	return hosttype;
+static int
+apply_hosttype_profile(puavo_conf_t *conf, int verbose)
+{
+	struct puavo_conf_err err;
+	char *hosttype;
+	char *hosttype_profile_path;
+	int ret, retvalue;
+
+	if (puavo_conf_get(conf, "puavo.hosttype", &hosttype, &err) == -1) {
+		warnx("error getting puavo.hosttype: %s", err.msg);
+		return 1;
+	}
+
+	ret = asprintf(&hosttype_profile_path, PROFILES_DIR "/%s.json",
+	    hosttype);
+	if (ret == -1) {
+		warnx("asprintf() error in apply_hosttype_profile()");
+		free(hosttype);
+		return 1;
+	}
+
+	retvalue = 0;
+
+	if (apply_one_profile(conf, hosttype_profile_path, verbose) != 0)
+		retvalue = 1;
+
+	free(hosttype);
+	free(hosttype_profile_path);
+
+	return retvalue;
 }
 
 static char *
@@ -425,41 +460,36 @@ finish:
 }
 
 static int
-apply_hosttype_profile(puavo_conf_t *conf, const char *hosttype, int verbose)
+apply_one_profile(puavo_conf_t *conf, const char *profile_path, int verbose)
 {
 	json_t *root, *node_value;
 	const char *param_name, *param_value;
-	char *hosttype_profile_path;
 	int ret, retvalue;
 
 	retvalue = 0;
 	root = NULL;
 
-	ret = asprintf(&hosttype_profile_path,
-	    "/usr/share/puavo-conf/profile-overwrites/%s.json",
-	    hosttype);
-	if (ret == -1) {
-		warnx("asprintf() error in apply_hosttype_profile()");
-		return 1;
+	if (verbose) {
+		(void) printf("puavo-conf-update: applying profile %s\n",
+		    profile_path);
 	}
 
-	if ((root = parse_json_file(hosttype_profile_path)) == NULL) {
-		warnx("parse_json_file() failed for %s", hosttype_profile_path);
+	if ((root = parse_json_file(profile_path)) == NULL) {
+		warnx("parse_json_file() failed for %s", profile_path);
 		retvalue = 1;
 		goto finish;
 	}
 
 	if (!json_is_object(root)) {
-		warnx("hosttype profile %s is not in correct format",
-		    hosttype_profile_path);
+		warnx("profile %s is not in correct format", profile_path);
 		retvalue = 1;
 		goto finish;
 	}
 
 	json_object_foreach(root, param_name, node_value) {
 		if ((param_value = json_string_value(node_value)) == NULL) {
-			warnx("hosttype profile %s has a non-string value"
-			    " for key %s", hosttype_profile_path, param_name);
+			warnx("profile %s has a non-string value for key %s",
+			    profile_path, param_name);
 			retvalue = 1;
 			continue;
 		}
@@ -472,8 +502,6 @@ finish:
 	if (root != NULL)
 		json_decref(root);
 
-	free(hosttype_profile_path);
-
 	return retvalue;
 }
 
@@ -485,11 +513,19 @@ apply_hwquirks(puavo_conf_t *conf, int verbose)
 }
 
 static int
-apply_kernel_arguments(puavo_conf_t *conf, char *cmdline, int verbose)
+apply_kernel_arguments(puavo_conf_t *conf, int verbose)
 {
-	char *cmdarg, *param_name, *param_value;
+	char *cmdarg, *cmdline, *param_name, *param_value;
 	size_t prefix_len;
 	int ret, retvalue;
+
+	(void) printf("puavo-conf-update: applying kernel arguments\n");
+
+	cmdline = get_cmdline();
+	if (cmdline == NULL) {
+		warnx("could not read /proc/cmdline");
+		return 1;
+	}
 
 	retvalue = 0;
 
@@ -508,6 +544,8 @@ apply_kernel_arguments(puavo_conf_t *conf, char *cmdline, int verbose)
 		if (ret != 0)
 			retvalue = 1;
 	}
+
+	free(cmdline);
 
 	return retvalue;
 }
