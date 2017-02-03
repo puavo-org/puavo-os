@@ -34,6 +34,7 @@
 
 #define DEVICEJSON_PATH "/etc/puavo/device.json"
 #define IMAGE_CONF_PATH "/etc/puavo-conf/image.json"
+#define PROFILES_DIR    "/usr/share/puavo-conf/profile-overwrites"
 
 char *puavo_hosttype;
 
@@ -41,7 +42,8 @@ static int	 apply_device_settings(puavo_conf_t *, const char *, int);
 static int	 apply_hosttype_profile(puavo_conf_t *, int);
 static int	 apply_hwquirks(puavo_conf_t *, int);
 static int	 apply_kernel_arguments(puavo_conf_t *, int);
-static int	 apply_profile(puavo_conf_t *, const char *, int);
+static int	 apply_one_profile(puavo_conf_t *, const char *, int);
+static int	 apply_profiles(puavo_conf_t *, int);
 static char	*get_cmdline(void);
 static int	 glob_error(const char *, int);
 static int	 handle_one_paramdef(puavo_conf_t *, const char *, json_t *,
@@ -283,10 +285,10 @@ update_puavoconf(puavo_conf_t *conf, const char *device_json_path, int verbose)
 	if (apply_kernel_arguments(conf, verbose) != 0)
 		retvalue = 1;
 
-	if (apply_profile(conf, IMAGE_CONF_PATH, verbose) != 0)
+	if (apply_one_profile(conf, IMAGE_CONF_PATH, verbose) != 0)
 		retvalue = 1;
 
-	if (apply_hosttype_profile(conf, verbose) != 0)
+	if (apply_profiles(conf, verbose) != 0)
 		retvalue = 1;
 
 	if (apply_hwquirks(conf, verbose) != 0)
@@ -304,20 +306,67 @@ update_puavoconf(puavo_conf_t *conf, const char *device_json_path, int verbose)
 }
 
 static int
+apply_profiles(puavo_conf_t *conf, int verbose)
+{
+	struct puavo_conf_err err;
+	char *profile, *profiles, *profile_path;
+	int retvalue, ret;
+
+	ret = puavo_conf_get(conf, "puavo.profiles.list", &profiles, &err);
+	if (ret == -1) {
+		warnx("error getting puavo.profiles.list: %s", err.msg);
+		return 1;
+	}
+
+	/*
+	 * If no profiles have been set, use puavo.hosttype variable as
+	 * the profile name.
+	 */
+	if (strcmp(profiles, "") == 0) {
+		if (verbose) {
+			(void) printf("puavo-conf-update: applying hosttype"
+			    " profile because puavo.profiles is not set\n");
+		}
+
+		free(profiles);
+		return apply_hosttype_profile(conf, verbose);
+	}
+
+	retvalue = 0;
+
+	while ((profile = strsep(&profiles, ",")) != NULL) {
+		ret = asprintf(&profile_path, PROFILES_DIR "/%s.json",
+		    profile);
+		if (ret == -1) {
+			warnx("asprintf() error in apply_hosttype_profile()");
+			retvalue = 1;
+			continue;
+		}
+
+		if (apply_one_profile(conf, profile_path, verbose) != 0)
+			retvalue = 1;
+		free(profile_path);
+	}
+
+	free(profiles);
+
+	return retvalue;
+}
+
+static int
 apply_hosttype_profile(puavo_conf_t *conf, int verbose)
 {
+	struct puavo_conf_err err;
 	char *hosttype;
 	char *hosttype_profile_path;
 	int ret, retvalue;
-	struct puavo_conf_err err;
 
 	if (puavo_conf_get(conf, "puavo.hosttype", &hosttype, &err) == -1) {
 		warnx("error getting puavo.hosttype: %s", err.msg);
 		return 1;
 	}
 
-	ret = asprintf(&hosttype_profile_path,
-	    "/usr/share/puavo-conf/profile-overwrites/%s.json",
+	ret = asprintf(&hosttype_profile_path, PROFILES_DIR "/%s.json",
 	    hosttype);
 	if (ret == -1) {
 		warnx("asprintf() error in apply_hosttype_profile()");
@@ -327,10 +376,8 @@ apply_hosttype_profile(puavo_conf_t *conf, int verbose)
 
 	retvalue = 0;
 
-	if (apply_profile(conf, hosttype_profile_path, verbose) != 0) {
-		warnx("could not apply profile %s", hosttype_profile_path);
+	if (apply_one_profile(conf, hosttype_profile_path, verbose) != 0)
 		retvalue = 1;
-	}
 
 	free(hosttype);
 	free(hosttype_profile_path);
@@ -411,7 +458,7 @@ finish:
 }
 
 static int
-apply_profile(puavo_conf_t *conf, const char *profile_path, int verbose)
+apply_one_profile(puavo_conf_t *conf, const char *profile_path, int verbose)
 {
 	json_t *root, *node_value;
 	const char *param_name, *param_value;
@@ -419,6 +466,11 @@ apply_profile(puavo_conf_t *conf, const char *profile_path, int verbose)
 
 	retvalue = 0;
 	root = NULL;
+
+	if (verbose) {
+		(void) printf("puavo-conf-update: applying profile %s\n",
+		    profile_path);
+	}
 
 	if ((root = parse_json_file(profile_path)) == NULL) {
 		warnx("parse_json_file() failed for %s", profile_path);
