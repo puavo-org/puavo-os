@@ -165,9 +165,9 @@ setup-buildhost:
 	$(_sudo) .aux/setup-buildhost
 
 /etc/puavo-conf/image.json: config.json
-	mkdir -p $(@D)
-	jq .puavo_conf config.json > $@.tmp
-	mv $@.tmp $@
+	$(_sudo) mkdir -p $(@D)
+	$(_sudo) sh -c 'jq .puavo_conf config.json > $@.tmp'
+	$(_sudo) mv $@.tmp $@
 
 .PHONY: update
 update: /etc/puavo-conf/image.json install-build-deps
