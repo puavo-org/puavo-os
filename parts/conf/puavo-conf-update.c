@@ -281,7 +281,8 @@ update_puavoconf(puavo_conf_t *conf, const char *device_json_path, int verbose)
 	retvalue = 0;
 
 	/* First apply kernel arguments, because we get puavo.hosttype
-	 * and puavo.profiles from there, which affect subsequent settings. */
+	 * and puavo.profiles.list from there, which affect subsequent
+	 * settings. */
 	if (apply_kernel_arguments(conf, verbose) != 0)
 		retvalue = 1;
 
@@ -325,7 +326,8 @@ apply_profiles(puavo_conf_t *conf, int verbose)
 	if (strcmp(profiles, "") == 0) {
 		if (verbose) {
 			(void) printf("puavo-conf-update: applying hosttype"
-			    " profile because puavo.profiles is not set\n");
+			    " profile because puavo.profiles.list is not"
+			    " set\n");
 		}
 
 		free(profiles);
