@@ -5,7 +5,7 @@ class gnome_shell_extensions {
     $extension = $title
 
     file {
-      "/usr/share/gnome-shell/extensions/${extension}":
+      "/usr/share/gnome-shell/extensions/bigtouch-ux@puavo.org/":
 	recurse => true,
 	require => Package['gnome-shell-extensions'],
 	source  => "puppet:///modules/gnome_shell_extensions/${extension}";
@@ -15,7 +15,6 @@ class gnome_shell_extensions {
   ::gnome_shell_extensions::add_extension {
     [ 'appindicatorsupport@rgcjonas.gmail.com'
     , 'audio-switcher@AndresCidoncha'
-    , 'bigtouch-ux@puavo.org'
     , 'bottompanel@tmoer93'
     , 'extend-left-box2@linuxdeepin.com'
     , 'hide-activities-button@gnome-shell-extensions.bookmarkd.xyz'
