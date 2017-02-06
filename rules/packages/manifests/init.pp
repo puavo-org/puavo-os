@@ -129,6 +129,7 @@ class packages {
     , 'bvi'
     , 'cdbs'
     , 'debconf-doc'
+    , 'debootstrap'
     , 'devscripts'
     , 'dh-make'
     , 'dpkg-dev'
