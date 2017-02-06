@@ -18,7 +18,7 @@ _image_file  := $(image_dir)/$(_repo_name)-$(image_class)-$(debootstrap_suite)-$
 # Some basic dependencies for our build system.  "python3" is on this list,
 # because installing "devscripts" fails if "python3" has not been installed
 # earlier, working around some bug in Debian (on 2016-11-18).
-_debootstrap_packages := python3,devscripts,equivs,git,locales,lsb-release,\
+_debootstrap_packages := python3,devscripts,equivs,git,jq,locales,lsb-release,\
 			 make,puppet-common,sudo
 
 _cache_configured := $(shell grep -qs puavo-os /etc/squid3/squid.conf \
