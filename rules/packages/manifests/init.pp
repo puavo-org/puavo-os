@@ -110,6 +110,11 @@ class packages {
     , 'vlan' ]:
       tag => [ 'tag_basic', 'tag_debian', ];
 
+    [ 'debootstrap'
+    , 'squashfs-tools'
+    , 'systemd-container' ]:
+      tag => [ 'tag_builder', 'tag_debian', ];
+
     [ 'gdm3'
     , 'network-manager-openvpn-gnome'
     , 'network-manager-vpnc-gnome'
@@ -129,7 +134,6 @@ class packages {
     , 'bvi'
     , 'cdbs'
     , 'debconf-doc'
-    , 'debootstrap'
     , 'devscripts'
     , 'dh-make'
     , 'dpkg-dev'
