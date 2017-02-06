@@ -68,6 +68,17 @@ function enable() {
             vertical: true
         });
 
+   let launchGuideIcon = new St.Icon(
+        {
+            icon_name: "help-contents",
+            reactive: true,
+            track_hover: true,
+            style_class: "launcher-box-item"
+        });
+    launchGuideIcon.connect('button-press-event',
+                                  function() { Util.spawn(["evince", "/usr/share/gnome-shell/extensions/bigtouch-ux@puavo.org/opinsys-bigtouch-guide.pdf"]) });
+
+
     let launchGnomeCalculatorIcon = new St.Icon(
         {
             icon_name: "gnome-calculator",
@@ -163,6 +174,7 @@ function enable() {
         });
     toggleOverviewIcon.connect('button-press-event', _toggleOverview);
 
+    launcherBox.add_child(launchGuideIcon);
     launcherBox.add_child(launchGnomeCalculatorIcon);
     launcherBox.add_child(launchCheeseIcon);
     launcherBox.add_child(launchOpenboardIcon);
