@@ -2,7 +2,30 @@
 
 set -eu
 
+#
+# install tools needed for building images
+#
+
+packages='
+  dbus
+  debootstrap
+  devscripts
+  git
+  lsb-release
+  make
+  rsync
+  squashfs-tools
+  sudo
+  systemd
+  systemd-container
+'
+
+apt-get update
+apt-get -y install $packages
+
+#
 # some optional stuff for setting up buildhost for building
+#
 
 # setup squid as caching proxy for apt and puavo-pkg
 

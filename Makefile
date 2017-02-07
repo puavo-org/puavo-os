@@ -162,7 +162,7 @@ rootfs-update: rootfs-sync-repo
 
 .PHONY: setup-buildhost
 setup-buildhost:
-	$(_sudo) .aux/setup-buildhost
+	.aux/setup-buildhost
 
 /etc/puavo-conf/image.json: config.json
 	$(_sudo) mkdir -p $(@D)
