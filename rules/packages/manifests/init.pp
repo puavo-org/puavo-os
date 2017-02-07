@@ -326,6 +326,7 @@ class packages {
     , 'qt4-designer'
     , 'qt4-doc'
     , 'racket'
+    , 'scite'
     , 'scratch'
     , 'spe' ]:
       tag => [ 'tag_programming', 'tag_debian', ];
