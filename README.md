@@ -1,8 +1,8 @@
 # Opinsys OS
 
-To install build tools on Debian Jessie, run:
+To setup build host, run (with sudo or as root):
 
-    sudo ./install-build-tools
+    sudo make setup-buildhost
 
 To build Puavo OS image, run:
 
