@@ -104,8 +104,8 @@ help:
 	@echo 'Variables:'
 	@echo '    debootstrap_mirror   debootstrap mirror [$(debootstrap_mirror)]'
 	@echo '    image_dir            directory where images are built [$(image_dir)]'
-	@echo '    images_urlbase       Prefix for image urls (https://...)
-	@echo '    mirror_dir           Mirror directory (for images and rdiffs)
+	@echo '    images_urlbase       Prefix for image urls (https://...)'
+	@echo '    mirror_dir           Mirror directory (for images and rdiffs)'
 	@echo '    rootfs_dir           Puavo OS rootfs directory [$(rootfs_dir)]'
 
 $(rootfs_dir):
