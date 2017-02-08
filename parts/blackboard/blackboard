@@ -30,6 +30,8 @@ from PyQt5.QtWidgets import *
 
 import puavoblackboard.icons
 
+import camera
+
 def penWidthIcon(width, iconWidth=16, iconHeight=16):
     pixmap = QPixmap(iconWidth, iconHeight)
     painter = QPainter(pixmap)
@@ -186,6 +188,9 @@ class Canvas(QGraphicsScene):
         super().__init__(*args)
 
         self.__artist = None
+        self.resetBackground()
+
+    def resetBackground(self):
         self.setBackgroundBrush(QBrush(QColor(27, 51, 40), Qt.SolidPattern))
 
     def setBackgroundImage(self, fileName):
@@ -389,6 +394,28 @@ class MainWindow(QMainWindow):
         self.__changeBackgroundImageAction.triggered.connect(
             self.__changeBackgroundImage)
 
+        self.__takeWebcamImageButton = self.__toolBar.addAction(
+                QIcon.fromTheme('camera-photo'),
+                "Use an image from the webcam as background image")
+        self.__takeWebcamImageButton.triggered.connect(self.__takeWebcamImage)
+
+        self.__resetBackgroundButton = self.__toolBar.addAction(
+                QIcon.fromTheme('edit-clear'),
+                "Reset board background")
+        self.__resetBackgroundButton.triggered.connect(self.__resetBackground)
+
+    def __takeWebcamImage(self):
+        dlg = camera.WebcamImageCapture(self)
+
+        if dlg.exec_() == QDialog.Accepted:
+            self.__canvasBrowser.currentCanvas().setBackgroundImage(dlg.capturedImage)
+
+        # HACK HACK HACK HACK, see camera.py
+        if dlg.camera is not None:
+            dlg.camera.stop()
+
+    def __resetBackground(self):
+        self.__canvasBrowser.currentCanvas().resetBackground()
 
     def __changeBackgroundImage(self):
         canvas = self.__canvasBrowser.currentCanvas()
