@@ -1,0 +1,12 @@
+#!/bin/sh
+
+set -eu
+
+# XXX Write apiserver to /etc/puavo/apiserver for legacy code,
+# XXX code should be changed to use puavo-conf instead.
+
+apiserver=$(puavo-conf puavo.www.apiserver)
+
+if [ -n "$apiserver" ]; then
+  echo "$apiserver" > /etc/puavo/apiserver
+fi

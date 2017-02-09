@@ -1,15 +1,11 @@
 class desktop::mimedefaults {
-  require packages
+  include ::packages
 
   file {
-    '/usr/share/applications/defaults.list':
-       content => template('desktop/defaults.list');
+    '/etc/xdg/mimeapps.list':
+       require => Package['xdg-user-dirs'],
+       source  => 'puppet:///modules/desktop/mimeapps.list';
   }
 
-  file {
-    '/etc/gnome/defaults.list':
-       content => template('desktop/defaults.list');
-  }
-
-  Package <| title == desktop-file-utils |>
+  Package <| title == xdg-user-dirs |>
 }

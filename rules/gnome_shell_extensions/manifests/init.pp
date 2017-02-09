@@ -5,7 +5,7 @@ class gnome_shell_extensions {
     $extension = $title
 
     file {
-      "/usr/share/gnome-shell/extensions/bigtouch-ux@puavo.org/":
+      "/usr/share/gnome-shell/extensions/${extension}/":
 	recurse => true,
 	require => Package['gnome-shell-extensions'],
 	source  => "puppet:///modules/gnome_shell_extensions/${extension}";

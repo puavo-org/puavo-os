@@ -65,15 +65,15 @@ install: install-parts
 	$(MAKE) install-rules
 
 .PHONY: install-parts
-install-parts: /$(_repo_name)
+install-parts: /puavo-os
 	$(_sudo) $(MAKE) -C parts install prefix=/usr sysconfdir=/etc
 
 .PHONY: install-build-deps
-install-build-deps: /$(_repo_name)
+install-build-deps: /puavo-os
 	$(MAKE) -C debs update-repo
 
 	$(_sudo) env FACTER_puavoruleset=prepare puppet apply	\
-		--logdest '/var/log/$(_repo_name)/puppet.log'	\
+		--logdest '/var/log/puavo-os/puppet.log'	\
 		--logdest console				\
 		--modulepath 'rules'				\
 		rules/site.pp
@@ -120,14 +120,14 @@ rootfs-debootstrap:
 		{ echo ERROR: rootfs directory '$(rootfs_dir)' already exists >&2; false; }
 	$(_sudo) debootstrap					\
 		--arch=amd64					\
-		--include='$(_debootstrap_packages)'	\
+		--include='$(_debootstrap_packages)'	        \
 		--components=main,contrib,non-free		\
 		'$(debootstrap_suite)'				\
 		'$(rootfs_dir).tmp' '$(debootstrap_mirror)'
 
-	$(_sudo) git clone . '$(rootfs_dir).tmp/$(_repo_name)'
+	$(_sudo) git clone . '$(rootfs_dir).tmp/puavo-os'
 
-	$(_sudo) ln -s '/$(_repo_name)/.aux/policy-rc.d' \
+	$(_sudo) ln -s '/puavo-os/.aux/policy-rc.d' \
 		'$(rootfs_dir).tmp/usr/sbin/policy-rc.d'
 
 	$(_sudo) mv '$(rootfs_dir).tmp' '$(rootfs_dir)'
@@ -148,19 +148,19 @@ rootfs-image: $(rootfs_dir) $(image_dir)
 
 .PHONY: rootfs-shell
 rootfs-shell: $(rootfs_dir)
-	$(_systemd_nspawn_cmd) '/$(_repo_name)/.aux/proxywrap' \
+	$(_systemd_nspawn_cmd) '/puavo-os/.aux/proxywrap' \
 	   sh -c 'cd ~ && exec bash'
 
 .PHONY: rootfs-sync-repo
 rootfs-sync-repo: $(rootfs_dir)
-	$(_sudo) .aux/create-adm-user '$(rootfs_dir)' '/$(_repo_name)' \
+	$(_sudo) .aux/create-adm-user '$(rootfs_dir)' '/puavo-os' \
 	    '$(_adm_user)' '$(_adm_group)' '$(_adm_uid)' '$(_adm_gid)'
 	$(_sudo) rsync "--chown=$(_adm_uid):$(_adm_gid)" --chmod=Dg+s,ug+w \
-	    -glopr . '$(rootfs_dir)/$(_repo_name)/'
+	    -glopr . '$(rootfs_dir)/puavo-os/'
 
 .PHONY: rootfs-update
 rootfs-update: rootfs-sync-repo
-	$(_systemd_nspawn_cmd) $(MAKE) -C '/$(_repo_name)' update
+	$(_systemd_nspawn_cmd) $(MAKE) -C '/puavo-os' update
 
 .PHONY: setup-buildhost
 setup-buildhost:
@@ -186,10 +186,10 @@ update: /etc/puavo-conf/image.json install-build-deps
 	$(_sudo) updatedb
 
 .PHONY: install-rules
-install-rules: /$(_repo_name)
+install-rules: /puavo-os
 	$(_sudo) .aux/setup-debconf
 	$(_sudo) env 'FACTER_puavoruleset=$(image_class)' puppet apply	\
-		--logdest '/var/log/$(_repo_name)/puppet.log'		\
+		--logdest '/var/log/puavo-os/puppet.log'		\
 		--logdest console					\
 		--modulepath 'rules'					\
 		rules/site.pp
@@ -203,6 +203,6 @@ rdiffs: $(image_dir) $(mirror_dir)
 $(mirror_dir):
 	$(_sudo) mkdir -p '$(mirror_dir)'
 
-/$(_repo_name):
+/puavo-os:
 	@echo ERROR: localhost is not Puavo OS system >&2
 	@false
