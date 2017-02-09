@@ -12,7 +12,7 @@ _adm_group	:= puavo-os
 _adm_uid	:= 1000
 _adm_gid	:= 1000
 
-_repo_name   := $(shell basename $(shell git rev-parse --show-toplevel))
+_repo_name   := puavo-os
 _image_file  := $(image_dir)/$(_repo_name)-$(image_class)-$(debootstrap_suite)-$(shell date -u +%Y-%m-%d-%H%M%S)-amd64.img
 
 # Some basic dependencies for our build system.  "python3" is on this list,
