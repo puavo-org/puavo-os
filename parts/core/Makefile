@@ -48,8 +48,6 @@ install : installdirs
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-conf/definitions \
                 puavo-conf/definitions/*.json
-	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-conf/scripts \
-                puavo-conf/scripts/.preinit
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/puavo-conf/scripts \
                 puavo-conf/scripts/*
 
