@@ -1,0 +1,8 @@
+# shell configurations configured by puppet
+
+PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/games:/usr/games"
+export PATH
+
+# Puavo OS admins have a more relaxed umask to facilitate collaboration under
+# "/puavo-os"
+umask 002
