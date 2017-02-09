@@ -53,3 +53,29 @@ if [ -x /usr/lib/command-not-found -o -x /usr/share/command-not-found/command-no
 		fi
 	}
 fi
+
+if [ "$(id -u)" = 0 ] || (groups | fgrep -qw puavo-os); then
+  _puavo_image_name=$(cat /etc/puavo-image/name)
+  _puavo_host_profiles=$(puavo-conf puavo.profiles.list)
+
+  if [ -z "$_puavo_host_profiles" ]; then
+    _puavo_host_profiles=$(puavo-conf puavo.hosttype)
+    if [ -z "$_puavo_host_profiles" ]; then
+      _puavo_host_profiles='???'
+    fi
+  fi
+
+  if [ "$(id -u)" = 0 ]; then
+    _puavo_prompt_colornum=31
+    # red prompt for root
+  else
+    # magenta prompt for adm users
+    _puavo_prompt_colornum=35
+  fi
+
+  PS1="\[\e[1;${_puavo_prompt_colornum}m\]> ${_puavo_image_name%.img} (${_puavo_host_profiles})\n\u@\h:\w\$\[\e[0m\] "
+
+  unset _puavo_host_profiles
+  unset _puavo_image_name
+  unset _puavo_prompt_colornum
+fi
