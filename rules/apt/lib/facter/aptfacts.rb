@@ -1,6 +1,6 @@
 Facter.add('localmirror') do
     setcode do
-        File.exists?('/opinsys-os/debs/Packages') ? '/opinsys-os/debs' : ''
+        File.exists?('/puavo-os/debs/Packages') ? '/puavo-os/debs' : ''
     end
 end
 

@@ -95,7 +95,7 @@ class adm {
   # sets up $common_group as well.
   adm::user {
     'puavo-os':
-      homedir   => '/opinsys-os',
+      homedir   => '/puavo-os',
       home_mode => '02775',
       uid       => 1000;
   }
