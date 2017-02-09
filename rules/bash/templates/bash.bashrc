@@ -11,7 +11,7 @@
 shopt -s checkwinsize
 
 # set variable identifying the chroot you work in (used in the prompt below)
-if [ -z "$debian_chroot" ] && [ -r /etc/debian_chroot ]; then
+if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
     debian_chroot=$(cat /etc/debian_chroot)
 fi
 
@@ -29,53 +29,27 @@ PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
 #esac
 
 # enable bash completion in interactive shells
-#if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
+#if ! shopt -oq posix; then
+#  if [ -f /usr/share/bash-completion/bash_completion ]; then
+#    . /usr/share/bash-completion/bash_completion
+#  elif [ -f /etc/bash_completion ]; then
 #    . /etc/bash_completion
+#  fi
 #fi
 
-# sudo hint
-if [ ! -e "$HOME/.sudo_as_admin_successful" ]; then
-    case " $(groups) " in *\ admin\ *)
-    if [ -x /usr/bin/sudo ]; then
-        cat <<-EOF
-        To run a command as administrator (user "root"), use "sudo <command>".
-        See "man sudo_root" for details.
-EOF
-    fi
-    esac
-fi
-
 # if the command-not-found package is installed, use it
-if [ -x /usr/lib/command-not-found -o -x /usr/share/command-not-found ]; then
-        function command_not_found_handle {
-                # check because c-n-f could've been removed in the meantime
+if [ -x /usr/lib/command-not-found -o -x /usr/share/command-not-found/command-not-found ]; then
+	function command_not_found_handle {
+	        # check because c-n-f could've been removed in the meantime
                 if [ -x /usr/lib/command-not-found ]; then
-                   /usr/bin/python /usr/lib/command-not-found -- $1
+		   /usr/lib/command-not-found -- "$1"
                    return $?
-                elif [ -x /usr/share/command-not-found ]; then
-                   /usr/bin/python /usr/share/command-not-found -- $1
+                elif [ -x /usr/share/command-not-found/command-not-found ]; then
+		   /usr/share/command-not-found/command-not-found -- "$1"
                    return $?
-                else
-                   return 127
-                fi
-        }
+		else
+		   printf "%s: command not found\n" "$1" >&2
+		   return 127
+		fi
+	}
 fi
-
-if [ "$(id -u)" = 0 ] || (groups | fgrep -qw adm); then
-  if [ "$(id -u)" = 0 ]; then
-    # red prompt for root
-    PS1="\[\e[1;31m\] \u@\h:\w\$\[\e[0m\] "
-  else
-    # magenta prompt for adm users
-    PS1="\[\e[1;35m\] \u@\h:\w\$\[\e[0m\] "
-  fi
-
-  # automatic logout if shell is idle for 30 minutes
-  TMOUT=1800
-fi
-
-# turn on fancy bash history timestamps
-HISTTIMEFORMAT='%d.%m.%Y - %T '
-HISTFILESIZE=10000
-HISTSIZE=5000
-export HISTTIMEFORMAT HISTFILESIZE HISTSIZE
