@@ -8,7 +8,6 @@ user_primary_group=$(id -gn)
 
 is_remotemounts_enabled=$(puavo-conf -b puavo.remotemounts.enabled)
 is_nethomes_enabled=$(puavo-conf -b puavo.nethomes.enabled)
-nethomes_protocol=$(puavo-conf puavo.nethomes.protocol)
 
 filter_out_our_bookmarks() {
   local bookmarksfile
@@ -45,20 +44,11 @@ update_bookmarks() {
 
   filter_out_our_bookmarks "${bookmarksfile}" > "${tmpfile}"
 
-  if [ "${is_nethomes_enabled}" = true ]; then
-      case "${nethomes_protocol}" in
-          samba)
-	      echo "file://${HOME}/.puavo-sharedir.schooldir/${sharename}/${user_primary_group} ${schooldir_displayname}" >> "${tmpfile}"
-              ;;
-          nfs)
-	      echo "file:///home/share/${sharename}/${user_primary_group} ${schooldir_displayname}" >> "${tmpfile}"
-              ;;
-          *)
-              ;;
-      esac
+  if [ "${is_nethomes_enabled}" = 'true' ]; then
+    echo "file:///home/share/${sharename}/${user_primary_group} ${schooldir_displayname}" >> "${tmpfile}"
   fi
 
-  if [ "${is_remotemounts_enabled}" = true ]; then
+  if [ "${is_remotemounts_enabled}" = 'true' ]; then
       remote_host=$(dig SRV "_sambaserver._tcp.${puavo_domain}" +short \
           | sed -r -n 's/^[0-9]+ [0-9]+ 139 (.*)\./\1/p' | head -n1)
       if [ -n "${remote_host}" ]; then
@@ -105,19 +95,8 @@ for linkname in 'Yhteiset'     'Delade filer' 'Share' \
   [ -h ~/"$linkname" ] && rm -f ~/"$linkname"
 done
 
-if [ "${is_nethomes_enabled}" = true ]; then
-    case "${nethomes_protocol}" in
-        samba)
-            ln -ns ~/.puavo-sharedir.schooldir ~/"${schooldir_displayname}" || true
-            ;;
-        nfs)
-            rmdir ~/.puavo-sharedir.schooldir 2>/dev/null || true
-            ln -ns "/home/share/${sharename}/${user_primary_group}" \
-                ~/"${schooldir_displayname}" || true
-            ;;
-        *)
-            echo "Unknown puavo.nethomes.protocol: ${nethomes_protocol}" >&2
-            exit 1
-            ;;
-    esac
+if [ "${is_nethomes_enabled}" = 'true' ]; then
+  rmdir ~/.puavo-sharedir.schooldir 2>/dev/null || true
+  ln -ns "/home/share/${sharename}/${user_primary_group}" \
+         ~/"${schooldir_displayname}" || true
 fi
