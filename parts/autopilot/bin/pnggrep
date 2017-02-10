@@ -146,7 +146,7 @@ screenshot=$(mktemp --suffix='.png')
 
 ntries=0
 while [ "${ntries}" -lt "${try_times}" ]; do
-    escrotum "${screenshot}" >/dev/null || {
+    scrot "${screenshot}" >/dev/null || {
         echo 'error: failed to take a screenshot' >&2
         exit 1
     }
