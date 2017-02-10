@@ -75,10 +75,10 @@ Package: puavo-autopilot
 Architecture: all
 Depends: ${misc:Depends},
  coreutils,
- escrotum,
  imagemagick,
  puavo-conf,
  ruby,
+ scrot,
  xautomation (>= 1.05)
 Description: Automatic Puavo Desktop testing tool
  Provides scripts for testing various parts of Puavo desktop.
