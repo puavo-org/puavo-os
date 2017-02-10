@@ -2,6 +2,8 @@
 
 set -eu
 
+mode=${1:-}
+
 puavo_domain=$(cat /etc/puavo/domain)
 
 user_primary_group=$(id -gn)
@@ -85,18 +87,23 @@ for bookmark_file in ~/.config/gtk-3.0/bookmarks ~/.gtk-bookmarks; do
                    "$bookmark_file"
 done
 
+# Handle links from user home directory to gvfs-mounts for applications
+# that do not understand gvfs (and do not know about gtk-bookmarks).
+# "puavo-remotemounts-helper" handles these for those that have
+# "puavo.remotemounts.enabled" == true (but --with-cleanups is useful also
+# in that case).
 
-# handle links from user home directory to gvfs-mounts for applications
-# that do not understand gvfs
+if [ "$mode" = '--with-cleanups' ]; then
+  rmdir ~/.puavo-sharedir.schooldir 2>/dev/null || true
 
-# remove stale links (maybe created later)
-for linkname in 'Yhteiset'     'Delade filer' 'Share' \
-                'Verkkokansio' 'Nätverksmapp' 'Network folder'; do
-  [ -h ~/"$linkname" ] && rm -f ~/"$linkname"
-done
+  # remove stale links (maybe created later)
+  for linkname in 'Yhteiset'     'Delade filer' 'Share' \
+                  'Verkkokansio' 'Nätverksmapp' 'Network folder'; do
+    [ -h ~/"$linkname" ] && rm -f ~/"$linkname"
+  done
+fi
 
 if [ "${is_nethomes_enabled}" = 'true' ]; then
-  rmdir ~/.puavo-sharedir.schooldir 2>/dev/null || true
   ln -ns "/home/share/${sharename}/${user_primary_group}" \
-         ~/"${schooldir_displayname}" || true
+         ~/"${schooldir_displayname}"
 fi
