@@ -2,13 +2,14 @@
 
 set -eu
 
+mode=${1:-}
+
 puavo_domain=$(cat /etc/puavo/domain)
 
 user_primary_group=$(id -gn)
 
 is_remotemounts_enabled=$(puavo-conf -b puavo.remotemounts.enabled)
 is_nethomes_enabled=$(puavo-conf -b puavo.nethomes.enabled)
-nethomes_protocol=$(puavo-conf puavo.nethomes.protocol)
 
 filter_out_our_bookmarks() {
   local bookmarksfile
@@ -45,20 +46,11 @@ update_bookmarks() {
 
   filter_out_our_bookmarks "${bookmarksfile}" > "${tmpfile}"
 
-  if [ "${is_nethomes_enabled}" = true ]; then
-      case "${nethomes_protocol}" in
-          samba)
-	      echo "file://${HOME}/.puavo-sharedir.schooldir/${sharename}/${user_primary_group} ${schooldir_displayname}" >> "${tmpfile}"
-              ;;
-          nfs)
-	      echo "file:///home/share/${sharename}/${user_primary_group} ${schooldir_displayname}" >> "${tmpfile}"
-              ;;
-          *)
-              ;;
-      esac
+  if [ "${is_nethomes_enabled}" = 'true' ]; then
+    echo "file:///home/share/${sharename}/${user_primary_group} ${schooldir_displayname}" >> "${tmpfile}"
   fi
 
-  if [ "${is_remotemounts_enabled}" = true ]; then
+  if [ "${is_remotemounts_enabled}" = 'true' ]; then
       remote_host=$(dig SRV "_sambaserver._tcp.${puavo_domain}" +short \
           | sed -r -n 's/^[0-9]+ [0-9]+ 139 (.*)\./\1/p' | head -n1)
       if [ -n "${remote_host}" ]; then
@@ -95,29 +87,23 @@ for bookmark_file in ~/.config/gtk-3.0/bookmarks ~/.gtk-bookmarks; do
                    "$bookmark_file"
 done
 
+# Handle links from user home directory to gvfs-mounts for applications
+# that do not understand gvfs (and do not know about gtk-bookmarks).
+# "puavo-remotemounts-helper" handles these for those that have
+# "puavo.remotemounts.enabled" == true (but --with-cleanups is useful also
+# in that case).
 
-# handle links from user home directory to gvfs-mounts for applications
-# that do not understand gvfs
+if [ "$mode" = '--with-cleanups' ]; then
+  rmdir ~/.puavo-sharedir.schooldir 2>/dev/null || true
 
-# remove stale links (maybe created later)
-for linkname in 'Yhteiset'     'Delade filer' 'Share' \
-                'Verkkokansio' 'Nätverksmapp' 'Network folder'; do
-  [ -h ~/"$linkname" ] && rm -f ~/"$linkname"
-done
+  # remove stale links (maybe created later)
+  for linkname in 'Yhteiset'     'Delade filer' 'Share' \
+                  'Verkkokansio' 'Nätverksmapp' 'Network folder'; do
+    [ -h ~/"$linkname" ] && rm -f ~/"$linkname"
+  done
+fi
 
-if [ "${is_nethomes_enabled}" = true ]; then
-    case "${nethomes_protocol}" in
-        samba)
-            ln -ns ~/.puavo-sharedir.schooldir ~/"${schooldir_displayname}" || true
-            ;;
-        nfs)
-            rmdir ~/.puavo-sharedir.schooldir 2>/dev/null || true
-            ln -ns "/home/share/${sharename}/${user_primary_group}" \
-                ~/"${schooldir_displayname}" || true
-            ;;
-        *)
-            echo "Unknown puavo.nethomes.protocol: ${nethomes_protocol}" >&2
-            exit 1
-            ;;
-    esac
+if [ "${is_nethomes_enabled}" = 'true' ]; then
+  ln -ns "/home/share/${sharename}/${user_primary_group}" \
+         ~/"${schooldir_displayname}"
 fi
