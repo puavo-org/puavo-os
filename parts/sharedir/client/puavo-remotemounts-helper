@@ -12,6 +12,9 @@ require 'dbus'
 require 'fileutils'
 require 'open3'
 require 'resolv'
+require 'thread'
+
+$update_gtk_bookmarks_semaphore = Mutex.new
 
 def sendmsg(channel, msg)
   channel.puts "puavo-remotemounts-helper #{ Time.now }: #{ msg }"
@@ -117,19 +120,28 @@ class GvfsMount
   end
 
   def ensure_link(shouldbe)
-    system('puavo-update-gtk-bookmarks')
+    begin
+      linksrc = "#{ ENV['HOME'] }/#{ @linkname }"
 
-    linksrc = "#{ ENV['HOME'] }/#{ @linkname }"
-
-    if shouldbe; then
-      begin
-        return if File.readlink(linksrc) == @mntpath
-      rescue Errno::ENOENT
+      if shouldbe; then
+        begin
+          return if File.readlink(linksrc) == @mntpath
+        rescue Errno::ENOENT
+        end
+        FileUtils.rm_f(linksrc)
+        FileUtils.symlink(@mntpath, linksrc)
+      else
+        FileUtils.rm_f(linksrc)
       end
-      FileUtils.rm_f(linksrc)
-      FileUtils.symlink(@mntpath, linksrc)
-    else
-      FileUtils.rm_f(linksrc)
+
+      # Update bookmarks when links have changed.
+      # Use a mutex so that threads do not run this at the same time.
+      $update_gtk_bookmarks_semaphore.synchronize do
+        system('puavo-update-gtk-bookmarks')
+      end
+    rescue StandardError => e
+      errmsg("Error in ensure_link(): #{ e.message }")
+      raise e
     end
   end
 
