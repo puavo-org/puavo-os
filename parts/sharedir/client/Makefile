@@ -23,10 +23,6 @@ install: install-dirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
 		puavo-remotemounts-helper \
 		puavo-update-gtk-bookmarks
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/network/if-post-down.d \
-		etc/network/if-post-down.d/ipsec
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/network/if-up.d \
-		etc/network/if-up.d/ipsec
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
 		puavo-remotemounts-helper.desktop
 
