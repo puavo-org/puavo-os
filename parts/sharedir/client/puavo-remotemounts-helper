@@ -131,6 +131,7 @@ class GvfsMount
         FileUtils.rm_f(linksrc)
         FileUtils.symlink(@mntpath, linksrc)
       else
+        return unless File.exists?(linksrc)
         FileUtils.rm_f(linksrc)
       end
 
