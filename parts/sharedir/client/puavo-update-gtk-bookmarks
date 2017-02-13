@@ -2,7 +2,7 @@
 
 set -eu
 
-if [ "$GUEST_SESSION" = 'true' ]; then
+if [ "${GUEST_SESSION:-}" = 'true' ]; then
   exit 0
 fi
 
