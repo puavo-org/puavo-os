@@ -108,6 +108,6 @@ if [ "$mode" = '--with-cleanups' ]; then
 fi
 
 if [ "${is_nethomes_enabled}" = 'true' ]; then
-  ln -ns "/home/share/${sharename}/${user_primary_group}" \
-         ~/"${schooldir_displayname}"
+  ln -fns "/home/share/${sharename}/${user_primary_group}" \
+          ~/"${schooldir_displayname}"
 fi
