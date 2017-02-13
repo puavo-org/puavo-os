@@ -2,6 +2,10 @@
 
 set -eu
 
+if [ "$GUEST_SESSION" = 'true' ]; then
+  exit 0
+fi
+
 mode=${1:-}
 
 puavo_domain=$(cat /etc/puavo/domain)
