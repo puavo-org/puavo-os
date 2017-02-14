@@ -6,7 +6,7 @@ status=0
 
 nmi_watchdog() {
   nmi_watchdog_param=''
-  case "$(puavo-conf puavo.powersave.nmi_watchdog.mode)" in
+  case "$(puavo-conf puavo.pm.nmi_watchdog.mode)" in
     disable) nmi_watchdog_param=0 ;;
     enable)  nmi_watchdog_param=1 ;;
   esac
@@ -18,7 +18,7 @@ nmi_watchdog() {
 
 sata_alpm() {
   sata_alpm_param=''
-  case "$(puavo-conf puavo.powersave.sata_alpm.mode)" in
+  case "$(puavo-conf puavo.pm.sata_alpm.mode)" in
     disable) sata_alpm_param=false ;;
     enable)  sata_alpm_param=true  ;;
   esac
@@ -32,7 +32,7 @@ sata_alpm() {
 }
 
 wireless() {
-  if [ "$(puavo-conf puavo.powersave.wireless.mode)" = 'disable' ]; then
+  if [ "$(puavo-conf puavo.pm.wireless.mode)" = 'disable' ]; then
     if [ -e /etc/pm/power.d/wireless ]; then
       mkdir -p /etc/pm/power.d.disabled || return 1
       mv /etc/pm/power.d/wireless /etc/pm/power.d.disabled/wireless || return 1
