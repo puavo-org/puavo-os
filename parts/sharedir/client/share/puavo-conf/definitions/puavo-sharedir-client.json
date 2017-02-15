@@ -1,8 +1,11 @@
 {
-  "puavo.nethomes.enabled" : {
+  "puavo.mounts.by_user_from_bootserver.enabled" : {
     "default": "false"
   },
-  "puavo.remotemounts.enabled" : {
+  "puavo.mounts.extramounts" : {
+    "default": ""
+  },
+  "puavo.mounts.nethomes.enabled" : {
     "default": "false"
   }
 }

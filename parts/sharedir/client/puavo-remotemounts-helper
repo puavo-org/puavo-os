@@ -6,7 +6,7 @@ exit(0) if ENV['GUEST_SESSION'] == 'true'
 require 'puavo/conf'
 
 puavoconf = Puavo::Conf.new
-exit(0) unless puavoconf.get('puavo.remotemounts.enabled') == 'true'
+exit(0) unless puavoconf.get('puavo.mounts.by_user_from_bootserver.enabled') == 'true'
 
 require 'dbus'
 require 'fileutils'
