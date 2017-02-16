@@ -2,14 +2,18 @@
 
 set -eu
 
+if [ "${GUEST_SESSION:-}" = 'true' ]; then
+  exit 0
+fi
+
 mode=${1:-}
 
 puavo_domain=$(cat /etc/puavo/domain)
 
 user_primary_group=$(id -gn)
 
-is_remotemounts_enabled=$(puavo-conf -b puavo.remotemounts.enabled)
-is_nethomes_enabled=$(puavo-conf -b puavo.nethomes.enabled)
+is_remotemounts_enabled=$(puavo-conf -b puavo.mounts.by_user_from_bootserver.enabled)
+is_nethomes_enabled=$(puavo-conf -b puavo.mounts.nethomes.enabled)
 
 filter_out_our_bookmarks() {
   local bookmarksfile
@@ -90,8 +94,8 @@ done
 # Handle links from user home directory to gvfs-mounts for applications
 # that do not understand gvfs (and do not know about gtk-bookmarks).
 # "puavo-remotemounts-helper" handles these for those that have
-# "puavo.remotemounts.enabled" == true (but --with-cleanups is useful also
-# in that case).
+# "puavo.mounts.by_user_from_bootserver.enabled" == true
+# (but --with-cleanups is useful also in that case).
 
 if [ "$mode" = '--with-cleanups' ]; then
   rmdir ~/.puavo-sharedir.schooldir 2>/dev/null || true
@@ -104,6 +108,6 @@ if [ "$mode" = '--with-cleanups' ]; then
 fi
 
 if [ "${is_nethomes_enabled}" = 'true' ]; then
-  ln -ns "/home/share/${sharename}/${user_primary_group}" \
-         ~/"${schooldir_displayname}"
+  ln -fns "/home/share/${sharename}/${user_primary_group}" \
+          ~/"${schooldir_displayname}"
 fi
