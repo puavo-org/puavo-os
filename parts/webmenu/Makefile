@@ -14,16 +14,7 @@ INSTALL_DATA = $(INSTALL) -m 644
 
 export PATH := node_modules/.bin:$(PATH)
 
-# Jessie-related tweaks
-ifeq ($(_lsb_release),jessie)
-  NPM_PACKAGE_JSON=package.json-jessie
-  NPM_SHRINKWRAP_JSON=npm-shrinkwrap.json-jessie
-  NW_VERSION=0.8.6
-else
-  NPM_PACKAGE_JSON=package.json-default
-  NPM_SHRINKWRAP_JSON=npm-shrinkwrap.json-default
-  NW_VERSION=0.14.7
-endif
+NW_VERSION=0.14.7
 
 # https://github.com/rogerwang/nw-gyp
 NW_GYP=$(CURDIR)/node_modules/.bin/nw-gyp
@@ -50,8 +41,6 @@ nw-gyp:
 	$(call nw-build,ref)
 
 npm-install:
-	cp $(NPM_PACKAGE_JSON) package.json
-	cp $(NPM_SHRINKWRAP_JSON) npm-shrinkwrap.json
 	npm install
 	make nw-gyp
 
@@ -90,7 +79,6 @@ clean:
 	rm -rf i18n/*/i18n.js
 	rm -rf lib/
 	rm -rf node_modules
-	rm -rf npm-shrinkwrap.json package.json
 	rm -rf scripts/bundle.js
 	rm -f  styles/main.css
 
