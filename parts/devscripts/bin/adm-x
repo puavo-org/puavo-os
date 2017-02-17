@@ -1,5 +1,56 @@
-#!/bin/sh
+#!/bin/bash
 
 set -eu
 
-sudo env DISPLAY=:0 XAUTHORITY="/var/run/lightdm/root/:0" "$@"
+if [ -z "${SUDO_USER:-}" ]; then
+  exec sudo $0 "$@"
+fi
+
+default_path=
+declare -a choices
+
+xauthority_files=$(ls -rt /run/user/*/gdm/Xauthority)
+
+echo 'The following user sessions are available:'
+echo
+
+i=0
+for xauthority in $xauthority_files; do
+  test -e "$xauthority" || continue
+  user_dir=${xauthority%/gdm/Xauthority}
+  user_id=${user_dir#/run/user/}
+  user_name=$(id -nu "$user_id" 2>/dev/null || true)
+  tty=$(ps --no-headers -C Xorg -o uid,tty | awk -v uid="$user_id" 'uid == $1 { print $2 }')
+
+  gnome_shell_pid=$(pgrep -u "$user_id" -nx gnome-shell 2>/dev/null || true)
+  if [ -n "$gnome_shell_pid" ]; then
+    display=$(awk 'BEGIN { FS = "="; RS = "\0" } /^DISPLAY=/ { print $2 }' \
+      /proc/${gnome_shell_pid}/environ 2>/dev/null || true)
+    if [ -n "$display" ]; then
+      i=$(($i + 1))
+      choices[$i]="env DISPLAY=$display XAUTHORITY=$xauthority"
+      echo "    $i) $user_name ($user_id) on $tty DISPLAY=$display"
+    fi
+  fi
+done
+
+if [ $i -eq 0 ]; then
+  echo 'No accessible user sessions available' >&2
+  exit 1
+elif [ $i -eq 1 ]; then
+  echo
+  echo 'Choosing the only session.'
+  choice=1
+else
+  echo
+  choice=
+  while [ -z "$choice" ] || [ "$choice" -lt 1 -o "$choice" -gt "$i" ]; do
+    read -p "> Your choice: [$i] " choice
+    [ -z "$choice" ] && choice=$i
+    choice=$(echo "$choice" | awk '/^[0-9]+$/ { print $1 }')
+  done
+fi
+
+echo "${choices[$choice]} $@"
+
+exec ${choices[$choice]} "$@"
