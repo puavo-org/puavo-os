@@ -33,6 +33,15 @@ def append_tags_to_environment(tags)
   end
 end
 
+def handle_hitachicalib
+  hitachi_calibration = @puavoconf.get('puavo.xorg.inputs.hitachi.calibration')
+  match = /^(\d+):(\d+):(\d+):(\d+)$/.match(hitachi_calibration)
+  if match then
+    @hitachicalib_values = match.captures.join(' ')
+    write_config('/usr/share/X11/xorg.conf.d/99-hitachicalib.conf')
+  end
+end
+
 def write_config(filename, version=nil, secure=false)
   begin
     template_file = filename
@@ -103,21 +112,15 @@ if File.exists?("/etc/puavo/device.json")
   append_tags_to_environment(@tags)
 end
 
-@enable_suspend =                \
-  @puavo_device_type == 'laptop' \
-    && (! @tags.include?('nosuspend') || @tags.include?('no_nosuspend'))
-
-@enable_lidsuspend =             \
-  @puavo_device_type == 'laptop' \
-    && @enable_suspend           \
-    && (! @tags.include?('nolidsuspend') || @tags.include?('no_nolidsuspend'))
+@enable_suspend    = (@puavoconf.get('puavo.pm.suspend.enabled') == 'true')
+@enable_lidsuspend = @enable_suspend && (@puavoconf.get('puavo.pm.lidsuspend.enabled') == 'true')
 
 def try_writing_puavomounts()
   begin
     conflines = []
 
-    mountpoints = @device['mountpoints']
-    if mountpoints.nil? || !mountpoints.kind_of?(Array) then
+    mountpoints = JSON.parse( @puavoconf.get('puavo.mounts.extramounts') )
+    if !mountpoints.kind_of?(Array) then
       warn 'Device mountpoints list is not an array'
       return
     end
@@ -221,14 +224,7 @@ case @puavo_device_type
       write_config("/etc/polkit-1/localauthority/50-local.d/90.org.freedesktop.networkmanager.deny_in_webkiosk_mode.pkla")
     end
 
-    @tags.each do |tag|
-      match = /^hitachicalib:(\d+):(\d+):(\d+):(\d+)$/.match(tag)
-      if match then
-        @hitachicalib_values = match.captures.join(' ')
-        write_config('/usr/share/X11/xorg.conf.d/99-hitachicalib.conf')
-        break
-      end
-    end
+    handle_hitachicalib
 
 #    `cp /usr/lib/puavo-ltsp-client/puavo-desktop-guest-session /usr/share/ltsp-lightdm/xsession-stub`
 
@@ -261,14 +257,7 @@ case @puavo_device_type
       write_config("/etc/polkit-1/localauthority/50-local.d/90.org.freedesktop.networkmanager.deny_in_webkiosk_mode.pkla")
     end
 
-    @tags.each do |tag|
-      match = /^hitachicalib:(\d+):(\d+):(\d+):(\d+)$/.match(tag)
-      if match then
-        @hitachicalib_values = match.captures.join(' ')
-        write_config('/usr/share/X11/xorg.conf.d/99-hitachicalib.conf')
-        break
-      end
-    end
+    handle_hitachicalib
 
     @ldap_binddn       = read_file('/etc/puavo/ldap/dn')
     @ldap_bindpw       = read_file('/etc/puavo/ldap/password')

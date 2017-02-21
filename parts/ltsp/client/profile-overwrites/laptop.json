@@ -1,5 +1,7 @@
 {
     "puavo.mounts.by_user_from_bootserver.enabled"   : "true",
+    "puavo.pm.lidsuspend.enabled"                    : "true",
+    "puavo.pm.suspend.enabled"                       : "true",
     "puavo.service.nscd.enabled"                     : "false",
     "puavo.service.nslcd.enabled"                    : "false",
     "puavo.service.puavo-vpn-client-dnsmasq.enabled" : "true",

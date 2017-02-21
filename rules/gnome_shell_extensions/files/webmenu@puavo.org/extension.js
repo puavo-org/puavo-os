@@ -23,12 +23,13 @@ let logout_button, menu_button;
 function make_button(icon_name, spawn_command) {
     let button = new St.Bin({ can_focus:   true,
 			      reactive:    true,
-			      style_class: 'panel-button',
+			      style_class: 'panel-button-webmenu',
 			      track_hover: true,
 			      x_fill:      true,
 			      y_fill:      false });
     let icon = new St.Icon({ icon_name:   icon_name,
-                             style_class: 'launcher-box-item' });
+                             style_class: 'launcher-box-item-webmenu', 
+                             icon_size: 16});
 
     button.set_child(icon);
     button.connect('button-press-event',
@@ -38,9 +39,9 @@ function make_button(icon_name, spawn_command) {
 }
 
 function init() {
-    logout_button = make_button('webmenu',
+    logout_button = make_button('system-shutdown-symbolic',
 				[ 'webmenu-spawn', '--logout' ]);
-    menu_button   = make_button('webmenu-logout',
+    menu_button   = make_button('start-here-debian-symbolic',
 				[ 'webmenu-spawn' ]);
 }
 
