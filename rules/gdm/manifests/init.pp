@@ -3,8 +3,13 @@ class gdm {
   include ::puavo_conf
 
   file {
-    '/etc/gdm3/greeter.dconf-defaults':
+    '/etc/gdm3/daemon.conf':
       require => Package['gdm3'],
+      source  => 'puppet:///modules/gdm/daemon.conf';
+
+    '/etc/gdm3/greeter.dconf-defaults':
+      require => [ File['/usr/share/backgrounds/puavo-art']
+                 , Package['gdm3'] ],
       source  => 'puppet:///modules/gdm/greeter.dconf-defaults';
   }
 

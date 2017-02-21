@@ -1,21 +1,20 @@
 #!/usr/bin/ruby
 
 require 'json'
+require 'puavo/conf'
 require 'syslog'
 
 Syslog.open('puavo-local-config/pam/login-setup', Syslog::LOG_CONS)
 
+puavoconf = Puavo::Conf.new
+
 begin
-  device_json_path = '/state/etc/puavo/device.json'
-
-  device = JSON.parse( IO.read(device_json_path) )
-
-  if device['personally_administered'] != true then
+  if puavoconf.get('puavo.admin.personally_administered') != 'true' then
     Syslog.info('not a personally administered host, doing nothing')
     exit(0)
   end
 
-  if (device['primary_user'] || '').empty? then
+  if puavoconf.get('puavo.admin.primary_user') == '' then
     # This test should be run before populate-users in puavo-ltsp-client,
     # otherwise this just will not work.
     if test(?s, '/var/lib/extrausers/passwd') \
@@ -35,29 +34,24 @@ begin
     Syslog.notice('making %s the primary user by using the override mechanism',
                   ENV['PAM_USER'])
 
-    device['primary_user'] = ENV['PAM_USER']
-
     primary_user_override_path = '/state/etc/puavo/primary_user_override'
     File.open(primary_user_override_path, 'w') do |f|
-      f.puts(device['primary_user'])
+      f.puts(ENV['PAM_USER'])
       Syslog.info('wrote %s', primary_user_override_path)
     end
-    tmpfile = "#{ device_json_path }.login-setup.tmp"
-    File.open(tmpfile, 'w') { |f| f.write(device.to_json) }
-    File.rename(tmpfile, device_json_path)
 
-    Syslog.info('wrote %s', device_json_path)
+    puavoconf.overwrite('puavo.admin.primary_user', ENV['PAM_USER'])
   end
 
   Syslog.info('running puavo-local-config --admins --networkmanager-policy')
 
   # This adds the primary user into the puavoadmins-group... it must not be
-  # done unless primary_user is reliably set in device.json, because adding a
+  # done unless primary_user is reliably set in puavo-conf, because adding a
   # login to puavoadmins-group has the side effect of starting up
   # puavo-local-config-ui in desktop login, which has a side effect creating
   # /state/etc/puavo/local/config.json, which has a side effect of restricting
   # logins to primary user and those listed in that file.  If primary_user is
-  # not set in device.json, no one can log in.
+  # not set in puavo-conf, no one can log in.
   system('/usr/sbin/puavo-local-config',
          '--admins',
          '--networkmanager-policy') \

@@ -1,5 +1,6 @@
 prefix = /usr/local
 sbindir= $(prefix)/sbin
+datarootdir = $(prefix)/share
 
 ifeq ($(prefix), /usr/local)
 	systemdsystemunitdir='$(prefix)/lib/systemd/system'
@@ -11,7 +12,11 @@ all:
 
 clean:
 
-install: puavo-wlanap.service
+.PHONY : installdirs
+installdirs :
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/definitions
+
+install: installdirs puavo-wlanap.service
 	install -D -m 755 -t '$(DESTDIR)$(sbindir)'	\
 		puavo-wlanap				\
 		puavo-wlanap-dhclient-script		\
@@ -21,6 +26,9 @@ install: puavo-wlanap.service
 
 	install -D -m 644 -t '$(DESTDIR)$(systemdsystemunitdir)' \
 		puavo-wlanap.service
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-conf/definitions \
+		puavo-wlanap.json
 
 	rm -f puavo-wlanap.service
 

@@ -1,16 +1,14 @@
 #!/bin/sh
 
-has_device_tag() {
-  jq -r .tags[] /etc/puavo/device.json | grep -qx "$1"
-}
+set -eu
 
-puavo_keyboard_layout=$(jq -r .keyboard_layout /etc/puavo/device.json)
-puavo_keyboard_variant=$(jq -r .keyboard_variant /etc/puavo/device.json)
-puavo_primary_user=$(jq -r .primary_user /etc/puavo/device.json)
-puavo_greeter_background_mode=$(jq -r '.tags[]' /etc/puavo/device.json | sed -r -n 's/^greeter_background_mode://p' | tail -n1)
-puavo_greeter_background=$(jq -r '.tags[]' /etc/puavo/device.json | sed -r -n 's/^greeter_background://p' | tail -n1)
-puavo_greeter_background_random_subdir=$(jq -r '.tags[]' /etc/puavo/device.json | sed -r -n 's/^greeter_background_random_subdir://p' | tail -n1)
-puavo_greeter_background_firstlogin=$(jq -r '.tags[]' /etc/puavo/device.json | sed -r -n 's/^greeter_background_firstlogin://p' | tail -n1)
+puavo_greeter_background_firstlogin=$(puavo-conf puavo.greeter.background.firstlogin)
+puavo_greeter_background_mode=$(puavo-conf puavo.greeter.background.mode)
+puavo_greeter_background=$(puavo-conf puavo.greeter.background.default)
+puavo_greeter_background_random_subdir=$(puavo-conf puavo.greeter.background.random.subdir)
+puavo_keyboard_layout=$(puavo-conf puavo.desktop.keyboard.layout)
+puavo_keyboard_variant=$(puavo-conf puavo.desktop.keyboard.variant)
+puavo_primary_user=$(puavo-conf puavo.admin.primary_user)
 
 background=
 
@@ -50,10 +48,6 @@ case "${puavo_greeter_background_mode}" in
       echo "unknown greeter background mode '${puavo_greeter_background_mode}'" >&2
       ;;
 esac
-
-[ "${puavo_keyboard_layout}" = "null" ] && puavo_keyboard_layout=
-[ "${puavo_keyboard_variant}" = "null" ] && puavo_keyboard_variant=
-[ "${puavo_primary_user}" = "null" ] && puavo_primary_user=
 
 export XAUTHORITY=/var/run/lightdm/root/:0
 export DISPLAY=:0

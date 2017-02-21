@@ -2,6 +2,7 @@
 
 require 'fileutils'
 require 'json'
+require 'puavo/conf'
 require 'puavo/rest-client'
 require 'syslog'
 
@@ -85,7 +86,8 @@ def update_device_json(restclient)
     = IO.read('/state/etc/puavo/primary_user_override').chomp rescue nil
 
   if primary_user_override && !primary_user_override.empty? then
-    if primary_user_override == device['primary_user'] then
+    primary_user = $puavoconf.get('puavo.admin.primary_user')
+    if primary_user_override == primary_user then
       # remove override if we get the same information from Puavo
       remove_primary_user_override = true
     else
@@ -107,6 +109,8 @@ def update_device_json(restclient)
         primary_user_override)
 
     device['primary_user'] = primary_user_override
+    device['conf'] ||= {}
+    device['conf']['puavo.admin.primary_user'] = primary_user_override
   end
 
   tmp_filepath = "#{ device_json_path }.tmp"
@@ -134,22 +138,20 @@ end
 def update_grub_environment(restclient)
   log(Syslog::LOG_INFO, ">>> Updating grub environment\n")
 
-  device = JSON.parse( IO.read('/state/etc/puavo/device.json') )
-
-  kernel_version = device['kernel_version']
+  kernel_version = $puavoconf.get('puavo.kernel.version')
   if kernel_version && !kernel_version.empty? then
     grubedit('set', "puavo_kernel_version=#{ kernel_version }")
   else
     grubedit('unset', 'puavo_kernel_version')
   end
 
-  if device['personally_administered'] == true then
+  if $puavoconf.get('puavo.admin.personally_administered') == 'true' then
     grubedit('set', 'puavo_show_imageoverlays=true')
   else
     grubedit('unset', 'puavo_show_imageoverlays')
   end
 
-  kernel_arguments = device['kernel_arguments']
+  kernel_arguments = $puavoconf.get('puavo.kernel.arguments')
   if kernel_arguments && !kernel_arguments.empty? then
     grubedit('set', "puavo_kernel_arguments=#{ kernel_arguments }")
   else
@@ -167,9 +169,7 @@ def update_wlan_configurations(restclient)
 end
 
 def update_puavopkg_installers(restclient)
-  device = JSON.parse( IO.read('/state/etc/puavo/device.json') )
-
-  unless device['personally_administered'] \
+  unless $puavoconf.get('puavo.admin.personally_administered') == 'true' \
            && File.executable?('/usr/sbin/puavo-local-config') then
     log(Syslog::LOG_DEBUG,
         "Not personally administered, so not updating puavo packages\n")
@@ -182,6 +182,8 @@ def update_puavopkg_installers(restclient)
 end
 
 Syslog.open(File.basename($0), Syslog::LOG_CONS)
+
+$puavoconf = Puavo::Conf.new
 
 restclient = PuavoRestClient.new(:auth => :etc, :timeout => 30)
 

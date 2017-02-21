@@ -1,8 +1,20 @@
 {
+  "puavo.image.automatic_updates" : {
+    "default": "true"
+  },
+  "puavo.image.download.ratelimit" : {
+    "default": ""
+  },
   "puavo.image.overlay" : {
     "default": ""
   },
   "puavo.image.path": {
     "default": "/ltsp.img"
+  },
+  "puavo.image.preferred": {
+    "default": ""
+  },
+  "puavo.image.series.urls": {
+    "default": "[]"
   }
 }
