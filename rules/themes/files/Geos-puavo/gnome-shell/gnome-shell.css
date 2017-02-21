@@ -19,6 +19,9 @@
 
  * Designed by Sunkotora@deviantart.com
 
+ * Modified by Opinsys to suit the traditional bottom panel desktop layout
+   used in Puavo OS.
+
 Thanks to Elementary team for their creative design and their passion.
 
 
@@ -26,8 +29,8 @@ Thanks to Elementary team for their creative design and their passion.
 /* GLOBALS */
 stage {
   font-family: cantarell, Sans-Serif;
-  font-size: 11.5pt;
-  color: #222; }
+  font-size: 10pt;
+  color: #2e2f31; }
 
 
 
@@ -45,7 +48,7 @@ border: 1px solid rgba(138,143,142,0.75);
     color: #eeeeec;
     text-shadow: 0 1px black;
     icon-shadow: 0 1px black;
-     border-color: rgba(68,171,236,0.5);}
+    border-color: rgba(68,171,236,0.5);}
 
 .button:hover {
 background-color: none;
@@ -122,7 +125,7 @@ StEntry {
   padding: 4px;
   border-width: 0px;
   color: #222;
-  background-color: rgba(250,250,250,0.70);
+  background-color: rgba(250,250,250,0.94);
   box-shadow: inset 0 2px 4px rgba(37, 42, 50, 0.2);
   selection-background-color: rgb(68,171,236);
   selected-color: #ffffff; }
@@ -701,10 +704,12 @@ color: #fff;
 
 /* TOP BAR */
 #panel {
-  background-color: rgba(20,20,20,0.60);
-  font-weight: bold;
-  box-shadow: 0 0px 4px 3px rgba(0, 0, 0, 0.6); 
-  height: 1.86em; }
+  background-color: rgba(250,250,250,0.75);
+  /*background-gradient-direction: vertical;
+  background-gradient-end: green;*/
+  font-weight: normal;
+  box-shadow: 0 0px 4px 3px rgba(0, 0, 0, 0.80); 
+  height: 2.4em; }
   #panel.unlock-screen, #panel.login-screen, #panel.lock-screen {
     background-color: transparent; }
   #panel #panelLeft, #panel #panelCenter {
@@ -721,21 +726,21 @@ color: #fff;
       -panel-corner-background-color: none;
       -panel-corner-border-color: transparent; }
   #panel .panel-button {
-    -natural-hpadding: 12px;
-    -minimum-hpadding: 6px;
+    -natural-hpadding: 2px;
+    -minimum-hpadding: 2px;
     font-weight: bold;
-    color: #ccc;
+    color: #161616;
     transition-duration: 100ms; }
     #panel .panel-button .app-menu-icon {
       -st-icon-style: symbolic;
       margin-left: 6px;
       margin-right: 6px; }
     #panel .panel-button:hover {
-      color: white; }
+      color: black; }
     #panel .panel-button:active, #panel .panel-button:overview, #panel .panel-button:focus, #panel .panel-button:checked {
       background-color: rgba(238, 238, 236, 0.1);
-      box-shadow: inset 0 -2px 0px rgba(28,131,196,0);
-      color: white; }
+      /*box-shadow: inset 0 -2px 0px rgba(28,131,196,0);*/
+      color: black; }
       #panel .panel-button:active > .system-status-icon, #panel .panel-button:overview > .system-status-icon, #panel .panel-button:focus > .system-status-icon, #panel .panel-button:checked > .system-status-icon {
         icon-shadow: black 0 2px 2px; }
     #panel .panel-button .system-status-icon {
@@ -1956,6 +1961,7 @@ border: 1px solid rgba(95,95,95, 0.35);
   spacing: 4px;
   padding: 4px;
   border: 2px solid grey;
+  color: white;
   border-radius: 4px; }
   #LookingGlassDialog > #Toolbar {
     border: 1px solid grey;
@@ -1982,7 +1988,8 @@ border: 1px solid rgba(95,95,95, 0.35);
     padding: 4px;
     spacing: 4px; }
   #LookingGlassDialog StBoxLayout#ResultsArea {
-    spacing: 4px; }
+    spacing: 4px; 
+    color: white;}
 
 .lg-dialog StEntry {
   selection-background-color: #bbbbbb;
