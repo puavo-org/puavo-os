@@ -1,6 +1,7 @@
 class webmenu {
   include ::dpkg
   include ::packages
+  include ::puavo_conf
 
   File { require => Package['webmenu'], }
   file {
@@ -42,6 +43,11 @@ class webmenu {
     '/usr/local/bin/puavo-webmenu':
       content => template('webmenu/puavo-webmenu'),
       mode    => '0755';
+  }
+
+  ::puavo_conf::definition {
+    'puavo-webmenu.json':
+      source => 'puppet:///modules/webmenu/puavo-conf-parameters.json';
   }
 
   Package <| title == breathe-icon-theme

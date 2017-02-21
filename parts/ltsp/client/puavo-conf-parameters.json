@@ -1,12 +1,45 @@
 {
+    "puavo.admin.personally_administered": {
+        "default": "false"
+    },
+    "puavo.admin.primary_user": {
+        "default": ""
+    },
+    "puavo.audio.pa.default_sink": {
+        "default": ""
+    },
+    "puavo.audio.pa.default_source": {
+        "default": ""
+    },
     "puavo.autoeth.enabled": {
         "default": "false"
+    },
+    "puavo.greeter.background.default": {
+        "default": ""
+    },
+    "puavo.greeter.background.firstlogin": {
+        "default": ""
+    },
+    "puavo.greeter.background.mode": {
+        "default": "static"
+    },
+    "puavo.greeter.background.random.subdir": {
+        "default": ""
     },
     "puavo.graphics.driver": {
         "default": ""
     },
+    "puavo.guestlogin.enabled": {
+        "default": "true"
+    },
     "puavo.guestlogin.mode": {
-        "default": "off"
+        "default": "manual"
+    },
+    "puavo.printing.default_printer": {
+	"default": ""
+    },
+    "puavo.printing.default_uri": {
+	"default": ""
     },
     "puavo.printing.dnssd.enabled": {
 	"default": "true"
@@ -44,11 +77,20 @@
     "puavo.www.apiserver": {
         "default": ""
     },
+    "puavo.www.homepage": {
+        "default": ""
+    },
     "puavo.xbacklight.enabled": {
         "default": "true"
     },
     "puavo.xbacklight.brightness": {
         "default": "100"
+    },
+    "puavo.xorg.inputs.hitachi.calibration": {
+        "default": ""
+    },
+    "puavo.xorg.server": {
+        "default": ""
     },
     "puavo.xrandr.args": {
 	"default": ""
