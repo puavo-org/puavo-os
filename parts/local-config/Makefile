@@ -38,7 +38,7 @@ install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-local-config/templates/etc \
 		templates/etc/cpufreqd.conf
 
-	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/etc/puavo-conf/scripts
+	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/etc/puavo-conf/scripts \
 		setup_local_config
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(libdir)/puavo-local-config-ui \
