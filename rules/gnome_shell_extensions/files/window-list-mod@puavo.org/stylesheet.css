@@ -2,7 +2,7 @@
   /* .window-button-icon height +
      .window-button vertical padding +
      .window-button > StWidget vertical padding) */
-  height: 2.25em;
+  height: 2em;
 }
 
 .bottom-panel > StWidget {
@@ -19,6 +19,9 @@
 
 .window-button {
   padding: 1px;
+  border-right:0px;
+  border-color:#fcfcfc;
+  background-color:rgba(252, 252, 252, 0.3);
 }
 
 .window-button:first-child:ltr {
@@ -52,14 +55,15 @@
 
 .window-button.focused > StWidget {
   background-color: #5da7ff;
-  border: 1px solid #101010;
+  background-color: rgba(158, 147, 134, 0.8);
+  border: 1px solid rgba(130, 121, 110);
 }
 
 .window-button.focused:active > StWidget {
 }
 
 .window-button.minimized > StWidget {
-  color: #666;
+  color: black;
 }
 
 .window-button.minimized:active > StWidget {
