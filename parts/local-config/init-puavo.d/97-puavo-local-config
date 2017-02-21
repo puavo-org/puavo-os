@@ -1,3 +1,5 @@
+# XXX change to a puavo-conf script
+
 puavo_personally_administered=$(jq -r .personally_administered \
 				      /etc/puavo/device.json)
 

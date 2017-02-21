@@ -2,7 +2,6 @@
 
 set -eu
 
-device_config_path=/state/etc/puavo/device.json
 local_config_path=/state/etc/puavo/local/config.json
 
 allowed_logins() { jq -r .allow_logins_for[] "$local_config_path"; }
@@ -20,7 +19,7 @@ is_admin_user()
 	| grep -x -q "${PAM_USER}"
 }
 
-if [ "$(jq -r .personally_administered "$device_config_path")" != "true" ]; then
+if [ "$(puavo-conf puavo.admin.personally_administered)" != 'true' ]; then
   # no special restrictions on hosts which are not personally administered
   exit 0
 fi
@@ -67,9 +66,9 @@ case $(jq -r .allow_logins_for "${local_config_path}") in
 esac
 
 # allow primary user in irrespective of local configurations
-primary_user="$(jq -r .primary_user "${device_config_path}")"
-if [ "$primary_user" != "null" -a "$primary_user" = "${PAM_USER}" ]; then
-  exit 0
+primary_user="$(puavo-conf puavo.admin.primary_user)"
+if [ "$primary_user" = "${PAM_USER}" ]; then
+    exit 0
 fi
 
 # Allow root always.
