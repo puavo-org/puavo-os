@@ -1,12 +1,13 @@
-# XXX change to a puavo-conf script
+#!/bin/sh
 
-puavo_personally_administered=$(jq -r .personally_administered \
-				      /etc/puavo/device.json)
+set -eu
 
-puavo_hosttype=$(cat /etc/puavo/hosttype)
+puavo_personally_administered=$(puavo-conf puavo.admin.personally_administered)
 
-if [ "$puavo_hosttype" = "laptop" \
-     -a "$puavo_personally_administered" = "true" ]; then
+puavo_hosttype=$(puavo-conf puavo.hosttype)
+
+if [ "$puavo_hosttype" = 'laptop' \
+     -a "$puavo_personally_administered" = 'true' ]; then
   /usr/sbin/puavo-local-config --admins                               \
                                --grub-default                         \
                                --networkmanager-policy                \
