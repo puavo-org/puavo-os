@@ -5,24 +5,15 @@ set -eu
 use_rate_limit=$1
 
 update_ltsp_image() {
-    next_imagename=$(jq -r .preferred_image /state/etc/puavo/device.json) \
-        || return
+    next_imagename=$(puavo-conf puavo.image.preferred) || return
 
-    if [ "$use_rate_limit" = "true" ]; then
-        rate_limit=$(
-            jq -r '.tags[]' /state/etc/puavo/device.json \
-                | awk -F: '
-            BEGIN { rate_limit = "500k" }
-            $1 == "imagedownload-rate-limit" && $2 ~ /^[0-9]+k/ {
-              rate_limit = $2
-            }
-            END { print rate_limit }
-          ')
+    if [ "$use_rate_limit" = 'true' ]; then
+        rate_limit=$(puavo-conf puavo.image.download.ratelimit)
     else
         rate_limit=''
     fi
 
-    update_ltspimage_params=""
+    update_ltspimage_params=''
 
     if [ -n "$rate_limit" ]; then
         update_ltspimage_params="${update_ltspimage_params} --rate-limit $rate_limit"
