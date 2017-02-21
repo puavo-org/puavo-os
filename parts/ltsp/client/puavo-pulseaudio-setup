@@ -62,12 +62,12 @@ if [ $# -ne 0 ]; then
     usage_error "invalid number of positional arguments ($#), expected 0"
 fi
 
-[ -n "${sink}" ] || sink=$(jq -r .default_audio_sink /etc/puavo/device.json)
-[ -n "${source}" ] || source=$(jq -r .default_audio_source /etc/puavo/device.json)
+[ -n "${sink}"   ] || sink=$(  puavo-conf puavo.audio.pa.default_sink)
+[ -n "${source}" ] || source=$(puavo-conf puavo.audio.pa.default_source)
 
 # jq outputs null for non-existing fields, treat them as empty
 # strings.
-[ "${sink}" = "null" ] && sink=
+[ "${sink}"   = "null" ] && sink=
 [ "${source}" = "null" ] && source=
 
 # Quirk for smartboards: if the default sink was not set in Puavo
