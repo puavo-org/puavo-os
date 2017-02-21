@@ -8,7 +8,8 @@ class gdm {
       source  => 'puppet:///modules/gdm/daemon.conf';
 
     '/etc/gdm3/greeter.dconf-defaults':
-      require => Package['gdm3'],
+      require => [ File['/usr/share/backgrounds/puavo-art']
+                 , Package['gdm3'] ],
       source  => 'puppet:///modules/gdm/greeter.dconf-defaults';
   }
 
