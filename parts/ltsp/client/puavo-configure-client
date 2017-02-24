@@ -221,7 +221,6 @@ case @puavo_device_type
     write_config("/etc/pam.d/gdm-password", "fatclient")
     write_config("/etc/rsyslog.conf")
     write_config("/etc/rsyslog.d/send_to_syslogserver.conf")
-    write_config("/etc/security/group.conf")
 
     if @puavo_xsessions_default == 'puavo-webkiosk' then
       write_config("/etc/polkit-1/localauthority/50-local.d/90.org.freedesktop.networkmanager.deny_in_webkiosk_mode.pkla")
@@ -250,7 +249,6 @@ case @puavo_device_type
     write_config("/etc/pam.d/sudo", "laptop")
     write_config("/etc/racoon/racoon.conf")
     write_config("/etc/samba/smb.conf", "laptop")
-    write_config("/etc/security/group.conf")
     write_config("/etc/systemd/logind.conf")
 
     # XXX should this Ubuntu-specific file be used in Debian?

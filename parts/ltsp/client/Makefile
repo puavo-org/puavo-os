@@ -162,9 +162,6 @@ install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/samba \
 		templates/etc/samba/smb.conf-laptop
 
-	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/security \
-		templates/etc/security/group.conf
-
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/sssd \
 		templates/etc/sssd/sssd.conf \
 		templates/etc/sssd/sssd.conf-laptop

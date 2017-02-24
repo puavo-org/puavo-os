@@ -16,6 +16,7 @@ class image::bundle::desktop {
   # include ::libreoffice		# XXX needs fixing for Debian
   include ::network_manager
   # include ::pycharm	                # XXX pycharm needs to be packaged
+  include ::supplementary_groups
   # include ::tuxpaint	                # XXX needs fixing for Debian
   include ::wacom
   include ::workaround_firefox_local_swf_bug
