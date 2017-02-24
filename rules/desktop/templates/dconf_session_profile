@@ -42,6 +42,9 @@ home-icon-visible=true
 trash-icon-visible=true
 volumes-visible=true
 
+[org/gnome/nautilus/icon-view]
+default-zoom-level='standard'
+
 [org/gnome/shell]
 favorite-apps=['org.gnome.Nautilus.desktop', 'firefox-esr.desktop', 'google-chrome.desktop', 'chromium.desktop', 'libreoffice-writer.desktop']
 
