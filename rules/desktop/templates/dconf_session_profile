@@ -45,6 +45,9 @@ volumes-visible=true
 [org/gnome/nautilus/icon-view]
 default-zoom-level='standard'
 
+[org/gnome/nautilus/preferences]
+automatic-decompression=false
+
 [org/gnome/shell]
 favorite-apps=['org.gnome.Nautilus.desktop', 'firefox-esr.desktop', 'google-chrome.desktop', 'chromium.desktop', 'libreoffice-writer.desktop']
 
