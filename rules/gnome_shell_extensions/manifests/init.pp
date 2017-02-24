@@ -19,6 +19,8 @@ class gnome_shell_extensions {
     , 'extend-left-box2@linuxdeepin.com'
     , 'hide-activities-button@gnome-shell-extensions.bookmarkd.xyz'
     , 'hide-dash@xenatt.github.com'
+    , 'hide-aggregatemenu-session-buttons@puavo.org'
+    , 'hide-panel-power-indicator@puavo.org'
     , 'Move_Clock@rmy.pobox.com'
     , 'Panel_Favorites@rmy.pobox.com'
     , 'TopIcons@phocean.net'

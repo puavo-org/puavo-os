@@ -101,12 +101,14 @@ class packages {
     , 'bridge-utils'
     , 'gdebi-core'
     , 'grub-pc'
+    , 'libpam-modules'
     , 'lvm2'
     , 'nfs-common'
     , 'openssh-client'
     , 'openssh-server'
     , 'pm-utils'
     , 'rng-tools'
+    , 'systemd'
     , 'udev'
     , 'vlan' ]:
       tag => [ 'tag_basic', 'tag_debian', ];
