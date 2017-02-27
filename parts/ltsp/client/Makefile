@@ -113,9 +113,6 @@ install : installdirs
 		templates/etc/ldap/ldap.conf \
 		templates/etc/ldap/ldap.conf-laptop
 
-	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/lightdm \
-		templates/etc/lightdm/lightdm.conf
-
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/network/if-up.d \
 		etc/network/if-up.d/sssd
 

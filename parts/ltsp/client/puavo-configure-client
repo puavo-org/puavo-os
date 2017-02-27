@@ -92,7 +92,6 @@ if Uninstalled_device_types.include?(@puavo_device_type) then
   `echo #{ @puavo_device_type } > /etc/hostname`
 
   if @puavo_device_type == 'preinstalled' then
-    write_config("/etc/lightdm/lightdm.conf")
     write_config("/etc/pam.d/gdm-autologin", "preinstalled")
     write_config("/etc/sudoers.d/puavo-install-when-preinstalled")
     write_config("/etc/xdg/autostart/puavo-install.desktop")
@@ -215,7 +214,6 @@ case @puavo_device_type
     write_config("/etc/idmapd.conf")
     write_config("/etc/krb5.conf")
     write_config("/etc/ldap/ldap.conf")
-    write_config("/etc/lightdm/lightdm.conf")
     write_config("/etc/nsswitch.conf", "extrausers")
     write_config("/etc/pam.d/gdm-autologin", "fatclient")
     write_config("/etc/pam.d/gdm-password", "fatclient")
@@ -240,7 +238,6 @@ case @puavo_device_type
     write_config("/etc/idmapd.conf")
     write_config("/etc/krb5.conf", "laptop")
     write_config("/etc/ldap/ldap.conf", "laptop")
-    write_config("/etc/lightdm/lightdm.conf")
     write_config("/etc/nsswitch.conf", "sss-extrausers")
     write_config("/etc/ntp.conf")
     write_config("/etc/pam.d/gdm-autologin", "laptop")
@@ -282,7 +279,6 @@ case @puavo_device_type
   when "wirelessaccesspoint"
     # wirelessaccesspoints may be used as infotv devices depending on device
     # tags.
-    write_config("/etc/lightdm/lightdm.conf")
     write_config("/etc/ntp.conf")
     write_config("/etc/pam.d/gdm-autologin", "wirelessaccesspoint")
 
