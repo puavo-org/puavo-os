@@ -306,7 +306,8 @@ class packages {
     , 'sound-juicer' ]:
       tag => [ 'tag_optical_media', 'tag_debian', ];
 
-    [ 'gtklp' ]:
+    [ 'cups-daemon'
+    , 'gtklp' ]:
       tag => [ 'tag_printing', 'tag_debian', ];
 
     [ 'arduino'

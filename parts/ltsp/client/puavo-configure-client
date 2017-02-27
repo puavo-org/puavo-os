@@ -103,11 +103,6 @@ if File.exists?("/etc/puavo/device.json")
   append_tags_to_environment(@tags)
 end
 
-begin
-  Dir.mkdir('/etc/cups')
-rescue Errno::EEXIST
-end
-
 # XXX This ugliness must be, because /var/lib/puavo-desktop/shared may reside
 # XXX on /state partition, and its concept of uids/gids may not match the
 # XXX current image (there should be some solution to this ugliness).
@@ -117,7 +112,6 @@ FileUtils.chown('puavodesktop',
 
 case @puavo_device_type
   when "fatclient"
-    write_config("/etc/cups/cupsd.conf")
     write_config("/etc/dbus-1/system.d/org.freedesktop.login1.conf")
     write_config("/etc/default/nfs-common", "userprincipal")
     write_config("/etc/idmapd.conf")
@@ -136,7 +130,6 @@ case @puavo_device_type
     delete_file('/usr/share/dbus-1/system-services/fi.epitest.hostap.WPASupplicant.service')
     delete_file('/usr/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service')
   when "laptop"
-    write_config("/etc/cups/cupsd.conf")
     write_config("/etc/dbus-1/system.d/org.freedesktop.login1.conf")
     write_config("/etc/idmapd.conf")
     write_config("/etc/krb5.conf", "laptop")
