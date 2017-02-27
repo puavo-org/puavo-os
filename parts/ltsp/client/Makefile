@@ -124,7 +124,6 @@ install : installdirs
 		icons/puavoremoteaccess-yellow.svg
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc \
-		templates/etc/hosts \
 		templates/etc/idmapd.conf \
 		templates/etc/krb5.conf \
 		templates/etc/krb5.conf-laptop \
@@ -140,8 +139,7 @@ install : installdirs
 		templates/etc/cron.d/infotv_display_control
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/cups \
-		templates/etc/cups/client.conf \
-		templates/etc/cups/cupsd.conf
+		templates/etc/cups/client.conf
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/default \
 		templates/etc/default/nfs-common \
