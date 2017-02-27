@@ -124,7 +124,6 @@ install : installdirs
 		icons/puavoremoteaccess-yellow.svg
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc \
-		templates/etc/idmapd.conf \
 		templates/etc/krb5.conf \
 		templates/etc/krb5.conf-laptop \
 		templates/etc/nscd.conf \

@@ -1,0 +1,20 @@
+#!/bin/sh
+
+set -eu
+
+read kerberos_realm < /etc/puavo/kerberos/realm
+
+cat <<EOF > /etc/idmapd.conf.tmp
+[General]
+
+Verbosity = 0
+Pipefs-Directory = /run/rpc_pipefs
+Domain = ${kerberos_realm}
+
+[Mapping]
+
+Nobody-User = nobody
+Nobody-Group = nogroup
+EOF
+
+mv /etc/idmapd.conf.tmp /etc/idmapd.conf
