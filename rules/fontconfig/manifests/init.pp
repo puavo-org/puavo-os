@@ -19,6 +19,9 @@ class fontconfig {
       notify  => Exec['configure fonts'],
       require => File['/etc/fonts/conf.avail/65-fonts-sourcesans.conf'],
       target  => '../conf.avail/65-fonts-sourcesans.conf';
+
+    '/etc/fonts/local.conf':
+      source  => 'puppet:///modules/fontconfig/local.conf';
   }
 
   Package <| title == fontconfig
