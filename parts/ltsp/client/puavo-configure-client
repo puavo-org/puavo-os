@@ -77,10 +77,6 @@ end
 
 Uninstalled_device_types = %w(diskinstaller preinstalled unregistered)
 if Uninstalled_device_types.include?(@puavo_device_type) then
-  `hostname #{ @puavo_device_type }`
-  `echo #{ @puavo_device_type } > /proc/sys/kernel/hostname`
-  `echo #{ @puavo_device_type } > /etc/hostname`
-
   if @puavo_device_type == 'preinstalled' then
     write_config("/etc/pam.d/gdm-autologin", "preinstalled")
     write_config("/etc/sudoers.d/puavo-install-when-preinstalled")
@@ -111,12 +107,6 @@ begin
   Dir.mkdir('/etc/cups')
 rescue Errno::EEXIST
 end
-
-`hostname #{@puavo_hostname}`
-`echo #{@puavo_hostname} > /proc/sys/kernel/hostname`
-`echo #{@puavo_hostname} > /etc/hostname`
-
-write_config("/etc/hosts")
 
 # XXX This ugliness must be, because /var/lib/puavo-desktop/shared may reside
 # XXX on /state partition, and its concept of uids/gids may not match the
