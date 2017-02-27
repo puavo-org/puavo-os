@@ -33,14 +33,6 @@ def append_tags_to_environment(tags)
   end
 end
 
-def handle_hitachicalib(puavo_hitachi_calibration)
-  match = /^(\d+):(\d+):(\d+):(\d+)$/.match(puavo_hitachi_calibration)
-  if match then
-    @hitachicalib_values = match.captures.join(' ')
-    write_config('/usr/share/X11/xorg.conf.d/99-hitachicalib.conf')
-  end
-end
-
 def write_config(filename, version=nil, secure=false)
   begin
     template_file = filename
@@ -73,7 +65,6 @@ end
 @puavo_extramounts         = @puavoconf.get('puavo.mounts.extramounts')
 @puavo_guestlogin_enabled  = @puavoconf.get('puavo.guestlogin.enabled')
 @puavo_guestlogin_mode     = @puavoconf.get('puavo.guestlogin.mode')
-@puavo_hitachi_calibration = @puavoconf.get('puavo.xorg.inputs.hitachi.calibration')
 @puavo_xsessions_default   = @puavoconf.get('puavo.xsessions.default')
 @puavo_xsessions_locked    = @puavoconf.get('puavo.xsessions.locked') == 'true'
 
@@ -224,8 +215,6 @@ case @puavo_device_type
       write_config("/etc/polkit-1/localauthority/50-local.d/90.org.freedesktop.networkmanager.deny_in_webkiosk_mode.pkla")
     end
 
-    handle_hitachicalib(@puavo_hitachi_calibration)
-
     delete_file('/usr/share/dbus-1/system-services/fi.epitest.hostap.WPASupplicant.service')
     delete_file('/usr/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service')
 
@@ -252,8 +241,6 @@ case @puavo_device_type
     if @puavo_xsessions_default == 'puavo-webkiosk' then
       write_config("/etc/polkit-1/localauthority/50-local.d/90.org.freedesktop.networkmanager.deny_in_webkiosk_mode.pkla")
     end
-
-    handle_hitachicalib(@puavo_hitachi_calibration)
 
     @ldap_binddn       = read_file('/etc/puavo/ldap/dn')
     @ldap_bindpw       = read_file('/etc/puavo/ldap/password')

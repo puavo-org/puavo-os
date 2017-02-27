@@ -168,5 +168,8 @@ xexit
     connection to X is broken.  This is basically used to kill processes
     that stay behind when they should not).
 
+xorg_inputs_calibration
+    Some calibrations for different Xorg input devices.
+
 zram_configuration
     Add configurations for compressing memory (zram).

@@ -20,5 +20,6 @@ class image::bundle::desktop {
   # include ::tuxpaint	                # XXX needs fixing for Debian
   include ::wacom
   include ::workaround_firefox_local_swf_bug
+  include ::xorg_inputs_calibration
   # include ::xexit	                # XXX perhaps unneeded?
 }
