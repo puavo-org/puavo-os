@@ -143,9 +143,6 @@ install : installdirs
 		templates/etc/cups/client.conf \
 		templates/etc/cups/cupsd.conf
 
-	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/dbus-1/system.d \
-		templates/etc/dbus-1/system.d/org.freedesktop.login1.conf
-
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/default \
 		templates/etc/default/nfs-common \
 		templates/etc/default/nfs-common-userprincipal

@@ -1,3 +1,8 @@
+#!/bin/sh
+
+set -eu
+
+puavo-template /etc/dbus-1/system.d/org.freedesktop.login1.conf <<'EOF'
 <?xml version="1.0"?> <!--*-nxml-*-->
 <!DOCTYPE busconfig PUBLIC "-//freedesktop//DTD D-BUS Bus Configuration 1.0//EN"
         "http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd">
@@ -132,7 +137,7 @@
                        send_interface="org.freedesktop.login1.Manager"
                        send_member="Reboot"/>
 
-<% if @enable_suspend %>
+{if puavo_pm_suspend_enabled == "true"}
                 <allow send_destination="org.freedesktop.login1"
                        send_interface="org.freedesktop.login1.Manager"
                        send_member="Suspend"/>
@@ -144,7 +149,7 @@
                 <allow send_destination="org.freedesktop.login1"
                        send_interface="org.freedesktop.login1.Manager"
                        send_member="HybridSleep"/>
-<% end %>
+{end}
 
                 <allow send_destination="org.freedesktop.login1"
                        send_interface="org.freedesktop.login1.Manager"
@@ -154,7 +159,7 @@
                        send_interface="org.freedesktop.login1.Manager"
                        send_member="CanReboot"/>
 
-<% if @enable_suspend %>
+{if puavo_pm_suspend_enabled == "true"}
                 <allow send_destination="org.freedesktop.login1"
                        send_interface="org.freedesktop.login1.Manager"
                        send_member="CanSuspend"/>
@@ -166,7 +171,7 @@
                 <allow send_destination="org.freedesktop.login1"
                        send_interface="org.freedesktop.login1.Manager"
                        send_member="CanHybridSleep"/>
-<% end %>
+{end}
 
                 <allow send_destination="org.freedesktop.login1"
                        send_interface="org.freedesktop.login1.Manager"
@@ -276,3 +281,4 @@
         </policy>
 
 </busconfig>
+EOF
