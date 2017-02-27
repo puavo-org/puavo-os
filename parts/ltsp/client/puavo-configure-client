@@ -226,8 +226,6 @@ case @puavo_device_type
 
     handle_hitachicalib(@puavo_hitachi_calibration)
 
-#    `cp /usr/lib/puavo-ltsp-client/puavo-desktop-guest-session /usr/share/ltsp-lightdm/xsession-stub`
-
     delete_file('/usr/share/dbus-1/system-services/fi.epitest.hostap.WPASupplicant.service')
     delete_file('/usr/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service')
 
