@@ -1,0 +1,27 @@
+#!/bin/sh
+
+set -eu
+
+[ "$(puavo-conf puavo.mounts.nethomes.enabled)" = 'true' ] || exit 0
+
+puavomounts_path='/var/lib/puavo-desktop/puavomounts'
+
+puavo-conf puavo.mounts.extramounts | jq -r '
+  map(
+    if (.mountpoint == "" or .path == "") then empty else
+      .mountpoint
+      + " " + "-fstype="
+        + (if (.fs      == "") then "auto" else .fs end) + ",nodev,nosuid"
+        + (if (.options == "") then ""     else ("," + .options) end)
+      + " " + .path
+    end
+  ) | .[]
+' > "${puavomounts_path}.tmp"
+mv "${puavomounts_path}.tmp" "$puavomounts_path"
+
+mkdir -p /etc/auto.master.d
+cat <<'EOF' > /etc/auto.master.d/puavomounts.autofs.tmp
+/- /var/lib/puavo-desktop/puavomounts
+EOF
+mv /etc/auto.master.d/puavomounts.autofs.tmp \
+   /etc/auto.master.d/puavomounts.autofs

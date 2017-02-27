@@ -62,7 +62,6 @@ end
 
 @puavo_autoeth_enabled     = @puavoconf.get('puavo.autoeth.enabled') == 'true'
 @puavo_device_type         = @puavoconf.get('puavo.hosttype')
-@puavo_extramounts         = @puavoconf.get('puavo.mounts.extramounts')
 @puavo_guestlogin_enabled  = @puavoconf.get('puavo.guestlogin.enabled')
 @puavo_guestlogin_mode     = @puavoconf.get('puavo.guestlogin.mode')
 @puavo_xsessions_default   = @puavoconf.get('puavo.xsessions.default')
@@ -108,77 +107,6 @@ if File.exists?("/etc/puavo/device.json")
   append_tags_to_environment(@tags)
 end
 
-def try_writing_puavomounts()
-  begin
-    conflines = []
-
-    mountpoints = JSON.parse(@puavo_extramounts)
-    if !mountpoints.kind_of?(Array) then
-      warn 'Device mountpoints list is not an array'
-      return
-    end
-
-    mountpoints.each do |mountinfo|
-      if mountinfo.nil? || !mountinfo.kind_of?(Hash) then
-	warn 'Mountpoint information is not a hash structure'
-	next
-      end
-
-      fs         = mountinfo['fs']
-      mountpoint = mountinfo['mountpoint']
-      options    = mountinfo['options']
-      path       = mountinfo['path']
-
-      if mountpoint.nil? || mountpoint.empty? then
-	warn "A mountpoint is not set for:\n#{ m.inspect }"
-	next
-      end
-
-      if path.nil? || path.empty? then
-	warn "A path is not set for:\n#{ m.inspect }"
-	next
-      end
-
-      # set "auto" be the default filesystem type
-      fs = (!fs.nil? && !fs.empty? && fs) || 'auto'
-      if !fs.kind_of?(String) then 
-	 warn "Filesystem info is not a string for:\n#{ m.inspect }"
-	 next
-      end
-
-      options = !options.nil? ? options : ''
-      if !options.kind_of?(String) then 
-	 warn "Mountpoint options is not a string for:\n#{ m.inspect }"
-	 next
-      end
-
-      autofs_options = "-fstype=#{ fs },nodev,nosuid"
-      if !options.empty? then
-	autofs_options << ",#{ options }"
-      end
-
-      conflines << [ mountpoint, autofs_options, path ].join(' ')
-    end
-
-    autofs_configuration = conflines.map { |s| "#{ s }\n" }.join('')
-
-    File.open('/var/lib/puavo-desktop/puavomounts', 'w') do |f|
-      f.print(autofs_configuration)
-    end
-
-    begin
-      Dir.mkdir('/etc/auto.master.d')
-    rescue Errno::EEXIST
-    end
-
-    File.open('/etc/auto.master.d/puavomounts.autofs', 'w') do |f|
-      f.print("/- /var/lib/puavo-desktop/puavomounts\n")
-    end
-  rescue StandardError => e
-    warn "Could not write puavomounts autofs configuration: #{ e.message }"
-  end
-end
-
 begin
   Dir.mkdir('/etc/cups')
 rescue Errno::EEXIST
@@ -217,8 +145,6 @@ case @puavo_device_type
 
     delete_file('/usr/share/dbus-1/system-services/fi.epitest.hostap.WPASupplicant.service')
     delete_file('/usr/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service')
-
-    try_writing_puavomounts()
   when "laptop"
     write_config("/etc/cups/cupsd.conf")
     write_config("/etc/dbus-1/system.d/org.freedesktop.login1.conf")

@@ -28,6 +28,7 @@ setup_powersave
 manage_module_blacklist
 cleanup_crash_dumps
 cleanup_network_connections
+setup_autofs
 setup_extra_environment
 run_configure_client
 disable_update_initramfs
