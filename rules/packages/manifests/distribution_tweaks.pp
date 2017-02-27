@@ -5,12 +5,9 @@ class packages::distribution_tweaks {
   # (as of 2016-11-21) or there installation problems.
 
   Package <|
-       title == 'calibre'
-    or title == 'denemo'	# dependency conflict with chromium, which wins
-    or title == 'krita'
+       title == 'denemo'	# dependency conflict with chromium, which wins
     or title == 'libnspr4-0d'
     or title == 'libnspr4-0d:i386'
     or title == 'myspell-sv-se'
-    or title == 'tellico'
   |> { ensure => absent, }
 }
