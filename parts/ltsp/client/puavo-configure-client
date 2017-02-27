@@ -19,20 +19,6 @@ def read_file(file)
   return ""
 end
 
-def append_tags_to_environment(tags)
-  begin
-    File.open('/etc/environment', 'a') do |f|
-      tags.each do |tag|
-        if tag.match(/\A[[:alpha:]_]+\Z/) then
-          f.puts "PUAVO_TAG_#{ tag.upcase }=1"
-        end
-      end
-    end
-  rescue StandardError => e
-    warn "Could not append puavo tags to /etc/environment: #{ e.message }"
-  end
-end
-
 def write_config(filename, version=nil, secure=false)
   begin
     template_file = filename
@@ -99,8 +85,6 @@ end
 if File.exists?("/etc/puavo/device.json")
   @device = JSON.parse( File.read("/etc/puavo/device.json") )
   @tags   = @device["tags"] || []
-
-  append_tags_to_environment(@tags)
 end
 
 # XXX This ugliness must be, because /var/lib/puavo-desktop/shared may reside
