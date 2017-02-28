@@ -17,6 +17,7 @@ sync_clock_from_server
 set_machine_id
 set_systemd_default_target
 setup_swap
+setup_preinstalled_mode
 maybe_disable_acpi_wakeup
 setup_syslog
 setup_polkit
@@ -49,4 +50,5 @@ setup_network_manager
 setup_xsessions
 setup_devilspie
 setup_cron
+setup_preinstalled_mode
 setup_systemd

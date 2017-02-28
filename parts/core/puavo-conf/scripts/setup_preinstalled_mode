@@ -1,0 +1,33 @@
+#!/bin/sh
+
+set -eu
+
+puavo_hosttype=$(puavo-conf puavo.hosttype)
+
+if [ "$puavo_hosttype" != 'preinstalled' ]; then
+  rm -f /etc/sudoers.d/puavo-install-when-preinstalled \
+        /etc/xdg/autostart/puavo-install.desktop
+  exit 0
+fi
+
+cat <<'EOF' > /etc/sudoers.d/puavo-install-when-preinstalled.tmp
+ALL	preinstalled = NOPASSWD: /usr/lib/puavo-ltsp-client/darkdm
+EOF
+mv /etc/sudoers.d/puavo-install-when-preinstalled.tmp \
+   /etc/sudoers.d/puavo-install-when-preinstalled
+
+cat <<'EOF' > /etc/xdg/autostart/puavo-install.desktop.tmp
+[Desktop Entry]
+Version=1.0
+Name=Puavo-install
+Comment=Puavo device installation
+Exec=x-terminal-emulator -geometry 80x24+100+100 -e 'sudo /usr/lib/puavo-ltsp-client/darkdm'
+Terminal=false
+Type=Application
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
+X-GNOME-Autostart-Phase=Applications
+EOF
+
+mv /etc/xdg/autostart/puavo-install.desktop.tmp \
+   /etc/xdg/autostart/puavo-install.desktop
