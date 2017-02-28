@@ -49,19 +49,6 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/pam-configs
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/definitions
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/profile-overwrites
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/cron.d
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/cups
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/dbus-1/system.d
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/default
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/ldap
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/lightdm
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/network/if-up.d
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/network/if-post-down.d
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/samba
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/security
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/ssh
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/lib/udev
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/usr/share/X11/xorg.conf.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/xsessions
 	mkdir -p $(DESTDIR)$(datarootdir)/xgreeters
 	mkdir -p $(DESTDIR)$(datarootdir)/xsessions
@@ -81,9 +68,6 @@ install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-conf/profile-overwrites \
 		profile-overwrites/*.json
 
-	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/ssh \
-		templates/etc/ssh/sshd_config
-
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/network/if-up.d \
 		etc/network/if-up.d/sssd
 
@@ -93,16 +77,6 @@ install : installdirs
 		icons/puavoremoteaccess-grey.svg \
 		icons/puavoremoteaccess-original.svg \
 		icons/puavoremoteaccess-yellow.svg
-
-	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc \
-		templates/etc/nscd.conf \
-		templates/etc/nslcd.conf
-
-	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/cups \
-		templates/etc/cups/client.conf
-
-	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/usr/share/X11/xorg.conf.d \
-		templates/usr/share/X11/xorg.conf.d/99-hitachicalib.conf
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/xsessions \
 		xsessions/*
