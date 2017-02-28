@@ -86,17 +86,6 @@ if File.exists?("/etc/puavo/device.json")
   @tags   = @device["tags"] || []
 end
 
-case @puavo_device_type
-  when "wirelessaccesspoint"
-    # wirelessaccesspoints may be used as infotv devices depending on device
-    # tags.
-
-    # turn infotv displays on and off
-    if @puavo_xsessions_default == 'puavo-infotv' then
-      write_config("/etc/cron.d/infotv_display_control")
-    end
-end
-
 if @puavo_autoeth_enabled
     wired_interfaces                                                 \
       = Dir.glob('/sys/class/net/eth*')                              \
