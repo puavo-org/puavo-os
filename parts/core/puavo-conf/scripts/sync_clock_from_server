@@ -4,6 +4,6 @@ set -eu
 
 test -e /run/puavo/nbd-server || exit 0
 
-server=$(cat /run/puavo/run/puavo/nbd-server)
+read nbd_server < /run/puavo/run/puavo/nbd-server
 
-rdate "$server"
+rdate "$nbd_server"
