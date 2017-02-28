@@ -88,7 +88,6 @@ end
 
 case @puavo_device_type
   when "laptop"
-    write_config("/etc/samba/smb.conf", "laptop")
     write_config("/etc/systemd/logind.conf")
 
     # XXX should this Ubuntu-specific file be used in Debian?
