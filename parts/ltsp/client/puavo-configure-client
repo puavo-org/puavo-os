@@ -93,10 +93,6 @@ case @puavo_device_type
     # XXX should this Ubuntu-specific file be used in Debian?
     # write_config("/var/lib/polkit-1/localauthority/10-vendor.d/com.ubuntu.desktop.pkla")
 
-    if @puavo_xsessions_default == 'puavo-webkiosk' then
-      write_config("/etc/polkit-1/localauthority/50-local.d/90.org.freedesktop.networkmanager.deny_in_webkiosk_mode.pkla")
-    end
-
     @ldap_binddn       = read_file('/etc/puavo/ldap/dn')
     @ldap_bindpw       = read_file('/etc/puavo/ldap/password')
 
