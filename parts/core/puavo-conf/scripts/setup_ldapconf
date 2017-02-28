@@ -1,0 +1,24 @@
+#!/bin/sh
+
+set -eu
+
+read puavo_ldap_base < /etc/puavo/ldap/base
+
+# XXX get rid of hosttype handling
+if [ "$(puavo-conf puavo.hosttype)" = 'laptop' ]; then
+  read puavo_ldap_server < /etc/puavo/ldap/master
+else
+  read puavo_ldap_server < /etc/puavo/ldap/slave
+fi
+
+cat <<EOF > /etc/ldap/ldap.conf.tmp
+BASE        ${puavo_ldap_base}
+NETWORK_TIMEOUT 15
+SASL_MECH   GSSAPI
+TIMEOUT     15
+TLS_CACERT  /usr/share/ca-certificates/opinsys/opinsys-ca.crt
+TLS_REQCERT demand
+URI         ldap://${puavo_ldap_server}
+EOF
+
+mv /etc/ldap/ldap.conf.tmp /etc/ldap/ldap.conf

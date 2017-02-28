@@ -96,7 +96,6 @@ FileUtils.chown('puavodesktop',
 
 case @puavo_device_type
   when "fatclient"
-    write_config("/etc/ldap/ldap.conf")
     write_config("/etc/nsswitch.conf", "extrausers")
     write_config("/etc/pam.d/gdm-autologin", "fatclient")
     write_config("/etc/pam.d/gdm-password", "fatclient")
@@ -110,7 +109,6 @@ case @puavo_device_type
     delete_file('/usr/share/dbus-1/system-services/fi.epitest.hostap.WPASupplicant.service')
     delete_file('/usr/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service')
   when "laptop"
-    write_config("/etc/ldap/ldap.conf", "laptop")
     write_config("/etc/nsswitch.conf", "sss-extrausers")
     write_config("/etc/ntp.conf")
     write_config("/etc/pam.d/gdm-autologin", "laptop")

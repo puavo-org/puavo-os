@@ -109,10 +109,6 @@ install : installdirs
 		templates/etc/pam.d/gnome-screensaver-laptop \
 		templates/etc/pam.d/sudo-laptop
 
-	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/ldap \
-		templates/etc/ldap/ldap.conf \
-		templates/etc/ldap/ldap.conf-laptop
-
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/network/if-up.d \
 		etc/network/if-up.d/sssd
 
