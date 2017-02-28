@@ -1,21 +1,24 @@
+#!/bin/sh
+
+set -eu
+
+read puavo_domain          < /etc/puavo/domain
+read puavo_kerberos_master < /etc/puavo/kerberos/master
+read puavo_kerberos_realm  < /etc/puavo/kerberos/realm
+
+# no read permissions for anyone else
+umask 0077
+
+cat <<EOF > /etc/sssd/sssd.conf.tmp
 [sssd]
 config_file_version = 2
-#debug_level = 6128
-#pam_verbosity = 3
-
-# Number of times services should attempt to reconnect in the
-# event of a crash or restart before they give up
-#reconnection_retries = 1
-
-# If a back end is particularly slow you can raise this timeout here
-#sbus_timeout = 30
 services = nss, pam
 
 # SSSD will not start if you do not configure any domains.
 # Add new domain configurations as [domain/<NAME>] sections, and
 # then add the list of domains (in the order you want them to be
 # queried) to the "domains" attribute below and uncomment it.
-domains = KRBLDAP.<%= @kerberos_realm %>
+domains = KRBLDAP.${puavo_kerberos_realm}
 
 [nss]
 # The following prevents SSSD from searching for the root user/group in
@@ -23,7 +26,6 @@ domains = KRBLDAP.<%= @kerberos_realm %>
 # are always going to be /etc/passwd users, or that you want to filter out).
 filter_groups = root
 filter_users = root
-#reconnection_retries = 1
 
 # The entry_cache_timeout indicates the number of seconds to retain an
 # entry in cache before it is considered stale and must block to refresh.
@@ -37,37 +39,20 @@ entry_negative_timeout = 0
 
 [pam]
 reconnection_retries = 1
-#debug_level = 0xfff0
 
-[domain/KRBLDAP.<%= @kerberos_realm %>]
-#debug_level = 0xfff0
+[domain/KRBLDAP.${puavo_kerberos_realm}]
 auth_provider = krb5
 cache_credentials = true
 id_provider = proxy
 proxy_lib_name = extrausers
-dns_discovery_domain=<%= @puavo_domain %>
-krb5_server = kerberos.<%= @puavo_domain %>,<%= @kerberos_master %>
-krb5_realm = <%= @kerberos_realm %>
+dns_discovery_domain=${puavo_domain}
+krb5_server = kerberos.${puavo_domain},${puavo_kerberos_master}
+krb5_realm = ${puavo_kerberos_realm}
 krb5_validate = false
 krb5_lifetime = 7d
 krb5_renewable_lifetime = 7d
 krb5_renew_interval = 3d
-#ldap_krb5_init_creds = true
-#ldap_sasl_mech = gssapi
-#ldap_id_use_start_tls = true
-#ldap_default_bind_dn=<%= @ldap_binddn %>
-#ldap_default_authtok=<%= @ldap_bindpw %>
-#ldap_user_search_base = ou=People,<%= @ldap_base %>?sub?(objectClass=posixAccount)
-#ldap_group_search_base = ou=Groups,<%= @ldap_base %>?sub?(objectClass=posixGroup)
-#ldap_tls_reqcert = demand
-#ldap_uri = _srv_
-#<% if @ldap_slave.length > 0 %>
-#ldap_backup_uri = ldap://<%= @ldap_slave %>
-#<% end %>
-#ldap_chpass_uri = ldap://<%= @ldap_master %>
-#ldap_id_use_start_tls = true
 min_id = 500
-#ldap_search_base = <%= @ldap_base %>
-krb5_store_password_if_offline = true
-#ldap_user_fullname = displayName
-#override_homedir = /home/%u
+EOF
+
+mv /etc/sssd/sssd.conf.tmp /etc/sssd/sssd.conf
