@@ -25,6 +25,13 @@
 # ]
 #
 
+require 'puavo/conf'
+
+puavoconf = Puavo::Conf.new
+exit(0) unless puavoconf.get('puavo.service.NetworkManager.enabled') == 'true'
+
+puavoconf.close
+
 require 'fileutils'
 require 'json'
 require 'uuidtools'

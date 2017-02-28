@@ -87,13 +87,6 @@ if File.exists?("/etc/puavo/device.json")
 end
 
 case @puavo_device_type
-  when "laptop"
-    # Laptops also want the NetworkManager configurations to be done before
-    # it starts.  Should that be integrated here is an interesting question,
-    # but right now the puavo-update-nm-configurations script loads fileutils
-    # and json modules, which would needlessly slow down this script for other
-    # host types that do not need this.
-    system('puavo-update-nm-configurations')
   when "wirelessaccesspoint"
     # wirelessaccesspoints may be used as infotv devices depending on device
     # tags.
