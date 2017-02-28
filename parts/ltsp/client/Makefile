@@ -57,17 +57,13 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/lightdm
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/network/if-up.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/network/if-post-down.d
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/pam.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/samba
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/security
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/ssh
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/sssd
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/sudoers.d
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/systemd
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/xdg/autostart
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/lib/udev
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/usr/share/X11/xorg.conf.d
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/var/lib/polkit-1/localauthority/10-vendor.d
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/xsessions
 	mkdir -p $(DESTDIR)$(datarootdir)/xgreeters
 	mkdir -p $(DESTDIR)$(datarootdir)/xsessions
@@ -90,16 +86,6 @@ install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/ssh \
 		templates/etc/ssh/sshd_config
 
-	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/pam.d \
-		templates/etc/pam.d/gdm-autologin-fatclient \
-		templates/etc/pam.d/gdm-autologin-laptop \
-		templates/etc/pam.d/gdm-autologin-preinstalled \
-		templates/etc/pam.d/gdm-autologin-wirelessaccesspoint \
-		templates/etc/pam.d/gdm-password-fatclient \
-		templates/etc/pam.d/gdm-password-laptop \
-		templates/etc/pam.d/gnome-screensaver-laptop \
-		templates/etc/pam.d/sudo-laptop
-
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/network/if-up.d \
 		etc/network/if-up.d/sssd
 
@@ -117,24 +103,14 @@ install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/cups \
 		templates/etc/cups/client.conf
 
-	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/sssd \
-		templates/etc/sssd/sssd.conf \
-		templates/etc/sssd/sssd.conf-laptop
-
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/sudoers.d \
 		templates/etc/sudoers.d/puavo-install-when-preinstalled
-
-	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/systemd \
-		templates/etc/systemd/logind.conf
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/xdg/autostart \
 		templates/etc/xdg/autostart/puavo-install.desktop
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/usr/share/X11/xorg.conf.d \
 		templates/usr/share/X11/xorg.conf.d/99-hitachicalib.conf
-
-	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/var/lib/polkit-1/localauthority/10-vendor.d \
-		templates/var/lib/polkit-1/localauthority/10-vendor.d/com.ubuntu.desktop.pkla
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/xsessions \
 		xsessions/*
@@ -152,8 +128,7 @@ install : installdirs
 		puavo-handle-external-files-actions \
 		puavo-ltsp-login \
 		puavo-netboot-init-nfs \
-		puavo-report-system-version \
-		puavo-update-nm-configurations
+		puavo-report-system-version
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES \
 		po/fi/puavo-remote-assistance-applet.mo
