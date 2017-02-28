@@ -121,7 +121,8 @@ Architecture: all
 Depends: ${misc:Depends},
  initramfs-tools,
  puavo-conf,
- rdate
+ rdate,
+ rsyslog-relp
 Description: Puavo Core Infrastructure
  Bolts and nuts for Puavo OS.
  .
@@ -291,7 +292,6 @@ Depends: ${misc:Depends},
  python-appindicator,
  python-gtk2,
  ratpoison,
- rsyslog-relp,
  ruby-dnsruby,
  ruby-json,
  ruby-ldap,

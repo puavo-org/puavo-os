@@ -18,6 +18,7 @@ set_machine_id
 set_systemd_default_target
 setup_swap
 maybe_disable_acpi_wakeup
+setup_syslog
 setup_xorg
 setup_xorg_inputs_calibration
 setup_dconf_settings
