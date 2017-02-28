@@ -1,0 +1,36 @@
+#!/bin/sh
+
+set -eu
+
+pam_install() {
+  install -m 644 -o root -g root "$@"
+}
+
+# XXX get rid of hosttype handling
+case "$(puavo-conf puavo.hosttype)" in
+  diskinstaller|preinstalled|unregistered)
+    pam_install /etc/puavo-conf/files/etc/pam.d/gdm-autologin-preinstalled \
+                /etc/pam.d/gdm-autologin
+    ;;
+  fatclient)
+    pam_install /etc/puavo-conf/files/etc/pam.d/gdm-autologin-fatclient \
+                /etc/pam.d/gdm-autologin
+    pam_install /etc/puavo-conf/files/etc/pam.d/gdm-password-fatclient \
+                /etc/pam.d/gdm-password
+    ;;
+  laptop)
+    pam_install /etc/puavo-conf/files/etc/pam.d/gdm-autologin-laptop \
+                /etc/pam.d/gdm-autologin
+    pam_install /etc/puavo-conf/files/etc/pam.d/gdm-password-laptop \
+                /etc/pam.d/gdm-password
+    pam_install /etc/puavo-conf/files/etc/pam.d/gnome-screensaver-laptop \
+                /etc/pam.d/gnome-screensaver
+    pam_install /etc/puavo-conf/files/etc/pam.d/sudo-laptop \
+                /etc/pam.d/sudo
+    ;;
+  wirelessaccesspoint)
+    pam_install \
+      /etc/puavo-conf/files/etc/pam.d/gdm-autologin-wirelessaccesspoint \
+      /etc/pam.d/gdm-autologin
+    ;;
+esac

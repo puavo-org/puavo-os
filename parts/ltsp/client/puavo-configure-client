@@ -64,7 +64,6 @@ end
 Uninstalled_device_types = %w(diskinstaller preinstalled unregistered)
 if Uninstalled_device_types.include?(@puavo_device_type) then
   if @puavo_device_type == 'preinstalled' then
-    write_config("/etc/pam.d/gdm-autologin", "preinstalled")
     write_config("/etc/sudoers.d/puavo-install-when-preinstalled")
     write_config("/etc/xdg/autostart/puavo-install.desktop")
   end
@@ -96,8 +95,6 @@ FileUtils.chown('puavodesktop',
 
 case @puavo_device_type
   when "fatclient"
-    write_config("/etc/pam.d/gdm-autologin", "fatclient")
-    write_config("/etc/pam.d/gdm-password", "fatclient")
     write_config("/etc/rsyslog.conf")
     write_config("/etc/rsyslog.d/send_to_syslogserver.conf")
 
@@ -109,10 +106,6 @@ case @puavo_device_type
     delete_file('/usr/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service')
   when "laptop"
     write_config("/etc/ntp.conf")
-    write_config("/etc/pam.d/gdm-autologin", "laptop")
-    write_config("/etc/pam.d/gdm-password", "laptop")
-    write_config("/etc/pam.d/gnome-screensaver", "laptop")
-    write_config("/etc/pam.d/sudo", "laptop")
     write_config("/etc/racoon/racoon.conf")
     write_config("/etc/samba/smb.conf", "laptop")
     write_config("/etc/systemd/logind.conf")
@@ -139,7 +132,6 @@ case @puavo_device_type
     # wirelessaccesspoints may be used as infotv devices depending on device
     # tags.
     write_config("/etc/ntp.conf")
-    write_config("/etc/pam.d/gdm-autologin", "wirelessaccesspoint")
 
     # turn infotv displays on and off
     if @puavo_xsessions_default == 'puavo-infotv' then
