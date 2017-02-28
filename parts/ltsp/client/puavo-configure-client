@@ -87,9 +87,6 @@ if File.exists?("/etc/puavo/device.json")
 end
 
 case @puavo_device_type
-  when "fatclient"
-    delete_file('/usr/share/dbus-1/system-services/fi.epitest.hostap.WPASupplicant.service')
-    delete_file('/usr/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service')
   when "laptop"
     write_config("/etc/racoon/racoon.conf")
     write_config("/etc/samba/smb.conf", "laptop")
