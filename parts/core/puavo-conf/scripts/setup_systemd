@@ -1,3 +1,14 @@
+#!/bin/sh
+
+set -eu
+
+if [ "$(puavo-conf puavo.pm.lidsuspend.enabled)" = 'true' ]; then
+  handle_lid_switch_action=suspend
+else
+  handle_lid_switch_action=ignore
+fi
+
+cat <<EOF > /etc/systemd/logind.conf.tmp
 #  This file is part of systemd.
 #
 #  systemd is free software; you can redistribute it and/or modify it
@@ -19,14 +30,13 @@ ResetControllers=
 #HandlePowerKey=poweroff
 #HandleSuspendKey=suspend
 #HandleHibernateKey=hibernate
-<% if @enable_lidsuspend %>
-#HandleLidSwitch=suspend
-<% else %>
-HandleLidSwitch=ignore
-<% end %>
+HandleLidSwitch=${handle_lid_switch_action}
 #PowerKeyIgnoreInhibited=no
 #SuspendKeyIgnoreInhibited=no
 #HibernateKeyIgnoreInhibited=no
 #LidSwitchIgnoreInhibited=yes
 #IdleAction=ignore
 #IdleActionSec=30min
+EOF
+
+mv /etc/systemd/logind.conf.tmp /etc/systemd/logind.conf

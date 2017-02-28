@@ -88,8 +88,6 @@ end
 
 case @puavo_device_type
   when "laptop"
-    write_config("/etc/systemd/logind.conf")
-
     # XXX should this Ubuntu-specific file be used in Debian?
     # write_config("/var/lib/polkit-1/localauthority/10-vendor.d/com.ubuntu.desktop.pkla")
 
