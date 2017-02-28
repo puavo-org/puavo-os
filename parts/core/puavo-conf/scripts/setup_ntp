@@ -1,7 +1,20 @@
+#!/bin/sh
+
+set -eu
+
+read puavo_domain    < /etc/puavo/domain
+read puavo_topdomain < /etc/puavo/topdomain || true
+
+if [ -n "${puavo_topdomain:-}" ]; then
+  topdomain_confline="server ntp.${puavo_topdomain}"
+else
+  topdomain_confline='# topdomain not available, not configured'
+fi
+
+cat <<EOF > /etc/ntp.conf.tmp
 # /etc/ntp.conf, configuration for ntpd; see ntp.conf(5) for help
 
 driftfile /var/lib/ntp/ntp.drift
-
 
 # Enable this if you want statistics to be logged.
 #statsdir /var/log/ntpstats/
@@ -11,22 +24,22 @@ filegen loopstats file loopstats type day enable
 filegen peerstats file peerstats type day enable
 filegen clockstats file clockstats type day enable
 
-# Specify one or more NTP servers.
+
+# You do need to talk to an NTP server or two (or three).
+#server ntp.your-provider.example
 
 # Use Puavo ntp server (from toplevel domain and puavo domains).
-<%= (@puavo_topdomain != '') ? "server ntp.#{ @puavo_topdomain }\n" : '' %>
-server ntp.<%= @puavo_domain %>
+${topdomain_confline}
+server ntp.${puavo_domain}
 
-# Use servers from the NTP Pool Project. Approved by Ubuntu Technical Board
-# on 2011-02-08 (LP: #104525). See http://www.pool.ntp.org/join.html for
-# more information.
-server 0.ubuntu.pool.ntp.org
-server 1.ubuntu.pool.ntp.org
-server 2.ubuntu.pool.ntp.org
-server 3.ubuntu.pool.ntp.org
+# pool.ntp.org maps to about 1000 low-stratum NTP servers.  Your server will
+# pick a different set every time it starts up.  Please consider joining the
+# pool: <http://www.pool.ntp.org/join.html>
+pool 0.debian.pool.ntp.org iburst
+pool 1.debian.pool.ntp.org iburst
+pool 2.debian.pool.ntp.org iburst
+pool 3.debian.pool.ntp.org iburst
 
-# Use Ubuntu's ntp server as a fallback.
-server ntp.ubuntu.com
 
 # Access control configuration; see /usr/share/doc/ntp-doc/html/accopt.html for
 # details.  The web page <http://support.ntp.org/bin/view/Support/AccessRestrictions>
@@ -37,12 +50,15 @@ server ntp.ubuntu.com
 # up blocking replies from your own upstream servers.
 
 # By default, exchange time with everybody, but don't allow configuration.
-restrict -4 default kod notrap nomodify nopeer noquery
-restrict -6 default kod notrap nomodify nopeer noquery
+restrict -4 default kod notrap nomodify nopeer noquery limited
+restrict -6 default kod notrap nomodify nopeer noquery limited
 
 # Local users may interrogate the ntp server more closely.
 restrict 127.0.0.1
 restrict ::1
+
+# Needed for adding pool entries
+restrict source notrap nomodify noquery
 
 # Clients from this (example!) subnet have unlimited access, but only if
 # cryptographically authenticated.
@@ -57,3 +73,6 @@ restrict ::1
 # next lines.  Please do this only if you trust everybody on the network!
 #disable auth
 #broadcastclient
+EOF
+
+mv /etc/ntp.conf.tmp /etc/ntp.conf

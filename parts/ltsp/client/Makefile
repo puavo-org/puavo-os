@@ -114,8 +114,7 @@ install : installdirs
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc \
 		templates/etc/nscd.conf \
-		templates/etc/nslcd.conf \
-		templates/etc/ntp.conf
+		templates/etc/nslcd.conf
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/cron.d \
 		templates/etc/cron.d/infotv_display_control
