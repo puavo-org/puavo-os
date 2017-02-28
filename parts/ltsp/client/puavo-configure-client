@@ -46,7 +46,6 @@ end
 
 @puavoconf = Puavo::Conf.new
 
-@puavo_autoeth_enabled     = @puavoconf.get('puavo.autoeth.enabled') == 'true'
 @puavo_device_type         = @puavoconf.get('puavo.hosttype')
 @puavo_guestlogin_enabled  = @puavoconf.get('puavo.guestlogin.enabled')
 @puavo_guestlogin_mode     = @puavoconf.get('puavo.guestlogin.mode')
@@ -84,19 +83,6 @@ end
 if File.exists?("/etc/puavo/device.json")
   @device = JSON.parse( File.read("/etc/puavo/device.json") )
   @tags   = @device["tags"] || []
-end
-
-if @puavo_autoeth_enabled
-    wired_interfaces                                                 \
-      = Dir.glob('/sys/class/net/eth*')                              \
-           .select { |path| not File.exists?("#{ path }/phy80211") } \
-           .map    { |path| File.basename(path) }
-
-    File.open('/etc/network/interfaces.d/puavo-autoeth', 'w') do |file|
-      wired_interfaces.each do |interface|
-        file.write("\nauto #{ interface }\niface #{ interface } inet dhcp\n")
-      end
-    end
 end
 
 exit(0)
