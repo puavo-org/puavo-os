@@ -122,10 +122,6 @@ install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc \
 		templates/etc/nscd.conf \
 		templates/etc/nslcd.conf \
-		templates/etc/nsswitch.conf-extrausers \
-		templates/etc/nsswitch.conf-ldap \
-		templates/etc/nsswitch.conf-sss \
-		templates/etc/nsswitch.conf-sss-extrausers \
 		templates/etc/ntp.conf
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/templates/etc/cron.d \

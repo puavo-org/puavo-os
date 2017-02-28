@@ -96,7 +96,6 @@ FileUtils.chown('puavodesktop',
 
 case @puavo_device_type
   when "fatclient"
-    write_config("/etc/nsswitch.conf", "extrausers")
     write_config("/etc/pam.d/gdm-autologin", "fatclient")
     write_config("/etc/pam.d/gdm-password", "fatclient")
     write_config("/etc/rsyslog.conf")
@@ -109,7 +108,6 @@ case @puavo_device_type
     delete_file('/usr/share/dbus-1/system-services/fi.epitest.hostap.WPASupplicant.service')
     delete_file('/usr/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service')
   when "laptop"
-    write_config("/etc/nsswitch.conf", "sss-extrausers")
     write_config("/etc/ntp.conf")
     write_config("/etc/pam.d/gdm-autologin", "laptop")
     write_config("/etc/pam.d/gdm-password", "laptop")
@@ -130,14 +128,6 @@ case @puavo_device_type
     @ldap_bindpw       = read_file('/etc/puavo/ldap/password')
 
     write_config("/etc/sssd/sssd.conf", "laptop", true)
-
-    # Make sure that the nss-extrausers database files exist so that
-    # sssd does not go into offline mode when using extrausers proxy
-    ["/var/lib/extrausers/passwd", "/var/lib/extrausers/group"].each do |filename|
-      if !File.exists?(filename)
-        File.open(filename, "w") {|f| }
-      end
-    end
 
     # Laptops also want the NetworkManager configurations to be done before
     # it starts.  Should that be integrated here is an interesting question,
