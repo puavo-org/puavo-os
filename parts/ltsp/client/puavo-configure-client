@@ -88,10 +88,6 @@ end
 
 case @puavo_device_type
   when "fatclient"
-    if @puavo_xsessions_default == 'puavo-webkiosk' then
-      write_config("/etc/polkit-1/localauthority/50-local.d/90.org.freedesktop.networkmanager.deny_in_webkiosk_mode.pkla")
-    end
-
     delete_file('/usr/share/dbus-1/system-services/fi.epitest.hostap.WPASupplicant.service')
     delete_file('/usr/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service')
   when "laptop"
