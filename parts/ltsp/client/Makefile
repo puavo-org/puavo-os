@@ -148,7 +148,6 @@ install : installdirs
 		puavo-remote-assistance-applet
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
-		puavo-configure-client \
 		puavo-dnssd-printer-client \
 		puavo-handle-external-files-actions \
 		puavo-ltsp-login \
