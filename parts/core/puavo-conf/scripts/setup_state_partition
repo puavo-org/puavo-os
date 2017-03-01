@@ -3,22 +3,31 @@
 set -eu
 
 puavo_link_to_state() {
-  local dir
+  local current_linktarget dirpath wanted_linktarget
 
-  dir=$1
-  if [ ! -d "$dir" ]; then
-    echo "not linking to $dir which does not exist" >&2
+  dirpath=$1
+  if [ ! -d "$dirpath" ]; then
+    echo "not linking to $dirpath which does not exist" >&2
     return 1
+  fi
+
+  wanted_linktarget="/state${dirpath}"
+
+  current_linktarget=$(readlink "$dirpath" 2>/dev/null || true)
+  if [ -n "$current_linktarget" \
+       -a "$current_linktarget" = "$wanted_linktarget" ]; then
+    return 0
   fi
 
   # Before linking the directory, make sure that the /state partition has
   # the same directory structure as the image so that applications do
   # not freak out because something was be missing. The original directory
-  # is renamed to $dir.rofs before replacing the directory with a
+  # is renamed to ${dirpath}.rofs before replacing the directory with a
   # symbolic link to the /state partition.
-  find "$dir" -type d -print0 | cpio -0dpm --quiet /state || return 1
-  mv -T "$dir" "${dir}.rofs" 2>/dev/null || true
-  ln -fns "/state${dir}" "$dir"
+  find "$dirpath" -type d -print0 | cpio -0dpm --quiet /state || return 1
+
+  mv -T "$dirpath" "${dirpath}.rofs" 2>/dev/null || true
+  ln -fns "$wanted_linktarget" "$dirpath"
 }
 
 # CUPS always writes its configuration files as new files and then
@@ -28,17 +37,17 @@ puavo_link_to_state() {
 # when booting.  Locally configured printers should stay configured
 # this way and PPDs are placed under /state/etc/cups/ppd.
 puavo_setup_cups_dir() {
+  local cups_status
+
   cups_status=0
 
-  if find /etc/cups/ -type d -print0 | cpio -0dpm --quiet /state \
-    && cp -a -t /state/etc/cups/          \
-                /etc/cups/cupsd.conf      \
-                /etc/cups/cups-files.conf \
-                /etc/cups/raw.convs       \
-                /etc/cups/raw.types       \
-                /etc/cups/snmp.conf; then
-    mv -T /etc/cups /etc/cups.rofs 2>/dev/null || true
-    ln -fns /state/etc/cups /etc/cups || cups_status=1
+  if puavo_link_to_state /etc/cups; then
+    cp -a -t /state/etc/cups/               \
+             /etc/cups.rofs/cupsd.conf      \
+             /etc/cups.rofs/cups-files.conf \
+             /etc/cups.rofs/raw.convs       \
+             /etc/cups.rofs/raw.types       \
+             /etc/cups.rofs/snmp.conf
   else
     cups_status=1
   fi
