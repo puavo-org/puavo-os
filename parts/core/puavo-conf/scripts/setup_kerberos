@@ -2,16 +2,17 @@
 
 set -eu
 
-read puavo_domain            < /etc/puavo/domain
-read puavo_kerberos_master   < /etc/puavo/kerberos/master
-read puavo_kerberos_realm    < /etc/puavo/kerberos/realm
-read puavo_kerberos_toprealm < /etc/puavo/kerberos/toprealm
-read puavo_topdomain         < /etc/puavo/topdomain
+read puavo_kerberos_realm < /etc/puavo/kerberos/realm
 
 # XXX get rid of hosttype handling
 if [ "$(puavo-conf puavo.hosttype)" = 'laptop' ]; then
   dns_lookup_kdc=false
   dns_lookup_realm=false
+
+  read puavo_domain            < /etc/puavo/domain
+  read puavo_kerberos_master   < /etc/puavo/kerberos/master
+  read puavo_kerberos_toprealm < /etc/puavo/kerberos/toprealm
+  read puavo_topdomain         < /etc/puavo/topdomain
   realms=$(cat <<EOF)
 [realms]
         ${puavo_kerberos_realm} = {
