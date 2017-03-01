@@ -1,3 +1,0 @@
-SUBSYSTEM=="usb", SYSFS{idVendor}=="04b8", SYSFS{idProduct}=="0142", GROUP="scanner"
-ACTION=="add", SUBSYSTEM=="usb", SYSFS{idVendor}=="04b8", SYSFS{idProduct}=="0110", RUN+="/usr/local/bin/enable_epson_perfection_1650"
-ACTION=="remove", SUBSYSTEM=="usb", SYSFS{idVendor}=="04b8", SYSFS{idProduct}=="0110", RUN+="/usr/local/bin/disable_epson_perfection_1650"
