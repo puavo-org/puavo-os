@@ -62,10 +62,18 @@ puavo_mount_partition() {
 # get rid of hosttype handling?
 puavo_hosttype=$(puavo-conf puavo.hosttype)
 
-if [ "$puavo_hosttype" = 'diskinstaller' ]; then
-  vgchange -a y puavoinstaller
-else
-  vgchange -a y puavo
+case "$puavo_hosttype" in
+  diskinstaller)
+    vgchange -a y puavoinstaller
+    ;;
+  fatclient)
+    # fatclients normally do not have a "puavo" volume group,
+    # so failing this is not an error and there is nothing more to do.
+    vgchange -a y puavo 2>/dev/null || exit 0
+    ;;
+  *)
+    vgchange -a y puavo
+    ;;
 fi
 
 status=0
