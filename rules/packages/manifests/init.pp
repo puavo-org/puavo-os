@@ -66,6 +66,7 @@ class packages {
     , 'pv'
     , 'pwgen'
     , 'pwman3'
+    , 'rsyslog'
     , 'screen'
     , 'setserial'
     , 'strace'
@@ -306,7 +307,8 @@ class packages {
     , 'sound-juicer' ]:
       tag => [ 'tag_optical_media', 'tag_debian', ];
 
-    [ 'gtklp' ]:
+    [ 'cups-daemon'
+    , 'gtklp' ]:
       tag => [ 'tag_printing', 'tag_debian', ];
 
     [ 'arduino'
@@ -615,7 +617,7 @@ class packages {
   $broadcom_sta_dkms_module = 'broadcom-sta/6.30.223.271'
   $nvidia_dkms_304_module   = 'nvidia-legacy-304xx/304.134'
   $nvidia_dkms_340_module   = 'nvidia-legacy-340xx/340.101'
-  $nvidia_dkms_375_module   = 'nvidia-current/375.26'
+  $nvidia_dkms_375_module   = 'nvidia-current/375.39'
   # XXX $r8168_dkms_module  = 'r8168/8.040.00'
 
   $all_dkms_modules = [ $broadcom_sta_dkms_module

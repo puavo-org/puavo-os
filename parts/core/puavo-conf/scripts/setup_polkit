@@ -1,0 +1,19 @@
+#!/bin/sh
+
+set -eu
+
+deny_in_webkiosk_mode_path='/etc/polkit-1/localauthority/50-local.d/90.org.freedesktop.networkmanager.deny_in_webkiosk_mode.pkla'
+
+if [ "$(puavo-conf puavo.xsessions.default)" = 'puavo-webkiosk' ]; then
+  cat <<'EOF' > "${deny_in_webkiosk_mode_path}.tmp"
+[Normal User Permissions]
+Identity=unix-user:*
+Action=org.freedesktop.NetworkManager.*
+ResultAny=no
+ResultInactive=no
+ResultActive=no
+EOF
+  mv "${deny_in_webkiosk_mode_path}.tmp" "$deny_in_webkiosk_mode_path"
+else
+  rm -f "$deny_in_webkiosk_mode_path"
+fi

@@ -69,6 +69,7 @@ chromium:
     fi: Chromium-selain
     sv: Chromium
     de: Chromium-Browser
+  osIcon: /usr/share/icons/hicolor/64x64/apps/chromium.png
 cmaptools:
   name:
     en: CmapTools-mindmap
@@ -154,6 +155,7 @@ fmit:
     fi: Viritinohjelma
     sv: Stämmningsprogram
     de: Stimmprogramm
+  osIcon: /usr/share/icons/hicolor/scalable/apps/fmit.svg
 fritzing:
   osIcon: /usr/share/pixmaps/fritzing_icon.png
 gcompris:
@@ -267,6 +269,7 @@ kalzium:
     de: Periodensystem
   command:
   - kalzium
+  osIcon: /usr/share/icons/hicolor/64x64/apps/kalzium.png
 kanagram:
   name:
     en: Kanagram - anagrams
@@ -281,6 +284,7 @@ kbruch:
     fi: KBruch-murtoluvut
     sv: KBruch-bråktal
     de: KBruch - Rechnen mit Brüchen
+  osIcon: /usr/share/icons/hicolor/64x64/apps/kbruch.png
 kdenlive:
   name:
     en: Kdenlive-video editor
@@ -303,6 +307,7 @@ khangman:
     de: KHangman
   command:
   - khangman
+  osIcon: /usr/share/icons/hicolor/64x64/apps/khangman.png
 kmplot:
   name:
     en: KmPlot-function plotter
@@ -321,6 +326,7 @@ kstars:
     de: KStars-Astronomie
   command:
   - kstars
+  osIcon: /usr/share/icons/hicolor/64x64/apps/kstars.png
 ktouch:
   name:
     en: KTouch-touch typing
@@ -329,6 +335,7 @@ ktouch:
     de: KTouch-Schreibmaschine
   command:
   - ktouch
+  osIcon: /usr/share/icons/hicolor/48x48/apps/ktouch.png
 kturtle:
   name:
     en: KTurtle - easy programming
@@ -337,6 +344,7 @@ kturtle:
     de: KTurtle - Programieren mit Logo
   command:
   - kturtle
+  osIconPath: /usr/share/icons/hicolor/64x64/apps/kturtle.png
 kwordquiz:
   name:
     en: KWordQuiz-vocabulary learning
@@ -345,6 +353,7 @@ kwordquiz:
     de: Kreuzworträtsel
   command:
   - kwordquiz
+  osIcon: /usr/share/icons/hicolor/64x64/apps/kwordquiz.png
 libreoffice-base:
   keywords:
   - openoffice
@@ -442,6 +451,7 @@ mscore:
     fi: Nuotinnusohjelma
     sv: Notering
     de: Musik-Notensatz
+  osIcon: /usr/share/icons/hicolor/48x48/mimetypes/application-x-musescore.png
 mypaint:
   name:
     en: MyPaint
@@ -495,6 +505,7 @@ pinta:
     de: Pinta
   keywords:
   - digabi
+  osIcon: /usr/share/icons/hicolor/96x96/apps/pinta.png
 pitivi:
   name:
     en: Pitivi-video editor
@@ -579,6 +590,7 @@ step:
     de: Step Physik Simulator
   command:
   - step
+  osIcon: /usr/share/icons/oxygen/base/64x64/apps/step.png
 supertuxkart:
   name: SuperTuxKart
 tellico:

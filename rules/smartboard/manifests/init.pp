@@ -3,6 +3,6 @@ class smartboard {
 
   ::puavo_conf::definition {
     'puavo-smartboard.json':
-      source => 'puppet:///modules/smartboard/puavo-conf-parameters.json';
+      source => 'puppet:///modules/smartboard/puavo-smartboard.json';
   }
 }

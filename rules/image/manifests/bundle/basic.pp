@@ -22,6 +22,7 @@ class image::bundle::basic {
   include ::rpcgssd
   include ::ssh_client
   include ::sysctl
+  include ::syslog
   include ::udev
   include ::use_urandom
   include ::zram_configuration

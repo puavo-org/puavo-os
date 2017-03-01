@@ -13,6 +13,10 @@ else
     # webmenu/menu.yaml only checks if variable is set and not at its value.
 fi
 
+if [ "$(puavo-conf puavo.nonfree.ti_nspire_cx_cas.enabled)" = 'true' ]; then
+  export PUAVO_TAG_TI_NSPIRE_CX_CAS=1
+fi
+
 if [ "$(puavo-conf puavo.webmenu.feedback.enabled)" = 'true' ]; then
   export WM_FEEDBACK_ACTIVE=true
 fi
