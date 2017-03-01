@@ -1,0 +1,58 @@
+#!/bin/sh
+
+set -eu
+
+read puavo_domain          < /etc/puavo/domain
+read puavo_kerberos_master < /etc/puavo/kerberos/master
+read puavo_kerberos_realm  < /etc/puavo/kerberos/realm
+
+# no read permissions for anyone else
+umask 0077
+
+cat <<EOF > /etc/sssd/sssd.conf.tmp
+[sssd]
+config_file_version = 2
+services = nss, pam
+
+# SSSD will not start if you do not configure any domains.
+# Add new domain configurations as [domain/<NAME>] sections, and
+# then add the list of domains (in the order you want them to be
+# queried) to the "domains" attribute below and uncomment it.
+domains = KRBLDAP.${puavo_kerberos_realm}
+
+[nss]
+# The following prevents SSSD from searching for the root user/group in
+# all domains (you can add here a comma-separated list of system accounts that
+# are always going to be /etc/passwd users, or that you want to filter out).
+filter_groups = root
+filter_users = root
+
+# The entry_cache_timeout indicates the number of seconds to retain an
+# entry in cache before it is considered stale and must block to refresh.
+# The entry_cache_nowait_timeout indicates the number of seconds to
+# wait before updating the cache out-of-band. (NSS requests will still
+# be returned from cache until the full entry_cache_timeout). Setting this
+# value to 0 turns this feature off (default).
+entry_cache_timeout = 0
+entry_cache_nowait_timeout = 0
+entry_negative_timeout = 0
+
+[pam]
+reconnection_retries = 1
+
+[domain/KRBLDAP.${puavo_kerberos_realm}]
+auth_provider = krb5
+cache_credentials = true
+id_provider = proxy
+proxy_lib_name = extrausers
+dns_discovery_domain=${puavo_domain}
+krb5_server = kerberos.${puavo_domain},${puavo_kerberos_master}
+krb5_realm = ${puavo_kerberos_realm}
+krb5_validate = false
+krb5_lifetime = 7d
+krb5_renewable_lifetime = 7d
+krb5_renew_interval = 3d
+min_id = 500
+EOF
+
+mv /etc/sssd/sssd.conf.tmp /etc/sssd/sssd.conf

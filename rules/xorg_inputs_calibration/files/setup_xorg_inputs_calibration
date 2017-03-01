@@ -1,0 +1,17 @@
+#!/bin/sh
+
+set -eu
+
+if [ -z "$(puavo-conf puavo.xorg.inputs.hitachi.calibration)" ]; then
+  rm -f /usr/share/X11/xorg.conf.d/99-hitachicalib.conf
+  exit 0
+fi
+
+puavo-template <<'EOF' /usr/share/X11/xorg.conf.d/99-hitachicalib.conf
+Section "InputClass"
+        Identifier   "calibration"
+        MatchProduct "Hitachi PROJECTOR CDROM COMPOSITE"
+        Option       "Calibration"                       "{puavo_xorg_inputs_hitachi_calibration}"
+        Option       "SwapAxes"                          "0"
+EndSection
+EOF

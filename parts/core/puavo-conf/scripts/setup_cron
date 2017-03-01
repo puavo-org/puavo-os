@@ -1,0 +1,37 @@
+#!/bin/sh
+
+set -eu
+
+[ "$(puavo-conf puavo.xsessions.default)" = 'puavo-infotv' ] || exit 0
+
+get_hour() {
+  puavo-conf "$1" \
+    | awk '/^[[:digit:]]+$/ && 0 <= $0 && $0 <= 24 { print ($0 % 24); exit(0) }'
+}
+
+start_hour=$(get_hour puavo.autopoweroff.daytime_start_hour)
+end_hour=$(  get_hour puavo.autopoweroff.daytime_end_hour)
+
+if [ -n "$start_hour" ]; then
+  display_on_line="0 $start_hour * * 1-7 root iivari-display_on"
+else
+  display_on_line=''
+fi
+
+if [ -n "$end_hour" ]; then
+  display_off_line="0 $end_hour * * 1-7 root iivari-display_off"
+else
+  display_off_line=''
+fi
+
+cat <<EOF > /etc/cron.d/infotv_display_control.tmp
+# /etc/cron.d/infotv_display_control: turn infotv displays on and off
+
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+${display_on_line}
+${display_off_line}
+EOF
+
+mv /etc/cron.d/infotv_display_control.tmp /etc/cron.d/infotv_display_control

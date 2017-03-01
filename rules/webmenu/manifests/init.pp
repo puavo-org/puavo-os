@@ -47,7 +47,7 @@ class webmenu {
 
   ::puavo_conf::definition {
     'puavo-webmenu.json':
-      source => 'puppet:///modules/webmenu/puavo-conf-parameters.json';
+      source => 'puppet:///modules/webmenu/puavo-webmenu.json';
   }
 
   Package <| title == breathe-icon-theme

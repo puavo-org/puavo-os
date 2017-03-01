@@ -1,0 +1,14 @@
+#!/bin/sh
+
+set -eu
+
+# XXX get rid of hosttype handling
+if [ "$(puavo-conf puavo.hosttype)" = 'fatclient' ]; then
+  cat <<'EOF' > /etc/rsyslog.d/send_to_syslogserver.conf
+$ModLoad omrelp
+
+*.* :omrelp:syslog:20514;RSYSLOG_ForwardFormat
+EOF
+else
+  rm -f /etc/rsyslog.d/send_to_syslogserver.conf
+fi
