@@ -6,7 +6,10 @@ puavo_link_to_state() {
   local dir
 
   dir=$1
-  test -d "$dir" || return 1
+  if [ ! -d "$dir" ]; then
+    echo "not linking to $dir which does not exist" >&2
+    return 1
+  fi
 
   # Before linking the directory, make sure that the /state partition has
   # the same directory structure as the image so that applications do
