@@ -27,7 +27,7 @@ install: installdirs puavo-wlanap.service
 	install -D -m 644 -t '$(DESTDIR)$(systemdsystemunitdir)' \
 		puavo-wlanap.service
 
-	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-conf/definitions \
+	install -D -m 644 -t $(DESTDIR)$(datarootdir)/puavo-conf/definitions \
 		puavo-wlanap.json
 
 	rm -f puavo-wlanap.service
