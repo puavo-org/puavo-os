@@ -66,6 +66,7 @@ class packages {
     , 'pv'
     , 'pwgen'
     , 'pwman3'
+    , 'rsyslog'
     , 'screen'
     , 'setserial'
     , 'strace'
