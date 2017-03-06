@@ -42,11 +42,12 @@ puavo_setup_cups_dir() {
   cups_status=0
 
   if puavo_link_to_state /etc/cups; then
-    cp -a -t /state/etc/cups/               \
-             /etc/cups.rofs/cupsd.conf      \
-             /etc/cups.rofs/cups-files.conf \
-             /etc/cups.rofs/raw.convs       \
-             /etc/cups.rofs/raw.types       \
+    cp -a -t /state/etc/cups/                 \
+             /etc/cups.rofs/cups-browsed.conf \
+             /etc/cups.rofs/cupsd.conf        \
+             /etc/cups.rofs/cups-files.conf   \
+             /etc/cups.rofs/raw.convs         \
+             /etc/cups.rofs/raw.types         \
              /etc/cups.rofs/snmp.conf
   else
     cups_status=1
