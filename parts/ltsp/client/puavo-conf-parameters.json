@@ -33,31 +33,31 @@
         "default": "manual"
     },
     "puavo.printing.default_printer": {
-	"default": ""
+        "default": ""
     },
     "puavo.printing.default_uri": {
-	"default": ""
+        "default": ""
     },
     "puavo.printing.dnssd.enabled": {
-	"default": "true"
+        "default": "true"
     },
     "puavo.printing.jetpipe.enabled": {
         "default": "false"
     },
     "puavo.service.ModemManager.enabled": {
-        "default": "true"
+        "default": "false"
     },
     "puavo.service.NetworkManager.enabled": {
-        "default": "true"
+        "default": "false"
     },
     "puavo.service.avahi-daemon.enabled": {
-        "default": "true"
+        "default": "false"
     },
     "puavo.service.nscd.enabled": {
-        "default": "true"
+        "default": "false"
     },
     "puavo.service.nslcd.enabled": {
-        "default": "true"
+        "default": "false"
     },
     "puavo.service.puavo-vpn-client-dnsmasq.enabled": {
         "default": "false"
@@ -87,10 +87,10 @@
         "default": ""
     },
     "puavo.xrandr.args": {
-	"default": ""
+        "default": ""
     },
     "puavo.xrandr.enabled": {
-	"default": "false"
+        "default": "false"
     },
     "puavo.xrandr.forced": {
         "default": "false"

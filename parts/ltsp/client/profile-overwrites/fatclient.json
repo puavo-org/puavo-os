@@ -1,8 +1,3 @@
 {
-    "puavo.service.avahi-daemon.enabled"   : "false",
-    "puavo.service.ModemManager.enabled"   : "false",
-    "puavo.service.NetworkManager.enabled" : "false",
-    "puavo.service.nscd.enabled"           : "false",
-    "puavo.service.nslcd.enabled"          : "false",
-    "puavo.service.rpc-gssd.enabled"       : "true"
+    "puavo.service.rpc-gssd.enabled": "true"
 }
