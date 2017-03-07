@@ -547,7 +547,7 @@ class Control
     HighLine.say "\n\t-=< Puavo Devices Client >=-\n\n"
 
     # check out if this host is already registered
-    puavo_hosttype = IO.read(Puavo_hosttype_path) rescue 'unregistered'
+    puavo_hosttype = IO.read(Puavo_hosttype_path).chomp rescue 'unregistered'
     unregistered_hosttypes = %w(diskinstaller preinstalled unregistered)
     if !unregistered_hosttypes.include?(puavo_hosttype) \
       && !cmdline_params['force']
