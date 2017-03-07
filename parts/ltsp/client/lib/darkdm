@@ -75,19 +75,24 @@ darkdm_build()
 
 darkdm_menu()
 {
-    local initial_command
     local command
+    local initial_command
+    local prompt
 
     initial_command=$1
     shift
 
     while true; do
-	if [ -n "${initial_command}" ]; then
-	    echo "> ${initial_command}"
-	    command="${initial_command}"
-	    initial_command=
-	else
-	    read -e -p "> " command
+        if [ -n "$initial_command" ]; then
+            prompt="[${initial_command}]> "
+        else
+            prompt='> '
+        fi
+
+	read -e -p "$prompt" command
+
+	if [ -z "$command" -a -n "$initial_command" ]; then
+	    command="$initial_command"
 	fi
 
 	case "${command}" in
