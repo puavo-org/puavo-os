@@ -1,14 +1,16 @@
 class supplementary_groups {
   include ::packages
 
-  $groups = [ 'lp'
+  $groups = [ 'bluebooth'
             , 'cdrom'
-            , 'floppy'
-            , 'video'
-            , 'plugdev'
             , 'dialout'
+            , 'floppy'
+            , 'lp'
+            , 'lpadmin'
+            , 'plugdev'
+            , 'puavodesktop'
             , 'scanner'
-            , 'puavodesktop' ]
+            , 'video' ]
 
   #
   # add users to supplementary groups via pam_group / systemd -tricks
