@@ -133,6 +133,9 @@ darkdm_main()
 
     hosttype=$(cat /etc/puavo/hosttype)
     case "${hosttype}" in
+	laptop)
+	    initial_command='update'
+	    ;;
 	unregistered)
 	    initial_command='install'
 	    ;;
