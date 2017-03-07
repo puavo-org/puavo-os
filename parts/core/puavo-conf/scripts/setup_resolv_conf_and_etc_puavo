@@ -80,6 +80,7 @@ search ltsp.${puavo_domain}
 nameserver ${nbd_server}
 EOF
 
+# XXX get rid of hosttype handling
 case "$(puavo-conf puavo.hosttype)" in
   diskinstaller|preinstalled|unregistered)
     # Do not setup /etc/puavo when installing,
