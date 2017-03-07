@@ -2,46 +2,6 @@
 
 set -eu
 
-ask_install_mode_and_preseed() {
-  puavo_install_hosttype=$1
-
-  if [ "$puavo_install_hosttype" = 'preinstalled' ]; then
-    prompt='This host is preinstalled, press enter to register: '
-  else
-    prompt='Press enter to begin installation: '
-  fi
-
-  while true; do
-    read -p "$prompt" answer
-    case "$answer" in
-      guru) break                 ;;
-      '')   echo normal; return 0 ;;
-    esac
-  done
-
-  # the guru mode
-
-  while true; do
-    cat >&2 <<-'EOF'
-
-	You chose the guru mode.  You may choose to:
-	  (m)ake install disk      (bootable usb flash drive or some such)
-	  (n)ormal installation    (with preseed)
-	  (p)reinstall             (install without registering)
-
-	EOF
-    read -p 'Your choice (type m, n or p): ' answer
-    case "$answer" in
-      m) echo make-install-disk  ; break ;;
-      n) echo normal-with-preseed; break ;;
-      p) echo preinstall         ; break ;;
-      *) echo "I did not understand your answer" >&2 ;;
-    esac
-  done
-
-  echo >&2
-}
-
 ask_install_target_hosttype() {
   puavo_install_target_hosttype=laptop
   while true; do
@@ -356,23 +316,19 @@ preinstall_only=false
 puavo_preseed_register_args=
 puavo_preseed_setup_filesystems_args=
 
-install_mode=$(ask_install_mode_and_preseed "$puavo_install_hosttype")
+install_mode=${1:-normal}
 
 case "$install_mode" in
-  make-install-disk)
-    puavo-make-install-disk
-    exit 0
-    ;;
   normal)
-    ;;
-  normal-with-preseed)
-    ask_preseed
     ;;
   preinstall)
     ask_preseed
     do_preinstall "$puavo_install_hosttype" \
                   "$puavo_preseed_setup_filesystems_args"
     exit 0
+    ;;
+  preseed-install)
+    ask_preseed
     ;;
   *)
     echo "Unknown installation mode: '${install_mode}'" >&2

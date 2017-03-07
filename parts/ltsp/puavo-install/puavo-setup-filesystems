@@ -160,8 +160,9 @@ module DiskHandler
 
   def self.mkfs(size, name, type, vgname)
     run('lvcreate',
-	(size.match(/%/) ? '-l' : '-L'), size,
-	'-n', name,
+	(size.match(/%/) ? '--extents' : '--size'), size,
+	'--name', name,
+	'--wipesignatures', y,
 	vgname,
 	{ :close_others => true })
 
@@ -348,7 +349,7 @@ module QueryDiskInfo
 
       puts '-----'
       puts "The disk /dev/#{ disk_device } has the following partitions:\n"
-      show_disk_devices(disk_device)
+      show_disk_devices([ disk_device ])
 
       partitions \
         = %w(whole) \
@@ -407,7 +408,7 @@ module QueryDiskInfo
 
   def self.show_disk_devices(disk_devices)
     sleep(1.5)
-    [ disk_devices ].each do |device|
+    disk_devices.each do |device|
       system("fdisk -l /dev/#{ device } | more") \
         or raise "Error running fdisk for device '#{ device }'"
     end

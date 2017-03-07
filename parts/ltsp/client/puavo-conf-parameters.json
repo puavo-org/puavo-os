@@ -1,104 +1,104 @@
 {
-    "puavo.admin.personally_administered": {
-        "default": "false"
-    },
-    "puavo.admin.primary_user": {
-        "default": ""
-    },
-    "puavo.audio.pa.default_sink": {
-        "default": ""
-    },
-    "puavo.audio.pa.default_source": {
-        "default": ""
-    },
-    "puavo.greeter.background.default": {
-        "default": ""
-    },
-    "puavo.greeter.background.firstlogin": {
-        "default": ""
-    },
-    "puavo.greeter.background.mode": {
-        "default": "static"
-    },
-    "puavo.greeter.background.random.subdir": {
-        "default": ""
-    },
-    "puavo.graphics.driver": {
-        "default": ""
-    },
-    "puavo.guestlogin.enabled": {
-        "default": "true"
-    },
-    "puavo.guestlogin.mode": {
-        "default": "manual"
-    },
-    "puavo.printing.default_printer": {
-	"default": ""
-    },
-    "puavo.printing.default_uri": {
-	"default": ""
-    },
-    "puavo.printing.dnssd.enabled": {
-	"default": "true"
-    },
-    "puavo.printing.jetpipe.enabled": {
-        "default": "false"
-    },
-    "puavo.service.ModemManager.enabled": {
-        "default": "true"
-    },
-    "puavo.service.NetworkManager.enabled": {
-        "default": "true"
-    },
-    "puavo.service.avahi-daemon.enabled": {
-        "default": "true"
-    },
-    "puavo.service.nscd.enabled": {
-        "default": "true"
-    },
-    "puavo.service.nslcd.enabled": {
-        "default": "true"
-    },
-    "puavo.service.puavo-vpn-client-dnsmasq.enabled": {
-        "default": "false"
-    },
-    "puavo.service.puavo-vpn-client-openvpn.enabled": {
-        "default": "false"
-    },
-    "puavo.service.rpc-gssd.enabled": {
-        "default": "false"
-    },
-    "puavo.swap.local.enabled": {
-        "default": "true"
-    },
-    "puavo.www.apiserver": {
-        "default": ""
-    },
-    "puavo.www.homepage": {
-        "default": ""
-    },
-    "puavo.xbacklight.enabled": {
-        "default": "true"
-    },
-    "puavo.xbacklight.brightness": {
-        "default": "100"
-    },
-    "puavo.xorg.server": {
-        "default": ""
-    },
-    "puavo.xrandr.args": {
-	"default": ""
-    },
-    "puavo.xrandr.enabled": {
-	"default": "false"
-    },
-    "puavo.xrandr.forced": {
-        "default": "false"
-    },
-    "puavo.xsessions.locked": {
-        "default": "true"
-    },
-    "puavo.xsessions.default": {
-        "default": "puavo-desktop"
-    }
+  "puavo.admin.personally_administered": {
+    "default": "false"
+  },
+  "puavo.admin.primary_user": {
+    "default": ""
+  },
+  "puavo.audio.pa.default_sink": {
+    "default": ""
+  },
+  "puavo.audio.pa.default_source": {
+    "default": ""
+  },
+  "puavo.greeter.background.default": {
+    "default": ""
+  },
+  "puavo.greeter.background.firstlogin": {
+    "default": ""
+  },
+  "puavo.greeter.background.mode": {
+    "default": "static"
+  },
+  "puavo.greeter.background.random.subdir": {
+    "default": ""
+  },
+  "puavo.graphics.driver": {
+    "default": ""
+  },
+  "puavo.guestlogin.enabled": {
+    "default": "true"
+  },
+  "puavo.guestlogin.mode": {
+    "default": "manual"
+  },
+  "puavo.printing.default_printer": {
+    "default": ""
+  },
+  "puavo.printing.default_uri": {
+    "default": ""
+  },
+  "puavo.printing.dnssd.enabled": {
+    "default": "true"
+  },
+  "puavo.printing.jetpipe.enabled": {
+    "default": "false"
+  },
+  "puavo.service.ModemManager.enabled": {
+    "default": "false"
+  },
+  "puavo.service.NetworkManager.enabled": {
+    "default": "false"
+  },
+  "puavo.service.avahi-daemon.enabled": {
+    "default": "false"
+  },
+  "puavo.service.nscd.enabled": {
+    "default": "false"
+  },
+  "puavo.service.nslcd.enabled": {
+    "default": "false"
+  },
+  "puavo.service.puavo-vpn-client-dnsmasq.enabled": {
+    "default": "false"
+  },
+  "puavo.service.puavo-vpn-client-openvpn.enabled": {
+    "default": "false"
+  },
+  "puavo.service.rpc-gssd.enabled": {
+    "default": "false"
+  },
+  "puavo.swap.local.enabled": {
+    "default": "true"
+  },
+  "puavo.www.apiserver": {
+    "default": ""
+  },
+  "puavo.www.homepage": {
+    "default": ""
+  },
+  "puavo.xbacklight.enabled": {
+    "default": "true"
+  },
+  "puavo.xbacklight.brightness": {
+    "default": "100"
+  },
+  "puavo.xorg.server": {
+    "default": ""
+  },
+  "puavo.xrandr.args": {
+    "default": ""
+  },
+  "puavo.xrandr.enabled": {
+    "default": "false"
+  },
+  "puavo.xrandr.forced": {
+    "default": "false"
+  },
+  "puavo.xsessions.locked": {
+    "default": "true"
+  },
+  "puavo.xsessions.default": {
+    "default": "puavo-desktop"
+  }
 }

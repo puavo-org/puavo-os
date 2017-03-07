@@ -17,23 +17,28 @@ darkdm_reboot()
 
 darkdm_install()
 {
-    /usr/sbin/puavo-install || return 1
+    /usr/sbin/puavo-install "$@" || return 1
 
     darkdm_reboot
 }
 
 darkdm_print_help()
 {
-    echo "Puavo OS Command Shell"
-    echo
-    echo "Commands:"
-    echo "  build    -  build Puavo OS image and poweroff"
-    echo "  help     -  show this help"
-    echo "  install  -  install Puavo OS to this device and reboot"
-    echo "  poweroff -  poweroff the system in 5 seconds"
-    echo "  reboot   -  reboot the system in 5 seconds"
-    echo "  shell    -  spawn a shell"
-    echo "  update   -  update the local Puavo OS installation and reboot"
+    cat <<'EOF'
+Puavo OS Command Shell
+
+Commands:
+  build             - build Puavo OS image and poweroff
+  help              - show this help
+  install           - install Puavo OS to this device and reboot
+  make-install-disk - make a bootable usb flash drive or some such
+  poweroff          - poweroff the system in 5 seconds
+  preinstall        - install without registering
+  preseed-install   - install with a preseed
+  reboot            - reboot the system in 5 seconds
+  shell             - spawn a shell
+  update            - update the local Puavo OS installation and reboot
+EOF
 }
 
 darkdm_shell()
@@ -75,19 +80,24 @@ darkdm_build()
 
 darkdm_menu()
 {
-    local initial_command
     local command
+    local initial_command
+    local prompt
 
     initial_command=$1
     shift
 
     while true; do
-	if [ -n "${initial_command}" ]; then
-	    echo "> ${initial_command}"
-	    command="${initial_command}"
-	    initial_command=
-	else
-	    read -e -p "> " command
+        if [ -n "$initial_command" ]; then
+            prompt="[${initial_command}]> "
+        else
+            prompt='> '
+        fi
+
+	read -e -p "$prompt" command || return 1
+
+	if [ -z "$command" -a -n "$initial_command" ]; then
+	    command="$initial_command"
 	fi
 
 	case "${command}" in
@@ -100,8 +110,17 @@ darkdm_menu()
             'install')
 		darkdm_install
 		;;
+	    'make-install-disk')
+		puavo-make-install-disk
+		;;
 	    'poweroff')
 		darkdm_poweroff
+		;;
+            'preinstall')
+		darkdm_install preinstall
+		;;
+            'preseed-install')
+		darkdm_install preseed-install
 		;;
 	    'reboot')
 		darkdm_reboot
@@ -128,6 +147,9 @@ darkdm_main()
 
     hosttype=$(cat /etc/puavo/hosttype)
     case "${hosttype}" in
+	laptop)
+	    initial_command='update'
+	    ;;
 	unregistered)
 	    initial_command='install'
 	    ;;
@@ -139,4 +161,13 @@ darkdm_main()
     darkdm_menu "${initial_command}"
 }
 
-darkdm_main
+while true; do
+    if darkdm_main; then
+	echo 'Operation was a success.'
+    else
+	echo "Operation failed with error code $?."
+    fi
+
+    echo 'Press ENTER to continue.'
+    read _
+done

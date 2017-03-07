@@ -2,8 +2,20 @@
 
 set -eu
 
-read puavo_domain   < /etc/puavo/domain
-read puavo_hostname < /etc/puavo/hostname
+# XXX get rid of hosttype handling
+puavo_hosttype="$(puavo-conf puavo.hosttype)"
+
+case "$puavo_hosttype" in
+  diskinstaller|preinstalled|unregistered)
+    # For unregistered hosts, setup hostname based on hosttype.
+    puavo_hostname="$puavo_hosttype"
+    ;;
+  *)
+    read puavo_hostname < /etc/puavo/hostname
+    ;;
+esac
+
+read puavo_domain < /etc/puavo/domain
 
 echo "$puavo_hostname" > /etc/hostname
 echo "$puavo_hostname" > /proc/sys/kernel/hostname
