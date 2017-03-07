@@ -160,8 +160,9 @@ module DiskHandler
 
   def self.mkfs(size, name, type, vgname)
     run('lvcreate',
-	(size.match(/%/) ? '-l' : '-L'), size,
-	'-n', name,
+	(size.match(/%/) ? '--extents' : '--size'), size,
+	'--name', name,
+	'--wipesignatures', y,
 	vgname,
 	{ :close_others => true })
 
