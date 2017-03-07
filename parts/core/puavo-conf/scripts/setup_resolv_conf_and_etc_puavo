@@ -80,15 +80,6 @@ search ltsp.${puavo_domain}
 nameserver ${nbd_server}
 EOF
 
-# XXX get rid of hosttype handling
-case "$(puavo-conf puavo.hosttype)" in
-  diskinstaller|preinstalled|unregistered)
-    # Do not setup /etc/puavo when installing,
-    # because puavo-register refuses to do anything if this directory exists.
-    exit 0
-    ;;
-esac
-
 ldap_base=$(query_txt "_ldap_base.${puavo_domain}")
 ldap_slave=$(query_srv --withport "_ldap._tcp.${puavo_domain}")
 ldap_master=$(query_srv --withport "_ldap_master._tcp.${puavo_domain}")

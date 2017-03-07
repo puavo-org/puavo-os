@@ -4,6 +4,6 @@ set -eu
 
 mkdir -p /etc/puavo
 
-# get rid of hosttype handling?
+# XXX get rid of hosttype handling?
 # (this is still needed by some old code)
 puavo-conf puavo.hosttype > /etc/puavo/hosttype

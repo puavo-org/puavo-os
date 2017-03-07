@@ -27,7 +27,7 @@ require 'yaml'
 require 'uri'
 
 Puavodir            = '/etc/puavo'
-Puavo_hostname_path = "#{ Puavodir }/hostname"
+Puavo_hosttype_path = "#{ Puavodir }/hosttype"
 Puavo_id_path       = "#{ Puavodir }/id"
 
 HostCrtPath     = "#{ Puavodir }/certs/host.crt"
@@ -546,9 +546,13 @@ class Control
   def self.register(cmdline_params)
     HighLine.say "\n\t-=< Puavo Devices Client >=-\n\n"
 
-    if File.exists?(Puavo_hostname_path) && !cmdline_params['force']
-      Tools.errmsg('Registration is already done and --force is not applied.')
-      exit 1
+    # check out if this host is already registered
+    puavo_hosttype = IO.read(Puavo_hosttype_path) rescue 'unregistered'
+    unregistered_hosttypes = %w(diskinstaller preinstalled unregistered)
+    if !unregistered_hosttypes.include?(puavo_hosttype) \
+      && !cmdline_params['force']
+        Tools.errmsg('Registration is already done and --force is not applied.')
+        exit 1
     end
 
     cert = HostCertificate.new
@@ -564,6 +568,10 @@ class Control
     raise 'Did not receive host configuration from Puavo' \
         unless info['registration']['host_configuration']
 
+    begin
+      FileUtils.remove_entry_secure(Puavodir)
+    rescue Errno::ENOENT
+    end
 
     if info['registration']['userCertificate']
       raise 'Root CA missing' \
@@ -575,7 +583,7 @@ class Control
                                       info['registration']['rootca'],
                                       info['registration']['orgcabundle'])
 
-      Tools.mkdir("#{ Puavodir }")
+      Tools.mkdir(Puavodir)
       Tools.mkdir("#{ Puavodir }/certs")
       cert.write_to_filesystem("#{ Puavodir }/certs/host.crt",
                                 "#{ Puavodir }/certs/host.key",
@@ -583,7 +591,6 @@ class Control
                                 "#{ Puavodir }/certs/hostorgcabundle.pem",
                                 "#{ Puavodir }/certs/orgcabundle.pem")
     end
-
 
     top_domain = Tools.topdomain(organisation_info['ldap_host'])
     PUAVO_ETC.write(:id, info["registration"]["puavoId"])
