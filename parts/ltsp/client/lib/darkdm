@@ -89,7 +89,7 @@ darkdm_menu()
             prompt='> '
         fi
 
-	read -e -p "$prompt" command
+	read -e -p "$prompt" command || return 1
 
 	if [ -z "$command" -a -n "$initial_command" ]; then
 	    command="$initial_command"
@@ -147,4 +147,13 @@ darkdm_main()
     darkdm_menu "${initial_command}"
 }
 
-darkdm_main
+while true; do
+    if darkdm_main; then
+	echo 'Operation was a success.'
+    else
+	echo "Operation failed with error code $?."
+    fi
+
+    echo 'Press ENTER to continue.'
+    read _
+done
