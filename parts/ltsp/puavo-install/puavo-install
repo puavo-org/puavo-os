@@ -25,14 +25,12 @@ ask_install_mode_and_preseed() {
     cat >&2 <<-'EOF'
 
 	You chose the guru mode.  You may choose to:
-	  (m)ake install disk      (bootable usb flash drive or some such)
 	  (n)ormal installation    (with preseed)
 	  (p)reinstall             (install without registering)
 
 	EOF
-    read -p 'Your choice (type m, n or p): ' answer
+    read -p 'Your choice (type n or p): ' answer
     case "$answer" in
-      m) echo make-install-disk  ; break ;;
       n) echo normal-with-preseed; break ;;
       p) echo preinstall         ; break ;;
       *) echo "I did not understand your answer" >&2 ;;
@@ -359,10 +357,6 @@ puavo_preseed_setup_filesystems_args=
 install_mode=$(ask_install_mode_and_preseed "$puavo_install_hosttype")
 
 case "$install_mode" in
-  make-install-disk)
-    puavo-make-install-disk
-    exit 0
-    ;;
   normal)
     ;;
   normal-with-preseed)
