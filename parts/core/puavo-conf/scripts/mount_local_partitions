@@ -71,10 +71,13 @@ case "$puavo_hosttype" in
     # so failing this is not an error and there is nothing more to do.
     vgchange -a y puavo 2>/dev/null || exit 0
     ;;
+  unregistered)
+    # Do not attach puavo VG when installing a new system.
+    ;;
   *)
     vgchange -a y puavo
     ;;
-fi
+esac
 
 status=0
 
@@ -94,9 +97,16 @@ case "$puavo_hosttype" in
     ;;
 esac
 
-if [ -b /dev/mapper/puavo-tmp ]; then
-  { puavo_mount_partition puavo-tmp /tmp && chmod 1777 /tmp; } || status=1
-fi
+case "$puavo_hosttype" in
+  diskinstaller|unregistered)
+    # do not mount from /dev/mapper/puavo-tmp when installing
+    ;;
+  *)
+    if [ -b /dev/mapper/puavo-tmp ]; then
+      { puavo_mount_partition puavo-tmp /tmp && chmod 1777 /tmp; } || status=1
+    fi
+    ;;
+esac
 
 rm -f /images/forcefsck
 

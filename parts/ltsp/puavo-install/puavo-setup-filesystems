@@ -162,7 +162,7 @@ module DiskHandler
     run('lvcreate',
 	(size.match(/%/) ? '--extents' : '--size'), size,
 	'--name', name,
-	'--wipesignatures', y,
+	'--yes',
 	vgname,
 	{ :close_others => true })
 
@@ -176,6 +176,10 @@ module DiskHandler
 
   def self.mount_filesystems(fs_conf, vgname)
     non_swap_filesystems( fs_conf['hosttype'] ).each do |name, attrs|
+      # /tmp should not be mounted now,
+      # otherwise things currently using it will break (for example tmux).
+      next if name == 'tmp'
+
       mnt_path = "/#{ name }"
       FileUtils.mkdir_p(mnt_path)
       run('mount', "/dev/mapper/#{ vgname }-#{ name }", mnt_path)
