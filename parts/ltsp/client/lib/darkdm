@@ -2,6 +2,24 @@
 
 set -eu
 
+darkdm_systeminfo()
+{
+  blockdevice_sda_size=$(facter blockdevice_sda_size \
+    | awk '$1 ~ /^[0-9]+$/ { printf "%.0fGb\n", $1 / 1000000000, "Gb" }')
+
+  cat <<EOF
+bios:            $(facter bios_vendor) / $(facter bios_version)
+blockdevice sda: $(facter blockdevice_sda_model) / ${blockdevice_sda_size}
+cpu:             $(facter processorcount) CPUs / $(facter processor0)
+memory:          $(facter memorysize)
+network:         IP $(facter ipaddress) / MAC $(facter macaddress)
+product:         $(facter manufacturer) / $(facter productname)
+serial numbers:  $(facter serialnumber) (machine) / $(facter boardserialnumber) (board)
+some pci devices:
+$(lspci | awk '$2 == "Network" || $2 == "VGA"' | sed 's/^/  /')
+EOF
+}
+
 darkdm_reboot()
 {
     local i
@@ -87,6 +105,7 @@ darkdm_menu()
     shift
 
     while true; do
+	echo "$systeminfo"
 	darkdm_print_help
 
         if [ -n "$initial_command" ]; then
@@ -156,6 +175,9 @@ darkdm_main()
 
     darkdm_menu "${initial_command}"
 }
+
+echo 'Gathering system information...'
+systeminfo=$(darkdm_systeminfo 2>/dev/null || true)
 
 while true; do
     if darkdm_main; then
