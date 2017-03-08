@@ -56,6 +56,7 @@ class packages {
     , 'libstdc++5'
     , 'lm-sensors'
     , 'lshw'
+    , 'lsof'
     , 'lynx'
     , 'm4'
     , 'mlocate'
