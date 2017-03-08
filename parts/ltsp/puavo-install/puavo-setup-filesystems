@@ -162,7 +162,7 @@ module DiskHandler
     run('lvcreate',
 	(size.match(/%/) ? '--extents' : '--size'), size,
 	'--name', name,
-	'--wipesignatures', 'y',
+	'--yes',
 	vgname,
 	{ :close_others => true })
 
