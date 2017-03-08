@@ -71,6 +71,9 @@ case "$puavo_hosttype" in
     # so failing this is not an error and there is nothing more to do.
     vgchange -a y puavo 2>/dev/null || exit 0
     ;;
+  unregistered)
+    # Do not attach puavo VG when installing a new system.
+    ;;
   *)
     vgchange -a y puavo
     ;;
