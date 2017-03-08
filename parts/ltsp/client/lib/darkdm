@@ -43,6 +43,7 @@ darkdm_install()
 darkdm_print_help()
 {
     cat <<'EOF'
+
 Puavo OS Command Shell
 
 Commands:
@@ -177,6 +178,7 @@ darkdm_main()
 }
 
 echo 'Gathering system information...'
+echo
 systeminfo=$(darkdm_systeminfo 2>/dev/null || true)
 
 while true; do
