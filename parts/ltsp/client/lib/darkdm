@@ -29,7 +29,6 @@ Puavo OS Command Shell
 
 Commands:
   build             - build Puavo OS image and poweroff
-  help              - show this help
   install           - install Puavo OS to this device and reboot
   make-install-disk - make a bootable usb flash drive or some such
   poweroff          - poweroff the system in 5 seconds
@@ -88,6 +87,8 @@ darkdm_menu()
     shift
 
     while true; do
+	darkdm_print_help
+
         if [ -n "$initial_command" ]; then
             prompt="[${initial_command}]> "
         else
@@ -103,9 +104,6 @@ darkdm_menu()
 	case "${command}" in
 	    'build')
 		darkdm_build
-		;;
-	    'help')
-		darkdm_print_help
 		;;
             'install')
 		darkdm_install
@@ -132,7 +130,7 @@ darkdm_menu()
 		darkdm_update
 		;;
 	    *)
-		echo "Error: Invalid command '${command}'. Try 'help'." >&2
+		echo "Error: Invalid command '${command}'." >&2
 		;;
 	esac
     done
@@ -142,8 +140,6 @@ darkdm_main()
 {
     local hosttype
     local initial_command
-
-    darkdm_print_help
 
     hosttype=$(cat /etc/puavo/hosttype)
     case "${hosttype}" in
