@@ -2,9 +2,31 @@
 "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
 <node>
   <interface name="org.puavo.Conf1">
+    <method name="Add">
+      <arg name="key" type="s" direction="in"/>
+      <arg name="value" type="s" direction="in"/>
+    </method>
+    <method name="Clear" />
     <method name="Get">
       <arg name="key" type="s" direction="in"/>
       <arg name="value" type="s" direction="out"/>
+    </method>
+    <method name="GetAll">
+      <arg name="length" type="t" direction="out"/>
+      <arg name="keys" type="as" direction="out"/>
+      <arg name="values" type="as" direction="out"/>
+    </method>
+    <method name="HasKey">
+      <arg name="key" type="s" direction="in"/>
+      <arg name="result" type="b" direction="out"/>
+    </method>
+    <method name="Overwrite">
+      <arg name="key" type="s" direction="in"/>
+      <arg name="value" type="s" direction="in"/>
+    </method>
+    <method name="Set">
+      <arg name="key" type="s" direction="in"/>
+      <arg name="value" type="s" direction="in"/>
     </method>
   </interface>
 </node>
