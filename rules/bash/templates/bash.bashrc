@@ -56,10 +56,10 @@ fi
 
 if [ "$(id -u)" = 0 ] || (groups | fgrep -qw puavo-os); then
   _puavo_image_name=$(cat /etc/puavo-image/name)
-  _puavo_host_profiles=$(puavo-conf puavo.profiles.list 2>/dev/null || true)
+  _puavo_host_profiles=$(timeout -k 1 3 puavo-conf puavo.profiles.list 2>/dev/null || true)
 
   if [ -z "$_puavo_host_profiles" ]; then
-    _puavo_host_profiles=$(puavo-conf puavo.hosttype 2>/dev/null || true)
+    _puavo_host_profiles=$(timeout -k 1 3 puavo-conf puavo.hosttype 2>/dev/null || true)
     if [ -z "$_puavo_host_profiles" ]; then
       _puavo_host_profiles='???'
     fi

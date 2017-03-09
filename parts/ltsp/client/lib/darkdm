@@ -6,8 +6,13 @@ darkdm_systeminfo()
 {
   blockdevice_sda_size=$(facter blockdevice_sda_size \
     | awk '$1 ~ /^[0-9]+$/ { printf "%.0fGb\n", $1 / 1000000000, "Gb" }')
+  this_image=$(cat /etc/puavo-image/name)
+  this_release=$(cat /etc/puavo-image/release)
 
   cat <<EOF
+image:   ${this_image}
+release: ${this_release}
+
 bios:            $(facter bios_vendor) / $(facter bios_version)
 blockdevice sda: $(facter blockdevice_sda_model) / ${blockdevice_sda_size}
 cpu:             $(facter processorcount) CPUs / $(facter processor0)
@@ -43,6 +48,7 @@ darkdm_install()
 darkdm_print_help()
 {
     cat <<'EOF'
+
 Puavo OS Command Shell
 
 Commands:
@@ -177,6 +183,7 @@ darkdm_main()
 }
 
 echo 'Gathering system information...'
+echo
 systeminfo=$(darkdm_systeminfo 2>/dev/null || true)
 
 while true; do
