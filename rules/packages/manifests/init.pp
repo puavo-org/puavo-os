@@ -57,6 +57,7 @@ class packages {
     , 'lm-sensors'
     , 'lshw'
     , 'lsof'
+    , 'ltrace'
     , 'lynx'
     , 'm4'
     , 'mlocate'
