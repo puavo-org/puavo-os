@@ -57,6 +57,7 @@ class packages {
     , 'lm-sensors'
     , 'lshw'
     , 'lsof'
+    , 'ltrace'
     , 'lynx'
     , 'm4'
     , 'mlocate'
@@ -308,7 +309,8 @@ class packages {
     , 'sound-juicer' ]:
       tag => [ 'tag_optical_media', 'tag_debian', ];
 
-    [ 'cups-daemon'
+    [ 'cups-browsed'
+    , 'cups-daemon'
     , 'gtklp' ]:
       tag => [ 'tag_printing', 'tag_debian', ];
 

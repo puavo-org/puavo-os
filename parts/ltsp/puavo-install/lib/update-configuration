@@ -22,6 +22,19 @@ def get_hostname()
   IO.read('/etc/puavo/hostname').chomp
 end
 
+def puavoconf_get(key)
+  # Open and close puavo-conf db each time, so that we will not be holding
+  # a lock when "puavo-conf-update" gets run, as it also wants a db access
+  # and a lock (or worse, it starts up puavo-conf-daemon which does not get
+  # a lock).
+  puavoconf = Puavo::Conf.new
+  begin
+    return puavoconf.get(key)
+  ensure
+    puavoconf.close
+  end
+end
+
 def puavo_rest_request_and_replace(restclient, uripath, filepath)
   data = restclient.get(uripath).to_s
 
@@ -86,7 +99,7 @@ def update_device_json(restclient)
     = IO.read('/state/etc/puavo/primary_user_override').chomp rescue nil
 
   if primary_user_override && !primary_user_override.empty? then
-    primary_user = $puavoconf.get('puavo.admin.primary_user')
+    primary_user = puavoconf_get('puavo.admin.primary_user')
     if primary_user_override == primary_user then
       # remove override if we get the same information from Puavo
       remove_primary_user_override = true
@@ -138,20 +151,20 @@ end
 def update_grub_environment(restclient)
   log(Syslog::LOG_INFO, ">>> Updating grub environment\n")
 
-  kernel_version = $puavoconf.get('puavo.kernel.version')
+  kernel_version = puavoconf_get('puavo.kernel.version')
   if kernel_version && !kernel_version.empty? then
     grubedit('set', "puavo_kernel_version=#{ kernel_version }")
   else
     grubedit('unset', 'puavo_kernel_version')
   end
 
-  if $puavoconf.get('puavo.admin.personally_administered') == 'true' then
+  if puavoconf_get('puavo.admin.personally_administered') == 'true' then
     grubedit('set', 'puavo_show_imageoverlays=true')
   else
     grubedit('unset', 'puavo_show_imageoverlays')
   end
 
-  kernel_arguments = $puavoconf.get('puavo.kernel.arguments')
+  kernel_arguments = puavoconf_get('puavo.kernel.arguments')
   if kernel_arguments && !kernel_arguments.empty? then
     grubedit('set', "puavo_kernel_arguments=#{ kernel_arguments }")
   else
@@ -169,7 +182,7 @@ def update_wlan_configurations(restclient)
 end
 
 def update_puavopkg_installers(restclient)
-  unless $puavoconf.get('puavo.admin.personally_administered') == 'true' \
+  unless puavoconf_get('puavo.admin.personally_administered') == 'true' \
            && File.executable?('/usr/sbin/puavo-local-config') then
     log(Syslog::LOG_DEBUG,
         "Not personally administered, so not updating puavo packages\n")
@@ -182,8 +195,6 @@ def update_puavopkg_installers(restclient)
 end
 
 Syslog.open(File.basename($0), Syslog::LOG_CONS)
-
-$puavoconf = Puavo::Conf.new
 
 restclient = PuavoRestClient.new(:auth => :etc, :timeout => 30)
 
