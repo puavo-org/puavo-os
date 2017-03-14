@@ -21,7 +21,6 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-local-config/templates/etc
 	mkdir -p $(DESTDIR)$(libdir)/puavo-local-config-ui
 	mkdir -p $(DESTDIR)$(libdir)/puavo-local-config/pam
-	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-conf/scripts
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
 
 .PHONY : install
@@ -37,9 +36,6 @@ install : installdirs
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-local-config/templates/etc \
 		templates/etc/cpufreqd.conf
-
-	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-conf/scripts \
-		setup_local_config
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(libdir)/puavo-local-config-ui \
 		plc-ui/index.html   \
