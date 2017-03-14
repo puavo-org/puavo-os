@@ -21,7 +21,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-local-config/templates/etc
 	mkdir -p $(DESTDIR)$(libdir)/puavo-local-config-ui
 	mkdir -p $(DESTDIR)$(libdir)/puavo-local-config/pam
-	mkdir -p $(DESTDIR)$(sysconfdir)/etc/puavo-conf/scripts
+	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-conf/scripts
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
 
 .PHONY : install
