@@ -20,4 +20,6 @@ until monitor_is_connected; do
   sleep 2
 done
 
-exec /usr/bin/gnome-shell.distrib "$@"
+# Not using exec, because this "gnome-shell"
+# process must exist so that "adm-x" tool finds us.
+/usr/bin/gnome-shell.distrib "$@"
