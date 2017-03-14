@@ -86,6 +86,11 @@ binding='<Primary><Super>z'
 command='xzoom'
 name='XZoom'
 
+[org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4]
+binding='<Primary><Alt>l'
+command='gnome-screensaver-command -l'
+name='Lock screen'
+
 [org/gnome/settings-daemon/plugins/xrandr]
 active=true
 default-monitors-setup='do-nothing'
