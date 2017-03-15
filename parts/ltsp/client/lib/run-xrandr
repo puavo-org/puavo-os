@@ -1,22 +1,29 @@
 #!/usr/bin/ruby
 
-require 'json'
-require 'shellwords'
-
 require 'puavo/conf'
 
 puavoconf = Puavo::Conf.new
 
 exit 0 unless puavoconf.get('puavo.xrandr.enabled') == 'true'
 
-xrandr_args = Shellwords.shellwords(puavoconf.get('puavo.xrandr.args'))
+require 'json'
+require 'shellwords'
+
+puavo_xrandr_args = puavoconf.get('puavo.xrandr.args')
 puavoconf.close
 
-connected_displays \
-  = %x(xrandr -q).split("\n")                                               \
-                 .map { |s| a = s.split; a[1] == "connected" ? a[0] : nil } \
-                 .compact
+xrandr_args_list = JSON.parse(puavo_xrandr_args)
 
-system('xrandr', *xrandr_args)
+raise 'puavo.xrandr.args not in correct format' \
+  unless xrandr_args_list.kind_of?(Array)
 
-exit $?.exitstatus
+status = 0
+
+xrandr_args_list.each do |xrandr_args_string|
+  xrandr_args = Shellwords.shellwords(xrandr_args_string)
+  system('xrandr', *xrandr_args)
+  system_status = $?.exitstatus
+  status = system_status if system_status != 0
+end
+
+exit(status)
