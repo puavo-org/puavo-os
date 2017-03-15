@@ -638,10 +638,6 @@ class packages {
       package_name => 'linux-image-4.9.0-2-amd64';
   }
 
-  #
-  # packages from the canonical/ubuntu partner repository
-  #
-
   # XXX missing from Debian
   # @package {
   #   XXX missing from Debian
