@@ -41,8 +41,10 @@ class packages {
   #
 
   @package {
-    [ 'cpufreqd'
+    [ 'clusterssh'
     , 'console-setup'
+    , 'cpufreqd'
+    , 'dconf-tools'
     , 'elinks'
     , 'ethtool'
     , 'expect'
@@ -65,31 +67,27 @@ class packages {
     , 'nmap'
     , 'powertop'
     , 'procps'
+    , 'pssh'
     , 'pv'
     , 'pwgen'
     , 'pwman3'
     , 'rsyslog'
     , 'screen'
     , 'setserial'
+    , 'smartmontools'
     , 'strace'
     , 'sudo'
     , 'sysstat'
+    , 'terminator'
     , 'tmux'
     , 'tshark'
+    , 'vinagre'
     , 'vrms'
     , 'w3m'
     , 'whois'
     , 'x11vnc'
+    , 'xbacklight'
     , 'xinput-calibrator' ]:
-      tag => [ 'tag_admin', 'tag_debian', ];
-
-    [ 'clusterssh'
-    , 'dconf-tools'
-    , 'pssh'
-    , 'smartmontools'
-    , 'terminator'
-    , 'vinagre'
-    , 'xbacklight' ]:
       tag => [ 'tag_admin', 'tag_debian', ];
 
     [ 'libasound2-plugins'
