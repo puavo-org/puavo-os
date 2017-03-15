@@ -28,17 +28,9 @@ class kernels {
     }
   }
 
-  $default_kernel = $debianversioncodename ? {
-    'jessie' => '4.7.0-0.bpo.1-amd64',
-    default  => '4.9.0-1-amd64',
-  }
-
-  $edge_kernel = $debianversioncodename ? {
-    'jessie' => '4.7.0-0.bpo.1-amd64',
-    default  => $default_kernel,
-  }
-
-  $legacy_kernel = '3.16.0-4-amd64'
+  $default_kernel = '4.9.0-2-amd64'
+  $edge_kernel    = $default_kernel
+  $legacy_kernel  = '3.16.0-4-amd64'
 
   ::kernels::all_kernel_links {
     'default': kernel => $default_kernel;

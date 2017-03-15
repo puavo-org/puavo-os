@@ -22,7 +22,9 @@ for xauthority in $xauthority_files; do
   user_name=$(id -nu "$user_id" 2>/dev/null || true)
   tty=$(ps --no-headers -C Xorg -o uid,tty | awk -v uid="$user_id" 'uid == $1 { print $2 }')
 
-  gnome_shell_pid=$(pgrep -u "$user_id" -nx gnome-shell 2>/dev/null || true)
+  # XXX surprising dependency on exact command-line characteristics
+  gnome_shell_pid=$(pgrep -u "$user_id" -fnx '/bin/sh /usr/bin/gnome-shell' \
+		      2>/dev/null || true)
   if [ -n "$gnome_shell_pid" ]; then
     display=$(awk 'BEGIN { FS = "="; RS = "\0" } /^DISPLAY=/ { print $2 }' \
       /proc/${gnome_shell_pid}/environ 2>/dev/null || true)

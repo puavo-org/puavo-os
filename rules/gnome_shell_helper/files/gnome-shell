@@ -1,0 +1,27 @@
+/bin/sh
+
+# gnome-shell/mutter expects that at least one monitor is connected,
+# otherwise it breaks on startup.  Wait for at least one monitor to come up
+# before starting the real gnome-shell.
+# See https://bugzilla.redhat.com/show_bug.cgi?id=1419561
+# and https://bugzilla.gnome.org/show_bug.cgi?id=730551.
+
+set -eu
+
+monitor_is_connected() {
+  xrandr -q | awk '
+    BEGIN { status = 1 }
+    $2 == "connected" { status = 0 }
+    END { exit(status) }
+  '
+}
+
+until monitor_is_connected; do
+  sleep 2
+done
+
+# Not using exec, because this "gnome-shell"
+# process must exist so that "adm-x" tool finds us.
+# XXX It pgreps the exact command-line arguments, so do not change shell
+# XXX or script name without considering.
+/usr/bin/gnome-shell.distrib "$@"

@@ -41,8 +41,10 @@ class packages {
   #
 
   @package {
-    [ 'cpufreqd'
+    [ 'clusterssh'
     , 'console-setup'
+    , 'cpufreqd'
+    , 'dconf-tools'
     , 'elinks'
     , 'ethtool'
     , 'expect'
@@ -65,31 +67,27 @@ class packages {
     , 'nmap'
     , 'powertop'
     , 'procps'
+    , 'pssh'
     , 'pv'
     , 'pwgen'
     , 'pwman3'
     , 'rsyslog'
     , 'screen'
     , 'setserial'
+    , 'smartmontools'
     , 'strace'
     , 'sudo'
     , 'sysstat'
+    , 'terminator'
     , 'tmux'
     , 'tshark'
+    , 'vinagre'
     , 'vrms'
     , 'w3m'
     , 'whois'
     , 'x11vnc'
+    , 'xbacklight'
     , 'xinput-calibrator' ]:
-      tag => [ 'tag_admin', 'tag_debian', ];
-
-    [ 'clusterssh'
-    , 'dconf-tools'
-    , 'pssh'
-    , 'smartmontools'
-    , 'terminator'
-    , 'vinagre'
-    , 'xbacklight' ]:
       tag => [ 'tag_admin', 'tag_debian', ];
 
     [ 'libasound2-plugins'
@@ -583,6 +581,25 @@ class packages {
   }
 
   #
+  # packages from the Ubuntu repository
+  #
+
+  @package {
+    [ 'edubuntu-wallpapers'
+    , 'ubuntu-wallpapers-lucid'
+    , 'ubuntu-wallpapers-precise'
+    , 'ubuntu-wallpapers-quantal'
+    , 'ubuntu-wallpapers-raring'
+    , 'ubuntu-wallpapers-saucy'
+    , 'ubuntu-wallpapers-trusty'
+    , 'ubuntu-wallpapers-utopic'
+    , 'ubuntu-wallpapers-vivid'
+    , 'ubuntu-wallpapers-wily'
+    , 'ubuntu-wallpapers-xenial' ]:
+      tag => [ 'tag_wallpapers', 'tag_ubuntu', ];
+  }
+
+  #
   # packages from the (Opinsys) puavo repository
   #
 
@@ -634,14 +651,10 @@ class packages {
       dkms_modules => $all_dkms_modules,
       package_name => 'linux-image-3.16.0-4-amd64';
 
-    '4.9.0-1-amd64':
+    '4.9.0-2-amd64':
       dkms_modules => $all_dkms_modules,
-      package_name => 'linux-image-4.9.0-1-amd64';
+      package_name => 'linux-image-4.9.0-2-amd64';
   }
-
-  #
-  # packages from the canonical/ubuntu partner repository
-  #
 
   # XXX missing from Debian
   # @package {

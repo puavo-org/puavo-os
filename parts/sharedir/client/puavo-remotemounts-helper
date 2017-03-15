@@ -14,6 +14,8 @@ require 'open3'
 require 'resolv'
 require 'thread'
 
+$puavo_domain = IO.read('/etc/puavo/domain').chomp
+
 $update_gtk_bookmarks_semaphore = Mutex.new
 
 def sendmsg(channel, msg)
@@ -78,12 +80,15 @@ class DbusHandler
 end
 
 class GvfsMount
-  def initialize(remote_host, url, mntpath, linkname)
+  def initialize(remote_path, user_id, linkname)
     @active      = true
     @linkname    = linkname
-    @mntpath     = mntpath
-    @remote_host = remote_host
-    @url         = url
+    @remote_path = remote_path
+    @user_id     = user_id
+
+    @mntpath     = nil
+    @remote_host = nil
+    @url         = nil
   end
 
   def activate()
@@ -146,50 +151,58 @@ class GvfsMount
     end
   end
 
-  def ensure_mounts
-    checks_with_timeout = 0
+  def check_and_handle_mount(checks_with_timeout)
+    mount_state = check_mount_state()
+
+    if !@active then
+      if mount_state != 'not connected' then
+        unmount_gvfsmount()
+        checks_with_timeout[0] = 0
+      end
+
+      return
+    end
+
+    case mount_state
+      when 'not connected'
+        ensure_link(false) rescue true
+        begin
+          # make sure dns works, so we do not stress gvfs-mount,
+          # besides, it is not an error if gvfs-mount fails if not
+          # on the right network
+          Resolv::DNS.new.getaddress(@remote_host)
+
+          outmsg("mounting '#{ @mntpath }'")
+          system('timeout', '-k', '10', '20', 'gvfs-mount', @url) \
+            or errmsg("problem in mounting '#{ @url }'")
+          checks_with_timeout[0] = 0
+        rescue Resolv::ResolvError
+          outmsg("did not find #{ @remote_host }," \
+                   + " not mounting #{ @url }")
+        end
+
+      when 'ok'
+        ensure_link(true) rescue true
+        checks_with_timeout[0] = 0
+
+      when 'timeout'
+        checks_with_timeout[0] += 1
+        if checks_with_timeout[0] >= 3 then
+          # with three timeouts in a row, unmount the thing!
+          unmount_gvfsmount()
+          checks_with_timeout[0] = 0
+        end
+    end
+  end
+
+  def ensure_mount
+    checks_with_timeout = [0]
 
     while true do
       begin
-        mount_state = check_mount_state()
-
-        if !@active then
-          if mount_state == 'not connected' then
-            # mount is not connected and not active, so nothing to do
-          else
-            unmount_gvfsmount()
-            checks_with_timeout = 0
-          end
-        else
-	  case mount_state
-	    when 'not connected'
-	      ensure_link(false) rescue true
-	      begin
-		# make sure dns works, so we do not stress gvfs-mount,
-		# besides, it is not an error if gvfs-mount fails if not on the
-		# right network
-		Resolv::DNS.new.getaddress(@remote_host)
-
-		outmsg("mounting '#{ @mntpath }'")
-		system('timeout', '-k', '10', '20', 'gvfs-mount', @url) \
-		  or errmsg("problem in mounting '#{ @url }'")
-		checks_with_timeout = 0
-	      rescue Resolv::ResolvError
-		outmsg("did not find #{ @remote_host }, not mounting #{ @url }")
-	      end
-
-	    when 'ok'
-	      ensure_link(true) rescue true
-	      checks_with_timeout = 0
-
-	    when 'timeout'
-	      checks_with_timeout += 1
-	      if checks_with_timeout >= 3 then
-		# with three timeouts in a row, unmount the thing!
-		unmount_gvfsmount()
-		checks_with_timeout = 0
-	      end
-	  end
+        update_mountinfo_from_dns()
+        if @url then
+          check_and_handle_mount(checks_with_timeout)
         end
 
       rescue StandardError => e
@@ -205,6 +218,36 @@ class GvfsMount
     outmsg("unmounting '#{ @url }'")
     system('timeout', '-k', '5', '10', 'gvfs-mount', '-u', @url) \
       or errmsg("problem in unmounting '#{ @url }'")
+  end
+
+  def update_mountinfo_from_dns()
+    # If we are behind some server that provides samba mounts for us,
+    # update our mount information.
+
+    remote_host = nil
+    Resolv::DNS.open do |dns|
+      dns.getresources("_sambaserver._tcp.#{ $puavo_domain }",
+                       Resolv::DNS::Resource::IN::SRV).each do |srv|
+        if srv.port == 139 then
+          remote_host = srv.target
+          break
+        end
+      end
+    end
+
+    # Use the old info from DNS (if it exists) if we do not get new info.
+    # Usually this should result in unmounts soon.
+    return if remote_host.nil?
+
+    new_url = "smb://#{ remote_host }/#{ @remote_path }/"
+
+    if @url && @url != new_url then
+      unmount_gvfsmount()
+    end
+
+    @mntpath     = "/run/user/#{ @user_id }/gvfs/smb-share:server=#{ remote_host },share=#{ @remote_path }"
+    @remote_host = remote_host
+    @url         = new_url
   end
 end
 
@@ -233,32 +276,15 @@ def get_our_gvfsmounts
   userdir_label   = userdir_labels[lang]   || userdir_labels['en']
   schooldir_label = schooldir_labels[lang] || schooldir_labels['en']
 
-  puavo_domain = IO.read('/etc/puavo/domain').chomp
-
   user = Etc.getpwuid.name
   user_id = Process.uid
   user_primary_group = Etc.getgrgid( Etc.getpwuid.gid ).name
 
-  remote_host = Resolv::DNS.open do |dns|
-    dns.getresources("_sambaserver._tcp.#{puavo_domain}",
-                     Resolv::DNS::Resource::IN::SRV).each do |srv|
-      break srv.target if srv.port == 139
-      nil
-    end
-  end
-
   [
-    GvfsMount.new(
-      remote_host,
-      "smb://#{ remote_host }/#{ user }/",
-      "/run/user/#{ user_id }/gvfs/smb-share:server=#{ remote_host },share=#{ user }",
-      userdir_label),
-
-    GvfsMount.new(
-      remote_host,
-      "smb://#{ remote_host }/share/#{ sharename }/#{ user_primary_group }/",
-      "/run/user/#{ user_id }/gvfs/smb-share:server=#{ remote_host },share=share/#{ sharename }/#{ user_primary_group }",
-      schooldir_label),
+    GvfsMount.new(user, user_id, userdir_label),
+    GvfsMount.new("share/#{ sharename }/#{ user_primary_group }",
+                  user_id,
+                  schooldir_label)
   ]
 end
 
@@ -267,7 +293,7 @@ end
 gvfs_mounts = get_our_gvfsmounts()
 
 gvfs_threads = gvfs_mounts.map do |gvfsmnt|
-                 Thread.new { gvfsmnt.ensure_mounts() }
+                 Thread.new { gvfsmnt.ensure_mount() }
                end
 
 # we want to run this as long as the gvfs_threads are running
