@@ -110,7 +110,6 @@ class packages {
     , 'pm-utils'
     , 'rng-tools'
     , 'systemd'
-    , 'ubuntu-archive-keyring'
     , 'udev'
     , 'vlan' ]:
       tag => [ 'tag_basic', 'tag_debian', ];

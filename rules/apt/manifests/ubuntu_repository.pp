@@ -1,6 +1,5 @@
 class apt::ubuntu_repository {
   include ::apt
-  include ::packages
 
   $ubuntu_mirror  = 'archive.ubuntu.com'
   $ubuntu_version = 'xenial'
@@ -15,5 +14,11 @@ class apt::ubuntu_repository {
       notify  => Exec['apt update'];
   }
 
-  Package <| title == ubuntu-archive-keyring |>
+  # Exceptionally do not add this to ::packages,
+  # because these apt::* rules should be applied before everything in
+  # ::packages are installable.
+  package {
+    'ubuntu-archive-keyring':
+      ensure => present;
+  }
 }
