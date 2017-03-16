@@ -50,7 +50,6 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/definitions
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/profile-overwrites
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/xsessions
-	mkdir -p $(DESTDIR)$(datarootdir)/xgreeters
 	mkdir -p $(DESTDIR)$(datarootdir)/xsessions
 	mkdir -p $(DESTDIR)/var/lib/puavo-desktop/shared
 	mkdir -p $(DESTDIR)/var/lib/puavo-desktop/users
@@ -139,9 +138,6 @@ install : installdirs
 		pam/populate-extrausers \
 		pam/restrict-logins-by-local-config \
 		pam/setup-guest-session
-
-	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/xgreeters \
-		xgreeters/puavo-gtk-greeter.desktop
 
 	$(INSTALL_DATA) -t $(DESTDIR)/lib/systemd/system \
 		systemd/*
