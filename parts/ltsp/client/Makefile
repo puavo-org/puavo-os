@@ -72,7 +72,7 @@ install : installdirs
 		etc/network/if-up.d/sssd
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/gdm/greeter/autostart \
-		gdm/greeter/autostart/puavo-run-xrandr.desktop
+		etc/xdg/autostart/puavo-run-xrandr.desktop
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/icons/hicolor/scalable/status \
 		icons/puavoremoteaccess-cyan.svg \
@@ -114,8 +114,7 @@ install : installdirs
 		etc/NetworkManager/dispatcher.d/dnssd-printers
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
-		etc/xdg/autostart/* \
-		gdm/greeter/autostart/puavo-run-xrandr.desktop
+		etc/xdg/autostart/*
 
 	$(INSTALL_DATA) -t $(DESTDIR)/lib/udev/rules.d \
 		udev/rules.d/80-puavo-printers.rules \
