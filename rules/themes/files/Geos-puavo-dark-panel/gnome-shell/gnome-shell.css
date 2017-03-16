@@ -704,7 +704,7 @@ color: #fff;
 
 /* TOP BAR */
 #panel {
-  background-color: rgba(0,0,0,0.3);
+  background-color: rgba(0,0,0,0.15);
   text-shadow: none;
   font-weight: normal;
   box-shadow: 0 0px 4px 3px rgba(0, 0, 0, 0.80); 
@@ -725,7 +725,7 @@ color: #fff;
       -panel-corner-background-color: none;
       -panel-corner-border-color: transparent; }
   #panel .panel-button {
-    background-color: rgba(0,0,0,0.45);
+    background-color: rgba(0,0,0,0.25);
     -natural-hpadding: 2px;
     -minimum-hpadding: 2px;
     font-weight: bold;
@@ -766,7 +766,7 @@ color: #fff;
     box-shadow: inset 0px rgba(0,0,0,0);
 }
 .panel-button-webmenu{
-    background:rgba(0,0,0,0.45);
+    background:rgba(0,0,0,0.25);
     padding-left: 1em; 
     padding-right: 1em; 
     color:white;
