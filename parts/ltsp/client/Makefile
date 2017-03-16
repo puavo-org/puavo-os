@@ -44,13 +44,13 @@ installdirs :
 	mkdir -p $(DESTDIR)/lib/udev/rules.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/X11/Xsession.d
 	mkdir -p $(DESTDIR)$(datarootdir)/applications
+	mkdir -p $(DESTDIR)$(datarootdir)/gdm/greeter/autostart
 	mkdir -p $(DESTDIR)$(datarootdir)/icons/hicolor/scalable/status
 	mkdir -p $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES
 	mkdir -p $(DESTDIR)$(datarootdir)/pam-configs
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/definitions
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/profile-overwrites
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/xsessions
-	mkdir -p $(DESTDIR)$(datarootdir)/xgreeters
 	mkdir -p $(DESTDIR)$(datarootdir)/xsessions
 	mkdir -p $(DESTDIR)/var/lib/puavo-desktop/shared
 	mkdir -p $(DESTDIR)/var/lib/puavo-desktop/users
@@ -70,6 +70,9 @@ install : installdirs
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/network/if-up.d \
 		etc/network/if-up.d/sssd
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/gdm/greeter/autostart \
+		etc/xdg/autostart/puavo-run-xrandr.desktop
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/icons/hicolor/scalable/status \
 		icons/puavoremoteaccess-cyan.svg \
@@ -139,9 +142,6 @@ install : installdirs
 		pam/populate-extrausers \
 		pam/restrict-logins-by-local-config \
 		pam/setup-guest-session
-
-	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/xgreeters \
-		xgreeters/puavo-gtk-greeter.desktop
 
 	$(INSTALL_DATA) -t $(DESTDIR)/lib/systemd/system \
 		systemd/*

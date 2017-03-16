@@ -1,14 +1,10 @@
 #!/usr/bin/ruby
 
-require 'puavo/conf'
-
-puavoconf = Puavo::Conf.new
-
-exit 0 unless puavoconf.get('puavo.xrandr.enabled') == 'true'
-
 require 'json'
+require 'puavo/conf'
 require 'shellwords'
 
+puavoconf = Puavo::Conf.new
 puavo_xrandr_args = puavoconf.get('puavo.xrandr.args')
 puavoconf.close
 

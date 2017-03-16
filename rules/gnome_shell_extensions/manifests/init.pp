@@ -16,6 +16,7 @@ class gnome_shell_extensions {
     [ 'appindicatorsupport@rgcjonas.gmail.com'
     , 'audio-switcher@AndresCidoncha'
     , 'bottompanel@tmoer93'
+    , 'dash-to-panel@jderose9.github.com'
     , 'extend-left-box2@linuxdeepin.com'
     , 'hide-activities-button@gnome-shell-extensions.bookmarkd.xyz'
     , 'hide-dash@xenatt.github.com'

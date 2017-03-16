@@ -172,7 +172,6 @@ class packages {
 
     [ 'fontconfig'
     , 'ttf-freefont'
-    , 'ttf-ubuntu-font-family'
     , 'xfonts-terminus'
     , 'xfonts-utils' ]:
       tag => [ 'tag_fonts', 'tag_debian', ];
@@ -585,6 +584,9 @@ class packages {
   #
 
   @package {
+    [ 'ttf-ubuntu-font-family' ]:
+      tag => [ 'tag_fonts', 'tag_ubuntu', ];
+
     [ 'edubuntu-wallpapers'
     , 'ubuntu-wallpapers-lucid'
     , 'ubuntu-wallpapers-precise'
