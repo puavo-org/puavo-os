@@ -114,7 +114,8 @@ install : installdirs
 		etc/NetworkManager/dispatcher.d/dnssd-printers
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
-		etc/xdg/autostart/*
+		etc/xdg/autostart/* \
+		gdm/greeter/autostart/puavo-run-xrandr.desktop
 
 	$(INSTALL_DATA) -t $(DESTDIR)/lib/udev/rules.d \
 		udev/rules.d/80-puavo-printers.rules \
