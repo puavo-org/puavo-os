@@ -400,7 +400,7 @@ function setSpacing() {
 
     let boxLayoutSpacing = settings.get_int('icon-spacing');
 
-    iconsBoxLayout.set_style('spacing: ' + boxLayoutSpacing + 'px; margin_top: 2px; margin_bottom: 2px;');
+    iconsBoxLayout.set_style('spacing: ' + boxLayoutSpacing + 'px; margin_top: 2px; margin_bottom: 2px; padding-left: 1em; padding-right: 1em;');
 
 }
 
