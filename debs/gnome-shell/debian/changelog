@@ -1,3 +1,9 @@
+gnome-shell (3.22.3-2+puavo1) unstable; urgency=medium
+
+  * Allow gnome-shell extensions in gdm mode.
+
+ -- Juha Erkkilä <Juha.Erkkila@opinsys.fi>  Fri, 17 Mar 2017 08:36:50 +0200
+
 gnome-shell (3.22.3-2) unstable; urgency=medium
 
   * d/control: Drop dependency on telepathy-mission-control-5. GNOME Shell

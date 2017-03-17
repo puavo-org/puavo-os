@@ -1,0 +1,12 @@
+Description: Allow extensions in gdm mode
+
+--- gnome-shell-3.22.3.orig/js/ui/sessionMode.js
++++ gnome-shell-3.22.3/js/ui/sessionMode.js
+@@ -42,6 +42,7 @@ const _modes = {
+     },
+ 
+     'gdm': {
++        allowExtensions: true,
+         hasNotifications: true,
+         isGreeter: true,
+         isPrimary: true,
