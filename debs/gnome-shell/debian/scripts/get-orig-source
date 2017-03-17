@@ -6,7 +6,9 @@ upstream_version=$(dpkg-parsechangelog -S Version | sed -r -n 's/^(.*)-.*$/\1/p'
 orig_tarball="../gnome-shell_${upstream_version}.orig.tar.xz"
 
 if [ ! -e "${orig_tarball}" ]; then
-    uscan -dd --download-current-version --verbose
+  wget -O "${orig_tarball}.tmp" \
+       "https://download.gnome.org/sources/gnome-shell/3.22/gnome-shell-${upstream_version}.tar.xz"
+  mv "${orig_tarball}.tmp" "${orig_tarball}"
 fi
 
 tar -Jxf "${orig_tarball}" --strip-components=1
