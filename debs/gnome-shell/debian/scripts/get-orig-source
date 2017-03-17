@@ -1,0 +1,12 @@
+#!/bin/sh
+
+set -eu
+
+upstream_version=$(dpkg-parsechangelog -S Version | sed -r -n 's/^(.*)-.*$/\1/p')
+orig_tarball="../gnome-shell_${upstream_version}.orig.tar.xz"
+
+if [ ! -e "${orig_tarball}" ]; then
+    uscan -ddd
+fi
+
+tar -Jxf "${orig_tarball}" --strip-components=1
