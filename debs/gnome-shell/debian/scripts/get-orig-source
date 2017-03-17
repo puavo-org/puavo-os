@@ -6,7 +6,7 @@ upstream_version=$(dpkg-parsechangelog -S Version | sed -r -n 's/^(.*)-.*$/\1/p'
 orig_tarball="../gnome-shell_${upstream_version}.orig.tar.xz"
 
 if [ ! -e "${orig_tarball}" ]; then
-    uscan -ddd
+    uscan -dd --download-current-version --verbose
 fi
 
 tar -Jxf "${orig_tarball}" --strip-components=1
