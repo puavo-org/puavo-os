@@ -1,0 +1,15 @@
+diff -ruN gnome-shell.1.get-orig-source/docs/Makefile.in gnome-shell/docs/Makefile.in
+--- gnome-shell.1.get-orig-source/docs/Makefile.in	2017-02-16 19:31:09.000000000 +0200
++++ gnome-shell/docs/Makefile.in	2017-03-20 12:21:06.363407515 +0200
+@@ -650,8 +650,9 @@
+ 
+ clean-am: clean-generic clean-libtool mostlyclean-am
+ 
+-distclean: distclean-recursive
+-	-rm -f Makefile
++# XXX distclean disabled
++distclean:
++
+ distclean-am: clean-am distclean-generic distclean-tags
+ 
+ dvi: dvi-recursive
