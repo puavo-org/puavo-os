@@ -31,6 +31,9 @@ class gdm {
   }
 
   ::puavo_conf::script {
+    'setup_loginscreen_background':
+      source => 'puppet:///modules/gdm/setup_loginscreen_background';
+
     'setup_xsessions':
       require => Package['puavo-ltsp-client'],
       source  => 'puppet:///modules/gdm/setup_xsessions';
