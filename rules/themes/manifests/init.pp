@@ -1,4 +1,6 @@
 class themes {
+  include ::gdm
+
   file {
     '/usr/share/themes':
       ensure => directory;
@@ -13,6 +15,7 @@ class themes {
 
     '/usr/share/themes/Puavo':
       recurse => true,
+      require => File['/etc/gdm3/background.img'],
       source  => 'puppet:///modules/themes/Puavo';
   }
 }

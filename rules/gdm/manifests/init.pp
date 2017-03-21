@@ -8,6 +8,11 @@ class gdm {
   }
 
   file {
+    '/etc/gdm3/background.img':
+      ensure  => link,
+      require => [ Package['gdm3'], Package['ubuntu-wallpapers-saucy'], ],
+      target  => '/usr/share/backgrounds/Grass_by_Jeremy_Hill.jpg';
+
     '/etc/gdm3/daemon.conf':
       notify  => Exec['/usr/sbin/dpkg-reconfigure gdm3'],
       require => Package['gdm3'],
@@ -34,5 +39,6 @@ class gdm {
   Package <|
        title == gdm3
     or title == puavo-ltsp-client
+    or title == ubuntu-wallpapers-saucy
   |>
 }
