@@ -1,5 +1,5 @@
 class gdm {
-  include ::backgrounds
+  include ::art
   include ::packages
   include ::puavo_conf
 
