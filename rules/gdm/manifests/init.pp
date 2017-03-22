@@ -19,12 +19,6 @@ class gdm {
       require => Package['gdm3'],
       source  => 'puppet:///modules/gdm/daemon.conf';
 
-    '/etc/gdm3/greeter.dconf-defaults':
-      notify  => Exec['/usr/sbin/dpkg-reconfigure gdm3'],
-      require => [ File['/usr/share/backgrounds/puavo-art']
-                 , Package['gdm3'] ],
-      source  => 'puppet:///modules/gdm/greeter.dconf-defaults';
-
     '/usr/share/gdm/greeter/autostart/puavo-remote-assistance-applet.desktop':
       ensure  => link,
       require => [ Package['gdm3'], Package['puavo-ltsp-client'], ],
@@ -32,8 +26,13 @@ class gdm {
   }
 
   ::puavo_conf::script {
+    'setup_gdm':
+      require => ::Puavo_conf::Definition['puavo-art.json'],
+      source  => 'puppet:///modules/gdm/setup_gdm';
+
     'setup_loginscreen_background':
-      source => 'puppet:///modules/gdm/setup_loginscreen_background';
+      require => ::Puavo_conf::Definition['puavo-art.json'],
+      source  => 'puppet:///modules/gdm/setup_loginscreen_background';
 
     'setup_xsessions':
       require => Package['puavo-ltsp-client'],
