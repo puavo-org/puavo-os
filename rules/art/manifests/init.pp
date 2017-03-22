@@ -3,7 +3,7 @@ class art {
   include ::puavo_conf
 
   file {
-    '/usr/share/backgrounds/puavo-art':
+    '/usr/share/puavo-art':
       source  => 'puppet:///modules/art/puavo-art',
       recurse => true;
   }

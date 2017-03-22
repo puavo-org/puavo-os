@@ -23,7 +23,7 @@ class desktop::puavodesktop {
     '/etc/dconf/db/puavo-desktop.d/session_profile':
       content => template('desktop/dconf_session_profile'),
       notify  => Exec['update dconf'],
-      require => [ File['/usr/share/backgrounds/puavo-art']
+      require => [ File['/usr/share/puavo-art']
                  , Package['faenza-icon-theme']
 		 , Package['webmenu'] ];
                  # , Package['light-themes'] ];	# XXX needs packaging
