@@ -1,0 +1,59 @@
+#!/bin/sh
+
+set -eu
+
+set_background() {
+  background_path=$1
+
+  [ -e "$background_path" ] || return 1
+
+  ln -fns "$background_path" /etc/gdm3/background.img
+}
+
+backgrounds_basedir=/usr/share/backgrounds/puavo-greeter
+backgrounds_randomdir="${backgrounds_basedir}/default"
+
+background_firstlogin=$(puavo-conf puavo.greeter.background.firstlogin)
+
+background_path=''
+
+if [ ! -s /var/lib/extrausers/passwd -a -n "$background_firstlogin" ]; then
+  # If no users have logged in yet and puavo.greeter.background.firstlogin
+  # is set, we put a special background to guide the user.
+  background="$background_firstlogin"
+  background_mode='firstlogin'
+else
+  background=$(puavo-conf puavo.greeter.background.default)
+  background_mode=$(puavo-conf puavo.greeter.background.mode)
+fi
+
+case "$background_mode" in
+  ''|static)
+    exit 0
+    ;;
+  dynamic|firstlogin)
+    if [ -n "$background" ]; then
+      if find "$backgrounds_basedir" '(' -type f -o -type l ')' -printf '%P\n' \
+        | grep -qx "$background"; then
+          background_path="${backgrounds_basedir}/${background}"
+      fi
+    fi
+    ;;
+  random)
+    bg_random_subdir=$(puavo-conf puavo.greeter.background.random.subdir)
+    if [ -n "$bg_random_subdir" ]; then
+      if find "$backgrounds_basedir" -mindepth 1 -type d -printf '%P\n' \
+        | grep -qx "$bg_random_subdir"; then
+          backgrounds_randomdir="${backgrounds_basedir}/${bg_random_subdir}"
+          background_path=$(find "$backgrounds_randomdir" \
+            '(' -type f -o -type l ')' | sort -R | head -n1)
+      fi
+    fi
+    ;;
+  *)
+    echo "unknown greeter background mode '${background_mode}'" >&2
+    exit 1
+    ;;
+esac
+
+set_background "$background_path"

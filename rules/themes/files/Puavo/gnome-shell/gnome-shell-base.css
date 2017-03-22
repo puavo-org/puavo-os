@@ -2604,8 +2604,10 @@ StScrollBar StButton#vhandle:active {
 }
 
 #lockDialogGroup {
-    background: #2e3436 url(noise-texture.png);
-    background-repeat: repeat;
+    background: #2e3436 url(/etc/gdm3/background.img);
+    background-repeat: no-repeat;
+    background-size: cover;
+    border:solid transparent 1px;
 }
 
 .screen-shield-arrows {
