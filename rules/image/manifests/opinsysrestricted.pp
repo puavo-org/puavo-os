@@ -1,5 +1,6 @@
 class image::opinsysrestricted {
-  include ::image::allinone,
+  include ::art::opinsys,
+          ::image::allinone,
           ::oracle_java,
           ::puavo_pkg::packages,
           ::ssh_server
