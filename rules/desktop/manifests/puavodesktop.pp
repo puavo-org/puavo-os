@@ -1,4 +1,5 @@
 class desktop::puavodesktop {
+  include ::backgrounds
   include ::desktop::dconf::desktopbackgroundlock
   include ::desktop::dconf::disable_lidsuspend
   include ::desktop::dconf::disable_suspend
@@ -31,9 +32,6 @@ class desktop::puavodesktop {
       ensure  => link,
       require => Package['faenza-icon-theme'],
       target  => 'evolution-calendar.png';
-
-    '/usr/share/backgrounds':
-      ensure => directory;
 
     '/usr/share/backgrounds/puavo-art':
       source  => 'puppet:///modules/desktop/art',
