@@ -15,12 +15,12 @@ case "$puavo_hosttype" in
     ;;
 esac
 
-read puavo_domain < /etc/puavo/domain
-
 echo "$puavo_hostname" > /etc/hostname
 echo "$puavo_hostname" > /proc/sys/kernel/hostname
 
 hostname "$puavo_hostname"
+
+puavo_domain=$(cat /etc/puavo/domain 2>/dev/null || echo nodomain)
 
 cat <<EOF > /etc/hosts.tmp
 127.0.0.1 localhost
