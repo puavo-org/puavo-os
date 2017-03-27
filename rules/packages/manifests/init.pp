@@ -52,6 +52,7 @@ class packages {
     , 'gawk'
     , 'git'
     , 'iftop'
+    , 'inetutils-traceroute'
     , 'initramfs-tools'
     , 'inotify-tools'
     , 'iperf'
