@@ -76,7 +76,7 @@ EOF
   end
 
   parent_status = File.read("/proc/#{Process.ppid}/status")
-  unless parent_status.lines.next == "Name:\thostapd_cli\n"
+  unless parent_status.lines.first == "Name:\thostapd_cli\n"
     Log.error("this script must be called by hostapd_cli")
     return 1
   end
