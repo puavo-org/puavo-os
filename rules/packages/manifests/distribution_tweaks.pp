@@ -1,6 +1,4 @@
 class packages::distribution_tweaks {
-  include ::packages::pinning
-
   # These packages appear to be missing from Stretch currently
   # (as of 2016-11-21) or there installation problems.
 
