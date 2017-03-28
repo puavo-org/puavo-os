@@ -380,7 +380,7 @@ Depends: ${misc:Depends},
  puavo-client (>= 0.1.1),
  puavo-wlanmapper,
  ruby-puavowlan,
- vtun,
+ vtun (= 3.0.2-4+b1),
  wireless-regdb,
  wireless-tools
 Description: host tunneled WLAN accesspoint

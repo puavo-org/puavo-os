@@ -1,6 +1,7 @@
 class packages {
   require ::apt::multiarch
   include ::packages::distribution_tweaks
+  include ::packages::pinned
   include ::packages::purged
 
   # install packages by default
@@ -614,9 +615,6 @@ class packages {
     # , 'puavo-load-reporter'   # XXX not yet packaged for Debian
     # , 'simplescreenrecorder'          # XXX not yet packaged for Debian
     # , 'xexit' ]:                      # XXX not yet packaged for Debian
-
-    'vtun':
-      ensure => '3.0.2-5+trusty.amd64+master.531cf0dbc32b3c20a22e783612e968055ffb1d1e';
 
     # XXX not yet packaged for Debian
     # [ 'dymo-cups-drivers' ]:

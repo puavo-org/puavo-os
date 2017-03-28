@@ -1,0 +1,3 @@
+Package: <%= @package %>
+Pin: version <%= @version %>
+Pin-Priority: 1000

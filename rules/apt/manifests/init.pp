@@ -17,6 +17,15 @@ class apt {
     }
   }
 
+  define pin ($version) {
+    $package = $title
+
+    file {
+      "/etc/apt/preferences.d/01-${package}.pref":
+        content => template('apt/01-pinpackage.pref');
+    }
+  }
+
   define repository ($aptline) {
     $repository_name = $title
 
