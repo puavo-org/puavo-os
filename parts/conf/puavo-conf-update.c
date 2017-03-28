@@ -52,6 +52,7 @@ static int	 apply_kernel_arguments(puavo_conf_t *, int);
 static int	 apply_one_profile(puavo_conf_t *, const char *, int);
 static int	 apply_profiles(puavo_conf_t *, int);
 static char	*get_cmdline(void);
+static int	 get_first_line(char **, const char *);
 static int	 glob_error(const char *, int);
 static int	 handle_one_paramdef(puavo_conf_t *, const char *, json_t *,
     int);
@@ -548,13 +549,41 @@ apply_hwquirks(puavo_conf_t *conf, int verbose)
 }
 
 static int
+get_first_line(char **dst, const char *path)
+{
+	FILE *id_file;
+	ssize_t s;
+	size_t n;
+	int ret;
+
+	ret = 0;
+
+	if ((id_file = fopen(path, "r")) == NULL) {
+		warn("could not open %s", path);
+		return 1;
+	}
+
+	n = 0;
+	s = getline(dst, &n, id_file);
+	if (s == -1) {
+		warn("could not read a line from %s", path);
+		ret = 1;
+	} else {
+		(*dst)[s-1] = '\0';	/* remove newline */
+	}
+
+	if (fclose(id_file) != 0)
+		warn("could not close a file");
+
+	return ret;
+}
+
+static int
 update_hwparam_table(struct hwparam *hwparam_table, size_t tablesize,
     int verbose)
 {
-	FILE *id_file;
 	char id_path[PATH_MAX];
-	ssize_t s;
-	size_t i, n;
+	size_t i;
 	int ret;
 
 	ret = 0;
@@ -563,34 +592,18 @@ update_hwparam_table(struct hwparam *hwparam_table, size_t tablesize,
 		snprintf(id_path, PATH_MAX, "%s/%s", DMI_ID_PATH,
 		    hwparam_table[i].key);
 
-		if ((id_file = fopen(id_path, "r")) == NULL) {
-			warn("could not open %s", id_path);
-			ret = 1;
+		if (get_first_line(&hwparam_table[i].value, id_path) != 0)
 			continue;
-		}
-
-		n = 0;
-		s = getline(&hwparam_table[i].value, &n, id_file);
-		if (s == -1) {
-			warn("could not read a line from %s", id_path);
-			ret = 1;
-			if (fclose(id_file) != 0)
-				warn("could not close a file");
-			continue;
-		}
-		hwparam_table[i].value[s-1] = '\0';	/* remove newline */
 
 		if (verbose) {
 			(void) printf("puavo-conf-update: dmi id %s = %s\n",
 			    hwparam_table[i].key, hwparam_table[i].value);
 		}
-
-		if (fclose(id_file) != 0)
-			warn("could not close a file");
 	}
 
 	return ret;
 }
+
 static int
 apply_kernel_arguments(puavo_conf_t *conf, int verbose)
 {
