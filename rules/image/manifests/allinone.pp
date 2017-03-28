@@ -33,7 +33,7 @@ class image::allinone {
   include ::udev
   include ::use_urandom
   include ::wacom
-  include ::wlanap_systemd
+  include ::wlanap
 
   stage {
     'init':
