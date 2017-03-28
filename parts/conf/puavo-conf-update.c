@@ -40,6 +40,11 @@
 
 char *puavo_hosttype;
 
+struct hwparam {
+	const char      *key;
+	char            *value;
+};
+
 static int	 apply_device_settings(puavo_conf_t *, const char *, int);
 static int	 apply_hosttype_profile(puavo_conf_t *, int);
 static int	 apply_hwquirks(puavo_conf_t *, int);
@@ -55,13 +60,9 @@ static int	 init_with_parameter_definitions(puavo_conf_t *, int);
 static int	 overwrite_value(puavo_conf_t *, const char *, const char *,
     int);
 static json_t	*parse_json_file(const char *);
+static int	 update_hwparam_table(struct hwparam *, size_t, int);
 static int	 update_puavoconf(puavo_conf_t *, const char *, int);
 static void	 usage(void);
-
-struct hwparam {
-	const char      *key;
-	char            *value;
-};
 
 int
 main(int argc, char *argv[])
@@ -536,14 +537,29 @@ apply_hwquirks(puavo_conf_t *conf, int verbose)
 		{ "product_version",   NULL, },
 		{ "sys_vendor",        NULL, },
 	};
+	int ret;
+
+	ret = update_hwparam_table(hwparam_table,
+	    sizeof(hwparam_table) / sizeof(struct hwparam), verbose);
+
+	/* XXX */
+
+	return ret;
+}
+
+static int
+update_hwparam_table(struct hwparam *hwparam_table, size_t tablesize,
+    int verbose)
+{
 	FILE *id_file;
 	char id_path[PATH_MAX];
+	ssize_t s;
 	size_t i, n;
 	int ret;
 
 	ret = 0;
 
-	for (i = 0; i < sizeof(hwparam_table) / sizeof(struct hwparam); i++) {
+	for (i = 0; i < tablesize; i++) {
 		snprintf(id_path, PATH_MAX, "%s/%s", DMI_ID_PATH,
 		    hwparam_table[i].key);
 
@@ -554,16 +570,18 @@ apply_hwquirks(puavo_conf_t *conf, int verbose)
 		}
 
 		n = 0;
-		if (getline(&hwparam_table[i].value, &n, id_file) == -1) {
+		s = getline(&hwparam_table[i].value, &n, id_file);
+		if (s == -1) {
 			warn("could not read a line from %s", id_path);
 			ret = 1;
 			if (fclose(id_file) != 0)
 				warn("could not close a file");
 			continue;
 		}
+		hwparam_table[i].value[s-1] = '\0';	/* remove newline */
 
 		if (verbose) {
-			(void) printf("puavo-conf-update: dmi id %s = %s",
+			(void) printf("puavo-conf-update: dmi id %s = %s\n",
 			    hwparam_table[i].key, hwparam_table[i].value);
 		}
 
@@ -573,7 +591,6 @@ apply_hwquirks(puavo_conf_t *conf, int verbose)
 
 	return ret;
 }
-
 static int
 apply_kernel_arguments(puavo_conf_t *conf, int verbose)
 {
