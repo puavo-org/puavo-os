@@ -26,6 +26,7 @@
 #include <getopt.h>
 #include <glob.h>
 #include <jansson.h>
+#include <limits.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -33,6 +34,7 @@
 #include "conf.h"
 
 #define DEVICEJSON_PATH "/etc/puavo/device.json"
+#define DMI_ID_PATH     "/sys/class/dmi/id"
 #define IMAGE_CONF_PATH "/etc/puavo-conf/image.json"
 #define PROFILES_DIR    "/usr/share/puavo-conf/profile-overwrites"
 
@@ -55,6 +57,11 @@ static int	 overwrite_value(puavo_conf_t *, const char *, const char *,
 static json_t	*parse_json_file(const char *);
 static int	 update_puavoconf(puavo_conf_t *, const char *, int);
 static void	 usage(void);
+
+struct hwparam {
+	const char      *key;
+	char            *value;
+};
 
 int
 main(int argc, char *argv[])
@@ -508,8 +515,63 @@ finish:
 static int
 apply_hwquirks(puavo_conf_t *conf, int verbose)
 {
-	/* XXX */
-	return 0;
+	static struct hwparam hwparam_table[] = {
+		{ "bios_date",         NULL, },
+		{ "bios_date",         NULL, },
+		{ "bios_vendor",       NULL, },
+		{ "bios_version",      NULL, },
+		{ "board_asset_tag",   NULL, },
+		{ "board_name",        NULL, },
+		{ "board_serial",      NULL, },
+		{ "board_vendor",      NULL, },
+		{ "board_version",     NULL, },
+		{ "chassis_asset_tag", NULL, },
+		{ "chassis_serial",    NULL, },
+		{ "chassis_type",      NULL, },
+		{ "chassis_vendor",    NULL, },
+		{ "chassis_version",   NULL, },
+		{ "product_name",      NULL, },
+		{ "product_serial",    NULL, },
+		{ "product_uuid",      NULL, },
+		{ "product_version",   NULL, },
+		{ "sys_vendor",        NULL, },
+	};
+	FILE *id_file;
+	char id_path[PATH_MAX];
+	size_t i, n;
+	int ret;
+
+	ret = 0;
+
+	for (i = 0; i < sizeof(hwparam_table) / sizeof(struct hwparam); i++) {
+		snprintf(id_path, PATH_MAX, "%s/%s", DMI_ID_PATH,
+		    hwparam_table[i].key);
+
+		if ((id_file = fopen(id_path, "r")) == NULL) {
+			warn("could not open %s", id_path);
+			ret = 1;
+			continue;
+		}
+
+		n = 0;
+		if (getline(&hwparam_table[i].value, &n, id_file) == -1) {
+			warn("could not read a line from %s", id_path);
+			ret = 1;
+			if (fclose(id_file) != 0)
+				warn("could not close a file");
+			continue;
+		}
+
+		if (verbose) {
+			(void) printf("puavo-conf-update: dmi id %s = %s",
+			    hwparam_table[i].key, hwparam_table[i].value);
+		}
+
+		if (fclose(id_file) != 0)
+			warn("could not close a file");
+	}
+
+	return ret;
 }
 
 static int
