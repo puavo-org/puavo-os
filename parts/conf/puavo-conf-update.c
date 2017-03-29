@@ -552,10 +552,12 @@ apply_hwquirks(puavo_conf_t *conf, int verbose)
 	if (ret != 0)
 		retvalue = ret;
 
-	if (verbose) {
-		(void) printf("puavo-conf-update: found %d PCI devices\n",
-		    pci_id_count);
-	}
+        /* XXX Looking up USB devices should also be useful, but this appears
+         * XXX to be somewhat more difficult than the PCI case.  For possible
+         * XXX future references checkout lspci(8) and lsusb(8).  USB can also
+         * XXX be looked up from under "/sys" by looking up "idVendor"- and
+         * XXX "idProduct"-files.  Maybe it is easier to just parse output
+         * XXX from "lspci -n" and "lsusb". */
 
 	/* free tables */
 	for (i = 0; i < (sizeof(dmi_table) / sizeof(struct dmi)); i++)
