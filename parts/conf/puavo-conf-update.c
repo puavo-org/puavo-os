@@ -38,6 +38,8 @@
 #define IMAGE_CONF_PATH "/etc/puavo-conf/image.json"
 #define PROFILES_DIR    "/usr/share/puavo-conf/profile-overwrites"
 
+#define PCI_MAX         1024
+
 char *puavo_hosttype;
 
 struct dmi {
@@ -58,7 +60,7 @@ static int	 handle_one_paramdef(puavo_conf_t *, const char *, json_t *,
     int);
 static int	 handle_paramdef_file(puavo_conf_t *, const char *, int);
 static int	 init_with_parameter_definitions(puavo_conf_t *, int);
-static int	 lookup_pci_ids(char ***, size_t *, int);
+static int	 lookup_pci_ids(char **, size_t *, int);
 static int	 overwrite_value(puavo_conf_t *, const char *, const char *,
     int);
 static json_t	*parse_json_file(const char *);
@@ -539,7 +541,7 @@ apply_hwquirks(puavo_conf_t *conf, int verbose)
 		{ "product_version",   NULL, },
 		{ "sys_vendor",        NULL, },
 	};
-	char **pci_ids;
+	char *pci_ids[PCI_MAX];
 	size_t pci_id_count, i;
 	int ret, retvalue;
 
@@ -548,16 +550,16 @@ apply_hwquirks(puavo_conf_t *conf, int verbose)
 	if (ret != 0)
 		retvalue = ret;
 
-	ret = lookup_pci_ids(&pci_ids, &pci_id_count, verbose);
+	ret = lookup_pci_ids(pci_ids, &pci_id_count, verbose);
 	if (ret != 0)
 		retvalue = ret;
 
-        /* XXX Looking up USB devices should also be useful, but this appears
-         * XXX to be somewhat more difficult than the PCI case.  For possible
-         * XXX future references checkout lspci(8) and lsusb(8).  USB can also
-         * XXX be looked up from under "/sys" by looking up "idVendor"- and
-         * XXX "idProduct"-files.  Maybe it is easier to just parse output
-         * XXX from "lspci -n" and "lsusb". */
+	/* XXX Looking up USB devices should also be useful, but this appears
+	 * XXX to be somewhat more difficult than the PCI case.  For possible
+	 * XXX future references checkout lspci(8) and lsusb(8).  USB can also
+	 * XXX be looked up from under "/sys" by looking up "idVendor"- and
+	 * XXX "idProduct"-files.  Maybe it is easier to just parse output
+	 * XXX from "lspci -n" and "lsusb". */
 
 	/* free tables */
 	for (i = 0; i < (sizeof(dmi_table) / sizeof(struct dmi)); i++)
@@ -569,88 +571,80 @@ apply_hwquirks(puavo_conf_t *conf, int verbose)
 }
 
 static int
-lookup_pci_ids(char ***pci_ids, size_t *pci_id_count, int verbose)
+lookup_pci_ids(char **pci_ids, size_t *pci_id_count, int verbose)
 {
-	char id_path[PATH_MAX];
-	char *pci_vendor_string, *pci_device_string;
+	FILE *lspci;
 	char **next_pci_id;
-	glob_t globbuf;
-	size_t pci_id_count_tmp, i;
-	unsigned int pci_vendor, pci_device;
-	int ret, retvalue;
+	char *field, *line, *linep;
+	size_t i, n;
+	ssize_t len;
+	int lspci_status, retvalue;
 
 	retvalue = 0;
 
-	*pci_id_count = 0;
-	*pci_ids = NULL;
-
-	ret = glob("/sys/bus/pci/devices/*", 0, glob_error, &globbuf);
-	if (ret != 0) {
-		warnx("glob() failure when iterating PCI devices");
-		retvalue = 1;
-		goto finish;
+	if ((lspci = popen("lspci -n", "r")) == NULL) {
+		warn("lspci popen error");
+		return 1;
 	}
 
-	pci_id_count_tmp = globbuf.gl_pathc;
-	*pci_ids = calloc(pci_id_count_tmp, sizeof(char *));
-	if (*pci_ids == NULL) {
-		warn("calloc() failure when iterating PCI devices");
-		retvalue = 1;
-		goto finish;
-	}
-
-	for (i = 0; i < pci_id_count_tmp; i++) {
-		ret = snprintf(id_path, PATH_MAX, "%s/%s", globbuf.gl_pathv[i],
-		    "vendor");
-		if (ret >= PATH_MAX) {
-			warnx("snprintf() error with %s", globbuf.gl_pathv[i]);
-			continue;
-		}
-		if ((pci_vendor_string = get_first_line(id_path)) == NULL)
-			continue;
-
-		ret = snprintf(id_path, PATH_MAX, "%s/%s", globbuf.gl_pathv[i],
-		    "device");
-		if (ret >= PATH_MAX) {
-			warnx("snprintf() error with %s", globbuf.gl_pathv[i]);
-			free(pci_vendor_string);
-			continue;
-		}
-		if ((pci_device_string = get_first_line(id_path)) == NULL) {
-			free(pci_vendor_string);
-			continue;
-		}
-
-		if (sscanf(pci_vendor_string, "%x", &pci_vendor) != 1 ||
-		    sscanf(pci_device_string, "%x", &pci_device) != 1) {
-			warnx("sscanf() error with %s:%s", pci_vendor_string,
-			    pci_device_string);
-			free(pci_vendor_string);
-			free(pci_device_string);
-			continue;
-		}
-
-		next_pci_id = &(*pci_ids)[*pci_id_count];
-		ret = asprintf(next_pci_id, "%04x:%04x", pci_vendor,
-		    pci_device);
-		if (ret == -1) {
-			warnx("asprintf() error with %x:%x",
-			    pci_vendor, pci_device);
+	for (;;) {
+		line = NULL;
+		n = 0;
+		len = getline(&line, &n, lspci);
+		if (len == -1) {
+			if (feof(lspci))
+				break;
+			warn("could not read a line from lspci");
+			free(line);
 			retvalue = 1;
-		} else {
+			break;
+		} else if (len < 1) {
+			continue;
+		}
+		line[len-1] = '\0';	/* remove newline */
+
+		linep = line;
+		for (i = 0; i < 3; i++) {
+			field = strsep(&linep, " \t");
+			if (field == NULL) {
+				warn("could not parse a line from lspci");
+				retvalue = 1;
+				break;
+			}
+		}
+		if (field != NULL) {
+			next_pci_id = &pci_ids[*pci_id_count];
+			if ((*next_pci_id = strdup(field)) == NULL) {
+				warn("strdup() with %s", field);
+				retvalue = 1;
+				free(line);
+				continue;
+			}
 			if (verbose) {
 				(void) printf("puavo-conf-update: found PCI"
 				    " device %s\n", *next_pci_id);
 			}
+
 			(*pci_id_count)++;
+			if (*pci_id_count >= PCI_MAX) {
+				warnx("pci id count maximum reached");
+				retvalue = 1;
+				free(line);
+				break;
+			}
 		}
 
-		free(pci_vendor_string);
-		free(pci_device_string);
+		free(line);
 	}
 
-finish:
-	globfree(&globbuf);
+	lspci_status = pclose(lspci);
+	if (lspci_status == -1) {
+		warn("lspci error with pclose()");
+		retvalue = 1;
+	} else if (lspci_status != 0) {
+		warnx("lspci return error code %d", lspci_status);
+		retvalue = 1;
+	}
 
 	return retvalue;
 }
