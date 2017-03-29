@@ -39,6 +39,7 @@
 #define PROFILES_DIR    "/usr/share/puavo-conf/profile-overwrites"
 
 #define PCI_MAX         1024
+#define USB_MAX         1024
 
 char *puavo_hosttype;
 
@@ -60,7 +61,8 @@ static int	 handle_one_paramdef(puavo_conf_t *, const char *, json_t *,
     int);
 static int	 handle_paramdef_file(puavo_conf_t *, const char *, int);
 static int	 init_with_parameter_definitions(puavo_conf_t *, int);
-static int	 lookup_pci_ids(char **, size_t *, int);
+static int	 lookup_ids_from_cmd(const char *, size_t, char **, size_t *,
+    size_t);
 static int	 overwrite_value(puavo_conf_t *, const char *, const char *,
     int);
 static json_t	*parse_json_file(const char *);
@@ -541,8 +543,8 @@ apply_hwquirks(puavo_conf_t *conf, int verbose)
 		{ "product_version",   NULL, },
 		{ "sys_vendor",        NULL, },
 	};
-	char *pci_ids[PCI_MAX];
-	size_t pci_id_count, i;
+	char *pci_ids[PCI_MAX], *usb_ids[USB_MAX];
+	size_t pci_id_count, usb_id_count, i;
 	int ret, retvalue;
 
 	ret = update_dmi_table(dmi_table,
@@ -550,16 +552,25 @@ apply_hwquirks(puavo_conf_t *conf, int verbose)
 	if (ret != 0)
 		retvalue = ret;
 
-	ret = lookup_pci_ids(pci_ids, &pci_id_count, verbose);
+	ret = lookup_ids_from_cmd("lspci -n", 3, pci_ids, &pci_id_count,
+	    PCI_MAX);
 	if (ret != 0)
 		retvalue = ret;
 
-	/* XXX Looking up USB devices should also be useful, but this appears
-	 * XXX to be somewhat more difficult than the PCI case.  For possible
-	 * XXX future references checkout lspci(8) and lsusb(8).  USB can also
-	 * XXX be looked up from under "/sys" by looking up "idVendor"- and
-	 * XXX "idProduct"-files.  Maybe it is easier to just parse output
-	 * XXX from "lspci -n" and "lsusb". */
+	ret = lookup_ids_from_cmd("lsusb", 6, usb_ids, &usb_id_count, USB_MAX);
+	if (ret != 0)
+		retvalue = ret;
+
+	if (verbose) {
+		for (i = 0; i < pci_id_count; i++) {
+			(void) printf("puavo-conf-update: found PCI device"
+			    " %s\n", pci_ids[i]);
+		}
+		for (i = 0; i < usb_id_count; i++) {
+			(void) printf("puavo-conf-update: found USB device"
+			    " %s\n", usb_ids[i]);
+		}
+	}
 
 	/* free tables */
 	for (i = 0; i < (sizeof(dmi_table) / sizeof(struct dmi)); i++)
@@ -571,30 +582,31 @@ apply_hwquirks(puavo_conf_t *conf, int verbose)
 }
 
 static int
-lookup_pci_ids(char **pci_ids, size_t *pci_id_count, int verbose)
+lookup_ids_from_cmd(const char *cmd_string, size_t fieldnum, char **idtable,
+    size_t *id_count, size_t id_max)
 {
-	FILE *lspci;
-	char **next_pci_id;
+	FILE *cmd_pipe;
+	char **next_id;
 	char *field, *line, *linep;
 	size_t i, n;
 	ssize_t len;
-	int lspci_status, retvalue;
+	int cmd_status, retvalue;
 
 	retvalue = 0;
 
-	if ((lspci = popen("lspci -n", "r")) == NULL) {
-		warn("lspci popen error");
+	if ((cmd_pipe = popen(cmd_string, "r")) == NULL) {
+		warn("%s popen error", cmd_string);
 		return 1;
 	}
 
 	for (;;) {
 		line = NULL;
 		n = 0;
-		len = getline(&line, &n, lspci);
+		len = getline(&line, &n, cmd_pipe);
 		if (len == -1) {
-			if (feof(lspci))
+			if (feof(cmd_pipe))
 				break;
-			warn("could not read a line from lspci");
+			warn("could not read a line from %s", cmd_string);
 			free(line);
 			retvalue = 1;
 			break;
@@ -604,30 +616,27 @@ lookup_pci_ids(char **pci_ids, size_t *pci_id_count, int verbose)
 		line[len-1] = '\0';	/* remove newline */
 
 		linep = line;
-		for (i = 0; i < 3; i++) {
+		for (i = 0; i < fieldnum; i++) {
 			field = strsep(&linep, " \t");
 			if (field == NULL) {
-				warn("could not parse a line from lspci");
+				warn("could not parse a line from %s",
+				    cmd_string);
 				retvalue = 1;
 				break;
 			}
 		}
 		if (field != NULL) {
-			next_pci_id = &pci_ids[*pci_id_count];
-			if ((*next_pci_id = strdup(field)) == NULL) {
+			next_id = &idtable[*id_count];
+			if ((*next_id = strdup(field)) == NULL) {
 				warn("strdup() with %s", field);
 				retvalue = 1;
 				free(line);
 				continue;
 			}
-			if (verbose) {
-				(void) printf("puavo-conf-update: found PCI"
-				    " device %s\n", *next_pci_id);
-			}
 
-			(*pci_id_count)++;
-			if (*pci_id_count >= PCI_MAX) {
-				warnx("pci id count maximum reached");
+			(*id_count)++;
+			if (*id_count >= id_max) {
+				warnx("id count maximum reached");
 				retvalue = 1;
 				free(line);
 				break;
@@ -637,12 +646,12 @@ lookup_pci_ids(char **pci_ids, size_t *pci_id_count, int verbose)
 		free(line);
 	}
 
-	lspci_status = pclose(lspci);
-	if (lspci_status == -1) {
-		warn("lspci error with pclose()");
+	cmd_status = pclose(cmd_pipe);
+	if (cmd_status == -1) {
+		warn("%s error with pclose()", cmd_string);
 		retvalue = 1;
-	} else if (lspci_status != 0) {
-		warnx("lspci return error code %d", lspci_status);
+	} else if (cmd_status != 0) {
+		warnx("%s returned error code %d", cmd_string, cmd_status);
 		retvalue = 1;
 	}
 
