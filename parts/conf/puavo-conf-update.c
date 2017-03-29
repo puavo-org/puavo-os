@@ -40,7 +40,7 @@
 
 char *puavo_hosttype;
 
-struct hwparam {
+struct dmi {
 	const char      *key;
 	char            *value;
 };
@@ -52,16 +52,17 @@ static int	 apply_kernel_arguments(puavo_conf_t *, int);
 static int	 apply_one_profile(puavo_conf_t *, const char *, int);
 static int	 apply_profiles(puavo_conf_t *, int);
 static char	*get_cmdline(void);
-static int	 get_first_line(char **, const char *);
+static char	*get_first_line(const char *);
 static int	 glob_error(const char *, int);
 static int	 handle_one_paramdef(puavo_conf_t *, const char *, json_t *,
     int);
 static int	 handle_paramdef_file(puavo_conf_t *, const char *, int);
 static int	 init_with_parameter_definitions(puavo_conf_t *, int);
+static int	 lookup_pci_ids(char ***, size_t *, int);
 static int	 overwrite_value(puavo_conf_t *, const char *, const char *,
     int);
 static json_t	*parse_json_file(const char *);
-static int	 update_hwparam_table(struct hwparam *, size_t, int);
+static int	 update_dmi_table(struct dmi *, size_t, int);
 static int	 update_puavoconf(puavo_conf_t *, const char *, int);
 static void	 usage(void);
 
@@ -517,7 +518,7 @@ finish:
 static int
 apply_hwquirks(puavo_conf_t *conf, int verbose)
 {
-	static struct hwparam hwparam_table[] = {
+	static struct dmi dmi_table[] = {
 		{ "bios_date",         NULL, },
 		{ "bios_date",         NULL, },
 		{ "bios_vendor",       NULL, },
@@ -538,66 +539,176 @@ apply_hwquirks(puavo_conf_t *conf, int verbose)
 		{ "product_version",   NULL, },
 		{ "sys_vendor",        NULL, },
 	};
-	int ret;
+	char **pci_ids;
+	size_t pci_id_count, i;
+	int ret, retvalue;
 
-	ret = update_hwparam_table(hwparam_table,
-	    sizeof(hwparam_table) / sizeof(struct hwparam), verbose);
+	ret = update_dmi_table(dmi_table,
+	    (sizeof(dmi_table) / sizeof(struct dmi)), verbose);
+	if (ret != 0)
+		retvalue = ret;
 
-	/* XXX */
+	ret = lookup_pci_ids(&pci_ids, &pci_id_count, verbose);
+	if (ret != 0)
+		retvalue = ret;
 
-	return ret;
+	if (verbose) {
+		(void) printf("puavo-conf-update: found %d PCI devices\n",
+		    pci_id_count);
+	}
+
+	/* free tables */
+	for (i = 0; i < (sizeof(dmi_table) / sizeof(struct dmi)); i++)
+		free(dmi_table[i].value);
+	for (i = 0; i < pci_id_count; i++)
+		free(pci_ids[i]);
+
+	return retvalue;
 }
 
 static int
-get_first_line(char **dst, const char *path)
+lookup_pci_ids(char ***pci_ids, size_t *pci_id_count, int verbose)
+{
+	char id_path[PATH_MAX];
+	char *pci_vendor_string, *pci_device_string;
+	char **next_pci_id;
+	glob_t globbuf;
+	size_t pci_id_count_tmp, i;
+	unsigned int pci_vendor, pci_device;
+	int ret, retvalue;
+
+	retvalue = 0;
+
+	*pci_id_count = 0;
+	*pci_ids = NULL;
+
+	ret = glob("/sys/bus/pci/devices/*", 0, glob_error, &globbuf);
+	if (ret != 0) {
+		warnx("glob() failure when iterating PCI devices");
+		retvalue = 1;
+		goto finish;
+	}
+
+	pci_id_count_tmp = globbuf.gl_pathc;
+	*pci_ids = calloc(pci_id_count_tmp, sizeof(char *));
+	if (*pci_ids == NULL) {
+		warn("calloc() failure when iterating PCI devices");
+		retvalue = 1;
+		goto finish;
+	}
+
+	for (i = 0; i < pci_id_count_tmp; i++) {
+		ret = snprintf(id_path, PATH_MAX, "%s/%s", globbuf.gl_pathv[i],
+		    "vendor");
+		if (ret >= PATH_MAX) {
+			warnx("snprintf() error with %s", globbuf.gl_pathv[i]);
+			continue;
+		}
+		if ((pci_vendor_string = get_first_line(id_path)) == NULL)
+			continue;
+
+		ret = snprintf(id_path, PATH_MAX, "%s/%s", globbuf.gl_pathv[i],
+		    "device");
+		if (ret >= PATH_MAX) {
+			warnx("snprintf() error with %s", globbuf.gl_pathv[i]);
+			free(pci_vendor_string);
+			continue;
+		}
+		if ((pci_device_string = get_first_line(id_path)) == NULL) {
+			free(pci_vendor_string);
+			continue;
+		}
+
+		if (sscanf(pci_vendor_string, "%x", &pci_vendor) != 1 ||
+		    sscanf(pci_device_string, "%x", &pci_device) != 1) {
+			warnx("sscanf() error with %s:%s", pci_vendor_string,
+			    pci_device_string);
+			free(pci_vendor_string);
+			free(pci_device_string);
+			continue;
+		}
+
+		next_pci_id = &(*pci_ids)[*pci_id_count];
+		ret = asprintf(next_pci_id, "%04x:%04x", pci_vendor,
+		    pci_device);
+		if (ret == -1) {
+			warnx("asprintf() error with %x:%x",
+			    pci_vendor, pci_device);
+			retvalue = 1;
+		} else {
+			if (verbose) {
+				(void) printf("puavo-conf-update: found PCI"
+				    " device %s\n", *next_pci_id);
+			}
+			(*pci_id_count)++;
+		}
+
+		free(pci_vendor_string);
+		free(pci_device_string);
+	}
+
+finish:
+	globfree(&globbuf);
+
+	return retvalue;
+}
+
+static char *
+get_first_line(const char *path)
 {
 	FILE *id_file;
+	char *line;
 	ssize_t s;
 	size_t n;
-	int ret;
-
-	ret = 0;
 
 	if ((id_file = fopen(path, "r")) == NULL) {
 		warn("could not open %s", path);
-		return 1;
+		return NULL;
 	}
 
+	line = NULL;
 	n = 0;
-	s = getline(dst, &n, id_file);
+	s = getline(&line, &n, id_file);
 	if (s == -1) {
 		warn("could not read a line from %s", path);
-		ret = 1;
-	} else {
-		(*dst)[s-1] = '\0';	/* remove newline */
+		free(line);
+		line = NULL;
+	} else if (s >= 1) {
+		line[s-1] = '\0';	/* remove newline */
 	}
 
 	if (fclose(id_file) != 0)
 		warn("could not close a file");
 
-	return ret;
+	return line;
 }
 
 static int
-update_hwparam_table(struct hwparam *hwparam_table, size_t tablesize,
-    int verbose)
+update_dmi_table(struct dmi *dmi_table, size_t tablesize, int verbose)
 {
 	char id_path[PATH_MAX];
+	char *line;
 	size_t i;
 	int ret;
 
 	ret = 0;
 
 	for (i = 0; i < tablesize; i++) {
-		snprintf(id_path, PATH_MAX, "%s/%s", DMI_ID_PATH,
-		    hwparam_table[i].key);
-
-		if (get_first_line(&hwparam_table[i].value, id_path) != 0)
+		ret = snprintf(id_path, PATH_MAX, "%s/%s", DMI_ID_PATH,
+		    dmi_table[i].key);
+		if (ret >= PATH_MAX) {
+			warnx("snprintf() error with %s", dmi_table[i].key);
 			continue;
+		}
+
+		if ((line = get_first_line(id_path)) == NULL)
+			continue;
+
+		dmi_table[i].value = line;
 
 		if (verbose) {
 			(void) printf("puavo-conf-update: dmi id %s = %s\n",
-			    hwparam_table[i].key, hwparam_table[i].value);
+			    dmi_table[i].key, dmi_table[i].value);
 		}
 	}
 
