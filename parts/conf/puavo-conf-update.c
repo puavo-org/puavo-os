@@ -33,8 +33,10 @@
 
 #include "conf.h"
 
+#define DEFINITIONS_DIR "/usr/share/puavo-conf/definitions"
 #define DEVICEJSON_PATH "/etc/puavo/device.json"
 #define DMI_ID_PATH     "/sys/class/dmi/id"
+#define HWQUIRKS_DIR    "/usr/share/puavo-conf/hwquirk-overwrites"
 #define IMAGE_CONF_PATH "/etc/puavo-conf/image.json"
 #define PROFILES_DIR    "/usr/share/puavo-conf/profile-overwrites"
 
@@ -51,6 +53,10 @@ struct dmi {
 static int	 apply_device_settings(puavo_conf_t *, const char *, int);
 static int	 apply_hosttype_profile(puavo_conf_t *, int);
 static int	 apply_hwquirks(puavo_conf_t *, int);
+static int	 apply_hwquirks_from_rules(puavo_conf_t *, struct dmi *, size_t,
+    char **, size_t, char **, size_t, int);
+static int	 apply_hwquirks_from_a_json_root(puavo_conf_t *, json_t *,
+    struct dmi *, size_t, char **, size_t, char **, size_t, int);
 static int	 apply_kernel_arguments(puavo_conf_t *, int);
 static int	 apply_one_profile(puavo_conf_t *, const char *, int);
 static int	 apply_profiles(puavo_conf_t *, int);
@@ -183,8 +189,7 @@ init_with_parameter_definitions(puavo_conf_t *conf, int verbose)
 
 	retvalue = 0;
 
-	ret = glob("/usr/share/puavo-conf/definitions/*.json", 0, glob_error,
-	    &globbuf);
+	ret = glob(DEFINITIONS_DIR "/*.json", 0, glob_error, &globbuf);
 	if (ret != 0) {
 		warnx("glob() failure in init_with_parameter_definitions()");
 		globfree(&globbuf);
@@ -544,7 +549,7 @@ apply_hwquirks(puavo_conf_t *conf, int verbose)
 		{ "sys_vendor",        NULL, },
 	};
 	char *pci_ids[PCI_MAX], *usb_ids[USB_MAX];
-	size_t pci_id_count, usb_id_count, i;
+	size_t dmi_items_count, pci_id_count, usb_id_count, i;
 	int ret, retvalue;
 
 	ret = update_dmi_table(dmi_table,
@@ -572,11 +577,134 @@ apply_hwquirks(puavo_conf_t *conf, int verbose)
 		}
 	}
 
+	dmi_items_count = sizeof(dmi_table) / sizeof(struct dmi);
+	ret = apply_hwquirks_from_rules(conf, dmi_table, dmi_items_count,
+	    pci_ids, pci_id_count, usb_ids, usb_id_count, verbose);
+	if (ret != 0)
+		retvalue = ret;
+
 	/* free tables */
-	for (i = 0; i < (sizeof(dmi_table) / sizeof(struct dmi)); i++)
+	for (i = 0; i < dmi_items_count; i++)
 		free(dmi_table[i].value);
 	for (i = 0; i < pci_id_count; i++)
 		free(pci_ids[i]);
+	for (i = 0; i < usb_id_count; i++)
+		free(usb_ids[i]);
+
+	return retvalue;
+}
+
+static int
+apply_hwquirks_from_rules(puavo_conf_t *conf, struct dmi *dmi_table,
+    size_t dmi_items_count, char **pci_ids, size_t pci_id_count, char **usb_ids,
+    size_t usb_id_count, int verbose)
+{
+	json_t *root;
+	glob_t globbuf;
+	size_t i;
+	int ret, retvalue;
+	const char *quirkfilepath;
+
+	retvalue = 0;
+
+	/* XXX for debugging only, remove */
+	if (verbose) {
+		for (i = 0; i < dmi_items_count; i++) {
+			(void) printf("puavo-conf-update: dmi id %s = %s\n",
+			    dmi_table[i].key, dmi_table[i].value);
+		}
+		for (i = 0; i < pci_id_count; i++) {
+			(void) printf("puavo-conf-update: found PCI device"
+			    " %s\n", pci_ids[i]);
+		}
+		for (i = 0; i < usb_id_count; i++) {
+			(void) printf("puavo-conf-update: found USB device"
+			    " %s\n", usb_ids[i]);
+		}
+	}
+
+	ret = glob(HWQUIRKS_DIR "/*.json", 0, glob_error, &globbuf);
+	if (ret != 0) {
+		warnx("glob() failure in apply_hwquirks_from_rules()");
+		globfree(&globbuf);
+		return 1;
+	}
+
+	for (i = 0; i < globbuf.gl_pathc; i++) {
+		quirkfilepath = globbuf.gl_pathv[i];
+
+		/* XXX */
+		if (verbose)
+			(void) printf("looking up path %s\n", quirkfilepath);
+
+		if ((root = parse_json_file(quirkfilepath)) == NULL) {
+			warnx("parse_json_file() failed for %s", quirkfilepath);
+			retvalue = 1;
+			continue;
+		}
+		ret = apply_hwquirks_from_a_json_root(conf, root, dmi_table,
+		    dmi_items_count, pci_ids, pci_id_count, usb_ids,
+		    usb_id_count, verbose);
+		if (ret != 0) {
+			warnx("apply_hwquirks_from_rules() failed for %s",
+			    globbuf.gl_pathv[i]);
+			retvalue = 1;
+		}
+
+		json_decref(root);
+	}
+
+	return retvalue;
+}
+
+static int
+apply_hwquirks_from_a_json_root(puavo_conf_t *conf, json_t *root,
+    struct dmi *dmi_table, size_t dmi_items_count, char **pci_ids,
+    size_t pci_id_count, char **usb_ids, size_t usb_id_count, int verbose)
+{
+	json_t *rule, *key_obj, *mm_obj, *pattern_obj, *parameters_obj;
+	const char *key, *matchmethod, *pattern, *parameters;
+	size_t i;
+	int retvalue;
+
+	retvalue = 0;
+
+	if (!json_is_array(root)) {
+		warnx("rules file json is not a json array");
+		return 1;
+	}
+
+	json_array_foreach(root, i, rule) {
+		if (!json_is_object(rule)) {
+			warnx("hwquirk rule is not an object");
+			retvalue = 1;
+			continue;
+		}
+
+		if ((key_obj = json_object_get(rule, "key")) == NULL ||
+		    (key = json_string_value(key_obj)) == NULL) {
+			warnx("hwquirk rule 'key' is missing");
+			retvalue = 1;
+			continue;
+		}
+
+		if ((mm_obj = json_object_get(rule, "matchmethod")) == NULL ||
+		    (matchmethod = json_string_value(mm_obj)) == NULL) {
+			warnx("hwquirk rule 'matchmethod' is missing");
+			retvalue = 1;
+			continue;
+		}
+
+		if ((pattern_obj = json_object_get(rule, "pattern")) == NULL ||
+		    (pattern = json_string_value(pattern_obj)) == NULL) {
+			warnx("hwquirk rule 'pattern' is missing");
+			retvalue = 1;
+			continue;
+		}
+
+		/* XXX Check for matches, if there is, apply puavo-conf
+		 * XXX parameters. */
+	}
 
 	return retvalue;
 }
