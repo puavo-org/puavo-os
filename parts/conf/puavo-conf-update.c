@@ -50,13 +50,22 @@ struct dmi {
 	char            *value;
 };
 
+struct hw_characteristics {
+	struct dmi	*dmi_table;
+	size_t		 dmi_itemcount;
+	char		*pci_ids[PCI_MAX];
+	size_t		 pci_id_count;
+	char		*usb_ids[USB_MAX];
+	size_t		 usb_id_count;
+};
+
 static int	 apply_device_settings(puavo_conf_t *, const char *, int);
 static int	 apply_hosttype_profile(puavo_conf_t *, int);
 static int	 apply_hwquirks(puavo_conf_t *, int);
-static int	 apply_hwquirks_from_rules(puavo_conf_t *, struct dmi *, size_t,
-    char **, size_t, char **, size_t, int);
+static int	 apply_hwquirks_from_rules(puavo_conf_t *,
+    struct hw_characteristics *, int);
 static int	 apply_hwquirks_from_a_json_root(puavo_conf_t *, json_t *,
-    struct dmi *, size_t, char **, size_t, char **, size_t, int);
+    struct hw_characteristics *, int);
 static int	 apply_kernel_arguments(puavo_conf_t *, int);
 static int	 apply_one_profile(puavo_conf_t *, const char *, int);
 static int	 apply_profiles(puavo_conf_t *, int);
@@ -527,7 +536,7 @@ finish:
 static int
 apply_hwquirks(puavo_conf_t *conf, int verbose)
 {
-	static struct dmi dmi_table[] = {
+	struct dmi dmi_table[] = {
 		{ "bios_date",         NULL, },
 		{ "bios_date",         NULL, },
 		{ "bios_vendor",       NULL, },
@@ -548,56 +557,60 @@ apply_hwquirks(puavo_conf_t *conf, int verbose)
 		{ "product_version",   NULL, },
 		{ "sys_vendor",        NULL, },
 	};
-	char *pci_ids[PCI_MAX], *usb_ids[USB_MAX];
-	size_t dmi_items_count, pci_id_count, usb_id_count, i;
+	struct hw_characteristics hw;
+	size_t i;
 	int ret, retvalue;
 
-	ret = update_dmi_table(dmi_table,
-	    (sizeof(dmi_table) / sizeof(struct dmi)), verbose);
+	hw.dmi_table = dmi_table;
+	hw.dmi_itemcount = sizeof(dmi_table) / sizeof(struct dmi);
+
+	ret = update_dmi_table(hw.dmi_table, hw.dmi_itemcount, verbose);
 	if (ret != 0)
 		retvalue = ret;
 
-	ret = lookup_ids_from_cmd("lspci -n", 3, pci_ids, &pci_id_count,
+	ret = lookup_ids_from_cmd("lspci -n", 3, hw.pci_ids, &hw.pci_id_count,
 	    PCI_MAX);
 	if (ret != 0)
 		retvalue = ret;
 
-	ret = lookup_ids_from_cmd("lsusb", 6, usb_ids, &usb_id_count, USB_MAX);
+	ret = lookup_ids_from_cmd("lsusb", 6, hw.usb_ids, &hw.usb_id_count,
+	    USB_MAX);
 	if (ret != 0)
 		retvalue = ret;
 
 	if (verbose) {
-		for (i = 0; i < pci_id_count; i++) {
-			(void) printf("puavo-conf-update: found PCI device"
-			    " %s\n", pci_ids[i]);
+		for (i = 0; i < hw.dmi_itemcount; i++) {
+			(void) printf("puavo-conf-update: dmi id %s = %s\n",
+			    dmi_table[i].key, dmi_table[i].value);
 		}
-		for (i = 0; i < usb_id_count; i++) {
+		for (i = 0; i < hw.pci_id_count; i++) {
+			(void) printf("puavo-conf-update: found PCI device"
+			    " %s\n", hw.pci_ids[i]);
+		}
+		for (i = 0; i < hw.usb_id_count; i++) {
 			(void) printf("puavo-conf-update: found USB device"
-			    " %s\n", usb_ids[i]);
+			    " %s\n", hw.usb_ids[i]);
 		}
 	}
 
-	dmi_items_count = sizeof(dmi_table) / sizeof(struct dmi);
-	ret = apply_hwquirks_from_rules(conf, dmi_table, dmi_items_count,
-	    pci_ids, pci_id_count, usb_ids, usb_id_count, verbose);
+	ret = apply_hwquirks_from_rules(conf, &hw, verbose);
 	if (ret != 0)
 		retvalue = ret;
 
 	/* free tables */
-	for (i = 0; i < dmi_items_count; i++)
-		free(dmi_table[i].value);
-	for (i = 0; i < pci_id_count; i++)
-		free(pci_ids[i]);
-	for (i = 0; i < usb_id_count; i++)
-		free(usb_ids[i]);
+	for (i = 0; i < hw.dmi_itemcount; i++)
+		free(hw.dmi_table[i].value);
+	for (i = 0; i < hw.pci_id_count; i++)
+		free(hw.pci_ids[i]);
+	for (i = 0; i < hw.usb_id_count; i++)
+		free(hw.usb_ids[i]);
 
 	return retvalue;
 }
 
 static int
-apply_hwquirks_from_rules(puavo_conf_t *conf, struct dmi *dmi_table,
-    size_t dmi_items_count, char **pci_ids, size_t pci_id_count, char **usb_ids,
-    size_t usb_id_count, int verbose)
+apply_hwquirks_from_rules(puavo_conf_t *conf, struct hw_characteristics *hw,
+    int verbose)
 {
 	json_t *root;
 	glob_t globbuf;
@@ -606,22 +619,6 @@ apply_hwquirks_from_rules(puavo_conf_t *conf, struct dmi *dmi_table,
 	const char *quirkfilepath;
 
 	retvalue = 0;
-
-	/* XXX for debugging only, remove */
-	if (verbose) {
-		for (i = 0; i < dmi_items_count; i++) {
-			(void) printf("puavo-conf-update: dmi id %s = %s\n",
-			    dmi_table[i].key, dmi_table[i].value);
-		}
-		for (i = 0; i < pci_id_count; i++) {
-			(void) printf("puavo-conf-update: found PCI device"
-			    " %s\n", pci_ids[i]);
-		}
-		for (i = 0; i < usb_id_count; i++) {
-			(void) printf("puavo-conf-update: found USB device"
-			    " %s\n", usb_ids[i]);
-		}
-	}
 
 	ret = glob(HWQUIRKS_DIR "/*.json", 0, glob_error, &globbuf);
 	if (ret != 0) {
@@ -642,12 +639,10 @@ apply_hwquirks_from_rules(puavo_conf_t *conf, struct dmi *dmi_table,
 			retvalue = 1;
 			continue;
 		}
-		ret = apply_hwquirks_from_a_json_root(conf, root, dmi_table,
-		    dmi_items_count, pci_ids, pci_id_count, usb_ids,
-		    usb_id_count, verbose);
+		ret = apply_hwquirks_from_a_json_root(conf, root, hw, verbose);
 		if (ret != 0) {
 			warnx("apply_hwquirks_from_rules() failed for %s",
-			    globbuf.gl_pathv[i]);
+			    quirkfilepath);
 			retvalue = 1;
 		}
 
@@ -659,8 +654,7 @@ apply_hwquirks_from_rules(puavo_conf_t *conf, struct dmi *dmi_table,
 
 static int
 apply_hwquirks_from_a_json_root(puavo_conf_t *conf, json_t *root,
-    struct dmi *dmi_table, size_t dmi_items_count, char **pci_ids,
-    size_t pci_id_count, char **usb_ids, size_t usb_id_count, int verbose)
+    struct hw_characteristics *hw, int verbose)
 {
 	json_t *rule, *key_obj, *mm_obj, *pattern_obj, *parameters_obj;
 	const char *key, *matchmethod, *pattern, *parameters;
@@ -838,11 +832,6 @@ update_dmi_table(struct dmi *dmi_table, size_t tablesize, int verbose)
 			continue;
 
 		dmi_table[i].value = line;
-
-		if (verbose) {
-			(void) printf("puavo-conf-update: dmi id %s = %s\n",
-			    dmi_table[i].key, dmi_table[i].value);
-		}
 	}
 
 	return ret;
