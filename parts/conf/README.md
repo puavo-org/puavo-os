@@ -47,10 +47,11 @@ precedences. The following list defines the sources in ascending
 precedence order:
 
     1. Parameter definitions
-    2. Parameter overwrites from the configuration profile
-    3. Parameter overwrites from hardware quirks
-    4. Parameter overwrites from device settings
-    5. Parameter overwrites from the kernel command line
+    2. Parameter overwrites from the image specific settings
+    3. Parameter overwrites from the configuration profile
+    4. Parameter overwrites from hardware quirks
+    5. Parameter overwrites from device settings
+    6. Parameter overwrites from the kernel command line
 
 Thus, for example, values assigned on the kernel command line
 overwrite values assigned by hardware quirks.
@@ -80,6 +81,11 @@ in lexicographical order and must have the following structure:
             "description": "Network filesystem protocol used for network mounted home directories"
         }
     }
+
+### Parameter overwrites from the image specific settings
+
+Apply puavo-conf overwrites from `/etc/puavo-conf/image.json`
+(which can be customized for various image).
 
 ### Parameter overrides from hardware quirks
 
