@@ -88,21 +88,21 @@ Hardware quirks must be defined in JSON files located in
 in lexicographical order and must have the following structure:
 
     [
-        {
-            "key": "dmidecode-system-product-name",
-            "matchmethod": "exact",
-            "pattern": "Aspire ES1-111",
-            "parameters": {
-                "puavo.intel_backlight.enabled": "true"
-            }
+      {
+        "key": "dmidecode-system-product-name",
+        "matchmethod": "exact",
+        "pattern": "Aspire ES1-111",
+        "parameters": {
+          "puavo.intel_backlight.enabled": "true"
         }
+      }
     ]
 
 Field `key` determines the name of the hardware characteristic the
 filter is matched against. Valid hardware characteristic key names are
 `dmidecode-*` (wildcard expands to any keyword supported by
 `dmidecode`), `pci-id` and `usb-id`. Field `matchmethod` determines
-the method for matching: `exact`, `glob` and `regex` are
+the method for matching: `exact`, `glob` and `regexp` are
 supported.  Value is tested against the value of field `pattern`, and
 if a match is successful, parameters listed in `parameters` field will
 be set.  Parameter values must be strings.
