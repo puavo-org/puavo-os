@@ -23,10 +23,12 @@
 
 #include <err.h>
 #include <fcntl.h>
+#include <fnmatch.h>
 #include <getopt.h>
 #include <glob.h>
 #include <jansson.h>
 #include <limits.h>
+#include <regex.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -81,6 +83,8 @@ static int	 handle_paramdef_file(puavo_conf_t *, const char *, int);
 static int	 init_with_parameter_definitions(puavo_conf_t *, int);
 static int	 lookup_ids_from_cmd(const char *, size_t, char **, size_t *,
     size_t);
+static int	 match_pattern(const char *, const char *, const regex_t *,
+    const char *);
 static int	 overwrite_value(puavo_conf_t *, const char *, const char *,
     int);
 static json_t	*parse_json_file(const char *);
@@ -717,8 +721,8 @@ apply_hwquirks_from_a_json_root(puavo_conf_t *conf, json_t *root,
 			if (ret != 0)
 				retvalue = 1;
 			if (verbose) {
-				(void) printf("puavo-conf-update: applying"
-				    " hwquirk rule done\n");
+				(void) printf("puavo-conf-update: ... hwquirk"
+				    " rule done\n");
 			}
 		} else {
 			(void) printf("puavo-conf-update: hwquirk rule"
@@ -734,31 +738,68 @@ static int
 check_match_for_hwquirk_rule(const char *key, const char *matchmethod,
     const char *pattern, struct hw_characteristics *hw)
 {
+	regex_t regex;
+	regex_t *regex_p;
 	size_t i;
+	int match;
 
-	if (strcmp(matchmethod, "exact") != 0) {
-		warnx("only matchmethod 'exact' is supported for now");
-		return 0;
+	match = 0;
+
+	if (strcmp(matchmethod, "regexp") == 0) {
+		if (regcomp(&regex, pattern, REG_EXTENDED|REG_NOSUB) != 0) {
+			warn("error compiling regexp %s", pattern);
+			return 0;
+		}
+		regex_p = &regex;
+	} else {
+		regex_p = NULL;
 	}
 
 	if (strcmp(key, "pci-id") == 0) {
 		for (i = 0; i < hw->pci_id_count; i++) {
-			if (strcmp(pattern, hw->pci_ids[i]) == 0)
-				return 1;
+			match = match_pattern(matchmethod, pattern, regex_p,
+			    hw->pci_ids[i]);
+			if (match)
+				break;
 		}
 	} else if (strcmp(key, "usb-id") == 0) {
 		for (i = 0; i < hw->usb_id_count; i++) {
-			if (strcmp(pattern, hw->usb_ids[i]) == 0)
-				return 1;
+			match = match_pattern(matchmethod, pattern, regex_p,
+			    hw->usb_ids[i]);
+			if (match)
+				break;
 		}
 	} else {
 		for (i = 0; i < hw->dmi_itemcount; i++) {
-			if (strcmp(hw->dmi_table[i].key, key) == 0 &&
-			    strcmp(hw->dmi_table[i].value, pattern) == 0) {
-				return 1;
+			if (strcmp(hw->dmi_table[i].key, key) == 0) {
+				match = match_pattern(matchmethod, pattern,
+				    regex_p, hw->dmi_table[i].value);
+				if (match)
+					break;
 			}
 		}
 	}
+
+	if (regex_p != NULL)
+		regfree(regex_p);
+
+	return match;
+}
+
+static int
+match_pattern(const char *matchmethod, const char *pattern,
+    const regex_t *regex, const char *value)
+{
+	if (regex != NULL)
+		return (regexec(regex, value, 0, NULL, 0) == 0);
+
+	if (strcmp(matchmethod, "exact") == 0)
+		return (strcmp(pattern, value) == 0);
+
+	if (strcmp(matchmethod, "glob") == 0)
+		return (fnmatch(pattern, value, 0) == 0);
+
+	warnx("Unsupported matchmethod %s", matchmethod);
 
 	return 0;
 }
