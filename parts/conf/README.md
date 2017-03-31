@@ -93,7 +93,7 @@ in lexicographical order and must have the following structure:
             "matchmethod": "exact",
             "pattern": "Aspire ES1-111",
             "parameters": {
-                "puavo.intel_backlight.enabled": true
+                "puavo.intel_backlight.enabled": "true"
             }
         }
     ]
@@ -103,9 +103,9 @@ filter is matched against. Valid hardware characteristic key names are
 `dmidecode-*` (wildcard expands to any keyword supported by
 `dmidecode`), `pci-id` and `usb-id`. Field `matchmethod` determines
 the method for matching: `exact`, `glob` and `regex` are
-supported. Value is tested against the value of field `pattern`, and
+supported.  Value is tested against the value of field `pattern`, and
 if a match is successful, parameters listed in `parameters` field will
-be set.
+be set.  Parameter values must be strings.
 
 ### Puavo Web
 

@@ -61,6 +61,7 @@ struct hw_characteristics {
 
 static int	 apply_device_settings(puavo_conf_t *, const char *, int);
 static int	 apply_hosttype_profile(puavo_conf_t *, int);
+static int	 apply_hwquirk_rule_parameters(puavo_conf_t *, json_t *, int);
 static int	 apply_hwquirks(puavo_conf_t *, int);
 static int	 apply_hwquirks_from_rules(puavo_conf_t *,
     struct hw_characteristics *, int);
@@ -69,6 +70,8 @@ static int	 apply_hwquirks_from_a_json_root(puavo_conf_t *, json_t *,
 static int	 apply_kernel_arguments(puavo_conf_t *, int);
 static int	 apply_one_profile(puavo_conf_t *, const char *, int);
 static int	 apply_profiles(puavo_conf_t *, int);
+static int	 check_match_for_hwquirk_rule(const char *, const char *,
+    const char *, struct hw_characteristics *);
 static char	*get_cmdline(void);
 static char	*get_first_line(const char *);
 static int	 glob_error(const char *, int);
@@ -81,7 +84,7 @@ static int	 lookup_ids_from_cmd(const char *, size_t, char **, size_t *,
 static int	 overwrite_value(puavo_conf_t *, const char *, const char *,
     int);
 static json_t	*parse_json_file(const char *);
-static int	 update_dmi_table(struct dmi *, size_t, int);
+static int	 update_dmi_table(struct dmi *, size_t);
 static int	 update_puavoconf(puavo_conf_t *, const char *, int);
 static void	 usage(void);
 
@@ -564,7 +567,7 @@ apply_hwquirks(puavo_conf_t *conf, int verbose)
 	hw.dmi_table = dmi_table;
 	hw.dmi_itemcount = sizeof(dmi_table) / sizeof(struct dmi);
 
-	ret = update_dmi_table(hw.dmi_table, hw.dmi_itemcount, verbose);
+	ret = update_dmi_table(hw.dmi_table, hw.dmi_itemcount);
 	if (ret != 0)
 		retvalue = ret;
 
@@ -630,10 +633,6 @@ apply_hwquirks_from_rules(puavo_conf_t *conf, struct hw_characteristics *hw,
 	for (i = 0; i < globbuf.gl_pathc; i++) {
 		quirkfilepath = globbuf.gl_pathv[i];
 
-		/* XXX */
-		if (verbose)
-			(void) printf("looking up path %s\n", quirkfilepath);
-
 		if ((root = parse_json_file(quirkfilepath)) == NULL) {
 			warnx("parse_json_file() failed for %s", quirkfilepath);
 			retvalue = 1;
@@ -641,7 +640,7 @@ apply_hwquirks_from_rules(puavo_conf_t *conf, struct hw_characteristics *hw,
 		}
 		ret = apply_hwquirks_from_a_json_root(conf, root, hw, verbose);
 		if (ret != 0) {
-			warnx("apply_hwquirks_from_rules() failed for %s",
+			warnx("apply_hwquirks_from_a_json_root() failed for %s",
 			    quirkfilepath);
 			retvalue = 1;
 		}
@@ -656,10 +655,10 @@ static int
 apply_hwquirks_from_a_json_root(puavo_conf_t *conf, json_t *root,
     struct hw_characteristics *hw, int verbose)
 {
-	json_t *rule, *key_obj, *mm_obj, *pattern_obj, *parameters_obj;
-	const char *key, *matchmethod, *pattern, *parameters;
+	json_t *rule, *key_obj, *mm_obj, *pattern_obj, *params_obj;
+	const char *key, *matchmethod, *pattern;
 	size_t i;
-	int retvalue;
+	int is_match, ret, retvalue;
 
 	retvalue = 0;
 
@@ -677,27 +676,117 @@ apply_hwquirks_from_a_json_root(puavo_conf_t *conf, json_t *root,
 
 		if ((key_obj = json_object_get(rule, "key")) == NULL ||
 		    (key = json_string_value(key_obj)) == NULL) {
-			warnx("hwquirk rule 'key' is missing");
+			warnx("hwquirk rule field 'key' is missing");
 			retvalue = 1;
 			continue;
 		}
 
 		if ((mm_obj = json_object_get(rule, "matchmethod")) == NULL ||
 		    (matchmethod = json_string_value(mm_obj)) == NULL) {
-			warnx("hwquirk rule 'matchmethod' is missing");
+			warnx("hwquirk rule field 'matchmethod' is missing");
 			retvalue = 1;
 			continue;
 		}
 
 		if ((pattern_obj = json_object_get(rule, "pattern")) == NULL ||
 		    (pattern = json_string_value(pattern_obj)) == NULL) {
-			warnx("hwquirk rule 'pattern' is missing");
+			warnx("hwquirk rule field 'pattern' is missing");
 			retvalue = 1;
 			continue;
 		}
 
-		/* XXX Check for matches, if there is, apply puavo-conf
-		 * XXX parameters. */
+		params_obj = json_object_get(rule, "parameters");
+		if (params_obj == NULL) {
+			warnx("hwquirk rule field 'parameters' is missing");
+			retvalue = 1;
+			continue;
+		}
+
+		is_match = check_match_for_hwquirk_rule(key, matchmethod,
+		    pattern, hw);
+		if (is_match) {
+			if (verbose) {
+				(void) printf("puavo-conf-update: APPLYING"
+				    " hwquirk rule with key=%s matchmethod=%s"
+				    " pattern=%s\n", key, matchmethod,
+				    pattern);
+			}
+
+			ret = apply_hwquirk_rule_parameters(conf, params_obj,
+			    verbose);
+			if (ret != 0)
+				retvalue = 1;
+			if (verbose) {
+				(void) printf("puavo-conf-update: applying"
+				    " hwquirk rule done\n");
+			}
+		} else {
+			(void) printf("puavo-conf-update: hwquirk rule"
+			    " with key=%s matchmethod=%s pattern=%s did not"
+			    " match\n", key, matchmethod, pattern);
+		}
+	}
+
+	return retvalue;
+}
+
+static int
+check_match_for_hwquirk_rule(const char *key, const char *matchmethod,
+    const char *pattern, struct hw_characteristics *hw)
+{
+	size_t i;
+
+	if (strcmp(matchmethod, "exact") != 0) {
+		warnx("only matchmethod 'exact' is supported for now");
+		return 0;
+	}
+
+	if (strcmp(key, "pci-id") == 0) {
+		for (i = 0; i < hw->pci_id_count; i++) {
+			if (strcmp(pattern, hw->pci_ids[i]) == 0)
+				return 1;
+		}
+	} else if (strcmp(key, "usb-id") == 0) {
+		for (i = 0; i < hw->usb_id_count; i++) {
+			if (strcmp(pattern, hw->usb_ids[i]) == 0)
+				return 1;
+		}
+	} else {
+		for (i = 0; i < hw->dmi_itemcount; i++) {
+			if (strcmp(hw->dmi_table[i].key, key) == 0 &&
+			    strcmp(hw->dmi_table[i].value, pattern) == 0) {
+				return 1;
+			}
+		}
+	}
+
+	return 0;
+}
+
+static int
+apply_hwquirk_rule_parameters(puavo_conf_t *conf, json_t *params_obj,
+    int verbose)
+{
+	json_t *node_value;
+	const char *param_name, *param_value;
+	int ret, retvalue;
+
+	retvalue = 0;
+
+	if (!json_is_object(params_obj)) {
+		warnx("parameters in hwquirk rule is not an object");
+		return 1;
+	}
+
+	json_object_foreach(params_obj, param_name, node_value) {
+		if ((param_value = json_string_value(node_value)) == NULL) {
+			warnx("parameter value in hwquirk is not a string");
+			retvalue = 1;
+		}
+		ret = overwrite_value(conf, param_name, param_value, verbose);
+		if (ret != 0)
+			retvalue = 1;
+
 	}
 
 	return retvalue;
@@ -811,7 +900,7 @@ get_first_line(const char *path)
 }
 
 static int
-update_dmi_table(struct dmi *dmi_table, size_t tablesize, int verbose)
+update_dmi_table(struct dmi *dmi_table, size_t tablesize)
 {
 	char id_path[PATH_MAX];
 	char *line;
