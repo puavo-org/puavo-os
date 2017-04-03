@@ -15,6 +15,10 @@ override_dh_auto_install:
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-autopilot
 
+	$(MAKE) -C bigtouch-shutdown \
+		install prefix=/usr sysconfdir=/etc \
+		DESTDIR=$(CURDIR)/debian/puavo-bigtouch-shutdown
+
 	$(MAKE) -C blackboard				\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-blackboard

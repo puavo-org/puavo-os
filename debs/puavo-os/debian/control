@@ -475,6 +475,16 @@ Description: simple drawing application
  to big touch screen devices.
  .
 
+Package: puavo-bigtouch-shutdown
+Architecture: all
+Depends: ${misc:Depends},
+ bash,
+ libgtk-3-0,
+Description: Customized shutdown dialog for BigTouch
+ The built-in GDM shutdown dialog does not have the options we want,
+ this simple replacement does.
+ .
+
 Package: webkiosk-language-selector
 Architecture: all
 Depends: ${misc:Depends}, nwjs
