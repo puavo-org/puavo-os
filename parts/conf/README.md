@@ -47,10 +47,11 @@ precedences. The following list defines the sources in ascending
 precedence order:
 
     1. Parameter definitions
-    2. Parameter overwrites from the configuration profile
-    3. Parameter overwrites from hardware quirks
-    4. Parameter overwrites from device settings
-    5. Parameter overwrites from the kernel command line
+    2. Parameter overwrites from the image specific settings
+    3. Parameter overwrites from the configuration profile
+    4. Parameter overwrites from hardware quirks
+    5. Parameter overwrites from device settings
+    6. Parameter overwrites from the kernel command line
 
 Thus, for example, values assigned on the kernel command line
 overwrite values assigned by hardware quirks.
@@ -81,6 +82,11 @@ in lexicographical order and must have the following structure:
         }
     }
 
+### Parameter overwrites from the image specific settings
+
+Apply puavo-conf overwrites from `/etc/puavo-conf/image.json`
+(which can be customized for various image).
+
 ### Parameter overrides from hardware quirks
 
 Hardware quirks must be defined in JSON files located in
@@ -88,24 +94,24 @@ Hardware quirks must be defined in JSON files located in
 in lexicographical order and must have the following structure:
 
     [
-        {
-            "key": "dmidecode-system-product-name",
-            "matchmethod": "exact",
-            "pattern": "Aspire ES1-111",
-            "parameters": {
-                "puavo.intel_backlight.enabled": true
-            }
+      {
+        "key": "dmidecode-system-product-name",
+        "matchmethod": "exact",
+        "pattern": "Aspire ES1-111",
+        "parameters": {
+          "puavo.intel_backlight.enabled": "true"
         }
+      }
     ]
 
 Field `key` determines the name of the hardware characteristic the
 filter is matched against. Valid hardware characteristic key names are
 `dmidecode-*` (wildcard expands to any keyword supported by
 `dmidecode`), `pci-id` and `usb-id`. Field `matchmethod` determines
-the method for matching: `exact`, `glob` and `regex` are
-supported. Value is tested against the value of field `pattern`, and
+the method for matching: `exact`, `glob` and `regexp` are
+supported.  Value is tested against the value of field `pattern`, and
 if a match is successful, parameters listed in `parameters` field will
-be set.
+be set.  Parameter values must be strings.
 
 ### Puavo Web
 

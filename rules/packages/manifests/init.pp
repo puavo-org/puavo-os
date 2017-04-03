@@ -15,6 +15,7 @@ class packages {
     [ 'iivari-client'
     , 'opinsys-ca-certificates'
     , 'puavo-autopilot'
+    , 'puavo-bigtouch-shutdown'
     , 'puavo-blackboard'
     , 'puavo-client'
     , 'puavo-conf'

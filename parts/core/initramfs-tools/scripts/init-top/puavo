@@ -81,3 +81,15 @@ else
   rm -fv /etc/modprobe.d/nvidia-blacklists-nouveau.conf \
          /etc/modprobe.d/nvidia.conf
 fi
+
+# Set kernel module blacklists.
+# This is similar to /etc/puavo-conf/scripts/manage_module_blacklist.
+puavo_blacklist=$(puavo-conf puavo.kernel.modules.blacklist)
+if [ -n "$puavo_blacklist" ]; then
+  OLDIFS="$IFS"
+  IFS=','
+  for module in $puavo_blacklist; do
+    echo "blacklist $module" >> /etc/modprobe.d/blacklist-by-puavo-conf.conf
+  done
+  IFS="$OLDIFS"
+fi

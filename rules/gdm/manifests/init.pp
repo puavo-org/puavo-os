@@ -11,6 +11,7 @@ class gdm {
   file {
     '/etc/gdm3/background.img':
       ensure  => link,
+      replace => false, # just initial setup, see setup_loginscreen_background
       require => [ Package['gdm3'], Package['ubuntu-wallpapers-saucy'], ],
       target  => '/usr/share/backgrounds/Grass_by_Jeremy_Hill.jpg';
 

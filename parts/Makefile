@@ -1,5 +1,6 @@
 subdirs         := admins                       \
                    autopilot                    \
+                   bigtouch-shutdown            \
                    blackboard                   \
                    client                       \
                    conf                         \

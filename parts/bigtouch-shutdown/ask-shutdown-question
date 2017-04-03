@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# Driver script for the custom BigTouch shutdown dialog
+# (c) Opinsys 2017
+
+/usr/sbin/shutdown-question /usr/share/bigtouch-shutdown/shutdown-question.ui
+
+case $? in
+    1)
+        dbus-send --session --type=method_call --print-reply --dest=org.gnome.SessionManager /org/gnome/SessionManager org.gnome.SessionManager.Logout uint32:1
+        ;;
+    2)
+        dbus-send --system --print-reply --dest=org.freedesktop.login1 /org/freedesktop/login1 org.freedesktop.login1.Manager.PowerOff boolean:true
+        ;;
+    *)
+        exit 0
+        ;;
+esac
