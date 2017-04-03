@@ -142,7 +142,7 @@ function enable() {
             style_class: "launcher-box-item"
         });
     launchQuitIcon.connect('button-press-event',
-                              function() { Util.spawn(["gnome-session-quit"]) });
+                              function() { Util.spawn(["/usr/sbin/ask-shutdown-question"]) });
 
     let toggleOnboardIcon = new St.Icon(
         {
