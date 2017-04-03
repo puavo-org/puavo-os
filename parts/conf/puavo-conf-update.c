@@ -570,6 +570,8 @@ apply_hwquirks(puavo_conf_t *conf, int verbose)
 
 	hw.dmi_table = dmi_table;
 	hw.dmi_itemcount = sizeof(dmi_table) / sizeof(struct dmi);
+	hw.pci_id_count = 0;
+	hw.usb_id_count = 0;
 
 	ret = update_dmi_table(hw.dmi_table, hw.dmi_itemcount);
 	if (ret != 0)
