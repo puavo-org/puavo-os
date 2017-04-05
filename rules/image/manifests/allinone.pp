@@ -34,7 +34,6 @@ class image::allinone {
   include ::udev
   include ::use_urandom
   include ::wacom
-  include ::wlanap
 
   stage {
     'init':
