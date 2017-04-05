@@ -1,0 +1,43 @@
+From ef3866ab016e8ff58c2adbfb1ec673a7f7e1dfd8 Mon Sep 17 00:00:00 2001
+From: Ilan Peer <ilan.peer@intel.com>
+Date: Sun, 27 Dec 2015 14:36:11 +0200
+Subject: nl80211: Don't call linux_iface_up() for a dedicated P2P Device
+
+As a dedicated P2P Device interface does not have a network
+interface associated with it, trying to call linux_iface_up()
+on it would always fail so this call can be skipped for
+such an interface.
+
+Getting interface nlmode can be done only after bss->wdev_id is
+set, so move this call to wpa_driver_nl80211_finish_drv_init(),
+and do it only in case the nlmode != NL80211_IFTYPE_P2P_DEVICE.
+
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+---
+ src/drivers/driver_nl80211.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+--- a/src/drivers/driver_nl80211.c
++++ b/src/drivers/driver_nl80211.c
+@@ -1681,9 +1681,6 @@
+ 		os_free(rcfg);
+ 	}
+ 
+-	if (linux_iface_up(drv->global->ioctl_sock, ifname) > 0)
+-		drv->start_iface_up = 1;
+-
+ 	if (wpa_driver_nl80211_finish_drv_init(drv, set_addr, 1, driver_params))
+ 		goto failed;
+ 
+@@ -2186,6 +2183,11 @@
+ 	if (!bss->if_dynamic && nl80211_get_ifmode(bss) == NL80211_IFTYPE_AP)
+ 		bss->static_ap = 1;
+ 
++	if (first &&
++	    nl80211_get_ifmode(bss) != NL80211_IFTYPE_P2P_DEVICE &&
++	    linux_iface_up(drv->global->ioctl_sock, bss->ifname) > 0)
++		drv->start_iface_up = 1;
++
+ 	if (wpa_driver_nl80211_capa(drv))
+ 		return -1;
+ 

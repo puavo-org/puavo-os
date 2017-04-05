@@ -1,0 +1,64 @@
+From cda3a40fce55202b5daea697007bf323f38ad1d5 Mon Sep 17 00:00:00 2001
+From: Mike Gilbert <floppym@gentoo.org>
+Date: Wed, 12 Aug 2015 10:44:42 -0400
+Subject: systemd: Order wpa_supplicant before network.target
+
+Ordering the units before network.target causes them to be stopped
+after network.target on shutdown. This ensures that any network
+filesystems will be unmounted before wpa_supplicant is killed.
+
+Adding Wants=network.target ensures that network.target will be included
+in the active dependency graph. This is typical of units which are
+involved in networking setup functions.
+
+Signed-off-by: Mike Gilbert <floppym@gentoo.org>
+---
+ wpa_supplicant/systemd/wpa_supplicant-nl80211.service.arg.in | 2 ++
+ wpa_supplicant/systemd/wpa_supplicant-wired.service.arg.in   | 2 ++
+ wpa_supplicant/systemd/wpa_supplicant.service.arg.in         | 2 ++
+ wpa_supplicant/systemd/wpa_supplicant.service.in             | 2 ++
+ 4 files changed, 8 insertions(+)
+
+--- a/wpa_supplicant/systemd/wpa_supplicant-nl80211.service.arg.in
++++ b/wpa_supplicant/systemd/wpa_supplicant-nl80211.service.arg.in
+@@ -2,6 +2,8 @@
+ Description=WPA supplicant daemon (interface- and nl80211 driver-specific version)
+ Requires=sys-subsystem-net-devices-%i.device
+ After=sys-subsystem-net-devices-%i.device
++Before=network.target
++Wants=network.target
+ 
+ # NetworkManager users will probably want the dbus version instead.
+ 
+--- a/wpa_supplicant/systemd/wpa_supplicant-wired.service.arg.in
++++ b/wpa_supplicant/systemd/wpa_supplicant-wired.service.arg.in
+@@ -2,6 +2,8 @@
+ Description=WPA supplicant daemon (interface- and wired driver-specific version)
+ Requires=sys-subsystem-net-devices-%i.device
+ After=sys-subsystem-net-devices-%i.device
++Before=network.target
++Wants=network.target
+ 
+ # NetworkManager users will probably want the dbus version instead.
+ 
+--- a/wpa_supplicant/systemd/wpa_supplicant.service.arg.in
++++ b/wpa_supplicant/systemd/wpa_supplicant.service.arg.in
+@@ -2,6 +2,8 @@
+ Description=WPA supplicant daemon (interface-specific version)
+ Requires=sys-subsystem-net-devices-%i.device
+ After=sys-subsystem-net-devices-%i.device
++Before=network.target
++Wants=network.target
+ 
+ # NetworkManager users will probably want the dbus version instead.
+ 
+--- a/wpa_supplicant/systemd/wpa_supplicant.service.in
++++ b/wpa_supplicant/systemd/wpa_supplicant.service.in
+@@ -1,5 +1,7 @@
+ [Unit]
+ Description=WPA supplicant
++Before=network.target
++Wants=network.target
+ 
+ [Service]
+ Type=dbus
