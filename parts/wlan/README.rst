@@ -40,3 +40,8 @@ Acesspoint is the basic building block of Puavo WLAN networks. It uses
 To run accesspoint, simply run::
 
   sudo puavo-wlanap
+
+Note that puavo-wlanap expects that system-udevd does not change interface
+names.  /etc/systemd/network/99-default.link should be a symbolic link
+to /dev/null or some equivalent configuration should be used.  Update
+initrd as well ("update-initramfs -u -k all").

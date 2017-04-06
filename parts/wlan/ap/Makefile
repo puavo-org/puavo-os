@@ -37,9 +37,6 @@ install: installdirs puavo-wlanap.service
 	install -D -m 644 -t $(DESTDIR)$(datarootdir)/puavo-conf/definitions \
 		puavo-wlanap.json
 
-	install -D -m 644 -t $(DESTDIR)$(sysconfdir)/systemd/network \
-		70-puavo-wlanap.link
-
 	rm -f puavo-wlanap.service
 
 puavo-wlanap.service: puavo-wlanap.service.in FORCE
