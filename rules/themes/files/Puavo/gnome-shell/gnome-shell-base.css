@@ -2410,6 +2410,9 @@ StScrollBar StButton#vhandle:active {
     /* Reset border and background */
     border: none;
     background-color: transparent;
+    background-gradient-direction: vertical;
+    background-gradient-start: rgba(0,0,0,0.7);
+    background-gradient-end:rgba(0,0,0,0);
 }
 
 .login-dialog-button-box {
@@ -2493,15 +2496,19 @@ StScrollBar StButton#vhandle:active {
 }
 
 .login-dialog-prompt-layout {
-    padding-top: 24px;
-    padding-bottom: 12px;
+    padding-top: 30px;
+    padding-bottom: 30px;
     spacing: 8px;
     width: 23em;
+    padding-left:3em;
+    padding-right:3em;
+    background-color: rgba(0,0,0,0.2);
+    border-radius: 5px;
 }
 
 .login-dialog-prompt-label {
     color: #eeeeee;
-    font-size: 14px;
+    font-size: 18px;
     padding-top: 11px;
 }
 
