@@ -1,0 +1,135 @@
+--- configure.in	2006-12-11 04:55:06.000000000 -0300
++++ debian/configure.in	2007-05-26 12:22:23.000000000 -0300
+@@ -7,7 +7,8 @@
+ dnl Process this file with autoconf to produce a configure script.
+ dnl
+ 
+-AC_INIT(lib.c)
++AC_INIT
++AC_CONFIG_SRCDIR([lib.c])
+ AC_CONFIG_HEADER(config.h)
+ 
+ dnl Shapper support
+@@ -72,7 +73,7 @@
+ 
+ dnl Guess host type.
+ AC_CANONICAL_HOST
+-AC_CANONICAL_SYSTEM
++AC_CANONICAL_TARGET
+ 
+ dnl Check for programs.
+ AC_PROG_YACC
+@@ -103,18 +104,18 @@
+ AC_SEARCH_LIBS(nanosleep, rt posix4)
+ 
+ dnl Check for setproctitle in libutil
+-AC_SEARCH_LIBS(setproctitle, util bsd, AC_DEFINE(HAVE_SETPROC_TITLE) )
++AC_SEARCH_LIBS(setproctitle, util bsd, AC_DEFINE(HAVE_SETPROC_TITLE, 1, "Check for setproctitle in libutil") )
+ 
+ if test "$SHAPER" = "yes"; then
+-   AC_DEFINE(HAVE_SHAPER)
++   AC_DEFINE(HAVE_SHAPER, 1, "Shaper module")
+ fi
+ 
+ if test "$ZLIB" = "yes"; then
+    AC_MSG_RESULT()
+-   AC_CHECKING( for ZLIB Library and Header files ... )
++   AS_MESSAGE([checking for ZLIB Library and Header files ... ...])
+    AC_CHECK_LIB(z, deflate,
+ 	LIBS="$LIBS -lz"
+-	AC_DEFINE(HAVE_ZLIB),
++	AC_DEFINE(HAVE_ZLIB, 1, "ZLIB module"),
+ 	AC_MSG_ERROR( Zlib library not found.)
+    )
+ fi
+@@ -123,7 +124,7 @@
+ if test "$LZO" = "yes"; then
+    LZOCHK=""
+    AC_MSG_RESULT()
+-   AC_CHECKING( for LZO Library and Header files ... )
++   AS_MESSAGE([checking for LZO Library and Header files ... ...])
+    AC_SEARCH_HEADERS(lzo_asm.h,
+ 	$LZO_HDR_DIR /usr/include/lzo "" /usr/local/include,
+ 	LZOCHK="lzo2 lzo",
+@@ -141,7 +142,7 @@
+ 	    AC_CHECK_LIB($I, lzo1x_decompress,
+ 	    [
+ 	          LIBS="$LIBS -l"$I
+-	       AC_DEFINE(HAVE_LZO)
++	       AC_DEFINE(HAVE_LZO, 1, "LZO module")
+ 	          havelzo=1
+ 	      ]
+ 	    )
+@@ -157,7 +158,7 @@
+ 
+ if test "$SSL" = "yes"; then
+    AC_MSG_RESULT()
+-   AC_CHECKING( for md5 Library and Header files ... )
++   AS_MESSAGE([checking for md5 Library and Header files ... ...])
+ AC_SEARCH_HEADERS(md5.h,
+     $SSL_HDR_DIR /usr/include/openssl "" /usr/include /usr/include/ssl /usr/local/include /usr/local/ssl/include /usr/include/sys, 
+     ,
+@@ -167,14 +168,14 @@
+ 
+ if test "$SSL" = "yes"; then
+    AC_MSG_RESULT()
+-   AC_CHECKING( for blowfish Library and Header files ... )
++   AS_MESSAGE([checking for blowfish Library and Header files ... ...])
+    AC_SEARCH_HEADERS(blowfish.h,
+     $BLOWFISH_HDR_DIR /usr/include/ssl /usr/include/openssl /usr/include /usr/local/include /usr/local/ssl/include  /usr/include/crypto,
+ 	AC_CHECK_LIB(crypto, BF_set_key,
+ 	    [
+ 	       LIBS="$LIBS -lcrypto"
+-	       AC_DEFINE(HAVE_SSL)
+-	       AC_DEFINE(HAVE_SSL_BLOWFISH)
++	       AC_DEFINE(HAVE_SSL, 1, "Encryption support")
++	       AC_DEFINE(HAVE_SSL_BLOWFISH, 1, "Blowfish encryption support")
+ 	    ],
+ 	    AC_MSG_ERROR( SSL library not found. )
+ 	),
+@@ -189,7 +190,7 @@
+     $SSL_HDR_DIR /usr/include/ssl /usr/include/openssl /usr/include /usr/local/include /usr/local/ssl/include  /usr/include/crypto,
+ 	AC_CHECK_LIB(crypto, AES_set_encrypt_key,
+ 	    [
+-	       AC_DEFINE(HAVE_SSL_AES)
++	       AC_DEFINE(HAVE_SSL_AES, 1, "AES encryption support")
+ 	    ],
+ 	    AC_MSG_ERROR( AES library not found. )
+ 	),
+@@ -204,7 +205,7 @@
+     $SSL_HDR_DIR /usr/include/ssl /usr/include/openssl /usr/include /usr/local/include /usr/local/ssl/include  /usr/include/crypto,
+ 	AC_CHECK_LIB(crypto, EVP_EncryptInit,
+ 	    [
+-	       AC_DEFINE(HAVE_SSL_EVP)
++	       AC_DEFINE(HAVE_SSL_EVP, 1, "EVP encryption support")
+ 	    ],
+ 	    AC_MSG_ERROR( EVP library not found. )
+ 	),
+@@ -214,7 +215,7 @@
+ 
+ if test "$SOCKS" = "yes"; then
+    AC_MSG_RESULT()
+-   AC_CHECKING( for SOCKS Library ... )
++   AS_MESSAGE([checking for SOCKS Library ... ...])
+    AC_CHECK_LIB(socks5, SOCKSconnect,
+         [
+ 	  CFLAGS="$CFLAGS -DVTUN_SOCKS=1"
+@@ -232,7 +233,7 @@
+ 
+ AC_MSG_RESULT()
+ 
+-AC_CHECK_FUNCS([getpt grantpt unlockpt ptsname])
++AC_CHECK_FUNCS([posix_openpt grantpt unlockpt ptsname])
+ 
+ OS_REL=`uname -r | tr -d '[A-Za-z\-\_\.]'`
+ case $host_os in
+@@ -263,6 +264,7 @@
+ REL=`echo 'BRANCH-3_X' | tr -d '$: \-' | sed 's/^[A-Za-z]*//' | sed 's/\_/\./'`
+ changequote([,])
+ 
+-AC_DEFINE_UNQUOTED(VTUN_VER, "$REL `date '+%m/%d/%Y'`")
++AC_DEFINE_UNQUOTED(VTUN_VER, "$REL `date '+%m/%d/%Y'`", "VTun version")
+ 
+-AC_OUTPUT(Makefile)
++AC_CONFIG_FILES([Makefile])
++AC_OUTPUT

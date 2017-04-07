@@ -1,0 +1,90 @@
+<background>
+  <starttime>
+    <year>2017</year>
+    <month>01</month>
+    <day>01</day>
+    <hour>8</hour>
+    <minute>00</minute>
+    <second>00</second>
+  </starttime>
+
+<!-- This animation will start at 7 AM. -->
+
+<!-- We start with sunrise at 8 AM. It will remain up for 3 hours. -->
+<static>
+<duration>10800.0</duration>
+<file>/usr/share/backgrounds/Morning_Dew_by_Lars_Clausen.jpg</file>
+</static>
+
+<!-- Transition -->
+<transition type="overlay">
+<duration>5.0</duration>
+<from>/usr/share/backgrounds/Morning_Dew_by_Lars_Clausen.jpg</from>
+<to>/usr/share/backgrounds/Vanishing_by_James_Wilson.jpg</to>
+</transition>
+
+<!--  Image for 5 hours. -->
+<static>
+<duration>18000.0</duration>
+<file>/usr/share/backgrounds/Vanishing_by_James_Wilson.jpg</file>
+</static>
+
+<!-- Transition -->
+<transition type="overlay">
+<duration>5.0</duration>
+<from>/usr/share/backgrounds/Vanishing_by_James_Wilson.jpg</from>
+<to>/usr/share/backgrounds/edubuntu_lonelytree.png</to>
+</transition>
+
+<!-- Image 3 hours. -->
+<static>
+<duration>10800.0</duration>
+<file>/usr/share/backgrounds/edubuntu_lonelytree.png</file>
+</static>
+
+<!-- Transition -->
+<transition type="overlay">
+<duration>5.0</duration>
+<from>/usr/share/backgrounds/edubuntu_lonelytree.png</from>
+<to>/usr/share/backgrounds/salcantayperu_by_Life_Nomadic.jpg</to>
+</transition>
+
+<!-- Image 3 hours. -->
+<static>
+<duration>10800.0</duration>
+<file>/usr/share/backgrounds/salcantayperu_by_Life_Nomadic.jpg</file>
+</static>
+
+<!-- Transition -->
+<transition type="overlay">
+<duration>5.0</duration>
+<from>/usr/share/backgrounds/salcantayperu_by_Life_Nomadic.jpg</from>
+<to>/usr/share/backgrounds/edubuntu-mrtau-and-tree-by-tj.jpg</to>
+</transition>
+
+<!-- Image 3 hours. -->
+<static>
+<duration>10800.0</duration>
+<file>/usr/share/backgrounds/edubuntu-mrtau-and-tree-by-tj.jpg</file>
+</static>
+
+<!-- Transition -->
+<transition type="overlay">
+<duration>5.0</duration>
+<from>/usr/share/backgrounds/edubuntu-mrtau-and-tree-by-tj.jpg</from>
+<to>/usr/share/backgrounds/Forever_by_Shady_S.jpg</to>
+</transition>
+
+<!--  Image for 7 hours. -->
+<static>
+<duration>25200.0</duration>
+<file>/usr/share/backgrounds/Forever_by_Shady_S.jpg</file>
+</static>
+
+<!-- Transition -->
+<transition type="overlay">
+<duration>5.0</duration>
+<from>/usr/share/backgrounds/Forever_by_Shady_S.jpg</from>
+<to>/usr/share/backgrounds/Morning_Dew_by_Lars_Clausen.jpg</to>
+</transition>
+

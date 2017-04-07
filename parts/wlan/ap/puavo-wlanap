@@ -220,6 +220,7 @@ end
 RUNDIR                     = '/run/puavo/wlanap'
 CTRLSOCKET                 = File.join(RUNDIR, 'ctrlsocket')
 THIS_SCRIPT                = Pathname.new($0).realpath
+BRIDGE_OK_MSG              = 'bridge ok'
 HOSTAPD_ACTION_SCRIPT      = THIS_SCRIPT.dirname.join('puavo-wlanap-hostapd-action')
 HOSTAPD_CTRL_INTERFACE_DIR = File.join(RUNDIR, 'hostapd')
 DHCLIENT_SCRIPT            = THIS_SCRIPT.dirname.join('puavo-wlanap-dhclient-script').to_s
@@ -337,7 +338,7 @@ puavo-wlanap {
     multi     yes;
 
     up {
-        program "<%= THIS_SCRIPT %> --ctrlmsg 'vtun-up:%%:<%= @bridge %>'";
+        program <%= THIS_SCRIPT %> "--ctrlmsg vtun-up:%%:<%= @bridge %>" wait;
     };
 }
 EOF
@@ -929,6 +930,7 @@ class Host
       run_or_fail('ip', 'link', 'set', 'dev', iface, 'up')
       run_or_fail('brctl', 'addif', bridge, iface)
       spawn_service(Services::Dhclient.new(:bridge => bridge))
+      @ctrlconn.puts(BRIDGE_OK_MSG)
     else
       Log.warning("received invalid vtun-up arguments #{args}")
     end
@@ -1397,8 +1399,14 @@ EOF
   unless ctrlmsg.nil?
     UNIXSocket.open(CTRLSOCKET) do |ctrlsocket|
       ctrlsocket.puts(ctrlmsg)
+      answer = ctrlsocket.readline rescue ''
+      if answer.chomp == BRIDGE_OK_MSG
+	return 0
+      end
     end
-    return 0
+
+    Log.error("did not receive '#{ BRIDGE_OK_MSG }' from #{ THIS_SCRIPT }")
+    return 1
   end
 
   Host.new(opts).run

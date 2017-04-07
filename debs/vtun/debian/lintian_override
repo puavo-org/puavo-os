@@ -1,0 +1,2 @@
+# Conffile that contains passwords and should not be world readable
+vtun: non-standard-file-perm etc/vtund.conf 0600 != 0644

@@ -8,6 +8,12 @@ else
 	systemdsystemunitdir=$(shell pkg-config systemd --variable=systemdsystemunitdir)
 endif
 
+ifeq ($(prefix), /usr/local)
+sysconfdir = $(prefix)/etc
+else
+sysconfdir = /etc
+endif
+
 all:
 
 clean:
@@ -15,6 +21,7 @@ clean:
 .PHONY : installdirs
 installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/definitions
+	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/network
 
 install: installdirs puavo-wlanap.service
 	install -D -m 755 -t '$(DESTDIR)$(sbindir)'	\

@@ -1,0 +1,8 @@
+/var/log/vtund/*.dump {
+	rotate 54
+	daily
+	compress
+	copytruncate
+	missingok
+}
+

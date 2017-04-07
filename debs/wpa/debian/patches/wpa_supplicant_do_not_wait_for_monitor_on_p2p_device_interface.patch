@@ -1,0 +1,28 @@
+From ede7770180f6ad27f1cade7ed0cf782e39400e79 Mon Sep 17 00:00:00 2001
+From: Ilan Peer <ilan.peer@intel.com>
+Date: Sun, 27 Dec 2015 16:25:07 +0200
+Subject: wpa_supplicant: Do not wait for monitor on P2P Device interface
+
+External programs are not aware of the creation of a
+dedicated P2P Device interface, so it does not make sense
+to wait for a monitor to connect on such an interface.
+
+Fix this by not waiting on a dedicated P2P Device interface
+for monitor to attach.
+
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+---
+ wpa_supplicant/wpa_supplicant.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- a/wpa_supplicant/wpa_supplicant.c
++++ b/wpa_supplicant/wpa_supplicant.c
+@@ -4944,7 +4944,7 @@
+ 
+ 	if (global->params.wait_for_monitor) {
+ 		for (wpa_s = global->ifaces; wpa_s; wpa_s = wpa_s->next)
+-			if (wpa_s->ctrl_iface)
++			if (wpa_s->ctrl_iface && !wpa_s->p2p_mgmt)
+ 				wpa_supplicant_ctrl_iface_wait(
+ 					wpa_s->ctrl_iface);
+ 	}

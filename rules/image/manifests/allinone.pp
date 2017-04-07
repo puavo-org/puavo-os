@@ -27,13 +27,13 @@ class image::allinone {
   include ::packages::languages::fr
   include ::packages::languages::sv
   include ::picaxe_udev_rules
+  include ::polkit_printers
   include ::plymouth
   include ::ssh_client
   include ::sysctl
   include ::udev
   include ::use_urandom
   include ::wacom
-  include ::wlanap
 
   stage {
     'init':

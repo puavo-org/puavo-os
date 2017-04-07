@@ -1,0 +1,6 @@
+[Printers dialog]
+Identity=*
+Action=org.opensuse.cupspkhelper.mechanism.printer-set-default;org.opensuse.cupspkhelper.mechanism.printer-enable;org.opensuse.cupspkhelper.mechanism.printer-local-edit;org.opensuse.cupspkhelper.mechanism.job-edit;org.opensuse.cupspkhelper.mechanism.all-edit;org.opensuse.cupspkhelper.mechanism.printeraddremove
+#ResultAny=yes
+ResultInactive=yes
+ResultActive=yes

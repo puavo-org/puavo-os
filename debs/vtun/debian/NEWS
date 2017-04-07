@@ -1,0 +1,22 @@
+vtun (3.0.0-1) unstable; urgency=low
+
+  May not work with encrypted connections to 2.6 vtuns. See upstream bug
+  #1685781.
+
+ -- Martín Ferrari <martin.ferrari@gmail.com>  Sat, 26 May 2007 23:55:38 -0300
+
+vtun (2.6-5) unstable; urgency=low
+
+  Starting from 2.6-5, vtun has stopped using /etc/vtund-start.conf.
+  Configuration parameters about which instances to create are now stored in
+  /etc/default/vtun.
+  The installation script will try to perform an automatic upgrade, please
+  check that it is OK. 
+
+  Pidfiles now include the session name and hostname, so you can have more
+  than one instance of the same session name.
+
+  Also, now includes a logrotate script for correct housekeeping of dump
+  files.
+
+ -- Martín Ferrari <martin.ferrari@gmail.com>  Thu, 23 Nov 2006 20:34:05 -0300

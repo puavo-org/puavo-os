@@ -11,6 +11,10 @@ logo='{puavo_desktop_vendor_logo}'
 fallback-logo='/usr/share/icons/hicolor/48x48/emblems/emblem-debian-white.png'
 disable-user-list={if puavo_admin_personally_administered == "true"}false{else}true{end}
 
+[org/gnome/desktop/peripherals/touchpad]
+natural-scroll=false
+tap-to-click=true
+
 [org/gnome/desktop/session]
 idle-delay=uint32 0
 

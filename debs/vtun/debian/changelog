@@ -1,0 +1,320 @@
+vtun (3.0.2-4+puavo1) unstable; urgency=medium
+
+  * Added a patch to make vtun wait for subprocess resposible for
+    running the program specified in the configuration.
+
+ -- Juha Erkkilä <Juha.Erkkila@opinsys.fi>  Fri, 07 Apr 2017 10:59:08 +0300
+
+vtun (3.0.2-4) unstable; urgency=high
+
+  * Check MAKEDEV existence before invoking it; also, avoid aborting even if
+    MAKEDEV fails. Code snippet took from mdadm scripts. Closes: #595931.
+  * debian/source/format: created for compatibility.
+  * debian/control: bumped Standards-Version with no changes.
+
+ -- Martín Ferrari <tincho@debian.org>  Mon, 27 Sep 2010 04:42:18 +0200
+
+vtun (3.0.2-3) unstable; urgency=low
+
+  * Stop installing deprecated modutils conffile. (Closes: #518314).
+  * Acknowledging NMU. Thanks Gregor.
+  * debian/rules: update config.{sub,guess} before each build, closes:
+    #535720.
+  * debian/patches: added 07-64bits-segfault.patch, closes: #477707.
+  * debian/init.d, debian/rules: support for tmpfs in /var, thanks to Stefano
+    Rivera. Closes: #587342.
+  * debian/copyright: add exception note for OpenSSL, thanks to Stefano too.
+  * debian/control: add ${misc:Depends}; bump Standards-Version with no
+    changes.
+  * debian/init.d: remove run-level 1 from Default-Stop; sendsigs will take
+    care.
+  * debian/postinst: try to detect udev before calling makedev; remove the
+    devfs check.
+  * debian/control: add dependency on udev or makedev.
+  * debian/init.d: add status command, thanks to Stefano Rivera.
+
+ -- Martín Ferrari <tincho@debian.org>  Tue, 29 Jun 2010 06:25:15 +0200
+
+vtun (3.0.2-2.1) unstable; urgency=low
+
+  * Non-maintainer upload.
+  * Fix "vtun is broken on 'testing' when IPv6 is configured": apply patch by
+    Mats Erik Andersson as debian/patches/06-ipv6.patch (closes: #581552).
+
+ -- gregor herrmann <gregoa@debian.org>  Sun, 13 Jun 2010 17:30:52 +0200
+
+vtun (3.0.2-2) unstable; urgency=low
+
+  * Acknowledging NMU. Thanks Aurélien.
+  * Fix duplicate NEWS file (Closes: #501442).
+  * debian/control: bumped Standards-Version, removed unused debconf
+    dependency.
+  * debian/README.source: added to comply with 3.8.0 S-V.
+  * debian/copyright: s/(C)/©/.
+
+ -- Martín Ferrari <tincho@debian.org>  Mon, 16 Feb 2009 14:50:37 -0200
+
+vtun (3.0.2-1.1) unstable; urgency=high
+
+  * Non-maintainer upload.
+  * Fix openpty() wrong usage. (Closes: #499036)
+
+ -- Aurélien GÉRÔME <ag@debian.org>  Tue, 13 Jan 2009 19:32:10 +0100
+ 
+vtun (3.0.2-1) unstable; urgency=low
+
+  * New upstream release, fixes incompatibilities with older clients.
+  * debian/patches/05-cfgfile-bug.dpatch: removed as it was included in
+    upstream release.
+  * debian/patches/05-unix98pty.dpatch: added patch to support newer unix98
+    interface (Closes: #451931).
+  * debian/control:
+    - Bumped Standards-Version (no changes needed).
+    - Added DM-Upload-Allowed and Vcs-Browser fields.
+    - Minor description improvements (capitalisation).
+    - Removed DMUA flag. Updated email address
+  * debian/rules:
+    - Fix debian-rules-ignores-make-clean-error.
+  * debian/init.d: finally make it LSB compliant, thanks Petter for the fix
+    (NMU'ed) (Closes: #464069). Also add dependency on $network, and avoid
+    stopping during reboot/shutdown for faster processing.
+  * debian/{patches,rules,control}: converted from dpatch to quilt, refreshed
+    all patches.
+
+ -- Martín Ferrari <tincho@debian.org>  Tue, 22 Jul 2008 20:38:49 -0300
+
+vtun (3.0.1-2.1) unstable; urgency=low
+
+  * Non-maintainer upload to solve release goal.
+  * Add LSB dependency header to init.d scripts (Closes: #464069).
+
+ -- Petter Reinholdtsen <pere@debian.org>  Mon, 31 Mar 2008 00:30:54 +0200
+
+vtun (3.0.1-2) unstable; urgency=low
+
+  * Fix message in init.d that points to uncompressed NEWS.Debian file.
+    (Closes: #414502)
+  * Moved homepage pseudo-field to new source field in debian/control.
+
+ -- Martín Ferrari <martin.ferrari@gmail.com>  Wed, 17 Oct 2007 15:09:17 -0300
+
+vtun (3.0.1-1) unstable; urgency=low
+
+  * New upstream release.
+  * Switched to liblzo2 (Closes: #434941)
+
+ -- Martín Ferrari <martin.ferrari@gmail.com>  Tue, 31 Jul 2007 20:29:59 +0100
+
+vtun (3.0.0-1) unstable; urgency=low
+
+  * New upstream version.
+  * May not work with encrypted connections to 2.6 vtuns. See upstream bug
+    #1685781.
+
+ -- Martín Ferrari <martin.ferrari@gmail.com>  Fri, 15 Jun 2007 18:12:54 -0300
+
+vtun (2.6-7) unstable; urgency=low
+
+  * Corrected a bug in the maintainer scripts, which were preventing correct
+    rc*.d links from being created, and daemon from starting on
+    install/upgrade. (Closes: 409247)
+  * Fixed start behaviour in init script, which caused it to fail when vtun
+    was already running (and made upgrading fail, when the previous bug was
+    fixed).
+  * Moved notice about need to manually restart to a more sensible location.
+  * Added script to remove configuration file in purge.
+
+ -- Martín Ferrari <martin.ferrari@gmail.com>  Sat, 17 Feb 2007 20:18:36 -0300
+
+vtun (2.6-6) unstable; urgency=low
+
+  * Patch for correct declaration of types and functions (Closes: #400559). I
+    had to replace getpt with posix_openpt, because for some obscure reason
+    getpt was not being defined. Anyway, posix_openpt is the portable way of
+    doing it.
+  * Also added some minor fixes to shut up gcc. While doing that, a previously
+    unknown bug showed up and was fixed.
+
+ -- Martín Ferrari <martin.ferrari@gmail.com>  Wed, 29 Nov 2006 18:14:00 -0300
+
+vtun (2.6-5) unstable; urgency=low
+
+  * New maintainer. (Closes: #373134: ITA)
+  * Acknowledge NMU. Thanks bubulle!
+  * Re-packaged from scratch, with up-to-date autotools, current DH version
+    and Standards-Version, and removing unneeded dependencies, solving some
+    bugs in the way. (Closes: #344784)
+  * Added conditional dependency on debconf-2.0. (Closes: #332139)
+  * Added warnings about insecure encryption. (Closes: #319449)
+  * New init.d uses /etc/default/vtun and can handle multiple clients and
+    one server. (Closes: #262416)
+
+ -- Martín Ferrari <martin.ferrari@gmail.com>  Fri, 24 Nov 2006 11:08:26 -0300
+
+vtun (2.6-4.1) unstable; urgency=low
+
+  * Non-maintainer upload to fix longstanding l10n issues
+  * Remove the debconf templates that deals with upgrading from a 
+    pre-woody version. Closes: #388980, #276829, #318155, #330616, #337553
+
+ -- Christian Perrier <bubulle@debian.org>  Sun,  8 Oct 2006 11:32:34 +0200
+
+vtun (2.6-4) unstable; urgency=low
+
+  * Change package from non-US to main. Crypto in main has actually 
+    been acceptable for quite some time now, it seems.
+  * Add the Japanese po-debconf template translation.
+    Thanks, Hideki (Closes: #227423).
+  * Give a mention to tun-source in README.Debian (Closes: #240428).
+  * Only give mention that vtun needs to be restarted, don't actually 
+    restart it. Some working aroung debhelper was needed for this 
+    sort of thing (Closes: #203575).
+  * Comment the examples in /etc/vtund.conf (Closes: #262418).
+  * Change from deprecated dh_installmanpages to dh_installman.
+
+ -- Morgon Kanter <morgon@surgo.net>  Fri,  1 Oct 2004 18:02:28 -0400
+
+vtun (2.6-3) unstable; urgency=low
+
+  * Updated policy to version 3.6.1, no change required.
+  * Removed mentions of "encryption" from the description, added a 
+    README.Encryption file because of recent speculations (but no solid 
+    proof yet) about vtun's security (Closes: #212357).
+  * Moved sslauth patch from cluster in the diff.gz to a dpatch file.
+  * Added po-debconf to build-depends.
+  * Changed "with permissions 644" to "default MAKEDEV permissions" in
+    postinst because in the future they may not be 644.
+  * Acknoledge NMU. (Closes: #198156, #208262, #202153)
+
+ -- Morgon Kanter <morgon@surgo.net>  Fri, 26 Sep 2003 18:44:59 -0400
+
+vtun (2.6-2.1) unstable; urgency=low
+
+  * NMU
+  * Added french debconf translation. Thanks, Michel Grentzinger. 
+    Closes: #198156
+  * Added dutch debconf translation. Thanks, Tim Vandermeersch.
+    Closes: #208262
+  * Corrected README.Debian about mknod. Closes: #202153
+
+ -- Christian Perrier <bubulle@debian.org>  Mon,  8 Sep 2003 12:09:53 +0200
+
+vtun (2.6-2) unstable; urgency=low
+
+  * Patch so clients now write their PID file as well. (Closes: #197752, #197857)
+  * Oops, it seems that I stuck the german debconf template in the 
+    wrong place. Thanks to Michel Grentzinger for the patch. (Closes: #197496)
+  * Started using dpatch to handle patches between versions.
+
+ -- Morgon Kanter <morgon@surgo.net>  Wed, 18 Jun 2003 01:22:35 -0400
+
+vtun (2.6-1) unstable; urgency=low
+  * New upstream release. (Closes: #187796)
+    + tunnel.c fd leak fixed (Closes: #148770)
+    + bugs in keeping tap interface up in persist mode fixed (Closes: #148807)
+  * New maintainer (Closes: #194023)
+  * Bumped standards version to 3.5.10
+  * New gettext-based debconf template translation used. 
+    Thanks for the patch, Andre. (Closes: #190083)
+  * New Brazilian-Portugese debconf template translation (Thanks, Andre)
+  * Added a German template (Closes: #138596)
+  * Removed debian/copyright boilerplate left over from dh_make
+  * Now just grab the newest config.{sub,guess} from autotools-dev 
+    instead of letting upstream provide them.
+  * Added an autogen.sh script, and regenerated configure script so 
+    it would work with the new config.{guess,sub}.
+  * We now use /dev/net/tun, not /dev/net/misc/tun. No idea why we 
+    didn't before, other than "devfs uses it". (Closes: #129968)
+  * Can now connect an SSL client to a non-SSL server.
+    Patch by Artur Czechowski. (Closes: #134271)
+
+ -- Morgon Kanter <morgon@surgo.net>  Tue, 20 May 2002 17:33:21 -0400
+
+vtun (2.5-4) unstable; urgency=low
+
+  * Fix a broken vtun.config closes: #152689, #152927, 152589, #152886
+  * Remove unused files from package closes: #152690
+  
+ -- Greg Olszewski <noop@debian.org>  Sun, 14 Jul 2002 18:07:38 -0700
+
+vtun (2.5-3) unstable; urgency=low
+
+  * Apply multiple link patches from Alexander Zangerl closes: #97780
+  * Fix debconf from repeating the upgrade messages closes: #137901
+  * Mention tun-source package in documentation closes: #145844
+ 
+ -- Greg Olszewski <noop@debian.org>  Tue,  9 Jul 2002 17:39:32 -0700
+
+vtun (2.5-2) unstable; urgency=low
+
+  * make /etc/vtund.conf 600 closes: #129967
+  * add creation of /dev/misc/net/tun for 2.4 kernels closes: #129968
+
+ -- Greg Olszewski <noop@debian.org>  Wed, 23 Jan 2002 00:28:33 -0800
+
+vtun (2.5-1) unstable; urgency=low
+
+  * New upstream version. closes: #102832, #92856, #108070, #109710, #113905
+  * added flex, bison to Build-Depends. closes: #100787
+  * added psmisc to depends. closes: #115059
+  * New maintainer
+
+ -- Greg Olszewski <noop@debian.org>  Thu, 17 Jan 2002 16:16:29 -0800
+
+vtun (2.4b1-3) unstable; urgency=low
+
+  * these bugs were closed some time ago...closes: #80445, #77493, #81177, #81798
+  * no response from person who submitted bug.  appears to be configuration error. closes: #69946 
+  * fixed devfs support.  closes: #86388
+  * CPU-eating bug with persists was fixed with 2.0b5.  Closes: #58752
+
+ -- Craig Sanders <cas@taz.net.au>  Sat, 31 Mar 2001 12:54:34 +1000
+
+vtun (2.4b1-2) unstable; urgency=low
+
+  * added liblzo-dev, zlib1g-dev, libssl096-dev to Build-Depends
+  * closes Bug#80445
+
+ -- Craig Sanders <cas@taz.net.au>  Mon, 25 Dec 2000 12:45:47 +1100
+
+vtun (2.4b1-1) unstable; urgency=low
+
+  * new upstream version
+  * several fixes, adds support for tun driver in 2.4 series kernel
+
+ -- Craig Sanders <cas@taz.net.au>  Sun, 24 Dec 2000 12:17:36 +1100
+
+vtun (2.3-1) unstable; urgency=low
+
+  * new upstream version
+  * compiled against libssl-095a
+
+ -- Craig Sanders <cas@taz.net.au>  Sat, 26 Aug 2000 08:41:41 +1000
+
+vtun (2.1b3-1) unstable; urgency=low
+
+  * new upstream version
+  * rewrote init.d script and vtund-start script.  Closes: #58449
+  * bug #36512 should have been closed ages ago.  Closes: #36512
+
+ -- Craig Sanders <cas@taz.net.au>  Sat, 25 Mar 2000 16:20:56 +1100
+
+vtun (1.3-1) unstable; urgency=low
+
+  * new upstream version
+  * architecture changed from i386 to any.  Closes Bug#36512
+
+ -- Craig Sanders <cas@taz.net.au>  Mon, 26 Apr 1999 08:38:30 +1000
+
+vtun (1.2-1) unstable; urgency=low
+
+  * Initial Release.
+  * created vtund-start perl script to make it easy to run vtund as
+    as server or as a client.
+  * cleaned up various compiler warnings by adding "#include <string.h>"
+    to cfg_file.l, client.c, lfd_encrypt.c, lib.c, linkfd.c, main.c, and
+    server.c
+
+
+ -- Craig Sanders <cas@taz.net.au>  Sat, 17 Apr 1999 08:22:39 +1000
+

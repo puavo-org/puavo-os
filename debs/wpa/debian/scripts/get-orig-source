@@ -1,0 +1,14 @@
+#!/bin/sh
+
+set -eu
+
+upstream_version=$(dpkg-parsechangelog -S Version | sed -ne 's/^\(\([0-9]\+\):\)\?\(.*\)-.*/\3/p')
+orig_tarball="../wpa_${upstream_version}.orig.tar.xz"
+
+if [ ! -e "${orig_tarball}" ]; then
+  wget -O "${orig_tarball}.tmp" \
+       "http://http.debian.net/debian/pool/main/w/wpa/wpa_${upstream_version}.orig.tar.xz"
+  mv "${orig_tarball}.tmp" "${orig_tarball}"
+fi
+
+tar -Jxf "${orig_tarball}" --strip-components=1

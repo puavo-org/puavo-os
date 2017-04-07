@@ -1,0 +1,26 @@
+From 1c94570f1b4d12d5fdcfe072b4b2f2042e8268f0 Mon Sep 17 00:00:00 2001
+From: Ilan Peer <ilan.peer@intel.com>
+Date: Sun, 27 Dec 2015 16:25:06 +0200
+Subject: Do not wait for monitor to attach if no control interface
+
+In case an interface has started without a control interface
+initialized, skip waiting for monitor to attach at the start of
+wpa_supplicant (-W).
+
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+---
+ wpa_supplicant/ctrl_iface_unix.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+--- a/wpa_supplicant/ctrl_iface_unix.c
++++ b/wpa_supplicant/ctrl_iface_unix.c
+@@ -848,6 +848,9 @@
+ 	struct sockaddr_un from;
+ 	socklen_t fromlen = sizeof(from);
+ 
++	if (priv->sock == -1)
++		return;
++
+ 	for (;;) {
+ 		wpa_printf(MSG_DEBUG, "CTRL_IFACE - %s - wait for monitor to "
+ 			   "attach", priv->wpa_s->ifname);

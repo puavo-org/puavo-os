@@ -1,0 +1,12 @@
+This program includes an "encryption" feature intended to protect the tunneled
+data as it travels across the network. However, the protocol it uses is known
+to be very insecure, and you should not rely on it to deter anyone but a casual
+eavesdropper.
+
+For more information, see:
+http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=319449
+http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=212357
+http://www.cs.auckland.ac.nz/~pgut001/pubs/linux_vpn.txt
+http://www.mit.edu:8008/bloom-picayune/crypto/14238
+
+-- Martín Ferrari <martin.ferrari@gmail.com>
