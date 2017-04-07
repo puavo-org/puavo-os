@@ -3,7 +3,7 @@ Section: net
 Priority: optional
 Maintainer: Martín Ferrari <tincho@debian.org>
 Build-Depends: debhelper (>= 5), quilt, autotools-dev, liblzo2-dev,
- zlib1g-dev, libssl-dev, bison, flex
+ zlib1g-dev, libssl1.0-dev, bison, flex
 Standards-Version: 3.9.1
 Homepage: http://vtun.sourceforge.net/
 Vcs-Browser: http://canterville.mine.nu/wsvn/debian/trunk/vtun/
