@@ -1,0 +1,31 @@
+Source: vtun
+Section: net
+Priority: optional
+Maintainer: Martín Ferrari <tincho@debian.org>
+Build-Depends: debhelper (>= 5), quilt, autotools-dev, liblzo2-dev,
+ zlib1g-dev, libssl-dev, bison, flex
+Standards-Version: 3.9.1
+Homepage: http://vtun.sourceforge.net/
+Vcs-Browser: http://canterville.mine.nu/wsvn/debian/trunk/vtun/
+
+Package: vtun
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, udev | makedev
+Description: virtual tunnel over TCP/IP networks
+ VTun is the easiest way to create virtual tunnels over TCP/IP networks
+ with traffic shaping and compression.
+ .
+ It supports IP, PPP, SLIP, Ethernet and other tunnel types.
+ .
+ VTun is easily and highly configurable, it can be used for various
+ network tasks.
+ .
+ VTun requires the universal TUN/TAP kernel module which can be found at
+ http://vtun.sourceforge.net/tun/index.html or in the 2.4 and newer Linux
+ kernels.
+ .
+ Note: This program includes an "encryption" feature intended to protect the
+ tunneled data as it travels across the network. However, the protocol it uses
+ is known to be very insecure, and you should not rely on it to deter anyone
+ but a casual eavesdropper. See the included README.Encryption file for more
+ information.

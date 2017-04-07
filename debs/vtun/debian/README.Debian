@@ -1,0 +1,12 @@
+vtun for Debian
+---------------
+
+The installed /etc/vtund.conf file is empty except for explanatory comments.
+
+By default, vtund doesn't start at all, you need to edit /etc/vtund.conf
+and set it up for your requirements. See the docs and examples for details.
+
+You also need to edit /etc/default/vtun and define whether vtund is
+being run as a client, as a server or both.
+
+ -- Martín Ferrari <martin.ferrari@gmail.com>  Fri, 24 Nov 2006 03:57:22 -0300

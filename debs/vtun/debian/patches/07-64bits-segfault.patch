@@ -1,0 +1,27 @@
+Author: Bjorn Gronvall
+Description: On systems (e.g FreeBSD amd64) where sizeof(unsigned int) differs
+ from sizeof(lzo_uint) this patch is necessary for correct operation.
+Last-Update: 2010-06-29
+
+Index: vtun/lfd_lzo.c
+===================================================================
+--- vtun.orig/lfd_lzo.c
++++ vtun/lfd_lzo.c
+@@ -104,7 +104,7 @@ int free_lzo()
+  */  
+ int comp_lzo(int len, char *in, char **out)
+ { 
+-     unsigned int zlen = 0;    
++     lzo_uint zlen = 0;
+      int err;
+      
+      if( (err=lzo1x_compress((void *)in,len,zbuf,&zlen,wmem)) != LZO_E_OK ){
+@@ -118,7 +118,7 @@ int comp_lzo(int len, char *in, char **o
+ 
+ int decomp_lzo(int len, char *in, char **out)
+ {
+-     unsigned int zlen = 0;
++     lzo_uint zlen = 0;
+      int err;
+ 
+      if( (err=lzo1x_decompress((void *)in,len,zbuf,&zlen,wmem)) != LZO_E_OK ){
