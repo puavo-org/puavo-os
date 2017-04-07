@@ -2496,20 +2496,20 @@ StScrollBar StButton#vhandle:active {
 }
 
 .login-dialog-prompt-layout {
-    padding-top: 30px;
-    padding-bottom: 30px;
+    padding-top: 2px;
+    padding-bottom: 15px;
     spacing: 8px;
     width: 23em;
-    padding-left:3em;
-    padding-right:3em;
+    padding-left:5px;
+    padding-right:5px;
     background-color: rgba(0,0,0,0.2);
-    border-radius: 5px;
+    border-radius: 10px;
 }
 
 .login-dialog-prompt-label {
     color: #eeeeee;
-    font-size: 18px;
-    padding-top: 11px;
+    font-size: 16px;
+    padding-top: 10px;
 }
 
 .login-dialog-session-list-button StIcon {
@@ -2573,9 +2573,9 @@ StScrollBar StButton#vhandle:active {
 }
 
 .login-dialog-message {
-    padding-top: 4px;
-    padding-bottom: 16px;
-    min-height: 2em;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    min-height: 1em;
 }
 
 .login-dialog-message-warning {
