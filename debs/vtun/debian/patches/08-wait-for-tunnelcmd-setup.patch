@@ -1,0 +1,30 @@
+--- vtun-3.0.2/tunnel.c	2008-01-08 00:36:03.000000000 +0200
++++ vtun/tunnel.c	2017-04-07 10:55:55.977593486 +0300
+@@ -70,7 +70,7 @@
+    
+ int tunnel(struct vtun_host *host)
+ {
+-     int null_fd, pid, opt;
++     int null_fd, pid, opt, st;
+      int fd[2]={-1, -1};
+      char dev[VTUN_DEV_LEN]="";
+      int interface_already_open = 0;
+@@ -188,6 +188,18 @@
+ 	   exit(0);           
+ 	}
+ 
++     while (waitpid(pid, &st, 0) == -1) {
++	if (errno != EINTR) {
++	   vtun_syslog(LOG_ERR, "Waiting for vtun tunnel-setup subprocess: %s",
++	      strerror(errno));
++	   break;
++	}
++     }
++     if (WIFEXITED(st) && WEXITSTATUS(st)) {
++	vtun_syslog(LOG_ERR, "vtun tunnel-setup subprocess returned %d",
++	    WEXITSTATUS(st));
++     }
++
+      switch( host->flags & VTUN_TYPE_MASK ){
+         case VTUN_TTY:
+ 	   set_title("%s tty", host->host);
