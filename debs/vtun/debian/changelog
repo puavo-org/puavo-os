@@ -1,3 +1,10 @@
+vtun (3.0.2-4+puavo1) unstable; urgency=medium
+
+  * Added a patch to make vtun wait for subprocess resposible for
+    running the program specified in the configuration.
+
+ -- Juha Erkkilä <Juha.Erkkila@opinsys.fi>  Fri, 07 Apr 2017 10:59:08 +0300
+
 vtun (3.0.2-4) unstable; urgency=high
 
   * Check MAKEDEV existence before invoking it; also, avoid aborting even if
