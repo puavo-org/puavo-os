@@ -3,7 +3,7 @@ class packages::pinned {
     $package = $title
 
     @package {
-      'vtun':
+      $package:
 	ensure  => $version,
 	require => Apt::Pin[$package],
 	tag     => $taglist;
