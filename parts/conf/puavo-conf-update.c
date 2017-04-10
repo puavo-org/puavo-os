@@ -1055,6 +1055,10 @@ parse_json_file(const char *filepath)
 		warn("lseek() on %s", filepath);
 		goto finish;
 	}
+	if (len == 0) {
+		warnx("file %s has zero size", filepath);
+		goto finish;
+	}
 
 	if ((json = mmap(0, len, PROT_READ, MAP_PRIVATE, fd, 0)) == NULL) {
 		warn("mmap() on %s", filepath);
