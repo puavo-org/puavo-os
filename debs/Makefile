@@ -5,6 +5,7 @@ _pkgs_ports     := autopoweroff    \
                    libpam-envfeed  \
                    nwjs            \
                    visionmedia-mon \
+                   vtun            \
                    wpa             \
                    $(_lsb_release_ports)
 _pkgs           := $(_pkgs_parts) $(_pkgs_ports)

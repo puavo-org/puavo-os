@@ -22,6 +22,7 @@
 #include <sys/stat.h>
 
 #include <err.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <fnmatch.h>
 #include <getopt.h>
@@ -207,6 +208,8 @@ init_with_parameter_definitions(puavo_conf_t *conf, int verbose)
 
 	ret = glob(DEFINITIONS_DIR "/*.json", 0, glob_error, &globbuf);
 	if (ret != 0) {
+		if (ret == GLOB_NOMATCH)
+			return 0;
 		warnx("glob() failure in init_with_parameter_definitions()");
 		globfree(&globbuf);
 		return 1;
@@ -227,9 +230,12 @@ init_with_parameter_definitions(puavo_conf_t *conf, int verbose)
 }
 
 static int
-glob_error(const char *epath, int errno)
+glob_error(const char *epath, int eerrno)
 {
-	warnx("glob error with %s: %s", epath, strerror(errno));
+	if (eerrno == ENOENT)
+		return 0;
+
+	warnx("glob error with %s: %s", epath, strerror(eerrno));
 
 	return 1;
 }
@@ -631,6 +637,8 @@ apply_hwquirks_from_rules(puavo_conf_t *conf, struct hw_characteristics *hw,
 
 	ret = glob(HWQUIRKS_DIR "/*.json", 0, glob_error, &globbuf);
 	if (ret != 0) {
+		if (ret == GLOB_NOMATCH)
+			return 0;
 		warnx("glob() failure in apply_hwquirks_from_rules()");
 		globfree(&globbuf);
 		return 1;
@@ -1045,6 +1053,10 @@ parse_json_file(const char *filepath)
 
 	if ((len = lseek(fd, 0, SEEK_END)) == -1) {
 		warn("lseek() on %s", filepath);
+		goto finish;
+	}
+	if (len == 0) {
+		warnx("file %s has zero size", filepath);
 		goto finish;
 	}
 
