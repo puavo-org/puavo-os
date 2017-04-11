@@ -9,7 +9,6 @@ orig_tarball="../visionmedia-mon_${upstream_version}.orig.tar.gz"
 if [ ! -e "${orig_tarball}" ]; then
     wget -O "${orig_tarball}.tmp" \
          "https://github.com/visionmedia/mon/archive/${upstream_version}.tar.gz"
+    tar -z -x -f "${orig_tarball}.tmp" --strip-components=1
     mv "${orig_tarball}.tmp" "${orig_tarball}"
 fi
-
-tar -z -x -f "${orig_tarball}" --strip-components=1
