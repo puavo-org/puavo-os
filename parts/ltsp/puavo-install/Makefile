@@ -50,7 +50,8 @@ install : installdirs
 		puavo-make-install-disk \
 		puavo-reset-laptop-to-factory-defaults \
 		puavo-setup-filesystems \
-		puavo-update-client
+		puavo-update-client \
+		puavo-update-service-script
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/dbus-1/system-services \
 		dbus-1/org.puavo.client.Daemon.service
@@ -84,6 +85,11 @@ install : installdirs
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
 		xdg-autostart/*
+
+	$(INSTALL_DATA) -t $(DESTDIR)/lib/systemd/system dbus-1/puavo-update.service
+
+	ln -s -f /lib/systemd/system/puavo-update.service \
+		$(DESTDIR)/etc/systemd/system/multi-user.target.wants/puavo-update.service
 
 .PHONY : clean
 clean :

@@ -1,0 +1,17 @@
+# puavo-update - local installation and fatclient update service
+
+# On fat clients, synchronizes external files at startup. On local
+# installations, handles external files and OS upgrades and various
+# configuration updates. Hopefully.
+
+# Converted from the puavo-update-client.conf upstart script
+
+[Unit]
+Description=Puavo client updater
+After=dbus.service networking.service
+
+[Service]
+ExecStart=/bin/sh -e /usr/sbin/puavo-update-service-script
+
+[Install]
+WantedBy=multi-user.target
