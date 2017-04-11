@@ -8,7 +8,6 @@ orig_tarball="../vtun-${upstream_version}.orig.tar.gz"
 if [ ! -e "${orig_tarball}" ]; then
   wget -O "${orig_tarball}.tmp" \
        "https://sourceforge.net/projects/vtun/files/vtun/${upstream_version}/vtun-${upstream_version}.tar.gz/download"
+  tar -zxf "${orig_tarball}.tmp" --strip-components=1
   mv "${orig_tarball}.tmp" "${orig_tarball}"
 fi
-
-tar -zxf "${orig_tarball}" --strip-components=1
