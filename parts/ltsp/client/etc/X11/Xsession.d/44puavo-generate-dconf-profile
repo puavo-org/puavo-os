@@ -1,8 +1,8 @@
 # Generate dconf profile based on locale and host type.
 #
 
-puavo_user_desktopconf_path="/var/lib/puavo-desktop/users/${USER}"
-puavo_dconf_profile_path="${puavo_user_desktopconf_path}/dconf_profile"
+puavo_session_dir="$(mktemp -d /tmp/puavo-desktopsession-${USER}.XXXXXXX || return 1)"
+puavo_dconf_profile_path="${puavo_session_dir}/dconf_profile"
 
 has_device_tag() {
   jq -r .device.tags[] "$PUAVO_SESSION_PATH" | grep -qx "$1"
