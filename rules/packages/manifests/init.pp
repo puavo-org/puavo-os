@@ -81,6 +81,7 @@ class packages {
     , 'strace'
     , 'sudo'
     , 'sysstat'
+    , 'telnet'
     , 'terminator'
     , 'tmux'
     , 'tshark'
