@@ -1,0 +1,27 @@
+#!/bin/sh
+# External files synchronization and system/configuration updates for
+# local installations and fat clients.
+# Executed by puavo-update.service
+
+set -eu
+
+if grep -q root=/dev/nbd /proc/cmdline; then
+    # fat client
+    puavo-sync-external-files
+    puavo-handle-external-files-actions
+else
+    # local installation
+
+    # Wait 90 seconds before proceeding (seems like a nice number, at least
+    # the administrative tunnel should be up by then).
+    sleep 90
+
+    # The real work is done elsewhere. Trigger puavo-update-client and wait
+    # for an hour before triggering it again.
+    while true; do
+        puavo-update-client --auto || true
+        sleep 3600
+    done
+fi
+
+exit 0
