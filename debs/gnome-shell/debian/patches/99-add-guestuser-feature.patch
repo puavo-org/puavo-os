@@ -1,0 +1,117 @@
+diff -ruN gnome-shell.orig/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
+--- gnome-shell.orig/js/gdm/authPrompt.js	2017-02-16 18:48:04.000000000 +0200
++++ gnome-shell/js/gdm/authPrompt.js	2017-04-18 13:52:32.765772683 +0300
+@@ -46,6 +46,13 @@
+         this._gdmClient = gdmClient;
+         this._mode = mode;
+ 
++        gio_settings = new Gio.Settings({ schema_id: GdmUtil.LOGIN_SCREEN_SCHEMA });
++        if (gio_settings.get_boolean(GdmUtil.GUESTUSER_KEY)) {
++          this._guestuser_login = 'guest';
++        } else {
++          this._guestuser_login = '';
++        }
++
+         let reauthenticationOnly;
+         if (this._mode == AuthPromptMode.UNLOCK_ONLY)
+             reauthenticationOnly = true;
+@@ -73,6 +80,11 @@
+                          }
+                      }));
+ 
++        this.connect('guest', Lang.bind(this, function() {
++                         this._entry.text = this._guestuser_login;
++                         this.emit('next');
++                     }));
++
+         this.actor = new St.BoxLayout({ style_class: 'login-dialog-prompt-layout',
+                                         vertical: true });
+         this.actor.connect('destroy', Lang.bind(this, this._onDestroy));
+@@ -122,6 +134,23 @@
+                          x_align: St.Align.MIDDLE,
+                          y_align: St.Align.END });
+ 
++        this.guestButton = new St.Button({ style_class: 'modal-dialog-button button',
++                                           button_mask: St.ButtonMask.ONE | St.ButtonMask.THREE,
++                                           reactive: true,
++                                           can_focus: true,
++                                           label: _("Login as guest") });
++        this.guestButton.connect('clicked',
++                                 Lang.bind(this, function() { this.emit('guest'); }));
++        this.actor.add(this.guestButton,
++                       { expand: true,
++                         x_fill: false,
++                         y_fill: true,
++                         x_align: St.Align.MIDDLE });
++
++        this._updateGuestButtonSensitivity(this._entry.text.length == 0);
++
++        this._maybeShowGuestLogin();
++
+         this._defaultButtonWell = new St.Widget({ layout_manager: new Clutter.BinLayout() });
+         this._defaultButtonWellActor = null;
+ 
+@@ -139,6 +168,14 @@
+         this._userVerifier = null;
+     },
+ 
++    _maybeShowGuestLogin: function() {
++      if (this._guestuser_login != '') {
++        this.guestButton.show();
++      } else {
++        this.guestButton.hide();
++      }
++    },
++
+     _initButtons: function() {
+         this.cancelButton = new St.Button({ style_class: 'modal-dialog-button button',
+                                             button_mask: St.ButtonMask.ONE | St.ButtonMask.THREE,
+@@ -186,6 +223,7 @@
+                                              if (!this._userVerifier.hasPendingMessages)
+                                                  this._fadeOutMessage();
+ 
++                                             this._updateGuestButtonSensitivity(this._entry.text.length == 0);
+                                              this._updateNextButtonSensitivity(this._entry.text.length > 0);
+                                          }));
+         this._entry.clutter_text.connect('activate', Lang.bind(this, function() {
+@@ -216,6 +254,8 @@
+             this.nextButton.label = _("Next");
+         }
+ 
++        this.guestButton.hide();
++
+         this.updateSensitivity(true);
+         this.emit('prompted');
+     },
+@@ -408,6 +448,11 @@
+         }
+     },
+ 
++    _updateGuestButtonSensitivity: function(sensitive) {
++        this.guestButton.reactive = sensitive;
++        this.guestButton.can_focus = sensitive;
++    },
++
+     _updateNextButtonSensitivity: function(sensitive) {
+         this.nextButton.reactive = sensitive;
+         this.nextButton.can_focus = sensitive;
+@@ -447,6 +492,8 @@
+         this.cancelButton.reactive = true;
+         this.nextButton.label = _("Next");
+ 
++        this._maybeShowGuestLogin();
++
+         if (this._userVerifier)
+             this._userVerifier.cancel();
+ 
+diff -ruN gnome-shell.orig/js/gdm/util.js gnome-shell/js/gdm/util.js
+--- gnome-shell.orig/js/gdm/util.js	2016-11-18 18:44:21.000000000 +0200
++++ gnome-shell/js/gdm/util.js	2017-04-18 13:50:52.960074720 +0300
+@@ -31,6 +31,7 @@
+ const BANNER_MESSAGE_KEY = 'banner-message-enable';
+ const BANNER_MESSAGE_TEXT_KEY = 'banner-message-text';
+ const ALLOWED_FAILURES_KEY = 'allowed-failures';
++const GUESTUSER_KEY = 'enable-guestuser';
+ 
+ const LOGO_KEY = 'logo';
+ const DISABLE_USER_LIST_KEY = 'disable-user-list';
