@@ -1,5 +1,6 @@
 class gdm {
   include ::art
+  include ::guest
   include ::packages
   include ::puavo_conf
 
@@ -19,6 +20,11 @@ class gdm {
       notify  => Exec['/usr/sbin/dpkg-reconfigure gdm3'],
       require => Package['gdm3'],
       source  => 'puppet:///modules/gdm/daemon.conf';
+
+    '/etc/gdm3/PostLogin/Default':
+      mode    => '0755',
+      require => [ File['/etc/guest-session'], Package['gdm3'], ],
+      source  => 'puppet:///modules/gdm/PostLogin_Default';
 
     '/usr/share/gdm/greeter/autostart/puavo-remote-assistance-applet.desktop':
       ensure  => link,

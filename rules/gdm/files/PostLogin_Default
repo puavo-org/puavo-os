@@ -1,0 +1,14 @@
+#!/bin/sh
+#
+# This script will be run before any setup is run on behalf of the user and is
+# useful if you for example need to do some setup to create a home directory
+# for the user or something like that.  $HOME, $USER and such will all be
+# set appropriately and this script is run as root.
+
+set -eu
+
+if [ "$USER" = 'guest' ]; then
+  /etc/guest-session/reset-guestuser-home
+fi
+
+exit 0
