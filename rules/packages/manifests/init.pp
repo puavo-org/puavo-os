@@ -217,6 +217,7 @@ class packages {
     [ 'blender'
     , 'dia'
     , 'dvgrab'
+    , 'fotowall'
     , 'gimp'
     , 'gimp-data-extras'
     , 'gimp-gap'
