@@ -1,6 +1,6 @@
 diff -ruN gnome-shell.orig/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
 --- gnome-shell.orig/js/gdm/authPrompt.js	2017-02-16 18:48:04.000000000 +0200
-+++ gnome-shell/js/gdm/authPrompt.js	2017-04-18 13:52:32.765772683 +0300
++++ gnome-shell/js/gdm/authPrompt.js	2017-04-19 08:28:56.116903795 +0300
 @@ -46,6 +46,13 @@
          this._gdmClient = gdmClient;
          this._mode = mode;
@@ -106,7 +106,7 @@ diff -ruN gnome-shell.orig/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
  
 diff -ruN gnome-shell.orig/js/gdm/util.js gnome-shell/js/gdm/util.js
 --- gnome-shell.orig/js/gdm/util.js	2016-11-18 18:44:21.000000000 +0200
-+++ gnome-shell/js/gdm/util.js	2017-04-18 13:50:52.960074720 +0300
++++ gnome-shell/js/gdm/util.js	2017-04-19 08:28:56.116903795 +0300
 @@ -31,6 +31,7 @@
  const BANNER_MESSAGE_KEY = 'banner-message-enable';
  const BANNER_MESSAGE_TEXT_KEY = 'banner-message-text';
@@ -115,3 +115,59 @@ diff -ruN gnome-shell.orig/js/gdm/util.js gnome-shell/js/gdm/util.js
  
  const LOGO_KEY = 'logo';
  const DISABLE_USER_LIST_KEY = 'disable-user-list';
+diff -ruN gnome-shell.orig/po/de.po gnome-shell/po/de.po
+--- gnome-shell.orig/po/de.po	2017-02-16 18:48:04.000000000 +0200
++++ gnome-shell/po/de.po	2017-04-19 08:38:04.094282725 +0300
+@@ -343,6 +343,10 @@
+ msgid "GNOME Shell Extensions"
+ msgstr "GNOME-Shell-Erweiterungen"
+ 
++#: js/gdm/authPrompt.js:141
++msgid "Login as guest"
++msgstr "Als Gast anmelden"
++
+ #: js/gdm/authPrompt.js:147 js/ui/audioDeviceSelection.js:71
+ #: js/ui/components/networkAgent.js:145 js/ui/components/polkitAgent.js:179
+ #: js/ui/endSessionDialog.js:483 js/ui/extensionDownloader.js:195
+diff -ruN gnome-shell.orig/po/fi.po gnome-shell/po/fi.po
+--- gnome-shell.orig/po/fi.po	2017-02-16 18:48:04.000000000 +0200
++++ gnome-shell/po/fi.po	2017-04-19 08:36:47.066981154 +0300
+@@ -342,6 +342,10 @@
+ msgid "GNOME Shell Extensions"
+ msgstr "GNOME Shell -laajennukset"
+ 
++#: js/gdm/authPrompt.js:141
++msgid "Login as guest"
++msgstr "Kirjaudu vieraana"
++
+ #: js/gdm/authPrompt.js:147 js/ui/audioDeviceSelection.js:71
+ #: js/ui/components/networkAgent.js:145 js/ui/components/polkitAgent.js:179
+ #: js/ui/endSessionDialog.js:483 js/ui/extensionDownloader.js:195
+diff -ruN gnome-shell.orig/po/fr.po gnome-shell/po/fr.po
+--- gnome-shell.orig/po/fr.po	2017-02-14 00:21:02.000000000 +0200
++++ gnome-shell/po/fr.po	2017-04-19 08:37:36.965183169 +0300
+@@ -353,6 +353,10 @@
+ msgid "GNOME Shell Extensions"
+ msgstr "Extensions GNOME Shell"
+ 
++#: js/gdm/authPrompt.js:141
++msgid "Login as guest"
++msgstr "Connectez-vous comme invité"
++
+ #: js/gdm/authPrompt.js:147 js/ui/audioDeviceSelection.js:71
+ #: js/ui/components/networkAgent.js:145 js/ui/components/polkitAgent.js:179
+ #: js/ui/endSessionDialog.js:483 js/ui/extensionDownloader.js:195
+diff -ruN gnome-shell.orig/po/sv.po gnome-shell/po/sv.po
+--- gnome-shell.orig/po/sv.po	2017-02-16 18:48:04.000000000 +0200
++++ gnome-shell/po/sv.po	2017-04-19 08:37:20.596487987 +0300
+@@ -323,6 +323,10 @@
+ msgid "GNOME Shell Extensions"
+ msgstr "Tillägg för GNOME-skal"
+ 
++#: js/gdm/authPrompt.js:141
++msgid "Login as guest"
++msgstr "Logga in som gäst"
++
+ #: js/gdm/authPrompt.js:147 js/ui/audioDeviceSelection.js:71
+ #: js/ui/components/networkAgent.js:145 js/ui/components/polkitAgent.js:179
+ #: js/ui/endSessionDialog.js:483 js/ui/extensionDownloader.js:195
