@@ -53,6 +53,7 @@ class packages {
     , 'fping'
     , 'gawk'
     , 'git'
+    , 'htop'
     , 'iftop'
     , 'inetutils-traceroute'
     , 'initramfs-tools'
