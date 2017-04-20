@@ -14,6 +14,8 @@ add_remote_printers()
     local puavo_domain=$(cat /etc/puavo/domain)
     readonly puavo_domain
 
+    [ -e "${PUAVO_SESSION_PATH}" ] || return 1
+
     cat "${PUAVO_SESSION_PATH}" | jq -r -c .printer_queues[] | while read printer; do
         name=$(echo "${printer}" | jq -r -c .name)
         location=$(echo "${printer}" | jq -r -c .location)
@@ -26,6 +28,8 @@ add_remote_printers()
 
 get_printer_list()
 {
+    [ -e "${PUAVO_SESSION_PATH}" ] || return 1
+
     cat "${PUAVO_SESSION_PATH}" | jq -r -c .printer_queues[] | {
         PRINTER_LIST=''
         while read printer; do
@@ -43,6 +47,8 @@ get_printer_list()
 set_default_printer()
 {
     local default_printer_name
+
+    [ -e "${PUAVO_SESSION_PATH}" ] || return 1
 
     default_printer_name=$(jq -r .device.default_printer_name "${PUAVO_SESSION_PATH}")
     [ "${default_printer_name}" != null ] && lpadmin -d "${default_printer_name}"

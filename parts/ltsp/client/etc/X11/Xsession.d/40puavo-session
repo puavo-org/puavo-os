@@ -1,0 +1,3 @@
+if [ -e /var/lib/puavo-desktop/users/puavo_session.json ]; then
+  export PUAVO_SESSION_PATH="/var/lib/puavo-desktop/users/puavo_session.json"
+fi

@@ -11,6 +11,8 @@ puavo_find_locale_and_language() {
   puavo_jq_locale_key=$2
   puavo_jq_preferred_language_key=$3
 
+  [ -e "$puavo_jq_file" ] || return 1
+
   puavo_language_short_form=
 
   puavo_locale=$(jq -r $puavo_jq_locale_key $puavo_jq_file)

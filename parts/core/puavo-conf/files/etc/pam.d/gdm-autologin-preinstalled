@@ -24,7 +24,6 @@ session required        pam_permit.so
 # See "man pam_umask".
 session optional        pam_umask.so
 
-session required        pam_envfeed.so prog=/usr/lib/puavo-ltsp-client/pam/chown-session-dir
 session required        pam_envfeed.so prog=/usr/lib/puavo-ltsp-client/pam/setup-guest-session
 session optional        pam_systemd.so
 session optional        pam_ck_connector.so nox11
