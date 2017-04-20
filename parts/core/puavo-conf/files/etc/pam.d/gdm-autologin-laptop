@@ -10,7 +10,6 @@ auth    sufficient      pam_succeed_if.so user ingroup guest
 auth    optional        pam_group.so
 
 auth    required        pam_permit.so
-auth    required        pam_exec.so /usr/lib/puavo-ltsp-client/pam/make-session-dir
 auth    optional        pam_exec.so /usr/lib/puavo-ltsp-client/pam/open-session guest
 
 # Permit all accounts for now.
