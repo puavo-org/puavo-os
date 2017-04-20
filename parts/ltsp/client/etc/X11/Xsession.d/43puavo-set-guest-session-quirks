@@ -3,4 +3,5 @@
 
 if [ "$USER" = 'guest' ]; then
   dconf write /org/gnome/desktop/lockdown/disable-lock-screen true
+  export GUEST_SESSION=true
 fi
