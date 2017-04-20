@@ -139,8 +139,7 @@ install : installdirs
 		pam/open-session \
 		pam/puavo-local-config-setup \
 		pam/populate-extrausers \
-		pam/restrict-logins-by-local-config \
-		pam/setup-guest-session
+		pam/restrict-logins-by-local-config
 
 	$(INSTALL_DATA) -t $(DESTDIR)/lib/systemd/system \
 		systemd/*
