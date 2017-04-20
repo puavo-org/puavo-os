@@ -3,12 +3,8 @@ if [ -z "${WM_HOME:-}" ]; then
 fi
 export WM_HOME
 
-if [ -n "${XDG_RUNTIME_DIR:-}" ]; then
-    WM_SOCK="${XDG_RUNTIME_DIR}/webmenu-spawn.sock"
-else
-    # Webmenu spawn socket path. Create unique for each X instance
-    WM_SOCK="${WM_HOME}/spawn.$(hostname)-$(echo "$DISPLAY" | sed -r s/[.][0-9]*$//).sock"
-fi
+# Webmenu spawn socket path. Create unique for each X instance
+WM_SOCK="${WM_HOME}/spawn.$(hostname)-$(echo "$DISPLAY" | sed -r s/[.][0-9]*$//).sock"
 export WM_SOCK
 
 # Log file for the current Webmenu instance

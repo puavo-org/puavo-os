@@ -18,11 +18,4 @@ if [ "${PAM_USER}" != "lightdm" ]; then
     chown "${PAM_USER}" "${SESSION_DIR}"
 
     echo "PUAVO_SESSION_PATH=${SESSION_DIR}/puavo_session.json"
-
-    # XDG_RUNTIME_DIR is used for session information that should not
-    # be persisted across reboots.
-    XDG_RUNTIME_DIR="/run/user/${PAM_USER}"
-    chown "${PAM_USER}" "${XDG_RUNTIME_DIR}"
-
-    echo "XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR}"
 fi
