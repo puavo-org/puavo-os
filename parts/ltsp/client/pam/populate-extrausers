@@ -25,7 +25,7 @@ shadow:         compat
 /etc/pam.d/service:
 
 auth    required          pam_krb5.so minimum_uid=1000
-auth    optional          pam_envfeed.so prog=/usr/lib/puavo-ltsp-client/populate-extrausers
+auth    optional          pam_exec.so /usr/lib/puavo-ltsp-client/populate-extrausers
 
 =end
 

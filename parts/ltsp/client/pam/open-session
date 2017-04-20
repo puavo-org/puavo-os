@@ -12,10 +12,14 @@ set -e
 # On laptops old user session is used if the session request fails.
 
 CACHE_DIR="/var/lib/puavo-desktop/users/${PAM_USER}"
-CACHE_FILE="${CACHE_DIR}/puavo_session.json"
+PUAVO_SESSION_PATH="${CACHE_DIR}/puavo_session.json"
 
 PUAVO_HOSTNAME=$(cat /etc/puavo/hostname)
 PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
+
+mkdir -p "$CACHE_DIR"
+chmod 0755 "$CACHE_DIR"
+chown root:root "$CACHE_DIR"
 
 if [ "$1" = "guest" ]; then
   if PUAVO_SESSION=$(
@@ -26,7 +30,7 @@ if [ "$1" = "guest" ]; then
       echo "Received puavo guest session: ${PUAVO_SESSION}" \
           | logger -t puavo-open-session -p auth.info
 
-      echo "${PUAVO_SESSION}" >"${CACHE_FILE}"
+      echo "${PUAVO_SESSION}" > "${PUAVO_SESSION_PATH}"
   else
       CODE=$?
       echo "Failed to get guest session from puavo-rest (error code ${CODE})" \
@@ -66,15 +70,15 @@ else
       CODE=0
       echo "Received puavo session with kerberos ticket: ${PUAVO_SESSION}" \
           | logger -t puavo-open-session -p auth.info
-      echo "${PUAVO_SESSION}" >"${CACHE_FILE}"
+      echo "${PUAVO_SESSION}" > "${PUAVO_SESSION_PATH}"
     else
       CODE=$?
     fi
   fi
 
   if [ "${CODE}" -ne 0 ]; then
-    if [ -f "${CACHE_FILE}" -a "${PUAVO_HOSTTYPE}" = "laptop" ]; then
-      PUAVO_SESSION=$(cat $CACHE_FILE)
+    if [ -f "${PUAVO_SESSION_PATH}" -a "${PUAVO_HOSTTYPE}" = "laptop" ]; then
+      PUAVO_SESSION=$(cat "$PUAVO_SESSION_PATH")
 
       echo "Failed to get session from puavo-rest with kerberos ticket (error code ${CODE}), reusing old session: ${PUAVO_SESSION}" \
           | logger -t puavo-open-session -p auth.warn
@@ -94,7 +98,7 @@ else
                                       v3/sessions </dev/null 2>/dev/null); then
           echo "Received puavo session using basic auth: ${PUAVO_SESSION}" \
               | logger -t puavo-open-session -p auth.info
-          echo "${PUAVO_SESSION}" >"${CACHE_FILE}"
+          echo "${PUAVO_SESSION}" > "${PUAVO_SESSION_PATH}"
         else
           CODE=$?
           echo "Failed to get session from puavo-rest (error code ${CODE}), no old session to reuse" \

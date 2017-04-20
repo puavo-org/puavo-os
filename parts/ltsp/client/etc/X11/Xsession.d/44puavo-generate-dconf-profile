@@ -1,12 +1,8 @@
 # Generate dconf profile based on locale and host type.
 #
 
-puavo_user_desktopconf_path="/var/lib/puavo-desktop/users/${USER}"
-puavo_dconf_profile_path="${puavo_user_desktopconf_path}/dconf_profile"
-
-has_device_tag() {
-  jq -r .device.tags[] "$PUAVO_SESSION_PATH" | grep -qx "$1"
-}
+puavo_session_dir="$(mktemp -d /tmp/puavo-desktopsession-${USER}.XXXXXXX || return 1)"
+puavo_dconf_profile_path="${puavo_session_dir}/dconf_profile"
 
 {
   echo "user-db:user"
@@ -27,27 +23,19 @@ has_device_tag() {
   # If xrandr settings from puavo are forced (whether or not those are set to
   # anything), turn off the gnome-settings-daemon xrandr plugin.  But do
   # nothing they are not forced.
-  is_xrandr_forced=$(puavo-conf -b puavo.xrandr.forced)
-  if [ "${is_xrandr_forced}" = true ]; then
+  if [ "$(puavo-conf puavo.xrandr.forced)" = 'true' ]; then
     echo "system-db:turn_off_xrandrplugin"
   fi
 
-  if has_device_tag nolidsuspend && ! has_device_tag no_nolidsuspend; then
-    echo "system-db:disable_lidsuspend"
-  fi
-
-  if has_device_tag nosuspend && ! has_device_tag no_nosuspend; then
+  if [ "$(puavo-conf puavo.pm.suspend.enabled)" = 'false' ]; then
     echo "system-db:disable_lidsuspend"
     echo "system-db:disable_suspend"
+  elif [ "$(puavo-conf puavo.pm.lidsuspend.enabled)" = 'false' ]; then
+    echo "system-db:disable_lidsuspend"
   fi
 
-  if has_device_tag nokeyboard && ! has_device_tag no_nokeyboard; then
+  if [ "$(puavo-conf puavo.onscreenkeyboard.enabled)" = 'true' ]; then
     echo "system-db:nokeyboard"
-  fi
-
-  if has_device_tag desktopbackgroundlock \
-       && ! has_device_tag no_desktopbackgroundlock; then
-    echo "system-db:desktopbackgroundlock"
   fi
 
   echo "system-db:puavo-keyboard"
