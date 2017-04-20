@@ -1,6 +1,5 @@
 class desktop::puavodesktop {
   include ::art
-  include ::desktop::dconf::desktopbackgroundlock
   include ::desktop::dconf::disable_lidsuspend
   include ::desktop::dconf::disable_suspend
   include ::desktop::dconf::laptop
