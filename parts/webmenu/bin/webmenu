@@ -59,6 +59,9 @@ if [ -h "$lockfile" ]; then
         rm -f "${nwjs_user_data_dir}"/Singleton* "${nwjs_user_data_dir}"/*.pid
     else
         nwjs_user_data_dir="$(mktemp -d /tmp/webmenu-nwjs-${USER}.XXXXXXXX)"
+        # copy the default profile to nwjs data dir
+        cp -a "${WM_HOME}/Default" "${nwjs_user_data_dir}/Default" \
+            2>/dev/null || true
     fi
 fi
 
