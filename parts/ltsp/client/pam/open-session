@@ -18,7 +18,7 @@ PUAVO_HOSTNAME=$(cat /etc/puavo/hostname)
 PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
 
 mkdir -p "$CACHE_DIR"
-chmod 0700 "$CACHE_DIR"
+chmod 0755 "$CACHE_DIR"
 chown root:root "$CACHE_DIR"
 
 if [ "$1" = "guest" ]; then
