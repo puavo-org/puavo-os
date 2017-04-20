@@ -18,9 +18,9 @@ is_mounted() {
           '
 }
 
-# nx user is the FreeNX user that does not have/need a real home directory, so
-# it should not be mounted
-if [ "${PAM_USER}" = "nx" ]; then
+# "guest" and "nx" (FreeNX) users do not have/need a real home directory,
+# so do not try to mount anything.
+if [ "${PAM_USER}" = 'guest' -o "${PAM_USER}" = 'nx' ]; then
   exit 0
 fi
 
