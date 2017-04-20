@@ -53,6 +53,7 @@ class packages {
     , 'fping'
     , 'gawk'
     , 'git'
+    , 'htop'
     , 'iftop'
     , 'inetutils-traceroute'
     , 'initramfs-tools'
@@ -215,8 +216,10 @@ class packages {
       tag => [ 'tag_gnome', 'tag_debian', ];
 
     [ 'blender'
+    , 'breeze-icon-theme'	# wanted (not required) by kdenlive
     , 'dia'
     , 'dvgrab'
+    , 'fotowall'
     , 'gimp'
     , 'gimp-data-extras'
     , 'gimp-gap'

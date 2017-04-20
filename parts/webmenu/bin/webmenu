@@ -1,8 +1,9 @@
 #!/bin/sh
 
-if [ "$WM_HOME" = "" ]; then
-    export WM_HOME="$HOME/.config/webmenu"
+if [ -z "$WM_HOME" ]; then
+    WM_HOME="${HOME}/.config/webmenu"
 fi
+export WM_HOME
 
 
 set -eu
@@ -46,9 +47,28 @@ help(){
     "
 }
 
-mkdir -p $WM_HOME
+# XXX If this home directory has a nwjs instance locking it,
+# XXX remove it if it is old, otherwise use a temporary directory.
+# XXX This is an ugly workaround for the
+# XXX "multiple hosts one directory"-problem.
+nwjs_user_data_dir="${WM_HOME}"
+lockfile="${nwjs_user_data_dir}/SingletonLock"
+if [ -h "$lockfile" ]; then
+    if [ "$(stat --format=%Y "$lockfile")" -le "$(( $(date +%s) - 43200 ))" ]; then
+        # remove locks in case they are over 12 hours old
+        rm -f "${nwjs_user_data_dir}"/Singleton* "${nwjs_user_data_dir}"/*.pid
+    else
+        nwjs_user_data_dir="$(mktemp -d /tmp/webmenu-nwjs-${USER}.XXXXXXXX)"
+        # copy the default profile to nwjs data dir
+        cp -a "${WM_HOME}/Default" "${nwjs_user_data_dir}/Default" \
+            2>/dev/null || true
+    fi
+fi
+
+
+mkdir -p "$WM_HOME"
 # Save startup time to a file to log start up times
-date +%s > "$WM_HOME/started"
+date +%s > "${WM_HOME}/started"
 
 # Webmenu installation path
 if [ -f package.json ]; then
@@ -65,7 +85,7 @@ fi
 
 # Remove old useless socket files. Webmenu has changed the socket file name few
 # times...
-for file in "$WM_HOME/"*; do
+for file in "${WM_HOME}/"*; do
     if [ -S "$file" ]; then
         rm "$file"
     fi
@@ -73,8 +93,8 @@ done
 
 # https://github.com/visionmedia/mon
 mon_args=""
-mon_pidfile="$WM_HOME/mon.pid"
-nw_pidfile="$WM_HOME/nw.pid"
+mon_pidfile="${WM_HOME}/mon.pid"
+nw_pidfile="${WM_HOME}/nw.pid"
 
 wm_args=""
 
@@ -153,7 +173,7 @@ if $stop_wm; then
     exit 0
 fi
 
-generated_menu_json="$WM_HOME/menu-generated.json"
+generated_menu_json="${WM_HOME}/menu-generated.json"
 
 if $use_xdg; then
     echo "Generating $generated_menu_json"
@@ -194,9 +214,9 @@ if $use_mon; then
         --pidfile "$nw_pidfile" \
         --on-restart $restart_script \
         --on-error $error_script \
-        "nw . $wm_args"
+        "nw . $wm_args --user-data-dir=${nwjs_user_data_dir}"
 else
     echo $$ > "$nw_pidfile"
     rm -f "$mon_pidfile"
-    exec nw . $wm_args
+    exec nw . $wm_args --user-data-dir="${nwjs_user_data_dir}"
 fi

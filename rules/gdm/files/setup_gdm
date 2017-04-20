@@ -10,6 +10,7 @@ puavo-template /etc/gdm3/greeter.dconf-defaults <<'EOF'
 logo='{puavo_desktop_vendor_logo}'
 fallback-logo='/usr/share/icons/hicolor/48x48/emblems/emblem-debian-white.png'
 disable-user-list={if puavo_admin_personally_administered == "true"}false{else}true{end}
+enable-guestuser={if puavo_guestlogin_enabled == "true"}true{else}false{end}
 
 [org/gnome/desktop/peripherals/touchpad]
 natural-scroll=false

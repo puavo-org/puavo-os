@@ -1,0 +1,22 @@
+#!/bin/sh
+
+set -eu
+
+guestuser='guest'
+guesthome="$(getent passwd "$guestuser" | awk -F: '{ print $6 }')"
+
+# Make sure guestuser home directory is what we expect it to be, for safety.
+# (We do not hardcode $guesthome because this script should fail if these
+# do not match).
+if [ "$guesthome" != '/anon/guest' ]; then
+  exit 1
+fi
+
+find /tmp /var/tmp -mindepth 1 -maxdepth 1 -user "$guestuser" -print0 \
+  | xargs -0 rm -rf || true
+
+rm -rf "$guesthome"
+
+cp -RT /etc/guest-session/skel "$guesthome"
+chown -R "${guestuser}:" "$guesthome"
+chmod 700 "$guesthome"

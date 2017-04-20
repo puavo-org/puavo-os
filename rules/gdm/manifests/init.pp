@@ -1,11 +1,24 @@
 class gdm {
   include ::art
+  include ::dpkg
+  include ::guest
   include ::packages
   include ::puavo_conf
 
+  ::dpkg::simpledivert {
+    '/usr/share/glib-2.0/schemas/org.gnome.login-screen.gschema.xml':
+      require => Package['gdm3'];
+  }
+
   exec {
+    'compile glib schemas':
+      command     => '/usr/bin/glib-compile-schemas /usr/share/glib-2.0/schemas',
+      refreshonly => true,
+      require     => Package['gdm3'];
+
     '/usr/sbin/dpkg-reconfigure gdm3':
-      refreshonly => true;
+      refreshonly => true,
+      require     => File['/usr/share/glib-2.0/schemas/org.gnome.login-screen.gschema.xml'];
   }
 
   file {
@@ -19,6 +32,16 @@ class gdm {
       notify  => Exec['/usr/sbin/dpkg-reconfigure gdm3'],
       require => Package['gdm3'],
       source  => 'puppet:///modules/gdm/daemon.conf';
+
+    '/etc/gdm3/PostLogin/Default':
+      mode    => '0755',
+      require => [ File['/etc/guest-session'], Package['gdm3'], ],
+      source  => 'puppet:///modules/gdm/PostLogin_Default';
+
+    '/usr/share/glib-2.0/schemas/org.gnome.login-screen.gschema.xml':
+      notify  => Exec['compile glib schemas'],
+      require => Dpkg::Simpledivert['/usr/share/glib-2.0/schemas/org.gnome.login-screen.gschema.xml'],
+      source  => 'puppet:///modules/gdm/org.gnome.login-screen.gschema.xml';
 
     '/usr/share/gdm/greeter/autostart/puavo-remote-assistance-applet.desktop':
       ensure  => link,

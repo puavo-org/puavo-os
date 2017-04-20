@@ -34,7 +34,9 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-install
 	mkdir -p $(DESTDIR)$(libdir)/puavo-ltsp-install
 	mkdir -p $(DESTDIR)$(sbindir)
+	mkdir -p $(DESTDIR)/lib/systemd/system
 	mkdir -p $(DESTDIR)$(sysconfdir)/dbus-1/system.d
+	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
 
 .PHONY : install
@@ -86,10 +88,11 @@ install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
 		xdg-autostart/*
 
-	$(INSTALL_DATA) -t $(DESTDIR)/lib/systemd/system dbus-1/puavo-update.service
+	$(INSTALL_DATA) -t $(DESTDIR)/lib/systemd/system \
+		dbus-1/puavo-update.service
 
-	ln -s -f /lib/systemd/system/puavo-update.service \
-		$(DESTDIR)/etc/systemd/system/multi-user.target.wants/puavo-update.service
+	ln -fs /lib/systemd/system/puavo-update.service \
+		$(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants/puavo-update.service
 
 .PHONY : clean
 clean :

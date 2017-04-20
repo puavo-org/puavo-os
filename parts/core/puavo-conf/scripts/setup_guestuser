@@ -1,0 +1,41 @@
+#!/bin/sh
+
+set -eu
+
+is_mounted() {
+  mount | awk -v mntpoint="$1" '
+    BEGIN { status = 1 }
+    $1 == "tmpfs" && $3 == mntpoint { status = 0 }
+    END { exit(status) }
+  '
+}
+
+guestmntpoint='/anon'
+guestuid='999'
+guestuser='guest'
+guesthome="${guestmntpoint}/${guestuser}"
+
+status=0
+
+if [ "$(puavo-conf puavo.guestlogin.enabled)" = 'true' ]; then
+  mkdir -p "${guestmntpoint}"
+  if ! is_mounted "$guestmntpoint"; then
+    mount -t tmpfs -o mode=755 tmpfs "$guestmntpoint"
+  fi
+
+  if ! passwd -qS "$guestuser" >/dev/null 2>&1; then
+    useradd --no-create-home --system --home-dir "$guesthome" \
+            --comment Guest --user-group --shell /bin/bash --uid "$guestuid" \
+            "$guestuser"
+  fi
+else
+  if passwd -qS "$guestuser" >/dev/null 2>&1; then
+    userdel --force "$guestuser" || status=1
+  fi
+
+  if is_mounted "$guestmntpoint"; then
+    umount -l "$guestmntpoint"
+  fi
+fi
+
+exit $status
