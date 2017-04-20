@@ -2,8 +2,6 @@
 # that firefox-puavodesktop.js uses to set startpage when the
 # browser start.
 
-set +x
-
 DEVICE_HOMEPAGE=$(jq -r .homepage "/etc/puavo/device.json")
 
 if [ -f "${PUAVO_SESSION_PATH}" ]; then
