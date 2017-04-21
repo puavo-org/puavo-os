@@ -19,6 +19,9 @@ tap-to-click=true
 [org/gnome/desktop/session]
 idle-delay=uint32 0
 
+[org/gnome/settings-daemon/peripherals/touchscreen]
+orientation-lock=true
+
 [org/gnome/shell]
 enabled-extensions=['appindicatorsupport@rgcjonas.gmail.com', 'bottompanel@tmoer93', 'Move_Clock@rmy.pobox.com', 'user-theme@gnome-shell-extensions.gcampax.github.com']
 
