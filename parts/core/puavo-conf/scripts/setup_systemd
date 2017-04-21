@@ -8,6 +8,9 @@ else
   handle_lid_switch_action=ignore
 fi
 
+puavo_os_group_users=$(getent group puavo-os \
+                         | awk -F: '{ gsub(/,/, " ", $4); print $4 }')
+
 cat <<EOF > /etc/systemd/logind.conf.tmp
 #  This file is part of systemd.
 #
@@ -21,9 +24,9 @@ cat <<EOF > /etc/systemd/logind.conf.tmp
 [Login]
 #NAutoVTs=6
 #ReserveVT=6
-#KillUserProcesses=no
+KillUserProcesses=yes
 #KillOnlyUsers=
-#KillExcludeUsers=root
+KillExcludeUsers=root ${puavo_os_group_users}
 Controllers=blkio cpu cpuacct cpuset devices freezer hugetlb memory perf_event net_cls net_prio
 ResetControllers=
 #InhibitDelayMaxSec=5
