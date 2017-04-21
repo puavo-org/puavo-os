@@ -5,6 +5,8 @@ set -eu
 guestuser='guest'
 guesthome="$(getent passwd "$guestuser" | awk -F: '{ print $6 }')"
 
+pkill -9 -U guest || [ $? -eq 1 ]
+
 # Make sure guestuser home directory is what we expect it to be, for safety.
 # (We do not hardcode $guesthome because this script should fail if these
 # do not match).
