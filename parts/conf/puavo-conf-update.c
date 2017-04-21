@@ -574,6 +574,8 @@ apply_hwquirks(puavo_conf_t *conf, int verbose)
 	size_t i;
 	int ret, retvalue;
 
+	retvalue = 0;
+
 	hw.dmi_table = dmi_table;
 	hw.dmi_itemcount = sizeof(dmi_table) / sizeof(struct dmi);
 	hw.pci_id_count = 0;
