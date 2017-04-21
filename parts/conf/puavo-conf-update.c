@@ -958,25 +958,28 @@ update_dmi_table(struct dmi *dmi_table, size_t tablesize)
 	char id_path[PATH_MAX];
 	char *line;
 	size_t i;
-	int ret;
+	int ret, retvalue;
 
-	ret = 0;
+	retvalue = 0;
 
 	for (i = 0; i < tablesize; i++) {
 		ret = snprintf(id_path, PATH_MAX, "%s/%s", DMI_ID_PATH,
 		    dmi_table[i].key);
 		if (ret >= PATH_MAX) {
 			warnx("snprintf() error with %s", dmi_table[i].key);
+			retvalue = 1;
 			continue;
 		}
 
-		if ((line = get_first_line(id_path)) == NULL)
+		if ((line = get_first_line(id_path)) == NULL) {
+			retvalue = 1;
 			continue;
+		}
 
 		dmi_table[i].value = line;
 	}
 
-	return ret;
+	return retvalue;
 }
 
 static int
