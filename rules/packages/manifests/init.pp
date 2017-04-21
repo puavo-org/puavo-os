@@ -619,7 +619,6 @@ class packages {
     # [ 'fluent-plugin-puavo'   # XXX not yet packaged for Debian
     # , 'puavo-load-reporter'   # XXX not yet packaged for Debian
     # , 'simplescreenrecorder'          # XXX not yet packaged for Debian
-    # , 'xexit' ]:                      # XXX not yet packaged for Debian
 
     # XXX not yet packaged for Debian
     # [ 'dymo-cups-drivers' ]:
