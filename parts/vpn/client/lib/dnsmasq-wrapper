@@ -2,7 +2,7 @@
 
 set -eu
 
-rm /etc/resolv.conf
+rm -f /etc/resolv.conf
 cat <<EOF >/etc/resolv.conf
 nameserver 127.0.0.1
 EOF
