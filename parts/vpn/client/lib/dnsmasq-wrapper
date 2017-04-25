@@ -4,7 +4,7 @@ set -eu
 
 rm -f /etc/resolv.conf
 cat <<EOF >/etc/resolv.conf
-nameserver 127.0.0.1
+nameserver 127.0.1.1
 EOF
 
 /usr/sbin/dnsmasq                                                \
@@ -12,7 +12,7 @@ EOF
     --no-hosts                                                   \
     --bind-interfaces                                            \
     --pid-file=/run/sendsigs.omit.d/puavo-vpn-client-dnsmasq.pid \
-    --listen-address=127.0.0.1                                   \
+    --listen-address=127.0.1.1                                   \
     --cache-size=0                                               \
     --proxy-dnssec                                               \
     --enable-dbus=org.puavo.VPN.dnsmasq                          \
