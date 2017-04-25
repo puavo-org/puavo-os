@@ -1,0 +1,10 @@
+#!/bin/sh
+# Copy the pregenerated wallpaper thumbnails into the thumbnail directory
+# to speed up the opening of the wallpaper change dialog.
+
+# Executed by /etc/xdg/autostart/puavo-sync-wallpaper-thumbnails.desktop.
+# Use /usr/bin/makethumbs and /usr/bin/thumb to generate the thumbnails
+# manually (normally they're built by Puppet at the system build time).
+
+mkdir -p "$HOME/.cache/thumbnails/large"
+rsync /usr/share/background-thumbnails/*.png "$HOME/.cache/thumbnails/large/" -times --chmod=u=rw,g=,o=

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Name=Synchronize Wallpaper Thumbnails
+Comment=Synchronizes the prebuilt wallpaper thumbnails
+Exec=/usr/bin/puavo-sync-wallpaper-thumbnails
+Terminal=false
+Type=Application
+Categories=Utility;
+NoDisplay=true
+X-GNOME-Autostart-Phase=EarlyInitialization
