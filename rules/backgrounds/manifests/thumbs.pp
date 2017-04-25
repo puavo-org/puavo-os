@@ -35,4 +35,20 @@ class backgrounds::thumbs {
         logoutput => 'on_failure'
     }
   }
+
+  file {
+    '/usr/bin/puavo-sync-wallpaper-thumbnails':
+      source => 'puppet:///modules/backgrounds/puavo-sync-wallpaper-thumbnails',
+      owner  => 'root',
+      group  => 'root',
+      mode   => '0755',
+  }
+
+  file {
+    '/etc/xdg/autostart/puavo-sync-wallpaper-thumbnails.desktop':
+      source => 'puppet:///modules/backgrounds/puavo-sync-wallpaper-thumbnails.desktop',
+      owner  => 'root',
+      group  => 'root',
+      mode   => '0644',
+  }
 }
