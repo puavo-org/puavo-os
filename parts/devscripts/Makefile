@@ -9,7 +9,10 @@ INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL) -m 644
 
-all:
+all: bin/thumb
+
+bin/thumb:
+	gcc -s -O2 -Wall -Wextra -Wpedantic -o bin/thumb bin/thumb.c -std=c99 `pkg-config --cflags --libs gnome-desktop-3.0`
 
 bin/puavo-devscripts-env: Makefile
 	echo "#!/bin/sh" > $@
@@ -18,7 +21,7 @@ bin/puavo-devscripts-env: Makefile
 installdirs:
 	mkdir -p $(DESTDIR)$(bindir)
 
-install: bin/puavo-devscripts-env installdirs
+install: bin/thumb bin/puavo-devscripts-env installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
 		bin/adm-x \
 		bin/adm-x11vnc \
@@ -29,6 +32,7 @@ install: bin/puavo-devscripts-env installdirs
 		bin/dpkg-diff-img \
 		bin/git-dch \
 		bin/log2db.kdc \
+		bin/makethumbs \
 		bin/puavo-build-debian-dir \
 		bin/puavo-dch \
 		bin/puavo-debuild \
@@ -36,7 +40,8 @@ install: bin/puavo-devscripts-env installdirs
 		bin/puavo-img-clone \
 		bin/puavo-img-chroot \
 		bin/puavo-install-deps \
-		bin/puavo-passwd
+		bin/puavo-passwd \
+		bin/thumb
 
 	rm -f bin/puavo-devscripts-env
 

@@ -1,0 +1,53 @@
+#!/bin/sh
+# Wrapper script for thumb, for generating thumbnails from images
+
+# Copyright (C) 2017 Opinsys Oy
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+# Author: Jarmo Pietiläinen <jarmo@opinsys.fi>
+
+set -eu
+
+if [ "$#" -ne 2 ]; then
+    echo "Usage: makethumbs <source directory> <destination directory>" >&2
+    echo "Recursively generates thumbnails of image files in the source directory and" >&2
+    echo "places them in the destination directory." >&2
+    exit 1
+fi
+
+src_dir=$1
+dst_dir=$2
+
+if [ ! -d "$dst_dir" ]; then
+    echo "Destination directory \"$dst_dir\" does not exist, creating it"
+    mkdir -p "$dst_dir"
+fi
+
+# thumb uses GNOME's own thumbnailing functions to generate the thumbnails (the thumbnails
+# contain GNOME's own metadata which we could replicate, but that's not trivial), which
+# means we cannot fully control where they're placed in. GNOME respects XDG_CACHE_DIRECTORY,
+# so we can put the images under /tmp and then get them out from there later.
+temp_dir=$(mktemp -d -t thumbnailer-XXXXXXXX)
+echo "Using temporary directory \"$temp_dir\""
+
+find "$src_dir" -type f -iregex ".*\.\(gif\|png\|jpg\|jpeg\|svg\)" | while read -r i; do
+    echo "Thumbnailing \"$i\""
+    out=$(XDG_CACHE_HOME="$temp_dir" thumb "$i")
+    mv "$temp_dir/thumbnails/large/$out.png" "$dst_dir/$out.png"
+done
+
+echo "All done"
+rm -rf $temp_dir
+exit 0
