@@ -362,7 +362,7 @@ Description: Puavo shared directory manager
 
 Package: puavo-vpn-client
 Architecture: all
-Depends: ${misc:Depends}, coreutils, openvpn, puavo-conf
+Depends: ${misc:Depends}, coreutils, openvpn, puavo-conf, resolvconf
 Description: Puavo VPN client
  Puavo VPN client
  .
