@@ -57,6 +57,9 @@ default-zoom-level='standard'
 [org/gnome/nautilus/preferences]
 automatic-decompression=false
 
+[org/gnome/puavo]
+show-power-indicator=false
+
 [org/gnome/shell]
 favorite-apps=['org.gnome.Nautilus.desktop', 'firefox-esr.desktop', 'google-chrome.desktop', 'chromium.desktop', 'libreoffice-writer.desktop']
 

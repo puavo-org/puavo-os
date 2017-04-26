@@ -14,12 +14,34 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+
+const Gio = imports.gi.Gio;
 const Main = imports.ui.main;
 
+var enabled = false;
+var gsettings = null;
+
 function enable() {
-    Main.panel.statusArea.aggregateMenu._power.indicators.hide();
+    enabled = true;
+
+    gsettings = new Gio.Settings({ schema_id: 'org.gnome.puavo' });
+    gsettings.connect('changed::show-power-indicator', update_status);
+
+    update_status();
+}
+
+function update_status() {
+    if (!enabled)
+	return;
+
+    if (gsettings.get_boolean('show-power-indicator')) {
+        Main.panel.statusArea.aggregateMenu._power.indicators.show();
+    } else {
+        Main.panel.statusArea.aggregateMenu._power.indicators.hide();
+    }
 }
 
 function disable() {
+    enabled = false;
     Main.panel.statusArea.aggregateMenu._power.indicators.show();
 }

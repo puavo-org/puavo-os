@@ -1,4 +1,5 @@
 class gnome_shell_extensions {
+  include ::dconf::schemas
   include ::packages
 
   define add_extension () {
@@ -13,15 +14,19 @@ class gnome_shell_extensions {
   }
 
   ::gnome_shell_extensions::add_extension {
+    'hide-panel-power-indicator@puavo.org':
+      require => ::Dconf::Schemas::Schema['org.gnome.puavo.gschema.xml'];
+  }
+
+  ::gnome_shell_extensions::add_extension {
     [ 'appindicatorsupport@rgcjonas.gmail.com'
     , 'audio-switcher@AndresCidoncha'
     , 'bottompanel@tmoer93'
     , 'dash-to-panel@jderose9.github.com'
     , 'extend-left-box2@linuxdeepin.com'
     , 'hide-activities-button@gnome-shell-extensions.bookmarkd.xyz'
-    , 'hide-dash@xenatt.github.com'
     , 'hide-aggregatemenu-session-buttons@puavo.org'
-    , 'hide-panel-power-indicator@puavo.org'
+    , 'hide-dash@xenatt.github.com'
     , 'Move_Clock@rmy.pobox.com'
     , 'Panel_Favorites@rmy.pobox.com'
     , 'TopIcons@phocean.net'
