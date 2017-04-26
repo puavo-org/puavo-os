@@ -2,11 +2,17 @@
 
 set -eu
 
+status=0
+
 puavo_swap_devices=''
 
-if [ "$(puavo-conf puavo.swap.local.enabled)" = "true" ]; then
-  # Enable local swap partition if found on local disk
-  for part in $(sfdisk -l 2>/dev/null | awk '/ 82 / { print $1 }'); do
+list_swap_partitions() {
+  sfdisk -l 2>/dev/null | awk '/swap/ && ($6 == 82 || $7 == 82) { print $1 }'
+}
+
+if [ "$(puavo-conf puavo.swap.local.enabled)" = 'true' ]; then
+  # Enable local swap partition if found on local disk.
+  for part in list_swap_partitions; do
     puavo_swap_devices="$puavo_swap_devices $part"
   done
 
@@ -18,5 +24,16 @@ if [ "$(puavo-conf puavo.swap.local.enabled)" = "true" ]; then
 fi
 
 for swap in $puavo_swap_devices; do
-  swapon "$swap" || true
+  swapon "$swap" && continue
+
+  # Debian Stretch does not accept swap partitions made in Ubuntu Trusty
+  # or before, so initialize the swap partition in case "swapon" failed.
+  # (This is slightly risky, but should be okay).
+  if mkswap "$swap"; then
+    swapon "$swap" && continue
+  fi
+
+  status=1
 done
+
+exit $status

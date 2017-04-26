@@ -1,0 +1,11 @@
+<schemalist>
+  <schema id='org.gnome.puavo' path='/org/gnome/puavo/'>
+    <key name='show-power-indicator' type='b'>
+      <summary>Show power indicator</summary>
+      <description>
+        If true, show panel indicator on panel.
+      </description>
+      <default>true</default>
+    </key>
+  </schema>
+</schemalist>

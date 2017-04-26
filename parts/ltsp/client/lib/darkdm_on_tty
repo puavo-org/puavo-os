@@ -2,6 +2,12 @@
 
 set -eu
 
+# If we are starting this to tty, we must be in some special
+# installation/update/recovery mode, and thus normal remote connection
+# restrictions should not apply.
+/usr/lib/puavo-ltsp-client/admin-remote-connections --accept-incoming \
+  2>/dev/null || true
+
 tty_dev=$(tty)
 tty_n=$(echo "${tty_dev}" | sed -r -n 's|/dev/tty||p')
 
