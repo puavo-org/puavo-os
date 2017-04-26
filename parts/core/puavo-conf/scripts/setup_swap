@@ -2,6 +2,8 @@
 
 set -eu
 
+status=0
+
 puavo_swap_devices=''
 
 if [ "$(puavo-conf puavo.swap.local.enabled)" = "true" ]; then
@@ -18,5 +20,16 @@ if [ "$(puavo-conf puavo.swap.local.enabled)" = "true" ]; then
 fi
 
 for swap in $puavo_swap_devices; do
-  swapon "$swap" || true
+  swapon "$swap" && continue
+
+  # Debian Stretch does not accept swap partitions made in Ubuntu Trusty
+  # or before, so initialize the swap partition in case "swapon" failed.
+  # (This is slightly risky, but should be okay).
+  if mkswap "$swap"; then
+    swapon "$swap" && continue
+  fi
+
+  status=1
 done
+
+exit $status
