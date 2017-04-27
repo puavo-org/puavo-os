@@ -17,8 +17,8 @@ function read_text_file(name)
 
 function init()
 {
-    const host_type = read_text_file("/etc/puavo/hosttype");
-          host_name = read_text_file("/etc/puavo/hostname");
+    const host_type = read_text_file("/etc/puavo/hosttype"),
+          host_name = read_text_file("/etc/puavo/hostname"),
           release_name = read_text_file("/etc/puavo-image/release");
 
     button = new St.Button({
