@@ -43,6 +43,9 @@ class webmenu {
     '/usr/local/bin/puavo-webmenu':
       content => template('webmenu/puavo-webmenu'),
       mode    => '0755';
+
+    '/usr/share/icons/opinsys-nelio-menu.png':
+       source => 'puppet:///modules/webmenu/opinsys-nelio-menu.png';
   }
 
   ::puavo_conf::definition {

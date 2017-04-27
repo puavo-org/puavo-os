@@ -20,7 +20,7 @@ const Util = imports.misc.util;
 
 let logout_button, menu_button;
 
-function make_button(icon_name, spawn_command) {
+function make_button(icon_name, icon_size, spawn_command) {
     let button = new St.Bin({ can_focus:   true,
 			      reactive:    true,
 			      style_class: 'panel-button-webmenu',
@@ -29,7 +29,7 @@ function make_button(icon_name, spawn_command) {
 			      y_fill:      false });
     let icon = new St.Icon({ icon_name:   icon_name,
                              style_class: 'launcher-box-item-webmenu', 
-                             icon_size: 16});
+                             icon_size: icon_size});
 
     button.set_child(icon);
     button.connect('button-press-event',
@@ -40,8 +40,10 @@ function make_button(icon_name, spawn_command) {
 
 function init() {
     logout_button = make_button('system-shutdown-symbolic',
+				'16',
 				[ 'webmenu-spawn', '--logout' ]);
-    menu_button   = make_button('start-here-debian-symbolic',
+    menu_button   = make_button('opinsys-nelio-menu',
+				'28',
 				[ 'webmenu-spawn' ]);
 }
 
