@@ -4,4 +4,5 @@ set -eu
 
 debconf-set-selections <<'EOF'
 # add your own debconf settings here
+resolvconf	resolvconf/linkify-resolvconf	boolean	false
 EOF
