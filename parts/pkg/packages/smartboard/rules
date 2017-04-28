@@ -259,6 +259,17 @@ case "${command}" in
             dpkg -x "${upstream_dir}/${deb}" "${upstream_dir}/smartboard"
             rm -f "${upstream_dir}/${deb}"
         done
+
+        (
+            cd "${upstream_dir}/smartboard${smart_technologies_dir}/common/lib"
+            for lib in ../lib.common/*; do
+                ln -fns "$lib" "$(basename "$lib")"
+            done
+            cd "${upstream_dir}/smartboard${smart_technologies_dir}/common/nb/lib"
+            for lib in ../../lib.common/*; do
+                ln -fns "$lib" "$(basename "$lib")"
+            done
+        )
         ;;
     *)
         ;;
