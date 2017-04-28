@@ -239,6 +239,110 @@ smartboard_links='
   /usr/share/pixmaps/hicolor/scalable/apps/SMART_LanguageChooser.svg
 '
 
+make_config_file() {
+  filepath="$1"
+  mkdir -p "$(dirname "$filepath")"
+  cat > "${filepath}.tmp"
+  mv "${filepath}.tmp" "$filepath"
+}
+
+create_configurations() {
+  make_config_file "/etc/adobe/FlashPlayerTrust/SMARTNotebook.cfg" <<'EOF'
+/opt/SMART Technologies
+EOF
+  make_config_file "/etc/udev/rules.d/60-SMARTBoard32.rules" <<'EOF'
+#SMART Technologies rules for permissions.
+KERNEL=="ttyS*", MODE="0666"
+SUBSYSTEM=="usb", ATTR{idVendor}=="0b8c", MODE="0666"
+SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_interface", ATTR{idVendor}=="0b8c", MODE="0666"
+SUBSYSTEMS=="usb", DRIVERS=="usb", ATTRS{idVendor}=="0b8c", MODE:="0666"
+#
+#Kernel 2.6.32 and greater has a bug that causes the mouse pointer to jump to the top left corner in HID mouse mode.
+#Disable the event stream for affected products.
+#Actually the bug began in 2.6.30, but these rules only work on 2.6.32.  You need an fdi policy file to work around 2.6.31.
+KERNEL=="event*", ATTRS{idVendor}=="0b8c", ATTRS{idProduct}=="0001", NAME="SB%k"
+KERNEL=="event*", ATTRS{idVendor}=="0b8c", ATTRS{idProduct}=="0002", NAME="SB%k"
+KERNEL=="event*", ATTRS{idVendor}=="0b8c", ATTRS{idProduct}=="0003", NAME="SB%k"
+KERNEL=="event*", ATTRS{idVendor}=="0b8c", ATTRS{idProduct}=="0004", NAME="SB%k"
+KERNEL=="event*", ATTRS{idVendor}=="0b8c", ATTRS{idProduct}=="0005", NAME="SB%k"
+KERNEL=="event*", ATTRS{idVendor}=="0b8c", ATTRS{idProduct}=="0006", NAME="SB%k"
+KERNEL=="event*", ATTRS{idVendor}=="0b8c", ATTRS{idProduct}=="0007", NAME="SB%k"
+KERNEL=="event*", ATTRS{idVendor}=="0b8c", ATTRS{idProduct}=="0008", NAME="SB%k"
+KERNEL=="event*", ATTRS{idVendor}=="0b8c", ATTRS{idProduct}=="000a", NAME="SB%k"
+KERNEL=="event*", ATTRS{idVendor}=="0b8c", ATTRS{idProduct}=="000b", NAME="SB%k"
+KERNEL=="event*", ATTRS{idVendor}=="0b8c", ATTRS{idProduct}=="0017", NAME="SB%k"
+KERNEL=="event*", ATTRS{idVendor}=="0b8c", ATTRS{idProduct}=="0060", NAME="SB%k"
+KERNEL=="event*", ATTRS{idVendor}=="0b8c", ATTRS{idProduct}=="0061", NAME="SB%k"
+KERNEL=="event*", ATTRS{idVendor}=="0b8c", ATTRS{idProduct}=="0042", NAME="SB%k"
+EOF
+  make_config_file "/etc/xdg/SMART Technologies.conf" <<'EOF'
+[Software]
+SMART%20Technologies\Activation%20Wizard\Location=/opt/SMART Technologies/Activation Wizard/bin/.activationwizard_elf
+SMART%20Technologies\MyScript\MyScriptPath=/opt/SMART Technologies/MyScript
+SMART%20Technologies\Language%20Setup\Path=/opt/SMART Technologies/Language Setup
+SMART%20Technologies\Language%20Setup\Version=2.2.2060.4
+SMART%20Technologies\Notebook%20Software\Install%20Information\NotebookExePath=/opt/SMART Technologies/Notebook Software
+SMART%20Technologies\Notebook%20Software\Install%20Information\Notebook%20Version=11.0.7511.0
+SMART%20Technologies\Notebook%20Software\Install%20Information\Documentation=/opt/SMART Technologies/Notebook Software/bin/Notebook/documentation
+SMART%20Technologies\SMART%20Board%20Drivers\Install%20Information\Drivers%20Directory=/opt/SMART Technologies/SMART Product Drivers
+SMART%20Technologies\SMART%20Board%20Drivers\Install%20Information\Drivers%20Version=11.3.2121.1
+SMART%20Technologies\SMART%20Board%20Drivers\Install%20Information\Documentation=/opt/SMART Technologies/SMART Product Drivers/documentation
+SMART%20Technologies\License%20Information\Trial\0\MGTR6TX59W3BSW7A3XC7XJSCKJB5UI87\5JF3EP743VG9DHAHNDFMRMYEXA43AEFS=W7F8A5EENJSADFJAAYSAABTSAAV2B6NABT42AAN2EJHSAAABQGE9VAS2AA
+EOF
+  make_config_file "/etc/xdg/SMART Technologies Drivers.conf" <<'EOF'
+EOF
+  make_config_file "/etc/xdg/SMART Technologies/Language Setup.conf" <<'EOF'
+DisplayName=Activation Wizard
+IsHwConfigurable=0
+IsLanguageConfigurable=0
+LanguagesFolder=/opt/SMART Technologies/Activation Wizard/Languages
+
+[SMART Board]
+DisplayName=SMART Board Drivers
+IsHwConfigurable=0
+IsLanguageConfigurable=1
+LanguagesFolder=/opt/SMART Technologies/SMART Product Drivers/Languages
+
+[Gallery Setup]
+DisplayName=Gallery Setup
+IsHwConfigurable=0
+IsLanguageConfigurable=0
+LanguagesFolder=/opt/SMART Technologies/Gallery Setup/Languages
+
+[Notebook]
+DisplayName=Notebook Software
+IsHwConfigurable=1
+IsLanguageConfigurable=1
+LanguagesFolder=/opt/SMART Technologies/Notebook Software/bin/Notebook/resources/Languages
+LanguagesFolder1=/opt/SMART Technologies/Notebook Software/Languages
+LanguagesFolder2=/opt/SMART Technologies/Activation Wizard/Languages
+EOF
+  make_config_file "/etc/xdg/SMART Technologies/SMART Notebook.conf" <<'EOF'
+[Software]
+SMART%20Technologies\Gallery\OnlineMarketplace=http://learningmarketplace.smarttech.com/notebook.aspx
+SMART%20Technologies\Gallery\TeamContent\deinclified=1
+SMART%20Technologies\Gallery\TeamContent\gallery.smarttech.com\ImsManifestXml=/opt/SMART Technologies/Notebook Galleries/SMART Technologies/Essentials for Educators/imsmanifest.xml
+SMART%20Technologies\Gallery\TeamContent\gallery.smarttech.com\MetadataXml=/opt/SMART Technologies/Notebook Galleries/Configurations/SMART Technologies/Gallery Essentials/gallery.smarttech.com/metadata.xml
+SMART%20Technologies\Gallery\TeamContent\gallery.smarttech.com\AppPath=/opt/SMART Technologies/Gallery Setup/bin/.GallerySetup_elf
+SMART%20Technologies\Gallery\TeamContent\gallery.smarttech.com\Args=-configuration \"/opt/SMART Technologies/Notebook Galleries/Configurations/SMART Technologies/Gallery Essentials/gallery.smarttech.com\"
+SMART%20Technologies\Gallery\TeamContent\gallery.smarttech.com\Enabled=0
+SMART%20Technologies\Gallery\TeamContent\gallery.smarttech.com\Remote=0
+SMART%20Technologies\Gallery\TeamContent\gallery.smarttech.com\ForceUser=0
+SMART%20Technologies\Language%20Setup\Path=/opt/SMART Technologies/Language Setup
+SMART%20Technologies\Language%20Setup\Version=2.2.2060.4
+SMART%20Technologies\Gallery\GallerySamplerManifest=/opt/SMART Technologies/Notebook Software/Gallery/imsmanifest.xml
+SMART%20Technologies\Gallery\TeamContent\fd16a709-8b28-4662-b5bd-63dc86eeb34e.com\ImsManifestXml=/opt/SMART Technologies/Notebook Galleries/SMART Technologies/Lesson Activity Toolkit/imsmanifest.xml
+SMART%20Technologies\Gallery\TeamContent\fd16a709-8b28-4662-b5bd-63dc86eeb34e.com\MetadataXml=/opt/SMART Technologies/Notebook Galleries/Configurations/Lesson Activity Toolkit/fd16a709-8b28-4662-b5bd-63dc86eeb34e.com/metadata.xml
+SMART%20Technologies\Gallery\TeamContent\fd16a709-8b28-4662-b5bd-63dc86eeb34e.com\AppPath=/opt/SMART Technologies/Gallery Setup/bin/.GallerySetup_elf
+SMART%20Technologies\Gallery\TeamContent\fd16a709-8b28-4662-b5bd-63dc86eeb34e.com\Args=-configuration \"/opt/SMART Technologies/Notebook Galleries/Configurations/Lesson Activity Toolkit/fd16a709-8b28-4662-b5bd-63dc86eeb34e.com\"
+SMART%20Technologies\Gallery\TeamContent\fd16a709-8b28-4662-b5bd-63dc86eeb34e.com\Enabled=0
+SMART%20Technologies\Gallery\TeamContent\fd16a709-8b28-4662-b5bd-63dc86eeb34e.com\Remote=0
+SMART%20Technologies\Gallery\TeamContent\fd16a709-8b28-4662-b5bd-63dc86eeb34e.com\ForceUser=0
+SMART%20Technologies\Gallery\TeamContent\fd16a709-8b28-4662-b5bd-63dc86eeb34e.com\Locale\fi=
+SMART%20Technologies\Gallery\TeamContent\fd16a709-8b28-4662-b5bd-63dc86eeb34e.com\Locale\sv=
+EOF
+}
+
 case "${command}" in
     configure)
         upstream_dir=$1
@@ -247,9 +351,18 @@ case "${command}" in
             mkdir -p "$(dirname "$f")"
             ln -s -f -T "${upstream_dir}/smartboard${f}" "$f"
         done
+
+        create_configurations
         ;;
     unconfigure)
-        rm -f "$smart_technologies_dir" ${smartboard_links}
+        rm -f "$smart_technologies_dir"                         \
+              ${smartboard_links}                               \
+              /etc/adobe/FlashPlayerTrust/SMARTNotebook.cfg     \
+              /etc/udev/rules.d/60-SMARTBoard32.rules           \
+              "/etc/xdg/SMART Technologies.conf"                \
+              "/etc/xdg/SMART Technologies Drivers.conf"        \
+              "/etc/xdg/SMART Technologies/Language Setup.conf" \
+              "/etc/xdg/SMART Technologies/SMART Notebook.conf"
         ;;
     unpack)
         upstream_pack=$1
