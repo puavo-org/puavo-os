@@ -247,6 +247,10 @@ make_config_file() {
 }
 
 create_configurations() {
+  #
+  # Smartboard configurations
+  #
+
   make_config_file "/etc/adobe/FlashPlayerTrust/SMARTNotebook.cfg" <<'EOF'
 /opt/SMART Technologies
 EOF
@@ -341,6 +345,64 @@ SMART%20Technologies\Gallery\TeamContent\fd16a709-8b28-4662-b5bd-63dc86eeb34e.co
 SMART%20Technologies\Gallery\TeamContent\fd16a709-8b28-4662-b5bd-63dc86eeb34e.com\Locale\fi=
 SMART%20Technologies\Gallery\TeamContent\fd16a709-8b28-4662-b5bd-63dc86eeb34e.com\Locale\sv=
 EOF
+
+  #
+  # Autostart scripts
+  #
+
+  make_config_file "/etc/xdg/autostart/smart_1-_Service.desktop" <<'EOF'
+[Desktop Entry]
+Name=SMARTBoardService
+Encoding=UTF-8
+Version=1.0
+X-GNOME-Autostart-enabled=true
+Exec=/usr/local/bin/start_smartboard_service
+Type=Application
+Icon=system-run
+Comment=SMART Software
+EOF
+
+  make_config_file "/etc/xdg/autostart/smart_1-_Tools.desktop" <<'EOF'
+[Desktop Entry]
+Name=SMART Board Tools
+Encoding=UTF-8
+Version=1.0
+X-GNOME-Autostart-enabled=true
+Exec=/usr/local/bin/start_smartboard_tools
+Type=Application
+Icon=system-run
+Comment=SMART Software
+EOF
+
+  make_config_file "/usr/local/bin/start_smartboard_service" <<'EOF'
+#!/bin/sh
+
+set -eu
+
+# do not start smartboard stuff if we do not have a smartboard connected
+if ! lsusb | awk '$6 ~ /^0b8c:/' | grep -q .; then
+  exit 1
+fi
+
+exec "/opt/SMART Technologies/SMART Product Drivers/bin/SMARTBoardService" \
+     "$@"
+EOF
+  chmod 755 "/usr/local/bin/start_smartboard_service"
+
+  make_config_file "/usr/local/bin/start_smartboard_tools" <<'EOF'
+#!/bin/sh
+
+set -eu
+
+# do not start smartboard stuff if we do not have a smartboard connected
+if ! lsusb | awk '$6 ~ /^0b8c:/' | grep -q .; then
+  exit 1
+fi
+
+exec "/opt/SMART Technologies/SMART Product Drivers/bin/SMART Board Tools" \
+     "$@"
+EOF
+  chmod 755 "/usr/local/bin/start_smartboard_tools"
 }
 
 case "${command}" in
