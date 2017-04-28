@@ -386,6 +386,8 @@ case "${command}" in
 
         smart_datadir="${upstream_dir}/smartboard${smart_technologies_dir}/common/data"
         install -d -o root -g root -m 1777 "$smart_datadir"
+        ln -fns /state/external_files/smartboard_license \
+                "${smart_datadir}/.mp.1.1.dat"
         ;;
     *)
         ;;
