@@ -1,0 +1,22 @@
+#!/bin/sh
+
+set -eu
+
+# XXX We might want to do this, but the operation is pointless in the
+# XXX general case (and likely currently breaks some things)!
+# XXX It is only needed when puavo-pkgs are not in the image itself,
+# XXX or in the "smartboard"-case (see below).
+# puavo-pkg reconfigure --all
+
+status=0
+
+# XXX Instead, we now only do this, because smartboard should be
+# XXX configured/unconfigured based on puavo-conf variable
+# XXX "puavo.nonfree.smartboard.enabled".
+# XXX (Also get rid of extra call to "puavo-pkg show" to check if
+# XXX puavo-pkg package is installed).
+if puavo-pkg show smartboard >/dev/null 2>&1; then
+  puavo-pkg reconfigure smartboard || status=1
+fi
+
+exit $status
