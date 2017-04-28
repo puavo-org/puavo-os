@@ -270,6 +270,9 @@ case "${command}" in
                 ln -fns "$lib" "$(basename "$lib")"
             done
         )
+
+        smart_datadir="${upstream_dir}/smartboard${smart_technologies_dir}/common/data"
+        install -d -o root -g root -m 1777 "$smart_datadir"
         ;;
     *)
         ;;
