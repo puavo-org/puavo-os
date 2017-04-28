@@ -409,12 +409,18 @@ case "${command}" in
     configure)
         upstream_dir=$1
 
-        for f in "$smart_technologies_dir" ${smartboard_links}; do
-            mkdir -p "$(dirname "$f")"
-            ln -s -f -T "${upstream_dir}/smartboard${f}" "$f"
-        done
+        if [ "$(puavo-conf puavo.nonfree.smartboard.enabled)" = 'true' ]; then
+            for f in "$smart_technologies_dir" ${smartboard_links}; do
+                mkdir -p "$(dirname "$f")"
+                ln -s -f -T "${upstream_dir}/smartboard${f}" "$f"
+            done
 
-        create_configurations
+            create_configurations
+
+            chmod 755 "${upstream_dir}/smartboard"
+        else
+            chmod 700 "${upstream_dir}/smartboard"
+        fi
         ;;
     unconfigure)
         rm -f "$smart_technologies_dir"                         \
@@ -425,6 +431,7 @@ case "${command}" in
               "/etc/xdg/SMART Technologies Drivers.conf"        \
               "/etc/xdg/SMART Technologies/Language Setup.conf" \
               "/etc/xdg/SMART Technologies/SMART Notebook.conf"
+        chmod 700 "${upstream_dir}/smartboard"
         ;;
     unpack)
         upstream_pack=$1
@@ -450,6 +457,10 @@ case "${command}" in
         install -d -o root -g root -m 1777 "$smart_datadir"
         ln -fns /state/external_files/smartboard_license \
                 "${smart_datadir}/.mp.1.1.dat"
+
+        # Because this is proprietary software, set ${upstream_dir}/smartboard
+        # permissions to 0700 by default.
+        chmod 700 "${upstream_dir}/smartboard"
         ;;
     *)
         ;;
