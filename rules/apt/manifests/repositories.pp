@@ -21,6 +21,10 @@ class apt::repositories {
     }
 
     file {
+      '/etc/apt/preferences.d/00-puavo.pref':
+        content => template('apt/00-puavo.pref'),
+        notify  => Exec['apt update'];
+
       '/etc/apt/sources.list':
         content => template('apt/sources.list'),
         notify  => Exec['apt update'];

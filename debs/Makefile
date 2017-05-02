@@ -41,7 +41,7 @@ clean:
 
 .PHONY: update-repo
 update-repo:
-	$(MAKE) Packages.gz
+	$(MAKE) Release
 
 Packages: $(wildcard pool/*.deb)
 	mkdir -p pool
@@ -49,6 +49,9 @@ Packages: $(wildcard pool/*.deb)
 
 Packages.gz: Packages
 	gzip -f -k $<
+
+Release: Packages.gz
+	apt-ftparchive -o APT::FTPArchive::Release::Origin=puavo-os release . >$@
 
 .PHONY: install-build-deps-parts
 install-build-deps-parts: $(_install_build_deps_parts)
