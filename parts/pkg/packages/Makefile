@@ -16,6 +16,7 @@ packagedirs += google-earth/
 packagedirs += msttcorefonts/
 packagedirs += oracle-java/
 packagedirs += skype/
+packagedirs += smartboard/
 packagedirs += spotify-client/
 packagedirs += vstloggerpro/
 
