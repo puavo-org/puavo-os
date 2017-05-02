@@ -239,6 +239,8 @@ smartboard_links='
   /usr/share/pixmaps/hicolor/scalable/apps/SMART_LanguageChooser.svg
 '
 
+smart_notebook_desktop_file='/usr/share/applications/smarttech-notebook.desktop'
+
 make_config_file() {
   filepath="$1"
   mkdir -p "$(dirname "$filepath")"
@@ -424,11 +426,17 @@ case "${command}" in
         done
 
         create_configurations
+
+        sed 's|^Exec|Exec="/opt/SMART Technologies/Notebook Software/bin/notebook" %f|' \
+            "${smart_technologies_dir}/.store/smart-notebook/xdg/mime-desktop/smarttech-notebook.desktop" \
+            > "${smart_notebook_desktop_file}.tmp"
+        mv "${smart_notebook_desktop_file}.tmp" "$smart_notebook_desktop_file"
         ;;
     unconfigure)
         upstream_dir=$1
         rm -f "$smart_technologies_dir"                         \
               ${smartboard_links}                               \
+              "$smart_notebook_desktop_file"                    \
               /etc/adobe/FlashPlayerTrust/SMARTNotebook.cfg     \
               /etc/udev/rules.d/60-SMARTBoard32.rules           \
               "/etc/xdg/SMART Technologies.conf"                \
