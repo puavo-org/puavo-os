@@ -427,7 +427,7 @@ case "${command}" in
 
         create_configurations
 
-        sed 's|^Exec|Exec="/opt/SMART Technologies/Notebook Software/bin/notebook" %f|' \
+        sed 's|^Exec.*|Exec="/opt/SMART Technologies/Notebook Software/bin/notebook" %f|' \
             "${smart_technologies_dir}/.store/smart-notebook/xdg/mime-desktop/smarttech-notebook.desktop" \
             > "${smart_notebook_desktop_file}.tmp"
         mv "${smart_notebook_desktop_file}.tmp" "$smart_notebook_desktop_file"
