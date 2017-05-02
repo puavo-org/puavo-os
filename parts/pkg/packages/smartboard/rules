@@ -470,9 +470,9 @@ case "${command}" in
         ln -fns /state/external_files/smartboard_license \
                 "${smart_datadir}/.mp.1.1.dat"
 
-        # Because this is proprietary software, set ${upstream_dir}/smartboard
+        # Because this is proprietary software, set ${upstream_dir}
         # permissions to 0700 by default.
-        chmod 700 "${upstream_dir}/smartboard"
+        chmod 700 "${upstream_dir}"
         ;;
     *)
         ;;
