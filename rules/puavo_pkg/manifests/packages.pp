@@ -13,6 +13,7 @@ class puavo_pkg::packages {
 			, 'msttcorefonts'
 			, 'oracle-java'
 			, 'skype'
+			, 'smartboard'
 			, 'spotify-client'
 			, 'vstloggerpro' ]
 
