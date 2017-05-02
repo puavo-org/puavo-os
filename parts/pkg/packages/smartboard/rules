@@ -426,6 +426,7 @@ case "${command}" in
         chmod 755 "${upstream_dir}/smartboard"
         ;;
     unconfigure)
+        upstream_dir=$1
         rm -f "$smart_technologies_dir"                         \
               ${smartboard_links}                               \
               /etc/adobe/FlashPlayerTrust/SMARTNotebook.cfg     \
