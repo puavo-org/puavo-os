@@ -296,7 +296,9 @@ class packages {
     , 'tuxguitar-jsa' ]:
       tag => [ 'tag_music_making', 'tag_debian', ];
 
-    [ 'amtterm' ]:
+    [ 'amtterm'
+    , 'hostapd'
+    , 'vtun' ]:
       tag => [ 'tag_network', 'tag_debian', ];
 
     [ 'calibre'
