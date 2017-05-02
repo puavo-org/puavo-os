@@ -416,14 +416,14 @@ case "${command}" in
     configure)
         upstream_dir=$1
 
+        chmod 755 "${upstream_dir}"
+
         for f in "$smart_technologies_dir" ${smartboard_links}; do
             mkdir -p "$(dirname "$f")"
             ln -s -f -T "${upstream_dir}/smartboard${f}" "$f"
         done
 
         create_configurations
-
-        chmod 755 "${upstream_dir}/smartboard"
         ;;
     unconfigure)
         upstream_dir=$1
@@ -435,7 +435,7 @@ case "${command}" in
               "/etc/xdg/SMART Technologies Drivers.conf"        \
               "/etc/xdg/SMART Technologies/Language Setup.conf" \
               "/etc/xdg/SMART Technologies/SMART Notebook.conf"
-        chmod 700 "${upstream_dir}/smartboard"
+        chmod 700 "${upstream_dir}"
         ;;
     unpack)
         upstream_pack=$1
