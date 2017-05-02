@@ -405,22 +405,25 @@ EOF
   chmod 755 "/usr/local/bin/start_smartboard_tools"
 }
 
+# If smartboard license is not enabled, do not configure a package but
+# unconfigure it instead.
+if [ "${command}" = 'configure' \
+  -a "$(puavo-conf puavo.nonfree.smartboard.enabled)" != 'true' ]; then
+    command='unconfigure'
+fi
+
 case "${command}" in
     configure)
         upstream_dir=$1
 
-        if [ "$(puavo-conf puavo.nonfree.smartboard.enabled)" = 'true' ]; then
-            for f in "$smart_technologies_dir" ${smartboard_links}; do
-                mkdir -p "$(dirname "$f")"
-                ln -s -f -T "${upstream_dir}/smartboard${f}" "$f"
-            done
+        for f in "$smart_technologies_dir" ${smartboard_links}; do
+            mkdir -p "$(dirname "$f")"
+            ln -s -f -T "${upstream_dir}/smartboard${f}" "$f"
+        done
 
-            create_configurations
+        create_configurations
 
-            chmod 755 "${upstream_dir}/smartboard"
-        else
-            chmod 700 "${upstream_dir}/smartboard"
-        fi
+        chmod 755 "${upstream_dir}/smartboard"
         ;;
     unconfigure)
         rm -f "$smart_technologies_dir"                         \
