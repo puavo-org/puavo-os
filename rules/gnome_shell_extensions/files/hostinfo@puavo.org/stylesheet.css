@@ -1,11 +1,54 @@
-.hostinfo-label
+/*
+    Host Info shell extension styles
+    Copyright (c) 2017 Opinsys Oy
+*/
+
+/*
+    Container for the pseudo-menu item entry (that cannot be selected/clicked)
+    which contains the while info text block
+*/
+.infoTextMenuItem
 {
-    font-size: 100%;
-    color: #444;
-    padding: 0 1em;
 }
 
-.hostinfo-label:hover
+/*
+    Container for the whole information text block
+*/
+.infoTextContainer
+{
+}
+
+.infoTextCategory
 {
     color: #000;
+    font-weight: bold;
+}
+
+.infoTextKey
+{
+    color: #000;
+    padding-right: 5px;
+    font-weight: bold;
+    padding-left: 25px;
+}
+
+.infoTextValue
+{
+    color: #000;
+}
+
+.infoTextPlainValue
+{
+    color: #000;
+    padding-left: 25px;
+}
+
+.infoTextWarning
+{
+    color: #f00;
+}
+
+.infoErrorTitle
+{
+    color: #f00;
 }
