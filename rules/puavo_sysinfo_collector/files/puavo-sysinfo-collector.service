@@ -1,0 +1,11 @@
+[Unit]
+Description=Collect system information for the login screen
+After=network-online.target
+Before=gdm.service
+
+[Service]
+ExecStart=/usr/sbin/puavo-sysinfo-collector
+Type=oneshot
+
+[Install]
+WantedBy=multi-user.target
