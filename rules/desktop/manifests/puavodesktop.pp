@@ -11,6 +11,7 @@ class desktop::puavodesktop {
   include ::gnome_shell_extensions
   include ::gnome_shell_helper
   include ::packages
+  include ::puavo_sysinfo_collector
   include ::themes
   include ::webmenu
 
