@@ -19,15 +19,15 @@ _install_build_deps       := $(_pkgs:%=.install-build-deps-%)
 
 .PHONY: all
 all: $(_dpkg_buildpackage)
-	$(MAKE) Packages.gz
+	$(MAKE) update-repo
 
 .PHONY: parts
 parts: $(_dpkg_buildpackage_parts)
-	$(MAKE) Packages.gz
+	$(MAKE) update-repo
 
 .PHONY: ports
 ports: $(_dpkg_buildpackage_ports)
-	$(MAKE) Packages.gz
+	$(MAKE) update-repo
 
 .PHONY: clean
 clean:
