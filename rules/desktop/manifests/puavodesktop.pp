@@ -35,6 +35,15 @@ class desktop::puavodesktop {
       target  => 'evolution-calendar.png';
   }
 
+  # overwrite /etc/profile with our custom version
+  file {
+    '/etc/profile':
+      source => 'puppet:///modules/desktop/profile',
+      owner  => 'root',
+      group  => 'root',
+      mode   => '0644',
+  }
+
   Package <| title == faenza-icon-theme
           or title == light-themes
           or title == webmenu |>
