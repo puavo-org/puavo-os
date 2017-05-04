@@ -1,0 +1,82 @@
+#!/usr/bin/ruby
+
+# Gather some basic system information. Executed at startup, the
+# output is used in the login screen's system information display
+# (see /usr/share/gnome-shell/extensions/hostinfo@puavo.org).
+
+# Executed by puavo-sysinfo-collector.service.
+
+# Copyright (C) 2017 Opinsys Oy
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+# Version 0.95
+# Author: Jarmo Pietiläinen (jarmo@opinsys.fi)
+
+require 'facter'
+require 'json'
+
+# These symbols are also used verbatim in the JavaScript code,
+# so changing them willy-nilly will have disastrous consequences
+values = [
+    :bios_vendor,
+    :bios_version,
+    :bios_release_date,
+    :blockdevice_sda_model,
+    :blockdevice_sda_size,
+    :processorcount,
+    :processor0,
+    :memorysize_mb,
+    :macaddress,
+    :manufacturer,
+    :productname,
+    :serialnumber,
+    :boardserialnumber,
+]
+
+def read_text_file(name)
+    begin
+        File.open(name, 'rb') { |f| f.read }
+    rescue
+        "<Can't read #{name}>"
+    end
+end
+
+data = {}
+
+begin
+    # timestamp (so we know how old this information is)
+    data[:timestamp] = Time.now.to_i
+
+    # release info
+    data[:this_image] = read_text_file('/etc/puavo-image/name').strip
+    data[:this_release] = read_text_file('/etc/puavo-image/release').strip
+
+    # facter stuff
+    values.each { |f| data[f] = Facter.value(f) }
+
+    # some lspci values
+    data[:lspci_values] = []
+    lspci_raw = `lspci | awk '$2 == "Network" || $2 == "VGA"' | sed 's/^/  /'`
+    lspci_raw.strip.split("\n").each { |i| data[:lspci_values] << i.strip }
+
+    # wireless info (this needs to be improved)
+    x = `lspci -nnk | grep 0280 | cut -c 36-`
+    data[:wifi] = x.strip.split("\n").first.strip || ''
+rescue
+    # do nothing :-(
+end
+
+# use pretty_generate because humans might read the file out of curiosity
+File.open('/tmp/puavo-sysinfo.json', 'w') { |f| f.write(JSON.pretty_generate(data)) }

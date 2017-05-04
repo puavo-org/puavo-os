@@ -15,7 +15,7 @@
                                border */
     border-bottom: 1px solid #666;
     app-icon-bottom-clip: 0px;
-
+    border-bottom:0;
 /* hrm, still no multipoint gradients
     background-image: linear-gradient(left, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1) 50%, rgba(255, 255, 255, 0)) !important;*/
 }

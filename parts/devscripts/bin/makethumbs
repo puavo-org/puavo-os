@@ -46,6 +46,7 @@ find "$src_dir" -type f -iregex ".*\.\(gif\|png\|jpg\|jpeg\|svg\)" | while read 
     echo "Thumbnailing \"$i\""
     out=$(XDG_CACHE_HOME="$temp_dir" thumb "$i")
     mv "$temp_dir/thumbnails/large/$out.png" "$dst_dir/$out.png"
+    chmod 0644 "$dst_dir/$out.png"
 done
 
 echo "All done"
