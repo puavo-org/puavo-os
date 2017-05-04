@@ -139,6 +139,7 @@ $(image_dir):
 rootfs-image: $(rootfs_dir) $(image_dir)
 	$(_sudo) .aux/set-image-release '$(rootfs_dir)' '$(image_class)' \
 	    '$(notdir $(_image_file))'
+	$(_sudo) /usr/lib/puavo-ltsp-client/make-release-logos
 	$(_sudo) mksquashfs '$(rootfs_dir)' '$(_image_file).tmp'	\
 		-noappend -no-recovery -wildcards		\
 		-ef '.aux/$(image_class).excludes'		\

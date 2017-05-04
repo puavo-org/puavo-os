@@ -4,15 +4,16 @@ set -eu
 
 release=$(cat /etc/puavo-image/release)
 hosttypes="fatclient laptop wirelessaccesspoint"
+webmenu_logo_source=$(jq -r '."puavo.desktop.vendor.logo"' /etc/puavo-conf/image.json)
 
 uppercase() { echo -n "$1" | tr [:lower:] [:upper:]; }
 
-if [ -f /usr/share/icons/vendor_logo.png ]; then
+if [ -f "$webmenu_logo_source" ]; then
   for hosttype in $hosttypes; do
     hosttype_uppercased="$(uppercase $hosttype)"
     convert -font Ubuntu-R -gravity center -background transparent \
         -matte -bordercolor none -border 35 \
-        '(' -gravity center -resize 100x /usr/share/icons/vendor_logo.png ')' \
+        '(' -gravity center -resize 100x "$webmenu_logo_source" ')' \
         '(' pango:"<span foreground=\"#41786b\" font-size=\"x-small\">${hosttype_uppercased}</span>" ')' \
         '(' pango:"<span foreground=\"#41786b\" font-size=\"x-small\">${release}</span>" ')' \
         -append "/usr/share/icons/release_logo.${hosttype}.png"
