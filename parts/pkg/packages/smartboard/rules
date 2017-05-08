@@ -405,6 +405,42 @@ exec "/opt/SMART Technologies/SMART Product Drivers/bin/SMART Board Tools" \
      "$@"
 EOF
   chmod 755 "/usr/local/bin/start_smartboard_tools"
+
+  make_config_file "/usr/local/bin/smart_notebook" <<'EOF'
+#!/bin/sh
+
+# XXX This is a horrible wrapper for notebook software.  It segfaults
+# XXX or otherwise breaks sometimes on startup with some machines, and as
+# XXX it is closed source software and the Linux version not maintained by
+# XXX the vendor, there is not much else we can do.
+
+set -eu
+
+i=0
+previous_seconds=$(date +%s)
+status=0
+
+while [ "$i" -lt 100 ]; do
+  status=0
+  "/opt/SMART Technologies/Notebook Software/bin/Notebook/.notebook_elf" "$@" \
+    || status=$?
+  current_seconds=$(date +%s)
+  if [ "$current_seconds" -ge "$(($previous_seconds + 3))" ]; then
+    break
+  fi
+
+  previous_seconds="$current_seconds"
+  i=$(($i + 1))
+done
+
+exit "$status"
+EOF
+  chmod 755 "/usr/local/bin/smart_notebook"
+
+  sed 's|^Exec.*|Exec=/usr/local/bin/smart_notebook %f|' \
+      "${smart_technologies_dir}/.store/smart-notebook/xdg/mime-desktop/smarttech-notebook.desktop" \
+      > "${smart_notebook_desktop_file}.tmp"
+  mv "${smart_notebook_desktop_file}.tmp" "$smart_notebook_desktop_file"
 }
 
 # If smartboard license is not enabled, do not configure a package but
@@ -426,17 +462,15 @@ case "${command}" in
         done
 
         create_configurations
-
-        sed 's|^Exec.*|Exec="/opt/SMART Technologies/Notebook Software/bin/notebook" %f|' \
-            "${smart_technologies_dir}/.store/smart-notebook/xdg/mime-desktop/smarttech-notebook.desktop" \
-            > "${smart_notebook_desktop_file}.tmp"
-        mv "${smart_notebook_desktop_file}.tmp" "$smart_notebook_desktop_file"
         ;;
     unconfigure)
         upstream_dir=$1
         rm -f "$smart_technologies_dir"                         \
               ${smartboard_links}                               \
               "$smart_notebook_desktop_file"                    \
+              /usr/local/bin/smart_notebook                     \
+              /usr/local/bin/start_smartboard_service           \
+              /usr/local/bin/start_smartboard_tools             \
               /etc/adobe/FlashPlayerTrust/SMARTNotebook.cfg     \
               /etc/udev/rules.d/60-SMARTBoard32.rules           \
               "/etc/xdg/SMART Technologies.conf"                \

@@ -1,0 +1,21 @@
+#!/bin/sh
+
+# Create a link to the icon displayed in the lower right corner in Webmenu
+
+set -eu
+
+host_type=$(cat /etc/puavo/hosttype)
+release_icon="/usr/share/icons/release_logo.$host_type.png"
+wm_img_dir="/opt/webmenu/styles/theme/default/img"
+
+src_name=""
+dst_name="$wm_img_dir/logo.png"
+
+if [ -f "$release_icon" ]; then
+    src_name=$release_icon
+else
+    src_name="$wm_img_dir/opinsys.png"
+fi
+
+rm -f "$dst_name"
+ln -s "$src_name" "$dst_name"

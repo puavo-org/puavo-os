@@ -98,6 +98,7 @@ insmod regexp
 insmod loopback
 insmod usb_keyboard
 insmod lvm
+insmod progress
 
 for dev in (lvm/__PUAVO_LVM_PARTITION__); do
   for file in ${dev}/*.default; do
