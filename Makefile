@@ -7,6 +7,8 @@ images_urlbase		:= https://images.puavo.org
 mirror_dir		:= $(image_dir)/mirror
 rootfs_dir		:= /var/tmp/puavo-os/rootfs
 
+include .opinsys/defaults.mk
+
 _adm_user	:= puavo-os
 _adm_group	:= puavo-os
 _adm_uid	:= 1000
@@ -135,11 +137,15 @@ rootfs-debootstrap:
 $(image_dir):
 	$(_sudo) mkdir -p '$(image_dir)'
 
+.PHONY: make-release-logos
+make-release-logos:
+	$(_sudo) /usr/lib/puavo-ltsp-client/make-release-logos
+
 .PHONY: rootfs-image
 rootfs-image: $(rootfs_dir) $(image_dir)
 	$(_sudo) .aux/set-image-release '$(rootfs_dir)' '$(image_class)' \
 	    '$(notdir $(_image_file))'
-	$(_sudo) /usr/lib/puavo-ltsp-client/make-release-logos
+	$(_systemd_nspawn_cmd) $(MAKE) -C '/puavo-os' make-release-logos
 	$(_sudo) mksquashfs '$(rootfs_dir)' '$(_image_file).tmp'	\
 		-noappend -no-recovery -wildcards		\
 		-ef '.aux/$(image_class).excludes'		\
