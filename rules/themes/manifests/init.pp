@@ -13,6 +13,10 @@ class themes {
       recurse => true,
       source  => 'puppet:///modules/themes/Geos-puavo-dark-panel';
 
+    '/usr/share/themes/Minwaita-Vanilla-Puavo':
+      recurse => true,
+      source  => 'puppet:///modules/themes/Minwaita-Vanilla-Puavo';
+
     '/usr/share/themes/Puavo':
       recurse => true,
       require => File['/etc/gdm3/background.img'],
