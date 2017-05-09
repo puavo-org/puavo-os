@@ -19,6 +19,7 @@
 /***************
  * Base States *
  ***************/
+
 .background {
   color: #2e3436;
   background-color: #f5f5f4;
@@ -2256,9 +2257,18 @@ combobox:drop(active) {
   box-shadow: none;
 }
 
+
+
 /************
  * Toolbars *
  ************/
+
+/* This section has been commented out as a dirty fix. When active it seems 
+to cause a white line on top of the desktop (when gnome-panel is located in the
+bottom of the screen) and does not seem to affect the UI. We will propably 
+have to get back to this.
+
+
 toolbar, .inline-toolbar, searchbar,
 .location-bar {
   -GtkWidget-window-dragging: true;
@@ -2328,6 +2338,8 @@ searchbar,
   box-shadow: none;
   transition: all 250ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
+
+*/
 
 /***************
  * Header bars *
@@ -6520,6 +6532,29 @@ box > arrow, box > image {
   padding: 0 2px;
 }
 
+
+/* Fix Nautilus icon text color on puavo-os desktop */
+.nautilus-desktop.nautilus-canvas-item {
+    background-color: #4a90d9;
+    color: white;
+    text-shadow: 1px 1px 0px rgba(0,0,0, 0.5);
+}
+
+.nautilus-desktop.nautilus-canvas-item:active {
+    color: white;
+    text-shadow: none;
+}
+
+.nautilus-desktop.nautilus-canvas-item:selected {
+    color: white;
+    text-shadow: 1px 1px 0px rgba(0,0,0, 0.5);
+}
+
+.nautilus-desktop.nautilus-canvas-item:prelight {
+    text-shadow: none;
+}
+
+
 /* GTK NAMED COLORS
    ----------------
    use responsibly! */
@@ -6599,3 +6634,4 @@ read if you used those and something break with a version upgrade you're on your
 @define-color wm_button_active_color_b shade(#f5f5f4, 0.89);
 @define-color wm_button_active_color_c shade(#f5f5f4, 0.9);
 @define-color content_view_bg #ffffff;
+
