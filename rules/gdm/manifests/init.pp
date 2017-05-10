@@ -16,6 +16,23 @@ class gdm {
       require     => File['/usr/share/glib-2.0/schemas/org.gnome.login-screen.gschema.xml'];
   }
 
+  # don't let apt-get overwrite our customized gdm.service file
+  ::dpkg::simpledivert {
+    '/lib/systemd/system/gdm.service':
+      before => File['/lib/systemd/system/gdm.service'];
+  }
+
+  # Our custom version that (hopefully) fixes issue 205 (slow shutdowns/reboots).
+  # Xorg gets stuck and refuses to die. The default timeout is 90 seconds which
+  # is too long.
+  file {
+    '/lib/systemd/system/gdm.service':
+      source => 'puppet:///modules/gdm/gdm.service',
+      owner  => 'root',
+      group  => 'root',
+      mode   => '0644',
+  }
+
   file {
     '/etc/gdm3/background.img':
       ensure  => link,
