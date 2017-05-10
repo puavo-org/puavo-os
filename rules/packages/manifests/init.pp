@@ -562,6 +562,7 @@ class packages {
 
     [ 'bindfs'
     , 'desktop-file-utils'
+    , 'detox'
     , 'devilspie2'
     , 'duplicity'
     , 'exfat-fuse'
