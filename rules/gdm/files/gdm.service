@@ -34,3 +34,5 @@ IgnoreSIGPIPE=no
 StandardOutput=syslog
 StandardError=inherit
 EnvironmentFile=-/etc/default/locale
+# Make Xorg die faster. Sometimes it gets stuck on shutdown/reboot. The default is 90 seconds, which is too long.
+TimeoutStopSec=15
