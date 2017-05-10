@@ -1,0 +1,9 @@
+[Unit]
+Description=Report Puavo system version to syslog
+
+[Service]
+ExecStart=/usr/sbin/puavo-report-system-version
+Type=oneshot
+
+[Install]
+WantedBy=multi-user.target

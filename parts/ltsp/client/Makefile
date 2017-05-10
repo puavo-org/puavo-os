@@ -147,6 +147,9 @@ install : installdirs
 	ln -fs -t $(DESTDIR)/lib/systemd/system/multi-user.target.wants \
 		../puavo-darkdm.service
 
+	ln -fs -t $(DESTDIR)/lib/systemd/system/multi-user.target.wants \
+		../puavo-report-system-version.service
+
 .PHONY : clean
 clean :
 	rm -rf po/fi/*.mo
