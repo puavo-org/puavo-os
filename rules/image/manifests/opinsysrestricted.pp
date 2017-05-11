@@ -2,6 +2,7 @@ class image::opinsysrestricted {
   include ::art::opinsys,
           ::image::allinone,
           ::oracle_java,
+          ::primus,
           ::puavo_pkg::packages,
           ::ssh_server
 
