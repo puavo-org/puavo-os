@@ -36,12 +36,6 @@ else
 _proxywrap_cmd := .aux/proxywrap
 endif
 
-_puppet_apply_cmd := env LC_CTYPE=en_US.UTF-8 puppet apply      \
-                       --logdest '/var/log/puavo-os/puppet.log' \
-                       --logdest console                        \
-                       --modulepath 'rules'                     \
-                       rules/site.pp
-
 _systemd_nspawn_machine_name := \
   $(notdir $(rootfs_dir))-$(shell tr -dc A-Za-z0-9 < /dev/urandom | head -c8)
 _systemd_nspawn_cmd := sudo systemd-nspawn -D '$(rootfs_dir)' \
@@ -78,7 +72,7 @@ install-parts: /puavo-os
 install-build-deps: /puavo-os
 	$(MAKE) -C debs update-repo
 
-	$(_sudo) env FACTER_puavoruleset=prepare $(_puppet_apply_cmd)
+	$(_sudo) env FACTER_puavoruleset=prepare .aux/apply-puppet-rules
 
 	$(_sudo) $(MAKE) -C debs install-build-deps
 
@@ -200,7 +194,8 @@ update: /etc/puavo-conf/image.json install-build-deps
 .PHONY: install-rules
 install-rules: /puavo-os
 	$(_sudo) .aux/setup-debconf
-	$(_sudo) env 'FACTER_puavoruleset=$(image_class)' $(_puppet_apply_cmd)
+	$(_sudo) env 'FACTER_puavoruleset=$(image_class)' \
+		.aux/apply-puppet-rules
 
 .PHONY: rdiffs
 rdiffs: $(image_dir) $(mirror_dir)

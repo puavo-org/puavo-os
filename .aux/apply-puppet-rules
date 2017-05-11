@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -eu
+
+env LC_CTYPE=en_US.UTF-8 puppet apply      \
+    --detailed-exitcodes                   \
+    --logdest /var/log/puavo-os/puppet.log \
+    --logdest console                      \
+    --modulepath rules                     \
+    rules/site.pp \
+  || [ $? -eq 2 ]

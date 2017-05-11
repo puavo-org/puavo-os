@@ -6,7 +6,7 @@ INSTALL_DATA = $(INSTALL) -m 644
 
 packagedirs  = adobe-flashplugin/
 packagedirs += adobe-pepperflashplugin/
-# packagedirs += adobe-reader/  # XXX old, broken software
+packagedirs += adobe-reader/
 packagedirs += cmaptools/
 packagedirs += dropbox/
 packagedirs += ekapeli-alku/

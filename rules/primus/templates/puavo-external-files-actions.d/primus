@@ -1,0 +1,10 @@
+#!/bin/sh
+
+set -eu
+
+if [ -e /opt/primus/primuskurre.exe ]; then
+  ln -fns /opt/primus/primusclient.desktop \
+          /usr/share/applications/primusclient.desktop
+else
+  rm -f /usr/share/applications/primusclient.desktop
+fi
