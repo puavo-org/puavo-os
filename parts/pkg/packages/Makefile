@@ -18,6 +18,7 @@ packagedirs += oracle-java/
 packagedirs += skype/
 packagedirs += smartboard/
 packagedirs += spotify-client/
+packagedirs += tilitin/
 packagedirs += t-lasku/
 packagedirs += vstloggerpro/
 
