@@ -1,0 +1,291 @@
+#!/bin/sh
+
+# This is a puavo-pkg package for Ekapeli, see https://ekapeli.lukimat.fi/
+#
+# Ekapeli cache files have been downloaded from
+# https://ekapeli.lukimat.fi/?site=download;action=init (needs login).
+#
+# "ekapeli.jnlp", "ekapeli-maahanmuuttaja.jnlp" and "spelett.jnlp" are
+# javaws-startup-files, and downloadable from
+# "Käynnistä Web Start -version".  The games download cache files
+# normally to "/var/tmp/ekapeli", these are in the upstream pack.
+# "chown -R root:" has been run to all files before making a tarball
+# with "tar -zcf ekapeli-cache-files-2017-05-12.tar.gz \
+#   ekapeli-cache-files-2017-05-12"
+#
+# We have a permission to distribute the *.jnlp and cache-files
+# (internally) to our customers as part of our device image, given by
+# Ville Mönkkönen to Antti Sokero, on the phone, on 7th of November, 2013.
+
+set -eu
+
+command=$1
+shift
+
+make_config_file() {
+  filepath="$1"
+  mkdir -p "$(dirname "$filepath")"
+  cat > "${filepath}.tmp"
+  mv "${filepath}.tmp" "$filepath"
+}
+
+add_jnpl_files() {
+  make_config_file "/opt/ekapeli/ekapeli.jnlp" <<'EOF'
+<?xml version="1.0" encoding="utf-8"?>
+<jnlp
+  spec="1.0+"
+  codebase="https://ekapeli.lukimat.fi/files/webstart/38/"
+  href="https://ekapeli.lukimat.fi/files/webstart/38/game.jnlp">
+  <information>
+    <title>Ekapeli-Eskari</title>
+    <vendor>Niilo Mäki Instituutti</vendor>
+    <homepage href="https://ekapeli.lukimat.fi/"/>
+    <description>Ekapeli-Eskari</description>
+    <description kind="short">Ekapeli-Eskari</description>
+	<icon href="icon64.gif" width="64" height="64" kind="default" />
+  </information>
+  <security>
+	<all-permissions/>
+  </security>
+  <resources>
+    <j2se version="1.5+" java-vm-args=""/>
+	<property name="isJNLP" value="true"/><!--Make the game understand we're running webstart-->	
+	<jar href="launcher.jar" main="true"/>
+    <jar href="jshortcut-0.4-oberzalek.jar"/>
+    <jar href="cling-core-1.0.5.jar"/>
+    <jar href="cling-support-1.0.5.jar"/>
+    <jar href="teleal-common-1.0.13.jar"/>
+  </resources>
+  <resources os="Windows">
+  </resources>  
+  <application-desc main-class="gamelauncher.Launcher">
+  <argument>gameid=38</argument><argument>server=ekapeli.lukimat.fi</argument><argument>port=443</argument><argument>serverpath=/ekapeliproto.fcgi</argument><argument>name=Ekapeli-Eskari</argument><argument>resourceSetID=38</argument><argument>version=1.97</argument><argument>resourceset=Ekapeli_LukiMat_eskari</argument><argument>levels=levels/levels.txt</argument><argument>locale=fi</argument><argument>settingsName=Ekapeli-Eskari</argument>
+  </application-desc> 
+</jnlp>
+EOF
+  make_config_file "/opt/ekapeli/ekapeli-maahanmuuttaja.jnlp" <<'EOF'
+<?xml version="1.0" encoding="utf-8"?>
+<jnlp
+  spec="1.0+"
+  codebase="https://ekapeli.lukimat.fi/files/webstart/1054/"
+  href="https://ekapeli.lukimat.fi/files/webstart/1054/game.jnlp">
+  <information>
+    <title>Ekapeli-Arabia</title>
+    <vendor>Niilo Mäki Instituutti</vendor>
+    <homepage href="https://ekapeli.lukimat.fi/"/>
+    <description>Ekapeli-Arabia</description>
+    <description kind="short">Ekapeli-Arabia</description>
+	<icon href="icon64.gif" width="64" height="64" kind="default" />
+  </information>
+  <security>
+	<all-permissions/>
+  </security>
+  <resources>
+    <j2se version="1.5+" java-vm-args=""/>
+	<property name="isJNLP" value="true"/><!--Make the game understand we're running webstart-->	
+	<jar href="launcher.jar" main="true"/>
+    <jar href="jshortcut-0.4-oberzalek.jar"/>
+    <jar href="cling-core-1.0.5.jar"/>
+    <jar href="cling-support-1.0.5.jar"/>
+    <jar href="teleal-common-1.0.13.jar"/>
+  </resources>
+  <resources os="Windows">
+  </resources>  
+  <application-desc main-class="gamelauncher.Launcher">
+  <argument>gameid=1054</argument><argument>server=ekapeli.lukimat.fi</argument><argument>port=443</argument><argument>serverpath=/ekapeliproto.fcgi</argument><argument>name=Ekapeli-Arabia</argument><argument>resourceSetID=1054</argument><argument>version=1.59</argument><argument>resourceset=Ekapeli-Yksi</argument><argument>levels=levels/mamulevels_arabia.txt</argument><argument>locale=fi</argument><argument>settingsName=Ekapeli-Maahanmuuttaja-ar</argument>
+  </application-desc> 
+</jnlp>
+EOF
+  make_config_file "/opt/ekapeli/spelett.jnlp" <<'EOF'
+<?xml version="1.0" encoding="utf-8"?>
+<jnlp
+  spec="1.0+"
+  codebase="https://ekapeli.lukimat.fi/files/webstart/1048/"
+  href="https://ekapeli.lukimat.fi/files/webstart/1048/game.jnlp">
+  <information>
+    <title>Spel-Ett Läsning</title>
+    <vendor>Niilo Mäki Instituutti</vendor>
+    <homepage href="https://ekapeli.lukimat.fi/"/>
+    <description>Spel-Ett Läsning</description>
+    <description kind="short">Spel-Ett Läsning</description>
+	<icon href="icon64.gif" width="64" height="64" kind="default" />
+  </information>
+  <security>
+	<all-permissions/>
+  </security>
+  <resources>
+    <j2se version="1.5+" java-vm-args=""/>
+	<property name="isJNLP" value="true"/><!--Make the game understand we're running webstart-->	
+	<jar href="launcher.jar" main="true"/>
+    <jar href="jshortcut-0.4-oberzalek.jar"/>
+    <jar href="cling-core-1.0.5.jar"/>
+    <jar href="cling-support-1.0.5.jar"/>
+    <jar href="teleal-common-1.0.13.jar"/>
+  </resources>
+  <resources os="Windows">
+  </resources>  
+  <application-desc main-class="gamelauncher.Launcher">
+  <argument>gameid=1048</argument><argument>server=ekapeli.lukimat.fi</argument><argument>port=443</argument><argument>serverpath=/ekapeliproto.fcgi</argument><argument>name=Spel-Ett Läsning</argument><argument>resourceSetID=1048</argument><argument>version=1.30</argument><argument>resourceset=Spel-Ett2011</argument><argument>levels=levels/levels_del_1.txt</argument><argument>locale=se</argument><argument>settingsName=Spel-Ett2011</argument>
+  </application-desc> 
+</jnlp>
+EOF
+}
+
+add_startup_wrappers() {
+  make_config_file "/usr/local/bin/ekapeli" <<'EOF'
+#!/bin/sh
+
+exec setsid /usr/local/lib/ekapeli/ekapeli_wrapper "$@"
+EOF
+  chmod 755 "/usr/local/bin/ekapeli"
+
+  make_config_file "/usr/local/lib/ekapeli/ekapeli_wrapper" <<'EOF'
+#!/bin/bash
+
+subgame=$1
+
+set -eu
+
+[ -z "$subgame" ] && subgame=ekapeli
+
+case "$subgame" in
+  ekapeli)
+    game_jnlp_path=/opt/ekapeli/ekapeli.jnlp
+    ;;
+  ekapeli-maahanmuuttaja)
+    game_jnlp_path=/opt/ekapeli/ekapeli-maahanmuuttaja.jnlp
+    ;;
+  spelett)
+    game_jnlp_path=/opt/ekapeli/spelett.jnlp
+    ;;
+  *)
+    echo "Unrecognized ekapeli subgame: '$subgame'" >&2
+    exit 1
+    ;;
+esac
+
+user=$(id -nu)
+group=$(id -g)
+
+tmpdir=$(mktemp -d /tmp/${subgame}-${user}.XXXXXXXXXX)
+
+cleanup() {
+  # kill all java processes in our process group, in case the ekapeli
+  # is still running
+  pkill -g 0 '^java' 2>/dev/null || true
+
+  sleep 3 || true
+
+  fusermount -uz "${tmpdir}/ekapeli"      || true
+  fusermount -uz "${tmpdir}/ekapeli.rofs" || true
+
+  rm -rf "${tmpdir}"
+}
+
+trap cleanup EXIT
+
+
+mkdir -p "${tmpdir}/ekapeli"     \
+         "${tmpdir}/ekapeli.cow" \
+         "${tmpdir}/ekapeli.rofs"
+
+bindfs -u "$user" -g "$group" /opt/ekapeli/cache "${tmpdir}/ekapeli.rofs"
+
+unionfs-fuse -o cow \
+  "${tmpdir}/ekapeli.cow=RW:${tmpdir}/ekapeli.rofs=RO" \
+  "${tmpdir}/ekapeli"
+
+## WTF: When Ekapeli is started and a newer version is available and
+## Ekapeli is not yet cached (to $HOME/.java/deployment/cache), Java
+## downloads and caches the newer webstart file and proceeds. Everything
+## is fine so far. But when Ekapeli is started again with the old
+## webstart file (and there is the newer webstart file cached), javaws
+## fails to start Ekapeli with following error message:
+##
+##   Error: Failed to validate signing of launch file. The signed
+##   version does not match the downloaded version.
+##
+## I am not 100% sure what's wrong there. Launch succeeds with an empty
+## cache, but fails if a newer webstart launcher is cached. Obviously,
+## the problem does not appear if the contents of $game_jnlp_path
+## matches the latest launcher. But because Ekapeli ws can be updated at
+## any time, we need to do something to ensure Ekapeli does not break
+## between image updates.
+##
+## The problem can be circumvented either by disabling Java deployment
+## caching completely, or by removing just Ekapeli from the cache before
+## launch. Here we do the latter to avoid affecting other Java
+## applications.
+javaws -uninstall "$game_jnlp_path"
+
+env EKAPELI_CACHE_PATH="${tmpdir}/ekapeli" javaws -wait "$game_jnlp_path"
+
+# -nowait does not really do what one could expect, so we wait until
+# all '^java' processes in our own process group have exited...
+# (this script must be started with "setsid" for things to work properly)
+while sleep 3; do
+  if [ "$(pgrep -c -g 0 '^java')" -eq 0 ]; then
+    break
+  fi
+done
+EOF
+  chmod 755 "/usr/local/lib/ekapeli/ekapeli_wrapper"
+
+  make_config_file "/usr/local/share/applications/ekapeli.desktop" <<'EOF'
+[Desktop Entry]
+Name=Ekapeli
+Exec=ekapeli ekapeli
+Type=Application
+Terminal=false
+Icon=/usr/share/icons/Faenza/categories/96/applications-fonts.png
+StartupNotify=true
+Categories=Education;Games;
+EOF
+
+  make_config_file "/usr/local/share/applications/ekapeli-maahanmuuttaja.desktop" <<'EOF'
+[Desktop Entry]
+Name=Ekapeli-Maahanmuuttaja
+Exec=ekapeli ekapeli-maahanmuuttaja
+Type=Application
+Terminal=false
+Icon=/usr/share/icons/Faenza/categories/96/applications-fonts.png
+StartupNotify=true
+Categories=Education;Games;
+EOF
+
+  make_config_file "/usr/local/share/applications/spelett.desktop" <<'EOF'
+[Desktop Entry]
+Name=SpelEtt
+Exec=ekapeli spelett
+Type=Application
+Terminal=false
+Icon=/usr/share/icons/Faenza/categories/96/applications-fonts.png
+StartupNotify=true
+Categories=Education;Games;
+EOF
+}
+
+case "${command}" in
+    configure)
+        upstream_dir=$1
+        add_jnpl_files
+        add_startup_wrappers
+        ln -fns "${upstream_dir}" /opt/ekapeli/cache
+        ;;
+    unconfigure)
+        rm -rf /opt/ekapeli                                                 \
+               /usr/local/bin/ekapeli                                       \
+               /usr/local/lib/ekapeli/ekapeli_wrapper                       \
+               /usr/local/share/applications/ekapeli.desktop                \
+               /usr/local/share/applications/ekapeli-maahanmuuttaja.desktop \
+               /usr/local/share/applications/spelett.desktop
+        ;;
+    unpack)
+        upstream_pack=$1
+        upstream_dir=$2
+        tar --no-same-owner --strip-components=1 -z -x -f "${upstream_pack}" \
+            -C "${upstream_dir}"
+        ;;
+    *)
+        ;;
+esac

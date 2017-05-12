@@ -21,6 +21,9 @@ packagedirs += spotify-client/
 packagedirs += t-lasku/
 packagedirs += vstloggerpro/
 
+# opinsys-os specific
+packagedirs += ekapeli/
+
 packagefiles = $(packagedirs:%/=%.tar.gz)
 
 .PHONY: all
