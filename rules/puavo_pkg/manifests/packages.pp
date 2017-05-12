@@ -1,5 +1,6 @@
 class puavo_pkg::packages {
   include ::puavo_pkg
+  include ::puavo_pkg::ekapeli
 
   $available_packages = [ 'adobe-flashplugin'
 			, 'adobe-pepperflashplugin'
@@ -19,10 +20,4 @@ class puavo_pkg::packages {
 			, 'vstloggerpro' ]
 
   @puavo_pkg::install { $available_packages: ; }
-
-  # Ekapeli is Opinsys-only because the upstream files are not downloadable
-  # without the Ekapeli application and its UI, so we keep the upstream pack
-  # in our own repository.  (Or are they downloadable?  How?)
-  $opinsys_only_packages = [ 'ekapeli' ]
-  @puavo_pkg::install { $opinsys_only_packages: ; }
 }
