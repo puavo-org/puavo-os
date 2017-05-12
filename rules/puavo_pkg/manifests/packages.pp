@@ -10,6 +10,7 @@ class puavo_pkg::packages {
 			, 'geogebra'
 			, 'google-chrome'
 			, 'google-earth'
+			, 'mattermost-desktop'
 			, 'msttcorefonts'
 			, 'oracle-java'
 			, 'skype'
