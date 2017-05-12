@@ -1,0 +1,35 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "${command}" in
+    configure)
+	upstream_dir=$1
+
+	ln -fs "${upstream_dir}" /opt/mattermost-desktop
+
+	cat <<EOF > /usr/share/applications/mattermost-desktop.desktop
+[Desktop Entry]
+Name=Mattermost
+Comment=Mattermost Desktop application for Linux
+Exec=/opt/mattermost-desktop/mattermost-desktop
+Terminal=false
+Type=Application
+Icon=/opt/mattermost-desktop/icon.png
+EOF
+	;;
+    unconfigure)
+	rm -rf /opt/mattermost-desktop /usr/share/applications/mattermost-desktop.desktop
+	;;
+    unpack)
+	upstream_pack=$1
+	upstream_dir=$2
+
+	tar xf "${upstream_pack}" -C "${upstream_dir}" --strip-components=1
+	;;
+    *)
+	;;
+esac

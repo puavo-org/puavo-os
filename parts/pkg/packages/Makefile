@@ -13,6 +13,7 @@ packagedirs += ekapeli-alku/
 packagedirs += geogebra/
 packagedirs += google-chrome/
 packagedirs += google-earth/
+packagedirs += mattermost-desktop/
 packagedirs += msttcorefonts/
 packagedirs += oracle-java/
 packagedirs += skype/
