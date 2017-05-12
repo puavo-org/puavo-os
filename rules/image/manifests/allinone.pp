@@ -11,6 +11,7 @@ class image::allinone {
   include ::disable_suspend_on_nbd_devices
   include ::disable_unclutter
   include ::fontconfig
+  include ::fuse
   include ::gdm
   include ::gnome_terminal
   include ::image::bundle::basic

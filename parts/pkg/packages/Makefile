@@ -18,6 +18,7 @@ packagedirs += oracle-java/
 packagedirs += skype/
 packagedirs += smartboard/
 packagedirs += spotify-client/
+packagedirs += t-lasku/
 packagedirs += vstloggerpro/
 
 packagefiles = $(packagedirs:%/=%.tar.gz)

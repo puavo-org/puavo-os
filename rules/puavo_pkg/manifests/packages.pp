@@ -15,6 +15,7 @@ class puavo_pkg::packages {
 			, 'skype'
 			, 'smartboard'
 			, 'spotify-client'
+			, 't-lasku'
 			, 'vstloggerpro' ]
 
   @puavo_pkg::install { $available_packages: ; }

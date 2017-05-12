@@ -8,13 +8,15 @@ class puavo_pkg {
   $pkgrootdir = '/var/lib/puavo-pkg/packages'
 
   define install () {
-    $pkgname = $title
+    $pkgname        = $title
+    $pkgpath        = "${puavo_pkg::pkgbasedir}/${pkgname}.tar.gz"
+    $installed_link = "${puavo_pkg::pkgrootdir}/${pkgname}/installed"
 
     exec {
       "/usr/sbin/puavo-pkg install ${puavo_pkg::pkgbasedir}/${pkgname}.tar.gz":
-        creates => "${puavo_pkg::pkgrootdir}/${pkgname}/installed",
         require => Package['puavo-pkg'],
-        timeout => 7200;	# 2 hours = 7200 seconds, should be enough
+        timeout => 7200,	# 2 hours = 7200 seconds, should be enough
+        unless  => "/usr/bin/test \"\$(readlink \"${installed_link}\")\" = \"\$(md5sum \"${pkgpath}\" | awk '{ print \$1 }')\"";
     }
   }
 
