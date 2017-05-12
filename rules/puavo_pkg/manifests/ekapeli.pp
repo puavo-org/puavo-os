@@ -7,6 +7,7 @@ class puavo_pkg::ekapeli {
   # in our own repository.  (Or are they downloadable?  How?)
   @puavo_pkg::install {
     'ekapeli':
-      require => File['/etc/fuse.conf'];        # needed by special fuse-tricks
+      require => [ File['/etc/fuse.conf']	# needed by special fuse-tricks
+		 , Puavo_pkg::Install['oracle-java'] ];
   }
 }
