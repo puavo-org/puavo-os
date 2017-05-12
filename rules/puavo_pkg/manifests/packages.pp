@@ -15,6 +15,7 @@ class puavo_pkg::packages {
 			, 'skype'
 			, 'smartboard'
 			, 'spotify-client'
+			, 'tilitin'
 			, 't-lasku'
 			, 'vstloggerpro' ]
 
