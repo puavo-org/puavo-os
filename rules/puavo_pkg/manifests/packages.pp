@@ -4,6 +4,7 @@ class puavo_pkg::packages {
   $available_packages = [ 'adobe-flashplugin'
 			, 'adobe-pepperflashplugin'
 			, 'adobe-reader'
+			, 'bluegriffon'
 			, 'cmaptools'
 			, 'dropbox'
 			, 'ekapeli-alku'
