@@ -1,0 +1,37 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "${command}" in
+    configure)
+	upstream_dir=$1
+
+	ln -fs "${upstream_dir}" /opt/processing
+
+	cat <<EOF > /usr/share/applications/processing.desktop
+[Desktop Entry]
+Terminal=false
+Exec=/opt/processing/processing %F
+Icon=/opt/processing/lib/icons/pde-48.png
+Type=Application
+Categories=Development;Graphics
+StartupNotify=false
+Name=Processing
+GenericName=Processing
+EOF
+	;;
+    unconfigure)
+	rm -rf /opt/processing /usr/share/applications/processing.desktop
+	;;
+    unpack)
+	upstream_pack=$1
+	upstream_dir=$2
+
+	tar xf "${upstream_pack}" -C "${upstream_dir}" --strip-components=1
+	;;
+    *)
+	;;
+esac
