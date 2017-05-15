@@ -13,6 +13,7 @@ class puavo_pkg::packages {
 			, 'mattermost-desktop'
 			, 'msttcorefonts'
 			, 'oracle-java'
+			, 'processing'
 			, 'skype'
 			, 'smartboard'
 			, 'spotify-client'
