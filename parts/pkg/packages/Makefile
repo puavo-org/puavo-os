@@ -11,6 +11,7 @@ packagedirs += bluegriffon/
 packagedirs += cmaptools/
 packagedirs += dropbox/
 packagedirs += ekapeli-alku/
+packagedirs += enchanting/
 packagedirs += geogebra/
 packagedirs += google-chrome/
 packagedirs += google-earth/
