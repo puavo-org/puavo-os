@@ -8,6 +8,7 @@ class puavo_pkg::packages {
 			, 'cmaptools'
 			, 'dropbox'
 			, 'ekapeli-alku'
+			, 'enchanting'
 			, 'geogebra'
 			, 'google-chrome'
 			, 'google-earth'
