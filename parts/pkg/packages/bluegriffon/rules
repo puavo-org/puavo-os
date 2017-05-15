@@ -1,0 +1,41 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "${command}" in
+    configure)
+	upstream_dir=$1
+
+	ln -fs "${upstream_dir}/opt/bluegriffon" /opt/bluegriffon
+
+	cat <<EOF > /usr/share/applications/bluegriffon.desktop
+[Desktop Entry]
+Encoding=UTF-8
+Name=Bluegriffon
+GenericName=Bluegriffon
+Comment=Web and EPUB Editor
+Exec=/opt/bluegriffon/bluegriffon %u
+Icon=${upstream_dir}/usr/share/pixmaps/bluegriffon.png
+Terminal=false
+X-MultipleArgs=false
+Type=Application
+StartupWMClass=Bluegriffon
+Categories=Web;
+MimeType=text/html;text/xml;application/xhtml+xml;application/epub+zip
+EOF
+	;;
+    unconfigure)
+	rm -rf /opt/bluegriffon /usr/share/applications/bluegriffon.desktop
+	;;
+    unpack)
+	upstream_pack=$1
+	upstream_dir=$2
+
+	dpkg -x "${upstream_pack}" "${upstream_dir}"
+	;;
+    *)
+	;;
+esac

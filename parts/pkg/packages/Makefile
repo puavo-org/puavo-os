@@ -7,6 +7,7 @@ INSTALL_DATA = $(INSTALL) -m 644
 packagedirs  = adobe-flashplugin/
 packagedirs += adobe-pepperflashplugin/
 packagedirs += adobe-reader/
+packagedirs += bluegriffon/
 packagedirs += cmaptools/
 packagedirs += dropbox/
 packagedirs += ekapeli-alku/
