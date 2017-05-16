@@ -21,7 +21,8 @@ class puavo_pkg::packages {
 			, 'spotify-client'
 			, 'tilitin'
 			, 't-lasku'
-			, 'vstloggerpro' ]
+			, 'vstloggerpro'
+			, 'vidyo-client' ]
 
   @puavo_pkg::install { $available_packages: ; }
 }
