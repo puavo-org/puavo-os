@@ -24,6 +24,7 @@ packagedirs += smartboard/
 packagedirs += spotify-client/
 packagedirs += tilitin/
 packagedirs += t-lasku/
+packagedirs += vidyo-client/
 packagedirs += vstloggerpro/
 
 packagefiles = $(packagedirs:%/=%.tar.gz)

@@ -1,0 +1,44 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "${command}" in
+    configure)
+	upstream_dir=$1
+
+	ln -fs "${upstream_dir}/opt/vidyo" /opt/vidyo
+	ln -fs "${upstream_dir}/usr/bin/VidyoDesktop" /usr/bin/VidyoDesktop
+
+	# for some reason icons can fail to load if they're links
+	cat <<EOF > /usr/share/applications/VidyoDesktop.desktop
+[Desktop Entry]
+Version=2.0.4
+Encoding=UTF-8
+Name=VidyoDesktop
+Icon=${upstream_dir}/usr/share/pixmaps/vidyo_icon.png
+Comment=Vidyo Endpoint Application
+Categories=Application;Network;
+Exec=VidyoDesktop -AutoStart
+Terminal=false
+Type=Application
+GenericName[en_US]=VidyoDesktop
+StartupWMClass=VidyoDesktop
+EOF
+	;;
+    unconfigure)
+	rm -rf /opt/vidyo \
+/usr/bin/VidyoDesktop \
+/usr/share/applications/VidyoDesktop.desktop
+	;;
+    unpack)
+	upstream_pack=$1
+	upstream_dir=$2
+
+	dpkg -x "${upstream_pack}" "${upstream_dir}"
+	;;
+    *)
+	;;
+esac
