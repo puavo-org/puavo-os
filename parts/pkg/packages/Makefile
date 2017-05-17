@@ -13,6 +13,7 @@ packagedirs += dropbox/
 packagedirs += ekapeli-alku/
 packagedirs += enchanting/
 packagedirs += geogebra/
+packagedirs += globisens/
 packagedirs += google-chrome/
 packagedirs += google-earth/
 packagedirs += mattermost-desktop/
