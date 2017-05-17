@@ -9,8 +9,8 @@ case "${command}" in
     configure)
 	upstream_dir=$1
 
-	ln -fs "${upstream_dir}/opt/vidyo" /opt/vidyo
-	ln -fs "${upstream_dir}/usr/bin/VidyoDesktop" /usr/bin/VidyoDesktop
+	ln -fns "${upstream_dir}/opt/vidyo" /opt/vidyo
+	ln -fns "${upstream_dir}/usr/bin/VidyoDesktop" /usr/bin/VidyoDesktop
 
 	# for some reason icons can fail to load if they're links
 	cat <<EOF > /usr/share/applications/VidyoDesktop.desktop

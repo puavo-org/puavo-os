@@ -9,12 +9,12 @@ case "${command}" in
     configure)
 	upstream_dir=$1
 
-	ln -fs "${upstream_dir}/usr/share/enchanting/" /usr/share/enchanting
-	ln -fs "${upstream_dir}/usr/bin/enchanting" /usr/bin/enchanting
-	ln -fs "${upstream_dir}/usr/bin/enchanting-frontend" /usr/bin/enchanting-frontend
-	ln -fs "${upstream_dir}/usr/share/icons/hicolor/48x48/apps/enchanting.png" /usr/share/icons/hicolor/48x48/apps/enchanting.png
-	ln -fs "${upstream_dir}/usr/share/mime/packages/enchanting.xml" /usr/share/mime/packages/enchanting.xml
-	ln -fs "${upstream_dir}/etc/udev/rules.d/70-enchanting-lego-mindstorms-nxt.rules" /etc/udev/rules.d/70-enchanting-lego-mindstorms-nxt.rules
+	ln -fns "${upstream_dir}/usr/share/enchanting/" /usr/share/enchanting
+	ln -fns "${upstream_dir}/usr/bin/enchanting" /usr/bin/enchanting
+	ln -fns "${upstream_dir}/usr/bin/enchanting-frontend" /usr/bin/enchanting-frontend
+	ln -fns "${upstream_dir}/usr/share/icons/hicolor/48x48/apps/enchanting.png" /usr/share/icons/hicolor/48x48/apps/enchanting.png
+	ln -fns "${upstream_dir}/usr/share/mime/packages/enchanting.xml" /usr/share/mime/packages/enchanting.xml
+	ln -fns "${upstream_dir}/etc/udev/rules.d/70-enchanting-lego-mindstorms-nxt.rules" /etc/udev/rules.d/70-enchanting-lego-mindstorms-nxt.rules
 
 	# enchanting has its own .desktop file, but the icon file does not seem to work
 	# unless we use a hardcoded path

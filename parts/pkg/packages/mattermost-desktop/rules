@@ -9,7 +9,7 @@ case "${command}" in
     configure)
 	upstream_dir=$1
 
-	ln -fs "${upstream_dir}" /opt/mattermost-desktop
+	ln -fns "${upstream_dir}" /opt/mattermost-desktop
 
 	cat <<EOF > /usr/share/applications/mattermost-desktop.desktop
 [Desktop Entry]

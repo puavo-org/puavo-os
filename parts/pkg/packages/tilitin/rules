@@ -9,9 +9,9 @@ case "${command}" in
     configure)
 	upstream_dir=$1
 
-	ln -fs "${upstream_dir}/usr/share/tilitin" /usr/share/tilitin
-	ln -fs "${upstream_dir}/usr/share/doc/tilitin" /usr/share/doc/tilitin
-	ln -fs "${upstream_dir}/usr/bin/tilitin" /usr/bin/tilitin
+	ln -fns "${upstream_dir}/usr/share/tilitin" /usr/share/tilitin
+	ln -fns "${upstream_dir}/usr/share/doc/tilitin" /usr/share/doc/tilitin
+	ln -fns "${upstream_dir}/usr/bin/tilitin" /usr/bin/tilitin
 
 	cat <<EOF > /usr/share/applications/tilitin.desktop
 [Desktop Entry]

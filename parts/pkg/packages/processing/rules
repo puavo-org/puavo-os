@@ -9,7 +9,7 @@ case "${command}" in
     configure)
 	upstream_dir=$1
 
-	ln -fs "${upstream_dir}" /opt/processing
+	ln -fns "${upstream_dir}" /opt/processing
 
 	cat <<EOF > /usr/share/applications/processing.desktop
 [Desktop Entry]

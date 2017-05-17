@@ -38,25 +38,25 @@ case "${command}" in
         for f in ${vstloggerpro_links}; do
             dir=$(dirname "${f}")
             mkdir -p "${dir}"
-            ln -s -f -T "${upstream_dir}/vstloggerpro${f}" "${f}"
+            ln -fns -T "${upstream_dir}/vstloggerpro${f}" "${f}"
         done
 
         mkdir -p /usr/share/applications
         desktop_file_path=$(readlink -e LoggerPro.desktop)
-        ln -s -f -T "${desktop_file_path}" /usr/share/applications/LoggerPro.desktop
+        ln -fns -T "${desktop_file_path}" /usr/share/applications/LoggerPro.desktop
 
-        ln -s -f -T "${upstream_dir}/vstdrivers/usr/lib/libGoIO.so.2.0.53" \
+        ln -fns -T "${upstream_dir}/vstdrivers/usr/lib/libGoIO.so.2.0.53" \
             /usr/lib/libGoIO.so.2
-        ln -s -f -T "${upstream_dir}/vstdrivers/usr/lib/libGoIO.so.2.0.53" \
+        ln -fns -T "${upstream_dir}/vstdrivers/usr/lib/libGoIO.so.2.0.53" \
             /usr/lib/libGoIO.so
-        ln -s -f -T "${upstream_dir}/vstdrivers/usr/lib/libNGIO.so.1.0.0"  \
+        ln -fns -T "${upstream_dir}/vstdrivers/usr/lib/libNGIO.so.1.0.0"  \
             /usr/lib/libNGIO.so.1
-        ln -s -f -T "${upstream_dir}/vstdrivers/usr/lib/libNGIO.so.1.0.0"  \
+        ln -fns -T "${upstream_dir}/vstdrivers/usr/lib/libNGIO.so.1.0.0"  \
             /usr/lib/libNGIO.so
 
         mkdir -p /lib/udev/rules.d
         udev_rules_file_path=$(readlink -e 40-vstdrivers.rules)
-        ln -s -f "${udev_rules_file_path}" /lib/udev/rules.d/40-vstdrivers.rules
+        ln -fns "${udev_rules_file_path}" /lib/udev/rules.d/40-vstdrivers.rules
 
         ## WTF Vernier.
         chmod 777 "${upstream_dir}/vstloggerpro/usr/local/share/LoggerPro/Linux/tmp"

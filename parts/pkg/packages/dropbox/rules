@@ -9,7 +9,7 @@ case "${command}" in
     configure)
         upstream_dir=$1
         mkdir -p /var/lib/dropbox
-        ln -sf -T "${upstream_dir}/.dropbox-dist" /var/lib/dropbox/.dropbox-dist
+        ln -fns -T "${upstream_dir}/.dropbox-dist" /var/lib/dropbox/.dropbox-dist
         ;;
     unconfigure)
         rm -f /var/lib/dropbox/.dropbox-dist

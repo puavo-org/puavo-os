@@ -9,7 +9,7 @@ case "${command}" in
     configure)
 	upstream_dir=$1
 
-	ln -fs "${upstream_dir}/opt/bluegriffon" /opt/bluegriffon
+	ln -fns "${upstream_dir}/opt/bluegriffon" /opt/bluegriffon
 
 	cat <<EOF > /usr/share/applications/bluegriffon.desktop
 [Desktop Entry]
