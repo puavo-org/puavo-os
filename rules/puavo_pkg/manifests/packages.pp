@@ -10,6 +10,7 @@ class puavo_pkg::packages {
 			, 'ekapeli-alku'
 			, 'enchanting'
 			, 'geogebra'
+			, 'globisense'
 			, 'google-chrome'
 			, 'google-earth'
 			, 'mattermost-desktop'
