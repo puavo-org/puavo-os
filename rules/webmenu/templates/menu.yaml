@@ -196,10 +196,8 @@ items:
     type: desktop
   - source: designer-qt4
     type: desktop
-  - type: custom
-    name: Processing
-    command: /opt/processing/processing
-    osIconPath: /opt/processing/lib/icons/pde-48.png
+  - source: processing
+    type: desktop
   - source: robboscratch2
     type: desktop
     inactiveByDeviceType: thinclient

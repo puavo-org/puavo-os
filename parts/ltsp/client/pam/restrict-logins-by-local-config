@@ -19,6 +19,11 @@ is_admin_user()
 	| grep -x -q "${PAM_USER}"
 }
 
+# Allow "root" and "Debian-gdm" always.
+if [ "${PAM_USER}" = "root" -o "${PAM_USER}" = "Debian-gdm" ]; then
+    exit 0
+fi
+
 if [ "$(puavo-conf puavo.admin.personally_administered)" != 'true' ]; then
   # no special restrictions on hosts which are not personally administered
   exit 0
@@ -68,11 +73,6 @@ esac
 # allow primary user in irrespective of local configurations
 primary_user="$(puavo-conf puavo.admin.primary_user)"
 if [ "$primary_user" = "${PAM_USER}" ]; then
-    exit 0
-fi
-
-# Allow root always.
-if [ "${PAM_USER}" = "root" ]; then
     exit 0
 fi
 

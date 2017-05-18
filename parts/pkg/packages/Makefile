@@ -7,18 +7,25 @@ INSTALL_DATA = $(INSTALL) -m 644
 packagedirs  = adobe-flashplugin/
 packagedirs += adobe-pepperflashplugin/
 packagedirs += adobe-reader/
+packagedirs += bluegriffon/
 packagedirs += cmaptools/
 packagedirs += dropbox/
 packagedirs += ekapeli-alku/
+packagedirs += enchanting/
 packagedirs += geogebra/
+packagedirs += globisens/
 packagedirs += google-chrome/
 packagedirs += google-earth/
+packagedirs += mattermost-desktop/
 packagedirs += msttcorefonts/
 packagedirs += oracle-java/
+packagedirs += processing/
 packagedirs += skype/
 packagedirs += smartboard/
 packagedirs += spotify-client/
+packagedirs += tilitin/
 packagedirs += t-lasku/
+packagedirs += vidyo-client/
 packagedirs += vstloggerpro/
 
 # opinsys-os specific

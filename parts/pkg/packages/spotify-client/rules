@@ -9,9 +9,9 @@ case "${command}" in
     configure)
         upstream_dir=$1
 
-        ln -s -f -T "${upstream_dir}/usr/bin/spotify"   /usr/bin/spotify
-        ln -s -f -T "${upstream_dir}/usr/share/spotify" /usr/share/spotify
-        ln -s -f -T "${upstream_dir}/usr/share/doc/spotify-client" \
+        ln -fns -T "${upstream_dir}/usr/bin/spotify"   /usr/bin/spotify
+        ln -fns -T "${upstream_dir}/usr/share/spotify" /usr/share/spotify
+        ln -fns -T "${upstream_dir}/usr/share/doc/spotify-client" \
                     /usr/share/doc/spotify-client
         sed 's/^Icon=.*$/Icon=spotify/' /usr/share/spotify/spotify.desktop \
             > /usr/share/applications/spotify.desktop

@@ -5,19 +5,26 @@ class puavo_pkg::packages {
   $available_packages = [ 'adobe-flashplugin'
 			, 'adobe-pepperflashplugin'
 			, 'adobe-reader'
+			, 'bluegriffon'
 			, 'cmaptools'
 			, 'dropbox'
 			, 'ekapeli-alku'
+			, 'enchanting'
 			, 'geogebra'
+			, 'globisense'
 			, 'google-chrome'
 			, 'google-earth'
+			, 'mattermost-desktop'
 			, 'msttcorefonts'
 			, 'oracle-java'
+			, 'processing'
 			, 'skype'
 			, 'smartboard'
 			, 'spotify-client'
+			, 'tilitin'
 			, 't-lasku'
-			, 'vstloggerpro' ]
+			, 'vstloggerpro'
+			, 'vidyo-client' ]
 
   @puavo_pkg::install { $available_packages: ; }
 }

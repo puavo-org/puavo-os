@@ -22,6 +22,7 @@ class packages::compat_32bit {
       , 'libltdl7:i386'
       , 'libnspr4-0d:i386'
       , 'libnspr4:i386'
+      , 'libpng12-0:i386'	# needed by GlobiLab
       , 'libpulse0:i386'
       , 'libqt4-dbus:i386'
       , 'libqt4-network:i386'

@@ -26,7 +26,7 @@ case "${command}" in
 
         for symlink_target in ${symlink_targets}; do
             mkdir -p $(dirname "${symlink_target}")
-            ln -sf -T "${upstream_dir}${symlink_target}" "${symlink_target}"
+            ln -fns -T "${upstream_dir}${symlink_target}" "${symlink_target}"
         done
         ;;
 

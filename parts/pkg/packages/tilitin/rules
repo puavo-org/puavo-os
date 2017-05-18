@@ -1,0 +1,39 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "${command}" in
+    configure)
+	upstream_dir=$1
+
+	ln -fns "${upstream_dir}/usr/share/tilitin" /usr/share/tilitin
+	ln -fns "${upstream_dir}/usr/share/doc/tilitin" /usr/share/doc/tilitin
+	ln -fns "${upstream_dir}/usr/bin/tilitin" /usr/bin/tilitin
+
+	cat <<EOF > /usr/share/applications/tilitin.desktop
+[Desktop Entry]
+Terminal=false
+Exec=tilitin %F
+Icon=${upstream_dir}/usr/share/icons/hicolor/48x48/apps/tilitin.png
+Type=Application
+Categories=Application;Office;
+StartupNotify=false
+Name=Tilitin
+GenericName=Kirjanpito-ohjelma
+EOF
+	;;
+    unconfigure)
+	rm -rf /usr/share/tilitin /usr/share/doc/tilitin /usr/bin/tilitin /usr/share/applications/tilitin.desktop
+	;;
+    unpack)
+	upstream_pack=$1
+	upstream_dir=$2
+
+	dpkg -x "${upstream_pack}" "${upstream_dir}"
+	;;
+    *)
+	;;
+esac

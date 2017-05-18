@@ -14,7 +14,7 @@ case "${command}" in
         upstream_dir=$1
 
         mkdir -p "${TTFONT_BASE}"
-        ln -s -f -T "${upstream_dir}" "${FONT_DIR}"
+        ln -fns -T "${upstream_dir}" "${FONT_DIR}"
         ;;
 
     unconfigure)
@@ -71,7 +71,7 @@ EOF
             done
 
             while read longname shortname; do
-                ln -s "${shortname}" "${longname}"
+                ln -fns "${shortname}" "${longname}"
 
                 ## Make the timestamps of symlinks identical to their
                 ## targets. This ensures we get identical upstream pack

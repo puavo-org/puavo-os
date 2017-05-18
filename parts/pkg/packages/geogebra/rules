@@ -62,7 +62,7 @@ case "${command}" in
         for f in ${links}; do
             dir=$(dirname "${f}")
             mkdir -p "${dir}"
-            ln -s -f -T "${upstream_dir}${f}" "${f}"
+            ln -fns -T "${upstream_dir}${f}" "${f}"
         done
         ;;
     unconfigure)

@@ -10,7 +10,7 @@ case "${command}" in
         upstream_dir=$1
 
         mkdir -p /usr/bin
-        ln -sf -T "${upstream_dir}/bin/CmapTools" /usr/bin/CmapTools
+        ln -fns -T "${upstream_dir}/bin/CmapTools" /usr/bin/CmapTools
 
         mkdir -p /usr/share/icons/hicolor/16x16/apps
         mkdir -p /usr/share/icons/hicolor/22x22/apps
@@ -20,23 +20,23 @@ case "${command}" in
         mkdir -p /usr/share/icons/hicolor/64x64/apps
         mkdir -p /usr/share/icons/hicolor/128x128/apps
 
-        ln -s -f -T "$(readlink -e icons/cmaptools-16.png)"  \
+        ln -fns -T "$(readlink -e icons/cmaptools-16.png)"  \
             /usr/share/icons/hicolor/16x16/apps/cmaptools.png
-        ln -s -f -T "$(readlink -e icons/cmaptools-22.png)"  \
+        ln -fns -T "$(readlink -e icons/cmaptools-22.png)"  \
             /usr/share/icons/hicolor/22x22/apps/cmaptools.png
-        ln -s -f -T "$(readlink -e icons/cmaptools-24.png)"  \
+        ln -fns -T "$(readlink -e icons/cmaptools-24.png)"  \
             /usr/share/icons/hicolor/24x24/apps/cmaptools.png
-        ln -s -f -T "$(readlink -e icons/cmaptools-32.png)"  \
+        ln -fns -T "$(readlink -e icons/cmaptools-32.png)"  \
             /usr/share/icons/hicolor/32x32/apps/cmaptools.png
-        ln -s -f -T "$(readlink -e icons/cmaptools-48.png)"  \
+        ln -fns -T "$(readlink -e icons/cmaptools-48.png)"  \
             /usr/share/icons/hicolor/48x48/apps/cmaptools.png
-        ln -s -f -T "$(readlink -e icons/cmaptools-64.png)"  \
+        ln -fns -T "$(readlink -e icons/cmaptools-64.png)"  \
             /usr/share/icons/hicolor/64x64/apps/cmaptools.png
-        ln -s -f -T "$(readlink -e icons/cmaptools-128.png)" \
+        ln -fns -T "$(readlink -e icons/cmaptools-128.png)" \
             /usr/share/icons/hicolor/128x128/apps/cmaptools.png
 
         mkdir -p /usr/share/applications
-        ln -s -f -T "$(readlink -e cmaptools.desktop)" \
+        ln -fns -T "$(readlink -e cmaptools.desktop)" \
             /usr/share/applications/cmaptools.desktop
         ;;
 
