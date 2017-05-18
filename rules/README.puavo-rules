@@ -182,6 +182,10 @@ workaround_firefox_local_swf_bug
     Do workaround a mime-types related Firefox Shockwafe Flash -bug (with
     local swf-files only).
 
+workaround_icedtea_netx_bug
+    The "icedtea-netx"-package manually sets javaws update-alternative.
+    Workaround that issue.
+
 xorg_inputs_calibration
     Some calibrations for different Xorg input devices.
 
