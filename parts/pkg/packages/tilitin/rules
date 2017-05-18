@@ -9,24 +9,20 @@ case "${command}" in
     configure)
 	upstream_dir=$1
 
-	ln -fns "${upstream_dir}/usr/share/tilitin" /usr/share/tilitin
-	ln -fns "${upstream_dir}/usr/share/doc/tilitin" /usr/share/doc/tilitin
 	ln -fns "${upstream_dir}/usr/bin/tilitin" /usr/bin/tilitin
-
-	cat <<EOF > /usr/share/applications/tilitin.desktop
-[Desktop Entry]
-Terminal=false
-Exec=tilitin %F
-Icon=${upstream_dir}/usr/share/icons/hicolor/48x48/apps/tilitin.png
-Type=Application
-Categories=Application;Office;
-StartupNotify=false
-Name=Tilitin
-GenericName=Kirjanpito-ohjelma
-EOF
+	ln -fns "${upstream_dir}/usr/share/applications/tilitin.desktop" \
+            /usr/share/applications/tilitin.desktop
+	ln -fns "${upstream_dir}/usr/share/doc/tilitin" /usr/share/doc/tilitin
+        ln -fns "${upstream_dir}/usr/share/icons/hicolor/48x48/apps/tilitin.png" \
+            /usr/share/pixmaps/tilitin.png
+	ln -fns "${upstream_dir}/usr/share/tilitin" /usr/share/tilitin
 	;;
     unconfigure)
-	rm -rf /usr/share/tilitin /usr/share/doc/tilitin /usr/bin/tilitin /usr/share/applications/tilitin.desktop
+	rm -rf /usr/bin/tilitin                        \
+               /usr/share/applications/tilitin.desktop \
+               /usr/share/doc/tilitin                  \
+               /usr/share/pixmaps/tilitin.png          \
+               /usr/share/tilitin
 	;;
     unpack)
 	upstream_pack=$1
