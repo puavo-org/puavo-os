@@ -27,12 +27,6 @@ class image::bundle::basic {
   include ::use_urandom
   include ::zram_configuration
 
-  case $debianversioncodename {
-    'precise': {
-      include packages::sssd_install_workaround
-    }
-  }
-
   Package <| title == ltsp-client
           or title == puavo-ltsp-client
           or title == puavo-ltsp-install |>
