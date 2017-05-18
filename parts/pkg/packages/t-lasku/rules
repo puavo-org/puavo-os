@@ -9,26 +9,18 @@ case "${command}" in
     configure)
 	upstream_dir=$1
 
-	mkdir -p /opt/t-lasku
-	ln -fns "${upstream_dir}/usr/bin/t-lasku" /opt/t-lasku/t-lasku
-	ln -fns "${upstream_dir}/usr/bin/t-lasku-cli" /opt/t-lasku/t-lasku-cli
-	ln -fns "${upstream_dir}/usr/share/doc/t-lasku/copyright" /opt/t-lasku/copyright
-	ln -fns "${upstream_dir}/usr/share/icons/hicolor/48x48/apps/t-lasku.png" /opt/t-lasku/t-lasku.png
-
-	cat <<'EOF' > /usr/share/applications/t-lasku.desktop
-[Desktop Entry]
-Version=1.0
-Terminal=false
-Exec=/opt/t-lasku/t-lasku %F
-Icon=/opt/t-lasku/t-lasku.png
-Type=Application
-Categories=Application;Office;
-StartupNotify=false
-Name=T-lasku
-EOF
+	ln -fns "${upstream_dir}/usr/bin/t-lasku" /usr/bin/t-lasku
+	ln -fns "${upstream_dir}/usr/bin/t-lasku-cli" /usr/bin/t-lasku-cli
+	ln -fns "${upstream_dir}/usr/share/applications/t-lasku.desktop" \
+                /usr/share/applications/t-lasku.desktop
+	ln -fns "${upstream_dir}/usr/share/icons/hicolor/48x48/apps/t-lasku.png" \
+                /usr/share/pixmaps/t-lasku.png
 	;;
     unconfigure)
-	rm -rf "/opt/t-lasku" /usr/share/applications/t-lasku.desktop
+	rm -rf /usr/bin/t-lasku \
+               /usr/bin/t-lasku-cli \
+               /usr/share/applications/t-lasku.desktop \
+               /usr/share/icons/hicolor/48x48/apps/t-lasku.png
 	;;
     unpack)
 	upstream_pack=$1
