@@ -1,0 +1,42 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "${command}" in
+    configure)
+	upstream_dir=$1
+
+	ln -fns "${upstream_dir}/usr/bin/GlobiConfig" /usr/bin/GlobiConfig
+	ln -fns "${upstream_dir}/usr/bin/GlobiLab"    /usr/bin/GlobiLab
+	ln -fns "${upstream_dir}/usr/local/Globisens" /usr/local/Globisens
+	ln -fns "${upstream_dir}/usr/share/icons/hicolor/48x48/apps/GlobiLab.png" \
+            /usr/share/pixmaps/GlobiLab.png
+
+	cat <<EOF > /usr/share/applications/GlobiLab.desktop
+[Desktop Entry]
+Name=GlobiLab
+Exec=env LD_LIBRARY_PATH=${upstream_dir}/usr/local/lib GlobiLab
+Icon=GlobiLab
+Type=Application
+Categories=GNOME;GTK;Science;
+EOF
+	;;
+    unconfigure)
+	rm -rf /usr/bin/GlobiConfig                     \
+               /usr/bin/GlobiLab                        \
+               /usr/local/Globisens                     \
+               /usr/share/applications/GlobiLab.desktop \
+               /usr/share/pixmaps/GlobiLab.png
+	;;
+    unpack)
+	upstream_pack=$1
+	upstream_dir=$2
+
+	dpkg -x "${upstream_pack}" "${upstream_dir}"
+	;;
+    *)
+	;;
+esac

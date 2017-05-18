@@ -25,13 +25,8 @@ class image::bundle::basic {
   include ::syslog
   include ::udev
   include ::use_urandom
+  include ::workaround_icedtea_netx_bug
   include ::zram_configuration
-
-  case $debianversioncodename {
-    'precise': {
-      include packages::sssd_install_workaround
-    }
-  }
 
   Package <| title == ltsp-client
           or title == puavo-ltsp-client
