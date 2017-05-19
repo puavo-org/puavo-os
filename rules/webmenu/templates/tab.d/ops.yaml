@@ -247,9 +247,6 @@ items:
     - type: desktop
       source: google-earth
       inactiveByDeviceType: thinclient
-    - type: desktop
-      source: googleearth
-      inactiveByDeviceType: thinclient
     - type: web
       name: YLE Elävä arkisto
       url: http://yle.fi/aihe/elava-arkisto
@@ -289,9 +286,6 @@ items:
       source: marble
     - type: desktop
       source: google-earth
-      inactiveByDeviceType: thinclient
-    - type: desktop
-      source: googleearth
       inactiveByDeviceType: thinclient
     - type: web
       name: YLE Elävä arkisto
