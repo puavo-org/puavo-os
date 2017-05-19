@@ -243,6 +243,8 @@ items:
     type: desktop
   - source: marble-qt
     type: desktop
+  - source: google-earth
+    type: desktop
   - source: org.kde.kgeography
     type: desktop
     condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
