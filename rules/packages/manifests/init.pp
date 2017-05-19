@@ -351,8 +351,8 @@ class packages {
     , 'spe' ]:
       tag => [ 'tag_programming', 'tag_debian', ];
 
-    # 'gftp-gtk'	# XXX missing from Debian
-    [ 'lftp'
+    [ 'gftp'
+    , 'lftp'
     , 'remmina'
     , 'smbclient'
     , 'wget'
