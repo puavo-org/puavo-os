@@ -2,7 +2,7 @@
   "name": "webmenu",
   "version": "0.8.0",
   "private": true,
-  "chromium-args": "--enable-logging=stdout",
+  "chromium-args": "--disable-devtools --enable-logging=stdout",
   "scripts": {
     "test": "make test-nw-hidden"
   },
