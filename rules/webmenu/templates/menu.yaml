@@ -37,6 +37,8 @@ items:
     type: desktop
   - source: org.gnome.Terminal
     type: desktop
+  - source: gftp
+    type: desktop
   - source: seahorse
     type: desktop
   - source: system-config-printer
@@ -121,9 +123,6 @@ items:
     type: desktop
   - source: liferea
     type: desktop
-  - source: googleearth
-    type: desktop
-    inactiveByDeviceType: thinclient
   - source: google-earth
     type: desktop
     inactiveByDeviceType: thinclient
@@ -246,6 +245,8 @@ items:
     type: desktop
   - source: marble-qt
     type: desktop
+  - source: google-earth
+    type: desktop
   - source: org.kde.kgeography
     type: desktop
     condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
@@ -272,7 +273,7 @@ items:
     type: desktop
   - source: GlobiLab
     type: desktop
-  - source: wxmaxima
+  - source: wxMaxima
     type: desktop
   - source: ti_nspire_cx_cas
     type: desktop
@@ -415,7 +416,7 @@ items:
     type: desktop
   - source: fmit
     type: desktop
-  - source: stopmotion
+  - source: qstopmotion
     type: desktop
   - source: luciole
     type: desktop
@@ -487,7 +488,7 @@ items:
     type: desktop
   - source: geogebra
     type: desktop
-  - source: wxmaxima
+  - source: wxMaxima
     type: desktop
   - source: ti_nspire_cx_cas
     type: desktop

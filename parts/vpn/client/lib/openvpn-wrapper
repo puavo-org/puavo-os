@@ -22,6 +22,11 @@ EOF
   exit 1
 fi
 
+# XXX Workaround https://github.com/puavo-org/puavo-os/issues/211
+# XXX Please try to figure out a proper fix and then remove this setting.
+OPENSSL_ia32cap="~0x200000200000000"
+export OPENSSL_ia32cap
+
 /usr/sbin/openvpn                                         \
     --client                                              \
     --dev tap                                             \

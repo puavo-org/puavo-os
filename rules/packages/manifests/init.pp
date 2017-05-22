@@ -101,6 +101,8 @@ class packages {
     , 'pavucontrol'
     , 'pavumeter'
     , 'pulseaudio-esound-compat'
+    , 'qstopmotion'
+    , 'simplescreenrecorder'
     , 'timidity' ]:
       tag => [ 'tag_audio', 'tag_debian', ];
 
@@ -351,8 +353,8 @@ class packages {
     , 'spe' ]:
       tag => [ 'tag_programming', 'tag_debian', ];
 
-    # 'gftp-gtk'	# XXX missing from Debian
-    [ 'lftp'
+    [ 'gftp'
+    , 'lftp'
     , 'remmina'
     , 'smbclient'
     , 'wget'
@@ -623,7 +625,6 @@ class packages {
 
     # [ 'fluent-plugin-puavo'   # XXX not yet packaged for Debian
     # , 'puavo-load-reporter'   # XXX not yet packaged for Debian
-    # , 'simplescreenrecorder'          # XXX not yet packaged for Debian
 
     # XXX not yet packaged for Debian
     # [ 'dymo-cups-drivers' ]:

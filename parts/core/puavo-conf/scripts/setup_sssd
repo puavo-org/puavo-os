@@ -53,6 +53,7 @@ krb5_lifetime = 7d
 krb5_renewable_lifetime = 7d
 krb5_renew_interval = 3d
 min_id = 500
+krb5_store_password_if_offline = true
 EOF
 
 mv /etc/sssd/sssd.conf.tmp /etc/sssd/sssd.conf

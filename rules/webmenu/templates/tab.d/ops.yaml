@@ -92,7 +92,7 @@ items:
     - type: desktop
       source: libreoffice-writer
     - type: desktop
-      source: wxmaxima
+      source: wxMaxima
     - type: web
       name: Kahoot!
       url: https://getkahoot.com/
@@ -118,7 +118,9 @@ items:
    osIcon: /usr/share/tuxpaint/stamps/space/planets/3_earth.png
    items:
     - type: desktop
-      source: marble
+      source: marble-qt
+    - type: desktop
+      source: google-earth
     - type: desktop
       source: kgeography
     - type: desktop
@@ -158,7 +160,9 @@ items:
    osIcon: /usr/share/icons/Faenza/apps/64/tracker.png
    items:
     - type: desktop
-      source: marble
+      source: marble-qt
+    - type: desktop
+      source: google-earth
     - type: desktop
       source: kgeography
     - type: desktop
@@ -247,9 +251,6 @@ items:
     - type: desktop
       source: google-earth
       inactiveByDeviceType: thinclient
-    - type: desktop
-      source: googleearth
-      inactiveByDeviceType: thinclient
     - type: web
       name: YLE Elävä arkisto
       url: http://yle.fi/aihe/elava-arkisto
@@ -286,12 +287,9 @@ items:
    osIcon: /usr/share/icons/hicolor/128x128/apps/freeciv-client.png
    items:
     - type: desktop
-      source: marble
+      source: marble-qt
     - type: desktop
       source: google-earth
-      inactiveByDeviceType: thinclient
-    - type: desktop
-      source: googleearth
       inactiveByDeviceType: thinclient
     - type: web
       name: YLE Elävä arkisto
