@@ -101,6 +101,7 @@ class packages {
     , 'pavucontrol'
     , 'pavumeter'
     , 'pulseaudio-esound-compat'
+    , 'qstopmotion'
     , 'simplescreenrecorder'
     , 'timidity' ]:
       tag => [ 'tag_audio', 'tag_debian', ];
