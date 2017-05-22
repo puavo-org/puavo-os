@@ -1,11 +1,6 @@
 
 global-reset()
 
-// Never show scroll bars
-body
-  overflow hidden
-  font-family Ubuntu
-
 disable-select()
   -webkit-touch-callout: none;
   -webkit-user-select: none;
@@ -13,6 +8,13 @@ disable-select()
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+
+
+// Never show scroll bars
+body
+  overflow hidden
+  font-family Ubuntu
+  disable-select()
 
 
 @import "menu-layout"
