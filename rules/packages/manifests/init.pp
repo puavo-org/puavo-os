@@ -101,6 +101,7 @@ class packages {
     , 'pavucontrol'
     , 'pavumeter'
     , 'pulseaudio-esound-compat'
+    , 'simplescreenrecorder'
     , 'timidity' ]:
       tag => [ 'tag_audio', 'tag_debian', ];
 
@@ -623,7 +624,6 @@ class packages {
 
     # [ 'fluent-plugin-puavo'   # XXX not yet packaged for Debian
     # , 'puavo-load-reporter'   # XXX not yet packaged for Debian
-    # , 'simplescreenrecorder'          # XXX not yet packaged for Debian
 
     # XXX not yet packaged for Debian
     # [ 'dymo-cups-drivers' ]:
