@@ -39,15 +39,25 @@ case "${command}" in
             /usr/share/icons/hicolor/256x256/apps/google-chrome.png
         ln -fns "${upstream_dir}/usr/share/man/man1/google-chrome.1" \
             /usr/share/man/man1/google-chrome.1
+
+        # Do not overwrite /usr/bin/google-chrome-stable in case there is
+        # a wrapper for google-chrome.
         ln -fns "${upstream_dir}/opt/google/chrome/google-chrome" \
-            /usr/bin/google-chrome-stable
+            /usr/bin/google-chrome-stable.puavopkg
+        if [ ! -e /usr/bin/google-chrome-stable ]; then
+            ln -fns google-chrome-stable.puavopkg /usr/bin/google-chrome-stable
+        fi
 
         sed '/^MimeType=/a\
 StartupNotify=true' "${upstream_dir}/usr/share/applications/google-chrome.desktop" \
             > /usr/share/applications/google-chrome.desktop
         ;;
     unconfigure)
-        rm -f /usr/bin/google-chrome-stable
+        if [ "$(readlink /usr/bin/google-chrome-stable)" \
+            = 'google-chrome-stable.puavopkg' ] ; then
+                rm -f /usr/bin/google-chrome-stable
+        fi
+        rm -f /usr/bin/google-chrome-stable.puavopkg
         rm -f /usr/share/applications/google-chrome.desktop
         rm -f /usr/share/man/man1/google-chrome.1
         rm -f /usr/share/icons/hicolor/256x256/apps/google-chrome.png
