@@ -20,6 +20,7 @@ packagedirs += mattermost-desktop/
 packagedirs += msttcorefonts/
 packagedirs += oracle-java/
 packagedirs += processing/
+packagedirs += pycharm/
 packagedirs += skype/
 packagedirs += smartboard/
 packagedirs += spotify-client/

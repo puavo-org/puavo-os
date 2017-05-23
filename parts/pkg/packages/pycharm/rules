@@ -1,0 +1,37 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "${command}" in
+    configure)
+	upstream_dir=$1
+
+	ln -fns "${upstream_dir}" /opt/pycharm
+
+	cat <<EOF > /usr/share/applications/pycharm.desktop
+[Desktop Entry]
+Terminal=false
+Exec=/opt/pycharm/bin/pycharm.sh %F
+Icon=/opt/pycharm/bin/pycharm.png
+Type=Application
+Categories=Development
+StartupNotify=false
+Name=PyCharm
+GenericName=PyCharm
+EOF
+	;;
+    unconfigure)
+	rm -rf /opt/pycharm /usr/share/applications/pycharm.desktop
+	;;
+    unpack)
+	upstream_pack=$1
+	upstream_dir=$2
+
+	tar xf "${upstream_pack}" -C "${upstream_dir}" --strip-components=1
+	;;
+    *)
+	;;
+esac
