@@ -15,13 +15,16 @@ class packages::compat_32bit {
       , 'libfontconfig1:i386'
       , 'libfreetype6:i386'
       , 'libgcc1:i386'
+      , 'libgif7:i386'		# needed by RobboScratch2
       , 'libgl1-mesa-glx:i386'
       , 'libglib2.0-0:i386'
       , 'libgtk2.0-0:i386'
       , 'libice6:i386'
+      , 'libjpeg8:i386'		# needed by RobboScratch2
       , 'libltdl7:i386'
       , 'libnspr4-0d:i386'
       , 'libnspr4:i386'
+      , 'libnss3:i386'		# needed by RobboScratch2
       , 'libpng12-0:i386'	# needed by GlobiLab
       , 'libpulse0:i386'
       , 'libqt4-dbus:i386'
