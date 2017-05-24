@@ -19,6 +19,7 @@ class puavo_pkg::packages {
 			, 'oracle-java'
 			, 'processing'
 			, 'pycharm'
+			, 'robboscratch'
 			, 'skype'
 			, 'smartboard'
 			, 'spotify-client'
