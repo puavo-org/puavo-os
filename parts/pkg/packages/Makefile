@@ -22,6 +22,7 @@ packagedirs += msttcorefonts/
 packagedirs += oracle-java/
 packagedirs += processing/
 packagedirs += pycharm/
+packagedirs += robboscratch/
 packagedirs += skype/
 packagedirs += smartboard/
 packagedirs += spotify-client/
