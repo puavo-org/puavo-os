@@ -14,9 +14,11 @@ case "${command}" in
             /usr/share/applications/bluegriffon.desktop
         ln -fns "${upstream_dir}/usr/share/pixmaps/bluegriffon.png" \
             /usr/share/pixmaps/bluegriffon.png
+        ln -fns /opt/bluegriffon/bluegriffon /usr/bin/bluegriffon
 	;;
     unconfigure)
-	rm -rf /opt/bluegriffon /usr/share/applications/bluegriffon.desktop
+        rm -rf /opt/bluegriffon /usr/share/applications/bluegriffon.desktop \
+/usr/bin/bluegriffon
 	;;
     unpack)
 	upstream_pack=$1
