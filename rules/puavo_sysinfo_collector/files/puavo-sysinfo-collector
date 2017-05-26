@@ -79,4 +79,4 @@ rescue
 end
 
 # use pretty_generate because humans might read the file out of curiosity
-File.open('/tmp/puavo-sysinfo.json', 'w') { |f| f.write(JSON.pretty_generate(data)) }
+File.open('/run/puavo/puavo-sysinfo.json', 'w') { |f| f.write(JSON.pretty_generate(data)) }
