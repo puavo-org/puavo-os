@@ -23,8 +23,6 @@ case "$(puavo-conf puavo.hosttype)" in
                 /etc/pam.d/gdm-autologin
     pam_install /etc/puavo-conf/files/etc/pam.d/gdm-password-laptop \
                 /etc/pam.d/gdm-password
-    pam_install /etc/puavo-conf/files/etc/pam.d/gnome-screensaver-laptop \
-                /etc/pam.d/gnome-screensaver
     pam_install /etc/puavo-conf/files/etc/pam.d/sudo-laptop \
                 /etc/pam.d/sudo
     ;;
