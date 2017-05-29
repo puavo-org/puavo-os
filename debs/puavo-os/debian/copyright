@@ -26,3 +26,13 @@ License: GPL-2.0+
  .
  On Debian systems, the complete text of the GNU General
  Public License version 2 can be found in "/usr/share/common-licenses/GPL-2".
+
+Comment:
+ Exceptions to above:
+ .
+ pam_puavo is a patched version of pam_exec, the original written by
+ Thorsten Kukuk <kukuk@thkukuk.de>, EITHER under 3-clause BSD-license OR GPL.
+ .
+ The included gnome-shell extensions have various copyright terms and
+ notices, but all of them should be free software.  See the corresponding
+ files for details.

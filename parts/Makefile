@@ -12,6 +12,7 @@ subdirs         := admins                       \
                    local-config                 \
                    ltsp                         \
                    opinsys-ca-certificates      \
+                   pam                          \
                    pkg                          \
                    sharedir                     \
                    vpn                          \
