@@ -99,6 +99,7 @@ call_exec (const char *pam_type, pam_handle_t *pamh,
   int call_setuid = 0;
   int quiet = 0;
   int expose_authtok = 0;
+  int exitcode_to_pam = 0;
   int use_stdout = 0;
   int optargc;
   const char *logfile = NULL;
@@ -107,6 +108,7 @@ call_exec (const char *pam_type, pam_handle_t *pamh,
   int fds[2];
   int stdout_fds[2];
   FILE *stdout_file = NULL;
+  int child_exitcode = -1;
 
   if (argc < 1) {
     pam_syslog (pamh, LOG_ERR,
@@ -136,6 +138,8 @@ call_exec (const char *pam_type, pam_handle_t *pamh,
 	quiet = 1;
       else if (strcasecmp (argv[optargc], "expose_authtok") == 0)
 	expose_authtok = 1;
+      else if (strcasecmp (argv[optargc], "exitcode_to_pam") == 0)
+	exitcode_to_pam = 1;
       else
 	break; /* Unknown option, assume program to execute. */
     }
@@ -267,11 +271,12 @@ call_exec (const char *pam_type, pam_handle_t *pamh,
 	{
 	  if (WIFEXITED(status))
 	    {
+	      child_exitcode = WEXITSTATUS(status);
 	      pam_syslog (pamh, LOG_ERR, "%s failed: exit code %d",
-			  argv[optargc], WEXITSTATUS(status));
+			  argv[optargc], child_exitcode);
 		if (!quiet)
 	      pam_error (pamh, _("%s failed: exit code %d"),
-			 argv[optargc], WEXITSTATUS(status));
+			 argv[optargc], child_exitcode);
 	    }
 	  else if (WIFSIGNALED(status))
 	    {
@@ -291,6 +296,10 @@ call_exec (const char *pam_type, pam_handle_t *pamh,
 	      pam_error (pamh, _("%s failed: unknown status 0x%x"),
 			 argv[optargc], status);
 	    }
+
+	  if (exitcode_to_pam && child_exitcode >= 0)
+	    return child_exitcode;
+
 	  return PAM_SYSTEM_ERR;
 	}
       return PAM_SUCCESS;
