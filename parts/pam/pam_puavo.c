@@ -100,10 +100,12 @@ call_exec (const char *pam_type, pam_handle_t *pamh,
   int quiet = 0;
   int expose_authtok = 0;
   int exitcode_to_pam = 0;
+  int set_krb5ccname = 0;
   int use_stdout = 0;
   int optargc;
   const char *logfile = NULL;
   const char *authtok = NULL;
+  char *krb5cc_envstr = NULL;
   pid_t pid;
   int fds[2];
   int stdout_fds[2];
@@ -140,9 +142,63 @@ call_exec (const char *pam_type, pam_handle_t *pamh,
 	expose_authtok = 1;
       else if (strcasecmp (argv[optargc], "exitcode_to_pam") == 0)
 	exitcode_to_pam = 1;
+      else if (strcasecmp (argv[optargc], "set_krb5ccname") == 0)
+	set_krb5ccname = 1;
       else
 	break; /* Unknown option, assume program to execute. */
     }
+
+  if (set_krb5ccname) {
+    const char *pam_user;
+    char *krb5cc_path;
+    int retval, tmp_fd;
+
+    retval = pam_get_item (pamh, PAM_USER, (const void **) &pam_user);
+    if (retval != PAM_SUCCESS)
+      {
+	if (!quiet) {
+	  pam_error (pamh, _("%s failed: pam_get_item PAM_USER failed"),
+	    argv[optargc]);
+	}
+	return PAM_SYSTEM_ERR;
+      }
+
+    if (asprintf(&krb5cc_path, "/tmp/krb5cc_%s_XXXXXX", pam_user) < 0) {
+      if (!quiet) {
+	pam_error (pamh, "%s failed: could not create KRB5CCNAME path",
+	  argv[optargc]);
+      }
+      return PAM_SYSTEM_ERR;
+    }
+
+    if ((tmp_fd = mkstemp(krb5cc_path)) < 0) {
+      if (!quiet) {
+	pam_error (pamh, "%s failed: could not setup KRB5CCNAME temporary file",
+	  argv[optargc]);
+      }
+      free(krb5cc_path);
+      return PAM_SYSTEM_ERR;
+    }
+    (void) close(tmp_fd);
+
+    if (asprintf(&krb5cc_envstr, "KRB5CCNAME=FILE:%s", krb5cc_path) < 0) {
+      pam_error (pamh, "%s failed: could not setup KRB5CCNAME", argv[optargc]);
+      free(krb5cc_path);
+      return PAM_SYSTEM_ERR;
+    }
+
+    if (pam_putenv(pamh, krb5cc_envstr) != PAM_SUCCESS) {
+      if (!quiet) {
+	pam_error (pamh, _("%s failed: failed to set KRB5CCNAME"),
+		   argv[optargc]);
+      }
+      free(krb5cc_path);
+      free(krb5cc_envstr);
+      return PAM_SYSTEM_ERR;
+    }
+
+    free(krb5cc_path);
+  }
 
   if (expose_authtok == 1)
     {
@@ -223,6 +279,9 @@ call_exec (const char *pam_type, pam_handle_t *pamh,
     {
       int status = 0;
       pid_t retval;
+
+      if (set_krb5ccname)
+	free(krb5cc_envstr);
 
       if (expose_authtok) /* send the password to the child */
 	{
@@ -436,8 +495,8 @@ call_exec (const char *pam_type, pam_handle_t *pamh,
       for (envlen = 0; envlist[envlen] != NULL; ++envlen)
         /* nothing */ ;
       nitems = sizeof(env_items) / sizeof(*env_items);
-      /* + 2 because of PAM_TYPE and NULL entry */
-      tmp = realloc(envlist, (envlen + nitems + 2) * sizeof(*envlist));
+      /* + 3 because of PAM_TYPE, KRB5CCNAME and NULL entry */
+      tmp = realloc(envlist, (envlen + nitems + 3) * sizeof(*envlist));
       if (tmp == NULL)
       {
         free(envlist);
@@ -469,6 +528,11 @@ call_exec (const char *pam_type, pam_handle_t *pamh,
         }
       envlist[envlen++] = envstr;
       envlist[envlen] = NULL;
+
+      if (set_krb5ccname) {
+	envlist[envlen++] = krb5cc_envstr;
+	envlist[envlen] = NULL;
+      }
 
       if (debug)
 	pam_syslog (pamh, LOG_DEBUG, "Calling %s ...", arggv[0]);
