@@ -20,7 +20,7 @@ class gnome_shell_extensions {
 
   ::gnome_shell_extensions::add_extension {
     [ 'appindicatorsupport@rgcjonas.gmail.com'
-    , 'audio-switcher@AndresCidoncha'
+    , 'audio-menu-modifier@puavo.org'
     , 'bottompanel@tmoer93'
     , 'dash-to-panel@jderose9.github.com'
     , 'extend-left-box2@linuxdeepin.com'
