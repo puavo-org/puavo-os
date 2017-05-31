@@ -120,6 +120,9 @@ network_manager
     Allow users to modify network manager connections, but clean them
     up so that those modifications are (normally) only temporary.
 
+nss
+    Setup /etc/nsswitch.conf.
+
 opinsys_apt_repositories
     The public apt repositories maintained by Opinsys.
 
