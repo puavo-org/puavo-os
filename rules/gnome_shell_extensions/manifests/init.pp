@@ -31,6 +31,7 @@ class gnome_shell_extensions {
     , 'Move_Clock@rmy.pobox.com'
     , 'Panel_Favorites@rmy.pobox.com'
     , 'TopIcons@phocean.net'
+    , 'uparrows@puavo.org'
     , 'webmenu@puavo.org'
     , 'window-list-mod@puavo.org' ]:
       ;
