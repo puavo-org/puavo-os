@@ -13,13 +13,16 @@ PUAVO_SESSION_OK=0
 PUAVO_SESSION_OLD=1
 PUAVO_SESSION_FAIL=2
 
+PUAVO_SESSION_DIR="/var/lib/puavo-desktop/users/${PAM_USER}"
+PUAVO_SESSION_FILE="${PUAVO_SESSION_DIR}/puavo_session.json"
+
 # XXX for development debugging
 # env
 
 # XXX DOCUMENTATION!
 # XXX LOGGING!
 
-mode=${1:-immediate}
+mode="${1:-immediate}"
 
 if [ -z "${KRB5CCNAME:-}" ]; then
   exit "$PAM_SYSTEM_ERR"
@@ -51,6 +54,10 @@ esac
 
 user_password=$(cat) || exit "$PAM_SYSTEM_ERR"
 
+#
+# main subroutines
+#
+
 user_has_session() {
   timeout -k 1 10 loginctl user-status "$PAM_USER" >/dev/null 2>&1
 }
@@ -60,7 +67,7 @@ authenticate_user() {
   kinit_msg=$(
     echo "$user_password" \
       | timeout -k 1 10 env LANG=C \
-      	  kinit -f -l 5d -r 7d "$PAM_USER" 2>&1) || authenticate_user_status=$?
+	  kinit -f -l 5d -r 7d "$PAM_USER" 2>&1) || authenticate_user_status=$?
 
   # May fail because uid may not be known yet.
   # "open_session" should fix that, but that is not enough
@@ -80,40 +87,207 @@ authenticate_user() {
 }
 
 get_puavo_session() {
-  session_fetch_timeout=${1:-}
+  session_fetch_timeout="${1:-}"
   shift		# the rest of the arguments go to puavo-rest-client
 
+  puavo_session_status="$PUAVO_SESSION_FAIL"
+
+  puavo_hostname="$(cat /etc/puavo/hostname 2>/dev/null)" \
+    || return "$puavo_session_status"
+
+  if [ -s "${PUAVO_SESSION_FILE}" ]; then
+    # If we have an old session, so this is not a complete failure.
+    puavo_session_status="$PUAVO_SESSION_OLD"
+  fi
+
   if [ -z "$session_fetch_timeout" ]; then
-    # If we have a previous session data, keep the fetch timeout shorter
+    session_fetch_timeout=40
+
+    # If we have a previous session data, keep the fetch timeout very short
     # because usually any session data we have is good enough.
-    if [ -s "${puavo_session_file}" ]; then
+    if [ -s "${PUAVO_SESSION_FILE}" ]; then
       session_fetch_timeout=4
-    else
-      session_fetch_timeout=15
     fi
   fi
 
-  puavo_hostname="$(cat /etc/puavo/hostname 2>/dev/null)" \
-    || return "$PUAVO_SESSION_FAIL"
+  mkdir -p "$PUAVO_SESSION_DIR"
 
-  puavo_session_file="/var/lib/puavo-desktop/users/${PAM_USER}/puavo_session.json"
   session_status=0
   timeout -k 1 "$session_fetch_timeout" /usr/sbin/puavo-rest-client \
-    --data "hostname=${puavo_hostname}" "$@" v3/sessions \
-    > "${puavo_session_file}.tmp" || session_status=$?
+    --data "hostname=${puavo_hostname}" --max-time 15 "$@" v3/sessions \
+    > "${PUAVO_SESSION_FILE}.tmp" || session_status=$?
 
-  if [ "$session_status" -eq 0 -a -s "${puavo_session_file}.tmp" ]; then
-    mv "${puavo_session_file}.tmp" "${puavo_session_file}" \
-      && return "$PUAVO_SESSION_OK"
+  if [ "$session_status" -eq 0 -a -s "${PUAVO_SESSION_FILE}.tmp" ]; then
+    if mv "${PUAVO_SESSION_FILE}.tmp" "${PUAVO_SESSION_FILE}"; then
+      puavo_session_status="$PUAVO_SESSION_OK"
+    fi
   fi
 
-  if [ -s "${puavo_session_file}" ]; then
-    # though fetching new session failed, we have an old session
-    return "$PUAVO_SESSION_OLD"
+  rm -f "${PUAVO_SESSION_FILE}.tmp"
+
+  if ! update_extrausers; then
+    puavo_session_status="$PUAVO_SESSION_FAIL"
   fi
 
-  return "$PUAVO_SESSION_FAIL"
+  return "$puavo_session_status"
 }
+
+update_extrausers() {
+  update_extrausers_status=0
+
+  extrausers_new_passwd || update_extrausers_status=1
+  extrausers_new_group  || update_extrausers_status=1
+
+  return "$update_extrausers_status"
+}
+
+#
+# subroutines needed by update_extrausers
+#
+
+session_get_username() {
+  jq -r '.user.username' "$PUAVO_SESSION_FILE"
+}
+
+session_get_user() {
+  jq -r '
+    .user.username
+      + ":" + "x"
+      + ":" + (.user.uid_number|tostring)
+      + ":" + (.user.gid_number|tostring)
+      + ":" + .user.first_name + " " + .user.last_name
+      + ":" + "/home/" + .user.username
+      + ":" + "/bin/bash"
+  ' "$PUAVO_SESSION_FILE"
+}
+
+session_get_groups() {
+  jq -r '
+    .user.groups
+    | map( .abbreviation + ":" + (.gid_number|tostring))
+    | .[]
+  ' "$PUAVO_SESSION_FILE"
+}
+
+extrausers_new_passwd() {
+  passwd_file_path='/var/lib/extrausers/passwd'
+
+  new_user="$(session_get_user)" || return 1
+  [ -n "$new_user" ]             || return 1
+
+  [ -e "$passwd_file_path" ] || touch "$passwd_file_path"
+
+  new_passwd_data="$(
+    echo "$new_user" | gawk -F: '
+      # map users by uid, filter out duplicates,
+      # possible adding the new user or modifying it
+      { users[$3] = $0 }
+      END { for (user in users) { print users[user] } }
+    ' "$passwd_file_path" /dev/stdin)" || return 1
+
+  echo "$new_passwd_data" \
+    | sort_and_replace_extrausers_file_from_stdin "$passwd_file_path"
+}
+
+extrausers_new_group() {
+  group_file_path='/var/lib/extrausers/group'
+
+  user_groups="$(session_get_groups)" || return 1
+  username="$(session_get_username)"  || return 1
+
+  [ -e "$group_file_path" ] || touch "$group_file_path"
+
+  new_group_data="$(
+    gawk -F: -v username="$username" -v user_groups="$user_groups" '
+      # map groups by gid, filter out duplicates,
+      # possible adding the user to some groups and removing from others
+
+      BEGIN {
+	user_group_count = split(user_groups, user_groups_array, "\n")
+	for (i = 1; i <= user_group_count; i++) {
+	  split(user_groups_array[i], newgroup_info, ":")
+	  newgroup_name = newgroup_info[1]
+	  newgroup_gid  = newgroup_info[2]
+
+	  new_groups_members[ newgroup_gid ] = username
+	  new_groups_names[   newgroup_gid ] = newgroup_name
+	}
+      }
+
+      {
+	oldgroup_name = $1
+	oldgroup_gid  = $3
+	split($4, oldgroup_members, ",")
+
+	if (!(oldgroup_gid in new_groups_names)) {
+	  new_groups_names[ oldgroup_gid ] = oldgroup_name
+	}
+
+	for (i in oldgroup_members) {
+	  member_user = oldgroup_members[i]
+
+	  # Filter out the current user... if it was not already listed in
+	  # new_groups_members[oldgroup_gid], it must be deleted.
+	  if (member_user == username) { continue }
+
+	  new_groups_members[oldgroup_gid] =                       \
+	    (new_groups_members[oldgroup_gid] == "")               \
+	      ? member_user                                        \
+	      : (new_groups_members[oldgroup_gid] "," member_user)
+	}
+      }
+
+      END {
+	for (gid in new_groups_names) {
+          # drop groups with no members
+	  if (new_groups_members[gid] == "") { continue }
+
+	  members_list = ""
+	  split(new_groups_members[gid], sorted_members_array, ",")
+	  asort(sorted_members_array)
+
+	  for (i in sorted_members_array) {
+	    members_list =                                   \
+	      (members_list == "")                           \
+		? sorted_members_array[i]                    \
+		: (members_list "," sorted_members_array[i])
+	  }
+
+	  printf("%s:x:%d:%s\n", new_groups_names[gid], gid, members_list)
+	}
+      }
+    ' "$group_file_path")" || return 1
+
+  echo "$new_group_data" \
+    | sort_and_replace_extrausers_file_from_stdin "$group_file_path"
+}
+
+sort_and_replace_extrausers_file_from_stdin() {
+  filepath="$1"
+
+  # clean up possible old cruft
+  for path in ${filepath}.tmp_*; do
+    rm -f "$path"
+  done
+
+  extrausers_tempfile="$(mktemp "${filepath}.tmp_XXXXXX")" || return 1
+  chmod 644 "$extrausers_tempfile" || return 1
+
+  # data from stdin
+  sort -k 3 -n -t ':' > "$extrausers_tempfile" || return 1
+
+  if ! cmp "$extrausers_tempfile" "$filepath" 2>/dev/null; then
+    mv "$extrausers_tempfile" "$filepath" || return 1
+  else
+    rm -f "$extrausers_tempfile"
+  fi
+
+  return 0
+}
+
+#
+# main
+#
 
 if [ "$mode" = 'guest' ]; then
   # ignore session errors on guest user
@@ -136,7 +310,7 @@ if [ "$mode" = 'immediate' ]; then
 
   # Fetch user session information from puavo if auth was okay.
   puavo_session_status="$PUAVO_SESSION_OK"
-  get_puavo_session '' --user-krb5 || puavo_session_status=$?
+  get_puavo_session '' --user-krb || puavo_session_status=$?
   if [ "$puavo_session_status" = 'PUAVO_SESSION_OK' ]; then
     exit "$PAM_SUCCESS"
   fi
@@ -174,7 +348,7 @@ fi
       # Fetch user session information from puavo if auth was okay.
       # It is not serious if we fail.  It is okay to wait for a longer
       # time, in deferred mode we do not delay logins.
-      get_puavo_session 60 --user-krb5 || true
+      get_puavo_session 60 --user-krb || true
     fi
 
     exit "$auth_status"
