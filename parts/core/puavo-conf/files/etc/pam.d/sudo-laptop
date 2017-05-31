@@ -1,22 +1,17 @@
 #%PAM-1.0
 
-auth       required   pam_env.so readenv=1 user_readenv=0
-auth       required   pam_env.so readenv=1 envfile=/etc/default/locale user_readenv=0
-auth       required   pam_env.so readenv=1 envfile=/etc/environment.puavo user_readenv=0
+auth    required   pam_env.so readenv=1 user_readenv=0
+auth    required   pam_env.so readenv=1 envfile=/etc/default/locale user_readenv=0
+auth    required   pam_env.so readenv=1 envfile=/etc/environment.puavo user_readenv=0
 
-auth    [success=2 default=ignore]      pam_unix.so nullok_secure
-auth    [success=1 default=ignore]      pam_sss.so use_first_pass
-auth    requisite                       pam_deny.so
-auth    required                        pam_permit.so
+auth    [authinfo_unavail=ignore success=1 perm_denied=2 default=3]   pam_puavo.so      exitcode_to_pam expose_authtok quiet set_krb5ccname /usr/lib/puavo-ltsp-client/pam/puavo-login immediate
+auth    [success=3 default=2]           pam_ccreds.so   action=validate use_first_pass
+auth    [default=3]                     pam_ccreds.so   action=store
+auth    required                        pam_ccreds.so   action=update
+auth    required                        pam_deny.so
+auth    optional                        pam_puavo.so    expose_authtok quiet /usr/lib/puavo-ltsp-client/pam/puavo-login cached-auth
+
 auth    optional                        pam_cap.so
 
-account    [success=2 default=ignore]      pam_unix.so
-account    [success=1 default=ignore]      pam_sss.so
-account    requisite                       pam_deny.so
-account    required                        pam_permit.so
-
-session    [success=2 default=ignore]      pam_unix.so
-session    [success=1 default=ignore]      pam_sss.so
-session    requisite                       pam_deny.so
-session    required                        pam_permit.so
-session    optional                        pam_umask.so
+account    required     pam_permit.so
+session    required     pam_permit.so
