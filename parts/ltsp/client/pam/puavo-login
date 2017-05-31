@@ -317,14 +317,22 @@ if [ "$mode" = 'immediate' ]; then
 
   # Try to fetch new puavo-session in deferred mode.
   # Note that we know the auth status is PAM_SUCCESS now.
-  mode='deferred'
+  mode='deferred-session-fetch'
 fi
 
-if [ "$mode" != 'deferred' ]; then
+if [ "$mode" != 'cached-auth' -a "$mode" != 'deferred-session-fetch' ]; then
   exit "$PAM_SYSTEM_ERR"
 fi
 
-# deferred mode
+# cached-auth and deferred-session-fetch modes
+
+# When gone through cached authentication, do extrausers update here as well,
+# because we might have a case were we have a broken extrausers-database
+# (should never happen), a successful auth through cached credentials, and
+# proper user session information.
+if [ "$mode" = 'cached-auth' ]; then
+  update_extrausers 2>/dev/null || true
+fi
 
 (
   # wait that user gets a login session
@@ -335,7 +343,7 @@ fi
 
   while user_has_session; do
     auth_status="$PAM_SUCCESS"
-    if [ ! -s "$krb5_ticketpath" ]; then
+    if [ "$mode" = 'cached-auth' ]; then
       authenticate_user || auth_status=$?
     fi
 
