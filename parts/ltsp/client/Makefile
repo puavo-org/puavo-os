@@ -138,6 +138,7 @@ install : installdirs
 		pam/check-if-account-is-locked \
 		pam/open-session \
 		pam/puavo-local-config-setup \
+		pam/puavo-login \
 		pam/populate-extrausers \
 		pam/restrict-logins-by-local-config
 

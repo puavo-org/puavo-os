@@ -1,0 +1,186 @@
+#!/bin/sh
+
+# NOT using "set -eu", we want to control exit codes exactly.
+# set -x; exec > /tmp/puavo-login.$$.log 2>&1	# for development debugging
+
+# from /usr/include/security/_pam_types.h
+PAM_SUCCESS=0
+PAM_SYSTEM_ERR=4
+PAM_PERM_DENIED=6
+PAM_AUTHINFO_UNAVAIL=9
+
+PUAVO_SESSION_OK=0
+PUAVO_SESSION_OLD=1
+PUAVO_SESSION_FAIL=2
+
+# XXX for development debugging
+# env
+
+# XXX DOCUMENTATION!
+# XXX LOGGING!
+
+mode=${1:-immediate}
+
+if [ -z "${KRB5CCNAME:-}" ]; then
+  exit "$PAM_SYSTEM_ERR"
+fi
+export KRB5CCNAME
+
+krb5_ticketpath="${KRB5CCNAME#FILE:}"
+
+case "$PAM_TYPE" in
+  auth)
+    ;;
+  close_session)
+    rm -f "${krb5_ticketpath}" || exit "$PAM_SYSTEM_ERR"
+    exit "$PAM_SUCCESS"
+    ;;
+  open_session)
+    # guest session does not have "${krb5_ticketpath}"
+    if [ -e "${krb5_ticketpath}" ]; then
+      chown "${PAM_USER}:" "${krb5_ticketpath}" || exit "$PAM_SYSTEM_ERR"
+    fi
+    exit "$PAM_SUCCESS"
+    ;;
+  *)
+    exit "$PAM_SYSTEM_ERR"
+    ;;
+esac
+
+# now PAM_TYPE == "auth"
+
+user_password=$(cat) || exit "$PAM_SYSTEM_ERR"
+
+user_has_session() {
+  timeout -k 1 10 loginctl user-status "$PAM_USER" >/dev/null 2>&1
+}
+
+authenticate_user() {
+  authenticate_user_status=0
+  kinit_msg=$(
+    echo "$user_password" \
+      | timeout -k 1 10 env LANG=C \
+      	  kinit -f -l 5d -r 7d "$PAM_USER" 2>&1) || authenticate_user_status=$?
+
+  # May fail because uid may not be known yet.
+  # "open_session" should fix that, but that is not enough
+  # for every situation.
+  chown "${PAM_USER}:" "${krb5_ticketpath}" 2>/dev/null || true
+
+  if [ "$authenticate_user_status" -eq 0 ]; then
+    return "$PAM_SUCCESS"
+  fi
+
+  if echo "$kinit_msg" \
+    | grep -Eq '(not found in Kerberos database|Password incorrect)'; then
+      return "$PAM_PERM_DENIED"
+  fi
+
+  return "$PAM_AUTHINFO_UNAVAIL"
+}
+
+get_puavo_session() {
+  session_fetch_timeout=${1:-}
+  shift		# the rest of the arguments go to puavo-rest-client
+
+  if [ -z "$session_fetch_timeout" ]; then
+    # If we have a previous session data, keep the fetch timeout shorter
+    # because usually any session data we have is good enough.
+    if [ -s "${puavo_session_file}" ]; then
+      session_fetch_timeout=4
+    else
+      session_fetch_timeout=15
+    fi
+  fi
+
+  puavo_hostname="$(cat /etc/puavo/hostname 2>/dev/null)" \
+    || return "$PUAVO_SESSION_FAIL"
+
+  puavo_session_file="/var/lib/puavo-desktop/users/${PAM_USER}/puavo_session.json"
+  session_status=0
+  timeout -k 1 "$session_fetch_timeout" /usr/sbin/puavo-rest-client \
+    --data "hostname=${puavo_hostname}" "$@" v3/sessions \
+    > "${puavo_session_file}.tmp" || session_status=$?
+
+  if [ "$session_status" -eq 0 -a -s "${puavo_session_file}.tmp" ]; then
+    mv "${puavo_session_file}.tmp" "${puavo_session_file}" \
+      && return "$PUAVO_SESSION_OK"
+  fi
+
+  if [ -s "${puavo_session_file}" ]; then
+    # though fetching new session failed, we have an old session
+    return "$PUAVO_SESSION_OLD"
+  fi
+
+  return "$PUAVO_SESSION_FAIL"
+}
+
+if [ "$mode" = 'guest' ]; then
+  # ignore session errors on guest user
+  if [ -e /run/puavo/nbd-server ]; then
+    get_puavo_session '' --user-bootserver || true
+  else
+    get_puavo_session '' --user-etc || true
+  fi
+
+  exit "$PAM_SUCCESS"
+fi
+
+if [ "$mode" = 'immediate' ]; then
+  auth_status="$PAM_SUCCESS"
+  authenticate_user || auth_status="$?"
+
+  if [ "$auth_status" -ne "$PAM_SUCCESS" ]; then
+    exit "$auth_status"
+  fi
+
+  # Fetch user session information from puavo if auth was okay.
+  puavo_session_status="$PUAVO_SESSION_OK"
+  get_puavo_session '' --user-krb5 || puavo_session_status=$?
+  if [ "$puavo_session_status" = 'PUAVO_SESSION_OK' ]; then
+    exit "$PAM_SUCCESS"
+  fi
+
+  # Try to fetch new puavo-session in deferred mode.
+  # Note that we know the auth status is PAM_SUCCESS now.
+  mode='deferred'
+fi
+
+if [ "$mode" != 'deferred' ]; then
+  exit "$PAM_SYSTEM_ERR"
+fi
+
+# deferred mode
+
+(
+  # wait that user gets a login session
+  for i in 1 2 4 8 16 32 64; do
+    user_has_session && break
+    sleep $i
+  done
+
+  while user_has_session; do
+    auth_status="$PAM_SUCCESS"
+    if [ ! -s "$krb5_ticketpath" ]; then
+      authenticate_user || auth_status=$?
+    fi
+
+    if [ "$auth_status" -eq "$PAM_AUTHINFO_UNAVAIL" ]; then
+      sleep 20
+      continue
+    fi
+
+    if [ "$auth_status" -eq "$PAM_SUCCESS" ]; then
+      # Fetch user session information from puavo if auth was okay.
+      # It is not serious if we fail.  It is okay to wait for a longer
+      # time, in deferred mode we do not delay logins.
+      get_puavo_session 60 --user-krb5 || true
+    fi
+
+    exit "$auth_status"
+  done
+
+  exit "$PAM_AUTHINFO_UNAVAIL"
+) &
+
+exit "$PAM_SUCCESS"
