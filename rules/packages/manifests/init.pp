@@ -189,6 +189,7 @@ class packages {
     , 'freeciv-client-gtk'
     , 'gcompris'
     , 'gcompris-sound-en'
+    , 'gcompris-sound-de'
     , 'gcompris-sound-fi'
     , 'gcompris-sound-sv'
     , 'gnubg'
