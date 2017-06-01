@@ -90,9 +90,7 @@ cd /
 
 {
   echo starting...
-  service sssd stop || true
   find /var/lib/sss/db/ -mindepth 1 -print0 | xargs -0 rm -vrf
-  service sssd start || true
   echo done.
 } 2>&1 | sed 's|^|>>>>> Cleaning up sssd-cache - |'
 

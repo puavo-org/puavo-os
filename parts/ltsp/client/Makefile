@@ -68,9 +68,6 @@ install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-conf/profile-overwrites \
 		profile-overwrites/*.json
 
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/network/if-up.d \
-		etc/network/if-up.d/sssd
-
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/gdm/greeter/autostart \
 		etc/xdg/autostart/puavo-run-xrandr.desktop
 
@@ -107,7 +104,6 @@ install : installdirs
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/puavo-vpn-client/scripts/route-up \
 		etc/puavo-vpn-client/scripts/route-up/10-dnsmasq \
-		etc/puavo-vpn-client/scripts/route-up/20-sssd \
 		etc/puavo-vpn-client/scripts/route-up/30-ntpdate
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/NetworkManager/dispatcher.d \
