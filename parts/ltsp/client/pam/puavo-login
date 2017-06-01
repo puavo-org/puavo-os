@@ -12,6 +12,8 @@ PAM_AUTHINFO_UNAVAIL=9
 PUAVO_SESSION_DIR="/var/lib/puavo-desktop/users/${PAM_USER}"
 PUAVO_SESSION_FILE="${PUAVO_SESSION_DIR}/puavo_session.json"
 
+USER_MINIMUM_UID=10000
+
 # XXX for development debugging
 # env
 
@@ -54,10 +56,6 @@ user_password=$(cat) || exit "$PAM_SYSTEM_ERR"
 # main subroutines
 #
 
-user_has_session() {
-  timeout -k 1 10 loginctl user-status "$PAM_USER" >/dev/null 2>&1
-}
-
 authenticate_user() {
   authenticate_user_status=0
   kinit_msg=$(
@@ -80,6 +78,12 @@ authenticate_user() {
   fi
 
   return "$PAM_AUTHINFO_UNAVAIL"
+}
+
+check_user_uid() {
+  user_uid="$(id -u "$1" 2>/dev/null)" || return 1
+
+  [ "$user_uid" -ge "$USER_MINIMUM_UID" ]
 }
 
 get_puavo_session() {
@@ -127,6 +131,10 @@ update_extrausers() {
   return "$update_extrausers_status"
 }
 
+user_has_session() {
+  timeout -k 1 10 loginctl user-status "$PAM_USER" >/dev/null 2>&1
+}
+
 #
 # subroutines needed by update_extrausers
 #
@@ -164,10 +172,10 @@ extrausers_new_passwd() {
   [ -e "$passwd_file_path" ] || touch "$passwd_file_path"
 
   new_passwd_data="$(
-    echo "$new_user" | gawk -F: '
+    echo "$new_user" | gawk -F: -v minimum_uid=10000 '
       # map users by uid, filter out duplicates,
       # possible adding the new user or modifying it
-      { users[$3] = $0 }
+      $3 >= minimum_uid { users[$3] = $0 }
       END { for (user in users) { print users[user] } }
     ' "$passwd_file_path" /dev/stdin)" || return 1
 
@@ -184,7 +192,9 @@ extrausers_new_group() {
   [ -e "$group_file_path" ] || touch "$group_file_path"
 
   new_group_data="$(
-    gawk -F: -v username="$username" -v user_groups="$user_groups" '
+    gawk -F: -v username="$username" \
+             -v user_groups="$user_groups" \
+             -v minimum_gid=10000 '
       # map groups by gid, filter out duplicates,
       # possible adding the user to some groups and removing from others
 
@@ -195,6 +205,8 @@ extrausers_new_group() {
 	  newgroup_name = newgroup_info[1]
 	  newgroup_gid  = newgroup_info[2]
 
+          if (newgroup_gid < minimum_gid) { continue }
+
 	  new_groups_members[ newgroup_gid ] = username
 	  new_groups_names[   newgroup_gid ] = newgroup_name
 	}
@@ -204,6 +216,8 @@ extrausers_new_group() {
 	oldgroup_name = $1
 	oldgroup_gid  = $3
 	split($4, oldgroup_members, ",")
+
+        if (oldgroup_gid < minimum_gid) { next }
 
 	if (!(oldgroup_gid in new_groups_names)) {
 	  new_groups_names[ oldgroup_gid ] = oldgroup_name
@@ -302,8 +316,9 @@ if [ "$mode" = 'immediate' ]; then
   fi
 
   # Either we have no session or update_extrausers failed.
-  # That is serious only if $PAM_USER does not exist.
-  id -u "$PAM_USER" >/dev/null 2>&1 || exit "$PAM_SYSTEM_ERR"
+  # That is serious only if $PAM_USER does not exist or is invalid.
+  check_user_uid "$PAM_USER" || exit "$PAM_SYSTEM_ERR"
+
   mode='deferred-session-fetch'
 fi
 
@@ -318,10 +333,8 @@ fi
 # (should never happen), a successful auth through cached credentials, and
 # proper user session information.
 if [ "$mode" = 'cached-auth' ]; then
-  if ! update_extrausers; then
-    # This error is serious only if $PAM_USER does not exist.
-    id -u "$PAM_USER" >/dev/null 2>&1 || exit "$PAM_SYSTEM_ERR"
-  fi
+  update_extrausers || true
+  check_user_uid "$PAM_USER" || exit "$PAM_SYSTEM_ERR"
 fi
 
 (
