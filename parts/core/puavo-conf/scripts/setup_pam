@@ -9,6 +9,9 @@ pam_install() {
 pam_install /etc/puavo-conf/files/etc/pam.d/gdm-autologin \
             /etc/pam.d/gdm-autologin
 
+pam_install /etc/puavo-conf/files/etc/pam.d/sudo \
+            /etc/pam.d/sudo
+
 # XXX get rid of hosttype handling
 case "$(puavo-conf puavo.hosttype)" in
   fatclient)
