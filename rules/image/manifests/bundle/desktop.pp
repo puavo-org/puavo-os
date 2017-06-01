@@ -20,7 +20,7 @@ class image::bundle::desktop {
   include ::smartboard
   include ::supplementary_groups
   include ::ti_nspire_cx_cas
-  # include ::tuxpaint	                # XXX needs fixing for Debian
+  include ::tuxpaint
   include ::wacom
   include ::workaround_firefox_local_swf_bug
   include ::xorg_inputs_calibration
