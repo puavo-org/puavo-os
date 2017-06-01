@@ -106,7 +106,7 @@ get_puavo_session() {
 
   session_status=0
   timeout -k 1 "$session_fetch_timeout" /usr/sbin/puavo-rest-client \
-    --data "hostname=${puavo_hostname}" --max-time 15 "$@" v3/sessions \
+    --data "hostname=${puavo_hostname}" --max-time 30 "$@" v3/sessions \
     > "${PUAVO_SESSION_FILE}.tmp" || session_status=$?
 
   if [ "$session_status" -eq 0 -a -s "${PUAVO_SESSION_FILE}.tmp" ]; then
