@@ -88,9 +88,7 @@ check_user_uid() {
 
 get_puavo_session() {
   session_fetch_timeout="${1:-}"
-  shift		# the rest of the arguments go to puavo-rest-client
-
-  puavo_hostname="$(cat /etc/puavo/hostname 2>/dev/null)" || return 1
+  shift		# the rest of the arguments go to puavo-rest-request
 
   if [ -z "$session_fetch_timeout" ]; then
     session_fetch_timeout=40
@@ -105,8 +103,7 @@ get_puavo_session() {
   mkdir -p "$PUAVO_SESSION_DIR" || return 1
 
   session_status=0
-  timeout -k 1 "$session_fetch_timeout" /usr/sbin/puavo-rest-client \
-    --data "hostname=${puavo_hostname}" --max-time 30 "$@" v3/sessions \
+  timeout -k 1 "$session_fetch_timeout" puavo-rest-request "$@" \
     > "${PUAVO_SESSION_FILE}.tmp" || session_status=$?
 
   if [ "$session_status" -eq 0 -a -s "${PUAVO_SESSION_FILE}.tmp" ]; then
@@ -292,9 +289,9 @@ sort_and_replace_extrausers_file_from_stdin() {
 if [ "$mode" = 'guest' ]; then
   # ignore session errors on guest user
   if [ -e /run/puavo/nbd-server ]; then
-    get_puavo_session '' --user-bootserver || true
+    get_puavo_session '' --user-bootserver v3/sessions || true
   else
-    get_puavo_session '' --user-etc || true
+    get_puavo_session '' --user-etc v3/sessions || true
   fi
 
   exit "$PAM_SUCCESS"
@@ -311,7 +308,7 @@ if [ "$mode" = 'immediate' ]; then
   # auth_status is now PAM_SUCCESS
 
   # Fetch user session information from puavo if auth was okay.
-  if get_puavo_session '' --user-krb; then
+  if get_puavo_session '' --user-krb v3/sessions; then
     exit "$PAM_SUCCESS"
   fi
 
@@ -359,7 +356,7 @@ fi
       # Fetch user session information from puavo if auth was okay.
       # It is not serious if we fail.  It is okay to wait for a longer
       # time, in deferred mode we do not delay logins.
-      get_puavo_session 60 --user-krb || true
+      get_puavo_session 60 --user-krb v3/sessions || true
     fi
 
     exit "$auth_status"

@@ -87,7 +87,8 @@ install : installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
 		puavo-pulseaudio-setup \
 		puavo-pulseaudio-list \
-		puavo-remote-assistance-applet
+		puavo-remote-assistance-applet \
+		puavo-rest-request
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-dnssd-printer-client \
