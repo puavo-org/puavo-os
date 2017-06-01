@@ -9,10 +9,6 @@ PAM_SYSTEM_ERR=4
 PAM_PERM_DENIED=6
 PAM_AUTHINFO_UNAVAIL=9
 
-PUAVO_SESSION_OK=0
-PUAVO_SESSION_OLD=1
-PUAVO_SESSION_FAIL=2
-
 PUAVO_SESSION_DIR="/var/lib/puavo-desktop/users/${PAM_USER}"
 PUAVO_SESSION_FILE="${PUAVO_SESSION_DIR}/puavo_session.json"
 
@@ -90,27 +86,19 @@ get_puavo_session() {
   session_fetch_timeout="${1:-}"
   shift		# the rest of the arguments go to puavo-rest-client
 
-  puavo_session_status="$PUAVO_SESSION_FAIL"
-
-  puavo_hostname="$(cat /etc/puavo/hostname 2>/dev/null)" \
-    || return "$puavo_session_status"
-
-  if [ -s "${PUAVO_SESSION_FILE}" ]; then
-    # If we have an old session, so this is not a complete failure.
-    puavo_session_status="$PUAVO_SESSION_OLD"
-  fi
+  puavo_hostname="$(cat /etc/puavo/hostname 2>/dev/null)" || return 1
 
   if [ -z "$session_fetch_timeout" ]; then
     session_fetch_timeout=40
 
-    # If we have a previous session data, keep the fetch timeout very short
+    # If we have previous session data, keep the fetch timeout very short
     # because usually any session data we have is good enough.
     if [ -s "${PUAVO_SESSION_FILE}" ]; then
       session_fetch_timeout=4
     fi
   fi
 
-  mkdir -p "$PUAVO_SESSION_DIR"
+  mkdir -p "$PUAVO_SESSION_DIR" || return 1
 
   session_status=0
   timeout -k 1 "$session_fetch_timeout" /usr/sbin/puavo-rest-client \
@@ -118,18 +106,16 @@ get_puavo_session() {
     > "${PUAVO_SESSION_FILE}.tmp" || session_status=$?
 
   if [ "$session_status" -eq 0 -a -s "${PUAVO_SESSION_FILE}.tmp" ]; then
-    if mv "${PUAVO_SESSION_FILE}.tmp" "${PUAVO_SESSION_FILE}"; then
-      puavo_session_status="$PUAVO_SESSION_OK"
-    fi
+    mv "${PUAVO_SESSION_FILE}.tmp" "${PUAVO_SESSION_FILE}" || true
   fi
 
   rm -f "${PUAVO_SESSION_FILE}.tmp"
 
-  if ! update_extrausers; then
-    puavo_session_status="$PUAVO_SESSION_FAIL"
-  fi
+  update_extrausers || return 1
 
-  return "$puavo_session_status"
+  # If we have a puavo-session file, we have a success
+  # (even if the file is old).
+  [ -s "{PUAVO_SESSION_FILE}" ]
 }
 
 update_extrausers() {
@@ -308,15 +294,16 @@ if [ "$mode" = 'immediate' ]; then
     exit "$auth_status"
   fi
 
+  # auth_status is now PAM_SUCCESS
+
   # Fetch user session information from puavo if auth was okay.
-  puavo_session_status="$PUAVO_SESSION_OK"
-  get_puavo_session '' --user-krb || puavo_session_status=$?
-  if [ "$puavo_session_status" = 'PUAVO_SESSION_OK' ]; then
+  if get_puavo_session '' --user-krb; then
     exit "$PAM_SUCCESS"
   fi
 
-  # Try to fetch new puavo-session in deferred mode.
-  # Note that we know the auth status is PAM_SUCCESS now.
+  # Either we have no session or update_extrausers failed.
+  # That is serious only if $PAM_USER does not exist.
+  id -u "$PAM_USER" >/dev/null 2>&1 || exit "$PAM_SYSTEM_ERR"
   mode='deferred-session-fetch'
 fi
 
@@ -331,7 +318,10 @@ fi
 # (should never happen), a successful auth through cached credentials, and
 # proper user session information.
 if [ "$mode" = 'cached-auth' ]; then
-  update_extrausers 2>/dev/null || true
+  if ! update_extrausers; then
+    # This error is serious only if $PAM_USER does not exist.
+    id -u "$PAM_USER" >/dev/null 2>&1 || exit "$PAM_SYSTEM_ERR"
+  fi
 fi
 
 (
