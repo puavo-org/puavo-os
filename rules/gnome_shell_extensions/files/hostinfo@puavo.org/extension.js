@@ -51,17 +51,24 @@ const HostInfoButton = new Lang.Class(
         this.parent(0.0);
 
         // ---------------------------------------------------------------------
-        // Create the toolbar button
+        // Create the panel button
 
-        this.captionLabel = new St.Label({
-            text: hostType + " | " + releaseName + " | " + hostName
+        this.captionContainer = new St.BoxLayout({
+            style_class: "panel-status-menu-box"
         });
 
+        this.captionContainer.add_child(new St.Label({
+            text: hostType + " | " + releaseName + " | " + hostName
+        }));
+
+        this.captionContainer.add_child(new PopupMenu.arrowIcon(St.Side.TOP));
+
+        // I can't get the text centered vertically without an St.Bin
         this.captionBin = new St.Bin({
             name: "HostInfoButtonBin"
         });
 
-        this.captionBin.add_actor(this.captionLabel);
+        this.captionBin.add_actor(this.captionContainer);
         this.actor.add_actor(this.captionBin);
 
         // ---------------------------------------------------------------------
