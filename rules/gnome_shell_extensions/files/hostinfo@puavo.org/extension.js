@@ -94,7 +94,6 @@ const HostInfoButton = new Lang.Class(
             // startup. It's nearly impossible to run that script (as root!) here
             // asynchronously without losing sanity.
             const json = JSON.parse(readTextFile("/run/puavo/puavo-sysinfo.json"));
-            const now = Date.now() / 1000;
 
             this.category(c, "Release");
             this.titleValue(c, "Image", jval(json, "this_image"));
