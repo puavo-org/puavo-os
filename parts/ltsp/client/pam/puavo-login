@@ -25,6 +25,11 @@ mode="${1:-immediate}"
 
 logmsg() { logger -p "auth.$1" -t puavo-login "user ${PAM_USER} / mode $mode :: $2"; }
 
+if [ "$mode" = 'cached-fail' ]; then
+  logmsg notice 'cached credentials auth was DENIED'
+  exit "$PAM_PERM_DENIED"
+fi
+
 if [ -z "${KRB5CCNAME:-}" ]; then
   logmsg err 'KRB5CCNAME is not set'
   exit "$PAM_SYSTEM_ERR"
@@ -101,6 +106,7 @@ authenticate_user() {
   if echo "$kinit_msg" \
     | grep -Eq '(not found in Kerberos database|Password incorrect)'; then
       logmsg notice 'kerberos auth was DENIED'
+      logmsg notice 'removing cached credentials'	# up to pam_ccreds.so
       return "$PAM_PERM_DENIED"
   fi
 
@@ -376,9 +382,9 @@ sort_and_replace_extrausers_file_from_stdin() {
 
   if ! cmp "$extrausers_tempfile" "$filepath" 2>/dev/null; then
     mv "$extrausers_tempfile" "$filepath" || return 1
-    logmsg notice "updated extrausers db $1 with changes"
+    logmsg notice "updated extrausers db $filepath with changes"
   else
-    logmsg info "no change in extrausers db $1"
+    logmsg info "no change in extrausers db $filepath"
     rm -f "$extrausers_tempfile"
   fi
 
@@ -445,6 +451,8 @@ fi
 # (should never happen), a successful auth through cached credentials, and
 # proper user session information.
 if [ "$mode" = 'cached-auth' ]; then
+  logmsg notice 'cached credentials auth was SUCCESS'
+
   update_extrausers || true
   if ! check_user_uid; then
     logmsg err 'user id does not exist or is invalid'
