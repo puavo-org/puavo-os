@@ -15,7 +15,6 @@ PUAVO_SESSION_FILE="${PUAVO_SESSION_DIR}/puavo_session.json"
 USER_MINIMUM_UID=10000
 
 # XXX DOCUMENTATION!
-# XXX LOGGING!
 
 if [ -z "$PAM_USER" ]; then
   logger -p auth.err -s -t puavo-login 'PAM_USER is not set'
@@ -24,57 +23,6 @@ fi
 mode="${1:-immediate}"
 
 logmsg() { logger -p "auth.$1" -t puavo-login "user ${PAM_USER} / mode $mode :: $2"; }
-
-if [ "$mode" = 'cached-fail' ]; then
-  logmsg notice 'cached credentials auth was DENIED'
-  exit "$PAM_PERM_DENIED"
-fi
-
-if [ -z "${KRB5CCNAME:-}" ]; then
-  logmsg err 'KRB5CCNAME is not set'
-  exit "$PAM_SYSTEM_ERR"
-fi
-export KRB5CCNAME
-
-krb5_ticketpath="${KRB5CCNAME#FILE:}"
-
-is_guest() {
-  id -gn "$PAM_USER" 2>/dev/null | grep -Fqw guest
-}
-
-case "$PAM_TYPE" in
-  auth)
-    ;;
-  close_session)
-    logmsg info 'closing login session'
-    rm -f "${krb5_ticketpath}" || exit "$PAM_SYSTEM_ERR"
-    exit "$PAM_SUCCESS"
-    ;;
-  open_session)
-    logmsg info 'opening login session'
-
-    # guest session does not have "${krb5_ticketpath}"
-    is_guest && exit "$PAM_SUCCESS"
-
-    if ! chown "${PAM_USER}:" "${krb5_ticketpath}" 2>/dev/null; then
-      logmsg err "could not chown ${krb5_ticketpath} at open_session"
-      exit "$PAM_SYSTEM_ERR"
-    fi
-
-    exit "$PAM_SUCCESS"
-    ;;
-  *)
-    logmsg err "unknown PAM_TYPE '${PAM_TYPE}'"
-    exit "$PAM_SYSTEM_ERR"
-    ;;
-esac
-
-# now PAM_TYPE == "auth"
-
-if ! user_password="$(cat)"; then
-  logmsg err 'could not read user password'
-  exit "$PAM_SYSTEM_ERR"
-fi
 
 #
 # main subroutines
@@ -395,21 +343,83 @@ sort_and_replace_extrausers_file_from_stdin() {
 # main
 #
 
-if is_guest; then
-  # Set guest user in even in case of session errors.  Guest uid and gid
-  # are hardcoded session information does not affect it, so session is not
-  # really essential.  Besides guest account should work in every situation
-  # if at all possible.
-  if [ -e /run/puavo/nbd-server ]; then
-    get_puavo_session '' --user-bootserver v3/sessions || true
-  else
-    get_puavo_session '' --user-etc v3/sessions || true
-  fi
+if [ "$PAM_USER" = 'guest' -a "$mode" = 'guest' ]; then
+  case "$PAM_TYPE" in
+    auth)
+      logmsg notice 'letting guest user in without further authentication'
 
-  logmsg notice 'letting guest user in without further authentication'
+      # Setup guest user in even in case of session errors.  Guest uid and gid
+      # are hardcoded session information does not affect it, so session is not
+      # really essential.  Besides guest account should work in every situation
+      # if at all possible.
+      if [ -e /run/puavo/nbd-server ]; then
+	get_puavo_session '' --user-bootserver v3/sessions || true
+      else
+	get_puavo_session '' --user-etc v3/sessions || true
+      fi
 
-  exit "$PAM_SUCCESS"
+      exit "$PAM_SUCCESS"
+      ;;
+    close_session)
+      logmsg info 'closing login session'
+      exit "$PAM_SUCCESS"
+      ;;
+    open_session)
+      logmsg info 'opening login session'
+      exit "$PAM_SUCCESS"
+      ;;
+    *)
+      logmsg err "unknown PAM_TYPE '${PAM_TYPE}'"
+      ;;
+  esac
+
+  exit "$PAM_SYSTEM_ERR"
 fi
+
+# we are not a guest user
+
+if [ "$mode" = 'cached-fail' ]; then
+  logmsg notice 'cached credentials auth was DENIED'
+  exit "$PAM_PERM_DENIED"
+fi
+
+if [ -z "${KRB5CCNAME:-}" ]; then
+  logmsg err 'KRB5CCNAME is not set'
+  exit "$PAM_SYSTEM_ERR"
+fi
+export KRB5CCNAME
+
+krb5_ticketpath="${KRB5CCNAME#FILE:}"
+
+case "$PAM_TYPE" in
+  auth)
+    ;;
+  close_session)
+    logmsg info 'closing login session'
+    rm -f "${krb5_ticketpath}" || exit "$PAM_SYSTEM_ERR"
+    exit "$PAM_SUCCESS"
+    ;;
+  open_session)
+    logmsg info 'opening login session'
+    if ! chown "${PAM_USER}:" "${krb5_ticketpath}" 2>/dev/null; then
+      logmsg err "could not chown ${krb5_ticketpath} at open_session"
+      exit "$PAM_SYSTEM_ERR"
+    fi
+    exit "$PAM_SUCCESS"
+    ;;
+  *)
+    logmsg err "unknown PAM_TYPE '${PAM_TYPE}'"
+    exit "$PAM_SYSTEM_ERR"
+    ;;
+esac
+
+# now PAM_TYPE == "auth"
+
+if ! user_password="$(cat)"; then
+  logmsg err 'could not read user password'
+  exit "$PAM_SYSTEM_ERR"
+fi
+
 
 if [ "$mode" = 'immediate' ]; then
   auth_status="$PAM_SUCCESS"
