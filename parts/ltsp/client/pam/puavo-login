@@ -111,7 +111,7 @@ get_puavo_session() {
 
   update_extrausers || return 1
 
-  if [ ! -s "{PUAVO_SESSION_FILE}" ]; then
+  if [ ! -s "$PUAVO_SESSION_FILE" ]; then
     logmsg err 'we have no puavo session, not even an old one'
     return 1
   fi
