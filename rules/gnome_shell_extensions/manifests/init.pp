@@ -20,7 +20,7 @@ class gnome_shell_extensions {
 
   ::gnome_shell_extensions::add_extension {
     [ 'appindicatorsupport@rgcjonas.gmail.com'
-    , 'audio-switcher@AndresCidoncha'
+    , 'audio-menu-modifier@puavo.org'
     , 'bottompanel@tmoer93'
     , 'dash-to-panel@jderose9.github.com'
     , 'extend-left-box2@linuxdeepin.com'
@@ -30,7 +30,9 @@ class gnome_shell_extensions {
     , 'hostinfo@puavo.org'
     , 'Move_Clock@rmy.pobox.com'
     , 'Panel_Favorites@rmy.pobox.com'
+    , 'show-desktop@l300lvl.tk'
     , 'TopIcons@phocean.net'
+    , 'uparrows@puavo.org'
     , 'webmenu@puavo.org'
     , 'window-list-mod@puavo.org' ]:
       ;

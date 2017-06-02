@@ -1,0 +1,34 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "${command}" in
+    configure)
+	upstream_dir=$1
+
+	ln -fns "${upstream_dir}/usr/google" /usr/google
+
+	cat <<EOF > /usr/share/applications/appinventor.desktop
+[Desktop Entry]
+Name=AppInventor USB
+Exec="xterm /usr/google/appinventor/commands-for-Appinventor/aiStarter"
+Icon=/usr/share/icons/Faenza/devices/96/drive-removable-media-usb.png
+Terminal=false
+Type=Application
+EOF
+	;;
+    unconfigure)
+	rm -rf /usr/google /usr/share/applications/appinventor.desktop
+	;;
+    unpack)
+	upstream_pack=$1
+	upstream_dir=$2
+
+	dpkg -x "${upstream_pack}" "${upstream_dir}"
+	;;
+    *)
+	;;
+esac

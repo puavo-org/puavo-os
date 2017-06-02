@@ -1,0 +1,56 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "${command}" in
+    configure)
+	upstream_dir=$1
+
+	ln -fns "${upstream_dir}/opt/robboscratch2" /opt/robboscratch2
+	ln -fns "${upstream_dir}/usr/share/applications/robboscratch2.desktop" \
+		/usr/share/applications/robboscratch2.desktop
+	ln -fns "${upstream_dir}/usr/share/pixmaps/robboscratch2.png" \
+		/usr/share/pixmaps/robboscratch2.png
+
+	# Custom launch script, the same used in Trusty
+	cat <<'EOF' > /usr/bin/robboscratch2
+#!/bin/sh
+
+set -eu
+
+cd /opt/robboscratch2
+
+CLASSPATH=""
+
+ITEMS=$(find -name '*.jar')
+for ITEM in $ITEMS; do
+   CLASSPATH="$CLASSPATH:$ITEM"
+done
+
+wmctrl -a Flash || true
+
+exec /opt/robboscratch2/java/bin/java -classpath "$CLASSPATH" \
+	-Xmx256m scratchduino.robot.Main
+EOF
+
+	chmod +x /usr/bin/robboscratch2
+
+	;;
+    unconfigure)
+	rm -rf /opt/robboscratch2 \
+/usr/share/applications/robboscratch2.desktop \
+/usr/share/pixmaps/robboscratch2.png \
+/usr/bin/robboscratch2
+	;;
+    unpack)
+	upstream_pack=$1
+	upstream_dir=$2
+
+	dpkg -x "${upstream_pack}" "${upstream_dir}"
+	;;
+    *)
+	;;
+esac

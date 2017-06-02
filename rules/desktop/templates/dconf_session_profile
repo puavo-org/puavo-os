@@ -107,7 +107,7 @@ name='XZoom'
 
 [org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4]
 binding='<Primary><Alt>l'
-command='gnome-screensaver-command --lock'
+command='dbus-send --type=method_call--dest=org.gnome.ScreenSaver /org/gnome/ScreenSaver org.gnome.ScreenSaver.Lock"
 name='Lock screen'
 
 [org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5]
@@ -123,7 +123,7 @@ default-monitors-setup='do-nothing'
 overrides={'Gtk/ShellShowsAppMenu': <0>, 'Gtk/ShellShowsMenubar': <0>, 'Gtk/DecorationLayout': <'menu:minimize,maximize,close'>}
 
 [org/gnome/shell]
-enabled-extensions=['alternate-tab@gnome-shell-extensions.gcampax.github.com', 'appindicatorsupport@rgcjonas.gmail.com', 'audio-switcher@AndresCidoncha', 'bottompanel@tmoer93', 'dash-to-panel@jderose9.github.com', 'extend-left-box2@linuxdeepin.com', 'hide-activities-button@gnome-shell-extensions.bookmarkd.xyz', 'hide-dash@xenatt.github.com', 'hide-aggregatemenu-session-buttons@puavo.org', 'hide-panel-power-indicator@puavo.org', 'launch-new-instance@gnome-shell-extensions.gcampax.github.com', 'Move_Clock@rmy.pobox.com', 'TopIcons@phocean.net', 'user-theme@gnome-shell-extensions.gcampax.github.com', 'webmenu@puavo.org']
+enabled-extensions=['alternate-tab@gnome-shell-extensions.gcampax.github.com', 'appindicatorsupport@rgcjonas.gmail.com', 'audio-menu-modifier@puavo.org', 'bottompanel@tmoer93', 'dash-to-panel@jderose9.github.com', 'extend-left-box2@linuxdeepin.com', 'hide-activities-button@gnome-shell-extensions.bookmarkd.xyz', 'hide-dash@xenatt.github.com', 'hide-aggregatemenu-session-buttons@puavo.org', 'hide-panel-power-indicator@puavo.org', 'launch-new-instance@gnome-shell-extensions.gcampax.github.com', 'Move_Clock@rmy.pobox.com', 'show-desktop@l300lvl.tk', 'TopIcons@phocean.net', 'uparrows@puavo.org', 'user-theme@gnome-shell-extensions.gcampax.github.com', 'webmenu@puavo.org']
 
 [org/gnome/shell/extensions/topicons]
 tray-pos='center'

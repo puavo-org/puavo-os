@@ -1,0 +1,69 @@
+diff -ruN gnome-shell.orig/data/theme/gnome-shell.css gnome-shell/data/theme/gnome-shell.css
+--- gnome-shell.orig/data/theme/gnome-shell.css	2017-02-16 19:31:17.000000000 +0200
++++ gnome-shell/data/theme/gnome-shell.css	2017-06-01 13:16:37.915656838 +0300
+@@ -1626,6 +1626,11 @@
+   padding-top: 0;
+   padding-bottom: 20px; }
+ 
++.login-dialog-user-name {
++  font-size: 120%;
++  font-weight: bold;
++}
++
+ .login-dialog-user-selection-box {
+   padding: 100px 0px; }
+   .login-dialog-user-selection-box .login-dialog-not-listed-label {
+diff -ruN gnome-shell.orig/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
+--- gnome-shell.orig/js/gdm/authPrompt.js	2017-05-31 14:05:33.000000000 +0300
++++ gnome-shell/js/gdm/authPrompt.js	2017-06-01 13:21:50.346272786 +0300
+@@ -73,6 +73,12 @@
+         this.connect('next', Lang.bind(this, function() {
+                          this.updateSensitivity(false);
+                          this.startSpinning();
++
++                         if (this._userName && !this._userNameEntered) {
++                             this._userName.text = this._entry.text;
++                             this._userNameEntered = true;
++                         }
++
+                          if (this._queryingService) {
+                              this._userVerifier.answerQuery(this._queryingService, this._entry.text);
+                          } else {
+@@ -103,6 +109,25 @@
+                          x_fill: true,
+                          y_fill: true,
+                          expand: true });
++
++        if (this._mode == AuthPromptMode.UNLOCK_OR_LOG_IN) {
++            // Display the username above the password prompt, but
++            // ONLY in the login screen, not in the unlocking screen.
++            // The label is always visible, it's just empty before
++            // the name has been entered.
++            this._userName = new St.Label({ style_class:
++                'login-dialog-user-name', text: ' ' });
++
++            this.actor.add(this._userName, {
++                expand: true,
++                x_fill: false,
++                y_fill: true,
++                x_align: St.Align.MIDDLE });
++                this._userName.show();
++        }
++
++        this._userNameEntered = false;
++
+         this._label = new St.Label({ style_class: 'login-dialog-prompt-label' });
+ 
+         this.actor.add(this._label,
+@@ -492,6 +517,11 @@
+         this.cancelButton.reactive = true;
+         this.nextButton.label = _("Next");
+ 
++        if (this._userName)
++            this._userName.text = " ";
++
++        this._userNameEntered = false;
++
+         this._maybeShowGuestLogin();
+ 
+         if (this._userVerifier)

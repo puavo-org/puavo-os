@@ -1,4 +1,4 @@
-/bin/sh
+#!/bin/sh
 
 # gnome-shell/mutter expects that at least one monitor is connected,
 # otherwise it breaks on startup.  Wait for at least one monitor to come up
