@@ -102,12 +102,12 @@ const HostInfoButton = new Lang.Class(
             this.titleValue(c, "Hard drive",
                 jval(json, "blockdevice_sda_model") + ", " +
                 (parseFloat(jval(json, "blockdevice_sda_size", 0)) /
-                    (1024.0 * 1024.0 * 1024.0)).toFixed(0) + " GB");
+                    (1024.0 * 1024.0 * 1024.0)).toFixed(0) + " GiB");
             this.titleValue(c, "Processor",
                 jval(json, "processorcount") + " CPU(s), " +
                 jval(json, "processor0"));
             this.titleValue(c, "Memory",
-                (parseFloat(jval(json, "memorysize_mb", 0.0)) / 1024.0).toFixed(2) + " GB");
+                (parseFloat(jval(json, "memorysize_mb", 0.0)) / 1024.0).toFixed(2) + " GiB");
 
             this.spacer(c);
             this.category(c, "Network");
