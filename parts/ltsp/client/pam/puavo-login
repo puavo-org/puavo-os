@@ -343,7 +343,8 @@ sort_and_replace_extrausers_file_from_stdin() {
 # main
 #
 
-if [ "$PAM_USER" = 'guest' -a "$mode" = 'guest' ]; then
+# XXX should there be some other safeguard for guest session?
+if [ "$PAM_USER" = 'guest' ]; then
   case "$PAM_TYPE" in
     auth)
       logmsg notice 'letting guest user in without further authentication'
