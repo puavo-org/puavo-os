@@ -30,6 +30,7 @@ class gnome_shell_extensions {
     , 'hostinfo@puavo.org'
     , 'Move_Clock@rmy.pobox.com'
     , 'Panel_Favorites@rmy.pobox.com'
+    , 'show-desktop@l300lvl.tk'
     , 'TopIcons@phocean.net'
     , 'uparrows@puavo.org'
     , 'webmenu@puavo.org'
