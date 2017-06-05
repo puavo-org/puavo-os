@@ -13,7 +13,7 @@ PAM_AUTHINFO_UNAVAIL=9
 PUAVO_SESSION_DIR="/var/lib/puavo-desktop/users/${PAM_USER}"
 PUAVO_SESSION_FILE="${PUAVO_SESSION_DIR}/puavo_session.json"
 
-USER_MINIMUM_UID=10000
+USER_MINIMUM_UID_GID=10000
 
 # XXX DOCUMENTATION!
 
@@ -67,7 +67,7 @@ authenticate_user() {
 check_user_uid() {
   user_uid="$(id -u "$PAM_USER" 2>/dev/null)" || return 1
 
-  if [ "$user_uid" -lt "$USER_MINIMUM_UID" ]; then
+  if [ "$user_uid" -lt "$USER_MINIMUM_UID_GID" ]; then
     logmsg warning "login through puavo-login attempted with uid ${user_uid}"
     return 1
   fi
@@ -155,27 +155,122 @@ user_has_session() {
 #
 
 session_get_username() {
-  jq -r '.user.username' "$PUAVO_SESSION_FILE"
+  jq -r '
+    if (.|type != "object") then
+      error("session information is not an object")
+
+    elif (.user|type != "object") then
+      error("session user information is not an object")
+    elif (.user.username|type != "string") then
+      error("username is not a string")
+    elif (.user.username == "") then
+      error("username is an empty string")
+    elif ((.user.username|contains(":")) or (.user.username|contains("\n"))) then
+      error("username contains : or a newline")
+
+    else
+      .user.username
+    end
+   ' "$PUAVO_SESSION_FILE"
 }
 
 session_get_user() {
-  jq -r '
-    .user.username
-      + ":" + "x"
-      + ":" + (.user.uid_number|tostring)
-      + ":" + (.user.gid_number|tostring)
-      + ":" + .user.first_name + " " + .user.last_name
-      + ":" + "/home/" + .user.username
-      + ":" + "/bin/bash"
+  jq -r --arg minimum_uid_gid "$USER_MINIMUM_UID_GID" '
+    if (.|type != "object") then
+      error("session information is not an object")
+    elif (.user|type != "object") then
+      error("session user information is not an object")
+
+    elif (.user.username|type != "string") then
+      error("username is not a string")
+    elif (.user.username == "") then
+      error("username is an empty string")
+    elif ((.user.username|contains(":")) or (.user.username|contains("\n"))) then
+      error("username contains : or a newline")
+
+    elif (.user.uid_number|type != "number") then
+      error(".user.uid_number is not a number")
+    elif (.user.uid_number < ($minimum_uid_gid|tonumber)) then
+      error(".user.uid_number is less than " + $minimum_uid_gid)
+    elif (.user.uid_number > 4294967295) then
+      error(".user.uid_number is more than 4294967295")
+
+    elif (.user.gid_number|type != "number") then
+      error(".user.gid_number is not a number")
+    elif (.user.gid_number < ($minimum_uid_gid|tonumber)) then
+      error(".user.gid_number is less than " + $minimum_uid_gid)
+    elif (.user.gid_number > 4294967295) then
+      error(".user.gid_number is more than 4294967295")
+
+    elif (.user.first_name|type != "string") then
+      error(".user.first_name is not a string")
+    elif ((.user.first_name|contains(":")) or (.user.first_name|contains("\n"))) then
+      error("user .first_name contains : or a newline")
+
+    elif (.user.last_name|type != "string") then
+      error(".user.last_name is not a string")
+    elif ((.user.last_name|contains(":")) or (.user.last_name|contains("\n"))) then
+      error("user .last_name contains : or a newline")
+
+    else
+      .user.username
+        + ":" + "x"
+        + ":" + (.user.uid_number|tostring)
+        + ":" + (.user.gid_number|tostring)
+        + ":" + (if (.user.first_name != "" and .user.last_name != "") then
+                   .user.first_name + " " + .user.last_name
+                 elif (.user.first_name != "") then
+                   .user.first_name
+                 elif (.user.last_name != "") then
+                   .user.last_name
+                 else
+                   "User X"
+                 end)
+        + ":" + "/home/" + .user.username
+        + ":" + "/bin/bash"
+    end
   ' "$PUAVO_SESSION_FILE"
 }
 
 session_get_groups() {
-  # XXX test what if groups are empty?
-  jq -r '
-    .user.groups
-    | map( .abbreviation + ":" + (.gid_number|tostring))
-    | .[]
+  jq -r --arg minimum_uid_gid "$USER_MINIMUM_UID_GID" '
+    if (.|type != "object") then
+      error("session information is not an object")
+
+    elif (.user|type != "object") then
+      error("session user information is not an object")
+
+    elif (.user.groups|type != "array") then
+      error(".user.groups is not an array")
+    elif (.user.groups|length == 0) then
+      error(".user.groups is an empty array")
+
+    else
+      .user.groups
+      | map(
+          if (.|type != "object") then
+            error("group is not an object")
+
+          elif (.abbreviation|type != "string") then
+            error("group .abbreviation is not a string")
+          elif (.abbreviation == "") then
+            error("group .abbreviation is an empty string")
+          elif ((.abbreviation|contains(":")) or (.abbreviation|contains("\n"))) then
+            error("group .abbreviation contains : or a newline")
+
+          elif (.gid_number|type != "number") then
+            error("group .gid_number is not a number")
+          elif (.gid_number < ($minimum_uid_gid|tonumber)) then
+            error("group .gid_number is less than " + $minimum_uid_gid)
+          elif (.gid_number > 4294967295) then
+            error("group .gid_number is more than 4294967295")
+
+          else
+            .abbreviation + ":" + (.gid_number|tostring)
+          end
+          )
+      | .[]
+    end
   ' "$PUAVO_SESSION_FILE"
 }
 
@@ -183,7 +278,8 @@ extrausers_new_passwd() {
   passwd_file_path='/var/lib/extrausers/passwd'
 
   if ! new_user="$(session_get_user)" || [ -z "$new_user" ]; then
-    logmsg err 'could not find user information from puavo session'
+    get_user_error="$(session_get_user 2>&1 >/dev/null)"
+    logmsg err "could not find user information from puavo session: $get_user_error"
     return 1
   fi
 
@@ -196,7 +292,7 @@ extrausers_new_passwd() {
   fi
 
   new_passwd_data="$(
-    echo "$new_user" | gawk -F: -v minimum_uid=10000 '
+    echo "$new_user" | gawk -F: -v minimum_uid="$USER_MINIMUM_UID_GID" '
       # map users by uid, filter out duplicates,
       # possible adding the new user or modifying it
       $3 >= minimum_uid { users[$3] = $0 }
@@ -219,12 +315,14 @@ extrausers_new_group() {
   group_file_path='/var/lib/extrausers/group'
 
   if ! user_groups="$(session_get_groups)" || [ -z "$user_groups" ]; then
-    logmsg err 'could not get user groups from puavo session'
+    get_groups_error="$(session_get_groups 2>&1 >/dev/null)"
+    logmsg err "could not get user groups from puavo session: $get_groups_error"
     return 1
   fi
 
   if ! username="$(session_get_username)" || [ -z "$username" ]; then
-    logmsg err 'could not get user groups from puavo session'
+    get_username_error="$(session_get_username 2>&1 >/dev/null)"
+    logmsg err "could not get username from puavo session: $get_username_error"
     return 1
   fi
 
