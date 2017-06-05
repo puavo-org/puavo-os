@@ -30,6 +30,7 @@ make_request() {
   curl --cacert /etc/puavo/certs/rootca.pem       \
        --fail                                     \
        --form-string "hostname=${PUAVO_HOSTNAME}" \
+       --show-error                               \
        --silent                                   \
        "$@"                                       \
        "${API_SERVER}/${urlpath}"
