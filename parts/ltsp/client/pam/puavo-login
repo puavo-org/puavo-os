@@ -2,6 +2,7 @@
 
 # NOT using "set -eu", we want to control exit codes exactly,
 # because pam_puavo expects them to be precisely meaningful.
+# set -x; exec >/tmp/puavo-login.$$.log 2>&1 # uncomment for development only
 
 # from /usr/include/security/_pam_types.h
 PAM_SUCCESS=0
