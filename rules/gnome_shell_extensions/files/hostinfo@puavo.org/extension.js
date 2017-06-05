@@ -26,6 +26,7 @@ const Lang = imports.lang;
 const Shell = imports.gi.Shell;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
+const Clutter = imports.gi.Clutter;
 
 var hostType, hostName, releaseName;
 
@@ -53,23 +54,17 @@ const HostInfoButton = new Lang.Class(
         // ---------------------------------------------------------------------
         // Create the panel button
 
-        this.captionContainer = new St.BoxLayout({
-            style_class: "panel-status-menu-box"
-        });
+        let buttonContainer = new St.BoxLayout({ style_class: "panel-status-menu-box" });
 
-        this.captionContainer.add_child(new St.Label({
-            text: hostType + " | " + releaseName + " | " + hostName
+        buttonContainer.add_child(new St.Label({
+            text: hostType + " | " + releaseName + " | " + hostName,
+            y_expand: true,
+            y_align: Clutter.ActorAlign.CENTER
         }));
 
-        this.captionContainer.add_child(new PopupMenu.arrowIcon(St.Side.TOP));
+        buttonContainer.add_child(new PopupMenu.arrowIcon(St.Side.TOP));
 
-        // I can't get the text centered vertically without an St.Bin
-        this.captionBin = new St.Bin({
-            name: "HostInfoButtonBin"
-        });
-
-        this.captionBin.add_actor(this.captionContainer);
-        this.actor.add_actor(this.captionBin);
+        this.actor.add_actor(buttonContainer);
 
         // ---------------------------------------------------------------------
         // Construct the popup menu
