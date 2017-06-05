@@ -19,6 +19,7 @@ USER_MINIMUM_UID_GID=10000
 
 if [ -z "$PAM_USER" ]; then
   logger -p auth.err -s -t puavo-login 'PAM_USER is not set'
+  exit 1
 fi
 
 mode="${1:-immediate}"
@@ -126,8 +127,15 @@ get_puavo_session() {
   return 0
 }
 
+is_guest() {
+  [ "$PAM_USER" = 'guest' ]
+}
+
 update_extrausers() {
   update_extrausers_status=0
+
+  # guest user information is not in extrausers
+  is_guest && return 0
 
   if ! extrausers_new_passwd; then
     logmsg err 'error updating extrausers passwd db'
@@ -442,8 +450,7 @@ sort_and_replace_extrausers_file_from_stdin() {
 # main
 #
 
-# XXX should there be some other safeguard for guest session?
-if [ "$PAM_USER" = 'guest' ]; then
+if is_guest; then
   case "$PAM_TYPE" in
     auth)
       logmsg notice 'letting guest user in without further authentication'
