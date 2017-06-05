@@ -24,7 +24,7 @@ fi
 
 mode="${1:-immediate}"
 
-logmsg() { logger -p "auth.$1" -t puavo-login "user ${PAM_USER} / mode $mode :: $2"; }
+logmsg() { logger -p "auth.$1" -t puavo-login "user ${PAM_USER} / mode ${PAM_TYPE}/${mode} :: $2"; }
 
 #
 # main subroutines
@@ -90,8 +90,6 @@ get_puavo_session() {
     fi
   fi
 
-  logmsg info "fetching new puavo session with timeout $session_fetch_timeout"
-
   mkdir -p "$PUAVO_SESSION_DIR" || return 1
 
   session_status=0
@@ -100,13 +98,13 @@ get_puavo_session() {
       > "${PUAVO_SESSION_FILE}.tmp") || session_status=$?
 
   if [ "$session_status" -eq 0 -a -s "${PUAVO_SESSION_FILE}.tmp" ]; then
-    logmsg info 'fetched new puavo session'
+    logmsg info "fetched new puavo session with timeout $session_fetch_timeout"
     if ! mv "${PUAVO_SESSION_FILE}.tmp" "${PUAVO_SESSION_FILE}" 2>/dev/null; then
       logmsg err 'error putting new puavo session into place'
       session_status=1
     fi
   else
-    logmsg warning "error fetching new puavo session: $session_error_msg"
+    logmsg warning "error fetching new puavo session with timeout $session_fetch_timeout: $session_error_msg"
   fi
 
   rm -f "${PUAVO_SESSION_FILE}.tmp"
@@ -581,7 +579,7 @@ fi
     logmsg info 'waiting for user login session'
     for i in 1 2 4 8 16 32 64; do
       if user_has_session; then
-        logmsg info "user got session after $((2 * $i - 1)) seconds"
+        logmsg info 'user got session'
         break
       fi
       sleep $i
