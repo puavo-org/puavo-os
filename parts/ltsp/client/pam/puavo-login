@@ -298,10 +298,21 @@ extrausers_new_passwd() {
   fi
 
   new_passwd_data="$(
-    echo "$new_user" | gawk -F: -v minimum_uid="$USER_MINIMUM_UID_GID" '
+    echo "$new_user" | gawk -F: -v minimum_uid_gid="$USER_MINIMUM_UID_GID" '
       # map users by uid, filter out duplicates,
       # possible adding the new user or modifying it
-      $3 >= minimum_uid { users[$3] = $0 }
+
+         NF == 7 \
+      && $1 != "" \
+      && $2 == "x" \
+      && $3 ~ /^[[:digit:]]+$/ && $3 >= minimum_uid_gid \
+      && $4 ~ /^[[:digit:]]+$/ && $4 >= minimum_uid_gid \
+      && $5 != "" \
+      && $6 != "" \
+      && $7 != "" {
+        users[$3] = $0
+      }
+
       END { for (user in users) { print users[user] } }
     ' "$passwd_file_path" /dev/stdin)" || {
       logmsg err 'error in creating new extrausers passwd db'
@@ -343,7 +354,7 @@ extrausers_new_group() {
   new_group_data="$(
     gawk -F: -v username="$username" \
              -v user_groups="$user_groups" \
-             -v minimum_gid=10000 '
+             -v minimum_uid_gid="$USER_MINIMUM_UID_GID" '
       # map groups by gid, filter out duplicates,
       # possible adding the user to some groups and removing from others
 
@@ -361,7 +372,11 @@ extrausers_new_group() {
 	}
       }
 
-      {
+         NF == 4 \
+      && $1 != "" \
+      && $2 == "x" \
+      && $3 ~ /^[[:digit:]]+$/ && $3 >= minimum_uid_gid \
+      && $4 != "" {
 	oldgroup_name = $1
 	oldgroup_gid  = $3
 	split($4, oldgroup_members, ",")
