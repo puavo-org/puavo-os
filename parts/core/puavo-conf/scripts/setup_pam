@@ -21,7 +21,5 @@ case "$(puavo-conf puavo.hosttype)" in
   laptop)
     pam_install /etc/puavo-conf/files/etc/pam.d/gdm-password-laptop \
                 /etc/pam.d/gdm-password
-    pam_install /etc/puavo-conf/files/etc/pam.d/sudo-laptop \
-                /etc/pam.d/sudo
     ;;
 esac
