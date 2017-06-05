@@ -439,7 +439,6 @@ sort_and_replace_extrausers_file_from_stdin() {
     mv "$extrausers_tempfile" "$filepath" || return 1
     logmsg notice "updated extrausers db $filepath with changes"
   else
-    logmsg info "no change in extrausers db $filepath"
     rm -f "$extrausers_tempfile"
   fi
 
