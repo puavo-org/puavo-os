@@ -590,11 +590,12 @@ if [ "$mode" = 'cached-auth' ]; then
 fi
 
 (
+  sleep 4
   if ! user_has_session; then
-    logmsg info 'waiting for user login session'
-    for i in 1 2 4 8 16 32 64; do
+    logmsg info 'waiting for the user login session'
+    for i in 8 16 32 64; do
       if user_has_session; then
-        logmsg info 'user got session'
+        logmsg info 'user got the user login session'
         break
       fi
       sleep $i
@@ -603,7 +604,7 @@ fi
 
   while true; do
     if ! user_has_session; then
-      logmsg info 'user does not have a session, giving up'
+      logmsg info 'user does not have a user login session, giving up'
       break
     fi
 
