@@ -26,6 +26,7 @@ const Lang = imports.lang;
 const Shell = imports.gi.Shell;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
+const Clutter = imports.gi.Clutter;
 
 var hostType, hostName, releaseName;
 
@@ -51,18 +52,19 @@ const HostInfoButton = new Lang.Class(
         this.parent(0.0);
 
         // ---------------------------------------------------------------------
-        // Create the toolbar button
+        // Create the panel button
 
-        this.captionLabel = new St.Label({
-            text: hostType + " | " + releaseName + " | " + hostName
-        });
+        let buttonContainer = new St.BoxLayout({ style_class: "panel-status-menu-box" });
 
-        this.captionBin = new St.Bin({
-            name: "HostInfoButtonBin"
-        });
+        buttonContainer.add_child(new St.Label({
+            text: hostType + " | " + releaseName + " | " + hostName,
+            y_expand: true,
+            y_align: Clutter.ActorAlign.CENTER
+        }));
 
-        this.captionBin.add_actor(this.captionLabel);
-        this.actor.add_actor(this.captionBin);
+        buttonContainer.add_child(new PopupMenu.arrowIcon(St.Side.TOP));
+
+        this.actor.add_actor(buttonContainer);
 
         // ---------------------------------------------------------------------
         // Construct the popup menu
@@ -87,7 +89,6 @@ const HostInfoButton = new Lang.Class(
             // startup. It's nearly impossible to run that script (as root!) here
             // asynchronously without losing sanity.
             const json = JSON.parse(readTextFile("/run/puavo/puavo-sysinfo.json"));
-            const now = Date.now() / 1000;
 
             this.category(c, "Release");
             this.titleValue(c, "Image", jval(json, "this_image"));
@@ -102,12 +103,12 @@ const HostInfoButton = new Lang.Class(
             this.titleValue(c, "Hard drive",
                 jval(json, "blockdevice_sda_model") + ", " +
                 (parseFloat(jval(json, "blockdevice_sda_size", 0)) /
-                    (1024.0 * 1024.0 * 1024.0)).toFixed(0) + " GB");
+                    (1024.0 * 1024.0 * 1024.0)).toFixed(0) + " GiB");
             this.titleValue(c, "Processor",
                 jval(json, "processorcount") + " CPU(s), " +
                 jval(json, "processor0"));
             this.titleValue(c, "Memory",
-                (parseFloat(jval(json, "memorysize_mb", 0.0)) / 1024.0).toFixed(2) + " GB");
+                (parseFloat(jval(json, "memorysize_mb", 0.0)) / 1024.0).toFixed(2) + " GiB");
 
             this.spacer(c);
             this.category(c, "Network");

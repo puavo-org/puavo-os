@@ -1,47 +1,116 @@
 #!/bin/sh
+#
+# ##############################################################################
+#
+# Copyright (C) 2015 Opinsys Oy
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# ##############################################################################
+#
 
-[ "$1" = "--help" -o "$1" = "-h" ] && {
+PROGRAM_NAME="$(basename $0)"
+
+usage () {
     echo "
-    usage: $(basename $0) [option]
+    usage: ${PROGRAM_NAME} [option]
 
     Resolve local puavo api server from dns. If the device type is laptop and
     dns resolve fails it will return the public server.
 
+    --writable             Search for writable puavo-rest instance instead of a read-only slave
     --cloud-fallback       Fallback to cloud puavo-rest if bootserver dns lookup fails
 
     "
-} && exit 0
+}
 
-option=$1
+OPT_WRITABLE=""
+OPT_CLOUD_FALLBACK=""
+
+while true; do
+    case $1 in
+        -w|--writable)
+            OPT_WRITABLE=1
+            shift
+        ;;
+        -c|--cloud-fallback)
+            OPT_CLOUD_FALLBACK=1
+            shift
+        ;;
+        -h|--help)
+            usage
+            exit 0
+        ;;
+        --)
+            break
+        ;;
+        "")
+            break
+        ;;
+        *)
+            printf "Unknown option %s\n" "$1"
+            exit 1
+        ;;
+    esac
+done
 
 set -eu
 
 puavo_domain=$(cat /etc/puavo/domain)
 
-lookup_puavoapi() {
-  dig +time=2 +tries=1 SRV _puavo-api._tcp.${puavo_domain} +search +short
+lookup_puavo_apiserver() {
+  host -t SRV -W 2 "_puavo-api._tcp.${puavo_domain}" \
+      | awk -v puavo_domain="$puavo_domain" '
+            $2 == "has" && $3 == "SRV" && $4 == "record" {
+                sub(/\.$/, "", $8)
+
+                # check that $8 has puavo_domain-suffix
+                i = index($8, puavo_domain)
+                if (i == 0) { next }
+                if ($8 == (substr($8, 0, i-1) puavo_domain)) {
+                    printf "https://%s:%s\n", $8, $7
+                    exit(0)
+                }
+            }'
 }
 
-if dig_res=$(lookup_puavoapi); then
-    # dig might not exit with nonzero exit status even if the search fails,
-    # instead it will just give an empty response.
-    if [ -n "$dig_res" ]; then
-        echo $dig_res | awk '{
-                          sub(/\.$/, "")
-                          printf "https://%s:%s\n", $4, $3
-                        }'
+# At the moment only the cloud API server is writable, so we skip the
+# query and just fallback to cloud server if write access is requested.
+if [ -z "${OPT_WRITABLE}" ]; then
+    puavo_apiserver=$(lookup_puavo_apiserver)
+    if [ -n "$puavo_apiserver" ]; then
+        echo "$puavo_apiserver"
         exit 0
     fi
 fi
 
 puavo_hosttype=$(cat /etc/puavo/hosttype)
+puavo_apiserver="https://$puavo_domain"
+
+# XXX The effects of this change need to be tested:
+# Fallback uses API server
+# if [ -s /etc/puavo/apiserver ]; then
+#   puavo_apiserver=$(cat /etc/puavo/apiserver)
+# fi
 
 # Fallback for laptops and wirelessaccesspoints that are not in the school
 # network.
 if [    "$puavo_hosttype" = "laptop"              \
      -o "$puavo_hosttype" = "wirelessaccesspoint" \
-     -o "$option"         = "--cloud-fallback" ]; then
-    echo "https://$puavo_domain"
+     -o -n "${OPT_CLOUD_FALLBACK}"                \
+     -o -n "${OPT_WRITABLE}"                        ]; then
+    echo "$puavo_apiserver"
     exit 0
 fi
 

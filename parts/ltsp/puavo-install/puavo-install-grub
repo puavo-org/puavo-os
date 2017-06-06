@@ -33,14 +33,23 @@ terminal_output gfxterm
 set timeout=5
 ### END /usr/local/etc/grub.d/00_header ###
 
-function pathname { regexp -s 2:"$2" '^(\(.*\))?(/.*)$'    "$1"; }
+function get_kernelarch { regexp -s 2:"$2" '^(.*)-(i386|amd64)$' "$1"; }
+function get_pathname { regexp -s 2:"$2" '^(\(.*\))?(/.*)$' "$1"; }
+
+function get_kernelversion {
+  if regexp -s 1:"$2" '^(.*)-(i386|amd64)$' "$1"; then
+    :
+  else
+    set $2="$1"
+  fi
+}
 
 function ltsp_image_entry {
   set imagefile="$1"
   set description="$2"
   set kernelparameters="$3"
 
-  pathname $imagefile imagepath
+  get_pathname $imagefile imagepath
 
   # if changing menuentry description, update correspondingly on
   # puavo-local-config configure_grub_default()
@@ -56,20 +65,63 @@ function ltsp_image_entry {
     loopback loop "${imagefile}"
     set root='(loop)'
 
+    #
+    # this mirrors code in puavo-ltspboot-config (puavo-tftpd hook)
+    #
+
+    set use_if64cpu='false'
+
     # ${puavo_kernel_version} comes from a grub environment file
     # (if it is defined there)
-    if test -n "${puavo_kernel_version}" \
-         -a -e "(loop)/boot/vmlinuz-${puavo_kernel_version}" \
-         -a -e "(loop)/boot/initrd.img-${puavo_kernel_version}"; then
-      set kernelversion="-${puavo_kernel_version}"
+
+    set kernel_version_suffix=''
+    if test -n "${puavo_kernel_version}"; then
+      if regexp -- '-(amd64|i386)$' "${puavo_kernel_version}"; then
+        # kernel_version set to particular arch
+        if test -e "(loop)/boot/vmlinuz-${puavo_kernel_version}"; then
+          set kernel_version_suffix="-${puavo_kernel_version}"
+        else
+          true  # ... but kernel not available, so just use default
+        fi
+      elif test -e "(loop)/boot/vmlinuz-${puavo_kernel_version}-amd64" \
+             -a -e "(loop)/boot/vmlinuz-${puavo_kernel_version}-i386"; then
+        set use_if64cpu='true'
+        set kernel_version_suffix="-${puavo_kernel_version}"
+      elif test -e "(loop)/boot/vmlinuz-${puavo_kernel_version}"; then
+        # no kernels for both archs, but some kernel exists, so use that
+        set kernel_version_suffix="-${puavo_kernel_version}"
+      else
+        # requested kernel not found, use default
+        true
+      fi
+    elif test -e '(loop)/boot/vmlinuz-amd64' \
+           -a -e '(loop)/boot/vmlinuz-i386'; then
+      set use_if64cpu='true'
     else
-      set kernelversion=""
+      true              # okay, just use default kernel
+    fi
+
+    if test "${use_if64cpu}" = 'true'; then
+      if cpuid -l; then
+        set kernel_version_suffix="${kernel_version_suffix}-amd64"
+      else
+        set kernel_version_suffix="${kernel_version_suffix}-i386"
+      fi
+    fi
+
+    # one more sanity test (also checks the corresponding initrd.img)
+    if test -e "(loop)/boot/initrd.img${kernel_version_suffix}" \
+         -a -e "(loop)/boot/vmlinuz${kernel_version_suffix}"; then
+      true      # all is okay
+    else
+      # something is wrong, use the default kernel
+      set kernel_version_suffix=''
     fi
 
     set kernelparameters="$4"
 
-    linux   /boot/vmlinuz${kernelversion} ro init=/sbin/init-puavo __PUAVO_KERNEL_ARGUMENTS__ ${kernelparameters}
-    initrd  /boot/initrd.img${kernelversion}
+    linux   /boot/vmlinuz${kernel_version_suffix} ro init=/sbin/init-puavo __PUAVO_KERNEL_ARGUMENTS__ ${kernelparameters}
+    initrd  /boot/initrd.img${kernel_version_suffix}
 
     loopback -d loop
   }

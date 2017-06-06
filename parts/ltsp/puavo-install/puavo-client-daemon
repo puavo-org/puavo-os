@@ -149,12 +149,17 @@ class Updater < DBus::Object
                  e.message)
         end
 
-        # configuration update must be run before
+        # configuration update should be run before
         # check_for_available_image_updates() so that it gives a proper result
         command = '/usr/lib/puavo-ltsp-install/update-configuration'
         output, status = Open3.capture2e(command)
         if not status.success? then
-          raise "Failed to update device configuration: #{ output }"
+          logerr(Syslog::LOG_WARNING,
+                 "Failed to update device configuration: %s\n",
+                 output)
+          # (but carry on, because configuration update may fail due to
+          # several reasons and maybe we have correct information
+          # for check_for_available_image_updates() anyway)
         end
 
         version_state = :unknown
@@ -191,8 +196,6 @@ class Updater < DBus::Object
         end
 
         case version_state
-          when :unknown
-            # we do not know what to do, so we do nothing
           when :update_available
             log(Syslog::LOG_INFO, "Notifying user about available upgrades\n")
             self.UpdateAvailable
@@ -205,12 +208,18 @@ class Updater < DBus::Object
             log(Syslog::LOG_INFO,
                 "Notifying user that we are up-to-date, but require reboot.\n")
             self.UpdateIsUpToDate(true)  # true == reboot *is* required
+          else
+            raise "Internal error, version_state is #{ version_state }"
         end
 
       rescue StandardError => e
         logerr(Syslog::LOG_ERR,
                "Could not do a configuration update: %s\n",
                e.message)
+        # Internal error, but do something, anything, maybe updating helps?
+        log(Syslog::LOG_WARNING,
+            "Sending UpdateAvailable in confusion on what to do.\n")
+        self.UpdateAvailable
         raise e
       ensure
         $configuration_update_thread = nil

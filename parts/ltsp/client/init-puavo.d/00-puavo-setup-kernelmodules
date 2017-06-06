@@ -1,0 +1,10 @@
+# If we have booted on a 32-bit system with a 64-bit kernel,
+# we must fix the kernel modules dir to match the kernel architecture.
+if [ "$(uname -m)" = "x86_64" \
+       -a "$(dpkg --print-architecture)" = "i386" ]; then
+  for moddir in /lib/modules-amd64 /usr/lib/debug/lib/modules-amd64; do
+    if [ -d "$moddir" ]; then
+      ln -fns "$(basename "$moddir")" "${moddir%-amd64}"
+    fi
+  done
+fi

@@ -13,6 +13,7 @@ usage_error()
 
 interface=
 network=255.255.255.255/0
+do_resolve=true
 
 print_help()
 {
@@ -23,6 +24,7 @@ print_help()
     echo 'Options:'
     echo '    -i, --interface IFACE   limit listing to interface'
     echo '    -n, --network CIDR      limit listing to network'
+    echo '        --no-resolve        do not resolve host names'
     echo '    -h, --help              print help and exit'
     echo
 }
@@ -46,6 +48,10 @@ while [ $# -gt 0 ]; do
 	    network=$1
 	    shift
 	    ;;
+	--no-resolve)
+	    shift
+	    do_resolve=false
+	    ;;
 	--)
 	    shift
 	    break
@@ -68,18 +74,18 @@ if [ -n "${interface}" ]; then
     network=$(ip route | awk -v "iface={interface}" '$3 == iface {print $1}')
 fi
 
-ss -t -r state established dst "${network}": | tail -n+2 \
+ss -t -n state established dst "${network}": | tail -n+2 \
     | while read recvq sendq local_addr remote_addr; do
     local_port=$(echo "${local_addr}" | cut -d: -f2)
 
     case "${local_port}" in
-	rpc.nfs)
+	2049)
 	    conn_type="NFS"
 	    ;;
-	nbd)
+	10809)
 	    conn_type="NBD"
 	    ;;
-	microsoft-ds)
+	445)
 	    conn_type="SMB"
 	    ;;
 	*)
@@ -88,5 +94,8 @@ ss -t -r state established dst "${network}": | tail -n+2 \
     esac
 
     remote_host=$(echo "${remote_addr}" | cut -d: -f1)
+    if $do_resolve; then
+	remote_host=$(dig +short -x "${remote_host}")
+    fi
     printf "%s\t%s\n" "${conn_type}" "${remote_host}"
 done | sort -u

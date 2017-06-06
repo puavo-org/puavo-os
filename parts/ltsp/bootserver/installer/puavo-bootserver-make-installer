@@ -97,9 +97,11 @@ parted -s -a optimal "${dev}" -- \
     set 1 boot on
 echo "OK"
 
-echo -n "Creating a filesystem on ${dev}1 ... "
+partdev=$(fdisk -l "${dev}" | sed -r -n "s|^(${dev}[^ ]+) .*$|\1|p" | head -n1)
+
+echo -n "Creating a filesystem on ${partdev} ... "
 ## debian-installer assumes the installation media is iso9660 or fat32.
-mkfs.vfat -F 32 "${dev}1" >/dev/null
+mkfs.vfat -F 32 "${partdev}" >/dev/null
 echo "OK"
 
 isoroot=
@@ -110,8 +112,8 @@ trap on_exit EXIT
 isoroot=$(mktemp -d)
 devroot=$(mktemp -d)
 
-echo -n "Copying files to ${dev}1 ... "
-mount "${dev}1" "${devroot}"
+echo -n "Copying files to ${partdev} ... "
+mount "${partdev}" "${devroot}"
 mount -oloop,ro "${iso}" "${isoroot}"
 rsync --quiet --recursive "${isoroot}/" "${devroot}/"
 
@@ -125,7 +127,7 @@ cp fix-dummy-partitions "${devroot}"
 echo "OK"
 
 echo -n "Installing bootloader to ${dev} ... "
-syslinux -i "${dev}1"
+syslinux -i "${partdev}"
 dd status=none conv=notrunc bs=440 count=1 if=/usr/lib/syslinux/mbr.bin "of=${dev}"
 cp syslinux.cfg "${devroot}"
 cp /usr/lib/syslinux/vesamenu.c32 "${devroot}/vesamenu.c32"

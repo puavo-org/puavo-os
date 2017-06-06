@@ -4,12 +4,9 @@ require "digest/sha1"
 require "fileutils"
 require "json"
 require "optparse"
-require "uri"
-
-# puavo lib must loaded before rest-client because rest-client is bundled into
-# puavo lib
 require "puavo"
-require "rest-client"
+require "puavo/rest-client"
+require "uri"
 
 options = {}
 
@@ -66,24 +63,22 @@ def read_current_files(dirpath)
 end
 
 class ExternalFiles
-  def initialize(base_uri)
-    @base_uri = base_uri
+  def initialize(base_path)
+    @base_path = base_path
 
     case PUAVO_ETC.hosttype
-      when 'laptop','wirelessaccesspoint'
-        @username = PUAVO_ETC.ldap_dn
-	@password = PUAVO_ETC.ldap_password
+      when 'laptop', 'wirelessaccesspoint'
+        auth_type = :etc
+      else
+        auth_type = :bootserver
     end
+
+    @client = PuavoRestClient.new :auth => auth_type
   end
 
   def data(name='')
-    uri =  name != ''  ?  "#{ @base_uri }/#{ name }"  :  @base_uri
-
-    rc = @username && @password \
-           ? RestClient::Resource.new(uri, @username, @password) \
-           : RestClient::Resource.new(uri)
-
-    rc.get
+    uri =  name != ''  ?  "#{ @base_path }/#{ name }"  :  @base_path
+    @client.get(uri)
   end
 
   def index
@@ -93,17 +88,20 @@ end
 
 def main(options)
   FileUtils.mkdir_p(options[:target])
+
+  files_to_remove = Hash[
+    Dir.glob("#{ options[:target] }/*").map { |k| [ k, 1 ] }
+  ]
+
   current_files = read_current_files(options[:target])
 
-  ef_root = URI.join(options[:server],
-		     "/v3/devices/#{ options[:hostname] }/",
-		     'external_files').to_s
-
-  puts "Connecting to #{ ef_root }"
-  ef = ExternalFiles.new(ef_root)
+  ef_urlpath = "/v3/devices/#{ options[:hostname] }/external_files"
+  ef = ExternalFiles.new(ef_urlpath)
 
   ef.index.each do |meta|
     file_path = File.join(options[:target], meta["name"])
+
+    files_to_remove.delete(file_path)
 
     if current_files.include?(meta)
       puts "OK #{ file_path } #{ meta["data_hash"] }"
@@ -113,6 +111,15 @@ def main(options)
     File.open(file_path, "w") do |f|
       puts "Writing #{ file_path } #{ meta["data_hash"] }"
       f.write(ef.data(meta["name"]))
+    end
+  end
+
+  files_to_remove.each_key do |path|
+    begin
+      puts "Removing #{ path }"
+      File.unlink(path)
+    rescue StandardError => e
+      warn("Could not unlink #{ path }: #{ e.message }")
     end
   end
 end
