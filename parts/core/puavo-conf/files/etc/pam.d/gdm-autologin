@@ -1,19 +1,16 @@
 # This PAM stack is to be used with display manager logins.
-#
-# Only kerberos authentication is supported currently.
 
 auth    requisite       pam_nologin.so
 auth    required        pam_env.so readenv=1
 auth    required        pam_env.so readenv=1 envfile=/etc/default/locale
 auth    required        pam_env.so readenv=1 envfile=/etc/environment.puavo
-auth    sufficient      pam_succeed_if.so user ingroup guest
 auth    optional        pam_group.so
 
-auth    required        pam_permit.so
-auth    required        pam_exec.so /usr/lib/puavo-ltsp-client/pam/open-session guest
-
-auth    optional        pam_gnome_keyring.so
-auth    optional        pam_cap.so
+# guest user
+auth    [success=1 default=ignore]      pam_succeed_if.so user ingroup guest
+auth    requisite                       pam_deny.so
+auth    required                        pam_puavo.so exitcode_to_pam quiet /usr/lib/puavo-ltsp-client/pam/puavo-login
+auth    sufficient                      pam_permit.so
 
 # Permit all accounts for now.
 account required        pam_permit.so
@@ -27,6 +24,5 @@ session required        pam_permit.so
 # See "man pam_umask".
 session optional        pam_umask.so
 
-session optional        pam_gnome_keyring.so auto_start
-session optional	pam_systemd.so
-session optional	pam_ck_connector.so nox11
+session optional        pam_systemd.so
+session optional        pam_ck_connector.so nox11

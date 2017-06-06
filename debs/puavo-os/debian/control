@@ -14,6 +14,7 @@ Build-Depends: bundler | ruby-bundler,
  libncurses5-dev,
  libnl-3-dev,
  libnl-genl-3-dev,
+ libpam0g-dev,
  libsqlite3-dev,
  libssl1.0-dev,
  libtool-bin,
@@ -274,6 +275,7 @@ Depends: ${misc:Depends},
  krb5-user,
  libnss-extrausers,
  libnss-ldapd,
+ libpam-ccreds,
  libpam-krb5,
  libpam-runtime,
  libsasl2-modules-gssapi-mit,
@@ -286,6 +288,7 @@ Depends: ${misc:Depends},
  puavo-conf,
  puavo-core,
  puavo-hw-tools,
+ puavo-pam,
  puavo-vpn-client,
  python,
  python-appindicator,
@@ -298,7 +301,6 @@ Depends: ${misc:Depends},
  ruby-trollop,
  ruby-uuidtools,
  ruby,
- sssd,
  xautolock
 Suggests: webkiosk-language-selector
 Description: Bits and pieces needed inside the LTSP chroot image.
@@ -326,6 +328,13 @@ Depends: ${misc:Depends},
  wget
 Description: Bits and pieces needed inside the LTSP chroot image.
  Bits and pieces needed inside the LTSP chroot image.
+ .
+
+Package: puavo-pam
+Architecture: all
+Depends: ${misc:Depends}, libpam0g
+Description: Puavo PAM module
+ Puavo PAM module.
  .
 
 Package: puavo-pkg
