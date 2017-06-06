@@ -4,6 +4,60 @@
 # because pam_puavo expects them to be precisely meaningful.
 # set -x; exec >/tmp/puavo-login.$$.log 2>&1 # uncomment for development only
 
+# This is puavo-login, a script that handles authentication in
+# puavo-os systems.  It is meant to be used in conjunction with
+# pam_puavo (a modified version of pam_exec-module), pam_ccreds and
+# libnss-extrausers, with the following pam-configuration (or similar):
+#
+# auth    [authinfo_unavail=ignore success=1 perm_denied=2 default=4]   pam_puavo.so      exitcode_to_pam expose_authtok quiet set_krb5ccname /usr/lib/puavo-ltsp-client/pam/puavo-login immediate
+# auth    [success=4 default=2]           pam_ccreds.so   action=validate ccredsfile=/var/cache/ccreds/ccreds.db use_first_pass
+# auth    [default=4]                     pam_ccreds.so   action=store ccredsfile=/var/cache/ccreds/ccreds.db
+# auth    [default=1]                     pam_ccreds.so   action=update ccredsfile=/var/cache/ccreds/ccreds.db
+# auth    required                        pam_puavo.so    exitcode_to_pam quiet /usr/lib/puavo-ltsp-client/pam/puavo-login cached-fail
+# auth    requisite                       pam_deny.so
+# auth    optional                        pam_puavo.so    exitcode_to_pam expose_authtok quiet /usr/lib/puavo-ltsp-client/pam/puavo-login cached-auth
+#
+# The script uses kerberos for authentication, but if kerberos servers
+# are not available it will fall back to cached credentials.  These
+# are provided by pam_ccreds, and these are updated whenever kerberos
+# servers are available.  This means that on the first login on any
+# host/user combination the network should be available, but on subsequent
+# logins that is not a requirement.  One possible security concern is that
+# a hashed form of every user password is stored on the host, but this is
+# only for users which have logged in on a particular host.
+#
+# If kerberos authentication is successful, the script requests puavo
+# session information from puavo server.  This session information
+# contains, among other things, user uid and gid information, as well
+# as information about user groups.  This information is used to update
+# passwd- and group-databases for libnss-extrausers, to be stored under
+# /var/lib/extrausers.  The session and extrausers information is stored
+# so that it is not necessary to fetch it every time user logs in.
+#
+# If kerberos authentication is not successful due to wrong username/password,
+# the old password information from cached credentials should be removed
+# (done by pam_ccreds) and login is denied.  Thus changing user password
+# should be an effective measure of blocking (online) logins.
+#
+# If kerberos servers are not available but cached credentials
+# contain match for the provided password, old session and extrausers
+# information is used to allow login to proceed.  In this scenario
+# puavo-login is put into "deferred"-mode, in which user login password is
+# kept in process memory (running as root), and puavo-login waits for some
+# kerberos server to become available so it can try to fetch a new
+# kerberos ticket with the provided password.  The script will exit if
+# user login session ends or once a kerberos server is reached, except that
+# if kerberos authentication is successful, one attempt to fetch new puavo
+# session information is made and extrausers databases are also updated.
+#
+# All network operations should have strict timeouts, so that
+# puavo-login should be predictable in case any servers are unavailable
+# and logins should not be unreasonably delayed.  This concerns both
+# the kerberos authentication and the session fetch from puavo server.
+#
+# puavo-login logs events to syslog, and normally its operation can be
+# tracked at /var/log/auth.log.
+
 # from /usr/include/security/_pam_types.h
 PAM_SUCCESS=0
 PAM_SYSTEM_ERR=4
@@ -14,8 +68,6 @@ PUAVO_SESSION_DIR="/var/lib/puavo-desktop/users/${PAM_USER}"
 PUAVO_SESSION_FILE="${PUAVO_SESSION_DIR}/puavo_session.json"
 
 USER_MINIMUM_UID_GID=10000
-
-# XXX DOCUMENTATION!
 
 if [ -z "$PAM_USER" ]; then
   logger -p auth.err -s -t puavo-login 'PAM_USER is not set'
