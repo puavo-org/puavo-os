@@ -34,6 +34,8 @@ case "$1" in
 	chown puavodesktop:puavodesktop /var/lib/puavo-desktop/shared
 	chmod 2775 /var/lib/puavo-desktop/shared
 
+	mkdir -p /var/cache/ccreds
+
 	# XXX is this needed and why?
 	# usermod -a -G puavodesktop lightdm
     ;;

@@ -1,0 +1,96 @@
+#!/bin/sh
+
+set -eu
+
+API_SERVER="$(/usr/sbin/puavo-resolve-api-server)" || true
+if [ -z "$API_SERVER" ]; then
+  echo 'Could not resolve Puavo API server' >&2
+  exit 1
+fi
+
+PUAVO_HOSTNAME="$(cat /etc/puavo/hostname 2>/dev/null)" || true
+if [ -z "$PUAVO_HOSTNAME" ]; then
+  echo 'Could not read puavo hostname from /etc/puavo/hostname' >&2
+  exit 1
+fi
+
+usage() {
+  cat <<EOF
+Usage: $(basename $0) [--user-bootserver|--user-etc|--user-krb] urlpath
+EOF
+}
+
+make_request() {
+  urlpath=$1
+  shift
+
+  # use curl instead of puavo-rest-client for efficiency reasons
+
+  # no timeouts here, it is the caller's responsibility to decide on that
+  curl --cacert /etc/puavo/certs/rootca.pem       \
+       --fail                                     \
+       --form-string "hostname=${PUAVO_HOSTNAME}" \
+       --show-error                               \
+       --silent                                   \
+       "$@"                                       \
+       "${API_SERVER}/${urlpath}"
+}
+
+case "${1:-}" in
+  --user-bootserver)
+    mode='bootserver'
+    ;;
+  --user-etc)
+    mode='etc'
+    ;;
+  --user-krb)
+    mode='krb'
+    ;;
+  *)
+    usage >&2
+    exit 1
+    ;;
+esac
+
+urlpath=${2:-}
+
+if [ -z "$urlpath" ]; then
+  usage >&2
+  exit 1
+fi
+
+case "$mode" in
+  bootserver)
+    make_request "$urlpath" --header 'Authorization: Bootserver'
+    ;;
+
+  etc)
+    device_dn="$(cat /etc/puavo/ldap/dn 2>/dev/null)" || true
+    if [ -z "$device_dn" ]; then
+      echo 'Could not determine device dn for this host' >&2
+      exit 1
+    fi
+
+    device_password="$(cat /etc/puavo/ldap/password 2>/dev/null)" || true
+    if [ -z "$device_password" ]; then
+      echo 'Could not determine device password for this host' >&2
+      exit 1
+    fi
+
+    echo "--user ${device_dn}:${device_password}" \
+      | make_request "$urlpath" --config -
+    ;;
+
+  krb)
+    make_request "$urlpath"          \
+                 --delegation always \
+                 --negotiate         \
+                 --user :
+    ;;
+  *)
+    echo "$(basename $0) internal error" >&2
+    exit 1
+    ;;
+esac
+
+exit 0

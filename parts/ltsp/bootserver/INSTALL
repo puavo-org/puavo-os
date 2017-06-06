@@ -105,49 +105,6 @@ Do the following to get the NFS-configurations active:
   service idmapd restart
 
 
-sssd configuration
-------------------
-
-/etc/nsswitch.conf should be configured to use sss.  Make sure that
-the "passwd", "group", "shadow" and netgroup sections contain "sss", for
-example:
-
-  passwd:         compat sss
-  group:          compat sss
-  shadow:         compat sss
-
-  netgroup:       nis sss
-
-sssd also needs a bit of configuration.  /etc/sssd/sssd.conf should something
-to the effect of:
-
-  [sssd]
-  services = nss, pam
-  domains = KRBLDAP.FILL_IN_YOUR_KERBEROS_REALM_AT_/etc/puavo/kerberos/realm
-
-  ...
-
-  [domain/KRBLDAP.FILL_IN_YOUR_KERBEROS_REALM_AT_/etc/puavo/kerberos/realm]
-  auth_provider = krb5
-  cache_credentials = true
-  id_provider = ldap
-  dns_discovery_domain=FILL_IN_YOUR_DOMAIN_AT_/etc/puavo/domain
-  krb5_server = _srv_,kerberos.FILL_IN_YOUR_DOMAIN_AT_/etc/puavo/domain
-  krb5_realm = FILL_IN_YOUR_KERBEROS_REALM_AT_/etc/puavo/kerberos/realm
-  krb5_validate = false
-  ldap_default_bind_dn=FILL_IN_YOUR_LDAP_DN_AT_/etc/puavo/ldap/dn
-  ldap_default_authtok=FILL_IN_YOUR_LDAP_PASSWORD_AT_/etc/puavo/ldap/password
-  ldap_user_search_base = ou=People,FILL_IN_YOUR_LDAP_BASE_AT_/etc/puavo/ldap/base?sub?(objectClass=posixAccount)
-  ldap_group_search_base = ou=Groups,FILL_IN_YOUR_LDAP_BASE_AT_/etc/puavo/ldap/base?sub?(objectClass=posixGroup)
-  ldap_tls_reqcert = demand
-  ldap_uri = _srv_,ldap://FILL_IN_YOUR_LDAP_MASTER_AT_/etc/puavo/ldap/master:389
-  ldap_id_use_start_tls = true
-  min_id = 500
-  ldap_search_base = FILL_IN_YOUR_LDAP_BASE_AT_/etc/puavo/ldap/base
-  krb5_store_password_if_offline = true
-  ldap_user_fullname = displayName
-
-
 Ldap configuration
 ------------------
 

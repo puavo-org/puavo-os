@@ -68,9 +68,6 @@ install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-conf/profile-overwrites \
 		profile-overwrites/*.json
 
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/network/if-up.d \
-		etc/network/if-up.d/sssd
-
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/gdm/greeter/autostart \
 		etc/xdg/autostart/puavo-run-xrandr.desktop
 
@@ -90,7 +87,8 @@ install : installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
 		puavo-pulseaudio-setup \
 		puavo-pulseaudio-list \
-		puavo-remote-assistance-applet
+		puavo-remote-assistance-applet \
+		puavo-rest-request
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-dnssd-printer-client \
@@ -107,7 +105,6 @@ install : installdirs
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/puavo-vpn-client/scripts/route-up \
 		etc/puavo-vpn-client/scripts/route-up/10-dnsmasq \
-		etc/puavo-vpn-client/scripts/route-up/20-sssd \
 		etc/puavo-vpn-client/scripts/route-up/30-ntpdate
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/NetworkManager/dispatcher.d \
@@ -136,9 +133,8 @@ install : installdirs
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-client/pam \
 		pam/check-if-account-is-locked \
-		pam/open-session \
 		pam/puavo-local-config-setup \
-		pam/populate-extrausers \
+		pam/puavo-login \
 		pam/restrict-logins-by-local-config
 
 	$(INSTALL_DATA) -t $(DESTDIR)/lib/systemd/system \
