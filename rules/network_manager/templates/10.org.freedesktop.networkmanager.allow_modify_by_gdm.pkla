@@ -1,5 +1,5 @@
 [Login user permissions]
-Identity=unix-user:lightdm
+Identity=unix-user:Debian-gdm
 Action=org.freedesktop.NetworkManager.settings.modify.own
 ResultAny=no
 ResultInactive=no
