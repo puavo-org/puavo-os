@@ -250,15 +250,15 @@ session_get_user() {
       error(".user.uid_number is not a number")
     elif (.user.uid_number < ($minimum_uid_gid|tonumber)) then
       error(".user.uid_number is less than " + $minimum_uid_gid)
-    elif (.user.uid_number > 4294967295) then
-      error(".user.uid_number is more than 4294967295")
+    elif (.user.uid_number > 4294967294) then
+      error(".user.uid_number is more than 4294967294")
 
     elif (.user.gid_number|type != "number") then
       error(".user.gid_number is not a number")
     elif (.user.gid_number < ($minimum_uid_gid|tonumber)) then
       error(".user.gid_number is less than " + $minimum_uid_gid)
-    elif (.user.gid_number > 4294967295) then
-      error(".user.gid_number is more than 4294967295")
+    elif (.user.gid_number > 4294967294) then
+      error(".user.gid_number is more than 4294967294")
 
     elif (.user.first_name|type != "string") then
       error(".user.first_name is not a string")
@@ -320,8 +320,8 @@ session_get_groups() {
             error("group .gid_number is not a number")
           elif (.gid_number < ($minimum_uid_gid|tonumber)) then
             error("group .gid_number is less than " + $minimum_uid_gid)
-          elif (.gid_number > 4294967295) then
-            error("group .gid_number is more than 4294967295")
+          elif (.gid_number > 4294967294) then
+            error("group .gid_number is more than 4294967294")
 
           else
             .abbreviation + ":" + (.gid_number|tostring)
