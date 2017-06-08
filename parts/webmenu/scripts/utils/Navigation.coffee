@@ -55,10 +55,13 @@ class Navigation
     isActive: -> !!@selected
 
     select: (view) ->
-        @selected?.hideSelectHighlight()
-        view.displaySelectHighlight()
-        @selected = view
-        view.scrollTo()
+        try
+            @selected?.hideSelectHighlight()
+            view.displaySelectHighlight()
+            @selected = view
+            view.scrollTo()
+        catch e
+            console.log "Can't select or highlight the next item"
 
     next: ->
         if @isActive()
