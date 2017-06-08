@@ -6,6 +6,7 @@ class AllItems extends Backbone.Collection
     favorites: ->
         items = @filter (m) -> m.get("type") isnt "menu" and m.get("clicks") > 0
         items.sort (a, b) -> b.get("clicks") - a.get("clicks")
+        items = items[0..3]    # there's no room for more than 4 favorites
         return items
 
     searchFilter: (filterWords) ->
