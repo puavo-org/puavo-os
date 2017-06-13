@@ -182,7 +182,7 @@ module.exports = (gui, Window) ->
     ###*
     # Make menu visible and bring it to current desktop
     ###
-    displayMenu = (viewName) ->
+    displayMenu = (viewName, position, centerAtPos) ->
         fs.exists userPhotoPath, (exists) ->
           if exists
             config.set("userPhoto", "file://#{ userPhotoPath }")
@@ -192,19 +192,24 @@ module.exports = (gui, Window) ->
         menuVisible = true
         console.log "Displaying menu"
 
-        alignWindow(viewName)
+        alignWindow(viewName, position, centerAtPos)
         Window.show()
         Window.focus()
 
-    alignWindow = (viewName) ->
+
+    alignWindow = (viewName, position, centerAtPos) ->
         if viewName == 'logout'
             # put to right/bottom
-            x = window.window.screen.width  - Window.width
-            y = window.window.screen.height - Window.height
+            x = position[0] - Window.width
+            y = position[1] - Window.height
         else
-            # put to left/bottom
-            x = 0
-            y = window.window.screen.height - Window.height
+            # put to left/bottom (or center around the mouse cursor)
+            if centerAtPos
+                x = position[0] - Math.ceil(Window.width / 2)
+                y = position[1] - Math.ceil(Window.height / 2)
+            else
+                x = position[0]
+                y = position[1] - Window.height
 
         Window.moveTo(x,y)
 
@@ -215,7 +220,7 @@ module.exports = (gui, Window) ->
     ###
     toggleMenu = do ->
         currentView = null
-        return (viewName) ->
+        return (viewName, position, centerAtPos) ->
             shared.emit("open-view", viewName)
 
             if currentView isnt viewName
@@ -229,14 +234,14 @@ module.exports = (gui, Window) ->
                     Window.hide()
                     setTimeout(displayMenu, 1) # Allow menu to disappear
                 else
-                    displayMenu(currentView)
+                    displayMenu(currentView, position, centerAtPos)
                 return
 
             # When view is not changing just toggle menu visibility
             if menuVisible
                 hideWindow()
             else
-                displayMenu(currentView)
+                displayMenu(currentView, position, centerAtPos)
 
 
     ###*
@@ -247,15 +252,29 @@ module.exports = (gui, Window) ->
     #   @param {String} options.webmenu-exit Exit Webmenu gracefully
     ###
     spawnHandler = (options) ->
+        position = [0, 0]
+        centerAtPos = false
+
+        # The position (--pos=X,Y) should always be there...
+        if options.pos
+            position = options.pos.split ","
+            position[0] = parseInt(position[0], 10)
+            position[1] = parseInt(position[1], 10)
+
+        # If this is set (--center), then the position is the mouse
+        # cursor position and we want to center the menu around it.
+        # Otherwise it is an absolute position.
+        if options.center
+            centerAtPos = true
 
         if options.logout
-            toggleMenu("logout")
+            toggleMenu("logout", position, centerAtPos)
         else if options["webmenu-exit"]
             code = parseInt(options["webmenu-exit"], 10) or 0
             console.info "Exiting on user request with code #{ options["webmenu-exit"] }"
             process.exit(code)
         else
-            toggleMenu("root")
+            toggleMenu("root", position, centerAtPos)
 
     # Prevent crazy menu spawning which might cause slow machines to get stuck
     # for long periods of time
