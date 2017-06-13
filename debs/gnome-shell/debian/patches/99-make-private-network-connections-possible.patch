@@ -1,0 +1,60 @@
+diff -ruN gnome-shell.orig/js/ui/status/network.js gnome-shell/js/ui/status/network.js
+--- gnome-shell.orig/js/ui/status/network.js	2017-06-13 15:06:18.084094143 +0300
++++ gnome-shell/js/ui/status/network.js	2017-06-13 15:11:26.461382710 +0300
+@@ -365,8 +365,7 @@
+     },
+ 
+     _autoConnect: function() {
+-        let connection = new NetworkManager.Connection();
+-        this._client.add_and_activate_connection(connection, this._device, null, null);
++        this._addAndActivateNewConnection(null);
+     },
+ 
+     destroy: function() {
+@@ -944,14 +943,43 @@
+                 Util.spawn(['gnome-control-center', 'network', 'connect-8021x-wifi',
+                             this._device.get_path(), accessPoints[0].dbus_path]);
+             } else {
+-                let connection = new NetworkManager.Connection();
+-                this._client.add_and_activate_connection(connection, this._device, accessPoints[0].dbus_path, null)
++                this._addAndActivateNewConnection(accessPoints[0].dbus_path);
+             }
+         }
+ 
+         this.close();
+     },
+ 
++    _addAndActivateNewConnection: function(dbus_path) {
++      let connection = new NetworkManager.Connection();
++
++      let cmd = '/usr/lib/puavo-ltsp-client/puavo-network-connections --ask-if-must-be-private';
++      let [res, out, err, status] = GLib.spawn_command_line_sync(cmd);
++
++      if (res && status == 0) {
++          // We do a similar trick as "nmcli"-utility does when given
++          // "private yes" as parameters.  Set the user of the network
++          // connection to the current user only so that network connection
++          // can be made with
++          // "org.freedesktop.NetworkManager.settings.modify.own" permission
++          // only and "org.freedesktop.NetworkManager.settings.modify.system"
++          // is not needed.  But this is intentionally coded so that if
++          // the above command is not found, the default behaviour of using
++          // system-level permission is retained.
++          let username = GLib.get_user_name();
++
++          if (username && username != "") {
++              let s_con = new NetworkManager.SettingConnection();
++              connection.add_setting(s_con);
++
++              s_con.add_permission("user", username, null);
++          }
++      }
++
++      this._client.add_and_activate_connection(connection, this._device,
++          dbus_path, null);
++    },
++
+     _notifySsidCb: function(accessPoint) {
+         if (accessPoint.get_ssid() != null) {
+             accessPoint.disconnect(accessPoint._notifySsidId);
+Binääritiedostot gnome-shell.orig/js/ui/status/.network.js.swp ja gnome-shell/js/ui/status/.network.js.swp eroavat
