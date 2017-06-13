@@ -20,6 +20,27 @@ default_spawn_sock=~/.config/webmenu/spawn.sock
 args="$@"
 status=0
 
+# Check if the --pos=X,Y argument was specified on the command line.
+# If this script was called from the Webmenu shell extension, then
+# it will be there. Otherwise we'll have extra work to do.
+pos_specified=0
+
+for arg in "$@"; do
+    case "$arg" in
+        --pos=*)
+            pos_specified=1
+            ;;
+    esac
+done
+
+if [ $pos_specified -eq 0 ]; then
+    # No position specified. Assume the script was called from the command
+    # line, or by pressing Alt+F1. Determine the mouse position and add it
+    # to the arguments, so the menu is centered around the mouse cursor.
+    eval $(xdotool getmouselocation --shell)
+    args="--pos=$X,$Y --center $args"
+fi
+
 spawn(){
     echo "$args" | nc -U $1
     status=$?
