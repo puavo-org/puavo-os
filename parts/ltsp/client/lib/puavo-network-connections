@@ -1,0 +1,24 @@
+#!/bin/sh
+
+set -eu
+
+check_for_system_modify_permission() {
+  pkcheck --action-id org.freedesktop.NetworkManager.settings.modify.system \
+    --process "$$" >/dev/null 2>&1
+}
+
+case "${1:-}" in
+  --ask-if-must-be-private)
+    if check_for_system_modify_permission; then
+      exit 1
+    else
+      # we have no .modify.system permission,
+      # network connections must be private
+      exit 0
+    fi
+    ;;
+  *)
+    echo "Usage: $(basename $0) --ask-if-must-be-private" >&2
+    exit 1
+    ;;
+esac
