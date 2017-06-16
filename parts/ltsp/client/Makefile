@@ -93,7 +93,6 @@ install : installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-dnssd-printer-client \
 		puavo-handle-external-files-actions \
-		puavo-ltsp-login \
 		puavo-netboot-init-nfs \
 		puavo-report-system-version
 
