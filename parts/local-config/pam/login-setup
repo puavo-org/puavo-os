@@ -15,13 +15,12 @@ begin
   end
 
   if puavoconf.get('puavo.admin.primary_user') == '' then
-    # This test should be run before populate-users in puavo-ltsp-client,
-    # otherwise this just will not work.
-    if test(?s, '/var/lib/extrausers/passwd') \
-	 || test(?s, '/var/lib/extrausers/group') then
-      # /var/lib/extrausers/{passwd,group} exist and have non-zero size,
-      # so we deduce that this is not the first login on this host and we do
-      # nothing.  (We could add the user as primary_user, but I think it is
+    # Test for the existence of /run/puavo/first_login_on_host, which should be
+    # setup by puavo-login in case this was the first login on this host.
+    if !File.exists?('/run/puavo/first_login_on_host') then
+      # /run/puavo/first_login_on_host should exist now if this was the first
+      # login on this host, so if it does not, we do nothing.
+      # (We could add the user as primary_user, but I think it is
       # better to prevent accidents by having this check).
       Syslog.warning('primary user is not set, but this is not the first' \
                        + ' login on this host')

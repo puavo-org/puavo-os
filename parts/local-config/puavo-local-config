@@ -296,8 +296,7 @@ EOF
 
   gdmsysconf_path = '/etc/polkit-1/localauthority/50-local.d/10.org.freedesktop.networkmanager.allow_modify_system_by_gdm.pkla'
 
-  if test(?s, '/var/lib/extrausers/passwd') \
-      || test(?s, '/var/lib/extrausers/group') then
+  if !File.exists?('/run/puavo/first_login_on_host') then
     # not a first login, remove special permissions
     FileUtils.rm_f(gdmsysconf_path)
   else

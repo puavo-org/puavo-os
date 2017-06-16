@@ -67,6 +67,8 @@ PAM_AUTHINFO_UNAVAIL=9
 PUAVO_SESSION_DIR="/var/lib/puavo-desktop/users/${PAM_USER}"
 PUAVO_SESSION_FILE="${PUAVO_SESSION_DIR}/puavo_session.json"
 
+FIRSTLOGIN_MARKER_PATH='/run/puavo/first_login_on_host'
+
 USER_MINIMUM_UID_GID=10000
 
 if [ -z "$PAM_USER" ]; then
@@ -347,6 +349,11 @@ extrausers_new_passwd() {
       logmsg err "could not create ${passwd_file_path}"
       return 1
     fi
+
+    # We create this file as a marker for
+    # /usr/lib/puavo-local-config/pam/login-setup to determine if this was
+    # the first login on this host.
+    touch "$FIRSTLOGIN_MARKER_PATH"
   fi
 
   new_passwd_data="$(
@@ -593,6 +600,8 @@ fi
 
 
 if [ "$mode" = 'immediate' ]; then
+  rm -f "$FIRSTLOGIN_MARKER_PATH"
+
   auth_status="$PAM_SUCCESS"
   authenticate_user || auth_status="$?"
 
