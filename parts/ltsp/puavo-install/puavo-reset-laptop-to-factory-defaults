@@ -7,7 +7,7 @@ if [ "$(id -u)" -ne 0 ]; then
   exit 1
 fi
 
-if grep -qw root=/dev/nbd0 /proc/cmdline; then
+if [ -e /run/puavo/nbd-server ]; then
   echo 'Refusing to do anything as we are on an NBD root' >&2
   exit 1
 fi
@@ -62,6 +62,7 @@ cd /
 # XXX The device primary user should probably be set to nil in Puavo,
 # XXX but puavo-rest does not permit this yet.  It should also be ensured that
 # XXX /state/etc/puavo/primary_user_override does not exist.
+rm -f /state/etc/puavo/primary_user_override
 
 {
   echo starting...
@@ -108,8 +109,8 @@ cd /
 
 echo '>>>>> Done!'
 echo
-echo 'Press ENTER to restart the login manager.'
+echo 'Press ENTER to reboot.'
 
 read answer
 
-service lightdm restart &
+reboot
