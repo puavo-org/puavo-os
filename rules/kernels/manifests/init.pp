@@ -28,7 +28,7 @@ class kernels {
     }
   }
 
-  $default_kernel = '4.9.0-2-amd64'
+  $default_kernel = '4.9.0-3-amd64'
   $edge_kernel    = $default_kernel
   $legacy_kernel  = '3.16.0-4-amd64'
 
