@@ -60,6 +60,9 @@ layout.on "open-app", (model) ->
         nodejs.hideWindow()
     , Application.animationDuration
 
+# just a wrapper, see native.coffee for the real function
+layout.on "resetClicks", (model) ->
+    nodejs.resetClicks(model)
 
 $(window).keydown (e) ->
     if e.which is 27 # Esc

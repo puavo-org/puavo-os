@@ -14,9 +14,10 @@ class Favorites extends ViewMaster
         @config = opts.config
 
         @setList()
-        @listenTo this, "favorite-removed", =>
+        @listenTo this, "favorite-removed", (model) =>
             @setList()
             @refreshViews()
+            @bubble "resetClicks", model    # remove the entry from the favorites data
         @listenTo @collection, "change:clicks", =>
             setTimeout =>
                 @setList()
