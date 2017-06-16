@@ -108,6 +108,24 @@ config.set("webkioskMode", (process.env.WM_WEBKIOSK_MODE is "true"))
 
 userPhotoPath = "#{ webmenuHome }/user-photo.jpg"
 
+# ##################
+
+# try to read the favorites JSON
+favesFile = "#{process.env.WM_HOME}/favorites.json"
+favesData = null
+
+try
+    favesData = JSON.parse(fs.readFileSync(favesFile).toString())
+catch e
+    console.log "Can't read the faves file, reason: #{e}"
+    favesData = {}
+
+# save the favorites JSON
+saveFaves = () ->
+    fs.writeFile favesFile, JSON.stringify(favesData), (error) ->
+        console.error("Error writing file", error) if error
+
+# ##################
 
 try
     puavoDomain = fs.readFileSync("/etc/puavo/domain").toString().trim()
