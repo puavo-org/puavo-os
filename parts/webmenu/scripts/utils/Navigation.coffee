@@ -38,7 +38,10 @@ class Navigation
 
         # Enter opens always the first app or the selected one
         if e.which is key.ENTER
-            @openItem()
+            try
+                @openItem()
+            catch e
+                console.log "ENTER pressed when nothing was selected"
 
         # Call other methods when navigation is active
         if @isActive()
@@ -52,10 +55,13 @@ class Navigation
     isActive: -> !!@selected
 
     select: (view) ->
-        @selected?.hideSelectHighlight()
-        view.displaySelectHighlight()
-        @selected = view
-        view.scrollTo()
+        try
+            @selected?.hideSelectHighlight()
+            view.displaySelectHighlight()
+            @selected = view
+            view.scrollTo()
+        catch e
+            console.log "Can't select or highlight the next item"
 
     next: ->
         if @isActive()

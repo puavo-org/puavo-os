@@ -17,10 +17,11 @@
 const Main = imports.ui.main;
 const St   = imports.gi.St;
 const Util = imports.misc.util;
+const Lang = imports.lang;
 
 let logout_button, menu_button;
 
-function make_button(icon_name, icon_size, spawn_command) {
+function make_button(icon_name, icon_size, spawn_command, is_right) {
     let button = new St.Bin({ can_focus:   true,
 			      reactive:    true,
 			      style_class: 'panel-button-webmenu',
@@ -28,12 +29,23 @@ function make_button(icon_name, icon_size, spawn_command) {
 			      x_fill:      true,
 			      y_fill:      false });
     let icon = new St.Icon({ icon_name:   icon_name,
-                             style_class: 'launcher-box-item-webmenu', 
+                             style_class: 'launcher-box-item-webmenu',
                              icon_size: icon_size});
 
     button.set_child(icon);
-    button.connect('button-press-event',
-		  function() { Util.spawn(spawn_command); });
+
+    button.connect("button-press-event", Lang.bind(this, function() {
+        let [x, y] = button.get_transformed_position();
+
+        // align to the right edge
+        if (is_right)
+            x += button.get_transformed_size()[0];
+
+        let finalCmd = spawn_command.slice();  // slice=a new copy of the array
+
+        finalCmd.push("--pos=" + Math.ceil(x) + "," + Math.ceil(y));
+        Util.spawn(finalCmd);
+    }));
 
     return button;
 }
@@ -41,10 +53,10 @@ function make_button(icon_name, icon_size, spawn_command) {
 function init() {
     logout_button = make_button('system-shutdown-symbolic',
 				'16',
-				[ 'webmenu-spawn', '--logout' ]);
+				[ 'webmenu-spawn', '--logout' ], true);
     menu_button   = make_button('opinsys-nelio-menu',
 				'28',
-				[ 'webmenu-spawn' ]);
+				[ 'webmenu-spawn' ], false);
 }
 
 function disable() {
