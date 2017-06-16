@@ -1,5 +1,4 @@
 class network_manager {
-  include ::network_manager::allow_modify
   include ::packages
 
   # Use dns=dnsmasq option so that
