@@ -298,10 +298,27 @@ module.exports = (gui, Window) ->
     # for long periods of time
     spawnEmitter.on "spawn", _.debounce(spawnHandler, 300, true)
 
+    # Adds/updates a click counter and saves the new array
+    incrementClick = (id, clicks) ->
+        favesData[id] = parseInt(clicks)
+        saveFaves()
+
+    # Removes an entry from the faves array and saves the new array. Without
+    # this, otherwise unfaved entries will remain in the menu if no other
+    # programs are opened after the deletion (since only opening a program
+    # causes the JSON to be written).
+    resetClicks = (model) ->
+        delete favesData[model.id]
+        saveFaves()
+
+    shared.resetClicks = resetClicks
+
     open = (cmd) ->
 
         if typeof cmd.toJSON is "function"
             cmd = cmd.toJSON()
+
+        incrementClick(cmd["id"], cmd["clicks"])
 
         console.log "Opening command", cmd
         logger.emit(
@@ -327,6 +344,7 @@ module.exports = (gui, Window) ->
         else
             launchCommand(cmd)
 
+    shared.initialFaves = favesData
     shared.user = userData
     shared.config = config
     shared.menu = menuJSON
