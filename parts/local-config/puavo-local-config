@@ -287,31 +287,31 @@ EOF
   end
 
   #
-  # In case no logins have happened yet on this host, give lightdm special
+  # In case no logins have happened yet on this host, give gdm special
   # permissions to system-wide network settings so that wireless network
   # connections created in login screen are global and persistent.  This is
   # reverted once logins have happened (to prevent possibility that wireless
   # network passwords can be read from login screen).
   #
 
-  lightdmsysconf_path = '/etc/polkit-1/localauthority/50-local.d/10.org.freedesktop.networkmanager.allow_modify_system_by_lightdm.pkla'
+  gdmsysconf_path = '/etc/polkit-1/localauthority/50-local.d/10.org.freedesktop.networkmanager.allow_modify_system_by_gdm.pkla'
 
   if test(?s, '/var/lib/extrausers/passwd') \
       || test(?s, '/var/lib/extrausers/group') then
     # not a first login, remove special permissions
-    FileUtils.rm_f(lightdmsysconf_path)
+    FileUtils.rm_f(gdmsysconf_path)
   else
-    lightdmsysconf = <<EOF
-[Special lightdm firstlogin permissions]
-Identity=unix-user:lightdm
+    gdmsysconf = <<EOF
+[Special gdm firstlogin permissions]
+Identity=unix-user:Debian-gdm
 Action=org.freedesktop.NetworkManager.settings.modify.system
 ResultAny=no
 ResultInactive=no
 ResultActive=yes
 EOF
-    tmpfile = "#{ lightdmsysconf_path }.tmp"
-    File.open(tmpfile, 'w') { |f| f.print(lightdmsysconf) }
-    File.rename(tmpfile, lightdmsysconf_path)
+    tmpfile = "#{ gdmsysconf_path }.tmp"
+    File.open(tmpfile, 'w') { |f| f.print(gdmsysconf) }
+    File.rename(tmpfile, gdmsysconf_path)
   end
 end
 
