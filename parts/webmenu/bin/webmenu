@@ -47,24 +47,9 @@ help(){
     "
 }
 
-# XXX If this home directory has a nwjs instance locking it,
-# XXX remove it if it is old, otherwise use a temporary directory.
-# XXX This is an ugly workaround for the
-# XXX "multiple hosts one directory"-problem.
-nwjs_user_data_dir="${WM_HOME}"
-lockfile="${nwjs_user_data_dir}/SingletonLock"
-if [ -h "$lockfile" ]; then
-    if [ "$(stat --format=%Y "$lockfile")" -le "$(( $(date +%s) - 43200 ))" ]; then
-        # remove locks in case they are over 12 hours old
-        rm -f "${nwjs_user_data_dir}"/Singleton* "${nwjs_user_data_dir}"/*.pid
-    else
-        nwjs_user_data_dir="$(mktemp -d /tmp/webmenu-nwjs-${USER}.XXXXXXXX)"
-        # copy the default profile to nwjs data dir
-        cp -a "${WM_HOME}/Default" "${nwjs_user_data_dir}/Default" \
-            2>/dev/null || true
-    fi
-fi
-
+# Always put nw.js's profile files in a temporary directory. User data like favorites,
+# are handled elsewhere. Related to issue #159.
+nwjs_user_data_dir="$(mktemp -d /tmp/webmenu-nwjs-${USER}.XXXXXXXX)"
 
 mkdir -p "$WM_HOME"
 # Save startup time to a file to log start up times
