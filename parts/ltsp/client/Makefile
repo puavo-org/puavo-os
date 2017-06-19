@@ -93,7 +93,6 @@ install : installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-dnssd-printer-client \
 		puavo-handle-external-files-actions \
-		puavo-ltsp-login \
 		puavo-netboot-init-nfs \
 		puavo-report-system-version
 
@@ -134,6 +133,7 @@ install : installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-client/pam \
 		pam/check-if-account-is-locked \
 		pam/puavo-local-config-setup \
+		pam/puavo-login \
 		pam/restrict-logins-by-local-config
 
 	$(INSTALL_DATA) -t $(DESTDIR)/lib/systemd/system \

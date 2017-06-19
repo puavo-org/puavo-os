@@ -1,0 +1,702 @@
+#!/bin/sh
+
+# NOT using "set -eu", we want to control exit codes exactly,
+# because pam_puavo expects them to be precisely meaningful.
+# set -x; exec >/tmp/puavo-login.$$.log 2>&1 # uncomment for development only
+
+# This is puavo-login, a script that handles authentication in
+# puavo-os systems.  It is meant to be used in conjunction with
+# pam_puavo (a modified version of pam_exec-module), pam_ccreds and
+# libnss-extrausers, with the following pam-configuration (or similar):
+#
+# auth    [authinfo_unavail=ignore success=1 perm_denied=2 default=4]   pam_puavo.so      exitcode_to_pam expose_authtok quiet set_krb5ccname /usr/lib/puavo-ltsp-client/pam/puavo-login immediate
+# auth    [success=4 default=2]           pam_ccreds.so   action=validate ccredsfile=/var/cache/ccreds/ccreds.db use_first_pass
+# auth    [default=4]                     pam_ccreds.so   action=store ccredsfile=/var/cache/ccreds/ccreds.db
+# auth    [default=1]                     pam_ccreds.so   action=update ccredsfile=/var/cache/ccreds/ccreds.db
+# auth    required                        pam_puavo.so    exitcode_to_pam quiet /usr/lib/puavo-ltsp-client/pam/puavo-login cached-fail
+# auth    requisite                       pam_deny.so
+# auth    optional                        pam_puavo.so    exitcode_to_pam expose_authtok quiet /usr/lib/puavo-ltsp-client/pam/puavo-login cached-auth
+#
+# The script uses kerberos for authentication, but if kerberos servers
+# are not available it will fall back to cached credentials.  These
+# are provided by pam_ccreds, and these are updated whenever kerberos
+# servers are available.  This means that on the first login on any
+# host/user combination the network should be available, but on subsequent
+# logins that is not a requirement.  One possible security concern is that
+# a hashed form of every user password is stored on the host, but this is
+# only for users which have logged in on a particular host.
+#
+# If kerberos authentication is successful, the script requests puavo
+# session information from puavo server.  This session information
+# contains, among other things, user uid and gid information, as well
+# as information about user groups.  This information is used to update
+# passwd- and group-databases for libnss-extrausers, to be stored under
+# /var/lib/extrausers.  The session and extrausers information is stored
+# so that it is not necessary to fetch it every time user logs in.
+#
+# If kerberos authentication is not successful due to wrong username/password,
+# the old password information from cached credentials should be removed
+# (done by pam_ccreds) and login is denied.  Thus changing user password
+# should be an effective measure of blocking (online) logins.
+#
+# If kerberos servers are not available but cached credentials
+# contain match for the provided password, old session and extrausers
+# information is used to allow login to proceed.  In this scenario
+# puavo-login is put into "deferred"-mode, in which user login password is
+# kept in process memory (running as root), and puavo-login waits for some
+# kerberos server to become available so it can try to fetch a new
+# kerberos ticket with the provided password.  The script will exit if
+# user login session ends or once a kerberos server is reached, except that
+# if kerberos authentication is successful, one attempt to fetch new puavo
+# session information is made and extrausers databases are also updated.
+#
+# All network operations should have strict timeouts, so that
+# puavo-login should be predictable in case any servers are unavailable
+# and logins should not be unreasonably delayed.  This concerns both
+# the kerberos authentication and the session fetch from puavo server.
+#
+# puavo-login logs events to syslog, and normally its operation can be
+# tracked at /var/log/auth.log.
+
+# from /usr/include/security/_pam_types.h
+PAM_SUCCESS=0
+PAM_SYSTEM_ERR=4
+PAM_PERM_DENIED=6
+PAM_AUTHINFO_UNAVAIL=9
+
+PUAVO_SESSION_DIR="/var/lib/puavo-desktop/users/${PAM_USER}"
+PUAVO_SESSION_FILE="${PUAVO_SESSION_DIR}/puavo_session.json"
+
+FIRSTLOGIN_MARKER_PATH='/run/puavo/first_login_on_host'
+
+USER_MINIMUM_UID_GID=10000
+
+if [ -z "$PAM_USER" ]; then
+  logger -p auth.err -s -t puavo-login 'PAM_USER is not set'
+  exit 1
+fi
+
+mode="${1:-immediate}"
+
+logmsg() { logger -p "auth.$1" -t puavo-login "user ${PAM_USER} / mode ${PAM_TYPE}/${mode} :: $2"; }
+
+#
+# main subroutines
+#
+
+authenticate_user() {
+  authenticate_user_status=0
+  kinit_msg=$(
+    echo "$user_password" \
+      | timeout -k 1 10 env LANG=C \
+	  kinit -f -l 5d -r 7d "$PAM_USER" 2>&1) || authenticate_user_status=$?
+
+  if [ "$authenticate_user_status" -eq 0 ]; then
+    logmsg notice 'kerberos auth was SUCCESS'
+
+    # If PAM_USER uid is known at this point, change ticket owner.
+    # It is not known in the first login case, but "open_session" fixes that.
+    # "open_session" is however not run in every situation, for example when
+    # screen lock is opened.
+    if check_user_uid; then
+      if ! chown "${PAM_USER}:" "${krb5_ticketpath}" 2>/dev/null; then
+	logmsg warning "could not chown ${krb5_ticketpath} at auth"
+      fi
+    fi
+
+    return "$PAM_SUCCESS"
+  fi
+
+  if echo "$kinit_msg" \
+    | grep -Eq '(not found in Kerberos database|Password incorrect)'; then
+      logmsg notice 'kerberos auth was DENIED'
+      logmsg notice 'removing cached credentials'	# up to pam_ccreds.so
+      return "$PAM_PERM_DENIED"
+  fi
+
+  logmsg notice 'kerberos auth was UNAVAILABLE'
+
+  return "$PAM_AUTHINFO_UNAVAIL"
+}
+
+check_user_uid() {
+  user_uid="$(id -u "$PAM_USER" 2>/dev/null)" || return 1
+
+  if [ "$user_uid" -lt "$USER_MINIMUM_UID_GID" ]; then
+    logmsg warning "login through puavo-login attempted with uid ${user_uid}"
+    return 1
+  fi
+
+  return 0
+}
+
+get_puavo_session() {
+  session_fetch_timeout="${1:-}"
+  shift		# the rest of the arguments go to puavo-rest-request
+
+  if [ -z "$session_fetch_timeout" ]; then
+    session_fetch_timeout=40
+
+    # If we have previous session data, keep the fetch timeout very short
+    # because usually any session data we have is good enough.
+    if [ -s "${PUAVO_SESSION_FILE}" ]; then
+      session_fetch_timeout=4
+    fi
+  fi
+
+  mkdir -p "$PUAVO_SESSION_DIR" || return 1
+
+  session_status=0
+  session_error_msg=$(
+    timeout -k 1 "$session_fetch_timeout" puavo-rest-request "$@" 2>&1 \
+      > "${PUAVO_SESSION_FILE}.tmp") || session_status=$?
+
+  if [ "$session_status" -eq 0 -a -s "${PUAVO_SESSION_FILE}.tmp" ]; then
+    logmsg info "fetched new puavo session with timeout $session_fetch_timeout"
+    if ! mv "${PUAVO_SESSION_FILE}.tmp" "${PUAVO_SESSION_FILE}" 2>/dev/null; then
+      logmsg err 'error putting new puavo session into place'
+      session_status=1
+    fi
+  else
+    logmsg warning "error fetching new puavo session with timeout $session_fetch_timeout: $session_error_msg"
+  fi
+
+  rm -f "${PUAVO_SESSION_FILE}.tmp"
+
+  update_extrausers || return 1
+
+  if [ ! -s "$PUAVO_SESSION_FILE" ]; then
+    logmsg err 'we have no puavo session, not even an old one'
+    return 1
+  fi
+
+  if [ "$session_status" -ne 0 ]; then
+    logmsg info 'using old puavo session'
+  fi
+
+  # If we have a puavo-session file, we have a success
+  # (even if the file is old).
+  return 0
+}
+
+is_guest() {
+  [ "$PAM_USER" = 'guest' ]
+}
+
+update_extrausers() {
+  update_extrausers_status=0
+
+  # guest user information is not in extrausers
+  is_guest && return 0
+
+  if ! extrausers_new_passwd; then
+    logmsg err 'error updating extrausers passwd db'
+    update_extrausers_status=1
+  fi
+
+  if ! extrausers_new_group; then
+    logmsg err 'error updating extrausers group db'
+    update_extrausers_status=1
+  fi
+
+  if [ "$update_extrausers_status" -eq 0 ]; then
+    logmsg notice 'extrausers databases update done'
+  fi
+
+  return "$update_extrausers_status"
+}
+
+user_has_session() {
+  timeout -k 1 10 loginctl user-status "$PAM_USER" >/dev/null 2>&1
+}
+
+#
+# subroutines needed by update_extrausers
+#
+
+session_get_username() {
+  jq -r '
+    if (.|type != "object") then
+      error("session information is not an object")
+
+    elif (.user|type != "object") then
+      error("session user information is not an object")
+    elif (.user.username|type != "string") then
+      error("username is not a string")
+    elif (.user.username == "") then
+      error("username is an empty string")
+    elif ((.user.username|contains(":")) or (.user.username|contains("\n"))) then
+      error("username contains : or a newline")
+
+    else
+      .user.username
+    end
+   ' "$PUAVO_SESSION_FILE"
+}
+
+session_get_user() {
+  jq -r --arg minimum_uid_gid "$USER_MINIMUM_UID_GID" '
+    if (.|type != "object") then
+      error("session information is not an object")
+    elif (.user|type != "object") then
+      error("session user information is not an object")
+
+    elif (.user.username|type != "string") then
+      error("username is not a string")
+    elif (.user.username == "") then
+      error("username is an empty string")
+    elif ((.user.username|contains(":")) or (.user.username|contains("\n"))) then
+      error("username contains : or a newline")
+
+    elif (.user.uid_number|type != "number") then
+      error(".user.uid_number is not a number")
+    elif (.user.uid_number < ($minimum_uid_gid|tonumber)) then
+      error(".user.uid_number is less than " + $minimum_uid_gid)
+    elif (.user.uid_number > 4294967294) then
+      error(".user.uid_number is more than 4294967294")
+
+    elif (.user.gid_number|type != "number") then
+      error(".user.gid_number is not a number")
+    elif (.user.gid_number < ($minimum_uid_gid|tonumber)) then
+      error(".user.gid_number is less than " + $minimum_uid_gid)
+    elif (.user.gid_number > 4294967294) then
+      error(".user.gid_number is more than 4294967294")
+
+    elif (.user.first_name|type != "string") then
+      error(".user.first_name is not a string")
+    elif ((.user.first_name|contains(":")) or (.user.first_name|contains("\n"))) then
+      error("user .first_name contains : or a newline")
+
+    elif (.user.last_name|type != "string") then
+      error(".user.last_name is not a string")
+    elif ((.user.last_name|contains(":")) or (.user.last_name|contains("\n"))) then
+      error("user .last_name contains : or a newline")
+
+    else
+      .user.username
+        + ":" + "x"
+        + ":" + (.user.uid_number|tostring)
+        + ":" + (.user.gid_number|tostring)
+        + ":" + (if (.user.first_name != "" and .user.last_name != "") then
+                   .user.first_name + " " + .user.last_name
+                 elif (.user.first_name != "") then
+                   .user.first_name
+                 elif (.user.last_name != "") then
+                   .user.last_name
+                 else
+                   "User X"
+                 end)
+        + ":" + "/home/" + .user.username
+        + ":" + "/bin/bash"
+    end
+  ' "$PUAVO_SESSION_FILE"
+}
+
+session_get_groups() {
+  jq -r --arg minimum_uid_gid "$USER_MINIMUM_UID_GID" '
+    if (.|type != "object") then
+      error("session information is not an object")
+
+    elif (.user|type != "object") then
+      error("session user information is not an object")
+
+    elif (.user.groups|type != "array") then
+      error(".user.groups is not an array")
+    elif (.user.groups|length == 0) then
+      error(".user.groups is an empty array")
+
+    else
+      .user.groups
+      | map(
+          if (.|type != "object") then
+            error("group is not an object")
+
+          elif (.abbreviation|type != "string") then
+            error("group .abbreviation is not a string")
+          elif (.abbreviation == "") then
+            error("group .abbreviation is an empty string")
+          elif ((.abbreviation|contains(":")) or (.abbreviation|contains("\n"))) then
+            error("group .abbreviation contains : or a newline")
+
+          elif (.gid_number|type != "number") then
+            error("group .gid_number is not a number")
+          elif (.gid_number < ($minimum_uid_gid|tonumber)) then
+            error("group .gid_number is less than " + $minimum_uid_gid)
+          elif (.gid_number > 4294967294) then
+            error("group .gid_number is more than 4294967294")
+
+          else
+            .abbreviation + ":" + (.gid_number|tostring)
+          end
+          )
+      | .[]
+    end
+  ' "$PUAVO_SESSION_FILE"
+}
+
+extrausers_new_passwd() {
+  passwd_file_path='/var/lib/extrausers/passwd'
+
+  if ! new_user="$(session_get_user)" || [ -z "$new_user" ]; then
+    get_user_error="$(session_get_user 2>&1 >/dev/null)"
+    logmsg err "could not find user information from puavo session: $get_user_error"
+    return 1
+  fi
+
+  if [ ! -e "$passwd_file_path" ]; then
+    logmsg notice "setting up new ${passwd_file_path} file"
+    if ! touch "$passwd_file_path" 2>/dev/null; then
+      logmsg err "could not create ${passwd_file_path}"
+      return 1
+    fi
+
+    # We create this file as a marker for
+    # /usr/lib/puavo-local-config/pam/login-setup to determine if this was
+    # the first login on this host.
+    touch "$FIRSTLOGIN_MARKER_PATH"
+  fi
+
+  new_passwd_data="$(
+    echo "$new_user" | gawk -F: -v minimum_uid_gid="$USER_MINIMUM_UID_GID" '
+      # map users by uid, filter out duplicates,
+      # possible adding the new user or modifying it
+
+         NF == 7 \
+      && $1 != "" \
+      && $2 == "x" \
+      && $3 ~ /^[[:digit:]]+$/ && $3 >= minimum_uid_gid \
+      && $4 ~ /^[[:digit:]]+$/ && $4 >= minimum_uid_gid \
+      && $5 != "" \
+      && $6 != "" \
+      && $7 != "" {
+        users[$3] = $0
+      }
+
+      END { for (user in users) { print users[user] } }
+    ' "$passwd_file_path" /dev/stdin)" || {
+      logmsg err 'error in creating new extrausers passwd db'
+      return 1
+   }
+
+  if ! echo "$new_passwd_data" \
+         | sort_and_replace_extrausers_file_from_stdin "$passwd_file_path"; then
+    logmsg err 'error in replacing old extrausers passwd db with a new one'
+    return 1
+  fi
+
+  return 0
+}
+
+extrausers_new_group() {
+  group_file_path='/var/lib/extrausers/group'
+
+  if ! user_groups="$(session_get_groups)" || [ -z "$user_groups" ]; then
+    get_groups_error="$(session_get_groups 2>&1 >/dev/null)"
+    logmsg err "could not get user groups from puavo session: $get_groups_error"
+    return 1
+  fi
+
+  if ! username="$(session_get_username)" || [ -z "$username" ]; then
+    get_username_error="$(session_get_username 2>&1 >/dev/null)"
+    logmsg err "could not get username from puavo session: $get_username_error"
+    return 1
+  fi
+
+  if [ ! -e "$group_file_path" ]; then
+    logmsg notice "setting up new ${group_file_path} file"
+    if ! touch "$group_file_path" 2>/dev/null; then
+      logmsg err "could not create ${group_file_path}"
+      return 1
+    fi
+  fi
+
+  new_group_data="$(
+    gawk -F: -v username="$username" \
+             -v user_groups="$user_groups" \
+             -v minimum_uid_gid="$USER_MINIMUM_UID_GID" '
+      # map groups by gid, filter out duplicates,
+      # possible adding the user to some groups and removing from others
+
+      BEGIN {
+	user_group_count = split(user_groups, user_groups_array, "\n")
+	for (i = 1; i <= user_group_count; i++) {
+	  split(user_groups_array[i], newgroup_info, ":")
+	  newgroup_name = newgroup_info[1]
+	  newgroup_gid  = newgroup_info[2]
+
+          if (newgroup_gid < minimum_gid) { continue }
+
+	  new_groups_members[ newgroup_gid ] = username
+	  new_groups_names[   newgroup_gid ] = newgroup_name
+	}
+      }
+
+         NF == 4 \
+      && $1 != "" \
+      && $2 == "x" \
+      && $3 ~ /^[[:digit:]]+$/ && $3 >= minimum_uid_gid \
+      && $4 != "" {
+	oldgroup_name = $1
+	oldgroup_gid  = $3
+	split($4, oldgroup_members, ",")
+
+        if (oldgroup_gid < minimum_gid) { next }
+
+	if (!(oldgroup_gid in new_groups_names)) {
+	  new_groups_names[ oldgroup_gid ] = oldgroup_name
+	}
+
+	for (i in oldgroup_members) {
+	  member_user = oldgroup_members[i]
+
+	  # Filter out the current user... if it was not already listed in
+	  # new_groups_members[oldgroup_gid], it must be deleted.
+	  if (member_user == username) { continue }
+
+	  new_groups_members[oldgroup_gid] =                       \
+	    (new_groups_members[oldgroup_gid] == "")               \
+	      ? member_user                                        \
+	      : (new_groups_members[oldgroup_gid] "," member_user)
+	}
+      }
+
+      END {
+	for (gid in new_groups_names) {
+          # drop groups with no members
+	  if (new_groups_members[gid] == "") { continue }
+
+	  members_list = ""
+	  split(new_groups_members[gid], sorted_members_array, ",")
+	  asort(sorted_members_array)
+
+	  for (i in sorted_members_array) {
+	    members_list =                                   \
+	      (members_list == "")                           \
+		? sorted_members_array[i]                    \
+		: (members_list "," sorted_members_array[i])
+	  }
+
+	  printf("%s:x:%d:%s\n", new_groups_names[gid], gid, members_list)
+	}
+      }
+    ' "$group_file_path")" || {
+      logmsg err 'error in creating new extrausers group db'
+      return 1
+  }
+
+  if ! echo "$new_group_data" \
+         | sort_and_replace_extrausers_file_from_stdin "$group_file_path"; then
+    logmsg err 'error in replacing old extrausers group db with a new one'
+    return 1
+  fi
+
+  return 0
+}
+
+sort_and_replace_extrausers_file_from_stdin() {
+  filepath="$1"
+
+  # clean up possible old cruft
+  for path in ${filepath}.tmp_*; do
+    rm -f "$path" || true
+  done
+
+  extrausers_tempfile="$(mktemp "${filepath}.tmp_XXXXXX")" || return 1
+  chmod 644 "$extrausers_tempfile" || return 1
+
+  # data from stdin
+  sort -k 3 -n -t ':' > "$extrausers_tempfile" || return 1
+
+  if ! cmp "$extrausers_tempfile" "$filepath" 2>/dev/null; then
+    mv "$extrausers_tempfile" "$filepath" || return 1
+    logmsg notice "updated extrausers db $filepath with changes"
+  else
+    rm -f "$extrausers_tempfile"
+  fi
+
+  return 0
+}
+
+#
+# main
+#
+
+if is_guest; then
+  case "$PAM_TYPE" in
+    auth)
+      logmsg notice 'letting guest user in without further authentication'
+
+      # Setup guest user in even in case of session errors.  Guest uid and gid
+      # are hardcoded session information does not affect it, so session is not
+      # really essential.  Besides guest account should work in every situation
+      # if at all possible.
+      if [ -e /run/puavo/nbd-server ]; then
+	get_puavo_session '' --user-bootserver v3/sessions || true
+      else
+	get_puavo_session '' --user-etc v3/sessions || true
+      fi
+
+      exit "$PAM_SUCCESS"
+      ;;
+    close_session)
+      logmsg info 'closing login session'
+      exit "$PAM_SUCCESS"
+      ;;
+    open_session)
+      logmsg info 'opening login session'
+      exit "$PAM_SUCCESS"
+      ;;
+    *)
+      logmsg err "unknown PAM_TYPE '${PAM_TYPE}'"
+      ;;
+  esac
+
+  exit "$PAM_SYSTEM_ERR"
+fi
+
+# we are not a guest user
+
+if [ "$mode" = 'cached-fail' ]; then
+  logmsg notice 'cached credentials auth was DENIED'
+  exit "$PAM_PERM_DENIED"
+fi
+
+if [ -z "${KRB5CCNAME:-}" ]; then
+  logmsg err 'KRB5CCNAME is not set'
+  exit "$PAM_SYSTEM_ERR"
+fi
+export KRB5CCNAME
+
+krb5_ticketpath="${KRB5CCNAME#FILE:}"
+
+case "$PAM_TYPE" in
+  auth)
+    ;;
+  close_session)
+    logmsg info 'closing login session'
+    rm -f "${krb5_ticketpath}" || exit "$PAM_SYSTEM_ERR"
+    exit "$PAM_SUCCESS"
+    ;;
+  open_session)
+    logmsg info 'opening login session'
+    if ! chown "${PAM_USER}:" "${krb5_ticketpath}" 2>/dev/null; then
+      logmsg err "could not chown ${krb5_ticketpath} at open_session"
+      exit "$PAM_SYSTEM_ERR"
+    fi
+    exit "$PAM_SUCCESS"
+    ;;
+  *)
+    logmsg err "unknown PAM_TYPE '${PAM_TYPE}'"
+    exit "$PAM_SYSTEM_ERR"
+    ;;
+esac
+
+# now PAM_TYPE == "auth"
+
+if ! user_password="$(cat)"; then
+  logmsg err 'could not read user password'
+  exit "$PAM_SYSTEM_ERR"
+fi
+
+
+if [ "$mode" = 'immediate' ]; then
+  rm -f "$FIRSTLOGIN_MARKER_PATH"
+
+  auth_status="$PAM_SUCCESS"
+  authenticate_user || auth_status="$?"
+
+  if [ "$auth_status" -ne "$PAM_SUCCESS" ]; then
+    logmsg notice 'returning auth error'
+    exit "$auth_status"
+  fi
+
+  # auth_status is now PAM_SUCCESS
+
+  # Fetch user session information from puavo if auth was okay.
+  if get_puavo_session '' --user-krb v3/sessions; then
+    logmsg notice 'returning success'
+    exit "$PAM_SUCCESS"
+  fi
+
+  # Either we have no session or update_extrausers failed.
+  # That is serious only if $PAM_USER does not exist or is invalid.
+  if ! check_user_uid; then
+    logmsg err 'user id does not exist or is invalid'
+    exit "$PAM_SYSTEM_ERR"
+  fi
+
+  logmsg notice 'problems in session fetch, attempting fetch in deferred mode'
+  mode='deferred-session-fetch'
+fi
+
+if [ "$mode" != 'cached-auth' -a "$mode" != 'deferred-session-fetch' ]; then
+  logmsg err 'internal error, mode is wrong'
+  exit "$PAM_SYSTEM_ERR"
+fi
+
+# cached-auth and deferred-session-fetch modes
+
+# When gone through cached authentication, do extrausers update here as well,
+# because we might have a case were we have a broken extrausers-database
+# (should never happen), a successful auth through cached credentials, and
+# proper user session information.
+if [ "$mode" = 'cached-auth' ]; then
+  logmsg notice 'cached credentials auth was SUCCESS'
+
+  update_extrausers || true
+  if ! check_user_uid; then
+    logmsg err 'user id does not exist or is invalid'
+    exit "$PAM_SYSTEM_ERR"
+  fi
+fi
+
+(
+  sleep 4
+  if ! user_has_session; then
+    logmsg info 'waiting for the user login session'
+    for i in 8 16 32 64; do
+      if user_has_session; then
+        logmsg info 'user got the user login session'
+        break
+      fi
+      sleep $i
+    done
+  fi
+
+  while true; do
+    if ! user_has_session; then
+      logmsg info 'user does not have a user login session, giving up'
+      break
+    fi
+
+    auth_status="$PAM_SUCCESS"
+    if [ "$mode" = 'cached-auth' ]; then
+      logmsg info 'trying deferred authentication'
+      authenticate_user || auth_status=$?
+    fi
+
+    if [ "$auth_status" -eq "$PAM_AUTHINFO_UNAVAIL" ]; then
+      logmsg info 'authentication service is not available, waiting 20 seconds'
+      sleep 20
+      continue
+    fi
+
+    if [ "$auth_status" -eq "$PAM_SUCCESS" ]; then
+      # Fetch user session information from puavo if auth was okay.
+      # It is not serious if we fail.  It is okay to wait for a longer
+      # time, in deferred mode we do not delay logins.
+
+      logmsg info 'authentication was ok, trying deferred puavo session fetch'
+      get_puavo_session 60 --user-krb v3/sessions || true
+      logmsg info 'exiting from deferred mode'
+    else
+      logmsg info 'authentication failed, exiting from deferred mode'
+    fi
+
+    exit "$auth_status"
+  done
+
+  exit "$PAM_AUTHINFO_UNAVAIL"
+) &
+
+exit "$PAM_SUCCESS"

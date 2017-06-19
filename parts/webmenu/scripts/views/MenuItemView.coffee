@@ -43,7 +43,7 @@ class MenuItemView extends ViewMaster
 
     removeFromFavorites: ->
         @model.resetClicks()
-        @bubble "favorite-removed"
+        @bubble "favorite-removed", @model
 
     afterTemplate: ->
         @$thumbnail = @$(".thumbnail")
@@ -61,8 +61,8 @@ class MenuItemView extends ViewMaster
         else if @model.get("confirm")
             @bubble "open-confirm", @model
         else
-            @bubble "open-app", @model
-            @model.incClicks()
+            @model.incClicks()            # increment the counter first,
+            @bubble "open-app", @model    # so it'll be correct here
             @$img.addClass("rotate-loading")
 
     toggleInactiveNotify: ->

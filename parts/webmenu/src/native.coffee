@@ -108,6 +108,24 @@ config.set("webkioskMode", (process.env.WM_WEBKIOSK_MODE is "true"))
 
 userPhotoPath = "#{ webmenuHome }/user-photo.jpg"
 
+# ##################
+
+# try to read the favorites JSON
+favesFile = "#{process.env.WM_HOME}/favorites.json"
+favesData = null
+
+try
+    favesData = JSON.parse(fs.readFileSync(favesFile).toString())
+catch e
+    console.log "Can't read the faves file, reason: #{e}"
+    favesData = {}
+
+# save the favorites JSON
+saveFaves = () ->
+    fs.writeFile favesFile, JSON.stringify(favesData), (error) ->
+        console.error("Error writing file", error) if error
+
+# ##################
 
 try
     puavoDomain = fs.readFileSync("/etc/puavo/domain").toString().trim()
@@ -280,10 +298,27 @@ module.exports = (gui, Window) ->
     # for long periods of time
     spawnEmitter.on "spawn", _.debounce(spawnHandler, 300, true)
 
+    # Adds/updates a click counter and saves the new array
+    incrementClick = (id, clicks) ->
+        favesData[id] = parseInt(clicks)
+        saveFaves()
+
+    # Removes an entry from the faves array and saves the new array. Without
+    # this, otherwise unfaved entries will remain in the menu if no other
+    # programs are opened after the deletion (since only opening a program
+    # causes the JSON to be written).
+    resetClicks = (model) ->
+        delete favesData[model.id]
+        saveFaves()
+
+    shared.resetClicks = resetClicks
+
     open = (cmd) ->
 
         if typeof cmd.toJSON is "function"
             cmd = cmd.toJSON()
+
+        incrementClick(cmd["id"], cmd["clicks"])
 
         console.log "Opening command", cmd
         logger.emit(
@@ -309,6 +344,7 @@ module.exports = (gui, Window) ->
         else
             launchCommand(cmd)
 
+    shared.initialFaves = favesData
     shared.user = userData
     shared.config = config
     shared.menu = menuJSON

@@ -1,7 +1,7 @@
 
 nodejs = window.nodejs
 
-{user, config, menu, logger} = nodejs
+{user, config, initialFaves, menu, logger} = nodejs
 
 window.onerror = (message, file, line, column, errorObj) ->
     logger.emit(
@@ -30,6 +30,15 @@ user = new Backbone.Model user
 allItems = new AllItems
 menuModel = new MenuModel menu, allItems
 
+# Get the initial click counts for all items
+# (this replaces the localStorage)
+for i in [0..allItems.length-1] by 1
+    j = allItems.at(i)
+    id = j.get("id")
+
+    if clicks = initialFaves[id]
+        console.log "main.coffee: have initial clicks (#{clicks}) for id '#{id}'"
+        j.set("clicks", parseInt(clicks, 10))
 
 layout = new MenuLayout
     user: user
@@ -51,6 +60,9 @@ layout.on "open-app", (model) ->
         nodejs.hideWindow()
     , Application.animationDuration
 
+# just a wrapper, see native.coffee for the real function
+layout.on "resetClicks", (model) ->
+    nodejs.resetClicks(model)
 
 $(window).keydown (e) ->
     if e.which is 27 # Esc
