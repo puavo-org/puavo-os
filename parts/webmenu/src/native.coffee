@@ -41,6 +41,14 @@ process.on 'uncaughtException', (err) ->
     process.stderr.write "!!nodejs uncaughtException!!\n"
     process.stderr.write err.message + "\n"
     process.stderr.write err.stack + "\n"
+
+    message = "UNHANDLED EXCEPTION IN WEBMENU\n" + err.message + "\n" + err.stack + "\n"
+    fs.writeFileSync "#{process.env.WM_HOME}/exception_details.txt", message
+
+    ###
+    process.stderr.write "!!nodejs uncaughtException!!\n"
+    process.stderr.write err.message + "\n"
+    process.stderr.write err.stack + "\n"
     logger.emit(
         msg: "unhandled exception"
         capturedFrom: "process.on(uncaughtException)"
