@@ -246,7 +246,9 @@ module.exports = (gui, Window) ->
                     # user clicks the logout button from right of the panel while menu is
                     # visible on the left side.
                     Window.hide()
-                    setTimeout(displayMenu, 1) # Allow menu to disappear
+                    setTimeout ( ->
+                        displayMenu currentView, position, centerAtPos
+                    ), 1 # Allow menu to disappear
                 else
                     displayMenu(currentView, position, centerAtPos)
                 return
