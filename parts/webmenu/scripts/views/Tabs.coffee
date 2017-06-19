@@ -12,12 +12,15 @@ class Tabs extends ViewMaster
     constructor: ->
         super
         @currentTab = 0
+        @storedTab = 0
 
         @listenTo this, "reset", =>
-            @currentTab = 0
+            @currentTab = @storedTab
+            @bubble "open-menu", @collection.at(@currentTab), this
             @render()
 
         @listenTo this, "open-logout-view", =>
+            # don't reset storedTab here!
             @currentTab = -1
             @render()
 
@@ -32,6 +35,7 @@ class Tabs extends ViewMaster
 
     selectTab: (e) ->
         @currentTab = parseInt($(e.target).data("index"), 10)
+        @storedTab = @currentTab
         @bubble "open-menu", @collection.at(@currentTab), this
         @render()
 
