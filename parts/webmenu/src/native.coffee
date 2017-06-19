@@ -41,13 +41,9 @@ process.on 'uncaughtException', (err) ->
     process.stderr.write "!!nodejs uncaughtException!!\n"
     process.stderr.write err.message + "\n"
     process.stderr.write err.stack + "\n"
-    logger.emit(
-        msg: "unhandled exception"
-        capturedFrom: "process.on(uncaughtException)"
-        error:
-            message: err.message
-            stack: err.stack
-    )
+
+    message = "UNHANDLED EXCEPTION IN WEBMENU\n" + err.message + "\n" + err.stack + "\n"
+    fs.writeFileSync "#{process.env.WM_HOME}/exception_details.txt", message
 
     process.exit 1
 
@@ -250,7 +246,9 @@ module.exports = (gui, Window) ->
                     # user clicks the logout button from right of the panel while menu is
                     # visible on the left side.
                     Window.hide()
-                    setTimeout(displayMenu, 1) # Allow menu to disappear
+                    setTimeout ( ->
+                        displayMenu currentView, position, centerAtPos
+                    ), 1 # Allow menu to disappear
                 else
                     displayMenu(currentView, position, centerAtPos)
                 return
