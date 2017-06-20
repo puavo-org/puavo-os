@@ -47,13 +47,15 @@ help(){
     "
 }
 
-# Always put nw.js's profile files in a temporary directory. User data like favorites,
-# are handled elsewhere. Related to issue #159.
-nwjs_user_data_dir="$(mktemp -d /tmp/webmenu-nwjs-${USER}.XXXXXXXX)"
+# Put everything (except favorites and the socket file) in a temp directory.
+# Each Webmenu instance must be isolated from each other, otherwise you can't
+# log in on multiple fatclients at the same time without getting profile
+# locking errors. See issue #159.
+WM_TEMP_DIR="$(mktemp -d /tmp/webmenu-temp-${USER}.XXXXXXXX)"
 
 mkdir -p "$WM_HOME"
 # Save startup time to a file to log start up times
-date +%s > "${WM_HOME}/started"
+date +%s > "${WM_TEMP_DIR}/started"
 
 # Webmenu installation path
 if [ -f package.json ]; then
@@ -68,18 +70,10 @@ fi
 
 . webmenu-env
 
-# Remove old useless socket files. Webmenu has changed the socket file name few
-# times...
-for file in "${WM_HOME}/"*; do
-    if [ -S "$file" ]; then
-        rm "$file"
-    fi
-done
-
 # https://github.com/visionmedia/mon
 mon_args=""
-mon_pidfile="${WM_HOME}/mon.pid"
-nw_pidfile="${WM_HOME}/nw.pid"
+mon_pidfile="${WM_TEMP_DIR}/mon.pid"
+nw_pidfile="${WM_TEMP_DIR}/nw.pid"
 
 wm_args=""
 
@@ -199,9 +193,9 @@ if $use_mon; then
         --pidfile "$nw_pidfile" \
         --on-restart $restart_script \
         --on-error $error_script \
-        "nw . $wm_args --user-data-dir=${nwjs_user_data_dir}"
+        "nw . $wm_args --user-data-dir=${WM_TEMP_DIR}"
 else
     echo $$ > "$nw_pidfile"
     rm -f "$mon_pidfile"
-    exec nw . $wm_args --user-data-dir="${nwjs_user_data_dir}"
+    exec nw . $wm_args --user-data-dir="${WM_TEMP_DIR}"
 fi
