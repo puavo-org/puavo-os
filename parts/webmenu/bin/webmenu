@@ -70,14 +70,6 @@ fi
 
 . webmenu-env
 
-# Remove old useless socket files. Webmenu has changed the socket file name few
-# times...
-for file in "${WM_TEMP_DIR}/"*; do
-    if [ -S "$file" ]; then
-        rm "$file"
-    fi
-done
-
 # https://github.com/visionmedia/mon
 mon_args=""
 mon_pidfile="${WM_TEMP_DIR}/mon.pid"
