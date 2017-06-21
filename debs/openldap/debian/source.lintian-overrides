@@ -1,3 +1,11 @@
+# these files list copyright notices applying to the schemas
+openldap source: license-problem-non-free-RFC debian/copyright
+openldap source: license-problem-non-free-RFC servers/slapd/schema/README
+# RFC text removed, files contain functional interface definitions only
+# Copyright notices have been retained to preserve attribution
+openldap source: license-problem-non-free-RFC debian/schema/core.ldif
+openldap source: license-problem-non-free-RFC debian/schema/core.schema
+openldap source: license-problem-non-free-RFC debian/schema/pmi.schema
 # internal templates, not shown to users
 openldap source: untranslatable-debconf-templates slapd.templates: 89
 openldap source: untranslatable-debconf-templates slapd.templates: 94

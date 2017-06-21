@@ -94,15 +94,6 @@ Type: password
 Description: Generated admin password:
  Internal template, should never be displayed to users.
 
-Template: slapd/allow_ldap_v2
-Type: boolean
-Default: false
-_Description: Allow LDAPv2 protocol?
- The obsolete LDAPv2 protocol is disabled by default in slapd. Programs
- and users should upgrade to LDAPv3.  If you have old programs which
- can't use LDAPv3, you should select this option and 'allow bind_v2'
- will be added to your slapd.conf file.
-
 Template: slapd/upgrade_slapcat_failure
 Type: error
 #flag:translate!:5
@@ -158,3 +149,37 @@ _Description: Potentially unsafe slapd access control configuration
  are only able to modify specifically allowed attributes.
  .
  See /usr/share/doc/slapd/README.Debian.gz for more details.
+
+Template: slapd/ppolicy_schema_needs_update
+Type: select
+__Choices: abort installation, continue regardless
+DefaultChoice: abort installation
+#flag:comment:2
+# "ppolicy", "pwdMaxRecordedFailure", and "cn=config" are not translatable.
+#flag:comment:3
+# This paragraph is followed by the path to the generated file (not
+# translatable). The sentence continues in the following paragraph.
+#flag:comment:5
+# This paragraph continues the sentence started in the previous
+# paragraph. It is followed by a command line.
+#flag:translate!:4,6
+_Description: Manual ppolicy schema update recommended
+ The new version of the Password Policy (ppolicy) overlay requires the
+ schema to define the pwdMaxRecordedFailure attribute type, which is not
+ present in the schema currently in use. It is recommended to abort the
+ upgrade now, and to update the ppolicy schema before upgrading slapd.
+ If replication is in use, the schema update should be applied on every
+ server before continuing with the upgrade.
+ .
+ An LDIF file has been generated with the changes required for the upgrade:
+ .
+ ${ldif}
+ .
+ so if slapd is using the default access control rules, these changes can be
+ applied (after starting slapd) by using the command:
+ .
+ ldapmodify -H ldapi:/// -Y EXTERNAL -f ${ldif}
+ .
+ If instead you choose to continue the installation, the new attribute
+ type will be added automatically, but the change will not be acted on
+ by slapd overlays, and replication with other servers may be affected.

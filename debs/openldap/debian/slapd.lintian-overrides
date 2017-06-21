@@ -1,3 +1,5 @@
 # libslapi is a special case, used only for writing extension modules for
 # slapd, and is therefore shipped with slapd.
 slapd: package-name-doesnt-match-sonames libslapi-2.4-2
+# The only occurrence of olcAccess is in configuration examples.
+slapd: spelling-error-in-readme-debian olcAccess olcAccess (duplicate word) olcAccess

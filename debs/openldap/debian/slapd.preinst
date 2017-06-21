@@ -1,0 +1,121 @@
+#! /bin/sh
+
+set -e
+
+. /usr/share/debconf/confmodule
+
+# This will be replaced with debian/slapd.scripts-common which includes
+# various helper functions and $OLD_VERSION and $SLAPD_CONF
+#SCRIPTSCOMMON#
+
+ppolicy_schema_needs_update() {						# {{{
+# Provide an LDIF to add the pwdMaxRecordedFailure attribute to the 
+# ppolicy schema, and recommend the user apply it before continuing with 
+# the slapd upgrade.
+	local update_ldif
+
+	update_ldif="$(mktemp --tmpdir ppolicy-schema-update-XXXXXXXX.ldif)"
+	cat > "$update_ldif" << eof
+dn: $1
+changetype: modify
+add: olcAttributeTypes
+olcAttributeTypes: {16}( 1.3.6.1.4.1.42.2.27.8.1.30 NAME 'pwdMaxRecordedFailure' EQUALITY integerMatch ORDERING integerOrderingMatch  SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 SINGLE-VALUE )
+-
+delete: olcObjectClasses
+olcObjectClasses: {1}( 1.3.6.1.4.1.42.2.27.8.2.1 NAME 'pwdPolicy' SUP top AUXILIARY MUST pwdAttribute MAY ( pwdMinAge $ pwdMaxAge $ pwdInHistory $ pwdCheckQuality $ pwdMinLength $ pwdExpireWarning $ pwdGraceAuthNLimit $ pwdLockout $ pwdLockoutDuration $ pwdMaxFailure $ pwdFailureCountInterval $ pwdMustChange $ pwdAllowUserChange $ pwdSafeModify ) )
+-
+add: olcObjectClasses
+olcObjectClasses: {1}( 1.3.6.1.4.1.42.2.27.8.2.1 NAME 'pwdPolicy' SUP top AUXILIARY MUST pwdAttribute MAY ( pwdMinAge $ pwdMaxAge $ pwdInHistory $ pwdCheckQuality $ pwdMinLength $ pwdExpireWarning $ pwdGraceAuthNLimit $ pwdLockout $ pwdLockoutDuration $ pwdMaxFailure $ pwdFailureCountInterval $ pwdMustChange $ pwdAllowUserChange $ pwdSafeModify $ pwdMaxRecordedFailure ) )
+
+eof
+
+	db_subst slapd/ppolicy_schema_needs_update ldif "$update_ldif"
+	db_fset slapd/ppolicy_schema_needs_update seen false
+	db_input critical slapd/ppolicy_schema_needs_update || true
+	db_go || true
+	db_get slapd/ppolicy_schema_needs_update
+	if [ "$RET" = 'abort installation' ]; then
+		db_stop
+		exit 1
+	fi
+}
+# }}}
+check_ppolicy_schema() {						# {{{
+# When upgrading to 2.4.43 or later, if the cn=config database contains 
+# an old version of the ppolicy schema, check that it is safe to upgrade 
+# it automatically in postinst, or instruct the user to do so before 
+# upgrading.
+	local config_ldif="$1"
+
+	# Check whether the schema is loaded and needs an update.
+	local ppolicy_dn="$(find_old_ppolicy_schema "$config_ldif")"
+	if [ -z "$ppolicy_dn" ]; then
+		return
+	fi
+
+	# If either the config or frontend databases have any overlays 
+	# or syncrepl clients on them, don't assume it's safe to change 
+	# the config offline.
+	# As well, if a content database is a sync provider, we want to 
+	# recommend that the schema be updated on every server before 
+	# going through with the upgrade.
+	if grep -q -e '^dn: olcOverlay=.\+,olcDatabase={-1}frontend,cn=config$' -e '^dn: olcOverlay=.\+,olcDatabase={0}config,cn=config$' "$config_ldif" \
+		|| sed -n '/^dn: olcDatabase={-1}frontend,cn=config$/,// p' "$config_ldif" | grep -q '^olcSyncrepl:' \
+		|| sed -n '/^dn: olcDatabase={0}config,cn=config$/,//p' "$config_ldif" | grep -q '^olcSyncrepl:' \
+		|| grep -q '^dn: olcOverlay={[0-9]\+}syncprov,olcDatabase=.\+,cn=config' "$config_ldif"; then
+		ppolicy_schema_needs_update "$ppolicy_dn"
+	fi
+
+	# If we made it this far, it should be safe to upgrade the 
+	# schema automatically in postinst.
+}
+# }}}
+preinst_check_config() {						# {{{
+# Check whether manual config changes are required before upgrading
+	if ! previous_version_older '2.4.44+dfsg-1~'; then
+		# no pre-checks required
+		return 0
+	fi
+
+	# Locate the file exported by dump_config.
+	local dumped_ldif="$(database_dumping_destdir)/cn=config.ldif"
+	if [ ! -f "$dumped_ldif" ]; then
+		echo "Expected to find a configuration backup in $dumped_ldif but it is missing. Please retry the upgrade." >&2
+		exit 1
+	fi
+
+	# Create a working copy with lines unwrapped.
+	local config_ldif="$(mktemp --tmpdir slapd.XXXXXXXX.ldif)"
+	trap "trap - INT EXIT; rm -f '$config_ldif'" INT EXIT
+	normalize_ldif "$dumped_ldif" > "$config_ldif"
+
+	check_ppolicy_schema "$config_ldif"
+}
+# }}}
+
+# If we are upgrading from an old version then stop slapd and attempt to
+# slapcat out the data so we can use it in postinst to do the upgrade.
+# If slapd was removed and is being reinstalled, slapcat is not
+# available at this time, so the data should have been dumped before the
+# old slapd was removed.
+
+if [ "$MODE" = upgrade ]; then
+	dump_config
+fi
+
+if [ "$MODE" = upgrade ] || [ "$MODE" = install -a -n "$OLD_VERSION" ]; then
+	# Do not assume slapcat is available in this phase
+	if [ -d "$SLAPD_CONF" ]; then
+		preinst_check_config
+	fi
+fi
+
+if [ "$MODE" = upgrade ]; then
+	dump_databases
+fi
+
+#DEBHELPER#
+
+exit 0
+
+# vim: set sw=8 foldmethod=marker: 

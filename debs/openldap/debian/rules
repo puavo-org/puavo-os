@@ -2,7 +2,7 @@
 
 # Set this variable if you're building packages outside of Debian and don't
 # want the checks for DFSG-freeness.
-DFSG_NONFREE = 1
+#DFSG_NONFREE = 1
 
 export DEB_CFLAGS_MAINT_APPEND := -Wall -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE
 export DEB_BUILD_MAINT_OPTIONS := hardening=+pie,+bindnow
@@ -11,11 +11,21 @@ export DEB_BUILD_MAINT_OPTIONS := hardening=+pie,+bindnow
 export RESOLV_MULTI = off
 
 DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
+DEB_HOST_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
 DEB_HOST_ARCH_OS ?= $(shell dpkg-architecture -qDEB_HOST_ARCH_OS)
 
 CONFIG		= $(shell grep -v "^\#" debian/configure.options)
-ifneq ($(DEB_HOST_ARCH_OS),linux)
-	CONFIG += --disable-mdb
+ifeq ($(DEB_HOST_ARCH_OS),hurd)
+	CONFIG += --disable-bdb --disable-hdb --disable-mdb
+endif
+ifneq ($(filter stage1,$(DEB_BUILD_PROFILES)),)
+	CONFIG += --disable-slapd
+endif
+
+# Ensure CC is set correctly for cross builds, unless it has already 
+# been set explicitly.
+ifeq ($(origin CC),default)
+	export CC := $(DEB_HOST_GNU_TYPE)-gcc
 endif
 
 installdir	:= $(CURDIR)/debian/tmp
@@ -26,19 +36,36 @@ MAKEVARS	:= STRIP=
 
 # These variables are used only by get-orig-source, which will normally only
 # be run by maintainers.
-VERSION = $(shell dpkg-parsechangelog |grep Version| sed 's/.*: //;s/-.*//')
+VERSION = $(shell dpkg-parsechangelog |grep Version| sed 's/.*: //;s/\+dfsg//;s/-.*//')
 URL     = http://www.openldap.org/software/download/OpenLDAP/openldap-release/
 
+# Download the upstream source and make changes as required for DFSG reasons.
+# Assumes wget is available, as this is generally only used by the package
+# maintainers.
 get-orig-source:
 	@if [ ! -d "debian/schema" ] ; then \
 	    echo 'Run this from the top directory of the Debian source' >&2; \
 	    exit 1; \
 	fi
-	wget $(URL)/openldap-$(VERSION).tgz -O openldap_$(VERSION).orig.tar.gz
-	tar xzf openldap_$(VERSION).orig.tar.gz --strip-components=1 -C .
+	wget $(URL)/openldap-$(VERSION).tgz
+	tar xzf openldap-$(VERSION).tgz
+	rm -r openldap-$(VERSION)/doc/drafts
+	rm -r openldap-$(VERSION)/doc/rfc
+	set -e; for schema in debian/schema/*.schema debian/schema/*.ldif ; do \
+	    file=`basename "$$schema"`; \
+	    rm openldap-$(VERSION)/servers/slapd/schema/$$file; \
+	done
+	mv openldap-$(VERSION) openldap-$(VERSION)+dfsg
+	tar cf openldap_$(VERSION)+dfsg.orig.tar openldap-$(VERSION)+dfsg
+	rm -r openldap-$(VERSION)+dfsg
+	gzip -9 openldap_$(VERSION)+dfsg.orig.tar
 
+DH = dh $@ --with autoreconf --builddirectory=$(builddir) --parallel
+.PHONY: build
+build:
+	$(DH)
 %:
-	dh $@ --with quilt,autoreconf,systemd --builddirectory=$(builddir) --parallel
+	$(DH)
 
 # Only contrib/ldapc++ uses Automake, so special care is needed to update
 # config.guess and config.sub at the top level.
@@ -74,16 +101,17 @@ override_dh_auto_configure:
 
 override_dh_auto_build:
 	dh_auto_build -- $(MAKEVARS)
-	$(MAKE) -C contrib/slapd-modules/smbk5pwd
-	$(MAKE) -C contrib/slapd-modules/smbkrb5pwd
-	$(MAKE) -C contrib/slapd-modules/autogroup
-	$(MAKE) -C contrib/slapd-modules/lastbind
-	$(MAKE) -C contrib/slapd-modules/passwd/sha2
+ifeq ($(filter stage1,$(DEB_BUILD_PROFILES)),)
+	$(MAKE) -C contrib/slapd-modules/smbk5pwd CC=$(CC)
+	$(MAKE) -C contrib/slapd-modules/autogroup CC=$(CC)
+	$(MAKE) -C contrib/slapd-modules/lastbind CC=$(CC)
+	$(MAKE) -C contrib/slapd-modules/passwd/sha2 CC=$(CC)
+endif
 
 override_dh_auto_install:
 	dh_auto_install -- $(MAKEVARS)
+ifeq ($(filter stage1,$(DEB_BUILD_PROFILES)),)
 	$(MAKE) -C contrib/slapd-modules/smbk5pwd install DESTDIR=$(installdir)
-	$(MAKE) -C contrib/slapd-modules/smbkrb5pwd install DESTDIR=$(installdir)
 	$(MAKE) -C contrib/slapd-modules/autogroup install DESTDIR=$(installdir)
 	$(MAKE) -C contrib/slapd-modules/lastbind install DESTDIR=$(installdir)
 	$(MAKE) -C contrib/slapd-modules/passwd/sha2 install DESTDIR=$(installdir)
@@ -92,6 +120,7 @@ override_dh_auto_install:
 	for F in $(installdir)/usr/lib/ldap/*.la; do \
 		sed -i "s/^dependency_libs=.*/dependency_libs=''/" $$F; \
 	done
+endif
 	
 	# Check all built libraries for unresolved symbols except for the
 	# libslapi library.  It is a special case since the SLAPI interface
@@ -108,31 +137,43 @@ override_dh_auto_install:
 	    fi; \
 	done
 
-	# Upstream installs schema files in mode 0444 - policy wants 0644
-	find $(installdir)/etc -type f|xargs chmod 0644
 	# Upstream manpages are section 8C but installed as section 8
 	find $(installdir)/usr/share/man -name \*.8 \
 		| xargs perl -pi -e 's#(\.TH \w+ 8)C#$$1#'
 
-override_dh_install:
+ifeq ($(filter stage1,$(DEB_BUILD_PROFILES)),)
+override_dh_install-arch:
 	dh_install
 	rm -rf $(CURDIR)/debian/slapd/usr/lib/ldap/smbk5pwd*
-	rm -rf $(CURDIR)/debian/slapd/usr/lib/ldap/smbkrb5pwd*
-	chmod 0755 $(CURDIR)/debian/slapd/usr/share/slapd/ldiftopasswd
+endif
 
 override_dh_installinit:
 	dh_installinit -- "defaults 19 80"
 
+ifeq ($(filter stage1,$(DEB_BUILD_PROFILES)),)
+override_dh_installman:
+	dh_installman
+	rm -f $(CURDIR)/debian/slapd/usr/share/man/man5/slapo-smbk5pwd.*
+
+override_dh_fixperms-arch:
+	dh_fixperms
+	chmod +x $(CURDIR)/debian/slapd/usr/share/slapd/ldiftopasswd
+endif
+
 override_dh_strip:
 	dh_strip -plibldap-2.4-2 --dbg-package=libldap-2.4-2-dbg
+ifeq ($(filter stage1,$(DEB_BUILD_PROFILES)),)
 	dh_strip -pslapd --dbg-package=slapd-dbg
+endif
 	dh_strip -Nlibldap-2.4-2 -Nslapd
+ifeq ($(filter stage1,$(DEB_BUILD_PROFILES)),)
 	# hardlink these so not confined by apparmor; do this here and not
 	# in dh_link so that dh_strip doesn't get confused and put the wrong
 	# binary in the debug package.
 	for f in slapacl slapadd slapauth slapcat slapdn slapindex slappasswd slaptest slapschema ; do \
 	    ln -f $(slapddir)/slapd $(slapddir)/$$f ; \
 	done
+endif
 
 override_dh_link:
 	for pkg in libldap2-dev libldap-2.4-2; do \
@@ -141,26 +182,26 @@ override_dh_link:
 	dh_link
 
 override_dh_makeshlibs:
-	# ideally we would do this and not have any libldap-2.4.so.2 links
-	# at all, but that requires adjusting the build scripts first to
-	# link against libldap_r, otherwise dh_shlibdeps fails
-	#dh_makeshlibs -plibldap-2.4-2 -V 'libldap-2.4-2 (>= 2.4.7)'
-	mkdir -p debian/libldap-2.4-2/DEBIAN
-	cp -p debian/libldap-2.4-2.shlibs debian/libldap-2.4-2/DEBIAN/shlibs
+ifeq ($(filter stage1,$(DEB_BUILD_PROFILES)),)
 	echo "slapd:Provides=$$(objdump -p debian/slapd/usr/lib/$(DEB_HOST_MULTIARCH)/libslapi-*.so.* \
 		| sed -ne '/SONAME/ { s/[[:space:]]*SONAME[[:space:]]*//; \
 		                      s/\.so\./-/; p; q }' \
 	)" >> debian/slapd.substvars
 	dh_makeshlibs -pslapd -X/usr/lib/ldap/ -V "$$(sed -ne's/slapd:Provides=//p' debian/slapd.substvars)"
+endif
+	dh_makeshlibs --remaining-packages
 
+ifeq ($(filter stage1,$(DEB_BUILD_PROFILES)),)
 override_dh_installdeb:
 	dh_installdeb
 	perl -w debian/dh_installscripts-common -p slapd
+endif
 
 override_dh_auto_clean:
 	dh_auto_clean
 	# Update translation templates for debconf
 	debconf-updatepo
+ifeq ($(filter stage1,$(DEB_BUILD_PROFILES)),)
 	# Remove our stripped schema from the upstream source area.
 	if [ -z "$(DFSG_NONFREE)" ]; then \
 	    set -e; for s in debian/schema/*.schema debian/schema/*.ldif; do \
@@ -173,10 +214,6 @@ override_dh_auto_clean:
 		contrib/slapd-modules/smbk5pwd/smbk5pwd.lo \
 		contrib/slapd-modules/smbk5pwd/smbk5pwd.la \
 		contrib/slapd-modules/smbk5pwd/smbk5pwd.o
-	rm -rf contrib/slapd-modules/smbkrb5pwd/.libs \
-		contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.lo \
-		contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.la \
-		contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.o
 	rm -rf contrib/slapd-modules/autogroup/.libs \
 		contrib/slapd-modules/autogroup/autogroup.lo \
 		contrib/slapd-modules/autogroup/autogroup.la \
@@ -186,6 +223,9 @@ override_dh_auto_clean:
 		contrib/slapd-modules/lastbind/lastbind.la \
 		contrib/slapd-modules/lastbind/lastbind.o
 	rm -rf contrib/slapd-modules/passwd/sha2/.libs \
-		contrib/slapd-modules/passwd/sha2/pw-sha2.lo \
 		contrib/slapd-modules/passwd/sha2/pw-sha2.la \
-		contrib/slapd-modules/passwd/sha2/pw-sha2.o
+		contrib/slapd-modules/passwd/sha2/sha2.lo \
+		contrib/slapd-modules/passwd/sha2/sha2.o \
+		contrib/slapd-modules/passwd/sha2/slapd-sha2.lo \
+		contrib/slapd-modules/passwd/sha2/slapd-sha2.o
+endif

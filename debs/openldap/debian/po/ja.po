@@ -15,8 +15,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openldap\n"
 "Report-Msgid-Bugs-To: openldap@packages.debian.org\n"
-"POT-Creation-Date: 2014-10-20 22:17-0700\n"
-"PO-Revision-Date: 2014-10-26 13:17+0900\n"
+"POT-Creation-Date: 2017-01-10 05:24+0000\n"
+"PO-Revision-Date: 2017-01-15 13:46+0900\n"
 "Last-Translator: Kenshi Muto <kmuto@debian.org>\n"
 "Language-Team: Japanese <debian-japanese@lists.debian.org>\n"
 "Language: ja\n"
@@ -230,41 +230,21 @@ msgstr "2回入力されたパスワードは同じではありません。再�
 msgid "Do you want the database to be removed when slapd is purged?"
 msgstr "slapd をパージしたときにデータベースを削除しますか?"
 
-#. Type: boolean
-#. Description
-#: ../slapd.templates:14001
-msgid "Allow LDAPv2 protocol?"
-msgstr "LDAPv2 プロトコルを許可しますか?"
-
-#. Type: boolean
-#. Description
-#: ../slapd.templates:14001
-msgid ""
-"The obsolete LDAPv2 protocol is disabled by default in slapd. Programs and "
-"users should upgrade to LDAPv3.  If you have old programs which can't use "
-"LDAPv3, you should select this option and 'allow bind_v2' will be added to "
-"your slapd.conf file."
-msgstr ""
-"時代遅れの LDAPv2 プロトコルは slapd のデフォルトで無効になっています。プログ"
-"ラムおよびユーザは LDAPv3 に更新すべきです。いくつかの古いプログラムが "
-"LDAPv3 を利用できないのなら、この選択肢で「はい」を選べば、'allow bind_v2' "
-"が slapd.conf に追加されます。"
-
 #. Type: error
 #. Description
-#: ../slapd.templates:15001
+#: ../slapd.templates:14001
 msgid "slapcat failure during upgrade"
 msgstr "更新中に slapcat が失敗"
 
 #. Type: error
 #. Description
-#: ../slapd.templates:15001
+#: ../slapd.templates:14001
 msgid "An error occurred while upgrading the LDAP directory."
 msgstr "LDAP ディレクトリの更新中にエラーが発生しました。"
 
 #. Type: error
 #. Description
-#: ../slapd.templates:15001
+#: ../slapd.templates:14001
 msgid ""
 "The 'slapcat' program failed while extracting the LDAP directory. This may "
 "be caused by an incorrect configuration file (for example, missing "
@@ -278,7 +258,7 @@ msgstr ""
 #. Description
 #. This paragraph is followed by a (non translatable) paragraph
 #. containing a command line
-#: ../slapd.templates:15001
+#: ../slapd.templates:14001
 msgid ""
 "This failure will cause 'slapadd' to fail later as well. The old database "
 "files will be moved to /var/backups. If you want to try this upgrade again, "
@@ -294,7 +274,7 @@ msgstr ""
 #. Description
 #. Translators: keep "${location}" unchanged. This is a variable that
 #. will be replaced by a directory name at execution
-#: ../slapd.templates:15001
+#: ../slapd.templates:14001
 msgid ""
 "Then move the database files back to a backup area and then try running "
 "slapadd from ${location}."
@@ -304,62 +284,134 @@ msgstr ""
 
 #. Type: select
 #. Description
-#: ../slapd.templates:16001
+#: ../slapd.templates:15001
 msgid "Database backend to use:"
 msgstr "利用するデータベースバックエンド:"
 
 #. Type: select
 #. Description
-#: ../slapd.templates:16001
+#: ../slapd.templates:15001
 msgid ""
 "HDB and BDB use similar storage formats, but HDB adds support for subtree "
 "renames. Both support the same configuration options."
-msgstr "HDB と BDB は似たストレージフォーマットを使いますが、HDB にはサブツリーの名前変更のサポートが加わっています。共に、同じ設定オプションをサポートします。"
+msgstr ""
+"HDB と BDB は似たストレージフォーマットを使いますが、HDB にはサブツリーの名前"
+"変更のサポートが加わっています。共に、同じ設定オプションをサポートします。"
 
 #. Type: select
 #. Description
-#: ../slapd.templates:16001
+#: ../slapd.templates:15001
 msgid ""
 "The MDB backend is recommended. MDB uses a new storage format and requires "
 "less configuration than BDB or HDB."
-msgstr "MDB バックエンドをお勧めします。MDB は新しいストレージフォーマットを採用しており、BDB や HDB よりも少ない設定で済みます。"
+msgstr ""
+"MDB バックエンドをお勧めします。MDB は新しいストレージフォーマットを採用して"
+"おり、BDB や HDB よりも少ない設定で済みます。"
 
 #. Type: select
 #. Description
-#: ../slapd.templates:16001
+#: ../slapd.templates:15001
 msgid ""
 "In any case, you should review the resulting database configuration for your "
 "needs. See /usr/share/doc/slapd/README.Debian.gz for more details."
-msgstr "いずれの場合でも、必要に応じてデータベース設定の結果を再確認すべきです。詳細については /usr/share/doc/slapd/README.Debian.gz を参照してください。"
+msgstr ""
+"いずれの場合でも、必要に応じてデータベース設定の結果を再確認すべきです。詳細"
+"については /usr/share/doc/slapd/README.Debian.gz を参照してください。"
 
 #. Type: note
 #. Description
-#: ../slapd.templates:17001
+#: ../slapd.templates:16001
 msgid "Potentially unsafe slapd access control configuration"
 msgstr "潜在的に安全でない slapd のアクセス制御設定です"
 
 #. Type: note
 #. Description
-#: ../slapd.templates:17001
+#: ../slapd.templates:16001
 msgid ""
 "One or more of the configured databases has an access control rule that "
 "allows users to modify most of their own attributes. This may be unsafe, "
 "depending on how the database is used."
-msgstr "設定されたデータベースには、ユーザに自身の属性のほとんどの変更を許容する 1 つ以上のアクセス制御ルールがあります。これはデータベースの使いようによっては安全でない可能性があります。"
+msgstr ""
+"設定されたデータベースには、ユーザに自身の属性のほとんどの変更を許容する 1 つ"
+"以上のアクセス制御ルールがあります。これはデータベースの使いようによっては安"
+"全でない可能性があります。"
 
 #. Type: note
 #. Description
 #. Translators: keep "by self write" and "to *" unchanged. These are part
 #. of the slapd configuration and are not translatable.
-#: ../slapd.templates:17001
+#: ../slapd.templates:16001
 msgid ""
 "In the case of slapd access rules that begin with \"to *\", it is "
 "recommended to remove any instances of \"by self write\", so that users are "
 "only able to modify specifically allowed attributes."
-msgstr "\"to *\" で始まる slapd アクセスルールがある場合、各 \"by self write\" 記述を削除することをお勧めします。そうすれば、ユーザが変更できるのは明示的に許可された属性のみになります。"
+msgstr ""
+"\"to *\" で始まる slapd アクセスルールがある場合、各 \"by self write\" 記述を"
+"削除することをお勧めします。そうすれば、ユーザが変更できるのは明示的に許可さ"
+"れた属性のみになります。"
 
 #. Type: note
 #. Description
-#: ../slapd.templates:17001
+#: ../slapd.templates:16001
 msgid "See /usr/share/doc/slapd/README.Debian.gz for more details."
-msgstr "詳細については /usr/share/doc/slapd/README.Debian.gz を参照してください。"
+msgstr ""
+"詳細については /usr/share/doc/slapd/README.Debian.gz を参照してください。"
+
+#. Type: select
+#. Choices
+#: ../slapd.templates:17001
+msgid "abort installation"
+msgstr "インストールの中止"
+
+#. Type: select
+#. Choices
+#: ../slapd.templates:17001
+msgid "continue regardless"
+msgstr "かまわず続ける"
+
+#. Type: select
+#. Description
+#: ../slapd.templates:17002
+msgid "Manual ppolicy schema update recommended"
+msgstr "手動の ppolicy スキーマ更新の推奨"
+
+#. Type: select
+#. Description
+#. "ppolicy", "pwdMaxRecordedFailure", and "cn=config" are not translatable.
+#: ../slapd.templates:17002
+msgid ""
+"The new version of the Password Policy (ppolicy) overlay requires the schema "
+"to define the pwdMaxRecordedFailure attribute type, which is not present in "
+"the schema currently in use. It is recommended to abort the upgrade now, and "
+"to update the ppolicy schema before upgrading slapd. If replication is in "
+"use, the schema update should be applied on every server before continuing "
+"with the upgrade."
+msgstr "Password Policy (ppolicy) オーバレイの新しいバージョンは、現在使用しているスキーマに存在しない pwdMaxRecordedFailure 属性型をスキーマに定義する必要があります。アップグレードを今すぐ中止し、slapd をアップグレードする前に ppolicy スキーマを更新することをお勧めします。レプリケーションが使われている場合、このアップグレードを続ける前にスキーマの更新を各サーバに適用しておくべきです。"
+
+#. Type: select
+#. Description
+#. This paragraph is followed by the path to the generated file (not
+#. translatable). The sentence continues in the following paragraph.
+#: ../slapd.templates:17002
+msgid ""
+"An LDIF file has been generated with the changes required for the upgrade:"
+msgstr "アップグレードに必要な変更付きの LDIF ファイルが生成されました:"
+
+#. Type: select
+#. Description
+#. This paragraph continues the sentence started in the previous
+#. paragraph. It is followed by a command line.
+#: ../slapd.templates:17002
+msgid ""
+"so if slapd is using the default access control rules, these changes can be "
+"applied (after starting slapd) by using the command:"
+msgstr "slapd がデフォルトのアクセス制御ルールを使っているのであれば、これらの変更は (slapd が開始した後に) 以下のコマンドによって適用できます:"
+
+#. Type: select
+#. Description
+#: ../slapd.templates:17002
+msgid ""
+"If instead you choose to continue the installation, the new attribute type "
+"will be added automatically, but the change will not be acted on by slapd "
+"overlays, and replication with other servers may be affected."
+msgstr "インストールを続けることを選ぶと、新しい属性型は自動的に追加されますが、この変更は slapd オーバレイで実行されず、他のサーバとのレプリケーションに影響する可能性があります。"

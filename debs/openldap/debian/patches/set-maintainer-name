@@ -1,0 +1,11 @@
+--- a/build/mkversion
++++ b/build/mkversion
+@@ -50,7 +50,7 @@
+ fi
+ 
+ APPLICATION=$1
+-WHOWHERE="$USER@`uname -n`:`pwd`"
++WHOWHERE="Debian OpenLDAP Maintainers <pkg-openldap-devel@lists.alioth.debian.org>"
+ 
+ cat << __EOF__
+ /* This work is part of OpenLDAP Software <http://www.openldap.org/>.

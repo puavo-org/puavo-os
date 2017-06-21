@@ -152,6 +152,13 @@ libldap_r-2.4.so.2 libldap-2.4-2 #MINVER#
  ldap_attributetype_free@OPENLDAP_2.4_2 2.4.7
  ldap_bind@OPENLDAP_2.4_2 2.4.7
  ldap_bind_s@OPENLDAP_2.4_2 2.4.7
+ ldap_build_add_req@OPENLDAP_2.4_2 2.4.43
+ ldap_build_bind_req@OPENLDAP_2.4_2 2.4.43
+ ldap_build_compare_req@OPENLDAP_2.4_2 2.4.43
+ ldap_build_delete_req@OPENLDAP_2.4_2 2.4.43
+ ldap_build_extended_req@OPENLDAP_2.4_2 2.4.43
+ ldap_build_moddn_req@OPENLDAP_2.4_2 2.4.43
+ ldap_build_modify_req@OPENLDAP_2.4_2 2.4.43
  ldap_build_search_req@OPENLDAP_2.4_2 2.4.7
  ldap_bv2dn@OPENLDAP_2.4_2 2.4.7
  ldap_bv2dn_x@OPENLDAP_2.4_2 2.4.7

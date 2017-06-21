@@ -2,22 +2,23 @@
 # Slovenské preklady pre balík openldap.
 # Copyright (C) 2011 THE openldap'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# Automatically generated, 2011.
-# Slavko <linux@slavino.sk>, 2011.
 #
+# Slavko <linux@slavino.sk>, 2011.
+# Ivan Masár <helix84@centrum.sk>, 2017.
 msgid ""
 msgstr ""
 "Project-Id-Version: openldap 2.4.23-7\n"
 "Report-Msgid-Bugs-To: openldap@packages.debian.org\n"
-"POT-Creation-Date: 2014-10-20 22:17-0700\n"
-"PO-Revision-Date: 2011-01-02 20:34+0100\n"
-"Last-Translator: Slavko <linux@slavino.sk>\n"
-"Language-Team: Slovak <nomail>\n"
+"POT-Creation-Date: 2017-01-10 05:24+0000\n"
+"PO-Revision-Date: 2017-01-10 10:01+0200\n"
+"Last-Translator: Ivan Masár <helix84@centrum.sk>\n"
+"Language-Team: x\n"
 "Language: sk\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+"X-Generator: Virtaal 0.7.1\n"
 
 #. Type: boolean
 #. Description
@@ -66,7 +67,7 @@ msgid ""
 "LDAP directories can be dumped into plain text files in the standard LDAP "
 "Data Interchange Format."
 msgstr ""
-"Pred aktualizáciou na novšie verziu servera OpenLDAP môžu byť vaše dáta z "
+"Pred aktualizáciou na novšiu verziu servera OpenLDAP môžu byť vaše dáta z "
 "adresárov LDAP uložené do textových súborov vo formáte LDAP Data Interchange "
 "Format, čo je štandardizovaný formát na popis týchto dát."
 
@@ -82,8 +83,8 @@ msgstr ""
 "Výberom „vždy“ zaistíte, že budú databázy uložené do súborov pred každou "
 "aktualizáciou. Voľba „keď je treba“ znamená, že budú databázy uložené len v "
 "prípade, že je nová verzia nekompatibilná s formátom starej databázy, a teda "
-"bude potrebné opätovné nahratie dát. Ak zvolíte „nikdy“, dáta nebudú "
-"ukladané."
+"bude potrebné opätovné nahratie dát. Ak zvolíte „nikdy“, dáta sa nebudú "
+"ukladať."
 
 #. Type: string
 #. Description
@@ -102,11 +103,11 @@ msgid ""
 "string \"VERSION\" is replaced with the server version you are upgrading "
 "from."
 msgstr ""
-"Zadajte prosím adresár, kam majú byť uložené databázy LDAP. V tomto adresári "
-"bude vytvorených niekoľko súborov LDIF, jeden pre každý koreň adresárov LDAP "
-"daného servera. Presvedčte sa, že je na zvolenej oblasti dostatok miesta. "
-"Prvý výskyt reťazca „VERSION” bude nahradený verziou servera LDAP, z ktorej "
-"aktualizujete."
+"Prosím, zadajte adresár, kam majú byť uložené databázy LDAP. V tomto "
+"adresári bude vytvorených niekoľko súborov LDIF, jeden pre každý koreň "
+"adresárov LDAP daného servera. Presvedčte sa, že je na zvolenej oblasti "
+"dostatok miesta. Prvý výskyt reťazca „VERSION” bude nahradený verziou "
+"servera LDAP, z ktorej aktualizujete."
 
 #. Type: boolean
 #. Description
@@ -163,9 +164,9 @@ msgid ""
 "For example, 'foo.example.org' will create the directory with 'dc=foo, "
 "dc=example, dc=org' as base DN."
 msgstr ""
-"Meno domény (DNS) je použité na vytvorenie základného DN adresára LDAP. "
-"Napríklad, „foo.example.org” vytvorí adresár so základným DN 'dc=foo, "
-"dc=example, dc=org'."
+"Meno domény (DNS) sa použije na vytvorenie základného DN adresára LDAP. "
+"Napríklad „foo.example.org“ vytvorí adresár so základným DN „dc=foo, "
+"dc=example, dc=org“."
 
 #. Type: string
 #. Description
@@ -180,20 +181,20 @@ msgid ""
 "Please enter the name of the organization to use in the base DN of your LDAP "
 "directory."
 msgstr ""
-"Prosím zadajte názov organizácie, ktorý bude použitý v základnom DN vášho "
+"Prosím, zadajte názov organizácie, ktorý sa použije v základnom DN vášho "
 "adresára LDAP."
 
 #. Type: password
 #. Description
 #: ../slapd.templates:8001
 msgid "Administrator password:"
-msgstr "Heslo administrátora:"
+msgstr "Heslo správcu:"
 
 #. Type: password
 #. Description
 #: ../slapd.templates:8001
 msgid "Please enter the password for the admin entry in your LDAP directory."
-msgstr "Prosím zadajte heslo administrátora vášho adresára LDAP."
+msgstr "Prosím zadajte heslo správcu vášho adresára LDAP."
 
 #. Type: password
 #. Description
@@ -208,20 +209,20 @@ msgid ""
 "Please enter the admin password for your LDAP directory again to verify that "
 "you have typed it correctly."
 msgstr ""
-"Prosím zadajte znova heslo administrátora vášho adresára LDAP, na overenie, "
-"že ste ho napísali správne."
+"Prosím, zadajte znova heslo správcu vášho adresára LDAP na overenie, že ste "
+"ho napísali správne."
 
 #. Type: note
 #. Description
 #: ../slapd.templates:10001
 msgid "Password mismatch"
-msgstr "Heslá nesúhlasia"
+msgstr "Heslá sa nezhodujú"
 
 #. Type: note
 #. Description
 #: ../slapd.templates:10001
 msgid "The two passwords you entered were not the same. Please try again."
-msgstr "Zadané heslá nie sú rovnaké. Prosím skúste znova."
+msgstr "Zadané heslá nie sú rovnaké. Prosím, skúste to znova."
 
 #. Type: boolean
 #. Description
@@ -229,62 +230,42 @@ msgstr "Zadané heslá nie sú rovnaké. Prosím skúste znova."
 msgid "Do you want the database to be removed when slapd is purged?"
 msgstr "Chcete aby pri odstránení balíka slapd bola odstránená aj databáza?"
 
-#. Type: boolean
-#. Description
-#: ../slapd.templates:14001
-msgid "Allow LDAPv2 protocol?"
-msgstr "Povoliť protokol LDAPv2?"
-
-#. Type: boolean
-#. Description
-#: ../slapd.templates:14001
-msgid ""
-"The obsolete LDAPv2 protocol is disabled by default in slapd. Programs and "
-"users should upgrade to LDAPv3.  If you have old programs which can't use "
-"LDAPv3, you should select this option and 'allow bind_v2' will be added to "
-"your slapd.conf file."
-msgstr ""
-"Zastaraný protokol LDAPv2 je v slapd predvolene zakázaný. Programy a "
-"používatelia by mali prejsť na LDAPv3. Ak máte staré programy, ktoré "
-"nedokážu používať LDAPv3, mali by ste povoliť túto možnosť a do "
-"konfiguračného súboru slapd.conf bude pridaný riadok „allow bind_v2”."
-
 #. Type: error
 #. Description
-#: ../slapd.templates:15001
+#: ../slapd.templates:14001
 msgid "slapcat failure during upgrade"
 msgstr "Zlyhanie slapcat počas aktualizácie"
 
 #. Type: error
 #. Description
-#: ../slapd.templates:15001
+#: ../slapd.templates:14001
 msgid "An error occurred while upgrading the LDAP directory."
 msgstr "Pri aktualizácii adresára LDAP nastala chyba."
 
 #. Type: error
 #. Description
-#: ../slapd.templates:15001
+#: ../slapd.templates:14001
 msgid ""
 "The 'slapcat' program failed while extracting the LDAP directory. This may "
 "be caused by an incorrect configuration file (for example, missing "
 "'moduleload' lines to support the backend database)."
 msgstr ""
-"Program „slapcat” zlyhal pri práci s adresárom LDAP. Táto chyba môže byť "
+"Program „slapcat“ zlyhal pri práci s adresárom LDAP. Táto chyba môže byť "
 "spôsobená chybným konfiguračným súborom (napríklad chýbajúce riadky "
-"„moduleload” s podporou backend databázy)."
+"„moduleload“ s podporou backend databázy)."
 
 #. Type: error
 #. Description
 #. This paragraph is followed by a (non translatable) paragraph
 #. containing a command line
-#: ../slapd.templates:15001
+#: ../slapd.templates:14001
 msgid ""
 "This failure will cause 'slapadd' to fail later as well. The old database "
 "files will be moved to /var/backups. If you want to try this upgrade again, "
 "you should move the old database files back into place, fix whatever caused "
 "slapcat to fail, and run:"
 msgstr ""
-"Táto chyba bude mať za následok, že „slapadd” neskôr tiež zlyhá. Súbory "
+"Táto chyba bude mať za následok, že „slapadd“ neskôr tiež zlyhá. Súbory "
 "starej databázy budú presunuté do /var/backups. Ak budete chcieť skúsiť túto "
 "aktualizáciu neskôr znova, mali by ste najprv presunúť súbory starej "
 "databázy naspäť, opraviť príčinu zlyhania slapcat a spustiť:"
@@ -293,7 +274,7 @@ msgstr ""
 #. Description
 #. Translators: keep "${location}" unchanged. This is a variable that
 #. will be replaced by a directory name at execution
-#: ../slapd.templates:15001
+#: ../slapd.templates:14001
 msgid ""
 "Then move the database files back to a backup area and then try running "
 "slapadd from ${location}."
@@ -303,86 +284,160 @@ msgstr ""
 
 #. Type: select
 #. Description
-#: ../slapd.templates:16001
+#: ../slapd.templates:15001
 msgid "Database backend to use:"
-msgstr "Backend databázy:"
+msgstr "Použiť backend databázy:"
 
 #. Type: select
 #. Description
-#: ../slapd.templates:16001
-#, fuzzy
-#| msgid ""
-#| "The HDB backend is recommended. HDB and BDB use similar storage formats, "
-#| "but HDB adds support for subtree renames. Both support the same "
-#| "configuration options."
+#: ../slapd.templates:15001
 msgid ""
 "HDB and BDB use similar storage formats, but HDB adds support for subtree "
 "renames. Both support the same configuration options."
 msgstr ""
-"Odporúčaný je backend HDB. HDB a BDB používajú podobné formáty úložiska, ale "
-"HDB pridáva podporu premenovania podstromov. Oba podporujú rovnaké "
-"konfiguračné voľby."
+"HDB a BDB používajú podobné formáty úložiska, ale HDB pridáva podporu "
+"premenovania podstromov. Oba podporujú rovnaké konfiguračné voľby."
 
 #. Type: select
 #. Description
-#: ../slapd.templates:16001
-#, fuzzy
-#| msgid ""
-#| "The HDB backend is recommended. HDB and BDB use similar storage formats, "
-#| "but HDB adds support for subtree renames. Both support the same "
-#| "configuration options."
+#: ../slapd.templates:15001
 msgid ""
 "The MDB backend is recommended. MDB uses a new storage format and requires "
 "less configuration than BDB or HDB."
 msgstr ""
-"Odporúčaný je backend HDB. HDB a BDB používajú podobné formáty úložiska, ale "
-"HDB pridáva podporu premenovania podstromov. Oba podporujú rovnaké "
-"konfiguračné voľby."
+"Odporúča sa použiť backend MDB. MDB používa nový formát úložiska a vyžaduje "
+"menej konfigurácie ako BDB či HDB."
 
 #. Type: select
 #. Description
-#: ../slapd.templates:16001
-#, fuzzy
-#| msgid ""
-#| "In either case, you should review the resulting database configuration "
-#| "for your needs. See /usr/share/doc/slapd/README.DB_CONFIG.gz for more "
-#| "details."
+#: ../slapd.templates:15001
 msgid ""
 "In any case, you should review the resulting database configuration for your "
 "needs. See /usr/share/doc/slapd/README.Debian.gz for more details."
 msgstr ""
-"V oboch prípadoch, by ste mali skontrolovať, či výsledné nastavenie databázy "
-"zodpovedá vašim potrebám. Viac informácií hľadajte v /usr/share/doc/slapd/"
-"README.DB_CONFIG.gz."
+"V každom prípade by ste mali skontrolovať, či výsledné nastavenie databázy "
+"zodpovedá vašim potrebám. Ďalšie informácie nájdete v súbore /usr/share/doc/"
+"slapd/README.Debian.gz."
 
 #. Type: note
 #. Description
-#: ../slapd.templates:17001
+#: ../slapd.templates:16001
 msgid "Potentially unsafe slapd access control configuration"
-msgstr ""
+msgstr "Potenciálne nebezpečná konfigurácia riadenia prístupu slapd"
 
 #. Type: note
 #. Description
-#: ../slapd.templates:17001
+#: ../slapd.templates:16001
 msgid ""
 "One or more of the configured databases has an access control rule that "
 "allows users to modify most of their own attributes. This may be unsafe, "
 "depending on how the database is used."
 msgstr ""
+"Jedna alebo viac z nastavených databáz obsahuje pravidlo riadenia prístupu, "
+"ktoré umožňuje používateľom meniť väčšinu svojich vlastných atribútov. To "
+"môže byť nebezpečné podľa toho ako sa databáza používa."
 
 #. Type: note
 #. Description
 #. Translators: keep "by self write" and "to *" unchanged. These are part
 #. of the slapd configuration and are not translatable.
-#: ../slapd.templates:17001
+#: ../slapd.templates:16001
 msgid ""
 "In the case of slapd access rules that begin with \"to *\", it is "
 "recommended to remove any instances of \"by self write\", so that users are "
 "only able to modify specifically allowed attributes."
 msgstr ""
+"V prípade pravidiel riadenia prístupu slapd, ktoré začínajú na „to *“ sa "
+"odporúča odstrániť všetky prípady „by self write“, aby používatelia mohli "
+"meniť iba konkrétne povolené atribúty."
 
 #. Type: note
 #. Description
-#: ../slapd.templates:17001
+#: ../slapd.templates:16001
 msgid "See /usr/share/doc/slapd/README.Debian.gz for more details."
 msgstr ""
+"Ďalšie informácie nájdete v súbore /usr/share/doc/slapd/README.Debian.gz."
+
+#. Type: select
+#. Choices
+#: ../slapd.templates:17001
+msgid "abort installation"
+msgstr "prerušiť inštaláciu"
+
+#. Type: select
+#. Choices
+#: ../slapd.templates:17001
+msgid "continue regardless"
+msgstr "napriek tomu pokračovať"
+
+#. Type: select
+#. Description
+#: ../slapd.templates:17002
+msgid "Manual ppolicy schema update recommended"
+msgstr "Odporúča sa manuálna aktualizácia schémy ppolicy"
+
+#. Type: select
+#. Description
+#. "ppolicy", "pwdMaxRecordedFailure", and "cn=config" are not translatable.
+#: ../slapd.templates:17002
+msgid ""
+"The new version of the Password Policy (ppolicy) overlay requires the schema "
+"to define the pwdMaxRecordedFailure attribute type, which is not present in "
+"the schema currently in use. It is recommended to abort the upgrade now, and "
+"to update the ppolicy schema before upgrading slapd. If replication is in "
+"use, the schema update should be applied on every server before continuing "
+"with the upgrade."
+msgstr ""
+"Nová verzia prekrytia politiky hesla (ppolicy; Password Policy) vyžaduje, "
+"aby schéma definovala typ atribútu pwdMaxRecordedFailure, ktorý v momentálne "
+"používanej schéme nie je prítomný. Odporuča sa teraz prerušiť inštaláciu a "
+"aktualizovať schému ppolicy pred aktualizáciou slapd. Ak používate "
+"replikáciu, aktualizáciu schémy by ste mali použiť na každom serveri "
+"predtým, než budete pokračovať v aktualizácii."
+
+#. Type: select
+#. Description
+#. This paragraph is followed by the path to the generated file (not
+#. translatable). The sentence continues in the following paragraph.
+#: ../slapd.templates:17002
+msgid ""
+"An LDIF file has been generated with the changes required for the upgrade:"
+msgstr "Bol vytvorený súbor LDIF so zmenami potrebnými na aktualizáciu:"
+
+#. Type: select
+#. Description
+#. This paragraph continues the sentence started in the previous
+#. paragraph. It is followed by a command line.
+#: ../slapd.templates:17002
+msgid ""
+"so if slapd is using the default access control rules, these changes can be "
+"applied (after starting slapd) by using the command:"
+msgstr ""
+"takže ak slapd používa predvolené pravidlá riadenia prístupu, tieto zmeny je "
+"možné použiť (po spustení slapd) príkazom:"
+
+#. Type: select
+#. Description
+#: ../slapd.templates:17002
+msgid ""
+"If instead you choose to continue the installation, the new attribute type "
+"will be added automatically, but the change will not be acted on by slapd "
+"overlays, and replication with other servers may be affected."
+msgstr ""
+"Ak sa namiesto toho rozhodnete pokračovať v inštalácii, nový typ atribúty sa "
+"pridá automaticky, ale zmena sa neprejaví v prekrytiach slapd a môže to "
+"ovplyvniť replikáciu s ostatnými servermi."
+
+#~ msgid "Allow LDAPv2 protocol?"
+#~ msgstr "Povoliť protokol LDAPv2?"
+
+#~ msgid ""
+#~ "The obsolete LDAPv2 protocol is disabled by default in slapd. Programs "
+#~ "and users should upgrade to LDAPv3.  If you have old programs which can't "
+#~ "use LDAPv3, you should select this option and 'allow bind_v2' will be "
+#~ "added to your slapd.conf file."
+#~ msgstr ""
+#~ "Zastaraný protokol LDAPv2 je v slapd predvolene zakázaný. Programy a "
+#~ "používatelia by mali prejsť na LDAPv3. Ak máte staré programy, ktoré "
+#~ "nedokážu používať LDAPv3, mali by ste povoliť túto možnosť a do "
+#~ "konfiguračného súboru slapd.conf bude pridaný riadok „allow bind_v2”."

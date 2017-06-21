@@ -1,26 +1,217 @@
-openldap (2.4.44-0+opinsys1) precise; urgency=medium
+openldap (2.4.44+dfsg-5) unstable; urgency=medium
 
-  * New upstream version
+  * debian/patches/ITS-8644-wait-for-slapd-to-start-in-test064.patch: Fix an 
+    intermittently failing test by waiting for slapd to start before running 
+    tests. (ITS#8644) (Closes: #770890)
+  * debian/patches/ITS-8655-paged-results-double-free.patch: Fix a double free 
+    in the MDB backend on a search including the Paged Results control with a 
+    page size of 0. (ITS#8655) (Closes: #863563)
 
- -- Veli-Matti Lintu <veli-matti.lintu@opinsys.fi>  Wed, 01 Jun 2016 17:04:12 +0300
+ -- Ryan Tandy <ryan@nardis.ca>  Sun, 28 May 2017 09:59:46 -0700
 
-openldap (2.4.40+dfsg-1+deb8u2) jessie; urgency=medium
+openldap (2.4.44+dfsg-4) unstable; urgency=medium
 
-  * debian/patches/ITS8003-fix-off-by-one-in-LDIF-length.patch: Import
-    upstream patch to fix a crash when adding a large attribute value with the
-    auditlog overlay enabled. (Closes: #806909)
+  * Improve the slapd/ppolicy_schema_needs_update debconf template. Thanks to 
+    Justin B Rye for the review.
+  * Update Catalan debconf translation. (Closes: #851905)
+    Thanks to Innocent De Marchi.
+  * Update Czech debconf translation. (Closes: #852190)
+    Thanks to Miroslav Kure.
+  * Update Danish debconf translation. (Closes: #850859)
+    Thanks to Joe Dalton.
+  * Update German debconf translation. (Closes: #851480)
+    Thanks to Helge Kreutzmann.
+  * Update Basque debconf translation. (Closes: #850812)
+    Thanks to Iñaki Larrañaga Murgoitio.
+  * Update French debconf translation. (Closes: #852459)
+    Thanks to Jean-Pierre Giraud.
+  * Update Italian debconf translation. (Closes: #852074)
+    Thanks to Luca Monducci.
+  * Update Japanese debconf translation. (Closes: #851457)
+    Thanks to Kenshi Muto.
+  * Update Dutch debconf translation. (Closes: #852405)
+    Thanks to Frans Spiesschaert.
+  * Update Brazilian Portuguese debconf translation. (Closes: #852443)
+    Thanks to Adriano Rafael Gomes.
+  * Update Russian debconf translation. (Closes: #850833)
+    Thanks to Yuri Kozlov.
+  * Update Slovak debconf translation. (Closes: #850796)
+    Thanks to Ivan Masár.
+  * Update Swedish debconf translation. (Closes: #851168)
+    Thanks to Martin Bagge.
+  * Update Turkish debconf translation. (Closes: #851470)
+    Thanks to Atila KOÇ.
+  * Update Vietnamese debconf translation.
+    Thanks to Trần Ngọc Quân.
+  * Update Build-Depends on debhelper to ensure shlibs files are installed at 
+    the expected time during build. (Closes: #854158)
+  * Update Portuguese debconf translation. (Closes: #859943)
+    Thanks to Rui Branco and DebianPT.
+  * Dump the configuration and databases to LDIF before removing slapd, so 
+    that they are available if a newer version requiring migration is 
+    installed later. (Closes: #665199)
+  * When creating a new configuration with dpkg-reconfigure, back up the old 
+    configuration before overwriting it.
 
- -- Ryan Tandy <ryan@nardis.ca>  Sat, 12 Dec 2015 16:11:38 -0800
+ -- Ryan Tandy <ryan@nardis.ca>  Sun, 16 Apr 2017 20:10:43 -0700
 
-openldap (2.4.40+dfsg-1+deb8u1) jessie-security; urgency=high
+openldap (2.4.44+dfsg-3) unstable; urgency=medium
 
-  * Non-maintainer upload by the Security Team.
-  * Add ITS8240-remove-obsolete-assert.patch patch.
-    Import upstream patch to remove an unnecessary assert(0) that could be
-    triggered remotely by an unauthenticated user by sending a malformed BER
-    element. (CVE-2015-6908, Closes: #798622)
+  * Apply upstream patch to fix FTBFS on kFreeBSD. (Closes: #845394)
+  * Restore heimdal support to the smbk5pwd overlay.
 
- -- Salvatore Bonaccorso <carnil@debian.org>  Fri, 11 Sep 2015 10:30:43 +0200
+ -- Ryan Tandy <ryan@nardis.ca>  Sun, 01 Jan 2017 19:47:36 -0800
+
+openldap (2.4.44+dfsg-2) unstable; urgency=medium
+
+  [ Ryan Tandy ]
+  * Update Standards-Version to 3.9.8; no changes required.
+  * Enable dh_makeshlibs for libldap-2.4-2. Remove libldap-2.4-2.postinst, now 
+    replaced by the automatic ldconfig trigger.
+  * Don't execute slapd's override_dh_install when building only 
+    arch-independent packages. (Closes: #845506)
+  * Override lintian false positives on slapd.README.Debian, 
+    slapd-smbk5pwd.postinst, and slapd-smbk5pwd triggering ldconfig.
+  * Perform permissions changes in override_dh_fixperms instead of in 
+    override_dh_install.
+  * Remove manual chmod of schema files since dh_fixperms sets correct 
+    permissions automatically.
+  * Fix slapd-smbk5pwd failing to upgrade when there are no instances of the 
+    overlay configured.
+
+  [ Helmut Grohne ]
+  * Fix FTCBFS: Pass CC to make explicitly. (Closes: #839251)
+
+ -- Ryan Tandy <ryan@nardis.ca>  Thu, 01 Dec 2016 19:40:20 -0800
+
+openldap (2.4.44+dfsg-1) unstable; urgency=medium
+
+  [ Ryan Tandy ]
+  * New upstream release.
+    - Fixed ppolicy not unlocking policy entry after initialization failure 
+      (ITS#7537) (Closes: #702414)
+  * Drop ITS8240-remove-obsolete-assert.patch, included upstream.
+  * Update debian/schema/ppolicy.schema to add the pwdMaxRecordedFailure 
+    attribute.
+  * Update libldap-2.4-2.symbols with new ldap_build_*_req symbols.
+  * Mark the build target in debian/rules as phony, since the upstream source 
+    includes a build/ directory.
+  * Correct the list of files to be cleaned for the pw-sha2 contrib module.
+  * Fix a typo (slpad -> slapd) in the Catalan debconf translation.
+  * Disable OpenSLP support and remove libslp-dev from Build-Depends.
+    (Closes: #815364)
+  * Ensure /var/run/slapd exists when starting slapd, even if the pid file is 
+    somewhere else. Thanks to Dave Beach for the report. (Closes: #815571)
+  * Create the pidfile directory when starting slapd, but not when running the 
+    init script in other modes.
+  * Remove support for enabling the obsolete LDAPv2 protocol via debconf.
+  * debian/copyright: Update the OpenLDAP copyright and license.
+  * debian/control: Update VCS URIs to the modern canonical form.
+  * Override Lintian errors about schema files derived from RFC documents. 
+    Copyrightable content has been removed from these files; however, the 
+    copyright notices have been retained to preserve attribution.
+  * On upgrade, if the cn=config database contains the ppolicy schema, add the 
+    new pwdMaxRecordedFailure attribute to it.
+  * Add debian/patches/set-maintainer-name to omit the builder's username and 
+    working directory from version strings and thereby make the build 
+    reproducible. Thanks to Daniel Shahaf for the patch. (Closes: #833179)
+  * Build smbk5pwd without Kerberos support and drop the build-dependency on 
+    heimdal. (Closes: #836885)
+  * On upgrade, comment the krb5 setting on any instances of the smbk5pwd 
+    overlay in slapd.conf. Require cn=config users to disable krb5 manually 
+    before upgrading.
+
+  [ Helmut Grohne ]
+  * Fix policy 8.2 violation (Closes: #330695)
+    + Move /etc/ldap/ldap.conf and manpage to new package libldap-common.
+
+ -- Ryan Tandy <ryan@nardis.ca>  Mon, 14 Nov 2016 18:59:30 -0800
+
+openldap (2.4.42+dfsg-2) unstable; urgency=medium
+
+  [ Ryan Tandy ]
+  * Change explicit Pre-Depends: multiarch-support to ${misc:Pre-Depends}, as 
+    recommended by lintian.
+  * Omit slapd, slapd-dbg, and slapd-smbk5pwd from the stage1 build profile. 
+    This allows the dependency loop with heimdal to be broken for 
+    bootstrapping, and the dependency on libperl-dev to be avoided for 
+    cross-building. Thanks Daniel Schepler and Helmut Grohne.
+    (Closes: #724518)
+  * Apply wrap-and-sort to the Build-Depends field.
+  * Drop libncurses5-dev from Build-Depends, no longer needed since the ud 
+    tool was removed in OpenLDAP 2.1.4.
+  * Drop libltdl3-dev as an alternate Build-Depends, since that package was 
+    removed after lenny.
+  * Annotate Build-Depends on perl with :any to allow running the system perl 
+    interpreter during cross builds.
+  * Ensure CC is set correctly for cross builds. Thanks Helmut Grohne.
+  * Build-Depend on dpkg-dev (>= 1.17.14) and debhelper (>= 9.20141010) for 
+    restriction formula support.
+  * Override the 'dev-pkg-without-shlib-symlink' lintian tag. The symlink is 
+    actually in the form libldap_r.so -> libldap_r-2.4.so.xyz and the tag is a 
+    false positive; see #687022.
+  * Include the smbk5pwd man page in the slapd-smbk5pwd package.
+  * Allow anonymous read access to the shadowLastChange attribute by default, 
+    allowing nss-ldap/nss-ldapd to handle password expiry correctly even when 
+    bound anonymously. This was the only restricted shadow attribute, the 
+    others were already world-readable. (Closes: #669235)
+  * Drop the redundant default ACL for dn.base="" from the database entry. 
+    It's already covered by the fallback case below.
+  * Copy more comments from the slapd.conf template to slapd.init.ldif. Also 
+    comment the shadowLastChange access rule.
+  * Import upstream patch to remove an unnecessary assert(0) that could be 
+    triggered remotely by an unauthenticated user by sending a malformed BER 
+    element. (ITS#8240) (CVE-2015-6908) (Closes: #798622)
+
+  [ Peter Marschall ]
+  * Add a manual page slapo-smbk5pwd.5 and update smbk5pwd's Makefile to 
+    install the new manual page. (Closes: #794998)
+
+ -- Ryan Tandy <ryan@nardis.ca>  Thu, 10 Sep 2015 20:13:17 -0700
+
+openldap (2.4.42+dfsg-1) unstable; urgency=medium
+
+  [ Peter Marschall ]
+  * slapd.scripts-common:
+    - Use update_permissions instead of direct calls to chown and chgrp.
+    - Make variables only used within a function local to that function.
+    - Restore databases ordered by increasing suffix path length.
+      This should help configurations with databases glued together using the
+      'subordinate' keyword / 'olcSubordinate' attribute in slapd's
+      configuration.
+    (Closes: #794996)
+  * Install slapo-lastbind.5 man page. (Closes: #794997)
+
+  [ Ryan Tandy ]
+  * slapd.scripts-common: Delete an outdated comment.
+  * New upstream release.
+  * Enable the MDB backend again on GNU/kFreeBSD. The new pthread library 
+    provides all the required interfaces, and the test suite now passes.
+    Leave it disabled on the Hurd. LMDB requires POSIX semaphores, which have 
+    not yet been implemented.
+  * Disable the BDB/HDB backends on the Hurd. BDB requires record locks 
+    (F_SETLK), which have not yet been implemented; see #693971.
+
+ -- Ryan Tandy <ryan@nardis.ca>  Fri, 21 Aug 2015 13:07:51 -0700
+
+openldap (2.4.41+dfsg-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Update patches for upstream changes, drop patches included upstream.
+  * debian/rules: Adjust get-orig-source target to add +dfsg to version.
+  * Convert to source format 3.0 (quilt).
+  * debian/slapd.scripts-common: Fix nesting of fold markers.
+
+ -- Ryan Tandy <ryan@nardis.ca>  Wed, 08 Jul 2015 21:07:24 -0700
+
+openldap (2.4.40+dfsg-2) unstable; urgency=medium
+
+  * Actually install libldap-2.4-2.symbols.
+  * Update Standards-Version to 3.9.6.
+  * Build-Depend on debhelper (>= 9) to fix a Lintian warning.
+  * Import upstream patch to fix FTBFS with gcc-5. (Addresses #778045)
+
+ -- Ryan Tandy <ryan@nardis.ca>  Sun, 28 Jun 2015 20:40:37 -0700
 
 openldap (2.4.40+dfsg-1) unstable; urgency=medium
 

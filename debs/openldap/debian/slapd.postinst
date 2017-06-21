@@ -8,6 +8,148 @@ set -e
 # various helper functions and $OLD_VERSION and $SLAPD_CONF
 #SCRIPTSCOMMON#
 
+postinst_upgrade_cn_config() {						# {{{
+	if previous_version_older '2.4.44+dfsg-1~'; then
+		upgrade_cnconfig_ppolicy_schema
+	fi
+}
+# }}}
+postinst_initial_configuration() {					# {{{
+# Configure slapd for the first time (when first installed)
+# Usage: postinst_initial_configuration
+
+	if manual_configuration_wanted; then
+		echo "  Omitting slapd configuration as requested." >&2
+	else
+		crypt_admin_pass
+		create_new_configuration
+	fi
+}
+
+# }}}
+postinst_upgrade_configuration() {					# {{{
+# Handle upgrading slapd from some older version
+# Usage: postinst_upgrade_configuration
+
+	# Better back up the config file in any case
+	backup_config_once
+
+	# Complete any config updates before trying to use slapadd
+	if [ -d "$SLAPD_CONF" ]; then
+		postinst_upgrade_cn_config
+	fi
+
+	# Check if the database format has changed.
+	if database_format_changed; then
+
+		# During upgrading we have to load the old data
+		move_incompatible_databases_away
+		load_databases
+	fi
+
+	# Move to slapd.d configuration style.
+	migrate_to_slapd_d_style
+
+	# One-time upgrade fix for olcAccess on cn=Subschema
+	if previous_version_older 2.4.23-5 && previous_version_newer 2.4.23-3 \
+	   && [ -e "$SLAPD_CONF/cn=config/olcDatabase={-1}frontend.ldif" ] \
+	   && ! grep -i 'olcAccess:.*subschema' "$SLAPD_CONF/cn=config/olcDatabase={-1}frontend.ldif"
+	then
+		sed -i '/olcAccess: {0}/a\
+olcAccess: {1}to dn.exact="" by * read\
+olcAccess: {2}to dn.base="cn=Subschema" by * read' "${SLAPD_CONF}/cn=config/olcDatabase={-1}frontend.ldif"
+	fi
+
+	# Update permissions of all database directories and /var/run/slapd
+	update_databases_permissions
+	update_permissions /var/run/slapd
+
+	# Versions prior to 2.4.7-1 could create a slapd.conf that wasn't
+	# readable by the openldap user.
+	update_permissions "${SLAPD_CONF}"
+}
+
+# }}}
+
+upgrade_cnconfig_ppolicy_schema() {						# {{{
+# Add a new required attribute to the ppolicy schema embedded in the 
+# cn=config database when upgrading to 2.4.43 or later.
+# slapd.conf users get schema updates through the regular conffile 
+# handling.
+	local dumped_ldif working_ldif ppolicy_dn tmp_slapd_d failed
+
+	if ! [ -d "$SLAPD_CONF" ]; then
+		return 0
+	fi
+
+	if ! previous_version_older '2.4.44+dfsg-1~'; then
+		return 0
+	fi
+
+	# The config should have been dumped in preinst.
+	# If not, hope for the best.
+	dumped_ldif="$(database_dumping_destdir)/cn=config.ldif"
+	if ! [ -f "$dumped_ldif" ]; then
+		echo "Saved configuration not found at $dumped_ldif. Skipping configuration updates." >&2
+		return 0
+	fi
+
+	# Create a working copy with lines unwrapped.
+	working_ldif="$(mktemp --tmpdir slapd-XXXXXXXX.ldif)"
+	trap "trap - INT EXIT; rm -f '$working_ldif'" INT EXIT
+	normalize_ldif "$dumped_ldif" > "$working_ldif"
+
+	# Check whether the schema is loaded and needs an update.
+	ppolicy_dn="$(find_old_ppolicy_schema "$working_ldif")"
+	if [ -z "$ppolicy_dn" ]; then
+		return
+	fi
+
+	echo -n "Adding pwdMaxRecordedFailure attribute to ${ppolicy_dn}... " >&2
+
+	# Add the pwdMaxRecordedFailure attribute to the ppolicy schema.
+	# Let slapadd update modifiersName and modifyTimestamp so these 
+	# reflect reality, and entryCSN so replication is aware of the change.
+	perl -i -ne '
+		BEGIN { my $nextidx; }
+		if (/^dn: cn=\{\d+\}ppolicy,cn=schema,cn=config/ .. /^$/) {
+			if (/^entryCSN:/ or /^modifiersName:/ or /^modifyTimestamp:/) {
+				next;
+			} elsif (/^olcAttributeTypes: \{(\d+)\}/) {
+				$nextidx = $1 + 1;
+			} elsif (/^olcObjectClasses: .*NAME '\''pwdPolicy'\''/) {
+				s/MAY \( ([^)]+) \)/MAY ( $1 \$ pwdMaxRecordedFailure )/;
+			} elsif (/^$/) {
+				print "olcAttributeTypes: {$nextidx}( 1.3.6.1.4.1.42.2.27.8.1.30 NAME '\''pwdMaxRecordedFailure'\'' EQUALITY integerMatch ORDERING integerOrderingMatch  SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 SINGLE-VALUE )\n";
+			}
+		}
+		print;
+	' "$working_ldif"
+
+	# Import the modified config into a temporary location.
+	tmp_slapd_d="$(mktemp -d --tmpdir slapd-XXXXXXXX)"
+	trap "trap - INT EXIT; rm -rf '$tmp_slapd_d' '$working_ldif'" INT EXIT
+	capture_diagnostics slapadd -F "$tmp_slapd_d" -n0 -l "$working_ldif" || failed=1
+	if [ "$failed" ]; then
+		cat >&2 <<-eof
+failed.
+
+Updating the slapd configuration failed with the following error
+while running slapadd:
+eof
+		release_diagnostics
+		exit 1
+	fi
+
+	# Replace the old config with the updated one.
+	# The current config has already been backed up earlier.
+	rm -r "$SLAPD_CONF/cn=config.ldif" "$SLAPD_CONF/cn=config"
+	mv "$tmp_slapd_d/cn=config.ldif" "$tmp_slapd_d/cn=config" "$SLAPD_CONF/"
+
+	echo 'done.' >&2
+}
+# }}}
+
 # Create a new user.  Don't create the user, however, if the local
 # administrator has already customized slapd to run as a different user.
 if [ "$MODE" = "configure" ] || [ "$MODE" = "reconfigure" ] ; then
@@ -15,6 +157,15 @@ if [ "$MODE" = "configure" ] || [ "$MODE" = "reconfigure" ] ; then
 		create_new_user
 	fi
 fi
+
+# Configuration.
+if is_initial_configuration "$@"; then
+	postinst_initial_configuration
+else
+	postinst_upgrade_configuration
+fi
+
+db_stop || true
 
 #DEBHELPER#
 

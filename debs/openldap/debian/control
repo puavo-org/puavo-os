@@ -8,24 +8,33 @@ Uploaders: Roland Bauerschmidt <rb@debian.org>,
  Matthijs Möhlmann <matthijs@cacholong.nl>,
  Timo Aaltonen <tjaalton@ubuntu.com>,
  Ryan Tandy <ryan@nardis.ca>
-Build-Depends: debhelper (>= 8.9.0~),
-	dpkg-dev (>= 1.16.1),
-	libdb5.3-dev, nettle-dev,
- libgnutls28-dev, unixodbc-dev, libncurses5-dev, libperl-dev (>= 5.8.0),
- libsasl2-dev, libslp-dev, libltdl-dev | libltdl3-dev (>= 1.4.3),
- libwrap0-dev, perl, po-debconf, quilt (>= 0.46-7),
- groff-base, time, heimdal-multidev, krb5-multidev, libssl-dev, 
- dh-autoreconf, dh-systemd
+Build-Depends: debhelper (>= 9.20150501),
+               dh-autoreconf,
+               dpkg-dev (>= 1.17.14),
+               groff-base,
+               heimdal-multidev <!stage1>,
+               libdb5.3-dev <!stage1>,
+               libgnutls28-dev,
+               libltdl-dev <!stage1>,
+               libperl-dev (>= 5.8.0) <!stage1>,
+               libsasl2-dev,
+               libwrap0-dev <!stage1>,
+               nettle-dev <!stage1>,
+               perl:any,
+               po-debconf,
+               time <!stage1>,
+               unixodbc-dev <!stage1>
 Build-Conflicts: libbind-dev, bind-dev, libicu-dev, autoconf2.13
-Standards-Version: 3.9.1
+Standards-Version: 3.9.8
 Homepage: http://www.openldap.org/
-Vcs-Git: git://anonscm.debian.org/pkg-openldap/openldap.git
-Vcs-Browser: http://anonscm.debian.org/gitweb/?p=pkg-openldap/openldap.git
+Vcs-Git: https://anonscm.debian.org/git/pkg-openldap/openldap.git
+Vcs-Browser: https://anonscm.debian.org/git/pkg-openldap/openldap.git
 
 Package: slapd
 Section: net
 Priority: optional
 Architecture: any
+Build-Profiles: <!stage1>
 Pre-Depends: debconf (>= 0.5) | debconf-2.0, ${misc:Pre-Depends}
 Depends: ${shlibs:Depends}, libldap-2.4-2 (= ${binary:Version}),
  coreutils (>= 4.5.1-1), psmisc, perl (>> 5.8.0) | libmime-base64-perl,
@@ -45,6 +54,7 @@ Package: slapd-smbk5pwd
 Section: net
 Priority: extra
 Architecture: any
+Build-Profiles: <!stage1>
 Depends: slapd (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
 Description: Keeps Samba and Kerberos passwords in sync within slapd.
  Extends the PasswordModify Extended Operation to update Kerberos keys
@@ -74,12 +84,23 @@ Priority: standard
 Architecture: any
 Multi-Arch: same
 Conflicts: ldap-utils (<= 2.1.23-1)
-Pre-Depends: multiarch-support
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, libldap-common (= ${source:Version})
 Replaces: libldap2, libldap-2.3-0
 Description: OpenLDAP libraries 
  These are the run-time libraries for the OpenLDAP (Lightweight Directory
  Access Protocol) servers and clients.
+
+Package: libldap-common
+Section: libs
+Priority: standard
+Architecture: all
+Multi-Arch: foreign
+Depends: ${misc:Depends}
+Replaces: libldap-2.4-2 (<< 2.4.44+dfsg-1)
+Description: OpenLDAP common files for libraries
+ These are common files for the run-time libraries for the OpenLDAP
+ (Lightweight Directory Access Protocol) servers and clients.
 
 Package: libldap-2.4-2-dbg
 Section: debug
@@ -112,6 +133,7 @@ Package: slapd-dbg
 Section: debug
 Priority: extra
 Architecture: any
+Build-Profiles: <!stage1>
 Depends: slapd (= ${binary:Version}), ${misc:Depends}
 Description: Debugging information for the OpenLDAP server (slapd)
  This package provides detached debugging information for the OpenLDAP
@@ -119,14 +141,3 @@ Description: Debugging information for the OpenLDAP server (slapd)
  primarily to permit better backtraces and crash dump analysis after
  problems with the libraries. GDB will find this debug information
  automatically.
-
-Package: slapd-smbkrb5pwd
-Section: net
-Priority: optional
-Architecture: any
-Pre-Depends: debconf (>= 0.5) | debconf-2.0
-Depends: ${shlibs:Depends}, libkrb5-3, slapd, ${misc:Depends}
-Description: Samba / MIT Kerberos password overlay module for slapd
- smbkrb5pwd extends password change operations to synchronously change
- passwords in MIT Kerberos and Samba.
-

@@ -1,0 +1,34 @@
+#!/bin/sh
+
+set -e
+
+. /usr/share/debconf/confmodule
+
+# This will be replaced with debian/slapd.scripts-common which includes
+# various helper functions and $OLD_VERSION and $SLAPD_CONF
+#SCRIPTSCOMMON#
+
+#DEBHELPER#
+
+# Dump config and data to LDIF before removing slapd.
+# If a later version is reinstalled without being purged first, the LDIF
+# files may be required for the upgrade, and the old slapcat won't be
+# available any more.
+# During an upgrade, the new preinst will be in a better position to
+# control whether dumping is needed.
+
+# If the config is badly broken, slapcat may fail, but this should not
+# prevent the package from being removed or purged.
+set +e
+
+if [ "$MODE" = remove ]; then
+	# scripts-common sets OLD_VERSION incorrectly for remove
+	OLD_VERSION="$(dpkg-query -W -f '${Version}' slapd)"
+
+	dump_config
+	dump_databases
+fi
+
+exit 0
+
+# vim: set foldmethod=marker:

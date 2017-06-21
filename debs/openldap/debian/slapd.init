@@ -78,14 +78,6 @@ if [ -z "$SLAPD_PIDFILE" ]; then
 	exit 1
 fi
 
-# Make sure the pidfile directory exists with correct permissions
-piddir=`dirname "$SLAPD_PIDFILE"`
-if [ ! -d "$piddir" ]; then
-	mkdir -p "$piddir"
-	[ -z "$SLAPD_USER" ] || chown -R "$SLAPD_USER" "$piddir"
-	[ -z "$SLAPD_GROUP" ] || chgrp -R "$SLAPD_GROUP" "$piddir"
-fi
-
 # Pass the user and group to run under to slapd
 if [ "$SLAPD_USER" ]; then
 	SLAPD_OPTIONS="-u $SLAPD_USER $SLAPD_OPTIONS"
@@ -132,6 +124,21 @@ report_failure() {
 # Start the slapd daemon and capture the error message if any to 
 # $reason.
 start_slapd() {
+	# Make sure /var/run/slapd exists with correct permissions
+	if [ ! -d /var/run/slapd ]; then
+		mkdir -p /var/run/slapd
+		[ -z "$SLAPD_USER" ] || chown -R "$SLAPD_USER" /var/run/slapd
+		[ -z "$SLAPD_GROUP" ] || chgrp -R "$SLAPD_GROUP" /var/run/slapd
+	fi
+
+	# Make sure the pidfile directory exists with correct permissions
+	piddir=`dirname "$SLAPD_PIDFILE"`
+	if [ ! -d "$piddir" ]; then
+		mkdir -p "$piddir"
+		[ -z "$SLAPD_USER" ] || chown -R "$SLAPD_USER" "$piddir"
+		[ -z "$SLAPD_GROUP" ] || chgrp -R "$SLAPD_GROUP" "$piddir"
+	fi
+
 	if [ -z "$SLAPD_SERVICES" ]; then
 		reason="`start-stop-daemon --start --quiet --oknodo \
 			--pidfile "$SLAPD_PIDFILE" \

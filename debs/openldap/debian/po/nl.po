@@ -3,14 +3,14 @@
 # This file is distributed under the same license as the openldap package.
 # Bart Cornelis <cobaco@skolelinux.no>, 2008.
 # Jeroen Schot <schot@a-eskwadraat.nl>, 2011.
-# Frans Spiesschaert <Frans.Spiesschaert@yucom.be>, 2014.
+# Frans Spiesschaert <Frans.Spiesschaert@yucom.be>, 2014, 2017.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: openldap 2.4.25-4\n"
+"Project-Id-Version: openldap 2.4.44+dfsg-4\n"
 "Report-Msgid-Bugs-To: openldap@packages.debian.org\n"
-"POT-Creation-Date: 2014-10-20 22:17-0700\n"
-"PO-Revision-Date: 2014-11-04 10:58+0100\n"
+"POT-Creation-Date: 2017-01-10 05:24+0000\n"
+"PO-Revision-Date: 2017-01-12 14:24+0100\n"
 "Last-Translator: Frans Spiesschaert <Frans.Spiesschaert@yucom.be>\n"
 "Language-Team: Debian Dutch l10n Team <debian-l10n-dutch@lists.debian.org>\n"
 "Language: nl\n"
@@ -18,6 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Gtranslator 2.91.6\n"
 
 #. Type: boolean
 #. Description
@@ -32,7 +33,7 @@ msgid ""
 "If you enable this option, no initial configuration or database will be "
 "created for you."
 msgstr ""
-"Wanneer u deze optie kiest, worden er geen initiële configuratie en database "
+"Wanneer u deze optie kiest, worden er geen initiële configuratie en databank "
 "voor u aangemaakt."
 
 #. Type: select
@@ -57,7 +58,7 @@ msgstr "nooit"
 #. Description
 #: ../slapd.templates:2002
 msgid "Dump databases to file on upgrade:"
-msgstr "Bij de opwaardering de databases exporteren naar bestand:"
+msgstr "Bij de opwaardering de databanken exporteren naar bestand:"
 
 #. Type: select
 #. Description
@@ -81,18 +82,18 @@ msgid ""
 "the new version is incompatible with the old database format and it needs to "
 "be reimported. If you select \"never\", no dump will be done."
 msgstr ""
-"Wanneer u 'altijd' selecteert, worden de databases voor elke opwaardering "
+"Wanneer u 'altijd' selecteert, worden de databanken voor elke opwaardering "
 "onvoorwaardelijk naar een bestand geëxporteerd. Wanneer u 'wanneer nodig' "
-"selecteert, worden de databases enkel geëxporteerd wanneer de nieuwe "
-"database-indeling incompatibel is met de oude indeling en de data opnieuw "
-"geïmporteerd moeten worden. Wanneer u 'nooit' kiest wordt er geen database-"
+"selecteert, worden de databanken enkel geëxporteerd wanneer de nieuwe "
+"databank-indeling incompatibel is met de oude indeling en de data opnieuw "
+"geïmporteerd moeten worden. Wanneer u 'nooit' kiest wordt er geen databank-"
 "export gemaakt."
 
 #. Type: string
 #. Description
 #: ../slapd.templates:3001
 msgid "Directory to use for dumped databases:"
-msgstr "Voor database-exports te gebruiken map:"
+msgstr "Voor databank-exports te gebruiken map:"
 
 #. Type: string
 #. Description
@@ -105,7 +106,7 @@ msgid ""
 "string \"VERSION\" is replaced with the server version you are upgrading "
 "from."
 msgstr ""
-"Geef de map op waarnaar LDAP-databases geëxporteerd moeten worden. In deze "
+"Geef de map op waarnaar LDAP-databanken geëxporteerd moeten worden. In deze "
 "map worden verschillende LDIF-bestanden aangemaakt die overeenkomen met de "
 "zoekbasissen op de server. U dient ervoor te zorgen dat u genoeg vrije "
 "ruimte heeft op de partitie waar de map zich bevindt. Het eerste voorkomen "
@@ -116,7 +117,7 @@ msgstr ""
 #. Description
 #: ../slapd.templates:4001
 msgid "Move old database?"
-msgstr "Wilt u de oude database verplaatsen?"
+msgstr "Wilt u de oude databank verplaatsen?"
 
 #. Type: boolean
 #. Description
@@ -129,8 +130,8 @@ msgid ""
 msgstr ""
 "Er bevinden zich nog bestanden in /var/lib/ldap die het configuratieproces "
 "waarschijnlijk zullen verstoren. Als u voor deze optie kiest, zullen de "
-"scripts van de pakketbeheerder de oude databasebestanden wegzetten voordat "
-"ze de nieuwe database aanmaken."
+"scripts van de pakketbeheerder de oude databankbestanden wegzetten voordat "
+"ze de nieuwe databank aanmaken."
 
 #. Type: boolean
 #. Description
@@ -198,13 +199,15 @@ msgstr "Beheerderswachtwoord:"
 #. Description
 #: ../slapd.templates:8001
 msgid "Please enter the password for the admin entry in your LDAP directory."
-msgstr "Wat is het wachtwoord voor de beheerdersingang in uw LDAP-catalogus?"
+msgstr ""
+"Gelieve het wachtwoord op te geven voor het beheerdersaccount in uw LDAP-"
+"catalogus."
 
 #. Type: password
 #. Description
 #: ../slapd.templates:9001
 msgid "Confirm password:"
-msgstr "Bevestiging wachtwoord:"
+msgstr "Bevestig het wachtwoord:"
 
 #. Type: password
 #. Description
@@ -234,44 +237,24 @@ msgstr ""
 #. Description
 #: ../slapd.templates:11001
 msgid "Do you want the database to be removed when slapd is purged?"
-msgstr "Wilt u dat de database verwijderd wordt wanneer slapd gewist wordt?"
-
-#. Type: boolean
-#. Description
-#: ../slapd.templates:14001
-msgid "Allow LDAPv2 protocol?"
-msgstr "LDAPv2-protocol toelaten?"
-
-#. Type: boolean
-#. Description
-#: ../slapd.templates:14001
-msgid ""
-"The obsolete LDAPv2 protocol is disabled by default in slapd. Programs and "
-"users should upgrade to LDAPv3.  If you have old programs which can't use "
-"LDAPv3, you should select this option and 'allow bind_v2' will be added to "
-"your slapd.conf file."
-msgstr ""
-"Het verouderde LDAPv2-protocol is standaard uitgeschakeld in slapd. "
-"Programma's en gebruikers dienen op te waarderen naar LDAPv3. Als u oude "
-"programma's heeft die geen LDAPv3 aankunnen, dient u deze optie te kiezen "
-"(hierdoor wordt 'allow bind_v2' toegevoegd aan uw 'slapd.conf'-bestand)."
+msgstr "Wilt u dat de databank verwijderd wordt wanneer slapd gewist wordt?"
 
 #. Type: error
 #. Description
-#: ../slapd.templates:15001
+#: ../slapd.templates:14001
 msgid "slapcat failure during upgrade"
 msgstr "slapcat gaf een fout tijdens de opwaardering"
 
 #. Type: error
 #. Description
-#: ../slapd.templates:15001
+#: ../slapd.templates:14001
 msgid "An error occurred while upgrading the LDAP directory."
 msgstr ""
 "Er is een fout opgetreden tijdens het opwaarderen van uw LDAP-catalogus."
 
 #. Type: error
 #. Description
-#: ../slapd.templates:15001
+#: ../slapd.templates:14001
 msgid ""
 "The 'slapcat' program failed while extracting the LDAP directory. This may "
 "be caused by an incorrect configuration file (for example, missing "
@@ -280,13 +263,13 @@ msgstr ""
 "Bij het uitpakken van de LDAP-catalogus signaleerde het programma 'slapcat' "
 "een fout. Dit kan veroorzaakt worden door een onjuist configuratiebestand "
 "(bv. het ontbreken van 'moduleload'-regels voor het ondersteunen van de "
-"backenddatabase)."
+"backenddatabank)."
 
 #. Type: error
 #. Description
 #. This paragraph is followed by a (non translatable) paragraph
 #. containing a command line
-#: ../slapd.templates:15001
+#: ../slapd.templates:14001
 msgid ""
 "This failure will cause 'slapadd' to fail later as well. The old database "
 "files will be moved to /var/backups. If you want to try this upgrade again, "
@@ -294,8 +277,8 @@ msgid ""
 "slapcat to fail, and run:"
 msgstr ""
 "Deze mislukking zorgt ervoor dat 'slapadd' zo meteen ook mislukt. De oude "
-"databasebestanden worden verplaatst naar /var/backups . Als u deze "
-"opwaardering opnieuw wilt proberen, dient u eerst de oude databasebestanden "
+"databankbestanden worden verplaatst naar /var/backups . Als u deze "
+"opwaardering opnieuw wilt proberen, dient u eerst de oude databankbestanden "
 "terug te plaatsen, daarna de oorzaak van het mislukken van slapcat op te "
 "lossen, en tenslotte de volgende opdracht uit te voeren:"
 
@@ -303,23 +286,23 @@ msgstr ""
 #. Description
 #. Translators: keep "${location}" unchanged. This is a variable that
 #. will be replaced by a directory name at execution
-#: ../slapd.templates:15001
+#: ../slapd.templates:14001
 msgid ""
 "Then move the database files back to a backup area and then try running "
 "slapadd from ${location}."
 msgstr ""
-"Vervolgens verplaatst u de databasebestanden terug naar de reservekopie-map "
+"Vervolgens verplaatst u de databankbestanden terug naar de reservekopie-map "
 "en probeert u slapadd uit te voeren vanaf ${location}."
 
 #. Type: select
 #. Description
-#: ../slapd.templates:16001
+#: ../slapd.templates:15001
 msgid "Database backend to use:"
-msgstr "Welk database-backend wilt u gebruiken?"
+msgstr "Te gebruiken databankbackend:"
 
 #. Type: select
 #. Description
-#: ../slapd.templates:16001
+#: ../slapd.templates:15001
 msgid ""
 "HDB and BDB use similar storage formats, but HDB adds support for subtree "
 "renames. Both support the same configuration options."
@@ -330,7 +313,7 @@ msgstr ""
 
 #. Type: select
 #. Description
-#: ../slapd.templates:16001
+#: ../slapd.templates:15001
 msgid ""
 "The MDB backend is recommended. MDB uses a new storage format and requires "
 "less configuration than BDB or HDB."
@@ -340,39 +323,39 @@ msgstr ""
 
 #. Type: select
 #. Description
-#: ../slapd.templates:16001
+#: ../slapd.templates:15001
 msgid ""
 "In any case, you should review the resulting database configuration for your "
 "needs. See /usr/share/doc/slapd/README.Debian.gz for more details."
 msgstr ""
 "In elk geval is het een goed idee om te controleren of de resulterende "
-"databaseconfiguratie aan uw noden voldoet. Meer informatie vindt u in /usr/"
+"databankconfiguratie aan uw noden voldoet. Meer informatie vindt u in /usr/"
 "share/doc/slapd/README.Debian.gz."
 
 #. Type: note
 #. Description
-#: ../slapd.templates:17001
+#: ../slapd.templates:16001
 msgid "Potentially unsafe slapd access control configuration"
 msgstr "De configuratie van de slapd-toegangscontrole is mogelijk onveilig"
 
 #. Type: note
 #. Description
-#: ../slapd.templates:17001
+#: ../slapd.templates:16001
 msgid ""
 "One or more of the configured databases has an access control rule that "
 "allows users to modify most of their own attributes. This may be unsafe, "
 "depending on how the database is used."
 msgstr ""
-"Een of meer van de geconfigureerde databases gebruikt bij de "
+"Een of meer van de geconfigureerde databanken gebruikt bij de "
 "toegangscontrole een regel die gebruikers toelaat om het grootste deel van "
 "hun eigen attributen te wijzigen. Afhankelijk van de wijze waarop de "
-"database gebruikt wordt, is dit mogelijk onveilig."
+"databank gebruikt wordt, is dit mogelijk onveilig."
 
 #. Type: note
 #. Description
 #. Translators: keep "by self write" and "to *" unchanged. These are part
 #. of the slapd configuration and are not translatable.
-#: ../slapd.templates:17001
+#: ../slapd.templates:16001
 msgid ""
 "In the case of slapd access rules that begin with \"to *\", it is "
 "recommended to remove any instances of \"by self write\", so that users are "
@@ -385,6 +368,95 @@ msgstr ""
 
 #. Type: note
 #. Description
-#: ../slapd.templates:17001
+#: ../slapd.templates:16001
 msgid "See /usr/share/doc/slapd/README.Debian.gz for more details."
 msgstr "Raadpleeg /usr/share/doc/slapd/README.Debian.gz voor meer details."
+
+#. Type: select
+#. Choices
+#: ../slapd.templates:17001
+msgid "abort installation"
+msgstr "de installatie afbreken"
+
+#. Type: select
+#. Choices
+#: ../slapd.templates:17001
+msgid "continue regardless"
+msgstr "desondanks toch voortgaan"
+
+#. Type: select
+#. Description
+#: ../slapd.templates:17002
+msgid "Manual ppolicy schema update recommended"
+msgstr "Het handmatig bijwerken van het ppolicy schema wordt aanbevolen"
+
+#. Type: select
+#. Description
+#. "ppolicy", "pwdMaxRecordedFailure", and "cn=config" are not translatable.
+#: ../slapd.templates:17002
+msgid ""
+"The new version of the Password Policy (ppolicy) overlay requires the schema "
+"to define the pwdMaxRecordedFailure attribute type, which is not present in "
+"the schema currently in use. It is recommended to abort the upgrade now, and "
+"to update the ppolicy schema before upgrading slapd. If replication is in "
+"use, the schema update should be applied on every server before continuing "
+"with the upgrade."
+msgstr ""
+"De nieuwe versie van de Password Policy (ppolicy) overlay vereist dat het "
+"schema het attribuuttype pwdMaxRecordedFailure definieert, maar dit komt "
+"niet voor in het schema dat momenteel in gebruik is. Het wordt aanbevolen om "
+"de opwaardering nu af te breken en het ppolicy-schema bij te werken "
+"vooraleer slapd opgewaardeerd wordt. Indien replicatie toegepast wordt, moet "
+"het bijwerken van het schema op elke server uitgevoerd worden voor u "
+"voortgaat met de opwaardering."
+
+#. Type: select
+#. Description
+#. This paragraph is followed by the path to the generated file (not
+#. translatable). The sentence continues in the following paragraph.
+#: ../slapd.templates:17002
+msgid ""
+"An LDIF file has been generated with the changes required for the upgrade:"
+msgstr ""
+"Er werd een LDIF-bestand gegenereerd met de voor de opwaardering vereiste "
+"wijzigingen:"
+
+#. Type: select
+#. Description
+#. This paragraph continues the sentence started in the previous
+#. paragraph. It is followed by a command line.
+#: ../slapd.templates:17002
+msgid ""
+"so if slapd is using the default access control rules, these changes can be "
+"applied (after starting slapd) by using the command:"
+msgstr ""
+"dus als slapd de standaardregels voor toegangscontrole gebruikt, kunnen deze "
+"wijzigingen toegepast worden door (na het starten van slapd) de volgende "
+"opdracht uit te voeren:"
+
+#. Type: select
+#. Description
+#: ../slapd.templates:17002
+msgid ""
+"If instead you choose to continue the installation, the new attribute type "
+"will be added automatically, but the change will not be acted on by slapd "
+"overlays, and replication with other servers may be affected."
+msgstr ""
+"Indien u er integendeel voor kiest de installatie voort te zetten, zal het "
+"nieuwe attribuuttype automatisch toegevoegd worden, maar zullen de slapd-"
+"overlays geen rekening houden met de aanpassing en dit kan de replicatie met "
+"andere servers beïnvloeden."
+
+#~ msgid "Allow LDAPv2 protocol?"
+#~ msgstr "LDAPv2-protocol toelaten?"
+
+#~ msgid ""
+#~ "The obsolete LDAPv2 protocol is disabled by default in slapd. Programs "
+#~ "and users should upgrade to LDAPv3.  If you have old programs which can't "
+#~ "use LDAPv3, you should select this option and 'allow bind_v2' will be "
+#~ "added to your slapd.conf file."
+#~ msgstr ""
+#~ "Het verouderde LDAPv2-protocol is standaard uitgeschakeld in slapd. "
+#~ "Programma's en gebruikers dienen op te waarderen naar LDAPv3. Als u oude "
+#~ "programma's heeft die geen LDAPv3 aankunnen, dient u deze optie te kiezen "
+#~ "(hierdoor wordt 'allow bind_v2' toegevoegd aan uw 'slapd.conf'-bestand)."

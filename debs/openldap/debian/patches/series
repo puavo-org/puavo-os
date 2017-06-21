@@ -10,8 +10,10 @@ getaddrinfo-is-threadsafe
 do-not-second-guess-sonames
 contrib-modules-use-dpkg-buildflags
 smbk5pwd-makefile
+smbk5pwd-makefile-manpage
 autogroup-makefile
 lastbind-makefile
+lastbind-makefile-manpage
 pw-sha2-makefile
 ldap-conf-tls-cacertdir
 add-tlscacert-option-to-ldap-conf
@@ -20,7 +22,8 @@ no-AM_INIT_AUTOMAKE
 switch-to-lt_dlopenadvise-to-get-RTLD_GLOBAL-set.diff
 no-bdb-ABI-second-guessing
 heimdal-fix
-opinsys-increase-max-number-of-ldap-keys
-opinsys-increase-max-rewrite-passes
-opinsys-smbkrb5pwd
-opinsys-fix-smbkrb5pwd-makefile
+ITS6035-olcauthzregex-needs-restart.patch
+set-maintainer-name
+ITS-8554-kFreeBSD-is-like-BSD.patch
+ITS-8644-wait-for-slapd-to-start-in-test064.patch
+ITS-8655-paged-results-double-free.patch

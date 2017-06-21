@@ -7,7 +7,7 @@ cn: config
 olcPidFile: /var/run/slapd/slapd.pid
 # List of arguments that were passed to the server
 olcArgsFile: /var/run/slapd/slapd.args
-# Read slapd.conf(5) for possible values
+# Read slapd-config(5) for possible values
 olcLogLevel: none
 # The tool-threads parameter sets the actual amount of cpu's that is used
 # for indexing.
@@ -48,6 +48,7 @@ include: file:///etc/ldap/schema/inetorgperson.ldif
 dn: cn=module{0},cn=config
 objectClass: olcModuleList
 cn: module{0}
+# Where the dynamically loaded modules are stored
 olcModulePath: /usr/lib/ldap
 olcModuleLoad: back_@BACKEND@
 
@@ -61,22 +62,40 @@ dn: olcDatabase=@BACKEND@,cn=config
 objectClass: olcDatabaseConfig
 objectClass: @BACKENDOBJECTCLASS@
 olcDatabase: @BACKEND@
+# Checkpoint the database periodically in case of system
+# failure and to speed slapd shutdown.
 olcDbCheckpoint: 512 30
 @BACKENDOPTIONS@
+# Save the time that the entry gets modified, for database #1
 olcLastMod: TRUE
+# The base of your directory in database #1
 olcSuffix: @SUFFIX@
+# Where the database file are physically stored for database #1
 olcDbDirectory: /var/lib/ldap
+# olcRootDN directive for specifying a superuser on the database. This
+# is needed for syncrepl.
 olcRootDN: cn=admin,@SUFFIX@
 olcRootPW: @PASSWORD@
+# Indexing options for database #1
 olcDbIndex: objectClass eq
 olcDbIndex: cn,uid eq
 olcDbIndex: uidNumber,gidNumber eq
 olcDbIndex: member,memberUid eq
-olcAccess: to attrs=userPassword,shadowLastChange
+# The userPassword by default can be changed by the entry owning it if
+# they are authenticated. Others should not be able to see it, except
+# the admin entry above.
+olcAccess: to attrs=userPassword
   by self write
   by anonymous auth
   by * none
-olcAccess: to dn.base="" by * read
+# Allow update of authenticated user's shadowLastChange attribute.
+# Updating it on password change is implemented at least by libpam-ldap,
+# libpam-ldapd, and the slapo-smbk5pwd overlay.
+olcAccess: to attrs=shadowLastChange
+  by self write
+  by * read
+# The admin dn (olcRootDN) bypasses ACLs and so has total access,
+# everyone else can read everything.
 olcAccess: to *
   by * read
 
