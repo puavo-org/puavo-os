@@ -23,3 +23,5 @@ set-maintainer-name
 no-gnutls_global_set_mutex
 opinsys-increase-max-number-of-ldap-keys
 opinsys-increase-max-rewrite-passes
+opinsys-smbkrb5pwd
+opinsys-fix-smbkrb5pwd-makefile
