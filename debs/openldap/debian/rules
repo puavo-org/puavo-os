@@ -90,6 +90,7 @@ override_dh_auto_build:
 	dh_auto_build -- $(MAKEVARS)
 ifeq ($(filter stage1,$(DEB_BUILD_PROFILES)),)
 	$(MAKE) -C contrib/slapd-modules/smbk5pwd CC=$(CC)
+	$(MAKE) -C contrib/slapd-modules/smbkrb5pwd CC=$(CC)
 	$(MAKE) -C contrib/slapd-modules/autogroup CC=$(CC)
 	$(MAKE) -C contrib/slapd-modules/lastbind CC=$(CC)
 	$(MAKE) -C contrib/slapd-modules/passwd/sha2 CC=$(CC)
@@ -99,6 +100,7 @@ override_dh_auto_install:
 	dh_auto_install -- $(MAKEVARS)
 ifeq ($(filter stage1,$(DEB_BUILD_PROFILES)),)
 	$(MAKE) -C contrib/slapd-modules/smbk5pwd install DESTDIR=$(installdir)
+	$(MAKE) -C contrib/slapd-modules/smbkrb5pwd install DESTDIR=$(installdir)
 	$(MAKE) -C contrib/slapd-modules/autogroup install DESTDIR=$(installdir)
 	$(MAKE) -C contrib/slapd-modules/lastbind install DESTDIR=$(installdir)
 	$(MAKE) -C contrib/slapd-modules/passwd/sha2 install DESTDIR=$(installdir)
@@ -132,6 +134,7 @@ ifeq ($(filter stage1,$(DEB_BUILD_PROFILES)),)
 override_dh_install-arch:
 	dh_install
 	rm -rf $(CURDIR)/debian/slapd/usr/lib/ldap/smbk5pwd*
+	rm -rf $(CURDIR)/debian/slapd/usr/lib/ldap/smbkrb5pwd*
 endif
 
 override_dh_installinit:
@@ -201,6 +204,10 @@ ifeq ($(filter stage1,$(DEB_BUILD_PROFILES)),)
 		contrib/slapd-modules/smbk5pwd/smbk5pwd.lo \
 		contrib/slapd-modules/smbk5pwd/smbk5pwd.la \
 		contrib/slapd-modules/smbk5pwd/smbk5pwd.o
+	rm -rf contrib/slapd-modules/smbkrb5pwd/.libs \
+		contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.lo \
+		contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.la \
+		contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.o
 	rm -rf contrib/slapd-modules/autogroup/.libs \
 		contrib/slapd-modules/autogroup/autogroup.lo \
 		contrib/slapd-modules/autogroup/autogroup.la \

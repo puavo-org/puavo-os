@@ -13,6 +13,7 @@ Build-Depends: debhelper (>= 9.20150501),
                dpkg-dev (>= 1.17.14),
                groff-base,
                heimdal-multidev <!stage1>,
+               krb5-multidev,
                libdb5.3-dev <!stage1>,
                libkrb5-dev <!stage1>,
                libltdl-dev <!stage1>,
@@ -142,3 +143,13 @@ Description: Debugging information for the OpenLDAP server (slapd)
  primarily to permit better backtraces and crash dump analysis after
  problems with the libraries. GDB will find this debug information
  automatically.
+
+Package: slapd-smbkrb5pwd
+Section: net
+Priority: optional
+Architecture: any
+Pre-Depends: debconf (>= 0.5) | debconf-2.0
+Depends: ${shlibs:Depends}, libkrb5-3, slapd, ${misc:Depends}
+Description: Samba / MIT Kerberos password overlay module for slapd
+ smbkrb5pwd extends password change operations to synchronously change
+ passwords in MIT Kerberos and Samba.

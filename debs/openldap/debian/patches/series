@@ -30,3 +30,5 @@ ITS-8644-wait-for-slapd-to-start-in-test064.patch
 ITS-8655-paged-results-double-free.patch
 opinsys-increase-max-number-of-ldap-keys
 opinsys-increase-max-rewrite-passes
+opinsys-smbkrb5pwd
+opinsys-fix-smbkrb5pwd-makefile
