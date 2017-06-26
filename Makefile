@@ -7,6 +7,8 @@ images_urlbase		:= https://images.puavo.org
 mirror_dir		:= $(image_dir)/mirror
 rootfs_dir		:= /var/tmp/puavo-os/rootfs
 
+include defaults.mk
+
 _adm_user	:= puavo-os
 _adm_group	:= puavo-os
 _adm_uid	:= 1000
