@@ -1,3 +1,9 @@
+openldap (2.4.44-0+opinsys1) unstable; urgency=medium
+
+  * With some patches by Opinsys.
+
+ -- Juha Erkkilä <Juha.Erkkila@opinsys.fi>  Mon, 26 Jun 2017 08:28:42 +0300
+
 openldap (2.4.44+dfsg-5) unstable; urgency=medium
 
   * debian/patches/ITS-8644-wait-for-slapd-to-start-in-test064.patch: Fix an 
