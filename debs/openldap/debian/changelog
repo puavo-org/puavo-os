@@ -1,3 +1,9 @@
+openldap (2.4.47+dfsg-3+puavo1+buildonce) unstable; urgency=medium
+
+  * With some patches by Puavo Org.
+
+ -- Puavo Org <dev@opinsys.fi>  Mon, 25 Mar 2019 12:54:06 +0200
+
 openldap (2.4.47+dfsg-3) unstable; urgency=medium
 
   * Restore patches to contrib Makefiles to set CFLAGS, CPPFLAGS, and LDFLAGS
@@ -163,7 +169,6 @@ openldap (2.4.44+dfsg-6) unstable; urgency=medium
   * Fix upgrade failure when olcSuffix contains a backslash. (Closes: #864719)
 
  -- Ryan Tandy <ryan@nardis.ca>  Mon, 26 Jun 2017 19:42:02 -0700
-
 openldap (2.4.44+dfsg-5) unstable; urgency=medium
 
   * debian/patches/ITS-8644-wait-for-slapd-to-start-in-test064.patch: Fix an 
