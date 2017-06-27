@@ -78,7 +78,7 @@ EOF
     find . -maxdepth 1 \
       ! '(' -type d -or -name Makefile -or -name .gitignore ')' -print0 \
       | sed -z 's|^./||' \
-      | grep -z "$upload_pkgregex" \
+      | grep -zE "$upload_pkgregex" \
       | xargs -0 shar --no-check-existing --quiet --quiet-unshar --uuencode \
       | grep -Fvx 'exit 0'
   )
