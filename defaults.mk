@@ -2,3 +2,6 @@
 # debootstrap_mirror	:= http://mirror.opinsys.fi/debian/
 image_class		:= opinsysrestricted
 rootfs_dir		:= /virtualtmp/opinsys-os/rootfs
+upload_dir              := /srv/aptirepo/puavo-os
+upload_login            := aptirepo-http
+upload_server           := archive.opinsys.fi
