@@ -6,11 +6,11 @@ image_dir		:= /srv/puavo-os-images
 images_urlbase		:= https://images.puavo.org
 mirror_dir		:= $(image_dir)/mirror
 rootfs_dir		:= /var/tmp/puavo-os/rootfs
-upload_archive_dir      :=
-upload_archive_login    :=
-upload_archive_server   :=
+upload_codename         := $(debootstrap_suite)
+upload_dir              :=
+upload_login            :=
 upload_pkgregex         :=
-upload_target_codename  := $(debootstrap_suite)
+upload_server           :=
 
 include defaults.mk
 
@@ -200,8 +200,8 @@ update: /etc/puavo-conf/image.json install-build-deps
 .PHONY: upload-debs
 upload-debs:
 	.aux/upload-debs "$(CURDIR)/debs" "$(upload_pkgregex)" \
-		"$(upload_archive_server)" "$(upload_archive_login)" \
-		"$(upload_archive_dir)" "$(upload_target_codename)"
+		"$(upload_server)" "$(upload_login)" "$(upload_dir)" \
+		"$(upload_codename)"
 
 .PHONY: install-rules
 install-rules: /puavo-os

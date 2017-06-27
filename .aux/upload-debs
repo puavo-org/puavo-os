@@ -3,14 +3,14 @@
 set -eu
 
 debsdir=${1:-}
-pkgregex=${2:-.*}
-archive_server=${3:-}
-archive_login=${4:-$USER}
-archive_dir=${5:-}
-target_codename=${6:-}
+upload_pkgregex=${2:-.*}
+upload_server=${3:-}
+upload_login=${4:-$USER}
+upload_dir=${5:-}
+upload_codename=${6:-}
 
 usage() {
-  echo "Usage: $(basename $0) debsdir archive_server archive_dir"
+  echo "Usage: $(basename $0) debsdir upload_pkgregex upload_server upload_logi upload_dir upload_codename"
 }
 
 if [ -z "$debsdir" ]; then
@@ -19,15 +19,15 @@ if [ -z "$debsdir" ]; then
   exit 1
 fi
 
-if [ -z "$archive_server" ]; then
+if [ -z "$upload_server" ]; then
   usage >&2
-  echo '  archive_server is not set' >&2
+  echo '  upload_server is not set' >&2
   exit 1
 fi
 
-if [ -z "$archive_dir" ]; then
+if [ -z "$upload_dir" ]; then
   usage >&2
-  echo '  archive_dir is not set' >&2
+  echo '  upload_dir is not set' >&2
   exit 1
 fi
 
@@ -51,15 +51,15 @@ if [ -z "$(which uudecode)" ]; then
   exit 1
 fi
 
-archive_dir=$1
-target_codename=$2
+upload_dir=$1
+upload_codename=$2
 
-mkdir -p "${archive_dir}/conf"
+mkdir -p "${upload_dir}/conf"
 
 # "SignWith: yes" here presumes that user has GPG set up so that releases
 # can be signed without prompting.
-cat <<REMOTE_EOF > "${archive_dir}/conf/distributions"
-Codename: ${target_codename}
+cat <<REMOTE_EOF > "${upload_dir}/conf/distributions"
+Codename: ${upload_codename}
 Architectures: amd64 i386
 Components: main
 SignWith: yes
@@ -68,9 +68,9 @@ EOF
 
   # debs archive
   cat <<'EOF'
-rm -rf "${archive_dir}/incoming"
-mkdir -p "${archive_dir}/incoming"
-cd "${archive_dir}/incoming"
+rm -rf "${upload_dir}/incoming"
+mkdir -p "${upload_dir}/incoming"
+cd "${upload_dir}/incoming"
 set +eu
 EOF
   (
@@ -78,7 +78,7 @@ EOF
     find . -maxdepth 1 \
       ! '(' -type d -or -name Makefile -or -name .gitignore ')' -print0 \
       | sed -z 's|^./||' \
-      | grep -z "$pkgregex" \
+      | grep -z "$upload_pkgregex" \
       | xargs -0 shar --no-check-existing --quiet --quiet-unshar --uuencode \
       | grep -Fvx 'exit 0'
   )
@@ -88,15 +88,15 @@ EOF
 set -eu
 
 # run reprepro now
-cd "${archive_dir}"
+cd "${upload_dir}"
 for changefile in incoming/*.changes; do
   test -e "$changefile" || continue
-  reprepro --basedir "$archive_dir" --ignore=wrongdistribution include \
-    "$target_codename" "$changefile"
+  reprepro --basedir "$upload_dir" --ignore=wrongdistribution include \
+    "$upload_codename" "$changefile"
 done
 EOF
 }
 
 remote_script \
-  | ssh -l "$archive_login" "$archive_server" sh /dev/stdin "$archive_dir" \
-      "$target_codename"
+  | ssh -l "$upload_login" "$upload_server" sh /dev/stdin "$upload_dir" \
+      "$upload_codename"
