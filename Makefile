@@ -6,6 +6,11 @@ image_dir		:= /srv/puavo-os-images
 images_urlbase		:= https://images.puavo.org
 mirror_dir		:= $(image_dir)/mirror
 rootfs_dir		:= /var/tmp/puavo-os/rootfs
+upload_codename         := $(debootstrap_suite)
+upload_dir              :=
+upload_login            :=
+upload_pkgregex         :=
+upload_server           :=
 
 include defaults.mk
 
@@ -98,6 +103,7 @@ help:
 	@echo '    rootfs-update        update Puavo OS rootfs'
 	@echo '    setup-buildhost      some optional setup for buildhost'
 	@echo '    update               update Puavo OS localhost'
+	@echo '    upload-debs          upload debs to remote archive'
 	@echo
 	@echo 'Variables:'
 	@echo '    debootstrap_mirror   debootstrap mirror [$(debootstrap_mirror)]'
@@ -190,6 +196,12 @@ update: /etc/puavo-conf/image.json install-build-deps
 
 	$(_sudo) update-initramfs -u -k all
 	$(_sudo) updatedb
+
+.PHONY: upload-debs
+upload-debs:
+	.aux/upload-debs "$(CURDIR)/debs" "$(upload_pkgregex)" \
+		"$(upload_server)" "$(upload_login)" "$(upload_dir)" \
+		"$(upload_codename)"
 
 .PHONY: install-rules
 install-rules: /puavo-os

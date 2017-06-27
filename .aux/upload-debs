@@ -1,0 +1,102 @@
+#!/bin/sh
+
+set -eu
+
+debsdir=${1:-}
+upload_pkgregex=${2:-.*}
+upload_server=${3:-}
+upload_login=${4:-$USER}
+upload_dir=${5:-}
+upload_codename=${6:-}
+
+usage() {
+  echo "Usage: $(basename $0) debsdir upload_pkgregex upload_server upload_logi upload_dir upload_codename"
+}
+
+if [ -z "$debsdir" ]; then
+  usage >&2
+  echo '  debsdir is not set' >&2
+  exit 1
+fi
+
+if [ -z "$upload_server" ]; then
+  usage >&2
+  echo '  upload_server is not set' >&2
+  exit 1
+fi
+
+if [ -z "$upload_dir" ]; then
+  usage >&2
+  echo '  upload_dir is not set' >&2
+  exit 1
+fi
+
+remote_script() {
+  # header
+  cat <<'EOF'
+set -eu
+
+if [ -z "$(which gpg)" ]; then
+  echo 'gpg is not installed, please install it on the remote host' >&2
+  exit 1
+fi
+
+if [ -z "$(which reprepro)" ]; then
+  echo 'reprepro is not installed, please install it on the remote host' >&2
+  exit 1
+fi
+
+if [ -z "$(which uudecode)" ]; then
+  echo 'uudecode is not installed, please install it on the remote host' >&2
+  exit 1
+fi
+
+upload_dir=$1
+upload_codename=$2
+
+mkdir -p "${upload_dir}/conf"
+
+# "SignWith: yes" here presumes that user has GPG set up so that releases
+# can be signed without prompting.
+cat <<REMOTE_EOF > "${upload_dir}/conf/distributions"
+Codename: ${upload_codename}
+Architectures: amd64 i386 source
+Components: main contrib non-free
+SignWith: yes
+REMOTE_EOF
+EOF
+
+  # debs archive
+  cat <<'EOF'
+rm -rf "${upload_dir}/incoming"
+mkdir -p "${upload_dir}/incoming"
+cd "${upload_dir}/incoming"
+set +eu
+EOF
+  (
+    cd "$debsdir"
+    find . -maxdepth 1 \
+      ! '(' -type d -or -name Makefile -or -name .gitignore ')' -print0 \
+      | sed -z 's|^./||' \
+      | grep -z "$upload_pkgregex" \
+      | xargs -0 shar --no-check-existing --quiet --quiet-unshar --uuencode \
+      | grep -Fvx 'exit 0'
+  )
+
+  # footer
+  cat <<'EOF'
+set -eu
+
+# run reprepro now
+cd "${upload_dir}"
+for changefile in incoming/*.changes; do
+  test -e "$changefile" || continue
+  reprepro --basedir "$upload_dir" --ignore=wrongdistribution include \
+    "$upload_codename" "$changefile"
+done
+EOF
+}
+
+remote_script \
+  | ssh -l "$upload_login" "$upload_server" sh /dev/stdin "$upload_dir" \
+      "$upload_codename"
