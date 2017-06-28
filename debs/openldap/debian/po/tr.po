@@ -1,0 +1,448 @@
+# Turkish debconf templates translation for openldap
+# This file is distributed under the same license as the openldap package.
+# Atila KOÇ <koc@artielektronik.com.tr>, 2012, 2014, 2017.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: openldap\n"
+"Report-Msgid-Bugs-To: openldap@packages.debian.org\n"
+"POT-Creation-Date: 2017-01-10 05:24+0000\n"
+"PO-Revision-Date: 2017-01-13 18:42+0300\n"
+"Last-Translator: Atila KOÇ <koc@artielektronik.com.tr>\n"
+"Language-Team: Turkish <debian-l10n-turkish@lists.debian.org>\n"
+"Language: tr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.8.7.1\n"
+
+#. Type: boolean
+#. Description
+#: ../slapd.templates:1001
+msgid "Omit OpenLDAP server configuration?"
+msgstr "OpenLDAP sunucu yapılandırması atlansın mı?"
+
+#. Type: boolean
+#. Description
+#: ../slapd.templates:1001
+msgid ""
+"If you enable this option, no initial configuration or database will be "
+"created for you."
+msgstr ""
+"Bu seçeneği seçmeniz durumunda sizin için ne bir ön yapılandırma yapılacak "
+"ne de bir veritabanı yaratılacak. "
+
+#. Type: select
+#. Choices
+#: ../slapd.templates:2001
+msgid "always"
+msgstr "her zaman"
+
+#. Type: select
+#. Choices
+#: ../slapd.templates:2001
+msgid "when needed"
+msgstr "gerektiğinde"
+
+#. Type: select
+#. Choices
+#: ../slapd.templates:2001
+msgid "never"
+msgstr "hiçbir zaman"
+
+#. Type: select
+#. Description
+#: ../slapd.templates:2002
+msgid "Dump databases to file on upgrade:"
+msgstr "Yükseltme sırasında veritabanlarının dökümü yapılsın mı?:"
+
+#. Type: select
+#. Description
+#: ../slapd.templates:2002
+msgid ""
+"Before upgrading to a new version of the OpenLDAP server, the data from your "
+"LDAP directories can be dumped into plain text files in the standard LDAP "
+"Data Interchange Format."
+msgstr ""
+"Makineniz yeni OpenLDAP sunucu sürümüne yükseltilmeden önce, LDAP "
+"dizinlerindeki verileriniz LDAP Veri Değişimi Biçimi'nde (LDIF) metin "
+"dosyalarına yedeklenebilir."
+
+#. Type: select
+#. Description
+#: ../slapd.templates:2002
+msgid ""
+"Selecting \"always\" will cause the databases to be dumped unconditionally "
+"before an upgrade. Selecting \"when needed\" will only dump the database if "
+"the new version is incompatible with the old database format and it needs to "
+"be reimported. If you select \"never\", no dump will be done."
+msgstr ""
+"\"her zaman\" seçimi veritabanlarının yükseltme öncesinde kayıtsız şartsız "
+"bir dökümünü sağlayacaktır. \"gerektiğinde\" seçimi yeni ile eski sürüm "
+"arasında veritabanı biçim farklılığı varsa ve bu nedenle yeni veritabanına "
+"eski verilerin sonradan alınması gerekirse döküm yapacaktır. \"hiçbir zaman"
+"\" seçeneğini seçerseniz döküm yapılmayacaktır."
+
+#. Type: string
+#. Description
+#: ../slapd.templates:3001
+msgid "Directory to use for dumped databases:"
+msgstr "Veritabanı dökümü için kullanılacak dizin:"
+
+#. Type: string
+#. Description
+#: ../slapd.templates:3001
+msgid ""
+"Please specify the directory where the LDAP databases will be exported. In "
+"this directory, several LDIF files will be created which correspond to the "
+"search bases located on the server. Make sure you have enough free space on "
+"the partition where the directory is located. The first occurrence of the "
+"string \"VERSION\" is replaced with the server version you are upgrading "
+"from."
+msgstr ""
+"LDAP veritabanlarının dışa aktarımı için bir dizin belirtiniz. Bu dizine "
+"sunucuda varolan arama tabanlarına karşılık gelen bir çok LDIF dosyası "
+"kaydedilecektir. İlgili dizinin bulunduğu disk bölümünde yeterince boş alan "
+"olduğundan emin olunuz. \"VERSION\" dizgesi ilk görüldüğü yerde yükseltme "
+"işleminden önceki sunucu sürümünüzle değiştirilecektir."
+
+#. Type: boolean
+#. Description
+#: ../slapd.templates:4001
+msgid "Move old database?"
+msgstr "Eski veritabanı taşınsın mı?"
+
+#. Type: boolean
+#. Description
+#: ../slapd.templates:4001
+msgid ""
+"There are still files in /var/lib/ldap which will probably break the "
+"configuration process. If you enable this option, the maintainer scripts "
+"will move the old database files out of the way before creating a new "
+"database."
+msgstr ""
+"/var/lib/ldap dizininde yapılandırma sürecini bozabilecek bazı dosyalar "
+"bulunmaktadır. Bu seçeneği seçerseniz, bakımcı betikleri yeni bir veritabanı "
+"yaratmadan önce bu eski veritabanı dosyalarını başka bir yere taşıyacaktır."
+
+#. Type: boolean
+#. Description
+#: ../slapd.templates:5001
+msgid "Retry configuration?"
+msgstr "Yapılandırma yeniden denensin mi?"
+
+#. Type: boolean
+#. Description
+#: ../slapd.templates:5001
+msgid ""
+"The configuration you entered is invalid. Make sure that the DNS domain name "
+"is syntactically valid, the field for the organization is not left empty and "
+"the admin passwords match. If you decide not to retry the configuration the "
+"LDAP server will not be set up. Run 'dpkg-reconfigure slapd' if you want to "
+"retry later."
+msgstr ""
+"Girdiğiniz yapılandırma ayarları geçersiz. DNS alan adının sözdizimsel "
+"olarak geçerli olduğundan, örgüt adı için ayrılmış alanın boş olmadığından "
+"ve yönetici parolalarının uyumlu olduğundan emin olunuz. Yapılandırmayı "
+"yeniden denemeyi seçmezseniz LDAP sunucu kurulmayacaktır. Kurulumu sonra "
+"denemek isterseniz, 'dpkg-reconfigure slapd' komutunu çalıştırın."
+
+#. Type: string
+#. Description
+#: ../slapd.templates:6001
+msgid "DNS domain name:"
+msgstr "DNS alan adı:"
+
+#. Type: string
+#. Description
+#: ../slapd.templates:6001
+msgid ""
+"The DNS domain name is used to construct the base DN of the LDAP directory. "
+"For example, 'foo.example.org' will create the directory with 'dc=foo, "
+"dc=example, dc=org' as base DN."
+msgstr ""
+"DNS alan adı LDAP dizinin temel DN yapılandırması için kullanılmıştır. "
+"Örneğin, 'gecici.example.org' alan adı 'dc=gecici, dc=example, dc=org' temel "
+"DN'ye sahip dizini yaratacaktır."
+
+#. Type: string
+#. Description
+#: ../slapd.templates:7001
+msgid "Organization name:"
+msgstr "Örgüt adı:"
+
+#. Type: string
+#. Description
+#: ../slapd.templates:7001
+msgid ""
+"Please enter the name of the organization to use in the base DN of your LDAP "
+"directory."
+msgstr "LDAP dizininizin temel DN'si olarak kullanılacak örgüt adını giriniz."
+
+#. Type: password
+#. Description
+#: ../slapd.templates:8001
+msgid "Administrator password:"
+msgstr "Yönetici parolası:"
+
+#. Type: password
+#. Description
+#: ../slapd.templates:8001
+msgid "Please enter the password for the admin entry in your LDAP directory."
+msgstr "LDAP dizini yöneticisi için parola giriniz."
+
+#. Type: password
+#. Description
+#: ../slapd.templates:9001
+msgid "Confirm password:"
+msgstr "Parolayı doğrulayınız:"
+
+#. Type: password
+#. Description
+#: ../slapd.templates:9001
+msgid ""
+"Please enter the admin password for your LDAP directory again to verify that "
+"you have typed it correctly."
+msgstr ""
+"LDAP dizini yönetici parolasını tekrar giriniz ve doğru yazdığınızdan emin "
+"olunuz."
+
+#. Type: note
+#. Description
+#: ../slapd.templates:10001
+msgid "Password mismatch"
+msgstr "Parola uyumsuzluğu"
+
+#. Type: note
+#. Description
+#: ../slapd.templates:10001
+msgid "The two passwords you entered were not the same. Please try again."
+msgstr "Girdiğiniz iki parola aynı değil, lütfen tekrar deneyiniz."
+
+#. Type: boolean
+#. Description
+#: ../slapd.templates:11001
+msgid "Do you want the database to be removed when slapd is purged?"
+msgstr ""
+"slapd paketi tamamen kaldırıldığında veritabanının da kaldırılmasını ister "
+"misiniz?"
+
+#. Type: error
+#. Description
+#: ../slapd.templates:14001
+msgid "slapcat failure during upgrade"
+msgstr "Yükseltme sırasında 'slapcat' hatası"
+
+#. Type: error
+#. Description
+#: ../slapd.templates:14001
+msgid "An error occurred while upgrading the LDAP directory."
+msgstr "LDAP dizini yükseltilirken bir hata oluştu."
+
+#. Type: error
+#. Description
+#: ../slapd.templates:14001
+msgid ""
+"The 'slapcat' program failed while extracting the LDAP directory. This may "
+"be caused by an incorrect configuration file (for example, missing "
+"'moduleload' lines to support the backend database)."
+msgstr ""
+"'slapcat' programı LDAP dizinini dışa aktarırken başarısız oldu. Buna hatalı "
+"bir yapılandırma dosyası neden olmuş olabilir (örneğin, arka uç "
+"veritabanlarını desteklemek için gerekli 'moduleload' satırlarının eksik "
+"olması gibi)."
+
+#. Type: error
+#. Description
+#. This paragraph is followed by a (non translatable) paragraph
+#. containing a command line
+#: ../slapd.templates:14001
+msgid ""
+"This failure will cause 'slapadd' to fail later as well. The old database "
+"files will be moved to /var/backups. If you want to try this upgrade again, "
+"you should move the old database files back into place, fix whatever caused "
+"slapcat to fail, and run:"
+msgstr ""
+"Bu hata 'slapadd' programının da hata vermesine neden olacaktır. Eski "
+"veritabanı dosyaları /var/backups dizinine taşınacaktır. Eğer bu yükseltmeyi "
+"yeniden denemek isterseniz, eski veritabanı dosyalarını yerlerine geri "
+"almalı, 'slapcat' programının hatasına neden olan her ne ise düzeltmeli ve "
+"aşağıdaki komutu çalıştırmalısınız:"
+
+#. Type: error
+#. Description
+#. Translators: keep "${location}" unchanged. This is a variable that
+#. will be replaced by a directory name at execution
+#: ../slapd.templates:14001
+msgid ""
+"Then move the database files back to a backup area and then try running "
+"slapadd from ${location}."
+msgstr ""
+"Daha sonra veritabanı dosyalarını bir yedekleme alanına geri taşıyın ve "
+"${location} konumundan 'slapadd' komutunu çalıştırınız."
+
+#. Type: select
+#. Description
+#: ../slapd.templates:15001
+msgid "Database backend to use:"
+msgstr "Kullanılacak veritabanı arka ucu:"
+
+#. Type: select
+#. Description
+#: ../slapd.templates:15001
+msgid ""
+"HDB and BDB use similar storage formats, but HDB adds support for subtree "
+"renames. Both support the same configuration options."
+msgstr ""
+"HDB ve BDB benzer depolama biçimleri kullanırlar, fakat HDB alt ağaç yeniden "
+"adlandırmalarına olanak tanır. Her ikisi de aynı yapılandırma seçeneklerini "
+"desteklerler."
+
+#. Type: select
+#. Description
+#: ../slapd.templates:15001
+msgid ""
+"The MDB backend is recommended. MDB uses a new storage format and requires "
+"less configuration than BDB or HDB."
+msgstr ""
+"MDB arka ucu önerilir. MDB yeni bir depolama biçimi kullanır ve BDB ya da "
+"HDB'ye göre daha az yapılandırma gerektirir."
+
+#. Type: select
+#. Description
+#: ../slapd.templates:15001
+msgid ""
+"In any case, you should review the resulting database configuration for your "
+"needs. See /usr/share/doc/slapd/README.Debian.gz for more details."
+msgstr ""
+"Her durumda sonuçlanan veritabanı yapılandırmasının gereksinimlerinize "
+"uyduğundan emin olmalısınız. Daha fazla bilgi için /usr/share/doc/slapd/"
+"README.Debian.gz dosyasını okuyunuz."
+
+#. Type: note
+#. Description
+#: ../slapd.templates:16001
+msgid "Potentially unsafe slapd access control configuration"
+msgstr "Olası güvensiz slapd erişim denetimi yapılandırması"
+
+#. Type: note
+#. Description
+#: ../slapd.templates:16001
+msgid ""
+"One or more of the configured databases has an access control rule that "
+"allows users to modify most of their own attributes. This may be unsafe, "
+"depending on how the database is used."
+msgstr ""
+"Yapılandırılmış bir ya da daha fazla veritabanında, kullanıcıların "
+"kendilerine ait bir çok özelliği değiştirmesine izin veren bir erişim "
+"denetimi kuralı var. Bu durum, veritabanı kullanım şekline bağlı olarak, "
+"güvenli olmayabilir."
+
+#. Type: note
+#. Description
+#. Translators: keep "by self write" and "to *" unchanged. These are part
+#. of the slapd configuration and are not translatable.
+#: ../slapd.templates:16001
+msgid ""
+"In the case of slapd access rules that begin with \"to *\", it is "
+"recommended to remove any instances of \"by self write\", so that users are "
+"only able to modify specifically allowed attributes."
+msgstr ""
+"\"to *\" ile başlayan slapd erişim kurallarında, kullanıcıların yalnızca "
+"değiştirilmesine izin verilmiş özellikleri değiştirebilmeleri için, tüm \"by "
+"self write\" alanlarının kaldırılması önerilir."
+
+#. Type: note
+#. Description
+#: ../slapd.templates:16001
+msgid "See /usr/share/doc/slapd/README.Debian.gz for more details."
+msgstr ""
+"Daha fazla bilgi için /usr/share/doc/slapd/README.Debian.gz dosyasını "
+"okuyunuz."
+
+#. Type: select
+#. Choices
+#: ../slapd.templates:17001
+msgid "abort installation"
+msgstr "kurulumdan çık"
+
+#. Type: select
+#. Choices
+#: ../slapd.templates:17001
+msgid "continue regardless"
+msgstr "yine de sürdür"
+
+#. Type: select
+#. Description
+#: ../slapd.templates:17002
+msgid "Manual ppolicy schema update recommended"
+msgstr "ppolicy şemasının elle yükseltilmesi öneriliyor"
+
+#. Type: select
+#. Description
+#. "ppolicy", "pwdMaxRecordedFailure", and "cn=config" are not translatable.
+#: ../slapd.templates:17002
+msgid ""
+"The new version of the Password Policy (ppolicy) overlay requires the schema "
+"to define the pwdMaxRecordedFailure attribute type, which is not present in "
+"the schema currently in use. It is recommended to abort the upgrade now, and "
+"to update the ppolicy schema before upgrading slapd. If replication is in "
+"use, the schema update should be applied on every server before continuing "
+"with the upgrade."
+msgstr ""
+"Parola ilkesi katmanının (ppolicy) yeni sürümü, şu anda kullanılmakta olan "
+"şemanın içermediği pwdMaxRecordedFailure özniteliğinin şemada tanımlanmasını "
+"gerektiriyor. Şimdi kurulumdan çıkmanız ve slapd yükseltmesine başlamadan "
+"önce ppolicy şemasını güncellemeniz önerilir. Eğer dizinlerinizi kopyalayan "
+"başka sunucular varsa, yükseltmeye başlamadan önce bütün sunuculardaki "
+"şemaları güncellemeniz gerekiyor."
+
+#. Type: select
+#. Description
+#. This paragraph is followed by the path to the generated file (not
+#. translatable). The sentence continues in the following paragraph.
+#: ../slapd.templates:17002
+msgid ""
+"An LDIF file has been generated with the changes required for the upgrade:"
+msgstr ""
+"Yükseltme için gerekli değişiklikleri içeren bir LDIF dosyası oluşturuldu:"
+
+#. Type: select
+#. Description
+#. This paragraph continues the sentence started in the previous
+#. paragraph. It is followed by a command line.
+#: ../slapd.templates:17002
+msgid ""
+"so if slapd is using the default access control rules, these changes can be "
+"applied (after starting slapd) by using the command:"
+msgstr ""
+"Eğer slapd öntanımlı erişim denetimi kurallarını kullanıyorsa, bu "
+"değişiklikler slapd başlatıldıktan sonra aşağıdaki komutu çalıştırarak "
+"uygulanabilir:"
+
+#. Type: select
+#. Description
+#: ../slapd.templates:17002
+msgid ""
+"If instead you choose to continue the installation, the new attribute type "
+"will be added automatically, but the change will not be acted on by slapd "
+"overlays, and replication with other servers may be affected."
+msgstr ""
+"Eğer kurulumu sürdürmeyi yeğlerseniz, yeni öznitelik kendiliğinden eklenecek "
+"fakat bu değişim slapd katmanlarında hayata geçmeyecek ve dizinleri "
+"kopyalayan sunucular varsa bu durumdan etkilenebileceklerdir."
+
+#~ msgid "Allow LDAPv2 protocol?"
+#~ msgstr "LDAPv2 iletişim kuralına izin verilsin mi?"
+
+#~ msgid ""
+#~ "The obsolete LDAPv2 protocol is disabled by default in slapd. Programs "
+#~ "and users should upgrade to LDAPv3.  If you have old programs which can't "
+#~ "use LDAPv3, you should select this option and 'allow bind_v2' will be "
+#~ "added to your slapd.conf file."
+#~ msgstr ""
+#~ "Eskimiş LDAPv2 iletişim kuralı slapd yapılandırmasında öntanımlı olarak "
+#~ "devre dışı bırakılmıştır. Programlar ve kullanıcılar LDAPv3 iletişim "
+#~ "kuralına geçmelidirler. LDAPv3 iletişim kuralına geçemeyecek eski "
+#~ "programlarınız varsa slapd.conf dosyasına 'allow bind_v2' satırını "
+#~ "ekleyecek olan bu seçeneği seçmelisiniz."
