@@ -1,0 +1,417 @@
+#
+#    Translators, if you are not familiar with the PO format, gettext
+#    documentation is worth reading, especially sections dedicated to
+#    this format, e.g. by running:
+#         info -n '(gettext)PO Files'
+#         info -n '(gettext)Header Entry'
+#
+#    Some information specific to po-debconf are available at
+#            /usr/share/doc/po-debconf/README-trans
+#         or http://www.debian.org/intl/l10n/po-debconf/README-trans
+#
+#    Developers do not need to manually edit POT or PO files.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: openldap\n"
+"Report-Msgid-Bugs-To: openldap@packages.debian.org\n"
+"POT-Creation-Date: 2017-01-10 05:24+0000\n"
+"PO-Revision-Date: 2017-01-15 13:46+0900\n"
+"Last-Translator: Kenshi Muto <kmuto@debian.org>\n"
+"Language-Team: Japanese <debian-japanese@lists.debian.org>\n"
+"Language: ja\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Type: boolean
+#. Description
+#: ../slapd.templates:1001
+msgid "Omit OpenLDAP server configuration?"
+msgstr "OpenLDAP サーバの設定を省略しますか?"
+
+#. Type: boolean
+#. Description
+#: ../slapd.templates:1001
+msgid ""
+"If you enable this option, no initial configuration or database will be "
+"created for you."
+msgstr "ここで「はい」を選ぶと、初期設定やデータベースは作成されません。"
+
+#. Type: select
+#. Choices
+#: ../slapd.templates:2001
+msgid "always"
+msgstr "常に"
+
+#. Type: select
+#. Choices
+#: ../slapd.templates:2001
+msgid "when needed"
+msgstr "必要なときに"
+
+#. Type: select
+#. Choices
+#: ../slapd.templates:2001
+msgid "never"
+msgstr "行わない"
+
+#. Type: select
+#. Description
+#: ../slapd.templates:2002
+msgid "Dump databases to file on upgrade:"
+msgstr "更新時にデータベースをファイルにダンプ:"
+
+#. Type: select
+#. Description
+#: ../slapd.templates:2002
+msgid ""
+"Before upgrading to a new version of the OpenLDAP server, the data from your "
+"LDAP directories can be dumped into plain text files in the standard LDAP "
+"Data Interchange Format."
+msgstr ""
+"OpenLDAP サーバの新しいバージョンへの更新の前に、LDAP ディレクトリのデータ"
+"を、標準 LDAP データ交換フォーマットのプレインテキストファイルにダンプできま"
+"す。"
+
+#. Type: select
+#. Description
+#: ../slapd.templates:2002
+msgid ""
+"Selecting \"always\" will cause the databases to be dumped unconditionally "
+"before an upgrade. Selecting \"when needed\" will only dump the database if "
+"the new version is incompatible with the old database format and it needs to "
+"be reimported. If you select \"never\", no dump will be done."
+msgstr ""
+"「常に」を選ぶと、無条件に更新の前にデータベースをダンプするようになります。"
+"「必要なときに」を選ぶと、新しいバージョンが古いデータベースフォーマットと非"
+"互換で、再インポートが必要なときに、データベースをダンプします。「行わない」"
+"を選ぶと、データベースのダンプを行いません。"
+
+#. Type: string
+#. Description
+#: ../slapd.templates:3001
+msgid "Directory to use for dumped databases:"
+msgstr "データベースのダンプに使うディレクトリ:"
+
+#. Type: string
+#. Description
+#: ../slapd.templates:3001
+msgid ""
+"Please specify the directory where the LDAP databases will be exported. In "
+"this directory, several LDIF files will be created which correspond to the "
+"search bases located on the server. Make sure you have enough free space on "
+"the partition where the directory is located. The first occurrence of the "
+"string \"VERSION\" is replaced with the server version you are upgrading "
+"from."
+msgstr ""
+"LDAP データベースをエキスポートするディレクトリを指定してください。このディレ"
+"クトリの中には、サーバ上に配置された検索ベースに関連するいくつかの LDIF ファ"
+"イルが作成されます。ディレクトリを格納するパーティションに十分な空き領域があ"
+"ることを確認してください。最初に出現する文字列 \"VERSION\" は、更新対象のサー"
+"バのバージョンで置き換えられます。"
+
+#. Type: boolean
+#. Description
+#: ../slapd.templates:4001
+msgid "Move old database?"
+msgstr "古いデータベースを移動しますか?"
+
+#. Type: boolean
+#. Description
+#: ../slapd.templates:4001
+msgid ""
+"There are still files in /var/lib/ldap which will probably break the "
+"configuration process. If you enable this option, the maintainer scripts "
+"will move the old database files out of the way before creating a new "
+"database."
+msgstr ""
+"おそらく設定手順を壊すと思われるファイルが、/var/lib/ldap にまだあります。こ"
+"の選択肢で「はい」を選ぶと、メンテナスクリプトは新しいデータベースを作成する"
+"前に古いデータベースファイルを別の場所に移動します。"
+
+#. Type: boolean
+#. Description
+#: ../slapd.templates:5001
+msgid "Retry configuration?"
+msgstr "設定を再試行しますか?"
+
+#. Type: boolean
+#. Description
+#: ../slapd.templates:5001
+msgid ""
+"The configuration you entered is invalid. Make sure that the DNS domain name "
+"is syntactically valid, the field for the organization is not left empty and "
+"the admin passwords match. If you decide not to retry the configuration the "
+"LDAP server will not be set up. Run 'dpkg-reconfigure slapd' if you want to "
+"retry later."
+msgstr ""
+"入力された設定は無効です。DNS ドメイン名が有効な文法になっていること、組織名"
+"のフィールドが空になっていないことと、管理者パスワードが合っていることを確認"
+"してください。設定を再試行しないと、LDAP サーバはセットアップされません。あと"
+"で再試行するときには、\"dpkg-reconfigure slapd\" を実行してください。"
+
+#. Type: string
+#. Description
+#: ../slapd.templates:6001
+msgid "DNS domain name:"
+msgstr "DNS ドメイン名:"
+
+#. Type: string
+#. Description
+#: ../slapd.templates:6001
+msgid ""
+"The DNS domain name is used to construct the base DN of the LDAP directory. "
+"For example, 'foo.example.org' will create the directory with 'dc=foo, "
+"dc=example, dc=org' as base DN."
+msgstr ""
+"DNS ドメイン名は LDAP ディレクトリのベース DN を形成するのに使われます。たと"
+"えば、'foo.example.org' は、ベース DN として 'dc=foo, dc=example, dc=org' の"
+"ディレクトリを作成します。"
+
+#. Type: string
+#. Description
+#: ../slapd.templates:7001
+msgid "Organization name:"
+msgstr "組織名:"
+
+#. Type: string
+#. Description
+#: ../slapd.templates:7001
+msgid ""
+"Please enter the name of the organization to use in the base DN of your LDAP "
+"directory."
+msgstr "LDAP ディレクトリのベース DN 内で使う組織の名前を入力してください。"
+
+#. Type: password
+#. Description
+#: ../slapd.templates:8001
+msgid "Administrator password:"
+msgstr "管理者のパスワード:"
+
+#. Type: password
+#. Description
+#: ../slapd.templates:8001
+msgid "Please enter the password for the admin entry in your LDAP directory."
+msgstr ""
+"あなたの LDAP ディレクトリでの管理者エントリのパスワードを入力してください。"
+
+#. Type: password
+#. Description
+#: ../slapd.templates:9001
+msgid "Confirm password:"
+msgstr "パスワードの確認:"
+
+#. Type: password
+#. Description
+#: ../slapd.templates:9001
+msgid ""
+"Please enter the admin password for your LDAP directory again to verify that "
+"you have typed it correctly."
+msgstr ""
+"正しくタイプしたかの確認のために、先ほど入力したのと同じ LDAP ディレクトリ用"
+"の admin のパスワードを再度入力してください。"
+
+#. Type: note
+#. Description
+#: ../slapd.templates:10001
+msgid "Password mismatch"
+msgstr "パスワードが合致しません"
+
+#. Type: note
+#. Description
+#: ../slapd.templates:10001
+msgid "The two passwords you entered were not the same. Please try again."
+msgstr "2回入力されたパスワードは同じではありません。再度入力してください。"
+
+#. Type: boolean
+#. Description
+#: ../slapd.templates:11001
+msgid "Do you want the database to be removed when slapd is purged?"
+msgstr "slapd をパージしたときにデータベースを削除しますか?"
+
+#. Type: error
+#. Description
+#: ../slapd.templates:14001
+msgid "slapcat failure during upgrade"
+msgstr "更新中に slapcat が失敗"
+
+#. Type: error
+#. Description
+#: ../slapd.templates:14001
+msgid "An error occurred while upgrading the LDAP directory."
+msgstr "LDAP ディレクトリの更新中にエラーが発生しました。"
+
+#. Type: error
+#. Description
+#: ../slapd.templates:14001
+msgid ""
+"The 'slapcat' program failed while extracting the LDAP directory. This may "
+"be caused by an incorrect configuration file (for example, missing "
+"'moduleload' lines to support the backend database)."
+msgstr ""
+"LDAP ディレクトリの展開中に 'slapcat' プログラムが失敗しました。これは不正な"
+"設定ファイル (たとえばバックエンドデータベースをサポートするための "
+"'moduleload' 行がないなど) によって引き起こされた可能性があります。"
+
+#. Type: error
+#. Description
+#. This paragraph is followed by a (non translatable) paragraph
+#. containing a command line
+#: ../slapd.templates:14001
+msgid ""
+"This failure will cause 'slapadd' to fail later as well. The old database "
+"files will be moved to /var/backups. If you want to try this upgrade again, "
+"you should move the old database files back into place, fix whatever caused "
+"slapcat to fail, and run:"
+msgstr ""
+"この失敗は、後で 'slapadd' を失敗させることになります。古いデータベースファイ"
+"ルは /var/backups に移動されます。更新を再試行したいのであれば、古いデータ"
+"ベースファイルを元の場所に戻して slapcat が失敗する原因を修正し、次のように実"
+"行します:"
+
+#. Type: error
+#. Description
+#. Translators: keep "${location}" unchanged. This is a variable that
+#. will be replaced by a directory name at execution
+#: ../slapd.templates:14001
+msgid ""
+"Then move the database files back to a backup area and then try running "
+"slapadd from ${location}."
+msgstr ""
+"そして、データベースファイルをバックアップ領域に戻し、slapadd を ${location} "
+"から実行してみます。"
+
+#. Type: select
+#. Description
+#: ../slapd.templates:15001
+msgid "Database backend to use:"
+msgstr "利用するデータベースバックエンド:"
+
+#. Type: select
+#. Description
+#: ../slapd.templates:15001
+msgid ""
+"HDB and BDB use similar storage formats, but HDB adds support for subtree "
+"renames. Both support the same configuration options."
+msgstr ""
+"HDB と BDB は似たストレージフォーマットを使いますが、HDB にはサブツリーの名前"
+"変更のサポートが加わっています。共に、同じ設定オプションをサポートします。"
+
+#. Type: select
+#. Description
+#: ../slapd.templates:15001
+msgid ""
+"The MDB backend is recommended. MDB uses a new storage format and requires "
+"less configuration than BDB or HDB."
+msgstr ""
+"MDB バックエンドをお勧めします。MDB は新しいストレージフォーマットを採用して"
+"おり、BDB や HDB よりも少ない設定で済みます。"
+
+#. Type: select
+#. Description
+#: ../slapd.templates:15001
+msgid ""
+"In any case, you should review the resulting database configuration for your "
+"needs. See /usr/share/doc/slapd/README.Debian.gz for more details."
+msgstr ""
+"いずれの場合でも、必要に応じてデータベース設定の結果を再確認すべきです。詳細"
+"については /usr/share/doc/slapd/README.Debian.gz を参照してください。"
+
+#. Type: note
+#. Description
+#: ../slapd.templates:16001
+msgid "Potentially unsafe slapd access control configuration"
+msgstr "潜在的に安全でない slapd のアクセス制御設定です"
+
+#. Type: note
+#. Description
+#: ../slapd.templates:16001
+msgid ""
+"One or more of the configured databases has an access control rule that "
+"allows users to modify most of their own attributes. This may be unsafe, "
+"depending on how the database is used."
+msgstr ""
+"設定されたデータベースには、ユーザに自身の属性のほとんどの変更を許容する 1 つ"
+"以上のアクセス制御ルールがあります。これはデータベースの使いようによっては安"
+"全でない可能性があります。"
+
+#. Type: note
+#. Description
+#. Translators: keep "by self write" and "to *" unchanged. These are part
+#. of the slapd configuration and are not translatable.
+#: ../slapd.templates:16001
+msgid ""
+"In the case of slapd access rules that begin with \"to *\", it is "
+"recommended to remove any instances of \"by self write\", so that users are "
+"only able to modify specifically allowed attributes."
+msgstr ""
+"\"to *\" で始まる slapd アクセスルールがある場合、各 \"by self write\" 記述を"
+"削除することをお勧めします。そうすれば、ユーザが変更できるのは明示的に許可さ"
+"れた属性のみになります。"
+
+#. Type: note
+#. Description
+#: ../slapd.templates:16001
+msgid "See /usr/share/doc/slapd/README.Debian.gz for more details."
+msgstr ""
+"詳細については /usr/share/doc/slapd/README.Debian.gz を参照してください。"
+
+#. Type: select
+#. Choices
+#: ../slapd.templates:17001
+msgid "abort installation"
+msgstr "インストールの中止"
+
+#. Type: select
+#. Choices
+#: ../slapd.templates:17001
+msgid "continue regardless"
+msgstr "かまわず続ける"
+
+#. Type: select
+#. Description
+#: ../slapd.templates:17002
+msgid "Manual ppolicy schema update recommended"
+msgstr "手動の ppolicy スキーマ更新の推奨"
+
+#. Type: select
+#. Description
+#. "ppolicy", "pwdMaxRecordedFailure", and "cn=config" are not translatable.
+#: ../slapd.templates:17002
+msgid ""
+"The new version of the Password Policy (ppolicy) overlay requires the schema "
+"to define the pwdMaxRecordedFailure attribute type, which is not present in "
+"the schema currently in use. It is recommended to abort the upgrade now, and "
+"to update the ppolicy schema before upgrading slapd. If replication is in "
+"use, the schema update should be applied on every server before continuing "
+"with the upgrade."
+msgstr "Password Policy (ppolicy) オーバレイの新しいバージョンは、現在使用しているスキーマに存在しない pwdMaxRecordedFailure 属性型をスキーマに定義する必要があります。アップグレードを今すぐ中止し、slapd をアップグレードする前に ppolicy スキーマを更新することをお勧めします。レプリケーションが使われている場合、このアップグレードを続ける前にスキーマの更新を各サーバに適用しておくべきです。"
+
+#. Type: select
+#. Description
+#. This paragraph is followed by the path to the generated file (not
+#. translatable). The sentence continues in the following paragraph.
+#: ../slapd.templates:17002
+msgid ""
+"An LDIF file has been generated with the changes required for the upgrade:"
+msgstr "アップグレードに必要な変更付きの LDIF ファイルが生成されました:"
+
+#. Type: select
+#. Description
+#. This paragraph continues the sentence started in the previous
+#. paragraph. It is followed by a command line.
+#: ../slapd.templates:17002
+msgid ""
+"so if slapd is using the default access control rules, these changes can be "
+"applied (after starting slapd) by using the command:"
+msgstr "slapd がデフォルトのアクセス制御ルールを使っているのであれば、これらの変更は (slapd が開始した後に) 以下のコマンドによって適用できます:"
+
+#. Type: select
+#. Description
+#: ../slapd.templates:17002
+msgid ""
+"If instead you choose to continue the installation, the new attribute type "
+"will be added automatically, but the change will not be acted on by slapd "
+"overlays, and replication with other servers may be affected."
+msgstr "インストールを続けることを選ぶと、新しい属性型は自動的に追加されますが、この変更は slapd オーバレイで実行されず、他のサーバとのレプリケーションに影響する可能性があります。"
