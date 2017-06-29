@@ -4,7 +4,7 @@ set -eu
 
 upstream_version=$(dpkg-parsechangelog -S Version | sed -r -n 's/^(.*)-.*$/\1/p')
 upstream_dir=$(dpkg-parsechangelog -S Version | sed -r -n 's/^([0-9]+\.[0-9]+)\..*$/\1/p')
-orig_tarball="../nwjs-sdk_${upstream_version}.orig.tar.gz"
+orig_tarball="../nwjs_${upstream_version}.orig.tar.gz"
 
 if [ ! -e "${orig_tarball}" ]; then
     wget -O "${orig_tarball}.tmp" \
