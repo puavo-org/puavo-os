@@ -40,14 +40,3 @@ override_dh_auto_build:
 override_dh_installinit:
 	dh_installinit --name puavo-krb5-kdc
 	dh_installinit
-
-PACKAGE = $(shell dpkg-parsechangelog | sed -ne 's/^Source: //p')
-SRC_VERSION := $(shell dpkg-parsechangelog | sed -ne 's/^Version: \(\([0-9]\+\):\)\?\(.*\)-.*/\3/p')
-TARBALL = $(PACKAGE)_$(SRC_VERSION).orig.tar.gz
-.PHONY: get-orig-source
-get-orig-source:
-	wget https://github.com/opinsys/$(PACKAGE)/archive/$(SRC_VERSION).tar.gz -O../$(TARBALL)
-	tar -z -x -f ../$(TARBALL) --strip-components=1 -C .
-get-ref-source:
-	wget https://github.com/opinsys/$(PACKAGE)/archive/$(REF).tar.gz -O../$(TARBALL)
-	tar -z -x -f ../$(TARBALL) --strip-components=1 -C .
