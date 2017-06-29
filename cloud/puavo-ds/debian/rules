@@ -34,7 +34,7 @@ export PATH := $(GEM_HOME)/bin:$(PATH)
 
 override_dh_auto_build:
 	# Install bundler to a tmp dir
-	gem1.9.3 install -i $(GEM_HOME) bundler --version '1.2.4'
+	gem install -i $(GEM_HOME) bundler --version '1.2.4'
 	dh_auto_build --
 
 override_dh_installinit:
