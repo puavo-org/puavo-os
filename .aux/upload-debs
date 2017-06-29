@@ -62,6 +62,7 @@ cat <<REMOTE_EOF > "${upload_dir}/conf/distributions"
 Codename: ${upload_codename}
 Architectures: amd64 i386 source
 Components: main contrib non-free
+UDebComponents: main contrib non-free
 SignWith: yes
 REMOTE_EOF
 EOF
