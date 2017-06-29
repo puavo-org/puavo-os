@@ -1,0 +1,55 @@
+[libdefaults]
+	default_realm = <%= @kerberos_realm %>
+	default_tgs_enctypes = des3-hmac-sha1 des-cbc-crc
+	default_tkt_enctypes = des3-hmac-sha1 des-cbc-crc
+	dns_lookup_kdc = true
+	dns_lookup_realm = true
+	allow_weak_crypto = true
+
+[realms]
+	<%= @kerberos_realm %> = {
+		master_kdc = <%= @kerberos_master %>
+		kdc = <%= @puavo_hostname + "." + @puavo_domain %>
+		kdc = <%= @kerberos_master %>
+		admin_server = <%= @kerberos_master %>
+		default_domain = <%= @puavo_domain %>
+		database_module = ldap_<%= @puavo_domain %>
+	}
+	<%= @kerberos_toprealm %> = {
+		kdc = <%= @kerberos_master %>
+		admin_server = <%= @kerberos_master %>
+		default_domain = <%= @puavo_topdomain %>
+	}
+
+[domain_realm]
+	.<%= @puavo_domain %> = <%= @kerberos_realm %>
+	<%= @puavo_domain %> = <%= @kerberos_realm %>
+	.<%= @puavo_topdomain %> = <%= @kerberos_toprealm %>
+	<%= @puavo_topdomain %> = <%= @kerberos_toprealm %>
+
+[logging]
+	kdc = FILE:/var/log/kdc.log
+
+[dbdefaults]
+        disable_last_success = true
+        disable_lockout = true
+
+[dbmodules]
+	ldap_<%= @puavo_domain %> = {
+		db_library = kldap
+		ldap_kadmind_dn = <%= @ldap_binddn %>
+		ldap_kdc_dn = <%= @ldap_binddn %>
+		ldap_kerberos_container_dn = ou=Kerberos Realms,<%= @ldap_base %>
+		ldap_servers = ldapi:/// ldaps://<%= @ldap_master %>
+		ldap_service_password_file = /etc/krb5.secrets
+	}
+
+[appdefaults]
+	pam = {
+		debug = false
+		ticket_lifetime = 604800
+		renew_lifetime = 604800
+		forwardable = true
+		krb4_convert = false
+	}
+

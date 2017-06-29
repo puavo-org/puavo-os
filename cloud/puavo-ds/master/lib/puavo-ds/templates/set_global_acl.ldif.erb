@@ -1,0 +1,15 @@
+dn: olcDatabase={-1}frontend,cn=config
+changetype: modify
+replace: olcAccess
+olcAccess: {0}to * by dn.exact=cn=localroot,cn=config manage by dn.exact=uid=admin,o=puavo manage by * break
+olcAccess: {1}to dn.base="cn=subschema" by * read
+olcAccess: {2}to dn.base="" attrs="namingContexts" by dn.children="o=puavo" read
+olcAccess: {3}to dn.base="" by * read
+
+dn: olcDatabase={0}config,cn=config
+changetype: modify
+replace: olcAccess
+olcAccess: {0}to * by dn.exact=gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth manage by dn.exact=uid=admin,o=puavo manage by * break
+olcAccess: {1}to dn.subtree=cn=schema,cn=config by set="user/objectClass & [puavoServer]" read
+olcAccess: {2}to dn.exact=cn=config by set="user/objectClass & [puavoServer]" read
+olcAccess: {3}to dn.children=cn=config filter=objectClass=olcDatabaseConfig attrs="entry,objectClass,olcAccess,olcSuffix" by set="user/objectClass & [puavoServer]" read

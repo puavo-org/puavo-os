@@ -1,0 +1,31 @@
+dn: olcDatabase=hdb,cn=config
+objectClass: olcDatabaseConfig
+objectClass: olcHdbConfig
+olcDatabase: hdb
+olcSuffix: <%= @suffix %>
+olcRootDN: uid=admin,<%= @suffix %>
+olcDbConfig: set_cachesize 0 10485760 0
+olcDbConfig: set_lg_bsize 2097512
+olcDbConfig: set_flags DB_LOG_AUTOREMOVE
+olcDbIndex: sambaSID pres,eq
+olcDbIndex: sambaSIDList pres,eq
+olcDbIndex: sambaGroupType pres,eq
+olcDbIndex: member,memberUid pres,eq
+olcDbIndex: puavoSchool pres,eq
+olcDbIndex: puavoId pres,eq
+olcDbIndex: puavoTag pres,eq
+olcDbIndex: puavoDeviceType pres,eq
+olcDbIndex: puavoHostname pres,eq,sub
+olcDbIndex: displayName,puavoEduPersonReverseDisplayName pres,eq,sub
+olcDbIndex: uid pres,eq
+olcDbIndex: krbPrincipalName pres,eq
+olcDbIndex: cn,sn,mail,givenName pres,eq,approx,sub
+olcDbIndex: objectClass eq
+olcDbIndex: entryUUID eq
+olcDbIndex: entryCSN eq
+olcLastMod: TRUE
+olcDbCheckpoint: 512 30
+olcSyncRepl: rid=<%= "%03d" % @rid %> provider="ldap://<%= @master_server %>" binddn="<%= @binddn %>" bindmethod=simple credentials="<%= @bindpw %>" searchbase="<%= @suffix %>" type=refreshAndPersist interval=00:00:00:05 retry="15 +" timeout=30 starttls=critical schemachecking=off scope=sub
+olcUpdateRef: ldap://<%= @master_server %>
+olcDbNosync: TRUE
+olcDbDirectory: <%= @directory %>

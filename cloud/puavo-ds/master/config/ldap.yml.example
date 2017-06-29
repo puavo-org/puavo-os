@@ -1,0 +1,46 @@
+settings:
+  templates:
+    domain: "%s.example.edu"
+    suffix: "dc=%s,dc=example,dc=edu"
+    puppet_host: "%s.puppet.example.edu"
+    samba_domain: "EDU%s"
+
+  ldap_server:
+    host: ldap1.example.edu
+    bind_dn: uid=admin,o=puavo
+    password: password
+    method: tls
+
+  puavo:
+    bind_dn: uid=puavo,o=puavo
+    password: password
+
+  puppet:
+    bind_dn: uid=puppet,o=puavo
+    password: password
+
+  kdc:
+    bind_dn: uid=kdc,o=puavo
+    password: password
+
+  kadmin:
+    bind_dn: uid=kadmin,o=puavo
+    password: password
+
+  monitor:
+    bind_dn: uid=monitor,o=puavo
+    password: password
+
+  slave:
+    bind_dn: uid=slave,o=puavo
+    password: password
+
+  syncrepl:
+    urls:
+    - ldap://ldap1.example.edu
+    - ldap://ldap2.example.edu
+    - ldap://ldap3.example.edu
+
+  puppetmaster:
+    enable: true
+    file_dir: /etc/puppet/files

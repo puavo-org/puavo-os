@@ -1,0 +1,51 @@
+#!/usr/bin/ruby
+#
+# Create new kerberos configurations by ldap
+#
+# Usage: ruby reset_kerberos_configuration.rb
+#
+
+# Add lib path for development
+$LOAD_PATH.unshift(
+  File.expand_path(
+    File.join( File.dirname(__FILE__), '..', 'lib' )
+  )
+)
+
+require 'puavo-ds'
+
+# Set password for kadmin and kdc users
+
+`echo "#{ PUAVO_ETC.ds_kdc_password }\\n#{ PUAVO_ETC.ds_kdc_password }\\n" | /usr/sbin/kdb5_ldap_util stashsrvpw -f /etc/krb5.secrets "#{ PUAVO_ETC.ds_kdc_dn }" 2>/dev/null`
+
+`echo "#{ PUAVO_ETC.ds_kadmin_password }\\n#{ PUAVO_ETC.ds_kadmin_password }\\n" | /usr/sbin/kdb5_ldap_util stashsrvpw -f /etc/krb5.secrets "#{ PUAVO_ETC.ds_kadmin_dn }" 2>/dev/null`
+
+`chown root:openldap /etc/krb5.secrets`
+`chmod 0640 /etc/krb5.secrets`
+
+# Get kerberos configuration from ldap (all organisation)
+kerberos_configuration = KerberosSettings.new(:ldap_host => PUAVO_ETC.ldap_master,
+                                              :ldap_dn => PUAVO_ETC.ldap_dn,
+                                              :ldap_password => PUAVO_ETC.ldap_password)
+
+kerberos_configuration.write_configurations_to_file
+
+# Check organisations keytab files
+
+# Show diff with new and old files
+kerberos_configuration.diff
+
+# Replace kerberos configuration files
+puts "Replace kerberos configuration files? (y/n)"
+replace = STDIN.gets.chomp
+if replace == "y"
+
+  puts "\nStop krb5-kdc service\n\n"
+  `stop krb5-kdc`
+
+  kerberos_configuration.replace_server_configurations
+
+  puts "\nStart krb5-kdc service\n\n"
+  `start krb5-kdc`
+end
+

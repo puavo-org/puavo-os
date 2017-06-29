@@ -1,0 +1,96 @@
+# Global config:
+dn: cn=config
+objectClass: olcGlobal
+cn: config
+# Where the pid file is put. The init.d script
+# will not stop the server if you change this.
+olcPidFile: /var/run/slapd/slapd.pid
+# List of arguments that were passed to the server
+olcArgsFile: /var/run/slapd/slapd.args
+# Read slapd.conf(5) for possible values
+olcLogLevel: none
+# The tool-threads parameter sets the actual amount of cpu's that is used
+# for indexing.
+olcToolThreads: 1
+olcTLSCACertificateFile: /etc/ssl/certs/slapd-ca.crt
+olcTLSCertificateFile: /etc/ssl/certs/slapd-server.crt
+olcTLSCertificateKeyFile: /etc/ssl/certs/slapd-server.key
+olcLocalSSF: 128
+olcSecurity: ssf=128
+olcSizeLimit: unlimited
+olcAuthzRegexp: uid=([^,]*),cn=gssapi,cn=auth ldap:///ou=People,<%= @suffix %>??one?(uid=$1)
+
+dn: olcDatabase={-1}frontend,cn=config
+objectClass: olcDatabaseConfig
+objectClass: olcFrontendConfig
+olcDatabase: {-1}frontend
+# The maximum number of entries that is returned for a search operation
+olcSizeLimit: unlimited
+# Allow unlimited access to local connection from the local root user
+olcAccess: {0}to * by dn.exact=gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth manage by * break
+olcAccess: {1}to dn.base="" by * read
+olcAccess: {2}to dn.base="cn=subschema" by * read
+
+# Config db settings
+dn: olcDatabase=config,cn=config
+objectClass: olcDatabaseConfig
+olcDatabase: config
+# Allow unlimited access to local connection from the local root user
+olcAccess: to * by dn.exact=gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth manage by * break
+
+# Load schemas
+#dn: cn=schema,cn=config
+#objectClass: olcSchemaConfig
+#cn: schema
+
+<%= @schemas %>
+
+dn: cn=module{0},cn=config
+objectClass: olcModuleList
+cn: module{0}
+olcModulePath: /usr/lib/ldap
+olcModuleLoad: {0}back_hdb
+olcModuleLoad: {1}dynlist
+olcModuleLoad: {2}unique
+olcModuleLoad: {3}ppolicy
+olcModuleLoad: {4}syncprov
+olcModuleLoad: {5}memberof
+olcModuleLoad: {6}valsort
+olcModuleLoad: {7}auditlog
+olcModuleLoad: {8}refint
+olcModuleLoad: {9}constraint
+olcModuleLoad: {10}accesslog
+
+dn: olcDatabase={1}hdb,cn=config
+objectClass: olcDatabaseConfig
+objectClass: olcHdbConfig
+olcDatabase: {1}hdb
+olcDbDirectory: /var/lib/ldap
+olcSuffix: <%= @suffix %>
+olcRootDN: uid=admin,<%= @suffix %>
+olcLastMod: TRUE
+olcDbCheckpoint: 512 30
+olcDbCacheSize: 30000
+olcDbDNCacheSize: 60000
+olcSyncRepl: rid=001 provider="ldap://<%= @master_server %>" binddn="<%= @binddn %>" bindmethod=simple credentials="<%= @bindpw %>" searchbase="<%= @suffix %>" type=refreshAndPersist interval=00:00:00:05 retry="15 +" timeout=30 starttls=critical schemachecking=off scope=sub
+olcUpdateRef: ldap://<%= @master_server %>
+olcDbConfig: {0}set_cachesize 0 10485760 0
+olcDbConfig: {1}set_lg_bsize 2097512
+olcDbConfig: {2}set_flags DB_LOG_AUTOREMOVE
+olcDbIndex: sambaSID pres,eq
+olcDbIndex: sambaSIDList pres,eq
+olcDbIndex: sambaGroupType pres,eq
+olcDbIndex: uniqueMember pres,eq
+olcDbIndex: puavoTag pres,eq
+olcDbIndex: puavoDeviceType pres,eq
+olcDbIndex: puavoHostname pres,eq
+olcDbIndex: uid pres,eq
+olcDbIndex: krbPrincipalName pres,eq
+olcDbIndex: cn,sn,mail pres,eq,approx,sub
+olcDbIndex: objectClass eq
+olcDbIndex: entryUUID eq
+olcDbIndex: entryCSN eq
+olcDbIndex: macAddress eq
+olcDbIndex: memberUid eq
+olcDbIndex: uidNumber eq
+<%= @acls %>

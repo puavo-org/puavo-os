@@ -1,0 +1,57 @@
+[libdefaults]
+        default_realm = <%= PUAVO_ETC.krb_toprealm %>
+        default_tgs_enctypes = des3-hmac-sha1 des-cbc-crc
+        default_tkt_enctypes = des3-hmac-sha1 des-cbc-crc
+        allow_weak_crypto = true
+
+[realms]
+<% @organisations.each do |organisation| %>
+  <%= organisation['realm'] %> = {
+             kdc = localhost
+             admin_server = localhost:<%= organisation['kadmin_port'] %>
+             master_kdc = localhost
+             default_domain = <%= organisation['domain'] %>
+             database_module = ldap_<%= organisation['domain'] %>
+  }
+<% end %>
+
+  <%= PUAVO_ETC.krb_toprealm %> = {
+    kdc = localhost
+    master_kdc = localhost
+    database_module = ldap_toprealm
+  }
+
+[domain_realm]
+<% @organisations.each do |organisation| %>
+         .<%= organisation['domain'] %> = <%= organisation['realm'] %>
+         <%= organisation['domain'] %> = <%= organisation['realm'] %>
+<% end %>
+         .<%= PUAVO_ETC.topdomain %> = <%= PUAVO_ETC.krb_toprealm %>
+         <%= PUAVO_ETC.topdomain %> = <%= PUAVO_ETC.krb_toprealm %>
+
+[logging]
+        kdc = FILE:/var/log/kdc.log
+        admin_server = FILE:/var/log/kadm5.log
+
+[dbmodules]
+<% @organisations.each do |organisation| %>
+ldap_<%= organisation['domain'] %> = {
+               db_library = kldap
+               ldap_kerberos_container_dn = ou=Kerberos Realms,<%= organisation['suffix'] %>
+               ldap_kdc_dn = uid=kdc,o=Puavo
+               ldap_kadmind_dn = uid=kadmin,o=Puavo
+               ldap_service_password_file = /etc/krb5.secrets
+               ldap_servers = ldapi:///
+               ldap_conns_per_server = 2
+       }
+<% end %>
+
+ldap_toprealm = {
+               db_library = kldap
+               ldap_kerberos_container_dn = ou=Kerberos Realms,o=puavo
+               ldap_kdc_dn = uid=kdc,o=Puavo
+               ldap_kadmind_dn = uid=kadmin,o=Puavo
+               ldap_service_password_file = /etc/krb5.secrets
+               ldap_servers = ldapi:///
+               ldap_conns_per_server = 10
+       }

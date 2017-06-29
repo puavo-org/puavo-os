@@ -1,0 +1,10 @@
+dn: <%= @database_dn %>
+changetype: modify
+replace: olcSyncRepl
+<% @servers.each_index do |index| %>
+olcSyncRepl: {<%= index %>}rid=<%= "%03d" % IdPool.next_id('puavoNextRid') %> provider=ldap://<%= @servers[index] %> bindmethod=simple binddn=<%= @rootdn %> credentials=<%= @rootpw %> searchbase=<%= @suffix %> type=refreshAndPersist retry="15 +" starttls=yes
+<% end %>
+-
+replace: olcMirrorMode
+olcMirrorMode: TRUE
+

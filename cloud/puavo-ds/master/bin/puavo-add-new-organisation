@@ -1,0 +1,325 @@
+#!/usr/bin/ruby1.8
+# -*- coding: utf-8 -*-
+
+# Add lib path for development
+$LOAD_PATH.unshift(
+  File.expand_path(
+    File.join( File.dirname(__FILE__), '..', 'lib' )
+  )
+)
+
+require 'optparse'
+require 'puavo-ds'
+
+def newpass( len )
+  chars = ("a".."z").to_a + ("A".."Z").to_a + ("0".."9").to_a
+  newpass = ""
+  1.upto(len) { |i| newpass << chars[rand(chars.size-1)] }
+  return newpass
+end
+
+options = {}
+
+parser = OptionParser.new do |opts|
+  opts.banner = "Usage: #{ File.basename(__FILE__) } [options] <organisation>"
+
+  opts.on("-y", "--yes", "Automatic yes to prompts") do |y|
+    options[:yes] = y
+  end
+
+  opts.on("--top-domain [TOP_DOMAIN]",
+    "Top domain. If omitted it's read from /etc/puavo"
+  ) do |top_domain|
+    options[:top_domain] = top_domain
+  end
+
+  opts.on("--domain [DOMAIN]",
+    "Force domain. By default it's generated from organisation and top domain"
+  ) do |top_domain|
+    options[:domain] = domain
+  end
+
+  opts.on("--legal-name [LEGAL_NAME]",
+    "Legal name. Defaults to organisation"
+  ) do |legal_name|
+    options[:legal_name] = legal_name
+  end
+
+  opts.on("--samba-domain [SAMBA_DOMAIN]",
+    "Samba domain. By default it's generated from domain"
+  ) do |samba_domain|
+    options[:samba_domain] = samba_domain
+  end
+
+  opts.on("--krb-realm [KERBEROS_REALM]",
+    "Force Kerberos Realm. By default it's generated from domain"
+  ) do |kerberos_realm|
+    options[:kerberos_realm] = kerberos_realm
+  end
+
+  opts.on("--puppet-host [PUPPET_HOST]", "Puppet host for legacy Lucid systems") do |puppet_host|
+    options[:puppet_host] = puppet_host
+  end
+
+  opts.on("--suffix [SUFFIX]", "Suffix") do |suffix|
+    options[:suffix] = suffix
+  end
+
+  opts.on("--given-name [GIVEN_NAME]", "Given name") do |given_name|
+    options[:given_name] = given_name
+  end
+
+  opts.on("--surname [SURNAME]", "Surname") do |surname|
+    options[:surname] = surname
+  end
+
+  opts.on("--username [USERNAME]", "Username") do |username|
+    options[:username] = username
+  end
+
+  opts.on("--password [PASSWORD]", "Password") do |password|
+    options[:password] = password
+  end
+
+  opts.on_tail("-h", "--help", "Show this message") do
+    puts opts
+    exit
+  end
+
+end
+
+parser.parse!
+
+organisation_name = ARGV.first
+if not organisation_name
+  STDERR.puts "Organisation missing!"
+  STDERR.puts "\n"
+  STDERR.puts parser
+  exit 2
+end
+
+domain = options[:domain]
+top_domain = options[:top_domain] || begin
+  # read from /etc/puavo if --top-domain switch was not provided
+  PUAVO_ETC.topdomain
+rescue Errno::ENOENT
+  nil # Convert to nil if missing
+end
+
+if not domain and not top_domain
+  STDERR.puts "/etc/puavo/topdomain, --top-domain or --domain is required"
+  exit 2
+end
+
+# Generate from organisation_name and --top-domain if not forced by --domain
+domain ||= "#{ organisation_name }.#{ top_domain }"
+
+top_domain ||= domain.split(".")[1..-1].join(".")
+
+samba_domain = options[:samba_domain] || "EDU%s" % organisation_name.upcase
+suffix = options[:suffix] || "dc=edu,dc=%s,dc=fi" % organisation_name.downcase
+suffix_start = suffix.split(',')[0]
+legal_name = options[:legal_name] || organisation_name
+kerberos_realm = options[:kerberos_realm] || domain.upcase
+puppet_host = options[:puppet_host] || "#{organisation_name.downcase}.puppet.#{top_domain}"
+
+puts "******************************************************"
+puts "  Initialising organisation: #{organisation_name}"
+puts "******************************************************"
+
+
+puts "* Creating database for suffix: #{suffix}"
+puts "* Kerberos realm: #{kerberos_realm}"
+puts "* Legal name: #{legal_name}"
+puts "* Samba: #{samba_domain}"
+puts "* Domain: #{domain}"
+puts "* Suffix start: #{suffix_start}"
+
+Readline.readline('OK?', true) unless options[:yes]
+
+# User
+puts "\nCreate organisation owner:"
+
+if options.has_key?(:given_name)
+  given_name = options[:given_name]
+  puts "Given name: #{given_name}"
+else
+  print "Given name> "
+  given_name = STDIN.gets.chomp
+end
+
+if options.has_key?(:surname)
+  surname = options[:surname]
+  puts "Surname: #{surname}"
+else
+  print "Surname> "
+  surname = STDIN.gets.chomp
+end
+
+if options.has_key?(:username)
+  username =  options[:username] 
+  puts "Username: #{username}"
+else
+  print "Username> "
+  username =  STDIN.gets.chomp
+end
+if options.has_key?(:password)
+  password = options[:password]
+else
+  print "Password> "
+  password = STDIN.gets.chomp
+end
+
+# FIXME: asking whether the user wants to configure kerberos?
+puts "\nStop krb5-kdc service\n\n"
+`stop krb5-kdc`
+
+begin
+  `mkdir -p "/var/lib/ldap/#{suffix}"`
+  `chown openldap.openldap "/var/lib/ldap/#{suffix}"`
+
+  new_db = Database.new( "olcSuffix" => suffix,
+                         "olcRootDN" => PUAVO_ETC.ldap_dn,
+                         :samba_domain => samba_domain,
+                         :kerberos_realm => kerberos_realm )
+  # Save without validation
+  new_db.save(false)
+rescue => e
+  raise e
+end
+
+new_db = Database.find(:first, :attribute => 'olcSuffix', :value => suffix)
+
+slapd_config = SlapdConfig.first
+
+puts "* Setting up overlay configuration to database"
+Overlay.create_overlays(:database => new_db,
+                        :kerberos_realm => kerberos_realm)
+
+# Create organisation and set LdapOrganisationBase LDAP connection
+puts "* Create organisation root"
+organisation_attributes = {
+  :owner => PUAVO_ETC.ldap_dn,
+  :suffix => suffix,
+  :puavoDomain => domain,
+  :puavoKerberosRealm => kerberos_realm,
+  :o => organisation_name,
+  :cn => organisation_name,
+  :description => organisation_name,
+  :eduOrgLegalName => legal_name,
+  :sambaDomainName => samba_domain,
+  :puavoPuppetHost => puppet_host
+}
+organisation = Organisation.create(organisation_attributes)
+
+puts "* Update olcAuthzRegexp"
+slapd_config.olcAuthzRegexp = Array(slapd_config.olcAuthzRegexp) +
+  [ "uid=([^,]*)@#{kerberos_realm.downcase},cn=gssapi,cn=auth ldap:///ou=People,#{suffix}??one?(uid=$1)" ]
+slapd_config.save
+
+puts "* Add organizational units: People, Groups, Hosts, etc..."
+OrganizationalUnit.create_units(organisation)
+
+puts "* Setting up Samba configuration"
+Samba.create_samba_configuration(organisation_name, samba_domain, suffix_start)
+
+#puts "* Create OAuth subtree"
+OAuth.create_oauth_branch
+
+puts "* Create System Groups"
+SystemGroup.create_system_groups
+
+puts "* Add admin users: kdc, kadmin, samba"
+AdminUser.create_admin_user
+
+# School
+school = School.first
+puts "\nCreate new school"
+school_name = "Administration"
+puts "School name: #{school_name}" 
+school = School.create( :displayName => school_name,
+                        :cn => school_name.downcase.gsub(/[^a-z0-9]/, "") )
+school.save
+
+# Role
+puts "Create new role"
+role_name = "Maintenance"
+puts "Role name: #{role_name}"
+role = Role.create( :displayName => role_name,
+                    :puavoSchool => school.dn )
+role.save
+
+# Group
+puts "Create new group"
+group_name = "Maintenance"
+puts "Group name: #{group_name}"
+group = Group.create( :displayName => group_name,
+                      :cn => group_name.downcase.gsub(/[^a-z0-9]/, ""),
+                      :puavoSchool => school.dn )
+group.save
+
+# Added association
+role.groups << group
+
+kerberos_masterpw = KerberosSettings.generate_new_password(20)
+puts "\nInitializing kerberos realm with master key: #{kerberos_masterpw}\n"
+
+kerberos_configuration = KerberosSettings.new(:ldap_host => PUAVO_ETC.ldap_master,
+                                              :ldap_dn => PUAVO_ETC.ldap_dn,
+                                              :ldap_password => PUAVO_ETC.ldap_password)
+
+kerberos_configuration.write_configurations_to_file
+
+kerberos_configuration.replace_server_configurations
+
+realm = KerberosRealm.new( :ldap_host => PUAVO_ETC.ldap_master,
+                           :ldap_dn => PUAVO_ETC.ldap_dn,
+                           :ldap_password => PUAVO_ETC.ldap_password,
+                           :realm => kerberos_realm,
+                           :masterpw => kerberos_masterpw,
+                           :suffix => suffix,
+                           :domain => domain )
+realm.save
+
+# FIXME: asking whether the user wants to configure kerberos?
+puts "Start krb5-kdc service"
+`start krb5-kdc`
+
+user = User.new
+
+user.givenName = given_name
+user.sn = surname
+user.uid = username
+user.new_password = password
+user.new_password_confirmation = password
+user.role_name = role.displayName
+user.puavoSchool = school.dn
+user.puavoEduPersonAffiliation = "admin"
+user_save = false
+while user_save != true
+  begin
+    user.save!
+    user_save = true
+  rescue Exception => e
+    if options[:yes]
+      raise e
+    else
+      puts
+      puts e
+      puts "Cannot save user, press enter to try again"
+      STDIN.gets
+    end
+  end
+end
+
+domain_admin = SambaGroup.find("Domain Admins")
+domain_admin.memberUid = user.uid
+domain_admin.save!
+
+puts
+puts "User was successfully created."
+puts "\nSets the user (#{user.uid}) as the owner of the organisation"
+ldap_organisation = LdapOrganisation.first
+ldap_organisation.owner = Array(ldap_organisation.owner).push user.dn
+ldap_organisation.save
+

@@ -1,0 +1,124 @@
+#!/usr/bin/ruby
+# -*- coding: utf-8 -*-
+#
+# This script connects to LDAP master and reads all its configuration
+# and database data. Data is written to local database.
+#
+
+require "erb"
+require 'tempfile'
+require 'fileutils'
+require 'readline'
+require "ldap"
+
+def parse_erb(basename)
+  ldif_template = File.read("/usr/share/puavo-ds-ext/templates/#{ basename }")
+  ldif = ERB.new(ldif_template, 0, "%<>")
+
+#  tempfile = Tempfile.open(basename)
+#  tempfile.puts ldif.result
+#  tempfile.close
+  
+#  tempfile
+  ldif.result
+end
+
+@binddn = "uid=admin,o=Puavo"
+
+puts "Master server:"
+@master_server = Readline.readline('> ', true)
+
+@binddn = "uid=admin,o=puavo"
+puts "#{@binddn} password:"
+@bindpw = Readline.readline('> ', true)
+
+`stop slapd`
+`killall -9 slapd`
+`rm -rf /etc/ldap/slapd.d/* /var/lib/ldap/*`
+
+tempfile = Tempfile.open("ldif")
+
+conn = LDAP::Conn.new(host=@master_server, port=389)
+conn.set_option(LDAP::LDAP_OPT_PROTOCOL_VERSION, 3)
+conn.start_tls
+
+suffixes = Array.new
+
+conn.bind(@binddn, @bindpw) do
+  begin
+    conn.search("cn=config", LDAP::LDAP_SCOPE_BASE, "(objectClass=*)") do |e|
+      tempfile.puts "dn: #{e.dn}"
+
+      e.attrs.each do |attr|
+        e.vals(attr).each do |value|
+          tempfile.puts "#{attr}: #{value}"
+        end
+      end
+
+      tempfile.puts
+    end
+
+    conn.search("cn=schema,cn=config", LDAP::LDAP_SCOPE_SUBTREE, "(objectClass=*)") do |e|
+      tempfile.puts "dn: #{e.dn}"
+
+      e.attrs.each do |attr|
+        e.vals(attr).each do |value|
+          tempfile.puts "#{attr}: #{value}"
+        end
+      end
+
+      tempfile.puts
+    end
+
+    tempfile.puts parse_erb("modules.ldif.erb")
+    tempfile.puts
+
+    conn.search("", LDAP::LDAP_SCOPE_BASE, "(objectClass=*)", ["namingContexts"]) do |e|
+      e.get_values("namingContexts").each do |suffix|
+        if !suffix.eql?("o=puavo")
+          suffixes << suffix
+        end
+      end
+    end
+
+    rid = 1
+
+    suffixes.each do |suffix|
+      @suffix = suffix
+
+      conn.search("cn=config", LDAP::LDAP_SCOPE_SUBTREE, "(&(objectClass=olcDatabaseConfig)(olcSuffix=#{ @suffix }))") do |e|
+        tmp_rid = "%03i" % rid
+        rid = rid+1
+        @rid = rid
+
+        @directory = "/var/lib/ldap/#{@suffix}"
+
+        tempfile.puts parse_erb("slave_database.ldif.erb")
+
+        e.vals("olcAccess").each do |acl|
+          tempfile.puts "olcAccess: #{acl}"
+        end
+
+        tempfile.puts
+
+        `mkdir -p #{@directory}`
+        `chown openldap.openldap #{@directory}`
+        `chmod 0750 #{@directory}`
+      end
+
+      tempfile.puts ""
+    end
+  rescue Exception => e
+    puts "ERROR: #{e}"
+  end
+end
+puts "#{tempfile.path}"
+
+tempfile.close(false)
+
+`slapadd -F /etc/ldap/slapd.d/ -l #{tempfile.path} -b cn=config`
+`chown -R openldap: /etc/ldap/slapd.d`
+`chown -R openldap.openldap /var/lib/ldap/*`
+`start slapd`
+
+tempfile.unlink

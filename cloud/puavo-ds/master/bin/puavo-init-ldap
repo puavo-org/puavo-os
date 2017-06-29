@@ -1,0 +1,247 @@
+#!/usr/bin/ruby1.9.1
+
+# Add lib path for development
+$LOAD_PATH.unshift(
+  File.expand_path(
+    File.join( File.dirname(__FILE__), '..', 'lib' )
+  )
+)
+
+require 'erb'
+require 'yaml'
+require 'tempfile'
+require 'optparse'
+require 'fileutils'
+require 'socket'
+
+require 'puavo/etc'
+require 'puavo-ds/templates'
+require 'puavo-ds/kerberos'
+require 'puavo-ds/helpers'
+
+if ["-h", "--help"].include? ARGV.first
+  STDERR.puts "
+  usage: #{ File.basename(__FILE__) }
+
+  Initialize LDAP database with Puavo schemas on this machine.
+
+  WARNING: This is a destructive operation which cannot be undone. It will
+  destroy all existing databases.
+  "
+  exit 2
+end
+
+AUTO_YES = ARGV.include?("--AUTO-YES")
+WAIT_TIME = 10
+
+if AUTO_YES
+  puts
+  puts "!"*50
+  puts "WARNING: --AUTO-YES is set"
+  puts "I'm automatically going to destroy everything!"
+  puts "Hit Ctrl+c to cancel!"
+  puts "!"*50
+  puts
+
+  WAIT_TIME.times do |i|
+    print "\rStarting in #{ WAIT_TIME - i } seconds#{ "."*i }"
+    sleep 1
+  end
+end
+
+
+def parse_erb(basename)
+  template = File.read("#{ TEMPLATES_PATH }/#{basename}.erb")
+  parse_file = ERB.new(template, 0, "%<>")
+
+  tempfile = Tempfile.open(basename)
+  tempfile.puts parse_file.result
+  tempfile.close
+
+  return tempfile
+end
+
+# Ask puavo_attr for /etc/puavo with given question
+# @param {String} question Question printed to screen
+# @param {Symbol} puavo_attr Puavo attribute to be written to /etc/puavo
+# @param {String} [default] Default value for new Puavo attributes
+# @return {String} new value
+def ask_puavo_attr(question, puavo_attr, default=nil)
+
+  begin
+    default = PUAVO_ETC.send(puavo_attr)
+  rescue Errno::ENOENT
+  end
+
+  while true
+    print "#{question} [#{ default }]> "
+    new_value = STDIN.gets.strip if not AUTO_YES
+
+    # Use default or previous value if user did not give anything
+    new_value = default if new_value.to_s.empty?
+
+    if AUTO_YES && new_value.to_s.empty?
+      STDERR.puts "NO DEFAULT VALUE! --AUTO-YES failed"
+      Process.exit 1
+    else
+      puts default
+    end
+
+    # Break only when we have a value
+    break if not new_value.to_s.empty?
+  end
+
+  if puavo_attr == "ldap_password" && !ARGV.include?("--save-admin-password")
+    return new_value
+  end
+
+  PUAVO_ETC.write(puavo_attr.to_sym, new_value)
+  return new_value
+end
+
+
+
+puts "\nInitialize slapd with Puavo configuration"
+puts
+
+# Ask Puavo attributes for /puavo/etc and save them to instance variable for
+# the erb templates
+@rootdn = ask_puavo_attr("root dn", :ldap_dn, "uid=admin,o=puavo")
+@rootpw = ask_puavo_attr("root password", "ldap_password")
+
+@puavodn = ask_puavo_attr("puavo dn", :ds_puavo_dn, "uid=puavo,o=puavo")
+@puavopw = ask_puavo_attr("puavo password", "ds_puavo_password")
+
+@puppetdn = ask_puavo_attr("puppet dn", :ds_puppet_dn, "uid=puppet,o=puavo")
+@puppetpw = ask_puavo_attr("puppet password", "ds_puppet_password")
+
+@kdcdn = ask_puavo_attr("kdc dn", :ds_kdc_dn, "uid=kdc,o=puavo")
+@kdcpw = ask_puavo_attr("kdc password", :ds_kdc_password)
+
+@kadmindn = ask_puavo_attr("kadmin dn", :ds_kadmin_dn, "uid=kadmin,o=puavo")
+@kadminpw = ask_puavo_attr("kadmin password", :ds_kadmin_password)
+
+@monitordn = ask_puavo_attr("monitor dn", :ds_monitor_dn, "uid=monitor,o=puavo")
+@monitorpw = ask_puavo_attr("monitor password", :ds_monitor_password)
+
+@slavedn = ask_puavo_attr("slave dn", :ds_slave_dn, "uid=slave,o=puavo")
+@slavepw = ask_puavo_attr("slave password", "ds_slave_password")
+
+@puavo_ticket_dn = ask_puavo_attr("puavo-ticket dn", :ds_puavo_ticket_dn, "uid=puavo-ticket,o=puavo")
+@puavo_ticket_pw = ask_puavo_attr("puavo-ticket password", "ds_puavo_ticket_password")
+
+@pw_mgmt_dn = ask_puavo_attr("pw-mgmt dn", :ds_pw_mgmt_dn, "uid=pw-mgmt,o=puavo")
+@pw_mgmt_pw = ask_puavo_attr("pw-mgmt password", :ds_pw_mgmt_password)
+
+puts "Using #{@rootdn} as rootdn"
+
+@rootpw_hash=`slappasswd -h "{SSHA}" -s "#{@rootpw}"`.gsub(/\n/,"")
+@puavopw_hash=`slappasswd -h "{SSHA}" -s "#{@puavopw}"`.gsub(/\n/,"")
+@puppetpw_hash=`slappasswd -h "{SSHA}" -s "#{@puppetpw}"`.gsub(/\n/,"")
+@kdcpw_hash=`slappasswd -h "{SSHA}" -s "#{@kdcpw}"`.gsub(/\n/,"")
+@kadminpw_hash=`slappasswd -h "{SSHA}" -s "#{@kadminpw}"`.gsub(/\n/,"")
+@puavo_ticket_pw_hash=`slappasswd -h "{SSHA}" -s "#{@puavo_ticket_pw}"`.gsub(/\n/,"")
+@pw_mgmt_pw_hash=`slappasswd -h "{SSHA}" -s "#{@pw_mgmt_pw}"`.gsub(/\n/,"")
+
+print <<EOF
+I'm now going to initialize new LDAP databases on this machine.
+This will destroy previous databases permanently.
+EOF
+
+while not AUTO_YES
+  print "Type YES to continue> "
+  break if STDIN.gets.strip == "YES"
+end
+
+# LDAP master address is this machine + topdomain
+PUAVO_ETC.write(:ldap_master, "#{ Socket.gethostname }.#{ PUAVO_ETC.topdomain }")
+
+# Make sure that slapd is not running
+`stop slapd`
+`killall -9 slapd`
+FileUtils.rm_r Dir.glob('/var/lib/ldap/*')
+
+# AppArmor rules allow slapd to access files under /var/lib/ldap so
+# we'll just create new directories under it for different databases:
+#
+# /var/lib/ldap/o=puavo
+
+FileUtils.mkdir_p '/var/lib/ldap/o=puavo'
+
+FileUtils.rm_r Dir.glob('/etc/ldap/slapd.d/*')
+
+# Check that the certificate files can be found
+["/etc/ssl/certs/slapd-ca.crt",
+ "/etc/ssl/certs/slapd-server.crt",
+ "/etc/ssl/certs/slapd-server.key"].each do |file|
+  if not File.exists?(file)
+    raise "Certificate file not found! #{file}."
+  end
+end
+
+# Replace slapd configuration file
+puts "Replace /etc/defaul/slapd configuration file"
+tempfile = parse_erb("default_slapd")
+FileUtils.cp(tempfile.path, "/etc/default/slapd")
+tempfile.delete
+
+# As /etc/ldap/slapd.d is now totally empty, slapd won't start before
+# initial config is added with slapadd.
+#
+# Initialize cn=config from a template ldif file
+
+tempfile = parse_erb("init_ldap.ldif")
+puts assert_exec "slapadd -l #{tempfile.path} -F /etc/ldap/slapd.d -b \"cn=config\""
+tempfile.delete
+
+# Initialize o=puavo from a template ldif file
+
+tempfile = parse_erb("init_puavo_db.ldif")
+puts assert_exec "slapadd -l #{tempfile.path} -F /etc/ldap/slapd.d -b \"o=Puavo\""
+tempfile.delete
+
+# slapdadd leaves the files owner by root, so let's fix those
+
+FileUtils.chown_R 'openldap', 'openldap', '/etc/ldap/slapd.d'
+FileUtils.chown_R 'openldap', 'openldap', '/var/lib/ldap/o=puavo'
+FileUtils.chmod 0750, '/var/lib/ldap/o=puavo'
+
+assert_exec 'start slapd'
+sleep 5
+
+# slapd should be running now and the rest of the modifications
+# can be done with ldapmodify.
+
+tempfile = parse_erb("set_global_acl.ldif")
+puts `cat #{tempfile.path}`
+puts `ldapmodify -Y EXTERNAL -H ldapi:/// -f #{tempfile.path} 2>&1`
+tempfile.delete
+
+# Get kerberos configuration from toprealm
+kerberos_configuration = KerberosSettings.new(:ldap_host => PUAVO_ETC.ldap_master,
+                                              :ldap_dn => PUAVO_ETC.ldap_dn,
+                                              :ldap_password => @rootpw)
+kerberos_configuration.write_configurations_to_file
+kerberos_configuration.replace_server_configurations
+
+# FIXME
+master_password = KerberosSettings.generate_new_password(20)
+
+puts "master password: #{master_password}"
+
+puts `echo "#{master_password}\\n#{master_password}\\n" | kdb5_ldap_util -D #{PUAVO_ETC.ldap_dn} create -k aes256-cts-hmac-sha1-96 -subtrees \"o=puavo\" -s -sf /etc/krb5kdc/stash.toprealm -H ldaps://#{PUAVO_ETC.ldap_master} -r #{PUAVO_ETC.krb_toprealm} -w #{ @rootpw }`
+puts `echo "#{PUAVO_ETC.ds_kdc_password}\\n#{PUAVO_ETC.ds_kdc_password}\\n" | /usr/sbin/kdb5_ldap_util stashsrvpw -f /etc/krb5.secrets "#{PUAVO_ETC.ds_kdc_dn}" 2>/dev/null`
+puts `echo "#{PUAVO_ETC.ds_kadmin_password}\\n#{PUAVO_ETC.ds_kadmin_password}\\n" | /usr/sbin/kdb5_ldap_util stashsrvpw -f /etc/krb5.secrets "#{PUAVO_ETC.ds_kadmin_dn}" 2>/dev/null`
+
+
+FileUtils.rm_rf("/etc/ldap/krb5.keytab")
+puts assert_exec "kadmin.local -r #{PUAVO_ETC.krb_toprealm} -q \"addprinc -randkey ldap/#{PUAVO_ETC.ldap_master}\""
+puts assert_exec "kadmin.local -r #{PUAVO_ETC.krb_toprealm} -q \"ktadd -norandkey -k /etc/ldap/krb5.keytab ldap/#{PUAVO_ETC.ldap_master}\""
+
+# Fix file permissions
+FileUtils.chown 'root', 'openldap', '/etc/ldap/krb5.keytab'
+FileUtils.chmod 0640, '/etc/ldap/krb5.keytab'
+
+
+puts "Test: ldapsearch -ZZ -h #{ PUAVO_ETC.ldap_master } -D uid=admin,o=puavo -w #{ @rootpw } -x -b o=puavo"
+puts "LDAP init ok!"
