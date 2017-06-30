@@ -8,21 +8,44 @@ Homepage: https://github.com/puavo-org/puavo-os/
 
 Package: puavo-ds-ext
 Architecture: all
-Depends: ${shlibs:Depends}, ${misc:Depends}, ruby, slapd, ldap-utils, krb5-kdc-ldap, libsasl2-modules-gssapi-mit, ruby-ldap
+Depends: ${misc:Depends},
+ ${shlibs:Depends},
+ krb5-kdc-ldap,
+ ldap-utils,
+ libsasl2-modules-gssapi-mit,
+ ruby,
+ ruby-ldap,
+ slapd
 Recommends: rng-tools
 Description: Puavo LDAP setup tool
  Builds LDAP for Puavo
 
 Package: puavo-ds-master
 Architecture: all
-Depends: ${shlibs:Depends}, ${misc:Depends}, ruby, slapd, slapd-smbkrb5pwd, ldap-utils, krb5-admin-server, krb5-kdc-ldap, libsasl2-modules-gssapi-mit,  puavo-client (>= 1.4.3), ruby-activeldap
+Depends: ${misc:Depends},
+ ${shlibs:Depends},
+ krb5-admin-server,
+ krb5-kdc-ldap,
+ ldap-utils,
+ libsasl2-modules-gssapi-mit,
+ puavo-client,
+ ruby,
+ ruby-activeldap,
+ slapd,
+ slapd-smbkrb5pwd
 Recommends: rng-tools
 Description: Puavo LDAP setup tool
  Builds LDAP for Puavo
 
 Package: puavo-ds-slave
 Architecture: all
-Depends: ${shlibs:Depends}, ${misc:Depends}, ruby, slapd, ldap-utils, krb5-admin-server, krb5-kdc-ldap
+Depends: ${misc:Depends},
+ ${shlibs:Depends},
+ krb5-admin-server,
+ krb5-kdc-ldap,
+ ldap-utils,
+ ruby,
+ slapd
 Description: LDAP slave replication tool
  puavo-ds-slave handles LDAP slave replication from master
  server.
