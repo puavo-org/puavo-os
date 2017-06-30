@@ -7,7 +7,7 @@ require 'tempfile'
 @rootdn = "uid=admin,o=Puavo"
 @rootpw = "password"
 
-`/etc/init.d/slapd stop`
+`service slapd stop`
 `killall -9 slapd`
 `rm -rf /etc/ldap/slapd.d/* /var/lib/ldap/*`
 `mkdir -p /var/lib/ldap/o=puavo`
@@ -29,4 +29,4 @@ tempfile.delete
 `chown -R openldap.openldap /etc/ldap/slapd.d /var/lib/ldap`
 `chmod -R 0750 /var/lib/ldap`
 
-`/etc/init.d/slapd start`
+`service slapd start`

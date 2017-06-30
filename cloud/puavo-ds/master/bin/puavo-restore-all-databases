@@ -88,10 +88,10 @@ generic_olc_db_checkpoint = '64 5'
 
 # Stop slapd service
 begin
-  response = Puavo::Execute.run( ["/sbin/stop", "slapd"] )
+  response = Puavo::Execute.run( ["/usr/sbin/service", "slapd", "stop"] )
   $stderr.puts response.stderr if options[:verbose]
 rescue Puavo::ExitStatusError => exception
-  $stderr.puts "\nCould't stop slapd service: " + exception.response.stderr.to_s
+  $stderr.puts "\nCould not stop slapd service: " + exception.response.stderr.to_s
   $stderr.puts
 end
 
