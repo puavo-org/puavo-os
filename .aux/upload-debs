@@ -75,9 +75,11 @@ cd "${upload_dir}/incoming"
 set +eu
 EOF
   (
-    cd "$debsdir"
-    find . -maxdepth 1 \
-      ! '(' -type d -or -name Makefile -or -name .gitignore ')' -print0 \
+    cd "${debsdir}/pool"
+
+    # XXX This would be better if upload_pkgregex would check matching
+    # XXX source packages and then send all files belonging to those.
+    find . -print0 \
       | sed -z 's|^./||' \
       | grep -zE "$upload_pkgregex" \
       | xargs -0 shar --no-check-existing --quiet --quiet-unshar --uuencode \
@@ -97,6 +99,11 @@ for changefile in incoming/*.changes; do
 done
 EOF
 }
+
+if [ ! -d "${debsdir}/pool" ]; then
+  echo "${debsdir}/pool does not exist or is not a directory" >&2
+  exit 1
+fi
 
 remote_script \
   | ssh -l "$upload_login" "$upload_server" sh /dev/stdin "$upload_dir" \
