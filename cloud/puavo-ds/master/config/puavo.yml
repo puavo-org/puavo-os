@@ -1,0 +1,47 @@
+server:
+  ca_fqdn: 'ca.example.org'
+  server_fqdn: 'ldap.example.org'
+  cert_organisation: "Example Org"
+  cert_unit: "Support"
+  cert_locality: "City"
+  cert_state: "State"
+  cert_country: "FI"
+  cert_expiration_days: 3650
+  connect_dn: "uid=admin,o=puavo"
+  connect_password: "adminpw"
+  default_realm: "EXAMPLE.ORG"
+
+puavo:
+  suffix: "o=puavo"
+  domain: "puavo"
+  rootdn: "uid=admin,o=puavo"
+  rootpw: "changerootpw"
+  puavodn: "uid=puavo,o=puavo"
+  puavopw: "changepuavopw"
+  id_pool: "cn=IdPool,o=puavo"
+
+organisations:
+  - organisation:
+    name: District1
+    domain: "district1.example.org"
+    realm: "DISTRICT1.EXAMPLE.ORG"
+    samba_domain: "EDUDISTRICT1"
+    suffix: "dc=district1,dc=example,dc=edu"
+    kadmin_port: 10000
+    passwords:
+      kerberos_master: "krbmasterpw"
+      samba: "sambapw"
+      kdc: "kdcpw"
+      kadmin: "kadminpw"
+  - organisation:
+    name: District2
+    domain: "district2.example.org"
+    realm: "DISTRICT2.EXAMPLE.ORG"
+    samba_domain: "EDUDISTRICT2"
+    suffix: "dc=district2,dc=example,dc=edu"
+    kadmin_port: 10000
+    passwords:
+      kerberos_master: "krbmasterpw"
+      samba: "sambapw"
+      kdc: "kdcpw"
+      kadmin: "kadminpw"

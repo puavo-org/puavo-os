@@ -1,0 +1,166 @@
+#!/usr/bin/ruby
+
+require "ldap"
+require 'rubygems'
+require 'yaml'
+
+if configurations = YAML.load_file("config/ldap.yml") rescue nil
+#  puts "Using config/ldap.yml"
+else
+  puts "Not found LDAP configuration file (config/ldap.yml)"
+  exit
+end
+
+@binddn = configurations["settings"]["ldap_server"]["bind_dn"]
+@bindpw = configurations["settings"]["ldap_server"]["password"]
+@ldaphost = configurations["settings"]["ldap_server"]["host"]
+@ldapuri = "ldap://#{@ldaphost}"
+@exclude = configurations["settings"]["stats"]["exclude_databases"]
+
+@totals = Hash.new
+
+def get_statistics(suffix)
+  conn = LDAP::SSLConn.new(host=@ldaphost, port=636)
+  conn.set_option(LDAP::LDAP_OPT_PROTOCOL_VERSION, 3)
+
+  devices = Hash.new
+  name = suffix
+  schools = Hash.new
+
+  conn.bind(@binddn, @bindpw) do
+    begin
+      conn.search(suffix, LDAP::LDAP_SCOPE_BASE, "(objectClass=eduOrg)") {|e|
+        name = e.get_values('o')[0]
+      }
+
+      conn.search("ou=Samba,ou=Hosts,#{suffix}", LDAP::LDAP_SCOPE_SUBTREE, "(objectClass=sambaSamAccount)") {|e|
+        devices["windows"] = Integer(devices["windows"]) + 1
+        @totals["windows"] = Integer(@totals["windows"]) + 1
+      }
+
+      conn.search(suffix, LDAP::LDAP_SCOPE_SUBTREE, "(&(objectClass=puavoSchool)(!(cn=administration)))") {|e|
+        schools[e.dn] = e.get_values('displayName')
+        devices["school"] = Integer(devices["school"]) + 1
+        @totals["school"] = Integer(@totals["school"]) + 1
+      }
+
+      conn.search(suffix, LDAP::LDAP_SCOPE_SUBTREE, "(|(objectClass=puavoNetbootDevice)(objectClass=puavoLocalbootDevice)(objectClass=puavoServer))") {|e|
+        device_type = e.get_values('puavoDeviceType')[0]
+        devices[device_type] = Integer(devices[device_type]) + 1
+        @totals[device_type] = Integer(@totals[device_type]) + 1
+      }
+
+      conn.search(suffix, LDAP::LDAP_SCOPE_SUBTREE, "(objectClass=puavoEduPerson)") {|e|
+        devices["user"] = Integer(devices["user"]) + 1
+        @totals["user"] = Integer(@totals["user"]) + 1
+      }
+
+      schools.keys.each {|schooldn|
+        conn.search(suffix, LDAP::LDAP_SCOPE_SUBTREE, "(&(|(objectClass=puavoNetbootDevice)(objectClass=puavoLocalbootDevice)(objectClass=puavoServer))(puavoSchool=#{schooldn}))") {|e|
+          device_type = e.get_values('puavoDeviceType')[0]
+          devices["#{schooldn}-#{device_type}"] = Integer(devices["#{schooldn}-#{device_type}"]) + 1
+          @totals["#{schooldn}-#{device_type}"] = Integer(@totals["#{schooldn}-#{device_type}"]) + 1
+        }
+
+        conn.search(suffix, LDAP::LDAP_SCOPE_SUBTREE, "(&(objectClass=puavoEduPerson)(puavoSchool=#{schooldn}))") {|e|
+          devices["#{schooldn}-user"] = Integer(devices["#{schooldn}-user"]) + 1
+          @totals["#{schooldn}-user"] = Integer(@totals["#{schooldn}-user"]) + 1
+        }
+      }
+
+      conn.search("#{suffix}", LDAP::LDAP_SCOPE_SUBTREE, "(objectClass=puavoPrinterQueue)") {|e|
+        devices["printer"] = Integer(devices["printer"]) + 1
+        @totals["printer"] = Integer(@totals["printer"]) + 1
+      }
+
+    rescue LDAP::ResultError
+      conn.perror("Error!")
+    end  
+  end
+
+  puts "<tr>"
+  puts "<td><b>#{name}</b></td>"
+  puts "<td><b>#{devices['thinclient']}</b></td>"
+  puts "<td><b>#{devices['fatclient']}</b></td>"
+  puts "<td><b>#{devices['laptop']}</b></td>"
+  puts "<td><b>#{devices['windows']}</b></td>"
+  puts "<td><b>#{devices['printer']}</b></td>"
+  puts "<td><b>#{devices['ltspserver']}</b></td>"
+  puts "<td><b>#{devices['infotv']}</b></td>"
+  puts "<td><b>#{devices['netstand']}</b></td>"
+  puts "<td><b>#{devices['school']}</b></td>"
+  puts "<td><b>#{devices['user']}</b></td>"
+  puts "</tr>"
+
+  schools.each_pair {|schooldn, name|
+    thinclients = devices["#{schooldn}-thinclient"]
+    fatclients = devices["#{schooldn}-fatclient"]
+    laptops = devices["#{schooldn}-laptop"]
+    users = devices["#{schooldn}-user"]
+    infotvs = devices["#{schooldn}-infotv"]
+    netstands = devices["#{schooldn}-netstand"]
+
+    puts "<tr>"
+    puts "<td>#{name}</td>"
+    puts "<td>#{thinclients}</td>"
+    puts "<td>#{fatclients}</td>"
+    puts "<td>#{laptops}</td>"
+    puts "<td></td>"
+    puts "<td></td>"
+    puts "<td></td>"
+    puts "<td>#{infotvs}</td>"
+    puts "<td>#{netstands}</td>"
+    puts "<td></td>"
+    puts "<td>#{users}</td>"
+    puts "</tr>"
+  }
+end
+
+puts "<table><tr>"
+puts "<td></td>"
+puts "<td>Thin clients</td>"
+puts "<td>Fat clients</td>"
+puts "<td>Laptops</td>"
+puts "<td>Windows</td>"
+puts "<td>Printers</td>"
+puts "<td>LTSP servers</td>"
+puts "<td>Info-tv</td>"
+puts "<td>-</td>"
+puts "<td>Schools</td>"
+puts "<td>Users</td>"
+puts "</tr>"
+
+conn = LDAP::SSLConn.new(host=@ldaphost, port=636)
+conn.set_option(LDAP::LDAP_OPT_PROTOCOL_VERSION, 3)
+
+conn.bind(@binddn, @bindpw) do
+  begin
+    conn.search("", LDAP::LDAP_SCOPE_BASE, "(objectClass=*)", ["namingContexts"]) {|e|
+      e.get_values("namingContexts").each {|suffix|
+        if (! @exclude.include?(suffix))
+          get_statistics(suffix)
+        end
+      }
+    }
+
+    rescue LDAP::ResultError
+      conn.perror("LDAP connection failed")
+      puts "LDAP connection failed"
+    end  
+end
+
+puts "<tr>"
+puts "<th>Total</th>"
+puts "<td>#{@totals['thinclient']}</td>"
+puts "<td>#{@totals['fatclient']}</td>"
+puts "<td>#{@totals['laptop']}</td>"
+puts "<td>#{@totals['windows']}</td>"
+puts "<td>#{@totals['printer']}</td>"
+puts "<td>#{@totals['ltspserver']}</td>"
+puts "<td>#{@totals['infotv']}</td>"
+puts "<td>#{@totals['netstand']}</td>"
+puts "<td>#{@totals['school']}</td>"
+puts "<td>#{@totals['user']}</td>"
+puts "</tr>"
+
+puts "</table>"

@@ -1,0 +1,33 @@
+#!/bin/sh
+
+set -e
+
+. puavo-ds-installdirs
+
+install -o root -g root -m 644 \
+  "$PUAVO_DS_TEMPLATEDIR/etc/default/slapd" /etc/default/slapd
+install -o root -g root -m 755 \
+  "$PUAVO_DS_TEMPLATEDIR/etc/init.d/slapd" /etc/init.d
+install -o root -g root -m 644 \
+  "$PUAVO_DS_TEMPLATEDIR/etc/default/krb5-kdc" /etc/default
+install -o root -g root -m 755 \
+  "$PUAVO_DS_TEMPLATEDIR/etc/init.d/krb5-kdc" /etc/init.d
+
+echo "Run following commands as a root in your LDAP-master:
+(if you have not already done so)
+
+  FQDN=$(cat /etc/puavo/hostname).$(cat /etc/puavo/domain)
+  REALM=$(cat /etc/puavo/kerberos/realm)
+  kadmin.local -r \${REALM} -q \"addprinc -randkey ldap/\${FQDN}\"
+  kadmin.local -r \${REALM} -q \"addprinc -randkey host/\${FQDN}\"
+  kadmin.local -r \${REALM} -q \"addprinc -randkey IPP/\${FQDN}\"
+  kadmin.local -r \${REALM} -q \"addprinc -randkey cifs/\${FQDN}\"
+  kadmin.local -r \${REALM} -q \"addprinc -randkey nfs/\${FQDN}\"
+  kadmin.local -r \${REALM} -q \"addprinc -randkey HTTP/\${FQDN}\"
+
+  Press ENTER when ready."
+
+read ready
+
+puavo-init-ldap-slave --force
+puavo-init-kdc-slave --force

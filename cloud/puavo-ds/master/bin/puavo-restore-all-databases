@@ -1,0 +1,174 @@
+#!/usr/bin/ruby
+#
+# Destroy current slapd installation and restore all
+# databases and slapd configurations (cn=config) from
+# the dump files.
+#
+# Usage: puavo-restore-all-databases [options]
+#
+
+require 'fileutils'
+require 'optparse'
+require 'puavo/execute'
+
+@debug = false
+
+options = {}
+options[:verbose] = false
+
+OptionParser.new do |opts|
+  opts.banner = "Usage: puavo-restore-all-databases [options]"
+
+  opts.on("-d", "--dump-directory [DUMPDIR]", "source directory of dump files") do |directory|
+    options[:dumpdir] = directory
+  end
+
+  opts.on("-v", "--[no-]verbose", "Run verbosely. Print STDERR of shell command (eg. slapadd)") do |v|
+    options[:verbose] = v
+  end
+
+  opts.on_tail("-h", "--help", "Show this message") do
+    puts opts
+    exit
+  end
+end.parse!
+
+if options[:dumpdir].nil?
+  $stderr.puts "Missing argument --dump-directory"
+  exit 2
+end
+
+if not File.directory?(options[:dumpdir])
+  $stderr.puts "Cannot find dump directory: #{options[:dumpdir]}"
+  exit 2
+end
+
+##############################################################
+# Comment this out when you use this script
+##############################################################
+puts
+puts "Script is disable. See source code of #{ __FILE__} file"
+exit 2
+##############################################################
+##############################################################
+
+puts
+puts "This will destroy previous databases permanently and restore databases from the dump files!"
+
+while(true)
+  print "Type YES to continue> "
+  break if STDIN.gets.strip == "YES"
+end
+
+generic_olc_db_config = ['set_cachesize 0 10485760 0',
+                         'set_lg_bsize 2097512',
+                         'set_flags DB_LOG_AUTOREMOVE']
+generic_olc_db_index = ['uidNumber pres,eq',
+                        'sambaSID pres,eq',
+                        'sambaSIDList pres,eq',
+                        'sambaGroupType pres,eq',
+                        'member,memberUid pres,eq',
+                        'puavoSchool pres,eq',
+                        'puavoId pres,eq',
+                        'puavoTag pres,eq',
+                        'puavoDeviceType pres,eq',
+                        'puavoHostname pres,eq,sub',
+                        'displayName,puavoEduPersonReverseDisplayName pres,eq,sub',
+                        'uid pres,eq',
+                        'krbPrincipalName pres,eq',
+                        'cn,sn,mail,givenName pres,eq,approx,sub',
+                        'objectClass eq',
+                        'entryUUID eq',
+                        'entryCSN eq',
+                        'macAddress eq'
+                       ]
+generic_olc_db_cache_size = '30000'
+generic_olc_db_dn_cache_size = '60000'
+generic_olc_db_checkpoint = '64 5'
+
+# Stop slapd service
+begin
+  response = Puavo::Execute.run( ["/sbin/stop", "slapd"] )
+  $stderr.puts response.stderr if options[:verbose]
+rescue Puavo::ExitStatusError => exception
+  $stderr.puts "\nCould't stop slapd service: " + exception.response.stderr.to_s
+  $stderr.puts
+end
+
+# Remove slapd configuration directory
+FileUtils.rm_r Dir.glob('/etc/ldap/slapd.d/cn=config*')
+# Remove all databases
+FileUtils.rm_r Dir.glob('/var/lib/ldap/*')
+
+File.open("/tmp/config.ldif", "w") do |cf|
+  File.open(File.join(options[:dumpdir], "cn=config.ldif")) do |f|
+    f.each_line do |line|
+      if line.match(/dn: olcDatabase=.*hdb/)
+        cf.puts line
+
+        generic_olc_db_config.each do |config|
+          cf.puts "olcDbConfig: #{ config }"
+        end
+        generic_olc_db_index.each do |index|
+          cf.puts "olcDbIndex: #{ index }"
+        end
+
+        cf.puts "olcDbCacheSize: #{ generic_olc_db_cache_size }"
+        cf.puts "olcDbDNCacheSize: #{ generic_olc_db_dn_cache_size }"
+        cf.puts "olcDbCheckpoint: #{ generic_olc_db_checkpoint }"
+
+      elsif line.match(/olcDbConfig:/)
+        next # skip old value
+      elsif line.match(/olcDbIndex:/)
+        next # skip old value
+      elsif line.match(/olcDbCacheSize:/i)
+        next # skip old value
+      elsif line.match(/olcDbDNcacheSize:/i)
+        next # skip old value
+      elsif line.match(/olcDbCheckpoint:/i)
+        next # skip old value
+      elsif line.match(/olcDbDirectory:/)
+	cf.puts line
+        db_directory = line.match(/olcDbDirectory: (.*)/)[1]
+        # Create data directory for database
+        FileUtils.mkdir_p(db_directory)
+      else
+        cf.puts line
+      end
+    end
+  end
+end
+
+# Restore slapd configuration
+puts "Restore configurations (cn=config)"
+response = Puavo::Execute.run(
+             [ '/usr/sbin/slapadd',
+               '-l', '/tmp/config.ldif',
+               '-F', '/etc/ldap/slapd.d',
+               '-b', 'cn=config' ])
+$stderr.puts response.stderr if options[:verbose]
+
+
+Dir.foreach(options[:dumpdir]) do |filename|
+  next if filename == "cn=config.ldif"
+
+  if match_data = filename.match(/(.*)\.ldif$/)
+    base = match_data[1]
+    puts "Restore database: #{base}"
+
+    # Restore database
+    response = Puavo::Execute.run(
+                 [ '/usr/sbin/slapadd',
+                   '-q',
+                   '-b', base,
+                   '-l', File.join(options[:dumpdir], filename),
+                   '-F', '/etc/ldap/slapd.d'])
+    $stderr.puts response.stderr if options[:verbose]
+  end
+end
+
+# Fix permission of slapd files
+FileUtils.chown_R("openldap", "openldap", "/etc/ldap/slapd.d/")
+FileUtils.chown_R("openldap", "openldap", "/var/lib/ldap")
+
+puts "\nDatabases was successfully restored!\n\n"

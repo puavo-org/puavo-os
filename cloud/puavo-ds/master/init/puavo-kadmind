@@ -1,0 +1,37 @@
+#!/usr/bin/ruby
+#
+# Script to launch kadmind processes for every realm defined
+# in Puavo installation. The kerberos realms and kadmind ports
+# are read from /etc/krb5kdc/kdc.conf file.
+#
+# Veli-Matti Lintu <veli-matti.lintu@opinsys.fi>
+
+APP_NAME = 'puavo_kadmind'
+
+def start_kadminds
+  contents = File.read("/etc/krb5kdc/kdc.conf")
+  regex = Regexp.new('([\w.]+) = \{.*?kadmind_port = (\d+).*?\}', Regexp::MULTILINE)
+
+  match = regex.match(contents)
+
+  while match != nil
+    `kadmind -r #{$1} -port #{$2}`
+    contents = match.post_match
+    match = regex.match(contents)
+  end
+end
+
+case ARGV.first
+  when 'stop'
+    `killall -9 kadmind`
+  when 'start'
+    start_kadminds
+  when 'restart'
+    `killall -9 kadmind`
+    start_kadminds
+end
+
+unless %w{start stop restart}.include? ARGV.first
+  puts "Usage: #{APP_NAME} {start|stop|restart}"
+  exit
+end

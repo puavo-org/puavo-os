@@ -1,0 +1,177 @@
+#!/usr/bin/ruby
+
+require 'erb'
+require 'fileutils'
+require 'getoptlong'
+require 'tempfile'
+
+use_force = false
+update_only_config = false
+
+opts = GetoptLong.new(
+  ['--help', '-h', GetoptLong::NO_ARGUMENT],
+  ['--force', GetoptLong::NO_ARGUMENT],
+  ['--update-only-config', GetoptLong::NO_ARGUMENT]
+)
+
+opts.each do |opt, arg|
+  case opt
+  when '--help'
+    puts <<EOF
+Usage: puavo-init-ldap-slave [OPTION]...
+
+Configure and initialize slapd.
+
+-h, --help                       display this help and exit
+    --force                      clear and re-initialize the database
+    --update-only-config         update only cn=config and restart slapd
+
+EOF
+    exit(0)
+  when '--force'
+    use_force = true
+  when '--update-only-config'
+    update_only_config = true
+  end
+end
+
+if ARGV.length != 0 then
+  STDERR.puts("error: invalid number of arguments #{ARGV.length}, expected 0")
+  exit(1)
+end
+
+# Use SSL certificate that was acquired when the host was
+# registered to Puavo.
+ENV["LDAPTLS_REQCERT"] = "demand"
+ENV["LDAPTLS_CACERT"] = "/etc/puavo/certs/rootca.pem"
+
+Sentinel_file = '/var/lib/ldap/init_ldap_slave_done'
+
+if !File.exist?(Sentinel_file) and update_only_config
+  STDERR.puts('error: cannot update uninitialized slapd, run without --update-only-config')
+  exit(1)
+end
+
+if File.exist?(Sentinel_file) and not use_force
+  STDERR.puts('error: slapd is already initialized, use the --force, Mikko!')
+  exit(1)
+end
+
+@binddn        = File.read('/etc/puavo/ldap/dn'      ).chomp
+@bindpw        = File.read('/etc/puavo/ldap/password').chomp
+@master_server = File.read('/etc/puavo/ldap/master'  ).chomp
+@suffix        = File.read('/etc/puavo/ldap/base'    ).chomp
+
+def parse_erb(basename)
+  ldif_template = File.read("/usr/share/puavo-ds-slave/#{ basename }.ldif.erb")
+  ldif = ERB.new(ldif_template, 0, "%<>")
+
+  tempfile = Tempfile.open(basename)
+  tempfile.puts ldif.result
+  tempfile.close
+  
+  tempfile
+end
+
+@acls = `ldapsearch -LLL -x -H ldap://#{ @master_server } -D #{ @binddn } -w #{ @bindpw } -Z -b cn=config "(&(objectClass=olcDatabaseConfig)(olcSuffix=#{ @suffix }))" olcAccess | grep -v dn:`
+if $?.exitstatus != 0
+  STDERR.puts('error: failed to get ACLs from the master server')
+  exit(1)
+end
+
+@schemas = `ldapsearch -LLL -x -H ldap://#{ @master_server } -D #{ @binddn } -w #{ @bindpw } -Z -b cn=schema,cn=config`
+if $?.exitstatus != 0
+  STDERR.puts('error: failed to get schemas from the master server')
+  exit(1)
+end
+
+tempfile = parse_erb('init_ldap_slave')
+
+system('service slapd stop')
+sleep 3
+system('pkill -9 -x slapd')
+
+if !system('rm -rf /etc/ldap/slapd.d/*')
+  STDERR.puts('error: failed to remove old LDAP configuration')
+  exit(1)
+end
+
+if !system("slapadd -l #{tempfile.path} -F /etc/ldap/slapd.d -b 'cn=config'")
+  STDERR.puts('error: failed to update the configuration of the database')
+  exit(1)
+end
+
+if !system('chown -R openldap.openldap /etc/ldap/slapd.d')
+  STDERR.puts('error: failed to chown /etc/ldap/slapd.d to openldap')
+  exit(1)
+end
+
+if update_only_config
+  if !system('service slapd start')
+    STDERR.puts('error: failed to start slapd')
+    exit(1)
+  end
+  exit(0)
+end
+
+if !system('rm -rf /var/lib/ldap/*')
+  STDERR.puts('error: failed to remove the old LDAP database')
+  exit(1)
+end
+
+if !system('chown -R openldap.openldap /var/lib/ldap')
+  STDERR.puts('error: failed to chown /var/lib/ldap to openldap')
+  exit(1)
+end
+
+if !system('install -m 0644 -g openldap /etc/puavo/certs/host.crt /etc/ssl/certs/slapd-server.crt')
+  STDERR.puts('error: failed to install /etc/puavo/certs/host.crt to /etc/ssl/certs/slapd-server.crt')
+  exit(1)
+end
+
+if !system('install -m 0640 -g openldap /etc/puavo/certs/host.key /etc/ssl/certs/slapd-server.key')
+  STDERR.puts('error: failed to copy /etc/puavo/certs/host.key to /etc/ssl/certs/slapd-server.key')
+  exit(1)
+end
+
+if !system('install -m 0644 -g openldap /etc/puavo/certs/orgcabundle.pem /etc/ssl/certs/slapd-ca.crt')
+  STDERR.puts('error: failed to copy /etc/puavo/certs/orgcabundle.pem to /etc/ssl/certs/slapd-ca.crt')
+  exit(1)
+end
+
+if !system('chmod -R 0750 /var/lib/ldap')
+  STDERR.puts('error: failed to chmod /var/lib/ldap')
+  exit(1)
+end
+
+if !system('service slapd start')
+  STDERR.puts('error: failed to stop slapd')
+  exit(1)
+end
+
+FileUtils.touch(Sentinel_file)
+
+puts('Waiting for slapd to synchronize all data from the LDAP master.')
+puts('This may take a while.')
+
+previous_linecount = -1
+current_linecount = 0
+while previous_linecount != current_linecount
+  if current_linecount > 0 then
+    puts("Still waiting... the magic number is #{current_linecount} now.")
+  end
+
+  sleep 10
+  previous_linecount = current_linecount
+  IO::popen("slapcat") do |io|
+    current_linecount = io.readlines().count
+    io.close()
+    if !$?.success?
+      STDERR.puts('error: failed to query the database contents')
+      exit(1)
+    end
+  end
+end
+
+puts('Synchronization complete.')
+puts()

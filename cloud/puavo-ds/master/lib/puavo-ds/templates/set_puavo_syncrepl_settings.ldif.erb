@@ -1,0 +1,9 @@
+dn: olcDatabase={1}hdb,cn=config
+changetype: modify
+replace: olcSyncRepl
+<% @servers.each_index do |index| %>
+olcSyncRepl: {<%= index %>}rid=<%= "%03d" % (@servers.length + index + 1) %> provider=<%= @servers[index] %> bindmethod=simple binddn=<%= @rootdn %> credentials=<%= @rootpw %> searchbase=o=Puavo type=refreshAndPersist retry="15 +" starttls=critical
+<% end %>
+-
+replace: olcMirrorMode
+olcMirrorMode: TRUE

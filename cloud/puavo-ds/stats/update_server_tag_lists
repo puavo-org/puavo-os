@@ -1,0 +1,95 @@
+#!/usr/bin/ruby
+
+require "ldap"
+require 'rubygems'
+require 'yaml'
+
+if configurations = YAML.load_file("/etc/puavo/ldap.yml") rescue nil
+#  puts "Using config/ldap.yml"
+else
+  puts "Not found LDAP configuration file (config/ldap.yml)"
+  exit
+end
+
+target_dir = ARGV[0]
+
+puts "Saving tag files to #{target_dir}"
+
+@binddn = configurations["settings"]["ldap_server"]["bind_dn"]
+@bindpw = configurations["settings"]["ldap_server"]["password"]
+@ldaphost = configurations["settings"]["ldap_server"]["host"]
+@ldapuri = "ldap://#{@ldaphost}"
+@exclude = configurations["settings"]["tags"]["exclude_servers"]
+
+@tags = Hash.new
+@tags['all_servers'] = Array.new
+
+def get_servers(suffix)
+  serverlist = ""
+
+  conn = LDAP::SSLConn.new(host=@ldaphost, port=636)
+  conn.set_option(LDAP::LDAP_OPT_PROTOCOL_VERSION, 3)
+
+  devices = Hash.new
+  name = suffix
+
+  conn.bind(@binddn, @bindpw) do
+    begin
+      conn.search(suffix, LDAP::LDAP_SCOPE_BASE, "(objectClass=eduOrg)") {|e|
+        name = e.get_values('puavoDomain')[0]
+      }
+
+      conn.search(suffix, LDAP::LDAP_SCOPE_SUBTREE, "(objectClass=puavoServer)") {|e|
+	server_name = "#{e.get_values('cn')}.#{name}"
+        if e.get_values('puavoTag')
+          e.get_values('puavoTag').each {|tag|
+            if @tags.has_key?(tag)
+              server_list = @tags[tag]
+            else
+              server_list = Array.new
+              @tags[tag] = server_list
+            end
+
+            if !server_list.include?(server_name)
+              server_list << server_name
+            end
+          }
+        end
+
+        @tags['all_servers'] << server_name
+      }
+    rescue LDAP::ResultError
+      conn.perror("Virhe")
+      puts "Virhe"
+    end  
+  end
+end
+
+conn = LDAP::SSLConn.new(host=@ldaphost, port=636)
+conn.set_option(LDAP::LDAP_OPT_PROTOCOL_VERSION, 3)
+
+conn.bind(@binddn, @bindpw) do
+  begin
+    conn.search("", LDAP::LDAP_SCOPE_BASE, "(objectClass=*)", ["namingContexts"]) {|e|
+      e.get_values("namingContexts").each {|suffix|
+        if (! @exclude.include?(suffix))
+          get_servers(suffix)
+        end
+      }
+    }
+
+    rescue LDAP::ResultError
+      conn.perror("LDAP connection failed")
+      puts "LDAP connection failed"
+    end  
+end
+
+puts @tags.inspect
+
+@tags.keys.sort.each do |tag|
+  File.open("#{target_dir}/#{tag}", "w") {|f|
+    @tags[tag].each {|server|
+      f.write("#{server}\n")
+    }
+  }
+end

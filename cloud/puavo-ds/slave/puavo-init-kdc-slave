@@ -1,0 +1,73 @@
+#!/usr/bin/ruby
+
+require 'fileutils'
+require 'highline/import'
+require 'tmpdir'
+
+def get_password(prompt="Kerberos master password")
+  ask(prompt) {|q| q.echo = false}
+end
+
+Sentinel_file = '/etc/krb5kdc/init_kdc_slave_done'
+
+if File.exist?(Sentinel_file) and not ARGV[0] == '--force'
+  puts "#{ Sentinel_file } exists, use the --force, Mikko!"
+  exit 1
+end
+
+@ldap_binddn       = File.read('/etc/puavo/ldap/dn'        ).chomp
+@ldap_bindpw       = File.read('/etc/puavo/ldap/password'  ).chomp
+@ldap_master       = File.read('/etc/puavo/ldap/master'    ).chomp
+@ldap_base         = File.read('/etc/puavo/ldap/base'      ).chomp
+@kerberos_master   = File.read('/etc/puavo/kerberos/master').chomp
+@kerberos_realm    = File.read('/etc/puavo/kerberos/realm' ).chomp
+@kerberos_toprealm = File.read('/etc/puavo/kerberos/toprealm' ).chomp
+@puavo_hostname    = File.read('/etc/puavo/hostname'       ).chomp
+@puavo_domain      = File.read('/etc/puavo/domain'         ).chomp
+@puavo_topdomain   = File.read('/etc/puavo/topdomain'      ).chomp
+
+@kerberos_masterpw = get_password()
+
+conf_template = File.read("/usr/share/puavo-ds-slave/krb5.conf.erb")
+conf = ERB.new(conf_template, 0, "%<>")
+
+File.open("/etc/krb5.conf", "w") do |f|
+  f.write conf.result
+end
+
+conf_template = File.read("/usr/share/puavo-ds-slave/kdc.conf.erb")
+conf = ERB.new(conf_template, 0, "%<>")
+
+File.open("/etc/krb5kdc/kdc.conf", "w") do |f|
+  f.write conf.result
+end
+
+File.delete("/etc/krb5kdc/stash") if File.exists?("/etc/krb5kdc/stash")
+File.delete("/etc/krb5.secrets") if File.exists?("/etc/krb5.secrets")
+File.delete("/etc/krb5.keytab") if File.exists?("/etc/krb5.keytab")
+File.delete("/etc/ldap/krb5.keytab") if File.exists?("/etc/ldap/krb5.keytab")
+File.delete("/etc/puavo/puavo-rest.keytab") if File.exists?("/etc/puavo/puavo-rest.keytab")
+
+`echo "#{@ldap_bindpw}\\n#{@ldap_bindpw}\\n" | /usr/sbin/kdb5_ldap_util stashsrvpw -f /etc/krb5.secrets "#{@ldap_binddn}" 2>/dev/null`
+
+puts `echo "#{@kerberos_masterpw}" | kadmin.local -m -q "ktadd -norandkey -k /etc/krb5kdc/stash K/M"`
+`/etc/init.d/krb5-kdc restart`
+
+# Init keytab files
+
+Dir.mktmpdir do |dir|
+  puts "DIR: #{dir}"
+
+  system("kadmin.local -q \"ktadd -norandkey -k #{dir}/cups.keytab IPP/#{ @puavo_hostname }.#{ @puavo_domain }\"")
+  system("kadmin.local -q \"ktadd -norandkey -k #{dir}/system.keytab host/#{ @puavo_hostname }.#{ @puavo_domain }\"")
+  system("kadmin.local -q \"ktadd -norandkey -k #{dir}/system.keytab nfs/#{ @puavo_hostname }.#{ @puavo_domain }\"")
+  system("kadmin.local -q \"ktadd -norandkey -k #{dir}/ldap.keytab ldap/#{ @puavo_hostname }.#{ @puavo_domain }\"")
+  system("kadmin.local -q \"ktadd -norandkey -k #{dir}/http.keytab HTTP/#{ @puavo_hostname }.#{ @puavo_domain }\"")
+
+  system("install -m 0600 #{dir}/cups.keytab /etc/cups/krb5.keytab")
+  system("install -m 0600 #{dir}/system.keytab /etc/krb5.keytab")
+  system("install -m 0640 -g openldap #{dir}/ldap.keytab /etc/ldap/krb5.keytab")
+  system("install -m 0640 -g puavo #{dir}/http.keytab /etc/puavo/puavo-rest.keytab")
+end
+
+FileUtils.touch(Sentinel_file)

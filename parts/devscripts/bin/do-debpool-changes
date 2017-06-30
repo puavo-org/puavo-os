@@ -38,7 +38,7 @@ while [ $# -gt 0 ]; do
             shift
             target_dir=$1
             shift
-            cmd="mv -v -a -n -t ${target_dir}"
+            cmd="mv -v -n -t ${target_dir}"
             ;;
         -r|--remove)
             shift
@@ -74,9 +74,11 @@ while [ $# -gt 0 ]; do
         mkdir -p "${target_dir}"
     fi
 
-    awk -v"source_dir=${source_dir}" \
-        'NR == 1, /^Files:$/ { next } /^ / { printf "%s/%s%c", source_dir, $5, 0 }' \
-        "${changes_file}" | xargs -0 ${cmd}
+    awk -v "source_dir=${source_dir}" '
+        BEGIN { ORS = "\0" }
+        NR == 1, /^Files:$/ { next }
+        /^ / { print source_dir "/" $5 }
+    ' "${changes_file}" | xargs -0 ${cmd}
 
     ${cmd} "${changes_file}"
 done

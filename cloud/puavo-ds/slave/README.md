@@ -1,0 +1,2 @@
+
+# LDAP slave setup tools

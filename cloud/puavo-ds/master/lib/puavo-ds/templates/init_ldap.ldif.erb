@@ -1,0 +1,108 @@
+# Global config:
+dn: cn=config
+objectClass: olcGlobal
+cn: config
+# Read slapd.conf(5) for possible values
+olcLogLevel: none
+# The tool-threads parameter sets the actual amount of cpu's that is used
+# for indexing.
+olcToolThreads: 1
+olcTLSCACertificateFile: /etc/ssl/certs/slapd-ca.crt
+olcTLSCertificateFile: /etc/ssl/certs/slapd-server.crt
+olcTLSCertificateKeyFile: /etc/ssl/certs/slapd-server.key
+olcLocalSSF: 128
+olcSecurity: ssf=128
+olcSizeLimit: unlimited
+olcPasswordCryptSaltFormat: "$6$%.12s"
+
+dn: olcDatabase={-1}frontend,cn=config
+objectClass: olcDatabaseConfig
+objectClass: olcFrontendConfig
+olcDatabase: {-1}frontend
+# The maximum number of entries that is returned for a search operation
+olcSizeLimit: 500
+# Allow unlimited access to local connection from the local root user
+olcAccess: {0}to * by dn.exact=gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth manage by * break
+olcAccess: {1}to dn.base="" by * read
+olcAccess: {2}to dn.base="cn=subschema" by * read
+olcPasswordHash: {CRYPT}
+
+# Config db settings
+dn: olcDatabase=config,cn=config
+objectClass: olcDatabaseConfig
+olcDatabase: config
+# Allow unlimited access to local connection from the local root user
+olcAccess: to * by dn.exact=gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth manage by * break
+olcSizeLimit: unlimited
+
+# Load schemas
+dn: cn=schema,cn=config
+objectClass: olcSchemaConfig
+cn: schema
+
+include: file:///etc/ldap/schema/core.ldif
+include: file:///etc/ldap/schema/cosine.ldif
+include: file:///etc/ldap/schema/nis.ldif
+include: file:///etc/ldap/schema/inetorgperson.ldif
+include: file:///etc/ldap/schema/misc.ldif
+include: file:///etc/ldap/schema/ppolicy.ldif
+include: file:///etc/ldap/schema/samba.ldif
+include: file:///etc/ldap/schema/autofs.ldif
+include: file:///etc/ldap/schema/kerberos.ldif
+include: file:///etc/ldap/schema/eduorg.ldif
+include: file:///etc/ldap/schema/eduperson.ldif
+include: file:///etc/ldap/schema/edumember.ldif
+include: file:///etc/ldap/schema/puppet.ldif
+include: file:///etc/ldap/schema/dnsdomain2.ldif
+include: file:///etc/ldap/schema/printer.ldif
+include: file:///etc/ldap/schema/puavo.ldif
+include: file:///etc/ldap/schema/dhcp.ldif
+
+dn: cn=module{0},cn=config
+objectClass: olcModuleList
+cn: module{0}
+olcModulePath: /usr/lib/ldap
+olcModuleLoad: {0}back_hdb
+olcModuleLoad: {1}dynlist
+olcModuleLoad: {2}unique
+olcModuleLoad: {3}ppolicy
+olcModuleLoad: {4}syncprov
+olcModuleLoad: {5}memberof
+olcModuleLoad: {6}valsort
+olcModuleLoad: {7}auditlog
+olcModuleLoad: {8}refint
+olcModuleLoad: {9}constraint
+olcModuleLoad: {10}accesslog
+olcModuleLoad: {11}smbkrb5pwd_srv
+
+dn: olcOverlay={0}syncprov,olcDatabase={0}config,cn=config
+objectClass: olcSyncProvConfig
+objectClass: olcOverlayConfig
+olcOverlay: {0}syncprov
+
+dn: olcDatabase={1}hdb,cn=config
+objectClass: olcDatabaseConfig
+objectClass: olcHdbConfig
+olcDatabase: {1}hdb
+olcDbDirectory: /var/lib/ldap/o=puavo
+olcSuffix: o=puavo
+olcLastMod: TRUE
+olcRootDN: uid=admin,o=puavo
+olcRootPW: <%= @rootpw_hash %>
+olcDbCheckpoint: 512 30
+olcDbConfig: {0}set_cachesize 0 10485760 0
+olcDbConfig: {1}set_lg_bsize 2097512
+olcDbConfig: {2}set_flags DB_LOG_AUTOREMOVE
+olcDbIndex: uid pres,eq
+olcDbIndex: cn,sn,mail pres,eq,approx,sub
+olcDbIndex: objectClass eq
+olcAccess: {0}to attrs=userPassword by anonymous auth
+olcAccess: {1}to dn.exact="cn=idPool,o=Puavo" attrs="puavoNextGidNumber,puavoNextUidNumber,puavoNextId" by dn.exact="uid=puavo,o=Puavo" write
+olcAccess: {2}to dn.subtree="ou=Kerberos Realms,o=Puavo" by dn.exact="uid=kadmin,o=puavo" write by dn.exact="uid=kdc,o=puavo" read
+olcAccess: {3}to dn.exact="o=Puavo" by dn="uid=kadmin,o=puavo" read by dn.exact="uid=kdc,o=puavo" read by dn.exact="uid=puavo,o=Puavo" read
+olcAccess: {4}to dn.subtree="o=Puavo" by dn.exact="uid=puavo,o=Puavo" read
+
+dn: olcOverlay={0}syncprov,olcDatabase={1}hdb,cn=config
+objectClass: olcSyncProvConfig
+objectClass: olcOverlayConfig
+olcOverlay: {0}syncprov
