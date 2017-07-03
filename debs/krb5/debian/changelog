@@ -1,3 +1,9 @@
+krb5 (1.20.1-2+deb12u1+puavo1) bookworm; urgency=high
+
+  * Added a patch to increase maximum number of realms.
+
+ -- Puavo Org <dev@opinsys.fi>  Tue, 14 Mar 2023 10:23:22 +0200
+
 krb5 (1.20.1-2+deb12u1) bookworm; urgency=high
 
   * Fixes CVE-2023-36054: a  remote authenticated attacker can cause
