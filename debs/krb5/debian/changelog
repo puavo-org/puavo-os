@@ -1,3 +1,9 @@
+krb5 (1.18.3-6+puavo1) bullseye; urgency=medium
+
+  * Added a patch to increase maximum number of realms.
+
+ -- Puavo Org <dev@opinsys.fi>  Thu, 19 Aug 2021 12:28:55 +0300
+
 krb5 (1.18.3-6) unstable; urgency=high
 
   * Pull in upstream patch to fix CVE-2021-36222 (KDC NULL dereference),
