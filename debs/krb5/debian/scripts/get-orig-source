@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -eu
+
+upstream_version=$(dpkg-parsechangelog | sed -ne 's/^Version: \(\([0-9]\+\):\)\?\(.*\)-.*/\3/p')
+orig_tarball="../krb5_${upstream_version}.orig.tar.gz"
+
+if [ ! -e "${orig_tarball}" ]; then
+  wget -O "${orig_tarball}.tmp" \
+       "http://web.mit.edu/kerberos/dist/krb5/${upstream_version}/krb5-${upstream_version}.tar.gz"
+  tar -zxf "${orig_tarball}.tmp" --strip-components=1
+  mv "${orig_tarball}.tmp" "${orig_tarball}"
+fi
