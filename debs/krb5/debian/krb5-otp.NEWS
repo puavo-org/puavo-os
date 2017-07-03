@@ -1,0 +1,7 @@
+krb5 (1.13~alpha1+dfsg-1) experimental; urgency=low
+    The default location of the socket used by the OTP plugin has moved
+    from /etc/krb5kdc to /run/krb5kdc/.  If the "zero-conf" krb5-otp
+    functionality is in use, the software providing the other end of
+    the socket must be adjusted to use the new path.
+
+ -- Benjamin Kaduk <kaduk@mit.edu>  Thu, 28 Aug 2014 23:49:41 -0400

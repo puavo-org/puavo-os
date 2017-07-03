@@ -1,0 +1,40 @@
+From 57ca06990b44b57f7dedf306a7f06fd876770cca Mon Sep 17 00:00:00 2001
+From: Ben Kaduk <kaduk@mit.edu>
+Date: Fri, 29 Mar 2013 20:53:37 -0400
+Subject: Add substpdf target
+
+Akin to substhtml, so that we can build PDF documents without
+overwriting the upstream-provided versions and causing debian/rules clean
+to not return to the original state.
+
+Patch-Category: debian-local
+---
+ src/doc/Makefile.in | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/src/doc/Makefile.in b/src/doc/Makefile.in
+index 1fb5fea..043de76 100644
+--- a/src/doc/Makefile.in
++++ b/src/doc/Makefile.in
+@@ -87,6 +87,21 @@ pdf: $(PDFDIR)
+ 	 rm -f *.dvi *.log *.ind *.aux *.toc *.syn *.idx *.out *.ilg *.pla \
+ 	)
+ 
++substpdf: rst_composite
++	$(SPHINX_BUILD) -t pathsubs -b latex -q rst_composite pdf_subst
++	mv pdf_subst/Makefile pdf_subst/GMakefile
++	(cd pdf_subst && \
++	 for i in $(PDFDOCS); do \
++		texfile=`echo $${i}.tex` && \
++		idxfile=`echo $${i}.idx` && \
++		pdflatex $(LATEXOPTS) $$texfile && \
++		pdflatex $(LATEXOPTS) $$texfile && \
++		makeindex -s python.ist $$idxfile || true; \
++		pdflatex $(LATEXOPTS) $$texfile && \
++		pdflatex $(LATEXOPTS) $$texfile; done && \
++	 rm -f *.dvi *.log *.ind *.aux *.toc *.syn *.idx *.out *.ilg *.pla \
++	)
++
+ # Use doxygen to generate API documentation, translate it into RST
+ # format, and then create a composite of $(docsrc)'s RST and the
+ # generated files in rst_composite.  Used by the html and substhtml targets.

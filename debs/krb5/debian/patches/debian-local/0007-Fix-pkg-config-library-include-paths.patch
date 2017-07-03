@@ -1,0 +1,102 @@
+From 0aba055f646db233fa38641a27849468fb3e7f5f Mon Sep 17 00:00:00 2001
+From: Jelmer Vernooij <jelmer@debian.org>
+Date: Wed, 27 Aug 2014 16:40:29 -0400
+Subject: Fix pkg-config library/include paths
+
+Include library and include flags in pkg-config files, so they work when the
+symlinks provided by libkrb5-dev are not installed.
+
+Patch-Category: debian-local
+---
+ src/build-tools/gssrpc.pc.in          | 4 ++--
+ src/build-tools/kadm-client.pc.in     | 4 ++--
+ src/build-tools/kadm-server.pc.in     | 4 ++--
+ src/build-tools/kdb.pc.in             | 4 ++--
+ src/build-tools/mit-krb5-gssapi.pc.in | 4 ++--
+ src/build-tools/mit-krb5.pc.in        | 4 ++--
+ 6 files changed, 12 insertions(+), 12 deletions(-)
+
+diff --git a/src/build-tools/gssrpc.pc.in b/src/build-tools/gssrpc.pc.in
+index ca90921..e08c2e8 100644
+--- a/src/build-tools/gssrpc.pc.in
++++ b/src/build-tools/gssrpc.pc.in
+@@ -1,7 +1,7 @@
+ prefix=@prefix@
+ exec_prefix=@exec_prefix@
+-libdir=@libdir@
+-includedir=@includedir@
++libdir=@libdir@/mit-krb5
++includedir=@includedir@/mit-krb5
+ vendor=MIT
+ 
+ Name: gssrpc
+diff --git a/src/build-tools/kadm-client.pc.in b/src/build-tools/kadm-client.pc.in
+index c8d1cd1..de56a75 100644
+--- a/src/build-tools/kadm-client.pc.in
++++ b/src/build-tools/kadm-client.pc.in
+@@ -1,7 +1,7 @@
+ prefix=@prefix@
+ exec_prefix=@exec_prefix@
+-libdir=@libdir@
+-includedir=@includedir@
++libdir=@libdir@/mit-krb5
++includedir=@includedir@/mit-krb5
+ 
+ Name: kadm-client
+ Description: Kerberos administration client library
+diff --git a/src/build-tools/kadm-server.pc.in b/src/build-tools/kadm-server.pc.in
+index cd2f86c..a73ff86 100644
+--- a/src/build-tools/kadm-server.pc.in
++++ b/src/build-tools/kadm-server.pc.in
+@@ -1,7 +1,7 @@
+ prefix=@prefix@
+ exec_prefix=@exec_prefix@
+-libdir=@libdir@
+-includedir=@includedir@
++libdir=@libdir@/mit-krb5
++includedir=@includedir@/mit-krb5
+ 
+ Name: kadm-server
+ Description: Kerberos administration server library
+diff --git a/src/build-tools/kdb.pc.in b/src/build-tools/kdb.pc.in
+index 461a8d01d0..356501d 100644
+--- a/src/build-tools/kdb.pc.in
++++ b/src/build-tools/kdb.pc.in
+@@ -1,7 +1,7 @@
+ prefix=@prefix@
+ exec_prefix=@exec_prefix@
+-libdir=@libdir@
+-includedir=@includedir@
++libdir=@libdir@/mit-krb5
++includedir=@includedir@/mit-krb5
+ 
+ KDB5_DB_LIB=@KDB5_DB_LIB@
+ 
+diff --git a/src/build-tools/mit-krb5-gssapi.pc.in b/src/build-tools/mit-krb5-gssapi.pc.in
+index 7b91b19..b2b2436 100644
+--- a/src/build-tools/mit-krb5-gssapi.pc.in
++++ b/src/build-tools/mit-krb5-gssapi.pc.in
+@@ -1,7 +1,7 @@
+ prefix=@prefix@
+ exec_prefix=@exec_prefix@
+-libdir=@libdir@
+-includedir=@includedir@
++libdir=@libdir@/mit-krb5
++includedir=@includedir@/mit-krb5
+ 
+ Name: mit-krb5-gssapi
+ Description: Kerberos implementation of the GSSAPI
+diff --git a/src/build-tools/mit-krb5.pc.in b/src/build-tools/mit-krb5.pc.in
+index 0308815..058e75f 100644
+--- a/src/build-tools/mit-krb5.pc.in
++++ b/src/build-tools/mit-krb5.pc.in
+@@ -1,7 +1,7 @@
+ prefix=@prefix@
+ exec_prefix=@exec_prefix@
+-libdir=@libdir@
+-includedir=@includedir@
++libdir=@libdir@/mit-krb5
++includedir=@includedir@/mit-krb5
+ 
+ defccname=@DEFCCNAME@
+ defktname=@DEFKTNAME@

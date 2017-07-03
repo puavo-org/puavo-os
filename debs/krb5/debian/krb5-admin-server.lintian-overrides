@@ -1,0 +1,2 @@
+# lintian gets confused because of the disable call for RUN_KADMIND removal
+krb5-admin-server: duplicate-updaterc.d-calls-in-postinst krb5-admin-server

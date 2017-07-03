@@ -1,0 +1,51 @@
+#! /bin/sh
+
+set -e
+
+# Failing to start should not break installs or upgrades
+init_error() {
+    true
+    }
+
+if [ "configure" = "$1" ] || [ "reconfigure" = "$1" ] ; then
+    . /usr/share/debconf/confmodule
+    db_version 2.0
+
+    db_get krb5-config/default_realm || true
+    KRB5LD_DEFAULT_REALM="$RET"
+    if [ -z "$KRB5LD_DEFAULT_REALM" ] ; then
+        KRB5LD_DEFAULT_REALM=EXAMPLE.COM
+    fi
+    export KRB5LD_DEFAULT_REALM
+
+    db_get krb5-kdc/debconf
+    DEBCONF="$RET"
+
+    if [ ! -f /etc/krb5kdc/kdc.conf ] && [ $DEBCONF = "true" ] ; then
+        sed -e "s/@MYREALM/$KRB5LD_DEFAULT_REALM/" \
+            /usr/share/krb5-kdc/kdc.conf.template > /etc/krb5kdc/kdc.conf
+    fi
+
+    if [ $DEBCONF = "true" ] ; then
+        if [ -f "/etc/default/krb5-kdc" ] ; then
+            . /etc/default/krb5-kdc
+        fi
+        cat <<'EOF' > /etc/default/krb5-kdc
+
+# Automatically generated.  Only the value of DAEMON_ARGS will be preserved.
+# If you change anything in this file other than DAEMON_ARGS, first run
+# dpkg-reconfigure krb5-kdc and disable managing the KDC configuration with
+# debconf.  Otherwise, changes will be overwritten.
+
+EOF
+        if [ -n "$DAEMON_ARGS" ] ; then
+            echo "DAEMON_ARGS=\"$DAEMON_ARGS\"" >> /etc/default/krb5-kdc
+        fi
+    fi
+
+    db_stop
+fi
+
+#DEBHELPER#
+
+exit 0

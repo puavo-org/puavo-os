@@ -1,0 +1,15 @@
+krb5-kdc (1.14+dfsg-1) unstable; urgency=high
+
+  In this version of the kdc, a new package is introduced, krb5-kpropd.  This package should be installed on all slave KDCs that need the kpropd daemon.  Future versions of krb5-kdc will drop  the kpropd binary.  Today the only effect of installing krb5-kpropd is that init scripts and systemd service files will be installed for kpropd.  If the krb5-kpropd package is not installed on slave KDCs by the time that the kpropd binaries are removed, then slave functionality will fail until the package is installed.
+  
+
+
+ -- Sam Hartman <hartmans@debian.org>  Thu, 25 Feb 2016 08:03:11 -0500
+
+krb5 (1.12.1+dfsg-11) unstable; urgency=medium
+
+  This version includes systemd unit files.  In previous versions of krb5-admin-server, debconf was used to determine whether to use kadmind.  With this version, update-rc.d  krb5-admin-server disable should be used to disable the Kerberos administration daemon.
+
+
+ -- Sam Hartman <hartmans@debian.org>  Mon, 20 Oct 2014 16:39:32 -0400
+

@@ -1,0 +1,41 @@
+From 5575b130aff6ea77c5f3cb544c76a66e9abbcd6e Mon Sep 17 00:00:00 2001
+From: Sam Hartman <hartmans@debian.org>
+Date: Mon, 26 Dec 2011 18:12:39 -0500
+Subject: debian: install ldap library in subdirectory
+
+Debian received a request to install the internal ldap library not in
+the main lib directory.
+
+We are changing SHLIB_DIRS from the default that upstream sets in the
+makefile includes; assign unconditionally the full value.
+
+Patch-Category: debian-local
+---
+ src/plugins/kdb/ldap/Makefile.in           | 1 +
+ src/plugins/kdb/ldap/ldap_util/Makefile.in | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/src/plugins/kdb/ldap/Makefile.in b/src/plugins/kdb/ldap/Makefile.in
+index 94df816..2ed562b 100644
+--- a/src/plugins/kdb/ldap/Makefile.in
++++ b/src/plugins/kdb/ldap/Makefile.in
+@@ -20,6 +20,7 @@ SHLIB_EXPDEPS = \
+ 	$(TOPLIBD)/libkrb5$(SHLIBEXT) \
+ 	$(TOPLIBD)/lib$(SUPPORT_LIBNAME)$(SHLIBEXT)
+ SHLIB_EXPLIBS= -lkdb_ldap $(GSSRPC_LIBS) -lkrb5 -lcom_err -lk5crypto -lkrb5support $(LIBS)
++SHLIB_DIRS=-L$(TOPLIBD) -Wl,-rpath,$(KRB5_LIBDIR)/krb5
+ 
+ SRCS= 	$(srcdir)/ldap_exp.c
+ 
+diff --git a/src/plugins/kdb/ldap/ldap_util/Makefile.in b/src/plugins/kdb/ldap/ldap_util/Makefile.in
+index 8669c24..2d92a26 100644
+--- a/src/plugins/kdb/ldap/ldap_util/Makefile.in
++++ b/src/plugins/kdb/ldap/ldap_util/Makefile.in
+@@ -2,6 +2,7 @@ mydir=plugins$(S)kdb$(S)ldap$(S)ldap_util
+ BUILDTOP=$(REL)..$(S)..$(S)..$(S)..
+ DEFINES = -DKDB4_DISABLE
+ LOCALINCLUDES = -I. -I$(srcdir)/../libkdb_ldap -I$(top_srcdir)/lib/kdb
++PROG_LIBPATH=-L$(TOPLIBD) $(KRB4_LIBPATH)  -Wl,-rpath,$(KRB5_LIBDIR)/krb5
+ #KDB_DEP_LIB=$(DL_LIB) $(THREAD_LINKOPTS)
+ KDB_DEP_LIB=$(DL_LIB) -lkdb_ldap $(THREAD_LINKOPTS)
+ 

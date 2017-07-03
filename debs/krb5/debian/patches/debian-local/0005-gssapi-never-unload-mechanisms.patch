@@ -1,0 +1,34 @@
+From eb891f5577ef4a926a53ed9f8e855f1aded857bd Mon Sep 17 00:00:00 2001
+From: Benjamin Kaduk <kaduk@mit.edu>
+Date: Fri, 29 Mar 2013 17:18:40 -0400
+Subject: gssapi: never unload mechanisms
+
+It turns out that many GSSAPI mechanisms link to the main gss-api
+library creating a circular reference. Depending on how the linker
+breaks the cycle at process exit time, the linker may unload the GSS
+library after unloading the mechanisms. The explicit dlclose from the
+GSS library tends to cause a libdl assertion failure at that
+point. So, never unload plugins. They are refcounted, so dlopen
+handles will not leak, although obviously the memory from the plugin
+is never reclaimed.
+
+ticket: 7135
+
+Patch-Category: debian-local
+---
+ src/lib/gssapi/mechglue/g_initialize.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/src/lib/gssapi/mechglue/g_initialize.c b/src/lib/gssapi/mechglue/g_initialize.c
+index 9197666..890bd2c 100644
+--- a/src/lib/gssapi/mechglue/g_initialize.c
++++ b/src/lib/gssapi/mechglue/g_initialize.c
+@@ -562,8 +562,6 @@ releaseMechInfo(gss_mech_info *pCf)
+ 		generic_gss_release_oid(&minor_status, &cf->mech_type);
+ 	if (cf->freeMech)
+ 		zapfree(cf->mech, sizeof(*cf->mech));
+-	if (cf->dl_handle != NULL)
+-		krb5int_close_plugin(cf->dl_handle);
+ 	if (cf->int_mech_type != GSS_C_NO_OID)
+ 		generic_gss_release_oid(&minor_status, &cf->int_mech_type);
+ 

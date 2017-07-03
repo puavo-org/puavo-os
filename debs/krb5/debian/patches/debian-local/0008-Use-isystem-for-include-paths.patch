@@ -1,0 +1,109 @@
+From 94654c3868e1f60bcce02ef8ee4019bf05260817 Mon Sep 17 00:00:00 2001
+From: Jelmer Vernooij <jelmer@debian.org>
+Date: Wed, 3 Sep 2014 22:41:55 -0400
+Subject: Use -isystem for include paths
+
+ This is necessary so Kerberos headers files are classified as "system headers"
+ by the compiler, and thus not subject to the same strict warnings as
+ other headers (which breaks compilation if -Werror is specified).
+ .
+ This fixes the build of folks using -Werror and including Kerberos headers
+ when the latter are installed in a non-standard location (e.g.
+ /usr/include/tuple/mit-krb5, as Debian is doing).
+(cherry picked from commit d8520c1d1c218e3c766009abc728b207c0421232)
+
+Author: Jelmer Vernooij <jelmer@debian.org>
+Bug-Debian: http://bugs.debian.org/751760
+Patch-Category: debian-local
+---
+ src/build-tools/gssrpc.pc.in          | 2 +-
+ src/build-tools/kadm-client.pc.in     | 2 +-
+ src/build-tools/kadm-server.pc.in     | 2 +-
+ src/build-tools/kdb.pc.in             | 2 +-
+ src/build-tools/krb5-config.in        | 2 +-
+ src/build-tools/mit-krb5-gssapi.pc.in | 2 +-
+ src/build-tools/mit-krb5.pc.in        | 2 +-
+ 7 files changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/src/build-tools/gssrpc.pc.in b/src/build-tools/gssrpc.pc.in
+index e08c2e8..fb4f489 100644
+--- a/src/build-tools/gssrpc.pc.in
++++ b/src/build-tools/gssrpc.pc.in
+@@ -7,6 +7,6 @@ vendor=MIT
+ Name: gssrpc
+ Description: GSSAPI RPC implementation
+ Version: @KRB5_VERSION@
+-Cflags: -I${includedir}
++Cflags: -isystem ${includedir}
+ Libs: -L${libdir} -lgssrpc
+ Requires.private: mit-krb5-gssapi
+diff --git a/src/build-tools/kadm-client.pc.in b/src/build-tools/kadm-client.pc.in
+index de56a75..47541ac 100644
+--- a/src/build-tools/kadm-client.pc.in
++++ b/src/build-tools/kadm-client.pc.in
+@@ -7,5 +7,5 @@ Name: kadm-client
+ Description: Kerberos administration client library
+ Version: @KRB5_VERSION@
+ Requires.private: mit-krb5-gssapi gssrpc
+-Cflags: -I${includedir}
++Cflags: -isystem ${includedir}
+ Libs: -L${libdir} -lkadm5clnt_mit
+diff --git a/src/build-tools/kadm-server.pc.in b/src/build-tools/kadm-server.pc.in
+index a73ff86..5ce4b73 100644
+--- a/src/build-tools/kadm-server.pc.in
++++ b/src/build-tools/kadm-server.pc.in
+@@ -7,5 +7,5 @@ Name: kadm-server
+ Description: Kerberos administration server library
+ Version: @KRB5_VERSION@
+ Requires.private: kdb mit-krb5-gssapi
+-Cflags: -I${includedir}
++Cflags: -isystem ${includedir}
+ Libs: -L${libdir} -lkadm5srv_mit
+diff --git a/src/build-tools/kdb.pc.in b/src/build-tools/kdb.pc.in
+index 356501d..d39eeef 100644
+--- a/src/build-tools/kdb.pc.in
++++ b/src/build-tools/kdb.pc.in
+@@ -9,6 +9,6 @@ Name: kdb
+ Description: Kerberos database access libraries
+ Version: @KRB5_VERSION@
+ Requires.private: mit-krb5-gssapi mit-krb5 gssrpc
+-Cflags: -I${includedir}
++Cflags: -isystem ${includedir}
+ Libs: -L${libdir} -lkdb5
+ Libs.private: ${KDB5_DB_LIB}
+diff --git a/src/build-tools/krb5-config.in b/src/build-tools/krb5-config.in
+index 637bad7..5a109b0 100755
+--- a/src/build-tools/krb5-config.in
++++ b/src/build-tools/krb5-config.in
+@@ -201,7 +201,7 @@ fi
+ 
+ if test -n "$do_cflags"; then
+     if test x"$includedir" != x"/usr/include" ; then
+-        echo "-I${includedir}"
++        echo "-isystem ${includedir}"
+     else
+         echo ''
+     fi
+diff --git a/src/build-tools/mit-krb5-gssapi.pc.in b/src/build-tools/mit-krb5-gssapi.pc.in
+index b2b2436..f919222 100644
+--- a/src/build-tools/mit-krb5-gssapi.pc.in
++++ b/src/build-tools/mit-krb5-gssapi.pc.in
+@@ -7,5 +7,5 @@ Name: mit-krb5-gssapi
+ Description: Kerberos implementation of the GSSAPI
+ Version: @KRB5_VERSION@
+ Requires.private: mit-krb5
+-Cflags: -I${includedir}
++Cflags: -isystem ${includedir}
+ Libs: -L${libdir} -lgssapi_krb5
+diff --git a/src/build-tools/mit-krb5.pc.in b/src/build-tools/mit-krb5.pc.in
+index 058e75f..455427a 100644
+--- a/src/build-tools/mit-krb5.pc.in
++++ b/src/build-tools/mit-krb5.pc.in
+@@ -10,6 +10,6 @@ defcktname=@DEFCKTNAME@
+ Name: mit-krb5
+ Description: An implementation of Kerberos network authentication
+ Version: @KRB5_VERSION@
+-Cflags: -I${includedir}
++Cflags: -isystem ${includedir}
+ Libs: -L${libdir} -lkrb5 -lk5crypto -lcom_err
+ Libs.private: -lkrb5support

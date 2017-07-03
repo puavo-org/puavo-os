@@ -1,0 +1,18 @@
+#! /bin/sh
+
+set -e
+
+init_error() {
+    echo failed to stop krb5-kdc
+    exit 1
+    }
+
+if test "remove" = "$1"; then
+    if which update-inetd >/dev/null 2>&1 ; then
+	update-inetd --remove '#?krb5_prop.*/usr/sbin/kpropd'
+    fi
+fi
+
+#DEBHELPER#
+
+exit 0

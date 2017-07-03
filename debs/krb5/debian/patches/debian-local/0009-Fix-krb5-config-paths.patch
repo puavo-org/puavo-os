@@ -1,0 +1,47 @@
+From b513e731f2ac081fba65ad819e828bd815fac5af Mon Sep 17 00:00:00 2001
+From: Jelmer Vernooij <jelmer@debian.org>
+Date: Sun, 20 Apr 2014 15:59:08 +0200
+Subject: Fix krb5-config paths
+
+Include library and include flags in krb5-config, so they
+work when the symlinks provided by libkrb5-dev are not
+installed.
+
+(cherry picked from commit 33c4b2ebf6688af9cdb71d3795187ddc1601b849)
+Patch-Category: debian-local
+---
+ src/build-tools/krb5-config.in | 14 +++-----------
+ 1 file changed, 3 insertions(+), 11 deletions(-)
+
+diff --git a/src/build-tools/krb5-config.in b/src/build-tools/krb5-config.in
+index 5a109b0..723d1eb 100755
+--- a/src/build-tools/krb5-config.in
++++ b/src/build-tools/krb5-config.in
+@@ -29,8 +29,8 @@ version_string="Kerberos 5 release @KRB5_VERSION@"
+ 
+ prefix=@prefix@
+ exec_prefix=@exec_prefix@
+-includedir=@includedir@
+-libdir=@libdir@
++includedir=@includedir@/mit-krb5
++libdir=@libdir@/mit-krb5
+ CC_LINK='@CC_LINK@'
+ KDB5_DB_LIB=@KDB5_DB_LIB@
+ LDFLAGS='@LDFLAGS@'
+@@ -209,15 +209,7 @@ fi
+ 
+ 
+ if test -n "$do_libs"; then
+-    # Assumes /usr/lib is the standard library directory everywhere...
+-    case $libdir in
+-	/usr/lib*)
+-	    libdirarg=
+-	    ;;
+-	*)
+-	    libdirarg="-L$libdir"
+-	    ;;
+-    esac
++	libdirarg="-L$libdir"
+     # Ugly gross hack for our build tree
+     lib_flags=`echo $CC_LINK | sed -e 's/\$(CC)//' \
+ 	    -e 's/\$(PURE)//' \
