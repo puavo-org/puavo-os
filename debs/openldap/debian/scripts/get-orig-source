@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -eu
+
+upstream_version=$(dpkg-parsechangelog -S Version | sed 's/.*: //;s/\+dfsg//;s/-.*//')
+orig_tarball="../openldap_${upstream_version}.orig.tar.gz"
+
+if [ ! -e "${orig_tarball}" ]; then
+  wget -O "${orig_tarball}.tmp" \
+       "http://www.openldap.org/software/download/OpenLDAP/openldap-release/openldap-${upstream_version}.tgz"
+  tar -zxf "${orig_tarball}.tmp" --strip-components=1
+  mv "${orig_tarball}.tmp" "${orig_tarball}"
+fi
