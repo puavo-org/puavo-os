@@ -45,7 +45,7 @@ clean:
 .dpkg-buildpackage-%: %
 	cd $<						\
 		&& debian/scripts/get-orig-source	\
-		&& dpkg-buildpackage -uc -us		\
+		&& dpkg-buildpackage -sa -uc -us	\
 		&& ../../parts/devscripts/bin/do-debpool-changes -m $(CURDIR)/pool
 
 .PHONY: update-repo
