@@ -1,0 +1,12 @@
+usr/lib/${DEB_HOST_MULTIARCH}/lib*.so usr/lib/${DEB_HOST_MULTIARCH}/mit-krb5
+usr/lib/${DEB_HOST_MULTIARCH}/pkgconfig/mit-krb5.pc usr/lib/${DEB_HOST_MULTIARCH}/pkgconfig
+usr/lib/${DEB_HOST_MULTIARCH}/pkgconfig/mit-krb5-gssapi.pc usr/lib/${DEB_HOST_MULTIARCH}/pkgconfig
+usr/lib/${DEB_HOST_MULTIARCH}/pkgconfig/gssrpc.pc usr/lib/${DEB_HOST_MULTIARCH}/pkgconfig/mit-krb5
+usr/lib/${DEB_HOST_MULTIARCH}/pkgconfig/kadm-client.pc usr/lib/${DEB_HOST_MULTIARCH}/pkgconfig/mit-krb5
+usr/lib/${DEB_HOST_MULTIARCH}/pkgconfig/kadm-server.pc usr/lib/${DEB_HOST_MULTIARCH}/pkgconfig/mit-krb5
+usr/lib/${DEB_HOST_MULTIARCH}/pkgconfig/kdb.pc usr/lib/${DEB_HOST_MULTIARCH}/pkgconfig/mit-krb5
+usr/lib/${DEB_HOST_MULTIARCH}/pkgconfig/krb5-gssapi.pc usr/lib/${DEB_HOST_MULTIARCH}/pkgconfig/mit-krb5
+usr/lib/${DEB_HOST_MULTIARCH}/pkgconfig/krb5.pc usr/lib/${DEB_HOST_MULTIARCH}/pkgconfig/mit-krb5
+usr/include/* usr/include/mit-krb5
+usr/bin/krb5-config.mit
+usr/share/man/man1/krb5-config.mit.1

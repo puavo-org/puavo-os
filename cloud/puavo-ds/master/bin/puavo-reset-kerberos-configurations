@@ -41,11 +41,11 @@ replace = STDIN.gets.chomp
 if replace == "y"
 
   puts "\nStop krb5-kdc service\n\n"
-  `stop krb5-kdc`
+  `service krb5-kdc stop`
 
   kerberos_configuration.replace_server_configurations
 
   puts "\nStart krb5-kdc service\n\n"
-  `start krb5-kdc`
+  `service krb5-kdc start`
 end
 

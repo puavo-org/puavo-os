@@ -11,7 +11,7 @@ _pkgs_ports     := autopoweroff    \
 _pkgs_image     := $(_pkgs_parts) $(_pkgs_ports)
 
 # cloud packages do NOT go into puavo-os images
-_pkgs_cloud     := openldap puavo-ds
+_pkgs_cloud     := krb5 openldap puavo-ds
 
 _dpkg_buildpackage_cloud := $(_pkgs_cloud:%=.dpkg-buildpackage-%)
 _dpkg_buildpackage_parts := $(_pkgs_parts:%=.dpkg-buildpackage-%)
@@ -45,7 +45,7 @@ clean:
 .dpkg-buildpackage-%: %
 	cd $<						\
 		&& debian/scripts/get-orig-source	\
-		&& dpkg-buildpackage -uc -us		\
+		&& dpkg-buildpackage -sa -uc -us	\
 		&& ../../parts/devscripts/bin/do-debpool-changes -m $(CURDIR)/pool
 
 .PHONY: update-repo

@@ -1,0 +1,139 @@
+# krb5 Brazilian Portuguese translation
+# Copyright (C) 2008 THE krb5'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the krb5 package.
+# Eder L. Marques <eder@edermarques.net>, 2008, 2009.
+# Fernando Ike de Oliveira (fike) <fike@midstorm.org>. 2013.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: krb5\n"
+"Report-Msgid-Bugs-To: krb5@packages.debian.org\n"
+"POT-Creation-Date: 2014-10-20 17:18-0400\n"
+"PO-Revision-Date: 2013-08-04 13:54-0300\n"
+"Last-Translator: Fernando Ike de Oliveira (fike) <fike@midstorm.org>\n"
+"Language-Team: Brazilian Portuguese <debian-l10n-portuguese@lists.debian."
+"org>\n"
+"Language: pt_BR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Type: note
+#. Description
+#: ../krb5-admin-server.templates:2001
+msgid "Setting up a Kerberos Realm"
+msgstr "Configurando um Realm Kerberos"
+
+#. Type: note
+#. Description
+#: ../krb5-admin-server.templates:2001
+msgid ""
+"This package contains the administrative tools required to run the Kerberos "
+"master server."
+msgstr ""
+"Este pacote contém as ferramentas administrativas necessárias para executar "
+"o servidor mestre Kerberos."
+
+#. Type: note
+#. Description
+#: ../krb5-admin-server.templates:2001
+msgid ""
+"However, installing this package does not automatically set up a Kerberos "
+"realm.  This can be done later by running the \"krb5_newrealm\" command."
+msgstr ""
+"Contudo, instalar este pacote não configura automaticamente um realm "
+"Kerberos. Isto pode ser feito posteriormente executando o comando "
+"\"krb5_newrealm\"."
+
+#. Type: note
+#. Description
+#: ../krb5-admin-server.templates:2001
+msgid ""
+"Please also read the /usr/share/doc/krb5-kdc/README.KDC file and the "
+"administration guide found in the krb5-doc package."
+msgstr ""
+"Por favor, leia também o arquivo /usr/share/doc/krb5-kdc/README.KDC e o guia "
+"de administração encontrado no pacote krb5-doc."
+
+#. Type: boolean
+#. Description
+#: ../krb5-kdc.templates:2001
+msgid "Create the Kerberos KDC configuration automatically?"
+msgstr "Criar a configuração do Kerberos KDC automaticamente?"
+
+#. Type: boolean
+#. Description
+#: ../krb5-kdc.templates:2001
+msgid ""
+"The Kerberos Key Distribution Center (KDC) configuration files, in /etc/"
+"krb5kdc, may be created automatically."
+msgstr ""
+"Os arquivos de configuração do Centro de Distribuição de Chaves Kerberos "
+"(KDC -- \"Kerberos Key Distribution Center\"), em /etc/krb5kdc, podem ser "
+"criados automaticamente."
+
+#. Type: boolean
+#. Description
+#: ../krb5-kdc.templates:2001
+msgid ""
+"By default, an example template will be copied into this directory with "
+"local parameters filled in."
+msgstr ""
+"Por padrão, um modelo de exemplo será copiado para este diretório com os "
+"parâmetros locais preenchidos."
+
+#. Type: boolean
+#. Description
+#: ../krb5-kdc.templates:2001
+msgid ""
+"Administrators who already have infrastructure to manage their Kerberos "
+"configuration may wish to disable these automatic configuration changes."
+msgstr ""
+"Administradores que já possuem infraestrutura para administrar suas "
+"configurações Kerberos podem desejar desabilitar estas mudanças automáticas "
+"de configuração."
+
+#. Type: boolean
+#. Description
+#: ../krb5-kdc.templates:3001
+msgid "Should the KDC database be deleted?"
+msgstr "O banco de dados do KDC deve ser excluído?"
+
+#. Type: boolean
+#. Description
+#: ../krb5-kdc.templates:3001
+msgid ""
+"By default, removing this package will not delete the KDC database in /var/"
+"lib/krb5kdc/principal since this database cannot be recovered once it is "
+"deleted."
+msgstr ""
+"Por padrão, remover este pacote não excluirá o banco de dados do KDC em /var/"
+"lib/krb5kdc/principal visto que este banco de dados não pode ser recuperado "
+"uma vez excluído."
+
+#. Type: boolean
+#. Description
+#: ../krb5-kdc.templates:3001
+msgid ""
+"Choose this option if you wish to delete the KDC database now, deleting all "
+"of the user accounts and passwords in the KDC."
+msgstr ""
+"Escolha esta opção se você deseja excluir o banco de dados do KDC agora, "
+"excluindo todas as contas de usuários e senhas do KDC."
+
+#~ msgid "Run the Kerberos V5 administration daemon (kadmind)?"
+#~ msgstr "Executar o daemon de administração do Kerberos V5 (kadmind)?"
+
+#~ msgid ""
+#~ "Kadmind serves requests to add/modify/remove principals in the Kerberos "
+#~ "database."
+#~ msgstr ""
+#~ "O kadmind atende requisições para adicionar/modificar/remover \"principals"
+#~ "\" no banco de dados do Kerberos."
+
+#~ msgid ""
+#~ "It is required by the kpasswd program, used to change passwords.  With "
+#~ "standard setups, this daemon should run on the master KDC."
+#~ msgstr ""
+#~ "Ele é necessário para o programa kpasswd, usado para alterar senhas. Com "
+#~ "configurações padrão, este daemon deveria ser executado no KDC mestre."

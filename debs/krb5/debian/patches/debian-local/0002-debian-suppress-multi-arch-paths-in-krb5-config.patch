@@ -1,0 +1,47 @@
+From ad0b1e5a2ce079717c054f88300749ee58dde85a Mon Sep 17 00:00:00 2001
+From: Sam Hartman <hartmans@debian.org>
+Date: Mon, 26 Dec 2011 18:19:53 -0500
+Subject: debian: suppress multi-arch paths in krb5-config
+
+Just match anything that starts with /usr/lib, since that's managed
+by the system; don't require an exact match.
+
+Also include --deps in the usage output, since it is a valid argument.
+
+Patch-Category: debian-local
+---
+ src/build-tools/krb5-config.in | 14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
+
+diff --git a/src/build-tools/krb5-config.in b/src/build-tools/krb5-config.in
+index f6184da..637bad7 100755
+--- a/src/build-tools/krb5-config.in
++++ b/src/build-tools/krb5-config.in
+@@ -138,6 +138,7 @@ if test -n "$do_help"; then
+     echo "        [--defktname]     Show built-in default keytab name"
+     echo "        [--defcktname]    Show built-in default client keytab name"
+     echo "        [--cflags]        Compile time CFLAGS"
++    echo "        [--deps]          Include dependent libraries"
+     echo "        [--libs]          List libraries required to link [LIBRARIES]"
+     echo "Libraries:"
+     echo "        krb5              Kerberos 5 application"
+@@ -209,11 +210,14 @@ fi
+ 
+ if test -n "$do_libs"; then
+     # Assumes /usr/lib is the standard library directory everywhere...
+-    if test "$libdir" = /usr/lib; then
+-	libdirarg=
+-    else
+-	libdirarg="-L$libdir"
+-    fi
++    case $libdir in
++	/usr/lib*)
++	    libdirarg=
++	    ;;
++	*)
++	    libdirarg="-L$libdir"
++	    ;;
++    esac
+     # Ugly gross hack for our build tree
+     lib_flags=`echo $CC_LINK | sed -e 's/\$(CC)//' \
+ 	    -e 's/\$(PURE)//' \

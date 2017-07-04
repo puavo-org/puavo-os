@@ -1,0 +1,8 @@
+krb5 (1.13.1+dfsg-1) experimental; urgency=low
+
+  The KDC process now listens on TCP port 88 as well as UDP port 88 by
+  default.  To disable listening on TCP, set kdc_tcp_ports to the empty
+  string in the [kdcdefaults] section of kdc.conf.
+
+ -- Benjamin Kaduk <kaduk@mit.edu>  Fri, 13 Mar 2015 17:26:53 -0400
+

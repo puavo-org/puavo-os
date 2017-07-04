@@ -1,0 +1,34 @@
+From 38bd4d3391849747a0cc89bcc6182e844af38264 Mon Sep 17 00:00:00 2001
+From: Sam Hartman <hartmans@debian.org>
+Date: Mon, 26 Dec 2011 18:20:11 -0500
+Subject: debian: osconf.hin path changes
+
+Patch-Category: debian-local
+---
+ src/include/osconf.hin | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/include/osconf.hin b/src/include/osconf.hin
+index 98a4674..2f51cc1 100644
+--- a/src/include/osconf.hin
++++ b/src/include/osconf.hin
+@@ -59,7 +59,7 @@
+ #define PLUGIN_EXT              "@DYNOBJEXT"
+ 
+ #define KDC_DIR                 "@LOCALSTATEDIR/krb5kdc"
+-#define KDC_RUN_DIR             "@RUNSTATEDIR/krb5kdc"
++#define KDC_RUN_DIR             "/run/krb5kdc"
+ #define DEFAULT_KDB_FILE        KDC_DIR "/principal"
+ #define DEFAULT_KEYFILE_STUB    KDC_DIR "/.k5."
+ #define KRB5_DEFAULT_ADMIN_ACL  KDC_DIR "/krb5_adm.acl"
+@@ -114,8 +114,8 @@
+  * krb5 slave support follows
+  */
+ 
+-#define KPROP_DEFAULT_FILE KDC_DIR "/slave_datatrans"
+-#define KPROPD_DEFAULT_FILE KDC_DIR "/from_master"
++#define KPROP_DEFAULT_FILE "/var/lib/krb5kdc/slave_datatrans"
++#define KPROPD_DEFAULT_FILE "/var/lib/krb5kdc/from_master"
+ #define KPROPD_DEFAULT_KDB5_UTIL "@SBINDIR/kdb5_util"
+ #define KPROPD_DEFAULT_KPROP "@SBINDIR/kprop"
+ #define KPROPD_DEFAULT_KRB_DB DEFAULT_KDB_FILE

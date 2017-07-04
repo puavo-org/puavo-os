@@ -32,7 +32,7 @@ puts "Master server:"
 puts "#{@binddn} password:"
 @bindpw = Readline.readline('> ', true)
 
-`stop slapd`
+`service slapd stop`
 `killall -9 slapd`
 `rm -rf /etc/ldap/slapd.d/* /var/lib/ldap/*`
 
@@ -119,6 +119,6 @@ tempfile.close(false)
 `slapadd -F /etc/ldap/slapd.d/ -l #{tempfile.path} -b cn=config`
 `chown -R openldap: /etc/ldap/slapd.d`
 `chown -R openldap.openldap /var/lib/ldap/*`
-`start slapd`
+`service slapd start`
 
 tempfile.unlink

@@ -1,0 +1,47 @@
+This package is managed with git-dpm.
+If you are not familiar with git-dpm, then treat it as a standard quilt package stored in git with patches applied; it will become obvious the next time that git-dpm is used that cleanup is required and the appropriate cherry-picks can be made.
+
+
+Submitting Patch to the Maintainer:
+
+It's best to clone the git repository mentioned in debian/control and
+use the git format-patch command to generate patches.  Attach these
+patches to bugs on  the krb5 source package.
+
+
+Preparing a new Upstream version:
+
+You'll need two things to do this correctly.  First, you'll need the
+upstream tarball.  Secondly, you'll need a clone of the upstream git repository
+git://github.com/krb5/krb5.git .  Upstream has removed the files with
+non-DFSG-compliant licenses, so we no longer need a special workflow
+to generate a DFSG-compliant orig tarball.
+From within a git repository containing both the upstream tag for the release and the debian packaging:
+
+1) Make sure there is a local upstream branch that descends from origin/upstream
+2) Rename upstream's tarfile to the expected .orig.tar.gz name.
+2) git-dpm import-new-upstream -p tag_from_upstream orig_tarball
+3) git tag upstream/version_number upstream
+
+This will update the upstream branch and create an upstream tag.  
+
+4) git dpm checkout-patched&&git rebase upstream_tag
+
+5) git dpm update-patches
+
+Old repository: The packaging for krb-1.11 and later is in the repository
+pointed to by the VCS fields in the control file.  The previous repository
+(based off upstream's testing git export, prior to their conversion to git)
+is at git.debian.org/git/pkg-k5-afs/debian-krb5.git .
+
+Old old repository: There's an old old repository at
+git://git.debian.org/git/pkg-k5-afs/krb5-debian-2011.git containing
+old packaging. If you want to merge or otherwise work across the
+boundary with that old repository then you may want to copy
+debian/source/grafts.old_repository to .git/info/grafts
+
+Do not commit anything based on the old repositories to the new one.
+Ideally the commit hooks should stop you.
+
+ -- Sam Hartman <hartmans@debian.org>, Tue, 27 Dec 2011 06:11:15 -0500
+ -- Benjamin Kaduk <kaduk@mit.edu>, Fri 28 Oct 2013 15:55:54 -0400

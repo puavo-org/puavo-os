@@ -172,7 +172,7 @@ end
 
 # FIXME: asking whether the user wants to configure kerberos?
 puts "\nStop krb5-kdc service\n\n"
-`stop krb5-kdc`
+`service krb5-kdc stop`
 
 begin
   `mkdir -p "/var/lib/ldap/#{suffix}"`
@@ -283,7 +283,7 @@ realm.save
 
 # FIXME: asking whether the user wants to configure kerberos?
 puts "Start krb5-kdc service"
-`start krb5-kdc`
+`service krb5-kdc start`
 
 user = User.new
 
