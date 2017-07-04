@@ -1,3 +1,13 @@
+# Disable duplicate DN creation checks as the hdb database creation 
+# fails otherwise. A better workaround should be figured out for this.
+module ActiveLdap
+  module Validations
+    def validate_duplicated_dn_creation
+      true
+    end
+  end
+end
+
 class Overlay < ActiveLdap::Base
 
   def self.ldap_mapping(args)
@@ -10,11 +20,11 @@ class Overlay < ActiveLdap::Base
     # Find classes for overlay configurations. If you like to add new overlay configuration
     # you have to only create new child class for Overlay.
     self.subclasses_order_by_index.each do |_subclass|
-      Class.class_eval(_subclass).add_overlay_config(args)
+      Class.class_eval(_subclass.to_s).add_overlay_config(args)
     end
   end
 
   def self.subclasses_order_by_index
-    self.subclasses.sort{ |a,b| Class.class_eval(a).index <=> Class.class_eval(b).index }
+    self.subclasses.sort{ |a,b| Class.class_eval(a.to_s).index <=> Class.class_eval(b.to_s).index }
   end
 end

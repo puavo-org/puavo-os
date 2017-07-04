@@ -34,6 +34,7 @@ puts "#{@binddn} password:"
 
 `service slapd stop`
 `killall -9 slapd`
+FileUtils.mkdir_p '/etc/ldap/slapd.d'
 `rm -rf /etc/ldap/slapd.d/* /var/lib/ldap/*`
 
 tempfile = Tempfile.open("ldif")
