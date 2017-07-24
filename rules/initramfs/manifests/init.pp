@@ -1,9 +1,7 @@
 class initramfs {
-
   exec {
-    'initramfs::update':
+    'update initramfs':
       command     => '/usr/sbin/update-initramfs -k all -u',
       refreshonly => true;
   }
-
 }
