@@ -27,6 +27,7 @@ class gnome_shell_extensions {
     , 'hide-activities-button@gnome-shell-extensions.bookmarkd.xyz'
     , 'hide-aggregatemenu-session-buttons@puavo.org'
     , 'hide-dash@xenatt.github.com'
+    , 'hide-overview-search-entry@puavo.org'
     , 'hostinfo@puavo.org'
     , 'Move_Clock@rmy.pobox.com'
     , 'Panel_Favorites@rmy.pobox.com'
