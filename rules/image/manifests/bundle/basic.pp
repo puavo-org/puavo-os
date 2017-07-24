@@ -8,6 +8,7 @@ class image::bundle::basic {
   include ::disable_unclutter
   include ::disable_update_initramfs
   include ::gdm
+  include ::initramfs
   include ::kernels
   # include ::keyboard_hw_quirks        # XXX do we need this for Debian?
   include ::locales
