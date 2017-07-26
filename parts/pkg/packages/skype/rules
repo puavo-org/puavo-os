@@ -6,18 +6,17 @@ command=$1
 shift
 
 symlink_targets='
-/etc/dbus-1/system.d/skype.conf
-/usr/bin/skype
-/usr/share/applications/skype.desktop
-/usr/share/icons/hicolor/128x128/apps/skype.png
-/usr/share/icons/hicolor/16x16/apps/skype.png
-/usr/share/icons/hicolor/24x24/apps/skype.png
-/usr/share/icons/hicolor/256x256/apps/skype.png
-/usr/share/icons/hicolor/32x32/apps/skype.png
-/usr/share/icons/hicolor/48x48/apps/skype.png
-/usr/share/icons/hicolor/64x64/apps/skype.png
-/usr/share/pixmaps/skype.png
-/usr/share/skype
+  /opt/skypeforlinux
+  /usr/bin/skypeforlinux
+  /usr/share/applications/skypeforlinux.desktop
+  /usr/share/doc/skypeforlinux
+  /usr/share/icons/hicolor/1024x1024/apps/skypeforlinux.png
+  /usr/share/icons/hicolor/16x16/apps/skypeforlinux.png
+  /usr/share/icons/hicolor/256x256/apps/skypeforlinux.png
+  /usr/share/icons/hicolor/32x32/apps/skypeforlinux.png
+  /usr/share/icons/hicolor/512x512/apps/skypeforlinux.png
+  /usr/share/pixmaps/skypeforlinux.png
+  /usr/share/skypeforlinux
 '
 
 case "${command}" in
@@ -28,9 +27,32 @@ case "${command}" in
             mkdir -p $(dirname "${symlink_target}")
             ln -fns -T "${upstream_dir}${symlink_target}" "${symlink_target}"
         done
+
+        ln -fns /usr/bin/skypeforlinux /usr/bin/skype
+        ln -fns /usr/share/applications/skypeforlinux.desktop \
+                /usr/share/applications/skype.desktop
+        ;;
+
+    download)
+        upstream_pack=$1
+
+        wget \
+            --no-check-certificate \
+            --no-cookies \
+            --no-use-server-timestamps \
+            --output-document "$upstream_pack" \
+            --progress=dot:mega \
+            https://go.skype.com/skypeforlinux-64.deb || {
+            wget_err=$?
+            rm -f "${upstream_pack}" || true
+            [ ${wget_err} -eq 4 ] && exit 2 ## Network failure.
+            exit 1
+        }
         ;;
 
     unconfigure)
+        rm -f /usr/bin/skype \
+              /usr/share/applications/skype.desktop
         for symlink_target in ${symlink_targets}; do
             rm -f "${symlink_target}"
         done
