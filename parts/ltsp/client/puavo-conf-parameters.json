@@ -56,6 +56,21 @@
   "puavo.service.rpc-gssd.enabled": {
     "default": "false"
   },
+  "puavo.support.new_bugreport_browser": {
+    "default": "firefox"
+  },
+  "puavo.support.new_bugreport_url": {
+    "default": ""
+  },
+  "puavo.support.show_accesscontrols_for": {
+    "default": "vino"
+  },
+  "puavo.support.ssh_access_timeout": {
+    "default": ""
+  },
+  "puavo.support.vino_network_interface": {
+    "default": "eth0"
+  },
   "puavo.swap.local.enabled": {
     "default": "true"
   },

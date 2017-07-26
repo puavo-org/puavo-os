@@ -37,7 +37,6 @@ puavo-local-config [OPTIONS]
     --powersave-settings    setup powersave configurations
     --prepare-puavopkg      setup configurations for puavo-pkg
     --setup-installed-pkgs  configure installed (optional) packages
-    --setup-puavo-remote-assistance-applet
     --system-boot           tell we are running at system boot
 
     --install-pkg           a package name
@@ -410,21 +409,6 @@ def setup_installed_pkgs()
   puavo_pkg('reconfigure', '--all')
 end
 
-def setup_puavo_remote_assistance_applet()
-  confpath = '/etc/puavo-remote-assistance-applet/config.json'
-  applet_config = JSON.parse( IO.read(confpath) )
-
-  # show access controls for ssh (and vino)
-  applet_config['show_accesscontrols_for'] = %w(ssh vino)
-
-  # limit ssh access enablement to eight hours
-  applet_config['ssh_access_timeout'] = 28800
-
-  tmp_confpath = "#{ confpath }.tmp"
-  File.open(tmp_confpath, 'w') { |f| f.print(applet_config.to_json) }
-  File.rename(tmp_confpath, confpath)
-end
-
 
 Syslog.open(File.basename($0), Syslog::LOG_CONS)
 
@@ -437,19 +421,18 @@ system_boot          = false
 
 begin
   opts = GetoptLong.new(
-    [ '--config-path',   '-c',   GetoptLong::REQUIRED_ARGUMENT,          ],
-    [ '--help',          '-h',   GetoptLong::NO_ARGUMENT,                ],
+    [ '--config-path',   '-c',   GetoptLong::REQUIRED_ARGUMENT, ],
+    [ '--help',          '-h',   GetoptLong::NO_ARGUMENT,       ],
 
-    [ '--admins',                GetoptLong::NO_ARGUMENT,                ],
-    [ '--grub-default',          GetoptLong::NO_ARGUMENT,                ],
-    [ '--install-pkg',           GetoptLong::REQUIRED_ARGUMENT,          ],
-    [ '--networkmanager-policy', GetoptLong::NO_ARGUMENT,                ],
-    [ '--powersave-settings',    GetoptLong::NO_ARGUMENT,                ],
-    [ '--remove-pkg',            GetoptLong::REQUIRED_ARGUMENT,          ],
-    [ '--prepare-puavopkg',      GetoptLong::NO_ARGUMENT,                ],
-    [ '--setup-installed-pkgs',  GetoptLong::NO_ARGUMENT,                ],
-    [ '--setup-puavo-remote-assistance-applet', GetoptLong::NO_ARGUMENT, ],
-    [ '--system-boot',           GetoptLong::NO_ARGUMENT,                ],
+    [ '--admins',                GetoptLong::NO_ARGUMENT,       ],
+    [ '--grub-default',          GetoptLong::NO_ARGUMENT,       ],
+    [ '--install-pkg',           GetoptLong::REQUIRED_ARGUMENT, ],
+    [ '--networkmanager-policy', GetoptLong::NO_ARGUMENT,       ],
+    [ '--powersave-settings',    GetoptLong::NO_ARGUMENT,       ],
+    [ '--remove-pkg',            GetoptLong::REQUIRED_ARGUMENT, ],
+    [ '--prepare-puavopkg',      GetoptLong::NO_ARGUMENT,       ],
+    [ '--setup-installed-pkgs',  GetoptLong::NO_ARGUMENT,       ],
+    [ '--system-boot',           GetoptLong::NO_ARGUMENT,       ],
   )
 
   opts.each do |opt, arg|
@@ -465,7 +448,6 @@ begin
            '--powersave-settings',
            '--prepare-puavopkg',
            '--setup-installed-pkgs',
-           '--setup-puavo-remote-assistance-applet'
 	apply_configs.push(opt) unless apply_configs.include?(opt)
       when '--install-pkg'
 	apply_configs.push(opt) unless apply_configs.include?(opt)
@@ -515,8 +497,6 @@ dispatch_table = {
   '--prepare-puavopkg'      => lambda { prepare_puavopkg()                 },
   '--remove-pkg'            => lambda { remove_pkgs(packages_to_remove)    },
   '--setup-installed-pkgs'  => lambda { setup_installed_pkgs()             },
-  '--setup-puavo-remote-assistance-applet' \
-    => lambda { setup_puavo_remote_assistance_applet() },
 }
 
 exit_code = 0

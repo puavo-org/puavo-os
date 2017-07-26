@@ -7,11 +7,10 @@ set -eu
 
 [ "$(puavo-conf puavo.admin.personally_administered)" = 'true' ] || exit 0
 
-/usr/sbin/puavo-local-config --admins                               \
-                             --grub-default                         \
-                             --networkmanager-policy                \
-                             --powersave-settings                   \
-                             --prepare-puavopkg                     \
-                             --setup-installed-pkgs                 \
-                             --setup-puavo-remote-assistance-applet \
+/usr/sbin/puavo-local-config --admins                \
+                             --grub-default          \
+                             --networkmanager-policy \
+                             --powersave-settings    \
+                             --prepare-puavopkg      \
+                             --setup-installed-pkgs  \
                              --system-boot

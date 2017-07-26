@@ -315,20 +315,36 @@ class RemoteAssistanceApplet:
         return ('vino' in self.config['show_accesscontrols_for'])
 
 
+# get configuration from puavo-conf
+
 config = {
-  'new_bugreport_browser': None,
+  'new_bugreport_browser': 'firefox',
   'new_bugreport_url': None,
-  'show_accesscontrols_for': [ "vino" ],
+  'show_accesscontrols_for': [ 'vino' ],
   'ssh_access_timeout': None,
   'vino_network_interface': None,
 }
 
-try:
-    with open('/etc/puavo-remote-assistance-applet/config.json') as file:
-        config.update( json.load(file) )
-except IOError, e:
-    if e.errno != errno.ENOENT:
-        raise e
+for config_key in config.keys():
+  puavoconf_key = ("puavo.support.%s" % config_key)
+  cmd = [ "puavo-conf", puavoconf_key ]
+  try:
+    puavoconf_value = subprocess.check_output(cmd).rstrip()
+  except Exception as e:
+    print("Could not read puavo-conf variable '%s': %s" % (puavoconf_key, e),
+      file=sys.stderr)
+    continue
+
+  if puavoconf_key == 'show_accesscontrols_for':
+    if puavoconf_value == '':
+      puavoconf_value = []
+    else:
+      puavoconf_value = puavoconf_value.split(',')
+  elif puavoconf_value == '':
+    puavoconf_value = None
+
+  config[puavoconf_key] = puavoconf_value
+
 
 access_handler = RemoteAccessHandler()
 
