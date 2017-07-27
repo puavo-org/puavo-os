@@ -343,7 +343,7 @@ for config_key in config.keys():
   elif puavoconf_value == '':
     puavoconf_value = None
 
-  config[puavoconf_key] = puavoconf_value
+  config[config_key] = puavoconf_value
 
 
 access_handler = RemoteAccessHandler()
