@@ -47,6 +47,8 @@ HOMEDIR_SERVER="homedir.${PUAVO_DOMAIN}"
 
 # First check that the dummy /mntroot mountpoint exists
 if ! is_mounted "/mntroot"; then
+  # mount may fail if there are root-user tickets under /tmp, so remove
+  find /tmp -maxdepth 1 -user root -name 'krb5cc_*' -exec rm -f \{} \;
   mkdir -p /mntroot
   mount -t nfs4 -o sec=sys "${HOMEDIR_SERVER}:/" /mntroot
 fi
