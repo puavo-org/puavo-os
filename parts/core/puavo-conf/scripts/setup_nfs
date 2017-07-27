@@ -1,0 +1,21 @@
+#!/bin/sh
+
+set -eu
+
+# The method we use nfs4 is somewhat unusual and we have encountered some
+# issues with it, unless we use the following hack to force a unique id
+# for every netboot client boot.  This hack goes against suggestions in
+# http://elixir.free-electrons.com/linux/latest/source/Documentation/filesystems/nfs/nfs.txt.
+
+nfs4_unique_id="$(uuidgen)"
+
+if [ -z "$nfs4_unique_id" ]; then
+  echo 'uuidgen did not return an uuid' >&2
+  exit 1
+fi
+
+cat <<EOF > /etc/modprobe.d/nfs.conf.tmp
+options nfs nfs4_unique_id=${nfs4_unique_id}
+EOF
+
+mv /etc/modprobe.d/nfs.conf.tmp /etc/modprobe.d/nfs.conf
