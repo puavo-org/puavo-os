@@ -7,7 +7,7 @@ class puavo_conf {
 
     file {
       "/usr/share/puavo-conf/definitions/${definition_name}":
-        notify  => Exec['initramfs::update'],
+        notify  => Exec['update initramfs'],
         require => Package['puavo-conf'],
         source  => $source;
     }

@@ -6,5 +6,6 @@
   "puavo.service.ModemManager.enabled"            : "true",
   "puavo.service.NetworkManager.enabled"          : "true",
   "puavo.service.puavo-vpn-client-dnsmasq.enabled": "true",
-  "puavo.service.puavo-vpn-client-openvpn.enabled": "true"
+  "puavo.service.puavo-vpn-client-openvpn.enabled": "true",
+  "puavo.support.vino_network_interface":           "tap0"
 }
