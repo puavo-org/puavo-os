@@ -264,7 +264,8 @@ class RemoteAssistanceApplet:
         self.create_access_controls()
 
         make_bugreport_button = self.config['new_bugreport_browser'] \
-                                  and self.config['new_bugreport_url']
+                                  and self.config['new_bugreport_url'] \
+                                  and getpass.getuser() != 'Debian-gdm'
         if make_bugreport_button:
             self.new_ticket_button = gtk.MenuItem( _tr('New support request') )
             self.new_ticket_button.connect('activate', self.make_bugreport)
