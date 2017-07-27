@@ -96,21 +96,21 @@ class ChangelogNotifyApplet:
 
 
     def read_imageseries_name(self):
-        series_name = self.read_firstline('/etc/ltsp/this_ltspimage_series')
+        series_name = self.read_firstline('/etc/puavo-image/class')
         if series_name == '':
             raise Exception('Could not image series name')
         return series_name
 
 
     def read_system_release_name(self):
-        release_name = self.read_firstline('/etc/ltsp/this_ltspimage_release')
+        release_name = self.read_firstline('/etc/puavo-image/release')
         if release_name == '':
             raise Exception('Could not read system release name')
         return release_name
 
 
     def read_system_version(self):
-        version = self.read_firstline('/etc/ltsp/this_ltspimage_name')
+        version = self.read_firstline('/etc/puavo-image/name')
         if version == '':
             raise Exception('Could not read system version')
         return version

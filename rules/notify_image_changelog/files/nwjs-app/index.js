@@ -13,8 +13,8 @@ function read_a_line(filepath) {
            .replace(/\n$/, '');
 }
 
-var this_ltspimage_name    = read_a_line('/etc/ltsp/this_ltspimage_name');
-var this_ltspimage_release = read_a_line('/etc/ltsp/this_ltspimage_release');
+var this_ltspimage_name    = read_a_line('/etc/puavo-image/name');
+var this_ltspimage_release = read_a_line('/etc/puavo-image/release');
 
 gui.App.clearCache();
 
