@@ -2,15 +2,11 @@
 
 set -eu
 
-# exit if our root is not an nbd device
-grep -qw root=/dev/nbd0 /proc/cmdline || exit 0
-
-nbd_server_host=$(awk -F= '$1 == "NBD_ROOT_HOST" { print $2 }' \
-                    /var/cache/ltsp/ltsp_config)
+nbd_server_host="$(cat /run/puavo/nbd-server 2>/dev/null || true)"
 
 if [ -z "$nbd_server_host" ]; then
-  echo 'Could not find the nbd server host' >&2
-  exit 1
+  # exit if not booted from an nbd-server
+  exit 0
 fi
 
 has_nbd_connection() { nbd-client -c /dev/nbd0 > /dev/null; }
