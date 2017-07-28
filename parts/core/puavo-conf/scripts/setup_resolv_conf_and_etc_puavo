@@ -18,7 +18,14 @@
 
 set -eu
 
-# Setup /etc/resolv.conf and /etc/puavo only if we have booted with NBD.
+# Point /etc/resolv.conf to resolvconf-generated resolv.conf.
+# For netboot devices this is overridden later in this script.
+# For hosts with puavo-vpn /usr/lib/puavo-vpn-client/dnsmasq-wrapper
+# overrides these.
+ln -fns /run/resolvconf/resolv.conf /etc/resolv.conf
+
+# Setup /etc/resolv.conf and /etc/puavo only for netboot devices
+# (we have booted from NBD-server).
 test -e /run/puavo/nbd-server || exit 0
 
 query_dns() {
