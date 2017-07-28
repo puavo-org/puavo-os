@@ -52,7 +52,7 @@ class ChangelogNotifyApplet:
                 .replace("%%IMAGEVERSION%%", self.system_version)
 
         cmd = [ '/usr/bin/nw',
-                '/usr/local/share/notify_puavoimage_changelog/nwjs-app',
+                '/usr/local/share/puavo-notify-changelog/nwjs-app',
                 url ]
 
         (pid, stdin, stdout, stderr) \
