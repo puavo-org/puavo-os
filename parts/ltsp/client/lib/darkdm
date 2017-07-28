@@ -55,6 +55,7 @@ Commands:
   build             - build Puavo OS image and poweroff
   install           - install Puavo OS to this device and reboot
   make-install-disk - make a bootable usb flash drive or some such
+  nmtui             - configure network (not available on netboot devices)
   poweroff          - poweroff the system in 5 seconds
   preinstall        - install without registering
   preseed-install   - install with a preseed
@@ -135,6 +136,13 @@ darkdm_menu()
 		;;
 	    'make-install-disk')
 		puavo-make-install-disk
+		;;
+	    'nmtui')
+		if [ ! -x /usr/bin/nmtui ]; then
+		    echo 'nmtui not available' >&2
+		else
+		    nmtui || true
+		fi
 		;;
 	    'poweroff')
 		darkdm_poweroff
