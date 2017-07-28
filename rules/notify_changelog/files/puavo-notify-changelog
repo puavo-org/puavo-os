@@ -8,10 +8,12 @@ import gtk
 import json
 import os
 import pynotify
+import subprocess
 import sys
 
 class ChangelogNotifyApplet:
     def __init__(self):
+        self.changelog_url       = self.read_changelog_url()
         self.image_series_name   = self.read_imageseries_name()
         self.system_release_name = self.read_system_release_name()
         self.system_version      = self.read_system_version()
@@ -44,10 +46,13 @@ class ChangelogNotifyApplet:
 
 
     def button_callback(self, widget):
-        url = 'http://changelog.opinsys.fi/%s/#%s' % (self.image_series_name,
-                                                      self.system_version)
+        url = self.changelog_url \
+                .replace("%%IMAGERELEASE%%", self.system_release_name) \
+                .replace("%%IMAGESERIES%%",  self.image_series_name)   \
+                .replace("%%IMAGEVERSION%%", self.system_version)
+
         cmd = [ '/usr/bin/nw',
-                '/usr/local/share/notify_puavoimage_changelog/nwjs-app',
+                '/usr/local/share/puavo-notify-changelog/nwjs-app',
                 url ]
 
         (pid, stdin, stdout, stderr) \
@@ -88,6 +93,11 @@ class ChangelogNotifyApplet:
         if not n.show():
             print >> sys.stderr, 'Problem showing notification.'
             return
+
+
+    def read_changelog_url(self):
+        cmd = [ "puavo-conf", "puavo.support.image_changelog_url" ]
+        return subprocess.check_output(cmd).rstrip()
 
 
     def read_firstline(self, pathname):
@@ -205,6 +215,10 @@ if __name__ == '__main__':
         pass
 
     applet = ChangelogNotifyApplet()
+
+    if applet.changelog_url == "":
+        print("puavo.support.image_changelog_url is not set, exiting.")
+        exit(0)
 
     if not applet.user_has_been_notified_about_this_version():
         applet.notify_user_on_update()
