@@ -21,7 +21,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# Version 0.95
+# Version 0.95.1
 # Author: Jarmo Pietiläinen (jarmo@opinsys.fi)
 
 require 'facter'
@@ -45,14 +45,6 @@ values = [
     :boardserialnumber,
 ]
 
-def read_text_file(name)
-    begin
-        File.open(name, 'rb') { |f| f.read }
-    rescue
-        "<Can't read #{name}>"
-    end
-end
-
 data = {}
 
 begin
@@ -60,8 +52,8 @@ begin
     data[:timestamp] = Time.now.to_i
 
     # release info
-    data[:this_image] = read_text_file('/etc/puavo-image/name').strip
-    data[:this_release] = read_text_file('/etc/puavo-image/release').strip
+    data[:this_image]   = IO.read('/etc/puavo-image/name').strip rescue '?'
+    data[:this_release] = IO.read('/etc/puavo-image/release').strip rescue '?'
 
     # facter stuff
     values.each { |f| data[f] = Facter.value(f) }
