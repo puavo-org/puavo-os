@@ -1,4 +1,4 @@
-class image::opinsysrestricted {
+class image::opinsys {
   include ::art::opinsys,
           ::image::allinone,
           ::oracle_java,
