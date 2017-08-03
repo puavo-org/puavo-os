@@ -63,10 +63,7 @@ err:
         return ret;
 }
 
-static int get_param(puavo_conf_t *const conf,
-                     char const *const key,
-                     enum puavo_conf_type const type,
-                     char const *const exact_match)
+static int get_param(puavo_conf_t *const conf, char const *const key)
 {
         struct puavo_conf_err err;
         char *value;
@@ -74,21 +71,6 @@ static int get_param(puavo_conf_t *const conf,
         if (puavo_conf_get(conf, key, &value, &err)) {
                 (void) fprintf(stderr, "Error: Failed to get '%s': %s\n",
                                key, err.msg);
-                return 1;
-        }
-
-        if (puavo_conf_check_type(value, type, &err)) {
-                free(value);
-                (void) fprintf(stderr, "Error: Failed to get '%s': %s\n",
-                               key, err.msg);
-                return 1;
-        }
-
-        if (exact_match && strcmp(value, exact_match)) {
-                (void) fprintf(stderr,
-                               "Error: Value '%s' does not match '%s'\n",
-                               value, exact_match);
-                free(value);
                 return 1;
         }
 
@@ -114,24 +96,9 @@ enum set_mode {
 static int set_param(puavo_conf_t *const conf,
                      char const *const key,
                      char const *const value,
-                     enum puavo_conf_type const type,
-                     char const *const exact_match,
                      enum set_mode const set_mode)
 {
         struct puavo_conf_err err;
-
-        if (puavo_conf_check_type(value, type, &err)) {
-                (void) fprintf(stderr, "Error: Failed to get '%s': %s\n",
-                               key, err.msg);
-                return 1;
-        }
-
-        if (exact_match && strcmp(value, exact_match)) {
-                (void) fprintf(stderr,
-                               "Error: Value '%s' does not match '%s'\n",
-                               value, exact_match);
-                return 1;
-        }
 
         switch (set_mode) {
         case OVERWRITE:
@@ -177,9 +144,7 @@ int print_help(void)
                      "Get and set Puavo Configuration parameters.\n"
                      "\n"
                      "Options:\n"
-                     "  -b, --type-bool               fail if VALUE is not boolean\n"
                      "  -h, --help                    display this help and exit\n"
-                     "  -x STR, --match-exact STR     fail if value does not match STR exactly\n"
                      "  --set-mode MODE               how to set the value, see MODE below\n"
                      "\n"
                      "If both KEY and VALUE are given, set the value of\n"
@@ -206,15 +171,11 @@ int main(int argc, char *argv[])
         puavo_conf_t *conf;
         struct puavo_conf_err err;
         int exitval;
-        enum puavo_conf_type type = PUAVO_CONF_TYPE_ANY;
-        char *exact_match = NULL;
         enum set_mode set_mode = OVERWRITE;
 
         while (1) {
                 int optval;
                 static struct option long_options[] = {
-                        {"match-exact", required_argument, 0, 'x' },
-                        {"type-bool"  , no_argument      , 0, 'b' },
                         {"help"       , no_argument      , 0, 'h' },
                         {"set-mode"   , required_argument, 0, 's' },
                         {0            , 0                , 0, 0   }
@@ -226,16 +187,8 @@ int main(int argc, char *argv[])
                         break;
 
                 switch (optval) {
-                case 'b':
-                        type = PUAVO_CONF_TYPE_BOOL;
-                        break;
-
                 case 'h':
                         return print_help();
-
-                case 'x':
-                        exact_match = optarg;
-                        break;
 
                 case 's':
                         if (!strcmp("overwrite", optarg)) {
@@ -279,12 +232,11 @@ int main(int argc, char *argv[])
                         goto err;
                 break;
         case 1:
-                if (get_param(conf, argv[argc - 1], type, exact_match))
+                if (get_param(conf, argv[argc - 1]))
                         goto err;
                 break;
         case 2:
-                if (set_param(conf, argv[argc - 2], argv[argc - 1], type,
-                              exact_match, set_mode))
+                if (set_param(conf, argv[argc - 2], argv[argc - 1], set_mode))
                         goto err;
                 break;
         default:

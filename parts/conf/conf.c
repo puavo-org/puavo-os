@@ -151,30 +151,6 @@ int puavo_conf_clear(struct puavo_conf *const conf,
         return conf->ops->clear(conf, errp);
 }
 
-int puavo_conf_check_type(char const *const value,
-                          enum puavo_conf_type const type,
-                          struct puavo_conf_err *const errp)
-{
-        switch (type) {
-        case PUAVO_CONF_TYPE_ANY:
-                break;
-        case PUAVO_CONF_TYPE_BOOL:
-                if (strcmp(value, "true") && strcmp(value, "false")) {
-                        puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_TYPE, 0,
-                                           "Expected boolean value, got '%s'",
-                                           value);
-                        return -1;
-                }
-                break;
-        default:
-                puavo_conf_err_set(errp, PUAVO_CONF_ERRNUM_TYPE, 0,
-                                   "Unknown type code %d", type);
-                return -1;
-        }
-
-        return 0;
-}
-
 enum puavo_conf_conn puavo_conf_get_conn(puavo_conf_t const *const conf)
 {
         if (conf->db)

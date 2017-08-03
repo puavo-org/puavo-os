@@ -254,26 +254,6 @@ int puavo_conf_get_all(puavo_conf_t *conf,
  */
 void puavo_conf_list_free(struct puavo_conf_list *list);
 
-/**
- * puavo_conf_check_type() - check if the value is of given type
- *
- * @value - NUL-terminated string constant
- *
- * @type  - type descriptor
- *
- * @errp  - pointer to an error struct or NULL
- *
- * If @errp is not NULL and an error is encountered, the error struct
- * pointed by @errp is filled to convey error details.
- *
- * Return 0 on success and -1 on error.
- *
- */
-int puavo_conf_check_type(char const *value,
-                          enum puavo_conf_type type,
-                          struct puavo_conf_err *errp);
-
-
 enum puavo_conf_conn {
         PUAVO_CONF_CONN_DB,
         PUAVO_CONF_CONN_DBUS

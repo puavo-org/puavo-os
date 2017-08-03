@@ -76,44 +76,6 @@ START_TEST(test_empty_db_lock_conflict)
 }
 END_TEST
 
-START_TEST(test_type_check)
-{
-        ck_assert_int_eq(0, puavo_conf_check_type("true",
-                                                  PUAVO_CONF_TYPE_BOOL,
-                                                  NULL));
-        ck_assert_int_eq(0, puavo_conf_check_type("false",
-                                                  PUAVO_CONF_TYPE_BOOL,
-                                                  NULL));
-        ck_assert_int_eq(-1, puavo_conf_check_type("yes",
-                                                   PUAVO_CONF_TYPE_BOOL,
-                                                   NULL));
-        ck_assert_int_eq(-1, puavo_conf_check_type("no",
-                                                   PUAVO_CONF_TYPE_BOOL,
-                                                   NULL));
-        ck_assert_int_eq(-1, puavo_conf_check_type("TRUE",
-                                                   PUAVO_CONF_TYPE_BOOL,
-                                                   NULL));
-        ck_assert_int_eq(-1, puavo_conf_check_type("FALSE",
-                                                   PUAVO_CONF_TYPE_BOOL,
-                                                   NULL));
-        ck_assert_int_eq(-1, puavo_conf_check_type("1",
-                                                   PUAVO_CONF_TYPE_BOOL,
-                                                   NULL));
-        ck_assert_int_eq(-1, puavo_conf_check_type("0",
-                                                   PUAVO_CONF_TYPE_BOOL,
-                                                   NULL));
-        ck_assert_int_eq(-1, puavo_conf_check_type("",
-                                                   PUAVO_CONF_TYPE_BOOL,
-                                                   NULL));
-        ck_assert_int_eq(0, puavo_conf_check_type("true",
-                                                  PUAVO_CONF_TYPE_ANY,
-                                                  NULL));
-        ck_assert_int_eq(0, puavo_conf_check_type("",
-                                                  PUAVO_CONF_TYPE_ANY,
-                                                  NULL));
-}
-END_TEST
-
 static void setup_empty_db()
 {
         setenv("PUAVO_CONF_DB_FILEPATH", "test.db", 1);
@@ -142,7 +104,6 @@ static Suite *libpuavoconf_suite_create(void)
         tcase_add_test(tcase_empty_db, test_empty_db_set_same_twice_and_get);
         tcase_add_test(tcase_empty_db, test_empty_db_set_many_and_get_all);
         tcase_add_test(tcase_empty_db, test_empty_db_lock_conflict);
-        tcase_add_test(tcase_empty_db, test_type_check);
 
         suite_add_tcase(suite, tcase_empty_db);
 
