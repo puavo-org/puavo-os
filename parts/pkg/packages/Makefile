@@ -17,6 +17,7 @@ packagedirs += geogebra/
 packagedirs += globilab/
 packagedirs += google-chrome/
 packagedirs += google-earth/
+packagedirs += marvinsketch/
 packagedirs += mattermost-desktop/
 packagedirs += msttcorefonts/
 packagedirs += oracle-java/

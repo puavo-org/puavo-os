@@ -12,8 +12,8 @@ puavo_domain=$(cat /etc/puavo/domain)
 
 user_primary_group=$(id -gn)
 
-is_remotemounts_enabled=$(puavo-conf -b puavo.mounts.by_user_from_bootserver.enabled)
-is_nethomes_enabled=$(puavo-conf -b puavo.mounts.nethomes.enabled)
+is_remotemounts_enabled=$(puavo-conf puavo.mounts.by_user_from_bootserver.enabled)
+is_nethomes_enabled=$(puavo-conf puavo.mounts.nethomes.enabled)
 
 filter_out_our_bookmarks() {
   local bookmarksfile

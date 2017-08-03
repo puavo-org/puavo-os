@@ -539,7 +539,7 @@ diff -Nur orig/contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.c new/contrib/slapd-m
 +	   some lockups still happened, so fork the process instead before 
 +	   doing any krb5 operations. The process is forked and the child sets 
 +	   an alarm that kills the forked process if the password change is not 
-+	   finished in 2 seconds.
++	   finished in 15 seconds.
 +	*/
 +
 +	worker_pid = fork();

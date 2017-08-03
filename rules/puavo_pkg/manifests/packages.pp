@@ -15,6 +15,7 @@ class puavo_pkg::packages {
 			, 'globilab'
 			, 'google-chrome'
 			, 'google-earth'
+			, 'marvinsketch'
 			, 'mattermost-desktop'
 			, 'msttcorefonts'
 			, 'oracle-java'

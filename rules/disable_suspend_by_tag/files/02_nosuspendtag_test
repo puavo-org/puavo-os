@@ -2,7 +2,7 @@
 
 set -eu
 
-is_enabled=$(puavo-conf -b puavo.suspend.enabled)
-if [ "${is_enabled}" != true ]; then
+is_enabled=$(puavo-conf puavo.suspend.enabled)
+if [ "${is_enabled}" != 'true' ]; then
     exit 1
 fi

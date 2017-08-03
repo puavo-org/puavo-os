@@ -26,26 +26,26 @@
 <!--  Image for 5 hours. -->
 <static>
 <duration>18000.0</duration>
-<file>/usr/share/backgrounds/Vanishing_by_James_Wilson.jpg</file>
+<file>/usr/share/backgrounds/Golden_leaves_by_Mauro_Campanelli.jpg</file>
 </static>
 
 <!-- Transition -->
 <transition type="overlay">
 <duration>5.0</duration>
-<from>/usr/share/backgrounds/Vanishing_by_James_Wilson.jpg</from>
+<from>/usr/share/backgrounds/Golden_leaves_by_Mauro_Campanelli.jpg</from>
 <to>/usr/share/backgrounds/edubuntu_lonelytree.png</to>
 </transition>
 
 <!-- Image 3 hours. -->
 <static>
 <duration>10800.0</duration>
-<file>/usr/share/backgrounds/edubuntu_lonelytree.png</file>
+<file>/usr/share/backgrounds/edubuntu-ladybug.jpg</file>
 </static>
 
 <!-- Transition -->
 <transition type="overlay">
 <duration>5.0</duration>
-<from>/usr/share/backgrounds/edubuntu_lonelytree.png</from>
+<from>/usr/share/backgrounds/edubuntu-ladybug.jpg</from>
 <to>/usr/share/backgrounds/salcantayperu_by_Life_Nomadic.jpg</to>
 </transition>
 

@@ -1,8 +1,8 @@
 (
   set -e
 
-  is_enabled=$(puavo-conf -b puavo.autopilot.enabled)
-  [ "${is_enabled}" = true ] || exit 0
+  is_enabled=$(puavo-conf puavo.autopilot.enabled)
+  [ "${is_enabled}" = 'true' ] || exit 0
 
   mode=$(puavo-conf puavo.autopilot.mode)
   username=$(puavo-conf puavo.autopilot.username)

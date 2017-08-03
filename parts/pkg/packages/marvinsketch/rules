@@ -1,0 +1,83 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "${command}" in
+    configure)
+	upstream_dir=$1
+	marvinsuite_dir="${upstream_dir}/opt/chemaxon/marvinsuite"
+	ln -fns "${marvinsuite_dir}/LicenseManager" \
+		/usr/local/bin/LicenseManager
+	ln -fns "${marvinsuite_dir}/MarvinSketch" \
+		/usr/local/bin/MarvinSketch
+	ln -fns "${marvinsuite_dir}/MarvinView" \
+		/usr/local/bin/MarvinView
+
+	ln -fns "${marvinsuite_dir}/bin/molconvert" \
+		/usr/local/bin/molconvert
+	ln -fns "${marvinsuite_dir}/bin/cxcalc" \
+		/usr/local/bin/cxcalc
+	ln -fns "${marvinsuite_dir}/bin/cxtrain" \
+		/usr/local/bin/cxtrain
+	ln -fns "${marvinsuite_dir}/bin/mview" \
+		/usr/local/bin/mview
+	ln -fns "${marvinsuite_dir}/bin/msketch" \
+		/usr/local/bin/msketch
+
+	ln -fns "${marvinsuite_dir}/bin/molconvert" \
+		/usr/bin/molconvert
+	ln -fns "${marvinsuite_dir}/bin/msketch" \
+		/usr/bin/msketch
+	ln -fns "${marvinsuite_dir}/bin/mview" \
+		/usr/bin/mview
+
+	cat <<EOF > /usr/share/applications/LicenseManager.desktop
+[Desktop Entry]
+Type=Application
+Name=LicenseManager
+Exec=/usr/local/bin/LicenseManager
+Icon=${upstream_dir}/opt/chemaxon/marvinsuite/.install4j/LicenseManager.png
+EOF
+	cat <<EOF > /usr/share/applications/MarvinSketch.desktop
+[Desktop Entry]
+Type=Application
+Name=MarvinSketch
+Exec=/usr/local/bin/MarvinSketch
+Icon=${upstream_dir}/opt/chemaxon/marvinsuite/.install4j/MarvinSketch.png
+EOF
+	cat <<EOF > /usr/share/applications/MarvinView.desktop
+[Desktop Entry]
+Type=Application
+Name=MarvinView
+Exec=/usr/local/bin/MarvinView
+Icon=${upstream_dir}/opt/chemaxon/marvinsuite/.install4j/MarvinView.png
+EOF
+	;;
+    unconfigure)
+	rm -f /usr/bin/molconvert                            \
+	      /usr/bin/msketch                               \
+	      /usr/bin/mview                                 \
+	      /usr/local/bin/cxcalc                          \
+	      /usr/local/bin/cxtrain                         \
+	      /usr/local/bin/LicenseManager                  \
+	      /usr/local/bin/MarvinSketch                    \
+	      /usr/local/bin/MarvinView                      \
+	      /usr/local/bin/molconvert                      \
+	      /usr/local/bin/msketch                         \
+	      /usr/local/bin/mview                           \
+	      /usr/share/applications/LicenseManager.desktop \
+	      /usr/share/applications/MarvinSketch.desktop   \
+	      /usr/share/applications/MarvinView.desktop
+	;;
+    unpack)
+	upstream_pack=$1
+	upstream_dir=$2
+	dpkg -x "${upstream_pack}" "${upstream_dir}"
+	chmod 0755 "${upstream_dir}"
+	;;
+    *)
+	;;
+esac
