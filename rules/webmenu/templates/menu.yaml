@@ -287,6 +287,12 @@ items:
     type: desktop
   - source: kalzium
     type: desktop
+  - source: MarvinSketch
+    type: desktop
+    inactiveByDeviceType: thinclient
+  - source: MarvinView
+    type: desktop
+    inactiveByDeviceType: thinclient
   - source: mandelbulber
     type: desktop
     inactiveByDeviceType: thinclient
