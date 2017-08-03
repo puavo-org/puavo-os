@@ -2,9 +2,9 @@
 
 set -eu
 
-puavo_onscreenkeyboard_enabled=$(puavo-conf -b puavo.onscreenkeyboard.enabled)
+puavo_onscreenkeyboard_enabled=$(puavo-conf puavo.onscreenkeyboard.enabled)
 
-if [ "${puavo_onscreenkeyboard_enabled}" != true ]; then
+if [ "${puavo_onscreenkeyboard_enabled}" != 'true' ]; then
     exit 1
 fi
 

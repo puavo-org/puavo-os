@@ -1,7 +1,7 @@
 #!/bin/sh
 
-is_xbacklight_enabled=$(puavo-conf -b puavo.xbacklight.enabled)
-if [ "${is_xbacklight_enabled}" = true ]; then
+is_xbacklight_enabled=$(puavo-conf puavo.xbacklight.enabled)
+if [ "${is_xbacklight_enabled}" = 'true' ]; then
     xbacklight_brightness=$(puavo-conf puavo.xbacklight.brightness)
 
     if [ "${xbacklight_brightness}" -gt 0 ]; then

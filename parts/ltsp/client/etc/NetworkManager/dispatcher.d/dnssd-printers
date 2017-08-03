@@ -4,7 +4,7 @@ IFACE=$1
 COMMAND=$2
 
 if [ "${COMMAND}" = "up" ]; then
-    is_dnssd_enabled=$(puavo-conf -b puavo.printing.dnssd.enabled)
+    is_dnssd_enabled=$(puavo-conf puavo.printing.dnssd.enabled)
 
     if [ "${is_dnssd_enabled}" = 'true' ]; then
 	/usr/sbin/puavo-dnssd-printer-client --retries 6 --retry-delay 15 --delay 10 >/dev/null 2>&1 &

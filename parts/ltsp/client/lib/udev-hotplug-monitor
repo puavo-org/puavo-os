@@ -16,9 +16,9 @@ there_is_a_desktop_session() {
     >/dev/null
 }
 
-is_forced=$(puavo-conf -b puavo.xrandr.forced)
+is_forced=$(puavo-conf puavo.xrandr.forced)
 
-if there_is_a_desktop_session && [ "${is_forced}" = false ]; then
+if there_is_a_desktop_session && [ "${is_forced}" != 'true' ]; then
     # Depend on the gnome-settings-daemon xrandr plugin to handle the displays.
     exit 0
 fi

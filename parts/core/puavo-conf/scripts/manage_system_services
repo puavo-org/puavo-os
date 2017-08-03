@@ -16,8 +16,8 @@ services='
 status=0
 
 for service in ${services}; do
-  enabled=$(puavo-conf -b "puavo.service.${service}.enabled")
-  if [ "${enabled}" = true ]; then
+  enabled=$(puavo-conf "puavo.service.${service}.enabled")
+  if [ "${enabled}" = 'true' ]; then
     if ! systemctl enable "${service}"; then
       echo "Could not enable ${service}" >&2
       status=1
