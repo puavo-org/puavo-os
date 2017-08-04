@@ -1,3 +1,9 @@
+grub2 (2.02~beta3-5+opinsys1) UNRELEASED; urgency=medium
+
+  * Fix sparsefile support on compressed squashfs.
+
+ -- Juha Erkkilä <Juha.Erkkila@opinsys.fi>  Fri, 04 Aug 2017 14:54:37 +0300
+
 grub2 (2.02~beta3-5) unstable; urgency=medium
 
   [ Steve McIntyre ]
