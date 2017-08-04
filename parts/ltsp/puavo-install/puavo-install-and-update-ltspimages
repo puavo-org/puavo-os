@@ -58,6 +58,7 @@ if ! args=$(getopt -n "$0" -o +f:n:r:q \
 fi
 
 images_dir=/images
+checksums_file="${images_dir}/CKSUMS"
 puavoinstall_libdir=/usr/lib/puavo-ltsp-install
 
 hosttype=""
@@ -165,10 +166,8 @@ trap interrupted INT TERM
 #
 
 check_checksums_exist_for() {
-  checksums_file=$1; shift
   for file_to_check_checksum_for in "$@"; do
-    if ! lookup_size_from_cksums "$checksums_file" \
-                                 "$file_to_check_checksum_for" >/dev/null; then
+    if ! lookup_size_from_cksums "$file_to_check_checksum_for" >/dev/null; then
       log err "could not find checksum for '$file_to_check_checksum_for'"
       return 1
     fi
@@ -180,11 +179,9 @@ check_checksums_exist_for() {
 check_image_and_put_it_to_use() {
   next_image=$1
   next_image_tmppath=$2
-  checksums_file=$3
 
   check_with_cksum "$next_image"         \
                    "$next_image_tmppath" \
-                   "$checksums_file"     \
                    image_checksum        \
     || return 1
 
@@ -198,8 +195,7 @@ check_image_and_put_it_to_use() {
 check_with_cksum() {
   filename=$1
   actual_file_path=$2
-  checksums_file=$3
-  phase=$4
+  phase=$3
 
   if ! [ -r "$actual_file_path" ]; then
     log err "could not find a file $filename to check"
@@ -353,16 +349,12 @@ get_checksums_file() {
   rate_limit=$1
   url=$2
 
-  checksum_file_path="${images_dir}/CKSUMS"
-
-  fetch_with_wget "$rate_limit"               \
-		  "${checksum_file_path}.tmp" \
-		  "$url"                      \
-                  checksums_fetch             \
+  fetch_with_wget "$rate_limit"           \
+		  "${checksums_file}.tmp" \
+		  "$url"                  \
+                  checksums_fetch         \
     || return 1
-  mv "${checksum_file_path}.tmp" "${checksum_file_path}" || return 1
-
-  echo "${checksum_file_path}" || return 1
+  mv "${checksums_file}.tmp" "${checksums_file}" || return 1
 }
 
 get_next_image() {
@@ -418,7 +410,6 @@ get_rdiff() {
   rate_limit=$2
   rdiff_filename=$3
   rdiff_url=$4
-  checksums_file=$5
 
   rdiff_path="${rdiffs_dir}/${rdiff_filename}"
 
@@ -434,7 +425,6 @@ get_rdiff() {
     || return 1
   check_with_cksum "$rdiff_filename" \
                    "$rdiff_tmp"      \
-                   "$checksums_file" \
                    rdiff_checksum    \
     || return 1
 
@@ -533,8 +523,7 @@ install_image() {
 }
 
 lookup_size_from_cksums() {
-  checksums_file=$1
-  file_to_look_filesize_for=$2
+  file_to_look_filesize_for=$1
 
   awk -v filename="$file_to_look_filesize_for" '
     BEGIN { status = 1 }
@@ -618,10 +607,8 @@ patch_with_rdiff() {
   previous_image=$2
   next_image=$3
   rdiff_filename=$4
-  checksums_file=$5
 
-  if ! next_image_filesize=$(lookup_size_from_cksums "$checksums_file" \
-                                                     "$next_image"); then
+  if ! next_image_filesize=$(lookup_size_from_cksums "$next_image"); then
     log err "could not lookup image size from CKSUMS for '${next_image}'"
     return 1
   fi
@@ -644,7 +631,6 @@ patch_with_rdiff() {
 
   check_image_and_put_it_to_use "$next_image"         \
                                 "$next_image_tmppath" \
-                                "$checksums_file"     \
     || return 1
 }
 
@@ -712,12 +698,11 @@ try_full_image_update_from_imageserver() {
   rate_limit=$2
   next_image=$3
 
-  checksums_file=$(
-    get_checksums_file "$rate_limit" "https://${image_server}/CKSUMS") \
-      || return 1
+  get_checksums_file "$rate_limit" "https://${image_server}/CKSUMS" \
+    || return 1
 
   # it is not sensible to continue if the required checksum does not exist
-  check_checksums_exist_for "$checksums_file" "$next_image" || return 1
+  check_checksums_exist_for "$next_image" || return 1
 
   next_image_tmppath="${images_dir}/${next_image}.tmp"
 
@@ -776,7 +761,6 @@ try_full_image_update_from_imageserver() {
 
   check_image_and_put_it_to_use "$next_image"         \
                                 "$next_image_tmppath" \
-                                "$checksums_file"     \
     || return 1
 }
 
@@ -788,12 +772,11 @@ try_rdiff_update_from_imageserver() {
   previous_image=$5
   next_image=$6
 
-  checksums_file=$(
-    get_checksums_file "$rate_limit" "https://${image_server}/CKSUMS") \
-      || return 1
+  get_checksums_file "$rate_limit" "https://${image_server}/CKSUMS" \
+    || return 1
 
   # it is not sensible to continue if the required checksums do not exist
-  check_checksums_exist_for "$checksums_file" "$rdiff_filename" "$next_image" \
+  check_checksums_exist_for "$rdiff_filename" "$next_image" \
     || return 1
 
   rdiff_url="https://${image_server}/rdiffs/${rdiff_filename}"
@@ -802,14 +785,12 @@ try_rdiff_update_from_imageserver() {
 	    "$rate_limit"      \
 	    "$rdiff_filename"  \
 	    "$rdiff_url"       \
-	    "$checksums_file"  \
     || return 1
 
   patch_with_rdiff "$rdiffs_dir"     \
 		   "$previous_image" \
 		   "$next_image"     \
 		   "$rdiff_filename" \
-		   "$checksums_file" \
     || return 1
 }
 
