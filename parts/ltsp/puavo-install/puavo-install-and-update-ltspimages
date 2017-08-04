@@ -58,6 +58,8 @@ if ! args=$(getopt -n "$0" -o +f:n:r:q \
 fi
 
 images_dir=/images
+rdiffs_dir="${images_dir}/rdiffs"
+checksums_file="${images_dir}/CKSUMS"
 puavoinstall_libdir=/usr/lib/puavo-ltsp-install
 
 hosttype=""
@@ -165,10 +167,8 @@ trap interrupted INT TERM
 #
 
 check_checksums_exist_for() {
-  checksums_file=$1; shift
   for file_to_check_checksum_for in "$@"; do
-    if ! lookup_size_from_cksums "$checksums_file" \
-                                 "$file_to_check_checksum_for" >/dev/null; then
+    if ! lookup_size_from_cksums "$file_to_check_checksum_for" >/dev/null; then
       log err "could not find checksum for '$file_to_check_checksum_for'"
       return 1
     fi
@@ -180,11 +180,9 @@ check_checksums_exist_for() {
 check_image_and_put_it_to_use() {
   next_image=$1
   next_image_tmppath=$2
-  checksums_file=$3
 
   check_with_cksum "$next_image"         \
                    "$next_image_tmppath" \
-                   "$checksums_file"     \
                    image_checksum        \
     || return 1
 
@@ -198,8 +196,7 @@ check_image_and_put_it_to_use() {
 check_with_cksum() {
   filename=$1
   actual_file_path=$2
-  checksums_file=$3
-  phase=$4
+  phase=$3
 
   if ! [ -r "$actual_file_path" ]; then
     log err "could not find a file $filename to check"
@@ -233,9 +230,8 @@ cksum_with_progress() {
 }
 
 cleanup_previous_runs() {
-  rdiffs_dir=$1
-  preserve_imagefile=$2
-  preserve_rdifffile=$3
+  preserve_imagefile=$1
+  preserve_rdifffile=$2
 
   # cleanup old ltsp images (and their possible temporary *.tmp files).
   # The ltsp-backup.img is going to go too...
@@ -263,22 +259,59 @@ cleanup_previous_runs() {
 }
 
 ensure_enough_available_diskspace() {
-  rdiffs_dir=$1
+  next_image=$1
+  rdiff_filename=$2
 
-  # 133% of the space taken by the current image is probably enough
-  # for updating to new image
-  required_diskspace=$(stat -c '1.33 * %s' "${images_dir}/ltsp.img" \
-			 | bc -l | xargs printf %.0f)
+  if ! target_image_size=$(lookup_size_from_cksums "$next_image"); then
+    log err "could not look up target image size for $next_image"
+    return 1
+  fi
+  target_tmpimage_size_on_fs=$(stat -c %s "${images_dir}/${next_image}.tmp" \
+                                 2>/dev/null || echo 0)
 
-  for dir in "$images_dir" "$rdiffs_dir"; do
-    diskspace=$(stat -f -c '%S * %a' "$dir" | bc -l | xargs printf %.0f)
-    if [ "$diskspace" -lt "$required_diskspace" ]; then
-      msg="Only $diskspace bytes available on $dir,"
-      msg="$msg need $required_diskspace bytes"
-      log err "$msg"
-      return 1
-    fi
-  done
+  if ! target_rdiff_size=$(lookup_size_from_cksums "$rdiff_filename"); then
+    # We are not using rdiffs for updates.
+    target_rdiff_size=0
+    target_rdiff_size_on_fs=0
+    target_tmprdiff_size_on_fs=0
+  elif [ -e "${rdiffs_dir}/${rdiff_filename}" ]; then
+    # This implies rdiff should be ok.
+    target_rdiff_size_on_fs="$target_rdiff_size"
+    target_tmprdiff_size_on_fs=0
+  else
+    # No rdiff on filesystem, check out temporary rdiff size.
+    target_rdiff_size_on_fs=0
+    target_tmprdiff_size_on_fs=$(
+      stat -c %s "${rdiffs_dir}/${rdiff_filename}.tmp" 2>/dev/null || echo 0)
+  fi
+
+  target_sizes_summed=$(echo "${target_image_size} + ${target_rdiff_size}" \
+                          | bc -l)
+  target_sizes_on_fs=$(
+    echo "${target_tmpimage_size_on_fs} + ${target_rdiff_size_on_fs} \
+      + ${target_tmprdiff_size_on_fs}" | bc -l)
+
+  required_diskspace=$(
+    echo "${target_sizes_summed} - ${target_sizes_on_fs}" | bc -l)
+
+  diskspace=$(stat -f -c '%S * %a' "$images_dir" | bc -l | xargs printf %.0f)
+
+  msg="checking if there is enough available diskspace:"
+  msg="$msg diskspace:${diskspace} >= required_diskspace:$required_diskspace"
+  msg="$msg = targets:${target_sizes_summed} - onfs:${target_sizes_on_fs}"
+  msg="$msg = (image:${target_image_size} + rdiff:${target_rdiff_size})"
+  msg="$msg - (tmpimage_on_fs:${target_tmpimage_size_on_fs} + rdiff_on_fs:${target_rdiff_size_on_fs} + tmprdiff_on_fs:${target_tmprdiff_size_on_fs})"
+
+  log info "$msg"
+
+  # This check presumes rdiffs directory is in the same partition as images
+  # directory, sharing the same diskspace.
+  if [ "$diskspace" -lt "$required_diskspace" ]; then
+    msg="only $diskspace bytes available on $images_dir,"
+    msg="$msg need $required_diskspace bytes"
+    log err "$msg"
+    return 1
+  fi
 }
 
 ensure_that_default_image_is_the_current_one() {
@@ -353,16 +386,12 @@ get_checksums_file() {
   rate_limit=$1
   url=$2
 
-  checksum_file_path="${images_dir}/CKSUMS"
-
-  fetch_with_wget "$rate_limit"               \
-		  "${checksum_file_path}.tmp" \
-		  "$url"                      \
-                  checksums_fetch             \
+  fetch_with_wget "$rate_limit"           \
+		  "${checksums_file}.tmp" \
+		  "$url"                  \
+                  checksums_fetch         \
     || return 1
-  mv "${checksum_file_path}.tmp" "${checksum_file_path}" || return 1
-
-  echo "${checksum_file_path}" || return 1
+  mv "${checksums_file}.tmp" "${checksums_file}" || return 1
 }
 
 get_next_image() {
@@ -371,7 +400,6 @@ get_next_image() {
 
   image_server_list=$(lookup_image_servers)
 
-  rdiffs_dir="${images_dir}/rdiffs"
   previous_image=$(lookup_ltspimage_name_by_alias ltsp.img || true)
 
   if [ -z "$previous_image" ]; then
@@ -386,15 +414,14 @@ get_next_image() {
 
   mkdir -p "$rdiffs_dir"
 
-  cleanup_previous_runs "$rdiffs_dir" "${next_image}.tmp" "$rdiff_filename"
+  cleanup_previous_runs "${next_image}.tmp" "$rdiff_filename"
 
-  ensure_enough_available_diskspace "$rdiffs_dir"
+  ensure_enough_available_diskspace "$next_image" "$rdiff_filename"
 
   for image_server in $image_server_list; do
     try_rdiff_update_from_imageserver "$image_server"   \
 				      "$rate_limit"     \
 				      "$rdiff_filename" \
-				      "$rdiffs_dir"     \
 				      "$previous_image" \
 				      "$next_image"     \
       && return 0
@@ -414,11 +441,9 @@ get_next_image() {
 }
 
 get_rdiff() {
-  rdiffs_dir=$1
-  rate_limit=$2
-  rdiff_filename=$3
-  rdiff_url=$4
-  checksums_file=$5
+  rate_limit=$1
+  rdiff_filename=$2
+  rdiff_url=$3
 
   rdiff_path="${rdiffs_dir}/${rdiff_filename}"
 
@@ -434,7 +459,6 @@ get_rdiff() {
     || return 1
   check_with_cksum "$rdiff_filename" \
                    "$rdiff_tmp"      \
-                   "$checksums_file" \
                    rdiff_checksum    \
     || return 1
 
@@ -498,7 +522,7 @@ install_from_file_or_nbd() {
       ;;
   esac
 
-  cleanup_previous_runs "${images_dir}/rdiffs" "$preserve_imagefile" ''
+  cleanup_previous_runs "$preserve_imagefile" ''
 
   dd "if=$image_src_path" 2>/dev/null | pv -s "$total_size" \
     > "${imagepath}.tmp"
@@ -533,8 +557,7 @@ install_image() {
 }
 
 lookup_size_from_cksums() {
-  checksums_file=$1
-  file_to_look_filesize_for=$2
+  file_to_look_filesize_for=$1
 
   awk -v filename="$file_to_look_filesize_for" '
     BEGIN { status = 1 }
@@ -614,14 +637,11 @@ lookup_ltspimage_name_by_alias() {
 }
 
 patch_with_rdiff() {
-  rdiffs_dir=$1
-  previous_image=$2
-  next_image=$3
-  rdiff_filename=$4
-  checksums_file=$5
+  previous_image=$1
+  next_image=$2
+  rdiff_filename=$3
 
-  if ! next_image_filesize=$(lookup_size_from_cksums "$checksums_file" \
-                                                     "$next_image"); then
+  if ! next_image_filesize=$(lookup_size_from_cksums "$next_image"); then
     log err "could not lookup image size from CKSUMS for '${next_image}'"
     return 1
   fi
@@ -644,7 +664,6 @@ patch_with_rdiff() {
 
   check_image_and_put_it_to_use "$next_image"         \
                                 "$next_image_tmppath" \
-                                "$checksums_file"     \
     || return 1
 }
 
@@ -712,12 +731,11 @@ try_full_image_update_from_imageserver() {
   rate_limit=$2
   next_image=$3
 
-  checksums_file=$(
-    get_checksums_file "$rate_limit" "https://${image_server}/CKSUMS") \
-      || return 1
+  get_checksums_file "$rate_limit" "https://${image_server}/CKSUMS" \
+    || return 1
 
   # it is not sensible to continue if the required checksum does not exist
-  check_checksums_exist_for "$checksums_file" "$next_image" || return 1
+  check_checksums_exist_for "$next_image" || return 1
 
   next_image_tmppath="${images_dir}/${next_image}.tmp"
 
@@ -776,7 +794,6 @@ try_full_image_update_from_imageserver() {
 
   check_image_and_put_it_to_use "$next_image"         \
                                 "$next_image_tmppath" \
-                                "$checksums_file"     \
     || return 1
 }
 
@@ -784,32 +801,26 @@ try_rdiff_update_from_imageserver() {
   image_server=$1
   rate_limit=$2
   rdiff_filename=$3
-  rdiffs_dir=$4
-  previous_image=$5
-  next_image=$6
+  previous_image=$4
+  next_image=$5
 
-  checksums_file=$(
-    get_checksums_file "$rate_limit" "https://${image_server}/CKSUMS") \
-      || return 1
+  get_checksums_file "$rate_limit" "https://${image_server}/CKSUMS" \
+    || return 1
 
   # it is not sensible to continue if the required checksums do not exist
-  check_checksums_exist_for "$checksums_file" "$rdiff_filename" "$next_image" \
+  check_checksums_exist_for "$rdiff_filename" "$next_image" \
     || return 1
 
   rdiff_url="https://${image_server}/rdiffs/${rdiff_filename}"
 
-  get_rdiff "$rdiffs_dir"      \
-	    "$rate_limit"      \
-	    "$rdiff_filename"  \
-	    "$rdiff_url"       \
-	    "$checksums_file"  \
+  get_rdiff "$rate_limit"     \
+	    "$rdiff_filename" \
+	    "$rdiff_url"      \
     || return 1
 
-  patch_with_rdiff "$rdiffs_dir"     \
-		   "$previous_image" \
+  patch_with_rdiff "$previous_image" \
 		   "$next_image"     \
 		   "$rdiff_filename" \
-		   "$checksums_file" \
     || return 1
 }
 

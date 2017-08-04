@@ -37,6 +37,15 @@ items:
       source: ghemical
       inactiveByDeviceType: thinclient
     - type: desktop
+      source: avogadro
+      inactiveByDeviceType: thinclient
+    - source: MarvinSketch
+      type: desktop
+      inactiveByDeviceType: thinclient
+    - source: MarvinView
+      type: desktop
+      inactiveByDeviceType: thinclient
+    - type: desktop
       source: LoggerPro
     - type: desktop
       source: libreoffice-writer
