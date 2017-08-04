@@ -3,6 +3,7 @@ _pkgs_parts     := puavo-os
 _pkgs_ports     := autopoweroff    \
                    fluentd         \
                    gnome-shell     \
+                   grub2           \
                    nwjs            \
                    visionmedia-mon \
                    vtun            \
