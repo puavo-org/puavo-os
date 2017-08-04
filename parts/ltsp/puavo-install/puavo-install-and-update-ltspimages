@@ -259,14 +259,55 @@ cleanup_previous_runs() {
 }
 
 ensure_enough_available_diskspace() {
-  # 133% of the space taken by the current image is probably enough
-  # for updating to new image
-  required_diskspace=$(stat -c '1.33 * %s' "${images_dir}/ltsp.img" \
-			 | bc -l | xargs printf %.0f)
+  next_image=$1
+  rdiff_filename=$2
+
+  if ! target_image_size=$(lookup_size_from_cksums "$next_image"); then
+    log err "could not look up target image size for $next_image"
+    return 1
+  fi
+  target_tmpimage_size_on_fs=$(stat -c %s "${images_dir}/${next_image}.tmp" \
+                                 2>/dev/null || echo 0)
+
+  if ! target_rdiff_size=$(lookup_size_from_cksums "$rdiff_filename"); then
+    # We are not using rdiffs for updates.
+    target_rdiff_size=0
+    target_rdiff_size_on_fs=0
+    target_tmprdiff_size_on_fs=0
+  elif [ -e "${rdiffs_dir}/${rdiff_filename}" ]; then
+    # This implies rdiff should be ok.
+    target_rdiff_size_on_fs="$target_rdiff_size"
+    target_tmprdiff_size_on_fs=0
+  else
+    # No rdiff on filesystem, check out temporary rdiff size.
+    target_rdiff_size_on_fs=0
+    target_tmprdiff_size_on_fs=$(
+      stat -c %s "${rdiffs_dir}/${rdiff_filename}.tmp" 2>/dev/null || echo 0)
+  fi
+
+  target_sizes_summed=$(echo "${target_image_size} + ${target_rdiff_size}" \
+                          | bc -l)
+  target_sizes_on_fs=$(
+    echo "${target_tmpimage_size_on_fs} + ${target_rdiff_size_on_fs} \
+      + ${target_tmprdiff_size_on_fs}" | bc -l)
+
+  required_diskspace=$(
+    echo "${target_sizes_summed} - ${target_sizes_on_fs}" | bc -l)
 
   diskspace=$(stat -f -c '%S * %a' "$images_dir" | bc -l | xargs printf %.0f)
+
+  msg="checking if there is enough available diskspace:"
+  msg="$msg diskspace:${diskspace} >= required_diskspace:$required_diskspace"
+  msg="$msg = targets:${target_sizes_summed} - onfs:${target_sizes_on_fs}"
+  msg="$msg = (image:${target_image_size} + rdiff:${target_rdiff_size})"
+  msg="$msg - (tmpimage_on_fs:${target_tmpimage_size_on_fs} + rdiff_on_fs:${target_rdiff_size_on_fs} + tmprdiff_on_fs:${target_tmprdiff_size_on_fs})"
+
+  log info "$msg"
+
+  # This check presumes rdiffs directory is in the same partition as images
+  # directory, sharing the same diskspace.
   if [ "$diskspace" -lt "$required_diskspace" ]; then
-    msg="Only $diskspace bytes available on $images_dir,"
+    msg="only $diskspace bytes available on $images_dir,"
     msg="$msg need $required_diskspace bytes"
     log err "$msg"
     return 1
@@ -375,7 +416,7 @@ get_next_image() {
 
   cleanup_previous_runs "${next_image}.tmp" "$rdiff_filename"
 
-  ensure_enough_available_diskspace
+  ensure_enough_available_diskspace "$next_image" "$rdiff_filename"
 
   for image_server in $image_server_list; do
     try_rdiff_update_from_imageserver "$image_server"   \
