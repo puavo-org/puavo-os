@@ -72,6 +72,7 @@ static int	 apply_hwquirks_from_a_json_root(puavo_conf_t *, json_t *,
     struct hw_characteristics *, int);
 static int	 apply_kernel_arguments(puavo_conf_t *, int);
 static int	 apply_one_profile(puavo_conf_t *, const char *, int);
+static int	 apply_parameter_definitions(puavo_conf_t *, int, int);
 static int	 apply_profiles(puavo_conf_t *, int);
 static int	 check_match_for_hwquirk_rule(const char *, const char *,
     const char *, struct hw_characteristics *);
@@ -79,9 +80,8 @@ static char	*get_cmdline(void);
 static char	*get_first_line(const char *);
 static int	 glob_error(const char *, int);
 static int	 handle_one_paramdef(puavo_conf_t *, const char *, json_t *,
-    int);
-static int	 handle_paramdef_file(puavo_conf_t *, const char *, int);
-static int	 init_with_parameter_definitions(puavo_conf_t *, int);
+    int, int);
+static int	 handle_paramdef_file(puavo_conf_t *, const char *, int, int);
 static int	 lookup_ids_from_cmd(const char *, size_t, char **, size_t *,
     size_t);
 static int	 match_pattern(const char *, const char *, const regex_t *,
@@ -152,11 +152,9 @@ main(int argc, char *argv[])
 	if (puavo_conf_open(&conf, &err))
 		errx(1, "Failed to open config backend: %s", err.msg);
 
-	if (init) {
-		if (init_with_parameter_definitions(conf, verbose) != 0) {
-			warnx("failure in initializing puavo conf db");
-			status = EXIT_FAILURE;
-		}
+	if (apply_parameter_definitions(conf, verbose, init) != 0) {
+		warnx("failure in initializing puavo conf db");
+		status = EXIT_FAILURE;
 	}
 
 	if (update_puavoconf(conf, device_json_path, verbose) != 0) {
@@ -199,7 +197,7 @@ usage(void)
 }
 
 static int
-init_with_parameter_definitions(puavo_conf_t *conf, int verbose)
+apply_parameter_definitions(puavo_conf_t *conf, int verbose, int init)
 {
 	glob_t globbuf;
 	size_t i;
@@ -211,13 +209,14 @@ init_with_parameter_definitions(puavo_conf_t *conf, int verbose)
 	if (ret != 0) {
 		if (ret == GLOB_NOMATCH)
 			return 0;
-		warnx("glob() failure in init_with_parameter_definitions()");
+		warnx("glob() failure in apply_parameter_definitions()");
 		globfree(&globbuf);
 		return 1;
 	}
 
 	for (i = 0; i < globbuf.gl_pathc; i++) {
-		ret = handle_paramdef_file(conf, globbuf.gl_pathv[i], verbose);
+		ret = handle_paramdef_file(conf, globbuf.gl_pathv[i], verbose,
+		    init);
 		if (ret != 0) {
 			warnx("error handling %s", globbuf.gl_pathv[i]);
 			/* Return error, but try other files. */
@@ -242,7 +241,8 @@ glob_error(const char *epath, int eerrno)
 }
 
 static int
-handle_paramdef_file(puavo_conf_t *conf, const char *filepath, int verbose)
+handle_paramdef_file(puavo_conf_t *conf, const char *filepath, int verbose,
+    int init)
 {
 	json_t *root, *param_value;
 	const char *param_name;
@@ -263,7 +263,7 @@ handle_paramdef_file(puavo_conf_t *conf, const char *filepath, int verbose)
 
 	json_object_foreach(root, param_name, param_value) {
 		ret = handle_one_paramdef(conf, param_name, param_value,
-		    verbose);
+		    verbose, init);
 		if (ret != 0) {
 			warnx("error handling %s in %s", param_name, filepath);
 			/* Return error, but try other keys. */
@@ -279,7 +279,7 @@ finish:
 
 static int
 handle_one_paramdef(puavo_conf_t *conf, const char *param_name,
-    json_t *param_value, int verbose)
+    json_t *param_value, int verbose, int init)
 {
 	json_t *default_node;
 	struct puavo_conf_err err;
@@ -301,15 +301,24 @@ handle_one_paramdef(puavo_conf_t *conf, const char *param_name,
 		return 1;
 	}
 
-	if (puavo_conf_add(conf, param_name, value, &err) != 0) {
-		warnx("error adding %s --> '%s' : %s", param_name, value,
-		    err.msg);
-		return 1;
+	if (init) {
+		if (puavo_conf_add(conf, param_name, value, &err) != 0) {
+			warnx("error adding %s --> '%s' : %s", param_name, value,
+			    err.msg);
+			return 1;
+		}
+	} else {
+		if (puavo_conf_overwrite(conf, param_name, value, &err) != 0) {
+			warnx("error overwriting %s --> '%s' : %s", param_name,
+			    value, err.msg);
+			return 1;
+		}
 	}
 
 	if (verbose) {
-		(void) printf("puavo-conf-update: initialized puavo conf key"
-		    " %s --> %s\n", param_name, value);
+		(void) printf("puavo-conf-update: initialized/%s"
+		    " puavo conf key %s --> %s\n",
+		    (init ? "added" : "overwrote"), param_name, value);
 	}
 
 	return 0;
