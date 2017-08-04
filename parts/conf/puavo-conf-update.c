@@ -462,6 +462,11 @@ apply_device_settings(puavo_conf_t *conf, const char *device_json_path,
 	const char *param_name, *param_value;
 	int ret, retvalue;
 
+	if (verbose) {
+		(void) printf("puavo-conf-update: applying device settings"
+		    " from %s\n", device_json_path);
+	}
+
 	retvalue = 0;
 
 	if ((root = parse_json_file(device_json_path)) == NULL) {
