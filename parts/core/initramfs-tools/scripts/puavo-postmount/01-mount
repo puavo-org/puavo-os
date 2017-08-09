@@ -132,8 +132,19 @@ mount_puavo_partition() {
 
         OPTIONS="-o noatime"
 
-        mount ${OPTIONS} "/dev/mapper/${PUAVO_LVM_VG}-${name}" "/${name}"
+        if mount ${OPTIONS} "/dev/mapper/${PUAVO_LVM_VG}-${name}" "/${name}"; then
+            return 0
+        fi
+
+        # FORCE fsck if mount failed again (first try automatic, then -y)
+        if ! fsck -fpv "/dev/mapper/${PUAVO_LVM_VG}-${name}"; then
+            fsck -fvy "/dev/mapper/${PUAVO_LVM_VG}-${name}" || true
+        fi
+
+        mount ${OPTIONS} "/dev/mapper/${PUAVO_LVM_VG}-${name}" "/${name}" || return 1
     fi
+
+    return 0
 }
 
 move_puavo_partition()
