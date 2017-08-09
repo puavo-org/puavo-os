@@ -549,8 +549,8 @@ install_image() {
   fi
 
   install_from_file_or_nbd "$imagename" "$type_opt" "$type_arg"
-  set_image_as_default_image "$imagename"
   run_image_preinst_hook     "$imagename"
+  set_image_as_default_image "$imagename"
 
   echo "The PuavoLTSP image $imagename"
   echo "is now installed and set as default."
@@ -841,8 +841,8 @@ update_image() {
     log info "the requested ltsp image is already in place"
     update_stats uptodate 100
   else
-    set_image_as_default_image "$next_image"
     run_image_preinst_hook     "$next_image"
+    set_image_as_default_image "$next_image"
   fi
 }
 
