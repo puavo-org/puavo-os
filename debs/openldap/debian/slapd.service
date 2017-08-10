@@ -7,7 +7,7 @@ ExecStartPre = /bin/chown openldap:openldap /run/slapd
 ExecStart = /usr/sbin/slapd -u openldap -g openldap -h "ldap:/// ldapi:/// ldaps:///" -F /etc/ldap/slapd.d -d 0
 Restart = always
 RestartSec = 180
-ExecStop = /bin/rm -rf /var/run/slapd
+ExecStop = /bin/rm -rf /run/slapd
 LimitNOFILE = 100000
 
 [Install]
