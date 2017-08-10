@@ -22,7 +22,22 @@ set -eu
 new_mnt=/images/mnt
 
 update_grub() {
-  "${new_mnt}/usr/sbin/puavo-install-grub" --only-update-config "$@"
+  # puavo-install-grub updates /images/boot/grub/version
+  old_grub_version="$(cat /images/boot/grub/version 2>/dev/null || true)"
+  new_grub_version="$(${new_mnt}/usr/sbin/grub-install --version \
+                        | awk '{ print $3 }')"
+  if [ -z "$new_grub_version" ]; then
+    echo 'Can not determine the new grub version' >&2
+    return 1
+  fi
+
+  if [ -z "$old_grub_version" ] \
+    || dpkg --compare-versions "$old_grub_version" lt "$new_grub_version"; then
+      "${new_mnt}/usr/sbin/puavo-install-grub" --grub-basedir "$new_mnt" "$@"
+  else
+    "${new_mnt}/usr/sbin/puavo-install-grub" --grub-basedir "$new_mnt" \
+      --only-update-config "$@"
+  fi
 }
 
 hosttype=
