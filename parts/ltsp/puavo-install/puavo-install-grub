@@ -213,6 +213,9 @@ EOF
   exit 1
 }
 
+exitstatus=0
+
+grub_basedir=''
 hosttype=$(cat /etc/puavo/hosttype 2>/dev/null || true)
 images_dir=/images
 only_update_config=false
@@ -227,6 +230,7 @@ fi
 eval "set -- $args"
 while [ $# -ne 0 ]; do
   case "$1" in
+    --grub-basedir)       grub_basedir=$2;         shift; shift ;;
     --hosttype)           hosttype=$2;             shift; shift ;;
     --images-dir)         images_dir=$2;           shift; shift ;;
     --only-update-config) only_update_config=true; shift        ;;
@@ -281,13 +285,27 @@ case "$hosttype" in
 esac
 
 if ! $only_update_config; then
-  if ! grub_msg=$(grub-install --root-directory=$images_dir "$diskdev" \
-                    3>&- 4>&- 5>&- 2>&1); then
-    echo "Grub installation failed: $grub_msg" >&2
-    exit 1
+  grub_install_args=
+  if [ -n "$grub_basedir" ]; then
+    grub_install_args="--directory=${grub_basedir}/usr/lib/grub/i386-pc --locale-directory=${grub_basedir}/usr/share/locale"
+  fi
+  if ! grub_msg=$(${grub_basedir}/usr/sbin/grub-install \
+    --boot-directory=${images_dir} $grub_install_args "$diskdev" \
+      3>&- 4>&- 5>&- 2>&1); then
+        echo "Grub installation failed: $grub_msg" >&2
+        exit 1
   fi
 
-  echo "Grub has been installed to ${diskdev}."
+  ${grub_basedir}/usr/sbin/grub-install --version \
+    | awk '{ print $3 }' > /images/boot/grub/version.tmp
+  if [ ! -s /images/boot/grub/version.tmp ]; then
+    echo 'Could not determine new grub version' >&2
+    rm -f /images/boot/grub/version.tmp
+    exitstatus=1
+  else
+    mv /images/boot/grub/version.tmp /images/boot/grub/version
+    echo "Grub has been installed to ${diskdev}."
+  fi
 fi
 
 grub_cfg_path="${images_dir}/boot/grub/grub.cfg"
@@ -316,14 +334,16 @@ if cmp "$grub_cfg_path" "$tmp_grub_cfg_path" >/dev/null 2>&1; then
   rm -f "$tmp_grub_cfg_path"
 else
   mv "$tmp_grub_cfg_path" "$grub_cfg_path"
-
-  # We have got some weird spurious grub errors of the sort (at first boot):
-  # "error: ELF header smaller than expected", so we play it safe
-  # and try weird tricks to flush all caches to actual, physical disk.
-  # But we are not quite sure yet this will actually work (the problem is
-  # difficult to reproduce).
-  sync
-  echo 3 > /proc/sys/vm/drop_caches
-  blockdev --flushbufs $diskdev
-  hdparm -qF $diskdev
 fi
+
+# We have got some weird spurious grub errors of the sort (at first boot):
+# "error: ELF header smaller than expected", so we play it safe
+# and try weird tricks to flush all caches to actual, physical disk.
+# But we are not quite sure yet this will actually work (the problem is
+# difficult to reproduce).
+sync
+echo 3 > /proc/sys/vm/drop_caches
+blockdev --flushbufs $diskdev
+hdparm -qF $diskdev
+
+exit $exitstatus
