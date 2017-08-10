@@ -8,6 +8,20 @@ class packages {
   # install packages by default
   Package { ensure => present, }
 
+  # XXX This mechanism does not check signatures, hopefully we do not have to
+  # XXX use this much, or should fix it.
+  define install_from_url ($url) {
+    $packagename = $title
+    $filename = inline_template('<%= File.basename(@url) %>')
+    $target_file = "/var/cache/apt/archives/${filename}"
+
+    exec {
+      "install ${url}":
+        command => "/usr/bin/wget -O ${target_file} ${url} && /usr/bin/dpkg -i ${target_file}",
+        unless  => "/usr/bin/dpkg -s ${packagename} | /bin/grep -Fqx 'Status: install ok installed'";
+    }
+  }
+
   #
   # Puavo OS packages
   #
@@ -661,10 +675,29 @@ class packages {
 		      , $nvidia_dkms_375_module ]
                       # XXX $r8168_dkms_module  # XXX missing from Debian
 
+  ::packages::install_from_url {
+    'linux-headers-4.9.0-2-amd64':
+      require => ::Packages::Install_from_url['linux-headers-4.9.0-2-common'],
+      url     => 'http://snapshot.debian.org/archive/debian/20170516T212008Z/pool/main/l/linux/linux-headers-4.9.0-2-amd64_4.9.18-1_amd64.deb';
+
+    'linux-headers-4.9.0-2-common':
+      url => 'http://snapshot.debian.org/archive/debian/20170516T212008Z/pool/main/l/linux/linux-headers-4.9.0-2-common_4.9.18-1_all.deb';
+
+    'linux-image-4.9.0-2-amd64':
+      url => 'http://snapshot.debian.org/archive/debian/20170516T212008Z/pool/main/l/linux-signed/linux-image-4.9.0-2-amd64_4.9.18-1_amd64.deb';
+  }
+
   packages::kernels::kernel_package {
     '3.16.0-4-amd64':
       dkms_modules => $all_dkms_modules,
       package_name => 'linux-image-3.16.0-4-amd64';
+
+    '4.9.0-2-amd64':
+      dkms_modules => $all_dkms_modules,
+      package_name => 'linux-image-4.9.0-2-amd64',
+      require      => [ ::Packages::Install_from_url['linux-headers-4.9.0-2-amd64']
+                      , ::Packages::Install_from_url['linux-headers-4.9.0-2-common']
+                      , ::Packages::Install_from_url['linux-image-4.9.0-2-amd64'] ];
 
     '4.9.0-3-amd64':
       dkms_modules => $all_dkms_modules,
