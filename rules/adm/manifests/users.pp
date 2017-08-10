@@ -53,5 +53,10 @@ class adm::users {
       sshkey      => 'AAAAB3NzaC1yc2EAAAADAQABAAABAQCutK/dYF6XwVwW7e5d5ZJhGPZq4uvYyqGldFzstMGj/CkSZNVTwGwpTvvEMAU68I926kGXHiImVq30rFbac/U5cVg7SGsE726XJfN8a2+ayE9pCX6QvEGD0pJmdeIFTTFtDVuI+v0M5OdLX1eyyUX0g0bpw2DWl5J7jUufxKd1vh5zWuyaRy7F4uFAP2Jd2kkvuuB7rbzEOmwtkw7+cjm8U3TH78TOrBz1sW2DlOS8ih93wSQkRsCpWOZrSwA1nYr1TQff0k50iFR8wUqyuNB9YtS1tOlQsRGLH5S2fnBbzMmYtyU5yiFFikxuFSH0gaijJNk6EMAeQM17GYQdFQVr',
       sshkey_type => 'rsa',
       uid         => 1015;
+
+    'adm-jpitkanen':
+      sshkey      => 'AAAAB3NzaC1yc2EAAAADAQABAAABAQDk2SgYALJj3MhyxLLfDVwkWhXTdKEzA8Q56zmqlUar7n82n20F/qskwuaysWC+BtGTFLDr6RyhDkqV+6HOQ8sqb08L4LJt0Im0Z0IGVtdtQ5Q+s+RBvkp2WAlpmyM6l+l5ZTO6wwnXGUZlPzTuLyilf5ynR5+RseqzkgivPEoP9ionhFcZjqv9ByPrfnB2lliePa8EA9v+HVvUZlEqJAI781boLi7kQKIQdGKipqhLwvaL6D+DtbJT4T/oQzL8LxjbPi6ldGCLXVxO1+ShgU67aQh3Ez/WniwXddZbXni0glVpknEivX1wsoc5DRJ7tfIAG7PbOiJgHzmjAocQdC2l',
+      sshkey_type => 'rsa',
+      uid         => 1016;
   }
 }
