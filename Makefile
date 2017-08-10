@@ -146,13 +146,17 @@ make-release-logos:
 # gzip.  Especially on some hosts the decompression stage of kernel/initrd is
 # very slow when gzip is used, apparently because CPUs are not in normal
 # performance mode quite yet.
+# Using -no-sparse to workaround bug
+# https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=869771.
+# May be removed only when sure that grub has been updated on all hosts
+# updating to images made with this.
 .PHONY: rootfs-image
 rootfs-image: $(rootfs_dir) $(image_dir)
 	$(_sudo) .aux/set-image-release '$(rootfs_dir)' '$(image_class)' \
 	    '$(notdir $(_image_file))'
 	$(_systemd_nspawn_cmd) $(MAKE) -C '/puavo-os' make-release-logos
 	$(_sudo) mksquashfs '$(rootfs_dir)' '$(_image_file).tmp'	\
-		-noappend -no-recovery -wildcards -comp lzo	\
+		-noappend -no-recovery -no-sparse -wildcards -comp lzo	\
 		-ef '.aux/$(image_class).excludes'		\
 		|| { rm -f '$(_image_file).tmp'; false; }
 	$(_sudo) mv '$(_image_file).tmp' '$(_image_file)'
