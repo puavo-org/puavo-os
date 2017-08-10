@@ -205,6 +205,7 @@ $(basename $0) [optional arguments]
 
   $(basename $0) takes the following optional arguments:
 
+    --grub-basedir       grubbasedir
     --hosttype           hosttype
     --images-dir         imagesdir
     --only-update-config
