@@ -47,6 +47,7 @@ clean:
 	rm -rf .workdir/$<
 	mkdir -p .workdir/$<
 	cp -aH $< .workdir/$</$<
+	find .workdir/$</$< -type l -maxdepth 1 -exec sh -c 'ln -fns "../../$$(readlink "$$0")" "$$0"' {} \;
 	cd .workdir/$</$<				\
 		&& debian/scripts/get-orig-source	\
 		&& dpkg-buildpackage -sa -uc -us	\
