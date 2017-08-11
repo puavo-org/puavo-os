@@ -77,7 +77,7 @@ install-parts: /puavo-os
 
 .PHONY: install-build-deps
 install-build-deps: /puavo-os
-	$(MAKE) -C debs update-repo
+	$(MAKE) -C debs prepare
 
 	$(_sudo) env 'FACTER_localmirror=$(CURDIR)/debs/.archive' \
 	    FACTER_puavoruleset=prepare .aux/apply-puppet-rules

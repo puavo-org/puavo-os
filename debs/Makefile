@@ -49,9 +49,15 @@ clean:
 	@../.aux/build-debs --build-pkgs "$<" "$(_workdir)" \
 	    "$(CURDIR)/.archive/pool"
 
+.PHONY: prepare
+prepare: $(_workdir) update-repo
+
 .PHONY: update-repo
 update-repo:
 	$(MAKE) .archive/Release
+
+$(_workdir):
+	mkdir -p $(_workdir)
 
 .archive/Packages: $(wildcard .archive/pool/*.deb)
 	mkdir -p .archive/pool
