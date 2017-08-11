@@ -67,7 +67,7 @@ build-parts:
 
 .PHONY: install
 install: install-parts
-	$(MAKE) install-rules
+	$(MAKE) apply-rules
 
 .PHONY: install-parts
 install-parts: /puavo-os
@@ -87,6 +87,7 @@ help:
 	@echo
 	@echo 'Targets:'
 	@echo '    [build]              build all'
+	@echo '    apply-rules          apply all Puppet rules'
 	@echo '    build-debs-parts     build Puavo OS Debian packages'
 	@echo '    build-debs-ports     build all external Debian packages'
 	@echo '    build-parts          build all parts'
@@ -94,7 +95,6 @@ help:
 	@echo '    install              install all'
 	@echo '    install-build-deps   install all build dependencies'
 	@echo '    install-parts        install all parts'
-	@echo '    install-rules        install all Puppet rules'
 	@echo '    rdiffs               make rdiffs for images (uses "rdiff_targets"-variable)'
 	@echo '    rootfs-debootstrap   build Puavo OS rootfs from scratch'
 	@echo '    rootfs-image         pack rootfs to a squashfs image'
@@ -207,8 +207,8 @@ upload-debs:
 		"$(upload_server)" "$(upload_login)" "$(upload_dir)" \
 		"$(upload_codename)"
 
-.PHONY: install-rules
-install-rules: /puavo-os
+.PHONY: apply-rules
+apply-rules: /puavo-os
 	$(_sudo) .aux/setup-debconf
 	$(_sudo) env 'FACTER_puavoruleset=$(image_class)' \
 		.aux/apply-puppet-rules
