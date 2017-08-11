@@ -24,6 +24,8 @@ _install_build_deps_parts := $(_pkgs_parts:%=.install-build-deps-%)
 _install_build_deps_ports := $(_pkgs_ports:%=.install-build-deps-%)
 _install_build_deps       := $(_pkgs_image:%=.install-build-deps-%)
 
+_workdir = .workdir
+
 .PHONY: all
 all: $(_dpkg_buildpackage)
 	$(MAKE) update-repo
@@ -41,14 +43,14 @@ ports: $(_dpkg_buildpackage_ports)
 
 .PHONY: clean
 clean:
-	rm -rf .workdir
+	rm -rf $(_workdir)
 
 .dpkg-buildpackage-%: %
-	rm -rf .workdir/$<
-	mkdir -p .workdir/$<
-	cp -aH $< .workdir/$</$<
-	find .workdir/$</$< -type l -maxdepth 1 -exec sh -c 'ln -fns "../../$$(readlink "$$0")" "$$0"' {} \;
-	cd .workdir/$</$<				\
+	rm -rf $(_workdir)/$<
+	mkdir -p $(_workdir)/$<
+	cp -aH $< $(_workdir)/$</$<
+	find $(_workdir)/$</$< -type l -maxdepth 1 -exec sh -c 'ln -fns "../../$$(readlink "$$0")" "$$0"' {} \;
+	cd $(_workdir)/$</$<				\
 		&& debian/scripts/get-orig-source	\
 		&& dpkg-buildpackage -sa -uc -us	\
 		&& ../../../../parts/devscripts/bin/do-debpool-changes \
