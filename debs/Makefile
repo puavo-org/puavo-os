@@ -41,13 +41,17 @@ ports: $(_dpkg_buildpackage_ports)
 
 .PHONY: clean
 clean:
-	git clean -f -d -x
+	rm -rf .workdir
 
 .dpkg-buildpackage-%: %
-	cd $<						\
+	rm -rf .workdir/$<
+	mkdir -p .workdir/$<
+	cp -aH $< .workdir/$</$<
+	cd .workdir/$</$<				\
 		&& debian/scripts/get-orig-source	\
 		&& dpkg-buildpackage -sa -uc -us	\
-		&& ../../parts/devscripts/bin/do-debpool-changes -m $(CURDIR)/pool
+		&& ../../../../parts/devscripts/bin/do-debpool-changes \
+		     -m $(CURDIR)/pool
 
 .PHONY: update-repo
 update-repo:
