@@ -1,0 +1,42 @@
+#!/bin/sh
+
+set -eu
+
+srcpkgname=$1
+workdir=$2
+pooldir=$3
+
+pkgworkdir="${workdir}/${srcpkgname}"
+
+checksum_file="${workdir}/.checksum.${srcpkgname}"
+
+rm -rf "${pkgworkdir}"
+mkdir -p "${pkgworkdir}/${srcpkgname}"
+
+cp -aH "$srcpkgname"/* "${pkgworkdir}/${srcpkgname}/"
+
+current_srctree_checksum="$(cd "$pkgworkdir" \
+  && tar --mtime='2000-01-01 00:00:00 +00:00' -c -f - \
+       "$srcpkgname" | md5sum | awk '{ print $1 }')"
+
+if [ -z "$current_srctree_checksum" ]; then
+  echo 'Could not calculate checksum from source tree' >&2
+  exit 1
+fi
+
+old_srctree_checksum="$(cat "${checksum_file}" 2>/dev/null || true)"
+
+if [ "$current_srctree_checksum" = "$old_srctree_checksum" ]; then
+  # No need to build if source tree matches what we have built previously.
+  echo "No changes to ${srcpkgname}."
+  exit 0
+fi
+
+(
+  cd "${pkgworkdir}/${srcpkgname}"
+  debian/scripts/get-orig-source
+  dpkg-buildpackage -sa -uc -us
+  ../../../../parts/devscripts/bin/do-debpool-changes -m "$pooldir"
+)
+
+echo "$current_srctree_checksum" > "$checksum_file"

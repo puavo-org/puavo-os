@@ -46,15 +46,7 @@ clean:
 	rm -rf $(_workdir)
 
 .dpkg-buildpackage-%: %
-	rm -rf $(_workdir)/$<
-	mkdir -p $(_workdir)/$<
-	cp -aH $< $(_workdir)/$</$<
-	find $(_workdir)/$</$< -type l -maxdepth 1 -exec sh -c 'ln -fns "../../$$(readlink "$$0")" "$$0"' {} \;
-	cd $(_workdir)/$</$<				\
-		&& debian/scripts/get-orig-source	\
-		&& dpkg-buildpackage -sa -uc -us	\
-		&& ../../../../parts/devscripts/bin/do-debpool-changes \
-		     -m $(CURDIR)/pool
+	@../.aux/build-debs "$<" "$(_workdir)" "$(CURDIR)/pool"
 
 .PHONY: update-repo
 update-repo:
