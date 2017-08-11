@@ -79,7 +79,7 @@ install-parts: /puavo-os
 install-build-deps: /puavo-os
 	$(MAKE) -C debs update-repo
 
-	$(_sudo) env 'FACTER_localmirror=$(CURDIR)/debs' \
+	$(_sudo) env 'FACTER_localmirror=$(CURDIR)/debs/.archive' \
 	    FACTER_puavoruleset=prepare .aux/apply-puppet-rules
 
 	$(_sudo) $(MAKE) -C debs install-build-deps
@@ -213,7 +213,7 @@ upload-debs:
 .PHONY: apply-rules
 apply-rules: /puavo-os
 	$(_sudo) .aux/setup-debconf
-	$(_sudo) env 'FACTER_localmirror=$(CURDIR)/debs' \
+	$(_sudo) env 'FACTER_localmirror=$(CURDIR)/debs/.archive' \
 	    'FACTER_puavoruleset=$(image_class)' .aux/apply-puppet-rules
 
 .PHONY: rdiffs

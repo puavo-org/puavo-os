@@ -43,24 +43,26 @@ ports: $(_dpkg_buildpackage_ports)
 
 .PHONY: clean
 clean:
-	rm -rf $(_workdir) Packages Packages.gz Release *.deb
+	rm -rf .archive $(_workdir)
 
 .dpkg-buildpackage-%: %
-	@../.aux/build-debs --build-pkgs "$<" "$(_workdir)" "$(CURDIR)/pool"
+	@../.aux/build-debs --build-pkgs "$<" "$(_workdir)" \
+	    "$(CURDIR)/.archive/pool"
 
 .PHONY: update-repo
 update-repo:
-	$(MAKE) Release
+	$(MAKE) .archive/Release
 
-Packages: $(wildcard pool/*.deb)
-	mkdir -p pool
-	apt-ftparchive packages pool >$@
+.archive/Packages: $(wildcard .archive/pool/*.deb)
+	mkdir -p .archive/pool
+	cd .archive && apt-ftparchive packages pool > Packages
 
-Packages.gz: Packages
+.archive/Packages.gz: .archive/Packages
 	gzip -f -k $<
 
-Release: Packages.gz
-	apt-ftparchive -o APT::FTPArchive::Release::Origin=puavo-os release . >$@
+.archive/Release: .archive/Packages.gz
+	cd .archive && apt-ftparchive \
+	    -o APT::FTPArchive::Release::Origin=puavo-os release . > Release
 
 .PHONY: install-build-deps-cloud
 install-build-deps-cloud: $(_install_build_deps_cloud)
@@ -76,7 +78,7 @@ install-build-deps: $(_install_build_deps)
 
 .install-build-deps-%: % apt_update
 	@../.aux/build-debs --install-build-deps "$<" "$(_workdir)" \
-	    "$(CURDIR)/pool"
+	    "$(CURDIR)/.archive/pool"
 
 .PHONY: apt_update
 apt_update:
