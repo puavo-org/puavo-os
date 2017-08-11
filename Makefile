@@ -61,6 +61,7 @@ build-debs-parts:
 build-debs-ports:
 	$(MAKE) -C debs ports
 
+# mainly for development use
 .PHONY: build-parts
 build-parts:
 	$(MAKE) -C parts
@@ -69,6 +70,7 @@ build-parts:
 install: install-parts
 	$(MAKE) apply-rules
 
+# mainly for development use
 .PHONY: install-parts
 install-parts: /puavo-os
 	$(_sudo) $(MAKE) -C parts install prefix=/usr sysconfdir=/etc
@@ -189,14 +191,14 @@ setup-buildhost:
 
 .PHONY: update
 update: /etc/puavo-conf/image.json install-build-deps
-	$(MAKE)
+	$(MAKE) build
 
 	$(_sudo) apt-get update
 	$(_sudo) apt-get dist-upgrade -V -y			\
 		-o Dpkg::Options::="--force-confdef"	\
 		-o Dpkg::Options::="--force-confold"
 
-	$(MAKE) install
+	$(MAKE) apply-rules
 
 	$(_sudo) update-initramfs -u -k all
 	$(_sudo) updatedb
