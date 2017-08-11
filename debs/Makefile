@@ -74,6 +74,9 @@ install-build-deps-ports: $(_install_build_deps_ports)
 .PHONY: install-build-deps
 install-build-deps: $(_install_build_deps)
 
-.install-build-deps-%: %
-	apt-get update
+.install-build-deps-%: % apt_update
 	mk-build-deps -i "$</debian/control" -t 'apt-get -y --force-yes'
+
+.PHONY: apt_update
+apt_update:
+	apt-get update
