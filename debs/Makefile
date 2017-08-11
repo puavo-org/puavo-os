@@ -43,7 +43,7 @@ ports: $(_dpkg_buildpackage_ports)
 
 .PHONY: clean
 clean:
-	rm -rf $(_workdir)
+	rm -rf $(_workdir) Packages Packages.gz Release *.deb
 
 .dpkg-buildpackage-%: %
 	@../.aux/build-debs "$<" "$(_workdir)" "$(CURDIR)/pool"
