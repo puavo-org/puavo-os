@@ -2,13 +2,25 @@
 
 set -eu
 
-srcpkgname=$1
-workdir=$2
-pooldir=$3
+mode=$1
+srcpkgname=$2
+workdir=$3
+pooldir=$4
 
-pkgworkdir="${workdir}/${srcpkgname}"
-
-checksum_file="${workdir}/.checksum.${srcpkgname}"
+case "$mode" in
+  --build-pkgs)
+    checksum_file="${workdir}/.checksum.${srcpkgname}.build"
+    pkgworkdir="${workdir}/${srcpkgname}.build"
+    ;;
+  --install-build-deps)
+    checksum_file="${workdir}/.checksum.${srcpkgname}.builddeps"
+    pkgworkdir="${workdir}/${srcpkgname}.builddeps"
+    ;;
+  *)
+    echo "Usage: $(basename $0) --build-pkgs|--install-build-deps srcpkg workdir pooldir" >&2
+    exit 1
+    ;;
+esac
 
 rm -rf "${pkgworkdir}"
 mkdir -p "${pkgworkdir}/${srcpkgname}"
@@ -32,11 +44,19 @@ if [ "$current_srctree_checksum" = "$old_srctree_checksum" ]; then
   exit 0
 fi
 
-(
-  cd "${pkgworkdir}/${srcpkgname}"
-  debian/scripts/get-orig-source
-  dpkg-buildpackage -sa -uc -us
-  ../../../../parts/devscripts/bin/do-debpool-changes -m "$pooldir"
-)
+if [ "$mode" = '--install-build-deps' ]; then
+  (
+    cd "$pkgworkdir"
+    mk-build-deps -i "${srcpkgname}/debian/control" -t 'apt-get -y --force-yes'
+  )
+  rm -rf "$pkgworkdir"
+else
+  (
+    cd "${pkgworkdir}/${srcpkgname}"
+    debian/scripts/get-orig-source
+    dpkg-buildpackage -sa -uc -us
+    ../../../../parts/devscripts/bin/do-debpool-changes -m "$pooldir"
+  )
+fi
 
 echo "$current_srctree_checksum" > "$checksum_file"

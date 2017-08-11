@@ -46,7 +46,7 @@ clean:
 	rm -rf $(_workdir) Packages Packages.gz Release *.deb
 
 .dpkg-buildpackage-%: %
-	@../.aux/build-debs "$<" "$(_workdir)" "$(CURDIR)/pool"
+	@../.aux/build-debs --build-pkgs "$<" "$(_workdir)" "$(CURDIR)/pool"
 
 .PHONY: update-repo
 update-repo:
@@ -75,7 +75,8 @@ install-build-deps-ports: $(_install_build_deps_ports)
 install-build-deps: $(_install_build_deps)
 
 .install-build-deps-%: % apt_update
-	mk-build-deps -i "$</debian/control" -t 'apt-get -y --force-yes'
+	@../.aux/build-debs --install-build-deps "$<" "$(_workdir)" \
+	    "$(CURDIR)/pool"
 
 .PHONY: apt_update
 apt_update:
