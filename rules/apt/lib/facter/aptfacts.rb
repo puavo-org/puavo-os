@@ -1,9 +1,3 @@
-Facter.add('localmirror') do
-    setcode do
-        File.exists?('/puavo-os/debs/Packages') ? '/puavo-os/debs' : ''
-    end
-end
-
 Facter.add('mirror') do
     setcode do
         File.read('/etc/apt/sources.list')
