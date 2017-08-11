@@ -291,7 +291,7 @@ if ! $only_update_config; then
     grub_install_args="--directory=${grub_basedir}/usr/lib/grub/i386-pc --locale-directory=${grub_basedir}/usr/share/locale"
   fi
   if ! grub_msg=$(${grub_basedir}/usr/sbin/grub-install \
-    --boot-directory=${images_dir} $grub_install_args "$diskdev" \
+    --boot-directory=${images_dir}/boot $grub_install_args "$diskdev" \
       3>&- 4>&- 5>&- 2>&1); then
         echo "Grub installation failed: $grub_msg" >&2
         exit 1
