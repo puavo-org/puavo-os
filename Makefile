@@ -49,6 +49,7 @@ _systemd_nspawn_cmd := sudo systemd-nspawn -D '$(rootfs_dir)' \
 			 --setenv="PUAVO_CACHE_PROXY=$(_proxy_address)"
 
 _sudo := sudo $(_proxywrap_cmd)
+export _sudo
 
 .PHONY: build
 build: build-debs-ports build-debs-parts
@@ -82,7 +83,7 @@ install-build-deps: /puavo-os
 	$(_sudo) env 'FACTER_localmirror=$(CURDIR)/debs/.archive' \
 	    FACTER_puavoruleset=prepare .aux/apply-puppet-rules
 
-	$(MAKE) '_sudo=$(_sudo)' -C debs install-build-deps
+	$(MAKE) -C debs install-build-deps
 
 .PHONY: help
 help:
