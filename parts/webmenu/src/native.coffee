@@ -335,10 +335,8 @@ module.exports = (gui, Window) ->
             gui.Window.open? cmd.url,
                 width: cmd.width or 1000
                 height: cmd.height or 800
-                "always-on-top": true
-                toolbar: false
                 frame: true
-                title: cmd.name
+                title: (cmd.name and cmd.name[process.env.LANGUAGE]) or 'webmenu'
         else
             launchCommand(cmd)
 
