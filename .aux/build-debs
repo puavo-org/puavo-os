@@ -1,0 +1,74 @@
+#!/bin/sh
+
+set -eu
+
+mode=$1
+srcpkgname=$2
+workdir=$3
+pooldir=$4
+
+case "$mode" in
+  --build-pkgs)
+    checksum_file="${workdir}/.checksum.${srcpkgname}.build"
+    ;;
+  --install-build-deps)
+    checksum_file="${workdir}/.checksum.${srcpkgname}.builddeps"
+    ;;
+  *)
+    echo "Usage: $(basename $0) --build-pkgs|--install-build-deps srcpkg workdir pooldir" >&2
+    exit 1
+    ;;
+esac
+
+pkgworkdir="${workdir}/${srcpkgname}"
+
+rm -rf "${pkgworkdir}"
+mkdir -p "${pkgworkdir}/${srcpkgname}"
+
+cp -aH "$srcpkgname"/* "${pkgworkdir}/${srcpkgname}/"
+
+current_srctree_checksum="$(cd "$pkgworkdir" \
+  && tar --mtime='2000-01-01 00:00:00 +00:00' -c -f - \
+       "$srcpkgname" | md5sum | awk '{ print $1 }')"
+
+if [ -z "$current_srctree_checksum" ]; then
+  echo 'Could not calculate checksum from source tree' >&2
+  exit 1
+fi
+
+old_srctree_checksum="$(cat "${checksum_file}" 2>/dev/null || true)"
+
+if [ "$current_srctree_checksum" = "$old_srctree_checksum" ]; then
+  # No need to build if source tree matches what we have built previously.
+  echo "No changes to ${srcpkgname}."
+  exit 0
+fi
+
+if [ "$mode" = '--install-build-deps' ]; then
+  (
+    cd "$pkgworkdir"
+    ${PUAVOOS_SUDO:-} mk-build-deps -i "${srcpkgname}/debian/control" -t 'apt-get -y --force-yes'
+  )
+  rm -rf "$pkgworkdir"
+else
+  (
+    cd "${pkgworkdir}/${srcpkgname}"
+    debian/scripts/get-orig-source
+
+    current_deb_version="$(dpkg-parsechangelog -S version \
+                             | sed -E 's/\+build[0-9]+$//')"
+    if [ -z "$current_deb_version" ]; then
+      echo "Could not determine package version for ${srcpkgname}." >&2
+      exit 1
+    fi
+    new_deb_version="${current_deb_version}+build$(date +%s)"
+    env DEBFULLNAME="Puavo Org" DEBEMAIL="dev@opinsys.fi" \
+      dch --newversion "$new_deb_version" \
+        "Automatic build for puavo-os on $(env LANG=C date)."
+
+    dpkg-buildpackage -sa -uc -us
+    ../../../../parts/devscripts/bin/do-debpool-changes -m "$pooldir"
+  )
+fi
+
+echo "$current_srctree_checksum" > "$checksum_file"

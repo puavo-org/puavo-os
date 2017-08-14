@@ -3,7 +3,6 @@ _pkgs_parts     := puavo-os
 _pkgs_ports     := autopoweroff    \
                    fluentd         \
                    gnome-shell     \
-                   grub2           \
                    nwjs            \
                    visionmedia-mon \
                    vtun            \
@@ -24,6 +23,8 @@ _install_build_deps_parts := $(_pkgs_parts:%=.install-build-deps-%)
 _install_build_deps_ports := $(_pkgs_ports:%=.install-build-deps-%)
 _install_build_deps       := $(_pkgs_image:%=.install-build-deps-%)
 
+_workdir = .workdir
+
 .PHONY: all
 all: $(_dpkg_buildpackage)
 	$(MAKE) update-repo
@@ -41,27 +42,32 @@ ports: $(_dpkg_buildpackage_ports)
 
 .PHONY: clean
 clean:
-	git clean -f -d -x
+	rm -rf .archive $(_workdir)
 
 .dpkg-buildpackage-%: %
-	cd $<						\
-		&& debian/scripts/get-orig-source	\
-		&& dpkg-buildpackage -sa -uc -us	\
-		&& ../../parts/devscripts/bin/do-debpool-changes -m $(CURDIR)/pool
+	@../.aux/build-debs --build-pkgs "$<" "$(_workdir)" \
+	    "$(CURDIR)/.archive/pool"
+
+.PHONY: prepare
+prepare: $(_workdir) update-repo
 
 .PHONY: update-repo
 update-repo:
-	$(MAKE) Release
+	$(MAKE) .archive/Release
 
-Packages: $(wildcard pool/*.deb)
-	mkdir -p pool
-	apt-ftparchive packages pool >$@
+$(_workdir):
+	mkdir -p $(_workdir)
 
-Packages.gz: Packages
+.archive/Packages: $(wildcard .archive/pool/*.deb)
+	mkdir -p .archive/pool
+	cd .archive && apt-ftparchive packages pool > Packages
+
+.archive/Packages.gz: .archive/Packages
 	gzip -f -k $<
 
-Release: Packages.gz
-	apt-ftparchive -o APT::FTPArchive::Release::Origin=puavo-os release . >$@
+.archive/Release: .archive/Packages.gz
+	cd .archive && apt-ftparchive \
+	    -o APT::FTPArchive::Release::Origin=puavo-os release . > Release
 
 .PHONY: install-build-deps-cloud
 install-build-deps-cloud: $(_install_build_deps_cloud)
@@ -75,6 +81,11 @@ install-build-deps-ports: $(_install_build_deps_ports)
 .PHONY: install-build-deps
 install-build-deps: $(_install_build_deps)
 
-.install-build-deps-%: %
-	apt-get update
-	mk-build-deps -i "$</debian/control" -t 'apt-get -y --force-yes'
+.install-build-deps-%: % apt_update
+	@env PUAVOOS_SUDO='$(_sudo)' \
+	    ../.aux/build-debs --install-build-deps \
+	    "$<" "$(_workdir)" "$(CURDIR)/.archive/pool"
+
+.PHONY: apt_update
+apt_update:
+	$(_sudo) apt-get update

@@ -269,11 +269,12 @@ ensure_enough_available_diskspace() {
   target_tmpimage_size_on_fs=$(stat -c %s "${images_dir}/${next_image}.tmp" \
                                  2>/dev/null || echo 0)
 
-  if ! target_rdiff_size=$(lookup_size_from_cksums "$rdiff_filename"); then
-    # We are not using rdiffs for updates.
-    target_rdiff_size=0
-    target_rdiff_size_on_fs=0
-    target_tmprdiff_size_on_fs=0
+  if [ -z "$rdiff_filename" ] \
+    || ! target_rdiff_size=$(lookup_size_from_cksums "$rdiff_filename"); then
+      # We are not using rdiffs for updates.
+      target_rdiff_size=0
+      target_rdiff_size_on_fs=0
+      target_tmprdiff_size_on_fs=0
   elif [ -e "${rdiffs_dir}/${rdiff_filename}" ]; then
     # This implies rdiff should be ok.
     target_rdiff_size_on_fs="$target_rdiff_size"
@@ -415,8 +416,6 @@ get_next_image() {
   mkdir -p "$rdiffs_dir"
 
   cleanup_previous_runs "${next_image}.tmp" "$rdiff_filename"
-
-  ensure_enough_available_diskspace "$next_image" "$rdiff_filename"
 
   for image_server in $image_server_list; do
     try_rdiff_update_from_imageserver "$image_server"   \
@@ -737,6 +736,8 @@ try_full_image_update_from_imageserver() {
   # it is not sensible to continue if the required checksum does not exist
   check_checksums_exist_for "$next_image" || return 1
 
+  ensure_enough_available_diskspace "$next_image" '' || return 1
+
   next_image_tmppath="${images_dir}/${next_image}.tmp"
 
   rsyncopts=""
@@ -810,6 +811,8 @@ try_rdiff_update_from_imageserver() {
   # it is not sensible to continue if the required checksums do not exist
   check_checksums_exist_for "$rdiff_filename" "$next_image" \
     || return 1
+
+  ensure_enough_available_diskspace "$next_image" "$rdiff_filename" || return 1
 
   rdiff_url="https://${image_server}/rdiffs/${rdiff_filename}"
 

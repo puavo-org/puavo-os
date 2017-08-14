@@ -36,9 +36,9 @@ else ifeq ($(_cache_configured),true)
   _proxy_address := localhost:3128
 endif
 ifdef _proxy_address
-_proxywrap_cmd := .aux/proxywrap --with-proxy $(_proxy_address)
+_proxywrap_cmd := $(CURDIR)/.aux/proxywrap --with-proxy $(_proxy_address)
 else
-_proxywrap_cmd := .aux/proxywrap
+_proxywrap_cmd := $(CURDIR)/.aux/proxywrap
 endif
 
 _systemd_nspawn_machine_name := \
@@ -49,6 +49,7 @@ _systemd_nspawn_cmd := sudo systemd-nspawn -D '$(rootfs_dir)' \
 			 --setenv="PUAVO_CACHE_PROXY=$(_proxy_address)"
 
 _sudo := sudo $(_proxywrap_cmd)
+export _sudo
 
 .PHONY: build
 build: build-debs-ports build-debs-parts
@@ -61,25 +62,28 @@ build-debs-parts:
 build-debs-ports:
 	$(MAKE) -C debs ports
 
+# mainly for development use
 .PHONY: build-parts
 build-parts:
 	$(MAKE) -C parts
 
 .PHONY: install
 install: install-parts
-	$(MAKE) install-rules
+	$(MAKE) apply-rules
 
+# mainly for development use
 .PHONY: install-parts
 install-parts: /puavo-os
 	$(_sudo) $(MAKE) -C parts install prefix=/usr sysconfdir=/etc
 
 .PHONY: install-build-deps
 install-build-deps: /puavo-os
-	$(MAKE) -C debs update-repo
+	$(MAKE) -C debs prepare
 
-	$(_sudo) env FACTER_puavoruleset=prepare .aux/apply-puppet-rules
+	$(_sudo) env 'FACTER_localmirror=$(CURDIR)/debs/.archive' \
+	    FACTER_puavoruleset=prepare .aux/apply-puppet-rules
 
-	$(_sudo) $(MAKE) -C debs install-build-deps
+	$(MAKE) -C debs install-build-deps
 
 .PHONY: help
 help:
@@ -87,14 +91,15 @@ help:
 	@echo
 	@echo 'Targets:'
 	@echo '    [build]              build all'
+	@echo '    apply-rules          apply all Puppet rules'
 	@echo '    build-debs-parts     build Puavo OS Debian packages'
 	@echo '    build-debs-ports     build all external Debian packages'
 	@echo '    build-parts          build all parts'
+	@echo '    clean                clean debs and parts
 	@echo '    help                 display this help and exit'
 	@echo '    install              install all'
 	@echo '    install-build-deps   install all build dependencies'
 	@echo '    install-parts        install all parts'
-	@echo '    install-rules        install all Puppet rules'
 	@echo '    rdiffs               make rdiffs for images (uses "rdiff_targets"-variable)'
 	@echo '    rootfs-debootstrap   build Puavo OS rootfs from scratch'
 	@echo '    rootfs-image         pack rootfs to a squashfs image'
@@ -189,14 +194,14 @@ setup-buildhost:
 
 .PHONY: update
 update: /etc/puavo-conf/image.json install-build-deps
-	$(MAKE)
+	$(MAKE) build
 
 	$(_sudo) apt-get update
 	$(_sudo) apt-get dist-upgrade -V -y			\
 		-o Dpkg::Options::="--force-confdef"	\
 		-o Dpkg::Options::="--force-confold"
 
-	$(MAKE) install
+	$(MAKE) apply-rules
 
 	$(_sudo) update-initramfs -u -k all
 	$(_sudo) updatedb
@@ -207,17 +212,22 @@ upload-debs:
 		"$(upload_server)" "$(upload_login)" "$(upload_dir)" \
 		"$(upload_codename)"
 
-.PHONY: install-rules
-install-rules: /puavo-os
+.PHONY: apply-rules
+apply-rules: /puavo-os
 	$(_sudo) .aux/setup-debconf
-	$(_sudo) env 'FACTER_puavoruleset=$(image_class)' \
-		.aux/apply-puppet-rules
+	$(_sudo) env 'FACTER_localmirror=$(CURDIR)/debs/.archive' \
+	    'FACTER_puavoruleset=$(image_class)' .aux/apply-puppet-rules
 
 .PHONY: rdiffs
 rdiffs: $(image_dir) $(mirror_dir)
 	$(_sudo) .aux/make-rdiffs image_dir="$(image_dir)" \
 		images_urlbase="$(images_urlbase)" \
 		mirror_dir="$(mirror_dir)" $(rdiff_targets)
+
+.PHONY: clean
+clean:
+	$(MAKE) -C debs clean
+	$(MAKE) -C parts clean
 
 $(mirror_dir):
 	$(_sudo) mkdir -p '$(mirror_dir)'
