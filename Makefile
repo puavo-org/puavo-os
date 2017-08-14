@@ -95,6 +95,7 @@ help:
 	@echo '    build-debs-parts     build Puavo OS Debian packages'
 	@echo '    build-debs-ports     build all external Debian packages'
 	@echo '    build-parts          build all parts'
+	@echo '    clean                clean debs and parts
 	@echo '    help                 display this help and exit'
 	@echo '    install              install all'
 	@echo '    install-build-deps   install all build dependencies'
@@ -222,6 +223,11 @@ rdiffs: $(image_dir) $(mirror_dir)
 	$(_sudo) .aux/make-rdiffs image_dir="$(image_dir)" \
 		images_urlbase="$(images_urlbase)" \
 		mirror_dir="$(mirror_dir)" $(rdiff_targets)
+
+.PHONY: clean
+clean:
+	$(MAKE) -C debs clean
+	$(MAKE) -C parts clean
 
 $(mirror_dir):
 	$(_sudo) mkdir -p '$(mirror_dir)'
