@@ -36,9 +36,9 @@ else ifeq ($(_cache_configured),true)
   _proxy_address := localhost:3128
 endif
 ifdef _proxy_address
-_proxywrap_cmd := .aux/proxywrap --with-proxy $(_proxy_address)
+_proxywrap_cmd := $(CURDIR)/.aux/proxywrap --with-proxy $(_proxy_address)
 else
-_proxywrap_cmd := .aux/proxywrap
+_proxywrap_cmd := $(CURDIR)/.aux/proxywrap
 endif
 
 _systemd_nspawn_machine_name := \
@@ -82,7 +82,7 @@ install-build-deps: /puavo-os
 	$(_sudo) env 'FACTER_localmirror=$(CURDIR)/debs/.archive' \
 	    FACTER_puavoruleset=prepare .aux/apply-puppet-rules
 
-	$(_sudo) $(MAKE) -C debs install-build-deps
+	$(MAKE) '_sudo=$(_sudo)' -C debs install-build-deps
 
 .PHONY: help
 help:

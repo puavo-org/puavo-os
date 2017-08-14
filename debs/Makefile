@@ -3,7 +3,6 @@ _pkgs_parts     := puavo-os
 _pkgs_ports     := autopoweroff    \
                    fluentd         \
                    gnome-shell     \
-                   grub2           \
                    nwjs            \
                    visionmedia-mon \
                    vtun            \
@@ -83,9 +82,10 @@ install-build-deps-ports: $(_install_build_deps_ports)
 install-build-deps: $(_install_build_deps)
 
 .install-build-deps-%: % apt_update
-	@../.aux/build-debs --install-build-deps "$<" "$(_workdir)" \
-	    "$(CURDIR)/.archive/pool"
+	@env PUAVOOS_SUDO='$(_sudo)' \
+	    ../.aux/build-debs --install-build-deps \
+	    "$<" "$(_workdir)" "$(CURDIR)/.archive/pool"
 
 .PHONY: apt_update
 apt_update:
-	apt-get update
+	$(_sudo) apt-get update

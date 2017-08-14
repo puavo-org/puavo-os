@@ -10,17 +10,17 @@ pooldir=$4
 case "$mode" in
   --build-pkgs)
     checksum_file="${workdir}/.checksum.${srcpkgname}.build"
-    pkgworkdir="${workdir}/${srcpkgname}.build"
     ;;
   --install-build-deps)
     checksum_file="${workdir}/.checksum.${srcpkgname}.builddeps"
-    pkgworkdir="${workdir}/${srcpkgname}.builddeps"
     ;;
   *)
     echo "Usage: $(basename $0) --build-pkgs|--install-build-deps srcpkg workdir pooldir" >&2
     exit 1
     ;;
 esac
+
+pkgworkdir="${workdir}/${srcpkgname}"
 
 rm -rf "${pkgworkdir}"
 mkdir -p "${pkgworkdir}/${srcpkgname}"
@@ -47,7 +47,7 @@ fi
 if [ "$mode" = '--install-build-deps' ]; then
   (
     cd "$pkgworkdir"
-    mk-build-deps -i "${srcpkgname}/debian/control" -t 'apt-get -y --force-yes'
+    ${PUAVOOS_SUDO:-} mk-build-deps -i "${srcpkgname}/debian/control" -t 'apt-get -y --force-yes'
   )
   rm -rf "$pkgworkdir"
 else
