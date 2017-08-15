@@ -83,7 +83,7 @@ def get_version(name, version_re)
   return versionmatch[1..4].join
 end
 
-def make_metadata_file(series_metadata, series_metadata_file)
+def make_metadata_file(series_name, series_metadata, series_metadata_file)
   series_metadata['images'].each do |image_metadata|
     imagename = image_metadata['filename']
     image_metadata['cksum'] = read_cksum(imagename)
@@ -97,9 +97,11 @@ def make_metadata_file(series_metadata, series_metadata_file)
     end
   end
 
+  series_metadata_by_series_name = { series_name => series_metadata }
+
   tmpfile = "#{ series_metadata_file }.tmp"
   File.open(tmpfile, 'w') do |f|
-    f.write(series_metadata.to_json)
+    f.write(series_metadata_by_series_name.to_json)
   end
   mv tmpfile, series_metadata_file
 end
@@ -278,7 +280,7 @@ image_series.each do |series_name, image_list|
   end
 
   file series_metadata_file do |t|
-    make_metadata_file(series_metadata, series_metadata_file)
+    make_metadata_file(series_name, series_metadata, series_metadata_file)
   end
 
   if target_image_rdiff_target then
