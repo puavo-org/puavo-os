@@ -87,13 +87,13 @@ def make_metadata_file(series_name, series_metadata, series_metadata_file)
   series_metadata['images'].each do |image_metadata|
     imagename = image_metadata['filename']
     image_metadata['cksum'] = read_cksum(imagename)
-    image_metadata['sha256sum'] = read_sha256sum(imagename)
+    image_metadata['sha256'] = read_sha256sum(imagename)
 
     image_metadata['diffs'].each do |rdiff_metadata|
       rdiff_file = rdiff_metadata['filename']
       rdiff_metadata['size'] = File.size("#{ Rdiffs_dir }/#{ rdiff_file }")
       rdiff_metadata['cksum'] = read_cksum(rdiff_file)
-      rdiff_metadata['sha256sum'] = read_sha256sum(rdiff_file)
+      rdiff_metadata['sha256'] = read_sha256sum(rdiff_file)
     end
   end
 
