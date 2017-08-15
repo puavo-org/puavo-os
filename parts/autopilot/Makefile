@@ -18,9 +18,6 @@ bin/puavo-autopilot-env: Makefile
 	echo "export PUAVO_AUTOPILOT_LIBDIR=$(libdir)/puavo-autopilot" >> $@
 
 install: bin/puavo-autopilot-env installdirs
-	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/ltsp/xinitrc.d \
-		I99-lightdm-puavo-autopilot-login
-
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
 		puavo-autopilot-session.desktop
 
@@ -29,6 +26,9 @@ install: bin/puavo-autopilot-env installdirs
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-autopilot \
 		lib/*
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/gdm/greeter/autostart \
+		puavo-autopilot-login.desktop
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-autopilot \
 		share/*.png
@@ -40,7 +40,7 @@ install: bin/puavo-autopilot-env installdirs
 
 installdirs:
 	mkdir -p $(DESTDIR)$(bindir)
-	mkdir -p $(DESTDIR)$(datarootdir)/ltsp/xinitrc.d
+	mkdir -p $(DESTDIR)$(datarootdir)/gdm/greeter/autostart
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-autopilot
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/definitions
 	mkdir -p $(DESTDIR)$(libdir)/puavo-autopilot
