@@ -2,10 +2,6 @@
 
 set -eu
 
-# XXX remove
-set -x
-exec > /tmp/puavo-autopilot-login.$$.log 2>&1
-
 is_enabled=$(puavo-conf puavo.autopilot.enabled)
 [ "${is_enabled}" = 'true' ] || exit 0
 
