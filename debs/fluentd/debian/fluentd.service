@@ -1,0 +1,13 @@
+[Unit]
+Description = Fluentd
+
+[Service]
+ExecStartPre = /bin/mkdir -p /state/fluentd-buffer
+ExecStartPre = /bin/chown fluentd:fluentd /state/fluentd-buffer
+Environment = GEM_HOME=/usr/lib/fluentd-gem
+ExecStart = /usr/lib/fluentd-gem/bin/fluentd
+User = fluentd
+Group = fluentd
+
+[Install]
+WantedBy = multi-user.target
