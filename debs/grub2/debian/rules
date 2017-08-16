@@ -1,7 +1,8 @@
 #!/usr/bin/make -f
 SHELL		:= bash
 
-deb_version		:= $(shell dpkg-parsechangelog | sed -ne "s/^Version: \(.*\)/\1/p")
+deb_withbuild_version	:= $(shell dpkg-parsechangelog | sed -ne "s/^Version: \(.*\)/\1/p")
+deb_version	        := $(shell echo $(deb_withbuild_version) | sed 's/\+build[0-9]+$$//')
 upstream_version	:= $(shell echo $(deb_version) | sed -e "s/-[^-]*$$//")
 
 package		:= grub2

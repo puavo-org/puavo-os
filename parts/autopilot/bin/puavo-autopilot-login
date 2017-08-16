@@ -1,5 +1,12 @@
+#!/bin/sh
+
+set -eu
+
 (
-  set -e
+  if ! flock -n 9; then
+    # puavo-autopilot-login is likely already running, do nothing
+    exit 0
+  fi
 
   is_enabled=$(puavo-conf puavo.autopilot.enabled)
   [ "${is_enabled}" = 'true' ] || exit 0
@@ -8,38 +15,33 @@
   username=$(puavo-conf puavo.autopilot.username)
   password=$(puavo-conf puavo.autopilot.password)
 
-  if [ -n "$user" -a -n "$password" ]; then
+  if [ -n "$username" -a -n "$password" ]; then
     if [ "${mode}" = "smoke" ]; then
       puavo-autopilot-logger --tag smoke                        \
                              --                                 \
                              'msg=enter-display-manager-screen' \
-                             "user=$user"                       \
-          || true
+                             "user=$username"                   \
+        || true
     fi
-    sleep 15
-
-    ## The "Guest Session" widget might be the active one, click up
-    ## arrow to activate the normal login widget.
-    xte 'key Up'
-    sleep 1
+    sleep 5
 
     ## The login widget might be dirty, click esc to clear it.
     xte 'key Escape'
     sleep 1
 
-    xte "str ${user}"
+    xte "str ${username}"
     xte 'key Return'
     sleep 4 ## Password widget activates slowly.
 
     xte "str ${password}"
     xte 'key Return'
 
-    if [ "${mode}" = "smoke" ]; then
+    if [ "${mode}" = 'smoke' ]; then
       puavo-autopilot-logger --tag smoke                     \
                              --                              \
                              'msg=try-display-manager-login' \
-                             "user=$user"                    \
-          || true
+                             "user=$username"                \
+        || true
     fi
   fi
-) &
+) 9< "$0"

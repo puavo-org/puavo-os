@@ -83,23 +83,25 @@ def get_version(name, version_re)
   return versionmatch[1..4].join
 end
 
-def make_metadata_file(series_metadata, series_metadata_file)
+def make_metadata_file(series_name, series_metadata, series_metadata_file)
   series_metadata['images'].each do |image_metadata|
     imagename = image_metadata['filename']
     image_metadata['cksum'] = read_cksum(imagename)
-    image_metadata['sha256sum'] = read_sha256sum(imagename)
+    image_metadata['sha256'] = read_sha256sum(imagename)
 
     image_metadata['diffs'].each do |rdiff_metadata|
       rdiff_file = rdiff_metadata['filename']
       rdiff_metadata['size'] = File.size("#{ Rdiffs_dir }/#{ rdiff_file }")
       rdiff_metadata['cksum'] = read_cksum(rdiff_file)
-      rdiff_metadata['sha256sum'] = read_sha256sum(rdiff_file)
+      rdiff_metadata['sha256'] = read_sha256sum(rdiff_file)
     end
   end
 
+  series_metadata_by_series_name = { series_name => series_metadata }
+
   tmpfile = "#{ series_metadata_file }.tmp"
   File.open(tmpfile, 'w') do |f|
-    f.write(series_metadata.to_json)
+    f.write(series_metadata_by_series_name.to_json)
   end
   mv tmpfile, series_metadata_file
 end
@@ -190,7 +192,7 @@ def setup_rdiff_tasks(source_image_file, target_image_file, metadata_file)
 
   return {
     'filename' => rdiff_file,
-    'urls'     => "#{ Images_urlbase }/rdiffs/#{ rdiff_file }",
+    'urls'     => [ "#{ Images_urlbase }/rdiffs/#{ rdiff_file }" ],
     'version'  => get_rdiff_version(rdiff_file),
    }
 end
@@ -254,7 +256,7 @@ image_series.each do |series_name, image_list|
       'filename' => target_image_file,
       'id'       => File.basename(target_image_file, '.img'),
       'size'     => File.size(target_image_file_fp),
-      'urls'     => "#{ Images_urlbase }/#{ target_image_file }",
+      'urls'     => [ "#{ Images_urlbase }/#{ target_image_file }" ],
       'version'  => get_image_version(target_image_file),
      }
 
@@ -278,7 +280,7 @@ image_series.each do |series_name, image_list|
   end
 
   file series_metadata_file do |t|
-    make_metadata_file(series_metadata, series_metadata_file)
+    make_metadata_file(series_name, series_metadata, series_metadata_file)
   end
 
   if target_image_rdiff_target then
