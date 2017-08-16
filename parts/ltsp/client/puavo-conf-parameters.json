@@ -32,13 +32,16 @@
   "puavo.printing.jetpipe.enabled": {
     "default": "false"
   },
+  "puavo.service.avahi-daemon.enabled": {
+    "default": "false"
+  },
+  "puavo.service.fluent.enabled": {
+    "default": "true"
+  },
   "puavo.service.ModemManager.enabled": {
     "default": "false"
   },
   "puavo.service.NetworkManager.enabled": {
-    "default": "false"
-  },
-  "puavo.service.avahi-daemon.enabled": {
     "default": "false"
   },
   "puavo.service.nscd.enabled": {
