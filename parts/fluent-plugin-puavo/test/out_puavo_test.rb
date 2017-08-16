@@ -1,7 +1,6 @@
 
 require "fluent/test"
 require "fileutils"
-require "debugger"
 require "webmock/test_unit"
 require_relative "../out_puavo"
 

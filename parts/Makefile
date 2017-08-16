@@ -6,6 +6,7 @@ subdirs         := admins                       \
                    conf                         \
                    core                         \
                    devscripts                   \
+                   fluent-plugin-puavo          \
                    hw-log                       \
                    hw-tools                     \
                    iivari                       \
