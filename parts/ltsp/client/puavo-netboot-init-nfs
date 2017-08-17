@@ -60,7 +60,7 @@ if [ ! -e /tmp/krb5cc_0 ]; then
 fi
 
 # Request a remote directory for the user (three second timeout, may fail)
-{ echo "$PAM_USER" | nc -w 3 "$HOMEDIR_SERVER" 907; } || true
+{ echo "$PAM_USER" | nc -N -w 3 "$HOMEDIR_SERVER" 907; } || true
 
 # Then do the real mounts
 if ! is_mounted /home; then
