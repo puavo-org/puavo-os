@@ -8,10 +8,9 @@ set -e
 
 case "$1" in
   configure)
-      adduser --no-create-home --home /state/fluentd-buffer \
-        --disabled-password --disabled-login --system --group fluentd
+      adduser --no-create-home --disabled-password --disabled-login --system --group puavo
       mkdir -p /var/log/fluentd
-      chown fluentd:fluentd /var/log/fluentd
+      chown puavo:puavo /var/log/fluentd
     ;;
   abort-upgrade)
     ;;

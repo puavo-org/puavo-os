@@ -4,11 +4,11 @@ Description = Fluentd
 [Service]
 PermissionsStartOnly = true
 ExecStartPre = /bin/mkdir -p /state/fluentd-buffer
-ExecStartPre = /bin/chown fluentd:fluentd /state/fluentd-buffer
+ExecStartPre = /bin/chown puavo:puavo /state/fluentd-buffer
 Environment = GEM_HOME=/usr/lib/fluentd-gem
 ExecStart = /usr/lib/fluentd-gem/bin/fluentd
-User = fluentd
-Group = fluentd
+User = puavo
+Group = puavo
 
 [Install]
 WantedBy = multi-user.target
