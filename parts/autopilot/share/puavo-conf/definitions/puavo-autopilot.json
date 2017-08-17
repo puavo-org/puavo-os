@@ -5,10 +5,13 @@
     "puavo.autopilot.mode" : {
         "default": "stress"
     },
-    "puavo.autopilot.username" : {
+    "puavo.autopilot.password" : {
         "default": "puavo.autopilot"
     },
-    "puavo.autopilot.password" : {
+    "puavo.autopilot.session_args" : {
+        "default": "[]"
+    },
+    "puavo.autopilot.username" : {
         "default": "puavo.autopilot"
     }
 }
