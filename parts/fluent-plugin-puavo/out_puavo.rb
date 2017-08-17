@@ -4,7 +4,7 @@ require "fluent/plugin/out_forward"
 
 module PuavoFluent
 begin
-  IMAGE_VERSION = File.open("/etc/ltsp/this_ltspimage_name", "r") do |f|
+  IMAGE_VERSION = File.open("/etc/puavo-image/name", "r") do |f|
     f.read
   end.strip
 rescue Errno::ENOENT
