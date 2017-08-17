@@ -4,6 +4,7 @@ set -eu
 
 services='
   avahi-daemon
+  fluentd
   ModemManager
   NetworkManager
   nscd

@@ -42,6 +42,13 @@ Description: Generate new block for debian/changelog file
  VERSION_SUFFIX added
  .
 
+Package: fluent-plugin-puavo
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}, fluentd
+Description: Generic fluentd plugin for Puavo managed installations
+ Generic fluentd plugin for Puavo managed installations.
+ .
+
 Package: iivari-client
 Architecture: all
 Depends: ${misc:Depends}, python, python-pyside, unclutter

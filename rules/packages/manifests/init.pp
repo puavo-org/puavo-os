@@ -13,7 +13,8 @@ class packages {
   #
 
   @package {
-    [ 'iivari-client'
+    [ 'fluent-plugin-puavo'
+    , 'iivari-client'
     , 'opinsys-ca-certificates'
     , 'puavo-autopilot'
     , 'puavo-bigtouch-shutdown'

@@ -2,7 +2,7 @@
 SHELL		:= bash
 
 deb_withbuild_version	:= $(shell dpkg-parsechangelog | sed -ne "s/^Version: \(.*\)/\1/p")
-deb_version	        := $(shell echo $(deb_withbuild_version) | sed 's/\+build[0-9]+$$//')
+deb_version	        := $(shell echo $(deb_withbuild_version) | sed -E 's/\+build[0-9]+$$//')
 upstream_version	:= $(shell echo $(deb_version) | sed -e "s/-[^-]*$$//")
 
 package		:= grub2
