@@ -93,6 +93,7 @@ class AutoForward < Fluent::ForwardOutput
     if not $?.success?
       raise Fluent::ConfigError, "Failed to execute puavo-resolve-api-server"
     end
+    api_server.strip!
 
     host = URI.parse(api_server).host
     if host.to_s.strip == ""
