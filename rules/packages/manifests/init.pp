@@ -574,6 +574,7 @@ class packages {
     , 'fuse'
     , 'gconf-editor'
     , 'pass'
+    , 'tlp'
     , 'unace'
     , 'unionfs-fuse' ]: # Ekapeli might need this.
       tag => [ 'tag_utils', 'tag_debian', ];
