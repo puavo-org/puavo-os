@@ -459,7 +459,6 @@ class packages {
     , 'gnome-online-accounts'
     , 'gnome-screenshot'
     , 'gnome-session'
-    , 'gnome-session-canberra'
     , 'gnome-settings-daemon'
     , 'gnome-shell'
     , 'gnome-shell-extensions'
