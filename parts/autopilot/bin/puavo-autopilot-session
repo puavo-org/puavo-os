@@ -26,13 +26,22 @@ AVAILABLE_MODES = %w(releasetest smoke stress)
 
 puavoconf = Puavo::Conf.new
 
-mode     = puavoconf.get('puavo.autopilot.mode')
-username = puavoconf.get('puavo.autopilot.username')
+mode = puavoconf.get('puavo.autopilot.mode')
 
-if AVAILABLE_MODES.include?(mode) && username == ENV['USER']
-  session_command = "puavo-autopilot-session-#{mode}"
-  system(session_command)
-  exit $?.exitstatus
-else
+if !AVAILABLE_MODES.include?(mode) then
   STDERR.puts("ignoring unknown Puavo autopilot mode '#{mode}'")
+  exit 1
+end
+
+if puavoconf.get('puavo.autopilot.username') == ENV['USER'] then
+  session_command = "puavo-autopilot-session-#{mode}"
+
+  session_args_json = puavoconf.get('puavo.autopilot.session_args')
+  session_args = JSON.parse(session_args_json)
+
+  raise 'puavo.autopilot.session_args is not an Array' \
+    unless session_args.kind_of?(Array)
+
+  system(session_command, *(session_args.map &:to_s))
+  exit $?.exitstatus
 end

@@ -24,6 +24,7 @@
 # tags from Puavo.
 # See README for more information.
 
+require 'getoptlong'
 require 'json'
 
 # actions
@@ -52,6 +53,12 @@ end
 
 def logout
   system('gnome-session-quit', '--force', '--no-prompt', '--logout')
+end
+
+def reboot
+  system('gnome-session-quit', '--reboot')
+  sleep(1)
+  press_enter()
 end
 
 def move_mouse(x_dist, y_dist)
@@ -93,6 +100,23 @@ def get_random_command_string(sum, commands_with_cumulative_probability)
   raise 'Internal error on get_random_command'
 end
 
+reboot_likelihood = 0.0
+slowness_factor = 5.0
+
+getopts =
+  GetoptLong.new(
+    [ '--reboot-likelihood', GetoptLong::REQUIRED_ARGUMENT ],
+    [ '--slower-by',         GetoptLong::REQUIRED_ARGUMENT ])
+
+getopts.each do |opt, arg|
+  case opt
+  when '--reboot-likelihood'
+    reboot_likelihood = arg.to_f
+  when '--slower-by'
+    slowness_factor = arg.to_f
+  end
+end
+
 while true do
   spacechar = ' '
   loadavg = IO.read('/proc/loadavg').split(spacechar).first.to_f
@@ -125,8 +149,11 @@ while true do
               [ 2,  %q{ system('libreoffice', '--impress')                    }, ],
 
               [ 3 * (loadavg.to_i + 1), %q{ kill_current_window()             }, ],
+              [ 1 * (loadavg.to_i + 1), %q{ kill_current_window()             }, ],
               [ 1 * (loadavg.to_i + 1), %q{ kill_kill_kill()                  }, ],
               [ 1 * (loadavg.to_i + 1), %q{ logout()                          }, ],
+
+              [ reboot_likelihood, %q{ reboot()                               }, ],
              ]
 
   commands_with_cumulative_probability = []
@@ -145,5 +172,5 @@ while true do
 
   # sleep a bit before doing more....
   # also slow down when system load rises (as users would do anyway)
-  sleep(1  +  5 * Math.log(1 + loadavg) * rand())
+  sleep(1  + slowness_factor * Math.log(1 + loadavg) * rand())
 end
