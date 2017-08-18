@@ -58,5 +58,10 @@ class adm::users {
       sshkey      => 'AAAAB3NzaC1yc2EAAAADAQABAAABAQDk2SgYALJj3MhyxLLfDVwkWhXTdKEzA8Q56zmqlUar7n82n20F/qskwuaysWC+BtGTFLDr6RyhDkqV+6HOQ8sqb08L4LJt0Im0Z0IGVtdtQ5Q+s+RBvkp2WAlpmyM6l+l5ZTO6wwnXGUZlPzTuLyilf5ynR5+RseqzkgivPEoP9ionhFcZjqv9ByPrfnB2lliePa8EA9v+HVvUZlEqJAI781boLi7kQKIQdGKipqhLwvaL6D+DtbJT4T/oQzL8LxjbPi6ldGCLXVxO1+ShgU67aQh3Ez/WniwXddZbXni0glVpknEivX1wsoc5DRJ7tfIAG7PbOiJgHzmjAocQdC2l',
       sshkey_type => 'rsa',
       uid         => 1016;
+
+    'adm-mlinna':
+      sshkey      => 'AAAAB3NzaC1yc2EAAAADAQABAAABAQCwgOoKY1b+5nYiboF/nbGP7EzidpYAnv37mqshT022XRm2ZLYsM72J3pxGprQiGEvAufe5Kjn60SLnus3W2rYF6NRA9TkNuslh7dypZltAg4tCgLyFkJD6q0vctl2w1Vbwqnu6w603yU6gVBqWSO3PC7CkcfEzzp06riKmCGl+nhJ6gjHvYwZC4WVNT9/45n/lE20QLuzLgD60Rx0UIXNKgImpl5QCjdUI4nLf786Gc63J51ptPX9fL2U7VSJTJwEUlXD84bO8bVwOOU40/iZBCo5B9TL/syEunq2bqfxoha0PaYi8oSXx5JZf3OCmRUf//1C1kcHxrUbW/vVTcJgF',
+      sshkey_type => 'rsa',
+      uid         => 1017;
   }
 }
