@@ -16,20 +16,22 @@ diff -ruN gnome-shell.orig/data/theme/gnome-shell.css gnome-shell/data/theme/gno
 diff -ruN gnome-shell.orig/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
 --- gnome-shell.orig/js/gdm/authPrompt.js	2017-05-31 14:05:33.000000000 +0300
 +++ gnome-shell/js/gdm/authPrompt.js	2017-06-01 13:21:50.346272786 +0300
-@@ -73,6 +73,12 @@
+@@ -73,6 +73,14 @@
          this.connect('next', Lang.bind(this, function() {
                           this.updateSensitivity(false);
                           this.startSpinning();
 +
 +                         if (this._userName && !this._userNameEntered) {
-+                             this._userName.text = this._entry.text;
-+                             this._userNameEntered = true;
++                             if (!this._entry.menu.isPassword) {    // don't show passwords!
++                                 this._userName.text = this._entry.text;
++                                 this._userNameEntered = true;
++                             }
 +                         }
 +
                           if (this._queryingService) {
                               this._userVerifier.answerQuery(this._queryingService, this._entry.text);
                           } else {
-@@ -103,6 +109,25 @@
+@@ -103,6 +111,25 @@
                           x_fill: true,
                           y_fill: true,
                           expand: true });
@@ -55,7 +57,7 @@ diff -ruN gnome-shell.orig/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
          this._label = new St.Label({ style_class: 'login-dialog-prompt-label' });
  
          this.actor.add(this._label,
-@@ -492,6 +517,11 @@
+@@ -492,6 +519,11 @@
          this.cancelButton.reactive = true;
          this.nextButton.label = _("Next");
  
