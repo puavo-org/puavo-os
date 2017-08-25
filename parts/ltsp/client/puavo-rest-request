@@ -34,25 +34,29 @@ make_request() {
        --silent                                   \
        "$@"                                       \
        "${API_SERVER}/${urlpath}"
+
 }
 
-case "${1:-}" in
-  --user-bootserver)
-    mode='bootserver'
-    ;;
-  --user-etc)
-    mode='etc'
-    ;;
-  --user-krb)
-    mode='krb'
-    ;;
-  *)
+mode='noauth'
+
+if ! args=$(getopt -n "$0" -o + \
+  -l 'user-bootserver,user-etc,user-krb' -- "$@"); then
     usage >&2
     exit 1
-    ;;
-esac
+fi
 
-urlpath=${2:-}
+eval "set -- $args"
+while [ $# -ne 0 ]; do
+  case "$1" in
+    --user-bootserver) mode='bootserver'; shift ;;
+    --user-etc)        mode='etc'       ; shift ;;
+    --user-krb)        mode='krb'       ; shift ;;
+    --) shift; break;;
+    *) usage >&2; exit 1 ;;
+  esac
+done
+
+urlpath=${1:-}
 
 if [ -z "$urlpath" ]; then
   usage >&2
@@ -86,6 +90,9 @@ case "$mode" in
                  --delegation always \
                  --negotiate         \
                  --user :
+    ;;
+  noauth)
+    make_request "$urlpath"
     ;;
   *)
     echo "$(basename $0) internal error" >&2
