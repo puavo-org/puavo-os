@@ -352,6 +352,7 @@ class packages {
     , 'racket'
     , 'scite'
     , 'scratch'
+    , 'sonic-pi'
     , 'spe' ]:
       tag => [ 'tag_programming', 'tag_debian', ];
 

@@ -5361,8 +5361,8 @@ printdialog .dialog-action-box {
 /**********
  * Frames *
  **********/
-frame,
-.frame {
+.frame,
+frame > border {
   box-shadow: none;
   margin: 0;
   padding: 0;
