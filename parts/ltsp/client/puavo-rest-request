@@ -16,8 +16,18 @@ fi
 
 usage() {
   cat <<EOF
-Usage: $(basename $0) [--user-bootserver|--user-etc|--user-krb] [--post] urlpath
+Usage:
+  $(basename $0) [--pass-credentials|--user-bootserver|--user-etc|--user-krb]
+                 [--post]
+                 urlpath
 EOF
+}
+
+check_mode() {
+  if [ -n "$1" ]; then
+    usage >&2
+    exit 1
+  fi
 }
 
 make_request() {
@@ -38,10 +48,11 @@ make_request() {
 }
 
 curl_args=''
-mode='noauth'
+mode=''
+password=false
 
 if ! args=$(getopt -n "$0" -o + \
-  -l 'post,user-bootserver,user-etc,user-krb' -- "$@"); then
+  -l 'pass-credentials,post,user-bootserver,user-etc,user-krb' -- "$@"); then
     usage >&2
     exit 1
 fi
@@ -49,13 +60,32 @@ fi
 eval "set -- $args"
 while [ $# -ne 0 ]; do
   case "$1" in
+    --pass-credentials)
+      check_mode "$mode"
+
+      password="$(cat 2>/dev/null || true)"
+      if [ -z "$password" ]; then
+        echo 'Could not read password from stdin' >&2
+        exit 1
+      fi
+      username="${USER:-}"
+      if [ -z "$username" ]; then
+        echo 'Could not find username from USER environment variable' >&2
+        exit 1
+      fi
+
+      mode='pass-credentials'
+      shift
+      ;;
+
     --post)
       curl_args="$curl_args -X POST"
       shift
       ;;
-    --user-bootserver) mode='bootserver'; shift ;;
-    --user-etc)        mode='etc'       ; shift ;;
-    --user-krb)        mode='krb'       ; shift ;;
+
+    --user-bootserver) check_mode "$mode"; mode='bootserver'; shift ;;
+    --user-etc)        check_mode "$mode"; mode='etc'       ; shift ;;
+    --user-krb)        check_mode "$mode"; mode='krb'       ; shift ;;
     --) shift; break;;
     *) usage >&2; exit 1 ;;
   esac
@@ -69,6 +99,10 @@ if [ -z "$urlpath" ]; then
 fi
 
 case "$mode" in
+  '')
+    make_request "$urlpath" $curl_args
+    ;;
+
   bootserver)
     make_request "$urlpath" $curl_args --header 'Authorization: Bootserver'
     ;;
@@ -97,9 +131,14 @@ case "$mode" in
                  --negotiate         \
                  --user :
     ;;
-  noauth)
-    make_request "$urlpath" $curl_args
+
+  pass-credentials)
+    echo -n "$password" \
+      | make_request "$urlpath" $curl_args \
+          --form-string "username=${username}" \
+          --form "password=<-"
     ;;
+
   *)
     echo "$(basename $0) internal error" >&2
     exit 1
