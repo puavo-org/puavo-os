@@ -16,7 +16,7 @@ fi
 
 usage() {
   cat <<EOF
-Usage: $(basename $0) [--user-bootserver|--user-etc|--user-krb] urlpath
+Usage: $(basename $0) [--user-bootserver|--user-etc|--user-krb] [--post] urlpath
 EOF
 }
 
@@ -37,10 +37,11 @@ make_request() {
 
 }
 
+curl_args=''
 mode='noauth'
 
 if ! args=$(getopt -n "$0" -o + \
-  -l 'user-bootserver,user-etc,user-krb' -- "$@"); then
+  -l 'post,user-bootserver,user-etc,user-krb' -- "$@"); then
     usage >&2
     exit 1
 fi
@@ -48,6 +49,10 @@ fi
 eval "set -- $args"
 while [ $# -ne 0 ]; do
   case "$1" in
+    --post)
+      curl_args="$curl_args -X POST"
+      shift
+      ;;
     --user-bootserver) mode='bootserver'; shift ;;
     --user-etc)        mode='etc'       ; shift ;;
     --user-krb)        mode='krb'       ; shift ;;
@@ -65,7 +70,7 @@ fi
 
 case "$mode" in
   bootserver)
-    make_request "$urlpath" --header 'Authorization: Bootserver'
+    make_request "$urlpath" $curl_args --header 'Authorization: Bootserver'
     ;;
 
   etc)
@@ -82,17 +87,18 @@ case "$mode" in
     fi
 
     echo "--user ${device_dn}:${device_password}" \
-      | make_request "$urlpath" --config -
+      | make_request "$urlpath" $curl_args --config -
     ;;
 
   krb)
     make_request "$urlpath"          \
+                 $curl_args          \
                  --delegation always \
                  --negotiate         \
                  --user :
     ;;
   noauth)
-    make_request "$urlpath"
+    make_request "$urlpath" $curl_args
     ;;
   *)
     echo "$(basename $0) internal error" >&2
