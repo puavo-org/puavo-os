@@ -2,12 +2,6 @@
 
 set -eu
 
-API_SERVER="$(/usr/sbin/puavo-resolve-api-server)" || true
-if [ -z "$API_SERVER" ]; then
-  echo 'Could not resolve Puavo API server' >&2
-  exit 1
-fi
-
 PUAVO_HOSTNAME="$(cat /etc/puavo/hostname 2>/dev/null)" || true
 if [ -z "$PUAVO_HOSTNAME" ]; then
   echo 'Could not read puavo hostname from /etc/puavo/hostname' >&2
@@ -31,8 +25,7 @@ check_mode() {
 }
 
 make_request() {
-  urlpath=$1
-  shift
+  url=$1; shift
 
   # use curl instead of puavo-rest-client for efficiency reasons
 
@@ -43,18 +36,19 @@ make_request() {
        --show-error                               \
        --silent                                   \
        "$@"                                       \
-       "${API_SERVER}/${urlpath}"
-
+       "$url"
 }
 
 curl_args=''
 mode=''
 password=false
+puavo_resolve_args=''
 
 if ! args=$(getopt -n "$0" -o + \
-  -l 'pass-credentials,post,user-bootserver,user-etc,user-krb' -- "$@"); then
-    usage >&2
-    exit 1
+  -l 'pass-credentials,post,user-bootserver,user-etc,user-krb,use-writable' \
+    -- "$@"); then
+      usage >&2
+      exit 1
 fi
 
 eval "set -- $args"
@@ -86,10 +80,22 @@ while [ $# -ne 0 ]; do
     --user-bootserver) check_mode "$mode"; mode='bootserver'; shift ;;
     --user-etc)        check_mode "$mode"; mode='etc'       ; shift ;;
     --user-krb)        check_mode "$mode"; mode='krb'       ; shift ;;
+
+    --use-writable)
+      puavo_resolve_args='--writable'
+      shift
+      ;;
+
     --) shift; break;;
     *) usage >&2; exit 1 ;;
   esac
 done
+
+api_server="$(/usr/sbin/puavo-resolve-api-server $puavo_resolve_args)" || true
+if [ -z "$api_server" ]; then
+  echo 'Could not resolve Puavo API server' >&2
+  exit 1
+fi
 
 urlpath=${1:-}
 
@@ -98,13 +104,16 @@ if [ -z "$urlpath" ]; then
   exit 1
 fi
 
+url="${api_server}/${urlpath}"
+
 case "$mode" in
   '')
-    make_request "$urlpath" $curl_args
+    make_request "$url" $curl_args
     ;;
 
   bootserver)
-    make_request "$urlpath" $curl_args --header 'Authorization: Bootserver'
+    make_request "$url" $curl_args \
+      --header 'Authorization: Bootserver'
     ;;
 
   etc)
@@ -121,11 +130,11 @@ case "$mode" in
     fi
 
     echo "--user ${device_dn}:${device_password}" \
-      | make_request "$urlpath" $curl_args --config -
+      | make_request "$url" $curl_args --config -
     ;;
 
   krb)
-    make_request "$urlpath"          \
+    make_request "$url"              \
                  $curl_args          \
                  --delegation always \
                  --negotiate         \
@@ -134,7 +143,7 @@ case "$mode" in
 
   pass-credentials)
     echo -n "$password" \
-      | make_request "$urlpath" $curl_args \
+      | make_request "$url" $curl_args         \
           --form-string "username=${username}" \
           --form "password=<-"
     ;;
