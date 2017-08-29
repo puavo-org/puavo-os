@@ -2,6 +2,9 @@
 
 set -eu
 
+# XXX get rid of hosttype handling
+puavo_hosttype=$(puavo-conf puavo.hosttype)
+
 read puavo_kerberos_realm < /etc/puavo/kerberos/realm
 
 krb5_config() {
@@ -72,8 +75,8 @@ ${realms}
 EOF
 }
 
-krb5_config laptop false > /etc/krb5.conf.tmp
+krb5_config "$puavo_hosttype" false > /etc/krb5.conf.tmp
 mv /etc/krb5.conf.tmp /etc/krb5.conf
 
-krb5_config laptop true > /etc/krb5.conf.masteronly.tmp
+krb5_config "$puavo_hosttype" true > /etc/krb5.conf.masteronly.tmp
 mv /etc/krb5.conf.masteronly.tmp /etc/krb5.conf.masteronly
