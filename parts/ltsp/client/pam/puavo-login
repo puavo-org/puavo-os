@@ -194,7 +194,7 @@ handle_external_login() {
       | timeout -k 1 10 env USER="$PAM_USER" \
           /usr/bin/puavo-rest-request --pass-credentials --use-writable \
             v3/external_login); then
-    external_login_status=$({ echo "$external_logins" | jq .status; } \
+    external_login_status=$({ echo "$external_logins" | jq -r .status; } \
                               || echo NOSTATUS)
   else
     external_login_status=FAIL
