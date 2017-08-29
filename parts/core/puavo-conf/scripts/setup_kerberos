@@ -14,12 +14,12 @@ krb5_config() {
 
     read puavo_domain          < /etc/puavo/domain
     read puavo_kerberos_master < /etc/puavo/kerberos/master
-    read puavo_topdomain       < /etc/puavo/topdomain
 
     toprealm_config=''
     puavo_kerberos_toprealm=$(cat /etc/puavo/kerberos/toprealm 2>/dev/null \
                                 || true)
-    if [ -n "$puavo_kerberos_toprealm" ]; then
+    puavo_topdomain=$(cat /etc/puavo/topdomain 2>/dev/null || true)
+    if [ -n "$puavo_kerberos_toprealm" -a -n "$puavo_topdomain" ]; then
       toprealm_config=<<EOF
         ${puavo_kerberos_toprealm} = {
                 kdc = ${puavo_kerberos_master}
