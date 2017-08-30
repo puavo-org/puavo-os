@@ -155,7 +155,7 @@ get_puavo_session() {
   session_status=0
   session_error_msg=$(
     timeout -k 1 "$session_fetch_timeout" \
-      puavo-rest-request $rest_request_args "$@" 2>&1 \
+      puavo-rest-request $rest_request_args "$@" v3/sessions 2>&1 \
         > "${PUAVO_SESSION_FILE}.tmp") || session_status=$?
 
   if [ "$session_status" -eq 0 -a -s "${PUAVO_SESSION_FILE}.tmp" ]; then
@@ -573,9 +573,9 @@ if is_guest; then
       # really essential.  Besides guest account should work in every situation
       # if at all possible.
       if [ -e /run/puavo/nbd-server ]; then
-	get_puavo_session '' --user-bootserver v3/sessions || true
+	get_puavo_session '' --user-bootserver || true
       else
-	get_puavo_session '' --user-etc v3/sessions || true
+	get_puavo_session '' --user-etc || true
       fi
 
       exit "$PAM_SUCCESS"
@@ -666,7 +666,7 @@ if [ "$mode" = 'immediate' ]; then
   # auth_status is now PAM_SUCCESS
 
   # Fetch user session information from puavo if auth was okay.
-  if get_puavo_session '' --user-krb v3/sessions; then
+  if get_puavo_session '' --user-krb; then
     logmsg notice 'returning success'
     exit "$PAM_SUCCESS"
   fi
@@ -743,7 +743,7 @@ fi
       # time, in deferred mode we do not delay logins.
 
       logmsg info 'authentication was ok, trying deferred puavo session fetch'
-      get_puavo_session 60 --user-krb v3/sessions || true
+      get_puavo_session 60 --user-krb || true
       logmsg info 'exiting from deferred mode'
     else
       logmsg info 'authentication failed, exiting from deferred mode'
