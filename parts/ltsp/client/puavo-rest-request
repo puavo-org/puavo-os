@@ -7,6 +7,7 @@ usage() {
 Usage:
   $(basename $0) [--pass-credentials|--user-bootserver|--user-etc|--user-krb]
                  [--post]
+                 [--send-device-credentials]
                  [--send-hostname]
                  urlpath
 EOF
@@ -39,7 +40,7 @@ password=false
 puavo_resolve_args=''
 
 if ! args=$(getopt -n "$0" -o + \
-  -l 'pass-credentials,post,user-bootserver,send-hostname,user-etc,user-krb,use-writable' \
+  -l 'pass-credentials,post,user-bootserver,send-device-credentials,send-hostname,user-etc,user-krb,use-writable' \
     -- "$@"); then
       usage >&2
       exit 1
@@ -71,9 +72,22 @@ while [ $# -ne 0 ]; do
       shift
       ;;
 
+    --send-device-credentials)
+      if [ ! -r /etc/puavo/ldap/dn ]; then
+        echo 'Can not read device dn from /etc/puavo/ldap/dn' >&2
+        exit 1
+      fi
+      if [ ! -r /etc/puavo/ldap/password ]; then
+        echo 'Can not read device password from /etc/puavo/ldap/password' >&2
+        exit 1
+      fi
+      curl_args="$curl_args --form device_dn=</etc/puavo/ldap/dn --form device_password=</etc/puavo/ldap/password"
+      shift
+      ;;
+
     --send-hostname)
       if [ ! -r /etc/puavo/hostname ]; then
-        echo 'Could not read puavo hostname from /etc/puavo/hostname' >&2
+        echo 'Can not read puavo hostname from /etc/puavo/hostname' >&2
         exit 1
       fi
       curl_args="$curl_args --form hostname=</etc/puavo/hostname"
