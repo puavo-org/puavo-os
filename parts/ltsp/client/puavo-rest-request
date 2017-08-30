@@ -2,17 +2,12 @@
 
 set -eu
 
-PUAVO_HOSTNAME="$(cat /etc/puavo/hostname 2>/dev/null)" || true
-if [ -z "$PUAVO_HOSTNAME" ]; then
-  echo 'Could not read puavo hostname from /etc/puavo/hostname' >&2
-  exit 1
-fi
-
 usage() {
   cat <<EOF
 Usage:
   $(basename $0) [--pass-credentials|--user-bootserver|--user-etc|--user-krb]
                  [--post]
+                 [--send-hostname]
                  urlpath
 EOF
 }
@@ -32,7 +27,6 @@ make_request() {
   # no timeouts here, it is the caller's responsibility to decide on that
   curl --cacert /etc/puavo/certs/rootca.pem       \
        --fail                                     \
-       --form-string "hostname=${PUAVO_HOSTNAME}" \
        --show-error                               \
        --silent                                   \
        "$@"                                       \
@@ -45,7 +39,7 @@ password=false
 puavo_resolve_args=''
 
 if ! args=$(getopt -n "$0" -o + \
-  -l 'pass-credentials,post,user-bootserver,user-etc,user-krb,use-writable' \
+  -l 'pass-credentials,post,user-bootserver,send-hostname,user-etc,user-krb,use-writable' \
     -- "$@"); then
       usage >&2
       exit 1
@@ -74,6 +68,15 @@ while [ $# -ne 0 ]; do
 
     --post)
       curl_args="$curl_args -X POST"
+      shift
+      ;;
+
+    --send-hostname)
+      if [ ! -r /etc/puavo/hostname ]; then
+        echo 'Could not read puavo hostname from /etc/puavo/hostname' >&2
+        exit 1
+      fi
+      curl_args="$curl_args --form hostname=</etc/puavo/hostname"
       shift
       ;;
 

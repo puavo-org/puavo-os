@@ -147,7 +147,7 @@ get_puavo_session() {
 
   mkdir -p "$PUAVO_SESSION_DIR" || return 1
 
-  rest_request_args='--post'
+  rest_request_args='--post --send-hostname'
   if [ "${KRB5_CONFIG:-}" = '/etc/krb5.conf.masteronly' ]; then
     rest_request_args="${rest_request_args} --use-writable"
   fi
