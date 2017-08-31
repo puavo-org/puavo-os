@@ -5,10 +5,11 @@ set -eu
 usage() {
   cat <<EOF
 Usage:
-  $(basename $0) [--pass-credentials|--user-bootserver|--user-etc|--user-krb]
-                 [--post]
+  $(basename $0) [--post]
                  [--send-device-credentials]
                  [--send-hostname]
+                 [--user-bootserver|--user-etc|--user-krb|--user-pass-credentials]
+                 [--writable]
                  urlpath
 EOF
 }
@@ -40,8 +41,14 @@ puavo_resolve_args=''
 user_password=''
 user_username=''
 
+cleanup() { [ -n "$tmpdir" ] && rm -rf "$tmpdir"; }
+
+tmpdir=$(mktemp -d /tmp/puavo-rest-request.XXXXXX)
+
+trap cleanup 0 HUP INT QUIT KILL SEGV PIPE TERM
+
 if ! args=$(getopt -n "$0" -o + \
-  -l 'pass-credentials,post,user-bootserver,send-device-credentials,send-hostname,user-etc,user-krb,use-writable' \
+  -l 'post,send-device-credentials,send-hostname,user-bootserver,user-etc,user-krb,user-pass-credentials,writable' \
     -- "$@"); then
       usage >&2
       exit 1
@@ -50,7 +57,38 @@ fi
 eval "set -- $args"
 while [ $# -ne 0 ]; do
   case "$1" in
-    --pass-credentials)
+    --post)
+      curl_args="$curl_args -X POST"
+      shift
+      ;;
+
+    --send-device-credentials)
+      if ! tr -d '\n' < /etc/puavo/ldap/dn > "${tmpdir}/dn"; then
+        echo 'Could not read device dn from /etc/puavo/ldap/dn' >&2
+        exit 1
+      fi
+      if ! tr -d '\n' < /etc/puavo/ldap/password > "${tmpdir}/password"; then
+        echo 'Could not read device password from /etc/puavo/ldap/password' >&2
+        exit 1
+      fi
+      curl_args="$curl_args --form device_dn=<${tmpdir}/dn --form device_password=<${tmpdir}password"
+      shift
+      ;;
+
+    --send-hostname)
+      if ! tr -d '\n' < /etc/puavo/hostname > "${tmpdir}/hostname"; then
+        echo 'Could not read puavo hostname from /etc/puavo/hostname' >&2
+        exit 1
+      fi
+      curl_args="$curl_args --form hostname=<${tmpdir}/hostname"
+      shift
+      ;;
+
+    --user-bootserver) check_mode "$mode"; mode='bootserver'; shift ;;
+    --user-etc)        check_mode "$mode"; mode='etc'       ; shift ;;
+    --user-krb)        check_mode "$mode"; mode='krb'       ; shift ;;
+
+    --user-pass-credentials)
       check_mode "$mode"
 
       user_password="$(cat 2>/dev/null || true)"
@@ -64,42 +102,11 @@ while [ $# -ne 0 ]; do
         exit 1
       fi
 
-      mode='pass-credentials'
+      mode='user-pass-credentials'
       shift
       ;;
 
-    --post)
-      curl_args="$curl_args -X POST"
-      shift
-      ;;
-
-    --send-device-credentials)
-      if [ ! -r /etc/puavo/ldap/dn ]; then
-        echo 'Can not read device dn from /etc/puavo/ldap/dn' >&2
-        exit 1
-      fi
-      if [ ! -r /etc/puavo/ldap/password ]; then
-        echo 'Can not read device password from /etc/puavo/ldap/password' >&2
-        exit 1
-      fi
-      curl_args="$curl_args --form device_dn=</etc/puavo/ldap/dn --form device_password=</etc/puavo/ldap/password"
-      shift
-      ;;
-
-    --send-hostname)
-      if [ ! -r /etc/puavo/hostname ]; then
-        echo 'Can not read puavo hostname from /etc/puavo/hostname' >&2
-        exit 1
-      fi
-      curl_args="$curl_args --form hostname=</etc/puavo/hostname"
-      shift
-      ;;
-
-    --user-bootserver) check_mode "$mode"; mode='bootserver'; shift ;;
-    --user-etc)        check_mode "$mode"; mode='etc'       ; shift ;;
-    --user-krb)        check_mode "$mode"; mode='krb'       ; shift ;;
-
-    --use-writable)
+    --writable)
       puavo_resolve_args='--writable'
       shift
       ;;
@@ -130,8 +137,7 @@ case "$mode" in
     ;;
 
   bootserver)
-    make_request "$url" $curl_args \
-      --header 'Authorization: Bootserver'
+    make_request "$url" $curl_args --header 'Authorization: Bootserver'
     ;;
 
   etc)
@@ -140,13 +146,15 @@ case "$mode" in
       echo 'Could not determine device dn for this host' >&2
       exit 1
     fi
-
     device_password="$(cat /etc/puavo/ldap/password 2>/dev/null)" || true
     if [ -z "$device_password" ]; then
       echo 'Could not determine device password for this host' >&2
       exit 1
     fi
 
+    # XXX This presumes device_password does not contain "difficult"
+    # XXX characters, which should be true with Puavo-generated device
+    # XXX passwords.
     echo "--user ${device_dn}:${device_password}" \
       | make_request "$url" $curl_args --config -
     ;;
@@ -159,7 +167,7 @@ case "$mode" in
                  --user :
     ;;
 
-  pass-credentials)
+  user-pass-credentials)
     echo -n "$user_password"                        \
       | make_request "$url" $curl_args              \
           --form-string "username=${user_username}" \

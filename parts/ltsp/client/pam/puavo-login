@@ -149,7 +149,7 @@ get_puavo_session() {
 
   rest_request_args='--post --send-hostname'
   if [ "${KRB5_CONFIG:-}" = '/etc/krb5.conf.masteronly' ]; then
-    rest_request_args="${rest_request_args} --use-writable"
+    rest_request_args="${rest_request_args} --writable"
   fi
 
   # If /etc/puavo/ldap/dn and /etc/puavo/ldap/password exist,
@@ -199,7 +199,7 @@ handle_external_login() {
   if external_logins=$(
     echo "$user_password" \
       | timeout -k 1 10 env USER="$PAM_USER" \
-          /usr/bin/puavo-rest-request --pass-credentials --use-writable \
+          /usr/bin/puavo-rest-request --pass-credentials --writable \
             v3/external_login); then
     external_login_status=$({ echo "$external_logins" | jq -r .status; } \
                               || echo NOSTATUS)
