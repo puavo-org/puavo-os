@@ -5,12 +5,12 @@ set -eu
 usage() {
   cat <<EOF
 Usage:
-  $(basename $0) [--post]
-                 [--send-device-credentials]
-                 [--send-hostname]
-                 [--user-bootserver|--user-etc|--user-krb|--user-pass-credentials]
-                 [--writable]
-                 urlpath
+  puavo-rest-request [--post]
+                     [--send-device-credentials]
+                     [--send-hostname]
+                     [--user-bootserver|--user-etc|--user-krb|--user-pass-credentials]
+                     [--writable]
+                     urlpath
 EOF
 }
 
