@@ -111,6 +111,9 @@ authenticate_user() {
     | grep -Eq '(not found in Kerberos database|Password incorrect)'; then
       logmsg notice 'kerberos auth was DENIED'
       logmsg notice 'removing cached credentials'	# up to pam_ccreds.so
+      # XXX Removing krb5_ticketpath should be done at pam_puavo.so,
+      # XXX there are situations where puavo-login can not do it.
+      # XXX Once that is done all these "rm -f"-calls can be removed.
       rm -f "${krb5_ticketpath}"
       return "$PAM_PERM_DENIED"
   fi
