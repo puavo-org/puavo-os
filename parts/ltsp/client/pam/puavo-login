@@ -111,10 +111,6 @@ authenticate_user() {
     | grep -Eq '(not found in Kerberos database|Password incorrect)'; then
       logmsg notice 'kerberos auth was DENIED'
       logmsg notice 'removing cached credentials'	# up to pam_ccreds.so
-      # XXX Removing krb5_ticketpath should be done at pam_puavo.so,
-      # XXX there are situations where puavo-login can not do it.
-      # XXX Once that is done all these "rm -f"-calls can be removed.
-      rm -f "${krb5_ticketpath}"
       return "$PAM_PERM_DENIED"
   fi
 
@@ -618,7 +614,6 @@ krb5_ticketpath="${KRB5CCNAME#FILE:}"
 
 if [ "$mode" = 'cached-fail' ]; then
   logmsg notice 'cached credentials auth was DENIED'
-  rm -f "${krb5_ticketpath}"
   exit "$PAM_PERM_DENIED"
 fi
 
@@ -627,21 +622,18 @@ case "$PAM_TYPE" in
     ;;
   close_session)
     logmsg info 'closing login session'
-    rm -f "${krb5_ticketpath}" || exit "$PAM_SYSTEM_ERR"
     exit "$PAM_SUCCESS"
     ;;
   open_session)
     logmsg info 'opening login session'
     if ! chown "${PAM_USER}:" "${krb5_ticketpath}" 2>/dev/null; then
       logmsg err "could not chown ${krb5_ticketpath} at open_session"
-      rm -f "${krb5_ticketpath}"
       exit "$PAM_SYSTEM_ERR"
     fi
     exit "$PAM_SUCCESS"
     ;;
   *)
     logmsg err "unknown PAM_TYPE '${PAM_TYPE}'"
-    rm -f "${krb5_ticketpath}"
     exit "$PAM_SYSTEM_ERR"
     ;;
 esac
@@ -650,7 +642,6 @@ esac
 
 if ! user_password="$(cat)"; then
   logmsg err 'could not read user password'
-  rm -f "${krb5_ticketpath}"
   exit "$PAM_SYSTEM_ERR"
 fi
 
@@ -668,8 +659,6 @@ if [ "$mode" = 'immediate' ]; then
 
   if [ "$auth_status" -ne "$PAM_SUCCESS" ]; then
     logmsg notice 'returning auth error'
-    # We do not remove ${krb5_ticketpath} because deferred auth may place
-    # a ticket into it.
     exit "$auth_status"
   fi
 
@@ -685,7 +674,6 @@ if [ "$mode" = 'immediate' ]; then
   # That is serious only if $PAM_USER does not exist or is invalid.
   if ! check_user_uid; then
     logmsg err 'user id does not exist or is invalid'
-    rm -f "${krb5_ticketpath}"
     exit "$PAM_SYSTEM_ERR"
   fi
 
@@ -695,7 +683,6 @@ fi
 
 if [ "$mode" != 'cached-auth' -a "$mode" != 'deferred-session-fetch' ]; then
   logmsg err 'internal error, mode is wrong'
-  rm -f "${krb5_ticketpath}"
   exit "$PAM_SYSTEM_ERR"
 fi
 
@@ -711,7 +698,6 @@ if [ "$mode" = 'cached-auth' ]; then
   update_extrausers || true
   if ! check_user_uid; then
     logmsg err 'user id does not exist or is invalid'
-    rm -f "${krb5_ticketpath}"
     exit "$PAM_SYSTEM_ERR"
   fi
 fi
@@ -757,13 +743,11 @@ fi
       logmsg info 'exiting from deferred mode'
     else
       logmsg info 'authentication failed, exiting from deferred mode'
-      rm -f "${krb5_ticketpath}"
     fi
 
     exit "$auth_status"
   done
 
-  rm -f "${krb5_ticketpath}"
   exit "$PAM_AUTHINFO_UNAVAIL"
 ) &
 
