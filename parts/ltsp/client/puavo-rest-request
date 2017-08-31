@@ -36,8 +36,9 @@ make_request() {
 
 curl_args=''
 mode=''
-password=false
 puavo_resolve_args=''
+user_password=''
+user_username=''
 
 if ! args=$(getopt -n "$0" -o + \
   -l 'pass-credentials,post,user-bootserver,send-device-credentials,send-hostname,user-etc,user-krb,use-writable' \
@@ -52,13 +53,13 @@ while [ $# -ne 0 ]; do
     --pass-credentials)
       check_mode "$mode"
 
-      password="$(cat 2>/dev/null || true)"
-      if [ -z "$password" ]; then
+      user_password="$(cat 2>/dev/null || true)"
+      if [ -z "$user_password" ]; then
         echo 'Could not read password from stdin' >&2
         exit 1
       fi
-      username="${USER:-}"
-      if [ -z "$username" ]; then
+      user_username="${USER:-}"
+      if [ -z "$user_username" ]; then
         echo 'Could not find username from USER environment variable' >&2
         exit 1
       fi
@@ -159,9 +160,9 @@ case "$mode" in
     ;;
 
   pass-credentials)
-    echo -n "$password" \
-      | make_request "$url" $curl_args         \
-          --form-string "username=${username}" \
+    echo -n "$user_password"                        \
+      | make_request "$url" $curl_args              \
+          --form-string "username=${user_username}" \
           --form "password=<-"
     ;;
 
