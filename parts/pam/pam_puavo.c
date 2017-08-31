@@ -91,6 +91,20 @@ move_fd_to_non_stdio (pam_handle_t *pamh, int fd)
   return fd;
 }
 
+static char *
+get_krb5cc_path_from_environment (pam_handle_t *pamh)
+{
+  const char *krb5cc_envvalue;
+
+  if ((krb5cc_envvalue = pam_getenv(pamh, "KRB5CCNAME")) == NULL)
+    return NULL;
+
+  if (strncmp(krb5cc_envvalue, "FILE:", sizeof("FILE:")-1) == 0)
+    return strdup(&krb5cc_envvalue[ sizeof("FILE:")-1 ]);
+
+  return NULL;
+}
+
 static int
 call_exec (const char *pam_type, pam_handle_t *pamh,
 	   int argc, const char **argv)
@@ -197,6 +211,9 @@ call_exec (const char *pam_type, pam_handle_t *pamh,
       retval = PAM_SYSTEM_ERR;
       goto finish;
     }
+  } else {
+    /* Get the krb5cc_path from environment in case we need to unlink() it. */
+    krb5cc_path = get_krb5cc_path_from_environment(pamh);
   }
 
   if (expose_authtok == 1)
@@ -607,7 +624,20 @@ PAM_EXTERN int
 pam_sm_close_session(pam_handle_t *pamh, int flags UNUSED,
 		     int argc, const char **argv)
 {
-  return call_exec ("close_session", pamh, argc, argv);
+  char *krb5cc_path;
+  int retval;
+  FILE *fd;
+
+  krb5cc_path = get_krb5cc_path_from_environment(pamh);
+
+  retval = call_exec ("close_session", pamh, argc, argv);
+
+  if (krb5cc_path != NULL) {
+    unlink(krb5cc_path);
+    free(krb5cc_path);
+  }
+
+  return retval;
 }
 
 #ifdef PAM_STATIC
