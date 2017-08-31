@@ -71,7 +71,7 @@ while [ $# -ne 0 ]; do
         echo 'Could not read device password from /etc/puavo/ldap/password' >&2
         exit 1
       fi
-      curl_args="$curl_args --form device_dn=<${tmpdir}/dn --form device_password=<${tmpdir}password"
+      curl_args="$curl_args --form device_dn=<${tmpdir}/dn --form device_password=<${tmpdir}/password"
       shift
       ;;
 
