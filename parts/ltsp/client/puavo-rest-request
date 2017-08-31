@@ -168,7 +168,7 @@ case "$mode" in
     ;;
 
   user-pass-credentials)
-    echo -n "$user_password"                        \
+    printf %s "$user_password"                      \
       | make_request "$url" $curl_args              \
           --form-string "username=${user_username}" \
           --form "password=<-"
