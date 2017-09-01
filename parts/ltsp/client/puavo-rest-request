@@ -5,7 +5,8 @@ set -eu
 usage() {
   cat <<EOF
 Usage:
-  puavo-rest-request [--post]
+  puavo-rest-request [--authoritative]
+                     [--post]
                      [--send-device-credentials]
                      [--send-hostname]
                      [--user-bootserver|--user-etc|--user-krb|--user-pass-credentials]
@@ -48,7 +49,7 @@ tmpdir=$(mktemp -d /tmp/puavo-rest-request.XXXXXX)
 trap cleanup 0 HUP INT QUIT KILL SEGV PIPE TERM
 
 if ! args=$(getopt -n "$0" -o + \
-  -l 'post,send-device-credentials,send-hostname,user-bootserver,user-etc,user-krb,user-pass-credentials,writable' \
+  -l 'authoritative,post,send-device-credentials,send-hostname,user-bootserver,user-etc,user-krb,user-pass-credentials,writable' \
     -- "$@"); then
       usage >&2
       exit 1
@@ -57,6 +58,11 @@ fi
 eval "set -- $args"
 while [ $# -ne 0 ]; do
   case "$1" in
+    --authoritative)
+      curl_args="$curl_args --form-string authoritative=true"
+      shift
+      ;;
+
     --post)
       curl_args="$curl_args -X POST"
       shift

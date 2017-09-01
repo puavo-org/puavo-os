@@ -148,7 +148,7 @@ get_puavo_session() {
 
   rest_request_args='--post --send-hostname'
   if [ "${KRB5_CONFIG:-}" = '/etc/krb5.conf.masteronly' ]; then
-    rest_request_args="${rest_request_args} --writable"
+    rest_request_args="${rest_request_args} --authoritative"
   fi
 
   # If /etc/puavo/ldap/dn and /etc/puavo/ldap/password exist,
