@@ -8,6 +8,7 @@ Usage:
   puavo-rest-request [--authoritative]
                      [--post]
                      [--send-device-credentials]
+                     [--send-device-school-dn]
                      [--send-hostname]
                      [--user-bootserver|--user-etc|--user-krb|--user-pass-credentials]
                      [--writable]
@@ -49,7 +50,7 @@ tmpdir=$(mktemp -d /tmp/puavo-rest-request.XXXXXX)
 trap cleanup 0 HUP INT QUIT KILL SEGV PIPE TERM
 
 if ! args=$(getopt -n "$0" -o + \
-  -l 'authoritative,post,send-device-credentials,send-hostname,user-bootserver,user-etc,user-krb,user-pass-credentials,writable' \
+  -l 'authoritative,post,send-device-credentials,send-device-school-dn,send-hostname,user-bootserver,user-etc,user-krb,user-pass-credentials,writable' \
     -- "$@"); then
       usage >&2
       exit 1
@@ -78,6 +79,15 @@ while [ $# -ne 0 ]; do
         exit 1
       fi
       curl_args="$curl_args --form device_dn=<${tmpdir}/dn --form device_password=<${tmpdir}/password"
+      shift
+      ;;
+
+    --send-device-school-dn)
+      if ! jq -j .school_dn /etc/puavo/device.json > "${tmpdir}/school_dn"; then
+        echo 'Could not read device school dn from /etc/puavo/device.json' >&2
+        exit 1
+      fi
+      curl_args="$curl_args --form school_dn=<${tmpdir}/school_dn"
       shift
       ;;
 
