@@ -111,7 +111,6 @@ authenticate_user() {
     | grep -Eq '(not found in Kerberos database|Password incorrect)'; then
       logmsg notice 'kerberos auth was DENIED'
       logmsg notice 'removing cached credentials'	# up to pam_ccreds.so
-      rm -f "${krb5_ticketpath}"
       return "$PAM_PERM_DENIED"
   fi
 
@@ -147,10 +146,23 @@ get_puavo_session() {
 
   mkdir -p "$PUAVO_SESSION_DIR" || return 1
 
+  rest_request_args='--post --send-hostname'
+  if [ "${KRB5_CONFIG:-}" = '/etc/krb5.conf.masteronly' ]; then
+    rest_request_args="${rest_request_args} --authoritative"
+  fi
+
+  # If /etc/puavo/ldap/dn and /etc/puavo/ldap/password exist,
+  # pass device credentials to request, because user credentials are
+  # not sufficient to lookup device related parameters.
+  if [ -r /etc/puavo/ldap/dn -a -r /etc/puavo/ldap/password ]; then
+    rest_request_args="${rest_request_args} --send-device-credentials"
+  fi
+
   session_status=0
   session_error_msg=$(
-    timeout -k 1 "$session_fetch_timeout" puavo-rest-request "$@" 2>&1 \
-      > "${PUAVO_SESSION_FILE}.tmp") || session_status=$?
+    timeout -k 1 "$session_fetch_timeout" \
+      puavo-rest-request $rest_request_args "$@" v3/sessions 2>&1 \
+        > "${PUAVO_SESSION_FILE}.tmp") || session_status=$?
 
   if [ "$session_status" -eq 0 -a -s "${PUAVO_SESSION_FILE}.tmp" ]; then
     logmsg info "fetched new puavo session with timeout $session_fetch_timeout"
@@ -179,6 +191,48 @@ get_puavo_session() {
   # (even if the file is old).
   return 0
 }
+
+handle_external_login() {
+  [ "$(puavo-conf puavo.login.external.enabled)" = 'true' ] || return 0
+
+  if external_logins=$(
+    echo "$user_password" \
+      | timeout -k 1 10 env USER="$PAM_USER" \
+          /usr/bin/puavo-rest-request --send-device-school-dn \
+            --user-pass-credentials --writable v3/external_login); then
+    external_login_status=$({ echo "$external_logins" | jq -r .status; } \
+                              || echo NOSTATUS)
+  else
+    external_login_status=FAIL
+  fi
+
+  logmsg notice "called external login, status is '${external_login_status}'"
+
+  case "$external_login_status" in
+    NOCHANGE)
+      return 0
+      ;;
+    UPDATED)
+      KRB5_CONFIG=/etc/krb5.conf.masteronly
+      export KRB5_CONFIG
+      return 0
+      ;;
+    NOTCONFIGURED)
+      extlogin_errmsg="external login is not configured: $(echo "$external_logins" | jq .msg)"
+      ;;
+    UNAVAILABLE)
+      extlogin_errmsg="external login was not available: $(echo "$external_logins" | jq .msg)"
+      ;;
+    *)
+      extlogin_errmsg='external login encountered an unknown error'
+      ;;
+  esac
+
+  logmsg err "$extlogin_errmsg"
+
+  return 1
+}
+
 
 is_guest() {
   [ "$PAM_USER" = 'guest' ]
@@ -370,10 +424,17 @@ extrausers_new_passwd() {
       && $5 != "" \
       && $6 != "" \
       && $7 != "" {
-        users[$3] = $0
+        if ($1 in user_uids_by_loginname) {
+          # do not allow the same loginname twice
+          delete users_by_uid[ user_uids_by_loginname[$1] ]
+        }
+
+        # by mapping by uid, we do not get the same uid twice
+        user_uids_by_loginname[$1] = $3
+        users_by_uid[$3]           = $0
       }
 
-      END { for (user in users) { print users[user] } }
+      END { for (uid in users_by_uid) { print users_by_uid[uid] } }
     ' "$passwd_file_path" /dev/stdin)" || {
       logmsg err 'error in creating new extrausers passwd db'
       return 1
@@ -427,8 +488,9 @@ extrausers_new_group() {
 
           if (newgroup_gid < minimum_gid) { continue }
 
-	  new_groups_members[ newgroup_gid ] = username
-	  new_groups_names[   newgroup_gid ] = newgroup_name
+	  new_groups_members_by_gid[ newgroup_gid  ] = username
+	  new_groups_names_by_gid[   newgroup_gid  ] = newgroup_name
+	  new_groups_gid_by_name[    newgroup_name ] = newgroup_gid
 	}
       }
 
@@ -443,31 +505,32 @@ extrausers_new_group() {
 
         if (oldgroup_gid < minimum_gid) { next }
 
-	if (!(oldgroup_gid in new_groups_names)) {
-	  new_groups_names[ oldgroup_gid ] = oldgroup_name
+	if (!(oldgroup_gid in new_groups_names_by_gid) \
+          && !(oldgroup_name in new_groups_gid_by_name)) {
+	    new_groups_names_by_gid[ oldgroup_gid ] = oldgroup_name
 	}
 
 	for (i in oldgroup_members) {
 	  member_user = oldgroup_members[i]
 
 	  # Filter out the current user... if it was not already listed in
-	  # new_groups_members[oldgroup_gid], it must be deleted.
+	  # new_groups_members_by_gid[oldgroup_gid], it must be deleted.
 	  if (member_user == username) { continue }
 
-	  new_groups_members[oldgroup_gid] =                       \
-	    (new_groups_members[oldgroup_gid] == "")               \
+	  new_groups_members_by_gid[oldgroup_gid] =                       \
+	    (new_groups_members_by_gid[oldgroup_gid] == "")               \
 	      ? member_user                                        \
-	      : (new_groups_members[oldgroup_gid] "," member_user)
+	      : (new_groups_members_by_gid[oldgroup_gid] "," member_user)
 	}
       }
 
       END {
-	for (gid in new_groups_names) {
+	for (gid in new_groups_names_by_gid) {
           # drop groups with no members
-	  if (new_groups_members[gid] == "") { continue }
+	  if (new_groups_members_by_gid[gid] == "") { continue }
 
 	  members_list = ""
-	  split(new_groups_members[gid], sorted_members_array, ",")
+	  split(new_groups_members_by_gid[gid], sorted_members_array, ",")
 	  asort(sorted_members_array)
 
 	  for (i in sorted_members_array) {
@@ -477,7 +540,8 @@ extrausers_new_group() {
 		: (members_list "," sorted_members_array[i])
 	  }
 
-	  printf("%s:x:%d:%s\n", new_groups_names[gid], gid, members_list)
+	  printf("%s:x:%d:%s\n", new_groups_names_by_gid[gid], gid,
+	    members_list)
 	}
       }
     ' "$group_file_path")" || {
@@ -532,9 +596,9 @@ if is_guest; then
       # really essential.  Besides guest account should work in every situation
       # if at all possible.
       if [ -e /run/puavo/nbd-server ]; then
-	get_puavo_session '' --user-bootserver v3/sessions || true
+	get_puavo_session '' --user-bootserver || true
       else
-	get_puavo_session '' --user-etc v3/sessions || true
+	get_puavo_session '' --user-etc || true
       fi
 
       exit "$PAM_SUCCESS"
@@ -567,7 +631,6 @@ krb5_ticketpath="${KRB5CCNAME#FILE:}"
 
 if [ "$mode" = 'cached-fail' ]; then
   logmsg notice 'cached credentials auth was DENIED'
-  rm -f "${krb5_ticketpath}"
   exit "$PAM_PERM_DENIED"
 fi
 
@@ -576,21 +639,18 @@ case "$PAM_TYPE" in
     ;;
   close_session)
     logmsg info 'closing login session'
-    rm -f "${krb5_ticketpath}" || exit "$PAM_SYSTEM_ERR"
     exit "$PAM_SUCCESS"
     ;;
   open_session)
     logmsg info 'opening login session'
     if ! chown "${PAM_USER}:" "${krb5_ticketpath}" 2>/dev/null; then
       logmsg err "could not chown ${krb5_ticketpath} at open_session"
-      rm -f "${krb5_ticketpath}"
       exit "$PAM_SYSTEM_ERR"
     fi
     exit "$PAM_SUCCESS"
     ;;
   *)
     logmsg err "unknown PAM_TYPE '${PAM_TYPE}'"
-    rm -f "${krb5_ticketpath}"
     exit "$PAM_SYSTEM_ERR"
     ;;
 esac
@@ -599,28 +659,30 @@ esac
 
 if ! user_password="$(cat)"; then
   logmsg err 'could not read user password'
-  rm -f "${krb5_ticketpath}"
   exit "$PAM_SYSTEM_ERR"
 fi
 
-
 if [ "$mode" = 'immediate' ]; then
   rm -f "$FIRSTLOGIN_MARKER_PATH"
+
+  # External login does not determine the login outcome directly at all,
+  # instead it possibly affects Puavo database contents with user information.
+  # If user information has changed, this should set KRB5_CONFIG to
+  # "/etc/krb5.conf.masteronly", thus affecting this login process.
+  handle_external_login || true
 
   auth_status="$PAM_SUCCESS"
   authenticate_user || auth_status="$?"
 
   if [ "$auth_status" -ne "$PAM_SUCCESS" ]; then
     logmsg notice 'returning auth error'
-    # We do not remove ${krb5_ticketpath} because deferred auth may place
-    # a ticket into it.
     exit "$auth_status"
   fi
 
   # auth_status is now PAM_SUCCESS
 
   # Fetch user session information from puavo if auth was okay.
-  if get_puavo_session '' --user-krb v3/sessions; then
+  if get_puavo_session '' --user-krb; then
     logmsg notice 'returning success'
     exit "$PAM_SUCCESS"
   fi
@@ -629,7 +691,6 @@ if [ "$mode" = 'immediate' ]; then
   # That is serious only if $PAM_USER does not exist or is invalid.
   if ! check_user_uid; then
     logmsg err 'user id does not exist or is invalid'
-    rm -f "${krb5_ticketpath}"
     exit "$PAM_SYSTEM_ERR"
   fi
 
@@ -639,7 +700,6 @@ fi
 
 if [ "$mode" != 'cached-auth' -a "$mode" != 'deferred-session-fetch' ]; then
   logmsg err 'internal error, mode is wrong'
-  rm -f "${krb5_ticketpath}"
   exit "$PAM_SYSTEM_ERR"
 fi
 
@@ -655,7 +715,6 @@ if [ "$mode" = 'cached-auth' ]; then
   update_extrausers || true
   if ! check_user_uid; then
     logmsg err 'user id does not exist or is invalid'
-    rm -f "${krb5_ticketpath}"
     exit "$PAM_SYSTEM_ERR"
   fi
 fi
@@ -697,17 +756,15 @@ fi
       # time, in deferred mode we do not delay logins.
 
       logmsg info 'authentication was ok, trying deferred puavo session fetch'
-      get_puavo_session 60 --user-krb v3/sessions || true
+      get_puavo_session 60 --user-krb || true
       logmsg info 'exiting from deferred mode'
     else
       logmsg info 'authentication failed, exiting from deferred mode'
-      rm -f "${krb5_ticketpath}"
     fi
 
     exit "$auth_status"
   done
 
-  rm -f "${krb5_ticketpath}"
   exit "$PAM_AUTHINFO_UNAVAIL"
 ) &
 
