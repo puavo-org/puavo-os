@@ -212,16 +212,23 @@ handle_external_login() {
     NOCHANGE)
       return 0
       ;;
-    UNAVAILABLE)
-      logmsg err "external login was unavailable: $(echo "$external_logins" | jq .error)"
-      return 1
-      ;;
     UPDATED)
       KRB5_CONFIG=/etc/krb5.conf.masteronly
       export KRB5_CONFIG
       return 0
       ;;
+    NOTCONFIGURED)
+      extlogin_errmsg="external login is not configured: $(echo "$external_logins" | jq .msg)"
+      ;;
+    UNAVAILABLE)
+      extlogin_errmsg="external login was not available: $(echo "$external_logins" | jq .msg)"
+      ;;
+    *)
+      extlogin_errmsg='external login encountered an unknown error'
+      ;;
   esac
+
+  logmsg err "$extlogin_errmsg"
 
   return 1
 }
