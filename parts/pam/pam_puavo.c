@@ -91,6 +91,20 @@ move_fd_to_non_stdio (pam_handle_t *pamh, int fd)
   return fd;
 }
 
+static char *
+get_krb5cc_path_from_environment (pam_handle_t *pamh)
+{
+  const char *krb5cc_envvalue;
+
+  if ((krb5cc_envvalue = pam_getenv(pamh, "KRB5CCNAME")) == NULL)
+    return NULL;
+
+  if (strncmp(krb5cc_envvalue, "FILE:", sizeof("FILE:")-1) == 0)
+    return strdup(&krb5cc_envvalue[ sizeof("FILE:")-1 ]);
+
+  return NULL;
+}
+
 static int
 call_exec (const char *pam_type, pam_handle_t *pamh,
 	   int argc, const char **argv)
@@ -103,9 +117,11 @@ call_exec (const char *pam_type, pam_handle_t *pamh,
   int set_krb5ccname = 0;
   int use_stdout = 0;
   int optargc;
+  int retval;
   const char *logfile = NULL;
   const char *authtok = NULL;
   char *krb5cc_envstr = NULL;
+  char *krb5cc_path = NULL;
   pid_t pid;
   int fds[2];
   int stdout_fds[2];
@@ -150,8 +166,7 @@ call_exec (const char *pam_type, pam_handle_t *pamh,
 
   if (set_krb5ccname) {
     const char *pam_user;
-    char *krb5cc_path;
-    int retval, tmp_fd;
+    int tmp_fd;
 
     retval = pam_get_item (pamh, PAM_USER, (const void **) &pam_user);
     if (retval != PAM_SUCCESS)
@@ -183,8 +198,8 @@ call_exec (const char *pam_type, pam_handle_t *pamh,
 
     if (asprintf(&krb5cc_envstr, "KRB5CCNAME=FILE:%s", krb5cc_path) < 0) {
       pam_error (pamh, "%s failed: could not setup KRB5CCNAME", argv[optargc]);
-      free(krb5cc_path);
-      return PAM_SYSTEM_ERR;
+      retval = PAM_SYSTEM_ERR;
+      goto finish;
     }
 
     if (pam_putenv(pamh, krb5cc_envstr) != PAM_SUCCESS) {
@@ -192,12 +207,13 @@ call_exec (const char *pam_type, pam_handle_t *pamh,
 	pam_error (pamh, _("%s failed: failed to set KRB5CCNAME"),
 		   argv[optargc]);
       }
-      free(krb5cc_path);
       free(krb5cc_envstr);
-      return PAM_SYSTEM_ERR;
+      retval = PAM_SYSTEM_ERR;
+      goto finish;
     }
-
-    free(krb5cc_path);
+  } else {
+    /* Get the krb5cc_path from environment in case we need to unlink() it. */
+    krb5cc_path = get_krb5cc_path_from_environment(pamh);
   }
 
   if (expose_authtok == 1)
@@ -211,7 +227,6 @@ call_exec (const char *pam_type, pam_handle_t *pamh,
       else
 	{
 	  const void *void_pass;
-	  int retval;
 
 	  retval = pam_get_item (pamh, PAM_AUTHTOK, &void_pass);
 	  if (retval != PAM_SUCCESS)
@@ -220,7 +235,7 @@ call_exec (const char *pam_type, pam_handle_t *pamh,
 		pam_syslog (pamh, LOG_DEBUG,
 			    "pam_get_item (PAM_AUTHTOK) failed, return %d",
 			    retval);
-	      return retval;
+	      goto finish;
 	    }
 	  else if (void_pass == NULL)
 	    {
@@ -234,7 +249,7 @@ call_exec (const char *pam_type, pam_handle_t *pamh,
 		  _pam_drop (resp);
 		  if (retval == PAM_CONV_AGAIN)
 		    retval = PAM_INCOMPLETE;
-		  return retval;
+		  goto finish;
 		}
 
 	      pam_set_item (pamh, PAM_AUTHTOK, resp);
@@ -247,7 +262,8 @@ call_exec (const char *pam_type, pam_handle_t *pamh,
 	  if (pipe(fds) != 0)
 	    {
 	      pam_syslog (pamh, LOG_ERR, "Could not create pipe: %m");
-	      return PAM_SYSTEM_ERR;
+	      retval = PAM_SYSTEM_ERR;
+	      goto finish;
 	    }
 	}
     }
@@ -257,28 +273,33 @@ call_exec (const char *pam_type, pam_handle_t *pamh,
       if (pipe(stdout_fds) != 0)
 	{
 	  pam_syslog (pamh, LOG_ERR, "Could not create pipe: %m");
-	  return PAM_SYSTEM_ERR;
+	  retval = PAM_SYSTEM_ERR;
+	  goto finish;
 	}
       stdout_file = fdopen(stdout_fds[0], "r");
       if (!stdout_file)
 	{
 	  pam_syslog (pamh, LOG_ERR, "Could not fdopen pipe: %m");
-	  return PAM_SYSTEM_ERR;
+	  retval = PAM_SYSTEM_ERR;
+	  goto finish;
 	}
     }
 
   if (optargc >= argc) {
     pam_syslog (pamh, LOG_ERR, "No path given as argument");
-    return PAM_SERVICE_ERR;
+    retval = PAM_SERVICE_ERR;
+    goto finish;
   }
 
   pid = fork();
-  if (pid == -1)
-    return PAM_SYSTEM_ERR;
+  if (pid == -1) {
+    retval = PAM_SYSTEM_ERR;
+    goto finish;
+  }
   if (pid > 0) /* parent */
     {
       int status = 0;
-      pid_t retval;
+      pid_t retval_pid;
 
       if (set_krb5ccname)
 	free(krb5cc_envstr);
@@ -319,12 +340,13 @@ call_exec (const char *pam_type, pam_handle_t *pamh,
 	  fclose(stdout_file);
 	}
 
-      while ((retval = waitpid (pid, &status, 0)) == -1 &&
+      while ((retval_pid = waitpid (pid, &status, 0)) == -1 &&
 	     errno == EINTR);
-      if (retval == (pid_t)-1)
+      if (retval_pid == (pid_t)-1)
 	{
 	  pam_syslog (pamh, LOG_ERR, "waitpid returns with -1: %m");
-	  return PAM_SYSTEM_ERR;
+	  retval = PAM_SYSTEM_ERR;
+	  goto finish;
 	}
       else if (status != 0)
 	{
@@ -356,12 +378,16 @@ call_exec (const char *pam_type, pam_handle_t *pamh,
 			 argv[optargc], status);
 	    }
 
-	  if (exitcode_to_pam && child_exitcode >= 0)
-	    return child_exitcode;
+	  if (exitcode_to_pam && child_exitcode >= 0) {
+	    retval = child_exitcode;
+	    goto finish;
+	  }
 
-	  return PAM_SYSTEM_ERR;
+	  retval = PAM_SYSTEM_ERR;
+	  goto finish;
 	}
-      return PAM_SUCCESS;
+      retval = PAM_SUCCESS;
+      goto finish;
     }
   else /* child */
     {
@@ -543,7 +569,16 @@ call_exec (const char *pam_type, pam_handle_t *pamh,
       free(envlist);
       _exit (i);
     }
-  return PAM_SYSTEM_ERR; /* will never be reached. */
+
+finish:
+  if (krb5cc_path) {
+    if (retval != PAM_SUCCESS && retval != PAM_AUTHINFO_UNAVAIL) {
+      unlink(krb5cc_path);
+    }
+    free(krb5cc_path);
+  }
+
+  return retval;
 }
 
 PAM_EXTERN int
@@ -589,7 +624,20 @@ PAM_EXTERN int
 pam_sm_close_session(pam_handle_t *pamh, int flags UNUSED,
 		     int argc, const char **argv)
 {
-  return call_exec ("close_session", pamh, argc, argv);
+  char *krb5cc_path;
+  int retval;
+  FILE *fd;
+
+  krb5cc_path = get_krb5cc_path_from_environment(pamh);
+
+  retval = call_exec ("close_session", pamh, argc, argv);
+
+  if (krb5cc_path != NULL) {
+    unlink(krb5cc_path);
+    free(krb5cc_path);
+  }
+
+  return retval;
 }
 
 #ifdef PAM_STATIC
