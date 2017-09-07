@@ -217,6 +217,11 @@ handle_external_login() {
       export KRB5_CONFIG
       return 0
       ;;
+    UPDATED_BUT_FAIL)
+      KRB5_CONFIG=/etc/krb5.conf.masteronly
+      export KRB5_CONFIG
+      return 1
+      ;;
     NOTCONFIGURED)
       extlogin_errmsg="external login is not configured: $(echo "$external_logins" | jq .msg)"
       ;;
