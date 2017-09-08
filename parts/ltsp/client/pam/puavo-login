@@ -195,29 +195,30 @@ get_puavo_session() {
 handle_external_login() {
   [ "$(puavo-conf puavo.login.external.enabled)" = 'true' ] || return 0
 
-  if external_logins=$(
+  if extlogins=$(
     echo "$user_password" \
       | timeout -k 1 10 env USER="$PAM_USER" \
           /usr/bin/puavo-rest-request --send-device-school-dn \
             --user-pass-credentials --writable v3/external_login); then
-    external_login_status=$({ echo "$external_logins" | jq -r .status; } \
+    external_login_status=$({ echo "$extlogins" | jq -r .status; } \
                               || echo NOSTATUS)
   else
     external_login_status=FAIL
   fi
 
-  logmsg notice "called external login, status is '${external_login_status}'"
-
   case "$external_login_status" in
     NOCHANGE)
+      logmsg info "external login NOCHANGE: $(echo "$extlogins" | jq .msg)"
       return 0
       ;;
     UPDATED)
+      logmsg info "external login UPDATED: $(echo "$extlogins" | jq .msg)"
       KRB5_CONFIG=/etc/krb5.conf.masteronly
       export KRB5_CONFIG
       return 0
       ;;
     UPDATED_BUT_FAIL)
+      logmsg notice "external login UPDATE/FAIL: $(echo "$extlogins" | jq .msg)"
       KRB5_CONFIG=/etc/krb5.conf.masteronly
       export KRB5_CONFIG
       return 1
