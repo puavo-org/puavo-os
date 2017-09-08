@@ -110,7 +110,6 @@ authenticate_user() {
   if echo "$kinit_msg" \
     | grep -Eq '(not found in Kerberos database|Password incorrect)'; then
       logmsg notice 'kerberos auth was DENIED'
-      logmsg notice 'removing cached credentials'	# up to pam_ccreds.so
       return "$PAM_PERM_DENIED"
   fi
 
