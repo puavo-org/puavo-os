@@ -76,6 +76,8 @@ if [ -z "$PAM_USER" ]; then
   exit 1
 fi
 
+request_authoritative=false
+
 mode="${1:-immediate}"
 
 logmsg() { logger -p "auth.$1" -t puavo-login "user ${PAM_USER} / mode ${PAM_TYPE}/${mode} :: $2"; }
@@ -86,9 +88,15 @@ logmsg() { logger -p "auth.$1" -t puavo-login "user ${PAM_USER} / mode ${PAM_TYP
 
 authenticate_user() {
   authenticate_user_status=0
+
+  kinit_env=''
+  if $request_authoritative; then
+    kinit_env='KRB5_CONFIG=/etc/krb5.conf.masteronly'
+  fi
+
   kinit_msg=$(
     echo "$user_password" \
-      | timeout -k 1 10 env LANG=C \
+      | timeout -k 1 10 env LANG=C $kinit_env \
 	  kinit -f -l 5d -r 7d "$PAM_USER" 2>&1) || authenticate_user_status=$?
 
   if [ "$authenticate_user_status" -eq 0 ]; then
@@ -136,17 +144,18 @@ get_puavo_session() {
   if [ -z "$session_fetch_timeout" ]; then
     session_fetch_timeout=40
 
-    # If we have previous session data, keep the fetch timeout very short
-    # because usually any session data we have is good enough.
-    if [ -s "${PUAVO_SESSION_FILE}" ]; then
-      session_fetch_timeout=4
+    # If we have previous session data and we can expect is has not changed,
+    # keep the fetch timeout very short because usually any session data
+    # we have is good enough.
+    if !$request_authoritative && [ -s "${PUAVO_SESSION_FILE}" ]; then
+        session_fetch_timeout=4
     fi
   fi
 
   mkdir -p "$PUAVO_SESSION_DIR" || return 1
 
   rest_request_args='--post --send-hostname'
-  if [ "${KRB5_CONFIG:-}" = '/etc/krb5.conf.masteronly' ]; then
+  if $request_authoritative; then
     rest_request_args="${rest_request_args} --authoritative"
   fi
 
@@ -212,14 +221,12 @@ handle_external_login() {
       ;;
     UPDATED)
       logmsg info "external login UPDATED: $(echo "$extlogins" | jq .msg)"
-      KRB5_CONFIG=/etc/krb5.conf.masteronly
-      export KRB5_CONFIG
+      request_authoritative=true
       return 0
       ;;
     UPDATED_BUT_FAIL)
       logmsg notice "external login UPDATE/FAIL: $(echo "$extlogins" | jq .msg)"
-      KRB5_CONFIG=/etc/krb5.conf.masteronly
-      export KRB5_CONFIG
+      request_authoritative=true
       return 1
       ;;
     NOTCONFIGURED)
@@ -672,8 +679,8 @@ if [ "$mode" = 'immediate' ]; then
 
   # External login does not determine the login outcome directly at all,
   # instead it possibly affects Puavo database contents with user information.
-  # If user information has changed, this should set KRB5_CONFIG to
-  # "/etc/krb5.conf.masteronly", thus affecting this login process.
+  # If user information has changed, this should set $request_authoritative to
+  # "true", thus affecting this login process.
   handle_external_login || true
 
   auth_status="$PAM_SUCCESS"
