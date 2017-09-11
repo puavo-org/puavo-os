@@ -67,6 +67,8 @@ PAM_AUTHINFO_UNAVAIL=9
 PUAVO_SESSION_DIR="/var/lib/puavo-desktop/users/${PAM_USER}"
 PUAVO_SESSION_FILE="${PUAVO_SESSION_DIR}/puavo_session.json"
 
+EXTRAUSERS_PASSWD_FILE_PATH='/var/lib/extrausers/passwd'
+EXTRAUSERS_GROUP_FILE_PATH='/var/lib/extrausers/group'
 FIRSTLOGIN_MARKER_PATH='/run/puavo/first_login_on_host'
 
 USER_MINIMUM_UID_GID=10000
@@ -115,9 +117,14 @@ authenticate_user() {
     return "$PAM_SUCCESS"
   fi
 
-  if echo "$kinit_msg" \
-    | grep -Eq '(not found in Kerberos database|Password incorrect)'; then
-      logmsg notice 'kerberos auth was DENIED'
+  if echo "$kinit_msg" | grep -Fq 'not found in Kerberos database'; then
+      logmsg notice 'user not found, kerberos auth was DENIED'
+      extrausers_maybe_remove_user "$PAM_USER"
+      return "$PAM_PERM_DENIED"
+  fi
+
+  if echo "$kinit_msg" | grep -Fq 'Password incorrect'; then
+      logmsg notice 'incorrect password, kerberos auth was DENIED'
       return "$PAM_PERM_DENIED"
   fi
 
@@ -402,18 +409,16 @@ session_get_groups() {
 }
 
 extrausers_new_passwd() {
-  passwd_file_path='/var/lib/extrausers/passwd'
-
   if ! new_user="$(session_get_user)" || [ -z "$new_user" ]; then
     get_user_error="$(session_get_user 2>&1 >/dev/null)"
     logmsg err "could not find user information from puavo session: $get_user_error"
     return 1
   fi
 
-  if [ ! -e "$passwd_file_path" ]; then
-    logmsg notice "setting up new ${passwd_file_path} file"
-    if ! touch "$passwd_file_path" 2>/dev/null; then
-      logmsg err "could not create ${passwd_file_path}"
+  if [ ! -e "$EXTRAUSERS_PASSWD_FILE_PATH" ]; then
+    logmsg notice "setting up new ${EXTRAUSERS_PASSWD_FILE_PATH} file"
+    if ! touch "$EXTRAUSERS_PASSWD_FILE_PATH" 2>/dev/null; then
+      logmsg err "could not create ${EXTRAUSERS_PASSWD_FILE_PATH}"
       return 1
     fi
 
@@ -447,13 +452,14 @@ extrausers_new_passwd() {
       }
 
       END { for (uid in users_by_uid) { print users_by_uid[uid] } }
-    ' "$passwd_file_path" /dev/stdin)" || {
-      logmsg err 'error in creating new extrausers passwd db'
-      return 1
-   }
+    ' "$EXTRAUSERS_PASSWD_FILE_PATH" /dev/stdin)" || {
+    logmsg err 'error in creating new extrausers passwd db'
+    return 1
+  }
 
   if ! echo "$new_passwd_data" \
-         | sort_and_replace_extrausers_file_from_stdin "$passwd_file_path"; then
+         | sort_and_replace_extrausers_file_from_stdin \
+             "$EXTRAUSERS_PASSWD_FILE_PATH"; then
     logmsg err 'error in replacing old extrausers passwd db with a new one'
     return 1
   fi
@@ -462,8 +468,6 @@ extrausers_new_passwd() {
 }
 
 extrausers_new_group() {
-  group_file_path='/var/lib/extrausers/group'
-
   if ! user_groups="$(session_get_groups)" || [ -z "$user_groups" ]; then
     get_groups_error="$(session_get_groups 2>&1 >/dev/null)"
     logmsg err "could not get user groups from puavo session: $get_groups_error"
@@ -476,10 +480,10 @@ extrausers_new_group() {
     return 1
   fi
 
-  if [ ! -e "$group_file_path" ]; then
-    logmsg notice "setting up new ${group_file_path} file"
-    if ! touch "$group_file_path" 2>/dev/null; then
-      logmsg err "could not create ${group_file_path}"
+  if [ ! -e "$EXTRAUSERS_GROUP_FILE_PATH" ]; then
+    logmsg notice "setting up new ${EXTRAUSERS_GROUP_FILE_PATH} file"
+    if ! touch "$EXTRAUSERS_GROUP_FILE_PATH" 2>/dev/null; then
+      logmsg err "could not create ${EXTRAUSERS_GROUP_FILE_PATH}"
       return 1
     fi
   fi
@@ -556,18 +560,66 @@ extrausers_new_group() {
 	    members_list)
 	}
       }
-    ' "$group_file_path")" || {
-      logmsg err 'error in creating new extrausers group db'
-      return 1
+    ' "$EXTRAUSERS_GROUP_FILE_PATH")" || {
+    logmsg err 'error in creating new extrausers group db'
+    return 1
   }
 
   if ! echo "$new_group_data" \
-         | sort_and_replace_extrausers_file_from_stdin "$group_file_path"; then
+         | sort_and_replace_extrausers_file_from_stdin \
+             "$EXTRAUSERS_GROUP_FILE_PATH"; then
     logmsg err 'error in replacing old extrausers group db with a new one'
     return 1
   fi
 
   return 0
+}
+
+extrausers_maybe_remove_user() {
+  username_to_remove="$1"
+
+  new_passwd_data="$(
+    gawk -F: -v username_to_remove="$username_to_remove" '
+      $1 != username_to_remove
+    ' "$EXTRAUSERS_PASSWD_FILE_PATH")" || {
+    logmsg err "error in removing user '${username_to_remove}' from passwd db"
+    return 1
+  }
+
+  if ! echo "$new_passwd_data" \
+         | sort_and_replace_extrausers_file_from_stdin \
+             "$EXTRAUSERS_PASSWD_FILE_PATH"; then
+    logmsg err "error in removing user '$username_to_remove' from passwd db"
+    return 1
+  fi
+
+  new_group_data="$(
+    gawk -F: -v username_to_remove="$username_to_remove" '
+      BEGIN { OFS = ":" }
+      {
+        split($4, group_members, ",")
+        new_group_members = ""
+        for (i in group_members) {
+          member_user = group_members[i]
+          if (member_user == username_to_remove) { continue }
+          new_group_members = (new_group_members == "" \
+                                 ? member_user \
+                                 : new_group_members "," member_user)
+        }
+        $4 = new_group_members
+        print
+      }
+    ' "$EXTRAUSERS_GROUP_FILE_PATH")" || {
+    logmsg err "error in removing user '${username_to_remove}' from group db"
+    return 1
+  }
+
+  if ! echo "$new_group_data" \
+         | sort_and_replace_extrausers_file_from_stdin \
+             "$EXTRAUSERS_GROUP_FILE_PATH"; then
+    logmsg err "error in removing user '$username_to_remove' from group db"
+    return 1
+  fi
 }
 
 sort_and_replace_extrausers_file_from_stdin() {
