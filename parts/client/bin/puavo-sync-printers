@@ -36,6 +36,31 @@ def parse_cups_printers_conf(conf_path)
     end
   end
 
+  cups_dir = File.dirname(conf_path)
+  ppd_dir = "#{ cups_dir }/ppd"
+
+  # check ppd-files for MakeModel,
+  # because printers.conf apparently frequently lacks it
+  printers.keys.each do |description|
+    make_and_model = 'Unknown'
+    begin
+      ppd_file = "#{ ppd_dir }/#{ description }.ppd"
+      ppd_file_data = IO.read(ppd_file)
+      match = ppd_file_data.match(/^\*ShortNickName: "(.*)"$/)
+      if match
+        make_and_model = match[1]
+      else
+        warn("Did not find MakeModel from #{ ppd_file }")
+      end
+    rescue Errno::ENOENT
+      # frequent enough that no point in telling about this
+    rescue StandardError => e
+      warn("Could not read MakeModel from #{ ppd_file }: #{ e.message }")
+    end
+
+    printers[description]['MakeModel'] = make_and_model
+  end
+
   printers
 end
 
