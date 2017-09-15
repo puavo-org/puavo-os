@@ -166,27 +166,31 @@ module PuavoBS
 
   def self.create_testuser(admin_username, admin_password, school_id,
                            testuser_username='test.user.**********')
-    role_ids = self.get_role_ids(admin_username, admin_password, school_id)
-    if role_ids.empty? then
-      return []
-    end
-
-    testuser_role_id  = role_ids[0]
     testuser_username.gsub!('*') { SecureRandom.hex(1) }
     testuser_password = SecureRandom.hex(32)
+
+    formdata = {
+      "user[givenName]"                 => "test",
+      "user[sn]"                        => "user",
+      "user[uid]"                       => testuser_username,
+      "user[puavoEduPersonAffiliation]" => "testuser",
+      "user[new_password]"              => testuser_password,
+      "user[new_password_confirmation]" => testuser_password,
+    }
+
+    role_ids = self.get_role_ids(admin_username, admin_password, school_id)
+    if role_ids.empty? then
+      # it appears the new group/role interface is in use for this organisation
+      formdata['user[role]'] = 'testuser'
+    else
+      # using the legacy roles interface
+      formdata['user[role_ids][]'] = role_ids[0]
+    end
 
     url = self.get_puavo_url("/users/#{school_id}/users")
     response = HTTP
       .auth(self.basic_auth(admin_username, admin_password))
-      .post(url, :form => {
-              "user[givenName]"                 => "test",
-              "user[sn]"                        => "user",
-              "user[uid]"                       => testuser_username,
-              "user[puavoEduPersonAffiliation]" => "testuser",
-              "user[role_ids][]"                => testuser_role_id,
-              "user[new_password]"              => testuser_password,
-              "user[new_password_confirmation]" => testuser_password,
-            })
+      .post(url, :form => formdata)
     self.check_response_code(response.code)
     [testuser_username, testuser_password]
   end

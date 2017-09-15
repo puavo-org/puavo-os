@@ -9,8 +9,7 @@ require "puavo/api-server"
 
 def assert_response(res)
   if ![200, 201, 202].include?(res.code)
-    puts "Bad response status #{ res.code } for #{ res.request.path.to_s }: #{ res }"
-    exit 1
+    raise "Bad response status #{ res.code } for #{ res.request.path.to_s }: #{ res }"
   end
 end
 
@@ -36,8 +35,35 @@ def parse_cups_printers_conf(conf_path)
     end
   end
 
+  cups_dir = File.dirname(conf_path)
+  ppd_dir = "#{ cups_dir }/ppd"
+
+  # check ppd-files for MakeModel,
+  # because printers.conf apparently frequently lacks it
+  printers.keys.each do |description|
+    make_and_model = 'Unknown'
+    begin
+      ppd_file = "#{ ppd_dir }/#{ description }.ppd"
+      ppd_file_data = IO.read(ppd_file)
+      match = ppd_file_data.match(/^\*ShortNickName: "(.*)"$/)
+      if match
+        make_and_model = match[1]
+      else
+        warn("Did not find MakeModel from #{ ppd_file }")
+      end
+    rescue Errno::ENOENT
+      # frequent enough that no point in telling about this
+    rescue StandardError => e
+      warn("Could not read MakeModel from #{ ppd_file }: #{ e.message }")
+    end
+
+    printers[description]['MakeModel'] = make_and_model
+  end
+
   printers
 end
+
+exitcode = 0
 
 options = {
   :printers_conf => "/etc/cups/printers.conf"
@@ -139,40 +165,49 @@ end
 server_printers = parse_cups_printers_conf(options[:printers_conf])
 puts "Ensuring #{ server_printers.size } printers to puavo"
 server_printers.each do |description, info|
+  begin
+    # TODO: We might want to check if any of the attributes has been changed and
+    # update the printer. Now we only send the printer data if it is completely
+    # new.
+    if current_printer_descriptions.include?(description)
+      next
+    end
 
-  # TODO: We might want to check if any of the attributes has been changed and
-  # update the printer. Now we only send the printer data if it is completely
-  # new.
-  if current_printer_descriptions.include?(description)
-    next
-  end
-
-  printer = {
-    "printerDescription" => description,
-    "printerLocation" => info["Location"] || "",
-    "printerMakeAndModel" => info["MakeModel"] || "",
-    "printerType" => info["Type"] || "" ,
-    "printerURI" => info["DeviceURI"] || "" ,
-    "puavoServer" => options[:server_dn]
-  }
-
-  json = printer.to_json
-
-  puts "Sending #{ json }"
-  puts "to #{ options[:post_printers] }"
-  res = HTTParty.post(options[:post_printers],
-    :body => json,
-    :basic_auth => {
-      :username => options[:user],
-      :password => options[:password]
-    },
-    :headers => {
-      "Content-Type" => "application/json",
-      "Accept" => "application/json"
+    printer = {
+      "printerDescription" => description,
+      "printerLocation" => info["Location"] || "",
+      "printerMakeAndModel" => info["MakeModel"] || "",
+      "printerType" => info["Type"] || "" ,
+      "printerURI" => info["DeviceURI"] || "" ,
+      "puavoServer" => options[:server_dn]
     }
-   )
-  assert_response res
-  puts "OK"
-  puts
 
+    json = printer.to_json
+
+    puts "Sending to #{ options[:post_printers] } : '#{ json }'"
+    res = HTTParty.post(options[:post_printers],
+      :body => json,
+      :basic_auth => {
+        :username => options[:user],
+        :password => options[:password]
+      },
+      :headers => {
+        "Content-Type" => "application/json",
+        "Accept" => "application/json"
+      }
+    )
+    assert_response res
+    puts 'OK'
+    puts
+  rescue StandardError => e
+    warn("Problem sending printer information for '#{ description }'" \
+           + 'to Puavo: ' + e.message)
+    exitcode = 1
+  end
 end
+
+if exitcode != 0 then
+  warn('Problems when sending printers to Puavo')
+end
+
+exit(exitcode)
