@@ -2,14 +2,19 @@
 
 set -eu
 
-setup_webmenu_window_type() {
+setup_webmenu_window_mode() {
+  setup_mode_status=0
   # set webmenu window type to be menu
   # (actually running this once for each webmenu startup should be enough)
   webmenu_xwin_id=$(xdotool search --name Webmenu) || return 1
   if [ -n "$webmenu_xwin_id" ]; then
     xprop -id "$webmenu_xwin_id" -f _NET_WM_WINDOW_TYPE 32a \
-      -set _NET_WM_WINDOW_TYPE _NET_WM_WINDOW_TYPE_MENU || return 1
+      -set _NET_WM_WINDOW_TYPE _NET_WM_WINDOW_TYPE_MENU || setup_mode_status=1
+    # activate webmenu window (switch desktop, raise, give focus)
+    xdotool windowactivate "$webmenu_xwin_id"           || setup_mode_status=1
   fi
+
+  return $setup_mode_status
 }
 
 spawn() {
@@ -66,7 +71,7 @@ mkdir -p "$webmenu_dir"
     # If first spawn fails, retry with default pipe path.
     # Used when starting webmenu with "nw ."
     if spawn "$WM_SOCK" "$args" || spawn "$default_spawn_sock" "$args"; then
-      setup_webmenu_window_type || true
+      setup_webmenu_window_mode || true
       exit 0
     fi
 
