@@ -1,0 +1,6 @@
+#!/bin/sh -e
+
+appname=$(basename "$0" .exe)
+name=$(echo $appname | cut -d- -f1)
+
+exec wineDEBSUFFIX "$name.exe" "$@"

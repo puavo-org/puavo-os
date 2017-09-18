@@ -1,0 +1,19 @@
+description: remove dependencies on prebuilt ttf font files
+author: Michael Gilbert <mgilbert@debian.org>
+
+--- a/dlls/dwrite/tests/Makefile.in
++++ b/dlls/dwrite/tests/Makefile.in
+@@ -8,5 +8,3 @@ C_SRCS = \
+ 
+ FONT_SRCS = \
+ 	wine_test.sfd
+-
+-RC_SRCS = resource.rc
+--- a/dlls/gdi32/tests/Makefile.in
++++ b/dlls/gdi32/tests/Makefile.in
+@@ -20,5 +20,3 @@ FONT_SRCS = \
+ 	vertical.sfd \
+ 	wine_test.sfd \
+ 	wine_vdmx.sfd
+-
+-RC_SRCS = resource.rc

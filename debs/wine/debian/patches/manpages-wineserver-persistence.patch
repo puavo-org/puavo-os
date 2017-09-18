@@ -1,0 +1,36 @@
+description: fix wineserver manpages for Debian's default persistence value
+author: Jens Reyer <jre.winesim@gmail.com>
+
+--- a/server/wineserver.de.UTF-8.man.in
++++ b/server/wineserver.de.UTF-8.man.in
+@@ -44,7 +44,7 @@ SIGINT, gefolgt von einem SIGKILL gesend
+ Gibt die Dauer an, für die \fBwineserver\fR weiterläuft nachdem alle
+ Clientprozesse beendet sind. Das erspart den Rechenaufwand und Zeitverlust
+ eines Neustarts, wenn Anwendungen in schneller Abfolge gestartet werden.
+-Die Verzögerung \fIn\fR ist anzugeben in Sekunden, der Standardwert ist 3.
++Die Verzögerung \fIn\fR ist anzugeben in Sekunden, der Standardwert ist 0.
+ Bei fehlender Angabe von \fIn\fR läuft der Server unbegrenzt weiter.
+ .TP
+ .BR \-v ", " --version
+--- a/server/wineserver.fr.UTF-8.man.in
++++ b/server/wineserver.fr.UTF-8.man.in
+@@ -47,7 +47,7 @@ temps pendant lequel le serveur continue
+ processus clients se sont terminés. Ceci évite le coût inhérent à l'arrêt
+ puis au redémarrage du serveur lorsque des programmes sont lancés successivement
+ à intervalle rapproché.
+-Le délai d'attente \fIn\fR est exprimé en secondes (3 secondes par défaut).
++Le délai d'attente \fIn\fR est exprimé en secondes (0 secondes par défaut).
+ Si \fIn\fR n'est pas spécifié, le serveur s'exécute indéfiniment.
+ .TP
+ .BR \-v ", " --version
+--- a/server/wineserver.man.in
++++ b/server/wineserver.man.in
+@@ -47,7 +47,7 @@ Specify the \fBwineserver\fR persistence
+ time that the server will keep running when all client processes have
+ terminated. This avoids the cost of shutting down and starting again
+ when programs are launched in quick succession. The timeout \fIn\fR is
+-in seconds, the default value is 3 seconds. If \fIn\fR is not
++in seconds, the default value is 0 seconds. If \fIn\fR is not
+ specified, the server stays around forever.
+ .TP
+ .BR \-v ", " --version

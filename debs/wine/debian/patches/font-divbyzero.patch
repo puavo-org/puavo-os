@@ -1,0 +1,20 @@
+description: avoid divide-by-zero condition for certain font files and warn about it
+bug: https://bugs.winehq.org/show_bug.cgi?id=38762
+bug-debian: https://bugs.debian.org/788809
+
+--- a/dlls/gdi32/freetype.c
++++ b/dlls/gdi32/freetype.c
+@@ -5736,6 +5736,13 @@ found_face:
+         if (scale > 2 && scaled_height - height > face->size.height / 4) scale--;
+         /* The jump between unscaled and doubled is delayed by 1 */
+         else if (scale == 2 && scaled_height - height > (face->size.height / 4 - 1)) scale--;
++
++        if (face->size.height == 0) {
++            scale = 1;
++            WARN("the font file %s (%s) has zero face height!\n",
++                 debugstr_w(face->file), debugstr_w(face->FullName));
++        }
++
+         ret->scale_y = scale;
+ 
+         width = face->size.x_ppem >> 6;

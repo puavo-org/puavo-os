@@ -1,0 +1,15 @@
+Description: winelib: Append '(Debian)' at the end of the version string.
+Origin: https://github.com/wine-compholio/wine-staging/blob/master/patches/Staging/0002-winelib-Append-Staging-at-the-end-of-the-version-s.patch
+Forwarded: not-needed
+
+--- a/libs/wine/Makefile.in
++++ b/libs/wine/Makefile.in
+@@ -33,7 +33,7 @@ libwine_LDFLAGS = $(LIBWINE_LDFLAGS)
+ libwine_DEPS = $(LIBWINE_DEPENDS)
+ 
+ version.c: dummy
+-	version=`(GIT_DIR=$(top_srcdir)/.git git describe HEAD 2>/dev/null || echo "wine-$(PACKAGE_VERSION)") | sed -n -e '$$s/\(.*\)/const char wine_build[] = "\1";/p'` && (echo $$version | cmp -s - $@) || echo $$version >$@ || ($(RM) $@ && exit 1)
++	version=`(GIT_DIR=$(top_srcdir)/.git git describe HEAD 2>/dev/null || echo "wine-$(PACKAGE_VERSION)") | sed -n -e '$$s/\(.*\)/const char wine_build[] = "\1  ($(VENDOR))";/p'` && (echo $$version | cmp -s - $@) || echo $$version >$@ || ($(RM) $@ && exit 1)
+ 
+ dummy:
+ .PHONY: dummy
