@@ -1,0 +1,141 @@
+--- wine.orig/dlls/mountmgr.sys/device.c	2019-01-22 23:25:59.000000000 +0200
++++ wine/dlls/mountmgr.sys/device.c	2019-04-16 12:54:44.328214484 +0300
+@@ -90,6 +90,51 @@
+     struct mount_point   *mount;       /* DosDevices mount point */
+ };
+ 
++typedef struct _GETVERSIONINPARAMS {
++	UCHAR bVersion;
++	UCHAR bRevision;
++	UCHAR bReserved;
++	UCHAR bIDEDeviceMap;
++	ULONG fCapabilities;
++	ULONG dwReserved[4];
++} GETVERSIONINPARAMS, *PGETVERSIONINPARAMS, *LPGETVERSIONINPARAMS;
++
++typedef struct _DRIVERSTATUS {
++	UCHAR bDriverError;
++	UCHAR bIDEError;
++	UCHAR bReserved[2];
++	ULONG dwReserved[2];
++} DRIVERSTATUS, *PDRIVERSTATUS, *LPDRIVERSTATUS;
++
++typedef struct _IDEREGS {
++	UCHAR bFeaturesReg;
++	UCHAR bSectorCountReg;
++	UCHAR bSectorNumberReg;
++	UCHAR bCylLowReg;
++	UCHAR bCylHighReg;
++	UCHAR bDriveHeadReg;
++	UCHAR bCommandReg;
++	UCHAR bReserved;
++} IDEREGS, *PIDEREGS, *LPIDEREGS;
++
++typedef struct _SENDCMDINPARAMS {
++	ULONG   cBufferSize;
++	IDEREGS irDriveRegs;
++	UCHAR   bDriveNumber;
++	UCHAR   bReserved[3];
++	ULONG   dwReserved[4];
++	UCHAR   bBuffer[1];
++} SENDCMDINPARAMS, *PSENDCMDINPARAMS, *LPSENDCMDINPARAMS;
++
++typedef struct _SENDCMDOUTPARAMS {
++	ULONG        cBufferSize;
++	DRIVERSTATUS DriverStatus;
++	UCHAR        bBuffer[512];
++} SENDCMDOUTPARAMS, *PSENDCMDOUTPARAMS, *LPSENDCMDOUTPARAMS;
++
++#define CAP_ATA_ID_CMD 1
++#define HOSTID_FILE_PATH "/run/puavo/primary_disk_id"
++
+ static struct list drives_list = LIST_INIT(drives_list);
+ static struct list volumes_list = LIST_INIT(volumes_list);
+ 
+@@ -951,6 +996,86 @@
+ 
+         break;
+     }
++    /* SMART_GET_VERSION ? */
++    case 0x74080:
++    {
++	DWORD len = min(sizeof(GETVERSIONINPARAMS), irpsp->Parameters.DeviceIoControl.OutputBufferLength);
++	GETVERSIONINPARAMS info;
++
++	FIXME("returning something for 0x74080 (SMART_GET_VERSION?)\n" );
++
++	info.bVersion = 1;
++	info.bRevision = 0;
++	info.bReserved = 0;
++	info.bIDEDeviceMap = 0;
++	info.fCapabilities = CAP_ATA_ID_CMD;
++	info.dwReserved[0] = 0;
++	info.dwReserved[1] = 0;
++	info.dwReserved[2] = 0;
++	info.dwReserved[3] = 0;
++
++	memcpy( irp->AssociatedIrp.SystemBuffer, &info, len );
++
++	irp->IoStatus.Information = len;
++	irp->IoStatus.u.Status = STATUS_SUCCESS;
++	break;
++    }
++    /* SMART_RCV_DRIVE_DATA ? */
++    case 0x7c088:
++    {
++	DWORD len = min(sizeof(SENDCMDOUTPARAMS) - 1 + 512,
++	    irpsp->Parameters.DeviceIoControl.OutputBufferLength);
++	FILE *hostid_file;
++	SENDCMDINPARAMS in;
++	SENDCMDOUTPARAMS out;
++	size_t hostid_charcount, i;
++	char hostid_string[256];
++
++	memcpy(&in, irp->AssociatedIrp.SystemBuffer, sizeof(SENDCMDINPARAMS));
++#define ID_CMD 0xec
++	if (in.irDriveRegs.bCommandReg != ID_CMD) {
++		FIXME("0x7c088: in.irDriveRegs.bCommandReg=%x unsupported\n",
++		    in.irDriveRegs.bCommandReg);
++		irp->IoStatus.u.Status = STATUS_NOT_SUPPORTED;
++		break;
++	}
++
++	out.cBufferSize = sizeof(hostid_string);
++	out.DriverStatus.bDriverError = 0;
++	out.DriverStatus.bIDEError = 0;
++	out.DriverStatus.bReserved[0] = 0;
++	out.DriverStatus.bReserved[1] = 0;
++	out.DriverStatus.dwReserved[0] = 0;
++	out.DriverStatus.dwReserved[1] = 0;
++
++	hostid_file = fopen(HOSTID_FILE_PATH, "r");
++	if (hostid_file == NULL) {
++		FIXME("0x7c088: error opening %s file: %s\n",
++		   HOSTID_FILE_PATH, strerror(errno));
++        	irp->IoStatus.u.Status = STATUS_NOT_SUPPORTED;
++		break;
++	}
++	hostid_charcount = fread(hostid_string, 1, sizeof(hostid_string),
++	    hostid_file);
++	if (hostid_charcount == 0 || !feof(hostid_file)) {
++		FIXME("0x7c088: error reading from %s\n", HOSTID_FILE_PATH);
++        	irp->IoStatus.u.Status = STATUS_NOT_SUPPORTED;
++		(void)fclose(hostid_file);
++		break;
++	}
++	(void)fclose(hostid_file);
++
++	for (i = 0; i < sizeof(hostid_string); i++)
++		out.bBuffer[i] = hostid_string[ i % hostid_charcount ];
++	out.bBuffer[i] = '\0';
++	FIXME("0x7c088: providing %s as ATA ID\n", out.bBuffer);
++
++	memcpy(irp->AssociatedIrp.SystemBuffer, &out, len);
++
++	irp->IoStatus.Information = len;
++	irp->IoStatus.u.Status = STATUS_SUCCESS;
++	break;
++    }
+     default:
+         FIXME( "Unsupported property %#x\n", query->PropertyId );
+         irp->IoStatus.u.Status = STATUS_NOT_SUPPORTED;
