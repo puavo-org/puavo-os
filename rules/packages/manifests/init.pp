@@ -174,7 +174,7 @@ class packages {
       tag => [ 'tag_email', 'tag_debian', ];
 
     [ 'wine'
-    , 'winetricks ]:
+    , 'winetricks' ]:
       tag => [ 'tag_emulation', 'tag_debian', ];
 
     'firmware-linux-free':
