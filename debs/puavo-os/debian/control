@@ -130,7 +130,8 @@ Depends: ${misc:Depends},
  initramfs-tools,
  puavo-conf,
  rdate,
- rsyslog-relp
+ rsyslog-relp,
+ smartmontools
 Description: Puavo Core Infrastructure
  Bolts and nuts for Puavo OS.
  .
