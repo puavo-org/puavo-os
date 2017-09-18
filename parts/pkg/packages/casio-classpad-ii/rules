@@ -13,22 +13,38 @@ set -eu
 
 installer_exe_path='/usr/share/puavo-pkg/installers/casio_classpad_ii_installer.exe'
 
-WINEARCH=win32
-export WINEARCH
+final_wineprefix=~/.wine-casio-classpad-ii_v2_01_2000
 
-WINEPREFIX=~/.wine-casio-classpad-ii_v2_01_2000
-export WINEPREFIX
+program_exe_dir="${final_wineprefix}/drive_c/Program Files (x86)/CASIO/ClassPad Manager Subscription for ClassPad II"
+program_exe_name='ClassPadManagerSubscriptionForClassPadII.exe'
+program_exe_path="${program_exe_dir}/${program_exe_name}"
 
-classpad_exe_dir="${WINEPREFIX}/drive_c/Program Files (x86)/CASIO/ClassPad Manager Subscription for ClassPad II"
-classpad_exe_name='ClassPadManagerSubscriptionForClassPadII.exe'
-classpad_exe_path="${classpad_exe_dir}/${classpad_exe_name}"
+export WINEARCH=win32
 
-if [ ! -e "$classpad_exe_path" ]; then
+# XXX how should we support:
+# XXX   1. installing new version
+# XXX   2. updating an old version to new version (safely!)
+# XXX   3. allowing user to use the old version without nagging him/her to update?
+
+if [ ! -d "$final_wineprefix" ]; then
+  export WINEPREFIX="${final_wineprefix}.tmp"
+
+  rm -rf "${final_wineprefix}.tmp"
   wine "$installer_exe_path"
+
+  if [ ! -e "$program_exe_path" ]; then
+    echo 'error occurred during installation' >&2
+    exit 1
+  fi
+
+  ln -fns "$(basename "$final_wineprefix")" ~/.wine-casio-classpad-ii
+  mv "$WINEPREFIX" "$final_wineprefix"
 fi
 
-cd "$classpad_exe_dir"
-wine "$classpad_exe_name"
+export WINEPREFIX=~/.wine-casio-classpad-ii
+
+cd "$program_exe_dir"
+wine "$program_exe_name"
 EOF
   chmod 755 /usr/local/bin/casio-classpad-ii
 }
