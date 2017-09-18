@@ -30,41 +30,41 @@ EOF
   chmod 755 /usr/local/bin/casio-classpad-ii
 }
 
-case "${command}" in
-    configure)
-        upstream_dir=$1
-        mkdir -p /usr/share/puavo-pkg/installers
-        ln -fns "${upstream_dir}/ClassPadManager_v2_01_2000_Windows/ClassPad Manager Subscription for ClassPad II Ver. 2.01.2000.exe" \
-                /usr/share/puavo-pkg/installers/casio_classpad_ii_installer.exe
-        install_installer_script
-        ;;
+case "$command" in
+  configure)
+    upstream_dir=$1
+    mkdir -p /usr/share/puavo-pkg/installers
+    ln -fns "${upstream_dir}/ClassPadManager_v2_01_2000_Windows/ClassPad Manager Subscription for ClassPad II Ver. 2.01.2000.exe" \
+            /usr/share/puavo-pkg/installers/casio_classpad_ii_installer.exe
+    install_installer_script
+    ;;
 
-    download)
-        upstream_pack=$1
-        curl --form-string 'ORG_TEA=' \
-             --form-string 'OCCUPATION=student' \
-             --form-string 'ORG_STU=Upper+secondary+school' \
-             --form-string 'ORG_OTH=' \
-             --form-string 'COUNTRY=Finland' \
-             --form-string 'fn=' \
-             --form-string 'dl_FILE_NO=19579' \
-             --form-string 'LANGUAGE=1' \
-             --form-string 'submit=Download' \
-             --output "$upstream_pack" \
-          https://edu.casio.com/freetrial/en/download.php
-        ;;
+  download)
+    upstream_pack=$1
+    curl --form-string 'ORG_TEA=' \
+         --form-string 'OCCUPATION=student' \
+         --form-string 'ORG_STU=Upper+secondary+school' \
+         --form-string 'ORG_OTH=' \
+         --form-string 'COUNTRY=Finland' \
+         --form-string 'fn=' \
+         --form-string 'dl_FILE_NO=19579' \
+         --form-string 'LANGUAGE=1' \
+         --form-string 'submit=Download' \
+         --output "$upstream_pack" \
+      https://edu.casio.com/freetrial/en/download.php
+    ;;
 
-    unconfigure)
-        rm -f /usr/local/bin/casio-classpad-ii \
-              /usr/share/puavo-pkg/installers/casio_classpad_ii_installer.exe
-        ;;
+  unconfigure)
+    rm -f /usr/local/bin/casio-classpad-ii \
+          /usr/share/puavo-pkg/installers/casio_classpad_ii_installer.exe
+    ;;
 
-    unpack)
-        upstream_pack=$1
-        upstream_dir=$2
-        unzip -d "$upstream_dir" "$upstream_pack"
-        ;;
+  unpack)
+    upstream_pack=$1
+    upstream_dir=$2
+    unzip -d "$upstream_dir" "$upstream_pack"
+    ;;
 
-    *)
-        ;;
+  *)
+    ;;
 esac
