@@ -1,0 +1,77 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+install_installer_script() {
+  cat <<'EOF' > /usr/local/bin/ti-nspire-cx-cas
+#!/bin/sh
+
+set -eu
+
+installer_msi_path='/usr/share/puavo-pkg/installers/ti_nspire_cx_cas_installer.msi'
+
+final_wineprefix=~/.wine-ti-nspire-cx-cas-4.5.0.1180
+
+program_exe_dir="${final_wineprefix}/drive_c/Program Files (x86)/TI Education/TI-Nspire CX CAS Student Software"
+program_exe_name='TI-Nspire CX CAS Student Software.exe'
+program_exe_path="${program_exe_dir}/${program_exe_name}"
+
+export WINEARCH=win32
+
+# XXX how should we support:
+# XXX   1. installing new version
+# XXX   2. updating an old version to new version (safely!)
+# XXX   3. allowing user to use the old version without nagging him/her to update?
+
+if [ ! -d "$final_wineprefix" ]; then
+  export WINEPREFIX="${final_wineprefix}.tmp"
+
+  rm -rf "${final_wineprefix}.tmp"
+
+  msiexec /i "$installer_msi_path"
+
+  if [ ! -e "$program_exe_path" ]; then
+    echo 'error occurred during installation' >&2
+    exit 1
+  fi
+
+  ln -fns "$(basename "$final_wineprefix")" ~/.wine-ti-nspire-cx-cas
+  mv "$WINEPREFIX" "$final_wineprefix"
+fi
+
+export WINEPREFIX=~/.wine-ti-nspire-cx-cas
+
+cd "$program_exe_dir"
+wine "$program_exe_name"
+EOF
+  chmod 755 /usr/local/bin/ti-nspire-cx-cas
+}
+
+case "$command" in
+  configure)
+    upstream_dir=$1
+    mkdir -p /usr/share/puavo-pkg/installers
+    ln -fns "${upstream_dir}/TINspireCXCASStudentSoftware-4.5.0.1180.msi" \
+            /usr/share/puavo-pkg/installers/ti_nspire_cx_cas_installer.msi
+    install_installer_script
+    ;;
+
+  unconfigure)
+    rm -f /usr/local/bin/ti-nspire-cx-cas \
+          /usr/share/puavo-pkg/installers/ti_nspire_cx_cas_installer.msi
+    ;;
+
+  unpack)
+    upstream_pack=$1
+    upstream_dir=$2
+    target_file="${upstream_dir}/TINspireCXCASStudentSoftware-4.5.0.1180.msi"
+    ln "$upstream_pack" "$target_file" 2>/dev/null \
+      || cp "$upstream_pack" "$target_file"
+    ;;
+
+  *)
+    ;;
+esac

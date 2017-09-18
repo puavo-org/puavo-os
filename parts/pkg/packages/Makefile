@@ -29,6 +29,7 @@ packagedirs += skype/
 packagedirs += smartboard/
 packagedirs += spotify-client/
 packagedirs += tilitin/
+packagedirs += ti-nspire-cx-cas/
 packagedirs += t-lasku/
 packagedirs += vidyo-client/
 packagedirs += vstloggerpro/
