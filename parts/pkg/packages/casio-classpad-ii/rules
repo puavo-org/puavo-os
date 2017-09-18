@@ -13,6 +13,9 @@ set -eu
 
 installer_exe_path='/usr/share/puavo-pkg/installers/casio_classpad_ii_installer.exe'
 
+WINEARCH=win32
+export WINEARCH
+
 WINEPREFIX=~/.wine-casio-classpad-ii_v2_01_2000
 export WINEPREFIX
 
