@@ -173,7 +173,8 @@ class packages {
     [ 'mutt' ]:
       tag => [ 'tag_email', 'tag_debian', ];
 
-    [ 'wine' ]:
+    [ 'wine'
+    , 'winetricks ]:
       tag => [ 'tag_emulation', 'tag_debian', ];
 
     'firmware-linux-free':
