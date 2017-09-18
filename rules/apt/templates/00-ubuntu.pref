@@ -1,11 +1,3 @@
 Package: *
-Pin: release a=<%= @ubuntu_version %>
-Pin-Priority: 30
-
-Package: *
-Pin: release a=<%= @ubuntu_version %>-updates
-Pin-Priority: 30
-
-Package: *
-Pin: release a=<%= @ubuntu_version %>-security
+Pin: release n=<%= @ubuntu_version %>
 Pin-Priority: 30
