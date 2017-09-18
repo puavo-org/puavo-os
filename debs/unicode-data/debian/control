@@ -1,0 +1,15 @@
+Source: unicode-data
+Section: misc
+Priority: optional
+Maintainer: Alastair McKinstry <mckinstry@debian.org>
+Build-Depends: debhelper (>= 10)
+Build-Depends-Indep: bzip2, unzip
+Standards-Version: 4.1.0
+Homepage: http://www.unicode.org/
+
+Package: unicode-data
+Architecture: all
+Depends: ${misc:Depends}
+Multi-Arch: foreign
+Description: Property data for the Unicode character set
+ This package contains the property data, for the Unicode data set.
