@@ -61,10 +61,13 @@ else
       echo "Could not determine package version for ${srcpkgname}." >&2
       exit 1
     fi
-    new_deb_version="${current_deb_version}+build$(date +%s)"
-    env DEBFULLNAME="Puavo Org" DEBEMAIL="dev@opinsys.fi" \
-      dch --newversion "$new_deb_version" \
-        "Automatic build for puavo-os on $(env LANG=C date)."
+
+    if ! echo "$current_deb_version" | grep -q '\+buildonce$'; then
+      new_deb_version="${current_deb_version}+build$(date +%s)"
+      env DEBFULLNAME="Puavo Org" DEBEMAIL="dev@opinsys.fi" \
+        dch --newversion "$new_deb_version" \
+          "Automatic build for puavo-os on $(env LANG=C date)."
+    fi
 
     dpkg-buildpackage -sa -uc -us
     ../../../../parts/devscripts/bin/do-debpool-changes -m "$pooldir"
