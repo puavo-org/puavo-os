@@ -5,8 +5,10 @@ _pkgs_ports     := autopoweroff    \
                    gnome-shell     \
                    grub2           \
                    nwjs            \
+                   unicode-data    \
                    visionmedia-mon \
                    vtun            \
+                   wine            \
                    wpa             \
                    $(_lsb_release_ports)
 _pkgs_image     := $(_pkgs_parts) $(_pkgs_ports)

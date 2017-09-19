@@ -6,6 +6,7 @@ image_dir		:= /srv/puavo-os-images
 images_urlbase		:= https://images.puavo.org
 mirror_dir		:= $(image_dir)/mirror
 rootfs_dir		:= /var/tmp/puavo-os/rootfs
+target_arch             := amd64
 upload_codename         := $(debootstrap_suite)
 upload_dir              :=
 upload_login            :=
@@ -126,7 +127,7 @@ rootfs-debootstrap:
 	@[ ! -e '$(rootfs_dir)' ] || \
 		{ echo ERROR: rootfs directory '$(rootfs_dir)' already exists >&2; false; }
 	$(_sudo) debootstrap					\
-		--arch=amd64					\
+		--arch='$(target_arch)'				\
 		--include='$(_debootstrap_packages)'	        \
 		--components=main,contrib,non-free		\
 		'$(debootstrap_suite)'				\

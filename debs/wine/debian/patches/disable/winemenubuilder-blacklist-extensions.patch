@@ -1,0 +1,60 @@
+Description: Blacklist all extensions that trigger a freedesktop file type association from an empty prefix.
+Author: Jens Reyer <jre.winesim@gmail.com>
+Bug: https://bugs.winehq.org/show_bug.cgi?id=28159
+Bug-Debian: https://bugs.debian.org/845334
+
+--- a/programs/winemenubuilder/winemenubuilder.c
++++ b/programs/winemenubuilder/winemenubuilder.c
+@@ -2465,10 +2465,51 @@ static BOOL is_extension_blacklisted(LPC
+     static const WCHAR comW[] = {'.','c','o','m',0};
+     static const WCHAR exeW[] = {'.','e','x','e',0};
+     static const WCHAR msiW[] = {'.','m','s','i',0};
++    /* All extensions that are associated natively from an empty prefix. Blacklist them for security
++     * reasons, and because most people don't want their native file type associations changed.
++     */
++    static const WCHAR chmW[] = {'.','c','h','m',0};
++    static const WCHAR gifW[] = {'.','g','i','f',0};
++    static const WCHAR hlpW[] = {'.','h','l','p',0};
++    static const WCHAR htmW[] = {'.','h','t','m',0};
++    static const WCHAR htmlW[] = {'.','h','t','m','l',0};
++    static const WCHAR iniW[] = {'.','i','n','i',0};
++    static const WCHAR jfifW[] = {'.','j','f','i','f',0};
++    static const WCHAR jpeW[] = {'.','j','p','e',0};
++    static const WCHAR jpegW[] = {'.','j','p','e','g',0};
++    static const WCHAR jpgW[] = {'.','j','p','g',0};
++    static const WCHAR mspW[] = {'.','m','s','p',0};
++    static const WCHAR pdfW[] = {'.','p','d','f',0};
++    static const WCHAR pngW[] = {'.','p','n','g',0};
++    static const WCHAR rtfW[] = {'.','r','t','f',0};
++    static const WCHAR txtW[] = {'.','t','x','t',0};
++    static const WCHAR urlW[] = {'.','u','r','l',0};
++    static const WCHAR vbsW[] = {'.','v','b','s',0};
++    static const WCHAR wriW[] = {'.','w','r','i',0};
++    static const WCHAR xmlW[] = {'.','x','m','l',0};
+ 
+     if (!strcmpiW(extension, comW) ||
+         !strcmpiW(extension, exeW) ||
+-        !strcmpiW(extension, msiW))
++        !strcmpiW(extension, msiW) ||
++        !strcmpiW(extension, chmW) ||
++        !strcmpiW(extension, gifW) ||
++        !strcmpiW(extension, hlpW) ||
++        !strcmpiW(extension, htmW) ||
++        !strcmpiW(extension, htmlW) ||
++        !strcmpiW(extension, iniW) ||
++        !strcmpiW(extension, jfifW) ||
++        !strcmpiW(extension, jpeW) ||
++        !strcmpiW(extension, jpegW) ||
++        !strcmpiW(extension, jpgW) ||
++        !strcmpiW(extension, mspW) ||
++        !strcmpiW(extension, pdfW) ||
++        !strcmpiW(extension, pngW) ||
++        !strcmpiW(extension, rtfW) ||
++        !strcmpiW(extension, txtW) ||
++        !strcmpiW(extension, urlW) ||
++        !strcmpiW(extension, vbsW) ||
++        !strcmpiW(extension, wriW) ||
++        !strcmpiW(extension, xmlW))
+         return TRUE;
+     return FALSE;
+ }

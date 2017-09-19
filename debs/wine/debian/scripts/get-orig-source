@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -eu
+
+upstream_version=$(dpkg-parsechangelog -S Version | sed -r -n 's/^(.*)-.*$/\1/p')
+orig_tarball="../wine_${upstream_version}.orig.tar.xz"
+
+if [ ! -e "${orig_tarball}" ]; then
+  wget -O "${orig_tarball}.tmp" \
+       "http://http.debian.net/debian/pool/main/w/wine/wine_${upstream_version}.orig.tar.xz"
+  tar -Jxf "${orig_tarball}.tmp" --strip-components=1
+  mv "${orig_tarball}.tmp" "${orig_tarball}"
+fi

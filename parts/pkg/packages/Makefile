@@ -9,6 +9,7 @@ packagedirs += adobe-pepperflashplugin/
 packagedirs += adobe-reader/
 packagedirs += appinventor/
 packagedirs += bluegriffon/
+packagedirs += casio-classpad-ii/
 packagedirs += cmaptools/
 packagedirs += dropbox/
 packagedirs += ekapeli-alku/

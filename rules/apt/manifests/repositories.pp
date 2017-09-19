@@ -1,10 +1,10 @@
 class apt::repositories {
   include ::apt
 
-  $old_releases = $debianversioncodename ? {
-                    'jessie' => [ 'wheezy',           ],
-                    default  => [ 'wheezy', 'jessie', ],
-                  }
+  $other_releases = $debianversioncodename ? {
+                      'buster' => [],
+                      default  => [ 'wheezy', 'jessie', 'buster', ],
+                    }
 
   define setup ($localmirror='',
                 $mirror,
@@ -12,7 +12,7 @@ class apt::repositories {
                 $securitymirror,
                 $securitymirror_path='') {
     ::apt::debian_repository {
-      $::apt::repositories::old_releases:
+      $::apt::repositories::other_releases:
         localmirror         => $localmirror,
         mirror              => $mirror,
         mirror_path         => $mirror_path,

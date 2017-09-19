@@ -1,0 +1,103 @@
+description: drop generated sources from tests Makefiles
+author: Michael Gilbert <mgilbert@debian.org>
+
+--- a/dlls/rpcrt4/tests/Makefile.in
++++ b/dlls/rpcrt4/tests/Makefile.in
+@@ -4,7 +4,6 @@ EXTRAIDLFLAGS = --prefix-server=s_
+ 
+ C_SRCS = \
+ 	cstub.c \
+-	generated.c \
+ 	ndr_marshall.c \
+ 	rpc.c \
+ 	rpc_async.c \
+--- a/dlls/gdi32/tests/Makefile.in
++++ b/dlls/gdi32/tests/Makefile.in
+@@ -9,7 +9,6 @@ C_SRCS = \
+ 	dib.c \
+ 	font.c \
+ 	gdiobj.c \
+-	generated.c \
+ 	icm.c \
+ 	mapping.c \
+ 	metafile.c \
+--- a/dlls/kernel32/tests/Makefile.in
++++ b/dlls/kernel32/tests/Makefile.in
+@@ -15,7 +15,6 @@ C_SRCS = \
+ 	fiber.c \
+ 	file.c \
+ 	format_msg.c \
+-	generated.c \
+ 	heap.c \
+ 	loader.c \
+ 	locale.c \
+--- a/dlls/ntdll/tests/Makefile.in
++++ b/dlls/ntdll/tests/Makefile.in
+@@ -9,7 +9,6 @@ C_SRCS = \
+ 	error.c \
+ 	exception.c \
+ 	file.c \
+-	generated.c \
+ 	info.c \
+ 	large_int.c \
+ 	om.c \
+--- a/dlls/shell32/tests/Makefile.in
++++ b/dlls/shell32/tests/Makefile.in
+@@ -7,7 +7,6 @@ C_SRCS = \
+ 	autocomplete.c \
+ 	brsfolder.c \
+ 	ebrowser.c \
+-	generated.c \
+ 	progman_dde.c \
+ 	recyclebin.c \
+ 	shelldispatch.c \
+--- a/dlls/shlwapi/tests/Makefile.in
++++ b/dlls/shlwapi/tests/Makefile.in
+@@ -5,7 +5,6 @@ C_SRCS = \
+ 	assoc.c \
+ 	clist.c \
+ 	clsid.c \
+-	generated.c \
+ 	istream.c \
+ 	ordinal.c \
+ 	path.c \
+--- a/dlls/urlmon/tests/Makefile.in
++++ b/dlls/urlmon/tests/Makefile.in
+@@ -2,7 +2,6 @@ TESTDLL   = urlmon.dll
+ IMPORTS   = urlmon wininet ole32 oleaut32 user32 advapi32
+ 
+ C_SRCS = \
+-	generated.c \
+ 	misc.c \
+ 	protocol.c \
+ 	sec_mgr.c \
+--- a/dlls/user32/tests/Makefile.in
++++ b/dlls/user32/tests/Makefile.in
+@@ -11,7 +11,6 @@ C_SRCS = \
+ 	dde.c \
+ 	dialog.c \
+ 	edit.c \
+-	generated.c \
+ 	input.c \
+ 	listbox.c \
+ 	menu.c \
+--- a/dlls/wininet/tests/Makefile.in
++++ b/dlls/wininet/tests/Makefile.in
+@@ -3,7 +3,6 @@ IMPORTS   = wininet crypt32 ws2_32 user3
+ 
+ C_SRCS = \
+ 	ftp.c \
+-	generated.c \
+ 	http.c \
+ 	internet.c \
+ 	url.c \
+--- a/dlls/winmm/tests/Makefile.in
++++ b/dlls/winmm/tests/Makefile.in
+@@ -3,7 +3,6 @@ IMPORTS   = winmm ole32 user32 advapi32
+ 
+ C_SRCS = \
+ 	capture.c \
+-	generated.c \
+ 	joystick.c \
+ 	mci.c \
+ 	mcicda.c \

@@ -1,0 +1,35 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+#
+
+# turn around bug in dpkg-parsechangelog
+export LC_ALL=C
+
+# The magic debhelper rule:
+%:
+	dh $@
+
+SOURCE_DIR      = build-tree
+STAMP_DIR       = stampdir
+EMOJI_DIR 	= debian/emoji
+
+build: $(STAMP_DIR)/build-stamp
+$(STAMP_DIR)/build-stamp:
+	dh_testdir
+	mkdir -p $(SOURCE_DIR) $(STAMP_DIR) 
+	(cd $(SOURCE_DIR) && TZ=UTC unzip ../UCD.zip )
+	(cd $(SOURCE_DIR) && TZ=UTZ unzip ../Unihan.zip )
+	( find $(SOURCE_DIR) -name '*txt' | while read f; do \
+		tr -d \\r < $$f > tmpf  ; \
+		mv tmpf $$f ;			\
+		done )
+	bzip2 $(SOURCE_DIR)/NormalizationTest.txt
+	( cd $(SOURCE_DIR); for d in Unihan*.txt ; do \
+		bzip2 $$d ; done )
+	touch $@
+	
+binary-indep: build
+
+override_dh_auto_clean:
+	rm -rf $(STAMP_DIR) $(SOURCE_DIR)
+	dh_clean

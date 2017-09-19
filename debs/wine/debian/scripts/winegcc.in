@@ -1,0 +1,11 @@
+#!/bin/sh -e
+
+name=$(basename $0 | cut -d- -f1)
+
+# wineg++ fails to find winebuild in Wine's bindir
+# See https://bugs.winehq.org/show_bug.cgi?id=40245
+if test -z "$WINEBUILD"; then
+    export WINEBUILD="/BINDIR/winebuild"
+fi
+
+exec /BINDIR/$name $@
