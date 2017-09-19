@@ -5,48 +5,95 @@ set -eu
 command=$1
 shift
 
-install_installer_script() {
-  cat <<'EOF' > /usr/local/bin/casio-classpad-ii
-#!/bin/sh
+wrapper_script_path=/usr/local/bin/casio-classpad-ii
 
-set -eu
+install_wrapper_script() {
+  cat <<'EOF' > "$wrapper_script_path"
+#!/bin/sh
 
 installer_exe_path='/usr/share/puavo-pkg/installers/casio_classpad_ii_installer.exe'
 
-final_wineprefix=~/.wine-casio-classpad-ii_v2_01_2000
+link_wineprefix=~/.wine-puavo-casio-classpad-ii
+version_wineprefix="${link_wineprefix}-v2_01_2000"
 
-program_exe_dir="${final_wineprefix}/drive_c/Program Files (x86)/CASIO/ClassPad Manager Subscription for ClassPad II"
+program_exe_dir="drive_c/Program Files/CASIO/ClassPad Manager Subscription for ClassPad II"
 program_exe_name='ClassPadManagerSubscriptionForClassPadII.exe'
 program_exe_path="${program_exe_dir}/${program_exe_name}"
 
 export WINEARCH=win32
 
-# XXX how should we support:
-# XXX   1. installing new version
-# XXX   2. updating an old version to new version (safely!)
-# XXX   3. allowing user to use the old version without nagging him/her to update?
+# we should support:
+#   1. installing a new version
+#   2. updating an old version to a new version (safely!)
+#   3. allowing user to use the old version without nagging him/her
+#      to update? (use a timestamp to periodically check for it?)
+#   4. perhaps cleaning up old versions?
 
-if [ ! -d "$final_wineprefix" ]; then
-  export WINEPREFIX="${final_wineprefix}.tmp"
+do_installation() {
+  export WINEPREFIX="${version_wineprefix}.tmp"
 
-  rm -rf "${final_wineprefix}.tmp"
+  rm -rf "${version_wineprefix}.tmp"
+
+  # if we have less than 2GB (2^31 bytes = 2147483648 bytes) available,
+  # refuse to install
+  available_diskspace=$(stat -f -c '%S * %a' "$HOME" | bc -l) || true
+  if [ -z "$available_diskspace" \
+    -o "$available_diskspace" -lt 2147483648 ]; then
+      zenity --error --text 'not enough available diskspace for installation'
+      return 1
+  fi
+
+  # if a copy exists of an old version, make a base copy for the new version
+  # before attempting upgrade
+  old_installation=$(readlink "$link_wineprefix" 2>/dev/null) || true
+  if [ -d "$old_installation" ]; then
+    last_old_installation_update_check=$(
+      stat -c %Y "${old_installation}/.latest_update_check" 2>/dev/null || true)
+
+    # if we have not bothered the user about updating in over a week,
+    # bother again
+    if [ -z "$last_old_installation_update_check" \
+      -o "$last_old_installation_update_check" \
+        -lt "$(($(date +%s) - 7*24*60*60))" ]; then
+      touch "${old_installation}/.latest_update_check"
+      msg='There is an update available for TI Nspire'
+      if ! zenity --question --text "$msg" --cancel-label 'maybe later' \
+        --ok-label 'UPDATE NOW'; then
+          # user did not click 'UPDATE NOW'
+          return 1
+      fi
+    fi
+
+    rsync -a "$old_installation" "$version_wineprefix"
+    # XXX should program_exe_path be removed so that update check is more
+    # XXX reliable?  how should we check update was successful?
+  fi
+
+  zenity --error --text 'installing stuff'
+
+  winetricks settings win7
   wine "$installer_exe_path"
 
-  if [ ! -e "$program_exe_path" ]; then
-    echo 'error occurred during installation' >&2
+  if [ ! -e "${WINEPREFIX}/${program_exe_path}" ]; then
+    zenity --error --text 'error occurred during installation'
     exit 1
   fi
 
-  ln -fns "$(basename "$final_wineprefix")" ~/.wine-casio-classpad-ii
-  mv "$WINEPREFIX" "$final_wineprefix"
+  # XXX should do atomically both
+  mv "$WINEPREFIX" "$version_wineprefix"
+  ln -fns "$(basename "$version_wineprefix")" "$link_wineprefix"
+}
+
+if [ ! -d "$version_wineprefix" ]; then
+  do_installation || true
 fi
 
-export WINEPREFIX=~/.wine-casio-classpad-ii
+export WINEPREFIX="$link_wineprefix"
 
-cd "$program_exe_dir"
+cd "${WINEPREFIX}/${program_exe_dir}"
 wine "$program_exe_name"
 EOF
-  chmod 755 /usr/local/bin/casio-classpad-ii
+  chmod 755 "$wrapper_script_path"
 }
 
 case "$command" in
@@ -55,7 +102,7 @@ case "$command" in
     mkdir -p /usr/share/puavo-pkg/installers
     ln -fns "${upstream_dir}/ClassPadManager_v2_01_2000_Windows/ClassPad Manager Subscription for ClassPad II Ver. 2.01.2000.exe" \
             /usr/share/puavo-pkg/installers/casio_classpad_ii_installer.exe
-    install_installer_script
+    install_wrapper_script
     ;;
 
   download)
