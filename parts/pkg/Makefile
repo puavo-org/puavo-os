@@ -22,6 +22,7 @@ install: installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-pkg \
 		puavo-pkg-updater \
+		puavo-pkg-wine-helper \
 		puavo-test-puavo-pkg-installers \
 		puavo-update-remote-pkginstaller-bundle
 

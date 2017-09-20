@@ -1,0 +1,130 @@
+#!/bin/sh
+
+set -eu
+
+usage() {
+  echo "$(basename $0): command arguments not understood"
+}
+
+if ! args=$(getopt -n "$0" -o + -l 'app-description:,app-version:,install,installer-path:,installer-type:,link-wineprefix:,program-exedir:,program-exename:' -- "$@"); then
+  exit 1
+fi
+
+app_description=''
+app_version=''
+installer_path=''
+installer_type=''
+link_wineprefix=''
+mode=''
+program_exedir=''
+program_exename=''
+
+eval "set -- $args"
+while [ $# -ne 0 ]; do
+  case "$1" in
+    --app-description) app_description=$2; shift; shift ;;
+    --app-version)     app_version=$2    ; shift; shift ;;
+    --install)         mode=install      ; shift;       ;;
+    --installer-path)  installer_path=$2 ; shift; shift ;;
+    --installer-type)  installer_type=$2 ; shift; shift ;;
+    --link-wineprefix) link_wineprefix=$2; shift; shift ;;
+    --program-exedir)  program_exedir=$2 ; shift; shift ;;
+    --program-exename) program_exename=$2; shift; shift ;;
+    --) shift; break ;;
+    *) usage >&2; exit 1;;
+  esac
+done
+
+[ -n "$app_description" ] || { usage >&2; exit 1; }
+[ -n "$app_version"     ] || { usage >&2; exit 1; }
+[ -n "$installer_path"  ] || { usage >&2; exit 1; }
+[ -n "$link_wineprefix" ] || { usage >&2; exit 1; }
+[ -n "$program_exedir"  ] || { usage >&2; exit 1; }
+[ -n "$program_exename" ] || { usage >&2; exit 1; }
+
+if [ "$installer_type" != 'exe' -a "$installer_type" != 'msi' ]; then
+  usage >&2; exit 1
+fi
+
+program_exepath="${program_exedir}/${program_exename}"
+
+version_wineprefix="${link_wineprefix}-${app_version}"
+
+# XXX messages should be localized
+
+do_installation() {
+  # we should support:
+  #   1. installing a new version
+  #   2. updating an old version to a new version (safely!)
+  #   3. allowing user to use the old version without nagging him/her
+  #      to update? (use a timestamp to periodically check for it?)
+  #   4. perhaps cleaning up old versions?
+
+  export WINEPREFIX="${version_wineprefix}.tmp"
+
+  rm -rf "${version_wineprefix}.tmp"
+
+  # if we have less than 2GB (2^31 bytes = 2147483648 bytes) available,
+  # refuse to install
+  available_diskspace=$(stat -f -c '%S * %a' "$HOME" | bc -l) || true
+  if [ -z "$available_diskspace" \
+    -o "$available_diskspace" -lt 2147483648 ]; then
+      zenity --error --text 'not enough available diskspace for installation'
+      return 1
+  fi
+
+  # if a copy exists of an old version, make a base copy for the new version
+  # before attempting upgrade
+  old_installation=$(readlink "$link_wineprefix" 2>/dev/null) || true
+  if [ -d "$old_installation" ]; then
+    last_old_installation_update_check=$(
+      stat -c %Y "${old_installation}/.latest_update_check" 2>/dev/null || true)
+
+    # if we have not bothered the user about updating in over a week,
+    # bother again
+    if [ -z "$last_old_installation_update_check" \
+      -o "$last_old_installation_update_check" \
+        -lt "$(($(date +%s) - 7*24*60*60))" ]; then
+      touch "${old_installation}/.latest_update_check"
+      msg="There is an update available for ${app_description}"
+      if ! zenity --question --text "$msg" --cancel-label 'maybe later' \
+        --ok-label 'UPDATE NOW'; then
+          # user did not click 'UPDATE NOW'
+          return 1
+      fi
+    fi
+
+    rsync -a "$old_installation" "$version_wineprefix"
+    # XXX should program_exepath be removed so that update check is more
+    # XXX reliable?  how should we check update was successful?
+  fi
+
+  winetricks settings win7
+
+  case "$installer_type" in
+    exe) wine "$installer_path"       ;;
+    msi) msiexec /i "$installer_path" ;;
+  esac
+
+  if [ ! -e "${WINEPREFIX}/${program_exepath}" ]; then
+    zenity --error \
+      --text "error occurred during the installation ${app_description}"
+    exit 1
+  fi
+
+  # XXX should do atomically both
+  mv "$WINEPREFIX" "$version_wineprefix"
+  ln -fns "$(basename "$version_wineprefix")" "$link_wineprefix"
+}
+
+case "$mode" in
+  install)
+    if [ ! -d "$version_wineprefix" ]; then
+      do_installation
+    fi
+    ;;
+  *)
+    usage >&2
+    exit 1
+    ;;
+esac
