@@ -21,7 +21,7 @@ _adm_uid	:= 1000
 _adm_gid	:= 1000
 
 _repo_name   := $(shell basename $(shell git rev-parse --show-toplevel))
-_image_file  := $(image_dir)/$(_repo_name)-$(image_class)-$(debootstrap_suite)-$(shell date -u +%Y-%m-%d-%H%M%S)-amd64.img
+_image_file  := $(image_dir)/$(_repo_name)-$(image_class)-$(debootstrap_suite)-$(shell date -u +%Y-%m-%d-%H%M%S)-${target_arch}.img
 
 # Some basic dependencies for our build system.  "python3" is on this list,
 # because installing "devscripts" fails if "python3" has not been installed
