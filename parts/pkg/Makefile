@@ -1,5 +1,6 @@
 prefix = /usr
 exec_prefix = $(prefix)
+bindir = $(exec_prefix)/bin
 sbindir = $(exec_prefix)/sbin
 sysconfdir = /etc
 
@@ -13,16 +14,19 @@ all:
 
 .PHONY: installdirs
 installdirs:
+	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-pkg
 	${MAKE} -C packages installdirs
 
 .PHONY: install
 install: installdirs
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
+		puavo-pkg-wine-helper
+
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-pkg \
 		puavo-pkg-updater \
-		puavo-pkg-wine-helper \
 		puavo-test-puavo-pkg-installers \
 		puavo-update-remote-pkginstaller-bundle
 
