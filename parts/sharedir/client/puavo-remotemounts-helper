@@ -101,7 +101,9 @@ class GvfsMount
   end
 
   def check_mount_state()
-    # returns 'not connected', 'ok' or 'timeout'
+    # returns 'no mountpoint known', 'not connected', 'ok' or 'timeout'
+
+    return 'no mountpoint known' unless @mntpath
 
     # wait for 10 seconds for stat operation to a remote path
     system('timeout', '-s', 'KILL', '10', 'stat', '-c', '%X', @mntpath, \
@@ -129,6 +131,7 @@ class GvfsMount
       linksrc = "#{ ENV['HOME'] }/#{ @linkname }"
 
       if shouldbe; then
+        return unless @mntpath
         begin
           return if File.readlink(linksrc) == @mntpath
         rescue Errno::ENOENT
@@ -163,6 +166,8 @@ class GvfsMount
     end
 
     case mount_state
+      when 'no mountpoint known'
+        # do nothing
       when 'not connected'
         ensure_link(false) rescue true
         begin
@@ -214,6 +219,7 @@ class GvfsMount
 
   def unmount_gvfsmount()
     ensure_link(false) rescue true
+    return unless @url
     outmsg("unmounting '#{ @url }'")
     system('timeout', '-k', '5', '10', 'gvfs-mount', '-u', @url) \
       or errmsg("problem in unmounting '#{ @url }'")
