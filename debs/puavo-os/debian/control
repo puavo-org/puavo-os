@@ -357,7 +357,8 @@ Depends: ${misc:Depends},
  sharutils,
  tar,
  unzip,
- wget
+ wget,
+ zenity
 Description: Package manager for Puavo packages
  Scripts to make the life of a Opinsys developer easier
  .

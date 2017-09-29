@@ -103,8 +103,8 @@ class GvfsMount
   def check_mount_state()
     # returns 'not connected', 'ok' or 'timeout'
 
-    # wait for 5 seconds for stat operation to a remote path
-    system('timeout', '-s', 'KILL', '5', 'stat', '-c', '%X', @mntpath, \
+    # wait for 10 seconds for stat operation to a remote path
+    system('timeout', '-s', 'KILL', '10', 'stat', '-c', '%X', @mntpath, \
            { :out => '/dev/null', :err => '/dev/null' })
 
     return 'timeout' if $?.termsig == 9
@@ -136,7 +136,6 @@ class GvfsMount
         FileUtils.rm_f(linksrc)
         FileUtils.symlink(@mntpath, linksrc)
       else
-        return unless File.exists?(linksrc)
         FileUtils.rm_f(linksrc)
       end
 

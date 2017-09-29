@@ -1,0 +1,68 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+wrapper_script_path=/usr/local/bin/ti-nspire-cx-cas-ss
+
+install_wrapper_script() {
+  cat <<'EOF' > "$wrapper_script_path"
+#!/bin/sh
+
+set -eu
+
+installer_msi_path='/usr/share/puavo-pkg/installers/ti_nspire_cx_cas_ss_installer.msi'
+
+app_version='4.5.0.118'
+link_wineprefix=~/.wine-ti-nspire-cx-cas-ss
+
+program_exe_dir="drive_c/Program Files/TI Education/TI-Nspire CX CAS Student Software"
+program_exe_name='TI-Nspire CX CAS Student Software.exe'
+program_exe_path="${program_exe_dir}/${program_exe_name}"
+
+export WINEARCH=win32
+
+puavo-pkg-wine-helper --app-description 'TI-Nspire CX CAS Student Software' \
+                      --app-version     "$app_version"                      \
+                      --install                                             \
+                      --installer-path  "$installer_msi_path"               \
+                      --installer-type  msi                                 \
+                      --link-wineprefix "$link_wineprefix"                  \
+                      --program-exedir  "$program_exe_dir"                  \
+                      --program-exename "$program_exe_name"                 \
+
+export WINEPREFIX="$link_wineprefix"
+
+cd "${WINEPREFIX}/${program_exe_dir}"
+wine "$program_exe_name"
+EOF
+  chmod 755 "$wrapper_script_path"
+}
+
+case "$command" in
+  configure)
+    upstream_dir=$1
+    mkdir -p /usr/share/puavo-pkg/installers
+    ln -fns "${upstream_dir}/TINspireCXCASStudentSoftware-4.5.0.1180.msi" \
+            /usr/share/puavo-pkg/installers/ti_nspire_cx_cas_ss_installer.msi
+    install_wrapper_script
+    ;;
+
+  unconfigure)
+    rm -f "$wrapper_script_path" \
+          /usr/share/puavo-pkg/installers/ti_nspire_cx_cas_ss_installer.msi
+    ;;
+
+  unpack)
+    upstream_pack=$1
+    upstream_dir=$2
+    target_file="${upstream_dir}/TINspireCXCASStudentSoftware-4.5.0.1180.msi"
+    ln "$upstream_pack" "$target_file" 2>/dev/null \
+      || cp "$upstream_pack" "$target_file"
+    ;;
+
+  *)
+    ;;
+esac
