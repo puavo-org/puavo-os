@@ -82,12 +82,6 @@ class DbusHandler
                 ? :activate                               \
                 : :deactivate
 
-    if method == :activate then
-      log('activating remote mounts')
-    else
-      log('deactivating remote mounts')
-    end
-
     @gvfs_mounts.each { |gvfsmount| gvfsmount.send(method) }
   end
 end
@@ -115,11 +109,17 @@ class GvfsMount
     @previous_mount_state = nil
   end
 
+  def gvfslog(msg)
+    log("#{ @remote_path } :: #{ msg }")
+  end
+
   def activate()
+    gvfslog('activating')
     @dns_lookups_to_try = 10
   end
 
   def deactivate()
+    gvfslog('deactivating')
     unmount_gvfsmount()
     @mntinfo = nil
     @dns_lookups_to_try = 0
@@ -159,22 +159,22 @@ class GvfsMount
           return if File.readlink(linksrc) == @mntinfo.path
         rescue Errno::ENOENT
         end
-        log("adding link from '#{ linksrc }' to '#{ @mntinfo.path }'")
+        gvfslog("adding link from '#{ linksrc }' to '#{ @mntinfo.path }'")
         FileUtils.rm_f(linksrc)
         FileUtils.symlink(@mntinfo.path, linksrc)
       else
-        log("removing link '#{ linksrc }'") if File.symlink?(linksrc)
+        gvfslog("removing link '#{ linksrc }'") if File.symlink?(linksrc)
         FileUtils.rm_f(linksrc)
       end
 
       # Update bookmarks when links have changed.
       # Use a mutex so that threads do not run this at the same time.
       $update_gtk_bookmarks_semaphore.synchronize do
-        log('running puavo-update-gtk-bookmarks')
+        gvfslog('running puavo-update-gtk-bookmarks')
         system('puavo-update-gtk-bookmarks')
       end
     rescue StandardError => e
-      log("error in ensure_link(): #{ e.message }")
+      gvfslog("error in ensure_link(): #{ e.message }")
       raise e
     end
   end
@@ -185,17 +185,17 @@ class GvfsMount
     mount_state = check_mount_state()
 
     if mount_state != @previous_mount_state then
-      log("mount state changed to '#{ mount_state }'")
+      gvfslog("mount state changed to '#{ mount_state }'")
       @previous_mount_state = mount_state
     end
 
     case mount_state
       when 'not connected'
         if system('timeout', '-k', '10', '20', 'gvfs-mount', @mntinfo.url) then
-          log("mounted '#{ @mntinfo.url }'")
+          gvfslog('mounted')
           ensure_link(true) rescue true
         else
-          log("problem in mounting '#{ @mntinfo.url }'")
+          gvfslog('problem when mounting')
         end
         checks_with_timeout[0] = 0
 
@@ -206,7 +206,7 @@ class GvfsMount
       when 'timeout'
         checks_with_timeout[0] += 1
         if checks_with_timeout[0] >= 3 then
-          log("got three timeouts in a row, unmounting '#{ @mntinfo.url }'")
+          gvfslog('got three timeouts in a row, unmounting')
           unmount_gvfsmount()
           checks_with_timeout[0] = 0
         end
@@ -226,7 +226,7 @@ class GvfsMount
         end
 
       rescue StandardError => e
-        log("got some error: #{ e }, yet continuing...")
+        gvfslog("got some error: #{ e }, yet continuing...")
       end
 
       sleep(5)
@@ -235,10 +235,12 @@ class GvfsMount
 
   def unmount_gvfsmount()
     ensure_link(false) rescue true
+
     return unless @mntinfo
-    log("unmounting '#{ @mntinfo.url }'")
+
+    gvfslog('unmounting')
     system('timeout', '-k', '5', '10', 'gvfs-mount', '-u', @mntinfo.url) \
-      or log("problem in unmounting '#{ @mntinfo.url }'")
+      or gvfslog('problem in unmounting')
   end
 
   def update_mountinfo_from_dns()
@@ -248,7 +250,7 @@ class GvfsMount
     return unless @dns_lookups_to_try > 0
 
     srv_name = "_sambaserver._tcp.#{ $puavo_domain }"
-    log("looking up '#{ srv_name }' from DNS")
+    gvfslog("looking up '#{ srv_name }' from DNS")
 
     remote_host = nil
     begin
@@ -267,7 +269,7 @@ class GvfsMount
 
     if remote_host.nil? then
       if @dns_lookups_to_try == 0 then
-        log("not doing any more dns lookups for '#{ srv_name }'")
+        gvfslog("not doing any more dns lookups for '#{ srv_name }'")
         # We should deactivate, because trying continuously mounting when
         # are probably not behind the home directory server is pointless.
         deactivate
@@ -282,8 +284,7 @@ class GvfsMount
     new_mntinfo = MountInfo.new(new_mntpath, new_url)
 
     if @mntinfo && @mntinfo.url != new_mntinfo.url then
-      log("remote url has changed from '#{ @mntinfo.url }'" \
-            + " to '#{ new_mntinfo.url }'")
+      gvfslog("remote url has changed to '#{ new_mntinfo.url }'")
       unmount_gvfsmount()
     end
 
