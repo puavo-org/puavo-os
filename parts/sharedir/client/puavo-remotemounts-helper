@@ -39,7 +39,12 @@ class DbusHandler
     # if we are going to suspend, deactivate gvfs-mounts
 
     loginobj.on_signal('PrepareForSleep') do |preparing_for_sleep|
-      log('received PrepareForSleep-dbus-signal, preparing for sleep')
+      if preparing_for_sleep then
+        log('received PrepareForSleep-dbus-signal, going to sleep')
+      else
+        log('received PrepareForSleep-dbus-signal, waking up')
+      end
+
       @in_sleep = preparing_for_sleep
       activate_or_deactivate
     end
