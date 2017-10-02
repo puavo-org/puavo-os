@@ -82,7 +82,7 @@ class DbusHandler
                 ? :activate                               \
                 : :deactivate
 
-    @gvfs_mounts.each { |gvfsmount| gvfsmount.send(method) }
+    @gvfs_mounts.each { |gvfsmount| gvfsmount.change_plan(method) }
   end
 end
 
@@ -107,10 +107,29 @@ class GvfsMount
 
     @dns_lookups_to_try = 10
     @previous_mount_state = nil
+
+    @old_plan = nil
+    @new_plan = nil
   end
 
   def gvfslog(msg)
     log("#{ @remote_path } :: #{ msg }")
+  end
+
+  def change_plan(new_plan)
+    @new_plan = new_plan
+  end
+
+  def apply_plan
+    return if @old_plan == @new_plan
+
+    if @new_plan == :activate then
+      activate()
+    elsif @new_plan == :deactivate then
+      deactivate()
+    end
+
+    @old_plan = @new_plan
   end
 
   def activate()
@@ -121,8 +140,8 @@ class GvfsMount
   def deactivate()
     gvfslog('deactivating')
     unmount_gvfsmount()
-    @mntinfo = nil
     @dns_lookups_to_try = 0
+    @mntinfo = nil
   end
 
   def check_mount_state()
@@ -135,18 +154,25 @@ class GvfsMount
     return 'timeout' if $?.termsig == 9
     return 'ok'      if $?.exitstatus == 0
 
-    # if gvfs-info fails, check explicitly with gvfs-mount if mount exists
+    # if gvfs-info fails, check if mount exists
+    if is_mounted() then
+      return 'ok'
+    end
 
+    return 'not connected'
+  end
+
+  def is_mounted()
     output, s = Open3.capture2e('gvfs-mount', '-il')
     raise "gvfs-mount -il returned error code #{ s.exitstatus }" \
       unless s.exitstatus == 0
 
     re = /^\s+default_location=#{ Regexp.quote(@mntinfo.url) }$/
     output.split("\n").each do |line|
-      return 'ok' if line.match(re)
+      return true if line.match(re)
     end
 
-    return 'not connected'
+    return false
   end
 
   def ensure_link(shouldbe)
@@ -218,6 +244,7 @@ class GvfsMount
 
     while true do
       begin
+        apply_plan()
         update_mountinfo_from_dns()
         if @mntinfo then
           check_and_handle_mount(checks_with_timeout)
@@ -237,6 +264,7 @@ class GvfsMount
     ensure_link(false) rescue true
 
     return unless @mntinfo
+    return unless is_mounted()
 
     gvfslog('unmounting')
     system('timeout', '-k', '5', '10', 'gvfs-mount', '-u', @mntinfo.url) \
@@ -271,7 +299,7 @@ class GvfsMount
       if @dns_lookups_to_try == 0 then
         gvfslog("not doing any more dns lookups for '#{ srv_name }'")
         # We should deactivate, because trying continuously mounting when
-        # are probably not behind the home directory server is pointless.
+        # we are probably not behind the home directory server is pointless.
         deactivate
       end
       return
