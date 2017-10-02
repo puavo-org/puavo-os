@@ -120,14 +120,13 @@ class GvfsMount
   end
 
   def deactivate()
-    @dns_lookups_to_try = 0
     unmount_gvfsmount()
+    @mntinfo = nil
+    @dns_lookups_to_try = 0
   end
 
   def check_mount_state()
-    # returns 'no mountpoint known', 'not connected', 'ok' or 'timeout'
-
-    return 'no home directory server known' unless @mntinfo
+    # returns 'not connected', 'ok' or 'timeout'
 
     # wait for 10 seconds for stat operation to a remote path
     system('timeout', '-s', 'KILL', '10', 'stat', '-c', '%X', @mntinfo.path,
@@ -181,6 +180,8 @@ class GvfsMount
   end
 
   def check_and_handle_mount(checks_with_timeout)
+    raise '@mntinfo not set where it should be' unless @mntinfo
+
     mount_state = check_mount_state()
 
     if mount_state != @previous_mount_state then
@@ -188,18 +189,7 @@ class GvfsMount
       @previous_mount_state = mount_state
     end
 
-    if @mntinfo && @dns_lookups_to_try == 0 then
-      if mount_state != 'not connected' then
-        unmount_gvfsmount()
-        checks_with_timeout[0] = 0
-      end
-
-      return
-    end
-
     case mount_state
-      when 'no mountpoint known'
-        # do nothing
       when 'not connected'
         log("mounting '#{ @mntinfo.path }'")
         if system('timeout', '-k', '10', '20', 'gvfs-mount', @mntinfo.url) then
@@ -232,6 +222,8 @@ class GvfsMount
         update_mountinfo_from_dns()
         if @mntinfo then
           check_and_handle_mount(checks_with_timeout)
+        else
+          checks_with_timeout = [0]
         end
 
       rescue StandardError => e
@@ -277,32 +269,28 @@ class GvfsMount
     if remote_host.nil? then
       if @dns_lookups_to_try == 0 then
         log("not doing any more dns lookups for '#{ srv_name }'")
+        # We should deactivate, because trying continuously mounting when
+        # are probably not behind the home directory server is pointless.
         deactivate
       end
       return
     end
 
-    # Use the old info from DNS (if it exists) if we do not get new info.
-    # Usually this should result in unmounts soon.
-
+    new_mntpath = "/run/user/#{ @user_id }/gvfs/smb-share:server=" \
+                    + "#{ remote_host },share=#{ @remote_path }"
     new_url = "smb://#{ remote_host }/#{ @remote_path }/"
 
-    if @mntinfo && @mntinfo.url != new_url then
-      log("remote url has changed from '#{ @mntinfo.url }' to '#{ new_url }'," \
-            + " unmounting '#{ @mntinfo.path }")
+    new_mntinfo = MountInfo.new(new_mntpath, new_url)
+
+    changed = @mntinfo && \
+      (@mntinfo.path != new_mntinfo.path || @mntinfo.url != new_mntinfo.url)
+    if changed then
+      log("remote url has changed from '#{ @mntinfo.url }'" \
+            + " to '#{ new_mntinfo.url }', unmounting '#{ @mntinfo.path }")
       unmount_gvfsmount()
     end
 
-    new_mntpath = "/run/user/#{ @user_id }/gvfs/smb-share:server=" \
-                    + "#{ remote_host },share=#{ @remote_path }"
-
-    if @mntinfo && @mntinfo.path != new_mntpath then
-      log("new server found for mounting '#{ new_mntpath }'" \
-            " from '#{ @mntinfo.url }'")
-    end
-
-    @mntinfo = MountInfo.new(new_mntpath, new_url)
-
+    @mntinfo = new_mntinfo
     @dns_lookups_to_try = 0
   end
 end
