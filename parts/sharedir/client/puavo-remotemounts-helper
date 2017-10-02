@@ -31,14 +31,15 @@ class DbusHandler
 
     bus = DBus::SystemBus.instance
 
-    # if we are going to suspend, deactivate gvfs-mounts
-
     loginservice = bus.service('org.freedesktop.login1')
     loginobj = loginservice.object('/org/freedesktop/login1')
     loginobj.introspect
     loginobj.default_iface = 'org.freedesktop.login1.Manager'
 
+    # if we are going to suspend, deactivate gvfs-mounts
+
     loginobj.on_signal('PrepareForSleep') do |preparing_for_sleep|
+      log('received PrepareForSleep-dbus-signal, preparing for sleep')
       @in_sleep = preparing_for_sleep
       activate_or_deactivate
     end
@@ -54,13 +55,17 @@ class DbusHandler
       = nmobj['org.freedesktop.NetworkManager']['ActiveConnections'].count
 
     nmobj.on_signal('PropertiesChanged') do |props|
+      log('received PropertiesChanged-dbus-signal')
       if props['ActiveConnections'].kind_of?(Array) then
         @active_connection_count = props['ActiveConnections'].count
+        log("active connection count is #{ @active_connection_count }")
         activate_or_deactivate
       end
     end
 
     activate_or_deactivate
+
+    log('starting up dbus handler')
 
     loop = DBus::Main.new
     loop << bus
@@ -72,11 +77,19 @@ class DbusHandler
                 ? :activate                               \
                 : :deactivate
 
+    if method == :activate then
+      log('activating remote mounts')
+    else
+      log('deactivating remote mounts')
+    end
+
     @gvfs_mounts.each { |gvfsmount| gvfsmount.send(method) }
   end
 end
 
 class GvfsMount
+  attr_reader :linkname
+
   def initialize(remote_path, user_id, linkname)
     @active      = true
     @linkname    = linkname
@@ -86,6 +99,8 @@ class GvfsMount
     @mntpath     = nil
     @remote_host = nil
     @url         = nil
+
+    @previous_mount_state = nil
   end
 
   def activate()
@@ -133,15 +148,18 @@ class GvfsMount
           return if File.readlink(linksrc) == @mntpath
         rescue Errno::ENOENT
         end
+        log("adding link from '#{ linksrc }' to '#{ @mntpath }'")
         FileUtils.rm_f(linksrc)
         FileUtils.symlink(@mntpath, linksrc)
       else
+        log("removing link '#{ linksrc }'") if File.symlink?(linksrc)
         FileUtils.rm_f(linksrc)
       end
 
       # Update bookmarks when links have changed.
       # Use a mutex so that threads do not run this at the same time.
       $update_gtk_bookmarks_semaphore.synchronize do
+        log('running puavo-update-gtk-bookmarks')
         system('puavo-update-gtk-bookmarks')
       end
     rescue StandardError => e
@@ -152,6 +170,11 @@ class GvfsMount
 
   def check_and_handle_mount(checks_with_timeout)
     mount_state = check_mount_state()
+
+    if mount_state != @previous_mount_state then
+      log("mount state changed to '#{ mount_state }'")
+      @previous_mount_state = mount_state
+    end
 
     if !@active then
       if mount_state != 'not connected' then
@@ -188,7 +211,7 @@ class GvfsMount
       when 'timeout'
         checks_with_timeout[0] += 1
         if checks_with_timeout[0] >= 3 then
-          # with three timeouts in a row, unmount the thing!
+          log("got three timeouts in a row, unmounting '#{ @mntpath }'")
           unmount_gvfsmount()
           checks_with_timeout[0] = 0
         end
@@ -243,12 +266,17 @@ class GvfsMount
     new_url = "smb://#{ remote_host }/#{ @remote_path }/"
 
     if @url && @url != new_url then
+      log("remote url has changed from '#{ @url }' to '#{ new_url }'," \
+            + " unmounting '#{ @mntpath }")
       unmount_gvfsmount()
     end
 
-    @mntpath     = "/run/user/#{ @user_id }/gvfs/smb-share:server=#{ remote_host },share=#{ @remote_path }"
+    @mntpath     = "/run/user/#{ @user_id }/gvfs/smb-share:server=" \
+                     + "#{ remote_host },share=#{ @remote_path }"
     @remote_host = remote_host
     @url         = new_url
+
+    log("new server found for mounting '#{ @mntpath }' from '#{ @url }'")
   end
 end
 
@@ -294,7 +322,10 @@ end
 gvfs_mounts = get_our_gvfsmounts()
 
 gvfs_threads = gvfs_mounts.map do |gvfsmnt|
-                 Thread.new { gvfsmnt.ensure_mount() }
+                 Thread.new do
+                   log("starting a thread to handle '#{ gvfsmnt.linkname }'")
+                   gvfsmnt.ensure_mount()
+                 end
                end
 
 # we want to run this as long as the gvfs_threads are running
@@ -302,7 +333,7 @@ Thread.new do
   begin
     DbusHandler.new(gvfs_mounts)
   rescue StandardError => e
-    warn e.message
+    log("error when starting up dbushandler: #{ e.message }")
     exit 1
   end
 end
