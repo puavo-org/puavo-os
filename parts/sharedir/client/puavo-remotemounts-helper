@@ -111,7 +111,7 @@ class GvfsMount
     @dns_lookups_to_try = 10
     @previous_mount_state = nil
 
-    @new_plan = nil
+    @new_plan = :activate
   end
 
   def gvfslog(msg)
