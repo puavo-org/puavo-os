@@ -92,6 +92,15 @@ class DbusHandler
   end
 end
 
+class MountInfo
+  attr_reader :path, :url
+
+  def initialize(path, url)
+    @path = path
+    @url  = url
+  end
+end
+
 class GvfsMount
   attr_reader :linkname
 
@@ -100,9 +109,7 @@ class GvfsMount
     @remote_path = remote_path
     @user_id     = user_id
 
-    @mntpath     = nil
-    @remote_host = nil
-    @url         = nil
+    @mntinfo = nil
 
     @dns_lookups_to_try = 10
     @previous_mount_state = nil
@@ -120,10 +127,10 @@ class GvfsMount
   def check_mount_state()
     # returns 'no mountpoint known', 'not connected', 'ok' or 'timeout'
 
-    return 'no mountpoint known' unless @mntpath
+    return 'no home directory server known' unless @mntinfo
 
     # wait for 10 seconds for stat operation to a remote path
-    system('timeout', '-s', 'KILL', '10', 'stat', '-c', '%X', @mntpath, \
+    system('timeout', '-s', 'KILL', '10', 'stat', '-c', '%X', @mntinfo.path,
            { :out => '/dev/null', :err => '/dev/null' })
 
     return 'timeout' if $?.termsig == 9
@@ -135,7 +142,7 @@ class GvfsMount
     raise "gvfs-mount -il returned error code #{ s.exitstatus }" \
       unless s.exitstatus == 0
 
-    re = /^\s+default_location=#{ Regexp.quote(@url) }$/
+    re = /^\s+default_location=#{ Regexp.quote(@mntinfo.url) }$/
     output.split("\n").each do |line|
       return 'ok' if line.match(re)
     end
@@ -148,14 +155,14 @@ class GvfsMount
       linksrc = "#{ ENV['HOME'] }/#{ @linkname }"
 
       if shouldbe; then
-        return unless @mntpath
+        return unless @mntinfo
         begin
-          return if File.readlink(linksrc) == @mntpath
+          return if File.readlink(linksrc) == @mntinfo.path
         rescue Errno::ENOENT
         end
-        log("adding link from '#{ linksrc }' to '#{ @mntpath }'")
+        log("adding link from '#{ linksrc }' to '#{ @mntinfo.path }'")
         FileUtils.rm_f(linksrc)
-        FileUtils.symlink(@mntpath, linksrc)
+        FileUtils.symlink(@mntinfo.path, linksrc)
       else
         log("removing link '#{ linksrc }'") if File.symlink?(linksrc)
         FileUtils.rm_f(linksrc)
@@ -181,7 +188,7 @@ class GvfsMount
       @previous_mount_state = mount_state
     end
 
-    if @dns_lookups_to_try == 0 then
+    if @mntinfo && @dns_lookups_to_try == 0 then
       if mount_state != 'not connected' then
         unmount_gvfsmount()
         checks_with_timeout[0] = 0
@@ -194,12 +201,12 @@ class GvfsMount
       when 'no mountpoint known'
         # do nothing
       when 'not connected'
-        log("mounting '#{ @mntpath }'")
-        if system('timeout', '-k', '10', '20', 'gvfs-mount', @url) then
-          log("mounted '#{ @url }' with success")
+        log("mounting '#{ @mntinfo.path }'")
+        if system('timeout', '-k', '10', '20', 'gvfs-mount', @mntinfo.url) then
+          log("mounted '#{ @mntinfo.url }' with success")
           ensure_link(true) rescue true
         else
-          log("problem in mounting '#{ @url }'")
+          log("problem in mounting '#{ @mntinfo.url }'")
         end
         checks_with_timeout[0] = 0
 
@@ -210,7 +217,7 @@ class GvfsMount
       when 'timeout'
         checks_with_timeout[0] += 1
         if checks_with_timeout[0] >= 3 then
-          log("got three timeouts in a row, unmounting '#{ @mntpath }'")
+          log("got three timeouts in a row, unmounting '#{ @mntinfo.path }'")
           unmount_gvfsmount()
           checks_with_timeout[0] = 0
         end
@@ -223,7 +230,7 @@ class GvfsMount
     while true do
       begin
         update_mountinfo_from_dns()
-        if @url then
+        if @mntinfo then
           check_and_handle_mount(checks_with_timeout)
         end
 
@@ -237,10 +244,10 @@ class GvfsMount
 
   def unmount_gvfsmount()
     ensure_link(false) rescue true
-    return unless @url
-    log("unmounting '#{ @url }'")
-    system('timeout', '-k', '5', '10', 'gvfs-mount', '-u', @url) \
-      or log("problem in unmounting '#{ @url }'")
+    return unless @mntinfo
+    log("unmounting '#{ @mntinfo.url }'")
+    system('timeout', '-k', '5', '10', 'gvfs-mount', '-u', @mntinfo.url) \
+      or log("problem in unmounting '#{ @mntinfo.url }'")
   end
 
   def update_mountinfo_from_dns()
@@ -270,6 +277,7 @@ class GvfsMount
     if remote_host.nil? then
       if @dns_lookups_to_try == 0 then
         log("not doing any more dns lookups for '#{ srv_name }'")
+        deactivate
       end
       return
     end
@@ -279,22 +287,23 @@ class GvfsMount
 
     new_url = "smb://#{ remote_host }/#{ @remote_path }/"
 
-    if @url && @url != new_url then
-      log("remote url has changed from '#{ @url }' to '#{ new_url }'," \
-            + " unmounting '#{ @mntpath }")
+    if @mntinfo && @mntinfo.url != new_url then
+      log("remote url has changed from '#{ @mntinfo.url }' to '#{ new_url }'," \
+            + " unmounting '#{ @mntinfo.path }")
       unmount_gvfsmount()
     end
 
     new_mntpath = "/run/user/#{ @user_id }/gvfs/smb-share:server=" \
                     + "#{ remote_host },share=#{ @remote_path }"
 
-    if @mntpath != new_mntpath then
-      log("new server found for mounting '#{ new_mntpath }' from '#{ @url }'")
+    if @mntinfo && @mntinfo.path != new_mntpath then
+      log("new server found for mounting '#{ new_mntpath }'" \
+            " from '#{ @mntinfo.url }'")
     end
 
-    @mntpath     = new_mntpath
-    @remote_host = remote_host
-    @url         = new_url
+    @mntinfo = MountInfo.new(new_mntpath, new_url)
+
+    @dns_lookups_to_try = 0
   end
 end
 
