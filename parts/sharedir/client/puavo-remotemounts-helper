@@ -111,7 +111,6 @@ class GvfsMount
     @dns_lookups_to_try = 10
     @previous_mount_state = nil
 
-    @old_plan = nil
     @new_plan = nil
   end
 
@@ -125,7 +124,7 @@ class GvfsMount
   end
 
   def apply_plan
-    return if @old_plan == @new_plan
+    return unless @new_plan
 
     if @new_plan == :activate then
       activate()
@@ -133,7 +132,7 @@ class GvfsMount
       deactivate()
     end
 
-    @old_plan = @new_plan
+    @new_plan = nil
   end
 
   def activate()
