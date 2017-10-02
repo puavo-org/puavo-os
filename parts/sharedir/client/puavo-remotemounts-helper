@@ -281,7 +281,8 @@ class GvfsMount
     return unless @dns_lookups_to_try > 0
 
     srv_name = "_sambaserver._tcp.#{ $puavo_domain }"
-    gvfslog("looking up '#{ srv_name }' from DNS")
+    gvfslog("looking up '#{ srv_name }' from DNS" \
+              + " (#{ @dns_lookups_to_try } more tries)")
 
     remote_host = nil
     begin
