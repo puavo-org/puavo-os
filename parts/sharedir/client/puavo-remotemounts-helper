@@ -116,7 +116,8 @@ class GvfsMount
   end
 
   def gvfslog(msg)
-    log("#{ @remote_path } :: #{ msg }")
+    url = (@mntinfo && @mntinfo.url) || "[#{ @remote_path }]"
+    log("#{ url } :: #{ msg }")
   end
 
   def change_plan(new_plan)
