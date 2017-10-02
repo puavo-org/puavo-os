@@ -300,7 +300,7 @@ class GvfsMount
         gvfslog("not doing any more dns lookups for '#{ srv_name }'")
         # We should deactivate, because trying continuously mounting when
         # we are probably not behind the home directory server is pointless.
-        deactivate
+        change_plan(:deactivate)
       end
       return
     end
