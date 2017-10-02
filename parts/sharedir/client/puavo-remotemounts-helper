@@ -128,14 +128,14 @@ class GvfsMount
   def check_mount_state()
     # returns 'not connected', 'ok' or 'timeout'
 
-    # wait for 10 seconds for stat operation to a remote path
-    system('timeout', '-s', 'KILL', '10', 'stat', '-c', '%X', @mntinfo.path,
+    # wait for 10 seconds for gvfs-info operation to a remote url
+    system('timeout', '-s', 'KILL', '10', 'gvfs-info', @mntinfo.url,
            { :out => '/dev/null', :err => '/dev/null' })
 
     return 'timeout' if $?.termsig == 9
     return 'ok'      if $?.exitstatus == 0
 
-    # if stat fails, check explicitly with gvfs-mount if mount exists
+    # if gvfs-info fails, check explicitly with gvfs-mount if mount exists
 
     output, s = Open3.capture2e('gvfs-mount', '-il')
     raise "gvfs-mount -il returned error code #{ s.exitstatus }" \
