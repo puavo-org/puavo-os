@@ -191,9 +191,8 @@ class GvfsMount
 
     case mount_state
       when 'not connected'
-        log("mounting '#{ @mntinfo.path }'")
         if system('timeout', '-k', '10', '20', 'gvfs-mount', @mntinfo.url) then
-          log("mounted '#{ @mntinfo.url }' with success")
+          log("mounted '#{ @mntinfo.url }'")
           ensure_link(true) rescue true
         else
           log("problem in mounting '#{ @mntinfo.url }'")
@@ -207,7 +206,7 @@ class GvfsMount
       when 'timeout'
         checks_with_timeout[0] += 1
         if checks_with_timeout[0] >= 3 then
-          log("got three timeouts in a row, unmounting '#{ @mntinfo.path }'")
+          log("got three timeouts in a row, unmounting '#{ @mntinfo.url }'")
           unmount_gvfsmount()
           checks_with_timeout[0] = 0
         end
@@ -282,11 +281,9 @@ class GvfsMount
 
     new_mntinfo = MountInfo.new(new_mntpath, new_url)
 
-    changed = @mntinfo && \
-      (@mntinfo.path != new_mntinfo.path || @mntinfo.url != new_mntinfo.url)
-    if changed then
+    if @mntinfo && @mntinfo.url != new_mntinfo.url then
       log("remote url has changed from '#{ @mntinfo.url }'" \
-            + " to '#{ new_mntinfo.url }', unmounting '#{ @mntinfo.path }")
+            + " to '#{ new_mntinfo.url }'")
       unmount_gvfsmount()
     end
 
