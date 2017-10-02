@@ -18,12 +18,9 @@ $puavo_domain = IO.read('/etc/puavo/domain').chomp
 
 $update_gtk_bookmarks_semaphore = Mutex.new
 
-def sendmsg(channel, msg)
-  channel.puts "puavo-remotemounts-helper #{ Time.now }: #{ msg }"
+def log(msg)
+  STDERR.puts("puavo-remotemounts-helper #{ Time.now }: #{ msg }")
 end
-
-def errmsg(msg); sendmsg(STDERR, msg); end
-def outmsg(msg); sendmsg(STDOUT, msg); end
 
 class DbusHandler
   def initialize(gvfs_mounts)
@@ -148,7 +145,7 @@ class GvfsMount
         system('puavo-update-gtk-bookmarks')
       end
     rescue StandardError => e
-      errmsg("Error in ensure_link(): #{ e.message }")
+      log("error in ensure_link(): #{ e.message }")
       raise e
     end
   end
@@ -176,13 +173,12 @@ class GvfsMount
           # on the right network
           Resolv::DNS.new.getaddress(@remote_host)
 
-          outmsg("mounting '#{ @mntpath }'")
+          log("mounting '#{ @mntpath }'")
           system('timeout', '-k', '10', '20', 'gvfs-mount', @url) \
-            or errmsg("problem in mounting '#{ @url }'")
+            or log("problem in mounting '#{ @url }'")
           checks_with_timeout[0] = 0
         rescue Resolv::ResolvError
-          outmsg("did not find #{ @remote_host }," \
-                   + " not mounting #{ @url }")
+          log("did not find #{ @remote_host }, not mounting #{ @url }")
         end
 
       when 'ok'
@@ -210,7 +206,7 @@ class GvfsMount
         end
 
       rescue StandardError => e
-        errmsg("Got some error: #{ e }, yet continuing...")
+        log("got some error: #{ e }, yet continuing...")
       end
 
       sleep(5)
@@ -220,9 +216,9 @@ class GvfsMount
   def unmount_gvfsmount()
     ensure_link(false) rescue true
     return unless @url
-    outmsg("unmounting '#{ @url }'")
+    log("unmounting '#{ @url }'")
     system('timeout', '-k', '5', '10', 'gvfs-mount', '-u', @url) \
-      or errmsg("problem in unmounting '#{ @url }'")
+      or log("problem in unmounting '#{ @url }'")
   end
 
   def update_mountinfo_from_dns()
