@@ -16,10 +16,13 @@ require 'thread'
 
 $puavo_domain = IO.read('/etc/puavo/domain').chomp
 
+$stderr_semaphore = Mutex.new
 $update_gtk_bookmarks_semaphore = Mutex.new
 
 def log(msg)
-  STDERR.puts("puavo-remotemounts-helper #{ Time.now }: #{ msg }")
+  $stderr_semaphore.synchronize do
+    STDERR.puts("puavo-remotemounts-helper #{ Time.now }: #{ msg }")
+  end
 end
 
 class DbusHandler
