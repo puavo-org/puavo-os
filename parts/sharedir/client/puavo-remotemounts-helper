@@ -91,7 +91,6 @@ class GvfsMount
   attr_reader :linkname
 
   def initialize(remote_path, user_id, linkname)
-    @active      = true
     @linkname    = linkname
     @remote_path = remote_path
     @user_id     = user_id
@@ -105,12 +104,10 @@ class GvfsMount
   end
 
   def activate()
-    @active = true
     @dns_lookups_to_try = 10
   end
 
   def deactivate()
-    @active = false
     @dns_lookups_to_try = 0
     unmount_gvfsmount()
   end
@@ -179,7 +176,7 @@ class GvfsMount
       @previous_mount_state = mount_state
     end
 
-    if !@active then
+    if @dns_lookups_to_try == 0 then
       if mount_state != 'not connected' then
         unmount_gvfsmount()
         checks_with_timeout[0] = 0
@@ -192,20 +189,14 @@ class GvfsMount
       when 'no mountpoint known'
         # do nothing
       when 'not connected'
-        ensure_link(false) rescue true
-        begin
-          # make sure dns works, so we do not stress gvfs-mount,
-          # besides, it is not an error if gvfs-mount fails if not
-          # on the right network
-          Resolv::DNS.new.getaddress(@remote_host)
-
-          log("mounting '#{ @mntpath }'")
-          system('timeout', '-k', '10', '20', 'gvfs-mount', @url) \
-            or log("problem in mounting '#{ @url }'")
-          checks_with_timeout[0] = 0
-        rescue Resolv::ResolvError
-          log("did not find #{ @remote_host }, not mounting #{ @url }")
+        log("mounting '#{ @mntpath }'")
+        if system('timeout', '-k', '10', '20', 'gvfs-mount', @url) then
+          log("mounted '#{ @url }' with success")
+          ensure_link(true) rescue true
+        else
+          log("problem in mounting '#{ @url }'")
         end
+        checks_with_timeout[0] = 0
 
       when 'ok'
         ensure_link(true) rescue true
@@ -272,7 +263,7 @@ class GvfsMount
     @dns_lookups_to_try -= 1
 
     if remote_host.nil? then
-      if @active && @dns_lookups_to_try == 0 then
+      if @dns_lookups_to_try == 0 then
         log("not doing any more dns lookups for '#{ srv_name }'")
       end
       return
