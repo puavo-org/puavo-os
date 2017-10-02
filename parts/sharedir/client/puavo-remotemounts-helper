@@ -100,15 +100,18 @@ class GvfsMount
     @remote_host = nil
     @url         = nil
 
+    @dns_lookups_to_try = 10
     @previous_mount_state = nil
   end
 
   def activate()
     @active = true
+    @dns_lookups_to_try = 10
   end
 
   def deactivate()
     @active = false
+    @dns_lookups_to_try = 0
     unmount_gvfsmount()
   end
 
@@ -248,20 +251,35 @@ class GvfsMount
     # If we are behind some server that provides samba mounts for us,
     # update our mount information.
 
+    return unless @dns_lookups_to_try > 0
+
+    srv_name = "_sambaserver._tcp.#{ $puavo_domain }"
+    log("looking up '#{ srv_name }' from DNS")
+
     remote_host = nil
-    Resolv::DNS.open do |dns|
-      dns.getresources("_sambaserver._tcp.#{ $puavo_domain }",
-                       Resolv::DNS::Resource::IN::SRV).each do |srv|
-        if srv.port == 139 then
-          remote_host = srv.target
-          break
+    begin
+      Resolv::DNS.open do |dns|
+        dns.getresources(srv_name, Resolv::DNS::Resource::IN::SRV).each do |srv|
+          if srv.port == 139 then
+            remote_host = srv.target
+            break
+          end
         end
       end
+    rescue StandardError => e
+    end
+
+    @dns_lookups_to_try -= 1
+
+    if remote_host.nil? then
+      if @active && @dns_lookups_to_try == 0 then
+        log("not doing any more dns lookups for '#{ srv_name }'")
+      end
+      return
     end
 
     # Use the old info from DNS (if it exists) if we do not get new info.
     # Usually this should result in unmounts soon.
-    return if remote_host.nil?
 
     new_url = "smb://#{ remote_host }/#{ @remote_path }/"
 
@@ -271,12 +289,16 @@ class GvfsMount
       unmount_gvfsmount()
     end
 
-    @mntpath     = "/run/user/#{ @user_id }/gvfs/smb-share:server=" \
-                     + "#{ remote_host },share=#{ @remote_path }"
+    new_mntpath = "/run/user/#{ @user_id }/gvfs/smb-share:server=" \
+                    + "#{ remote_host },share=#{ @remote_path }"
+
+    if @mntpath != new_mntpath then
+      log("new server found for mounting '#{ new_mntpath }' from '#{ @url }'")
+    end
+
+    @mntpath     = new_mntpath
     @remote_host = remote_host
     @url         = new_url
-
-    log("new server found for mounting '#{ @mntpath }' from '#{ @url }'")
   end
 end
 
