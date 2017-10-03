@@ -11,6 +11,10 @@ class desktop::dconf::puavodesktop {
       "/etc/dconf/db/locale-${lang}.d/${lang}":
         content => template("desktop/dconf_by_locale/${lang}"),
         notify  => Exec['update dconf'];
+
+      "/etc/dconf/db/locale-${lang}.d/${lang}-laptop":
+        content => template("desktop/dconf_by_locale/${lang}-laptop"),
+        notify  => Exec['update dconf'];
     }
   }
 
