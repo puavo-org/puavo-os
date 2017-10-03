@@ -8,17 +8,18 @@ puavo_dconf_profile_path="${puavo_session_dir}/dconf_profile"
   echo "user-db:user"
 
   if [ -n "$LANGUAGE" ]; then
-    echo "system-db:locale-$LANGUAGE"
+    locale_dconf_db="locale-$LANGUAGE"
   else
-    echo "system-db:locale-en"
+    locale_dconf_db='locale-en'
   fi
 
   PUAVO_HOSTTYPE=$(cat /etc/puavo/hosttype)
-  case "$PUAVO_HOSTTYPE" in
-    laptop)
-      echo "system-db:laptop"
-      ;;
-  esac
+  if [ "$PUAVO_HOSTTYPE" = 'laptop' ]; then
+    echo "system-db:${locale_dconf_db}-laptop"
+    echo "system-db:laptop"
+  else
+    echo "system-db:${locale_dconf_db}"
+  fi
 
   if [ "$(puavo-conf puavo.pm.suspend.enabled)" = 'false' ]; then
     echo "system-db:disable_lidsuspend"
