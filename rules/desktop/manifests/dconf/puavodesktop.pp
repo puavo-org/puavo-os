@@ -3,17 +3,19 @@ class desktop::dconf::puavodesktop {
 
   define locale {
     $lang = $title
+    $lang_laptop = "${lang}-laptop"
 
     file {
-      "/etc/dconf/db/locale-${lang}.d":
+      [ "/etc/dconf/db/locale-${lang}.d"
+      , "/etc/dconf/db/locale-${lang_laptop}.d" ]:
         ensure => directory;
 
       "/etc/dconf/db/locale-${lang}.d/${lang}":
         content => template("desktop/dconf_by_locale/${lang}"),
         notify  => Exec['update dconf'];
 
-      "/etc/dconf/db/locale-${lang}.d/${lang}-laptop":
-        content => template("desktop/dconf_by_locale/${lang}-laptop"),
+      "/etc/dconf/db/locale-${lang_laptop}.d/${lang_laptop}":
+        content => template("desktop/dconf_by_locale/${lang_laptop}"),
         notify  => Exec['update dconf'];
     }
   }
