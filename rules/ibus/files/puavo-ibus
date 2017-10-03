@@ -1,0 +1,21 @@
+#!/bin/sh
+
+set -eu
+
+dconf_key=/org/gnome/desktop/input-sources/sources
+
+input_sources_dconf=$(dconf read "$dconf_key")
+
+case "${1:-}" in
+  --anthy)
+    if ! echo "$input_sources_dconf" | grep -q "('ibus', 'anthy')"; then
+      new_value="$(echo "$input_sources_dconf" \
+                     | sed "s/]/, ('ibus', 'anthy')]/")"
+      dconf write "$dconf_key" "$new_value"
+    fi
+    ;;
+  --no-anthy)
+    new_value="$(echo "$input_sources_dconf" | sed "s/, ('ibus', 'anthy')//")"
+    dconf write "$dconf_key" "$new_value"
+    ;;
+esac

@@ -10,6 +10,7 @@ class image::bundle::desktop {
   include ::fontconfig
   include ::gnome_terminal
   include ::graphics_drivers
+  include ::ibus
   include ::image::bundle::basic
   include ::kaffeine
   include ::keyutils
