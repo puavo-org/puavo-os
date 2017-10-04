@@ -481,6 +481,7 @@ class packages {
     , 'hplip'
     , 'i3'
     , 'ibus'
+    , 'ibus-anthy'
     , 'ibus-gtk3'
     , 'ibus-pinyin'
     , 'ibus-table'
