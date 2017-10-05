@@ -1,7 +1,83 @@
-#!/usr/bin/ruby
+#!/bin/sh
 
-require 'etc'
+set -eu
 
-loginname = STDIN.read.chomp
-user = Etc.getpwnam(loginname)
-system('/sbin/mkhomedir_helper', user.name, '0077')
+# XXX check out if this could be just the same as puavo-manage-homedirs
+# XXX in puavo-os
+
+logmsg() {
+  logger -t puavo-bootserver-make-homedir "$@"
+}
+
+username=$(cat)
+
+user_uid="$(id -u "$username" 2>/dev/null)" || true
+
+if [ -z "$user_uid" ]; then
+  logmsg -p user.err "user $username is not known"
+  exit 1
+fi
+
+if [ "$user_uid" -lt 10000 ]; then
+  logmsg -p user.err 'refusing to manage uids under 10000'
+  exit 1
+fi
+
+user_homedir="$(getent passwd "$username" | awk -F: '{ print $6 }')" || true
+
+if [ -z "$user_homedir" ]; then
+  logmsg -p user.err "could not determine home directory for user ${username}"
+  exit 1
+fi
+
+# If $user_homedir is occupied by some other user (and this can happen
+# when ${username} was used previously with a different $user_uid
+# and has since been deleted), move it out of the way.
+current_home_uid=$(stat -c %u "$user_homedir" 2>/dev/null) || true
+if [ -n "$current_home_uid" -a "$current_home_uid" != "$user_uid" ]; then
+  backup_path="/home/${current_home_uid}_${username}.$(date -Iseconds)"
+
+  msg="home directory for user ${username} was reserved by"
+  msg="${msg} ${current_home_uid}, moving ${user_homedir} to ${backup_path}"
+
+  logmsg -p user.notice "$msg"
+
+  if ! mv -T "$user_homedir" "$backup_path"; then
+    logmsg -p user.err "error when moving ${user_homedir}"
+    exit 1
+  fi
+fi
+
+# In case the directory does not exist, we lookup if user has
+# the directory in some other path and move it to the proper place.
+if [ ! -d "$user_homedir" ]; then
+  for other_homedir in /home/*; do
+    home_user_uid=$(stat -c %u "$other_homedir" 2>/dev/null) || true
+
+    if [ -n "$home_user_uid" -a "$home_user_uid" = "$user_uid" ]; then
+      msg="found old home directory for user ${username},"
+      msg="${msg} moving it from ${other_homedir} to ${user_homedir}"
+      logmsg -p user.notice "$msg"
+
+      if ! mv -T "$other_homedir" "$user_homedir"; then
+        logmsg -p user.err "error when moving ${other_homedir}"
+        exit 1
+      fi
+
+      break
+    fi
+  done
+fi
+
+# make a new directory if it is missing
+if [ ! -d "$user_homedir" ]; then
+  logmsg -p user.notice \
+         "making a new home directory ${user_homedir} for ${username}"
+
+  if ! /sbin/mkhomedir_helper "$username" '0077'; then
+    logmsg -p user.err "error when creating home directory ${user_homedir}"
+    exit 1
+  fi
+fi
+
+exit 0
