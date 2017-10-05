@@ -15,7 +15,9 @@ require 'resolv'
 require 'thread'
 
 $puavo_domain = IO.read('/etc/puavo/domain').chomp
+$requested_remote_home_update = false
 
+$home_update_semaphore = Mutex.new
 $stderr_semaphore = Mutex.new
 $update_gtk_bookmarks_semaphore = Mutex.new
 
@@ -90,21 +92,23 @@ class DbusHandler
 end
 
 class MountInfo
-  attr_reader :path, :url
+  attr_reader :path, :remote_host, :url
 
-  def initialize(path, url)
-    @path = path
-    @url  = url
+  def initialize(path, remote_host, url)
+    @path        = path
+    @remote_host = remote_host
+    @url         = url
   end
 end
 
 class GvfsMount
   attr_reader :linkname
 
-  def initialize(remote_path, user_id, linkname)
+  def initialize(remote_path, username, user_id, linkname)
     @linkname    = linkname
     @remote_path = remote_path
     @user_id     = user_id
+    @username    = username
 
     @mntinfo = nil
 
@@ -211,6 +215,13 @@ class GvfsMount
   def check_and_handle_mount(checks_with_timeout)
     raise '@mntinfo not set where it should be' unless @mntinfo
 
+    # If update_remote_homes() fails, we must not proceed with mounts,
+    # because username might have changed, in which case home directory path
+    # has changed, and server *should* update it to match what we expect.
+    # Otherwise, Samba will create another home directory for user,
+    # and then user will be missing files.
+    update_remote_home()
+
     mount_state = check_mount_state()
 
     if mount_state != @previous_mount_state then
@@ -257,6 +268,7 @@ class GvfsMount
 
       rescue StandardError => e
         gvfslog("got some error: #{ e }, yet continuing...")
+        checks_with_timeout = [0]
       end
 
       sleep(5)
@@ -313,7 +325,7 @@ class GvfsMount
                     + "#{ remote_host },share=#{ @remote_path }"
     new_url = "smb://#{ remote_host }/#{ @remote_path }/"
 
-    new_mntinfo = MountInfo.new(new_mntpath, new_url)
+    new_mntinfo = MountInfo.new(new_mntpath, remote_host, new_url)
 
     if @mntinfo && @mntinfo.url != new_mntinfo.url then
       gvfslog("remote url has changed to '#{ new_mntinfo.url }'")
@@ -323,6 +335,27 @@ class GvfsMount
     @mntinfo = new_mntinfo
     @dns_lookups_to_try = 0
   end
+
+  def update_remote_home()
+    $home_update_semaphore.synchronize do
+      # enough to do this once (successfully)
+      return if $requested_remote_home_update
+
+      cmd = [ 'timeout', '-k', '1', '10',
+              'nc', '-N', @mntinfo.remote_host.to_s, '907' ]
+
+      output, status = Open3.capture2e(*cmd, :stdin_data => "#{ @username }\n")
+      output_no_newlines = output.chomp.gsub(/\n/, ' / ')
+
+      if status.exitstatus != 0 || output_no_newlines != 'OK' then
+        raise("bad return status from command/server: '#{ cmd.join(' ') }'" \
+                + " (#{ status.exitstatus }): #{ output_no_newlines }")
+      end
+
+      $requested_remote_home_update = true
+    end
+  end
+
 end
 
 def get_our_gvfsmounts
@@ -350,13 +383,14 @@ def get_our_gvfsmounts
   userdir_label   = userdir_labels[lang]   || userdir_labels['en']
   schooldir_label = schooldir_labels[lang] || schooldir_labels['en']
 
-  user = Etc.getpwuid.name
+  username = Etc.getpwuid.name
   user_id = Process.uid
   user_primary_group = Etc.getgrgid( Etc.getpwuid.gid ).name
 
   [
-    GvfsMount.new(user, user_id, userdir_label),
+    GvfsMount.new(username, username, user_id, userdir_label),
     GvfsMount.new("share/#{ sharename }/#{ user_primary_group }",
+                  username,
                   user_id,
                   schooldir_label)
   ]
