@@ -134,6 +134,7 @@ install : installdirs
 		pam/check-if-account-is-locked \
 		pam/puavo-local-config-setup \
 		pam/puavo-login \
+		pam/puavo-manage-homedir \
 		pam/restrict-logins-by-local-config
 
 	$(INSTALL_DATA) -t $(DESTDIR)/lib/systemd/system \
