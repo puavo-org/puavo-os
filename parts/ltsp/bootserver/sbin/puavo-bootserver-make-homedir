@@ -80,4 +80,8 @@ if [ ! -d "$user_homedir" ]; then
   fi
 fi
 
+# Pass information that everything went well.  This message is checked
+# by puavo-remotemounts-helper.
+echo OK
+
 exit 0
