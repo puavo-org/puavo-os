@@ -1,0 +1,126 @@
+From ae0752a452faa1d9a9f1d3b9f8d6092de23c9f2e Mon Sep 17 00:00:00 2001
+From: Simon McVittie <smcv@debian.org>
+Date: Thu, 18 Oct 2012 15:57:21 +0100
+Subject: [PATCH] volume monitors: on glibc systems, let realpath() allocate
+ its own buffer
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+This was originally to support Hurd, which doesn't have a PATH_MAX
+at all. It also seems a good idea for systems where PATH_MAX is just a
+convenient lie, such as Linux.
+
+Based on a patch by Samuel Thibault, as revised by Martin Pitt,
+Raphaël Hertzog and Emilio Pozuelo Monfort.
+
+Bug-Debian: http://bugs.debian.org/555055
+---
+ monitor/gdu/ggduvolumemonitor.c |   33 +++++++++++++++++++++++++++++++--
+ monitor/hal/ghalvolumemonitor.c |   18 +++++++++++++++++-
+ 2 files changed, 48 insertions(+), 3 deletions(-)
+
+diff --git a/monitor/gdu/ggduvolumemonitor.c b/monitor/gdu/ggduvolumemonitor.c
+index 4021eab..aecfa34 100644
+--- a/monitor/gdu/ggduvolumemonitor.c
++++ b/monitor/gdu/ggduvolumemonitor.c
+@@ -698,15 +698,30 @@ get_mount_point_for_device (GduDevice *d, GList *fstab_mount_points)
+         }
+       else
+         {
++          /* handle symlinks such as /dev/disk/by-uuid/47C2-1994 */
++#ifdef __GLIBC__
++          char *resolved_fstab_device_file;
++
++          resolved_fstab_device_file = realpath (fstab_device_file, NULL);
++          if (resolved_fstab_device_file != NULL &&
++              g_strcmp0 (resolved_fstab_device_file, device_file) == 0)
++            {
++              free (resolved_fstab_device_file);
++              ret = mount_point;
++              goto out;
++            }
++
++          free(resolved_fstab_device_file);
++#else
+           char resolved_fstab_device_file[PATH_MAX];
+ 
+-          /* handle symlinks such as /dev/disk/by-uuid/47C2-1994 */
+           if (realpath (fstab_device_file, resolved_fstab_device_file) != NULL &&
+               g_strcmp0 (resolved_fstab_device_file, device_file) == 0)
+             {
+               ret = mount_point;
+               goto out;
+             }
++#endif
+         }
+     }
+ 
+@@ -1432,16 +1447,30 @@ update_fstab_volumes (GGduVolumeMonitor *monitor,
+       device_file = g_unix_mount_point_get_device_path (mount_point);
+       if (g_str_has_prefix (device_file, "/dev/"))
+         {
+-          gchar resolved_path[PATH_MAX];
+           GduDevice *device = NULL;
++#ifdef __GLIBC__
++          gchar *resolved_path;
++
++          /* doesn't exist */
++          resolved_path = realpath (device_file, NULL);
++          if (resolved_path == NULL)
++            continue;
++#else
++          gchar resolved_path[PATH_MAX];
+ 
+           /* doesn't exist */
+           if (realpath (device_file, resolved_path) == NULL)
+             continue;
++#endif
+ 
+           /* is handled by DKD */
+           if (monitor->pool != NULL)
+             device = gdu_pool_get_by_device_file (monitor->pool, resolved_path);
++
++#ifdef __GLIBC__
++          free(resolved_path);
++#endif
++
+           if (device != NULL)
+             {
+               g_object_unref (device);
+diff --git a/monitor/hal/ghalvolumemonitor.c b/monitor/hal/ghalvolumemonitor.c
+index 5082fc8..7bbd5a3 100644
+--- a/monitor/hal/ghalvolumemonitor.c
++++ b/monitor/hal/ghalvolumemonitor.c
+@@ -739,11 +739,27 @@ get_mount_point_for_device (HalDevice *d, GList *fstab_mount_points)
+         }
+       else
+         {
+-          char resolved_device_path[PATH_MAX];
+           /* handle symlinks such as /dev/disk/by-uuid/47C2-1994 */
++#ifdef __GLIBC__
++          char *resolved_device_path;
++
++          resolved_device_path = realpath (device_path, NULL);
++
++          if (resolved_device_path != NULL &&
++              strcmp (resolved_device_path, device_file) == 0)
++            {
++              free (resolved_device_path);
++              return mount_point;
++            }
++
++          free (resolved_device_path);
++#else
++          char resolved_device_path[PATH_MAX];
++
+           if (realpath (device_path, resolved_device_path) != NULL &&
+               strcmp (resolved_device_path, device_file) == 0)
+             return mount_point;
++#endif
+         }
+     }
+ 
+-- 
+1.7.10.4
+
