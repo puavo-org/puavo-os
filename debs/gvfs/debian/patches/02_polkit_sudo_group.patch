@@ -1,0 +1,15 @@
+Description: Use sudo group instead of the wheel one, the later doesn't exist on debian
+Author: Laurent Bigonville <bigon@debian.org>
+Forwarded: not-needed
+
+--- a/daemon/org.gtk.vfs.file-operations.rules
++++ b/daemon/org.gtk.vfs.file-operations.rules
+@@ -2,7 +2,7 @@ polkit.addRule(function(action, subject)
+         if ((action.id == "org.gtk.vfs.file-operations-helper") &&
+             subject.local &&
+             subject.active &&
+-            subject.isInGroup ("wheel")) {
++            subject.isInGroup ("sudo")) {
+             return polkit.Result.YES;
+         }
+ });

@@ -1,0 +1,34 @@
+From 6c3ca864314a87c65e245db853fc0dae3649341b Mon Sep 17 00:00:00 2001
+From: Christian Kellner <gicmo@gnome.org>
+Date: Wed, 4 Nov 2009 14:20:59 +0100
+Subject: [PATCH] Check if MetaTree exists before flushing it
+
+Also change meta_tree_clear () so it sets fd to -1; this will make
+meta_tree_exists () work as expected. Bug 598561.
+---
+ metadata/metatree.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
+
+Index: gvfs-1.22.1/metadata/metatree.c
+===================================================================
+--- gvfs-1.22.1.orig/metadata/metatree.c	2014-10-13 15:46:54.198130663 +0200
++++ gvfs-1.22.1/metadata/metatree.c	2014-10-13 15:46:54.194130594 +0200
+@@ -257,7 +257,7 @@
+   if (tree->fd != -1)
+     {
+       close (tree->fd);
+-      tree->fd = 0;
++      tree->fd = -1;
+     }
+ }
+ 
+@@ -2311,6 +2311,9 @@
+ 
+   builder = meta_builder_new ();
+ 
++  if (!meta_tree_exists (tree))
++    return FALSE;
++
+   copy_tree_to_builder (tree, tree->root, builder->root);
+ 
+   if (tree->journal)

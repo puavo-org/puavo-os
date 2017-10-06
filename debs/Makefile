@@ -4,6 +4,7 @@ _pkgs_ports     := autopoweroff    \
                    fluentd         \
                    gnome-shell     \
                    grub2           \
+                   gvfs            \
                    nwjs            \
                    unicode-data    \
                    visionmedia-mon \

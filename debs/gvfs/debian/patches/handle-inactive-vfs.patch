@@ -1,0 +1,17 @@
+Description: If the VFS never initialized, don't crash when creating volume monitors
+Origin: vendor, Ubuntu
+Bug-Ubuntu: LP #832533
+
+Index: b/client/gdaemonvfs.c
+===================================================================
+--- a/client/gdaemonvfs.c
++++ b/client/gdaemonvfs.c
+@@ -1432,7 +1432,7 @@
+ GDBusConnection *
+ _g_daemon_vfs_get_async_bus (void)
+ {
+-  return the_vfs->async_bus;
++  return the_vfs ? the_vfs->async_bus : NULL;
+ }
+ 
+ static gboolean

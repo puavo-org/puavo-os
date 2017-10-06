@@ -1,0 +1,36 @@
+#!/usr/bin/make -f
+
+-include /usr/share/gnome-pkg-tools/1/rules/gnome-get-source.mk
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+#LDFLAGS += -Wl,-z,defs -Wl,-O1 -Wl,--as-needed
+
+DEB_HOST_ARCH ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
+ifneq (,$(filter $(DEB_HOST_ARCH), hurd-i386 kfreebsd-i386 kfreebsd-amd64))
+	ADMIN_BACKEND=--disable-admin
+else
+	ADMIN_BACKEND=
+endif
+
+%:
+	dh $@ --with gnome
+
+override_dh_auto_configure:
+	dh_auto_configure -- \
+		--libexecdir=/usr/lib/gvfs \
+		--disable-hal \
+		$(ADMIN_BACKEND)
+
+override_dh_strip:
+	dh_strip --dbgsym-migration='gvfs-dbg (<< 1.28.0-1~)'
+
+override_dh_install:
+	find debian/tmp -name '*.la' -delete
+	find debian/tmp -name '*.h' -delete
+	dh_install --fail-missing
+
+override_dh_makeshlibs:
+	dh_makeshlibs --no-act
+
+override_dh_auto_test:
+	echo "Skipping testsuite as it's better run as an autopkgtest with machine isolation"

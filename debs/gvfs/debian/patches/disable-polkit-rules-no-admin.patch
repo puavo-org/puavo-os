@@ -1,0 +1,21 @@
+Description: Do not install polkit rules when admin backend is disabled
+Author: Laurent Bigonville <bigon@debian.org>
+Forwarded: yes
+Bug: https://bugzilla.gnome.org/show_bug.cgi?id=774100
+
+Index: b/daemon/Makefile.am
+===================================================================
+--- a/daemon/Makefile.am
++++ b/daemon/Makefile.am
+@@ -670,9 +670,11 @@
+ org.gtk.vfs.file-operations.policy: org.gtk.vfs.file-operations.policy.in Makefile
+ 	$(AM_V_GEN) XDG_DATA_DIRS=$(top_srcdir) $(MSGFMT) --xml --template $< -d $(top_srcdir)/po -o $@ || cp $< $@
+ 
++if HAVE_ADMIN
+ gvfs_polkit_actionsdir = $(datadir)/polkit-1/actions
+ gvfs_polkit_actions_in_files = org.gtk.vfs.file-operations.policy.in
+ gvfs_polkit_actions_DATA = org.gtk.vfs.file-operations.policy
+ 
+ gvfs_polkit_rulesdir = $(datadir)/polkit-1/rules.d
+ dist_gvfs_polkit_rules_DATA = org.gtk.vfs.file-operations.rules
++endif

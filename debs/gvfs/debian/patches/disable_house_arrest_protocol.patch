@@ -1,0 +1,23 @@
+Disable the House Arrest Protocol.  It did not work for us with Nautilus,
+and files on iOS were inaccessible.
+
+diff -ruN gvfs-1.30.4.orig/monitor/afc/afcvolumemonitor.c gvfs-1.30.4/monitor/afc/afcvolumemonitor.c
+--- gvfs-1.30.4.orig/monitor/afc/afcvolumemonitor.c	2017-03-21 11:34:37.000000000 +0200
++++ gvfs-1.30.4/monitor/afc/afcvolumemonitor.c	2017-10-06 14:06:07.737701200 +0300
+@@ -29,9 +29,13 @@
+ 
+   g_print ("creating volume for device uuid '%s'\n", uuid);
+ 
+-  /* Only add the house arrest volume, the default AFC service
+-   * doesn't contain anything that users should modify */
+-  volume = g_vfs_afc_volume_new (G_VOLUME_MONITOR (self), uuid, HOUSE_ARREST_SERVICE_PORT);
++  /* XXX Only add the house arrest volume, the default AFC service
++   * XXX doesn't contain anything that users should modify.
++   * volume = g_vfs_afc_volume_new (G_VOLUME_MONITOR (self), uuid, HOUSE_ARREST_SERVICE_PORT); */
++
++  /* XXX Attaching house arrest volume (above) did not work with Nautilus,
++   * XXX using the default AFC service - juhaerk */
++  volume = g_vfs_afc_volume_new (G_VOLUME_MONITOR (self), uuid, NULL);
+   if (volume != NULL)
+     {
+       self->volumes = g_list_prepend (self->volumes, volume);

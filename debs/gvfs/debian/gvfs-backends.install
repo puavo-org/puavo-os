@@ -1,0 +1,62 @@
+#!/usr/bin/dh-exec
+usr/lib/gvfs/gvfs-afc-volume-monitor                            [!hurd-any]
+usr/lib/gvfs/gvfs-goa-volume-monitor
+usr/lib/gvfs/gvfs-gphoto2-volume-monitor                        [linux-any]
+usr/lib/gvfs/gvfs-mtp-volume-monitor                            [linux-any]
+usr/lib/gvfs/gvfsd-admin					[linux-any]
+usr/lib/gvfs/gvfsd-afc                                          [!hurd-any]
+usr/lib/gvfs/gvfsd-afp
+usr/lib/gvfs/gvfsd-afp-browse
+usr/lib/gvfs/gvfsd-archive
+usr/lib/gvfs/gvfsd-cdda                                         [linux-any]
+usr/lib/gvfs/gvfsd-dav
+usr/lib/gvfs/gvfsd-dnssd
+usr/lib/gvfs/gvfsd-ftp
+usr/lib/gvfs/gvfsd-google
+usr/lib/gvfs/gvfsd-gphoto2                                      [linux-any]
+usr/lib/gvfs/gvfsd-http
+usr/lib/gvfs/gvfsd-mtp                                          [linux-any]
+usr/lib/gvfs/gvfsd-network
+usr/lib/gvfs/gvfsd-nfs
+usr/lib/gvfs/gvfsd-recent
+usr/lib/gvfs/gvfsd-sftp
+usr/lib/gvfs/gvfsd-smb                                          [!hurd-any]
+usr/lib/gvfs/gvfsd-smb-browse                                   [!hurd-any]
+usr/lib/systemd/user/gvfs-afc-volume-monitor.service		[linux-any]
+usr/lib/systemd/user/gvfs-goa-volume-monitor.service		[linux-any]
+usr/lib/systemd/user/gvfs-gphoto2-volume-monitor.service	[linux-any]
+usr/lib/systemd/user/gvfs-mtp-volume-monitor.service		[linux-any]
+usr/share/dbus-1/services/org.gtk.vfs.AfcVolumeMonitor.service  [!hurd-any]
+usr/share/dbus-1/services/org.gtk.vfs.GPhoto2VolumeMonitor.service  [linux-any]
+usr/share/dbus-1/services/org.gtk.vfs.GoaVolumeMonitor.service
+usr/share/dbus-1/services/org.gtk.vfs.MTPVolumeMonitor.service  [linux-any]
+usr/share/gvfs/mounts/admin.mount				[linux-any]
+usr/share/gvfs/mounts/afc.mount                                 [!hurd-any]
+usr/share/gvfs/mounts/afp-browse.mount
+usr/share/gvfs/mounts/afp.mount
+usr/share/gvfs/mounts/archive.mount
+usr/share/gvfs/mounts/cdda.mount                                [linux-any]
+usr/share/gvfs/mounts/dav+sd.mount
+usr/share/gvfs/mounts/dav.mount
+usr/share/gvfs/mounts/dns-sd.mount
+usr/share/gvfs/mounts/ftp.mount
+usr/share/gvfs/mounts/ftps.mount
+usr/share/gvfs/mounts/google.mount
+usr/share/gvfs/mounts/gphoto2.mount                             [linux-any]
+usr/share/gvfs/mounts/http.mount
+usr/share/gvfs/mounts/mtp.mount                                 [linux-any]
+usr/share/gvfs/mounts/network.mount
+usr/share/gvfs/mounts/nfs.mount
+usr/share/gvfs/mounts/recent.mount
+usr/share/gvfs/mounts/sftp.mount
+usr/share/gvfs/mounts/smb-browse.mount                          [!hurd-any]
+usr/share/gvfs/mounts/smb.mount                                 [!hurd-any]
+usr/share/gvfs/remote-volume-monitors/afc.monitor               [!hurd-any]
+usr/share/gvfs/remote-volume-monitors/goa.monitor
+usr/share/gvfs/remote-volume-monitors/gphoto2.monitor           [linux-any]
+usr/share/gvfs/remote-volume-monitors/mtp.monitor               [linux-any]
+usr/share/polkit-1/actions/org.gtk.vfs.file-operations.policy   [linux-any]
+usr/share/polkit-1/rules.d/org.gtk.vfs.file-operations.rules	usr/share/doc/gvfs-backends/examples/	[linux-any]
+# Schemas moved from gvfs-common, only used for smb and dns-sd
+usr/share/glib-2.0
+usr/share/GConf
