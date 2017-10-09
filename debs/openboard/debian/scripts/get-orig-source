@@ -25,6 +25,29 @@ mv "OpenBoard-Importer-${importer_commit}" OpenBoard-Importer
 unpack_tar_from_github "https://github.com/OpenBoard-org/OpenBoard-ThirdParty/archive/${thirdparty_commit}.tar.gz"
 mv "OpenBoard-ThirdParty-${thirdparty_commit}" OpenBoard-ThirdParty
 
+cat <<'EOF' > Makefile
+.PHONY: all
+all:
+	(cd OpenBoard-ThirdParty/freetype \
+	  && qmake freetype.pro -spec linux-g++ \
+	  && make)
+	(cd OpenBoard-ThirdParty/quazip \
+	  && qmake quazip.pro -spec linux-g++ \
+	  && make)
+	(cd OpenBoard-ThirdParty/xpdf/xpdf-3.04 \
+	  && ./configure --with-freetype2-library="../../freetype/lib/linux" \
+	       --with-freetype2-includes="../../freetype/freetype-2.6.1/include")
+	(cd OpenBoard-ThirdParty/xpdf \
+	  && qmake xpdf.pro -spec linux-g++ \
+	  && make)
+	(cd OpenBoard && ./release_scripts/linux/build.sh)
+
+.PHONY: install
+install:
+	@echo WHAT TO DO?
+	exit 1
+EOF
+
 (
   cd ..
   tar -zcf "../openboard_${openboard_version}.orig.tar.gz" "$openboard_dir"
