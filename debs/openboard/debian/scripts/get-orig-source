@@ -42,10 +42,39 @@ all:
 	  && make)
 	(cd OpenBoard && ./release_scripts/linux/build.sh)
 
+.PHONY: installdirs
+installdirs:
+	mkdir -p $(DESTDIR)/opt/openboard
+	mkdir -p $(DESTDIR)/opt/openboard/etc
+	mkdir -p $(DESTDIR)/opt/openboard/i18n
+	mkdir -p $(DESTDIR)/opt/openboard/importer
+	mkdir -p $(DESTDIR)/usr/share/applications
+
 .PHONY: install
-install:
-	@echo WHAT TO DO?
-	exit 1
+install: installdirs
+	cp -pR OpenBoard/build/linux/release/product/* $(DESTDIR)/opt/openboard/
+	cp -pR OpenBoard/resources/customizations $(DESTDIR)/opt/openboard/
+	cp -p OpenBoard/resources/images/OpenBoard.png \
+	      $(DESTDIR)/opt/openboard/
+	cp -p OpenBoard/resources/linux/openboard-ubz.xml \
+	      $(DESTDIR)/opt/openboard/etc/
+	cp -p openboard.desktop $(DESTDIR)/usr/share/applications/
+	cp -p OpenBoard-Importer/OpenBoardImporter \
+	      $(DESTDIR)/opt/openboard/importer/
+EOF
+
+cat <<'EOF' > openboard.desktop
+[Desktop Entry]
+Encoding=UTF-8
+Name=OpenBoard
+Comment=OpenBoard, an interactive white board application
+Exec=openboard %f
+Icon=/opt/openboard/OpenBoard.png
+StartupNotify=true
+Terminal=false
+Type=Application
+MimeType=application/ubz
+Categories=Education
 EOF
 
 (

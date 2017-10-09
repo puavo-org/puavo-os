@@ -2,7 +2,7 @@
 
 set -eu
 
-xdg-desktop-menu uninstall /usr/share/applications/openboard.desktop || true
+xdg-desktop-menu uninstall /usr/share/applications/openboard.desktop
 rm -f /usr/bin/openboard
 
 exit 0
