@@ -1,0 +1,34 @@
+#!/bin/sh
+
+set -eu
+
+unpack_tar_from_github() {
+  wget -O - "$1" | tar -zx
+}
+
+openboard_version=1.3.6
+openboard_dir="openboard-${openboard_version}"
+
+openboard_commit=8386bf4290703cd93b5b6f679dc6809e8527c960
+importer_commit=47927bda021b4f7f1540b794825fb0d601875e79
+thirdparty_commit=925f2d1949ef159c1efbe1e0a7fe23202de1d3a3
+
+mkdir -p "$openboard_dir"
+cd "$openboard_dir"
+
+unpack_tar_from_github "https://github.com/puavo-org/OpenBoard/archive/${openboard_commit}.tar.gz"
+mv "OpenBoard-${openboard_commit}" OpenBoard
+
+unpack_tar_from_github "https://github.com/OpenBoard-org/OpenBoard-Importer/archive/${importer_commit}.tar.gz"
+mv "OpenBoard-Importer-${importer_commit}" OpenBoard-Importer
+
+unpack_tar_from_github "https://github.com/OpenBoard-org/OpenBoard-ThirdParty/archive/${thirdparty_commit}.tar.gz"
+mv "OpenBoard-ThirdParty-${thirdparty_commit}" OpenBoard-ThirdParty
+
+../debian/scripts/setup-build
+
+cd ..
+
+tar -zcf "../openboard_${openboard_version}.orig.tar.gz" "$openboard_dir"
+mv "$openboard_dir"/* .
+rmdir "$openboard_dir"

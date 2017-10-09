@@ -651,6 +651,9 @@ class packages {
 
     [ 'faenza-icon-theme' ]:
       tag => [ 'tag_themes', 'tag_puavo', ];
+
+    'openboard':
+      tag => [ 'tag_whiteboard', 'tag_puavo', ];
   }
 
   $broadcom_sta_dkms_module = 'broadcom-sta/6.30.223.271'

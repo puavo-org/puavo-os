@@ -6,6 +6,7 @@ _pkgs_ports     := autopoweroff    \
                    grub2           \
                    gvfs            \
                    nwjs            \
+                   openboard       \
                    unicode-data    \
                    visionmedia-mon \
                    vtun            \

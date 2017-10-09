@@ -1,0 +1,14 @@
+#!/bin/sh
+
+set -eu
+
+tlp_replace() {
+  sed "$1" /etc/default/tlp > /etc/default/tlp.tmp
+  mv /etc/default/tlp.tmp /etc/default/tlp
+}
+
+if [ "$(puavo-conf puavo.pm.tlp.enabled)" = 'true' ]; then
+  tlp_replace 's/^TLP_ENABLE=.*$/TLP_ENABLE=1/'
+else
+  tlp_replace 's/^TLP_ENABLE=.*$/TLP_ENABLE=0/'
+fi

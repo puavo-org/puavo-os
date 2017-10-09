@@ -1,0 +1,10 @@
+#!/bin/sh
+
+set -eu
+
+xdg-desktop-menu install --novendor /usr/share/applications/openboard.desktop
+xdg-mime install --mode system /opt/openboard/etc/openboard-ubz.xml
+
+ln -fns /opt/openboard/OpenBoard /usr/bin/openboard
+
+exit 0
