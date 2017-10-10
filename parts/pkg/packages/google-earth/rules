@@ -42,7 +42,7 @@ case "${command}" in
             /usr/share/icons/hicolor/256x256/apps/google-earth.png
 
         mkdir -p /usr/share/applications
-        ln -fns -T "${upstream_dir}/opt/google/earth/pro/google-earth.desktop" \
+        ln -fns -T "${upstream_dir}/opt/google/earth/pro/google-earth-pro.desktop" \
             /usr/share/applications/google-earth.desktop
         ;;
     unconfigure)

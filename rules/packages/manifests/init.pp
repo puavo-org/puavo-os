@@ -659,7 +659,7 @@ class packages {
   $broadcom_sta_dkms_module = 'broadcom-sta/6.30.223.271'
   $nvidia_dkms_304_module   = 'nvidia-legacy-304xx/304.135'
   $nvidia_dkms_340_module   = 'nvidia-legacy-340xx/340.102'
-  $nvidia_dkms_375_module   = 'nvidia-current/375.66'
+  $nvidia_dkms_375_module   = 'nvidia-current/375.82'
   # XXX $r8168_dkms_module  = 'r8168/8.040.00'
 
   $all_dkms_modules = [ $broadcom_sta_dkms_module
@@ -673,9 +673,9 @@ class packages {
       dkms_modules => $all_dkms_modules,
       package_name => 'linux-image-3.16.0-4-amd64';
 
-    '4.9.0-3-amd64':
+    '4.9.0-4-amd64':
       dkms_modules => $all_dkms_modules,
-      package_name => 'linux-image-4.9.0-3-amd64';
+      package_name => 'linux-image-4.9.0-4-amd64';
   }
 
   # XXX missing from Debian

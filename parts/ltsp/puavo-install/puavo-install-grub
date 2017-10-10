@@ -257,7 +257,10 @@ fi
 # why we do "3>&- 4>&- 5>&-" (same with grub-install)
 diskdev=$(pvs 3>&- 4>&- 5>&-                                            \
             | awk -v vgname="$vgname" '$2 == vgname { print $1; exit }' \
-            | sed -E 's|[0-9]+$||')
+            | sed -E '
+                /\/dev\/mmcblk/ { s|p[0-9]+$|| }
+                /\/dev\/[vs]d/  { s|[0-9]+$||  }
+              ')
 
 if [ -z "$diskdev" ]; then
   echo "Could not find the disk device where volume group '${vgname}' is" >&2
@@ -345,6 +348,11 @@ fi
 sync
 echo 3 > /proc/sys/vm/drop_caches
 blockdev --flushbufs $diskdev
-hdparm -qF $diskdev
+
+case "$diskdev" in
+  /dev/[vs]d*)
+    hdparm -qF "$diskdev"
+    ;;
+esac
 
 exit $exitstatus
