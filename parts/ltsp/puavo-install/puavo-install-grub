@@ -348,6 +348,11 @@ fi
 sync
 echo 3 > /proc/sys/vm/drop_caches
 blockdev --flushbufs $diskdev
-hdparm -qF $diskdev
+
+case "$diskdev" in
+  /dev/[vs]d*)
+    hdparm -qF "$diskdev"
+    ;;
+esac
 
 exit $exitstatus
