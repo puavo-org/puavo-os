@@ -357,12 +357,14 @@ module QueryDiskInfo
       puts "The disk /dev/#{ disk_device } has the following partitions:\n"
       show_disk_devices([ disk_device ])
 
+      partition_regexp = /^#{ Regexp.quote(disk_device) }p?[0-9]+$/
+
       partitions \
         = %w(whole) \
           + IO.readlines('/proc/partitions') \
               .map { |line| (line.split)[3] } \
               .compact \
-              .select { |part| part.match(/^#{ disk_device }[0-9]/) } \
+              .select { |part| part.match(partition_regexp) }
 
       puts "\nPossible partitions are: #{ partitions.join(' ') }"
       puts "\nYou may choose 'fdisk' to partition this disk,"
