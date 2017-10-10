@@ -212,11 +212,13 @@ module QueryDiskInfo
       STDERR.puts msg
     end
 
+    disk_device_regexp = /^([vs]d[a-z]|mmcblk[0-9]+)$/
+
     chosen_disk_device = nil
     until choosable_disk_devices.include?(chosen_disk_device) do
       all_disk_devices = IO.readlines('/proc/partitions') \
                            .map { |s| s.split(' ')[3] }   \
-                           .select { |s| s && s.match(/^[vs]d[a-z]$/) }
+                           .select { |s| s && s.match(disk_device_regexp) }
 
       # do not allow installation to the device where the currently running
       # system resides
