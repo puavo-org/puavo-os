@@ -18,6 +18,7 @@ class puavo_pkg::packages {
 			, 'marvinsketch'
 			, 'mattermost-desktop'
 			, 'msttcorefonts'
+			, 'obsidian-icons'
 			, 'oracle-java'
 			, 'processing'
 			, 'pycharm'

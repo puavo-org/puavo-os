@@ -103,7 +103,11 @@ module DiskHandler
     if fs_conf['partition'] == 'whole'
       fs_setup_phases += [ :wipe_device ] if conf['wipe']
       fs_setup_phases += [ :lvm_partition, :puavo_filesystems ]
-      fs_conf['partition'] = "#{ fs_conf['device'] }1"
+      if fs_conf['device'].match(%r{\Ammcblk[0-9]+\z}) then
+        fs_conf['partition'] = "#{ fs_conf['device'] }p1"
+      else
+        fs_conf['partition'] = "#{ fs_conf['device'] }1"
+      end
     else
       fs_setup_phases += [ :wipe_partition ] if conf['wipe']
       fs_setup_phases += [ :puavo_filesystems ]
@@ -212,7 +216,7 @@ module QueryDiskInfo
       STDERR.puts msg
     end
 
-    disk_device_regexp = /^([vs]d[a-z]|mmcblk[0-9]+)$/
+    disk_device_regexp = /\A([vs]d[a-z]|mmcblk[0-9]+)\z/
 
     chosen_disk_device = nil
     until choosable_disk_devices.include?(chosen_disk_device) do
@@ -357,7 +361,7 @@ module QueryDiskInfo
       puts "The disk /dev/#{ disk_device } has the following partitions:\n"
       show_disk_devices([ disk_device ])
 
-      partition_regexp = /^#{ Regexp.quote(disk_device) }p?[0-9]+$/
+      partition_regexp = /\A#{ Regexp.quote(disk_device) }p?[0-9]+\z/
 
       partitions \
         = %w(whole) \
@@ -379,7 +383,7 @@ module QueryDiskInfo
   def self.get_current_system_device
     rootdev = nil
     File.read('/proc/cmdline').split.each do |kernel_arg|
-      match = kernel_arg.match(/^root=(.*)$/)
+      match = kernel_arg.match(/\Aroot=(.*)\z/)
       if match then
         rootdev = match[1]
         break
@@ -389,10 +393,10 @@ module QueryDiskInfo
     raise 'Could not find root= argument in kernel command line' \
       unless rootdev
 
-    match = rootdev.match(%r{^/dev/(nbd.*)$})
+    match = rootdev.match(%r{\A/dev/(nbd.*)\z})
     return match[1] if match
 
-    match = rootdev.match(%r{^/dev/mapper/(.*)$})
+    match = rootdev.match(%r{\A/dev/mapper/(.*)\z})
     raise 'Did not understand the root= argument in kernel command line' \
       unless match
     root_dm_name = match[1]
@@ -534,8 +538,8 @@ EOF
     prompt = "#{ question } [#{ default }] "
     answer = HighLine.ask(prompt) { |q| q.whitespace = nil }
 
-    return answer.match(/^\n$/)  ? default \
-         : answer.match(/^\s+$/) ? ''      \
+    return answer.match(/\A\n\z/)  ? default \
+         : answer.match(/\A\s+\z/) ? ''      \
          : answer.strip
   end
 
