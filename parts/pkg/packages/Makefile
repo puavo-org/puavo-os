@@ -21,6 +21,7 @@ packagedirs += google-earth/
 packagedirs += marvinsketch/
 packagedirs += mattermost-desktop/
 packagedirs += msttcorefonts/
+packagedirs += obsidian-icons/
 packagedirs += oracle-java/
 packagedirs += processing/
 packagedirs += pycharm/
