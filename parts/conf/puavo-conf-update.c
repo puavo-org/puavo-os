@@ -337,6 +337,11 @@ update_puavoconf(puavo_conf_t *conf, const char *device_json_path, int verbose)
 	if (apply_kernel_arguments(conf, verbose) != 0)
 		retvalue = 1;
 
+	/* Also apply device settings now, because that might affect
+	 * puavo.hosttype and puavo.profiles.list. */
+	if (apply_device_settings(conf, device_json_path, verbose) != 0)
+		retvalue = 1;
+
 	if (apply_one_profile(conf, IMAGE_CONF_PATH, verbose) != 0)
 		retvalue = 1;
 
@@ -346,6 +351,8 @@ update_puavoconf(puavo_conf_t *conf, const char *device_json_path, int verbose)
 	if (apply_hwquirks(conf, verbose) != 0)
 		retvalue = 1;
 
+	/* Apply device settings again, because those override
+	 * profiles and hwquirks. */
 	if (apply_device_settings(conf, device_json_path, verbose) != 0)
 		retvalue = 1;
 
