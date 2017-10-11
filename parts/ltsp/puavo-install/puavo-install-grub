@@ -300,14 +300,14 @@ if ! $only_update_config; then
         exit 1
   fi
 
-  ${grub_basedir}/usr/sbin/grub-install --version \
-    | awk '{ print $3 }' > /images/boot/grub/version.tmp
-  if [ ! -s /images/boot/grub/version.tmp ]; then
+  "${grub_basedir}/usr/sbin/grub-install" --version \
+    | awk '{ print $3 }' > "${images_dir}/boot/grub/version.tmp"
+  if [ ! -s "${images_dir}/boot/grub/version.tmp" ]; then
     echo 'Could not determine new grub version' >&2
-    rm -f /images/boot/grub/version.tmp
+    rm -f "${images_dir}/boot/grub/version.tmp"
     exitstatus=1
   else
-    mv /images/boot/grub/version.tmp /images/boot/grub/version
+    mv "${images_dir}/boot/grub/version.tmp" "${images_dir}/boot/grub/version"
     echo "Grub has been installed to ${diskdev}."
   fi
 fi
