@@ -27,9 +27,8 @@ mkdir -p "${pkgworkdir}/${srcpkgname}"
 
 cp -aH "$srcpkgname"/* "${pkgworkdir}/${srcpkgname}/"
 
-current_srctree_checksum="$(cd "$pkgworkdir" \
-  && tar --mtime='2000-01-01 00:00:00 +00:00' -c -f - \
-       "$srcpkgname" | md5sum | awk '{ print $1 }')"
+current_srctree_checksum="$(find "$pkgworkdir" -type f -exec md5sum \{} \; \
+                             | sort | md5sum | awk '{ print $1 }')"
 
 if [ -z "$current_srctree_checksum" ]; then
   echo 'Could not calculate checksum from source tree' >&2
