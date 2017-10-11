@@ -103,7 +103,7 @@ module DiskHandler
     if fs_conf['partition'] == 'whole'
       fs_setup_phases += [ :wipe_device ] if conf['wipe']
       fs_setup_phases += [ :lvm_partition, :puavo_filesystems ]
-      if fs_conf['device'].match(%r{\A/dev/mmcblk[0-9]+\z}) then
+      if fs_conf['device'].match(%r{\Ammcblk[0-9]+\z}) then
         fs_conf['partition'] = "#{ fs_conf['device'] }p1"
       else
         fs_conf['partition'] = "#{ fs_conf['device'] }1"
