@@ -1,0 +1,31 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "${command}" in
+    configure)
+	upstream_dir=$1
+
+        mkdir -p /usr/share/icons/obsidian
+	ln -fns "${upstream_dir}/iconpack-obsidian-master/Obsidian" \
+		/usr/share/icons/obsidian/Obsidian
+        ln -fns "${upstream_dir}/iconpack-obsidian-master/Obsidian-Amber-Light" \
+		/usr/share/icons/obsidian/Obsidian-Amber-Light
+
+	;;
+    unconfigure)
+	rm -rf /usr/share/icons/obsidian
+	;;
+    unpack)
+	upstream_pack=$1
+	upstream_dir=$2
+
+	tar -zxf "${upstream_pack}" -C "${upstream_dir}" --strip-components=1 \
+	    --wildcards '*/Obsidian' '*/Obsidian-Amber-Light'
+	;;
+    *)
+	;;
+esac
