@@ -55,6 +55,9 @@ puavo-pkg-installers-bundle.tar: $(packagefiles)
 # Do not use tar with -z, instead use "gzip -n" so that tar-archives are
 # deterministically created and thus different only when their contents have
 # changed (we use tar-archive contents as installer versions).
+# XXX The above comment implies that the outcome is exactly the same on
+# XXX different hosts, given the same directory tree (paths and contents).
+# XXX This is *not* true, but should be.
 %.tar.gz: %/ %/*
 	tar --mtime='2000-01-01 00:00:00 +00:00' -c -f - $< | gzip -n > "$@"
 
