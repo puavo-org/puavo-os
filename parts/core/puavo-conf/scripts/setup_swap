@@ -12,7 +12,7 @@ list_swap_partitions() {
 
 if [ "$(puavo-conf puavo.swap.local.enabled)" = 'true' ]; then
   # Enable local swap partition if found on local disk.
-  for part in list_swap_partitions; do
+  for part in $(list_swap_partitions); do
     puavo_swap_devices="$puavo_swap_devices $part"
   done
 
