@@ -2,12 +2,11 @@
 
 set -eu
 
-# XXX "Welcome to ratpoison!" is nasty
-/usr/bin/ratpoison & ratpoison_pid=$!
+/usr/bin/openbsd-cwm & cwm_pid=$!
 
 export PUAVO_SESSION_LANGUAGE=$(webkiosk-language-selector)
 
-kill -9 "$ratpoison_pid"
+kill -9 "$cwm_pid"
 
 # Logout user automatically if nothing has been done in 10 minutes
 xautolock -locker "kill -9 -1" -time 10 &
