@@ -1,17 +1,9 @@
 #!/bin/sh
 
-/usr/bin/ratpoison &
-RATPOISON_PID=$!
+set -eu
 
-export PUAVO_SESSION_LANGUAGE=$(webkiosk-language-selector)
+# just start /usr/lib/puavo-ltsp-client/desktop-session,
+# environment variable DESKTOP_SESSION should contain "puavo-webkiosk",
+# so we can do necessary tricks in /etc/X11/Xsession.d/38puavo-setup-webkiosk
 
-kill -9 ${RATPOISON_PID}
-
-# Logout user automatically if nothing has been done in 10 minutes
-xautolock -locker "kill -9 -1" -time 10 &
-
-# Automatically start firefox after session is opened
-mkdir -p ~/.config/autostart
-cp /usr/share/applications/firefox.desktop ~/.config/autostart/
-
-gnome-session --session="gnome-flashback"
+exec /usr/lib/puavo-ltsp-client/desktop-session "$@"

@@ -3,9 +3,14 @@
 set -eu
 
 if [ "$(puavo-conf puavo.pm.lidsuspend.enabled)" = 'true' ]; then
-  handle_lid_switch_action=suspend
+  handle_lid_switch_action='suspend'
 else
-  handle_lid_switch_action=ignore
+  handle_lid_switch_action='ignore'
+fi
+
+handle_lid_switch_docked_action="$(puavo-conf puavo.pm.lidswitchdocked.action)"
+if [ -z "$handle_lid_switch_docked_action" ]; then
+  handle_lid_switch_docked_action='ignore'
 fi
 
 puavo_os_group_users=$(getent group puavo-os \
@@ -34,6 +39,7 @@ ResetControllers=
 #HandleSuspendKey=suspend
 #HandleHibernateKey=hibernate
 HandleLidSwitch=${handle_lid_switch_action}
+HandleLidSwitchDocked=${handle_lid_switch_docked_action}
 #PowerKeyIgnoreInhibited=no
 #SuspendKeyIgnoreInhibited=no
 #HibernateKeyIgnoreInhibited=no

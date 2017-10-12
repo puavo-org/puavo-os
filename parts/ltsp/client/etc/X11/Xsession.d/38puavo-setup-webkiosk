@@ -1,0 +1,18 @@
+if [ "$DESKTOP_SESSION" = 'puavo-webkiosk' ]; then
+  /usr/bin/openbsd-cwm & cwm_pid=$!
+
+  export PUAVO_SESSION_LANGUAGE=$(webkiosk-language-selector)
+
+  kill -9 "$cwm_pid"
+
+  # Logout user automatically if nothing has been done in 10 minutes
+  xautolock -locker "kill -9 -1" -time 10 &
+
+  # Automatically start firefox after session is opened
+  mkdir -p ~/.config/autostart
+  cp /usr/share/applications/firefox-esr.desktop ~/.config/autostart/
+
+  export DESKTOP_SESSION=puavo-desktop
+  export GDMSESSION=puavo-desktop
+  export XDG_SESSION_DESKTOP=puavo-desktop
+fi
