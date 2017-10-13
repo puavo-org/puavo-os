@@ -1,9 +1,0 @@
-#!/bin/sh
-
-set -eu
-
-if [ "$USER" = 'guest' ]; then
-  /etc/guest-session/reset-guestuser-home
-fi
-
-exit 0
