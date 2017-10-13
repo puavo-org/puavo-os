@@ -2,12 +2,12 @@
   "puavo.mounts.by_user_from_bootserver.enabled"  : "true",
   "puavo.pm.lidsuspend.enabled"                   : "true",
   "puavo.pm.suspend.enabled"                      : "true",
-  "puavo.pm.tlp.enabled"                          : "true",
   "puavo.printing.dnssd.enabled"                  : "true",
   "puavo.service.avahi-daemon.enabled"            : "true",
   "puavo.service.ModemManager.enabled"            : "true",
   "puavo.service.NetworkManager.enabled"          : "true",
   "puavo.service.puavo-vpn-client-dnsmasq.enabled": "true",
   "puavo.service.puavo-vpn-client-openvpn.enabled": "true",
-  "puavo.support.vino_network_interface":           "tap0"
+  "puavo.service.tlp.enabled"                     : "true",
+  "puavo.support.vino_network_interface"          : "tap0"
 }

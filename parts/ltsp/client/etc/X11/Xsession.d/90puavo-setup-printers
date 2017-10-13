@@ -1,7 +1,13 @@
-#!/bin/sh
+# -*- sh -*-
+# Xsession.d script to set the printers according to Puavo settings
+#
+# This file is sourced by Xsession(5), not executed.
 
-remove_remote_printers()
-{
+if [ "$(puavo-conf puavo.printing.use_puavo_permissions)" != 'true' ]; then
+  return 0
+fi
+
+remove_remote_printers() {
     LANG=C lpstat -v | while read line; do
         name=$(echo "${line}" | sed -r -n 's|^device for (.*): ipp://.*$|\1|p')
         [ -n "${name}" ] || continue
@@ -9,8 +15,7 @@ remove_remote_printers()
     done
 }
 
-add_remote_printers()
-{
+add_remote_printers() {
     local puavo_domain=$(cat /etc/puavo/domain)
     readonly puavo_domain
 
@@ -26,8 +31,7 @@ add_remote_printers()
     done
 }
 
-get_printer_list()
-{
+get_printer_list() {
     [ -e "${PUAVO_SESSION_PATH}" ] || return 1
 
     cat "${PUAVO_SESSION_PATH}" | jq -r -c .printer_queues[] | {
@@ -44,8 +48,7 @@ get_printer_list()
     }
 }
 
-set_default_printer()
-{
+set_default_printer() {
     local default_printer_name
 
     [ -e "${PUAVO_SESSION_PATH}" ] || return 1
@@ -54,21 +57,6 @@ set_default_printer()
     [ "${default_printer_name}" != null ] && lpadmin -d "${default_printer_name}"
 }
 
-hosttype=$(cat /etc/puavo/hosttype)
-
-case "${hosttype}" in
-    fatclient)
-        remove_remote_printers
-        add_remote_printers
-        set_default_printer
-        ;;
-    *)
-        if jq -r .tags[] /etc/puavo/device.json | grep -qx use_puavo_printer_permissions; then
-            remove_remote_printers
-            add_remote_printers
-            set_default_printer
-        else
-            echo "hosttype '${hosttype}' does not support Puavo printer setup" >&2
-        fi
-        ;;
-esac
+remove_remote_printers
+add_remote_printers
+set_default_printer

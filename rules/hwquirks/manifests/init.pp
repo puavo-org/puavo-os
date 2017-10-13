@@ -6,8 +6,8 @@ class hwquirks {
       ensure  => directory,
       require => Package['puavo-conf'];
 
-    '/usr/share/puavo-conf/hwquirk-overwrites/hp_stream_pro.json':
-      source => 'puppet:///modules/hwquirks/hp_stream_pro.json';
+    '/usr/share/puavo-conf/hwquirk-overwrites/01-pm-lidswitchdocked.json':
+      source => 'puppet:///modules/hwquirks/01-pm-lidswitchdocked.json';
   }
 
   Package <| title == puavo-conf |>

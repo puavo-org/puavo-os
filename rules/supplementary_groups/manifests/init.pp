@@ -6,7 +6,6 @@ class supplementary_groups {
             , 'dialout'
             , 'floppy'
             , 'lp'
-            , 'lpadmin'
             , 'plugdev'
             , 'puavodesktop'
             , 'scanner'
