@@ -8,5 +8,6 @@
   "puavo.service.NetworkManager.enabled"          : "true",
   "puavo.service.puavo-vpn-client-dnsmasq.enabled": "true",
   "puavo.service.puavo-vpn-client-openvpn.enabled": "true",
-  "puavo.support.vino_network_interface":           "tap0"
+  "puavo.service.tlp.enabled"                     : "true",
+  "puavo.support.vino_network_interface"          : "tap0"
 }
