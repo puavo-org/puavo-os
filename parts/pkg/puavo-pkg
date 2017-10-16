@@ -55,6 +55,8 @@ Options:
                                  multiple times to silence puavo-pkg
 
 Commands:
+  gc-upstream-packs              garbage collect upstream packs
+
   install INSTALLER              install package with an installer
 
   license INSTALLER|PACKAGE      print license URL
@@ -101,6 +103,30 @@ log_warning()
     if [ ${g_log_level} -ge ${LOG_WARNING} ]; then
         echo "WARNING: $@" >&2
     fi
+}
+
+gc_upstream_packs() {
+    local cache_subdir old_upstream_pack_list old_upstream_pack \
+          upstream_pack_path
+
+    [ -n "$g_puavo_pkg_cachedir" ] || return 0
+
+    gc_status=$SC_OK
+
+    for cache_subdir in "$g_puavo_pkg_cachedir"/upstream_packs/*; do
+        old_upstream_pack_list=$(ls -1t "$cache_subdir" | sed -n '2,$p')
+        for old_upstream_pack in $old_upstream_pack_list; do
+            upstream_pack_path="${cache_subdir}/${old_upstream_pack}"
+            if rm -f "${upstream_pack_path}"; then
+                log_info "removed old pack ${upstream_pack_path} from cache"
+            else
+                log_error "error removing ${upstream_pack_path} from cache"
+                gc_status=$SC_ERR
+            fi
+        done
+    done
+
+    g_sc=$gc_status
 }
 
 list_installed_pkg_dirs()
@@ -785,6 +811,10 @@ command=$1
 shift
 
 case "${command}" in
+    gc-upstream-packs)
+        assert_args_count -eq 0 "$@"
+        gc_upstream_packs
+        ;;
     install)
         assert_args_count -eq 1 "$@"
         install_pkg_with_installer "$1"
