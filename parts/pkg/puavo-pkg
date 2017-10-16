@@ -44,38 +44,40 @@ on_exit()
 
 print_help_and_exit()
 {
-    echo "Usage: puavo-pkg [OPTIONS] [COMMAND] [COMMAND_ARGS]"
-    echo
-    echo "Package manager for Puavo packages."
-    echo
-    echo "Options:"
-    echo "  -h, --help                     print this help and exit"
-    echo "  -q, --quiet                    less verbose output, can be given"
-    echo "                                 multiple times to silence puavo-pkg"
-    echo
-    echo "Commands:"
-    echo "  install INSTALLER              install package with an installer"
-    echo
-    echo "  license INSTALLER|PACKAGE      print license URL"
-    echo
-    echo "  list                           list installed packages"
-    echo
-    echo "  reconfigure PACKAGE            reconfigure installed PACKAGE"
-    echo "  reconfigure --all              reconfigure all installed packages"
-    echo
-    echo "  remove PACKAGE                 remove installed PACKAGE"
-    echo "  remove --all                   remove all installed packages"
-    echo
-    echo "  show INSTALLER|PACKAGE         show package details"
-    echo "  show -F|--field FIELD PACKAGE  show specific FIELD"
-    echo
-    echo "Files:"
-    echo "  /etc/puavo-pkg/puavo-pkg.conf  configuration file"
-    echo
-    echo "Exit status codes:"
-    echo "  0 - Success"
-    echo "  1 - Generic error"
-    echo "  2 - Network failure"
+    cat <<'EOF'
+Usage: puavo-pkg [OPTIONS] [COMMAND] [COMMAND_ARGS]
+
+Package manager for Puavo packages.
+
+Options:
+  -h, --help                     print this help and exit
+  -q, --quiet                    less verbose output, can be given
+                                 multiple times to silence puavo-pkg
+
+Commands:
+  install INSTALLER              install package with an installer
+
+  license INSTALLER|PACKAGE      print license URL
+
+  list                           list installed packages
+
+  reconfigure PACKAGE            reconfigure installed PACKAGE
+  reconfigure --all              reconfigure all installed packages
+
+  remove PACKAGE                 remove installed PACKAGE
+  remove --all                   remove all installed packages
+
+  show INSTALLER|PACKAGE         show package details
+  show -F|--field FIELD PACKAGE  show specific FIELD
+
+Files:
+  /etc/puavo-pkg/puavo-pkg.conf  configuration file
+
+Exit status codes:
+  0 - Success
+  1 - Generic error
+  2 - Network failure
+EOF
     g_sc=${SC_OK}
     exit 0
 }
