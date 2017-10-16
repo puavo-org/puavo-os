@@ -5,6 +5,7 @@ image_class		:= allinone
 image_dir		:= /srv/puavo-os-images
 images_urlbase		:= https://images.puavo.org
 mirror_dir		:= $(image_dir)/mirror
+release_name            :=
 rootfs_dir		:= /var/tmp/puavo-os/rootfs
 target_arch             := amd64
 upload_codename         := $(debootstrap_suite)
@@ -159,7 +160,7 @@ make-release-logos:
 .PHONY: rootfs-image
 rootfs-image: $(rootfs_dir) $(image_dir)
 	$(_sudo) .aux/set-image-release '$(rootfs_dir)' '$(image_class)' \
-	    '$(notdir $(_image_file))'
+	    '$(notdir $(_image_file))' '$(release_name)'
 	$(_systemd_nspawn_cmd) $(MAKE) -C '/puavo-os' make-release-logos
 	$(_sudo) mksquashfs '$(rootfs_dir)' '$(_image_file).tmp'	\
 		-noappend -no-recovery -no-sparse -wildcards -comp lzo	\
