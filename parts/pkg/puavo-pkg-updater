@@ -283,6 +283,24 @@ def upgrade_packages(config)
 
   errors_occurred = false
 
+  begin
+    run('puavo-pkg', 'gc-upstream-packs')
+  rescue StandardError => e
+    logerr(Syslog::LOG_ERR,
+           "error when garbage collecting old upstream packs: %s\n",
+           e.message)
+    errors_occurred = true
+  end
+
+  begin
+    run('puavo-pkg', 'gc-installations')
+  rescue StandardError => e
+    logerr(Syslog::LOG_ERR,
+           "error when garbage collecting old puavo-pkg installations: %s\n",
+           e.message)
+    errors_occurred = true
+  end
+
   packages_to_upgrade.each do |pkgname, version|
     tarball = "#{ config['installers_dir'] }/installers/#{ pkgname }.tar.gz"
 
