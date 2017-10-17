@@ -97,7 +97,7 @@ help:
 	@echo '    build-debs-parts     build Puavo OS Debian packages'
 	@echo '    build-debs-ports     build all external Debian packages'
 	@echo '    build-parts          build all parts'
-	@echo '    clean                clean debs and parts
+	@echo '    clean                clean debs and parts'
 	@echo '    help                 display this help and exit'
 	@echo '    install              install all'
 	@echo '    install-build-deps   install all build dependencies'
