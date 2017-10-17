@@ -47,7 +47,6 @@ class packages {
   @package {
     [ 'clusterssh'
     , 'console-setup'
-    , 'cpufreqd'
     , 'dconf-tools'
     , 'elinks'
     , 'ethtool'
