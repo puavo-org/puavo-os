@@ -55,6 +55,7 @@ Options:
                                  multiple times to silence puavo-pkg
 
 Commands:
+  gc-installations               garbage collect puavo-pkg installations
   gc-upstream-packs              garbage collect upstream packs
 
   install INSTALLER              install package with an installer
@@ -105,8 +106,44 @@ log_warning()
     fi
 }
 
+gc_installations() {
+    local gc_status installed_pkg_version msg pkg_installation pkg_version \
+          root_basedir
+
+    gc_status=$SC_OK
+
+    for root_basedir in "${g_puavo_pkg_rootdir}"/packages/*; do
+        installed_pkg_version="$(readlink "${root_basedir}/installed")" || true
+
+        for pkg_installation in "$root_basedir"/*; do
+            pkg_version="$(basename "$pkg_installation")"
+            [ "$pkg_version" != 'installed' ] || continue
+            [ -d "$pkg_installation"        ] || continue
+
+            if [ "$installed_pkg_version" != "$pkg_version" ]; then
+                if rm -rf "$pkg_installation"; then
+                    log_info "removed old installation in $pkg_installation"
+                else
+                    msg="could not remove old installation in $pkg_installation"
+                    log_error "$msg"
+                    gc_status=$SC_ERR
+                fi
+            fi
+        done
+
+        rmdir --ignore-fail-on-non-empty "$root_basedir" 2>/dev/null || true
+    done
+
+    if [ "$gc_status" = "$SC_ERR" ]; then
+      g_sc=$gc_status
+      return 1
+    fi
+
+    return 0
+}
+
 gc_upstream_packs() {
-    local cache_subdir old_upstream_pack_list old_upstream_pack \
+    local cache_subdir gc_status old_upstream_pack old_upstream_pack_list \
           upstream_pack_path
 
     [ -n "$g_puavo_pkg_cachedir" ] || return 0
@@ -126,7 +163,12 @@ gc_upstream_packs() {
         done
     done
 
-    g_sc=$gc_status
+    if [ "$gc_status" = "$SC_ERR" ]; then
+      g_sc=$gc_status
+      return 1
+    fi
+
+    return 0
 }
 
 list_installed_pkg_dirs()
@@ -811,6 +853,10 @@ command=$1
 shift
 
 case "${command}" in
+    gc-installations)
+        assert_args_count -eq 0 "$@"
+        gc_installations
+        ;;
     gc-upstream-packs)
         assert_args_count -eq 0 "$@"
         gc_upstream_packs
