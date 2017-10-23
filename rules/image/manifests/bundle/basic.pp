@@ -26,6 +26,7 @@ class image::bundle::basic {
   include ::ssh_client
   include ::sysctl
   include ::syslog
+  include ::systemd
   include ::udev
   include ::use_urandom
   include ::workaround_icedtea_netx_bug
