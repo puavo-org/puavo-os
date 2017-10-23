@@ -30,6 +30,14 @@ vgchange -a y "${PUAVO_LVM_VG}"
 
 for x in $(cat /proc/cmdline); do
     case "$x" in
+        loop=*)
+            # loop-parameter is legacy and is for compatibility with
+            # the old Trusty-based Puavo-systems and their grub
+            # configuration.
+            if [ -z "$PUAVO_IMAGE_PATH" ]; then
+                PUAVO_IMAGE_PATH="${x#loop=}"
+            fi
+            ;;
         puavo.image.path=*)
             PUAVO_IMAGE_PATH="${x#puavo.image.path=}"
             ;;
