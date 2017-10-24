@@ -115,6 +115,9 @@ binding='Print'
 command='gnome-screenshot --interactive'
 name='Gnome screenshot'
 
+[org/gnome/settings-daemon/plugins/power]
+ambient-enabled=false
+
 [org/gnome/settings-daemon/plugins/xrandr]
 active=true
 default-monitors-setup='do-nothing'
