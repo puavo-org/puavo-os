@@ -25,5 +25,5 @@ class image::bundle::desktop {
   include ::tuxpaint
   include ::wacom
   include ::workaround_firefox_local_swf_bug
-  include ::xorg_inputs_calibration
+  include ::xorg
 }

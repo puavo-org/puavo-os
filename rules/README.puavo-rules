@@ -196,8 +196,8 @@ workaround_icedtea_netx_bug
     The "icedtea-netx"-package manually sets javaws update-alternative.
     Workaround that issue.
 
-xorg_inputs_calibration
-    Some calibrations for different Xorg input devices.
+xorg
+    Some configurations for Xorg.
 
 zram_configuration
     Add configurations for compressing memory (zram).
