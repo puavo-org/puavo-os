@@ -20,10 +20,6 @@ puavo_dconf_profile_path="${puavo_session_dir}/dconf_profile"
       ;;
   esac
 
-  if [ -r /etc/dconf/db/puavo-monitors ]; then
-    echo "system-db:puavo-monitors"
-  fi
-
   if [ "$(puavo-conf puavo.pm.suspend.enabled)" = 'false' ]; then
     echo "system-db:disable_lidsuspend"
     echo "system-db:disable_suspend"

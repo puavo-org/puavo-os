@@ -96,19 +96,3 @@ EOF
 else
   rm -f /etc/dconf/db/puavo-desktopbackground
 fi
-
-#
-# setup default monitor configuration as a special case
-#
-
-puavo_xrandr_default_setup=$(puavo-conf puavo.xrandr.default_setup)
-
-if [ "$puavo_xrandr_default_setup" != 'clone' ]; then
-  new_dconf_chunk puavo-monitors <<EOF
-[org/gnome/settings-daemon/plugins/xrandr]
-default-monitors-setup='${puavo_xrandr_default_setup}'
-EOF
-else
-  # the default setup is clone, so in that case just remove any customization
-  rm -f /etc/dconf/db/puavo-monitors
-fi
