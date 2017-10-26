@@ -45,7 +45,8 @@ class packages {
   #
 
   @package {
-    [ 'clusterssh'
+    [ 'arandr'
+    , 'clusterssh'
     , 'console-setup'
     , 'dconf-tools'
     , 'elinks'
