@@ -5,29 +5,89 @@ require 'puavo/conf'
 require 'shellwords'
 require 'syslog'
 
-puavoconf = Puavo::Conf.new
-puavo_xrandr_args = puavoconf.get('puavo.xrandr.args')
-puavoconf.close
+$monitors_info = nil
+$status = 0
 
-xrandr_args_list = JSON.parse(puavo_xrandr_args)
+def get_monitors_info
+  return $monitors_info if $monitors_info
 
-raise 'puavo.xrandr.args not in correct format' \
-  unless xrandr_args_list.kind_of?(Array)
+  new_monitors_info = {}
 
-status = 0
+  xrandr_output = %x(xrandr -q)
+  if $?.exitstatus != 0 then
+    Syslog.log(Syslog::LOG_ERR, 'xrandr -q returned an error code')
+    return nil
+  end
 
-Syslog.open(File.basename($0), Syslog::LOG_CONS)
+  current_output = nil
 
-xrandr_args_list.each do |xrandr_args_string|
-  xrandr_args = Shellwords.shellwords(xrandr_args_string)
+  xrandr_output.split("\n").each do |line|
+    fields = line.split
+    if fields[1] == 'connected' then
+      current_output = fields[0]
+    end
+
+    if current_output && line.match(/\A\s+/) then
+      resolution = fields[0]
+      next unless resolution
+
+      new_monitors_info[current_output] ||= {}
+      (new_monitors_info[current_output]['resolutions'] ||= []) << resolution
+    end
+  end
+
+  return nil if new_monitors_info.empty?
+
+  $monitors_info = new_monitors_info
+end
+
+def apply_clone_preset
+  monitors_info = get_monitors_info()
+  if !monitors_info then
+    Syslog.log(Syslog::LOG_ERR,
+               'could not get monitors information, not cloning')
+    return
+  end
+
+  common_resolutions = monitors_info.values.map { |v| v['resolutions'] } \
+                                    .reduce { |a,b| a & b }
+
+  if common_resolutions.empty? then
+    Syslog.log(Syslog::LOG_ERR,
+               'could not find a common resolution, not cloning')
+    return
+  end
+
+  # find the resolution with the most pixels
+  target_resolution = common_resolutions.max_by do |r|
+                        r.match(/\A(\d+)x(\d+)/) ? ($1.to_i * $2.to_i) : 0
+                      end
+
+  displays = monitors_info.keys
+  first_display = displays.first
+
+  xrandr_args = [ '--output', first_display, '--mode', target_resolution ]
+  displays.each do |display|
+    next if display == first_display
+    xrandr_args += [ '--output', display, '--mode', target_resolution,
+                     '--same-as', first_display ]
+  end
+
+  Syslog.log(Syslog::LOG_INFO,
+             "applying preset 'clone' with target resolution %s",
+             target_resolution)
+  run_xrandr(xrandr_args)
+end
+
+def run_xrandr(xrandr_args)
   system('xrandr', *xrandr_args)
-  system_status = $?.exitstatus
+  xrandr_status = $?.exitstatus
 
-  if system_status != 0 then
+  if xrandr_status != 0 then
     Syslog.log(Syslog::LOG_ERR,
                "xrandr FAILED with arguments %s",
                xrandr_args.join(' '))
-    status = system_status
+    $status = xrandr_status if $status != 0
   else
     Syslog.log(Syslog::LOG_INFO,
                "xrandr ok with arguments %s",
@@ -35,6 +95,45 @@ xrandr_args_list.each do |xrandr_args_string|
   end
 end
 
+puavoconf = Puavo::Conf.new
+puavo_xrandr_apply_presets = puavoconf.get('puavo.xrandr.apply_presets')
+puavo_xrandr_args = puavoconf.get('puavo.xrandr.args')
+puavoconf.close
+
+Syslog.open(File.basename($0), Syslog::LOG_CONS)
+
+# apply presets
+
+puavo_xrandr_apply_presets.split(',').each do |xrandr_preset|
+  case xrandr_preset
+    when 'clone'
+      apply_clone_preset()
+    else
+      Syslog.log(Syslog::LOG_ERR,
+                 "xrandr preset '%s' is not supported",
+                 xrandr_preset)
+      $status = 1
+  end
+end
+
+# apply puavo.xrandr.args
+
+xrandr_args_list = JSON.parse(puavo_xrandr_args)
+
+begin
+  raise 'puavo.xrandr.args not in correct format' \
+    unless xrandr_args_list.kind_of?(Array)
+
+  xrandr_args_list.each do |xrandr_args_string|
+    raise 'xrandr args item is not a string' \
+      unless xrandr_args_string.kind_of?(String)
+    run_xrandr( Shellwords.shellwords(xrandr_args_string) )
+  end
+rescue StandardError => e
+  Syslog.log(Syslog::LOG_ERR, '%s', e.message)
+  $status = 1
+end
+
 Syslog.close()
 
-exit(status)
+exit($status)
