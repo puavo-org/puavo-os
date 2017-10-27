@@ -49,6 +49,14 @@ def apply_clone_preset
     return
   end
 
+  displays = monitors_info.keys
+  if displays.count <= 1 then
+    Syslog.log(Syslog::LOG_ERR,
+               "there is only %d monitor, not applying 'clone' preset",
+               displays.count)
+    return
+  end
+
   common_resolutions = monitors_info.values.map { |v| v['resolutions'] } \
                                     .reduce { |a,b| a & b }
 
@@ -63,7 +71,6 @@ def apply_clone_preset
                         r.match(/\A(\d+)x(\d+)/) ? ($1.to_i * $2.to_i) : 0
                       end
 
-  displays = monitors_info.keys
   first_display = displays.first
 
   xrandr_args = [ '--output', first_display, '--mode', target_resolution ]
