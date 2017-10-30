@@ -1,0 +1,72 @@
+--- mutter.build.0/src/backends/meta-monitor-config.c	2017-02-16 18:24:00.000000000 +0200
++++ mutter.build.2/src/backends/meta-monitor-config.c	2017-10-30 11:13:05.966300129 +0200
+@@ -37,6 +37,7 @@
+ #include "boxes-private.h"
+ #include "meta-monitor-config.h"
+ 
++#include <stdlib.h>
+ #include <string.h>
+ #include <clutter/clutter.h>
+ #include <libupower-glib/upower.h>
+@@ -793,8 +794,21 @@
+ static void
+ meta_monitor_config_load (MetaMonitorConfig *self)
+ {
+-  if (self->user_file && load_config_file (self, self->user_file))
+-    return;
++  char *mutter_allow_configuration;
++  gboolean load_user_config = TRUE;
++
++  if (self->user_file) {
++    /* If MUTTER_ALLOW_CONFIGURATION is set and does not contain "user",
++     * do not load user configuration file. */
++    mutter_allow_configuration = getenv("MUTTER_ALLOW_CONFIGURATION");
++    if (mutter_allow_configuration != NULL) {
++      if (strstr(mutter_allow_configuration, "user") == NULL)
++        load_user_config = FALSE;
++    }
++
++    if (load_user_config && load_config_file (self, self->user_file))
++      return;
++  }
+   if (self->system_file && load_config_file (self, self->system_file))
+     return;
+ }
+@@ -1466,6 +1480,15 @@
+   gboolean ok = FALSE;
+   int max_width, max_height;
+   gboolean use_stored_config;
++  char *mutter_allow_configuration;
++
++  /* If MUTTER_ALLOW_CONFIGURATION is set and does not contain "default",
++   * do nothing. */
++  mutter_allow_configuration = getenv("MUTTER_ALLOW_CONFIGURATION");
++  if (mutter_allow_configuration != NULL) {
++    if (strstr(mutter_allow_configuration, "default") == NULL)
++      return;
++  }
+ 
+   outputs = meta_monitor_manager_get_outputs (manager, &n_outputs);
+   meta_monitor_manager_get_screen_limits (manager, &max_width, &max_height);
+--- mutter.build.0/src/backends/meta-monitor-manager.c	2017-02-16 18:24:02.000000000 +0200
++++ mutter.build.2/src/backends/meta-monitor-manager.c	2017-10-30 11:14:05.623418906 +0200
+@@ -811,6 +811,19 @@
+   guint transform;
+   guint output_index;
+   GPtrArray *crtc_infos, *output_infos;
++  char *mutter_allow_configuration;
++
++  /* If MUTTER_ALLOW_CONFIGURATION is set and does not contain "temporary",
++   * do nothing. */
++  mutter_allow_configuration = getenv("MUTTER_ALLOW_CONFIGURATION");
++  if (mutter_allow_configuration != NULL) {
++    if (strstr(mutter_allow_configuration, "temporary") == NULL) {
++      g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
++                                             G_DBUS_ERROR_ACCESS_DENIED,
++                                             "Permission denied.");
++      return TRUE;
++    }
++  }
+ 
+   if (serial != manager->serial)
+     {
