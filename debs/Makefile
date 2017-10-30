@@ -5,6 +5,7 @@ _pkgs_ports     := autopoweroff    \
                    gnome-shell     \
                    grub2           \
                    gvfs            \
+                   mutter          \
                    nwjs            \
                    openboard       \
                    unicode-data    \

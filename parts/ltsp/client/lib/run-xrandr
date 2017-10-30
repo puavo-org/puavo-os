@@ -5,36 +5,243 @@ require 'puavo/conf'
 require 'shellwords'
 require 'syslog'
 
-puavoconf = Puavo::Conf.new
-puavo_xrandr_args = puavoconf.get('puavo.xrandr.args')
-puavoconf.close
+$monitors_info = nil
+$status = 0
 
-xrandr_args_list = JSON.parse(puavo_xrandr_args)
+def update_monitors_info
+  xrandr_output = %x(xrandr -q)
+  if $?.exitstatus != 0 then
+    raise 'xrandr -q returned an error code'
+  end
 
-raise 'puavo.xrandr.args not in correct format' \
-  unless xrandr_args_list.kind_of?(Array)
+  $monitors_info = {}
 
-status = 0
+  current_output = nil
 
-Syslog.open(File.basename($0), Syslog::LOG_CONS)
+  xrandr_output.split("\n").each do |line|
+    fields = line.split
+    if fields[1] == 'connected' then
+      current_output = fields[0]
+    end
 
-xrandr_args_list.each do |xrandr_args_string|
-  xrandr_args = Shellwords.shellwords(xrandr_args_string)
+    if current_output && line.match(/\A\s+/) then
+      resolution = fields[0]
+      next unless resolution
+
+      $monitors_info[current_output] ||= {}
+      ($monitors_info[current_output]['resolutions'] ||= []) << resolution
+    end
+  end
+end
+
+def apply_clone_preset
+  displays = $monitors_info.keys
+  if displays.count <= 1 then
+    Syslog.log(Syslog::LOG_ERR,
+               "there is only %d monitor, not applying 'clone' preset",
+               displays.count)
+    return
+  end
+
+  common_resolutions = $monitors_info.values.map { |v| v['resolutions'] } \
+                                     .reduce { |a,b| a & b }
+
+  if common_resolutions.empty? then
+    Syslog.log(Syslog::LOG_ERR,
+               'could not find a common resolution, not cloning')
+    return
+  end
+
+  # find the resolution with the most pixels
+  target_resolution = common_resolutions.max_by do |r|
+                        r.match(/\A(\d+)x(\d+)/) ? ($1.to_i * $2.to_i) : 0
+                      end
+
+  first_display = displays.first
+
+  xrandr_args = [ '--output', first_display, '--mode', target_resolution ]
+  displays.each do |display|
+    next if display == first_display
+    xrandr_args += [ '--output', display, '--mode', target_resolution,
+                     '--same-as', first_display ]
+  end
+
+  Syslog.log(Syslog::LOG_INFO,
+             "applying preset 'clone' with target resolution %s",
+             target_resolution)
+  run_xrandr(xrandr_args)
+end
+
+def apply_extra_modes(puavo_xrandr_extra_modes, xrandr_parsed_args_list)
+  extra_modes_conf = puavo_xrandr_extra_modes.split(',')
+
+  extra_modes = []
+  extra_modes_conf.each do |em_conf_value|
+    if em_conf_value == 'auto' then
+      xrandr_parsed_args_list.each do |xrandr_args|
+        mode_argument = false
+        xrandr_args.each do |xrandr_arg|
+          if xrandr_arg == '--mode' then
+            mode_argument = true
+          elsif mode_argument then
+            extra_modes << xrandr_arg
+            mode_argument = false
+          end
+        end
+      end
+
+      next
+    end
+
+    extra_modes << em_conf_value
+  end
+
+  unique_extra_modes = extra_modes.uniq
+
+  if unique_extra_modes.empty? then
+    Syslog.log(Syslog::LOG_INFO, 'no extra modes to apply')
+    return
+  end
+
+  current_modes = $monitors_info.values.map { |v| v['resolutions'] } \
+                                .flatten.uniq
+
+  modes_to_add = []
+  unique_extra_modes.map do |extra_mode|
+    if !extra_mode.match(/\A(\d+)x(\d+)/) then
+      Syslog.log(Syslog::LOG_ERR,
+                 "extra mode of format '%s' is not supported",
+                 extra_mode)
+      $status = 1
+      next
+    end
+
+    modes_to_add << extra_mode unless current_modes.include?(extra_mode)
+  end
+
+  modes_to_add.each do |extra_mode|
+    em_match = extra_mode.match(/\A(\d+)x(\d+)/) # works because see above
+    width  = em_match[1]
+    height = em_match[2]
+
+    mode_configuration = %x(cvt #{ width } #{ height })
+    if $?.exitstatus != 0 then
+      Syslog.log(Syslog::LOG_ERR,
+                 "can not configure extra mode '%s', cvt returned error",
+                 extra_mode)
+      $status = 1
+      next
+    end
+    modeline_match = mode_configuration.match(/^Modeline\s+".*?"\s+(.*)$/)
+    if !modeline_match then
+      Syslog.log(Syslog::LOG_ERR,
+                 'could not parse cvt output',
+                 extra_mode)
+      $status = 1
+      next
+    end
+
+    run_xrandr([ '--newmode', extra_mode ] + modeline_match[1].split)
+  end
+
+  # add new modes to displays
+  modes_to_add.each do |extra_mode|
+    $monitors_info.each do |display, info|
+      next if info['resolutions'].include?(extra_mode)
+
+      if run_xrandr([ '--addmode', display, extra_mode ]) then
+        $monitors_info[display]['resolutions'] << extra_mode
+      end
+    end
+  end
+end
+
+def apply_custom_settings(xrandr_parsed_args_list)
+  xrandr_parsed_args_list.each do |xrandr_parsed_args|
+    run_xrandr(xrandr_parsed_args)
+  end
+end
+
+def apply_settings(settings_to_apply, xrandr_parsed_args_list)
+  settings_to_apply.each do |xrandr_setting|
+    case xrandr_setting
+      when 'clone'
+        apply_clone_preset()
+      when 'custom'
+        apply_custom_settings(xrandr_parsed_args_list)
+      else
+        Syslog.log(Syslog::LOG_ERR,
+                   "xrandr preset '%s' is not supported",
+                   xrandr_preset)
+        $status = 1
+    end
+  end
+end
+
+def run_xrandr(xrandr_args)
   system('xrandr', *xrandr_args)
-  system_status = $?.exitstatus
+  xrandr_status = $?.exitstatus
 
-  if system_status != 0 then
+  if xrandr_status != 0 then
     Syslog.log(Syslog::LOG_ERR,
                "xrandr FAILED with arguments %s",
                xrandr_args.join(' '))
-    status = system_status
-  else
-    Syslog.log(Syslog::LOG_INFO,
-               "xrandr ok with arguments %s",
-               xrandr_args.join(' '))
+    $status = 1
+    return false
   end
+
+  Syslog.log(Syslog::LOG_INFO,
+             "xrandr ok with arguments %s",
+             xrandr_args.join(' '))
+
+  return true
+end
+
+Syslog.open(File.basename($0), Syslog::LOG_CONS)
+
+begin
+  puavoconf = Puavo::Conf.new
+  puavo_xrandr_apply_presets = puavoconf.get('puavo.xrandr.apply_presets')
+  puavo_xrandr_args = puavoconf.get('puavo.xrandr.args')
+  puavo_xrandr_extra_modes = puavoconf.get('puavo.xrandr.extra_modes')
+  puavoconf.close
+
+  # populates $monitors_info
+  update_monitors_info()
+
+  xrandr_parsed_args_list = []
+
+  begin
+    xrandr_args_list = JSON.parse(puavo_xrandr_args)
+    raise 'puavo.xrandr.args not in correct format' \
+      unless xrandr_args_list.kind_of?(Array)
+
+    xrandr_args_list.each do |xrandr_args_string|
+      raise 'xrandr argument string is not actually a string' \
+        unless xrandr_args_string.kind_of?(String)
+      xrandr_parsed_args_list << Shellwords.shellwords(xrandr_args_string)
+    end
+  rescue StandardError => e
+    Syslog.log(Syslog::LOG_ERR,
+               'could not parse puavo.xrandr.args: %s', e.message)
+    $status = 1
+  end
+
+  apply_extra_modes(puavo_xrandr_extra_modes, xrandr_parsed_args_list)
+
+  settings_to_apply = puavo_xrandr_apply_presets.split(',')
+  if !xrandr_parsed_args_list.empty? \
+    && !settings_to_apply.include?('custom') then
+      settings_to_apply = [ 'custom' ]
+  end
+
+  apply_settings(settings_to_apply, xrandr_parsed_args_list)
+
+rescue StandardError => e
+  Syslog.log(Syslog::LOG_ERR, '%s', e.message)
+  $status = 1
 end
 
 Syslog.close()
 
-exit(status)
+exit($status)

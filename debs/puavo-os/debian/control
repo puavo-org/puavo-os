@@ -310,7 +310,8 @@ Depends: ${misc:Depends},
  ruby-trollop,
  ruby-uuidtools,
  ruby,
- xautolock
+ xautolock,
+ xserver-xorg-core
 Suggests: webkiosk-language-selector
 Description: Bits and pieces needed inside the LTSP chroot image.
 

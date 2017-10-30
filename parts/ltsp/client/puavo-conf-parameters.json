@@ -110,8 +110,14 @@
   "puavo.xrandr.args": {
     "default": "[]"
   },
+  "puavo.xrandr.extra_modes": {
+    "default": "auto"
+  },
   "puavo.xrandr.forced": {
     "default": "true"
+  },
+  "puavo.xrandr.mutter_permissions": {
+    "default": "auto"
   },
   "puavo.xsessions.locked": {
     "default": "true"

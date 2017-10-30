@@ -69,7 +69,7 @@ install : installdirs
 		profile-overwrites/*.json
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/gdm/greeter/autostart \
-		etc/xdg/autostart/puavo-run-xrandr.desktop
+		gdm/greeter/autostart/puavo-run-xrandr.desktop
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/icons/hicolor/scalable/status \
 		icons/puavoremoteaccess-cyan.svg \

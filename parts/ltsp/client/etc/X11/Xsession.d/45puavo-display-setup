@@ -6,3 +6,21 @@ if [ -n "${X2GO_SESSION:-}" ]; then
         xrandr --output default --mode "${x2go_session_display_geometry}"
     fi
 fi
+
+MUTTER_ALLOW_CONFIGURATION="$(puavo-conf puavo.xrandr.mutter_permissions)"
+if [ "$MUTTER_ALLOW_CONFIGURATION" = 'auto' ]; then
+  if [ -n "$(puavo-conf puavo.xrandr.args | jq -r '.[]')" ')' \
+         -o -n "$(puavo-conf puavo.xrandr.apply_presets)" ]; then
+    if [ "$(puavo-conf puavo.xrandr.forced)" = 'true' ]; then
+      MUTTER_ALLOW_CONFIGURATION=temporary
+    else
+      MUTTER_ALLOW_CONFIGURATION=temporary,user
+    fi
+  else
+    MUTTER_ALLOW_CONFIGURATION=default,temporary,user
+  fi
+fi
+
+export MUTTER_ALLOW_CONFIGURATION
+
+/usr/lib/puavo-ltsp-client/run-xrandr
