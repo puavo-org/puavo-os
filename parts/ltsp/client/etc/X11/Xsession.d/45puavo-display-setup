@@ -17,7 +17,7 @@ if [ "$MUTTER_ALLOW_CONFIGURATION" = 'auto' ]; then
       MUTTER_ALLOW_CONFIGURATION=temporary,user
     fi
   else
-    MUTTER_ALLOW_CONFIGURATION=defaults,temporary,user
+    MUTTER_ALLOW_CONFIGURATION=default,temporary,user
   fi
 fi
 
