@@ -156,11 +156,19 @@ def apply_extra_modes(puavo_xrandr_extra_modes, xrandr_parsed_args_list)
   end
 end
 
-def apply_presets(puavo_xrandr_apply_presets)
-  puavo_xrandr_apply_presets.split(',').each do |xrandr_preset|
-    case xrandr_preset
+def apply_custom_settings(xrandr_parsed_args_list)
+  xrandr_parsed_args_list.each do |xrandr_parsed_args|
+    run_xrandr(xrandr_parsed_args)
+  end
+end
+
+def apply_settings(settings_to_apply, xrandr_parsed_args_list)
+  settings_to_apply.each do |xrandr_setting|
+    case xrandr_setting
       when 'clone'
         apply_clone_preset()
+      when 'custom'
+        apply_custom_settings(xrandr_parsed_args_list)
       else
         Syslog.log(Syslog::LOG_ERR,
                    "xrandr preset '%s' is not supported",
@@ -221,11 +229,14 @@ begin
 
   apply_extra_modes(puavo_xrandr_extra_modes, xrandr_parsed_args_list)
 
-  apply_presets(puavo_xrandr_apply_presets)
-
-  xrandr_parsed_args_list.each do |xrandr_parsed_args|
-    run_xrandr(xrandr_parsed_args)
+  settings_to_apply = puavo_xrandr_apply_presets.split(',')
+  if !xrandr_parsed_args_list.empty? \
+    && !settings_to_apply.include?('custom') then
+      settings_to_apply = [ 'custom' ]
   end
+
+  apply_settings(settings_to_apply, xrandr_parsed_args_list)
+
 rescue StandardError => e
   Syslog.log(Syslog::LOG_ERR, '%s', e.message)
   $status = 1
