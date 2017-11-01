@@ -1,9 +1,29 @@
-wpa (2:2.4-1+puavo1) unstable; urgency=medium
+wpa (2:2.4-1+deb9u1+puavo1) stretch; urgency=medium
 
   * Add a patch to hostapd so that puavo-wlanap can support multiple
     networks.  Patch written by Petko Bordjukov <bordjukov at gmail.com>.
 
- -- Juha Erkkilä <Juha.Erkkila@opinsys.fi>  Wed, 05 Apr 2017 09:51:06 +0300
+ -- Juha Erkkilä <Juha.Erkkila@opinsys.fi>  Wed, 01 Nov 2017 13:20:43 +0200
+
+wpa (2:2.4-1+deb9u1) stretch-security; urgency=high
+
+  * Non-maintainer upload by the Security Team.
+  * Fix multiple issues in WPA protocol (CVE-2017-13077, CVE-2017-13078,
+    CVE-2017-13079, CVE-2017-13080, CVE-2017-13081, CVE-2017-13082,
+    CVE-2017-13086, CVE-2017-13087, CVE-2017-13088):
+    - hostapd: Avoid key reinstallation in FT handshake
+    - Prevent reinstallation of an already in-use group key
+    - Extend protection of GTK/IGTK reinstallation of
+    - Fix TK configuration to the driver in EAPOL-Key 3/4
+    - Prevent installation of an all-zero TK
+    - Fix PTK rekeying to generate a new ANonce
+    - TDLS: Reject TPK-TK reconfiguration
+    - WNM: Ignore WNM-Sleep Mode Response if WNM-Sleep Mode
+    - WNM: Ignore WNM-Sleep Mode Response without pending
+    - FT: Do not allow multiple Reassociation Response frames
+    - TDLS: Ignore incoming TDLS Setup Response retries
+
+ -- Yves-Alexis Perez <corsac@debian.org>  Sat, 14 Oct 2017 14:18:32 +0200
 
 wpa (2:2.4-1) unstable; urgency=medium
 
