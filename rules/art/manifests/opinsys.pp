@@ -8,5 +8,8 @@ class art::opinsys {
 
     '/usr/share/opinsys-art/logo.png':
       source  => 'puppet:///modules/plymouth/theme/opinsys/logo.png';
+
+    '/usr/share/opinsys-art/opinsys-support-info-fi.png':
+      source  => 'puppet:///modules/art/opinsys/opinsys-support-info-fi.png';
   }
 }
