@@ -29,6 +29,7 @@ class gnome_shell_extensions {
     , 'hide-overview-search-entry@puavo.org'
     , 'hostinfo@puavo.org'
     , 'Move_Clock@rmy.pobox.com'
+    , 'nohotcorner@azuri.free.fr'
     , 'Panel_Favorites@rmy.pobox.com'
     , 'quickoverview@kirby_33@hotmail.fr'
     , 'show-desktop@l300lvl.tk'
