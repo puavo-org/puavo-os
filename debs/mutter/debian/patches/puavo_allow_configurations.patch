@@ -1,5 +1,5 @@
 --- mutter.build.0/src/backends/meta-monitor-config.c	2017-02-16 18:24:00.000000000 +0200
-+++ mutter.build.2/src/backends/meta-monitor-config.c	2017-10-30 11:13:05.966300129 +0200
++++ mutter.build.3/src/backends/meta-monitor-config.c	2017-11-01 14:58:35.249271917 +0200
 @@ -37,6 +37,7 @@
  #include "boxes-private.h"
  #include "meta-monitor-config.h"
@@ -32,24 +32,44 @@
    if (self->system_file && load_config_file (self, self->system_file))
      return;
  }
-@@ -1466,6 +1480,15 @@
+@@ -1465,7 +1479,10 @@
+   unsigned n_outputs;
    gboolean ok = FALSE;
    int max_width, max_height;
-   gboolean use_stored_config;
+-  gboolean use_stored_config;
++  gboolean use_stored_config, do_configuration;
 +  char *mutter_allow_configuration;
 +
++  do_configuration = TRUE;
+ 
+   outputs = meta_monitor_manager_get_outputs (manager, &n_outputs);
+   meta_monitor_manager_get_screen_limits (manager, &max_width, &max_height);
+@@ -1486,7 +1503,22 @@
+   use_stored_config = !meta_monitor_manager_has_hotplug_mode_update (manager);
+   default_config = make_default_config (self, outputs, n_outputs, max_width, max_height, use_stored_config);
+ 
+-  if (default_config != NULL)
 +  /* If MUTTER_ALLOW_CONFIGURATION is set and does not contain "default",
 +   * do nothing. */
 +  mutter_allow_configuration = getenv("MUTTER_ALLOW_CONFIGURATION");
 +  if (mutter_allow_configuration != NULL) {
 +    if (strstr(mutter_allow_configuration, "default") == NULL)
-+      return;
++      do_configuration = FALSE;
 +  }
- 
-   outputs = meta_monitor_manager_get_outputs (manager, &n_outputs);
-   meta_monitor_manager_get_screen_limits (manager, &max_width, &max_height);
++
++  if (!do_configuration)
++    {
++      ok = FALSE;
++      if (default_config != NULL) {
++          config_unref (default_config);
++      }
++    }
++  else if (default_config != NULL)
+     {
+       ok = apply_configuration_with_lid (self, default_config, manager);
+       config_unref (default_config);
 --- mutter.build.0/src/backends/meta-monitor-manager.c	2017-02-16 18:24:02.000000000 +0200
-+++ mutter.build.2/src/backends/meta-monitor-manager.c	2017-10-30 11:14:05.623418906 +0200
++++ mutter.build.3/src/backends/meta-monitor-manager.c	2017-10-30 11:14:05.623418906 +0200
 @@ -811,6 +811,19 @@
    guint transform;
    guint output_index;
