@@ -40,6 +40,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(sysconfdir)/network/if-up.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/NetworkManager/dispatcher.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/ssh
+	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system/systemd-udevd.service.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
 	mkdir -p $(DESTDIR)/lib/udev/rules.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/X11/Xsession.d
@@ -108,6 +109,9 @@ install : installdirs
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/NetworkManager/dispatcher.d \
 		etc/NetworkManager/dispatcher.d/dnssd-printers
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/systemd/system/systemd-udevd.service.d \
+		etc/systemd/system/systemd-udevd.service.d/puavo-ltsp-client.conf
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
 		etc/xdg/autostart/*
