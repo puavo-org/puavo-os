@@ -11,8 +11,8 @@ case "${command}" in
         mkdir -p /usr/lib/adobe-flashplugin
         ln -fns "${upstream_dir}/libpepflashplayer.so" \
             /usr/lib/adobe-flashplugin/libpepflashplayer.so
-        mkdir -p /etc/chromium-browser/customizations
-        cat <<'EOF' > /etc/chromium-browser/customizations/10-flash
+        mkdir -p /etc/chromium.d
+        cat <<'EOF' > /etc/chromium.d/adobe-pepperflashplugin
 flashso="/usr/lib/adobe-flashplugin/libpepflashplayer.so"
 if test -f "$flashso"; then
         CHROMIUM_FLAGS="$CHROMIUM_FLAGS --ppapi-flash-path=$flashso --ppapi-flash-version="
