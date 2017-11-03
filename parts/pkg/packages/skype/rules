@@ -2,6 +2,13 @@
 
 set -eu
 
+add_disable_autostart() {
+  cat <<'EOF' > /etc/X11/Xsession.d/65skype-disable-autostart
+# skypeforlinux creates this on every startup.
+rm -f ~/.config/autostart/skypeforlinux.desktop
+EOF
+}
+
 command=$1
 shift
 
@@ -31,6 +38,8 @@ case "${command}" in
         ln -fns /usr/bin/skypeforlinux /usr/bin/skype
         ln -fns /usr/share/applications/skypeforlinux.desktop \
                 /usr/share/applications/skype.desktop
+
+        add_disable_autostart
         ;;
 
     download)
@@ -51,7 +60,8 @@ case "${command}" in
         ;;
 
     unconfigure)
-        rm -f /usr/bin/skype \
+        rm -f /etc/X11/Xsession.d/65skype-disable-autostart \
+              /usr/bin/skype \
               /usr/share/applications/skype.desktop
         for symlink_target in ${symlink_targets}; do
             rm -f "${symlink_target}"
