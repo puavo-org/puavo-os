@@ -566,7 +566,8 @@ class packages {
     , 'zip' ]:
       tag => [ 'tag_ubuntu-gnome-desktop', 'tag_debian', ];
 
-    [ 'bindfs'
+    [ 'anki'
+    , 'bindfs'
     , 'desktop-file-utils'
     , 'detox'
     , 'devilspie2'
