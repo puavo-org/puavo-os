@@ -7,6 +7,7 @@ class puavo_pkg::packages {
 			, 'appinventor'
 			, 'bluegriffon'
 			, 'cmaptools'
+			, 'cnijfilter2'
 			, 'dropbox'
 			, 'ekapeli-alku'
 			, 'enchanting'
@@ -27,8 +28,8 @@ class puavo_pkg::packages {
 			, 'spotify-client'
 			, 'tilitin'
 			, 't-lasku'
-			, 'vstloggerpro'
-			, 'vidyo-client' ]
+			, 'vidyo-client'
+			, 'vstloggerpro' ]
 
   @puavo_pkg::install { $available_packages: ; }
 }

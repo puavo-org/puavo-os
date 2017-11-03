@@ -11,6 +11,7 @@ packagedirs += appinventor/
 packagedirs += bluegriffon/
 packagedirs += casio-classpad-manager-for-ii/
 packagedirs += cmaptools/
+packagedirs += cnijfilter2/
 packagedirs += dropbox/
 packagedirs += ekapeli-alku/
 packagedirs += enchanting/
