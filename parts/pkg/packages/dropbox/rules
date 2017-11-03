@@ -2,6 +2,16 @@
 
 set -eu
 
+add_autostart_when_needed() {
+  cat <<'EOF' > /etc/X11/Xsession.d/65dropbox-autostart-when-needed
+# If user does not have the ~/Dropbox directory, he/she probably
+# does not want it to start automatically.
+if [ ! -d ~/Dropbox ]; then
+  rm -f ~/.config/autostart/dropbox.desktop
+fi
+EOF
+}
+
 command=$1
 shift
 
@@ -10,9 +20,11 @@ case "${command}" in
         upstream_dir=$1
         mkdir -p /var/lib/dropbox
         ln -fns -T "${upstream_dir}/.dropbox-dist" /var/lib/dropbox/.dropbox-dist
+        add_autostart_when_needed
         ;;
     unconfigure)
-        rm -f /var/lib/dropbox/.dropbox-dist
+        rm -f /etc/X11/Xsession.d/65dropbox-autostart-when-needed \
+              /var/lib/dropbox/.dropbox-dist
         ;;
     unpack)
         tar --no-same-owner -z -x -f "$1" -C "$2"
