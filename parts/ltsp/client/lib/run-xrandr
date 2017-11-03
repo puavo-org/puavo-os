@@ -145,7 +145,7 @@ def apply_extra_modes(puavo_xrandr_extra_modes, xrandr_parsed_args_list)
   end
 
   # add new modes to displays
-  modes_to_add.each do |extra_mode|
+  unique_extra_modes.each do |extra_mode|
     $monitors_info.each do |display, info|
       next if info['resolutions'].include?(extra_mode)
 
