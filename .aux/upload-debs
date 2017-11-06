@@ -10,7 +10,7 @@ upload_dir=${5:-}
 upload_codename=${6:-}
 
 usage() {
-  echo "Usage: $(basename $0) debsdir upload_pkgregex upload_server upload_logi upload_dir upload_codename"
+  echo "Usage: $(basename $0) debsdir upload_pkgregex upload_server upload_login upload_dir upload_codename"
 }
 
 if [ -z "$debsdir" ]; then
