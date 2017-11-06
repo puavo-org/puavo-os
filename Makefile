@@ -210,7 +210,7 @@ update: /etc/puavo-conf/image.json install-build-deps
 
 .PHONY: upload-debs
 upload-debs:
-	.aux/upload-debs "$(CURDIR)/debs" "$(upload_pkgregex)" \
+	.aux/upload-debs "$(CURDIR)/debs/pool" "$(upload_pkgregex)" \
 		"$(upload_server)" "$(upload_login)" "$(upload_dir)" \
 		"$(upload_codename)"
 
