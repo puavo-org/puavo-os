@@ -1,0 +1,10 @@
+[
+  {
+    "key": "pci-id",
+    "matchmethod": "regexp",
+    "pattern": "^10de:039[3]$",
+    "parameters": {
+      "puavo.graphics.driver": "nvidia-304"
+    }
+  }
+]

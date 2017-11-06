@@ -3,7 +3,7 @@
 set -eu
 
 browser_running() {
-  pgrep -x -U "$USER" chromium >/dev/null
+  pgrep -x -U "$USER" chromium.distrib >/dev/null
 }
 
 manage_preferences() {

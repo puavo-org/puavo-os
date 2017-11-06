@@ -108,6 +108,7 @@ class packages {
       tag => [ 'tag_audio', 'tag_debian', ];
 
     [ 'bash'
+    , 'bash-completion'
     , 'bridge-utils'
     , 'gdebi-core'
     , 'grub-pc'
