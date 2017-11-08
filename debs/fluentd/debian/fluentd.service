@@ -3,8 +3,8 @@ Description = Fluentd
 
 [Service]
 PermissionsStartOnly = true
-ExecStartPre = /bin/mkdir -p /state/fluentd-buffer
-ExecStartPre = /bin/chown puavo:puavo /state/fluentd-buffer
+ExecStartPre = /bin/mkdir -p /state/fluentd-buffer /var/log/fluentd
+ExecStartPre = /bin/chown -R puavo:puavo /state/fluentd-buffer /var/log/fluentd
 Environment = GEM_HOME=/usr/lib/fluentd-gem
 ExecStart = /usr/lib/fluentd-gem/bin/fluentd
 User = puavo

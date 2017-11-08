@@ -10,7 +10,7 @@ upload_dir=${5:-}
 upload_codename=${6:-}
 
 usage() {
-  echo "Usage: $(basename $0) debsdir upload_pkgregex upload_server upload_logi upload_dir upload_codename"
+  echo "Usage: $(basename $0) debsdir upload_pkgregex upload_server upload_login upload_dir upload_codename"
 }
 
 if [ -z "$debsdir" ]; then
@@ -76,7 +76,7 @@ cd "${upload_dir}/incoming"
 set +eu
 EOF
   (
-    cd "${debsdir}/pool"
+    cd "$debsdir"
 
     # XXX This would be better if upload_pkgregex would check matching
     # XXX source packages and then send all files belonging to those.
@@ -101,8 +101,8 @@ done
 EOF
 }
 
-if [ ! -d "${debsdir}/pool" ]; then
-  echo "${debsdir}/pool does not exist or is not a directory" >&2
+if [ ! -d "$debsdir" ]; then
+  echo "${debsdir} does not exist or is not a directory" >&2
   exit 1
 fi
 
