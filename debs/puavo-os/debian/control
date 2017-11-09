@@ -390,7 +390,7 @@ Architecture: all
 Depends: ${misc:Depends},
  bridge-utils,
  crda,
- hostapd (>= 2:2.4-1+puavo1),
+ hostapd (>= 2:2.4-1+deb9u1+puavo1),
  isc-dhcp-client,
  iproute2,
  iw,
