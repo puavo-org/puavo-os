@@ -360,7 +360,6 @@ class packages {
 
     [ 'gftp'
     , 'lftp'
-    , 'remmina'
     , 'smbclient'
     , 'wget'
     , 'xtightvncviewer']:
