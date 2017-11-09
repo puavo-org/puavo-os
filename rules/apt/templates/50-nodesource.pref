@@ -1,0 +1,7 @@
+Package: *
+Pin: origin "deb.nodesource.com"
+Pin-Priority: 20
+
+Package: nodejs nodejs-dbg
+Pin: origin "deb.nodesource.com"
+Pin-Priority: 991

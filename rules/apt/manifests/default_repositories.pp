@@ -1,4 +1,5 @@
 class apt::default_repositories {
+  include ::apt::nodejs
   include ::apt::repositories
   include ::apt::ubuntu_repository
 

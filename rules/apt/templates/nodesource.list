@@ -1,0 +1,2 @@
+deb http://deb.nodesource.com/<%= @node_branch %> <%= @debianversioncodename %> main
+deb-src http://deb.nodesource.com/<%= @node_branch %> <%= @debianversioncodename %> main
