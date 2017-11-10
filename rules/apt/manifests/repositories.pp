@@ -3,7 +3,11 @@ class apt::repositories {
 
   $other_releases = $debianversioncodename ? {
                       'buster' => [],
-                      default  => [ 'wheezy', 'jessie', 'buster', ],
+                      default  => {
+                        'wheezy' => 70,
+                        'jessie' => 80,
+                        'buster' => 60,
+                      }
                     }
 
   define setup ($localmirror='',
@@ -11,13 +15,17 @@ class apt::repositories {
                 $mirror_path='',
                 $securitymirror,
                 $securitymirror_path='') {
-    ::apt::debian_repository {
-      $::apt::repositories::other_releases:
-        localmirror         => $localmirror,
-        mirror              => $mirror,
-        mirror_path         => $mirror_path,
-        securitymirror      => $securitymirror,
-        securitymirror_path => $securitymirror_path;
+    $::apt::repositories::other_releases.each |String $distrib_version,
+                                               Integer $pin_priority| {
+      ::apt::debian_repository {
+        $distrib_version:
+          localmirror         => $localmirror,
+          mirror              => $mirror,
+          mirror_path         => $mirror_path,
+          pin_priority        => $pin_priority,
+          securitymirror      => $securitymirror,
+          securitymirror_path => $securitymirror_path;
+      }
     }
 
     file {
