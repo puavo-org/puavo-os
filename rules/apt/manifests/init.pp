@@ -2,6 +2,7 @@ class apt {
   define debian_repository ($localmirror='',
                             $mirror='',
                             $mirror_path='',
+                            $pin_priority=50,
                             $securitymirror='',
                             $securitymirror_path='') {
     $distrib_version = $title
