@@ -1,5 +1,6 @@
 class packages {
   require ::apt::multiarch
+  include ::packages::backports
   include ::packages::compat_32bit
   include ::packages::distribution_tweaks
   include ::packages::pinned
