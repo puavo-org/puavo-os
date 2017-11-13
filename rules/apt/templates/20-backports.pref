@@ -1,0 +1,3 @@
+Package: <%= @packages_from_backports.join(' ') %>
+Pin: release n=stretch-backports
+Pin-Priority: 995
