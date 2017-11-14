@@ -161,23 +161,32 @@ config_path = '/etc/puavo/wlan.json'
 
 begin
   networks = JSON.parse(IO.read(config_path))
-rescue Exception => e
-  STDERR.puts "Could not read and interpret #{ config_path }: #{ e.message }."
+rescue StandardError => e
+  warn "Could not read and interpret #{ config_path }: #{ e.message }."
   exit(1)
 end
 
-networks.each do |network|
-  wlan \
-    = case network['type']
-	when 'open'
-	  Wlan::Open.new(network['ssid'])
-	when 'psk'
-	  Wlan::Psk.new(network['ssid'], network['password'])
-	else
-	  warn "Unsupported wlan type #{ network['type'] }"
-      end
+status = 0
 
-  if wlan
-    wlan.update_file
+networks.each do |network|
+  begin
+    wlan \
+      = case network['type']
+          when 'open'
+            Wlan::Open.new(network['ssid'])
+          when 'psk'
+            Wlan::Psk.new(network['ssid'], network['password'])
+          else
+            warn "Unsupported wlan type #{ network['type'] }"
+        end
+
+    if wlan
+      wlan.update_file
+    end
+  rescue StandardError => e
+    warn "Problem applying network settings: #{ e.message }"
+    status = 1
   end
 end
+
+exit(status)
