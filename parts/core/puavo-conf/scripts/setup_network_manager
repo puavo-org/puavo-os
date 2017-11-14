@@ -99,16 +99,19 @@ class Wlan::Open < Wlan
 [connection]
 id=#{ @id }
 uuid=#{ @uuid }
-type=802-11-wireless
+type=wifi
 
-[802-11-wireless]
-ssid=#{ @ssid }
+[wifi]
 mode=infrastructure
-
-[ipv6]
-method=auto
+ssid=#{ @ssid }
 
 [ipv4]
+dns-search=
+method=auto
+
+[ipv6]
+addr-gen-mode=stable-privacy
+dns-search=
 method=auto
 EOF
   end
@@ -129,21 +132,24 @@ class Wlan::Psk < Wlan
 [connection]
 id=#{ @id }
 uuid=#{ @uuid }
-type=802-11-wireless
+type=wifi
 
-[802-11-wireless]
-ssid=#{ @ssid }
+[wifi]
 mode=infrastructure
-security=802-11-wireless-security
+ssid=#{ @ssid }
 
-[802-11-wireless-security]
+[wifi-security]
+auth-alg=open
 key-mgmt=wpa-psk
 psk=#{ @psk }
 
 [ipv4]
+dns-search=
 method=auto
 
 [ipv6]
+addr-gen-mode=stable-privacy
+dns-search=
 method=auto
 EOF
   end
