@@ -6,8 +6,9 @@
 #
 # Reads json from /etc/puavo/wlan.json
 # and excepts it to contain something like this
-# (only "type", "ssid" and possibly "password" are used).
-# The "type" can be "open" or "psk".
+# (only "type", "ssid" and possibly "password"/"identity"/"certs" are used,
+# "wlan_ap" is not used by this script).
+# The "type" can be "open", "psk" or "eap-tls".
 #
 # [
 #   {
@@ -21,6 +22,18 @@
 #     "ssid":     "Humppaajat",
 #     "wlan_ap":  null,
 #     "password": ""
+#   },
+#   {
+#     "type":     "eap-tls",
+#     "ssid":     "Baggins",
+#     "wlan_ap":  null,
+#     "identity": "Shire",
+#     "certs": {
+#       "ca-cert":             "...",
+#       "client-cert":         "...",
+#       "client-key":          "...",
+#       "client-key-password": "mysecretclientkeypassword"
+#     }
 #   }
 # ]
 #
@@ -93,22 +106,125 @@ class Wlan
   end
 end
 
+class Wlan::EapTls < Wlan
+  # This path must be linked under /state on laptops, that is why it is
+  # under /etc/NetworkManager/system-connections.
+  Network_manager_certs_dir = '/etc/NetworkManager/system-connections/.certs'
+
+  def certdir
+    "#{ Network_manager_certs_dir }/#{ @ssid }"
+  end
+
+  def ca_cert_path;     "#{ certdir }/ca_cert";     end
+  def client_cert_path; "#{ certdir }/client_cert"; end
+  def client_key_path;  "#{ certdir }/client_key";  end
+
+  def initialize(ssid, identity, certs)
+    raise 'Wlan eap-tls ssid is not a non-empty string' \
+      unless ssid.kind_of?(String) && !ssid.empty?
+    raise 'Wlan eap-tls identity is not a non-empty string' \
+      unless identity.kind_of?(String) && !identity.empty?
+    raise 'Wlan eap-tls certs is not a hash' unless certs.kind_of?(Hash)
+    raise 'Wlan eap-tls certs/ca-cert is not a string' \
+      unless certs['ca-cert'].kind_of?(String) && !certs['ca-cert'].empty?
+    raise 'Wlan eap-tls certs/client-cert is not a non-empty string' \
+      unless certs['client-cert'].kind_of?(String) \
+               && !certs['client-cert'].empty?
+    raise 'Wlan eap-tls certs/client-key is not a non-empty string' \
+      unless certs['client-key'].kind_of?(String) \
+               && !certs['client-key'].empty?
+    raise 'Wlan eap-tls certs/client-key-password is not a string' \
+      unless certs['client-key-password'].kind_of?(String)
+
+    @ca_cert             = certs['ca-cert']
+    @client_cert         = certs['client-cert']
+    @client_key          = certs['client-key']
+    @client_key_password = certs['client-key-password']
+    @identity            = identity
+
+    super(ssid)
+  end
+
+  def config
+    <<"EOF"
+[connection]
+id=#{ @id }
+uuid=#{ @uuid }
+type=wifi
+permissions=
+
+[wifi]
+mode=infrastructure
+ssid=#{ @ssid }
+
+[wifi-security]
+key-mgmt=wpa-eap
+
+[802-1x]
+ca-cert=#{ ca_cert_path }
+client-cert=#{ client_cert_path }
+eap=tls;
+identity=#{ @identity }
+private-key=#{ client_key_path }
+private-key-password=#{ @client_key_password }
+
+[ipv4]
+dns-search=
+method=auto
+
+[ipv6]
+addr-gen-mode=stable-privacy
+dns-search=
+method=auto
+EOF
+  end
+
+  def update_file
+    begin
+      Dir.mkdir(Network_manager_certs_dir)
+    rescue Errno::EEXIST
+    end
+    begin
+      Dir.mkdir(certdir)
+    rescue Errno::EEXIST
+    end
+
+    cert_file_paths = {
+      ca_cert_path()     => @ca_cert,
+      client_cert_path() => @client_cert,
+      client_key_path()  => @client_key,
+    }
+
+    cert_file_paths.each do |path, data|
+      tmppath = "#{ path }.tmp"
+      File.open(tmppath, 'w') { |f| f.write(data) }
+      File.rename(tmppath, path)
+    end
+
+    super
+  end
+end
+
 class Wlan::Open < Wlan
   def config
     <<"EOF"
 [connection]
 id=#{ @id }
 uuid=#{ @uuid }
-type=802-11-wireless
+type=wifi
+permissions=
 
-[802-11-wireless]
-ssid=#{ @ssid }
+[wifi]
 mode=infrastructure
-
-[ipv6]
-method=auto
+ssid=#{ @ssid }
 
 [ipv4]
+dns-search=
+method=auto
+
+[ipv6]
+addr-gen-mode=stable-privacy
+dns-search=
 method=auto
 EOF
   end
@@ -129,21 +245,25 @@ class Wlan::Psk < Wlan
 [connection]
 id=#{ @id }
 uuid=#{ @uuid }
-type=802-11-wireless
+type=wifi
+permissions=
 
-[802-11-wireless]
-ssid=#{ @ssid }
+[wifi]
 mode=infrastructure
-security=802-11-wireless-security
+ssid=#{ @ssid }
 
-[802-11-wireless-security]
+[wifi-security]
+auth-alg=open
 key-mgmt=wpa-psk
 psk=#{ @psk }
 
 [ipv4]
+dns-search=
 method=auto
 
 [ipv6]
+addr-gen-mode=stable-privacy
+dns-search=
 method=auto
 EOF
   end
@@ -153,23 +273,36 @@ config_path = '/etc/puavo/wlan.json'
 
 begin
   networks = JSON.parse(IO.read(config_path))
-rescue Exception => e
-  STDERR.puts "Could not read and interpret #{ config_path }: #{ e.message }."
+rescue StandardError => e
+  warn "Could not read and interpret #{ config_path }: #{ e.message }."
   exit(1)
 end
 
-networks.each do |network|
-  wlan \
-    = case network['type']
-	when 'open'
-	  Wlan::Open.new(network['ssid'])
-	when 'psk'
-	  Wlan::Psk.new(network['ssid'], network['password'])
-	else
-	  warn "Unsupported wlan type #{ network['type'] }"
-      end
+status = 0
 
-  if wlan
-    wlan.update_file
+networks.each do |network|
+  begin
+    wlan \
+      = case network['type']
+          when 'eap-tls'
+            Wlan::EapTls.new(network['ssid'],
+                             network['identity'],
+                             network['certs'])
+          when 'open'
+            Wlan::Open.new(network['ssid'])
+          when 'psk'
+            Wlan::Psk.new(network['ssid'], network['password'])
+          else
+            warn "Unsupported wlan type #{ network['type'] }"
+        end
+
+    if wlan
+      wlan.update_file
+    end
+  rescue StandardError => e
+    warn "Problem applying network settings: #{ e.message }"
+    status = 1
   end
 end
+
+exit(status)

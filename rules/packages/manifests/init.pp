@@ -1,5 +1,6 @@
 class packages {
   require ::apt::multiarch
+  include ::packages::backports
   include ::packages::compat_32bit
   include ::packages::distribution_tweaks
   include ::packages::pinned
@@ -600,6 +601,19 @@ class packages {
     , 'sqlite3' ]:
       tag => [ 'tag_web', 'tag_debian', ];
   }
+
+  #
+  # packages from the Debian backports
+  #
+
+  # These modify apt preferences so that these packages will be picked up
+  # from backports instead of the usual channels.  The inclusion of a package
+  # on this list does not trigger the installation of a package, that has
+  # to be defined elsewhere.
+  $packages_from_backports = $debianversioncodename ? {
+                               'stretch' => [ 'remmina' ],
+                               default   => [],
+                             }
 
   #
   # packages from the Ubuntu repository
