@@ -100,6 +100,7 @@ class Wlan::Open < Wlan
 id=#{ @id }
 uuid=#{ @uuid }
 type=wifi
+permissions=
 
 [wifi]
 mode=infrastructure
@@ -133,6 +134,7 @@ class Wlan::Psk < Wlan
 id=#{ @id }
 uuid=#{ @uuid }
 type=wifi
+permissions=
 
 [wifi]
 mode=infrastructure
