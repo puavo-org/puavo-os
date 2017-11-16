@@ -29,10 +29,10 @@
 #     "wlan_ap":  null,
 #     "identity": "Shire",
 #     "certs": {
-#       "ca-cert":             "...",
-#       "client-cert":         "...",
-#       "client-key":          "...",
-#       "client-key-password": "mysecretclientkeypassword"
+#       "ca_cert":             "...",
+#       "client_cert":         "...",
+#       "client_key":          "...",
+#       "client_key_password": "mysecretclientkeypassword"
 #     }
 #   }
 # ]
@@ -125,21 +125,21 @@ class Wlan::EapTls < Wlan
     raise 'Wlan eap-tls identity is not a non-empty string' \
       unless identity.kind_of?(String) && !identity.empty?
     raise 'Wlan eap-tls certs is not a hash' unless certs.kind_of?(Hash)
-    raise 'Wlan eap-tls certs/ca-cert is not a string' \
-      unless certs['ca-cert'].kind_of?(String) && !certs['ca-cert'].empty?
-    raise 'Wlan eap-tls certs/client-cert is not a non-empty string' \
-      unless certs['client-cert'].kind_of?(String) \
-               && !certs['client-cert'].empty?
-    raise 'Wlan eap-tls certs/client-key is not a non-empty string' \
-      unless certs['client-key'].kind_of?(String) \
-               && !certs['client-key'].empty?
-    raise 'Wlan eap-tls certs/client-key-password is not a string' \
-      unless certs['client-key-password'].kind_of?(String)
+    raise 'Wlan eap-tls certs/ca_cert is not a string' \
+      unless certs['ca_cert'].kind_of?(String) && !certs['ca_cert'].empty?
+    raise 'Wlan eap-tls certs/client_cert is not a non-empty string' \
+      unless certs['client_cert'].kind_of?(String) \
+               && !certs['client_cert'].empty?
+    raise 'Wlan eap-tls certs/client_key is not a non-empty string' \
+      unless certs['client_key'].kind_of?(String) \
+               && !certs['client_key'].empty?
+    raise 'Wlan eap-tls certs/client_key_password is not a string' \
+      unless certs['client_key_password'].kind_of?(String)
 
-    @ca_cert             = certs['ca-cert']
-    @client_cert         = certs['client-cert']
-    @client_key          = certs['client-key']
-    @client_key_password = certs['client-key-password']
+    @ca_cert             = certs['ca_cert']
+    @client_cert         = certs['client_cert']
+    @client_key          = certs['client_key']
+    @client_key_password = certs['client_key_password']
     @identity            = identity
 
     super(ssid)
