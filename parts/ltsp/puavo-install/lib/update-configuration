@@ -175,7 +175,7 @@ end
 def update_wlan_configurations(restclient)
   log(Syslog::LOG_INFO, ">>> Updating wlan configurations\n")
 
-  wlan_networks_uri = "v3/devices/#{ get_hostname() }/wlan_networks"
+  wlan_networks_uri = "v3/devices/#{ get_hostname() }/wlan_networks_with_certs"
   puavo_rest_request_and_replace(restclient,
                                  wlan_networks_uri,
                                  '/state/etc/puavo/wlan.json')
