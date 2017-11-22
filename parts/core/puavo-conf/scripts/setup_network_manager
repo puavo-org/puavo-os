@@ -53,6 +53,8 @@ require 'uuidtools'
 Nm_config_directory = '/state/etc/NetworkManager/system-connections'
 
 class Wlan
+  Puavo_label = '# automatically generated from Puavo'
+
   def initialize(ssid)
     raise "Wlan ssid is not set" if (ssid.nil? || ssid.empty?)
 
@@ -61,6 +63,10 @@ class Wlan
 
     # try to read uuid from the old config file, or generate with uuidgen
     @uuid = read_uuid_from_config || uuidgen
+  end
+
+  def config(config_text)
+    Puavo_label + "\n" + config_text
   end
 
   def nm_config_path
@@ -147,7 +153,7 @@ class Wlan::EapTls < Wlan
   end
 
   def config
-    <<"EOF"
+    super(<<"EOF")
 [connection]
 id=#{ @id }
 uuid=#{ @uuid }
@@ -208,7 +214,7 @@ end
 
 class Wlan::Open < Wlan
   def config
-    <<"EOF"
+    super(<<"EOF")
 [connection]
 id=#{ @id }
 uuid=#{ @uuid }
@@ -242,7 +248,7 @@ class Wlan::Psk < Wlan
   end
 
   def config
-    <<"EOF"
+    super(<<"EOF")
 [connection]
 id=#{ @id }
 uuid=#{ @uuid }
