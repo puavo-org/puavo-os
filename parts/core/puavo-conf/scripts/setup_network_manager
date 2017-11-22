@@ -43,6 +43,20 @@ require 'puavo/conf'
 puavoconf = Puavo::Conf.new
 exit(0) unless puavoconf.get('puavo.service.NetworkManager.enabled') == 'true'
 
+require 'json'
+
+status = 0
+
+begin
+  no_autoconnect_networks \
+    = JSON.parse( puavoconf.get('puavo.wireless.nm.no_autoconnect_networks') )
+rescue StandardError => e
+  warn 'Problem parsing puavo.wireless.nm.no_autoconnect_networks:' \
+         + " #{ e.message }"
+  no_autoconnect_networks = []
+  status = 1
+end
+
 puavoconf.close
 
 require 'base64'
@@ -284,8 +298,6 @@ rescue StandardError => e
   exit(1)
 end
 
-status = 0
-
 puavo_networks = []
 
 networks.each do |network|
@@ -339,6 +351,52 @@ Dir.glob("#{ Nm_config_directory }/puavo-*") do |nm_conf_path|
   rescue StandardError => e
     warn "Problem removing stale network setting #{ nm_conf_path }:" \
            + " #{ e.message }"
+    status = 1
+  end
+end
+
+# Add autoconnect=false to network-connections as suggested by
+# puavo.wireless.nm.no_autoconnect_networks puavo-conf variable.
+Dir.glob("#{ Nm_config_directory }/*") do |nm_conf_path|
+  begin
+    add_autoconnect = false
+
+    lines = File.readlines(nm_conf_path)
+    lines.each do |line|
+      match = line.chomp.match(/^ssid=(.*)$/)
+      if match && no_autoconnect_networks.include?(match[1]) then
+        add_autoconnect = true
+        break
+      end
+    end
+
+    next unless add_autoconnect
+
+    autoconnect_written = false
+
+    tmpfile = "#{ nm_conf_path }.tmp"
+    File.open(tmpfile, 'w') do |f|
+      lines.each do |line|
+        case line
+          when /^type=/
+            f.write(line)
+            f.write("autoconnect=false\n")
+            autoconnect_written = true
+          when /^autoconnect=/
+            f.write(line) unless autoconnect_written
+          else
+            f.write(line)
+        end
+      end
+    end
+
+    File.rename(tmpfile, nm_conf_path)
+
+    raise 'Could not find a place to write autoconnect=false' \
+      unless autoconnect_written
+
+  rescue StandardError => e
+    warn "Could not add autoconnect=false to #{ nm_conf_path }: #{ e.message }"
     status = 1
   end
 end
