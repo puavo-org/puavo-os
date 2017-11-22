@@ -51,10 +51,9 @@ require 'json'
 require 'uuidtools'
 
 Nm_config_directory = '/state/etc/NetworkManager/system-connections'
+Puavo_wlan_label = '# automatically generated from Puavo'
 
 class Wlan
-  Puavo_label = '# automatically generated from Puavo'
-
   def initialize(ssid)
     raise "Wlan ssid is not set" if (ssid.nil? || ssid.empty?)
 
@@ -66,7 +65,7 @@ class Wlan
   end
 
   def config(config_text)
-    Puavo_label + "\n" + config_text
+    Puavo_wlan_label + "\n" + config_text
   end
 
   def nm_config_path
@@ -287,7 +286,11 @@ end
 
 status = 0
 
+puavo_networks = []
+
 networks.each do |network|
+  puavo_networks << network['ssid']
+
   begin
     wlan \
       = case network['type']
@@ -308,6 +311,34 @@ networks.each do |network|
     end
   rescue StandardError => e
     warn "Problem applying network settings: #{ e.message }"
+    status = 1
+  end
+end
+
+# remove stale network settings
+Dir.glob("#{ Nm_config_directory }/puavo-*") do |nm_conf_path|
+  begin
+    is_automatic = false
+    ssid = ''
+
+    File.readlines(nm_conf_path).each do |line|
+      case line.chomp
+        when Puavo_wlan_label
+          is_automatic = true
+        when /^ssid=(.*)$/
+          ssid = $1
+      end
+    end
+
+    # XXX Add "&& is_automatic" later to the following test so that
+    # XXX user generated networks with "puavo-"-prefix can be allowed
+    # XXX (currently user can not have a network with "puavo-*"-ssid).
+    if !puavo_networks.include?(ssid) then
+      File.unlink(nm_conf_path)
+    end
+  rescue StandardError => e
+    warn "Problem removing stale network setting #{ nm_conf_path }:" \
+           + " #{ e.message }"
     status = 1
   end
 end
