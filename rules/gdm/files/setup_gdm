@@ -40,10 +40,11 @@ puavo-template /etc/gdm3/greeter.dconf-defaults <<'EOF'
 # Some that work in a desktop session might not work here.
 
 [org/gnome/login-screen]
-logo='{puavo_desktop_vendor_logo}'
-fallback-logo='/usr/share/icons/hicolor/48x48/emblems/emblem-debian-white.png'
+allowed-failures=1
 disable-user-list={if puavo_admin_personally_administered == "true"}false{else}true{end}
 enable-guestuser={if puavo_guestlogin_enabled == "true"}true{else}false{end}
+fallback-logo='/usr/share/icons/hicolor/48x48/emblems/emblem-debian-white.png'
+logo='{puavo_desktop_vendor_logo}'
 
 [org/gnome/desktop/peripherals/touchpad]
 natural-scroll=false
