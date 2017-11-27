@@ -11,8 +11,7 @@ _pkgs_ports     := autopoweroff    \
                    unicode-data    \
                    visionmedia-mon \
                    vtun            \
-                   wpa             \
-                   $(_lsb_release_ports)
+                   wpa
 _pkgs_image     := $(_pkgs_parts) $(_pkgs_ports)
 
 # cloud packages do NOT go into puavo-os images

@@ -1,0 +1,49 @@
+--- gnome-shell.orig/js/gdm/loginDialog.js	2017-02-16 18:48:07.000000000 +0200
++++ gnome-shell/js/gdm/loginDialog.js	2017-11-27 13:23:37.000230775 +0200
+@@ -129,7 +129,7 @@
+ const UserList = new Lang.Class({
+     Name: 'UserList',
+ 
+-    _init: function() {
++    _init: function(accepted_users) {
+         this.actor = new St.ScrollView({ style_class: 'login-dialog-user-list-view'});
+         this.actor.set_policy(Gtk.PolicyType.NEVER,
+                               Gtk.PolicyType.AUTOMATIC);
+@@ -141,6 +141,8 @@
+         this.actor.add_actor(this._box);
+         this._items = {};
+ 
++        this._accepted_users = accepted_users.split(',');
++
+         this.actor.connect('key-focus-in', Lang.bind(this, this._moveFocusToItems));
+     },
+ 
+@@ -226,6 +228,17 @@
+         if (user.locked)
+            return;
+ 
++        is_accepted = false;
++        for (let i = 0; i < this._accepted_users.length; i++) {
++            if (this._accepted_users[i] == '*' ||
++              this._accepted_users[i] == user.user_name) {
++                is_accepted = true;
++                break;
++            }
++        }
++        if (!is_accepted)
++            return;
++
+         let userName = user.get_user_name();
+ 
+         if (!userName)
+@@ -417,7 +430,9 @@
+                                                     visible: false });
+         this.actor.add_child(this._userSelectionBox);
+ 
+-        this._userList = new UserList();
++        let accepted_users = this._settings.get_string('accepted-usernames-for-userlist');
++        this._userList = new UserList(accepted_users);
++
+         this._userSelectionBox.add(this._userList.actor,
+                                    { expand: true,
+                                      x_fill: true,
