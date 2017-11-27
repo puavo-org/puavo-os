@@ -35,13 +35,30 @@ AutomaticLogin = guest{else}#  AutomaticLoginEnable = true
 #Enable=true
 EOF
 
-puavo-template /etc/gdm3/greeter.dconf-defaults <<'EOF'
+primary_user=$(puavo-conf puavo.admin.primary_user)
+
+check_if_user_is_in_extrausers_passwd() {
+  awk -F: -v primary_user="$primary_user" '
+    BEGIN { status = 1 }
+    primary_user == $1 { status = 0 }
+    END { exit(status) }
+  ' /var/lib/extrausers/passwd
+}
+
+if [ -n "$primary_user" ] \
+  && check_if_user_is_in_extrausers_passwd "$primary_user"; then
+    disable_user_list=false
+else
+    disable_user_list=true
+fi
+
+puavo-template /etc/gdm3/greeter.dconf-defaults <<EOF
 # These are dconf-settings for gdm.
 # Some that work in a desktop session might not work here.
 
 [org/gnome/login-screen]
 allowed-failures=1
-disable-user-list={if puavo_admin_personally_administered == "true"}false{else}true{end}
+disable-user-list=${disable_user_list}
 enable-guestuser={if puavo_guestlogin_enabled == "true"}true{else}false{end}
 fallback-logo='/usr/share/icons/hicolor/48x48/emblems/emblem-debian-white.png'
 logo='{puavo_desktop_vendor_logo}'
