@@ -57,6 +57,7 @@ puavo-template /etc/gdm3/greeter.dconf-defaults <<EOF
 # Some that work in a desktop session might not work here.
 
 [org/gnome/login-screen]
+accepted-usernames-for-userlist='{if puavo_greeter_userlist_accepted_users != ""}{puavo_greeter_userlist_accepted_users}{else}{if puavo_admin_primary_user != ""}{puavo_admin_primary_user}{else}*{end}{end}'
 allowed-failures=1
 disable-user-list=${disable_user_list}
 enable-guestuser={if puavo_guestlogin_enabled == "true"}true{else}false{end}
