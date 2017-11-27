@@ -56,5 +56,10 @@
       <summary>Enable guestlogin feature.</summary>
       <description>Enable guestlogin feature.</description>
     </key>
+    <key type="s" name="accepted-usernames-for-userlist">
+      <default>''</default>
+      <summary>Accepted usernames for userlist.</summary>
+      <description>Comma-separated list of usernames (loginnames), that list the accepted users on the userlist, when that is enabled.  If the list contains "*", all usernames are accepted.</description>
+    </key>
   </schema>
 </schemalist>
