@@ -76,6 +76,7 @@ cp -aT /state/etc/puavo /etc/puavo         || status=1
 statedirlist='
   /etc/NetworkManager/system-connections
   /var/cache/ccreds
+  /var/lib/AccountsService
   /var/lib/extrausers
   /var/lib/logrotate
   /var/lib/puavo-desktop
