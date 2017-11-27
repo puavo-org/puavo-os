@@ -22,11 +22,6 @@ class adm::users {
       sshkey_type => 'rsa',
       uid         => 1004;
 
-    'adm-hannele':
-      sshkey      => 'AAAAB3NzaC1yc2EAAAABIwAAAQEAxnP1o+ujlUgNiqbdimpsHUydYdxiWILXo0KnhDPEVfytXnSrP9MEW5pfT2jt1Rkrg66HkdVjhaIZEqigPlxhliDEdnsSjwvewR5DIydUPjXqutdfUs/Af3CZYbQ0f19yCDnkPbuNFMOkmcH0xDdHVcTp6lAZhQdqiJ21JtBrIO8a1pqYw08bbZuIpMltGlXqMUTvII/jplvx6/hIptA01GbAml34V4W+IftNNAdKQwVKebbxHcEirhfPo5mDI7+MEyxiA8LwkGlTllJaR8KQx3nhL+jnyF+SFh/y1BCBb3vK2V2Wjklanpj648NN9FyFJYCR2LcmoR+1Hd+L0l51kQ==',
-      sshkey_type => 'rsa',
-      uid         => 1005;
-
     'adm-mjokinen':
       sshkey      => 'AAAAB3NzaC1yc2EAAAABIwAAAQEAvs4IP+ijmRvoE1x1mfbzaHXEd11czXQhVir/VtrEC4S6T9isqRwe1l+sKsrnlNp4X8qfqR7mPUuw/UoUAD2Zuk0zTtijxFVneqEEM4Q5KCo2WJrHt1DhvGdI9oBIQOFLLLJdX5sAq1JkVelrfVRSUtDCkKVLTj5pE+R7duYPdVO3804oO5GV2oroYfgDALf+Zt1YgfQuLeEw5ubu0hmk8Vf1RYmQBCiQPAcny0R5JbEWygugQJ5PVFYoi8Q7uYQzM1TJBy2xkZvJI/Yl3LJ9VO0ddh7hLaszAyT0O9YbmBbez3cmrukbPOzclmglmrSs2DuTtdZCrWNfiGrMORR38w==',
       sshkey_type => 'rsa',
