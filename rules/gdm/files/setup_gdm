@@ -37,16 +37,8 @@ EOF
 
 primary_user=$(puavo-conf puavo.admin.primary_user)
 
-check_if_user_is_in_extrausers_passwd() {
-  awk -F: -v primary_user="$primary_user" '
-    BEGIN { status = 1 }
-    primary_user == $1 { status = 0 }
-    END { exit(status) }
-  ' /var/lib/extrausers/passwd
-}
-
-if [ -n "$primary_user" ] \
-  && check_if_user_is_in_extrausers_passwd "$primary_user"; then
+if [ -n "$primary_user" \
+  -a -e "/var/lib/AccountsService/users/${primary_user}" ]; then
     disable_user_list=false
 else
     disable_user_list=true
