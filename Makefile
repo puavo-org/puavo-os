@@ -179,7 +179,8 @@ rootfs-sync-repo: $(rootfs_dir)
 	$(_sudo) .aux/create-adm-user '$(rootfs_dir)' '/puavo-os' \
 	    '$(_adm_user)' '$(_adm_group)' '$(_adm_uid)' '$(_adm_gid)'
 	$(_sudo) rsync "--chown=$(_adm_uid):$(_adm_gid)" --chmod=Dg+s,ug+w \
-	    -glopr . '$(rootfs_dir)/puavo-os/'
+	    -glopr --exclude debs/.archive --exclude debs/.workdir \
+	    . '$(rootfs_dir)/puavo-os/'
 
 .PHONY: rootfs-update
 rootfs-update: rootfs-sync-repo
