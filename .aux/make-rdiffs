@@ -156,6 +156,39 @@ def setup_checksum_tasks(filename, absolute_source_path)
   return [ cksum_file, sha256sum_file ]
 end
 
+def get_puavo_conf_defaults(target_image_file_fp)
+  definitions_path = '/usr/share/puavo-conf/definitions'
+  mnt_done         = false
+  mnt_path         = '/mnt'
+
+  puavo_conf = {}
+
+  begin
+    system('mount', target_image_file_fp, mnt_path) \
+      or raise "could not mount #{ mnt_path }"
+    mnt_done = true
+
+    Dir.glob("#{ mnt_path }#{ definitions_path }/*.json").each do |json_path|
+      new_values = JSON.parse( File.read(json_path) )
+      raise "JSON in #{ json_path } is not in a hash format" \
+        unless new_values.kind_of?(Hash)
+
+      new_values.each do |key, value|
+        raise "Duplicate definition of '#{ key }' in '#{ json_path }'" \
+          if puavo_conf.has_key?(key)
+        puavo_conf[key] = value
+      end
+    end
+  ensure
+    if mnt_done then
+      system('umount', mnt_path) \
+        or raise "could not unmount #{ mnt_path }"
+    end
+  end
+
+  return puavo_conf
+end
+
 def setup_rdiff_tasks(source_image_file, target_image_file, metadata_file)
   source_image_file_fp = "#{ Image_dir }/#{ source_image_file }"
 
@@ -252,12 +285,13 @@ image_series.each do |series_name, image_list|
     end
 
     image_metadata = {
-      'diffs'    => [],
-      'filename' => target_image_file,
-      'id'       => File.basename(target_image_file, '.img'),
-      'size'     => File.size(target_image_file_fp),
-      'urls'     => [ "#{ Images_urlbase }/#{ target_image_file }" ],
-      'version'  => get_image_version(target_image_file),
+      'diffs'      => [],
+      'filename'   => target_image_file,
+      'id'         => File.basename(target_image_file, '.img'),
+      'puavo-conf' => get_puavo_conf_defaults(target_image_file_fp),
+      'size'       => File.size(target_image_file_fp),
+      'urls'       => [ "#{ Images_urlbase }/#{ target_image_file }" ],
+      'version'    => get_image_version(target_image_file),
      }
 
     file series_metadata_file => [ target_image_file_copy ] + checksum_files
