@@ -8,7 +8,7 @@ pipeline {
   }
 
   stages {
-    stage('Prepare for image build') {
+    stage('Prepare for build') {
       steps {
         sh '''
           apt-get update
@@ -19,31 +19,19 @@ pipeline {
       }
     }
 
-    stage('Bootstrap image') {
-      steps {
-        sh 'make rootfs-debootstrap'
-      }
+    stage('Install deb-package build dependencies') {
+      steps { sh 'make install-build-deps' }
     }
 
-    stage('Build and configure image') {
-      steps {
-        sh 'make rootfs-update'
-      }
+    stage('Build puavo-os deb-packages') {
+      steps { sh 'make build-debs-parts' }
     }
 
-    stage('Make the squashfs image') {
-      steps {
-        sh 'make release_name=Jenkinsbuild-$(date +%s) rootfs-image'
-      }
+    stage('Build custom deb-packages used in puavo-os') {
+      steps { sh 'make build-debs-ports' }
     }
 
-    stage('Test') {
-      steps {
-        sh 'echo XXX make test the image maybe'
-      }
-    }
-
-    stage('Upload') {
+    stage('Upload deb-packages') {
       steps {
         withCredentials([file(credentialsId: 'dput.cf',
                               variable: 'DPUT_CONFIG_FILE')]) {
@@ -61,10 +49,29 @@ pipeline {
                                            passphraseVariable: '',
                                            usernameVariable: '')]) {
           sh 'cp -p "$ID_RSA" ~/.ssh/id_rsa'
-          sh 'echo XXX could maybe upload the built debian packages'
-          sh 'echo XXX could maybe upload the image somewhere'
         }
+        sh 'make upload-debs'
       }
+    }
+
+    stage('Bootstrap image') {
+      steps { sh 'make rootfs-debootstrap' }
+    }
+
+    stage('Build and configure image') {
+      steps { sh 'make rootfs-update' }
+    }
+
+    stage('Make the squashfs image') {
+      steps { sh 'make release_name="Jenkinsbuild-$(date +%s)" rootfs-image' }
+    }
+
+    stage('Test') {
+      steps { sh 'echo XXX make test the image maybe' }
+    }
+
+    stage('Upload image') {
+      steps { sh 'echo XXX maybe upload image here somehow somewhere' }
     }
   }
 }
