@@ -15,6 +15,9 @@ pipeline {
           apt-get -y dist-upgrade
           apt-get install -y devscripts dpkg-dev make
         '''
+        // We can treat a docker container as if it is a puavo-os system
+        // so package builds can proceed:
+        sh 'mkdir -p /puavo-os'
       }
     }
 
