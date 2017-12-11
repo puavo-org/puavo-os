@@ -300,6 +300,10 @@ function enable() {
 	savedUpdateVisibility = Main.panel.statusArea.aggregateMenu._volume._volumeMenu._input._updateVisibility;
 	Main.panel.statusArea.aggregateMenu._volume._volumeMenu._input._updateVisibility = function () {};
 	Main.panel.statusArea.aggregateMenu._volume._volumeMenu._input.item.actor.visible = true;
+
+	// Make the aggregate menu wider to prevent an unfortunate text ellipsis.
+	// We do this here, because those "unfortunate" labels are added here.
+	Main.panel.statusArea.aggregateMenu.menu.box.set_width(350);
 }
 
 function disable() {
