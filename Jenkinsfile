@@ -13,7 +13,7 @@ pipeline {
         sh '''
           apt-get update
           apt-get -y dist-upgrade
-          apt-get install -y devscripts dpkg-dev make
+          apt-get install -y apt-utils devscripts dpkg-dev make puppet
           make setup-buildhost
         '''
         // We can treat a docker container as if it is a puavo-os system
