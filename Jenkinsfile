@@ -3,7 +3,7 @@ pipeline {
     docker {
       image 'debian:stretch'
       // XXX could you do most operations as normal user?
-      args '-u root'
+      args '-u root --mount type=bind,source=/etc/jenkins-docker-config,destination=/etc/jenkins-docker-config,readonly'
     }
   }
 
@@ -33,23 +33,18 @@ pipeline {
 
     stage('Upload deb-packages') {
       steps {
-        withCredentials([file(credentialsId: 'dput.cf',
-                              variable: 'DPUT_CONFIG_FILE')]) {
-          sh 'install -o root -g root -m 644 "$DPUT_CONFIG_FILE" /etc/dput.cf'
-        }
-        withCredentials([file(credentialsId: 'ssh_known_hosts',
-                              variable: 'SSH_KNOWN_HOSTS')]) {
-          sh '''
-            mkdir -m 700 -p ~/.ssh
-            cp -p "$SSH_KNOWN_HOSTS" ~/.ssh/known_hosts
-          '''
-        }
-        withCredentials([sshUserPrivateKey(credentialsId: 'puavo-deb-upload',
-                                           keyFileVariable: 'ID_RSA',
-                                           passphraseVariable: '',
-                                           usernameVariable: '')]) {
-          sh 'cp -p "$ID_RSA" ~/.ssh/id_rsa'
-        }
+        sh '''
+          install -o root -g root -m 644 /etc/jenkins-docker-config/dput.cf \
+            /etc/dput.cf
+          install -o root -g root -m 644 \
+            /etc/jenkins-docker-config/ssh_known_hosts \
+            /etc/ssh/ssh_known_hosts
+          install -d -o root -g root -m 700 ~/.ssh
+          install -o root -g root -m 600 \
+            /etc/jenkins-docker-config/sshkey_puavo_deb_upload \
+            ~/.ssh/id_rsa
+        '''
+
         sh 'make upload-debs'
       }
     }
