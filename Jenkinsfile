@@ -14,7 +14,6 @@ pipeline {
           apt-get update
           apt-get -y dist-upgrade
           apt-get install -y devscripts dpkg-dev make
-          make setup-buildhost
         '''
       }
     }
@@ -47,26 +46,6 @@ pipeline {
 
         sh 'make upload-debs'
       }
-    }
-
-    stage('Bootstrap image') {
-      steps { sh 'make rootfs-debootstrap' }
-    }
-
-    stage('Build and configure image') {
-      steps { sh 'make rootfs-update' }
-    }
-
-    stage('Make the squashfs image') {
-      steps { sh 'make release_name="Jenkinsbuild-$(date +%s)" rootfs-image' }
-    }
-
-    stage('Test') {
-      steps { sh 'echo XXX make test the image maybe' }
-    }
-
-    stage('Upload image') {
-      steps { sh 'echo XXX maybe upload image here somehow somewhere' }
     }
   }
 }
