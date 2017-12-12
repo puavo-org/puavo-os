@@ -8,7 +8,7 @@ Homepage: https://github.com/deragon/autopoweroff
 
 Package: autopoweroff
 Architecture: all
-Depends: python
+Depends: python, systemd-sysv
 Description: Automatically power off a computer if not used
  GUI configurator available from menus System/Administration/Autopoweroff
  .
