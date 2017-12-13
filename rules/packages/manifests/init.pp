@@ -228,6 +228,7 @@ class packages {
     , 'dia'
     , 'dvgrab'
     , 'fotowall'
+    , 'freecad'
     , 'gimp'
     , 'gimp-data-extras'
     , 'gimp-gap'
