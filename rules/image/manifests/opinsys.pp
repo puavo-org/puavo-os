@@ -1,5 +1,6 @@
 class image::opinsys {
-  include ::art::opinsys,
+  include ::art::kemi,
+           :art::opinsys,
           ::image::allinone,
           ::oracle_java,
           ::primus,
