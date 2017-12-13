@@ -31,6 +31,13 @@ manual_add_modules overlay
 manual_add_modules overlayfs
 manual_add_modules squashfs
 
+# hooks/fsck does not copy fsck because we have an empty /etc/fstab
+copy_exec /sbin/fsck
+copy_exec /sbin/fsck.ext2
+copy_exec /sbin/fsck.ext3
+copy_exec /sbin/fsck.ext4
+copy_exec /sbin/logsave
+
 #
 # puavo-conf
 #

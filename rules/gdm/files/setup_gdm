@@ -54,7 +54,7 @@ allowed-failures=1
 disable-user-list=${disable_user_list}
 enable-guestuser={if puavo_guestlogin_enabled == "true"}true{else}false{end}
 fallback-logo='/usr/share/icons/hicolor/48x48/emblems/emblem-debian-white.png'
-logo='{puavo_desktop_vendor_logo}'
+logo='{puavo_greeter_logo}'
 
 [org/gnome/desktop/peripherals/touchpad]
 natural-scroll=false
