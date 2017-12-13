@@ -2,6 +2,8 @@ class adm::users {
   include ::adm
 
   adm::user {
+    # 1001 was reserved before
+
     'adm-juhaerk':
       sshkey      => 'AAAAB3NzaC1yc2EAAAABIwAAAQEAnlcriJylDCXUIy619nX/nBjDLaf4M668nz7HBFfwA2rlsbA48LPZ+gkUB2KgW6GUikT13djFo352HYQ2m3NJzNjTtk5hmZuGVb7eNmE5Q2/rr9D3vkEJN8qDDRsiKSk8nS3sya4pv7+BMe/4OoDV4ANvehd7svn3osqzHstQHvm+a6ycN8bqCsBYgj9is7PDnnoKA4XU6aOq13OfoB6XIZx3Q6qy745k976lOFOHVNtrUWJbUwz8OpDl3rU02Bc3P7a98BbuAwWp37AQSPg8Mhn8oXrUW/Dw5xeGVSVC1SFG4hEcEnF9gIYMY8WAYBzLOExPU/riOc/PnmX7vlJ/Zw==',
       sshkey_type => 'rsa',
@@ -16,6 +18,8 @@ class adm::users {
       sshkey      => 'AAAAB3NzaC1yc2EAAAABIwAAAQEAr8YO+0Ygwy592shekjeN6g+8f2TXY3Nt7eTV7u36eVQwLoy4+pThtVCKk1ei2u6cJi2AeKkIK/mWVkiju6OUTrMjsBIi3VBSUc+O8/cgi73SjuZjvRXuQUP27zFyoPLVbwk99K15upHJtV7FEIzfTretU6f5KssDjDyo/GJTSSL11R0HQWbGkSSAmEGqz1C965NJ4T78L3jLznf9bxkjClfpVaHXanEEvya3qay7izcBZT3k4R32hhTVzRhb2obt5BPguzkfz3jfG1/YfS8AjHTTJDz+uPdWVLpFdFB40TOkjgW6kQCq5c4VqAjeLYvo6lda9NP8HqHPm9pB39/MDQ==',
       sshkey_type => 'rsa',
       uid         => 1004;
+
+    # 1005 was reserved before
 
     'adm-mjokinen':
       sshkey      => 'AAAAB3NzaC1yc2EAAAABIwAAAQEAvs4IP+ijmRvoE1x1mfbzaHXEd11czXQhVir/VtrEC4S6T9isqRwe1l+sKsrnlNp4X8qfqR7mPUuw/UoUAD2Zuk0zTtijxFVneqEEM4Q5KCo2WJrHt1DhvGdI9oBIQOFLLLJdX5sAq1JkVelrfVRSUtDCkKVLTj5pE+R7duYPdVO3804oO5GV2oroYfgDALf+Zt1YgfQuLeEw5ubu0hmk8Vf1RYmQBCiQPAcny0R5JbEWygugQJ5PVFYoi8Q7uYQzM1TJBy2xkZvJI/Yl3LJ9VO0ddh7hLaszAyT0O9YbmBbez3cmrukbPOzclmglmrSs2DuTtdZCrWNfiGrMORR38w==',
