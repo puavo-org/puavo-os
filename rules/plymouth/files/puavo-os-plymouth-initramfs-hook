@@ -16,6 +16,4 @@ case "${1}" in
 		;;
 esac
 
-THEMES='/usr/share/plymouth/themes'
-
-cp -R -t "${DESTDIR}/${THEMES}" "$THEMES"
+cp -R -t "${DESTDIR}/usr/share/plymouth" /usr/share/plymouth/themes
