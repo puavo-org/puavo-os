@@ -60,6 +60,7 @@ class packages {
     , 'iftop'
     , 'inetutils-traceroute'
     , 'initramfs-tools'
+    , 'initramfs-tools-core'
     , 'inotify-tools'
     , 'iperf'
     , 'libstdc++5'
