@@ -1,0 +1,19 @@
+#!/bin/sh
+
+set -e
+
+PREREQ=""
+
+prereqs()
+{
+	echo "${PREREQ}"
+}
+
+case "${1}" in
+	prereqs)
+		prereqs
+		exit 0
+		;;
+esac
+
+cp -R -t "${DESTDIR}/usr/share/plymouth" /usr/share/plymouth/themes
