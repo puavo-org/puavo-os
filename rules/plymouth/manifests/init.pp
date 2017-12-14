@@ -24,6 +24,7 @@ class plymouth {
 
   file {
     '/usr/share/initramfs-tools/hooks/puavo-os-plymouth':
+      mode    => '0755',
       require => Package['initramfs-tools-core'],
       source  => 'puppet:///modules/plymouth/puavo-os-plymouth-initramfs-hook';
   }
