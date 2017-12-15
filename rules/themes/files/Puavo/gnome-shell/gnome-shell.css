@@ -135,7 +135,7 @@
     color: #000 !important;
   }
 
-  .popup-menu-item:active {
+  .popup-menu-item:hover, .popup-menu-item:active {
     background-color: #4a90d9 !important;
     color: #fff !important;
   }
