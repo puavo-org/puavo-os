@@ -33,6 +33,12 @@ fi
 # this host is personally administered so special rules apply
 #
 
+# If guest login is enabled, allow guest user in.
+if [ "$(puavo-conf puavo.guestlogin.enabled)" = 'true' \
+  -a "$PAM_USER" = 'guest' ]; then
+    exit 0
+fi
+
 # config does not exist or is not readable, so do not restrict anyone
 [ ! -r "$local_config_path" ] && exit 0
 
