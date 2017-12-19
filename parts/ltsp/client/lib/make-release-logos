@@ -17,7 +17,7 @@ mkdir -p /usr/share/icons/release_logos
 
 for hosttype in $hosttypes; do
   hosttype_uppercased="$(uppercase $hosttype)"
-  convert -font Ubuntu-R -gravity center -background transparent \
+  convert -size 94x -font Ubuntu-R -gravity center -background transparent \
       -matte -bordercolor none -border 3 \
       '(' pango:"<span foreground=\"#41786b\" font-size=\"x-small\">${hosttype_uppercased}</span>" ')' \
       '(' pango:"<span foreground=\"#41786b\" font-size=\"x-small\">${release}</span>" ')' \
