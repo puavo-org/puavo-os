@@ -7,6 +7,15 @@ pipeline {
     }
   }
 
+  environment {
+    ftp_proxy   = 'ftp://localhost:3128'
+    FTP_PROXY   = 'ftp://localhost:3128'
+    http_proxy  = 'http://localhost:3128'
+    HTTP_PROXY  = 'http://localhost:3128'
+    https_proxy = 'http://localhost:3128'
+    HTTPS_PROXY = 'http://localhost:3128'
+  }
+
   stages {
     stage('Prepare for build') {
       steps {
