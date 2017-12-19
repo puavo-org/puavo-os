@@ -7,4 +7,6 @@ debconf-set-selections <<'EOF'
 firmware-ipw2x00	firmware-ipw2x00/license/accepted	boolean	true
 firmware-ivtv		firmware-ivtv/license/accepted		boolean	true
 resolvconf		resolvconf/linkify-resolvconf		boolean	false
+steam			steam/question				select I AGREE
+steam			steam/license				note
 EOF
