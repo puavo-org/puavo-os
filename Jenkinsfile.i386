@@ -8,6 +8,13 @@ pipeline {
   }
 
   stages {
+    stage('Checkout') {
+      steps {
+        cleanWs()
+        checkout scm
+      }
+    }
+
     stage('Prepare for build') {
       steps {
         sh '''
