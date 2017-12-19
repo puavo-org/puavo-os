@@ -765,6 +765,9 @@ class packages {
       ensure => present,
       tag    => [ 'tag_firmware', 'tag_debian_nonfree', ];
 
+    'steam':
+      tag => [ 'tag_games', 'tag_debian_nonfree', ];
+
     'scribus-doc':
       tag => [ 'tag_office', 'tag_debian_nonfree', ];
 
