@@ -10,6 +10,8 @@ pipeline {
   stages {
     stage('Prepare for build') {
       steps {
+        sh 'git clean -dfx'
+
         sh '''
           apt-get update
           apt-get -y dist-upgrade
