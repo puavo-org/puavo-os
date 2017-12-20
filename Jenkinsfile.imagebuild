@@ -10,8 +10,6 @@ pipeline {
   stages {
     stage('Prepare for build') {
       steps {
-        sh 'git clean -dfx'
-
         sh '''
           apt-get update
           apt-get -y dist-upgrade
@@ -39,6 +37,12 @@ pipeline {
 
     stage('Upload image') {
       steps { sh 'echo XXX maybe upload image here somehow somewhere' }
+    }
+  }
+
+  post {
+    always {
+      deleteDir() /* clean up our workspace */
     }
   }
 }
