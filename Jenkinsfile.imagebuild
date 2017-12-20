@@ -3,7 +3,7 @@ pipeline {
     docker {
       image 'debian:stretch'
       // XXX could you do most operations as normal user?
-      args '-u root'
+      args '-u root --env-file=/etc/jenkins-docker-config/environment'
     }
   }
 
