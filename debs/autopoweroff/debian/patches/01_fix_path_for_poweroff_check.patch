@@ -1,0 +1,26 @@
+diff -ruN autopoweroff.orig/configure.in autopoweroff/configure.in
+--- autopoweroff.orig/configure.in	2008-06-02 03:26:00.000000000 +0300
++++ autopoweroff/configure.in	2017-12-21 08:19:41.726707332 +0200
+@@ -1,10 +1,5 @@
+ process this file with autoconf to produce a configure script.
+ 
+-# Need to setup PATH with sbin directories so calls to testprg() work.
+-# When called with a non-root account, sbin directories are not in the
+-# PATH by default, causing binaries such as "shutdown" not to be found.
+-PATH=/sbin:/usr/sbin:${PATH}
+-
+ AC_INIT(autopoweroff, 2.9.1, hans@deragon.biz)
+ AM_INIT_AUTOMAKE(autopoweroff, 2.9.1)
+ AC_REVISION($Revision: 1.4 $)
+@@ -157,6 +152,11 @@
+   fi
+ }
+ 
++# Need to setup PATH with sbin directories so calls to testprg() work.
++# When called with a non-root account, sbin directories are not in the
++# PATH by default, causing binaries such as "shutdown" not to be found.
++PATH=/sbin:/usr/sbin:${PATH}
++
+ UBUNTUCOMPATIBLE=0
+ FEDORACOMPATIBLE=0
+ SUSECOMPATIBLE=0

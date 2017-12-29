@@ -11,7 +11,6 @@ setup_apiserver
 setup_device_json
 update_puavoconf_values
 disable_cronjobs
-link_release_logo
 manage_system_services
 sync_clock_from_server
 set_machine_id
@@ -53,5 +52,5 @@ setup_guestuser
 setup_nfs
 setup_gdm
 setup_puavopkgs
+setup_webmenu_logos
 setup_systemd
-setup_webmenu_vendor_logo

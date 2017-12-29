@@ -60,6 +60,7 @@ class packages {
     , 'iftop'
     , 'inetutils-traceroute'
     , 'initramfs-tools'
+    , 'initramfs-tools-core'
     , 'inotify-tools'
     , 'iperf'
     , 'libstdc++5'
@@ -228,6 +229,7 @@ class packages {
     , 'dia'
     , 'dvgrab'
     , 'fotowall'
+    , 'freecad'
     , 'gimp'
     , 'gimp-data-extras'
     , 'gimp-gap'
@@ -762,6 +764,9 @@ class packages {
     , 'iucode-tool' ]:
       ensure => present,
       tag    => [ 'tag_firmware', 'tag_debian_nonfree', ];
+
+    'steam':
+      tag => [ 'tag_games', 'tag_debian_nonfree', ];
 
     'scribus-doc':
       tag => [ 'tag_office', 'tag_debian_nonfree', ];

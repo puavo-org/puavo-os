@@ -2,22 +2,26 @@
 
 set -eu
 
+uppercase() { printf %s "$1" | tr '[:lower:]' '[:upper:]'; }
+
 release=$(cat /etc/puavo-image/release)
-hosttypes="fatclient laptop wirelessaccesspoint"
-webmenu_logo_source=$(jq -r '."puavo.desktop.vendor.logo"' /etc/puavo-conf/image.json)
+hosttypes=$(ls /usr/share/puavo-conf/profile-overwrites/*.json \
+              | xargs -I % -n 1 basename % .json)
 
-uppercase() { echo -n "$1" | tr [:lower:] [:upper:]; }
-
-if [ -f "$webmenu_logo_source" ]; then
-  for hosttype in $hosttypes; do
-    hosttype_uppercased="$(uppercase $hosttype)"
-    convert -font Ubuntu-R -gravity center -background transparent \
-        -matte -bordercolor none -border 35 \
-        '(' -gravity center -resize 100x "$webmenu_logo_source" ')' \
-        '(' pango:"<span foreground=\"#41786b\" font-size=\"x-small\">${hosttype_uppercased}</span>" ')' \
-        '(' pango:"<span foreground=\"#41786b\" font-size=\"x-small\">${release}</span>" ')' \
-        -append "/usr/share/icons/release_logo.${hosttype}.png"
-  done
+if [ -z "$hosttypes" ]; then
+  echo 'Could not determine hosttypes for release logos' >&2
+  exit 1
 fi
+
+mkdir -p /usr/share/icons/release_logos
+
+for hosttype in $hosttypes; do
+  hosttype_uppercased="$(uppercase $hosttype)"
+  convert -size 94x -font Ubuntu-R -gravity center -background transparent \
+      -matte -bordercolor none -border 3 \
+      '(' pango:"<span foreground=\"#41786b\" font-size=\"x-small\">${hosttype_uppercased}</span>" ')' \
+      '(' pango:"<span foreground=\"#41786b\" font-size=\"x-small\">${release}</span>" ')' \
+      -append "/usr/share/icons/release_logos/${hosttype}.png"
+done
 
 exit 0

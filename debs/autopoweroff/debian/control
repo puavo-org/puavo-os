@@ -2,7 +2,7 @@ Source: autopoweroff
 Section: misc
 Priority: extra
 Maintainer: Opinsys Developers <dev@opinsys.fi>
-Build-Depends: debhelper (>= 8), python
+Build-Depends: debhelper (>= 8), python, systemd-sysv
 Standards-Version: 3.9.6
 Homepage: https://github.com/deragon/autopoweroff
 

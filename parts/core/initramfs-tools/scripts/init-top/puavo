@@ -93,3 +93,11 @@ if [ -n "$puavo_blacklist" ]; then
   done
   IFS="$OLDIFS"
 fi
+
+plymouth_theme=$(puavo-conf puavo.boot.plymouth.theme)
+if [ -n "$plymouth_theme" ]; then
+  cat <<EOF > /etc/plymouth/plymouthd.conf
+[Daemon]
+Theme=${plymouth_theme}
+EOF
+fi
