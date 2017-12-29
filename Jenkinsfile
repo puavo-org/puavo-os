@@ -31,7 +31,11 @@ pipeline {
     }
 
     stage('Build custom deb-packages used in puavo-os') {
-      steps { sh 'make build-debs-ports' }
+      // DEB_BUILD_OPTIONS=nocheck is needed for the grub2-build in
+      // a docker environment.  It makes the build quite a bit faster as
+      // well, but this means that some grub-regressions will not be caught
+      // by Jenkins builds (they are enabled for image builds).
+      steps { sh 'env DEB_BUILD_OPTIONS=nocheck make build-debs-ports' }
     }
 
     stage('Upload deb-packages') {
