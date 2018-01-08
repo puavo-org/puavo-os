@@ -66,6 +66,7 @@ else
       env DEBFULLNAME="Puavo Org" DEBEMAIL="dev@opinsys.fi" \
         dch --newversion "$new_deb_version" \
           "Automatic build for puavo-os on $(env LANG=C date)."
+        dch --distribution "$(lsb_release -cs)" --release ''
     fi
 
     dpkg-buildpackage -sa -uc -us
