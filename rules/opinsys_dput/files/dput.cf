@@ -1,0 +1,24 @@
+# Example dput.cf that defines the host that can be used
+# with dput for uploading.
+
+[DEFAULT]
+login                   = *
+method                  = ftp
+hash                    = md5
+allow_unsigned_uploads  = 1
+allow_dcut              = 0
+run_lintian             = 0
+run_dinstall            = 0
+check_version           = 0
+scp_compress            = 0
+post_upload_command     =
+pre_upload_command      =
+passive_ftp             = 1
+default_host_main       =
+allowed_distributions   = (?!UNRELEASED)
+
+[puavo]
+fqdn     = archive-internal.opinsys.fi
+incoming = /srv/aptirepo/puavo/incoming
+login    = aptirepo-http
+method   = rsync
