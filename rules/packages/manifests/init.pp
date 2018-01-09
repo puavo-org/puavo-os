@@ -153,6 +153,7 @@ class packages {
     , 'devscripts'
     , 'dh-make'
     , 'dpkg-dev'
+    , 'dput'
     , 'fakeroot'
     , 'gdb'
     , 'gnupg'
