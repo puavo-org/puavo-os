@@ -35,6 +35,7 @@ all: $(_dpkg_buildpackage)
 
 .PHONY: cloud
 cloud: $(_dpkg_buildpackage_cloud)
+	$(MAKE) update-repo
 
 .PHONY: parts
 parts: $(_dpkg_buildpackage_parts)

@@ -38,6 +38,11 @@ pipeline {
       steps { sh 'env DEB_BUILD_OPTIONS=nocheck make build-debs-ports' }
     }
 
+    stage('Build puavo-os cloud deb-packages') {
+      // These are packages not needed by puavo-os image.
+      steps { sh 'make build-debs-cloud' }
+    }
+
     stage('Upload deb-packages') {
       steps {
         sh '''

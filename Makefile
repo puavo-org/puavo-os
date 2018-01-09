@@ -56,6 +56,10 @@ export _sudo
 .PHONY: build
 build: build-debs-ports build-debs-parts
 
+.PHONY: build-debs-cloud
+build-debs-cloud:
+	$(MAKE) -C debs cloud
+
 .PHONY: build-debs-parts
 build-debs-parts:
 	$(MAKE) -C debs parts
@@ -94,6 +98,7 @@ help:
 	@echo 'Targets:'
 	@echo '    [build]              build all'
 	@echo '    apply-rules          apply all Puppet rules'
+	@echo '    build-debs-cloud     build Puavo OS (cloud) Debian packages'
 	@echo '    build-debs-parts     build Puavo OS Debian packages'
 	@echo '    build-debs-ports     build all external Debian packages'
 	@echo '    build-parts          build all parts'
