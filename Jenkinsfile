@@ -26,6 +26,10 @@ pipeline {
       steps { sh 'make install-build-deps' }
     }
 
+    stage('Install (cloud) deb-package build dependencies') {
+      steps { sh 'make -C debs install-build-deps-cloud' }
+    }
+
     stage('Build puavo-os deb-packages') {
       steps { sh 'make build-debs-parts' }
     }
@@ -36,6 +40,11 @@ pipeline {
       // well, but this means that some grub-regressions will not be caught
       // by Jenkins builds (they are enabled for image builds).
       steps { sh 'env DEB_BUILD_OPTIONS=nocheck make build-debs-ports' }
+    }
+
+    stage('Build puavo-os cloud deb-packages') {
+      // These are packages not needed by puavo-os image.
+      steps { sh 'make build-debs-cloud' }
     }
 
     stage('Upload deb-packages') {
