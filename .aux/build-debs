@@ -32,6 +32,10 @@ cp -aH "$srcpkgname"/* "${pkgworkdir}/${srcpkgname}/"
     -t 'apt-get -y --force-yes'
 )
 
+if [ "$mode" = '--install-build-deps' ]; then
+  exit 0
+fi
+
 current_srctree_checksum="$(find "$pkgworkdir" -type f -exec md5sum \{} \; \
                              | sort | md5sum | awk '{ print $1 }')"
 
