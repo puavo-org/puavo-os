@@ -23,7 +23,12 @@ pipeline {
     }
 
     stage('Install deb-package build dependencies') {
-      steps { sh 'make install-build-deps' }
+      steps {
+        sh '''
+          make install-build-deps
+          make -C debs install-build-deps-cloud
+        '''
+      }
     }
 
     stage('Build puavo-os deb-packages') {

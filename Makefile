@@ -105,7 +105,7 @@ help:
 	@echo '    clean                clean debs and parts'
 	@echo '    help                 display this help and exit'
 	@echo '    install              install all'
-	@echo '    install-build-deps   install all build dependencies'
+	@echo '    install-build-deps   install build dependencies (no cloud)'
 	@echo '    install-parts        install all parts'
 	@echo '    rdiffs               make rdiffs for images (uses "rdiff_targets"-variable)'
 	@echo '    rootfs-debootstrap   build Puavo OS rootfs from scratch'
