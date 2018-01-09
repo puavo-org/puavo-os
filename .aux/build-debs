@@ -52,9 +52,9 @@ if [ -n "$builddeps_checksum_file" ]; then
       cd "$pkgworkdir"
       ${PUAVOOS_SUDO:-} mk-build-deps -i "${srcpkgname}/debian/control" \
         -t 'apt-get -y --force-yes'
-
-      echo "$current_srctree_checksum" > "$builddeps_checksum_file"
     )
+
+    echo "$current_srctree_checksum" > "$builddeps_checksum_file"
   fi
 fi
 
@@ -88,9 +88,8 @@ if [ -n "$build_checksum_file" ]; then
 
       dpkg-buildpackage -sa -uc -us
       ../../../../parts/devscripts/bin/do-debpool-changes -m "$pooldir"
-
-      echo "$current_srctree_checksum" > "$build_checksum_file"
     )
+
+    echo "$current_srctree_checksum" > "$build_checksum_file"
   fi
 fi
-
