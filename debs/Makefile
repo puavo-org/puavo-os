@@ -51,8 +51,8 @@ clean:
 
 .dpkg-buildpackage-%: %
 	@env PUAVOOS_SUDO='$(_sudo)' \
-	    ../.aux/build-debs --build-pkgs --install-build-deps "$<" \
-	    "$(_workdir)" "$(CURDIR)/.archive/pool"
+	    ../.aux/build-debs --build-pkgs "$<" "$(_workdir)" \
+	    "$(CURDIR)/.archive/pool"
 
 .PHONY: prepare
 prepare: $(_workdir) update-repo
