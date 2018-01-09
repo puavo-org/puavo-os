@@ -26,6 +26,13 @@ pipeline {
       steps {
         sh '''
           make -C debs .dpkg-buildpackage-unicode-data
+          make -C debs update-repo
+
+          cat <<'EOF' >> /etc/apt/sources.list
+deb [trusted=yes] file:///puavo-os/debs/.archive /
+EOF
+          apt-get update
+
           make -C debs .dpkg-buildpackage-wine
         '''
       }
