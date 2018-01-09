@@ -43,7 +43,7 @@ else
 _proxywrap_cmd := $(CURDIR)/.aux/proxywrap
 endif
 
-_chroot_cmd := sudo chroot --userspec='$(_adm_user):$(_adm_group)' \
+_chroot_cmd := sudo .aux/chroot-cmd --userspec='$(_adm_user):$(_adm_group)' \
 		    '$(rootfs_dir)' \
 		    env 'PUAVO_CACHE_PROXY=$(_proxy_address)'
 
