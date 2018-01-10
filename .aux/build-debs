@@ -28,8 +28,9 @@ cp -aH "$srcpkgname"/* "${pkgworkdir}/${srcpkgname}/"
 (
   echo "Installing build dependencies for ${srcpkgname}"
   cd "$pkgworkdir"
-  ${PUAVOOS_SUDO:-} mk-build-deps -i "${srcpkgname}/debian/control" \
-    -t 'apt-get -y --force-yes'
+  mk-build-deps "${srcpkgname}/debian/control"
+  ${PUAVOOS_SUDO:-} apt-get install -y "./${srcpkgname}-build-deps_"*.deb
+  rm -f "./${srcpkgname}-build-deps_"*.deb
 )
 
 if [ "$mode" = '--install-build-deps' ]; then
