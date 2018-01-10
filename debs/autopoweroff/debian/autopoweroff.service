@@ -1,0 +1,8 @@
+[Unit]
+Description=Autopoweroff
+
+[Service]
+ExecStart=/usr/sbin/autopoweroffd
+
+[Install]
+WantedBy=multi-user.target
