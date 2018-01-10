@@ -2,7 +2,8 @@
 
 set -eu
 
-target_dir=$2
+target_dir=$1
+shift
 
 do_mounts() {
   mount -o bind /dev     "${target_dir}/dev"     || return 1
@@ -29,7 +30,9 @@ if ! do_mounts; then
   exit 1
 fi
 
-chroot "$@" || status=$?
+chroot --userspec='puavo-os:puavo-os' "$target_dir" \
+  env -i HOME=/puavo-os "PUAVO_CACHE_PROXY=${PUAVO_CACHE_PROXY}" USER=puavo-os \
+    "$@" || status=$?
 
 do_umounts || status=$?
 
