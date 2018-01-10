@@ -43,18 +43,20 @@ else
 _proxywrap_cmd := $(CURDIR)/.aux/proxywrap
 endif
 
-_systemd_nspawn_machine_name := \
-  $(notdir $(rootfs_dir))-$(shell tr -dc A-Za-z0-9 < /dev/urandom | head -c8)
-_systemd_nspawn_cmd := sudo systemd-nspawn -D '$(rootfs_dir)' \
-			 -M '$(_systemd_nspawn_machine_name)' \
-			 -u '$(_adm_user)'                    \
-			 --setenv="PUAVO_CACHE_PROXY=$(_proxy_address)"
+_chroot_cmd := sudo .aux/chroot-cmd --userspec='$(_adm_user):$(_adm_group)' \
+		    '$(rootfs_dir)' \
+		    env HOME=/puavo-os 'PUAVO_CACHE_PROXY=$(_proxy_address)' \
+			USER=puavo-os
 
 _sudo := sudo $(_proxywrap_cmd)
 export _sudo
 
 .PHONY: build
 build: build-debs-ports build-debs-parts
+
+.PHONY: build-debs-cloud
+build-debs-cloud:
+	$(MAKE) -C debs cloud
 
 .PHONY: build-debs-parts
 build-debs-parts:
@@ -94,13 +96,14 @@ help:
 	@echo 'Targets:'
 	@echo '    [build]              build all'
 	@echo '    apply-rules          apply all Puppet rules'
+	@echo '    build-debs-cloud     build Puavo OS (cloud) Debian packages'
 	@echo '    build-debs-parts     build Puavo OS Debian packages'
 	@echo '    build-debs-ports     build all external Debian packages'
 	@echo '    build-parts          build all parts'
 	@echo '    clean                clean debs and parts'
 	@echo '    help                 display this help and exit'
 	@echo '    install              install all'
-	@echo '    install-build-deps   install all build dependencies'
+	@echo '    install-build-deps   install build dependencies (no cloud)'
 	@echo '    install-parts        install all parts'
 	@echo '    rdiffs               make rdiffs for images (uses "rdiff_targets"-variable)'
 	@echo '    rootfs-debootstrap   build Puavo OS rootfs from scratch'
@@ -161,7 +164,7 @@ make-release-logos:
 rootfs-image: $(rootfs_dir) $(image_dir)
 	$(_sudo) .aux/set-image-release '$(rootfs_dir)' '$(image_class)' \
 	    '$(notdir $(_image_file))' '$(release_name)'
-	$(_systemd_nspawn_cmd) $(MAKE) -C '/puavo-os' make-release-logos
+	$(_chroot_cmd) $(MAKE) -C '/puavo-os' make-release-logos
 	$(_sudo) mksquashfs '$(rootfs_dir)' '$(_image_file).tmp'	\
 		-noappend -no-recovery -no-sparse -wildcards -comp lzo	\
 		-ef '.aux/$(image_class).excludes'		\
@@ -171,8 +174,7 @@ rootfs-image: $(rootfs_dir) $(image_dir)
 
 .PHONY: rootfs-shell
 rootfs-shell: $(rootfs_dir)
-	$(_systemd_nspawn_cmd) '/puavo-os/.aux/proxywrap' \
-	   sh -c 'cd ~ && exec bash'
+	$(_chroot_cmd) '/puavo-os/.aux/proxywrap' sh -c 'cd ~ && exec bash'
 
 .PHONY: rootfs-sync-repo
 rootfs-sync-repo: $(rootfs_dir)
@@ -184,7 +186,7 @@ rootfs-sync-repo: $(rootfs_dir)
 
 .PHONY: rootfs-update
 rootfs-update: rootfs-sync-repo
-	$(_systemd_nspawn_cmd) $(MAKE) -C '/puavo-os' update
+	$(_chroot_cmd) $(MAKE) -C '/puavo-os' update
 
 .PHONY: setup-buildhost
 setup-buildhost:
@@ -211,9 +213,7 @@ update: /etc/puavo-conf/image.json install-build-deps
 
 .PHONY: upload-debs
 upload-debs:
-	.aux/upload-debs "$(CURDIR)/debs/pool" "$(upload_pkgregex)" \
-		"$(upload_server)" "$(upload_login)" "$(upload_dir)" \
-		"$(upload_codename)"
+	dput puavo debs/.archive/pool/*.changes
 
 .PHONY: apply-rules
 apply-rules: /puavo-os

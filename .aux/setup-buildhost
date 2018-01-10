@@ -10,14 +10,13 @@ packages='
   dbus
   debootstrap
   devscripts
+  dput
   git
   lsb-release
   make
   rsync
   squashfs-tools
   sudo
-  systemd
-  systemd-container
 '
 
 apt-get update
@@ -29,7 +28,7 @@ apt-get -y install $packages
 
 # setup squid as caching proxy for apt and puavo-pkg
 
-apt-get install squid
+apt-get -y install squid
 
 if [ -e /etc/squid/squid.conf -a ! -e /etc/squid/squid.conf.orig ]; then
   mv /etc/squid/squid.conf /etc/squid/squid.conf.orig

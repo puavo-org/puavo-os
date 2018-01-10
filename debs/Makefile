@@ -35,6 +35,7 @@ all: $(_dpkg_buildpackage)
 
 .PHONY: cloud
 cloud: $(_dpkg_buildpackage_cloud)
+	$(MAKE) update-repo
 
 .PHONY: parts
 parts: $(_dpkg_buildpackage_parts)
@@ -49,7 +50,8 @@ clean:
 	rm -rf .archive $(_workdir)
 
 .dpkg-buildpackage-%: %
-	@../.aux/build-debs --build-pkgs "$<" "$(_workdir)" \
+	@env PUAVOOS_SUDO='$(_sudo)' \
+	    ../.aux/build-debs --build-pkgs "$<" "$(_workdir)" \
 	    "$(CURDIR)/.archive/pool"
 
 .PHONY: prepare

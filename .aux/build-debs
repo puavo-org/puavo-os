@@ -7,12 +7,10 @@ srcpkgname=$2
 workdir=$3
 pooldir=$4
 
+checksum_file="${workdir}/.checksum.${srcpkgname}.build"
+
 case "$mode" in
-  --build-pkgs)
-    checksum_file="${workdir}/.checksum.${srcpkgname}.build"
-    ;;
-  --install-build-deps)
-    checksum_file="${workdir}/.checksum.${srcpkgname}.builddeps"
+  --build-pkgs|--install-build-deps)
     ;;
   *)
     echo "Usage: $(basename $0) --build-pkgs|--install-build-deps srcpkg workdir pooldir" >&2
@@ -27,6 +25,18 @@ mkdir -p "${pkgworkdir}/${srcpkgname}"
 
 cp -aH "$srcpkgname"/* "${pkgworkdir}/${srcpkgname}/"
 
+(
+  echo "Installing build dependencies for ${srcpkgname}"
+  cd "$pkgworkdir"
+  mk-build-deps "${srcpkgname}/debian/control"
+  ${PUAVOOS_SUDO:-} apt-get install -y "./${srcpkgname}-build-deps_"*.deb
+  rm -f "./${srcpkgname}-build-deps_"*.deb
+)
+
+if [ "$mode" = '--install-build-deps' ]; then
+  exit 0
+fi
+
 current_srctree_checksum="$(find "$pkgworkdir" -type f -exec md5sum \{} \; \
                              | sort | md5sum | awk '{ print $1 }')"
 
@@ -38,40 +48,34 @@ fi
 old_srctree_checksum="$(cat "${checksum_file}" 2>/dev/null || true)"
 
 if [ "$current_srctree_checksum" = "$old_srctree_checksum" ]; then
-  # No need to build if source tree matches what we have built previously.
+  # No need to build if source tree matches what we have handled previously.
   echo "No changes to ${srcpkgname}."
   exit 0
 fi
 
-if [ "$mode" = '--install-build-deps' ]; then
-  (
-    cd "$pkgworkdir"
-    ${PUAVOOS_SUDO:-} mk-build-deps -i "${srcpkgname}/debian/control" -t 'apt-get -y --force-yes'
-  )
-  rm -rf "$pkgworkdir"
-else
-  (
-    cd "${pkgworkdir}/${srcpkgname}"
-    debian/scripts/get-orig-source
+echo "Building ${srcpkgname}"
 
-    current_deb_version="$(dpkg-parsechangelog -S version \
-                             | sed -E 's/\+build[0-9]+$//')"
-    if [ -z "$current_deb_version" ]; then
-      echo "Could not determine package version for ${srcpkgname}." >&2
-      exit 1
-    fi
+(
+  cd "${pkgworkdir}/${srcpkgname}"
+  debian/scripts/get-orig-source
 
-    if ! echo "$current_deb_version" | grep -q '\+buildonce$'; then
-      new_deb_version="${current_deb_version}+build$(date +%s)"
-      env DEBFULLNAME="Puavo Org" DEBEMAIL="dev@opinsys.fi" \
-        dch --newversion "$new_deb_version" \
-          "Automatic build for puavo-os on $(env LANG=C date)."
-        dch --distribution "$(lsb_release -cs)" --release ''
-    fi
+  current_deb_version="$(dpkg-parsechangelog -S version \
+			   | sed -E 's/\+build[0-9]+$//')"
+  if [ -z "$current_deb_version" ]; then
+    echo "Could not determine package version for ${srcpkgname}." >&2
+    exit 1
+  fi
 
-    dpkg-buildpackage -sa -uc -us
-    ../../../../parts/devscripts/bin/do-debpool-changes -m "$pooldir"
-  )
-fi
+  if ! echo "$current_deb_version" | grep -q '\+buildonce$'; then
+    new_deb_version="${current_deb_version}+build$(date +%s)"
+    env DEBFULLNAME="Puavo Org" DEBEMAIL="dev@opinsys.fi" \
+      dch --newversion "$new_deb_version" \
+	"Automatic build for puavo-os on $(env LANG=C date)."
+      dch --distribution "$(lsb_release -cs)" --release ''
+  fi
+
+  dpkg-buildpackage -sa -uc -us
+  ../../../../parts/devscripts/bin/do-debpool-changes -m "$pooldir"
+)
 
 echo "$current_srctree_checksum" > "$checksum_file"
