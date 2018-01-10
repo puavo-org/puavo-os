@@ -153,6 +153,7 @@ class packages {
     , 'devscripts'
     , 'dh-make'
     , 'dpkg-dev'
+    , 'dput'
     , 'fakeroot'
     , 'gdb'
     , 'gnupg'
@@ -692,9 +693,9 @@ class packages {
       dkms_modules => $all_dkms_modules,
       package_name => 'linux-image-3.16.0-4-amd64';
 
-    '4.9.0-4-amd64':
+    '4.9.0-5-amd64':
       dkms_modules => $all_dkms_modules,
-      package_name => 'linux-image-4.9.0-4-amd64';
+      package_name => 'linux-image-4.9.0-5-amd64';
   }
 
   # XXX missing from Debian
