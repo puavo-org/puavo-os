@@ -11,6 +11,7 @@ _pkgs_ports     := autopoweroff    \
                    unicode-data    \
                    visionmedia-mon \
                    vtun            \
+                   wine            \
                    wpa
 _pkgs_image     := $(_pkgs_parts) $(_pkgs_ports)
 
