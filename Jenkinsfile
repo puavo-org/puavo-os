@@ -22,14 +22,6 @@ pipeline {
       }
     }
 
-    stage('Install deb-package build dependencies') {
-      steps { sh 'make install-build-deps' }
-    }
-
-    stage('Install (cloud) deb-package build dependencies') {
-      steps { sh 'make -C debs install-build-deps-cloud' }
-    }
-
     stage('Build puavo-os deb-packages') {
       steps { sh 'make build-debs-parts' }
     }
