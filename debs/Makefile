@@ -27,42 +27,31 @@ _dpkg_buildpackage_parts     := $(_pkgs_parts:%=.dpkg-buildpackage-%)
 _dpkg_buildpackage_ports     := $(_pkgs_ports:%=.dpkg-buildpackage-%)
 _dpkg_buildpackage           := $(_pkgs_image:%=.dpkg-buildpackage-%)
 
-_install_build_deps_builddeps := $(_pkgs_builddeps:%=.install-build-deps-%)
-_install_build_deps_cloud     := $(_pkgs_cloud:%=.install-build-deps-%)
-_install_build_deps_parts     := $(_pkgs_parts:%=.install-build-deps-%)
-_install_build_deps_ports     := $(_pkgs_ports:%=.install-build-deps-%)
-_install_build_deps           := $(_pkgs_image:%=.install-build-deps-%)
-
 _workdir = .workdir
 
 .PHONY: all
 all: $(_dpkg_buildpackage)
-	$(MAKE) update-repo
 
 .PHONY: builddeps
 builddeps: $(_dpkg_buildpackage_builddeps)
-	$(MAKE) update-repo
 
 .PHONY: cloud
 cloud: $(_dpkg_buildpackage_cloud)
-	$(MAKE) update-repo
 
 .PHONY: parts
 parts: $(_dpkg_buildpackage_parts)
-	$(MAKE) update-repo
 
 .PHONY: ports
 ports: $(_dpkg_buildpackage_ports)
-	$(MAKE) update-repo
 
 .PHONY: clean
 clean:
 	rm -rf .archive $(_workdir)
 
-.dpkg-buildpackage-%: %
+.dpkg-buildpackage-%: % apt_update
 	@env PUAVOOS_SUDO='$(_sudo)' \
-	    ../.aux/build-debs --build-pkgs "$<" "$(_workdir)" \
-	    "$(CURDIR)/.archive/pool"
+	    ../.aux/build-debs "$<" "$(_workdir)" "$(CURDIR)/.archive/pool"
+	$(MAKE) update-repo
 
 .PHONY: prepare
 prepare: $(_workdir) update-repo
@@ -84,26 +73,6 @@ $(_workdir):
 .archive/Release: .archive/Packages.gz
 	cd .archive && apt-ftparchive \
 	    -o APT::FTPArchive::Release::Origin=puavo-os release . > Release
-
-.PHONY: install-build-deps-builddeps
-install-build-deps-builddeps: $(_install_build_deps_builddeps)
-
-.PHONY: install-build-deps-cloud
-install-build-deps-cloud: $(_install_build_deps_cloud)
-
-.PHONY: install-build-deps-parts
-install-build-deps-parts: $(_install_build_deps_parts)
-
-.PHONY: install-build-deps-ports
-install-build-deps-ports: $(_install_build_deps_ports)
-
-.PHONY: install-build-deps
-install-build-deps: builddeps $(_install_build_deps)
-
-.install-build-deps-%: % apt_update
-	@env PUAVOOS_SUDO='$(_sudo)' \
-	    ../.aux/build-debs --install-build-deps \
-	    "$<" "$(_workdir)" "$(CURDIR)/.archive/pool"
 
 .PHONY: apt_update
 apt_update:

@@ -2,21 +2,16 @@
 
 set -eu
 
-mode=$1
-srcpkgname=$2
-workdir=$3
-pooldir=$4
+srcpkgname=$1
+workdir=$2
+pooldir=$3
 
 checksum_file="${workdir}/.checksum.${srcpkgname}.build"
 
-case "$mode" in
-  --build-pkgs|--install-build-deps)
-    ;;
-  *)
-    echo "Usage: $(basename $0) --build-pkgs|--install-build-deps srcpkg workdir pooldir" >&2
-    exit 1
-    ;;
-esac
+if [ -z "$srcpkgname" -o -z "$workdir" -o -z "$pooldir" ]; then
+  echo "Usage: $(basename $0) srcpkg workdir pooldir" >&2
+  exit 1
+fi
 
 pkgworkdir="${workdir}/${srcpkgname}"
 
@@ -48,10 +43,6 @@ fi
   ${PUAVOOS_SUDO:-} apt-get install -y "./${srcpkgname}-build-deps_"*.deb
   rm -f "./${srcpkgname}-build-deps_"*.deb
 )
-
-if [ "$mode" = '--install-build-deps' ]; then
-  exit 0
-fi
 
 echo "Building ${srcpkgname}"
 
