@@ -3,6 +3,8 @@ Description=Autopoweroff
 
 [Service]
 ExecStart=/usr/sbin/autopoweroffd
+Type=forking
+PIDFile=/usr/share/var/autopoweroffd.pid
 
 [Install]
 WantedBy=multi-user.target
