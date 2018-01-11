@@ -190,12 +190,7 @@ setup-buildhost:
 	$(_sudo) mv $@.tmp $@
 
 .PHONY: update
-update: /etc/puavo-conf/image.json
-	$(MAKE) -C debs prepare
-
-	$(_sudo) env 'FACTER_localmirror=$(CURDIR)/debs/.archive' \
-	    FACTER_puavoruleset=prepare .aux/apply-puppet-rules
-
+update: prepare /etc/puavo-conf/image.json
 	$(MAKE) build
 
 	$(_sudo) apt-get update
@@ -207,6 +202,12 @@ update: /etc/puavo-conf/image.json
 
 	$(_sudo) update-initramfs -u -k all
 	$(_sudo) updatedb
+
+.PHONY: prepare
+prepare:
+	$(MAKE) -C debs prepare
+	$(_sudo) env 'FACTER_localmirror=$(CURDIR)/debs/.archive' \
+	    FACTER_puavoruleset=prepare .aux/apply-puppet-rules
 
 .PHONY: upload-debs
 upload-debs:
