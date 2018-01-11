@@ -25,18 +25,6 @@ mkdir -p "${pkgworkdir}/${srcpkgname}"
 
 cp -aH "$srcpkgname"/* "${pkgworkdir}/${srcpkgname}/"
 
-(
-  echo "Installing build dependencies for ${srcpkgname}"
-  cd "$pkgworkdir"
-  mk-build-deps "${srcpkgname}/debian/control"
-  ${PUAVOOS_SUDO:-} apt-get install -y "./${srcpkgname}-build-deps_"*.deb
-  rm -f "./${srcpkgname}-build-deps_"*.deb
-)
-
-if [ "$mode" = '--install-build-deps' ]; then
-  exit 0
-fi
-
 current_srctree_checksum="$(find "$pkgworkdir" -type f -exec md5sum \{} \; \
                              | sort | md5sum | awk '{ print $1 }')"
 
@@ -50,6 +38,18 @@ old_srctree_checksum="$(cat "${checksum_file}" 2>/dev/null || true)"
 if [ "$current_srctree_checksum" = "$old_srctree_checksum" ]; then
   # No need to build if source tree matches what we have handled previously.
   echo "No changes to ${srcpkgname}."
+  exit 0
+fi
+
+(
+  echo "Installing build dependencies for ${srcpkgname}"
+  cd "$pkgworkdir"
+  mk-build-deps "${srcpkgname}/debian/control"
+  ${PUAVOOS_SUDO:-} apt-get install -y "./${srcpkgname}-build-deps_"*.deb
+  rm -f "./${srcpkgname}-build-deps_"*.deb
+)
+
+if [ "$mode" = '--install-build-deps' ]; then
   exit 0
 fi
 
