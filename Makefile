@@ -52,16 +52,20 @@ export _sudo
 .PHONY: build
 build: build-debs-ports build-debs-parts
 
+.PHONY: build-debs-builddeps
+build-debs-builddeps:
+	$(MAKE) -C debs builddeps
+
 .PHONY: build-debs-cloud
-build-debs-cloud:
+build-debs-cloud: build-debs-builddeps
 	$(MAKE) -C debs cloud
 
 .PHONY: build-debs-parts
-build-debs-parts:
+build-debs-parts: build-debs-builddeps
 	$(MAKE) -C debs parts
 
 .PHONY: build-debs-ports
-build-debs-ports:
+build-debs-ports: build-debs-builddeps
 	$(MAKE) -C debs ports
 
 # mainly for development use
