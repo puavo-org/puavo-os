@@ -18,6 +18,8 @@ if [ "$(puavo-conf puavo.autopoweroff.enabled)" = "true" ]; then
 	[DEPENDANTS]
 	Hosts=
 	EOF
+  ln -fns /lib/systemd/system/autopoweroff.service \
+          /etc/systemd/system/multi-user.target.wants/autopoweroff.service
 else
-  cat /dev/null > /etc/autopoweroff.conf
+  rm -f /etc/systemd/system/multi-user.target.wants/autopoweroff.service
 fi

@@ -2,11 +2,16 @@
 
 set -eu
 
-target_dir=$2
+target_dir=$1
+shift
 
 do_mounts() {
+  # XXX should these be new mounts and not bind mounts?
+  # XXX for security?
+
   mount -o bind /dev     "${target_dir}/dev"     || return 1
   mount -o bind /dev/pts "${target_dir}/dev/pts" || return 1
+  mount -o bind /dev/shm "${target_dir}/dev/shm" || return 1
   mount -o bind /proc    "${target_dir}/proc"    || return 1
   mount -o bind /sys     "${target_dir}/sys"     || return 1
 }
@@ -14,6 +19,7 @@ do_mounts() {
 do_umounts() {
   do_umounts_status=0
 
+  umount -l "${target_dir}/dev/shm" || do_umounts_status=$?
   umount -l "${target_dir}/dev/pts" || do_umounts_status=$?
   umount -l "${target_dir}/dev"     || do_umounts_status=$?
   umount -l "${target_dir}/proc"    || do_umounts_status=$?
@@ -29,7 +35,12 @@ if ! do_mounts; then
   exit 1
 fi
 
-chroot "$@" || status=$?
+chroot --userspec='puavo-os:puavo-os' "$target_dir" \
+  env -i HOME=/puavo-os \
+         PATH='/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/games:/usr/games' \
+         "PUAVO_CACHE_PROXY=${PUAVO_CACHE_PROXY}" \
+         USER=puavo-os \
+    "$@" || status=$?
 
 do_umounts || status=$?
 

@@ -19,6 +19,10 @@ pipeline {
         // We can treat a docker container as if it is a puavo-os system
         // so package builds can proceed:
         sh 'ln -fns "$(pwd)" /puavo-os'
+
+        // XXX This step fails for some reason (puppet/ruby-bug?) in 32-bit
+        // XXX Docker, but luckily we do not need to do it.
+        // sh 'make prepare'
       }
     }
 

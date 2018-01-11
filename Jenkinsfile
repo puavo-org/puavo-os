@@ -19,6 +19,8 @@ pipeline {
         // We can treat a docker container as if it is a puavo-os system
         // so package builds can proceed:
         sh 'ln -fns "$(pwd)" /puavo-os'
+
+        sh 'make prepare'
       }
     }
 

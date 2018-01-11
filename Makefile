@@ -43,10 +43,8 @@ else
 _proxywrap_cmd := $(CURDIR)/.aux/proxywrap
 endif
 
-_chroot_cmd := sudo .aux/chroot-cmd --userspec='$(_adm_user):$(_adm_group)' \
-		    '$(rootfs_dir)' \
-		    env HOME=/puavo-os 'PUAVO_CACHE_PROXY=$(_proxy_address)' \
-			USER=puavo-os
+_chroot_cmd := sudo env 'PUAVO_CACHE_PROXY=$(_proxy_address)' .aux/chroot-cmd \
+                    '$(rootfs_dir)'
 
 _sudo := sudo $(_proxywrap_cmd)
 export _sudo
@@ -54,16 +52,20 @@ export _sudo
 .PHONY: build
 build: build-debs-ports build-debs-parts
 
+.PHONY: build-debs-builddeps
+build-debs-builddeps:
+	$(MAKE) -C debs builddeps
+
 .PHONY: build-debs-cloud
-build-debs-cloud:
+build-debs-cloud: build-debs-builddeps
 	$(MAKE) -C debs cloud
 
 .PHONY: build-debs-parts
-build-debs-parts:
+build-debs-parts: build-debs-builddeps
 	$(MAKE) -C debs parts
 
 .PHONY: build-debs-ports
-build-debs-ports:
+build-debs-ports: build-debs-builddeps
 	$(MAKE) -C debs ports
 
 # mainly for development use
@@ -80,15 +82,6 @@ install: install-parts
 install-parts: /puavo-os
 	$(_sudo) $(MAKE) -C parts install prefix=/usr sysconfdir=/etc
 
-.PHONY: install-build-deps
-install-build-deps: /puavo-os
-	$(MAKE) -C debs prepare
-
-	$(_sudo) env 'FACTER_localmirror=$(CURDIR)/debs/.archive' \
-	    FACTER_puavoruleset=prepare .aux/apply-puppet-rules
-
-	$(MAKE) -C debs install-build-deps
-
 .PHONY: help
 help:
 	@echo 'Puavo OS Build System'
@@ -103,7 +96,6 @@ help:
 	@echo '    clean                clean debs and parts'
 	@echo '    help                 display this help and exit'
 	@echo '    install              install all'
-	@echo '    install-build-deps   install build dependencies (no cloud)'
 	@echo '    install-parts        install all parts'
 	@echo '    rdiffs               make rdiffs for images (uses "rdiff_targets"-variable)'
 	@echo '    rootfs-debootstrap   build Puavo OS rootfs from scratch'
@@ -198,7 +190,7 @@ setup-buildhost:
 	$(_sudo) mv $@.tmp $@
 
 .PHONY: update
-update: /etc/puavo-conf/image.json install-build-deps
+update: prepare /etc/puavo-conf/image.json
 	$(MAKE) build
 
 	$(_sudo) apt-get update
@@ -210,6 +202,12 @@ update: /etc/puavo-conf/image.json install-build-deps
 
 	$(_sudo) update-initramfs -u -k all
 	$(_sudo) updatedb
+
+.PHONY: prepare
+prepare:
+	$(MAKE) -C debs prepare
+	$(_sudo) env 'FACTER_localmirror=$(CURDIR)/debs/.archive' \
+	    FACTER_puavoruleset=prepare .aux/apply-puppet-rules
 
 .PHONY: upload-debs
 upload-debs:
