@@ -6,7 +6,7 @@ class opinsys_dput {
   file {
     '/etc/dput.cf':
       require => Package['dput'],
-      source  => 'puppet:///modules/dput/dput.cf';
+      source  => 'puppet:///modules/opinsys_dput/dput.cf';
   }
 
   Package <| title == dput |>
