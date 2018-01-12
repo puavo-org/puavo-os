@@ -1,0 +1,46 @@
+#!/bin/sh
+
+set -eu
+
+if [ ! -e /run/puavo/nbd-server ]; then
+  exec /lib/systemd/systemd-shutdown.distrib "$@"
+fi
+
+# If have root over nbd, systemd will mess up the connection by sending
+# STOP-signal to nbd-client (and other processes... note that it does not
+# send TERM or KILL to nbd-client, because the nbd-client process has been
+# marked as special with "@").  As a result reboot/shutdown may not finish.
+# In this case we need to handle the shutdown sequence ourselves.
+
+pids_not_owned_by_root=''
+
+for i in $(seq 5); do
+  # Send TERM to all processes except those owned by root
+  # (not sending to nbd-client).
+  pids_not_owned_by_root=$(pgrep -v -u root 2>/dev/null || true)
+  if [ -z "$pids_not_owned_by_root" ]; then
+    break
+  fi
+
+  kill -TERM $pids_not_owned_by_root || true
+  sleep 1
+done
+
+# Send KILL to all processes (not owned by root) if there still are any.
+if [ -n "$pids_not_owned_by_root" ]; then
+  kill -KILL $pids_not_owned_by_root || true
+fi
+
+# Forcefully unmount /home.
+timeout -k 1 5 umount -f /home || true
+
+mode=$1
+
+case "$mode" in
+  halt|poweroff|reboot)
+    $mode -f
+    ;;
+esac
+
+# Fallback to normal shutdown in case $mode was something else.
+exec /lib/systemd/systemd-shutdown.distrib "$@"

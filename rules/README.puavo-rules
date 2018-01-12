@@ -157,6 +157,9 @@ puavo_conf
 puavo_external_files
     Some helper definitions for setting up links to /state/external_files.
 
+puavo_shutdown
+    A helper script to handle shutdown for systems on nbd root.
+
 rpcgssd
     Configure rpc-gssd for netboot devices.
 
