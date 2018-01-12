@@ -286,6 +286,7 @@ class packages {
     , 'gstreamer1.0-tools'
     , 'gtk-recordmydesktop'
     , 'kaffeine'
+    , 'libdvd-pkg'
     , 'libdvdread4'
     , 'ogmrip'
     , 'vlc'
