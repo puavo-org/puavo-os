@@ -109,6 +109,9 @@ keyutils
 ktouch
     Some extra ktouch training files.
 
+libdvdcss
+    Support for watching encrypted DVDs.
+
 libreoffice
     Set default office formats to MS Office formats, and add a "sujutellaan"
     font.
@@ -156,6 +159,9 @@ puavo_conf
 
 puavo_external_files
     Some helper definitions for setting up links to /state/external_files.
+
+puavo_shutdown
+    A helper script to handle shutdown for systems on nbd root.
 
 rpcgssd
     Configure rpc-gssd for netboot devices.

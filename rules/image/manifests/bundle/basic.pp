@@ -22,6 +22,7 @@ class image::bundle::basic {
   include ::packages::languages::sv
   include ::picaxe_udev_rules
   include ::plymouth
+  include ::puavo_shutdown
   include ::rpcgssd
   include ::ssh_client
   include ::sysctl

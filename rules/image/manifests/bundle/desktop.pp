@@ -15,6 +15,7 @@ class image::bundle::desktop {
   include ::kaffeine
   include ::keyutils
   include ::ktouch
+  include ::libdvdcss
   include ::network_manager
   include ::notify_changelog
   # include ::pycharm	                # XXX pycharm needs to be packaged
