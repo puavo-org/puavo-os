@@ -102,8 +102,8 @@ do_installation() {
   winetricks settings win7
 
   case "$installer_type" in
-    exe) wine "$installer_path"       ;;
-    msi) msiexec /i "$installer_path" ;;
+    exe) wine "$installer_path"           ;;
+    msi) msiexec /i "$installer_path" /qn ;;
   esac
 
   if [ ! -e "${WINEPREFIX}/${program_exepath}" ]; then
