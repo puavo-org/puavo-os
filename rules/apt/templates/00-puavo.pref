@@ -1,3 +1,7 @@
 Package: *
-Pin: release o=puavo-os
+Pin: release o=puavo-os-local
 Pin-Priority: 1001
+
+Package: *
+Pin: release o=puavo-os-remote
+Pin-Priority: 400
