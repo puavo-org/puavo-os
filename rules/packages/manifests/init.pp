@@ -178,6 +178,8 @@ class packages {
       tag => [ 'tag_email', 'tag_debian', ];
 
     [ 'wine'
+    , 'wine32'
+    , 'wine64'
     , 'winetricks' ]:
       tag => [ 'tag_emulation', 'tag_debian', ];
 
