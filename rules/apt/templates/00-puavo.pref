@@ -5,3 +5,7 @@ Pin-Priority: 1001
 Package: *
 Pin: release o=puavo-os-remote
 Pin-Priority: 400
+
+Package: wine32:i386 libwine:i386
+Pin: release o=puavo-os-remote
+Pin-Priority: 1001
