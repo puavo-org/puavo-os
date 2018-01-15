@@ -72,7 +72,8 @@ $(_workdir):
 
 .archive/Release: .archive/Packages.gz
 	cd .archive && apt-ftparchive \
-	    -o APT::FTPArchive::Release::Origin=puavo-os release . > Release
+	    -o APT::FTPArchive::Release::Origin=puavo-os-local release . \
+	    > Release
 
 .PHONY: apt_update
 apt_update:

@@ -36,6 +36,9 @@ class apt::repositories {
       '/etc/apt/sources.list':
         content => template('apt/sources.list'),
         notify  => Exec['apt update'];
+
+      '/etc/apt/trusted.gpg.d/opinsys.gpg':
+        source => 'puppet:///modules/apt/opinsys.gpg';
     }
   }
 }
