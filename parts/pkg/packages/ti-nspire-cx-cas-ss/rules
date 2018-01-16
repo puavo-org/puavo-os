@@ -13,13 +13,15 @@ install_additional_components() {
 
 set -eu
 
-program_exe_dir='drive_c/Program Files/TI Education/TI-Nspire CX CAS Student Software'
+program_exe_dir='drive_c/Program Files (x86)/TI Education/TI-Nspire CX CAS Student Software'
 program_exe_name='TI-Nspire CX CAS Student Software.exe'
 tisoftdir=/opt/wine/ti-nspire-cx-cas-ss
 
 WINEARCH=win32
 WINEDLLOVERRIDES='mscoree,mshtml='
 WINEPREFIX=~/.wine-ti-nspire-cx-cas
+
+export WINEARCH WINEDLLOVERRIDES WINEPREFIX
 
 app_version=4.5.0.1180
 
@@ -57,11 +59,11 @@ run_setup() {
   cp "${tisoftdir}/deployment.properties" \
      "${tiwineroot}/res/deployment.properties"
   mkdir -p "${WINEPREFIX}/drive_c/windows/Fonts/"
-  cp "$tisoftdir"/wineprefix/drive_c/Program\ Files/TI\ Education/TI-Nspire\ CX\ CAS\ Student\ Software/fonts/* "${WINEPREFIX}/drive_c/windows/Fonts/"
+  cp "$tisoftdir"/wineprefix/drive_c/Program\ Files\ \(x86\)/TI\ Education/TI-Nspire\ CX\ CAS\ Student\ Software/fonts/* "${WINEPREFIX}/drive_c/windows/Fonts/"
 
-  mkdir -p "${WINEPREFIX}/drive_c/Program Files/TI Education"
-  ln -fns "${tisoftdir}/wineprefix/drive_c/Program Files/TI Education/TI-Nspire CX CAS Student Software" \
-          "${WINEPREFIX}/drive_c/Program Files/TI Education/TI-Nspire CX CAS Student Software"
+  mkdir -p "${WINEPREFIX}/drive_c/Program Files (x86)/TI Education"
+  ln -fns "${tisoftdir}/wineprefix/drive_c/Program Files (x86)/TI Education/TI-Nspire CX CAS Student Software" \
+          "${WINEPREFIX}/drive_c/Program Files (x86)/TI Education/TI-Nspire CX CAS Student Software"
 
   for filename in system.reg userdef.reg user.reg; do
     # "root" was the login that was used to install the pack
@@ -373,7 +375,6 @@ case "$command" in
     upstream_pack=$1
     upstream_dir=$2
 
-    export WINEARCH=win32
     export WINEPREFIX="$upstream_dir"
     winetricks settings win7
     msiexec /i "$upstream_pack" /qn
