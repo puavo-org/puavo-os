@@ -27,6 +27,7 @@ class puavo_pkg::packages {
 			, 'smartboard'
 			, 'spotify-client'
 			, 'tilitin'
+			, 'ti-nspire-cx-cas-ss'
 			, 't-lasku'
 			, 'vidyo-client'
 			, 'vstloggerpro' ]
