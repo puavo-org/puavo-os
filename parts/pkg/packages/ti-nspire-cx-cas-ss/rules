@@ -61,9 +61,6 @@ run_setup() {
   mkdir -p "${WINEPREFIX}/drive_c/windows/Fonts/"
   cp "$tisoftdir"/wineprefix/drive_c/Program\ Files\ \(x86\)/TI\ Education/TI-Nspire\ CX\ CAS\ Student\ Software/fonts/* "${WINEPREFIX}/drive_c/windows/Fonts/"
 
-  mkdir -p "${WINEPREFIX}/drive_c/Program Files (x86)/TI Education"
-  ln -fns "${tisoftdir}/wineprefix/drive_c/Program Files (x86)/TI Education/TI-Nspire CX CAS Student Software" \
-          "${WINEPREFIX}/drive_c/Program Files (x86)/TI Education/TI-Nspire CX CAS Student Software"
 
   for filename in system.reg userdef.reg user.reg; do
     # "root" was the login that was used to install the pack
@@ -137,6 +134,7 @@ run_setup() {
   xdg-mime default wine-extension-tnsp.desktop \
       application/x-wine-extension-tnsp
 
+  mkdir -p "$(dirname "${WINEPREFIX}/${program_exe_dir}")"
   ln -fns "${tisoftdir}/wineprefix/${program_exe_dir}" \
           "${WINEPREFIX}/${program_exe_dir}"
 }
