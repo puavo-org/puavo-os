@@ -2,6 +2,8 @@
 
 set -eu
 
+# XXX This script is maybe useless and should be removed?
+
 usage() {
   echo "$(basename $0): command arguments not understood"
 }

@@ -5,62 +5,378 @@ set -eu
 command=$1
 shift
 
-wrapper_script_path=/usr/local/bin/ti-nspire-cx-cas-ss
+tisoftdir=/opt/wine/ti-nspire-cx-cas-ss
 
-install_wrapper_script() {
-  cat <<'EOF' > "$wrapper_script_path"
+install_additional_components() {
+  cat <<'EOF' > "${tisoftdir}/ti-nspire-cx-cas-ss"
 #!/bin/sh
 
 set -eu
 
-installer_msi_path='/usr/share/puavo-pkg/installers/ti_nspire_cx_cas_ss_installer.msi'
-
-app_version='4.5.0.118'
-link_wineprefix=~/.wine-ti-nspire-cx-cas-ss
-
-program_exe_dir="drive_c/Program Files/TI Education/TI-Nspire CX CAS Student Software"
+program_exe_dir='drive_c/Program Files/TI Education/TI-Nspire CX CAS Student Software'
 program_exe_name='TI-Nspire CX CAS Student Software.exe'
-program_exe_path="${program_exe_dir}/${program_exe_name}"
+tisoftdir=/opt/wine/ti-nspire-cx-cas-ss
 
-export WINEARCH=win32
+WINEARCH=win32
+WINEDLLOVERRIDES='mscoree,mshtml='
+WINEPREFIX=~/.wine-ti-nspire-cx-cas
 
-puavo-pkg-wine-helper --app-description 'TI-Nspire CX CAS Student Software' \
-                      --app-version     "$app_version"                      \
-                      --install                                             \
-                      --installer-path  "$installer_msi_path"               \
-                      --installer-type  msi                                 \
-                      --link-wineprefix "$link_wineprefix"                  \
-                      --program-exedir  "$program_exe_dir"                  \
-                      --program-exename "$program_exe_name"                 \
+app_version=4.5.0.1180
 
-export WINEPREFIX="$link_wineprefix"
+run_setup() {
+  # Setup $WINEPREFIX for user
+
+  winetricks win7
+
+  # Wait for some time for wineserver to finish, but try to continue as soon
+  # as possible.  One minute should be enough in all cases (there might be
+  # another wineserver running, we do not care about that).
+  i=0
+  while pgrep -x wineserver >/dev/null && [ "$i" -lt 600 ]; do
+    sleep 0.1
+    i=$(($i + 1))
+  done
+
+  country=$( echo "$LANG" | cut -d . -f 1 | cut -d _ -f 2)
+  language=$(echo "$LANG" | cut -d . -f 1 | cut -d _ -f 1)
+
+  tiuserwinedir="${WINEPREFIX}/drive_c/users/${USER}/Application Data/Texas Instruments/TI-Nspire CX CAS Student Software"
+  mkdir -p "$tiuserwinedir"
+  cp "${tisoftdir}/preferences.properties" \
+     "${tiuserwinedir}/preferences.properties"
+  # Set the locale and country
+  cat <<-EOF >> "${tiuserwinedir}/preferences.properties"
+	locale=${language}
+	country=${country}
+	EOF
+
+  tiwineroot="${WINEPREFIX}/drive_c/users/Public/Application Data/TI-Nspire CX CAS"
+  mkdir -p "${tiwineroot}/res"
+  cp "${tisoftdir}/settings.properties" \
+     "${tiwineroot}/res/settings.properties"
+  cp "${tisoftdir}/deployment.properties" \
+     "${tiwineroot}/res/deployment.properties"
+  mkdir -p "${WINEPREFIX}/drive_c/windows/Fonts/"
+  cp "$tisoftdir"/wineprefix/drive_c/Program\ Files/TI\ Education/TI-Nspire\ CX\ CAS\ Student\ Software/fonts/* "${WINEPREFIX}/drive_c/windows/Fonts/"
+
+  mkdir -p "${WINEPREFIX}/drive_c/Program Files/TI Education"
+  ln -fns "${tisoftdir}/wineprefix/drive_c/Program Files/TI Education/TI-Nspire CX CAS Student Software" \
+          "${WINEPREFIX}/drive_c/Program Files/TI Education/TI-Nspire CX CAS Student Software"
+
+  for filename in system.reg userdef.reg user.reg; do
+    # "root" was the login that was used to install the pack
+    awk -v user="$USER" '{ gsub("root", user); print }' \
+      "${tisoftdir}/wineprefix/${filename}" > "${WINEPREFIX}/${filename}"
+  done
+
+  # mimetype associations
+  mkdir -p ~/.local/share/applications
+  cat <<-EOF > ~/.local/share/applications/wine-extension-tns.desktop
+	[Desktop Entry]
+	Type=Application
+	Name=TI-Nspire CX CAS Student Software
+	MimeType=application/x-wine-extension-tns;
+	Exec=env WINEPREFIX="${WINEPREFIX}" /opt/wine-devel/bin/wine start /ProgIDOpen TI-NspireCXCAS-SS.Document %f
+	NoDisplay=true
+	StartupNotify=true
+	Icon=E542_TI-Nspire CX CAS Student Software.0
+	EOF
+  cat <<-EOF > ~/.local/share/applications/wine-extension-tnsp.desktop
+	[Desktop Entry]
+	Type=Application
+	Name=TI-Nspire CX CAS Student Software
+	MimeType=application/x-wine-extension-tnsp;
+	Exec=env WINEPREFIX="${WINEPREFIX}" /opt/wine-devel/bin/wine start /ProgIDOpen TI-NspireCXCAS-SS-tnsp.Document %f
+	NoDisplay=true
+	StartupNotify=true
+	Icon=E542_TI-Nspire CX CAS Student Software.0
+	EOF
+
+  mkdir -p ~/.local/share/mime/application
+  cat <<-EOF > ~/.local/share/mime/application/x-wine-extension-tns.xml
+	<?xml version="1.0" encoding="utf-8"?>
+	<mime-type xmlns="http://www.freedesktop.org/standards/shared-mime-info" type="application/x-wine-extension-tns">
+	  <!--Created automatically by update-mime-database. DO NOT EDIT!-->
+	  <glob pattern="*.tns"/>
+	  <comment>TI-Nspire CX CAS Student Software Document</comment>
+	</mime-type>
+	EOF
+  cat <<-EOF > ~/.local/share/mime/application/x-wine-extension-tnsp.xml
+	<?xml version="1.0" encoding="utf-8"?>
+	<mime-type xmlns="http://www.freedesktop.org/standards/shared-mime-info" type="application/x-wine-extension-tnsp">
+	  <!--Created automatically by update-mime-database. DO NOT EDIT!-->
+	  <glob pattern="*.tnsp"/>
+	  <comment>TI-Nspire CX CAS Student Software Document</comment>
+	</mime-type>
+	EOF
+
+  mkdir -p ~/.local/share/mime/packages
+  cat <<-EOF > ~/.local/share/mime/packages/x-wine-extension-tns.xml
+	<?xml version="1.0" encoding="UTF-8"?>
+	<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+	  <mime-type type="application/x-wine-extension-tns">
+	    <glob pattern="*.tns"/>
+	    <comment>TI-Nspire CX CAS Student Software Document</comment>
+	  </mime-type>
+	</mime-info>
+	EOF
+  cat <<-EOF > ~/.local/share/mime/packages/x-wine-extension-tnsp.xml
+	<?xml version="1.0" encoding="UTF-8"?>
+	<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+	  <mime-type type="application/x-wine-extension-tnsp">
+	    <glob pattern="*.tnsp"/>
+	    <comment>TI-Nspire CX CAS Student Software Document</comment>
+	  </mime-type>
+	</mime-info>
+	EOF
+
+  xdg-mime default wine-extension-tns.desktop \
+      application/x-wine-extension-tns
+  xdg-mime default wine-extension-tnsp.desktop \
+      application/x-wine-extension-tnsp
+
+  ln -fns "${tisoftdir}/wineprefix/${program_exe_dir}" \
+          "${WINEPREFIX}/${program_exe_dir}"
+}
+
+# The previous version did not use the .setup_version scheme.
+if [ -e "${WINEPREFIX}/.setup_done.1" ]; then
+  rm -f "${WINEPREFIX}/.setup_done.1"
+  echo 4.3.0.702 > "${WINEPREFIX}/.setup_version"
+fi
+
+installed_version="$(cat "${WINEPREFIX}/.setup_version" 2>/dev/null || true)"
+if [ "$app_version" != "$installed_version" ]; then
+  run_setup
+  echo "$app_version" > "${WINEPREFIX}/.setup_version"
+fi
 
 cd "${WINEPREFIX}/${program_exe_dir}"
 wine "$program_exe_name"
 EOF
-  chmod 755 "$wrapper_script_path"
+  chmod 755 "${tisoftdir}/ti-nspire-cx-cas-ss"
+
+  cat <<'EOF' > /usr/local/share/applications/ti_nspire_cx_cas_ss.desktop
+Name=TI-Nspire CX CAS Student Software
+Description=TI-Nspire CX CAS Student Software
+Exec=/opt/wine/ti-nspire-cx-cas-ss/ti-nspire-cx-cas-ss
+Type=Application
+StartupNotify=true
+Icon=/opt/wine/ti-nspire-cx-cas-ss/ti_nspire_cx_cas_ss.png
+EOF
+
+  base64 -d <<'EOF' > "${tisoftdir}/ti_nspire_cx_cas_ss.png"
+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
+AAAAAElFTkSuQmCC
+EOF
+
+  cat <<-'EOF' > "${tisoftdir}/deployment.properties"
+# deployment.properties for TI-Nspire Family v4.2
+#
+# Creates an empty file immediately after activation. The file name indicates success or failure using the following format: <AppName>-<Success/Failure>- <Host name>-<Date>-<Time>.log
+# Example, if TI-NspireTM CAS Teacher Software were installed successfully on the ClassDesktop01 computer on August 15, 2011, at 2:30 p.m., this entry would appear: TINspireCASTeacherEdition-Success- ClassDesktop01-20110815-1430.log
+# Accepted values: A valid Unix, UNC, or Windows path.
+deploy.log.dir=
+
+# License Number of the TI software to be activated on the client computer.
+# Accepted Values: A valid 31-digit license number.
+license.number=
+
+# When ACTIVATE is set to YES, the software chooses a random value between 1 and the specified value to wait before the activation Volume attempt and between attempts. This prevents a large number of clients from attempting to communicate with the activation server at the same time.
+# The system tries automatically to activate up to three times.
+# Accepted Values: 0 - 600 (Default: 600)
+activation.time.limit=
+EOF
+
+  cat <<'EOF' > "${tisoftdir}/preferences.properties"
+#Wed Mar 23 08:51:49 CDT 2016
+view=computer
+docToolboxPanelIndex_NspireWS=nspirepagesorter
+defaultDocPreview=computer
+defaultPageSize=computer
+EOF
+
+  cat <<'EOF' > "${tisoftdir}/settings.properties"
+# settings.properties for TI-Nspire Family v4.2
+#
+# Allows the administrator to set the path that the software checks for a database on launch. Setting this property disables the user's ability to change the database path in the software.
+# Note: This setting only applies to TI-Nspire Navigator Teacher Software and TI-Nspire Navigator NC Teacher Software.
+# Note: Texas Instruments recommends that this path be set to a local file system path.
+# Accepted Values: A Unix, UNC, or Windows file path. These paths may use environment variables, but will not work with the tilde (~) character.
+database.path=
+
+# Allows the administrator to specify the host(s) to query for available classes when multi-casting is disabled on the network. 
+# Note: This option is used only in TI-NspireTM Student Software and TI-NspireTM CAS Student Software.
+# Accepted Values: Semicolon (;) delimited set of <Hostname or IP address>:<port>.
+preferred.hosts=
+
+# When set to YES, allows automatic updates to Texas Instruments software on computers running the TI-NspireTM software. Computer(s) are notified of available software updates.
+# To receive notices, users must have Internet access, and port 80 must be open.
+# Accepted Values: True/False (Default: True)
+allow.auto.upgrade=False
+
+# Points the TI-NspireTM software to the license-service computer for license checkout. 
+# Note: The IP address must be IPv4.
+# Note: This setting only applies to Concurrent and School-Managed licenses.
+# Accepted values: Hostname or IP Address
+license.server=
+# Points the TI-NspireTM software to a secondary license-service computer for license checkout. 
+# Note: The IP address must be IPv4.
+# Note: This setting only applies to Concurrent and School-Managed licenses.
+# Accepted values: Hostname or IP Address
+license.server.2=
+
+# Points the TI-NspireTM software to a tertiary license-service computer for license checkout. 
+# Note: The IP address must be IPv4.
+# Note: This setting only applies to Concurrent and School-Managed licenses.
+# Accepted values: Hostname or IP Address
+license.server.3=
+
+# Enable license borrowing (local license) when using a concurrent license that has borrowing enabled.
+# Note: This setting only applies to Concurrent licenses.
+# Values: YES/NO (Default: YES)
+allow.license.borrow=
+
+# The time (in days) the user is allowed to borrow a license when using a concurrent license that has borrowing enabled.
+# Note: This setting only applies to Concurrent licenses.
+# Values: 1 - 365 (Default: 14)
+max.days.borrow.license=
+
+# Enable to allow the user to be warned of pending license expiration.
+# Note: This setting only applies to Subscription licenses.
+# Values: YES/NO (Default: YES)
+allow.subscription.warning=YES
+
+# The time (in days) prior to license expiration for user to be warned.
+# Note: This setting only applies to Subscription licenses.
+# Range: 1 - 31 Default: 30
+subscription.warning.days=
+
+# Enable to hide the subscription warning dialog displaying remaining active time for a subscription license.
+# Note: This setting only applies to Subscription licenses.
+# Values: True/False (Default: False)
+subscription.warned.already=False
+
+# By setting the property allow.analytics to true, you agree to allow TI to automatically collect anonymous information about:
+#   1) product usage
+#   2) product reliability
+# This anonymous information will be used by TI to improve the reliability and performance of this product and improve TI products to better meet customer needs.
+# The system TI uses to collect this data does not gather any personally identifiable information. TI will only use the data it gathers in this manner for the purposes described above.
+# Note: Selecting true or false for this property will not display notificationt to the user. Leaving this unset will prompt each user to choose to opt-in or opt-out.
+# Values: True/False (Default: None)
+allow.analytics=False
+EOF
 }
 
 case "$command" in
   configure)
     upstream_dir=$1
-    mkdir -p /usr/share/puavo-pkg/installers
-    ln -fns "${upstream_dir}/TINspireCXCASStudentSoftware-4.5.0.1180.msi" \
-            /usr/share/puavo-pkg/installers/ti_nspire_cx_cas_ss_installer.msi
-    install_wrapper_script
+    mkdir -p "$tisoftdir"
+    ln -fns "$upstream_dir" "${tisoftdir}/wineprefix"
+    install_additional_components
     ;;
 
   unconfigure)
-    rm -f "$wrapper_script_path" \
-          /usr/share/puavo-pkg/installers/ti_nspire_cx_cas_ss_installer.msi
+    rm -rf "$tisoftdir" \
+           /usr/local/share/applications/ti_nspire_cx_cas_ss.desktop
     ;;
 
   unpack)
     upstream_pack=$1
     upstream_dir=$2
-    target_file="${upstream_dir}/TINspireCXCASStudentSoftware-4.5.0.1180.msi"
-    ln "$upstream_pack" "$target_file" 2>/dev/null \
-      || cp "$upstream_pack" "$target_file"
+
+    export WINEARCH=win32
+    export WINEPREFIX="$upstream_dir"
+    winetricks settings win7
+    msiexec /i "$upstream_pack" /qn
     ;;
 
   *)
