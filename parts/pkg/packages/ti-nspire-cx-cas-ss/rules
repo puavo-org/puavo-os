@@ -23,7 +23,7 @@ WINEPREFIX=~/.wine-ti-nspire-cx-cas
 
 export WINEARCH WINEDLLOVERRIDES WINEPREFIX
 
-app_version=4.5.0.1180
+app_version=4.5.0.1180+opinsys1
 
 run_setup() {
   # Setup $WINEPREFIX for user
