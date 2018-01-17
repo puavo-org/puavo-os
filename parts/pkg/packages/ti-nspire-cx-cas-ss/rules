@@ -157,12 +157,15 @@ EOF
   chmod 755 "${tisoftdir}/ti-nspire-cx-cas-ss"
 
   cat <<'EOF' > /usr/local/share/applications/ti_nspire_cx_cas_ss.desktop
+[Desktop Entry]
 Name=TI-Nspire CX CAS Student Software
 Description=TI-Nspire CX CAS Student Software
 Exec=/opt/wine/ti-nspire-cx-cas-ss/ti-nspire-cx-cas-ss
 Type=Application
 StartupNotify=true
+Terminal=false
 Icon=/opt/wine/ti-nspire-cx-cas-ss/ti_nspire_cx_cas_ss.png
+Categories=Education;
 EOF
 
   base64 -d <<'EOF' > "${tisoftdir}/ti_nspire_cx_cas_ss.png"
