@@ -19,7 +19,7 @@ tisoftdir=/opt/wine/ti-nspire-cx-cas-ss
 
 WINEARCH=win32
 WINEDLLOVERRIDES='mscoree,mshtml='
-WINEPREFIX=~/.wine-ti-nspire-cx-cas
+WINEPREFIX=~/.wineprefix-ti-nspire-cx-cas
 
 export WINEARCH WINEDLLOVERRIDES WINEPREFIX
 
@@ -157,12 +157,15 @@ EOF
   chmod 755 "${tisoftdir}/ti-nspire-cx-cas-ss"
 
   cat <<'EOF' > /usr/local/share/applications/ti_nspire_cx_cas_ss.desktop
+[Desktop Entry]
 Name=TI-Nspire CX CAS Student Software
 Description=TI-Nspire CX CAS Student Software
 Exec=/opt/wine/ti-nspire-cx-cas-ss/ti-nspire-cx-cas-ss
 Type=Application
 StartupNotify=true
+Terminal=false
 Icon=/opt/wine/ti-nspire-cx-cas-ss/ti_nspire_cx_cas_ss.png
+Categories=Education;
 EOF
 
   base64 -d <<'EOF' > "${tisoftdir}/ti_nspire_cx_cas_ss.png"
@@ -383,6 +386,9 @@ case "$command" in
     export WINEPREFIX="$upstream_dir"
     winetricks settings win7
     msiexec /i "$upstream_pack" /qn
+
+    # Save some space and remove pointless stuff.
+    rm -rf "${upstream_dir}/drive_c/windows"
     ;;
 
   *)
