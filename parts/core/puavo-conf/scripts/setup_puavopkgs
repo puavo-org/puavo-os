@@ -19,4 +19,10 @@ if puavo-pkg show smartboard >/dev/null 2>&1; then
   puavo-pkg reconfigure smartboard || status=1
 fi
 
+# XXX ti-nspire-cx-cas-ss should be configured/unconfigured based on
+# XXX puavo-conf variable "puavo.nonfree.ti_nspire_cx_cas_ss.enabled".
+if puavo-pkg show ti-nspire-cx-cas-ss >/dev/null 2>&1; then
+  puavo-pkg reconfigure ti-nspire-cx-cas-ss || status=1
+fi
+
 exit $status
