@@ -356,6 +356,13 @@ allow.analytics=False
 EOF
 }
 
+# If ti_nspire_cx_cas_ss license is not enabled, do not configure a package but
+# unconfigure it instead.
+if [ "${command}" = 'configure' \
+  -a "$(puavo-conf puavo.nonfree.ti_nspire_cx_cas_ss.enabled)" != 'true' ]; then
+    command='unconfigure'
+fi
+
 case "$command" in
   configure)
     upstream_dir=$1
