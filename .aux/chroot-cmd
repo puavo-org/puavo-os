@@ -39,6 +39,7 @@ chroot --userspec='puavo-os:puavo-os' "$target_dir" \
   env -i HOME=/puavo-os \
          PATH='/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/games:/usr/games' \
          "PUAVO_CACHE_PROXY=${PUAVO_CACHE_PROXY}" \
+         TERM=screen \
          USER=puavo-os \
     "$@" || status=$?
 

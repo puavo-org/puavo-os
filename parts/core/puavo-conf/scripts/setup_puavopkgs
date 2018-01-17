@@ -2,21 +2,37 @@
 
 set -eu
 
-# XXX We might want to do this, but the operation is pointless in the
-# XXX general case (and likely currently breaks some things)!
-# XXX It is only needed when puavo-pkgs are not in the image itself,
-# XXX or in the "smartboard"-case (see below).
-# puavo-pkg reconfigure --all
-
 status=0
 
-# XXX Instead, we now only do this, because smartboard should be
-# XXX configured/unconfigured based on puavo-conf variable
-# XXX "puavo.nonfree.smartboard.enabled".
-# XXX (Also get rid of extra call to "puavo-pkg show" to check if
-# XXX puavo-pkg package is installed).
-if puavo-pkg show smartboard >/dev/null 2>&1; then
+# XXX We might want to do this, but the operation is pointless in the
+# XXX general case (and likely breaks some things currently!).
+# XXX It is only needed when puavo-pkgs are not in the image itself,
+# XXX or in the "smartboard"- and "ti-nspire-cx-cas-ss"-cases (see below).
+# puavo-pkg reconfigure --all
+
+PUAVO_PKG_CACHEDIR=/var/cache/puavo-pkg
+PUAVO_PKG_ROOTDIR=/var/lib/puavo-pkg
+
+. /etc/puavo-pkg/puavo-pkg.conf
+
+test_puavopkg_installation() {
+  # this is faster than "puavo-pkg show $1"
+  puavopkg=$1
+  installed_path="${PUAVO_PKG_ROOTDIR}/packages/${puavopkg}/installed"
+  [ -h "$installed_path" -a -d "$installed_path" ]
+}
+
+# Instead, we now only do this, because smartboard should be
+# configured/unconfigured based on puavo-conf variable
+# "puavo.nonfree.smartboard.enabled".
+if test_puavopkg_installation smartboard; then
   puavo-pkg reconfigure smartboard || status=1
+fi
+
+# ti-nspire-cx-cas-ss should be configured/unconfigured based on
+# puavo-conf variable "puavo.nonfree.ti_nspire_cx_cas_ss.enabled".
+if test_puavopkg_installation ti-nspire-cx-cas-ss; then
+  puavo-pkg reconfigure ti-nspire-cx-cas-ss || status=1
 fi
 
 exit $status

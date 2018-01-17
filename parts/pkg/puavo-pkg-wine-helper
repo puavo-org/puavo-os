@@ -2,6 +2,8 @@
 
 set -eu
 
+# XXX This script is maybe useless and should be removed?
+
 usage() {
   echo "$(basename $0): command arguments not understood"
 }
@@ -102,8 +104,8 @@ do_installation() {
   winetricks settings win7
 
   case "$installer_type" in
-    exe) wine "$installer_path"       ;;
-    msi) msiexec /i "$installer_path" ;;
+    exe) wine "$installer_path"           ;;
+    msi) msiexec /i "$installer_path" /qn ;;
   esac
 
   if [ ! -e "${WINEPREFIX}/${program_exepath}" ]; then

@@ -390,6 +390,7 @@ class packages {
     , 'marble-qt'
     , 'qgis'
     , 'stellarium'
+    , 'step'
     , 'texlive-fonts-extra'
     , 'texlive-fonts-recommended'
     , 'texlive-latex-extra'
