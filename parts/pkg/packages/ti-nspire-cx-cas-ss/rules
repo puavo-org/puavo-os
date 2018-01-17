@@ -19,7 +19,7 @@ tisoftdir=/opt/wine/ti-nspire-cx-cas-ss
 
 WINEARCH=win32
 WINEDLLOVERRIDES='mscoree,mshtml='
-WINEPREFIX=~/.wine-ti-nspire-cx-cas
+WINEPREFIX=~/.wineprefix-ti-nspire-cx-cas
 
 export WINEARCH WINEDLLOVERRIDES WINEPREFIX
 
