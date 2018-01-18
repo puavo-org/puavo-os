@@ -1006,9 +1006,9 @@ case "${command}" in
 	upstream_dir=$1
 
 	mkdir -p /opt/ekapeli-alku
-	ln -fns "${upstream_dir}/Ekapeli-Alku.x86" \
+	ln -fns "${upstream_dir}/Ekapeli_Alku_58_Linux/Ekapeli-Alku.x86" \
 		/opt/ekapeli-alku/Ekapeli-Alku.x86
-	ln -fns "${upstream_dir}/Ekapeli-Alku_Data" \
+	ln -fns "${upstream_dir}/Ekapeli_Alku_58_Linux/Ekapeli-Alku_Data" \
 		/opt/ekapeli-alku/Ekapeli-Alku_Data
 	ln -fns "${upstream_dir}/ekapeli_alku_title.png" \
 		/opt/ekapeli-alku/ekapeli_alku_title.png
@@ -1031,7 +1031,6 @@ EOF
 	upstream_pack=$1
 	upstream_dir=$2
 	unzip -q -d "${upstream_dir}" "${upstream_pack}"
-	chmod 755 "${upstream_dir}/Ekapeli-Alku.x86"
 	extract_icon "$upstream_dir"
 	;;
     *)
