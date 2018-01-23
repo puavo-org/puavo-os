@@ -383,12 +383,7 @@ case "$command" in
     upstream_pack=$1
     upstream_dir=$2
 
-    export WINEPREFIX="$upstream_dir"
-    winetricks settings win7
-    msiexec /i "$upstream_pack" /qn
-
-    # Save some space and remove pointless stuff.
-    rm -rf "${upstream_dir}/drive_c/windows"
+    tar --no-same-owner -z -x -f "${upstream_pack}" -C "${upstream_dir}"
     ;;
 
   *)
