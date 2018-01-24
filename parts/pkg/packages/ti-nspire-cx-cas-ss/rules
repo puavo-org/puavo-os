@@ -27,10 +27,14 @@ app_version=4.5.0.1180+opinsys1
 run_setup() {
   # Setup $WINEPREFIX for user
 
+  app_data_dir='drive_c/users/Public/Application Data/TI-Nspire CX CAS'
+
   rm -rf "${WINEPREFIX}/${program_exe_dir}"
+
   rsync -a \
         --exclude "$program_exe_dir" \
         --exclude 'drive_c/users/%%PUAVOUSER%%' \
+        --exclude "${app_data_dir}" \
         "${tisoftdir}/wineprefix/" \
         "${WINEPREFIX}/"
   rsync -a "${tisoftdir}/wineprefix/drive_c/users/%%PUAVOUSER%%/" \
@@ -43,10 +47,14 @@ run_setup() {
       "${tisoftdir}/wineprefix/${filename}" > "${WINEPREFIX}/${filename}"
   done
 
-  sed 's/^allow.auto.upgrade=/allow.auto.upgrade=False/;
-       s/^allow.analytics=/allow.analytics=False/' \
-    "${tisoftdir}/wineprefix/drive_c/users/Public/Application Data/TI-Nspire CX CAS/res/settings.properties" \
-    > "${WINEPREFIX}/drive_c/users/Public/Application Data/TI-Nspire CX CAS/res/settings.properties"
+  if [ ! -e "${WINEPREFIX}/${app_data_dir}" ]; then
+    rsync -a "${tisoftdir}/wineprefix/${app_data_dir}/" \
+          "${WINEPREFIX}/${app_data_dir}/"
+    sed 's/^allow.auto.upgrade=/allow.auto.upgrade=False/;
+         s/^allow.analytics=/allow.analytics=False/' \
+      "${tisoftdir}/wineprefix/${app_data_dir}/res/settings.properties" \
+      > "${WINEPREFIX}/${app_data_dir}/res/settings.properties"
+  fi
 
   # mimetype associations
   mkdir -p ~/.local/share/applications
