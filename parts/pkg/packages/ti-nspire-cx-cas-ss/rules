@@ -13,12 +13,11 @@ install_additional_components() {
 
 set -eu
 
-program_exe_dir='drive_c/Program Files (x86)/TI Education/TI-Nspire CX CAS Student Software'
+program_exe_dir='drive_c/Program Files/TI Education/TI-Nspire CX CAS Student Software'
 program_exe_name='TI-Nspire CX CAS Student Software.exe'
 tisoftdir=/opt/wine/ti-nspire-cx-cas-ss
 
 WINEARCH=win32
-WINEDLLOVERRIDES='mscoree,mshtml='
 WINEPREFIX=~/.wineprefix-ti-nspire-cx-cas
 
 export WINEARCH WINEDLLOVERRIDES WINEPREFIX
@@ -28,43 +27,19 @@ app_version=4.5.0.1180+opinsys1
 run_setup() {
   # Setup $WINEPREFIX for user
 
-  winetricks win7
-
-  # Wait for some time for wineserver to finish, but try to continue as soon
-  # as possible.  One minute should be enough in all cases (there might be
-  # another wineserver running, we do not care about that).
-  i=0
-  while pgrep -x wineserver >/dev/null && [ "$i" -lt 600 ]; do
-    sleep 0.1
-    i=$(($i + 1))
-  done
-
-  country=$( echo "$LANG" | cut -d . -f 1 | cut -d _ -f 2)
-  language=$(echo "$LANG" | cut -d . -f 1 | cut -d _ -f 1)
-
-  tiuserwinedir="${WINEPREFIX}/drive_c/users/${USER}/Application Data/Texas Instruments/TI-Nspire CX CAS Student Software"
-  mkdir -p "$tiuserwinedir"
-  cp "${tisoftdir}/preferences.properties" \
-     "${tiuserwinedir}/preferences.properties"
-  # Set the locale and country
-  cat <<-EOF >> "${tiuserwinedir}/preferences.properties"
-	locale=${language}
-	country=${country}
-	EOF
-
-  tiwineroot="${WINEPREFIX}/drive_c/users/Public/Application Data/TI-Nspire CX CAS"
-  mkdir -p "${tiwineroot}/res"
-  cp "${tisoftdir}/settings.properties" \
-     "${tiwineroot}/res/settings.properties"
-  cp "${tisoftdir}/deployment.properties" \
-     "${tiwineroot}/res/deployment.properties"
-  mkdir -p "${WINEPREFIX}/drive_c/windows/Fonts/"
-  cp "$tisoftdir"/wineprefix/drive_c/Program\ Files\ \(x86\)/TI\ Education/TI-Nspire\ CX\ CAS\ Student\ Software/fonts/* "${WINEPREFIX}/drive_c/windows/Fonts/"
-
+  rm -rf "${WINEPREFIX}/${program_exe_dir}"
+  rsync -a \
+        --exclude "$program_exe_dir" \
+        --exclude 'drive_c/users/%%PUAVOUSER%%' \
+        "${tisoftdir}/wineprefix/" \
+        "${WINEPREFIX}/"
+  rsync -a "${tisoftdir}/wineprefix/drive_c/users/%%PUAVOUSER%%/" \
+        "${WINEPREFIX}/drive_c/users/${USER}/"
+  ln -fns "${tisoftdir}/wineprefix/${program_exe_dir}" \
+          "${WINEPREFIX}/${program_exe_dir}"
 
   for filename in system.reg userdef.reg user.reg; do
-    # "root" was the login that was used to install the pack
-    awk -v user="$USER" '{ gsub("root", user); print }' \
+    awk -v user="$USER" '{ gsub("%%PUAVOUSER%%", user); print }' \
       "${tisoftdir}/wineprefix/${filename}" > "${WINEPREFIX}/${filename}"
   done
 
@@ -75,7 +50,7 @@ run_setup() {
 	Type=Application
 	Name=TI-Nspire CX CAS Student Software
 	MimeType=application/x-wine-extension-tns;
-	Exec=env WINEPREFIX="${WINEPREFIX}" /opt/wine-devel/bin/wine start /ProgIDOpen TI-NspireCXCAS-SS.Document %f
+	Exec=env WINEPREFIX="${WINEPREFIX}" wine-stable start /ProgIDOpen TI-NspireCXCAS-SS.Document %f
 	NoDisplay=true
 	StartupNotify=true
 	Icon=E542_TI-Nspire CX CAS Student Software.0
@@ -85,7 +60,7 @@ run_setup() {
 	Type=Application
 	Name=TI-Nspire CX CAS Student Software
 	MimeType=application/x-wine-extension-tnsp;
-	Exec=env WINEPREFIX="${WINEPREFIX}" /opt/wine-devel/bin/wine start /ProgIDOpen TI-NspireCXCAS-SS-tnsp.Document %f
+	Exec=env WINEPREFIX="${WINEPREFIX}" wine-stable start /ProgIDOpen TI-NspireCXCAS-SS-tnsp.Document %f
 	NoDisplay=true
 	StartupNotify=true
 	Icon=E542_TI-Nspire CX CAS Student Software.0
@@ -133,10 +108,6 @@ run_setup() {
       application/x-wine-extension-tns
   xdg-mime default wine-extension-tnsp.desktop \
       application/x-wine-extension-tnsp
-
-  mkdir -p "$(dirname "${WINEPREFIX}/${program_exe_dir}")"
-  ln -fns "${tisoftdir}/wineprefix/${program_exe_dir}" \
-          "${WINEPREFIX}/${program_exe_dir}"
 }
 
 # The previous version did not use the .setup_version scheme.
@@ -261,6 +232,7 @@ MzowMNhdgpYAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTYtMDctMjFUMDk6NTM6MzgrMDM6MDD7n8wt
 AAAAAElFTkSuQmCC
 EOF
 
+  # XXX do we need this?
   cat <<-'EOF' > "${tisoftdir}/deployment.properties"
 # deployment.properties for TI-Nspire Family v4.2
 #
@@ -279,6 +251,7 @@ license.number=
 activation.time.limit=
 EOF
 
+  # XXX do we need this?
   cat <<'EOF' > "${tisoftdir}/preferences.properties"
 #Wed Mar 23 08:51:49 CDT 2016
 view=computer
@@ -287,6 +260,7 @@ defaultDocPreview=computer
 defaultPageSize=computer
 EOF
 
+  # XXX do we need this?
   cat <<'EOF' > "${tisoftdir}/settings.properties"
 # settings.properties for TI-Nspire Family v4.2
 #
@@ -370,7 +344,8 @@ case "$command" in
   configure)
     upstream_dir=$1
     mkdir -p "$tisoftdir"
-    ln -fns "$upstream_dir" "${tisoftdir}/wineprefix"
+    ln -fns "${upstream_dir}/ti-nspire-cx-cas-ss-4.5.0.1180-wineprefix" \
+            "${tisoftdir}/wineprefix"
     install_additional_components
     ;;
 
