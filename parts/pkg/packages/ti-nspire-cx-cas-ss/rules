@@ -43,6 +43,11 @@ run_setup() {
       "${tisoftdir}/wineprefix/${filename}" > "${WINEPREFIX}/${filename}"
   done
 
+  sed 's/^allow.auto.upgrade=/allow.auto.upgrade=False/;
+       s/^allow.analytics=/allow.analytics=False/' \
+    "${tisoftdir}/wineprefix/drive_c/users/Public/Application Data/TI-Nspire CX CAS/res/settings.properties" \
+    > "${WINEPREFIX}/drive_c/users/Public/Application Data/TI-Nspire CX CAS/res/settings.properties"
+
   # mimetype associations
   mkdir -p ~/.local/share/applications
   cat <<-EOF > ~/.local/share/applications/wine-extension-tns.desktop
@@ -230,106 +235,6 @@ KpEgmtcUFBVRo+pVDEa97/6same4gmZjOfWKGDXaTQ3BK0I20hSgLcqiphx08KSq/9l/XXXqo50g
 b9+uvX9u83+mBIhitdt63AAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxNi0wOC0yNlQxNTowNDowNysw
 MzowMNhdgpYAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTYtMDctMjFUMDk6NTM6MzgrMDM6MDD7n8wt
 AAAAAElFTkSuQmCC
-EOF
-
-  # XXX do we need this?
-  cat <<-'EOF' > "${tisoftdir}/deployment.properties"
-# deployment.properties for TI-Nspire Family v4.2
-#
-# Creates an empty file immediately after activation. The file name indicates success or failure using the following format: <AppName>-<Success/Failure>- <Host name>-<Date>-<Time>.log
-# Example, if TI-NspireTM CAS Teacher Software were installed successfully on the ClassDesktop01 computer on August 15, 2011, at 2:30 p.m., this entry would appear: TINspireCASTeacherEdition-Success- ClassDesktop01-20110815-1430.log
-# Accepted values: A valid Unix, UNC, or Windows path.
-deploy.log.dir=
-
-# License Number of the TI software to be activated on the client computer.
-# Accepted Values: A valid 31-digit license number.
-license.number=
-
-# When ACTIVATE is set to YES, the software chooses a random value between 1 and the specified value to wait before the activation Volume attempt and between attempts. This prevents a large number of clients from attempting to communicate with the activation server at the same time.
-# The system tries automatically to activate up to three times.
-# Accepted Values: 0 - 600 (Default: 600)
-activation.time.limit=
-EOF
-
-  # XXX do we need this?
-  cat <<'EOF' > "${tisoftdir}/preferences.properties"
-#Wed Mar 23 08:51:49 CDT 2016
-view=computer
-docToolboxPanelIndex_NspireWS=nspirepagesorter
-defaultDocPreview=computer
-defaultPageSize=computer
-EOF
-
-  # XXX do we need this?
-  cat <<'EOF' > "${tisoftdir}/settings.properties"
-# settings.properties for TI-Nspire Family v4.2
-#
-# Allows the administrator to set the path that the software checks for a database on launch. Setting this property disables the user's ability to change the database path in the software.
-# Note: This setting only applies to TI-Nspire Navigator Teacher Software and TI-Nspire Navigator NC Teacher Software.
-# Note: Texas Instruments recommends that this path be set to a local file system path.
-# Accepted Values: A Unix, UNC, or Windows file path. These paths may use environment variables, but will not work with the tilde (~) character.
-database.path=
-
-# Allows the administrator to specify the host(s) to query for available classes when multi-casting is disabled on the network. 
-# Note: This option is used only in TI-NspireTM Student Software and TI-NspireTM CAS Student Software.
-# Accepted Values: Semicolon (;) delimited set of <Hostname or IP address>:<port>.
-preferred.hosts=
-
-# When set to YES, allows automatic updates to Texas Instruments software on computers running the TI-NspireTM software. Computer(s) are notified of available software updates.
-# To receive notices, users must have Internet access, and port 80 must be open.
-# Accepted Values: True/False (Default: True)
-allow.auto.upgrade=False
-
-# Points the TI-NspireTM software to the license-service computer for license checkout. 
-# Note: The IP address must be IPv4.
-# Note: This setting only applies to Concurrent and School-Managed licenses.
-# Accepted values: Hostname or IP Address
-license.server=
-# Points the TI-NspireTM software to a secondary license-service computer for license checkout. 
-# Note: The IP address must be IPv4.
-# Note: This setting only applies to Concurrent and School-Managed licenses.
-# Accepted values: Hostname or IP Address
-license.server.2=
-
-# Points the TI-NspireTM software to a tertiary license-service computer for license checkout. 
-# Note: The IP address must be IPv4.
-# Note: This setting only applies to Concurrent and School-Managed licenses.
-# Accepted values: Hostname or IP Address
-license.server.3=
-
-# Enable license borrowing (local license) when using a concurrent license that has borrowing enabled.
-# Note: This setting only applies to Concurrent licenses.
-# Values: YES/NO (Default: YES)
-allow.license.borrow=
-
-# The time (in days) the user is allowed to borrow a license when using a concurrent license that has borrowing enabled.
-# Note: This setting only applies to Concurrent licenses.
-# Values: 1 - 365 (Default: 14)
-max.days.borrow.license=
-
-# Enable to allow the user to be warned of pending license expiration.
-# Note: This setting only applies to Subscription licenses.
-# Values: YES/NO (Default: YES)
-allow.subscription.warning=YES
-
-# The time (in days) prior to license expiration for user to be warned.
-# Note: This setting only applies to Subscription licenses.
-# Range: 1 - 31 Default: 30
-subscription.warning.days=
-
-# Enable to hide the subscription warning dialog displaying remaining active time for a subscription license.
-# Note: This setting only applies to Subscription licenses.
-# Values: True/False (Default: False)
-subscription.warned.already=False
-
-# By setting the property allow.analytics to true, you agree to allow TI to automatically collect anonymous information about:
-#   1) product usage
-#   2) product reliability
-# This anonymous information will be used by TI to improve the reliability and performance of this product and improve TI products to better meet customer needs.
-# The system TI uses to collect this data does not gather any personally identifiable information. TI will only use the data it gathers in this manner for the purposes described above.
-# Note: Selecting true or false for this property will not display notificationt to the user. Leaving this unset will prompt each user to choose to opt-in or opt-out.
-# Values: True/False (Default: None)
-allow.analytics=False
 EOF
 }
 
