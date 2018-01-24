@@ -35,6 +35,9 @@ install: install-dirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) bin/puavo-rest-client
 	cp -r lib/* $(DESTDIR)$(RUBY_LIB_DIR)
 
+# XXX Care should be taken if this is done, the latest available gems break
+# XXX device image reporting to Puavo in puavo-client-daemon.
+# XXX The currently locked gems are fine.
 update-gemfile-lock: clean
 	rm -f Gemfile.lock
 	GEM_HOME=.tmpgem bundle install
