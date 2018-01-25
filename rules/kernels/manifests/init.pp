@@ -29,12 +29,10 @@ class kernels {
   }
 
   $default_kernel = '4.9.0-5-amd64'
-  $edge_kernel    = $default_kernel
   $legacy_kernel  = '3.16.0-4-amd64'
 
   ::kernels::all_kernel_links {
     'default': kernel => $default_kernel;
-    'edge':    kernel => $edge_kernel;
     'legacy':  kernel => $legacy_kernel;
   }
 }
