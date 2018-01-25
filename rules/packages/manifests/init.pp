@@ -294,6 +294,7 @@ class packages {
     , 'libdvdread4'
     , 'ogmrip'
     , 'vlc'
+    , 'winff'
     , 'x264' ]:
       tag => [ 'tag_mediaplayer', 'tag_debian', ];
 
