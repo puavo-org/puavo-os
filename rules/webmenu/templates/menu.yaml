@@ -397,20 +397,11 @@ items:
     type: desktop
   - source: org.kde.kdenlive
     type: desktop
-  - type: custom
     name:
-      en: Kino-non-linear DV editor
-      fi: Kino-videoeditori
-      sv: Kino-videoredigerare
-      de: Kino Filme bearbeiten
-    command:
-    - kino
-    description:
-      en: Edit videos
-      fi: Muokkaa videoita
-      sv: Redigera videon
-      de: Video bearbeiten
-    osIcon: kino
+      en: Kdenlive
+      fi: Kdenlive-videomuokkain
+      sv: Kdenlive
+      de: Kdenlive
   - source: pitivi
     type: desktop
   - source: solfege
@@ -440,6 +431,14 @@ items:
   - source: qjackctl
     type: desktop
     inactiveByDeviceType: thinclient
+  - source: winff
+    type: desktop
+    name:
+      fi: Winff-videomuunnin
+      sv: Winff
+      en: Winff
+      de: Winff
+    osIcon: /usr/share/icons/Faenza/mimetypes/96/video-x-generic.png
 - type: menu
   name:
     en: Games
@@ -527,7 +526,7 @@ items:
     fi: Älytaulut
     sv: Interaktiva tavlor
     de: Interaktive Wandtafeln
-  osIconPath: /usr/share/icons/hicolor/128x128/apps/SMART_Tools.png
+  osIconPath: /usr/share/icons/Faenza/categories/96/applications-science.png
   condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
   items:
   - source: smarttech-notebook
