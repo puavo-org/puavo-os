@@ -134,8 +134,8 @@ module PuavoBS
       .accept(:json)
       .post(url, :json => {
               "puavoHostname"   => hostname,
-              "macAddress"      => mac,
-              "puavoTag"        => tags,
+              "macAddress"      => Array(mac),
+              "puavoTag"        => tags.join(" "),
               "puavoDeviceType" => hosttype,
               "classes"         => ["puavoNetbootDevice"]
             })
@@ -175,7 +175,7 @@ module PuavoBS
       "user[givenName]"                 => "test",
       "user[sn]"                        => "user",
       "user[uid]"                       => testuser_username,
-      "user[puavoEduPersonAffiliation]" => "testuser",
+      "user[puavoEduPersonAffiliation][]" => "testuser",
       "user[new_password]"              => testuser_password,
       "user[new_password_confirmation]" => testuser_password,
     }
@@ -192,6 +192,7 @@ module PuavoBS
     url = self.get_puavo_url("/users/#{school_id}/users")
     response = HTTP
       .auth(self.basic_auth(admin_username, admin_password))
+      .accept(:json)
       .post(url, :form => formdata)
     self.check_response_code(response.code)
     [testuser_username, testuser_password]
