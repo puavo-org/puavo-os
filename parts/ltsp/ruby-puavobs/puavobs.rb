@@ -63,8 +63,9 @@ module PuavoBS
     end
   end
 
-  def self.get_school_and_device_ids(hostname)
+  def self.get_school_and_device_ids(admin_username, admin_password, hostname)
     response = HTTP
+      .auth(self.basic_auth(admin_username, admin_password))
       .accept(:json)
       .get(self.get_api_url("/v3/devices/#{hostname}"))
     self.check_response_code(response.code)
@@ -74,8 +75,9 @@ module PuavoBS
     [school_id, device_id]
   end
 
-  def self.get_device_json(hostname)
+  def self.get_device_json(admin_username, admin_password, hostname)
     response = HTTP
+      .auth(self.basic_auth(admin_username, admin_password))
       .accept(:json)
       .get(self.get_api_url("/v3/devices/#{hostname}"))
     self.check_response_code(response.code)
@@ -142,7 +144,7 @@ module PuavoBS
   end
 
   def self.unregister_device(admin_username, admin_password, hostname)
-    school_id, device_id = self.get_school_and_device_ids(hostname)
+    school_id, device_id = self.get_school_and_device_ids(admin_username, admin_password, hostname)
     url = self.get_puavo_url("/devices/#{school_id}/devices/#{device_id}.xml")
     response = HTTP
       .auth(self.basic_auth(admin_username, admin_password))
