@@ -176,7 +176,7 @@ class TestRun
     (0..4).each do |ntries|
       sleep 1 if ntries > 0
       begin
-        @testclient_image = PuavoBS.get_device_json(@testclient_hostname)['preferred_image']
+        @testclient_image = PuavoBS.get_device_json(@admin_username, @admin_password, @testclient_hostname)['preferred_image']
       rescue RuntimeError => e
         error = e
         next
