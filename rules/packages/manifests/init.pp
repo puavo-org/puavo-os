@@ -359,6 +359,7 @@ class packages {
     , 'qt4-designer'
     , 'qt4-doc'
     , 'racket'
+    , 'renpy'
     , 'scite'
     , 'scratch'
     , 'sonic-pi'
