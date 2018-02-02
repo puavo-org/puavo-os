@@ -66,8 +66,10 @@ items:
   - source: org.kde.kolourpaint
     type: desktop
     osIcon: /usr/share/icons/hicolor/48x48/apps/kolourpaint.png
+    name: KolourPaint
   - source: org.kde.krita
     type: desktop
+    name: Krita-digitaalimaalaus
   - source: tuxpaint
     type: desktop
   - source: mypaint
@@ -101,6 +103,7 @@ items:
     type: desktop
   - source: freecad
     type: desktop
+    name: Freecad
 - type: menu
   name:
     en: Internet
@@ -113,12 +116,18 @@ items:
   items:
   - source: iceweasel
     type: desktop
+    name: Firefox
   - source: chromium
     type: desktop
   - source: google-chrome
     type: desktop
   - source: icedove
     type: desktop
+    name:
+      en: Thunderbird
+      fi: Thunderbird-sähköposti
+      sv: Thunderbird
+      de: Thunderbird
   - source: evolution
     type: desktop
   - source: pidgin
@@ -178,6 +187,7 @@ items:
     type: desktop
   - source: eric
     type: desktop
+    name: Eric python IDE
   - source: pycharm
     type: desktop
   - source: spe
@@ -190,6 +200,7 @@ items:
     type: desktop
   - source: org.kde.kturtle
     type: desktop
+    name: Konna logo-ohjelmointi
   - source: scratch
     type: desktop
     inactiveByDeviceType: thinclient
@@ -245,10 +256,20 @@ items:
   - source: org.kde.kbruch
     type: desktop
     osIcon: /usr/share/icons/hicolor/64x64/apps/kbruch.png
+    name:
+      en: KBruch
+      fi: KBruch-murtoluvut
+      sv: KBruch
+      de: KBruch
   - source: geogebra
     type: desktop
   - source: org.kde.kmplot
     type: desktop
+    name:
+      en: KmPlot
+      fi: KmPlot-kuvaajat
+      sv: KmPlot
+      de: KmPlot
   - source: marble-qt
     type: desktop
   - source: google-earth
@@ -256,6 +277,11 @@ items:
   - source: org.kde.kgeography
     type: desktop
     condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
+    name:
+      en: KGeography
+      fi: KGeography-maantieto
+      sv: KGeography
+      de: KGeography
   - source: kanagram
     type: desktop
   - source: org.kde.kwordquiz
@@ -273,6 +299,11 @@ items:
     inactiveByDeviceType: thinclient
   - source: org.kde.kstars
     type: desktop
+    name:
+      en: KStars
+      fi: KStars-planetaario
+      sv: KStars
+      de: KStars
   - source: step
     type: desktop
   - source: LoggerPro
@@ -281,6 +312,7 @@ items:
     type: desktop
   - source: wxMaxima
     type: desktop
+    name: wxMaxima
   - source: ti_nspire_cx_cas_ss
     type: desktop
   - source: ghemical
@@ -288,6 +320,11 @@ items:
     inactiveByDeviceType: thinclient
   - source: avogadro
     type: desktop
+    name:
+      en: Avogadro
+      fi: Avogadro-molekyylimuokkain
+      sv: Avogadro
+      de: Avogadro
   - source: kalzium
     type: desktop
   - source: MarvinSketch
@@ -380,6 +417,11 @@ items:
     type: desktop
   - source: org.kde.kaffeine
     type: desktop
+    name:
+      en: Kaffeine
+      fi: Kaffeine-mediasoitin
+      sv: Kaffeine
+      de: Kaffeine
   - source: banshee
     type: desktop
   - source: spotify
@@ -388,6 +430,11 @@ items:
     type: desktop
     inactiveByDeviceType: thinclient
     osIcon: /usr/share/icons/hicolor/48x48/apps/org.gnome.Cheese.png
+    name:
+      en: Cheese
+      fi: Muikku-valokuvakoppi
+      sv: Cheese
+      de: Cheese
   - type: custom
     name: Kena Vision Microscope
     command: /opt/av4kav/lib/av4.sh
@@ -399,7 +446,7 @@ items:
     type: desktop
     name:
       en: Kdenlive
-      fi: Kdenlive-videomuokkain
+      fi: Kdenlive-videoeditori
       sv: Kdenlive
       de: Kdenlive
   - source: pitivi
@@ -408,7 +455,11 @@ items:
     type: desktop
   - source: mscore
     type: desktop
-  - source: denemo
+    name:
+      en: Musescore
+      fi: Musescore-nuotinnosohjelma
+      sv: Musescore
+      de: Musescore
     type: desktop
   - source: hydrogen
     type: desktop
@@ -448,6 +499,16 @@ items:
   osIcon: applications-cardgames
   condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
   items:
+  - source: gnome-klotski
+    type: desktop
+  - source: gnome-mines
+    type: desktop
+  - source: gnome-mahjongg
+    type: desktop
+  - source: sol
+    type: desktop
+  - source: gnome-sudoku
+    type: desktop
   - source: gnubg
     type: desktop
     osIcon: /usr/share/icons/hicolor/48x48/apps/gnubg.png
@@ -608,6 +669,10 @@ items:
   - type: web
     name: SanomaPro
     url: http://sanomapro.fi/
+    osIconPath: /usr/share/icons/Faenza/mimetypes/96/text-html.png
+  - type: web
+    name: Otava - Oppilaan maailma
+    url: https://oppilas.otava.fi/
     osIconPath: /usr/share/icons/Faenza/mimetypes/96/text-html.png
   - type: web
     name: Ekapeli (websivu)
