@@ -15,6 +15,12 @@ debfiles='
   smart-product-drivers_11.3.2121.1-1_i386.deb
 '
 
+mime_xml_files='
+  x-smarttech-galleryitem.xml
+  x-smarttech-gallery.xml
+  x-smarttech-notebook.xml
+'
+
 smart_technologies_dir='/opt/SMART Technologies'
 
 smartboard_links='
@@ -462,6 +468,15 @@ case "${command}" in
         done
 
         create_configurations
+
+        for mime_xml in $mime_xml_files; do
+           ln -fns "${upstream_dir}/smartboard/opt/SMART Technologies/.store/smart-notebook/xdg/mime/${mime_xml}" \
+                   "/usr/share/mime/packages/${mime_xml}"
+        done
+
+        # This operation can take a rather long time (but is needed by above
+        # mime-xml links), so we put it into background and hope for the best.
+        update-mime-database /usr/share/mime
         ;;
     unconfigure)
         upstream_dir=$1
@@ -477,6 +492,10 @@ case "${command}" in
               "/etc/xdg/SMART Technologies Drivers.conf"        \
               "/etc/xdg/SMART Technologies/Language Setup.conf" \
               "/etc/xdg/SMART Technologies/SMART Notebook.conf"
+        for mime_xml in $mime_xml_files; do
+           rm -f "/usr/share/mime/packages/${mime_xml}"
+        done
+        update-mime-database /usr/share/mime
         chmod 700 "${upstream_dir}"
         ;;
     unpack)
