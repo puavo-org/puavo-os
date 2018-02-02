@@ -192,7 +192,8 @@ class packages {
     , 'xfonts-utils' ]:
       tag => [ 'tag_fonts', 'tag_debian', ];
 
-    [ 'dosbox'
+    [ 'aisleriot'
+    , 'dosbox'
     , 'extremetuxracer'
     , 'freeciv-client-gtk'
     , 'gcompris'
@@ -200,6 +201,7 @@ class packages {
     , 'gcompris-sound-de'
     , 'gcompris-sound-fi'
     , 'gcompris-sound-sv'
+    , 'gnome-games'
     , 'gnubg'
     , 'gnuchess'
     , 'khangman'
