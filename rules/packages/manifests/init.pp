@@ -177,7 +177,8 @@ class packages {
     [ 'mutt' ]:
       tag => [ 'tag_email', 'tag_debian', ];
 
-    [ 'wine'
+    [ 'virtualbox'
+    , 'wine'
     , 'wine32'
     , 'wine64'
     , 'winetricks' ]:
