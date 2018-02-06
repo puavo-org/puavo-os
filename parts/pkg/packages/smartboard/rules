@@ -449,9 +449,33 @@ EOF
   mv "${smart_notebook_desktop_file}.tmp" "$smart_notebook_desktop_file"
 }
 
+setup_mimetypes() {
+  upstream_dir=$1
+
+  if [ -e "${upstream_dir}/.mimetype_setup_done" ]; then
+    return 0
+  fi
+
+  for mime_xml in $mime_xml_files; do
+     ln -fns "${upstream_dir}/smartboard/opt/SMART Technologies/.store/smart-notebook/xdg/mime/${mime_xml}" \
+             "/usr/share/mime/packages/${mime_xml}"
+  done
+
+  # This operation can take a rather long time (but is needed by above
+  # mime-xml links), so we put it into background and hope for the best.
+  update-mime-database /usr/share/mime
+
+  touch "${upstream_dir}/.mimetype_setup_done"
+}
+
 case "${command}" in
     configure)
         upstream_dir=$1
+
+        # We setup mimetypes even if smartboard license is not enabled,
+        # because this may happen in the imagebuild-phase and the process
+        # may take quite a bit of time.
+        setup_mimetypes "$upstream_dir"
 
         # If smartboard license is not enabled, do not configure a package.
         if [ "$(puavo-conf puavo.nonfree.smartboard.enabled)" != 'true' ]; then
@@ -466,15 +490,6 @@ case "${command}" in
         done
 
         create_configurations
-
-        for mime_xml in $mime_xml_files; do
-           ln -fns "${upstream_dir}/smartboard/opt/SMART Technologies/.store/smart-notebook/xdg/mime/${mime_xml}" \
-                   "/usr/share/mime/packages/${mime_xml}"
-        done
-
-        # This operation can take a rather long time (but is needed by above
-        # mime-xml links), so we put it into background and hope for the best.
-        update-mime-database /usr/share/mime
         ;;
     unconfigure)
         upstream_dir=$1
@@ -494,6 +509,7 @@ case "${command}" in
            rm -f "/usr/share/mime/packages/${mime_xml}"
         done
         update-mime-database /usr/share/mime
+        rm -f "${upstream_dir}/.mimetype_setup_done"
         chmod 700 "${upstream_dir}"
         ;;
     unpack)
