@@ -17,6 +17,15 @@ items:
     - type: desktop
       source: libreoffice-writer
     - type: web
+      name: PhET Simulations Web
+      url: https://phet.colorado.edu/en/simulations/category/physics
+      description:
+        en: PhET physics simulations
+        fi: PhET fysiikkasimulaatiot
+        sv: PhET web
+        de: PhET web
+      osIconPath: /usr/share/icons/Faenza/categories/96/applications-internet.png
+    - type: web
       name: Youtube
       url: http://youtube.com
       description:
@@ -80,16 +89,29 @@ items:
       source: kbruch
     - type: desktop
       source: geogebra
+    - source: org.kde.kmplot
+      type: desktop
+      name:
+        en: KmPlot
+        fi: KmPlot-kuvaajat
+        sv: KmPlot
+        de: KmPlot
     - type: desktop
-      source: kmplot
-    - type: desktop
-      source: gcalctool
+      source: gnome-calculator
     - type: desktop
       source: Snap4Arduino
       inactiveByDeviceType: thinclient
     - type: desktop
       source: scratch
       inactiveByDeviceType: thinclient
+    - type: web
+      name: Scratch-klubi
+      url: http://www.teromakotero.fi/scratch-klubi/
+      osIconPath: /usr/share/icons/oxygen/base/64x64/categories/applications-internet.png
+    - type: web
+      name: Python-klubi
+      url: http://www.teromakotero.fi/python-klubi/
+      osIconPath: /usr/share/icons/oxygen/base/64x64/categories/applications-internet.png
     - type: desktop
       source: kturtle
     - type: desktop
@@ -101,7 +123,7 @@ items:
     - type: desktop
       source: libreoffice-writer
     - type: desktop
-      source: wxMaxima
+      source: wxmaxima
     - type: web
       name: Kahoot!
       url: https://getkahoot.com/
@@ -130,8 +152,13 @@ items:
       source: marble-qt
     - type: desktop
       source: google-earth
-    - type: desktop
-      source: kgeography
+    - source: org.kde.kgeography
+      type: desktop
+      name:
+        en: KGeography
+        fi: KGeography-maantieto
+        sv: KGeography
+        de: KGeography
     - type: desktop
       source: celestia
       inactiveByDeviceType: thinclient
