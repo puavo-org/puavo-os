@@ -14,5 +14,6 @@ cat <<'EOF' > ~/.vimrc
 highlight ExtraWhitespace ctermbg=darkgreen guibg=lightgreen
 match ExtraWhitespace /\s\+$/
 set expandtab
+set mouse=
 set sw=2
 EOF
