@@ -721,6 +721,7 @@ class packages {
   @package {
     [ 'libnspr4-0d' # spotify
     , 'libssl1.0.0' # spotify
+    , 'libudev0'    # vmware-horizon-client
     , 'lsb-core' ]: # google-earth
       tag => [ 'tag_debian', 'tag_required-by-restricted' ];
   }
