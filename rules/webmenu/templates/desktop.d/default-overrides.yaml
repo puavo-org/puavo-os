@@ -2,15 +2,15 @@
 LoggerPro:
   keywords:
   - digabi
-Open-Sankore:
+Open-Board:
   keywords:
   - smart
   - notebook
   name:
-    en: Open-Sankore
-    fi: Open-Sankoré-älytauluohjelmisto
-    sv: Open-Sankore
-    de: Open-Sankore
+    en: Open-Board
+    fi: Open-Board-älytauluohjelmisto
+    sv: Open-Board
+    de: Open-Board
 Snap4Arduino:
   name:
     en: Teddy Bear programming
@@ -33,6 +33,12 @@ audacity:
     fi: Audacity-äänieditori
     sv: Audacity-ljudredigerare
     de: Audacity Audio bearbeiten
+avogadro:
+  name:
+    en: Avogadro
+    fi: Avogadro-molekyylimuokkain
+    sv: Avogadro
+    de: Avogadro
 banshee:
   name:
     en: Banshee-music player
@@ -62,8 +68,6 @@ celestia:
     fi: Avaruussimulaattori
     sv: Rymdsimulator
     de: Celestia Weltraum Simulator
-cheese:
-  osIcon: /usr/share/icons/Faenza/devices/96/camera-web.png
 chromium:
   name:
     en: Chromium-browser
@@ -114,6 +118,7 @@ eog:
     sv: Bildvisare
     de: Bildbetrachter
 eric:
+  name: Eric python IDE
   osIcon: /usr/share/eric/icons/default/eric.png
 evince:
   keywords:
@@ -171,12 +176,6 @@ geany:
     fi: Geany - monikielinen editori
     sv: Geany - utvecklingsmiljö
     de: Geany - Textverarbeitung
-gedit:
-  name:
-    en: Gedit-text editor
-    fi: Gedit-tekstieditori
-    sv: Gedit- tekstredigerare
-    de: Gedit-Texteditor
 geogebra:
   keywords:
   - digabi
@@ -213,6 +212,8 @@ gnome-sound-recorder:
     fi: Ääninauhuri
     sv: Ljudinspelare
     de: Tonaufnahmen
+goobox:
+  osIcon: /usr/share/icons/hicolor/48x48/apps/goobox.png
 google-chrome:
   name:
     en: Chrome-browser
@@ -230,6 +231,8 @@ gthumb:
     sv: gThumb-bildvisare
     de: gThumb-Bildbetrachter
   osIcon: /usr/share/icons/hicolor/48x48/apps/gthumb.png
+gnubg:
+  osIcon: /usr/share/icons/hicolor/48x48/apps/gnubg.png
 hydrogen:
   osIcon: /usr/share/hydrogen/data/img/gray/icon.svg
   name:
@@ -237,13 +240,19 @@ hydrogen:
     fi: Hydrogen-rumpukone
     sv: Hydrogen-trummaskin
     de: Hydrogen Drum Machine
+icedove:
+  name:
+      en: Thunderbird
+      fi: Thunderbird-sähköposti
+      sv: Thunderbird
+      de: Thunderbird
 idle-python2.7:
   name:
     en: IDLE (2.7)
   osIcon: /usr/share/icons/Faenza/mimetypes/96/text-x-python.png
-idle-python3.4:
+idle-python3.5:
   name:
-    en: IDLE (3.4)
+    en: IDLE (3.5)
   osIcon: /usr/share/icons/Faenza/mimetypes/96/text-x-python.png
 inkscape:
   keywords:
@@ -258,44 +267,12 @@ kaffeine:
     fi: Kaffeine-mediasoitin
     sv: Kaffeine-mediaspelare
     de: Kaffeine Medienspieler
-kalzium:
-  name:
-    en: Kalzium-periodic system
-    fi: Jaksollinen järjestelmä
-    sv: Periodsystem
-    de: Periodensystem
-  command:
-  - kalzium
-  osIcon: /usr/share/icons/hicolor/64x64/apps/kalzium.png
 kanagram:
   name:
     en: Kanagram - anagrams
     fi: Anagrammit
     sv: Anagram
     de: Anagramme
-kbruch:
-  command:
-  - kbruch
-  name:
-    en: KBruch-fractions
-    fi: KBruch-murtoluvut
-    sv: KBruch-bråktal
-    de: KBruch - Rechnen mit Brüchen
-  osIcon: /usr/share/icons/hicolor/64x64/apps/kbruch.png
-kdenlive:
-  name:
-    en: Kdenlive-video editor
-    fi: Kdenlive-videoeditori
-    sv: Kdenlive-videoredigerare
-    de: Kdenlive Videoeditor
-  command:
-  - kdenlive
-kgeography:
-  name:
-    en: KGeography-geography
-    fi: KGeography-maantieto
-    sv: KGeography-geografi
-    de: Kgeography
 khangman:
   name:
     en: KHangMan-hangman game
@@ -305,25 +282,6 @@ khangman:
   command:
   - khangman
   osIcon: /usr/share/icons/hicolor/64x64/apps/khangman.png
-kmplot:
-  name:
-    en: KmPlot-function plotter
-    fi: KmPlot-kuvaajat
-    sv: KmPlot
-    de: KmPlot
-kolourpaint:
-  osIcon: /usr/share/icons/hicolor/48x48/apps/kolourpaint.png
-  name:
-    en: KolourPaint
-kstars:
-  name:
-    en: KStars-astronomy
-    fi: KStars-tähtitaivas
-    sv: KStars-stjärnhimlen
-    de: KStars-Astronomie
-  command:
-  - kstars
-  osIcon: /usr/share/icons/hicolor/64x64/apps/kstars.png
 ktouch:
   name:
     en: KTouch-touch typing
@@ -333,24 +291,6 @@ ktouch:
   command:
   - ktouch
   osIcon: /usr/share/icons/hicolor/48x48/apps/ktouch.png
-kturtle:
-  name:
-    en: KTurtle - easy programming
-    fi: Konna logo-ohjelmointi
-    sv: KTurtle - logoprogrammering
-    de: KTurtle - Programieren mit Logo
-  command:
-  - kturtle
-  osIconPath: /usr/share/icons/hicolor/64x64/apps/kturtle.png
-kwordquiz:
-  name:
-    en: KWordQuiz-vocabulary learning
-    fi: Sanastoharjoitus
-    sv: Ordförrådsövningar
-    de: Kreuzworträtsel
-  command:
-  - kwordquiz
-  osIcon: /usr/share/icons/hicolor/64x64/apps/kwordquiz.png
 libreoffice-base:
   keywords:
   - openoffice
@@ -478,6 +418,84 @@ openshot:
     fi: OpenShot-videoeditori
     sv: OpenShot-videoredigerare
     de: OpenShot Videoeditor
+org.gnome.gedit:
+  name:
+    en: Gedit-text editor
+    fi: Gedit-tekstieditori
+    sv: Gedit- tekstredigerare
+    de: Gedit-Texteditor
+  osIcon: /usr/share/icons/Faenza/apps/96/accessories-text-editor.png
+org.gnome.Cheese:
+    osIcon: /usr/share/icons/hicolor/48x48/apps/org.gnome.Cheese.png
+org.kde.kalzium:
+  name:
+    en: Kalzium-periodic system
+    fi: Jaksollinen järjestelmä
+    sv: Periodsystem
+    de: Periodensystem
+  command: kalzium
+  osIcon: /usr/share/icons/hicolor/64x64/apps/kalzium.png
+org.kde.kbruch:
+  command:
+  - kbruch
+  name:
+    en: KBruch-fractions
+    fi: KBruch-murtoluvut
+    sv: KBruch-bråktal
+    de: KBruch - Rechnen mit Brüchen
+  osIcon: /usr/share/icons/hicolor/64x64/apps/kbruch.png
+org.kde.kdenlive:
+  name:
+    en: Kdenlive-video editor
+    fi: Kdenlive-videoeditori
+    sv: Kdenlive-videoredigerare
+    de: Kdenlive Videoeditor
+  command:
+  - kdenlive
+org.kde.kgeography:
+  name:
+    en: KGeography-geography
+    fi: KGeography-maantieto
+    sv: KGeography-geografi
+    de: Kgeography
+org.kde.kmplot:
+  name:
+    en: KmPlot-function plotter
+    fi: KmPlot-kuvaajat
+    sv: KmPlot
+    de: KmPlot
+org.kde.krita:
+  name: Krita-digitaalimaalaus
+org.kde.kolourpaint:
+  osIcon: /usr/share/icons/hicolor/48x48/apps/kolourpaint.png
+  name: KolourPaint
+org.kde.kstars:
+  name:
+    en: KStars-astronomy
+    fi: KStars-planetaario
+    sv: KStars-stjärnhimlen
+    de: KStars-Astronomie
+  command:
+  - kstars
+  osIcon: /usr/share/icons/hicolor/64x64/apps/kstars.png
+org.kde.kwordquiz:
+  name:
+    en: KWordQuiz-vocabulary learning
+    fi: KWordQuiz-sanastoharjoitus
+    sv: Ordförrådsövningar
+    de: Kreuzworträtsel
+  command:
+  - kwordquiz
+  osIcon: /usr/share/icons/hicolor/64x64/apps/kwordquiz.png
+org.kde.turtle:
+  name:
+    en: KTurtle - easy programming
+    fi: Konna logo-ohjelmointi
+    sv: KTurtle - logoprogrammering
+    de: KTurtle - Programieren mit Logo
+  command:
+  - kturtle
+  osIconPath: /usr/share/icons/hicolor/64x64/apps/kturtle.png
 photofilmstrip:
   name:
     fi: Photofilmstrip-kuvaesitys
@@ -511,6 +529,8 @@ pitivi:
     de: Pitivi Filme bearbeiten
 primusclient:
   name: Primus
+qsynth:
+  osIcon: /usr/share/icons/hicolor/32x32/apps/qsynth.png
 qjackctl:
   osIcon: /usr/share/icons/hicolor/32x32/apps/qjackctl.png
 rosegarden:
@@ -642,6 +662,13 @@ vym:
     fi: Miellekarttasovellus
     sv: Mindmap
     de: Mindmap
+winff:
+  name:
+    fi: Winff-videomuunnin
+    sv: Winff
+    en: Winff
+    de: Winff
+  osIcon: /usr/share/icons/Faenza/mimetypes/96/video-x-generic.png
 wxMaxima:
   keywords:
   - digabi

@@ -20,7 +20,6 @@ items:
   - source: gnome-calculator
     type: desktop
   - source: org.gnome.gedit
-    osIcon: /usr/share/icons/Faenza/apps/96/accessories-text-editor.png
     type: desktop
   - source: gucharmap
     type: desktop
@@ -65,11 +64,8 @@ items:
   items:
   - source: org.kde.kolourpaint
     type: desktop
-    osIcon: /usr/share/icons/hicolor/48x48/apps/kolourpaint.png
-    name: KolourPaint
   - source: org.kde.krita
     type: desktop
-    name: Krita-digitaalimaalaus
   - source: tuxpaint
     type: desktop
   - source: mypaint
@@ -123,11 +119,6 @@ items:
     type: desktop
   - source: icedove
     type: desktop
-    name:
-      en: Thunderbird
-      fi: Thunderbird-sähköposti
-      sv: Thunderbird
-      de: Thunderbird
   - source: evolution
     type: desktop
   - source: pidgin
@@ -149,7 +140,7 @@ items:
     type: desktop
   - source: tsclient
     type: desktop
-  - source: vmware-view-client
+  - source: vmware-view
     type: desktop
   - source: VidyoDesktop
     type: desktop
@@ -187,7 +178,6 @@ items:
     type: desktop
   - source: eric
     type: desktop
-    name: Eric python IDE
   - source: pycharm
     type: desktop
   - source: spe
@@ -200,7 +190,6 @@ items:
     type: desktop
   - source: org.kde.kturtle
     type: desktop
-    name: Konna logo-ohjelmointi
   - source: scratch
     type: desktop
     inactiveByDeviceType: thinclient
@@ -255,21 +244,10 @@ items:
     condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
   - source: org.kde.kbruch
     type: desktop
-    osIcon: /usr/share/icons/hicolor/64x64/apps/kbruch.png
-    name:
-      en: KBruch
-      fi: KBruch-murtoluvut
-      sv: KBruch
-      de: KBruch
   - source: geogebra
     type: desktop
   - source: org.kde.kmplot
     type: desktop
-    name:
-      en: KmPlot
-      fi: KmPlot-kuvaajat
-      sv: KmPlot
-      de: KmPlot
   - source: marble-qt
     type: desktop
   - source: google-earth
@@ -277,16 +255,10 @@ items:
   - source: org.kde.kgeography
     type: desktop
     condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
-    name:
-      en: KGeography
-      fi: KGeography-maantieto
-      sv: KGeography
-      de: KGeography
   - source: kanagram
     type: desktop
   - source: org.kde.kwordquiz
     type: desktop
-    osIcon: /usr/share/icons/hicolor/64x64/apps/kwordquiz.png
   - source: org.kde.khangman
     type: desktop
   - source: ktouch
@@ -299,11 +271,6 @@ items:
     inactiveByDeviceType: thinclient
   - source: org.kde.kstars
     type: desktop
-    name:
-      en: KStars
-      fi: KStars-planetaario
-      sv: KStars
-      de: KStars
   - source: step
     type: desktop
   - source: LoggerPro
@@ -320,12 +287,7 @@ items:
     inactiveByDeviceType: thinclient
   - source: avogadro
     type: desktop
-    name:
-      en: Avogadro
-      fi: Avogadro-molekyylimuokkain
-      sv: Avogadro
-      de: Avogadro
-  - source: kalzium
+  - source: org.kde.kalzium
     type: desktop
   - source: MarvinSketch
     type: desktop
@@ -406,7 +368,6 @@ items:
     type: desktop
   - source: goobox
     type: desktop
-    osIcon: /usr/share/icons/hicolor/48x48/apps/goobox.png
   - source: omgrip
     type: desktop
   - source: thoggen
@@ -429,7 +390,6 @@ items:
   - source: org.gnome.Cheese
     type: desktop
     inactiveByDeviceType: thinclient
-    osIcon: /usr/share/icons/hicolor/48x48/apps/org.gnome.Cheese.png
     name:
       en: Cheese
       fi: Muikku-valokuvakoppi
@@ -478,18 +438,11 @@ items:
   - source: qsynth
     type: desktop
     inactiveByDeviceType: thinclient
-    osIcon: /usr/share/icons/hicolor/32x32/apps/qsynth.png
   - source: qjackctl
     type: desktop
     inactiveByDeviceType: thinclient
   - source: winff
     type: desktop
-    name:
-      fi: Winff-videomuunnin
-      sv: Winff
-      en: Winff
-      de: Winff
-    osIcon: /usr/share/icons/Faenza/mimetypes/96/video-x-generic.png
 - type: menu
   name:
     en: Games
@@ -511,7 +464,6 @@ items:
     type: desktop
   - source: gnubg
     type: desktop
-    osIcon: /usr/share/icons/hicolor/48x48/apps/gnubg.png
 - type: menu
   name:
     en: Games
