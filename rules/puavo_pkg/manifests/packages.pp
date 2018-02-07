@@ -31,6 +31,7 @@ class puavo_pkg::packages {
 			, 'ti-nspire-cx-cas-ss'
 			, 't-lasku'
 			, 'vidyo-client'
+			, 'vmware-horizon-client'
 			, 'vstloggerpro' ]
 
   @puavo_pkg::install { $available_packages: ; }

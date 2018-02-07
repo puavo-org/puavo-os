@@ -1,0 +1,79 @@
+#!/bin/sh
+
+set -eu
+
+# To obtain the distfile, download
+# https://download3.vmware.com/software/view/viewclients/CART18FQ4/VMware-Horizon-Client-4.7.0-7395152.x64.bundle
+# (md5sum 2b899d8e5236e4412732f3103a0f681e),
+# install it with:
+#   sudo su
+#   ./VMware-Horizon-Client-4.7.0-7395152.x64.bundle \
+#       --console --eulas-agreed \
+#       --set-setting vmware-horizon-smartcard smartcardEnable yes \
+#       --set-setting vmware-horizon-rtav rtavEnable yes \
+#       --set-setting vmware-horizon-usb usbEnable yes \
+#       --set-setting vmware-horizon-virtual-printing tpEnable yes \
+#       --set-setting vmware-horizon-tsdr tsdrEnable yes \
+#       --set-setting vmware-horizon-mmr mmrEnable yes \
+#       --set-setting vmware-horizon-media-provider mediaproviderEnable yes
+#
+# Then create a tar-archive with:
+#   cd /
+#   tar -T /tmp/VMWARE_INSTALL_FILELIST.TXT \
+#       -zcvf /tmp/VMware-Horizon-Client-4.7.0-7395152-opinsys1.x64.tar.gz
+#   # (/tmp/VMWARE_INSTALL_FILELIST.TXT must first be conjured through research,
+#   #  consideration and magic).
+
+command=$1
+shift
+
+case "${command}" in
+    configure)
+        upstream_dir=$1
+
+        stow --ignore='(etc/rc[\d].d/K08vmware-USBArbitrator|etc/rc[\d].d/S50vmware-USBArbitrator|usr/bin/vmware-installer|usr/bin/vmware-usbarbitrator)$' \
+          -vv -d "$(dirname "$upstream_dir")" -t / upstream
+
+        # stow does not like to create absolute symlinks
+        ln -fns /etc/init.d/vmware-USBArbitrator \
+                /etc/rc2.d/K08vmware-USBArbitrator
+        ln -fns /etc/init.d/vmware-USBArbitrator \
+                /etc/rc3.d/K08vmware-USBArbitrator
+        ln -fns /etc/init.d/vmware-USBArbitrator \
+                /etc/rc5.d/K08vmware-USBArbitrator
+        ln -fns /etc/init.d/vmware-USBArbitrator \
+                /etc/rc2.d/S50vmware-USBArbitrator
+        ln -fns /etc/init.d/vmware-USBArbitrator \
+                /etc/rc3.d/S50vmware-USBArbitrator
+        ln -fns /etc/init.d/vmware-USBArbitrator \
+                /etc/rc5.d/S50vmware-USBArbitrator
+        ln -fns /usr/lib/vmware-installer-horizon/2.1.0/vmware-installer \
+                /usr/bin/vmware-installer
+        ln -fns /usr/lib/vmware/view/usb/vmware-usbarbitrator \
+                /usr/bin/vmware-usbarbitrator
+        ;;
+
+    unconfigure)
+        upstream_dir=$1
+
+        rm -f /etc/rc2.d/K08vmware-USBArbitrator \
+              /etc/rc2.d/S50vmware-USBArbitrator \
+              /etc/rc3.d/K08vmware-USBArbitrator \
+              /etc/rc3.d/S50vmware-USBArbitrator \
+              /etc/rc5.d/K08vmware-USBArbitrator \
+              /etc/rc5.d/S50vmware-USBArbitrator \
+              /usr/bin/vmware-installer          \
+              /usr/bin/vmware-usbarbitrator
+
+        stow -D -vv -d "$(dirname "$upstream_dir")" -t / upstream
+        ;;
+
+    unpack)
+        upstream_pack=$1
+        upstream_dir=$2
+
+        tar --no-same-owner -z -x -f "${upstream_pack}" -C "${upstream_dir}"
+        ;;
+    *)
+        ;;
+esac

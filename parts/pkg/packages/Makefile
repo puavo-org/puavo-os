@@ -34,6 +34,7 @@ packagedirs += tilitin/
 packagedirs += ti-nspire-cx-cas-ss/
 packagedirs += t-lasku/
 packagedirs += vidyo-client/
+packagedirs += vmware-horizon-client/
 packagedirs += vstloggerpro/
 
 # opinsys-os specific
