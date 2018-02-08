@@ -29,10 +29,12 @@ class kernels {
   }
 
   $default_kernel = '4.9.0-5-amd64'
+  $fresh_kernel   = '4.14.0-0.bpo.3-amd64'
   $legacy_kernel  = '3.16.0-4-amd64'
 
   ::kernels::all_kernel_links {
     'default': kernel => $default_kernel;
+    'fresh':   kernel => $fresh_kernel;
     'legacy':  kernel => $legacy_kernel;
   }
 }
