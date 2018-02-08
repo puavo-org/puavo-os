@@ -719,10 +719,10 @@ class packages {
   # the image to minimize the effort of installing restricted packages
   # "during runtime".
   @package {
-    [ 'libnspr4-0d' # spotify
-    , 'libssl1.0.0' # spotify
-    , 'libudev0'    # vmware-horizon-client
-    , 'lsb-core' ]: # google-earth
+    [ 'libnspr4-0d'    # spotify
+    , 'libssl1.0.0'    # spotify
+    , 'libudev0:amd64' # vmware-horizon-client
+    , 'lsb-core' ]:    # google-earth
       tag => [ 'tag_debian', 'tag_required-by-restricted' ];
   }
 
