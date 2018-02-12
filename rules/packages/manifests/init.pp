@@ -46,7 +46,8 @@ class packages {
   #
 
   @package {
-    [ 'arandr'
+    [ 'acpitool'
+    , 'arandr'
     , 'clusterssh'
     , 'console-setup'
     , 'dconf-tools'
