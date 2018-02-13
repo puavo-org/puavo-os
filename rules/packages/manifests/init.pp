@@ -86,6 +86,7 @@ class packages {
     , 'smartmontools'
     , 'strace'
     , 'sudo'
+    , 'sysfsutils'
     , 'sysstat'
     , 'telnet'
     , 'terminator'
