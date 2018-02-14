@@ -46,7 +46,8 @@ class packages {
   #
 
   @package {
-    [ 'arandr'
+    [ 'acpitool'
+    , 'arandr'
     , 'clusterssh'
     , 'console-setup'
     , 'dconf-tools'
@@ -85,6 +86,7 @@ class packages {
     , 'smartmontools'
     , 'strace'
     , 'sudo'
+    , 'sysfsutils'
     , 'sysstat'
     , 'telnet'
     , 'terminator'
@@ -705,6 +707,10 @@ class packages {
     '4.9.0-5-amd64':
       dkms_modules => $all_dkms_modules,
       package_name => 'linux-image-4.9.0-5-amd64';
+
+    '4.14.0-0.bpo.3-amd64':
+      dkms_modules => [],
+      package_name => 'linux-image-4.14.0-0.bpo.3-amd64';
   }
 
   # XXX missing from Debian
@@ -719,10 +725,10 @@ class packages {
   # the image to minimize the effort of installing restricted packages
   # "during runtime".
   @package {
-    [ 'libnspr4-0d' # spotify
-    , 'libssl1.0.0' # spotify
-    , 'libudev0'    # vmware-horizon-client
-    , 'lsb-core' ]: # google-earth
+    [ 'libnspr4-0d'    # spotify
+    , 'libssl1.0.0'    # spotify
+    , 'libudev0:amd64' # vmware-horizon-client
+    , 'lsb-core' ]:    # google-earth
       tag => [ 'tag_debian', 'tag_required-by-restricted' ];
   }
 
