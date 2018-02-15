@@ -95,6 +95,7 @@ if [ -n "$puavo_blacklist" ]; then
 fi
 
 if [ "$(puavo-conf puavo.pm.display.drrs.enabled)" != 'true' ]; then
+  echo 'applying enable_drrs=0 option to i915-module'
   echo 'options i915 enable_drrs=0' > /etc/modprobe.d/i915_disable_drrs.conf
 fi
 
