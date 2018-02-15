@@ -1,0 +1,64 @@
+This adds i915.enable_drrs kernel parameter, which can be used to
+turn DRRS on/off for i915.  Possible values are "0" and "1".
+By default it is on.  DRRS stands for "Dynamic Refresh Rate Switching".
+
+diff -ruN linux-4.9.65.orig/drivers/gpu/drm/i915/i915_params.c linux-4.9.65/drivers/gpu/drm/i915/i915_params.c
+--- linux-4.9.65.orig/drivers/gpu/drm/i915/i915_params.c	2017-11-24 09:33:43.000000000 +0200
++++ linux-4.9.65/drivers/gpu/drm/i915/i915_params.c	2018-02-15 13:34:13.486370208 +0200
+@@ -39,6 +39,7 @@
+ 	.enable_hangcheck = true,
+ 	.enable_ppgtt = -1,
+ 	.enable_psr = -1,
++	.enable_drrs = -1,
+ 	.preliminary_hw_support = IS_ENABLED(CONFIG_DRM_I915_PRELIMINARY_HW_SUPPORT),
+ 	.disable_power_well = -1,
+ 	.enable_ips = 1,
+@@ -131,6 +132,11 @@
+ 	"Override execlists usage. "
+ 	"(-1=auto [default], 0=disabled, 1=enabled)");
+ 
++module_param_named_unsafe(enable_drrs, i915.enable_drrs, int, 0400);
++MODULE_PARM_DESC(enable_drrs, "Enable DSSR "
++	"(0=disabled, 1=enabled) "
++	"(-1=auto [default], 0=disabled, 1=enabled)");
++
+ module_param_named_unsafe(enable_psr, i915.enable_psr, int, 0600);
+ MODULE_PARM_DESC(enable_psr, "Enable PSR "
+ 		 "(0=disabled, 1=enabled - link mode chosen per-platform, 2=force link-standby mode, 3=force link-off mode) "
+diff -ruN linux-4.9.65.orig/drivers/gpu/drm/i915/i915_params.h linux-4.9.65/drivers/gpu/drm/i915/i915_params.h
+--- linux-4.9.65.orig/drivers/gpu/drm/i915/i915_params.h	2017-11-24 09:33:43.000000000 +0200
++++ linux-4.9.65/drivers/gpu/drm/i915/i915_params.h	2018-02-15 13:35:29.335656880 +0200
+@@ -40,6 +40,7 @@
+ 	int enable_ppgtt;
+ 	int enable_execlists;
+ 	int enable_psr;
++	int enable_drrs;
+ 	unsigned int preliminary_hw_support;
+ 	int disable_power_well;
+ 	int enable_ips;
+diff -ruN linux-4.9.65.orig/drivers/gpu/drm/i915/intel_dp.c linux-4.9.65/drivers/gpu/drm/i915/intel_dp.c
+--- linux-4.9.65.orig/drivers/gpu/drm/i915/intel_dp.c	2017-11-24 09:33:43.000000000 +0200
++++ linux-4.9.65/drivers/gpu/drm/i915/intel_dp.c	2018-02-15 13:37:06.477318708 +0200
+@@ -5283,6 +5283,11 @@
+ 		return;
+ 	}
+ 
++	if (!i915.enable_drrs) {
++		DRM_DEBUG_KMS("DRRS disabled by flag\n");
++		return;
++	}
++
+ 	mutex_lock(&dev_priv->drrs.mutex);
+ 	if (WARN_ON(dev_priv->drrs.dp)) {
+ 		DRM_ERROR("DRRS already enabled\n");
+@@ -5523,6 +5528,10 @@
+ 		return NULL;
+ 	}
+ 
++	/* Per platform default: all enabled. */
++	if (i915.enable_drrs == -1)
++		i915.enable_drrs = 1;
++
+ 	downclock_mode = intel_find_panel_downclock
+ 					(dev, fixed_mode, connector);
+ 
