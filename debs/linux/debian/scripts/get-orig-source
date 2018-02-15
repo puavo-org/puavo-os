@@ -11,3 +11,6 @@ if [ ! -e "${orig_tarball}" ]; then
   tar -Jxf "${orig_tarball}.tmp" --strip-components=1
   mv "${orig_tarball}.tmp" "${orig_tarball}"
 fi
+
+make -f debian/rules debian/control-real \
+  | grep -q 'generated SUCCESSFULLY'
