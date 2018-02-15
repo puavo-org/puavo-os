@@ -9,6 +9,7 @@ _pkgs_ports     := autopoweroff    \
                    gnome-shell     \
                    grub2           \
                    gvfs            \
+                   linux           \
                    mutter          \
                    nwjs            \
                    openboard       \
