@@ -94,6 +94,10 @@ if [ -n "$puavo_blacklist" ]; then
   IFS="$OLDIFS"
 fi
 
+if [ "$(puavo-conf puavo.pm.display.drrs.enabled)" != 'true' ]; then
+  echo 'options i915 enable_drrs=0' > /etc/modprobe.d/i915_disable_drrs.conf
+fi
+
 plymouth_theme=$(puavo-conf puavo.boot.plymouth.theme)
 if [ -n "$plymouth_theme" ]; then
   cat <<EOF > /etc/plymouth/plymouthd.conf
