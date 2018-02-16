@@ -1,3 +1,11 @@
+gvfs (1.30.4-1+puavo1) stretch; urgency=medium
+
+  * On gvfs, disable the House Arrest Protocol used by Apple devices.
+    It did not work for us with Nautilus, and consequently files
+    on iOS were inaccessible.
+
+ -- Puavo Org <dev@opinsys.fi>  Fri, 16 Feb 2018 07:42:13 +0200
+
 gvfs (1.30.4-1) unstable; urgency=medium
 
   * New upstream release.
