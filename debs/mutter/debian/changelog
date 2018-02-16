@@ -1,3 +1,11 @@
+mutter (3.22.3-2+puavo1) stretch; urgency=medium
+
+  * Add puavo_allow_permissions.patch to mutter, allowing
+    restrictions to mutter functionality based on
+    MUTTER_ALLOW_CONFIGURATION environment variable.
+
+ -- Puavo Org <dev@opinsys.fi>  Fri, 16 Feb 2018 07:46:35 +0200
+
 mutter (3.22.3-2) unstable; urgency=medium
 
   * debian/patches/clutter-clone-Unset-source-when-source-actor-is-dest.patch

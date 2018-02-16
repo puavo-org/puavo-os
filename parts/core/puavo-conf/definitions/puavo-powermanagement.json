@@ -1,17 +1,20 @@
 {
+  "puavo.pm.display.drrs.enabled": {
+    "default": "true"
+  },
   "puavo.pm.lidsuspend.enabled": {
     "default": "false"
   },
   "puavo.pm.lidswitchdocked.action": {
     "default": ""
   },
-  "puavo.pm.suspend.enabled": {
-    "default": "false"
-  },
   "puavo.pm.nmi_watchdog.enabled": {
     "default": "false"
   },
   "puavo.pm.sata_alpm.enabled": {
+    "default": "false"
+  },
+  "puavo.pm.suspend.enabled": {
     "default": "false"
   },
   "puavo.pm.wireless.enabled": {
