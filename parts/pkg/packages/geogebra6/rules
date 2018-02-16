@@ -13,7 +13,7 @@ case "${command}" in
 		/opt/GeoGebra-linux-x64
         cat <<'EOF' > /usr/share/applications/geogebra6.desktop
 [Desktop Entry]
-Name=Geogebra 6 Classic
+Name=Geogebra 6
 Exec=/opt/GeoGebra-linux-x64/GeoGebra
 Type=Application
 Terminal=false
