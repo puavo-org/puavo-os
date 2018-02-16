@@ -156,9 +156,9 @@ class Wlan::EapTls < Wlan
     raise 'Wlan eap-tls certs/client_key_password is not a string' \
       unless certs['client_key_password'].kind_of?(String)
 
-    @ca_cert             = Base64.decode(certs['ca_cert'])
-    @client_cert         = Base64.decode(certs['client_cert'])
-    @client_key          = Base64.decode(certs['client_key'])
+    @ca_cert             = Base64.decode64(certs['ca_cert'])
+    @client_cert         = Base64.decode64(certs['client_cert'])
+    @client_key          = Base64.decode64(certs['client_key'])
     @client_key_password = certs['client_key_password']
     @identity            = identity
 
