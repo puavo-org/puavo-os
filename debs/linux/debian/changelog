@@ -1,3 +1,10 @@
+linux (4.9.65-3+deb9u2+puavo1) stretch; urgency=medium
+
+  * Add a patch for enabling/disabling DRRS-feature in "i915"-driver,
+    with "i915.enable_drrs=0" or "i915.enable_drrs=1".
+
+ -- Puavo Org <dev@opinsys.fi>  Fri, 16 Feb 2018 07:43:58 +0200
+
 linux (4.9.65-3+deb9u2) stretch-security; urgency=high
 
   * x86: setup PCID, preparation work for KPTI.
