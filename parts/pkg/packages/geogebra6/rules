@@ -1,0 +1,37 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "${command}" in
+    configure)
+	upstream_dir=$1
+
+	ln -fns "${upstream_dir}/GeoGebra-linux-x64" \
+		/opt/GeoGebra-linux-x64
+        cat <<'EOF' > /usr/share/applications/geogebra6.desktop
+[Desktop Entry]
+Name=Geogebra 6 Classic
+Exec=/opt/GeoGebra-linux-x64/GeoGebra
+Type=Application
+Terminal=false
+Icon=glade
+StartupNotify=true
+Categories=Education;
+EOF
+	;;
+    unconfigure)
+	rm -rf /opt/GeoGebra-linux-x64
+        rm /usr/share/applications/geogebra6.desktop
+	;;
+    unpack)
+	upstream_pack=$1
+	upstream_dir=$2
+
+        unzip -q -d "${upstream_dir}" "${upstream_pack}"
+	;;
+    *)
+	;;
+esac

@@ -16,6 +16,7 @@ packagedirs += dropbox/
 packagedirs += ekapeli-alku/
 packagedirs += enchanting/
 packagedirs += geogebra/
+packagedirs += geogebra6/
 packagedirs += globilab/
 packagedirs += google-chrome/
 packagedirs += google-earth/
