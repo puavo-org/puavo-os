@@ -2,6 +2,7 @@ class image::opinsys {
   include ::art::kemi,
           ::art::opinsys,
           ::image::allinone,
+          ::install_hp_plugins,
           ::opinsys_dput,
           ::oracle_java,
           ::primus,
