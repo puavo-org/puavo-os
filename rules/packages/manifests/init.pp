@@ -173,6 +173,7 @@ class packages {
     , 'nvidia-settings'
     # , 'r8168-dkms'		# XXX missing from Debian
     , 'update-glx'
+    , 'xserver-xorg-input-evdev'
     , 'xserver-xorg-video-all' ]:
       tag => [ 'tag_drivers', 'tag_debian', ];
 
