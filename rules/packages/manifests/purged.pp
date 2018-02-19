@@ -5,8 +5,7 @@ class packages::purged {
   Package { ensure => purged, }
 
   @package {
-    [ 'cups-pk-helper'		# we do not need this, and it has bugs
-    , 'gnome-screensaver'	# not using this for anything
+    [ 'gnome-screensaver'	# not using this for anything
 
     # slows down login considerably
     # (runs dpkg-query without speed considerations)

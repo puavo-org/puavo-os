@@ -95,11 +95,12 @@ items:
   - source: blender
     type: desktop
     inactiveByDeviceType: thinclient
-  - source: photofilmstrip
-    type: desktop
+  - type: web
+    name: SketchUp Free (Web)
+    url: https://app.sketchup.com/app?hl=en
+    osIconPath: /usr/share/icons/Faenza/apps/96/glade.png
   - source: freecad
     type: desktop
-    name: Freecad
 - type: menu
   name:
     en: Internet
@@ -245,6 +246,8 @@ items:
   - source: org.kde.kbruch
     type: desktop
   - source: geogebra
+    type: desktop
+  - source: geogebra6
     type: desktop
   - source: org.kde.kmplot
     type: desktop
