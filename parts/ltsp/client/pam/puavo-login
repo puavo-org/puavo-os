@@ -236,6 +236,10 @@ handle_external_login() {
       request_authoritative=true
       return 1
       ;;
+    UPDATEERROR)
+      logmsg error "external login UPDATEERROR: $(echo "$extlogins" | jq .msg)"
+      return 1
+      ;;
     BADUSERCREDS)
       logmsg notice "external login BADUSERCREDS: $(echo "$extlogins" | jq .msg)"
       return 1
