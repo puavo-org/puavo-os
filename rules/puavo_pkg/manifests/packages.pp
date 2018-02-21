@@ -13,6 +13,7 @@ class puavo_pkg::packages {
 			, 'ekapeli-alku'
 			, 'enchanting'
 			, 'geogebra'
+			, 'geogebra6'
 			, 'globilab'
 			, 'google-chrome'
 			, 'google-earth'

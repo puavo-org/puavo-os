@@ -11,6 +11,7 @@ puavo-template <<'EOF' /usr/share/X11/xorg.conf.d/99-hitachicalib.conf
 Section "InputClass"
         Identifier   "calibration"
         MatchProduct "Hitachi PROJECTOR CDROM COMPOSITE"
+        Driver       "evdev"
         Option       "Calibration"                       "{puavo_xorg_inputs_hitachi_calibration}"
         Option       "SwapAxes"                          "0"
 EndSection

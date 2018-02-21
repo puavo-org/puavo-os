@@ -23,8 +23,8 @@ Categories=Education;
 EOF
 	;;
     unconfigure)
-	rm -rf /opt/GeoGebra-linux-x64
-        rm /usr/share/applications/geogebra6.desktop
+	rm -f /opt/GeoGebra-linux-x64 \
+              /usr/share/applications/geogebra6.desktop
 	;;
     unpack)
 	upstream_pack=$1
