@@ -232,8 +232,16 @@ handle_external_login() {
       return 0
       ;;
     UPDATED_BUT_FAIL)
-      logmsg notice "external login UPDATE/FAIL: $(echo "$extlogins" | jq .msg)"
+      logmsg notice "external login UPDATED_BUT_FAIL: $(echo "$extlogins" | jq .msg)"
       request_authoritative=true
+      return 1
+      ;;
+    UPDATEERROR)
+      logmsg error "external login UPDATEERROR: $(echo "$extlogins" | jq .msg)"
+      return 1
+      ;;
+    BADUSERCREDS)
+      logmsg notice "external login BADUSERCREDS: $(echo "$extlogins" | jq .msg)"
       return 1
       ;;
     NOTCONFIGURED)
