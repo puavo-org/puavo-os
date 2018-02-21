@@ -1,0 +1,33 @@
+#!/bin/sh
+
+set -eu
+
+default_sink=$(  pactl info | awk '/^Default Sink:/   { print $3; exit 0 }')
+default_source=$(pactl info | awk '/^Default Source:/ { print $3; exit 0 }')
+
+test -n "$default_sink"   || echo 'Could not determine the default sink!'   >&2
+test -n "$default_source" || echo 'Could not determine the default source!' >&2
+
+pacmd list-cards \
+  | awk -v default_sink="$default_sink" -v default_source="$default_source" '
+      $1 == "name:" && match($2, /^<(.*)>$/, a) {
+        current_card = a[1]
+      }
+      $1 == "active" && $2 == "profile:" && match($3, /^<(.*)>$/, a) {
+        active_profile = a[1]
+      }
+
+      $1 == "sinks:"   { listing_sinks = 1; listing_sources = 0; next }
+      $1 == "sources:" { listing_sinks = 0; listing_sources = 1; next }
+      $1 == "ports:"   { listing_sinks = 0; listing_sources = 0; next }
+
+      listing_sinks {
+        split($1, a, /\//)
+        if (a[1] == default_sink) { printf "puavo.audio.pa.default_sink\t%s|%s|%s\n", current_card, active_profile, a[1] }
+      }
+
+      listing_sources {
+        split($1, a, /\//)
+        if (a[1] == default_source) { printf "puavo.audio.pa.default_source\t%s|%s|%s\n", current_card, active_profile, a[1] }
+      }
+    '
