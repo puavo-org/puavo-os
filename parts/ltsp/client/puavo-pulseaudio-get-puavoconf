@@ -23,11 +23,12 @@ pacmd list-cards \
 
       listing_sinks {
         split($1, a, /\//)
-        if (a[1] == default_sink) { printf "puavo.audio.pa.default_sink\t%s|%s|%s\n", current_card, active_profile, a[1] }
+        if (a[1] == default_sink) { printf "OUTPUT\tpuavo.audio.pa.default_sink\t%s|%s|%s\n", current_card, active_profile, a[1] }
       }
 
       listing_sources {
         split($1, a, /\//)
-        if (a[1] == default_source) { printf "puavo.audio.pa.default_source\t%s|%s|%s\n", current_card, active_profile, a[1] }
+        if (a[1] == default_source) { printf "INPUT\tpuavo.audio.pa.default_source\t%s|%s|%s\n", current_card, active_profile, a[1] }
       }
-    '
+    ' \
+  | sort
