@@ -8,6 +8,7 @@ class image::bundle::desktop {
   include ::disable_geoclue
   include ::firefox
   include ::fontconfig
+  include ::fuse
   include ::gnome_terminal
   include ::graphics_drivers
   include ::ibus
@@ -18,6 +19,7 @@ class image::bundle::desktop {
   include ::libdvdcss
   include ::network_manager
   include ::notify_changelog
+  include ::polkit_printers
   # include ::pycharm	                # XXX pycharm needs to be packaged
   include ::smartboard
   include ::supplementary_groups
