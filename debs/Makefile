@@ -4,21 +4,19 @@ _pkgs_builddeps := unicode-data
 # parts & ports packages go into puavo-os images
 
 _pkgs_parts     := puavo-os
-_pkgs_ports     :=
-# XXX
-#_pkgs_ports     := autopoweroff    \
-#                   fluentd         \
-#                   gnome-shell     \
-#                   grub2           \
-#                   gvfs            \
-#                   linux           \
-#                   mutter          \
-#                   nwjs            \
-#                   openboard       \
-#                   visionmedia-mon \
-#                   vtun            \
-#                   wine            \
-#                   wpa
+_pkgs_ports     := autopoweroff    \
+                   fluentd         \
+                   gnome-shell     \
+                   grub2           \
+                   gvfs            \
+                   linux           \
+                   mutter          \
+                   nwjs            \
+                   openboard       \
+                   visionmedia-mon \
+                   vtun            \
+                   wine            \
+                   wpa
 _pkgs_image     := $(_pkgs_builddeps) $(_pkgs_parts) $(_pkgs_ports)
 
 # cloud packages do NOT go into puavo-os images
