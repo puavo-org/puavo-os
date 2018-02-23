@@ -4,11 +4,14 @@ class image::bundle::desktop {
   include ::chromium
   include ::cups
   include ::desktop
+  include ::devilspie
   include ::disable_accounts_service
   include ::disable_geoclue
+  include ::disable_unclutter
   include ::firefox
   include ::fontconfig
   include ::fuse
+  include ::gdm
   include ::gnome_terminal
   include ::graphics_drivers
   include ::ibus
@@ -19,6 +22,12 @@ class image::bundle::desktop {
   include ::libdvdcss
   include ::network_manager
   include ::notify_changelog
+  include ::packages::languages::de
+  include ::packages::languages::en
+  include ::packages::languages::fi
+  include ::packages::languages::fr
+  include ::packages::languages::sv
+  include ::picaxe_udev_rules
   include ::polkit_printers
   # include ::pycharm	                # XXX pycharm needs to be packaged
   include ::smartboard
