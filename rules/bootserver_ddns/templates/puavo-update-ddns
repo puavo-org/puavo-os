@@ -1,16 +1,16 @@
-#!/usr/bin/ruby 
+#!/usr/bin/ruby
 #
 # Copyright 2013 Opinsys Oy
 #
-# Script to do dynamic DNS updates. Both forward and reverse records are 
+# Script to do dynamic DNS updates. Both forward and reverse records are
 # updated. Multiple servers can be updated simultaneously.
 #
 #
 # CONFIGURATION
 #
-# The script uses defaults that work out-of-the-box when used on Puavo 
-# LTSP bootservers and internal networks are in 10.0.0.0/8 range. The 
-# default configuration can be overwriten using file 
+# The script uses defaults that work out-of-the-box when used on Puavo
+# LTSP bootservers and internal networks are in 10.0.0.0/8 range. The
+# default configuration can be overwriten using file
 # /etc/puavo/nameserver.yml.
 #
 # Configuration Defaults
@@ -47,7 +47,7 @@
 # The Key attribute value is the key that needs to be put in the
 # /etc/puavo/nameserver.yml configuration file.
 #
-# Bind configuration (/etc/bind/named.conf.local) should look something 
+# Bind configuration (/etc/bind/named.conf.local) should look something
 # like this:
 #
 # key "puavo-updater" {
@@ -72,7 +72,7 @@
 # };
 #
 #
- 
+
 require 'yaml'
 require 'ldap'
 require 'dnsruby'
@@ -156,11 +156,11 @@ fqdn = "#{hostname}.#{subdomain}.#{@puavo_domain}"
 
 # Loop through all servers and update the A and reverse PTR records.
 # The records are first deleted and then added.
- 
+
 config["servers"].each do |url|
   port = 53
   server = url
- 
+
   if /(.*):(\d+)/.match(url)
     server = $1
     port = $2

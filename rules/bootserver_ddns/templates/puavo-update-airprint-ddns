@@ -93,7 +93,7 @@ printer_queues.each do |printer_queue|
       "product=(GPL Ghostscript)",
       "printer-state=3",
       "printer-type=0x803014",
-      "pdl=application/octet-stream,application/pdf,application/postscript,image/gif,image/jpeg,image/png,image/tiff,image/urf,text/html,text/plain,application/vnd.cups-banner,application/vnd.cups-pdf,application/vnd.cups-postscript,application/vnd.cups-raw" ] 
+      "pdl=application/octet-stream,application/pdf,application/postscript,image/gif,image/jpeg,image/png,image/tiff,image/urf,text/html,text/plain,application/vnd.cups-banner,application/vnd.cups-pdf,application/vnd.cups-postscript,application/vnd.cups-raw" ]
   )
 end
 

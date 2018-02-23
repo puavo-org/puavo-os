@@ -37,7 +37,7 @@ def _main():
         "NFS": 0,
         "SMB": 0,
         }
-    
+
     if len(sys.argv) == 1:
         out = subprocess.check_output(['/usr/bin/puavo-bootserver-list-clients',
                                        '--no-resolve'])

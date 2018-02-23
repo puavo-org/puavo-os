@@ -20,5 +20,5 @@ mkdir -p "${zonefile_dst_dir}"
 
 tmpfile=$(mktemp "--tmpdir=${zonefile_dst_dir}")
 
-cp -p "${zonefile_src}" "${tmpfile}" 
+cp -p "${zonefile_src}" "${tmpfile}"
 mv "${tmpfile}" "${zonefile_dst}"

@@ -19,7 +19,7 @@ class bootserver_munin {
   }
 
   $statefile = '/var/lib/munin-node/plugin-state/nobody/puavo-wlan-127.0.0.1'
-  
+
   exec {
     'reset puavo-wlan state':
       command => "/bin/mv '${statefile}' '${statefile}.reset_by_puppet'; \

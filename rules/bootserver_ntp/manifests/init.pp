@@ -6,7 +6,7 @@ class bootserver_ntp {
       notify  => Service['ntp'],
       require => Package['ntp'];
   }
-  
+
   package {
     'ntp':
       ensure => present;

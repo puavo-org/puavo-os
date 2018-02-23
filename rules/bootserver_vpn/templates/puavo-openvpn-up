@@ -2,15 +2,15 @@
 #
 # Copyright 2013 Opinsys Oy
 #
-# This script is called from OpenVPN when client connection to VPN 
-# server is established. The script writes a configuration file 
-# /etc/dnsmasq.d/10-puavo-vpn.conf that redirects DNS queries for ldap 
-# and kerberos master servers to go to nameserver at the gateway 
+# This script is called from OpenVPN when client connection to VPN
+# server is established. The script writes a configuration file
+# /etc/dnsmasq.d/10-puavo-vpn.conf that redirects DNS queries for ldap
+# and kerberos master servers to go to nameserver at the gateway
 # address.
 #
-# This makes it possible to have multiple VPN gateways where each 
-# gateway has its own endpoint address. When the client connects to 
-# different VPN server, the settings change and dnsmasq is restarted for 
+# This makes it possible to have multiple VPN gateways where each
+# gateway has its own endpoint address. When the client connects to
+# different VPN server, the settings change and dnsmasq is restarted for
 # the changes to take effect.
 
 TMPFILE=`mktemp`
