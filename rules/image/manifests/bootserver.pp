@@ -1,6 +1,7 @@
 class image::bootserver {
   include ::adm::users
   include ::image::bundle::basic
+  include ::image::bundle::bootserver
 
   stage {
     'init':

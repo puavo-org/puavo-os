@@ -14,6 +14,12 @@ class packages {
   #
 
   @package {
+    'puavo-ltsp-bootserver':
+      ensure => present,
+      tag    => [ 'tag_puavo_bootserver' ];
+  }
+
+  @package {
     [ 'fluent-plugin-puavo'
     , 'iivari-client'
     , 'opinsys-ca-certificates'
