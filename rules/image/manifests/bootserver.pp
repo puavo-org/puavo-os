@@ -15,8 +15,6 @@ class image::bootserver {
       stage => pre-main;
   }
 
-  Package <| tag == 'tag_debian'
-          or tag == 'tag_debian_backports'
-          or tag == 'tag_kernel'
+  Package <| tag == 'tag_kernel'
           or tag == 'tag_puavo' |>
 }
