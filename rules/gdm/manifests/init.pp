@@ -1,5 +1,6 @@
 class gdm {
   include ::art
+  include ::dconf::schemas
   include ::dpkg
   include ::guest
   include ::packages
