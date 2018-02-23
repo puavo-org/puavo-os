@@ -1,0 +1,46 @@
+#!/usr/bin/ruby1.9.1
+#
+# Get device settings from the LDAP-server (Puavo) and generate lts.conf for terminal.
+#
+# Usage: [sudo] ltspboot-config [GET URL] [IP ADDRESS]
+#
+
+$LOAD_PATH.unshift( File.dirname(__FILE__) )
+
+ENV['LDAPTLS_REQCERT'] = 'demand'
+
+require 'puavo'
+require 'puavo/lts'
+require 'puavo/ldap'
+
+@get_request = ARGV[0]
+@ip = ARGV[1]
+
+if not @ip
+  puts "Invalid IP-address"
+  exit 1
+end
+begin
+  # Get MAC-address by IP
+  @mac = `arp -n #{ @ip }`.split("\n").last.match(/(([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2})/)[1]
+rescue
+  puts "Cannot find ip (#{ @ip }) from arp table"
+  exit 1
+end
+
+# Create ldap connection
+@puavoldap = Puavo::Ldap.new
+
+ldap_device = @puavoldap.device_by_mac(@mac)
+device = Puavo::Client::Base.new_by_ldap_entry( ldap_device )
+
+school = ""
+if ldap_device["puavoSchool"]
+  school = Puavo::Client::Base.new_by_ldap_entry( @puavoldap.school_by_dn(ldap_device["puavoSchool"]) )
+end
+
+organisation = Puavo::Client::Base.new_by_ldap_entry( @puavoldap.organisation )
+
+lts_config = Puavo::Lts.new(organisation, school, device)
+
+puts lts_config.output
