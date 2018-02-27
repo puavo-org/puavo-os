@@ -5,7 +5,6 @@ class bootserver_nginx {
     file {
       "/etc/nginx/sites-enabled/${service_name}":
 	ensure => link,
-	notify => Exec['reload nginx'],
 	target => "/etc/nginx/sites-available/${service_name}";
     }
   }
@@ -15,17 +14,10 @@ class bootserver_nginx {
       ;
   }
 
-  exec {
-    'reload nginx':
-      command     => '/usr/sbin/service nginx reload',
-      refreshonly => true;
-  }
-
   file {
     '/etc/nginx/sites-available/default':
       content => template('bootserver_nginx/default_site'),
-      mode    => '0644',
-      notify  => Exec['reload nginx'];
+      mode    => '0644';
 
     # Newer version of nginx ships the default index.html file in
     # /usr/share/nginx/html directory instead of
