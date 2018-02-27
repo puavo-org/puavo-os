@@ -101,6 +101,7 @@ class packages {
     , 'vinagre'
     , 'vrms'
     , 'w3m'
+    , 'wakeonlan'
     , 'whois'
     , 'x11vnc'
     , 'xbacklight'
