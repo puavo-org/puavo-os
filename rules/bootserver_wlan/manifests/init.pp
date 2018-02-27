@@ -8,7 +8,7 @@ class bootserver_wlan {
       require => Package['puavo-wlangw'];
 
     '/usr/sbin/puavo-wlangw-vtun-up':
-      mode    => 755,
+      mode    => '0755',
       content => template('bootserver_wlan/puavo-wlangw-vtun-up'),
       require => Package['puavo-wlangw'];
   }

@@ -3,11 +3,11 @@ class bootserver_nbd_server {
   file {
 
     '/etc/init.d/nbd-server':
-      mode   => 0755,
+      mode   => '0755',
       source => 'puppet:///modules/bootserver_nbd_server/nbd-server.init';
 
     '/etc/nbd-server/config':
-      mode   => 0644,
+      mode   => '0644',
       notify => Service['nbd-server'],
       source => 'puppet:///modules/bootserver_nbd_server/config';
 

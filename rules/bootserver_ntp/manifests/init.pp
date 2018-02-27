@@ -2,7 +2,7 @@ class bootserver_ntp {
   file {
     '/etc/ntp.conf':
       content => template('bootserver_ntp/ntp.conf'),
-      mode    => 0644,
+      mode    => '0644',
       notify  => Service['ntp'],
       require => Package['ntp'];
   }

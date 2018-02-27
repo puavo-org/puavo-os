@@ -18,7 +18,7 @@ class bootserver_cups {
 
     '/etc/init/cups-watchdog.conf':
       content => template('bootserver_cups/cups-watchdog.upstart'),
-      mode    => 0644,
+      mode    => '0644',
       notify  => Service['cups-watchdog'],
       require => File['/usr/local/lib/cups-watchdog'];
 
@@ -30,7 +30,7 @@ class bootserver_cups {
 
     '/usr/local/lib/cups-watchdog':
       content => template('bootserver_cups/cups-watchdog'),
-      mode    => 0755,
+      mode    => '0755',
       notify  => Service['cups-watchdog'];
   }
 

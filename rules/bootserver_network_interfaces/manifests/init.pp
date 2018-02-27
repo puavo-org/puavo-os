@@ -7,6 +7,6 @@ class bootserver_network_interfaces {
 
     '/etc/network/if-up.d/disable_flow_control':
       content => template('bootserver_network_interfaces/etc/network/if-up.d/disable_flow_control'),
-      mode    => 755
+      mode    => '0755';
   }
 }

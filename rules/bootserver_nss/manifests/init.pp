@@ -23,7 +23,7 @@ class bootserver_nss {
 
     '/etc/nslcd.conf':
       content => template('bootserver_nss/nslcd.conf'),
-      mode    => 640,
+      mode    => '0640',
       group   => nslcd,
       notify  => Service['nslcd'];
   }

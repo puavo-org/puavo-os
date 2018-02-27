@@ -8,7 +8,7 @@ class bootserver_syslog {
 
     '/etc/logrotate.d/hosts':
       content => template('bootserver_syslog/hosts.logrotate'),
-      mode    => 0644;
+      mode    => '0644';
 
     '/etc/rsyslog.conf':
       content => template('bootserver_syslog/rsyslog.conf'),

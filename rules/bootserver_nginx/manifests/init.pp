@@ -25,7 +25,7 @@ class bootserver_nginx {
   file {
     '/etc/nginx/sites-available/default':
       content => template('bootserver_nginx/default_site'),
-      mode    => 0644,
+      mode    => '0644',
       notify  => Exec['reload nginx'];
 
     # Newer version of nginx ships the default index.html file in
@@ -37,7 +37,7 @@ class bootserver_nginx {
 
     '/usr/share/nginx/html/index.html':
       content => template('bootserver_nginx/index.html'),
-      mode    => 0644;
+      mode    => '0644';
 
     '/usr/share/nginx/www/index.html':
       ensure => link,

@@ -24,13 +24,13 @@ class bootserver_ddns {
     file {
       $zonefile:
         group   => 'bind',
-        mode    => 0644,
+        mode    => '0644',
         owner   => 'bind',
         require => Exec["reset zone ${zone}"];
 
       $zonefile_by_puppet:
         content => template("bootserver_ddns/${zone}"),
-        mode    => 0644;
+        mode    => '0644';
     }
   }
 
@@ -43,7 +43,7 @@ class bootserver_ddns {
     file {
         "/usr/local/${type}/${title}":
           content => template("bootserver_ddns/${title}"),
-          mode    => 0755;
+          mode    => '0755';
     }
   }
 
@@ -82,12 +82,12 @@ class bootserver_ddns {
   file {
     $ddns_key:
       group   => 'dhcpd',
-      mode    => 0640,
+      mode    => '0640',
       require => Exec['create ddns key'];
 
     '/etc/apparmor.d/local/usr.sbin.dhcpd':
       content => template('bootserver_ddns/dhcpd.apparmor'),
-      mode    => 0644,
+      mode    => '0644',
       notify  => Service['apparmor'],
       require => Package['apparmor'];
 
@@ -101,7 +101,7 @@ class bootserver_ddns {
 
     '/etc/bind/nsupdate.key':
       group   => 'bind',
-      mode    => 0640,
+      mode    => '0640',
       notify  => Service['bind9'],
       require => [ File[$ddns_key]
                  , Package['bind9'] ],
@@ -109,7 +109,7 @@ class bootserver_ddns {
 
     '/etc/cron.d/puavo-update-airprint-ddns':
       content => template('bootserver_ddns/puavo-update-airprint-ddns.cron'),
-      mode    => 0644,
+      mode    => '0644',
       require => Bootserver_ddns::Scriptfile['puavo-update-airprint-ddns'];
 
     '/etc/dhcp/dhcpd.conf':
@@ -125,7 +125,7 @@ class bootserver_ddns {
 
     '/etc/sudoers.d/puavo-bootserver':
       content => template('bootserver_ddns/sudoers'),
-      mode    => 0440;
+      mode    => '0440';
   }
 
   # We need to trim /etc/hosts lines first, becuase Puppet 2.7 fails

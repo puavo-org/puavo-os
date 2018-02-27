@@ -10,11 +10,11 @@ print Puavo::Client::Base.new_by_ldap_entry(
   file {
     '/etc/pam.d/samba':
       content => template('bootserver_samba/pam.samba'),
-      mode    => 644;
+      mode    => '0644';
 
     '/etc/samba/smb.conf':
       content => template('bootserver_samba/smb.conf'),
-      mode    => 0644,
+      mode    => '0644',
       notify  => [ Service['nmbd']
                  , Service['smbd']
                  , Service['winbind'] ],

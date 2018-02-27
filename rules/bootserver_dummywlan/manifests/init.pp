@@ -17,7 +17,7 @@ class bootserver_dummywlan {
   file {
     '/etc/init/dummywlan.conf':
       content => template('bootserver_dummywlan/dummywlan.upstart.conf'),
-      mode    => 0644,
+      mode    => '0644',
       require => File['/usr/local/lib/dummywlan'];
 
     '/etc/init.d/dummywlan':
@@ -27,11 +27,11 @@ class bootserver_dummywlan {
 
     '/etc/init/isc-dhcp-server.override':
       content => template('bootserver_dummywlan/isc-dhcp-server.upstart.override'),
-      mode    => 0644;
+      mode    => '0644';
 
     '/usr/local/lib/dummywlan':
       content => template('bootserver_dummywlan/dummywlan'),
-      mode    => 0755;
+      mode    => '0755';
   }
 
   service {
