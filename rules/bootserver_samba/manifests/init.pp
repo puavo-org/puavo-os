@@ -1,6 +1,6 @@
 class bootserver_samba {
 
-  $puavo_samba_domain = generate('/usr/bin/ruby1.9.3', '-e', '
+  $puavo_samba_domain = generate('/usr/bin/ruby', '-e', '
 require "puavo"
 require "puavo/ldap"
 print Puavo::Client::Base.new_by_ldap_entry(
