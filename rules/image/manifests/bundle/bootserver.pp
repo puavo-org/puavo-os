@@ -7,7 +7,6 @@ class image::bundle::bootserver {
   # include ::bootserver_dummywlan              # XXX needs work
   # include ::bootserver_fluentd                # XXX needs work
   # include ::bootserver_helpers                # XXX needs work
-  # include ::bootserver_hostname               # XXX needs work
   # include ::bootserver_inetd                  # XXX needs work
   # include ::bootserver_krb5kdc                # XXX needs work
   # include ::bootserver_kvm_ltspserver         # XXX needs work
