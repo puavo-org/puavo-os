@@ -31,7 +31,6 @@ class image::bundle::bootserver {
   # include ::bootserver_syslog                 # XXX needs work
   # include ::bootserver_utmp                   # XXX needs work
   # include ::bootserver_vpn                    # XXX needs work
-  # include ::bootserver_webdisk                # XXX needs work
   # include ::bootserver_wlan                   # XXX needs work
   include ::packages
 
