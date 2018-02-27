@@ -1,3 +1,6 @@
+# XXX This code does not belong here.
+exit 0
+
 begin
   require 'ipaddress'
 rescue LoadError
