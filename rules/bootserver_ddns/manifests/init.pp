@@ -128,15 +128,6 @@ class bootserver_ddns {
   }
 
   host {
-    'images.opinsys.fi':
-      ensure => absent;
-
-    'private-archive.opinsys.fi':
-      ensure => absent;
-
-    'ldap1.opinsys.fi':
-      ensure => absent;
-
     'localhost':
       ensure => present,
       ip     => '127.0.0.1';
