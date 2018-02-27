@@ -12,19 +12,12 @@ class bootserver_syslog {
 
     '/etc/rsyslog.conf':
       content => template('bootserver_syslog/rsyslog.conf'),
-      mode    => '0644',
-      notify  => Service['rsyslog'];
+      mode    => '0644';
 
     '/var/log/hosts':
       ensure => directory,
       group  => adm,
       mode   => '0750',
       owner  => syslog;
-  }
-
-  service {
-    'rsyslog':
-      enable  => 'true',
-      ensure  => 'running';
   }
 }

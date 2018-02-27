@@ -18,8 +18,7 @@ class bootserver_nginx {
   exec {
     'reload nginx':
       command     => '/usr/sbin/service nginx reload',
-      refreshonly => true,
-      require     => Service['nginx'];
+      refreshonly => true;
   }
 
   file {
@@ -42,10 +41,5 @@ class bootserver_nginx {
     '/usr/share/nginx/www/index.html':
       ensure => link,
       target => '/usr/share/nginx/html/index.html';
-  }
-
-  service {
-    'nginx':
-      ensure => running;
   }
 }

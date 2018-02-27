@@ -12,7 +12,6 @@ class bootserver_munin {
     file {
       "/etc/munin/plugins/$plugin_name":
         ensure  => link,
-        notify  => Service['munin-node'],
         require => Package['munin-node'],
         target  => "/usr/share/munin/plugins/$real_plugin_name",
     }
@@ -33,13 +32,11 @@ class bootserver_munin {
     '/etc/munin/munin-node.conf':
       content => template('bootserver_munin/munin-node.conf'),
       mode    => '0644',
-      notify  => Service['munin-node'],
       require => Package['munin-node'];
 
     '/etc/munin/plugin-conf.d/cupsys_pages':
       content => template('bootserver_munin/cupsys_pages_conf'),
       mode    => '0644',
-      notify  => Service['munin-node'],
       require => Package['munin-node'];
 
     '/etc/nginx/sites-available/munin':
@@ -91,12 +88,6 @@ class bootserver_munin {
       ensure => present;
   }
 
-  service {
-    'munin-node':
-      ensure  => running,
-      require => Package['munin-node'];
-  }
-
   tidy {
     '/etc/munin/plugins':
       matches => [ 'if_err_tap*'
@@ -104,7 +95,6 @@ class bootserver_munin {
                  , 'nfs4_client'
                  , 'nfs_client'
                  , 'nfsd' ],
-      notify  => Service['munin-node'],
       recurse => true;
   }
 }

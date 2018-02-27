@@ -8,39 +8,25 @@ class bootserver_nss {
   exec {
     'kill redundant nslcd instances':
       command => '/usr/bin/pkill -x nslcd',
-      notify  => Service['nslcd'],
       onlyif  => '/usr/bin/test "$(/usr/bin/pgrep -x -c nslcd)" -gt 2';
   }
 
   file {
     '/etc/nsswitch.conf':
-      content => template('bootserver_nss/nsswitch.conf'),
-      notify  => Service['nscd'];
+      content => template('bootserver_nss/nsswitch.conf');
 
     '/etc/nscd.conf':
-      content => template('bootserver_nss/nscd.conf'),
-      notify  => Service['nscd'];
+      content => template('bootserver_nss/nscd.conf');
 
     '/etc/nslcd.conf':
       content => template('bootserver_nss/nslcd.conf'),
       mode    => '0640',
-      group   => nslcd,
-      notify  => Service['nslcd'];
+      group   => nslcd;
   }
 
   package {
     'sssd':
       ensure  => purged,
-      require => [ File['/etc/nsswitch.conf'], Service['nslcd'], ];
-  }
-
-  service {
-    'nscd':
-      ensure  => running,
-      require => File['/etc/nscd.conf'];
-
-    'nslcd':
-      ensure  => running,
-      require => File['/etc/nslcd.conf'];
+      require => File['/etc/nsswitch.conf'];
   }
 }

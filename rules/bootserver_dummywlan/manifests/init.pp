@@ -10,7 +10,6 @@ class bootserver_dummywlan {
   exec {
     '/usr/local/lib/dummywlan':
       onlyif  => '/usr/bin/test ! -e /sys/class/net/wlan0/brif/dummywlan0',
-      notify  => Service['isc-dhcp-server'],
       require => Bootserver_kernel_modules::Add['dummy'];
   }
 
@@ -32,13 +31,5 @@ class bootserver_dummywlan {
     '/usr/local/lib/dummywlan':
       content => template('bootserver_dummywlan/dummywlan'),
       mode    => '0755';
-  }
-
-  service {
-    'dummywlan':
-      enable  => true,
-      require => [ Bootserver_kernel_modules::Add['dummy']
-                 , File['/etc/init.d/dummywlan'] ],
-      notify  => Service['isc-dhcp-server'];
   }
 }

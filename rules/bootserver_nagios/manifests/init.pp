@@ -4,8 +4,7 @@ class bootserver_nagios {
 
   file {
     '/etc/nagios/nrpe.cfg':
-      content => template('bootserver_nagios/nrpe.cfg'),
-      notify  => Service['nagios-nrpe-server'];
+      content => template('bootserver_nagios/nrpe.cfg');
   }
 
   Dpkg::Statoverride   <| tag == bootserver |>

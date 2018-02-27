@@ -5,39 +5,26 @@ class bootserver_cups {
 
   file {
     '/etc/apparmor.d/local/usr.sbin.cupsd':
-      content => template('bootserver_cups/apparmor_usr.sbin.cupsd'),
-      notify  => Service['apparmor'];
+      content => template('bootserver_cups/apparmor_usr.sbin.cupsd');
 
     '/etc/cups/cupsd.conf':
-      content => template('bootserver_cups/cupsd.conf'),
-      notify  => Service['cups'];
+      content => template('bootserver_cups/cupsd.conf');
 
     '/etc/cups/cups-files.conf':
-      content => template('bootserver_cups/cups-files.conf'),
-      notify  => Service['cups'];
+      content => template('bootserver_cups/cups-files.conf');
 
     '/etc/init/cups-watchdog.conf':
       content => template('bootserver_cups/cups-watchdog.upstart'),
       mode    => '0644',
-      notify  => Service['cups-watchdog'],
       require => File['/usr/local/lib/cups-watchdog'];
 
     '/etc/init.d/cups-watchdog':
-      before  => Service['cups-watchdog'],
       ensure  => link,
       require => File['/etc/init/cups-watchdog.conf'],
       target  => '/lib/init/upstart-job';
 
     '/usr/local/lib/cups-watchdog':
       content => template('bootserver_cups/cups-watchdog'),
-      mode    => '0755',
-      notify  => Service['cups-watchdog'];
-  }
-
-  service {
-    [ 'cups'
-    , 'cups-watchdog' ]:
-      enable => true,
-      ensure => running;
+      mode    => '0755';
   }
 }

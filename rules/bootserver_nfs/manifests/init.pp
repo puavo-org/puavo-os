@@ -18,13 +18,11 @@ class bootserver_nfs {
       require => File['/export/home'];
   }
 
-  Exec { notify => [ Service['idmapd'], Service['nfs-kernel-server'], ], }
   exec {
     '/bin/mount -a':
       refreshonly => true;
   }
 
-  File { notify => [ Service['idmapd'], Service['nfs-kernel-server'], ], }
   file {
     '/etc/default/nfs-common':
       content => template('bootserver_nfs/etc_default_nfs-common');
@@ -40,10 +38,5 @@ class bootserver_nfs {
 
     [ '/export', '/export/home', ]:
       ensure => directory;
-  }
-
-  service {
-    [ 'idmapd', 'nfs-kernel-server', ]:
-      ensure => running;
   }
 }

@@ -16,7 +16,6 @@ class bootserver_ddns {
       "reset zone ${zone}":
         command     => "/usr/local/lib/reset-zone '${zonefile_by_puppet}' '${zonefile}'",
         creates     => $zonefile,
-        notify      => Service['bind9'],
         require     => [ File[$zonefile_by_puppet]
                        , Package['bind9utils'] ];
     }
@@ -88,21 +87,17 @@ class bootserver_ddns {
     '/etc/apparmor.d/local/usr.sbin.dhcpd':
       content => template('bootserver_ddns/dhcpd.apparmor'),
       mode    => '0644',
-      notify  => Service['apparmor'],
       require => Package['apparmor'];
 
     '/etc/bind/named.conf.local':
-      content => template('bootserver_ddns/named.conf.local'),
-      notify  => Service['bind9'];
+      content => template('bootserver_ddns/named.conf.local');
 
     '/etc/bind/named.conf.options':
-      content => template('bootserver_ddns/named.conf.options'),
-      notify  => Service['bind9'];
+      content => template('bootserver_ddns/named.conf.options');
 
     '/etc/bind/nsupdate.key':
       group   => 'bind',
       mode    => '0640',
-      notify  => Service['bind9'],
       require => [ File[$ddns_key]
                  , Package['bind9'] ],
       source  => "file://${ddns_key}";
@@ -114,13 +109,11 @@ class bootserver_ddns {
 
     '/etc/dhcp/dhcpd.conf':
       content => template('bootserver_ddns/dhcpd.conf'),
-      notify  => Service['isc-dhcp-server'],
       require => [ Package['isc-dhcp-server']
                  , Exec['ensure ubnt.conf exists'] ];
 
     '/etc/dnsmasq.conf':
       content => template('bootserver_ddns/dnsmasq.conf'),
-      notify  => Service['dnsmasq'],
       require => Package['dnsmasq'];
 
     '/etc/sudoers.d/puavo-bootserver':
@@ -132,7 +125,6 @@ class bootserver_ddns {
   # to parse /etc/hosts if lines begin with whitespace.
   Host {
     require => Exec['trim /etc/hosts'],
-    notify  => Service['dnsmasq'],
   }
 
   host {
@@ -156,24 +148,5 @@ class bootserver_ddns {
     , 'dnsmasq'
     , 'isc-dhcp-server' ]:
       ensure => present;
-  }
-
-  service {
-    'bind9':
-      enable => true,
-      ensure => 'running';
-
-    'dnsmasq':
-      enable => true,
-      ensure => 'running',
-      require => Service['bind9'];
-
-    'isc-dhcp-server':
-      enable => true,
-      ensure => 'running',
-      require => [ Bootserver_ddns::Scriptfile['puavo-update-ddns']
-                 , File['/etc/sudoers.d/puavo-bootserver']
-                 , Service['bind9']
-                 , Service['dnsmasq'] ];
   }
 }
