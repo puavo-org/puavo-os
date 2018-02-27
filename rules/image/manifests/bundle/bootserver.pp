@@ -1,5 +1,8 @@
 class image::bundle::bootserver {
   include ::bootserver_autopoweron
+  include ::bootserver_inetd
+  include ::packages
+
   # include ::bootserver_backup                 # XXX needs work
   # include ::bootserver_cron                   # XXX needs work
   # include ::bootserver_cups                   # XXX needs work
@@ -7,7 +10,6 @@ class image::bundle::bootserver {
   # include ::bootserver_dummywlan              # XXX needs work
   # include ::bootserver_fluentd                # XXX needs work
   # include ::bootserver_helpers                # XXX needs work
-  # include ::bootserver_inetd                  # XXX needs work
   # include ::bootserver_krb5kdc                # XXX needs work
   # include ::bootserver_kvm_ltspserver         # XXX needs work
   # include ::bootserver_ldap                   # XXX needs work
@@ -31,7 +33,6 @@ class image::bundle::bootserver {
   # include ::bootserver_utmp                   # XXX needs work
   # include ::bootserver_vpn                    # XXX needs work
   # include ::bootserver_wlan                   # XXX needs work
-  include ::packages
 
   Package <| tag == tag_puavo_bootserver |>
 }

@@ -52,6 +52,11 @@ class packages {
   #
 
   @package {
+    'openbsd-inetd':
+      tag => [ 'tag_basic', 'tag_debian_bootserver', ];
+  }
+
+  @package {
     [ 'acpitool'
     , 'arandr'
     , 'clusterssh'
