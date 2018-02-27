@@ -53,7 +53,7 @@ class packages::compat_32bit {
       , 'libxv1:i386'
       , 'zlib1g:i386' ]:
         ensure => present,
-        tag    => [ 'tag_debian', 'tag_i386' ];
+        tag    => [ 'tag_debian_desktop', 'tag_i386' ];
     }
 
     # XXX libnss-extrausers:i386 can not live with libnss-extrausers:amd64,

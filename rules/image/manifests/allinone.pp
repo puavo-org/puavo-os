@@ -16,8 +16,8 @@ class image::allinone {
       stage => pre-main;
   }
 
-  Package <| tag == 'tag_debian'
-          or tag == 'tag_debian_backports'
+  Package <| tag == 'tag_debian_desktop'
+          or tag == 'tag_debian_desktop_backports'
           or tag == 'tag_kernel'
           or tag == 'tag_puavo'
           or tag == 'tag_ubuntu' |>

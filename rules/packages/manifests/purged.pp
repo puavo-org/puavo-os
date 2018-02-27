@@ -37,6 +37,6 @@ class packages::purged {
                                 # (we use a separate boot server)
 
     , 'tracker' ]:              # this uses too much resources when using nfs
-      tag => [ 'tag_debian' ];
+      tag => [ 'tag_debian_desktop' ];
   }
 }

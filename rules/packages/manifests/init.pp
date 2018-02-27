@@ -106,7 +106,7 @@ class packages {
     , 'x11vnc'
     , 'xbacklight'
     , 'xinput-calibrator' ]:
-      tag => [ 'tag_admin', 'tag_debian', ];
+      tag => [ 'tag_admin', 'tag_debian_desktop', ];
 
     [ 'libasound2-plugins'
     , 'mumble'
@@ -116,7 +116,7 @@ class packages {
     , 'qstopmotion'
     , 'simplescreenrecorder'
     , 'timidity' ]:
-      tag => [ 'tag_audio', 'tag_debian', ];
+      tag => [ 'tag_audio', 'tag_debian_desktop', ];
 
     [ 'bash'
     , 'bash-completion'
@@ -133,12 +133,12 @@ class packages {
     , 'systemd'
     , 'udev'
     , 'vlan' ]:
-      tag => [ 'tag_basic', 'tag_debian', ];
+      tag => [ 'tag_basic', 'tag_debian_desktop', ];
 
     [ 'debootstrap'
     , 'squashfs-tools'
     , 'systemd-container' ]:
-      tag => [ 'tag_builder', 'tag_debian', ];
+      tag => [ 'tag_builder', 'tag_debian_desktop', ];
 
     [ 'gdm3'
     , 'network-manager-openvpn-gnome'
@@ -151,7 +151,7 @@ class packages {
     , 'python-notify'
     , 'shared-mime-info'
     , 'xul-ext-mozvoikko' ]:
-      tag => [ 'tag_desktop', 'tag_debian', ];
+      tag => [ 'tag_desktop', 'tag_debian_desktop', ];
 
     [ 'acct'
     , 'ack-grep'
@@ -172,7 +172,7 @@ class packages {
     , 'sloccount'
     , 'translate-toolkit'
     , 'vim-nox' ]:
-      tag => [ 'tag_devel', 'tag_debian', ];
+      tag => [ 'tag_devel', 'tag_debian_desktop', ];
 
     [ 'dkms'
     , 'glx-alternative-mesa'
@@ -182,26 +182,26 @@ class packages {
     , 'update-glx'
     , 'xserver-xorg-input-evdev'
     , 'xserver-xorg-video-all' ]:
-      tag => [ 'tag_drivers', 'tag_debian', ];
+      tag => [ 'tag_drivers', 'tag_debian_desktop', ];
 
     [ 'mutt' ]:
-      tag => [ 'tag_email', 'tag_debian', ];
+      tag => [ 'tag_email', 'tag_debian_desktop', ];
 
     [ 'virtualbox'
     , 'wine'
     , 'wine32'
     , 'wine64'
     , 'winetricks' ]:
-      tag => [ 'tag_emulation', 'tag_debian', ];
+      tag => [ 'tag_emulation', 'tag_debian_desktop', ];
 
     'firmware-linux-free':
-      tag => [ 'tag_firmware', 'tag_debian', ];
+      tag => [ 'tag_firmware', 'tag_debian_desktop', ];
 
     [ 'fontconfig'
     , 'ttf-freefont'
     , 'xfonts-terminus'
     , 'xfonts-utils' ]:
-      tag => [ 'tag_fonts', 'tag_debian', ];
+      tag => [ 'tag_fonts', 'tag_debian_desktop', ];
 
     [ 'aisleriot'
     , 'dosbox'
@@ -228,7 +228,7 @@ class packages {
     , 'tuxpaint'
     , 'tuxpaint-stamps-default'
     , 'xmoto' ]:
-      tag => [ 'tag_games', 'tag_debian', ];
+      tag => [ 'tag_games', 'tag_debian_desktop', ];
 
     [ 'dbus-x11'
     , 'gnome-applets'
@@ -238,7 +238,7 @@ class packages {
     , 'libgnomevfs2-bin'
     , 'libgnomevfs2-extra'
     , 'notification-daemon' ]:
-      tag => [ 'tag_gnome', 'tag_debian', ];
+      tag => [ 'tag_gnome', 'tag_debian_desktop', ];
 
     [ 'blender'
     , 'breeze-icon-theme'	# wanted (not required) by kdenlive
@@ -273,22 +273,22 @@ class packages {
     , 'python-lxml'
     , 'sane-utils'
     , 'xsane' ]:
-      tag => [ 'tag_graphics', 'tag_debian', ];
+      tag => [ 'tag_graphics', 'tag_debian_desktop', ];
 
     # XXX some issue on Debian
     # [ 'kdump-tools' ]:
-    #   tag => [ 'tag_kernelutils', 'tag_debian', ];
+    #   tag => [ 'tag_kernelutils', 'tag_debian_desktop', ];
 
     [ 'irssi'
     , 'irssi-plugin-xmpp'
     , 'pidgin'
     , 'pidgin-libnotify'
     , 'pidgin-plugin-pack' ]:
-      tag => [ 'tag_instant_messaging', 'tag_debian', ];
+      tag => [ 'tag_instant_messaging', 'tag_debian_desktop', ];
 
     # XXX enable if issues are fixed
     # [ 'laptop-mode-tools' ]:
-    #   tag => [ 'tag_laptop', 'tag_debian', ];
+    #   tag => [ 'tag_laptop', 'tag_debian_desktop', ];
 
     # , 'clam-chordata'		# XXX missing from Debian Jessie
     [ 'goobox'
@@ -307,7 +307,7 @@ class packages {
     , 'vlc'
     , 'winff'
     , 'x264' ]:
-      tag => [ 'tag_mediaplayer', 'tag_debian', ];
+      tag => [ 'tag_mediaplayer', 'tag_debian_desktop', ];
 
     [ 'audacity'
     , 'denemo'
@@ -322,12 +322,12 @@ class packages {
     , 'soundconverter'
     , 'tuxguitar'
     , 'tuxguitar-jsa' ]:
-      tag => [ 'tag_music_making', 'tag_debian', ];
+      tag => [ 'tag_music_making', 'tag_debian_desktop', ];
 
     [ 'amtterm'
     , 'hostapd'
     , 'vtun' ]:
-      tag => [ 'tag_network', 'tag_debian', ];
+      tag => [ 'tag_network', 'tag_debian_desktop', ];
 
     [ 'calibre'
     , 'icedove'
@@ -337,17 +337,17 @@ class packages {
     , 'scribus'
     , 'tellico'
     , 'vym' ]:
-      tag => [ 'tag_office', 'tag_debian', ];
+      tag => [ 'tag_office', 'tag_debian_desktop', ];
 
     [ 'eject'
     , 'sound-juicer' ]:
-      tag => [ 'tag_optical_media', 'tag_debian', ];
+      tag => [ 'tag_optical_media', 'tag_debian_desktop', ];
 
     [ 'cups-browsed'
     , 'cups-daemon'
     , 'cups-pk-helper'
     , 'gtklp' ]:
-      tag => [ 'tag_printing', 'tag_debian', ];
+      tag => [ 'tag_printing', 'tag_debian_desktop', ];
 
     [ 'arduino'
     , 'arduino-mk'
@@ -379,7 +379,7 @@ class packages {
     , 'scratch'
     , 'sonic-pi'
     , 'spe' ]:
-      tag => [ 'tag_programming', 'tag_debian', ];
+      tag => [ 'tag_programming', 'tag_debian_desktop', ];
 
     [ 'gftp'
     , 'lftp'
@@ -387,7 +387,7 @@ class packages {
     , 'smbclient'
     , 'wget'
     , 'xtightvncviewer']:
-      tag => [ 'tag_remote_access', 'tag_debian', ];
+      tag => [ 'tag_remote_access', 'tag_debian_desktop', ];
 
     [ 'avogadro'
     , 'celestia'
@@ -412,7 +412,7 @@ class packages {
     , 'texlive-latex-extra'
     , 'texlive-latex-recommended'
     , 'wxmaxima' ]:
-      tag => [ 'tag_science', 'tag_debian', ];
+      tag => [ 'tag_science', 'tag_debian_desktop', ];
 
     # 'breathe-icon-theme'		# XXX missing from Debian
     [ 'gnome-icon-theme'
@@ -425,7 +425,7 @@ class packages {
     , 'oxygen-icon-theme'
     , 'xscreensaver-data'
     , 'xscreensaver-data-extra' ]:
-      tag => [ 'tag_themes', 'tag_debian', ];
+      tag => [ 'tag_themes', 'tag_debian_desktop', ];
 
     # the dependencies (and recommends) of ubuntu-gnome-desktop package
     # without a few packages that we do not want
@@ -589,7 +589,7 @@ class packages {
     , 'youtube-dl'
     , 'zenity'
     , 'zip' ]:
-      tag => [ 'tag_ubuntu-gnome-desktop', 'tag_debian', ];
+      tag => [ 'tag_ubuntu-gnome-desktop', 'tag_debian_desktop', ];
 
     [ 'anki'
     , 'bindfs'
@@ -606,10 +606,10 @@ class packages {
     , 'tlp'
     , 'unace'
     , 'unionfs-fuse' ]: # Ekapeli might need this.
-      tag => [ 'tag_utils', 'tag_debian', ];
+      tag => [ 'tag_utils', 'tag_debian_desktop', ];
 
     [ 'qemu-kvm' ]:
-      tag => [ 'tag_virtualization', 'tag_debian', ];
+      tag => [ 'tag_virtualization', 'tag_debian_desktop', ];
 
     [ 'bluefish'
     , 'browser-plugin-vlc'
@@ -622,7 +622,7 @@ class packages {
     , 'php-cli'
     , 'php-sqlite3'
     , 'sqlite3' ]:
-      tag => [ 'tag_web', 'tag_debian', ];
+      tag => [ 'tag_web', 'tag_debian_desktop', ];
   }
 
   #
@@ -738,13 +738,13 @@ class packages {
     , 'libssl1.0.0'    # spotify
     , 'libudev0:amd64' # vmware-horizon-client
     , 'lsb-core' ]:    # google-earth
-      tag => [ 'tag_debian', 'tag_required-by-restricted' ];
+      tag => [ 'tag_debian_desktop', 'tag_required-by-restricted' ];
   }
 
   # various contrib/non-free stuff, firmwares and such
   @package {
     'nautilus-dropbox':
-      tag => [ 'tag_desktop', 'tag_debian_nonfree', ];
+      tag => [ 'tag_desktop', 'tag_debian_desktop_nonfree', ];
 
     [ 'broadcom-sta-dkms'
     , 'libgl1-nvidia-glx'
@@ -756,7 +756,7 @@ class packages {
     , 'xserver-xorg-video-nvidia'
     , 'xserver-xorg-video-nvidia-legacy-304xx'
     , 'xserver-xorg-video-nvidia-legacy-340xx' ]:
-      tag => [ 'tag_drivers', 'tag_debian_nonfree', ];
+      tag => [ 'tag_drivers', 'tag_debian_desktop_nonfree', ];
 
     [ 'amd64-microcode'
     , 'b43-fwcutter'
@@ -789,17 +789,17 @@ class packages {
     , 'intel-microcode'
     , 'iucode-tool' ]:
       ensure => present,
-      tag    => [ 'tag_firmware', 'tag_debian_nonfree', ];
+      tag    => [ 'tag_firmware', 'tag_debian_desktop_nonfree', ];
 
     'steam':
-      tag => [ 'tag_games', 'tag_debian_nonfree', ];
+      tag => [ 'tag_games', 'tag_debian_desktop_nonfree', ];
 
     'scribus-doc':
-      tag => [ 'tag_office', 'tag_debian_nonfree', ];
+      tag => [ 'tag_office', 'tag_debian_desktop_nonfree', ];
 
     'celestia-common-nonfree':
       ensure => present,
-      tag    => [ 'tag_science', 'tag_debian_nonfree', ];
+      tag    => [ 'tag_science', 'tag_debian_desktop_nonfree', ];
 
     'unrar':
       tag => [ 'tag_utils', 'tag_debian_nonfree', ];

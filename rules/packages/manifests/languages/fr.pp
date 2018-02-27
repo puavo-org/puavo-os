@@ -8,6 +8,6 @@ class packages::languages::fr {
     , 'libreoffice-l10n-fr'
     , 'myspell-fr'
     , 'mythes-fr' ]:
-      tag => [ 'tag_debian', 'tag_language_fr', ];
+      tag => [ 'tag_debian_desktop', 'tag_language_fr', ];
   }
 }
