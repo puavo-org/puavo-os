@@ -7,6 +7,8 @@ class bootserver_autopoweron {
       mode    => '0644',
       require => File['/etc/systemd/system/puavo-autopoweron.service'];
 
+    # XXX This should be controlled by puavo.service.puavo-autopoweron.enabled
+    # XXX puavo-conf variable, I suppose.
     '/etc/systemd/system/puavo-autopoweron.service':
       content => template('bootserver_autopoweron/puavo-autopoweron.service'),
       mode    => '0644',
