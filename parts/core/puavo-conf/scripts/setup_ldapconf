@@ -4,8 +4,10 @@ set -eu
 
 read puavo_ldap_base < /etc/puavo/ldap/base
 
+puavo_hosttype="$(puavo-conf puavo.hosttype)"
+
 # XXX get rid of hosttype handling
-if [ "$(puavo-conf puavo.hosttype)" = 'laptop' ]; then
+if [ "$puavo_hosttype" = 'bootserver' -o "$puavo_hosttype" = 'laptop' ]; then
   read puavo_ldap_server < /etc/puavo/ldap/master
 else
   read puavo_ldap_server < /etc/puavo/ldap/slave
