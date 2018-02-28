@@ -5,13 +5,13 @@ set -eu
 ask_install_target_hosttype() {
   puavo_install_target_hosttype=laptop
   while true; do
-    echo 'Choose hosttype (possible choices are: laptop wirelessaccesspoint)' \
+    echo 'Choose hosttype (possible choices are: bootserver laptop wirelessaccesspoint)' \
          >&2
     read -p "  Target hosttype? [$puavo_install_target_hosttype]: " answer
     [ -n "$answer" ] && puavo_install_target_hosttype=$answer
 
     case "$puavo_install_target_hosttype" in
-      laptop|wirelessaccesspoint) break                     ;;
+      bootserver|laptop|wirelessaccesspoint) break          ;;
       *) echo "'$answer' is not a supported hosttype\n" >&2 ;;
     esac
   done
@@ -148,7 +148,7 @@ get_accepted_hosttypes() {
     return 0
   fi
 
-  echo 'fatclient,laptop,wirelessaccesspoint'
+  echo 'bootserver,fatclient,laptop,wirelessaccesspoint'
 }
 
 get_install_hosttype() {
@@ -174,7 +174,7 @@ get_install_hosttype() {
 get_preinstalled_hosttype() {
   preinstalled_hosttype=$(cat /images/puavo_preinstalled 2>/dev/null || true)
   case "$preinstalled_hosttype" in
-    laptop|wirelessaccesspoint)
+    bootserver|laptop|wirelessaccesspoint)
       echo "$preinstalled_hosttype"
       ;;
     *)
@@ -242,7 +242,8 @@ is_preinstalled() { [ "$1" = 'preinstalled' ]; }
 setup_preinstalled_localbootdevice() {
   puavo_hosttype=$1
 
-  if ! [ "$puavo_hosttype" = 'laptop' \
+  if ! [ "$puavo_hosttype" = 'bootserver' \
+           -o "$puavo_hosttype" = 'laptop' \
            -o "$puavo_hosttype" = 'wirelessaccesspoint' ]; then
     echo "Setting up preinstalled '$puavo_hosttype' is not supported" >&2
     return 1
@@ -340,7 +341,7 @@ fi
 # requires (for fatclients nothing needs to be done).
 
 case "$puavo_hosttype" in
-  laptop|wirelessaccesspoint)
+  bootserver|laptop|wirelessaccesspoint)
     install_localbootdevice "$puavo_install_hosttype"               \
                             "$puavo_preseed_setup_filesystems_args"
     ;;
