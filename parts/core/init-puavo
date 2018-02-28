@@ -1,7 +1,29 @@
 #!/bin/sh
 
 {
-  puavo_conf_scripts="$(cat /etc/puavo-conf/scripts/.preinit || true)"
+  puavo_hosttype=''
+
+  read cmdline < /proc/cmdline
+  for kernel_arg in $cmdline; do
+    case "$kernel_arg" in
+      puavo.hosttype=*)
+        puavo_hosttype=${kernel_arg##puavo.hosttype=}
+        break
+        ;;
+    esac
+  done
+
+  preinit_path='/etc/puavo-conf/scripts/.preinit'
+  preinit_by_hosttype_path="${preinit_path}.${puavo_hosttype}"
+
+  if puavo_conf_scripts="$(cat "$preinit_by_hosttype_path" 2>/dev/null)"; then
+    echo "Using hosttype-specific ($puavo_hosttype) puavo-conf scripts."
+  elif puavo_conf_scripts="$(cat "$preinit_path" 2>/dev/null)"; then
+    echo 'Using generic puavo-conf scripts.'
+  else
+    echo 'Could not determine puavoconf preinit-scripts.' >&2
+    puavo_conf_scripts=
+  fi
 
   if [ -n "$puavo_conf_scripts" ]; then
     read seconds _ < /proc/uptime
