@@ -17,10 +17,4 @@ class bootserver_cron {
       mode   => '0755',
       source => 'puppet:///modules/bootserver_cron/puavo-fix-homedir-permissions';
   }
-
-  # XXX old stuff, may be removed once this has been removed from everywhere
-  file {
-    '/etc/cron.d/img-sync':
-      ensure => absent;
-  }
 }
