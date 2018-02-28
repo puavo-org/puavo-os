@@ -4,5 +4,4 @@ File { owner => 'root', group => 'root', mode => '0644', }
 case $::puavoruleset {
   'prepare':    { include ::apt::default_repositories }
   'allinone':   { include ::image::allinone           }
-  'bootserver': { include ::image::bootserver         }
 }
