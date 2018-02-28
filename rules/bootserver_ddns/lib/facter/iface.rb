@@ -1,11 +1,10 @@
-# XXX This code does not belong here.
-exit 0
-
 begin
   require 'ipaddress'
 rescue LoadError
   # NOP
-else
+end
+
+if false then
   ENV['LANG'] = 'C'
 
   class Interface
