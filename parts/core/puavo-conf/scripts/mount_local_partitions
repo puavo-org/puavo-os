@@ -85,13 +85,13 @@ if [ "$puavo_hosttype" = 'diskinstaller' ]; then
   puavo_mount_partition puavoinstaller-installimages /installimages || status=1
 fi
 
-if [ "$puavo_hosttype" = 'laptop' ]; then
+if [ "$puavo_hosttype" = 'bootserver' -o "$puavo_hosttype" = 'laptop' ]; then
   puavo_mount_partition puavo-home /home || status=1
 fi
 
 # These are needed for system updates when on NBD.
 case "$puavo_hosttype" in
-  laptop|preinstalled|wirelessaccesspoint)
+  bootserver|laptop|preinstalled|wirelessaccesspoint)
     puavo_mount_partition puavo-images /images || status=1
     puavo_mount_partition puavo-state  /state  || status=1
     ;;
