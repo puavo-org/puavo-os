@@ -33,5 +33,6 @@ class image::bundle::bootserver {
   # include ::bootserver_vpn                    # XXX needs work
   # include ::bootserver_wlan                   # XXX needs work
 
-  Package <| tag == tag_puavo_bootserver |>
+  Package <| tag == tag_debian_bootserver
+          or tag == tag_puavo_bootserver |>
 }

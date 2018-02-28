@@ -1,6 +1,7 @@
 class image::allinone {
   include ::adm::users
   include ::image::bundle::basic
+  include ::image::bundle::bootserver
   include ::image::bundle::desktop
 
   stage {
@@ -16,9 +17,6 @@ class image::allinone {
       stage => pre-main;
   }
 
-  Package <| tag == 'tag_debian_desktop'
-          or tag == 'tag_debian_desktop_backports'
-          or tag == 'tag_kernel'
-          or tag == 'tag_puavo'
-          or tag == 'tag_ubuntu' |>
+  Package <| tag == 'tag_kernel'
+          or tag == 'tag_puavo'  |>
 }

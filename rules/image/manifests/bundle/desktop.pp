@@ -37,4 +37,8 @@ class image::bundle::desktop {
   include ::wacom
   include ::workaround_firefox_local_swf_bug
   include ::xorg
+
+  Package <| tag == 'tag_debian_desktop'
+          or tag == 'tag_debian_desktop_backports'
+          or tag == 'tag_ubuntu_desktop' |>
 }

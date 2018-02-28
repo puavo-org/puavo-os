@@ -649,7 +649,7 @@ class packages {
 
   @package {
     [ 'ttf-ubuntu-font-family' ]:
-      tag => [ 'tag_fonts', 'tag_ubuntu', ];
+      tag => [ 'tag_fonts', 'tag_ubuntu_desktop', ];
 
     [ 'edubuntu-wallpapers'
     , 'ubuntu-wallpapers-lucid'
@@ -662,7 +662,7 @@ class packages {
     , 'ubuntu-wallpapers-vivid'
     , 'ubuntu-wallpapers-wily'
     , 'ubuntu-wallpapers-xenial' ]:
-      tag => [ 'tag_wallpapers', 'tag_ubuntu', ];
+      tag => [ 'tag_wallpapers', 'tag_ubuntu_desktop', ];
   }
 
   #
