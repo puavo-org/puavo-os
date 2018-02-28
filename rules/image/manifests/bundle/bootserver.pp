@@ -24,7 +24,6 @@ class image::bundle::bootserver {
   # include ::bootserver_ntp                    # XXX needs work
   # include ::bootserver_pam                    # XXX needs work
   # include ::bootserver_pxe                    # XXX needs work
-  # include ::bootserver_qemu                   # XXX needs work
   # include ::bootserver_samba                  # XXX needs work
   # include ::bootserver_slapd                  # XXX needs work
   # include ::bootserver_ssh_server             # XXX needs work
