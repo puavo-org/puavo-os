@@ -77,6 +77,7 @@ case "$(puavo-conf puavo.hosttype)" in
   bootserver)
     statedirlist='
       /etc/network/interfaces.d
+      /etc/shorewall
       /var/lib/bind
       /var/lib/ldap
       /var/lib/logrotate
