@@ -277,7 +277,7 @@ fi
 common_kernel_arguments="puavo.hosttype=${hosttype} root=/dev/mapper/${puavo_lvm_partition} loop=\"\${imagepath}\" puavo.image.path=\"\${imagepath}\""
 
 case "$hosttype" in
-  diskinstaller|preinstalled|wirelessaccesspoint)
+  bootserver|diskinstaller|preinstalled|wirelessaccesspoint)
     puavo_kernel_arguments="$common_kernel_arguments"
     ;;
   laptop)
