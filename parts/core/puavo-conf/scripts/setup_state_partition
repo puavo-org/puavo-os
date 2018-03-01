@@ -101,7 +101,7 @@ case "$(puavo-conf puavo.hosttype)" in
       /var/spool/anacron
     '
     ;;
-fi
+esac
 
 for statedir in $statedirlist; do
   puavo_link_to_state "$statedir" || status=1
