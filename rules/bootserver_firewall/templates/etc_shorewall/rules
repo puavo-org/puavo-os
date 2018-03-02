@@ -1,0 +1,11 @@
+#ACTION         SOURCE          	DEST            	PROTO   DEST    SOURCE          ORIGINAL        RATE            USER/   MARK    CONNLIMIT       TIME         HEADERS         SWITCH
+#                                                       	PORT    PORT(S) 		DEST            LIMIT           GROUP
+ACCEPT		any			any			icmp    8
+ACCEPT		wlan			fw			tcp	53
+ACCEPT		wlan			fw			udp	53
+ACCEPT		wlan			fw
+ACCEPT		avpn			fw			icmp
+ACCEPT		avpn			fw			tcp	22
+
+# Maybe enable for some cases:
+#ACCEPT		inet			fw			tcp	22

@@ -1,0 +1,4 @@
+#TYPE			ZONE	GATEWAY		GATEWAY
+#						ZONE
+ipsec			ltsp	10.249.0.0/20	ivpn
+ipsec			wlan	10.249.224.0/20	ivpn

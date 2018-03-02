@@ -17,7 +17,15 @@ class bootserver_firewall {
   }
 
   ::bootserver_firewall::conffile {
-    'shorewall.conf':
+    [ 'Makefile'
+    , 'hosts'
+    , 'interfaces'
+    , 'masq'
+    , 'policy'
+    , 'rules'
+    , 'shorewall.conf'
+    , 'tunnels'
+    , 'zones' ]:
       ;
   }
 }
