@@ -96,7 +96,8 @@ install : installdirs
 		puavo-dnssd-printer-client \
 		puavo-handle-external-files-actions \
 		puavo-netboot-init-nfs \
-		puavo-report-system-version
+		puavo-report-system-version \
+		puavo-sysmerge
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES \
 		po/fi/puavo-remote-assistance-applet.mo
