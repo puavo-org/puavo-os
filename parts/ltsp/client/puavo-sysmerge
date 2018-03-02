@@ -2,145 +2,28 @@
 
 set -eu
 
-usage() {
-  echo "$(basename $0) --auto|--manual state-directory"
-}
+mode=${1:---manual}
 
-mode=${1:-}
-state_directory=${2:-}
+puavo_hosttype=$(puavo-conf puavo.hosttype)
 
-if ! [ "$mode" = '--auto' -o "$mode" = '--manual' ]; then
-  usage >&2
-  exit 1
+status=0
+
+statedirlist=''
+if [ "$puavo_hosttype" = 'bootserver' ]; then
+  statedirlist='
+    /state/etc/network/interfaces.d
+    /state/etc/shorewall
+  '
 fi
 
-case "$state_directory" in
-  /state/*)
-    rofs_directory="${state_directory##/state}.rofs"
-    ;;
-  *)
-    usage >&2
-    exit 1
-    ;;
-esac
-
-state_directory_backup="$(dirname "$state_directory")/.$(basename "$state_directory")_sysmerge_backup_$(date +%s)"
-
-tmp_outputdir="${state_directory}.sysmerge_output"
-
-cleanup() {
-  rm -rf "$tmp_outputdir"
-}
-
-make_the_changes() {
-  echo -n '>> Making changes... '
-
-  (cd "$tmp_outputdir" && find . -type f ! -name .checksums -print0 \
-     | xargs -0 sha256sum > .checksums)
-
-  mv "$state_directory" "$state_directory_backup"
-  if ! mv "$tmp_outputdir" "$state_directory"; then
-    mv "$state_directory_backup" "$state_directory"
-    echo FAILED
-    echo "Problem occurred when moving $tmp_outputdir to $state_directory" >&2
-    return 1
-  fi
-
-  echo "DONE, backup in $state_directory_backup"
-}
-
-trap cleanup EXIT
-
-show_diff() {
-  diff --color=always -ruN "$state_directory" "$tmp_outputdir"
-}
-
-rm -rf "${state_directory}.sysmerge_output"
-
-if [ ! -d "$rofs_directory" ]; then
-  echo ">> Directory ${rofs_directory} does not exist." >&2
-  exit 1
-fi
-
-mkdir -p "$state_directory"
-rsync -a --delete "${state_directory}/" "${tmp_outputdir}/"
-
-echo ">>> Considering changes to $state_directory..."
-echo
-
-# XXX can IFS be set to \0 ?  Should it be?
-IFS='
-'
-for rofs_filepath in $(find "$rofs_directory" -type f | sort); do
-  subpath=${rofs_filepath##${rofs_directory}/}
-  output_filepath="${tmp_outputdir}/${subpath}"
-  state_filepath="${state_directory}/${subpath}"
-
-  if [ ! -e "$output_filepath" ]; then
-    echo ">> Copying ${rofs_filepath} to ${state_filepath}"
-    mkdir -p "$(dirname "$output_filepath")"
-    cp -p "$rofs_filepath" "$output_filepath"
-    continue
-  fi
-
-  if cmp "$rofs_filepath" "$output_filepath" >/dev/null 2>&1; then
-    echo ">> No changes to '${state_filepath}'"
-    continue
-  fi
-
-  current_checksum=$(cd "$state_directory" && sha256sum "./${subpath}")
-  checksums_path="${state_directory}/.checksums"
-  if grep -Fqx "$current_checksum" "$checksums_path" 2>/dev/null; then
-    echo ">> Updating '${state_filepath}' (that has no manual changes)."
-    mkdir -p "$(dirname "$output_filepath")"
-    cp -p "$rofs_filepath" "$output_filepath"
-    continue
-  fi
-
-  if [ "$mode" = '--auto' ]; then
-    echo ">> The file '${state_filepath}' has changes, skipping..."
-    continue
-  fi
-
-  echo ">> Merging (manually) changes to '${state_filepath}'"
-  echo ':::'
-  mkdir -p "$(dirname "$output_filepath")"
-  env LANG=C sdiff -o "$output_filepath" "$state_filepath" "$rofs_filepath" \
-    || true
+done_first=false
+for statedir in $statedirlist; do
+  if ! $done_first; then done_first=true; else echo; fi
+  puavo-sysmerge-onedir "$mode" "$statedir" || status=1
 done
 
-if show_diff >/dev/null 2>&1; then
-  echo
-  echo '>>> No changes were made to configuration files.'
-  exit 0
+if [ "$status" -ne 0 ]; then
+  echo 'There were errors!' >&2
 fi
 
-if [ "$mode" = '--auto' ]; then
-  make_the_changes
-  exit 0
-fi
-
-while true; do
-  {
-    {
-      echo
-      echo '>>> Here are the changes to the configuration files:'
-      echo
-      show_diff
-      echo
-    } | more
-  } || true
-
-  read -p 'Do you accept the above changes? (yes/no) ? ' answer
-  case "$answer" in
-    [Yy][Ee][Ss])
-      make_the_changes
-      break
-      ;;
-    [Nn][Oo])
-      break
-      ;;
-  esac
-done
-
-exit 0
+exit $status
