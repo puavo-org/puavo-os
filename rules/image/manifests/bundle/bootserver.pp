@@ -2,6 +2,7 @@ class image::bundle::bootserver {
   include ::bootserver_autopoweron
   include ::bootserver_helpers
   include ::bootserver_inetd
+  include ::bootserver_network_interfaces
   include ::packages
 
   # include ::bootserver_backup                 # XXX needs work
@@ -17,7 +18,6 @@ class image::bundle::bootserver {
   # include ::bootserver_munin                  # XXX needs work
   # include ::bootserver_nagios                 # XXX needs work
   # include ::bootserver_nbd_server             # XXX needs work
-  # include ::bootserver_network_interfaces     # XXX needs work
   # include ::bootserver_nfs                    # XXX needs work
   # include ::bootserver_nginx                  # XXX needs work
   # include ::bootserver_nss                    # XXX needs work

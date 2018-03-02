@@ -1,0 +1,24 @@
+# The primary network interface
+auto eth0
+iface eth0 inet manual
+
+# XXX static is preferred, but you need to fill these in.
+# XXX Remove the "inet0 inet dhcp" once this is done
+# XXX (or remove these lines if dhcp is good.)
+# auto inet0
+# iface inet0 inet static
+#       address XXX.XXX.XXX.XXX
+#       netmask XXX.XXX.XXX.XXX
+#       gateway XXX.XXX.XXX.XXX
+#       dns-nameservers XXX.XXX.XXX.XXX XXX.XXX.XXX.XXX
+#       bridge_ports eth0
+#       bridge_stp off
+#       bridge_fd 0
+#       bridge_maxwait 0
+
+auto inet0
+iface inet0 inet dhcp
+        bridge_ports eth0
+        bridge_stp off
+        bridge_fd 0
+        bridge_maxwait 0
