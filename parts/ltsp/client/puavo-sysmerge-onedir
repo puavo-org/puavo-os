@@ -36,7 +36,7 @@ make_the_changes() {
   echo -n '>> Making changes... '
 
   (cd "$tmp_outputdir" && find . -type f ! -name .checksums -print0 \
-     | xargs -0 sha256sum > .checksums)
+     | sort -z | xargs -0 sha256sum > .checksums)
 
   mv "$state_directory" "$state_directory_backup"
   if ! mv "$tmp_outputdir" "$state_directory"; then
