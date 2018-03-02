@@ -35,8 +35,12 @@ cleanup() {
 make_the_changes() {
   echo -n '>> Making changes... '
 
-  (cd "$tmp_outputdir" && find . -type f ! -name .checksums -print0 \
-     | sort -z | xargs -0 sha256sum > .checksums)
+  # Record the current image configuration file checksums
+  # (not the actual file checksums) so that we can
+  # know later if files have been manually altered from the
+  # current default versions.
+  (cd "$rofs_directory" && find . -type f -print0 \
+     | xargs -0 sha256sum > "${tmp_outputdir}/.checksums")
 
   mv "$state_directory" "$state_directory_backup"
   if ! mv "$tmp_outputdir" "$state_directory"; then
