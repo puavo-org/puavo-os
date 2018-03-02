@@ -1,5 +1,6 @@
 class image::bundle::bootserver {
   include ::bootserver_autopoweron
+  include ::bootserver_firewall
   include ::bootserver_helpers
   include ::bootserver_inetd
   include ::bootserver_network_interfaces
