@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -eu
+
+firewall_enable=0
+if [ "$(puavo-conf puavo.hosttype)" = 'bootserver' ]; then
+  firewall_enable=1
+fi
+
+sed -i "s/^startup=.*\$/startup=${firewall_enable}/" \
+       /etc/default/shorewall

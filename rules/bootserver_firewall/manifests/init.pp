@@ -1,4 +1,6 @@
 class bootserver_firewall {
+  include ::puavo_conf
+
   define conffile {
     $filename = $title
 
@@ -14,6 +16,11 @@ class bootserver_firewall {
 
     '/etc/shorewall':
       ensure => directory;
+  }
+
+  ::puavo_conf::script {
+    'setup_firewall':
+      source => 'puppet:///modules/bootserver_firewall/setup_firewall';
   }
 
   ::bootserver_firewall::conffile {
