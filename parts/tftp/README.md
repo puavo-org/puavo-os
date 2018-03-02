@@ -85,9 +85,7 @@ CLI switches can be used to override options in `puavo-tftp.yml`.
 
 ## Install
 
-On Precise Pangolin
-
-    sudo apt-get install ruby1.9.3 ruby-eventmachine libldap-ruby1.8
+    sudo apt-get install ruby ruby-eventmachine ruby-ldap
 
     make install
 

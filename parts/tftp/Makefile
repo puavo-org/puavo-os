@@ -13,7 +13,7 @@ build:
 
 .PHONY: test
 test:
-	ruby1.9.3 test/run.rb
+	ruby test/run.rb
 
 .PHONY: installdirs
 installdirs:
