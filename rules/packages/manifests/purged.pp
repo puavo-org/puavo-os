@@ -17,9 +17,6 @@ class packages::purged {
 
     , 'linux-image-generic'             # we want to choose kernels explicitly
 
-    , 'samba'				# not needed, gets into system as
-					# some recommendation through winbind
-
     # the functionality in these is not for our end users
     , 'software-properties-gtk'
     , 'synaptic'
