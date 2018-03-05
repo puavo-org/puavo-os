@@ -71,6 +71,11 @@ rsync -a --delete "${state_directory}/" "${tmp_outputdir}/"
 
 echo ">>> Considering changes to $state_directory..."
 
+# XXX This utility should also check if file has been removed
+# XXX from rofs_directory... if file was not changed, it can be
+# XXX removed automatically, otherwise manual deletion should be
+# XXX required.
+
 # XXX can IFS be set to \0 ?  Should it be?
 IFS='
 '
