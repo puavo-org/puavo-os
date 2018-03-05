@@ -1,143 +1,136 @@
 class bootserver_ddns {
+  include ::packages
+  include ::puavo_conf
 
-  $arpazone = '10.in-addr.arpa'
-  $ddns_key = '/etc/dhcp/ddns-keys/nsupdate.key'
-
-  if $ltsp_iface_ip == undef {
-    fail('ltsp_iface_ip fact is missing')
+  ::puavo_conf::scripts {
+    'setup_dhcpd':
+      require => [ Package['moreutils']
+                 , Package['ruby-ipaddress'] ],
+      source  => 'puppet:///modules/bootserver_ddns/setup_dhcpd';
   }
 
-  define zonefile() {
-    $zone               = $title
-    $zonefile           = "/var/lib/bind/${zone}"
-    $zonefile_by_puppet = "${zonefile}.by_puppet"
-
-    exec {
-      "reset zone ${zone}":
-        command     => "/usr/local/lib/reset-zone '${zonefile_by_puppet}' '${zonefile}'",
-        creates     => $zonefile,
-        require     => [ File[$zonefile_by_puppet]
-                       , Package['bind9utils'] ];
-    }
-
-    file {
-      $zonefile:
-        group   => 'bind',
-        mode    => '0644',
-        owner   => 'bind',
-        require => Exec["reset zone ${zone}"];
-
-      $zonefile_by_puppet:
-        content => template("bootserver_ddns/${zone}"),
-        mode    => '0644';
-    }
-  }
-
-  define scriptfile($type) {
-    case $type {
-      'lib', 'bin', 'sbin': { }
-      default             : { fail('type must be lib, bin or sbin') }
-    }
-
-    file {
-        "/usr/local/${type}/${title}":
-          content => template("bootserver_ddns/${title}"),
-          mode    => '0755';
-    }
-  }
-
-  ::bootserver_ddns::scriptfile {
-    [ 'create-dummy-ubnt-conf'
-    , 'create-ddns-key'
-    , 'puavo-update-ddns'
-    , 'reset-zone']:
-      type => 'lib';
-
-    'puavo-update-airprint-ddns':
-      type => 'sbin';
-  }
-
-  ::bootserver_ddns::zonefile {
-    [ 'puavo_domain'
-    , 'puavo_domain_reverse' ]:
-      ;
-  }
-
-  exec {
-    'ensure ubnt.conf exists':
-      command => '/usr/local/lib/create-dummy-ubnt-conf',
-      creates => '/etc/dhcp/ubnt.conf',
-      require => Package['isc-dhcp-server'];
-
-    'create ddns key':
-      command => "/usr/local/lib/create-ddns-key '${ddns_key}'",
-      creates => $ddns_key;
-
-    'trim /etc/hosts':
-      command => "/bin/sed -i -r 's/^[\s\t]+//' /etc/hosts",
-      unless  => "/bin/sed -r -n '/^[\s\t]+/q1' /etc/hosts";
-  }
-
-  file {
-    $ddns_key:
-      group   => 'dhcpd',
-      mode    => '0640',
-      require => Exec['create ddns key'];
-
-    '/etc/apparmor.d/local/usr.sbin.dhcpd':
-      content => template('bootserver_ddns/dhcpd.apparmor'),
-      mode    => '0644',
-      require => Package['apparmor'];
-
-    '/etc/bind/named.conf.local':
-      content => template('bootserver_ddns/named.conf.local');
-
-    '/etc/bind/named.conf.options':
-      content => template('bootserver_ddns/named.conf.options');
-
-    '/etc/bind/nsupdate.key':
-      group   => 'bind',
-      mode    => '0640',
-      require => [ File[$ddns_key]
-                 , Package['bind9'] ],
-      source  => "file://${ddns_key}";
-
-    '/etc/cron.d/puavo-update-airprint-ddns':
-      content => template('bootserver_ddns/puavo-update-airprint-ddns.cron'),
-      mode    => '0644',
-      require => Bootserver_ddns::Scriptfile['puavo-update-airprint-ddns'];
-
-    '/etc/dhcp/dhcpd.conf':
-      content => template('bootserver_ddns/dhcpd.conf'),
-      require => [ Package['isc-dhcp-server']
-                 , Exec['ensure ubnt.conf exists'] ];
-
-    '/etc/dnsmasq.conf':
-      content => template('bootserver_ddns/dnsmasq.conf'),
-      require => Package['dnsmasq'];
-
-    '/etc/sudoers.d/puavo-bootserver':
-      content => template('bootserver_ddns/sudoers'),
-      mode    => '0440';
-  }
-
-  # We need to trim /etc/hosts lines first, becuase Puppet 2.7 fails
-  # to parse /etc/hosts if lines begin with whitespace.
-  Host {
-    require => Exec['trim /etc/hosts'],
-  }
-
-  host {
-    'localhost':
-      ensure => present,
-      ip     => '127.0.0.1';
-  }
-
-  package {
-    [ 'bind9'
-    , 'bind9utils'
-    , 'dnsmasq'
-    , 'isc-dhcp-server' ]:
-      ensure => present;
-  }
+  Package <| title == 'bind9'
+          or title == 'bind9utils'
+          or title == 'dnsmasq'
+          or title == 'isc-dhcp-server'
+          or title == 'moreutils' |>
 }
+
+#{
+#  $arpazone = '10.in-addr.arpa'
+#  $ddns_key = '/etc/dhcp/ddns-keys/nsupdate.key'
+#
+#  if $ltsp_iface_ip == undef {
+#    fail('ltsp_iface_ip fact is missing')
+#  }
+#
+#  define zonefile() {
+#    $zone               = $title
+#    $zonefile           = "/var/lib/bind/${zone}"
+#    $zonefile_by_puppet = "${zonefile}.by_puppet"
+#
+#    exec {
+#      "reset zone ${zone}":
+#        command     => "/usr/local/lib/reset-zone '${zonefile_by_puppet}' '${zonefile}'",
+#        creates     => $zonefile,
+#        require     => [ File[$zonefile_by_puppet]
+#                       , Package['bind9utils'] ];
+#    }
+#
+#    file {
+#      $zonefile:
+#        group   => 'bind',
+#        mode    => '0644',
+#        owner   => 'bind',
+#        require => Exec["reset zone ${zone}"];
+#
+#      $zonefile_by_puppet:
+#        content => template("bootserver_ddns/${zone}"),
+#        mode    => '0644';
+#    }
+#  }
+#
+#  define scriptfile($type) {
+#    case $type {
+#      'lib', 'bin', 'sbin': { }
+#      default             : { fail('type must be lib, bin or sbin') }
+#    }
+#
+#    file {
+#        "/usr/local/${type}/${title}":
+#          content => template("bootserver_ddns/${title}"),
+#          mode    => '0755';
+#    }
+#  }
+#
+#  ::bootserver_ddns::scriptfile {
+#    [ 'create-dummy-ubnt-conf'
+#    , 'create-ddns-key'
+#    , 'puavo-update-ddns'
+#    , 'reset-zone']:
+#      type => 'lib';
+#
+#    'puavo-update-airprint-ddns':
+#      type => 'sbin';
+#  }
+#
+#  ::bootserver_ddns::zonefile {
+#    [ 'puavo_domain'
+#    , 'puavo_domain_reverse' ]:
+#      ;
+#  }
+#
+#  exec {
+#    'ensure ubnt.conf exists':
+#      command => '/usr/local/lib/create-dummy-ubnt-conf',
+#      creates => '/etc/dhcp/ubnt.conf',
+#      require => Package['isc-dhcp-server'];
+#
+#    'create ddns key':
+#      command => "/usr/local/lib/create-ddns-key '${ddns_key}'",
+#      creates => $ddns_key;
+#  }
+#
+#  file {
+#    $ddns_key:
+#      group   => 'dhcpd',
+#      mode    => '0640',
+#      require => Exec['create ddns key'];
+#
+#    '/etc/apparmor.d/local/usr.sbin.dhcpd':
+#      content => template('bootserver_ddns/dhcpd.apparmor'),
+#      mode    => '0644',
+#      require => Package['apparmor'];
+#
+#    '/etc/bind/named.conf.local':
+#      content => template('bootserver_ddns/named.conf.local');
+#
+#    '/etc/bind/named.conf.options':
+#      content => template('bootserver_ddns/named.conf.options');
+#
+#    '/etc/bind/nsupdate.key':
+#      group   => 'bind',
+#      mode    => '0640',
+#      require => [ File[$ddns_key]
+#                 , Package['bind9'] ],
+#      source  => "file://${ddns_key}";
+#
+#    '/etc/cron.d/puavo-update-airprint-ddns':
+#      content => template('bootserver_ddns/puavo-update-airprint-ddns.cron'),
+#      mode    => '0644',
+#      require => Bootserver_ddns::Scriptfile['puavo-update-airprint-ddns'];
+#
+#    '/etc/dhcp/dhcpd.conf':
+#      content => template('bootserver_ddns/dhcpd.conf'),
+#      require => [ Package['isc-dhcp-server']
+#                 , Exec['ensure ubnt.conf exists'] ];
+#
+#    '/etc/dnsmasq.conf':
+#      content => template('bootserver_ddns/dnsmasq.conf'),
+#      require => Package['dnsmasq'];
+#
+#    '/etc/sudoers.d/puavo-bootserver':
+#      content => template('bootserver_ddns/sudoers'),
+#      mode    => '0440';
+#  }
+#}

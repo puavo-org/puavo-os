@@ -52,7 +52,12 @@ class packages {
   #
 
   @package {
-    'openbsd-inetd':
+    [ 'bind9'
+    , 'bind9utils'
+    , 'dnsmasq'
+    , 'isc-dhcp-server'
+    , 'openbsd-inetd'
+    , 'ruby-ipaddress' ]:
       tag => [ 'tag_basic', 'tag_debian_bootserver', ];
   }
 
