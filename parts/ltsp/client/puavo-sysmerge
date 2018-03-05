@@ -8,18 +8,18 @@ puavo_hosttype=$(puavo-conf puavo.hosttype)
 
 status=0
 
-statedirlist=''
+sourcedirlist=''
 if [ "$puavo_hosttype" = 'bootserver' ]; then
-  statedirlist='
-    /state/etc/network/interfaces.d
-    /state/etc/shorewall
+  sourcedirlist='
+    /etc/network/interfaces.d.rofs
+    /etc/shorewall.rofs
   '
 fi
 
 done_first=false
-for statedir in $statedirlist; do
+for sourcedir in $sourcedirlist; do
   if ! $done_first; then done_first=true; else echo; fi
-  puavo-sysmerge-onedir "$mode" "$statedir" || status=1
+  puavo-sysmerge-onedir "$mode" "$sourcedir" || status=1
 done
 
 if [ "$status" -ne 0 ]; then

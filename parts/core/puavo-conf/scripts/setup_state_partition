@@ -82,7 +82,6 @@ case "$(puavo-conf puavo.hosttype)" in
       /var/lib/ldap
       /var/lib/logrotate
       /var/lib/nfs
-      /var/lib/opinsys-bootserver
       /var/lib/puavo
       /var/lib/samba
       /var/lib/shorewall
