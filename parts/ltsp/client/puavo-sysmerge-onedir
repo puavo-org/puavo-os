@@ -3,20 +3,30 @@
 set -eu
 
 usage() {
-  echo "$(basename $0) --auto|--manual state-directory"
+  cat <<EOF
+$(basename $0) --auto|--manual source-directory
+
+  source-directory must be in format "/*.rofs" or
+  "/var/lib/puavo-conf/sources/*".
+  The output directory under /state will be "/state/*"
+  (where "*" matches the "*" above).
+EOF
 }
 
 mode=${1:-}
-state_directory=${2:-}
+source_directory=${2:-}
 
 if ! [ "$mode" = '--auto' -o "$mode" = '--manual' ]; then
   usage >&2
   exit 1
 fi
 
-case "$state_directory" in
-  /state/*)
-    rofs_directory="${state_directory##/state}.rofs"
+case "$source_directory" in
+  /*.rofs)
+    state_directory="/state${source_directory%%.rofs}"
+    ;;
+  /var/lib/puavo-conf/sources/*)
+    state_directory="/state${source_directory##/var/lib/puavo-conf/sources}"
     ;;
   *)
     usage >&2
@@ -39,7 +49,7 @@ make_the_changes() {
   # (not the actual file checksums) so that we can
   # know later if files have been manually altered from the
   # current default versions.
-  (cd "$rofs_directory" && find . -type f -print0 \
+  (cd "$source_directory" && find . -type f -print0 \
      | xargs -0 sha256sum > "${tmp_outputdir}/.checksums")
 
   mv "$state_directory" "$state_directory_backup"
@@ -61,8 +71,8 @@ show_diff() {
 
 rm -rf "${state_directory}.sysmerge_output"
 
-if [ ! -d "$rofs_directory" ]; then
-  echo ">> Directory ${rofs_directory} does not exist." >&2
+if [ ! -d "$source_directory" ]; then
+  echo ">> Directory ${source_directory} does not exist." >&2
   exit 1
 fi
 
@@ -72,26 +82,26 @@ rsync -a --delete "${state_directory}/" "${tmp_outputdir}/"
 echo ">>> Considering changes to $state_directory..."
 
 # XXX This utility should also check if file has been removed
-# XXX from rofs_directory... if file was not changed, it can be
+# XXX from source_directory... if file was not changed, it can be
 # XXX removed automatically, otherwise manual deletion should be
 # XXX required.
 
 # XXX can IFS be set to \0 ?  Should it be?
 IFS='
 '
-for rofs_filepath in $(find "$rofs_directory" -type f | sort); do
-  subpath=${rofs_filepath##${rofs_directory}/}
+for source_filepath in $(find "$source_directory" -type f | sort); do
+  subpath=${source_filepath##${source_directory}/}
   output_filepath="${tmp_outputdir}/${subpath}"
   state_filepath="${state_directory}/${subpath}"
 
   if [ ! -e "$output_filepath" ]; then
-    echo ">> Copying ${rofs_filepath} to ${state_filepath}"
+    echo ">> Copying ${source_filepath} to ${state_filepath}"
     mkdir -p "$(dirname "$output_filepath")"
-    cp -p "$rofs_filepath" "$output_filepath"
+    cp -p "$source_filepath" "$output_filepath"
     continue
   fi
 
-  if cmp "$rofs_filepath" "$output_filepath" >/dev/null 2>&1; then
+  if cmp "$source_filepath" "$output_filepath" >/dev/null 2>&1; then
     echo ">> No changes to '${state_filepath}'"
     continue
   fi
@@ -101,7 +111,7 @@ for rofs_filepath in $(find "$rofs_directory" -type f | sort); do
   if grep -Fqx "$current_checksum" "$checksums_path" 2>/dev/null; then
     echo ">> Updating '${state_filepath}' (that has no manual changes)."
     mkdir -p "$(dirname "$output_filepath")"
-    cp -p "$rofs_filepath" "$output_filepath"
+    cp -p "$source_filepath" "$output_filepath"
     continue
   fi
 
@@ -113,7 +123,7 @@ for rofs_filepath in $(find "$rofs_directory" -type f | sort); do
   echo ">> Merging (manually) changes to '${state_filepath}'"
   echo ':::'
   mkdir -p "$(dirname "$output_filepath")"
-  env LANG=C sdiff -o "$output_filepath" "$state_filepath" "$rofs_filepath" \
+  env LANG=C sdiff -o "$output_filepath" "$state_filepath" "$source_filepath" \
     || true
 done
 
