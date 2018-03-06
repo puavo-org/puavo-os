@@ -44,6 +44,7 @@ if [ -z "$ltsp0_ip" ]; then
 fi
 
 if [ ! -e /var/lib/bind/puavo_domain ]; then
+  install -o bind -g bind -m 644 /dev/null /var/lib/bind/puavo_domain.tmp
   cat <<EOF > /var/lib/bind/puavo_domain.tmp
 \$ORIGIN .
 \$TTL 0          ; no TTL
@@ -62,6 +63,8 @@ EOF
 fi
 
 if [ ! -e /var/lib/bind/puavo_domain_reverse ]; then
+  install -o bind -g bind -m 644 /dev/null \
+         /var/lib/bind/puavo_domain_reverse.tmp
   cat <<EOF > /var/lib/bind/puavo_domain_reverse.tmp
 \$ORIGIN .
 \$TTL 0          ; no TTL
