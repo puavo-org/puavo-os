@@ -4,7 +4,7 @@ class bootserver_ddns {
 
   ::puavo_conf::definition {
     'puavo-networking.json':
-      source => 'puppet:///modules/art/puavo-networking.json';
+      source => 'puppet:///modules/bootserver_ddns/puavo-networking.json';
   }
 
   ::puavo_conf::script {
