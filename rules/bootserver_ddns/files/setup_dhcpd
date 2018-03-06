@@ -43,7 +43,7 @@ class Interface
   end
 
   def lookup_ifdata(if_name, if_fieldname, if_data_arg)
-    if_data = %x(ifdata #{ if_data_arg } #{ if_name }).chomp
+    if_data = %x(ifdata #{ if_data_arg } #{ if_name } 2>/dev/null).chomp
     if if_data.empty? then
       if_data = lookup_ifdata_from_file(if_name, if_fieldname)
     end
