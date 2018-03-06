@@ -85,7 +85,7 @@ case "$(puavo-conf puavo.hosttype)" in
       /var/lib/puavo
       /var/lib/samba
       /var/lib/shorewall
-      /var/lib/tftpboot
+      /var/lib/tftpboot/ltsp
       /var/log
       /var/spool/anacron
     '
