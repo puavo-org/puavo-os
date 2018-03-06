@@ -2,6 +2,20 @@ class bootserver_ddns {
   include ::packages
   include ::puavo_conf
 
+  file {
+    '/etc/cron.d/puavo-update-airprint-ddns':
+      require => File['/usr/local/sbin/puavo-update-airprint-ddns'],
+      source  => 'puppet:///modules/bootserver_ddns/puavo-update-airprint-ddns.cron';
+
+    '/usr/local/lib/puavo-update-ddns':
+      mode   => '0755',
+      source => 'puppet:///modules/bootserver_ddns/puavo-update-ddns';
+
+    '/usr/local/sbin/puavo-update-airprint-ddns':
+      mode   => '0755',
+      source => 'puppet:///modules/bootserver_ddns/puavo-update-airprint-ddns';
+  }
+
   ::puavo_conf::definition {
     'puavo-networking.json':
       source => 'puppet:///modules/bootserver_ddns/puavo-networking.json';
@@ -9,7 +23,8 @@ class bootserver_ddns {
 
   ::puavo_conf::script {
     'setup_bind':
-      require => [ Package['bind9']
+      require => [ File['/usr/local/lib/puavo-update-ddns']
+                 , Package['bind9']
                  , Package['bind9utils']
                  , Package['isc-dhcp-server']
                  , Package['moreutils'] ],
@@ -34,28 +49,6 @@ class bootserver_ddns {
 #    fail('ltsp_iface_ip fact is missing')
 #  }
 #
-#  define scriptfile($type) {
-#    case $type {
-#      'lib', 'bin', 'sbin': { }
-#      default             : { fail('type must be lib, bin or sbin') }
-#    }
-#
-#    file {
-#        "/usr/local/${type}/${title}":
-#          content => template("bootserver_ddns/${title}"),
-#          mode    => '0755';
-#    }
-#  }
-#
-#  ::bootserver_ddns::scriptfile {
-#    'puavo-update-airprint-ddns':
-#      type => 'sbin';
-#
-#    'puavo-update-ddns':
-#      type => 'lib';
-#  }
-#
-#
 #  file {
 #    '/etc/apparmor.d/local/usr.sbin.dhcpd':
 #      content => template('bootserver_ddns/dhcpd.apparmor'),
@@ -67,11 +60,6 @@ class bootserver_ddns {
 #
 #    '/etc/bind/named.conf.options':
 #      content => template('bootserver_ddns/named.conf.options');
-#
-#    '/etc/cron.d/puavo-update-airprint-ddns':
-#      content => template('bootserver_ddns/puavo-update-airprint-ddns.cron'),
-#      mode    => '0644',
-#      require => Bootserver_ddns::Scriptfile['puavo-update-airprint-ddns'];
 #
 #    '/etc/dnsmasq.conf':
 #      content => template('bootserver_ddns/dnsmasq.conf'),
