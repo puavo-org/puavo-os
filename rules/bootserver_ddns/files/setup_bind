@@ -80,3 +80,15 @@ ${arpazone}             IN SOA  ${puavo_domain}. root.${puavo_domain}. (
 EOF
   mv /var/lib/bind/puavo_domain_reverse.tmp /var/lib/bind/puavo_domain_reverse
 fi
+
+# Create nsupdate.key for ddns-updates.  We do create a new one for every
+# boot, because this is only used internally for this server.  In case this
+# ever changes later, the key should be put under /state and the old one
+# should not be overwritten.
+mkdir -m 750 -p /etc/dhcp/ddns-keys
+install -o root -g root -m 640 /dev/null /etc/dhcp/ddns-keys/nsupdate.key.tmp
+ddns-confgen -a hmac-md5 -q > /etc/dhcp/ddns-keys/nsupdate.key.tmp
+mv /etc/dhcp/ddns-keys/nsupdate.key.tmp /etc/dhcp/ddns-keys/nsupdate.key
+
+install -o root -g bind -m 640 /etc/dhcp/ddns-keys/nsupdate.key \
+                               /etc/bind/nsupdate.key

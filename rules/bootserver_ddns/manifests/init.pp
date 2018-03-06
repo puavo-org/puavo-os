@@ -9,7 +9,10 @@ class bootserver_ddns {
 
   ::puavo_conf::script {
     'setup_bind':
-      require => Package['moreutils'],
+      require => [ Package['bind9']
+                 , Package['bind9utils']
+                 , Package['isc-dhcp-server']
+                 , Package['moreutils'] ],
       source  => 'puppet:///modules/bootserver_ddns/setup_bind';
 
     'setup_dhcpd':
@@ -27,8 +30,6 @@ class bootserver_ddns {
 }
 
 #{
-#  $ddns_key = '/etc/dhcp/ddns-keys/nsupdate.key'
-#
 #  if $ltsp_iface_ip == undef {
 #    fail('ltsp_iface_ip fact is missing')
 #  }
@@ -47,26 +48,15 @@ class bootserver_ddns {
 #  }
 #
 #  ::bootserver_ddns::scriptfile {
-#    [ 'create-ddns-key'
-#    , 'puavo-update-ddns' ]:
-#      type => 'lib';
-#
 #    'puavo-update-airprint-ddns':
 #      type => 'sbin';
+#
+#    'puavo-update-ddns':
+#      type => 'lib';
 #  }
 #
-#  exec {
-#    'create ddns key':
-#      command => "/usr/local/lib/create-ddns-key '${ddns_key}'",
-#      creates => $ddns_key;
-#  }
 #
 #  file {
-#    $ddns_key:
-#      group   => 'dhcpd',
-#      mode    => '0640',
-#      require => Exec['create ddns key'];
-#
 #    '/etc/apparmor.d/local/usr.sbin.dhcpd':
 #      content => template('bootserver_ddns/dhcpd.apparmor'),
 #      mode    => '0644',
@@ -77,13 +67,6 @@ class bootserver_ddns {
 #
 #    '/etc/bind/named.conf.options':
 #      content => template('bootserver_ddns/named.conf.options');
-#
-#    '/etc/bind/nsupdate.key':
-#      group   => 'bind',
-#      mode    => '0640',
-#      require => [ File[$ddns_key]
-#                 , Package['bind9'] ],
-#      source  => "file://${ddns_key}";
 #
 #    '/etc/cron.d/puavo-update-airprint-ddns':
 #      content => template('bootserver_ddns/puavo-update-airprint-ddns.cron'),
