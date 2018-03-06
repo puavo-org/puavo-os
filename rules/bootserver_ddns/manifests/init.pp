@@ -47,8 +47,7 @@ class bootserver_ddns {
 #  }
 #
 #  ::bootserver_ddns::scriptfile {
-#    [ 'create-dummy-ubnt-conf'
-#    , 'create-ddns-key'
+#    [ 'create-ddns-key'
 #    , 'puavo-update-ddns' ]:
 #      type => 'lib';
 #
@@ -57,11 +56,6 @@ class bootserver_ddns {
 #  }
 #
 #  exec {
-#    'ensure ubnt.conf exists':
-#      command => '/usr/local/lib/create-dummy-ubnt-conf',
-#      creates => '/etc/dhcp/ubnt.conf',
-#      require => Package['isc-dhcp-server'];
-#
 #    'create ddns key':
 #      command => "/usr/local/lib/create-ddns-key '${ddns_key}'",
 #      creates => $ddns_key;
