@@ -2,6 +2,7 @@
   "puavo.autopoweroff.enabled":                     "false",
   "puavo.autopoweron.enabled":                      "true",
   "puavo.guestlogin.enabled":                       "false",
+  "puavo.networking.ddns.dhcpd_interfaces":         "ltsp0,wlan0",
   "puavo.service.nscd.enabled":                     "true",
   "puavo.service.nslcd.enabled":                    "true",
   "puavo.service.puavo-vpn-client-openvpn.enabled": "true",

@@ -2,7 +2,12 @@ class bootserver_ddns {
   include ::packages
   include ::puavo_conf
 
-  ::puavo_conf::scripts {
+  ::puavo_conf::definition {
+    'puavo-networking.json':
+      source => 'puppet:///modules/art/puavo-networking.json';
+  }
+
+  ::puavo_conf::script {
     'setup_dhcpd':
       require => [ Package['moreutils']
                  , Package['ruby-ipaddress'] ],
@@ -119,11 +124,6 @@ class bootserver_ddns {
 #      content => template('bootserver_ddns/puavo-update-airprint-ddns.cron'),
 #      mode    => '0644',
 #      require => Bootserver_ddns::Scriptfile['puavo-update-airprint-ddns'];
-#
-#    '/etc/dhcp/dhcpd.conf':
-#      content => template('bootserver_ddns/dhcpd.conf'),
-#      require => [ Package['isc-dhcp-server']
-#                 , Exec['ensure ubnt.conf exists'] ];
 #
 #    '/etc/dnsmasq.conf':
 #      content => template('bootserver_ddns/dnsmasq.conf'),
