@@ -58,7 +58,9 @@ class packages {
     , 'incron'
     , 'isc-dhcp-server'
     , 'openbsd-inetd'
-    , 'ruby-ipaddress' ]:
+    , 'pxelinux'
+    , 'ruby-ipaddress'
+    , 'syslinux-common' ]:
       tag => [ 'tag_basic', 'tag_debian_bootserver', ];
   }
 
