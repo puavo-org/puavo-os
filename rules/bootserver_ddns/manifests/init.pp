@@ -64,9 +64,5 @@ class bootserver_ddns {
 #    '/etc/dnsmasq.conf':
 #      content => template('bootserver_ddns/dnsmasq.conf'),
 #      require => Package['dnsmasq'];
-#
-#    '/etc/sudoers.d/puavo-bootserver':
-#      content => template('bootserver_ddns/sudoers'),
-#      mode    => '0440';
 #  }
 #}

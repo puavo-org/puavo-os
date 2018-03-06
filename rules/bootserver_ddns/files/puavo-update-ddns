@@ -81,9 +81,7 @@ include Dnsruby
 def lookup_hostname_by_mac(mac)
   base     = File.read('/etc/puavo/ldap/base'    ).chomp
   dn       = File.read('/etc/puavo/ldap/dn'      ).chomp
-# FIXME - find a proper solution to get dhcpd belong to the puavo group
-#  password = File.read('/etc/puavo/ldap/password').chomp
-  password = `sudo /bin/cat /etc/puavo/ldap/password`.chomp
+  password = File.read('/etc/puavo/ldap/password').chomp
   hostname = File.read('/etc/puavo/hostname').chomp
   domain   = File.read('/etc/puavo/domain'    ).chomp
 
