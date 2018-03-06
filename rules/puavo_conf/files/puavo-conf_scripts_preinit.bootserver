@@ -25,6 +25,6 @@ setup_extra_environment
 disable_update_initramfs
 setup_systemd
 setup_firewall
-setup_bind
 setup_dhcpd
+setup_dns
 run_puavo_sysmerge

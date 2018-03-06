@@ -27,18 +27,18 @@ class bootserver_ddns {
   }
 
   ::puavo_conf::script {
-    'setup_bind':
+    'setup_dhcpd':
+      require => [ Package['moreutils']
+                 , Package['ruby-ipaddress'] ],
+      source  => 'puppet:///modules/bootserver_ddns/setup_dhcpd';
+
+    'setup_dns':
       require => [ File['/usr/local/lib/puavo-update-ddns']
                  , Package['bind9']
                  , Package['bind9utils']
                  , Package['isc-dhcp-server']
                  , Package['moreutils'] ],
-      source  => 'puppet:///modules/bootserver_ddns/setup_bind';
-
-    'setup_dhcpd':
-      require => [ Package['moreutils']
-                 , Package['ruby-ipaddress'] ],
-      source  => 'puppet:///modules/bootserver_ddns/setup_dhcpd';
+      source  => 'puppet:///modules/bootserver_ddns/setup_dns';
   }
 
   Package <| title == 'bind9'
@@ -59,9 +59,5 @@ class bootserver_ddns {
 #      content => template('bootserver_ddns/dhcpd.apparmor'),
 #      mode    => '0644',
 #      require => Package['apparmor'];
-#
-#    '/etc/dnsmasq.conf':
-#      content => template('bootserver_ddns/dnsmasq.conf'),
-#      require => Package['dnsmasq'];
 #  }
 #}
