@@ -1,7 +1,8 @@
 server {
 	listen 872;
 
-	root /opt/ltsp/images;
+        # XXX should we perhaps not serve *everything* under /images ?
+	root /images;
 
 	ssl on;
 	ssl_certificate /etc/puavo/certs/hostorgcabundle.pem;

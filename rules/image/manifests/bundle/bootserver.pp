@@ -6,6 +6,7 @@ class image::bundle::bootserver {
   include ::bootserver_inetd
   include ::bootserver_ltspimages
   include ::bootserver_network_interfaces
+  include ::bootserver_nginx
   include ::bootserver_pxe
   include ::packages
 
@@ -22,7 +23,6 @@ class image::bundle::bootserver {
   # include ::bootserver_nagios                 # XXX needs work
   # include ::bootserver_nbd_server             # XXX needs work
   # include ::bootserver_nfs                    # XXX needs work
-  # include ::bootserver_nginx                  # XXX needs work
   # include ::bootserver_nss                    # XXX needs work
   # include ::bootserver_ntp                    # XXX needs work
   # include ::bootserver_pam                    # XXX needs work

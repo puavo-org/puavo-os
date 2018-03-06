@@ -1,6 +1,9 @@
 class bootserver_ltspimages {
+  include ::bootserver_nginx
   include ::packages
   include ::puavo_conf
+
+  ::bootserver_nginx::enable { 'ltsp-images': ; }
 
   file {
     '/usr/local/lib/puavo-handle-image-changes':
@@ -22,8 +25,3 @@ class bootserver_ltspimages {
 
   Package <| title == incron |>
 }
-
-
-#  include ::bootserver_nginx
-#
-#  bootserver_nginx::enable { 'ltsp-images': ; }
