@@ -22,7 +22,8 @@ class bootserver_ddns {
           or title == 'bind9utils'
           or title == 'dnsmasq'
           or title == 'isc-dhcp-server'
-          or title == 'moreutils' |>
+          or title == 'moreutils'
+          or title == 'ruby-ipaddress' |>
 }
 
 #{
