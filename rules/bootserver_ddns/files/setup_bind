@@ -92,3 +92,34 @@ mv /etc/dhcp/ddns-keys/nsupdate.key.tmp /etc/dhcp/ddns-keys/nsupdate.key
 
 install -o root -g bind -m 640 /etc/dhcp/ddns-keys/nsupdate.key \
                                /etc/bind/nsupdate.key
+
+install -o root -g bind -m 644 /dev/null /etc/bind/named.conf.local.tmp
+cat <<EOF > /etc/bind/named.conf.local.tmp
+//
+// Do any local configuration here
+//
+
+// Consider adding the 1918 zones here, if they are not used in your
+// organization
+//include "/etc/bind/zones.rfc1918";
+
+include "/etc/bind/nsupdate.key";
+
+zone "${puavo_domain}" {
+        type master;
+        file "/var/lib/bind/puavo_domain";
+        update-policy {
+                grant ddns-key zonesub ANY;
+        };
+};
+
+zone "${arpazone}" {
+        type master;
+        file "/var/lib/bind/puavo_domain_reverse";
+        update-policy {
+                grant ddns-key zonesub ANY;
+        };
+};
+EOF
+mv /etc/bind/named.conf.local.tmp \
+   /etc/bind/named.conf.local

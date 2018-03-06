@@ -60,9 +60,6 @@ class bootserver_ddns {
 #      mode    => '0644',
 #      require => Package['apparmor'];
 #
-#    '/etc/bind/named.conf.local':
-#      content => template('bootserver_ddns/named.conf.local');
-#
 #    '/etc/dnsmasq.conf':
 #      content => template('bootserver_ddns/dnsmasq.conf'),
 #      require => Package['dnsmasq'];
