@@ -8,6 +8,10 @@ class bootserver_ddns {
   }
 
   ::puavo_conf::script {
+    'setup_bind':
+      require => Package['moreutils'],
+      source  => 'puppet:///modules/bootserver_ddns/setup_bind';
+
     'setup_dhcpd':
       require => [ Package['moreutils']
                  , Package['ruby-ipaddress'] ],
