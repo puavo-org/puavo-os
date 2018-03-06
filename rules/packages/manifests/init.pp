@@ -55,6 +55,7 @@ class packages {
     [ 'bind9'
     , 'bind9utils'
     , 'dnsmasq'
+    , 'incron'
     , 'isc-dhcp-server'
     , 'openbsd-inetd'
     , 'ruby-ipaddress' ]:

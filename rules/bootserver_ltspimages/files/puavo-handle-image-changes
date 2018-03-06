@@ -1,0 +1,35 @@
+#!/bin/sh
+
+set -eu
+
+# This is normally run from /etc/incron.d/handle_images_changes through
+# incron, meaning that we should get the filename where the event happened.
+# Handle events only matching *.img, except if no arguments is given,
+# in which case we are probably run manually.
+
+imagename=${1:-}
+
+if [ -n "$imagename" ]; then
+  if ! echo "$imagename" | grep -q '.img$'; then
+    exit 0
+  fi
+fi
+
+mkdir -p /var/lib/tftpboot/ltsp
+
+(
+  if ! flock -w 60 9; then
+    echo 'Could not flock /var/lib/tftpboot/ltsp, exiting.' >&2
+    exit 1
+  fi
+
+  status=0
+
+  /usr/sbin/puavo-bootserver-generate-nbd-exports    || status=1
+  /usr/sbin/puavo-bootserver-update-tftpboot --prune || status=1
+
+  if [ "$status" -ne 0 ]; then
+    echo 'Error occurred in puavo-handle-image-changes' >&2
+    exit 1
+  fi
+) 9< /var/lib/tftpboot/ltsp
