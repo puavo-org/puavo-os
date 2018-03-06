@@ -3,6 +3,11 @@ class bootserver_ddns {
   include ::puavo_conf
 
   file {
+    '/etc/bind/named.conf.options':
+      group   => 'bind',
+      require => Package['bind9'],
+      source  => 'puppet:///modules/bootserver_ddns/named.conf.options';
+
     '/etc/cron.d/puavo-update-airprint-ddns':
       require => File['/usr/local/sbin/puavo-update-airprint-ddns'],
       source  => 'puppet:///modules/bootserver_ddns/puavo-update-airprint-ddns.cron';
@@ -57,9 +62,6 @@ class bootserver_ddns {
 #
 #    '/etc/bind/named.conf.local':
 #      content => template('bootserver_ddns/named.conf.local');
-#
-#    '/etc/bind/named.conf.options':
-#      content => template('bootserver_ddns/named.conf.options');
 #
 #    '/etc/dnsmasq.conf':
 #      content => template('bootserver_ddns/dnsmasq.conf'),
