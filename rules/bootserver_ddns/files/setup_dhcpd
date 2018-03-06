@@ -117,7 +117,7 @@ if network_interfaces_for_dhcpd.empty? then
   ubnt_conf        = "# DISABLED\n"
 else
   dhcpd_conf = <<EOF
-include "/etc/dhcp.d/puavo_dhcpd.conf"
+include "/etc/dhcp.d/puavo_dhcpd.conf";
 EOF
 
   puavo_dhcpd_conf = <<EOF
