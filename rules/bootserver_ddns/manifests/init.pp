@@ -27,37 +27,10 @@ class bootserver_ddns {
 }
 
 #{
-#  $arpazone = '10.in-addr.arpa'
 #  $ddns_key = '/etc/dhcp/ddns-keys/nsupdate.key'
 #
 #  if $ltsp_iface_ip == undef {
 #    fail('ltsp_iface_ip fact is missing')
-#  }
-#
-#  define zonefile() {
-#    $zone               = $title
-#    $zonefile           = "/var/lib/bind/${zone}"
-#    $zonefile_by_puppet = "${zonefile}.by_puppet"
-#
-#    exec {
-#      "reset zone ${zone}":
-#        command     => "/usr/local/lib/reset-zone '${zonefile_by_puppet}' '${zonefile}'",
-#        creates     => $zonefile,
-#        require     => [ File[$zonefile_by_puppet]
-#                       , Package['bind9utils'] ];
-#    }
-#
-#    file {
-#      $zonefile:
-#        group   => 'bind',
-#        mode    => '0644',
-#        owner   => 'bind',
-#        require => Exec["reset zone ${zone}"];
-#
-#      $zonefile_by_puppet:
-#        content => template("bootserver_ddns/${zone}"),
-#        mode    => '0644';
-#    }
 #  }
 #
 #  define scriptfile($type) {
@@ -76,18 +49,11 @@ class bootserver_ddns {
 #  ::bootserver_ddns::scriptfile {
 #    [ 'create-dummy-ubnt-conf'
 #    , 'create-ddns-key'
-#    , 'puavo-update-ddns'
-#    , 'reset-zone']:
+#    , 'puavo-update-ddns' ]:
 #      type => 'lib';
 #
 #    'puavo-update-airprint-ddns':
 #      type => 'sbin';
-#  }
-#
-#  ::bootserver_ddns::zonefile {
-#    [ 'puavo_domain'
-#    , 'puavo_domain_reverse' ]:
-#      ;
 #  }
 #
 #  exec {
