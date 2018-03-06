@@ -48,16 +48,3 @@ class bootserver_ddns {
           or title == 'moreutils'
           or title == 'ruby-ipaddress' |>
 }
-
-#{
-#  if $ltsp_iface_ip == undef {
-#    fail('ltsp_iface_ip fact is missing')
-#  }
-#
-#  file {
-#    '/etc/apparmor.d/local/usr.sbin.dhcpd':
-#      content => template('bootserver_ddns/dhcpd.apparmor'),
-#      mode    => '0644',
-#      require => Package['apparmor'];
-#  }
-#}
