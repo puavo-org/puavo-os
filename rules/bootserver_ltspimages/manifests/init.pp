@@ -6,6 +6,11 @@ class bootserver_ltspimages {
     '/usr/local/lib/puavo-handle-image-changes':
       mode   => '0755',
       source => 'puppet:///modules/bootserver_ltspimages/puavo-handle-image-changes';
+
+    # This must be created somewhere so that setup_state_partition links
+    # it under /state.
+    '/var/lib/tftpboot/ltsp':
+      ensure => directory;
   }
 
   ::puavo_conf::script {
@@ -22,20 +27,3 @@ class bootserver_ltspimages {
 #  include ::bootserver_nginx
 #
 #  bootserver_nginx::enable { 'ltsp-images': ; }
-#
-#  exec {
-#    '/usr/sbin/puavo-bootserver-generate-nbd-exports':
-#      loglevel => debug,
-#      require  => File['/opt/ltsp/images'];
-#  }
-#
-#  exec {
-#    '/usr/sbin/puavo-bootserver-update-tftpboot --prune':
-#      loglevel => debug,
-#      require  => File['/opt/ltsp/images'];
-#  }
-#
-#  file {
-#    [ '/opt/ltsp', '/opt/ltsp/images', ]:
-#      ensure => directory;
-#  }
