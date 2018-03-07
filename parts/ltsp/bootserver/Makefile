@@ -49,21 +49,8 @@ install : installdirs
 		templates/etc/apparmor.d/local/usr.sbin.dhcpd
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/etc \
-		templates/etc/dnsmasq.conf \
 		templates/etc/ntp.conf \
 		templates/etc/rsyslog.conf \
-
-	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/etc/dhcp \
-		templates/etc/dhcp/dhcpd.conf \
-		templates/etc/dhcp/ubnt.conf
-
-	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/etc/bind \
-		templates/etc/bind/named.conf.local \
-		templates/etc/bind/named.conf.options
-
-	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/var/lib/bind \
-		templates/var/lib/bind/puavo_domain \
-		templates/var/lib/bind/puavo_domain_reverse
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
 		bin/*
