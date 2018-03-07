@@ -121,7 +121,7 @@ if [ -e "${image_dir}" ]; then
         -name '*.img'                      \
         >"${image_filepaths}"
 else
-    echo >"${image_filepath}"
+    echo > "${image_filepaths}"
 fi
 
 while read image_filepath; do
