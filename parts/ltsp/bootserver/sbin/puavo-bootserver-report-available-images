@@ -19,7 +19,7 @@
 #
 # ##############################################################################
 #
-# Lists images (*.img) under /opt/ltsp/images and updates the image list to
+# Lists images (*.img) under /images and updates the image list to
 # master puavo-rest. puavo-rest is first queried to check if the information
 # is already up-to-date.
 
@@ -34,7 +34,7 @@ end
 def list_existing_images
   images = Array.new
 
-  Dir.chdir("/opt/ltsp/images")
+  Dir.chdir('/images')
   Dir.glob("*.img") do |filename|
     if /(.*?)\.img/.match(filename)
       id = $1

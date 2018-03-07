@@ -59,7 +59,7 @@ while [ $# -gt 0 ]; do
             echo
             echo "Copy /boot from image files to TFTP boot directories."
             echo
-            echo "Image file directory defaults to /opt/ltsp/images but can be set in "
+            echo "Image file directory defaults to /images but can be set in "
             echo "PUAVO_IMAGE_DIR environment variable."
             echo
             echo "TFTP boot directory defaults to /var/lib/tftpboot/ltsp but can be set in "
@@ -111,7 +111,7 @@ trap on_exit EXIT
 
 tmpdir=$(mktemp -d)
 image_filepaths="${tmpdir}/image_filepaths"
-image_dir="${PUAVO_IMAGE_DIR:-/opt/ltsp/images}"
+image_dir="${PUAVO_IMAGE_DIR:-/images}"
 
 if [ -e "${image_dir}" ]; then
     # Save the list of image filepaths to a temporary file.

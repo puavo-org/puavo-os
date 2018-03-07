@@ -31,12 +31,12 @@ into /etc/network/interfaces.  An interface named "wlan0" is also recommended.
 LTSP-images
 -----------
 
-You should put some LTSP-images to /opt/ltsp/images for nbd-server to serve.
+You should put some LTSP-images to /images for nbd-server to serve.
 Do:
 
-  mkdir -p /opt/ltsp/images
-  cp $YOUR_DEFAULT_LTSP_IMAGE /opt/ltsp/images/i386.img	# i386.img = default
-  cp $YOUR_OTHER_LTSP_IMAGE   /opt/ltsp/images/other.img
+  mkdir -p /images
+  cp $YOUR_DEFAULT_LTSP_IMAGE /images/i386.img	# i386.img = default
+  cp $YOUR_OTHER_LTSP_IMAGE   /images/other.img
   puavo-bootserver-generate-nbd-exports
 
 You should also either restart nbd-server in case it does not support

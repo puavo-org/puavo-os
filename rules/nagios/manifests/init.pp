@@ -6,7 +6,7 @@ class nagios {
 
   # makes checks that are virtual (defined with @check)
   check_disk {
-    [ '/', '/boot', '/home', '/opt/ltsp/images', '/tmp', '/var', ]:
+    [ '/', '/boot', '/home', '/images', '/tmp', '/var', ]:
       check_tags => [ 'bootserver', ];
   }
 
@@ -22,7 +22,7 @@ class nagios {
 
     'image_sync':
       # Warn if the there hasn't been sync in last two days (60 * 60 * 24 * 2 = 172800).
-      cmdline => '/usr/lib/nagios/plugins/check_file_age -w 172800 -c 0 -f /opt/ltsp/images/.puavo-bootserver-sync-images-ok',
+      cmdline => '/usr/lib/nagios/plugins/check_file_age -w 172800 -c 0 -f /images/.puavo-bootserver-sync-images-ok',
       tag     => [ 'bootserver', ];
 
     'ldap':

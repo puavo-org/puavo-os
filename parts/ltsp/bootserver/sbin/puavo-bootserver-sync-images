@@ -28,7 +28,7 @@
 # delete the images/diffs specified there once those are no longer needed.
 #
 # Unmanaged images/diffs are other images and diffs in download paths
-# ("/opt/ltsp/images" and "/opt/ltsp/images/rdiffs" by default).
+# ("/images" and "/images/rdiffs" by default).
 #
 # By default the script handles only the managed images and unmanaged images
 # are left untouched.  The script can be asked to delete unmanaged images with
@@ -1336,7 +1336,7 @@ BANNER_EOF
     $options[:diff_limit] = Integer(limit)
   end
 
-  $options[:download_path] = "/opt/ltsp/images"
+  $options[:download_path] = '/images'
   opts.on("--download-path PATH") do |path|
     $options[:download_path] = path
   end
