@@ -34,7 +34,9 @@ class Interface
         when 'iface'
           found_interface = (value == if_name)
         when if_fieldname
-          return value
+          if found_interface then
+            return value
+          end
         end
       end
     end
