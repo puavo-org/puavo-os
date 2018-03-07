@@ -29,7 +29,7 @@ EOF
 find /etc/nbd-server/conf.d -maxdepth 1 -type f -name '*.conf' | while read filepath; do
     imagename=$(basename "${filepath}" .conf)
     if [ ! -f "/images/${imagename}.img" ]; then
-        rm "${filepath}"
+        rm -f "${filepath}"
     fi
 done
 
