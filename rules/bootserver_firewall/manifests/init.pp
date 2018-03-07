@@ -1,4 +1,5 @@
 class bootserver_firewall {
+  include ::packages
   include ::puavo_conf
 
   define conffile {
@@ -6,16 +7,14 @@ class bootserver_firewall {
 
     file {
       "/etc/shorewall/${filename}":
-        content => template("bootserver_firewall/etc_shorewall/${filename}");
+        content => template("bootserver_firewall/etc_shorewall/${filename}"),
+        require => Package['shorewall'];
     }
   }
 
   file {
     '/etc/default/shorewall':
       content => template('bootserver_firewall/etc_default_shorewall');
-
-    '/etc/shorewall':
-      ensure => directory;
   }
 
   ::puavo_conf::script {
@@ -35,4 +34,6 @@ class bootserver_firewall {
     , 'zones' ]:
       ;
   }
+
+  Package <| title == shorewall |>
 }

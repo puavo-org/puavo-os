@@ -61,6 +61,7 @@ class packages {
     , 'openbsd-inetd'
     , 'pxelinux'
     , 'ruby-ipaddress'
+    , 'shorewall'
     , 'syslinux-common' ]:
       tag => [ 'tag_basic', 'tag_debian_bootserver', ];
   }
