@@ -57,6 +57,7 @@ class packages {
     , 'dnsmasq'
     , 'incron'
     , 'isc-dhcp-server'
+    , 'nginx'
     , 'openbsd-inetd'
     , 'pxelinux'
     , 'ruby-ipaddress'

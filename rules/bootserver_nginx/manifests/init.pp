@@ -1,4 +1,8 @@
 class bootserver_nginx {
+  include ::packages
+
+  File { require => Package['nginx'] }
+
   define enable {
     $service_name = $title
 
@@ -34,4 +38,6 @@ class bootserver_nginx {
       ensure => link,
       target => '/usr/share/nginx/html/index.html';
   }
+
+  Package <| title == nginx |>
 }
