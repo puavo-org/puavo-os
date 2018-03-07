@@ -13,7 +13,7 @@ class bootserver_pxe {
   }
 
   ::bootserver_pxe::tftpexport {
-    [ 'menu.c32', 'chain.c32', 'ifcpu64.c32' ]:
+    [ 'chain.c32', 'ifcpu64.c32', 'ldlinux.c32', 'libutil.c32', 'menu.c32' ]:
       filedir => '/usr/lib/syslinux/modules/bios',
       require => Package['syslinux-common'];
 
