@@ -13,7 +13,8 @@ class bootserver_ltspimages {
     # This must be created somewhere so that setup_state_partition links
     # it under /state.
     '/var/lib/tftpboot/ltsp':
-      ensure => directory;
+      ensure  => directory,
+      replace => false;
   }
 
   ::puavo_conf::script {
