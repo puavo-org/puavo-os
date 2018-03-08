@@ -5,8 +5,6 @@ set -e
 . puavo-ds-installdirs
 
 install -o root -g root -m 644 \
-  "$PUAVO_DS_TEMPLATEDIR/etc/default/slapd" /etc/default/slapd
-install -o root -g root -m 644 \
   "$PUAVO_DS_TEMPLATEDIR/etc/default/krb5-kdc" /etc/default
 install -o root -g root -m 755 \
   "$PUAVO_DS_TEMPLATEDIR/etc/init.d/krb5-kdc" /etc/init.d
