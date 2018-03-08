@@ -134,7 +134,7 @@ if !system('chmod -R 0750 /state/var/lib/ldap')
 end
 
 if !system('service slapd start')
-  STDERR.puts('error: failed to stop slapd')
+  STDERR.puts('error: failed to start slapd')
   exit(1)
 end
 
