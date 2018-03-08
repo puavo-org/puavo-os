@@ -1,4 +1,6 @@
 class bootserver_slapd {
+  include ::puavo_conf
+
   # XXX Is this still necessary?  (Should get apparmor working first.)
   file {
     '/etc/apparmor.d/local/usr.sbin.slapd':
@@ -10,5 +12,10 @@ class bootserver_slapd {
     '/etc/init.d/slapd':
       mode   => '0755',
       source => 'puppet:///modules/bootserver_slapd/etc_init.d_slapd';
+  }
+
+  ::puavo_conf::script {
+    'setup_slapd':
+      source => 'puppet:///modules/bootserver_slapd/setup_slapd';
   }
 }
