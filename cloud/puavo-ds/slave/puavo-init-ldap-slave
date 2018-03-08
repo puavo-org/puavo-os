@@ -45,7 +45,7 @@ end
 ENV["LDAPTLS_REQCERT"] = "demand"
 ENV["LDAPTLS_CACERT"] = "/etc/puavo/certs/rootca.pem"
 
-Sentinel_file = '/var/lib/ldap/init_ldap_slave_done'
+Sentinel_file = '/state/var/lib/ldap/init_ldap_slave_done'
 
 if !File.exist?(Sentinel_file) and update_only_config
   STDERR.puts('error: cannot update uninitialized slapd, run without --update-only-config')
@@ -118,17 +118,17 @@ if update_only_config
   exit(0)
 end
 
-if !system('rm -rf /var/lib/ldap/*')
+if !system('rm -rf /state/var/lib/ldap/*')
   STDERR.puts('error: failed to remove the old LDAP database')
   exit(1)
 end
 
-if !system('chown -R openldap.openldap /var/lib/ldap')
-  STDERR.puts('error: failed to chown /var/lib/ldap to openldap')
+if !system('chown -R openldap.openldap /state/var/lib/ldap')
+  STDERR.puts('error: failed to chown /state/var/lib/ldap to openldap')
   exit(1)
 end
 
-if !system('chmod -R 0750 /var/lib/ldap')
+if !system('chmod -R 0750 /state/var/lib/ldap')
   STDERR.puts('error: failed to chmod /var/lib/ldap')
   exit(1)
 end
