@@ -23,3 +23,10 @@ URI         ldapi:/// ldap://${puavo_ldap_server}
 EOF
 
 mv /etc/ldap/ldap.conf.tmp /etc/ldap/ldap.conf
+
+install -o root -g openldap -m 644 /etc/puavo/certs/host.crt \
+       /etc/ssl/certs/slapd-server.crt
+install -o root -g openldap -m 640 /etc/puavo/certs/host.key \
+       /etc/ssl/certs/slapd-server.key
+install -o root -g openldap -m 644 /etc/puavo/certs/orgcabundle.pem \
+       /etc/ssl/certs/slapd-ca.crt

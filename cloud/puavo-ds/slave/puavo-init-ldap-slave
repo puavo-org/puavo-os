@@ -128,21 +128,6 @@ if !system('chown -R openldap.openldap /var/lib/ldap')
   exit(1)
 end
 
-if !system('install -m 0644 -g openldap /etc/puavo/certs/host.crt /etc/ssl/certs/slapd-server.crt')
-  STDERR.puts('error: failed to install /etc/puavo/certs/host.crt to /etc/ssl/certs/slapd-server.crt')
-  exit(1)
-end
-
-if !system('install -m 0640 -g openldap /etc/puavo/certs/host.key /etc/ssl/certs/slapd-server.key')
-  STDERR.puts('error: failed to copy /etc/puavo/certs/host.key to /etc/ssl/certs/slapd-server.key')
-  exit(1)
-end
-
-if !system('install -m 0644 -g openldap /etc/puavo/certs/orgcabundle.pem /etc/ssl/certs/slapd-ca.crt')
-  STDERR.puts('error: failed to copy /etc/puavo/certs/orgcabundle.pem to /etc/ssl/certs/slapd-ca.crt')
-  exit(1)
-end
-
 if !system('chmod -R 0750 /var/lib/ldap')
   STDERR.puts('error: failed to chmod /var/lib/ldap')
   exit(1)
