@@ -44,8 +44,7 @@ install: bin/puavo-ds-installdirs installdirs
 		templates/etc/default/slapd
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/etc/init.d \
-		templates/etc/init.d/krb5-kdc \
-		templates/etc/init.d/slapd
+		templates/etc/init.d/krb5-kdc
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
                 bin/*

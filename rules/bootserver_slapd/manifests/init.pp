@@ -3,5 +3,8 @@ class bootserver_slapd {
   file {
     '/etc/apparmor.d/local/usr.sbin.slapd':
       source => 'puppet:///modules/bootserver_slapd/local-apparmor-inclusions';
+
+    '/etc/init.d/slapd':
+      source => 'puppet:///modules/bootserver_slapd/etc_init.d_slapd';
   }
 }
