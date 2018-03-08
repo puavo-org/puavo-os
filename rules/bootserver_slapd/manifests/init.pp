@@ -8,6 +8,7 @@ class bootserver_slapd {
       source => 'puppet:///modules/bootserver_slapd/etc_default_slapd';
 
     '/etc/init.d/slapd':
+      mode   => '0755',
       source => 'puppet:///modules/bootserver_slapd/etc_init.d_slapd';
   }
 }
