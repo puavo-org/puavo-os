@@ -53,7 +53,7 @@ if !File.exist?(Sentinel_file) and update_only_config
 end
 
 if File.exist?(Sentinel_file) and not use_force
-  STDERR.puts('error: slapd is already initialized, use the --force, Mikko!')
+  STDERR.puts('error: slapd is already initialized, use the --force, Luke!')
   exit(1)
 end
 
