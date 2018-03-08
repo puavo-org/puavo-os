@@ -15,7 +15,6 @@ set_machine_id
 set_systemd_default_target
 setup_swap
 maybe_disable_acpi_wakeup
-setup_ldapconf
 setup_keyboard
 set_timezone
 setup_locale
@@ -28,4 +27,5 @@ setup_firewall
 setup_dhcpd
 setup_dns
 setup_incrond
+setup_slapd
 run_puavo_sysmerge
