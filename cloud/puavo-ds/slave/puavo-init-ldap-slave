@@ -69,7 +69,7 @@ def parse_erb(basename)
   tempfile = Tempfile.open(basename)
   tempfile.puts ldif.result
   tempfile.close
-  
+
   tempfile
 end
 
@@ -91,22 +91,22 @@ system('service slapd stop')
 sleep 3
 system('pkill -9 -x slapd')
 
-FileUtils.mkdir_p '/etc/ldap/slapd.d'
-FileUtils.chmod(0750, '/etc/ldap/slapd.d')
-FileUtils.chown('openldap', 'openldap', '/etc/ldap/slapd.d')
+FileUtils.mkdir_p '/state/etc/ldap/slapd.d'
+FileUtils.chmod(0750, '/state/etc/ldap/slapd.d')
+FileUtils.chown('openldap', 'openldap', '/state/etc/ldap/slapd.d')
 
-if !system('rm -rf /etc/ldap/slapd.d/*')
+if !system('rm -rf /state/etc/ldap/slapd.d/*')
   STDERR.puts('error: failed to remove old LDAP configuration')
   exit(1)
 end
 
-if !system("slapadd -l #{tempfile.path} -F /etc/ldap/slapd.d -b 'cn=config'")
+if !system("slapadd -l #{tempfile.path} -F /state/etc/ldap/slapd.d -b cn=config")
   STDERR.puts('error: failed to update the configuration of the database')
   exit(1)
 end
 
-if !system('chown -R openldap.openldap /etc/ldap/slapd.d')
-  STDERR.puts('error: failed to chown /etc/ldap/slapd.d to openldap')
+if !system('chown -R openldap.openldap /state/etc/ldap/slapd.d')
+  STDERR.puts('error: failed to chown /state/etc/ldap/slapd.d to openldap')
   exit(1)
 end
 

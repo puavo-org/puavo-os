@@ -76,6 +76,7 @@ cp -aT /state/etc/puavo /etc/puavo         || status=1
 case "$(puavo-conf puavo.hosttype)" in
   bootserver)
     statedirlist='
+      /etc/ldap/slapd.d
       /etc/network/interfaces.d
       /etc/shorewall
       /var/lib/bind
