@@ -40,8 +40,7 @@ install: bin/puavo-ds-installdirs installdirs
 		kdc.conf.erb
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/etc/default \
-		templates/etc/default/krb5-kdc \
-		templates/etc/default/slapd
+		templates/etc/default/krb5-kdc
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/etc/init.d \
 		templates/etc/init.d/krb5-kdc
