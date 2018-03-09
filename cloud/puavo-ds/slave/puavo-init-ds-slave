@@ -2,13 +2,6 @@
 
 set -e
 
-. puavo-ds-installdirs
-
-install -o root -g root -m 644 \
-  "$PUAVO_DS_TEMPLATEDIR/etc/default/krb5-kdc" /etc/default
-install -o root -g root -m 755 \
-  "$PUAVO_DS_TEMPLATEDIR/etc/init.d/krb5-kdc" /etc/init.d
-
 echo "Run following commands as a root in your LDAP-master:
 (if you have not already done so)
 

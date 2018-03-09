@@ -4,6 +4,7 @@ class image::bundle::bootserver {
   include ::bootserver_firewall
   include ::bootserver_helpers
   include ::bootserver_inetd
+  include ::bootserver_krb5kdc
   include ::bootserver_ltspimages
   include ::bootserver_network_interfaces
   include ::bootserver_nginx
@@ -16,7 +17,6 @@ class image::bundle::bootserver {
   # include ::bootserver_cups                   # XXX needs work
   # include ::bootserver_dummywlan              # XXX needs work
   # include ::bootserver_fluentd                # XXX needs work
-  # include ::bootserver_krb5kdc                # XXX needs work
   # include ::bootserver_kvm_ltspserver         # XXX needs work
   # include ::bootserver_ldap                   # XXX needs work
   # include ::bootserver_ltspimages             # XXX needs work

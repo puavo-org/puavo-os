@@ -57,6 +57,7 @@ class packages {
     , 'dnsmasq'
     , 'incron'
     , 'isc-dhcp-server'
+    , 'krb5-kdc'
     , 'nginx'
     , 'openbsd-inetd'
     , 'pxelinux'
