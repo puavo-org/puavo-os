@@ -1,5 +1,6 @@
 class bootserver_krb5kdc {
   include ::packages
+  include ::puavo_conf
 
   file {
     '/etc/default/krb5-kdc':
@@ -11,24 +12,20 @@ class bootserver_krb5kdc {
       require => Package['krb5-kdc'],
       source  => 'puppet:///modules/bootserver_krb5kdc/etc_init.d_krb5-kdc';
 
+    # XXX what to do this this?
+    # '/etc/init/krb5-kdc.override':
+    #   source => 'puppet:///modules/bootserver_krb5kdc/krb5-kdc.override';
+
      '/etc/logrotate.d/kdc':
        require => Package['logrotate'],
        source => 'puppet:///modules/bootserver_krb5kdc/logrotate.conf';
   }
 
+  ::puavo_conf::script {
+    'setup_krb5kdc':
+      source => 'puppet:///modules/bootserver_krb5kdc/setup_krb5kdc';
+  }
+
   Package <| title == krb5-kdc
           or title == logrotate |>
 }
-
-#  file {
-#    '/etc/init/krb5-kdc.override':
-#      source => 'puppet:///modules/bootserver_krb5kdc/krb5-kdc.override';
-#
-#    '/etc/krb5kdc/kdc.conf':
-#      mode    => '0644',
-#      content => template('bootserver_krb5kdc/kdc.conf');
-#
-#    '/etc/krb5.conf':
-#      mode    => '0644',
-#      content => template('bootserver_krb5kdc/krb5.conf');
-#  }
