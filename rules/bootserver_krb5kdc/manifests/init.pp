@@ -10,9 +10,14 @@ class bootserver_krb5kdc {
       mode    => '0755',
       require => Package['krb5-kdc'],
       source  => 'puppet:///modules/bootserver_krb5kdc/etc_init.d_krb5-kdc';
+
+     '/etc/logrotate.d/kdc':
+       require => Package['logrotate'],
+       source => 'puppet:///modules/bootserver_krb5kdc/logrotate.conf';
   }
 
-  Package <| title == krb5-kdc |>
+  Package <| title == krb5-kdc
+          or title == logrotate |>
 }
 
 #  file {
@@ -26,7 +31,4 @@ class bootserver_krb5kdc {
 #    '/etc/krb5.conf':
 #      mode    => '0644',
 #      content => template('bootserver_krb5kdc/krb5.conf');
-#
-#    '/etc/logrotate.d/kdc':
-#      source => 'puppet:///modules/bootserver_krb5kdc/logrotate.conf';
 #  }

@@ -58,6 +58,7 @@ class packages {
     , 'incron'
     , 'isc-dhcp-server'
     , 'krb5-kdc'
+    , 'logrotate'
     , 'nginx'
     , 'openbsd-inetd'
     , 'pxelinux'
