@@ -1,0 +1,29 @@
+#!/bin/sh
+
+set -eu
+
+# This script should be run before setup_state_partition so that
+# /etc/network/interfaces.d is not yet linked to under /state.
+
+# XXX get rid of hosttype handling!
+puavo_hosttype=$(puavo-conf puavo.hosttype)
+
+if [ "$puavo_hosttype" != 'bootserver' ]; then
+  exit 0
+fi
+
+if [ -h /etc/network/interfaces.d ]; then
+  echo 'Not touching /etc/network/interfaces.d, it is a symbolic link!' >&2
+  exit 1
+fi
+
+if [ -e /run/puavo/nbd-server ]; then
+  # We do not want to touch the interfaces if we have booted from the
+  # network (which might happen in case bootserver image is updated
+  # by booting from other bootserver).
+  exit 0
+fi
+
+rm -f /etc/network/interfaces.d/*
+cp -p /etc/network/interfaces.${puavo_hosttype}.d/* \
+      /etc/network/interfaces.d/

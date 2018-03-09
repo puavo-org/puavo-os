@@ -1,5 +1,7 @@
 set_puavo_hosttype
+find_nbd_server_address
 mount_local_partitions
+setup_network_interfaces
 setup_state_partition
 correct_file_ownership
 enable_utmp_logs
