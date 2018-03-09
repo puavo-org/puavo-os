@@ -64,6 +64,7 @@ class packages {
     , 'pxelinux'
     , 'ruby-ipaddress'
     , 'shorewall'
+    , 'slapd'
     , 'syslinux-common' ]:
       tag => [ 'tag_basic', 'tag_debian_bootserver', ];
   }
