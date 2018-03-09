@@ -11,7 +11,7 @@ end
 Sentinel_file = '/etc/krb5kdc/init_kdc_slave_done'
 
 if File.exist?(Sentinel_file) and not ARGV[0] == '--force'
-  puts "#{ Sentinel_file } exists, use the --force, Mikko!"
+  puts "#{ Sentinel_file } exists, use the --force, Luke!"
   exit 1
 end
 
