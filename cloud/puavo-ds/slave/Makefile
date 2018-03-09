@@ -33,9 +33,7 @@ install: bin/puavo-ds-installdirs installdirs
 		puavo-init-kdc-slave
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ds-slave \
-		init_ldap_slave.ldif.erb \
-		krb5.conf.erb \
-		kdc.conf.erb
+		init_ldap_slave.ldif.erb
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
                 bin/*
