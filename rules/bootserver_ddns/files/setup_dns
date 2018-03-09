@@ -37,6 +37,11 @@ lookup_ifdata() {
 lookup_ip()      { lookup_ifdata -pa address "$1"; }
 lookup_netmask() { lookup_ifdata -pn netmask "$1"; }
 
+# XXX get rid of hosttype handling
+if [ "$(puavo-conf puavo.hosttype)" != 'bootserver' ]; then
+  exit 0
+fi
+
 # XXX this should not be hardcoded to 10.XXX addresses!
 arpazone='10.in-addr.arpa'
 
@@ -210,5 +215,26 @@ ptr-record=lb._dns-sd._udp.ltsp.${puavo_domain},${puavo_domain}
 ptr-record=b._dns-sd._udp.wlan.${puavo_domain},${puavo_domain}
 ptr-record=lb._dns-sd._udp.wlan.${puavo_domain},${puavo_domain}
 EOF
-
 mv /etc/dnsmasq.conf.tmp /etc/dnsmasq.conf
+
+# Setup /etc/hosts
+{
+  cat <<EOF
+127.0.0.1       localhost
+
+${ltsp0_ip}     ${puavo_hostname}.${puavo_domain} ${puavo_hostname} wlangw
+
+# The following lines are desirable for IPv6 capable hosts
+::1     ip6-localhost   ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+EOF
+  if [ -s /state/etc/hosts ]; then
+    echo
+    echo '# from /state/etc/hosts:'
+    cat /state/etc/hosts
+  fi
+} >> /etc/hosts.tmp
+mv /etc/hosts.tmp /etc/hosts

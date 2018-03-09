@@ -22,6 +22,11 @@ hostname "$puavo_hostname"
 
 puavo_domain=$(cat /etc/puavo/domain 2>/dev/null || echo nodomain)
 
+if [ "$puavo_hosttype" = 'bootserver' ]; then
+  # For bootservers, setting up /etc/hosts happens in "setup_dns".
+  exit 0
+fi
+
 cat <<EOF > /etc/hosts.tmp
 127.0.0.1 localhost
 127.0.1.1 ${puavo_hostname}.${puavo_domain} ${puavo_hostname}
