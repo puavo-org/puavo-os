@@ -93,3 +93,19 @@ cat <<EOF > /etc/krb5.conf.tmp
 
 EOF
 mv /etc/krb5.conf.tmp /etc/krb5.conf
+
+puavo_krb5kdc_dir='/var/lib/krb5kdc/puavo'
+
+install -o root -g root -m 600 "${puavo_krb5kdc_dir}/krb5.secrets" \
+        /etc/krb5.secrets
+install -o root -g root -m 600 "${puavo_krb5kdc_dir}/stash" \
+        /etc/krb5kdc/stash
+
+install -o root -g root -m 600 "${puavo_krb5kdc_dir}/cups.keytab" \
+        /etc/cups/krb5.keytab
+install -o root -g root -m 600 "${puavo_krb5kdc_dir}/system.keytab" \
+        /etc/krb5.keytab
+install -o root -g openldap -m 640 "${puavo_krb5kdc_dir}/ldap_krb5.keytab" \
+        /etc/ldap/krb5.keytab
+install -o root -g puavo -m 640 "${puavo_krb5kdc_dir}/http.keytab" \
+        /etc/puavo/puavo-rest.keytab

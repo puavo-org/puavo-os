@@ -81,6 +81,7 @@ case "$(puavo-conf puavo.hosttype)" in
       /etc/network/interfaces.d
       /etc/shorewall
       /var/lib/bind
+      /var/lib/krb5kdc
       /var/lib/ldap
       /var/lib/logrotate
       /var/lib/nfs
