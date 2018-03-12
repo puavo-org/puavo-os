@@ -1,27 +1,6 @@
 class bootserver_nfs {
   include ::puavo
-
-  augeas {
-    'add /export/home to /etc/fstab':
-      context => '/files/etc/fstab',
-      changes => [
-        "set 01/spec    /home",
-        "set 01/file    /export/home",
-        "set 01/vfstype none",
-        "set 01/opt[1]  rw",
-        "set 01/opt[2]  bind",
-        "set 01/dump    0",
-        "set 01/passno  0",
-      ],
-      notify  => Exec['/bin/mount -a'],
-      onlyif  => "match *[spec='/home'][file = '/export/home'] size == 0",
-      require => File['/export/home'];
-  }
-
-  exec {
-    '/bin/mount -a':
-      refreshonly => true;
-  }
+  include ::puavo_conf
 
   file {
     '/etc/default/nfs-common':
@@ -32,11 +11,10 @@ class bootserver_nfs {
 
     '/etc/exports':
       content => template('bootserver_nfs/etc_exports');
+  }
 
-    '/etc/idmapd.conf':
-      content => template('bootserver_nfs/etc_idmapd.conf');
-
-    [ '/export', '/export/home', ]:
-      ensure => directory;
+  ::puavo_conf::script {
+    'setup_nfs_server':
+      source => 'puppet:///modules/bootserver_nfs/setup_nfs_server';
   }
 }
