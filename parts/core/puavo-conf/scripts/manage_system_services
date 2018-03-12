@@ -5,17 +5,25 @@ set -eu
 services='
   avahi-daemon
   fluentd
+  isc-dhcp-server
+  krb5-kdc
   ModemManager
+  nbd-server
   NetworkManager
   nscd
   nslcd
+  puavo-tftpd
   puavo-vpn-client-dnsmasq
   puavo-vpn-client-openvpn
   rpc-gssd
+  shorewall
+  slapd
   tlp
 '
 
 status=0
+
+# XXX look if this is slow and could be optimized (skipping systemctl-tool?)
 
 for service in ${services}; do
   enabled=$(puavo-conf "puavo.service.${service}.enabled")

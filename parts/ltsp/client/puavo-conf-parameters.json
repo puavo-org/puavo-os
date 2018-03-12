@@ -44,7 +44,16 @@
   "puavo.service.fluentd.enabled": {
     "default": "true"
   },
+  "puavo.service.isc-dhcp-server.enabled": {
+    "default": "false"
+  },
+  "puavo.service.krb5-kdc.enabled": {
+    "default": "false"
+  },
   "puavo.service.ModemManager.enabled": {
+    "default": "false"
+  },
+  "puavo.service.nbd-server.enabled": {
     "default": "false"
   },
   "puavo.service.NetworkManager.enabled": {
@@ -56,6 +65,9 @@
   "puavo.service.nslcd.enabled": {
     "default": "false"
   },
+  "puavo.service.puavo-tftpd.enabled": {
+    "default": "false"
+  },
   "puavo.service.puavo-vpn-client-dnsmasq.enabled": {
     "default": "false"
   },
@@ -63,6 +75,12 @@
     "default": "false"
   },
   "puavo.service.rpc-gssd.enabled": {
+    "default": "false"
+  },
+  "puavo.service.shorewall.enabled": {
+    "default": "false"
+  },
+  "puavo.service.slapd.enabled": {
     "default": "false"
   },
   "puavo.service.tlp.enabled": {
