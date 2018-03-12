@@ -1,5 +1,4 @@
 class bootserver_nfs {
-  include ::puavo
   include ::puavo_conf
 
   file {
