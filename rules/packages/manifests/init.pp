@@ -696,8 +696,8 @@ class packages {
   }
 
   $broadcom_sta_dkms_module = 'broadcom-sta/6.30.223.271'
-  $nvidia_dkms_304_module   = 'nvidia-legacy-304xx/304.135'
-  $nvidia_dkms_340_module   = 'nvidia-legacy-340xx/340.102'
+  $nvidia_dkms_304_module   = 'nvidia-legacy-304xx/304.137'
+  $nvidia_dkms_340_module   = 'nvidia-legacy-340xx/340.106'
   $nvidia_dkms_375_module   = 'nvidia-current/375.82'
   # XXX $r8168_dkms_module  = 'r8168/8.040.00'
 
