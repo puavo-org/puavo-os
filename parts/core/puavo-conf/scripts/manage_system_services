@@ -5,6 +5,7 @@ set -eu
 services='
   avahi-daemon
   fluentd
+  incron
   isc-dhcp-server
   krb5-kdc
   ModemManager

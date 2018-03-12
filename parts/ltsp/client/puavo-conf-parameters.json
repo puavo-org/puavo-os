@@ -44,6 +44,9 @@
   "puavo.service.fluentd.enabled": {
     "default": "true"
   },
+  "puavo.service.incron.enabled": {
+    "default": "false"
+  },
   "puavo.service.isc-dhcp-server.enabled": {
     "default": "false"
   },
