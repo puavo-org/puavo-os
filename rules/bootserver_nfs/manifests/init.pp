@@ -7,9 +7,6 @@ class bootserver_nfs {
 
     '/etc/default/nfs-kernel-server':
       content => template('bootserver_nfs/etc_default_nfs-kernel-server');
-
-    '/etc/exports':
-      content => template('bootserver_nfs/etc_exports');
   }
 
   ::puavo_conf::script {
