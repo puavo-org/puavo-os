@@ -12,6 +12,8 @@ To build Puavo OS image, run:
 
 Run `make help` to get help.
 
+## The "config"-directory
+
 The "config"-directory contains various configurations for the image.
 
 The file "config/rootca.pem" is a CA-certificate that will be copied to
