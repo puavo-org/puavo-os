@@ -9,6 +9,7 @@ class image::bundle::bootserver {
   include ::bootserver_network_interfaces
   include ::bootserver_nfs
   include ::bootserver_nginx
+  include ::bootserver_nss
   include ::bootserver_pxe
   include ::bootserver_slapd
   include ::packages

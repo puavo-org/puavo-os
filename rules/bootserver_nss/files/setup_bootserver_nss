@@ -1,0 +1,86 @@
+#!/bin/sh
+
+set -eu
+
+if [ "$(puavo-conf puavo.hosttype)" != 'bootserver' ]; then
+  exit 0
+fi
+
+read puavo_domain        < /etc/puavo/domain
+read puavo_hostname      < /etc/puavo/hostname
+read puavo_ldap_base     < /etc/puavo/ldap/base
+read puavo_ldap_dn       < /etc/puavo/ldap/dn
+read puavo_ldap_master   < /etc/puavo/ldap/master
+read puavo_ldap_password < /etc/puavo/ldap/password
+
+install -o root -g nslcd -m 640 /dev/null /etc/nslcd.conf.tmp
+cat <<EOF > /etc/nslcd.conf.tmp
+# /etc/nslcd.conf
+# nslcd configuration file. See nslcd.conf(5)
+# for details.
+
+# The user and group nslcd should run as.
+uid nslcd
+gid nslcd
+
+# The location at which the LDAP server(s) should be reachable.
+uri ldap://${puavo_hostname}.${puavo_domain}
+uri ldap://${puavo_ldap_master}
+
+# XXX sometimes later?
+# use_sasl 1
+# krb5_ccname /tmp/krb5cc_nslcd
+
+# The search base that will be used for all queries.
+base ${puavo_ldap_base}
+base group ou=Groups,${puavo_ldap_base}
+base passwd ou=People,${puavo_ldap_base}
+
+# The LDAP protocol version to use.
+ldap_version 3
+
+# The DN to bind with for normal lookups.
+binddn ${puavo_ldap_dn}
+bindpw ${puavo_ldap_password}
+
+# SSL options
+ssl start_tls
+tls_reqcert demand
+tls_cacertfile /etc/puavo/certs/rootca.pem
+
+# The search scope.
+#scope sub
+
+## Filter out adm-users, libnss_puavoadmins.so.2 serves them.
+filter passwd (!(uid=adm-*))
+
+map passwd homeDirectory "/home/\$uid"
+map passwd gecos displayName
+
+# Flush caches if LDAP connection is re-established
+reconnect_invalidate passwd,group,nfsidmap
+EOF
+mv /etc/nslcd.conf.tmp /etc/nslcd.conf
+
+cat <<'EOF' > /etc/nsswitch.conf.tmp
+# /etc/nsswitch.conf
+#
+# Example configuration of GNU Name Service Switch functionality.
+# If you have the `glibc-doc-reference' and `info' packages installed, try:
+# `info libc "Name Service Switch"' for information about this file.
+
+passwd:         compat ldap
+group:          compat ldap
+shadow:         compat
+
+hosts:          files dns
+networks:       files
+
+protocols:      db files
+services:       db files
+ethers:         db files
+rpc:            db files
+
+netgroup:       nis
+EOF
+mv /etc/nsswitch.conf.tmp /etc/nsswitch.conf

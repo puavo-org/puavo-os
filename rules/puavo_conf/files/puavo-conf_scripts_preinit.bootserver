@@ -30,6 +30,7 @@ setup_dhcpd
 setup_dns
 setup_incrond
 setup_nfs_server
+setup_bootserver_nss
 setup_slapd
 setup_krb5kdc
 run_puavo_sysmerge
