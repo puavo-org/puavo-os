@@ -4,6 +4,6 @@ set -eu
 
 # XXX We should look for ways to assign (at least some) uids statically...
 chown -R bind:bind         /state/var/lib/bind
-chown -R openldap:openldap /state/etc/ldap/slap.d /state/var/lib/ldap
+chown -R openldap:openldap /state/etc/ldap/slapd.d /state/var/lib/ldap
 chown -R redis:redis       /state/var/log/redis
 chown -R www-data:adm      /state/var/log/nginx
