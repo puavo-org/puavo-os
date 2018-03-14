@@ -1,0 +1,9 @@
+#!/bin/sh
+
+set -eu
+
+if [ ! -e /etc/puavo/certs/rootca.pem ]; then
+  mkdir -p /etc/puavo/certs
+  cp /etc/puavo-image/rootca.pem \
+     /etc/puavo/certs/rootca.pem
+fi
