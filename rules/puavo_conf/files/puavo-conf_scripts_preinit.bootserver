@@ -3,7 +3,7 @@ find_nbd_server_address
 mount_local_partitions
 setup_network_interfaces
 setup_state_partition
-correct_file_ownership
+correct_desktop_file_ownership
 enable_utmp_logs
 puavo_certificate_setup
 setup_resolv_conf_and_etc_puavo
