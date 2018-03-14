@@ -18,6 +18,7 @@ services='
   puavo-tftpd
   puavo-vpn-client-dnsmasq
   puavo-vpn-client-openvpn
+  redis-server
   rpc-gssd
   shorewall
   slapd

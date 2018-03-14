@@ -83,6 +83,9 @@
   "puavo.service.puavo-vpn-client-openvpn.enabled": {
     "default": "false"
   },
+  "puavo.service.redis-server.enabled": {
+    "default": "false"
+  },
   "puavo.service.rpc-gssd.enabled": {
     "default": "false"
   },
