@@ -27,6 +27,3 @@ mkdir -p "${rootfs}/etc/puavo-image"
 echo "$image_class"    > "${rootfs}/etc/puavo-image/class"
 echo "$image_filename" > "${rootfs}/etc/puavo-image/name"
 echo "$release_name"   > "${rootfs}/etc/puavo-image/release"
-
-install -o root -g root -m 644 config/rootca.pem \
-        "${rootfs}/etc/puavo-image/rootca.pem"

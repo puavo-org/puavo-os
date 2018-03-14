@@ -188,8 +188,12 @@ setup-buildhost:
 	$(_sudo) mkdir -p $(@D)
 	$(_sudo) cp $< $@
 
+/etc/puavo-conf/rootca.pem: config/rootca.pem
+	$(_sudo) mkdir -p $(@D)
+	$(_sudo) cp $< $@
+
 .PHONY: update
-update: prepare /etc/puavo-conf/image.json
+update: prepare /etc/puavo-conf/image.json /etc/puavo-conf/rootca.pem
 	$(MAKE) build
 
 	$(_sudo) apt-get update
