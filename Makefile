@@ -184,10 +184,9 @@ rootfs-update: rootfs-sync-repo
 setup-buildhost:
 	.aux/setup-buildhost
 
-/etc/puavo-conf/image.json: config.json
+/etc/puavo-conf/image.json: config/puavo_conf.json
 	$(_sudo) mkdir -p $(@D)
-	$(_sudo) sh -c 'jq .puavo_conf config.json > $@.tmp'
-	$(_sudo) mv $@.tmp $@
+	$(_sudo) cp -p $< $@
 
 .PHONY: update
 update: prepare /etc/puavo-conf/image.json
