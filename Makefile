@@ -186,7 +186,7 @@ setup-buildhost:
 
 /etc/puavo-conf/image.json: config/puavo_conf.json
 	$(_sudo) mkdir -p $(@D)
-	$(_sudo) cp -p $< $@
+	$(_sudo) cp $< $@
 
 .PHONY: update
 update: prepare /etc/puavo-conf/image.json
