@@ -2,8 +2,12 @@
 
 set -eu
 
+status=0
+
 # XXX We should look for ways to assign (at least some) uids statically...
-chown -R bind:bind         /state/var/lib/bind
-chown -R openldap:openldap /state/etc/ldap/slapd.d /state/var/lib/ldap
-chown -R redis:redis       /state/var/log/redis
-chown -R www-data:adm      /state/var/log/nginx
+chown -R bind:bind         /state/var/lib/bind                         || status=1
+chown -R openldap:openldap /state/etc/ldap/slapd.d /state/var/lib/ldap || status=1
+chown -R redis:redis       /state/var/log/redis                        || status=1
+chown -R www-data:adm      /state/var/log/nginx                        || status=1
+
+exit $status

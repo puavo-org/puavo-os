@@ -2,14 +2,18 @@
 
 set -eu
 
+status=0
+
 # XXX This ugliness must be, because /var/lib/puavo-desktop/shared may reside
 # XXX on /state partition, and its concept of uids/gids may not match the
 # XXX current image (there should be some solution to this ugliness).
 # XXX (We should look for ways to assign (at least some) uids statically...).
-chown puavodesktop:puavodesktop /var/lib/puavo-desktop/shared
+chown puavodesktop:puavodesktop /var/lib/puavo-desktop/shared || status=1
 
-chown -R Debian-exim:adm /state/var/log/exim4
-chown -R ntp:ntp         /state/var/log/ntpstats
-chown -R puavo:puavo     /state/fluentd-buffer   /state/var/log/fluentd
-chown -R puppet:puppet   /state/var/log/puavo-os /state/var/log/puppet
-chown -R statd:nogroup   /state/var/lib/nfs
+chown -R Debian-exim:adm /state/var/log/exim4                           || status=1
+chown -R ntp:ntp         /state/var/log/ntpstats                        || status=1
+chown -R puavo:puavo     /state/fluentd-buffer   /state/var/log/fluentd || status=1
+chown -R puppet:puppet   /state/var/log/puavo-os /state/var/log/puppet  || status=1
+chown -R statd:nogroup   /state/var/lib/nfs                             || status=1
+
+exit $status
