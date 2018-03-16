@@ -12,6 +12,7 @@ class image::bundle::bootserver {
   include ::bootserver_nginx
   include ::bootserver_nss
   include ::bootserver_pxe
+  include ::bootserver_samba
   include ::bootserver_slapd
   include ::packages
 
@@ -28,7 +29,6 @@ class image::bundle::bootserver {
   # include ::bootserver_nss                    # XXX needs work
   # include ::bootserver_ntp                    # XXX needs work
   # include ::bootserver_pam                    # XXX needs work
-  # include ::bootserver_samba                  # XXX needs work
   # include ::bootserver_ssh_server             # XXX needs work
   # include ::bootserver_sudoers                # XXX needs work
   # include ::bootserver_syslog                 # XXX needs work

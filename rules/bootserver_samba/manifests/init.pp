@@ -1,32 +1,23 @@
 class bootserver_samba {
-
-  $puavo_samba_domain = generate('/usr/bin/ruby', '-e', '
-require "puavo"
-require "puavo/ldap"
-print Puavo::Client::Base.new_by_ldap_entry(
-  Puavo::Ldap.new.organisation).samba_domain_name
-')
+  include ::packages
+  include ::puavo_conf
 
   file {
     '/etc/pam.d/samba':
-      content => template('bootserver_samba/pam.samba'),
-      mode    => '0644';
-
-    '/etc/samba/smb.conf':
-      content => template('bootserver_samba/smb.conf'),
-      mode    => '0644',
-      require => Package['samba'];
+      source => 'puppet:///modules/bootserver_samba/etc_pam.d_samba');
   }
 
-  exec {
-    'fetch cifs.keytab':
-      command => "/usr/bin/smbpasswd -w '${puavo_ldap_password}' && /usr/sbin/kadmin.local -q 'ktadd -norandkey -k /etc/samba/cifs.keytab cifs/${puavo_hostname}.${puavo_domain}'",
-      creates => '/etc/samba/cifs.keytab';
+  ::puavo_conf::script {
+    'setup_samba':
+      source => 'puppet:///modules/bootserver_samba/setup_samba');
   }
 
-  package {
-    [ 'samba'
-    , 'winbind' ]:
-      ensure => present;
-  }
+  # XXX this should be done somehow
+  # exec {
+  #   'fetch cifs.keytab':
+  #     command => "/usr/bin/smbpasswd -w '${puavo_ldap_password}' && /usr/sbin/kadmin.local -q 'ktadd -norandkey -k /etc/samba/cifs.keytab cifs/${puavo_hostname}.${puavo_domain}'",
+  #     creates => '/etc/samba/cifs.keytab';
+  # }
+
+  Package <| title == samba or title == winbind |>
 }

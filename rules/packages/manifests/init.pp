@@ -63,9 +63,11 @@ class packages {
     , 'openbsd-inetd'
     , 'pxelinux'
     , 'ruby-ipaddress'
+    , 'samba'
     , 'shorewall'
     , 'slapd'
-    , 'syslinux-common' ]:
+    , 'syslinux-common'
+    , 'winbind' ]:
       tag => [ 'tag_basic', 'tag_debian_bootserver', ];
   }
 
