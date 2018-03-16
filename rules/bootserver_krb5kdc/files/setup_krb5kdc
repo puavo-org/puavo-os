@@ -109,3 +109,5 @@ install -o root -g openldap -m 640 "${puavo_krb5kdc_dir}/ldap_krb5.keytab" \
         /etc/ldap/krb5.keytab
 install -o root -g puavo -m 640 "${puavo_krb5kdc_dir}/http.keytab" \
         /etc/puavo/puavo-rest.keytab
+install -o root -g root -m 600 "${puavo_krb5kdc_dir}/cifs.keytab" \
+        /etc/samba/cifs.keytab

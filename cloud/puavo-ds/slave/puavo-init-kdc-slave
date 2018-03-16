@@ -26,7 +26,13 @@ kerberos_masterpw = ask('Kerberos master password') { |q| q.echo = false }
 
 FileUtils.mkdir_p(Puavo_krb5kdc_dir)
 
-Krb5_files_list = %w(cups.keytab http.keytab krb5.secrets ldap_krb5.keytab stash system.keytab)
+Krb5_files_list = %w(cifs.keytab
+                     cups.keytab
+                     http.keytab
+                     krb5.secrets
+                     ldap_krb5.keytab
+                     stash
+                     system.keytab)
 Krb5_files_list.each do |filename|
   FileUtils.rm_f("#{ Puavo_krb5kdc_dir }/#{ filename }")
 end
@@ -45,6 +51,11 @@ FileUtils.cp('/etc/krb5kdc/stash', "#{ Puavo_krb5kdc_dir }/stash")
 
 system('service', 'krb5-kdc', 'restart')
 
+# setup samba/ldap auth
+cmd = [ 'smbpasswd', '-W' ]
+IO.popen(cmd, 'w') { |pipe| pipe.puts ldap_bindpw; pipe.puts ldap_bindpw; }
+raise "error running command #{ cmd }" unless $?.success?
+
 # init keytab files
 
 puavo_fqdn = "#{ puavo_hostname }.#{ puavo_domain }"
@@ -59,5 +70,7 @@ run('kadmin.local', '-q',
     "ktadd -norandkey -k #{ Puavo_krb5kdc_dir }/system.keytab host/#{ puavo_fqdn }")
 run('kadmin.local', '-q',
     "ktadd -norandkey -k #{ Puavo_krb5kdc_dir }/system.keytab nfs/#{ puavo_fqdn }")
+run('kadmin.local', '-q',
+    "ktadd -norandkey -k #{ Puavo_krb5kdc_dir }/cifs.keytab cifs/#{ puavo_fqdn }")
 
 FileUtils.touch(Sentinel_file)
