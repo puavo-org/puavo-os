@@ -2,29 +2,28 @@
 
 set -eu
 
-[ "$(puavo-conf puavo.xsessions.default)" = 'puavo-infotv' ] || exit 0
-
 get_hour() {
   puavo-conf "$1" \
     | awk '/^[[:digit:]]+$/ && 0 <= $0 && $0 <= 24 { print ($0 % 24); exit(0) }'
 }
 
-start_hour=$(get_hour puavo.autopoweroff.daytime_start_hour)
-end_hour=$(  get_hour puavo.autopoweroff.daytime_end_hour)
+setup_infotv_display_control() {
+  start_hour=$(get_hour puavo.autopoweroff.daytime_start_hour)
+  end_hour=$(  get_hour puavo.autopoweroff.daytime_end_hour)
 
-if [ -n "$start_hour" ]; then
-  display_on_line="0 $start_hour * * 1-7 root iivari-display_on"
-else
-  display_on_line=''
-fi
+  if [ -n "$start_hour" ]; then
+    display_on_line="0 $start_hour * * 1-7 root iivari-display_on"
+  else
+    display_on_line=''
+  fi
 
-if [ -n "$end_hour" ]; then
-  display_off_line="0 $end_hour * * 1-7 root iivari-display_off"
-else
-  display_off_line=''
-fi
+  if [ -n "$end_hour" ]; then
+    display_off_line="0 $end_hour * * 1-7 root iivari-display_off"
+  else
+    display_off_line=''
+  fi
 
-cat <<EOF > /etc/cron.d/infotv_display_control.tmp
+  cat <<EOF > /etc/cron.d/infotv_display_control.tmp
 # /etc/cron.d/infotv_display_control: turn infotv displays on and off
 
 SHELL=/bin/sh
@@ -34,4 +33,42 @@ ${display_on_line}
 ${display_off_line}
 EOF
 
-mv /etc/cron.d/infotv_display_control.tmp /etc/cron.d/infotv_display_control
+  mv /etc/cron.d/infotv_display_control.tmp /etc/cron.d/infotv_display_control
+}
+
+# Setup cronjobs that we need.
+
+if [ "$(puavo-conf puavo.xsessions.default)" = 'puavo-infotv' ]; then
+  setup_infotv_display_control
+else
+  rm -f /etc/cron.d/infotv_display_control
+fi
+
+# Disable most cronjobs (those mostly cause unnecessary load), but logrotate
+# is actually useful when /state is used.
+
+for cronjobfile in /etc/cron.d/*       \
+                   /etc/cron.hourly/*  \
+                   /etc/cron.daily/*   \
+                   /etc/cron.monthly/* \
+                   /etc/cron.weekly/*; do
+  test -e "$cronjobfile" || continue
+
+  case "$cronjobfile" in
+    /etc/cron.daily/0anacron               \
+      | /etc/cron.daily/logrotate          \
+      | /etc/cron.d/anacron                \
+      | /etc/cron.d/infotv_display_control \
+      | /etc/cron.monthly/0anacron         \
+      | /etc/cron.weekly/0anacron)
+        # Save these files, anacron/cron need the *cron files for proper
+        # functioning and we want to run logrotate to prevent /state from
+        # filling up.  And obviously we do not want to remove those which we
+        # have just added.
+        continue
+        ;;
+    *)
+      rm -f "$cronjobfile"
+      ;;
+  esac
+done
