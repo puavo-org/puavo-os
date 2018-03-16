@@ -8,7 +8,15 @@ read puavo_kerberos_realm < /etc/puavo/kerberos/realm
 read puavo_ldap_base      < /etc/puavo/ldap/base
 read puavo_ldap_dn        < /etc/puavo/ldap/dn
 read puavo_ldap_master    < /etc/puavo/ldap/master
-read puavo_samba_domain   < /etc/puavo/samba/domainname
+
+ldap_filter="ldap:///${puavo_ldap_base}???(puavoDomain=${puavo_domain})"
+puavo_samba_domain=$(slapcat -H "$ldap_filter" \
+  | awk '$1 == "sambaDomainName:" { print $2; exit 0 }')
+
+if [ -z "$puavo_samba_domain" ]; then
+  echo 'Could not determine Samba domain name' >&2
+  exit 1
+fi
 
 cat <<EOF > /etc/samba/smb.conf.tmp
 [global]
