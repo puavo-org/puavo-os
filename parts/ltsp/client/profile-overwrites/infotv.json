@@ -1,5 +1,6 @@
 {
-  "puavo.guestlogin.enabled": "true",
-  "puavo.guestlogin.mode"   : "automatic",
-  "puavo.xsessions.default" : "puavo-infotv"
+  "puavo.service.cron.cronjobs": "infotv_display_control",
+  "puavo.guestlogin.enabled":    "true",
+  "puavo.guestlogin.mode"   :    "automatic",
+  "puavo.xsessions.default" :    "puavo-infotv"
 }

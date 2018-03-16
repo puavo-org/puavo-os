@@ -41,6 +41,9 @@
   "puavo.service.avahi-daemon.enabled": {
     "default": "false"
   },
+  "puavo.service.cron.cronjobs": {
+    "default": ""
+  },
   "puavo.service.fluentd.enabled": {
     "default": "true"
   },

@@ -2,6 +2,37 @@
 
 set -eu
 
+# Disable most cronjobs (those mostly cause unnecessary load), but logrotate
+# is actually useful when /state is used.
+
+for cronjobfile in /etc/cron.d/*       \
+                   /etc/cron.hourly/*  \
+                   /etc/cron.daily/*   \
+                   /etc/cron.monthly/* \
+                   /etc/cron.weekly/*; do
+  test -e "$cronjobfile" || continue
+
+  case "$cronjobfile" in
+    /etc/cron.daily/0anacron               \
+      | /etc/cron.daily/logrotate          \
+      | /etc/cron.d/anacron                \
+      | /etc/cron.monthly/0anacron         \
+      | /etc/cron.weekly/0anacron)
+        # Save these files, anacron/cron need the *cron files for proper
+        # functioning and we want to run logrotate to prevent /state from
+        # filling up.
+        continue
+        ;;
+    *)
+      rm -f "$cronjobfile"
+      ;;
+  esac
+done
+
+puavo_cronjobs=$(puavo-conf puavo.service.cron.cronjobs)
+
+[ -n "$puavo_cronjobs" ] || exit 0
+
 get_hour() {
   puavo-conf "$1" \
     | awk '/^[[:digit:]]+$/ && 0 <= $0 && $0 <= 24 { print ($0 % 24); exit(0) }'
@@ -38,37 +69,12 @@ EOF
 
 # Setup cronjobs that we need.
 
-if [ "$(puavo-conf puavo.xsessions.default)" = 'puavo-infotv' ]; then
-  setup_infotv_display_control
+status=0
+
+if echo "$puavo_cronjobs" | grep -qw infotv_display_control; then
+  setup_infotv_display_control || status=1
 else
   rm -f /etc/cron.d/infotv_display_control
 fi
 
-# Disable most cronjobs (those mostly cause unnecessary load), but logrotate
-# is actually useful when /state is used.
-
-for cronjobfile in /etc/cron.d/*       \
-                   /etc/cron.hourly/*  \
-                   /etc/cron.daily/*   \
-                   /etc/cron.monthly/* \
-                   /etc/cron.weekly/*; do
-  test -e "$cronjobfile" || continue
-
-  case "$cronjobfile" in
-    /etc/cron.daily/0anacron               \
-      | /etc/cron.daily/logrotate          \
-      | /etc/cron.d/anacron                \
-      | /etc/cron.d/infotv_display_control \
-      | /etc/cron.monthly/0anacron         \
-      | /etc/cron.weekly/0anacron)
-        # Save these files, anacron/cron need the *cron files for proper
-        # functioning and we want to run logrotate to prevent /state from
-        # filling up.  And obviously we do not want to remove those which we
-        # have just added.
-        continue
-        ;;
-    *)
-      rm -f "$cronjobfile"
-      ;;
-  esac
-done
+exit $status
