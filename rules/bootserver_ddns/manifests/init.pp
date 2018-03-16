@@ -8,10 +8,6 @@ class bootserver_ddns {
       require => Package['bind9'],
       source  => 'puppet:///modules/bootserver_ddns/named.conf.options';
 
-    '/etc/cron.d/puavo-update-airprint-ddns':
-      require => File['/usr/local/sbin/puavo-update-airprint-ddns'],
-      source  => 'puppet:///modules/bootserver_ddns/puavo-update-airprint-ddns.cron';
-
     '/usr/local/lib/puavo-update-ddns':
       mode   => '0755',
       source => 'puppet:///modules/bootserver_ddns/puavo-update-ddns';

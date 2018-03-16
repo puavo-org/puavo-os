@@ -3,6 +3,7 @@
   "puavo.autopoweron.enabled":                      "true",
   "puavo.guestlogin.enabled":                       "false",
   "puavo.networking.ddns.dhcpd_interfaces":         "ltsp0,wlan0",
+  "puavo.service.cron.cronjobs":                    "fix-homedir-permissions,fstrim,puavo-autopoweron,puavo-update-airprint-ddns,remove-cups-jobs",
   "puavo.service.incron.enabled":                   "true",
   "puavo.service.isc-dhcp-server.enabled":          "true",
   "puavo.service.krb5-kdc.enabled":                 "true",
