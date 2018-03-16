@@ -1,5 +1,6 @@
 class image::bundle::bootserver {
   include ::bootserver_autopoweron
+  include ::bootserver_cron
   include ::bootserver_ddns
   include ::bootserver_firewall
   include ::bootserver_helpers
@@ -15,7 +16,6 @@ class image::bundle::bootserver {
   include ::packages
 
   # include ::bootserver_backup                 # XXX needs work
-  # include ::bootserver_cron                   # XXX needs work
   # include ::bootserver_cups                   # XXX needs work
   # include ::bootserver_dummywlan              # XXX needs work
   # include ::bootserver_fluentd                # XXX needs work
