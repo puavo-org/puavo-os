@@ -1,5 +1,4 @@
 class image::bundle::desktop {
-  # include ::acroread			# XXX needs fixing for Debian
   include ::chrome
   include ::chromium
   include ::cups
