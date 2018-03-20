@@ -5,10 +5,16 @@ set -eu
 command=$1
 shift
 
+marvinsuite_dir='/opt/chemaxon/marvinsuite'
+
 case "${command}" in
     configure)
 	upstream_dir=$1
-	marvinsuite_dir="${upstream_dir}/opt/chemaxon/marvinsuite"
+
+        mkdir -p "$(dirname "$marvinsuite_dir")"
+	ln -fns "${upstream_dir}${marvinsuite_dir}" \
+                "$marvinsuite_dir"
+
 	ln -fns "${marvinsuite_dir}/LicenseManager" \
 		/usr/local/bin/LicenseManager
 	ln -fns "${marvinsuite_dir}/MarvinSketch" \
@@ -57,7 +63,8 @@ Icon=${upstream_dir}/opt/chemaxon/marvinsuite/.install4j/MarvinView.png
 EOF
 	;;
     unconfigure)
-	rm -f /usr/bin/molconvert                            \
+	rm -f "$marvinsuite_dir"                             \
+              /usr/bin/molconvert                            \
 	      /usr/bin/msketch                               \
 	      /usr/bin/mview                                 \
 	      /usr/local/bin/cxcalc                          \
@@ -71,6 +78,7 @@ EOF
 	      /usr/share/applications/LicenseManager.desktop \
 	      /usr/share/applications/MarvinSketch.desktop   \
 	      /usr/share/applications/MarvinView.desktop
+        rmdir --ignore-fail-on-non-empty "$(dirname "$marvinsuite_dir")"
 	;;
     unpack)
 	upstream_pack=$1
