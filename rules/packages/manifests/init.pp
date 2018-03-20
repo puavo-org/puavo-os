@@ -503,7 +503,6 @@ class packages {
     , 'ibus-gtk3'
     , 'ibus-pinyin'
     , 'ibus-table'
-    , 'iceweasel'
     , 'inputattach'
     , 'itstool'
     , 'laptop-detect'
@@ -608,7 +607,6 @@ class packages {
     , 'browser-plugin-vlc'
     , 'chromium'
     , 'epiphany-browser'
-    , 'firefox-esr'
     , 'liferea'
     , 'openjdk-8-jdk'
     , 'openjdk-8-jre'
@@ -636,6 +634,14 @@ class packages {
   #
 
   @package {
+    [ 'firefox'
+    , 'firefox-locale-de'
+    , 'firefox-locale-en'
+    , 'firefox-locale-fi'
+    , 'firefox-locale-fr'
+    , 'firefox-locale-sv' ]:
+      tag => [ 'tag_web', 'tag_ubuntu', ];
+
     [ 'ttf-ubuntu-font-family' ]:
       tag => [ 'tag_fonts', 'tag_ubuntu', ];
 

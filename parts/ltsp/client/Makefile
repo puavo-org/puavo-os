@@ -86,8 +86,9 @@ install : installdirs
 		xsessions/*
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
-		puavo-pulseaudio-setup \
+		puavo-pulseaudio-get-puavoconf \
 		puavo-pulseaudio-list \
+		puavo-pulseaudio-setup \
 		puavo-remote-assistance-applet \
 		puavo-rest-request
 

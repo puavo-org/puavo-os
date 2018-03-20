@@ -14,7 +14,8 @@ else
 fi
 
 if [ "$(puavo-conf puavo.webmenu.feedback.enabled)" = 'true' ]; then
-  export WM_FEEDBACK_ACTIVE=true
+  # XXX Enable back again once we resolve issues.
+  : # export WM_FEEDBACK_ACTIVE=true
 fi
 
 if [ "$(puavo-conf puavo.webmenu.webkiosk)" = 'true' ]; then

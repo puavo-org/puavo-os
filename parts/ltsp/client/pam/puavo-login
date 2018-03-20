@@ -154,7 +154,7 @@ get_puavo_session() {
     # If we have previous session data and we can expect is has not changed,
     # keep the fetch timeout very short because usually any session data
     # we have is good enough.
-    if !$request_authoritative && [ -s "${PUAVO_SESSION_FILE}" ]; then
+    if ! $request_authoritative && [ -s "${PUAVO_SESSION_FILE}" ]; then
         session_fetch_timeout=4
     fi
   fi
