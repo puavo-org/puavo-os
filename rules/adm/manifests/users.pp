@@ -36,22 +36,14 @@ class adm::users {
       sshkey_type => 'rsa',
       uid         => 1008;
 
-    # 1009-1013 were reserved before
-
-    'adm-toinonen':
-      sshkey      => 'AAAAB3NzaC1yc2EAAAADAQABAAACAQDdHKONM33p5tP9/UPBk22sgVN53iAlvh4YEpeDm/yAXvIz3mqB2+P7NP8sejiEWPWwW4kzqZUD0B3fVeq8ighZ3WP767m1iS+3s9pc95IiI0M/Owm3pgBW0QzaJId4Kl3O0I42moTiDZ+7d26zJC9fFGCzFw2Til+7fFUOPjtfWatWTNvYdIzYJQRx+zdObaJ5CfegohTPyRrSjtPgH/V2Lh6dVMqKjZXm18dwxM6pS464oedJrFXcWHg8mNWGP2Ver/BX/d2oQYi846ur1ElZSgcZqZWgewBE1aQ0x0a4MsPM2eOg9ioSslDTyfV8dg5ZhppFqLQQ7o/eUlu9m5IyZHQ3rtqJSkZic4tVj9s9e6YEcR7iXBRtb7gVrA2ZpQ38c6RmP9jXDBjb3UqXdQP8SuqlCtQGC3ZRnasd3YnK2oX1L+WL67pO0LGbMRaFvnmjcQ81JxCQZg845V0yYneWlyJlu341sy1O9ysuzJKDDUD5yNVEK+ry2mQgdxGcSIjxD2Fp7DNFfdMqu5XxfzPDecTqfhua96gTQc3V1Dnp3JAVTMoPMy0O6lUksAf1PlYdlvWW8c0XbIMnqPxTz19JQ1uJXOj4UkQ6Av4w+igQcxoxVK4+mxe1rAF6v9bZDMZAOX70FWqINx7LKaWQVLw/CsxE9iqekTUoR/qvt8Pqgw==',
-      sshkey_type => 'rsa',
-      uid         => 1014;
+    # 1009-1014 were reserved before
 
     'adm-jarmo':
       sshkey      => 'AAAAB3NzaC1yc2EAAAADAQABAAABAQCutK/dYF6XwVwW7e5d5ZJhGPZq4uvYyqGldFzstMGj/CkSZNVTwGwpTvvEMAU68I926kGXHiImVq30rFbac/U5cVg7SGsE726XJfN8a2+ayE9pCX6QvEGD0pJmdeIFTTFtDVuI+v0M5OdLX1eyyUX0g0bpw2DWl5J7jUufxKd1vh5zWuyaRy7F4uFAP2Jd2kkvuuB7rbzEOmwtkw7+cjm8U3TH78TOrBz1sW2DlOS8ih93wSQkRsCpWOZrSwA1nYr1TQff0k50iFR8wUqyuNB9YtS1tOlQsRGLH5S2fnBbzMmYtyU5yiFFikxuFSH0gaijJNk6EMAeQM17GYQdFQVr',
       sshkey_type => 'rsa',
       uid         => 1015;
 
-    'adm-jpitkanen':
-      sshkey      => 'AAAAB3NzaC1yc2EAAAADAQABAAABAQDk2SgYALJj3MhyxLLfDVwkWhXTdKEzA8Q56zmqlUar7n82n20F/qskwuaysWC+BtGTFLDr6RyhDkqV+6HOQ8sqb08L4LJt0Im0Z0IGVtdtQ5Q+s+RBvkp2WAlpmyM6l+l5ZTO6wwnXGUZlPzTuLyilf5ynR5+RseqzkgivPEoP9ionhFcZjqv9ByPrfnB2lliePa8EA9v+HVvUZlEqJAI781boLi7kQKIQdGKipqhLwvaL6D+DtbJT4T/oQzL8LxjbPi6ldGCLXVxO1+ShgU67aQh3Ez/WniwXddZbXni0glVpknEivX1wsoc5DRJ7tfIAG7PbOiJgHzmjAocQdC2l',
-      sshkey_type => 'rsa',
-      uid         => 1016;
+    # 1016 was reserved before
 
     'adm-mlinna':
       sshkey      => 'AAAAB3NzaC1yc2EAAAADAQABAAABAQCwgOoKY1b+5nYiboF/nbGP7EzidpYAnv37mqshT022XRm2ZLYsM72J3pxGprQiGEvAufe5Kjn60SLnus3W2rYF6NRA9TkNuslh7dypZltAg4tCgLyFkJD6q0vctl2w1Vbwqnu6w603yU6gVBqWSO3PC7CkcfEzzp06riKmCGl+nhJ6gjHvYwZC4WVNT9/45n/lE20QLuzLgD60Rx0UIXNKgImpl5QCjdUI4nLf786Gc63J51ptPX9fL2U7VSJTJwEUlXD84bO8bVwOOU40/iZBCo5B9TL/syEunq2bqfxoha0PaYi8oSXx5JZf3OCmRUf//1C1kcHxrUbW/vVTcJgF',
