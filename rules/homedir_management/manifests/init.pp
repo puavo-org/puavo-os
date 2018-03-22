@@ -12,16 +12,15 @@ class homedir_management {
     '/usr/local/bin/puavo-report-about-homedir-cleanups':
       mode   => '0755',
       source => 'puppet:///modules/homedir_management/puavo-report-about-homedir-cleanups';
+
+    '/usr/local/sbin/puavo-cleanup-homedirs':
+      mode    => '0755',
+      require => Puavo_conf::Definition['puavo-admin-cleanup-homedirs.json'],
+      source  => 'puppet:///modules/homedir_management/puavo-cleanup-homedirs';
   }
 
   ::puavo_conf::definition {
     'puavo-admin-cleanup-homedirs.json':
       source => 'puppet:///modules/homedir_management/puavo-admin-cleanup-homedirs.json';
-  }
-
-  ::puavo_conf::script {
-    'cleanup_homedirs':
-      require => Puavo_conf::Definition['puavo-admin-cleanup-homedirs.json'],
-      source  => 'puppet:///modules/homedir_management/cleanup_homedirs';
   }
 }
