@@ -4,6 +4,14 @@ class homedir_management {
   file {
     '/etc/X11/Xsession.d/49puavo-touch-homedir':
       source => 'puppet:///modules/homedir_management/49puavo-touch-homedir';
+
+    '/etc/xdg/autostart/puavo-report-about-homedir-cleanups.desktop':
+      require => File['/usr/local/bin/puavo-report-about-homedir-cleanups'],
+      source  => 'puppet:///modules/homedir_management/puavo-report-about-homedir-cleanups.desktop';
+
+    '/usr/local/bin/puavo-report-about-homedir-cleanups':
+      mode   => '0755',
+      source => 'puppet:///modules/homedir_management/puavo-report-about-homedir-cleanups';
   }
 
   ::puavo_conf::definition {
