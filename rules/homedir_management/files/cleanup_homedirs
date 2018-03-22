@@ -1,0 +1,45 @@
+#!/bin/sh
+
+set -eu
+
+cleanup_mode=$(puavo-conf puavo.admin.cleanup_homedirs.mode)
+
+if [ "$cleanup_mode" != 'remove-old-to-ensure-free-space' ]; then
+  exit 0
+fi
+
+freespace_min=$(puavo-conf puavo.admin.cleanup_homedirs.freespace_min)
+
+if ! echo "$freespace_min" | grep -Eqx '[0-9]+'; then
+  echo 'puavo.admin.cleanup_homedirs.freespace_min is not a number' >&2
+  exit 1
+fi
+
+get_freespace_amount() {
+  stat -f -c '%S * %a' /home | bc -l
+}
+
+lookup_oldest_file() {
+  find /home ! -type l -maxdepth 1 -mindepth 1 -printf '%T@ %p\0' \
+    | sort -nz | grep -zom 1 '.*' | sed 's/[^ ]* //'
+}
+
+while true; do
+  freespace_amount=$(get_freespace_amount)
+  echo "/home has ${freespace_amount} bytes of free space, expecting ${freespace_min} bytes"
+  if [ "$(get_freespace_amount)" -ge "$freespace_min" ]; then
+    echo '/home has enough free space'
+    break
+  fi
+
+  oldest_file=$(lookup_oldest_file)
+  if [ -z "$oldest_file" ]; then
+    echo 'oldest file could not be found, perhaps there are no files under /home?'
+    break
+  fi
+
+  echo "not enough free space on /home, removing ${oldest_file}: last modified on $(stat -c %y "$oldest_file" || true)"
+  rm -rf "$oldest_file"
+done
+
+exit 0

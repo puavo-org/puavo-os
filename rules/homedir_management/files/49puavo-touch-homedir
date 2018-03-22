@@ -1,0 +1,3 @@
+# We touch $HOME so that /etc/puavo-conf/scripts/cleanup_homedirs would work
+# properly irrespective of the desktop environment.
+touch "$HOME"

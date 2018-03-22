@@ -9,6 +9,7 @@ class image::bundle::desktop {
   include ::fontconfig
   include ::gnome_terminal
   include ::graphics_drivers
+  include ::homedir_management
   include ::ibus
   include ::image::bundle::basic
   include ::kaffeine
