@@ -6,6 +6,10 @@ set -eu
 # XXX puavo-ltsp/bootserver/sbin/puavo-bootserver-make-homedir,
 # XXX unify these if possible
 
+if [ "${PAM_TYPE:-}" != 'open_session' ]; then
+  exit 0
+fi
+
 logmsg() {
   logger -t puavo-manage-homedir "$@"
 }
