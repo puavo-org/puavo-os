@@ -94,8 +94,8 @@ if [ ! -d "$user_homedir" ]; then
   fi
 fi
 
-if [ -x /usr/local/sbin/puavo-cleanup-homedirs ]; then
-  /usr/local/sbin/puavo-cleanup-homedirs || true
+if [ -x /usr/local/sbin/puavo-cleanup-homedirs-to-ensure-free-space ]; then
+  /usr/local/sbin/puavo-cleanup-homedirs-to-ensure-free-space || true
 fi
 
 exit 0
