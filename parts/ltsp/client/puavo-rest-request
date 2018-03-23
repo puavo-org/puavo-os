@@ -5,14 +5,14 @@ set -eu
 usage() {
   cat <<EOF
 Usage:
-  puavo-rest-request [--authoritative]
+  puavo-rest-request urlpath
+                     [--authoritative]
                      [--post]
                      [--send-device-credentials]
                      [--send-device-school-dn]
                      [--send-hostname]
                      [--user-bootserver|--user-etc|--user-krb|--user-pass-credentials]
                      [--writable]
-                     urlpath
 EOF
 }
 
@@ -48,6 +48,13 @@ cleanup() { [ -n "$tmpdir" ] && rm -rf "$tmpdir"; }
 tmpdir=$(mktemp -d /tmp/puavo-rest-request.XXXXXX)
 
 trap cleanup 0 HUP INT QUIT KILL SEGV PIPE TERM
+
+urlpath=${1:-}
+if [ -z "$urlpath" ]; then
+  usage >&2
+  exit 1
+fi
+shift
 
 if ! args=$(getopt -n "$0" -o + \
   -l 'authoritative,post,send-device-credentials,send-device-school-dn,send-hostname,user-bootserver,user-etc,user-krb,user-pass-credentials,writable' \
@@ -135,13 +142,6 @@ done
 api_server="$(/usr/sbin/puavo-resolve-api-server $puavo_resolve_args)" || true
 if [ -z "$api_server" ]; then
   echo 'Could not resolve Puavo API server' >&2
-  exit 1
-fi
-
-urlpath=${1:-}
-
-if [ -z "$urlpath" ]; then
-  usage >&2
   exit 1
 fi
 
