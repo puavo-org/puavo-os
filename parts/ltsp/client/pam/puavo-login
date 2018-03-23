@@ -67,6 +67,7 @@ PAM_AUTHINFO_UNAVAIL=9
 PUAVO_SESSION_DIR="/var/lib/puavo-desktop/users/${PAM_USER}"
 PUAVO_SESSION_FILE="${PUAVO_SESSION_DIR}/puavo_session.json"
 
+EXTRAUSERS_EXPIRED_USERS_PATH='/var/lib/extrausers/expired'
 EXTRAUSERS_PASSWD_FILE_PATH='/var/lib/extrausers/passwd'
 EXTRAUSERS_GROUP_FILE_PATH='/var/lib/extrausers/group'
 FIRSTLOGIN_MARKER_PATH='/run/puavo/first_login_on_host'
@@ -205,6 +206,27 @@ get_puavo_session() {
   # If we have a puavo-session file, we have a success
   # (even if the file is old).
   return 0
+}
+
+# XXX is this a descriptive function name?
+expire_removed_users() {
+  # XXX flocking "$EXTRAUSERS_EXPIRED_USERS_PATH"
+
+  if [ ! -s "$EXTRAUSERS_EXPIRED_USERS_PATH" ]; then
+    # nothing to expire
+    return 0
+  fi
+
+  user_expiration_status=0
+  for expired_username in $(cat "$EXTRAUSERS_EXPIRED_USERS_PATH" || user_expiration_status=1); do
+    extrausers_maybe_remove_user "$expired_username" || user_expiration_status=1
+  done
+
+  if [ "$user_expiration_status" -eq 0 ]; then
+    cat /dev/null > "$EXTRAUSERS_EXPIRED_USERS_PATH" || return 1
+  fi
+
+  return $user_expiration_status
 }
 
 handle_external_login() {
@@ -736,6 +758,9 @@ fi
 
 if [ "$mode" = 'immediate' ]; then
   rm -f "$FIRSTLOGIN_MARKER_PATH"
+
+  # expire removed users at this stage
+  expire_removed_users || true
 
   # External login does not determine the login outcome directly at all,
   # instead it possibly affects Puavo database contents with user information.

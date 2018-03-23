@@ -1,0 +1,105 @@
+#!/bin/sh
+
+set -eu
+
+logmsg() {
+  logger -t puavo-cleanup-old-users "$@"
+}
+
+get_current_system_uids() {
+  {
+    getent passwd | awk -F: '$3 >= 10000 && $1 != "nobody" { print $3 }'
+    find /home -mindepth 1 -maxdepth 1 -printf "%U\n"
+  } \
+  | awk '$1 >= 10000' \
+  | sort -nu
+}
+
+get_organisation_uids() {
+  if ! response=$(/usr/bin/puavo-rest-request v3/users --user-etc \
+                    -- --get --data-urlencode attributes=uid_number); then
+    echo 'puavo-rest-request v3/users to get UIDs in organisation failed' >&2
+    return 1
+  fi
+
+  parsed_response=$(echo "$response" | jq -r '.[] | .uid_number')
+
+  printf %s "$parsed_response" \
+    | awk '
+        BEGIN { found_valid_uids = 0 }
+        !/^[0-9]+$/ && $0 >= 10000 {
+          print $0, "is not a valid Puavo uid number" > "/dev/stderr"
+          exit(1)
+        }
+        { print; found_valid_uids = 1 }
+        END {
+          # Protect against not getting any output...
+          # it appears as if all users have been removed from the organisation.
+          if (!found_valid_uids) {
+            print "no valid uid numbers were found" > "/dev/stderr"
+            exit(1)
+          }
+        }
+      ' \
+    | sort -nu
+}
+
+if ! organisation_uids=$(get_organisation_uids); then
+  echo 'Could not get a list of organisation uids' >&2
+  exit 1
+fi
+
+current_system_uids=$(get_current_system_uids)
+
+remove_uids_list=''
+remove_usernames_list=''
+
+for sys_uid in $current_system_uids; do
+  if printf %s "$organisation_uids" | grep -Fqx "$sys_uid"; then
+    # system uid found in organisation uids
+    continue
+  fi
+
+  remove_uids_list="${remove_uids_list} ${sys_uid}"
+done
+
+# XXX 365 days should be configurable
+daylimit_for_removals=365
+
+for uid_to_remove in $remove_uids_list; do
+  echo "removing home directory from user $uid_to_remove, but only if no changes have occurred during the last ${daylimit_for_removals} days:"
+  find /home -maxdepth 1 -mindepth 1 -ctime "+${daylimit_for_removals}" -user "$uid_to_remove" -exec rm -rf \{} \;
+
+  possible_homedirs="$(find /home -maxdepth 1 -mindepth 1 -user "$uid_to_remove" || true)"
+  if [ -n "$possible_homedirs" ]; then
+    # if homedir still exists, do not cleanup the user any further
+    : # continue
+  fi
+
+  username=$(id -nu "$uid_to_remove" || true)
+  if [ -z "$username" ]; then
+    # XXX can't do no more
+    continue
+  fi
+
+  rm -rf "/var/lib/puavo-desktop/users/${username}"
+
+  find /etc/NetworkManager/system-connections -mindepth 1 -maxdepth 1 -type f -print0 \
+    | xargs -0 --no-run-if-empty awk -v username="$username" '
+        BEGIN { FS = "="; ORS = "\0" }
+        $1 == "permissions" {
+          split($2, userlist, /;/)
+          for (i in userlist) {
+            if (userlist[i] == ("user:" username ":") {
+              print FILENAME
+            }
+          }
+        }
+      ' \
+    | xargs -0 rm -f
+
+  remove_usernames_list="${remove_usernames_list} ${username}"
+done
+
+# XXX flocking... puavo-login will take care of the rest
+printf %s "$remove_usernames_list" > /var/lib/extrausers/expired
