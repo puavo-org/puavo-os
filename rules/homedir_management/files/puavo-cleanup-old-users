@@ -6,11 +6,11 @@ logmsg() {
   logger -t puavo-cleanup-old-users "$@" || true
 }
 
-EXTRAUSERS_EXPIRED_USERS_PATH='/var/lib/extrausers/expired'
+EXTRAUSERS_USERS_TO_REMOVE_PATH='/var/lib/extrausers/users_to_remove'
 
 if [ "$(puavo-conf puavo.admin.personally_administered)" = 'true' \
      -o "$(puavo-conf puavo.admin.cleanup.remove_old_users)" != 'true' ]; then
-  rm -f "$EXTRAUSERS_EXPIRED_USERS_PATH"
+  rm -f "$EXTRAUSERS_USERS_TO_REMOVE_PATH"
   exit 0
 fi
 
@@ -157,11 +157,11 @@ done
 
 if [ -n "$remove_usernames_list" ]; then
   logmsg -p user.notice \
-         "putting users '${remove_usernames_list}' to ${EXTRAUSERS_EXPIRED_USERS_PATH} for puavo-login to remove"
+         "putting users '${remove_usernames_list}' to ${EXTRAUSERS_USERS_TO_REMOVE_PATH} for puavo-login to remove"
   # Update atomically because puavo-login might be checking this out.
   #
-  printf %s "$remove_usernames_list" > "${EXTRAUSERS_EXPIRED_USERS_PATH}.tmp"
-  mv "${EXTRAUSERS_EXPIRED_USERS_PATH}.tmp" "$EXTRAUSERS_EXPIRED_USERS_PATH"
+  printf %s "$remove_usernames_list" > "${EXTRAUSERS_USERS_TO_REMOVE_PATH}.tmp"
+  mv "${EXTRAUSERS_USERS_TO_REMOVE_PATH}.tmp" "$EXTRAUSERS_USERS_TO_REMOVE_PATH"
 fi
 
 if [ "$exitstatus" -ne 0 ]; then
