@@ -7,11 +7,12 @@ logmsg() {
 }
 
 get_current_system_uids() {
+  # 65534 is "nobody"-user
   {
-    getent passwd | awk -F: '$3 >= 10000 && $1 != "nobody" { print $3 }'
+    getent passwd | awk -F: '$3 >= 10000 { print $3 }'
     find /home -mindepth 1 -maxdepth 1 -printf "%U\n"
   } \
-  | awk '$1 >= 10000' \
+  | awk '$1 >= 10000 && $1 != 65534' \
   | sort -nu
 }
 
@@ -27,7 +28,7 @@ get_organisation_uids() {
   printf %s "$parsed_response" \
     | awk '
         BEGIN { found_valid_uids = 0 }
-        !/^[0-9]+$/ && $0 >= 10000 {
+        !/^[0-9]+$/ || $0 < 10000 || $0 == 65534 {
           print $0, "is not a valid Puavo uid number" > "/dev/stderr"
           exit(1)
         }
