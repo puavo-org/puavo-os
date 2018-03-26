@@ -23,26 +23,38 @@ get_organisation_uids() {
     return 1
   fi
 
-  parsed_response=$(echo "$response" | jq -r '.[] | .uid_number')
+  if ! parsed_response=$(echo "$response" | jq -r '.[] | .uid_number'); then
+    echo 'JSON parsing of organisation uids failed' >&2
+    return 1
+  fi
 
-  printf %s "$parsed_response" \
-    | awk '
-        BEGIN { found_valid_uids = 0 }
-        !/^[0-9]+$/ || $0 < 10000 || $0 == 65534 {
-          print $0, "is not a valid Puavo uid number" > "/dev/stderr"
-          exit(1)
-        }
-        { print; found_valid_uids = 1 }
-        END {
-          # Protect against not getting any output...
-          # it appears as if all users have been removed from the organisation.
-          if (!found_valid_uids) {
-            print "no valid uid numbers were found" > "/dev/stderr"
+  if ! unsorted_organisation_uids=$(
+    printf %s "$parsed_response" \
+      | awk '
+          BEGIN { found_valid_uids = 0 }
+          !/^[0-9]+$/ || $0 < 10000 || $0 == 65534 {
+            print $0, "is not a valid Puavo uid number" > "/dev/stderr"
             exit(1)
           }
-        }
-      ' \
-    | sort -nu
+          { print; found_valid_uids = 1 }
+          END {
+            # Protect against not getting any output...
+            # it appears as if all users have been removed
+            # from the organisation.
+            if (!found_valid_uids) {
+              print "no valid uid numbers were found" > "/dev/stderr"
+              exit(1)
+            }
+          }
+        '); then
+    echo 'awk parsing of organisation uids failed' >&2
+    return 1
+  fi
+
+  if ! echo "$unsorted_organisation_uids" | sort -nu; then
+    echo 'sorting and uniqueing of organisation uids failed' >&2
+    return 1
+  fi
 }
 
 if ! organisation_uids=$(get_organisation_uids); then
