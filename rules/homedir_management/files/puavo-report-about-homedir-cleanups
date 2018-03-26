@@ -8,6 +8,10 @@ if [ "$(puavo-conf puavo.admin.homedirs.cleanup.ensure_free_space)" != 'true' ];
   exit 0
 fi
 
+if [ "$(puavo-conf puavo.admin.personally_administered)" = 'true' ]; then
+  exit 0
+fi
+
 case "$LANG" in
   de*)
     report='Die Dateien auf dem Computer werden möglicherweise automatisch gelöscht, da der Computer nur über wenig Speicherplatz verfügt.'
