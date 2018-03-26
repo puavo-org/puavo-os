@@ -3,7 +3,7 @@
 set -eu
 
 logmsg() {
-  logger -t puavo-cleanup-old-users "$@" || true
+  logger -s -t puavo-cleanup-old-users "$@" || true
 }
 
 EXTRAUSERS_USERS_TO_REMOVE_PATH='/var/lib/extrausers/.users_to_remove'
@@ -139,6 +139,8 @@ for uid_to_remove in $remove_uids_list; do
     continue
   fi
 
+  logmsg -p user.info \
+         "adding user ${username} (${uid_to_remove}) to user removal list"
   if [ -n "$remove_usernames_list" ]; then
     remove_usernames_list="${remove_usernames_list} ${username}"
   else
