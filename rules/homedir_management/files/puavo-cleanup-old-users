@@ -97,15 +97,25 @@ for sys_uid in $current_system_uids; do
 done
 
 for uid_to_remove in $remove_uids_list; do
-  if ! removal_messages=$(LANG=C find /home -maxdepth 1 -mindepth 1 -mtime "+${daylimit_for_removals}" -user "$uid_to_remove" -exec rm -rvf \{} \;); then
-    logmsg -p user.err 'an error occurred when removing old home directories'
+  if ! directories_to_remove=$(find /home -maxdepth 1 -mindepth 1 \
+      -mtime "+${daylimit_for_removals}" -user "$uid_to_remove"); then
+    logmsg -p user.err 'an error occurred when looking up directories to remove'
     exitstatus=1
     continue
   fi
 
-  if [ -n "$removal_messages" ]; then
-    logmsg -p user.notice \
-           "removed directories of user ${uid_to_remove}:\n${removal_messages}"
+  if [ -n "$directories_to_remove" ]; then
+    if ! find /home -maxdepth 1 -mindepth 1 \
+           -mtime "+${daylimit_for_removals}" \
+           -user "$uid_to_remove" -exec rm -rf \{} \; ; then
+      logmsg -p user.err 'an error occurred when removing old home directories'
+      exitstatus=1
+      continue
+    fi
+
+    log_message="removed directories of user ${uid_to_remove}:"
+    log_message="${log_message} $(echo "$directories_to_remove" | tr '\n' ' ')"
+    logmsg -p user.notice "$log_message"
   fi
 
   if ! possible_homedirs="$(find /home -maxdepth 1 -mindepth 1 \
