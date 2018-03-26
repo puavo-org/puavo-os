@@ -4,5 +4,11 @@
   },
   "puavo.admin.homedirs.cleanup.freespace_min": {
     "default": "1073741824"
+  },
+  "puavo.admin.homedirs.cleanup.old_user_homedir_daylimit": {
+    "default": "365"
+  },
+  "puavo.admin.homedirs.cleanup.remove_old_users": {
+    "default": "false"
   }
 }

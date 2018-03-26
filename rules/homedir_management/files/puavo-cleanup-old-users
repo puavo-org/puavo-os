@@ -2,18 +2,28 @@
 
 set -eu
 
+logmsg() {
+  logger -t puavo-cleanup-old-users "$@" || true
+}
+
 EXTRAUSERS_EXPIRED_USERS_PATH='/var/lib/extrausers/expired'
 
-if [ "$(puavo-conf puavo.admin.personally_administered)" = 'true' ]; then
+if [ "$(puavo-conf puavo.admin.personally_administered)" = 'true' \
+     -o "$(puavo-conf puavo.admin.homedirs.cleanup.remove_old_users)" != 'true' ]; then
   rm -f "$EXTRAUSERS_EXPIRED_USERS_PATH"
   exit 0
 fi
 
-exitstatus=0
+daylimit_for_removals=$(puavo-conf puavo.admin.homedirs.cleanup.old_user_homedir_daylimit)
+if ! printf %s "$daylimit_for_removals" | grep -Eqx '[0-9]+'; then
+  logmsg -p user.err \
+    'puavo.admin.homedirs.cleanup.old_user_homedir_daylimit is not a number'
+  exit 1
+fi
 
-logmsg() {
-  logger -t puavo-cleanup-old-users "$@" || true
-}
+logmsg -p user.info 'puavo-cleanup-old-users is active'
+
+exitstatus=0
 
 get_current_system_uids() {
   # 65534 is "nobody"-user
@@ -85,9 +95,6 @@ for sys_uid in $current_system_uids; do
 
   remove_uids_list="${remove_uids_list} ${sys_uid}"
 done
-
-# XXX 365 days should be configurable
-daylimit_for_removals=365
 
 for uid_to_remove in $remove_uids_list; do
   if ! removal_messages=$(LANG=C find /home -maxdepth 1 -mindepth 1 -ctime "+${daylimit_for_removals}" -user "$uid_to_remove" -exec rm -rvf \{} \;); then
