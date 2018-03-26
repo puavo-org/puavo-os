@@ -129,7 +129,11 @@ for uid_to_remove in $remove_uids_list; do
     continue
   fi
 
-  remove_usernames_list="${remove_usernames_list} ${username}"
+  if [ -n "$remove_usernames_list" ]; then
+    remove_usernames_list="${remove_usernames_list} ${username}"
+  else
+    remove_usernames_list="${username}"
+  fi
 
   logmsg -p user.info \
          "removing /var/lib/puavo-desktop/users/${username}"
@@ -160,7 +164,7 @@ if [ -n "$remove_usernames_list" ]; then
          "putting users '${remove_usernames_list}' to ${EXTRAUSERS_USERS_TO_REMOVE_PATH} for puavo-login to remove"
   # Update atomically because puavo-login might be checking this out.
   #
-  printf %s "$remove_usernames_list" > "${EXTRAUSERS_USERS_TO_REMOVE_PATH}.tmp"
+  printf "%s\n" "$remove_usernames_list" > "${EXTRAUSERS_USERS_TO_REMOVE_PATH}.tmp"
   mv "${EXTRAUSERS_USERS_TO_REMOVE_PATH}.tmp" "$EXTRAUSERS_USERS_TO_REMOVE_PATH"
 fi
 
