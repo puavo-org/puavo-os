@@ -138,7 +138,7 @@ for uid_to_remove in $remove_uids_list; do
   logmsg -p user.info \
          "removing user ${username} network connections from under /etc/NetworkManager/system-connections"
   {
-    find /etc/NetworkManager/system-connections -mindepth 1 -maxdepth 1
+    find /etc/NetworkManager/system-connections -mindepth 1 -maxdepth 1 \
       -type f -print0 \
         | xargs -0 --no-run-if-empty awk -v username="$username" '
             BEGIN { FS = "="; ORS = "\0" }
