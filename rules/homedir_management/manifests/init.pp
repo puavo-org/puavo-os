@@ -2,6 +2,12 @@ class homedir_management {
   include ::puavo_conf
 
   file {
+    # XXX this should be moved to setup_cron after bootserver changes
+    # XXX have been merged to master
+    '/etc/cron.daily/puavo-cleanup-old-users':
+      mode   => '0755',
+      source => 'puppet:///modules/homedir_management/puavo-cleanup-old-users.cron';
+
     '/etc/X11/Xsession.d/49puavo-touch-homedir':
       source => 'puppet:///modules/homedir_management/49puavo-touch-homedir';
 
@@ -17,6 +23,11 @@ class homedir_management {
       mode    => '0755',
       require => Puavo_conf::Definition['puavo-admin-cleanup.json'],
       source  => 'puppet:///modules/homedir_management/puavo-cleanup-homedirs-to-ensure-free-space';
+
+    '/usr/local/sbin/puavo-cleanup-old-users':
+      mode    => '0755',
+      require => Puavo_conf::Definition['puavo-admin-cleanup.json'],
+      source  => 'puppet:///modules/homedir_management/puavo-cleanup-old-users';
   }
 
   ::puavo_conf::definition {
