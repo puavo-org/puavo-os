@@ -15,12 +15,12 @@ class homedir_management {
 
     '/usr/local/sbin/puavo-cleanup-homedirs-to-ensure-free-space':
       mode    => '0755',
-      require => Puavo_conf::Definition['puavo-admin-cleanup-homedirs.json'],
+      require => Puavo_conf::Definition['puavo-admin-cleanup.json'],
       source  => 'puppet:///modules/homedir_management/puavo-cleanup-homedirs-to-ensure-free-space';
   }
 
   ::puavo_conf::definition {
-    'puavo-admin-cleanup-homedirs.json':
-      source => 'puppet:///modules/homedir_management/puavo-admin-cleanup-homedirs.json';
+    'puavo-admin-cleanup.json':
+      source => 'puppet:///modules/homedir_management/puavo-admin-cleanup.json';
   }
 }

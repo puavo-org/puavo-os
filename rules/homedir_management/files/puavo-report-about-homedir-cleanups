@@ -4,7 +4,7 @@ set -eu
 
 [ -n "${GUEST_SESSION:-}" ] && exit 0
 
-if [ "$(puavo-conf puavo.admin.homedirs.cleanup.ensure_free_space)" != 'true' ]; then
+if [ "$(puavo-conf puavo.admin.cleanup.homedirs.ensure_free_space)" != 'true' ]; then
   exit 0
 fi
 
