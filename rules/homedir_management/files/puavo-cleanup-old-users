@@ -4,6 +4,11 @@ set -eu
 
 EXTRAUSERS_EXPIRED_USERS_PATH='/var/lib/extrausers/expired'
 
+if [ "$(puavo-conf puavo.admin.personally_administered)" = 'true' ]; then
+  rm -f "$EXTRAUSERS_EXPIRED_USERS_PATH"
+  exit 0
+fi
+
 exitstatus=0
 
 logmsg() {
