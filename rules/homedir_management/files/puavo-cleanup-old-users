@@ -9,15 +9,15 @@ logmsg() {
 EXTRAUSERS_EXPIRED_USERS_PATH='/var/lib/extrausers/expired'
 
 if [ "$(puavo-conf puavo.admin.personally_administered)" = 'true' \
-     -o "$(puavo-conf puavo.admin.homedirs.cleanup.remove_old_users)" != 'true' ]; then
+     -o "$(puavo-conf puavo.admin.cleanup.remove_old_users)" != 'true' ]; then
   rm -f "$EXTRAUSERS_EXPIRED_USERS_PATH"
   exit 0
 fi
 
-daylimit_for_removals=$(puavo-conf puavo.admin.homedirs.cleanup.old_user_homedir_daylimit)
+daylimit_for_removals=$(puavo-conf puavo.admin.cleanup.old_user_homedir_daylimit)
 if ! printf %s "$daylimit_for_removals" | grep -Eqx '[0-9]+'; then
   logmsg -p user.err \
-    'puavo.admin.homedirs.cleanup.old_user_homedir_daylimit is not a number'
+    'puavo.admin.cleanup.old_user_homedir_daylimit is not a number'
   exit 1
 fi
 
