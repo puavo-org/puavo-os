@@ -142,8 +142,7 @@ class packages {
     , 'python-appindicator'
     , 'python-gtk2'
     , 'python-notify'
-    , 'shared-mime-info'
-    , 'xul-ext-mozvoikko' ]:
+    , 'shared-mime-info' ]:
       tag => [ 'tag_desktop', 'tag_debian', ];
 
     [ 'acct'
