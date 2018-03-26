@@ -6,7 +6,7 @@ logmsg() {
   logger -t puavo-cleanup-old-users "$@" || true
 }
 
-EXTRAUSERS_USERS_TO_REMOVE_PATH='/var/lib/extrausers/users_to_remove'
+EXTRAUSERS_USERS_TO_REMOVE_PATH='/var/lib/extrausers/.users_to_remove'
 
 if [ "$(puavo-conf puavo.admin.personally_administered)" = 'true' \
      -o "$(puavo-conf puavo.admin.cleanup.remove_old_users)" != 'true' ]; then

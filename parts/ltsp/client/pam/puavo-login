@@ -69,7 +69,7 @@ PUAVO_SESSION_FILE="${PUAVO_SESSION_DIR}/puavo_session.json"
 
 EXTRAUSERS_PASSWD_FILE_PATH='/var/lib/extrausers/passwd'
 EXTRAUSERS_GROUP_FILE_PATH='/var/lib/extrausers/group'
-EXTRAUSERS_USERS_TO_REMOVE_PATH='/var/lib/extrausers/users_to_remove'
+EXTRAUSERS_USERS_TO_REMOVE_PATH='/var/lib/extrausers/.users_to_remove'
 FIRSTLOGIN_MARKER_PATH='/run/puavo/first_login_on_host'
 
 USER_MINIMUM_UID_GID=10000
