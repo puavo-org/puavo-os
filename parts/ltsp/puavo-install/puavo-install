@@ -242,6 +242,8 @@ is_preinstalled() { [ "$1" = 'preinstalled' ]; }
 setup_preinstalled_localbootdevice() {
   puavo_hosttype=$1
 
+  update_configuration_retstatus=0
+
   if ! [ "$puavo_hosttype" = 'laptop' \
            -o "$puavo_hosttype" = 'wirelessaccesspoint' ]; then
     echo "Setting up preinstalled '$puavo_hosttype' is not supported" >&2
@@ -249,15 +251,20 @@ setup_preinstalled_localbootdevice() {
   fi
 
   setup_state
-  update_configuration
+
+  # some failures of update_configuration are inconsequential and can be
+  # fixed after reboot
+  update_configuration || update_configuration_retstatus=1
 
   # If host was preinstalled, grub will boot the host as 'preinstalled' until
   # we do this:
-  puavo-install-grub --hosttype "$puavo_hosttype" --only-update-config
+  puavo-install-grub --hosttype "$puavo_hosttype" --only-update-config \
+    || update_configuration_retstatus=1
 
   # From now on the host will boot as a fully installed host.
+  rm -f /images/puavo_preinstalled || update_configuration_retstatus=1
 
-  rm -f /images/puavo_preinstalled
+  return $update_configuration_retstatus
 }
 
 setup_state() {
