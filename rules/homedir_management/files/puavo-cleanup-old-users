@@ -2,8 +2,12 @@
 
 set -eu
 
+EXTRAUSERS_EXPIRED_USERS_PATH='/var/lib/extrausers/expired'
+
+exitstatus=0
+
 logmsg() {
-  logger -t puavo-cleanup-old-users "$@"
+  logger -t puavo-cleanup-old-users "$@" || true
 }
 
 get_current_system_uids() {
@@ -19,12 +23,13 @@ get_current_system_uids() {
 get_organisation_uids() {
   if ! response=$(/usr/bin/puavo-rest-request v3/users --user-etc \
                     -- --get --data-urlencode attributes=uid_number); then
-    echo 'puavo-rest-request v3/users to get UIDs in organisation failed' >&2
+    logmsg -p user.err \
+           'puavo-rest-request v3/users to get UIDs in organisation failed'
     return 1
   fi
 
   if ! parsed_response=$(echo "$response" | jq -r '.[] | .uid_number'); then
-    echo 'JSON parsing of organisation uids failed' >&2
+    logmsg -p user.err 'JSON parsing of organisation uids failed'
     return 1
   fi
 
@@ -47,18 +52,18 @@ get_organisation_uids() {
             }
           }
         '); then
-    echo 'awk parsing of organisation uids failed' >&2
+    logmsg -p user.err 'awk parsing of organisation uids failed'
     return 1
   fi
 
   if ! echo "$unsorted_organisation_uids" | sort -nu; then
-    echo 'sorting and uniqueing of organisation uids failed' >&2
+    logmsg -p user.err 'sorting and uniqueing of organisation uids failed'
     return 1
   fi
 }
 
 if ! organisation_uids=$(get_organisation_uids); then
-  echo 'Could not get a list of organisation uids' >&2
+  logmsg -p user.err 'could not get a list of organisation uids'
   exit 1
 fi
 
@@ -68,7 +73,7 @@ remove_uids_list=''
 remove_usernames_list=''
 
 for sys_uid in $current_system_uids; do
-  if printf %s "$organisation_uids" | grep -Fqx "$sys_uid"; then
+  if echo "$organisation_uids" | grep -Fqx "$sys_uid"; then
     # system uid found in organisation uids
     continue
   fi
@@ -80,39 +85,75 @@ done
 daylimit_for_removals=365
 
 for uid_to_remove in $remove_uids_list; do
-  echo "removing home directory from user $uid_to_remove, but only if no changes have occurred during the last ${daylimit_for_removals} days:"
-  find /home -maxdepth 1 -mindepth 1 -ctime "+${daylimit_for_removals}" -user "$uid_to_remove" -exec rm -rf \{} \;
-
-  possible_homedirs="$(find /home -maxdepth 1 -mindepth 1 -user "$uid_to_remove" || true)"
-  if [ -n "$possible_homedirs" ]; then
-    # if homedir still exists, do not cleanup the user any further
-    : # continue
-  fi
-
-  username=$(id -nu "$uid_to_remove" || true)
-  if [ -z "$username" ]; then
-    # XXX can't do no more
+  if ! removal_messages=$(LANG=C find /home -maxdepth 1 -mindepth 1 -ctime "+${daylimit_for_removals}" -user "$uid_to_remove" -exec rm -rvf \{} \;); then
+    logmsg -p user.err 'an error occurred when removing old home directories'
+    exitstatus=1
     continue
   fi
 
-  rm -rf "/var/lib/puavo-desktop/users/${username}"
+  if [ -n "$removal_messages" ]; then
+    logmsg -p user.notice \
+           "removed directories of user ${uid_to_remove}:\n${removal_messages}"
+  fi
 
-  find /etc/NetworkManager/system-connections -mindepth 1 -maxdepth 1 -type f -print0 \
-    | xargs -0 --no-run-if-empty awk -v username="$username" '
-        BEGIN { FS = "="; ORS = "\0" }
-        $1 == "permissions" {
-          split($2, userlist, /;/)
-          for (i in userlist) {
-            if (userlist[i] == ("user:" username ":") {
-              print FILENAME
-            }
-          }
-        }
-      ' \
-    | xargs -0 rm -f
+  if ! possible_homedirs="$(find /home -maxdepth 1 -mindepth 1 \
+    -user "$uid_to_remove")"; then
+      logmsg -p user.err 'error looking up home directories'
+      exitstatus=1
+      continue
+  fi
+
+  if [ -n "$possible_homedirs" ]; then
+    logmsg -p user.info \
+           "home directories for user ${uid_to_remove} still exist, because they have been used in the last ${daylimit_for_removals} days"
+    # if homedir still exists, do not cleanup the user any further
+    continue
+  fi
+
+  if ! username=$(id -nu "$uid_to_remove") || [ -z "$username" ]; then
+    logmsg -p user.err \
+           "looking up username for ${uid_to_remove} failed, so not doing further purge of user information"
+    exitstatus=1
+    continue
+  fi
 
   remove_usernames_list="${remove_usernames_list} ${username}"
+
+  logmsg -p user.info \
+         "removing /var/lib/puavo-desktop/users/${username}"
+  rm -rf "/var/lib/puavo-desktop/users/${username}" || exitstatus=1
+
+  logmsg -p user.info \
+         "removing user ${username} network connections from under /etc/NetworkManager/system-connections"
+  {
+    find /etc/NetworkManager/system-connections -mindepth 1 -maxdepth 1
+      -type f -print0 \
+        | xargs -0 --no-run-if-empty awk -v username="$username" '
+            BEGIN { FS = "="; ORS = "\0" }
+            $1 == "permissions" {
+              split($2, userlist, /;/)
+              for (i in userlist) {
+                if (userlist[i] == ("user:" username ":") {
+                  print FILENAME
+                }
+              }
+            }
+          ' \
+        | xargs -0 rm -f
+  } || exitstatus=1
 done
 
-# XXX flocking... puavo-login will take care of the rest
-printf %s "$remove_usernames_list" > /var/lib/extrausers/expired
+if [ -n "$remove_usernames_list" ]; then
+  logmsg -p user.notice \
+         "putting users '${remove_usernames_list}' to ${EXTRAUSERS_EXPIRED_USERS_PATH} for puavo-login to remove"
+  # Update atomically because puavo-login might be checking this out.
+  #
+  printf %s "$remove_usernames_list" > "${EXTRAUSERS_EXPIRED_USERS_PATH}.tmp"
+  mv "${EXTRAUSERS_EXPIRED_USERS_PATH}.tmp" "$EXTRAUSERS_EXPIRED_USERS_PATH"
+fi
+
+if [ "$exitstatus" -ne 0 ]; then
+  logmsg -p user.err 'there was some errors'
+fi
+
+exit $exitstatus

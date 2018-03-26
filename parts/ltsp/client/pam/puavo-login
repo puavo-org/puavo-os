@@ -210,20 +210,24 @@ get_puavo_session() {
 
 # XXX is this a descriptive function name?
 expire_removed_users() {
-  # XXX flocking "$EXTRAUSERS_EXPIRED_USERS_PATH"
-
-  if [ ! -s "$EXTRAUSERS_EXPIRED_USERS_PATH" ]; then
+  usernames_to_expire_list=$(cat "$EXTRAUSERS_EXPIRED_USERS_PATH" 2>/dev/null \
+                               || true)
+  if [ -z "$usernames_to_expire_list" ]; then
     # nothing to expire
     return 0
   fi
 
   user_expiration_status=0
-  for expired_username in $(cat "$EXTRAUSERS_EXPIRED_USERS_PATH" || user_expiration_status=1); do
-    extrausers_maybe_remove_user "$expired_username" || user_expiration_status=1
+  for expired_username in $usernames_to_expire_list; do
+    extrausers_maybe_remove_user "$expired_username" \
+      || user_expiration_status=1
   done
 
+  # We realize puavo-cleanup-old-users might have updated this since we last
+  # read this... that is okay, puavo-cleanup-old-users should eventually
+  # update it again.
   if [ "$user_expiration_status" -eq 0 ]; then
-    cat /dev/null > "$EXTRAUSERS_EXPIRED_USERS_PATH" || return 1
+    rm -f "$EXTRAUSERS_EXPIRED_USERS_PATH" || return 1
   fi
 
   return $user_expiration_status
