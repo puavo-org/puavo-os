@@ -5,14 +5,15 @@ set -eu
 usage() {
   cat <<EOF
 Usage:
-  puavo-rest-request [--authoritative]
+  puavo-rest-request urlpath
+                     [--authoritative]
                      [--post]
                      [--send-device-credentials]
                      [--send-device-school-dn]
                      [--send-hostname]
                      [--user-bootserver|--user-etc|--user-krb|--user-pass-credentials]
                      [--writable]
-                     urlpath
+                     [-- [arbitrary curl arguments]]
 EOF
 }
 
@@ -29,11 +30,11 @@ make_request() {
   # use curl instead of puavo-rest-client for efficiency reasons
 
   # no timeouts here, it is the caller's responsibility to decide on that
-  curl --cacert /etc/puavo/certs/rootca.pem       \
-       --fail                                     \
-       --show-error                               \
-       --silent                                   \
-       "$@"                                       \
+  curl --cacert /etc/puavo/certs/rootca.pem \
+       --fail                               \
+       --show-error                         \
+       --silent                             \
+       "$@"                                 \
        "$url"
 }
 
@@ -48,6 +49,13 @@ cleanup() { [ -n "$tmpdir" ] && rm -rf "$tmpdir"; }
 tmpdir=$(mktemp -d /tmp/puavo-rest-request.XXXXXX)
 
 trap cleanup 0 HUP INT QUIT KILL SEGV PIPE TERM
+
+urlpath=${1:-}
+if [ -z "$urlpath" ]; then
+  usage >&2
+  exit 1
+fi
+shift
 
 if ! args=$(getopt -n "$0" -o + \
   -l 'authoritative,post,send-device-credentials,send-device-school-dn,send-hostname,user-bootserver,user-etc,user-krb,user-pass-credentials,writable' \
@@ -132,16 +140,11 @@ while [ $# -ne 0 ]; do
   esac
 done
 
+# "$@" now has arbirary curl arguments, if any
+
 api_server="$(/usr/sbin/puavo-resolve-api-server $puavo_resolve_args)" || true
 if [ -z "$api_server" ]; then
   echo 'Could not resolve Puavo API server' >&2
-  exit 1
-fi
-
-urlpath=${1:-}
-
-if [ -z "$urlpath" ]; then
-  usage >&2
   exit 1
 fi
 
@@ -149,11 +152,11 @@ url="${api_server}/${urlpath}"
 
 case "$mode" in
   '')
-    make_request "$url" $curl_args
+    make_request "$url" $curl_args "$@"
     ;;
 
   bootserver)
-    make_request "$url" $curl_args --header 'Authorization: Bootserver'
+    make_request "$url" $curl_args --header 'Authorization: Bootserver' "$@"
     ;;
 
   etc)
@@ -172,7 +175,7 @@ case "$mode" in
     # XXX characters, which should be true with Puavo-generated device
     # XXX passwords.
     echo "--user ${device_dn}:${device_password}" \
-      | make_request "$url" $curl_args --config -
+      | make_request "$url" $curl_args --config - "$@"
     ;;
 
   krb)
@@ -180,14 +183,16 @@ case "$mode" in
                  $curl_args          \
                  --delegation always \
                  --negotiate         \
-                 --user :
+                 --user :            \
+                 "$@"
     ;;
 
   user-pass-credentials)
     printf %s "$user_password"                      \
       | make_request "$url" $curl_args              \
           --form-string "username=${user_username}" \
-          --form "password=<-"
+          --form "password=<-"                      \
+          "$@"
     ;;
 
   *)
