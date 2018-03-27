@@ -29,15 +29,22 @@ for cronjobfile in /etc/cron.d/*       \
   esac
 done
 
-# puavo_cronjobs=$(puavo-conf puavo.service.cron.cronjobs)
-puavo_cronjobs='fix-homedir-permissions,fstrim,infotv-display-control,remove-cups-jobs'
+puavo_cronjobs=$(puavo-conf puavo.service.cron.cronjobs)
 
 [ -n "$puavo_cronjobs" ] || exit 0
 
-cron_cond_enable() {
+cron_d_cond_enable() {
   if echo "$puavo_cronjobs" | grep -qw "$1"; then
     cat > "/etc/cron.d/${1}.tmp"
     mv "/etc/cron.d/${1}.tmp" "/etc/cron.d/${1}"
+  fi
+}
+
+cron_daily_cond_enable() {
+  if echo "$puavo_cronjobs" | grep -qw "$1"; then
+    cat > "/etc/cron.daily/${1}.tmp"
+    chmod 755 "/etc/cron.daily/${1}.tmp"
+    mv "/etc/cron.daily/${1}.tmp" "/etc/cron.daily/${1}"
   fi
 }
 
@@ -76,31 +83,38 @@ EOF
 # Setup cronjobs that we need.
 #
 
-cron_cond_enable fix-homedir-permissions <<'EOF'
+cron_d_cond_enable fix-homedir-permissions <<'EOF'
 # Fix home directory permissions every morning at 06:13
 13 06 * * * root /usr/local/sbin/puavo-fix-homedir-permissions >/dev/null
 EOF
 
 # XXX Is this still necessary?
-cron_cond_enable fstrim <<'EOF'
+cron_d_cond_enable fstrim <<'EOF'
 # Trim SSD-cached /home every night at 03:00
 PATH=/bin:/sbin
 00 03 * * * root grep -q '^/dev/mapper/cache-home /home ext4' && fstrim /home >/dev/null
 EOF
 
-cron_infotv_display_control | cron_cond_enable infotv-display-control
+cron_infotv_display_control | cron_d_cond_enable infotv-display-control
 
-cron_cond_enable puavo-autopoweron <<'EOF'
+cron_d_cond_enable puavo-autopoweron <<'EOF'
 # Run wakeonlan for hosts that should be woken up.
 30 07 * * * root /usr/local/lib/puavo-autopoweron >/dev/null
 EOF
 
-cron_cond_enable puavo-update-airprint-ddns <<'EOF'
+cron_d_cond_enable puavo-update-airprint-ddns <<'EOF'
 # Update printers on DNS every fifteen minutes.
 */15 * * * * root /usr/local/sbin/puavo-update-airprint-ddns >/dev/null
 EOF
 
-cron_cond_enable remove-cups-jobs <<'EOF'
+cron_d_cond_enable remove-cups-jobs <<'EOF'
 # Remove all CUPS jobs every night at 03:00
 00 03 * * * root /usr/bin/cancel -a >/dev/null
+EOF
+
+cron_daily_cond_enable puavo-cleanup-old-users <<'EOF'
+#!/bin/sh
+
+test -x /usr/local/sbin/puavo-cleanup-old-users || exit 0
+/usr/local/sbin/puavo-cleanup-old-users
 EOF

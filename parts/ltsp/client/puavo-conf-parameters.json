@@ -42,7 +42,7 @@
     "default": "false"
   },
   "puavo.service.cron.cronjobs": {
-    "default": ""
+    "default": "puavo-cleanup-old-users"
   },
   "puavo.service.fluentd.enabled": {
     "default": "true"
