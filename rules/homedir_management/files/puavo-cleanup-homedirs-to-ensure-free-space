@@ -10,6 +10,10 @@ if [ "$(puavo-conf puavo.admin.cleanup.homedirs.ensure_free_space)" != 'true' ];
   exit 0
 fi
 
+if [ "$(puavo-conf puavo.admin.personally_administered)" = 'true' ]; then
+  exit 0
+fi
+
 logmsg -p user.notice 'activating...'
 
 freespace_min=$(puavo-conf puavo.admin.cleanup.homedirs.freespace_min)

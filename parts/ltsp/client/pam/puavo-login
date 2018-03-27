@@ -69,6 +69,7 @@ PUAVO_SESSION_FILE="${PUAVO_SESSION_DIR}/puavo_session.json"
 
 EXTRAUSERS_PASSWD_FILE_PATH='/var/lib/extrausers/passwd'
 EXTRAUSERS_GROUP_FILE_PATH='/var/lib/extrausers/group'
+EXTRAUSERS_USERS_TO_REMOVE_PATH='/var/lib/extrausers/.users_to_remove'
 FIRSTLOGIN_MARKER_PATH='/run/puavo/first_login_on_host'
 
 USER_MINIMUM_UID_GID=10000
@@ -176,7 +177,7 @@ get_puavo_session() {
   session_status=0
   session_error_msg=$(
     timeout -k 1 "$session_fetch_timeout" \
-      puavo-rest-request $rest_request_args "$@" v3/sessions 2>&1 \
+      puavo-rest-request v3/sessions $rest_request_args "$@" 2>&1 \
         > "${PUAVO_SESSION_FILE}.tmp") || session_status=$?
 
   if [ "$session_status" -eq 0 -a -s "${PUAVO_SESSION_FILE}.tmp" ]; then
@@ -207,14 +208,38 @@ get_puavo_session() {
   return 0
 }
 
+remove_users_on_removal_list() {
+  usernames_to_remove_list=$(
+    cat "$EXTRAUSERS_USERS_TO_REMOVE_PATH" 2>/dev/null || true)
+  if [ -z "$usernames_to_remove_list" ]; then
+    # no users to remove
+    return 0
+  fi
+
+  user_removal_status=0
+  for remove_this_username in $usernames_to_remove_list; do
+    extrausers_maybe_remove_user "$remove_this_username" \
+      || user_removal_status=1
+  done
+
+  # We realize puavo-cleanup-old-users might have updated this since we last
+  # read this... that is okay, puavo-cleanup-old-users should eventually
+  # update it again.
+  if [ "$user_removal_status" -eq 0 ]; then
+    rm -f "$EXTRAUSERS_USERS_TO_REMOVE_PATH" || return 1
+  fi
+
+  return $user_removal_status
+}
+
 handle_external_login() {
   [ "$(puavo-conf puavo.login.external.enabled)" = 'true' ] || return 0
 
   if extlogins=$(
     echo "$user_password" \
       | timeout -k 1 10 env USER="$PAM_USER" \
-          /usr/bin/puavo-rest-request --send-device-school-dn \
-            --user-pass-credentials --writable v3/external_login); then
+          /usr/bin/puavo-rest-request v3/external_login \
+            --send-device-school-dn --user-pass-credentials --writable); then
     external_login_status=$({ echo "$extlogins" | jq -r .status; } \
                               || echo NOSTATUS)
   else
@@ -736,6 +761,9 @@ fi
 
 if [ "$mode" = 'immediate' ]; then
   rm -f "$FIRSTLOGIN_MARKER_PATH"
+
+  # remove users to be removed at this stage
+  remove_users_on_removal_list || true
 
   # External login does not determine the login outcome directly at all,
   # instead it possibly affects Puavo database contents with user information.
