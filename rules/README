@@ -1,0 +1,212 @@
+Short explanations for puppet modules listed here (to know exactly what
+they do, you need to look inside):
+
+autopoweroff
+    Settings for autopoweroff.
+
+backgrounds
+    Some backgrounds for login screen and desktop.
+
+bigtouch
+    Gnome 3 customizations for big touchscreens.
+
+chrome
+    Do not activate the apt source for chrome, and do not do the default
+    browser check.
+
+chromium
+    Setup chromium to use flashplugin in chrome, and do not do the default
+    browser check.
+
+citrix
+    Configurations for Citrix client.
+
+console
+    Startup getty on a console device.
+
+cups
+    Configurations for cups.
+
+desktop
+    Desktop settings.
+
+devilspie
+    Special window management rules for devilspie.
+
+disable_accounts_service
+    Accounts service daemon is not needed by our system and it seriously
+    slows system down in Trusty, at login time and otherwise.  This module
+    disables it (while leaving the package intact).
+
+disable_geoclue
+    Disable Ubuntu's geoclue-stuff.
+
+disable_suspend_by_tag
+    Check out for device tag "nosuspend", and possibly block suspend.
+
+disable_suspend_on_halt
+    When on runlevel 0 (halt), do not suspend.
+
+disable_suspend_on_nbd_devices
+    Do not allow suspend when root directory is on an nbd device.
+
+disable_unclutter
+    Disable unclutter, causes problems on some hardware.
+
+disable_update_initramfs
+    Disable initramfs generation.
+
+dpkg
+    A helper module for dealing with dpkg.
+
+espon_scanner
+    Special udev- and sane-configurations for a particular Espon scanner.
+
+extra_boot_scripts
+    Extra boot scripts -implementation.
+
+firefox
+    Settings for Firefox.
+
+fontconfig
+    Additional fontconfig configurations.
+
+fuse
+    Configurations for FUSE.
+
+gdm
+    Some gdm3 configurations.
+
+gnome_shell_helper
+    Help gnome-shell with starting up.
+
+google-earth-stable
+    Settings for a particular version of Google Earth.
+
+graphics_drivers
+    Setup proprietary nvidia drivers in a such a way they can be used
+    (without breaking everything else).
+
+ibus
+    Configurations for ibus.
+
+image
+    Collections of other modules.
+
+install_hp_plugins
+    Install some HP printer firmwares/plugins through "hp-plugin".
+    Consider the EULA before enabling this.
+
+kaffeine
+    Some tuning for kaffeine-dvd.desktop for watching DVDs.
+
+kernels
+    Kernel related stuff.
+
+keyboard_hw_quirks
+    Additional quirks for keyboard hardware (udev hwdb-rules).
+
+keyutils
+    Integrate cifs with request-key.
+
+ktouch
+    Some extra ktouch training files.
+
+libdvdcss
+    Support for watching encrypted DVDs.
+
+libreoffice
+    Set default office formats to MS Office formats, and add a "sujutellaan"
+    font.
+
+lightdm
+    Some lightdm configurations (some of these come from ltsp-lightdm package).
+
+locales
+    Configure needed locales and language support.
+
+network_manager
+    Allow users to modify network manager connections, but clean them
+    up so that those modifications are (normally) only temporary.
+
+notify_changelog
+    Image-update notification system.  Tells users if system has been
+    update a provides a link to changelog.
+
+nss
+    Setup /etc/nsswitch.conf.
+
+opinsys_apt_repositories
+    The public apt repositories maintained by Opinsys.
+
+packages
+    Lists packages that are to be installed to ltsp images,
+    and those that should be kept out.
+
+picaxe_udev_rules
+    Some udev rules for making Picaxe microcontrollers work.
+
+primus
+    Some wrappers for Primus client (special Finnish software used in
+    education sector).
+
+promethean
+    Add support for Promethean whiteboards.
+
+puavo
+    Contains a plugin for getting some variables from /etc/puavo into
+    puppet variables.
+
+puavo_conf
+    Support module for puavo-conf integrations.
+
+puavo_external_files
+    Some helper definitions for setting up links to /state/external_files.
+
+puavo_shutdown
+    A helper script to handle shutdown for systems on nbd root.
+
+rpcgssd
+    Configure rpc-gssd for netboot devices.
+
+ssh_client
+    Settings for openssh client.  XXX these actually weaken security from
+    default, should find a way to do this in a smarter way.
+
+themes
+    Themes for desktop.
+
+ti_nspire_cx_cas
+    Module for installing TI-Nspire CX CAS and setting it up.
+
+tuxpaint
+    Tuxpaint related configurations.
+
+udev
+    udev-related issues.  For now, contains workarounds to trigger udev-stuff
+    so that usb memory-sticks work correctly, as well as other device
+    permission related issues.
+
+use_urandom
+    Install rng-tools and configure it to use /dev/urandom as a source of
+    random numbers.
+
+wacom
+    udev-rules for wacom.
+
+webmenu
+    Our own branding for webmenu.
+
+workaround_firefox_local_swf_bug
+    Do workaround a mime-types related Firefox Shockwafe Flash -bug (with
+    local swf-files only).
+
+workaround_icedtea_netx_bug
+    The "icedtea-netx"-package manually sets javaws update-alternative.
+    Workaround that issue.
+
+xorg
+    Some configurations for Xorg.
+
+zram_configuration
+    Add configurations for compressing memory (zram).

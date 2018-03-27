@@ -2,7 +2,9 @@ class apt::ubuntu_repository {
   include ::apt
 
   $ubuntu_mirror  = 'archive.ubuntu.com'
-  $ubuntu_version = 'xenial'
+
+  $old_ubuntu_version = 'trusty'
+  $ubuntu_version     = 'xenial'
 
   file {
     '/etc/apt/preferences.d/00-ubuntu.pref':

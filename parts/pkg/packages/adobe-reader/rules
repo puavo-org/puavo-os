@@ -21,10 +21,15 @@ case "${command}" in
             /usr/share/man/man1/acroread.1.gz
         ln -fns "${upstream_dir}/opt/Adobe/Reader9/Resource/Shell/acroread_tab" \
             /etc/bash_completion.d/acroread.sh
-        ln -fns "${upstream_dir}/opt/Adobe/Reader9/Resource/Support/AdobeReader.desktop" \
-            /usr/share/applications/acroread.desktop
         ln -fns "${upstream_dir}/opt/Adobe/Reader9/bin/acroread" \
             /usr/bin/acroread
+
+        # Do a tweak to Exec-line so that "Open with ..." works with acroreader.
+        sed 's/^Exec=.*$/Exec=acroread %U/' \
+            "${upstream_dir}/opt/Adobe/Reader9/Resource/Support/AdobeReader.desktop" \
+            > /usr/share/applications/acroread.desktop.tmp
+        mv /usr/share/applications/acroread.desktop.tmp \
+           /usr/share/applications/acroread.desktop
         ;;
 
     unconfigure)

@@ -5,6 +5,8 @@ class image::bundle::basic {
   include ::disable_suspend_on_halt
   include ::disable_suspend_on_nbd_devices
   include ::disable_update_initramfs
+  include ::extra_boot_scripts
+  include ::gdm
   include ::hwquirks
   include ::initramfs
   include ::kernels

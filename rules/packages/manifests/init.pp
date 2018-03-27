@@ -169,8 +169,7 @@ class packages {
     , 'python-appindicator'
     , 'python-gtk2'
     , 'python-notify'
-    , 'shared-mime-info'
-    , 'xul-ext-mozvoikko' ]:
+    , 'shared-mime-info' ]:
       tag => [ 'tag_desktop', 'tag_debian_desktop', ];
 
     [ 'acct'
@@ -530,7 +529,6 @@ class packages {
     , 'ibus-gtk3'
     , 'ibus-pinyin'
     , 'ibus-table'
-    , 'iceweasel'
     , 'inputattach'
     , 'itstool'
     , 'laptop-detect'
@@ -635,7 +633,6 @@ class packages {
     , 'browser-plugin-vlc'
     , 'chromium'
     , 'epiphany-browser'
-    , 'firefox-esr'
     , 'liferea'
     , 'openjdk-8-jdk'
     , 'openjdk-8-jre'
@@ -663,6 +660,14 @@ class packages {
   #
 
   @package {
+    [ 'firefox'
+    , 'firefox-locale-de'
+    , 'firefox-locale-en'
+    , 'firefox-locale-fi'
+    , 'firefox-locale-fr'
+    , 'firefox-locale-sv' ]:
+      tag => [ 'tag_web', 'tag_ubuntu', ];
+
     [ 'ttf-ubuntu-font-family' ]:
       tag => [ 'tag_fonts', 'tag_ubuntu_desktop', ];
 
@@ -733,9 +738,9 @@ class packages {
       dkms_modules => $all_dkms_modules,
       package_name => 'linux-image-3.16.0-4-amd64';
 
-    '4.9.0-5-amd64':
+    '4.9.0-6-amd64':
       dkms_modules => $all_dkms_modules,
-      package_name => 'linux-image-4.9.0-5-amd64';
+      package_name => 'linux-image-4.9.0-6-amd64';
 
     '4.14.0-0.bpo.3-amd64':
       dkms_modules => [],

@@ -1,0 +1,4 @@
+#!/bin/sh
+
+test -x /usr/local/sbin/puavo-cleanup-old-users || exit 0
+/usr/local/sbin/puavo-cleanup-old-users

@@ -6,6 +6,10 @@ set -eu
 # XXX puavo-ltsp/bootserver/sbin/puavo-bootserver-make-homedir,
 # XXX unify these if possible
 
+if [ "${PAM_TYPE:-}" != 'open_session' ]; then
+  exit 0
+fi
+
 logmsg() {
   logger -t puavo-manage-homedir "$@"
 }
@@ -88,6 +92,10 @@ if [ ! -d "$user_homedir" ]; then
     logmsg -p user.err "error when creating home directory ${user_homedir}"
     exit 1
   fi
+fi
+
+if [ -x /usr/local/sbin/puavo-cleanup-homedirs-to-ensure-free-space ]; then
+  /usr/local/sbin/puavo-cleanup-homedirs-to-ensure-free-space || true
 fi
 
 exit 0

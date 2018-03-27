@@ -1,0 +1,63 @@
+#!/bin/sh
+
+set -eu
+
+logmsg() {
+  logger -t puavo-clean-homedirs "$@"
+}
+
+if [ "$(puavo-conf puavo.admin.cleanup.homedirs.ensure_free_space)" != 'true' ]; then
+  exit 0
+fi
+
+if [ "$(puavo-conf puavo.admin.personally_administered)" = 'true' ]; then
+  exit 0
+fi
+
+logmsg -p user.notice 'activating...'
+
+freespace_min=$(puavo-conf puavo.admin.cleanup.homedirs.freespace_min)
+
+if ! echo "$freespace_min" | grep -Eqx '[0-9]+'; then
+  logmsg -p user.err \
+         'puavo.admin.cleanup.homedirs.freespace_min is not a number'
+  exit 1
+fi
+
+save_homedir_exception=''
+if [ -n "${PAM_USER:-}" ]; then
+  save_homedir_exception="${PAM_USER:-}"
+fi
+
+get_freespace_amount() {
+  stat -f -c '%S * %a' /home | bc -l
+}
+
+lookup_oldest_file() {
+  find /home -maxdepth 1 -mindepth 1 ! -type l \
+    -a ! -name "$save_homedir_exception" -printf '%T@ %p\0' \
+      | sort -nz | grep -zom 1 '.*' | sed 's/[^ ]* //'
+}
+
+while true; do
+  freespace_amount=$(get_freespace_amount)
+  logmsg -p user.info \
+         "/home has ${freespace_amount} bytes of free space, expecting ${freespace_min} bytes"
+  if [ "$(get_freespace_amount)" -ge "$freespace_min" ]; then
+    logmsg -p user.info '/home has enough free space'
+    break
+  fi
+
+  oldest_file=$(lookup_oldest_file)
+  if [ -z "$oldest_file" ]; then
+    logmsg -p user.info \
+           'oldest file could not be found, perhaps there are no files under /home?'
+    break
+  fi
+
+  logmsg -p user.info \
+         "not enough free space on /home, removing ${oldest_file}: last modified on $(stat -c %y "$oldest_file" || true)"
+  rm -rf "$oldest_file"
+done
+
+exit 0

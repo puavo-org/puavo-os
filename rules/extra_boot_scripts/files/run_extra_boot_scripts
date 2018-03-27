@@ -1,0 +1,15 @@
+#!/bin/sh
+
+set -eu
+
+if [ "$(puavo-conf puavo.admin.run_extra_boot_scripts)" != 'true' ]; then
+  exit 0
+fi
+
+mode='--execute-only'
+
+if [ -e /run/puavo/nbd-server ]; then
+  mode='--fetch-and-execute'
+fi
+
+exec timeout -k 5 180 /usr/local/sbin/puavo-run-extra-boot-scripts "$mode"

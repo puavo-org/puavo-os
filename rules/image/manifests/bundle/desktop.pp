@@ -1,5 +1,4 @@
 class image::bundle::desktop {
-  # include ::acroread			# XXX needs fixing for Debian
   include ::chrome
   include ::chromium
   include ::cups
@@ -14,6 +13,7 @@ class image::bundle::desktop {
   include ::gdm
   include ::gnome_terminal
   include ::graphics_drivers
+  include ::homedir_management
   include ::ibus
   include ::image::bundle::basic
   include ::kaffeine

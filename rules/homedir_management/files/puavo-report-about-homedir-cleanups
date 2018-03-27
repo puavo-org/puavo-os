@@ -1,0 +1,33 @@
+#!/bin/sh
+
+set -eu
+
+[ -n "${GUEST_SESSION:-}" ] && exit 0
+
+if [ "$(puavo-conf puavo.admin.cleanup.homedirs.ensure_free_space)" != 'true' ]; then
+  exit 0
+fi
+
+if [ "$(puavo-conf puavo.admin.personally_administered)" = 'true' ]; then
+  exit 0
+fi
+
+case "$LANG" in
+  de*)
+    report='Die Dateien auf dem Computer werden möglicherweise automatisch gelöscht, da der Computer nur über wenig Speicherplatz verfügt.'
+    ;;
+  fi*)
+    report='Tämän tietokoneen tiedostoja voidaan poistaa automaattisesti, koska koneessa on vain vähän levytilaa.'
+    ;;
+  fr*)
+    report='Les fichiers de l'ordinateur peuvent être supprimés automatiquement, car l'ordinateur ne dispose que d'une petite quantité d'espace disque.'
+    ;;
+  sv*)
+    report='Datorfiler kan raderas automatiskt eftersom det bara finns en liten mängd diskutrymme på datorn.'
+    ;;
+  *)
+    report='The files in the computer may be deleted automatically, because the computer has only a small amount of diskspace.'
+    ;;
+esac
+
+zenity --warning --text="$report"
