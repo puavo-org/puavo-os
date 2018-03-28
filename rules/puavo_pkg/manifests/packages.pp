@@ -28,6 +28,7 @@ class puavo_pkg::packages {
 			, 'skype'
 			, 'smartboard'
 			, 'spotify-client'
+			, 'teddybear'
 			, 'tilitin'
 			, 'ti-nspire-cx-cas-ss'
 			, 't-lasku'
