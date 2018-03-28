@@ -40,6 +40,7 @@ packagedirs += vstloggerpro/
 
 # opinsys-os specific
 packagedirs += ekapeli/
+packagedirs += teddybear/
 
 packagefiles = $(packagedirs:%/=%.tar.gz)
 
