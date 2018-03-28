@@ -84,6 +84,7 @@ class packages {
     , 'screen'
     , 'setserial'
     , 'smartmontools'
+    , 'sshfs'
     , 'strace'
     , 'sudo'
     , 'sysfsutils'
