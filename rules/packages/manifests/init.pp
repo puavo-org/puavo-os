@@ -434,7 +434,6 @@ class packages {
     , 'bluez'
     , 'bluez-cups'
     , 'brasero'
-    , 'brltty'
     , 'ca-certificates'
     , 'cheese'
     , 'cups'
