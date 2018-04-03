@@ -238,7 +238,7 @@ handle_external_login() {
   if extlogins=$(
     echo "$user_password" \
       | timeout -k 1 10 env USER="$PAM_USER" \
-          /usr/bin/puavo-rest-request v3/external_login \
+          /usr/bin/puavo-rest-request v3/external_login/auth \
             --send-device-school-dn --user-pass-credentials --writable); then
     external_login_status=$({ echo "$extlogins" | jq -r .status; } \
                               || echo NOSTATUS)
