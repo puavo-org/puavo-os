@@ -1,0 +1,43 @@
+# shell configurations configured by puppet
+
+PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/games:/usr/games"
+export PATH
+
+# Puavo OS admins have a more relaxed umask to facilitate collaboration under
+# "/puavo-os"
+umask 002
+
+cat <<'EOF' > ~/.nanorc
+set constantshow
+set historylog
+set linenumbers
+set morespace
+set positionlog
+set quickblank
+set smarthome
+set smooth
+set suspend
+set tabsize 4
+set tabstospaces
+set titlecolor brightwhite,blue
+set numbercolor cyan
+set statuscolor white,blue
+set keycolor green
+include "/usr/share/nano/*.nanorc"
+EOF
+
+cat <<'EOF' > ~/.tmux.conf
+set -g prefix C-a
+unbind C-b
+bind C-a send-prefix
+set -g history-limit 100000
+bind-key -n M-left select-pane -L
+bind-key -n M-right select-pane -R
+bind-key -n M-up select-pane -U
+bind-key -n M-down select-pane -D
+EOF
+
+cat <<'EOF' > ~/.inputrc
+"\e[A":history-search-backward
+"\e[B":history-search-forward
+EOF
