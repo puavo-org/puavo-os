@@ -125,24 +125,24 @@ const HostInfoButton = new Lang.Class(
 
             if (memory && memory.length > 0) {
                 for (var i = 0; i < memory.length; i++) {
-                  const size = memory[i].size;
+                    const size = memory[i].size;
 
-                  // the texts here are indented using spaces, but we *really* should create
-                  // a new St.BoxLayout() element to indent them... maybe one day...
+                    // the texts here are indented using spaces, but we *really* should create
+                    // a new St.BoxLayout() element to indent them... maybe one day...
 
-                  if (size == 0) {
-                    this.titleValue(c, "    Slot #" + i, "<empty>");
-                    continue;
-                  }
+                    if (size == 0) {
+                        this.titleValue(c, "    Slot #" + i, "<empty>");
+                        continue;
+                    }
 
-                  var text = "";
+                    var text = "";
 
-                  text += "Size: " + size + "MiB; ";
-                  text += "Slot: " + memory[i].slot + "; ";
-                  text += "Product: " + memory[i].product + "; ";
-                  text += "Vendor: " + memory[i].vendor;
+                    text += "Size: " + size + "MiB; ";
+                    text += "Slot: " + memory[i].slot + "; ";
+                    text += "Product: " + memory[i].product + "; ";
+                    text += "Vendor: " + memory[i].vendor;
 
-                  this.titleValue(c, "    Slot #" + i, text);
+                    this.titleValue(c, "    Slot #" + i, text);
                 }
             }
 
