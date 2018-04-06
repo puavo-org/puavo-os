@@ -176,7 +176,7 @@ const HostInfoButton = new Lang.Class(
             let r = new St.BoxLayout();
 
             this.addLabel(r, {
-                text: "Cannot disply system information. This is a serious " +
+                text: "Cannot display system information. This is a serious " +
                       "error, please report it.\n" + e.message,
                 style_class: "infoErrorTitle"
             });
