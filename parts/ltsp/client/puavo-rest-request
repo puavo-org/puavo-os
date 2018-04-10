@@ -11,13 +11,15 @@ Usage:
                      [--send-device-credentials]
                      [--send-device-school-dn]
                      [--send-hostname]
-                     [--user-bootserver|--user-etc|--user-krb]
-                     [--writable]
+                     [--user username (password from standard input)
+                       | --user-bootserver
+                       | --user-etc
+                       | --user-krb]
                      [-- [arbitrary curl arguments]]
 }
 }
 
-proc make_request {url curl_args {stdin_value ""}} {
+proc make_request {url curl_args {password ""}} {
   # use curl instead of puavo-rest-client for efficiency reasons
 
   set exec_curl_args [list --cacert /etc/puavo/certs/rootca.pem \
@@ -26,14 +28,35 @@ proc make_request {url curl_args {stdin_value ""}} {
                            --silent                             \
                            {*}$curl_args                        \
                            $url]
-  if {$stdin_value ne ""} {
-    lappend exec_curl_args << $stdin_value
-  }
 
   # no timeouts here, it is the caller's responsibility to decide on that
 
-  if {[catch { exec curl {*}$exec_curl_args } result]} {
-    error "error executing curl:\n$result"
+  if {$password eq ""} {
+    if {[catch { exec curl {*}$exec_curl_args } result]} {
+      error "error executing curl:\n${result}"
+    }
+  } else {
+    if {[catch {
+           set timeout -1
+           log_user 0
+           match_max -d 8388608
+
+           spawn -noecho curl {*}$exec_curl_args
+           expect -re {Enter host password for user '.*':}
+           send "$password\n"
+           expect "\n"
+           expect eof
+
+           lassign [wait] pid spawn_id ok curl_status
+           if {$ok != 0} { error {operating system error} }
+           if {$curl_status != 0} {
+             error "curl returned error code $curl_status:\n$expect_out(buffer)"
+           }
+
+           set result $expect_out(buffer)
+         } result]} {
+      error "error executing curl with password:\n${result}"
+    }
   }
 
   puts -nonewline stdout $result
@@ -63,6 +86,8 @@ trap cleanup {SIGHUP SIGINT SIGQUIT SIGPIPE SIGTERM}
 if {[catch {
   set curl_args          [list]
   set puavo_resolve_args [list]
+  set user_username      ""
+  set user_password      ""
 
   set urlpath [lindex $argv 0]
   if { $urlpath eq "" } {
@@ -77,6 +102,7 @@ if {[catch {
     send-device-credentials
     send-device-school-dn
     send-hostname
+    user.arg
     user-bootserver
     user-etc
     user-krb
@@ -143,6 +169,16 @@ if {[catch {
     set_auth_mode krb
   }
 
+  if {$params(user) ne ""} {
+    set_auth_mode user
+    set user_username $params(user)
+    if {$user_username eq ""} {
+      usage
+      exit 1
+    }
+    set user_password [string trimright [read stdin]]
+  }
+
   if $params(writable) {
     lappend puavo_resolve_args --writable
   }
@@ -175,12 +211,9 @@ if {[catch {
         error {Could not determine device password for this host}
       }
 
-      lappend curl_args --config - {*}$argv
+      lappend curl_args --user $device_dn {*}$argv
 
-      # XXX This presumes device_password does not contain "difficult"
-      # XXX characters, which should be true with Puavo-generated device
-      # XXX passwords.  Use basic auth instead of this.
-      make_request $url $curl_args "--user ${device_dn}:${device_password}"
+      make_request $url $curl_args $device_password
     }
 
     krb {
@@ -188,7 +221,12 @@ if {[catch {
                         --negotiate         \
                         --user :            \
                         {*}$argv
-      make_request "$url" $curl_args
+      make_request $url $curl_args
+    }
+
+    user {
+      lappend curl_args --user $user_username {*}$argv
+      make_request $url $curl_args $user_password
     }
 
     default {
