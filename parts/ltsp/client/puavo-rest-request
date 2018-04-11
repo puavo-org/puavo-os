@@ -35,32 +35,31 @@ proc make_request {url curl_args {password ""}} {
     if {[catch { exec curl {*}$exec_curl_args } result]} {
       error "error executing curl:\n${result}"
     }
-  } else {
-    if {[catch {
-           set timeout -1
-           log_user 0
-           match_max -d 8388608
-
-           spawn -noecho curl {*}$exec_curl_args
-           expect -re {Enter host password for user '.*':}
-           send "$password\n"
-           expect "\n"
-           expect eof
-
-           lassign [wait] pid spawn_id ok curl_status
-           if {$ok != 0} { error {operating system error} }
-           if {$curl_status != 0} {
-             error "curl returned error code $curl_status:\n$expect_out(buffer)"
-           }
-
-           set result $expect_out(buffer)
-         } result]} {
-      error "error executing curl with password:\n${result}"
-    }
+    puts -nonewline stdout $result
+    flush stdout
+    return
   }
 
-  puts -nonewline stdout $result
-  flush stdout
+  if {[catch {
+         set timeout -1
+
+         log_user 0
+         spawn -noecho curl {*}$exec_curl_args
+         expect -re {Enter host password for user '.*':}
+         send "$password\n"
+         expect "\n"
+
+         log_user 1
+         expect eof
+
+         lassign [wait] pid spawn_id ok curl_status
+         if {$ok != 0} { error {operating system error} }
+         if {$curl_status != 0} {
+           error "curl returned error code $curl_status:\n$expect_out(buffer)"
+         }
+       } result]} {
+    error "error executing curl with password:\n${result}"
+  }
 }
 
 set auth_mode ""
@@ -76,9 +75,10 @@ proc set_auth_mode {new_authmode} {
 
 set prr_tmpdir [exec mktemp -d /tmp/puavo-rest-request.XXXXXX]
 
-proc cleanup {} {
+proc cleanup {{exitcode 1}} {
   global prr_tmpdir
   catch { exec rm -rf $prr_tmpdir }
+  exit $exitcode
 }
 
 trap cleanup {SIGHUP SIGINT SIGQUIT SIGPIPE SIGTERM}
@@ -193,7 +193,10 @@ if {[catch {
   set url "${api_server}/${urlpath}"
 
   switch -- $auth_mode {
-    {} { make_request $url $curl_args }
+    {} {
+      lappend curl_args {*}$argv
+      make_request $url $curl_args
+    }
 
     bootserver {
       lappend curl_args --header {Authorization: Bootserver} {*}$argv
@@ -234,10 +237,8 @@ if {[catch {
     }
   }
 } errmsg]} {
-  cleanup
   puts stderr $errmsg
-  exit 1
+  cleanup
 }
 
-cleanup
-exit 0
+cleanup 0
