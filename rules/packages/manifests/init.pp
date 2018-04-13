@@ -534,6 +534,7 @@ class packages {
     , 'network-manager'
     , 'network-manager-pptp'
     , 'network-manager-pptp-gnome'
+    , 'nodm'            # for infotv
     , 'openprinting-ppds'
     , 'pcmciautils'
     , 'plymouth'
