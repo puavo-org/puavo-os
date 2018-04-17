@@ -196,11 +196,11 @@
 
 .calendar {}
   .calendar-month-label {
-    color: #333 !important;
+    color: #000 !important;
   }
   .datemenu-date-label,
   .events-day-header {
-    color: #666 !important;
+    color: #000 !important;
   }
   .calendar-day-base:active {
     color: #fff !important;
@@ -214,15 +214,23 @@
     border-image: none !important;
   }
   .calendar-day-base {
-    color: #666 !important;
+    color: #000 !important;
+    border: none !important;
+    border-radius: 0.6em;
   }
     .calendar-day-base:hover {
       background-color: #666 !important;
       color: #fff !important;
     }
+
   .calendar-nonwork-day {
-    color: #999 !important;
+    color: #f00 !important;
   }
+
+    .calendar-other-month-day {
+        color: #bbb !important;
+    }
+
   .events-day-dayname,
   .events-day-time {
     color: #666 !important;

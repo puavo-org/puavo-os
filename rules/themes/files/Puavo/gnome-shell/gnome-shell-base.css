@@ -1340,10 +1340,9 @@ StScrollBar StButton#vhandle:active {
 
 .calendar-change-month-back:hover,
 .calendar-change-month-back:focus {
-    background-color: #999999;
 }
 .calendar-change-month-back:active {
-    background-color: #aaaaaa;
+    background-color: #44abec;
 }
 
 .calendar-change-month-forward {
@@ -1359,10 +1358,9 @@ StScrollBar StButton#vhandle:active {
 
 .calendar-change-month-forward:hover,
 .calendar-change-month-forward:focus {
-    background-color: #999999;
 }
 .calendar-change-month-forward:active {
-    background-color: #aaaaaa;
+    background-color: #44abec;
 }
 
 .datemenu-date-label {
@@ -1370,20 +1368,19 @@ StScrollBar StButton#vhandle:active {
     font-weight: bold;
     text-align: center;
     color: #eeeeec;
-    border-radius: 4px;
+    border-radius: 0px;
 }
 
 .datemenu-date-label:hover,
 .datemenu-date-label:focus {
-    background-color: #999999;
 }
 
 .datemenu-date-label:active {
-    background-color: #aaaaaa;
+    background-color: #44abec;
 }
 
 .calendar-day-base {
-    font-size: 9pt;
+    font-size: 14px;
     text-align: center;
     width: 2.4em;
     height: 2.4em;
@@ -1413,7 +1410,6 @@ StScrollBar StButton#vhandle:active {
 
 /* Hack used in lieu of border-collapse - see calendar.js */
 .calendar-day {
-    border: 1px solid #505050;
     color: #babdb6;
     border-top-width: 0;
     border-left-width: 0;
@@ -1431,7 +1427,6 @@ StScrollBar StButton#vhandle:active {
 }
 
 .calendar-nonwork-day {
-    background-color: rgba(128, 128, 128, .1);
 }
 
 .calendar-today {
@@ -1446,7 +1441,11 @@ StScrollBar StButton#vhandle:active {
 }
 
 .calendar-other-month-day {
-    color: #333333;
+    color: #bbb;
+ }
+
+.calendar-other-month-day:hover {
+    color: #666;
 }
 
 .events-table {
