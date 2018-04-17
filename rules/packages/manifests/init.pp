@@ -358,6 +358,7 @@ class packages {
     , 'idle-python3.5'
     , 'kturtle'
     , 'lokalize'
+    , 'meld'
     , 'pyqt4-dev-tools'
     , 'python-doc'
     , 'python-jsonpickle' # a dependency for
