@@ -2417,6 +2417,7 @@ StScrollBar StButton#vhandle:active {
 
 .login-dialog-button-box {
     spacing: 5px;
+    padding-bottom: 15px; /* push the guest login button downwards */
 }
 
 .login-dialog-user-list-view {
@@ -2491,25 +2492,31 @@ StScrollBar StButton#vhandle:active {
     font-size: 16pt;
     font-weight: bold;
     text-align: left;
-    padding-left: 15px;
-    text-shadow: rgba(0, 0, 0, 0.5) 0px 2px 1px 0px;
+    text-shadow: rgba(0, 0, 0, 1) 2px 2px 1px;
 }
 
 .login-dialog-prompt-layout {
-    padding-top: 2px;
-    padding-bottom: 15px;
-    spacing: 8px;
-    width: 23em;
-    padding-left:13px;
-    padding-right:13px;
-    background-color: rgba(0,0,0,0.2);
+    padding: 5px 20px 20px 20px;  /* username already has padding at top */
+    background-color: rgba(0,0,0,0.4);
     border-radius: 10px;
 }
 
 .login-dialog-prompt-label {
     color: #eeeeee;
     font-size: 16px;
-    padding-top: 10px;
+    text-shadow: rgba(0, 0, 0, 1) 1px 1px 0;
+    padding: 0;
+}
+
+.login-dialog-prompt-entry {
+    /* make the username/password field text more visible */
+    color: #000 !important;
+    background: #fff !important;
+}
+
+.login-dialog-prompt-entry:insensitive {
+    color: #000 !important;
+    background: rgba(136, 136, 136, 0.5) !important;
 }
 
 .login-dialog-session-list-button StIcon {
@@ -2569,13 +2576,14 @@ StScrollBar StButton#vhandle:active {
     border-color: #666666;
     color: #9f9f9f;
     background-gradient-direction: none;
-    background-color: rgba(102, 102, 102, 0.15);
+    background-color: rgba(102, 102, 102, 0.25);
 }
 
 .login-dialog-message {
     padding-top: 0px;
-    padding-bottom: 0px;
+    padding-bottom: 15px;  /* push the buttonbox down a bit */
     min-height: 1em;
+    text-shadow: rgba(0, 0, 0, 1) 1px 1px 0px;
 }
 
 .login-dialog-message-warning {
