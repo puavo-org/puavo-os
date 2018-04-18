@@ -271,6 +271,9 @@ handle_external_login() {
       logmsg notice "external login BADUSERCREDS: $(echo "$extlogins" | jq .msg)"
       return 1
       ;;
+    CONFIGERROR)
+      extlogin_errmsg="external login configuration error: $(echo "$external_logins" | jq .msg)"
+      ;;
     NOTCONFIGURED)
       extlogin_errmsg="external login is not configured: $(echo "$external_logins" | jq .msg)"
       ;;
