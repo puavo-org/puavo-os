@@ -239,7 +239,7 @@ handle_external_login() {
     echo "$user_password" \
       | timeout -k 1 10 \
           /usr/bin/puavo-rest-request v3/external_login/auth \
-            --send-device-school-dn --user "$PAM_USER" --writable); then
+            --post --send-device-school-dn --user "$PAM_USER" --writable); then
     external_login_status=$({ echo "$extlogins" | jq -r .status; } \
                               || echo NOSTATUS)
   else
