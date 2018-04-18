@@ -1,6 +1,6 @@
 diff -ruN gnome-shell.orig/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
 --- gnome-shell.orig/js/gdm/authPrompt.js	2017-02-16 18:48:04.000000000 +0200
-+++ gnome-shell/js/gdm/authPrompt.js	2017-04-19 08:28:56.116903795 +0300
++++ gnome-shell/js/gdm/authPrompt.js	2018-04-18 08:21:11.856292088 +0300
 @@ -46,6 +46,13 @@
          this._gdmClient = gdmClient;
          this._mode = mode;
@@ -15,7 +15,22 @@ diff -ruN gnome-shell.orig/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
          let reauthenticationOnly;
          if (this._mode == AuthPromptMode.UNLOCK_ONLY)
              reauthenticationOnly = true;
-@@ -73,6 +80,11 @@
+@@ -66,6 +73,14 @@
+         this.connect('next', Lang.bind(this, function() {
+                          this.updateSensitivity(false);
+                          this.startSpinning();
++
++                         if (this._userName && !this._userNameEntered) {
++                             if (!this._entry.menu.isPassword) {    // don't show passwords!
++                                 this._userName.text = this._entry.text;
++                                 this._userNameEntered = true;
++                             }
++                         }
++
+                          if (this._queryingService) {
+                              this._userVerifier.answerQuery(this._queryingService, this._entry.text);
+                          } else {
+@@ -73,6 +88,11 @@
                           }
                       }));
  
@@ -27,10 +42,37 @@ diff -ruN gnome-shell.orig/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
          this.actor = new St.BoxLayout({ style_class: 'login-dialog-prompt-layout',
                                          vertical: true });
          this.actor.connect('destroy', Lang.bind(this, this._onDestroy));
-@@ -122,6 +134,23 @@
+@@ -91,6 +111,25 @@
+                          x_fill: true,
+                          y_fill: true,
+                          expand: true });
++
++        if (this._mode == AuthPromptMode.UNLOCK_OR_LOG_IN) {
++            // Display the username above the password prompt, but
++            // ONLY in the login screen, not in the unlocking screen.
++            // The label is always visible, it's just empty before
++            // the name has been entered.
++            this._userName = new St.Label({ style_class:
++                'login-dialog-username', text: ' ' });
++
++            this.actor.add(this._userName, {
++                expand: true,
++                x_fill: false,
++                y_fill: true,
++                x_align: St.Align.MIDDLE });
++                this._userName.show();
++        }
++
++        this._userNameEntered = false;
++
+         this._label = new St.Label({ style_class: 'login-dialog-prompt-label' });
+ 
+         this.actor.add(this._label,
+@@ -121,6 +160,27 @@
+                        { expand:  true,
                           x_align: St.Align.MIDDLE,
                           y_align: St.Align.END });
- 
++
 +        this.guestButton = new St.Button({ style_class: 'modal-dialog-button button',
 +                                           button_mask: St.ButtonMask.ONE | St.ButtonMask.THREE,
 +                                           reactive: true,
@@ -44,46 +86,35 @@ diff -ruN gnome-shell.orig/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
 +                         y_fill: true,
 +                         x_align: St.Align.MIDDLE });
 +
-+        this._updateGuestButtonSensitivity(this._entry.text.length == 0);
-+
-+        this._maybeShowGuestLogin();
-+
++        if (reauthenticationOnly) {
++            // hide the guest login button on the unlock screen
++            this.guestButton.hide();
++        } else {
++            // initially the guest button is clickable
++            this._updateGuestButtonSensitivity(true);
++        }
+ 
          this._defaultButtonWell = new St.Widget({ layout_manager: new Clutter.BinLayout() });
          this._defaultButtonWellActor = null;
- 
-@@ -139,6 +168,14 @@
-         this._userVerifier = null;
-     },
- 
-+    _maybeShowGuestLogin: function() {
-+      if (this._guestuser_login != '') {
-+        this.guestButton.show();
-+      } else {
-+        this.guestButton.hide();
-+      }
-+    },
-+
-     _initButtons: function() {
-         this.cancelButton = new St.Button({ style_class: 'modal-dialog-button button',
-                                             button_mask: St.ButtonMask.ONE | St.ButtonMask.THREE,
-@@ -186,6 +223,7 @@
+@@ -186,6 +246,8 @@
                                               if (!this._userVerifier.hasPendingMessages)
                                                   this._fadeOutMessage();
  
-+                                             this._updateGuestButtonSensitivity(this._entry.text.length == 0);
++                                             this._updateGuestButtonSensitivity(this._entry.text.length == 0 &&
++                                                !this._userNameEntered);
                                               this._updateNextButtonSensitivity(this._entry.text.length > 0);
                                           }));
          this._entry.clutter_text.connect('activate', Lang.bind(this, function() {
-@@ -216,6 +254,8 @@
-             this.nextButton.label = _("Next");
-         }
- 
-+        this.guestButton.hide();
-+
-         this.updateSensitivity(true);
-         this.emit('prompted');
+@@ -261,7 +323,7 @@
+     _onVerificationComplete: function() {
+         this.setActorInDefaultButtonWell(null);
+         this.verificationStatus = AuthPromptStatus.VERIFICATION_SUCCEEDED;
+-	this.cancelButton.reactive = false;
++        this.cancelButton.reactive = false;
      },
-@@ -408,6 +448,11 @@
+ 
+     _onReset: function() {
+@@ -408,6 +470,11 @@
          }
      },
  
@@ -95,18 +126,24 @@ diff -ruN gnome-shell.orig/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
      _updateNextButtonSensitivity: function(sensitive) {
          this.nextButton.reactive = sensitive;
          this.nextButton.can_focus = sensitive;
-@@ -447,6 +492,8 @@
+@@ -447,6 +514,14 @@
          this.cancelButton.reactive = true;
          this.nextButton.label = _("Next");
  
-+        this._maybeShowGuestLogin();
++        if (this._userName)
++            this._userName.text = " ";
++
++        this._userNameEntered = false;
++
++        // we're back at the start, so the guest button is usable again
++        this._updateGuestButtonSensitivity(true);
 +
          if (this._userVerifier)
              this._userVerifier.cancel();
  
 diff -ruN gnome-shell.orig/js/gdm/util.js gnome-shell/js/gdm/util.js
 --- gnome-shell.orig/js/gdm/util.js	2016-11-18 18:44:21.000000000 +0200
-+++ gnome-shell/js/gdm/util.js	2017-04-19 08:28:56.116903795 +0300
++++ gnome-shell/js/gdm/util.js	2018-04-18 08:23:44.917181890 +0300
 @@ -31,6 +31,7 @@
  const BANNER_MESSAGE_KEY = 'banner-message-enable';
  const BANNER_MESSAGE_TEXT_KEY = 'banner-message-text';
@@ -115,6 +152,18 @@ diff -ruN gnome-shell.orig/js/gdm/util.js gnome-shell/js/gdm/util.js
  
  const LOGO_KEY = 'logo';
  const DISABLE_USER_LIST_KEY = 'disable-user-list';
+@@ -529,8 +530,9 @@
+         // go back to the welcome screen.
+ 
+         this._failCounter++;
+-        let canRetry = retry && this._userName &&
+-            this._failCounter < this._settings.get_int(ALLOWED_FAILURES_KEY);
++        let canRetry = retry && this._userName;     // let the user re-enter the password as
++                                                    // many times as they want, they aren't
++                                                    // going to brute-force it this way...
+ 
+         if (canRetry) {
+             if (!this.hasPendingMessages) {
 diff -ruN gnome-shell.orig/po/de.po gnome-shell/po/de.po
 --- gnome-shell.orig/po/de.po	2017-02-16 18:48:04.000000000 +0200
 +++ gnome-shell/po/de.po	2017-04-19 08:38:04.094282725 +0300
