@@ -20,6 +20,7 @@ packagedirs += geogebra6/
 packagedirs += globilab/
 packagedirs += google-chrome/
 packagedirs += google-earth/
+packagedirs += idid/
 packagedirs += marvinsketch/
 packagedirs += mattermost-desktop/
 packagedirs += msttcorefonts/
