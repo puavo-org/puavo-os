@@ -2,18 +2,24 @@
 
 set -eu
 
-# System defaults, taken from a stock Opinsys-OS installation
-DEFAULT_DM="/usr/sbin/gdm3"
-SESSION_MANAGER="/usr/bin/gnome-session"
-DM_SERVICE="/lib/systemd/system/gdm3.service"
+dm=$(puavo-conf puavo.xsessions.display_manager)
 
-if [ "$(puavo-conf puavo.xsessions.default)" = "puavo-infotv" ]; then
-  # Activate the info-tv mode
-  DEFAULT_DM="/usr/sbin/nodm"
-  SESSION_MANAGER="/usr/lib/puavo-ltsp-client/infotv-session"
-  DM_SERVICE="/lib/systemd/system/nodm.service"
+case "$dm" in
+  gdm)
+    default_dm='/usr/sbin/gdm3'
+    dm_service='/lib/systemd/system/gdm3.service'
+    ;;
+  nodm)
+    # Activate the "nodm"-mode
+    default_dm='/usr/sbin/nodm'
+    dm_service='/lib/systemd/system/nodm.service'
+    ;;
+  *)
+    echo "Unsupported display manager ${dm}" >&2
+    exit 1
+    ;;
 fi
 
-echo "${DEFAULT_DM}" > "/etc/X11/default-display-manager"
-ln -fns "${SESSION_MANAGER}" "/etc/alternatives/x-session-manager"
-ln -fns "${DM_SERVICE}" "/etc/systemd/system/display-manager.service"
+echo "$default_dm" > /etc/X11/default-display-manager
+
+ln -fns "$dm_service" /etc/systemd/system/display-manager.service
