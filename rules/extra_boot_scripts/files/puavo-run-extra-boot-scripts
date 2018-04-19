@@ -99,18 +99,22 @@ try_fetching() {
 fetch_extra_boot_scripts() {
   preferred_image=$1
 
+  fetch_status=0
+
   mkdir -p /state/ebs
 
   ebs_server=$(lookup_image_server_by_dns)
   if [ -z "$ebs_server" ]; then
     echo 'Failed to lookup image server from DNS' >&2
-    return 1
+    return 2
   fi
 
   for ebs_filename in $(generate_possible_ebs_names "$preferred_image"); do
     try_fetching "$ebs_server" "$ebs_filename" "/state/ebs/${ebs_filename}" \
-      || ebs_status=1
+      || fetch_status=1
   done
+
+  return $fetch_status
 }
 
 execute_extra_boot_scripts() {
@@ -135,12 +139,12 @@ case "$mode" in
     execute_extra_boot_scripts || ebs_status=1
     ;;
   --fetch-and-execute)
-    fetch_extra_boot_scripts '' || ebs_status=1
+    fetch_extra_boot_scripts '' || ebs_status=$?
     execute_extra_boot_scripts  || ebs_status=1
     ;;
   --fetch-only)
     preferred_image=$(puavo-conf puavo.image.preferred)
-    fetch_extra_boot_scripts "$preferred_image" || ebs_status=1
+    fetch_extra_boot_scripts "$preferred_image" || ebs_status=$?
     ;;
   *)
     cat <<EOF >&2

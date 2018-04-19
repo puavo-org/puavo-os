@@ -200,7 +200,12 @@ end
 
 def update_extra_boot_scripts(restclient)
   # These are fetched even if puavo.admin.run_extra_boot_scripts != 'true'
-  run('/usr/local/sbin/puavo-run-extra-boot-scripts', '--fetch-only')
+  # Error code 2 means that host was not behind a bootserver, which is okay.
+  system('/usr/local/sbin/puavo-run-extra-boot-scripts', '--fetch-only')
+  if $?.exitstatus != 0 && $?.exitstatus != 2 then
+    raise 'Running /usr/local/sbin/puavo-run-extra-boot-scripts --fetch-only' \
+            + ' returned unexpected failure'
+  end
 end
 
 Syslog.open(File.basename($0), Syslog::LOG_CONS)
