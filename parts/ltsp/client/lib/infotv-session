@@ -38,15 +38,6 @@ run_iivari()
 	done
 }
 
-# Make sure the infotv user exists
-if [ ! -d "/home/infotv" ]; then
-        while true; do
-                logger -p local0.err -t infotv "The /home/infotv directory does not exist. You must login at least once as the infotv user."
-                sleep 3600
-        done
-        exit 1
-fi
-
 # Start openbox and keep it running
 (
 	while true; do
