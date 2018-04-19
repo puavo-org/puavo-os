@@ -191,6 +191,7 @@ class packages {
       tag => [ 'tag_firmware', 'tag_debian', ];
 
     [ 'fontconfig'
+    , 'gnome-font-viewer'
     , 'ttf-freefont'
     , 'xfonts-terminus'
     , 'xfonts-utils' ]:
