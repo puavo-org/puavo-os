@@ -47,20 +47,12 @@ if [ ! -d "/home/infotv" ]; then
         exit 1
 fi
 
-# Write a configuration file for i3. It hides the bottom panel and
-# workspace switchers, so the screen is completely empty.
-mkdir -p /home/infotv/.config/i3 || true
-cat <<'EOF' > /home/infotv/.config/i3/config
-# i3 config file (v4)
-#set $mod Mod4
-font pango:monospace 8
-EOF
-
-# Start i3 and keep it running
+# Start openbox and keep it running
 (
 	while true; do
-		i3 || true
-		logger -p local0.err -t infotv "i3 has exited or crashed, restarting it..."
+		openbox || true
+		logger -p local0.err -t infotv \
+                       'openbox has exited or crashed, restarting it...'
 		sleep 5
 	done
 ) &
