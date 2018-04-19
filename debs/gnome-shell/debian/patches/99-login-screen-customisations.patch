@@ -1,7 +1,28 @@
 diff -ruN gnome-shell.orig/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
 --- gnome-shell.orig/js/gdm/authPrompt.js	2017-02-16 18:48:04.000000000 +0200
-+++ gnome-shell/js/gdm/authPrompt.js	2018-04-18 08:21:11.856292088 +0300
-@@ -46,6 +46,13 @@
++++ gnome-shell/js/gdm/authPrompt.js	2018-04-19 12:27:46.324345645 +0300
+@@ -5,6 +5,7 @@
+ const Lang = imports.lang;
+ const Signals = imports.signals;
+ const St = imports.gi.St;
++const Shell = imports.gi.Shell;
+ 
+ const Animation = imports.ui.animation;
+ const Batch = imports.gdm.batch;
+@@ -37,6 +38,12 @@
+     DONT_PROVIDE_USERNAME: 1
+ };
+ 
++// will throw exceptions, remember to handle them
++function readTextFile(name)
++{
++    return Shell.get_file_contents_utf8_sync(name);
++}
++
+ const AuthPrompt = new Lang.Class({
+     Name: 'AuthPrompt',
+ 
+@@ -46,6 +53,13 @@
          this._gdmClient = gdmClient;
          this._mode = mode;
  
@@ -15,7 +36,7 @@ diff -ruN gnome-shell.orig/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
          let reauthenticationOnly;
          if (this._mode == AuthPromptMode.UNLOCK_ONLY)
              reauthenticationOnly = true;
-@@ -66,6 +73,14 @@
+@@ -66,6 +80,14 @@
          this.connect('next', Lang.bind(this, function() {
                           this.updateSensitivity(false);
                           this.startSpinning();
@@ -30,7 +51,7 @@ diff -ruN gnome-shell.orig/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
                           if (this._queryingService) {
                               this._userVerifier.answerQuery(this._queryingService, this._entry.text);
                           } else {
-@@ -73,6 +88,11 @@
+@@ -73,6 +95,11 @@
                           }
                       }));
  
@@ -42,7 +63,7 @@ diff -ruN gnome-shell.orig/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
          this.actor = new St.BoxLayout({ style_class: 'login-dialog-prompt-layout',
                                          vertical: true });
          this.actor.connect('destroy', Lang.bind(this, this._onDestroy));
-@@ -91,6 +111,25 @@
+@@ -91,6 +118,25 @@
                           x_fill: true,
                           y_fill: true,
                           expand: true });
@@ -68,11 +89,11 @@ diff -ruN gnome-shell.orig/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
          this._label = new St.Label({ style_class: 'login-dialog-prompt-label' });
  
          this.actor.add(this._label,
-@@ -121,6 +160,27 @@
+@@ -121,6 +167,53 @@
                         { expand:  true,
                           x_align: St.Align.MIDDLE,
                           y_align: St.Align.END });
-+
++ 
 +        this.guestButton = new St.Button({ style_class: 'modal-dialog-button button',
 +                                           button_mask: St.ButtonMask.ONE | St.ButtonMask.THREE,
 +                                           reactive: true,
@@ -93,10 +114,36 @@ diff -ruN gnome-shell.orig/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
 +            // initially the guest button is clickable
 +            this._updateGuestButtonSensitivity(true);
 +        }
++
++        if (reauthenticationOnly) {
++            // Show the machine hostname, host type and release name in the lock screen.
++            // I tried to create a separate label element for this in loginDialog.js, but
++            // I just couldn't get it to work (the label never shows up). So we'll do it
++            // here. The font size has been set to small to make long hostnames visible
++            // (if the hostname is too long, it gets ellipsized). These things should be
++            // done using extensions, but I couldn't find a way to run extensions in the
++            // lock screen.
++            var hostType,
++                hostName,
++                releaseName;
++
++            try { hostType = readTextFile('/etc/puavo/hosttype').trim(); } catch (e) { hostType = '?'; }
++            try { hostName = readTextFile('/etc/puavo/hostname').trim(); } catch (e) { hostName = '?'; }
++            try { releaseName = readTextFile('/etc/puavo-image/release').trim(); } catch (e) { releaseName = '?'; }
++
++            this._machineInfoText = new St.Label({
++                text: hostType + ' | ' + releaseName + ' | ' + hostName,
++                style: 'font-size: 75%; text-align: center; margin-top: 20px;'
++            });
++
++            this.actor.add_child(this._machineInfoText);
++            this._machineInfoText.show();
++            // This is a hack from start to end, but right now it does the job.
++        }
  
          this._defaultButtonWell = new St.Widget({ layout_manager: new Clutter.BinLayout() });
          this._defaultButtonWellActor = null;
-@@ -186,6 +246,8 @@
+@@ -186,6 +279,8 @@
                                               if (!this._userVerifier.hasPendingMessages)
                                                   this._fadeOutMessage();
  
@@ -105,7 +152,7 @@ diff -ruN gnome-shell.orig/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
                                               this._updateNextButtonSensitivity(this._entry.text.length > 0);
                                           }));
          this._entry.clutter_text.connect('activate', Lang.bind(this, function() {
-@@ -261,7 +323,7 @@
+@@ -261,7 +356,7 @@
      _onVerificationComplete: function() {
          this.setActorInDefaultButtonWell(null);
          this.verificationStatus = AuthPromptStatus.VERIFICATION_SUCCEEDED;
@@ -114,7 +161,7 @@ diff -ruN gnome-shell.orig/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
      },
  
      _onReset: function() {
-@@ -408,6 +470,11 @@
+@@ -408,6 +503,11 @@
          }
      },
  
@@ -126,7 +173,7 @@ diff -ruN gnome-shell.orig/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
      _updateNextButtonSensitivity: function(sensitive) {
          this.nextButton.reactive = sensitive;
          this.nextButton.can_focus = sensitive;
-@@ -447,6 +514,14 @@
+@@ -447,6 +547,14 @@
          this.cancelButton.reactive = true;
          this.nextButton.label = _("Next");
  
