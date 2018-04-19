@@ -131,6 +131,7 @@ tray-pos='center'
 name='Geos-puavo-dark-panel'
 
 [org/gnome/shell/overrides]
+attach-modal-dialogs=false
 dynamic-workspaces=false
 workspaces-only-on-primary=false
 
