@@ -62,11 +62,15 @@ begin
     data[:ssd] = IO.read('/sys/block/sda/queue/rotational').strip == "0" ? "1" : "0" rescue "-1"
 
     # detailed RAM info
-    memory_json = `lshw -json 2>/dev/null`
-    memory_data = JSON.parse(memory_json)
+    # XXX running lshw slows down boot too much (currently), do not do this
+    # memory_json = `lshw -json 2>/dev/null`
+    # memory_data = JSON.parse(memory_json)
+    memory_data = []
     data[:memory] = []
 
     begin
+        raise 'XXX Do nothing (see above)'
+
         # TODO: we could replace Facter fully with this
         # locate the "core" block...
         memory_data['children'].each do |child1|
