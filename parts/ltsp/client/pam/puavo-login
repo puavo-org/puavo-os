@@ -97,8 +97,9 @@ authenticate_user() {
     kinit_env='KRB5_CONFIG=/etc/krb5.conf.masteronly'
   fi
 
+  # printf is a shell builtin, so this is secure
   kinit_msg=$(
-    echo "$user_password" \
+    printf %s "$user_password" \
       | timeout -k 1 10 env LANG=C $kinit_env \
 	  kinit -f -l 5d -r 7d "$PAM_USER" 2>&1) || authenticate_user_status=$?
 
@@ -235,11 +236,12 @@ remove_users_on_removal_list() {
 handle_external_login() {
   [ "$(puavo-conf puavo.login.external.enabled)" = 'true' ] || return 0
 
+  # printf is a shell builtin, so this is secure
   if extlogins=$(
-    echo "$user_password" \
-      | timeout -k 1 10 env USER="$PAM_USER" \
+    printf %s "$user_password" \
+      | timeout -k 1 10 \
           /usr/bin/puavo-rest-request v3/external_login/auth \
-            --send-device-school-dn --user-pass-credentials --writable); then
+            --post --send-device-school-dn --user "$PAM_USER" --writable); then
     external_login_status=$({ echo "$extlogins" | jq -r .status; } \
                               || echo NOSTATUS)
   else
@@ -268,6 +270,9 @@ handle_external_login() {
     BADUSERCREDS)
       logmsg notice "external login BADUSERCREDS: $(echo "$extlogins" | jq .msg)"
       return 1
+      ;;
+    CONFIGERROR)
+      extlogin_errmsg="external login configuration error: $(echo "$external_logins" | jq .msg)"
       ;;
     NOTCONFIGURED)
       extlogin_errmsg="external login is not configured: $(echo "$external_logins" | jq .msg)"

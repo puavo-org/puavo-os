@@ -1340,10 +1340,9 @@ StScrollBar StButton#vhandle:active {
 
 .calendar-change-month-back:hover,
 .calendar-change-month-back:focus {
-    background-color: #999999;
 }
 .calendar-change-month-back:active {
-    background-color: #aaaaaa;
+    background-color: #44abec;
 }
 
 .calendar-change-month-forward {
@@ -1359,10 +1358,9 @@ StScrollBar StButton#vhandle:active {
 
 .calendar-change-month-forward:hover,
 .calendar-change-month-forward:focus {
-    background-color: #999999;
 }
 .calendar-change-month-forward:active {
-    background-color: #aaaaaa;
+    background-color: #44abec;
 }
 
 .datemenu-date-label {
@@ -1370,20 +1368,19 @@ StScrollBar StButton#vhandle:active {
     font-weight: bold;
     text-align: center;
     color: #eeeeec;
-    border-radius: 4px;
+    border-radius: 0px;
 }
 
 .datemenu-date-label:hover,
 .datemenu-date-label:focus {
-    background-color: #999999;
 }
 
 .datemenu-date-label:active {
-    background-color: #aaaaaa;
+    background-color: #44abec;
 }
 
 .calendar-day-base {
-    font-size: 9pt;
+    font-size: 14px;
     text-align: center;
     width: 2.4em;
     height: 2.4em;
@@ -1413,7 +1410,6 @@ StScrollBar StButton#vhandle:active {
 
 /* Hack used in lieu of border-collapse - see calendar.js */
 .calendar-day {
-    border: 1px solid #505050;
     color: #babdb6;
     border-top-width: 0;
     border-left-width: 0;
@@ -1431,7 +1427,6 @@ StScrollBar StButton#vhandle:active {
 }
 
 .calendar-nonwork-day {
-    background-color: rgba(128, 128, 128, .1);
 }
 
 .calendar-today {
@@ -1446,7 +1441,11 @@ StScrollBar StButton#vhandle:active {
 }
 
 .calendar-other-month-day {
-    color: #333333;
+    color: #bbb;
+ }
+
+.calendar-other-month-day:hover {
+    color: #666;
 }
 
 .events-table {
@@ -2417,6 +2416,7 @@ StScrollBar StButton#vhandle:active {
 
 .login-dialog-button-box {
     spacing: 5px;
+    padding-bottom: 15px; /* push the guest login button downwards */
 }
 
 .login-dialog-user-list-view {
@@ -2491,25 +2491,31 @@ StScrollBar StButton#vhandle:active {
     font-size: 16pt;
     font-weight: bold;
     text-align: left;
-    padding-left: 15px;
-    text-shadow: rgba(0, 0, 0, 0.5) 0px 2px 1px 0px;
+    text-shadow: rgba(0, 0, 0, 1) 2px 2px 1px;
 }
 
 .login-dialog-prompt-layout {
-    padding-top: 2px;
-    padding-bottom: 15px;
-    spacing: 8px;
-    width: 23em;
-    padding-left:13px;
-    padding-right:13px;
-    background-color: rgba(0,0,0,0.2);
+    padding: 5px 20px 20px 20px;  /* username already has padding at top */
+    background-color: rgba(0,0,0,0.4);
     border-radius: 10px;
 }
 
 .login-dialog-prompt-label {
     color: #eeeeee;
     font-size: 16px;
-    padding-top: 10px;
+    text-shadow: rgba(0, 0, 0, 1) 1px 1px 0;
+    padding: 0;
+}
+
+.login-dialog-prompt-entry {
+    /* make the username/password field text more visible */
+    color: #000 !important;
+    background: #fff !important;
+}
+
+.login-dialog-prompt-entry:insensitive {
+    color: #000 !important;
+    background: rgba(136, 136, 136, 0.5) !important;
 }
 
 .login-dialog-session-list-button StIcon {
@@ -2569,13 +2575,14 @@ StScrollBar StButton#vhandle:active {
     border-color: #666666;
     color: #9f9f9f;
     background-gradient-direction: none;
-    background-color: rgba(102, 102, 102, 0.15);
+    background-color: rgba(102, 102, 102, 0.25);
 }
 
 .login-dialog-message {
     padding-top: 0px;
-    padding-bottom: 0px;
+    padding-bottom: 15px;  /* push the buttonbox down a bit */
     min-height: 1em;
+    text-shadow: rgba(0, 0, 0, 1) 1px 1px 0px;
 }
 
 .login-dialog-message-warning {

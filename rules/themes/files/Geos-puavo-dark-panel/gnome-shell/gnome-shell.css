@@ -824,7 +824,7 @@ color: #fff;
 .world-clocks-button:active,
 .message-list-section-title:active {
   background-color: rgb(68,171,236);
-  color: #fff; }
+  color: #000; }
 
 .datemenu-today-button .date-label {
   font-size: 1.5em;
@@ -872,7 +872,7 @@ color: #fff;
   .pager-button:hover, .pager-button:focus {
     background-color: rgba(238, 238, 236, 0.05); }
   .pager-button:active {
-    background-color: transparent; }
+    background-color: #44abec; }
 
 .calendar-change-month-back {
   background-image: url("resource:///org/gnome/shell/theme/calendar-arrow-left.svg"); }
@@ -918,8 +918,8 @@ color: #fff;
   border-left-width: 1px; }
 
 .calendar-nonwork-day {
-  color: rgba(133, 133, 132, 0.96);
-   text-shadow: 0px 2px #fff; }
+  color: #f00;
+ }
 
 .calendar-today {
   font-weight: bold;
@@ -932,8 +932,12 @@ color: #fff;
 
 
 .calendar-other-month-day {
-   color: rgba(238, 238, 236, 0.15);
-  opacity: 0; }
+    color: #bbb;
+ }
+
+.calendar-other-month-day:hover {
+    color: #666;
+}
 
 .calendar-week-number {
   font-size: 70%;
@@ -943,7 +947,7 @@ color: #fff;
   padding: 0.9em 0 0;
   margin: 3px;
   color: black;
-  background-color: white; }
+  background-color: inherit; }
 
 /* Message list */
 .message-list {

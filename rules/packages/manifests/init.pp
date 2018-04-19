@@ -191,6 +191,7 @@ class packages {
       tag => [ 'tag_firmware', 'tag_debian', ];
 
     [ 'fontconfig'
+    , 'gnome-font-viewer'
     , 'ttf-freefont'
     , 'xfonts-terminus'
     , 'xfonts-utils' ]:
@@ -358,6 +359,7 @@ class packages {
     , 'idle-python3.5'
     , 'kturtle'
     , 'lokalize'
+    , 'meld'
     , 'pyqt4-dev-tools'
     , 'python-doc'
     , 'python-jsonpickle' # a dependency for
@@ -534,6 +536,7 @@ class packages {
     , 'network-manager'
     , 'network-manager-pptp'
     , 'network-manager-pptp-gnome'
+    , 'nodm'            # for infotv
     , 'openprinting-ppds'
     , 'pcmciautils'
     , 'plymouth'
@@ -633,12 +636,12 @@ class packages {
   #
 
   @package {
-    [ 'firefox'
-    , 'firefox-locale-de'
-    , 'firefox-locale-en'
-    , 'firefox-locale-fi'
-    , 'firefox-locale-fr'
-    , 'firefox-locale-sv' ]:
+    [ 'firefox:i386'
+    , 'firefox-locale-de:i386'
+    , 'firefox-locale-en:i386'
+    , 'firefox-locale-fi:i386'
+    , 'firefox-locale-fr:i386'
+    , 'firefox-locale-sv:i386' ]:
       tag => [ 'tag_web', 'tag_ubuntu', ];
 
     [ 'ttf-ubuntu-font-family' ]:

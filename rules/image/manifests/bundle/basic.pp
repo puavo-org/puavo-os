@@ -11,6 +11,7 @@ class image::bundle::basic {
   include ::gdm
   include ::hwquirks
   include ::initramfs
+  include ::infotv
   include ::kernels
   # include ::keyboard_hw_quirks        # XXX do we need this for Debian?
   include ::locales
