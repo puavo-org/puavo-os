@@ -122,15 +122,7 @@ install : installdirs
 		udev/rules.d/95-monitor-hotplug.rules
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/X11/Xsession.d \
-		etc/X11/Xsession.d/40puavo-session \
-		etc/X11/Xsession.d/41puavo-set-locale \
-		etc/X11/Xsession.d/42puavo-set-browser-homepage \
-		etc/X11/Xsession.d/43puavo-set-guest-session-quirks \
-		etc/X11/Xsession.d/44puavo-generate-dconf-profile \
-		etc/X11/Xsession.d/45puavo-display-setup \
-		etc/X11/Xsession.d/47puavo-force-plaintext-keyring \
-		etc/X11/Xsession.d/47puavo-set-default-browser-in-panel \
-		etc/X11/Xsession.d/90puavo-setup-printers
+		etc/X11/Xsession.d/*
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-client \
 		lib/*
