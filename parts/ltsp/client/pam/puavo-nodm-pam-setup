@@ -1,0 +1,7 @@
+#!/bin/sh
+
+set -eu
+
+if [ "$PAM_USER" = 'guest' ]; then
+  /etc/guest-session/reset-guestuser-home
+fi

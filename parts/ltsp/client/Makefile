@@ -132,6 +132,7 @@ install : installdirs
 		pam/puavo-local-config-setup \
 		pam/puavo-login \
 		pam/puavo-manage-homedir \
+		pam/puavo-nodm-pam-setup \
 		pam/restrict-logins-by-local-config
 
 	$(INSTALL_DATA) -t $(DESTDIR)/lib/systemd/system \
