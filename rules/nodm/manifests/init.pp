@@ -1,10 +1,9 @@
 class nodm {
+  include ::puavo_conf
+
   # nodm configuration file for infotv sessions
-  file {
-    '/etc/default/nodm':
-      source => 'puppet:///modules/nodm/nodm',
-      owner  => 'root',
-      group  => 'root',
-      mode   => '0644',
+  ::puavo_conf::script {
+    'setup_nodm':
+      source => 'puppet:///modules/nodm/setup_nodm';
   }
 }
