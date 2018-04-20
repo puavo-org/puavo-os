@@ -9,13 +9,6 @@ run_idid()
 	# Hide the mouse cursor except when moving
 	unclutter -idle 0.1 -root &
 
-	# Disable screen blanking and power saving features
-	xset s 0 0
-	xset s off
-	xset s noblank
-	xset dpms 0 0 0
-	xset -dpms
-
 	# Start idid and keep it running
 	while true; do
 		idid || true
@@ -47,6 +40,13 @@ run_iivari()
 		sleep 5
 	done
 ) &
+
+# Disable screen blanking and power saving features
+xset s 0 0
+xset s off
+xset s noblank
+xset dpms 0 0 0
+xset -dpms
 
 # Run the specified software
 case "$(puavo-conf puavo.infotv.software)" in
