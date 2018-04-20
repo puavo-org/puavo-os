@@ -2,8 +2,8 @@
 
 set -eu
 
-# just start /usr/lib/puavo-ltsp-client/desktop-session,
-# environment variable DESKTOP_SESSION should contain "puavo-webkiosk",
-# so we can do necessary tricks in /etc/X11/Xsession.d/38puavo-setup-webkiosk
+# Set the environment variable DESKTOP_SESSION to "puavo-webkiosk",
+# so we can do necessary tricks in /etc/X11/Xsession.d/38puavo-setup-webkiosk.
 
-exec /usr/lib/puavo-ltsp-client/desktop-session "$@"
+exec env DESKTOP_SESSION=puavo-webkiosk \
+     /usr/lib/puavo-ltsp-client/desktop-session "$@"
