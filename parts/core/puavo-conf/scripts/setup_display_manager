@@ -18,7 +18,7 @@ case "$dm" in
     echo "Unsupported display manager ${dm}" >&2
     exit 1
     ;;
-fi
+esac
 
 echo "$default_dm" > /etc/X11/default-display-manager
 
