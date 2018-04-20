@@ -20,6 +20,8 @@ Usage:
 }
 
 proc make_request {url curl_args {password ""}} {
+  global debug_mode
+
   # use curl instead of puavo-rest-client for efficiency reasons
 
   set exec_curl_args [list --cacert /etc/puavo/certs/rootca.pem \
@@ -30,6 +32,8 @@ proc make_request {url curl_args {password ""}} {
                            $url]
 
   # no timeouts here, it is the caller's responsibility to decide on that
+
+  if {$debug_mode} { puts stderr "Running curl $exec_curl_args" }
 
   if {$password eq ""} {
     if {[catch { exec curl {*}$exec_curl_args } result]} {
@@ -62,7 +66,8 @@ proc make_request {url curl_args {password ""}} {
   }
 }
 
-set auth_mode ""
+set auth_mode  ""
+set debug_mode false
 
 proc set_auth_mode {new_authmode} {
   global auth_mode
@@ -98,6 +103,7 @@ if {[catch {
 
   set options {
     authoritative
+    debug
     post
     send-device-credentials
     send-device-school-dn
@@ -116,6 +122,10 @@ if {[catch {
 
   if $params(authoritative) {
     lappend curl_args --form-string authoritative=true
+  }
+
+  if $params(debug) {
+    set debug_mode true
   }
 
   if $params(post) {
