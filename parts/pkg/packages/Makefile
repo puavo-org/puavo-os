@@ -27,6 +27,7 @@ packagedirs += marvinsketch/
 packagedirs += mattermost-desktop/
 packagedirs += msttcorefonts/
 packagedirs += obsidian-icons/
+packagedirs += ohjelmointi-opetuksessa/
 packagedirs += oracle-java/
 packagedirs += processing/
 packagedirs += pycharm/

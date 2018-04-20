@@ -27,6 +27,7 @@ class puavo_pkg::packages {
 			, 'mattermost-desktop'
 			, 'msttcorefonts'
 			, 'obsidian-icons'
+			, 'ohjelmointi-opetuksessa'
 			, 'oracle-java'
 			, 'processing'
 			, 'pycharm'

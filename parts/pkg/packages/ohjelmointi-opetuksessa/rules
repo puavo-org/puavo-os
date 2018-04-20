@@ -1,0 +1,28 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "${command}" in
+    configure)
+        upstream_dir=$1
+
+        ln -fns "${upstream_dir}/huomioliivi" /usr/share/arduino/libraries/Huomioliivi
+        ln -fns "${upstream_dir}/nalle" /usr/share/arduino/libraries/Nalle
+        ln -fns "${upstream_dir}/zumo-32u4" /usr/share/arduino/libraries/Zumo
+        ;;
+    unconfigure)
+        rm -rf /usr/share/arduino/libraries/Huomioliivi \
+               /usr/share/arduino/libraries/Nalle \
+               /usr/share/arduino/libraries/Zumo
+        ;;
+    unpack)
+        upstream_pack=$1
+        upstream_dir=$2
+        tar xf "${upstream_pack}" -C "${upstream_dir}" --strip-components=1
+        ;;
+    *)
+        ;;
+esac
