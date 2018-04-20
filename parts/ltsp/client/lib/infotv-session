@@ -6,84 +6,72 @@ set -eu
 
 run_idid()
 {
-	# Hide the mouse cursor except when moving
-	unclutter -idle 0.1 -root &
+  # Hide the mouse cursor except when moving
+  unclutter -idle 0.1 -root &
 
-	# Disable screen blanking and power saving features
-	xset s 0 0
-	xset s off
-	xset s noblank
-	xset dpms 0 0 0
-	xset -dpms
-
-	# Start idid and keep it running
-	while true; do
-		idid || true
-		logger -p local0.err -t infotv "The idid process has exited or crashed, restarting it..."
-		sleep 5
-	done
+  # Start idid and keep it running
+  while true; do
+    idid || true
+    logger -p local0.err -t infotv \
+           'The idid process has exited or crashed, restarting it...'
+    sleep 5
+  done
 }
 
 run_iivari()
 {
-	# Clean up iivari's cache
-	rm -rf /home/infotv/.iivari >/dev/null 2>&1
+  # Clean up iivari's cache
+  rm -rf /home/infotv/.iivari >/dev/null 2>&1
 
-	# Start iivari and keep it running
-	while true; do
-		iivari_kiosk_domain="$(cat /etc/puavo/domain)"
-		iivari-kiosk --urlbase "https://${iivari_kiosk_domain}/infotv/conductor" || true
-		logger -p local0.err -t infotv "The iivari process has exited or crashed, restarting it..."
-		sleep 5
-	done
+  # Start iivari and keep it running
+  while true; do
+    iivari_kiosk_domain="$(cat /etc/puavo/domain)"
+    iivari-kiosk --urlbase "https://${iivari_kiosk_domain}/infotv/conductor" \
+      || true
+    logger -p local0.err -t infotv \
+           'The iivari process has exited or crashed, restarting it...'
+    sleep 5
+  done
 }
 
-# Make sure the infotv user exists
-if [ ! -d "/home/infotv" ]; then
-        while true; do
-                logger -p local0.err -t infotv "The /home/infotv directory does not exist. You must login at least once as the infotv user."
-                sleep 3600
-        done
-        exit 1
-fi
-
-# Write a configuration file for i3. It hides the bottom panel and
-# workspace switchers, so the screen is completely empty.
-mkdir -p /home/infotv/.config/i3 || true
-cat <<'EOF' > /home/infotv/.config/i3/config
-# i3 config file (v4)
-#set $mod Mod4
-font pango:monospace 8
-EOF
-
-# Start i3 and keep it running
+# Start openbox and keep it running
 (
-	while true; do
-		i3 || true
-		logger -p local0.err -t infotv "i3 has exited or crashed, restarting it..."
-		sleep 5
-	done
+  while true; do
+    openbox || true
+    logger -p local0.err -t infotv \
+           'openbox has exited or crashed, restarting it...'
+    sleep 5
+  done
 ) &
+
+# Disable screen blanking and power saving features
+xset s 0 0
+xset s off
+xset s noblank
+xset dpms 0 0 0
+xset -dpms
 
 # Run the specified software
 case "$(puavo-conf puavo.infotv.software)" in
-	iivari)
-		run_iivari
-		break
-		;;
-	idid)
-		run_idid
-		break
-		;;
-	*)
-		while true; do
-			logger -p local0.err -t infotv "Invalid/missing signage software specified in puavo.infotv.software"
-			sleep 300
-		done
-		break
-		;;
+  iivari)
+    run_iivari
+    break
+    ;;
+  idid)
+    run_idid
+    break
+    ;;
+  *)
+    while true; do
+      logger -p local0.err -t infotv \
+             'Invalid/missing software specified in puavo.infotv.software'
+      sleep 300
+    done
+    break
+    ;;
 esac
 
 # We should never get here...
-logger -p local0.err -t infotv "The info-tv-session script is exiting! This should not happen!"
+logger -p local0.err -t infotv \
+       'The info-tv-session script is exiting! This should not happen!'
 exit 1

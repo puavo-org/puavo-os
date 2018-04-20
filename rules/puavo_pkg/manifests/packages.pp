@@ -23,6 +23,7 @@ class puavo_pkg::packages {
 			, 'globilab'
 			, 'google-chrome'
 			, 'google-earth'
+			, 'idid'
 			, 'marvinsketch'
 			, 'mattermost-desktop'
 			, 'msttcorefonts'

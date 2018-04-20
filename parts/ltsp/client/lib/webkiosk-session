@@ -1,9 +1,16 @@
 #!/bin/sh
 
-set -eu
+# no "set -eu"!
+# we should be run from nodm
 
-# just start /usr/lib/puavo-ltsp-client/desktop-session,
-# environment variable DESKTOP_SESSION should contain "puavo-webkiosk",
-# so we can do necessary tricks in /etc/X11/Xsession.d/38puavo-setup-webkiosk
+export DESKTOP_SESSION=puavo-webkiosk
+
+SYSSESSIONDIR=/etc/X11/Xsession.d
+SESSIONFILES=$(run-parts --list $SYSSESSIONDIR)
+if [ -n "$SESSIONFILES" ]; then
+  for SESSIONFILE in $SESSIONFILES; do
+    . $SESSIONFILE
+  done
+fi
 
 exec /usr/lib/puavo-ltsp-client/desktop-session "$@"
