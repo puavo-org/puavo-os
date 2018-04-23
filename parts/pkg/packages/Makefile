@@ -10,6 +10,7 @@ packagedirs += adobe-pepperflashplugin/
 packagedirs += adobe-pepperflashplugin-32bit/
 packagedirs += adobe-reader/
 packagedirs += appinventor/
+packagedirs += arduino-ide/
 packagedirs += bluegriffon/
 # XXX do not build, not ready # packagedirs += casio-classpad-manager-for-ii/
 packagedirs += cmaptools/
