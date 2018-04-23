@@ -343,9 +343,7 @@ class packages {
     , 'gtklp' ]:
       tag => [ 'tag_printing', 'tag_debian', ];
 
-    [ 'arduino'
-    , 'arduino-mk'
-    , 'avr-libc'
+    [ 'avr-libc'
     # XXX 'basic256'		# XXX missing from Debian Jessie
     , 'eclipse'
     , 'emacs24'

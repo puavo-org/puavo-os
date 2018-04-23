@@ -11,6 +11,7 @@ class puavo_pkg::packages {
 			, 'adobe-pepperflashplugin'     # for 64-bit Chromium
 			, 'adobe-reader'
 			, 'appinventor'
+			, 'arduino-ide'
 			, 'bluegriffon'
 			, 'cmaptools'
 			, 'cnijfilter2'
@@ -41,4 +42,8 @@ class puavo_pkg::packages {
 			, 'vstloggerpro' ]
 
   @puavo_pkg::install { $available_packages: ; }
+
+  Puavo_pkg::Install['ohjelmointi-opetuksessa'] {
+    require +> Puavo_pkg::Install['arduino-ide'],
+  }
 }
