@@ -5,18 +5,24 @@ set -eu
 command=$1
 shift
 
+# We assume the arduino-ide package has been installed before
+# this package is installed!
+opinsys="/opt/arduino-ide/examples/12.Opinsys"
+
 case "${command}" in
     configure)
         upstream_dir=$1
 
-        ln -fns "${upstream_dir}/huomioliivi" /usr/share/arduino/libraries/Huomioliivi
-        ln -fns "${upstream_dir}/nalle" /usr/share/arduino/libraries/Nalle
-        ln -fns "${upstream_dir}/zumo-32u4" /usr/share/arduino/libraries/Zumo
+        mkdir -p "${opinsys}"
+        ln -fns "${upstream_dir}/huomioliivi" "${opinsys}/Huomioliivi"
+        ln -fns "${upstream_dir}/nalle" "${opinsys}/Nalle"
+        ln -fns "${upstream_dir}/zumo-32u4" "${opinsys}/Zumo"
         ;;
     unconfigure)
-        rm -rf /usr/share/arduino/libraries/Huomioliivi \
-               /usr/share/arduino/libraries/Nalle \
-               /usr/share/arduino/libraries/Zumo
+        rm -rf "${opinsys}/Huomioliivi" \
+               "${opinsys}/Nalle" \
+               "${opinsys}/Zumo" \
+               "${opinsys}"
         ;;
     unpack)
         upstream_pack=$1
