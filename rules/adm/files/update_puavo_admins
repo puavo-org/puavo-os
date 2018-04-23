@@ -1,0 +1,135 @@
+#!/bin/sh
+
+set -eu
+
+get_adm_users_json() {
+  puavo_os_gid=$(id -g puavo-os)
+
+  jq -r --arg puavo_os_gid "$puavo_os_gid" '
+    reduce .owners[] as $u
+     ({
+        adm_users: [],
+        passwd: {},
+        shadow: {},
+        ssh_public_keys: [],
+      };
+
+      # XXX usernames and such should be validated at least a bit
+      # if ($u.username | test("^adm-")) then
+        .passwd[$u.username] = ($u.username + ":"
+                                  + "x" + ":"
+                                  + ($u.uid_number | tostring) + ":"
+                                  + $puavo_os_gid + ":"
+                                  + $u.first_name + " " + $u.last_name + ":"
+                                  + "/adm-home/" + $u.username + ":"
+                                  + "/bin/bash")
+        | .adm_users += [ $u.username ]
+        | .shadow[$u.username] = ($u.username + ":!:::::::")
+        | if ($u.ssh_public_key != null) then
+            .ssh_public_keys += [ $u.username + " " + $u.ssh_public_key ]
+          else
+            .
+          end
+      # else
+        # .
+      # end
+    )
+  ' /state/etc/puavo/org.json
+}
+
+update_passwd_file() {
+  awk -F: '
+    $1 in users { next }
+    {
+      users[$1] = $0
+      print $0
+    }
+  '
+}
+
+update_group_file() {
+  awk -F: -v puavoadmins_string="$1" '
+    BEGIN {
+      split(puavoadmins_string, puavoadmins_a, "\n")
+      for (u in puavoadmins_a) { puavoadmins[ puavoadmins_a[u] ] = 1 }
+    }
+    $1 == "adm" || $1 == "lpadmin" {
+      delete group_members
+      for (u in puavoadmins) { group_members[u] = 1 }
+
+      split($4, group_members_a, ",")
+      for (u in group_members_a) { group_members[ group_members_a[u] ] = 1 }
+
+      printf "%s:%s:%s:", $1, $2, $3
+      first_put = 0
+      for (u in group_members) {
+        printf "%s%s", (first_put ? "," : ""), u
+        first_put = 1
+      }
+      printf "\n"
+      next
+    }
+    { print }
+  '
+}
+
+if [ -e /run/puavo/nbd-server ]; then
+  prr_args='--user-bootserver'
+  target_path='/etc/puavo/org.json'
+else
+  prr_args='--user-etc'
+  target_path='/state/etc/puavo/org.json'
+fi
+
+puavo-rest-request /v3/current_organisation "$prr_args" > "${target_path}.tmp"
+mv "${target_path}.tmp" "$target_path"
+
+adm_users_json=$(get_adm_users_json)
+
+puavoadmins=$(printf %s "$adm_users_json" | jq -r '.adm_users[]')
+
+{
+  cat /etc/passwd
+  printf %s "$adm_users_json" | jq -r '.passwd[]'
+} | update_passwd_file > /etc/passwd.tmp_update_puavo_admins
+mv /etc/passwd.tmp_update_puavo_admins /etc/passwd
+
+install -o root -g shadow -m 640 /dev/null /etc/shadow.tmp_update_puavo_admins
+{
+  cat /etc/shadow
+  printf %s "$adm_users_json" | jq -r '.shadow[]'
+} | update_passwd_file > /etc/shadow.tmp_update_puavo_admins
+mv /etc/shadow.tmp_update_puavo_admins /etc/shadow
+
+update_group_file "$puavoadmins" < /etc/group \
+  > /etc/group.tmp_update_puavo_admins
+mv /etc/group.tmp_update_puavo_admins /etc/group
+
+install -o root -g shadow -m 640 /dev/null /etc/gshadow.tmp_update_puavo_admins
+update_group_file "$puavoadmins" < /etc/gshadow \
+  > /etc/gshadow.tmp_update_puavo_admins
+mv /etc/gshadow.tmp_update_puavo_admins /etc/gshadow
+
+# do not parse json in a loop, because awk if faster
+ssh_keys=$(printf %s "$adm_users_json" | jq -r '.ssh_public_keys[]')
+
+for adm_user in $(printf "%s\n" "$ssh_keys" | awk '{ print $1 }') ; do
+  ssh_key=$(printf "%s\n" "$ssh_keys" \
+              | awk -v adm_user="$adm_user" '
+                  $1 == adm_user { $1 = ""; sub(/^ /, ""); print }
+                  { next }
+                ')
+
+  if [ -n "$ssh_key" -a "$ssh_key" != 'null' \
+       -a ! -d "/adm-home/${adm_user}" ]; then
+    mkdir -p /adm-home
+    cp -R /etc/skel "/adm-home/${adm_user}"
+    install -d -o "$adm_user" -g puavo-os -m 700 "/adm-home/${adm_user}/.ssh"
+    printf "%s\n" "$ssh_key" > "/adm-home/${adm_user}/.ssh/authorized_keys"
+    chmod 600 "/adm-home/${adm_user}/.ssh/authorized_keys"
+    chown -R "${adm_user}:puavo-os" "/adm-home/${adm_user}"
+    chmod 750 "/adm-home/${adm_user}"
+  fi
+done
+
+exit 0
