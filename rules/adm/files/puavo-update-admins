@@ -75,6 +75,17 @@ get_adm_users_json() {
   ' "$org_json_path"
 }
 
+replace_if_changed() {
+  target_path=$1
+  src_path=$2
+
+  if cmp "$target_path" "$src_path" >/dev/null 2>&1; then
+    rm -f "$src_path"
+  else
+    mv "$src_path" "$target_path"
+  fi
+}
+
 update_passwd_file() {
   awk -F: '
     $1 in users { next }
@@ -140,23 +151,23 @@ puavoadmins=$(printf %s "$adm_users_json" | jq -r '.adm_users[]')
   cat /etc/passwd
   printf %s "$adm_users_json" | jq -r '.passwd[]'
 } | update_passwd_file > /etc/passwd.tmp_update_puavo_admins
-mv /etc/passwd.tmp_update_puavo_admins /etc/passwd
+replace_if_changed /etc/passwd /etc/passwd.tmp_update_puavo_admins
 
 install -o root -g shadow -m 640 /dev/null /etc/shadow.tmp_update_puavo_admins
 {
   cat /etc/shadow
   printf %s "$adm_users_json" | jq -r '.shadow[]'
 } | update_passwd_file > /etc/shadow.tmp_update_puavo_admins
-mv /etc/shadow.tmp_update_puavo_admins /etc/shadow
+replace_if_changed /etc/shadow /etc/shadow.tmp_update_puavo_admins
 
 update_group_file "$puavoadmins" < /etc/group \
   > /etc/group.tmp_update_puavo_admins
-mv /etc/group.tmp_update_puavo_admins /etc/group
+replace_if_changed /etc/group /etc/group.tmp_update_puavo_admins
 
 install -o root -g shadow -m 640 /dev/null /etc/gshadow.tmp_update_puavo_admins
 update_group_file "$puavoadmins" < /etc/gshadow \
   > /etc/gshadow.tmp_update_puavo_admins
-mv /etc/gshadow.tmp_update_puavo_admins /etc/gshadow
+replace_if_changed /etc/gshadow /etc/gshadow.tmp_update_puavo_admins
 
 # do not parse json in a loop, because awk if faster
 ssh_keys=$(printf %s "$adm_users_json" | jq -r '.ssh_public_keys[]')
