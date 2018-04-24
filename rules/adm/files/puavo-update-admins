@@ -7,6 +7,10 @@ set -eu
 exec 3<$0
 flock -nx 3 || { echo 'did not get a lock, exiting'; exit 2; }
 
+logmsg() {
+  logger -s -t puavo-update-admins "$@" || true
+}
+
 get_adm_users_json() {
   org_json_path=$1
   puavo_os_gid=$(id -g puavo-os)
@@ -87,6 +91,8 @@ replace_if_changed() {
   if cmp "$target_path" "$src_path" >/dev/null 2>&1; then
     rm -f "$src_path"
   else
+    logmsg -p user.info \
+           "updating ${target_path} with information from org.json"
     mv "$src_path" "$target_path"
   fi
 }
@@ -190,6 +196,8 @@ for adm_user in $(printf "%s\n" "$ssh_keys" | awk '{ print $1 }') ; do
 
   if [ -n "$ssh_key" -a "$ssh_key" != 'null' \
        -a ! -d "/adm-home/${adm_user}" ]; then
+    logmsg -p user.info \
+           "setting up home and ssh key for ${adm_user} from org.json"
     mkdir -p /adm-home
     cp -R /etc/skel "/adm-home/${adm_user}"
     install -d -o "$adm_user" -g puavo-os -m 700 "/adm-home/${adm_user}/.ssh"
