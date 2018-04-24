@@ -14,8 +14,7 @@ get_adm_users_json() {
         ssh_public_keys: [],
       };
 
-      # XXX usernames and such should be validated at least a bit
-      # if ($u.username | test("^adm-")) then
+      if ($u.username | test("^adm-")) then
         .passwd[$u.username] = ($u.username + ":"
                                   + "x" + ":"
                                   + ($u.uid_number | tostring) + ":"
@@ -30,9 +29,9 @@ get_adm_users_json() {
           else
             .
           end
-      # else
-        # .
-      # end
+      else
+        .
+      end
     )
   ' /state/etc/puavo/org.json
 }
