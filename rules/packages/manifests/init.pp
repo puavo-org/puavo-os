@@ -324,6 +324,7 @@ class packages {
       tag => [ 'tag_network', 'tag_debian', ];
 
     [ 'calibre'
+    , 'gummi'
     , 'icedove'
     , 'libreoffice'
     , 'libreoffice-base'
