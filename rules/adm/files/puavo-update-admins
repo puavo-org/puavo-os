@@ -2,6 +2,11 @@
 
 set -eu
 
+# obtain an exclusive lock on myself...
+# there should be only one instance of this program running
+exec 3<$0
+flock -nx 3 || { echo 'did not get a lock, exiting'; exit 2; }
+
 get_adm_users_json() {
   org_json_path=$1
   puavo_os_gid=$(id -g puavo-os)
