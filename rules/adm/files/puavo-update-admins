@@ -3,6 +3,7 @@
 set -eu
 
 get_adm_users_json() {
+  org_json_path=$1
   puavo_os_gid=$(id -g puavo-os)
 
   # validation is mostly the same as in puavo-login
@@ -71,7 +72,7 @@ get_adm_users_json() {
 	end
       )
     end
-  ' /state/etc/puavo/org.json
+  ' "$org_json_path"
 }
 
 update_passwd_file() {
@@ -111,17 +112,18 @@ update_group_file() {
 }
 
 if [ -e /run/puavo/nbd-server ]; then
+  org_json_path='/etc/puavo/org.json'
   prr_args='--user-bootserver'
-  target_path='/etc/puavo/org.json'
 else
+  org_json_path='/state/etc/puavo/org.json'
   prr_args='--user-etc'
-  target_path='/state/etc/puavo/org.json'
 fi
 
-puavo-rest-request /v3/current_organisation "$prr_args" > "${target_path}.tmp"
-mv "${target_path}.tmp" "$target_path"
+puavo-rest-request /v3/current_organisation "$prr_args" \
+  > "${org_json_path}.tmp"
+mv "${org_json_path}.tmp" "$org_json_path"
 
-adm_users_json=$(get_adm_users_json)
+adm_users_json=$(get_adm_users_json "$org_json_path")
 
 puavoadmins=$(printf %s "$adm_users_json" | jq -r '.adm_users[]')
 
