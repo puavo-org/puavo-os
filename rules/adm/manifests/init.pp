@@ -1,5 +1,5 @@
 class adm {
-  include ::adm::update_puavo_admins
+  include ::adm::update_admins
   include ::bash
   include ::packages
 
