@@ -1,0 +1,9 @@
+[Unit]
+Description=Update Puavo admins from Puavo
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/puavo-update-admins
+
+[Install]
+WantedBy=multi-user.target

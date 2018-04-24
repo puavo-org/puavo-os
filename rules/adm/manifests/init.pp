@@ -1,4 +1,5 @@
 class adm {
+  include ::adm::update_admins
   include ::bash
   include ::packages
 
@@ -26,35 +27,29 @@ class adm {
       $user_homedir:
         ensure  => directory,
         owner   => $username,
-        group   => $username,
+        group   => $::adm::common_group,
         mode    => $home_mode,
         require => User[$username];
 
       $ssh_subdir:
-        ensure  => directory,
-        owner   => $username,
-        group   => $username,
-        mode    => '0700';
+        ensure => directory,
+        owner  => $username,
+        group  => $::adm::common_group,
+        mode   => '0700';
 
       "${user_homedir}/.bash_by_puppet":
-        owner   => $username,
-        group   => $username,
-        mode    => '0644',
-        source  => [ "puppet:///modules/adm/users/$username/.bash_by_puppet"
-                   , "puppet:///modules/adm/common/.bash_by_puppet" ];
+        owner  => $username,
+        group  => $::adm::common_group,
+        mode   => '0644',
+        source => [ "puppet:///modules/adm/users/$username/.bash_by_puppet"
+                  , "puppet:///modules/adm/common/.bash_by_puppet" ];
 
       "${user_homedir}/.gitconfig":
-        owner   => $username,
-        group   => $username,
-        mode    => '0644',
-        source  => [ "puppet:///modules/adm/users/$username/.gitconfig"
-                   , "puppet:///modules/adm/common/.gitconfig" ];
-    }
-
-    group {
-      $username:
-        ensure  => present,
-        gid     => $uid;
+        owner  => $username,
+        group  => $::adm::common_group,
+        mode   => '0644',
+        source => [ "puppet:///modules/adm/users/$username/.gitconfig"
+                  , "puppet:///modules/adm/common/.gitconfig" ];
     }
 
     if $sshkey != undef {
@@ -71,12 +66,11 @@ class adm {
       $username:
         ensure     => present,
         uid        => $uid,
-        gid        => $uid,
-        groups     => [ 'adm', 'lpadmin', $adm::common_group ],
+        gid        => $::adm::common_group_gid,
+        groups     => [ 'adm', 'lpadmin', ],
         home       => $user_homedir,
         managehome => true,
         require    => [ File['/etc/skel/.bashrc']
-                      , Group[$username]
                       , Package['cups-client'] ],
         shell      => $shell,
         password   => '!';

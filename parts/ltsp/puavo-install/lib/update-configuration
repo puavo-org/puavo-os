@@ -208,6 +208,14 @@ def update_extra_boot_scripts(restclient)
   end
 end
 
+def update_puavoadmins()
+  system('/usr/local/sbin/puavo-update-admins')
+  if $?.exitstatus != 0 && $?.exitstatus != 2 then
+    raise 'Running /usr/local/sbin/puavo-update-admins' \
+            + ' returned unexpected failure'
+  end
+end
+
 Syslog.open(File.basename($0), Syslog::LOG_CONS)
 
 restclient = PuavoRestClient.new(:auth => :etc, :timeout => 30)
@@ -230,6 +238,7 @@ update_functions = [
   :update_puavopkg_installers,
   :update_certificate,
   :update_extra_boot_scripts,
+  :update_puavoadmins,
 ]
 
 exitcode = 0
