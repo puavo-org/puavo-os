@@ -5,34 +5,72 @@ set -eu
 get_adm_users_json() {
   puavo_os_gid=$(id -g puavo-os)
 
+  # validation is mostly the same as in puavo-login
   jq -r --arg puavo_os_gid "$puavo_os_gid" '
-    reduce .owners[] as $u
-     ({
-        adm_users: [],
-        passwd: {},
-        shadow: {},
-        ssh_public_keys: [],
-      };
+    if (.|type != "object") then
+      error("organisation information is not an object")
+    elif (.owners|type != "array") then
+      error("organisation owners is not an array")
+    else
+      reduce .owners[] as $u
+       ({
+	  adm_users: [],
+	  passwd: {},
+	  shadow: {},
+	  ssh_public_keys: [],
+	};
 
-      if ($u.username | test("^adm-")) then
-        .passwd[$u.username] = ($u.username + ":"
-                                  + "x" + ":"
-                                  + ($u.uid_number | tostring) + ":"
-                                  + $puavo_os_gid + ":"
-                                  + $u.first_name + " " + $u.last_name + ":"
-                                  + "/adm-home/" + $u.username + ":"
-                                  + "/bin/bash")
-        | .adm_users += [ $u.username ]
-        | .shadow[$u.username] = ($u.username + ":!:::::::")
-        | if ($u.ssh_public_key != null) then
-            .ssh_public_keys += [ $u.username + " " + $u.ssh_public_key ]
-          else
-            .
-          end
-      else
-        .
-      end
-    )
+	if ($u|type != "object") then
+	  error("organisation owner info is not an object")
+        elif ($u.username|type != "string") then
+          error("username is not a string")
+        elif ($u.username == "") then
+          error("username is an empty string")
+        elif (($u.username|contains(":")) or ($u.username|contains("\n"))) then
+          error("username contains : or a newline")
+        elif ($u.uid_number|type != "number") then
+          error("$u.uid_number is not a number")
+        elif ($u.uid_number < 1001) then
+          error("$u.uid_number is less than 1001")
+        elif ($u.uid_number > 4294967294) then
+          error("$u.uid_number is more than 4294967294")
+        elif ($u.first_name|type != "string") then
+          error("$u.first_name is not a string")
+        elif (($u.first_name|contains(":")) or ($u.first_name|contains("\n"))) then
+          error("$u.first_name contains : or a newline")
+        elif ($u.last_name|type != "string") then
+          error("$u.last_name is not a string")
+        elif (($u.last_name|contains(":")) or ($u.last_name|contains("\n"))) then
+          error("$u.last_name contains : or a newline")
+	elif ($u.username | test("^adm-")) then
+	  .passwd[$u.username]
+             = $u.username
+		 + ":" + "x"
+		 + ":" + ($u.uid_number|tostring)
+		 + ":" + $puavo_os_gid
+		 + ":" + (if ($u.first_name != "" and $u.last_name != "") then
+                            $u.first_name + " " + $u.last_name
+                          elif ($u.first_name != "") then
+                            $u.first_name
+                          elif ($u.last_name != "") then
+                            $u.last_name
+                          else
+                            "User X"
+                          end)
+                 + ":" + "/adm-home/" + $u.username
+                 + ":" + "/bin/bash"
+	  | .adm_users += [ $u.username ]
+	  | .shadow[$u.username] = ($u.username + ":!:::::::")
+	  | if ($u.ssh_public_key != null) then
+	      .ssh_public_keys += [ $u.username + " " + $u.ssh_public_key ]
+	    else
+	      .
+	    end
+	else
+	  .
+	end
+      )
+    end
   ' /state/etc/puavo/org.json
 }
 
