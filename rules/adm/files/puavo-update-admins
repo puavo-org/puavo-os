@@ -137,6 +137,7 @@ fi
 
 # it is okay if this fails
 {
+  install -o root -g root -m 600 /dev/null "${org_json_path}.tmp"
   puavo-rest-request /v3/current_organisation "$prr_args" \
     > "${org_json_path}.tmp"
   mv "${org_json_path}.tmp" "$org_json_path"
