@@ -718,9 +718,9 @@ class packages {
       dkms_modules => $all_dkms_modules,
       package_name => 'linux-image-4.9.0-6-amd64';
 
-    '4.14.0-0.bpo.3-amd64':
+    '4.15.0-0.bpo.2-amd64':
       dkms_modules => [],
-      package_name => 'linux-image-4.14.0-0.bpo.3-amd64';
+      package_name => 'linux-image-4.15.0-0.bpo.2-amd64';
   }
 
   # XXX missing from Debian
