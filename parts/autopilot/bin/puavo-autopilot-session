@@ -24,7 +24,6 @@ if [ "$(puavo-conf puavo.autopilot.username)" != "$USER" ]; then
 fi
 
 session_args_json=$(puavo-conf puavo.autopilot.session_args)
-session_args_json='["--reboot-likelihood",3,"--slower-by",20]'
 
 session_args=$(echo "$session_args_json" \
                  | jq -r '
