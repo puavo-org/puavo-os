@@ -80,6 +80,7 @@ class packages {
     , 'pv'
     , 'pwgen'
     , 'pwman3'
+    , 'read-edid'
     , 'rsyslog'
     , 'screen'
     , 'setserial'
