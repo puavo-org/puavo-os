@@ -32,7 +32,7 @@ EOF
     unpack)
         upstream_pack=$1
         upstream_dir=$2
-        tar xf "${upstream_pack}" -C "${upstream_dir}" --strip-components=1
+        tar xf "${upstream_pack}" -C "${upstream_dir}" --strip-components=1 --exclude=java
         ;;
     *)
         ;;
