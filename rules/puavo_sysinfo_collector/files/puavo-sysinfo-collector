@@ -1,12 +1,8 @@
 #!/usr/bin/ruby
 
-# Gather some basic system information. Executed at startup, the
-# output is used in the login screen's system information display
-# (see /usr/share/gnome-shell/extensions/hostinfo@puavo.org).
-
-# Executed by puavo-sysinfo-collector.service.
-
-# Copyright (C) 2017-2018 Opinsys Oy
+# DBus service to collect some system information on-demand.
+# Version 0.99, (c) Opinsys Oy 2017-2018
+# Author: Jarmo Pietiläinen (jarmo@opinsys.fi)
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,92 +17,149 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# Version 0.96
-# Author: Jarmo Pietiläinen (jarmo@opinsys.fi)
+# Why, yes, this is my first DBus service ever, can you tell?
 
-require 'facter'
+require 'dbus'
 require 'json'
+require 'facter'
 
-# These symbols are also used verbatim in the JavaScript code,
-# so changing them willy-nilly will have disastrous consequences
-values = [
-    :bios_vendor,
-    :bios_version,
-    :bios_release_date,
-    :blockdevice_sda_model,
-    :blockdevice_sda_size,
-    :processorcount,
-    :processor0,
-    :memorysize_mb,
-    :macaddress,
-    :manufacturer,
-    :productname,
-    :serialnumber,
-    :boardserialnumber,
-]
+class SystemInfoCollector < DBus::Object
+  dbus_interface 'org.puavo.client.systeminfocollector' do
+    dbus_method :CollectSysinfo, 'out ret:s' do
+      begin
+        # These symbols are also used verbatim in the JavaScript code, so
+        # changing them willy-nilly will have disastrous consequences
+        values = [
+          :kernelrelease,
+          :bios_vendor,
+          :bios_version,
+          :bios_release_date,
+          :blockdevice_sda_model,
+          :blockdevice_sda_size,
+          :processorcount,
+          :processor0,
+          :memorysize_mb,
+          :manufacturer,
+          :productname,
+          :serialnumber,
+          :boardserialnumber,
+        ]
 
-data = {}
+        netmasks = {
+          '128.0.0.0' => 1, '255.128.0.0' => 9,  '255.255.128.0' => 17, '255.255.255.128' => 25,
+          '192.0.0.0' => 2, '255.192.0.0' => 10, '255.255.192.0' => 18, '255.255.255.192' => 26,
+          '224.0.0.0' => 3, '255.224.0.0' => 11, '255.255.224.0' => 19, '255.255.255.224' => 27,
+          '240.0.0.0' => 4, '255.240.0.0' => 12, '255.255.240.0' => 20, '255.255.255.240' => 28,
+          '248.0.0.0' => 5, '255.248.0.0' => 13, '255.255.248.0' => 21, '255.255.255.248' => 29,
+          '252.0.0.0' => 6, '255.252.0.0' => 14, '255.255.252.0' => 22, '255.255.255.252' => 30,
+          '254.0.0.0' => 7, '255.254.0.0' => 15, '255.255.254.0' => 23, '255.255.255.254' => 31,
+          '255.0.0.0' => 8, '255.255.0.0' => 16, '255.255.255.0' => 24, '255.255.255.255' => 32
+        }
 
-begin
-    # timestamp (so we know how old this information is)
-    data[:timestamp] = Time.now.to_i
+        data = {}
 
-    # release info
-    data[:this_image]   = IO.read('/etc/puavo-image/name').strip rescue '?'
-    data[:this_release] = IO.read('/etc/puavo-image/release').strip rescue '?'
+        begin
+          # timestamp (so we know how old this information is)
+          data[:timestamp] = Time.now.to_i
 
-    # facter stuff
-    values.each { |f| data[f] = Facter.value(f) }
+          # release info
+          data[:this_image]   = IO.read('/etc/puavo-image/name').strip rescue '?'
+          data[:this_release] = IO.read('/etc/puavo-image/release').strip rescue '?'
 
-    # SSD or spinning platters?
-    data[:ssd] = IO.read('/sys/block/sda/queue/rotational').strip == "0" ? "1" : "0" rescue "-1"
+          # facter stuff
+          values.each { |f| data[f] = Facter.value(f) }
 
-    # detailed RAM info
-    # XXX running lshw slows down boot too much (currently), do not do this
-    # memory_json = `lshw -json 2>/dev/null`
-    # memory_data = JSON.parse(memory_json)
-    memory_data = []
-    data[:memory] = []
+          # network interface addresses
+          interfaces = []
 
-    begin
-        raise 'XXX Do nothing (see above)'
+          begin
+            (Facter.value('interfaces').split(',') || []).each do |i|
+              next if i == 'lo'
 
-        # TODO: we could replace Facter fully with this
-        # locate the "core" block...
-        memory_data['children'].each do |child1|
-            next if child1['id'] != 'core'
+              ip = Facter.value("ipaddress_#{i}") || '<N/A>'
+              mac = Facter.value("macaddress_#{i}") || '<N/A>'
+              prefix = Facter.value("netmask_#{i}") || 0
+              prefix = netmasks[prefix] if netmasks.include?(prefix)
 
-            # locate the "memory" block..
-            child1['children'].each do |child2|
+              interfaces << {
+                name: i,
+                ip: ip,
+                mac: mac,
+                prefix: prefix
+              }
+            end
+          rescue
+            interfaces = []
+          end
+
+          data[:network_interfaces] = interfaces
+
+          # SSD or spinning platters?
+          data[:ssd] = IO.read('/sys/block/sda/queue/rotational').strip == '0' ? '1' : '0' rescue '-1'
+
+          # detailed RAM info
+          memory_json = `lshw -json 2>/dev/null`
+          memory_data = JSON.parse(memory_json)
+          data[:memory] = []
+
+          begin
+            # TODO: we could replace Facter fully with this
+            # locate the "core" block...
+            memory_data['children'].each do |child1|
+              next if child1['id'] != 'core'
+
+              # locate the "memory" block..
+              child1['children'].each do |child2|
                 next if child2['id'] != 'memory'
 
                 # iterate over the memory banks
                 child2['children'].each do |bank|
-                    data[:memory] << {
-                        size: bank['size'].to_i / (1024 * 1024),
-                        slot: bank['slot'],
-                        product: bank['product'],
-                        vendor: bank['vendor']
-                    }
+                  data[:memory] << {
+                    size: bank['size'].to_i / (1024 * 1024),
+                    slot: bank['slot'],
+                    product: bank['product'],
+                    vendor: bank['vendor']
+                  }
                 end
+              end
             end
+          rescue
+            # if the memory info fails, ensure a valid output still exists
+            data[:memory] = []
+          end
+
+          # some lspci values
+          data[:lspci_values] = []
+          lspci_raw = `lspci | awk '$2 == "Network" || $2 == "VGA"' | sed 's/^/  /'`
+          lspci_raw.strip.split("\n").each { |i| data[:lspci_values] << i.strip }
+
+          # wireless info (this needs to be improved)
+          x = `lspci -nnk | grep 0280 | cut -c 36-`
+          data[:wifi] = x.strip.split("\n").first.strip || ''
+        rescue
         end
-    rescue
-        # if the memory info fails, ensure a valid output still exists
-        data[:memory] = []
+
+        # use pretty_generate because humans might read the file out of curiosity
+        File.open('/run/puavo/puavo-sysinfo.json', 'w') do |f|
+          f.write(JSON.pretty_generate(data))
+        end
+
+        # return the raw data to the caller directly
+        out = JSON.generate(data)
+      rescue StandardError => e
+        # ensure we return valid data in all cases
+        out = '{}'
+      end
     end
-
-    # some lspci values
-    data[:lspci_values] = []
-    lspci_raw = `lspci | awk '$2 == "Network" || $2 == "VGA"' | sed 's/^/  /'`
-    lspci_raw.strip.split("\n").each { |i| data[:lspci_values] << i.strip }
-
-    # wireless info (this needs to be improved)
-    x = `lspci -nnk | grep 0280 | cut -c 36-`
-    data[:wifi] = x.strip.split("\n").first.strip || ''
-rescue
-    # do nothing :-(
+  end
 end
 
-# use pretty_generate because humans might read the file out of curiosity
-File.open('/run/puavo/puavo-sysinfo.json', 'w') { |f| f.write(JSON.pretty_generate(data)) }
+# create the service...
+bus = DBus::SystemBus.instance
+service = bus.request_service('org.puavo.client.systeminfocollectordaemon')
+service.export(SystemInfoCollector.new('/systeminfocollector'))
+
+# ...and start it
+mainloop = DBus::Main.new
+mainloop << bus
+mainloop.run
