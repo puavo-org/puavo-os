@@ -50,10 +50,7 @@ class adm::users {
       sshkey_type => 'rsa',
       uid         => 1017;
 
-    'adm-tjousmaki':
-      sshkey      => 'AAAAB3NzaC1yc2EAAAADAQABAAABAQC69Mjklxjd+99PofiCz53JZyJyQoFwI9T1jqmN423A8Od52ev0d0PPhFr02GaXEKZ2lvGgY+XYnib+aedxWY17775/9h1/JOs4jlKUSq2WyQLGYXl9QL8mXPMMzVqPwhCuayt/G5V23meA85gcyqKVGKKN5uiflHum5dXooPrUGUdOGPB4XMASFJOor8sYeh07GrzQ8RCWVfAyH6PYoi5pGbHQYGYZPhW1Bg1sx4B/hJIMIOS4iSa3dtyhAkV1HrjZcwoJ7I8fTCkYVanNzWAhBSgprpj5RKpWd51LkIPAO9jIuHaiz5M2uMstFP1PkB4aNw7fib3gxy03Swe+HWa5',
-      sshkey_type => 'rsa',
-      uid         => 1018;
+      # 1018 was reserved before
 
     'adm-eranta':
       sshkey      => 'AAAAB3NzaC1yc2EAAAADAQABAAABAQC6Lh/QdR7lAEDg5Je6lzjxEUcONiF9U9+Rn8LcKBgK3uHo2cx9EO5iFOwd5Cfe8t0k20RFxGBCVqyRmTTVZXdCG9On1PijG7YeEU3NOBVgGDbKtwBdyrucMKDPmnTca+YcCH8dO01IAHc2esDqMc8mHloJ/WR45AxQ8/bZVQqZYKNdWXPDgPqusj7E+Hg2uog7Eo2eNJP0jf7aSS4YYpUVOxvJ/cTEbFWO3VL4Lgb1/IJep/Q6QwpmAS8K24thFbiN51C7VbFHPX58nDIjI/Hh0qXbFCatfR1RtnRHaY0IPhoffUBNhleAyNbIvN8sWjEVA6dIWAxdn4/2djokEoO5',
