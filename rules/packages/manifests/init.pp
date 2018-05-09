@@ -218,6 +218,7 @@ class packages {
     , 'neverball'
     , 'neverputt'
     , 'openttd'
+    , 'qml-module-qtmultimedia'		# required by khangman
     , 'supertuxkart'
     , 'tuxmath'
     , 'tuxpaint'
