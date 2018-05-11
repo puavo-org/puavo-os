@@ -1,6 +1,5 @@
 /*
 Login screen host information display
-
 Copyright (C) 2017-2018 Opinsys Oy
 
 This program is free software: you can redistribute it and/or modify
@@ -16,17 +15,20 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-Version 0.9.1
+Version 0.9.9
 Author: Jarmo Pietiläinen (jarmo@opinsys.fi)
 */
 
 const St = imports.gi.St;
 const Main = imports.ui.main;
 const Lang = imports.lang;
+const Gtk = imports.gi.Gtk;
 const Shell = imports.gi.Shell;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const Clutter = imports.gi.Clutter;
+const Mainloop = imports.mainloop;
+const Gio = imports.gi.Gio;
 
 var hostType, hostName, releaseName;
 
@@ -51,7 +53,53 @@ const HostInfoButton = new Lang.Class(
     {
         this.parent(0.0);
 
-        // ---------------------------------------------------------------------
+        /*
+        Rough schematic of the containers and other elements we're creating:
+
+            +-baseMenuItem (PopupMenu.PopupBaseMenuItem)----------------------------------+
+            |                                                                             |
+            | +-mainContainer (St.BoxLayout)--------------------------------------------+ |
+            | |                                                                         | |
+            | | +-infoContainer (St.ScrollView)---------------------------------------+ | |
+            | | |                                                                     | | |
+            | | | +-infoTextBlock (St.BoxLayout)------------------------------------+ | | |
+            | | | | Category1                                                       | | | |
+            | | | |  Label1: Value1                                                 | | | |
+            | | | |  Label2: Value2                                                 | | | |
+            | | | |                                                                 | | | |
+            | | | | Category2                                                       | | | |
+            | | | |  Label3: Value3                                                 | | | |
+            | | | |  ...                                                            | | | |
+            | | | +-----------------------------------------------------------------+ | | |
+            | | |                                                                     | | |
+            | | +---------------------------------------------------------------------+ | |
+            | |                                                                         | |
+            | | +-buttonsContainer (St.BoxLayout)-------------------------------------+ | |
+            | | |                                                                     | | |
+            | | | +-updateButton (St.Button)-+                                        | | |
+            | | | | <...>                    |                                        | | |
+            | | | +--------------------------+                                        | | |
+            | | |                                                                     | | |
+            | | +---------------------------------------------------------------------+ | |
+            | |                                                                         | |
+            | +-------------------------------------------------------------------------+ |
+            |                                                                             |
+            +--+  +-----------------------------------------------------------------------+
+                \/
+        +-buttonContainer (St.BoxLayout)--------------------------------+
+        |                                                               |
+        | +-St.Label--------------------------+ +-PopupMenu.arrowIcon-+ |
+        | | hostType | releaseName | hostName | |         ▲           | |
+        | +-----------------------------------+ +---------------------+ |
+        |                                                               |
+        +---------------------------------------------------------------+
+
+        The actual info texts are in a separate BoxLayout container, so we can destroy and
+        recreate it at will. The scrollview also works better (less jumpy scrolling) if its
+        content is just a single container box.
+        */
+
+        // -----------------------------------------------------------------------------------------
         // Create the panel button
 
         let buttonContainer = new St.BoxLayout({ style_class: "panel-status-menu-box" });
@@ -66,36 +114,181 @@ const HostInfoButton = new Lang.Class(
 
         this.actor.add_actor(buttonContainer);
 
-        // ---------------------------------------------------------------------
+        // -----------------------------------------------------------------------------------------
         // Construct the popup menu
 
-        // this menu entry cannot be highlighted or interacted with as it's
-        // just a container for other stuff
-        this.infoTextMenuItem = new PopupMenu.PopupBaseMenuItem({
-            reactive: false,
-            style_class: "infoTextMenuItem"
+        // Top-level container for everything in the popup menu. This is a pseudo-
+        // menuitem; it cannot be clicked or interacted with in any way.
+        this.baseMenuItem = new PopupMenu.PopupBaseMenuItem({
+            style_class: "baseMenuItem",
+            reactive: false
         });
 
-        // contains the info text blocks, stacked vertically
-        this.infoContainer = new St.BoxLayout({
-            vertical: true,
-            style_class: "infoTextContainer"
+        // Main container for the info text block and the buttons at the button
+        this.mainContainer = new St.BoxLayout({
+            style_class: "mainContainer",
+            vertical: true
         });
 
-        let c = this.infoContainer;
+        // The system info text container, initially empty and hidden
+        this.infoContainer = new St.ScrollView({
+            hscrollbar_policy: Gtk.PolicyType.NEVER,
+            vscrollbar_policy: Gtk.PolicyType.AUTOMATIC,
+            enable_mouse_scrolling: true,
+            style_class: "infoContainer",
+        });
+
+        this.infoContainer.hide();
+
+        // Container for the buttons at the bottom
+        this.buttonsContainer = new St.BoxLayout({
+            style_class: "buttonsContainer",
+            vertical: false
+        });
+
+        // placeholder, will be created later
+        this.infoTextBlock = null;
+
+        // The update button
+        this.updateButton = new St.Button({
+            label: "Click to collect system information...",
+            style_class: "updateButton"
+        });
+
+        this.buttonsContainer.add_actor(this.updateButton);
+
+        // Build the final container hierarchy and finish the menu layout
+        this.mainContainer.add_actor(this.infoContainer);
+        this.mainContainer.add_actor(this.buttonsContainer);
+        this.baseMenuItem.actor.add(this.mainContainer);
+        this.menu.addMenuItem(this.baseMenuItem);
+
+        // Setup a D-Bus proxy for system info queries
+        // https://stackoverflow.com/questions/48933174/gdbus-call-when-click-on-panel-extension-icon
+        try {
+            this.proxy = new Gio.DBusProxy({
+                g_connection: Gio.DBus.system,
+                g_name: "org.puavo.client.systeminfocollectordaemon",
+                g_object_path: "/systeminfocollector",
+                g_interface_name: "org.puavo.client.systeminfocollector"
+            });
+
+            this.proxy.init(null);
+        } catch (error) {
+            this.buttonsContainer.remove_actor(this.updateButton);
+            delete this.updateButton;
+            this.updateButton = null;
+            this.proxy = null;
+
+            this.errorText(this.buttonsContainer,
+                "D-Bus init error, can't display system info. Sorry :-(");
+        }
+
+        // Setup info retrieval/update logic
+        if (this.updateButton && this.proxy) {
+            this.updateButton.connect("clicked", Lang.bind(this, function() {
+                this.updateButton.reactive = false;
+                this.updateButton.opacity = 128;        // simulate a "disabled" look
+
+                try {
+                    // asynchronous D-Bus method call
+                    this.proxy.call(
+                        "org.puavo.client.systeminfocollector.CollectSysinfo",
+                        null, 0, 5000, null,
+                        Lang.bind(this, function(source, res, user_data) {
+                            this.updateButton.reactive = true;
+                            this.updateButton.opacity = 255;
+
+                            if (this.infoTextBlock) {
+                                // remove old contents first
+                                this.infoContainer.hide();
+                                this.infoContainer.remove_actor(this.infoTextBlock);
+                                this.infoTextBlock = null;
+                            }
+
+                            if (!this.createInfoText())
+                                this.updateButton.label = "Try again?";
+                            else this.updateButton.label = "Update";
+
+                            this.infoContainer.show();
+                            this.infoContainer.add_actor(this.infoTextBlock);
+                        }),
+                        null    // userdata
+                    );
+                } catch (error) {
+                    // UNTESTED
+                    if (this.infoTextBlock) {
+                        this.infoContainer.remove_actor(this.infoTextBlock);
+                        this.infoTextBlock = null;
+                    }
+
+                    this.errorText(this.infoContainer, "Failed :-(");
+                }
+            }));
+        }
+    },
+
+    // ---------------------------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------
+
+    createInfoText: function()
+    {
+        if (this.infoTextBlock) {
+            // if the block already exists, do nothing because something is wrong
+            return;
+        }
+
+        this.infoTextBlock = new St.BoxLayout({
+            style_class: "infoTextBlock",
+            vertical: true
+        });
+
+        let c = this.infoTextBlock;
+
+        function pad(number)
+        {
+            return (number < 10) ? '0' + number : number;
+        }
 
         try {
-            // This JSON file is generated by /usr/sbin/puavo-sysinfo-collector at system
-            // startup. It's nearly impossible to run that script (as root!) here
-            // asynchronously without losing sanity.
-            // TODO: This actually needs to be asynchronously. The current collector
-            // slows down some systems too much.
+            // This JSON file is generated by /usr/sbin/puavo-sysinfo-collector when the button
+            // is clicked. We get the same JSON back through D-Bus, but at the moment this data
+            // is not used, because I don't know how to get the data from the async callback :-(
             const json = JSON.parse(readTextFile("/run/puavo/puavo-sysinfo.json"));
 
+            // When was this information last updated? This is important!
+            var timestamp = jval(json, "timestamp", -1);
+
+            if (timestamp == -1)
+                timestamp = "<ERROR>";
+            else {
+                const d = new Date(timestamp * 1000);
+
+                timestamp = d.getUTCFullYear() + '-' +
+                    pad(d.getUTCMonth() + 1) + '-' +
+                    pad(d.getUTCDate()) + ' ' +
+                    pad(d.getUTCHours()) + ':' +
+                    pad(d.getUTCMinutes()) + ':' +
+                    pad(d.getUTCSeconds()) + ' UTC';
+            }
+
+            let tsBox = new St.BoxLayout();
+
+            tsBox.add_actor(new St.Label({
+                text: "Last updated: " + timestamp,
+                style_class: "infoTextTimestamp"
+            }));
+
+            c.add_actor(tsBox);
+            this.spacer(c);
+
+            // General release info
             this.category(c, "Release");
             this.titleValue(c, "Image", jval(json, "this_image"));
             this.titleValue(c, "Name", jval(json, "this_release"));
+            this.titleValue(c, "Kernel", jval(json, "kernelrelease"));
 
+            // Machine
             this.spacer(c);
             this.category(c, "Machine");
             this.titleValue(c, "BIOS",
@@ -103,6 +296,40 @@ const HostInfoButton = new Lang.Class(
                 jval(json, "bios_version") + ", " +
                 jval(json, "bios_release_date"));
 
+            // CPU
+            this.titleValue(c, "Processor",
+                jval(json, "processorcount") + " CPU(s), " +
+                jval(json, "processor0"));
+
+            // Memory
+            this.titleValue(c, "Memory",
+                (parseFloat(jval(json, "memorysize_mb", 0.0)) / 1024.0).toFixed(2) + " GiB");
+
+            const memory = jval(json, "memory", null);
+
+            if (memory && memory.length > 0) {
+                for (var i = 0; i < memory.length; i++) {
+                    const size = memory[i].size;
+
+                    // The texts here are indented using spaces, but we *really* should create
+                    // a new St.BoxLayout() element to indent them... maybe one day...
+
+                    var text = "";
+
+                    if (size == 0)
+                        text = "<empty>";
+                    else {
+                        text += "Size: " + size + " MiB; ";
+                        text += "Slot: " + memory[i].slot + "; ";
+                        text += "Product: " + memory[i].product + "; ";
+                        text += "Vendor: " + memory[i].vendor;
+                    }
+
+                    this.titleValue(c, "    Slot #" + i, text);
+                }
+            }
+
+            // Hard drive
             var hdText = jval(json, "blockdevice_sda_model");
 
             hdText += ", ";
@@ -115,47 +342,36 @@ const HostInfoButton = new Lang.Class(
 
             this.titleValue(c, "Hard drive", hdText);
 
-            this.titleValue(c, "Processor",
-                jval(json, "processorcount") + " CPU(s), " +
-                jval(json, "processor0"));
-            this.titleValue(c, "Memory",
-                (parseFloat(jval(json, "memorysize_mb", 0.0)) / 1024.0).toFixed(2) + " GiB");
+            // Network
+            this.spacer(c);
+            this.category(c, "Network");
 
-            const memory = jval(json, "memory");
+            const network = jval(json, "network_interfaces", null);
 
-            if (memory && memory.length > 0) {
-                for (var i = 0; i < memory.length; i++) {
-                    const size = memory[i].size;
-
-                    // the texts here are indented using spaces, but we *really* should create
-                    // a new St.BoxLayout() element to indent them... maybe one day...
-
-                    if (size == 0) {
-                        this.titleValue(c, "    Slot #" + i, "<empty>");
-                        continue;
-                    }
-
+            if (network && network.length > 0) {
+                for (var i = 0; i < network.length; i++) {
                     var text = "";
 
-                    text += "Size: " + size + "MiB; ";
-                    text += "Slot: " + memory[i].slot + "; ";
-                    text += "Product: " + memory[i].product + "; ";
-                    text += "Vendor: " + memory[i].vendor;
+                    text += "MAC=" + network[i].mac + "; ";
+                    text += "IP=" + network[i].ip;
 
-                    this.titleValue(c, "    Slot #" + i, text);
+                    if (network[i].prefix > 0)
+                        text += "/" + network[i].prefix.toString();
+
+                    this.titleValue(c, "Interface " + network[i].name, text);
                 }
             }
 
-            this.spacer(c);
-            this.category(c, "Network");
-            this.titleValue(c, "MAC address", jval(json, "macaddress"));
+
             this.titleValue(c, "WiFi", jval(json, "wifi"));
 
+            // Serial numbers
             this.spacer(c);
             this.category(c, "Serial numbers");
             this.titleValue(c, "Machine", jval(json, "serialnumber"));
             this.titleValue(c, "Mainboard", jval(json, "boardserialnumber"));
 
+            // lspci values, if present
             if ("lspci_values" in json && json["lspci_values"].length > 0) {
                 this.spacer(c);
                 this.category(c, "Some lspci values");
@@ -164,7 +380,7 @@ const HostInfoButton = new Lang.Class(
                 let self = this;
 
                 json["lspci_values"].forEach(function(e) {
-                    self.value(self.infoContainer, e);
+                    self.value(self.infoTextBlock, e);
                 });
             } else {
                 // this can happen, at least in theory...
@@ -172,25 +388,14 @@ const HostInfoButton = new Lang.Class(
                 this.category(c, "No lspci output listed in the JSON");
             }
         } catch (e) {
-            // show the error
-            let r = new St.BoxLayout();
-
-            this.addLabel(r, {
-                text: "Cannot display system information. This is a serious " +
-                      "error, please report it.\n" + e.message,
-                style_class: "infoErrorTitle"
-            });
-
-            c.add_actor(r);
+            this.errorText(c,
+                "Cannot disply system information. This is a serious " +
+                "error, please report it.\n" + e.message);
+            return false;
         }
 
-        // finally add the fake menu item to the menu
-        this.infoTextMenuItem.actor.add(this.infoContainer);
-        this.menu.addMenuItem(this.infoTextMenuItem);
+        return true;
     },
-
-    // -------------------------------------------------------------------------
-    // -------------------------------------------------------------------------
 
     // Adds a text label in the container. "params" must contain the text value,
     // style class and possibly other, optional, arguments.
@@ -212,7 +417,10 @@ const HostInfoButton = new Lang.Class(
     // but it was hard to control)
     spacer: function(where)
     {
-        this.category(where, " ");
+        let r = new St.BoxLayout();
+
+        this.addLabel(r, { text: " ", style_class: "infoTextSpacer" });
+        where.add_actor(r);
     },
 
     // add a value without title
@@ -224,29 +432,31 @@ const HostInfoButton = new Lang.Class(
         where.add_actor(r);
     },
 
-    // add a title with value and an optional "warning" text displayed
-    // at the end
-    titleValue: function(where, title, value, warningText = null)
+    // add a title with value
+    titleValue: function(where, title, value)
     {
         let r = new St.BoxLayout();
 
         this.addLabel(r, { text: title + ":", style_class: "infoTextKey" });
         this.addLabel(r, { text: value, style_class: "infoTextValue" });
 
-        if (warningText)
-            this.addLabel(r, { text: " [" + warningText + "]", style_class: "infoTextWarning" });
-
         where.add_actor(r);
+    },
+
+    // adds an error text, used in error conditions
+    errorText: function(where, text)
+    {
+        where.add_actor(new St.Label({ text: text, style_class: "errorText" }));
     },
 });
 
-// -----------------------------------------------------------------------------
-// -----------------------------------------------------------------------------
+// -------------------------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------------------------
 
 function init()
 {
-    // these are displayed on the button, so they must be read before doing
-    // anything else
+    // These are displayed on the button, so they must be read before doing
+    // anything else. Fortunately they don't change during runtime.
     try {
         hostType = readTextFile("/etc/puavo/hosttype").trim();
     } catch (e) {

@@ -18,6 +18,15 @@ class puavo_sysinfo_collector {
       mode   => '0644',
   }
 
+  # DBus service file
+  file {
+    '/etc/dbus-1/system.d/org.puavo.sysinfo.conf':
+      source => 'puppet:///modules/puavo_sysinfo_collector/org.puavo.sysinfo.conf',
+      owner  => 'root',
+      group  => 'root',
+      mode   => '0644',
+  }
+
   # link for systemd
   file {
     '/etc/systemd/system/multi-user.target.wants/puavo-sysinfo-collector.service':

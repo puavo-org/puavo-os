@@ -24,6 +24,7 @@ class image::bundle::desktop {
   include ::ti_nspire_cx_cas
   include ::tuxpaint
   include ::wacom
+  include ::wine
   include ::workaround_firefox_local_swf_bug
   include ::xorg
 }
