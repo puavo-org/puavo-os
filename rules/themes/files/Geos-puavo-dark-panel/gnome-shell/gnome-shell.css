@@ -1526,15 +1526,14 @@ border: 1px solid rgba(95,95,95, 0.35);
     spacing: 1px; }
   .notification-banner .notification-button {
     padding: 4px 4px 5px;
-    background-color: #ddd;
-    border-radius: 0 !important;
+    background-color: #f8f8f8;
      box-shadow: none; }
     .notification-banner .notification-button:first-child {
       border-radius: 0 0 0 8px; }
     .notification-banner .notification-button:last-child {
       border-radius: 0 0 8px 0; }
     .notification-banner .notification-button:hover, .notification-banner .notification-buttonfocus {
-      background-color: #4a90d9; }
+      background-color: #f8f8f8; }
 
 .summary-source-counter {
   font-size: 10pt;
