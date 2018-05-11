@@ -1,0 +1,67 @@
+diff -ruN mutter-3.22.3/src/backends/x11/meta-backend-x11.c mutter-3.22.3/src/backends/x11/meta-backend-x11.c
+--- mutter-3.22.3/src/backends/x11/meta-backend-x11.c	2017-02-16 18:24:00.000000000 +0200
++++ mutter-3.22.3/src/backends/x11/meta-backend-x11.c	2018-05-11 08:41:34.646576742 +0300
+@@ -273,6 +273,19 @@
+     if (display)
+       {
+         MetaCompositor *compositor = display->compositor;
++        MetaBackendX11 *x11 = META_BACKEND_X11 (backend);
++        MetaBackendX11Private *priv =
++          meta_backend_x11_get_instance_private (x11);
++
++        /* XXX An ugly hack to prevent gnome-shell UI hangs
++         * XXX due to problems in pointer grab handling. */
++        if (!display->grab_have_pointer) {
++          meta_backend_ungrab_device(backend,
++                                     META_VIRTUAL_CORE_POINTER_ID,
++                                     priv->latest_evtime - 1);
++          display->grab_have_pointer = FALSE;
++        }
++
+         if (meta_plugin_manager_xevent_filter (compositor->plugin_mgr, event))
+           bypass_clutter = TRUE;
+       }
+diff -ruN mutter-3.22.3.0.basic_build/src/compositor/compositor.c mutter-3.22.3/src/compositor/compositor.c
+--- mutter-3.22.3/src/compositor/compositor.c	2017-02-16 18:24:00.000000000 +0200
++++ mutter-3.22.3/src/compositor/compositor.c	2018-05-11 08:41:49.714851561 +0300
+@@ -332,8 +332,12 @@
+   return TRUE;
+ 
+  fail:
+-  if (pointer_grabbed)
++  if (pointer_grabbed) {
++    MetaDisplay *display = meta_get_display ();
+     meta_backend_ungrab_device (backend, META_VIRTUAL_CORE_POINTER_ID, timestamp);
++    if (display)
++      display->grab_have_pointer = FALSE;
++  }
+   if (keyboard_grabbed)
+     meta_backend_ungrab_device (backend, META_VIRTUAL_CORE_KEYBOARD_ID, timestamp);
+ 
+@@ -367,6 +371,7 @@
+   XIUngrabDevice (display->xdisplay,
+                   META_VIRTUAL_CORE_POINTER_ID,
+                   timestamp);
++  display->grab_have_pointer = FALSE;
+   XSync (display->xdisplay, False);
+ 
+   if (!grab_devices (options, timestamp))
+diff -ruN mutter-3.22.3.0.basic_build/src/core/display.c mutter-3.22.3/src/core/display.c
+--- mutter-3.22.3/src/core/display.c	2017-02-16 18:24:00.000000000 +0200
++++ mutter-3.22.3/src/core/display.c	2018-05-11 08:46:59.996437288 +0300
+@@ -1877,6 +1877,7 @@
+   XIUngrabDevice (display->xdisplay,
+                   META_VIRTUAL_CORE_POINTER_ID,
+                   timestamp);
++  display->grab_have_pointer = FALSE;
+   XSync (display->xdisplay, False);
+ 
+   if (meta_backend_grab_device (backend, META_VIRTUAL_CORE_POINTER_ID, timestamp))
+@@ -1994,6 +1995,7 @@
+     {
+       MetaBackend *backend = meta_get_backend ();
+       meta_backend_ungrab_device (backend, META_VIRTUAL_CORE_POINTER_ID, timestamp);
++      display->grab_have_pointer = FALSE;
+     }
+ 
+   if (display->grab_have_keyboard)
