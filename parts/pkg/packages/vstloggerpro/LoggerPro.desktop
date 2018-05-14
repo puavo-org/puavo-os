@@ -3,8 +3,8 @@ Type=Application
 Version=1.0
 Name=Logger Pro
 Comment=Measure. Analyze. Learn
-TryExec=loggerpro
-Exec=loggerpro %F
+TryExec=env LD_LIBRARY_PATH=/opt/trusty/lib/x64_64-linux-gnu loggerpro
+Exec=env LD_LIBRARY_PATH=/opt/trusty/lib/x64_64-linux-gnu loggerpro %F
 Icon=/usr/local/share/icons/hicolor/48x48/apps/loggerpro.png
 MimeType=application/x-vernier-lpdata;application/x-vernier-lldata;application/x-vernier-lqdata
 Terminal=false
