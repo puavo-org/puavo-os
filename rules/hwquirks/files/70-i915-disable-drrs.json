@@ -6,5 +6,13 @@
     "parameters": {
       "puavo.pm.display.drrs.enabled": "false"
     }
+  },
+  {
+    "key": "product_name",
+    "matchmethod": "exact",
+    "pattern": "HP EliteBook 840 G1",
+    "parameters": {
+      "puavo.pm.display.drrs.enabled": "false"
+    }
   }
 ]
