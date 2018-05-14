@@ -33,8 +33,37 @@ def click_mouse
   system('xte', 'mouseclick 1')
 end
 
+def enough_memory?
+  IO.readlines('/proc/meminfo').each do |line|
+    field, value, units = * line.split
+    if field == 'MemAvailable:' && units == 'kB' then
+      available_memory = value.to_i
+      puts ">>>>> calculated avilable memory to #{ available_memory }"
+      if available_memory >= 524288 then
+        return true
+      else
+        return false
+      end
+    end
+  end
+
+  raise 'Did not find the amount of available memory'
+end
+
+def run_if_enough_memory(*cmd)
+  begin
+    if enough_memory? then
+      system(*cmd)
+    else
+      puts "Not enough available memory for running #{ cmd }"
+    end
+  rescue StandardError => e
+    warn "Could not look up available memory: #{ e.message }"
+  end
+end
+
 def firefox(page)
-  system('firefox', '-new-window', page)
+  run_if_enough_memory('firefox', '-new-window', page)
 end
 
 def kill_current_window
@@ -140,18 +169,21 @@ while true do
               [ 3,  %q{ firefox('http://www.youtube.com/watch?v=mahBZ4lSZHQ') }, ],
               [ 3,  %q{ firefox('http://www.youtube.com/watch?v=S1Lz8b3w618') }, ],
 
-              [ 3,  %q{ system('gimp')                                        }, ],
-              [ 3,  %q{ system('khangman')                                    }, ],
+              [ 3,  %q{ run_if_enough_memory('gimp')                          }, ],
+              [ 3,  %q{ run_if_enough_memory('khangman')                      }, ],
 
-              [ 3,  %q{ system('libreoffice', '--base'   )                    }, ],
-              [ 2,  %q{ system('libreoffice', '--calc'   )                    }, ],
-              [ 2,  %q{ system('libreoffice', '--draw'   )                    }, ],
-              [ 2,  %q{ system('libreoffice', '--impress')                    }, ],
+              [ 3,  %q{ run_if_enough_memory('libreoffice', '--base'   )      }, ],
+              [ 2,  %q{ run_if_enough_memory('libreoffice', '--calc'   )      }, ],
+              [ 2,  %q{ run_if_enough_memory('libreoffice', '--draw'   )      }, ],
+              [ 2,  %q{ run_if_enough_memory('libreoffice', '--impress')      }, ],
 
-              [ 3 * (loadavg.to_i + 1), %q{ kill_current_window()             }, ],
-              [ 1 * (loadavg.to_i + 1), %q{ kill_current_window()             }, ],
+              [ 4 * (loadavg.to_i + 1), %q{ kill_current_window()             }, ],
               [ 1 * (loadavg.to_i + 1), %q{ kill_kill_kill()                  }, ],
               [ 1 * (loadavg.to_i + 1), %q{ logout()                          }, ],
+
+              # if we are low on memory, make it more likely for us to start
+              # killing things
+              [ (enough_memory? ? 0 : 20), %q{ kill_kill_kill()               }, ],
 
               [ reboot_likelihood, %q{ reboot()                               }, ],
              ]
