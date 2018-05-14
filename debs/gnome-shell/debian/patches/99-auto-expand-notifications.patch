@@ -1,5 +1,5 @@
---- messageTray.js	2018-04-18 13:45:07.000000000 +0300
-+++ messageTray.js	2018-05-11 11:10:12.155667912 +0300
+--- gnome-shell.orig/js/ui/messageTray.js	2018-04-18 13:45:07.000000000 +0300
++++ gnome-shelljs/ui/messageTray.js	2018-05-11 11:10:12.155667912 +0300
 @@ -1336,11 +1336,9 @@
          this._notification.acknowledged = true;
          this._notification.playSound();
