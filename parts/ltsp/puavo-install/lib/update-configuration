@@ -208,7 +208,7 @@ def update_extra_boot_scripts(restclient)
   end
 end
 
-def update_puavoadmins()
+def update_puavoadmins(restclient)
   system('/usr/local/sbin/puavo-update-admins')
   if $?.exitstatus != 0 && $?.exitstatus != 2 then
     raise 'Running /usr/local/sbin/puavo-update-admins' \
