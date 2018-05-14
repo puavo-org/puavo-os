@@ -1,6 +1,6 @@
 class puavo_pkg::packages {
-  include ::puavo_pkg,
-          ::trusty_libs
+  include ::puavo_pkg
+  include ::trusty_libs
 
   # NOTE! adobe-flashplugin and adobe-pepperflashplugin contain both
   # 32-bit and 64-bit versions
