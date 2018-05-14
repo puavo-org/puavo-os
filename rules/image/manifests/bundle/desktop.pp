@@ -1,4 +1,5 @@
 class image::bundle::desktop {
+  include ::blueman
   include ::chrome
   include ::chromium
   include ::cups
