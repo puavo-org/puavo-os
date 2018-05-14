@@ -1,6 +1,7 @@
 class puavo_pkg::packages {
   include ::puavo_pkg
   include ::puavo_pkg::ekapeli
+  include ::trusty_libs
 
   # NOTE! adobe-flashplugin and adobe-pepperflashplugin contain both
   # 32-bit and 64-bit versions
@@ -49,5 +50,11 @@ class puavo_pkg::packages {
 
   Puavo_pkg::Install['ohjelmointi-opetuksessa'] {
     require +> Puavo_pkg::Install['arduino-ide'],
+  }
+
+  Puavo_pkg::Install['vstloggerpro'] {
+    require +> [ ::Trusty_libs::Deb_unpack['/opt/trusty/lib/x64_64-linux-gnu/libcairomm-1.0.so.1']
+               , ::Trusty_libs::Deb_unpack['/opt/trusty/lib/x64_64-linux-gnu/libglibmm-2.4.so.1']
+               , ::Trusty_libs::Deb_unpack['/opt/trusty/lib/x64_64-linux-gnu/libgtkmm-2.4.so.1'] ],
   }
 }

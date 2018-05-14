@@ -588,6 +588,7 @@ class packages {
 
     [ 'anki'
     , 'bindfs'
+    , 'blueman'
     , 'desktop-file-utils'
     , 'detox'
     , 'devilspie2'
