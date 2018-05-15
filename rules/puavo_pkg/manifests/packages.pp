@@ -14,6 +14,8 @@ class puavo_pkg::packages {
 			, 'adobe-reader'
 			, 'appinventor'
 			, 'arduino-ide'
+			, 'arduino-radiohead'
+			, 'arduino-TM1637'
 			, 'bluegriffon'
 			, 'cmaptools'
 			, 'cnijfilter2'
