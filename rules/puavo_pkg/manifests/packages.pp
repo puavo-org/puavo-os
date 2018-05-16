@@ -50,8 +50,12 @@ class puavo_pkg::packages {
 
   @puavo_pkg::install { $available_packages: ; }
 
-  Puavo_pkg::Install['ohjelmointi-opetuksessa'] {
-    require +> Puavo_pkg::Install['arduino-ide'],
+  # "arduino-TM1637", "arduino-radiohead" and "ohjelmointi-opetuksessa"
+  # require "arduino-ide" to be installed first.
+  Puavo_pkg::Install['arduino-ide'] {
+    before +> [ Puavo_pkg::Install['arduino-TM1637']
+              , Puavo_pkg::Install['arduino-radiohead']
+              , Puavo_pkg::Install['ohjelmointi-opetuksessa'] ],
   }
 
   Puavo_pkg::Install['vstloggerpro'] {
