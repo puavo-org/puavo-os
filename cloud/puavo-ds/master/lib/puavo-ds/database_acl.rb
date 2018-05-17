@@ -324,8 +324,10 @@ class LdapAcl
 															  PuavoUid.puavo('dn'),
 															  PuavoUid.puavo_ticket('dn')),						],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      [ People.subtree,		attrs(%w(puavoExternalId)),					Rule.read('self', Set.externalservice_addressbook)						],
-
+      [ People.subtree,		attrs(%w(puavoExternalId)),					Rule.read('self',
+													  Set.all_admins,
+													  Set.teacher,
+													  Set.externalservice_addressbook)							],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ People.subtree,		attrs(%w(givenName
 					 sn
