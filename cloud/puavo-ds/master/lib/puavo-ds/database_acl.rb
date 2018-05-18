@@ -324,9 +324,6 @@ class LdapAcl
 															  PuavoUid.puavo('dn'),
 															  PuavoUid.puavo_ticket('dn')),						],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      # this is because changing external passwords should be possible by self, admins and teachers
-      [ People.subtree,		attrs(%w(puavoExternalId)),                                      Rule.read('self', Set.all_admins, Set.teacher),                                                ],
-# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ People.subtree,		attrs(%w(givenName
 					 sn
 					 displayName
