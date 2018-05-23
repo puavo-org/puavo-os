@@ -320,11 +320,11 @@ class LdapAcl
 					 sn
 					 puavoPreferredDesktop
 					 loginShell)),	Rule.write(Set.admin),			Rule.read(Set.getent,
-                                                                                                          PuavoUid.pw_mgmt('dn'),
-															  PuavoUid.puavo('dn'),
-															  PuavoUid.puavo_ticket('dn')),						],
+													  PuavoUid.pw_mgmt('dn'),
+													  PuavoUid.puavo('dn'),
+													  PuavoUid.puavo_ticket('dn')),								],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      [ People.subtree,		attrs(%w(puavoExternalId)),					Rule.read('self',
+      [ People.subtree,		attrs(%w(puavoExternalId)),	Rule.write(Set.admin),		Rule.read('self',
 													  Set.all_admins,
 													  Set.teacher,
 													  Set.externalservice_addressbook)							],
