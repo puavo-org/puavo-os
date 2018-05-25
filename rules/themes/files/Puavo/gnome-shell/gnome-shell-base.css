@@ -2416,7 +2416,14 @@ StScrollBar StButton#vhandle:active {
 
 .login-dialog-button-box {
     spacing: 5px;
-    padding-bottom: 15px; /* push the guest login button downwards */
+}
+
+.login-dialog-guest-button {
+    /*
+       Push the guest button downwards. Do this here, so that if guest
+       logins are disabled, we don't add empty padding to the login box.
+    */
+    margin-top: 10px;
 }
 
 .login-dialog-user-list-view {
