@@ -389,8 +389,9 @@ const HostInfoButton = new Lang.Class(
             }
         } catch (e) {
             this.errorText(c,
-                "Cannot disply system information. This is a serious " +
-                "error, please report it.\n" + e.message);
+                "Cannot display system information. Try clicking the \"Try again?\" button to see if\n" +
+                "the problem fixes itself. If not, try rebooting the machine. If even that does not\n" +
+                "help, please report this problem to Opinsys support.\n\n" + e.message);
             return false;
         }
 
