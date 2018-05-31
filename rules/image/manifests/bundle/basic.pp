@@ -2,6 +2,7 @@ class image::bundle::basic {
   include ::autopoweroff
   include ::console
   include ::devilspie
+  include ::disable_hp_accel_module
   include ::disable_suspend_by_tag
   include ::disable_suspend_on_halt
   include ::disable_suspend_on_nbd_devices
