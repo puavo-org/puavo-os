@@ -44,6 +44,10 @@ disable_accounts_service
 disable_geoclue
     Disable Ubuntu's geoclue-stuff.
 
+disable_hp_accel
+    Disable HP accelerometer (triggers automatic screen rotation but does
+    not work properly).
+
 disable_suspend_by_tag
     Check out for device tag "nosuspend", and possibly block suspend.
 
