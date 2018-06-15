@@ -1,7 +1,7 @@
 {
   "passwordCMD": {
     "type": "webWindow",
-    "url": "https://{{puavoDomain}}/users/password/own",
+    "url": "https://{{puavoDomain}}/users/password/own?changing={{puavoUser}}",
     "osIconPath": "/usr/share/icons/Faenza/emblems/96/emblem-readonly.png",
     "name": {
       "fi": "Salasana",
