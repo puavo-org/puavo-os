@@ -20,6 +20,8 @@ Build-Depends: debhelper (>= 10),
                nettle-dev <!stage1>,
                perl:any,
                po-debconf,
+               quilt,
+               time <!stage1>,
                unixodbc-dev <!stage1>
 Build-Conflicts: libbind-dev, bind-dev, libicu-dev, autoconf2.13
 Standards-Version: 4.3.0
