@@ -17,7 +17,7 @@ case "$command" in
         ln -fns "$upstream_dir" "$opinsys_dir"
         ;;
     unconfigure)
-        rm -rf "$opinsys"
+        rm -rf "$opinsys_dir"
         ;;
     unpack)
         upstream_pack=$1
