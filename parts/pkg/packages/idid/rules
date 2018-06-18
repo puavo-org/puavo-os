@@ -2,6 +2,9 @@
 
 set -eu
 
+# get the idid-package url by using the following apt-sources:
+#   deb http://apt.idid.fi xenial main
+
 command=$1
 shift
 
