@@ -24,6 +24,7 @@ Build-Depends: debhelper (>= 9.20150501),
                nettle-dev <!stage1>,
                perl:any,
                po-debconf,
+               quilt,
                time <!stage1>,
                unixodbc-dev <!stage1>
 Build-Conflicts: libbind-dev, bind-dev, libicu-dev, autoconf2.13

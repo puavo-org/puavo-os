@@ -57,6 +57,7 @@ class packages::backports {
                                  , 'uno-libs3'
                                  , 'ure'
 
+                                 , 'libssh-4'
                                  , 'remmina'
                                  ],
                     default   => [],
