@@ -1,0 +1,96 @@
+#!/usr/bin/tclsh
+
+# This script forwards logs to remote syslog server, and caches them
+# in case the syslog server is not responding.  Written due to observed
+# issues with disk caches on rsyslog and syslog-ng.  This should work,
+# reliability first, performance second.  Because this is run mostly
+# on laptops, with reboots and network outages, we expect a lot of
+# issues that (it appears) rsyslog and syslog-ng do not always handle.
+
+set puavo_domain [exec cat /etc/puavo/domain]
+
+set remote_cache_path "/var/spool/rsyslog/remote.cache"
+
+# If remote cache filesize is greater than 512 megabytes, we simply remove
+# it before doing anything (yes we lose a lot of logs but this should not
+# normally happen and we do not want to waste exceeding amounts of space
+# for caching logs that are not ending up anywhere).
+catch {
+  if {[file size $remote_cache_path] > 536870912} {
+    file delete $remote_cache_path
+  }
+}
+
+# read previous file cache, if any
+if {[catch { set syslog_filecache [open $remote_cache_path r] }]} {
+  set syslog_memcache {}
+} else {
+  set syslog_memcache [read $syslog_filecache]
+  close $syslog_filecache
+}
+
+set syslog_filecache [open $remote_cache_path a]
+
+proc send_to_syslog {} {
+  global puavo_domain syslog_connection syslog_memcache syslog_sending_state
+
+  if {[
+    catch {
+      set syslog_connection [socket "syslog.${puavo_domain}" 514]
+      fconfigure $syslog_connection -translation binary
+
+      # ten second timeout for send events
+      after 10000 set syslog_sending_state timeout
+      fileevent $syslog_connection writable {
+	puts -nonewline $syslog_connection $syslog_memcache
+	set syslog_sending_state ok
+      }
+
+      vwait syslog_sending_state
+      close $syslog_connection
+
+      if {$syslog_sending_state eq "timeout"} {
+        error "timeout sending data to remote syslog"
+      }
+    }
+  ]} {
+    return false
+  }
+
+  return true
+}
+
+proc send_to_syslog_or_cache {{msg ""}} {
+  global remote_cache_path syslog_filecache syslog_memcache
+
+  if {$msg ne ""} {
+    # add new messages to cache first
+    append syslog_memcache $msg
+    puts -nonewline $syslog_filecache $msg
+    flush $syslog_filecache
+  }
+
+  if {$syslog_memcache eq ""} { return }
+
+  # send stuff to syslog
+  if {[send_to_syslog]} {
+    # everything has been sent to syslog, truncate file cache
+    close $syslog_filecache
+    set syslog_filecache [open $remote_cache_path w]
+    set syslog_memcache {}
+  }
+
+  if {$syslog_memcache ne ""} {
+    # try again after 20 seconds, if there is still something to do
+    after 20000 send_to_syslog_or_cache
+  }
+}
+
+fconfigure stdin -blocking 0
+
+fileevent stdin readable {
+  if {[eof stdin]} { exit 0 }
+  send_to_syslog_or_cache [read stdin]
+}
+
+vwait forever
