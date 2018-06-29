@@ -2,21 +2,26 @@
 
 set -e
 
+log() {
+  logpriority=$1
+  logmessage=$2
+  logger -p "$logpriority" -s -t puavo-update-client "$logmessage"
+}
+
 on_persistent_overlay() {
   grep -q "puavo.image.overlay=" /proc/cmdline
 }
 
 usage_error() {
-  echo "error: $1" >&2
-  echo "Try '$0 --help' for more information." >&2
+  log err "error: $1 (try '$0 --help' for more information)"
   exit 1
 }
 
 hosttype=$(puavo-conf puavo.hosttype)
 
 if [ "$hosttype" != "laptop" -a "$hosttype" != "wirelessaccesspoint" ]; then
-  echo 'This script should be run only for laptops and wirelessaccesspoints!' \
-    >&2
+  msg='this script should be run only for laptops and wirelessaccesspoints'
+  log err "$msg"
   exit 1
 fi
 
@@ -88,14 +93,17 @@ fi
 if $force_image_update; then
   do_image_update=true
 elif $no_image_update; then
+  log notice 'not doing an image update, requested to not to'
   do_image_update=false
 elif on_persistent_overlay; then
   # we are on persistent overlay (development mode),
   # do not do an image update
+  log notice 'not doing an image update, we are on persistent overlay'
   do_image_update=false
 else
   automatic_image_updates=$(puavo-conf puavo.image.automatic_updates)
   if [ "$automatic_image_updates" = 'false' ]; then
+    log notice 'not doing an image update, automatic updates are off'
     do_image_update=false
   else
     # empty/missing or nonsensical value for $automatic_image_updates
@@ -122,18 +130,24 @@ dbus_cmd="
 if ! $do_image_update; then
   # do only the configuration update
   if $dbus_cmd org.puavo.client.update.UpdateConfiguration >/dev/null; then
-    echo 'Configuration update started.'
+    log notice 'configuration update started'
   else
-    echo 'Starting configuration update failed.' >&2
+    log err 'starting configuration update failed'
     exit 1
   fi
 else
+  if $use_rate_limit; then
+    log notice 'using rate limit on image update'
+  else
+    log notice 'NOT using rate limit on image update'
+  fi
+
   # do the whole update (configuration update + image update)
   if $dbus_cmd org.puavo.client.update.Update \
                "boolean:${use_rate_limit}" >/dev/null; then
-    echo 'System update started.'
+    log notice 'system update started'
   else
-    echo 'Starting system update failed.' >&2
+    log notice 'starting system update failed'
     exit 1
   fi
 fi
