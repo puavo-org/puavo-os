@@ -3,18 +3,18 @@
 set -eu
 
 send_everything_to_bootserver() {
-  cat <<'EOF' > /etc/syslog-ng/conf.d/send_everything_to_bootserver.conf
+  cat <<'EOF' > /etc/rsyslog.d/send_everything_to_bootserver.conf
 $ModLoad omrelp
 
 *.* :omrelp:syslog:20514;RSYSLOG_ForwardFormat
 EOF
-  rm -f /etc/syslog-ng/conf.d/send_some_to_bootserver_with_cache.conf
+  rm -f /etc/rsyslog.d/send_some_to_bootserver_with_cache.conf
 }
 
 send_session_data_to_bootserver_with_cache() {
-  rm -f /etc/syslog-ng/conf.d/send_everything_to_bootserver.conf
+  rm -f /etc/rsyslog.d/send_everything_to_bootserver.conf
 
-  cat <<'EOF' > /etc/syslog-ng/conf.d/send_some_to_bootserver_with_cache.conf
+  cat <<'EOF' > /etc/rsyslog.d/send_some_to_bootserver_with_cache.conf
 module(load="omprog")
 
 $template PuavoForwardFormat,"<%PRI%>%TIMESTAMP% %HOSTNAME% %syslogtag:1:32%%msg:::sp-if-no-1st-sp%%msg%\n"
@@ -44,8 +44,8 @@ logging_policy="$(puavo-conf puavo.admin.logging.policy)"
 
 case "$logging_policy" in
   local-only)
-    rm -f /etc/syslog-ng/conf.d/send_everything_to_bootserver.conf \
-          /etc/syslog-ng/conf.d/send_some_to_bootserver_with_cache.conf
+    rm -f /etc/rsyslog.d/send_everything_to_bootserver.conf \
+          /etc/rsyslog.d/send_some_to_bootserver_with_cache.conf
     ;;
   send-everything-to-bootserver)
     send_everything_to_bootserver
