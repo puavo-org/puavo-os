@@ -2,13 +2,61 @@
 
 set -eu
 
-# XXX get rid of hosttype handling
-if [ "$(puavo-conf puavo.hosttype)" = 'fatclient' ]; then
-  cat <<'EOF' > /etc/rsyslog.d/send_to_syslogserver.conf
+send_everything_to_bootserver() {
+  cat <<'EOF' > /etc/rsyslog.d/send_everything_to_bootserver.conf
 $ModLoad omrelp
 
 *.* :omrelp:syslog:20514;RSYSLOG_ForwardFormat
 EOF
-else
-  rm -f /etc/rsyslog.d/send_to_syslogserver.conf
-fi
+  rm -f /etc/rsyslog.d/send_some_to_bootserver_with_cache.conf
+}
+
+send_session_data_to_bootserver_with_cache() {
+  rm -f /etc/rsyslog.d/send_everything_to_bootserver.conf
+
+  cat <<'EOF' > /etc/rsyslog.d/send_some_to_bootserver_with_cache.conf
+module(load="omprog")
+
+$template PuavoForwardFormat,"<%PRI%>%TIMESTAMP% %HOSTNAME% %syslogtag:1:32%%msg:::sp-if-no-1st-sp%%msg%\n"
+
+ruleset(name="cachedsessionlogging") {
+    action(type="omprog"
+           binary="/usr/local/lib/puavo-caching-syslog-sender"
+           template="PuavoForwardFormat")
+}
+
+if (
+     ($programname == 'puavo-login'
+        and (   $msg contains "opening login session"
+             or $msg contains "closing login session"))
+  or ($programname == 'sshd'
+        and (   $msg contains "session opened"
+             or $msg contains "session closed"))
+  or ($programname == 'systemd'
+        and (   $msg startswith " Started Session"
+             or $msg startswith " Stopped Session"))
+  or $programname == 'systemd-logind'
+) then call cachedsessionlogging
+EOF
+}
+
+logging_policy="$(puavo-conf puavo.admin.logging.policy)"
+
+case "$logging_policy" in
+  local-only)
+    rm -f /etc/rsyslog.d/send_everything_to_bootserver.conf \
+          /etc/rsyslog.d/send_some_to_bootserver_with_cache.conf
+    ;;
+  send-everything-to-bootserver)
+    send_everything_to_bootserver
+    ;;
+  send-session-data-to-bootserver-with-cache)
+    send_session_data_to_bootserver_with_cache
+    ;;
+  *)
+    echo "Unsupported logging policy: ${logging_policy}" >&2
+    exit 1
+    ;;
+esac
+
+exit 0

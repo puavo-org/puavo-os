@@ -893,7 +893,11 @@ renice -n 20 -p $$ > /dev/null
 
 # do nothing if /images/DISABLE_IMAGE_UPDATES exists
 # (for development and emergencies)
-test -e "${images_dir}/DISABLE_IMAGE_UPDATES" && exit 0
+if [ -e "${images_dir}/DISABLE_IMAGE_UPDATES" ]; then
+  msg="not updating image because ${images_dir}/DISABLE_IMAGE_UPDATES exists"
+  log notice "$msg"
+  exit 0
+fi
 
 update_stats starting 0
 
