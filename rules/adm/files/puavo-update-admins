@@ -144,7 +144,7 @@ fi
 # it is okay if this fails
 {
   install -o root -g root -m 600 /dev/null "${org_json_path}.tmp"
-  if ! puavo-rest-request /v3/current_organisation "$prr_args" \
+  if ! puavo-rest-request /v3/current_organisation "$prr_args" 2>/dev/null \
          > "${org_json_path}.tmp"; then
     rm -f "${org_json_path}.tmp"
   else
