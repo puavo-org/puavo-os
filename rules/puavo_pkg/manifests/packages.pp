@@ -1,6 +1,7 @@
 class puavo_pkg::packages {
   include ::puavo_pkg
   include ::puavo_pkg::ekapeli
+  include ::puavo_pkg::mimio
   include ::trusty_libs
 
   # NOTE! adobe-flashplugin and adobe-pepperflashplugin contain both

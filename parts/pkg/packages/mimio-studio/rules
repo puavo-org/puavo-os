@@ -1,0 +1,71 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+mimio_links='
+  /etc/modprobe.d/blacklist-mimio.conf
+  /etc/xdg/autostart/mimio-mimiosys.desktop
+  /etc/xdg/menus/applications-merged/mimio.menu
+  /lib/udev/rules.d/60-mimio-projector.rules
+  /lib/udev/rules.d/60-mimio.rules
+  /lib/udev/rules.d/60-mimio-tablet.rules
+  /usr/share/applications/mimio-collaborate.desktop
+  /usr/share/applications/mimio-gallery.desktop
+  /usr/share/applications/mimio-gradebook.desktop
+  /usr/share/applications/mimio-launch.desktop
+  /usr/share/applications/mimio-notebook.desktop
+  /usr/share/applications/mimio-quickvote.desktop
+  /usr/share/applications/mimio-reveal.desktop
+  /usr/share/applications/mimio-spotlight.desktop
+  /usr/share/applications/mimio-texttools.desktop
+  /usr/share/applications/mimio-tools.desktop
+  /usr/share/applications/mimio-view.desktop
+  /usr/share/desktop-directories/mimio-studio.directory
+  /usr/share/desktop-directories/mimio-studio-tools.directory
+  /usr/share/icons/application-x-mimio-gallery.png
+  /usr/share/icons/application-x-mimio-gradebook.png
+  /usr/share/icons/application-x-mimio-notebook.png
+  /usr/share/icons/mimio-collaborate.png
+  /usr/share/icons/mimio-gallery.png
+  /usr/share/icons/mimio-gradebook.png
+  /usr/share/icons/mimio-install.png
+  /usr/share/icons/mimio-launch.png
+  /usr/share/icons/mimio-markup.png
+  /usr/share/icons/mimio-merlotapp.png
+  /usr/share/icons/mimio-notebook.png
+  /usr/share/icons/mimio-quickvote.png
+  /usr/share/icons/mimio-restart.png
+  /usr/share/icons/mimio-reveal.png
+  /usr/share/icons/mimio-spotlight.png
+  /usr/share/icons/mimio-texttools.png
+  /usr/share/icons/mimio-tools.png
+  /usr/share/icons/mimio-view.png
+  /usr/share/mime/packages/mimio.xml
+  /var/opt/mimio
+'
+
+case "${command}" in
+  configure)
+    upstream_dir=$1
+
+    for f in $mimio_links; do
+      dir=$(dirname "${f}")
+      mkdir -p "${dir}"
+      ln -fns -T "${upstream_dir}/${f}" "${f}"
+    done
+    ;;
+
+  unconfigure)
+    rm -rf $mimio_links
+    ;;
+
+  unpack)
+    upstream_pack=$1
+    upstream_dir=$2
+
+    dpkg -x "$upstream_pack" "$upstream_dir"
+    ;;
+esac

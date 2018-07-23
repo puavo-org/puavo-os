@@ -28,6 +28,7 @@ packagedirs += google-earth/
 packagedirs += idid/
 packagedirs += marvinsketch/
 packagedirs += mattermost-desktop/
+packagedirs += mimio-studio/
 packagedirs += msttcorefonts/
 packagedirs += obsidian-icons/
 packagedirs += ohjelmointi-opetuksessa/
