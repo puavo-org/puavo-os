@@ -53,7 +53,7 @@ configure_system_links() {
   for f in $mimio_links; do
     dir=$(dirname "${f}")
     mkdir -p "${dir}"
-    ln -fns -T "${csl_upstream_dir}/${f}" "${f}"
+    ln -fns -T "${csl_upstream_dir}${f}" "${f}"
   done
 }
 
