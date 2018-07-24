@@ -135,10 +135,14 @@ update_group_file() {
 
 if [ -e /run/puavo/nbd-server ]; then
   org_json_path='/etc/puavo/org.json'
-  prr_args='--user-bootserver'
 else
   org_json_path='/state/etc/puavo/org.json'
+fi
+
+if [ -e /etc/puavo/ldap/dn ]; then
   prr_args='--user-etc'
+else
+  prr_args='--user-bootserver'
 fi
 
 # it is okay if this fails
