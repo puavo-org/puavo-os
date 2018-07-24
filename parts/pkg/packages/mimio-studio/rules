@@ -76,18 +76,16 @@ configure_system_links() {
 }
 
 setup_binary_wrappers() {
-  sbw_upstream_dir=$1
-
   for mimio_bin in $mimio_binaries; do
-    mv "${sbw_upstream_dir}/${mimio_bin}" \
-       "${sbw_upstream_dir}/${mimio_bin}.orig"
-    cat <<-EOF > "${sbw_upstream_dir}/${mimio_bin}"
+    mv "/var/opt/mimio/${mimio_bin}" \
+       "/var/opt/mimio/.${mimio_bin}.bin"
+    cat <<-EOF > "/var/opt/mimio/${mimio_bin}"
 	#!/bin/sh
 
 	exec env LD_LIBRARY_PATH=/opt/trusty/lib/i386-linux-gnu \
-             "${sbw_upstream_dir}/${mimio_bin}.orig" "$@"
+             "/var/opt/mimio/.${mimio_bin}.bin" "$@"
 	EOF
-    chmod 755 "${sbw_upstream_dir}/${mimio_bin}"
+    chmod 755 "/var/opt/mimio/${mimio_bin}"
   done
 }
 
@@ -126,7 +124,7 @@ case "${command}" in
       exit 1
     fi
 
-    setup_binary_wrappers "$upstream_dir"
+    setup_binary_wrappers
 
     # these installer files take about 640MB
     # and we do not need them after the installation
