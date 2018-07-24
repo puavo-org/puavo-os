@@ -87,7 +87,7 @@ case "${command}" in
       sleep 1
       waiting_for_mimio=$(($waiting_for_mimio + 1))
     done
-    if [ "$waiting_for_mimio" -eq 300 ]; then
+    if [ "$waiting_for_mimio" -eq 900 ]; then
       echo 'Failed to wait for mimio' >&2
       exit 1
     fi
