@@ -47,15 +47,20 @@ mimio_links='
   /var/opt/mimio
 '
 
+configure_system_links() {
+  csl_upstream_dir=$1
+
+  for f in $mimio_links; do
+    dir=$(dirname "${f}")
+    mkdir -p "${dir}"
+    ln -fns -T "${csl_upstream_dir}/${f}" "${f}"
+  done
+}
+
 case "${command}" in
   configure)
     upstream_dir=$1
-
-    for f in $mimio_links; do
-      dir=$(dirname "${f}")
-      mkdir -p "${dir}"
-      ln -fns -T "${upstream_dir}/${f}" "${f}"
-    done
+    configure_system_links "$upstream_dir"
     ;;
 
   unconfigure)
@@ -67,5 +72,26 @@ case "${command}" in
     upstream_dir=$2
 
     dpkg -x "$upstream_pack" "$upstream_dir"
+
+    configure_system_links "$upstream_dir"
+
+    rm -f /var/opt/mimio/.install-complete
+
+    env LD_LIBRARY_PATH=/opt/trusty/lib/i386-linux-gnu \
+        /var/opt/mimio/mimio-mimiosys \
+        /var/opt/mimio/tmp/app_mimiostudio.mcd
+
+    waiting_for_mimio=0
+    while [ ! -e /var/opt/mimio/.install-complete \
+            -a "$waiting_for_mimio" -lt 300 ]; do
+      sleep 1
+      waiting_for_mimio=$(($waiting_for_mimio + 1))
+    done
+    if [ "$waiting_for_mimio" -eq 300 ]; then
+      echo 'Failed to wait for mimio' >&2
+      exit 1
+    fi
+
+    rm -rf $mimio_links
     ;;
 esac
