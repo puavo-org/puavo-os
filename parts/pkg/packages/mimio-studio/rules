@@ -82,8 +82,8 @@ setup_binary_wrappers() {
     cat <<-EOF > "/var/opt/mimio/${mimio_bin}"
 	#!/bin/sh
 
-	exec env LD_LIBRARY_PATH=/opt/trusty/lib/i386-linux-gnu \
-             "/var/opt/mimio/.${mimio_bin}.bin" "$@"
+	exec env LD_LIBRARY_PATH=/opt/trusty/lib/i386-linux-gnu \\
+	     "/var/opt/mimio/.${mimio_bin}.bin" "\$@"
 	EOF
     chmod 755 "/var/opt/mimio/${mimio_bin}"
   done
