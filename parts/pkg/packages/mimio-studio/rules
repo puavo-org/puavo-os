@@ -92,6 +92,13 @@ case "${command}" in
       exit 1
     fi
 
+    # these installer files take about 640MB
+    # and we do not need them after the installation
+    rm -rf ${upstream_dir}/var/opt/mimio/tmp/*.mcd \
+           ${upstream_dir}/var/opt/mimio/tmp/*.pkg
+
+    # normally unpacking should not configure the software so remove the
+    # configuration links
     rm -rf $mimio_links
     ;;
 esac
