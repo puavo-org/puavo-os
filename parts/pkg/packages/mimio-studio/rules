@@ -5,6 +5,24 @@ set -eu
 command=$1
 shift
 
+mimio_binaries='
+  mimio-collaborate
+  mimio-gallery
+  mimio-gradebook
+  mimio-install
+  mimio-launch
+  mimio-markup
+  mimio-mimiosys
+  mimio-notebook
+  mimio-quickvote
+  mimio-restart
+  mimio-reveal
+  mimio-spotlight
+  mimio-texttools
+  mimio-tools
+  mimio-view
+'
+
 mimio_links='
   /etc/modprobe.d/blacklist-mimio.conf
   /etc/xdg/autostart/mimio-mimiosys.desktop
@@ -57,6 +75,22 @@ configure_system_links() {
   done
 }
 
+setup_binary_wrappers() {
+  sbw_upstream_dir=$1
+
+  for mimio_bin in $mimio_binaries; do
+    mv "${sbw_upstream_dir}/${mimio_bin}" \
+       "${sbw_upstream_dir}/${mimio_bin}.orig"
+    cat <<-EOF > "${sbw_upstream_dir}/${mimio_bin}"
+	#!/bin/sh
+
+	exec env LD_LIBRARY_PATH=/opt/trusty/lib/i386-linux-gnu \
+             "${sbw_upstream_dir}/${mimio_bin}.orig" "$@"
+	EOF
+    chmod 755 "${sbw_upstream_dir}/${mimio_bin}"
+  done
+}
+
 case "${command}" in
   configure)
     upstream_dir=$1
@@ -91,6 +125,8 @@ case "${command}" in
       echo 'Failed to wait for mimio' >&2
       exit 1
     fi
+
+    setup_binary_wrappers "$upstream_dir"
 
     # these installer files take about 640MB
     # and we do not need them after the installation
