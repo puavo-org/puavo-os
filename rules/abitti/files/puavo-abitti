@@ -1,0 +1,22 @@
+#!/bin/sh
+
+PREREQ=""
+
+prereqs()
+{
+        echo "${PREREQ}"
+}
+
+case ${1} in
+        prereqs)
+                prereqs
+                exit 0
+                ;;
+esac
+
+# XXX some additional check for abitti/puavo would be nice
+if [ "$BOOT" = 'live' ]; then
+  mkdir -p /image /root/lib/modules
+  mount -r -o loop /root/lib/live/mount/medium/ltsp.img /image
+  mount --bind /image/lib/modules /root/lib/modules
+fi

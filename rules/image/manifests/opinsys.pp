@@ -1,5 +1,6 @@
 class image::opinsys {
-  include ::art::kemi,
+  include ::abitti,
+          ::art::kemi,
           ::art::opinsys,
           ::image::allinone,
           ::install_hp_plugins,
