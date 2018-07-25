@@ -1,0 +1,118 @@
+--- gnome-shell/js/gdm/authPrompt.js	2018-07-24 14:35:11.484157314 +0300
++++ gnome-shell/js/gdm/authPrompt.js	2018-07-25 12:15:31.721589207 +0300
+@@ -2,10 +2,12 @@
+ 
+ const Clutter = imports.gi.Clutter;
+ const Gio = imports.gi.Gio;
++const GLib = imports.gi.GLib;
+ const Lang = imports.lang;
+ const Signals = imports.signals;
+ const St = imports.gi.St;
+ const Shell = imports.gi.Shell;
++const Util = imports.misc.util;
+ 
+ const Animation = imports.ui.animation;
+ const Batch = imports.gdm.batch;
+@@ -207,7 +209,7 @@
+ 
+             this._machineInfoText = new St.Label({
+                 text: hostType + ' | ' + releaseName + ' | ' + hostName,
+-                style: 'font-size: 75%; text-align: center; margin-top: 20px;'
++                style: 'font-size: 80%; text-align: center; margin-top: 20px;'
+             });
+ 
+             this.actor.add_child(this._machineInfoText);
+@@ -215,6 +217,27 @@
+             // This is a hack from start to end, but right now it does the job.
+         }
+ 
++        if (reauthenticationOnly) {
++            let button_opts = {
++              button_mask: St.ButtonMask.ONE | St.ButtonMask.THREE,
++              can_focus:   false,
++              label:       _("End session"),
++              reactive:    true,
++              style_class: 'button destroy-user-session',
++            };
++
++            this._killUserSessionButton = new St.Button(button_opts);
++            this._killUserSessionButton.connect('clicked',
++                    Lang.bind(this, function() {
++                      Util.spawn(['/usr/bin/gnome-session-quit',
++                                  '--force',
++                                  '--logout',
++                                  '--no-prompt']);
++                    }));
++            this.actor.add_child(this._killUserSessionButton);
++            this._killUserSessionButton.show();
++        }
++
+         this._defaultButtonWell = new St.Widget({ layout_manager: new Clutter.BinLayout() });
+         this._defaultButtonWellActor = null;
+ 
+--- gnome-shell/data/theme/gnome-shell.css	2017-02-16 19:31:17.000000000 +0200
++++ gnome-shell/data/theme/gnome-shell.css	2018-07-25 12:12:24.606190628 +0300
+@@ -1849,3 +1849,11 @@
+   border: 2px solid grey;
+   border-radius: 4px;
+   padding: 6px; }
++
++.destroy-user-session {
++  color: #cc8800;
++  font-size: 70%;
++  font-weight: bold;
++  margin-top: 3em; }
++  .destroy-user-session:hover {
++    color: #ffaa00; }
+--- gnome-shell/po/de.po	2018-07-24 14:35:11.488157383 +0300
++++ gnome-shell/po/de.po	2018-07-25 12:39:24.499770759 +0300
+@@ -368,6 +368,10 @@
+ msgid "Sign In"
+ msgstr "Anmelden"
+ 
++#: js/gdm/authPrompt.js:224
++msgid "End session"
++msgstr "Sitzung beenden"
++
+ #: js/gdm/loginDialog.js:285
+ msgid "Choose Session"
+ msgstr "Sitzung wählen"
+--- gnome-shell/po/fi.po	2018-07-24 14:35:11.488157383 +0300
++++ gnome-shell/po/fi.po	2018-07-25 12:39:15.399603006 +0300
+@@ -367,6 +367,10 @@
+ msgid "Sign In"
+ msgstr "Kirjaudu sisään"
+ 
++#: js/gdm/authPrompt.js:224
++msgid "End session"
++msgstr "Lopeta istunto"
++
+ #: js/gdm/loginDialog.js:285
+ msgid "Choose Session"
+ msgstr "Valitse istunto"
+--- gnome-shell/po/fr.po	2018-07-24 14:35:11.488157383 +0300
++++ gnome-shell/po/fr.po	2018-07-25 12:39:27.803831669 +0300
+@@ -378,6 +378,10 @@
+ msgid "Sign In"
+ msgstr "Se connecter"
+ 
++#: js/gdm/authPrompt.js:224
++msgid "End session"
++msgstr "Fin de session"
++
+ #: js/gdm/loginDialog.js:285
+ msgid "Choose Session"
+ msgstr "Choisir une session"
+--- gnome-shell/po/sv.po	2018-07-24 14:35:11.488157383 +0300
++++ gnome-shell/po/sv.po	2018-07-25 12:39:22.231728949 +0300
+@@ -348,6 +348,10 @@
+ msgid "Sign In"
+ msgstr "Logga in"
+ 
++#: js/gdm/authPrompt.js:224
++msgid "End session"
++msgstr "Avsluta sessionen"
++
+ #: js/gdm/loginDialog.js:285
+ msgid "Choose Session"
+ msgstr "Välj session"
