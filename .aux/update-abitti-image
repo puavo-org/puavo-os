@@ -1,0 +1,97 @@
+#!/bin/sh
+
+set -eu
+
+abitti_images_dir=/srv/abitti-images
+abitti_metadata_json_path="${abitti_images_dir}/abitti.json"
+incoming_dir="${abitti_images_dir}/incoming"
+image_mount_dir="${abitti_images_dir}/incoming/mnt"
+loopback_dev=/dev/loop7
+
+mkdir -p "$abitti_images_dir" "$incoming_dir" "$image_mount_dir"
+
+(
+  if ! flock -n 9; then
+    echo "$(basename $0) is already running" >&2
+    exit 1
+  fi
+
+  wget --timestamping -P "${incoming_dir}" \
+       http://static.abitti.fi/etcher-usb/koe-etcher.zip
+
+  if [ -e "${incoming_dir}/koe-etcher.zip" \
+       -a "${incoming_dir}/koe-etcher.zip" \
+            -ot "$abitti_metadata_json_path" ]; then
+    echo 'Latest image has already been set up'
+    exit 0
+  fi
+
+  rm -rf "${incoming_dir}/koe-etcher" "${incoming_dir}/koe-etcher.tmp"
+  unzip -d "${incoming_dir}/koe-etcher.tmp" \
+           "${incoming_dir}/koe-etcher.zip"
+  mv "${incoming_dir}/koe-etcher.tmp" "${incoming_dir}/koe-etcher"
+
+  abitti_version=$(jq -r .name \
+                         ${incoming_dir}/koe-etcher/ytl/.meta/manifest.json \
+                     | sed -E 's/.*v([0-9]+)$/\1/')
+
+  if [ -z "$abitti_version" ]; then
+    echo 'Could not determine the abitti version!' >&2
+    exit 1
+  fi
+
+  umount "$image_mount_dir"  2>/dev/null || true
+  losetup -d "$loopback_dev" 2>/dev/null || true
+
+  losetup -P "$loopback_dev" "${incoming_dir}/koe-etcher/ytl/Koe.img"
+  if ! mount "${loopback_dev}p2" "$image_mount_dir"; then
+    echo 'Could not mount Koe.img partition 2' >&2
+    losetup -d "$loopback_dev"
+    exit 1
+  fi
+
+  squashfs_copy_status=0
+
+  squashfs_path="${abitti_images_dir}/abitti-v${abitti_version}.squashfs"
+  if ! cp -p "${image_mount_dir}/live/filesystem.squashfs" \
+             "${squashfs_path}.tmp"; then
+    squashfs_copy_status=1
+    rm -f "${squashfs_path}.tmp"
+  else
+    chmod 644 "${squashfs_path}.tmp"
+    mv "${squashfs_path}.tmp" "$squashfs_path"
+  fi
+
+  if ! umount "$image_mount_dir"; then
+    echo "Could not umount $image_mount_dir" >&2
+    exit 1
+  fi
+  if ! losetup -d "$loopback_dev"; then
+    echo "Could not detach loopback device $image_mount_dir" >&2
+    exit 1
+  fi
+
+  if [ "$squashfs_copy_status" -ne 0 ]; then
+    echo 'squashfs copy failed' >&2
+    exit 1
+  fi
+
+  squashfs_checksum=$(sha256sum "$squashfs_path" | awk '{ print $1 }')
+  {
+    if [ -e "$abitti_metadata_json_path" ]; then
+      cat "$abitti_metadata_json_path"
+    else
+      echo '{ "images": {}, "latest": null }'
+    fi
+  } | jq --arg abitti_version    "abitti-v${abitti_version}" \
+         --arg squashfs_checksum "$squashfs_checksum"        \
+         '.images[$abitti_version] = { "sha256": $squashfs_checksum }
+            | .latest = $abitti_version'    \
+    > "${abitti_metadata_json_path}.tmp"
+  mv "${abitti_metadata_json_path}.tmp" "$abitti_metadata_json_path"
+
+  rm -rf "${incoming_dir}/koe-etcher" "${incoming_dir}/koe-etcher.tmp"
+
+) 9< "$abitti_images_dir"
+
+exit 0
