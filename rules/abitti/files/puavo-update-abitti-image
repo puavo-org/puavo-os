@@ -1,0 +1,82 @@
+#!/bin/sh
+
+set -eu
+
+# XXX this script has obvious and non-obvious problems
+
+# be_very nice
+ionice -c 3  -p $$
+renice -n 20 -p $$ > /dev/null
+
+# XXX script should do nothing in case puavo-conf so orders
+# XXX if puavo-conf is false, should all abitti-images be removed?
+# XXX three states: "install-and-update", "do-nothing", "purge" ???
+# XXX   (OR WHAT?)
+
+abitti_images_dir=/images/abitti
+
+mkdir -p "$abitti_images_dir"
+
+wget -q --ca-certificate=/etc/puavo/certs/rootca.pem \
+     -O "${abitti_images_dir}/abitti.json.tmp" \
+     https://images.opinsys.fi/abitti-images/abitti.json
+mv "${abitti_images_dir}/abitti.json.tmp" \
+   "${abitti_images_dir}/abitti.json"
+
+# XXX use puavo-conf to check which version we want to use
+# XXX ("latest" should be the default).
+# image_version=$(puavo-conf puavo.XXX)
+
+image_version=latest
+if [ "$image_version" = 'latest' ]; then
+  image_version=$(jq -r .latest "${abitti_images_dir}/abitti.json")
+
+  if [ -z "$image_version" ]; then
+    echo 'Could not determine the latest version from abitti metadata' >&2
+    exit 1
+  fi
+fi
+
+abitti_image="${image_version}.squashfs"
+abitti_image_fp="${abitti_images_dir}/${abitti_image}"
+
+# XXX check available disk space before downloading
+# XXX should not download if system image download is in progress?
+# XXX (perhaps we could always just do it before/after the system image
+# XXX update, and do abitti update even if it system image update fails?)
+# XXX (this way we would do both simultaneously, usually...)
+
+# XXX proper logging to syslog
+# download_rate_limit=$(puavo-conf puavo.image.download.ratelimit)
+download_rate_limit='500000k'
+if ! printf "%s\n" "$download_rate_limit" | grep -Eqx '[0-9]+[km]'; then
+  echo "the rate limit was not understood, got '$download_rate_limit'" >&2
+  exit 1
+fi
+
+if [ ! -e "${abitti_image_fp}" ]; then
+  if ! wget -q --ca-certificate=/etc/puavo/certs/rootca.pem \
+            --limit-rate="$download_rate_limit" \
+            -O "${abitti_image_fp}.tmp" \
+            "https://images.opinsys.fi/abitti-images/${abitti_image}"; then
+    rm -f "${abitti_image_fp}.tmp"
+    exit 1
+  fi
+
+  # XXX should do checksum check here
+
+  mv "${abitti_image_fp}.tmp" "$abitti_image_fp"
+  ln -f "$abitti_image_fp" "${abitti_images_dir}/abitti.squashfs.tmp"
+  mv "${abitti_images_dir}/abitti.squashfs.tmp" \
+     "${abitti_images_dir}/abitti.squashfs"
+  printf "%s\n" "$image_version" > "${abitti_images_dir}/abitti.version.tmp"
+  mv "${abitti_images_dir}/abitti.version.tmp" \
+     "${abitti_images_dir}/abitti.version"
+
+  # XXX what if updates always fail?  this will never get run?
+
+  find "$abitti_images_dir" \
+    '(' -name '*.squashfs' -o -name '*.squashfs.tmp' ')' \
+    -a ! '(' -name abitti.squashfs -or -name "${image_version}.squashfs" ')' \
+    -exec rm -f \{} \;
+fi
