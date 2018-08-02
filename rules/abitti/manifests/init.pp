@@ -4,6 +4,16 @@ class abitti {
   include ::puavo_conf
 
   file {
+    '/etc/cron.hourly/puavo-update-abitti-image':
+      mode    => '0755',
+      require => File['/usr/local/sbin/puavo-update-abitti-image'],
+      source  => 'puppet:///modules/abitti/puavo-update-abitti-image.cron';
+
+    '/usr/local/sbin/puavo-update-abitti-image':
+      mode    => '0755',
+      require => ::Puavo_conf::Definition['puavo-abitti.json'],
+      source  => 'puppet:///modules/abitti/puavo-update-abitti-image';
+
     '/usr/share/initramfs-tools/scripts/init-bottom/puavo-abitti':
       mode    => '0755',
       notify  => Exec['update initramfs'],
