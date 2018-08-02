@@ -46,16 +46,18 @@ function get_kernelversion {
 
 function ltsp_image_entry {
   set imagefile="$1"
-  set description="$2"
-  set kernelparameters="$3"
 
-  if [ "$kernelparameters" = "abitti" ]; then
+  if [ "$2" = "Abitti" ]; then
     set abitti=true
+    set description="$2"
+    set kernelparameters=""
+    set imagepath="$3"
   else
     set abitti=false
+    set description="$2"
+    set kernelparameters="$3"
+    get_pathname $imagefile imagepath
   fi
-
-  get_pathname $imagefile imagepath
 
   # if changing menuentry description, update correspondingly on
   # puavo-local-config configure_grub_default()
@@ -198,8 +200,15 @@ for dev in (lvm/__PUAVO_LVM_PARTITION__); do
     ltsp_image_entry_superlaptop "${file}" "Muu järjestelmä, kehittäjätila"
   done
 
-  if test -f "${default_image}"; then
-    ltsp_image_entry "${default_image}" "Abitti" "abitti"
+  for file in ${dev}/abitti/abitti-v*.squashfs; do
+    set abitti_image="${file}"
+    regexp -s abitti_version_number 'abitti-v(.*)\.squashfs$' "${file}"
+    break
+  done
+  if test -f "${abitti_image}"; then
+    ltsp_image_entry "${default_image}" \
+                     "Abitti"           \
+                     "versio ${abitti_version_number}"
   fi
 done
 EOF
