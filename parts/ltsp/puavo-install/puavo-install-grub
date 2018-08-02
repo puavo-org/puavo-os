@@ -201,9 +201,16 @@ for dev in (lvm/__PUAVO_LVM_PARTITION__); do
   done
 
   for file in ${dev}/abitti/abitti-v*.squashfs; do
+    # If there are two abitti-images, do not show the menuentry because we
+    # do not know what we get in the live-boot environment in this situation
+    # (because we have no mechanism to choose a particular image).
+    # This is mostly to stop admins doing unsupported things.
+    if test -n "$abitti_image"; then
+      set abitti_image=""
+      break
+    fi
     set abitti_image="${file}"
     regexp -s abitti_version_number 'abitti-v(.*)\.squashfs$' "${file}"
-    break
   done
   if test -f "${abitti_image}"; then
     ltsp_image_entry "${default_image}" \
