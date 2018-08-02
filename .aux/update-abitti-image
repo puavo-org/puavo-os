@@ -77,6 +77,7 @@ mkdir -p "$abitti_images_dir" "$incoming_dir" "$image_mount_dir"
   fi
 
   squashfs_checksum=$(sha256sum "$squashfs_path" | awk '{ print $1 }')
+  squashfs_size=$(stat -c %s "$squashfs_path")
   {
     if [ -e "$abitti_metadata_json_path" ]; then
       cat "$abitti_metadata_json_path"
@@ -85,8 +86,13 @@ mkdir -p "$abitti_images_dir" "$incoming_dir" "$image_mount_dir"
     fi
   } | jq --arg abitti_version    "abitti-v${abitti_version}" \
          --arg squashfs_checksum "$squashfs_checksum"        \
-         '.images[$abitti_version] = { "sha256": $squashfs_checksum }
-            | .latest = $abitti_version'    \
+         --arg squashfs_size     "$squashfs_size"            \
+         '
+           .images[$abitti_version] = {
+             "sha256": $squashfs_checksum,
+             "size":   $squashfs_size,
+           } | .latest = $abitti_version
+         ' \
     > "${abitti_metadata_json_path}.tmp"
   mv "${abitti_metadata_json_path}.tmp" "$abitti_metadata_json_path"
 
