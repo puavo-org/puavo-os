@@ -43,6 +43,19 @@ if [ -z "$abitti_version" ]; then
   exit 1
 fi
 
+rsyncopts=''
+if [ "${1:-}" = '--use-rate-limit' ]; then
+  download_rate_limit=$(puavo-conf puavo.image.download.ratelimit)
+  if [ -n "$download_rate_limit" ]; then
+    if ! printf "%s\n" "$download_rate_limit" | grep -Eqx '[0-9]+[km]'; then
+      logmsg -p user.err \
+             "the rate limit was not understood, got '$download_rate_limit'"
+      exit 1
+    fi
+    rsyncopts="--bwlimit=${download_rate_limit}"
+  fi
+fi
+
 mkdir -p "$abitti_images_dir" "$abitti_updates_dir"
 
 abitti_json_path="${abitti_updates_dir}/abitti.json"
@@ -86,17 +99,6 @@ done
 if [ -e "$abitti_image_fp" ]; then
   logmsg -p user.info "the requested abitti-image ${abitti_version} is in place"
   exit 0
-fi
-
-rsyncopts=''
-download_rate_limit=$(puavo-conf puavo.image.download.ratelimit)
-if [ -n "$download_rate_limit" ]; then
-  if ! printf "%s\n" "$download_rate_limit" | grep -Eqx '[0-9]+[km]'; then
-    logmsg -p user.err \
-           "the rate limit was not understood, got '$download_rate_limit'"
-    exit 1
-  fi
-  rsyncopts="--bwlimit=${download_rate_limit}"
 fi
 
 required_diskspace=$(jq -r --arg abitti_version "$abitti_version" \
