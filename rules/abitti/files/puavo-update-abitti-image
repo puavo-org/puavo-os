@@ -79,30 +79,59 @@ for squashfs_file in ${abitti_images_dir}/*.squashfs; do
 done
 
 if [ -e "$abitti_image_fp" ]; then
-  logmsg -p user.info 'the requested abitti-image is in place'
+  logmsg -p user.info "the requested abitti-image ${abitti_version} is in place"
   exit 0
 fi
 
-# XXX check available disk space before downloading
-# XXX should not download if system image download is in progress?
-# XXX (perhaps we could always just do it before/after the system image
-# XXX update, and do abitti update even if it system image update fails?)
-# XXX (this way we would do both simultaneously, usually...)
-
+rsyncopts=''
 download_rate_limit=$(puavo-conf puavo.image.download.ratelimit)
-if ! printf "%s\n" "$download_rate_limit" | grep -Eqx '[0-9]+[km]'; then
-  logmsg -p user.err \
-         "the rate limit was not understood, got '$download_rate_limit'"
+if [ -n "$download_rate_limit" ]; then
+  if ! printf "%s\n" "$download_rate_limit" | grep -Eqx '[0-9]+[km]'; then
+    logmsg -p user.err \
+           "the rate limit was not understood, got '$download_rate_limit'"
+    exit 1
+  fi
+  rsyncopts="--bwlimit=${download_rate_limit}"
+fi
+
+required_diskspace=$(jq -r --arg abitti_version "$abitti_version" \
+                         '.images[$abitti_version].size' "$abitti_json_path")
+if [ -z "$required_diskspace" ]; then
+  logmsg -p user.err "image size for '$abitti_version' is not known"
+  exit 1
+fi
+available_diskspace=$(stat -f -c '%S * %a' "$abitti_images_dir" \
+                        | bc -l | xargs printf %.0f)
+if [ "$available_diskspace" -lt "$required_diskspace" ]; then
+  msg="only $available_diskspace bytes available on $abitti_images_dir,"
+  msg="$msg need $required_diskspace bytes"
+  logmsg -p user.err "$msg"
   exit 1
 fi
 
-rsync --fuzzy --inplace --progress -v --bwlimit="$download_rate_limit" \
+expected_image_sha256=$(jq -r --arg abitti_version "$abitti_version" \
+                 '.images[$abitti_version].sha256' "$abitti_json_path")
+if [ -z "$expected_image_sha256" ]; then
+  logmsg -p user.err "checksum missing for image $abitti_version"
+  exit 1
+fi
+
+logmsg -p user.info "downloading $abitti_version with rsync from $image_server"
+rsync --fuzzy --inplace --progress -v $rsyncopts \
       "${image_server}::images/abitti-images/${abitti_image}" \
       "${abitti_image_fp}.tmp"
 
-# XXX should do checksum check here
+logmsg -p user.info "checking sha256 checksum of $abitti_version"
+actual_image_sha256=$(sha256sum "${abitti_image_fp}.tmp" | awk '{ print $1 }')
+if [ "$actual_image_sha256" != "$expected_image_sha256" ]; then
+  logmsg -p user.err "checksum mismatch for abitti-image ${abitti_version}"
+  exit 1
+fi
 
 if [ -n "$old_abitti_image_fp" ]; then
+  logmsg -p user.notice \
+         "replacing old abitti-image with version ${abitti_version}"
+
   # Destroy the old image in the process, but always keeping one
   # *.squashfs file in place.
   mv "${abitti_image_fp}.tmp" "$old_abitti_image_fp"
@@ -114,3 +143,5 @@ if [ -n "$old_abitti_image_fp" ]; then
 else
   mv "${abitti_image_fp}.tmp" "$abitti_image_fp"
 fi
+
+logmsg -p user.notice "new abitti-image ${abitti_version} installed!"
