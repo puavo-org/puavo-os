@@ -16,7 +16,6 @@ ionice -c 3  -p $$
 renice -n 20 -p $$ > /dev/null
 
 abitti_images_dir=/images/abitti
-abitti_updates_dir="${abitti_images_dir}/.puavo"
 image_server='images.opinsys.fi'
 
 abitti_mode=$(puavo-conf puavo.abitti.mode)
@@ -28,7 +27,7 @@ case "$abitti_mode" in
     # just continue...
     ;;
   purge)
-    rm -rf "$abitti_images_dir" "$abitti_updates_dir"
+    rm -rf "$abitti_images_dir"
     exit 0
     ;;
   *)
@@ -56,9 +55,9 @@ if [ "${1:-}" = '--use-rate-limit' ]; then
   fi
 fi
 
-mkdir -p "$abitti_images_dir" "$abitti_updates_dir"
+mkdir -p "$abitti_images_dir"
 
-abitti_json_path="${abitti_updates_dir}/abitti.json"
+abitti_json_path="${abitti_images_dir}/abitti.json"
 wget -q --ca-certificate=/etc/puavo/certs/rootca.pem \
      -O "${abitti_json_path}.tmp" \
      "https://${image_server}/abitti-images/abitti.json"
