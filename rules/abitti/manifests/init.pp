@@ -1,6 +1,7 @@
 class abitti {
   include ::initramfs
   include ::packages
+  include ::puavo_conf
 
   file {
     '/usr/share/initramfs-tools/scripts/init-bottom/puavo-abitti':
@@ -12,6 +13,11 @@ class abitti {
                  , Package['live-config-systemd']
                  , Package['live-tools'] ],
       source  => 'puppet:///modules/abitti/puavo-abitti';
+  }
+
+  ::puavo_conf::definition {
+    'puavo-abitti.json':
+      source => 'puppet:///modules/abitti/puavo-abitti.json';
   }
 
   Package <|

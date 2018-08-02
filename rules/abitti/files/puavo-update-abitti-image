@@ -2,43 +2,61 @@
 
 set -eu
 
-# XXX this script has obvious and non-obvious problems
-
 # be_very nice
 ionice -c 3  -p $$
 renice -n 20 -p $$ > /dev/null
+
+abitti_images_dir=/images/abitti
+abitti_updates_dir="${abitti_images_dir}/.puavo"
+
+abitti_mode=$(puavo-conf puavo.abitti.mode)
+case "$abitti_mode" in
+  do-nothing)
+    exit 0
+    ;;
+  install-and-update)
+    # just continue...
+    ;;
+  purge)
+    rm -rf "$abitti_images_dir" "$abitti_updates_dir"
+    exit 0
+    ;;
+  *)
+    echo "$(basename "$0"): unsupported abitti mode: '${abitti_mode}'" >&2
+    exit 1
+    ;;
+esac
+
+abitti_version=$(puavo-conf puavo.abitti.version)
+if [ -z "$abitti_version" ]; then
+  echo "$(basename "$0"): puavo.abitti.version is not set, doing nothing!" >&2
+  exit 1
+fi
 
 # XXX script should do nothing in case puavo-conf so orders
 # XXX if puavo-conf is false, should all abitti-images be removed?
 # XXX three states: "install-and-update", "do-nothing", "purge" ???
 # XXX   (OR WHAT?)
 
-abitti_images_dir=/images/abitti
-
-mkdir -p "$abitti_images_dir"
+mkdir -p "$abitti_images_dir" "$abitti_updates_dir"
 
 wget -q --ca-certificate=/etc/puavo/certs/rootca.pem \
-     -O "${abitti_images_dir}/abitti.json.tmp" \
+     -O "${abitti_updates_dir}/abitti.json.tmp" \
      https://images.opinsys.fi/abitti-images/abitti.json
-mv "${abitti_images_dir}/abitti.json.tmp" \
-   "${abitti_images_dir}/abitti.json"
+mv "${abitti_updates_dir}/abitti.json.tmp" \
+   "${abitti_updates_dir}/abitti.json"
 
-# XXX use puavo-conf to check which version we want to use
-# XXX ("latest" should be the default).
-# image_version=$(puavo-conf puavo.XXX)
+if [ "$abitti_version" = 'latest' ]; then
+  abitti_version=$(jq -r .latest "${abitti_updates_dir}/abitti.json")
 
-image_version=latest
-if [ "$image_version" = 'latest' ]; then
-  image_version=$(jq -r .latest "${abitti_images_dir}/abitti.json")
-
-  if [ -z "$image_version" ]; then
+  if [ -z "$abitti_version" ]; then
     echo 'Could not determine the latest version from abitti metadata' >&2
     exit 1
   fi
 fi
 
-abitti_image="${image_version}.squashfs"
-abitti_image_fp="${abitti_images_dir}/${abitti_image}"
+abitti_image="${abitti_version}.squashfs"
+abitti_image_fp="${abitti_updates_dir}/${abitti_image}"
 
 # XXX check available disk space before downloading
 # XXX should not download if system image download is in progress?
@@ -55,28 +73,42 @@ if ! printf "%s\n" "$download_rate_limit" | grep -Eqx '[0-9]+[km]'; then
 fi
 
 if [ ! -e "${abitti_image_fp}" ]; then
-  if ! wget -q --ca-certificate=/etc/puavo/certs/rootca.pem \
-            --limit-rate="$download_rate_limit" \
-            -O "${abitti_image_fp}.tmp" \
-            "https://images.opinsys.fi/abitti-images/${abitti_image}"; then
-    rm -f "${abitti_image_fp}.tmp"
-    exit 1
-  fi
+  # XXX determine the image server (perhaps bootservers could also be
+  # XXX image servers?)
+  image_server='images.opinsys.fi'
+  rsync --fuzzy --inplace --progress -v --bwlimit="$download_rate_limit" \
+        "${image_server}::images/abitti-images/${abitti_image}" \
+        "${abitti_image_fp}.tmp"
 
   # XXX should do checksum check here
 
   mv "${abitti_image_fp}.tmp" "$abitti_image_fp"
-  ln -f "$abitti_image_fp" "${abitti_images_dir}/abitti.squashfs.tmp"
-  mv "${abitti_images_dir}/abitti.squashfs.tmp" \
-     "${abitti_images_dir}/abitti.squashfs"
-  printf "%s\n" "$image_version" > "${abitti_images_dir}/abitti.version.tmp"
-  mv "${abitti_images_dir}/abitti.version.tmp" \
-     "${abitti_images_dir}/abitti.version"
+
+  abitti_image_for_grub="${abitti_images_dir}/${abitti_image}"
+
+  ln -f "$abitti_image_fp" "${abitti_image_for_grub}.tmp"
+  for squashfs_file in ${abitti_images_dir}/*.squashfs; do
+    if [ "$squashfs_file" = "${abitti_image_for_grub}" ]; then
+      continue
+    fi
+
+    if [ -e "$squashfs_file" ]; then
+      # XXX could it be that the files are the same in some error situation?
+      mv "${abitti_images_dir}/${abitti_image}.tmp" "$squashfs_file"
+      # now old image has been deleted, but it has a wrong version path,
+      # so fix that.
+      mv "$squashfs_file" "$abitti_image_for_grub"
+    fi
+  done
+  if [ ! -e "$abitti_image_for_grub" ]; then
+    mv "${abitti_image_for_grub}.tmp" "$abitti_image_for_grub"
+  fi
 
   # XXX what if updates always fail?  this will never get run?
+  # XXX this should done before the updates
 
   find "$abitti_images_dir" \
     '(' -name '*.squashfs' -o -name '*.squashfs.tmp' ')' \
-    -a ! '(' -name abitti.squashfs -or -name "${image_version}.squashfs" ')' \
+    -a ! '(' -name abitti.squashfs -or -name "${abitti_version}.squashfs" ')' \
     -exec rm -f \{} \;
 fi
