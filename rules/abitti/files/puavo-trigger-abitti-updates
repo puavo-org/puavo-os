@@ -1,0 +1,12 @@
+#!/bin/sh
+
+set -eu
+
+sleep 180
+
+while true; do
+  /usr/local/sbin/puavo-update-abitti-image --use-rate-limit || true
+  # Wait about 4115 seconds (~ 3600 * (8/7)) to not coincide much with image
+  # updates.
+  sleep 4115
+done

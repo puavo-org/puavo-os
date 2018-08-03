@@ -1,0 +1,170 @@
+#!/bin/sh
+
+set -eu
+
+# obtain an exclusive lock on myself...
+# there should be only one instance of this program running
+exec 3<$0
+flock -nx 3 || { echo did not get a lock, exiting; exit 1; }
+
+logmsg() {
+  logger -s -t puavo-update-abitti-image "$@" || true
+}
+
+# be_very nice
+ionice -c 3  -p $$
+renice -n 20 -p $$ > /dev/null
+
+abitti_images_dir=/images/abitti
+image_server='images.opinsys.fi'
+
+abitti_mode=$(puavo-conf puavo.abitti.mode)
+case "$abitti_mode" in
+  do-nothing)
+    exit 0
+    ;;
+  install-and-update)
+    # just continue...
+    ;;
+  purge)
+    rm -rf "$abitti_images_dir"
+    exit 0
+    ;;
+  *)
+    logmsg -p user.err "unsupported abitti mode: '${abitti_mode}'"
+    exit 1
+    ;;
+esac
+
+abitti_version=$(puavo-conf puavo.abitti.version)
+if [ -z "$abitti_version" ]; then
+  logmsg -p user.err 'puavo.abitti.version is not set, doing nothing!'
+  exit 1
+fi
+
+rsyncopts=''
+if [ "${1:-}" = '--use-rate-limit' ]; then
+  download_rate_limit=$(puavo-conf puavo.image.download.ratelimit)
+  if [ -n "$download_rate_limit" ]; then
+    if ! printf "%s\n" "$download_rate_limit" | grep -Eqx '[0-9]+[km]'; then
+      logmsg -p user.err \
+             "the rate limit was not understood, got '$download_rate_limit'"
+      exit 1
+    fi
+    rsyncopts="--bwlimit=${download_rate_limit}"
+  fi
+fi
+
+mkdir -p "$abitti_images_dir"
+
+abitti_json_path="${abitti_images_dir}/abitti.json"
+wget -q --ca-certificate=/etc/puavo/certs/rootca.pem \
+     -O "${abitti_json_path}.tmp" \
+     "https://${image_server}/abitti-images/abitti.json"
+mv "${abitti_json_path}.tmp" "$abitti_json_path"
+
+if [ "$abitti_version" = 'latest' ]; then
+  abitti_version=$(jq -r .latest "$abitti_json_path")
+
+  if [ -z "$abitti_version" ]; then
+    logmsg -p user.err \
+           'could not determine the latest version from abitti metadata'
+    exit 1
+  fi
+fi
+
+abitti_image="${abitti_version}.squashfs"
+abitti_image_fp="${abitti_images_dir}/${abitti_image}"
+
+# remove temporary files (of non-matching versions).
+find "$abitti_images_dir" -maxdepth 1 -name '*.squashfs.tmp' \
+  -a ! -name "${abitti_version}.squashfs.tmp" \
+  -exec rm -f \{} \;
+
+old_abitti_image_fp=''
+
+# remove old squashfs files, except one that we can also use as a base
+for squashfs_file in ${abitti_images_dir}/*.squashfs; do
+  test -e "$squashfs_file" || continue
+
+  if [ -n "$old_abitti_image_fp" ]; then
+    rm -f "$squashfs_file"
+    continue
+  fi
+
+  old_abitti_image_fp="$squashfs_file"
+done
+
+# setup persistent storage filesystem for DigabiOS/Abitti
+persistent_fs="${abitti_images_dir}/persistent_abitti_fs"
+if [ ! -e "$persistent_fs" ]; then
+  # count=14336 (7M) is the DigabiOS default, but we put a bit bigger
+  # one in case it should ever grow (four times as much).
+  {
+    dd if=/dev/zero "of=${persistent_fs}.tmp" bs=512 count=57344 2>/dev/null \
+      && mkfs.ext4 -q -L DAT452CBDF0OGISG "${persistent_fs}.tmp" \
+      && mv "${persistent_fs}.tmp" "$persistent_fs"
+  } || {
+    logmsg -p user.err 'could not create a persistent filesystem for Abitti'
+    exit 1
+  }
+
+  logmsg -p user.info 'created a new persistent filesystem for Abitti'
+fi
+
+if [ -e "$abitti_image_fp" ]; then
+  logmsg -p user.info "the requested abitti-image ${abitti_version} is in place"
+  exit 0
+fi
+
+required_diskspace=$(jq -r --arg abitti_version "$abitti_version" \
+                         '.images[$abitti_version].size' "$abitti_json_path")
+if [ -z "$required_diskspace" ]; then
+  logmsg -p user.err "image size for '$abitti_version' is not known"
+  exit 1
+fi
+available_diskspace=$(stat -f -c '%S * %a' "$abitti_images_dir" \
+                        | bc -l | xargs printf %.0f)
+if [ "$available_diskspace" -lt "$required_diskspace" ]; then
+  msg="only $available_diskspace bytes available on $abitti_images_dir,"
+  msg="$msg need $required_diskspace bytes"
+  logmsg -p user.err "$msg"
+  exit 1
+fi
+
+expected_image_sha256=$(jq -r --arg abitti_version "$abitti_version" \
+                 '.images[$abitti_version].sha256' "$abitti_json_path")
+if [ -z "$expected_image_sha256" ]; then
+  logmsg -p user.err "checksum missing for image $abitti_version"
+  exit 1
+fi
+
+logmsg -p user.info "downloading $abitti_version with rsync from $image_server"
+rsync --fuzzy --inplace --progress -v $rsyncopts \
+      "${image_server}::images/abitti-images/${abitti_image}" \
+      "${abitti_image_fp}.tmp"
+
+logmsg -p user.info "checking sha256 checksum of $abitti_version"
+actual_image_sha256=$(sha256sum "${abitti_image_fp}.tmp" | awk '{ print $1 }')
+if [ "$actual_image_sha256" != "$expected_image_sha256" ]; then
+  logmsg -p user.err "checksum mismatch for abitti-image ${abitti_version}"
+  exit 1
+fi
+
+if [ -n "$old_abitti_image_fp" ]; then
+  logmsg -p user.notice \
+         "replacing old abitti-image with version ${abitti_version}"
+
+  # Destroy the old image in the process, but always keeping one
+  # *.squashfs file in place.
+  mv "${abitti_image_fp}.tmp" "$old_abitti_image_fp"
+
+  # If we fail here (in such a way that the following command never runs
+  # or fails), we have the new image with the old name (and thus wrong
+  # version number), but this should get fixed in a later run.
+  mv "$old_abitti_image_fp" "$abitti_image_fp"
+else
+  mv "${abitti_image_fp}.tmp" "$abitti_image_fp"
+fi
+
+logmsg -p user.notice "new abitti-image ${abitti_version} installed!"

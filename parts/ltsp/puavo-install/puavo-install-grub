@@ -46,10 +46,18 @@ function get_kernelversion {
 
 function ltsp_image_entry {
   set imagefile="$1"
-  set description="$2"
-  set kernelparameters="$3"
 
-  get_pathname $imagefile imagepath
+  if [ "$2" = "Abitti" ]; then
+    set abitti=true
+    set description="$2"
+    set kernelparameters=""
+    set imagepath="$3"
+  else
+    set abitti=false
+    set description="$2"
+    set kernelparameters="$3"
+    get_pathname $imagefile imagepath
+  fi
 
   # if changing menuentry description, update correspondingly on
   # puavo-local-config configure_grub_default()
@@ -58,7 +66,7 @@ function ltsp_image_entry {
   # (if it is defined there)
   set kernelparameters="${kernelparameters} ${puavo_kernel_arguments}"
 
-  menuentry "${description} (${imagepath})" "$imagefile" "$imagepath" "$kernelparameters" {
+  menuentry "${description} (${imagepath})" "$imagefile" "$imagepath" "$kernelparameters" "$abitti" {
     set imagefile="$2"
     set imagepath="$3"
 
@@ -119,9 +127,15 @@ function ltsp_image_entry {
     fi
 
     set kernelparameters="$4"
+    set abitti="$5"
 
-    linux   /boot/vmlinuz${kernel_version_suffix} ro init=/sbin/init-puavo __PUAVO_KERNEL_ARGUMENTS__ ${kernelparameters}
-    initrd  /boot/initrd.img${kernel_version_suffix}
+    if [ "$abitti" = "true" ]; then
+      linux /boot/vmlinuz${kernel_version_suffix} ro boot=live config security=apparmor digabidata digabi=syslinux union=overlay live-media=/dev/mapper/puavo-images live-media-path=/abitti live-boot.debug puavo.abitti.boot=true puavo.boot.plymouth.theme=joy ${kernelparameters}
+    else
+      linux /boot/vmlinuz${kernel_version_suffix} ro init=/sbin/init-puavo quiet splash puavo.hosttype=laptop root=/dev/mapper/puavo-images loop="${imagepath}" puavo.image.path="${imagepath}" ${kernelparameters}
+    fi
+
+    initrd /boot/initrd.img${kernel_version_suffix}
 
     loopback -d loop
   }
@@ -185,6 +199,24 @@ for dev in (lvm/__PUAVO_LVM_PARTITION__); do
     ltsp_image_entry "${file}" "Muu järjestelmä, normaali käynnistys"
     ltsp_image_entry_superlaptop "${file}" "Muu järjestelmä, kehittäjätila"
   done
+
+  for file in ${dev}/abitti/abitti-v*.squashfs; do
+    # If there are two abitti-images, do not show the menuentry because we
+    # do not know what we get in the live-boot environment in this situation
+    # (because we have no mechanism to choose a particular image).
+    # This is mostly to stop admins doing unsupported things.
+    if test -n "$abitti_image"; then
+      set abitti_image=""
+      break
+    fi
+    set abitti_image="${file}"
+    regexp -s abitti_version_number 'abitti-v(.*)\.squashfs$' "${file}"
+  done
+  if test -f "${abitti_image}"; then
+    ltsp_image_entry "${default_image}" \
+                     "Abitti"           \
+                     "versio ${abitti_version_number}"
+  fi
 done
 EOF
 }
