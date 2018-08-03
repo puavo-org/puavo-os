@@ -27,6 +27,7 @@ class image::bundle::basic {
   include ::picaxe_udev_rules
   include ::plymouth
   include ::puavo_shutdown
+  include ::puavomenu
   include ::rpcgssd
   include ::ssh_client
   include ::sysctl
