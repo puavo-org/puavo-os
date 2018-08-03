@@ -1,0 +1,172 @@
+#!/usr/bin/python3
+
+# Welcome to PuavoMenu, the modern (?) WebMenu replacement.
+
+from os import environ
+from os.path import join as path_join
+from sys import exit
+from time import clock
+import argparse
+
+
+# Some kind of a help text
+epilog = """
+Socket names and IPC commands
+-----------------------------
+PuavoMenu uses a Unix domain socket for IPC. You can use it to send
+simple commands to it. See send_command for more information. The main
+PuavoMenu instance uses a socket file ~/puavomenu_(hostname)_socket;
+if you're running other copies of PuavoMenu, you *need* to use other
+socket names, so the commands you send to your copies do not interfere
+with the system menu.
+
+Known IPC commands are:
+    show: Show the menu
+    hide: Hide the menu
+    toggle: Show or hide the menu, depending on its current visibility
+
+'show' and 'toggle' also accept a position parameter, which tells the
+menu where the window should be shown at. Known positions are:
+
+    center: Center the window around the mouse cursor
+    corner <X> <Y>: Position the lower left corner at (X, Y)
+
+Examples on positioning:
+
+    show corner 115 68: This shows the window and moves it so that the
+                        lower left corner is located at (115, 68).
+    show corner: Shows the window at whatever position it happens to
+                 be at.
+    show center: Shows the window and centers it around the mouse cursor.
+
+Language codes
+--------------
+Like its predecessor, WebMenu, PuavoMenu supports multiple languages.
+The language code is simply a two-letter code, like "fi", or "en". You
+can use --lang=<code> to specify which language you want to use. If
+--lang is omitted, PuavoMenu looks up LANG and GDM_LANG environment
+variables (in that order) and takes the first two letters form its
+value, lowercases them and then compares them to known languages. If
+the environment variable(s) are missing, or the code is invalid, the
+language defaults to English (en). Known language codes are:
+    fi, en, sv, de.
+"""
+
+parser = argparse.ArgumentParser(
+    formatter_class=argparse.RawDescriptionHelpFormatter,
+    epilog=epilog)
+
+parser.add_argument('--lang',
+                    type=str,
+                    required=False,
+                    default=None,   # force autodetection
+                    help='language code (see documentation)')
+
+parser.add_argument('--log',
+                    type=str,
+                    required=False,
+                    help='log file name (if omitted, logs to console)')
+
+parser.add_argument('--autohide',
+                    action='store_true',
+                    required=False,
+                    help='enable window autohide (use this in production!)')
+
+parser.add_argument('--dev',
+                    action='store_true',
+                    required=False,
+                    help='enable development mode')
+
+required = parser.add_argument_group('required arguments')
+
+required.add_argument('--res_dir',
+                      required=True,
+                      type=str,
+                      help='location of PuavoMenu\'s own resources')
+
+required.add_argument('--menu_dir',
+                      required=True,
+                      type=str,
+                      help='location of the menu data')
+
+required.add_argument('--user_dir',
+                      required=True,
+                      type=str,
+                      help='location of user-specific data (faves, etc.)')
+
+required.add_argument('--socket',
+                      required=True,
+                      help='IPC command socket name')
+
+args = parser.parse_args()
+
+import logger
+
+if args.log:
+    logger.disable_console()
+    logger.enable_file(args.log)
+else:
+    logger.enable_console()
+    logger.disable_file()
+
+logger.start_banner()
+logger.info('This is PuavoMenu v0.5 (c) Opinsys Oy 2017-2018')
+
+params = {}
+params['res_dir'] = path_join(args.res_dir, '')
+params['menu_dir'] = path_join(args.menu_dir, '')
+params['user_dir'] = path_join(args.user_dir, '')
+params['socket'] = args.socket
+params['dev_mode'] = args.dev
+params['autohide'] = args.autohide
+params['lang'] = args.lang
+
+if params['lang'] is None:
+    if 'LANG' in environ:
+        params['lang'] = environ['LANG'][0:2].lower()
+    elif 'GDM_LANG' in os.environ:
+        params['lang'] = environ['GDM_LANG'][0:2].lower()
+
+if not params['lang'] in ('en', 'fi', 'sv', 'de'):
+    logger.error('Invalid language code "{0}", defaulting to "en"'.
+                 format(params['lang']))
+    params['lang'] = 'en'
+
+logger.info('Resource directory.: "{0}"'.format(params['res_dir']))
+logger.info('Menu data directory: "{0}"'.format(params['menu_dir']))
+logger.info('User directory.....: "{0}"'.format(params['user_dir']))
+logger.info('IPC socket name....: "{0}"'.format(params['socket']))
+logger.info('Language code......: "{0}"'.format(params['lang']))
+
+if args.log:
+    logger.info('Log (this) file....: "' + args.log + '"')
+
+if args.dev:
+    logger.info('*** Development mode activated ***')
+
+if params['autohide']:
+    logger.info('*** Autohide enabled ***')
+
+logger.info('=' * 50)
+
+# And go!
+import_start = clock()
+
+try:
+    from main import run
+    import_end = clock()
+    logger.print_time('Main import time', import_start, import_end)
+    run(params)
+except Exception as e:
+    # This is bad. Very bad.
+    logger.error(e)
+
+    import syslog
+    syslog.syslog(syslog.LOG_CRIT, str(e))
+
+# Exit
+logger.info('=' * 50)
+logger.info('Shutdown complete')
+logger.end_banner()
+
+exit(0)
