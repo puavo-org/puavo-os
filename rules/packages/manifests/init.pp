@@ -34,6 +34,7 @@ class packages {
     , 'puavo-vpn-client'
     , 'puavo-wlanap'
     , 'puavo-wlanmapper'
+    , 'puavomenu'
     , 'ruby-puavowlan'
     , 'webkiosk-language-selector'
     , 'webmenu' ]:

@@ -9,6 +9,7 @@ PuavoMenu is the upcoming WebMenu replacement component. It is written in Python
 ### General
 This list must be empty or nearly empty before PuavoMenu can be considered good enough to be used in production.
 
+* WebMenu parity: download and display user avatar images
 * WebMenu parity: implement the "webwindow" style, don't open the system browser for doing things like password change
 * Fix the keyboard focus issues
 * Prevent "special" characters like * and ? from being typed in the box. Currently the search box accepts them, but they're ignored when searching for programs.

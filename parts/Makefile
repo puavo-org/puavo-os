@@ -15,6 +15,7 @@ subdirs         := admins                       \
                    opinsys-ca-certificates      \
                    pam                          \
                    pkg                          \
+                   puavomenu                    \
                    sharedir                     \
                    vpn                          \
                    webkiosk-language-selector   \

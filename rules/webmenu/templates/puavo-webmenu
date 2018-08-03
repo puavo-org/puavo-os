@@ -2,6 +2,11 @@
 
 set -eu
 
+if [ "$(puavo-conf puavo.puavomenu.enabled)" = "true" ]; then
+    exec /opt/puavomenu/launch
+    exit 0
+fi
+
 webmenu_args=''
 
 if [ "$(puavo-conf puavo.localadmin.enabled)" = 'true' ]; then

@@ -1,0 +1,13 @@
+---
+
+# TODO: actually determine the values for these
+
+- name: personally_administered
+  method: constant
+  params:
+      - value: false
+
+- name: ti_nspire_cx_cas
+  method: constant
+  params:
+      - value: true
