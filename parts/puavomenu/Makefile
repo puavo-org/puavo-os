@@ -7,7 +7,7 @@ install-dirs:
 	mkdir -p $(DESTDIR)/etc/puavomenu
 
 install: install-dirs
-	cp * $(DESTDIR)/opt/puavomenu
+	cp -R * $(DESTDIR)/opt/puavomenu/
 
 uninstall:
 	rm -f $(DESTDIR)/etc/puavomenu
