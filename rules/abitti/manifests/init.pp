@@ -4,10 +4,19 @@ class abitti {
   include ::puavo_conf
 
   file {
-    '/etc/cron.hourly/puavo-update-abitti-image':
+    '/etc/systemd/system/multi-user.target.wants/puavo-trigger-abitti-updates.service':
+      ensure  => link,
+      require => File['/etc/systemd/system/puavo-trigger-abitti-updates.service'],
+      target  => '/etc/systemd/system/puavo-trigger-abitti-updates.service';
+
+    '/etc/systemd/system/puavo-trigger-abitti-updates.service':
+      require => File['/usr/local/lib/puavo-trigger-abitti-updates'],
+      source  => 'puppet:///modules/abitti/puavo-trigger-abitti-updates.service';
+
+    '/usr/local/lib/puavo-trigger-abitti-updates':
       mode    => '0755',
       require => File['/usr/local/sbin/puavo-update-abitti-image'],
-      source  => 'puppet:///modules/abitti/puavo-update-abitti-image.cron';
+      source  => 'puppet:///modules/abitti/puavo-trigger-abitti-updates';
 
     '/usr/local/sbin/puavo-update-abitti-image':
       mode    => '0755',

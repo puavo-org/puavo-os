@@ -1,5 +1,0 @@
-#!/bin/sh
-
-test -x /usr/local/sbin/puavo-update-abitti-image || exit 0
-
-exec /usr/local/sbin/puavo-update-abitti-image --use-rate-limit
