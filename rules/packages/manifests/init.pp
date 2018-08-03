@@ -145,8 +145,6 @@ class packages {
     , 'python-appindicator'
     , 'python-gtk2'
     , 'python-notify'
-    , 'python3-yaml'
-    , 'python3-xlib'
     , 'shared-mime-info' ]:
       tag => [ 'tag_desktop', 'tag_debian', ];
 
