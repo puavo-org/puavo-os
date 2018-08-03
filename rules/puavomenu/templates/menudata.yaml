@@ -1,0 +1,1200 @@
+---
+
+programs:
+
+  #A
+  - acroread:
+        keywords:
+          - pdf
+        name: Acrobat Reader
+  - amme:
+        type: web
+        name: Amme
+        url: https://www11.edu.fi/materiaali/index.php?id=2
+        description: Oppimateriaalia ammatilliseen erityisopetukseen
+        icon: /usr/share/icons/Faenza/apps/96/gimp.png
+  - anki:
+      name:
+          en: Anki
+          fi: Anki-muistikortit
+      condition: fof
+  - appinventor
+  - arduino:
+        icon: /opt/arduino-ide/lib/icons/96x96/apps/arduino.png
+  - audacity
+  - avogadro
+
+  #B
+  - blender
+  - bluefish:
+        name:
+            en: Bluefish HTML-editor
+            fi: Bluefish HTML-editori
+            sv: Bluefish HTML-redigerare
+            de: Bluefish HTML-editor
+  - bluegriffon
+  - brasero
+
+  #C
+  - calibre-gui:
+        name: Calibre
+        keywords: ebook, e-book
+  - celestia:
+      name:
+          en: Celestia-space simulation
+          fi: Avaruussimulaattori
+          sv: Rymdsimulator
+          de: Celestia Weltraum Simulator
+  - chromium:
+        icon: /usr/share/icons/hicolor/64x64/apps/chromium.png
+        name:
+            en: Chromium-browser
+            fi: Chromium-selain
+            sv: Chromium
+            de: Chromium-Browser
+  - cmaptools
+
+  #D
+  - designer-qt4:
+        name:
+            en: Qt4 - graphical UI designer
+            fi: Käyttöliittymä-suunnittelija
+            sv: Användargränssnitt-designer
+            de: Qt4 - Grafischer UI Designer
+        icon: /usr/share/icons/Faenza/apps/96/qtdesigner.png
+  - dia
+  - dropbox
+  - drracket
+
+  #E
+  - eclipse
+  - edison:
+        type: web
+        name: Edison
+        url: http://app.edison.fi
+        icon: /usr/share/icons/Faenza/mimetypes/96/text-html.png
+  - ekapeli:
+        condition: "!personally_administered"
+  - ekapeli-alku:
+        condition: "!personally_administered"
+  - ekapeli-maahanmuuttaja:
+        condition: "!personally_administered"
+  - ekapeliweb:
+        type: web
+        name: Ekapeli (websivu)
+        url: http://www.lukimat.fi/lukeminen/materiaalit/ekapeli
+        icon: /usr/share/icons/Faenza/categories/96/gnome-joystick.png
+        condition: "!personally_administered"
+  - empathy
+  - enchanting
+  - eog:
+      icon: /usr/share/icons/Faenza/apps/scalable/eog.svg
+  - eric
+  - evince
+  - evolution
+
+  #F
+  - firefox
+  - fmit:
+        name:
+            en: Fmit-instrument tuner
+            fi: Viritinohjelma
+            sv: Stämmningsprogram
+            de: Stimmprogramm
+        icon: /usr/share/icons/hicolor/scalable/apps/fmit.svg
+  - freecad
+  - fritzing:
+        icon: /usr/share/pixmaps/fritzing_icon.png
+  #G
+  - gcompris:
+        condition: "!personally_administered"
+  - geany:
+        icon: /usr/share/icons/hicolor/scalable/apps/geany.svg
+  - geogebra:
+        keywords:
+          - digabi
+        name: Geogebra 5
+  - geogebra6
+  - gftp:
+        icon: /usr/share/icons/gnome/48x48/places/gnome-fs-ftp.png
+  - gimp
+  - GlobiLab
+  - gnome-calculator
+  - gnome-klotski
+  - gnome-mahjongg
+  - gnome-mines
+  - gnome-sudoku
+  - gnubg
+  - goobox:
+        icon: /usr/share/icons/hicolor/48x48/apps/goobox.png
+  - google-chrome:
+        name:
+            en: Chrome-browser
+            fi: Chrome-selain
+            sv: Chrome
+            de: Chrome
+  - google-earth:
+        icon: /usr/share/icons/Faenza/apps/48/googleearth.png
+  - gthumb:
+        icon: /usr/share/icons/hicolor/scalable/apps/gthumb.svg
+  - gucharmap
+
+  #H
+  - hydrogen:
+        name:
+            en: Hydrogen-drum machine
+            fi: Hydrogen-rumpukone
+            sv: Hydrogen-trummaskin
+            de: Hydrogen Drum Machine
+
+  #I
+  - idle-python2.7:
+        icon: /usr/share/icons/Faenza/mimetypes/96/text-x-python.png
+  - idle-python3.5:
+        icon: /usr/share/icons/Faenza/mimetypes/96/text-x-python.png
+  - inkscape
+
+  #J
+
+  #K
+  - kahoot:
+        type: web
+        name: Kahoot!
+        url: https://getkahoot.com/
+        description: Kahoot
+        icon: /usr/share/icons/Gion/48x48/categories/xfce-internet.png
+  - kenavision:
+        name: Kena Vision Microscope
+        type: custom
+        command: /opt/av4kav/lib/av4.sh
+        icon: /usr/share/icons/Faenza/devices/96/camera-web.png
+  - kino:
+        type: custom
+        name:
+            en: Kino-non-linear DV editor
+            fi: Kino-videoeditori
+            sv: Kino-videoredigerare
+            de: Kino Filme bearbeiten
+        command: kino
+        description:
+            en: Edit videos
+            fi: Muokkaa videoita
+            sv: Redigera videon
+            de: Video bearbeiten
+        icon: kino
+
+  #L
+  - libreoffice-base
+  - libreoffice-calc
+  - libreoffice-draw
+  - libreoffice-impress
+  - libreoffice-math
+  - libreoffice-writer
+  - lmms:
+        name:
+            en: LMMS - music production suite
+            fi: LMMS - musiikkityökalu
+            de: LMMS - Software zur Musik-Produktion
+  - LoggerPro
+  - luola
+
+  #M
+  - mandelbulber
+  - marble-qt:
+        name:
+            en: Marble-virtual world
+            fi: Marble-maapallo
+            sv: Marble-jordglob
+            de: Marble virtueller Globus
+  - MarvinSketch
+  - MarvinView
+  - mscore:
+        name:
+            en: MuseScore-music composition & notation
+            fi: Nuotinnusohjelma
+            sv: Notering
+            de: Musik-Notensatz
+  - mypaint:
+        icon: /usr/share/icons/hicolor/48x48/apps/mypaint.png
+
+  #N
+  - net.sourceforge.liferea
+  - neverball
+  - neverputt
+
+  #O
+  - okular
+  - onboard
+  - openboard
+  - openshot
+  - openttd
+  - org.gnome.Cheese
+  - org.gnome.FileRoller
+  - org.gnome.gedit:
+        name:
+            en: Gedit-text editor
+            fi: Gedit-tekstieditori
+            sv: Gedit-tekstredigerare
+            de: Gedit-Texteditor
+        icon: /usr/share/icons/Faenza/apps/96/accessories-text-editor.png
+  - org.gnome.Nautilus
+  - org.gnome.Screenshot
+  - org.gnome.Terminal
+  - org.kde.kaffeine
+  - org.kde.kalzium:
+        icon: /usr/share/icons/hicolor/48x48/apps/kalzium.png
+        name:
+            en: Kalzium-periodic system
+            fi: Jaksollinen järjestelmä
+            sv: Periodsystem
+            de: Periodensystem
+  - org.kde.kbruch
+  - org.kde.kdenlive
+  - org.kde.kgeography:
+          name:
+            en: KGeography-geography
+            fi: KGeography-maantieto
+            sv: KGeography-geografi
+            de: Kgeography
+          condition: "!personally_administered"
+  - org.kde.khangman:
+        name:
+              en: KHangMan
+              fi: Hirsipuu
+        icon: /usr/share/icons/hicolor/scalable/apps/khangman.svgz
+  - org.kde.kmplot:
+        name:
+            en: KmPlot-function plotter
+            fi: KmPlot-kuvaajat
+            sv: KmPlot
+            de: KmPlot
+  - org.kde.kolourpaint
+  - org.kde.krita
+  - org.kde.kstars:
+        name:
+            en: KStars-astronomy
+            fi: KStars-planetaario
+            sv: KStars-stjärnhimlen
+            de: KStars-Astronomie
+  - org.kde.ktouch:
+        name:
+            en: KTouch-touch typing
+            fi: KTouch-konekirjoitus
+            sv: KTouch-maskinskrivning
+            de: KTouch-Schreibmaschine
+  - org.kde.kturtle:
+        name:
+            en: KTurtle - logo programming
+            fi: KTurtle - logo-ohjelmointi
+            sv: KTurtle - logoprogrammering
+            de: KTurtle - Programieren mit Logo
+        command: kturtle
+        icon: /usr/share/icons/hicolor/64x64/apps/kturtle.png
+  - org.kde.kwordquiz:
+        name:
+            en: KWordQuiz-vocabulary learning
+            fi: KWordQuiz-sanastoharjoitus
+            sv: Ordförrådsövningar
+            de: Kreuzworträtsel
+  - org.kde.step:
+        name:
+             en: Step-physics simulator
+             fi: Step-fysiikan simulaattori
+             sv: Step-fysik simulator
+             de: Step Physik Simulator
+  - otava:
+        type: web
+        name: Otava - Oppilaan maailma
+        url: https://oppilas.otava.fi/
+        icon: /usr/share/icons/Faenza/mimetypes/96/text-html.png
+
+  #P
+  - pahvi:
+        type: web
+        name: Pahvi
+        url: http://pahvidemo.opinsys.fi/
+        icon: /usr/share/icons/Faenza/mimetypes/96/text-html.png
+  - pedanet:
+        type: web
+        name: Peda.net
+        url: https://peda.net/:loginopinsys
+        icon: /usr/share/icons/Faenza/mimetypes/96/text-html.png
+  - perunakellari:
+        type: web
+        name: Perunakellarin harjoituksia
+        url: http://www.perunakellari.fi/ym.html#bi
+        description: Perunakellari
+        icon: /usr/share/icons/Gion/48x48/categories/xfce-internet.png
+  - phet:
+        type: web
+        name: PhET Simulations Web
+        url: https://phet.colorado.edu/en/simulations/category/physics
+        description:
+            en: PhET physics simulations
+            fi: PhET fysiikkasimulaatiot
+            sv: PhET web
+            de: PhET web
+        icon: /usr/share/icons/Faenza/categories/96/applications-internet.png
+  - pidgin
+  - pinta:
+        icon: /usr/share/icons/hicolor/scalable/apps/pinta.svg
+  - pitivi
+  - primusclient:
+        condition: "!personally_administered"
+  - processing
+  - puavo-local-config-ui:
+        type: custom
+        command: puavo-local-config-ui
+        name:
+            fi: Kannettavan asetukset
+            sv: Bärbar datorns inställningar
+            en: Laptop settings
+            de: Laptop einstellungen
+        icon: /usr/share/icons/Faenza/devices/64/drive-harddisk-system.png
+        condition: "personally_administered"
+  - pycharm
+  - python-club:
+        type: web
+        name:
+            fi: Python-klubi
+            en: Python Club
+        url: http://www.teromakotero.fi/python-klubi/
+        icon: /usr/share/icons/oxygen/base/64x64/categories/applications-internet.png
+
+  #Q
+  - qgis
+  - qjackctl:
+        icon: /usr/share/icons/hicolor/32x32/apps/qjackctl.png
+        name: JACK Control
+  - qstopmotion
+  - qsynth:
+        icon: /usr/share/icons/hicolor/32x32/apps/qsynth.png
+        name: FluidSynth GUI
+
+  #R
+  - robboscratch2
+  - rosegarden:
+        name:
+            en: Rosegarden-sequencer
+            fi: Rosegarden-sekvensseri
+            sv: Rosegarden-sekvenser
+            de: Rosegarden Sequencer
+        icon: /usr/share/icons/hicolor/64x64/apps/rosegarden.png
+
+  #S
+  - sanomapro:
+        type: web
+        name: SanomaPro
+        url: http://sanomapro.fi/
+        icon: /usr/share/icons/Faenza/mimetypes/96/text-html.png
+  - scratch
+  - scratch-club:
+        type: web
+        name:
+            fi: Scratch-klubi
+            en: Scratch Club
+        url: http://www.teromakotero.fi/scratch-klubi/
+        icon: /usr/share/icons/oxygen/base/64x64/categories/applications-internet.png
+  - scribus:
+        name:
+            en: Scribus-desktop publishing
+            fi: Scribus-julkaisuohjelma
+            sv: Scribus Layout
+            de: Scribus Seitengestaltung
+  - seahorse
+  - shotwell
+  - simple-scan:
+        name:
+            en: Simple Scan
+            fi: Yksinkertainen skannausohjelma
+            sv: Enkelt scanningsverktyg
+            de: Einfaches Scanner Werkzeug
+        icon: /usr/share/icons/Faenza/devices/96/scanner.png
+  - simplescreenrecorder:
+        name:
+            en: SimpleScreenRecorder
+            fi: Työpöytänauhoitus
+            sv: SimpleScreenRecorder
+            de: SimpleScreenRecorder
+  - sketchup:
+        type: web
+        name: SketchUp Free (Web)
+        url: https://app.sketchup.com/app?hl=en
+        icon: /usr/share/icons/Faenza/apps/96/glade.png
+  - skype:
+        icon: /usr/share/icons/Faenza/apps/48/skype.png
+  - smarttech-notebook
+  - sol
+  - solfege:
+        name:
+            en: Solfege-ear training program
+            fi: Korvanharjoitus-ohjelma
+            sv: Gehör-övningar
+            de: Hörbildung
+  - sound-juicer
+  - spe:
+        name:
+            en: SPE - Python IDE
+            fi: Stanin python-editori
+            sv: Stanis python-editor
+            de: Stanis Python IDE
+  - spelett:
+        condition: "!personally_administered"
+  - spotify
+  - steam
+  - stellarium:
+        name:
+            en: Stellarium-planetarium
+            fi: Stellarium-planetaario
+            sv: Stellarium-planetarium
+            de: Stellaruim-Planetarium
+  - sumopaint:
+        type: web
+        name: Sumopaint
+        url: http://www.sumopaint.com
+        description:
+            en: Sumopaint-online graphics editor
+            fi: Sumopaint-webkuvankäsittely
+            sv: Sumopaint-bildbehandling
+            de: Sumopaint Online Bildbearbeitung
+        icon: /usr/share/icons/Faenza/apps/96/gimp.png
+  - supertuxkart
+
+  #T
+  - t-lasku
+  - teddybear:
+        name:
+            en: Teddy Bear programming
+            fi: Nalle-ohjelmointi
+            sv: Teddybjörn programmering
+            de: Teddy-Programmierung
+  - tellico:
+        keywords: tellico
+        name:
+            en: Tellico-collection manager
+            fi: Kirjasto-ohjelma
+            sv: Biblotek
+            de: Tellico Sammlungs-Verwalter
+        icon: /usr/share/icons/hicolor/64x64/apps/tellico.png
+  - thunderbird
+  - ti_nspire_cx_cas_ss
+  - tilitin
+  - tuxguitar:
+        name:
+            en: TuxGuitar-multitrack tablature editor
+            fi: Kitaranuotinnus
+            sv: Noter för gitarr
+            de: Tabulaturen für Gitarre
+        icon: /opt/webmenu/extra/icons/apps/overlord59-tux-guitar-1434.png
+  - tuxmath:
+        icon: /usr/share/pixmaps/tuxmath.svg
+        condition: "!personally_administered"
+  - tuxpaint:
+        icon: /usr/share/icons/hicolor/48x48/apps/tuxpaint.png
+
+  #U
+  - unelmakoulu:
+        type: web
+        name: Unelmakoulu
+        url: http://dreamschool.fi
+        icon: /opt/webmenu/extra/icons/apps/unelmakoulu.png
+
+  #V
+  - VidyoDesktop
+  - vinagre
+  - viope:
+        type: web
+        name: Viope
+        url: https://www.viope.com/
+        icon: /usr/share/icons/Faenza/mimetypes/96/text-html.png
+  - vlc
+  - vym:
+        name:
+            en: VYM-mindmap
+            fi: Miellekarttasovellus
+            sv: Mindmap
+            de: Mindmap
+
+  #W
+  - walma:
+        type: web
+        name: Walma
+        keywords:
+            - photoshop
+            - toinen
+        url: http://walmademo.opinsys.fi
+        description:
+            en: Collaborative whiteboard
+            fi: Yhteistoiminnallinen piirtotaulu
+            sv: Kollaborativ whiteboard
+            de: Mit dem Whiteboard zusammenarbweiten
+        icon: /usr/share/icons/Faenza/mimetypes/96/text-html.png
+  - wikipedia:
+        type: web
+        name: Wikipedia
+        url: https://www.wikipedia.org/
+        icon: /usr/share/icons/Faenza/apps/96/wikipedia.png
+  - winff:
+        name:
+            fi: WinFF-videomuunnin
+            en: WinFF
+  - wxMaxima:
+        condition: ti_nspire_cx_cas
+
+
+  #X
+  - xmoto
+  - xsane
+
+  #Y
+  - yleareena:
+        type: web
+        name: Yle Areena
+        url: http://areena.yle.fi
+        icon: /usr/share/icons/Faenza/apps/96/me-tv.png
+  - ylearkisto:
+        type: web
+        name: Yle - Elävä arkisto
+        url: http://yle.fi/elavaarkisto/index.html
+        icon: /usr/share/icons/Faenza/apps/96/me-tv.png
+  - youtube:
+        type: web
+        name: YouTube
+        url: https://youtube.com
+        icon: /usr/share/icons/Faenza/apps/96/youtube.png
+
+  #Z
+
+# ------------------------------------------------------------------------------
+
+menus:
+
+  - menu-applications:
+        icon: /usr/share/icons/Faenza/categories/48/applications-accessories.png
+        name:
+            en: Applications
+            fi: Apuohjelmat
+            sv: Verktyg
+            de: Werkzeuge
+        programs:
+            - gnome-calculator
+            - org.gnome.gedit
+            - gucharmap
+            - onboard
+            - brasero
+            - sound-juicer
+            - org.gnome.FileRoller
+            - org.gnome.Terminal
+            - gftp
+            - seahorse
+            - org.gnome.Screenshot
+            - simplescreenrecorder
+
+  - menu-graphics:
+        name:
+            en: Graphics
+            fi: Grafiikka
+            sv: Grafik
+            de: Grafik
+        description:
+            en: Graphics applications
+            fi: Piirto- ja kuvankäsittelyohjelmia
+            sv: Ritprogram
+            de: Grafikprogramme
+        icon: /usr/share/icons/Faenza/categories/48/applications-painting.png
+        programs:
+            - org.kde.kolourpaint
+            - org.kde.krita
+            - tuxpaint
+            - mypaint
+            - gimp
+            - pinta
+            - gthumb
+            - eog
+            - shotwell
+            - inkscape
+            - simple-scan
+            - xsane
+            - blender
+            - sketchup
+            - freecad
+
+  - menu-internet:
+        icon: /usr/share/icons/Faenza/categories/48/applications-internet.png
+        name: Internet
+        description:
+            en: Internet-applications
+            fi: Internet-sovellukset
+            sv: Internet-program
+            de: Interent Programme
+        programs:
+            - firefox
+            - chromium
+            - google-chrome
+            - thunderbird
+            - evolution
+            - pidgin
+            - gftp
+            - net.sourceforge.liferea
+            - google-earth
+            - skype
+            - empathy
+            - vinagre
+            - dropbox
+            - VidyoDesktop
+
+  - menu-programming:
+        name:
+            en: Programming
+            fi: Ohjelmointi
+            sv: Programmering
+            de: Programmierung
+        description:
+            en: "Programming environments"
+            fi: Ohjelmointiympäristöjä
+        icon: /usr/share/icons/Faenza/categories/48/gnome-devel.png
+        programs:
+            - arduino
+            - fritzing
+            - teddybear
+            - drracket
+            - enchanting
+            - bluegriffon
+            - eclipse
+            - eric
+            - pycharm
+            - spe
+            - idle-python2.7
+            - idle-python3.5
+            - geany
+            - org.kde.kturtle
+            - scratch
+            - bluefish
+            - designer-qt4
+            - processing
+            - robboscratch2
+            - appinventor
+
+  - menu-education:
+        name:
+            en: Education
+            fi: Opetusohjelmat
+            sv: Undervisningsprogram
+            de: Bildung
+        description:
+            en: Educational applications
+            fi: Sovelluksia oppimisen tueksi
+            sv: Pedagogiska program
+            de: Bildungs Programme
+        icon: /usr/share/icons/Faenza/categories/48/applications-games.png
+        programs:
+            - ekapeli
+            - spelett
+            - ekapeli-maahanmuuttaja
+            - ekapeli-alku
+            - gcompris
+            - tuxmath
+            - org.kde.kbruch
+            - geogebra
+            - geogebra6
+            - org.kde.kmplot
+            - marble-qt
+            - google-earth
+            - org.kde.kgeography
+            - org.kde.kwordquiz
+            - org.kde.khangman
+            - org.kde.ktouch
+            - celestia
+            - stellarium
+            - org.kde.kstars
+            - org.kde.step
+            - LoggerPro
+            - GlobiLab
+            - wxMaxima
+            - ti_nspire_cx_cas_ss
+            - avogadro
+            - org.kde.kalzium
+            - MarvinSketch
+            - MarvinView
+            - mandelbulber
+            - qgis
+            - anki
+
+  - menu-office:
+        name:
+            en: Office
+            fi: Toimisto
+            sv: Kontor
+            de: Büro
+        description:
+            en: Office applications
+            fi: Toimisto-ohjelmat
+            sv: Kontorsprogram
+            de: Büroprogramme
+        icon: /usr/share/icons/Faenza/categories/48/applications-office.png
+        programs:
+            - libreoffice-writer
+            - libreoffice-calc
+            - libreoffice-impress
+            - libreoffice-draw
+            - libreoffice-base
+            - libreoffice-math
+            - scribus
+            - vym
+            - cmaptools
+            - acroread
+            - okular
+            - evince
+            - calibre-gui
+            - tellico
+            - openboard
+            - primusclient
+            - dia
+            - tilitin
+            - t-lasku
+
+  - menu-audio:
+        name:
+            en: Audio and video
+            fi: Ääni ja video
+            sv: Ljud och Video
+            de: Audio und Video
+        icon: /usr/share/icons/Faenza/categories/48/applications-multimedia.png
+        programs:
+            - audacity
+            - goobox
+            - vlc
+            - org.kde.kaffeine
+            - spotify
+            - org.gnome.Cheese
+            - kenavision
+            - openshot
+            - org.kde.kdenlive
+            - kino
+            - pitivi
+            - solfege
+            - mscore
+            - hydrogen
+            - lmms
+            - rosegarden
+            - tuxguitar
+            - fmit
+            - qstopmotion
+            - qsynth
+            - qjackctl
+            - winff
+
+  - menu-games:
+        name:
+            en: Games
+            fi: Pelit
+            sv: Spel
+            de: Spiele
+        icon: /usr/share/icons/Faenza/categories/48/applications-cardgames.png
+        condition: "!personally_administered"
+        programs:
+            - gnome-klotski
+            - gnome-mines
+            - gnome-mahjongg
+            - sol
+            - gnome-sudoku
+            - supertuxkart
+            - neverball
+            - neverputt
+            - luola
+            - openttd
+            - xmoto
+            - steam
+            - gnubg
+
+
+  - menu-digabi:
+        name: Digabi
+        description:
+            fi: Sovelluksia sähköiseen ylioppilastutkintoon
+        icon: /usr/share/icons/oxygen/base/48x48/categories/applications-education.png
+        condition: "personally_administered"
+        programs:
+            - gimp
+            - pinta
+            - inkscape
+            - geogebra
+            - wxMaxima
+            - ti_nspire_cx_cas_ss
+            - LoggerPro
+            - dia
+            - libreoffice-writer
+            - libreoffice-calc
+            - libreoffice-impress
+            - libreoffice-draw
+            - libreoffice-base
+            - libreoffice-math
+
+  - menu-whiteboards:
+        name:
+            en: "Interactive\nwhiteboards"
+            fi: Älytaulut
+            sv: Interaktiva tavlor
+            de: Interaktive Wandtafeln
+        icon: /usr/share/icons/hicolor/128x128/apps/SMART_Tools.png
+        condition: "!personally_administered"
+        programs:
+            - smarttech-notebook
+            - openboard
+
+  - menu-web:
+        name:
+            en: Web applications
+            fi: Web-sovellukset
+            sv: Web applikationer
+            de: Web Anwendungen
+        icon: /usr/share/icons/Gion/48x48/categories/xfce-internet.png
+        programs:
+            - youtube
+            - wikipedia
+            - yleareena
+            - ylearkisto
+            - sumopaint
+            - walma
+            - pahvi
+            - sanomapro
+            - otava
+            - ekapeliweb
+            - edison
+            - unelmakoulu
+            - pedanet
+            - viope
+
+  - menu-physics:
+        name:
+            en: Physics
+            fi: Fysiikka
+        icon: /usr/share/icons/hicolor/64x64/apps/step.png
+        programs:
+            - org.kde.step
+            - LoggerPro
+            - libreoffice-writer
+            - phet
+            - youtube
+
+  - menu-chemistry:
+        name:
+            en: Chemistry
+            fi: Kemia
+        icon: /usr/share/icons/hicolor/48x48/apps/kalzium.png
+        programs:
+            - avogadro
+            - MarvinSketch
+            - MarvinView
+            - org.kde.kalzium
+            - LoggerPro
+            - libreoffice-writer
+            - kahoot
+            - youtube
+
+  - menu-mathematics:
+        name:
+            en: Mathematics
+            fi: Matematiikka
+        icon: /usr/share/icons/Faenza/categories/64/applications-interfacedesign.png
+        programs:
+            - tuxmath
+            - org.kde.kbruch
+            - geogebra
+            - org.kde.kmplot
+            - gnome-calculator
+            - teddybear
+            - scratch
+            - scratch-club
+            - python-club
+            - arduino
+            - libreoffice-calc
+            - libreoffice-math
+            - libreoffice-writer
+            - wxMaxima
+            - kahoot
+            - youtube
+
+  - menu-geography:
+        name:
+            en: Geography
+            fi: Maantieto
+        icon: /usr/share/tuxpaint/stamps/space/planets/3_earth.png
+        programs:
+            - marble-qt
+            - google-earth
+            - org.kde.kgeography
+            - celestia
+            - stellarium
+            - org.kde.kstars
+            - qgis
+            - libreoffice-writer
+            - kahoot
+            - youtube
+
+  - menu-environment:
+        name:
+            en: Environmental Science
+            fi: Ympäristöoppi
+        icon: /usr/share/icons/Faenza/apps/64/tracker.png
+        programs:
+            - marble-qt
+            - google-earth
+            - org.kde.kgeography
+            - celestia
+            - stellarium
+            - org.kde.kstars
+            - libreoffice-writer
+            - kahoot
+            - youtube
+
+  - menu-biology:
+        name:
+            en: Biology
+            fi: Biologia
+        icon: /opt/webmenu/extra/icons/apps/applications-biology.svg
+        programs:
+            - perunakellari
+            - libreoffice-writer
+            - kahoot
+            - youtube
+
+  - menu-socialsciences:
+        name:
+            en: Social Sciences
+            fi: Yhteiskuntaoppi
+        icon: /usr/share/icons/Faenza/emblems/64/emblem-sales.png
+        programs:
+            - ekapeli
+            - ekapeli-maahanmuuttaja
+            - ekapeli-alku
+            - google-earth
+            - ylearkisto
+            - libreoffice-writer
+            - kahoot
+            - youtube
+
+  - menu-history:
+        name:
+            en: History
+            fi: Historia
+        icon: /usr/share/icons/hicolor/128x128/apps/freeciv-client.png
+        programs:
+            - marble-qt
+            - google-earth
+            - ylearkisto
+            - libreoffice-writer
+            - kahoot
+            - youtube
+
+  - menu-literature:
+        name:
+            en: English and literature
+            fi: Äidinkieli ja kirjallisuus
+        icon: /usr/share/icons/Faenza/apps/64/gnome-dictionary.png
+        programs:
+            - ekapeli
+            - ekapeli-maahanmuuttaja
+            - ekapeli-alku
+            - libreoffice-writer
+            - gcompris
+            - org.kde.khangman
+            - org.kde.kwordquiz
+            - org.kde.ktouch
+            - libreoffice-impress
+            - ylearkisto
+            - kahoot
+            - youtube
+
+  - menu-languages:
+        name:
+            en: Foreign languages
+            fi: Vieraat kielet
+        icon: /usr/share/icons/oxygen/base/64x64/categories/applications-education-language.png
+        programs:
+            - libreoffice-writer
+            - org.kde.kwordquiz
+            - org.kde.khangman
+            - kahoot
+            - youtube
+
+  - menu-foreign:
+        name:
+            en: Foreign languages
+            fi: Toinen kotimainen
+        icon: /usr/share/icons/Faenza/apps/64/config-language.png
+        programs:
+            - ekapeli
+            - ekapeli-maahanmuuttaja
+            - ekapeli-alku
+            - libreoffice-writer
+            - org.kde.kwordquiz
+            - org.kde.khangman
+            - kahoot
+            - youtube
+
+  - menu-music:
+        name:
+            en: Music
+            fi: Musiikki
+        icon: /usr/share/icons/Faenza/apps/64/gmusicbrowser.png
+        programs:
+            - audacity
+            - solfege
+            - hydrogen
+            - lmms
+            - mscore
+            - spotify
+            - libreoffice-writer
+            - kahoot
+            - youtube
+
+  - menu-crafts:
+        name:
+            en: Handicrafts
+            fi: Käsityö
+        icon: /usr/share/icons/Neu/128x128/categories/kcontrol.png
+        programs:
+            - pinta
+            - gimp
+            - inkscape
+            - sumopaint
+            - fritzing
+            - arduino
+            - teddybear
+            - libreoffice-writer
+            - kahoot
+            - youtube
+
+  - menu-arts:
+        name:
+            en: Arts
+            fi: Kuvataide
+        icon: /usr/share/icons/Faenza/apps/64/mypaint.png
+        programs:
+            - tuxpaint
+            - org.kde.kolourpaint
+            - org.kde.krita
+            - mypaint
+            - pinta
+            - gimp
+            - inkscape
+            - sumopaint
+            - simple-scan
+            - libreoffice-writer
+            - kahoot
+            - youtube
+
+  - menu-counseling:
+        name:
+            en: Student counseling
+            fi: Oppilaanohjaus
+        icon: /usr/share/icons/oxygen/base/128x128/apps/system-users.png
+        programs:
+            - libreoffice-writer
+            - kahoot
+            - youtube
+
+  - menu-econ:
+        name:
+            en: Home economics
+            fi: Kotitalous
+        icon: /opt/webmenu/extra/icons/apps/applications-java.svg
+        programs:
+            - libreoffice-writer
+            - amme
+            - kahoot
+            - youtube
+
+  - menu-sports:
+        name:
+            en: Sports
+            fi: Liikunta
+        icon: /opt/webmenu/extra/icons/apps/applications-sports.svg
+        programs:
+            - libreoffice-writer
+            - google-earth
+            - kahoot
+            - youtube
+
+  - menu-health:
+        name:
+            en: Health
+            fi: Terveystieto
+        icon: /usr/share/icons/gnome/48x48/emblems/emblem-favorite.png
+        programs:
+            - libreoffice-writer
+            - google-earth
+            - kahoot
+            - youtube
+
+  - menu-ethics:
+        name:
+            en: Ethics
+            fi: Elämänkatsomustieto
+        icon: /usr/share/icons/oxygen/base/64x64/status/meeting-participant.png
+        programs:
+            - libreoffice-writer
+            - kahoot
+            - youtube
+
+  - menu-religion:
+        name:
+            en: Religion
+            fi: Uskonto
+        icon: /usr/share/icons/oxygen/base/64x64/places/user-identity.png
+        programs:
+            - libreoffice-writer
+            - ylearkisto
+            - kahoot
+            - youtube
+
+# ------------------------------------------------------------------------------
+
+categories:
+
+  - category-main:
+        name:
+            en: All programs
+            fi: Kaikki ohjelmat
+        position: 0
+        menus:
+            - menu-applications
+            - menu-graphics
+            - menu-internet
+            - menu-programming
+            - menu-education
+            - menu-office
+            - menu-audio
+            - menu-games
+            - menu-digabi
+            - menu-whiteboards
+            - menu-web
+        programs:
+            - org.gnome.Nautilus
+            - puavo-local-config-ui
+
+  - category-subjects:
+        name: Oppiaineet
+        position: 1
+        menus:
+            - menu-physics
+            - menu-chemistry
+            - menu-mathematics
+            - menu-geography
+            - menu-environment
+            - menu-biology
+            - menu-socialsciences
+            - menu-history
+            - menu-literature
+            - menu-languages
+            - menu-foreign
+            - menu-music
+            - menu-crafts
+            - menu-arts
+            - menu-counseling
+            - menu-econ
+            - menu-sports
+            - menu-health
+            - menu-ethics
+            - menu-religion
