@@ -1,0 +1,26 @@
+#!/bin/sh
+
+# Sends a command to PuavoMenu through the IPC socket
+
+set -eu
+
+if [ "$#" -lt 2 ]; then
+    echo "Usage: $0 <socket> arg1 [arg2 ... argN]"
+    exit 1
+fi
+
+socket=$1
+cmd=$2
+shift
+
+echo "$@" | nc -U -u -w 0 "${socket}"
+
+# Set keyboard focus
+if [ $cmd = "show" -o $cmd = "toggle" ]; then
+    window=$(xdotool search --name PuavoMenuUniqueName) || return 1
+    echo "Found window: |${window}|"
+
+    if [ -n "$window" ]; then
+        xdotool windowactivate "$window" || return 1
+    fi
+fi
