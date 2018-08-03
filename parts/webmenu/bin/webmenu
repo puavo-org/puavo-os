@@ -1,5 +1,10 @@
 #!/bin/sh
 
+if [ "$(puavo-conf puavo.puavomenu.enabled)" = "true" ]; then
+    exec /opt/puavomenu/launch
+    exit 0
+fi
+
 if [ -z "$WM_HOME" ]; then
     WM_HOME="${HOME}/.config/webmenu"
 fi
