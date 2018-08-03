@@ -95,6 +95,23 @@ for squashfs_file in ${abitti_images_dir}/*.squashfs; do
   old_abitti_image_fp="$squashfs_file"
 done
 
+# setup persistent storage filesystem for DigabiOS/Abitti
+persistent_fs="${abitti_images_dir}/persistent_abitti_fs"
+if [ ! -e "$persistent_fs" ]; then
+  # count=14336 (7M) is the DigabiOS default, but we put a bit bigger
+  # one in case it should ever grow (four times as much).
+  {
+    dd if=/dev/zero "of=${persistent_fs}.tmp" bs=512 count=57344 2>/dev/null \
+      && mkfs.ext4 -q -L DAT452CBDF0OGISG "${persistent_fs}.tmp" \
+      && mv "${persistent_fs}.tmp" "$persistent_fs"
+  } || {
+    logmsg -p user.err 'could not create a persistent filesystem for Abitti'
+    exit 1
+  }
+
+  logmsg -p user.info 'created a new persistent filesystem for Abitti'
+fi
+
 if [ -e "$abitti_image_fp" ]; then
   logmsg -p user.info "the requested abitti-image ${abitti_version} is in place"
   exit 0

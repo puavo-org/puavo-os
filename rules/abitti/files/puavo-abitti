@@ -16,10 +16,14 @@ esac
 
 for x in $(cat /proc/cmdline); do
   case "$x" in
-    puavo.abitti.mount_kernel_modules=true)
+    puavo.abitti.boot=true)
+      # bind kernel module directory to system
       mkdir -p /image /root/lib/modules
       mount -r -o loop /root/lib/live/mount/medium/ltsp.img /image
       mount --bind /image/lib/modules /root/lib/modules
+
+      # setup persistent storage filesystem as a loopback device
+      losetup -f /root/lib/live/mount/medium/abitti/persistent_abitti_fs
       ;;
   esac
 done
