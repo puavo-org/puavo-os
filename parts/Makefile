@@ -14,6 +14,7 @@ subdirs         := admins                       \
                    ltsp                         \
                    opinsys-ca-certificates      \
                    pam                          \
+                   puavomenu                    \
                    pkg                          \
                    sharedir                     \
                    vpn                          \
