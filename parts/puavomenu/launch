@@ -7,7 +7,7 @@ TIMESTAMP=$(date +"%Y%m%d-%H%M%S.%N")
 
 /opt/puavomenu/puavomenu \
     --res_dir "/opt/puavomenu/res" \
-    --menu_dir "/opt/puavomenu" \
+    --menu_dir "/etc/puavomenu" \
     --user_dir "${HOME}/.config" \
     --socket "${HOME}/.config/puavomenu_${HOSTNAME}_socket" \
     --log "/tmp/puavomenu_${TIMESTAMP}.log" \
