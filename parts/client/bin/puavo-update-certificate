@@ -32,6 +32,7 @@ key = OpenSSL::PKey::RSA.new key_pem
 csr = OpenSSL::X509::Request.new
 csr.version = 0
 csr.public_key = key.public_key
+csr.sign(key, OpenSSL::Digest::SHA256.new)
 
 client = PuavoRestClient.new( :auth => :etc,
                               :dns => :no )
