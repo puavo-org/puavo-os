@@ -43,11 +43,11 @@ function make_button(icon_name, icon_size, spawn_command, is_right) {
 
         let finalCmd = spawn_command.slice();  // slice=a new copy of the array
 
-        finalCmd.push("--pos=" + Math.ceil(x) + "," + Math.ceil(y));
         finalCmd.push("toggle");
         finalCmd.push("corner");
         finalCmd.push(Math.ceil(x).toString());
         finalCmd.push(Math.ceil(y).toString());
+        finalCmd.push("--pos=" + Math.ceil(x) + "," + Math.ceil(y));
         Util.spawn(finalCmd);
     }));
 
