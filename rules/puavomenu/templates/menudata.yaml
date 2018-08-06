@@ -184,12 +184,30 @@ programs:
         icon: kino
 
   #L
-  - libreoffice-base
-  - libreoffice-calc
-  - libreoffice-draw
-  - libreoffice-impress
-  - libreoffice-math
-  - libreoffice-writer
+  - libreoffice-base:
+        name:
+            fi: LibreOffice Tietokanta
+        keywords: libreoffice
+  - libreoffice-calc:
+        keywords: calc, spreadsheet, libreoffice
+        name:
+            fi: LibreOffice Taulukkolaskenta
+  - libreoffice-draw:
+        name:
+            fi: LibreOffice Piirros
+        keywords: libreoffice
+  - libreoffice-impress:
+        name:
+            fi: LibreOffice Esitys
+        keywords: libreoffice
+  - libreoffice-math:
+        name:
+            fi: LibreOffice Kaava
+        keywords: equation, libreoffice
+  - libreoffice-writer:
+        name:
+            fi: LibreOffice Tekstinkäsittely
+        keywords: writer, kirjoitus, libreoffice
   - lmms:
         name:
             en: LMMS - music production suite
@@ -239,7 +257,8 @@ programs:
         icon: /usr/share/icons/Faenza/apps/96/accessories-text-editor.png
   - org.gnome.Nautilus
   - org.gnome.Screenshot
-  - org.gnome.Terminal
+  - org.gnome.Terminal:
+        keywords: terminal
   - org.kde.kaffeine
   - org.kde.kalzium:
         icon: /usr/share/icons/hicolor/48x48/apps/kalzium.png
