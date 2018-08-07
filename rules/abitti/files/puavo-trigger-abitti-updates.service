@@ -2,7 +2,6 @@
 Description=Trigger Abitti-image updates
 
 [Service]
-Type=oneshot
 ExecStart=/usr/local/lib/puavo-trigger-abitti-updates
 
 [Install]
