@@ -4,18 +4,28 @@ set -eu
 
 default_target='multi-user.target'
 
-# get rid of hosttype handling?
-puavo_hosttype=$(puavo-conf puavo.hosttype)
+is_netboot_exception() {
+  # Laptops and wirelessaccesspoints that have been booted from NBD
+  # should go to the admin menu.  It provides tools to update/configure
+  # the system.
+  if [ -e /run/puavo/nbd-server ]; then
+    # XXX get rid of hosttype handling
+    puavo_hosttype=$(puavo-conf puavo.hosttype)
+    case "$puavo_hosttype" in
+      laptop|wirelessaccesspoint)
+        return 0
+        ;;
+    esac
+  fi
 
-case "$puavo_hosttype" in
-  fatclient)
-    default_target='graphical.target'
-    ;;
-  laptop)
-    if [ -e /run/puavo/nbd-server ]; then
-      : # Laptop that has been booted from NBD should go to admin menu.
-        # It provides tools to update the system etc.
-    else
+  return 1
+}
+
+dm=$(puavo-conf puavo.xsessions.display_manager)
+
+case "$dm" in
+  gdm|nodm)
+    if ! is_netboot_exception; then
       default_target='graphical.target'
     fi
     ;;

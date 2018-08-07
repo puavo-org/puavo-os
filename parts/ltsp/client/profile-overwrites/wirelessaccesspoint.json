@@ -1,4 +1,6 @@
 {
   "puavo.service.puavo-vpn-client-openvpn.enabled": "true",
-  "puavo.support.vino_network_interface":           "tap0"
+  "puavo.support.vino_network_interface":           "tap0",
+  "puavo.xsessions.cowsay.message":                 "Moo, I am a Puavo wireless accesspoint!",
+  "puavo.xsessions.display_manager":                "puavo-darkdm-cowsay"
 }

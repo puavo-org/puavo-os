@@ -125,10 +125,13 @@
   "puavo.xsessions.locked": {
     "default": "true"
   },
+  "puavo.xsessions.cowsay.message": {
+    "default": "Moo!"
+  },
   "puavo.xsessions.default": {
     "default": "puavo-desktop"
   },
   "puavo.xsessions.display_manager": {
-    "default": "gdm"
+    "default": "puavo-darkdm"
   }
 }
