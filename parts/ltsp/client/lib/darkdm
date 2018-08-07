@@ -176,7 +176,7 @@ darkdm_main()
 
     hosttype=$(cat /etc/puavo/hosttype)
     case "${hosttype}" in
-	laptop)
+	laptop|wirelessaccesspoint)
 	    initial_command='update'
 	    ;;
 	unregistered)
