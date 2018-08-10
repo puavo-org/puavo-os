@@ -99,9 +99,10 @@ def update_device_json(restclient)
     = IO.read('/state/etc/puavo/primary_user_override').chomp rescue nil
 
   if primary_user_override && !primary_user_override.empty? then
-    primary_user = puavoconf_get('puavo.admin.primary_user')
-    if primary_user_override == primary_user then
-      # remove override if we get the same information from Puavo
+    if primary_user_override == device['primary_user'] then
+      # Remove override if we get the same information from Puavo
+      # (we are sure to check against the info just received from Puavo,
+      # not puavo-conf or any other local db).
       remove_primary_user_override = true
     else
       begin
