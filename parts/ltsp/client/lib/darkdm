@@ -72,12 +72,22 @@ darkdm_shell()
 
 darkdm_update()
 {
-    local image_name
+    local image_name update_status
 
-    image_name=$(cat /etc/puavo-image/name) || return 1
+    update_status=0
 
-    /usr/sbin/puavo-install-and-update-ltspimages \
-	--install-from-nbd /dev/nbd0 "${image_name}" || return 1
+    if image_name=$(cat /etc/puavo-image/name 2>/dev/null); then
+      /usr/sbin/puavo-install-and-update-ltspimages \
+	--install-from-nbd /dev/nbd0 "$image_name" || update_status=1
+    else
+      update_status=1
+    fi
+
+    /usr/lib/puavo-ltsp-install/update-configuration || update_status=1
+
+    if [ "$update_status" -ne 0 ]; then
+      return "$update_status"
+    fi
 
     darkdm_reboot
 }
