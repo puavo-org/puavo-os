@@ -17,6 +17,14 @@ if [ "$PAM_USER" = 'root' -o "$PAM_USER" = 'Debian-gdm' ]; then
   exit 0
 fi
 
+if [ -e /run/puavo/nbd-server ]; then
+  # No access restrictions on hosts which have booted from network
+  # (laptops are in maintenance mode, and fatclients are... well,
+  # user data is on servers anyway, and we do not know what
+  # "personally administered" means on netbooting hosts).
+  exit 0
+fi
+
 if [ "$(puavo-conf puavo.admin.personally_administered)" != 'true' ]; then
   # no special restrictions on hosts which are not personally administered
   exit 0
