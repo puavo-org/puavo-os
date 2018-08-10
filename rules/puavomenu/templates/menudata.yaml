@@ -361,16 +361,6 @@ programs:
   - primusclient:
         condition: "!personally_administered"
   - processing
-  - puavo-local-config-ui:
-        type: custom
-        command: puavo-local-config-ui
-        name:
-            fi: Kannettavan asetukset
-            sv: Bärbar datorns inställningar
-            en: Laptop settings
-            de: Laptop einstellungen
-        icon: /usr/share/icons/Faenza/devices/64/drive-harddisk-system.png
-        condition: "personally_administered"
   - pycharm
   - python-club:
         type: web
@@ -1191,7 +1181,6 @@ categories:
             - menu-web
         programs:
             - org.gnome.Nautilus
-            - puavo-local-config-ui
 
   - category-subjects:
         name: Oppiaineet

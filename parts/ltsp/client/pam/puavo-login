@@ -462,7 +462,8 @@ extrausers_new_passwd() {
 
     # We create this file as a marker for
     # /usr/lib/puavo-local-config/pam/login-setup to determine if this was
-    # the first login on this host.
+    # the first login on this host (XXX that script is not installed
+    # currently, so this may possibly be removed).
     touch "$FIRSTLOGIN_MARKER_PATH"
   fi
 

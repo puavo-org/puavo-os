@@ -181,19 +181,6 @@ def update_wlan_configurations(restclient)
                                  '/state/etc/puavo/wlan.json')
 end
 
-def update_puavopkg_installers(restclient)
-  unless puavoconf_get('puavo.admin.personally_administered') == 'true' \
-           && File.executable?('/usr/sbin/puavo-local-config') then
-    log(Syslog::LOG_DEBUG,
-        "Not personally administered, so not updating puavo packages\n")
-    return
-  end
-
-  log(Syslog::LOG_INFO, ">>> Updating puavo-pkg installers\n")
-  run('puavo-local-config', '--prepare-puavopkg')
-  run('puavo-pkg-updater',  '--update-installers')
-end
-
 def update_certificate(restclient)
   run('puavo-update-certificate')
 end
@@ -235,7 +222,6 @@ update_functions = [
   :update_external_files,
   :update_wlan_configurations,
   :update_grub_environment,
-  :update_puavopkg_installers,
   :update_certificate,
   :update_extra_boot_scripts,
   :update_puavoadmins,

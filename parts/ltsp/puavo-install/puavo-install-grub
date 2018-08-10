@@ -52,7 +52,7 @@ function ltsp_image_entry {
   get_pathname $imagefile imagepath
 
   # if changing menuentry description, update correspondingly on
-  # puavo-local-config configure_grub_default()
+  # (XXX currently not installed) puavo-local-config configure_grub_default()
 
   # ${puavo_kernel_arguments} comes from a grub environment file
   # (if it is defined there)

@@ -1,0 +1,53 @@
+#!/bin/sh
+
+set -eu
+
+deny() {
+  echo 'Access denied because of personally administered restrictions.' >&2
+  exit 1
+}
+
+is_admin_user() {
+  # Check if user belongs to "puavo-os"-group, which is for administrators.
+  getent group puavo-os | cut -d ':' -f4 | tr , '\n' | grep -qx "$PAM_USER"
+}
+
+# Allow "root" and "Debian-gdm" always.
+if [ "$PAM_USER" = 'root' -o "$PAM_USER" = 'Debian-gdm' ]; then
+  exit 0
+fi
+
+if [ "$(puavo-conf puavo.admin.personally_administered)" != 'true' ]; then
+  # no special restrictions on hosts which are not personally administered
+  exit 0
+fi
+
+#
+# this host is personally administered so special rules apply
+#
+
+# If guest login is enabled, allow guest user in.
+if [ "$(puavo-conf puavo.guestlogin.enabled)" = 'true' \
+  -a "$PAM_USER" = 'guest' ]; then
+    exit 0
+fi
+
+if is_admin_user; then
+  incoming_accepted=$(
+    /usr/lib/puavo-ltsp-client/admin-remote-connections --is-incoming-accepted)
+
+  if [ "$incoming_accepted" = 'yes' ]; then
+    exit 0
+  fi
+
+  deny
+fi
+
+# allow primary user in
+primary_user="$(puavo-conf puavo.admin.primary_user)"
+if [ "$primary_user" = "$PAM_USER" ]; then
+  exit 0
+fi
+
+# otherwise, tough luck!
+deny
