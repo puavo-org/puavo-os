@@ -43,9 +43,10 @@ if is_admin_user; then
   deny
 fi
 
-# allow primary user in
+# Allow only primary user in, or anyone with valid
+# credentials in case the primary user is not set.
 primary_user="$(puavo-conf puavo.admin.primary_user)"
-if [ "$primary_user" = "$PAM_USER" ]; then
+if [ -z "$primary_user" -o "$primary_user" = "$PAM_USER" ]; then
   exit 0
 fi
 

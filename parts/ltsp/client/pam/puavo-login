@@ -70,7 +70,6 @@ PUAVO_SESSION_FILE="${PUAVO_SESSION_DIR}/puavo_session.json"
 EXTRAUSERS_PASSWD_FILE_PATH='/var/lib/extrausers/passwd'
 EXTRAUSERS_GROUP_FILE_PATH='/var/lib/extrausers/group'
 EXTRAUSERS_USERS_TO_REMOVE_PATH='/var/lib/extrausers/.users_to_remove'
-FIRSTLOGIN_MARKER_PATH='/run/puavo/first_login_on_host'
 
 USER_MINIMUM_UID_GID=10000
 
@@ -459,12 +458,6 @@ extrausers_new_passwd() {
       logmsg err "could not create ${EXTRAUSERS_PASSWD_FILE_PATH}"
       return 1
     fi
-
-    # We create this file as a marker for
-    # /usr/lib/puavo-local-config/pam/login-setup to determine if this was
-    # the first login on this host (XXX that script is not installed
-    # currently, so this may possibly be removed).
-    touch "$FIRSTLOGIN_MARKER_PATH"
   fi
 
   new_passwd_data="$(
@@ -766,8 +759,6 @@ if ! user_password="$(cat)"; then
 fi
 
 if [ "$mode" = 'immediate' ]; then
-  rm -f "$FIRSTLOGIN_MARKER_PATH"
-
   # remove users to be removed at this stage
   remove_users_on_removal_list || true
 

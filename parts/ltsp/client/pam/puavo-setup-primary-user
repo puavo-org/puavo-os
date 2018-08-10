@@ -1,0 +1,34 @@
+#!/bin/sh
+
+set -eu
+
+if [ "$(puavo-conf puavo.admin.personally_administered)" != 'true' ]; then
+  exit 0
+fi
+
+primary_user="$(puavo-conf puavo.admin.primary_user)"
+
+if [ -n "$primary_user" ]; then
+  exit 0
+fi
+
+if [ -z "${PAM_USER:-}" ]; then
+  logger -p auth.err -s -t puavo-setup-primary-user \
+         'PAM_USER environment variable not set'
+  exit 1
+fi
+
+logger -p auth.notice \
+       "making '${PAM_USER}' the primary user by using the override mechanism"
+
+primary_user_override_path='/state/etc/puavo/primary_user_override'
+
+echo "$PAM_USER" > "${primary_user_override_path}.tmp"
+mv "${primary_user_override_path}.tmp" "$primary_user_override_path"
+
+puavo-conf puavo.admin.primary_user "$PAM_USER"
+
+# XXX we should run "puavo-local-config --admins --networkmanager-policy"
+# XXX or something equivalent to setup special permissions for the primary user
+
+exit 0
