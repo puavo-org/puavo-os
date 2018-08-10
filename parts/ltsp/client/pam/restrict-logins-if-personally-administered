@@ -9,7 +9,7 @@ deny() {
 
 is_admin_user() {
   # Check if user belongs to "puavo-os"-group, which is for administrators.
-  getent group puavo-os | cut -d ':' -f4 | tr , '\n' | grep -qx "$PAM_USER"
+  id -Gn "$PAM_USER" 2>/dev/null | tr ' ' "\n" | grep -qx puavo-os
 }
 
 # Allow "root" and "Debian-gdm" always.
