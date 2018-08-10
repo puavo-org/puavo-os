@@ -3,7 +3,6 @@ class nodm {
 
   file {
     '/etc/pam.d/nodm':
-      mode   => '0755',
       source => 'puppet:///modules/nodm/etc_pam.d_nodm';
   }
 

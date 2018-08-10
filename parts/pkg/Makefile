@@ -19,6 +19,10 @@ installdirs:
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-pkg
 	${MAKE} -C packages installdirs
 
+# XXX We do not install puavo-pkg-updater, puavo-pkg-updater.conf and
+# XXX puavo-update-remote-pkginstaller-bundle because we probably
+# XXX do not need them anymore.
+
 .PHONY: install
 install: installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
@@ -26,12 +30,10 @@ install: installdirs
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-pkg \
-		puavo-pkg-updater \
-		puavo-test-puavo-pkg-installers \
-		puavo-update-remote-pkginstaller-bundle
+		puavo-test-puavo-pkg-installers
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-pkg \
-		puavo-pkg.conf puavo-pkg-updater.conf
+		puavo-pkg.conf
 
 	${MAKE} -C packages install
 

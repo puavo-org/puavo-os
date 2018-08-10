@@ -77,6 +77,16 @@ class gdm {
       source  => 'puppet:///modules/gdm/setup_xsessions';
   }
 
+  user {
+    # We add Debian-gdm to puavodesktop group so that
+    # /usr/lib/puavo-ltsp-client/admin-remote-connections can work also in
+    # the login screen.
+    'Debian-gdm':
+      groups     => [ 'puavodesktop' ],
+      membership => minimum,
+      require    => [ Package['gdm3'], Package['puavo-ltsp-client'], ];
+  }
+
   Package <|
        title == gdm3
     or title == puavo-ltsp-client

@@ -27,7 +27,6 @@ class packages {
     , 'puavo-devscripts'
     , 'puavo-hw-log'
     , 'puavo-hw-tools'
-    , 'puavo-local-config'
     , 'puavo-ltsp-client'
     , 'puavo-ltsp-install'
     , 'puavo-pkg'

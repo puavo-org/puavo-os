@@ -1,25 +1,24 @@
-subdirs         := admins                       \
-                   autopilot                    \
-                   bigtouch-shutdown            \
-                   blackboard                   \
-                   client                       \
-                   conf                         \
-                   core                         \
-                   devscripts                   \
-                   fluent-plugin-puavo          \
-                   hw-log                       \
-                   hw-tools                     \
-                   iivari                       \
-                   local-config                 \
-                   ltsp                         \
-                   opinsys-ca-certificates      \
-                   pam                          \
-                   pkg                          \
-                   puavomenu                    \
-                   sharedir                     \
-                   vpn                          \
-                   webkiosk-language-selector   \
-                   webmenu                      \
+subdirs         := admins                     \
+                   autopilot                  \
+                   bigtouch-shutdown          \
+                   blackboard                 \
+                   client                     \
+                   conf                       \
+                   core                       \
+                   devscripts                 \
+                   fluent-plugin-puavo        \
+                   hw-log                     \
+                   hw-tools                   \
+                   iivari                     \
+                   ltsp                       \
+                   opinsys-ca-certificates    \
+                   pam                        \
+                   pkg                        \
+                   puavomenu                  \
+                   sharedir                   \
+                   vpn                        \
+                   webkiosk-language-selector \
+                   webmenu                    \
                    wlan
 subdirs-all     := $(subdirs:%=.all-%)
 subdirs-clean   := $(subdirs:%=.clean-%)

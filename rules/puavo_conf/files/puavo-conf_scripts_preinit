@@ -39,7 +39,6 @@ cleanup_network_connections
 setup_autofs
 setup_extra_environment
 disable_update_initramfs
-setup_local_config
 setup_graphics_drivers
 setup_networking
 setup_network_manager

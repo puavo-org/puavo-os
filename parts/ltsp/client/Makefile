@@ -129,11 +129,11 @@ install : installdirs
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-client/pam \
 		pam/check-if-account-is-locked \
-		pam/puavo-local-config-setup \
 		pam/puavo-login \
 		pam/puavo-manage-homedir \
 		pam/puavo-nodm-pam-setup \
-		pam/restrict-logins-by-local-config
+		pam/puavo-setup-primary-user \
+		pam/restrict-logins-if-personally-administered
 
 	$(INSTALL_DATA) -t $(DESTDIR)/lib/systemd/system \
 		systemd/*
