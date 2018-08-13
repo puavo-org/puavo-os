@@ -1,0 +1,53 @@
+#!/bin/sh
+
+set -eu
+
+# This script sets up sudoers if necessary, except that "puavo-os"-user
+# and users in "puavo-os"-group always have "root"-access without a password.
+
+# do nothing on hosts that have booted from network
+if [ -e /run/puavo/nbd-server ]; then
+  exit 0
+fi
+
+primary_user_conf_path=/etc/sudoers.d/primary_user
+
+if [ "$(puavo-conf puavo.admin.personally_administered)" != 'true' ]; then
+  rm -f "$primary_user_conf_path"
+  exit 0
+fi
+
+superusers_mode=$(puavo-conf puavo.admin.superusers)
+
+case "$superusers_mode" in
+  primary_user)
+    primary_user=$(puavo-conf puavo.admin.primary_user)
+    if [ -z "$primary_user" ]; then
+      rm -f "$primary_user_conf_path"
+      exit 0
+    fi
+
+    # make sure user actually exists in the system before providing
+    # access rights
+    if ! id -u "$primary_user" >/dev/null 2>&1; then
+      echo "User '${primary_user}' does not exist!" >&2
+      rm -f "$primary_user_conf_path"
+      exit 1
+    fi
+
+    cat <<EOF > "${primary_user_conf_path}.tmp"
+${primary_user} ALL=(ALL) ALL
+EOF
+    mv "${primary_user_conf_path}.tmp" "$primary_user_conf_path"
+    ;;
+  '')
+    rm -f "$primary_user_conf_path"
+    ;;
+  *)
+    echo "Unsupported mode in puavo.admin.superusers: '${superusers_mode}'" >&2
+    rm -f "$primary_user_conf_path"
+    exit 1
+    ;;
+esac
+
+exit 0
