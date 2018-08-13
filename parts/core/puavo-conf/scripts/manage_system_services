@@ -19,6 +19,17 @@ status=0
 
 for service in ${services}; do
   enabled=$(puavo-conf "puavo.service.${service}.enabled")
+
+  # As an exception, do not run puavo-vpn-client-dnsmasq on netboot devices,
+  # because that will mess up dns configuration (XXX perhaps we need a
+  # a special profile for laptops which are booted from network, that override
+  # otherwise normal laptop behaviour).
+  if [ -e /run/puavo/nbd-server ]; then
+    if [ "$service" = 'puavo-vpn-client-dnsmasq' ]; then
+      enabled=false
+    fi
+  fi
+
   if [ "${enabled}" = 'true' ]; then
     if ! systemctl enable "${service}"; then
       echo "Could not enable ${service}" >&2

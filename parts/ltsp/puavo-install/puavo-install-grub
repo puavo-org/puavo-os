@@ -149,7 +149,7 @@ function ltsp_image_entry_superlaptop {
 
   if test "${puavo_show_imageoverlays}" = "true" \
             -a -d (lvm/puavo-imageoverlays); then
-    set kernelparameters="puavo.image.overlay=default puavo.local.enable_superusers=true $kernelparameters"
+    set kernelparameters="$kernelparameters puavo.image.overlay=personal"
 
     ltsp_image_entry "${imagefile}" "${description}" "${kernelparameters}"
   fi

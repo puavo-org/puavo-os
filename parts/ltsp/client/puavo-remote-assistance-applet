@@ -336,16 +336,26 @@ for config_key in config.keys():
       file=sys.stderr)
     continue
 
-  if puavoconf_key == 'show_accesscontrols_for':
-    if puavoconf_value == '':
-      puavoconf_value = []
-    else:
-      puavoconf_value = puavoconf_value.split(',')
-  elif puavoconf_value == '':
-    puavoconf_value = None
+  try:
+    if config_key == 'show_accesscontrols_for':
+      if puavoconf_value == '':
+        puavoconf_value = []
+      else:
+        puavoconf_value = puavoconf_value.split(',')
+    elif config_key == 'ssh_access_timeout':
+      if puavoconf_value == '':
+        puavoconf_value = None
+      else:
+        puavoconf_value = int( puavoconf_value.rstrip(os.linesep) )
+    elif puavoconf_value == '':
+      puavoconf_value = None
 
-  config[config_key] = puavoconf_value
+    config[config_key] = puavoconf_value
 
+  except Exception as e:
+    print("Could not interpret puavo-conf variable '%s': %s" \
+            % (puavoconf_key, e),
+          file=sys.stderr)
 
 access_handler = RemoteAccessHandler()
 

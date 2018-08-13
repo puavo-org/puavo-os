@@ -56,6 +56,8 @@ setup_gdm
 setup_nodm
 setup_infotv
 setup_puavopkgs
+setup_grub_default
+setup_superusers
 setup_webmenu_logos
 setup_systemd
 run_extra_boot_scripts

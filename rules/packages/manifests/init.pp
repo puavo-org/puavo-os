@@ -600,6 +600,7 @@ class packages {
     , 'gconf-editor'
     , 'pass'
     , 'password-gorilla'
+    , 'system-config-printer'
     , 'tlp'
     , 'unace'
     , 'unionfs-fuse' ]: # Ekapeli might need this.

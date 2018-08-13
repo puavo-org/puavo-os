@@ -1,0 +1,56 @@
+#!/bin/sh
+
+set -eu
+
+if [ -e /run/puavo/nbd-server ]; then
+  exit 0
+fi
+
+if [ "$(puavo-conf puavo.admin.personally_administered)" != 'true' ]; then
+  exit 0
+fi
+
+image_path=$(puavo-conf puavo.image.path)
+if [ -z "$image_path" ]; then
+  echo 'Could not determine puavo.image.path' >&2
+  exit 1
+fi
+
+read this_puavoimage_name < /etc/puavo-image/name
+
+development_mode=false
+if [ "$(puavo-conf puavo.image.overlay)" = 'personal' ]; then
+  development_mode=true
+fi
+
+# XXX localisations are needed
+# XXX check out puavo-install-grub for the description format here
+case "$image_path" in
+  /ltsp.img)
+    if $development_mode; then
+      grub_description='Kehittäjätila'
+    else
+      grub_description='Normaali käynnistys'
+    fi
+    ;;
+  /ltsp-backup.img)
+    if $development_mode; then
+      grub_description='Varajärjestelmä, kehittäjätila'
+    else
+      grub_description='Varajärjestelmä, normaali käynnistys'
+    fi
+    ;;
+  *)
+    if $development_mode; then
+      grub_description='Muu järjestelmä, kehittäjätila'
+    else
+      grub_description='Muu järjestelmä, normaali käynnistys'
+    fi
+    ;;
+esac
+
+grub_default="${grub_description} - (lvm/puavo-images)/${this_puavoimage_name} (${image_path})"
+
+/usr/bin/grub-editenv /images/boot/grub/grubenv \
+                      set                       \
+                      "default=${grub_default}"
