@@ -19,7 +19,7 @@ fi
 read this_puavoimage_name < /etc/puavo-image/name
 
 development_mode=false
-if [ -n "$(puavo-conf puavo.image.overlay)" ]; then
+if [ "$(puavo-conf puavo.image.overlay)" = 'personal' ]; then
   development_mode=true
 fi
 
