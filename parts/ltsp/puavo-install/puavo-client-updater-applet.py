@@ -12,6 +12,7 @@ _tr = gettext.gettext
 import appindicator
 import dbus
 import dbus.mainloop.glib
+import getpass
 import gobject
 import grp
 import gtk
@@ -54,7 +55,11 @@ class UpdateIndicatorApplet:
           = [ 'update-downloading-%02d' % x for x in range(1, 14) ]
 
         self.add_update_button(menu)
-        self.add_view_log_button(menu)
+
+        # log viewing does not work on login screen
+        if getpass.getuser() != 'Debian-gdm':
+            self.add_view_log_button(menu)
+
         self.add_progress(menu)
 
         self.connect_to_dbus_image_update()
