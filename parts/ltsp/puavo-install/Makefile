@@ -35,7 +35,6 @@ installdirs :
 	mkdir -p $(DESTDIR)$(libdir)/puavo-ltsp-install
 	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)/lib/systemd/system
-	mkdir -p $(DESTDIR)$(sysconfdir)/dbus-1/system.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
 
@@ -81,9 +80,6 @@ install : installdirs
 		lib/update-configuration \
 		lib/update-images \
 		lib/update-ltspimage-update-stats
-
-	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/dbus-1/system.d \
-		dbus-1/org.puavo.client.conf
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
 		xdg-autostart/*
