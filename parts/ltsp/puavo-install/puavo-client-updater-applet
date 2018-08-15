@@ -502,12 +502,5 @@ class UpdateIndicatorApplet:
 
 
 if __name__ == "__main__":
-    user = pwd.getpwuid( os.getuid() ).pw_name
-    puavolocaladmins = grp.getgrnam('puavolocaladmins').gr_mem
-    if not user in puavolocaladmins:
-        print('You do not have a permission to run this program',
-              file=sys.stderr)
-        sys.exit(1)
-
     applet = UpdateIndicatorApplet()
     gtk.main()

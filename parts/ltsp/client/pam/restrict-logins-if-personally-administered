@@ -34,12 +34,6 @@ fi
 # this host is personally administered so special rules apply
 #
 
-# If guest login is enabled, allow guest user in.
-if [ "$(puavo-conf puavo.guestlogin.enabled)" = 'true' \
-  -a "$PAM_USER" = 'guest' ]; then
-    exit 0
-fi
-
 if is_admin_user; then
   incoming_accepted=$(
     /usr/lib/puavo-ltsp-client/admin-remote-connections --is-incoming-accepted)
@@ -51,12 +45,5 @@ if is_admin_user; then
   deny
 fi
 
-# Allow only primary user in, or anyone with valid
-# credentials in case the primary user is not set.
-primary_user="$(puavo-conf puavo.admin.primary_user)"
-if [ -z "$primary_user" -o "$primary_user" = "$PAM_USER" ]; then
-  exit 0
-fi
-
-# otherwise, tough luck!
-deny
+# okay, we let you in
+exit 0
