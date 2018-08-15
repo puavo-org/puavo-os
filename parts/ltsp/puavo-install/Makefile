@@ -41,7 +41,8 @@ installdirs :
 .PHONY : install
 install : installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
-		puavo-client-updater-applet
+		puavo-client-updater-applet       \
+		puavo-client-updater-applet.py
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-client-daemon \
