@@ -502,11 +502,5 @@ class UpdateIndicatorApplet:
 
 
 if __name__ == "__main__":
-    user_groups = [ grp.getgrgid(gid).gr_name for gid in os.getgroups() ]
-    if not 'puavodesktop' in user_groups:
-        print('You do not have a permission to run this program',
-              file=sys.stderr)
-        sys.exit(1)
-
     applet = UpdateIndicatorApplet()
     gtk.main()
