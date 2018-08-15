@@ -15,7 +15,7 @@ diff -ruN gnome-shell.orig/data/theme/gnome-shell.css gnome-shell/data/theme/gno
 +    color: #ffaa00; }
 diff -ruN gnome-shell.orig/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
 --- gnome-shell.orig/js/gdm/authPrompt.js	2017-02-16 18:48:04.000000000 +0200
-+++ gnome-shell/js/gdm/authPrompt.js	2018-08-14 14:39:58.897479686 +0300
++++ gnome-shell/js/gdm/authPrompt.js	2018-08-15 08:27:57.759349120 +0300
 @@ -2,9 +2,12 @@
  
  const Clutter = imports.gi.Clutter;
@@ -202,7 +202,7 @@ diff -ruN gnome-shell.orig/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
      },
  
      _onReset: function() {
-@@ -408,6 +526,18 @@
+@@ -408,6 +526,17 @@
          }
      },
  
@@ -215,13 +215,12 @@ diff -ruN gnome-shell.orig/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
 +
 +        this.guestButton.reactive = sensitive;
 +        this.guestButton.can_focus = sensitive;
-+        this.guestButton.show();
 +    },
 +
      _updateNextButtonSensitivity: function(sensitive) {
          this.nextButton.reactive = sensitive;
          this.nextButton.can_focus = sensitive;
-@@ -447,6 +577,14 @@
+@@ -447,6 +576,16 @@
          this.cancelButton.reactive = true;
          this.nextButton.label = _("Next");
  
@@ -231,6 +230,8 @@ diff -ruN gnome-shell.orig/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
 +        this._userNameEntered = false;
 +
 +        // we're back at the start, so the guest button is usable again
++        this.guestButton.show();
++        // this will also hide guest button if needed:
 +        this._updateGuestButtonSensitivity(true);
 +
          if (this._userVerifier)
