@@ -502,9 +502,8 @@ class UpdateIndicatorApplet:
 
 
 if __name__ == "__main__":
-    user = pwd.getpwuid( os.getuid() ).pw_name
-    puavodesktop_members = grp.getgrnam('puavodesktop').gr_mem
-    if not user in puavodesktop_members:
+    user_groups = [ grp.getgrgid(gid).gr_name for gid in os.getgroups() ]
+    if not 'puavodesktop' in user_groups:
         print('You do not have a permission to run this program',
               file=sys.stderr)
         sys.exit(1)
