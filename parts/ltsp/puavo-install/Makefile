@@ -14,7 +14,7 @@ INSTALL_DATA = $(INSTALL) -m 644
 .PHONY : all
 all : po/fi/puavo-client-updater-applet.mo po/sv/puavo-client-updater-applet.mo
 
-po/puavo-client-updater-applet.pot : puavo-client-updater-applet
+po/puavo-client-updater-applet.pot : puavo-client-updater-applet.py
 	xgettext --omit-header --language Python --keyword=_tr -o $@ $^
 
 %.po : po/puavo-client-updater-applet.pot
