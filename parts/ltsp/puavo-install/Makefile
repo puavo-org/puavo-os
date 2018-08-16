@@ -14,7 +14,7 @@ INSTALL_DATA = $(INSTALL) -m 644
 .PHONY : all
 all : po/fi/puavo-client-updater-applet.mo po/sv/puavo-client-updater-applet.mo
 
-po/puavo-client-updater-applet.pot : puavo-client-updater-applet
+po/puavo-client-updater-applet.pot : puavo-client-updater-applet.py
 	xgettext --omit-header --language Python --keyword=_tr -o $@ $^
 
 %.po : po/puavo-client-updater-applet.pot
@@ -35,14 +35,14 @@ installdirs :
 	mkdir -p $(DESTDIR)$(libdir)/puavo-ltsp-install
 	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)/lib/systemd/system
-	mkdir -p $(DESTDIR)$(sysconfdir)/dbus-1/system.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
 
 .PHONY : install
 install : installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
-		puavo-client-updater-applet
+		puavo-client-updater-applet       \
+		puavo-client-updater-applet.py
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-client-daemon \
@@ -81,9 +81,6 @@ install : installdirs
 		lib/update-configuration \
 		lib/update-images \
 		lib/update-ltspimage-update-stats
-
-	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/dbus-1/system.d \
-		dbus-1/org.puavo.client.conf
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
 		xdg-autostart/*

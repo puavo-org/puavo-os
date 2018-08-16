@@ -860,6 +860,10 @@ update_image_labels_for_grub() {
   test -n "$backup_image"  \
     && touch "${images_dir}/${backup_image%.img}.backup"
 
+  # the system default is the new default now,
+  # irrespective of what user has booted to before
+  grub-editenv "${images_dir}/boot/grub/grubenv" unset default
+
   return 0
 }
 
