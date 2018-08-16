@@ -207,7 +207,9 @@ class UpdateIndicatorApplet:
 
 
     def notify(self, msg):
-        pynotify.Notification(msg).show()
+        # no notifications if running on login screen
+        if getpass.getuser() != 'Debian-gdm':
+            pynotify.Notification(msg).show()
 
 
     def on_delete_overlays_completed(self):
