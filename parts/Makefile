@@ -12,7 +12,6 @@ subdirs         := admins                     \
                    iivari                     \
                    logrelay                   \
                    ltsp                       \
-                   opinsys-ca-certificates    \
                    pam                        \
                    pkg                        \
                    puavomenu                  \
