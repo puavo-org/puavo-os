@@ -123,11 +123,15 @@ saveFaves = () ->
 
 # ##################
 
+username = posix.getpwnam(posix.geteuid()).name
+userData = posix.getpwnam(username)
+userData.fullName = userData.gecos.split(",")[0]
+
 try
     puavoDomain = fs.readFileSync("/etc/puavo/domain").toString().trim()
     expandVariables = (ob, attr) ->
         tmpl = Handlebars.compile(ob[attr])
-        ob[attr] = tmpl(puavoDomain: puavoDomain)
+        ob[attr] = tmpl(puavoDomain: puavoDomain, puavoUser: username)
 catch err
     console.warn "Cannot read Puavo Domain", err
     console.warn "Disabling password and profiles buttons"
@@ -168,10 +172,6 @@ menutools.injectDesktopData(menuJSON, {
 
 desktopReadTook = (Date.now() - desktopReadStarted) / 1000
 console.log(".desktop files read took " + desktopReadTook + " seconds")
-
-username = posix.getpwnam(posix.geteuid()).name
-userData = posix.getpwnam(username)
-userData.fullName = userData.gecos.split(",")[0]
 
 
 ###*

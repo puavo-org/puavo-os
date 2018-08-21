@@ -42,6 +42,7 @@ items:
     type: desktop
   - source: system-config-printer
     type: desktop
+    osIconPath: /usr/share/icons/Faenza/devices/64/printer.png
   - source: vino-preferences
     type: desktop
   - source: org.gnome.Screenshot
@@ -111,7 +112,7 @@ items:
     de: Interent Programme
   osIcon: applications-internet
   items:
-  - source: iceweasel
+  - source: firefox
     type: desktop
     name: Firefox
   - source: chromium
@@ -656,12 +657,3 @@ items:
 - source: org.gnome.Nautilus
   type: desktop
   osIconPath: /usr/share/icons/Faenza/places/96/folder_home.png
-- type: custom
-  command: puavo-local-config-ui
-  name:
-    fi: Kannettavan asetukset
-    sv: Bärbar datorns inställningar
-    en: Laptop settings
-    de: Laptop einstellungen
-  osIconPath: /usr/share/icons/Faenza/devices/64/drive-harddisk-system.png
-  condition: "env.PUAVO_PERSONALLY_ADMINISTERED"

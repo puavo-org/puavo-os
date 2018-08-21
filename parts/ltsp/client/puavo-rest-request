@@ -1,9 +1,9 @@
-#!/bin/sh
+#!/usr/bin/expect
 
-set -eu
+package require cmdline
 
-usage() {
-  cat <<EOF
+proc usage {} {
+  puts stderr {
 Usage:
   puavo-rest-request urlpath
                      [--authoritative]
@@ -11,194 +11,244 @@ Usage:
                      [--send-device-credentials]
                      [--send-device-school-dn]
                      [--send-hostname]
-                     [--user-bootserver|--user-etc|--user-krb|--user-pass-credentials]
-                     [--writable]
+                     [--user username (password from standard input)
+                       | --user-bootserver
+                       | --user-etc
+                       | --user-krb]
                      [-- [arbitrary curl arguments]]
-EOF
+}
 }
 
-check_mode() {
-  if [ -n "$1" ]; then
-    usage >&2
-    exit 1
-  fi
-}
-
-make_request() {
-  url=$1; shift
+proc make_request {url curl_args {password ""}} {
+  global debug_mode
 
   # use curl instead of puavo-rest-client for efficiency reasons
 
+  set exec_curl_args [list --cacert /etc/puavo/certs/rootca.pem \
+                           --fail                               \
+                           --show-error                         \
+                           --silent                             \
+                           {*}$curl_args                        \
+                           $url]
+
   # no timeouts here, it is the caller's responsibility to decide on that
-  curl --cacert /etc/puavo/certs/rootca.pem \
-       --fail                               \
-       --show-error                         \
-       --silent                             \
-       "$@"                                 \
-       "$url"
+
+  if {$debug_mode} { puts stderr "Running curl $exec_curl_args" }
+
+  if {$password eq ""} {
+    if {[catch { exec curl {*}$exec_curl_args } result]} {
+      error "error executing curl:\n${result}"
+    }
+    puts -nonewline stdout $result
+    flush stdout
+    return
+  }
+
+  if {[catch {
+         set timeout -1
+
+         log_user 0
+         spawn -noecho curl {*}$exec_curl_args
+         expect -re {Enter host password for user '.*':}
+         send "$password\n"
+         expect "\n"
+
+         log_user 1
+         expect eof
+
+         lassign [wait] pid spawn_id ok curl_status
+         if {$ok != 0} { error {operating system error} }
+         if {$curl_status != 0} {
+           error "curl returned error code $curl_status:\n$expect_out(buffer)"
+         }
+       } result]} {
+    error "error executing curl with password:\n${result}"
+  }
 }
 
-curl_args=''
-mode=''
-puavo_resolve_args=''
-user_password=''
-user_username=''
+set auth_mode  ""
+set debug_mode false
 
-cleanup() { [ -n "$tmpdir" ] && rm -rf "$tmpdir"; }
-
-tmpdir=$(mktemp -d /tmp/puavo-rest-request.XXXXXX)
-
-trap cleanup 0 HUP INT QUIT KILL SEGV PIPE TERM
-
-urlpath=${1:-}
-if [ -z "$urlpath" ]; then
-  usage >&2
-  exit 1
-fi
-shift
-
-if ! args=$(getopt -n "$0" -o + \
-  -l 'authoritative,post,send-device-credentials,send-device-school-dn,send-hostname,user-bootserver,user-etc,user-krb,user-pass-credentials,writable' \
-    -- "$@"); then
-      usage >&2
-      exit 1
-fi
-
-eval "set -- $args"
-while [ $# -ne 0 ]; do
-  case "$1" in
-    --authoritative)
-      curl_args="$curl_args --form-string authoritative=true"
-      shift
-      ;;
-
-    --post)
-      curl_args="$curl_args -X POST"
-      shift
-      ;;
-
-    --send-device-credentials)
-      if ! tr -d '\n' < /etc/puavo/ldap/dn > "${tmpdir}/dn"; then
-        echo 'Could not read device dn from /etc/puavo/ldap/dn' >&2
-        exit 1
-      fi
-      if ! tr -d '\n' < /etc/puavo/ldap/password > "${tmpdir}/password"; then
-        echo 'Could not read device password from /etc/puavo/ldap/password' >&2
-        exit 1
-      fi
-      curl_args="$curl_args --form device_dn=<${tmpdir}/dn --form device_password=<${tmpdir}/password"
-      shift
-      ;;
-
-    --send-device-school-dn)
-      if ! jq -j .school_dn /etc/puavo/device.json > "${tmpdir}/school_dn"; then
-        echo 'Could not read device school dn from /etc/puavo/device.json' >&2
-        exit 1
-      fi
-      curl_args="$curl_args --form school_dn=<${tmpdir}/school_dn"
-      shift
-      ;;
-
-    --send-hostname)
-      if ! tr -d '\n' < /etc/puavo/hostname > "${tmpdir}/hostname"; then
-        echo 'Could not read puavo hostname from /etc/puavo/hostname' >&2
-        exit 1
-      fi
-      curl_args="$curl_args --form hostname=<${tmpdir}/hostname"
-      shift
-      ;;
-
-    --user-bootserver) check_mode "$mode"; mode='bootserver'; shift ;;
-    --user-etc)        check_mode "$mode"; mode='etc'       ; shift ;;
-    --user-krb)        check_mode "$mode"; mode='krb'       ; shift ;;
-
-    --user-pass-credentials)
-      check_mode "$mode"
-
-      user_password="$(cat 2>/dev/null || true)"
-      if [ -z "$user_password" ]; then
-        echo 'Could not read password from stdin' >&2
-        exit 1
-      fi
-      user_username="${USER:-}"
-      if [ -z "$user_username" ]; then
-        echo 'Could not find username from USER environment variable' >&2
-        exit 1
-      fi
-
-      mode='user-pass-credentials'
-      shift
-      ;;
-
-    --writable)
-      puavo_resolve_args='--writable'
-      shift
-      ;;
-
-    --) shift; break;;
-    *) usage >&2; exit 1 ;;
-  esac
-done
-
-# "$@" now has arbirary curl arguments, if any
-
-api_server="$(/usr/sbin/puavo-resolve-api-server $puavo_resolve_args)" || true
-if [ -z "$api_server" ]; then
-  echo 'Could not resolve Puavo API server' >&2
-  exit 1
-fi
-
-url="${api_server}/${urlpath}"
-
-case "$mode" in
-  '')
-    make_request "$url" $curl_args "$@"
-    ;;
-
-  bootserver)
-    make_request "$url" $curl_args --header 'Authorization: Bootserver' "$@"
-    ;;
-
-  etc)
-    device_dn="$(cat /etc/puavo/ldap/dn 2>/dev/null)" || true
-    if [ -z "$device_dn" ]; then
-      echo 'Could not determine device dn for this host' >&2
-      exit 1
-    fi
-    device_password="$(cat /etc/puavo/ldap/password 2>/dev/null)" || true
-    if [ -z "$device_password" ]; then
-      echo 'Could not determine device password for this host' >&2
-      exit 1
-    fi
-
-    # XXX This presumes device_password does not contain "difficult"
-    # XXX characters, which should be true with Puavo-generated device
-    # XXX passwords.
-    echo "--user ${device_dn}:${device_password}" \
-      | make_request "$url" $curl_args --config - "$@"
-    ;;
-
-  krb)
-    make_request "$url"              \
-                 $curl_args          \
-                 --delegation always \
-                 --negotiate         \
-                 --user :            \
-                 "$@"
-    ;;
-
-  user-pass-credentials)
-    printf %s "$user_password"                      \
-      | make_request "$url" $curl_args              \
-          --form-string "username=${user_username}" \
-          --form "password=<-"                      \
-          "$@"
-    ;;
-
-  *)
-    echo "$(basename $0) internal error" >&2
+proc set_auth_mode {new_authmode} {
+  global auth_mode
+  if {$auth_mode ne ""} {
+    usage
     exit 1
-    ;;
-esac
+  }
+  set auth_mode $new_authmode
+}
 
-exit 0
+set prr_tmpdir [exec mktemp -d /tmp/puavo-rest-request.XXXXXX]
+
+proc cleanup {{exitcode 1}} {
+  global prr_tmpdir
+  catch { exec rm -rf $prr_tmpdir }
+  exit $exitcode
+}
+
+trap cleanup {SIGHUP SIGINT SIGQUIT SIGPIPE SIGTERM}
+
+if {[catch {
+  set curl_args          [list]
+  set puavo_resolve_args [list]
+  set user_username      ""
+  set user_password      ""
+
+  set urlpath [lindex $argv 0]
+  if { $urlpath eq "" } {
+    usage
+    error {no urlpath set}
+  }
+  set argv [lrange $argv 1 end]
+
+  set options {
+    authoritative
+    debug
+    post
+    send-device-credentials
+    send-device-school-dn
+    send-hostname
+    user.arg
+    user-bootserver
+    user-etc
+    user-krb
+    writable
+  }
+
+  if {[catch { array set params [::cmdline::getoptions argv $options] }]} {
+    usage
+    error {could not parse command line parameters}
+  }
+
+  if $params(authoritative) {
+    lappend curl_args --form-string authoritative=true
+  }
+
+  if $params(debug) {
+    set debug_mode true
+  }
+
+  if $params(post) {
+    lappend curl_args -X POST
+  }
+
+  if $params(send-device-credentials) {
+    set r [catch { exec tr -d {\n} < /etc/puavo/ldap/dn > "${prr_tmpdir}/dn" }]
+    if {$r} {
+      error {Could not read device dn from /etc/puavo/ldap/dn}
+    }
+    set r [catch { exec tr -d {\n} < /etc/puavo/ldap/password \
+                                   > "${prr_tmpdir}/password" }]
+    if {$r} {
+      error {Could not read device password from /etc/puavo/ldap/password}
+    }
+
+    lappend curl_args --form "device_dn=<${prr_tmpdir}/dn" \
+                      --form "device_password=<${prr_tmpdir}/password"
+  }
+
+  if $params(send-device-school-dn) {
+    set r [catch { exec jq -j .school_dn /etc/puavo/device.json \
+                     > "${prr_tmpdir}/school_dn" }]
+    if {$r} {
+      error {Could not read device school dn from /etc/puavo/device.json}
+    }
+
+    lappend curl_args --form "school_dn=<${prr_tmpdir}/school_dn"
+  }
+
+  if $params(send-hostname) {
+    set r [catch { exec tr -d '\n' < /etc/puavo/hostname \
+                                   > "${prr_tmpdir}/hostname" }]
+    if {$r} {
+      error {Could not read puavo hostname from /etc/puavo/hostname}
+    }
+
+    lappend curl_args --form "hostname=<${prr_tmpdir}/hostname"
+  }
+
+  if $params(user-bootserver) {
+    set_auth_mode bootserver
+  }
+
+  if $params(user-etc) {
+    set_auth_mode etc
+  }
+
+  if $params(user-krb) {
+    set_auth_mode krb
+  }
+
+  if {$params(user) ne ""} {
+    set_auth_mode user
+    set user_username $params(user)
+    if {$user_username eq ""} {
+      usage
+      exit 1
+    }
+    set user_password [string trimright [read stdin]]
+  }
+
+  if $params(writable) {
+    lappend puavo_resolve_args --writable
+  }
+
+  set r [catch {
+           set api_server [exec /usr/sbin/puavo-resolve-api-server \
+                                {*}$puavo_resolve_args] } ]
+  if {$r} {
+    error {Could not resolve Puavo API server}
+  }
+
+  set url "${api_server}/${urlpath}"
+
+  switch -- $auth_mode {
+    {} {
+      lappend curl_args {*}$argv
+      make_request $url $curl_args
+    }
+
+    bootserver {
+      lappend curl_args --header {Authorization: Bootserver} {*}$argv
+      make_request $url $curl_args
+    }
+
+    etc {
+      set r [catch { set device_dn [exec cat /etc/puavo/ldap/dn] }]
+      if {$r} {
+        error {Could not determine device dn for this host}
+      }
+
+      set r [catch { set device_password [exec cat /etc/puavo/ldap/password] }]
+      if {$r} {
+        error {Could not determine device password for this host}
+      }
+
+      lappend curl_args --user $device_dn {*}$argv
+
+      make_request $url $curl_args $device_password
+    }
+
+    krb {
+      lappend curl_args --delegation always \
+                        --negotiate         \
+                        --user :            \
+                        {*}$argv
+      make_request $url $curl_args
+    }
+
+    user {
+      lappend curl_args --user $user_username {*}$argv
+      make_request $url $curl_args $user_password
+    }
+
+    default {
+      error {internal error, could not decide on operation mode}
+    }
+  }
+} errmsg]} {
+  puts stderr $errmsg
+  cleanup
+}
+
+cleanup 0

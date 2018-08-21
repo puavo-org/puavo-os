@@ -1,0 +1,215 @@
+#!/bin/sh
+
+set -eu
+
+# obtain an exclusive lock on myself...
+# there should be only one instance of this program running
+exec 3<$0
+flock -nx 3 || { echo 'did not get a lock, exiting'; exit 2; }
+
+logmsg() {
+  logger -s -t puavo-update-admins "$@" || true
+}
+
+get_adm_users_json() {
+  org_json_path=$1
+  puavo_os_gid=$(id -g puavo-os)
+
+  # validation is mostly the same as in puavo-login
+  jq -r --arg puavo_os_gid "$puavo_os_gid" '
+    if (.|type != "object") then
+      error("organisation information is not an object")
+    elif (.owners|type != "array") then
+      error("organisation owners is not an array")
+    else
+      reduce .owners[] as $u
+       ({
+	  adm_users: [],
+	  passwd: {},
+	  shadow: {},
+	  ssh_public_keys: [],
+	};
+
+	if ($u|type != "object") then
+	  error("organisation owner info is not an object")
+        elif ($u.username|type != "string") then
+          error("username is not a string")
+        elif ($u.username == "") then
+          error("username is an empty string")
+        elif (($u.username|contains(":")) or ($u.username|contains("\n"))) then
+          error("username contains : or a newline")
+        elif ($u.uid_number|type != "number") then
+          error("$u.uid_number is not a number")
+        elif ($u.uid_number < 1001) then
+          error("$u.uid_number is less than 1001")
+        elif ($u.uid_number > 4294967294) then
+          error("$u.uid_number is more than 4294967294")
+        elif ($u.first_name|type != "string") then
+          error("$u.first_name is not a string")
+        elif (($u.first_name|contains(":")) or ($u.first_name|contains("\n"))) then
+          error("$u.first_name contains : or a newline")
+        elif ($u.last_name|type != "string") then
+          error("$u.last_name is not a string")
+        elif (($u.last_name|contains(":")) or ($u.last_name|contains("\n"))) then
+          error("$u.last_name contains : or a newline")
+	elif ($u.username | test("^adm-")) then
+	  .passwd[$u.username]
+             = $u.username
+		 + ":" + "x"
+		 + ":" + ($u.uid_number|tostring)
+		 + ":" + $puavo_os_gid
+		 + ":" + (if ($u.first_name != "" and $u.last_name != "") then
+                            $u.first_name + " " + $u.last_name
+                          elif ($u.first_name != "") then
+                            $u.first_name
+                          elif ($u.last_name != "") then
+                            $u.last_name
+                          else
+                            "User X"
+                          end)
+                 + ":" + "/adm-home/" + $u.username
+                 + ":" + "/bin/bash"
+	  | .adm_users += [ $u.username ]
+	  | .shadow[$u.username] = ($u.username + ":!:::::::")
+	  | if ($u.ssh_public_key != null) then
+	      .ssh_public_keys += [ $u.username + " " + $u.ssh_public_key ]
+	    else
+	      .
+	    end
+	else
+	  .
+	end
+      )
+    end
+  ' "$org_json_path"
+}
+
+replace_if_changed() {
+  target_path=$1
+  src_path=$2
+
+  if cmp "$target_path" "$src_path" >/dev/null 2>&1; then
+    rm -f "$src_path"
+  else
+    logmsg -p user.info \
+           "updating ${target_path} with information from org.json"
+    mv "$src_path" "$target_path"
+  fi
+}
+
+update_passwd_file() {
+  awk -F: '
+    $1 in users { next }
+    {
+      users[$1] = $0
+      print $0
+    }
+  '
+}
+
+update_group_file() {
+  awk -F: -v puavoadmins_string="$1" '
+    BEGIN {
+      split(puavoadmins_string, puavoadmins_a, "\n")
+      for (u in puavoadmins_a) { puavoadmins[ puavoadmins_a[u] ] = 1 }
+    }
+    $1 == "adm" || $1 == "lpadmin" {
+      delete group_members
+      for (u in puavoadmins) { group_members[u] = 1 }
+
+      split($4, group_members_a, ",")
+      for (u in group_members_a) { group_members[ group_members_a[u] ] = 1 }
+
+      printf "%s:%s:%s:", $1, $2, $3
+      first_put = 0
+      for (u in group_members) {
+        printf "%s%s", (first_put ? "," : ""), u
+        first_put = 1
+      }
+      printf "\n"
+      next
+    }
+    { print }
+  '
+}
+
+if [ -e /run/puavo/nbd-server ]; then
+  org_json_path='/etc/puavo/org.json'
+else
+  org_json_path='/state/etc/puavo/org.json'
+fi
+
+if [ -e /etc/puavo/ldap/dn ]; then
+  prr_args='--user-etc'
+else
+  prr_args='--user-bootserver'
+fi
+
+# it is okay if this fails
+{
+  install -o root -g root -m 600 /dev/null "${org_json_path}.tmp"
+  if ! puavo-rest-request /v3/current_organisation "$prr_args" 2>/dev/null \
+         > "${org_json_path}.tmp"; then
+    rm -f "${org_json_path}.tmp"
+  else
+    mv "${org_json_path}.tmp" "$org_json_path"
+  fi
+} || true
+
+# but without org.json we can not continue
+if [ ! -e "$org_json_path" ]; then
+  echo "No org.json in $org_json_path" >&2
+  exit 1
+fi
+
+adm_users_json=$(get_adm_users_json "$org_json_path")
+
+puavoadmins=$(printf %s "$adm_users_json" | jq -r '.adm_users[]')
+
+{
+  cat /etc/passwd
+  printf %s "$adm_users_json" | jq -r '.passwd[]'
+} | update_passwd_file > /etc/passwd.tmp_update_puavo_admins
+replace_if_changed /etc/passwd /etc/passwd.tmp_update_puavo_admins
+
+install -o root -g shadow -m 640 /dev/null /etc/shadow.tmp_update_puavo_admins
+{
+  cat /etc/shadow
+  printf %s "$adm_users_json" | jq -r '.shadow[]'
+} | update_passwd_file > /etc/shadow.tmp_update_puavo_admins
+replace_if_changed /etc/shadow /etc/shadow.tmp_update_puavo_admins
+
+update_group_file "$puavoadmins" < /etc/group \
+  > /etc/group.tmp_update_puavo_admins
+replace_if_changed /etc/group /etc/group.tmp_update_puavo_admins
+
+install -o root -g shadow -m 640 /dev/null /etc/gshadow.tmp_update_puavo_admins
+update_group_file "$puavoadmins" < /etc/gshadow \
+  > /etc/gshadow.tmp_update_puavo_admins
+replace_if_changed /etc/gshadow /etc/gshadow.tmp_update_puavo_admins
+
+# do not parse json in a loop, because awk if faster
+ssh_keys=$(printf %s "$adm_users_json" | jq -r '.ssh_public_keys[]')
+
+for adm_user in $(printf "%s\n" "$ssh_keys" | awk '{ print $1 }') ; do
+  ssh_key=$(printf "%s\n" "$ssh_keys" \
+              | awk -v adm_user="$adm_user" '
+                  $1 == adm_user { $1 = ""; sub(/^ /, ""); print }
+                  { next }
+                ')
+
+  if [ -n "$ssh_key" -a "$ssh_key" != 'null' \
+       -a ! -d "/adm-home/${adm_user}" ]; then
+    logmsg -p user.info \
+           "setting up home and ssh key for ${adm_user} from org.json"
+    mkdir -p /adm-home
+    cp -R /etc/skel "/adm-home/${adm_user}"
+    install -d -o "$adm_user" -g puavo-os -m 700 "/adm-home/${adm_user}/.ssh"
+    printf "%s\n" "$ssh_key" > "/adm-home/${adm_user}/.ssh/authorized_keys"
+    chmod 600 "/adm-home/${adm_user}/.ssh/authorized_keys"
+    chown -R "${adm_user}:puavo-os" "/adm-home/${adm_user}"
+    chmod 750 "/adm-home/${adm_user}"
+  fi
+done
+
+exit 0

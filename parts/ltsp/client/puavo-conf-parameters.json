@@ -5,6 +5,9 @@
   "puavo.admin.primary_user": {
     "default": ""
   },
+  "puavo.admin.superusers": {
+    "default": ""
+  },
   "puavo.audio.pa.default_sink": {
     "default": ""
   },
@@ -22,6 +25,9 @@
   },
   "puavo.login.external.enabled": {
     "default": "false"
+  },
+  "puavo.networking.dhcp.interfaces": {
+    "default": ""
   },
   "puavo.printing.default_printer": {
     "default": ""
@@ -158,7 +164,13 @@
   "puavo.xsessions.locked": {
     "default": "true"
   },
+  "puavo.xsessions.cowsay.message": {
+    "default": "Moo!"
+  },
   "puavo.xsessions.default": {
     "default": "puavo-desktop"
+  },
+  "puavo.xsessions.display_manager": {
+    "default": "puavo-darkdm"
   }
 }

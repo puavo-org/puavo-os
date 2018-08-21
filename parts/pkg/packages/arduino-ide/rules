@@ -1,0 +1,39 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "${command}" in
+    configure)
+        upstream_dir=$1
+
+        ln -fns "${upstream_dir}" /opt/arduino-ide
+        ln -fns "${upstream_dir}/arduino" /usr/bin/arduino
+        cat <<'EOF' > /usr/share/applications/arduino.desktop
+[Desktop Entry]
+Type=Application
+Name=Arduino IDE
+GenericName=Create physical computing projects
+Exec=arduino
+Icon=arduino
+Terminal=false
+Categories=Development;Engineering;Electronics;
+MimeType=text/x-arduino
+Keywords=embedded electronics;electronics;avr;microcontroller;
+EOF
+        ;;
+    unconfigure)
+        rm -rf /usr/bin/arduino \
+               /usr/share/applications/arduino.desktop \
+               /opt/arduino-ide
+        ;;
+    unpack)
+        upstream_pack=$1
+        upstream_dir=$2
+        tar xf "${upstream_pack}" -C "${upstream_dir}" --strip-components=1 --exclude=java
+        ;;
+    *)
+        ;;
+esac

@@ -1,0 +1,49 @@
+#!/bin/sh
+
+set -eu
+
+deny() {
+  echo 'Access denied because of personally administered restrictions.' >&2
+  exit 1
+}
+
+is_admin_user() {
+  # Check if user belongs to "puavo-os"-group, which is for administrators.
+  id -Gn "$PAM_USER" 2>/dev/null | tr ' ' "\n" | grep -qx puavo-os
+}
+
+# Allow "root" and "Debian-gdm" always.
+if [ "$PAM_USER" = 'root' -o "$PAM_USER" = 'Debian-gdm' ]; then
+  exit 0
+fi
+
+if [ -e /run/puavo/nbd-server ]; then
+  # No access restrictions on hosts which have booted from network
+  # (laptops are in maintenance mode, and fatclients are... well,
+  # user data is on servers anyway, and we do not know what
+  # "personally administered" means on netbooting hosts).
+  exit 0
+fi
+
+if [ "$(puavo-conf puavo.admin.personally_administered)" != 'true' ]; then
+  # no special restrictions on hosts which are not personally administered
+  exit 0
+fi
+
+#
+# this host is personally administered so special rules apply
+#
+
+if is_admin_user; then
+  incoming_accepted=$(
+    /usr/lib/puavo-ltsp-client/admin-remote-connections --is-incoming-accepted)
+
+  if [ "$incoming_accepted" = 'yes' ]; then
+    exit 0
+  fi
+
+  deny
+fi
+
+# okay, we let you in
+exit 0

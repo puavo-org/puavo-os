@@ -1,0 +1,27 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "${command}" in
+    configure)
+        upstream_dir=$1
+        update-alternatives \
+            --install /usr/lib/mozilla/plugins/flashplugin-alternative.so \
+            mozilla-flashplugin "${upstream_dir}/libflashplayer.so" 50
+        ;;
+    unconfigure)
+        upstream_dir=$1
+        update-alternatives \
+            --remove mozilla-flashplugin "${upstream_dir}/libflashplayer.so"
+        ;;
+    unpack)
+        upstream_pack=$1
+        upstream_dir=$2
+        tar --no-same-owner -z -x -f "${upstream_pack}" -C "${upstream_dir}"
+        ;;
+    *)
+        ;;
+esac

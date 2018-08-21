@@ -2,37 +2,54 @@
 
 set -eu
 
+install_puavo_pkg_conf() {
+  puavo_pkg_conf_path='/etc/puavo-pkg/puavo-pkg.conf'
+
+  mkdir -p /etc/puavo-pkg
+
+  cat <<EOF > "${puavo_pkg_conf_path}.tmp"
+PUAVO_PKG_CACHEDIR=${puavo_pkg_cachedir}
+PUAVO_PKG_ROOTDIR=${puavo_pkg_rootdir}
+EOF
+
+  mv "${puavo_pkg_conf_path}.tmp" "$puavo_pkg_conf_path"
+}
+
 status=0
 
-# XXX We might want to do this, but the operation is pointless in the
-# XXX general case (and likely breaks some things currently!).
-# XXX It is only needed when puavo-pkgs are not in the image itself,
-# XXX or in the "smartboard"- and "ti-nspire-cx-cas-ss"-cases (see below).
-# puavo-pkg reconfigure --all
+puavo_pkg_cachedir='/var/cache/puavo-pkg'
+puavo_pkg_rootdir='/var/lib/puavo-pkg'
 
-PUAVO_PKG_CACHEDIR=/var/cache/puavo-pkg
-PUAVO_PKG_ROOTDIR=/var/lib/puavo-pkg
-
-. /etc/puavo-pkg/puavo-pkg.conf
+install_puavo_pkg_conf
 
 test_puavopkg_installation() {
   # this is faster than "puavo-pkg show $1"
-  puavopkg=$1
-  installed_path="${PUAVO_PKG_ROOTDIR}/packages/${puavopkg}/installed"
+  puavo_pkg=$1
+  installed_path="${puavo_pkg_rootdir}/packages/${puavo_pkg}/installed"
   [ -h "$installed_path" -a -d "$installed_path" ]
 }
 
-# Instead, we now only do this, because smartboard should be
-# configured/unconfigured based on puavo-conf variable
-# "puavo.nonfree.smartboard.enabled".
+# We configure the "smartboard" and "ti-nspire-cx-cas-ss" puavo-pkg packages
+# in system image in case those are installed, because they are unconfigured
+# by default and their configuration is dependent on puavo-conf variables
+# "puavo.nonfree.smartboard.enabled" and
+# "puavo.nonfree.ti_nspire_cx_cas_ss.enabled".
 if test_puavopkg_installation smartboard; then
   puavo-pkg reconfigure smartboard || status=1
 fi
-
-# ti-nspire-cx-cas-ss should be configured/unconfigured based on
-# puavo-conf variable "puavo.nonfree.ti_nspire_cx_cas_ss.enabled".
 if test_puavopkg_installation ti-nspire-cx-cas-ss; then
   puavo-pkg reconfigure ti-nspire-cx-cas-ss || status=1
 fi
+
+# Then setup puavo-pkg configuration to include possible locally installed
+# puavo-pkg images.  (Note that this does not install or update
+# the puavo-pkg packages, only sets them up at boottime).
+
+puavo_pkg_cachedir='/images/puavo-pkg/cache'
+puavo_pkg_rootdir='/images/puavo-pkg/root'
+
+install_puavo_pkg_conf
+
+puavo-pkg reconfigure --all
 
 exit $status

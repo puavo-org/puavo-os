@@ -65,10 +65,6 @@ bugfix/x86/platform-x86-ideapad-laptop-add-several-models-to-no.patch
 bugfix/powerpc/powerpc-invalidate-erat-on-powersave-wakeup-for-power9.patch
 bugfix/arm/arm-dts-exynos-add-dwc3-susphy-quirk.patch
 bugfix/mips/mips-remove-pt_regs-adjustments-in-indirect-syscall-.patch
-bugfix/powerpc/powerpc-64s-simple-rfi-macro-conversions.patch
-bugfix/powerpc/powerpc-64s-fix-conversion-of-slb_miss_common-to-use.patch
-bugfix/powerpc/powerpc-64s-simple-rfi-macro-conversions-2.patch
-bugfix/powerpc/powerpc-64s-improve-rfi-l1-d-cache-flush-fallback.patch
 
 # Arch features
 features/mips/MIPS-increase-MAX-PHYSMEM-BITS-on-Loongson-3-only.patch
@@ -82,7 +78,6 @@ features/arm64/dts-meson-gx-add-firmware-reserved-memory-zone.patch
 features/arm/ARM-dts-orion5x-lschl-Fix-model-name.patch
 features/arm/ARM-dts-orion5x-lschl-More-consistent-naming-on-link.patch
 features/arm/ARM-orion5x-fix-Makefile-for-linkstation-lschl.dtb.patch
-features/arm64/serial-pl011-add-console-matching-function.patch
 features/arm/dt-bindings-gpu-add-bindings-for-the-arm-mali-midgar.patch
 features/arm/arm-dts-rockchip-add-arm-mali-gpu-node-for-rk3288.patch
 features/arm/arm-dts-rockchip-enable-arm-mali-gpu-on-rk3288-rock2.patch
@@ -106,9 +101,19 @@ bugfix/all/mm-mmap.c-expand_downwards-don-t-require-the-gap-if-.patch
 bugfix/x86/mmap-remember-the-map_fixed-flag-as-vm_fixed.patch
 bugfix/x86/mmap-add-an-exception-to-the-stack-gap-for-hotspot-jvm.patch
 bugfix/all/xen-time-do-not-decrease-steal-time-after-live-migra.patch
+bugfix/all/nfsd-increase-DRC-cache-limit.patch
+bugfix/all/netfilter-xt_hashlimit-fix-integer-divide-round-to-z.patch
 
 # Miscellaneous features
 features/all/netfilter-nft_ct-add-notrack-support.patch
+features/all/ast/drm-ast-const-ify-mode-setting-tables.patch
+features/all/ast/drm-ast-remove-spurious-include.patch
+features/all/ast/drm-ast-fix-calculation-of-mclk.patch
+features/all/ast/drm-ast-base-support-for-ast2500.patch
+features/all/ast/drm-ast-fixed-vram-size-incorrect-issue-on-power.patch
+features/all/ast/drm-ast-factor-mmc_test-code-in-post-code.patch
+features/all/ast/drm-ast-rename-ast_init_dram_2300-to-ast_post_chip_2.patch
+features/all/ast/drm-ast-post-code-for-the-new-ast2500.patch
 
 # Securelevel patchset from mjg59
 features/all/securelevel/add-bsd-style-securelevel-support.patch
@@ -134,10 +139,67 @@ features/all/securelevel/mtd-disable-slram-and-phram-when-securelevel-is-enabled
 features/all/securelevel/arm64-efi-disable-secure-boot-if-shim-is-in-insecure.patch
 features/all/securelevel/arm64-add-kernel-config-option-to-set-securelevel-wh.patch
 
+# Qualcomm Centriq backports #1: emac network driver
+features/all/qualcomm-emac/0001-net-qcom-emac-move-phy-init-code-to-separate-files.patch
+features/all/qualcomm-emac/0002-net-qcom-emac-add-support-for-the-Qualcomm-Technolog.patch
+features/all/qualcomm-emac/0003-net-qcom-emac-don-t-try-to-claim-clocks-on-ACPI-syst.patch
+features/all/qualcomm-emac/0004-net-qcom-emac-add-ethtool-support.patch
+features/all/qualcomm-emac/0005-net-qcom-emac-grab-a-reference-to-the-phydev-on-ACPI.patch
+features/all/qualcomm-emac/0006-net-qcom-emac-rename-emac_phy-to-emac_sgmii-and-move.patch
+features/all/qualcomm-emac/0007-net-qcom-emac-claim-the-irq-only-when-the-device-is-.patch
+features/all/qualcomm-emac/0008-net-qcom-emac-display-the-phy-driver-info-after-we-c.patch
+features/all/qualcomm-emac/0009-net-qcom-emac-always-use-autonegotiation-to-configur.patch
+features/all/qualcomm-emac/0010-net-qcom-emac-do-not-call-emac_mac_start-twice.patch
+features/all/qualcomm-emac/0011-net-qcom-emac-remove-extraneous-wake-on-lan-code.patch
+features/all/qualcomm-emac/0012-net-qcom-emac-add-an-error-interrupt-handler-for-the.patch
+features/all/qualcomm-emac/0013-drivers-net-generalize-napi_complete_done.patch
+features/all/qualcomm-emac/0014-net-qcom-emac-add-ethool-support-for-setting-pause-p.patch
+features/all/qualcomm-emac/0015-net-qcom-emac-fix-semicolon.cocci-warnings.patch
+features/all/qualcomm-emac/0016-net-qcom-emac-add-ethtool-support-for-reading-hardwa.patch
+features/all/qualcomm-emac/0017-net-qcom-emac-add-ethtool-support-for-setting-ring-p.patch
+features/all/qualcomm-emac/0018-net-qcom-emac-fix-a-sizeof-typo.patch
+features/all/qualcomm-emac/0019-net-qcom-emac-optimize-QDF2400-SGMII-RX-TX-impedence.patch
+features/all/qualcomm-emac/0020-drivers-add-explicit-interrupt.h-includes.patch
+features/all/qualcomm-emac/0021-net-qcom-emac-do-not-use-hardware-mdio-automatic-pol.patch
+features/all/qualcomm-emac/0022-net-qcom-emac-add-shutdown-function.patch
+features/all/qualcomm-emac/0023-net-qcom-emac-do-not-reset-the-EMAC-during-initializ.patch
+features/all/qualcomm-emac/0024-net-qcom-emac-add-support-for-emulation-systems.patch
+features/all/qualcomm-emac/0025-net-qcom-emac-fix-double-free-of-SGMII-IRQ-during-sh.patch
+features/all/qualcomm-emac/0026-net-qcom-emac-add-software-control-for-pause-frame-m.patch
+features/all/qualcomm-emac/0027-net-qcom-emac-specify-the-correct-DMA-mask.patch
+features/all/qualcomm-emac/0028-net-qcom-emac-clean-up-some-TX-RX-error-messages.patch
+features/all/qualcomm-emac/0029-net-qcom-emac-Change-the-order-of-mac-up-and-sgmii-o.patch
+features/all/qualcomm-emac/0030-net-qcom-emac-extend-DMA-mask-to-46bits.patch
+
+# Qualcomm Centriq backports #2: fix for erratum E1041
+bugfix/arm64/Add-software-workaround-for-Falkor-erratum-1041.patch
+
 # Security fixes
 debian/i386-686-pae-pci-set-pci-nobios-by-default.patch
 debian/time-mark-timer_stats-as-broken.patch
 bugfix/all/tracing-Use-strlcpy-instead-of-strcpy-in-__trace_fin.patch
+# Deferred due to userland regressions (#897599)
+#bugfix/all/random-fix-crng_ready-test.patch
+bugfix/all/ocfs2-subsystem.su_mutex-is-required-while-accessing.patch
+bugfix/all/ocfs2-ip_alloc_sem-should-be-taken-in-ocfs2_get_bloc.patch
+bugfix/all/f2fs-fix-a-panic-caused-by-null-flush_cmd_control.patch
+bugfix/all/mm-hugetlb.c-don-t-call-region_abort-if-region_chg-f.patch
+bugfix/all/hugetlbfs-fix-offset-overflow-in-hugetlbfs-mmap.patch
+bugfix/all/hugetlbfs-check-for-pgoff-value-overflow.patch
+bugfix/all/xfs-set-format-back-to-extents-if-xfs_bmap_extents_t.patch
+bugfix/all/jfs-Fix-inconsistency-between-memory-allocation-and-ea_buf_max_size.patch
+bugfix/all/ext4-add-corruption-check-in-ext4_xattr_set_entry.patch
+bugfix/all/ext4-always-verify-the-magic-number-in-xattr-blocks.patch
+bugfix/all/ext4-always-check-block-group-bounds-in-ext4_init_bl.patch
+bugfix/all/ext4-make-sure-bitmaps-and-the-inode-table-don-t-ove.patch
+bugfix/all/ext4-only-look-at-the-bg_flags-field-if-it-is-valid.patch
+bugfix/all/ext4-verify-the-depth-of-extent-tree-in-ext4_find_ex.patch
+bugfix/all/ext4-clear-i_data-in-ext4_inode_info-when-removing-i.patch
+bugfix/all/ext4-never-move-the-system.data-xattr-out-of-the-ino.patch
+bugfix/all/jbd2-don-t-mark-block-as-modified-if-the-handle-is-o.patch
+bugfix/all/ext4-avoid-running-out-of-journal-credits-when-appen.patch
+bugfix/all/ext4-add-more-inode-number-paranoia-checks.patch
+bugfix/all/sr-pass-down-correctly-sized-scsi-sense-buffer.patch
 
 # Fix exported symbol versions
 bugfix/ia64/revert-ia64-move-exports-to-definitions.patch
@@ -168,6 +230,9 @@ bugfix/all/liblockdep-enable-wall-by-default.patch
 bugfix/all/liblockdep-fix-unused-value-warnings.patch
 bugfix/all/liblockdep-fix-set-but-not-used-warnings.patch
 bugfix/all/liblockdep-fix-defined-but-not-used-warning-for-init.patch
+
+# Workaround for #897599
+debian/random-make-getrandom-ready-earlier.patch
 
 # ABI maintenance
 

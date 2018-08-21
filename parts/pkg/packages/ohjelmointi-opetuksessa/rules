@@ -1,0 +1,34 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+# We assume the arduino-ide package has been installed before
+# this package is installed!
+opinsys="/opt/arduino-ide/examples/12.Opinsys"
+
+case "${command}" in
+    configure)
+        upstream_dir=$1
+
+        mkdir -p "${opinsys}"
+        ln -fns "${upstream_dir}/huomioliivi" "${opinsys}/Huomioliivi"
+        ln -fns "${upstream_dir}/nalle" "${opinsys}/Nalle"
+        ln -fns "${upstream_dir}/zumo-32u4" "${opinsys}/Zumo"
+        ;;
+    unconfigure)
+        rm -rf "${opinsys}/Huomioliivi" \
+               "${opinsys}/Nalle" \
+               "${opinsys}/Zumo" \
+               "${opinsys}"
+        ;;
+    unpack)
+        upstream_pack=$1
+        upstream_dir=$2
+        tar xf "${upstream_pack}" -C "${upstream_dir}" --strip-components=1
+        ;;
+    *)
+        ;;
+esac

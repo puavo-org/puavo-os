@@ -63,10 +63,6 @@ override_dh_auto_install:
 		install prefix=/usr sysconfdir=/etc \
 		DESTDIR=$(CURDIR)/debian/iivari-client
 
-	$(MAKE) -C local-config				\
-		install prefix=/usr sysconfdir=/etc		\
-		DESTDIR=$(CURDIR)/debian/puavo-local-config
-
 	$(MAKE) -C logrelay				        \
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-logrelay
@@ -94,6 +90,10 @@ override_dh_auto_install:
 	$(MAKE) -C pkg					\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-pkg
+
+	$(MAKE) -C puavomenu				\
+		install prefix=/usr sysconfdir=/etc	\
+		DESTDIR=$(CURDIR)/debian/puavomenu
 
 	$(MAKE) -C sharedir/client			\
 		install prefix=/usr sysconfdir=/etc		\

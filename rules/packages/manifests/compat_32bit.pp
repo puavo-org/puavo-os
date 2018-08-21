@@ -8,24 +8,35 @@ class packages::compat_32bit {
     @package {
       [ 'libasound2:i386'
       , 'libasound2-plugins:i386'
+      , 'libatk1.0-0:i386'              # needed by mimio-studio
+      , 'libatkmm-1.6-1v5:i386'         # needed by mimio-studio
       , 'libbluetooth3:i386'
+      , 'libbotan-1.10-0:i386'          # needed by mimio-studio
       , 'libc6:i386'
+      , 'libcairo2:i386'                # needed by mimio-studio
+      , 'libcanberra-gtk-module:i386'   # needed by mimio-studio
       , 'libcap-ng0:i386'
       , 'libcurl3:i386'
+      , 'libdbus-1-3:i386'              # needed by mimio-studio
+      , 'libdbus-glib-1-2:i386'         # needed by mimio-studio
+      , 'libfakekey0:i386'              # needed by mimio-studio
       , 'libfontconfig1:i386'
       , 'libfreetype6:i386'
       , 'libgcc1:i386'
-      , 'libgif7:i386'		# needed by RobboScratch2
+      , 'libgif7:i386'                  # needed by RobboScratch2
       , 'libgl1-mesa-glx:i386'
       , 'libglib2.0-0:i386'
       , 'libgtk2.0-0:i386'
       , 'libice6:i386'
-      , 'libjpeg8:i386'		# needed by RobboScratch2
+      , 'libjpeg8:i386'                 # needed by RobboScratch2
       , 'libltdl7:i386'
+      , 'libmp3lame0:i386'              # needed by mimio-studio
       , 'libnspr4-0d:i386'
       , 'libnspr4:i386'
-      , 'libnss3:i386'		# needed by RobboScratch2
-      , 'libpng12-0:i386'	# needed by GlobiLab
+      , 'libnss3:i386'                  # needed by RobboScratch2
+      , 'libpango1.0-0:i386'            # needed by mimio-studio
+      , 'libpangomm-1.4-1v5:i386'       # needed by mimio-studio
+      , 'libpng12-0:i386'               # needed by GlobiLab
       , 'libpulse0:i386'
       , 'libqt4-dbus:i386'
       , 'libqt4-network:i386'

@@ -1,0 +1,58 @@
+#!/bin/sh
+
+set -eu
+
+# This is not necessary if puavo.xsessions.display_manager != "nodm",
+# but this should be fast so we will do this anyway.
+
+case "$(puavo-conf puavo.xsessions.default)" in
+  puavo-infotv)
+    nodm_user='puavo-infotv'
+    xsession_path='/usr/lib/puavo-ltsp-client/infotv-session'
+    ;;
+  puavo-webkiosk)
+    # XXX this has not been properly tested yet
+    nodm_user='guest'
+    xsession_path='/usr/lib/puavo-ltsp-client/webkiosk-session'
+    ;;
+  *)
+    exit 0
+    ;;
+esac
+
+cat <<EOF > /etc/default/nodm.tmp
+# nodm configuration
+
+# Set NODM_ENABLED to something different than 'false' to enable nodm
+NODM_ENABLED=true
+
+# User to autologin for
+NODM_USER=${nodm_user}
+
+# First vt to try when looking for free VTs
+NODM_FIRST_VT=7
+
+# X session
+NODM_XSESSION=${xsession_path}
+
+# Options for nodm itself
+NODM_OPTIONS=
+
+# Options for the X server.
+#
+# Format: [/usr/bin/<Xserver>] [:<disp>] <Xserver-options>
+#
+# The Xserver executable and the display name can be omitted, but should
+# be placed in front, if nodm's defaults shall be overridden.
+NODM_X_OPTIONS='-nolisten tcp'
+
+# If an X session will run for less than this time in seconds, nodm will wait an
+# increasing bit of time before restarting the session.
+NODM_MIN_SESSION_TIME=60
+
+# Timeout (in seconds) to wait for X to be ready to accept connections. If X is
+# not ready before this timeout, it is killed and restarted.
+NODM_X_TIMEOUT=300
+EOF
+
+mv /etc/default/nodm.tmp /etc/default/nodm

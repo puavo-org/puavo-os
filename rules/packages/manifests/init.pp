@@ -32,7 +32,6 @@ class packages {
     , 'puavo-devscripts'
     , 'puavo-hw-log'
     , 'puavo-hw-tools'
-    , 'puavo-local-config'
     , 'puavo-ltsp-client'
     , 'puavo-ltsp-install'
     , 'puavo-pkg'
@@ -40,6 +39,7 @@ class packages {
     , 'puavo-vpn-client'
     , 'puavo-wlanap'
     , 'puavo-wlanmapper'
+    , 'puavomenu'
     , 'ruby-puavowlan'
     , 'webkiosk-language-selector'
     , 'webmenu' ]:
@@ -106,10 +106,12 @@ class packages {
     , 'pv'
     , 'pwgen'
     , 'pwman3'
+    , 'read-edid'
     , 'rsyslog'
     , 'screen'
     , 'setserial'
     , 'smartmontools'
+    , 'sshfs'
     , 'strace'
     , 'sudo'
     , 'sysfsutils'
@@ -217,6 +219,7 @@ class packages {
       tag => [ 'tag_firmware', 'tag_debian_desktop', ];
 
     [ 'fontconfig'
+    , 'gnome-font-viewer'
     , 'ttf-freefont'
     , 'xfonts-terminus'
     , 'xfonts-utils' ]:
@@ -242,6 +245,7 @@ class packages {
     , 'neverball'
     , 'neverputt'
     , 'openttd'
+    , 'qml-module-qtmultimedia'		# required by khangman
     , 'supertuxkart'
     , 'tuxmath'
     , 'tuxpaint'
@@ -349,10 +353,10 @@ class packages {
       tag => [ 'tag_network', 'tag_debian_desktop', ];
 
     [ 'calibre'
+    , 'gummi'
     , 'icedove'
     , 'libreoffice'
     , 'libreoffice-base'
-    , 'libreoffice-kde'
     , 'scribus'
     , 'tellico'
     , 'vym' ]:
@@ -368,9 +372,7 @@ class packages {
     , 'gtklp' ]:
       tag => [ 'tag_printing', 'tag_debian_desktop', ];
 
-    [ 'arduino'
-    , 'arduino-mk'
-    , 'avr-libc'
+    [ 'avr-libc'
     # XXX 'basic256'		# XXX missing from Debian Jessie
     , 'eclipse'
     , 'emacs24'
@@ -384,6 +386,7 @@ class packages {
     , 'idle-python3.5'
     , 'kturtle'
     , 'lokalize'
+    , 'meld'
     , 'pyqt4-dev-tools'
     , 'python-doc'
     , 'python-jsonpickle' # a dependency for
@@ -460,7 +463,6 @@ class packages {
     , 'bluez'
     , 'bluez-cups'
     , 'brasero'
-    , 'brltty'
     , 'ca-certificates'
     , 'cheese'
     , 'cups'
@@ -561,6 +563,8 @@ class packages {
     , 'network-manager'
     , 'network-manager-pptp'
     , 'network-manager-pptp-gnome'
+    , 'nodm'            # for infotv
+    , 'openbox'         # for infotv
     , 'openprinting-ppds'
     , 'pcmciautils'
     , 'plymouth'
@@ -611,6 +615,7 @@ class packages {
 
     [ 'anki'
     , 'bindfs'
+    , 'blueman'
     , 'desktop-file-utils'
     , 'detox'
     , 'devilspie2'
@@ -621,6 +626,7 @@ class packages {
     , 'gconf-editor'
     , 'pass'
     , 'password-gorilla'
+    , 'system-config-printer'
     , 'tlp'
     , 'unace'
     , 'unionfs-fuse' ]: # Ekapeli might need this.
@@ -660,12 +666,12 @@ class packages {
   #
 
   @package {
-    [ 'firefox'
-    , 'firefox-locale-de'
-    , 'firefox-locale-en'
-    , 'firefox-locale-fi'
-    , 'firefox-locale-fr'
-    , 'firefox-locale-sv' ]:
+    [ 'firefox:i386'
+    , 'firefox-locale-de:i386'
+    , 'firefox-locale-en:i386'
+    , 'firefox-locale-fi:i386'
+    , 'firefox-locale-fr:i386'
+    , 'firefox-locale-sv:i386' ]:
       tag => [ 'tag_web', 'tag_ubuntu', ];
 
     [ 'ttf-ubuntu-font-family' ]:
@@ -724,13 +730,13 @@ class packages {
   $broadcom_sta_dkms_module = 'broadcom-sta/6.30.223.271'
   $nvidia_dkms_304_module   = 'nvidia-legacy-304xx/304.137'
   $nvidia_dkms_340_module   = 'nvidia-legacy-340xx/340.106'
-  $nvidia_dkms_375_module   = 'nvidia-current/375.82'
+  $nvidia_dkms_384_module   = 'nvidia-current/384.130'
   # XXX $r8168_dkms_module  = 'r8168/8.040.00'
 
   $all_dkms_modules = [ $broadcom_sta_dkms_module
 		      , $nvidia_dkms_304_module
 		      , $nvidia_dkms_340_module
-		      , $nvidia_dkms_375_module ]
+		      , $nvidia_dkms_384_module ]
                       # XXX $r8168_dkms_module  # XXX missing from Debian
 
   packages::kernels::kernel_package {
@@ -738,13 +744,13 @@ class packages {
       dkms_modules => $all_dkms_modules,
       package_name => 'linux-image-3.16.0-4-amd64';
 
-    '4.9.0-6-amd64':
+    '4.9.0-7-amd64':
       dkms_modules => $all_dkms_modules,
-      package_name => 'linux-image-4.9.0-6-amd64';
+      package_name => 'linux-image-4.9.0-7-amd64';
 
-    '4.14.0-0.bpo.3-amd64':
+    '4.17.0-0.bpo.1-amd64':
       dkms_modules => [],
-      package_name => 'linux-image-4.14.0-0.bpo.3-amd64';
+      package_name => 'linux-image-4.17.0-0.bpo.1-amd64';
   }
 
   # XXX missing from Debian

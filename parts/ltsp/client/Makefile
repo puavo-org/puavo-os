@@ -33,7 +33,6 @@ installdirs :
 	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)$(sysconfdir)/default
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-external-files-actions.d
-	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-remote-assistance-applet
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-vpn-client/scripts/route-up
 	mkdir -p $(DESTDIR)$(sysconfdir)/init
 	mkdir -p $(DESTDIR)$(sysconfdir)/init.d
@@ -103,9 +102,6 @@ install : installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES \
 		po/fi/puavo-remote-assistance-applet.mo
 
-	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-remote-assistance-applet \
-		etc/puavo-remote-assistance-applet/config.json
-
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/puavo-vpn-client/scripts/route-up \
 		etc/puavo-vpn-client/scripts/route-up/10-dnsmasq \
 		etc/puavo-vpn-client/scripts/route-up/30-ntpdate
@@ -124,25 +120,18 @@ install : installdirs
 		udev/rules.d/95-monitor-hotplug.rules
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/X11/Xsession.d \
-		etc/X11/Xsession.d/40puavo-session \
-		etc/X11/Xsession.d/41puavo-set-locale \
-		etc/X11/Xsession.d/42puavo-set-browser-homepage \
-		etc/X11/Xsession.d/43puavo-set-guest-session-quirks \
-		etc/X11/Xsession.d/44puavo-generate-dconf-profile \
-		etc/X11/Xsession.d/45puavo-display-setup \
-		etc/X11/Xsession.d/47puavo-force-plaintext-keyring \
-		etc/X11/Xsession.d/47puavo-set-default-browser-in-panel \
-		etc/X11/Xsession.d/90puavo-setup-printers
+		etc/X11/Xsession.d/*
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-client \
 		lib/*
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-client/pam \
 		pam/check-if-account-is-locked \
-		pam/puavo-local-config-setup \
 		pam/puavo-login \
 		pam/puavo-manage-homedir \
-		pam/restrict-logins-by-local-config
+		pam/puavo-nodm-pam-setup \
+		pam/puavo-setup-primary-user \
+		pam/restrict-logins-if-personally-administered
 
 	$(INSTALL_DATA) -t $(DESTDIR)/lib/systemd/system \
 		systemd/*

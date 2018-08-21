@@ -2,6 +2,38 @@
 
 set -eu
 
+primary_user=$(puavo-conf puavo.admin.primary_user)
+
+if [ "$(puavo-conf puavo.admin.personally_administered)" = 'true' \
+     -a -n "$primary_user" ] && id -u "$primary_user" >/dev/null 2>&1; then
+  primary_user_policy="        <policy user=\"${primary_user}\">
+                <allow send_destination=\"org.puavo.client.Daemon\"/>
+        </policy>"
+else
+  primary_user_policy=''
+fi
+
+puavo_client_conf='/etc/dbus-1/system.d/org.puavo.client.conf'
+
+cat <<EOF > "${puavo_client_conf}.tmp"
+<!DOCTYPE busconfig PUBLIC
+ "-//freedesktop//DTD D-BUS Bus Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd">
+<busconfig>
+        <policy user="root">
+                <allow own="org.puavo.client.Daemon"/>
+                <allow send_destination="org.puavo.client.Daemon"/>
+        </policy>
+        <policy context="default">
+                <allow send_destination="org.puavo.client.Daemon"/>
+                <deny  send_destination="org.puavo.client.Daemon"
+                       send_interface="org.puavo.client.overlayhandler"/>
+        </policy>
+${primary_user_policy}
+</busconfig>
+EOF
+mv "${puavo_client_conf}.tmp" "$puavo_client_conf"
+
 puavo-template /etc/dbus-1/system.d/org.freedesktop.login1.conf <<'EOF'
 <?xml version="1.0"?> <!--*-nxml-*-->
 <!DOCTYPE busconfig PUBLIC "-//freedesktop//DTD D-BUS Bus Configuration 1.0//EN"

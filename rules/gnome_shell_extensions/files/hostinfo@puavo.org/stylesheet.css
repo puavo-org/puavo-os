@@ -1,20 +1,66 @@
 /*
     Host Info shell extension styles
-    Copyright (c) 2017 Opinsys Oy
+    Copyright (c) 2017-2018 Opinsys Oy
 */
 
-/*
-    Container for the pseudo-menu item entry (that cannot be selected/clicked)
-    which contains the while info text block
-*/
-.infoTextMenuItem
+.baseMenuItem
 {
 }
 
-/*
-    Container for the whole information text block
-*/
-.infoTextContainer
+.mainContainer
+{
+}
+
+.infoContainer
+{
+    max-height: 350px;
+    margin: 0 0 25px 0;
+    border: 1px solid #666;
+}
+
+.infoTextBlock
+{
+    padding: 5px;
+}
+
+.buttonsContainer
+{
+}
+
+.updateButton
+{
+    border: 2px solid transparent;
+    border-radius: 5px;
+    background: #6da2d9;
+    color: #000;
+    padding: 10px;
+}
+
+.updateButton:hover
+{
+    border: 2px solid #256ab1;
+    background: #4a90d9;
+    color: #000;
+}
+
+.updateButton:active
+{
+    border: 2px solid #256ab1;
+    color: #fff;
+}
+
+.errorText
+{
+    color: #f00;
+}
+
+.infoTextTimestamp
+{
+    color: #000;
+    font-weight: bold;
+}
+
+.infoTextSpacer
 {
 }
 
@@ -41,14 +87,4 @@
 {
     color: #000;
     padding-left: 25px;
-}
-
-.infoTextWarning
-{
-    color: #f00;
-}
-
-.infoErrorTitle
-{
-    color: #f00;
 }

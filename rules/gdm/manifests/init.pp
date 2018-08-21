@@ -34,10 +34,33 @@ class gdm {
       require => [ File['/etc/guest-session'], Package['gdm3'], ],
       source  => 'puppet:///modules/gdm/PostLogin_Default';
 
+    '/usr/share/gdm/greeter/autostart/puavo-client-updater-applet.desktop':
+      ensure  => link,
+      require => [ Package['gdm3'], Package['puavo-ltsp-client'], ],
+      target  => '/etc/xdg/autostart/puavo-client-updater-applet.desktop';
+
     '/usr/share/gdm/greeter/autostart/puavo-remote-assistance-applet.desktop':
       ensure  => link,
       require => [ Package['gdm3'], Package['puavo-ltsp-client'], ],
       target  => '/etc/xdg/autostart/puavo-remote-assistance-applet.desktop';
+
+    '/var/lib/gdm3/.config':
+      ensure  => directory,
+      owner   => 'Debian-gdm',
+      group   => 'Debian-gdm',
+      mode    => '0755',
+      require => Package['gdm3'];
+
+    '/var/lib/gdm3/.config/pulse':
+      ensure => directory,
+      owner  => 'Debian-gdm',
+      group  => 'Debian-gdm',
+      mode   => '0700';
+
+    '/var/lib/gdm3/.config/pulse/default.pa':
+      owner  => 'Debian-gdm',
+      group  => 'Debian-gdm',
+      source => 'puppet:///modules/gdm/default.pa';
   }
 
   ::dconf::schemas::schema {
@@ -58,6 +81,16 @@ class gdm {
     'setup_xsessions':
       require => Package['puavo-ltsp-client'],
       source  => 'puppet:///modules/gdm/setup_xsessions';
+  }
+
+  user {
+    # We add Debian-gdm to puavodesktop group so that
+    # /usr/lib/puavo-ltsp-client/admin-remote-connections can work also in
+    # the login screen.
+    'Debian-gdm':
+      groups     => [ 'puavodesktop' ],
+      membership => minimum,
+      require    => [ Package['gdm3'], Package['puavo-ltsp-client'], ];
   }
 
   Package <|

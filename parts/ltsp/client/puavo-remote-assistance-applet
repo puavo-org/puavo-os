@@ -159,7 +159,9 @@ class RemoteAssistanceApplet:
 
         self.menu = None
 
-        self.create_menu()
+        # if we did not create menu, there is nothing for us to do
+        if not self.create_menu():
+            sys.exit(0)
 
         self.check_for_changed_settings()
         gobject.timeout_add_seconds(5, self.check_for_changed_settings)
@@ -228,7 +230,7 @@ class RemoteAssistanceApplet:
             indicator_icon = 'puavoremoteaccess-grey'
         else:
             # if there is nothing to enable/disable, just show nothing
-            return
+            return False
 
         self.access_status_label = gtk.MenuItem('-=> %s <=' % access_state_msg)
         self.access_status_label.set_sensitive(False)
@@ -254,6 +256,8 @@ class RemoteAssistanceApplet:
 
         self.indicator.set_icon(indicator_icon)
 
+        return True
+
 
     def create_menu(self):
         if self.menu:
@@ -261,7 +265,7 @@ class RemoteAssistanceApplet:
 
         self.menu = gtk.Menu()
 
-        self.create_access_controls()
+        have_access_controls = self.create_access_controls()
 
         make_bugreport_button = self.config['new_bugreport_browser'] \
                                   and self.config['new_bugreport_url'] \
@@ -271,8 +275,15 @@ class RemoteAssistanceApplet:
             self.new_ticket_button.connect('activate', self.make_bugreport)
             self.new_ticket_button.show()
             self.menu.append(self.new_ticket_button)
+        elif not have_access_controls:
+            # if we did not create a bug report button and we did not
+            # have any access control buttons either,
+            # there is no reason for us to be, so report nothing was done
+            return False
 
         self.indicator.set_menu(self.menu)
+
+        return True
 
 
     def disable_remote_access(self, widget):
@@ -313,6 +324,10 @@ class RemoteAssistanceApplet:
 
 
     def vino_controls_available(self):
+        # vino-server can not be started in login screen
+        if getpass.getuser() == 'Debian-gdm':
+            return False
+
         return ('vino' in self.config['show_accesscontrols_for'])
 
 
@@ -336,16 +351,26 @@ for config_key in config.keys():
       file=sys.stderr)
     continue
 
-  if puavoconf_key == 'show_accesscontrols_for':
-    if puavoconf_value == '':
-      puavoconf_value = []
-    else:
-      puavoconf_value = puavoconf_value.split(',')
-  elif puavoconf_value == '':
-    puavoconf_value = None
+  try:
+    if config_key == 'show_accesscontrols_for':
+      if puavoconf_value == '':
+        puavoconf_value = []
+      else:
+        puavoconf_value = puavoconf_value.split(',')
+    elif config_key == 'ssh_access_timeout':
+      if puavoconf_value == '':
+        puavoconf_value = None
+      else:
+        puavoconf_value = int( puavoconf_value.rstrip(os.linesep) )
+    elif puavoconf_value == '':
+      puavoconf_value = None
 
-  config[config_key] = puavoconf_value
+    config[config_key] = puavoconf_value
 
+  except Exception as e:
+    print("Could not interpret puavo-conf variable '%s': %s" \
+            % (puavoconf_key, e),
+          file=sys.stderr)
 
 access_handler = RemoteAccessHandler()
 

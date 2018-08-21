@@ -1,0 +1,32 @@
+#!/bin/sh
+
+set -eu
+
+dm=$(puavo-conf puavo.xsessions.display_manager)
+
+case "$dm" in
+  gdm)
+    default_dm='/usr/sbin/gdm3'
+    dm_service='/lib/systemd/system/gdm3.service'
+    ;;
+  nodm)
+    # Activate the "nodm"-mode
+    default_dm='/usr/sbin/nodm'
+    dm_service='/lib/systemd/system/nodm.service'
+    ;;
+  puavo-darkdm|puavo-darkdm-*)
+    # Pass on these values as valid.  Even though setting these here should
+    # not have any effect, because in these cases graphical.target should
+    # not be run anyway.
+    default_dm='/usr/lib/puavo-ltsp-client/darkdm_on_tty'
+    dm_service='/lib/systemd/system/puavo-darkdm.service'
+    ;;
+  *)
+    echo "Unsupported display manager ${dm}" >&2
+    exit 1
+    ;;
+esac
+
+echo "$default_dm" > /etc/X11/default-display-manager
+
+ln -fns "$dm_service" /etc/systemd/system/display-manager.service

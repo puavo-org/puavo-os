@@ -38,8 +38,8 @@ cleanup_network_connections
 setup_autofs
 setup_extra_environment
 disable_update_initramfs
-setup_local_config
 setup_graphics_drivers
+setup_networking
 setup_network_manager
 setup_xsessions
 setup_devilspie
@@ -49,8 +49,14 @@ setup_preinstalled_mode
 setup_loginscreen_background
 setup_guestuser
 setup_nfs_client
+setup_display_manager
+setup_pulseaudio
 setup_gdm
+setup_nodm
+setup_infotv
 setup_puavopkgs
+setup_grub_default
+setup_superusers
 setup_webmenu_logos
 setup_systemd
 run_extra_boot_scripts

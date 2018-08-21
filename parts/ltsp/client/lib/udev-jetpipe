@@ -18,7 +18,7 @@ if [ ${CMD} = "add" ]; then
       kill $PID
     fi
 
-    /usr/sbin/jetpipe ${DEVNAME} 9100
+    /usr/lib/puavo-ltsp-client/jetpipe ${DEVNAME} 9100
   else
     PID=$(ps -ef|grep [j]etpipe\ ${DEVNAME}|awk '{print $2}')
     if [ "x${PID}" != "x" ]; then
@@ -27,7 +27,7 @@ if [ ${CMD} = "add" ]; then
 
     PORT=$(( $MINOR + 9101 ))
 
-    /usr/sbin/jetpipe ${DEVNAME} ${PORT}
+    /usr/lib/puavo-ltsp-client/jetpipe ${DEVNAME} ${PORT}
   fi
 fi
 

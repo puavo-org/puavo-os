@@ -1,0 +1,381 @@
+diff -ruN gnome-shell.orig/data/theme/gnome-shell.css gnome-shell/data/theme/gnome-shell.css
+--- gnome-shell.orig/data/theme/gnome-shell.css	2017-02-16 19:31:17.000000000 +0200
++++ gnome-shell/data/theme/gnome-shell.css	2018-08-14 14:39:53.393296118 +0300
+@@ -1849,3 +1849,11 @@
+   border: 2px solid grey;
+   border-radius: 4px;
+   padding: 6px; }
++
++.destroy-user-session {
++  color: #cc8800;
++  font-size: 70%;
++  font-weight: bold;
++  margin-top: 3em; }
++  .destroy-user-session:hover {
++    color: #ffaa00; }
+diff -ruN gnome-shell.orig/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
+--- gnome-shell.orig/js/gdm/authPrompt.js	2017-02-16 18:48:04.000000000 +0200
++++ gnome-shell/js/gdm/authPrompt.js	2018-08-15 08:27:57.759349120 +0300
+@@ -2,9 +2,12 @@
+ 
+ const Clutter = imports.gi.Clutter;
+ const Gio = imports.gi.Gio;
++const GLib = imports.gi.GLib;
+ const Lang = imports.lang;
+ const Signals = imports.signals;
+ const St = imports.gi.St;
++const Shell = imports.gi.Shell;
++const Util = imports.misc.util;
+ 
+ const Animation = imports.ui.animation;
+ const Batch = imports.gdm.batch;
+@@ -37,6 +40,12 @@
+     DONT_PROVIDE_USERNAME: 1
+ };
+ 
++// will throw exceptions, remember to handle them
++function readTextFile(name)
++{
++    return Shell.get_file_contents_utf8_sync(name);
++}
++
+ const AuthPrompt = new Lang.Class({
+     Name: 'AuthPrompt',
+ 
+@@ -46,6 +55,13 @@
+         this._gdmClient = gdmClient;
+         this._mode = mode;
+ 
++        gio_settings = new Gio.Settings({ schema_id: GdmUtil.LOGIN_SCREEN_SCHEMA });
++        if (gio_settings.get_boolean(GdmUtil.GUESTUSER_KEY)) {
++          this._guestuser_login = 'guest';
++        } else {
++          this._guestuser_login = '';
++        }
++
+         let reauthenticationOnly;
+         if (this._mode == AuthPromptMode.UNLOCK_ONLY)
+             reauthenticationOnly = true;
+@@ -66,6 +82,14 @@
+         this.connect('next', Lang.bind(this, function() {
+                          this.updateSensitivity(false);
+                          this.startSpinning();
++
++                         if (this._userName && !this._userNameEntered) {
++                             if (!this._entry.menu.isPassword) {    // don't show passwords!
++                                 this._userName.text = this._entry.text;
++                                 this._userNameEntered = true;
++                             }
++                         }
++
+                          if (this._queryingService) {
+                              this._userVerifier.answerQuery(this._queryingService, this._entry.text);
+                          } else {
+@@ -73,6 +97,11 @@
+                          }
+                      }));
+ 
++        this.connect('guest', Lang.bind(this, function() {
++                         this._entry.text = this._guestuser_login;
++                         this.emit('next');
++                     }));
++
+         this.actor = new St.BoxLayout({ style_class: 'login-dialog-prompt-layout',
+                                         vertical: true });
+         this.actor.connect('destroy', Lang.bind(this, this._onDestroy));
+@@ -91,6 +120,25 @@
+                          x_fill: true,
+                          y_fill: true,
+                          expand: true });
++
++        if (this._mode == AuthPromptMode.UNLOCK_OR_LOG_IN) {
++            // Display the username above the password prompt, but
++            // ONLY in the login screen, not in the unlocking screen.
++            // The label is always visible, it's just empty before
++            // the name has been entered.
++            this._userName = new St.Label({ style_class:
++                'login-dialog-username', text: ' ' });
++
++            this.actor.add(this._userName, {
++                expand: true,
++                x_fill: false,
++                y_fill: true,
++                x_align: St.Align.MIDDLE });
++                this._userName.show();
++        }
++
++        this._userNameEntered = false;
++
+         this._label = new St.Label({ style_class: 'login-dialog-prompt-label' });
+ 
+         this.actor.add(this._label,
+@@ -122,6 +170,74 @@
+                          x_align: St.Align.MIDDLE,
+                          y_align: St.Align.END });
+ 
++        this.guestButton = new St.Button({ style_class: 'modal-dialog-button button login-dialog-guest-button',
++                                           button_mask: St.ButtonMask.ONE | St.ButtonMask.THREE,
++                                           reactive: true,
++                                           can_focus: true,
++                                           label: _("Login as guest") });
++        this.guestButton.connect('clicked',
++                                 Lang.bind(this, function() { this.emit('guest'); }));
++        this.actor.add(this.guestButton,
++                       { expand: true,
++                         x_fill: false,
++                         y_fill: true,
++                         x_align: St.Align.MIDDLE });
++
++        if (reauthenticationOnly) {
++            // hide the guest login button on the unlock screen
++            this.guestButton.hide();
++        } else {
++            // initially the guest button is clickable
++            this._updateGuestButtonSensitivity(true);
++        }
++
++        if (reauthenticationOnly) {
++            // Show the machine hostname, host type and release name in the lock screen.
++            // I tried to create a separate label element for this in loginDialog.js, but
++            // I just couldn't get it to work (the label never shows up). So we'll do it
++            // here. The font size has been set to small to make long hostnames visible
++            // (if the hostname is too long, it gets ellipsized). These things should be
++            // done using extensions, but I couldn't find a way to run extensions in the
++            // lock screen.
++            var hostType,
++                hostName,
++                releaseName;
++
++            try { hostType = readTextFile('/etc/puavo/hosttype').trim(); } catch (e) { hostType = '?'; }
++            try { hostName = readTextFile('/etc/puavo/hostname').trim(); } catch (e) { hostName = '?'; }
++            try { releaseName = readTextFile('/etc/puavo-image/release').trim(); } catch (e) { releaseName = '?'; }
++
++            this._machineInfoText = new St.Label({
++                text: hostType + ' | ' + releaseName + ' | ' + hostName,
++                style: 'font-size: 80%; text-align: center; margin-top: 20px;'
++            });
++
++            this.actor.add_child(this._machineInfoText);
++            this._machineInfoText.show();
++            // This is a hack from start to end, but right now it does the job.
++        }
++
++        if (reauthenticationOnly) {
++            let button_opts = {
++              button_mask: St.ButtonMask.ONE | St.ButtonMask.THREE,
++              can_focus:   false,
++              label:       _("End session"),
++              reactive:    true,
++              style_class: 'button destroy-user-session',
++            };
++
++            this._killUserSessionButton = new St.Button(button_opts);
++            this._killUserSessionButton.connect('clicked',
++                    Lang.bind(this, function() {
++                      Util.spawn(['/usr/bin/gnome-session-quit',
++                                  '--force',
++                                  '--logout',
++                                  '--no-prompt']);
++                    }));
++            this.actor.add_child(this._killUserSessionButton);
++            this._killUserSessionButton.show();
++        }
++
+         this._defaultButtonWell = new St.Widget({ layout_manager: new Clutter.BinLayout() });
+         this._defaultButtonWellActor = null;
+ 
+@@ -186,6 +302,8 @@
+                                              if (!this._userVerifier.hasPendingMessages)
+                                                  this._fadeOutMessage();
+ 
++                                             this._updateGuestButtonSensitivity(this._entry.text.length == 0 &&
++                                                !this._userNameEntered);
+                                              this._updateNextButtonSensitivity(this._entry.text.length > 0);
+                                          }));
+         this._entry.clutter_text.connect('activate', Lang.bind(this, function() {
+@@ -261,7 +379,7 @@
+     _onVerificationComplete: function() {
+         this.setActorInDefaultButtonWell(null);
+         this.verificationStatus = AuthPromptStatus.VERIFICATION_SUCCEEDED;
+-	this.cancelButton.reactive = false;
++        this.cancelButton.reactive = false;
+     },
+ 
+     _onReset: function() {
+@@ -408,6 +526,17 @@
+         }
+     },
+ 
++    _updateGuestButtonSensitivity: function(sensitive) {
++        if (this._guestuser_login !== 'guest') {
++            // forcibly hide the guest login button if guest logins are disabled
++            this.guestButton.hide();
++            return;
++        }
++
++        this.guestButton.reactive = sensitive;
++        this.guestButton.can_focus = sensitive;
++    },
++
+     _updateNextButtonSensitivity: function(sensitive) {
+         this.nextButton.reactive = sensitive;
+         this.nextButton.can_focus = sensitive;
+@@ -447,6 +576,16 @@
+         this.cancelButton.reactive = true;
+         this.nextButton.label = _("Next");
+ 
++        if (this._userName)
++            this._userName.text = " ";
++
++        this._userNameEntered = false;
++
++        // we're back at the start, so the guest button is usable again
++        this.guestButton.show();
++        // this will also hide guest button if needed:
++        this._updateGuestButtonSensitivity(true);
++
+         if (this._userVerifier)
+             this._userVerifier.cancel();
+ 
+diff -ruN gnome-shell.orig/js/gdm/loginDialog.js gnome-shell/js/gdm/loginDialog.js
+--- gnome-shell.orig/js/gdm/loginDialog.js	2018-08-14 14:38:01.761528924 +0300
++++ gnome-shell/js/gdm/loginDialog.js	2018-08-14 14:39:58.897479686 +0300
+@@ -1111,6 +1111,7 @@
+     _showUserList: function() {
+         this._ensureUserListLoaded();
+         this._authPrompt.hide();
++        this._authPrompt._updateGuestButtonSensitivity(true);
+         this._hideBannerView();
+         this._sessionMenuButton.close();
+         this._setUserListExpanded(true);
+@@ -1120,6 +1121,7 @@
+ 
+     _beginVerificationForItem: function(item) {
+         this._authPrompt.setUser(item.user);
++        this._authPrompt.guestButton.hide();
+ 
+         let userName = item.user.get_user_name();
+         let hold = new Batch.Hold();
+diff -ruN gnome-shell.orig/js/gdm/util.js gnome-shell/js/gdm/util.js
+--- gnome-shell.orig/js/gdm/util.js	2016-11-18 18:44:21.000000000 +0200
++++ gnome-shell/js/gdm/util.js	2018-08-14 14:39:50.161188229 +0300
+@@ -31,6 +31,7 @@
+ const BANNER_MESSAGE_KEY = 'banner-message-enable';
+ const BANNER_MESSAGE_TEXT_KEY = 'banner-message-text';
+ const ALLOWED_FAILURES_KEY = 'allowed-failures';
++const GUESTUSER_KEY = 'enable-guestuser';
+ 
+ const LOGO_KEY = 'logo';
+ const DISABLE_USER_LIST_KEY = 'disable-user-list';
+@@ -529,8 +530,9 @@
+         // go back to the welcome screen.
+ 
+         this._failCounter++;
+-        let canRetry = retry && this._userName &&
+-            this._failCounter < this._settings.get_int(ALLOWED_FAILURES_KEY);
++        let canRetry = retry && this._userName;     // let the user re-enter the password as
++                                                    // many times as they want, they aren't
++                                                    // going to brute-force it this way...
+ 
+         if (canRetry) {
+             if (!this.hasPendingMessages) {
+diff -ruN gnome-shell.orig/po/de.po gnome-shell/po/de.po
+--- gnome-shell.orig/po/de.po	2017-02-16 18:48:04.000000000 +0200
++++ gnome-shell/po/de.po	2018-08-14 14:39:53.397296251 +0300
+@@ -343,6 +343,10 @@
+ msgid "GNOME Shell Extensions"
+ msgstr "GNOME-Shell-Erweiterungen"
+ 
++#: js/gdm/authPrompt.js:141
++msgid "Login as guest"
++msgstr "Als Gast anmelden"
++
+ #: js/gdm/authPrompt.js:147 js/ui/audioDeviceSelection.js:71
+ #: js/ui/components/networkAgent.js:145 js/ui/components/polkitAgent.js:179
+ #: js/ui/endSessionDialog.js:483 js/ui/extensionDownloader.js:195
+@@ -364,6 +368,10 @@
+ msgid "Sign In"
+ msgstr "Anmelden"
+ 
++#: js/gdm/authPrompt.js:224
++msgid "End session"
++msgstr "Sitzung beenden"
++
+ #: js/gdm/loginDialog.js:285
+ msgid "Choose Session"
+ msgstr "Sitzung wählen"
+diff -ruN gnome-shell.orig/po/fi.po gnome-shell/po/fi.po
+--- gnome-shell.orig/po/fi.po	2017-02-16 18:48:04.000000000 +0200
++++ gnome-shell/po/fi.po	2018-08-14 14:39:53.397296251 +0300
+@@ -342,6 +342,10 @@
+ msgid "GNOME Shell Extensions"
+ msgstr "GNOME Shell -laajennukset"
+ 
++#: js/gdm/authPrompt.js:141
++msgid "Login as guest"
++msgstr "Kirjaudu vieraana"
++
+ #: js/gdm/authPrompt.js:147 js/ui/audioDeviceSelection.js:71
+ #: js/ui/components/networkAgent.js:145 js/ui/components/polkitAgent.js:179
+ #: js/ui/endSessionDialog.js:483 js/ui/extensionDownloader.js:195
+@@ -363,6 +367,10 @@
+ msgid "Sign In"
+ msgstr "Kirjaudu sisään"
+ 
++#: js/gdm/authPrompt.js:224
++msgid "End session"
++msgstr "Lopeta istunto"
++
+ #: js/gdm/loginDialog.js:285
+ msgid "Choose Session"
+ msgstr "Valitse istunto"
+diff -ruN gnome-shell.orig/po/fr.po gnome-shell/po/fr.po
+--- gnome-shell.orig/po/fr.po	2017-02-14 00:21:02.000000000 +0200
++++ gnome-shell/po/fr.po	2018-08-14 14:39:53.397296251 +0300
+@@ -353,6 +353,10 @@
+ msgid "GNOME Shell Extensions"
+ msgstr "Extensions GNOME Shell"
+ 
++#: js/gdm/authPrompt.js:141
++msgid "Login as guest"
++msgstr "Connectez-vous comme invité"
++
+ #: js/gdm/authPrompt.js:147 js/ui/audioDeviceSelection.js:71
+ #: js/ui/components/networkAgent.js:145 js/ui/components/polkitAgent.js:179
+ #: js/ui/endSessionDialog.js:483 js/ui/extensionDownloader.js:195
+@@ -374,6 +378,10 @@
+ msgid "Sign In"
+ msgstr "Se connecter"
+ 
++#: js/gdm/authPrompt.js:224
++msgid "End session"
++msgstr "Fin de session"
++
+ #: js/gdm/loginDialog.js:285
+ msgid "Choose Session"
+ msgstr "Choisir une session"
+diff -ruN gnome-shell.orig/po/sv.po gnome-shell/po/sv.po
+--- gnome-shell.orig/po/sv.po	2017-02-16 18:48:04.000000000 +0200
++++ gnome-shell/po/sv.po	2018-08-14 14:39:53.397296251 +0300
+@@ -323,6 +323,10 @@
+ msgid "GNOME Shell Extensions"
+ msgstr "Tillägg för GNOME-skal"
+ 
++#: js/gdm/authPrompt.js:141
++msgid "Login as guest"
++msgstr "Logga in som gäst"
++
+ #: js/gdm/authPrompt.js:147 js/ui/audioDeviceSelection.js:71
+ #: js/ui/components/networkAgent.js:145 js/ui/components/polkitAgent.js:179
+ #: js/ui/endSessionDialog.js:483 js/ui/extensionDownloader.js:195
+@@ -344,6 +348,10 @@
+ msgid "Sign In"
+ msgstr "Logga in"
+ 
++#: js/gdm/authPrompt.js:224
++msgid "End session"
++msgstr "Avsluta sessionen"
++
+ #: js/gdm/loginDialog.js:285
+ msgid "Choose Session"
+ msgstr "Välj session"

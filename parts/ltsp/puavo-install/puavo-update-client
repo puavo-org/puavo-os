@@ -2,24 +2,30 @@
 
 set -e
 
+log() {
+  logpriority=$1
+  logmessage=$2
+  logger -p "$logpriority" -s -t puavo-update-client "$logmessage"
+}
+
 on_persistent_overlay() {
-    grep -q "puavo.image.overlay=" /proc/cmdline
+  grep -q "puavo.image.overlay=" /proc/cmdline
 }
 
 usage_error() {
-    echo "error: $1" >&2
-    echo "Try '$0 --help' for more information." >&2
-    exit 1
+  log err "error: $1 (try '$0 --help' for more information)"
+  exit 1
 }
 
 hosttype=$(puavo-conf puavo.hosttype)
 
-if [ "$hosttype" != "bootserver" -a \
-     "$hosttype" != "laptop" -a \
-     "$hosttype" != "wirelessaccesspoint" ]; then
-    echo 'This script should be run only for bootservers, laptops' \
-         ' and wirelessaccesspoints!' >&2
-    exit 1
+if [    "$hosttype" != 'bootserver' \
+     -a "$hosttype" != 'laptop'     \
+     -a "$hosttype" != 'wirelessaccesspoint' ]; then
+  msg='this script should be run only for bootserver, laptops' \
+  msg="${msg} and wirelessaccesspoints"
+  log err "$msg"
+  exit 1
 fi
 
 automatically_triggered=false
@@ -28,54 +34,54 @@ no_image_update=false
 use_rate_limit=false
 
 while [ $# -gt 0 ]; do
-    case $1 in
-        -h|--help)
-            shift
-            echo "Usage: $0"
-            echo
-            echo "Update device configuration and images."
-            echo
-            echo "Options:"
-            echo "    --auto                 automatically scheduled update"
-            echo "    --force-image-update   update image, no matter what"
-            echo "                           (overrides --no-image-update)"
-            echo "    --no-image-update      do not update images, only configurations"
-            echo "    --use-rate-limit       limit the image download rate"
-            echo "    -h, --help             print help and exit"
-            echo
-            exit 0
-            ;;
-        --auto)
-            shift
-            automatically_triggered=true
-            ;;
-        --force-image-update)
-            shift
-            force_image_update=true
-            ;;
-        --no-image-update)
-            shift
-            no_image_update=true
-            ;;
-        --use-rate-limit)
-            shift
-            use_rate_limit=true
-            ;;
-        --)
-            shift
-            break
-            ;;
-        -*)
-            usage_error "invalid argument '$1'"
-            ;;
-        *)
-            break
-            ;;
-    esac
+  case $1 in
+    -h|--help)
+      shift
+      echo "Usage: $0"
+      echo
+      echo "Update device configuration and images."
+      echo
+      echo "Options:"
+      echo "    --auto                 automatically scheduled update"
+      echo "    --force-image-update   update image, no matter what"
+      echo "                           (overrides --no-image-update)"
+      echo "    --no-image-update      do not update images, only configurations"
+      echo "    --use-rate-limit       limit the image download rate"
+      echo "    -h, --help             print help and exit"
+      echo
+      exit 0
+      ;;
+    --auto)
+      shift
+      automatically_triggered=true
+      ;;
+    --force-image-update)
+      shift
+      force_image_update=true
+      ;;
+    --no-image-update)
+      shift
+      no_image_update=true
+      ;;
+    --use-rate-limit)
+      shift
+      use_rate_limit=true
+      ;;
+    --)
+      shift
+      break
+      ;;
+    -*)
+      usage_error "invalid argument '$1'"
+      ;;
+    *)
+      break
+      ;;
+  esac
 done
 
 if [ $# -ne 0 ]; then
-    usage_error "invalid number of arguments ($#), expected 0"
+  usage_error "invalid number of arguments ($#), expected 0"
 fi
 
 set -u
@@ -88,22 +94,25 @@ fi
 
 # figure out the value of do_image_update
 if $force_image_update; then
-    do_image_update=true
+  do_image_update=true
 elif $no_image_update; then
-    do_image_update=false
+  log notice 'not doing an image update, requested to not to'
+  do_image_update=false
 elif on_persistent_overlay; then
-    # we are on persistent overlay (development mode),
-    # do not do an image update
-    do_image_update=false
+  # we are on persistent overlay (development mode),
+  # do not do an image update
+  log notice 'not doing an image update, we are on persistent overlay'
+  do_image_update=false
 else
-    automatic_image_updates=$(puavo-conf puavo.image.automatic_updates)
-    if [ "$automatic_image_updates" = 'false' ]; then
-        do_image_update=false
-    else
-        # empty/missing or nonsensical value for $automatic_image_updates
-        #   --> default to true
-        do_image_update=true
-    fi
+  automatic_image_updates=$(puavo-conf puavo.image.automatic_updates)
+  if [ "$automatic_image_updates" = 'false' ]; then
+    log notice 'not doing an image update, automatic updates are off'
+    do_image_update=false
+  else
+    # empty/missing or nonsensical value for $automatic_image_updates
+    #   --> default to true
+    do_image_update=true
+  fi
 fi
 
 # If automatically triggered (with --auto from upstart script), use rate
@@ -122,20 +131,26 @@ dbus_cmd="
 "
 
 if ! $do_image_update; then
-    # do only the configuration update
-    if $dbus_cmd org.puavo.client.update.UpdateConfiguration >/dev/null; then
-        echo 'Configuration update started.'
-    else
-        echo 'Starting configuration update failed.' >&2
-        exit 1
-    fi
+  # do only the configuration update
+  if $dbus_cmd org.puavo.client.update.UpdateConfiguration >/dev/null; then
+    log notice 'configuration update started'
+  else
+    log err 'starting configuration update failed'
+    exit 1
+  fi
 else
-    # do the whole update (configuration update + image update)
-    if $dbus_cmd org.puavo.client.update.Update \
-                 "boolean:${use_rate_limit}" >/dev/null; then
-        echo 'System update started.'
-    else
-        echo 'Starting system update failed.' >&2
-        exit 1
-    fi
+  if $use_rate_limit; then
+    log notice 'using rate limit on image update'
+  else
+    log notice 'NOT using rate limit on image update'
+  fi
+
+  # do the whole update (configuration update + image update)
+  if $dbus_cmd org.puavo.client.update.Update \
+               "boolean:${use_rate_limit}" >/dev/null; then
+    log notice 'system update started'
+  else
+    log notice 'starting system update failed'
+    exit 1
+  fi
 fi

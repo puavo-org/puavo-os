@@ -1,0 +1,24 @@
+#!/bin/sh
+
+set -eu
+
+case "$(puavo-conf puavo.xsessions.default)" in
+  puavo-infotv)
+    session_manager='/usr/lib/puavo-ltsp-client/infotv-session'
+
+    infotv_home='/home/puavo-infotv'
+    infotv_uid='998'
+    infotv_user='puavo-infotv'
+
+    useradd --system --create-home --home-dir "$infotv_home"      \
+            --comment Puavo-InfoTV --user-group --shell /bin/bash \
+            --uid "$infotv_uid" "$infotv_user"
+    ;;
+  *)
+    session_manager='/usr/bin/gnome-session'
+    ;;
+esac
+
+ln -fns "$session_manager" /etc/alternatives/x-session-manager
+
+exit 0

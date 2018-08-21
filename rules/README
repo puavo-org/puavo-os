@@ -7,6 +7,9 @@ autopoweroff
 backgrounds
     Some backgrounds for login screen and desktop.
 
+blueman
+    Remove autostart file for blueman.
+
 bigtouch
     Gnome 3 customizations for big touchscreens.
 
@@ -40,6 +43,10 @@ disable_accounts_service
 
 disable_geoclue
     Disable Ubuntu's geoclue-stuff.
+
+disable_hp_accel
+    Disable HP accelerometer (triggers automatic screen rotation but does
+    not work properly).
 
 disable_suspend_by_tag
     Check out for device tag "nosuspend", and possibly block suspend.
@@ -119,11 +126,11 @@ libreoffice
     Set default office formats to MS Office formats, and add a "sujutellaan"
     font.
 
-lightdm
-    Some lightdm configurations (some of these come from ltsp-lightdm package).
-
 locales
     Configure needed locales and language support.
+
+motd
+    Configurations to update the Message of the Day.
 
 network_manager
     Allow users to modify network manager connections, but clean them
@@ -196,6 +203,9 @@ wacom
 
 webmenu
     Our own branding for webmenu.
+
+wine
+    Configurations for wine.
 
 workaround_firefox_local_swf_bug
     Do workaround a mime-types related Firefox Shockwafe Flash -bug (with

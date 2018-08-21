@@ -154,6 +154,8 @@ make-release-logos:
 # updating to images made with this.
 .PHONY: rootfs-image
 rootfs-image: $(rootfs_dir) $(image_dir)
+	$(_sudo) rsync -a '$(rootfs_dir)/var/cache/' \
+	    '$(rootfs_dir).var_cache_backup/'
 	$(_sudo) .aux/set-image-release '$(rootfs_dir)' '$(image_class)' \
 	    '$(notdir $(_image_file))' '$(release_name)'
 	$(_chroot_cmd) $(MAKE) -C '/puavo-os' make-release-logos

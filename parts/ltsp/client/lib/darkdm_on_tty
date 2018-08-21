@@ -2,6 +2,20 @@
 
 set -eu
 
+do_cowsay() {
+  cowsay_message=$(puavo-conf puavo.xsessions.cowsay.message)
+
+  echo
+  echo
+  echo "$cowsay_message" | /usr/games/cowsay
+  echo
+  echo 'You can reboot this host by pressing ENTER.'
+  echo
+  read answer
+  reboot
+  sleep 600
+}
+
 # If we are starting this to tty, we must be in some special
 # installation/update/recovery mode, and thus normal remote connection
 # restrictions should not apply.
@@ -23,5 +37,11 @@ setupcon
 
 # suppress most kernel messages from this terminal
 dmesg -n2
+
+dm="$(puavo-conf puavo.xsessions.display_manager)"
+if [ "$dm" = 'puavo-darkdm-cowsay' ]; then
+  do_cowsay
+  exit 0
+fi
 
 exec tmux new-session /usr/lib/puavo-ltsp-client/darkdm

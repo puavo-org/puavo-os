@@ -2,6 +2,12 @@
 
 set -eu
 
+if [ "$(puavo-conf puavo.puavomenu.enabled)" = "true" ]; then
+    HOSTNAME=$(hostname)
+    /opt/puavomenu/send_command "${HOME}/.config/puavomenu_${HOSTNAME}_socket" $@
+    exit 0
+fi
+
 setup_webmenu_window_mode() {
   setup_mode_status=0
   # set webmenu window type to be menu

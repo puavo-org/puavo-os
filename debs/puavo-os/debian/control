@@ -291,6 +291,7 @@ Depends: ${misc:Depends},
  nfs-common,
  nslcd,
  ntp,
+ openbox,
  perl,
  puavo-client,
  puavo-conf,
@@ -301,6 +302,7 @@ Depends: ${misc:Depends},
  python,
  python-appindicator,
  python-gtk2,
+ python-serial,
  ruby-dnsruby,
  ruby-json,
  ruby-ldap,
@@ -336,6 +338,16 @@ Depends: ${misc:Depends},
  wget
 Description: Bits and pieces needed inside the LTSP chroot image.
  Bits and pieces needed inside the LTSP chroot image.
+ .
+
+Package: puavomenu
+Architecture: all
+Depends: ${misc:Depends},
+ python3,
+ python3-yaml,
+ python3-xlib
+Description: PuavoMenu is a desktop menu for starting up programs.
+ PuavoMenu is a desktop menu for starting up programs
  .
 
 Package: puavo-pam

@@ -12,7 +12,6 @@ class webmenu {
 
     [ '/etc/webmenu'
     , '/etc/webmenu/desktop.d'
-    , '/etc/webmenu/personally-administered-device'
     , '/etc/webmenu/tab.d' ]:
       ensure => directory;
 
@@ -25,9 +24,6 @@ class webmenu {
 
     '/etc/webmenu/menu.yaml':
       content => template('webmenu/menu.yaml');
-
-    '/etc/webmenu/personally-administered-device/config.json':
-      content => template('webmenu/personally-administered-device-config.json');
 
     '/etc/webmenu/tab.d/ops.yaml':
       content => template('webmenu/tab.d/ops.yaml'),

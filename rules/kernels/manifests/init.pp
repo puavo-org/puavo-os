@@ -28,8 +28,8 @@ class kernels {
     }
   }
 
-  $default_kernel = '4.9.0-6-amd64'
-  $fresh_kernel   = '4.14.0-0.bpo.3-amd64'
+  $default_kernel = '4.9.0-7-amd64'
+  $fresh_kernel   = '4.17.0-0.bpo.1-amd64'
   $legacy_kernel  = '3.16.0-4-amd64'
 
   ::kernels::all_kernel_links {

@@ -1,3 +1,9 @@
 Package: <%= @packages_from_backports.join(' ') %>
 Pin: release n=stretch-backports
 Pin-Priority: 995
+
+# This should override the priority from puavo-os so we can install
+# bpo-kernels.
+Package: linux-compiler-gcc-6-x86
+Pin: release n=stretch-backports
+Pin-Priority: 1002
