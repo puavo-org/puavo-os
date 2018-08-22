@@ -12,6 +12,7 @@
   "puavo.service.nfs-server.enabled":               "true",
   "puavo.service.nscd.enabled":                     "true",
   "puavo.service.nslcd.enabled":                    "true",
+  "puavo.service.puavo-darkdm.enabled":             "false",
   "puavo.service.puavo-rest.enabled":               "true",
   "puavo.service.puavo-tftpd.enabled":              "true",
   "puavo.service.puavo-vpn-client-openvpn.enabled": "true",
@@ -19,7 +20,5 @@
   "puavo.service.redis-server.enabled":             "true",
   "puavo.service.shorewall.enabled":                "true",
   "puavo.service.slapd.enabled":                    "true",
-  "puavo.serialconsole.enabled":                    "true",
-  "puavo.xsessions.cowsay.message":                 "Moo, I am a Puavo bootserver!",
-  "puavo.xsessions.display_manager":                "puavo-darkdm-cowsay"
+  "puavo.serialconsole.enabled":                    "true"
 }
