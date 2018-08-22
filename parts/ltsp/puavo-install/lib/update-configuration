@@ -183,10 +183,13 @@ def update_wlan_configurations(restclient)
 end
 
 def update_certificate(restclient)
+  log(Syslog::LOG_INFO, ">>> Updating host certificate\n")
   run('puavo-update-certificate')
 end
 
 def update_extra_boot_scripts(restclient)
+  log(Syslog::LOG_INFO, ">>> Updating extra boot scripts\n")
+
   # These are fetched even if puavo.admin.run_extra_boot_scripts != 'true'
   # Error code 2 means that host was not behind a bootserver, which is okay.
   system('/usr/local/sbin/puavo-run-extra-boot-scripts', '--fetch-only')
@@ -197,6 +200,8 @@ def update_extra_boot_scripts(restclient)
 end
 
 def update_puavoadmins(restclient)
+  log(Syslog::LOG_INFO, ">>> Updating Puavo administrators\n")
+
   system('/usr/local/sbin/puavo-update-admins')
   if $?.exitstatus != 0 && $?.exitstatus != 2 then
     raise 'Running /usr/local/sbin/puavo-update-admins' \
