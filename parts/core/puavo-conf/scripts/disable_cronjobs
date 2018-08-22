@@ -18,6 +18,7 @@ for cronjobfile in /etc/cron.d/*       \
       | /etc/cron.daily/logrotate               \
       | /etc/cron.daily/puavo-cleanup-old-users \
       | /etc/cron.d/anacron                     \
+      | /etc/cron.d/autoreboot-at-night         \
       | /etc/cron.monthly/0anacron              \
       | /etc/cron.weekly/0anacron)
         # Save these files, anacron/cron need the *cron files for proper

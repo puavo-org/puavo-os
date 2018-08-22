@@ -2,6 +2,17 @@
 
 set -eu
 
+# XXX this should check the "puavo.service.cron.cronjobs" puavo-conf value
+# XXX for "autoreboot-at-night" once bootserver-branch merges are done
+if [ "$(puavo-conf puavo.hosttype)" = 'wirelessaccesspoint' ]; then
+  cat <<'EOF' > /etc/cron.d/autoreboot-at-night.tmp
+00 03 * * * root /sbin/reboot >/dev/null 2>&1
+EOF
+  mv /etc/cron.d/autoreboot-at-night.tmp /etc/cron.d/autoreboot-at-night
+else
+  rm -f /etc/cron.d/autoreboot-at-night
+fi
+
 [ "$(puavo-conf puavo.xsessions.default)" = 'puavo-infotv' ] || exit 0
 
 get_hour() {
