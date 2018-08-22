@@ -28,10 +28,14 @@ services='
 
 status=0
 
-# XXX look if this is slow and could be optimized (skipping systemctl-tool?)
+target_wants_dir='/etc/systemd/system/multi-user.target.wants'
 
 for service in ${services}; do
-  enabled=$(puavo-conf "puavo.service.${service}.enabled")
+  if ! enabled=$(puavo-conf "puavo.service.${service}.enabled"); then
+    echo "No puavo-conf variable for service '${service}' status" >&2
+    status=1
+    continue
+  fi
 
   # As an exception, do not run puavo-vpn-client-dnsmasq on netboot devices,
   # because that will mess up dns configuration (XXX perhaps we need a
@@ -43,16 +47,27 @@ for service in ${services}; do
     fi
   fi
 
-  if [ "${enabled}" = 'true' ]; then
-    if ! systemctl enable "${service}"; then
-      echo "Could not enable ${service}" >&2
+  if [ "${enabled}" != 'true' ]; then
+    if ! rm -f "${target_wants_dir}/${service}.service"; then
+      echo "Could not disable service '${service}'" >&2
       status=1
     fi
+    continue
+  fi
+
+  if [ -e "/lib/systemd/system/${service}.service" ]; then
+    service_target="/lib/systemd/system/${service}.service"
+  elif [ -e "/etc/systemd/system/${service}.service" ]; then
+    service_target="/etc/systemd/system/${service}.service"
   else
-    if ! systemctl disable "${service}"; then
-      echo "Could not disable ${service}" >&2
-      status=1
-    fi
+    echo "Could not find service '${service}' to enable" >&2
+    status=1
+    continue
+  fi
+
+  if ! ln -fns "$service_target" "${target_wants_dir}/${service}.service"; then
+    echo "Could not disable service '${service}'" >&2
+    status=1
   fi
 done
 
