@@ -2,6 +2,13 @@
 
 set -eu
 
+# do this because root password question uses "stty -echo"
+cleanup() {
+  stty echo
+}
+
+trap cleanup 0 INT TERM
+
 ask_install_target_hosttype() {
   puavo_install_target_hosttype=laptop
   while true; do
@@ -224,7 +231,7 @@ install_localbootdevice() {
   puavo_preseed_setup_filesystems_args=$2
 
   puavo-setup-filesystems $puavo_preseed_setup_filesystems_args
-  setup_state
+  setup_state "$puavo_install_hosttype"
 
   # Grub needs to be installed before images, because grub
   # configuration is updated during image installation by
@@ -251,7 +258,7 @@ setup_preinstalled_localbootdevice() {
     return 1
   fi
 
-  setup_state
+  setup_state "$puavo_hosttype"
 
   # some failures of update_configuration are inconsequential and can be
   # fixed after reboot
@@ -268,12 +275,59 @@ setup_preinstalled_localbootdevice() {
   return $update_configuration_retstatus
 }
 
+setup_root_password() {
+  while true; do
+    stty echo
+
+    printf 'Set root password: '
+    stty -echo
+    read root_password
+    echo
+
+    stty echo
+    if [ -z "$root_password" ]; then
+      echo 'Please provide a root password.'
+      continue
+    fi
+
+    printf 'Set root password (again): '
+    stty -echo
+    read root_password_again
+    echo
+
+    stty echo
+    if [ "$root_password" = "$root_password_again" ]; then
+      printf "%s\n%s\n" "$root_password" "$root_password" | passwd root \
+        2>/dev/null || return 1
+      install -o root -g root -m 600 /dev/null /state/.root_password.tmp
+      awk -F: '$1 == "root" { print $2 }' /etc/shadow \
+        > /state/.root_password.tmp || return 1
+      mv /state/.root_password.tmp /state/.root_password || return 1
+      return 0
+    fi
+
+    echo 'Passwords do not match, try again.'
+  done
+}
+
 setup_state() {
+  local puavo_hosttype
+  puavo_hosttype=$1
+
   mkdir -p /state
   mountpoint -q /state || mount /dev/mapper/puavo-state /state
   mkdir -p /state/etc
   cp -aT /etc/puavo /state/etc/puavo
   sync
+
+  if [ "$puavo_hosttype" = 'bootserver' ]; then
+    if ! setup_root_password; then
+      echo 'Could not setup root password for bootservers' >&2
+      return 1
+    fi
+  fi
+
+  return 0
 }
 
 update_configuration() {
