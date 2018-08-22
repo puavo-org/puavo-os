@@ -15,6 +15,7 @@ setup_cron
 manage_system_services
 set_machine_id
 set_systemd_default_target
+set_root_password
 setup_swap
 maybe_disable_acpi_wakeup
 setup_keyboard
