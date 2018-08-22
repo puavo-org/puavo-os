@@ -2,7 +2,7 @@ set_puavo_hosttype
 find_nbd_server_address
 mount_local_partitions
 setup_state_partition
-correct_desktop_file_ownership
+correct_file_ownership
 enable_utmp_logs
 puavo_certificate_setup
 setup_resolv_conf_and_etc_puavo
