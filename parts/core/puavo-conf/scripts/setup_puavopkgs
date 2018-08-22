@@ -3,6 +3,9 @@
 set -eu
 
 install_puavo_pkg_conf() {
+  puavo_pkg_cachedir=$1
+  puavo_pkg_rootdir=$2
+
   puavo_pkg_conf_path='/etc/puavo-pkg/puavo-pkg.conf'
 
   mkdir -p /etc/puavo-pkg
@@ -17,10 +20,10 @@ EOF
 
 status=0
 
-puavo_pkg_cachedir='/var/cache/puavo-pkg'
-puavo_pkg_rootdir='/var/lib/puavo-pkg'
+image_puavo_pkg_cachedir='/var/cache/puavo-pkg'
+image_puavo_pkg_rootdir='/var/lib/puavo-pkg'
 
-install_puavo_pkg_conf
+install_puavo_pkg_conf "$image_puavo_pkg_cachedir" "$image_puavo_pkg_rootdir"
 
 test_puavopkg_installation() {
   # this is faster than "puavo-pkg show $1"
@@ -45,11 +48,26 @@ fi
 # puavo-pkg images.  (Note that this does not install or update
 # the puavo-pkg packages, only sets them up at boottime).
 
-puavo_pkg_cachedir='/images/puavo-pkg/cache'
-puavo_pkg_rootdir='/images/puavo-pkg/root'
+host_puavo_pkg_cachedir='/images/puavo-pkg/cache'
+host_puavo_pkg_rootdir='/images/puavo-pkg/root'
 
-install_puavo_pkg_conf
+install_puavo_pkg_conf "$host_puavo_pkg_cachedir" "$host_puavo_pkg_rootdir"
 
-puavo-pkg reconfigure --all
+# Setup puavo-pkgs from under /images/puavo-pkg only if they are missing
+# from the system image, or the versions under /images/puavo-pkg are
+# newer than the versions in system image (we determine the age of
+# a puavo-pkg from the installation time).
+
+for localpkg_instlink in ${host_puavo_pkg_rootdir}/packages/*/installed; do
+  test -e "$localpkg_instlink" || continue
+
+  localpkg_name="$(basename "${localpkg_instlink%%/installed}")"
+
+  sysinst_link="${image_puavo_pkg_rootdir}/packages/${localpkg_name}/installed"
+  if [ ! -e "$sysinst_link" \
+       -o "$sysinst_link" -ot "$localpkg_instlink" ]; then
+    puavo-pkg reconfigure "$localpkg_name" || status=1
+  fi
+done
 
 exit $status

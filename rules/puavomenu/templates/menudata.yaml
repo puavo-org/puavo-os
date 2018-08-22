@@ -845,7 +845,7 @@ menus:
             fi: Älytaulut
             sv: Interaktiva tavlor
             de: Interaktive Wandtafeln
-        icon: /usr/share/icons/hicolor/128x128/apps/SMART_Tools.png
+        icon: /usr/share/icons/Faenza/categories/96/applications-science.png
         condition: "!personally_administered"
         programs:
             - smarttech-notebook
@@ -1166,6 +1166,8 @@ categories:
         name:
             en: All programs
             fi: Kaikki ohjelmat
+            sv: Alla program
+            de: Alle Programme
         position: 0
         menus:
             - menu-applications
@@ -1183,7 +1185,11 @@ categories:
             - org.gnome.Nautilus
 
   - category-subjects:
-        name: Oppiaineet
+        name: 
+            en: Subjects
+            fi: Oppiaineet
+            sv: Ämnen
+            de: Themen
         position: 1
         menus:
             - menu-physics

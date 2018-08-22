@@ -184,16 +184,22 @@ class ProgramButton(HoverIconButtonBase):
         'add_to_desktop': {
             'fi': 'Lisää työpöydälle',
             'en': 'Add to desktop',
+            'sv': 'Add to desktop',
+            'de': 'Add to desktop',
         },
 
         'add_to_panel': {
             'fi': 'Lisää alapaneeliin',
             'en': 'Add to bottom panel',
+            'sv': 'Add to bottom panel',
+            'de': 'Add to bottom panel',
         },
 
         'remove_from_faves': {
             'fi': 'Poista suosikeista',
             'en': 'Remove from favorites',
+            'sv': 'Remove from favorites',
+            'de': 'Remove from favorites',
         },
     }
 
