@@ -9,13 +9,17 @@ SIDEBAR_BUTTONS = [
         'name': 'change-password',
 
         'title': {
-            'en': 'Change your password',
-            'fi': 'Muuta salasanaasi',
+            'en': 'Change password',
+            'fi': 'Vaihda salasana',
+            'sv': 'Byt lösenord',
+            'de': 'Passwort ändern',
         },
 
         'description': {
-            'fi': 'Vaihda salasanaasi',
-            'en': 'Change your password',
+            'fi': 'Vaihda salasana',
+            'en': 'Change password',
+            'sv': 'Byt lösenord',
+            'de': 'Passwort ändern',
         },
 
         'icon': '/usr/share/icons/Faenza/emblems/96/emblem-readonly.png',
@@ -35,6 +39,8 @@ SIDEBAR_BUTTONS = [
         'title': {
             'en': 'Support',
             'fi': 'Tukisivusto',
+            'sv': 'Support',
+            'de': 'Support',
         },
 
         'icon': '/usr/share/icons/Faenza/status/96/dialog-question.png',
@@ -51,6 +57,8 @@ SIDEBAR_BUTTONS = [
         'title': {
             'en': 'System settings',
             'fi': 'Järjestelmän asetukset',
+            'sv': 'Systeminställningar',
+            'de': 'Systemeinstellungen',
         },
 
         'icon': '/usr/share/icons/Faenza/categories/96/applications-system.png',
@@ -155,6 +163,8 @@ SIDEBAR_BUTTONS = [
         'title': {
             'en': 'Shut down',
             'fi': 'Sammuta',
+            'sv': 'Stäng av',
+            'de': 'Herunterfahren',
         },
 
         'icon': '/usr/share/icons/oxygen/base/32x32/actions/system-shutdown.png',
