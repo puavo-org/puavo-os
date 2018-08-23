@@ -326,6 +326,8 @@ setup_state() {
       echo 'Could not setup root password for bootservers' >&2
       return 1
     fi
+
+    puavo-init-ds-slave
   fi
 
   return 0
