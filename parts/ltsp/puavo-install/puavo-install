@@ -393,6 +393,7 @@ puavo-register --accepted-devicetypes "$accepted_hosttypes" \
                ${puavo_preseed_register_args}
 
 puavo_hosttype=$(cat /etc/puavo/hosttype)
+puavo-conf puavo.hosttype "$puavo_hosttype"
 
 if is_preinstalled "$puavo_install_hosttype"; then
   setup_preinstalled_localbootdevice "$puavo_hosttype"
