@@ -30,6 +30,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(templatedir)/etc/pam.d
 	mkdir -p $(DESTDIR)$(templatedir)/var/lib/bind
 	mkdir -p $(DESTDIR)$(libdir)/puavo-ltsp-bootserver
+	mkdir -p $(DESTDIR)/var/lib/puavo
 
 .PHONY : install
 install : installdirs
