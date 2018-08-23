@@ -327,6 +327,7 @@ setup_state() {
       return 1
     fi
 
+    /etc/puavo-conf/scripts/setup_state_partition
     puavo-init-ds-slave
   fi
 
