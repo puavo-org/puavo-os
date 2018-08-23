@@ -2,6 +2,10 @@
 
 set -eu
 
+if [ -e /run/puavo/nbd-server ]; then
+  exit 0
+fi
+
 if [ "$USER" = 'Debian-gdm' ]; then
   # on login screen
   if [ -n "$(puavo-conf puavo.image.overlay)" ]; then
