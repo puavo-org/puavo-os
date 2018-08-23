@@ -56,6 +56,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/xsessions
 	mkdir -p $(DESTDIR)/var/lib/puavo-desktop/shared
 	mkdir -p $(DESTDIR)/var/lib/puavo-desktop/users
+	mkdir -p $(DESTDIR)/lib/systemd/system
 
 .PHONY : install
 install : installdirs
