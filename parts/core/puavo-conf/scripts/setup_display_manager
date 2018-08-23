@@ -15,11 +15,12 @@ case "$dm" in
     dm_service='/lib/systemd/system/nodm.service'
     ;;
   puavo-darkdm|puavo-darkdm-*)
-    # Pass on these values as valid.  Even though setting these here should
-    # not have any effect, because in these cases graphical.target should
-    # not be run anyway.
     default_dm='/usr/lib/puavo-ltsp-client/darkdm_on_tty'
     dm_service='/lib/systemd/system/puavo-darkdm.service'
+    ;;
+  tty)
+    default_dm=''
+    dm_service=''
     ;;
   *)
     echo "Unsupported display manager ${dm}" >&2
@@ -27,6 +28,14 @@ case "$dm" in
     ;;
 esac
 
-echo "$default_dm" > /etc/X11/default-display-manager
+if [ -n "$default_dm" ]; then
+  echo "$default_dm" > /etc/X11/default-display-manager
+else
+  rm -f /etc/X11/default-display-manager
+fi
 
-ln -fns "$dm_service" /etc/systemd/system/display-manager.service
+if [ -n "$dm_service" ]; then
+  ln -fns "$dm_service" /etc/systemd/system/display-manager.service
+else
+  rm -f /etc/systemd/system/display-manager.service
+fi
