@@ -82,7 +82,7 @@ def send_changed_primary_user_to_puavo(primary_user)
   cloud_restclient.post(uripath, :json => senddata)
 end
 
-def do_nothing; end
+def do_nothing(restclient); end
 
 def update_device_json(restclient)
   log(Syslog::LOG_INFO, ">>> Updating device json\n")
