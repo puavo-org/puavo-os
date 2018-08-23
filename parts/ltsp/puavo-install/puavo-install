@@ -227,11 +227,12 @@ install_image() {
 }
 
 install_localbootdevice() {
-  puavo_install_hosttype=$1
-  puavo_preseed_setup_filesystems_args=$2
+  puavo_hosttype=$1
+  puavo_install_hosttype=$2
+  puavo_preseed_setup_filesystems_args=$3
 
   puavo-setup-filesystems $puavo_preseed_setup_filesystems_args
-  setup_state "$puavo_install_hosttype"
+  setup_state "$puavo_hosttype"
 
   # Grub needs to be installed before images, because grub
   # configuration is updated during image installation by
@@ -403,7 +404,8 @@ fi
 
 case "$puavo_hosttype" in
   bootserver|laptop|wirelessaccesspoint)
-    install_localbootdevice "$puavo_install_hosttype"               \
+    install_localbootdevice "$puavo_hosttype"                       \
+                            "$puavo_install_hosttype"               \
                             "$puavo_preseed_setup_filesystems_args"
     ;;
 esac
