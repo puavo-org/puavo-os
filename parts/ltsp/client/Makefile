@@ -39,6 +39,8 @@ installdirs :
 	mkdir -p $(DESTDIR)$(sysconfdir)/network/if-up.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/NetworkManager/dispatcher.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/ssh
+	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system
+	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants
 	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system/systemd-udevd.service.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
 	mkdir -p $(DESTDIR)/lib/udev/rules.d
@@ -54,8 +56,6 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/xsessions
 	mkdir -p $(DESTDIR)/var/lib/puavo-desktop/shared
 	mkdir -p $(DESTDIR)/var/lib/puavo-desktop/users
-	mkdir -p $(DESTDIR)/lib/systemd/system
-	mkdir -p $(DESTDIR)/lib/systemd/system/multi-user.target.wants
 
 .PHONY : install
 install : installdirs
@@ -136,11 +136,11 @@ install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)/lib/systemd/system \
 		systemd/*
 
-	ln -fs -t $(DESTDIR)/lib/systemd/system/multi-user.target.wants \
-		../puavo-darkdm.service
+	ln -fs -t $(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants \
+		/lib/systemd/system/puavo-darkdm.service
 
-	ln -fs -t $(DESTDIR)/lib/systemd/system/multi-user.target.wants \
-		../puavo-report-system-version.service
+	ln -fs -t $(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants \
+		/lib/systemd/system/puavo-report-system-version.service
 
 .PHONY : clean
 clean :
