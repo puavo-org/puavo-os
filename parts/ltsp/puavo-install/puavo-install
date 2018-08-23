@@ -329,6 +329,7 @@ setup_state() {
 
     /etc/puavo-conf/scripts/setup_state_partition
     puavo-init-ds-slave
+    /usr/local/lib/puavo-handle-image-changes
   fi
 
   return 0
