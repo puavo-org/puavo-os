@@ -41,3 +41,5 @@ cat <<'EOF' > /etc/exports.tmp
 /images/.export/home *(rw,async,subtree_check,no_root_squash,sec=krb5p:krb5i:krb5)
 EOF
 mv /etc/exports.tmp /etc/exports
+
+exportfs -r
