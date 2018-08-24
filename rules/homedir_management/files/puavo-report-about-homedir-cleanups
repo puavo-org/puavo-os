@@ -2,6 +2,9 @@
 
 set -eu
 
+# no homedir cleanups (or reports) on netboot devices
+[ -e /run/puavo/nbd-server ] && exit 0
+
 [ -n "${GUEST_SESSION:-}" ] && exit 0
 
 if [ "$(puavo-conf puavo.admin.cleanup.homedirs.ensure_free_space)" != 'true' ]; then

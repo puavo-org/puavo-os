@@ -2,6 +2,9 @@
 
 set -eu
 
+# no homedir cleanups on netboot devices
+[ -e /run/puavo/nbd-server ] && exit 0
+
 logmsg() {
   logger -t puavo-clean-homedirs "$@"
 }
