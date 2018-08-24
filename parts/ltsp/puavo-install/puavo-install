@@ -240,6 +240,10 @@ install_localbootdevice() {
   install_grub
   install_image "$puavo_install_hosttype"
 
+  if [ "$puavo_hosttype" = 'bootserver' ]; then
+    /usr/local/lib/puavo-handle-image-changes
+  fi
+
   update_configuration
 
   do_umounts
@@ -332,7 +336,6 @@ setup_state() {
     env PUAVO_BOOTSERVER_INSTALLATION=true \
         /etc/puavo-conf/scripts/setup_krb5kdc
     puavo-init-ds-slave
-    /usr/local/lib/puavo-handle-image-changes
   fi
 
   return 0
