@@ -94,6 +94,10 @@ cat <<EOF > /etc/krb5.conf.tmp
 EOF
 mv /etc/krb5.conf.tmp /etc/krb5.conf
 
+if [ "${PUAVO_BOOTSERVER_INSTALLATION:-}" = 'true' ]; then
+  exit 0
+fi
+
 puavo_krb5kdc_dir='/var/lib/krb5kdc/puavo'
 
 install -o root -g root -m 600 "${puavo_krb5kdc_dir}/krb5.secrets" \

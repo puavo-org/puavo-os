@@ -329,6 +329,8 @@ setup_state() {
 
     /etc/puavo-conf/scripts/setup_state_partition
     /etc/puavo-conf/scripts/setup_slapd
+    env PUAVO_BOOTSERVER_INSTALLATION=true \
+        /etc/puavo-conf/scripts/setup_krb5kdc
     puavo-init-ds-slave
     /usr/local/lib/puavo-handle-image-changes
   fi
