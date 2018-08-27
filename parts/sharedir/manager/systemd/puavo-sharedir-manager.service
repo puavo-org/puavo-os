@@ -1,0 +1,8 @@
+[Unit]
+Description=Puavo Sharedir Manager
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+ExecStart=/usr/sbin/puavo-sharedir-manager
