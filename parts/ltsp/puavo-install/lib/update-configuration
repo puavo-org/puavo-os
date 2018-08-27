@@ -92,7 +92,10 @@ def update_device_json(restclient)
 
   device_json_path = '/state/etc/puavo/device.json'
 
-  uripath = "v3/devices/#{ get_hostname() }"
+  uripath = ($puavo_hosttype == 'bootserver' \
+	       ? "v3/boot_servers/#{ get_hostname() }" \
+	       : "v3/devices/#{ get_hostname() }")
+
   device = restclient.get(uripath).parse()
 
   remove_primary_user_override = false
@@ -213,6 +216,8 @@ end
 
 Syslog.open(File.basename($0), Syslog::LOG_CONS)
 
+$puavo_hosttype = puavoconf_get('puavo.hosttype')
+
 restclient = PuavoRestClient.new(:auth => :etc, :timeout => 30)
 
 #
@@ -222,13 +227,13 @@ restclient = PuavoRestClient.new(:auth => :etc, :timeout => 30)
 # to figure out which parts failed).
 #
 
-is_a_device = (puavoconf_get('puavo.hosttype') != 'bootserver')
+is_a_device = ($puavo_hosttype != 'bootserver')
 
 # For exitcode calculation to work properly, there should not be more than
 # sizeof(int) (32) functions here.  "device.json" should be updated first,
 # because others may depend on it.
 update_functions = [
-  is_a_device ? :update_device_json         : :do_nothing,
+                :update_device_json,
   is_a_device ? :update_external_files      : :do_nothing,
   is_a_device ? :update_wlan_configurations : :do_nothing,
                 :update_grub_environment,
