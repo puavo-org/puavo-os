@@ -42,7 +42,6 @@ cat <<EOF > /etc/samba/smb.conf.tmp
   realm = ${puavo_kerberos_realm}
   kerberos method = dedicated keytab
   dedicated keytab file = /etc/samba/cifs.keytab
-  send spnego principal = yes
 
   log level = 0
   obey pam restrictions = yes
