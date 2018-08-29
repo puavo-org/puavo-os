@@ -1,8 +1,9 @@
 #!/bin/sh
 
-set -e
+set -eu
 
-echo "Run following commands as a root in your LDAP-master:
+cat <<EOF
+Run following commands as a root in your LDAP-master:
 (if you have not already done so)
 
   FQDN=$(cat /etc/puavo/hostname).$(cat /etc/puavo/domain)
@@ -14,9 +15,17 @@ echo "Run following commands as a root in your LDAP-master:
   kadmin.local -r \${REALM} -q \"addprinc -randkey nfs/\${FQDN}\"
   kadmin.local -r \${REALM} -q \"addprinc -randkey HTTP/\${FQDN}\"
 
-  Press ENTER when ready."
+  Press ENTER when ready.
+EOF
 
 read ready
 
 puavo-init-ldap-slave --force
+
+if [ "${PUAVO_BOOTSERVER_INSTALLATION:-}" = 'true' ]; then
+  # this must be run after puavo-init-ldap-slave
+  # and before puavo-init-kdc-slave
+  /etc/puavo-conf/scripts/setup_samba
+fi
+
 puavo-init-kdc-slave --force

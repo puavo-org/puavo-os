@@ -331,10 +331,13 @@ setup_state() {
       return 1
     fi
 
+    # this affects setup_krb5kdc and puavo-init-ds-slave
+    export PUAVO_BOOTSERVER_INSTALLATION=true
+
+    /etc/puavo-conf/scripts/setup_hostname
     /etc/puavo-conf/scripts/setup_state_partition
     /etc/puavo-conf/scripts/setup_slapd
-    env PUAVO_BOOTSERVER_INSTALLATION=true \
-        /etc/puavo-conf/scripts/setup_krb5kdc
+    /etc/puavo-conf/scripts/setup_krb5kdc
     puavo-init-ds-slave
   fi
 
