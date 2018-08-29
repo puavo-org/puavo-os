@@ -8,12 +8,8 @@ class bootserver_slapd {
     '/etc/apparmor.d/local/usr.sbin.slapd':
       source => 'puppet:///modules/bootserver_slapd/local-apparmor-inclusions';
 
-    '/etc/default/slapd':
-      source => 'puppet:///modules/bootserver_slapd/etc_default_slapd';
-
-    '/etc/init.d/slapd':
-      mode   => '0755',
-      source => 'puppet:///modules/bootserver_slapd/etc_init.d_slapd';
+    '/etc/systemd/system/slapd.service':
+      source => 'puppet:///modules/bootserver_slapd/slapd.service';
   }
 
   ::puavo_conf::script {
