@@ -116,10 +116,10 @@ image_dir="${PUAVO_IMAGE_DIR:-/images}"
 if [ -e "${image_dir}" ]; then
     # Save the list of image filepaths to a temporary file.
     find "${image_dir}"  \
-        -mindepth 1 -maxdepth 1            \
-        \( -type f -o -type l \)           \
-        -name '*.img'                      \
-        >"${image_filepaths}"
+        -mindepth 1 -maxdepth 1                                      \
+        '(' -type f -o -type l ')'                                   \
+        -name '*.img' -a ! -name ltsp.img -a ! -name ltsp-backup.img \
+      > "${image_filepaths}"
 else
     echo > "${image_filepaths}"
 fi

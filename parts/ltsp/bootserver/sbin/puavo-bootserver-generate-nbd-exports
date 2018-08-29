@@ -34,8 +34,9 @@ find /etc/nbd-server/conf.d -maxdepth 1 -type f -name '*.conf' | while read file
 done
 
 find /images \
-  -maxdepth 1 -name '*.img' '(' -type f -or -type l ')' -printf '%f\n' \
-    | handle_imagefiles
+  -maxdepth 1 -name '*.img' -a ! -name ltsp.img -a ! -name ltsp-backup.img \
+    '(' -type f -or -type l ')' -printf '%f\n' \
+  | handle_imagefiles
 
 # get the listening nbd_server pid, and send HUP to it
 nbd_server_pid=$(lsof -t -u nbd -a -iTCP:10809 -sTCP:LISTEN) || true
