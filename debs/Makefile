@@ -10,12 +10,10 @@ _pkgs_ports     := autopoweroff    \
                    gnome-shell     \
                    grub2           \
                    gvfs            \
-                   krb5            \
                    linux           \
                    mutter          \
                    nwjs            \
                    openboard       \
-                   openldap        \
                    visionmedia-mon \
                    vtun            \
                    wine            \
