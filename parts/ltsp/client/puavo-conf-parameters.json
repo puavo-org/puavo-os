@@ -80,6 +80,9 @@
   "puavo.service.nscd.enabled": {
     "default": "false"
   },
+  "puavo.service.nmbd.enabled": {
+    "default": "false"
+  },
   "puavo.service.nslcd.enabled": {
     "default": "false"
   },
@@ -108,6 +111,9 @@
     "default": "false"
   },
   "puavo.service.slapd.enabled": {
+    "default": "false"
+  },
+  "puavo.service.smbd.enabled": {
     "default": "false"
   },
   "puavo.service.tlp.enabled": {

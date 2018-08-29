@@ -12,6 +12,7 @@ services='
   nbd-server
   NetworkManager
   nfs-server
+  nmbd
   nscd
   nslcd
   puavo-darkdm
@@ -24,6 +25,7 @@ services='
   sharedir-manager
   shorewall
   slapd
+  smbd
   tlp
 '
 

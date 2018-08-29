@@ -10,6 +10,7 @@
   "puavo.service.krb5-kdc.enabled":                 "true",
   "puavo.service.nbd-server.enabled":               "true",
   "puavo.service.nfs-server.enabled":               "true",
+  "puavo.service.nmbd.enabled":                     "true",
   "puavo.service.nscd.enabled":                     "true",
   "puavo.service.nslcd.enabled":                    "true",
   "puavo.service.puavo-darkdm.enabled":             "false",
@@ -21,6 +22,7 @@
   "puavo.service.sharedir-manager.enabled":         "true",
   "puavo.service.shorewall.enabled":                "true",
   "puavo.service.slapd.enabled":                    "true",
+  "puavo.service.smbd.enabled":                     "true",
   "puavo.serialconsole.enabled":                    "true",
   "puavo.xsessions.display_manager":                "tty"
 }
