@@ -10,6 +10,10 @@ class bootserver_slapd {
 
     '/etc/systemd/system/slapd.service':
       source => 'puppet:///modules/bootserver_slapd/slapd.service';
+
+    '/usr/local/lib/puavo-service-wait-for-slapd':
+      mode   => '0755',
+      source => 'puppet:///modules/bootserver_slapd/puavo-service-wait-for-slapd';
   }
 
   ::puavo_conf::script {

@@ -1,4 +1,5 @@
 class bootserver_krb5kdc {
+  include ::bootserver_slapd
   include ::packages
   include ::puavo_conf
 
@@ -7,15 +8,12 @@ class bootserver_krb5kdc {
       ensure => directory;
 
     '/etc/systemd/system/krb5-kdc.service.d/override.conf':
-      source => 'puppet:///modules/bootserver_krb5kdc/krb5-kdc_override.conf';
+      require => File['/usr/local/lib/puavo-service-wait-for-slapd'],
+      source  => 'puppet:///modules/bootserver_krb5kdc/krb5-kdc_override.conf';
 
     '/etc/logrotate.d/kdc':
       require => Package['logrotate'],
       source  => 'puppet:///modules/bootserver_krb5kdc/logrotate.conf';
-
-    '/usr/local/lib/puavo-kdc-wait-for-slapd':
-      mode   => '0755',
-      source => 'puppet:///modules/bootserver_krb5kdc/puavo-kdc-wait-for-slapd';
   }
 
   ::puavo_conf::script {
