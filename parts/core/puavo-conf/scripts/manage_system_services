@@ -34,7 +34,11 @@ status=0
 # XXX look if this is slow and could be optimized (skipping systemctl-tool?)
 
 for service in ${services}; do
-  enabled=$(puavo-conf "puavo.service.${service}.enabled")
+  if ! enabled=$(puavo-conf "puavo.service.${service}.enabled"); then
+    echo "No puavo-conf setting for puavo.service.${service}.enabled" >&2
+    status=1
+    continue
+  fi
 
   # As an exception, do not run puavo-vpn-client-dnsmasq on netboot devices,
   # because that will mess up dns configuration (XXX perhaps we need a
