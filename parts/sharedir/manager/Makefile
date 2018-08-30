@@ -1,6 +1,7 @@
 prefix      = /usr/local
 exec_prefix = $(prefix)
 sbindir     = $(exec_prefix)/sbin
+datarootdir = $(prefix)/share
 
 INSTALL         = install
 INSTALL_DATA    = $(INSTALL) -m 644
@@ -17,6 +18,7 @@ all:
 
 install-dirs:
 	mkdir -p $(DESTDIR)$(RUBY_LIB_DIR)
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/definitions
 	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants
 	mkdir -p $(DESTDIR)/lib/systemd/system
@@ -24,6 +26,8 @@ install-dirs:
 install: install-dirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) bin/puavo-sharedir-manager
 	cp -R lib/* $(DESTDIR)$(RUBY_LIB_DIR)
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-conf/definitions \
+		puavo-sharedir-manager.json
 	$(INSTALL_DATA) -t $(DESTDIR)/lib/systemd/system \
 		systemd/*
 	ln -fs -t $(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants\
