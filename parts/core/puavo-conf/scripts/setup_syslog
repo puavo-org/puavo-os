@@ -2,17 +2,61 @@
 
 set -eu
 
+do_not_remove_list=''
+
+receive_as_bootserver() {
+  do_not_remove_list='
+    /etc/cron.daily/logrotate
+    /etc/logrotate.d/hosts
+    /etc/rsyslog.d/receive_messages_to_var_log_hosts.conf
+  '
+
+  # Rotate logs every hour, daily is not quite good enough in case there are
+  # misbehaving hosts.
+  ln -fns ../cron.hourly/logrotate /etc/cron.daily/logrotate
+  install -o root -g adm -m 750 -d /var/log/hosts
+
+  cat <<'EOF' > /etc/logrotate.d/hosts.tmp
+/var/log/hosts/*.log {
+	compress
+	copytruncate
+	missingok
+	nocreate
+	notifempty
+	rotate 8
+	size 10M
+}
+EOF
+  mv /etc/logrotate.d/hosts.tmp /etc/logrotate.d/hosts
+
+  cat <<EOF > /etc/rsyslog.d/receive_messages_to_var_log_hosts.conf.tmp
+# provides TCP syslog reception
+module(load="imtcp")
+input(type="imtcp" port="514")
+
+module(load="imrelp")
+input(type="imrelp" port="20514")
+
+\$template HostFile,"/var/log/hosts/%HOSTNAME%.log"
+
+if (\$hostname != '$(hostname)') then ?HostFile
+EOF
+  mv /etc/rsyslog.d/receive_messages_to_var_log_hosts.conf.tmp \
+     /etc/rsyslog.d/receive_messages_to_var_log_hosts.conf
+}
+
 send_everything_to_bootserver() {
+  do_not_remove_list='/etc/rsyslog.d/send_everything_to_bootserver.conf'
+
   cat <<'EOF' > /etc/rsyslog.d/send_everything_to_bootserver.conf
 $ModLoad omrelp
 
 *.* :omrelp:syslog:20514;RSYSLOG_ForwardFormat
 EOF
-  rm -f /etc/rsyslog.d/send_some_to_bootserver_with_cache.conf
 }
 
 send_session_data_to_bootserver_with_cache() {
-  rm -f /etc/rsyslog.d/send_everything_to_bootserver.conf
+  do_not_remove_list='/etc/rsyslog.d/send_session_data_to_bootserver_with_cache.conf'
 
   cat <<'EOF' > /etc/rsyslog.d/send_some_to_bootserver_with_cache.conf
 module(load="omprog")
@@ -44,8 +88,9 @@ logging_policy="$(puavo-conf puavo.admin.logging.policy)"
 
 case "$logging_policy" in
   local-only)
-    rm -f /etc/rsyslog.d/send_everything_to_bootserver.conf \
-          /etc/rsyslog.d/send_some_to_bootserver_with_cache.conf
+    ;;
+  receive-as-bootserver)
+    receive_as_bootserver
     ;;
   send-everything-to-bootserver)
     send_everything_to_bootserver
@@ -58,5 +103,21 @@ case "$logging_policy" in
     exit 1
     ;;
 esac
+
+all_configuration_files='
+  /etc/cron.daily/logrotate
+  /etc/logrotate.d/hosts
+  /etc/rsyslog.d/receive_messages_to_var_log_hosts.conf
+  /etc/rsyslog.d/send_everything_to_bootserver.conf
+  /etc/rsyslog.d/send_session_data_to_bootserver_with_cache.conf
+'
+
+for conffile in $all_configuration_files; do
+  found=false
+  for do_not_remove in $do_not_remove_list; do
+    [ "$do_not_remove" = "$conffile" ] && found=true
+  done
+  $found || rm -f "$conffile"
+done
 
 exit 0
