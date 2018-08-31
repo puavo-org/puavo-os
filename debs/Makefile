@@ -14,6 +14,7 @@ _pkgs_ports     := autopoweroff    \
                    mutter          \
                    nwjs            \
                    openboard       \
+                   openldap        \
                    visionmedia-mon \
                    vtun            \
                    wine            \
