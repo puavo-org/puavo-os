@@ -255,7 +255,7 @@ def execute(server_socket, testrun)
 
     ## Periodical timeout check.
     if result.nil?
-      raise TestRunError.new('timeout') if Time.now() >= start_time + 120
+      raise TestRunError.new('timeout') if Time.now() >= start_time + 300
       yield ## Tick the caller.
       next
     end
