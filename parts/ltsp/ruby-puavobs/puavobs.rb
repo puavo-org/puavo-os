@@ -266,9 +266,7 @@ module PuavoBS
       <target type='serial' port='0'/>
     </console>
     <video>
-      <model type='vga' vram='8192' heads='1'>
-        <acceleration accel3d='no' accel2d='yes'/>
-      </model>
+      <model type='vga' vram='8192' heads='1'/>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x0'/>
     </video>
     <memballoon model='virtio'>
