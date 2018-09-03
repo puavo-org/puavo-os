@@ -1,19 +1,25 @@
 #!/bin/sh
 
-# obtain an exclusive lock on myself...
-# there should be only one instance of this program running
+set -eu
 
-exec 3<$0
-flock -nx 3 || { echo did not get a lock, exiting; exit 1; }
+images_dir=/images
+
+# use a common lock with puavo-bootserver-sync-images
+# (only one instance of these two programs should be running)
+image_updates_lock_path="${images_dir}/.image_updates_lock"
+test -e "$image_updates_lock_path" || touch "$image_updates_lock_path"
+exec 3< "$image_updates_lock_path"
+if ! flock -nx 3; then
+  echo did not get a lock on $image_updates_lock_path, exiting
+  exit 1
+fi
+
+exec 4>&1	# another way to write to stdout for log()
+exec 5>&2	# another way to write to stderr for log()
 
 #
 # argument parsing
 #
-
-set -eu
-
-exec 4>&1	# another way to write to stdout for log()
-exec 5>&2	# another way to write to stderr for log()
 
 log() {
   log_to_stdout=false
@@ -57,7 +63,6 @@ if ! args=$(getopt -n "$0" -o +f:n:r:q \
   usage
 fi
 
-images_dir=/images
 rdiffs_dir="${images_dir}/rdiffs"
 checksums_file="${images_dir}/CKSUMS"
 puavoinstall_libdir=/usr/lib/puavo-ltsp-install

@@ -1418,6 +1418,16 @@ at_exit do
   end
 end
 
+# use a common lock with puavo-install-and-update-ltspimages
+# (only one instance of these two programs should be running)
+image_updates_lockfile_path \
+  = "#{ $options[:download_path] }/.image_updates_lock"
+image_updates_lockfile = File.open(image_updates_lockfile_path, 'a+')
+if !image_updates_lockfile.flock(File::LOCK_NB|File::LOCK_EX) then
+ warn "Could not get a lock on #{ image_updates_lockfile_path }"
+ exit(1)
+end
+
 managed_images = nil
 statuscode = 0
 
@@ -1444,5 +1454,7 @@ ensure
 end
 
 Syslog.close()
+
+image_updates_lockfile.close
 
 exit(statuscode)
