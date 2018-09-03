@@ -597,6 +597,7 @@ class packages {
     , 'exfat-utils'
     , 'fuse'
     , 'gconf-editor'
+    , 'kamerka'
     , 'pass'
     , 'password-gorilla'
     , 'system-config-printer'
