@@ -20,7 +20,6 @@ class image::bundle::bootserver {
   # include ::bootserver_cups                   # XXX needs work
   # include ::bootserver_dummywlan              # XXX needs work
   # include ::bootserver_fluentd                # XXX needs work
-  # include ::bootserver_ldap                   # XXX needs work
   # include ::bootserver_ltspimages             # XXX needs work
   # include ::bootserver_munin                  # XXX needs work
   # include ::bootserver_nagios                 # XXX needs work
