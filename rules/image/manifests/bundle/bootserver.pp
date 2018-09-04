@@ -22,7 +22,6 @@ class image::bundle::bootserver {
   # include ::bootserver_fluentd                # XXX needs work
   # include ::bootserver_munin                  # XXX needs work
   # include ::bootserver_nagios                 # XXX needs work
-  # include ::bootserver_nss                    # XXX needs work
   # include ::bootserver_ntp                    # XXX needs work
   # include ::bootserver_pam                    # XXX needs work
   # include ::bootserver_ssh_server             # XXX needs work
