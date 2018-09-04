@@ -1068,8 +1068,6 @@ module SeriesControl
       info(5, "Given --image option, not removing unused images/diffs")
     elsif options[:keep_unused]
       info(5, "Given --keep-unused option, not removing unused images/diffs")
-    elsif options[:image]
-      info(5, "Given --image option, not removing unused images/diffs")
     elsif options[:no_puavo_series_url_lookup]
       info(5, "Given --no-puavo-series-url-lookup option," \
                 + " not removing unused images/diffs")
