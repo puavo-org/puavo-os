@@ -1,0 +1,55 @@
+#!/bin/sh
+
+set -eu
+
+images_dir=$1
+rdiffs_dir=$2
+
+files_managed_by_puavo_bootserver_sync_images() {
+  # this file is only created by puavo-bootserver-sync-images on bootservers,
+  # thus it is rather normal if it is missing
+  test -e /var/lib/puavo/images.json || return 0
+
+  # however, syntax errors in images.json are an error we must handle
+  if ! _managed_files=$(jq -r '.[] | .[]' /var/lib/puavo/images.json); then
+    echo 'could not parse /var/lib/puavo/images.json' >&2
+    return 1
+  fi
+
+  printf %s "$_managed_files" | sort | uniq
+}
+
+lookup_old_images() {
+  test -e "${images_dir}/ltsp.img" || return 0
+  find "$images_dir" -maxdepth 1 -type f -a \
+       '(' '(' -name '*.img' -o -name '*.img.tmp' ')' \
+           -a '!' -samefile "${images_dir}/ltsp.img" ')'
+}
+
+lookup_old_rdiffs() {
+  test -d "$rdiffs_dir" || return 0
+  find "$rdiffs_dir" -maxdepth 1 -type f -a \
+       '(' -name '*.rdiff' -o -name '*.rdiff.tmp' ')'
+}
+
+managed_files_list=$(files_managed_by_puavo_bootserver_sync_images)
+old_files_list=$(lookup_old_images; lookup_old_rdiffs)
+
+IFS='
+'
+for old_file in $old_files_list; do
+  # do not list an image as old if there is a file with the same name
+  # and a ".lock"-suffix
+  test -e "${old_file}.lock" && continue
+
+  found=false
+  for managed_file in $managed_files_list; do
+    if [ "$old_file" = "$managed_file" ]; then
+      found=true
+      break
+    fi
+  done
+  if ! $found; then
+    printf "%s\n" "$old_file"
+  fi
+done
