@@ -102,6 +102,11 @@ cron_d_cond_enable puavo-autopoweron <<'EOF'
 30 07 * * * root /usr/local/lib/puavo-autopoweron >/dev/null
 EOF
 
+cron_d_cond_enable puavo-bootserver-sync-images <<'EOF'
+# Sync images (for other hosts mostly).
+21 21 * * * root /usr/sbin/puavo-bootserver-sync-images >/dev/null 2>&1
+EOF
+
 cron_d_cond_enable puavo-update-airprint-ddns <<'EOF'
 # Update printers on DNS every fifteen minutes.
 */15 * * * * root /usr/local/sbin/puavo-update-airprint-ddns >/dev/null
