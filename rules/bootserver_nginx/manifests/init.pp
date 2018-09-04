@@ -1,5 +1,6 @@
 class bootserver_nginx {
   include ::packages
+  include ::puavo_conf
 
   File { require => Package['nginx'] }
 
@@ -37,6 +38,11 @@ class bootserver_nginx {
     '/usr/share/nginx/www/index.html':
       ensure => link,
       target => '/usr/share/nginx/html/index.html';
+  }
+
+  ::puavo_conf::definition {
+    'puavo-nginx.json':
+      source => 'puppet:///modules/bootserver_nginx/puavo-nginx.json';
   }
 
   Package <| title == nginx |>
