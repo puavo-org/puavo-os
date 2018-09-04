@@ -872,6 +872,15 @@ class ManagedImages
     @new_by_series = {}
   end
 
+  def system_image?(candidate_path)
+    our_boot_system_images = %w(ltsp.img ltsp-backup.img).map do |s|
+                               "#{ $options[:download_path] }/#{ s }"
+                             end
+    our_boot_system_images.any? do |imgpath|
+      File.identical?(candidate_path, imgpath)
+    end
+  end
+
   def add_syncfile(series_name, syncfile)
     [ @current_by_series, @new_by_series ].each do |by_series|
       by_series[series_name] ||= []
@@ -933,7 +942,11 @@ class ManagedImages
                   .flatten
     new_files = @new_by_series.values.flatten
 
-    files_to_delete = (old_files - new_files).uniq
+    files_to_possibly_delete = (old_files - new_files).uniq
+
+    # do not delete images that we may actually need to boot ourself
+    files_to_delete \
+      = files_to_possibly_delete.reject { |filepath| system_image?(filepath) }
 
     all_deleted_ok = true
 
@@ -969,6 +982,7 @@ class ManagedImages
 
     ask_and_delete = lambda do |path|
       return true if managed_files.include?(path)
+      return true if system_image?(path)
 
       answer = "yes"
       if ask_interactively
