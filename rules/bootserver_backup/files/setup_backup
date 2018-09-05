@@ -1,0 +1,32 @@
+#!/bin/sh
+
+set -eu
+
+status=0
+
+configure_rsync_backup_etc_home() {
+  authorized_hosts=$(puavo-conf puavo.admin.backup.authorized_hosts)
+  authorized_ssh_pubkey=$(puavo-conf puavo.admin.backup.authorized_ssh_pubkey)
+
+  mkdir -p -m 700 /root/.ssh
+  cat <<EOF > /root/.ssh/authorized_keys.tmp
+from="${authorized_hosts}",no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty,command="/usr/local/sbin/rsync-server-backup-etc-home" ${authorized_ssh_pubkey}
+EOF
+  mv /root/.ssh/authorized_keys.tmp /root/.ssh/authorized_keys
+}
+
+backup_modes=$(puavo-conf puavo.admin.backup.modes)
+
+for mode in $(printf %s "$backup_modes" | tr , ' '); do
+  case "$mode" in
+    rsync-backup-etc-home)
+      configure_rsync_backup_etc_home
+      ;;
+    *)
+      echo "Mode '${mode}' is not supported" >&2
+      status=1
+      ;;
+  esac
+done
+
+exit $status
