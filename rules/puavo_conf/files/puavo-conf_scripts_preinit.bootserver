@@ -18,6 +18,8 @@ set_systemd_default_target
 set_root_password
 setup_swap
 maybe_disable_acpi_wakeup
+setup_syslog
+setup_dbus
 setup_keyboard
 set_timezone
 setup_locale
