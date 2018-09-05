@@ -19,12 +19,12 @@ services='
   nslcd
   puavo-darkdm
   puavo-rest
+  puavo-sharedir-manager
   puavo-tftpd
   puavo-vpn-client-dnsmasq
   puavo-vpn-client-openvpn
   redis-server
   rpc-gssd
-  sharedir-manager
   shorewall
   slapd
   smbd
