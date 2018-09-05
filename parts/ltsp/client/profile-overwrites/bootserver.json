@@ -2,7 +2,6 @@
   "puavo.admin.logging.policy":                     "receive-as-bootserver",
   "puavo.admin.set_root_password":                  "true",
   "puavo.autopoweroff.enabled":                     "false",
-  "puavo.autopoweron.enabled":                      "true",
   "puavo.guestlogin.enabled":                       "false",
   "puavo.networking.ddns.dhcpd_interfaces":         "ltsp0,wlan0",
   "puavo.service.cron.cronjobs":                    "fix-homedir-permissions,fstrim,puavo-autopoweron,puavo-bootserver-sync-images,puavo-cleanup-old-users,puavo-update-airprint-ddns,remove-cups-jobs",
