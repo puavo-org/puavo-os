@@ -71,6 +71,9 @@
   "puavo.service.ModemManager.enabled": {
     "default": "false"
   },
+  "puavo.service.nagios-nrpe-server.enabled": {
+    "default": "false"
+  },
   "puavo.service.nbd-server.enabled": {
     "default": "false"
   },

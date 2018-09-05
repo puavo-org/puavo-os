@@ -7,6 +7,7 @@ class image::bundle::bootserver {
   include ::bootserver_inetd
   include ::bootserver_krb5kdc
   include ::bootserver_ltspimages
+  include ::bootserver_nagios
   include ::bootserver_network_interfaces
   include ::bootserver_nfs
   include ::bootserver_nginx
@@ -21,7 +22,6 @@ class image::bundle::bootserver {
   # include ::bootserver_dummywlan              # XXX needs work
   # include ::bootserver_fluentd                # XXX needs work
   # include ::bootserver_munin                  # XXX needs work
-  # include ::bootserver_nagios                 # XXX needs work
   # include ::bootserver_pam                    # XXX needs work
   # include ::bootserver_ssh_server             # XXX needs work
   # include ::bootserver_utmp                   # XXX needs work
