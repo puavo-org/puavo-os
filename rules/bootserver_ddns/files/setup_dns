@@ -12,6 +12,7 @@ get_etc_puavo() {
   echo "$etc_puavo_data"
 }
 
+# XXX setup_nagios has a copy of this
 lookup_ifdata() {
   if_data_arg=$1
   if_fieldname=$2

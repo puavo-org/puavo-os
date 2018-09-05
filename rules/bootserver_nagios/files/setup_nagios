@@ -6,8 +6,32 @@ read puavo_domain    < /etc/puavo/domain
 read puavo_hostname  < /etc/puavo/hostname
 read puavo_ldap_base < /etc/puavo/ldap/base
 
+# XXX copied from setup_dns
+lookup_ifdata() {
+  if_data_arg=$1
+  if_fieldname=$2
+  if_name=$3
+
+  if_data=$(ifdata "$if_data_arg" "$if_name" 2>/dev/null) || true
+  if [ -z "$if_data" ]; then
+    if_data=$(
+      awk -v if_fieldname="$if_fieldname" -v if_name="$if_name" '
+        $1 == "iface" && $2 == if_name { found_interface_section = 1 }
+        found_interface_section && $1 == if_fieldname { print $2; exit 0 }
+      ' /etc/network/interfaces /etc/network/interfaces.d/* 2>/dev/null) \
+        || true
+  fi
+
+  if [ -z "$if_data" ]; then
+    return 1
+  fi
+
+  printf "%s\n" "$if_data"
+}
+lookup_ip() { lookup_ifdata -pa address "$1"; }
+
 allowed_hosts=$(puavo-conf puavo.monitoring.nagios.allowed_hosts)
-ltsp0_ip_address=$(ifdata -pa ltsp0)
+ltsp0_ip_address=$(lookup_ip ltsp0)
 
 cat <<EOF > /etc/nagios/nrpe.cfg.tmp
 #############################################################################
