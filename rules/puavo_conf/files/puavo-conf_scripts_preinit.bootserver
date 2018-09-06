@@ -19,6 +19,7 @@ set_root_password
 setup_swap
 maybe_disable_acpi_wakeup
 setup_syslog
+setup_backup
 setup_dbus
 setup_keyboard
 set_timezone
