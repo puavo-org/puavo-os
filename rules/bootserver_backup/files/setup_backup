@@ -8,6 +8,11 @@ configure_rsync_backup_etc_home() {
   authorized_hosts=$(puavo-conf puavo.admin.backup.authorized_hosts)
   authorized_ssh_pubkey=$(puavo-conf puavo.admin.backup.authorized_ssh_pubkey)
 
+  if [ -z "$authorized_hosts" -o -z "$authorized_ssh_pubkey" ]; then
+    rm -f /root/.ssh/authorized_keys
+    return 0
+  fi
+
   mkdir -p -m 700 /root/.ssh
   cat <<EOF > /root/.ssh/authorized_keys.tmp
 from="${authorized_hosts}",no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty,command="/usr/local/sbin/rsync-server-backup-etc-home" ${authorized_ssh_pubkey}
