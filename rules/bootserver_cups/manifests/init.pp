@@ -1,5 +1,4 @@
 class bootserver_cups {
-  include ::apparmor
   include ::puavo
   require ::bootserver_nss
 
