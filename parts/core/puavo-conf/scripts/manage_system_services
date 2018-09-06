@@ -4,6 +4,7 @@ set -eu
 
 services='
   avahi-daemon
+  cups-watchdog
   fluentd
   incron
   isc-dhcp-server

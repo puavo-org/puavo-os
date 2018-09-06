@@ -56,6 +56,9 @@
   "puavo.service.cron.cronjobs": {
     "default": "puavo-cleanup-old-users"
   },
+  "puavo.service.cups-watchdog.enabled": {
+    "default": "false"
+  },
   "puavo.service.fluentd.enabled": {
     "default": "true"
   },

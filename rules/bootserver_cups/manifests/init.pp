@@ -8,22 +8,22 @@ class bootserver_cups {
       source  => 'puppet:///modules/bootserver_cups/setup_bootserver_cups';
   }
 
-# XXX cups-watchdog disabled for now
-# file {
-#    '/etc/init/cups-watchdog.conf':
-#      content => template('bootserver_cups/cups-watchdog.upstart'),
-#      mode    => '0644',
-#      require => File['/usr/local/lib/cups-watchdog'];
-#
-#    '/etc/init.d/cups-watchdog':
-#      ensure  => link,
-#      require => File['/etc/init/cups-watchdog.conf'],
-#      target  => '/lib/init/upstart-job';
-#
-#    '/usr/local/lib/cups-watchdog':
-#      content => template('bootserver_cups/cups-watchdog'),
-#      mode    => '0755';
-# }
+  file {
+     '/etc/systemd/system/cups-watchdog.service':
+       require => File['/usr/local/lib/cups-watchdog'],
+       source  => 'puppet:///modules/bootserver_cups/cups-watchdog.service';
 
-  Package <| title == cups |>
+     '/etc/systemd/system/multi-user.target.wants/cups-watchdog.service':
+       ensure  => link,
+       require => File['/etc/systemd/system/cups-watchdog.service'],
+       target  => '/etc/systemd/system/cups-watchdog.service';
+
+     '/usr/local/lib/cups-watchdog':
+       mode    => '0755',
+       require => Package['cups-client'],
+       source  => 'puppet:///modules/bootserver_cups/cups-watchdog';
+  }
+
+  Package <| title == cups
+          or title == cups-client |>
 }
