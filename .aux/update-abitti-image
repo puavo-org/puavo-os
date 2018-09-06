@@ -2,6 +2,9 @@
 
 set -eu
 
+# latest image can be looked at from
+# http://static.abitti.fi/usbimg/prod/latest.txt
+
 abitti_images_dir=/srv/abitti-images
 abitti_metadata_json_path="${abitti_images_dir}/abitti.json"
 incoming_dir="${abitti_images_dir}/incoming"
