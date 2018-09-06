@@ -1,29 +1,29 @@
 class bootserver_cups {
-  include ::puavo
-  require ::bootserver_nss
+  include ::packages
+  include ::puavo_conf
 
-  file {
-    '/etc/apparmor.d/local/usr.sbin.cupsd':
-      content => template('bootserver_cups/apparmor_usr.sbin.cupsd');
-
-    '/etc/cups/cupsd.conf':
-      content => template('bootserver_cups/cupsd.conf');
-
-    '/etc/cups/cups-files.conf':
-      content => template('bootserver_cups/cups-files.conf');
-
-    '/etc/init/cups-watchdog.conf':
-      content => template('bootserver_cups/cups-watchdog.upstart'),
-      mode    => '0644',
-      require => File['/usr/local/lib/cups-watchdog'];
-
-    '/etc/init.d/cups-watchdog':
-      ensure  => link,
-      require => File['/etc/init/cups-watchdog.conf'],
-      target  => '/lib/init/upstart-job';
-
-    '/usr/local/lib/cups-watchdog':
-      content => template('bootserver_cups/cups-watchdog'),
-      mode    => '0755';
+  ::puavo_conf::script {
+    'setup_bootserver_cups':
+      require => Package['cups'],
+      source  => 'puppet:///modules/bootserver_cups/setup_bootserver_cups';
   }
+
+# XXX cups-watchdog disabled for now
+# file {
+#    '/etc/init/cups-watchdog.conf':
+#      content => template('bootserver_cups/cups-watchdog.upstart'),
+#      mode    => '0644',
+#      require => File['/usr/local/lib/cups-watchdog'];
+#
+#    '/etc/init.d/cups-watchdog':
+#      ensure  => link,
+#      require => File['/etc/init/cups-watchdog.conf'],
+#      target  => '/lib/init/upstart-job';
+#
+#    '/usr/local/lib/cups-watchdog':
+#      content => template('bootserver_cups/cups-watchdog'),
+#      mode    => '0755';
+# }
+
+  Package <| title == cups |>
 }
