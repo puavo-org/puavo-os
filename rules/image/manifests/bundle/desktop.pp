@@ -2,8 +2,8 @@ class image::bundle::desktop {
   include ::blueman
   include ::chrome
   include ::chromium
-  include ::cups
   include ::desktop
+  include ::desktop_cups
   include ::devilspie
   include ::disable_accounts_service
   include ::disable_geoclue
