@@ -2,6 +2,18 @@
 
 set -eu
 
+read puavo_domain   < /etc/puavo/domain
+read puavo_hostname < /etc/puavo/hostname
+
+# puavo_admin_vpn_subnet=$(puavo-conf puavo.admin.vpn.subnet)
+puavo_admin_vpn_subnet='10.246.155.0/24'
+
+if [ -n "$puavo_admin_vpn_subnet" ]; then
+  allow_from_admin_vpn="Allow from ${puavo_admin_vpn_subnet}"
+else
+  allow_from_admin_vpn=''
+fi
+
 cat <<'EOF' > /etc/cups/cups-files.conf.tmp
 #
 # File/directory/user/group configuration file for the CUPS scheduler.
@@ -21,8 +33,9 @@ cat <<'EOF' > /etc/cups/cups-files.conf.tmp
 
 # Administrator user group, used to match @SYSTEM in cupsd.conf policy rules...
 # This cannot contain the Group value for security reasons...
+SystemGroup adm
 SystemGroup lpadmin
-
+SystemGroup puavo-os
 
 # User that is substituted for unauthenticated (remote) root accesses...
 #RemoteRoot remroot
@@ -58,7 +71,7 @@ ErrorLog /var/log/cups/error_log
 #FontPath /usr/share/cups/fonts
 
 # Location of LPD configuration
-#LPDConfigFile 
+#LPDConfigFile
 
 # Location of the file logging all pages printed by the scheduler and any
 # helper programs; may be the name "syslog". If not an absolute path, the value
@@ -83,11 +96,17 @@ PageLog /var/log/cups/page_log
 # SSL/TLS keychain for the scheduler...
 #ServerKeychain ssl
 
+# SSL/TLS certificate for the scheduler...
+ServerCertificate /etc/puavo/certs/host.crt
+
+# SSL/TLS private key for the scheduler...
+ServerKey /etc/puavo/certs/host.key
+
 # Location of other configuration files...
 #ServerRoot /etc/cups
 
 # Location of Samba configuration file...
-#SMBConfigFile 
+#SMBConfigFile
 
 # Location of scheduler state files...
 #StateDir /var/run/cups
@@ -99,7 +118,7 @@ PageLog /var/log/cups/page_log
 EOF
 mv /etc/cups/cups-files.conf.tmp /etc/cups/cups-files.conf
 
-cat <<'EOF' > /etc/cups/cups.conf.tmp
+cat <<EOF > /etc/cups/cupsd.conf.tmp
 #
 # Configuration file for the CUPS scheduler.  See "man cupsd.conf" for a
 # complete description of this file.
@@ -114,16 +133,26 @@ PageLogFormat
 # LogLevel debug2 gets usable now
 MaxLogSize 0
 
-# Only listen for connections from the local machine.
-Listen localhost:631
+# Allow remote access
+Port 631
 Listen /var/run/cups/cups.sock
 
 # Show shared printers on the local network.
-Browsing On
-BrowseLocalProtocols dnssd
+Browsing Off
+BrowseOrder allow,deny
+BrowseInterval 30
+BrowseTimeout 120
+BrowseAddress @IF(ltsp0)
+BrowseAddress @IF(tap0)
+BrowseAddress @IF(wlan0)
+BrowseLocalProtocols CUPS
 
 # Default authentication type, when authentication is required...
 DefaultAuthType Basic
+DefaultEncryption Required
+ServerAlias cups
+ServerAlias cups.${puavo_domain}
+ServerAlias ${puavo_hostname}.${puavo_domain}
 
 # Web interface setting...
 WebInterface Yes
@@ -131,11 +160,15 @@ WebInterface Yes
 # Restrict access to the server...
 <Location />
   Order allow,deny
+  Allow @LOCAL
+  ${allow_from_admin_vpn}
 </Location>
 
 # Restrict access to the admin pages...
 <Location /admin>
   Order allow,deny
+  Allow @LOCAL
+  ${allow_from_admin_vpn}
 </Location>
 
 # Restrict access to configuration files...
@@ -143,6 +176,8 @@ WebInterface Yes
   AuthType Default
   Require user @SYSTEM
   Order allow,deny
+  Allow @LOCAL
+  ${allow_from_admin_vpn}
 </Location>
 
 # Restrict access to log files...
@@ -150,6 +185,8 @@ WebInterface Yes
   AuthType Default
   Require user @SYSTEM
   Order allow,deny
+  Allow @LOCAL
+  ${allow_from_admin_vpn}
 </Location>
 
 # Set the default printer/job policies...
@@ -241,4 +278,4 @@ WebInterface Yes
   </Limit>
 </Policy>
 EOF
-mv /etc/cups/cups.conf.tmp /etc/cups/cups.conf
+mv /etc/cups/cupsd.conf.tmp /etc/cups/cupsd.conf
