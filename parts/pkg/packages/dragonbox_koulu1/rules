@@ -31,7 +31,8 @@ EOF
 	upstream_dir=$2
 
         unzip -q -d "${upstream_dir}" "${upstream_pack}"
-        chmod +x "${upstream_dir}/DB_Koulu_1_Pro_linux/DB Koulu 1 Pro.x86*"
+        chmod +x "${upstream_dir}/DB_Koulu_1_Pro_linux/DB Koulu 1 Pro.x86_64"
+        chmod +x "${upstream_dir}/DB_Koulu_1_Pro_linux/DB Koulu 1 Pro.x86"
 	;;
     *)
 	;;
