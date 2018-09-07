@@ -1,6 +1,5 @@
 #ZONE   INTERFACE       BROADCAST       OPTIONS
 inet    inet0           detect          dhcp,tcpflags,nosmurfs,bridge
 ltsp    ltsp0           detect          dhcp,tcpflags,nosmurfs,bridge
-ovpn    vpn1
+ovpn    tap0
 wlan    wlan0           detect          dhcp,tcpflags,nosmurfs,bridge
-avpn	altvpn1

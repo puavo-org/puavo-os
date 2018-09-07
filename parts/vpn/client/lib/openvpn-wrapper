@@ -26,7 +26,8 @@ fi
     --ca /etc/puavo/certs/orgcabundle.pem                  \
     --cert /etc/puavo/certs/host.crt                       \
     --client                                               \
-    --dev tap                                              \
+    --dev tap0                                             \
+    --dev-type tap                                         \
     --keepalive 10 60                                      \
     --key /etc/puavo/certs/host.key                        \
     --ns-cert-type server                                  \
