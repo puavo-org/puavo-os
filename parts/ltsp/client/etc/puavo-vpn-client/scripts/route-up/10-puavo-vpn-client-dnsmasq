@@ -1,0 +1,49 @@
+#!/bin/sh
+
+set -eu
+
+inet_aton() {
+  local count=3
+  local int=0
+  for num in $(echo "$1" | tr . ' '); do
+    int=$(($int + $num * 256**$count))
+    count=$(($count - 1))
+  done
+  echo "$int"
+}
+
+enabled="$(puavo-conf puavo.service.puavo-vpn-client-dnsmasq.enabled)"
+if [ "$enabled" != 'true' ]; then
+  exit 0
+fi
+
+kerberos_master=$(cat /etc/puavo/kerberos/master 2>/dev/null) || true
+ldap_master=$(    cat /etc/puavo/ldap/master     2>/dev/null) || true
+ldap_slave=$(     cat /etc/puavo/ldap/slave      2>/dev/null) || true
+topdomain=$(      cat /etc/puavo/topdomain       2>/dev/null) || true
+
+params=''
+
+if [ -n "$kerberos_master" ]; then
+  params="${params} string:${kerberos_master}"
+fi
+
+if [ -n "$ldap_master" ]; then
+  params="${params} string:${ldap_master}"
+fi
+
+if [ -n "$ldap_slave" ]; then
+  params="${params} string:${ldap_slave}"
+fi
+
+if [ -n "$topdomain" ]; then
+  params="${params} string:images.${topdomain} string:imageproxy.${topdomain}"
+fi
+
+[ -z "$params" ] && exit 0
+
+dbus-send --system --dest=org.puavo.VPN.dnsmasq \
+  /uk/org/thekelleys/dnsmasq                    \
+  uk.org.thekelleys.SetServers                  \
+  "uint32:$(inet_aton "$route_vpn_gateway")"    \
+  $params

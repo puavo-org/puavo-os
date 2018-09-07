@@ -1,0 +1,56 @@
+#!/bin/sh
+#
+# Copyright 2013 Opinsys Oy
+#
+# This script is called from OpenVPN when client connection to VPN
+# server is established. The script writes a configuration file
+# /etc/dnsmasq.d/10-puavo-vpn.conf that redirects DNS queries for ldap
+# and kerberos master servers to go to nameserver at the gateway
+# address.
+#
+# This makes it possible to have multiple VPN gateways where each
+# gateway has its own endpoint address. When the client connects to
+# different VPN server, the settings change and dnsmasq is restarted for
+# the changes to take effect.
+
+set -eu
+
+conffile='/etc/dnsmasq.d/10-puavo-vpn.conf'
+
+# XXX get rid of hosttype handling
+if [ "$(puavo-conf puavo.hosttype)" != 'bootserver' ]; then
+  rm -f "$conffile"
+  exit 0
+fi
+
+read kerberos_master < /etc/puavo/kerberos/master
+read ldap_master     < /etc/puavo/ldap/master
+read topdomain       < /etc/puavo/topdomain
+
+# XXX $kerberos_master should be independent from $ldap_master,
+# XXX but in our typical configuration these are the same.
+# XXX This should not be the case here.  puavo-register should be fixed
+# XXX to not fallback to $ldap_master in case "kerberos_host" is missing
+# XXX in organisation information, so that /etc/puavo/kerberos/master
+# XXX could have the correct value.  Meanwhile, apply this workaround
+# XXX to use "kerberos.$topdomain" as the kerberos server.
+if [ "$kerberos_master" = "$ldap_master" ]; then
+  kerberos_master="kerberos.$topdomain"
+fi
+
+tmpfile="${conffile}.tmp"
+
+cat <<EOF > "$tmpfile"
+server=/${ldap_master}/${route_vpn_gateway}
+server=/${kerberos_master}/${route_vpn_gateway}
+server=/ntp.${topdomain}/${route_vpn_gateway}
+server=/private-archive.${topdomain}/${route_vpn_gateway}
+server=/images.${topdomain}/${route_vpn_gateway}
+EOF
+
+if ! cmp "$conffile" "$tmpfile" 2>/dev/null; then
+  mv "$tmpfile" "$conffile"
+  service dnsmasq restart
+else
+  rm -f "$tmpfile"
+fi
