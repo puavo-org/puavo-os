@@ -5,6 +5,11 @@ set -eu
 # Disable most cronjobs (those mostly cause unnecessary load), but logrotate
 # is actually useful when /state is used.
 
+if ! munin_enabled=$(puavo-conf puavo.service.munin-node.enabled \
+	               2>/dev/null); then
+  munin_enabled=false
+fi
+
 for cronjobfile in /etc/cron.d/*       \
                    /etc/cron.hourly/*  \
                    /etc/cron.daily/*   \
@@ -13,15 +18,19 @@ for cronjobfile in /etc/cron.d/*       \
   test -e "$cronjobfile" || continue
 
   case "$cronjobfile" in
-    /etc/cron.daily/0anacron               \
-      | /etc/cron.daily/logrotate          \
-      | /etc/cron.d/anacron                \
-      | /etc/cron.monthly/0anacron         \
+    /etc/cron.daily/0anacron       \
+      | /etc/cron.daily/logrotate  \
+      | /etc/cron.d/anacron        \
+      | /etc/cron.monthly/0anacron \
       | /etc/cron.weekly/0anacron)
         # Save these files, anacron/cron need the *cron files for proper
         # functioning and we want to run logrotate to prevent /state from
         # filling up.
         continue
+        ;;
+    /etc/cron.d/munin \
+      | /etc/cron.d/munin-node)
+        [ "$munin_enabled" != 'true' ] && rm -f "$cronjobfile"
         ;;
     *)
       rm -f "$cronjobfile"
