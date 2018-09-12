@@ -346,7 +346,7 @@ if ! $only_update_config; then
     exitstatus=1
   else
     mv "${images_dir}/boot/grub/version.tmp" "${images_dir}/boot/grub/version"
-    echo "Grub has been installed to ${grub_target_devices}."
+    echo "Grub has been installed to: $(echo $grub_target_devices)."
   fi
 fi
 
