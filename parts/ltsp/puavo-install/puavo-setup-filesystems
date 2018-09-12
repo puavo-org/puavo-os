@@ -103,6 +103,88 @@ module DiskHandler
       rescue true
   end
 
+  def self.maybe_wipe_current_raid_setups()
+    md_device_list \
+      = begin
+          IO.readlines('/proc/mdstat').map do |line|
+            first_field = line.split[0]
+            first_field && first_field.match(/\Amd[0-9]+\z/) \
+              ? first_field \
+              : nil
+          end.compact
+        rescue Errno::ENOENT
+          return
+        end
+
+    # XXX to wipe raid-setups something like the following might be necessary:
+    # XXX (we should possibly ask user confirmation before doing this)
+    # XXX
+    # XXX   for puavodev in /dev/puavo/*; do
+    # XXX     lvremove -f $puavodev
+    # XXX   done
+    # XXX   vgremove puavo
+    # XXX   mdadm --stop /dev/md0
+    # XXX   mdadm --zero-superblock /dev/sda
+    # XXX   mdadm --zero-superblock /dev/sdb
+    # XXX   mdadm --remove /dev/md0
+  end
+
+  def self.setup_raid_if_possible()
+    disks_for_mirroring = QueryDiskInfo::list_disks_for_mirroring()
+    return unless disks_for_mirroring
+
+    devicepaths_for_mirroring = disks_for_mirroring.map { |d| "/dev/#{ d }" }
+
+    loop do
+      puts "\nThe following disks can be used for mirroring RAID:\n"
+      QueryDiskInfo::show_disk_devices(disks_for_mirroring)
+      msg = "\nUse #{ disks_for_mirroring.join('+') }" \
+              + " in mirroring RAID setup?\n" \
+              + '(type "yes" to destroy data and setup RAID)'
+
+      answer = UI::ask_with_default(msg, 'no')
+      case answer
+        when 'yes'
+          break
+        when 'no'
+          puts 'NOT setting up RAID now.'
+          return
+#        else
+          puts 'Please answer "yes" or "no".'
+      end
+    end
+
+    # XXX this does not yet do anything useful
+    # maybe_wipe_current_raid_setups()
+
+    devicepaths_for_mirroring.each do |diskdev|
+      raid_partition(diskdev)
+    end
+
+    spare_args = (disks_for_mirroring.count > 2) \
+                   ? [ "--spare-devices=#{ disks_for_mirroring.count - 2 }" ] \
+                   : []
+
+    run('mdadm', '--create',
+                 '--run',
+                 '--verbose',
+                 '/dev/md0',
+                 '--level=mirror',
+                 '--raid-devices=2',
+                 *spare_args,
+                 *(devicepaths_for_mirroring.map { |dev| "#{ dev }1" }))
+  end
+
+  def self.raid_partition(device)
+    # clean up possible confusing mess from the device
+    run('dd', 'if=/dev/zero', "of=#{ device }", 'count=2K',
+        { :err => '/dev/null' })
+
+    IO.popen("fdisk #{ device }", 'w') do |f|
+      f.print "n\np\n1\n\n\nt\nfd\na\np\nw\n"
+    end
+  end
+
   def self.do_fs_setup(conf, vgname)
     fs_conf = conf.clone
 
@@ -146,7 +228,7 @@ module DiskHandler
     # create an lvm partition
     # see http://www.walkernews.net/2007/07/02/how-to-create-linux-lvm-in-3-minutes/
     IO.popen("fdisk #{ fs_conf['device'] }", 'w') do |f|
-      f.print "n\np\n1\n#{ fs_conf['first_sector'] }\n#{ fs_conf['last_sector'] }\nt\n8e\na\n1\np\nw\n"
+      f.print "n\np\n1\n#{ fs_conf['first_sector'] }\n#{ fs_conf['last_sector'] }\nt\n8e\na\np\nw\n"
     end
   end
 
@@ -211,15 +293,20 @@ module DiskHandler
 end
 
 module QueryDiskInfo
-  def self.list_possible_disks_for_mirroring(disk_device_regexp)
+  # possible choices here should sort so that "md0" is the first if it exists
+  Disk_device_regexp = /\A(md[0-9]+|mmcblk[0-9]+|[sv]d[a-z])\z/
+
+  def self.list_disks_for_mirroring()
     # return a list of devices if there are multiple disks with the same size,
     # otherwise return nil
 
     devices_by_size = {}
     IO.readlines('/proc/partitions').each do |line|
       disk_size, disk_name = * line.split(' ')[2,3]
-      next unless disk_size && disk_name && disk_name.match(disk_device_regexp)
-      (devices_by_size[disk_size.to_i] ||= []) << disk_name
+      next unless disk_size && disk_name
+      next unless disk_name.match(Disk_device_regexp)
+      next if disk_name.match(/\Amd[0-9]+\z/)       # no raid devices
+      (devices_by_size[disk_size.to_i] ||= []) << "#{ disk_name }"
     end
 
     biggest_common_disksize = devices_by_size.keys.sort.last
@@ -241,23 +328,18 @@ module QueryDiskInfo
       STDERR.puts msg
     end
 
-    disk_device_regexp = /\A([vs]d[a-z]|mmcblk[0-9]+|nvme[0-9]+n[0-9]+)\z/
-
     chosen_disk_device = nil
     until choosable_disk_devices.include?(chosen_disk_device) do
+      # these should sort here so that "md0" is the first if it exists
       all_disk_devices = IO.readlines('/proc/partitions') \
                            .map { |s| s.split(' ')[3] }   \
-                           .select { |s| s && s.match(disk_device_regexp) } \
+                           .select { |s| s && s.match(Disk_device_regexp) } \
                            .sort
-
-      disk_devices_for_mirroring \
-        = list_possible_disks_for_mirroring(disk_device_regexp)
 
       # do not allow installation to the device where the currently running
       # system resides
       choosable_disk_devices \
-        = (disk_devices_for_mirroring ? %w(mirroring-raid) : []) \
-            + all_disk_devices - [ current_system_device ].compact
+        = all_disk_devices - [ current_system_device ].compact
 
       if choosable_disk_devices.empty? then
         raise 'Could not find any disk device where we could install to'
@@ -265,7 +347,7 @@ module QueryDiskInfo
 
       puts '-----'
       puts "We can install to the following disk devices:\n"
-      show_disk_devices(choosable_disk_devices, disk_devices_for_mirroring)
+      show_disk_devices(choosable_disk_devices)
 
       if chosen_disk_device.nil? then
         chosen_disk_device = choosable_disk_devices[0]
@@ -448,18 +530,10 @@ module QueryDiskInfo
       unless images_dm_path
   end
 
-  def self.show_disk_devices(disk_devices, mirroring_devices=nil)
+  def self.show_disk_devices(disk_devices)
     sleep(1.5)
 
     disk_devices.each do |device|
-      if device == 'mirroring-raid' then
-        if mirroring_devices then
-          print "\n[mirroring-raid]\n  RAID mirror for " \
-                   + mirroring_devices.join('+') + "\n" \
-        end
-        next
-      end
-
       print "\n[#{ device }]\n"
       system("fdisk -l /dev/#{ device } | sed 's/^/  /' | more") \
         or raise "Error running fdisk for device '#{ device }'"
@@ -614,6 +688,10 @@ end
 vgname = (hosttype == 'diskinstaller') ? 'puavoinstaller' : 'puavo'
 
 DiskHandler::cleanup_disk_environment(hosttype, vgname)
+
+if hosttype == 'bootserver' then
+  DiskHandler::setup_raid_if_possible()
+end
 
 case hosttype
   when 'bootserver', 'diskinstaller', 'laptop', 'wirelessaccesspoint'
