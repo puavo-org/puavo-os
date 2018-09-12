@@ -59,6 +59,7 @@ class packages {
     , 'isc-dhcp-server'
     , 'krb5-kdc'
     , 'logrotate'
+    , 'mdadm'
     , 'monitoring-plugins'
     , 'munin'
     , 'munin-node'
