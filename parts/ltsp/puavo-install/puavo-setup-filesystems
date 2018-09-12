@@ -140,16 +140,16 @@ module DiskHandler
       QueryDiskInfo::show_disk_devices(disks_for_mirroring)
       msg = "\nUse #{ disks_for_mirroring.join('+') }" \
               + " in mirroring RAID setup?\n" \
-              + '(type "yes" to destroy data and setup RAID)'
+              + '(type "yes" to destroy data and setup RAID, "no" otherwise) '
 
-      answer = UI::ask_with_default(msg, 'no')
-      case answer
+      answer = HighLine.ask(msg) { |q| q.whitespace = nil }
+      case answer.strip
         when 'yes'
           break
         when 'no'
           puts 'NOT setting up RAID now.'
           return
-#        else
+        else
           puts 'Please answer "yes" or "no".'
       end
     end
