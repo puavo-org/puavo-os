@@ -211,6 +211,23 @@ module DiskHandler
 end
 
 module QueryDiskInfo
+  def self.list_possible_disks_for_mirroring(disk_device_regexp)
+    # return a list of devices if there are multiple disks with the same size,
+    # otherwise return nil
+
+    devices_by_size = {}
+    IO.readlines('/proc/partitions').each do |line|
+      disk_size, disk_name = * line.split(' ')[2,3]
+      next unless disk_size && disk_name && disk_name.match(disk_device_regexp)
+      (devices_by_size[disk_size.to_i] ||= []) << disk_name
+    end
+
+    biggest_common_disksize = devices_by_size.keys.sort.last
+    return nil unless biggest_common_disksize
+    return nil unless devices_by_size[biggest_common_disksize].count > 1
+    return devices_by_size[biggest_common_disksize].sort
+  end
+
   def self.ask_device()
     choosable_disk_devices = []
 
@@ -230,12 +247,17 @@ module QueryDiskInfo
     until choosable_disk_devices.include?(chosen_disk_device) do
       all_disk_devices = IO.readlines('/proc/partitions') \
                            .map { |s| s.split(' ')[3] }   \
-                           .select { |s| s && s.match(disk_device_regexp) }
+                           .select { |s| s && s.match(disk_device_regexp) } \
+                           .sort
+
+      disk_devices_for_mirroring \
+        = list_possible_disks_for_mirroring(disk_device_regexp)
 
       # do not allow installation to the device where the currently running
       # system resides
       choosable_disk_devices \
-        = all_disk_devices - [ current_system_device ].compact
+        = (disk_devices_for_mirroring ? %w(mirroring-raid) : []) \
+            + all_disk_devices - [ current_system_device ].compact
 
       if choosable_disk_devices.empty? then
         raise 'Could not find any disk device where we could install to'
@@ -243,9 +265,9 @@ module QueryDiskInfo
 
       puts '-----'
       puts "We can install to the following disk devices:\n"
-      show_disk_devices(choosable_disk_devices)
+      show_disk_devices(choosable_disk_devices, disk_devices_for_mirroring)
 
-      if chosen_disk_device.nil?
+      if chosen_disk_device.nil? then
         chosen_disk_device = choosable_disk_devices[0]
       end
 
@@ -426,10 +448,20 @@ module QueryDiskInfo
       unless images_dm_path
   end
 
-  def self.show_disk_devices(disk_devices)
+  def self.show_disk_devices(disk_devices, mirroring_devices=nil)
     sleep(1.5)
+
     disk_devices.each do |device|
-      system("fdisk -l /dev/#{ device } | more") \
+      if device == 'mirroring-raid' then
+        if mirroring_devices then
+          print "\n[mirroring-raid]\n  RAID mirror for " \
+                   + mirroring_devices.join('+') + "\n" \
+        end
+        next
+      end
+
+      print "\n[#{ device }]\n"
+      system("fdisk -l /dev/#{ device } | sed 's/^/  /' | more") \
         or raise "Error running fdisk for device '#{ device }'"
     end
   end
