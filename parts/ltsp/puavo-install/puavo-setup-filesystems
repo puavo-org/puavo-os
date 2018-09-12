@@ -573,6 +573,11 @@ end
 UI::parse_args
 
 hosttype = UI::hosttype || PuavoFacts::get('puavo_hosttype')
+unless DiskHandler::Filesystems[hosttype] then
+  warn "No filesystem scheme defined for hosttype '#{ hosttype }'," \
+         + ' try --hosttype'
+  exit(1)
+end
 
 vgname = (hosttype == 'diskinstaller') ? 'puavoinstaller' : 'puavo'
 
