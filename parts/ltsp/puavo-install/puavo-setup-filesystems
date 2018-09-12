@@ -190,10 +190,11 @@ module DiskHandler
 
     fs_setup_phases = []
 
-    if fs_conf['partition'] == 'whole'
+    if fs_conf['partition'] == 'whole' then
       fs_setup_phases += [ :wipe_device ] if conf['wipe']
       fs_setup_phases += [ :lvm_partition, :puavo_filesystems ]
-      if fs_conf['device'].match(%r{\A(mmcblk|nvme)[0-9]+n[0-9]+\z}) then
+      special_disk_regexp = %r{\A((md|mmcblk)[0-9]+|nvme[0-9]+n[0-9]+)\z}
+      if fs_conf['device'].match(special_disk_regexp) then
         fs_conf['partition'] = "#{ fs_conf['device'] }p1"
       else
         fs_conf['partition'] = "#{ fs_conf['device'] }1"
@@ -294,7 +295,7 @@ end
 
 module QueryDiskInfo
   # possible choices here should sort so that "md0" is the first if it exists
-  Disk_device_regexp = /\A(md[0-9]+|mmcblk[0-9]+|[sv]d[a-z])\z/
+  Disk_device_regexp = /\A((md|mmcblk)[0-9]+|nvme[0-9]+n[0-9]+|[sv]d[a-z])\z/
 
   def self.list_disks_for_mirroring()
     # return a list of devices if there are multiple disks with the same size,
