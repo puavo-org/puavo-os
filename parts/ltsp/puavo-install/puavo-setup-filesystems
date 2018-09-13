@@ -154,7 +154,7 @@ module DiskHandler
 
   def self.setup_raid_if_possible()
     disks_for_mirroring = QueryDiskInfo::list_disks_for_mirroring()
-    return unless disks_for_mirroring
+    return false unless disks_for_mirroring
 
     devicepaths_for_mirroring = disks_for_mirroring.map { |d| "/dev/#{ d }" }
 
@@ -171,7 +171,7 @@ module DiskHandler
           break
         when 'no'
           puts 'NOT setting up RAID now.'
-          return
+          return false
         else
           puts 'Please answer "yes" or "no".'
       end
@@ -195,6 +195,10 @@ module DiskHandler
                  '--raid-devices=2',
                  *spare_args,
                  *(devicepaths_for_mirroring.map { |dev| "#{ dev }1" }))
+
+    puts ''
+
+    return true
   end
 
   def self.raid_partition(device)
@@ -425,7 +429,7 @@ module QueryDiskInfo
     last_sector
   end
 
-  def self.ask_device_and_partition_with_confirmation(hosttype)
+  def self.ask_device_and_partition_with_confirmation(hosttype, raid_setup_done)
     do_it        = false
     device       = nil
     partition    = nil
@@ -434,15 +438,21 @@ module QueryDiskInfo
     wipe         = false
 
     until do_it do
-      device    = QueryDiskInfo::ask_device()
-      partition = QueryDiskInfo::ask_partition(device)
+      if raid_setup_done then
+        device    = 'md0'
+        partition = 'whole'
+      else
+        device    = QueryDiskInfo::ask_device()
+        partition = QueryDiskInfo::ask_partition(device)
+      end
+
       if partition == 'whole'
         first_sector = 2048
         last_sector  = QueryDiskInfo::ask_last_sector(device, first_sector)
 
         # Let the user set the size of the following filesystems:
         [
-         ['imageoverlays', UI::ImageoverlaySizePrompt],
+          ['imageoverlays', UI::ImageoverlaySizePrompt],
         ].each do |fs_name, prompt_key|
           fs = DiskHandler::Filesystems[hosttype][fs_name]
           next if fs.nil?
@@ -712,13 +722,15 @@ vgname = (hosttype == 'diskinstaller') ? 'puavoinstaller' : 'puavo'
 
 DiskHandler::cleanup_disk_environment(hosttype, vgname)
 
+raid_setup_done = false
 if hosttype == 'bootserver' then
-  DiskHandler::setup_raid_if_possible()
+  raid_setup_done = DiskHandler::setup_raid_if_possible()
 end
 
 case hosttype
   when 'bootserver', 'diskinstaller', 'laptop', 'wirelessaccesspoint'
-    conf = QueryDiskInfo::ask_device_and_partition_with_confirmation(hosttype)
+    conf = QueryDiskInfo::ask_device_and_partition_with_confirmation(hosttype,
+             raid_setup_done)
     DiskHandler::do_fs_setup(conf, vgname)
   else
     puts "Hosttype '#{ hosttype }' does not need to setup local filesystems."
