@@ -8,12 +8,12 @@ Run following commands as a root in your LDAP-master:
 
   FQDN=$(cat /etc/puavo/hostname).$(cat /etc/puavo/domain)
   REALM=$(cat /etc/puavo/kerberos/realm)
-  kadmin.local -r \${REALM} -q \"addprinc -randkey ldap/\${FQDN}\"
-  kadmin.local -r \${REALM} -q \"addprinc -randkey host/\${FQDN}\"
-  kadmin.local -r \${REALM} -q \"addprinc -randkey IPP/\${FQDN}\"
-  kadmin.local -r \${REALM} -q \"addprinc -randkey cifs/\${FQDN}\"
-  kadmin.local -r \${REALM} -q \"addprinc -randkey nfs/\${FQDN}\"
-  kadmin.local -r \${REALM} -q \"addprinc -randkey HTTP/\${FQDN}\"
+  kadmin.local -r \${REALM} -q "addprinc -randkey ldap/\${FQDN}"
+  kadmin.local -r \${REALM} -q "addprinc -randkey host/\${FQDN}"
+  kadmin.local -r \${REALM} -q "addprinc -randkey IPP/\${FQDN}"
+  kadmin.local -r \${REALM} -q "addprinc -randkey cifs/\${FQDN}"
+  kadmin.local -r \${REALM} -q "addprinc -randkey nfs/\${FQDN}"
+  kadmin.local -r \${REALM} -q "addprinc -randkey HTTP/\${FQDN}"
 
   Press ENTER when ready.
 EOF
