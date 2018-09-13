@@ -116,17 +116,40 @@ module DiskHandler
           return
         end
 
-    # XXX to wipe raid-setups something like the following might be necessary:
-    # XXX (we should possibly ask user confirmation before doing this)
-    # XXX
-    # XXX   for puavodev in /dev/puavo/*; do
-    # XXX     lvremove -f $puavodev
-    # XXX   done
-    # XXX   vgremove puavo
-    # XXX   mdadm --stop /dev/md0
-    # XXX   mdadm --zero-superblock /dev/sda
-    # XXX   mdadm --zero-superblock /dev/sdb
-    # XXX   mdadm --remove /dev/md0
+    return unless md_device_list.count > 0
+
+    raise 'System has more than one raid setup, not daring to touch those.' \
+      unless md_device_list.count == 1
+
+    md_device_path = "/dev/#{ md_device_list.first }"
+
+    raid_disk_partitions = []
+    IO.popen([ 'mdadm', '--detail', md_device_path ]) do |f|
+      f.readlines.each do |line|
+        fields = line.split
+        next unless (0..3).all? do |i|
+          fields[i] && fields[i].match(/\A[0-9]+\z/)
+        end
+        fields.each do |s|
+          raid_disk_partitions << s if s.match(/^\/dev/)
+        end
+      end
+    end
+    raise 'error running mdadm --detail' unless $?.success?
+
+    # these may not exist and operations may fail, but we must try anyway
+    # in case these reserve the raid devices
+    Dir.glob('/dev/puavo/*') do |puavofsdev|
+      system('lvremove', '-f', puavofsdev, :err => File::NULL)
+    end
+    system('vgremove', '-f', 'puavo', :err => File::NULL)
+
+    # these should not fail
+    run('mdadm', '--stop', md_device_path)
+    raid_disk_partitions.each do |raid_partition|
+      run('mdadm', '--zero-superblock', '--force', raid_partition)
+    end
+    run('mdadm', '--remove', md_device_path)
   end
 
   def self.setup_raid_if_possible()
@@ -154,8 +177,7 @@ module DiskHandler
       end
     end
 
-    # XXX this does not yet do anything useful
-    # maybe_wipe_current_raid_setups()
+    maybe_wipe_current_raid_setups()
 
     devicepaths_for_mirroring.each do |diskdev|
       raid_partition(diskdev)
