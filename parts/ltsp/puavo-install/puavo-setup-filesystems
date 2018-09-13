@@ -139,6 +139,7 @@ module DiskHandler
 
     # these may not exist and operations may fail, but we must try anyway
     # in case these reserve the raid devices
+    system('swapoff', '-a', :err => File::NULL)
     Dir.glob('/dev/puavo/*') do |puavofsdev|
       system('lvremove', '-f', puavofsdev, :err => File::NULL)
     end
