@@ -153,8 +153,18 @@ module DiskHandler
   end
 
   def self.setup_raid_if_possible()
-    disks_for_mirroring = QueryDiskInfo::list_disks_for_mirroring()
-    return false unless disks_for_mirroring
+    disks_for_mirroring = nil
+
+    loop do
+      disks_for_mirroring = QueryDiskInfo::list_disks_for_mirroring()
+      break if disks_for_mirroring
+      puts "\nYou are doing a bootserver installation but there are no\n" \
+              + "two or more identically sized disks available for\n"    \
+              + "setting up mirroring raid configuration.\n"
+      msg = 'Install without raid mirroring? (type "yes" if this is okay)'
+      answer = UI::ask_with_default(msg, 'no')
+      return false if answer == 'yes'
+    end
 
     devicepaths_for_mirroring = disks_for_mirroring.map { |d| "/dev/#{ d }" }
 
