@@ -18,6 +18,7 @@ packagedirs += bluegriffon/
 packagedirs += cmaptools/
 packagedirs += cnijfilter2/
 packagedirs += dropbox/
+packagedirs += dragonbox_koulu1/
 packagedirs += ekapeli-alku/
 packagedirs += enchanting/
 packagedirs += geogebra/
