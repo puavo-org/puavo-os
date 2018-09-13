@@ -127,7 +127,7 @@ module DiskHandler
     IO.popen([ 'mdadm', '--detail', md_device_path ]) do |f|
       f.readlines.each do |line|
         fields = line.split
-        next unless (0..3).all? do |i|
+        next unless (0..2).all? do |i|
           fields[i] && fields[i].match(/\A[0-9]+\z/)
         end
         fields.each do |s|

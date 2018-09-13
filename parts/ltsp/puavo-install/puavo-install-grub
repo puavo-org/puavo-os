@@ -194,8 +194,7 @@ find_grub_target_devices_on_raid() {
   mdadm --detail "$_diskdev" \
     | awk '   $1 ~ /^[0-9]+$/ \
            && $2 ~ /^[0-9]+$/ \
-           && $3 ~ /^[0-9]+$/ \
-           && $4 ~ /^[0-9]+$/ {
+           && $3 ~ /^[0-9]+$/ {
              split($0, a)
              for (i in a) {
                if (a[i] ~ /^\/dev\/[a-z]+[0-9]+$/) {
