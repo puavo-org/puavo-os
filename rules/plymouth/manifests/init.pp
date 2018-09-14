@@ -30,7 +30,7 @@ class plymouth {
   }
 
   ::plymouth::install_theme {
-    [ 'kites', 'opinsys', ]: ;
+    [ 'kites', 'opinsys', 'opinsys-dark', ]: ;
   }
 
   Package <|

@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=Opinsys dark, theme for Opinsys OS
+Description=A theme that features a background image with a logo and progressing dots.
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/opinsys-dark
+ScriptFile=/usr/share/plymouth/themes/opinsys-dark/opinsys-dark.script
