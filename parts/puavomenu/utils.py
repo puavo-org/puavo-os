@@ -35,6 +35,13 @@ def localize(where, lang_id):
     return str(where[list(where)[0]])
 
 
+def is_empty(s):
+    """Returns true if 's' is completely empty. This ugly hacky function
+    is needed because YAML."""
+
+    return s is None or len(s) == 0
+
+
 def get_file_contents(name, default=''):
     """Reads the contents of a UTF-8 file into a buffer."""
 

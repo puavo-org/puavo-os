@@ -25,7 +25,7 @@ from buttons import ProgramButton, MenuButton, SidebarButton, AvatarButton
 from utils import localize, expand_variables, get_file_contents, \
                   load_image_at_size
 from loader import load_menu_data
-from conditionals import evaluate_file
+from conditionals import evaluate_file, is_hidden
 
 
 class PuavoMenu(Gtk.Window):

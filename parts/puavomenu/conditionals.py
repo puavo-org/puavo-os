@@ -15,7 +15,11 @@ import os, stat
 
 from logger import debug as log_debug, \
                    error as log_error, \
+                   warn as log_warn, \
                    info as log_info
+
+from utils import is_empty
+
 
 def __file_check(name, params):
     """Checks if a file exists/does not exist. Optional checks include
@@ -244,3 +248,41 @@ def evaluate_file(file_name):
         log_debug('Conditional: name="{0}", result={1}'.format(k, v))
 
     return results
+
+
+def is_hidden(conditions, cond_string, name):
+    """Returns true if the conditionals say the item should not be
+    visible."""
+
+    if is_empty(cond_string):
+        log_warn('Empty conditional in "{0}", assuming it\'s visible'.
+                 format(name))
+        return False
+
+    for cond in cond_string.strip().split(', '):
+        original = cond
+        wanted = True
+
+        if not is_empty(cond) and cond[0] == '!':
+            # negate the condition
+            cond = cond[1:]
+            wanted = False
+
+        if cond not in conditions:
+            log_error('Undefined condition "{0}" in "{1}"'.
+                      format(cond, name))
+            continue
+
+        state = conditions[cond][1]
+
+        if not conditions[cond][0]:
+            log_warn('Conditional "{0}" is in indeterminate state, '
+                     'assuming it\'s True'.format(name))
+            state = True
+
+        if state != wanted:
+            log_info('"{0}" is hidden by conditional "{1}"'.
+                     format(name, original))
+            return True
+
+    return False
