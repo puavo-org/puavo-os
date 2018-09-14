@@ -8,7 +8,7 @@ if [ "$(puavo-conf puavo.hosttype)" != 'bootserver' ]; then
 fi
 
 cat <<'EOF' > /etc/incron.d/handle_images_changes.tmp
-/images IN_ATTRIB,IN_CLOSE_WRITE,IN_CREATE,IN_DELETE,IN_DELETE_SELF,IN_MODIFY,IN_MOVE_SELF,IN_MOVE /usr/local/lib/puavo-handle-image-changes $#
+/images IN_ATTRIB,IN_CLOSE_WRITE,IN_CREATE,IN_DELETE,IN_DELETE_SELF,IN_MOVE_SELF,IN_MOVE /usr/local/lib/puavo-handle-image-changes $#
 EOF
 mv /etc/incron.d/handle_images_changes.tmp \
    /etc/incron.d/handle_images_changes
