@@ -1,0 +1,34 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+symlink_targets='
+  /usr/share/X11/xkb/symbols/ruslav
+  /usr/share/X11/xkb/symbols/smn
+  /usr/share/X11/xkb/symbols/sms
+'
+
+case "$command" in
+    configure)
+        upstream_dir=$1
+        ls "$upstream_dir/custom-packages/digabios/xkb-symbols/" >> /tmp/kukkua
+        for symlink_target in ${symlink_targets}; do
+            ln -fns -T "$upstream_dir/custom-packages/digabios/xkb-symbols/" "$symlink_target"
+        done
+        ;;
+    unconfigure)
+        for symlink_target in ${symlink_targets}; do
+            rm -f "${symlink_target}"
+        done
+        ;;
+    unpack)
+        upstream_pack=$1
+        upstream_dir=$2
+        tar -x -f "$upstream_pack" -C "$upstream_dir" --strip-components=1
+        ;;
+    *)
+        ;;
+esac
