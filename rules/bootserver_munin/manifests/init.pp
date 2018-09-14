@@ -53,7 +53,7 @@ class bootserver_munin {
     , 'if_eth1'
     , 'if_inet0'
     , 'if_ltsp0'
-    , 'if_tap0'
+    , 'if_vpn0'
     , 'if_wlan0' ]:
       wildcard => true;
 
