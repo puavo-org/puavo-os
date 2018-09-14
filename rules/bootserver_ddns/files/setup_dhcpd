@@ -111,6 +111,7 @@ network_interfaces_for_dhcpd = \
   puavoconf.get('puavo.networking.ddns.dhcpd_interfaces') \
     .split(',') \
     .map { |iface| Interface.new(iface) }
+ubnt_unifi_address = puavoconf.get('puavo.networking.ubnt.unify.address')
 puavoconf.close
 
 if network_interfaces_for_dhcpd.empty? then
@@ -181,7 +182,9 @@ IFACE_EOF
   end.join("\n")
 }
 EOF
-  ubnt_conf = "#option ubnt.unifi-address xxx.xxx.xxx.xxx;\n"
+  ubnt_conf = (ubnt_unifi_address != '' \
+	         ? "option ubnt.unifi-address #{ ubnt_unifi_address };\n" \
+		 : "# DISABLED\n")
 end
 
 FileUtils.mkdir_p('/etc/dhcp.d')
