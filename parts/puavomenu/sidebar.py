@@ -235,7 +235,7 @@ class Sidebar:
 
         avatar = AvatarButton(self, getuser(), avatar_image)
 
-        if self.__is_guest:
+        if self.__is_guest or self.__is_webkiosk:
             logger.info('Disabling the avatar button for guest user')
             avatar.disable()
         else:
@@ -315,21 +315,25 @@ class Sidebar:
         # Since Python won't let you modify arguments (no pass-by-reference),
         # each of these returns the next Y position. X coordinates are fixed.
 
-        if not self.__is_guest:
+        if not (self.__is_guest or self.__is_webkiosk):
             y = self.__create_button(y, SB_CHANGE_PASSWORD)
 
         y = self.__create_button(y, SB_SUPPORT)
         y = self.__create_button(y, SB_SYSTEM_SETTINGS)
         y = self.__create_separator(y)
 
-        if not self.__is_guest:
+        if not (self.__is_guest or self.__is_webkiosk):
             y = self.__create_button(y, SB_LOCK_SCREEN)
 
-        y = self.__create_button(y, SB_SLEEP_MODE)
+        if not (self.__is_fatclient or self.__is_webkiosk):
+            y = self.__create_button(y, SB_SLEEP_MODE)
+
         y = self.__create_button(y, SB_LOGOUT)
         y = self.__create_separator(y)
         y = self.__create_button(y, SB_RESTART)
-        y = self.__create_button(y, SB_SHUTDOWN)
+
+        if not self.__is_webkiosk:
+            y = self.__create_button(y, SB_SHUTDOWN)
 
 
     # Creates a sidebar button
