@@ -126,11 +126,11 @@ class PuavoMenu(Gtk.Window):
             logger.error('This is a fatal error, stopping here.')
 
             syslog.syslog(syslog.LOG_CRIT,
-                'PuavoMenu IPC socket "{0}" creation failed: {1}'.
-                format(socket_name, e))
+                          'PuavoMenu IPC socket "{0}" creation failed: {1}'.
+                          format(socket_name, e))
 
             syslog.syslog(syslog.LOG_CRIT,
-                         'PuavoMenu stops here. Contact Opinsys support.')
+                          'PuavoMenu stops here. Contact Opinsys support.')
 
             exit(1)
 
@@ -508,12 +508,12 @@ class PuavoMenu(Gtk.Window):
 
         # TODO: "big" and "small" are not good sizes, we need to be explicit
         if self.__current_menu.description is None:
-            self.__menu_title.set_markup(
-                '<big>{0}</big>'.format(self.__current_menu.title))
+            self.__menu_title.set_markup('<big>{0}</big>'.
+                                         format(self.__current_menu.title))
         else:
             self.__menu_title.set_markup('<big>{0}</big>  <small>{1}</small>'.
-                format(self.__current_menu.title,
-                       self.__current_menu.description))
+                                         format(self.__current_menu.title,
+                                                self.__current_menu.description))
 
         self.__menu_title.show()
 
@@ -630,10 +630,10 @@ class PuavoMenu(Gtk.Window):
         # inserted on the list in random order and they tend to switch
         # positions constantly; we need to break that randomness).
         faves = [(name, p.uses, p.title)
-            for name, p in self.__programs.items() if p.uses > 0]
+                 for name, p in self.__programs.items() if p.uses > 0]
         self.__save_faves(faves)
         faves = sorted(faves,
-            key=lambda p: (p[1], p[2]), reverse=True)[0:NUMBER_OF_FAVES]
+                       key=lambda p: (p[1], p[2]), reverse=True)[0:NUMBER_OF_FAVES]
 
         # Do nothing if the list order hasn't changed
         new_ids = [f[0] for f in faves]
@@ -825,7 +825,7 @@ class PuavoMenu(Gtk.Window):
 
                 # Mark the file as trusted (I hate you GNOME)
                 subprocess.Popen(['gvfs-set-attribute', name,
-                                 'metadata::trusted', 'yes'],
+                                  'metadata::trusted', 'yes'],
                                  stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE)
 
@@ -1420,7 +1420,7 @@ class PuavoMenu(Gtk.Window):
             if not p.icon.usable:
                 logger.warn('Found an icon "{0}" for program "{1}", but '
                             'it could not be loaded'.
-                             format(path, name))
+                            format(path, name))
                 num_missing_icons += 1
             else:
                 id_to_path_mapping[name] = path
@@ -1445,7 +1445,7 @@ class PuavoMenu(Gtk.Window):
             if not m.icon.usable:
                 logger.warn('Found an icon "{0}" for menu "{1}", but '
                             'it could not be loaded'.
-                             format(path, name))
+                            format(path, name))
                 num_missing_icons += 1
 
         end_time = clock()
@@ -1593,7 +1593,7 @@ class PuavoMenu(Gtk.Window):
         def permit_exit(x):
             self.__exit_permitted = not self.__exit_permitted
             logger.debug('Normal exiting ' +
-                ('ENABLED' if self.__exit_permitted else 'DISABLED'))
+                         ('ENABLED' if self.__exit_permitted else 'DISABLED'))
 
         def force_exit(x):
             logger.debug('Devmenu force exit initiated!')
