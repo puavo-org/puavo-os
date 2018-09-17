@@ -16,10 +16,11 @@ from utils_gui import load_image_at_size, create_separator
 from iconcache import ICONS32
 from buttons import AvatarButton, SidebarButton
 
+
 # ------------------------------------------------------------------------------
 # Sidebar button definitions
 
-sb_change_password = {
+SB_CHANGE_PASSWORD = {
     'name': 'change_password',
 
     'title': {
@@ -45,7 +46,7 @@ sb_change_password = {
     },
 }
 
-sb_support = {
+SB_SUPPORT = {
     'name': 'support',
 
     'title': {
@@ -65,7 +66,7 @@ sb_support = {
     },
 }
 
-sb_system_settings = {
+SB_SYSTEM_SETTINGS = {
     'name': 'system-settings',
 
     'title': {
@@ -85,7 +86,7 @@ sb_system_settings = {
     },
 }
 
-sb_lock_screen = {
+SB_LOCK_SCREEN = {
     'name': 'lock-screen',
 
     'title': {
@@ -109,7 +110,7 @@ sb_lock_screen = {
     },
 }
 
-sb_sleep_mode = {
+SB_SLEEP_MODE = {
     'name': 'sleep-mode',
 
     'title': {
@@ -135,7 +136,7 @@ sb_sleep_mode = {
     },
 }
 
-sb_logout = {
+SB_LOGOUT = {
     'name': 'logout',
 
     'title': {
@@ -155,7 +156,7 @@ sb_logout = {
     },
 }
 
-sb_restart = {
+SB_RESTART = {
     'name': 'restart',
 
     'title': {
@@ -175,7 +176,7 @@ sb_restart = {
     }
 }
 
-sb_shutdown = {
+SB_SHUTDOWN = {
     'name': 'shutdown',
 
     'title': {
@@ -194,6 +195,7 @@ sb_shutdown = {
         'args': 'gnome-session-quit --power-off'
     }
 }
+
 
 # ------------------------------------------------------------------------------
 # The sidebar class
@@ -295,20 +297,20 @@ class Sidebar:
         # each of these returns the next Y position. X coordinates are fixed.
 
         if not self.__is_guest:
-            y = self.__create_button(y, sb_change_password)
+            y = self.__create_button(y, SB_CHANGE_PASSWORD)
 
-        y = self.__create_button(y, sb_support)
-        y = self.__create_button(y, sb_system_settings)
+        y = self.__create_button(y, SB_SUPPORT)
+        y = self.__create_button(y, SB_SYSTEM_SETTINGS)
         y = self.__create_separator(y)
 
         if not self.__is_guest:
-            y = self.__create_button(y, sb_lock_screen)
+            y = self.__create_button(y, SB_LOCK_SCREEN)
 
-        y = self.__create_button(y, sb_sleep_mode)
-        y = self.__create_button(y, sb_logout)
+        y = self.__create_button(y, SB_SLEEP_MODE)
+        y = self.__create_button(y, SB_LOGOUT)
         y = self.__create_separator(y)
-        y = self.__create_button(y, sb_restart)
-        y = self.__create_button(y, sb_shutdown)
+        y = self.__create_button(y, SB_RESTART)
+        y = self.__create_button(y, SB_SHUTDOWN)
 
 
     # Creates a sidebar button
