@@ -208,10 +208,12 @@ class Sidebar:
         }
     }
 
-    def __init__(self, parent, container, language, res_dir):
+    def __init__(self, parent, language, res_dir):
         self.__parent = parent
-        self.__container = container
         self.__language = language
+
+        # Sidebar container
+        self.container = Gtk.Fixed()
 
         # Detect guest user sessions
         if 'GUEST_SESSION' in environ:
@@ -243,13 +245,13 @@ class Sidebar:
         else:
             avatar.connect('clicked', self.__clicked_avatar_button)
 
-        self.__container.put(avatar, USER_AVATAR_LEFT, USER_AVATAR_TOP)
+        self.container.put(avatar, 0, MAIN_PADDING)
         avatar.show()
 
         # The buttons
-        create_separator(container=self.__container,
-                         x=USER_AVATAR_LEFT,
-                         y=USER_AVATAR_TOP + USER_AVATAR_SIZE + 10,
+        create_separator(container=self.container,
+                         x=0,
+                         y=MAIN_PADDING + USER_AVATAR_SIZE + MAIN_PADDING,
                          w=SIDEBAR_WIDTH,
                          h=-1,
                          orientation=Gtk.Orientation.HORIZONTAL)
@@ -257,11 +259,11 @@ class Sidebar:
         self.__create_buttons()
 
         # Host name and release name/type
-        label_top = WINDOW_HEIGHT - LABEL_HEIGHT - 10
+        label_top = WINDOW_HEIGHT - MAIN_PADDING - LABEL_HEIGHT
 
-        create_separator(container=self.__container,
-                         x=SIDEBAR_LEFT,
-                         y=label_top - 10,
+        create_separator(container=self.container,
+                         x=0,
+                         y=label_top - MAIN_PADDING,
                          w=SIDEBAR_WIDTH,
                          h=1,
                          orientation=Gtk.Orientation.HORIZONTAL)
@@ -281,11 +283,15 @@ class Sidebar:
             ht=get_file_contents('/etc/puavo/hosttype')))
 
         hostname_label.show()
-        container.put(hostname_label, SIDEBAR_LEFT, label_top)
+        self.container.put(hostname_label, 0, label_top)
+
+        self.container.show()
 
 
     def __create_buttons(self):
-        y = SIDEBAR_TOP
+        # FIXME: the "+1" is a hack, it must be changed if the separator
+        # height ever changes.
+        y = MAIN_PADDING + USER_AVATAR_SIZE + MAIN_PADDING * 2 + 1
 
         # Since Python won't let you modify arguments (no pass-by-reference),
         # each of these returns the next Y position. X coordinates are fixed.
@@ -309,7 +315,7 @@ class Sidebar:
 
     # Creates a sidebar button
     def __create_button(self, y, data):
-        button = SidebarButton(self.__parent,
+        button = SidebarButton(self,
                                localize(data['title'], self.__language),
                                ICONS32.load_icon(data['icon']),
                                localize(data['description'], self.__language),
@@ -317,25 +323,27 @@ class Sidebar:
 
         button.connect('clicked', self.__clicked_sidebar_button)
         button.show()
-        self.__container.put(button, SIDEBAR_LEFT + 10, y)
+        self.container.put(button, 0, y)
 
         # the next available Y coordinate
-        return y + 44
+        return y + button.get_preferred_button_size()[1]
 
 
     # Creates a special sidebar separator
     def __create_separator(self, y):
-        PADDING = 20
+        SEP_PADDING = 20
 
-        create_separator(container=self.__container,
-                         x=SIDEBAR_LEFT + 10 + PADDING,
-                         y=y + 10,
-                         w=SIDEBAR_WIDTH - (PADDING * 2),
+        create_separator(container=self.container,
+                         x=SEP_PADDING,
+                         y=y + MAIN_PADDING,
+                         w=SIDEBAR_WIDTH - SEP_PADDING * 2,
                          h=-1,
                          orientation=Gtk.Orientation.HORIZONTAL)
 
         # the next available Y coordinate
-        return y + 25
+        # FIXME: the "+1" is a hack, it must be changed if the separator
+        # height ever changes.
+        return y + MAIN_PADDING * 2 + 1
 
 
     # Edit user preferences

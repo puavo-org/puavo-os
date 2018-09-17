@@ -8,7 +8,7 @@ from gi.repository import Gtk, Pango, PangoCairo
 
 from logger import error as log_error
 from constants import PROGRAM_BUTTON_WIDTH, PROGRAM_BUTTON_HEIGHT, \
-                      PROGRAM_BUTTON_ICON_SIZE, SIDEBAR_WIDTH
+                      PROGRAM_BUTTON_ICON_SIZE, SIDEBAR_WIDTH, MAIN_PADDING
 from iconcache import ICONS32, ICONS48
 from utils import localize, rounded_rectangle, draw_x, load_image_at_size
 
@@ -462,7 +462,7 @@ class SidebarButton(HoverIconButtonBase):
 
     def get_preferred_button_size(self):
         return (
-            SIDEBAR_WIDTH - 10 * 2,
+            SIDEBAR_WIDTH,
             self.ICON_SIZE + self.PADDING * 2
         )
 

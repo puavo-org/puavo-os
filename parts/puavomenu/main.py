@@ -370,10 +370,13 @@ class PuavoMenu(Gtk.Window):
                          h=WINDOW_HEIGHT - (MAIN_PADDING * 2),
                          orientation=Gtk.Orientation.VERTICAL)
 
-        self.sidebar = Sidebar(parent=self,
-                               container=self.__main_container,
-                               language=self.language,
-                               res_dir=self.res_dir)
+        self.__sidebar = Sidebar(parent=self,
+                                 language=self.language,
+                                 res_dir=self.res_dir)
+
+        self.__main_container.put(self.__sidebar.container,
+                                  SIDEBAR_LEFT,
+                                  SIDEBAR_TOP)
 
         # ----------------------------------------------------------------------
         # Setup GTK signal handlers
