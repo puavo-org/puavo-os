@@ -67,4 +67,3 @@ def create_separator(container, x, y, w, h, orientation):
     sep.set_size_request(w, h)
     container.put(sep, x, y)
     sep.show()
-
