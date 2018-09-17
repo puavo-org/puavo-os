@@ -363,7 +363,7 @@ class Sidebar:
         except Exception as exception:
             logger.error(str(exception))
             self.__parent.error_message(
-                localize(self.STRINGS['avatar_link_failed'], self.language),
+                localize(self.STRINGS['avatar_link_failed'], self.__language),
                 str(exception))
 
         self.__parent.autohide()
