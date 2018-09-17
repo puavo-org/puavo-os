@@ -4,7 +4,6 @@ from time import clock
 
 from os import unlink, environ
 from os.path import join as path_join, isfile as is_file
-from sys import exit
 
 import socket               # for the IPC socket
 import traceback
