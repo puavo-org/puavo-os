@@ -4,7 +4,7 @@ from collections import OrderedDict
 
 import cairo
 import logger
-from utils import load_image_at_size, draw_x
+from utils_gui import load_image_at_size, draw_x
 
 
 class Icon:

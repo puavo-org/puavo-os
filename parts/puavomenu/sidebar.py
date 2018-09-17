@@ -10,9 +10,8 @@ from gi.repository import Pango
 
 from constants import *
 import logger
-from utils import localize, expand_variables, get_file_contents, \
-                  load_image_at_size
-from utils_gui import create_separator
+from utils import localize, expand_variables, get_file_contents
+from utils_gui import load_image_at_size, create_separator
 
 from iconcache import ICONS32
 from buttons import AvatarButton, SidebarButton
