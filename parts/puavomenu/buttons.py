@@ -8,7 +8,7 @@ from gi.repository import Gtk, Pango, PangoCairo
 
 from logger import error as log_error
 from constants import PROGRAM_BUTTON_WIDTH, PROGRAM_BUTTON_HEIGHT, \
-                      PROGRAM_BUTTON_ICON_SIZE, SIDEBAR_WIDTH, MAIN_PADDING
+                      PROGRAM_BUTTON_ICON_SIZE, SIDEBAR_WIDTH
 from iconcache import ICONS32, ICONS48
 from utils import localize
 from utils_gui import rounded_rectangle, draw_x, load_image_at_size

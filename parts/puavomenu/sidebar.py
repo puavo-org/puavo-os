@@ -8,7 +8,8 @@ gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
 from gi.repository import Gtk
 from gi.repository import Pango
 
-from constants import *
+from constants import WINDOW_HEIGHT, MAIN_PADDING, SIDEBAR_WIDTH, \
+                      USER_AVATAR_SIZE, HOSTINFO_LABEL_HEIGHT
 import logger
 from utils import localize, expand_variables, get_file_contents
 from utils_gui import load_image_at_size, create_separator
@@ -259,7 +260,7 @@ class Sidebar:
         self.__create_buttons()
 
         # Host name and release name/type
-        label_top = WINDOW_HEIGHT - MAIN_PADDING - LABEL_HEIGHT
+        label_top = WINDOW_HEIGHT - MAIN_PADDING - HOSTINFO_LABEL_HEIGHT
 
         create_separator(container=self.container,
                          x=0,
@@ -269,7 +270,7 @@ class Sidebar:
                          orientation=Gtk.Orientation.HORIZONTAL)
 
         hostname_label = Gtk.Label()
-        hostname_label.set_size_request(SIDEBAR_WIDTH, LABEL_HEIGHT)
+        hostname_label.set_size_request(SIDEBAR_WIDTH, HOSTINFO_LABEL_HEIGHT)
         hostname_label.set_ellipsize(Pango.EllipsizeMode.END)
         hostname_label.set_justify(Gtk.Justification.CENTER)
         hostname_label.set_alignment(0.5, 0.5)

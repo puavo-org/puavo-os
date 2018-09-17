@@ -53,7 +53,7 @@ USER_AVATAR_TOP = MAIN_PADDING
 USER_AVATAR_SIZE = 48
 
 # Height of the machine name and release info text
-LABEL_HEIGHT = 45
+HOSTINFO_LABEL_HEIGHT = 45
 
 # Accepted extensions for icon files, in the order we prefer them. Some
 # .desktop file "Icon" entries specify full paths, so we check if the
