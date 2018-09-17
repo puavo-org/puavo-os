@@ -1423,7 +1423,6 @@ class PuavoMenu(Gtk.Window):
             else:
                 id_to_path_mapping[name] = path
 
-
         for name in menus:
             m = menus[name]
 
