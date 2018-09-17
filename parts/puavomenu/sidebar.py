@@ -347,7 +347,7 @@ class Sidebar:
 
 
     # Edit user preferences
-    def __clicked_avatar_button(self, e):
+    def __clicked_avatar_button(self, button):
         print('Clicked the user avatar button')
 
         url = expand_variables('https://$(puavo_domain)/users/profile/edit',
@@ -360,11 +360,11 @@ class Sidebar:
             subprocess.Popen(['xdg-open', url],
                              stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE)
-        except Exception as e:
-            logger.error(str(e))
+        except Exception as exception:
+            logger.error(str(exception))
             self.__parent.error_message(
                 localize(self.STRINGS['avatar_link_failed'], self.language),
-                str(e))
+                str(exception))
 
         self.__parent.autohide()
 
