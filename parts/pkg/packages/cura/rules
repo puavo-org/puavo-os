@@ -1,0 +1,37 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "${command}" in
+    configure)
+	upstream_dir=$1
+
+	ln -fns "${upstream_dir}" /opt/cura
+        cat <<EOF > /usr/share/applications/cura.desktop
+[Desktop Entry]
+Name=Cura
+Exec=/opt/cura/Cura.AppImage
+Type=Application
+Terminal=false
+Icon=glade
+StartupNotify=true
+Categories=Education;
+EOF
+	;;
+    unconfigure)
+	rm -f /opt/cura \
+              /usr/share/applications/cura.desktop
+	;;
+    unpack)
+	upstream_pack=$1
+	upstream_dir=$2
+
+        cp "${upstream_pack}" "${upstream_dir}/Cura.AppImage"
+        chmod 755 "${upstream_dir}/Cura.AppImage"
+	;;
+    *)
+	;;
+esac
