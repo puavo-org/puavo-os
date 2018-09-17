@@ -17,6 +17,8 @@ from utils_gui import create_separator
 from iconcache import ICONS32
 from buttons import AvatarButton, SidebarButton
 
+# ------------------------------------------------------------------------------
+# Sidebar button definitions
 
 sb_change_password = {
     'name': 'change_password',
@@ -194,6 +196,9 @@ sb_shutdown = {
         'args': 'gnome-session-quit --power-off'
     }
 }
+
+# ------------------------------------------------------------------------------
+# The sidebar class
 
 class Sidebar:
     STRINGS = {
