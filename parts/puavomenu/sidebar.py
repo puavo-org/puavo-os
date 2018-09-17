@@ -63,7 +63,8 @@ SB_SUPPORT = {
 
     'command': {
         'type': 'url',
-        'args': 'https://tuki.opinsys.fi'
+        'args': puavo_conf('puavo.support.new_bugreport_url',
+                           'https://tuki.opinsys.fi')
     },
 }
 
