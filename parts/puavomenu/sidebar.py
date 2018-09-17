@@ -39,12 +39,11 @@ sb_change_password = {
 
     'icon': '/usr/share/icons/Faenza/emblems/96/emblem-readonly.png',
 
-    'command': {}
-    #{
-    #    'type': 'webwindow',
-    #    'args': 'https://$(puavo_domain)/users/password/own?changing=$(user_name)',
-    #    'have_vars': True,
-    #},
+    'command': {
+        'type': 'webwindow',
+        'args': 'https://$(puavo_domain)/users/password/own?changing=$(user_name)',
+        'have_vars': True,
+    },
 }
 
 sb_support = {
