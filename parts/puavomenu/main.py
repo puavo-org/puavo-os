@@ -1419,9 +1419,9 @@ class PuavoMenu(Gtk.Window):
             p.icon = ICONS48.load_icon(path)
 
             if not p.icon.usable:
-                logger.warning('Found an icon "{0}" for program "{1}", but '
-                               'it could not be loaded'.
-                               format(path, name))
+                logger.warn('Found an icon "{0}" for program "{1}", but '
+                            'it could not be loaded'.
+                             format(path, name))
                 num_missing_icons += 1
             else:
                 id_to_path_mapping[name] = path
@@ -1444,9 +1444,9 @@ class PuavoMenu(Gtk.Window):
             m.icon = ICONS48.load_icon(m.icon)
 
             if not m.icon.usable:
-                logger.warning('Found an icon "{0}" for menu "{1}", but '
-                               'it could not be loaded'.
-                               format(path, name))
+                logger.warn('Found an icon "{0}" for menu "{1}", but '
+                            'it could not be loaded'.
+                             format(path, name))
                 num_missing_icons += 1
 
         end_time = clock()
