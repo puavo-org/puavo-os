@@ -34,11 +34,11 @@ def localize(where, lang_id):
     return str(where[list(where)[0]])
 
 
-def is_empty(s):
+def is_empty(string):
     """Returns true if 's' is completely empty. This ugly hacky function
     is needed because YAML."""
 
-    return s is None or len(s) == 0
+    return string is None or len(string) == 0
 
 
 def get_file_contents(name, default=''):
@@ -46,8 +46,8 @@ def get_file_contents(name, default=''):
 
     try:
         return open(name, 'r', encoding='utf-8').read().strip()
-    except Exception as e:
-        log_error('Could not load file "{0}": {1}'.format(name, e))
+    except OSError as exception:
+        log_error('Could not load file "{0}": {1}'.format(name, exception))
         return default
 
 
