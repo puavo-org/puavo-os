@@ -11,7 +11,7 @@ from gi.repository import Pango
 from constants import WINDOW_HEIGHT, MAIN_PADDING, SIDEBAR_WIDTH, \
                       USER_AVATAR_SIZE, HOSTINFO_LABEL_HEIGHT
 import logger
-from utils import localize, expand_variables, get_file_contents
+from utils import localize, expand_variables, get_file_contents, puavo_conf
 from utils_gui import load_image_at_size, create_separator
 
 from iconcache import ICONS32
@@ -216,12 +216,7 @@ class Sidebar:
         # Sidebar container
         self.container = Gtk.Fixed()
 
-        # Detect guest user sessions
-        if 'GUEST_SESSION' in environ:
-            logger.info('This is a guest user session.')
-            self.__is_guest = True
-        else:
-            self.__is_guest = False
+        self.detect_host_params()
 
         # Variables for commands
         self.__variables = {}
@@ -287,6 +282,29 @@ class Sidebar:
         self.container.put(hostname_label, 0, label_top)
 
         self.container.show()
+
+
+    def detect_host_params(self):
+        """Detects various type -related settings for this host and session."""
+
+        self.__is_guest = False
+        self.__is_fatclient = False
+        self.__is_webkiosk = False
+
+        # Detect guest user sessions
+        if 'GUEST_SESSION' in environ:
+            logger.info('This is a guest user session.')
+            self.__is_guest = True
+
+        # Detect fatclients
+        device_type = puavo_conf('puavo.hosttype', 'laptop')
+
+        if device_type == 'fatclient':
+            logger.info('This is a fatclient device')
+            self.__is_fatclient = True
+
+        # Detect webkiosk sessions
+        # TODO: implement this
 
 
     def __create_buttons(self):
