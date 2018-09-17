@@ -278,9 +278,9 @@ class Sidebar:
         # "big" and "small" are not good sizes, we need to be explicit
         hostname_label.set_markup(
             '<big>{hn}</big>\n<small>{rn} ({ht})</small>'.format(
-            hn=get_file_contents('/etc/puavo/hostname'),
-            rn=get_file_contents('/etc/puavo-image/release'),
-            ht=get_file_contents('/etc/puavo/hosttype')))
+                hn=get_file_contents('/etc/puavo/hostname'),
+                rn=get_file_contents('/etc/puavo-image/release'),
+                ht=get_file_contents('/etc/puavo/hosttype')))
 
         hostname_label.show()
         self.container.put(hostname_label, 0, label_top)
