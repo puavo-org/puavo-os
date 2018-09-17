@@ -1,177 +1,405 @@
-# Sidebar buttons, icons and commands
+# The Sidebar: the user avatar, "system" buttons and the host info
+
+from os import environ
+from getpass import getuser
+
+import gi
+gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
+from gi.repository import Gtk
+from gi.repository import Pango
+
+from constants import *
+import logger
+from utils import localize, expand_variables, get_file_contents, \
+                  load_image_at_size
+from utils_gui import create_separator
+
+from iconcache import ICONS32
+from buttons import AvatarButton, SidebarButton
 
 
-SIDEBAR_SEPARATOR = {'type': 'separator'}
+sb_change_password = {
+    'name': 'change_password',
 
-
-SIDEBAR_BUTTONS = [
-    {
-        'name': 'change-password',
-
-        'title': {
-            'en': 'Change password',
-            'fi': 'Vaihda salasana',
-            'sv': 'Byt lösenord',
-            'de': 'Passwort ändern',
-        },
-
-        'description': {
-            'fi': 'Vaihda salasana',
-            'en': 'Change password',
-            'sv': 'Byt lösenord',
-            'de': 'Passwort ändern',
-        },
-
-        'icon': '/usr/share/icons/Faenza/emblems/96/emblem-readonly.png',
-
-        'command': {
-            'type': 'webwindow',
-            'args': 'https://$(puavo_domain)/users/password/own?changing=$(user_name)',
-            'have_vars': True,
-        },
-
-        'disabled_for_guests': True,
+    'title': {
+        'en': 'Change password',
+        'fi': 'Vaihda salasana',
+        'sv': 'Byt lösenord',
+        'de': 'Passwort ändern',
     },
 
-    {
-        'name': 'support',
-
-        'title': {
-            'en': 'Support',
-            'fi': 'Tukisivusto',
-            'sv': 'Support',
-            'de': 'Support',
-        },
-
-        'icon': '/usr/share/icons/Faenza/status/96/dialog-question.png',
-
-        'command': {
-            'type': 'url',
-            'args': 'https://tuki.opinsys.fi'
-        },
+    'description': {
+        'fi': 'Vaihda salasana',
+        'en': 'Change password',
+        'sv': 'Byt lösenord',
+        'de': 'Passwort ändern',
     },
 
-    {
-        'name': 'system-settings',
+    'icon': '/usr/share/icons/Faenza/emblems/96/emblem-readonly.png',
 
-        'title': {
-            'en': 'System settings',
-            'fi': 'Järjestelmän asetukset',
-            'sv': 'Systeminställningar',
-            'de': 'Systemeinstellungen',
-        },
+    'command': {}
+    #{
+    #    'type': 'webwindow',
+    #    'args': 'https://$(puavo_domain)/users/password/own?changing=$(user_name)',
+    #    'have_vars': True,
+    #},
+}
 
-        'icon': '/usr/share/icons/Faenza/categories/96/applications-system.png',
+sb_support = {
+    'name': 'support',
 
-        'command': {
-            'type': 'command',
-            'args': 'gnome-control-center',
-        },
+    'title': {
+        'en': 'Support',
+        'fi': 'Tukisivusto',
+        'sv': 'Support',
+        'de': 'Support',
     },
 
-    SIDEBAR_SEPARATOR,
+    'description': '',
 
-    {
-        'name': 'lock-screen',
+    'icon': '/usr/share/icons/Faenza/status/96/dialog-question.png',
 
-        'title': {
-            'en': 'Lock screen',
-            'fi': 'Lukitse näyttö',
-            'sv': 'Lås skärmen',
-            'de': 'Bildschirm sperren'
-        },
+    'command': {
+        'type': 'url',
+        'args': 'https://tuki.opinsys.fi'
+    },
+}
 
-        'icon': '/usr/share/icons/Faenza/actions/96/system-lock-screen.png',
+sb_system_settings = {
+    'name': 'system-settings',
 
-        'command': {
-            'type': 'command',
-            'args': ['dbus-send',
-                     '--type=method_call',
-                     '--dest=org.gnome.ScreenSaver',
-                     '/org/gnome/ScreenSaver',
-                     'org.gnome.ScreenSaver.Lock']
-        },
-
-        'disabled_for_guests': True,
+    'title': {
+        'en': 'System settings',
+        'fi': 'Järjestelmän asetukset',
+        'sv': 'Systeminställningar',
+        'de': 'Systemeinstellungen',
     },
 
-    {
-        'name': 'sleep-mode',
+    'description': '',
 
-        'title': {
-            'en': 'Sleep',
-            'fi': 'Unitila',
-            'sv': 'Strömsparläge',
-            'de': 'Schlafen'
-        },
+    'icon': '/usr/share/icons/Faenza/categories/96/applications-system.png',
 
-        'icon': '/usr/share/icons/oxygen/base/32x32/actions/system-suspend-hibernate.png',
+    'command': {
+        'type': 'command',
+        'args': 'gnome-control-center',
+    },
+}
 
-        'command': {
-            'type': 'command',
-            'args': ['dbus-send',
-                     '--system',
-                     '--print-reply',
-                     '--dest=org.freedesktop.login1',
-                     '/org/freedesktop/login1',
-                     'org.freedesktop.login1.Manager.Suspend',
-                     'boolean:true']
-        },
+sb_lock_screen = {
+    'name': 'lock-screen',
+
+    'title': {
+        'en': 'Lock screen',
+        'fi': 'Lukitse näyttö',
+        'sv': 'Lås skärmen',
+        'de': 'Bildschirm sperren'
     },
 
-    {
-        'name': 'logout',
+    'description': '',
 
-        'title': {
-            'en': 'Logout',
-            'fi': 'Kirjaudu ulos',
-            'sv': 'Logga ut',
-            'de': 'Abmelden'
-        },
+    'icon': '/usr/share/icons/Faenza/actions/96/system-lock-screen.png',
 
-        'icon': '/usr/share/icons/gnome/32x32/actions/gnome-session-logout.png',
+    'command': {
+        'type': 'command',
+        'args': ['dbus-send',
+                 '--type=method_call',
+                 '--dest=org.gnome.ScreenSaver',
+                 '/org/gnome/ScreenSaver',
+                 'org.gnome.ScreenSaver.Lock']
+    },
+}
 
-        'command': {
-            'type': 'command',
-            'args': 'gnome-session-quit --logout'
-        },
+sb_sleep_mode = {
+    'name': 'sleep-mode',
+
+    'title': {
+        'en': 'Sleep',
+        'fi': 'Unitila',
+        'sv': 'Strömsparläge',
+        'de': 'Schlafen'
     },
 
-    SIDEBAR_SEPARATOR,
+    'description': '',
 
-    {
-        'name': 'restart',
+    'icon': '/usr/share/icons/oxygen/base/32x32/actions/system-suspend-hibernate.png',
 
-        'title': {
-            'en': 'Restart',
-            'fi': 'Käynnistä uudelleen',
-            'sv': 'Starta om',
-            'de': 'Neustarten'
-        },
+    'command': {
+        'type': 'command',
+        'args': ['dbus-send',
+                 '--system',
+                 '--print-reply',
+                 '--dest=org.freedesktop.login1',
+                 '/org/freedesktop/login1',
+                 'org.freedesktop.login1.Manager.Suspend',
+                 'boolean:true']
+    },
+}
 
-        'icon': '/usr/share/icons/oxygen/base/32x32/actions/system-reboot.png',
+sb_logout = {
+    'name': 'logout',
 
-        'command': {
-            'type': 'command',
-            'args': 'gnome-session-quit --reboot'
+    'title': {
+        'en': 'Logout',
+        'fi': 'Kirjaudu ulos',
+        'sv': 'Logga ut',
+        'de': 'Abmelden'
+    },
+
+    'description': '',
+
+    'icon': '/usr/share/icons/gnome/32x32/actions/gnome-session-logout.png',
+
+    'command': {
+        'type': 'command',
+        'args': 'gnome-session-quit --logout'
+    },
+}
+
+sb_restart = {
+    'name': 'restart',
+
+    'title': {
+        'en': 'Restart',
+        'fi': 'Käynnistä uudelleen',
+        'sv': 'Starta om',
+        'de': 'Neustarten'
+    },
+
+    'description': '',
+
+    'icon': '/usr/share/icons/oxygen/base/32x32/actions/system-reboot.png',
+
+    'command': {
+        'type': 'command',
+        'args': 'gnome-session-quit --reboot'
+    }
+}
+
+sb_shutdown = {
+    'name': 'shutdown',
+
+    'title': {
+        'en': 'Shut down',
+        'fi': 'Sammuta',
+        'sv': 'Stäng av',
+        'de': 'Herunterfahren',
+    },
+
+    'description': '',
+
+    'icon': '/usr/share/icons/oxygen/base/32x32/actions/system-shutdown.png',
+
+    'command': {
+        'type': 'command',
+        'args': 'gnome-session-quit --power-off'
+    }
+}
+
+class Sidebar:
+    STRINGS = {
+        'avatar_link_failed': {
+            'en': 'Could not open the user preferences editor',
+            'fi': 'Ei voitu avata käyttäjätietojen muokkausta',
         }
-    },
+    }
 
-    {
-        'name': 'shutdown',
+    def __init__(self, parent, container, language, res_dir):
+        self.__parent = parent
+        self.__container = container
+        self.__language = language
 
-        'title': {
-            'en': 'Shut down',
-            'fi': 'Sammuta',
-            'sv': 'Stäng av',
-            'de': 'Herunterfahren',
-        },
+        # Detect guest user sessions
+        if 'GUEST_SESSION' in environ:
+            logger.info('This is a guest user session.')
+            self.__is_guest = True
+        else:
+            self.__is_guest = False
 
-        'icon': '/usr/share/icons/oxygen/base/32x32/actions/system-shutdown.png',
+        # Variables for commands
+        self.__variables = {}
+        self.__variables['puavo_domain'] = \
+            get_file_contents('/etc/puavo/domain')
+        self.__variables['user_name'] = getuser()
 
-        'command': {
-            'type': 'command',
-            'args': 'gnome-session-quit --power-off'
-        }
-    },
-]
+        # User name and avatar icon
+        try:
+            avatar_image = \
+                load_image_at_size(res_dir + 'default_avatar.png', 48, 48)
+        except Exception as e:
+            logger.error('Can\'t load the default avatar image: {0}'.
+                         format(e))
+            avatar_image = None
+
+        avatar = AvatarButton(self, getuser(), avatar_image)
+
+        if self.__is_guest:
+            logger.info('Disabling the avatar button for guest user')
+            avatar.disable()
+        else:
+            avatar.connect('clicked', self.__clicked_avatar_button)
+
+        self.__container.put(avatar, USER_AVATAR_LEFT, USER_AVATAR_TOP)
+        avatar.show()
+
+        # The buttons
+        create_separator(container=self.__container,
+                         x=USER_AVATAR_LEFT,
+                         y=USER_AVATAR_TOP + USER_AVATAR_SIZE + 10,
+                         w=SIDEBAR_WIDTH,
+                         h=-1,
+                         orientation=Gtk.Orientation.HORIZONTAL)
+
+        self.__create_buttons()
+
+        # Host name and release name/type
+        label_top = WINDOW_HEIGHT - LABEL_HEIGHT - 10
+
+        create_separator(container=self.__container,
+                         x=SIDEBAR_LEFT,
+                         y=label_top - 10,
+                         w=SIDEBAR_WIDTH,
+                         h=1,
+                         orientation=Gtk.Orientation.HORIZONTAL)
+
+        hostname_label = Gtk.Label()
+        hostname_label.set_size_request(SIDEBAR_WIDTH, LABEL_HEIGHT)
+        hostname_label.set_ellipsize(Pango.EllipsizeMode.END)
+        hostname_label.set_justify(Gtk.Justification.CENTER)
+        hostname_label.set_alignment(0.5, 0.5)
+        hostname_label.set_use_markup(True)
+
+        # "big" and "small" are not good sizes, we need to be explicit
+        hostname_label.set_markup(
+            '<big>{hn}</big>\n<small>{rn} ({ht})</small>'.format(
+            hn=get_file_contents('/etc/puavo/hostname'),
+            rn=get_file_contents('/etc/puavo-image/release'),
+            ht=get_file_contents('/etc/puavo/hosttype')))
+
+        hostname_label.show()
+        container.put(hostname_label, SIDEBAR_LEFT, label_top)
+
+
+    def __create_buttons(self):
+        y = SIDEBAR_TOP
+
+        # Since Python won't let you modify arguments (no pass-by-reference),
+        # each of these returns the next Y position. X coordinates are fixed.
+
+        if not self.__is_guest:
+            y = self.__create_button(y, sb_change_password)
+
+        y = self.__create_button(y, sb_support)
+        y = self.__create_button(y, sb_system_settings)
+        y = self.__create_separator(y)
+
+        if not self.__is_guest:
+            y = self.__create_button(y, sb_lock_screen)
+
+        y = self.__create_button(y, sb_sleep_mode)
+        y = self.__create_button(y, sb_logout)
+        y = self.__create_separator(y)
+        y = self.__create_button(y, sb_restart)
+        y = self.__create_button(y, sb_shutdown)
+
+
+    # Creates a sidebar button
+    def __create_button(self, y, data):
+        button = SidebarButton(self.__parent,
+                               localize(data['title'], self.__language),
+                               ICONS32.load_icon(data['icon']),
+                               localize(data['description'], self.__language),
+                               data['command'])
+
+        button.connect('clicked', self.__clicked_sidebar_button)
+        button.show()
+        self.__container.put(button, SIDEBAR_LEFT + 10, y)
+
+        # the next available Y coordinate
+        return y + 44
+
+
+    # Creates a special sidebar separator
+    def __create_separator(self, y):
+        PADDING = 20
+
+        create_separator(container=self.__container,
+                         x=SIDEBAR_LEFT + 10 + PADDING,
+                         y=y + 10,
+                         w=SIDEBAR_WIDTH - (PADDING * 2),
+                         h=-1,
+                         orientation=Gtk.Orientation.HORIZONTAL)
+
+        # the next available Y coordinate
+        return y + 25
+
+
+    # Edit user preferences
+    def __clicked_avatar_button(self, e):
+        print('Clicked the user avatar button')
+
+        url = expand_variables('https://$(puavo_domain)/users/profile/edit',
+                               self.__variables)
+
+        try:
+            # open the URL in the default web browser
+            import subprocess
+
+            subprocess.Popen(['xdg-open', url],
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+        except Exception as e:
+            logger.error(str(e))
+            self.__parent.error_message(
+                localize(self.STRINGS['avatar_link_failed'], self.language),
+                str(e))
+
+        self.__parent.autohide()
+
+
+    # Clicked a sidebar button
+    def __clicked_sidebar_button(self, button):
+        try:
+            import subprocess
+
+            command = button.data
+            arguments = command.get('args', '')
+
+            # Support plain strings and arrays of strings as arguments
+            if isinstance(arguments, list):
+                arguments = ' '.join(arguments).strip()
+
+            if len(arguments) == 0:
+                logger.error('Sidebar button without a command!')
+                self.__parent.error_message(
+                    'Nothing to do',
+                    'This button has no commands associated with it.')
+                return
+
+            self.__parent.autohide()
+
+            # Expand variables
+            if command.get('have_vars', False):
+                arguments = expand_variables(arguments, self.__variables)
+
+            logger.debug('Sidebar button arguments: "{0}"'.
+                         format(arguments))
+
+            if command['type'] == 'command':
+                logger.info('Executing a command')
+                subprocess.Popen(['sh', '-c', arguments, '&'],
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE)
+            elif command['type'] == 'url':
+                logger.info('Opening a URL')
+                subprocess.Popen(['xdg-open', arguments],
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE)
+            elif command['type'] == 'webwindow':
+                # TODO: implement this, don't open a separate browser window
+                logger.info('Creating a webwindow')
+                subprocess.Popen(['xdg-open', arguments],
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE)
+        except Exception as e:
+            logger.error('Could not process a sidebar button click!')
+            logger.error(e)
