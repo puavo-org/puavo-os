@@ -204,6 +204,11 @@ SB_SHUTDOWN = {
 
 class Sidebar:
     STRINGS = {
+        'avatar_hover': {
+            'en': 'Edit your user profile',
+            'fi': 'Muokkaa käyttäjäprofiiliasi',
+        },
+
         'avatar_link_failed': {
             'en': 'Could not open the user preferences editor',
             'fi': 'Ei voitu avata käyttäjätietojen muokkausta',
@@ -239,7 +244,12 @@ class Sidebar:
                          format(e))
             avatar_image = None
 
-        avatar = AvatarButton(self, getuser(), avatar_image)
+        avatar_tooltip = None
+
+        if not (self.__is_guest or self.__is_webkiosk):
+            avatar_tooltip = localize(self.STRINGS['avatar_hover'], self.__language)
+
+        avatar = AvatarButton(self, getuser(), avatar_image, avatar_tooltip)
 
         if self.__is_guest or self.__is_webkiosk:
             logger.info('Disabling the avatar button for guest user')
