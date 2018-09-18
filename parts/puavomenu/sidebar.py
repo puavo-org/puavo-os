@@ -25,10 +25,10 @@ SB_CHANGE_PASSWORD = {
     'name': 'change_password',
 
     'title': {
-        'en': 'Change password',
-        'fi': 'Vaihda salasana',
-        'sv': 'Byt lösenord',
-        'de': 'Passwort ändern',
+        'en': 'Change your password',
+        'fi': 'Vaihda salasanaasi',
+        'sv': '',
+        'de': '',
     },
 
     'icon': '/usr/share/icons/Faenza/emblems/96/emblem-readonly.png',
