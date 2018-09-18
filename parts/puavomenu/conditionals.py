@@ -193,7 +193,7 @@ def evaluate_file(file_name):
     """Evaluates the conditionals listed in a file and returns their
     results in a dict."""
 
-    log_info('Loading conditionals from file "{0}"'.format(file_name))
+    log_info('Loading a conditionals file "{0}"'.format(file_name))
 
     results = {}
 
@@ -208,44 +208,44 @@ def evaluate_file(file_name):
         log_error(e)
         return results
 
-    for c in (data or []):
-        if 'name' not in c:
-            log_error('Ignoring a conditional without name, skipping')
+    for cond in (data or []):
+        if 'name' not in cond:
+            log_error('Ignoring a conditional without a name (missing "name" key)')
             continue
 
-        c_name = c['name']
+        name = cond['name']
 
-        if c_name in results:
+        if name in results:
             log_error('Duplicate conditional "{0}", skipping'.
-                      format(c_name))
+                      format(name))
             continue
 
-        if 'method' not in c:
+        if 'method' not in cond:
             log_error('Conditional "{0}" has no method defined, skipping'.
-                      format(c_name))
+                      format(name))
             continue
 
-        c_method = c['method']
+        method = cond['method']
 
-        if c_method not in __METHODS:
+        if method not in __METHODS:
             log_error('Conditional "{0}" has an unknown method "{1}", '
-                      'skipping'.format(c_name, c_method))
+                      'skipping'.format(name, method))
             continue
 
-        if ('params' not in c) or (c['params'] is None):
+        if ('params' not in cond) or (cond['params'] is None):
             log_error('Conditional "{0}" has no "params" block, skipping'.
-                      format(c_name))
+                      format(name))
             continue
 
         try:
-            results[c_name] = __METHODS[c_method](c_name, c['params'][0])
+            results[name] = __METHODS[method](name, cond['params'][0])
         except Exception as e:
             # Don't let a single conditional failure remove
             # everything in this file
             log_error(e)
 
     for k, v in results.items():
-        log_debug('Conditional: name="{0}", result={1}'.format(k, v))
+        log_debug('Conditional: name="{0}", OK={1}, result={2}'.format(k, v[0], v[1]))
 
     return results
 
