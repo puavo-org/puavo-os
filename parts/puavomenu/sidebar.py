@@ -214,30 +214,8 @@ class Sidebar:
             get_file_contents('/etc/puavo/domain')
         self.__variables['user_name'] = getuser()
 
-        # User name and avatar icon
-        try:
-            avatar_image = \
-                load_image_at_size(res_dir + 'default_avatar.png', 48, 48)
-        except Exception as e:
-            logger.error('Can\'t load the default avatar image: {0}'.
-                         format(e))
-            avatar_image = None
-
-        avatar_tooltip = None
-
-        if not (self.__is_guest or self.__is_webkiosk):
-            avatar_tooltip = localize(self.STRINGS['avatar_hover'], self.__language)
-
-        avatar = AvatarButton(self, getuser(), avatar_image, avatar_tooltip)
-
-        if self.__is_guest or self.__is_webkiosk:
-            logger.info('Disabling the avatar button for guest user')
-            avatar.disable()
-        else:
-            avatar.connect('clicked', self.__clicked_avatar_button)
-
-        self.container.put(avatar, 0, MAIN_PADDING)
-        avatar.show()
+        # Avatar
+        self.__create_avatar(res_dir)
 
         # The buttons
         create_separator(container=self.container,
@@ -390,6 +368,33 @@ class Sidebar:
         # FIXME: the "+1" is a hack, it must be changed if the separator
         # height ever changes.
         return y + MAIN_PADDING * 2 + 1
+
+
+    def __create_avatar(self, res_dir):
+        # User name and avatar icon
+        try:
+            avatar_image = \
+                load_image_at_size(res_dir + 'default_avatar.png', 48, 48)
+        except Exception as e:
+            logger.error('Can\'t load the default avatar image: {0}'.
+                         format(e))
+            avatar_image = None
+
+        avatar_tooltip = None
+
+        if not (self.__is_guest or self.__is_webkiosk):
+            avatar_tooltip = localize(self.STRINGS['avatar_hover'], self.__language)
+
+        self.__avatar = AvatarButton(self, getuser(), avatar_image, avatar_tooltip)
+
+        if self.__is_guest or self.__is_webkiosk:
+            logger.info('Disabling the avatar button for guest user')
+            self.__avatar.disable()
+        else:
+            self.__avatar.connect('clicked', self.__clicked_avatar_button)
+
+        self.container.put(self.__avatar, 0, MAIN_PADDING)
+        self.__avatar.show()
 
 
     # Edit user preferences
