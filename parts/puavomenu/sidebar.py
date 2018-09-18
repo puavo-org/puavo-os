@@ -266,7 +266,8 @@ class Sidebar:
     # Digs up values for expanding variables in button arguments
     def __get_variables(self):
         self.__variables = {}
-        self.__variables['puavo_domain'] = get_file_contents('/etc/puavo/domain')
+        self.__variables['puavo_domain'] = \
+            get_file_contents('/etc/puavo/domain', '?')
         self.__variables['user_name'] = getuser()
 
 
@@ -284,9 +285,12 @@ class Sidebar:
         avatar_tooltip = None
 
         if not (self.__is_guest or self.__is_webkiosk):
-            avatar_tooltip = localize(self.STRINGS['avatar_hover'], self.__language)
+            avatar_tooltip = localize(self.STRINGS['avatar_hover'],
+                                      self.__language)
 
-        self.__avatar = AvatarButton(self, getuser(), avatar_image, avatar_tooltip)
+        self.__avatar = AvatarButton(self, getuser(),
+                                     avatar_image,
+                                     avatar_tooltip)
 
         if self.__is_guest or self.__is_webkiosk:
             logger.info('Disabling the avatar button for guest user')
@@ -332,7 +336,8 @@ class Sidebar:
         if not self.__is_webkiosk:
             y = self.__create_button(y, SB_SHUTDOWN)
 
-        logger.info('Support page URL: "{0}"'.format(SB_SUPPORT['command']['args']))
+        logger.info('Support page URL: "{0}"'.
+                    format(SB_SUPPORT['command']['args']))
 
 
     # Creates a sidebar button
