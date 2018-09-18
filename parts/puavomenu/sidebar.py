@@ -230,13 +230,8 @@ class Sidebar:
         # Sidebar container
         self.container = Gtk.Fixed()
 
-        self.detect_host_params()
-
-        # Variables for commands
-        self.__variables = {}
-        self.__variables['puavo_domain'] = \
-            get_file_contents('/etc/puavo/domain')
-        self.__variables['user_name'] = getuser()
+        self.__detect_host_params()
+        self.__get_variables()
 
         # Avatar
         self.__create_avatar(res_dir)
@@ -283,7 +278,7 @@ class Sidebar:
         self.container.show()
 
 
-    def detect_host_params(self):
+    def __detect_host_params(self):
         """Detects various type -related settings for this host and session."""
 
         self.__is_guest = False
@@ -306,28 +301,12 @@ class Sidebar:
         # TODO: implement this
 
 
-    def __get_changelog_url(self):
-        """Generates the full URL to the current image's changelog."""
+    def __get_variables(self):
+        """Digs up the values for variable expansion."""
 
-        series = get_file_contents('/etc/puavo-image/class', 'opinsys')
-        version = get_file_contents('/etc/puavo-image/name', '')
-
-        logger.debug('The current image series is "{0}"'.format(series))
-        logger.debug('The current image version is "{0}"'.format(version))
-
-        if len(version) > 4:
-            # strip extension from the image file name
-            version = version[:-4]
-
-        url = puavo_conf('puavo.support.image_changelog_url',
-                         'http://changelog.opinsys.fi')
-
-        url = url.replace('%%IMAGESERIES%%', series)
-        url = url.replace('%%IMAGEVERSION%%', version)
-
-        logger.info('The final changelog URL is "{0}"'.format(url))
-
-        return url
+        self.__variables = {}
+        self.__variables['puavo_domain'] = get_file_contents('/etc/puavo/domain')
+        self.__variables['user_name'] = getuser()
 
 
     def __create_buttons(self):
