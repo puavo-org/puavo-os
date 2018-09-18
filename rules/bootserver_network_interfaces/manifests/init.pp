@@ -26,5 +26,8 @@ class bootserver_network_interfaces {
   ::puavo_conf::script {
     'setup_network_interfaces':
       source => 'puppet:///modules/bootserver_network_interfaces/setup_network_interfaces';
+
+    'setup_persistent_net_rules':
+      source => 'puppet:///modules/bootserver_network_interfaces/setup_persistent_net_rules';
   }
 }
