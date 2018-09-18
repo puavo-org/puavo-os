@@ -38,3 +38,12 @@ terminal-border: "0"
   color = "#cccccc"
   font = "Unifont Regular 16"
 }
+
+# Show logo
++ image {
+  top = 90%
+  left = 80%
+  align = "center"
+  id = "__logo__"
+  file = icons/opinsys.png
+}
