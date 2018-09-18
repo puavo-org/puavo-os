@@ -370,10 +370,11 @@ class AvatarButton(HoverIconButtonBase):
     def __init__(self,
                  parent,
                  user_name,
-                 avatar=None):
+                 avatar=None,
+                 tooltip=None):
 
         super().__init__(parent, label=user_name, icon=None,
-                         tooltip=None, data=None)
+                         tooltip=tooltip, data=None)
 
         self.icon = avatar
 
