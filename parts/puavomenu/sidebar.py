@@ -178,6 +178,30 @@ SB_SHUTDOWN = {
 }
 
 
+def get_changelog_url():
+    """Generates the full URL to the current image's changelog."""
+
+    series = get_file_contents('/etc/puavo-image/class', 'opinsys')
+    version = get_file_contents('/etc/puavo-image/name', '')
+
+    logger.debug('The current image series is "{0}"'.format(series))
+    logger.debug('The current image version is "{0}"'.format(version))
+
+    if len(version) > 4:
+        # strip extension from the image file name
+        version = version[:-4]
+
+    url = puavo_conf('puavo.support.image_changelog_url',
+                     'http://changelog.opinsys.fi')
+
+    url = url.replace('%%IMAGESERIES%%', series)
+    url = url.replace('%%IMAGEVERSION%%', version)
+
+    logger.info('The final changelog URL is "{0}"'.format(url))
+
+    return url
+
+
 # ------------------------------------------------------------------------------
 # The sidebar class
 
@@ -250,7 +274,7 @@ class Sidebar:
             format(get_file_contents('/etc/puavo/hostname'),
                    get_file_contents('/etc/puavo-image/release'),
                    get_file_contents('/etc/puavo/hosttype'),
-                   self.__get_changelog_url(),
+                   get_changelog_url(),
                    localize(self.STRINGS['changelog_title'], self.__language)))
 
         hostname_label.show()
