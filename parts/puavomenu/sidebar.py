@@ -257,8 +257,10 @@ class Sidebar:
             logger.info('This is a fatclient device')
             self.__is_fatclient = True
 
-        # Detect webkiosk sessions
-        # TODO: implement this
+        # Detect webkiosk sessions. I don't know if this actually works!
+        if puavo_conf('puavo.webmenu.webkiosk', '') == 'true':
+            logger.info('This is a webkiosk session')
+            self.__is_webkiosk = True
 
 
     # Digs up values for expanding variables in button arguments
