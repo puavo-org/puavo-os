@@ -31,13 +31,6 @@ SB_CHANGE_PASSWORD = {
         'de': 'Passwort ändern',
     },
 
-    'description': {
-        'fi': 'Vaihda salasana',
-        'en': 'Change password',
-        'sv': 'Byt lösenord',
-        'de': 'Passwort ändern',
-    },
-
     'icon': '/usr/share/icons/Faenza/emblems/96/emblem-readonly.png',
 
     'command': {
@@ -56,8 +49,6 @@ SB_SUPPORT = {
         'sv': 'Support',
         'de': 'Support',
     },
-
-    'description': '',
 
     'icon': '/usr/share/icons/Faenza/status/96/dialog-question.png',
 
@@ -78,8 +69,6 @@ SB_SYSTEM_SETTINGS = {
         'de': 'Systemeinstellungen',
     },
 
-    'description': '',
-
     'icon': '/usr/share/icons/Faenza/categories/96/applications-system.png',
 
     'command': {
@@ -97,8 +86,6 @@ SB_LOCK_SCREEN = {
         'sv': 'Lås skärmen',
         'de': 'Bildschirm sperren'
     },
-
-    'description': '',
 
     'icon': '/usr/share/icons/Faenza/actions/96/system-lock-screen.png',
 
@@ -121,8 +108,6 @@ SB_SLEEP_MODE = {
         'sv': 'Strömsparläge',
         'de': 'Schlafen'
     },
-
-    'description': '',
 
     'icon': '/usr/share/icons/oxygen/base/32x32/actions/system-suspend-hibernate.png',
 
@@ -148,8 +133,6 @@ SB_LOGOUT = {
         'de': 'Abmelden'
     },
 
-    'description': '',
-
     'icon': '/usr/share/icons/gnome/32x32/actions/gnome-session-logout.png',
 
     'command': {
@@ -168,8 +151,6 @@ SB_RESTART = {
         'de': 'Neustarten'
     },
 
-    'description': '',
-
     'icon': '/usr/share/icons/oxygen/base/32x32/actions/system-reboot.png',
 
     'command': {
@@ -187,8 +168,6 @@ SB_SHUTDOWN = {
         'sv': 'Stäng av',
         'de': 'Herunterfahren',
     },
-
-    'description': '',
 
     'icon': '/usr/share/icons/oxygen/base/32x32/actions/system-shutdown.png',
 
@@ -383,7 +362,7 @@ class Sidebar:
         button = SidebarButton(self,
                                localize(data['title'], self.__language),
                                ICONS32.load_icon(data['icon']),
-                               localize(data['description'], self.__language),
+                               localize(data.get('description', ''), self.__language),
                                data['command'])
 
         button.connect('clicked', self.__clicked_sidebar_button)
