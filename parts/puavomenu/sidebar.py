@@ -227,60 +227,20 @@ class Sidebar:
         self.__parent = parent
         self.__language = language
 
-        # Sidebar container
         self.container = Gtk.Fixed()
 
         self.__detect_host_params()
         self.__get_variables()
 
-        # Avatar
         self.__create_avatar(res_dir)
-
-        # The buttons
-        create_separator(container=self.container,
-                         x=0,
-                         y=MAIN_PADDING + USER_AVATAR_SIZE + MAIN_PADDING,
-                         w=SIDEBAR_WIDTH,
-                         h=-1,
-                         orientation=Gtk.Orientation.HORIZONTAL)
-
         self.__create_buttons()
-
-        # Host name and release name/type
-        label_top = WINDOW_HEIGHT - MAIN_PADDING - HOSTINFO_LABEL_HEIGHT
-
-        create_separator(container=self.container,
-                         x=0,
-                         y=label_top - MAIN_PADDING,
-                         w=SIDEBAR_WIDTH,
-                         h=1,
-                         orientation=Gtk.Orientation.HORIZONTAL)
-
-        hostname_label = Gtk.Label()
-        hostname_label.set_size_request(SIDEBAR_WIDTH, HOSTINFO_LABEL_HEIGHT)
-        hostname_label.set_ellipsize(Pango.EllipsizeMode.END)
-        hostname_label.set_justify(Gtk.Justification.CENTER)
-        hostname_label.set_alignment(0.5, 0.5)
-        hostname_label.set_use_markup(True)
-
-        # "big" and "small" are not good sizes, we need to be explicit
-        hostname_label.set_markup(
-            '<big>{0}</big>\n<small><a href="{3}" title="{4}">{1}</a> ({2})</small>'.
-            format(get_file_contents('/etc/puavo/hostname'),
-                   get_file_contents('/etc/puavo-image/release'),
-                   get_file_contents('/etc/puavo/hosttype'),
-                   get_changelog_url(),
-                   localize(self.STRINGS['changelog_title'], self.__language)))
-
-        hostname_label.show()
-        self.container.put(hostname_label, 0, label_top)
+        self.__create_hostinfo()
 
         self.container.show()
 
 
+    # Detects various settings for the current host and session
     def __detect_host_params(self):
-        """Detects various type -related settings for this host and session."""
-
         self.__is_guest = False
         self.__is_fatclient = False
         self.__is_webkiosk = False
@@ -301,15 +261,50 @@ class Sidebar:
         # TODO: implement this
 
 
+    # Digs up values for expanding variables in button arguments
     def __get_variables(self):
-        """Digs up the values for variable expansion."""
-
         self.__variables = {}
         self.__variables['puavo_domain'] = get_file_contents('/etc/puavo/domain')
         self.__variables['user_name'] = getuser()
 
 
+    # Creates the user avatar button
+    def __create_avatar(self, res_dir):
+        # TODO: Load the actual user avatar image
+        try:
+            avatar_image = \
+                load_image_at_size(res_dir + 'default_avatar.png', 48, 48)
+        except Exception as e:
+            logger.error('Can\'t load the default avatar image: {0}'.
+                         format(e))
+            avatar_image = None
+
+        avatar_tooltip = None
+
+        if not (self.__is_guest or self.__is_webkiosk):
+            avatar_tooltip = localize(self.STRINGS['avatar_hover'], self.__language)
+
+        self.__avatar = AvatarButton(self, getuser(), avatar_image, avatar_tooltip)
+
+        if self.__is_guest or self.__is_webkiosk:
+            logger.info('Disabling the avatar button for guest user')
+            self.__avatar.disable()
+        else:
+            self.__avatar.connect('clicked', self.__clicked_avatar_button)
+
+        self.container.put(self.__avatar, 0, MAIN_PADDING)
+        self.__avatar.show()
+
+
+    # Creates the sidebar "system" buttons
     def __create_buttons(self):
+        create_separator(container=self.container,
+                         x=0,
+                         y=MAIN_PADDING + USER_AVATAR_SIZE + MAIN_PADDING,
+                         w=SIDEBAR_WIDTH,
+                         h=-1,
+                         orientation=Gtk.Orientation.HORIZONTAL)
+
         # FIXME: the "+1" is a hack, it must be changed if the separator
         # height ever changes.
         y = MAIN_PADDING + USER_AVATAR_SIZE + MAIN_PADDING * 2 + 1
@@ -373,34 +368,39 @@ class Sidebar:
         return y + MAIN_PADDING * 2 + 1
 
 
-    def __create_avatar(self, res_dir):
-        # User name and avatar icon
-        try:
-            avatar_image = \
-                load_image_at_size(res_dir + 'default_avatar.png', 48, 48)
-        except Exception as e:
-            logger.error('Can\'t load the default avatar image: {0}'.
-                         format(e))
-            avatar_image = None
+    # Builds the label that contains hostname, host type, image name and
+    # a link to the changelog.
+    def __create_hostinfo(self):
+        label_top = WINDOW_HEIGHT - MAIN_PADDING - HOSTINFO_LABEL_HEIGHT
 
-        avatar_tooltip = None
+        create_separator(container=self.container,
+                         x=0,
+                         y=label_top - MAIN_PADDING,
+                         w=SIDEBAR_WIDTH,
+                         h=1,
+                         orientation=Gtk.Orientation.HORIZONTAL)
 
-        if not (self.__is_guest or self.__is_webkiosk):
-            avatar_tooltip = localize(self.STRINGS['avatar_hover'], self.__language)
+        hostname_label = Gtk.Label()
+        hostname_label.set_size_request(SIDEBAR_WIDTH, HOSTINFO_LABEL_HEIGHT)
+        hostname_label.set_ellipsize(Pango.EllipsizeMode.END)
+        hostname_label.set_justify(Gtk.Justification.CENTER)
+        hostname_label.set_alignment(0.5, 0.5)
+        hostname_label.set_use_markup(True)
 
-        self.__avatar = AvatarButton(self, getuser(), avatar_image, avatar_tooltip)
+        # "big" and "small" are not good sizes, we need to be explicit
+        hostname_label.set_markup(
+            '<big>{0}</big>\n<small><a href="{3}" title="{4}">{1}</a> ({2})</small>'.
+            format(get_file_contents('/etc/puavo/hostname'),
+                   get_file_contents('/etc/puavo-image/release'),
+                   get_file_contents('/etc/puavo/hosttype'),
+                   get_changelog_url(),
+                   localize(self.STRINGS['changelog_title'], self.__language)))
 
-        if self.__is_guest or self.__is_webkiosk:
-            logger.info('Disabling the avatar button for guest user')
-            self.__avatar.disable()
-        else:
-            self.__avatar.connect('clicked', self.__clicked_avatar_button)
-
-        self.container.put(self.__avatar, 0, MAIN_PADDING)
-        self.__avatar.show()
+        hostname_label.show()
+        self.container.put(hostname_label, 0, label_top)
 
 
-    # Edit user preferences
+    # Open the user profile editor
     def __clicked_avatar_button(self, button):
         print('Clicked the user avatar button')
 
@@ -423,7 +423,7 @@ class Sidebar:
         self.__parent.autohide()
 
 
-    # Clicked a sidebar button
+    # Sidebar button command handler
     def __clicked_sidebar_button(self, button):
         try:
             import subprocess
