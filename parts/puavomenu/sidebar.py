@@ -356,6 +356,8 @@ class Sidebar:
         if not self.__is_webkiosk:
             y = self.__create_button(y, SB_SHUTDOWN)
 
+        logger.info('Support page URL: "{0}"'.format(SB_SUPPORT['command']['args']))
+
 
     # Creates a sidebar button
     def __create_button(self, y, data):
