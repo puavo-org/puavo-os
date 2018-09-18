@@ -11,7 +11,7 @@ from os.path import exists as path_exists, \
                     isfile as is_file, \
                     getsize as get_size
 
-import os, stat
+import os, re, stat
 
 from logger import debug as log_debug, \
                    error as log_error, \
@@ -129,7 +129,9 @@ def __env_var(name, params):
     if present == state:
         if present and 'value' in params:
             # content check
-            if os.environ[params['name']] != params['value']:
+            if re.search(params['value'],
+                         os.environ[params['name']],
+                         re.IGNORECASE) is None:
                 return (True, False)
 
         return (True, True)
