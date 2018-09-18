@@ -10,9 +10,13 @@ PROGRAM_TYPE_WEB = 2
 WINDOW_WIDTH = 955
 WINDOW_HEIGHT = 592
 
-# Main window padding
+# Main padding, used everywhere
 # !!! DO NOT CHANGE! DOES NOT WORK PROPERLY YET! !!!
 MAIN_PADDING = 10
+
+# Size, in pixels, of the separator lines. Depends on the theme, so
+# this unfortunately isn't very reliable.
+SEPARATOR_SIZE = 1
 
 # Width of the category selector
 CATEGORIES_WIDTH = 350
@@ -45,15 +49,15 @@ PROGRAM_BUTTON_ICON_SIZE = 48
 NUMBER_OF_FAVES = 4
 
 # Sidebar main
-SIDEBAR_TOP = 80
+SIDEBAR_TOP = 0
 SIDEBAR_LEFT = PROGRAMS_LEFT + PROGRAMS_WIDTH + (MAIN_PADDING * 2)
 SIDEBAR_WIDTH = WINDOW_WIDTH - SIDEBAR_LEFT - MAIN_PADDING
-USER_AVATAR_LEFT = SIDEBAR_LEFT
+
 USER_AVATAR_TOP = MAIN_PADDING
 USER_AVATAR_SIZE = 48
 
 # Height of the machine name and release info text
-LABEL_HEIGHT = 45
+HOSTINFO_LABEL_HEIGHT = 45
 
 # Accepted extensions for icon files, in the order we prefer them. Some
 # .desktop file "Icon" entries specify full paths, so we check if the

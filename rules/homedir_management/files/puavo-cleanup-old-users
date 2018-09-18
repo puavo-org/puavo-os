@@ -2,6 +2,9 @@
 
 set -eu
 
+# no user cleanups on netboot devices
+[ -e /run/puavo/nbd-server ] && exit 0
+
 logmsg() {
   logger -s -t puavo-cleanup-old-users "$@" || true
 }

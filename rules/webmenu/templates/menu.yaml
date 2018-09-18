@@ -96,6 +96,9 @@ items:
   - source: blender
     type: desktop
     inactiveByDeviceType: thinclient
+  - source: cura
+    type: desktop
+    inactiveByDeviceType: thinclient
   - type: web
     name: SketchUp Free (Web)
     url: https://app.sketchup.com/app?hl=en
@@ -237,6 +240,9 @@ items:
     type: desktop
     inactiveByDeviceType: thinclient
     condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"
+  - source: db_koulu1
+    type: desktop
+    inactiveByDeviceType: thinclient
   - source: gcompris
     type: desktop
     condition: "!env.PUAVO_PERSONALLY_ADMINISTERED"

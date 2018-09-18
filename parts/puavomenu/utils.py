@@ -1,6 +1,5 @@
 # PuavoMenu miscellaneous utility functions
 
-from math import radians
 from logger import error as log_error, warn as log_warn
 
 
@@ -35,13 +34,20 @@ def localize(where, lang_id):
     return str(where[list(where)[0]])
 
 
+def is_empty(string):
+    """Returns true if 's' is completely empty. This ugly hacky function
+    is needed because YAML."""
+
+    return string is None or len(string) == 0
+
+
 def get_file_contents(name, default=''):
     """Reads the contents of a UTF-8 file into a buffer."""
 
     try:
         return open(name, 'r', encoding='utf-8').read().strip()
-    except Exception as e:
-        log_error('Could not load file "{0}": {1}'.format(name, e))
+    except OSError as exception:
+        log_error('Could not load file "{0}": {1}'.format(name, exception))
         return default
 
 
@@ -89,58 +95,21 @@ def expand_variables(string, variables=None):
     return out
 
 
-def load_image_at_size(name, width, height):
-    """Loads an image file at the specified size. Does NOT handle
-    exceptions!"""
+def puavo_conf(name, default):
+    """puavo-conf call with a default value that is returned if
+    the call fails."""
 
-    from gi.repository import GdkPixbuf, Gdk
-    from cairo import ImageSurface, FORMAT_ARGB32, Context
+    import subprocess
 
-    pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(name, width, height)
-    surface = ImageSurface(FORMAT_ARGB32, width, height)
-    ctx = Context(surface)
-    Gdk.cairo_set_source_pixbuf(ctx, pixbuf, 0, 0)
-    ctx.paint()
+    proc = subprocess.Popen(['puavo-conf', name],
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
+    proc.wait()
 
-    return surface
+    if proc.returncode == 1:
+        # Assume the value does not exist. We cannot distinguish
+        # between failed puavo-conf calls and unknown/mistyped
+        # puavoconf variables.
+        return default
 
-
-def rounded_rectangle(ctx, x, y, width, height, radius=20):
-    """Creates a path with rounded corners. You must stroke/fill
-    the path yourself."""
-
-    # 2 is the smallest radius that actually is visible.
-    # Determined empirically.
-    if radius < 2:
-        ctx.rectangle(x, y, width, height)
-        return
-
-    # see https://www.cairographics.org/samples/rounded_rectangle/
-    ctx.arc(x + width - radius, y + radius, radius,
-            radians(-90.0), radians(0.0))
-    ctx.arc(x + width - radius, y + height - radius, radius,
-            radians(0.0), radians(90.0))
-    ctx.arc(x + radius, y + height - radius, radius,
-            radians(90.0), radians(180.0))
-    ctx.arc(x + radius, y + radius, radius,
-            radians(180.0), radians(270.0))
-
-
-def draw_x(ctx, x, y, width, height, color=None):
-    """Draws an arbitrarily-sized "X" placeholder icon."""
-
-    color = color or [1.0, 0.0, 0.0]
-
-    # https://www.cairographics.org/FAQ/#sharp_lines
-    ctx.save()
-    ctx.set_source_rgba(1.0, 1.0, 1.0, 1.0)
-    ctx.rectangle(x + 0.5, y + 0.5, width - 1.0, height - 1.0)
-    ctx.fill_preserve()
-    ctx.set_source_rgba(color[0], color[1], color[2], 1.0)
-    ctx.move_to(x + 0.5, y + 0.5)
-    ctx.line_to(x + width - 0.5, y + height - 0.5)
-    ctx.move_to(x + 0.5, y + height - 0.5)
-    ctx.line_to(x + width - 0.5, y + 0.5)
-    ctx.set_line_width(1)
-    ctx.stroke()
-    ctx.restore()
+    return proc.stdout.read().decode('utf-8').strip()

@@ -4,10 +4,8 @@ from time import clock
 
 from os import unlink, environ
 from os.path import join as path_join, isfile as is_file
-from sys import exit
 
 import socket               # for the IPC socket
-from getpass import getuser
 import traceback
 
 import gi
@@ -19,13 +17,13 @@ from gi.repository import GLib
 
 import logger
 from constants import *
-from sidebar import *
-from iconcache import ICONS32, ICONS48
-from buttons import ProgramButton, MenuButton, SidebarButton, AvatarButton
-from utils import localize, expand_variables, get_file_contents, \
-                  load_image_at_size
+from iconcache import ICONS48
+from buttons import ProgramButton, MenuButton
+from utils import localize
+from utils_gui import load_image_at_size, create_separator
 from loader import load_menu_data
 from conditionals import evaluate_file
+from sidebar import Sidebar
 
 
 class PuavoMenu(Gtk.Window):
@@ -59,10 +57,6 @@ class PuavoMenu(Gtk.Window):
         'panel_link_failed': {
             'en': 'Panel icon could not be created',
             'fi': 'Paneelin kuvaketta ei voitu luoda',
-        },
-        'avatar_link_failed': {
-            'en': 'Could not open the user preferences editor',
-            'fi': 'Ei voitu avata käyttäjätietojen muokkausta',
         },
     }
 
@@ -132,11 +126,11 @@ class PuavoMenu(Gtk.Window):
             logger.error('This is a fatal error, stopping here.')
 
             syslog.syslog(syslog.LOG_CRIT,
-                'PuavoMenu IPC socket "{0}" creation failed: {1}'.
-                format(socket_name, e))
+                          'PuavoMenu IPC socket "{0}" creation failed: {1}'.
+                          format(socket_name, e))
 
             syslog.syslog(syslog.LOG_CRIT,
-                         'PuavoMenu stops here. Contact Opinsys support.')
+                          'PuavoMenu stops here. Contact Opinsys support.')
 
             exit(1)
 
@@ -164,13 +158,6 @@ class PuavoMenu(Gtk.Window):
         self.language = language
         self.dev_mode = dev_mode
         self.enable_autohide = autohide
-
-        # Detect guest user sessions
-        if 'GUEST_SESSION' in environ:
-            logger.info('This is a guest user session.')
-            self.__is_guest = True
-        else:
-            self.__is_guest = False
 
         # Location of the Desktop directory, determined on the first use
         self.desktop_dir = None
@@ -207,12 +194,6 @@ class PuavoMenu(Gtk.Window):
         self.__fave_buttons = []
         self.__prev_fave_ids = []
 
-        # Expansion variables for sidebar button arguments
-        self.__sb_variables = {}
-        self.__sb_variables['puavo_domain'] = \
-            get_file_contents('/etc/puavo/domain')
-        self.__sb_variables['user_name'] = getuser()
-
         # Background image for top-level menus
         try:
             self.__menu_background = \
@@ -221,15 +202,6 @@ class PuavoMenu(Gtk.Window):
             logger.error('Can\'t load the menu background image: {0}'.
                          format(e))
             self.__menu_background = None
-
-        # The default user avatar image
-        try:
-            self.__default_avatar = \
-                load_image_at_size(res_dir + 'default_avatar.png', 48, 48)
-        except Exception as e:
-            logger.error('Can\'t load the default avatar image: {0}'.
-                         format(e))
-            self.__default_avatar = None
 
         # Load a per-user configuration file, if it exists
         conf = path_join(self.user_dir, 'puavomenu.conf')
@@ -388,68 +360,22 @@ class PuavoMenu(Gtk.Window):
                                   PROGRAMS_LEFT, FAVES_TOP)
 
         # ----------------------------------------------------------------------
-        # Sidebar
+        # The sidebar: the user avatar, buttons, host infos
 
-        self.__sidebar_sep = Gtk.Separator(orientation=
-                                           Gtk.Orientation.VERTICAL)
-        self.__sidebar_sep.set_size_request(1, WINDOW_HEIGHT - (MAIN_PADDING * 2))
-        self.__main_container.put(self.__sidebar_sep,
-                                  SIDEBAR_LEFT - MAIN_PADDING, MAIN_PADDING)
-        self.__sidebar_sep.show()
+        create_separator(container=self.__main_container,
+                         x=SIDEBAR_LEFT - MAIN_PADDING,
+                         y=MAIN_PADDING,
+                         w=1,
+                         h=WINDOW_HEIGHT - (MAIN_PADDING * 2),
+                         orientation=Gtk.Orientation.VERTICAL)
 
-        # User name and avatar icon
-        self.__user = AvatarButton(self,
-                                   getuser(),
-                                   self.__default_avatar)
+        self.__sidebar = Sidebar(parent=self,
+                                 language=self.language,
+                                 res_dir=self.res_dir)
 
-        if self.__is_guest:
-            logger.info('Disabling the avatar button for guest user')
-            self.__user.disable()
-        else:
-            # Only react to non-guest user clicks
-            self.__user.connect('clicked', self.__clicked_user_avatar)
-
-        self.__main_container.put(self.__user, USER_AVATAR_LEFT,
-                                  USER_AVATAR_TOP)
-        self.__user.show()
-
-        self.__avatar_sep = Gtk.Separator(orientation=
-                                          Gtk.Orientation.HORIZONTAL)
-        self.__avatar_sep.set_size_request(SIDEBAR_WIDTH, -1)
-        self.__main_container.put(self.__avatar_sep,
-            USER_AVATAR_LEFT, USER_AVATAR_TOP + USER_AVATAR_SIZE + 10)
-        self.__avatar_sep.show()
-
-        # Sidebar buttons
-        self.__create_sidebar_buttons()
-
-        # Host name and release name/type
-        label_top = WINDOW_HEIGHT - LABEL_HEIGHT - 10
-
-        self.__host_sep = Gtk.Separator(orientation=
-                                        Gtk.Orientation.HORIZONTAL)
-        self.__host_sep.set_size_request(SIDEBAR_WIDTH, 1)
-        self.__main_container.put(self.__host_sep,
-                                  SIDEBAR_LEFT, label_top - 10)
-        self.__host_sep.show()
-
-        self.__hostname_label = Gtk.Label()
-        self.__hostname_label.set_size_request(SIDEBAR_WIDTH, LABEL_HEIGHT)
-        self.__hostname_label.set_ellipsize(Pango.EllipsizeMode.END)
-        self.__hostname_label.set_justify(Gtk.Justification.CENTER)
-        self.__hostname_label.set_alignment(0.5, 0.5)
-        self.__hostname_label.set_use_markup(True)
-
-        # "big" and "small" are not good sizes, we need to be explicit
-        self.__hostname_label.set_markup(
-            '<big>{hn}</big>\n<small>{rn} ({ht})</small>'.format(
-            hn=get_file_contents('/etc/puavo/hostname'),
-            rn=get_file_contents('/etc/puavo-image/release'),
-            ht=get_file_contents('/etc/puavo/hosttype')))
-
-        self.__hostname_label.show()
-        self.__main_container.put(self.__hostname_label,
-                                  SIDEBAR_LEFT, label_top)
+        self.__main_container.put(self.__sidebar.container,
+                                  SIDEBAR_LEFT,
+                                  SIDEBAR_TOP)
 
         # ----------------------------------------------------------------------
         # Setup GTK signal handlers
@@ -582,12 +508,12 @@ class PuavoMenu(Gtk.Window):
 
         # TODO: "big" and "small" are not good sizes, we need to be explicit
         if self.__current_menu.description is None:
-            self.__menu_title.set_markup(
-                '<big>{0}</big>'.format(self.__current_menu.title))
+            self.__menu_title.set_markup('<big>{0}</big>'.
+                                         format(self.__current_menu.title))
         else:
             self.__menu_title.set_markup('<big>{0}</big>  <small>{1}</small>'.
-                format(self.__current_menu.title,
-                       self.__current_menu.description))
+                                         format(self.__current_menu.title,
+                                                self.__current_menu.description))
 
         self.__menu_title.show()
 
@@ -676,7 +602,7 @@ class PuavoMenu(Gtk.Window):
                 # search box has no focus)
                 logger.debug('Search field is empty and Esc pressed, '
                              'hiding the window')
-                self.__autohide()
+                self.autohide()
         elif key_event.keyval == Gdk.KEY_Return:
             if len(self.__get_search_text()) and (len(self.__buttons) == 1):
                 # There's only one search match and the user pressed
@@ -704,10 +630,10 @@ class PuavoMenu(Gtk.Window):
         # inserted on the list in random order and they tend to switch
         # positions constantly; we need to break that randomness).
         faves = [(name, p.uses, p.title)
-            for name, p in self.__programs.items() if p.uses > 0]
+                 for name, p in self.__programs.items() if p.uses > 0]
         self.__save_faves(faves)
         faves = sorted(faves,
-            key=lambda p: (p[1], p[2]), reverse=True)[0:NUMBER_OF_FAVES]
+                       key=lambda p: (p[1], p[2]), reverse=True)[0:NUMBER_OF_FAVES]
 
         # Do nothing if the list order hasn't changed
         new_ids = [f[0] for f in faves]
@@ -899,7 +825,7 @@ class PuavoMenu(Gtk.Window):
 
                 # Mark the file as trusted (I hate you GNOME)
                 subprocess.Popen(['gvfs-set-attribute', name,
-                                 'metadata::trusted', 'yes'],
+                                  'metadata::trusted', 'yes'],
                                  stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE)
 
@@ -990,27 +916,6 @@ class PuavoMenu(Gtk.Window):
         self.__update_faves()
 
 
-    # Edit user preferences
-    def __clicked_user_avatar(self, e):
-        print('Clicked the user avatar button')
-        url = expand_variables('https://$(puavo_domain)/users/profile/edit',
-                               self.__sb_variables)
-
-        try:
-            import subprocess
-
-            subprocess.Popen(['xdg-open', url],
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
-        except Exception as e:
-            logger.error(str(e))
-            self.error_message(
-                localize(self.STRINGS['avatar_link_failed'], self.language),
-                str(e))
-
-        self.__autohide()
-
-
     # Resets the menu back to the default view
     def __reset_menu(self):
         self.__current_category = 0
@@ -1037,7 +942,7 @@ class PuavoMenu(Gtk.Window):
                 self.__hide_search_results()
                 self.__reset_menu()
 
-            self.__autohide()
+            self.autohide()
 
 
     # Actually launch a program. Returns True if it succeeds.
@@ -1078,132 +983,6 @@ class PuavoMenu(Gtk.Window):
             self.error_message('Error', 'Could not launch the program '
                                '{0}:\n{1}'.format(p.command, str(e)))
             return False
-
-
-    # --------------------------------------------------------------------------
-    # Sidebar
-
-
-    # Creates the sidebar buttons
-    def __create_sidebar_buttons(self):
-        ypos = SIDEBAR_TOP
-
-        for b in SIDEBAR_BUTTONS:
-            if 'type' in b and b['type'] == 'separator':
-                # Hackily create a separator
-                sep = Gtk.Separator(orientation=
-                                    Gtk.Orientation.HORIZONTAL)
-                sep.set_size_request(SIDEBAR_WIDTH - 80, -1)
-                sep.show()
-                self.__main_container.put(sep,
-                                          SIDEBAR_LEFT + 40,
-                                          ypos + 10)
-                ypos += 25
-                continue
-
-            # Do some validation while we're at it
-            name = b.get('name', None)
-
-            if name is None:
-                logger.error('Sidebar button without a name, ignoring it')
-                continue
-
-            title = b.get('title', None)
-
-            if title is None:
-                logger.error('Sidebar button "{0}" has no title, ignoring it'.
-                             format(name))
-                continue
-
-            if 'command' not in b:
-                logger.error('Sidebar button "{0}" has no command defined, '
-                             'ignoring it'.format(name))
-                continue
-
-            cmd_type = b['command'].get('type', '')
-
-            if cmd_type not in ('command', 'url', 'webwindow'):
-                logger.error('Sidebar button "{0}" has an invalid/missing '
-                             ' command type "{1}", ignoring it'.
-                             format(name, cmd_type))
-                continue
-
-            title = localize(title, self.language)
-            description = b.get('description', None)
-            icon = b.get('icon', None)
-
-            if description:
-                description = localize(description, self.language)
-
-            if icon:
-                icon = ICONS32.load_icon(icon)
-
-            button = SidebarButton(self, title, icon, description, data=b)
-
-            if self.__is_guest and 'disabled_for_guests' in b:
-                logger.info('Disabling sidebar button "{0}" for guest user'.
-                            format(name))
-                button.disable()
-            else:
-                button.connect('clicked', self.__clicked_sidebar_button)
-
-            button.show()
-            self.__main_container.put(button, SIDEBAR_LEFT + 10, ypos)
-            ypos += 44
-
-
-    # Sidebar button click handler
-    def __clicked_sidebar_button(self, e):
-        try:
-            import subprocess
-
-            button = e.data
-            logger.info('Clicked the sidebar button "{0}"'.
-                        format(button['name']))
-
-            command = button['command']
-            arguments = command.get('args', '')
-
-            # Support strings and arrays of strings as arguments
-            if isinstance(arguments, list):
-                arguments = ' '.join(arguments).strip()
-
-            if len(arguments) == 0:
-                logger.warn('This command has NO arguments!')
-                self.error_message(
-                    'Nothing to do',
-                    'This button has no commands associated with it.')
-                return
-
-            self.__autohide()
-
-            # Expand variables?
-            if command.get('have_vars', False):
-                arguments = expand_variables(arguments, self.__sb_variables)
-
-            logger.debug('Sidebar button arguments: "{0}"'.
-                         format(arguments))
-
-            # The command type has been already validated
-            if command['type'] == 'command':
-                logger.info('Executing a command')
-                subprocess.Popen(['sh', '-c', arguments, '&'],
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE)
-            elif command['type'] == 'url':
-                logger.info('Opening a URL')
-                subprocess.Popen(['xdg-open', arguments],
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE)
-            elif command['type'] == 'webwindow':
-                # TODO: implement this, don't open a browser window
-                logger.info('Creating a webwindow')
-                subprocess.Popen(['xdg-open', arguments],
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE)
-        except Exception as e:
-            logger.error('Could not process a sidebar button click!')
-            logger.error(e)
 
 
     # --------------------------------------------------------------------------
@@ -1260,7 +1039,7 @@ class PuavoMenu(Gtk.Window):
 
     def __main_lost_focus(self, *unused):
         #logger.debug('Main window lost focus')
-        self.__autohide()
+        self.autohide()
 
 
     def __search_in(self, *unused):
@@ -1273,8 +1052,9 @@ class PuavoMenu(Gtk.Window):
         self.__search.grab_focus()
 
 
-    # If autohiding is enabled, hides the window when it loses focus.
-    def __autohide(self, *unused):
+    # If autohiding is enabled, hides the window when it loses focus. Public method, called
+    # from other files.
+    def autohide(self, *unused):
         if self.enable_autohide:
             logger.debug('Autohiding the window')
             self.set_keep_above(False)
@@ -1638,13 +1418,12 @@ class PuavoMenu(Gtk.Window):
             p.icon = ICONS48.load_icon(path)
 
             if not p.icon.usable:
-                logger.warning('Found an icon "{0}" for program "{1}", but '
-                               'it could not be loaded'.
-                               format(path, name))
+                logger.warn('Found an icon "{0}" for program "{1}", but '
+                            'it could not be loaded'.
+                            format(path, name))
                 num_missing_icons += 1
             else:
                 id_to_path_mapping[name] = path
-
 
         for name in menus:
             m = menus[name]
@@ -1664,9 +1443,9 @@ class PuavoMenu(Gtk.Window):
             m.icon = ICONS48.load_icon(m.icon)
 
             if not m.icon.usable:
-                logger.warning('Found an icon "{0}" for menu "{1}", but '
-                               'it could not be loaded'.
-                               format(path, name))
+                logger.warn('Found an icon "{0}" for menu "{1}", but '
+                            'it could not be loaded'.
+                            format(path, name))
                 num_missing_icons += 1
 
         end_time = clock()
@@ -1814,7 +1593,7 @@ class PuavoMenu(Gtk.Window):
         def permit_exit(x):
             self.__exit_permitted = not self.__exit_permitted
             logger.debug('Normal exiting ' +
-                ('ENABLED' if self.__exit_permitted else 'DISABLED'))
+                         ('ENABLED' if self.__exit_permitted else 'DISABLED'))
 
         def force_exit(x):
             logger.debug('Devmenu force exit initiated!')

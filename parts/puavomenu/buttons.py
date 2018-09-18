@@ -10,7 +10,8 @@ from logger import error as log_error
 from constants import PROGRAM_BUTTON_WIDTH, PROGRAM_BUTTON_HEIGHT, \
                       PROGRAM_BUTTON_ICON_SIZE, SIDEBAR_WIDTH
 from iconcache import ICONS32, ICONS48
-from utils import localize, rounded_rectangle, draw_x, load_image_at_size
+from utils import localize
+from utils_gui import rounded_rectangle, draw_x, load_image_at_size
 
 
 class HoverIconButtonBase(Gtk.Button):
@@ -369,10 +370,11 @@ class AvatarButton(HoverIconButtonBase):
     def __init__(self,
                  parent,
                  user_name,
-                 avatar=None):
+                 avatar=None,
+                 tooltip=None):
 
         super().__init__(parent, label=user_name, icon=None,
-                         tooltip=None, data=None)
+                         tooltip=tooltip, data=None)
 
         self.icon = avatar
 
@@ -462,7 +464,7 @@ class SidebarButton(HoverIconButtonBase):
 
     def get_preferred_button_size(self):
         return (
-            SIDEBAR_WIDTH - 10 * 2,
+            SIDEBAR_WIDTH,
             self.ICON_SIZE + self.PADDING * 2
         )
 
