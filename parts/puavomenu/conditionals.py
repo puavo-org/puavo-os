@@ -130,8 +130,7 @@ def __env_var(name, params):
         if present and 'value' in params:
             # content check
             if re.search(params['value'],
-                         os.environ[params['name']],
-                         re.IGNORECASE) is None:
+                         os.environ[params['name']]) is None:
                 return (True, False)
 
         return (True, True)
