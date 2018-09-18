@@ -9,7 +9,7 @@ from gi.repository import Gtk
 from gi.repository import Pango
 
 from constants import WINDOW_HEIGHT, MAIN_PADDING, SIDEBAR_WIDTH, \
-                      USER_AVATAR_SIZE, HOSTINFO_LABEL_HEIGHT
+                      USER_AVATAR_SIZE, HOSTINFO_LABEL_HEIGHT, SEPARATOR_SIZE
 import logger
 from utils import localize, expand_variables, get_file_contents, puavo_conf
 from utils_gui import load_image_at_size, create_separator
@@ -305,9 +305,7 @@ class Sidebar:
                          h=-1,
                          orientation=Gtk.Orientation.HORIZONTAL)
 
-        # FIXME: the "+1" is a hack, it must be changed if the separator
-        # height ever changes.
-        y = MAIN_PADDING + USER_AVATAR_SIZE + MAIN_PADDING * 2 + 1
+        y = MAIN_PADDING + USER_AVATAR_SIZE + MAIN_PADDING * 2 + SEPARATOR_SIZE
 
         # Since Python won't let you modify arguments (no pass-by-reference),
         # each of these returns the next Y position. X coordinates are fixed.
@@ -363,9 +361,7 @@ class Sidebar:
                          orientation=Gtk.Orientation.HORIZONTAL)
 
         # the next available Y coordinate
-        # FIXME: the "+1" is a hack, it must be changed if the separator
-        # height ever changes.
-        return y + MAIN_PADDING * 2 + 1
+        return y + MAIN_PADDING * 2 + SEPARATOR_SIZE
 
 
     # Builds the label that contains hostname, host type, image name and

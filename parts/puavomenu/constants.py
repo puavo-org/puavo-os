@@ -14,6 +14,10 @@ WINDOW_HEIGHT = 592
 # !!! DO NOT CHANGE! DOES NOT WORK PROPERLY YET! !!!
 MAIN_PADDING = 10
 
+# Size, in pixels, of the separator lines. Depends on the theme, so
+# this unfortunately isn't very reliable.
+SEPARATOR_SIZE = 1
+
 # Width of the category selector
 CATEGORIES_WIDTH = 350
 
