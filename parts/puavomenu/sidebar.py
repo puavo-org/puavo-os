@@ -207,7 +207,12 @@ class Sidebar:
         'avatar_link_failed': {
             'en': 'Could not open the user preferences editor',
             'fi': 'Ei voitu avata käyttäjätietojen muokkausta',
-        }
+        },
+
+        'changelog_title': {
+            'en': 'Show the changes in this version',
+            'fi': 'Näytä muutokset tässä versiossa',
+        },
     }
 
     def __init__(self, parent, language, res_dir):
@@ -274,10 +279,12 @@ class Sidebar:
 
         # "big" and "small" are not good sizes, we need to be explicit
         hostname_label.set_markup(
-            '<big>{hn}</big>\n<small>{rn} ({ht})</small>'.format(
-                hn=get_file_contents('/etc/puavo/hostname'),
-                rn=get_file_contents('/etc/puavo-image/release'),
-                ht=get_file_contents('/etc/puavo/hosttype')))
+            '<big>{0}</big>\n<small><a href="{3}" title="{4}">{1}</a> ({2})</small>'.
+            format(get_file_contents('/etc/puavo/hostname'),
+                   get_file_contents('/etc/puavo-image/release'),
+                   get_file_contents('/etc/puavo/hosttype'),
+                   self.__get_changelog_url(),
+                   localize(self.STRINGS['changelog_title'], self.__language)))
 
         hostname_label.show()
         self.container.put(hostname_label, 0, label_top)
@@ -306,6 +313,30 @@ class Sidebar:
 
         # Detect webkiosk sessions
         # TODO: implement this
+
+
+    def __get_changelog_url(self):
+        """Generates the full URL to the current image's changelog."""
+
+        series = get_file_contents('/etc/puavo-image/class', 'opinsys')
+        version = get_file_contents('/etc/puavo-image/name', '')
+
+        logger.debug('The current image series is "{0}"'.format(series))
+        logger.debug('The current image version is "{0}"'.format(version))
+
+        if len(version) > 4:
+            # strip extension from the image file name
+            version = version[:-4]
+
+        url = puavo_conf('puavo.support.image_changelog_url',
+                         'http://changelog.opinsys.fi')
+
+        url = url.replace('%%IMAGESERIES%%', series)
+        url = url.replace('%%IMAGEVERSION%%', version)
+
+        logger.info('The final changelog URL is "{0}"'.format(url))
+
+        return url
 
 
     def __create_buttons(self):
