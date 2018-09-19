@@ -398,7 +398,6 @@ class Sidebar:
     # Creates the user avatar button
     def __create_avatar(self):
         self.__must_download_avatar = True
-        self.__tried_downloading_avatar = False
 
         default_avatar = path_join(self.__res_dir, 'default_avatar.png')
         existing_avatar = path_join(self.__user_dir, 'avatar.jpg')
