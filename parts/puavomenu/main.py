@@ -254,12 +254,13 @@ class PuavoMenu(Gtk.Window):
         if self.dev_mode:
             # The devtools menu
             self.__devtools = Gtk.Button()
-            self.__devtools.set_label('Devtools')
+            self.__devtools.set_label('Development tools')
             self.__devtools.connect('clicked', self.__devtools_menu)
             self.__devtools.show()
-            self.__main_container.put(self.__devtools,
-                                      CATEGORIES_WIDTH + 30,
-                                      MAIN_PADDING)
+            self.__main_container.put(
+                self.__devtools,
+                PROGRAMS_LEFT + PROGRAMS_WIDTH - SEARCH_WIDTH - MAIN_PADDING,
+                MAIN_PADDING + SEARCH_HEIGHT + 5)
 
         # ----------------------------------------------------------------------
         # Menus/programs list
