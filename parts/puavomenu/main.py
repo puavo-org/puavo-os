@@ -204,7 +204,7 @@ class PuavoMenu(Gtk.Window):
             self.__menu_background = None
 
         # Load a per-user configuration file, if it exists
-        conf = path_join(self.user_dir, 'puavomenu.conf')
+        conf = path_join(self.user_dir, 'puavomenu', 'puavomenu.conf')
 
         if is_file(conf):
             logger.info('A per-user configuration file "{0}" exists,'
@@ -371,7 +371,8 @@ class PuavoMenu(Gtk.Window):
 
         self.__sidebar = Sidebar(parent=self,
                                  language=self.language,
-                                 res_dir=self.res_dir)
+                                 res_dir=self.res_dir,
+                                 user_dir=self.user_dir)
 
         self.__main_container.put(self.__sidebar.container,
                                   SIDEBAR_LEFT,
@@ -671,17 +672,19 @@ class PuavoMenu(Gtk.Window):
             out += '{0} {1}\n'.format(f[0], f[1])
 
         try:
-            open(self.user_dir + 'faves', 'w').write(out)
+            open(path_join(self.user_dir, 'faves'), 'w').write(out)
         except Exception as e:
             logger.error('Could not save favorites: {0}'.format(e))
 
 
     # Unserialize fave IDs and their counts
     def __load_faves(self):
-        if not is_file(self.user_dir + 'faves'):
+        faves_file = path_join(self.user_dir, 'faves')
+
+        if not is_file(faves_file):
             return
 
-        for row in open(self.user_dir + 'faves', 'r').readlines():
+        for row in open(faves_file, 'r').readlines():
             parts = row.strip().split()
 
             if len(parts) != 2:

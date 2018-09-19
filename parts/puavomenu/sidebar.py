@@ -223,9 +223,12 @@ class Sidebar:
         },
     }
 
-    def __init__(self, parent, language, res_dir):
+
+    def __init__(self, parent, language, res_dir, user_dir):
         self.__parent = parent
         self.__language = language
+        self.__res_dir = res_dir
+        self.__user_dir = user_dir
 
         self.container = Gtk.Fixed()
 
