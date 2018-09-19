@@ -139,7 +139,7 @@ def __env_var(name, params):
 
 
 def __puavo_conf(name, params):
-    """Puavo-conf variable check."""
+    """Puavo-conf variable presence (and optionally content) check."""
 
     if 'name' not in params:
         log_error('Conditional "{0}" is missing a required '
@@ -164,8 +164,9 @@ def __puavo_conf(name, params):
 
     if present == state:
         if 'value' in params:
-            if params['value'] != \
-                   proc.stdout.read().decode('utf-8').strip():
+            # content check
+            if re.search(params['value'],
+                         proc.stdout.read().decode('utf-8').strip()) is None:
                 return (True, False)
 
         return (True, True)
