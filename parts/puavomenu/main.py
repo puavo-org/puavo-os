@@ -204,7 +204,7 @@ class PuavoMenu(Gtk.Window):
             self.__menu_background = None
 
         # Load a per-user configuration file, if it exists
-        conf = path_join(self.user_dir, 'puavomenu', 'puavomenu.conf')
+        conf = path_join(self.user_dir, 'puavomenu.conf')
 
         if is_file(conf):
             logger.info('A per-user configuration file "{0}" exists,'
