@@ -124,8 +124,13 @@ def __env_var(name, params):
     if present == state:
         if present and 'value' in params:
             # content check
-            if re.search(params['value'],
-                         os.environ[params['name']]) is None:
+            wanted = params['value']
+            got = os.environ[params['name']]
+
+            log_debug('env_var "{0}": wanted="{1}" got="{2}" result={3}'.
+                      format(params['name'], wanted, got, wanted == got))
+
+            if re.search(wanted, got) is None:
                 return (True, False)
 
         return (True, True)
@@ -160,8 +165,13 @@ def __puavo_conf(name, params):
     if present == state:
         if 'value' in params:
             # content check
-            if re.search(params['value'],
-                         proc.stdout.read().decode('utf-8').strip()) is None:
+            wanted = params['value']
+            got = proc.stdout.read().decode('utf-8').strip()
+
+            log_debug('puavo_conf "{0}": wanted="{1}" got="{2}" result={3}'.
+                      format(params['name'], wanted, got, wanted == got))
+
+            if re.search(wanted, got) is None:
                 return (True, False)
 
         return (True, True)
