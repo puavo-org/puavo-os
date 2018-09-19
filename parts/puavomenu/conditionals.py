@@ -1,17 +1,10 @@
 # Conditional evaluators
 
-# TODO:
-#  - merge file_check and dir_check into path_check that can check types,
-#    sizes, hashes (multiple algorithms?), contents, owner/group, mode, etc.
-#  - regexp file/envvar/puavoconf content checks?
-#  - support checking multiple files/dirs/envvars/puavoconf names and values
-#    in one call?
-
 from os.path import exists as path_exists, \
                     isfile as is_file, \
                     getsize as get_size
 
-import os, stat
+import os, re, stat
 
 from logger import debug as log_debug, \
                    error as log_error, \
@@ -20,6 +13,8 @@ from logger import debug as log_debug, \
 
 from utils import is_empty
 
+# ------------------------------------------------------------------------------
+# Evaluators
 
 def __file_check(name, params):
     """Checks if a file exists/does not exist. Optional checks include
@@ -129,7 +124,13 @@ def __env_var(name, params):
     if present == state:
         if present and 'value' in params:
             # content check
-            if os.environ[params['name']] != params['value']:
+            wanted = params['value']
+            got = os.environ[params['name']]
+
+            log_debug('env_var "{0}": wanted="{1}" got="{2}" result={3}'.
+                      format(params['name'], wanted, got, wanted == got))
+
+            if re.search(wanted, got) is None:
                 return (True, False)
 
         return (True, True)
@@ -138,7 +139,7 @@ def __env_var(name, params):
 
 
 def __puavo_conf(name, params):
-    """Puavo-conf variable check."""
+    """Puavo-conf variable presence (and optionally content) check."""
 
     if 'name' not in params:
         log_error('Conditional "{0}" is missing a required '
@@ -163,8 +164,14 @@ def __puavo_conf(name, params):
 
     if present == state:
         if 'value' in params:
-            if params['value'] != \
-                   proc.stdout.read().decode('utf-8').strip():
+            # content check
+            wanted = params['value']
+            got = proc.stdout.read().decode('utf-8').strip()
+
+            log_debug('puavo_conf "{0}": wanted="{1}" got="{2}" result={3}'.
+                      format(params['name'], wanted, got, wanted == got))
+
+            if re.search(wanted, got) is None:
                 return (True, False)
 
         return (True, True)
@@ -179,8 +186,8 @@ def __constant(name, params):
     return (True, params.get('value', True))
 
 
-# List of known conditions and their evaluator methods
-__METHODS = {
+# List of known conditions and their evaluator functions
+__FUNCTIONS = {
     'file_check': __file_check,
     'dir_check': __dir_check,
     'env_var': __env_var,
@@ -189,11 +196,14 @@ __METHODS = {
 }
 
 
+# ------------------------------------------------------------------------------
+
+
 def evaluate_file(file_name):
     """Evaluates the conditionals listed in a file and returns their
     results in a dict."""
 
-    log_info('Loading conditionals from file "{0}"'.format(file_name))
+    log_info('Loading a conditionals file "{0}"'.format(file_name))
 
     results = {}
 
@@ -208,44 +218,44 @@ def evaluate_file(file_name):
         log_error(e)
         return results
 
-    for c in (data or []):
-        if 'name' not in c:
-            log_error('Ignoring a conditional without name, skipping')
+    for cond in (data or []):
+        if 'name' not in cond:
+            log_error('Ignoring a conditional without a name (missing "name" key)')
             continue
 
-        c_name = c['name']
+        name = cond['name']
 
-        if c_name in results:
+        if name in results:
             log_error('Duplicate conditional "{0}", skipping'.
-                      format(c_name))
+                      format(name))
             continue
 
-        if 'method' not in c:
-            log_error('Conditional "{0}" has no method defined, skipping'.
-                      format(c_name))
+        if 'function' not in cond:
+            log_error('Conditional "{0}" has no function defined, skipping'.
+                      format(name))
             continue
 
-        c_method = c['method']
+        function = cond['function']
 
-        if c_method not in __METHODS:
-            log_error('Conditional "{0}" has an unknown method "{1}", '
-                      'skipping'.format(c_name, c_method))
+        if function not in __FUNCTIONS:
+            log_error('Conditional "{0}" has an unknown function "{1}", '
+                      'skipping'.format(name, function))
             continue
 
-        if ('params' not in c) or (c['params'] is None):
+        if ('params' not in cond) or (cond['params'] is None):
             log_error('Conditional "{0}" has no "params" block, skipping'.
-                      format(c_name))
+                      format(name))
             continue
 
         try:
-            results[c_name] = __METHODS[c_method](c_name, c['params'][0])
+            results[name] = __FUNCTIONS[function](name, cond['params'][0])
         except Exception as e:
-            # Don't let a single conditional failure remove
+            # Don't let a single conditional failure destroy
             # everything in this file
             log_error(e)
 
     for k, v in results.items():
-        log_debug('Conditional: name="{0}", result={1}'.format(k, v))
+        log_debug('Conditional: Name="{0}", OK={1}, Result={2}'.format(k, v[0], v[1]))
 
     return results
 

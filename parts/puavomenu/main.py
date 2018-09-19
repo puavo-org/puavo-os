@@ -707,7 +707,6 @@ class PuavoMenu(Gtk.Window):
 
     # Change the category
     def __clicked_category(self, widget, frame, num):
-        print('Category changed to {0}'.format(num))
         self.__clear_search_field()
         self.__back_button.hide()
         self.__current_category = num
@@ -718,7 +717,6 @@ class PuavoMenu(Gtk.Window):
 
     # Go back to top level
     def __clicked_back_button(self, e):
-        print('Clicked the back button')
         self.__clear_search_field()
         self.__back_button.hide()
         self.__current_menu = None
@@ -728,7 +726,6 @@ class PuavoMenu(Gtk.Window):
 
     # Enter a menu
     def __clicked_menu_button(self, e):
-        print('Entering menu "{0}"'.format(e.data.title))
         self.__clear_search_field()
         self.__back_button.show()
         self.__current_menu = e.data

@@ -183,6 +183,7 @@ class packages {
       tag => [ 'tag_email', 'tag_debian', ];
 
     [ 'virtualbox'
+    , 'virtualbox-dkms'
     , 'wine'
     , 'wine32'
     , 'wine64'
@@ -706,12 +707,14 @@ class packages {
   $nvidia_dkms_304_module   = 'nvidia-legacy-304xx/304.137'
   $nvidia_dkms_340_module   = 'nvidia-legacy-340xx/340.106'
   $nvidia_dkms_384_module   = 'nvidia-current/384.130'
+  $virtualbox_module        = 'virtualbox/5.2.18'
   # XXX $r8168_dkms_module  = 'r8168/8.040.00'
 
   $all_dkms_modules = [ $broadcom_sta_dkms_module
 		      , $nvidia_dkms_304_module
 		      , $nvidia_dkms_340_module
-		      , $nvidia_dkms_384_module ]
+		      , $nvidia_dkms_384_module
+		      , $virtualbox_module ]
                       # XXX $r8168_dkms_module  # XXX missing from Debian
 
   packages::kernels::kernel_package {
@@ -719,12 +722,12 @@ class packages {
       dkms_modules => $all_dkms_modules,
       package_name => 'linux-image-3.16.0-4-amd64';
 
-    '4.9.0-7-amd64':
+    '4.9.0-8-amd64':
       dkms_modules => $all_dkms_modules,
-      package_name => 'linux-image-4.9.0-7-amd64';
+      package_name => 'linux-image-4.9.0-8-amd64';
 
     '4.17.0-0.bpo.1-amd64':
-      dkms_modules => [],
+      dkms_modules => [ $virtualbox_module ],
       package_name => 'linux-image-4.17.0-0.bpo.1-amd64';
   }
 

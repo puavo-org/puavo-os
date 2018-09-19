@@ -65,12 +65,16 @@ def disable_debug():
 def __output(s):
     global __enable_console, __enable_file, __file
 
-    if __enable_console:
-        print(s)
+    try:
+        if __enable_console:
+            print(s)
 
-    if __enable_file and __file:
-        __file.write(s + '\n')
-        __file.flush()
+        if __enable_file and __file:
+            __file.write(s + '\n')
+            __file.flush()
+    except UnicodeEncodeError:
+        # okay then, python, feel free to fail at any time
+        pass
 
 
 # ------------------------------------------------------------------------------
