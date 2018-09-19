@@ -1,6 +1,6 @@
 class apt::nodejs {
-  # This should be updated to node_6.x, node_8.x, ... later
-  $node_branch = 'node_4.x'
+  # This should be updated to node_8.x, node_10.x, ... later
+  $node_branch = 'node_6.x'
 
   file {
     '/etc/apt/preferences.d/50-nodesource.pref':
