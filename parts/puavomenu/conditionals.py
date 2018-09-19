@@ -1,12 +1,5 @@
 # Conditional evaluators
 
-# TODO:
-#  - merge file_check and dir_check into path_check that can check types,
-#    sizes, hashes (multiple algorithms?), contents, owner/group, mode, etc.
-#  - regexp file/envvar/puavoconf content checks?
-#  - support checking multiple files/dirs/envvars/puavoconf names and values
-#    in one call?
-
 from os.path import exists as path_exists, \
                     isfile as is_file, \
                     getsize as get_size
@@ -20,6 +13,8 @@ from logger import debug as log_debug, \
 
 from utils import is_empty
 
+# ------------------------------------------------------------------------------
+# Evaluators
 
 def __file_check(name, params):
     """Checks if a file exists/does not exist. Optional checks include
@@ -181,14 +176,17 @@ def __constant(name, params):
     return (True, params.get('value', True))
 
 
-# List of known conditions and their evaluator methods
-__METHODS = {
+# List of known conditions and their evaluator functions
+__FUNCTIONS = {
     'file_check': __file_check,
     'dir_check': __dir_check,
     'env_var': __env_var,
     'puavo_conf': __puavo_conf,
     'constant': __constant,
 }
+
+
+# ------------------------------------------------------------------------------
 
 
 def evaluate_file(file_name):
@@ -222,16 +220,16 @@ def evaluate_file(file_name):
                       format(name))
             continue
 
-        if 'method' not in cond:
-            log_error('Conditional "{0}" has no method defined, skipping'.
+        if 'function' not in cond:
+            log_error('Conditional "{0}" has no function defined, skipping'.
                       format(name))
             continue
 
-        method = cond['method']
+        function = cond['function']
 
-        if method not in __METHODS:
-            log_error('Conditional "{0}" has an unknown method "{1}", '
-                      'skipping'.format(name, method))
+        if function not in __FUNCTIONS:
+            log_error('Conditional "{0}" has an unknown function "{1}", '
+                      'skipping'.format(name, function))
             continue
 
         if ('params' not in cond) or (cond['params'] is None):
@@ -240,14 +238,14 @@ def evaluate_file(file_name):
             continue
 
         try:
-            results[name] = __METHODS[method](name, cond['params'][0])
+            results[name] = __FUNCTIONS[function](name, cond['params'][0])
         except Exception as e:
-            # Don't let a single conditional failure remove
+            # Don't let a single conditional failure destroy
             # everything in this file
             log_error(e)
 
     for k, v in results.items():
-        log_debug('Conditional: name="{0}", OK={1}, result={2}'.format(k, v[0], v[1]))
+        log_debug('Conditional: Name="{0}", OK={1}, Result={2}'.format(k, v[0], v[1]))
 
     return results
 
