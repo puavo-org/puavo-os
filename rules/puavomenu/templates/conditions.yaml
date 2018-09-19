@@ -3,11 +3,13 @@
 # TODO: actually determine the values for these
 
 - name: personally_administered
-  function: constant
+  function: puavo_conf
   params:
-      - value: false
+    - name: puavo.admin.personally_administered
+      value: "true"
 
 - name: ti_nspire_cx_cas
-  function: constant
+  function: puavo_conf
   params:
-      - value: true
+    - name: puavo.nonfree.ti_nspire_cx_cas_ss.enabled
+      value: "true"
