@@ -723,10 +723,6 @@ class packages {
     'nwjs':
       tag => [ 'tag_web', 'tag_puavo', ];
 
-    'x2goclient':
-    # 'x2goserver' # XXX not yet packaged for Debian
-      tag => [ 'tag_remote_access', 'tag_puavo', ];
-
     [ 'faenza-icon-theme' ]:
       tag => [ 'tag_themes', 'tag_puavo', ];
 
