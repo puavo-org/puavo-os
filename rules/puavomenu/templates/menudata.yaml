@@ -52,8 +52,10 @@ programs:
             sv: Chromium
             de: Chromium-Browser
   - cmaptools
+  - cura
 
   #D
+  - db_koulu1
   - designer-qt4:
         name:
             en: Qt4 - graphical UI designer
@@ -624,6 +626,7 @@ menus:
             - simple-scan
             - xsane
             - blender
+            - cura
             - sketchup
             - freecad
 
@@ -700,6 +703,7 @@ menus:
             - spelett
             - ekapeli-maahanmuuttaja
             - ekapeli-alku
+            - db_koulu1
             - gcompris
             - tuxmath
             - org.kde.kbruch
@@ -827,6 +831,7 @@ menus:
             - pinta
             - inkscape
             - geogebra
+            - geogebra6
             - wxMaxima
             - ti_nspire_cx_cas_ss
             - LoggerPro
@@ -909,6 +914,7 @@ menus:
             - tuxmath
             - org.kde.kbruch
             - geogebra
+            - geogebra6
             - org.kde.kmplot
             - gnome-calculator
             - teddybear
