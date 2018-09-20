@@ -5,7 +5,7 @@ gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
 gi.require_version('PangoCairo', '1.0')
 from gi.repository import Gtk, Pango, PangoCairo
 
-from logger import error as log_error
+from logger import error as log_error, info as log_info
 from constants import PROGRAM_BUTTON_WIDTH, PROGRAM_BUTTON_HEIGHT, \
                       PROGRAM_BUTTON_ICON_SIZE, SIDEBAR_WIDTH
 from iconcache import ICONS32, ICONS48
@@ -369,13 +369,17 @@ class AvatarButton(HoverIconButtonBase):
     def __init__(self,
                  parent,
                  user_name,
-                 avatar=None,
+                 initial_image=None,
                  tooltip=None):
 
         super().__init__(parent, label=user_name, icon=None,
                          tooltip=tooltip, data=None)
 
-        self.icon = avatar
+        # Load the initial avatar image
+        if initial_image:
+            self.load_avatar(initial_image)
+        else:
+            self.icon = None
 
         self.label_layout.set_alignment(Pango.Alignment.LEFT)
         self.label_layout.set_width(
@@ -427,9 +431,14 @@ class AvatarButton(HoverIconButtonBase):
     # Loads and resizes the avatar icon
     def load_avatar(self, path):
         try:
+            log_info('Loading avatar image "{0}"...'.format(path))
+
             self.icon = load_image_at_size(path,
                                            self.ICON_SIZE,
                                            self.ICON_SIZE)
+
+            # trigger a redraw
+            self.queue_draw()
         except Exception as e:
             log_error('Could not load avatar image "{0}": {1}'.
                       format(path, str(e)))

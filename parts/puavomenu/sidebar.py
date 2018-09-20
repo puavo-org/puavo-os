@@ -1,7 +1,9 @@
 # The Sidebar: the user avatar, "system" buttons and the host info
 
 from os import environ
+from os.path import exists as file_exists, join as path_join
 from getpass import getuser
+import threading
 
 import gi
 gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
@@ -202,6 +204,108 @@ def get_changelog_url():
     return url
 
 
+class AvatarDownloaderThread(threading.Thread):
+    """Downloads the user avatar from the API server, caches it and
+    updates the avatar icon."""
+
+    def __init__(self, destination, avatar_object):
+        super().__init__()
+        self.__destination = destination        # where to cache the file
+        self.__avatar_object = avatar_object    # the avatar button object
+
+
+    def run(self):
+        import time             # oh, I wish
+        import subprocess
+
+        # Wait until everything else has been loaded
+        time.sleep(30)
+
+        # How many times we'll keep trying until giving up?
+        MAX_ATTEMPTS = 10
+
+        for attempt in range(0, MAX_ATTEMPTS):
+            try:
+                # Figure out the API server address
+                proc = subprocess.Popen(['puavo-resolve-api-server'],
+                                        stdout=subprocess.PIPE,
+                                        stderr=subprocess.PIPE)
+                proc.wait()
+
+                if proc.returncode != 0:
+                    raise RuntimeError("'puavo-resolve-api-server' failed " \
+                                       "with code {0}".format(proc.returncode))
+
+                server = proc.stdout.read().decode('utf-8').strip()
+                uri = server + '/v3/users/' + getuser() + '/profile.jpg'
+
+                # Then download the avatar image
+                logger.info('Downloading user avatar from "{2}", ' \
+                            'attempt {0}/{1}...'.
+                            format(attempt + 1, MAX_ATTEMPTS, uri))
+
+                start_time = time.clock()
+
+                # I gave up pretty quickly on trying to replicate this in
+                # Python's http.client. It needs Kerberos authentication
+                # and other bells and whistles. I probably could figure
+                # it out, but I'd just introduce subtle bugs in it. Let
+                # curl deal with it.
+                command = [
+                    'curl',
+                    '--fail',
+                    '--negotiate', '--user', ':',
+                    '--delegation', 'always',
+                    uri
+                ]
+
+                proc = subprocess.Popen(command,
+                                        stdout=subprocess.PIPE,
+                                        stderr=subprocess.PIPE)
+                proc.wait()
+
+                if proc.returncode != 0:
+                    raise RuntimeError("'curl' failed with code {0}".
+                                       format(proc.returncode))
+
+                # Got it! We didn't specify -o, so the image data waits for
+                # us in stdout.
+                image = proc.stdout.read()
+
+                logger.info('Downloaded {0} bytes of avatar image data ' \
+                            'in {1:.1f} ms'.
+                            format(len(image),
+                                   (time.clock() - start_time) * 1000.0))
+
+                # Wrap this in its own exception handler, so if it fails,
+                # we just return instead of redownloading the image
+                try:
+                    name = path_join(self.__destination, 'avatar.jpg')
+                    open(name, 'wb').write(image)
+                    self.__avatar_object.load_avatar(name)
+                except Exception as e:
+                    # Why must everything fail?
+                    logger.warn('Failed to save the downloaded avatar ' \
+                                'image: {0}'.format(e))
+                    logger.warn('New avatar image not set')
+
+                logger.info('Avatar thread is exiting')
+                return
+            except Exception as error:
+                logger.error('Could not download the user avatar: {0}'.
+                             format(error))
+
+            # Retry, if possible
+            if attempt < MAX_ATTEMPTS - 1:
+                import time
+                logger.info('Retrying avatar downloading in 60 seconds...')
+                time.sleep(60)
+
+        logger.error('Giving up on trying to download the user avatar, ' \
+                     'tried {0} times'.format(MAX_ATTEMPTS))
+        logger.info('Avatar thread is exiting')
+
+
 # ------------------------------------------------------------------------------
 # The sidebar class
 
@@ -223,20 +327,40 @@ class Sidebar:
         },
     }
 
-    def __init__(self, parent, language, res_dir):
+
+    def __init__(self, parent, language, res_dir, user_dir):
         self.__parent = parent
         self.__language = language
+        self.__res_dir = res_dir
+        self.__user_dir = user_dir
 
         self.container = Gtk.Fixed()
 
         self.__detect_host_params()
         self.__get_variables()
 
-        self.__create_avatar(res_dir)
+        self.__create_avatar()
         self.__create_buttons()
         self.__create_hostinfo()
 
         self.container.show()
+
+        # Download a new copy of the user avatar image
+        if self.__must_download_avatar:
+            logger.info('Launching a background thread for downloading ' \
+                        'the avatar image')
+
+            try:
+                self.__avatar_thread = \
+                    AvatarDownloaderThread(self.__user_dir, self.__avatar)
+
+                # Daemonize the thread so that if we exit before
+                # the thread exists, it is also destroyed
+                self.__avatar_thread.daemon = True
+
+                self.__avatar_thread.start()
+            except Exception as e:
+                logger.error('Could not create a new thread: {0}'.format(e))
 
 
     # Detects various settings for the current host and session
@@ -272,26 +396,39 @@ class Sidebar:
 
 
     # Creates the user avatar button
-    def __create_avatar(self, res_dir):
-        # TODO: Load the actual user avatar image
-        try:
-            avatar_image = \
-                load_image_at_size(res_dir + 'default_avatar.png', 48, 48)
-        except Exception as e:
-            logger.error('Can\'t load the default avatar image: {0}'.
-                         format(e))
-            avatar_image = None
+    def __create_avatar(self):
+        self.__must_download_avatar = True
 
-        avatar_tooltip = None
+        default_avatar = path_join(self.__res_dir, 'default_avatar.png')
+        existing_avatar = path_join(self.__user_dir, 'avatar.jpg')
 
-        if not (self.__is_guest or self.__is_webkiosk):
+        if self.__is_guest or self.__is_webkiosk:
+            # Always use the default avatar for guests and webkiosk sessions
+            logger.info('Not loading avatar for a guest/webkiosk session')
+            avatar_image = default_avatar
+            self.__must_download_avatar = False
+        elif file_exists(existing_avatar):
+            logger.info('A previously-downloaded user avatar file exists, using it')
+            avatar_image = existing_avatar
+        else:
+            # We need to download this avatar image right away, use the
+            # default avatar until the download is complete
+            logger.info('Not a guest/webkiosk session and no previously-' \
+                        'downloaded avatar available, using the default image')
+            avatar_image = default_avatar
+
+        if self.__is_guest or self.__is_webkiosk:
+            avatar_tooltip = None
+        else:
             avatar_tooltip = localize(self.STRINGS['avatar_hover'],
                                       self.__language)
 
-        self.__avatar = AvatarButton(self, getuser(),
+        self.__avatar = AvatarButton(self,
+                                     getuser(),
                                      avatar_image,
                                      avatar_tooltip)
 
+        # No profile editing for guest users
         if self.__is_guest or self.__is_webkiosk:
             logger.info('Disabling the avatar button for guest user')
             self.__avatar.disable()

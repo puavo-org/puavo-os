@@ -4,12 +4,17 @@ set -eu
 
 HOSTNAME=$(hostname)
 TIMESTAMP=$(date +"%Y%m%d-%H%M%S.%N")
+CONF_DIR="${HOME}/.config/puavomenu"
+
+if [ ! -d "${CONF_DIR}" ]; then
+    mkdir -p "${CONF_DIR}"
+fi
 
 /opt/puavomenu/puavomenu \
     --res_dir "/opt/puavomenu/res" \
     --menu_dir "/etc/puavomenu" \
-    --user_dir "${HOME}/.config" \
-    --socket "${HOME}/.config/puavomenu_${HOSTNAME}_socket" \
+    --user_dir "${CONF_DIR}" \
+    --socket "${CONF_DIR}/socket_${HOSTNAME}" \
     --log "/tmp/puavomenu_${TIMESTAMP}.log" \
     --autohide \
     &

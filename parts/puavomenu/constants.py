@@ -19,7 +19,7 @@ MAIN_PADDING = 10
 SEPARATOR_SIZE = 1
 
 # Width of the category selector
-CATEGORIES_WIDTH = 350
+CATEGORIES_WIDTH = 400
 
 # The back button
 BACK_BUTTON_X = MAIN_PADDING

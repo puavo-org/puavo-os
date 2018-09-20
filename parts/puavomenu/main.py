@@ -254,12 +254,13 @@ class PuavoMenu(Gtk.Window):
         if self.dev_mode:
             # The devtools menu
             self.__devtools = Gtk.Button()
-            self.__devtools.set_label('Devtools')
+            self.__devtools.set_label('Development tools')
             self.__devtools.connect('clicked', self.__devtools_menu)
             self.__devtools.show()
-            self.__main_container.put(self.__devtools,
-                                      CATEGORIES_WIDTH + 30,
-                                      MAIN_PADDING)
+            self.__main_container.put(
+                self.__devtools,
+                PROGRAMS_LEFT + PROGRAMS_WIDTH - SEARCH_WIDTH - MAIN_PADDING,
+                MAIN_PADDING + SEARCH_HEIGHT + 5)
 
         # ----------------------------------------------------------------------
         # Menus/programs list
@@ -371,7 +372,8 @@ class PuavoMenu(Gtk.Window):
 
         self.__sidebar = Sidebar(parent=self,
                                  language=self.language,
-                                 res_dir=self.res_dir)
+                                 res_dir=self.res_dir,
+                                 user_dir=self.user_dir)
 
         self.__main_container.put(self.__sidebar.container,
                                   SIDEBAR_LEFT,
@@ -671,17 +673,19 @@ class PuavoMenu(Gtk.Window):
             out += '{0} {1}\n'.format(f[0], f[1])
 
         try:
-            open(self.user_dir + 'faves', 'w').write(out)
+            open(path_join(self.user_dir, 'faves'), 'w').write(out)
         except Exception as e:
             logger.error('Could not save favorites: {0}'.format(e))
 
 
     # Unserialize fave IDs and their counts
     def __load_faves(self):
-        if not is_file(self.user_dir + 'faves'):
+        faves_file = path_join(self.user_dir, 'faves')
+
+        if not is_file(faves_file):
             return
 
-        for row in open(self.user_dir + 'faves', 'r').readlines():
+        for row in open(faves_file, 'r').readlines():
             parts = row.strip().split()
 
             if len(parts) != 2:
