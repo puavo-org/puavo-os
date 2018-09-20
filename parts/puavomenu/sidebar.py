@@ -18,6 +18,7 @@ from utils_gui import load_image_at_size, create_separator
 
 from iconcache import ICONS32
 from buttons import AvatarButton, SidebarButton
+from strings import STRINGS
 
 
 # ------------------------------------------------------------------------------
@@ -26,12 +27,7 @@ from buttons import AvatarButton, SidebarButton
 SB_CHANGE_PASSWORD = {
     'name': 'change_password',
 
-    'title': {
-        'en': 'Change your password',
-        'fi': 'Vaihda salasanaasi',
-        'sv': '',
-        'de': '',
-    },
+    'title': STRINGS['sb_change_password'],
 
     'icon': '/usr/share/icons/Faenza/emblems/96/emblem-readonly.png',
 
@@ -45,12 +41,7 @@ SB_CHANGE_PASSWORD = {
 SB_SUPPORT = {
     'name': 'support',
 
-    'title': {
-        'en': 'Support',
-        'fi': 'Tukisivusto',
-        'sv': 'Support',
-        'de': 'Support',
-    },
+    'title': STRINGS['sb_support'],
 
     'icon': '/usr/share/icons/Faenza/status/96/dialog-question.png',
 
@@ -64,12 +55,7 @@ SB_SUPPORT = {
 SB_SYSTEM_SETTINGS = {
     'name': 'system-settings',
 
-    'title': {
-        'en': 'System settings',
-        'fi': 'Järjestelmän asetukset',
-        'sv': 'Systeminställningar',
-        'de': 'Systemeinstellungen',
-    },
+    'title': STRINGS['sb_system_settings'],
 
     'icon': '/usr/share/icons/Faenza/categories/96/applications-system.png',
 
@@ -82,12 +68,7 @@ SB_SYSTEM_SETTINGS = {
 SB_LOCK_SCREEN = {
     'name': 'lock-screen',
 
-    'title': {
-        'en': 'Lock screen',
-        'fi': 'Lukitse näyttö',
-        'sv': 'Lås skärmen',
-        'de': 'Bildschirm sperren'
-    },
+    'title': STRINGS['sb_lock_screen'],
 
     'icon': '/usr/share/icons/Faenza/actions/96/system-lock-screen.png',
 
@@ -104,12 +85,7 @@ SB_LOCK_SCREEN = {
 SB_SLEEP_MODE = {
     'name': 'sleep-mode',
 
-    'title': {
-        'en': 'Sleep',
-        'fi': 'Unitila',
-        'sv': 'Strömsparläge',
-        'de': 'Schlafen'
-    },
+    'title': STRINGS['sb_hibernate'],
 
     'icon': '/usr/share/icons/oxygen/base/32x32/actions/system-suspend-hibernate.png',
 
@@ -128,12 +104,7 @@ SB_SLEEP_MODE = {
 SB_LOGOUT = {
     'name': 'logout',
 
-    'title': {
-        'en': 'Logout',
-        'fi': 'Kirjaudu ulos',
-        'sv': 'Logga ut',
-        'de': 'Abmelden'
-    },
+    'title': STRINGS['sb_logout'],
 
     'icon': '/usr/share/icons/gnome/32x32/actions/gnome-session-logout.png',
 
@@ -146,12 +117,7 @@ SB_LOGOUT = {
 SB_RESTART = {
     'name': 'restart',
 
-    'title': {
-        'en': 'Restart',
-        'fi': 'Käynnistä uudelleen',
-        'sv': 'Starta om',
-        'de': 'Neustarten'
-    },
+    'title': STRINGS['sb_restart'],
 
     'icon': '/usr/share/icons/oxygen/base/32x32/actions/system-reboot.png',
 
@@ -164,12 +130,7 @@ SB_RESTART = {
 SB_SHUTDOWN = {
     'name': 'shutdown',
 
-    'title': {
-        'en': 'Shut down',
-        'fi': 'Sammuta',
-        'sv': 'Stäng av',
-        'de': 'Herunterfahren',
-    },
+    'title': STRINGS['sb_shutdown'],
 
     'icon': '/usr/share/icons/oxygen/base/32x32/actions/system-shutdown.png',
 
@@ -310,24 +271,6 @@ class AvatarDownloaderThread(threading.Thread):
 # The sidebar class
 
 class Sidebar:
-    STRINGS = {
-        'avatar_hover': {
-            'en': 'Edit your user profile',
-            'fi': 'Muokkaa käyttäjäprofiiliasi',
-        },
-
-        'avatar_link_failed': {
-            'en': 'Could not open the user preferences editor',
-            'fi': 'Ei voitu avata käyttäjätietojen muokkausta',
-        },
-
-        'changelog_title': {
-            'en': 'Show the changes in this version',
-            'fi': 'Näytä muutokset tässä versiossa',
-        },
-    }
-
-
     def __init__(self, parent, language, res_dir, user_dir):
         self.__parent = parent
         self.__language = language
@@ -420,7 +363,7 @@ class Sidebar:
         if self.__is_guest or self.__is_webkiosk:
             avatar_tooltip = None
         else:
-            avatar_tooltip = localize(self.STRINGS['avatar_hover'],
+            avatar_tooltip = localize(STRINGS['sb_avatar_hover'],
                                       self.__language)
 
         self.__avatar = AvatarButton(self,
@@ -534,7 +477,7 @@ class Sidebar:
                    get_file_contents('/etc/puavo-image/release'),
                    get_file_contents('/etc/puavo/hosttype'),
                    get_changelog_url(),
-                   localize(self.STRINGS['changelog_title'], self.__language)))
+                   localize(STRINGS['sb_changelog_title'], self.__language)))
 
         hostname_label.show()
         self.container.put(hostname_label, 0, label_top)
@@ -557,7 +500,7 @@ class Sidebar:
         except Exception as exception:
             logger.error(str(exception))
             self.__parent.error_message(
-                localize(self.STRINGS['avatar_link_failed'], self.__language),
+                localize(STRINGS['sb_avatar_link_failed'], self.__language),
                 str(exception))
 
         self.__parent.autohide()
