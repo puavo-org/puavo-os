@@ -19,47 +19,15 @@ import logger
 from constants import *
 from iconcache import ICONS48
 from buttons import ProgramButton, MenuButton
-from utils import localize
+from utils import localize, puavo_conf
 from utils_gui import load_image_at_size, create_separator
 from loader import load_menu_data
 from conditionals import evaluate_file
 from sidebar import Sidebar
+from strings import STRINGS
 
 
 class PuavoMenu(Gtk.Window):
-    STRINGS = {
-        'search_placeholder': {
-            'fi': 'Etsi...',
-            'en': 'Search...',
-            'sv': 'Sök...',
-            'de': 'Suchen...'
-        },
-        'no_search_results': {
-            'fi': 'Ei osumia',
-            'en': 'No hits',
-        },
-        'empty_menu': {
-            'fi': 'Tyhjä valikko',
-            'en': 'Empty menu',
-        },
-        'empty_category': {
-            'fi': 'Tyhjä kategoria',
-            'en': 'Empty category',
-        },
-        'no_menu_data': {
-            'fi': 'Ei valikkodataa? Tarkista tilanne!',
-            'en': 'No menu data? Check the situation!',
-        },
-        'desktop_link_failed': {
-            'en': 'Desktop link could not be created',
-            'fi': 'Työpöytäkuvaketta ei voitu luoda'
-        },
-        'panel_link_failed': {
-            'en': 'Panel icon could not be created',
-            'fi': 'Paneelin kuvaketta ei voitu luoda',
-        },
-    }
-
 
     def error_message(self, message, secondary_message=None):
         """Show a modal error message box."""
@@ -162,12 +130,6 @@ class PuavoMenu(Gtk.Window):
         # Location of the Desktop directory, determined on the first use
         self.desktop_dir = None
 
-        # We don't set the window position until we're showing it for
-        # the first time. But because window positing happens after
-        # we've made the window visible, it can briefly be seen in the
-        # wrong position on slower machines. This hack tries to fix that.
-        self.first_time_show = True
-
         # If True, the menu is reset back to the default view after you
         # click a program or a search result. Set to False to retain the
         # current view.
@@ -193,6 +155,12 @@ class PuavoMenu(Gtk.Window):
         # The most often used programs ("favorites")
         self.__fave_buttons = []
         self.__prev_fave_ids = []
+        self.__enable_faves_saving = True
+
+        if ('GUEST_SESSION' in environ) or \
+           (puavo_conf('puavo.webmenu.webkiosk', '') == 'true'):
+            # It's pointless to save faves in guest/webkiosk sessions
+            self.__enable_faves_saving = False
 
         # Background image for top-level menus
         try:
@@ -302,7 +270,7 @@ class PuavoMenu(Gtk.Window):
         self.__search_keypress_signal = \
             self.__search.connect('key-press-event', self.__search_keypress)
         self.__search.set_placeholder_text(
-            localize(self.STRINGS['search_placeholder'], self.language))
+            localize(STRINGS['search_placeholder'], self.language))
         self.__main_container.put(
             self.__search,
             PROGRAMS_LEFT + PROGRAMS_WIDTH - SEARCH_WIDTH - MAIN_PADDING,
@@ -482,9 +450,9 @@ class PuavoMenu(Gtk.Window):
 
             # Special situations
             if len(self.__category_index) == 0:
-                self.__show_empty_message(self.STRINGS['no_menu_data'])
+                self.__show_empty_message(STRINGS['menu_no_data_at_all'])
             elif len(new_buttons) == 0:
-                self.__show_empty_message(self.STRINGS['empty_category'])
+                self.__show_empty_message(STRINGS['menu_empty_category'])
 
         else:
             # Submenu view, have only programs
@@ -495,7 +463,7 @@ class PuavoMenu(Gtk.Window):
 
             # Special situations
             if len(self.__current_menu.programs) == 0:
-                self.__show_empty_message(self.STRINGS['empty_menu'])
+                self.__show_empty_message(STRINGS['menu_empty_menu'])
 
         self.__fill_programs_list(new_buttons, True)
 
@@ -555,6 +523,16 @@ class PuavoMenu(Gtk.Window):
                 matches.append(p)
                 continue
 
+            # check the .desktop file name
+            if p.original_desktop_file:
+                if re.search(key,
+                             p.original_desktop_file.replace('.desktop', ''),
+                             re.IGNORECASE):
+                    matches.append(p)
+                    continue
+
+            # keyword search must be done last, otherwise a program
+            # can appear multiple times in the search results
             for k in p.keywords:
                 if re.search(key, k, re.IGNORECASE):
                     matches.append(p)
@@ -565,8 +543,7 @@ class PuavoMenu(Gtk.Window):
         if len(matches) > 0:
             self.__empty.hide()
         else:
-            self.__show_empty_message(
-                self.STRINGS['no_search_results'])
+            self.__show_empty_message(STRINGS['search_no_results'])
 
         # create new buttons for results
         new_buttons = []
@@ -666,6 +643,9 @@ class PuavoMenu(Gtk.Window):
 
     # Serialize current fave IDs and their counts
     def __save_faves(self, all_faves):
+        if not self.__enable_faves_saving:
+            return
+
         out = ''
 
         # whitespace is not permitted in program IDs, so this works
@@ -779,7 +759,7 @@ class PuavoMenu(Gtk.Window):
                              format(self.desktop_dir))
             except Exception as e:
                 self.error_message(
-                    localize(self.STRINGS['desktop_link_failed'],
+                    localize(STRINGS['desktop_link_failed'],
                              self.language), str(e))
                 logger.error(str(e))
                 self.desktop_dir = None
@@ -835,7 +815,7 @@ class PuavoMenu(Gtk.Window):
             logger.error(e)
 
             self.error_message(
-                localize(self.STRINGS['desktop_link_failed'], self.language),
+                localize(STRINGS['desktop_link_failed'], self.language),
                 str(e))
 
 
@@ -906,7 +886,7 @@ class PuavoMenu(Gtk.Window):
             logger.error(e)
 
             self.error_message(
-                localize(self.STRINGS['panel_link_failed'], self.language),
+                localize(STRINGS['panel_link_failed'], self.language),
                 str(e))
 
 
@@ -1034,22 +1014,18 @@ class PuavoMenu(Gtk.Window):
 
 
     def __main_got_focus(self, *unused):
-        #logger.debug('Main window got focus')
         pass
 
 
     def __main_lost_focus(self, *unused):
-        #logger.debug('Main window lost focus')
         self.autohide()
 
 
     def __search_in(self, *unused):
-        #logger.debug('Search field got focus')
         pass
 
 
     def __search_out(self, *unused):
-        #logger.debug('Search field lost focus')
         self.__search.grab_focus()
 
 
@@ -1123,11 +1099,6 @@ class PuavoMenu(Gtk.Window):
             logger.debug('Socket command: "{0}"'.format(cmd))
             logger.debug('Socket arguments: "{0}"'.format(data))
 
-            #logger.debug("S WINDOW VISIBLE: {0}".format(self.get_visible()))
-            #logger.debug("S WINDOW ACTIVE: {0}".format(self.is_active()))
-            #logger.debug("S TOPLEVEL FOCUS: {0}".format(self.has_toplevel_focus()))
-            #logger.debug("S WIDGET VISIBLE: {0}".format(self.is_visible()))
-
             if cmd == 'hide':
                 # Hide the window
 
@@ -1168,7 +1139,6 @@ class PuavoMenu(Gtk.Window):
 
                     self.__search.grab_focus()
                     self.activate_focus()
-                    self.first_time_show = False
             elif cmd == 'toggle':
                 # Toggle the window visibility
 
@@ -1197,18 +1167,12 @@ class PuavoMenu(Gtk.Window):
 
                     self.__search.grab_focus()
                     self.activate_focus()
-                    self.first_time_show = False
             else:
                 logger.debug('Unknown command "{0}" received, args={1}'.
                              format(cmd, data))
         except Exception as e:
             logger.error('Socket command processing failed!')
             logger.error(e)
-
-        #logger.debug("E WINDOW VISIBLE: {0}".format(self.get_visible()))
-        #logger.debug("E WINDOW ACTIVE: {0}".format(self.is_active()))
-        #logger.debug("E TOPLEVEL FOCUS: {0}".format(self.has_toplevel_focus()))
-        #logger.debug("E WIDGET VISIBLE: {0}".format(self.is_visible()))
 
         # False will remove the handler, that's not what we want
         return True
@@ -1505,7 +1469,10 @@ class PuavoMenu(Gtk.Window):
 
         self.__programs_container.show()
 
-        self.__load_faves()
+        if self.__enable_faves_saving:
+            # ignore faves completely in guest/webkiosk modes
+            self.__load_faves()
+
         self.__update_faves()
         self.__faves_sep.show()
         self.__faves_container.show()

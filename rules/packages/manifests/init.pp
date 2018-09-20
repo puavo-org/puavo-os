@@ -160,6 +160,7 @@ class packages {
     , 'dput'
     , 'fakeroot'
     , 'gdb'
+    , 'gettext'
     , 'gnupg'
     , 'manpages-dev'
     , 'perl-doc'

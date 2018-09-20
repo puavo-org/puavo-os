@@ -23,6 +23,7 @@ class puavo_pkg::packages {
 			, 'dropbox'
 			, 'ekapeli-alku'
 			, 'enchanting'
+			, 'extra-xkb-symbols'
 			, 'geogebra'
 			, 'geogebra6'
 			, 'globilab'

@@ -11,6 +11,7 @@ from constants import PROGRAM_BUTTON_WIDTH, PROGRAM_BUTTON_HEIGHT, \
 from iconcache import ICONS32, ICONS48
 from utils import localize
 from utils_gui import rounded_rectangle, draw_x, load_image_at_size
+from strings import STRINGS
 
 
 class HoverIconButtonBase(Gtk.Button):
@@ -180,29 +181,6 @@ class ProgramButton(HoverIconButtonBase):
 
     WIDTH = 150
 
-    MENU_ITEMS = {
-        'add_to_desktop': {
-            'fi': 'Lisää työpöydälle',
-            'en': 'Add to desktop',
-            'sv': 'Add to desktop',
-            'de': 'Add to desktop',
-        },
-
-        'add_to_panel': {
-            'fi': 'Lisää alapaneeliin',
-            'en': 'Add to bottom panel',
-            'sv': 'Add to bottom panel',
-            'de': 'Add to bottom panel',
-        },
-
-        'remove_from_faves': {
-            'fi': 'Poista suosikeista',
-            'en': 'Remove from favorites',
-            'sv': 'Remove from favorites',
-            'de': 'Remove from favorites',
-        },
-    }
-
     def __init__(self,
                  parent,
                  label,
@@ -248,7 +226,7 @@ class ProgramButton(HoverIconButtonBase):
             self.menu = Gtk.Menu()
 
             desktop_item = Gtk.MenuItem(
-                localize(self.MENU_ITEMS['add_to_desktop'],
+                localize(STRINGS['popup_add_to_desktop'],
                          self.parent.language))
             desktop_item.connect('activate',
                                  lambda x: self.__special_operation(
@@ -257,7 +235,7 @@ class ProgramButton(HoverIconButtonBase):
             self.menu.append(desktop_item)
 
             panel_item = Gtk.MenuItem(
-                localize(self.MENU_ITEMS['add_to_panel'],
+                localize(STRINGS['popup_add_to_panel'],
                          self.parent.language))
             panel_item.connect('activate',
                                lambda x: self.__special_operation(
@@ -268,7 +246,7 @@ class ProgramButton(HoverIconButtonBase):
             if self.is_fave:
                 # special entry for fave buttons
                 remove_fave = Gtk.MenuItem(
-                    localize(self.MENU_ITEMS['remove_from_faves'],
+                    localize(STRINGS['popup_remove_from_faves'],
                              self.parent.language))
                 remove_fave.connect('activate',
                                     lambda x: self.__special_operation(

@@ -4,7 +4,7 @@ set -eu
 
 if [ "$(puavo-conf puavo.puavomenu.enabled)" = "true" ]; then
     HOSTNAME=$(hostname)
-    /opt/puavomenu/send_command "${HOME}/.config/puavomenu_${HOSTNAME}_socket" $@
+    /opt/puavomenu/send_command "${HOME}/.config/puavomenu/socket_${HOSTNAME}" $@
     exit 0
 fi
 
