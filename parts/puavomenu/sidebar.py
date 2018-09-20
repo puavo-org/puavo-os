@@ -271,11 +271,12 @@ class AvatarDownloaderThread(threading.Thread):
 # The sidebar class
 
 class Sidebar:
-    def __init__(self, parent, language, res_dir, user_dir):
+    def __init__(self, parent, language, res_dir, user_dir, dark=False):
         self.__parent = parent
         self.__language = language
         self.__res_dir = res_dir
         self.__user_dir = user_dir
+        self.__dark = dark
 
         self.container = Gtk.Fixed()
 
@@ -369,7 +370,8 @@ class Sidebar:
         self.__avatar = AvatarButton(self,
                                      getuser(),
                                      avatar_image,
-                                     avatar_tooltip)
+                                     avatar_tooltip,
+                                     dark=self.__dark)
 
         # No profile editing for guest users
         if self.__is_guest or self.__is_webkiosk:
@@ -426,7 +428,8 @@ class Sidebar:
                                localize(data['title'], self.__language),
                                ICONS32.load_icon(data['icon']),
                                localize(data.get('description', ''), self.__language),
-                               data['command'])
+                               data['command'],
+                               dark=self.__dark)
 
         button.connect('clicked', self.__clicked_sidebar_button)
         button.show()

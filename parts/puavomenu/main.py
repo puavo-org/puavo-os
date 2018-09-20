@@ -27,6 +27,21 @@ from sidebar import Sidebar
 from strings import STRINGS
 
 
+# Extremely ugly and hacky function to detect if the GTK dark theme is enabled
+# I'll clean up this later
+def is_dark_theme_enabled():
+    try:
+      import configparser
+      from os.path import expanduser, join
+
+      name = join(expanduser('~'), '.config', 'gtk-3.0', 'settings.ini')
+      config = configparser.ConfigParser()
+      config.read(name)
+      return config.getboolean('Settings', 'gtk-application-prefer-dark-theme', fallback=False)
+    except:
+      return False
+
+
 class PuavoMenu(Gtk.Window):
 
     def error_message(self, message, secondary_message=None):
@@ -156,6 +171,8 @@ class PuavoMenu(Gtk.Window):
         self.__fave_buttons = []
         self.__prev_fave_ids = []
         self.__enable_faves_saving = True
+
+        self.__dark = is_dark_theme_enabled()
 
         if ('GUEST_SESSION' in environ) or \
            (puavo_conf('puavo.webmenu.webkiosk', '') == 'true'):
@@ -341,7 +358,8 @@ class PuavoMenu(Gtk.Window):
         self.__sidebar = Sidebar(parent=self,
                                  language=self.language,
                                  res_dir=self.res_dir,
-                                 user_dir=self.user_dir)
+                                 user_dir=self.user_dir,
+                                 dark=self.__dark)
 
         self.__main_container.put(self.__sidebar.container,
                                   SIDEBAR_LEFT,
@@ -437,14 +455,14 @@ class PuavoMenu(Gtk.Window):
                 # Menus first...
                 for m in cat.menus:
                     mb = MenuButton(self, m.title, m.icon, m.description,
-                                    m, self.__menu_background)
+                                    m, self.__menu_background, dark=self.__dark)
                     mb.connect('clicked', self.__clicked_menu_button)
                     new_buttons.append(mb)
 
                 # ...then programs
                 for p in cat.programs:
                     pb = ProgramButton(self, p.title, p.icon,
-                                       p.description, p)
+                                       p.description, p, dark=self.__dark)
                     pb.connect('clicked', self.__clicked_program_button)
                     new_buttons.append(pb)
 
@@ -457,7 +475,8 @@ class PuavoMenu(Gtk.Window):
         else:
             # Submenu view, have only programs
             for p in self.__current_menu.programs:
-                pb = ProgramButton(self, p.title, p.icon, p.description, p)
+                pb = ProgramButton(self, p.title, p.icon, p.description, p,
+                                   dark=self.__dark)
                 pb.connect('clicked', self.__clicked_program_button)
                 new_buttons.append(pb)
 
@@ -549,7 +568,8 @@ class PuavoMenu(Gtk.Window):
         new_buttons = []
 
         for m in matches:
-            b = ProgramButton(self, m.title, m.icon, m.description, m)
+            b = ProgramButton(self, m.title, m.icon, m.description, m,
+                              dark=self.__dark)
             b.connect('clicked', self.__clicked_program_button)
             new_buttons.append(b)
 
@@ -633,7 +653,7 @@ class PuavoMenu(Gtk.Window):
         for i, f in enumerate(faves):
             p = self.__programs[f[0]]
             button = ProgramButton(self, p.title, p.icon, p.description,
-                                   data=p, is_fave=True)
+                                   data=p, is_fave=True, dark=self.__dark)
             button.connect('clicked', self.__clicked_program_button)
             self.__fave_buttons.append(button)
             self.__fave_icons.put(button, i * PROGRAM_BUTTON_WIDTH, 0)

@@ -27,7 +27,8 @@ class HoverIconButtonBase(Gtk.Button):
                  label,
                  icon=None,
                  tooltip=None,
-                 data=None):
+                 data=None,
+                 dark=False):
 
         super().__init__()
 
@@ -50,6 +51,9 @@ class HoverIconButtonBase(Gtk.Button):
 
         self.data = data
 
+        # Dark colors?
+        self.dark = dark
+
         # Not disabled by default
         self.disabled = False
 
@@ -71,6 +75,10 @@ class HoverIconButtonBase(Gtk.Button):
         self.icon_color = [1.0, 0.0, 0.0]
         self.label_pos = [-1, -1]
         self.label_color_normal = [0.0, 0.0, 0.0]
+
+        if self.dark:
+            self.label_color_normal = [1.0, 1.0, 1.0]
+
         self.label_color_hover = [1.0, 1.0, 1.0]
         self.background_color = [74.0 / 255.0, 144.0 / 255.0, 217.0 / 255.0]
         self.corner_rounding = 0
@@ -187,9 +195,10 @@ class ProgramButton(HoverIconButtonBase):
                  icon=None,
                  tooltip=None,
                  data=None,
-                 is_fave=False):
+                 is_fave=False,
+                 dark=False):
 
-        super().__init__(parent, label, icon, tooltip, data)
+        super().__init__(parent, label, icon=icon, tooltip=tooltip, data=data, dark=dark)
 
         self.is_fave = is_fave
         self.menu = None
@@ -305,12 +314,14 @@ class MenuButton(ProgramButton):
                  icon=None,
                  tooltip=None,
                  data=None,
-                 background=None):
+                 background=None,
+                 dark=False):
 
-        super().__init__(parent, label, icon, tooltip, data)
+        super().__init__(parent, label, icon=icon, tooltip=tooltip, data=data, dark=dark)
 
         self.background = background
         self.icon_color = [0.0, 0.0, 1.0]
+        self.label_color_normal = [0.0, 0.0, 0.0]
         self.label_color_hover = [0.0, 0.0, 0.0]
 
         # menu buttons don't have popup menus
@@ -348,10 +359,11 @@ class AvatarButton(HoverIconButtonBase):
                  parent,
                  user_name,
                  initial_image=None,
-                 tooltip=None):
+                 tooltip=None,
+                 dark=False):
 
         super().__init__(parent, label=user_name, icon=None,
-                         tooltip=tooltip, data=None)
+                         tooltip=tooltip, data=None, dark=dark)
 
         # Load the initial avatar image
         if initial_image:
@@ -440,9 +452,10 @@ class SidebarButton(HoverIconButtonBase):
                  label,
                  icon=None,
                  tooltip=None,
-                 data=None):
+                 data=None,
+                 dark=False):
 
-        super().__init__(parent, label, icon, tooltip, data)
+        super().__init__(parent, label, icon=icon, tooltip=tooltip, data=data, dark=dark)
 
         self.label_layout.set_width(-1)     # -1 turns off wrapping
         self.label_layout.set_ellipsize(Pango.EllipsizeMode.END)
