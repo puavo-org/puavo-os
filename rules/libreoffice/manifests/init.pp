@@ -1,19 +1,30 @@
 class libreoffice {
   include ::dpkg
-  require ::packages
+  include ::packages
 
-  $libre_dir = '/usr/lib/libreoffice'
+  # apply a translation fix for Finnish Libreoffice environment
 
-  dpkg::simpledivert {
-    [ "${libre_dir}/program/resource/fi/LC_MESSAGES/sfx.mo",  ]: ;
+  $libreoffice_dir = '/usr/lib/libreoffice'
+  $fi_msg_dir      = "${libreoffice_dir}/program/resource/fi/LC_MESSAGES"
+  $src_object      = "${fi_msg_dir}/.sfx.po"
+  $target_object   = "${fi_msg_dir}/sfx.mo"
+
+  dpkg::simpledivert { $target_object: ; }
+
+  exec {
+    "msgfmt --output-file ${target_object} ${src_object}":
+      onlyif  => "/usr/bin/test ${target_object} -ot ${src_object}",
+      require => [ Dpkg::Simpledivert[$target_object]
+                 , File[$src_object]
+                 , Package['gettext'] ];
   }
 
   file {
-    "${libre_dir}/program/resource/fi/LC_MESSAGES/sfx.mo":
-      require => Dpkg::Simpledivert["${libre_dir}/program/resource/fi/LC_MESSAGES/sfx.mo"],
-      source  => 'puppet:///modules/libreoffice/sfx.mo';
+    $src_object:
+      require => Package['libreoffice'],
+      source  => 'puppet:///modules/libreoffice/sfx.po';
   }
 
-  Package <| title == libreoffice |>
+  Package <| title == gettext
+          or title == libreoffice |>
 }
-
