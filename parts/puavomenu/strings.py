@@ -112,7 +112,7 @@ STRINGS = {
     },
 
     'sb_changelog_title': {
-        'en': 'Show the changes in this version',
+        'en': 'Show changes in this version',
         'fi': 'Näytä muutokset tässä versiossa',
     },
 
