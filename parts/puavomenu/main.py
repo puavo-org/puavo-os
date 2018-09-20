@@ -19,7 +19,7 @@ import logger
 from constants import *
 from iconcache import ICONS48
 from buttons import ProgramButton, MenuButton
-from utils import localize
+from utils import localize, puavo_conf
 from utils_gui import load_image_at_size, create_separator
 from loader import load_menu_data
 from conditionals import evaluate_file
@@ -161,6 +161,12 @@ class PuavoMenu(Gtk.Window):
         # The most often used programs ("favorites")
         self.__fave_buttons = []
         self.__prev_fave_ids = []
+        self.__enable_faves_saving = True
+
+        if ('GUEST_SESSION' in environ) or \
+           (puavo_conf('puavo.webmenu.webkiosk', '') == 'true'):
+            # It's pointless to save faves in guest/webkiosk sessions
+            self.__enable_faves_saving = False
 
         # Background image for top-level menus
         try:
@@ -633,6 +639,9 @@ class PuavoMenu(Gtk.Window):
 
     # Serialize current fave IDs and their counts
     def __save_faves(self, all_faves):
+        if not self.__enable_faves_saving:
+            return
+
         out = ''
 
         # whitespace is not permitted in program IDs, so this works
@@ -1472,7 +1481,10 @@ class PuavoMenu(Gtk.Window):
 
         self.__programs_container.show()
 
-        self.__load_faves()
+        if self.__enable_faves_saving:
+            # ignore faves completely in guest/webkiosk modes
+            self.__load_faves()
+
         self.__update_faves()
         self.__faves_sep.show()
         self.__faves_container.show()
