@@ -523,6 +523,16 @@ class PuavoMenu(Gtk.Window):
                 matches.append(p)
                 continue
 
+            # check the .desktop file name
+            if p.original_desktop_file:
+                if re.search(key,
+                             p.original_desktop_file.replace('.desktop', ''),
+                             re.IGNORECASE):
+                    matches.append(p)
+                    continue
+
+            # keyword search must be done last, otherwise a program
+            # can appear multiple times in the search results
             for k in p.keywords:
                 if re.search(key, k, re.IGNORECASE):
                     matches.append(p)
