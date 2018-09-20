@@ -16,7 +16,13 @@ ionice -c 3  -p $$
 renice -n 20 -p $$ > /dev/null
 
 abitti_images_dir=/images/abitti
+abitti_state_dir=/state/abitti
 image_server='images.opinsys.fi'
+
+# XXX cleanup old cruft (storing these under /state/abitti now...
+# XXX these lines may be removed sometimes later)
+rm -f "${abitti_images_dir}/abitti.json" \
+      "${abitti_images_dir}/persistent_abitti_fs"
 
 abitti_mode=$(puavo-conf puavo.abitti.mode)
 case "$abitti_mode" in
@@ -27,7 +33,7 @@ case "$abitti_mode" in
     # just continue...
     ;;
   purge)
-    rm -rf "$abitti_images_dir"
+    rm -rf "$abitti_images_dir" "$abitti_state_dir"
     exit 0
     ;;
   *)
@@ -55,9 +61,9 @@ if [ "${1:-}" = '--use-rate-limit' ]; then
   fi
 fi
 
-mkdir -p "$abitti_images_dir"
+mkdir -p "$abitti_images_dir" "$abitti_state_dir"
 
-abitti_json_path="${abitti_images_dir}/abitti.json"
+abitti_json_path="${abitti_state_dir}/abitti.json"
 wget -q --ca-certificate=/etc/puavo/certs/rootca.pem \
      -O "${abitti_json_path}.tmp" \
      "https://${image_server}/abitti-images/abitti.json"
@@ -96,7 +102,7 @@ for squashfs_file in ${abitti_images_dir}/*.squashfs; do
 done
 
 # setup persistent storage filesystem for DigabiOS/Abitti
-persistent_fs="${abitti_images_dir}/persistent_abitti_fs"
+persistent_fs="${abitti_state_dir}/persistent_abitti_fs"
 if [ ! -e "$persistent_fs" ]; then
   # count=14336 (7M) is the DigabiOS default, but we put a bit bigger
   # one in case it should ever grow (four times as much).

@@ -22,8 +22,14 @@ for x in $(cat /proc/cmdline); do
       mount -r -o loop /root/lib/live/mount/medium/ltsp.img /image
       mount --bind /image/lib/modules /root/lib/modules
 
-      # setup persistent storage filesystem as a loopback device
-      losetup -f /root/lib/live/mount/medium/abitti/persistent_abitti_fs
+      # Setup persistent storage filesystem as a loopback device.
+      # This filesystem needs to be on a read-write mount so that
+      # our loopback filesystem can also be read-write (thus the above
+      # "/root/lib/live/mount/medium" will not do).
+      mkdir -p /state
+      mount /dev/mapper/puavo-state /state
+      losetup -f /state/abitti/persistent_abitti_fs
+      umount -l /state
       ;;
   esac
 done

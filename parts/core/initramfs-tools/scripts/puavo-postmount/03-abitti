@@ -1,0 +1,32 @@
+#!/bin/sh
+
+MINKVER="2.6.17"
+PREREQ=""
+
+# Output pre-requisites
+prereqs()
+{
+    echo "$PREREQ"
+}
+
+case "$1" in
+    prereqs)
+        prereqs
+        exit 0
+        ;;
+esac
+
+# contains definition for "panic"
+. /scripts/functions
+
+PUAVO_LVM_VG="puavo"
+
+for x in $(cat /proc/cmdline); do
+    case "$x" in
+        puavo.abitti.boot=true)
+            # our abitti support layer needs access to /dev/mapper/puavo-state
+            vgchange -a y "${PUAVO_LVM_VG}"
+            exit 0
+            ;;
+    esac
+done
