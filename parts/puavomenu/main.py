@@ -1010,22 +1010,18 @@ class PuavoMenu(Gtk.Window):
 
 
     def __main_got_focus(self, *unused):
-        #logger.debug('Main window got focus')
         pass
 
 
     def __main_lost_focus(self, *unused):
-        #logger.debug('Main window lost focus')
         self.autohide()
 
 
     def __search_in(self, *unused):
-        #logger.debug('Search field got focus')
         pass
 
 
     def __search_out(self, *unused):
-        #logger.debug('Search field lost focus')
         self.__search.grab_focus()
 
 
@@ -1098,11 +1094,6 @@ class PuavoMenu(Gtk.Window):
 
             logger.debug('Socket command: "{0}"'.format(cmd))
             logger.debug('Socket arguments: "{0}"'.format(data))
-
-            #logger.debug("S WINDOW VISIBLE: {0}".format(self.get_visible()))
-            #logger.debug("S WINDOW ACTIVE: {0}".format(self.is_active()))
-            #logger.debug("S TOPLEVEL FOCUS: {0}".format(self.has_toplevel_focus()))
-            #logger.debug("S WIDGET VISIBLE: {0}".format(self.is_visible()))
 
             if cmd == 'hide':
                 # Hide the window
@@ -1180,11 +1171,6 @@ class PuavoMenu(Gtk.Window):
         except Exception as e:
             logger.error('Socket command processing failed!')
             logger.error(e)
-
-        #logger.debug("E WINDOW VISIBLE: {0}".format(self.get_visible()))
-        #logger.debug("E WINDOW ACTIVE: {0}".format(self.is_active()))
-        #logger.debug("E TOPLEVEL FOCUS: {0}".format(self.has_toplevel_focus()))
-        #logger.debug("E WIDGET VISIBLE: {0}".format(self.is_visible()))
 
         # False will remove the handler, that's not what we want
         return True
