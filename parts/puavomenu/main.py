@@ -130,12 +130,6 @@ class PuavoMenu(Gtk.Window):
         # Location of the Desktop directory, determined on the first use
         self.desktop_dir = None
 
-        # We don't set the window position until we're showing it for
-        # the first time. But because window positing happens after
-        # we've made the window visible, it can briefly be seen in the
-        # wrong position on slower machines. This hack tries to fix that.
-        self.first_time_show = True
-
         # If True, the menu is reset back to the default view after you
         # click a program or a search result. Set to False to retain the
         # current view.
@@ -1135,7 +1129,6 @@ class PuavoMenu(Gtk.Window):
 
                     self.__search.grab_focus()
                     self.activate_focus()
-                    self.first_time_show = False
             elif cmd == 'toggle':
                 # Toggle the window visibility
 
@@ -1164,7 +1157,6 @@ class PuavoMenu(Gtk.Window):
 
                     self.__search.grab_focus()
                     self.activate_focus()
-                    self.first_time_show = False
             else:
                 logger.debug('Unknown command "{0}" received, args={1}'.
                              format(cmd, data))
