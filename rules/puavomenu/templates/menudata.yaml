@@ -820,12 +820,11 @@ menus:
             - gnubg
 
 
-  - menu-digabi:
-        name: Digabi
+  - menu-abitti:
+        name: Abitti-sovellukset
         description:
             fi: Sovelluksia sähköiseen ylioppilastutkintoon
         icon: /usr/share/icons/oxygen/base/48x48/categories/applications-education.png
-        condition: "personally_administered"
         programs:
             - gimp
             - pinta
@@ -1183,7 +1182,7 @@ categories:
             - menu-office
             - menu-audio
             - menu-games
-            - menu-digabi
+            - menu-abitti
             - menu-whiteboards
             - menu-web
         programs:
