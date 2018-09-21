@@ -1,6 +1,6 @@
 class grub_themes {
   file {
-    '/boot/grub/themes':
+    [ '/boot', '/boot/grub', '/boot/grub/themes' ]:
       ensure => directory;
 
     '/boot/grub/themes/StylishDark':
