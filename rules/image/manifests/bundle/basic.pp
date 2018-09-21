@@ -10,6 +10,7 @@ class image::bundle::basic {
   include ::disable_update_initramfs
   include ::extra_boot_scripts
   include ::gdm
+  include ::grub_themes
   include ::hwquirks
   include ::initramfs
   include ::infotv

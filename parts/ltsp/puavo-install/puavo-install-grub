@@ -164,7 +164,8 @@ insmod regexp
 insmod loopback
 insmod usb_keyboard
 insmod lvm
-insmod progress
+insmod jpeg
+insmod png
 
 for dev in (lvm/__PUAVO_LVM_PARTITION__); do
   for file in ${dev}/*.default; do
@@ -184,6 +185,12 @@ for dev in (lvm/__PUAVO_LVM_PARTITION__); do
   if test -f "${default_image}"; then
     ltsp_image_entry "${default_image}" "Normaali käynnistys - ${default_image_alias}"
     ltsp_image_entry_superlaptop "${default_image}" "Kehittäjätila - ${default_image_alias}"
+
+    loopback default_image_loop "${default_image}"
+    set possible_puavo_grub_theme_path="(default_image_loop)/boot/grub/themes/${puavo_grub_theme}/theme.txt"
+    if test -f "${possible_puavo_grub_theme_path}"; then
+      set theme="${possible_puavo_grub_theme_path}"
+    fi
   fi
   if test -f "${backup_image}"; then
     ltsp_image_entry "${backup_image}" "Varajärjestelmä, normaali käynnistys - ${backup_image_alias}"
