@@ -181,8 +181,12 @@ class PuavoMenu(Gtk.Window):
 
         # Background image for top-level menus
         try:
-            self.__menu_background = \
-                load_image_at_size(res_dir + 'folder.png', 150, 110)
+            if self.__dark:
+                self.__menu_background = \
+                    load_image_at_size(res_dir + 'folder_dark.png', 150, 110)
+            else:
+                self.__menu_background = \
+                    load_image_at_size(res_dir + 'folder.png', 150, 110)
         except Exception as e:
             logger.error('Can\'t load the menu background image: {0}'.
                          format(e))
