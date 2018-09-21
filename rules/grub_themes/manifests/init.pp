@@ -1,9 +1,9 @@
 class grub_themes {
-  include ::art
+  include ::plymouth    # for (opinsys) logo.png
   include ::puavo_conf
 
   $vendor_logo_src_path =
-    'puppet:///modules/art/puavo-art/puavo-os_logo-gray-300px.png'
+    'puppet:///modules/plymouth/theme/opinsys-dark/logo.png';
 
   file {
     [ '/boot', '/boot/grub', '/boot/grub/themes' ]:
