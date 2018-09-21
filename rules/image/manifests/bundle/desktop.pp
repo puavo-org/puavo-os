@@ -20,6 +20,7 @@ class image::bundle::desktop {
   include ::libreoffice
   include ::network_manager
   include ::notify_changelog
+  include ::password_expiration
   # include ::pycharm	                # XXX pycharm needs to be packaged
   include ::smartboard
   include ::supplementary_groups

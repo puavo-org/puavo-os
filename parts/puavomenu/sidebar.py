@@ -548,9 +548,8 @@ class Sidebar:
                                  stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE)
             elif command['type'] == 'webwindow':
-                # TODO: implement this, don't open a separate browser window
                 logger.info('Creating a webwindow')
-                subprocess.Popen(['xdg-open', arguments],
+                subprocess.Popen(['chromium', '--app=%s' % arguments],
                                  stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE)
         except Exception as e:
