@@ -171,6 +171,13 @@ def update_grub_environment(restclient)
   else
     grubedit('unset', 'puavo_kernel_arguments')
   end
+
+  puavo_grub_theme = puavoconf_get('puavo.grub.theme')
+  if puavo_grub_theme && !puavo_grub_theme.empty? then
+    grubedit('set', "puavo_grub_theme=#{ puavo_grub_theme }")
+  else
+    grubedit('unset', 'puavo_grub_theme')
+  end
 end
 
 def update_wlan_configurations(restclient)
