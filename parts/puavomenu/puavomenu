@@ -110,7 +110,7 @@ else:
     logger.disable_file()
 
 logger.start_banner()
-logger.info('This is PuavoMenu v0.5 (c) Opinsys Oy 2017-2018')
+logger.info('This is PuavoMenu v0.6 (c) Opinsys Oy 2017-2018')
 
 params = {}
 params['res_dir'] = path_join(args.res_dir, '')
