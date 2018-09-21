@@ -343,6 +343,7 @@ Description: Bits and pieces needed inside the LTSP chroot image.
 Package: puavomenu
 Architecture: all
 Depends: ${misc:Depends},
+ chromium,
  python3,
  python3-yaml,
  python3-xlib
