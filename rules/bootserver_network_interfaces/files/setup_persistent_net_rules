@@ -4,7 +4,7 @@ set -eu
 
 if [ -e /state/etc/udev/rules.d/70-persistent-net.rules ]; then
   ln -fns /state/etc/udev/rules.d/70-persistent-net.rules \
-          /etc/udev/rules.d/70-persistent-net.rules \
+          /etc/udev/rules.d/70-persistent-net.rules
   exit 0
 fi
 
