@@ -4,6 +4,12 @@ class bootserver_samba {
   include ::puavo_conf
 
   file {
+    # workaround a bug when using dhclient on inet0
+    '/etc/dhcp/dhclient-enter-hooks.d/samba':
+      mode    => '0755',
+      require => Package['samba'],
+      source  => 'puppet:///modules/bootserver_samba/etc_dhcp_dhclient-enter-hooks.d_samba';
+
     '/etc/pam.d/samba':
       source => 'puppet:///modules/bootserver_samba/etc_pam.d_samba';
 
