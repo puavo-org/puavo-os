@@ -241,6 +241,8 @@ programs:
         url: https://getkahoot.com/
         description: Kahoot
         icon: /usr/share/icons/Gion/48x48/categories/xfce-internet.png
+  - kamerka:
+        icon: /usr/share/icons/Faenza/devices/96/camera-web.png
   - kenavision:
         name: Kena Vision Microscope
         type: custom
@@ -901,6 +903,7 @@ menus:
             - spotify
             - org.gnome.Cheese
             - kenavision
+            - kamerka
             - openshot
             - org.kde.kdenlive
             - kino
