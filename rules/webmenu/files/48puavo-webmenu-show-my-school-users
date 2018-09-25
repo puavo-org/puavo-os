@@ -1,0 +1,5 @@
+case "$(jq -r .user.user_type "$PUAVO_SESSION_PATH")" in
+  admin|staff|teacher)
+    export PUAVO_WEBMENU_SHOW_MY_SCHOOL_USERS=1
+  ;;
+esac

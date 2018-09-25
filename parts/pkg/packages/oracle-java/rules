@@ -25,6 +25,20 @@ case "${command}" in
             /opt/java/opinsys-add-cert "${upstream_dir}"
             /opt/java/opinsys-create-signed-ruleset
         fi
+cat <<'EOF' > /usr/share/applications/java.desktop
+[Desktop Entry]
+Name=Java
+Comment=Java
+GenericName=Java
+Keywords=java
+Exec=java -jar %f
+Terminal=false
+X-MultipleArgs=false
+Type=Application
+Icon=application-x-java
+MimeType=application/x-java-archive
+StartupNotify=true
+EOF
         ;;
 
     unconfigure)
@@ -34,6 +48,7 @@ case "${command}" in
 
         update-alternatives \
             --remove javaws "${upstream_dir}/bin/javaws"
+        rm -f /usr/share/applications/java.desktop
         ;;
 
     unpack)

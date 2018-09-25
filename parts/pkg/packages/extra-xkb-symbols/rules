@@ -5,7 +5,7 @@ set -eu
 command=$1
 shift
 
-symlink_targets='
+xkb_symbol_files='
   /usr/share/X11/xkb/symbols/ruslav
   /usr/share/X11/xkb/symbols/smn
   /usr/share/X11/xkb/symbols/sms
@@ -14,20 +14,21 @@ symlink_targets='
 case "$command" in
     configure)
         upstream_dir=$1
-        for symlink_target in $symlink_targets; do
-            ln -fns -T "${upstream_dir}/custom-packages/digabios/xkb-symbols/" \
-                       "$symlink_target"
+        for xkb_symbol_file_path in $xkb_symbol_files; do
+            ln -fns "${upstream_dir}/custom-packages/digabios/xkb-symbols/$(basename "$xkb_symbol_file_path")" \
+                    "$xkb_symbol_file_path"
         done
         ;;
     unconfigure)
-        for symlink_target in $symlink_targets; do
-            rm -f "$symlink_target"
+        for xkb_symbol_file_path in $xkb_symbol_files; do
+            rm -f "$xkb_symbol_file_path"
         done
         ;;
     unpack)
         upstream_pack=$1
         upstream_dir=$2
-        tar -x -f "$upstream_pack" -C "$upstream_dir" --strip-components=1
+        tar -x -f "$upstream_pack" -C "$upstream_dir" --strip-components=1 \
+            digabi-os-70a117933bb3ca0e4fac3760020cc6dc8230dcad/custom-packages/digabios/xkb-symbols
         ;;
     *)
         ;;

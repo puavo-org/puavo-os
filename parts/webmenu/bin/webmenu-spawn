@@ -3,9 +3,14 @@
 set -eu
 
 if [ "$(puavo-conf puavo.puavomenu.enabled)" = "true" ]; then
-    HOSTNAME=$(hostname)
-    /opt/puavomenu/send_command "${HOME}/.config/puavomenu/socket_${HOSTNAME}" $@
-    exit 0
+  if [ "${1:-}" = '--logout' ]; then
+    exec gnome-session-quit --logout
+  fi
+
+  hostname=$(hostname)
+  exec /opt/puavomenu/send_command                    \
+       "${HOME}/.config/puavomenu/socket_${hostname}" \
+       "$@"
 fi
 
 setup_webmenu_window_mode() {

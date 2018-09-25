@@ -405,6 +405,8 @@ items:
       fi: Muikku-valokuvakoppi
       sv: Cheese
       de: Cheese
+  - source: kamerka
+    type: desktop
   - type: custom
     name: Kena Vision Microscope
     command: /opt/av4kav/lib/av4.sh
@@ -663,3 +665,12 @@ items:
 - source: org.gnome.Nautilus
   type: desktop
   osIconPath: /usr/share/icons/Faenza/places/96/folder_home.png
+- type: web
+  name:
+    fi: Koulun käyttäjälista
+    sv: Skolan användarlista
+    en: School User List
+    de: Schulbenutzerliste
+  osIconPath: /usr/share/icons/Faenza/mimetypes/96/x-office-spreadsheet.png
+  url: https://api.opinsys.fi/v3/my_school_users
+  condition: "env.PUAVO_WEBMENU_SHOW_MY_SCHOOL_USERS"
