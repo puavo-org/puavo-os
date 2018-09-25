@@ -1,71 +1,106 @@
-#!/bin/sh
+#!/usr/bin/tclsh
 
-set -eu
+set services {
+  { avahi-daemon		/lib/systemd/system/avahi-daemon.service }
+  { cups-watchdog		/etc/systemd/system/cups-watchdog.service }
+  { fluentd			/lib/systemd/system/fluentd.service }
+  { incron			/lib/systemd/system/incron.service }
+  { isc-dhcp-server		/etc/init.d/isc-dhcp-server }
+  { krb5-kdc			/lib/systemd/system/krb5-kdc.service }
+  { libvirtd			/lib/systemd/system/libvirtd.service }
+  { ModemManager		/lib/systemd/system/ModemManager.service }
+  { munin-node			/lib/systemd/system/munin-node.service }
+  { nbd-server			/etc/init.d/nbd-server }
+  { NetworkManager		/lib/systemd/system/NetworkManager.service }
+  { nfs-server			/lib/systemd/system/nfs-server.service }
+  { nginx			/lib/systemd/system/nginx.service }
+  { nmbd			/lib/systemd/system/nmbd.service }
+  { nscd			/lib/systemd/system/nscd.service }
+  { nslcd			/etc/init.d/nslcd }
+  { puavo-darkdm		/lib/systemd/system/puavo-darkdm.service }
+  { puavo-rest			/lib/systemd/system/puavo-rest.service }
+  { puavo-sharedir-manager	/lib/systemd/system/puavo-sharedir-manager.service }
+  { puavo-tftpd			/lib/systemd/system/puavo-tftpd.service }
+  { puavo-vpn-client-dnsmasq	/lib/systemd/system/puavo-vpn-client-dnsmasq.service }
+  { puavo-vpn-client-openvpn	/lib/systemd/system/puavo-vpn-client-openvpn.service }
+  { puavo-wlancontroller	/lib/systemd/system/puavo-wlancontroller.service }
+  { redis-server		/lib/systemd/system/redis-server.service }
+  { rpc-gssd			/lib/systemd/system/rpc-gssd.service }
+  { shorewall			/lib/systemd/system/shorewall.service }
+  { slapd			/etc/systemd/system/slapd.service }
+  { smbd			/lib/systemd/system/smbd.service }
+  { tlp				/lib/systemd/system/tlp.service }
+}
 
-services='
-  avahi-daemon
-  cups-watchdog
-  fluentd
-  incron
-  isc-dhcp-server
-  krb5-kdc
-  libvirtd
-  ModemManager
-  munin-node
-  nbd-server
-  NetworkManager
-  nfs-server
-  nginx
-  nmbd
-  nscd
-  nslcd
-  puavo-darkdm
-  puavo-rest
-  puavo-sharedir-manager
-  puavo-tftpd
-  puavo-vpn-client-dnsmasq
-  puavo-vpn-client-openvpn
-  puavo-wlancontroller
-  redis-server
-  rpc-gssd
-  shorewall
-  slapd
-  smbd
-  tlp
-'
+proc set_service {service_name enabled service_file} {
+  switch -glob -- $service_file {
+    /etc/init.d/* {
+      set linkpaths [list "/etc/rc2.d/S01${service_name}" \
+                          "/etc/rc3.d/S01${service_name}" \
+                          "/etc/rc4.d/S01${service_name}" \
+                          "/etc/rc5.d/S01${service_name}" ]
+    }
+    *.service {
+      set mutw_path "/etc/systemd/system/multi-user.target.wants"
+      set linkpaths [list "${mutw_path}/${service_name}.service"]
+    }
+    default {
+      error "Cannot handle $service_name ($service_file), type not known"
+    }
+  }
 
-status=0
+  if {$enabled} {
+    foreach link $linkpaths { exec ln -fns $service_file $link }
+  } else {
+    exec rm -f {*}$linkpaths
+  }
+}
 
-# XXX look if this is slow and could be optimized (skipping systemctl-tool?)
+set status 0
 
-for service in ${services}; do
-  if ! enabled=$(puavo-conf "puavo.service.${service}.enabled"); then
-    echo "No puavo-conf setting for puavo.service.${service}.enabled" >&2
-    status=1
-    continue
-  fi
+set disabled_services [list]
+set enabled_services  [list]
 
-  # As an exception, do not run puavo-vpn-client-dnsmasq on netboot devices,
-  # because that will mess up dns configuration (XXX perhaps we need a
-  # a special profile for laptops which are booted from network, that override
-  # otherwise normal laptop behaviour).
-  if [ -e /run/puavo/nbd-server ]; then
-    if [ "$service" = 'puavo-vpn-client-dnsmasq' ]; then
-      enabled=false
-    fi
-  fi
+foreach service_def $services {
+  foreach {service service_file} $service_def {
+    set puavo_conf_var "puavo.service.${service}.enabled"
+    set res [ catch { exec -ignorestderr puavo-conf $puavo_conf_var } \
+                           puavo_conf_res]
+    if {$res} {
+      puts stderr "No puavo-conf setting for $puavo_conf_var: $puavo_conf_res"
+      set status 1
+      continue
+    }
+    set puavo_conf_value $puavo_conf_res
 
-  if [ "${enabled}" = 'true' ]; then
-    if ! systemctl enable "${service}"; then
-      echo "Could not enable ${service}" >&2
-      status=1
-    fi
-  else
-    if ! systemctl disable "${service}"; then
-      echo "Could not disable ${service}" >&2
-      status=1
-    fi
-  fi
-done
+    # As an exception, do not run puavo-vpn-client-dnsmasq on netboot devices,
+    # because that will mess up dns configuration (XXX perhaps we need a
+    # a special profile for laptops which are booted from network, that
+    # override otherwise normal laptop behaviour).
+    if {$service == "puavo-vpn-client-dnsmasq"
+	  && [file exists /run/puavo/nbd-server]} {
+      set puavo_conf_value false
+    }
+
+    if {$puavo_conf_value == "true"} {
+      if {[catch { set_service $service true $service_file } errmsg]} {
+        puts stderr "Could not enable $service: $errmsg"
+	set status 1
+	continue
+      }
+      lappend enabled_services $service
+    } else {
+      if {[catch { set_service $service false $service_file } errmsg]} {
+        puts stderr "Could not disable $service: $errmsg"
+	set status 1
+	continue
+      }
+      lappend disabled_services $service
+    }
+  }
+}
+
+puts "disabled services (by puavo-conf): $disabled_services"
+puts "enabled services (by puavo-conf): $enabled_services"
 
 exit $status
