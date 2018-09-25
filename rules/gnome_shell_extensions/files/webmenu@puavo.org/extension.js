@@ -60,7 +60,7 @@ function make_button(icon_name, icon_size, spawn_command, is_right) {
 function init() {
     logout_button = make_button('system-shutdown-symbolic',
 				'16',
-				[ 'gnome-session-quit', '--power-off' ], true);
+				[ 'webmenu-spawn', '--logout' ], true);
     menu_button   = make_button('start-here-debian-symbolic',
 				'28',
 				[ 'webmenu-spawn' ], false);
