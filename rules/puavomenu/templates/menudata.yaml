@@ -20,11 +20,26 @@ programs:
   - appinventor
   - arduino:
         icon: /opt/arduino-ide/lib/icons/96x96/apps/arduino.png
-  - audacity
-  - avogadro
+  - audacity:
+      name:
+          en: Audacity-audio editor
+          fi: Audacity-äänieditori
+          sv: Audacity-ljudredigerare
+          de: Audacity Audio bearbeiten
+  - avogadro:
+      name:
+          en: Avogadro
+          fi: Avogadro-molekyylimuokkain
+          sv: Avogadro
+          de: Avogadro
 
   #B
-  - blender
+  - blender:
+        name:
+          en: Blender
+          fi: Blender-3D-mallinnusohjelma
+          sv: Blender-3D-modellering
+          de: Blender-3D-Modellierung
   - bluefish:
         name:
             en: Bluefish HTML-editor
@@ -32,14 +47,19 @@ programs:
             sv: Bluefish HTML-redigerare
             de: Bluefish HTML-editor
   - bluegriffon
-  - brasero
+  - brasero:
+        name:
+          en: Brasero - CD/DVD -writer
+          fi: Brasero - CD/DVD -kirjoitus
+          sv: Brasero - CD/DVD -brännare
+          de: Brasero - CD/DVD -brennen
 
   #C
   - calibre-gui:
         name: Calibre
         keywords: ebook, e-book
   - celestia:
-      name:
+        name:
           en: Celestia-space simulation
           fi: Avaruussimulaattori
           sv: Rymdsimulator
@@ -51,7 +71,12 @@ programs:
             fi: Chromium-selain
             sv: Chromium
             de: Chromium-Browser
-  - cmaptools
+  - cmaptools:
+        name:
+          en: CmapTools-mindmap
+          fi: CmapTools-miellekartta
+          sv: CmapTools-mindmap
+          de: CmapTools-Mindmap
   - cura
 
   #D
@@ -86,16 +111,36 @@ programs:
         url: http://www.lukimat.fi/lukeminen/materiaalit/ekapeli
         icon: /usr/share/icons/Faenza/categories/96/gnome-joystick.png
         condition: "!personally_administered"
-  - empathy
+  - empathy:
+        name:
+          en: Empathy-chat client
+          fi: Empathy-pikaviestin
+          sv: Empathy-IM-klient
+          de: Empathy-Chat-Client
   - enchanting
   - eog:
       icon: /usr/share/icons/Faenza/apps/scalable/eog.svg
   - eric
-  - evince
-  - evolution
+  - evince:
+        name:
+            en: Evince-document viewer
+            fi: Evince-asiakirjakatselin
+            sv: Evince-dokumentläsare
+            de: Evince Dokumentenbetrachter
+  - evolution:
+        name:
+            en: Evolution-email
+            fi: Evolution-sähköposti
+            sv: Evolution-e-post
+            de: Evolution-Email
 
   #F
-  - firefox
+  - firefox:
+        name:
+            en: Firefox-browser
+            fi: Firefox-selain
+            sv: Firefox
+            de: Firefox
   - fmit:
         name:
             en: Fmit-instrument tuner
@@ -104,12 +149,23 @@ programs:
             de: Stimmprogramm
         icon: /usr/share/icons/hicolor/scalable/apps/fmit.svg
   - freecad
+  - freeciv-gtk2
   - fritzing:
         icon: /usr/share/pixmaps/fritzing_icon.png
   #G
   - gcompris:
+        name:
+            en: GCompris-educational software suite
+            fi: GCompris-opetuspelit
+            sv: GCompris-pedagogiksvit
+            de: GCompris
         condition: "!personally_administered"
   - geany:
+        name:
+            en: Geany - text editor
+            fi: Geany - monikielinen editori
+            sv: Geany - utvecklingsmiljö
+            de: Geany - Textverarbeitung
         icon: /usr/share/icons/hicolor/scalable/apps/geany.svg
   - geogebra:
         keywords:
@@ -118,7 +174,15 @@ programs:
   - geogebra6
   - gftp:
         icon: /usr/share/icons/gnome/48x48/places/gnome-fs-ftp.png
-  - gimp
+  - gimp:
+        keywords:
+          - photoshop
+          - digabi
+        name:
+            en: Gimp - GNU Image Manipulation Program
+            fi: Gimp-kuvankäsittely
+            sv: Gimp
+            de: Gimp
   - GlobiLab
   - gnome-calculator
   - gnome-klotski
@@ -138,6 +202,12 @@ programs:
         icon: /usr/share/icons/Faenza/apps/48/googleearth.png
   - gthumb:
         icon: /usr/share/icons/hicolor/scalable/apps/gthumb.svg
+        name:
+            en: gThumb-image viewer
+            fi: gThumb-kuvakatselin
+            sv: gThumb-bildvisare
+            de: gThumb-Bildbetrachter
+
   - gucharmap
 
   #H
@@ -153,7 +223,14 @@ programs:
         icon: /usr/share/icons/Faenza/mimetypes/96/text-x-python.png
   - idle-python3.5:
         icon: /usr/share/icons/Faenza/mimetypes/96/text-x-python.png
-  - inkscape
+  - inkscape:
+        keywords:
+        - digabi
+        name:
+            en: Inkscape-vector graphics editor
+            fi: Inkscape-vektorigrafiikka
+            sv: Inkscape-vektorgrafik
+            de: Inkscape-Vektorgrafik
 
   #J
 
@@ -242,9 +319,21 @@ programs:
   - neverputt
 
   #O
-  - okular
+  - okular:
+        keywords:
+          - pdf
+        name:
+          en: Okular-document viewer
+          fi: Okular-asiakirjakatselin
+          sv: Okular-dokumentläsare
+          de: Okular Dokumentenbetrachter
   - onboard
-  - openboard
+  - openboard:
+        name:
+            en: OpenBoard 
+            fi: OpenBoard-älytauluohjelmisto 
+            sv: OpenBoard 
+            de: OpenBoard 
   - openshot
   - openttd
   - org.gnome.Cheese
@@ -256,7 +345,8 @@ programs:
             sv: Gedit-tekstredigerare
             de: Gedit-Texteditor
         icon: /usr/share/icons/Faenza/apps/96/accessories-text-editor.png
-  - org.gnome.Nautilus
+  - org.gnome.Nautilus:
+        icon: /usr/share/icons/Faenza/places/96/user-home.png
   - org.gnome.Screenshot
   - org.gnome.Terminal:
         keywords: terminal
@@ -355,8 +445,18 @@ programs:
             sv: PhET web
             de: PhET web
         icon: /usr/share/icons/Faenza/categories/96/applications-internet.png
-  - pidgin
-  - pinta:
+  - pidgin:
+        name:
+          en: Pidgin-chat client
+          fi: Pidgin-pikaviestin
+          sv: Pidgin-IM-klient
+          de: Pidgin-Chat-Client
+  - pinta:  
+        name:
+          en: Pinta
+          fi: Pinta-kuvankäsittely
+          sv: Pinta
+          de: Pinta
         icon: /usr/share/icons/hicolor/scalable/apps/pinta.svg
   - pitivi
   - primusclient:
@@ -412,7 +512,12 @@ programs:
             sv: Scribus Layout
             de: Scribus Seitengestaltung
   - seahorse
-  - shotwell
+  - shotwell:
+        name:
+            en: Shotwell-photo organizer
+            fi: Shotwell-kuva-albumi
+            sv: Shotwell-foto-album
+            de: Shotwell Fotos verwalten
   - simple-scan:
         name:
             en: Simple Scan
@@ -486,7 +591,12 @@ programs:
             sv: Biblotek
             de: Tellico Sammlungs-Verwalter
         icon: /usr/share/icons/hicolor/64x64/apps/tellico.png
-  - thunderbird
+  - thunderbird:
+        name:
+            en: Thunderbird-email
+            fi: Thunderbird-sähköposti
+            sv: Thundebird-e-post
+            de: Thunderbird-Email
   - ti_nspire_cx_cas_ss
   - tilitin
   - tuxguitar:
@@ -499,8 +609,19 @@ programs:
   - tuxmath:
         icon: /usr/share/pixmaps/tuxmath.svg
         condition: "!personally_administered"
+        name:
+            en: TuxMath-math game
+            fi: TuxMath-matikkapeli
+            sv: TuxMath-matematikspel
+            de: Tuxmath Mathespiel
   - tuxpaint:
         icon: /usr/share/icons/hicolor/48x48/apps/tuxpaint.png
+        name:
+            en: Tuxpaint-drawing program
+            fi: Tuxpaint-piirto-ohjelma
+            sv: Tuxpaint
+            de: Tuxpaint
+
 
   #U
   - unelmakoulu:
@@ -810,6 +931,25 @@ menus:
             - gnome-mahjongg
             - sol
             - gnome-sudoku
+            - luola
+            - openttd
+            - gnubg
+            - freeciv-gtk2
+
+  - menu-games-personal:
+        name:
+            en: Games
+            fi: Pelit
+            sv: Spel
+            de: Spiele
+        icon: /usr/share/icons/Faenza/categories/48/applications-cardgames.png
+        condition: "personally_administered"
+        programs:
+            - gnome-klotski
+            - gnome-mines
+            - gnome-mahjongg
+            - sol
+            - gnome-sudoku
             - supertuxkart
             - neverball
             - neverputt
@@ -818,10 +958,13 @@ menus:
             - xmoto
             - steam
             - gnubg
-
+            - freeciv-gtk2
 
   - menu-abitti:
-        name: Abitti-sovellukset
+        name:
+            en: Abitti-applications
+            fi: Abitti-sovellukset
+            sv: Abitti-applikationer
         description:
             fi: Sovelluksia sähköiseen ylioppilastutkintoon
         icon: /usr/share/icons/oxygen/base/48x48/categories/applications-education.png
@@ -1182,6 +1325,7 @@ categories:
             - menu-office
             - menu-audio
             - menu-games
+            - menu-games-personal
             - menu-abitti
             - menu-whiteboards
             - menu-web
