@@ -10,7 +10,7 @@ case "${command}" in
 	upstream_dir=$1
 
 	ln -fns "${upstream_dir}" /opt/cura
-        cat <<EOF > /usr/share/applications/cura.desktop
+        cat <<EOF > /usr/share/applications/cura-appimage.desktop
 [Desktop Entry]
 Name=Cura
 Exec=/opt/cura/Cura.AppImage
@@ -23,7 +23,7 @@ EOF
 	;;
     unconfigure)
 	rm -f /opt/cura \
-              /usr/share/applications/cura.desktop
+              /usr/share/applications/cura-appimage.desktop
 	;;
     unpack)
 	upstream_pack=$1
