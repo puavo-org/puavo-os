@@ -1,58 +1,178 @@
 #!/usr/bin/tclsh
 
+# we do not use systemctl here, because we want this script to be fast
+
 set services {
-  { avahi-daemon		/lib/systemd/system/avahi-daemon.service }
-  { cups-watchdog		/etc/systemd/system/cups-watchdog.service }
-  { fluentd			/lib/systemd/system/fluentd.service }
-  { incron			/lib/systemd/system/incron.service }
-  { isc-dhcp-server		/etc/init.d/isc-dhcp-server }
-  { krb5-kdc			/lib/systemd/system/krb5-kdc.service }
-  { libvirtd			/lib/systemd/system/libvirtd.service }
-  { ModemManager		/lib/systemd/system/ModemManager.service }
-  { munin-node			/lib/systemd/system/munin-node.service }
-  { nbd-server			/etc/init.d/nbd-server }
-  { NetworkManager		/lib/systemd/system/NetworkManager.service }
-  { nfs-server			/lib/systemd/system/nfs-server.service }
-  { nginx			/lib/systemd/system/nginx.service }
-  { nmbd			/lib/systemd/system/nmbd.service }
-  { nscd			/lib/systemd/system/nscd.service }
-  { nslcd			/etc/init.d/nslcd }
-  { puavo-darkdm		/lib/systemd/system/puavo-darkdm.service }
-  { puavo-rest			/lib/systemd/system/puavo-rest.service }
-  { puavo-sharedir-manager	/lib/systemd/system/puavo-sharedir-manager.service }
-  { puavo-tftpd			/lib/systemd/system/puavo-tftpd.service }
-  { puavo-vpn-client-dnsmasq	/lib/systemd/system/puavo-vpn-client-dnsmasq.service }
-  { puavo-vpn-client-openvpn	/lib/systemd/system/puavo-vpn-client-openvpn.service }
-  { puavo-wlancontroller	/lib/systemd/system/puavo-wlancontroller.service }
-  { redis-server		/lib/systemd/system/redis-server.service }
-  { rpc-gssd			/lib/systemd/system/rpc-gssd.service }
-  { shorewall			/lib/systemd/system/shorewall.service }
-  { slapd			/etc/systemd/system/slapd.service }
-  { smbd			/lib/systemd/system/smbd.service }
-  { tlp				/lib/systemd/system/tlp.service }
+  { avahi-daemon {
+      /etc/systemd/system/dbus-org.freedesktop.Avahi.service
+        -> /lib/systemd/system/avahi-daemon.service
+      /etc/systemd/system/multi-user.target.wants/avahi-daemon.service
+        -> /lib/systemd/system/avahi-daemon.service
+      /etc/systemd/system/sockets.target.wants/avahi-daemon.socket
+        -> /lib/systemd/system/avahi-daemon.socket
+    }}
+
+  { cups-watchdog {
+      /etc/systemd/system/multi-user.target.wants/cups-watchdog.service
+        -> /etc/systemd/system/cups-watchdog.service
+    }}
+
+  { fluentd {
+      /etc/systemd/system/multi-user.target.wants/fluentd.service
+        -> /lib/systemd/system/fluentd.service
+    }}
+
+  { incron {
+      /etc/systemd/system/multi-user.target.wants/incron.service
+         -> /lib/systemd/system/incron.service
+    }}
+
+  { isc-dhcp-server /etc/init.d/isc-dhcp-server }
+
+  { krb5-kdc {
+      /etc/systemd/system/multi-user.target.wants/krb5-kdc.service
+        -> /lib/systemd/system/krb5-kdc.service
+    }}
+
+  { libvirtd {
+      /etc/systemd/system/multi-user.target.wants/libvirtd.service
+        -> /lib/systemd/system/libvirtd.service
+      /etc/systemd/system/sockets.target.wants/virtlockd.socket
+        -> /lib/systemd/system/virtlockd.socket
+      /etc/systemd/system/sockets.target.wants/virtlogd.socket
+        -> /lib/systemd/system/virtlogd.socket
+    }}
+
+  { ModemManager {
+      /etc/systemd/system/dbus-org.freedesktop.ModemManager1.service
+        -> /lib/systemd/system/ModemManager.service
+      /etc/systemd/system/multi-user.target.wants/ModemManager.service
+        -> /lib/systemd/system/ModemManager.service
+    }}
+
+  { munin-node {
+      /etc/systemd/system/sockets.target.wants/munin-node.service
+        -> /lib/systemd/system/munin-node.service
+    }}
+
+  { nagios-nrpe-server {
+      /etc/systemd/system/multi-user.target.wants/nagios-nrpe-server.service
+        -> /lib/systemd/system/nagios-nrpe-server.service
+    }}
+
+  { nbd-server /etc/init.d/nbd-server }
+
+  { NetworkManager {
+      /etc/systemd/system/dbus-org.freedesktop.nm-dispatcher.service
+        -> /lib/systemd/system/NetworkManager-dispatcher.service
+      /etc/systemd/system/multi-user.target.wants/NetworkManager.service
+        -> /lib/systemd/system/NetworkManager.service
+    }}
+
+  { nfs-server {
+      /etc/systemd/system/multi-user.target.wants/nfs-server.service
+        -> /lib/systemd/system/nfs-server.service
+    }}
+
+  { nginx {
+      /etc/systemd/system/multi-user.target.wants/nginx.service
+        -> /lib/systemd/system/nginx.service
+    }}
+
+  { nmbd {
+      /etc/systemd/system/multi-user.target.wants/nmbd.service
+        -> /lib/systemd/system/nmbd.service
+    }}
+
+  { nscd {
+      /etc/systemd/system/multi-user.target.wants/nscd.service
+        -> /lib/systemd/system/nscd.service
+    }}
+
+  { nslcd /etc/init.d/nslcd }
+
+  { puavo-darkdm {
+      /etc/systemd/system/multi-user.target.wants/puavo-darkdm.service
+        -> /lib/systemd/system/puavo-darkdm.service
+    }}
+
+  { puavo-rest {
+      /etc/systemd/system/multi-user.target.wants/puavo-rest.service
+        -> /lib/systemd/system/puavo-rest.service
+    }}
+
+  { puavo-sharedir-manager {
+      /etc/systemd/system/multi-user.target.wants/puavo-sharedir-manager.service
+        -> /lib/systemd/system/puavo-sharedir-manager.service
+    }}
+
+  { puavo-tftpd {
+      /etc/systemd/system/multi-user.target.wants/puavo-tftpd.service
+        -> /lib/systemd/system/puavo-tftpd.service
+    }}
+
+  { puavo-vpn-client-dnsmasq {
+      /etc/systemd/system/multi-user.target.wants/puavo-vpn-client-dnsmasq.service
+        -> /lib/systemd/system/puavo-vpn-client-dnsmasq.service
+    }}
+
+  { puavo-vpn-client-openvpn {
+      /etc/systemd/system/multi-user.target.wants/puavo-vpn-client-openvpn.service
+        -> /lib/systemd/system/puavo-vpn-client-openvpn.service
+    }}
+
+  { puavo-wlancontroller {
+      /etc/systemd/system/multi-user.target.wants/puavo-wlancontroller.service
+        -> /lib/systemd/system/puavo-wlancontroller.service
+    }}
+
+  { redis-server {
+      /etc/systemd/system/multi-user.target.wants/redis-server.service
+        -> /lib/systemd/system/redis-server.service
+    }}
+
+  { rpc-gssd {
+      /etc/systemd/system/multi-user.target.wants/rpc-gssd.service
+        -> /lib/systemd/system/rpc-gssd.service
+    }}
+
+  { shorewall {
+      /etc/systemd/system/basic.target.wants/shorewall.service
+        -> /lib/systemd/system/shorewall.service
+    }}
+
+  { slapd {
+     /etc/systemd/system/multi-user.target.wants/slapd.service
+       -> /etc/systemd/system/slapd.service
+    }}
+
+  { smbd {
+      /etc/systemd/system/multi-user.target.wants/smbd.service
+        -> /lib/systemd/system/smbd.service
+    }}
+
+  { tlp {
+      /etc/systemd/system/multi-user.target.wants/tlp.service
+        -> /lib/systemd/system/tlp.service
+    }}
 }
 
-proc set_service {service_name enabled service_file} {
-  switch -glob -- $service_file {
-    /etc/init.d/* {
-      set linkpaths [list "/etc/rc2.d/S01${service_name}" \
-                          "/etc/rc3.d/S01${service_name}" \
-                          "/etc/rc4.d/S01${service_name}" \
-                          "/etc/rc5.d/S01${service_name}" ]
-    }
-    *.service {
-      set mutw_path "/etc/systemd/system/multi-user.target.wants"
-      set linkpaths [list "${mutw_path}/${service_name}.service"]
-    }
-    default {
-      error "Cannot handle $service_name ($service_file), type not known"
-    }
+proc set_service {service_name enabled service_link_defs} {
+  if {[llength $service_link_defs] == 1} {
+    set linkpaths [list "/etc/rc2.d/S01${service_name}" -> $service_link_defs \
+                        "/etc/rc3.d/S01${service_name}" -> $service_link_defs \
+                        "/etc/rc4.d/S01${service_name}" -> $service_link_defs \
+                        "/etc/rc5.d/S01${service_name}" -> $service_link_defs]
+  } else {
+    set linkpaths $service_link_defs
   }
 
-  if {$enabled} {
-    foreach link $linkpaths { exec ln -fns $service_file $link }
-  } else {
-    exec rm -f {*}$linkpaths
+  foreach {source -> target} $linkpaths {
+    if {$enabled} {
+      exec ln -fns $target $source
+    } else {
+      exec rm -f $source
+    }
   }
 }
 
@@ -62,7 +182,7 @@ set disabled_services [list]
 set enabled_services  [list]
 
 foreach service_def $services {
-  foreach {service service_file} $service_def {
+  foreach {service service_link_defs} $service_def {
     set puavo_conf_var "puavo.service.${service}.enabled"
     set res [ catch { exec -ignorestderr puavo-conf $puavo_conf_var } \
                            puavo_conf_res]
@@ -83,14 +203,14 @@ foreach service_def $services {
     }
 
     if {$puavo_conf_value == "true"} {
-      if {[catch { set_service $service true $service_file } errmsg]} {
+      if {[catch { set_service $service true $service_link_defs } errmsg]} {
         puts stderr "Could not enable $service: $errmsg"
 	set status 1
 	continue
       }
       lappend enabled_services $service
     } else {
-      if {[catch { set_service $service false $service_file } errmsg]} {
+      if {[catch { set_service $service false $service_link_defs } errmsg]} {
         puts stderr "Could not disable $service: $errmsg"
 	set status 1
 	continue
