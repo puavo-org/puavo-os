@@ -75,12 +75,13 @@ class HoverIconButtonBase(Gtk.Button):
         self.icon_color = [1.0, 0.0, 0.0]
         self.label_pos = [-1, -1]
         self.label_color_normal = [0.0, 0.0, 0.0]
-
-        if self.dark:
-            self.label_color_normal = [1.0, 1.0, 1.0]
-
         self.label_color_hover = [1.0, 1.0, 1.0]
         self.background_color = [74.0 / 255.0, 144.0 / 255.0, 217.0 / 255.0]
+
+        if self.dark:
+            self.label_color_normal = [0.9, 0.9, 0.9]
+            self.background_color = [33.0 / 255.0, 93.0 / 255.0, 156.0 / 255.0]
+
         self.corner_rounding = 0
         self.compute_elements()
 
