@@ -100,7 +100,7 @@ foreach service_def $services {
   }
 }
 
-puts "disabled services (by puavo-conf): $disabled_services"
-puts "enabled services (by puavo-conf): $enabled_services"
+puts -nonewline "((( disabled services (by puavo-conf): $disabled_services ))) ... "
+puts -nonewline "((( enabled services (by puavo-conf): $enabled_services ))) ... "
 
 exit $status
