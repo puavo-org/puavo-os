@@ -51,6 +51,7 @@ install : installdirs
 		puavo-install-grub \
 		puavo-make-install-disk \
 		puavo-reset-laptop-to-factory-defaults \
+		puavo-set-root-password \
 		puavo-setup-filesystems \
 		puavo-update-client \
 		puavo-update-service-script
