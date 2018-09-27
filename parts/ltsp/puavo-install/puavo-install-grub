@@ -210,7 +210,7 @@ lookup_windows_partition_number() {
   # is a Windows-partition.
   _diskdev=$1
   env LANG=C fdisk -l "$_diskdev" \
-    | awk '$1 ~ "^/dev/" && !/(Extended|Linux)/ {
+    | awk '$1 ~ "^/dev/" && !/(BIOS boot|Extended|Linux)/ {
 	     if (match($1, /[0-9]+$/, _)) { print _[0]; exit }
            }'
 }
