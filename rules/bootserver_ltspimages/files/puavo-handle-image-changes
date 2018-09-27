@@ -8,6 +8,7 @@ set -eu
 # in which case we are probably run manually.
 
 imagename=${1:-}
+timeout=${2:-60}
 
 if [ -n "$imagename" ]; then
   if ! echo "$imagename" | grep -q '.img$'; then
@@ -18,7 +19,7 @@ fi
 mkdir -p /var/lib/tftpboot/ltsp
 
 (
-  if ! flock -w 60 9; then
+  if ! flock -w "$timeout" 9; then
     echo 'Could not flock /var/lib/tftpboot/ltsp, exiting.' >&2
     exit 1
   fi

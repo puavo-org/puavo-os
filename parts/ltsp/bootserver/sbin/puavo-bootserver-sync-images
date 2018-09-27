@@ -564,7 +564,7 @@ class SyncFileWithMetadata < SyncFile
 
         # This can fail and that might be only a temporary error,
         # so ignore errors.
-        self.class.run_syncfile_install_hooks
+        self.class.run_syncfile_install_hooks(3)
 
         @state.state = :inplace
         return true
@@ -624,7 +624,7 @@ class SyncFileWithMetadata < SyncFile
     return false
   end
 
-  def self.run_syncfile_install_hooks
+  def self.run_syncfile_install_hooks(level, timeout='')
     # by default do nothing... (subclasses can override this)
   end
 
@@ -680,7 +680,7 @@ class SyncFileWithMetadata < SyncFile
 
           # This can fail and that might be only a temporary error,
           # so ignore errors.
-          self.class.run_syncfile_install_hooks
+          self.class.run_syncfile_install_hooks(3)
         end
         @state.state = :inplace
       else
@@ -777,24 +777,27 @@ class Image < SyncFileWithMetadata
     return false
   end
 
-  def self.run_syncfile_install_hooks
-    info(5, "Running image install hooks")
+  def self.run_syncfile_install_hooks(level, timeout='')
+    info(level, "Running image install hooks")
 
     all_ok = true
 
     run_command = lambda do |cmd|
-      if system(cmd)
-        info(3, %Q{"#{ cmd }" ran successfully})
+      if system(*cmd)
+        info(level-1, %Q{#{ cmd } ran successfully}, HighLine::GREEN)
       else
         all_ok = false
-        warning(3, %Q{"#{ cmd }" returned error code #{ $?.exitstatus }})
+	warning(level-1,
+		%Q{#{ cmd } returned error code #{ $?.exitstatus }},
+	        HighLine::RED)
       end
     end
 
     # These are needed to run for each image so that those can be used by
     # netboot (diskless) clients.
-    run_command.call('/usr/sbin/puavo-bootserver-generate-nbd-exports')
-    run_command.call('/usr/sbin/puavo-bootserver-update-tftpboot --prune')
+    run_command.call([ '/usr/local/lib/puavo-handle-image-changes',
+		       '',
+		       timeout ])
 
     return all_ok
   end
@@ -1454,7 +1457,7 @@ begin
     statuscode = SeriesControl::sync_all_series(managed_images, $options)
   end
 
-  if !Image.run_syncfile_install_hooks
+  if !Image.run_syncfile_install_hooks(5, '43200')
     statuscode = 1
   end
 
