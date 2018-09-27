@@ -169,6 +169,8 @@ proc set_service {service_name enabled service_link_defs} {
 
   foreach {source -> target} $linkpaths {
     if {$enabled} {
+      set link_dir [file dirname $source]
+      if {![file isdirectory $link_dir]} { exec mkdir -p $link_dir }
       exec ln -fns $target $source
     } else {
       exec rm -f $source
