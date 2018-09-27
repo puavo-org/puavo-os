@@ -67,3 +67,23 @@ def create_separator(container, x, y, w, h, orientation):
     sep.set_size_request(w, h)
     container.put(sep, x, y)
     sep.show()
+
+
+# We don't support actual CSS theming yet, but I want to support the "global"
+# dark GNOME theme. This hacky function detects if the dark theme is enabled.
+def is_dark_theme_enabled():
+    try:
+        from os.path import expanduser, join
+        import configparser
+
+        name = join(expanduser('~'), '.config', 'gtk-3.0', 'settings.ini')
+
+        config = configparser.ConfigParser()
+        config.read(name)
+
+        return config.getboolean('Settings',
+                                 'gtk-application-prefer-dark-theme',
+                                 fallback=False)
+    except:
+        # okay then, no dark theme for you
+        return False

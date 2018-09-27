@@ -20,26 +20,12 @@ from constants import *
 from iconcache import ICONS48
 from buttons import ProgramButton, MenuButton
 from utils import localize, puavo_conf
-from utils_gui import load_image_at_size, create_separator
+from utils_gui import load_image_at_size, create_separator, \
+                      is_dark_theme_enabled
 from loader import load_menu_data
 from conditionals import evaluate_file
 from sidebar import Sidebar
 from strings import STRINGS
-
-
-# Extremely ugly and hacky function to detect if the GTK dark theme is enabled
-# I'll clean up this later
-def is_dark_theme_enabled():
-    try:
-      import configparser
-      from os.path import expanduser, join
-
-      name = join(expanduser('~'), '.config', 'gtk-3.0', 'settings.ini')
-      config = configparser.ConfigParser()
-      config.read(name)
-      return config.getboolean('Settings', 'gtk-application-prefer-dark-theme', fallback=False)
-    except:
-      return False
 
 
 class PuavoMenu(Gtk.Window):
