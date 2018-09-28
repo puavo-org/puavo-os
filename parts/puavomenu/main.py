@@ -19,7 +19,7 @@ import logger
 from constants import *
 from iconcache import ICONS48
 from buttons import ProgramButton, MenuButton
-from utils import localize, puavo_conf
+from utils import localize
 from utils_gui import load_image_at_size, create_separator
 from loader import load_menu_data
 from conditionals import evaluate_file

@@ -1,6 +1,5 @@
 # The Sidebar: the user avatar, "system" buttons and the host info
 
-from os import environ
 from os.path import exists as file_exists, join as path_join
 from getpass import getuser
 import threading
@@ -14,7 +13,7 @@ from constants import WINDOW_HEIGHT, MAIN_PADDING, SIDEBAR_WIDTH, \
                       USER_AVATAR_SIZE, HOSTINFO_LABEL_HEIGHT, SEPARATOR_SIZE
 import logger
 from utils import localize, expand_variables, get_file_contents, puavo_conf
-from utils_gui import load_image_at_size, create_separator
+from utils_gui import create_separator
 
 from iconcache import ICONS32
 from buttons import AvatarButton, SidebarButton
@@ -259,7 +258,6 @@ class AvatarDownloaderThread(threading.Thread):
 
             # Retry, if possible
             if attempt < MAX_ATTEMPTS - 1:
-                import time
                 logger.info('Retrying avatar downloading in 60 seconds...')
                 time.sleep(60)
 
@@ -398,7 +396,7 @@ class Sidebar:
                                localize(data['title'], SETTINGS.language),
                                ICONS32.load_icon(data['icon']),
                                localize(data.get('description', ''),
-                               SETTINGS.language),
+                                        SETTINGS.language),
                                data['command'])
 
         button.connect('clicked', self.__clicked_sidebar_button)
@@ -457,7 +455,7 @@ class Sidebar:
 
 
     # Open the user profile editor
-    def __clicked_avatar_button(self, button):
+    def __clicked_avatar_button(self, _):
         print('Clicked the user avatar button')
 
         url = expand_variables('https://$(puavo_domain)/users/profile/edit',

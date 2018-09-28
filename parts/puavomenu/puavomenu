@@ -4,7 +4,6 @@
 
 from os import environ
 from os.path import join as path_join
-from sys import exit
 from time import clock
 import argparse
 
