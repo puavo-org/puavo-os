@@ -124,12 +124,12 @@ SETTINGS.autohide = args.autohide
 if SETTINGS.language is None:
     if 'LANG' in environ:
         SETTINGS.language = environ['LANG'][0:2].lower()
-    elif 'GDM_LANG' in os.environ:
+    elif 'GDM_LANG' in environ:
         SETTINGS.language = environ['GDM_LANG'][0:2].lower()
 
 if SETTINGS.language not in ('en', 'fi', 'sv', 'de'):
     logger.error('Invalid language code "{0}", defaulting to "en"'.
-                 format(params['lang']))
+                 format(SETTINGS.language))
     SETTINGS.language = 'en'
 
 logger.info('Resource directory.: "{0}"'.format(SETTINGS.res_dir))
