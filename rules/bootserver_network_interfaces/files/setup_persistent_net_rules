@@ -18,12 +18,26 @@ get_ethernet_interfaces() {
 
 mkdir -p /state/etc/udev/rules.d
 
+inet0_added=false
+ltsp0_added=false
+
 {
   for interface in $(get_ethernet_interfaces); do
     mac_address=$(ifdata -ph "$interface" | tr A-Z a-z)
     [ -n "$mac_address" ] || continue
+
+    if ! $inet0_added; then
+      our_interface_name=inet0
+      inet0_added=true
+    elif ! $ltsp0_added; then
+      our_interface_name=ltsp0
+      ltsp0_added=true
+    else
+      our_interface_name=$interface
+    fi
+
     cat <<EOF
-SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="${mac_address}", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="eth*", NAME="${interface}"
+SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="${mac_address}", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="eth*", NAME="${our_interface_name}"
 EOF
   done
 } > /state/etc/udev/rules.d/70-persistent-net.rules.tmp
