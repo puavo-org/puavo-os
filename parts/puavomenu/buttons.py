@@ -12,6 +12,7 @@ from iconcache import ICONS32, ICONS48
 from utils import localize
 from utils_gui import rounded_rectangle, draw_x, load_image_at_size
 from strings import STRINGS
+from settings import SETTINGS
 
 
 class HoverIconButtonBase(Gtk.Button):
@@ -27,8 +28,7 @@ class HoverIconButtonBase(Gtk.Button):
                  label,
                  icon=None,
                  tooltip=None,
-                 data=None,
-                 dark=False):
+                 data=None):
 
         super().__init__()
 
@@ -50,9 +50,6 @@ class HoverIconButtonBase(Gtk.Button):
             self.set_property('tooltip-text', tooltip)
 
         self.data = data
-
-        # Dark colors?
-        self.dark = dark
 
         # Not disabled by default
         self.disabled = False
@@ -78,7 +75,7 @@ class HoverIconButtonBase(Gtk.Button):
         self.label_color_hover = [1.0, 1.0, 1.0]
         self.background_color = [74.0 / 255.0, 144.0 / 255.0, 217.0 / 255.0]
 
-        if self.dark:
+        if SETTINGS.dark_theme:
             self.label_color_normal = [0.9, 0.9, 0.9]
             self.background_color = [33.0 / 255.0, 93.0 / 255.0, 156.0 / 255.0]
 
@@ -196,10 +193,9 @@ class ProgramButton(HoverIconButtonBase):
                  icon=None,
                  tooltip=None,
                  data=None,
-                 is_fave=False,
-                 dark=False):
+                 is_fave=False):
 
-        super().__init__(parent, label, icon=icon, tooltip=tooltip, data=data, dark=dark)
+        super().__init__(parent, label, icon=icon, tooltip=tooltip, data=data)
 
         self.is_fave = is_fave
         self.menu = None
@@ -235,14 +231,16 @@ class ProgramButton(HoverIconButtonBase):
         if event.button == 3:
             self.menu = Gtk.Menu()
 
-            desktop_item = Gtk.MenuItem(
-                localize(STRINGS['popup_add_to_desktop'],
-                         self.parent.language))
-            desktop_item.connect('activate',
-                                 lambda x: self.__special_operation(
-                                     self.parent.add_program_to_desktop))
-            desktop_item.show()
-            self.menu.append(desktop_item)
+            if SETTINGS.desktop_dir:
+                # Can't do this without the desktop directory
+                desktop_item = Gtk.MenuItem(
+                    localize(STRINGS['popup_add_to_desktop'],
+                             self.parent.language))
+                desktop_item.connect('activate',
+                                     lambda x: self.__special_operation(
+                                         self.parent.add_program_to_desktop))
+                desktop_item.show()
+                self.menu.append(desktop_item)
 
             panel_item = Gtk.MenuItem(
                 localize(STRINGS['popup_add_to_panel'],
@@ -315,10 +313,9 @@ class MenuButton(ProgramButton):
                  icon=None,
                  tooltip=None,
                  data=None,
-                 background=None,
-                 dark=False):
+                 background=None):
 
-        super().__init__(parent, label, icon=icon, tooltip=tooltip, data=data, dark=dark)
+        super().__init__(parent, label, icon=icon, tooltip=tooltip, data=data)
 
         self.background = background
         self.icon_color = [0.0, 0.0, 1.0]
@@ -360,11 +357,10 @@ class AvatarButton(HoverIconButtonBase):
                  parent,
                  user_name,
                  initial_image=None,
-                 tooltip=None,
-                 dark=False):
+                 tooltip=None):
 
         super().__init__(parent, label=user_name, icon=None,
-                         tooltip=tooltip, data=None, dark=dark)
+                         tooltip=tooltip, data=None)
 
         # Load the initial avatar image
         if initial_image:
@@ -453,10 +449,9 @@ class SidebarButton(HoverIconButtonBase):
                  label,
                  icon=None,
                  tooltip=None,
-                 data=None,
-                 dark=False):
+                 data=None):
 
-        super().__init__(parent, label, icon=icon, tooltip=tooltip, data=data, dark=dark)
+        super().__init__(parent, label, icon=icon, tooltip=tooltip, data=data)
 
         self.label_layout.set_width(-1)     # -1 turns off wrapping
         self.label_layout.set_ellipsize(Pango.EllipsizeMode.END)
