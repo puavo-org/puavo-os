@@ -20,7 +20,8 @@ from constants import *
 from iconcache import ICONS48
 from buttons import ProgramButton, MenuButton
 from utils import localize
-from utils_gui import load_image_at_size, create_separator
+from utils_gui import load_image_at_size, create_separator, \
+                      create_desktop_link
 from loader import load_menu_data
 from conditionals import evaluate_file
 from sidebar import Sidebar
@@ -693,50 +694,14 @@ class PuavoMenu(Gtk.Window):
             return
 
         # Create the link file
+        # TODO: use the *original* .desktop file if it exists
         name = path_join(SETTINGS.desktop_dir, '{0}.desktop'.format(p.title))
 
         logger.info('Adding program "{0}" to the desktop, output="{1}"'.
                     format(p.title, name))
 
-        # TODO: use the *original* .desktop file if it exists
-
         try:
-            with open(name, 'w', encoding='utf-8') as out:
-                if p.type != PROGRAM_TYPE_WEB:
-                    out.write('#!/usr/bin/env xdg-open\n')
-
-                out.write('[Desktop Entry]\n')
-                out.write('Encoding=UTF-8\n')
-                out.write('Version=1.0\n')
-                out.write('Name={0}\n'.format(p.title))
-
-                if p.type in (PROGRAM_TYPE_DESKTOP, PROGRAM_TYPE_CUSTOM):
-                    out.write('Type=Application\n')
-                    out.write('Exec={0}\n'.format(p.command))
-                else:
-                    out.write('Type=Link\n')
-                    out.write('URL={0}\n'.format(p.command))
-
-                if p.icon:
-                    out.write('Icon={0}\n'.format(p.icon.file_name))
-                else:
-                    if p.type == PROGRAM_TYPE_WEB:
-                        # a "generic" web icon
-                        out.write('Icon=text-html\n')
-
-            if p.type != PROGRAM_TYPE_WEB:
-                # Make the file runnable, or GNOME won't accept it
-                from os import chmod
-                import subprocess
-
-                chmod(name, 0o755)
-
-                # Mark the file as trusted (I hate you GNOME)
-                subprocess.Popen(['gvfs-set-attribute', name,
-                                  'metadata::trusted', 'yes'],
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE)
-
+            create_desktop_link(name, p)
         except Exception as e:
             logger.error('Desktop link creation failed')
             logger.error(e)

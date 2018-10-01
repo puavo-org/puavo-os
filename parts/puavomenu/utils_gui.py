@@ -67,3 +67,48 @@ def create_separator(container, x, y, w, h, orientation):
     sep.set_size_request(w, h)
     container.put(sep, x, y)
     sep.show()
+
+
+def create_desktop_link(filename, program):
+    """Adds program (an instance of Program class) to the desktop. Moved
+    here from main.py. Make sure you handle exceptions if you call this!"""
+
+    from constants import PROGRAM_TYPE_DESKTOP, \
+                          PROGRAM_TYPE_CUSTOM, \
+                          PROGRAM_TYPE_WEB
+
+    with open(filename, 'w', encoding='utf-8') as out:
+        if program.type != PROGRAM_TYPE_WEB:
+            out.write('#!/usr/bin/env xdg-open\n')
+
+        out.write('[Desktop Entry]\n')
+        out.write('Encoding=UTF-8\n')
+        out.write('Version=1.0\n')
+        out.write('Name={0}\n'.format(program.title))
+
+        if program.type in (PROGRAM_TYPE_DESKTOP, PROGRAM_TYPE_CUSTOM):
+            out.write('Type=Application\n')
+            out.write('Exec={0}\n'.format(program.command))
+        else:
+            out.write('Type=Link\n')
+            out.write('URL={0}\n'.format(program.command))
+
+        if program.icon:
+            out.write('Icon={0}\n'.format(program.icon.file_name))
+        else:
+            if program.type == PROGRAM_TYPE_WEB:
+                # a "generic" web icon
+                out.write('Icon=text-html\n')
+
+    if program.type != PROGRAM_TYPE_WEB:
+        # Make the file runnable, or GNOME won't accept it
+        from os import chmod
+        import subprocess
+
+        chmod(filename, 0o755)
+
+        # Mark the file as trusted (I hate you GNOME)
+        subprocess.Popen(['gvfs-set-attribute', filename,
+                          'metadata::trusted', 'yes'],
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE)
