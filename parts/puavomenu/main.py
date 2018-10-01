@@ -24,6 +24,7 @@ from utils_gui import load_image_at_size, create_separator, \
                       create_desktop_link, create_panel_link
 from loader import load_menu_data
 from conditionals import evaluate_file
+import faves
 from sidebar import Sidebar
 from strings import STRINGS
 from settings import SETTINGS
@@ -130,10 +131,6 @@ class PuavoMenu(Gtk.Window):
         # The current menu/program buttons in the current
         # category and menu, if any
         self.__buttons = []
-
-        # The most often used programs ("favorites")
-        self.__fave_buttons = []
-        self.__prev_fave_ids = []
 
         # Background image for top-level menus
         try:
@@ -273,15 +270,10 @@ class PuavoMenu(Gtk.Window):
                                   PROGRAMS_LEFT,
                                   PROGRAMS_TOP + PROGRAMS_HEIGHT + MAIN_PADDING)
 
-        self.__faves_container = Gtk.ScrolledWindow()
-        self.__faves_container.set_size_request(PROGRAMS_WIDTH,
-                                                PROGRAM_BUTTON_HEIGHT + 2)
-        self.__faves_container.set_policy(Gtk.PolicyType.NEVER,
-                                          Gtk.PolicyType.NEVER)
-        self.__faves_container.set_shadow_type(Gtk.ShadowType.NONE)
-        self.__fave_icons = Gtk.Fixed()
-        self.__faves_container.add_with_viewport(self.__fave_icons)
-        self.__main_container.put(self.__faves_container,
+        self.__faves = faves.FavesList(self)
+        self.__faves.set_size_request(PROGRAMS_WIDTH,
+                                      PROGRAM_BUTTON_HEIGHT + 2)
+        self.__main_container.put(self.__faves,
                                   PROGRAMS_LEFT, FAVES_TOP)
 
         # ----------------------------------------------------------------------
@@ -398,7 +390,7 @@ class PuavoMenu(Gtk.Window):
                 for p in cat.programs:
                     pb = ProgramButton(self, p.title, p.icon,
                                        p.description, p)
-                    pb.connect('clicked', self.__clicked_program_button)
+                    pb.connect('clicked', self.clicked_program_button)
                     new_buttons.append(pb)
 
             # Special situations
@@ -411,7 +403,7 @@ class PuavoMenu(Gtk.Window):
             # Submenu view, have only programs
             for p in self.__current_menu.programs:
                 pb = ProgramButton(self, p.title, p.icon, p.description, p)
-                pb.connect('clicked', self.__clicked_program_button)
+                pb.connect('clicked', self.clicked_program_button)
                 new_buttons.append(pb)
 
             # Special situations
@@ -503,7 +495,7 @@ class PuavoMenu(Gtk.Window):
 
         for m in matches:
             b = ProgramButton(self, m.title, m.icon, m.description, m)
-            b.connect('clicked', self.__clicked_program_button)
+            b.connect('clicked', self.clicked_program_button)
             new_buttons.append(b)
 
         self.__fill_programs_list(new_buttons, True)
@@ -539,103 +531,11 @@ class PuavoMenu(Gtk.Window):
             if len(self.__get_search_text()) and (len(self.__buttons) == 1):
                 # There's only one search match and the user pressed
                 # Enter, so launch it!
-                self.__clicked_program_button(self.__buttons[0])
+                self.clicked_program_button(self.__buttons[0])
                 self.__clear_search_field()
                 self.__hide_search_results()
 
         return False
-
-
-    # --------------------------------------------------------------------------
-    # Favorites (most used programs) handling
-
-
-    # (Re)creates the most used programs list if needed
-    def __update_faves(self):
-        if len(self.__fave_buttons) == 0:
-            self.__prev_fave_ids = []
-
-        # Extract the IDs and counts of the N most used programs. Sort
-        # first by use count, then by title. Titles are required to get
-        # the order stable (Python dicts are not in any particular order
-        # in Python 3.5, so programs that have identical use counts are
-        # inserted on the list in random order and they tend to switch
-        # positions constantly; we need to break that randomness).
-        faves = [(name, p.uses, p.title)
-                 for name, p in self.__programs.items() if p.uses > 0]
-        self.__save_faves(faves)
-        faves = sorted(faves,
-                       key=lambda p: (p[1], p[2]), reverse=True)[0:NUMBER_OF_FAVES]
-
-        # Do nothing if the list order hasn't changed
-        new_ids = [f[0] for f in faves]
-
-        if self.__prev_fave_ids == new_ids:
-            return
-
-        # Something has changed, recreate the buttons
-        logger.info('Faves order has changed ({0} -> {1})'.
-                    format(self.__prev_fave_ids, new_ids))
-        self.__prev_fave_ids = new_ids
-
-        for b in self.__fave_buttons:
-            b.destroy()
-
-        self.__fave_buttons = []
-
-        for i, f in enumerate(faves):
-            p = self.__programs[f[0]]
-            button = ProgramButton(self, p.title, p.icon, p.description,
-                                   data=p, is_fave=True)
-            button.connect('clicked', self.__clicked_program_button)
-            self.__fave_buttons.append(button)
-            self.__fave_icons.put(button, i * PROGRAM_BUTTON_WIDTH, 0)
-
-        self.__fave_icons.show_all()
-
-
-    # Serialize current fave IDs and their counts
-    def __save_faves(self, all_faves):
-        if not SETTINGS.enable_faves_saving:
-            return
-
-        out = ''
-
-        # whitespace is not permitted in program IDs, so this works
-        for f in all_faves:
-            out += '{0} {1}\n'.format(f[0], f[1])
-
-        try:
-            open(path_join(SETTINGS.user_dir, 'faves'), 'w').write(out)
-        except Exception as e:
-            logger.error('Could not save favorites: {0}'.format(e))
-
-
-    # Unserialize fave IDs and their counts
-    def __load_faves(self):
-        faves_file = path_join(SETTINGS.user_dir, 'faves')
-
-        if not is_file(faves_file):
-            return
-
-        for row in open(faves_file, 'r').readlines():
-            parts = row.strip().split()
-
-            if len(parts) != 2:
-                continue
-
-            if not parts[0] in self.__programs:
-                logger.warn('Program "{0}" listed in faves.yaml, but it does '
-                            'not exist in the menu data'.format(parts[0]))
-                continue
-
-            try:
-                self.__programs[parts[0]].uses = int(parts[1])
-            except:
-                # the use count probably wasn't an integer...
-                logger.warn('Could not set the use count for program "{0}"'.
-                            format(parts[0]))
-                pass
 
 
     # --------------------------------------------------------------------------
@@ -731,7 +631,7 @@ class PuavoMenu(Gtk.Window):
     def remove_program_from_faves(self, p):
         print('Removing program "{0}" from the faves'.format(p.title))
         p.uses = 0
-        self.__update_faves()
+        self.__faves.update(self.__programs)
 
 
     # Resets the menu back to the default view
@@ -745,11 +645,12 @@ class PuavoMenu(Gtk.Window):
         self.__update_menu_title()
 
 
-    # Launch a program
-    def __clicked_program_button(self, e):
+    # Launch a program. This is a public method, it is called from other
+    # files (buttons and faves) to launch programs.
+    def clicked_program_button(self, e):
         p = e.data
         p.uses += 1
-        self.__update_faves()
+        self.__faves.update(self.__programs)
         print('Clicked program button "{0}", counter is {1}'.
               format(p.title, p.uses))
 
@@ -1042,20 +943,13 @@ class PuavoMenu(Gtk.Window):
         self.__programs_container.hide()
 
         self.__faves_sep.hide()
-        self.__fave_icons.hide()
-        self.__faves_container.hide()
+        self.__faves.clear()
+        self.__faves.hide()
 
         for b in self.__buttons:
             b.destroy()
 
         self.__buttons = []
-
-        for b in self.__fave_buttons:
-            b.destroy()
-
-        self.__fave_buttons = []
-
-        self.__prev_fave_ids = []
 
         # Actually remove the menu data
         self.__conditions = {}
@@ -1307,13 +1201,10 @@ class PuavoMenu(Gtk.Window):
 
         self.__programs_container.show()
 
-        if SETTINGS.enable_faves_saving:
-            # ignore faves completely in guest/webkiosk modes
-            self.__load_faves()
-
-        self.__update_faves()
+        faves.load_use_counts(self.__programs)
+        self.__faves.update(self.__programs)
         self.__faves_sep.show()
-        self.__faves_container.show()
+        self.__faves.show()
 
         self.__search.show()
         self.__search.grab_focus()
