@@ -112,3 +112,73 @@ def create_desktop_link(filename, program):
                           'metadata::trusted', 'yes'],
                          stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
+
+
+def create_panel_link(program):
+    """Adds a program to the bottom panel. Moved here from main.py. Remember
+    to handle exceptions if you call this!"""
+
+    from gi.repository import GLib, Gio
+    import logger
+
+    desktop_name = program.original_desktop_file \
+        if program.original_desktop_file else '{0}.desktop'.format(program.name)
+
+    logger.debug('Desktop file name is "{0}"'.format(desktop_name))
+
+    SCHEMA = 'org.gnome.shell'
+    KEY = 'favorite-apps'
+
+    # Is the program already in the panel?
+    gsettings = Gio.Settings.new(SCHEMA)
+    panel_faves = gsettings.get_value(KEY).unpack()
+
+    if desktop_name in panel_faves:
+        logger.info('Desktop file "{0}" is already in the panel, ' \
+                    'doing nothing'.format(desktop_name))
+        return
+
+    if not program.original_desktop_file:
+        # Not all programs have a .desktop file, so we have to
+        # create it manually.
+        from os import environ
+        from os.path import join as path_join
+
+        from constants import PROGRAM_TYPE_DESKTOP, \
+                              PROGRAM_TYPE_CUSTOM, \
+                              PROGRAM_TYPE_WEB
+
+        name = path_join(environ['HOME'],
+                         '.local',
+                         'share',
+                         'applications',
+                         desktop_name)
+
+        logger.debug('Creating a local .desktop file for "{0}", '
+                     'name="{1}"'.format(program.name, name))
+
+        with open(name, 'w', encoding='utf-8') as out:
+            out.write('[Desktop Entry]\n')
+            out.write('Encoding=UTF-8\n')
+            out.write('Version=1.0\n')
+            out.write('Name={0}\n'.format(program.title))
+
+            if program.type in (PROGRAM_TYPE_DESKTOP, PROGRAM_TYPE_CUSTOM):
+                out.write('Type=Application\n')
+                out.write('Exec={0}\n'.format(program.command))
+            else:
+                # FIXME: URL links don't work at all... :-(
+                out.write('Type=Link\n')
+                out.write('URL={0}\n'.format(program.command))
+
+            if program.icon:
+                out.write('Icon={0}\n'.format(program.icon.file_name))
+            else:
+                if program.type == PROGRAM_TYPE_WEB:
+                    # a "generic" web icon
+                    out.write('Icon=text-html\n')
+
+    # Add the new .desktop file to the list
+    panel_faves.append(desktop_name)
+    gsettings.set_value(KEY, GLib.Variant.new_strv(panel_faves))
+    logger.info('Panel icon created')

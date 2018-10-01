@@ -21,7 +21,7 @@ from iconcache import ICONS48
 from buttons import ProgramButton, MenuButton
 from utils import localize
 from utils_gui import load_image_at_size, create_separator, \
-                      create_desktop_link
+                      create_desktop_link, create_panel_link
 from loader import load_menu_data
 from conditionals import evaluate_file
 from sidebar import Sidebar
@@ -716,63 +716,8 @@ class PuavoMenu(Gtk.Window):
         logger.info('Adding program "{0}" (id="{1}") to the bottom panel'.
                     format(p.title, p.name))
 
-        desktop_name = p.original_desktop_file if p.original_desktop_file \
-            else '{0}.desktop'.format(p.name)
-
-        logger.debug('Desktop file name is "{0}"'.format(desktop_name))
-
         try:
-            # Is the program already in the panel?
-            from gi.repository import Gio
-
-            SCHEMA = 'org.gnome.shell'
-            KEY = 'favorite-apps'
-
-            gsettings = Gio.Settings.new(SCHEMA)
-            panel_faves = gsettings.get_value(KEY).unpack()
-
-            if desktop_name in panel_faves:
-                logger.info('Desktop file "{0}" is already in the panel, ' \
-                            'doing nothing'.format(desktop_name))
-                return
-
-            if not p.original_desktop_file:
-                # Not all programs have a .desktop file, so we have to
-                # create it manually.
-                name = path_join(environ['HOME'],
-                                 '.local',
-                                 'share',
-                                 'applications',
-                                 desktop_name)
-
-                logger.debug('Creating a local .desktop file for "{0}", '
-                             'name="{1}"'.format(p.name, name))
-
-                with open(name, 'w', encoding='utf-8') as out:
-                    out.write('[Desktop Entry]\n')
-                    out.write('Encoding=UTF-8\n')
-                    out.write('Version=1.0\n')
-                    out.write('Name={0}\n'.format(p.title))
-
-                    if p.type in (PROGRAM_TYPE_DESKTOP, PROGRAM_TYPE_CUSTOM):
-                        out.write('Type=Application\n')
-                        out.write('Exec={0}\n'.format(p.command))
-                    else:
-                        # FIXME: URL links don't work at all... :-(
-                        out.write('Type=Link\n')
-                        out.write('URL={0}\n'.format(p.command))
-
-                    if p.icon:
-                        out.write('Icon={0}\n'.format(p.icon.file_name))
-                    else:
-                        if p.type == PROGRAM_TYPE_WEB:
-                            # a "generic" web icon
-                            out.write('Icon=text-html\n')
-
-            # Add the new .desktop file to the list
-            panel_faves.append(desktop_name)
-            gsettings.set_value(KEY, GLib.Variant.new_strv(panel_faves))
-            logger.info('Panel icon created')
+            create_panel_link(p)
         except Exception as e:
             logger.error('Panel icon creation failed')
             logger.error(e)
