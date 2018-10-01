@@ -27,6 +27,7 @@ require 'json'
 
 # Third-party modules.
 require 'sinatra'
+require 'tilt/erb'
 
 # Local modules.
 require_relative './tempstore.rb'

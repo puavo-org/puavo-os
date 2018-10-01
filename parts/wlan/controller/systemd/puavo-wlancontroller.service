@@ -1,0 +1,14 @@
+[Unit]
+Description=Puavo WLAN Controller
+After=network.target
+Wants=network.target
+
+[Service]
+Environment=LC_ALL=en_US.UTF-8 PUAVO_WLANCONTROLLER_DB_SQLITE3=/var/opt/puavo-wlancontroller/db.sqlite3 RACK_ENV=production
+WorkingDirectory=/opt/puavo-wlancontroller
+ExecStart=/usr/bin/puma --workers 2 --port 45046
+User=puavo-wlancontroller
+Group=puavo-wlancontroller
+
+[Install]
+WantedBy=multi-user.target

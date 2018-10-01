@@ -1,0 +1,98 @@
+#!/usr/bin/ruby
+
+require "etc"
+require "yaml"
+
+$LOAD_PATH.unshift( File.dirname(__FILE__) )
+
+require "puavo-tftp/helpers"
+require "puavo-tftp/log"
+require "puavo-tftp/tftpserver"
+
+require 'optparse'
+
+def load_config_file(filename)
+  symbolize_keys(YAML.load_file(filename) || {})
+end
+
+options_defaults = {
+  :port => 69,
+  :group => "nogroup",
+  :root => "/var/lib/tftpboot/",
+  :config => "/etc/puavo-tftp.yml"
+}
+
+options_cli = {}
+OptionParser.new do |opts|
+  opts.banner = "Usage: [sudo] #{ File.basename(__FILE__) } [options]"
+
+  opts.on("-r", "--root PATH", String, "Serve files from directory.") do |v|
+    if v[0] == "/"
+      options_cli[:root] = v
+    else
+      options_cli[:root] = File.join(Dir.pwd, v)
+    end
+  end
+
+  opts.on("-u", "--user USER", String, "Drop to user.") do |v|
+    options_cli[:user] = v
+  end
+
+  opts.on("-g", "--group GROUP", String,
+    "Drop to group. Default #{ options_defaults[:group] }"
+  ) do |v|
+    options_cli[:group] = v
+  end
+
+  opts.on("-c", "--config FILE", String,
+    "Configuration file. Default #{ options_defaults[:config] }"
+  ) do |v|
+    options_cli[:config] = v
+  end
+
+  opts.on("--verbose", "Print more debugging stuff.") do |v|
+    options_cli[:verbose] = true
+  end
+
+  opts.on("-p", "--port PORT", "Listen on port.") do |v|
+    options_cli[:port] = v.to_i
+  end
+
+end.parse!
+
+
+options_file = load_config_file(
+  options_cli[:config] || options_defaults[:config]
+)
+
+options = options_defaults.merge(options_file).merge(options_cli)
+
+if options[:verbose]
+  $tftp_debug = true
+end
+
+EventMachine::run do
+  EventMachine::open_datagram_socket(
+    "0.0.0.0",
+    options[:port],
+    PuavoTFTP::Server,
+    options[:root],
+    Array(options[:hooks])
+  ) do
+
+    log "Serving files from #{ options[:root] }"
+    log "Listening on #{ options[:port] }"
+
+    if Process.uid == 0
+      if not options[:user]
+        log "ERROR: Started as root, but no user option is defined. puavo-tftp should not be run as root!"
+        Process.exit 1
+      end
+      Process.initgroups(options[:group], Etc.getgrnam(options[:group]).gid)
+      Process::Sys.setgid(Etc.getgrnam(options[:group]).gid)
+      Process::Sys.setuid(Etc.getpwnam(options[:user]).uid)
+      log "Changed to uid #{ Process.uid } and gid #{ Process.gid }"
+    end
+
+  end
+end

@@ -1,0 +1,14 @@
+#!/bin/sh
+
+# Delay the start until slapd is listening at ldapi:///
+
+set -eu
+
+for i in $(seq 10); do
+  [ -S /run/slapd/ldapi ] || { sleep "$i"; continue; }
+  break
+done
+
+sleep 3
+
+exit 0

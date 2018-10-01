@@ -1,0 +1,9 @@
+[Unit]
+Description=Wake-on-LAN tagged Puavo devices
+
+[Service]
+User=nobody
+ExecStart=/bin/sh -c '/usr/local/lib/puavo-autopoweron | /usr/bin/ts'
+
+[Install]
+WantedBy=multi-user.target

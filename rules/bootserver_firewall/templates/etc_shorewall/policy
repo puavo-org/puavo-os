@@ -1,0 +1,12 @@
+#SOURCE         DEST            POLICY          LOG LEVEL       LIMIT:BURST
+inet            fw              REJECT
+fw              all		ACCEPT
+ltsp            inet            ACCEPT
+ltsp            ovpn            ACCEPT
+ltsp            fw              ACCEPT
+ivpn		fw		ACCEPT
+ovpn            fw              ACCEPT
+wlan            inet            ACCEPT
+wlan            fw              REJECT
+wlan            ovpn		REJECT
+all             all             REJECT

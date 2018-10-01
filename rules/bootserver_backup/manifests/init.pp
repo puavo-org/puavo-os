@@ -1,17 +1,20 @@
 class bootserver_backup {
-  include ::bootserver_config
+  include ::puavo_conf
+
+  ::puavo_conf::definition {
+    'puavo-admin-backup.json':
+      source => 'puppet:///modules/bootserver_backup/puavo-admin-backup.json';
+  }
+
+  ::puavo_conf::script {
+    'setup_backup':
+      require => ::Puavo_conf::Definition['puavo-admin-backup.json'],
+      source  => 'puppet:///modules/bootserver_backup/setup_backup';
+  }
 
   file {
-    '/root/.ssh':
-      ensure => directory,
-      mode   => 700;
-
-    '/root/.ssh/authorized_keys2':
-      content => template('bootserver_backup/authorized_keys2'),
-      mode    => 600;
-
-    '/root/run-rdiff-backup-server':
-      content => template('bootserver_backup/run-rdiff-backup-server'),
-      mode    => 700;
+    '/usr/local/sbin/rsync-server-backup-etc-home':
+      mode   => '0755',
+      source => 'puppet:///modules/bootserver_backup/rsync-server-backup-etc-home';
   }
 }

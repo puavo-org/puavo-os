@@ -1,43 +1,29 @@
 class bootserver_cups {
-  include ::apparmor
-  include ::puavo
-  require ::bootserver_nss
+  include ::packages
+  include ::puavo_conf
+
+  ::puavo_conf::script {
+    'setup_bootserver_cups':
+      require => Package['cups'],
+      source  => 'puppet:///modules/bootserver_cups/setup_bootserver_cups';
+  }
 
   file {
-    '/etc/apparmor.d/local/usr.sbin.cupsd':
-      content => template('bootserver_cups/apparmor_usr.sbin.cupsd'),
-      notify  => Service['apparmor'];
+     '/etc/systemd/system/cups-watchdog.service':
+       require => File['/usr/local/lib/cups-watchdog'],
+       source  => 'puppet:///modules/bootserver_cups/cups-watchdog.service';
 
-    '/etc/cups/cupsd.conf':
-      content => template('bootserver_cups/cupsd.conf'),
-      notify  => Service['cups'];
+     '/etc/systemd/system/multi-user.target.wants/cups-watchdog.service':
+       ensure  => link,
+       require => File['/etc/systemd/system/cups-watchdog.service'],
+       target  => '/etc/systemd/system/cups-watchdog.service';
 
-    '/etc/cups/cups-files.conf':
-      content => template('bootserver_cups/cups-files.conf'),
-      notify  => Service['cups'];
-
-    '/etc/init/cups-watchdog.conf':
-      content => template('bootserver_cups/cups-watchdog.upstart'),
-      mode    => 0644,
-      notify  => Service['cups-watchdog'],
-      require => File['/usr/local/lib/cups-watchdog'];
-
-    '/etc/init.d/cups-watchdog':
-      before  => Service['cups-watchdog'],
-      ensure  => link,
-      require => File['/etc/init/cups-watchdog.conf'],
-      target  => '/lib/init/upstart-job';
-
-    '/usr/local/lib/cups-watchdog':
-      content => template('bootserver_cups/cups-watchdog'),
-      mode    => 0755,
-      notify  => Service['cups-watchdog'];
+     '/usr/local/lib/cups-watchdog':
+       mode    => '0755',
+       require => Package['cups-client'],
+       source  => 'puppet:///modules/bootserver_cups/cups-watchdog';
   }
 
-  service {
-    [ 'cups'
-    , 'cups-watchdog' ]:
-      enable => true,
-      ensure => running;
-  }
+  Package <| title == cups
+          or title == cups-client |>
 }

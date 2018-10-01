@@ -1,0 +1,6 @@
+#INTERFACE:DEST         SOURCE          ADDRESS         PROTO   PORT(S) IPSEC   MARK    USER/
+#                                                                                       GROUP
+inet0			10.249.0.0/20
+inet0			10.249.224.0/20
+vpn0			10.249.0.0/20
+vpn0 			10.249.224.0/20

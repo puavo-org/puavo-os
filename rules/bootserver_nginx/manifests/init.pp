@@ -1,11 +1,15 @@
 class bootserver_nginx {
+  include ::packages
+  include ::puavo_conf
+
+  File { require => Package['nginx'] }
+
   define enable {
     $service_name = $title
 
     file {
       "/etc/nginx/sites-enabled/${service_name}":
 	ensure => link,
-	notify => Exec['reload nginx'],
 	target => "/etc/nginx/sites-available/${service_name}";
     }
   }
@@ -15,18 +19,10 @@ class bootserver_nginx {
       ;
   }
 
-  exec {
-    'reload nginx':
-      command     => '/usr/sbin/service nginx reload',
-      refreshonly => true,
-      require     => Service['nginx'];
-  }
-
   file {
     '/etc/nginx/sites-available/default':
       content => template('bootserver_nginx/default_site'),
-      mode    => 0644,
-      notify  => Exec['reload nginx'];
+      mode    => '0644';
 
     # Newer version of nginx ships the default index.html file in
     # /usr/share/nginx/html directory instead of
@@ -37,15 +33,17 @@ class bootserver_nginx {
 
     '/usr/share/nginx/html/index.html':
       content => template('bootserver_nginx/index.html'),
-      mode    => 0644;
+      mode    => '0644';
 
     '/usr/share/nginx/www/index.html':
       ensure => link,
       target => '/usr/share/nginx/html/index.html';
   }
 
-  service {
-    'nginx':
-      ensure => running;
+  ::puavo_conf::definition {
+    'puavo-nginx.json':
+      source => 'puppet:///modules/bootserver_nginx/puavo-nginx.json';
   }
+
+  Package <| title == nginx |>
 }

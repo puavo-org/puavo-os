@@ -56,12 +56,10 @@ end
 
 class TestRun
 
-  def initialize(admin_username, admin_password,
-                 school_id, testclient_hosttype)
+  def initialize(admin_username, admin_password, school_id)
     @admin_username             = admin_username
     @admin_password             = admin_password
     @school_id                  = school_id
-    @testclient_hosttype        = testclient_hosttype
     @testclient_hostname        = nil
     @testclient_image           = nil
     @testclient_tags            = []
@@ -73,7 +71,6 @@ class TestRun
     @testuser_has_old_homedir   = true
   end
 
-  attr_reader :testclient_hosttype
   attr_reader :testclient_hostname
   attr_reader :testclient_image
   attr_reader :testclient_mac
@@ -88,16 +85,7 @@ class TestRun
   end
 
   def test(payload)
-    msg = payload['msg']
-    success_msg = case @testclient_hosttype
-                  when 'fatclient'
-                    'begin-user-session'
-                  when 'thinclient'
-                    'begin-user-session'
-                  else
-                    raise 'unsupported hosttype #{@testclient_hosttype}'
-                  end
-    msg == success_msg
+    payload['msg'] == 'begin-user-session'
   end
 
   def cleanup()
@@ -170,13 +158,13 @@ class TestRun
                                                           @school_id,
                                                           @testclient_hostname,
                                                           @testclient_mac,
-                                                          @testclient_hosttype,
+                                                          'fatclient',
                                                           @testclient_tags)
     error = nil
     (0..4).each do |ntries|
       sleep 1 if ntries > 0
       begin
-        @testclient_image = PuavoBS.get_device_json(@testclient_hostname)['preferred_image']
+        @testclient_image = PuavoBS.get_device_json(@admin_username, @admin_password, @testclient_hostname)['preferred_image']
       rescue RuntimeError => e
         error = e
         next
@@ -267,7 +255,7 @@ def execute(server_socket, testrun)
 
     ## Periodical timeout check.
     if result.nil?
-      raise TestRunError.new('timeout') if Time.now() >= start_time + 120
+      raise TestRunError.new('timeout') if Time.now() >= start_time + 300
       yield ## Tick the caller.
       next
     end
@@ -292,16 +280,14 @@ def execute(server_socket, testrun)
 
 end
 
-def run_test(admin_username, admin_password,
-             school_name, school_id, testclient_hosttype,
-             testrun_label)
+def run_test(admin_username, admin_password, school_name, school_id,
+	     testrun_label)
 
   server_socket_path = '/tmp/puavo-bootserver-smoke-test.socket'
   server_socket = open_server_socket(server_socket_path)
 
   begin
-    testrun = TestRun.new(admin_username, admin_password,
-                          school_id, testclient_hosttype)
+    testrun = TestRun.new(admin_username, admin_password, school_id)
     begin
       puts()
       puts("=== Test run #{testrun_label} ===")
@@ -309,7 +295,6 @@ def run_test(admin_username, admin_password,
       testrun.prepare()
       puts_ok()
       puts("    School   : #{school_name}")
-      puts("    Hosttype : #{testrun.testclient_hosttype}")
       puts("    Hostname : #{testrun.testclient_hostname}")
       puts("    MAC      : #{testrun.testclient_mac}")
       puts("    Image    : #{testrun.testclient_image}")
@@ -410,21 +395,16 @@ if do_run_all_tests then
 
   schools.each do |school_id, school_name|
     school_results = all_results[school_name] = {}
-    ['fatclient', 'thinclient'].each do |testclient_hosttype|
-      school_results[testclient_hosttype] = false
-
-      begin
-        school_results[testclient_hosttype] = run_test(admin_username,
-                                                       admin_password,
-                                                       school_name,
-                                                       school_id,
-                                                       testclient_hosttype,
-                                                       "##{testrun_number}")
-      rescue Interrupt
-        exit(1)
-      end
-      testrun_number += 1
+    begin
+      school_results = run_test(admin_username,
+				admin_password,
+				school_name,
+				school_id,
+				"##{testrun_number}")
+    rescue Interrupt
+      exit(1)
     end
+    testrun_number += 1
   end
 
   col1hdr = 'School'
@@ -433,7 +413,7 @@ if do_run_all_tests then
 
   max_school_name_length = all_results.keys.map{ |s| s.length }.max
   col1width = [col1hdr.length, max_school_name_length].max
-  col2width = [col2hdr, 'thinclient', 'fatclient'].map{ |s| s.length }.max
+  col2width = [col2hdr, 'fatclient'].map{ |s| s.length }.max
   col3width = [col3hdr, 'FAIL', 'OK'].map{ |s| s.length }.max
 
   fmt = "%-#{col1width}s  %-#{col2width}s  %-#{col3width}s\n"
@@ -442,16 +422,16 @@ if do_run_all_tests then
   puts '=' * (col1width + col2width + col3width + 4)
 
   all_results.each do |school_name, results|
-    results.each do |hosttype, result|
+    results.each do |result|
       if result then
-        printf fmt, school_name, hosttype, color_green('OK')
+        printf fmt, school_name, color_green('OK')
       else
-        printf fmt, school_name, hosttype, color_red('FAIL')
+        printf fmt, school_name, color_red('FAIL')
       end
     end
   end
 
-  exit 0 if all_results.values.map { |s| s.values.all? }.all?
+  exit 0 if all_results.values.all?
   exit 1
 end
 
@@ -469,16 +449,9 @@ while true do
   end
   school_name, school_id = school
 
-  say("Select the test device type:")
-  testclient_hosttype = choose() do |menu|
-    ['fatclient', 'thinclient'].each() do |hosttype|
-      menu.choice(hosttype) { hosttype }
-    end
-  end
-
   begin
-    run_test(admin_username, admin_password,
-             school_name, school_id, testclient_hosttype, "##{testrun_number}")
+    run_test(admin_username, admin_password, school_name, school_id,
+	     "##{testrun_number}")
   rescue Interrupt
     next
   end

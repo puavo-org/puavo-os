@@ -5,7 +5,13 @@
   "puavo.admin.primary_user": {
     "default": ""
   },
+  "puavo.admin.set_root_password": {
+    "default": "false"
+  },
   "puavo.admin.superusers": {
+    "default": ""
+  },
+  "puavo.admin.vpn.subnet": {
     "default": ""
   },
   "puavo.audio.pa.default_sink": {
@@ -47,19 +53,61 @@
   "puavo.service.avahi-daemon.enabled": {
     "default": "false"
   },
+  "puavo.service.cron.cronjobs": {
+    "default": "puavo-cleanup-old-users"
+  },
+  "puavo.service.cups-watchdog.enabled": {
+    "default": "false"
+  },
   "puavo.service.fluentd.enabled": {
     "default": "true"
   },
+  "puavo.service.incron.enabled": {
+    "default": "false"
+  },
+  "puavo.service.isc-dhcp-server.enabled": {
+    "default": "false"
+  },
+  "puavo.service.krb5-kdc.enabled": {
+    "default": "false"
+  },
+  "puavo.service.libvirtd.enabled": {
+    "default": "false"
+  },
   "puavo.service.ModemManager.enabled": {
+    "default": "false"
+  },
+  "puavo.service.munin-node.enabled": {
+    "default": "false"
+  },
+  "puavo.service.nagios-nrpe-server.enabled": {
+    "default": "false"
+  },
+  "puavo.service.nbd-server.enabled": {
     "default": "false"
   },
   "puavo.service.NetworkManager.enabled": {
     "default": "false"
   },
+  "puavo.service.nfs-server.enabled": {
+    "default": "false"
+  },
   "puavo.service.nscd.enabled": {
     "default": "false"
   },
+  "puavo.service.nmbd.enabled": {
+    "default": "false"
+  },
   "puavo.service.nslcd.enabled": {
+    "default": "false"
+  },
+  "puavo.service.puavo-darkdm.enabled": {
+    "default": "true"
+  },
+  "puavo.service.puavo-rest.enabled": {
+    "default": "false"
+  },
+  "puavo.service.puavo-tftpd.enabled": {
     "default": "false"
   },
   "puavo.service.puavo-vpn-client-dnsmasq.enabled": {
@@ -68,7 +116,22 @@
   "puavo.service.puavo-vpn-client-openvpn.enabled": {
     "default": "false"
   },
+  "puavo.service.puavo-wlancontroller.enabled": {
+    "default": "false"
+  },
+  "puavo.service.redis-server.enabled": {
+    "default": "false"
+  },
   "puavo.service.rpc-gssd.enabled": {
+    "default": "false"
+  },
+  "puavo.service.shorewall.enabled": {
+    "default": "false"
+  },
+  "puavo.service.slapd.enabled": {
+    "default": "false"
+  },
+  "puavo.service.smbd.enabled": {
     "default": "false"
   },
   "puavo.service.tlp.enabled": {

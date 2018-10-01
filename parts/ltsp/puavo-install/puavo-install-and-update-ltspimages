@@ -1,19 +1,25 @@
 #!/bin/sh
 
-# obtain an exclusive lock on myself...
-# there should be only one instance of this program running
+set -eu
 
-exec 3<$0
-flock -nx 3 || { echo did not get a lock, exiting; exit 1; }
+images_dir=/images
+
+# use a common lock with puavo-bootserver-sync-images
+# (only one instance of these two programs should be running)
+image_updates_lock_path="${images_dir}/.image_updates_lock"
+test -e "$image_updates_lock_path" || touch "$image_updates_lock_path"
+exec 3< "$image_updates_lock_path"
+if ! flock -nx 3; then
+  echo did not get a lock on $image_updates_lock_path, exiting
+  exit 1
+fi
+
+exec 4>&1	# another way to write to stdout for log()
+exec 5>&2	# another way to write to stderr for log()
 
 #
 # argument parsing
 #
-
-set -eu
-
-exec 4>&1	# another way to write to stdout for log()
-exec 5>&2	# another way to write to stderr for log()
 
 log() {
   log_to_stdout=false
@@ -57,7 +63,6 @@ if ! args=$(getopt -n "$0" -o +f:n:r:q \
   usage
 fi
 
-images_dir=/images
 rdiffs_dir="${images_dir}/rdiffs"
 checksums_file="${images_dir}/CKSUMS"
 puavoinstall_libdir=/usr/lib/puavo-ltsp-install
@@ -233,28 +238,15 @@ cleanup_previous_runs() {
   preserve_imagefile=$1
   preserve_rdifffile=$2
 
-  # cleanup old ltsp images (and their possible temporary *.tmp files).
-  # The ltsp-backup.img is going to go too...
-  old_images=$("${puavoinstall_libdir}/ls-old-images" "${images_dir}")
-  if [ -n "${old_images}" ]; then
-    echo -n "${old_images}" \
+  # cleanup old images (and their possible temporary *.tmp files)
+  # and rdiff-files too.  The ltsp-backup.img is going to go too...
+  old_imagesync_files=$("${puavoinstall_libdir}/ls-old-images-and-rdiffs" \
+	                  "$images_dir" "$rdiffs_dir")
+  if [ -n "$old_imagesync_files" ]; then
+    printf %s "$old_imagesync_files" \
       | fgrep -vx "${images_dir}/${preserve_imagefile}" \
+      | fgrep -vx "${images_dir}/${preserve_rdifffile}" \
       | xargs -r -d'\n' -L1 rm -f
-  fi
-
-  # cleanup old rdiff files, except those that we want to use right now
-  if [ -d "$rdiffs_dir" ]; then
-    if [ -z "$preserve_rdifffile" ]; then
-      find "$rdiffs_dir" -maxdepth 1 \
-             -type f -a '(' -name '*.rdiff' -o -name '*.rdiff.tmp' ')' -print0
-    else
-      find "$rdiffs_dir" -maxdepth 1                                     \
-             -type f -a '('                                              \
-               '(' -name '*.rdiff' -o -name '*.rdiff.tmp' ')'            \
-	          -a '!' '('   -name "${preserve_rdifffile}"             \
-		            -o -name "${preserve_rdifffile}.tmp" ')' ')' \
-        -print0
-    fi | xargs -0 rm -f
   fi
 }
 

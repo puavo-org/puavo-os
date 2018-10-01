@@ -82,6 +82,8 @@ def send_changed_primary_user_to_puavo(primary_user)
   cloud_restclient.post(uripath, :json => senddata)
 end
 
+def do_nothing(restclient); end
+
 def update_device_json(restclient)
   log(Syslog::LOG_INFO, ">>> Updating device json\n")
 
@@ -90,7 +92,10 @@ def update_device_json(restclient)
 
   device_json_path = '/state/etc/puavo/device.json'
 
-  uripath = "v3/devices/#{ get_hostname() }"
+  uripath = ($puavo_hosttype == 'bootserver' \
+	       ? "v3/boot_servers/#{ get_hostname() }" \
+	       : "v3/devices/#{ get_hostname() }")
+
   device = restclient.get(uripath).parse()
 
   remove_primary_user_override = false
@@ -190,10 +195,13 @@ def update_wlan_configurations(restclient)
 end
 
 def update_certificate(restclient)
+  log(Syslog::LOG_INFO, ">>> Updating host certificate\n")
   run('puavo-update-certificate')
 end
 
 def update_extra_boot_scripts(restclient)
+  log(Syslog::LOG_INFO, ">>> Updating extra boot scripts\n")
+
   # These are fetched even if puavo.admin.run_extra_boot_scripts != 'true'
   # Error code 2 means that host was not behind a bootserver, which is okay.
   system('/usr/local/sbin/puavo-run-extra-boot-scripts', '--fetch-only')
@@ -204,6 +212,8 @@ def update_extra_boot_scripts(restclient)
 end
 
 def update_puavoadmins(restclient)
+  log(Syslog::LOG_INFO, ">>> Updating Puavo administrators\n")
+
   system('/usr/local/sbin/puavo-update-admins')
   if $?.exitstatus != 0 && $?.exitstatus != 2 then
     raise 'Running /usr/local/sbin/puavo-update-admins' \
@@ -212,6 +222,8 @@ def update_puavoadmins(restclient)
 end
 
 Syslog.open(File.basename($0), Syslog::LOG_CONS)
+
+$puavo_hosttype = puavoconf_get('puavo.hosttype')
 
 restclient = PuavoRestClient.new(:auth => :etc, :timeout => 30)
 
@@ -222,17 +234,19 @@ restclient = PuavoRestClient.new(:auth => :etc, :timeout => 30)
 # to figure out which parts failed).
 #
 
+is_a_device = ($puavo_hosttype != 'bootserver')
+
 # For exitcode calculation to work properly, there should not be more than
 # sizeof(int) (32) functions here.  "device.json" should be updated first,
 # because others may depend on it.
 update_functions = [
-  :update_device_json,
-  :update_external_files,
-  :update_wlan_configurations,
-  :update_grub_environment,
-  :update_certificate,
-  :update_extra_boot_scripts,
-  :update_puavoadmins,
+                :update_device_json,
+  is_a_device ? :update_external_files      : :do_nothing,
+  is_a_device ? :update_wlan_configurations : :do_nothing,
+                :update_grub_environment,
+                :update_certificate,
+  is_a_device ? :update_extra_boot_scripts  : :do_nothing,
+                :update_puavoadmins,
 ]
 
 exitcode = 0

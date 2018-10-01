@@ -1,0 +1,45 @@
+#!/bin/sh
+
+set -eu
+
+if grep -Fqx "# UNCONFIGURED FSTAB FOR BASE SYSTEM" /etc/fstab; then
+  cat /dev/null > /etc/fstab
+fi
+
+# XXX Not happy about export-directory being under /images (especially admins
+# XXX might get confused and try to destroy it, which is really bad in this
+# XXX case, but when our "/" is on overlay, /export
+# XXX "does not support NFS export" according to "exportfs".
+
+mkdir -p /images/.export/home
+
+export_line='/home	/images/.export/home	none	rw,bind	0	0'
+if ! grep -Fqx "$export_line" /etc/fstab; then
+  {
+    echo '# Setup for NFS server by /etc/puavo-conf/scripts/setup_nfs_server'
+    printf "%s\n" "$export_line"
+  } >> /etc/fstab
+fi
+
+read puavo_kerberos_realm < /etc/puavo/kerberos/realm
+
+cat <<EOF > /etc/idmapd.conf
+[General]
+
+Verbosity = 0
+Pipefs-Directory = /run/rpc_pipefs
+Domain = ${puavo_kerberos_realm}
+
+[Mapping]
+
+Nobody-User = nobody
+Nobody-Group = nogroup
+EOF
+
+cat <<'EOF' > /etc/exports.tmp
+/images/.export *(rw,fsid=0,async,subtree_check,no_root_squash,sec=krb5p:krb5i:krb5:sys:null)
+/images/.export/home *(rw,async,subtree_check,no_root_squash,sec=krb5p:krb5i:krb5)
+EOF
+mv /etc/exports.tmp /etc/exports
+
+exportfs -r

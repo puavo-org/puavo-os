@@ -1,0 +1,193 @@
+#!/usr/bin/ruby
+
+require 'fileutils'
+require 'ipaddress'
+require 'puavo/conf'
+
+def writeconf(path, data)
+  File.open("#{ path }.tmp", 'w') { |f| f.write(data) }
+  File.rename("#{ path }.tmp", path)
+end
+
+class Interface
+  attr_accessor :ip, :name
+
+  def initialize(if_name)
+    address = lookup_address(if_name)
+    raise "could not determine address for #{ if_name }" unless address
+
+    netmask = lookup_netmask(if_name)
+    raise "could not determine netmask for #{ if_name }" unless netmask
+
+    @ip   = IPAddress("#{ address }/#{ netmask }")
+    @name = if_name
+  end
+
+  def lookup_ifdata_from_file(if_name, if_fieldname)
+    interfaces_files = %w(/etc/network/interfaces) \
+                         + Dir.glob('/etc/network/interfaces.d/*')
+    interfaces_files.each do |file|
+      found_interface = false
+      IO.readlines(file).each do |line|
+        key, value = * line.split
+        case key
+        when 'iface'
+          found_interface = (value == if_name)
+        when if_fieldname
+          if found_interface then
+            return value
+          end
+        end
+      end
+    end
+
+    return nil
+  end
+
+  def lookup_ifdata(if_name, if_fieldname, if_data_arg)
+    if_data = %x(ifdata #{ if_data_arg } #{ if_name } 2>/dev/null).chomp
+    if if_data.empty? then
+      if_data = lookup_ifdata_from_file(if_name, if_fieldname)
+    end
+
+    return if_data
+  end
+
+  def lookup_address(if_name)
+    lookup_ifdata(if_name, 'address', '-pa')
+  end
+
+  def lookup_netmask(if_name)
+    lookup_ifdata(if_name, 'netmask', '-pn')
+  end
+
+  def name_no_number
+    @name.match(/^(.*)\d+$/) ? $1 : @name
+  end
+
+  def subsubnets_prefix
+    [ @ip.prefix.to_i + 4, 32 ].min
+  end
+
+  def all_16_subnets
+    @ip.subnet(subsubnets_prefix)
+  end
+
+  def subnets_16_except_own
+    own_ip = IPAddress("#{ @ip.address }/#{ subsubnets_prefix }")
+    all_16_subnets.select { |sb| !sb.include?(own_ip) }
+  end
+
+  def dhcp_ranges
+    previous_last_ip = nil
+    ranges = []
+    subnets_16_except_own.each do |subnet|
+      if previous_last_ip.nil? \
+        || (previous_last_ip.u32 + 3) != (subnet.first.u32) then
+          ranges << [ subnet.first, subnet.last ]
+      else
+        ranges[-1][1] = subnet.last
+      end
+
+      previous_last_ip = ranges[-1][1]
+    end
+
+    ranges
+  end
+
+  def subnet
+    @ip.subnet(@ip.prefix.to_i).first.to_s
+  end
+end
+
+begin
+  puavo_domain = File.open('/etc/puavo/domain', &:readline).chomp
+rescue
+  raise 'Could not read puavo domain from /etc/puavo/domain'
+end
+
+puavoconf = Puavo::Conf.new
+network_interfaces_for_dhcpd = \
+  puavoconf.get('puavo.networking.ddns.dhcpd_interfaces') \
+    .split(',') \
+    .map { |iface| Interface.new(iface) }
+ubnt_unifi_address = puavoconf.get('puavo.networking.ubnt.unify.address')
+puavoconf.close
+
+if network_interfaces_for_dhcpd.empty? then
+  dhcpd_conf       = "# DISABLED\n"
+  puavo_dhcpd_conf = "# DISABLED\n"
+  ubnt_conf        = "# DISABLED\n"
+else
+  dhcpd_conf = <<EOF
+include "/etc/dhcp.d/puavo_dhcpd.conf";
+EOF
+
+  puavo_dhcpd_conf = <<EOF
+default-lease-time 7200;
+get-lease-hostnames true;
+max-lease-time 14400;
+
+authoritative;
+
+# https://help.ubnt.com/hc/en-us/articles/204909754-UniFi-Layer-3-methods-
+option space ubnt;
+option ubnt.unifi-address code 1 = ip-address;
+
+class "ubnt" {
+  match if substring (option vendor-class-identifier, 0, 4) = "ubnt";
+  option vendor-class-identifier "ubnt";
+  vendor-option-space ubnt;
+}
+
+include "/etc/dhcp.d/ubnt.conf";
+
+#{
+  network_interfaces_for_dhcpd.map do |iface|
+    <<IFACE_EOF
+subnet #{ iface.subnet } netmask #{ iface.ip.netmask } {
+  option domain-name "ltsp.#{ puavo_domain }";
+
+  pool {
+    #{
+      iface.dhcp_ranges.map do |range|
+        "range #{ range[0] } #{ range[1] };"
+      end.join("\n")
+    }
+
+    option domain-name-servers  #{ iface.ip };
+    option netbios-name-servers #{ iface.ip };
+    option ntp-servers          #{ iface.ip };
+    option routers              #{ iface.ip };
+    next-server                 #{ iface.ip };
+
+    if substring( option vendor-class-identifier, 0, 9 ) = "PXEClient" {
+      filename "/pxelinux.0";
+    }
+
+    on commit {
+      set ClientIP  = binary-to-ascii(10, 8, ".", leased-address);
+      set ClientMac = binary-to-ascii(16, 8, ":", substring(hardware, 1, 6));
+
+      log(concat("Commit: IP: ", ClientIP,
+		 " Mac: ",       ClientMac,
+		 " Subdomain: ", "#{ iface.name }"));
+
+      execute("/usr/local/lib/puavo-update-ddns", "mac", ClientMac, ClientIP,
+              "#{ iface.name_no_number }");
+    }
+  }
+}
+IFACE_EOF
+  end.join("\n")
+}
+EOF
+  ubnt_conf = (ubnt_unifi_address != '' \
+	         ? "option ubnt.unifi-address #{ ubnt_unifi_address };\n" \
+		 : "# DISABLED\n")
+end
+
+FileUtils.mkdir_p('/etc/dhcp.d')
+writeconf('/etc/dhcp.d/puavo_dhcpd.conf', puavo_dhcpd_conf)
+writeconf('/etc/dhcp.d/ubnt.conf',        ubnt_conf)
+writeconf('/etc/dhcp/dhcpd.conf',         dhcpd_conf)

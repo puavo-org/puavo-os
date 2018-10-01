@@ -1,5 +1,6 @@
 class gdm {
   include ::art
+  include ::dconf::schemas
   include ::dpkg
   include ::guest
   include ::packages
@@ -13,7 +14,7 @@ class gdm {
   exec {
     '/usr/sbin/dpkg-reconfigure gdm3':
       refreshonly => true,
-      require     => File['/usr/share/glib-2.0/schemas/org.gnome.login-screen.gschema.xml'];
+      require     => Dpkg::Simpledivert['/usr/share/glib-2.0/schemas/org.gnome.login-screen.gschema.xml'];
   }
 
   file {

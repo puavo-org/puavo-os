@@ -26,7 +26,9 @@ Build-Depends: bundler | ruby-bundler,
  python-pyside,
  python3,
  ruby,
- ruby-dev
+ ruby-dev,
+ ruby-eventmachine,
+ ruby-minitest
 Standards-Version: 3.9.6
 Homepage: http://github.com/puavo-org/puavo-os/
 
@@ -52,13 +54,6 @@ Architecture: all
 Depends: ${misc:Depends}, python, python-pyside, unclutter
 Description: A custom stand-alone WebKit display.
  A custom stand-alone WebKit display.
- .
-
-Package: opinsys-ca-certificates
-Architecture: all
-Depends: ${misc:Depends}
-Description: Opinsys CA certificate files for client usage.
- Opinsys CA certificate files for client usage.
  .
 
 Package: puavoadmins
@@ -182,6 +177,13 @@ Description: Puavo configuration tool for local (host-specific) features.
  Puavo configuration tool for local (host-specific) features.
  .
 
+Package: puavo-logrelay
+Architecture: all
+Depends: ${misc:Depends}, nodejs (>= 4.8.6-1nodesource1)
+Description: Buffering log relay
+ Buffering log relay from UDP to HTTP
+ .
+
 Package: puavo-ltsp-bootserver
 Architecture: all
 Depends: ${misc:Depends},
@@ -209,11 +211,9 @@ Depends: ${misc:Depends},
  jq,
  libsasl2-modules-gssapi-mit,
  libvirt-bin,
- linux-image-server,
  logrotate,
  lynx,
  nbd-server,
- nfs-kernel-server,
  nfs-kernel-server,
  nginx,
  nmap,
@@ -291,6 +291,7 @@ Depends: ${misc:Depends},
  nfs-common,
  nslcd,
  ntp,
+ ntpdate,
  openbox,
  perl,
  puavo-client,
@@ -322,6 +323,7 @@ Depends: ${misc:Depends},
  expect-dev,
  jq,
  m4,
+ mdadm,
  nbd-client,
  nwipe,
  puavo-client,
@@ -389,6 +391,27 @@ Architecture: all
 Depends: ${misc:Depends}, ruby, acl, libinotify-ruby, librb-inotify-ruby
 Description: Puavo shared directory manager
  Puavo shared directory manager
+ .
+
+Package: puavo-tftpd
+Architecture: all
+Depends: ${misc:Depends}, adduser, ruby, ruby-eventmachine, ruby-ldap
+Recommends: ruby-minitest
+Description: TFTP server for LTSP environments
+ puavo-tftp provides a TFTP server which dynamically queries ldap
+ server for pxelinux boot configuration.
+ .
+ This package provides generic TFTP server.
+ .
+
+Package: puavo-tftpd-hooks
+Architecture: all
+Depends: ${misc:Depends}, curl, puavo-client, puavo-rest, puavo-tftpd
+Description: Puavo-service hooks for Puavo TFTP server
+ puavo-tftp provides a TFTP server which dynamically queries ldap server
+ for pxelinux boot configuration.
+ .
+ This package provides hook files desinged for Puavo-service.
  .
 
 Package: puavo-vpn-client

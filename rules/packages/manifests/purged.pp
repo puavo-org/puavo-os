@@ -18,9 +18,6 @@ class packages::purged {
 
     , 'linux-image-generic'             # we want to choose kernels explicitly
 
-    , 'samba'				# not needed, gets into system as
-					# some recommendation through winbind
-
     # the functionality in these is not for our end users
     , 'software-properties-gtk'
     , 'synaptic'
@@ -38,6 +35,6 @@ class packages::purged {
                                 # (we use a separate boot server)
 
     , 'tracker' ]:              # this uses too much resources when using nfs
-      tag => [ 'tag_debian' ];
+      tag => [ 'tag_debian_desktop' ];
   }
 }

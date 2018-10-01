@@ -30,6 +30,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(templatedir)/etc/pam.d
 	mkdir -p $(DESTDIR)$(templatedir)/var/lib/bind
 	mkdir -p $(DESTDIR)$(libdir)/puavo-ltsp-bootserver
+	mkdir -p $(DESTDIR)/var/lib/puavo
 
 .PHONY : install
 install : installdirs
@@ -49,21 +50,7 @@ install : installdirs
 		templates/etc/apparmor.d/local/usr.sbin.dhcpd
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/etc \
-		templates/etc/dnsmasq.conf \
-		templates/etc/ntp.conf \
-		templates/etc/rsyslog.conf \
-
-	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/etc/dhcp \
-		templates/etc/dhcp/dhcpd.conf \
-		templates/etc/dhcp/ubnt.conf
-
-	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/etc/bind \
-		templates/etc/bind/named.conf.local \
-		templates/etc/bind/named.conf.options
-
-	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/var/lib/bind \
-		templates/var/lib/bind/puavo_domain \
-		templates/var/lib/bind/puavo_domain_reverse
+		templates/etc/ntp.conf
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
 		bin/*

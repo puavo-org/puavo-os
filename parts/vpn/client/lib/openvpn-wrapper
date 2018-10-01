@@ -22,19 +22,21 @@ EOF
   exit 1
 fi
 
-/usr/sbin/openvpn                                         \
-    --client                                              \
-    --dev tap                                             \
-    --proto tcp-client                                    \
-    --ca /etc/puavo/certs/orgcabundle.pem                 \
-    --cert /etc/puavo/certs/host.crt                      \
-    --key /etc/puavo/certs/host.key                       \
-    --ns-cert-type server                                 \
-    --verb 3                                              \
-    --keepalive 10 60                                     \
-    --up-delay                                            \
-    --script-security 2                                   \
-    --route-up '/usr/lib/puavo-vpn-client/runme route-up' \
-    --writepid /run/puavo/vpn-client-openvpn.pid          \
-    --status /run/puavo/vpn-client-openvpn.status 10      \
+/usr/sbin/openvpn                                          \
+    --ca /etc/puavo/certs/orgcabundle.pem                  \
+    --cert /etc/puavo/certs/host.crt                       \
+    --client                                               \
+    --dev vpn0                                             \
+    --dev-type tap                                         \
+    --keepalive 10 60                                      \
+    --key /etc/puavo/certs/host.key                        \
+    --ns-cert-type server                                  \
+    --proto tcp-client                                     \
+    --remote-random                                        \
+    --route-up '/usr/lib/puavo-vpn-client/runme route-up'  \
+    --script-security 2                                    \
+    --status /run/puavo/vpn-client-openvpn.status 10       \
+    --up-delay                                             \
+    --verb 3                                               \
+    --writepid /run/puavo/vpn-client-openvpn.pid           \
     $(convert_remoteservers_for_openvpn "$remote_servers")

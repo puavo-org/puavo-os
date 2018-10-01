@@ -8,6 +8,6 @@ class packages::languages::en {
     , 'libreoffice-l10n-en-za'
     , 'myspell-en-gb'
     , 'mythes-en-us' ]:
-      tag => [ 'tag_debian', 'tag_language_en', ];
+      tag => [ 'tag_debian_desktop', 'tag_language_en', ];
   }
 }

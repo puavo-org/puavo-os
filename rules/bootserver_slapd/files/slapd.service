@@ -1,0 +1,15 @@
+[Unit]
+Description = OpenLDAP server
+
+[Service]
+Environment=KRB5_KTNAME=/etc/ldap/krb5.keytab
+ExecStartPre = /bin/mkdir -p /run/slapd
+ExecStartPre = /bin/chown openldap:openldap /run/slapd
+ExecStart = /usr/sbin/slapd -u openldap -g openldap -h "ldap:/// ldapi:///" -F /etc/ldap/slapd.d -d 0
+Restart = always
+RestartSec = 180
+ExecStop = /bin/rm -rf /run/slapd
+LimitNOFILE = 100000
+
+[Install]
+WantedBy = multi-user.target
