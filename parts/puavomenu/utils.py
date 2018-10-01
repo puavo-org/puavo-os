@@ -99,17 +99,23 @@ def puavo_conf(name, default):
     """puavo-conf call with a default value that is returned if
     the call fails."""
 
-    import subprocess
+    try:
+        import subprocess
 
-    proc = subprocess.Popen(['puavo-conf', name],
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE)
-    proc.wait()
+        proc = subprocess.Popen(['puavo-conf', name],
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE)
+        proc.wait()
 
-    if proc.returncode == 1:
-        # Assume the value does not exist. We cannot distinguish
-        # between failed puavo-conf calls and unknown/mistyped
-        # puavoconf variables.
+        if proc.returncode == 1:
+            # Assume the value does not exist. We cannot distinguish
+            # between failed puavo-conf calls and unknown/mistyped
+            # puavoconf variables.
+            return default
+
+        return proc.stdout.read().decode('utf-8').strip()
+    except Exception as e:
+        logger.error('puavo_conf() failed with name="{0}", '
+                     'returning default "{1}":'.format(name, default))
+        logger.error(e)
         return default
-
-    return proc.stdout.read().decode('utf-8').strip()
