@@ -162,14 +162,17 @@ def create_panel_link(program):
             out.write('Encoding=UTF-8\n')
             out.write('Version=1.0\n')
             out.write('Name={0}\n'.format(program.title))
+            out.write('Type=Application\n')
 
-            if program.type in (PROGRAM_TYPE_DESKTOP, PROGRAM_TYPE_CUSTOM):
-                out.write('Type=Application\n')
-                out.write('Exec={0}\n'.format(program.command))
+            if program.type == PROGRAM_TYPE_WEB:
+                # GNOME, in its infinite wisdom, has decided that "you shall
+                # not have web links in the panel" and then broke the "Link"
+                # type icons. So let's hope that xdg-open can open the URL in
+                # whatever browser is the default browser.
+                # This *WILL* fail one day with some really weird URLs...
+                out.write('Exec=xdg-open "{0}"\n'.format(program.command))
             else:
-                # FIXME: URL links don't work at all... :-(
-                out.write('Type=Link\n')
-                out.write('URL={0}\n'.format(program.command))
+                out.write('Exec={0}\n'.format(program.command))
 
             if program.icon:
                 out.write('Icon={0}\n'.format(program.icon.file_name))
