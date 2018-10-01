@@ -191,3 +191,11 @@ FileUtils.mkdir_p('/etc/dhcp.d')
 writeconf('/etc/dhcp.d/puavo_dhcpd.conf', puavo_dhcpd_conf)
 writeconf('/etc/dhcp.d/ubnt.conf',        ubnt_conf)
 writeconf('/etc/dhcp/dhcpd.conf',         dhcpd_conf)
+
+# Write /etc/default/isc-dhcp-server so that systemd
+# does not try to start dhcpd for IPv6.
+etc_default_isc_dhcp_server = <<EOF
+INTERFACESv4="ltsp0 wlan0"
+INTERFACESv6=""
+EOF
+writeconf('/etc/default/isc-dhcp-server', etc_default_isc_dhcp_server)
