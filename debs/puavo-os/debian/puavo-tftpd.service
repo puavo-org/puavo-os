@@ -1,0 +1,8 @@
+[Unit]
+Description=puavo-tftpd
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+ExecStart=/usr/sbin/puavo-tftpd -r /var/lib/tftpboot/ --user puavo --group puavo

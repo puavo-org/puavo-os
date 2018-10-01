@@ -11,7 +11,7 @@ class bootserver_utmp {
   file {
     '/usr/local/sbin/enable-utmp-log':
       content => template('bootserver_utmp/enable-utmp-log'),
-      mode    => 755;
+      mode    => '0755';
   }
 
   bootserver_utmp::enable {

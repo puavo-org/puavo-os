@@ -1,6 +1,5 @@
 # The Sidebar: the user avatar, "system" buttons and the host info
 
-from os import environ
 from os.path import exists as file_exists, join as path_join
 from getpass import getuser
 import threading
@@ -14,11 +13,12 @@ from constants import WINDOW_HEIGHT, MAIN_PADDING, SIDEBAR_WIDTH, \
                       USER_AVATAR_SIZE, HOSTINFO_LABEL_HEIGHT, SEPARATOR_SIZE
 import logger
 from utils import localize, expand_variables, get_file_contents, puavo_conf
-from utils_gui import load_image_at_size, create_separator
+from utils_gui import create_separator
 
 from iconcache import ICONS32
 from buttons import AvatarButton, SidebarButton
 from strings import STRINGS
+from settings import SETTINGS
 
 
 # ------------------------------------------------------------------------------
@@ -258,7 +258,6 @@ class AvatarDownloaderThread(threading.Thread):
 
             # Retry, if possible
             if attempt < MAX_ATTEMPTS - 1:
-                import time
                 logger.info('Retrying avatar downloading in 60 seconds...')
                 time.sleep(60)
 
@@ -271,18 +270,12 @@ class AvatarDownloaderThread(threading.Thread):
 # The sidebar class
 
 class Sidebar:
-    def __init__(self, parent, language, res_dir, user_dir, dark=False):
+    def __init__(self, parent):
         self.__parent = parent
-        self.__language = language
-        self.__res_dir = res_dir
-        self.__user_dir = user_dir
-        self.__dark = dark
 
         self.container = Gtk.Fixed()
 
-        self.__detect_host_params()
         self.__get_variables()
-
         self.__create_avatar()
         self.__create_buttons()
         self.__create_hostinfo()
@@ -296,7 +289,7 @@ class Sidebar:
 
             try:
                 self.__avatar_thread = \
-                    AvatarDownloaderThread(self.__user_dir, self.__avatar)
+                    AvatarDownloaderThread(SETTINGS.user_dir, self.__avatar)
 
                 # Daemonize the thread so that if we exit before
                 # the thread exists, it is also destroyed
@@ -305,30 +298,6 @@ class Sidebar:
                 self.__avatar_thread.start()
             except Exception as e:
                 logger.error('Could not create a new thread: {0}'.format(e))
-
-
-    # Detects various settings for the current host and session
-    def __detect_host_params(self):
-        self.__is_guest = False
-        self.__is_fatclient = False
-        self.__is_webkiosk = False
-
-        # Detect guest user sessions
-        if 'GUEST_SESSION' in environ:
-            logger.info('This is a guest user session.')
-            self.__is_guest = True
-
-        # Detect fatclients
-        device_type = puavo_conf('puavo.hosttype', 'laptop')
-
-        if device_type == 'fatclient':
-            logger.info('This is a fatclient device')
-            self.__is_fatclient = True
-
-        # Detect webkiosk sessions. I don't know if this actually works!
-        if puavo_conf('puavo.webmenu.webkiosk', '') == 'true':
-            logger.info('This is a webkiosk session')
-            self.__is_webkiosk = True
 
 
     # Digs up values for expanding variables in button arguments
@@ -343,10 +312,10 @@ class Sidebar:
     def __create_avatar(self):
         self.__must_download_avatar = True
 
-        default_avatar = path_join(self.__res_dir, 'default_avatar.png')
-        existing_avatar = path_join(self.__user_dir, 'avatar.jpg')
+        default_avatar = path_join(SETTINGS.res_dir, 'default_avatar.png')
+        existing_avatar = path_join(SETTINGS.user_dir, 'avatar.jpg')
 
-        if self.__is_guest or self.__is_webkiosk:
+        if SETTINGS.is_guest or SETTINGS.is_webkiosk:
             # Always use the default avatar for guests and webkiosk sessions
             logger.info('Not loading avatar for a guest/webkiosk session')
             avatar_image = default_avatar
@@ -361,20 +330,19 @@ class Sidebar:
                         'downloaded avatar available, using the default image')
             avatar_image = default_avatar
 
-        if self.__is_guest or self.__is_webkiosk:
+        if SETTINGS.is_guest or SETTINGS.is_webkiosk:
             avatar_tooltip = None
         else:
             avatar_tooltip = localize(STRINGS['sb_avatar_hover'],
-                                      self.__language)
+                                      SETTINGS.language)
 
         self.__avatar = AvatarButton(self,
                                      getuser(),
                                      avatar_image,
-                                     avatar_tooltip,
-                                     dark=self.__dark)
+                                     avatar_tooltip)
 
         # No profile editing for guest users
-        if self.__is_guest or self.__is_webkiosk:
+        if SETTINGS.is_guest or SETTINGS.is_webkiosk:
             logger.info('Disabling the avatar button for guest user')
             self.__avatar.disable()
         else:
@@ -398,24 +366,24 @@ class Sidebar:
         # Since Python won't let you modify arguments (no pass-by-reference),
         # each of these returns the next Y position. X coordinates are fixed.
 
-        if not (self.__is_guest or self.__is_webkiosk):
+        if not (SETTINGS.is_guest or SETTINGS.is_webkiosk):
             y = self.__create_button(y, SB_CHANGE_PASSWORD)
 
         y = self.__create_button(y, SB_SUPPORT)
         y = self.__create_button(y, SB_SYSTEM_SETTINGS)
         y = self.__create_separator(y)
 
-        if not (self.__is_guest or self.__is_webkiosk):
+        if not (SETTINGS.is_guest or SETTINGS.is_webkiosk):
             y = self.__create_button(y, SB_LOCK_SCREEN)
 
-        if not (self.__is_fatclient or self.__is_webkiosk):
+        if not (SETTINGS.is_fatclient or SETTINGS.is_webkiosk):
             y = self.__create_button(y, SB_SLEEP_MODE)
 
         y = self.__create_button(y, SB_LOGOUT)
         y = self.__create_separator(y)
         y = self.__create_button(y, SB_RESTART)
 
-        if not self.__is_webkiosk:
+        if not SETTINGS.is_webkiosk:
             y = self.__create_button(y, SB_SHUTDOWN)
 
         logger.info('Support page URL: "{0}"'.
@@ -425,11 +393,11 @@ class Sidebar:
     # Creates a sidebar button
     def __create_button(self, y, data):
         button = SidebarButton(self,
-                               localize(data['title'], self.__language),
+                               localize(data['title'], SETTINGS.language),
                                ICONS32.load_icon(data['icon']),
-                               localize(data.get('description', ''), self.__language),
-                               data['command'],
-                               dark=self.__dark)
+                               localize(data.get('description', ''),
+                                        SETTINGS.language),
+                               data['command'])
 
         button.connect('clicked', self.__clicked_sidebar_button)
         button.show()
@@ -480,14 +448,14 @@ class Sidebar:
                    get_file_contents('/etc/puavo-image/release'),
                    get_file_contents('/etc/puavo/hosttype'),
                    get_changelog_url(),
-                   localize(STRINGS['sb_changelog_title'], self.__language)))
+                   localize(STRINGS['sb_changelog_title'], SETTINGS.language)))
 
         hostname_label.show()
         self.container.put(hostname_label, 0, label_top)
 
 
     # Open the user profile editor
-    def __clicked_avatar_button(self, button):
+    def __clicked_avatar_button(self, _):
         print('Clicked the user avatar button')
 
         url = expand_variables('https://$(puavo_domain)/users/profile/edit',
@@ -503,7 +471,7 @@ class Sidebar:
         except Exception as exception:
             logger.error(str(exception))
             self.__parent.error_message(
-                localize(STRINGS['sb_avatar_link_failed'], self.__language),
+                localize(STRINGS['sb_avatar_link_failed'], SETTINGS.language),
                 str(exception))
 
         self.__parent.autohide()

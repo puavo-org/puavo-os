@@ -1,0 +1,163 @@
+#!/bin/sh
+
+set -eu
+
+usage() {
+  cat <<EOF
+$(basename $0) --auto|--manual source-directory
+
+  source-directory must be in format "/*.rofs" or
+  "/var/lib/puavo-conf/sources/*".
+  The output directory under /state will be "/state/*"
+  (where "*" matches the "*" above).
+EOF
+}
+
+mode=${1:-}
+source_directory=${2:-}
+
+if ! [ "$mode" = '--auto' -o "$mode" = '--manual' ]; then
+  usage >&2
+  exit 1
+fi
+
+case "$source_directory" in
+  /*.rofs)
+    state_directory="/state${source_directory%%.rofs}"
+    ;;
+  /var/lib/puavo-conf/sources/*)
+    state_directory="/state${source_directory##/var/lib/puavo-conf/sources}"
+    ;;
+  *)
+    usage >&2
+    exit 1
+    ;;
+esac
+
+state_directory_backup="$(dirname "$state_directory")/.$(basename "$state_directory")_sysmerge_backup_$(date +%s)"
+
+tmp_outputdir="${state_directory}.sysmerge_output"
+
+cleanup() {
+  rm -rf "$tmp_outputdir"
+}
+
+make_the_changes() {
+  echo -n '>> Making changes... '
+
+  # Record the current image configuration file checksums
+  # (not the actual file checksums) so that we can
+  # know later if files have been manually altered from the
+  # current default versions.
+  (cd "$source_directory" && find . -type f -print0 \
+     | xargs -0 sha256sum > "${tmp_outputdir}/.checksums")
+
+  mv "$state_directory" "$state_directory_backup"
+  if ! mv "$tmp_outputdir" "$state_directory"; then
+    mv "$state_directory_backup" "$state_directory"
+    echo FAILED
+    echo "Problem occurred when moving $tmp_outputdir to $state_directory" >&2
+    return 1
+  fi
+
+  echo "DONE, backup in $state_directory_backup"
+}
+
+trap cleanup EXIT
+
+show_diff() {
+  diff --color=always -ruN "$state_directory" "$tmp_outputdir"
+}
+
+rm -rf "${state_directory}.sysmerge_output"
+
+if [ ! -d "$source_directory" ]; then
+  echo ">> Directory ${source_directory} does not exist." >&2
+  exit 1
+fi
+
+mkdir -p "$state_directory"
+rsync -a --delete "${state_directory}/" "${tmp_outputdir}/"
+
+echo ">>> Considering changes to $state_directory..."
+
+# XXX This utility should also check if file has been removed
+# XXX from source_directory... if file was not changed, it can be
+# XXX removed automatically, otherwise manual deletion should be
+# XXX required.
+
+# XXX can IFS be set to \0 ?  Should it be?
+IFS='
+'
+for source_filepath in $(find "$source_directory" -type f | sort); do
+  subpath=${source_filepath##${source_directory}/}
+  output_filepath="${tmp_outputdir}/${subpath}"
+  state_filepath="${state_directory}/${subpath}"
+
+  if [ ! -e "$output_filepath" ]; then
+    echo ">> Copying ${source_filepath} to ${state_filepath}"
+    mkdir -p "$(dirname "$output_filepath")"
+    cp -p "$source_filepath" "$output_filepath"
+    continue
+  fi
+
+  if cmp "$source_filepath" "$output_filepath" >/dev/null 2>&1; then
+    echo ">> No changes to '${state_filepath}'"
+    continue
+  fi
+
+  current_checksum=$(cd "$state_directory" && sha256sum "./${subpath}")
+  checksums_path="${state_directory}/.checksums"
+  if grep -Fqx "$current_checksum" "$checksums_path" 2>/dev/null; then
+    echo ">> Updating '${state_filepath}' (that has no manual changes)."
+    mkdir -p "$(dirname "$output_filepath")"
+    cp -p "$source_filepath" "$output_filepath"
+    continue
+  fi
+
+  if [ "$mode" = '--auto' ]; then
+    echo ">> The file '${state_filepath}' has changes, skipping..."
+    continue
+  fi
+
+  echo ">> Merging (manually) changes to '${state_filepath}'"
+  echo ':::'
+  mkdir -p "$(dirname "$output_filepath")"
+  env LANG=C sdiff -o "$output_filepath" "$state_filepath" "$source_filepath" \
+    || true
+done
+
+if show_diff >/dev/null 2>&1; then
+  echo '>>> No changes were made to configuration files.'
+  exit 0
+fi
+
+if [ "$mode" = '--auto' ]; then
+  make_the_changes
+  exit 0
+fi
+
+while true; do
+  {
+    {
+      echo
+      echo '>>> Here are the changes to the configuration files:'
+      echo
+      show_diff
+      echo
+    } | more
+  } || true
+
+  read -p 'Do you accept the above changes? (yes/no) ? ' answer
+  case "$answer" in
+    [Yy][Ee][Ss])
+      make_the_changes
+      break
+      ;;
+    [Nn][Oo])
+      break
+      ;;
+  esac
+done
+
+exit 0

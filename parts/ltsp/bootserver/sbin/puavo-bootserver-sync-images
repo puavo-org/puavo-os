@@ -1,4 +1,4 @@
-#!/usr/bin/ruby1.9.3
+#!/usr/bin/ruby
 
 ###############################################################################
 #
@@ -28,7 +28,7 @@
 # delete the images/diffs specified there once those are no longer needed.
 #
 # Unmanaged images/diffs are other images and diffs in download paths
-# ("/opt/ltsp/images" and "/opt/ltsp/images/rdiffs" by default).
+# ("/images" and "/images/rdiffs" by default).
 #
 # By default the script handles only the managed images and unmanaged images
 # are left untouched.  The script can be asked to delete unmanaged images with
@@ -564,7 +564,7 @@ class SyncFileWithMetadata < SyncFile
 
         # This can fail and that might be only a temporary error,
         # so ignore errors.
-        self.class.run_syncfile_install_hooks
+        self.class.run_syncfile_install_hooks(3)
 
         @state.state = :inplace
         return true
@@ -624,7 +624,7 @@ class SyncFileWithMetadata < SyncFile
     return false
   end
 
-  def self.run_syncfile_install_hooks
+  def self.run_syncfile_install_hooks(level, timeout='')
     # by default do nothing... (subclasses can override this)
   end
 
@@ -680,7 +680,7 @@ class SyncFileWithMetadata < SyncFile
 
           # This can fail and that might be only a temporary error,
           # so ignore errors.
-          self.class.run_syncfile_install_hooks
+          self.class.run_syncfile_install_hooks(3)
         end
         @state.state = :inplace
       else
@@ -777,24 +777,27 @@ class Image < SyncFileWithMetadata
     return false
   end
 
-  def self.run_syncfile_install_hooks
-    info(5, "Running image install hooks")
+  def self.run_syncfile_install_hooks(level, timeout='')
+    info(level, "Running image install hooks")
 
     all_ok = true
 
     run_command = lambda do |cmd|
-      if system(cmd)
-        info(3, %Q{"#{ cmd }" ran successfully})
+      if system(*cmd)
+        info(level-1, %Q{#{ cmd } ran successfully}, HighLine::GREEN)
       else
         all_ok = false
-        warning(3, %Q{"#{ cmd }" returned error code #{ $?.exitstatus }})
+	warning(level-1,
+		%Q{#{ cmd } returned error code #{ $?.exitstatus }},
+	        HighLine::RED)
       end
     end
 
     # These are needed to run for each image so that those can be used by
     # netboot (diskless) clients.
-    run_command.call('/usr/sbin/puavo-bootserver-generate-nbd-exports')
-    run_command.call('/usr/sbin/puavo-bootserver-update-tftpboot --prune')
+    run_command.call([ '/usr/local/lib/puavo-handle-image-changes',
+		       '',
+		       timeout ])
 
     return all_ok
   end
@@ -872,6 +875,15 @@ class ManagedImages
     @new_by_series = {}
   end
 
+  def system_image?(candidate_path)
+    our_boot_system_images = %w(ltsp.img ltsp-backup.img).map do |s|
+                               "#{ $options[:download_path] }/#{ s }"
+                             end
+    our_boot_system_images.any? do |imgpath|
+      File.identical?(candidate_path, imgpath)
+    end
+  end
+
   def add_syncfile(series_name, syncfile)
     [ @current_by_series, @new_by_series ].each do |by_series|
       by_series[series_name] ||= []
@@ -933,7 +945,11 @@ class ManagedImages
                   .flatten
     new_files = @new_by_series.values.flatten
 
-    files_to_delete = (old_files - new_files).uniq
+    files_to_possibly_delete = (old_files - new_files).uniq
+
+    # do not delete images that we may actually need to boot ourself
+    files_to_delete \
+      = files_to_possibly_delete.reject { |filepath| system_image?(filepath) }
 
     all_deleted_ok = true
 
@@ -969,6 +985,7 @@ class ManagedImages
 
     ask_and_delete = lambda do |path|
       return true if managed_files.include?(path)
+      return true if system_image?(path)
 
       answer = "yes"
       if ask_interactively
@@ -1068,8 +1085,6 @@ module SeriesControl
       info(5, "Given --image option, not removing unused images/diffs")
     elsif options[:keep_unused]
       info(5, "Given --keep-unused option, not removing unused images/diffs")
-    elsif options[:image]
-      info(5, "Given --image option, not removing unused images/diffs")
     elsif options[:no_puavo_series_url_lookup]
       info(5, "Given --no-puavo-series-url-lookup option," \
                 + " not removing unused images/diffs")
@@ -1336,7 +1351,7 @@ BANNER_EOF
     $options[:diff_limit] = Integer(limit)
   end
 
-  $options[:download_path] = "/opt/ltsp/images"
+  $options[:download_path] = '/images'
   opts.on("--download-path PATH") do |path|
     $options[:download_path] = path
   end
@@ -1418,6 +1433,16 @@ at_exit do
   end
 end
 
+# use a common lock with puavo-install-and-update-ltspimages
+# (only one instance of these two programs should be running)
+image_updates_lockfile_path \
+  = "#{ $options[:download_path] }/.image_updates_lock"
+image_updates_lockfile = File.open(image_updates_lockfile_path, 'a+')
+if !image_updates_lockfile.flock(File::LOCK_NB|File::LOCK_EX) then
+ warn "Could not get a lock on #{ image_updates_lockfile_path }"
+ exit(1)
+end
+
 managed_images = nil
 statuscode = 0
 
@@ -1432,7 +1457,7 @@ begin
     statuscode = SeriesControl::sync_all_series(managed_images, $options)
   end
 
-  if !Image.run_syncfile_install_hooks
+  if !Image.run_syncfile_install_hooks(5, '43200')
     statuscode = 1
   end
 
@@ -1444,5 +1469,7 @@ ensure
 end
 
 Syslog.close()
+
+image_updates_lockfile.close
 
 exit(statuscode)

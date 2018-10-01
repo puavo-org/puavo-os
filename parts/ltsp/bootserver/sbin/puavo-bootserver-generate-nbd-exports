@@ -18,7 +18,7 @@ handle_imagefiles()
 
         cat <<EOF > "${tmpconf}"
 [${imagename}]
-    exportname = /opt/ltsp/images/${filename}
+    exportname = /images/${filename}
     readonly = true
 EOF
         mv "${tmpconf}" "${conf}"
@@ -28,14 +28,15 @@ EOF
 # Remove configuration files which export non-existing images.
 find /etc/nbd-server/conf.d -maxdepth 1 -type f -name '*.conf' | while read filepath; do
     imagename=$(basename "${filepath}" .conf)
-    if [ ! -f "/opt/ltsp/images/${imagename}.img" ]; then
-        rm "${filepath}"
+    if [ ! -f "/images/${imagename}.img" ]; then
+        rm -f "${filepath}"
     fi
 done
 
-find /opt/ltsp/images \
-  -maxdepth 1 -name '*.img' '(' -type f -or -type l ')' -printf '%f\n' \
-    | handle_imagefiles
+find /images \
+  -maxdepth 1 -name '*.img' -a ! -name ltsp.img -a ! -name ltsp-backup.img \
+    '(' -type f -or -type l ')' -printf '%f\n' \
+  | handle_imagefiles
 
 # get the listening nbd_server pid, and send HUP to it
 nbd_server_pid=$(lsof -t -u nbd -a -iTCP:10809 -sTCP:LISTEN) || true

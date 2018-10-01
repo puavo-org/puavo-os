@@ -63,8 +63,9 @@ module PuavoBS
     end
   end
 
-  def self.get_school_and_device_ids(hostname)
+  def self.get_school_and_device_ids(admin_username, admin_password, hostname)
     response = HTTP
+      .auth(self.basic_auth(admin_username, admin_password))
       .accept(:json)
       .get(self.get_api_url("/v3/devices/#{hostname}"))
     self.check_response_code(response.code)
@@ -74,8 +75,9 @@ module PuavoBS
     [school_id, device_id]
   end
 
-  def self.get_device_json(hostname)
+  def self.get_device_json(admin_username, admin_password, hostname)
     response = HTTP
+      .auth(self.basic_auth(admin_username, admin_password))
       .accept(:json)
       .get(self.get_api_url("/v3/devices/#{hostname}"))
     self.check_response_code(response.code)
@@ -132,8 +134,8 @@ module PuavoBS
       .accept(:json)
       .post(url, :json => {
               "puavoHostname"   => hostname,
-              "macAddress"      => mac,
-              "puavoTag"        => tags,
+              "macAddress"      => Array(mac),
+              "puavoTag"        => tags.join(" "),
               "puavoDeviceType" => hosttype,
               "classes"         => ["puavoNetbootDevice"]
             })
@@ -142,7 +144,7 @@ module PuavoBS
   end
 
   def self.unregister_device(admin_username, admin_password, hostname)
-    school_id, device_id = self.get_school_and_device_ids(hostname)
+    school_id, device_id = self.get_school_and_device_ids(admin_username, admin_password, hostname)
     url = self.get_puavo_url("/devices/#{school_id}/devices/#{device_id}.xml")
     response = HTTP
       .auth(self.basic_auth(admin_username, admin_password))
@@ -173,7 +175,7 @@ module PuavoBS
       "user[givenName]"                 => "test",
       "user[sn]"                        => "user",
       "user[uid]"                       => testuser_username,
-      "user[puavoEduPersonAffiliation]" => "testuser",
+      "user[puavoEduPersonAffiliation][]" => "testuser",
       "user[new_password]"              => testuser_password,
       "user[new_password_confirmation]" => testuser_password,
     }
@@ -190,6 +192,7 @@ module PuavoBS
     url = self.get_puavo_url("/users/#{school_id}/users")
     response = HTTP
       .auth(self.basic_auth(admin_username, admin_password))
+      .accept(:json)
       .post(url, :form => formdata)
     self.check_response_code(response.code)
     [testuser_username, testuser_password]
@@ -263,9 +266,7 @@ module PuavoBS
       <target type='serial' port='0'/>
     </console>
     <video>
-      <model type='vga' vram='8192' heads='1'>
-        <acceleration accel3d='no' accel2d='yes'/>
-      </model>
+      <model type='vga' vram='8192' heads='1'/>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x0'/>
     </video>
     <memballoon model='virtio'>

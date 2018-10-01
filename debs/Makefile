@@ -1,9 +1,10 @@
 # a newer version of unicode-data is a dependency for wine
 _pkgs_builddeps := unicode-data
 
-# parts & ports packages go into puavo-os images
+# parts, ports and some cloud packages go into puavo-os images
 
-_pkgs_parts     := puavo-os
+_pkgs_parts     := puavo-ds \
+                   puavo-os
 _pkgs_ports     := autopoweroff    \
                    fluentd         \
                    gnome-shell     \
@@ -13,13 +14,12 @@ _pkgs_ports     := autopoweroff    \
                    mutter          \
                    nwjs            \
                    openboard       \
+                   openldap        \
                    visionmedia-mon \
                    vtun            \
                    wine            \
                    wpa
 _pkgs_image     := $(_pkgs_builddeps) $(_pkgs_parts) $(_pkgs_ports)
-
-# cloud packages do NOT go into puavo-os images
 _pkgs_cloud     := krb5 openldap puavo-ds
 
 _dpkg_buildpackage_builddeps := $(_pkgs_builddeps:%=.dpkg-buildpackage-%)

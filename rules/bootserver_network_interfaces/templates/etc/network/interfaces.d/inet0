@@ -1,0 +1,12 @@
+# XXX static is preferred, but you need to fill these in.
+# XXX Remove the "auto inet0 / iface inet0 inet dhcp" below
+# XXX once this is done (or remove these lines if dhcp is good.)
+# auto inet0
+# iface inet0 inet static
+#       address XXX.XXX.XXX.XXX
+#       netmask XXX.XXX.XXX.XXX
+#       gateway XXX.XXX.XXX.XXX
+#       dns-nameservers XXX.XXX.XXX.XXX XXX.XXX.XXX.XXX
+
+auto inet0
+iface inet0 inet dhcp

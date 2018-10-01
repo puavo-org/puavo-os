@@ -4,9 +4,10 @@
 
 from os import environ
 from os.path import join as path_join
-from sys import exit
 from time import clock
 import argparse
+
+from settings import SETTINGS
 
 
 # Some kind of a help text
@@ -112,51 +113,56 @@ else:
 logger.start_banner()
 logger.info('This is PuavoMenu v0.6 (c) Opinsys Oy 2017-2018')
 
-params = {}
-params['res_dir'] = path_join(args.res_dir, '')
-params['menu_dir'] = path_join(args.menu_dir, '')
-params['user_dir'] = path_join(args.user_dir, '')
-params['socket'] = args.socket
-params['dev_mode'] = args.dev
-params['autohide'] = args.autohide
-params['lang'] = args.lang
+SETTINGS.res_dir = path_join(args.res_dir, '')
+SETTINGS.menu_dir = path_join(args.menu_dir, '')
+SETTINGS.user_dir = path_join(args.user_dir, '')
+SETTINGS.language = args.lang
+SETTINGS.socket = args.socket
+SETTINGS.dev_mode = args.dev
+SETTINGS.autohide = args.autohide
 
-if params['lang'] is None:
+if SETTINGS.language is None:
     if 'LANG' in environ:
-        params['lang'] = environ['LANG'][0:2].lower()
-    elif 'GDM_LANG' in os.environ:
-        params['lang'] = environ['GDM_LANG'][0:2].lower()
+        SETTINGS.language = environ['LANG'][0:2].lower()
+    elif 'GDM_LANG' in environ:
+        SETTINGS.language = environ['GDM_LANG'][0:2].lower()
 
-if not params['lang'] in ('en', 'fi', 'sv', 'de'):
+if SETTINGS.language not in ('en', 'fi', 'sv', 'de'):
     logger.error('Invalid language code "{0}", defaulting to "en"'.
-                 format(params['lang']))
-    params['lang'] = 'en'
+                 format(SETTINGS.language))
+    SETTINGS.language = 'en'
 
-logger.info('Resource directory.: "{0}"'.format(params['res_dir']))
-logger.info('Menu data directory: "{0}"'.format(params['menu_dir']))
-logger.info('User directory.....: "{0}"'.format(params['user_dir']))
-logger.info('IPC socket name....: "{0}"'.format(params['socket']))
-logger.info('Language code......: "{0}"'.format(params['lang']))
+logger.info('Resource directory.: "{0}"'.format(SETTINGS.res_dir))
+logger.info('Menu data directory: "{0}"'.format(SETTINGS.menu_dir))
+logger.info('User directory.....: "{0}"'.format(SETTINGS.user_dir))
+logger.info('IPC socket name....: "{0}"'.format(SETTINGS.socket))
+logger.info('Language code......: "{0}"'.format(SETTINGS.language))
 
 if args.log:
     logger.info('Log (this) file....: "' + args.log + '"')
 
-if args.dev:
+# Detect the non-configurable settings
+SETTINGS.detect_environment()
+
+logger.info('Desktop directory..: "{0}"'.format(SETTINGS.desktop_dir))
+
+if SETTINGS.dev_mode:
     logger.info('*** Development mode activated ***')
 
-if params['autohide']:
+if SETTINGS.autohide:
     logger.info('*** Autohide enabled ***')
 
 logger.info('=' * 50)
 
 # And go!
-import_start = clock()
-
 try:
+    import_start = clock()
     from main import run
     import_end = clock()
+
     logger.print_time('Main import time', import_start, import_end)
-    run(params)
+
+    run()
 except Exception as e:
     # This is bad. Very bad.
     logger.error(e)
@@ -164,7 +170,7 @@ except Exception as e:
     import syslog
     syslog.syslog(syslog.LOG_CRIT, str(e))
 
-# Exit
+# Clean exit
 logger.info('=' * 50)
 logger.info('Shutdown complete')
 logger.end_banner()

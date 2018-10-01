@@ -17,9 +17,7 @@ installdirs:
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ds-slave
-	mkdir -p $(DESTDIR)$(templatedir)/etc/default
 	mkdir -p $(DESTDIR)$(templatedir)/etc/init
-	mkdir -p $(DESTDIR)$(templatedir)/etc/init.d
 	mkdir -p $(DESTDIR)/etc/bash_completion.d
 
 .PHONY : bin/puavo-ds-installdirs
@@ -35,17 +33,7 @@ install: bin/puavo-ds-installdirs installdirs
 		puavo-init-kdc-slave
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ds-slave \
-		init_ldap_slave.ldif.erb \
-		krb5.conf.erb \
-		kdc.conf.erb
-
-	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/etc/default \
-		templates/etc/default/krb5-kdc \
-		templates/etc/default/slapd
-
-	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/etc/init.d \
-		templates/etc/init.d/krb5-kdc \
-		templates/etc/init.d/slapd
+		init_ldap_slave.ldif.erb
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
                 bin/*

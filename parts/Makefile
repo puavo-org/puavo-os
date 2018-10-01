@@ -10,12 +10,13 @@ subdirs         := admins                     \
                    hw-log                     \
                    hw-tools                   \
                    iivari                     \
+                   logrelay                   \
                    ltsp                       \
-                   opinsys-ca-certificates    \
                    pam                        \
                    pkg                        \
                    puavomenu                  \
                    sharedir                   \
+                   tftp                       \
                    vpn                        \
                    webkiosk-language-selector \
                    webmenu                    \

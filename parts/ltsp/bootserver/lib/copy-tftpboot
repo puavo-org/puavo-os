@@ -126,6 +126,12 @@ if [ "${image_filepath_mtime}" -lt "${image_boot_dir_mtime}" \
 fi
 
 mount_point=$(mktemp -d)
-mount -oloop,ro "${image_filepath}" "${mount_point}"
-cp -r -T "${mount_point}/boot" "${image_boot_dir}"
-chmod -R +r "${image_boot_dir}"
+
+mount -o loop,ro "$image_filepath" "$mount_point"
+
+rm -rf "${image_boot_dir}.tmp"
+cp -RT "${mount_point}/boot" "${image_boot_dir}.tmp"
+chmod -R +r "${image_boot_dir}.tmp"
+
+rm -rf "$image_boot_dir"
+mv -T "${image_boot_dir}.tmp" "$image_boot_dir"

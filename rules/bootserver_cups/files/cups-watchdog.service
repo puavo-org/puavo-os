@@ -1,0 +1,9 @@
+[Unit]
+Description=CUPS Watchdog
+After=cups.service
+
+[Service]
+ExecStart=/usr/local/lib/cups-watchdog
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,29 @@
+#!/bin/sh
+
+set -eu
+
+mode=${1:---manual}
+
+puavo_hosttype=$(puavo-conf puavo.hosttype)
+
+status=0
+
+sourcedirlist=''
+if [ "$puavo_hosttype" = 'bootserver' ]; then
+  sourcedirlist='
+    /etc/network/interfaces.d.rofs
+    /etc/shorewall.rofs
+  '
+fi
+
+done_first=false
+for sourcedir in $sourcedirlist; do
+  if ! $done_first; then done_first=true; else echo; fi
+  puavo-sysmerge-onedir "$mode" "$sourcedir" || status=1
+done
+
+if [ "$status" -ne 0 ]; then
+  echo 'There were errors!' >&2
+fi
+
+exit $status

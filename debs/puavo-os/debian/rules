@@ -63,6 +63,10 @@ override_dh_auto_install:
 		install prefix=/usr sysconfdir=/etc \
 		DESTDIR=$(CURDIR)/debian/iivari-client
 
+	$(MAKE) -C logrelay				        \
+		install prefix=/usr sysconfdir=/etc		\
+		DESTDIR=$(CURDIR)/debian/puavo-logrelay
+
 	$(MAKE) -C ltsp/bootserver			\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-ltsp-bootserver
@@ -78,10 +82,6 @@ override_dh_auto_install:
 	$(MAKE) -C ltsp/ruby-puavobs			\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/ruby-puavobs
-
-	$(MAKE) -C opinsys-ca-certificates			\
-		install prefix=/usr sysconfdir=/etc		\
-		DESTDIR=$(CURDIR)/debian/opinsys-ca-certificates
 
 	$(MAKE) -C pam					\
 		install prefix=/usr sysconfdir=/etc		\
@@ -102,6 +102,14 @@ override_dh_auto_install:
 	$(MAKE) -C sharedir/manager			\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-sharedir-manager
+
+	$(MAKE) -C tftp				                \
+		install prefix=/usr sysconfdir=/etc		\
+		DESTDIR=$(CURDIR)/debian/puavo-tftpd
+
+	$(MAKE) -C tftp/hooks					\
+		install prefix=/usr sysconfdir=/etc		\
+		DESTDIR=$(CURDIR)/debian/puavo-tftpd-hooks
 
 	$(MAKE) -C vpn/client				\
 		install prefix=/usr sysconfdir=/etc		\

@@ -25,7 +25,6 @@ install-dirs:
 	mkdir -p $(DESTDIR)$(sbindir)
 
 install: install-dirs
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) bin/puavo-lts
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) bin/puavo-register
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) bin/puavo-sync-external-files
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) bin/puavo-sync-printers

@@ -13,7 +13,7 @@ session	required			pam_permit.so
 # See "man pam_umask".
 session optional			pam_umask.so
 # and here are more per-package modules (the "Additional" block)
-session	required	pam_unix.so 
-session	optional					pam_krb5.so 
+session	required	pam_unix.so
+session	optional					pam_krb5.so
 session	optional			pam_ck_connector.so nox11
 # end of pam-auth-update config

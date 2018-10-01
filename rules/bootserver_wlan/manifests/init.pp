@@ -4,11 +4,10 @@ class bootserver_wlan {
   file {
     '/etc/puavo-wlangw/vtund.conf':
       content => template('bootserver_wlan/vtund.conf'),
-      notify  => Service['puavo-wlangw'],
       require => Package['puavo-wlangw'];
 
     '/usr/sbin/puavo-wlangw-vtun-up':
-      mode    => 755,
+      mode    => '0755',
       content => template('bootserver_wlan/puavo-wlangw-vtun-up'),
       require => Package['puavo-wlangw'];
   }
@@ -17,10 +16,4 @@ class bootserver_wlan {
     'puavo-wlangw':
       ensure => present;
   }
-
-  service {
-    'puavo-wlangw':
-      ensure => running;
-  }
-
 }

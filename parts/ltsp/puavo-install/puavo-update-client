@@ -19,8 +19,11 @@ usage_error() {
 
 hosttype=$(puavo-conf puavo.hosttype)
 
-if [ "$hosttype" != "laptop" -a "$hosttype" != "wirelessaccesspoint" ]; then
-  msg='this script should be run only for laptops and wirelessaccesspoints'
+if [    "$hosttype" != 'bootserver' \
+     -a "$hosttype" != 'laptop'     \
+     -a "$hosttype" != 'wirelessaccesspoint' ]; then
+  msg='this script should be run only for bootserver, laptops' \
+  msg="${msg} and wirelessaccesspoints"
   log err "$msg"
   exit 1
 fi

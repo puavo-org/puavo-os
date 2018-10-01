@@ -30,6 +30,9 @@ do_umounts() {
 
 status=0
 
+# clean up possibly previously left mounts
+do_umounts 2>/dev/null || true
+
 if ! do_mounts; then
   do_umounts || true
   exit 1

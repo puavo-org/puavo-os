@@ -14,7 +14,7 @@ case "$puavo_hosttype" in
     puavo-sync-external-files
     puavo-handle-external-files-actions
     ;;
-  laptop|wirelessaccesspoint)
+  bootserver|laptop|wirelessaccesspoint)
     # Do not do updates when booting from network.
     test -e /run/puavo/nbd-server && exit 0
 

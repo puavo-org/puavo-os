@@ -42,6 +42,11 @@ STRINGS = {
         'fi': 'Paneelin kuvaketta ei voitu luoda',
     },
 
+    'program_launching_failed': {
+        'en': 'Could not launch a program',
+        'fi': 'Ohjelmaa ei voitu käynnistää',
+    },
+
     # --------------------------------------------------------------------------
     # Sidebar
 

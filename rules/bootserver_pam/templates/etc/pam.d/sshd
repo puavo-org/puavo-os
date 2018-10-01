@@ -4,13 +4,13 @@
 auth    [success=1 default=ignore]      pam_unix.so nullok_secure
 auth    requisite                       pam_deny.so
 auth    required                        pam_permit.so
-auth    optional                        pam_cap.so 
+auth    optional                        pam_cap.so
 
 account [success=2 new_authtok_reqd=done default=ignore]        pam_exec.so quiet /usr/lib/puavoadmins-validate-pam-user
-account [success=1 new_authtok_reqd=done default=ignore]        pam_unix.so 
+account [success=1 new_authtok_reqd=done default=ignore]        pam_unix.so
 account requisite                       pam_deny.so
 account required                        pam_permit.so
-account sufficient                      pam_localuser.so 
+account sufficient                      pam_localuser.so
 
 session required                        pam_permit.so
 
@@ -21,7 +21,7 @@ session required                        pam_permit.so
 
 session optional                        pam_umask.so
 
-session required                        pam_unix.so 
+session required                        pam_unix.so
 session optional                        pam_ck_connector.so nox11
 
 # Print the message of the day upon successful login.

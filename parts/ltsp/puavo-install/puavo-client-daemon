@@ -8,6 +8,7 @@ require 'dbus'
 require 'fileutils'
 require 'json'
 require 'open3'
+require 'puavo/etc'
 require 'puavo/rest-client'
 require 'socket'
 require 'syslog'
@@ -27,6 +28,8 @@ $configuration_update_thread  = nil
 $delete_image_overlays_thread = nil
 $image_update_thread          = nil
 $puavopkg_upgrade_thread      = nil
+
+$puavoetc = PuavoEtc.new
 
 class CancelledUpdate < RuntimeError; end
 
@@ -368,7 +371,9 @@ class Updater < DBus::Object
       # better chances of finding the right server when not using DNS.
       client = PuavoRestClient.new(:auth => :etc, :dns => :no)
 
-      restpath = "/v3/devices/#{ Socket.gethostname }"
+      restpath = ($puavoetc.hosttype == 'bootserver')            \
+                    ? "/v3/boot_servers/#{ Socket.gethostname }" \
+                    : "/v3/devices/#{ Socket.gethostname }"
       senddata = {
         'available_images' => available_images,
         'current_image'    => current_image,

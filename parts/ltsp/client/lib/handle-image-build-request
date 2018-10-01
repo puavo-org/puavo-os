@@ -53,7 +53,7 @@ cmd = [
   '--images-config',      '/usr/share/opinsys-rules/rules/images.json' ,
   '--images-config',      '/usr/share/puavo-rules/rules/images.json',
   '--mount-device',       conf['nfs-mount-device'],
-  '--mount-dir',          '/opt/ltsp/images',
+  '--mount-dir',          '/images',
   '--use-tmpfs',
   '--',
   '--apt-proxy',               'no',
@@ -61,7 +61,7 @@ cmd = [
   '--chroot-configure-script', '/usr/lib/puavo-rules/puavo-configure-chroot',
   '--extra-packages-dir',      conf['extra-packages-dir'],
   '--image-configure-script',  '/usr/lib/puavo-rules/puavo-configure-image',
-  '--images-dir',              '/opt/ltsp/images',
+  '--images-dir',              '/images',
   '--mirror',                  conf['mirror'],
   '--buildrule-dirs',
      '/usr/share/puavo-rules/rules,/usr/share/opinsys-rules/rules' ]

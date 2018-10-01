@@ -73,16 +73,40 @@ status=0
 chgrp puavo /state/etc/puavo/ldap/password || status=1
 cp -aT /state/etc/puavo /etc/puavo         || status=1
 
-statedirlist='
-  /etc/NetworkManager/system-connections
-  /var/cache/ccreds
-  /var/lib/AccountsService
-  /var/lib/extrausers
-  /var/lib/logrotate
-  /var/lib/puavo-desktop
-  /var/log
-  /var/spool/anacron
-'
+case "$(puavo-conf puavo.hosttype)" in
+  bootserver)
+    statedirlist='
+      /etc/ldap/slapd.d
+      /etc/nbd-server/conf.d
+      /etc/network/interfaces.d
+      /etc/shorewall
+      /var/lib/bind
+      /var/lib/krb5kdc
+      /var/lib/ldap
+      /var/lib/logrotate
+      /var/lib/munin
+      /var/lib/nfs
+      /var/lib/puavo
+      /var/lib/samba
+      /var/lib/shorewall
+      /var/lib/tftpboot/ltsp
+      /var/log
+      /var/spool/anacron
+    '
+    ;;
+  laptop)
+    statedirlist='
+      /etc/NetworkManager/system-connections
+      /var/cache/ccreds
+      /var/lib/AccountsService
+      /var/lib/extrausers
+      /var/lib/logrotate
+      /var/lib/puavo-desktop
+      /var/log
+      /var/spool/anacron
+    '
+    ;;
+esac
 
 for statedir in $statedirlist; do
   puavo_link_to_state "$statedir" || status=1

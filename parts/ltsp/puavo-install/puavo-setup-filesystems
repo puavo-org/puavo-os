@@ -37,6 +37,14 @@ end
 
 module DiskHandler
   Filesystems = {
+    'bootserver' => {
+      'swap'          => { 'size' => '16G',      'type' => 'swap' },
+      'tmp'           => { 'size' => '16G',      'type' => 'ext4' },
+      'images'        => { 'size' => '128G',     'type' => 'ext4' },
+      'state'         => { 'size' => '32G',      'type' => 'ext4' },
+      'imageoverlays' => { 'size' => '5G',       'type' => 'ext4' },
+      'home'          => { 'size' => '100%FREE', 'type' => 'ext4' },
+    },
     'diskinstaller' => {
       'installimages' => { 'size' => '100%FREE', 'type' => 'ext4' },
     },
@@ -95,18 +103,139 @@ module DiskHandler
       rescue true
   end
 
+  def self.maybe_wipe_current_raid_setups()
+    md_device_list \
+      = begin
+          IO.readlines('/proc/mdstat').map do |line|
+            first_field = line.split[0]
+            first_field && first_field.match(/\Amd[0-9]+\z/) \
+              ? first_field \
+              : nil
+          end.compact
+        rescue Errno::ENOENT
+          return
+        end
+
+    return unless md_device_list.count > 0
+
+    raise 'System has more than one raid setup, not daring to touch those.' \
+      unless md_device_list.count == 1
+
+    md_device_path = "/dev/#{ md_device_list.first }"
+
+    raid_disk_partitions = []
+    IO.popen([ 'mdadm', '--detail', md_device_path ]) do |f|
+      f.readlines.each do |line|
+        fields = line.split
+        next unless (0..2).all? do |i|
+          fields[i] && fields[i].match(/\A[0-9]+\z/)
+        end
+        fields.each do |s|
+          raid_disk_partitions << s if s.match(/^\/dev/)
+        end
+      end
+    end
+    raise 'error running mdadm --detail' unless $?.success?
+
+    # these may not exist and operations may fail, but we must try anyway
+    # in case these reserve the raid devices
+    system('swapoff', '-a', :err => File::NULL)
+    Dir.glob('/dev/puavo/*') do |puavofsdev|
+      system('lvremove', '-f', puavofsdev, :err => File::NULL)
+    end
+    system('vgremove', '-f', 'puavo', :err => File::NULL)
+
+    # these should not fail
+    run('mdadm', '--stop', md_device_path)
+    raid_disk_partitions.each do |raid_partition|
+      run('mdadm', '--zero-superblock', '--force', raid_partition)
+    end
+    run('mdadm', '--remove', md_device_path)
+  end
+
+  def self.setup_raid_if_possible()
+    disks_for_mirroring = nil
+
+    loop do
+      disks_for_mirroring = QueryDiskInfo::list_disks_for_mirroring()
+      break if disks_for_mirroring
+      puts "\nYou are doing a bootserver installation but there are no\n" \
+              + "two or more identically sized disks available for\n"    \
+              + "setting up mirroring raid configuration.\n"
+      msg = 'Install without raid mirroring? (type "yes" if this is okay)'
+      answer = UI::ask_with_default(msg, 'no')
+      return false if answer == 'yes'
+    end
+
+    devicepaths_for_mirroring = disks_for_mirroring.map { |d| "/dev/#{ d }" }
+
+    loop do
+      puts "\nThe following disks can be used for mirroring RAID:\n"
+      QueryDiskInfo::show_disk_devices(disks_for_mirroring)
+      msg = "\nUse #{ disks_for_mirroring.join('+') }" \
+              + " in mirroring RAID setup?\n" \
+              + '(type "yes" to destroy data and setup RAID, "no" otherwise) '
+
+      answer = HighLine.ask(msg) { |q| q.whitespace = nil }
+      case answer.strip
+        when 'yes'
+          break
+        when 'no'
+          puts 'NOT setting up RAID now.'
+          return false
+        else
+          puts 'Please answer "yes" or "no".'
+      end
+    end
+
+    maybe_wipe_current_raid_setups()
+
+    devicepaths_for_mirroring.each do |diskdev|
+      raid_partition(diskdev)
+    end
+
+    spare_args = (disks_for_mirroring.count > 2) \
+                   ? [ "--spare-devices=#{ disks_for_mirroring.count - 2 }" ] \
+                   : []
+
+    run('mdadm', '--create',
+                 '--run',
+                 '--verbose',
+                 '/dev/md0',
+                 '--level=mirror',
+                 '--raid-devices=2',
+                 *spare_args,
+                 *(devicepaths_for_mirroring.map { |dev| "#{ dev }2" }))
+
+    puts ''
+
+    return true
+  end
+
+  def self.raid_partition(device)
+    # clean up possible confusing mess from the device
+    run('dd', 'if=/dev/zero', "of=#{ device }", 'count=2K',
+        { :err => '/dev/null' })
+
+    # create a raid partition (using GPT)
+    IO.popen([ 'gdisk', device ], 'w') do |f|
+      f.print "2\no\ny\nn\n1\n\n+2M\nef02\nn\n2\n\n\nfd00\nw\ny\n"
+    end
+  end
+
   def self.do_fs_setup(conf, vgname)
     fs_conf = conf.clone
 
     fs_setup_phases = []
 
-    if fs_conf['partition'] == 'whole'
+    if fs_conf['partition'] == 'whole' then
       fs_setup_phases += [ :wipe_device ] if conf['wipe']
       fs_setup_phases += [ :lvm_partition, :puavo_filesystems ]
-      if fs_conf['device'].match(%r{\A(mmcblk|nvme)[0-9]+n[0-9]+\z}) then
-        fs_conf['partition'] = "#{ fs_conf['device'] }p1"
+      special_disk_regexp = %r{\A((md|mmcblk)[0-9]+|nvme[0-9]+n[0-9]+)\z}
+      if fs_conf['device'].match(special_disk_regexp) then
+        fs_conf['partition'] = "#{ fs_conf['device'] }p2"
       else
-        fs_conf['partition'] = "#{ fs_conf['device'] }1"
+        fs_conf['partition'] = "#{ fs_conf['device'] }2"
       end
     else
       fs_setup_phases += [ :wipe_partition ] if conf['wipe']
@@ -135,10 +264,9 @@ module DiskHandler
     run('dd', 'if=/dev/zero', "of=#{ fs_conf['device'] }", 'count=2K',
         { :err => '/dev/null' })
 
-    # create an lvm partition
-    # see http://www.walkernews.net/2007/07/02/how-to-create-linux-lvm-in-3-minutes/
-    IO.popen("fdisk #{ fs_conf['device'] }", 'w') do |f|
-      f.print "n\np\n1\n#{ fs_conf['first_sector'] }\n#{ fs_conf['last_sector'] }\nt\n8e\na\n1\np\nw\n"
+    # create an LVM partition (using GPT)
+    IO.popen([ 'gdisk', fs_conf['device'] ], 'w') do |f|
+      f.print "2\no\ny\nn\n1\n\n+2M\nef02\nn\n2\n\n\n8e00\nw\ny\n"
     end
   end
 
@@ -203,6 +331,28 @@ module DiskHandler
 end
 
 module QueryDiskInfo
+  # possible choices here should sort so that "md0" is the first if it exists
+  Disk_device_regexp = /\A((md|mmcblk)[0-9]+|nvme[0-9]+n[0-9]+|[sv]d[a-z])\z/
+
+  def self.list_disks_for_mirroring()
+    # return a list of devices if there are multiple disks with the same size,
+    # otherwise return nil
+
+    devices_by_size = {}
+    IO.readlines('/proc/partitions').each do |line|
+      disk_size, disk_name = * line.split(' ')[2,3]
+      next unless disk_size && disk_name
+      next unless disk_name.match(Disk_device_regexp)
+      next if disk_name.match(/\Amd[0-9]+\z/)       # no raid devices
+      (devices_by_size[disk_size.to_i] ||= []) << "#{ disk_name }"
+    end
+
+    biggest_common_disksize = devices_by_size.keys.sort.last
+    return nil unless biggest_common_disksize
+    return nil unless devices_by_size[biggest_common_disksize].count > 1
+    return devices_by_size[biggest_common_disksize].sort
+  end
+
   def self.ask_device()
     choosable_disk_devices = []
 
@@ -216,13 +366,13 @@ module QueryDiskInfo
       STDERR.puts msg
     end
 
-    disk_device_regexp = /\A([vs]d[a-z]|mmcblk[0-9]+|nvme[0-9]+n[0-9]+)\z/
-
     chosen_disk_device = nil
     until choosable_disk_devices.include?(chosen_disk_device) do
+      # these should sort here so that "md0" is the first if it exists
       all_disk_devices = IO.readlines('/proc/partitions') \
                            .map { |s| s.split(' ')[3] }   \
-                           .select { |s| s && s.match(disk_device_regexp) }
+                           .select { |s| s && s.match(Disk_device_regexp) } \
+                           .sort
 
       # do not allow installation to the device where the currently running
       # system resides
@@ -237,7 +387,7 @@ module QueryDiskInfo
       puts "We can install to the following disk devices:\n"
       show_disk_devices(choosable_disk_devices)
 
-      if chosen_disk_device.nil?
+      if chosen_disk_device.nil? then
         chosen_disk_device = choosable_disk_devices[0]
       end
 
@@ -265,49 +415,25 @@ module QueryDiskInfo
     UI::ask_with_default(prompt, 'no', UI::ConfirmPartitionsPrompt) == 'yes'
   end
 
-  def self.ask_last_sector(device, first_sector)
-    device_basename = File.basename(device)
-    sectors = File.read("/sys/block/#{device_basename}/size").strip().to_i()
-    sector_bytes = File.read("/sys/block/#{device_basename}/queue/logical_block_size").strip().to_i()
-
-    while true do
-      tailroom_size =
-        UI::ask_size_with_default('How much unpartitioned space '\
-                                  'should be left to the end of '\
-                                  'the device:', '0G', UI::UnpartitionedSpacePrompt)
-      tailroom_bytes = Size::to_bytes(tailroom_size)
-      tailroom_sectors = tailroom_bytes / sector_bytes
-      if tailroom_sectors > sectors - first_sector
-        UI::colormsg("The size of the tailroom exceeds the size of the device.",
-                     HighLine::RED)
-        next
-      end
-
-      last_sector = sectors - tailroom_sectors - 1
-      break
-
-    end
-    last_sector
-  end
-
-  def self.ask_device_and_partition_with_confirmation(hosttype)
-    do_it        = false
-    device       = nil
-    partition    = nil
-    first_sector = nil
-    last_sector  = nil
-    wipe         = false
+  def self.ask_device_and_partition_with_confirmation(hosttype, raid_setup_done)
+    do_it     = false
+    device    = nil
+    partition = nil
+    wipe      = false
 
     until do_it do
-      device    = QueryDiskInfo::ask_device()
-      partition = QueryDiskInfo::ask_partition(device)
-      if partition == 'whole'
-        first_sector = 2048
-        last_sector  = QueryDiskInfo::ask_last_sector(device, first_sector)
+      if raid_setup_done then
+        device    = 'md0'
+        partition = 'whole'
+      else
+        device    = QueryDiskInfo::ask_device()
+        partition = QueryDiskInfo::ask_partition(device)
+      end
 
+      if partition == 'whole'
         # Let the user set the size of the following filesystems:
         [
-         ['imageoverlays', UI::ImageoverlaySizePrompt],
+          ['imageoverlays', UI::ImageoverlaySizePrompt],
         ].each do |fs_name, prompt_key|
           fs = DiskHandler::Filesystems[hosttype][fs_name]
           next if fs.nil?
@@ -338,12 +464,10 @@ module QueryDiskInfo
     end
 
     {
-      'device'       => device,
-      'first_sector' => first_sector,
-      'hosttype'     => hosttype,
-      'last_sector'  => last_sector,
-      'partition'    => partition,
-      'wipe'         => wipe,
+      'device'    => device,
+      'hosttype'  => hosttype,
+      'partition' => partition,
+      'wipe'      => wipe,
     }
   end
 
@@ -352,8 +476,8 @@ module QueryDiskInfo
 
     chosen_partition = 'whole'
     until partitions.include?(chosen_partition) do
-      if chosen_partition == 'fdisk'
-        system('fdisk', "/dev/#{ disk_device }")
+      if chosen_partition == 'gdisk'
+        system('gdisk', "/dev/#{ disk_device }")
         chosen_partition = 'whole'
       end
 
@@ -371,7 +495,7 @@ module QueryDiskInfo
               .select { |part| part.match(partition_regexp) }
 
       puts "\nPossible partitions are: #{ partitions.join(' ') }"
-      puts "\nYou may choose 'fdisk' to partition this disk,"
+      puts "\nYou may choose 'gdisk' to partition this disk,"
       puts "or choose 'whole' to use the whole disk.\n"
       chosen_partition = UI::ask_with_default('Choose a partition:',
                                               chosen_partition,
@@ -420,8 +544,10 @@ module QueryDiskInfo
 
   def self.show_disk_devices(disk_devices)
     sleep(1.5)
+
     disk_devices.each do |device|
-      system("fdisk -l /dev/#{ device } | more") \
+      print "\n[#{ device }]\n"
+      system("fdisk -l /dev/#{ device } | sed 's/^/  /' | more") \
         or raise "Error running fdisk for device '#{ device }'"
     end
   end
@@ -565,14 +691,25 @@ end
 UI::parse_args
 
 hosttype = UI::hosttype || PuavoFacts::get('puavo_hosttype')
+unless DiskHandler::Filesystems[hosttype] then
+  warn "No filesystem scheme defined for hosttype '#{ hosttype }'," \
+         + ' try --hosttype'
+  exit(1)
+end
 
 vgname = (hosttype == 'diskinstaller') ? 'puavoinstaller' : 'puavo'
 
 DiskHandler::cleanup_disk_environment(hosttype, vgname)
 
+raid_setup_done = false
+if hosttype == 'bootserver' then
+  raid_setup_done = DiskHandler::setup_raid_if_possible()
+end
+
 case hosttype
-  when 'diskinstaller', 'laptop', 'wirelessaccesspoint'
-    conf = QueryDiskInfo::ask_device_and_partition_with_confirmation(hosttype)
+  when 'bootserver', 'diskinstaller', 'laptop', 'wirelessaccesspoint'
+    conf = QueryDiskInfo::ask_device_and_partition_with_confirmation(hosttype,
+             raid_setup_done)
     DiskHandler::do_fs_setup(conf, vgname)
   else
     puts "Hosttype '#{ hosttype }' does not need to setup local filesystems."

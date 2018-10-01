@@ -39,6 +39,8 @@ installdirs :
 	mkdir -p $(DESTDIR)$(sysconfdir)/network/if-up.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/NetworkManager/dispatcher.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/ssh
+	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system
+	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants
 	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system/systemd-udevd.service.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
 	mkdir -p $(DESTDIR)/lib/udev/rules.d
@@ -55,7 +57,6 @@ installdirs :
 	mkdir -p $(DESTDIR)/var/lib/puavo-desktop/shared
 	mkdir -p $(DESTDIR)/var/lib/puavo-desktop/users
 	mkdir -p $(DESTDIR)/lib/systemd/system
-	mkdir -p $(DESTDIR)/lib/systemd/system/multi-user.target.wants
 
 .PHONY : install
 install : installdirs
@@ -95,13 +96,16 @@ install : installdirs
 		puavo-dnssd-printer-client \
 		puavo-handle-external-files-actions \
 		puavo-netboot-init-nfs \
-		puavo-report-system-version
+		puavo-report-system-version \
+		puavo-sysmerge \
+		puavo-sysmerge-onedir
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES \
 		po/fi/puavo-remote-assistance-applet.mo
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/puavo-vpn-client/scripts/route-up \
-		etc/puavo-vpn-client/scripts/route-up/10-dnsmasq \
+		etc/puavo-vpn-client/scripts/route-up/10-bootserver-dnsmasq \
+		etc/puavo-vpn-client/scripts/route-up/10-puavo-vpn-client-dnsmasq \
 		etc/puavo-vpn-client/scripts/route-up/30-ntpdate
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/NetworkManager/dispatcher.d \
@@ -134,11 +138,11 @@ install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)/lib/systemd/system \
 		systemd/*
 
-	ln -fs -t $(DESTDIR)/lib/systemd/system/multi-user.target.wants \
-		../puavo-darkdm.service
+	ln -fs -t $(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants \
+		/lib/systemd/system/puavo-darkdm.service
 
-	ln -fs -t $(DESTDIR)/lib/systemd/system/multi-user.target.wants \
-		../puavo-report-system-version.service
+	ln -fs -t $(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants \
+		/lib/systemd/system/puavo-report-system-version.service
 
 .PHONY : clean
 clean :

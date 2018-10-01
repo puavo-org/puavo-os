@@ -2,7 +2,31 @@
 
 set -eu
 
-# XXX This ugliness must be, because /var/lib/puavo-desktop/shared may reside
+status=0
+
+# XXX This ugliness must be, because these directories may reside
 # XXX on /state partition, and its concept of uids/gids may not match the
 # XXX current image (there should be some solution to this ugliness).
-chown puavodesktop:puavodesktop /var/lib/puavo-desktop/shared
+# XXX (We should look for ways to assign (at least some) uids statically...).
+
+fix_recursively_if_exists() {
+  test -e "$2" || return 0
+
+  chown -R "$1" "$2" || status=1
+}
+
+fix_recursively_if_exists openldap:openldap         /state/etc/ldap/slapd.d
+fix_recursively_if_exists puavo:puavo               /state/fluentd-buffer
+fix_recursively_if_exists bind:bind                 /state/var/lib/bind
+fix_recursively_if_exists openldap:openldap         /state/var/lib/ldap
+fix_recursively_if_exists statd:nogroup             /state/var/lib/nfs
+fix_recursively_if_exists Debian-exim:adm           /state/var/log/exim4
+fix_recursively_if_exists puavo:puavo               /state/var/log/fluentd
+fix_recursively_if_exists www-data:adm              /state/var/log/nginx
+fix_recursively_if_exists ntp:ntp                   /state/var/log/ntpstats
+fix_recursively_if_exists puppet:puppet             /state/var/log/puavo-os
+fix_recursively_if_exists puppet:puppet             /state/var/log/puppet
+fix_recursively_if_exists redis:redis               /state/var/log/redis
+fix_recursively_if_exists puavodesktop:puavodesktop /var/lib/puavo-desktop/shared
+
+exit $status

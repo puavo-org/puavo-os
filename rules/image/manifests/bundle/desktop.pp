@@ -2,12 +2,16 @@ class image::bundle::desktop {
   include ::blueman
   include ::chrome
   include ::chromium
-  include ::cups
   include ::desktop
+  include ::desktop_cups
+  include ::devilspie
   include ::disable_accounts_service
   include ::disable_geoclue
+  include ::disable_unclutter
   include ::firefox
   include ::fontconfig
+  include ::fuse
+  include ::gdm
   include ::gnome_terminal
   include ::graphics_drivers
   include ::homedir_management
@@ -21,6 +25,13 @@ class image::bundle::desktop {
   include ::network_manager
   include ::notify_changelog
   include ::password_expiration
+  include ::packages::languages::de
+  include ::packages::languages::en
+  include ::packages::languages::fi
+  include ::packages::languages::fr
+  include ::packages::languages::sv
+  include ::picaxe_udev_rules
+  include ::polkit_printers
   # include ::pycharm	                # XXX pycharm needs to be packaged
   include ::smartboard
   include ::supplementary_groups
@@ -30,4 +41,8 @@ class image::bundle::desktop {
   include ::wine
   include ::workaround_firefox_local_swf_bug
   include ::xorg
+
+  Package <| tag == 'tag_debian_desktop'
+          or tag == 'tag_debian_desktop_backports'
+          or tag == 'tag_ubuntu_desktop' |>
 }

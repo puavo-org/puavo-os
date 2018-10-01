@@ -5,13 +5,14 @@ gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
 gi.require_version('PangoCairo', '1.0')
 from gi.repository import Gtk, Pango, PangoCairo
 
-from logger import error as log_error, info as log_info
+import logger
 from constants import PROGRAM_BUTTON_WIDTH, PROGRAM_BUTTON_HEIGHT, \
                       PROGRAM_BUTTON_ICON_SIZE, SIDEBAR_WIDTH
 from iconcache import ICONS32, ICONS48
 from utils import localize
 from utils_gui import rounded_rectangle, draw_x, load_image_at_size
 from strings import STRINGS
+from settings import SETTINGS
 
 
 class HoverIconButtonBase(Gtk.Button):
@@ -27,8 +28,7 @@ class HoverIconButtonBase(Gtk.Button):
                  label,
                  icon=None,
                  tooltip=None,
-                 data=None,
-                 dark=False):
+                 data=None):
 
         super().__init__()
 
@@ -51,9 +51,6 @@ class HoverIconButtonBase(Gtk.Button):
 
         self.data = data
 
-        # Dark colors?
-        self.dark = dark
-
         # Not disabled by default
         self.disabled = False
 
@@ -75,12 +72,13 @@ class HoverIconButtonBase(Gtk.Button):
         self.icon_color = [1.0, 0.0, 0.0]
         self.label_pos = [-1, -1]
         self.label_color_normal = [0.0, 0.0, 0.0]
-
-        if self.dark:
-            self.label_color_normal = [1.0, 1.0, 1.0]
-
         self.label_color_hover = [1.0, 1.0, 1.0]
         self.background_color = [74.0 / 255.0, 144.0 / 255.0, 217.0 / 255.0]
+
+        if SETTINGS.dark_theme:
+            self.label_color_normal = [0.9, 0.9, 0.9]
+            self.background_color = [33.0 / 255.0, 93.0 / 255.0, 156.0 / 255.0]
+
         self.corner_rounding = 0
         self.compute_elements()
 
@@ -124,8 +122,8 @@ class HoverIconButtonBase(Gtk.Button):
             self.draw_icon(ctx)
             self.draw_label(ctx)
         except Exception as e:
-            log_error('Could not draw a HoverIconButton widget: {0}'.
-                      format(str(e)))
+            logger.error('Could not draw a HoverIconButton widget: {0}'.
+                         format(str(e)))
 
         # return True to prevent default event processing
         return True
@@ -195,10 +193,9 @@ class ProgramButton(HoverIconButtonBase):
                  icon=None,
                  tooltip=None,
                  data=None,
-                 is_fave=False,
-                 dark=False):
+                 is_fave=False):
 
-        super().__init__(parent, label, icon=icon, tooltip=tooltip, data=data, dark=dark)
+        super().__init__(parent, label, icon=icon, tooltip=tooltip, data=data)
 
         self.is_fave = is_fave
         self.menu = None
@@ -234,18 +231,20 @@ class ProgramButton(HoverIconButtonBase):
         if event.button == 3:
             self.menu = Gtk.Menu()
 
-            desktop_item = Gtk.MenuItem(
-                localize(STRINGS['popup_add_to_desktop'],
-                         self.parent.language))
-            desktop_item.connect('activate',
-                                 lambda x: self.__special_operation(
-                                     self.parent.add_program_to_desktop))
-            desktop_item.show()
-            self.menu.append(desktop_item)
+            if SETTINGS.desktop_dir:
+                # Can't do this without the desktop directory
+                desktop_item = Gtk.MenuItem(
+                    localize(STRINGS['popup_add_to_desktop'],
+                             SETTINGS.language))
+                desktop_item.connect('activate',
+                                     lambda x: self.__special_operation(
+                                         self.parent.add_program_to_desktop))
+                desktop_item.show()
+                self.menu.append(desktop_item)
 
             panel_item = Gtk.MenuItem(
                 localize(STRINGS['popup_add_to_panel'],
-                         self.parent.language))
+                         SETTINGS.language))
             panel_item.connect('activate',
                                lambda x: self.__special_operation(
                                    self.parent.add_program_to_panel))
@@ -256,7 +255,7 @@ class ProgramButton(HoverIconButtonBase):
                 # special entry for fave buttons
                 remove_fave = Gtk.MenuItem(
                     localize(STRINGS['popup_remove_from_faves'],
-                             self.parent.language))
+                             SETTINGS.language))
                 remove_fave.connect('activate',
                                     lambda x: self.__special_operation(
                                         self.parent.remove_program_from_faves))
@@ -314,10 +313,9 @@ class MenuButton(ProgramButton):
                  icon=None,
                  tooltip=None,
                  data=None,
-                 background=None,
-                 dark=False):
+                 background=None):
 
-        super().__init__(parent, label, icon=icon, tooltip=tooltip, data=data, dark=dark)
+        super().__init__(parent, label, icon=icon, tooltip=tooltip, data=data)
 
         self.background = background
         self.icon_color = [0.0, 0.0, 1.0]
@@ -359,11 +357,10 @@ class AvatarButton(HoverIconButtonBase):
                  parent,
                  user_name,
                  initial_image=None,
-                 tooltip=None,
-                 dark=False):
+                 tooltip=None):
 
         super().__init__(parent, label=user_name, icon=None,
-                         tooltip=tooltip, data=None, dark=dark)
+                         tooltip=tooltip, data=None)
 
         # Load the initial avatar image
         if initial_image:
@@ -421,7 +418,7 @@ class AvatarButton(HoverIconButtonBase):
     # Loads and resizes the avatar icon
     def load_avatar(self, path):
         try:
-            log_info('Loading avatar image "{0}"...'.format(path))
+            logger.info('Loading avatar image "{0}"...'.format(path))
 
             self.icon = load_image_at_size(path,
                                            self.ICON_SIZE,
@@ -430,8 +427,8 @@ class AvatarButton(HoverIconButtonBase):
             # trigger a redraw
             self.queue_draw()
         except Exception as e:
-            log_error('Could not load avatar image "{0}": {1}'.
-                      format(path, str(e)))
+            logger.error('Could not load avatar image "{0}": {1}'.
+                         format(path, str(e)))
             self.icon = None
 
 
@@ -452,10 +449,9 @@ class SidebarButton(HoverIconButtonBase):
                  label,
                  icon=None,
                  tooltip=None,
-                 data=None,
-                 dark=False):
+                 data=None):
 
-        super().__init__(parent, label, icon=icon, tooltip=tooltip, data=data, dark=dark)
+        super().__init__(parent, label, icon=icon, tooltip=tooltip, data=data)
 
         self.label_layout.set_width(-1)     # -1 turns off wrapping
         self.label_layout.set_ellipsize(Pango.EllipsizeMode.END)

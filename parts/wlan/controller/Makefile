@@ -4,6 +4,12 @@ INSTALL_DATA = $(INSTALL) -m 644
 appdir = /opt/puavo-wlancontroller
 vardir = /var/opt/puavo-wlancontroller
 
+ifeq ($(prefix), /usr/local)
+	systemdsystemunitdir='$(prefix)/lib/systemd/system'
+else
+	systemdsystemunitdir=$(shell pkg-config systemd --variable=systemdsystemunitdir)
+endif
+
 all:
 
 install: all installdirs
@@ -22,6 +28,9 @@ install: all installdirs
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(appdir)/views	\
 		views/*
+
+	$(INSTALL_DATA) -D -t '$(DESTDIR)$(systemdsystemunitdir)' \
+		systemd/puavo-wlancontroller.service
 
 installdirs:
 	mkdir -p $(DESTDIR)$(appdir)
