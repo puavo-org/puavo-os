@@ -798,8 +798,9 @@ class PuavoMenu(Gtk.Window):
         except Exception as e:
             logger.error('Could not launch program "{0}": {1}'.
                          format(p.command, str(e)))
-            self.error_message('Error', 'Could not launch the program '
-                               '{0}:\n{1}'.format(p.command, str(e)))
+            self.error_message(localize(STRINGS['program_launching_failed'],
+                               SETTINGS.language),
+                               str(e))
             return False
 
 
