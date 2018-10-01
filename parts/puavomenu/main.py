@@ -647,32 +647,20 @@ class PuavoMenu(Gtk.Window):
 
     # Launch a program. This is a public method, it is called from other
     # files (buttons and faves) to launch programs.
-    def clicked_program_button(self, e):
-        p = e.data
+    def clicked_program_button(self, button):
+        p = button.data
         p.uses += 1
         self.__faves.update(self.__programs)
-        print('Clicked program button "{0}", counter is {1}'.
+
+        print('Clicked program button "{0}", usage counter is {1}'.
               format(p.title, p.uses))
-
-        if self.__do_launch(p):
-            if SETTINGS.reset_view_after_start:
-                # Go back to the default view
-                self.__clear_search_field()
-                self.__hide_search_results()
-                self.__reset_menu()
-
-            self.autohide()
-
-
-    # Actually launch a program. Returns True if it succeeds.
-    def __do_launch(self, p):
-        logger.info('Launching program "{0}"...'.format(p.title))
 
         if p.command is None:
             logger.error('No command defined for program "{0}"'.
                          format(p.title))
             return
 
+        # Try to launch the program
         try:
             import subprocess
 
@@ -695,7 +683,14 @@ class PuavoMenu(Gtk.Window):
             # Of course, we never check the return value here, so we
             # don't know if the command actually worked...
 
-            return True
+            self.autohide()
+
+            if SETTINGS.reset_view_after_start:
+                # Go back to the default view
+                self.__clear_search_field()
+                self.__hide_search_results()
+                self.__reset_menu()
+
         except Exception as e:
             logger.error('Could not launch program "{0}": {1}'.
                          format(p.command, str(e)))
