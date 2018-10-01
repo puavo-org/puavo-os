@@ -6,10 +6,7 @@ from os.path import exists as path_exists, \
 
 import os, re, stat
 
-from logger import debug as log_debug, \
-                   error as log_error, \
-                   warn as log_warn, \
-                   info as log_info
+import logger
 
 from utils import is_empty
 
@@ -22,8 +19,8 @@ def __file_check(name, params):
 
     # This is the *file* name, not the conditional name
     if 'name' not in params:
-        log_error('Conditional "{0}" is missing a required '
-                  'parameter "name"'.format(name))
+        logger.error('Conditional "{0}" is missing a required '
+                     'parameter "name"'.format(name))
         return (False, False)
 
     state = path_exists(params['name'])
@@ -43,8 +40,8 @@ def __file_check(name, params):
                 size = int(params['size'])
 
                 if size < 0:
-                    log_error('Negative file size specified in '
-                              'conditional "{0}"'.format(name))
+                    logger.error('Negative file size specified in '
+                                 'conditional "{0}"'.format(name))
                     return (False, False)
 
                 if get_size(params['name']) != size:
@@ -53,8 +50,8 @@ def __file_check(name, params):
             if 'hash' in params:
                 # SHA256 hash check
                 if len(params['hash']) != 64:
-                    log_error('Invalid hash (wrong size) specified in '
-                              'conditional "{0}"'.format(name))
+                    logger.error('Invalid hash (wrong size) specified in '
+                                 'conditional "{0}"'.format(name))
                     return (False, False)
 
                 from hashlib import sha256
@@ -89,8 +86,8 @@ def __dir_check(name, params):
     """Checks if a directory exists/does not exist."""
 
     if 'name' not in params:
-        log_error('Conditional "{0}" is missing a required '
-                  'parameter "name"'.format(name))
+        logger.error('Conditional "{0}" is missing a required '
+                     'parameter "name"'.format(name))
         return (False, False)
 
     state = path_exists(params['name'])
@@ -114,8 +111,8 @@ def __env_var(name, params):
     and optionally checks its value."""
 
     if 'name' not in params:
-        log_error('Conditional "{0}" is missing a required '
-                  'parameter "name"'.format(name))
+        logger.error('Conditional "{0}" is missing a required '
+                     'parameter "name"'.format(name))
         return (False, False)
 
     state = True if params['name'] in os.environ else False
@@ -127,8 +124,8 @@ def __env_var(name, params):
             wanted = params['value']
             got = os.environ[params['name']]
 
-            log_debug('env_var "{0}": wanted="{1}" got="{2}" result={3}'.
-                      format(params['name'], wanted, got, wanted == got))
+            logger.debug('env_var "{0}": wanted="{1}" got="{2}" result={3}'.
+                         format(params['name'], wanted, got, wanted == got))
 
             if re.search(wanted, got) is None:
                 return (True, False)
@@ -142,8 +139,8 @@ def __puavo_conf(name, params):
     """Puavo-conf variable presence (and optionally content) check."""
 
     if 'name' not in params:
-        log_error('Conditional "{0}" is missing a required '
-                  'parameter "name"'.format(name))
+        logger.error('Conditional "{0}" is missing a required '
+                     'parameter "name"'.format(name))
         return (False, False)
 
     import subprocess
@@ -168,8 +165,8 @@ def __puavo_conf(name, params):
             wanted = params['value']
             got = proc.stdout.read().decode('utf-8').strip()
 
-            log_debug('puavo_conf "{0}": wanted="{1}" got="{2}" result={3}'.
-                      format(params['name'], wanted, got, wanted == got))
+            logger.debug('puavo_conf "{0}": wanted="{1}" got="{2}" result={3}'.
+                         format(params['name'], wanted, got, wanted == got))
 
             if re.search(wanted, got) is None:
                 return (True, False)
@@ -203,48 +200,49 @@ def evaluate_file(file_name):
     """Evaluates the conditionals listed in a file and returns their
     results in a dict."""
 
-    log_info('Loading a conditionals file "{0}"'.format(file_name))
+    logger.info('Loading a conditionals file "{0}"'.format(file_name))
 
     results = {}
 
     if not is_file(file_name):
-        log_error('File "{0}" does not exist'.format(file_name))
+        logger.error('File "{0}" does not exist'.format(file_name))
         return results
 
     try:
         from yaml import safe_load as yaml_safe_load
         data = yaml_safe_load(open(file_name, 'r', encoding='utf-8').read())
     except Exception as e:
-        log_error(e)
+        logger.error(e)
         return results
 
     for cond in (data or []):
         if 'name' not in cond:
-            log_error('Ignoring a conditional without a name (missing "name" key)')
+            logger.error('Ignoring a conditional without a name '
+                         '(missing the "name" key)')
             continue
 
         name = cond['name']
 
         if name in results:
-            log_error('Duplicate conditional "{0}", skipping'.
-                      format(name))
+            logger.error('Duplicate conditional "{0}", skipping'.
+                         format(name))
             continue
 
         if 'function' not in cond:
-            log_error('Conditional "{0}" has no function defined, skipping'.
-                      format(name))
+            logger.error('Conditional "{0}" has no function defined, skipping'.
+                         format(name))
             continue
 
         function = cond['function']
 
         if function not in __FUNCTIONS:
-            log_error('Conditional "{0}" has an unknown function "{1}", '
-                      'skipping'.format(name, function))
+            logger.error('Conditional "{0}" has an unknown function "{1}", '
+                         'skipping'.format(name, function))
             continue
 
         if ('params' not in cond) or (cond['params'] is None):
-            log_error('Conditional "{0}" has no "params" block, skipping'.
-                      format(name))
+            logger.error('Conditional "{0}" has no "params" block, skipping'.
+                         format(name))
             continue
 
         try:
@@ -252,10 +250,11 @@ def evaluate_file(file_name):
         except Exception as e:
             # Don't let a single conditional failure destroy
             # everything in this file
-            log_error(e)
+            logger.error(e)
 
     for k, v in results.items():
-        log_debug('Conditional: Name="{0}", OK={1}, Result={2}'.format(k, v[0], v[1]))
+        logger.debug('Conditional: Name="{0}", OK={1}, Result={2}'.
+                     format(k, v[0], v[1]))
 
     return results
 
@@ -265,8 +264,8 @@ def is_hidden(conditions, cond_string, name):
     visible."""
 
     if is_empty(cond_string):
-        log_warn('Empty conditional in "{0}", assuming it\'s visible'.
-                 format(name))
+        logger.warn('Empty conditional in "{0}", assuming it\'s visible'.
+                    format(name))
         return False
 
     for cond in cond_string.strip().split(', '):
@@ -279,20 +278,20 @@ def is_hidden(conditions, cond_string, name):
             wanted = False
 
         if cond not in conditions:
-            log_error('Undefined condition "{0}" in "{1}"'.
-                      format(cond, name))
+            logger.error('Undefined condition "{0}" in "{1}"'.
+                         format(cond, name))
             continue
 
         state = conditions[cond][1]
 
         if not conditions[cond][0]:
-            log_warn('Conditional "{0}" is in indeterminate state, '
-                     'assuming it\'s True'.format(name))
+            logger.warn('Conditional "{0}" is in indeterminate state, '
+                        'assuming it\'s True'.format(name))
             state = True
 
         if state != wanted:
-            log_info('"{0}" is hidden by conditional "{1}"'.
-                     format(name, original))
+            logger.info('"{0}" is hidden by conditional "{1}"'.
+                        format(name, original))
             return True
 
     return False

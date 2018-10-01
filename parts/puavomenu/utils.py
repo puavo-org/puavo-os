@@ -1,6 +1,6 @@
 # PuavoMenu miscellaneous utility functions
 
-from logger import error as log_error, warn as log_warn
+import logger
 
 
 def localize(where, lang_id):
@@ -8,7 +8,7 @@ def localize(where, lang_id):
     using the key."""
 
     if where is None:
-        log_error('localize(): "where" is None, nothing to localize!')
+        logger.error('localize(): "where" is None, nothing to localize!')
         return '[ERROR]'
 
     if isinstance(where, str):
@@ -28,8 +28,8 @@ def localize(where, lang_id):
 
     # it's a list with only one entry and it's not the language
     # we want, but we have to use it anyway
-    log_warn('localize(): missing localization for "{0}" in "{1}"'.
-             format(lang_id, where))
+    logger.warn('localize(): missing localization for "{0}" in "{1}"'.
+                format(lang_id, where))
 
     return str(where[list(where)[0]])
 
@@ -47,7 +47,7 @@ def get_file_contents(name, default=''):
     try:
         return open(name, 'r', encoding='utf-8').read().strip()
     except OSError as exception:
-        log_error('Could not load file "{0}": {1}'.format(name, exception))
+        logger.error('Could not load file "{0}": {1}'.format(name, exception))
         return default
 
 
