@@ -50,8 +50,7 @@ install : installdirs
 		templates/etc/apparmor.d/local/usr.sbin.dhcpd
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/etc \
-		templates/etc/ntp.conf \
-		templates/etc/rsyslog.conf \
+		templates/etc/ntp.conf
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
 		bin/*
