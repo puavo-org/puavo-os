@@ -67,6 +67,13 @@ STRINGS = {
         'de': '',
     },
 
+    'sb_change_password_window_title': {
+        'en': 'Change password',
+        'fi': 'Vaihda salasana',
+        'sv': '',
+        'de': '',
+    },
+
     'sb_support': {
         'en': 'Support',
         'fi': 'Tukisivusto',

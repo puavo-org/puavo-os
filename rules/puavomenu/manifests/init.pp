@@ -20,12 +20,4 @@ class puavomenu {
     'puavomenu.json':
       source => 'puppet:///modules/puavomenu/puavomenu.json';
   }
-
-  Package <| title == breathe-icon-theme
-          or title == faenza-icon-theme
-          or title == gnome-themes-extras
-          or title == oxygen-icon-theme
-          or title == puavo-ltsp-client
-          or title == tuxpaint-stamps-default
-          or title == puavomenu |>
 }

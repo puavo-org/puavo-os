@@ -95,6 +95,10 @@ override_dh_auto_install:
 		install prefix=/usr sysconfdir=/etc	\
 		DESTDIR=$(CURDIR)/debian/puavomenu
 
+	$(MAKE) -C puavo-webwindow				\
+		install prefix=/usr sysconfdir=/etc	\
+		DESTDIR=$(CURDIR)/debian/puavo-webwindow
+
 	$(MAKE) -C sharedir/client			\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-sharedir-client

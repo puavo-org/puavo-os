@@ -1,0 +1,133 @@
+#!/usr/bin/python3
+
+# WebWindow v2.0 (c) Opinsys Oy 2018
+
+import sys
+import argparse
+
+
+def check_positive(value):
+    i = int(value)
+
+    if i < 1:
+        raise argparse.ArgumentTypeError(
+            '"{0}" is not valid, must be an integer larger than zero'.
+            format(value))
+
+    return i
+
+
+epilog = """
+WebWindow opens the specified URL in a small embedded WebKit2 browser
+window.
+
+JavaScript and Java and other plugins are disabled and the right-click
+context menu is severely restricted. There are no tabs, history, cookies
+or address bar. No data is written on the disk.
+
+Links can be clicked and they work normally, so you should not use
+this to open pages that contain links to outside of the "sandbox".
+
+The URL can be any valid HTTP/HTTPS URL, or a local HTML file that
+is referenced using the file:// protocol.
+
+If the URL is not valid, the window will remain empty!
+"""
+
+parser = argparse.ArgumentParser(
+    formatter_class=argparse.RawDescriptionHelpFormatter,
+    epilog=epilog)
+
+parser.add_argument('--width',
+                    required=False,
+                    default=800,
+                    help='window width in pixels (default is 800)',
+                    type=check_positive)
+
+parser.add_argument('--height',
+                    required=False,
+                    default=600,
+                    help='window height in pixels (default is 600)',
+                    type=check_positive)
+
+parser.add_argument('--title',
+                    required=False,
+                    default='WebWindow',
+                    help='window title')
+
+parser.add_argument('--fixed',
+                    action='store_true',
+                    required=False,
+                    default=False,
+                    help='prevent the window from being resized')
+
+parser.add_argument('--enable-plugins',
+                    action='store_true',
+                    required=False,
+                    default=False,
+                    help='enable plugins (be careful!)')
+
+required = parser.add_argument_group('required arguments')
+
+required.add_argument('--url',
+                      required=True,
+                      type=str,
+                      help='the URL to open')
+
+args = parser.parse_args()
+
+import gi
+gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
+gi.require_version('WebKit2', '4.0')    # explicitly require version 4
+from gi.repository import Gtk, WebKit2
+
+class WebWindow(Gtk.Window):
+    def __init__(self, params):
+        super(WebWindow, self).__init__()
+
+        self.connect("destroy", Gtk.main_quit)
+
+        self.set_title(params.title)
+        self.set_size_request(params.width, params.height)
+
+        if args.fixed:
+            self.set_resizable(False)
+
+        # Create an ephemeral context. Ephemeral contexts don't cache
+        # anything on disk. Or so the documentation says...
+        # (If this caches something somewhere, I can't find it.)
+        manager = WebKit2.WebsiteDataManager.new_ephemeral()
+        context = WebKit2.WebContext.new_with_website_data_manager(manager)
+        self.webview = WebKit2.WebView.new_with_context(context)
+
+        if not args.enable_plugins:
+            # Disable JavaScript and other junk
+            settings = WebKit2.Settings()
+            settings.set_enable_javascript(False)
+            settings.set_enable_java(False)
+            settings.set_enable_plugins(False)
+            self.webview.set_settings(settings)
+
+        # Block the context menu
+        self.webview.connect('context_menu', self.block_context_menu)
+
+        self.webview.show()
+        self.add(self.webview)
+
+        self.show()
+
+        self.webview.load_uri(args.url)
+
+
+    def block_context_menu(self, webview, context_menu, event, hit_test_result):
+        if hit_test_result.context_is_editable():
+            # Permit cut/copy/paste on edit fields...
+            return False
+
+        # ...but block the menu everywhere else
+        return True
+
+
+Gtk.init(sys.argv)
+webwindow = WebWindow(args)
+Gtk.main()

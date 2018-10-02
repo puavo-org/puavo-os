@@ -35,6 +35,11 @@ SB_CHANGE_PASSWORD = {
         'type': 'webwindow',
         'args': 'https://$(puavo_domain)/users/password/own?changing=$(user_name)',
         'have_vars': True,
+        'webwindow': {
+            'title': STRINGS['sb_change_password_window_title'],
+            'width': 1000,
+            'height': 600,
+        },
     },
 }
 
@@ -517,7 +522,25 @@ class Sidebar:
                                  stderr=subprocess.PIPE)
             elif command['type'] == 'webwindow':
                 logger.info('Creating a webwindow')
-                subprocess.Popen(['chromium', '--app=%s' % arguments],
+
+                # Default settings
+                title = 'WebWindow'
+                width = 800
+                height = 600
+
+                # Allow the window to be customized
+                if 'webwindow' in command:
+                    settings = command['webwindow']
+                    width = settings.get('width', width)
+                    height = settings.get('height', height)
+                    title = localize(settings.get('title', title),
+                                     SETTINGS.language)
+
+                subprocess.Popen(['puavo-webwindow',
+                                  '--title', title,
+                                  '--width', str(width),
+                                  '--height', str(height),
+                                  '--url', arguments],
                                  stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE)
         except Exception as e:

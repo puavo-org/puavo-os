@@ -15,6 +15,7 @@ subdirs         := admins                     \
                    pam                        \
                    pkg                        \
                    puavomenu                  \
+                   puavo-webwindow            \
                    sharedir                   \
                    tftp                       \
                    vpn                        \

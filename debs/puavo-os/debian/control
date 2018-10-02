@@ -345,10 +345,10 @@ Description: Bits and pieces needed inside the LTSP chroot image.
 Package: puavomenu
 Architecture: all
 Depends: ${misc:Depends},
- chromium,
  python3,
  python3-yaml,
- python3-xlib
+ python3-xlib,
+ puavo-webwindow
 Description: PuavoMenu is a desktop menu for starting up programs.
  PuavoMenu is a desktop menu for starting up programs
  .
@@ -420,6 +420,18 @@ Architecture: all
 Depends: ${misc:Depends}, coreutils, openvpn, puavo-conf, resolvconf
 Description: Puavo VPN client
  Puavo VPN client
+ .
+
+Package: puavo-webwindow
+Architecture: all
+Depends: ${misc:Depends},
+ python3,
+ libwebkit2gtk-4.0-37,
+ gir1.2-webkit2-4.0
+Description: puavo-webwindow opens URLs in an  embedded browser window.
+ puavo-webwindow opens URLs in a small embedded WebKit2 window. The URL,
+ window size, title and some options can be controlled from the command
+ line.
  .
 
 Package: puavo-wlanap
