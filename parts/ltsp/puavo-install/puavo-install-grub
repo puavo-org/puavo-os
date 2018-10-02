@@ -132,7 +132,7 @@ function ltsp_image_entry {
     if [ "$abitti" = "true" ]; then
       linux /boot/vmlinuz${kernel_version_suffix} ro boot=live config security=apparmor digabidata digabi=syslinux union=overlay live-media=/dev/mapper/puavo-images live-media-path=/abitti live-boot.debug puavo.abitti.boot=true puavo.boot.plymouth.theme=joy ${kernelparameters}
     else
-      linux /boot/vmlinuz${kernel_version_suffix} ro init=/sbin/init-puavo quiet splash puavo.hosttype=laptop root=/dev/mapper/puavo-images loop="${imagepath}" puavo.image.path="${imagepath}" ${kernelparameters}
+      linux /boot/vmlinuz${kernel_version_suffix} ro init=/sbin/init-puavo __PUAVO_KERNEL_ARGUMENTS__ ${kernelparameters}
     fi
 
     initrd /boot/initrd.img${kernel_version_suffix}
