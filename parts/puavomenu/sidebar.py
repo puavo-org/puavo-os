@@ -38,7 +38,7 @@ SB_CHANGE_PASSWORD = {
         'webwindow': {
             'title': STRINGS['sb_change_password_window_title'],
             'width': 1000,
-            'height': 600,
+            'height': 700,
         },
     },
 }
@@ -156,7 +156,7 @@ def get_changelog_url():
     logger.debug('The current image version is "{0}"'.format(version))
 
     if len(version) > 4:
-        # strip extension from the image file name
+        # strip the extension from the image file name
         version = version[:-4]
 
     url = puavo_conf('puavo.support.image_changelog_url',
@@ -168,6 +168,31 @@ def get_changelog_url():
     logger.info('The final changelog URL is "{0}"'.format(url))
 
     return url
+
+
+def web_window(url, title=None, width=None, height=None,
+               enable_plugins=False):
+    """puavo-webwindow call wrapper. Remember to handle exceptions."""
+
+    import subprocess
+
+    cmd = ['puavo-webwindow', '--url', str(url)]
+
+    if title:
+        cmd += ['--title', str(title)]
+
+    if width:
+        cmd += ['--width', str(width)]
+
+    if height:
+        cmd += ['--height', str(height)]
+
+    if enable_plugins:
+        cmd += ['--enable-plugins']
+
+    logger.info('Opening a webwindow: {0}'.format(cmd))
+
+    subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 
 class AvatarDownloaderThread(threading.Thread):
@@ -452,9 +477,10 @@ class Sidebar:
             format(get_file_contents('/etc/puavo/hostname'),
                    get_file_contents('/etc/puavo-image/release'),
                    get_file_contents('/etc/puavo/hosttype'),
-                   get_changelog_url(),
+                   '',
                    localize(STRINGS['sb_changelog_title'], SETTINGS.language)))
 
+        hostname_label.connect('activate-link', self.__clicked_changelog)
         hostname_label.show()
         self.container.put(hostname_label, 0, label_top)
 
@@ -463,26 +489,41 @@ class Sidebar:
     def __clicked_avatar_button(self, _):
         print('Clicked the user avatar button')
 
-        url = expand_variables('https://$(puavo_domain)/users/profile/edit',
-                               self.__variables)
-
         try:
-            # open the URL in the default web browser
-            import subprocess
-
-            subprocess.Popen(['puavo-webwindow',
-                              '--url', url,
-                              '--width', '1000',
-                              '--height', '700',
-                              '--title', localize(STRINGS['sb_avatar_hover'],
-                                                  SETTINGS.language),
-                              '--enable-plugins'],
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
+            web_window(
+                url=expand_variables(
+                    'https://$(puavo_domain)/users/profile/edit',
+                    self.__variables),
+                title=localize(
+                    STRINGS['sb_avatar_hover'],
+                    SETTINGS.language),
+                width=1000,
+                height=700,
+                enable_plugins=True)   # probably need JS for this?
         except Exception as exception:
             logger.error(str(exception))
             self.__parent.error_message(
                 localize(STRINGS['sb_avatar_link_failed'], SETTINGS.language),
+                str(exception))
+
+        self.__parent.autohide()
+
+
+    # Open the changelog
+    def __clicked_changelog(self, *unused):
+        try:
+            web_window(
+                url=get_changelog_url(),
+                title=localize(
+                    STRINGS['sb_changelog_window_title'],
+                    SETTINGS.language),
+                width=1000,
+                height=700,
+                enable_plugins=True)    # markdown is used on the page, need JS
+        except Exception as exception:
+            logger.error(str(exception))
+            self.__parent.error_message(
+                localize(STRINGS['sb_changelog_link_failed'], SETTINGS.language),
                 str(exception))
 
         self.__parent.autohide()
@@ -530,25 +571,28 @@ class Sidebar:
                 logger.info('Creating a webwindow')
 
                 # Default settings
-                title = 'WebWindow'
-                width = 800
-                height = 600
+                title = None
+                width = None
+                height = None
 
                 # Allow the window to be customized
                 if 'webwindow' in command:
                     settings = command['webwindow']
-                    width = settings.get('width', width)
-                    height = settings.get('height', height)
-                    title = localize(settings.get('title', title),
-                                     SETTINGS.language)
+                    width = settings.get('width', None)
+                    height = settings.get('height', None)
+                    title = settings.get('title', None)
 
-                subprocess.Popen(['puavo-webwindow',
-                                  '--title', title,
-                                  '--width', str(width),
-                                  '--height', str(height),
-                                  '--url', arguments],
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE)
+                    if title:
+                        title = localize(title, SETTINGS.language)
+
+                web_window(
+                    url=arguments,
+                    title=title,
+                    width=width,
+                    height=height)
         except Exception as e:
             logger.error('Could not process a sidebar button click!')
             logger.error(e)
+            self.__parent.error_message(
+                localize(STRINGS['sb_button_failed'], SETTINGS.language),
+                str(e))

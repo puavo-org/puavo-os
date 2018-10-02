@@ -60,6 +60,11 @@ STRINGS = {
         'fi': 'Ei voitu avata käyttäjätietojen muokkausta',
     },
 
+    'sb_button_failed': {
+        'en': 'Sidebar button action failed',
+        'fi': 'Sivupaneelin napin toiminnon suoritus ei onnistunut',
+    },
+
     'sb_change_password': {
         'en': 'Change your password',
         'fi': 'Vaihda salasanaasi',
@@ -126,6 +131,16 @@ STRINGS = {
     'sb_changelog_title': {
         'en': 'Show changes in this version',
         'fi': 'Näytä muutokset tässä versiossa',
+    },
+
+    'sb_changelog_window_title': {
+        'en': 'Changelog',
+        'fi': 'Muutosloki',
+    },
+
+    'sb_changelog_link_failed': {
+        'en': 'Could not open the changelog page',
+        'fi': 'Muutoslokin avaaminen ei onnistunut',
     },
 
     # --------------------------------------------------------------------------
