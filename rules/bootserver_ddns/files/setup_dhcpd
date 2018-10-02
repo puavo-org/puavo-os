@@ -195,7 +195,7 @@ writeconf('/etc/dhcp/dhcpd.conf',         dhcpd_conf)
 # Write /etc/default/isc-dhcp-server so that systemd
 # does not try to start dhcpd for IPv6.
 etc_default_isc_dhcp_server = <<EOF
-INTERFACESv4="ltsp0 wlan0"
+INTERFACESv4="#{ (network_interfaces_for_dhcpd.map &:name).join(' ') }"
 INTERFACESv6=""
 EOF
 writeconf('/etc/default/isc-dhcp-server', etc_default_isc_dhcp_server)
