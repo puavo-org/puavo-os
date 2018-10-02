@@ -470,7 +470,13 @@ class Sidebar:
             # open the URL in the default web browser
             import subprocess
 
-            subprocess.Popen(['xdg-open', url],
+            subprocess.Popen(['puavo-webwindow',
+                              '--url', url,
+                              '--width', '1000',
+                              '--height', '700',
+                              '--title', localize(STRINGS['sb_avatar_hover'],
+                                                  SETTINGS.language),
+                              '--enable-plugins'],
                              stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE)
         except Exception as exception:
