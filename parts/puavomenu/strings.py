@@ -139,8 +139,8 @@ STRINGS = {
     },
 
     'sb_changelog_link_failed': {
-        'en': 'Could not open the changelog page',
-        'fi': 'Muutoslokin avaaminen ei onnistunut',
+        'en': 'Could not show the changelog',
+        'fi': 'Muutoslokin näyttäminen ei onnistunut',
     },
 
     # --------------------------------------------------------------------------
