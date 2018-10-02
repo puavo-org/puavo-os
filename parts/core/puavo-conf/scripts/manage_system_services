@@ -111,6 +111,11 @@ set services {
         -> /lib/systemd/system/puavo-tftpd.service
     }}
 
+  { puavo-trigger-abitti-updates {
+      /etc/systemd/system/multi-user.target.wants/puavo-trigger-abitti-updates.service
+        -> /etc/systemd/system/puavo-trigger-abitti-updates.service
+    }}
+
   { puavo-vpn-client-dnsmasq {
       /etc/systemd/system/multi-user.target.wants/puavo-vpn-client-dnsmasq.service
         -> /lib/systemd/system/puavo-vpn-client-dnsmasq.service
