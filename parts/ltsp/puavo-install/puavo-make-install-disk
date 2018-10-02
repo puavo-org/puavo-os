@@ -17,18 +17,11 @@ install_image() {
                                       "$ltspimage_name"
 }
 
-case "$puavo_hosttype" in
-  bootserver|laptop|preinstalled|wirelessaccesspoint)
-    install_args="--install-from-file /images/${ltspimage_name}"
-    ;;
-  fatclient|unregistered)
-    install_args="--install-from-nbd /dev/nbd0"
-    ;;
-  *)
-    echo "Cannot create an install disk on hosttype: '${puavo_hosttype}'" >&2
-    exit 1
-    ;;
-esac
+if [ -e /run/puavo/nbd-server ]; then
+  install_args='--install-from-nbd /dev/nbd0'
+else
+  install_args="--install-from-file /images/${ltspimage_name}"
+fi
 
 puavo-setup-filesystems --hosttype diskinstaller
 
