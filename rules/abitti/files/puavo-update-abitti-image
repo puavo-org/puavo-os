@@ -7,6 +7,11 @@ set -eu
 exec 3<$0
 flock -nx 3 || { echo did not get a lock, exiting; exit 1; }
 
+if ! mountpoint -q /images; then
+  echo '/images is not its own partition, refusing to download abitti' >&2
+  exit 1
+fi
+
 logmsg() {
   logger -s -t puavo-update-abitti-image "$@" || true
 }
