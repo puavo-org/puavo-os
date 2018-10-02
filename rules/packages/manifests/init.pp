@@ -37,6 +37,7 @@ class packages {
     , 'puavo-pkg'
     , 'puavo-sharedir-client'
     , 'puavo-vpn-client'
+    , 'puavo-webwindow'
     , 'puavo-wlanap'
     , 'puavo-wlanmapper'
     , 'puavomenu'
