@@ -14,12 +14,12 @@ from settings import SETTINGS
 epilog = """
 Socket names and IPC commands
 -----------------------------
-PuavoMenu uses a Unix domain socket for IPC. You can use it to send
-simple commands to it. See send_command for more information. The main
-PuavoMenu instance uses a socket file ~/puavomenu_(hostname)_socket;
-if you're running other copies of PuavoMenu, you *need* to use other
-socket names, so the commands you send to your copies do not interfere
-with the system menu.
+PuavoMenu uses a Unix domain socket for IPC. You can use it to send simple
+commands to it. See send_command for more information. The main PuavoMenu
+instance uses a socket file ~/.config/puavomenu/socket_(hostname); if
+you're running other copies of PuavoMenu, you *need* to use other socket
+names, so the commands you send to your copies do not interfere with the
+system menu.
 
 Known IPC commands are:
     show: Show the menu
