@@ -10,7 +10,7 @@ puts "* Installed schemas: #{result[:installed_schemas].join(', ')}"
 puts "* Missing schemas: #{result[:missing_schemas].join(', ')}"
 
 puts "Checking modules:"
-result = PuavoSetup::SLAPD.check_modules("back_hdb dynlist unique ppolicy syncprov memberof valsort auditlog refint".split)
+result = PuavoSetup::SLAPD.check_modules("back_hdb dynlist unique ppolicy syncprov memberof valsort auditlog refint constraint accesslog deref".split)
 puts "* Installed modules: #{result[:installed_modules].join(', ')}"
 puts "* Missing modules: #{result[:missing_modules].join(', ')}"
 

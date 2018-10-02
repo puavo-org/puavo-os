@@ -50,7 +50,7 @@ else
   puts "* Schemas OK"
 end
 
-result = PuavoSetup::SLAPD.setup_modules("back_hdb dynlist unique ppolicy syncprov memberof valsort auditlog refint constraint smbkrb5pwd".split)
+result = PuavoSetup::SLAPD.setup_modules("back_hdb dynlist unique ppolicy syncprov memberof valsort auditlog refint constraint accesslog deref smbkrb5pwd".split)
 if !result.empty?
   puts "* Added modules: #{result.join(', ')}"
 else
