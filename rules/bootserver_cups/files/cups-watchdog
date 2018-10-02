@@ -7,13 +7,13 @@ echo "$(date --rfc-3339=seconds) started" >&2
 while true; do
   sleep 30
 
-  lpstat -a >/dev/null &
+  lpstat -a > /dev/null 2>&1 &
   lpstatpid=$!
   sleep 4
 
-  kill -0 "${lpstatpid}" 2>/dev/null || continue
+  kill -0 "$lpstatpid" 2>/dev/null || continue
 
-  kill "${lpstatpid}"
+  kill "$lpstatpid"
   service cups restart || true
 
   echo "$(date --rfc-3339=seconds) cups restarted" >&2
