@@ -296,10 +296,13 @@ class LdapAcl
 																					   'self'),
 																			Rule.perms('auth', 'anonymous'),	],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      [ People.subtree,		attrs(%w(shadowLastChange)),
-	  'filter="(puavoEduPersonAffiliation=student)"',		Rule.write(Set.all_admins),							RuleBreak.none('*'),			],
+      [ People.subtree,		attrs(%w(sambaPwdLastSet
+					 shadowLastChange)),
+	  'filter="(puavoEduPersonAffiliation=student)"',		Rule.write(Set.all_admins,
+                                                                                   Set.teacher),	        					RuleBreak.none('*'),			],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      [ People.subtree,		attrs(%w(shadowLastChange)),		Rule.write(Set.admin,
+      [ People.subtree,		attrs(%w(sambaPwdLastSet
+					 shadowLastChange)),		Rule.write(Set.admin,
 										   'self'),								Rule.perms('auth', 'anonymous'),	],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ People.subtree,		attrs(%w(entry
