@@ -1,3 +1,7 @@
+#
+# see https://www.openldap.org/doc/admin24/access-control.html
+#
+
 class LdapDn
   def initialize(dn_name=nil)
     tmp_dn_name = (dn_name ? "#{ dn_name }," : '')
