@@ -15,12 +15,12 @@ subdirs         := admins                     \
                    pam                        \
                    pkg                        \
                    puavomenu                  \
-                   puavo-webwindow            \
                    sharedir                   \
                    tftp                       \
                    vpn                        \
                    webkiosk-language-selector \
                    webmenu                    \
+                   webwindow                  \
                    wlan
 subdirs-all     := $(subdirs:%=.all-%)
 subdirs-clean   := $(subdirs:%=.clean-%)

@@ -1,3 +1,7 @@
+#
+# see https://www.openldap.org/doc/admin24/access-control.html
+#
+
 class LdapDn
   def initialize(dn_name=nil)
     tmp_dn_name = (dn_name ? "#{ dn_name }," : '')
@@ -296,10 +300,13 @@ class LdapAcl
 																					   'self'),
 																			Rule.perms('auth', 'anonymous'),	],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      [ People.subtree,		attrs(%w(shadowLastChange)),
-	  'filter="(puavoEduPersonAffiliation=student)"',		Rule.write(Set.all_admins),							RuleBreak.none('*'),			],
+      [ People.subtree,		attrs(%w(sambaPwdLastSet
+					 shadowLastChange)),
+	  'filter="(puavoEduPersonAffiliation=student)"',		Rule.write(Set.all_admins,
+                                                                                   Set.teacher),	        					RuleBreak.none('*'),			],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      [ People.subtree,		attrs(%w(shadowLastChange)),		Rule.write(Set.admin,
+      [ People.subtree,		attrs(%w(sambaPwdLastSet
+					 shadowLastChange)),		Rule.write(Set.admin,
 										   'self'),								Rule.perms('auth', 'anonymous'),	],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ People.subtree,		attrs(%w(entry
@@ -332,8 +339,7 @@ class LdapAcl
       [ People.subtree,		attrs(%w(givenName
 					 sn
 					 displayName
-					 puavoEduPersonReverseDisplayName
-)),
+					 puavoEduPersonReverseDisplayName)),
 									Rule.write(Set.admin),			Rule.read(People.children,
 															  Hosts.subtree,
 															  Set.sysgroup('getent'),
@@ -355,9 +361,10 @@ class LdapAcl
 																			# XXX odd
       [ People.subtree,		attrs(%w(puavoAcceptedTerms)),		Rule.write(Set.admin),			Rule.read(PuavoUid.puavo, PuavoUid.puavo_ticket),		Rule.write('self'),			],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      [ People.subtree,		attrs(%w(puavoSchool puavoLocked)),			Rule.write(Set.admin),			Rule.read('self',
-																	  PuavoUid.puavo_ticket,
-																	  Set.sysgroup('getent'))				],
+      [ People.subtree,		attrs(%w(puavoSchool puavoLocked)),	Rule.write(Set.admin),			Rule.read('self',
+															  PuavoUid.puavo,
+															  PuavoUid.puavo_ticket,
+															  Set.sysgroup('getent'))				                ],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ People.subtree,		attrs(%w(sambaNTPassword
 					 sambaLMPassword)),												Rule.perms('=az', Set.admin),		],

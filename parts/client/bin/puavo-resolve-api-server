@@ -104,10 +104,14 @@ puavo_apiserver="https://$puavo_domain"
 #   puavo_apiserver=$(cat /etc/puavo/apiserver)
 # fi
 
-# Fallback for laptops and wirelessaccesspoints that are not in the school
-# network.
-if [    "$puavo_hosttype" = "laptop"              \
-     -o "$puavo_hosttype" = "wirelessaccesspoint" \
+# Fallback for bootservers, laptops and wirelessaccesspoints
+# that are not in the school network.
+# (Normally bootservers should always resolve to itself,
+# but in case dns is down or bootserver is at an installation stage,
+# we can use the cloud api server).
+if [    "$puavo_hosttype" = 'bootserver'          \
+     -o "$puavo_hosttype" = 'laptop'              \
+     -o "$puavo_hosttype" = 'wirelessaccesspoint' \
      -o -n "${OPT_CLOUD_FALLBACK}"                \
      -o -n "${OPT_WRITABLE}"                        ]; then
     echo "$puavo_apiserver"
