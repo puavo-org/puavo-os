@@ -14,6 +14,7 @@ from constants import PROGRAM_TYPE_DESKTOP, PROGRAM_TYPE_CUSTOM, \
 from menudata import Program, Menu, Category
 from utils import localize, is_empty
 from conditionals import is_hidden
+from settings import SETTINGS
 
 
 # Characters that can be used in program, menu and category IDs
@@ -79,7 +80,7 @@ def __is_valid(s):
     return True
 
 
-def __parse_yml_string(string, lang_id, conditions):
+def __parse_yml_string(string, conditions):
     """Loads menu data from YAML data stored in a string."""
 
     import yaml
@@ -159,14 +160,14 @@ def __parse_yml_string(string, lang_id, conditions):
 
         # Load common parameters
         if 'name' in params:
-            p.title = localize(params['name'], lang_id)
+            p.title = localize(params['name'])
 
             if is_empty(p.title):
                 logger.error('Empty name given for "{0}"'.format(name))
                 p.title = None
 
         if 'description' in params:
-            p.description = localize(params['description'], lang_id)
+            p.description = localize(params['description'])
 
             if is_empty(p.description):
                 logger.warn('Ignoring empty description for program "{0}"'.
@@ -258,7 +259,7 @@ def __parse_yml_string(string, lang_id, conditions):
             menus[name] = m
             continue
 
-        m.title = localize(params.get('name', ''), lang_id)
+        m.title = localize(params.get('name', ''))
 
         if is_empty(m.title):
             logger.error('Menu "{0}" has no name at all, menu ignored'.
@@ -266,7 +267,7 @@ def __parse_yml_string(string, lang_id, conditions):
             continue
 
         if 'description' in params:
-            m.description = localize(params['description'], lang_id)
+            m.description = localize(params['description'])
 
             if is_empty(m.description):
                 logger.warn('Ignoring empty description for menu "{0}"'.
@@ -322,7 +323,7 @@ def __parse_yml_string(string, lang_id, conditions):
             categories[name] = c
             continue
 
-        c.title = localize(params.get('name', ''), lang_id)
+        c.title = localize(params.get('name', ''))
 
         if is_empty(c.title):
             logger.error('Category "{0}" has no name at all, '
@@ -351,11 +352,10 @@ def __parse_yml_string(string, lang_id, conditions):
     return programs, menus, categories
 
 
-def __parse_yml_file(name, lang_id, conditions):
+def __parse_yml_file(name, conditions):
     """Loads menu data from a YAML file."""
     return __parse_yml_string(
         open(name, mode='r', encoding='utf-8'),
-        lang_id,
         conditions)
 
 
@@ -422,7 +422,7 @@ def __load_dotdesktop_file(name):
 # ------------------------------------------------------------------------------
 
 
-def load_menu_data(source, desktop_dirs, lang_id, conditions):
+def load_menu_data(source, desktop_dirs, conditions):
     """The main menu loader function. Call this."""
 
     import time
@@ -444,14 +444,14 @@ def load_menu_data(source, desktop_dirs, lang_id, conditions):
         try:
             if s[0] == 'f':
                 logger.info('load_menu_data(): loading a file "{0}" for '
-                            'locale "{1}"...'.format(s[1], lang_id))
+                            'locale "{1}"...'.format(s[1], SETTINGS.language))
 
-                p, m, c = __parse_yml_file(s[1], lang_id, conditions)
+                p, m, c = __parse_yml_file(s[1], conditions)
             elif s[0] == 's':
                 logger.info('load_menu_data(): loading a string for '
-                            'locale "{0}"...'.format(lang_id))
+                            'locale "{0}"...'.format(SETTINGS.language))
 
-                p, m, c = __parse_yml_string(s[1], lang_id, conditions)
+                p, m, c = __parse_yml_string(s[1], conditions)
             else:
                 logger.error('Source type "{0}" is not valid, skipping'.
                              format(s[0]))
@@ -535,7 +535,7 @@ def load_menu_data(source, desktop_dirs, lang_id, conditions):
 
         # Try to load the parts that we don't have yet from it
         if p.title is None:
-            key = 'Name[' + lang_id + ']'
+            key = 'Name[' + SETTINGS.language + ']'
 
             if key in entry:
                 # The best case: we have a localized name
@@ -544,7 +544,7 @@ def load_menu_data(source, desktop_dirs, lang_id, conditions):
                 # "Name" and "GenericName" aren't interchangeable, but this
                 # is the best we can do. For example, if "Name" is "Mozilla",
                 # then "GenericName" could be "Web Browser".
-                key = 'GenericName[' + lang_id + ']'
+                key = 'GenericName[' + SETTINGS.language + ']'
 
                 if key in entry:
                     p.title = entry[key]
@@ -561,7 +561,7 @@ def load_menu_data(source, desktop_dirs, lang_id, conditions):
                 continue
 
         if p.description is None:
-            key = 'Comment[' + lang_id + ']'
+            key = 'Comment[' + SETTINGS.language + ']'
 
             # Accept *ONLY* localized comments
             if key in entry:
@@ -574,7 +574,7 @@ def load_menu_data(source, desktop_dirs, lang_id, conditions):
                     p.comment = None
 
         if is_empty(p.keywords):
-            key = 'Keywords[' + lang_id + ']'
+            key = 'Keywords[' + SETTINGS.language + ']'
 
             # Accept *ONLY* localized keyword strings
             if key in entry:

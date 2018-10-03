@@ -363,8 +363,7 @@ class Sidebar:
         if SETTINGS.is_guest or SETTINGS.is_webkiosk:
             avatar_tooltip = None
         else:
-            avatar_tooltip = localize(STRINGS['sb_avatar_hover'],
-                                      SETTINGS.language)
+            avatar_tooltip = localize(STRINGS['sb_avatar_hover'])
 
         self.__avatar = AvatarButton(self,
                                      getuser(),
@@ -423,10 +422,9 @@ class Sidebar:
     # Creates a sidebar button
     def __create_button(self, y, data):
         button = SidebarButton(self,
-                               localize(data['title'], SETTINGS.language),
+                               localize(data['title']),
                                ICONS32.load_icon(data['icon']),
-                               localize(data.get('description', ''),
-                                        SETTINGS.language),
+                               localize(data.get('description', '')),
                                data['command'])
 
         button.connect('clicked', self.__clicked_sidebar_button)
@@ -478,7 +476,7 @@ class Sidebar:
                    get_file_contents('/etc/puavo-image/release'),
                    get_file_contents('/etc/puavo/hosttype'),
                    '',
-                   localize(STRINGS['sb_changelog_title'], SETTINGS.language)))
+                   localize(STRINGS['sb_changelog_title'])))
 
         hostname_label.connect('activate-link', self.__clicked_changelog)
         hostname_label.show()
@@ -494,16 +492,14 @@ class Sidebar:
                 url=expand_variables(
                     'https://$(puavo_domain)/users/profile/edit',
                     self.__variables),
-                title=localize(
-                    STRINGS['sb_avatar_hover'],
-                    SETTINGS.language),
+                title=localize(STRINGS['sb_avatar_hover']),
                 width=1000,
                 height=700,
                 enable_plugins=True)   # probably need JS for this?
         except Exception as exception:
             logger.error(str(exception))
             self.__parent.error_message(
-                localize(STRINGS['sb_avatar_link_failed'], SETTINGS.language),
+                localize(STRINGS['sb_avatar_link_failed']),
                 str(exception))
 
         self.__parent.autohide()
@@ -514,16 +510,14 @@ class Sidebar:
         try:
             web_window(
                 url=get_changelog_url(),
-                title=localize(
-                    STRINGS['sb_changelog_window_title'],
-                    SETTINGS.language),
+                title=localize(STRINGS['sb_changelog_window_title']),
                 width=1000,
                 height=700,
                 enable_plugins=True)    # markdown is used on the page, need JS
         except Exception as exception:
             logger.error(str(exception))
             self.__parent.error_message(
-                localize(STRINGS['sb_changelog_link_failed'], SETTINGS.language),
+                localize(STRINGS['sb_changelog_link_failed']),
                 str(exception))
 
         self.__parent.autohide()
@@ -583,7 +577,7 @@ class Sidebar:
                     title = settings.get('title', None)
 
                     if title:
-                        title = localize(title, SETTINGS.language)
+                        title = localize(title)
 
                 web_window(
                     url=arguments,
@@ -594,5 +588,5 @@ class Sidebar:
             logger.error('Could not process a sidebar button click!')
             logger.error(e)
             self.__parent.error_message(
-                localize(STRINGS['sb_button_failed'], SETTINGS.language),
+                localize(STRINGS['sb_button_failed']),
                 str(e))
