@@ -332,8 +332,7 @@ class LdapAcl
       [ People.subtree,		attrs(%w(givenName
 					 sn
 					 displayName
-					 puavoEduPersonReverseDisplayName
-)),
+					 puavoEduPersonReverseDisplayName)),
 									Rule.write(Set.admin),			Rule.read(People.children,
 															  Hosts.subtree,
 															  Set.sysgroup('getent'),
