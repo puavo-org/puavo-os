@@ -51,6 +51,10 @@ class ChangelogNotifyApplet:
                 .replace("%%IMAGESERIES%%",  self.image_series_name)   \
                 .replace("%%IMAGEVERSION%%", self.system_version)
 
+        if url.endswith(".img"):
+            # remove the file extension so anchors on the page work
+            url = url[:-4]
+
         cmd = [ '/usr/bin/puavo-webwindow',
                 '--width', '1000', '--height', '700',
                 '--url', url, '--enable-plugins' ]
