@@ -22,7 +22,7 @@ class syslog {
     '/var/log/puavo':
       owner  => 'root',
       group  => 'adm',
-      mode   => '0640',
+      mode   => '0750',
       ensure => directory;
   }
 
