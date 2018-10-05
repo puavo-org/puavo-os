@@ -6,13 +6,9 @@ class syslog {
       require => Package['logrotate'],
       source  => 'puppet:///modules/syslog/etc_logrotate.d_martians';
 
-    '/etc/logrotate.d/puavo-rest':
+    '/etc/logrotate.d/puavo':
       require => Package['logrotate'],
-      source  => 'puppet:///modules/syslog/etc_logrotate.d_puavo-rest';
-
-    '/etc/logrotate.d/puavo-tftpd':
-      require => Package['logrotate'],
-      source  => 'puppet:///modules/syslog/etc_logrotate.d_puavo-tftpd';
+      source  => 'puppet:///modules/syslog/etc_logrotate.d_puavo';
 
     '/usr/local/lib/puavo-caching-syslog-sender':
       mode    => '0755',

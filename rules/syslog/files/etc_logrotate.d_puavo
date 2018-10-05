@@ -1,4 +1,4 @@
-/var/log/puavo/puavo-rest {
+/var/log/puavo/* {
 	daily
 	missingok
 	rotate 7
