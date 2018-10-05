@@ -7,14 +7,10 @@ hostname=$(hostname)
 
 receive_as_bootserver() {
   do_not_remove_list='
-    /etc/cron.daily/logrotate
     /etc/logrotate.d/hosts
     /etc/rsyslog.d/receive_messages_to_var_log_hosts.conf
   '
 
-  # Rotate logs every hour, daily is not quite good enough in case there are
-  # misbehaving hosts.
-  ln -fns ../cron.hourly/logrotate /etc/cron.daily/logrotate
   install -o root -g adm -m 750 -d /var/log/hosts
 
   cat <<'EOF' > /etc/logrotate.d/hosts.tmp
@@ -235,7 +231,6 @@ case "$logging_policy" in
 esac
 
 all_configuration_files='
-  /etc/cron.daily/logrotate
   /etc/logrotate.d/hosts
   /etc/rsyslog.d/receive_messages_to_var_log_hosts.conf
   /etc/rsyslog.d/send_everything_to_bootserver.conf
