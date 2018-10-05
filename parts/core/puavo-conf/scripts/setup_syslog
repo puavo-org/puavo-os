@@ -167,6 +167,11 @@ if (\$hostname == '${hostname}') then {
     stop
   }
 
+  if \$programname == 'fluentd' then {
+    action(type="omfile" file="/var/log/fluentd/fluentd-daemon.log")
+    stop
+  }
+
   if \$programname == 'puavo-rest' then {
     action(type="omfile" file="/var/log/puavo/puavo-rest")
     stop
