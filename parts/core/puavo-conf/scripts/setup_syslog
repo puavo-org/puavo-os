@@ -163,7 +163,7 @@ if (\$hostname == '${hostname}') then {
   if (\$programname == 'kernel' and
        (\$msg contains "IPv4: martian source"
           or \$msg contains "ll header:")) then {
-    action(type="omfile" file="/var/log/martians.log")
+    action(type="omfile" file="/var/log/martians")
     stop
   }
 
