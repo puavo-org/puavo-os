@@ -172,6 +172,11 @@ if (\$hostname == '${hostname}') then {
     stop
   }
 
+  if \$programname == 'puavo-tftpd' then {
+    action(type="omfile" file="/var/log/puavo/puavo-tftpd")
+    stop
+  }
+
   #
   # Some standard log files.  Log by facility.
   #
