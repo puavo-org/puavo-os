@@ -111,12 +111,27 @@ class WebWindow(Gtk.Window):
         # Block the context menu
         self.webview.connect('context_menu', self.block_context_menu)
 
+        # Listen for load events
+        self.failed = False
+        self.webview.connect('load-failed', self.on_load_failed)
+        self.webview.connect('load-changed', self.on_load_changed)
+
         self.webview.show()
         self.add(self.webview)
 
         self.show()
 
         self.webview.load_uri(args.url)
+
+
+    def on_load_failed(self, webview, event, url, error):
+        print('{"state":"failed"}', file=sys.stderr)
+        self.failed = True
+
+
+    def on_load_changed(self, webview, event):
+        if event == WebKit2.LoadEvent.FINISHED and not self.failed:
+            print('{"state":"ok","title":"' + str(webview.get_title()) + '"}')
 
 
     def block_context_menu(self, webview, context_menu, event, hit_test_result):

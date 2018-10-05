@@ -13,8 +13,9 @@ if [ "$puavo_hosttype" != 'bootserver' ]; then
 fi
 
 if [ -h /etc/network/interfaces.d ]; then
-  echo 'Not touching /etc/network/interfaces.d, it is a symbolic link!' >&2
-  exit 1
+  # not touching /etc/network/interfaces.d, it is a symbolic link
+  # (might happen if persistent overlay is in use)
+  exit 0
 fi
 
 if [ -e /run/puavo/nbd-server ]; then

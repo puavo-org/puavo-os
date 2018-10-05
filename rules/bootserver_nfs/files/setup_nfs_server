@@ -42,4 +42,8 @@ cat <<'EOF' > /etc/exports.tmp
 EOF
 mv /etc/exports.tmp /etc/exports
 
+for tabpath in /var/lib/nfs/rmtab /var/lib/nfs/xtab; do
+  [ -e "$tabpath" ] || touch "$tabpath"
+done
+
 exportfs -r

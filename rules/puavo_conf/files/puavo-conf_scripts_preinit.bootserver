@@ -3,6 +3,7 @@ find_nbd_server_address
 mount_local_partitions
 setup_network_interfaces
 setup_state_partition
+run_puavo_sysmerge
 setup_persistent_net_rules
 correct_file_ownership
 enable_utmp_logs
@@ -43,4 +44,3 @@ setup_bootserver_cups
 setup_slapd
 setup_krb5kdc
 setup_samba
-run_puavo_sysmerge

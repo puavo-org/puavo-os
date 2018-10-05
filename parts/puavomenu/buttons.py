@@ -234,8 +234,7 @@ class ProgramButton(HoverIconButtonBase):
             if SETTINGS.desktop_dir:
                 # Can't do this without the desktop directory
                 desktop_item = Gtk.MenuItem(
-                    localize(STRINGS['popup_add_to_desktop'],
-                             SETTINGS.language))
+                    localize(STRINGS['popup_add_to_desktop']))
                 desktop_item.connect('activate',
                                      lambda x: self.__special_operation(
                                          self.parent.add_program_to_desktop))
@@ -243,8 +242,7 @@ class ProgramButton(HoverIconButtonBase):
                 self.menu.append(desktop_item)
 
             panel_item = Gtk.MenuItem(
-                localize(STRINGS['popup_add_to_panel'],
-                         SETTINGS.language))
+                localize(STRINGS['popup_add_to_panel']))
             panel_item.connect('activate',
                                lambda x: self.__special_operation(
                                    self.parent.add_program_to_panel))
@@ -254,8 +252,7 @@ class ProgramButton(HoverIconButtonBase):
             if self.is_fave:
                 # special entry for fave buttons
                 remove_fave = Gtk.MenuItem(
-                    localize(STRINGS['popup_remove_from_faves'],
-                             SETTINGS.language))
+                    localize(STRINGS['popup_remove_from_faves']))
                 remove_fave.connect('activate',
                                     lambda x: self.__special_operation(
                                         self.parent.remove_program_from_faves))

@@ -22,7 +22,7 @@ ldap_bindpw    = File.read('/etc/puavo/ldap/password').chomp
 puavo_domain   = File.read('/etc/puavo/domain'       ).chomp
 puavo_hostname = File.read('/etc/puavo/hostname'     ).chomp
 
-kerberos_masterpw = ask('Kerberos master password') { |q| q.echo = false }
+kerberos_masterpw = ask('Kerberos master password? ') { |q| q.echo = false }
 
 FileUtils.mkdir_p(Puavo_krb5kdc_dir)
 
@@ -43,10 +43,23 @@ IO.popen(cmd, 'w') { |pipe| pipe.puts ldap_bindpw; pipe.puts ldap_bindpw }
 raise "error running command #{ cmd }" unless $?.success?
 FileUtils.cp('/etc/krb5.secrets', "#{ Puavo_krb5kdc_dir }/krb5.secrets")
 
-FileUtils.rm_f('/etc/krb5kdc/stash')
-cmd = [ 'kadmin.local', '-m', '-q', "ktadd -norandkey -k /etc/krb5kdc/stash K/M" ]
-IO.popen(cmd, 'w') { |pipe| pipe.puts kerberos_masterpw }
-raise "error running command #{ cmd }" unless $?.success?
+# try several times before giving up, in case user accidentally
+# types/copypastes wrong password
+try_count = 5
+try_count.times do |try_number|
+  FileUtils.rm_f('/etc/krb5kdc/stash')
+  cmd = [ 'kadmin.local', '-m', '-q', "ktadd -norandkey -k /etc/krb5kdc/stash K/M" ]
+  IO.popen(cmd, 'w') { |pipe| pipe.puts kerberos_masterpw }
+  break if $?.success?
+  if (try_number+1) < try_count then
+    tries_left = try_count - (try_number+1)
+    warn "\nFAILED to initialize kerberos, #{ tries_left } tries left."
+    kerberos_masterpw = ask('Kerberos master password? ') { |q| q.echo = false }
+    next
+  end
+  warn "\nCould not initialize kerberos, giving up."
+  exit(1)
+end
 FileUtils.cp('/etc/krb5kdc/stash', "#{ Puavo_krb5kdc_dir }/stash")
 
 system('service', 'krb5-kdc', 'restart')

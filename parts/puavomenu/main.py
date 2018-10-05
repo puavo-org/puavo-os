@@ -223,7 +223,7 @@ class PuavoMenu(Gtk.Window):
         self.__search_keypress_signal = \
             self.__search.connect('key-press-event', self.__search_keypress)
         self.__search.set_placeholder_text(
-            localize(STRINGS['search_placeholder'], SETTINGS.language))
+            localize(STRINGS['search_placeholder']))
         self.__main_container.put(
             self.__search,
             PROGRAMS_LEFT + PROGRAMS_WIDTH - SEARCH_WIDTH - MAIN_PADDING,
@@ -574,7 +574,7 @@ class PuavoMenu(Gtk.Window):
     # menu/category is empty, or there are no search results.
     def __show_empty_message(self, msg):
         if isinstance(msg, dict):
-            msg = localize(msg, SETTINGS.language)
+            msg = localize(msg)
 
         self.__empty.set_markup(
             '<span color="#888" size="large"><i>{0}</i></span>'.
@@ -607,7 +607,7 @@ class PuavoMenu(Gtk.Window):
             logger.error(e)
 
             self.error_message(
-                localize(STRINGS['desktop_link_failed'], SETTINGS.language),
+                localize(STRINGS['desktop_link_failed']),
                 str(e))
 
 
@@ -623,7 +623,7 @@ class PuavoMenu(Gtk.Window):
             logger.error(e)
 
             self.error_message(
-                localize(STRINGS['panel_link_failed'], SETTINGS.language),
+                localize(STRINGS['panel_link_failed']),
                 str(e))
 
 
@@ -694,8 +694,7 @@ class PuavoMenu(Gtk.Window):
         except Exception as e:
             logger.error('Could not launch program "{0}": {1}'.
                          format(p.command, str(e)))
-            self.error_message(localize(STRINGS['program_launching_failed'],
-                               SETTINGS.language),
+            self.error_message(localize(STRINGS['program_launching_failed']),
                                str(e))
             return False
 
@@ -1030,7 +1029,6 @@ class PuavoMenu(Gtk.Window):
             programs, menus, categories, category_index = \
                 load_menu_data(sources,
                                desktop_dirs,
-                               SETTINGS.language,
                                self.__conditions)
         except Exception as e:
             logger.error('Could not load menu data!')

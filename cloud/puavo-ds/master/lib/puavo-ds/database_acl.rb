@@ -529,7 +529,7 @@ class LdapAcl
 					 puavoId
 					 objectClass)),													Rule.perms('+azrwsc', Set.owner_and_user),
 																			Rule.perms('+rwsc',   Set.school_admin_and_user),
-																			Rule.read(People.children, Hosts.subtree, PuavoUid.puavo_ticket),
+																			Rule.read(People.children, Hosts.subtree, PuavoUid.puavo, PuavoUid.puavo_ticket),
 																			RuleBreak.read(Set.sysgroup('getent')), ],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Groups.subtree,
@@ -574,7 +574,7 @@ class LdapAcl
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Groups.subtree,
 	  'filter=(objectClass=puavoSchool)',				Rule.write(Set.owner_and_user),							Rule.perms('+rscxd', Set.school_admin_and_user),
-																			Rule.read(Set.getent, PuavoUid.puavo_ticket),			],
+																			Rule.read(Set.getent, PuavoUid.puavo, PuavoUid.puavo_ticket),			],
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ Desktops.exact,			attrs(%w(entry
 				                 ou

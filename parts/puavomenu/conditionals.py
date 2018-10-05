@@ -17,12 +17,6 @@ def __file_check(name, params):
     """Checks if a file exists/does not exist. Optional checks include
     size, hash and content checks."""
 
-    # This is the *file* name, not the conditional name
-    if 'name' not in params:
-        logger.error('Conditional "{0}" is missing a required '
-                     'parameter "name"'.format(name))
-        return (False, False)
-
     state = path_exists(params['name'])
     present = params.get('present', True)
 
@@ -85,11 +79,6 @@ def __file_check(name, params):
 def __dir_check(name, params):
     """Checks if a directory exists/does not exist."""
 
-    if 'name' not in params:
-        logger.error('Conditional "{0}" is missing a required '
-                     'parameter "name"'.format(name))
-        return (False, False)
-
     state = path_exists(params['name'])
     present = params.get('present', True)
 
@@ -109,11 +98,6 @@ def __dir_check(name, params):
 def __env_var(name, params):
     """Checks that an environment variable has been defined (or not)
     and optionally checks its value."""
-
-    if 'name' not in params:
-        logger.error('Conditional "{0}" is missing a required '
-                     'parameter "name"'.format(name))
-        return (False, False)
 
     state = True if params['name'] in os.environ else False
     present = params.get('present', True)
@@ -137,11 +121,6 @@ def __env_var(name, params):
 
 def __puavo_conf(name, params):
     """Puavo-conf variable presence (and optionally content) check."""
-
-    if 'name' not in params:
-        logger.error('Conditional "{0}" is missing a required '
-                     'parameter "name"'.format(name))
-        return (False, False)
 
     import subprocess
 
@@ -243,6 +222,14 @@ def evaluate_file(file_name):
         if ('params' not in cond) or (cond['params'] is None):
             logger.error('Conditional "{0}" has no "params" block, skipping'.
                          format(name))
+            continue
+
+        # Check the existence of a "name" parameter for all functions
+        # except constants
+        if 'name' not in cond['params'][0] and \
+           __FUNCTIONS[function] is not __constant:
+            logger.error('Conditional "{0}" is missing a required '
+                         'parameter "name"'.format(name))
             continue
 
         try:
