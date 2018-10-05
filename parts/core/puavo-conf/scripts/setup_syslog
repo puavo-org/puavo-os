@@ -182,13 +182,13 @@ if (\$hostname == '${hostname}') then {
   #
   # Some "catch-all" log files.
   #
-  *.=debug;\
-	  auth,authpriv.none;\
-	  news.none;mail.none	-/var/log/debug
-  *.=info;*.=notice;*.=warn;\
-	  auth,authpriv.none;\
-	  cron,daemon.none;\
-	  mail,news.none	-/var/log/messages
+  *.=debug;\\
+          auth,authpriv.none;\\
+          news.none;mail.none	-/var/log/debug
+  *.=info;*.=notice;*.=warn;\\
+          auth,authpriv.none;\\
+          cron,daemon.none;\\
+          mail,news.none	-/var/log/messages
 
   #
   # Emergencies are sent to everybody logged in.
