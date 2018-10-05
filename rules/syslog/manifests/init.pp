@@ -20,6 +20,8 @@ class syslog {
       source  => 'puppet:///modules/syslog/puavo-caching-syslog-sender';
 
     '/var/log/puavo':
+      owner  => 'root',
+      group  => 'adm',
       mode   => '0640',
       ensure => directory;
   }
