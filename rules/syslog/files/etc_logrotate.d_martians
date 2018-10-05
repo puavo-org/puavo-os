@@ -1,0 +1,9 @@
+/var/log/martians {
+	daily
+	missingok
+	rotate 7
+	compress
+	delaycompress
+	notifempty
+	create 640 root adm
+}

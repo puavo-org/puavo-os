@@ -7,14 +7,10 @@ hostname=$(hostname)
 
 receive_as_bootserver() {
   do_not_remove_list='
-    /etc/cron.daily/logrotate
     /etc/logrotate.d/hosts
     /etc/rsyslog.d/receive_messages_to_var_log_hosts.conf
   '
 
-  # Rotate logs every hour, daily is not quite good enough in case there are
-  # misbehaving hosts.
-  ln -fns ../cron.hourly/logrotate /etc/cron.daily/logrotate
   install -o root -g adm -m 750 -d /var/log/hosts
 
   cat <<'EOF' > /etc/logrotate.d/hosts.tmp
@@ -112,6 +108,10 @@ module(load="imklog")   # provides kernel logging support
 #module(load="imtcp")
 #input(type="imtcp" port="514")
 
+module(load="builtin:omfile"
+       fileCreateMode="0640"
+       fileOwner="root"
+       fileGroup="adm")
 
 ###########################
 #### GLOBAL DIRECTIVES ####
@@ -163,8 +163,31 @@ module(load="imklog")   # provides kernel logging support
 :msg, regex, "<= bdb_equality_candidates: \(.*\) not indexed" stop
 
 if (\$hostname == '${hostname}') then {
+  # Put martians to their own logfile.  Duck Dodgers in the 24½th Century!
+  if (\$programname == 'kernel' and
+       (\$msg contains "IPv4: martian source"
+          or \$msg contains "ll header:")) then {
+    action(type="omfile" file="/var/log/martians")
+    stop
+  }
+
+  if \$programname == 'fluentd' then {
+    action(type="omfile" file="/var/log/fluentd/fluentd-daemon.log")
+    stop
+  }
+
+  if \$programname == 'puavo-rest' then {
+    action(type="omfile" file="/var/log/puavo/puavo-rest")
+    stop
+  }
+
+  if \$programname == 'puavo-tftpd' then {
+    action(type="omfile" file="/var/log/puavo/puavo-tftpd")
+    stop
+  }
+
   #
-  # First some standard log files.  Log by facility.
+  # Some standard log files.  Log by facility.
   #
   auth,authpriv.*		/var/log/auth.log
   *.*;auth,authpriv.none	-/var/log/syslog
@@ -227,7 +250,6 @@ case "$logging_policy" in
 esac
 
 all_configuration_files='
-  /etc/cron.daily/logrotate
   /etc/logrotate.d/hosts
   /etc/rsyslog.d/receive_messages_to_var_log_hosts.conf
   /etc/rsyslog.d/send_everything_to_bootserver.conf
