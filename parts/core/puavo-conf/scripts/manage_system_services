@@ -121,6 +121,11 @@ set services {
         -> /lib/systemd/system/puavo-vpn-client-openvpn.service
     }}
 
+  { puavo-wlanap {
+      /etc/systemd/system/multi-user.target.wants/puavo-wlanap.service
+        -> /lib/systemd/system/puavo-wlanap.service
+    }}
+
   { puavo-wlancontroller {
       /etc/systemd/system/multi-user.target.wants/puavo-wlancontroller.service
         -> /lib/systemd/system/puavo-wlancontroller.service
