@@ -108,6 +108,10 @@ module(load="imklog")   # provides kernel logging support
 #module(load="imtcp")
 #input(type="imtcp" port="514")
 
+module(load="builtin:omfile"
+       fileCreateMode="0640"
+       fileOwner="root"
+       fileGroup="adm")
 
 ###########################
 #### GLOBAL DIRECTIVES ####
