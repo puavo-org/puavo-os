@@ -12,10 +12,11 @@ class syslog {
 
     '/usr/local/lib/puavo-caching-syslog-sender':
       mode    => '0755',
-      require => File['/var/log/puavo-os'],
+      require => File['/var/log/puavo'],
       source  => 'puppet:///modules/syslog/puavo-caching-syslog-sender';
 
-    '/var/log/puavo-os':
+    '/var/log/puavo':
+      mode   => '0640',
       ensure => directory;
   }
 

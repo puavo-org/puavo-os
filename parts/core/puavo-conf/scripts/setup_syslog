@@ -168,7 +168,7 @@ if (\$hostname == '${hostname}') then {
   }
 
   if \$programname == 'puavo-rest' then {
-    action(type="omfile" file="/var/log/puavo-rest")
+    action(type="omfile" file="/var/log/puavo/puavo-rest")
     stop
   }
 

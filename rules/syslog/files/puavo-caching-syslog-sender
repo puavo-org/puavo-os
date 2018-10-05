@@ -9,7 +9,7 @@
 
 set puavo_domain [exec cat /etc/puavo/domain]
 
-set remote_cache_path "/var/log/puavo-os/remote-syslog.cache"
+set remote_cache_path "/var/log/puavo/remote-syslog.cache"
 
 # If remote cache filesize is greater than 512 megabytes, we simply remove
 # it before doing anything (yes we lose a lot of logs but this should not
