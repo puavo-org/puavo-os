@@ -176,6 +176,11 @@ if (\$hostname == '${hostname}') then {
     stop
   }
 
+  if \$programname == 'puavo-bootserver-make-homedir' then {
+    action(type="omfile" file="/var/log/puavo/puavo-bootserver-make-homedir")
+    stop
+  }
+
   if \$programname == 'puavo-rest' then {
     action(type="omfile" file="/var/log/puavo/puavo-rest")
     stop
