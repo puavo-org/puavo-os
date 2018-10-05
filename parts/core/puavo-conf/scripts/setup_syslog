@@ -163,6 +163,14 @@ module(load="imklog")   # provides kernel logging support
 :msg, regex, "<= bdb_equality_candidates: \(.*\) not indexed" stop
 
 if (\$hostname == '${hostname}') then {
+  # Put martians to their own logfile.  Duck Dodgers in the 24½th Century!
+  if (\$programname == 'kernel' and
+       (\$msg contains "IPv4: martian source"
+          or \$msg contains "ll header:")) then {
+    action(type="omfile" file="/var/log/martians.log")
+    stop
+  }
+
   #
   # First some standard log files.  Log by facility.
   #
