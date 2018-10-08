@@ -19,7 +19,7 @@ get_ethernet_interfaces() {
 mkdir -p /state/etc/udev/rules.d
 
 inet0_added=false
-ltsp0_added=false
+ltspif_num_to_add=0
 
 {
   for interface in $(get_ethernet_interfaces); do
@@ -29,11 +29,9 @@ ltsp0_added=false
     if ! $inet0_added; then
       our_interface_name=inet0
       inet0_added=true
-    elif ! $ltsp0_added; then
-      our_interface_name=ltsp0
-      ltsp0_added=true
     else
-      our_interface_name=$interface
+      our_interface_name="ltsp${ltspif_num_to_add}"
+      ltspif_num_to_add=$(($ltspif_num_to_add + 1))
     fi
 
     cat <<EOF
