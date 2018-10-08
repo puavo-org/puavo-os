@@ -784,7 +784,7 @@ class packages {
   # various contrib/non-free stuff, firmwares and such
   @package {
     'nautilus-dropbox':
-      tag => [ 'tag_desktop', 'tag_debian_desktop_nonfree', ];
+      tag => [ 'tag_debian_desktop', 'tag_debian_desktop_nonfree', ];
 
     [ 'broadcom-sta-dkms'
     , 'libgl1-nvidia-glx'
