@@ -162,26 +162,36 @@ module(load="builtin:omfile"
 # XXX We should perhaps look into this if we want to do add those indices...
 :msg, regex, "<= bdb_equality_candidates: \(.*\) not indexed" stop
 
-if (\$hostname == '${hostname}') then {
+if (\$hostname == "${hostname}") then {
   # Put martians to their own logfile.  Duck Dodgers in the 24½th Century!
-  if (\$programname == 'kernel' and
+  if (\$programname == "kernel" and
        (\$msg contains "IPv4: martian source"
           or \$msg contains "ll header:")) then {
     action(type="omfile" file="/var/log/martians")
     stop
   }
 
-  if \$programname == 'fluentd' then {
+  if \$programname == "fluentd" then {
     action(type="omfile" file="/var/log/fluentd/fluentd-daemon.log")
     stop
   }
 
-  if \$programname == 'puavo-rest' then {
+  if \$programname == "puavo-bootserver-make-homedir" then {
+    action(type="omfile" file="/var/log/puavo/puavo-bootserver-make-homedir")
+    stop
+  }
+
+  if \$programname == "puavo-rest" then {
     action(type="omfile" file="/var/log/puavo/puavo-rest")
     stop
   }
 
-  if \$programname == 'puavo-tftpd' then {
+  if \$programname == "puavo-sharedir-manager" then {
+    action(type="omfile" file="/var/log/puavo/puavo-sharedir-manager")
+    stop
+  }
+
+  if \$programname == "puavo-tftpd" then {
     action(type="omfile" file="/var/log/puavo/puavo-tftpd")
     stop
   }

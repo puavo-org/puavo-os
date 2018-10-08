@@ -785,7 +785,7 @@ class packages {
   # various contrib/non-free stuff, firmwares and such
   @package {
     'nautilus-dropbox':
-      tag => [ 'tag_desktop', 'tag_debian_desktop_nonfree', ];
+      tag => [ 'tag_debian_desktop', 'tag_debian_desktop_nonfree', ];
 
     [ 'broadcom-sta-dkms'
     , 'libgl1-nvidia-glx'
@@ -830,7 +830,7 @@ class packages {
     , 'intel-microcode'
     , 'iucode-tool' ]:
       ensure => present,
-      tag    => [ 'tag_firmware', 'tag_debian_desktop_nonfree', ];
+      tag    => [ 'tag_firmware', 'tag_debian_nonfree', ];
 
     'steam':
       tag => [ 'tag_games', 'tag_debian_desktop_nonfree', ];
