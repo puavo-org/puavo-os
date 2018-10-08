@@ -2,19 +2,70 @@
 
 set -eu
 
-# This script should be run before setup_state_partition so that
-# /etc/network/interfaces.d is not yet linked to under /state.
+get_interfaces() {
+  sed 's/^.*NAME="//; s/"$//' /state/etc/udev/rules.d/70-persistent-net.rules
+}
+
+setup_inet0() {
+  cat <<'EOF' > /etc/network/interfaces.d.rofs/inet0.tmp || return 1
+# XXX static is preferred, but you need to fill these in.
+# XXX Remove the "auto inet0 / iface inet0 inet dhcp" below
+# XXX once this is done (or remove these lines if dhcp is good.)
+# auto inet0
+# iface inet0 inet static
+#	address XXX.XXX.XXX.XXX
+#	netmask XXX.XXX.XXX.XXX
+#	gateway XXX.XXX.XXX.XXX
+#	dns-nameservers XXX.XXX.XXX.XXX XXX.XXX.XXX.XXX
+
+auto inet0
+iface inet0 inet dhcp
+EOF
+  mv /etc/network/interfaces.d.rofs/inet0.tmp \
+     /etc/network/interfaces.d.rofs/inet0     \
+    || return 1
+}
+
+setup_ltsp() {
+  ltsp_if_num=$1
+  ltsp_if_name="ltsp${ltsp_if_num}"
+  ltsp_ip_address="10.249.$((16 * ($ltsp_if_num+1) - 1)).254"
+  ltsp_if_confpath="/etc/network/interfaces.d.rofs/${ltsp_if_name}"
+
+  if [ "$ltsp_if_num" -ge 14 ]; then
+    echo "Trying to create interface ltsp${ltsp_if_num}, not supported" >&2
+    return 1
+  fi
+
+  cat <<EOF > "${ltsp_if_confpath}.tmp" || return 1
+auto ${ltsp_if_name}
+iface ${ltsp_if_name} inet static
+	address ${ltsp_ip_address}
+	netmask 255.255.240.0
+EOF
+  mv "${ltsp_if_confpath}.tmp" "$ltsp_if_confpath" || return 1
+}
+
+setup_wlan0() {
+  cat <<'EOF' > /etc/network/interfaces.d.rofs/wlan0.tmp || return 1
+auto wlan0
+iface wlan0 inet static
+	address 10.249.239.254
+	netmask 255.255.240.0
+	bridge_ports none
+	bridge_stp off
+	bridge_fd 0
+	bridge_maxwait 0
+EOF
+  mv /etc/network/interfaces.d.rofs/wlan0.tmp \
+     /etc/network/interfaces.d.rofs/wlan0 \
+    || return 1
+}
 
 # XXX get rid of hosttype handling!
 puavo_hosttype=$(puavo-conf puavo.hosttype)
 
 if [ "$puavo_hosttype" != 'bootserver' ]; then
-  exit 0
-fi
-
-if [ -h /etc/network/interfaces.d ]; then
-  # not touching /etc/network/interfaces.d, it is a symbolic link
-  # (might happen if persistent overlay is in use)
   exit 0
 fi
 
@@ -25,6 +76,22 @@ if [ -e /run/puavo/nbd-server ]; then
   exit 0
 fi
 
-rm -f /etc/network/interfaces.d/*
-cp -p /etc/network/interfaces.${puavo_hosttype}.d/* \
-      /etc/network/interfaces.d/
+cat <<'EOF' > /etc/network/interfaces.d.rofs/lo.tmp
+# The loopback network interface
+auto lo
+iface lo inet loopback
+EOF
+mv /etc/network/interfaces.d.rofs/lo.tmp \
+   /etc/network/interfaces.d.rofs/lo
+
+status=0
+
+for interface in $(get_interfaces); do
+  case "$interface" in
+    inet0)                setup_inet0                    || status=1 ;;
+    ltsp[0-9]|ltsp1[0-3]) setup_ltsp "${interface#ltsp}" || status=1 ;;
+    wlan0)                setup_wlan0                    || status=1 ;;
+  esac
+done
+
+exit $status
