@@ -1,5 +1,0 @@
-#!/bin/sh
-
-set -eu
-
-exec puavo-sysmerge --auto
