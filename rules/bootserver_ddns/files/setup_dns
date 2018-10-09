@@ -197,8 +197,9 @@ localise-queries
 $(for subdomain in $dhcpd_subdomain_list; do
     echo "server=/${subdomain}.${puavo_domain}/127.0.0.1#553"
   done)
-# XXX hardcoded 249.10... breaks with 251.10.in-addr.arpa and others...
+# XXX hardcoded 249.10 and 251.10 ... breaks with other network configurations...
 server=/249.10.in-addr.arpa/127.0.0.1#553
+server=/251.10.in-addr.arpa/127.0.0.1#553
 
 # Printer entries
 server=/_ipp._tcp.${puavo_domain}/127.0.0.1#553
