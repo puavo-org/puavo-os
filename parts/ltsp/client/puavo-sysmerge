@@ -10,6 +10,8 @@ status=0
 
 sourcedirlist=''
 if [ "$puavo_hosttype" = 'bootserver' ]; then
+  /etc/puavo-conf/scripts/setup_bootserver_network_interfaces
+
   sourcedirlist='
     /etc/network/interfaces.d.rofs
     /etc/shorewall.rofs
