@@ -27,13 +27,18 @@ EOF
 }
 
 setup_ltsp() {
-  ltsp_if_num=$1
-  ltsp_if_name="ltsp${ltsp_if_num}"
-  ltsp_ip_address="10.249.$((16 * ($ltsp_if_num+1) - 1)).254"
+  if_num=$1
+
+  ltsp_ip_address="10.249.$((16 * ($if_num+1) - 1)).254"
+  ltsp_if_name="ltsp${if_num}"
   ltsp_if_confpath="/etc/network/interfaces.d.rofs/${ltsp_if_name}"
 
-  if [ "$ltsp_if_num" -ge 14 ]; then
-    echo "Trying to create interface ltsp${ltsp_if_num}, not supported" >&2
+  wlan_ip_address="10.251.$((16 * ($if_num+1) - 1)).254"
+  wlan_if_name="wlan${if_num}"
+  wlan_if_confpath="/etc/network/interfaces.d.rofs/${wlan_if_name}"
+
+  if [ "$if_num" -ge 16 ]; then
+    echo "Trying to create interface ltsp${if_num}, not supported" >&2
     return 1
   fi
 
@@ -44,22 +49,18 @@ iface ${ltsp_if_name} inet static
 	netmask 255.255.240.0
 EOF
   mv "${ltsp_if_confpath}.tmp" "$ltsp_if_confpath" || return 1
-}
 
-setup_wlan0() {
-  cat <<'EOF' > /etc/network/interfaces.d.rofs/wlan0.tmp || return 1
-auto wlan0
-iface wlan0 inet static
-	address 10.249.239.254
+  cat <<EOF > "${wlan_if_confpath}.tmp" || return 1
+auto ${wlan_if_name}
+iface ${wlan_if_name} inet static
+	address ${wlan_ip_address}
 	netmask 255.255.240.0
 	bridge_ports none
 	bridge_stp off
 	bridge_fd 0
 	bridge_maxwait 0
 EOF
-  mv /etc/network/interfaces.d.rofs/wlan0.tmp \
-     /etc/network/interfaces.d.rofs/wlan0 \
-    || return 1
+  mv "${wlan_if_confpath}.tmp" "$wlan_if_confpath" || return 1
 }
 
 # XXX get rid of hosttype handling!
@@ -88,10 +89,12 @@ status=0
 
 for interface in $(get_interfaces); do
   case "$interface" in
-    inet0)                setup_inet0                    || status=1 ;;
-    ltsp[0-9]|ltsp1[0-3]) setup_ltsp "${interface#ltsp}" || status=1 ;;
-    wlan0)                setup_wlan0                    || status=1 ;;
+    inet0)     setup_inet0                    || status=1 ;;
+    ltsp[0-7]) setup_ltsp "${interface#ltsp}" || status=1 ;;
   esac
 done
 
-exit $status
+if [ "$status" -ne 0 ]; then
+  echo 'Errors occurred while setting up network configuration' >&2
+  exit $status
+fi
