@@ -61,10 +61,6 @@ class Interface
     lookup_ifdata(if_name, 'netmask', '-pn')
   end
 
-  def name_no_number
-    @name.match(/^(.*)\d+$/) ? $1 : @name
-  end
-
   def subsubnets_prefix
     [ @ip.prefix.to_i + 4, 32 ].min
   end
@@ -107,12 +103,20 @@ rescue
 end
 
 puavoconf = Puavo::Conf.new
-network_interfaces_for_dhcpd = \
-  puavoconf.get('puavo.networking.ddns.dhcpd_interfaces') \
-    .split(',') \
-    .map { |iface| Interface.new(iface) }
+network_interfaces_filter = puavoconf.get('puavo.networking.ddns.dhcpd_interfaces') \
+                                     .split(',')
 ubnt_unifi_address = puavoconf.get('puavo.networking.ubnt.unify.address')
 puavoconf.close
+
+ip_link_output = %x(ip -o link)
+raise 'looking up interfaces failed' unless $?.success?
+all_interfaces = ip_link_output.split("\n").map { |s| (s.split)[1].sub(/:$/, "") }
+
+network_interfaces_for_dhcpd = all_interfaces.select do |interf|
+                                 network_interfaces_filter.any? do |globexpr|
+                                   File.fnmatch(globexpr, interf)
+                                 end
+                               end.map { |interf| Interface.new(interf) }
 
 if network_interfaces_for_dhcpd.empty? then
   dhcpd_conf       = "# DISABLED\n"
@@ -146,7 +150,8 @@ include "/etc/dhcp.d/ubnt.conf";
   network_interfaces_for_dhcpd.map do |iface|
     <<IFACE_EOF
 subnet #{ iface.subnet } netmask #{ iface.ip.netmask } {
-  option domain-name "ltsp.#{ puavo_domain }";
+  # interface #{ iface.name }
+  option domain-name "#{ iface.name }.#{ puavo_domain }";
 
   pool {
     #{
@@ -174,7 +179,7 @@ subnet #{ iface.subnet } netmask #{ iface.ip.netmask } {
 		 " Subdomain: ", "#{ iface.name }"));
 
       execute("/usr/local/lib/puavo-update-ddns", "mac", ClientMac, ClientIP,
-              "#{ iface.name_no_number }");
+              "#{ iface.name }");
     }
   }
 }
