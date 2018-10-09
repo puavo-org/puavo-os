@@ -61,6 +61,10 @@ class Interface
     lookup_ifdata(if_name, 'netmask', '-pn')
   end
 
+  def name_no_number
+    @name.match(/^(.*)\d+$/) ? $1 : @name
+  end
+
   def subsubnets_prefix
     [ @ip.prefix.to_i + 4, 32 ].min
   end
@@ -151,7 +155,7 @@ include "/etc/dhcp.d/ubnt.conf";
     <<IFACE_EOF
 subnet #{ iface.subnet } netmask #{ iface.ip.netmask } {
   # interface #{ iface.name }
-  option domain-name "#{ iface.name }.#{ puavo_domain }";
+  option domain-name "#{ iface.name_no_number }.#{ puavo_domain }";
 
   pool {
     #{
@@ -176,10 +180,10 @@ subnet #{ iface.subnet } netmask #{ iface.ip.netmask } {
 
       log(concat("Commit: IP: ", ClientIP,
 		 " Mac: ",       ClientMac,
-		 " Subdomain: ", "#{ iface.name }"));
+		 " Subdomain: ", "#{ iface.name_no_number }"));
 
       execute("/usr/local/lib/puavo-update-ddns", "mac", ClientMac, ClientIP,
-              "#{ iface.name }");
+              "#{ iface.name_no_number }");
     }
   }
 }
