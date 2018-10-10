@@ -125,14 +125,20 @@ bootserver_setup_state() {
   /etc/puavo-conf/scripts/setup_state_partition
   /etc/puavo-conf/scripts/setup_bootserver_persistent_net_rules
 
-  echo 'Wrote "/etc/udev/rules.d/70-persistent-net.rules":'
+  echo 'Wrote /etc/udev/rules.d/70-persistent-net.rules:'
   echo ---
   cat /etc/udev/rules.d/70-persistent-net.rules
   echo ---
   echo 'Spawning shell for you if you want to edit it, type "exit" when ok'
   bash
-  echo 'Running "puavo-sysmerge", remember to run it if you make changes to'
-  echo '"/etc/udev/rules.d/70-persistent-net.rules".'
+  echo 'Running puavo-sysmerge, remember to run it if you make changes to'
+  echo '/etc/udev/rules.d/70-persistent-net.rules.'
+
+  # XXX this is ugly but puavo-sysmerge needs this for proper networking
+  # XXX setup and bootserver profile is not yet effective (or we do
+  # XXX networking setup after first boot but that is also ugly)
+  puavo-conf puavo.networking.ddns.dhcpd_interfaces 'ltsp*,wlan*'
+
   puavo-sysmerge --auto
 
   /etc/puavo-conf/scripts/setup_slapd
