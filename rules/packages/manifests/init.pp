@@ -40,6 +40,7 @@ class packages {
     , 'puavo-webwindow'
     , 'puavo-wlanap'
     , 'puavo-wlanmapper'
+    , 'puavo-wlangw'
     , 'puavomenu'
     , 'ruby-puavowlan'
     , 'webkiosk-language-selector'
