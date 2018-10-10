@@ -2,37 +2,26 @@ class bootserver_firewall {
   include ::packages
   include ::puavo_conf
 
-  define conffile {
-    $filename = $title
-
-    file {
-      "/etc/shorewall/${filename}":
-        content => template("bootserver_firewall/etc_shorewall/${filename}"),
-        require => Package['shorewall'];
-    }
-  }
-
   file {
     '/etc/default/shorewall':
-      content => template('bootserver_firewall/etc_default_shorewall');
+      require => Package['shorewall'],
+      source  => 'puppet:///modules/bootserver_firewall/etc_default_shorewall';
+
+    '/etc/shorewall/Makefile':
+      require => Package['shorewall'],
+      source  => 'puppet:///modules/bootserver_firewall/etc_shorewall/Makefile';
+
+    '/etc/shorewall/shorewall.conf':
+      require => Package['shorewall'],
+      source  => 'puppet:///modules/bootserver_firewall/etc_shorewall/shorewall.conf';
   }
 
   ::puavo_conf::script {
+    'setup_bootserver_shorewall_conf':
+      source => 'puppet:///modules/bootserver_firewall/setup_bootserver_shorewall_conf';
+
     'setup_firewall':
       source => 'puppet:///modules/bootserver_firewall/setup_firewall';
-  }
-
-  ::bootserver_firewall::conffile {
-    [ 'Makefile'
-    , 'hosts'
-    , 'interfaces'
-    , 'masq'
-    , 'policy'
-    , 'rules'
-    , 'shorewall.conf'
-    , 'tunnels'
-    , 'zones' ]:
-      ;
   }
 
   Package <| title == shorewall |>

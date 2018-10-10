@@ -130,20 +130,6 @@ to /etc/ldap/ldap.conf for ldapsearch and other ldap-tools to work,
 but this should not be strictly necessary.
 
 
-Virtual LTSP-servers and thinclients
-------------------------------------
-
-If you need to serve thinclients (and not just fatclients), and you
-do not have physical machines (other than the bootserver)) to do this,
-you should setup a KVM virtual machine.  For example, you can create a
-machine named "ltsp1", with:
-
-  puavo-create-kvm-ltsp-server ltsp1
-
-Then putting the line "ltsp1" to /etc/puavo/primary_ltsp_server should be a
-good idea (this makes the created ltsp server the default ltsp server).
-
-
 Load balancing and laptop updates
 ---------------------------------
 

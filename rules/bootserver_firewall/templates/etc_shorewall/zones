@@ -1,9 +1,0 @@
-#ZONE   TYPE    OPTIONS                 IN                      OUT
-#                                       OPTIONS                 OPTIONS
-fw      firewall
-ltsp    ipv4		# LTSP network
-wlan    ipv4		# WLAN network
-inet    ipv4		# Internet
-ovpn    ipv4		# OpenVPN for server administration
-ivpn	ipsec		# IPsec for laptops
-avpn	ipv4		# Alternative OpenVPN for server administration
