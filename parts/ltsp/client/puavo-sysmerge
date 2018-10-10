@@ -6,23 +6,22 @@ mode=${1:---manual}
 
 puavo_hosttype=$(puavo-conf puavo.hosttype)
 
-status=0
-
-sourcedirlist=''
-if [ "$puavo_hosttype" = 'bootserver' ]; then
-  /etc/puavo-conf/scripts/setup_bootserver_network_interfaces
-
-  sourcedirlist='
-    /etc/network/interfaces.d.rofs
-    /etc/shorewall.rofs
-  '
+if [ "$puavo_hosttype" != 'bootserver' ]; then
+  echo "$(basename $0) is only supported on bootservers!" >&2
+  exit 1
 fi
 
-done_first=false
-for sourcedir in $sourcedirlist; do
-  if ! $done_first; then done_first=true; else echo; fi
-  puavo-sysmerge-onedir "$mode" "$sourcedir" || status=1
-done
+status=0
+
+{
+  /etc/puavo-conf/scripts/setup_bootserver_network_interfaces \
+    && puavo-sysmerge-onedir "$mode" /etc/network/interfaces.d.rofs
+} || status=1
+
+{
+  /etc/puavo-conf/scripts/setup_bootserver_shorewall_conf \
+    && puavo-sysmerge-onedir "$mode" /etc/shorewall.rofs
+} || status=1
 
 if [ "$status" -ne 0 ]; then
   echo 'There were errors!' >&2
