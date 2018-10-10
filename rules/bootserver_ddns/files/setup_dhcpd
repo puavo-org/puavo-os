@@ -112,9 +112,11 @@ network_interfaces_filter = puavoconf.get('puavo.networking.ddns.dhcpd_interface
 ubnt_unifi_address = puavoconf.get('puavo.networking.ubnt.unify.address')
 puavoconf.close
 
-ip_link_output = %x(ip -o link)
-raise 'looking up interfaces failed' unless $?.success?
-all_interfaces = ip_link_output.split("\n").map { |s| (s.split)[1].sub(/:$/, "") }
+all_interfaces = (%w(/etc/network/interfaces) + Dir.glob('/etc/network/interfaces.d/*')) \
+                    .map { |path| IO.readlines(path) }.flatten \
+                    .map { |line| a = line.split; (a[0] == 'iface') ? a[1] : nil } \
+                    .compact \
+                    .sort
 
 network_interfaces_for_dhcpd = all_interfaces.select do |interf|
                                  network_interfaces_filter.any? do |globexpr|

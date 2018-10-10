@@ -65,7 +65,8 @@ fi
 arpazone='10.in-addr.arpa'
 
 get_dhcp_interfaces() {
-  all_interfaces=$(ip -o link | awk '{ sub(/:$/, "", $2); print $2 }')
+  all_interfaces=$(awk '$1 == "iface" { print $2 }' /etc/network/interfaces \
+                                                    /etc/network/interfaces.d/*)
 
   puavo_dhcpd_interfaces=$(puavo-conf puavo.networking.ddns.dhcpd_interfaces)
   for if_filter in $(echo "$puavo_dhcpd_interfaces" | tr , ' '); do
