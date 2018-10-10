@@ -43,9 +43,6 @@ install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/nginx/sites-available \
 		etc/nginx/sites-available/ltsp-images
 
-	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir) \
-		templates/ltsp-server.xml
-
 	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/etc/apparmor.d/local \
 		templates/etc/apparmor.d/local/usr.sbin.dhcpd
 
