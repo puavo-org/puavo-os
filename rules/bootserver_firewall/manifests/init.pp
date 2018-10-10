@@ -18,6 +18,9 @@ class bootserver_firewall {
   }
 
   ::puavo_conf::script {
+    'setup_bootserver_shorewall_conf':
+      source => 'puppet:///modules/bootserver_firewall/setup_bootserver_shorewall_conf';
+
     'setup_firewall':
       source => 'puppet:///modules/bootserver_firewall/setup_firewall';
   }
