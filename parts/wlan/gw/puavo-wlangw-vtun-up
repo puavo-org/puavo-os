@@ -2,6 +2,34 @@
 
 set -eu
 
+find_wlan_interface() {
+  local_ip_address=$1
+
+  local_interface=$(
+    ip -o -4 addr show \
+      | awk -v ip="$local_ip_address" '{
+	  split($4, a, /\//)
+	  if (a[1] == ip) { print $2; exit(0) }
+	}')
+  if [ -z "$local_interface" ]; then
+    echo "Could not find local interface for ip address ${local_ip_addres}" >&2
+    return 1
+  fi
+
+  # find a matching bridging interface, ltsp0 --> wlan0, ltsp1 --> wlan1, etc.
+  case "$local_interface" in
+    ltsp*)
+      wlan_interface="wlan${local_interface#ltsp}"
+      ifdata -e "$wlan_interface" || return 1
+      echo "$wlan_interface"
+      return 0
+      ;;
+  esac
+
+  echo "Connection to ${local_interface}, not an ltsp* interface" >&2
+  return 1
+}
+
 # XXX code duplication with setup_bootserver_shorewall_conf and setup_dns
 get_dhcp_interfaces() {
   all_interfaces=$(awk '$1 == "iface" { print $2 }' /etc/network/interfaces \
@@ -19,26 +47,30 @@ get_dhcp_interfaces() {
   done
 }
 
-ifconfig $1 up
-brctl addif $2 $1
+tapdev=$1
+local_ip=$2
+bridging_wlan_if=$(find_wlan_interface "$local_ip")
+
+ifconfig "$tapdev" up
+brctl addif "$bridging_wlan_if" "$tapdev"
 
 # First make sure that there are no tc rules
-tc qdisc del root dev $1
+tc qdisc del root dev "$tapdev" 2>/dev/null || true
 
-tc qdisc add dev $1 root handle 1: htb default 10
+tc qdisc add dev "$tapdev" root handle 1: htb default 10
 # Limit traffic for a single tunnel to 50Mbps
-tc class add dev $1 parent 1: classid 1:1 htb rate 50mbit burst 15k
+tc class add dev "$tapdev" parent 1: classid 1:1 htb rate 50mbit burst 15k
 
 # Give 45Mbps to normal traffic
-tc class add dev $1 parent 1:1 classid 1:10 htb rate 45mbit burst 15k
+tc class add dev "$tapdev" parent 1:1 classid 1:10 htb rate 45mbit burst 15k
 
 # Give 15Mbps to image sync traffic
-tc class add dev $1 parent 1:1 classid 1:20 htb rate 15mbit burst 15k
+tc class add dev "$tapdev" parent 1:1 classid 1:20 htb rate 15mbit burst 15k
 
 # Image sync traffic originates from bootserver's port 872 only
 for dhcp_iface in $(get_dhcp_interfaces); do
   dhcp_iface_ip=$(ifdata -pa "$dhcp_iface")
-  tc filter add dev $1 parent 1: protocol ip prio 1 u32 \
+  tc filter add dev "$tapdev" parent 1: protocol ip prio 1 u32 \
      match ip src "${dhcp_iface_ip}/32"                  \
      match ip sport 872 0xffff flowid 1:20
 done
