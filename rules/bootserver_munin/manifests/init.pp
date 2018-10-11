@@ -1,6 +1,7 @@
 class bootserver_munin {
   include ::bootserver_helpers
   include ::bootserver_nginx
+  include ::puavo_conf
 
   define plugin ($wildcard = false) {
     $plugin_name = $title
@@ -49,14 +50,6 @@ class bootserver_munin {
     'cupsys_pages':
       require => File['/etc/munin/plugin-conf.d/cupsys_pages'];
 
-    [ 'if_eth0'
-    , 'if_eth1'
-    , 'if_inet0'
-    , 'if_ltsp0'
-    , 'if_vpn0'
-    , 'if_wlan0' ]:
-      wildcard => true;
-
     [ 'puavo-bootserver-clients'
     , 'users' ]:
       ;
@@ -66,6 +59,11 @@ class bootserver_munin {
   }
 
   ::bootserver_nginx::enable { 'munin': ; }
+
+  ::puavo_conf::script {
+    'setup_munin':
+      source => 'puppet:///modules/bootserver_munin/setup_munin';
+  }
 
   Package <| title == 'munin'
           or title == 'munin-node'

@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -eu
+
+interfaces=$(awk '$1 == "iface" && $2 != "lo" { print $2 }' /etc/network/interfaces \
+                 /etc/network/interfaces.d/*)
+interfaces="$interfaces vpn0"
+
+for iface in $interfaces; do
+  ln -fns /usr/share/munin/plugins/if_ "/etc/munin/plugins/if_${iface}"
+done
