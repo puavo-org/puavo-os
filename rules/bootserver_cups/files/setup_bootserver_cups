@@ -8,6 +8,12 @@ read puavo_hostname < /etc/puavo/hostname
 # puavo_admin_vpn_subnet=$(puavo-conf puavo.admin.vpn.subnet)
 puavo_admin_vpn_subnet='10.246.155.0/24'
 
+dhcpd_interfaces=$(sed -n -E '/^INTERFACESv4/s/^INTERFACESv4="(.*)"$/\1/p' \
+                       /etc/default/isc-dhcp-server)
+if [ -z "$dhcpd_interfaces" ]; then
+  echo 'No dhcpd interfaces in /etc/default/isc-dhcp-server, this is not likely good!' >&2
+fi
+
 if [ -n "$puavo_admin_vpn_subnet" ]; then
   allow_from_admin_vpn="Allow from ${puavo_admin_vpn_subnet}"
 else
@@ -142,9 +148,10 @@ Browsing Off
 BrowseOrder allow,deny
 BrowseInterval 30
 BrowseTimeout 120
-BrowseAddress @IF(ltsp0)
 BrowseAddress @IF(vpn0)
-BrowseAddress @IF(wlan0)
+$(for dhcp_iface in $dhcpd_interfaces; do
+    echo "BrowseAddress @IF(${dhcp_iface})"
+  done)
 BrowseLocalProtocols CUPS
 
 # Default authentication type, when authentication is required...
