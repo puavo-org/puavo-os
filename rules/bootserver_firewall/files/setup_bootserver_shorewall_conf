@@ -70,7 +70,6 @@ iface_to_network_cidr() {
 
 iface_no_num() { echo "$1" | sed -E 's/[0-9]+$//'; }
 
-# XXX code duplication with setup_dns
 get_dhcp_interfaces() {
   all_interfaces=$(awk '$1 == "iface" { print $2 }' /etc/network/interfaces \
                                                     /etc/network/interfaces.d/*)
