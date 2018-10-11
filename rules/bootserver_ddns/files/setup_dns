@@ -276,7 +276,6 @@ EOF
 mv /etc/hosts.tmp /etc/hosts
 
 cat <<EOF > /etc/resolvconf/resolv.conf.d/tail.tmp
-search ltsp.${puavo_domain}
-search wlan.${puavo_domain}
+search ltsp.${puavo_domain} wlan.${puavo_domain}
 EOF
 mv /etc/resolvconf/resolv.conf.d/tail.tmp /etc/resolvconf/resolv.conf.d/tail
