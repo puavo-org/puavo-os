@@ -13,8 +13,8 @@ class bootserver_backup {
   }
 
   file {
-    '/usr/local/sbin/rsync-server-backup-etc-home':
+    '/usr/local/sbin/rsync-server-backup-home-state':
       mode   => '0755',
-      source => 'puppet:///modules/bootserver_backup/rsync-server-backup-etc-home';
+      source => 'puppet:///modules/bootserver_backup/rsync-server-backup-home-state';
   }
 }
