@@ -10,11 +10,33 @@ if [ ! -d "${CONF_DIR}" ]; then
     mkdir -p "${CONF_DIR}"
 fi
 
-/opt/puavomenu/puavomenu \
-    --res_dir "/opt/puavomenu/res" \
-    --menu_dir "/etc/puavomenu" \
-    --user_dir "${CONF_DIR}" \
-    --socket "${CONF_DIR}/socket_${HOSTNAME}" \
-    --log "/tmp/puavomenu_${TIMESTAMP}.log" \
-    --autohide \
-    &
+# Enable quick development mode?
+DEVMODE=0
+
+if [ $# -gt 0 ]; then
+    if [ "$1" = "--dev" ]; then
+        DEVMODE=1
+    fi
+fi
+
+if [ $DEVMODE -eq 0 ]; then
+    # Production mode
+    /opt/puavomenu/puavomenu \
+        --res_dir "/opt/puavomenu/res" \
+        --menu_dir "/opt/puavomenu/res" \
+        --user_dir "${CONF_DIR}" \
+        --socket "${CONF_DIR}/socket_${HOSTNAME}" \
+        --log "/tmp/puavomenu_${TIMESTAMP}.log" \
+        --autohide \
+        &
+else
+    # Development mode
+    shift
+
+    ./puavomenu \
+        --res_dir "./res" \
+        --menu_dir "../../rules/puavomenu/templates" \
+        --user_dir "${CONF_DIR}" \
+        --socket "${CONF_DIR}/dev_socket_${HOSTNAME}" \
+        --dev "$@" &
+fi
