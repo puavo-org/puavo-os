@@ -6,6 +6,10 @@ class bootserver_cups {
     'setup_bootserver_cups':
       require => Package['cups'],
       source  => 'puppet:///modules/bootserver_cups/setup_bootserver_cups';
+
+    'setup_bootserver_printer_restrictions':
+      require => Package['cups'],
+      source  => 'puppet:///modules/bootserver_cups/setup_bootserver_printer_restrictions';
   }
 
   file {

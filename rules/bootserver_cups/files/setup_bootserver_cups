@@ -8,6 +8,13 @@ read puavo_hostname < /etc/puavo/hostname
 # puavo_admin_vpn_subnet=$(puavo-conf puavo.admin.vpn.subnet)
 puavo_admin_vpn_subnet='10.246.155.0/24'
 
+dhcpd_interfaces=$(sed -n -E '/^INTERFACESv4/s/^INTERFACESv4="(.*)"$/\1/p' \
+                       /etc/default/isc-dhcp-server)
+if [ -z "$dhcpd_interfaces" ]; then
+  echo 'No dhcpd interfaces set for a bootserver, exiting...' >&2
+  exit 1
+fi
+
 if [ -n "$puavo_admin_vpn_subnet" ]; then
   allow_from_admin_vpn="Allow from ${puavo_admin_vpn_subnet}"
 else
@@ -118,7 +125,8 @@ ServerKey /etc/puavo/certs/host.key
 EOF
 mv /etc/cups/cups-files.conf.tmp /etc/cups/cups-files.conf
 
-cat <<EOF > /etc/cups/cupsd.conf.tmp
+{
+  cat <<EOF
 #
 # Configuration file for the CUPS scheduler.  See "man cupsd.conf" for a
 # complete description of this file.
@@ -142,9 +150,10 @@ Browsing Off
 BrowseOrder allow,deny
 BrowseInterval 30
 BrowseTimeout 120
-BrowseAddress @IF(ltsp0)
 BrowseAddress @IF(vpn0)
-BrowseAddress @IF(wlan0)
+$(for dhcp_iface in $dhcpd_interfaces; do
+    echo "BrowseAddress @IF(${dhcp_iface})"
+  done)
 BrowseLocalProtocols CUPS
 
 # Default authentication type, when authentication is required...
@@ -278,4 +287,10 @@ WebInterface Yes
   </Limit>
 </Policy>
 EOF
+
+  # this might have been created by setup_bootserver_printer_restrictions
+  if [ -r /etc/cups/puavo/printer_restrictions.conf ]; then
+    cat /etc/cups/puavo/printer_restrictions.conf
+  fi
+} > /etc/cups/cupsd.conf.tmp
 mv /etc/cups/cupsd.conf.tmp /etc/cups/cupsd.conf

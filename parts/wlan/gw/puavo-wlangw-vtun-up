@@ -30,22 +30,8 @@ find_wlan_interface() {
   return 1
 }
 
-# XXX code duplication with setup_bootserver_shorewall_conf and setup_dns
-get_dhcp_interfaces() {
-  all_interfaces=$(awk '$1 == "iface" { print $2 }' /etc/network/interfaces \
-                                                    /etc/network/interfaces.d/*)
-
-  puavo_dhcpd_interfaces=$(puavo-conf puavo.networking.ddns.dhcpd_interfaces)
-  for if_filter in $(echo "$puavo_dhcpd_interfaces" | tr , ' '); do
-    for interf in $all_interfaces; do
-      case "$interf" in
-        $if_filter)
-          echo "$interf"
-          ;;
-      esac
-    done
-  done
-}
+dhcpd_interfaces=$(sed -n -E '/^INTERFACESv4/s/^INTERFACESv4="(.*)"$/\1/p' \
+                       /etc/default/isc-dhcp-server)
 
 tapdev=$1
 local_ip=$2
@@ -68,7 +54,7 @@ tc class add dev "$tapdev" parent 1:1 classid 1:10 htb rate 45mbit burst 15k
 tc class add dev "$tapdev" parent 1:1 classid 1:20 htb rate 15mbit burst 15k
 
 # Image sync traffic originates from bootserver's port 872 only
-for dhcp_iface in $(get_dhcp_interfaces); do
+for dhcp_iface in $dhcpd_interfaces; do
   dhcp_iface_ip=$(ifdata -pa "$dhcp_iface")
   tc filter add dev "$tapdev" parent 1: protocol ip prio 1 u32 \
      match ip src "${dhcp_iface_ip}/32"                  \

@@ -1,0 +1,144 @@
+#!/usr/bin/ruby
+
+require 'fileutils'
+require 'puavo/conf'
+require 'puavo/etc'
+require 'puavo/rest-client'
+
+def pq_structure_ok?(pq)
+  pq.kind_of?(Hash) \
+    && pq.all? do |printer, schools|
+         printer.kind_of?(String)     \
+           && schools.kind_of?(Array) \
+           && schools.all? { |s| s.kind_of?(String) }
+       end
+end
+
+client = PuavoRestClient.new :auth => :etc
+
+url = "/v3/boot_servers/#{ PUAVO_ETC.hostname }/printer_schools"
+all_schools_by_printers = client.get(url).parse
+
+schools_by_pq          = all_schools_by_printers['printer_queues']
+schools_by_wireless_pq = all_schools_by_printers['wireless_printer_queues']
+
+raise 'printer queues is not in a valid format' \
+  unless pq_structure_ok?(schools_by_pq)
+raise 'printer wireless queues is not in a valid format' \
+  unless pq_structure_ok?(schools_by_wireless_pq)
+
+all_schools = (schools_by_pq.values.flatten \
+                + schools_by_wireless_pq.values.flatten).uniq
+
+puavoconf = Puavo::Conf.new
+network_interfaces_by_school_conf = 'ltsp*,wlan*:*'
+  # = puavoconf.get('puavo.networking.bootserver.interfaces.schools')
+puavoconf.close
+
+# XXX duplicate code with setup_dhcpd
+interface_files = %w(/etc/network/interfaces) \
+                    + Dir.glob('/etc/network/interfaces.d/*')
+all_interfaces = interface_files \
+                    .map { |path| IO.readlines(path) }.flatten \
+                    .map { |line| a = line.split
+                                  (a[0] == 'iface') ? a[1] : nil } \
+                    .compact.sort.uniq
+
+wired_interfaces_by_school = {}
+wireless_interfaces_by_school = {}
+schools_by_network_interfaces = {}
+
+network_interfaces_by_school_conf.split.each do |mapping_string|
+  interface_matches_string, school_matches_string = * mapping_string.split(':')
+  interface_matches = interface_matches_string.split(',')
+  school_matches = school_matches_string.split(',')
+
+  interfaces = all_interfaces.select do |iface|
+                 interface_matches.any? do |if_match|
+                   File.fnmatch(if_match, iface)
+                 end
+               end
+  schools = all_schools.select do |school|
+              school_matches.any? do |school_match|
+                File.fnmatch(school_match, school)
+              end
+            end
+
+  wireless_interfaces, wired_interfaces = interfaces.partition do |iface|
+                                            iface.match(/^wlan/)
+					  end
+
+  interfaces.each do |iface|
+    schools_by_network_interfaces[iface] ||= []
+    (schools_by_network_interfaces[iface] += schools).uniq!
+  end
+
+  schools.each do |school|
+    wired_interfaces_by_school[school] ||= []
+    (wired_interfaces_by_school[school] += wired_interfaces).uniq!
+    wireless_interfaces_by_school[school] ||= []
+    (wireless_interfaces_by_school[school] += wireless_interfaces).uniq!
+  end
+end
+
+all_printer_queues = (schools_by_pq.keys + schools_by_wireless_pq.keys) \
+                       .sort_by(&:downcase).uniq
+
+cups_printer_restrictions = ''
+
+all_printer_queues.each do |printer_queue|
+  allow_wired = (schools_by_pq[printer_queue] || []).map do |school|
+                  wired_interfaces_by_school[school].sort.map do |iface|
+                    netif_schools = schools_by_network_interfaces[iface].sort
+                    "  Allow @IF(#{ iface })" \
+                      + "\t\t# puavo school(s): #{ netif_schools.join(' ') }"
+                  end.join("\n")
+                end.join("\n")
+  allow_wireless = (schools_by_wireless_pq[printer_queue] || []).map do |school|
+                      wireless_interfaces_by_school[school].sort.map do |iface|
+                        netif_schools \
+                          = schools_by_network_interfaces[iface].sort
+                        "  Allow @IF(#{ iface })\t\t# puavo school(s): " \
+                          + netif_schools.join(' ')
+                      end.join("\n")
+                   end.join("\n")
+
+  printer_conf = "<Location /printers/#{ printer_queue }>\n"                  \
+                    + (!allow_wired.empty?    ? (allow_wired    + "\n") : '') \
+                    + (!allow_wireless.empty? ? (allow_wireless + "\n") : '') \
+                    + "  Allow @IF(vpn0)\t\t# admin tunnel\n"                 \
+                    + "</Location>\n"
+
+  cups_printer_restrictions += printer_conf
+end
+
+FileUtils.mkdir_p('/etc/cups/puavo')
+
+cups_printer_restrictions_path = '/etc/cups/puavo/printer_restrictions.conf'
+tmpfile = "#{ cups_printer_restrictions_path }.tmp"
+
+status = 0
+
+# XXX flock?
+File.open(tmpfile, 'w') do |f|
+  f.print cups_printer_restrictions
+
+  files_match = FileUtils.compare_file(tmpfile,
+                                       cups_printer_restrictions_path) \
+                  rescue false
+
+  if !files_match then
+    File.rename(tmpfile, cups_printer_restrictions_path)
+    if !system('/etc/puavo-conf/scripts/setup_bootserver_cups') then
+      warn 'error running /etc/puavo-conf/scripts/setup_bootserver_cups'
+      status = 1
+    elsif !system('service cups restart') then
+      warn 'error running "service cups restart"'
+      status = 1
+    end
+  else
+    FileUtils.rm_f(tmpfile)
+  end
+end
+
+exit(status)

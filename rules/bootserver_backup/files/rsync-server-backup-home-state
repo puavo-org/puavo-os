@@ -9,7 +9,7 @@ maybe_run_command() {
   fi
 }
 
-backuppable_dirs="/etc/ /home/"
+backuppable_dirs="/home/ /state/"
 
 for dir in $backuppable_dirs; do
   maybe_run_command "rsync --server --sender -lHogDtprSe.iLsfxC . ${dir}"
