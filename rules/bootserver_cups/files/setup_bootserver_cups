@@ -125,7 +125,8 @@ ServerKey /etc/puavo/certs/host.key
 EOF
 mv /etc/cups/cups-files.conf.tmp /etc/cups/cups-files.conf
 
-cat <<EOF > /etc/cups/cupsd.conf.tmp
+{
+  cat <<EOF
 #
 # Configuration file for the CUPS scheduler.  See "man cupsd.conf" for a
 # complete description of this file.
@@ -286,4 +287,10 @@ WebInterface Yes
   </Limit>
 </Policy>
 EOF
+
+  # this might have been created by setup_bootserver_printer_restrictions
+  if [ -r /etc/cups/puavo/printer_restrictions.conf ]; then
+    cat /etc/cups/puavo/printer_restrictions.conf
+  fi
+} > /etc/cups/cupsd.conf.tmp
 mv /etc/cups/cupsd.conf.tmp /etc/cups/cupsd.conf
