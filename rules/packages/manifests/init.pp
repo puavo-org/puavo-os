@@ -555,6 +555,8 @@ class packages {
     , 'libpam-systemd'
     , 'libproxy1-plugin-gsettings'
     , 'libproxy1-plugin-networkmanager'
+    , 'libqt5quickcontrols2-5'            #mafynetti
+    , 'libqt5quicktemplates2-5'           #mafynetti
     , 'libreoffice-calc'
     , 'libreoffice-gnome'
     , 'libreoffice-impress'
@@ -590,6 +592,8 @@ class packages {
     , 'printer-driver-splix'
     , 'pulseaudio'
     , 'pulseaudio-module-bluetooth'
+    , 'qml-module-qtquick-controls2'            # mafynetti
+    , 'qml-module-qtquick-templates2'           # mafynetti
     , 'rfkill'
     , 'rtmpdump'
     , 'rxvt-unicode'
