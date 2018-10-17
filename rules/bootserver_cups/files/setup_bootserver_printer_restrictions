@@ -120,25 +120,32 @@ tmpfile = "#{ cups_printer_restrictions_path }.tmp"
 
 status = 0
 
-# XXX flock?
-File.open(tmpfile, 'w') do |f|
-  f.print cups_printer_restrictions
+File.exists?(cups_printer_restrictions_path) \
+  or FileUtils.touch(cups_printer_restrictions_path)
 
-  files_match = FileUtils.compare_file(tmpfile,
-                                       cups_printer_restrictions_path) \
-                  rescue false
+File.open(cups_printer_restrictions_path, 'r') do |lockfile|
+  lockfile.flock(File::LOCK_EX|File::LOCK_NB) \
+    or raise "Could not get a lock on #{ cups_printer_restrictions_path }"
 
-  if !files_match then
-    File.rename(tmpfile, cups_printer_restrictions_path)
-    if !system('/etc/puavo-conf/scripts/setup_bootserver_cups') then
-      warn 'error running /etc/puavo-conf/scripts/setup_bootserver_cups'
-      status = 1
-    elsif !system('service cups restart') then
-      warn 'error running "service cups restart"'
-      status = 1
+  File.open(tmpfile, 'w') do |f|
+    f.print cups_printer_restrictions
+
+    files_match = FileUtils.compare_file(tmpfile,
+                                         cups_printer_restrictions_path) \
+                    rescue false
+
+    if !files_match then
+      File.rename(tmpfile, cups_printer_restrictions_path)
+      if !system('/etc/puavo-conf/scripts/setup_bootserver_cups') then
+        warn 'error running /etc/puavo-conf/scripts/setup_bootserver_cups'
+        status = 1
+      elsif !system('service cups restart') then
+        warn 'error running "service cups restart"'
+        status = 1
+      end
+    else
+      FileUtils.rm_f(tmpfile)
     end
-  else
-    FileUtils.rm_f(tmpfile)
   end
 end
 
