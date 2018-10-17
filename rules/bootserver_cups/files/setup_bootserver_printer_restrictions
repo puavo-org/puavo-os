@@ -104,6 +104,7 @@ all_printer_queues.each do |printer_queue|
                    end.join("\n")
 
   printer_conf = "<Location /printers/#{ printer_queue }>\n"                  \
+                    + "  Order allow,deny\n"                                  \
                     + (!allow_wired.empty?    ? (allow_wired    + "\n") : '') \
                     + (!allow_wireless.empty? ? (allow_wireless + "\n") : '') \
                     + "  Allow @IF(vpn0)\t\t# admin tunnel\n"                 \
