@@ -1,0 +1,38 @@
+#!/bin/sh
+
+set -eu
+
+# get the idid-package url by using the following apt-sources:
+#   deb http://apt.idid.fi xenial main
+
+command=$1
+shift
+
+case "${command}" in
+    configure)
+	upstream_dir=$1
+cat <<'EOF' > /usr/share/applications/mafynetti.desktop
+[Desktop Entry]
+Exec=mafynetti
+Icon=mafynetti
+Type=Application
+Terminal=false
+Name=Mafynetti
+Categories=Education;Qt;
+EOF
+	ln -fns "${upstream_dir}/usr/bin/mafynetti" /usr/bin/mafynetti
+	ln -fns "${upstream_dir}/usr/share/mafynetti" /usr/share/mafynetti
+	ln -fns "${upstream_dir}/usr/share/icons/hicolor/scalable/apps/mafynetti.svg" /usr/share/pixmaps/mafynetti.svg
+	;;
+    unconfigure)
+	rm -rf /usr/bin/mafynetti /usr/share/mafynetti /usr/share/pixmaps/mafynetti.svg /usr/share/applications/mafynetti.desktop
+	;;
+    unpack)
+	upstream_pack=$1
+	upstream_dir=$2
+
+	dpkg -x "${upstream_pack}" "${upstream_dir}"
+	;;
+    *)
+	;;
+esac

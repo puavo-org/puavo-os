@@ -23,7 +23,7 @@ if [ $DEVMODE -eq 0 ]; then
     # Production mode
     /opt/puavomenu/puavomenu \
         --res_dir "/opt/puavomenu/res" \
-        --menu_dir "/opt/puavomenu/res" \
+        --menu_dir "/etc/puavomenu/" \
         --user_dir "${CONF_DIR}" \
         --socket "${CONF_DIR}/socket_${HOSTNAME}" \
         --log "/tmp/puavomenu_${TIMESTAMP}.log" \
