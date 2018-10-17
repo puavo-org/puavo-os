@@ -34,8 +34,7 @@ all_schools = (schools_by_pq.values.flatten \
                 + schools_by_wireless_pq.values.flatten).uniq
 
 puavoconf = Puavo::Conf.new
-network_interfaces_by_school_conf = 'ltsp*,wlan*:*'
-  # = puavoconf.get('puavo.networking.bootserver.interfaces.schools')
+network_interfaces_by_school_conf = puavoconf.get('puavo.networking.bootserver.interfaces.schools')
 puavoconf.close
 
 # XXX duplicate code with setup_dhcpd
