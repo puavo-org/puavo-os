@@ -6,6 +6,20 @@ require 'puavo/etc'
 require 'puavo/rest-client'
 require 'syslog'
 
+def get_cidr_network_for_interface(iface)
+  iface_netmask = %x(ifdata -pn #{ iface }).chomp
+  raise "could not find netmask for #{ iface }" unless $?.success?
+
+  iface_network = %x(ifdata -pN #{ iface }).chomp
+  raise "could not find network for #{ iface }" unless $?.success?
+
+  return nil if iface_netmask == 'NON-IP' || iface_network == 'NON-IP'
+
+  cidr = IPAddr.new(iface_netmask).to_i.to_s(2).count("1")
+
+  return "#{ iface_network }/#{ cidr }"
+end
+
 def pq_structure_ok?(pq)
   pq.kind_of?(Hash) \
     && pq.all? do |printer, schools|
@@ -35,16 +49,16 @@ all_schools = (schools_by_pq.values.flatten \
 
 puavoconf = Puavo::Conf.new
 network_interfaces_by_school_conf = puavoconf.get('puavo.networking.bootserver.interfaces.schools')
+admin_vpn_subnet = puavoconf.get('puavo.admin.vpn.subnet')
 puavoconf.close
 
-# XXX duplicate code with setup_dhcpd
-interface_files = %w(/etc/network/interfaces) \
-                    + Dir.glob('/etc/network/interfaces.d/*')
-all_interfaces = interface_files \
-                    .map { |path| IO.readlines(path) }.flatten \
-                    .map { |line| a = line.split
-                                  (a[0] == 'iface') ? a[1] : nil } \
-                    .compact.sort.uniq
+all_interfaces = Socket.getifaddrs.map { |iface| iface.name }.sort.uniq
+interface_network_cidrs = Hash[
+  all_interfaces.map do |iface|
+    cidr = get_cidr_network_for_interface(iface)
+    cidr ? [ iface, cidr ] : nil
+  end.compact
+]
 
 wired_interfaces_by_school = {}
 wireless_interfaces_by_school = {}
@@ -96,25 +110,29 @@ EOF
 all_printer_queues.each do |printer_queue|
   allow_wired = (schools_by_pq[printer_queue] || []).map do |school|
                   wired_interfaces_by_school[school].sort.map do |iface|
+                    network_cidr = interface_network_cidrs[iface]
+                    next unless network_cidr
                     netif_schools = schools_by_network_interfaces[iface].sort
-                    "  Allow @IF(#{ iface })" \
-                      + "\t\t# puavo school(s): #{ netif_schools.join(' ') }"
-                  end.join("\n")
+                    "  Allow #{ network_cidr }\t\t# #{iface}" \
+                      + " / #{ netif_schools.join(' ') }"
+                  end.compact.join("\n")
                 end.join("\n")
   allow_wireless = (schools_by_wireless_pq[printer_queue] || []).map do |school|
                       wireless_interfaces_by_school[school].sort.map do |iface|
+                        network_cidr = interface_network_cidrs[iface]
+                        next unless network_cidr
                         netif_schools \
                           = schools_by_network_interfaces[iface].sort
-                        "  Allow @IF(#{ iface })\t\t# puavo school(s): " \
-                          + netif_schools.join(' ')
-                      end.join("\n")
+                        "  Allow #{ network_cidr }\t\t# #{iface}" \
+                          + " / #{ netif_schools.join(' ') }"
+                      end.compact.join("\n")
                    end.join("\n")
 
   printer_conf = "<Location /printers/#{ printer_queue }>\n"                  \
                     + "  Order allow,deny\n"                                  \
                     + (!allow_wired.empty?    ? (allow_wired    + "\n") : '') \
                     + (!allow_wireless.empty? ? (allow_wireless + "\n") : '') \
-                    + "  Allow @IF(vpn0)\t\t# admin tunnel\n"                 \
+                    + "  Allow #{ admin_vpn_subnet }\t\t# admin network\n"    \
                     + "</Location>\n"
 
   cups_printer_restrictions += printer_conf
