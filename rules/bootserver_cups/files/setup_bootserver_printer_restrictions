@@ -130,28 +130,26 @@ File.open(cups_printer_restrictions_path, 'r') do |lockfile|
   lockfile.flock(File::LOCK_EX|File::LOCK_NB) \
     or raise "Could not get a lock on #{ cups_printer_restrictions_path }"
 
-  File.open(tmpfile, 'w') do |f|
-    f.print cups_printer_restrictions
+  File.open(tmpfile, 'w') { |f| f.print cups_printer_restrictions }
 
-    files_match = FileUtils.compare_file(tmpfile,
-                                         cups_printer_restrictions_path) \
-                    rescue false
+  files_match = FileUtils.compare_file(tmpfile,
+                                       cups_printer_restrictions_path) \
+                  rescue false
 
-    if !files_match then
-      File.rename(tmpfile, cups_printer_restrictions_path)
-      Syslog.log(Syslog::LOG_NOTICE, "updated cups printer restrictions\n")
+  if !files_match then
+    File.rename(tmpfile, cups_printer_restrictions_path)
+    Syslog.log(Syslog::LOG_NOTICE, "updated cups printer restrictions\n")
 
-      setup_script_path = '/etc/puavo-conf/scripts/setup_bootserver_cups'
-      if !system(setup_script_path) then
-        Syslog.log(Syslog::LOG_ERR, "error running %s\n", setup_script_path)
-        status = 1
-      elsif !system('service cups restart') then
-        Syslog.log(Syslog::LOG_ERR, "error running \"service cups restart\"\n")
-        status = 1
-      end
-    else
-      FileUtils.rm_f(tmpfile)
+    setup_script_path = '/etc/puavo-conf/scripts/setup_bootserver_cups'
+    if !system(setup_script_path) then
+      Syslog.log(Syslog::LOG_ERR, "error running %s\n", setup_script_path)
+      status = 1
+    elsif !system('/usr/sbin/service cups restart') then
+      Syslog.log(Syslog::LOG_ERR, "error running \"service cups restart\"\n")
+      status = 1
     end
+  else
+    FileUtils.rm_f(tmpfile)
   end
 end
 
