@@ -163,6 +163,12 @@ module(load="builtin:omfile"
 :msg, regex, "<= bdb_equality_candidates: \(.*\) not indexed" stop
 
 if (\$hostname == "${hostname}") then {
+  # Put cron job runs to their own logfile.
+  if (\$programname == "CRON") then {
+    action(type="omfile" file="/var/log/cron.log")
+    stop
+  }
+
   # Put martians to their own logfile.  Duck Dodgers in the 24½th Century!
   if (\$programname == "kernel" and
        (\$msg contains "IPv4: martian source"
