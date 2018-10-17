@@ -86,7 +86,12 @@ end
 all_printer_queues = (schools_by_pq.keys + schools_by_wireless_pq.keys) \
                        .sort_by(&:downcase).uniq
 
-cups_printer_restrictions = ''
+cups_printer_restrictions = <<'EOF'
+
+#
+# cups restrictions created by setup_bootserver_printer_restrictions
+#
+EOF
 
 all_printer_queues.each do |printer_queue|
   allow_wired = (schools_by_pq[printer_queue] || []).map do |school|
