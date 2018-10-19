@@ -25,6 +25,7 @@ puavo-desktop-applet.pot: puavo-desktop-applet
 installdirs:
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
+	mkdir -p $(DESTDIR)$(datarootdir)/icons/hicolor/scalable/status
 	mkdir -p $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES
 	mkdir -p $(DESTDIR)$(datarootdir)/locale/sv/LC_MESSAGES
 
@@ -37,6 +38,8 @@ install: installdirs
 		po/fi/puavo-desktop-applet.mo
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/sv/LC_MESSAGES \
 		po/sv/puavo-desktop-applet.mo
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/icons/hicolor/scalable/status \
+		icons/*
 
 .PHONY: clean
 clean:
