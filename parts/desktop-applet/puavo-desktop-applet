@@ -4,9 +4,11 @@
 import datetime
 import dbus
 import dbus.mainloop.glib
+import errno
 import getpass
 import gettext
 import gi
+import json
 import os
 import re
 import signal
@@ -57,10 +59,193 @@ class PuavoWidget:
     return dbus.Interface(dbusobj, dbus_interface=interface)
 
 
-  def notify(self, msg):
+  def notify(self, summary, body=None):
     # no notifications if running on login screen
     if getpass.getuser() != 'Debian-gdm':
-      Notify.Notification.new(msg).show()
+      if body:
+        Notify.Notification.new(summary, body).show()
+      else:
+        Notify.Notification.new(summary).show()
+
+
+class ChangelogNotifier(PuavoWidget):
+  def __init__(self, applet):
+    self.applet = applet
+    self.enabled = False
+
+    # do not show changelog notifier for guest users
+    try:
+      if os.environ['GUEST_SESSION'] == 'true':
+        return
+    except KeyError:
+      pass
+
+    self.changelog_url = puavoconf_get('puavo.support.image_changelog_url')
+    if self.changelog_url == '':
+      return
+
+    self.image_series_name   = self.read_imageseries_name()
+    self.system_release_name = self.read_system_release_name()
+    self.system_version      = self.read_system_version()
+    self.user_puavo_dir      = os.path.join(os.environ['HOME'], '.puavo')
+    self.user_versions_path  = os.path.join(self.user_puavo_dir,
+                                           'used_image_versions')
+    self.used_image_versions = self.read_used_image_versions()
+
+    if not self.user_has_been_notified_about_this_version():
+      self.notify_user_on_update()
+      self.write_user_versions(False)
+      self.enabled = True
+
+
+  def append_items_to_menu(self):
+    if not self.enabled:
+      return
+
+    buttonmsg = '%s (%s)' % (_tr('Information on the latest system update'),
+                             self.system_release_name)
+
+    button = Gtk.MenuItem(buttonmsg)
+    button.show()
+    self.applet.menu.append(button)
+    button.connect('activate', self.button_callback)
+
+
+  def button_callback(self, widget):
+    url = self.changelog_url \
+              .replace("%%IMAGERELEASE%%", self.system_release_name) \
+              .replace("%%IMAGESERIES%%",  self.image_series_name)   \
+              .replace("%%IMAGEVERSION%%", self.system_version)
+
+    if url.endswith(".img"):
+        # remove the file extension so anchors on the page work
+        url = url[:-4]
+
+    cmd = [ '/usr/bin/puavo-webwindow', '--width', '1000', '--height', '700',
+            '--url', url, '--enable-plugins' ]
+
+    (pid, stdin, stdout, stderr) \
+       = GObject.spawn_async(cmd,
+                             flags=GObject.SPAWN_STDERR_TO_DEV_NULL,
+                             standard_output=True)
+
+    GObject.io_add_watch(stdout,
+                         GObject.IO_HUP|GObject.IO_IN,
+                         self.pww_stdout_callback,
+                         os.fdopen(stdout))
+
+
+  def pww_stdout_callback(self, fd, condition, channel):
+    if condition == GObject.IO_HUP:
+      channel.close()
+      return False
+
+    if condition == GObject.IO_IN:
+      line = channel.readline()
+      changelog_ok = False
+
+      try:
+        data = json.loads(line)
+
+        if data['state'] == 'ok':
+          if data['title'].startswith('Muutokset'):
+            changelog_ok = True
+      except:
+        pass
+
+      if changelog_ok:
+        self.write_user_versions(True)
+        self.enabled = False
+        self.applet.create_menu()
+
+    return True
+
+
+  def notify_user_on_update(self):
+    version_subject = '%s (%s)' % (_tr('New system version'),
+                                   self.system_release_name)
+
+    msg = _tr('The system has been updated to a new version.'
+              ' Click the info-button in the panel for more information.')
+
+    self.notify(version_subject, msg)
+
+
+  def read_firstline(self, pathname):
+    with open(pathname) as file:
+      return (file.readlines())[0].rstrip("\n")
+
+
+  def read_imageseries_name(self):
+    series_name = self.read_firstline('/etc/puavo-image/class')
+    if series_name == '':
+      raise Exception('Could not read image series name')
+    return series_name
+
+
+  def read_system_release_name(self):
+    release_name = self.read_firstline('/etc/puavo-image/release')
+    if release_name == '':
+      raise Exception('Could not read system release name')
+    return release_name
+
+
+  def read_system_version(self):
+    version = self.read_firstline('/etc/puavo-image/name')
+    if version == '':
+      raise Exception('Could not read system version')
+    return version
+
+
+  def read_used_image_versions(self):
+    try:
+      with open(self.user_versions_path) as file:
+        return json.load(file)
+    except:
+      return {}
+
+  def changelog_notification_countdown(self):
+    try:
+      this_version_info = self.used_image_versions[self.system_version]
+      return this_version_info['changelog_notification_countdown']
+    except:
+      return 3
+
+
+  def user_has_been_notified_about_this_version(self):
+    return self.changelog_notification_countdown() == 0
+
+
+  def write_user_versions(self, user_has_seen_changelog):
+    try:
+      os.mkdir(self.user_puavo_dir)
+    except OSError as e:
+      if e.errno != errno.EEXIST:
+        raise e
+
+    if not type(self.used_image_versions) is dict:
+      self.used_image_versions = {}
+
+    if not self.system_version in self.used_image_versions \
+      or not type(self.used_image_versions[self.system_version]) is dict:
+        self.used_image_versions[self.system_version] = {}
+
+    this_version_info = self.used_image_versions[self.system_version]
+
+    if user_has_seen_changelog:
+      countdown = 0
+    else:
+      countdown = max(0, self.changelog_notification_countdown() - 1)
+
+    this_version_info['changelog_notification_countdown'] = countdown
+
+    tmpfile = '%s.tmp' % self.user_versions_path
+    with open(tmpfile, 'w') as file:
+      json.dump(self.used_image_versions, file)
+    os.rename(tmpfile, self.user_versions_path)
+
+    # update the self.used_image_versions from file
+    self.used_image_versions = self.read_used_image_versions()
 
 
 class ImageUpdater(PuavoWidget):
@@ -877,6 +1062,7 @@ class PuavoDesktopApplet:
 
     Notify.init('puavo-desktop-applet')
 
+    self.changelog_notifier = ChangelogNotifier(self)
     self.image_updater = ImageUpdater(self)
     self.remote_assistance = RemoteAssistance(self)
     self.reset_dev_state = ResetDevState(self)
@@ -894,6 +1080,7 @@ class PuavoDesktopApplet:
     self.reset_dev_state.append_items_to_menu()
     self.image_updater.append_items_to_menu()
     self.remote_assistance.append_items_to_menu()
+    self.changelog_notifier.append_items_to_menu()
 
     self.menu.show_all()
 
@@ -915,5 +1102,5 @@ class PuavoDesktopApplet:
 applet = PuavoDesktopApplet()
 
 if __name__ == '__main__':
-    signal.signal(signal.SIGINT, signal.SIG_DFL)
-    applet.main()
+  signal.signal(signal.SIGINT, signal.SIG_DFL)
+  applet.main()
