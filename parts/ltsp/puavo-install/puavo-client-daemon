@@ -468,7 +468,9 @@ class Updater < DBus::Object
     end
 
     dbus_method :UpdateConfiguration, 'out b' do
-      self.configuration_update() unless $configuration_update_thread
+      $configuration_update_thread          \
+	? $configuration_update_thread.join \
+	: self.configuration_update()
     end
 
     dbus_method :UpdateProgress,

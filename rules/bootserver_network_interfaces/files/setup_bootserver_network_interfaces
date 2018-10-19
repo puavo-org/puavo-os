@@ -70,13 +70,6 @@ if [ "$puavo_hosttype" != 'bootserver' ]; then
   exit 0
 fi
 
-if [ -e /run/puavo/nbd-server ]; then
-  # We do not want to touch the interfaces if we have booted from the
-  # network (which might happen in case bootserver image is updated
-  # by booting from other bootserver).
-  exit 0
-fi
-
 cat <<'EOF' > /etc/network/interfaces.d.rofs/lo.tmp
 # The loopback network interface
 auto lo

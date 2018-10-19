@@ -1,0 +1,1106 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import datetime
+import dbus
+import dbus.mainloop.glib
+import errno
+import getpass
+import gettext
+import gi
+import json
+import os
+import re
+import signal
+import subprocess
+import sys
+
+gi.require_version('AppIndicator3', '0.1')
+gi.require_version('Gtk', '3.0')
+gi.require_version('Notify', '0.7')
+
+from gi.repository import AppIndicator3
+from gi.repository import GObject
+from gi.repository import Gtk
+from gi.repository import Notify
+
+gettext.bindtextdomain('puavo-desktop-applet', '/usr/share/locale')
+gettext.textdomain('puavo-desktop-applet')
+_tr = gettext.gettext
+
+dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+
+
+def administered_by_user():
+  personally_administered \
+    = (puavoconf_get('puavo.admin.personally_administered') == 'true')
+  if not personally_administered:
+    return False
+  primary_user = puavoconf_get('puavo.admin.primary_user')
+  return (getpass.getuser() == primary_user)
+
+
+def on_persistent_overlay():
+  file = open('/proc/cmdline', 'r')
+  cmdline = file.read()
+  file.close()
+  return re.match(".*?puavo.image.overlay=", cmdline)
+
+
+def puavoconf_get(puavoconf_key):
+  return subprocess.check_output([ 'puavo-conf', puavoconf_key ]).rstrip() \
+                   .decode('utf-8')
+
+
+class PuavoWidget:
+  def connect_to_dbus(self, service, interface):
+    self.bus = dbus.SystemBus()
+    dbusobj = self.bus.get_object('org.puavo.client.Daemon', service)
+    return dbus.Interface(dbusobj, dbus_interface=interface)
+
+
+  def notify(self, summary, body=None):
+    # no notifications if running on login screen
+    if getpass.getuser() != 'Debian-gdm':
+      if body:
+        Notify.Notification.new(summary, body).show()
+      else:
+        Notify.Notification.new(summary).show()
+
+
+class ChangelogNotifier(PuavoWidget):
+  def __init__(self, applet):
+    self.applet = applet
+    self.enabled = False
+
+    # do not show changelog notifier for guest users
+    try:
+      if os.environ['GUEST_SESSION'] == 'true':
+        return
+    except KeyError:
+      pass
+
+    self.changelog_url = puavoconf_get('puavo.support.image_changelog_url')
+    if self.changelog_url == '':
+      return
+
+    self.image_series_name   = self.read_imageseries_name()
+    self.system_release_name = self.read_system_release_name()
+    self.system_version      = self.read_system_version()
+    self.user_puavo_dir      = os.path.join(os.environ['HOME'], '.puavo')
+    self.user_versions_path  = os.path.join(self.user_puavo_dir,
+                                           'used_image_versions')
+    self.used_image_versions = self.read_used_image_versions()
+
+    if not self.user_has_been_notified_about_this_version():
+      self.notify_user_on_update()
+      self.write_user_versions(False)
+      self.enabled = True
+
+
+  def append_items_to_menu(self):
+    if not self.enabled:
+      return
+
+    buttonmsg = '%s (%s)' % (_tr('Information on the latest system update'),
+                             self.system_release_name)
+
+    button = Gtk.MenuItem(buttonmsg)
+    button.show()
+    self.applet.menu.append(button)
+    button.connect('activate', self.button_callback)
+
+
+  def button_callback(self, widget):
+    url = self.changelog_url \
+              .replace("%%IMAGERELEASE%%", self.system_release_name) \
+              .replace("%%IMAGESERIES%%",  self.image_series_name)   \
+              .replace("%%IMAGEVERSION%%", self.system_version)
+
+    if url.endswith(".img"):
+        # remove the file extension so anchors on the page work
+        url = url[:-4]
+
+    cmd = [ '/usr/bin/puavo-webwindow', '--width', '1000', '--height', '700',
+            '--url', url, '--enable-plugins' ]
+
+    (pid, stdin, stdout, stderr) \
+       = GObject.spawn_async(cmd,
+                             flags=GObject.SPAWN_STDERR_TO_DEV_NULL,
+                             standard_output=True)
+
+    GObject.io_add_watch(stdout,
+                         GObject.IO_HUP|GObject.IO_IN,
+                         self.pww_stdout_callback,
+                         os.fdopen(stdout))
+
+
+  def pww_stdout_callback(self, fd, condition, channel):
+    if condition == GObject.IO_HUP:
+      channel.close()
+      return False
+
+    if condition == GObject.IO_IN:
+      line = channel.readline()
+      changelog_ok = False
+
+      try:
+        data = json.loads(line)
+
+        if data['state'] == 'ok':
+          if data['title'].startswith('Muutokset'):
+            changelog_ok = True
+      except:
+        pass
+
+      if changelog_ok:
+        self.write_user_versions(True)
+        self.enabled = False
+        self.applet.create_menu()
+
+    return True
+
+
+  def notify_user_on_update(self):
+    version_subject = '%s (%s)' % (_tr('New system version'),
+                                   self.system_release_name)
+
+    msg = _tr('The system has been updated to a new version.'
+              ' Click the info-button in the panel for more information.')
+
+    self.notify(version_subject, msg)
+
+
+  def read_firstline(self, pathname):
+    with open(pathname) as file:
+      return (file.readlines())[0].rstrip("\n")
+
+
+  def read_imageseries_name(self):
+    series_name = self.read_firstline('/etc/puavo-image/class')
+    if series_name == '':
+      raise Exception('Could not read image series name')
+    return series_name
+
+
+  def read_system_release_name(self):
+    release_name = self.read_firstline('/etc/puavo-image/release')
+    if release_name == '':
+      raise Exception('Could not read system release name')
+    return release_name
+
+
+  def read_system_version(self):
+    version = self.read_firstline('/etc/puavo-image/name')
+    if version == '':
+      raise Exception('Could not read system version')
+    return version
+
+
+  def read_used_image_versions(self):
+    try:
+      with open(self.user_versions_path) as file:
+        return json.load(file)
+    except:
+      return {}
+
+  def changelog_notification_countdown(self):
+    try:
+      this_version_info = self.used_image_versions[self.system_version]
+      return this_version_info['changelog_notification_countdown']
+    except:
+      return 3
+
+
+  def user_has_been_notified_about_this_version(self):
+    return self.changelog_notification_countdown() == 0
+
+
+  def write_user_versions(self, user_has_seen_changelog):
+    try:
+      os.mkdir(self.user_puavo_dir)
+    except OSError as e:
+      if e.errno != errno.EEXIST:
+        raise e
+
+    if not type(self.used_image_versions) is dict:
+      self.used_image_versions = {}
+
+    if not self.system_version in self.used_image_versions \
+      or not type(self.used_image_versions[self.system_version]) is dict:
+        self.used_image_versions[self.system_version] = {}
+
+    this_version_info = self.used_image_versions[self.system_version]
+
+    if user_has_seen_changelog:
+      countdown = 0
+    else:
+      countdown = max(0, self.changelog_notification_countdown() - 1)
+
+    this_version_info['changelog_notification_countdown'] = countdown
+
+    tmpfile = '%s.tmp' % self.user_versions_path
+    with open(tmpfile, 'w') as file:
+      json.dump(self.used_image_versions, file)
+    os.rename(tmpfile, self.user_versions_path)
+
+    # update the self.used_image_versions from file
+    self.used_image_versions = self.read_used_image_versions()
+
+
+class ImageUpdater(PuavoWidget):
+  def __init__(self, applet):
+    self.applet = applet
+
+    self.enabled = False
+    if os.path.exists('/run/puavo/nbd-server'):
+      return
+    if on_persistent_overlay():
+      return
+    if getpass.getuser() != 'Debian-gdm' and not administered_by_user():
+      return
+
+    self.available_notice_shown = False
+    self.download_animation_icons \
+      = [ 'update-downloading-%02d' % x for x in range(1, 14) ]
+    self.setup_log()
+
+    self.dbus_iface = None
+    self.enabled = True
+
+
+  def append_items_to_menu(self):
+    if not self.enabled:
+      return
+
+    self.add_update_button()
+    # log viewing does not work on login screen
+    if getpass.getuser() != 'Debian-gdm':
+      self.add_view_log_button()
+    self.add_progress()
+
+    if not self.dbus_iface:
+      self.setup_dbus_iface()
+      self.check_for_updates()
+
+
+  def add_progress(self):
+    self.progress = Gtk.MenuItem('')
+    self.set_progress_text( _tr('(No update progress.)') )
+    self.progress.set_sensitive(False)
+    self.progress.show()
+    self.roll_progress_id = None
+
+    self.applet.menu.append(self.progress)
+
+
+  def add_update_button(self):
+    self.update_button = Gtk.MenuItem('')
+    self.button_action_handler = None
+    self.set_update_button_mode('check')
+    self.update_button.show()
+
+    self.applet.menu.append(self.update_button)
+
+
+  def add_view_log_button(self):
+    self.view_log_item = Gtk.MenuItem( _tr('View log...') )
+    self.view_log_item.connect('activate', self.view_log)
+    self.view_log_item.show()
+
+    self.applet.menu.append(self.view_log_item)
+
+
+  def append_error_to_log(self, errortext):
+    self.append_text_to_log(errortext, True)
+
+
+  def append_text_to_log(self, text, error=False):
+    if text == '':
+      return
+
+    end_iter = self.log_buffer.get_end_iter()
+
+    timestamped_text = re.sub(r'^',
+                              '%s: ' % datetime.datetime.now(),
+                              text.rstrip(),
+                              flags=re.MULTILINE) \
+                         + "\n"
+
+    if not error:
+      self.log_buffer.insert_with_tags(end_iter,
+                                       timestamped_text,
+                                       self.log_ok_tag)
+      print(timestamped_text, end='')
+    else:
+      self.log_buffer.insert_with_tags(end_iter,
+                                       timestamped_text,
+                                       self.log_error_tag)
+      print(timestamped_text, file=sys.stderr, end='')
+
+
+  def cancel_image_update(self, widget):
+    self.dbus_iface.CancelImageUpdate()
+
+
+  def check_for_updates(self, widget=None):
+    self.set_update_button_mode('checking')
+
+    self.dbus_iface \
+        .UpdateConfiguration(reply_handler=lambda reply: None,
+                             error_handler=self.handle_dbus_error)
+
+
+  def setup_dbus_iface(self):
+    self.dbus_iface = self.connect_to_dbus('/updater',
+                                             'org.puavo.client.update')
+
+    self.dbus_iface.connect_to_signal('UpdateIsUpToDate',
+                                        self.on_update_isuptodate)
+    self.dbus_iface.connect_to_signal('UpdateAvailable',
+                                        self.on_update_available)
+    self.dbus_iface.connect_to_signal('UpdateMessage',
+                                        self.on_update_message)
+    self.dbus_iface.connect_to_signal('UpdateStarted',
+                                        self.on_update_started)
+    self.dbus_iface.connect_to_signal('UpdateProgressIndicator',
+                                        self.on_update_progress_indicator)
+    self.dbus_iface.connect_to_signal("UpdateCancelled",
+                                        self.on_update_cancelled)
+    self.dbus_iface.connect_to_signal('UpdateFailed',
+                                        self.on_update_failed)
+    self.dbus_iface.connect_to_signal('UpdateCompleted',
+                                        self.on_update_completed)
+
+
+  def handle_dbus_error(self, dbusexception):
+      self.append_error_to_log('Unknown dbus error: ' + str(dbusexception))
+      self.on_update_failed()
+
+
+  def on_update_available(self):
+    self.stop_roll_progress()
+    self.set_update_button_mode('update')
+
+    self.set_icon('update-available', AppIndicator3.IndicatorStatus.ATTENTION)
+
+    # show only once after each login
+    if not self.available_notice_shown:
+      self.append_text_to_log( _tr('A new system update is available.') \
+                                 + "\n" )
+      self.notify( _tr('A new system update is available.') )
+      self.available_notice_shown = True
+
+
+  def on_update_cancelled(self):
+    self.stop_roll_progress()
+    self.on_update_progress_indicator('interrupted')
+    self.on_update_available()
+
+    self.append_error_to_log( _tr('Update cancelled.') + "\n" )
+
+    self.notify( _tr('System update has been cancelled.') )
+
+
+  def on_update_completed(self, image_update_done, reboot_required):
+    self.stop_roll_progress()
+    self.set_update_button_mode('check')
+
+    self.on_update_isuptodate(reboot_required)
+
+    if not image_update_done:
+      return
+
+    if reboot_required:
+      log_msg = _tr('Update completed, reboot required to finish the update.')
+      notify_msg = _tr('System update is finished, reboot the computer.')
+    else:
+      log_msg    = _tr('Update completed.')
+      notify_msg = _tr('System update is finished.')
+
+    self.append_text_to_log( log_msg + "\n" )
+
+    self.available_notice_shown = False
+    self.notify(notify_msg)
+
+
+  def on_update_failed(self):
+    self.stop_roll_progress()
+    self.set_update_button_mode('update')
+    self.set_icon('update-error', AppIndicator3.IndicatorStatus.ATTENTION)
+
+    self.append_error_to_log( _tr('Update failed.') + "\n" )
+
+    self.notify( _tr('An error occurred when updating the system.') )
+
+
+  def on_update_isuptodate(self, reboot_required):
+    self.stop_roll_progress()
+
+    if reboot_required:
+      self.on_update_progress_indicator('finished')
+      self.set_icon('update-installed', AppIndicator3.IndicatorStatus.ATTENTION)
+    else:
+      self.on_update_progress_indicator('uptodate')
+      self.set_icon('update-idle', AppIndicator3.IndicatorStatus.ATTENTION)
+
+
+  def on_update_message(self, msgtype, content):
+    prefixed_message = '        > %s' % content
+    if msgtype == 'ok':
+      self.append_text_to_log(prefixed_message)
+    elif msgtype == 'error':
+      self.append_error_to_log(prefixed_message)
+
+
+  def on_update_progress_indicator(self, phase, progress=0):
+    mode, text = None, None
+
+    if phase == 'error':
+      mode = 'update'
+      text = _tr('Update failed.')
+    elif phase == 'finished':
+      mode = 'check'
+      text = _tr('Update done, reboot required to finish the update.')
+    elif phase == 'interrupted':
+      mode = 'update'
+      text = _tr('Update interrupted.')
+    elif phase == 'uptodate':
+      mode = 'check'
+      text = _tr('Up to date.')
+
+    if mode and text:
+      self.stop_roll_progress()
+      self.set_progress_text(text)
+      self.set_update_button_mode(mode)
+      return
+
+    progfn = lambda a, b: int(a + (b - a) * float(progress) / 100)
+
+    # There are two possible image update paths: image_download/image_sync
+    # and rdiff_fetch+rdiff_checksum+image_patch are alternative routes
+    # to the same result.
+
+    if phase == 'starting':
+      progresstext = '0% (starting)'
+    elif phase == 'checksums_fetch':
+      progresstext = '%d%% (fetch checksums)' % progfn(0, 1)
+    elif phase == 'rdiff_fetch':
+      progresstext = '%d%% (fetch rdiff)' % progfn(1, 75)
+    elif phase == 'rdiff_checksum':
+      progresstext = '%d%% (check rdiff)' % progfn(75, 80)
+    elif phase == 'image_patch':
+      progresstext = '%d%% (patch image)' % progfn(80, 90)
+    elif phase == 'image_download':
+      progresstext = '%d%% (download image)' % progfn(1, 90)
+    elif phase == 'image_sync':
+      progresstext = '%d%% (sync image)' % progfn(1, 90)
+    elif phase == 'image_checksum':
+      progresstext = '%d%% (check image)' % progfn(90, 100)
+    elif phase == 'puavopkg':
+      progresstext = '(extra packages)'
+    else:
+      # this should not happen, but show that to user anyway (so if a
+      # developer sees this, she can know there is something to fix)
+      progresstext = '???'
+
+    text = '%s %s' % (_tr('Update progress:'), progresstext)
+
+    self.set_progress_text(text)
+    self.set_update_button_mode('updating')
+
+    if not self.roll_progress_id:
+      self.roll_progress_id \
+        = GObject.timeout_add(250, self.roll_progress_animation)
+
+
+  def on_update_started(self):
+    self.set_update_button_mode('updating')
+    self.set_icon('update-downloading', AppIndicator3.IndicatorStatus.ATTENTION)
+
+    self.append_text_to_log( _tr('System update has been started.') \
+                               + "\n" )
+    self.notify( _tr('System update has been started.') )
+
+
+  def set_icon(self, icon, status):
+    # XXX these are disabled, because RemoteAssistance is responsible
+    # XXX for controlling the icon
+    # self.applet.indicator.set_attention_icon(icon)
+    # self.applet.indicator.set_status(status)
+    pass
+
+
+  def roll_progress_animation(self):
+    self.set_icon(self.download_animation_icons[0],
+                  AppIndicator3.IndicatorStatus.ATTENTION)
+
+    # cycle attention icons
+    self.download_animation_icons         \
+      = self.download_animation_icons[1:] \
+          + [ self.download_animation_icons[0] ]
+
+    return True
+
+
+  def set_progress_text(self, text):
+    wrapped_text = '-=> ' + text + ' <=-'
+    self.progress.get_child().set_text(wrapped_text)
+
+
+  def set_update_button_mode(self, mode):
+    action = None
+
+    if mode == 'check':
+      action      = self.check_for_updates
+      message     = _tr('Check for updates')
+      sensitivity = True
+    elif mode == 'checking':
+      message     = _tr('(Checking for updates.)')
+      sensitivity = False
+    elif mode == 'update':
+      action      = self.update_image
+      message     = _tr('Update')
+      sensitivity = True
+    elif mode == 'updating':
+      message     =_tr('Cancel update')
+      action      = self.cancel_image_update
+      sensitivity = True
+    else:
+      raise Exception('Wrong arguments for set_update_button_mode')
+
+    if self.button_action_handler:
+        self.update_button.disconnect(self.button_action_handler)
+        self.button_action_handler = None
+    if action:
+      self.button_action_handler \
+        = self.update_button.connect('activate', action)
+
+      self.update_button.get_child().set_text(message)
+      self.update_button.set_sensitive(sensitivity)
+
+
+  def setup_log(self):
+    self.log_dialog \
+      = Gtk.Dialog(title=_tr('Update log'),
+                   parent=None,
+                   flags=Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
+                   buttons=(Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
+
+    self.log_dialog.set_default_size(600, 300)
+
+    self.log_view = Gtk.TextView()
+    self.log_view.set_editable(False)
+    self.log_view.set_cursor_visible(False)
+    self.log_view.show()
+
+    self.log_buffer = self.log_view.get_buffer()
+
+    self.log_ok_tag    = self.log_buffer.create_tag(foreground='green')
+    self.log_error_tag = self.log_buffer.create_tag(foreground='red')
+
+    log_scroll = Gtk.ScrolledWindow()
+    log_scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+    log_scroll.add(self.log_view)
+    log_scroll.show()
+
+    self.log_dialog.vbox.pack_start(log_scroll, True, True, 0)
+
+
+  def stop_roll_progress(self):
+    if self.roll_progress_id:
+      GObject.source_remove(self.roll_progress_id)
+      self.roll_progress_id = None
+
+
+  def update_image(self, widget):
+    self.dbus_iface \
+        .Update(False,
+                reply_handler=lambda reply: None,
+                error_handler=self.handle_dbus_error)
+
+    self.set_update_button_mode('updating')
+    self.on_update_progress_indicator('starting')
+
+
+  def view_log(self, widget):
+    self.log_dialog.run()
+    self.log_dialog.hide()
+
+
+class RemoteAssistance:
+  def __init__(self, applet):
+    self.applet = applet
+    self.config = self.parse_config()
+
+    # always disable vino remote access
+    self.disable_vino_remote_access()
+
+    try:
+      if 'ssh' in self.config['show_accesscontrols_for']:
+        time_when_ssh_was_enabled = self.time_when_ssh_was_enabled()
+
+        # disable ssh remote access if it has not been enabled for a while
+        self.disable_stale_ssh_remote_access(
+          self.config['ssh_access_timeout'],
+          time_when_ssh_was_enabled)
+
+    except subprocess.CalledProcessError:
+      # /usr/lib/puavo-ltsp-client/admin-remote-connections does not behave
+      # properly, so do not handle ssh (indicates misconfiguration)
+      print("admin-remote-connections returned failure," \
+              + " check your configuration",
+            file=sys.stderr)
+      config['show_accesscontrols_for'] \
+        = filter(lambda x: x != 'ssh', config['show_accesscontrols_for'])
+
+    self.latest_vino_enabled = None
+    self.latest_ssh_enabled  = None
+
+
+  def parse_config(self):
+    config = {
+      'new_bugreport_browser':   'firefox',
+      'new_bugreport_url':       None,
+      'show_accesscontrols_for': [ 'vino' ],
+      'ssh_access_timeout':      None,
+      'vino_network_interface':  None,
+    }
+
+    for config_key in config.keys():
+      puavoconf_key = ("puavo.support.%s" % config_key)
+      try:
+        puavoconf_value = puavoconf_get(puavoconf_key)
+      except Exception as e:
+        print("Could not read puavo-conf variable '%s': %s" \
+                %(puavoconf_key, e),
+              file=sys.stderr)
+        continue
+
+      try:
+        if config_key == 'show_accesscontrols_for':
+          if puavoconf_value == '':
+            puavoconf_value = []
+          else:
+            puavoconf_value = puavoconf_value.split(',')
+        elif config_key == 'ssh_access_timeout':
+          if puavoconf_value == '':
+            puavoconf_value = None
+          else:
+            puavoconf_value = int( puavoconf_value.rstrip(os.linesep) )
+        elif puavoconf_value == '':
+          puavoconf_value = None
+
+        config[config_key] = puavoconf_value
+
+      except Exception as e:
+        print("Could not interpret puavo-conf variable '%s': %s" \
+                % (puavoconf_key, e),
+              file=sys.stderr)
+
+    return config
+
+
+  def call_puavo_admin_remote_connections(self, cmdargs):
+    cmdpath = '/usr/lib/puavo-ltsp-client/admin-remote-connections'
+    return subprocess.check_output([ cmdpath ] + cmdargs).decode('utf-8')
+
+
+  def enable_ssh_remote_access(self):
+    self.call_puavo_admin_remote_connections([ '--accept-incoming' ])
+
+
+  def enable_vino_remote_access(self, network_interface):
+    dconf_values = {
+      '/org/gnome/desktop/remote-access/enabled':            "true",
+      '/org/gnome/desktop/remote-access/icon-visibility':    "'client'",
+      '/org/gnome/desktop/remote-access/notify-on-connect':  "true",
+      '/org/gnome/desktop/remote-access/prompt-enabled':     "true",
+      '/org/gnome/desktop/remote-access/require-encryption': "true",
+      '/org/gnome/desktop/remote-access/view-only':          "false",
+    }
+
+    # we may want to restrict remote access to a particular network
+    # interface
+    if network_interface:
+      network_interface_dconf_value = ("'%s'" % network_interface)
+    else:
+      network_interface_dconf_value = "''"
+
+    dconf_values['/org/gnome/desktop/remote-access/network-interface'] \
+      = network_interface_dconf_value
+
+    self.set_dconf_values(dconf_values)
+
+    subprocess.Popen([ '/usr/lib/vino/vino-server', '--sm-disable' ],
+                     close_fds=True)
+
+
+  def check_ssh_remote_access(self):
+    args = [ '--is-incoming-accepted' ]
+    status = self.call_puavo_admin_remote_connections(args)
+
+    return (status.rstrip(os.linesep) == 'yes')
+
+
+  def check_vino_remote_access(self):
+    dconf_key = '/org/gnome/desktop/remote-access/enabled'
+    out = subprocess.check_output([ 'dconf', 'read', dconf_key ]) \
+                    .decode('utf-8')
+
+    return (out.rstrip(os.linesep) == 'true')
+
+
+  def disable_ssh_remote_access(self):
+    self.call_puavo_admin_remote_connections([ '--reject-incoming' ])
+
+
+  def disable_vino_remote_access(self):
+    dconf_values = {
+      '/org/gnome/desktop/remote-access/enabled':            "false",
+      '/org/gnome/desktop/remote-access/icon-visibility':    "'client'",
+      '/org/gnome/desktop/remote-access/network-interface':  "''",
+      '/org/gnome/desktop/remote-access/notify-on-connect':  "true",
+      '/org/gnome/desktop/remote-access/prompt-enabled':     "true",
+      '/org/gnome/desktop/remote-access/require-encryption': "true",
+      '/org/gnome/desktop/remote-access/view-only':          "true",
+    }
+
+    self.set_dconf_values(dconf_values)
+
+    user = getpass.getuser()
+    subprocess.call([ 'pkill', '-x', '-U', user, 'vino-server' ])
+
+
+  def disable_stale_ssh_remote_access(self, timeout_seconds, time_when_enabled):
+    # not enabled, nothing to do
+    if time_when_enabled == None:
+      return
+
+    # timeout_seconds can be null/None, in which case we do nothing
+    if timeout_seconds == None:
+      return
+
+    # zero timeout means that we always disable ssh access.
+    if timeout_seconds == 0:
+      self.disable_ssh_remote_access()
+      return
+
+    timedelta = (datetime.datetime.now() - datetime.datetime.fromtimestamp(0))
+    time_in_seconds = int( timedelta.total_seconds() )
+
+    time_since_enabled = time_in_seconds - time_when_enabled
+
+    if time_since_enabled >= timeout_seconds:
+      self.disable_ssh_remote_access()
+
+
+  def time_when_ssh_was_enabled(self):
+    args = [ '--show-enable-time' ]
+    time_when_enabled_string = self.call_puavo_admin_remote_connections(args)
+
+    if time_when_enabled_string.rstrip(os.linesep) == 'not enabled':
+      return None
+
+    return int(time_when_enabled_string)
+
+
+  def set_dconf_values(self, dconf_values):
+    for key, value in dconf_values.items():
+      subprocess.check_call([ 'dconf', 'write', key, value ])
+
+
+  def get_available_access_controls_string(self, wanting_enabled_state):
+    available_list = []
+
+    # When wanting_enabled_state is True, we add to available_list
+    # when access is enabled.  When wanting_enabled_state is False,
+    # we add to available_list when access is disabled.
+
+    if self.ssh_controls_available():
+      ssh_enabled = self.check_ssh_remote_access()
+      if ssh_enabled == wanting_enabled_state:
+        available_list.append('SSH')
+
+    if self.vino_controls_available():
+      vino_enabled = self.check_vino_remote_access()
+      if vino_enabled == wanting_enabled_state:
+        available_list.append('VNC')
+
+    if len(available_list) == 0:
+        return None
+
+    return ('(%s)' % ('/'.join(available_list)))
+
+
+  def check_for_changed_settings(self):
+    # XXX We poll because we may lack inotify (nfs, overlayfs)
+    # XXX and thus smarter solutions may not work.
+
+    ssh_settings_changed = False
+    if self.ssh_controls_available():
+      old_latest_ssh_enabled = self.latest_ssh_enabled
+      self.latest_ssh_enabled = self.check_ssh_remote_access()
+      ssh_settings_changed = (old_latest_ssh_enabled != self.latest_ssh_enabled)
+
+    vino_settings_changed = False
+    if self.vino_controls_available():
+      old_latest_vino_enabled = self.latest_vino_enabled
+      self.latest_vino_enabled = self.check_vino_remote_access()
+      vino_settings_changed \
+        = (old_latest_vino_enabled != self.latest_vino_enabled)
+
+    return ssh_settings_changed or vino_settings_changed
+
+
+  def create_access_controls(self):
+    to_disable_msg = self.get_available_access_controls_string(True)
+    to_enable_msg  = self.get_available_access_controls_string(False)
+
+    if to_disable_msg:
+      access_state_msg = '%s %s' % (_tr('Remote access allowed'),
+                                    to_disable_msg)
+      indicator_icon = 'puavoremoteaccess-green'
+    elif to_enable_msg:
+      access_state_msg = '%s %s' % (_tr('Remote access denied'), to_enable_msg)
+      indicator_icon = 'puavoremoteaccess-grey'
+    else:
+      # if there is nothing to enable/disable, just show nothing
+      return False
+
+    self.access_status_label = Gtk.MenuItem('-=> %s <=' % access_state_msg)
+    self.access_status_label.set_sensitive(False)
+    self.access_status_label.show()
+    self.applet.menu.append(self.access_status_label)
+
+    if to_enable_msg:
+      enable_msg = '%s %s' % (_tr('Enable remote access'), to_enable_msg)
+      self.enable_access_button = Gtk.MenuItem(enable_msg)
+      self.enable_access_button.connect('activate', self.enable_remote_access)
+      self.enable_access_button.show()
+      self.applet.menu.append(self.enable_access_button)
+
+    if to_disable_msg:
+      disable_msg = '%s %s' % (_tr('Disable remote access'), to_disable_msg)
+      self.disable_access_button = Gtk.MenuItem(disable_msg)
+      self.disable_access_button.connect('activate', self.disable_remote_access)
+      self.disable_access_button.show()
+      self.applet.menu.append(self.disable_access_button)
+
+    self.applet.indicator.set_icon(indicator_icon)
+
+
+  def disable_remote_access(self, widget):
+    if self.ssh_controls_available():
+      self.disable_ssh_remote_access()
+
+    if self.vino_controls_available():
+      self.disable_vino_remote_access()
+
+    self.applet.create_menu()
+
+
+  def enable_remote_access(self, widget):
+    if self.ssh_controls_available():
+      self.enable_ssh_remote_access()
+
+    if self.vino_controls_available():
+      interface = self.config['vino_network_interface']
+      self.enable_vino_remote_access(interface)
+
+    self.applet.create_menu()
+
+
+  def make_bugreport(self, widget):
+    browser = self.config['new_bugreport_browser']
+    url     = self.config['new_bugreport_url']
+
+    if browser == 'firefox':
+      cmd = [ browser, '-new-window', url ]
+    else:
+      cmd = [ browser, url ]
+
+    subprocess.Popen(cmd, close_fds=True)
+
+
+  def ssh_controls_available(self):
+    return ('ssh' in self.config['show_accesscontrols_for'])
+
+
+  def vino_controls_available(self):
+    # vino-server can not be started in login screen
+    if getpass.getuser() == 'Debian-gdm':
+      return False
+
+    return ('vino' in self.config['show_accesscontrols_for'])
+
+
+  def append_items_to_menu(self):
+    self.create_access_controls()
+
+    make_bugreport_button = self.config['new_bugreport_browser'] \
+                              and self.config['new_bugreport_url'] \
+                              and getpass.getuser() != 'Debian-gdm'
+    if make_bugreport_button:
+      self.new_ticket_button = Gtk.MenuItem( _tr('New support request') )
+      self.new_ticket_button.connect('activate', self.make_bugreport)
+      self.new_ticket_button.show()
+      self.applet.menu.append(self.new_ticket_button)
+
+
+class ResetDevState(PuavoWidget):
+  def __init__(self, applet):
+    self.applet = applet
+
+    self.enabled = False
+    if os.path.exists('/run/puavo/nbd-server'):
+      return
+    if not on_persistent_overlay():
+      return
+    if not administered_by_user():
+      return
+
+    self.dbus_iface = None
+    self.enabled = True
+
+
+  def setup_dbus_iface(self):
+    self.dbus_iface \
+      = self.connect_to_dbus('/overlayhandler',
+                             'org.puavo.client.overlayhandler')
+
+    self.dbus_iface \
+        .connect_to_signal('DeleteImageOverlaysCompleted',
+                           self.on_delete_overlays_completed)
+    self.dbus_iface \
+        .connect_to_signal('DeleteImageOverlaysFailed',
+                           self.on_delete_overlays_failed)
+
+
+  def on_delete_overlays_completed(self):
+    self.reset_devstate_button.set_sensitive(True)
+    self.notify( _tr('Reset development state is now done,'
+                     ' rebooting the system.') )
+
+
+  def on_delete_overlays_failed(self, errmsg):
+    self.reset_devstate_button.set_sensitive(True)
+    msg = _tr('An error occurred when resetting development state')
+    self.notify("%s: %s" % (msg, errmsg))
+
+
+  def confirm_reset_devstate(self, widget):
+    imageoverlays_state = self.dbus_iface.ImageOverlaysState()
+    if imageoverlays_state < 0:
+      statepercent = '???'
+    else:
+      statepercent = "%s%%" % imageoverlays_state
+
+    dialogmsg = _tr('Development state space utilization is') \
+                  + (" %s.\n\n" % statepercent)               \
+                  + _tr('Do you want to reset the development state?'
+                        ' All your custom system changes will be lost.'
+                        ' System will also reboot itself after this'
+                        ' operation.')
+
+    self.reset_devstate_dialog = Gtk.MessageDialog(None,
+                                                   Gtk.DialogFlags.MODAL,
+                                                   Gtk.MessageType.QUESTION,
+                                                   Gtk.ButtonsType.YES_NO,
+                                                   dialogmsg)
+
+    self.reset_devstate_dialog.set_title( _tr('Reset development state') )
+
+    response = self.reset_devstate_dialog.run()
+    self.reset_devstate_dialog.destroy()
+
+    if response == Gtk.ResponseType.YES:
+      self.reset_development_state()
+
+
+  def reset_development_state(self):
+    self.dbus_iface.DeleteImageOverlays()
+    self.reset_devstate_button.set_sensitive(False)
+
+
+  def append_items_to_menu(self):
+    if not self.enabled:
+      return
+
+    self.add_development_state_widgets()
+
+    if not self.dbus_iface:
+      self.setup_dbus_iface()
+
+
+  def add_development_state_widgets(self):
+    msg = _tr('Updates are disabled in developer mode, boot to normal mode'
+              ' to update.')
+    self.disabled_msg = Gtk.MenuItem(msg)
+    self.disabled_msg.set_sensitive(False)
+    self.disabled_msg.show()
+
+    self.applet.menu.append(self.disabled_msg)
+
+    buttonmsg = _tr('Reset development state')
+    self.reset_devstate_button = Gtk.MenuItem(buttonmsg)
+    self.reset_devstate_button.connect('activate',
+                                       self.confirm_reset_devstate)
+    self.reset_devstate_button.show()
+
+    self.applet.menu.append(self.reset_devstate_button)
+
+
+class PuavoDesktopApplet:
+  def __init__(self):
+    # XXX this should be something else and maybe puavo-conf configurable?
+
+    self.indicator = AppIndicator3.Indicator.new('puavo-desktop-applet',
+                        'puavoremoteaccess-grey',
+                        AppIndicator3.IndicatorCategory.SYSTEM_SERVICES)
+    self.indicator.set_status(AppIndicator3.IndicatorStatus.ACTIVE)
+
+    Notify.init('puavo-desktop-applet')
+
+    self.changelog_notifier = ChangelogNotifier(self)
+    self.image_updater = ImageUpdater(self)
+    self.remote_assistance = RemoteAssistance(self)
+    self.reset_dev_state = ResetDevState(self)
+
+    self.menu = False
+    self.create_menu()
+
+
+  def create_menu(self):
+    if self.menu:
+      self.menu.destroy()
+
+    self.menu = Gtk.Menu()
+
+    self.reset_dev_state.append_items_to_menu()
+    self.image_updater.append_items_to_menu()
+    self.remote_assistance.append_items_to_menu()
+    self.changelog_notifier.append_items_to_menu()
+
+    self.menu.show_all()
+
+    self.indicator.set_menu(self.menu)
+
+
+  def check_for_changed_settings(self):
+    if self.remote_assistance.check_for_changed_settings():
+      self.create_menu()
+
+
+  def main(self):
+    self.check_for_changed_settings()
+    GObject.timeout_add_seconds(5, self.check_for_changed_settings)
+
+    Gtk.main()
+
+
+applet = PuavoDesktopApplet()
+
+if __name__ == '__main__':
+  signal.signal(signal.SIGINT, signal.SIG_DFL)
+  applet.main()

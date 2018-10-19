@@ -12,25 +12,12 @@ INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL) -m 644
 
 .PHONY : all
-all : po/fi/puavo-client-updater-applet.mo po/sv/puavo-client-updater-applet.mo
-
-po/puavo-client-updater-applet.pot : puavo-client-updater-applet.py
-	xgettext --omit-header --language Python --keyword=_tr -o $@ $^
-
-%.po : po/puavo-client-updater-applet.pot
-	msgmerge --update --no-fuzzy-matching --backup=off $@ $<
-	touch $@
-
-%.mo : %.po
-	msgfmt $< --output-file $@
+all:
 
 .PHONY : installdirs
 installdirs :
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(datarootdir)/dbus-1/system-services
-	mkdir -p $(DESTDIR)$(datarootdir)/icons/hicolor/scalable/status
-	mkdir -p $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES
-	mkdir -p $(DESTDIR)$(datarootdir)/locale/sv/LC_MESSAGES
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-install
 	mkdir -p $(DESTDIR)$(libdir)/puavo-ltsp-install
 	mkdir -p $(DESTDIR)$(sbindir)
@@ -40,10 +27,6 @@ installdirs :
 
 .PHONY : install
 install : installdirs
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
-		puavo-client-updater-applet       \
-		puavo-client-updater-applet.py
-
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-client-daemon \
 		puavo-install \
@@ -58,20 +41,6 @@ install : installdirs
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/dbus-1/system-services \
 		dbus-1/org.puavo.client.Daemon.service
-
-	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/icons/hicolor/scalable/status \
-		icons/update-available.svg \
-		icons/update-error.svg \
-		icons/update-downloading.svg \
-		icons/update-downloading-*.svg \
-		icons/update-idle.svg \
-		icons/update-installed.svg
-
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES \
-		po/fi/puavo-client-updater-applet.mo
-
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/locale/sv/LC_MESSAGES \
-		po/sv/puavo-client-updater-applet.mo
 
 	cp -R preseeds $(DESTDIR)$(datarootdir)/puavo-ltsp-install/
 
@@ -94,6 +63,3 @@ install : installdirs
 
 .PHONY : clean
 clean :
-	rm -rf po/fi/*.mo
-	rm -rf po/sv/*.mo
-	rm -rf po/*.pot

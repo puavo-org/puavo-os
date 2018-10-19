@@ -11,17 +11,7 @@ INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL) -m 644
 
 .PHONY : all
-all : po/fi/puavo-remote-assistance-applet.mo
-
-puavo-remote-assistance-applet.pot: puavo-remote-assistance-applet
-	xgettext --omit-header --language Python --keyword=_tr -o $@ $^
-
-%.po : po/puavo-client-updater-applet.pot
-	msgmerge --update --no-fuzzy-matching --backup=off $@ $<
-	touch $@
-
-%.mo : %.po
-	msgfmt $< --output-file $@
+all :
 
 .PHONY : installdirs
 installdirs :
@@ -47,7 +37,6 @@ installdirs :
 	mkdir -p $(DESTDIR)$(sysconfdir)/X11/Xsession.d
 	mkdir -p $(DESTDIR)$(datarootdir)/applications
 	mkdir -p $(DESTDIR)$(datarootdir)/gdm/greeter/autostart
-	mkdir -p $(DESTDIR)$(datarootdir)/icons/hicolor/scalable/status
 	mkdir -p $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES
 	mkdir -p $(DESTDIR)$(datarootdir)/pam-configs
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/definitions
@@ -72,13 +61,6 @@ install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/gdm/greeter/autostart \
 		gdm/greeter/autostart/puavo-run-xrandr.desktop
 
-	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/icons/hicolor/scalable/status \
-		icons/puavoremoteaccess-cyan.svg \
-		icons/puavoremoteaccess-green.svg \
-		icons/puavoremoteaccess-grey.svg \
-		icons/puavoremoteaccess-original.svg \
-		icons/puavoremoteaccess-yellow.svg
-
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/xsessions \
 		xsessions/*
 
@@ -89,7 +71,6 @@ install : installdirs
 		puavo-pulseaudio-get-puavoconf \
 		puavo-pulseaudio-list \
 		puavo-pulseaudio-setup \
-		puavo-remote-assistance-applet \
 		puavo-rest-request
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
@@ -99,9 +80,6 @@ install : installdirs
 		puavo-report-system-version \
 		puavo-sysmerge \
 		puavo-sysmerge-onedir
-
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES \
-		po/fi/puavo-remote-assistance-applet.mo
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/puavo-vpn-client/scripts/route-up \
 		etc/puavo-vpn-client/scripts/route-up/10-bootserver-dnsmasq \

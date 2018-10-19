@@ -30,7 +30,7 @@ class kernels {
 
   $default_kernel = '4.9.0-8-amd64'
   $fresh_kernel   = '4.17.0-0.bpo.1-amd64'
-  $legacy_kernel  = '3.16.0-4-amd64'
+  $legacy_kernel  = '3.16.0-7-amd64'
 
   ::kernels::all_kernel_links {
     'default': kernel => $default_kernel;

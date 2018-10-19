@@ -30,6 +30,7 @@ class packages {
     , 'puavo-client'
     , 'puavo-conf'
     , 'puavo-core'
+    , 'puavo-desktop-applet'
     , 'puavo-devscripts'
     , 'puavo-hw-log'
     , 'puavo-hw-tools'
@@ -755,9 +756,9 @@ class packages {
                       # XXX $r8168_dkms_module  # XXX missing from Debian
 
   packages::kernels::kernel_package {
-    '3.16.0-4-amd64':
+    '3.16.0-7-amd64':
       dkms_modules => $all_dkms_modules,
-      package_name => 'linux-image-3.16.0-4-amd64';
+      package_name => 'linux-image-3.16.0-7-amd64';
 
     '4.9.0-8-amd64':
       dkms_modules => $all_dkms_modules,

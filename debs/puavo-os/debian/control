@@ -129,6 +129,17 @@ Description: Puavo Core Infrastructure
  Bolts and nuts for Puavo OS.
  .
 
+Package: puavo-desktop-applet
+Architecture: all
+Depends: ${misc:Depends},
+ python3,
+ python3-dbus,
+ python3-gi
+Description: Puavo Desktop Applet
+ Puavo Desktop Applet contains some functionality relating to
+ support and remote assistance, image updating and such.
+ .
+
 Package: puavo-devscripts
 Architecture: all
 Depends: ${misc:Depends},
@@ -301,8 +312,6 @@ Depends: ${misc:Depends},
  puavo-pam,
  puavo-vpn-client,
  python,
- python-appindicator,
- python-gtk2,
  python-serial,
  ruby-dnsruby,
  ruby-json,

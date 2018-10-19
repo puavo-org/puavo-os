@@ -5,6 +5,7 @@ subdirs         := admins                     \
                    client                     \
                    conf                       \
                    core                       \
+                   desktop-applet             \
                    devscripts                 \
                    fluent-plugin-puavo        \
                    hw-log                     \
