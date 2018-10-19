@@ -29,6 +29,7 @@ class packages {
     , 'puavo-client'
     , 'puavo-conf'
     , 'puavo-core'
+    , 'puavo-desktop-applet'
     , 'puavo-devscripts'
     , 'puavo-hw-log'
     , 'puavo-hw-tools'

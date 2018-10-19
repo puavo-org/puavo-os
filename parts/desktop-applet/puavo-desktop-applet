@@ -22,8 +22,8 @@ from gi.repository import GObject
 from gi.repository import Gtk
 from gi.repository import Notify
 
-gettext.bindtextdomain('puavo-remote-assistance-applet', '/usr/share/locale')
-gettext.textdomain('puavo-remote-assistance-applet')
+gettext.bindtextdomain('puavo-desktop-applet', '/usr/share/locale')
+gettext.textdomain('puavo-desktop-applet')
 _tr = gettext.gettext
 
 dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
