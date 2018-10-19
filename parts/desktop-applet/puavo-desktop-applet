@@ -205,7 +205,7 @@ class ImageUpdater:
 
 
   def handle_dbus_error(self, dbusexception):
-      self.append_error_to_log('Unknown dbus error.')
+      self.append_error_to_log('Unknown dbus error: ' + str(dbusexception))
       self.on_update_failed()
 
 
@@ -230,9 +230,7 @@ class ImageUpdater:
     self.stop_roll_progress()
     self.set_update_button_mode('update')
 
-    # XXX
-    # self.applet.indicator.set_attention_icon('update-available')
-    # self.applet.indicator.set_status(appindicator.STATUS_ATTENTION)
+    self.set_icon('update-available', AppIndicator3.IndicatorStatus.ATTENTION)
 
     # show only once after each login
     if not self.available_notice_shown:
@@ -268,19 +266,16 @@ class ImageUpdater:
       log_msg    = _tr('Update completed.')
       notify_msg = _tr('System update is finished.')
 
-      self.append_text_to_log( log_msg + "\n" )
+    self.append_text_to_log( log_msg + "\n" )
 
-      self.available_notice_shown = False
-      self.notify(notify_msg)
+    self.available_notice_shown = False
+    self.notify(notify_msg)
 
 
   def on_update_failed(self):
     self.stop_roll_progress()
     self.set_update_button_mode('update')
-
-    # XXX
-    # self.indicator.set_attention_icon('update-error')
-    # self.indicator.set_status(appindicator.STATUS_ATTENTION)
+    self.set_icon('update-error', AppIndicator3.IndicatorStatus.ATTENTION)
 
     self.append_error_to_log( _tr('Update failed.') + "\n" )
 
@@ -292,14 +287,10 @@ class ImageUpdater:
 
     if reboot_required:
       self.on_update_progress_indicator('finished')
-      # XXX
-      # self.indicator.set_attention_icon('update-installed')
-      # self.indicator.set_status(appindicator.STATUS_ATTENTION)
+      self.set_icon('update-installed', AppIndicator3.IndicatorStatus.ATTENTION)
     else:
       self.on_update_progress_indicator('uptodate')
-      # XXX
-      # self.indicator.set_icon('update-idle')
-      # self.indicator.set_status(appindicator.STATUS_ACTIVE)
+      self.set_icon('update-idle', AppIndicator3.IndicatorStatus.ATTENTION)
 
 
   def on_update_message(self, msgtype, content):
@@ -368,18 +359,15 @@ class ImageUpdater:
 
     if not self.roll_progress_id:
       self.roll_progress_id \
-        = gobject.timeout_add(250, self.roll_progress_animation)
+        = GObject.timeout_add(250, self.roll_progress_animation)
 
 
   def on_update_started(self):
     self.set_update_button_mode('updating')
-    # XXX
-    # self.applet.indicator.set_attention_icon('update-downloading')
-    # self.applet.indicator.set_status(appindicator.STATUS_ATTENTION)
+    self.set_icon('update-downloading', AppIndicator3.IndicatorStatus.ATTENTION)
 
     self.append_text_to_log( _tr('System update has been started.') \
                                + "\n" )
-
     self.notify( _tr('System update has been started.') )
 
 
@@ -399,8 +387,8 @@ class ImageUpdater:
 
     self.reset_devstate_dialog = Gtk.MessageDialog(None,
                                                    Gtk.DialogFlags.MODAL,
-                                                   Gtk.MESSAGE_QUESTION,
-                                                   Gtk.BUTTONS_YES_NO,
+                                                   Gtk.MessageType.QUESTION,
+                                                   Gtk.ButtonsType.YES_NO,
                                                    dialogmsg)
 
     self.reset_devstate_dialog.set_title( _tr('Reset development state') )
@@ -408,7 +396,7 @@ class ImageUpdater:
     response = self.reset_devstate_dialog.run()
     self.reset_devstate_dialog.destroy()
 
-    if response == Gtk.RESPONSE_YES:
+    if response == Gtk.ResponseType.YES:
       self.reset_development_state()
 
 
@@ -417,10 +405,16 @@ class ImageUpdater:
     self.reset_devstate_button.set_sensitive(False)
 
 
+  def set_icon(self, icon, status):
+    # XXX these are disabled, because RemoteAssistance is responsible
+    # XXX for controlling the icon
+    # self.applet.indicator.set_attention_icon(icon)
+    # self.applet.indicator.set_status(status)
+
+
   def roll_progress_animation(self):
-    # XXX
-    # self.applet.indicator.set_attention_icon(self.download_animation_icons[0])
-    # self.applet.indicator.set_status(appindicator.STATUS_ATTENTION)
+    self.set_icon(self.download_animation_icons[0],
+                  AppIndicator3.IndicatorStatus.ATTENTION)
 
     # cycle attention icons
     self.download_animation_icons         \
@@ -475,15 +469,16 @@ class ImageUpdater:
                    buttons=(Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
 
     self.log_dialog.set_default_size(600, 300)
-    self.log_buffer = Gtk.TextBuffer()
 
-    self.log_ok_tag    = self.log_buffer.create_tag(foreground='green')
-    self.log_error_tag = self.log_buffer.create_tag(foreground='red')
-
-    self.log_view = Gtk.TextView() # XXX self.log_buffer
+    self.log_view = Gtk.TextView()
     self.log_view.set_editable(False)
     self.log_view.set_cursor_visible(False)
     self.log_view.show()
+
+    self.log_buffer = self.log_view.get_buffer()
+
+    self.log_ok_tag    = self.log_buffer.create_tag(foreground='green')
+    self.log_error_tag = self.log_buffer.create_tag(foreground='red')
 
     log_scroll = Gtk.ScrolledWindow()
     log_scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
@@ -495,7 +490,7 @@ class ImageUpdater:
 
   def stop_roll_progress(self):
     if self.roll_progress_id:
-      gobject.source_remove(self.roll_progress_id)
+      GObject.source_remove(self.roll_progress_id)
       self.roll_progress_id = None
 
 
