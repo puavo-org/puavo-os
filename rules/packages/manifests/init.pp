@@ -126,6 +126,7 @@ class packages {
     , 'sudo'
     , 'sysfsutils'
     , 'sysstat'
+    , 'tftp'
     , 'telnet'
     , 'terminator'
     , 'tmux'
