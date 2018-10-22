@@ -116,6 +116,55 @@ class OverlayHandler < DBus::Object
   end
 end
 
+class ContentUpdates < DBus::Object
+  dbus_interface "org.puavo.client.contentupdates" do
+    dbus_signal :UpdateStarted,   'in contentname:s, in version:s'
+    dbus_signal :UpdateProgress,
+                'in contentname:s, in phase:s, in version:s, in progress:i'
+    dbus_signal :UpdateCompleted, 'in contentname:s, in version:s'
+    dbus_signal :UpdateFailed,    'in contentname:s, in version:s, in errmsg:s'
+
+    dbus_method :GetContents, 'out as' do
+      extra_contents = {}
+      begin
+        extra_contents_json_path \
+          = '/var/lib/puavo-desktop/extra_system_contents.json'
+        extra_contents = JSON.parse( IO.read(extra_contents_json_path) )
+      rescue Errno::ENOENT => e
+        # pass
+      rescue StandardError => e
+        logerr(Syslog::LOG_ERR,
+               "Could not read/parse #{ extra_contents_json_path }\n")
+        raise e
+      end
+
+      [ extra_contents.to_a.flatten.map { |s| s.to_s } ]
+    end
+
+    dbus_method :SetUpdateStarted, 'in contentname:s, in version:s' do
+      |contentname, version|
+      self.UpdateStarted(contentname, version)
+    end
+
+    dbus_method :SetUpdateProgress,
+                'in contentname:s, in phase:s, in version:s, in progress:i' do
+      |contentname, phase, version, progress|
+      self.UpdateProgress(contentname, phase, version, progress)
+    end
+
+    dbus_method :SetUpdateCompleted, 'in contentname:s, in version:s' do
+      |contentname, version|
+      self.UpdateCompleted(contentname, version)
+    end
+
+    dbus_method :SetUpdateFailed,
+                'in contentname:s, in version:s, in errmsg:s' do
+      |contentname, version, errmsg|
+      self.UpdateFailed(contentname, version, errmsg)
+    end
+  end
+end
+
 class Updater < DBus::Object
   def check_for_available_image_updates()
     system('/usr/lib/puavo-ltsp-install/is-update-available')
@@ -406,6 +455,7 @@ bus = DBus::SystemBus.instance
 service = bus.request_service("org.puavo.client.Daemon")
 
 # Export all dbus-accessible objects.
+service.export(ContentUpdates.new('/contentupdates'))
 service.export(OverlayHandler.new('/overlayhandler'))
 service.export(Updater.new("/updater"))
 
