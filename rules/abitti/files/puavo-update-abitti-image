@@ -16,6 +16,58 @@ logmsg() {
   logger -s -t puavo-update-abitti-image "$@" || true
 }
 
+errmsg='unknown error'
+error() {
+  errmsg=$1
+  logmsg -p user.err "$1"
+}
+
+send_status_message() {
+  method=$1; shift
+
+  dbus-send --dest=org.puavo.client.Daemon              \
+            --reply-timeout=100                         \
+            --print-reply=literal                       \
+            --system                                    \
+            /contentupdates                             \
+            "org.puavo.client.contentupdates.${method}" \
+            "string:Abitti"                             \
+            "string:${short_abitti_version}"            \
+            "$@" \
+    || true
+}
+
+update_status='not_started'
+send_final_status() {
+  case "$update_status" in
+    not_started)
+      exit 0
+      ;;
+    started)
+      send_status_message SetUpdateFailed "string:$errmsg"
+      exit 1
+      ;;
+    success)
+      send_status_message SetUpdateCompleted
+      exit 0
+      ;;
+  esac
+  update_status='final_message_sent'
+}
+
+update_progress() {
+  phase=$1
+
+  while read progress; do
+    # rsync goes only from 0 --> 90 %.
+    if [ "$phase" = 'rsync' ]; then
+      progress=$(echo "$progress" | tr -d '\r')
+      progress=$(( 90 * $progress / 100 ))
+    fi
+    send_status_message SetUpdateProgress "int32:${progress}"
+  done
+}
+
 # be_very nice
 ionice -c 3  -p $$
 renice -n 20 -p $$ > /dev/null
@@ -42,14 +94,14 @@ case "$abitti_mode" in
     exit 0
     ;;
   *)
-    logmsg -p user.err "unsupported abitti mode: '${abitti_mode}'"
+    error "unsupported abitti mode: '${abitti_mode}'"
     exit 1
     ;;
 esac
 
 abitti_version=$(puavo-conf puavo.abitti.version)
 if [ -z "$abitti_version" ]; then
-  logmsg -p user.err 'puavo.abitti.version is not set, doing nothing!'
+  error 'puavo.abitti.version is not set, doing nothing!'
   exit 1
 fi
 
@@ -58,8 +110,7 @@ if [ "${1:-}" = '--use-rate-limit' ]; then
   download_rate_limit=$(puavo-conf puavo.image.download.ratelimit)
   if [ -n "$download_rate_limit" ]; then
     if ! printf "%s\n" "$download_rate_limit" | grep -Eqx '[0-9]+[km]'; then
-      logmsg -p user.err \
-             "the rate limit was not understood, got '$download_rate_limit'"
+      error "the rate limit was not understood, got '$download_rate_limit'"
       exit 1
     fi
     rsyncopts="--bwlimit=${download_rate_limit}"
@@ -78,11 +129,12 @@ if [ "$abitti_version" = 'latest' ]; then
   abitti_version=$(jq -r .latest "$abitti_json_path")
 
   if [ -z "$abitti_version" ]; then
-    logmsg -p user.err \
-           'could not determine the latest version from abitti metadata'
+    error 'could not determine the latest version from abitti metadata'
     exit 1
   fi
 fi
+
+short_abitti_version=${abitti_version#abitti-v}
 
 abitti_image="${abitti_version}.squashfs"
 abitti_image_fp="${abitti_images_dir}/${abitti_image}"
@@ -116,7 +168,7 @@ if [ ! -e "$persistent_fs" ]; then
       && mkfs.ext4 -q -L DAT452CBDF0OGISG "${persistent_fs}.tmp" \
       && mv "${persistent_fs}.tmp" "$persistent_fs"
   } || {
-    logmsg -p user.err 'could not create a persistent filesystem for Abitti'
+    error 'could not create a persistent filesystem for Abitti'
     exit 1
   }
 
@@ -128,10 +180,18 @@ if [ -e "$abitti_image_fp" ]; then
   exit 0
 fi
 
+# now we are going to update
+update_status='started'
+
+# update_status and short_abitti_version must be set before this:
+trap send_final_status 0 INT TERM
+
+send_status_message SetUpdateStarted
+
 required_diskspace=$(jq -r --arg abitti_version "$abitti_version" \
                          '.images[$abitti_version].size' "$abitti_json_path")
 if [ -z "$required_diskspace" ]; then
-  logmsg -p user.err "image size for '$abitti_version' is not known"
+  error "image size for '$abitti_version' is not known"
   exit 1
 fi
 available_diskspace=$(stat -f -c '%S * %a' "$abitti_images_dir" \
@@ -139,28 +199,61 @@ available_diskspace=$(stat -f -c '%S * %a' "$abitti_images_dir" \
 if [ "$available_diskspace" -lt "$required_diskspace" ]; then
   msg="only $available_diskspace bytes available on $abitti_images_dir,"
   msg="$msg need $required_diskspace bytes"
-  logmsg -p user.err "$msg"
+  error "$msg"
   exit 1
 fi
 
 expected_image_sha256=$(jq -r --arg abitti_version "$abitti_version" \
                  '.images[$abitti_version].sha256' "$abitti_json_path")
 if [ -z "$expected_image_sha256" ]; then
-  logmsg -p user.err "checksum missing for image $abitti_version"
+  error "checksum missing for image $abitti_version"
   exit 1
 fi
 
 logmsg -p user.info "downloading $abitti_version with rsync from $image_server"
-rsync --fuzzy --inplace --progress -v $rsyncopts \
-      "${image_server}::images/abitti-images/${abitti_image}" \
-      "${abitti_image_fp}.tmp"
+
+echo 0 | update_progress starting
+
+# progress trick from /usr/sbin/puavo-install-and-update-ltspimages
+rsync_error_code=$(
+  {
+    {
+      rsync --fuzzy --inplace --progress -v $rsyncopts              \
+            "${image_server}::images/abitti-images/${abitti_image}" \
+            "${abitti_image_fp}.tmp" 2>/dev/null                    \
+        || echo $? >&2
+    } | unbuffer -p awk '
+          BEGIN { progress = -1 }
+
+          {
+            if (match($2, /^([[:digit:]]+)%$/, a)) {
+              new_progress = a[1]
+              if (progress != new_progress) {
+                progress = new_progress
+                print progress
+              }
+            }
+          }
+        ' \
+      | update_progress rsync
+  } 2>&1 || true
+)
+
+if [ -n "$rsync_error_code" ]; then
+  error "rsync failed with error code $rsync_error_code"
+  exit 1
+fi
+
+echo 90 | update_progress sha256
 
 logmsg -p user.info "checking sha256 checksum of $abitti_version"
 actual_image_sha256=$(sha256sum "${abitti_image_fp}.tmp" | awk '{ print $1 }')
 if [ "$actual_image_sha256" != "$expected_image_sha256" ]; then
-  logmsg -p user.err "checksum mismatch for abitti-image ${abitti_version}"
+  error "checksum mismatch for abitti-image ${abitti_version}"
   exit 1
 fi
+
+echo 99 | update_progress sha256
 
 if [ -n "$old_abitti_image_fp" ]; then
   logmsg -p user.notice \
@@ -179,3 +272,12 @@ else
 fi
 
 logmsg -p user.notice "new abitti-image ${abitti_version} installed!"
+
+# XXX this should maybe be checked every time this script is run
+# XXX in case something unusual has happened ?
+esc_json_path='/var/lib/puavo-desktop/extra_system_contents.json'
+jq --arg abitti_version "$abitti_version" '.Abitti = $abitti_version' \
+  "$esc_json_path" > "${esc_json_path}.tmp"
+mv "${esc_json_path}.tmp" "$esc_json_path"
+
+update_status='success'
