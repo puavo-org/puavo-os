@@ -120,7 +120,7 @@ class ContentUpdates < DBus::Object
   dbus_interface "org.puavo.client.contentupdates" do
     dbus_signal :UpdateStarted,   'in contentname:s, in version:s'
     dbus_signal :UpdateProgress,
-                'in contentname:s, in phase:s, in version:s, in progress:i'
+                'in contentname:s, in version:s, in progress:i'
     dbus_signal :UpdateCompleted, 'in contentname:s, in version:s'
     dbus_signal :UpdateFailed,    'in contentname:s, in version:s, in errmsg:s'
 
@@ -147,9 +147,9 @@ class ContentUpdates < DBus::Object
     end
 
     dbus_method :SetUpdateProgress,
-                'in contentname:s, in phase:s, in version:s, in progress:i' do
-      |contentname, phase, version, progress|
-      self.UpdateProgress(contentname, phase, version, progress)
+                'in contentname:s, in version:s, in progress:i' do
+      |contentname, version, progress|
+      self.UpdateProgress(contentname, version, progress)
     end
 
     dbus_method :SetUpdateCompleted, 'in contentname:s, in version:s' do

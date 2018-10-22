@@ -266,6 +266,10 @@ class ContentUpdates(PuavoWidget):
                                         self.update_completed)
     self.dbus_iface.connect_to_signal('UpdateFailed',
                                         self.update_failed)
+    self.get_contents()
+
+
+  def get_contents(self):
     self.dbus_iface \
         .GetContents(reply_handler=self.get_contents_handler,
                      error_handler=self.get_contents_dbus_error_handler)
@@ -282,7 +286,6 @@ class ContentUpdates(PuavoWidget):
 
 
   def append_items_to_menu(self):
-    print("now append %s" % (self.contents))
     for contentname in self.menuitems_by_contents.keys():
       self.menuitems_by_contents[contentname]['menuitem'].destroy()
       del(self.menuitems_by_contents[contentname]['menuitem'])
@@ -304,37 +307,45 @@ class ContentUpdates(PuavoWidget):
 
 
   def update_started(self, contentname, version):
-    # notification?
-    print("got update_started for %s / version" % (contentname, version))
-    self.update_progress(contentname, version, 'starting', '0')
+    # XXX translations
+    self.notify('update of %s to version %s has started' \
+                  % (contentname, version))
+    self.update_progress(contentname, version, 0)
 
 
-  def update_progress(self, contentname, version, phase, progress):
-    print("got update_progress for %s / %s / %s / %s" % (contentname, version, phase, progress))
+  def update_progress(self, contentname, new_version, progress):
     try:
+      # XXX translations
+      # XXX error handling
       current_version = self.contents[contentname]
       progress = "%s %s --> %s [%d%%]" \
-                   % (contentname, current_version, version, progress)
+                   % (contentname, current_version, new_version, progress)
 
       self.menuitems_by_contents[contentname]['progress'] = progress
       self.menuitems_by_contents[contentname]['menuitem'].get_child() \
           .set_text(progress)
 
     except Exception as e:
+      # XXX
       print("some error in updating progress: %s" % e, file=sys.stderr)
 
 
   def update_completed(self, contentname, version):
-    # notification?
-    print("got update_completed for %s / %s" % (contentname, version))
+    # XXX translations
+    self.notify('update of %s to version %s has completed successfully' \
+                  % (contentname, version))
+    self.update_progress(contentname, version, 100)
+    self.get_contents()
 
 
   def update_failed(self, contentname, version, errmsg):
-    # notification?
-    print("got update_failed for %s / %s / %s" % (contentname, version, errmsg))
+    # XXX translations
+    self.notify('update of %s to version %s has failed: %s' \
+                  % (contentname, version, errmsg))
 
 
   def get_contents_dbus_error_handler(self, dbusexception):
+    # XXX error messages to user?
     print('got dbus error on get contents: ' + str(dbusexception),
           file=sys.stderr)
 
