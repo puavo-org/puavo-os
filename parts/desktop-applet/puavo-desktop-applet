@@ -61,17 +61,22 @@ class PuavoWidget:
 
   def notify(self, summary, body=None):
     # no notifications if running on login screen
-    if getpass.getuser() != 'Debian-gdm':
-      if body:
-        Notify.Notification.new(summary, body).show()
-      else:
-        Notify.Notification.new(summary).show()
+    if getpass.getuser() == 'Debian-gdm':
+      return
+
+    if body:
+      Notify.Notification.new(summary, body).show()
+    else:
+      Notify.Notification.new(summary).show()
 
 
 class ChangelogNotifier(PuavoWidget):
   def __init__(self, applet):
     self.applet = applet
     self.enabled = False
+
+    if getpass.getuser() == 'Debian-gdm':
+      return
 
     # do not show changelog notifier for guest users
     try:
@@ -252,8 +257,7 @@ class ContentUpdates(PuavoWidget):
   def __init__(self, applet):
     self.applet = applet
 
-    self.contents = {}
-    self.menuitems_by_contents = {}
+    self.content_elements = {}
 
     self.dbus_iface = self.connect_to_dbus('/contentupdates',
                                            'org.puavo.client.contentupdates')
@@ -280,72 +284,97 @@ class ContentUpdates(PuavoWidget):
     i = iter(contentlist)
     new_contents = dict(zip(i, i))
 
-    if self.contents != new_contents:
-      self.contents = new_contents
+    new_content_elements = {}
+
+    for new_content_name, new_content_version in new_contents.items():
+      new_content_elements[new_content_name] = {
+        'menuitem': None,
+        'refresh':  False,
+        'text':     '%s %s' % (new_content_name, new_content_version),
+        'version':  new_content_version,
+      }
+
+      if new_content_name in self.content_elements:
+        new_content_elements[new_content_name]['menuitem'] \
+          = self.content_elements[new_content_name]['menuitem']
+        if not self.content_elements[new_content_name]['refresh']:
+          new_content_elements[new_content_name]['text'] \
+            = self.content_elements[new_content_name]['text']
+
+    if self.content_elements != new_content_elements:
+      self.content_elements = new_content_elements
       self.applet.create_menu()
 
 
   def append_items_to_menu(self):
-    for contentname in self.menuitems_by_contents.keys():
-      self.menuitems_by_contents[contentname]['menuitem'].destroy()
-      del(self.menuitems_by_contents[contentname]['menuitem'])
+    for contentname in self.content_elements.keys():
+      if self.content_elements[contentname]['menuitem']:
+         self.content_elements[contentname]['menuitem'].destroy()
+         self.content_elements[contentname]['menuitem'] = None
 
-    for contentname in sorted(self.contents):
-      version = self.contents[contentname]
-
-      progress = '%s %s' % (contentname, version)
-      if contentname in self.menuitems_by_contents:
-        progress = self.menuitems_by_contents[contentname]['progress']
-
-      menuitem = Gtk.MenuItem(progress)
+    for contentname in sorted(self.content_elements):
+      menuitem = Gtk.MenuItem(self.content_elements[contentname]['text'])
       menuitem.set_sensitive(False)
 
       self.applet.menu.append(menuitem)
 
-      self.menuitems_by_contents[contentname] = { 'menuitem': menuitem,
-                                                  'progress': progress }
+      self.content_elements[contentname]['menuitem'] = menuitem
 
 
   def update_started(self, contentname, version):
-    # XXX translations
-    self.notify('update of %s to version %s has started' \
-                  % (contentname, version))
+    self.notify('%s%s%s%s' % (contentname,
+                              _tr(' update to version '),
+                              version,
+                              _tr(' has started.')))
     self.update_progress(contentname, version, 0)
 
 
   def update_progress(self, contentname, new_version, progress):
     try:
-      # XXX translations
-      # XXX error handling
-      current_version = self.contents[contentname]
-      progress = "%s %s --> %s [%d%%]" \
-                   % (contentname, current_version, new_version, progress)
+      current_version = self.content_elements[contentname]['version']
+    except KeyError as e:
+      print("content name %s not known, can not update progress" % contentname,
+            file=sys.stderr)
+      return
 
-      self.menuitems_by_contents[contentname]['progress'] = progress
-      self.menuitems_by_contents[contentname]['menuitem'].get_child() \
-          .set_text(progress)
+    progress = "%s %s --> %s [%d%%]" \
+                 % (contentname, current_version, new_version, progress)
 
-    except Exception as e:
-      # XXX
-      print("some error in updating progress: %s" % e, file=sys.stderr)
+    self.content_elements[contentname]['text'] = progress
+    self.content_elements[contentname]['menuitem'].get_child() \
+        .set_text(progress)
 
 
   def update_completed(self, contentname, version):
-    # XXX translations
-    self.notify('update of %s to version %s has completed successfully' \
-                  % (contentname, version))
-    self.update_progress(contentname, version, 100)
+    self.notify('%s%s%s%s' % (contentname,
+                              _tr(' update to version '),
+                              version,
+                              _tr(' has completed successfully.')))
+
+    try:
+      self.content_elements[contentname]['refresh'] = True
+    except KeyError:
+      pass
+
     self.get_contents()
 
 
   def update_failed(self, contentname, version, errmsg):
-    # XXX translations
-    self.notify('update of %s to version %s has failed: %s' \
-                  % (contentname, version, errmsg))
+    self.notify('%s%s%s%s %s' % (contentname,
+                                 _tr(' update to version '),
+                                 version,
+                                 _tr(' has failed:'),
+                                 errmsg))
+
+    try:
+      self.content_elements[contentname]['refresh'] = True
+    except KeyError:
+      pass
+
+    self.get_contents()
 
 
   def get_contents_dbus_error_handler(self, dbusexception):
-    # XXX error messages to user?
     print('got dbus error on get contents: ' + str(dbusexception),
           file=sys.stderr)
 
@@ -753,8 +782,8 @@ class RemoteAssistance:
       print("admin-remote-connections returned failure," \
               + " check your configuration",
             file=sys.stderr)
-      config['show_accesscontrols_for'] \
-        = filter(lambda x: x != 'ssh', config['show_accesscontrols_for'])
+      self.config['show_accesscontrols_for'] \
+        = filter(lambda x: x != 'ssh', self.config['show_accesscontrols_for'])
 
     self.latest_vino_enabled = None
     self.latest_ssh_enabled  = None

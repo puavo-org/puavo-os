@@ -34,15 +34,10 @@ class gdm {
       require => [ File['/etc/guest-session'], Package['gdm3'], ],
       source  => 'puppet:///modules/gdm/PostLogin_Default';
 
-    '/usr/share/gdm/greeter/autostart/puavo-client-updater-applet.desktop':
+    '/usr/share/gdm/greeter/autostart/puavo-desktop-applet.desktop':
       ensure  => link,
-      require => [ Package['gdm3'], Package['puavo-ltsp-client'], ],
-      target  => '/etc/xdg/autostart/puavo-client-updater-applet.desktop';
-
-    '/usr/share/gdm/greeter/autostart/puavo-remote-assistance-applet.desktop':
-      ensure  => link,
-      require => [ Package['gdm3'], Package['puavo-ltsp-client'], ],
-      target  => '/etc/xdg/autostart/puavo-remote-assistance-applet.desktop';
+      require => [ Package['gdm3'], Package['puavo-desktop-applet'], ],
+      target  => '/etc/xdg/autostart/puavo-desktop-applet.desktop';
 
     '/var/lib/gdm3/.config':
       ensure  => directory,
