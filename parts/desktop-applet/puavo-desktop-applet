@@ -288,19 +288,20 @@ class ContentUpdates(PuavoWidget):
 
     for new_content_name, new_content_version in new_contents.items():
       new_content_elements[new_content_name] = {
-        menuitem: None,
-        text:     '%s %s' % (new_content_name, new_content_version),
-        version:  new_content_version,
+        'menuitem': None,
+        'refresh':  False,
+        'text':     '%s %s' % (new_content_name, new_content_version),
+        'version':  new_content_version,
       }
 
       if new_content_name in self.content_elements:
         new_content_elements[new_content_name]['menuitem'] \
           = self.content_elements[new_content_name]['menuitem']
-        new_content_elements[new_content_name]['text'] \
-          = self.content_elements[new_content_name]['text']
+        if not self.content_elements[new_content_name]['refresh']:
+          new_content_elements[new_content_name]['text'] \
+            = self.content_elements[new_content_name]['text']
 
     if self.content_elements != new_content_elements:
-      print("replacing old content elements with new ones")
       self.content_elements = new_content_elements
       self.applet.create_menu()
 
@@ -321,9 +322,10 @@ class ContentUpdates(PuavoWidget):
 
 
   def update_started(self, contentname, version):
-    self.notify(_tr('%s update to version %s has started.',
-                    contentname,
-                    version))
+    self.notify('%s%s%s%s' % (contentname,
+                              _tr(' update to version '),
+                              version,
+                              _tr(' has started.')))
     self.update_progress(contentname, version, 0)
 
 
@@ -344,18 +346,31 @@ class ContentUpdates(PuavoWidget):
 
 
   def update_completed(self, contentname, version):
-    self.notify(_tr('%s update to version %s has completed successfully.',
-                    contentname,
-                    version))
-    self.update_progress(contentname, version, 100)
+    self.notify('%s%s%s%s' % (contentname,
+                              _tr(' update to version '),
+                              version,
+                              _tr(' has completed successfully.')))
+
+    try:
+      self.content_elements[contentname]['refresh'] = True
+    except KeyError:
+      pass
+
     self.get_contents()
 
 
   def update_failed(self, contentname, version, errmsg):
-    self.notify(_tr('%s update to version %s has failed: %s',
-                    contentname,
-                    version,
-                    errmsg))
+    self.notify('%s%s%s%s %s' % (contentname,
+                                 _tr(' update to version '),
+                                 version,
+                                 _tr(' has failed:'),
+                                 errmsg))
+
+    try:
+      self.content_elements[contentname]['refresh'] = True
+    except KeyError:
+      pass
+
     self.get_contents()
 
 

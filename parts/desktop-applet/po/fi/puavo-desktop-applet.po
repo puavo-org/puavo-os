@@ -124,11 +124,14 @@ msgstr ""
 msgid "New system version"
 msgstr "Uusi järjestelmäversio"
 
-msgid "%s update to version %s has started."
-msgstr "%s-päivitys versioon %s on aloitettu."
+msgid " update to version "
+msgstr "-päivitys versioon "
 
-msgid "%s update to version %s has completed successfully."
-msgstr "%s-päivitys versioon %s onnistui."
+msgid " has started."
+msgstr " on aloitettu."
 
-msgid "%s update to version %s has failed: %s"
-msgstr "%s-päivitys versioon %s epäonnistui: %s"
+msgid " has completed successfully."
+msgstr " onnistui."
+
+msgid " has failed:"
+msgstr " epäonnistui:"
