@@ -5,7 +5,7 @@ set -eu
 command=$1
 shift
 
-upstream_url_checksum=96a7b8442fe848ef90c96a2fad6ed6d1
+upstream_url_checksum=750e1c8617c5452694857ad95c3ee230
 
 case "${command}" in
     configure)
@@ -66,7 +66,7 @@ EOF
             --header "Cookie: oraclelicense=accept-securebackup-cookie" \
             --output-document "${upstream_pack}" \
             --progress=dot:mega \
-            "http://download.oracle.com/otn-pub/java/jdk/8u181-b13/${upstream_url_checksum}/jre-8u181-linux-x64.tar.gz" || {
+            "http://download.oracle.com/otn-pub/java/jdk/8u192-b12/${upstream_url_checksum}/jre-8u192-linux-x64.tar.gz" || {
             [ $? -eq 4 ] && exit 2 ## Network failure.
             exit 1
             }
