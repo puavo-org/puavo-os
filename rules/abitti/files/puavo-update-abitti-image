@@ -33,6 +33,20 @@ edit_extra_system_contents() {
   mv "$tmpfile" "$esc_json_path"
 }
 
+post_update_actions() {
+  short_abitti_version=$1
+  persistent_fs=$2
+  persistent_fs_for_this_version=$3
+
+  edit_extra_system_contents --arg abitti_version "$short_abitti_version" \
+    '.Abitti = $abitti_version'
+
+  if [ ! "$persistent_fs" -ef "$persistent_fs_for_this_version" ]; then
+    ln -f "$persistent_fs_for_this_version" "${persistent_fs}.tmp"
+    mv "${persistent_fs}.tmp" "$persistent_fs"
+  fi
+}
+
 send_status_message() {
   method=$1; shift
 
@@ -171,13 +185,17 @@ done
 
 # setup persistent storage filesystem for DigabiOS/Abitti
 persistent_fs="${abitti_state_dir}/persistent_abitti_fs"
-if [ ! -e "$persistent_fs" ]; then
+persistent_fs_for_this_version="${persistent_fs}.${short_abitti_version}"
+if [ ! -e "$persistent_fs_for_this_version" ]; then
   # count=14336 (7M) is the DigabiOS default, but we put a bit bigger
   # one in case it should ever grow (four times as much).
   {
-    dd if=/dev/zero "of=${persistent_fs}.tmp" bs=512 count=57344 2>/dev/null \
-      && mkfs.ext4 -q -L DAT452CBDF0OGISG "${persistent_fs}.tmp" \
-      && mv "${persistent_fs}.tmp" "$persistent_fs"
+    dd if=/dev/zero "of=${persistent_fs_for_this_version}.tmp" bs=512 \
+       count=57344 2>/dev/null \
+      && mkfs.ext4 -q -L DAT452CBDF0OGISG \
+                   "${persistent_fs_for_this_version}.tmp" \
+      && mv "${persistent_fs_for_this_version}.tmp" \
+            "$persistent_fs_for_this_version"
   } || {
     error 'could not create a persistent filesystem for Abitti'
     exit 1
@@ -186,11 +204,17 @@ if [ ! -e "$persistent_fs" ]; then
   logmsg -p user.info 'created a new persistent filesystem for Abitti'
 fi
 
+# cleanup old persistent filesystems if they have not been used in 365 days
+find "$abitti_state_dir" -type f -name 'persistent_abitti_fs.*' \
+     -and '!' '(' -name 'persistent_abitti_fs' \
+                  -or -name "persistent_abitti_fs.${short_abitti_version}" ')' \
+     -and -mtime +365 -exec rm -f \{} \;
+
 if [ -e "$abitti_image_fp" ]; then
   logmsg -p user.info "the requested abitti-image ${abitti_version} is in place"
-  # make sure this is correctly set:
-  edit_extra_system_contents --arg abitti_version "$short_abitti_version" \
-    '.Abitti = $abitti_version'
+  post_update_actions "$short_abitti_version"           \
+                      "$persistent_fs"                  \
+                      "$persistent_fs_for_this_version"
   exit 0
 fi
 
@@ -287,7 +311,8 @@ fi
 
 logmsg -p user.notice "new abitti-image ${abitti_version} installed!"
 
-edit_extra_system_contents --arg abitti_version "$short_abitti_version" \
-  '.Abitti = $abitti_version'
+post_update_actions "$short_abitti_version"           \
+                    "$persistent_fs"                  \
+                    "$persistent_fs_for_this_version"
 
 update_status='success'
