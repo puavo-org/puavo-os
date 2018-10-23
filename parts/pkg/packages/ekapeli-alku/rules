@@ -797,9 +797,9 @@ case "${command}" in
 	upstream_dir=$1
 
 	mkdir -p /opt/ekapeli-alku
-	ln -fns "${upstream_dir}/Ekapeli_Alku_58_Linux/Ekapeli-Alku.x86" \
+	ln -fns "${upstream_dir}/Ekapeli-Alku.x86" \
 		/opt/ekapeli-alku/Ekapeli-Alku.x86
-	ln -fns "${upstream_dir}/Ekapeli_Alku_58_Linux/Ekapeli-Alku_Data" \
+	ln -fns "${upstream_dir}/Ekapeli-Alku_Data" \
 		/opt/ekapeli-alku/Ekapeli-Alku_Data
 	ln -fns "${upstream_dir}/ekapeli_alku_title.jpg" \
 		/opt/ekapeli-alku/ekapeli_alku_title.jpg
