@@ -73,6 +73,9 @@ class ChangelogNotifier(PuavoWidget):
     self.applet = applet
     self.enabled = False
 
+    if getpass.getuser() == 'Debian-gdm':
+      return
+
     # do not show changelog notifier for guest users
     try:
       if os.environ['GUEST_SESSION'] == 'true':
