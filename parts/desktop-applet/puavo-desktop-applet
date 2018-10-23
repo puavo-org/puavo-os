@@ -758,8 +758,8 @@ class RemoteAssistance:
       print("admin-remote-connections returned failure," \
               + " check your configuration",
             file=sys.stderr)
-      config['show_accesscontrols_for'] \
-        = filter(lambda x: x != 'ssh', config['show_accesscontrols_for'])
+      self.config['show_accesscontrols_for'] \
+        = filter(lambda x: x != 'ssh', self.config['show_accesscontrols_for'])
 
     self.latest_vino_enabled = None
     self.latest_ssh_enabled  = None
