@@ -61,11 +61,13 @@ class PuavoWidget:
 
   def notify(self, summary, body=None):
     # no notifications if running on login screen
-    if getpass.getuser() != 'Debian-gdm':
-      if body:
-        Notify.Notification.new(summary, body).show()
-      else:
-        Notify.Notification.new(summary).show()
+    if getpass.getuser() == 'Debian-gdm':
+      return
+
+    if body:
+      Notify.Notification.new(summary, body).show()
+    else:
+      Notify.Notification.new(summary).show()
 
 
 class ChangelogNotifier(PuavoWidget):
