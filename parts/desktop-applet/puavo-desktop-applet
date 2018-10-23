@@ -248,6 +248,108 @@ class ChangelogNotifier(PuavoWidget):
     self.used_image_versions = self.read_used_image_versions()
 
 
+class ContentUpdates(PuavoWidget):
+  def __init__(self, applet):
+    self.applet = applet
+
+    self.contents = {}
+    self.menuitems_by_contents = {}
+
+    self.dbus_iface = self.connect_to_dbus('/contentupdates',
+                                           'org.puavo.client.contentupdates')
+
+    self.dbus_iface.connect_to_signal('UpdateStarted',
+                                        self.update_started)
+    self.dbus_iface.connect_to_signal('UpdateProgress',
+                                        self.update_progress)
+    self.dbus_iface.connect_to_signal('UpdateCompleted',
+                                        self.update_completed)
+    self.dbus_iface.connect_to_signal('UpdateFailed',
+                                        self.update_failed)
+    self.get_contents()
+
+
+  def get_contents(self):
+    self.dbus_iface \
+        .GetContents(reply_handler=self.get_contents_handler,
+                     error_handler=self.get_contents_dbus_error_handler)
+
+
+  def get_contents_handler(self, contentlist):
+    # convert an array of [ key, value, key, value, ... ] to dict
+    i = iter(contentlist)
+    new_contents = dict(zip(i, i))
+
+    if self.contents != new_contents:
+      self.contents = new_contents
+      self.applet.create_menu()
+
+
+  def append_items_to_menu(self):
+    for contentname in self.menuitems_by_contents.keys():
+      self.menuitems_by_contents[contentname]['menuitem'].destroy()
+      del(self.menuitems_by_contents[contentname]['menuitem'])
+
+    for contentname in sorted(self.contents):
+      version = self.contents[contentname]
+
+      progress = '%s %s' % (contentname, version)
+      if contentname in self.menuitems_by_contents:
+        progress = self.menuitems_by_contents[contentname]['progress']
+
+      menuitem = Gtk.MenuItem(progress)
+      menuitem.set_sensitive(False)
+
+      self.applet.menu.append(menuitem)
+
+      self.menuitems_by_contents[contentname] = { 'menuitem': menuitem,
+                                                  'progress': progress }
+
+
+  def update_started(self, contentname, version):
+    # XXX translations
+    self.notify('update of %s to version %s has started' \
+                  % (contentname, version))
+    self.update_progress(contentname, version, 0)
+
+
+  def update_progress(self, contentname, new_version, progress):
+    try:
+      # XXX translations
+      # XXX error handling
+      current_version = self.contents[contentname]
+      progress = "%s %s --> %s [%d%%]" \
+                   % (contentname, current_version, new_version, progress)
+
+      self.menuitems_by_contents[contentname]['progress'] = progress
+      self.menuitems_by_contents[contentname]['menuitem'].get_child() \
+          .set_text(progress)
+
+    except Exception as e:
+      # XXX
+      print("some error in updating progress: %s" % e, file=sys.stderr)
+
+
+  def update_completed(self, contentname, version):
+    # XXX translations
+    self.notify('update of %s to version %s has completed successfully' \
+                  % (contentname, version))
+    self.update_progress(contentname, version, 100)
+    self.get_contents()
+
+
+  def update_failed(self, contentname, version, errmsg):
+    # XXX translations
+    self.notify('update of %s to version %s has failed: %s' \
+                  % (contentname, version, errmsg))
+
+
+  def get_contents_dbus_error_handler(self, dbusexception):
+    # XXX error messages to user?
+    print('got dbus error on get contents: ' + str(dbusexception),
+          file=sys.stderr)
+
+
 class ImageUpdater(PuavoWidget):
   def __init__(self, applet):
     self.applet = applet
@@ -374,8 +476,8 @@ class ImageUpdater(PuavoWidget):
 
 
   def handle_dbus_error(self, dbusexception):
-      self.append_error_to_log('Unknown dbus error: ' + str(dbusexception))
-      self.on_update_failed()
+    self.append_error_to_log('Unknown dbus error: ' + str(dbusexception))
+    self.on_update_failed()
 
 
   def on_update_available(self):
@@ -1063,9 +1165,10 @@ class PuavoDesktopApplet:
     Notify.init('puavo-desktop-applet')
 
     self.changelog_notifier = ChangelogNotifier(self)
-    self.image_updater = ImageUpdater(self)
-    self.remote_assistance = RemoteAssistance(self)
-    self.reset_dev_state = ResetDevState(self)
+    self.content_updates    = ContentUpdates(self)
+    self.image_updater      = ImageUpdater(self)
+    self.remote_assistance  = RemoteAssistance(self)
+    self.reset_dev_state    = ResetDevState(self)
 
     self.menu = False
     self.create_menu()
@@ -1081,6 +1184,7 @@ class PuavoDesktopApplet:
     self.image_updater.append_items_to_menu()
     self.remote_assistance.append_items_to_menu()
     self.changelog_notifier.append_items_to_menu()
+    self.content_updates.append_items_to_menu()
 
     self.menu.show_all()
 

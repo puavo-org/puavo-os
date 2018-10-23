@@ -52,9 +52,6 @@ install : installdirs
 		lib/update-images \
 		lib/update-ltspimage-update-stats
 
-	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
-		xdg-autostart/*
-
 	$(INSTALL_DATA) -t $(DESTDIR)/lib/systemd/system \
 		dbus-1/puavo-update.service
 

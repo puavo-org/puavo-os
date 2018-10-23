@@ -127,6 +127,7 @@ class packages {
     , 'sudo'
     , 'sysfsutils'
     , 'sysstat'
+    , 'tftp'
     , 'telnet'
     , 'terminator'
     , 'tmux'
@@ -385,12 +386,14 @@ class packages {
     , 'gtklp' ]:
       tag => [ 'tag_printing', 'tag_debian_desktop', ];
 
-    [ 'avr-libc'
+    [ 'adb'
+    , 'avr-libc'
     # XXX 'basic256'		# XXX missing from Debian Jessie
     , 'eclipse'
     , 'emacs24'
     , 'eric'
     , 'eric-api-files'
+    , 'fastboot'
     , 'fritzing'
     , 'gcc-avr'
     , 'geany'

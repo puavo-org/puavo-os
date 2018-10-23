@@ -27,7 +27,6 @@ def logerr(*args); syslog(STDERR, *args); end
 $configuration_update_thread  = nil
 $delete_image_overlays_thread = nil
 $image_update_thread          = nil
-$puavopkg_upgrade_thread      = nil
 
 $puavoetc = PuavoEtc.new
 
@@ -117,6 +116,55 @@ class OverlayHandler < DBus::Object
   end
 end
 
+class ContentUpdates < DBus::Object
+  dbus_interface "org.puavo.client.contentupdates" do
+    dbus_signal :UpdateStarted,   'in contentname:s, in version:s'
+    dbus_signal :UpdateProgress,
+                'in contentname:s, in version:s, in progress:i'
+    dbus_signal :UpdateCompleted, 'in contentname:s, in version:s'
+    dbus_signal :UpdateFailed,    'in contentname:s, in version:s, in errmsg:s'
+
+    dbus_method :GetContents, 'out as' do
+      extra_contents = {}
+      begin
+        extra_contents_json_path \
+          = '/var/lib/puavo-desktop/extra_system_contents.json'
+        extra_contents = JSON.parse( IO.read(extra_contents_json_path) )
+      rescue Errno::ENOENT => e
+        # pass
+      rescue StandardError => e
+        logerr(Syslog::LOG_ERR,
+               "Could not read/parse #{ extra_contents_json_path }\n")
+        raise e
+      end
+
+      [ extra_contents.to_a.flatten.map { |s| s.to_s } ]
+    end
+
+    dbus_method :SetUpdateStarted, 'in contentname:s, in version:s' do
+      |contentname, version|
+      self.UpdateStarted(contentname, version)
+    end
+
+    dbus_method :SetUpdateProgress,
+                'in contentname:s, in version:s, in progress:i' do
+      |contentname, version, progress|
+      self.UpdateProgress(contentname, version, progress)
+    end
+
+    dbus_method :SetUpdateCompleted, 'in contentname:s, in version:s' do
+      |contentname, version|
+      self.UpdateCompleted(contentname, version)
+    end
+
+    dbus_method :SetUpdateFailed,
+                'in contentname:s, in version:s, in errmsg:s' do
+      |contentname, version, errmsg|
+      self.UpdateFailed(contentname, version, errmsg)
+    end
+  end
+end
+
 class Updater < DBus::Object
   def check_for_available_image_updates()
     system('/usr/lib/puavo-ltsp-install/is-update-available')
@@ -186,15 +234,6 @@ class Updater < DBus::Object
             else
               logerr(Syslog::LOG_WARNING,
                      "Could not determine image up-to-dateness\n")
-          end
-
-          if !$puavopkg_upgrade_thread then
-            puavopkg_upgrades_available \
-              = system('puavo-pkg-updater', '--check-for-upgrades')
-            if puavopkg_upgrades_available then
-              log(Syslog::LOG_INFO, "Puavopkg upgrades are available\n")
-              version_state = :update_available
-            end
           end
         end
 
@@ -294,57 +333,6 @@ class Updater < DBus::Object
     return thread
   end
 
-  def puavopkg_upgrades()
-    thread = $puavopkg_upgrade_thread = Thread.new do
-      wait_thr, out_thr, err_thr = nil, nil, nil
-
-      begin
-        # puavo-pkg-updater --check-for-upgrades should always return fast,
-        # so we do not bother with a feature to cancel it.
-        upgrades_available = system('puavo-pkg-updater',
-                                    '--check-for-upgrades')
-
-        if !upgrades_available then
-          log(Syslog::LOG_INFO, "No puavo-pkg package upgrades to do.\n")
-          Thread.exit
-        end
-
-        stdin, stdout, stderr, wait_thr \
-          = Open3.popen3('puavo-pkg-updater', '--upgrade-packages',
-                         { :pgroup => true })
-
-        stdin.close
-        out_thr = Thread.new { stdout.read }
-        err_thr = Thread.new { stderr.read }
-
-        status = wait_thr.value
-        if status.success? then
-          log(Syslog::LOG_NOTICE, "Puavopkg upgrades done.\n")
-          # normal return when no failure, otherwise come out with an exception
-          Thread.exit
-        end
-
-        raise "Error in upgrading puavo-pkgs: puavo-pkg-updater returned " \
-                 + "error code #{ status.exitstatus }"
-
-      rescue CancelledUpdate => e
-        Process.kill('-TERM', wait_thr.pid) if wait_thr && wait_thr.alive?
-        logerr(Syslog::LOG_ERR, "Cancelled puavo-pkg upgrades\n")
-        raise e
-
-      rescue StandardError => e
-        logerr(Syslog::LOG_ERR, "%s\n", e.message)
-        raise e
-
-      ensure
-        [ wait_thr, out_thr, err_thr ].each { |t| t.join if t rescue nil }
-        $puavopkg_upgrade_thread = nil
-      end
-    end
-
-    return thread
-  end
-
   def notify_puavo_on_images
     available_images \
       = (Dir.glob('/images/*.img').map { |p| File.basename(p, '.img') } \
@@ -394,18 +382,10 @@ class Updater < DBus::Object
 
     dbus_method :CancelImageUpdate, '' do
       image_update_thread     = $image_update_thread
-      puavopkg_upgrade_thread = $puavopkg_upgrade_thread
 
       if image_update_thread then
         image_update_thread.raise(CancelledUpdate, 'Cancel image update')
-      end
-      if puavopkg_upgrade_thread then
-        puavopkg_upgrade_thread.raise(CancelledUpdate,
-                                      'Cancel puavo-pkg upgrades')
-      end
-
-      [ image_update_thread, puavopkg_upgrade_thread ].each do |thr|
-        thr.join if thr rescue nil
+        image_update_thread.join rescue nil
       end
 
       self.UpdateCancelled
@@ -415,8 +395,7 @@ class Updater < DBus::Object
       Thread.new do
         # Configuration update updates our information about what should be
         # our current image (may be the one we are running or another that
-        # should be updated to).  And it should also update our puavo-pkg
-        # installers.
+        # should be updated to).
         ($configuration_update_thread || self.configuration_update()) \
           .join rescue nil
 
@@ -428,25 +407,9 @@ class Updater < DBus::Object
               ? self.image_update(use_rate_limit)                           \
               : nil
 
-        puavopkg_upgrade_thread = ($puavopkg_upgrade_thread \
-                                     || self.puavopkg_upgrades())
-
         begin
           if image_update_thread then
             image_update_thread.join
-            # If we are doing an image update, we do not care when the
-            # puavopkg-upgrade is ready, so we do not wait for the
-            # puavopkg_upgrade_thread.
-          else
-            # We have no need for an image update.
-            #
-            # Because progress indicators are not connected to
-            # puavo-pkg-update (yet?), we should tell that we really do not
-            # know how long this operation will take.
-            self.UpdateProgressIndicator('puavopkg', 0)
-
-            # Wait for the puavopkg-upgrade to finish.
-            puavopkg_upgrade_thread.join
           end
         rescue CancelledUpdate => e
           # no problemos torremolinos!
@@ -492,6 +455,7 @@ bus = DBus::SystemBus.instance
 service = bus.request_service("org.puavo.client.Daemon")
 
 # Export all dbus-accessible objects.
+service.export(ContentUpdates.new('/contentupdates'))
 service.export(OverlayHandler.new('/overlayhandler'))
 service.export(Updater.new("/updater"))
 
