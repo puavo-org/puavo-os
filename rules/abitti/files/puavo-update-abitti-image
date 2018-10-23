@@ -22,6 +22,17 @@ error() {
   logmsg -p user.err "$1"
 }
 
+edit_extra_system_contents() {
+  esc_json_path='/var/lib/puavo-desktop/extra_system_contents.json'
+  tmpfile="${esc_json_path}.tmp"
+  if [ -e "$esc_json_path" ]; then
+    jq "$@" "$esc_json_path" > "$tmpfile" || return 1
+  else
+    jq --null-input "$@" > "$tmpfile" || return 1
+  fi
+  mv "$tmpfile" "$esc_json_path"
+}
+
 send_status_message() {
   method=$1; shift
 
@@ -177,6 +188,9 @@ fi
 
 if [ -e "$abitti_image_fp" ]; then
   logmsg -p user.info "the requested abitti-image ${abitti_version} is in place"
+  # make sure this is correctly set:
+  edit_extra_system_contents --arg abitti_version "$short_abitti_version" \
+    '.Abitti = $abitti_version'
   exit 0
 fi
 
@@ -273,11 +287,7 @@ fi
 
 logmsg -p user.notice "new abitti-image ${abitti_version} installed!"
 
-# XXX this should maybe be checked every time this script is run
-# XXX in case something unusual has happened ?
-esc_json_path='/var/lib/puavo-desktop/extra_system_contents.json'
-jq --arg abitti_version "$abitti_version" '.Abitti = $abitti_version' \
-  "$esc_json_path" > "${esc_json_path}.tmp"
-mv "${esc_json_path}.tmp" "$esc_json_path"
+edit_extra_system_contents --arg abitti_version "$short_abitti_version" \
+  '.Abitti = $abitti_version'
 
 update_status='success'
