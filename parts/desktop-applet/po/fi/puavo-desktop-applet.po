@@ -24,19 +24,21 @@ msgstr "Estä etäpääsy"
 msgid "New support request"
 msgstr "Uusi tukipyyntö"
 
-msgid "Updates are disabled in developer mode, boot to normal mode to update."
+msgid ""
+"System updates are disabled in developer mode, boot to normal mode"
+" to update."
 msgstr ""
-"Päivittäminen ei ole mahdollista kehittäjätilassa, käynnistä normaalitilaan"
-" päivittääksesi."
+"Järjestelmän päivittäminen ei ole mahdollista kehittäjätilassa,"
+" käynnistä normaalitilaan päivittääksesi."
 
 msgid "Reset development state"
 msgstr "Nollaa kehitystila"
 
-msgid "(No update progress.)"
-msgstr "(Ei päivityksen edistymistä.)"
+msgid "(No system update progress.)"
+msgstr "(Ei järjestelmäpäivityksen edistymistä.)"
 
-msgid "View log..."
-msgstr "Näytä loki..."
+msgid "View system update log..."
+msgstr "Näytä järjestelmäpäivityksen loki..."
 
 msgid "Reset development state is now done, rebooting the system."
 msgstr "Kehitystilan nollaus on nyt tehty, kone uudelleenkäynnistetään."
@@ -47,41 +49,41 @@ msgstr "Virhe tapahtui kehitystilan nollauksessa"
 msgid "A new system update is available."
 msgstr "Järjestelmän voi päivittää uuteen."
 
-msgid "Update cancelled."
-msgstr "Päivitys peruutettu."
+msgid "System update cancelled."
+msgstr "Järjestelmän päivitys peruutettu."
 
 msgid "System update has been cancelled."
 msgstr "Järjestelmän päivitys on peruutettu."
 
-msgid "Update completed, reboot required to finish the update."
-msgstr "Päivitys on valmis, uudelleenkäynnistys vaaditaan."
+msgid "System update completed, reboot required to finish the update."
+msgstr "Järjestelmän päivitys on valmis, uudelleenkäynnistys tarvitaan."
 
 msgid "System update is finished, reboot the computer."
 msgstr "Järjestelmän päivitys on tehty, uudelleenkäynnistä tietokone."
 
-msgid "Update completed."
-msgstr "Päivitys on valmis."
+msgid "System update completed."
+msgstr "Järjestelmän päivitys on valmis."
 
 msgid "System update is finished."
 msgstr "Järjestelmän päivitys on tehty."
 
-msgid "Update failed."
-msgstr "Päivitys epäonnistui."
+msgid "System update failed."
+msgstr "Järjestelmän päivitys epäonnistui."
 
 msgid "An error occurred when updating the system."
 msgstr "Virhe tapahtui päivitettäessä järjestelmää."
 
-msgid "Update done, reboot required to finish the update."
-msgstr "Päivitys tehty, käyttöönotto vaatii uudelleenkäynnistyksen."
+msgid "System update done, reboot required to finish the update."
+msgstr "Järjestelmän päivitys on tehty, käyttöönotto vaatii uudelleenkäynnistyksen."
 
-msgid "Update interrupted."
-msgstr "Päivitys keskeytetty."
+msgid "System update interrupted."
+msgstr "Järjestelmän päivitys keskeytetty."
 
-msgid "Up to date."
-msgstr "Päivitetty."
+msgid "System is up-to-date."
+msgstr "Järjestelmä on ajantasainen."
 
-msgid "Update progress:"
-msgstr "Päivityksen edistyminen:"
+msgid "System update progress:"
+msgstr "Järjestelmäpäivityksen edistyminen:"
 
 msgid "System update has been started."
 msgstr "Järjestelmän päivitys on käynnistetty."
@@ -96,20 +98,20 @@ msgstr ""
 "Haluatko nollata kehitystilan? Kaikki omat järjestelmämuutoksesi katoavat."
 " Järjestelmä myös uudelleenkäynnistetään operaation jälkeen."
 
-msgid "Check for updates"
-msgstr "Tarkista päivitykset"
+msgid "Check for system updates"
+msgstr "Tarkista järjestelmän päivitystilanne"
 
-msgid "(Checking for updates.)"
-msgstr "(Tarkistetaan päivityksiä.)"
+msgid "(Checking for system updates.)"
+msgstr "(Tarkistetaan järjestelmän päivitystilannetta.)"
 
-msgid "Update"
-msgstr "Päivitä"
+msgid "Update system"
+msgstr "Päivitä järjestelmä"
 
-msgid "Cancel update"
-msgstr "Peruuta päivitys"
+msgid "Cancel system update"
+msgstr "Peruuta järjestelmän päivitys"
 
-msgid "Update log"
-msgstr "Päivitysloki"
+msgid "System update log"
+msgstr "Järjestelmän päivitysloki"
 
 msgid "Information on the latest system update"
 msgstr "Tietoa järjestelmän viimeisimmästä päivityksestä"
