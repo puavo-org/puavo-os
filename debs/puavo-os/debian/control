@@ -72,6 +72,14 @@ Description: Puavo admin intergration
     via AuthorizedKeysCommand (requires OpenSSH 6.1 or newer).
  .
 
+Package: puavo-abitti-usb-factory
+Architecture: all
+Depends: ${misc:Depends},
+ python3
+Description: Puavo Abitti USB Factory
+ Make Abitti-images in an easy way.
+ .
+
 Package: puavo-autopilot
 Architecture: all
 Depends: ${misc:Depends},

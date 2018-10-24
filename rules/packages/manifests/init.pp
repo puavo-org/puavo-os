@@ -23,6 +23,7 @@ class packages {
     [ 'fluent-plugin-puavo'
     , 'iivari-client'
     , 'opinsys-ca-certificates'
+    , 'puavo-abitti-usb-factory'
     , 'puavo-autopilot'
     , 'puavo-bigtouch-shutdown'
     , 'puavo-blackboard'
