@@ -1,0 +1,983 @@
+#!/usr/bin/python3
+
+# Abitti USB Stick Factory v0.9
+
+import sys, os, time
+import subprocess, shlex    # needed for USB devices scanning
+import threading, queue
+import hashlib
+import select
+import argparse
+import configparser
+import syslog
+
+import gi
+gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
+from gi.repository import Gtk, GObject
+from gi.repository import Gdk
+
+
+STRINGS = {
+    'PROGRAM_TITLE': {
+        'en': 'Abitti USB Stick Factory',
+        'fi': 'Abitti USB-tikkutehdas',
+    },
+
+    'HELP_TEXT': {
+        'en': 'You can use this machine to create bootable Abitti USB sticks. Simply plug in a spare (4 GB or bigger)\n'
+              'USB stick and click the write button and wait a few minutes. Repeat as necessary.',
+        'fi': 'Voit luoda tällä koneella käynnistäviä Abitti -USB-tikkuja. Asetat vain joutilaan USB-tikun (4 GB tai isompi)\n'
+              'johonkin porttiin, painat kirjoitusnappia ja odotat muutaman minuutin. Toista tarpeen mukaan.'
+    },
+
+    'ABITTI_VERSION': {
+        'en': 'The current Abitti version is {0}, released on {1}.',
+        'fi': 'Nykyinen Abitin versio on {0}, julkaistu {1}.',
+    },
+
+    'WRITE_IMAGE': {
+        'en': 'Write image to USB stick',
+        'fi': 'Kirjoita levykuva USB-tikulle',
+    },
+
+    'CANCEL_WRITE': {
+        'en': 'Cancel writing',
+        'fi': 'Keskeytä kirjoitus',
+    },
+
+    'EXIT': {
+        'en': 'Exit',
+        'fi': 'Sulje',
+    },
+
+    'IMAGE_MISSING': {
+        'en': 'Image file "{0}" does not exist!',
+        'fi': 'Levykuvatiedosto "{0}" puuttuu!',
+    },
+
+    'IMAGE_NOT_READABLE': {
+        'en': 'Image file "{0}" is not readable!',
+        'fi': 'Levykuvatiedostoa "{0}" ei voi lukea!',
+    },
+
+    'WRITE_CANCELLED': {
+        'en': 'Writing was cancelled',
+        'fi': 'Kirjoitus keskeytettiin',
+    },
+
+    'INSERT_DRIVE': {
+        'en': 'Please insert a USB stick',
+        'fi': 'Aseta USB-tikku',
+    },
+
+    'HAVE_DEVICE': {
+        'en': 'Have a suitable USB device',
+        'fi': 'Sopiva USB-tikku tunnistettu',
+    },
+
+    'REMOVE_STICK': {
+        'en': 'You can remove the stick now',
+        'fi': 'Voit poistaa tikun',
+    },
+
+    'WRITE_COMPLETE': {
+        'en': 'Successfully wrote {0} in {1}',
+        'fi': 'Kirjoitettu onnistuneesti {0} ajassa {1}',
+    },
+
+    'YOINK': {
+        'en': 'USB stick was removed prematurely! Writing aborted.',
+        'fi': 'USB-tikku poistettu ennenaikojaan! Kirjoitus keskeytetty.',
+    },
+
+    'WRITE_STATUS': {
+        'en': '{pcnt:2.2f}% complete, {elapsed} elapsed, {remaining} left\n<small><small><small>{copied} copied, {left} left, at {speed}/s</small></small></small>',
+        'fi': '{pcnt:2.2f}% valmista, {elapsed} kulunut, {remaining} jäljellä\n<small><small><small>{copied} kopioitu, {left} jäljellä, nopeus {speed}/s</small></small></small>',
+    },
+
+    'CANT_OPEN_SOURCE': {
+        'en': "Can't open the source image!",
+        'fi': 'Lähdetiedosto ei voida avata!',
+    },
+
+    'CANT_OPEN_DESTINATION': {
+        'en': "Can't open the destination device!",
+        'fi': 'Kohdelaitetta ei voida avata!',
+    },
+
+    'CANCEL_WRITE': {
+        'en': 'Cancel write',
+        'fi': 'Keskeytä kirjoitus',
+    },
+
+    'WRITING_IMAGE': {
+        'en': 'Writing to stick...',
+        'fi': 'Kirjoitetaan tikkua...',
+    },
+
+    'READ_FAILED': {
+        'en': 'Could not read the source image',
+        'fi': 'Levykuvan luku epäonnistui',
+    },
+
+    'WRITE_FAILED': {
+        'en': 'Write failed',
+        'fi': 'Kirjoitus epäonnistui',
+    },
+
+    'WRITE_FAILED_WITH_MESSAGE': {
+        'en': 'Write failed:\n<small>{0}</small>',
+        'fi': 'Kirjoitus epäonnistui:\n<small>{0}</small>',
+    },
+
+    'TOO_SMALL_DEVICE': {
+        'en': 'The inserted stick is too small for the image',
+        'fi': 'Asetettu tikku on liian pieni levykuvalle',
+    },
+
+    'BROKEN_CONFIGURATION': {
+        'en': 'The configuration file is missing or broken!',
+        'fi': 'Konfiguraatiotiedosto puuttuu tai on rikki!',
+    },
+
+    #~ '': {
+        #~ 'en': '',
+        #~ 'fi': '',
+    #~ },
+
+}
+
+
+def clamp(n, min_value, max_value):
+    return max(min(n, max_value), min_value)
+
+
+def format_size(size):
+    size = abs(size)
+
+    if size < 1024.0:
+        return '{0} B'.format(int(size))
+
+    for unit in ['KiB','MiB','GiB']:
+        size /= 1024.0
+
+        if size < 1024.0:
+            return '{0:.2f} {1}'.format(size, unit)
+
+    return '{0:.2f} TiB'.format(size)
+
+
+def format_time(t):
+    return '{0:02d}:{1:02d}'.format(int(t / 60.0), int(t % 60.0))
+
+
+def find_suitable_usb_devices():
+    """Retrieves a list of available USB devices that we can write to."""
+
+    # Get a list of current mountpoints. Can't write to a USB stick that's
+    # currently mounted.
+    mounts = [l.strip() for l in open('/proc/mounts').readlines()]
+
+    usb_devices = []
+
+    for device in os.listdir('/sys/block/'):
+        # "/sys/block/XXX/device" is a link to /sys/devices/XXXXX
+        path = '/sys/block/' + device + '/device'
+
+        try:
+            link_tuplet = subprocess.Popen(
+                shlex.split('readlink -f ' + path),
+                stdout=subprocess.PIPE).communicate()
+
+            link_path = link_tuplet[0].strip().decode('ascii')
+
+            # If the link name contains the word "USB" and the device is not
+            # listed in current mounts, then it's a USB stick we can use
+            if 'usb' in link_path:
+                device_path = '/dev/' + device
+                found = False
+
+                for m in mounts:
+                    if m.startswith(device_path):
+                        found = True
+                        break
+
+                if not found:
+                    usb_devices.append(device_path)
+        except Exception as e:
+            print(e)
+
+    return usb_devices
+
+
+# Background file copying thread
+class ImageWriter(threading.Thread):
+
+    # Error codes
+    ERROR_CANNOT_READ = 0
+    ERROR_CANNOT_WRITE = 1
+
+    def __init__(self):
+        super().__init__()
+
+        # File descriptors
+        self.source_fd = -1
+        self.destination_fd = -1
+
+        # For messaging with the main thread
+        self.status_queue = None
+        self.cancel_event = None
+        self.complete_event = None
+
+        # Statistics
+        self.__left = 0
+
+
+    def set_image_size(self, size):
+        self.__left = size
+
+
+    def run(self):
+        READ_BUFFER_SIZE = 8192
+        MAX_READ_ATTEMPTS = 5
+
+        # How many writes to do until calling fsync()
+        NUM_WRITES_PER_SYNC = 25
+
+        next_update = time.time()
+        num_writes = 0
+        copy_speed = 0
+
+        while True:
+            if self.cancel_event.is_set():
+                # Operation canceled, stop here
+                return
+
+            if self.__left == 0:
+                # Tell the main thread that we're done
+                self.complete_event.set()
+                return
+
+            # ------------------------------------------------------------------
+            # READ
+
+            read_attempts = 0
+            data = []
+
+            while True:
+                try:
+                    data = os.read(self.source_fd, READ_BUFFER_SIZE)
+                except Exception as e:
+                    pass
+
+                if len(data) > 0:
+                    # Have data normally
+                    break
+
+                # We got no data
+                if self.__left == 0:
+                    # It's just EOF, stop normally
+                    self.complete_event.set()
+                    return
+                else:
+                    # Not EOF, something's wrong, try again if we can
+                    if read_attempts > MAX_READ_ATTEMPTS:
+                        self.status_queue.put({
+                            'error': True,
+                            'code': self.ERROR_CANNOT_READ },
+                            True)
+
+                        return
+
+                    print('Got an empty read, but source not exhausted yet, ' \
+                          'retrying in 2 seconds...')
+                    time.sleep(2.0)
+                    read_attempts += 1
+
+            if self.cancel_event.is_set():
+                # Operation canceled, stop here
+                return
+
+            self.__left -= len(data)
+            copy_speed += len(data)
+
+            # ------------------------------------------------------------------
+            # WRITE
+
+            write_attempts = 0
+            left_written = len(data)
+            write_pos = 0
+
+            # A single write() call does not necessarily write all of
+            # the data, so keep looping until it's all written
+            while left_written > 0:
+                # Is the destination ready for writing?
+                _, write_fd, ex_fd = select.select([],
+                                                   [self.destination_fd],
+                                                   [self.destination_fd],
+                                                   0.0)
+
+                if len(ex_fd) > 0:
+                    syslog.syslog(syslog.LOG_CRIT,
+                                 'Writing failed: exception descriptors not empty')
+
+                    self.status_queue.put({
+                        'error': True,
+                        'code': self.ERROR_CANNOT_WRITE },
+                        True)
+                    return
+
+                if write_attempts > 5:
+                    syslog.syslog(syslog.LOG_CRIT,
+                                 'Writing failed: too many failed write attempts')
+
+                    self.status_queue.put({
+                        'error': True,
+                        'code': self.ERROR_CANNOT_WRITE },
+                        True)
+
+                    return
+
+                if self.cancel_event.is_set():
+                    # Operation canceled, stop here
+                    return
+
+                if len(write_fd) == 1 and write_fd[0] == self.destination_fd:
+                    # It is, write a block of data
+                    try:
+                        num_written = os.write(self.destination_fd,
+                                               data[write_pos:])
+                        #num_written = os.write(-1, [])
+                        #raise OSError(34)
+                    except OSError as e:
+                        syslog.syslog(syslog.LOG_CRIT,
+                                      'Writing failed: os.write() failed')
+                        syslog.syslog(syslog.LOG_CRIT, 'errno: {0}'.format(e.errno))
+                        syslog.syslog(syslog.LOG_CRIT, str(e))
+
+                        self.status_queue.put({
+                            'error': True,
+                            'code': self.ERROR_CANNOT_WRITE,
+                            'osmessage': str(e) },
+                            True)
+                        return
+                    except Exception as e:
+                        syslog.syslog(syslog.LOG_CRIT,
+                                      'Writing failed: os.write() failed')
+
+                        self.status_queue.put({
+                            'error': True,
+                            'code': self.ERROR_CANNOT_WRITE },
+                            True)
+                        return
+
+                    left_written -= num_written
+                    write_pos += num_written
+                else:
+                    print('\nStalled?\n')
+                    time.sleep(1.0)
+                    write_attempts += 1
+
+            num_writes += 1
+
+            if self.cancel_event.is_set():
+                # Operation canceled, stop here
+                return
+
+            # ------------------------------------------------------------------
+            # STATUS UPDATES
+
+            now = time.time()
+
+            if now >= next_update:
+                self.status_queue.put({
+                    'error': False,
+                    'left': self.__left,
+                    'speed': copy_speed },
+                    True)
+
+                copy_speed = 0
+                next_update = now + 0.25
+
+            if num_writes >= NUM_WRITES_PER_SYNC:
+                os.fsync(self.destination_fd)
+                num_writes = 0
+
+
+        # We should never get here, fail hard if we do
+        exit(1)
+
+
+class AbittiUSBWriter(Gtk.Window):
+
+    # The current status
+    STATUS_IDLE = 0
+    STATUS_WRITING = 1
+    STATUS_SYNCING = 2
+    STATUS_VERIFYING = 3        # not implemented yet
+    STATUS_REMOVEWAIT = 4
+
+
+    def __init__(self, image_file, image_version, image_released,
+                  language, dev_mode=False):
+        super().__init__()
+        self.connect('delete-event', Gtk.main_quit)
+
+        self.image_file = image_file
+        self.image_version = image_version
+        self.image_released = image_released
+        self.language = language
+        self.dev_mode = dev_mode
+
+        if self.dev_mode:
+            width = 1366
+            height = 768
+        else:
+            screen = self.get_screen()
+            width = screen.get_width()
+            height = screen.get_height()
+
+        self.set_size_request(width, height)
+        self.set_resizable(False)
+        self.set_position(Gtk.WindowPosition.CENTER_ALWAYS)
+
+        if self.dev_mode:
+            self.set_title('Abitti USB Stick Factory')
+        else:
+            self.set_skip_taskbar_hint(True)
+            self.set_skip_pager_hint(True)
+            self.set_deletable(False)
+            self.set_decorated(False)
+            self.fullscreen()
+
+        self.main_container = Gtk.Fixed()
+
+        banner = '<big><big><span color="#080">{0}</span></big></big>'. \
+                 format(self.tr('PROGRAM_TITLE'))
+
+        help_text = '\n\n{0}'.format(self.tr('HELP_TEXT'))
+
+        version_text = '<b>{0}</b>'.format(self.tr('ABITTI_VERSION')). \
+                       format(self.image_version, self.image_released)
+
+        self.info_text = Gtk.Label(label= \
+                                   banner +
+                                   '<small><small><small>' +
+                                   help_text +
+                                   '\n\n' +
+                                   version_text +
+                                   '</small></small></small>')
+
+        self.info_text.set_size_request(width, 50)
+        self.info_text.set_justify(Gtk.Justification.CENTER)
+        self.info_text.set_alignment(0.5, 0.5)
+        self.info_text.set_use_markup(True)
+        self.main_container.put(self.info_text, 0, 20)
+
+        padding = int(width * 0.1)
+        status_y = int(height * 0.33)       # poor man's "scaling"
+        #status_y = 250
+
+        self.status_text = Gtk.Label(label='...')
+        self.status_text.set_size_request(width, 75)
+        self.status_text.set_justify(Gtk.Justification.CENTER)
+        self.status_text.set_alignment(0.5, 0.5)
+        self.status_text.set_use_markup(True)
+        self.main_container.put(self.status_text, 0, status_y)
+
+        self.progress_bar = Gtk.ProgressBar()
+        self.progress_bar.set_size_request(width - padding * 2, -1)
+        self.progress_bar.set_fraction(0.0)
+        self.main_container.put(self.progress_bar, padding, status_y + 85)
+
+        self.progress_text = Gtk.Label(label='')
+        self.progress_text.set_size_request(width, 100)
+        self.progress_text.set_justify(Gtk.Justification.CENTER)
+        self.progress_text.set_use_markup(True)
+        self.main_container.put(self.progress_text, 0, status_y + 85 + 15)
+
+        self.write_button = Gtk.Button(label=self.tr('WRITE_IMAGE'))
+        self.write_button.set_size_request(width - padding * 2, 100)
+        self.write_button.set_sensitive(False)
+        self.write_button.connect('clicked', self.start_writing)
+        self.main_container.put(self.write_button, padding, height - 268)
+
+        self.exit_button = Gtk.Button(label=self.tr('EXIT'))
+        self.exit_button.set_size_request(width - padding * 2, 100)
+        self.exit_button.connect('clicked', self.cancel_or_exit)
+        self.main_container.put(self.exit_button, padding, height - 143)
+
+        # Apply some custom CSS styles
+        style_provider = Gtk.CssProvider()
+
+        style_provider.load_from_data(b"""
+        * {
+            /*border: 1px solid #000;*/
+            font-size: 250%;
+        }
+        """)
+
+        buttons_provider = Gtk.CssProvider()
+
+        buttons_provider.load_from_data(b"""
+        button {
+            font-size: 250%;
+            color: #000;
+            background: #44abec;
+            border-radius: 10px;
+            border: none;
+            text-shadow: none;
+        }
+
+        button:hover {
+            background: #66cdfe;
+        }
+
+        button:disabled {
+            background: #ccc;
+        }
+
+        """)
+
+        self.apply_css(self.info_text, style_provider)
+        self.apply_css(self.status_text, style_provider)
+        self.apply_css(self.progress_bar, style_provider)
+        self.apply_css(self.progress_text, style_provider)
+        self.apply_css(self.write_button, buttons_provider)
+        self.apply_css(self.exit_button, buttons_provider)
+
+        # Finish the UI
+        self.add(self.main_container)
+
+        self.info_text.show()
+        self.status_text.show()
+        self.progress_bar.show()
+        self.progress_text.show()
+        self.write_button.show()
+
+        if self.dev_mode:
+            self.exit_button.show()
+        else:
+            self.exit_button.hide()
+
+        self.main_container.show()
+
+        self.set_visible(True)
+
+        # ----------------------------------------------------------------------
+
+        # Source and destination handles
+        self.source_fd = -1
+        self.destination_fd = -1
+        self.image_size = -1
+
+        # Multi-threaded messaging
+        self.background_thread = None
+        self.status_queue = None
+        self.cancel_event = None
+        self.complete_event = None
+
+        # Main status
+        self.status = self.STATUS_IDLE
+        self.have_image = True
+        self.device_name = ''
+
+        # Check the image file
+        if self.image_file is None:
+            self.write_button.set_sensitive(False)
+            self.set_status_message(self.tr('BROKEN_CONFIGURATION'), False)
+            self.have_image = False
+        else:
+            if not os.path.exists(self.image_file):
+                self.write_button.set_sensitive(False)
+                self.set_status_message(self.tr('IMAGE_MISSING').
+                                        format(self.image_file), False)
+                self.have_image = False
+
+            elif not os.access(self.image_file, os.R_OK):
+                self.write_button.set_sensitive(False)
+                self.set_status_message(self.tr('IMAGE_NOT_READABLE').
+                                        format(self.image_file), False)
+                self.have_image = False
+            else:
+                self.image_size = os.stat(self.image_file).st_size
+
+        # Start the main status update loop
+        self.update_status()
+        GObject.timeout_add(1000, self.update_status)
+
+
+    def apply_css(self, widget, provider):
+        Gtk.StyleContext.add_provider(widget.get_style_context(),
+            provider,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+
+    def tr(self, string_id):
+        if string_id in STRINGS:
+            s = STRINGS[string_id]
+
+            if self.language in s:
+                return s[self.language]
+
+        return '<MISSING TRANSLATION>'
+
+
+    def error_message(self, message, secondary_message=None):
+        """Show a modal error message box."""
+
+        dialog = Gtk.MessageDialog(parent=self,
+                                   flags=Gtk.DialogFlags.MODAL,
+                                   type=Gtk.MessageType.ERROR,
+                                   buttons=Gtk.ButtonsType.OK,
+                                   message_format=message)
+
+        if secondary_message:
+            dialog.format_secondary_markup(secondary_message)
+
+        dialog.run()
+        dialog.hide()
+
+
+    def set_status_message(self, message, good):
+        s = '<big>'
+
+        if good:
+            s += '<span foreground="blue">'
+        else:
+            s += '<span foreground="red">'
+
+        s += message + '</span></big>'
+
+        self.status_text.set_label(s)
+
+
+    def cancel_or_exit(self, button):
+        if self.status == self.STATUS_WRITING:
+            self.finish_the_job()
+            self.status = self.STATUS_IDLE
+            self.progress_bar.set_fraction(0.0)
+            self.progress_text.set_label(self.tr('WRITE_CANCELLED'))
+            self.update_status()
+        else:
+            # Exit normally, if not in development mode
+            if self.dev_mode:
+                Gtk.main_quit()
+
+
+    def update_status(self):
+        if not self.have_image:
+            return True
+
+        if self.status == self.STATUS_IDLE:
+            self.idle_update()
+        elif self.status == self.STATUS_WRITING:
+            self.write_update()
+        elif self.status == self.STATUS_REMOVEWAIT:
+            self.wait_for_stick_removal()
+        elif self.status == self.STATUS_VERIFYING:
+            # DO NOT USE THIS YET, WE SHOULD NEVER GET HERE
+            #self.verify_update()
+            exit(1)
+
+        return True
+
+
+    def idle_update(self):
+        devices = find_suitable_usb_devices()
+
+        if len(devices) > 0:
+            # Found at least one suitable device. See if it's big
+            # enough to contain the image.
+            size = -1
+
+            try:
+                fd = os.open(devices[0], os.O_RDONLY)
+                size = os.lseek(fd, 0, os.SEEK_END)
+                os.close(fd)
+            except Exception as e:
+                if self.dev_mode:
+                    # hack hack hack
+                    size = self.image_size
+
+            if size < self.image_size:
+                self.set_status_message(self.tr('TOO_SMALL_DEVICE'), False)
+                self.progress_text.set_label('')
+            else:
+                self.device_name = devices[0]
+                self.write_button.set_sensitive(True)
+                self.set_status_message(self.tr('HAVE_DEVICE').
+                                        format(self.device_name), True)
+                self.progress_text.set_label('')
+        else:
+            # No suitable devices found
+            self.device_name = None
+            self.write_button.set_sensitive(False)
+            self.set_status_message(self.tr('INSERT_DRIVE'), False)
+
+
+    def write_update(self):
+        if self.complete_event.is_set():
+            # ------------------------------------------------------------------
+            # Writing complete, clean up
+
+            self.finish_the_job()
+            self.status = self.STATUS_REMOVEWAIT
+
+            self.write_button.set_sensitive(False)
+
+            self.set_status_message(self.tr('REMOVE_STICK'), True)
+
+            self.progress_bar.set_fraction(1.0)
+            self.progress_text.set_label(self.tr('WRITE_COMPLETE').
+                                         format(format_size(self.image_size),
+                                         format_time(time.time() - self.start_time)))
+
+            # There's no chance of infinite loop here because
+            # finish_the_job() clears the status
+            self.update_status()
+        else:
+            # ------------------------------------------------------------------
+            # Writing is still on-going
+
+            # This can happen if you yoink the stick out before the
+            # write is complete
+            if not os.path.exists(self.device_name):
+                self.finish_the_job()
+                self.status = self.STATUS_IDLE
+
+                self.progress_bar.set_fraction(0.0)
+                self.progress_text.set_label(
+                    '<span foreground="red">{0}</span>'.format(self.tr('YOINK')))
+
+                self.update_status()
+                return
+
+            # Read status messages from the background thread
+            failed = None
+            status = None
+
+            while True:
+                try:
+                    msg = self.status_queue.get(False)
+
+                    if msg:
+                        if 'error' in msg and msg['error']:
+                            failed = msg
+                            break
+                        else:
+                            status = msg
+                except queue.Empty:
+                    break
+
+            if failed:
+                # Something failed, update the UI
+                self.finish_the_job()
+                self.status = self.STATUS_REMOVEWAIT
+                self.write_button.set_sensitive(False)
+                self.set_status_message(self.tr('REMOVE_STICK'), True)
+
+                self.progress_bar.set_fraction(0.0)
+
+                if failed['code'] == ImageWriter.ERROR_CANNOT_READ:
+                    self.progress_text.set_label( \
+                        '<span foreground="red">{0}</span>'.
+                        format(self.tr('READ_FAILED')))
+                elif failed['code'] == ImageWriter.ERROR_CANNOT_WRITE:
+                    if 'osmessage' in failed:
+                        self.progress_text.set_label( \
+                            '<span foreground="red">{0}</span>'.
+                            format(self.tr('WRITE_FAILED_WITH_MESSAGE')). \
+                            format(failed['osmessage']))
+                    else:
+                        self.progress_text.set_label( \
+                            '<span foreground="red">{0}</span>'.
+                            format(self.tr('WRITE_FAILED')))
+
+                self.update_status()
+            elif status:
+                # Use the last available status to update the progress bar
+                frac = clamp(1.0 - (status['left'] / self.image_size),
+                             0.0, 1.0)
+
+                # running average of write speeds from the last 30 seconds
+                self.avg -= self.avg / 30.0
+                self.avg += status['speed'] / 30.0
+
+                elapsed = time.time() - self.start_time
+
+                if self.num_samples < 30:
+                    remaining = '??:??'
+                else:
+                    # estimate the remaining time
+                    remaining = (elapsed / (self.image_size - status['left'])) * status['left']
+
+                    if remaining < 30.0:
+                        remaining = '&lt;30 s'
+                    else:
+                        minutes = 1
+
+                        while remaining > 60.0:
+                            remaining -= 60.0
+                            minutes += 1
+
+                        remaining = '{0} min'.format(minutes)
+
+
+                self.num_samples += 1
+
+                s = self.tr('WRITE_STATUS').format(
+                      copied=format_size(self.image_size - status['left']),
+                      left=format_size(status['left']),
+                      speed=format_size(status['speed']),
+                      remaining=remaining,
+                      pcnt=clamp(frac * 100.0, 0.0, 100.0),
+                      avg=0,
+                      elapsed=format_time(elapsed))
+
+                self.progress_bar.set_fraction(frac)
+                self.progress_text.set_label(s)
+
+
+    def wait_for_stick_removal(self):
+        # Wait until the mountpoint no longer exists,
+        # then go back to idle state
+        if not os.path.exists(self.device_name):
+            self.status = self.STATUS_IDLE
+            self.progress_bar.set_fraction(0.0)
+            self.progress_text.set_label('')
+
+
+    def verify_update(self):
+        # Not yet!
+        pass
+
+
+    def finish_the_job(self):
+        if self.background_thread.is_alive():
+            # Tell the background thread to stop and wait until it dies
+            self.cancel_event.set()
+            self.background_thread.join()
+
+        os.close(self.source_fd)
+        os.close(self.destination_fd)
+
+        self.background_thread = None
+        self.status_queue = None
+        self.cancel_event = None
+        self.complete_event = None
+
+        # Reset the dialog
+        self.exit_button.set_label(self.tr('EXIT'))
+        self.write_button.set_sensitive(True)
+
+        # The exit ("cancel") button is shown only when writing an image
+        if not self.dev_mode:
+            self.exit_button.hide()
+
+
+    def start_writing(self, button):
+        # Open the files
+        try:
+            self.source_fd = os.open(self.image_file, os.O_RDONLY)
+        except Exception as e:
+            self.error_message(self.tr('CANT_OPEN_SOURCE'), str(e))
+            return False
+
+        try:
+            name = 'abitti_v111/kopio.dd' if self.dev_mode else '/dev/sdb'
+            self.destination_fd = \
+                os.open(name, os.O_WRONLY | os.O_NONBLOCK)
+        except Exception as e:
+            os.close(self.source_fd)
+            self.error_message(self.tr('CANT_OPEN_DESTINATION'), str(e))
+            return False
+
+        # Create inter-thread messaging objects
+        self.status_queue = queue.Queue()
+        self.cancel_event = threading.Event()
+        self.complete_event = threading.Event()
+
+        # Setup the background image writer thread
+        self.background_thread = ImageWriter()
+        self.background_thread.source_fd = self.source_fd
+        self.background_thread.destination_fd = self.destination_fd
+        self.background_thread.status_queue = self.status_queue
+        self.background_thread.cancel_event = self.cancel_event
+        self.background_thread.complete_event = self.complete_event
+        self.background_thread.set_image_size(self.image_size)
+        self.background_thread.daemon = True
+
+        self.avg = 0.0
+        self.num_samples = 0
+
+        # Prepare the UI
+        self.status = self.STATUS_WRITING
+        self.set_status_message(self.tr('WRITING_IMAGE'), True)
+        self.write_button.set_sensitive(False)
+        self.exit_button.set_label(self.tr('CANCEL_WRITE'))
+        self.exit_button.show()
+
+        # Set the initial status message, as it can take up to one second
+        # before we actually update this with real content
+        self.progress_bar.set_fraction(0.0)
+        self.progress_text.set_label( \
+            self.tr('WRITE_STATUS').format(
+                      copied=format_size(0),
+                      left=format_size(self.image_size),
+                      remaining='??:??',
+                      speed=format_size(0),
+                      avg=format_size(0),
+                      pcnt=0.0,
+                      elapsed=format_time(0)))
+
+        # Go!
+        self.start_time = time.time()
+        self.background_thread.start()
+
+
+# ------------------------------------------------------------------------------
+
+
+parser = argparse.ArgumentParser(
+    formatter_class=argparse.RawDescriptionHelpFormatter)
+
+parser.add_argument('--dev',
+                    action='store_true',
+                    required=False,
+                    default=False,
+                    help='enable development mode')
+
+required = parser.add_argument_group('required arguments')
+
+required.add_argument('--config',
+                      required=True,
+                      help='the configuration file')
+
+args = parser.parse_args()
+
+try:
+    config = configparser.ConfigParser()
+    config.read(args.config)
+except Exception as e:
+    print("Cannot parse the configuration file {0}:".format(args.config))
+    print(str(e))
+    exit(1)
+
+language = "en"
+image_file = None
+image_version = None
+image_released = None
+
+try:
+    language = config['abitti_stick_factory']['language']
+    image_file = config['abitti_stick_factory']['image_file']
+    image_version = config['abitti_stick_factory']['image_version']
+    image_released = config['abitti_stick_factory']['image_released']
+except KeyError as e:
+    # ignore
+    pass
+
+# Go!
+mainWin = AbittiUSBWriter(image_file, image_version, image_released, language, args.dev)
+Gtk.main()
