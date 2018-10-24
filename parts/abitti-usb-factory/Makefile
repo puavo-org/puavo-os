@@ -14,7 +14,7 @@ installdirs:
 
 .PHONY: install
 install: installdirs
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) abitti_usb_factory
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) abitti-usb-factory
 
 .PHONY: clean
 clean:
