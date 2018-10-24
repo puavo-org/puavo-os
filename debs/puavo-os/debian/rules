@@ -7,6 +7,10 @@ export GEM_HOME := $(CURDIR)/debian/tmp
 export PATH := $(GEM_HOME)/bin:$(PATH)
 
 override_dh_auto_install:
+	$(MAKE) -C abitti-usb-factory				\
+		install prefix=/usr sysconfdir=/etc		\
+		DESTDIR=$(CURDIR)/debian/puavo-abitti-usb-factory
+
 	$(MAKE) -C admins					\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-admins

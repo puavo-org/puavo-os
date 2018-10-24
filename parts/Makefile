@@ -1,4 +1,4 @@
-subdirs         := abitti_usb_factory         \
+subdirs         := abitti-usb-factory         \
                    admins                     \
                    autopilot                  \
                    bigtouch-shutdown          \
