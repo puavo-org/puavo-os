@@ -1,0 +1,37 @@
+#!/bin/sh
+
+# Abitti USB stick factory session. Executed by nodm (see /etc/default/nodm)
+
+set -eu
+
+# Start openbox and keep it running
+(
+  while true; do
+    openbox || true
+    logger -p local0.err -t abitti_factory \
+           'openbox has exited or crashed, restarting it...'
+    sleep 5
+  done
+) &
+
+# Disable screen blanking and power saving features
+xset s 0 0
+xset s off
+xset s noblank
+xset dpms 0 0 0
+xset -dpms
+
+(
+  # Start idid and keep it running
+  while true; do
+    abitti_usb_factory --conf /home/abitti/abitti.conf || true
+    logger -p local0.err -t abitti_factory \
+           'The USB stick factory process has exited or crashed, restarting it...'
+    sleep 5
+  done
+)
+
+# We should never get here...
+logger -p local0.err -t abitti_factory \
+       'The abitti-factory-session script is exiting! This should not happen!'
+exit 1

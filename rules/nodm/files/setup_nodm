@@ -20,6 +20,12 @@ case "$(puavo-conf puavo.xsessions.default)" in
     ;;
 esac
 
+if [ "$(puavo-conf puavo.abitti.factory.enabled)" = "true" ]; then
+  # Activate the Abitti USB stick factory session
+  nodm_user='abitti'
+  xsession_path="/usr/lib/puavo-ltsp-client/abitti-factory-session"
+fi
+
 cat <<EOF > /etc/default/nodm.tmp
 # nodm configuration
 

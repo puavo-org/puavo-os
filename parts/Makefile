@@ -1,4 +1,5 @@
-subdirs         := admins                     \
+subdirs         := abitti_usb_factory         \
+                   admins                     \
                    autopilot                  \
                    bigtouch-shutdown          \
                    blackboard                 \
