@@ -218,6 +218,13 @@ unionfs-fuse -o cow \
 ## applications.
 javaws -uninstall "$game_jnlp_path"
 
+# XXX AWT is broken, yet a newer Ekapeli version wants to force it into use.
+# XXX We fight against that, but if Ekapeli has enough time to update itself
+# XXX to a newer version, we lose.  This is the best (?) we can do right now.
+if [ -e ~/.Ekapeli/settings.ini ]; then
+  sed -i '/^rendererType = /s/AWT/LWJGL/' ~/.Ekapeli/settings.ini
+fi
+
 env EKAPELI_CACHE_PATH="${tmpdir}/ekapeli" javaws -wait "$game_jnlp_path"
 
 # -nowait does not really do what one could expect, so we wait until
