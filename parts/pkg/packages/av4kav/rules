@@ -1,0 +1,41 @@
+#!/bin/sh
+
+set -eu
+
+# get the idid-package url by using the following apt-sources:
+#   deb http://apt.idid.fi xenial main
+
+command=$1
+shift
+
+case "${command}" in
+    configure)
+	upstream_dir=$1
+cat <<'EOF' > /usr/share/applications/kenavision.desktop
+[Desktop Entry]
+Exec=/opt/av4kav/lib/av4.sh
+Icon=/usr/share/pixmaps/av4.png
+Type=Application
+Terminal=false
+Name=Ken-A-Vision AV4
+Categories=Education;
+EOF
+	ln -fns "${upstream_dir}/opt/av4kav" /opt/av4kav
+	ln -fns "${upstream_dir}/usr/share/applications/av4.desktop" /usr/share/applications/av4.desktop
+	ln -fns "${upstream_dir}/usr/share/pixmaps/av4.png" /usr/share/pixmaps/av4.png
+	ln -fns "${upstream_dir}/usr/share/pixmaps/av4.xpm" /usr/share/pixmaps/av4.xpm
+	ln -fns "${upstream_dir}/usr/share/doc/av4kav" /usr/share/doc/av4kav
+	;;
+    unconfigure)
+	rm -rf /opt/av4kav /usr/share/applications/av4.desktop /usr/share/pixmaps/av4.png /usr/share/pixmaps/av4.xpm /usr/share/doc/av4kav
+	;;
+    unpack)
+	upstream_pack=$1
+	upstream_dir=$2
+
+	dpkg -x "${upstream_pack}" "${upstream_dir}"
+        convert "${upstream_dir}/usr/share/pixmaps/av4.xpm" "${upstream_dir}/usr/share/pixmaps/av4.png"
+	;;
+    *)
+	;;
+esac
