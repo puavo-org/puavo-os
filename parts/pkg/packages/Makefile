@@ -13,6 +13,7 @@ packagedirs += appinventor/
 packagedirs += arduino-ide/
 packagedirs += arduino-radiohead/
 packagedirs += arduino-TM1637/
+packagedirs += /av4kav/
 packagedirs += bluegriffon/
 # XXX do not build, not ready # packagedirs += casio-classpad-manager-for-ii/
 packagedirs += cmaptools/
