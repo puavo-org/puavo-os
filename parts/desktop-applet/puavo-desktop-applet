@@ -1211,9 +1211,19 @@ class PuavoDesktopApplet:
 
     self.reset_dev_state.append_items_to_menu()
     self.image_updater.append_items_to_menu()
-    self.remote_assistance.append_items_to_menu()
     self.changelog_notifier.append_items_to_menu()
+
+    separator = Gtk.SeparatorMenuItem()
+    separator.show()
+    self.menu.append(separator)
+
     self.content_updates.append_items_to_menu()
+
+    separator = Gtk.SeparatorMenuItem()
+    separator.show()
+    self.menu.append(separator)
+
+    self.remote_assistance.append_items_to_menu()
 
     self.menu.show_all()
 
