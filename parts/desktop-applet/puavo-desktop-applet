@@ -1189,9 +1189,11 @@ class PuavoDesktopApplet:
   def __init__(self):
     # XXX this should be something else and maybe puavo-conf configurable?
 
-    self.indicator = AppIndicator3.Indicator.new('puavo-desktop-applet',
-                        'puavoremoteaccess-grey',
-                        AppIndicator3.IndicatorCategory.SYSTEM_SERVICES)
+    self.indicator \
+      = AppIndicator3.Indicator.new('puavo-desktop-applet',
+          puavoconf_get('puavo.support.remoteaccess.icons.denied'),
+          AppIndicator3.IndicatorCategory.SYSTEM_SERVICES)
+
     self.indicator.set_status(AppIndicator3.IndicatorStatus.ACTIVE)
 
     Notify.init('puavo-desktop-applet')
