@@ -6,9 +6,9 @@ case "$(puavo-conf puavo.xsessions.default)" in
   puavo-abitti-usb-factory)
     session_manager='/usr/lib/puavo-ltsp-client/abitti-factory-session'
 
-    abitti_home='/home/abitti'
+    abitti_user='puavo-abitti-usb-factory'
+    abitti_home="/home/${abitti_user}"
     abitti_uid='997'
-    abitti_user='abitti'
 
     useradd --system --create-home --home-dir "$abitti_home"          \
             --comment "Abitti USB Factory" --groups disk --user-group \
