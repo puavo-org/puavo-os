@@ -8,7 +8,7 @@ set -eu
 (
   while true; do
     openbox || true
-    logger -p local0.err -t abitti_factory \
+    logger -p local0.err -t puavo-abitti-usb-factory \
            'openbox has exited or crashed, restarting it...'
     sleep 5
   done
@@ -24,14 +24,14 @@ xset -dpms
 (
   # Start idid and keep it running
   while true; do
-    abitti_usb_factory --conf /home/abitti/abitti.conf || true
-    logger -p local0.err -t abitti_factory \
+    puavo-abitti-usb-factory --conf ~/abitti.conf || true
+    logger -p local0.err -t puavo-abitti-usb-factory \
            'The USB stick factory process has exited or crashed, restarting it...'
     sleep 5
   done
 )
 
 # We should never get here...
-logger -p local0.err -t abitti_factory \
+logger -p local0.err -t puavo-abitti-usb-factory \
        'The abitti-factory-session script is exiting! This should not happen!'
 exit 1
