@@ -255,6 +255,7 @@ class ImageWriter(threading.Thread):
 
             if self.__left == 0:
                 # Tell the main thread that we're done
+                os.fsync(self.destination_fd)
                 self.complete_event.set()
                 return
 
@@ -277,6 +278,7 @@ class ImageWriter(threading.Thread):
                 # We got no data
                 if self.__left == 0:
                     # It's just EOF, stop normally
+                    os.fsync(self.destination_fd)
                     self.complete_event.set()
                     return
                 else:
