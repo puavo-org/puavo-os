@@ -8,6 +8,8 @@
   "puavo.monitoring.nagios.allowed_hosts": "127.0.0.1,10.246.133.132",
   "puavo.networking.ubnt.unify.address": "10.246.147.5",
   "puavo.support.image_changelog_url": "http://changelog.opinsys.fi/%%IMAGESERIES%%/#%%IMAGEVERSION%%",
+  "puavo.support.remoteaccess.icons.allowed": "/usr/share/opinsys-art/opinsys-applet-remote-access-active.png",
+  "puavo.support.remoteaccess.icons.denied": "/usr/share/opinsys-art/opinsys-applet-idle.png",
   "puavo.support.new_bugreport_url": "https://support.opinsys.fi/new",
   "puavo.vpn.client.remote_servers": "217.112.254.9|443|tcp 217.112.254.10|443|tcp",
   "puavo.www.apiserver": "https://api.opinsys.fi"
