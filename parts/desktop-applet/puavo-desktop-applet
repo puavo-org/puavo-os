@@ -994,10 +994,10 @@ class RemoteAssistance:
     if to_disable_msg:
       access_state_msg = '%s %s' % (_tr('Remote access allowed'),
                                     to_disable_msg)
-      indicator_icon = 'puavoremoteaccess-green'
+      indicator_icon = puavoconf_get('puavo.support.remoteaccess.icons.allowed')
     elif to_enable_msg:
       access_state_msg = '%s %s' % (_tr('Remote access denied'), to_enable_msg)
-      indicator_icon = 'puavoremoteaccess-grey'
+      indicator_icon = puavoconf_get('puavo.support.remoteaccess.icons.denied')
     else:
       # if there is nothing to enable/disable, just show nothing
       return False
