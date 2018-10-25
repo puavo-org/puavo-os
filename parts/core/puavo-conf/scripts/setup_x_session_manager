@@ -3,6 +3,18 @@
 set -eu
 
 case "$(puavo-conf puavo.xsessions.default)" in
+  puavo-abitti-usb-factory)
+    session_manager='/usr/lib/puavo-ltsp-client/abitti-factory-session'
+
+    abitti_home='/home/abitti'
+    abitti_uid='997'
+    abitti_user='abitti'
+
+    useradd --system --create-home --home-dir "$abitti_home"          \
+            --comment "Abitti USB Factory" --groups disk --user-group \
+            --shell /bin/bash --uid "$abitti_uid" "$abitti_user"
+    ;;
+
   puavo-infotv)
     session_manager='/usr/lib/puavo-ltsp-client/infotv-session'
 
@@ -14,6 +26,7 @@ case "$(puavo-conf puavo.xsessions.default)" in
             --comment Puavo-InfoTV --user-group --shell /bin/bash \
             --uid "$infotv_uid" "$infotv_user"
     ;;
+
   *)
     session_manager='/usr/bin/gnome-session'
     ;;
