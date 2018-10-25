@@ -1,6 +1,5 @@
 class image::opinsys {
   include ::abitti,
-          ::abitti_usb_factory,
           ::art::kemi,
           ::art::opinsys,
           ::image::allinone,
