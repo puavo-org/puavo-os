@@ -21,20 +21,28 @@ Name=Ken-A-Vision AV4
 Categories=Education;
 EOF
 	ln -fns "${upstream_dir}/opt/av4kav" /opt/av4kav
-	ln -fns "${upstream_dir}/usr/share/applications/av4.desktop" /usr/share/applications/av4.desktop
-	ln -fns "${upstream_dir}/usr/share/pixmaps/av4.png" /usr/share/pixmaps/av4.png
-	ln -fns "${upstream_dir}/usr/share/pixmaps/av4.xpm" /usr/share/pixmaps/av4.xpm
+	ln -fns "${upstream_dir}/usr/share/applications/av4.desktop" \
+                /usr/share/applications/av4.desktop
+	ln -fns "${upstream_dir}/usr/share/pixmaps/av4.png" \
+                /usr/share/pixmaps/av4.png
+	ln -fns "${upstream_dir}/usr/share/pixmaps/av4.xpm" \
+                /usr/share/pixmaps/av4.xpm
 	ln -fns "${upstream_dir}/usr/share/doc/av4kav" /usr/share/doc/av4kav
 	;;
     unconfigure)
-	rm -rf /opt/av4kav /usr/share/applications/av4.desktop /usr/share/pixmaps/av4.png /usr/share/pixmaps/av4.xpm /usr/share/doc/av4kav
+	rm -rf /opt/av4kav \
+               /usr/share/applications/av4.desktop \
+               /usr/share/doc/av4kav \
+               /usr/share/pixmaps/av4.png \
+               /usr/share/pixmaps/av4.xpm
 	;;
     unpack)
 	upstream_pack=$1
 	upstream_dir=$2
 
 	dpkg -x "${upstream_pack}" "${upstream_dir}"
-        convert "${upstream_dir}/usr/share/pixmaps/av4.xpm" "${upstream_dir}/usr/share/pixmaps/av4.png"
+        convert "${upstream_dir}/usr/share/pixmaps/av4.xpm" \
+                "${upstream_dir}/usr/share/pixmaps/av4.png"
 	;;
     *)
 	;;

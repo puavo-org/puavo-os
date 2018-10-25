@@ -17,6 +17,7 @@ class puavo_pkg::packages {
 			, 'arduino-ide'
 			, 'arduino-radiohead'
 			, 'arduino-TM1637'
+			, 'av4kav'
 			, 'bluegriffon'
 			, 'cmaptools'
 			, 'cnijfilter2'
