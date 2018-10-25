@@ -6,6 +6,10 @@ set -eu
 # but this should be fast so we will do this anyway.
 
 case "$(puavo-conf puavo.xsessions.default)" in
+  puavo-abitti-usb-factory)
+    nodm_user='abitti'
+    xsession_path="/usr/lib/puavo-ltsp-client/abitti-factory-session"
+    ;;
   puavo-infotv)
     nodm_user='puavo-infotv'
     xsession_path='/usr/lib/puavo-ltsp-client/infotv-session'
@@ -19,12 +23,6 @@ case "$(puavo-conf puavo.xsessions.default)" in
     exit 0
     ;;
 esac
-
-if [ "$(puavo-conf puavo.abitti.factory.enabled)" = "true" ]; then
-  # Activate the Abitti USB stick factory session
-  nodm_user='abitti'
-  xsession_path="/usr/lib/puavo-ltsp-client/abitti-factory-session"
-fi
 
 cat <<EOF > /etc/default/nodm.tmp
 # nodm configuration
