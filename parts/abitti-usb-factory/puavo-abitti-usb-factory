@@ -689,6 +689,8 @@ class AbittiUSBWriter(Gtk.Window):
         devices = find_suitable_usb_devices()
 
         if len(devices) > 0:
+            time.sleep(0.5)   # hack
+
             # Found at least one suitable device. See if it's big
             # enough to contain the image.
             size = -1
@@ -702,7 +704,7 @@ class AbittiUSBWriter(Gtk.Window):
                     # hack hack hack
                     size = self.image_size
 
-            if size < self.image_size:
+            if size != -1 and size < self.image_size:
                 self.set_status_message(self.tr('TOO_SMALL_DEVICE'), False)
                 self.progress_text.set_label('')
             else:
@@ -848,6 +850,7 @@ class AbittiUSBWriter(Gtk.Window):
             self.status = self.STATUS_IDLE
             self.progress_bar.set_fraction(0.0)
             self.progress_text.set_label('')
+            self.update_status()
 
 
     def verify_update(self):
