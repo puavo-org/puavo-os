@@ -40,7 +40,10 @@ const IndicatorStatusIcon = new Lang.Class({
         
         this._indicator = indicator;
         
-        this._iconBox = new AppIndicator.IconActor(indicator, Panel.PANEL_ICON_SIZE);
+        // XXX Modified PANEL_ICON_SIZE for puavo-os, there appears to be no
+        // XXX place in gnome-shell.css where this could be modified.
+        // this._iconBox = new AppIndicator.IconActor(indicator, Panel.PANEL_ICON_SIZE);
+        this._iconBox = new AppIndicator.IconActor(indicator, 30);
         if (!this._box) // Gnome Shell 3.10
             this.actor.add_actor(this._box = new St.BoxLayout({style_class: 'panel-button-indicator'}));
 
