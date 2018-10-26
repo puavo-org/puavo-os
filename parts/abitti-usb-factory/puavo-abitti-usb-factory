@@ -423,7 +423,7 @@ class AbittiUSBWriter(Gtk.Window):
     def __init__(self, image_file, image_version, image_released,
                   language, dev_mode=False):
         super().__init__()
-        self.connect('delete-event', Gtk.main_quit)
+        self.connect('delete-event', self.try_quit)
 
         self.image_file = image_file
         self.image_version = image_version
@@ -607,6 +607,14 @@ class AbittiUSBWriter(Gtk.Window):
         # Start the main status update loop
         self.update_status()
         GObject.timeout_add(1000, self.update_status)
+
+
+    def try_quit(self, menu, event):
+        if self.dev_mode:
+            Gtk.main_quit()
+        else:
+            # There is no escape
+            return True
 
 
     def apply_css(self, widget, provider):
