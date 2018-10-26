@@ -3,18 +3,6 @@
 set -eu
 
 case "$(puavo-conf puavo.xsessions.default)" in
-  puavo-abitti-usb-factory)
-    session_manager='/usr/lib/puavo-ltsp-client/abitti-factory-session'
-
-    abitti_user='puavo-abitti-usb-factory'
-    abitti_home="/home/${abitti_user}"
-    abitti_uid='997'
-
-    useradd --system --create-home --home-dir "$abitti_home"          \
-            --comment "Abitti USB Factory" --groups disk --user-group \
-            --shell /bin/bash --uid "$abitti_uid" "$abitti_user"
-    ;;
-
   puavo-infotv)
     session_manager='/usr/lib/puavo-ltsp-client/infotv-session'
 
@@ -25,6 +13,19 @@ case "$(puavo-conf puavo.xsessions.default)" in
     useradd --system --create-home --home-dir "$infotv_home"      \
             --comment Puavo-InfoTV --user-group --shell /bin/bash \
             --uid "$infotv_uid" "$infotv_user"
+    ;;
+
+  puavo-usb-factory)
+    session_manager='/usr/lib/puavo-ltsp-client/usb-factory-session'
+
+    usb_factory_user='puavo-usb-factory'
+    usb_factory_home="/home/${usb_factory_user}"
+    usb_factory_uid='997'
+
+    # XXX using --groups disk might be a risk
+    useradd --system --create-home --home-dir "$usb_factory_home"     \
+            --comment "Puavo USB Factory" --groups disk --user-group \
+            --shell /bin/bash --uid "$usb_factory_uid" "$usb_factory_user"
     ;;
 
   *)

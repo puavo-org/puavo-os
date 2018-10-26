@@ -1,5 +1,4 @@
-subdirs         := abitti-usb-factory         \
-                   admins                     \
+subdirs         := admins                     \
                    autopilot                  \
                    bigtouch-shutdown          \
                    blackboard                 \
@@ -19,6 +18,7 @@ subdirs         := abitti-usb-factory         \
                    puavomenu                  \
                    sharedir                   \
                    tftp                       \
+                   usb-factory                \
                    vpn                        \
                    webkiosk-language-selector \
                    webmenu                    \

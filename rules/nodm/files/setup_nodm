@@ -6,13 +6,13 @@ set -eu
 # but this should be fast so we will do this anyway.
 
 case "$(puavo-conf puavo.xsessions.default)" in
-  puavo-abitti-usb-factory)
-    nodm_user='puavo-abitti-usb-factory'
-    xsession_path="/usr/lib/puavo-ltsp-client/abitti-factory-session"
-    ;;
   puavo-infotv)
     nodm_user='puavo-infotv'
     xsession_path='/usr/lib/puavo-ltsp-client/infotv-session'
+    ;;
+  puavo-usb-factory)
+    nodm_user='puavo-usb-factory'
+    xsession_path="/usr/lib/puavo-ltsp-client/usb-factory-session"
     ;;
   puavo-webkiosk)
     # XXX this has not been properly tested yet
