@@ -28,6 +28,7 @@ class puavo_pkg::packages {
 			, 'google-chrome'
 			, 'google-earth'
 			, 'idid'
+			, 'mafynetti'
 			, 'marvinsketch'
 			, 'mattermost-desktop'
 			, 'msttcorefonts'
