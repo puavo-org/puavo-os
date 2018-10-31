@@ -27,7 +27,6 @@ let _logoutButton = null;
 
 /**
  * Initialises the extension
- */
 function init() {
     Convenience.initTranslations();
 }
