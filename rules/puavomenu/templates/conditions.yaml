@@ -13,3 +13,10 @@
   params:
     - name: puavo.nonfree.ti_nspire_cx_cas_ss.enabled
       value: "true"
+
+- name: only_teacher_admin
+  function: env_var
+  params:
+    - name: PUAVO_WEBMENU_SHOW_MY_SCHOOL_USERS
+      value: "1"
+

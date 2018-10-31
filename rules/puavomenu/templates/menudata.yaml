@@ -500,6 +500,16 @@ programs:
         name: SanomaPro
         url: http://sanomapro.fi/
         icon: /usr/share/icons/Faenza/mimetypes/96/text-html.png
+  - school-user-list:
+        type: web
+        name:
+            fi: Koulun käyttäjälista
+            sv: Skolan användarlista
+            en: School User List
+            de: Schulbenutzerliste
+        url: https://api.opinsys.fi/v3/my_school_users
+        icon: /usr/share/icons/Faenza/mimetypes/96/x-office-spreadsheet.png
+        condition: "only_teacher_admin"
   - scratch
   - scratch-club:
         type: web
@@ -577,6 +587,7 @@ programs:
             de: Sumopaint Online Bildbearbeitung
         icon: /usr/share/icons/Faenza/apps/96/gimp.png
   - supertuxkart
+  - system-config-printer
 
   #T
   - t-lasku
@@ -721,6 +732,7 @@ menus:
             - org.gnome.Terminal
             - gftp
             - seahorse
+            - system-config-printer
             - org.gnome.Screenshot
             - simplescreenrecorder
 
@@ -1336,6 +1348,7 @@ categories:
             - menu-web
         programs:
             - org.gnome.Nautilus
+            - school-user-list
 
   - category-subjects:
         name:
