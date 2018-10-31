@@ -101,8 +101,7 @@ programs:
         icon: /usr/share/icons/Faenza/mimetypes/96/text-html.png
   - ekapeli:
         condition: "!personally_administered"
-  - ekapeli-alku:
-        condition: "!personally_administered"
+  - ekapeli-alku
   - ekapeli-maahanmuuttaja:
         condition: "!personally_administered"
   - ekapeliweb:
@@ -307,6 +306,7 @@ programs:
             de: Marble virtueller Globus
   - MarvinSketch
   - MarvinView
+  - mimio-notebook
   - mscore:
         name:
             en: MuseScore-music composition & notation
@@ -1013,6 +1013,7 @@ menus:
         programs:
             - smarttech-notebook
             - openboard
+            - mimio-notebook
 
   - menu-web:
         name:
