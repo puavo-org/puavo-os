@@ -144,6 +144,7 @@ class packages {
       tag => [ 'tag_admin', 'tag_debian_desktop', ];
 
     [ 'libasound2-plugins'
+    , 'linphone'
     , 'mumble'
     , 'pavucontrol'
     , 'pavumeter'
