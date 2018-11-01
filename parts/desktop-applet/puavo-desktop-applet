@@ -105,7 +105,7 @@ class ChangelogNotifier(PuavoWidget):
 
   def append_items_to_menu(self):
     if not self.enabled:
-      return
+      return False
 
     buttonmsg = '%s (%s)' % (_tr('Information on the latest system update'),
                              self.system_release_name)
@@ -114,6 +114,8 @@ class ChangelogNotifier(PuavoWidget):
     button.show()
     self.applet.menu.append(button)
     button.connect('activate', self.button_callback)
+
+    return True
 
 
   def button_callback(self, widget):
@@ -309,6 +311,8 @@ class ContentUpdates(PuavoWidget):
 
 
   def append_items_to_menu(self):
+    has_items_in_menu = False
+
     for contentname in self.content_elements.keys():
       if self.content_elements[contentname]['menuitem']:
          self.content_elements[contentname]['menuitem'].destroy()
@@ -319,8 +323,11 @@ class ContentUpdates(PuavoWidget):
       menuitem.set_sensitive(False)
 
       self.applet.menu.append(menuitem)
+      has_items_in_menu = True
 
       self.content_elements[contentname]['menuitem'] = menuitem
+
+    return has_items_in_menu
 
 
   def update_started(self, contentname, version):
@@ -405,7 +412,7 @@ class ImageUpdater(PuavoWidget):
 
   def append_items_to_menu(self):
     if not self.enabled:
-      return
+      return False
 
     self.add_update_button()
     # log viewing does not work on login screen
@@ -416,6 +423,8 @@ class ImageUpdater(PuavoWidget):
     if not self.dbus_iface:
       self.setup_dbus_iface()
       self.check_for_updates()
+
+    return True
 
 
   def add_progress(self):
@@ -1023,6 +1032,8 @@ class RemoteAssistance:
 
     self.applet.indicator.set_icon(indicator_icon)
 
+    return True
+
 
   def disable_remote_access(self, widget):
     if self.ssh_controls_available():
@@ -1070,7 +1081,9 @@ class RemoteAssistance:
 
 
   def append_items_to_menu(self):
-    self.create_access_controls()
+    has_items_in_menu = False
+    if self.create_access_controls():
+      has_items_in_menu = True
 
     make_bugreport_button = self.config['new_bugreport_browser'] \
                               and self.config['new_bugreport_url'] \
@@ -1080,6 +1093,9 @@ class RemoteAssistance:
       self.new_ticket_button.connect('activate', self.make_bugreport)
       self.new_ticket_button.show()
       self.applet.menu.append(self.new_ticket_button)
+      has_items_in_menu = True
+
+    return has_items_in_menu
 
 
 class ResetDevState(PuavoWidget):
@@ -1159,12 +1175,14 @@ class ResetDevState(PuavoWidget):
 
   def append_items_to_menu(self):
     if not self.enabled:
-      return
+      return False
 
     self.add_development_state_widgets()
 
     if not self.dbus_iface:
       self.setup_dbus_iface()
+
+    return True
 
 
   def add_development_state_widgets(self):
@@ -1214,25 +1232,33 @@ class PuavoDesktopApplet:
 
     self.menu = Gtk.Menu()
 
-    self.reset_dev_state.append_items_to_menu()
-    self.image_updater.append_items_to_menu()
-    self.changelog_notifier.append_items_to_menu()
+    something_in_menu = False
+    if self.reset_dev_state.append_items_to_menu():
+      something_in_menu = True
+    if self.image_updater.append_items_to_menu():
+      something_in_menu = True
+    if self.changelog_notifier.append_items_to_menu():
+      something_in_menu = True
 
     separator = Gtk.SeparatorMenuItem()
     separator.show()
     self.menu.append(separator)
 
-    self.content_updates.append_items_to_menu()
+    if self.content_updates.append_items_to_menu():
+      something_in_menu = True
 
     separator = Gtk.SeparatorMenuItem()
     separator.show()
     self.menu.append(separator)
 
-    self.remote_assistance.append_items_to_menu()
+    if self.remote_assistance.append_items_to_menu():
+      something_in_menu = True
 
-    self.menu.show_all()
-
-    self.indicator.set_menu(self.menu)
+    if something_in_menu:
+      self.menu.show_all()
+      self.indicator.set_menu(self.menu)
+    else:
+      self.indicator.set_menu(None)
 
 
   def check_for_changed_settings(self):

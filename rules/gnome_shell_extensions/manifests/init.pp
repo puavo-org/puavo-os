@@ -28,6 +28,7 @@ class gnome_shell_extensions {
     , 'hide-dash@xenatt.github.com'
     , 'hide-overview-search-entry@puavo.org'
     , 'hostinfo@puavo.org'
+    , 'LogOutButton@kyle.aims.ac.za'
     , 'Move_Clock@rmy.pobox.com'
     , 'nohotcorner@azuri.free.fr'
     , 'Panel_Favorites@rmy.pobox.com'

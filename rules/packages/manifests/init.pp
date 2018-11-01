@@ -69,6 +69,7 @@ class packages {
     , 'munin'
     , 'munin-node'
     , 'nagios-nrpe-server'
+    , 'nagios-plugins-contrib'
     , 'nginx'
     , 'openbsd-inetd'
     , 'python-numpy'

@@ -352,7 +352,7 @@ command[image_sync]=/usr/lib/nagios/plugins/check_file_age -w 172800 -c 0 -f /im
 command[dhcp]=/usr/lib/nagios/plugins/check_dhcp -i ltsp0 -s ${ltsp0_ip_address} -t 4 -u
 command[dns]=/usr/lib/nagios/plugins/check_dns -H ${puavo_domain}
 command[ldap]=/usr/lib/nagios/plugins/check_ldap -H ${puavo_hostname}.${puavo_domain} -b ${puavo_ldap_base} -T
-command[raid]=/usr/lib/nagios/plugins/check_raid
+command[raid]=/usr/lib/nagios/plugins/check_raid -p mdstat
 command[total_procs]=/usr/lib/nagios/plugins/check_procs -w 1200 -c 2400
 command[zombies]=/usr/lib/nagios/plugins/check_procs -w 10 -c 50 -s Z
 
