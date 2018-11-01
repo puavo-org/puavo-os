@@ -70,6 +70,10 @@ function enable() {
 }
 
 function disable() {
+    // XXX hacks to workaround lock screen -related issues
+    // XXX (puavo-desktop-applet dies for no apparent reason after suspend)
+    Util.Logger.debug('not disabling appindicatorsupport (even though requested) due to lock screen -related bugs');
+    return;
     isEnabled = false;
     if (statusNotifierWatcher !== null) {
         statusNotifierWatcher.destroy();
