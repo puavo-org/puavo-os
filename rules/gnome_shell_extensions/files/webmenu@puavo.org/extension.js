@@ -19,7 +19,7 @@ const St   = imports.gi.St;
 const Util = imports.misc.util;
 const Lang = imports.lang;
 
-let logout_button, menu_button;
+let menu_button;
 
 function make_button(icon_name, icon_size, spawn_command, is_right) {
     let button = new St.Bin({ can_focus:   true,
@@ -58,20 +58,15 @@ function make_button(icon_name, icon_size, spawn_command, is_right) {
 }
 
 function init() {
-    logout_button = make_button('system-shutdown-symbolic',
-				'16',
-				[ 'webmenu-spawn', '--logout' ], true);
-    menu_button   = make_button('opinsys-nelio-menu',
-				'28',
-				[ 'webmenu-spawn' ], false);
+    menu_button = make_button('opinsys-nelio-menu',
+			      '28',
+			      [ 'webmenu-spawn' ], false);
 }
 
 function disable() {
     Main.panel._leftBox.remove_child(menu_button);
-    Main.panel._rightBox.remove_child(logout_button);
 }
 
 function enable() {
-    Main.panel._leftBox.insert_child_at_index(menu_button,    0);
-    Main.panel._rightBox.insert_child_at_index(logout_button, -1);
+    Main.panel._leftBox.insert_child_at_index(menu_button, 0);
 }
