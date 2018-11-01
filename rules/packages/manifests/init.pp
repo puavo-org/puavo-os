@@ -554,6 +554,7 @@ class packages {
     , 'laptop-detect'
     , 'libatk-adaptor'
     , 'libgail-common'
+    , 'libjavascriptcoregtk-1.0-0'        #citrix client
     , 'libnotify-bin'
     , 'libnss-extrausers'
     , 'libnss-mdns'
@@ -573,6 +574,7 @@ class packages {
     , 'libreoffice-style-tango'
     , 'libreoffice-writer'
     , 'libsasl2-modules'
+    , 'libwebkitgtk-1.0-0'                #citrix client
     , 'make'
     , 'memtest86+'
     , 'mousetweaks'
