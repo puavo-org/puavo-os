@@ -29,12 +29,12 @@ logmsg -p user.info 'puavo-cleanup-old-users is active'
 exitstatus=0
 
 get_current_system_uids() {
-  # 65534 is "nobody"-user
+  # 64055 is "libvirt-qemu", 65534 is "nobody"
   {
     getent passwd | awk -F: '$3 >= 10000 { print $3 }'
     find /home -mindepth 1 -maxdepth 1 -printf "%U\n"
   } \
-  | awk '$1 >= 10000 && $1 != 65534' \
+  | awk '$1 >= 10000 && $1 != 64055 && $1 != 65534' \
   | sort -nu
 }
 
