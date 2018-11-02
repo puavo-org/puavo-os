@@ -1,0 +1,96 @@
+#!/bin/sh
+
+# copies code from /opinsys-os/.aux/update-abitti-image
+
+set -eu
+
+puavo_usb_factory_dir=~/.puavo/usb-factory
+
+abitti_images_dir="${puavo_usb_factory_dir}/Abitti"
+incoming_dir="${abitti_images_dir}/incoming"
+
+abitti_version_path="${abitti_images_dir}/VERSION"
+download_status_path="${abitti_images_dir}/DOWNLOAD_STATUS"
+
+cleanup() {
+  if grep 'in progress' "$download_status_path"; then
+    echo failed > "$download_status_path"
+  fi
+}
+
+trap cleanup 0 INT TERM
+
+download_abitti() {
+  # XXX find remove old abitti images?
+
+  abitti_version=$(puavo-conf puavo.abitti.version)
+
+  if [ "$abitti_version" = 'latest' ]; then
+    abitti_version=$(
+      wget -q -O - http://static.abitti.fi/usbimg/prod/latest.txt 2>/dev/null)
+  else
+    abitti_version=${abitti_version#abitti-v}
+  fi
+
+  if [ -z "$abitti_version" ]; then
+    echo 'Could not lookup determine abitti version to use' >&2
+    return 1
+  fi
+
+  abitti_image_path="${abitti_images_dir}/abitti-v${abitti_version}.usbimg"
+
+  if [ -e "$abitti_image_path" ]; then
+    echo "$abitti_version" > "$abitti_version_path" || return 1
+    return 0
+  fi
+
+  koe_zip_path="${incoming_dir}/koe-etcher-${abitti_version}.zip"
+
+  if [ ! -e "$koe_zip_path" ]; then
+    if ! wget -O "${koe_zip_path}.tmp" \
+              "http://static.abitti.fi/usbimg/prod/${abitti_version}/koe.zip"; then
+      echo "Downloading ${koe_zip_path} failed" >&2
+      return 1
+    fi
+    # XXX md5sum check?
+    mv "${koe_zip_path}.tmp" "$koe_zip_path" || return 1
+  fi
+
+  rm -rf "${incoming_dir}/koe-etcher" || return 1
+
+  if ! unzip -d "${incoming_dir}/koe-etcher" "$koe_zip_path"; then
+    echo "Unpacking $koe_zip_path failed" >&2
+    return 1
+  fi
+
+  mv "${incoming_dir}/koe-etcher/koe.dd" "$abitti_image_path" \
+    || return 1
+
+  echo "$abitti_version" > "$abitti_version_path" || return 1
+}
+
+(
+  if ! flock -n 9; then
+    return 1
+  fi
+
+  mkdir -p "$abitti_images_dir" "$incoming_dir"
+
+  exitstatus=0
+
+  echo in progress > "$download_status_path"
+  if ! download_abitti; then
+    echo failed > "$download_status_path"
+    exitstatus=1
+  else
+    echo ok > "$download_status_path"
+  fi
+
+  rm -rf "$incoming_dir"
+
+  if [ "$exitstatus" -ne 0 ]; then
+    echo 'Error downloading latest version of Abitti' >&2
+    exit $exitstatus
+  fi
+
+) 9< "$abitti_images_dir"
