@@ -823,6 +823,7 @@ EOF
 	upstream_dir=$2
 	unzip -q -d "${upstream_dir}" "${upstream_pack}"
 	extract_icon "$upstream_dir"
+        chmod 755 "${upstream_dir}/Ekapeli-Alku.x86"
 	;;
     *)
 	;;
