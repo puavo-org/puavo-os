@@ -2,11 +2,12 @@
 
 from time import clock
 
-from os import unlink, environ
+from os import unlink
 from os.path import join as path_join, isfile as is_file
 
 import socket               # for the IPC socket
-import traceback
+
+import logging
 
 import gi
 gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
@@ -15,11 +16,10 @@ from gi.repository import Gdk
 from gi.repository import Pango
 from gi.repository import GLib
 
-import logger
 from constants import *
 from iconcache import ICONS48
 from buttons import ProgramButton, MenuButton
-from utils import localize
+from utils import localize, log_elapsed_time
 from utils_gui import load_image_at_size, create_separator, \
                       create_desktop_link, create_panel_link
 from loader import load_menu_data
@@ -80,18 +80,18 @@ class PuavoMenu(Gtk.Window):
         try:
             self.__socket = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
             self.__socket.bind(SETTINGS.socket)
-        except Exception as e:
+        except Exception as exception:
             # Oh dear...
             import syslog
 
-            logger.error('Unable to create a domain socket for IPC!')
-            logger.error('Reason: {0}'.format(e))
-            logger.error('Socket name: "{0}"'.format(SETTINGS.socket))
-            logger.error('This is a fatal error, stopping here.')
+            logging.error('Unable to create a domain socket for IPC!')
+            logging.error('Reason: %s', str(exception))
+            logging.error('Socket name: "%s"', SETTINGS.socket)
+            logging.error('This is a fatal error, stopping here.')
 
             syslog.syslog(syslog.LOG_CRIT,
-                          'PuavoMenu IPC socket "{0}" creation failed: {1}'.
-                          format(SETTINGS.socket, e))
+                          'PuavoMenu IPC socket "%s" creation failed: %s',
+                          SETTINGS.socket, str(exception))
 
             syslog.syslog(syslog.LOG_CRIT,
                           'PuavoMenu stops here. Contact Opinsys support.')
@@ -138,9 +138,9 @@ class PuavoMenu(Gtk.Window):
 
             self.__menu_background = \
                 load_image_at_size(SETTINGS.res_dir + image_name, 150, 110)
-        except Exception as e:
-            logger.error('Can\'t load the menu background image: {0}'.
-                         format(e))
+        except Exception as exception:
+            logging.error("Can't load the menu background image: %s",
+                          str(exception))
             self.__menu_background = None
 
         # ----------------------------------------------------------------------
@@ -324,7 +324,7 @@ class PuavoMenu(Gtk.Window):
         # menu data yet to show.
 
         end_time = clock()
-        logger.print_time('Window init time', start_time, end_time)
+        log_elapsed_time('Window init time', start_time, end_time)
 
         # Finally, load the menu data and show the UI
         self.__load_data()
@@ -524,8 +524,8 @@ class PuavoMenu(Gtk.Window):
                 # The search field is empty, hide the window (we have
                 # another Esc handler elsewhere that's used when the
                 # search box has no focus)
-                logger.debug('Search field is empty and Esc pressed, '
-                             'hiding the window')
+                logging.debug('Search field is empty and Esc pressed, '
+                              'hiding the window')
                 self.autohide()
         elif key_event.keyval == Gdk.KEY_Return:
             if len(self.__get_search_text()) and (len(self.__buttons) == 1):
@@ -597,39 +597,38 @@ class PuavoMenu(Gtk.Window):
         # TODO: use the *original* .desktop file if it exists
         name = path_join(SETTINGS.desktop_dir, '{0}.desktop'.format(p.title))
 
-        logger.info('Adding program "{0}" to the desktop, output="{1}"'.
-                    format(p.title, name))
+        logging.info('Adding program "%s" to the desktop, destination="%s"',
+                     p.title, name)
 
         try:
             create_desktop_link(name, p)
-        except Exception as e:
-            logger.error('Desktop link creation failed')
-            logger.error(e)
+        except Exception as exception:
+            logging.error('Desktop link creation failed:')
+            logging.error(str(exception))
 
             self.error_message(
                 localize(STRINGS['desktop_link_failed']),
-                str(e))
+                str(exception))
 
 
     # Called directly from ProgramButton
     def add_program_to_panel(self, p):
-        logger.info('Adding program "{0}" (id="{1}") to the bottom panel'.
-                    format(p.title, p.name))
+        logging.info('Adding program "%s" (id="%s") to the bottom panel',
+                     p.title, p.name)
 
         try:
             create_panel_link(p)
-        except Exception as e:
-            logger.error('Panel icon creation failed')
-            logger.error(e)
+        except Exception as exception:
+            logging.error('Panel icon creation failed')
+            logging.error(str(exception))
 
-            self.error_message(
-                localize(STRINGS['panel_link_failed']),
-                str(e))
+            self.error_message(localize(STRINGS['panel_link_failed']),
+                               str(exception))
 
 
     # Called directly from ProgramButton
     def remove_program_from_faves(self, p):
-        print('Removing program "{0}" from the faves'.format(p.title))
+        logging.info('Removing program "%s" from the faves', p.title)
         p.uses = 0
         self.__faves.update(self.__programs)
 
@@ -652,12 +651,11 @@ class PuavoMenu(Gtk.Window):
         p.uses += 1
         self.__faves.update(self.__programs)
 
-        print('Clicked program button "{0}", usage counter is {1}'.
-              format(p.title, p.uses))
+        logging.info('Clicked program button "%s", usage counter is %d',
+                     p.title, p.uses)
 
         if p.command is None:
-            logger.error('No command defined for program "{0}"'.
-                         format(p.title))
+            logging.error('No command defined for program "%s"', p.title)
             return
 
         # Try to launch the program
@@ -671,10 +669,10 @@ class PuavoMenu(Gtk.Window):
                 # Opens in the default browser
                 cmd = ['xdg-open', p.command]
             else:
-                raise RuntimeError('Unknown program type {0}'.
+                raise RuntimeError('Unknown program type "{0}"'.
                                    format(p.type))
 
-            logger.info('Executing "{0}"'.format(cmd))
+            logging.info('Executing "%s"', cmd)
 
             subprocess.Popen(cmd,
                              stdout=subprocess.PIPE,
@@ -691,11 +689,11 @@ class PuavoMenu(Gtk.Window):
                 self.__hide_search_results()
                 self.__reset_menu()
 
-        except Exception as e:
-            logger.error('Could not launch program "{0}": {1}'.
-                         format(p.command, str(e)))
+        except Exception as exception:
+            logging.error('Could not launch program "%s": %s',
+                          p.command, str(exception))
             self.error_message(localize(STRINGS['program_launching_failed']),
-                               str(e))
+                               str(exception))
             return False
 
 
@@ -711,9 +709,9 @@ class PuavoMenu(Gtk.Window):
             return
 
         if SETTINGS.dev_mode:
-            logger.debug('Ignoring Esc in development mode')
+            logging.debug('Ignoring Esc in development mode')
         else:
-            logger.debug('Esc pressed, hiding the window')
+            logging.debug('Esc pressed, hiding the window')
             self.set_keep_above(False)
             self.set_visible(False)
 
@@ -729,7 +727,7 @@ class PuavoMenu(Gtk.Window):
             return
 
         if self.__focus_signal:
-            logger.debug('Out-of-focus signal handler deactivated')
+            logging.debug('Out-of-focus signal handler deactivated')
             self.disconnect(self.__focus_signal)
             self.__focus_signal = None
 
@@ -741,7 +739,7 @@ class PuavoMenu(Gtk.Window):
             return
 
         if not self.__focus_signal:
-            logger.debug('Out-of-focus signal handler activated')
+            logging.debug('Out-of-focus signal handler activated')
             self.__focus_signal = \
                 self.connect('focus-out-event', self.__main_lost_focus)
 
@@ -766,7 +764,7 @@ class PuavoMenu(Gtk.Window):
     # from other files.
     def autohide(self, *unused):
         if SETTINGS.autohide:
-            logger.debug('Autohiding the window')
+            logging.debug('Autohiding the window')
             self.set_keep_above(False)
             self.set_visible(False)
 
@@ -775,12 +773,12 @@ class PuavoMenu(Gtk.Window):
     # this with "force=True" because they HAVE to kill the program.
     def go_away(self, force=False):
         if force or self.__exit_permitted:
-            logger.info('Shutdown initiated')
+            logging.info('Shutdown initiated')
             self.set_keep_above(False)
             self.set_visible(False)
             Gtk.main_quit()
         else:
-            logger.info('Exit not permitted')
+            logging.info('Exit not permitted')
             return True
 
 
@@ -823,14 +821,14 @@ class PuavoMenu(Gtk.Window):
             data = (data or b'').decode('utf-8').strip().split(' ')
 
             if len(data) == 0:
-                logger.debug('Received an empty command through the socket?')
+                logging.debug('Received an empty command through the socket?')
                 return True
 
             cmd = data[0]
             data = data[1:]
 
-            logger.debug('Socket command: "{0}"'.format(cmd))
-            logger.debug('Socket arguments: "{0}"'.format(data))
+            logging.debug('Socket command: "%s"', cmd)
+            logging.debug('Socket arguments: "%s"', data)
 
             if cmd == 'hide':
                 # Hide the window
@@ -842,12 +840,12 @@ class PuavoMenu(Gtk.Window):
                     self.__reset_menu()
 
                 if self.is_visible():
-                    logger.debug('Hiding the window')
+                    logging.debug('Hiding the window')
                     self.__search.grab_focus()
                     self.set_keep_above(False)
                     self.set_visible(False)
                 else:
-                    logger.debug('Already hidden')
+                    logging.debug('Already hidden')
             elif cmd == 'show':
                 # Show the window
 
@@ -858,12 +856,12 @@ class PuavoMenu(Gtk.Window):
                     self.__reset_menu()
 
                 if self.is_visible():
-                    logger.debug('Already visible')
+                    logging.debug('Already visible')
                 else:
                     coords = self.__parse_position(data)
 
                     if coords:
-                        logger.debug(coords)
+                        logging.debug(coords)
                         self.move(coords[0], coords[1])
 
                     self.set_keep_above(True)
@@ -882,16 +880,16 @@ class PuavoMenu(Gtk.Window):
                     self.__reset_menu()
 
                 if self.is_visible():
-                    logger.debug('Toggling window visibility (hide)')
+                    logging.debug('Toggling window visibility (hide)')
                     self.__search.grab_focus()
                     self.set_keep_above(False)
                     self.set_visible(False)
                 else:
-                    logger.debug('Toggling window visibility (show)')
+                    logging.debug('Toggling window visibility (show)')
                     coords = self.__parse_position(data)
 
                     if coords:
-                        logger.debug(coords)
+                        logging.debug(coords)
                         self.move(coords[0], coords[1])
 
                     self.set_keep_above(True)
@@ -901,11 +899,11 @@ class PuavoMenu(Gtk.Window):
                     self.__search.grab_focus()
                     self.activate_focus()
             else:
-                logger.debug('Unknown command "{0}" received, args={1}'.
-                             format(cmd, data))
-        except Exception as e:
-            logger.error('Socket command processing failed!')
-            logger.error(e)
+                logging.warning('Unknown command "%s" received, args="%s"',
+                                cmd, data)
+        except Exception as exception:
+            logging.error('Socket command processing failed!')
+            logging.error(str(exception))
 
         # False will remove the handler, that's not what we want
         return True
@@ -963,9 +961,6 @@ class PuavoMenu(Gtk.Window):
         """Loads menu data and sets up the UI. Returns false if
         something fails."""
 
-        # Don't mess up error and warning counts
-        logger.reset_counters()
-
         # Files/strings to be loaded
         sources = [
             ['f', 'menudata.yaml'],
@@ -1014,8 +1009,8 @@ class PuavoMenu(Gtk.Window):
 
         conditional_time = clock()
 
-        logger.print_time('Conditional evaluation time',
-                          start_time, conditional_time)
+        log_elapsed_time('Conditional evaluation time',
+                         start_time, conditional_time)
 
         programs = {}
         menus = {}
@@ -1030,9 +1025,9 @@ class PuavoMenu(Gtk.Window):
                 load_menu_data(sources,
                                desktop_dirs,
                                self.__conditions)
-        except Exception as e:
-            logger.error('Could not load menu data!')
-            logger.traceback(traceback.format_exc())
+        except Exception as exception:
+            logging.error('Could not load menu data!')
+            logging.error(exception, exc_info=True)
             return False
 
         if not programs:
@@ -1041,7 +1036,7 @@ class PuavoMenu(Gtk.Window):
         parsing_time = clock()
 
         # Locate and load icon files
-        logger.info('Loading icons...')
+        logging.info('Loading icons...')
         num_missing_icons = 0
 
         for name in programs:
@@ -1052,8 +1047,8 @@ class PuavoMenu(Gtk.Window):
 
             if p.icon is None:
                 # This should not happen, ever
-                logger.error('The impossible happened: program "{0}" '
-                             'has no icon at all!'.format(name))
+                logging.error('The impossible happened: program "%s" '
+                              'has no icon at all!', name)
                 num_missing_icons += 1
                 continue
 
@@ -1099,8 +1094,8 @@ class PuavoMenu(Gtk.Window):
 
             # Nothing found
             if not icon_path:
-                logger.error('Icon "{0}" for program "{1}" not found in '
-                             'icon load paths'.format(p.icon, name))
+                logging.error('Icon "%s" for program "%s" not found in '
+                              'icon load paths', p.icon, name)
                 p.icon = None
                 num_missing_icons += 1
                 continue
@@ -1108,9 +1103,8 @@ class PuavoMenu(Gtk.Window):
             p.icon = ICONS48.load_icon(path)
 
             if not p.icon.usable:
-                logger.warn('Found an icon "{0}" for program "{1}", but '
-                            'it could not be loaded'.
-                            format(path, name))
+                logging.warning('Found an icon "%s" for program "%s", but '
+                                'it could not be loaded', path, name)
                 num_missing_icons += 1
             else:
                 id_to_path_mapping[name] = path
@@ -1119,13 +1113,13 @@ class PuavoMenu(Gtk.Window):
             m = menus[name]
 
             if m.icon is None:
-                logger.warn('Menu "{0}" has no icon defined'.format(name))
+                logging.warning('Menu "%s" has no icon defined', name)
                 num_missing_icons += 1
                 continue
 
             if not is_file(m.icon):
-                logger.error('Icon "{0}" for menu "{1}" does not exist'.
-                             format(m.icon, name))
+                logging.error('Icon "%s" for menu "%s" does not exist',
+                              m.icon, name)
                 m.icon = None
                 num_missing_icons += 1
                 continue
@@ -1133,36 +1127,23 @@ class PuavoMenu(Gtk.Window):
             m.icon = ICONS48.load_icon(m.icon)
 
             if not m.icon.usable:
-                logger.warn('Found an icon "{0}" for menu "{1}", but '
-                            'it could not be loaded'.
-                            format(path, name))
+                logging.warning('Found an icon "%s" for menu "%s", but '
+                                'it could not be loaded', path, name)
                 num_missing_icons += 1
 
         end_time = clock()
 
         if num_missing_icons == 0:
-            logger.info('No missing icons')
+            logging.info('No missing icons')
         else:
-            logger.info('Have {0} missing or unloadable icons'.
-                        format(num_missing_icons))
+            logging.info('Have %d missing or unloadable icons',
+                         num_missing_icons)
 
         stats = ICONS48.stats()
-        logger.info('Number of 48-pixel icons cached: {0}'.
-                    format(stats['num_icons']))
-        logger.info('Number of 48-pixel atlas surfaces: {0}'.
-                    format(stats['num_atlases']))
-
-        logger.print_time('Icon loading time', parsing_time, end_time)
-
-        if logger.have_warnings():
-            logger.info('{0} warning(s) generated'.
-                        format(logger.num_warnings()))
-
-        if logger.have_errors():
-            logger.info('{0} error(s) generated'.
-                        format(logger.num_errors()))
-
-        logger.print_time('Total loading time', start_time, end_time)
+        logging.info('Number of 48-pixel icons cached: %d', stats['num_icons'])
+        logging.info('Number of 48-pixel atlas surfaces: %d', stats['num_atlases'])
+        log_elapsed_time('Icon loading time', parsing_time, end_time)
+        log_elapsed_time('Total loading time', start_time, end_time)
 
         # Replace existing menu data, if any
         self.__programs = programs
@@ -1216,9 +1197,9 @@ class PuavoMenu(Gtk.Window):
 
         def remove(x):
             if self.__programs:
-                logger.debug('=' * 20)
-                logger.debug('Purging all loaded menu data!')
-                logger.debug('=' * 20)
+                logging.debug('=' * 20)
+                logging.debug('Purging all loaded menu data!')
+                logging.debug('=' * 20)
                 self.__unload_data()
 
         def reload(x):
@@ -1229,9 +1210,9 @@ class PuavoMenu(Gtk.Window):
                 if self.__current_category != -1 else None
 
             # TODO: Don't clear current data if the reload fails
-            logger.debug('=' * 20)
-            logger.debug('Reloading all menu data!')
-            logger.debug('=' * 20)
+            logging.debug('=' * 20)
+            logging.debug('Reloading all menu data!')
+            logging.debug('=' * 20)
 
             if self.__programs:
                 self.__unload_data()
@@ -1243,21 +1224,21 @@ class PuavoMenu(Gtk.Window):
                 # try to restore the previous menu and category
                 for n, c in enumerate(self.__category_index):
                     if c == prev_cat:
-                        logger.debug('Restoring category "{0}" after reload'.
-                                     format(prev_cat))
+                        logging.debug('Restoring category "%s" after reload',
+                                      prev_cat)
                         self.__current_category = n
                         self.__category_buttons.set_current_page(n)
                         break
 
                 if prev_menu and prev_menu in self.__menus:
-                    logger.debug('Restoring menu "{0}" after reload'.
-                                 format(prev_menu))
+                    logging.debug('Restoring menu "%s" after reload',
+                                  prev_menu)
                     self.__current_menu = self.__menus[prev_menu]
                     self.__create_current_menu()
                     self.__back_button.show()
                     self.__update_menu_title()
 
-            logger.debug('Menu data reload complete')
+            logging.debug('Menu data reload complete')
 
         def toggle_autohide(x):
             SETTINGS.autohide = not SETTINGS.autohide
@@ -1282,11 +1263,11 @@ class PuavoMenu(Gtk.Window):
 
         def permit_exit(x):
             self.__exit_permitted = not self.__exit_permitted
-            logger.debug('Normal exiting ' +
-                         ('ENABLED' if self.__exit_permitted else 'DISABLED'))
+            logging.debug('Normal exiting ' +
+                          ('ENABLED' if self.__exit_permitted else 'DISABLED'))
 
         def force_exit(x):
-            logger.debug('Devmenu force exit initiated!')
+            logging.debug('Devmenu force exit initiated!')
             self.go_away(True)
 
 
@@ -1355,8 +1336,8 @@ def setup_signal_handlers(menu):
 
     def signal_action(signal):
         if signal in (signal.SIGHUP, signal.SIGINT, signal.SIGTERM):
-            logger.info('Caught signal {0}, exiting gracefully...'.
-                        format(signal))
+            logging.info('Caught signal "%s", exiting gracefully...',
+                         signal)
             menu.go_away(True)
 
 
@@ -1401,5 +1382,5 @@ def run():
         except OSError:
             pass
 
-    except Exception as e:
-        logger.traceback(traceback.format_exc())
+    except Exception as exception:
+        logging.error(exception, exc_info=True)

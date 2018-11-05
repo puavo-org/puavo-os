@@ -1,11 +1,12 @@
 # "Faves", ie. a list of the most often used programs
 
+import logging
+
 import gi
 gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
 from gi.repository import Gtk
 
 from constants import PROGRAM_BUTTON_WIDTH, NUMBER_OF_FAVES
-import logger
 
 from buttons import ProgramButton
 from settings import SETTINGS
@@ -28,8 +29,8 @@ def _save_use_counts(all_programs):
     try:
         from os.path import join as path_join
         open(path_join(SETTINGS.user_dir, 'faves'), 'w').write(out)
-    except Exception as e:
-        logger.error('Could not save favorites: {0}'.format(e))
+    except Exception as exception:
+        logging.error('Could not save favorites: %s', str(exception))
 
 
 def load_use_counts(all_programs):
@@ -52,16 +53,16 @@ def load_use_counts(all_programs):
             continue
 
         if not parts[0] in all_programs:
-            logger.warn('Program "{0}" listed in faves.yaml, but it does '
-                        'not exist in the menu data'.format(parts[0]))
+            logging.warning('Program "%s" listed in faves.yaml, but it does '
+                            'not exist in the menu data', parts[0])
             continue
 
         try:
             all_programs[parts[0]].uses = int(parts[1])
-        except:
+        except Exception as exception:
             # the use count probably wasn't an integer...
-            logger.warn('Could not set the use count for program "{0}"'.
-                        format(parts[0]))
+            logging.warning('Could not set the use count for program "%s": %s',
+                            parts[0], str(exception))
 
 
 class FavesList(Gtk.ScrolledWindow):
@@ -96,7 +97,7 @@ class FavesList(Gtk.ScrolledWindow):
         self.__fave_buttons = []
         self.__prev_fave_ids = []
 
-        logger.info('Faves list cleared')
+        logging.info('Faves list cleared')
 
 
     def update(self, all_programs):
@@ -124,8 +125,8 @@ class FavesList(Gtk.ScrolledWindow):
             return
 
         # Something has changed, recreate the buttons
-        logger.info('Faves order has changed ({0} -> {1})'.
-                    format(self.__prev_fave_ids, new_ids))
+        logging.info('Faves order has changed (%s -> %s)',
+                     str(self.__prev_fave_ids), str(new_ids))
 
         _save_use_counts(all_programs)
 

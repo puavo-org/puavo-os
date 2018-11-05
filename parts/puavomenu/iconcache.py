@@ -1,9 +1,9 @@
 # Efficiently (?) caches small icons using larger bitmaps
 
 from collections import OrderedDict
-
+import logging
 import cairo
-import logger
+
 from utils_gui import load_image_at_size, draw_x
 
 
@@ -117,8 +117,8 @@ class IconCache:
             if (self.__y + self.__icon_size) > self.__bitmap_size:
                 # This atlas is full, create another
                 self.__create_atlas()
-                logger.info('Created a new icon cache atlas for size {0}'.
-                            format(self.__icon_size))
+                logging.info('Created a new icon cache atlas for size %d',
+                             self.__icon_size)
 
                 icon.atlas = self.__atlas_num
                 icon.x = self.__x
@@ -134,10 +134,10 @@ class IconCache:
             msg = str(e)
 
             if msg == '':
+                # this actually has happened
                 msg = '<The exception has no message>'
 
-            logger.error('Could not load icon "{0}": {1}'.
-                         format(path, msg))
+            logging.error('Could not load icon "%s": %s', path, msg)
             icon.usable = False
 
         # Compute the position for the next icon (always done)

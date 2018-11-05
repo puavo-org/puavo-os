@@ -3,6 +3,7 @@
 from os.path import exists as file_exists, join as path_join
 from getpass import getuser
 import threading
+import logging
 
 import gi
 gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
@@ -11,7 +12,6 @@ from gi.repository import Pango
 
 from constants import WINDOW_HEIGHT, MAIN_PADDING, SIDEBAR_WIDTH, \
                       USER_AVATAR_SIZE, HOSTINFO_LABEL_HEIGHT, SEPARATOR_SIZE
-import logger
 from utils import localize, expand_variables, get_file_contents, puavo_conf
 from utils_gui import create_separator
 
@@ -152,8 +152,8 @@ def get_changelog_url():
     series = get_file_contents('/etc/puavo-image/class', 'opinsys')
     version = get_file_contents('/etc/puavo-image/name', '')
 
-    logger.debug('The current image series is "{0}"'.format(series))
-    logger.debug('The current image version is "{0}"'.format(version))
+    logging.info('The current image series is "%s"', series)
+    logging.info('The current image version is "%s"', version)
 
     if len(version) > 4:
         # strip the extension from the image file name
@@ -165,7 +165,7 @@ def get_changelog_url():
     url = url.replace('%%IMAGESERIES%%', series)
     url = url.replace('%%IMAGEVERSION%%', version)
 
-    logger.info('The final changelog URL is "{0}"'.format(url))
+    logging.info('The final changelog URL is "%s"', url)
 
     return url
 
@@ -190,7 +190,7 @@ def web_window(url, title=None, width=None, height=None,
     if enable_plugins:
         cmd += ['--enable-plugins']
 
-    logger.info('Opening a webwindow: {0}'.format(cmd))
+    logging.info('Opening a webwindow: "%s"', cmd)
 
     subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
@@ -198,6 +198,15 @@ def web_window(url, title=None, width=None, height=None,
 class AvatarDownloaderThread(threading.Thread):
     """Downloads the user avatar from the API server, caches it and
     updates the avatar icon."""
+
+    # How long to wait until we start downloading the avatar image?
+    INITIAL_WAIT = 30
+
+    # How long to wait between avatar download retries?
+    RETRY_WAIT = 60
+
+    # How many times we'll keep trying until giving up?
+    MAX_ATTEMPTS = 10
 
     def __init__(self, destination, avatar_object):
         super().__init__()
@@ -209,13 +218,9 @@ class AvatarDownloaderThread(threading.Thread):
         import time             # oh, I wish
         import subprocess
 
-        # Wait until everything else has been loaded
-        time.sleep(30)
+        time.sleep(self.INITIAL_WAIT)
 
-        # How many times we'll keep trying until giving up?
-        MAX_ATTEMPTS = 10
-
-        for attempt in range(0, MAX_ATTEMPTS):
+        for attempt in range(0, self.MAX_ATTEMPTS):
             try:
                 # Figure out the API server address
                 proc = subprocess.Popen(['puavo-resolve-api-server'],
@@ -231,9 +236,9 @@ class AvatarDownloaderThread(threading.Thread):
                 uri = server + '/v3/users/' + getuser() + '/profile.jpg'
 
                 # Then download the avatar image
-                logger.info('Downloading user avatar from "{2}", ' \
-                            'attempt {0}/{1}...'.
-                            format(attempt + 1, MAX_ATTEMPTS, uri))
+                logging.info('Downloading user avatar from "%s", ' \
+                             'attempt %d/%d...', uri, attempt + 1,
+                             self.MAX_ATTEMPTS)
 
                 start_time = time.clock()
 
@@ -263,37 +268,39 @@ class AvatarDownloaderThread(threading.Thread):
                 # us in stdout.
                 image = proc.stdout.read()
 
-                logger.info('Downloaded {0} bytes of avatar image data ' \
-                            'in {1:.1f} ms'.
-                            format(len(image),
-                                   (time.clock() - start_time) * 1000.0))
+                logging.info('Downloaded %d bytes of avatar image data in %s ms',
+                             len(image),
+                             '{0:.1f}'.format((time.clock() - start_time) * 1000.0))
 
                 # Wrap this in its own exception handler, so if it fails,
                 # we just return instead of redownloading the image
                 try:
+                    logging.info('Saving the avatar image to %s',
+                                 self.__destination)
                     name = path_join(self.__destination, 'avatar.jpg')
                     open(name, 'wb').write(image)
                     self.__avatar_object.load_avatar(name)
-                except Exception as e:
+                except Exception as exception:
                     # Why must everything fail?
-                    logger.warn('Failed to save the downloaded avatar ' \
-                                'image: {0}'.format(e))
-                    logger.warn('New avatar image not set')
+                    logging.warning('Failed to save the downloaded avatar ' \
+                                    'image: %s', str(exception))
+                    logging.warning('New avatar image not set')
 
-                logger.info('Avatar thread is exiting')
+                logging.info('Avatar thread is exiting')
                 return
-            except Exception as error:
-                logger.error('Could not download the user avatar: {0}'.
-                             format(error))
+            except Exception as exception:
+                logging.error('Could not download the user avatar: %s',
+                              str(exception))
 
             # Retry, if possible
-            if attempt < MAX_ATTEMPTS - 1:
-                logger.info('Retrying avatar downloading in 60 seconds...')
-                time.sleep(60)
+            if attempt < self.MAX_ATTEMPTS - 1:
+                logging.info('Retrying avatar downloading in %d seconds...',
+                             self.RETRY_WAIT)
+                time.sleep(self.RETRY_WAIT)
 
-        logger.error('Giving up on trying to download the user avatar, ' \
-                     'tried {0} times'.format(MAX_ATTEMPTS))
-        logger.info('Avatar thread is exiting')
+        logging.error('Giving up on trying to download the user avatar, ' \
+                      'tried %d times', self.MAX_ATTEMPTS)
+        logging.info('Avatar thread is exiting')
 
 
 # ------------------------------------------------------------------------------
@@ -314,8 +321,8 @@ class Sidebar:
 
         # Download a new copy of the user avatar image
         if self.__must_download_avatar:
-            logger.info('Launching a background thread for downloading ' \
-                        'the avatar image')
+            logging.info('Launching a background thread for downloading ' \
+                         'the avatar image')
 
             try:
                 self.__avatar_thread = \
@@ -326,8 +333,9 @@ class Sidebar:
                 self.__avatar_thread.daemon = True
 
                 self.__avatar_thread.start()
-            except Exception as e:
-                logger.error('Could not create a new thread: {0}'.format(e))
+            except Exception as exception:
+                logging.error('Could not create a new thread: %s',
+                              str(exception))
 
 
     # Digs up values for expanding variables in button arguments
@@ -347,17 +355,17 @@ class Sidebar:
 
         if SETTINGS.is_guest or SETTINGS.is_webkiosk:
             # Always use the default avatar for guests and webkiosk sessions
-            logger.info('Not loading avatar for a guest/webkiosk session')
+            logging.info('Not loading avatar for a guest/webkiosk session')
             avatar_image = default_avatar
             self.__must_download_avatar = False
         elif file_exists(existing_avatar):
-            logger.info('A previously-downloaded user avatar file exists, using it')
+            logging.info('A previously-downloaded user avatar file exists, using it')
             avatar_image = existing_avatar
         else:
             # We need to download this avatar image right away, use the
             # default avatar until the download is complete
-            logger.info('Not a guest/webkiosk session and no previously-' \
-                        'downloaded avatar available, using the default image')
+            logging.info('Not a guest/webkiosk session and no previously-' \
+                         'downloaded avatar available, using the default image')
             avatar_image = default_avatar
 
         if SETTINGS.is_guest or SETTINGS.is_webkiosk:
@@ -372,7 +380,7 @@ class Sidebar:
 
         # No profile editing for guest users
         if SETTINGS.is_guest or SETTINGS.is_webkiosk:
-            logger.info('Disabling the avatar button for guest user')
+            logging.info('Disabling the avatar button for guest user')
             self.__avatar.disable()
         else:
             self.__avatar.connect('clicked', self.__clicked_avatar_button)
@@ -415,8 +423,7 @@ class Sidebar:
         if not SETTINGS.is_webkiosk:
             y = self.__create_button(y, SB_SHUTDOWN)
 
-        logger.info('Support page URL: "{0}"'.
-                    format(SB_SUPPORT['command']['args']))
+        logging.info('Support page URL: "%s"', SB_SUPPORT['command']['args'])
 
 
     # Creates a sidebar button
@@ -497,7 +504,7 @@ class Sidebar:
                 height=700,
                 enable_plugins=True)   # probably need JS for this?
         except Exception as exception:
-            logger.error(str(exception))
+            logging.error(str(exception))
             self.__parent.error_message(
                 localize(STRINGS['sb_avatar_link_failed']),
                 str(exception))
@@ -515,7 +522,7 @@ class Sidebar:
                 height=700,
                 enable_plugins=True)    # markdown is used on the page, need JS
         except Exception as exception:
-            logger.error(str(exception))
+            logging.error(str(exception))
             self.__parent.error_message(
                 localize(STRINGS['sb_changelog_link_failed']),
                 str(exception))
@@ -536,7 +543,7 @@ class Sidebar:
                 arguments = ' '.join(arguments).strip()
 
             if len(arguments) == 0:
-                logger.error('Sidebar button without a command!')
+                logging.error('Sidebar button without a command!')
                 self.__parent.error_message(
                     'Nothing to do',
                     'This button has no commands associated with it.')
@@ -548,21 +555,20 @@ class Sidebar:
             if command.get('have_vars', False):
                 arguments = expand_variables(arguments, self.__variables)
 
-            logger.debug('Sidebar button arguments: "{0}"'.
-                         format(arguments))
+            logging.debug('Sidebar button arguments: "%s"', arguments)
 
             if command['type'] == 'command':
-                logger.info('Executing a command')
+                logging.info('Executing a command')
                 subprocess.Popen(['sh', '-c', arguments, '&'],
                                  stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE)
             elif command['type'] == 'url':
-                logger.info('Opening a URL')
+                logging.info('Opening a URL')
                 subprocess.Popen(['xdg-open', arguments],
                                  stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE)
             elif command['type'] == 'webwindow':
-                logger.info('Creating a webwindow')
+                logging.info('Creating a webwindow')
 
                 # Default settings
                 title = None
@@ -584,9 +590,9 @@ class Sidebar:
                     title=title,
                     width=width,
                     height=height)
-        except Exception as e:
-            logger.error('Could not process a sidebar button click!')
-            logger.error(e)
+        except Exception as exception:
+            logging.error('Could not process a sidebar button click!')
+            logging.error(str(exception))
             self.__parent.error_message(
                 localize(STRINGS['sb_button_failed']),
-                str(e))
+                str(exception))

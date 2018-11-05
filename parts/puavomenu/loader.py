@@ -6,13 +6,12 @@ from os.path import join as path_join, \
                     isfile as is_file, \
                     splitext as split_ext
 
-import traceback
+import logging
 
-import logger
 from constants import PROGRAM_TYPE_DESKTOP, PROGRAM_TYPE_CUSTOM, \
                       PROGRAM_TYPE_WEB, ICON_EXTENSIONS
 from menudata import Program, Menu, Category
-from utils import localize, is_empty
+from utils import localize, is_empty, log_elapsed_time
 from conditionals import is_hidden
 from settings import SETTINGS
 
@@ -67,7 +66,7 @@ def __convert_yaml_node(node):
             # - name:  (note the colon)
             params = {}
     else:
-        raise RuntimeError('Don\'t know what this is')
+        raise RuntimeError("Don't know what this is")
 
     return status, name, params
 
@@ -93,8 +92,8 @@ def __parse_yml_string(string, conditions):
     data = yaml.safe_load(string)
 
     if data is None or not isinstance(data, dict):
-        logger.warn('__parse_yml_string(): string produced no data, or the '
-                    'data is not a dict')
+        logging.warning('__parse_yml_string(): string produced no data, or the '
+                        'data is not a dict')
         return programs, menus, categories
 
     # data.get('xxx', []) will fail if the list following the key is
@@ -118,13 +117,13 @@ def __parse_yml_string(string, conditions):
             continue
 
         if not __is_valid(name):
-            logger.error('Program name "{0}" contains invalid characters, '
-                         'ignoring'.format(name))
+            logging.error('Program name "%s" contains invalid characters, '
+                          'ignoring', name)
             continue
 
         if name in programs:
-            logger.warn('Program "{0}" defined multiple times, ignoring '
-                        'duplicates'.format(name))
+            logging.warning('Program "%s" defined multiple times, ignoring '
+                            'duplicates', name)
             continue
 
         # "Reserve" the name so it's used even if we can't parse this
@@ -133,11 +132,11 @@ def __parse_yml_string(string, conditions):
         programs[name] = None
 
         # Figure out the type
-        prog_type = params.get('type', 'desktop')
+        prog_type = str(params.get('type', 'desktop'))
 
         if prog_type not in ('desktop', 'custom', 'web'):
-            logger.error('Unknown program type "{0}" for "{1}", '
-                         'ignoring definition'.format(prog_type, name))
+            logging.error('Unknown program type "%s" for "%s", '
+                          'ignoring definition', prog_type, name)
             continue
 
         p = Program()
@@ -163,22 +162,22 @@ def __parse_yml_string(string, conditions):
             p.title = localize(params['name'])
 
             if is_empty(p.title):
-                logger.error('Empty name given for "{0}"'.format(name))
+                logging.error('Empty name given for "%s"', name)
                 p.title = None
 
         if 'description' in params:
             p.description = localize(params['description'])
 
             if is_empty(p.description):
-                logger.warn('Ignoring empty description for program "{0}"'.
-                            format(name))
+                logging.warning('Ignoring empty description for program "%s"',
+                                name)
                 p.description = None
 
         if 'icon' in params:
             p.icon = str(params['icon'])
 
             if is_empty(p.icon):
-                logger.warn('Ignoring empty icon for "{0}"'.format(name))
+                logging.warning('Ignoring empty icon for "%s"', name)
                 p.icon = None
 
         p.keywords = __parse_list(params.get('keywords', []))
@@ -186,14 +185,14 @@ def __parse_yml_string(string, conditions):
         # Some per-type additional checks
         if p.type in (PROGRAM_TYPE_CUSTOM, PROGRAM_TYPE_WEB):
             if p.title is None:
-                logger.error('Custom program/web link "{0}" has no name at '
-                             'all, ignoring definition'.format(name))
+                logging.error('Custom program/web link "%s" has no name at '
+                              'all, ignoring definition', name)
                 continue
 
             if p.icon is None:
                 # this isn't fatal, it just looks really ugly
-                logger.warn('Custom program/web link "{0}" is missing an '
-                            'icon definition'.format(name))
+                logging.warning('Custom program/web link "%s" is missing an '
+                                'icon definition', name)
 
         # Load type-specific parameters
         if p.type == PROGRAM_TYPE_DESKTOP:
@@ -202,24 +201,24 @@ def __parse_yml_string(string, conditions):
                 p.command = str(params['command'])
 
                 if is_empty(p.command):
-                    logger.warn('Ignoring empty command override for desktop '
-                                'program "{0}"'.format(name))
+                    logging.warning('Ignoring empty command override for desktop '
+                                    'program "%s"', name)
                     p.command = None
 
         elif p.type == PROGRAM_TYPE_CUSTOM:
             if 'command' not in params or is_empty(params['command']):
-                logger.error('Custom program "{0}" has no command defined'
-                             '(or it\'s empty), ignoring command definition'.
-                             format(name))
+                logging.error("Custom program \"%s\" has no command defined"
+                              "(or it's empty), ignoring command definition",
+                              name)
                 continue
 
             p.command = str(params['command'])
 
         elif p.type == PROGRAM_TYPE_WEB:
             if ('url' not in params) or is_empty(params['url']):
-                logger.error('Web link "{0}" has no URL defined (or it\'s '
-                             'empty), ignoring link definition'.
-                             format(name))
+                logging.error("Web link \"%s\" has no URL defined (or it's "
+                              "empty), ignoring link definition",
+                              name)
                 continue
 
             p.command = str(params['url'])
@@ -237,13 +236,13 @@ def __parse_yml_string(string, conditions):
             continue
 
         if not __is_valid(name):
-            logger.error('Menu name "{0}" contains invalid characters, '
-                         'ignoring'.format(name))
+            logging.error('Menu name "%s" contains invalid characters, '
+                          'ignoring', name)
             continue
 
         if name in menus:
-            logger.error('Menu "{0}" defined multiple times, ignoring '
-                         'duplicates'.format(name))
+            logging.error('Menu "%s" defined multiple times, ignoring '
+                          'duplicates', name)
             continue
 
         # Like programs, reserve the name to prevent duplicates
@@ -262,31 +261,28 @@ def __parse_yml_string(string, conditions):
         m.title = localize(params.get('name', ''))
 
         if is_empty(m.title):
-            logger.error('Menu "{0}" has no name at all, menu ignored'.
-                         format(name))
+            logging.error('Menu "%s" has no name at all, menu ignored', name)
             continue
 
         if 'description' in params:
             m.description = localize(params['description'])
 
             if is_empty(m.description):
-                logger.warn('Ignoring empty description for menu "{0}"'.
-                            format(name))
+                logging.warning('Ignoring empty description for menu "%s"', name)
                 m.description = None
 
         if 'icon' in params:
             m.icon = str(params['icon'])
 
         if is_empty(m.icon):
-            logger.warn('Menu "{0}" has a missing/empty icon'.
-                        format(name))
+            logging.warning('Menu "%s" has a missing/empty icon', name)
             m.icon = None
 
         m.programs = __parse_list(params.get('programs', []))
 
         if is_empty(m.programs):
-            logger.warn('Menu "{0}" has no programs defined for it at all'.
-                        format(name))
+            logging.warning('Menu "%s" has no programs defined for it at all',
+                            name)
             m.programs = []
 
         # Actually use the reserved slot
@@ -302,13 +298,13 @@ def __parse_yml_string(string, conditions):
             continue
 
         if not __is_valid(name):
-            logger.error('Category name "{0}" contains invalid characters, '
-                         'ignoring'.format(name))
+            logging.error('Category name "%s" contains invalid characters, '
+                          'ignoring', name)
             continue
 
         if name in categories:
-            logger.error('Category "{0}" defined multiple times, ignoring '
-                         'duplicates'.format(name))
+            logging.error('Category "%s" defined multiple times, ignoring '
+                          'duplicates', name)
             continue
 
         # Again reserve the name to prevent duplicates
@@ -326,25 +322,25 @@ def __parse_yml_string(string, conditions):
         c.title = localize(params.get('name', ''))
 
         if is_empty(c.title):
-            logger.error('Category "{0}" has no name at all, '
-                         'category ignored'.format(name))
+            logging.error('Category "%s" has no name at all, '
+                          'category ignored', name)
             continue
 
         if 'position' in params:
             try:
                 c.position = int(params['position'])
             except ValueError:
-                logger.warn('Cannot interpret "{0}" as a position for '
-                            'category "{1}", defaulting to 0'.
-                            format(params["position"], name))
+                logging.warning('Cannot interpret "%s" as a position for '
+                                'category "%s", defaulting to 0',
+                                params["position"], name)
                 c.position = 0
 
         c.menus = __parse_list(params.get('menus', []))
         c.programs = __parse_list(params.get('programs', []))
 
         if is_empty(c.menus) and is_empty(c.programs):
-            logger.warn('Category "{0}" has no menus or programs defined '
-                        'for it at all'.format(name))
+            logging.warning('Category "%s" has no menus or programs defined '
+                            'for it at all', name)
 
         # Actually use the reserved slot
         categories[name] = c
@@ -381,14 +377,14 @@ def __load_dotdesktop_file(name):
             if is_empty(sect_name):
                 # Nothing in the spec says that empty section names are
                 # invalid, but what on Earth would we do with them?
-                logger.warn('Desktop file "{0}" contains an empty '
-                            'section name'.format(name))
+                logging.warning('Desktop file "%s" contains an empty '
+                                'section name', name)
                 section = None
 
             if sect_name in data:
                 # Section names must be unique
-                logger.warn('Desktop file "{0}" contains a '
-                            'duplicate section'.format(name))
+                logging.warning('Desktop file "%s" contains a '
+                                'duplicate section', name)
                 section = None
 
             data[sect_name] = {}
@@ -409,9 +405,9 @@ def __load_dotdesktop_file(name):
                 if key in section:
                     # The spec does, however, say that keys within a section
                     # must be unique
-                    logger.warn('Desktop file "{0}" contains duplicate '
-                                'keys within the same section'.
-                                format(name))
+                    logging.warning('Desktop file "%s" contains duplicate '
+                                    'keys ("%s") within the same section',
+                                    name, key)
                     continue
 
                 section[key] = value
@@ -438,33 +434,32 @@ def load_menu_data(source, desktop_dirs, conditions):
     total_start = time.clock()
     start_time = total_start
 
-    logger.info('Have {0} sources for menu data'.format(len(source)))
+    logging.info('Have %d sources for menu data', len(source))
 
     for n, s in enumerate(source):
         try:
             if s[0] == 'f':
-                logger.info('load_menu_data(): loading a file "{0}" for '
-                            'locale "{1}"...'.format(s[1], SETTINGS.language))
+                logging.info('load_menu_data(): loading a file "%s" for '
+                             'locale "%s"...', s[1], SETTINGS.language)
 
                 p, m, c = __parse_yml_file(s[1], conditions)
             elif s[0] == 's':
-                logger.info('load_menu_data(): loading a string for '
-                            'locale "{0}"...'.format(SETTINGS.language))
+                logging.info('load_menu_data(): loading a string for '
+                             'locale "%s"...', SETTINGS.language)
 
                 p, m, c = __parse_yml_string(s[1], conditions)
             else:
-                logger.error('Source type "{0}" is not valid, skipping'.
-                             format(s[0]))
+                logging.error('Source type "%s" is not valid, skipping', s[0])
                 continue
-        except Exception as e:
+        except Exception as exception:
             if s[0] == 'f':
-                logger.error('Could not load source file {0} ("{1}"): {2}'.
-                             format(n + 1, s[1], str(e)))
+                logging.error('Could not load source file %d ("%s"): %s',
+                              n + 1, s[1], str(exception))
             else:
-                logger.error('Could not load source string {0}: {1}'.
-                             format(n + 1, str(e)))
+                logging.error('Could not load source string %d: %s',
+                              n + 1, str(exception))
 
-            logger.traceback(traceback.format_exc())
+            logging.error(exception, exc_info=True)
             continue
 
         # IDs must be unique within a file, but not across files; a file
@@ -481,7 +476,7 @@ def load_menu_data(source, desktop_dirs, conditions):
     categories = {k: v for k, v in categories.items() if categories[k] is not None}
 
     end_time = time.clock()
-    logger.print_time('YAML loading time', start_time, end_time)
+    log_elapsed_time('YAML loading time', start_time, end_time)
 
     # --------------------------------------------------------------------------
     # Step 2: Load the .desktop files for desktop programs
@@ -489,7 +484,7 @@ def load_menu_data(source, desktop_dirs, conditions):
     start_time = time.clock()
 
     if is_empty(desktop_dirs):
-        logger.warn('No .desktop file search paths specified!')
+        logging.warning('No .desktop file search paths specified!')
 
     for i in programs:
         p = programs[i]
@@ -508,8 +503,7 @@ def load_menu_data(source, desktop_dirs, conditions):
                 break
 
         if dd_name is None:
-            logger.error('.desktop file for "{0}" not found'.
-                         format(p.name))
+            logging.error('.desktop file for "%s" not found', p.name)
             p.missing_desktop = True
             continue
 
@@ -518,16 +512,15 @@ def load_menu_data(source, desktop_dirs, conditions):
         # Try to load it
         try:
             desktop_data = __load_dotdesktop_file(dd_name)
-        except Exception as e:
-            logger.error('Could not load file "{0}": {1}'.
-                         format(dd_name, str(e)))
-            logger.traceback(traceback.format_exc())
+        except Exception as exception:
+            logging.error('Could not load file "%s":', dd_name)
+            logging.error(exception, exc_info=True)
             p.missing_desktop = True
             continue
 
         if 'Desktop Entry' not in desktop_data:
-            logger.error('Can\'t load "{0}" for "{1}": No [Desktop Entry] '
-                         'section in the file'.format(dd_name, i))
+            logging.error("Can't load \"%s\" for \"%s\": No [Desktop Entry] "
+                          "section in the file", dd_name, i)
             p.missing_desktop = True
             continue
 
@@ -550,13 +543,13 @@ def load_menu_data(source, desktop_dirs, conditions):
                     p.title = entry[key]
                 else:
                     # Last resort
-                    #logger.warn('Have to use "Name" entry for program "{0}"'.
-                    #            format(p.name))
+                    #logging.warning('Have to use "Name" entry for program "%s"'.
+                    #                p.name)
                     p.title = entry.get('Name', '')
 
             if is_empty(p.title):
-                logger.error('Empty name for program "{0}", program ignored'.
-                             format(p.name))
+                logging.error('Empty name for program "%s", program ignored',
+                              p.name)
                 p.missing_desktop = True
                 continue
 
@@ -568,9 +561,8 @@ def load_menu_data(source, desktop_dirs, conditions):
                 p.description = entry[key]
 
                 if is_empty(p.description):
-                    logger.warn('Empty comment specified for program "{0}" in '
-                                'the .desktop file "{1}"'.
-                                format(p.name, dd_name))
+                    logging.warning('Empty comment specified for program "%s" in '
+                                    'the .desktop file "%s"', p.name, dd_name)
                     p.comment = None
 
         if is_empty(p.keywords):
@@ -582,21 +574,21 @@ def load_menu_data(source, desktop_dirs, conditions):
 
         if p.icon is None:
             if 'Icon' not in entry:
-                logger.warn('Program "{0}" has no icon defined for it in the '
-                            '.desktop file "{1}"'.format(p.name, dd_name))
+                logging.warning('Program "%s" has no icon defined for it in the '
+                                '.desktop file "%s"', p.name, dd_name)
             else:
                 p.icon = entry.get('Icon', '')
 
         if is_empty(p.icon):
-            logger.warn('Program "{0}" has an empty/invalid icon name, will '
-                        'display incorrectly'.format(p.name))
+            logging.warning('Program "%s" has an empty/invalid icon name, will '
+                            'display incorrectly', p.name)
             p.icon = None
 
         if p.command is None:
             if 'Exec' not in entry or is_empty(entry['Exec']):
-                logger.warn('Program "{0}" has an empty or missing "Exec" '
-                            'line in the desktop file "{1}", program ignored'.
-                            format(p.name, dd_name))
+                logging.warning('Program "%s" has an empty or missing "Exec" '
+                                'line in the desktop file "%s", program ignored',
+                                p.name, dd_name)
                 p.missing_desktop = True
                 continue
 
@@ -623,7 +615,7 @@ def load_menu_data(source, desktop_dirs, conditions):
             p.icon_is_path = True
 
     end_time = time.clock()
-    logger.print_time('Desktop file parsing', start_time, end_time)
+    log_elapsed_time('Desktop file parsing', start_time, end_time)
 
     # --------------------------------------------------------------------------
     # Step 3: Convert textual references into actual object references and
@@ -651,8 +643,8 @@ def load_menu_data(source, desktop_dirs, conditions):
                     new_programs.append(programs[p])
                     programs[p].used = True
             else:
-                logger.error('Menu "{0}" references to a non-existent '
-                             'program "{1}"'.format(m, p))
+                logging.error('Menu "%s" references to a non-existent '
+                              'program "%s"', m, p)
 
         menu.programs = new_programs
 
@@ -671,8 +663,8 @@ def load_menu_data(source, desktop_dirs, conditions):
                     new_menus.append(menus[m])
                     menus[m].used = True
             else:
-                logger.error('Category "{0}" references to a non-existent '
-                             'menu "{1}"'.format(c, m))
+                logging.error('Category "%s" references to a non-existent '
+                              'menu "%s"', c, m)
 
         for p in cat.programs:
             if p in programs:
@@ -685,8 +677,8 @@ def load_menu_data(source, desktop_dirs, conditions):
                     new_programs.append(programs[p])
                     programs[p].used = True
             else:
-                logger.error('Category "{0}" references to a non-existent '
-                             'program "{1}"'.format(c, p))
+                logging.error('Category "%s" references to a non-existent '
+                              'program "%s"', c, p)
 
         cat.menus = new_menus
         cat.programs = new_programs
@@ -706,7 +698,7 @@ def load_menu_data(source, desktop_dirs, conditions):
         p = programs[i]
 
         if not p.hidden and not p.used:
-            logger.warn('Program "{0}" defined but not used'.format(p.name))
+            logging.warning('Program "%s" defined but not used', p.name)
 
         if p.used and not p.hidden:
             num_used_programs += 1
@@ -715,7 +707,7 @@ def load_menu_data(source, desktop_dirs, conditions):
         m = menus[i]
 
         if not m.hidden and not m.used:
-            logger.warn('Menu "{0}" defined but not used'.format(m.name))
+            logging.warning('Menu "%s" defined but not used', m.name)
 
         if m.used and not m.hidden:
             num_used_menus += 1
@@ -752,21 +744,20 @@ def load_menu_data(source, desktop_dirs, conditions):
         category_index.append(c[1])
 
     end_time = time.clock()
-    logger.print_time('Menu data building time', start_time, end_time)
+    log_elapsed_time('Menu data building time', start_time, end_time)
 
     # --------------------------------------------------------------------------
     # Done
 
-    logger.info(
-        'Have {n_progs} programs ({n_used_progs} actually used), '
-        '{n_menus} menus ({n_used_menus} actually used) and '
-        '{n_cats} categories ({n_used_cats} actually used)'.
-        format(n_progs=len(programs), n_used_progs=num_used_programs,
-               n_menus=len(menus), n_used_menus=num_used_menus,
-               n_cats=len(categories), n_used_cats=num_used_categories))
+    logging.info(
+        'Have %d programs (%d actually used), '
+        '%d menus (%d actually used) and '
+        '%d categories (%d actually used)',
+        len(programs), num_used_programs,
+        len(menus), num_used_menus,
+        len(categories), num_used_categories)
 
     end_time = time.clock()
-    logger.print_time('Total menu parsing time',
-                      total_start, end_time)
+    log_elapsed_time('Total menu parsing time', total_start, end_time)
 
     return programs, menus, categories, category_index

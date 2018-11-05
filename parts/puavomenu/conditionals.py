@@ -4,9 +4,11 @@ from os.path import exists as path_exists, \
                     isfile as is_file, \
                     getsize as get_size
 
-import os, re, stat
+import os
+import re
+import stat
 
-import logger
+import logging
 
 from utils import is_empty
 
@@ -34,8 +36,8 @@ def __file_check(name, params):
                 size = int(params['size'])
 
                 if size < 0:
-                    logger.error('Negative file size specified in '
-                                 'conditional "{0}"'.format(name))
+                    logging.error('Negative file size specified in '
+                                  'conditional "%s"', name)
                     return (False, False)
 
                 if get_size(params['name']) != size:
@@ -44,8 +46,8 @@ def __file_check(name, params):
             if 'hash' in params:
                 # SHA256 hash check
                 if len(params['hash']) != 64:
-                    logger.error('Invalid hash (wrong size) specified in '
-                                 'conditional "{0}"'.format(name))
+                    logging.error('Invalid hash (wrong size) specified in '
+                                  'conditional "%s"', name)
                     return (False, False)
 
                 from hashlib import sha256
@@ -108,8 +110,8 @@ def __env_var(name, params):
             wanted = params['value']
             got = os.environ[params['name']]
 
-            logger.debug('env_var "{0}": wanted="{1}" got="{2}" result={3}'.
-                         format(params['name'], wanted, got, wanted == got))
+            logging.debug('env_var "%s": wanted="%s" got="%s" result=%r',
+                          params['name'], wanted, got, wanted == got)
 
             if re.search(wanted, got) is None:
                 return (True, False)
@@ -144,8 +146,8 @@ def __puavo_conf(name, params):
             wanted = params['value']
             got = proc.stdout.read().decode('utf-8').strip()
 
-            logger.debug('puavo_conf "{0}": wanted="{1}" got="{2}" result={3}'.
-                         format(params['name'], wanted, got, wanted == got))
+            logging.debug('puavo_conf "%s": wanted="%s" got="%s" result=%r',
+                          params['name'], wanted, got, wanted == got)
 
             if re.search(wanted, got) is None:
                 return (True, False)
@@ -159,7 +161,7 @@ def __constant(name, params):
     """Returns a constant true/false value. Defaults to true if no value
     has been specified. Used mostly in debugging/development."""
 
-    return (True, params.get('value', True))
+    return (True, bool(params.get('value', True)))
 
 
 # List of known conditions and their evaluator functions
@@ -179,69 +181,70 @@ def evaluate_file(file_name):
     """Evaluates the conditionals listed in a file and returns their
     results in a dict."""
 
-    logger.info('Loading a conditionals file "{0}"'.format(file_name))
+    logging.info('Loading a conditionals file "%s"', file_name)
 
     results = {}
 
     if not is_file(file_name):
-        logger.error('File "{0}" does not exist'.format(file_name))
+        logging.error('File "%s" does not exist', file_name)
         return results
 
     try:
         from yaml import safe_load as yaml_safe_load
         data = yaml_safe_load(open(file_name, 'r', encoding='utf-8').read())
-    except Exception as e:
-        logger.error(e)
+    except Exception as exception:
+        logging.error(str(exception))
         return results
 
     for cond in (data or []):
         if 'name' not in cond:
-            logger.error('Ignoring a conditional without a name '
-                         '(missing the "name" key)')
+            logging.error('Ignoring a conditional without a name '
+                          '(missing the "name" key)')
             continue
 
         name = cond['name']
 
         if name in results:
-            logger.error('Duplicate conditional "{0}", skipping'.
-                         format(name))
+            logging.error('Duplicate conditional "%s", skipping', name)
             continue
 
         if 'function' not in cond:
-            logger.error('Conditional "{0}" has no function defined, skipping'.
-                         format(name))
+            logging.error('Conditional "%s" has no function defined, skipping',
+                          name)
             continue
 
         function = cond['function']
 
         if function not in __FUNCTIONS:
-            logger.error('Conditional "{0}" has an unknown function "{1}", '
-                         'skipping'.format(name, function))
+            logging.error('Conditional "%s" has an unknown function "%s", '
+                          'skipping', name, function)
             continue
 
         if ('params' not in cond) or (cond['params'] is None):
-            logger.error('Conditional "{0}" has no "params" block, skipping'.
-                         format(name))
+            logging.error('Conditional "%s" has no "params" block, skipping',
+                          name)
             continue
+
+        params = cond['params'][0]
 
         # Check the existence of a "name" parameter for all functions
         # except constants
-        if 'name' not in cond['params'][0] and \
-           __FUNCTIONS[function] is not __constant:
-            logger.error('Conditional "{0}" is missing a required '
-                         'parameter "name"'.format(name))
-            continue
+        if __FUNCTIONS[function] is not __constant:
+            if ('name' not in params) or (params['name'] is None):
+                logging.error('Conditional "%s" is missing a required '
+                              'parameter "name"', name)
+                continue
 
         try:
-            results[name] = __FUNCTIONS[function](name, cond['params'][0])
-        except Exception as e:
+            results[name] = __FUNCTIONS[function](name, params)
+        except Exception as exception:
             # Don't let a single conditional failure destroy
             # everything in this file
-            logger.error(e)
+            logging.error(str(exception))
 
     for k, v in results.items():
-        logger.debug('Conditional: Name="{0}", OK={1}, Result={2}'.
-                     format(k, v[0], v[1]))
+        logging.debug('Conditional: Name="%s", OK=%r, Result=%r',
+                      k, v[0], v[1])
 
     return results
 
@@ -251,8 +254,8 @@ def is_hidden(conditions, cond_string, name):
     visible."""
 
     if is_empty(cond_string):
-        logger.warn('Empty conditional in "{0}", assuming it\'s visible'.
-                    format(name))
+        logging.warning('Empty conditional in "%s", assuming it\'s visible',
+                        name)
         return False
 
     for cond in cond_string.strip().split(', '):
@@ -265,20 +268,19 @@ def is_hidden(conditions, cond_string, name):
             wanted = False
 
         if cond not in conditions:
-            logger.error('Undefined condition "{0}" in "{1}"'.
-                         format(cond, name))
+            logging.error('Undefined condition "%s" in "%s"', cond, name)
             continue
 
         state = conditions[cond][1]
 
         if not conditions[cond][0]:
-            logger.warn('Conditional "{0}" is in indeterminate state, '
-                        'assuming it\'s True'.format(name))
+            logging.warning('Conditional "%s" is in indeterminate state, '
+                            'assuming it\'s True', name)
             state = True
 
         if state != wanted:
-            logger.info('"{0}" is hidden by conditional "{1}"'.
-                        format(name, original))
+            logging.info('"%s" is hidden by conditional "%s"',
+                         name, original)
             return True
 
     return False

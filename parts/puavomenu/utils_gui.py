@@ -119,12 +119,14 @@ def create_panel_link(program):
     to handle exceptions if you call this!"""
 
     from gi.repository import GLib, Gio
-    import logger
+    import logging
 
-    desktop_name = program.original_desktop_file \
-        if program.original_desktop_file else '{0}.desktop'.format(program.name)
+    if program.original_desktop_file:
+        desktop_name = program.original_desktop_file
+    else:
+        desktop_name = program.name + '.desktop'
 
-    logger.debug('Desktop file name is "{0}"'.format(desktop_name))
+    logging.debug('Desktop file name is "%s"', desktop_name)
 
     SCHEMA = 'org.gnome.shell'
     KEY = 'favorite-apps'
@@ -134,8 +136,8 @@ def create_panel_link(program):
     panel_faves = gsettings.get_value(KEY).unpack()
 
     if desktop_name in panel_faves:
-        logger.info('Desktop file "{0}" is already in the panel, ' \
-                    'doing nothing'.format(desktop_name))
+        logging.info('Desktop file "%s" is already in the panel, ' \
+                     'doing nothing', desktop_name)
         return
 
     if not program.original_desktop_file:
@@ -143,10 +145,7 @@ def create_panel_link(program):
         # create it manually.
         from os import environ
         from os.path import join as path_join
-
-        from constants import PROGRAM_TYPE_DESKTOP, \
-                              PROGRAM_TYPE_CUSTOM, \
-                              PROGRAM_TYPE_WEB
+        from constants import PROGRAM_TYPE_WEB
 
         name = path_join(environ['HOME'],
                          '.local',
@@ -154,8 +153,8 @@ def create_panel_link(program):
                          'applications',
                          desktop_name)
 
-        logger.debug('Creating a local .desktop file for "{0}", '
-                     'name="{1}"'.format(program.name, name))
+        logging.debug('Creating a local .desktop file for "%s", '
+                      'name="%s"', program.name, name)
 
         with open(name, 'w', encoding='utf-8') as out:
             out.write('[Desktop Entry]\n')
@@ -184,4 +183,4 @@ def create_panel_link(program):
     # Add the new .desktop file to the list
     panel_faves.append(desktop_name)
     gsettings.set_value(KEY, GLib.Variant.new_strv(panel_faves))
-    logger.info('Panel icon created')
+    logging.info('Panel icon created')
