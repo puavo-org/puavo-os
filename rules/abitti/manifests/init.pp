@@ -13,6 +13,10 @@ class abitti {
       require => File['/usr/local/lib/puavo-trigger-abitti-updates'],
       source  => 'puppet:///modules/abitti/puavo-trigger-abitti-updates.service';
 
+    '/usr/local/bin/puavo-download-abitti-usb-stick-images':
+      mode   => '0755',
+      source => 'puppet:///modules/abitti/puavo-download-abitti-usb-stick-images';
+
     '/usr/local/lib/puavo-trigger-abitti-updates':
       mode    => '0755',
       require => File['/usr/local/sbin/puavo-update-abitti-image'],
