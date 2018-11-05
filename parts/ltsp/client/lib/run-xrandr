@@ -158,7 +158,14 @@ end
 
 def apply_custom_settings(xrandr_parsed_args_list)
   xrandr_parsed_args_list.each do |xrandr_parsed_args|
-    run_xrandr(xrandr_parsed_args)
+    # Support sleeping a bit in case xrandr settings should not be done
+    # all at once.
+    if xrandr_parsed_args[0] == 'sleep' \
+         && xrandr_parsed_args[1].kind_of?(String) then
+      sleep( xrandr_parsed_args[1].to_i )
+    else
+      run_xrandr(xrandr_parsed_args)
+    end
   end
 end
 
