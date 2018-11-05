@@ -7,8 +7,9 @@ puavo_usb_factory_dir=~/.puavo/usb-factory
 abitti_images_dir="${puavo_usb_factory_dir}/Abitti"
 incoming_dir="${abitti_images_dir}/incoming"
 
-abitti_version_path="${abitti_images_dir}/VERSION"
 download_status_path="${abitti_images_dir}/DOWNLOAD_STATUS"
+latest_abitti_filename_path="${abitti_images_dir}/LATEST_IMAGE"
+latest_abitti_version_path="${abitti_images_dir}/VERSION"
 
 cleanup() {
   if grep 'in progress' "$download_status_path" 2>/dev/null; then
@@ -20,6 +21,15 @@ trap cleanup 0 INT TERM
 
 logmsg() {
   logger -s -t puavo-download-abitti-usb-stick-images "$@" || true
+}
+
+set_latest_image() {
+  echo "abitti-v${1}.usbimg" > "${latest_abitti_filename_path}.tmp" || return 1
+  echo "$1" > "${latest_abitti_version_path}.tmp" || return 1
+  mv "${latest_abitti_filename_path}.tmp" "$latest_abitti_filename_path" \
+    || return 1
+  mv "${latest_abitti_version_path}.tmp" "$latest_abitti_version_path" \
+    || return 1
 }
 
 download_abitti() {
@@ -38,11 +48,11 @@ download_abitti() {
     return 1
   fi
 
-  current_version=$(cat "${abitti_images_dir}/VERSION" 2>/dev/null) || true
-  if [ -n "$current_version" ]; then
+  latest_image_name=$(cat "$latest_abitti_filename_path" 2>/dev/null) || true
+  if [ -n "$latest_image_name" ]; then
     find "$abitti_images_dir" -name '*.usbimg' \
       -and ! '(' -name "abitti-v${abitti_version}.usbimg" \
-                 -or -name "abitti-v${current_version}.usbimg" ')' \
+                 -or -name "$latest_image_name" ')' \
       -and -atime +60 \
       -exec rm -f '{}' \;
   else
@@ -55,8 +65,7 @@ download_abitti() {
   abitti_image_path="${abitti_images_dir}/abitti-v${abitti_version}.usbimg"
 
   if [ -e "$abitti_image_path" ]; then
-    echo "$abitti_version" > "${abitti_version_path}.tmp"  || return 1
-    mv "${abitti_version_path}.tmp" "$abitti_version_path" || return 1
+    set_latest_image "$abitti_version" || return 1
     return 0
   fi
 
@@ -97,8 +106,7 @@ download_abitti() {
   mv "${incoming_dir}/koe-etcher/koe.dd" "$abitti_image_path" \
     || return 1
 
-  echo "$abitti_version" > "${abitti_version_path}.tmp"  || return 1
-  mv "${abitti_version_path}.tmp" "$abitti_version_path" || return 1
+  set_latest_image "$abitti_version" || return 1
 
   rm -rf "$incoming_dir"
 }
