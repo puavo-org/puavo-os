@@ -134,8 +134,12 @@ class PuavoMenu(Gtk.Window):
 
         # Background image for top-level menus
         try:
-            image_name = 'folder_dark.png' if SETTINGS.dark_theme else 'folder.png'
+            if SETTINGS.dark_theme:
+                image_name = 'folder_dark.png'
+            else:
+                image_name = 'folder.png'
 
+            # WARNING: Hardcoded image size!
             self.__menu_background = \
                 load_image_at_size(SETTINGS.res_dir + image_name, 150, 110)
         except Exception as exception:
@@ -921,7 +925,7 @@ class PuavoMenu(Gtk.Window):
 
         num_pages = self.__category_buttons.get_n_pages()
 
-        for i in range(0, num_pages):
+        for index in range(0, num_pages):
             self.__category_buttons.remove_page(-1)
 
         self.__clear_search_field()

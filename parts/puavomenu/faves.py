@@ -22,9 +22,9 @@ def _save_use_counts(all_programs):
     out = ''
 
     # Whitespace is not permitted in program IDs, so this works
-    for name, p in all_programs.items():
-        if p.uses > 0:
-            out += '{0} {1}\n'.format(name, p.uses)
+    for name, program in all_programs.items():
+        if program.uses > 0:
+            out += '{0} {1}\n'.format(name, program.uses)
 
     try:
         from os.path import join as path_join
@@ -91,8 +91,8 @@ class FavesList(Gtk.ScrolledWindow):
     def clear(self):
         """Removes all buttons from the faves list."""
 
-        for b in self.__fave_buttons:
-            b.destroy()
+        for btn in self.__fave_buttons:
+            btn.destroy()
 
         self.__fave_buttons = []
         self.__prev_fave_ids = []
@@ -132,19 +132,20 @@ class FavesList(Gtk.ScrolledWindow):
 
         self.__prev_fave_ids = new_ids
 
-        for b in self.__fave_buttons:
-            b.destroy()
+        for btn in self.__fave_buttons:
+            btn.destroy()
 
         self.__fave_buttons = []
 
-        for i, f in enumerate(faves):
-            p = all_programs[f[0]]
+        for index, fave in enumerate(faves):
+            program = all_programs[fave[0]]
             # use self.__parent as the parent, so popup menu handlers
             # will call the correct methods from the main window class
-            button = ProgramButton(self.__parent, p.title, p.icon, p.description,
-                                   data=p, is_fave=True)
+            button = ProgramButton(self.__parent, program.title, program.icon,
+                                   program.description, data=program,
+                                   is_fave=True)
             button.connect('clicked', self.__parent.clicked_program_button)
             self.__fave_buttons.append(button)
-            self.__icons.put(button, i * PROGRAM_BUTTON_WIDTH, 0)
+            self.__icons.put(button, index * PROGRAM_BUTTON_WIDTH, 0)
 
         self.__icons.show_all()

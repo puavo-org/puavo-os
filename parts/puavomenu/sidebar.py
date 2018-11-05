@@ -444,12 +444,12 @@ class Sidebar:
 
     # Creates a special sidebar separator
     def __create_separator(self, y):
-        SEP_PADDING = 20
+        SEP_EDGES_PADDING = 20
 
         create_separator(container=self.container,
-                         x=SEP_PADDING,
+                         x=SEP_EDGES_PADDING,
                          y=y + MAIN_PADDING,
-                         w=SIDEBAR_WIDTH - SEP_PADDING * 2,
+                         w=SIDEBAR_WIDTH - SEP_EDGES_PADDING * 2,
                          h=-1,
                          orientation=Gtk.Orientation.HORIZONTAL)
 
@@ -476,7 +476,7 @@ class Sidebar:
         hostname_label.set_alignment(0.5, 0.5)
         hostname_label.set_use_markup(True)
 
-        # "big" and "small" are not good sizes, we need to be explicit
+        # FIXME: "big" and "small" are not good sizes, we need to be explicit
         hostname_label.set_markup(
             '<big>{0}</big>\n<small><a href="{3}" title="{4}">{1}</a> ({2})</small>'.
             format(get_file_contents('/etc/puavo/hostname'),
