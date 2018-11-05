@@ -1251,17 +1251,7 @@ class PuavoMenu(Gtk.Window):
             s = ''
 
             for k, v in self.__conditions.items():
-                if not v[0]:
-                    # highlight indeterminate conditionals
-                    s += '<span foreground="red">'
-
-                s += '{0}: usable={1} value={2}'. \
-                     format(k, str(v[0]), str(v[1]))
-
-                if not v[0]:
-                    s += '</span>'
-
-                s += '\n'
+                s += '"{0}" = "{1}"\n'.format(k, v)
 
             self.error_message('Conditionals', s)
 

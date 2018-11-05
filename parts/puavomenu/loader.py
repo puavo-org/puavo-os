@@ -152,7 +152,7 @@ def __parse_yml_string(string, conditions):
 
         # Conditionally hidden?
         if 'condition' in params and \
-                is_hidden(conditions, params['condition'], name):
+                is_hidden(conditions, params['condition'], name, 'program'):
             p.hidden = True
             programs[name] = p
             continue
@@ -253,7 +253,7 @@ def __parse_yml_string(string, conditions):
 
         # Conditionally hidden?
         if 'condition' in params and \
-                is_hidden(conditions, params['condition'], name):
+                is_hidden(conditions, params['condition'], name, 'menu'):
             m.hidden = True
             menus[name] = m
             continue
@@ -314,7 +314,7 @@ def __parse_yml_string(string, conditions):
         c.name = name
 
         if 'condition' in params and \
-                is_hidden(conditions, params['condition'], name):
+                is_hidden(conditions, params['condition'], name, 'category'):
             c.hidden = True
             categories[name] = c
             continue

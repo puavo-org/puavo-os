@@ -1,176 +1,186 @@
 # Conditional evaluators
 
-from os.path import exists as path_exists, \
-                    isfile as is_file, \
-                    getsize as get_size
-
 import os
+import os.path
 import re
-import stat
-
 import logging
 
-from utils import is_empty
+import utils
+
 
 # ------------------------------------------------------------------------------
-# Evaluators
-
-def __file_check(name, params):
-    """Checks if a file exists/does not exist. Optional checks include
-    size, hash and content checks."""
-
-    state = path_exists(params['name'])
-    present = params.get('present', True)
-
-    if present == state:
-        if present:
-            # Make sure it's not a directory
-            s = os.stat(params['name'])
-
-            if stat.S_ISDIR(s.st_mode):
-                return (True, False)
-
-            # The file exists, do additional checks?
-            if 'size' in params:
-                # Check size
-                size = int(params['size'])
-
-                if size < 0:
-                    logging.error('Negative file size specified in '
-                                  'conditional "%s"', name)
-                    return (False, False)
-
-                if get_size(params['name']) != size:
-                    return (True, False)
-
-            if 'hash' in params:
-                # SHA256 hash check
-                if len(params['hash']) != 64:
-                    logging.error('Invalid hash (wrong size) specified in '
-                                  'conditional "%s"', name)
-                    return (False, False)
-
-                from hashlib import sha256
-                h = sha256()
-
-                with open(params['name'], 'rb') as f:
-                    while True:
-                        data = f.read(4096)
-
-                        if len(data) == 0:
-                            break
-
-                        h.update(data)
-
-                if params['hash'] != h.hexdigest():
-                    return (True, False)
-
-            if 'contents' in params:
-                # raw contents check
-                from base64 import b64encode
-
-                if b64encode(open(params['name'], 'rb').read()) != \
-                       bytes(params['contents'], 'ascii'):
-                    return (True, False)
-
-        return (True, True)
-
-    return (True, False)
+# Evaluator classes
 
 
-def __dir_check(name, params):
-    """Checks if a directory exists/does not exist."""
+class Conditional:
+    """Base conditional class."""
 
-    state = path_exists(params['name'])
-    present = params.get('present', True)
+    def __init__(self, name):
+        # This is the conditional (our) name
+        self.name = name
 
-    if present == state:
-        if present:
-            # It exists, make sure it really is a directory
-            s = os.stat(params['name'])
+        # This is the name of the thing we're checking for
+        self.target_name = None
 
-            if not stat.S_ISDIR(s.st_mode):
-                return (True, False)
-
-        return (True, True)
-
-    return (True, False)
+        # Parameters
+        self.params = None
 
 
-def __env_var(name, params):
-    """Checks that an environment variable has been defined (or not)
-    and optionally checks its value."""
+    def parse_params(self, params):
+        """Parses the required 'name' parameter from the params block."""
 
-    state = True if params['name'] in os.environ else False
-    present = params.get('present', True)
+        # By default, the "name" parameter is the only required parameter
+        if ('name' not in params) or utils.is_empty(params['name']):
+            logging.error('Conditional "%s" is missing a required '
+                          'parameter "name" in the params block', self.name)
+            return False
 
-    if present == state:
-        if present and 'value' in params:
-            # content check
-            wanted = params['value']
-            got = os.environ[params['name']]
+        # Ensure the name is a string
+        if not isinstance(params['name'], str):
+            logging.error('Conditional "%s" has an invalid name "%s" in '
+                          'the params block ', self.name, params['name'])
+            return False
 
-            logging.debug('env_var "%s": wanted="%s" got="%s" result=%r',
-                          params['name'], wanted, got, wanted == got)
+        self.target_name = params['name']
 
-            if re.search(wanted, got) is None:
-                return (True, False)
+        self.params = params
 
-        return (True, True)
-
-    return (True, False)
+        return True
 
 
-def __puavo_conf(name, params):
-    """Puavo-conf variable presence (and optionally content) check."""
+    def evaluate(self):
+        """Evaluates the conditional."""
 
-    import subprocess
-
-    proc = subprocess.Popen(['puavo-conf', params['name']],
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE)
-    proc.wait()
-
-    state = True
-    present = params.get('present', True)
-
-    if proc.returncode == 1:
-        # Assume the value does not exist. We cannot distinguish
-        # between failed puavo-conf calls and unknown/mistyped
-        # puavoconf variables.
-        state = False
-
-    if present == state:
-        if 'value' in params:
-            # content check
-            wanted = params['value']
-            got = proc.stdout.read().decode('utf-8').strip()
-
-            logging.debug('puavo_conf "%s": wanted="%s" got="%s" result=%r',
-                          params['name'], wanted, got, wanted == got)
-
-            if re.search(wanted, got) is None:
-                return (True, False)
-
-        return (True, True)
-
-    return (True, False)
+        # Nothing happens by default
+        return False
 
 
-def __constant(name, params):
-    """Returns a constant true/false value. Defaults to true if no value
-    has been specified. Used mostly in debugging/development."""
+class EnvVar(Conditional):
+    """Checks environment variables."""
 
-    return (True, bool(params.get('value', True)))
+    def __init__(self, name):
+        super().__init__(name)
+        self.present = True     # assume envvars are present by default
+        self.value = None
 
 
-# List of known conditions and their evaluator functions
+    def parse_params(self, params):
+        if not super().parse_params(params):
+            return False
+
+        if 'present' in self.params:
+            self.present = bool(params.get('present', True))
+
+        if 'value' in self.params:
+            self.value = self.params['value']
+
+            # Must allow empty values here!
+            if not isinstance(self.value, str):
+                logging.error('Conditional "%s" has invalid "value" '
+                              'parameter', self.name)
+                return False
+
+        return True
+
+
+    def evaluate(self):
+        # Is the variable present?
+        present = True if self.target_name in os.environ else False
+
+        if self.present != present:
+            return False
+
+        if not present:
+            # No value checks for variables that shouldn't exist
+            return True
+
+        if self.value is None:
+            # No value specified, so the value is present, but we don't
+            # care about its value
+            return True
+
+        # Is the value correct?
+        value = os.environ[self.target_name]
+
+        if re.search(self.value, value) is None:
+            return False
+
+        return True
+
+# Inherit from EnvVar so we get its parse_params() method. These two
+# have the same parameters.
+class PuavoConf(EnvVar):
+    """Checks puavo-conf variables."""
+
+    def __init__(self, name):
+        super().__init__(name)
+        self.present = True     # assume puavo-conf variables are present by default
+        self.value = None
+
+
+    def evaluate(self):
+        import subprocess
+
+        try:
+            proc = subprocess.Popen(['puavo-conf', self.target_name],
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
+            proc.wait()
+
+            if proc.returncode == 1:
+                present = False
+                value = None
+            else:
+                present = True
+                value = proc.stdout.read().decode('utf-8').strip()
+        except Exception as exception:
+            logging.error('PuavoConf::evaluate(): puavo-conf failed:')
+            logging.error(str(exception))
+            return False
+
+        # Is the variable present?
+        if self.present != present:
+            return False
+
+        if not present:
+            # No value checks for variables that shouldn't exist
+            return True
+
+        if self.value is None:
+            # No value specified, so the value is present, but we don't
+            # care about its value
+            return True
+
+        # Is the value correct?
+        if re.search(self.value, value) is None:
+            return False
+
+        return True
+
+
+class Const(Conditional):
+    """A constant. Always returns true/false. Used primarily during development
+    and debugging. Defaults to True if no value has been specified."""
+
+    def __init__(self, name):
+        super().__init__(name)
+        self.expected = False
+
+
+    def parse_params(self, params):
+        self.expected = bool(params.get('value', True))
+        return True
+
+
+    def evaluate(self):
+        return self.expected
+
+
+# List of known conditions and their evaluator classes
 __FUNCTIONS = {
-    'file_check': __file_check,
-    'dir_check': __dir_check,
-    'env_var': __env_var,
-    'puavo_conf': __puavo_conf,
-    'constant': __constant,
+    'env_var': EnvVar,
+    'puavo_conf': PuavoConf,
+    'constant': Const,
 }
 
 
@@ -185,7 +195,7 @@ def evaluate_file(file_name):
 
     results = {}
 
-    if not is_file(file_name):
+    if not os.path.isfile(file_name):
         logging.error('File "%s" does not exist', file_name)
         return results
 
@@ -197,90 +207,113 @@ def evaluate_file(file_name):
         return results
 
     for cond in (data or []):
-        if 'name' not in cond:
-            logging.error('Ignoring a conditional without a name '
-                          '(missing the "name" key)')
-            continue
-
-        name = cond['name']
-
-        if name in results:
-            logging.error('Duplicate conditional "%s", skipping', name)
-            continue
-
-        if 'function' not in cond:
-            logging.error('Conditional "%s" has no function defined, skipping',
-                          name)
-            continue
-
-        function = cond['function']
-
-        if function not in __FUNCTIONS:
-            logging.error('Conditional "%s" has an unknown function "%s", '
-                          'skipping', name, function)
-            continue
-
-        if ('params' not in cond) or (cond['params'] is None):
-            logging.error('Conditional "%s" has no "params" block, skipping',
-                          name)
-            continue
-
-        params = cond['params'][0]
-
-        # Check the existence of a "name" parameter for all functions
-        # except constants
-        if __FUNCTIONS[function] is not __constant:
-            if ('name' not in params) or (params['name'] is None):
-                logging.error('Conditional "%s" is missing a required '
-                              'parameter "name"', name)
+        try:
+            # Check the conditional definition
+            if not isinstance(cond, dict):
+                logging.error('Skipping an invalid conditional definition "%s"',
+                              str(cond))
                 continue
 
-        try:
-            results[name] = __FUNCTIONS[function](name, params)
+            # Check the conditional name
+            if 'name' not in cond:
+                logging.error('Ignoring a conditional without a name')
+                continue
+
+            name = cond['name']
+
+            if (not isinstance(name, str)) or utils.is_empty(name):
+                logging.error('Ignoring a conditional with empty/invalid name '
+                              '("%s" is not valid)', name)
+                continue
+
+            if name in results:
+                logging.error('Duplicate conditional "%s", skipping', name)
+                continue
+
+            # Check the function name
+            if 'function' not in cond:
+                logging.error('Conditional "%s" has no function defined, skipping',
+                              name)
+                continue
+
+            function = cond['function']
+
+            if (not isinstance(function, str)) or utils.is_empty(function):
+                logging.error('Ignoring a conditional with empty/invalid function '
+                              '("%s" is not valid)', function)
+                continue
+
+            if function not in __FUNCTIONS:
+                logging.error('Conditional "%s" has an unknown function "%s", '
+                              'skipping', name, function)
+                continue
+
+            # Check the params block
+            if ('params' not in cond) or (cond['params'] is None):
+                logging.error('Conditional "%s" has no "params" block, skipping',
+                              name)
+                continue
+
+            params = cond['params'][0]
+
+            if (not isinstance(params, dict)) or utils.is_empty(params):
+                logging.error('Conditional "%s" invalid/empty params block, '
+                              'skipping', name)
+                continue
+
+            # Evaluate and store
+            cond = __FUNCTIONS[function](name)
+
+            if not cond.parse_params(params):
+                continue
+
+            results[name] = cond.evaluate()
         except Exception as exception:
             # Don't let a single conditional failure destroy
             # everything in this file
             logging.error(str(exception))
+            return results
 
-    for k, v in results.items():
-        logging.debug('Conditional: Name="%s", OK=%r, Result=%r',
-                      k, v[0], v[1])
+    for key, value in results.items():
+        logging.debug('Conditional: Name="%s", Result=%r', key, value)
 
     return results
 
 
-def is_hidden(conditions, cond_string, name):
+def is_hidden(conditions, cond_string, name, item_type=None):
     """Returns true if the conditionals say the item should not be
     visible."""
 
-    if is_empty(cond_string):
-        logging.warning('Empty conditional in "%s", assuming it\'s visible',
-                        name)
+    if not item_type:
+        item_type = ''
+    else:
+        # add whitespace at the end so messages look nice
+        item_type = item_type + ' '
+
+    if utils.is_empty(cond_string):
+        logging.warning('Empty conditional in %s"%s", assuming it\'s visible',
+                        item_type, name)
         return False
 
+    # Multiple conditional names can be specified; they all must evaluate
+    # to True for the whole string to evaluate to True
     for cond in cond_string.strip().split(', '):
         original = cond
         wanted = True
 
-        if not is_empty(cond) and cond[0] == '!':
+        if not utils.is_empty(cond) and cond[0] == '!':
             # negate the condition
             cond = cond[1:]
             wanted = False
 
         if cond not in conditions:
-            logging.error('Undefined condition "%s" in "%s"', cond, name)
+            logging.error('Undefined condition "%s" in %s"%s"',
+                          cond, item_type, name)
             continue
 
-        state = conditions[cond][1]
-
-        if not conditions[cond][0]:
-            logging.warning('Conditional "%s" is in indeterminate state, '
-                            'assuming it\'s True', name)
-            state = True
-
-        if state != wanted:
-            logging.info('"%s" is hidden by conditional "%s"',
-                         name, original)
+        if conditions[cond] != wanted:
+            logging.info('%s"%s" is hidden by conditional "%s"',
+                         item_type, name, original)
             return True
 
     return False
