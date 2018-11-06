@@ -464,33 +464,7 @@ class PuavoMenu(Gtk.Window):
             self.__hide_search_results()
             return
 
-        import re
-
-        matches = []
-
-        for name in self.menudata.programs:
-            p = self.menudata.programs[name]
-
-            if re.search(key, p.title, re.IGNORECASE):
-                matches.append(p)
-                continue
-
-            # check the .desktop file name
-            if p.original_desktop_file:
-                if re.search(key,
-                             p.original_desktop_file.replace('.desktop', ''),
-                             re.IGNORECASE):
-                    matches.append(p)
-                    continue
-
-            # keyword search must be done last, otherwise a program
-            # can appear multiple times in the search results
-            for k in p.keywords:
-                if re.search(key, k, re.IGNORECASE):
-                    matches.append(p)
-                    break
-
-        matches = sorted(matches, key=lambda p: p.title)
+        matches = self.menudata.search(key)
 
         if len(matches) > 0:
             self.__empty.hide()
