@@ -1,4 +1,4 @@
-# Core menu data types
+# Core menu data types. Menu data loading.
 
 from constants import PROGRAM_TYPE_DESKTOP
 
@@ -123,3 +123,219 @@ class Category:
 
         # Zero or more program IDs/instances
         self.programs = programs or []
+
+
+class Menudata:
+    """Top-level container for all menu data."""
+
+    def __init__(self):
+        # Conditions
+        self.conditions = {}
+
+        # All programs, indexed by their IDs
+        self.programs = {}
+
+        # All menus, indexed by their IDs
+        self.menus = {}
+
+        # All categories, indexed by their IDs
+        self.categories = {}
+
+        # A list of category IDs, in the order they appear on
+        # the category switcher
+        self.category_index = []
+
+
+    def load(self):
+        import time
+        import logging
+        import os.path
+
+        from iconcache import ICONS48
+        from loader import load_menu_data
+        from utils import log_elapsed_time
+        import conditionals
+        from settings import SETTINGS
+        from constants import ICON_EXTENSIONS
+
+        # Files/strings to be loaded
+        sources = [
+            ['f', 'menudata.yaml'],
+            #['s', koodi],
+        ]
+
+        # Paths for .desktop files
+        desktop_dirs = [
+            '/usr/share/applications',
+            '/usr/share/applications/kde4',
+            '/usr/local/share/applications',
+        ]
+
+        # Where to search for icons
+        icon_dirs = [
+            '/usr/share/icons/hicolor/48x48/apps',
+            '/usr/share/icons/hicolor/64x64/apps',
+            '/usr/share/icons/hicolor/128x128/apps',
+            '/usr/share/icons/Neu/128x128/categories',
+            '/usr/share/icons/hicolor/scalable/apps',
+            '/usr/share/icons/hicolor/scalable',
+            '/usr/share/icons/Faenza/categories/64',
+            '/usr/share/icons/Faenza/apps/48',
+            '/usr/share/icons/Faenza/apps/96',
+            '/usr/share/app-install/icons',
+            '/usr/share/pixmaps',
+            '/usr/share/icons/hicolor/32x32/apps',
+        ]
+
+        conditional_files = [
+            'conditions.yaml'
+        ]
+
+        for s in sources:
+            if s[0] == 'f':
+                s[1] = SETTINGS.menu_dir + s[1]
+
+        start_time = time.clock()
+
+        # Load and evaluate conditionals
+        for c in conditional_files:
+            r = conditionals.evaluate_file(SETTINGS.menu_dir + c)
+            self.conditions.update(r)
+
+        conditional_time = time.clock()
+
+        log_elapsed_time('Conditional evaluation time',
+                         start_time, conditional_time)
+
+        id_to_path_mapping = {}
+
+        # Load menu data
+        try:
+            self.programs, \
+            self.menus, \
+            self.categories, \
+            self.category_index = load_menu_data(sources,
+                                                 desktop_dirs,
+                                                 self.conditions)
+        except Exception as exception:
+            logging.error('Could not load menu data!')
+            logging.error(exception, exc_info=True)
+            return False
+
+        if not self.programs:
+            # No programs at all?
+            return False
+
+        parsing_time = time.clock()
+
+        # Locate and load icon files
+        logging.info('Loading icons...')
+        num_missing_icons = 0
+
+        for name in self.programs:
+            p = self.programs[name]
+
+            if not p.used:
+                continue
+
+            if p.icon is None:
+                # This should not happen, ever
+                logging.error('The impossible happened: program "%s" '
+                              'has no icon at all!', name)
+                num_missing_icons += 1
+                continue
+
+            if name in id_to_path_mapping:
+                p.icon_is_path = True
+                p.icon = id_to_path_mapping[name]
+
+            if p.icon_is_path:
+                # Just use it
+                if os.path.isfile(p.icon):
+                    icon = ICONS48.load_icon(p.icon)
+
+                    if icon.usable:
+                        p.icon = icon
+                        continue
+
+                # Okay, the icon was specified, but it could not be loaded.
+                # Try automatic loading.
+                p.icon_is_path = False
+
+            # Locate the icon specified in the .desktop file
+            icon_path = None
+
+            for s in icon_dirs:
+                # Try the name as-is first
+                path = os.path.join(s, p.icon)
+
+                if os.path.isfile(path):
+                    icon_path = path
+                    break
+
+                if not icon_path:
+                    # Then try the different extensions
+                    for e in ICON_EXTENSIONS:
+                        path = os.path.join(s, p.icon + e)
+
+                        if os.path.isfile(path):
+                            icon_path = path
+                            break
+
+                if icon_path:
+                    break
+
+            # Nothing found
+            if not icon_path:
+                logging.error('Icon "%s" for program "%s" not found in '
+                              'icon load paths', p.icon, name)
+                p.icon = None
+                num_missing_icons += 1
+                continue
+
+            p.icon = ICONS48.load_icon(path)
+
+            if not p.icon.usable:
+                logging.warning('Found an icon "%s" for program "%s", but '
+                                'it could not be loaded', path, name)
+                num_missing_icons += 1
+            else:
+                id_to_path_mapping[name] = path
+
+        for name in self.menus:
+            m = self.menus[name]
+
+            if m.icon is None:
+                logging.warning('Menu "%s" has no icon defined', name)
+                num_missing_icons += 1
+                continue
+
+            if not os.path.isfile(m.icon):
+                logging.error('Icon "%s" for menu "%s" does not exist',
+                              m.icon, name)
+                m.icon = None
+                num_missing_icons += 1
+                continue
+
+            m.icon = ICONS48.load_icon(m.icon)
+
+            if not m.icon.usable:
+                logging.warning('Found an icon "%s" for menu "%s", but '
+                                'it could not be loaded', path, name)
+                num_missing_icons += 1
+
+        end_time = time.clock()
+
+        if num_missing_icons == 0:
+            logging.info('No missing icons')
+        else:
+            logging.info('Have %d missing or unloadable icons',
+                         num_missing_icons)
+
+        stats = ICONS48.stats()
+        logging.info('Number of 48-pixel icons cached: %d', stats['num_icons'])
+        logging.info('Number of 48-pixel atlas surfaces: %d', stats['num_atlases'])
+        log_elapsed_time('Icon loading time', parsing_time, end_time)
+        log_elapsed_time('Total loading time', start_time, end_time)
+
+        return True

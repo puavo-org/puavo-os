@@ -17,13 +17,13 @@ from gi.repository import Pango
 from gi.repository import GLib
 
 from constants import *
-from iconcache import ICONS48
+
+import menudata
+
 from buttons import ProgramButton, MenuButton
 from utils import localize, log_elapsed_time
 from utils_gui import load_image_at_size, create_separator, \
                       create_desktop_link, create_panel_link
-from loader import load_menu_data
-from conditionals import evaluate_file
 import faves
 from sidebar import Sidebar
 from strings import STRINGS
@@ -115,18 +115,14 @@ class PuavoMenu(Gtk.Window):
         self.__exit_permitted = False
         self.connect('delete-event', self.__try_exit)
 
-        # Conditional data
-        self.__conditions = {}
+        # Program, menu and category data
+        self.menudata = None
 
-        # The actual menu data. Can be empty...
-        self.__programs = {}
-        self.__menus = {}
-        self.__categories = {}
-        self.__category_index = []
-        self.__current_category = -1
+        # Current category (index to menudata.category_index)
+        self.current_category = -1
 
-        # The current menu, if any
-        self.__current_menu = None
+        # The current menu, if any (None if on category top-level)
+        self.current_menu = None
 
         # The current menu/program buttons in the current
         # category and menu, if any
@@ -195,7 +191,6 @@ class PuavoMenu(Gtk.Window):
         # Category tabs
         self.__category_buttons = Gtk.Notebook()
         self.__category_buttons.set_size_request(CATEGORIES_WIDTH, -1)
-        self.__category_buttons.set_current_page(self.__current_category)
         self.__category_buttons.connect('switch-page',
                                         self.__clicked_category)
         self.__main_container.put(self.__category_buttons,
@@ -330,8 +325,16 @@ class PuavoMenu(Gtk.Window):
         end_time = clock()
         log_elapsed_time('Window init time', start_time, end_time)
 
+        # ----------------------------------------------------------------------
+        # Load menu data
+
         # Finally, load the menu data and show the UI
         self.__load_data()
+
+        # This is a bad, bad situation that should never happen in production.
+        # It will happen one day.
+        if self.menudata is None or len(self.menudata.programs) == 0:
+            self.__show_empty_message(STRINGS['menu_no_data_at_all'])
 
 
     # --------------------------------------------------------------------------
@@ -376,12 +379,14 @@ class PuavoMenu(Gtk.Window):
 
         self.__empty.hide()
 
-        if self.__current_menu is None:
+        if self.current_menu is None:
             # Top-level category view
-            if len(self.__category_index) > 0 and \
-                    self.__current_category < len(self.__category_index):
-                cat = self.__categories[self.__category_index[
-                    self.__current_category]]
+            if len(self.menudata.category_index) > 0 and \
+               self.current_category < len(self.menudata.category_index):
+
+                # We have a valid category
+                cat = self.menudata.categories[ \
+                    self.menudata.category_index[self.current_category]]
 
                 # Menus first...
                 for m in cat.menus:
@@ -397,21 +402,19 @@ class PuavoMenu(Gtk.Window):
                     pb.connect('clicked', self.clicked_program_button)
                     new_buttons.append(pb)
 
-            # Special situations
-            if len(self.__category_index) == 0:
-                self.__show_empty_message(STRINGS['menu_no_data_at_all'])
-            elif len(new_buttons) == 0:
+            # Handle special situations
+            if len(new_buttons) == 0:
                 self.__show_empty_message(STRINGS['menu_empty_category'])
 
         else:
-            # Submenu view, have only programs
-            for p in self.__current_menu.programs:
+            # Submenu view, have only programs (no submenu support yet)
+            for p in self.current_menu.programs:
                 pb = ProgramButton(self, p.title, p.icon, p.description, p)
                 pb.connect('clicked', self.clicked_program_button)
                 new_buttons.append(pb)
 
-            # Special situations
-            if len(self.__current_menu.programs) == 0:
+            # Handle special situations
+            if len(self.current_menu.programs) == 0:
                 self.__show_empty_message(STRINGS['menu_empty_menu'])
 
         self.__fill_programs_list(new_buttons, True)
@@ -420,19 +423,19 @@ class PuavoMenu(Gtk.Window):
     # Changes the menu title and description, and shows or hides
     # the whole thing if necessary
     def __update_menu_title(self):
-        if self.__current_menu is None:
+        if self.current_menu is None:
             # top-level
             self.__menu_title.hide()
             return
 
         # TODO: "big" and "small" are not good sizes, we need to be explicit
-        if self.__current_menu.description is None:
+        if self.current_menu.description is None:
             self.__menu_title.set_markup('<big>{0}</big>'.
-                                         format(self.__current_menu.title))
+                                         format(self.current_menu.title))
         else:
             self.__menu_title.set_markup('<big>{0}</big>  <small>{1}</small>'.
-                                         format(self.__current_menu.title,
-                                                self.__current_menu.description))
+                                         format(self.current_menu.title,
+                                                self.current_menu.description))
 
         self.__menu_title.show()
 
@@ -465,8 +468,8 @@ class PuavoMenu(Gtk.Window):
 
         matches = []
 
-        for name in self.__programs:
-            p = self.__programs[name]
+        for name in self.menudata.programs:
+            p = self.menudata.programs[name]
 
             if re.search(key, p.title, re.IGNORECASE):
                 matches.append(p)
@@ -550,8 +553,8 @@ class PuavoMenu(Gtk.Window):
     def __clicked_category(self, widget, frame, num):
         self.__clear_search_field()
         self.__back_button.hide()
-        self.__current_category = num
-        self.__current_menu = None
+        self.current_category = num
+        self.current_menu = None
         self.__create_current_menu()
         self.__update_menu_title()
 
@@ -560,7 +563,7 @@ class PuavoMenu(Gtk.Window):
     def __clicked_back_button(self, e):
         self.__clear_search_field()
         self.__back_button.hide()
-        self.__current_menu = None
+        self.current_menu = None
         self.__create_current_menu()
         self.__update_menu_title()
 
@@ -569,7 +572,7 @@ class PuavoMenu(Gtk.Window):
     def __clicked_menu_button(self, e):
         self.__clear_search_field()
         self.__back_button.show()
-        self.__current_menu = e.data
+        self.current_menu = e.data
         self.__create_current_menu()
         self.__update_menu_title()
 
@@ -634,14 +637,14 @@ class PuavoMenu(Gtk.Window):
     def remove_program_from_faves(self, p):
         logging.info('Removing program "%s" from the faves', p.title)
         p.uses = 0
-        self.__faves.update(self.__programs)
+        self.__faves.update(self.menudata.programs)
 
 
     # Resets the menu back to the default view
     def __reset_menu(self):
-        self.__current_category = 0
+        self.current_category = 0
+        self.current_menu = None
         self.__category_buttons.set_current_page(0)
-        self.__current_menu = None
         self.__clear_search_field()
         self.__back_button.hide()
         self.__create_current_menu()
@@ -653,7 +656,7 @@ class PuavoMenu(Gtk.Window):
     def clicked_program_button(self, button):
         p = button.data
         p.uses += 1
-        self.__faves.update(self.__programs)
+        self.__faves.update(self.menudata.programs)
 
         logging.info('Clicked program button "%s", usage counter is %d',
                      p.title, p.uses)
@@ -948,13 +951,11 @@ class PuavoMenu(Gtk.Window):
         self.__buttons = []
 
         # Actually remove the menu data
-        self.__conditions = {}
-        self.__programs = {}
-        self.__menus = {}
-        self.__categories = {}
-        self.__category_index = []
-        self.__current_category = -1
-        self.__current_menu = None
+        self.menudata = menudata.Menudata()
+        self.current_category = -1
+        self.current_menu = None
+
+        from iconcache import ICONS48
 
         if ICONS48.stats()['num_icons'] != 0:
             # Purge existing icons
@@ -965,200 +966,17 @@ class PuavoMenu(Gtk.Window):
         """Loads menu data and sets up the UI. Returns false if
         something fails."""
 
-        # Files/strings to be loaded
-        sources = [
-            ['f', 'menudata.yaml'],
-            #['s', koodi],
-        ]
+        menudata_new = menudata.Menudata()
 
-        # Paths for .desktop files
-        desktop_dirs = [
-            '/usr/share/applications',
-            '/usr/share/applications/kde4',
-            '/usr/local/share/applications',
-        ]
-
-        # Where to search for icons
-        icon_dirs = [
-            '/usr/share/icons/hicolor/48x48/apps',
-            '/usr/share/icons/hicolor/64x64/apps',
-            '/usr/share/icons/hicolor/128x128/apps',
-            '/usr/share/icons/Neu/128x128/categories',
-            '/usr/share/icons/hicolor/scalable/apps',
-            '/usr/share/icons/hicolor/scalable',
-            '/usr/share/icons/Faenza/categories/64',
-            '/usr/share/icons/Faenza/apps/48',
-            '/usr/share/icons/Faenza/apps/96',
-            '/usr/share/app-install/icons',
-            '/usr/share/pixmaps',
-            '/usr/share/icons/hicolor/32x32/apps',
-        ]
-
-        conditional_files = [
-            'conditions.yaml'
-        ]
-
-        for s in sources:
-            if s[0] == 'f':
-                s[1] = SETTINGS.menu_dir + s[1]
-
-        start_time = clock()
-
-        # Load and evaluate conditionals
-        self.__conditions = {}
-
-        for c in conditional_files:
-            r = evaluate_file(SETTINGS.menu_dir + c)
-            self.__conditions.update(r)
-
-        conditional_time = clock()
-
-        log_elapsed_time('Conditional evaluation time',
-                         start_time, conditional_time)
-
-        programs = {}
-        menus = {}
-        categories = {}
-        category_index = []
-
-        id_to_path_mapping = {}
-
-        # Load everything
-        try:
-            programs, menus, categories, category_index = \
-                load_menu_data(sources,
-                               desktop_dirs,
-                               self.__conditions)
-        except Exception as exception:
-            logging.error('Could not load menu data!')
-            logging.error(exception, exc_info=True)
+        if not menudata_new.load():
             return False
 
-        if not programs:
-            return False
-
-        parsing_time = clock()
-
-        # Locate and load icon files
-        logging.info('Loading icons...')
-        num_missing_icons = 0
-
-        for name in programs:
-            p = programs[name]
-
-            if not p.used:
-                continue
-
-            if p.icon is None:
-                # This should not happen, ever
-                logging.error('The impossible happened: program "%s" '
-                              'has no icon at all!', name)
-                num_missing_icons += 1
-                continue
-
-            if name in id_to_path_mapping:
-                p.icon_is_path = True
-                p.icon = id_to_path_mapping[name]
-
-            if p.icon_is_path:
-                # Just use it
-                if is_file(p.icon):
-                    icon = ICONS48.load_icon(p.icon)
-
-                    if icon.usable:
-                        p.icon = icon
-                        continue
-
-                # Okay, the icon was specified, but it could not be loaded.
-                # Try automatic loading.
-                p.icon_is_path = False
-
-            # Locate the icon specified in the .desktop file
-            icon_path = None
-
-            for s in icon_dirs:
-                # Try the name as-is first
-                path = path_join(s, p.icon)
-
-                if is_file(path):
-                    icon_path = path
-                    break
-
-                if not icon_path:
-                    # Then try the different extensions
-                    for e in ICON_EXTENSIONS:
-                        path = path_join(s, p.icon + e)
-
-                        if is_file(path):
-                            icon_path = path
-                            break
-
-                if icon_path:
-                    break
-
-            # Nothing found
-            if not icon_path:
-                logging.error('Icon "%s" for program "%s" not found in '
-                              'icon load paths', p.icon, name)
-                p.icon = None
-                num_missing_icons += 1
-                continue
-
-            p.icon = ICONS48.load_icon(path)
-
-            if not p.icon.usable:
-                logging.warning('Found an icon "%s" for program "%s", but '
-                                'it could not be loaded', path, name)
-                num_missing_icons += 1
-            else:
-                id_to_path_mapping[name] = path
-
-        for name in menus:
-            m = menus[name]
-
-            if m.icon is None:
-                logging.warning('Menu "%s" has no icon defined', name)
-                num_missing_icons += 1
-                continue
-
-            if not is_file(m.icon):
-                logging.error('Icon "%s" for menu "%s" does not exist',
-                              m.icon, name)
-                m.icon = None
-                num_missing_icons += 1
-                continue
-
-            m.icon = ICONS48.load_icon(m.icon)
-
-            if not m.icon.usable:
-                logging.warning('Found an icon "%s" for menu "%s", but '
-                                'it could not be loaded', path, name)
-                num_missing_icons += 1
-
-        end_time = clock()
-
-        if num_missing_icons == 0:
-            logging.info('No missing icons')
-        else:
-            logging.info('Have %d missing or unloadable icons',
-                         num_missing_icons)
-
-        stats = ICONS48.stats()
-        logging.info('Number of 48-pixel icons cached: %d', stats['num_icons'])
-        logging.info('Number of 48-pixel atlas surfaces: %d', stats['num_atlases'])
-        log_elapsed_time('Icon loading time', parsing_time, end_time)
-        log_elapsed_time('Total loading time', start_time, end_time)
-
-        # Replace existing menu data, if any
-        self.__programs = programs
-        self.__menus = menus
-        self.__categories = categories
-        self.__category_index = category_index
-        self.__current_category = 0
+        # Replace existing data (if any) only if we can load the new data
+        self.menudata = menudata_new
 
         # Prepare the user interface
-        for c in self.__category_index:
-            cat = self.__categories[c]
+        for index in self.menudata.category_index:
+            cat = self.menudata.categories[index]
 
             frame = Gtk.Frame()
             label = Gtk.Label(cat.title)
@@ -1166,7 +984,7 @@ class PuavoMenu(Gtk.Window):
             label.show()
             self.__category_buttons.append_page(frame, label)
 
-        if len(self.__category_index) > 0:
+        if len(self.menudata.category_index) > 0:
             self.__category_buttons.show()
 
         self.__create_current_menu()
@@ -1179,8 +997,8 @@ class PuavoMenu(Gtk.Window):
 
         self.__programs_container.show()
 
-        faves.load_use_counts(self.__programs)
-        self.__faves.update(self.__programs)
+        faves.load_use_counts(self.menudata.programs)
+        self.__faves.update(self.menudata.programs)
         self.__faves_sep.show()
         self.__faves.show()
 
@@ -1199,45 +1017,51 @@ class PuavoMenu(Gtk.Window):
         if not SETTINGS.dev_mode:
             return
 
-        def remove(x):
-            if self.__programs:
+        def purge(x):
+            if self.menudata and self.menudata.programs:
                 logging.debug('=' * 20)
                 logging.debug('Purging all loaded menu data!')
                 logging.debug('=' * 20)
                 self.__unload_data()
 
         def reload(x):
-            # remember where we are
-            prev_menu = self.__current_menu.name if self.__current_menu \
-                else None
-            prev_cat = self.__category_index[self.__current_category] \
-                if self.__current_category != -1 else None
+            # Remember where we are (a little nice-to-have for development time)
+            if self.current_menu:
+                prev_menu = self.current_menu.name
+            else:
+                prev_menu = None
 
-            # TODO: Don't clear current data if the reload fails
+            if self.current_category != -1:
+                prev_cat = self.menudata.category_index[self.current_category]
+            else:
+                prev_cat = None
+
             logging.debug('=' * 20)
             logging.debug('Reloading all menu data!')
             logging.debug('=' * 20)
 
-            if self.__programs:
+            # TODO: get rid of this call, so we can retain the old data if
+            # we can't load the new data (the loader already supports that)
+            if not self.menudata or not self.menudata.programs:
                 self.__unload_data()
 
             if not self.__load_data():
                 self.error_message('Failed to load menu data',
                                    'See the console for more details')
             else:
-                # try to restore the previous menu and category
-                for n, c in enumerate(self.__category_index):
+                # Try to restore the previous menu and category
+                for n, c in enumerate(self.menudata.category_index):
                     if c == prev_cat:
                         logging.debug('Restoring category "%s" after reload',
                                       prev_cat)
-                        self.__current_category = n
+                        self.current_category = n
                         self.__category_buttons.set_current_page(n)
                         break
 
-                if prev_menu and prev_menu in self.__menus:
+                if prev_menu and (prev_menu in self.menudata.menus):
                     logging.debug('Restoring menu "%s" after reload',
                                   prev_menu)
-                    self.__current_menu = self.__menus[prev_menu]
+                    self.current_menu = self.menudata.menus[prev_menu]
                     self.__create_current_menu()
                     self.__back_button.show()
                     self.__update_menu_title()
@@ -1250,7 +1074,7 @@ class PuavoMenu(Gtk.Window):
         def show_conditionals(x):
             s = ''
 
-            for k, v in self.__conditions.items():
+            for k, v in self.menudata.conditions.items():
                 s += '"{0}" = "{1}"\n'.format(k, v)
 
             self.error_message('Conditionals', s)
@@ -1273,7 +1097,7 @@ class PuavoMenu(Gtk.Window):
         dev_menu.append(reload_item)
 
         remove_item = Gtk.MenuItem('Unload all menu data')
-        remove_item.connect('activate', remove)
+        remove_item.connect('activate', purge)
         remove_item.show()
         dev_menu.append(remove_item)
 
