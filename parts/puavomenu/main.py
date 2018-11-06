@@ -173,15 +173,10 @@ class PuavoMenu(Gtk.Window):
                                                WINDOW_HEIGHT)
 
         if SETTINGS.dev_mode:
-            # The devtools menu
-            self.__devtools = Gtk.Button()
-            self.__devtools.set_label('Development tools')
-            self.__devtools.connect('clicked', self.__devtools_menu)
-            self.__devtools.show()
-            self.__main_container.put(
-                self.__devtools,
-                PROGRAMS_LEFT + PROGRAMS_WIDTH - SEARCH_WIDTH - MAIN_PADDING,
-                MAIN_PADDING + SEARCH_HEIGHT + 5)
+            # The devtools popup menu
+            self.menu_signal = \
+                self.connect('button-press-event', self.__devtools_menu)
+
 
         # ----------------------------------------------------------------------
         # Menus/programs list
@@ -988,7 +983,11 @@ class PuavoMenu(Gtk.Window):
 
 
     # The devtools menu and its commands
-    def __devtools_menu(self, button):
+    def __devtools_menu(self, widget, event):
+
+        if event.button != 3:
+            return
+
         if not SETTINGS.dev_mode:
             return
 
@@ -1071,15 +1070,16 @@ class PuavoMenu(Gtk.Window):
         reload_item.show()
         dev_menu.append(reload_item)
 
-        remove_item = Gtk.MenuItem('Unload all menu data')
-        remove_item.connect('activate', purge)
-        remove_item.show()
-        dev_menu.append(remove_item)
+        if not self.menudata or len(self.menudata.programs) > 0:
+            remove_item = Gtk.MenuItem('Unload all menu data')
+            remove_item.connect('activate', purge)
+            remove_item.show()
+            dev_menu.append(remove_item)
 
-        conditionals_item = Gtk.MenuItem('Show conditional values...')
-        conditionals_item.connect('activate', show_conditionals)
-        conditionals_item.show()
-        dev_menu.append(conditionals_item)
+            conditionals_item = Gtk.MenuItem('Show conditional values...')
+            conditionals_item.connect('activate', show_conditionals)
+            conditionals_item.show()
+            dev_menu.append(conditionals_item)
 
         sep = Gtk.SeparatorMenuItem()
         sep.show()
