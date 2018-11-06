@@ -701,7 +701,6 @@ class PuavoMenu(Gtk.Window):
         self.__back_button.hide()
         self.__empty.hide()
         self.__search.show()
-        self.__menu_title.hide()
 
         self.__programs_container.show()
 
@@ -723,6 +722,12 @@ class PuavoMenu(Gtk.Window):
         if not SETTINGS.dev_mode:
             return
 
+        self.menudata = menudata.Menudata()
+        self.current_category = -1
+        self.current_menu = None
+
+        self.__create_current_menu()
+
         self.__category_buttons.hide()
 
         num_pages = self.__category_buttons.get_n_pages()
@@ -730,29 +735,22 @@ class PuavoMenu(Gtk.Window):
         for index in range(0, num_pages):
             self.__category_buttons.remove_page(-1)
 
+        for button in self.__buttons:
+            button.destroy()
+
+        self.__buttons = []
+
         self.__clear_search_field()
         self.__back_button.hide()
         self.__search.hide()
-
         self.__empty.hide()
 
-        self.__menu_title.hide()
         self.__programs_icons.hide()
         self.__programs_container.hide()
 
         self.__faves_sep.hide()
         self.__faves.clear()
         self.__faves.hide()
-
-        for button in self.__buttons:
-            button.destroy()
-
-        self.__buttons = []
-
-        # Actually remove the menu data
-        self.menudata = menudata.Menudata()
-        self.current_category = -1
-        self.current_menu = None
 
         from iconcache import ICONS48
 
