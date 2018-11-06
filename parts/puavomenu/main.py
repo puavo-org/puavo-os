@@ -414,24 +414,20 @@ class PuavoMenu(Gtk.Window):
 
         self.__fill_programs_list(new_buttons, True)
 
-
-    # Changes the menu title and description, and shows or hides
-    # the whole thing if necessary
-    def __update_menu_title(self):
+        # Update the menu title
         if self.current_menu is None:
             self.__menu_title.hide()
-            return
-
-        # TODO: "big" and "small" are not good sizes, we need to be explicit
-        if self.current_menu.description:
-            self.__menu_title.set_markup(
-                '<big>{0}</big>  <small>{1}</small>'.
-                format(self.current_menu.title, self.current_menu.description))
         else:
-            self.__menu_title.set_markup(
-                '<big>{0}</big>'.format(self.current_menu.title))
+            # TODO: "big" and "small" are not good sizes, we need to be explicit
+            if self.current_menu.description:
+                self.__menu_title.set_markup(
+                    '<big>{0}</big>  <small>{1}</small>'.
+                    format(self.current_menu.title, self.current_menu.description))
+            else:
+                self.__menu_title.set_markup(
+                    '<big>{0}</big>'.format(self.current_menu.title))
 
-        self.__menu_title.show()
+            self.__menu_title.show()
 
 
     # --------------------------------------------------------------------------
@@ -456,7 +452,6 @@ class PuavoMenu(Gtk.Window):
         self.current_category = num
         self.current_menu = None
         self.__create_current_menu()
-        self.__update_menu_title()
 
 
     # Go back to top level
@@ -465,7 +460,6 @@ class PuavoMenu(Gtk.Window):
         self.__back_button.hide()
         self.current_menu = None
         self.__create_current_menu()
-        self.__update_menu_title()
 
 
     # Enter a menu
@@ -474,7 +468,6 @@ class PuavoMenu(Gtk.Window):
         self.__back_button.show()
         self.current_menu = e.data
         self.__create_current_menu()
-        self.__update_menu_title()
 
 
     # Resets the menu back to the default view
@@ -485,7 +478,6 @@ class PuavoMenu(Gtk.Window):
         self.__clear_search_field()
         self.__back_button.hide()
         self.__create_current_menu()
-        self.__update_menu_title()
 
 
     # --------------------------------------------------------------------------
@@ -1038,7 +1030,6 @@ class PuavoMenu(Gtk.Window):
                     self.current_menu = self.menudata.menus[prev_menu]
                     self.__create_current_menu()
                     self.__back_button.show()
-                    self.__update_menu_title()
 
             logging.debug('Menu data reload complete')
 
