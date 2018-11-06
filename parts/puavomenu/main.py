@@ -3,7 +3,6 @@
 from time import clock
 
 from os import unlink
-from os.path import join as path_join, isfile as is_file
 
 import socket               # for the IPC socket
 
@@ -384,18 +383,19 @@ class PuavoMenu(Gtk.Window):
                     self.menudata.category_index[self.current_category]]
 
                 # Menus first...
-                for m in cat.menus:
-                    mb = MenuButton(self, m.title, m.icon, m.description,
-                                    m, self.__menu_background)
-                    mb.connect('clicked', self.__clicked_menu_button)
-                    new_buttons.append(mb)
+                for menu in cat.menus:
+                    button = MenuButton(self, menu.title, menu.icon,
+                                        menu.description, menu,
+                                        self.__menu_background)
+                    button.connect('clicked', self.__clicked_menu_button)
+                    new_buttons.append(button)
 
                 # ...then programs
-                for p in cat.programs:
-                    pb = ProgramButton(self, p.title, p.icon,
-                                       p.description, p)
-                    pb.connect('clicked', self.clicked_program_button)
-                    new_buttons.append(pb)
+                for program in cat.programs:
+                    button = ProgramButton(self, program.title, program.icon,
+                                           program.description, program)
+                    button.connect('clicked', self.clicked_program_button)
+                    new_buttons.append(button)
 
             # Handle special situations
             if len(new_buttons) == 0:
@@ -403,10 +403,11 @@ class PuavoMenu(Gtk.Window):
 
         else:
             # Submenu view, have only programs (no submenu support yet)
-            for p in self.current_menu.programs:
-                pb = ProgramButton(self, p.title, p.icon, p.description, p)
-                pb.connect('clicked', self.clicked_program_button)
-                new_buttons.append(pb)
+            for program in self.current_menu.programs:
+                button = ProgramButton(self, program.title, program.icon,
+                                       program.description, program)
+                button.connect('clicked', self.clicked_program_button)
+                new_buttons.append(button)
 
             # Handle special situations
             if len(self.current_menu.programs) == 0:
@@ -455,7 +456,7 @@ class PuavoMenu(Gtk.Window):
 
 
     # Go back to top level
-    def __clicked_back_button(self, e):
+    def __clicked_back_button(self, button):
         self.__clear_search_field()
         self.__back_button.hide()
         self.current_menu = None
@@ -463,10 +464,10 @@ class PuavoMenu(Gtk.Window):
 
 
     # Enter a menu
-    def __clicked_menu_button(self, e):
+    def __clicked_menu_button(self, button):
         self.__clear_search_field()
         self.__back_button.show()
-        self.current_menu = e.data
+        self.current_menu = button.data
         self.__create_current_menu()
 
 
@@ -485,21 +486,23 @@ class PuavoMenu(Gtk.Window):
 
 
     # Called directly from ProgramButton
-    def add_program_to_desktop(self, p):
+    def add_program_to_desktop(self, program):
         """Creates a desktop shortcut to a program."""
 
         if not SETTINGS.desktop_dir:
             return
 
+        import os.path
+
         # Create the link file
         # TODO: use the *original* .desktop file if it exists
-        name = path_join(SETTINGS.desktop_dir, '{0}.desktop'.format(p.title))
+        name = os.path.join(SETTINGS.desktop_dir, '{0}.desktop'.format(program.title))
 
         logging.info('Adding program "%s" to the desktop, destination="%s"',
-                     p.title, name)
+                     program.title, name)
 
         try:
-            create_desktop_link(name, p)
+            create_desktop_link(name, program)
         except Exception as exception:
             logging.error('Desktop link creation failed:')
             logging.error(str(exception))
@@ -510,12 +513,12 @@ class PuavoMenu(Gtk.Window):
 
 
     # Called directly from ProgramButton
-    def add_program_to_panel(self, p):
+    def add_program_to_panel(self, program):
         logging.info('Adding program "%s" (id="%s") to the bottom panel',
-                     p.title, p.name)
+                     program.title, program.name)
 
         try:
-            create_panel_link(p)
+            create_panel_link(program)
         except Exception as exception:
             logging.error('Panel icon creation failed')
             logging.error(str(exception))
@@ -534,30 +537,30 @@ class PuavoMenu(Gtk.Window):
     # Launch a program. This is a public method, it is called from other
     # files (buttons and faves) to launch programs.
     def clicked_program_button(self, button):
-        p = button.data
-        p.uses += 1
+        program = button.data
+        program.uses += 1
         self.__faves.update(self.menudata.programs)
 
         logging.info('Clicked program button "%s", usage counter is %d',
-                     p.title, p.uses)
+                     program.title, program.uses)
 
-        if p.command is None:
-            logging.error('No command defined for program "%s"', p.title)
+        if program.command is None:
+            logging.error('No command defined for program "%s"', program.title)
             return
 
         # Try to launch the program
         try:
             import subprocess
 
-            if p.type in (PROGRAM_TYPE_DESKTOP, PROGRAM_TYPE_CUSTOM):
+            if program.type in (PROGRAM_TYPE_DESKTOP, PROGRAM_TYPE_CUSTOM):
                 # TODO: do we really need to open a shell for this?
-                cmd = ['sh', '-c', p.command, '&']
-            elif p.type == PROGRAM_TYPE_WEB:
+                cmd = ['sh', '-c', program.command, '&']
+            elif program.type == PROGRAM_TYPE_WEB:
                 # Opens in the default browser
-                cmd = ['xdg-open', p.command]
+                cmd = ['xdg-open', program.command]
             else:
                 raise RuntimeError('Unknown program type "{0}"'.
-                                   format(p.type))
+                                   format(program.type))
 
             logging.info('Executing "%s"', cmd)
 
@@ -578,7 +581,7 @@ class PuavoMenu(Gtk.Window):
 
         except Exception as exception:
             logging.error('Could not launch program "%s": %s',
-                          p.command, str(exception))
+                          program.command, str(exception))
             self.error_message(localize(STRINGS['program_launching_failed']),
                                str(exception))
             return False
@@ -869,7 +872,7 @@ class PuavoMenu(Gtk.Window):
                 # coordinates
                 # TODO: use window gravity for this?
                 return (int(args[1]), int(args[2]) - WINDOW_HEIGHT)
-        except:
+        except Exception:
             pass
 
         return None
@@ -983,14 +986,14 @@ class PuavoMenu(Gtk.Window):
         if not SETTINGS.dev_mode:
             return
 
-        def purge(x):
+        def purge(menuitem):
             if self.menudata and self.menudata.programs:
                 logging.debug('=' * 20)
                 logging.debug('Purging all loaded menu data!')
                 logging.debug('=' * 20)
                 self.unload_menu_data()
 
-        def reload(x):
+        def reload(menuitem):
             # Remember where we are (a little nice-to-have for development time)
             if self.current_menu:
                 prev_menu = self.current_menu.name
@@ -1016,12 +1019,12 @@ class PuavoMenu(Gtk.Window):
                                    'See the console for more details')
             else:
                 # Try to restore the previous menu and category
-                for n, c in enumerate(self.menudata.category_index):
-                    if c == prev_cat:
+                for index, cat in enumerate(self.menudata.category_index):
+                    if cat == prev_cat:
                         logging.debug('Restoring category "%s" after reload',
                                       prev_cat)
-                        self.current_category = n
-                        self.__category_buttons.set_current_page(n)
+                        self.current_category = index
+                        self.__category_buttons.set_current_page(index)
                         break
 
                 if prev_menu and (prev_menu in self.menudata.menus):
@@ -1033,23 +1036,23 @@ class PuavoMenu(Gtk.Window):
 
             logging.debug('Menu data reload complete')
 
-        def toggle_autohide(x):
+        def toggle_autohide(menuitem):
             SETTINGS.autohide = not SETTINGS.autohide
 
-        def show_conditionals(x):
-            s = ''
+        def show_conditionals(menuitem):
+            msg = ''
 
-            for k, v in self.menudata.conditions.items():
-                s += '"{0}" = "{1}"\n'.format(k, v)
+            for key, value in self.menudata.conditions.items():
+                msg += '"{0}" = "{1}"\n'.format(key, value)
 
-            self.error_message('Conditionals', s)
+            self.error_message('Conditionals', msg)
 
-        def permit_exit(x):
+        def permit_exit(menuitem):
             self.__exit_permitted = not self.__exit_permitted
             logging.debug('Normal exiting ' +
                           ('ENABLED' if self.__exit_permitted else 'DISABLED'))
 
-        def force_exit(x):
+        def force_exit(menuitem):
             logging.debug('Devmenu force exit initiated!')
             self.go_away(True)
 
