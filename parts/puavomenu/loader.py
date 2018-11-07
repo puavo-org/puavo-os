@@ -23,17 +23,17 @@ ALLOWED_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' \
                 '._-'
 
 
-def __parse_list(l):
+def __parse_list(lst):
     """Lists in YAML comes in many formats. Convert two of them into one
     unifid format."""
 
-    if isinstance(l, str):
-        l = l.split(', ')
+    if isinstance(lst, str):
+        lst = lst.split(', ')
 
-    if is_empty(l):
+    if is_empty(lst):
         return []
 
-    return l
+    return lst
 
 
 def __convert_yaml_node(node):
@@ -61,7 +61,7 @@ def __convert_yaml_node(node):
 
         if isinstance(params, list):
             # a list of dicts, merge them
-            params = {k: v for p in params for k, v in p.items()}
+            params = {key: value for param in params for key, value in param.items()}
         elif params is None:
             # - name:  (note the colon)
             params = {}
@@ -71,9 +71,9 @@ def __convert_yaml_node(node):
     return status, name, params
 
 
-def __is_valid(s):
-    for c in s:
-        if c not in ALLOWED_CHARS:
+def __is_valid(string):
+    for char in string:
+        if char not in ALLOWED_CHARS:
             return False
 
     return True
@@ -139,92 +139,92 @@ def __parse_yml_string(string, conditions):
                           'ignoring definition', prog_type, name)
             continue
 
-        p = Program()
+        program = Program()
 
         if prog_type == 'desktop':
-            p.type = PROGRAM_TYPE_DESKTOP
+            program.type = PROGRAM_TYPE_DESKTOP
         elif prog_type == 'custom':
-            p.type = PROGRAM_TYPE_CUSTOM
+            program.type = PROGRAM_TYPE_CUSTOM
         else:
-            p.type = PROGRAM_TYPE_WEB
+            program.type = PROGRAM_TYPE_WEB
 
-        p.name = name
+        program.name = name
 
         # Conditionally hidden?
         if 'condition' in params and \
                 is_hidden(conditions, params['condition'], name, 'program'):
-            p.hidden = True
-            programs[name] = p
+            program.hidden = True
+            programs[name] = program
             continue
 
         # Load common parameters
         if 'name' in params:
-            p.title = localize(params['name'])
+            program.title = localize(params['name'])
 
-            if is_empty(p.title):
+            if is_empty(program.title):
                 logging.error('Empty name given for "%s"', name)
-                p.title = None
+                program.title = None
 
         if 'description' in params:
-            p.description = localize(params['description'])
+            program.description = localize(params['description'])
 
-            if is_empty(p.description):
+            if is_empty(program.description):
                 logging.warning('Ignoring empty description for program "%s"',
                                 name)
-                p.description = None
+                program.description = None
 
         if 'icon' in params:
-            p.icon = str(params['icon'])
+            program.icon = str(params['icon'])
 
-            if is_empty(p.icon):
+            if is_empty(program.icon):
                 logging.warning('Ignoring empty icon for "%s"', name)
-                p.icon = None
+                program.icon = None
 
-        p.keywords = __parse_list(params.get('keywords', []))
+        program.keywords = __parse_list(params.get('keywords', []))
 
         # Some per-type additional checks
-        if p.type in (PROGRAM_TYPE_CUSTOM, PROGRAM_TYPE_WEB):
-            if p.title is None:
+        if program.type in (PROGRAM_TYPE_CUSTOM, PROGRAM_TYPE_WEB):
+            if program.title is None:
                 logging.error('Custom program/web link "%s" has no name at '
                               'all, ignoring definition', name)
                 continue
 
-            if p.icon is None:
+            if program.icon is None:
                 # this isn't fatal, it just looks really ugly
                 logging.warning('Custom program/web link "%s" is missing an '
                                 'icon definition', name)
 
         # Load type-specific parameters
-        if p.type == PROGRAM_TYPE_DESKTOP:
+        if program.type == PROGRAM_TYPE_DESKTOP:
             if 'command' in params:
                 # allow overriding of the "Exec" definition
-                p.command = str(params['command'])
+                program.command = str(params['command'])
 
-                if is_empty(p.command):
+                if is_empty(program.command):
                     logging.warning('Ignoring empty command override for desktop '
                                     'program "%s"', name)
-                    p.command = None
+                    program.command = None
 
-        elif p.type == PROGRAM_TYPE_CUSTOM:
+        elif program.type == PROGRAM_TYPE_CUSTOM:
             if 'command' not in params or is_empty(params['command']):
                 logging.error("Custom program \"%s\" has no command defined"
                               "(or it's empty), ignoring command definition",
                               name)
                 continue
 
-            p.command = str(params['command'])
+            program.command = str(params['command'])
 
-        elif p.type == PROGRAM_TYPE_WEB:
+        elif program.type == PROGRAM_TYPE_WEB:
             if ('url' not in params) or is_empty(params['url']):
                 logging.error("Web link \"%s\" has no URL defined (or it's "
                               "empty), ignoring link definition",
                               name)
                 continue
 
-            p.command = str(params['url'])
+            program.command = str(params['url'])
 
         # Actually use the reserved slot
-        programs[name] = p
+        programs[name] = program
 
     # --------------------------------------------------------------------------
     # Parse menus
@@ -248,45 +248,45 @@ def __parse_yml_string(string, conditions):
         # Like programs, reserve the name to prevent duplicates
         menus[name] = None
 
-        m = Menu()
-        m.name = name
+        menu = Menu()
+        menu.name = name
 
         # Conditionally hidden?
         if 'condition' in params and \
                 is_hidden(conditions, params['condition'], name, 'menu'):
-            m.hidden = True
-            menus[name] = m
+            menu.hidden = True
+            menus[name] = menu
             continue
 
-        m.title = localize(params.get('name', ''))
+        menu.title = localize(params.get('name', ''))
 
-        if is_empty(m.title):
+        if is_empty(menu.title):
             logging.error('Menu "%s" has no name at all, menu ignored', name)
             continue
 
         if 'description' in params:
-            m.description = localize(params['description'])
+            menu.description = localize(params['description'])
 
-            if is_empty(m.description):
+            if is_empty(menu.description):
                 logging.warning('Ignoring empty description for menu "%s"', name)
-                m.description = None
+                menu.description = None
 
         if 'icon' in params:
-            m.icon = str(params['icon'])
+            menu.icon = str(params['icon'])
 
-        if is_empty(m.icon):
+        if is_empty(menu.icon):
             logging.warning('Menu "%s" has a missing/empty icon', name)
-            m.icon = None
+            menu.icon = None
 
-        m.programs = __parse_list(params.get('programs', []))
+        menu.programs = __parse_list(params.get('programs', []))
 
-        if is_empty(m.programs):
+        if is_empty(menu.programs):
             logging.warning('Menu "%s" has no programs defined for it at all',
                             name)
-            m.programs = []
+            menu.programs = []
 
         # Actually use the reserved slot
-        menus[name] = m
+        menus[name] = menu
 
     # --------------------------------------------------------------------------
     # Parse categories
@@ -310,40 +310,40 @@ def __parse_yml_string(string, conditions):
         # Again reserve the name to prevent duplicates
         categories[name] = None
 
-        c = Category()
-        c.name = name
+        cat = Category()
+        cat.name = name
 
         if 'condition' in params and \
                 is_hidden(conditions, params['condition'], name, 'category'):
-            c.hidden = True
-            categories[name] = c
+            cat.hidden = True
+            categories[name] = cat
             continue
 
-        c.title = localize(params.get('name', ''))
+        cat.title = localize(params.get('name', ''))
 
-        if is_empty(c.title):
+        if is_empty(cat.title):
             logging.error('Category "%s" has no name at all, '
                           'category ignored', name)
             continue
 
         if 'position' in params:
             try:
-                c.position = int(params['position'])
+                cat.position = int(params['position'])
             except ValueError:
                 logging.warning('Cannot interpret "%s" as a position for '
                                 'category "%s", defaulting to 0',
                                 params["position"], name)
-                c.position = 0
+                cat.position = 0
 
-        c.menus = __parse_list(params.get('menus', []))
-        c.programs = __parse_list(params.get('programs', []))
+        cat.menus = __parse_list(params.get('menus', []))
+        cat.programs = __parse_list(params.get('programs', []))
 
-        if is_empty(c.menus) and is_empty(c.programs):
+        if is_empty(cat.menus) and is_empty(cat.programs):
             logging.warning('Category "%s" has no menus or programs defined '
                             'for it at all', name)
 
         # Actually use the reserved slot
-        categories[name] = c
+        categories[name] = cat
 
     return programs, menus, categories
 
