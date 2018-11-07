@@ -155,6 +155,9 @@ class Menudata:
         for name in self.programs:
             p = self.programs[name]
 
+            if not p.used:
+                continue
+
             if re.search(key, p.title, re.IGNORECASE):
                 matches.append(p)
                 continue
