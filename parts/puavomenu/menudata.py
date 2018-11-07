@@ -153,31 +153,31 @@ class Menudata:
         matches = []
 
         for name in self.programs:
-            p = self.programs[name]
+            program = self.programs[name]
 
-            if not p.used:
+            if not program.used:
                 continue
 
-            if re.search(key, p.title, re.IGNORECASE):
-                matches.append(p)
+            if re.search(key, program.title, re.IGNORECASE):
+                matches.append(program)
                 continue
 
             # check the .desktop file name
-            if p.original_desktop_file:
+            if program.original_desktop_file:
                 if re.search(key,
-                             p.original_desktop_file.replace('.desktop', ''),
+                             program.original_desktop_file.replace('.desktop', ''),
                              re.IGNORECASE):
-                    matches.append(p)
+                    matches.append(program)
                     continue
 
             # keyword search must be done last, otherwise a program
             # can appear multiple times in the search results
-            for k in p.keywords:
-                if re.search(key, k, re.IGNORECASE):
-                    matches.append(p)
+            for kwd in program.keywords:
+                if re.search(key, kwd, re.IGNORECASE):
+                    matches.append(program)
                     break
 
-        matches = sorted(matches, key=lambda p: p.title)
+        matches = sorted(matches, key=lambda program: program.title)
 
         return matches
 
@@ -227,16 +227,16 @@ class Menudata:
             'conditions.yaml'
         ]
 
-        for s in sources:
-            if s[0] == 'f':
-                s[1] = SETTINGS.menu_dir + s[1]
+        for src in sources:
+            if src[0] == 'f':
+                src[1] = SETTINGS.menu_dir + src[1]
 
         start_time = time.clock()
 
         # Load and evaluate conditionals
-        for c in conditional_files:
-            r = conditionals.evaluate_file(SETTINGS.menu_dir + c)
-            self.conditions.update(r)
+        for fname in conditional_files:
+            result = conditionals.evaluate_file(SETTINGS.menu_dir + fname)
+            self.conditions.update(result)
 
         conditional_time = time.clock()
 
@@ -269,12 +269,12 @@ class Menudata:
         num_missing_icons = 0
 
         for name in self.programs:
-            p = self.programs[name]
+            program = self.programs[name]
 
-            if not p.used:
+            if not program.used:
                 continue
 
-            if p.icon is None:
+            if program.icon is None:
                 # This should not happen, ever
                 logging.error('The impossible happened: program "%s" '
                               'has no icon at all!', name)
@@ -282,28 +282,28 @@ class Menudata:
                 continue
 
             if name in id_to_path_mapping:
-                p.icon_is_path = True
-                p.icon = id_to_path_mapping[name]
+                program.icon_is_path = True
+                program.icon = id_to_path_mapping[name]
 
-            if p.icon_is_path:
+            if program.icon_is_path:
                 # Just use it
-                if os.path.isfile(p.icon):
-                    icon = ICONS48.load_icon(p.icon)
+                if os.path.isfile(program.icon):
+                    icon = ICONS48.load_icon(program.icon)
 
                     if icon.usable:
-                        p.icon = icon
+                        program.icon = icon
                         continue
 
                 # Okay, the icon was specified, but it could not be loaded.
                 # Try automatic loading.
-                p.icon_is_path = False
+                program.icon_is_path = False
 
             # Locate the icon specified in the .desktop file
             icon_path = None
 
-            for s in icon_dirs:
+            for dirname in icon_dirs:
                 # Try the name as-is first
-                path = os.path.join(s, p.icon)
+                path = os.path.join(dirname, program.icon)
 
                 if os.path.isfile(path):
                     icon_path = path
@@ -311,8 +311,8 @@ class Menudata:
 
                 if not icon_path:
                     # Then try the different extensions
-                    for e in ICON_EXTENSIONS:
-                        path = os.path.join(s, p.icon + e)
+                    for ext in ICON_EXTENSIONS:
+                        path = os.path.join(dirname, program.icon + ext)
 
                         if os.path.isfile(path):
                             icon_path = path
@@ -324,38 +324,38 @@ class Menudata:
             # Nothing found
             if not icon_path:
                 logging.error('Icon "%s" for program "%s" not found in '
-                              'icon load paths', p.icon, name)
-                p.icon = None
+                              'icon load paths', program.icon, name)
+                program.icon = None
                 num_missing_icons += 1
                 continue
 
-            p.icon = ICONS48.load_icon(path)
+            program.icon = ICONS48.load_icon(path)
 
-            if not p.icon.usable:
-                logging.warning('Found an icon "%s" for program "%s", but '
+            if not program.icon.usable:
+                logging.warning('Found icon "%s" for program "%s", but '
                                 'it could not be loaded', path, name)
                 num_missing_icons += 1
             else:
                 id_to_path_mapping[name] = path
 
         for name in self.menus:
-            m = self.menus[name]
+            menu = self.menus[name]
 
-            if m.icon is None:
+            if menu.icon is None:
                 logging.warning('Menu "%s" has no icon defined', name)
                 num_missing_icons += 1
                 continue
 
-            if not os.path.isfile(m.icon):
+            if not os.path.isfile(menu.icon):
                 logging.error('Icon "%s" for menu "%s" does not exist',
-                              m.icon, name)
-                m.icon = None
+                              menu.icon, name)
+                menu.icon = None
                 num_missing_icons += 1
                 continue
 
-            m.icon = ICONS48.load_icon(m.icon)
+            menu.icon = ICONS48.load_icon(menu.icon)
 
-            if not m.icon.usable:
+            if not menu.icon.usable:
                 logging.warning('Found an icon "%s" for menu "%s", but '
                                 'it could not be loaded', path, name)
                 num_missing_icons += 1
