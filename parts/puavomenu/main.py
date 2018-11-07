@@ -473,12 +473,12 @@ class PuavoMenu(Gtk.Window):
 
     # Resets the menu back to the default view
     def reset_view(self):
-        self.current_category = 0
-        self.current_menu = None
-        self.__category_buttons.set_current_page(0)
         self.__clear_search_field()
         self.__back_button.hide()
+        self.current_category = 0
+        self.current_menu = None
         self.__create_current_menu()
+        self.__category_buttons.set_current_page(0)
 
 
     # --------------------------------------------------------------------------
@@ -575,8 +575,6 @@ class PuavoMenu(Gtk.Window):
 
             if SETTINGS.reset_view_after_start:
                 # Go back to the default view
-                self.__clear_search_field()
-                self.__hide_search_results()
                 self.reset_view()
 
         except Exception as exception:
@@ -596,19 +594,13 @@ class PuavoMenu(Gtk.Window):
         return self.__search.get_text().strip().translate(self.__translation_table)
 
 
-    def __hide_search_results(self):
-        self.__empty.hide()
-        self.__create_current_menu()
-
-
     # Searches the programs list using a string, then replaces the menu list
     # with results
     def __do_search(self, edit):
         key = self.__get_search_text()
 
         if len(key) == 0:
-            # reset
-            self.__hide_search_results()
+            self.__create_current_menu()
             return
 
         matches = self.menudata.search(key)
@@ -629,9 +621,8 @@ class PuavoMenu(Gtk.Window):
         self.__fill_programs_list(new_buttons, True)
 
 
-    # Ensures the search entry is empty
+    # Clear the search box without triggering another search
     def __clear_search_field(self):
-        # Clear the search box without triggering another search
         self.__search.disconnect(self.__search_keypress_signal)
         self.__search.disconnect(self.__search_changed_signal)
         self.__search.set_text('')
@@ -647,7 +638,7 @@ class PuavoMenu(Gtk.Window):
             if len(self.__get_search_text()):
                 # Cancel an ongoing search
                 self.__clear_search_field()
-                self.__hide_search_results()
+                self.__create_current_menu()
             else:
                 # The search field is empty, hide the window (we have
                 # another Esc handler elsewhere that's used when the
@@ -661,7 +652,7 @@ class PuavoMenu(Gtk.Window):
                 # Enter, so launch it!
                 self.clicked_program_button(self.__buttons[0])
                 self.__clear_search_field()
-                self.__hide_search_results()
+                self.__create_current_menu()
 
         return False
 
@@ -679,7 +670,6 @@ class PuavoMenu(Gtk.Window):
         if not menudata_new.load():
             return False
 
-        # Replace existing data (if any) only if we can load the new data
         self.menudata = menudata_new
 
         # Prepare the user interface
@@ -696,12 +686,6 @@ class PuavoMenu(Gtk.Window):
             self.__category_buttons.show()
 
         self.__create_current_menu()
-
-        self.__clear_search_field()
-        self.__back_button.hide()
-        self.__empty.hide()
-        self.__search.show()
-
         self.__programs_container.show()
 
         faves.load_use_counts(self.menudata.programs)
@@ -897,8 +881,6 @@ class PuavoMenu(Gtk.Window):
 
                 if SETTINGS.reset_view_after_start:
                     # Go back to the default view
-                    self.__clear_search_field()
-                    self.__hide_search_results()
                     self.reset_view()
 
                 if self.is_visible():
@@ -911,15 +893,13 @@ class PuavoMenu(Gtk.Window):
             elif cmd == 'show':
                 # Show the window
 
-                if SETTINGS.reset_view_after_start:
-                    # Go back to the default view
-                    self.__clear_search_field()
-                    self.__hide_search_results()
-                    self.reset_view()
-
                 if self.is_visible():
                     logging.debug('Already visible')
                 else:
+                    if SETTINGS.reset_view_after_start:
+                        # Go back to the default view
+                        self.reset_view()
+
                     coords = self.__parse_position(data)
 
                     if coords:
@@ -937,8 +917,6 @@ class PuavoMenu(Gtk.Window):
 
                 if SETTINGS.reset_view_after_start:
                     # Go back to the default view
-                    self.__clear_search_field()
-                    self.__hide_search_results()
                     self.reset_view()
 
                 if self.is_visible():
@@ -998,7 +976,7 @@ class PuavoMenu(Gtk.Window):
             else:
                 prev_menu = None
 
-            if self.current_category != -1:
+            if len(self.menudata.category_index) > 0 and self.current_category != -1:
                 prev_cat = self.menudata.category_index[self.current_category]
             else:
                 prev_cat = None
