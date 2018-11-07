@@ -2,10 +2,8 @@
 
 # Welcome to PuavoMenu, the modern (?) WebMenu replacement.
 
-from os import environ
-from os.path import join as path_join
-from time import clock
 import argparse
+import time
 
 
 # Some kind of a help text
@@ -99,6 +97,8 @@ required.add_argument('--socket',
 
 args = parser.parse_args()
 
+import os
+import os.path
 import logging
 
 from settings import SETTINGS
@@ -116,19 +116,19 @@ else:
 logging.info('Logging starts')
 logging.info('This is PuavoMenu v0.6 (c) Opinsys Oy 2017-2018')
 
-SETTINGS.res_dir = path_join(args.res_dir, '')
-SETTINGS.menu_dir = path_join(args.menu_dir, '')
-SETTINGS.user_dir = path_join(args.user_dir, '')
+SETTINGS.res_dir = os.path.join(args.res_dir, '')
+SETTINGS.menu_dir = os.path.join(args.menu_dir, '')
+SETTINGS.user_dir = os.path.join(args.user_dir, '')
 SETTINGS.language = args.lang
 SETTINGS.socket = args.socket
 SETTINGS.dev_mode = args.dev
 SETTINGS.autohide = args.autohide
 
 if SETTINGS.language is None:
-    if 'LANG' in environ:
-        SETTINGS.language = environ['LANG'][0:2].lower()
-    elif 'GDM_LANG' in environ:
-        SETTINGS.language = environ['GDM_LANG'][0:2].lower()
+    if 'LANG' in os.environ:
+        SETTINGS.language = os.environ['LANG'][0:2].lower()
+    elif 'GDM_LANG' in os.environ:
+        SETTINGS.language = os.environ['GDM_LANG'][0:2].lower()
 
 if SETTINGS.language not in ('en', 'fi', 'sv', 'de'):
     logging.error('Invalid language code "%s", defaulting to "en"',
@@ -159,10 +159,10 @@ logging.info('=' * 50)
 
 # And go!
 try:
-    import_start = clock()
+    import_start = time.clock()
     from utils import log_elapsed_time
     from main import run
-    import_end = clock()
+    import_end = time.clock()
 
     log_elapsed_time('Main import time', import_start, import_end)
 
