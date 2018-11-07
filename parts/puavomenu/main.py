@@ -302,8 +302,6 @@ class PuavoMenu(Gtk.Window):
             # In auto-hide mode, hide the window when it loses focus
             self.enable_out_of_focus_hide()
 
-        self.connect('focus-in-event', self.__main_got_focus)
-        self.__search.connect('focus-in-event', self.__search_in)
         self.__search.connect('focus-out-event', self.__search_out)
 
         # ----------------------------------------------------------------------
@@ -790,16 +788,8 @@ class PuavoMenu(Gtk.Window):
                 self.connect('focus-out-event', self.__main_lost_focus)
 
 
-    def __main_got_focus(self, *unused):
-        pass
-
-
     def __main_lost_focus(self, *unused):
         self.autohide()
-
-
-    def __search_in(self, *unused):
-        pass
 
 
     def __search_out(self, *unused):
