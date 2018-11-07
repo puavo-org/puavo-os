@@ -39,6 +39,15 @@ set diskdevice_list [list pci-0000:00:14.0-usb-0:4.1:1.0-scsi-0:0:0:0        \
                           pci-0000:00:14.0-usb-0:4.4.4.4.3:1.0-scsi-0:0:0:0  \
                           pci-0000:00:14.0-usb-0:4.4.4.4.4:1.0-scsi-0:0:0:0]
 
+# XXX Deltaco 7-port usb-hub
+# set diskdevice_list [list pci-0000:00:14.0-usb-0:4.1.1:1.0-scsi-0:0:0:0 \
+#                           pci-0000:00:14.0-usb-0:4.1.2:1.0-scsi-0:0:0:0 \
+#                           pci-0000:00:14.0-usb-0:4.1.3:1.0-scsi-0:0:0:0 \
+#                           pci-0000:00:14.0-usb-0:4.1.4:1.0-scsi-0:0:0:0 \
+#                           pci-0000:00:14.0-usb-0:4.2:1.0-scsi-0:0:0:0   \
+#                           pci-0000:00:14.0-usb-0:4.3:1.0-scsi-0:0:0:0   \
+#                           pci-0000:00:14.0-usb-0:4.4:1.0-scsi-0:0:0:0]
+
 proc do_background_resizing {} {
   global bg_image bg_image_path
 
