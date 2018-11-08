@@ -7,6 +7,7 @@ programs:
         keywords:
           - pdf
         name: Acrobat Reader
+  - airtame
   - amme:
         type: web
         name: Amme
@@ -736,6 +737,7 @@ menus:
             - system-config-printer
             - org.gnome.Screenshot
             - simplescreenrecorder
+            - airtame
 
   - menu-graphics:
         name:
