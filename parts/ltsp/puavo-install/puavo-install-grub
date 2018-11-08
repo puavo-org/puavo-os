@@ -2,6 +2,10 @@
 
 set -eu
 
+# This script is run on image updates from puavo-image-preinst so that only
+# /images is writable!  (and some other pseudo-filesystems such as /dev and
+# /proc are accessible as well).
+
 grub_m4_template() {
   cat <<'EOF'
 set default="0"
@@ -228,7 +232,6 @@ $(basename $0) [optional arguments]
 
   $(basename $0) takes the following optional arguments:
 
-    --grub-basedir       grubbasedir
     --hosttype           hosttype
     --images-dir         imagesdir
     --only-update-config
@@ -239,14 +242,13 @@ EOF
 
 exitstatus=0
 
-grub_basedir=''
 hosttype=$(cat /etc/puavo/hosttype 2>/dev/null || true)
 images_dir=/images
 only_update_config=false
 vgname=puavo
 
 if ! args=$(getopt -n "$0" -o +                                          \
-                   -l 'grub-basedir:,hosttype:,images-dir:,only-update-config,vgname:' \
+                   -l 'hosttype:,images-dir:,only-update-config,vgname:' \
                    -- "$@"); then
   usage
 fi
@@ -254,7 +256,6 @@ fi
 eval "set -- $args"
 while [ $# -ne 0 ]; do
   case "$1" in
-    --grub-basedir)       grub_basedir=$2;         shift; shift ;;
     --hosttype)           hosttype=$2;             shift; shift ;;
     --images-dir)         images_dir=$2;           shift; shift ;;
     --only-update-config) only_update_config=true; shift        ;;
@@ -330,22 +331,16 @@ case "$hosttype" in
 esac
 
 if ! $only_update_config; then
-  grub_install_args=
-  if [ -n "$grub_basedir" ]; then
-    grub_install_args="--directory=${grub_basedir}/usr/lib/grub/i386-pc --locale-directory=${grub_basedir}/usr/share/locale"
-  fi
-
   for grubdev in $grub_target_devices; do
-    if ! grub_msg=$(${grub_basedir}/usr/sbin/grub-install \
-      --boot-directory=${images_dir}/boot $grub_install_args "$grubdev" \
-        3>&- 4>&- 5>&- 2>&1); then
+    if ! grub_msg=$(grub-install --boot-directory=${images_dir}/boot \
+                      "$grubdev" 3>&- 4>&- 5>&- 2>&1); then
           echo "Grub installation to $grubdev failed: $grub_msg" >&2
           exit 1
     fi
   done
 
-  "${grub_basedir}/usr/sbin/grub-install" --version \
-    | awk '{ print $3 }' > "${images_dir}/boot/grub/version.tmp"
+  grub-install --version | awk '{ print $3 }' \
+    > "${images_dir}/boot/grub/version.tmp"
   if [ ! -s "${images_dir}/boot/grub/version.tmp" ]; then
     echo 'Could not determine new grub version' >&2
     rm -f "${images_dir}/boot/grub/version.tmp"
