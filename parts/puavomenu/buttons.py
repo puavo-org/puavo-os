@@ -1,11 +1,12 @@
 # Various custom buttons
 
+import logging
+
 import gi
 gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
 gi.require_version('PangoCairo', '1.0')
 from gi.repository import Gtk, Pango, PangoCairo
 
-import logger
 from constants import PROGRAM_BUTTON_WIDTH, PROGRAM_BUTTON_HEIGHT, \
                       PROGRAM_BUTTON_ICON_SIZE, SIDEBAR_WIDTH
 from iconcache import ICONS32, ICONS48
@@ -121,9 +122,9 @@ class HoverIconButtonBase(Gtk.Button):
             self.draw_background(ctx, rect)
             self.draw_icon(ctx)
             self.draw_label(ctx)
-        except Exception as e:
-            logger.error('Could not draw a HoverIconButton widget: {0}'.
-                         format(str(e)))
+        except Exception as exception:
+            logging.error('Could not draw a HoverIconButton widget: %s',
+                          str(exception))
 
         # return True to prevent default event processing
         return True
@@ -415,7 +416,7 @@ class AvatarButton(HoverIconButtonBase):
     # Loads and resizes the avatar icon
     def load_avatar(self, path):
         try:
-            logger.info('Loading avatar image "{0}"...'.format(path))
+            logging.info('Loading avatar image "%s"...', path)
 
             self.icon = load_image_at_size(path,
                                            self.ICON_SIZE,
@@ -423,9 +424,9 @@ class AvatarButton(HoverIconButtonBase):
 
             # trigger a redraw
             self.queue_draw()
-        except Exception as e:
-            logger.error('Could not load avatar image "{0}": {1}'.
-                         format(path, str(e)))
+        except Exception as exception:
+            logging.error('Could not load avatar image "%s": %s',
+                          path, str(exception))
             self.icon = None
 
 

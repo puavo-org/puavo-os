@@ -2,12 +2,8 @@
 
 # Welcome to PuavoMenu, the modern (?) WebMenu replacement.
 
-from os import environ
-from os.path import join as path_join
-from time import clock
 import argparse
-
-from settings import SETTINGS
+import time
 
 
 # Some kind of a help text
@@ -101,78 +97,88 @@ required.add_argument('--socket',
 
 args = parser.parse_args()
 
-import logger
+import os
+import os.path
+import logging
+
+from settings import SETTINGS
 
 if args.log:
-    logger.disable_console()
-    logger.enable_file(args.log)
+    # log to file
+    logging.basicConfig(filename=args.log,
+                        format='%(asctime)s %(levelname)s: %(message)s',
+                        level=logging.DEBUG)
 else:
-    logger.enable_console()
-    logger.disable_file()
+    # log to console
+    logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s',
+                        level=logging.DEBUG)
 
-logger.start_banner()
-logger.info('This is PuavoMenu v0.6 (c) Opinsys Oy 2017-2018')
+logging.info('Logging starts')
+logging.info('This is PuavoMenu v0.6 (c) Opinsys Oy 2017-2018')
 
-SETTINGS.res_dir = path_join(args.res_dir, '')
-SETTINGS.menu_dir = path_join(args.menu_dir, '')
-SETTINGS.user_dir = path_join(args.user_dir, '')
+SETTINGS.res_dir = os.path.join(args.res_dir, '')
+SETTINGS.menu_dir = os.path.join(args.menu_dir, '')
+SETTINGS.user_dir = os.path.join(args.user_dir, '')
 SETTINGS.language = args.lang
 SETTINGS.socket = args.socket
 SETTINGS.dev_mode = args.dev
 SETTINGS.autohide = args.autohide
 
 if SETTINGS.language is None:
-    if 'LANG' in environ:
-        SETTINGS.language = environ['LANG'][0:2].lower()
-    elif 'GDM_LANG' in environ:
-        SETTINGS.language = environ['GDM_LANG'][0:2].lower()
+    if 'LANG' in os.environ:
+        SETTINGS.language = os.environ['LANG'][0:2].lower()
+    elif 'GDM_LANG' in os.environ:
+        SETTINGS.language = os.environ['GDM_LANG'][0:2].lower()
 
 if SETTINGS.language not in ('en', 'fi', 'sv', 'de'):
-    logger.error('Invalid language code "{0}", defaulting to "en"'.
-                 format(SETTINGS.language))
+    logging.error('Invalid language code "%s", defaulting to "en"',
+                  SETTINGS.language)
     SETTINGS.language = 'en'
 
-logger.info('Resource directory.: "{0}"'.format(SETTINGS.res_dir))
-logger.info('Menu data directory: "{0}"'.format(SETTINGS.menu_dir))
-logger.info('User directory.....: "{0}"'.format(SETTINGS.user_dir))
-logger.info('IPC socket name....: "{0}"'.format(SETTINGS.socket))
-logger.info('Language code......: "{0}"'.format(SETTINGS.language))
+logging.info('Resource directory.: "%s"', SETTINGS.res_dir)
+logging.info('Menu data directory: "%s"', SETTINGS.menu_dir)
+logging.info('User directory.....: "%s"', SETTINGS.user_dir)
+logging.info('IPC socket name....: "%s"', SETTINGS.socket)
+logging.info('Language code......: "%s"', SETTINGS.language)
 
 if args.log:
-    logger.info('Log (this) file....: "' + args.log + '"')
+    logging.info('Log (this) file....: "%s"', args.log)
 
 # Detect the non-configurable settings
 SETTINGS.detect_environment()
 
-logger.info('Desktop directory..: "{0}"'.format(SETTINGS.desktop_dir))
+logging.info('Desktop directory..: "%s"', SETTINGS.desktop_dir)
 
 if SETTINGS.dev_mode:
-    logger.info('*** Development mode activated ***')
+    logging.info('*** Development mode activated ***')
 
 if SETTINGS.autohide:
-    logger.info('*** Autohide enabled ***')
+    logging.info('*** Autohide enabled ***')
 
-logger.info('=' * 50)
+logging.info('=' * 50)
 
 # And go!
 try:
-    import_start = clock()
+    import_start = time.clock()
+    from utils import log_elapsed_time
     from main import run
-    import_end = clock()
+    import_end = time.clock()
 
-    logger.print_time('Main import time', import_start, import_end)
+    log_elapsed_time('Main import time', import_start, import_end)
 
     run()
-except Exception as e:
-    # This is bad. Very bad.
-    logger.error(e)
+except Exception as exception:
+    # This is bad. Very bad. The exception bubbled all the way up to here,
+    # so this is fatal.
+    logging.critical(str(exception))
 
     import syslog
-    syslog.syslog(syslog.LOG_CRIT, str(e))
+    syslog.syslog(syslog.LOG_CRIT, str(exception))
 
 # Clean exit
-logger.info('=' * 50)
-logger.info('Shutdown complete')
-logger.end_banner()
+logging.info('=' * 50)
+logging.info('Shutdown complete')
+logging.info('Logging ends')
+logging.shutdown()
 
 exit(0)

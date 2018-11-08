@@ -2,11 +2,11 @@
 
 from time import clock
 
-from os import unlink, environ
-from os.path import join as path_join, isfile as is_file
+from os import unlink
 
 import socket               # for the IPC socket
-import traceback
+
+import logging
 
 import gi
 gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
@@ -15,15 +15,14 @@ from gi.repository import Gdk
 from gi.repository import Pango
 from gi.repository import GLib
 
-import logger
 from constants import *
-from iconcache import ICONS48
+
+import menudata
+
 from buttons import ProgramButton, MenuButton
-from utils import localize
+from utils import localize, log_elapsed_time
 from utils_gui import load_image_at_size, create_separator, \
                       create_desktop_link, create_panel_link
-from loader import load_menu_data
-from conditionals import evaluate_file
 import faves
 from sidebar import Sidebar
 from strings import STRINGS
@@ -80,18 +79,18 @@ class PuavoMenu(Gtk.Window):
         try:
             self.__socket = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
             self.__socket.bind(SETTINGS.socket)
-        except Exception as e:
+        except Exception as exception:
             # Oh dear...
             import syslog
 
-            logger.error('Unable to create a domain socket for IPC!')
-            logger.error('Reason: {0}'.format(e))
-            logger.error('Socket name: "{0}"'.format(SETTINGS.socket))
-            logger.error('This is a fatal error, stopping here.')
+            logging.error('Unable to create a domain socket for IPC!')
+            logging.error('Reason: %s', str(exception))
+            logging.error('Socket name: "%s"', SETTINGS.socket)
+            logging.error('This is a fatal error, stopping here.')
 
             syslog.syslog(syslog.LOG_CRIT,
-                          'PuavoMenu IPC socket "{0}" creation failed: {1}'.
-                          format(SETTINGS.socket, e))
+                          'PuavoMenu IPC socket "%s" creation failed: %s',
+                          SETTINGS.socket, str(exception))
 
             syslog.syslog(syslog.LOG_CRIT,
                           'PuavoMenu stops here. Contact Opinsys support.')
@@ -115,18 +114,14 @@ class PuavoMenu(Gtk.Window):
         self.__exit_permitted = False
         self.connect('delete-event', self.__try_exit)
 
-        # Conditional data
-        self.__conditions = {}
+        # Program, menu and category data
+        self.menudata = None
 
-        # The actual menu data. Can be empty...
-        self.__programs = {}
-        self.__menus = {}
-        self.__categories = {}
-        self.__category_index = []
-        self.__current_category = -1
+        # Current category (index to menudata.category_index)
+        self.current_category = -1
 
-        # The current menu, if any
-        self.__current_menu = None
+        # The current menu, if any (None if on category top-level)
+        self.current_menu = None
 
         # The current menu/program buttons in the current
         # category and menu, if any
@@ -134,13 +129,17 @@ class PuavoMenu(Gtk.Window):
 
         # Background image for top-level menus
         try:
-            image_name = 'folder_dark.png' if SETTINGS.dark_theme else 'folder.png'
+            if SETTINGS.dark_theme:
+                image_name = 'folder_dark.png'
+            else:
+                image_name = 'folder.png'
 
+            # WARNING: Hardcoded image size!
             self.__menu_background = \
                 load_image_at_size(SETTINGS.res_dir + image_name, 150, 110)
-        except Exception as e:
-            logger.error('Can\'t load the menu background image: {0}'.
-                         format(e))
+        except Exception as exception:
+            logging.error("Can't load the menu background image: %s",
+                          str(exception))
             self.__menu_background = None
 
         # ----------------------------------------------------------------------
@@ -173,15 +172,10 @@ class PuavoMenu(Gtk.Window):
                                                WINDOW_HEIGHT)
 
         if SETTINGS.dev_mode:
-            # The devtools menu
-            self.__devtools = Gtk.Button()
-            self.__devtools.set_label('Development tools')
-            self.__devtools.connect('clicked', self.__devtools_menu)
-            self.__devtools.show()
-            self.__main_container.put(
-                self.__devtools,
-                PROGRAMS_LEFT + PROGRAMS_WIDTH - SEARCH_WIDTH - MAIN_PADDING,
-                MAIN_PADDING + SEARCH_HEIGHT + 5)
+            # The devtools popup menu
+            self.menu_signal = \
+                self.connect('button-press-event', self.__devtools_menu)
+
 
         # ----------------------------------------------------------------------
         # Menus/programs list
@@ -191,7 +185,6 @@ class PuavoMenu(Gtk.Window):
         # Category tabs
         self.__category_buttons = Gtk.Notebook()
         self.__category_buttons.set_size_request(CATEGORIES_WIDTH, -1)
-        self.__category_buttons.set_current_page(self.__current_category)
         self.__category_buttons.connect('switch-page',
                                         self.__clicked_category)
         self.__main_container.put(self.__category_buttons,
@@ -309,8 +302,6 @@ class PuavoMenu(Gtk.Window):
             # In auto-hide mode, hide the window when it loses focus
             self.enable_out_of_focus_hide()
 
-        self.connect('focus-in-event', self.__main_got_focus)
-        self.__search.connect('focus-in-event', self.__search_in)
         self.__search.connect('focus-out-event', self.__search_out)
 
         # ----------------------------------------------------------------------
@@ -324,10 +315,18 @@ class PuavoMenu(Gtk.Window):
         # menu data yet to show.
 
         end_time = clock()
-        logger.print_time('Window init time', start_time, end_time)
+        log_elapsed_time('Window init time', start_time, end_time)
+
+        # ----------------------------------------------------------------------
+        # Load menu data
 
         # Finally, load the menu data and show the UI
-        self.__load_data()
+        self.load_menu_data()
+
+        # This is a bad, bad situation that should never happen in production.
+        # It will happen one day.
+        if self.menudata is None or len(self.menudata.programs) == 0:
+            self.__show_empty_message(STRINGS['menu_no_data_at_all'])
 
 
     # --------------------------------------------------------------------------
@@ -341,24 +340,24 @@ class PuavoMenu(Gtk.Window):
             self.__programs_icons.hide()
 
         # Clear the old buttons first
-        for b in self.__buttons:
-            b.destroy()
+        for button in self.__buttons:
+            button.destroy()
 
         self.__buttons = []
 
-        xp = 0
-        yp = 0
+        xpos = 0
+        ypos = 0
 
         # Insert the new icons and arrange them into rows
-        for n, b in enumerate(new_buttons):
-            self.__programs_icons.put(b, xp, yp)
-            self.__buttons.append(b)
+        for index, button in enumerate(new_buttons):
+            self.__programs_icons.put(button, xpos, ypos)
+            self.__buttons.append(button)
 
-            xp += PROGRAM_BUTTON_WIDTH
+            xpos += PROGRAM_BUTTON_WIDTH
 
-            if (n + 1) % PROGRAMS_PER_ROW == 0:
-                xp = 0
-                yp += PROGRAM_BUTTON_HEIGHT
+            if (index + 1) % PROGRAMS_PER_ROW == 0:
+                xpos = 0
+                ypos += PROGRAM_BUTTON_HEIGHT
 
         self.__programs_icons.show_all()
 
@@ -372,65 +371,216 @@ class PuavoMenu(Gtk.Window):
 
         self.__empty.hide()
 
-        if self.__current_menu is None:
+        if self.current_menu is None:
             # Top-level category view
-            if len(self.__category_index) > 0 and \
-                    self.__current_category < len(self.__category_index):
-                cat = self.__categories[self.__category_index[
-                    self.__current_category]]
+            if len(self.menudata.category_index) > 0 and \
+               self.current_category < len(self.menudata.category_index):
+
+                # We have a valid category
+                cat = self.menudata.categories[ \
+                    self.menudata.category_index[self.current_category]]
 
                 # Menus first...
-                for m in cat.menus:
-                    mb = MenuButton(self, m.title, m.icon, m.description,
-                                    m, self.__menu_background)
-                    mb.connect('clicked', self.__clicked_menu_button)
-                    new_buttons.append(mb)
+                for menu in cat.menus:
+                    button = MenuButton(self, menu.title, menu.icon,
+                                        menu.description, menu,
+                                        self.__menu_background)
+                    button.connect('clicked', self.__clicked_menu_button)
+                    new_buttons.append(button)
 
                 # ...then programs
-                for p in cat.programs:
-                    pb = ProgramButton(self, p.title, p.icon,
-                                       p.description, p)
-                    pb.connect('clicked', self.clicked_program_button)
-                    new_buttons.append(pb)
+                for program in cat.programs:
+                    button = ProgramButton(self, program.title, program.icon,
+                                           program.description, program)
+                    button.connect('clicked', self.clicked_program_button)
+                    new_buttons.append(button)
 
-            # Special situations
-            if len(self.__category_index) == 0:
-                self.__show_empty_message(STRINGS['menu_no_data_at_all'])
-            elif len(new_buttons) == 0:
+            # Handle special situations
+            if len(new_buttons) == 0:
                 self.__show_empty_message(STRINGS['menu_empty_category'])
 
         else:
-            # Submenu view, have only programs
-            for p in self.__current_menu.programs:
-                pb = ProgramButton(self, p.title, p.icon, p.description, p)
-                pb.connect('clicked', self.clicked_program_button)
-                new_buttons.append(pb)
+            # Submenu view, have only programs (no submenu support yet)
+            for program in self.current_menu.programs:
+                button = ProgramButton(self, program.title, program.icon,
+                                       program.description, program)
+                button.connect('clicked', self.clicked_program_button)
+                new_buttons.append(button)
 
-            # Special situations
-            if len(self.__current_menu.programs) == 0:
+            # Handle special situations
+            if len(self.current_menu.programs) == 0:
                 self.__show_empty_message(STRINGS['menu_empty_menu'])
 
         self.__fill_programs_list(new_buttons, True)
 
-
-    # Changes the menu title and description, and shows or hides
-    # the whole thing if necessary
-    def __update_menu_title(self):
-        if self.__current_menu is None:
-            # top-level
+        # Update the menu title
+        if self.current_menu is None:
             self.__menu_title.hide()
+        else:
+            # TODO: "big" and "small" are not good sizes, we need to be explicit
+            if self.current_menu.description:
+                self.__menu_title.set_markup(
+                    '<big>{0}</big>  <small>{1}</small>'.
+                    format(self.current_menu.title, self.current_menu.description))
+            else:
+                self.__menu_title.set_markup(
+                    '<big>{0}</big>'.format(self.current_menu.title))
+
+            self.__menu_title.show()
+
+
+    # --------------------------------------------------------------------------
+    # Menu/category navigation
+
+
+    # Shows an "empty" message in the main programs list. Used when a
+    # menu/category is empty, or there are no search results.
+    def __show_empty_message(self, msg):
+        if isinstance(msg, dict):
+            msg = localize(msg)
+
+        self.__empty.set_markup(
+            '<span color="#888" size="large"><i>{0}</i></span>'.format(msg))
+        self.__empty.show()
+
+
+    # Change the category
+    def __clicked_category(self, widget, frame, num):
+        self.__clear_search_field()
+        self.__back_button.hide()
+        self.current_category = num
+        self.current_menu = None
+        self.__create_current_menu()
+
+
+    # Go back to top level
+    def __clicked_back_button(self, button):
+        self.__clear_search_field()
+        self.__back_button.hide()
+        self.current_menu = None
+        self.__create_current_menu()
+
+
+    # Enter a menu
+    def __clicked_menu_button(self, button):
+        self.__clear_search_field()
+        self.__back_button.show()
+        self.current_menu = button.data
+        self.__create_current_menu()
+
+
+    # Resets the menu back to the default view
+    def reset_view(self):
+        self.__clear_search_field()
+        self.__back_button.hide()
+        self.current_category = 0
+        self.current_menu = None
+        self.__create_current_menu()
+        self.__category_buttons.set_current_page(0)
+
+
+    # --------------------------------------------------------------------------
+    # Button click handlers
+
+
+    # Called directly from ProgramButton
+    def add_program_to_desktop(self, program):
+        """Creates a desktop shortcut to a program."""
+
+        if not SETTINGS.desktop_dir:
             return
 
-        # TODO: "big" and "small" are not good sizes, we need to be explicit
-        if self.__current_menu.description is None:
-            self.__menu_title.set_markup('<big>{0}</big>'.
-                                         format(self.__current_menu.title))
-        else:
-            self.__menu_title.set_markup('<big>{0}</big>  <small>{1}</small>'.
-                                         format(self.__current_menu.title,
-                                                self.__current_menu.description))
+        import os.path
 
-        self.__menu_title.show()
+        # Create the link file
+        # TODO: use the *original* .desktop file if it exists
+        name = os.path.join(SETTINGS.desktop_dir, '{0}.desktop'.format(program.title))
+
+        logging.info('Adding program "%s" to the desktop, destination="%s"',
+                     program.title, name)
+
+        try:
+            create_desktop_link(name, program)
+        except Exception as exception:
+            logging.error('Desktop link creation failed:')
+            logging.error(str(exception))
+
+            self.error_message(
+                localize(STRINGS['desktop_link_failed']),
+                str(exception))
+
+
+    # Called directly from ProgramButton
+    def add_program_to_panel(self, program):
+        logging.info('Adding program "%s" (id="%s") to the bottom panel',
+                     program.title, program.name)
+
+        try:
+            create_panel_link(program)
+        except Exception as exception:
+            logging.error('Panel icon creation failed')
+            logging.error(str(exception))
+
+            self.error_message(localize(STRINGS['panel_link_failed']),
+                               str(exception))
+
+
+    # Called directly from ProgramButton
+    def remove_program_from_faves(self, p):
+        logging.info('Removing program "%s" from the faves', p.title)
+        p.uses = 0
+        self.__faves.update(self.menudata.programs)
+
+
+    # Launch a program. This is a public method, it is called from other
+    # files (buttons and faves) to launch programs.
+    def clicked_program_button(self, button):
+        program = button.data
+        program.uses += 1
+        self.__faves.update(self.menudata.programs)
+
+        logging.info('Clicked program button "%s", usage counter is %d',
+                     program.title, program.uses)
+
+        if program.command is None:
+            logging.error('No command defined for program "%s"', program.title)
+            return
+
+        # Try to launch the program
+        try:
+            import subprocess
+
+            if program.type in (PROGRAM_TYPE_DESKTOP, PROGRAM_TYPE_CUSTOM):
+                # TODO: do we really need to open a shell for this?
+                cmd = ['sh', '-c', program.command, '&']
+            elif program.type == PROGRAM_TYPE_WEB:
+                # Opens in the default browser
+                cmd = ['xdg-open', program.command]
+            else:
+                raise RuntimeError('Unknown program type "{0}"'.
+                                   format(program.type))
+
+            logging.info('Executing "%s"', cmd)
+
+            subprocess.Popen(cmd,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+
+            # Of course, we never check the return value here, so we
+            # don't know if the command actually worked...
+
+            self.autohide()
+
+            if SETTINGS.reset_view_after_start:
+                # Go back to the default view
+                self.reset_view()
+
+        except Exception as exception:
+            logging.error('Could not launch program "%s": %s',
+                          program.command, str(exception))
+            self.error_message(localize(STRINGS['program_launching_failed']),
+                               str(exception))
+            return False
 
 
     # --------------------------------------------------------------------------
@@ -442,48 +592,16 @@ class PuavoMenu(Gtk.Window):
         return self.__search.get_text().strip().translate(self.__translation_table)
 
 
-    def __hide_search_results(self):
-        self.__empty.hide()
-        self.__create_current_menu()
-
-
     # Searches the programs list using a string, then replaces the menu list
     # with results
     def __do_search(self, edit):
         key = self.__get_search_text()
 
         if len(key) == 0:
-            # reset
-            self.__hide_search_results()
+            self.__create_current_menu()
             return
 
-        import re
-
-        matches = []
-
-        for name in self.__programs:
-            p = self.__programs[name]
-
-            if re.search(key, p.title, re.IGNORECASE):
-                matches.append(p)
-                continue
-
-            # check the .desktop file name
-            if p.original_desktop_file:
-                if re.search(key,
-                             p.original_desktop_file.replace('.desktop', ''),
-                             re.IGNORECASE):
-                    matches.append(p)
-                    continue
-
-            # keyword search must be done last, otherwise a program
-            # can appear multiple times in the search results
-            for k in p.keywords:
-                if re.search(key, k, re.IGNORECASE):
-                    matches.append(p)
-                    break
-
-        matches = sorted(matches, key=lambda p: p.title)
+        matches = self.menudata.search(key)
 
         if len(matches) > 0:
             self.__empty.hide()
@@ -501,9 +619,8 @@ class PuavoMenu(Gtk.Window):
         self.__fill_programs_list(new_buttons, True)
 
 
-    # Ensures the search entry is empty
+    # Clear the search box without triggering another search
     def __clear_search_field(self):
-        # Clear the search box without triggering another search
         self.__search.disconnect(self.__search_keypress_signal)
         self.__search.disconnect(self.__search_changed_signal)
         self.__search.set_text('')
@@ -519,13 +636,13 @@ class PuavoMenu(Gtk.Window):
             if len(self.__get_search_text()):
                 # Cancel an ongoing search
                 self.__clear_search_field()
-                self.__hide_search_results()
+                self.__create_current_menu()
             else:
                 # The search field is empty, hide the window (we have
                 # another Esc handler elsewhere that's used when the
                 # search box has no focus)
-                logger.debug('Search field is empty and Esc pressed, '
-                             'hiding the window')
+                logging.debug('Search field is empty and Esc pressed, '
+                              'hiding the window')
                 self.autohide()
         elif key_event.keyval == Gdk.KEY_Return:
             if len(self.__get_search_text()) and (len(self.__buttons) == 1):
@@ -533,170 +650,95 @@ class PuavoMenu(Gtk.Window):
                 # Enter, so launch it!
                 self.clicked_program_button(self.__buttons[0])
                 self.__clear_search_field()
-                self.__hide_search_results()
+                self.__create_current_menu()
 
         return False
 
 
     # --------------------------------------------------------------------------
-    # Menu/category navigation
+    # Menu data loading and handling
 
 
-    # Change the category
-    def __clicked_category(self, widget, frame, num):
-        self.__clear_search_field()
-        self.__back_button.hide()
-        self.__current_category = num
-        self.__current_menu = None
-        self.__create_current_menu()
-        self.__update_menu_title()
+    def load_menu_data(self):
+        """Loads menu data and sets up the UI. Returns false if
+        something fails."""
 
+        menudata_new = menudata.Menudata()
 
-    # Go back to top level
-    def __clicked_back_button(self, e):
-        self.__clear_search_field()
-        self.__back_button.hide()
-        self.__current_menu = None
-        self.__create_current_menu()
-        self.__update_menu_title()
-
-
-    # Enter a menu
-    def __clicked_menu_button(self, e):
-        self.__clear_search_field()
-        self.__back_button.show()
-        self.__current_menu = e.data
-        self.__create_current_menu()
-        self.__update_menu_title()
-
-
-    # Shows an "empty" message in the main programs list. Used when a
-    # menu/category is empty, or there are no search results.
-    def __show_empty_message(self, msg):
-        if isinstance(msg, dict):
-            msg = localize(msg)
-
-        self.__empty.set_markup(
-            '<span color="#888" size="large"><i>{0}</i></span>'.
-            format(msg))
-        self.__empty.show()
-
-
-    # --------------------------------------------------------------------------
-    # Button click handlers
-
-
-    # Called directly from ProgramButton
-    def add_program_to_desktop(self, p):
-        """Creates a desktop shortcut to a program."""
-
-        if not SETTINGS.desktop_dir:
-            return
-
-        # Create the link file
-        # TODO: use the *original* .desktop file if it exists
-        name = path_join(SETTINGS.desktop_dir, '{0}.desktop'.format(p.title))
-
-        logger.info('Adding program "{0}" to the desktop, output="{1}"'.
-                    format(p.title, name))
-
-        try:
-            create_desktop_link(name, p)
-        except Exception as e:
-            logger.error('Desktop link creation failed')
-            logger.error(e)
-
-            self.error_message(
-                localize(STRINGS['desktop_link_failed']),
-                str(e))
-
-
-    # Called directly from ProgramButton
-    def add_program_to_panel(self, p):
-        logger.info('Adding program "{0}" (id="{1}") to the bottom panel'.
-                    format(p.title, p.name))
-
-        try:
-            create_panel_link(p)
-        except Exception as e:
-            logger.error('Panel icon creation failed')
-            logger.error(e)
-
-            self.error_message(
-                localize(STRINGS['panel_link_failed']),
-                str(e))
-
-
-    # Called directly from ProgramButton
-    def remove_program_from_faves(self, p):
-        print('Removing program "{0}" from the faves'.format(p.title))
-        p.uses = 0
-        self.__faves.update(self.__programs)
-
-
-    # Resets the menu back to the default view
-    def __reset_menu(self):
-        self.__current_category = 0
-        self.__category_buttons.set_current_page(0)
-        self.__current_menu = None
-        self.__clear_search_field()
-        self.__back_button.hide()
-        self.__create_current_menu()
-        self.__update_menu_title()
-
-
-    # Launch a program. This is a public method, it is called from other
-    # files (buttons and faves) to launch programs.
-    def clicked_program_button(self, button):
-        p = button.data
-        p.uses += 1
-        self.__faves.update(self.__programs)
-
-        print('Clicked program button "{0}", usage counter is {1}'.
-              format(p.title, p.uses))
-
-        if p.command is None:
-            logger.error('No command defined for program "{0}"'.
-                         format(p.title))
-            return
-
-        # Try to launch the program
-        try:
-            import subprocess
-
-            if p.type in (PROGRAM_TYPE_DESKTOP, PROGRAM_TYPE_CUSTOM):
-                # TODO: do we really need to open a shell for this?
-                cmd = ['sh', '-c', p.command, '&']
-            elif p.type == PROGRAM_TYPE_WEB:
-                # Opens in the default browser
-                cmd = ['xdg-open', p.command]
-            else:
-                raise RuntimeError('Unknown program type {0}'.
-                                   format(p.type))
-
-            logger.info('Executing "{0}"'.format(cmd))
-
-            subprocess.Popen(cmd,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
-
-            # Of course, we never check the return value here, so we
-            # don't know if the command actually worked...
-
-            self.autohide()
-
-            if SETTINGS.reset_view_after_start:
-                # Go back to the default view
-                self.__clear_search_field()
-                self.__hide_search_results()
-                self.__reset_menu()
-
-        except Exception as e:
-            logger.error('Could not launch program "{0}": {1}'.
-                         format(p.command, str(e)))
-            self.error_message(localize(STRINGS['program_launching_failed']),
-                               str(e))
+        if not menudata_new.load():
             return False
+
+        self.menudata = menudata_new
+
+        # Prepare the user interface
+        for index in self.menudata.category_index:
+            cat = self.menudata.categories[index]
+
+            frame = Gtk.Frame()
+            label = Gtk.Label(cat.title)
+            frame.show()
+            label.show()
+            self.__category_buttons.append_page(frame, label)
+
+        if len(self.menudata.category_index) > 0:
+            self.__category_buttons.show()
+
+        self.__create_current_menu()
+        self.__programs_container.show()
+
+        faves.load_use_counts(self.menudata.programs)
+        self.__faves.update(self.menudata.programs)
+        self.__faves_sep.show()
+        self.__faves.show()
+
+        self.__search.show()
+        self.__search.grab_focus()
+
+        return True
+
+
+    def unload_menu_data(self):
+        """Completely removes all menu data. Hides everything programs-
+        related from the UI."""
+
+        if not SETTINGS.dev_mode:
+            return
+
+        self.menudata = menudata.Menudata()
+        self.current_category = -1
+        self.current_menu = None
+
+        self.__create_current_menu()
+
+        self.__category_buttons.hide()
+
+        num_pages = self.__category_buttons.get_n_pages()
+
+        for index in range(0, num_pages):
+            self.__category_buttons.remove_page(-1)
+
+        for button in self.__buttons:
+            button.destroy()
+
+        self.__buttons = []
+
+        self.__clear_search_field()
+        self.__back_button.hide()
+        self.__search.hide()
+        self.__empty.hide()
+
+        self.__programs_icons.hide()
+        self.__programs_container.hide()
+
+        self.__faves_sep.hide()
+        self.__faves.clear()
+        self.__faves.hide()
+
+        from iconcache import ICONS48
+
+        if ICONS48.stats()['num_icons'] != 0:
+            # Purge existing icons
+            ICONS48.clear()
 
 
     # --------------------------------------------------------------------------
@@ -711,9 +753,9 @@ class PuavoMenu(Gtk.Window):
             return
 
         if SETTINGS.dev_mode:
-            logger.debug('Ignoring Esc in development mode')
+            logging.debug('Ignoring Esc in development mode')
         else:
-            logger.debug('Esc pressed, hiding the window')
+            logging.debug('Esc pressed, hiding the window')
             self.set_keep_above(False)
             self.set_visible(False)
 
@@ -729,7 +771,7 @@ class PuavoMenu(Gtk.Window):
             return
 
         if self.__focus_signal:
-            logger.debug('Out-of-focus signal handler deactivated')
+            logging.debug('Out-of-focus signal handler deactivated')
             self.disconnect(self.__focus_signal)
             self.__focus_signal = None
 
@@ -741,21 +783,13 @@ class PuavoMenu(Gtk.Window):
             return
 
         if not self.__focus_signal:
-            logger.debug('Out-of-focus signal handler activated')
+            logging.debug('Out-of-focus signal handler activated')
             self.__focus_signal = \
                 self.connect('focus-out-event', self.__main_lost_focus)
 
 
-    def __main_got_focus(self, *unused):
-        pass
-
-
     def __main_lost_focus(self, *unused):
         self.autohide()
-
-
-    def __search_in(self, *unused):
-        pass
 
 
     def __search_out(self, *unused):
@@ -766,7 +800,7 @@ class PuavoMenu(Gtk.Window):
     # from other files.
     def autohide(self, *unused):
         if SETTINGS.autohide:
-            logger.debug('Autohiding the window')
+            logging.debug('Autohiding the window')
             self.set_keep_above(False)
             self.set_visible(False)
 
@@ -775,12 +809,12 @@ class PuavoMenu(Gtk.Window):
     # this with "force=True" because they HAVE to kill the program.
     def go_away(self, force=False):
         if force or self.__exit_permitted:
-            logger.info('Shutdown initiated')
+            logging.info('Shutdown initiated')
             self.set_keep_above(False)
             self.set_visible(False)
             Gtk.main_quit()
         else:
-            logger.info('Exit not permitted')
+            logging.info('Exit not permitted')
             return True
 
 
@@ -810,7 +844,7 @@ class PuavoMenu(Gtk.Window):
                 # coordinates
                 # TODO: use window gravity for this?
                 return (int(args[1]), int(args[2]) - WINDOW_HEIGHT)
-        except:
+        except Exception:
             pass
 
         return None
@@ -823,47 +857,43 @@ class PuavoMenu(Gtk.Window):
             data = (data or b'').decode('utf-8').strip().split(' ')
 
             if len(data) == 0:
-                logger.debug('Received an empty command through the socket?')
+                logging.debug('Received an empty command through the socket?')
                 return True
 
             cmd = data[0]
             data = data[1:]
 
-            logger.debug('Socket command: "{0}"'.format(cmd))
-            logger.debug('Socket arguments: "{0}"'.format(data))
+            logging.debug('Socket command: "%s"', cmd)
+            logging.debug('Socket arguments: "%s"', data)
 
             if cmd == 'hide':
                 # Hide the window
 
                 if SETTINGS.reset_view_after_start:
                     # Go back to the default view
-                    self.__clear_search_field()
-                    self.__hide_search_results()
-                    self.__reset_menu()
+                    self.reset_view()
 
                 if self.is_visible():
-                    logger.debug('Hiding the window')
+                    logging.debug('Hiding the window')
                     self.__search.grab_focus()
                     self.set_keep_above(False)
                     self.set_visible(False)
                 else:
-                    logger.debug('Already hidden')
+                    logging.debug('Already hidden')
             elif cmd == 'show':
                 # Show the window
 
-                if SETTINGS.reset_view_after_start:
-                    # Go back to the default view
-                    self.__clear_search_field()
-                    self.__hide_search_results()
-                    self.__reset_menu()
-
                 if self.is_visible():
-                    logger.debug('Already visible')
+                    logging.debug('Already visible')
                 else:
+                    if SETTINGS.reset_view_after_start:
+                        # Go back to the default view
+                        self.reset_view()
+
                     coords = self.__parse_position(data)
 
                     if coords:
-                        logger.debug(coords)
+                        logging.debug(coords)
                         self.move(coords[0], coords[1])
 
                     self.set_keep_above(True)
@@ -877,21 +907,19 @@ class PuavoMenu(Gtk.Window):
 
                 if SETTINGS.reset_view_after_start:
                     # Go back to the default view
-                    self.__clear_search_field()
-                    self.__hide_search_results()
-                    self.__reset_menu()
+                    self.reset_view()
 
                 if self.is_visible():
-                    logger.debug('Toggling window visibility (hide)')
+                    logging.debug('Toggling window visibility (hide)')
                     self.__search.grab_focus()
                     self.set_keep_above(False)
                     self.set_visible(False)
                 else:
-                    logger.debug('Toggling window visibility (show)')
+                    logging.debug('Toggling window visibility (show)')
                     coords = self.__parse_position(data)
 
                     if coords:
-                        logger.debug(coords)
+                        logging.debug(coords)
                         self.move(coords[0], coords[1])
 
                     self.set_keep_above(True)
@@ -901,307 +929,13 @@ class PuavoMenu(Gtk.Window):
                     self.__search.grab_focus()
                     self.activate_focus()
             else:
-                logger.debug('Unknown command "{0}" received, args={1}'.
-                             format(cmd, data))
-        except Exception as e:
-            logger.error('Socket command processing failed!')
-            logger.error(e)
+                logging.warning('Unknown command "%s" received, args="%s"',
+                                cmd, data)
+        except Exception as exception:
+            logging.error('Socket command processing failed!')
+            logging.error(str(exception))
 
         # False will remove the handler, that's not what we want
-        return True
-
-
-    # --------------------------------------------------------------------------
-    # Menu data loading and handling
-
-
-    def __unload_data(self):
-        """Completely removes all menu data. Hides everything programs-
-        related from the UI."""
-
-        self.__category_buttons.hide()
-
-        num_pages = self.__category_buttons.get_n_pages()
-
-        for i in range(0, num_pages):
-            self.__category_buttons.remove_page(-1)
-
-        self.__clear_search_field()
-        self.__back_button.hide()
-        self.__search.hide()
-
-        self.__empty.hide()
-
-        self.__menu_title.hide()
-        self.__programs_icons.hide()
-        self.__programs_container.hide()
-
-        self.__faves_sep.hide()
-        self.__faves.clear()
-        self.__faves.hide()
-
-        for b in self.__buttons:
-            b.destroy()
-
-        self.__buttons = []
-
-        # Actually remove the menu data
-        self.__conditions = {}
-        self.__programs = {}
-        self.__menus = {}
-        self.__categories = {}
-        self.__category_index = []
-        self.__current_category = -1
-        self.__current_menu = None
-
-        if ICONS48.stats()['num_icons'] != 0:
-            # Purge existing icons
-            ICONS48.clear()
-
-
-    def __load_data(self):
-        """Loads menu data and sets up the UI. Returns false if
-        something fails."""
-
-        # Don't mess up error and warning counts
-        logger.reset_counters()
-
-        # Files/strings to be loaded
-        sources = [
-            ['f', 'menudata.yaml'],
-            #['s', koodi],
-        ]
-
-        # Paths for .desktop files
-        desktop_dirs = [
-            '/usr/share/applications',
-            '/usr/share/applications/kde4',
-            '/usr/local/share/applications',
-        ]
-
-        # Where to search for icons
-        icon_dirs = [
-            '/usr/share/icons/hicolor/48x48/apps',
-            '/usr/share/icons/hicolor/64x64/apps',
-            '/usr/share/icons/hicolor/128x128/apps',
-            '/usr/share/icons/Neu/128x128/categories',
-            '/usr/share/icons/hicolor/scalable/apps',
-            '/usr/share/icons/hicolor/scalable',
-            '/usr/share/icons/Faenza/categories/64',
-            '/usr/share/icons/Faenza/apps/48',
-            '/usr/share/icons/Faenza/apps/96',
-            '/usr/share/app-install/icons',
-            '/usr/share/pixmaps',
-            '/usr/share/icons/hicolor/32x32/apps',
-        ]
-
-        conditional_files = [
-            'conditions.yaml'
-        ]
-
-        for s in sources:
-            if s[0] == 'f':
-                s[1] = SETTINGS.menu_dir + s[1]
-
-        start_time = clock()
-
-        # Load and evaluate conditionals
-        self.__conditions = {}
-
-        for c in conditional_files:
-            r = evaluate_file(SETTINGS.menu_dir + c)
-            self.__conditions.update(r)
-
-        conditional_time = clock()
-
-        logger.print_time('Conditional evaluation time',
-                          start_time, conditional_time)
-
-        programs = {}
-        menus = {}
-        categories = {}
-        category_index = []
-
-        id_to_path_mapping = {}
-
-        # Load everything
-        try:
-            programs, menus, categories, category_index = \
-                load_menu_data(sources,
-                               desktop_dirs,
-                               self.__conditions)
-        except Exception as e:
-            logger.error('Could not load menu data!')
-            logger.traceback(traceback.format_exc())
-            return False
-
-        if not programs:
-            return False
-
-        parsing_time = clock()
-
-        # Locate and load icon files
-        logger.info('Loading icons...')
-        num_missing_icons = 0
-
-        for name in programs:
-            p = programs[name]
-
-            if not p.used:
-                continue
-
-            if p.icon is None:
-                # This should not happen, ever
-                logger.error('The impossible happened: program "{0}" '
-                             'has no icon at all!'.format(name))
-                num_missing_icons += 1
-                continue
-
-            if name in id_to_path_mapping:
-                p.icon_is_path = True
-                p.icon = id_to_path_mapping[name]
-
-            if p.icon_is_path:
-                # Just use it
-                if is_file(p.icon):
-                    icon = ICONS48.load_icon(p.icon)
-
-                    if icon.usable:
-                        p.icon = icon
-                        continue
-
-                # Okay, the icon was specified, but it could not be loaded.
-                # Try automatic loading.
-                p.icon_is_path = False
-
-            # Locate the icon specified in the .desktop file
-            icon_path = None
-
-            for s in icon_dirs:
-                # Try the name as-is first
-                path = path_join(s, p.icon)
-
-                if is_file(path):
-                    icon_path = path
-                    break
-
-                if not icon_path:
-                    # Then try the different extensions
-                    for e in ICON_EXTENSIONS:
-                        path = path_join(s, p.icon + e)
-
-                        if is_file(path):
-                            icon_path = path
-                            break
-
-                if icon_path:
-                    break
-
-            # Nothing found
-            if not icon_path:
-                logger.error('Icon "{0}" for program "{1}" not found in '
-                             'icon load paths'.format(p.icon, name))
-                p.icon = None
-                num_missing_icons += 1
-                continue
-
-            p.icon = ICONS48.load_icon(path)
-
-            if not p.icon.usable:
-                logger.warn('Found an icon "{0}" for program "{1}", but '
-                            'it could not be loaded'.
-                            format(path, name))
-                num_missing_icons += 1
-            else:
-                id_to_path_mapping[name] = path
-
-        for name in menus:
-            m = menus[name]
-
-            if m.icon is None:
-                logger.warn('Menu "{0}" has no icon defined'.format(name))
-                num_missing_icons += 1
-                continue
-
-            if not is_file(m.icon):
-                logger.error('Icon "{0}" for menu "{1}" does not exist'.
-                             format(m.icon, name))
-                m.icon = None
-                num_missing_icons += 1
-                continue
-
-            m.icon = ICONS48.load_icon(m.icon)
-
-            if not m.icon.usable:
-                logger.warn('Found an icon "{0}" for menu "{1}", but '
-                            'it could not be loaded'.
-                            format(path, name))
-                num_missing_icons += 1
-
-        end_time = clock()
-
-        if num_missing_icons == 0:
-            logger.info('No missing icons')
-        else:
-            logger.info('Have {0} missing or unloadable icons'.
-                        format(num_missing_icons))
-
-        stats = ICONS48.stats()
-        logger.info('Number of 48-pixel icons cached: {0}'.
-                    format(stats['num_icons']))
-        logger.info('Number of 48-pixel atlas surfaces: {0}'.
-                    format(stats['num_atlases']))
-
-        logger.print_time('Icon loading time', parsing_time, end_time)
-
-        if logger.have_warnings():
-            logger.info('{0} warning(s) generated'.
-                        format(logger.num_warnings()))
-
-        if logger.have_errors():
-            logger.info('{0} error(s) generated'.
-                        format(logger.num_errors()))
-
-        logger.print_time('Total loading time', start_time, end_time)
-
-        # Replace existing menu data, if any
-        self.__programs = programs
-        self.__menus = menus
-        self.__categories = categories
-        self.__category_index = category_index
-        self.__current_category = 0
-
-        # Prepare the user interface
-        for c in self.__category_index:
-            cat = self.__categories[c]
-
-            frame = Gtk.Frame()
-            label = Gtk.Label(cat.title)
-            frame.show()
-            label.show()
-            self.__category_buttons.append_page(frame, label)
-
-        if len(self.__category_index) > 0:
-            self.__category_buttons.show()
-
-        self.__create_current_menu()
-
-        self.__clear_search_field()
-        self.__back_button.hide()
-        self.__empty.hide()
-        self.__search.show()
-        self.__menu_title.hide()
-
-        self.__programs_container.show()
-
-        faves.load_use_counts(self.__programs)
-        self.__faves.update(self.__programs)
-        self.__faves_sep.show()
-        self.__faves.show()
-
-        self.__search.show()
-        self.__search.grab_focus()
-
         return True
 
 
@@ -1210,83 +944,82 @@ class PuavoMenu(Gtk.Window):
 
 
     # The devtools menu and its commands
-    def __devtools_menu(self, button):
+    def __devtools_menu(self, widget, event):
+
+        if event.button != 3:
+            return
+
         if not SETTINGS.dev_mode:
             return
 
-        def remove(x):
-            if self.__programs:
-                logger.debug('=' * 20)
-                logger.debug('Purging all loaded menu data!')
-                logger.debug('=' * 20)
-                self.__unload_data()
+        def purge(menuitem):
+            if self.menudata and self.menudata.programs:
+                logging.debug('=' * 20)
+                logging.debug('Purging all loaded menu data!')
+                logging.debug('=' * 20)
+                self.unload_menu_data()
 
-        def reload(x):
-            # remember where we are
-            prev_menu = self.__current_menu.name if self.__current_menu \
-                else None
-            prev_cat = self.__category_index[self.__current_category] \
-                if self.__current_category != -1 else None
+        def reload(menuitem):
+            # Remember where we are (a little nice-to-have for development time)
+            if self.current_menu:
+                prev_menu = self.current_menu.name
+            else:
+                prev_menu = None
 
-            # TODO: Don't clear current data if the reload fails
-            logger.debug('=' * 20)
-            logger.debug('Reloading all menu data!')
-            logger.debug('=' * 20)
+            if len(self.menudata.category_index) > 0 and self.current_category != -1:
+                prev_cat = self.menudata.category_index[self.current_category]
+            else:
+                prev_cat = None
 
-            if self.__programs:
-                self.__unload_data()
+            logging.debug('=' * 20)
+            logging.debug('Reloading all menu data!')
+            logging.debug('=' * 20)
 
-            if not self.__load_data():
+            # TODO: get rid of this call, so we can retain the old data if
+            # we can't load the new data (the loader already supports that)
+            if self.menudata or self.menudata.programs:
+                self.unload_menu_data()
+
+            if not self.load_menu_data():
                 self.error_message('Failed to load menu data',
                                    'See the console for more details')
             else:
-                # try to restore the previous menu and category
-                for n, c in enumerate(self.__category_index):
-                    if c == prev_cat:
-                        logger.debug('Restoring category "{0}" after reload'.
-                                     format(prev_cat))
-                        self.__current_category = n
-                        self.__category_buttons.set_current_page(n)
+                # Try to restore the previous menu and category
+                for index, cat in enumerate(self.menudata.category_index):
+                    if cat == prev_cat:
+                        logging.debug('Restoring category "%s" after reload',
+                                      prev_cat)
+                        self.current_category = index
+                        self.__category_buttons.set_current_page(index)
                         break
 
-                if prev_menu and prev_menu in self.__menus:
-                    logger.debug('Restoring menu "{0}" after reload'.
-                                 format(prev_menu))
-                    self.__current_menu = self.__menus[prev_menu]
+                if prev_menu and (prev_menu in self.menudata.menus):
+                    logging.debug('Restoring menu "%s" after reload',
+                                  prev_menu)
+                    self.current_menu = self.menudata.menus[prev_menu]
                     self.__create_current_menu()
                     self.__back_button.show()
-                    self.__update_menu_title()
 
-            logger.debug('Menu data reload complete')
+            logging.debug('Menu data reload complete')
 
-        def toggle_autohide(x):
+        def toggle_autohide(menuitem):
             SETTINGS.autohide = not SETTINGS.autohide
 
-        def show_conditionals(x):
-            s = ''
+        def show_conditionals(menuitem):
+            msg = ''
 
-            for k, v in self.__conditions.items():
-                if not v[0]:
-                    # highlight indeterminate conditionals
-                    s += '<span foreground="red">'
+            for key, value in self.menudata.conditions.items():
+                msg += '"{0}" = "{1}"\n'.format(key, value)
 
-                s += '{0}: usable={1} value={2}'. \
-                     format(k, str(v[0]), str(v[1]))
+            self.error_message('Conditionals', msg)
 
-                if not v[0]:
-                    s += '</span>'
-
-                s += '\n'
-
-            self.error_message('Conditionals', s)
-
-        def permit_exit(x):
+        def permit_exit(menuitem):
             self.__exit_permitted = not self.__exit_permitted
-            logger.debug('Normal exiting ' +
-                         ('ENABLED' if self.__exit_permitted else 'DISABLED'))
+            logging.debug('Normal exiting ' +
+                          ('ENABLED' if self.__exit_permitted else 'DISABLED'))
 
-        def force_exit(x):
-            logger.debug('Devmenu force exit initiated!')
+        def force_exit(menuitem):
+            logging.debug('Devmenu force exit initiated!')
             self.go_away(True)
 
 
@@ -1297,15 +1030,16 @@ class PuavoMenu(Gtk.Window):
         reload_item.show()
         dev_menu.append(reload_item)
 
-        remove_item = Gtk.MenuItem('Unload all menu data')
-        remove_item.connect('activate', remove)
-        remove_item.show()
-        dev_menu.append(remove_item)
+        if not self.menudata or len(self.menudata.programs) > 0:
+            remove_item = Gtk.MenuItem('Unload all menu data')
+            remove_item.connect('activate', purge)
+            remove_item.show()
+            dev_menu.append(remove_item)
 
-        conditionals_item = Gtk.MenuItem('Show conditional values...')
-        conditionals_item.connect('activate', show_conditionals)
-        conditionals_item.show()
-        dev_menu.append(conditionals_item)
+            conditionals_item = Gtk.MenuItem('Show conditional values...')
+            conditionals_item.connect('activate', show_conditionals)
+            conditionals_item.show()
+            dev_menu.append(conditionals_item)
 
         sep = Gtk.SeparatorMenuItem()
         sep.show()
@@ -1355,8 +1089,8 @@ def setup_signal_handlers(menu):
 
     def signal_action(signal):
         if signal in (signal.SIGHUP, signal.SIGINT, signal.SIGTERM):
-            logger.info('Caught signal {0}, exiting gracefully...'.
-                        format(signal))
+            logging.info('Caught signal "%s", exiting gracefully...',
+                         signal)
             menu.go_away(True)
 
 
@@ -1401,5 +1135,5 @@ def run():
         except OSError:
             pass
 
-    except Exception as e:
-        logger.traceback(traceback.format_exc())
+    except Exception as exception:
+        logging.error(exception, exc_info=True)

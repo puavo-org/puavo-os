@@ -1,6 +1,6 @@
 # PuavoMenu miscellaneous utility functions
 
-import logger
+import logging
 
 
 def localize(where):
@@ -8,7 +8,7 @@ def localize(where):
     current language."""
 
     if where is None:
-        logger.error('localize(): "where" is None, nothing to localize!')
+        logging.error('localize(): "where" is None, nothing to localize!')
         return '[ERROR]'
 
     if isinstance(where, str):
@@ -30,8 +30,8 @@ def localize(where):
 
     # it's a list with only one entry and it's not the language
     # we want, but we have to use it anyway
-    logger.warn('localize(): missing localization for "{0}" in "{1}"'.
-                format(SETTINGS.language, where))
+    logging.warning('localize(): missing localization for "%s" in "%s"',
+                    SETTINGS.language, where)
 
     return str(where[list(where)[0]])
 
@@ -49,7 +49,7 @@ def get_file_contents(name, default=''):
     try:
         return open(name, 'r', encoding='utf-8').read().strip()
     except OSError as exception:
-        logger.error('Could not load file "{0}": {1}'.format(name, exception))
+        logging.error('Could not load file "%s": %s', name, str(exception))
         return default
 
 
@@ -116,8 +116,14 @@ def puavo_conf(name, default):
             return default
 
         return proc.stdout.read().decode('utf-8').strip()
-    except Exception as e:
-        logger.error('puavo_conf() failed with name="{0}", '
-                     'returning default "{1}":'.format(name, default))
-        logger.error(e)
+    except Exception as exception:
+        logging.error('puavo_conf() failed with name="%s", '
+                      'returning default "%s":', name, default)
+        logging.error(str(exception))
         return default
+
+
+def log_elapsed_time(title, start_ms, end_ms):
+    logging.info('%s: %s milliseconds',
+                 title,
+                 '{0:.1f}'.format((end_ms - start_ms) * 1000.0))

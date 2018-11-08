@@ -1,11 +1,12 @@
 # "Faves", ie. a list of the most often used programs
 
+import logging
+
 import gi
 gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
 from gi.repository import Gtk
 
 from constants import PROGRAM_BUTTON_WIDTH, NUMBER_OF_FAVES
-import logger
 
 from buttons import ProgramButton
 from settings import SETTINGS
@@ -21,15 +22,15 @@ def _save_use_counts(all_programs):
     out = ''
 
     # Whitespace is not permitted in program IDs, so this works
-    for name, p in all_programs.items():
-        if p.uses > 0:
-            out += '{0} {1}\n'.format(name, p.uses)
+    for name, program in all_programs.items():
+        if program.uses > 0:
+            out += '{0} {1}\n'.format(name, program.uses)
 
     try:
         from os.path import join as path_join
         open(path_join(SETTINGS.user_dir, 'faves'), 'w').write(out)
-    except Exception as e:
-        logger.error('Could not save favorites: {0}'.format(e))
+    except Exception as exception:
+        logging.error('Could not save favorites: %s', str(exception))
 
 
 def load_use_counts(all_programs):
@@ -52,16 +53,16 @@ def load_use_counts(all_programs):
             continue
 
         if not parts[0] in all_programs:
-            logger.warn('Program "{0}" listed in faves.yaml, but it does '
-                        'not exist in the menu data'.format(parts[0]))
+            logging.warning('Program "%s" listed in faves.yaml, but it does '
+                            'not exist in the menu data', parts[0])
             continue
 
         try:
             all_programs[parts[0]].uses = int(parts[1])
-        except:
+        except Exception as exception:
             # the use count probably wasn't an integer...
-            logger.warn('Could not set the use count for program "{0}"'.
-                        format(parts[0]))
+            logging.warning('Could not set the use count for program "%s": %s',
+                            parts[0], str(exception))
 
 
 class FavesList(Gtk.ScrolledWindow):
@@ -90,13 +91,13 @@ class FavesList(Gtk.ScrolledWindow):
     def clear(self):
         """Removes all buttons from the faves list."""
 
-        for b in self.__fave_buttons:
-            b.destroy()
+        for btn in self.__fave_buttons:
+            btn.destroy()
 
         self.__fave_buttons = []
         self.__prev_fave_ids = []
 
-        logger.info('Faves list cleared')
+        logging.info('Faves list cleared')
 
 
     def update(self, all_programs):
@@ -124,26 +125,27 @@ class FavesList(Gtk.ScrolledWindow):
             return
 
         # Something has changed, recreate the buttons
-        logger.info('Faves order has changed ({0} -> {1})'.
-                    format(self.__prev_fave_ids, new_ids))
+        logging.info('Faves order has changed (%s -> %s)',
+                     str(self.__prev_fave_ids), str(new_ids))
 
         _save_use_counts(all_programs)
 
         self.__prev_fave_ids = new_ids
 
-        for b in self.__fave_buttons:
-            b.destroy()
+        for btn in self.__fave_buttons:
+            btn.destroy()
 
         self.__fave_buttons = []
 
-        for i, f in enumerate(faves):
-            p = all_programs[f[0]]
+        for index, fave in enumerate(faves):
+            program = all_programs[fave[0]]
             # use self.__parent as the parent, so popup menu handlers
             # will call the correct methods from the main window class
-            button = ProgramButton(self.__parent, p.title, p.icon, p.description,
-                                   data=p, is_fave=True)
+            button = ProgramButton(self.__parent, program.title, program.icon,
+                                   program.description, data=program,
+                                   is_fave=True)
             button.connect('clicked', self.__parent.clicked_program_button)
             self.__fave_buttons.append(button)
-            self.__icons.put(button, i * PROGRAM_BUTTON_WIDTH, 0)
+            self.__icons.put(button, index * PROGRAM_BUTTON_WIDTH, 0)
 
         self.__icons.show_all()

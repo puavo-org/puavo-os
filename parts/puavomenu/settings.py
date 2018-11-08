@@ -75,27 +75,27 @@ class Settings:
         import configparser
         import subprocess
 
-        import logger
+        import logging
         from utils import puavo_conf
 
         # Detect the session and device types
         if 'GUEST_SESSION' in environ:
-            logger.info('This is a guest user session')
+            logging.info('This is a guest user session')
             self.is_guest = True
 
         if puavo_conf('puavo.hosttype', 'laptop') == 'fatclient':
-            logger.info('This is a fatclient device')
+            logging.info('This is a fatclient device')
             self.is_fatclient = True
 
         if puavo_conf('puavo.webmenu.webkiosk', '') == 'true':
             # I don't know if this actually works!
-            logger.info('This is a webkiosk session')
+            logging.info('This is a webkiosk session')
             self.is_webkiosk = True
 
         if self.is_guest or self.is_webkiosk:
             # No point in saving faves when they get blown away upon logout.
             # No point in loading them, either.
-            logger.info('Faves loading/saving is disabled for this session')
+            logging.info('Faves loading/saving is disabled for this session')
             self.enable_faves_saving = False
 
         # Detect dark theme usage
@@ -112,17 +112,18 @@ class Settings:
                                  'gtk-application-prefer-dark-theme',
                                  fallback=False):
                 self.dark_theme = True
-                logger.info('Dark theme has been enabled')
-        except:
+                logging.info('Dark theme has been enabled')
+        except Exception as exception:
             # okay then, no dark theme for you
-            pass
+            logging.error('Dark theme check failed')
+            logging.error(str(exception))
 
         # Load the per-user config file, if it exists
         conf_file = join(self.user_dir, 'puavomenu.conf')
 
         if isfile(conf_file):
-            logger.info('A per-user configuration file "{0}" exists,'
-                        'trying to load it...'.format(conf_file))
+            logging.info('A per-user configuration file "%s" exists,'
+                         'trying to load it...', conf_file)
 
             try:
                 config = configparser.ConfigParser()
@@ -132,8 +133,8 @@ class Settings:
                     config.getboolean('puavomenu',
                                       'reset_view_after_start',
                                       fallback=True)
-            except Exception as e:
-                logger.error(e)
+            except Exception as exception:
+                logging.error(str(exception))
 
         # Determine the location of the desktop directory
         try:
@@ -147,12 +148,12 @@ class Settings:
 
             proc.wait()
             self.desktop_dir = proc.stdout.read().decode('utf-8').strip()
-        except Exception as e:
+        except Exception as exception:
             # Keep as None to signal that we don't know where to put desktop
             # files, this makes desktop link creation always fail
-            logger.error("Could not determine the location of user's " \
-                         "desktop directory")
-            logger.error(e)
+            logging.error("Could not determine the location of user's " \
+                          "desktop directory")
+            logging.error(str(exception))
             self.desktop_dir = None
 
 

@@ -14,7 +14,7 @@ case "${command}" in
         cat <<'EOF' > /usr/share/applications/db_koulu1.desktop
 [Desktop Entry]
 Name=DB Koulu 1
-Exec=/opt/DB-Koulu1/DB Koulu 1 Pro.x86_64
+Exec=/opt/DB-Koulu1/DB\ Koulu\ 1\ Pro.x86_64
 Type=Application
 Terminal=false
 Icon=glade
