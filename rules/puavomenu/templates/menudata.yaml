@@ -7,6 +7,7 @@ programs:
         keywords:
           - pdf
         name: Acrobat Reader
+  - airtame
   - amme:
         type: web
         name: Amme
@@ -77,7 +78,7 @@ programs:
           fi: CmapTools-miellekartta
           sv: CmapTools-mindmap
           de: CmapTools-Mindmap
-  - cura
+  - cura-appimage
 
   #D
   - db_koulu1
@@ -736,6 +737,7 @@ menus:
             - system-config-printer
             - org.gnome.Screenshot
             - simplescreenrecorder
+            - airtame
 
   - menu-graphics:
         name:

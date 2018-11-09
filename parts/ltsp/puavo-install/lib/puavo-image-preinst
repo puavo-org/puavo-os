@@ -16,15 +16,30 @@
 #
 # The old image/system should now be mounted at /, and this new image
 # should be mounted at /images/mnt.
+#
+# Note that grub-install and maybe some scripts should be run under chroot
+# of the new system, or otherwise there may be missing dynamic libraries,
+# or segfaults may occur in case system versions mismatch.
 
 set -eu
 
 new_mnt=/images/mnt
 
+bind_paths='/dev /images /proc /run /sys'
+
+cleanup() {
+  for path in $bind_paths; do
+    { mountpoint -q "${new_mnt}${path}" && umount "${new_mnt}${path}"; } \
+      || true
+  done
+}
+
+trap cleanup 0 INT TERM
+
 update_grub() {
   # puavo-install-grub updates /images/boot/grub/version
   old_grub_version="$(cat /images/boot/grub/version 2>/dev/null || true)"
-  new_grub_version="$(${new_mnt}/usr/sbin/grub-install --version \
+  new_grub_version="$(chroot "$new_mnt" /usr/sbin/grub-install --version \
                         | awk '{ print $3 }')"
   if [ -z "$new_grub_version" ]; then
     echo 'Can not determine the new grub version' >&2
@@ -33,10 +48,9 @@ update_grub() {
 
   if [ -z "$old_grub_version" ] \
     || dpkg --compare-versions "$old_grub_version" lt "$new_grub_version"; then
-      "${new_mnt}/usr/sbin/puavo-install-grub" --grub-basedir "$new_mnt" "$@"
+      chroot "$new_mnt" /usr/sbin/puavo-install-grub "$@"
   else
-    "${new_mnt}/usr/sbin/puavo-install-grub" --grub-basedir "$new_mnt" \
-      --only-update-config "$@"
+    chroot "$new_mnt" /usr/sbin/puavo-install-grub --only-update-config "$@"
   fi
 }
 
@@ -55,11 +69,25 @@ while [ $# -ge 2 ]; do
   esac
 done
 
-# update grub configuration from the new image
-if [ -n "$hosttype" ]; then
-  update_grub --hosttype "$hosttype"
-else
-  update_grub
+if [ -z "$hosttype" ]; then
+  hosttype=$(cat /etc/puavo/hosttype 2>/dev/null || true)
+  if [ -z "$hosttype" ]; then
+    echo 'Could not determine hosttype for grub update' >&2
+    exit 1
+  fi
 fi
+
+
+# Duplicate /images (and other $bind_paths) mount under $new_mnt
+# so that grub installation can access it.
+for path in $bind_paths; do
+  if ! mount -o bind "$path" "${new_mnt}${path}"; then
+    echo "Could not mount bind ${path} under ${new_mnt}${path}" >&2
+    exit 1
+  fi
+done
+
+# update grub configuration from the new image
+update_grub --hosttype "$hosttype"
 
 exit 0

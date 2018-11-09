@@ -67,7 +67,7 @@ STRINGS = {
 
     'sb_change_password': {
         'en': 'Change your password',
-        'fi': 'Vaihda salasanaasi',
+        'fi': 'Vaihda salasana',
     },
 
     'sb_change_password_window_title': {
