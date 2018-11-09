@@ -263,6 +263,9 @@ module DiskHandler
     run('dd', 'if=/dev/zero', "of=#{ fs_conf['device'] }", 'count=2K',
         { :err => '/dev/null' })
 
+    # NOTE: if making a change here to support gpt-partitioning schemes,
+    # check out commits 245f7081324d0e228b60141232bd87d8896b0111
+    # and 27d9049153c48cd67ac5955a3a1666a89bc1dedc for history.
     # create an lvm partition
     # see http://www.walkernews.net/2007/07/02/how-to-create-linux-lvm-in-3-minutes/
     IO.popen("fdisk #{ fs_conf['device'] }", 'w') do |f|
