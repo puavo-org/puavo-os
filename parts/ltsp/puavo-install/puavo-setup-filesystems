@@ -205,7 +205,7 @@ module DiskHandler
                  '--level=mirror',
                  '--raid-devices=2',
                  *spare_args,
-                 *(devicepaths_for_mirroring.map { |dev| "#{ dev }2" }))
+                 *(devicepaths_for_mirroring.map { |dev| "#{ dev }1" }))
 
     puts ''
 
@@ -217,9 +217,8 @@ module DiskHandler
     run('dd', 'if=/dev/zero', "of=#{ device }", 'count=2K',
         { :err => '/dev/null' })
 
-    # create a raid partition (using GPT)
-    IO.popen([ 'gdisk', device ], 'w') do |f|
-      f.print "2\no\ny\nn\n1\n\n+2M\nef02\nn\n2\n\n\nfd00\nw\ny\n"
+    IO.popen("fdisk #{ device }", 'w') do |f|
+      f.print "n\np\n1\n\n\nt\nfd\na\np\nw\n"
     end
   end
 
@@ -233,9 +232,9 @@ module DiskHandler
       fs_setup_phases += [ :lvm_partition, :puavo_filesystems ]
       special_disk_regexp = %r{\A((md|mmcblk)[0-9]+|nvme[0-9]+n[0-9]+)\z}
       if fs_conf['device'].match(special_disk_regexp) then
-        fs_conf['partition'] = "#{ fs_conf['device'] }p2"
+        fs_conf['partition'] = "#{ fs_conf['device'] }p1"
       else
-        fs_conf['partition'] = "#{ fs_conf['device'] }2"
+        fs_conf['partition'] = "#{ fs_conf['device'] }1"
       end
     else
       fs_setup_phases += [ :wipe_partition ] if conf['wipe']
@@ -264,9 +263,10 @@ module DiskHandler
     run('dd', 'if=/dev/zero', "of=#{ fs_conf['device'] }", 'count=2K',
         { :err => '/dev/null' })
 
-    # create an LVM partition (using GPT)
-    IO.popen([ 'gdisk', fs_conf['device'] ], 'w') do |f|
-      f.print "2\no\ny\nn\n1\n\n+2M\nef02\nn\n2\n\n\n8e00\nw\ny\n"
+    # create an lvm partition
+    # see http://www.walkernews.net/2007/07/02/how-to-create-linux-lvm-in-3-minutes/
+    IO.popen("fdisk #{ fs_conf['device'] }", 'w') do |f|
+      f.print "n\np\n1\n#{ fs_conf['first_sector'] }\n#{ fs_conf['last_sector'] }\nt\n8e\na\np\nw\n"
     end
   end
 
@@ -415,11 +415,38 @@ module QueryDiskInfo
     UI::ask_with_default(prompt, 'no', UI::ConfirmPartitionsPrompt) == 'yes'
   end
 
+  def self.ask_last_sector(device, first_sector)
+    device_basename = File.basename(device)
+    sectors = File.read("/sys/block/#{device_basename}/size").strip().to_i()
+    sector_bytes = File.read("/sys/block/#{device_basename}/queue/logical_block_size").strip().to_i()
+
+    while true do
+      tailroom_size =
+        UI::ask_size_with_default('How much unpartitioned space '\
+                                  'should be left to the end of '\
+                                  'the device:', '0G', UI::UnpartitionedSpacePrompt)
+      tailroom_bytes = Size::to_bytes(tailroom_size)
+      tailroom_sectors = tailroom_bytes / sector_bytes
+      if tailroom_sectors > sectors - first_sector
+        UI::colormsg("The size of the tailroom exceeds the size of the device.",
+                     HighLine::RED)
+        next
+      end
+
+      last_sector = sectors - tailroom_sectors - 1
+      break
+
+    end
+    last_sector
+  end
+
   def self.ask_device_and_partition_with_confirmation(hosttype, raid_setup_done)
-    do_it     = false
-    device    = nil
-    partition = nil
-    wipe      = false
+    do_it        = false
+    device       = nil
+    partition    = nil
+    first_sector = nil
+    last_sector  = nil
+    wipe         = false
 
     until do_it do
       if raid_setup_done then
@@ -431,6 +458,9 @@ module QueryDiskInfo
       end
 
       if partition == 'whole'
+        first_sector = 2048
+        last_sector  = QueryDiskInfo::ask_last_sector(device, first_sector)
+
         # Let the user set the size of the following filesystems:
         [
           ['imageoverlays', UI::ImageoverlaySizePrompt],
@@ -464,10 +494,12 @@ module QueryDiskInfo
     end
 
     {
-      'device'    => device,
-      'hosttype'  => hosttype,
-      'partition' => partition,
-      'wipe'      => wipe,
+      'device'       => device,
+      'first_sector' => first_sector,
+      'hosttype'     => hosttype,
+      'last_sector'  => last_sector,
+      'partition'    => partition,
+      'wipe'         => wipe,
     }
   end
 
@@ -476,8 +508,8 @@ module QueryDiskInfo
 
     chosen_partition = 'whole'
     until partitions.include?(chosen_partition) do
-      if chosen_partition == 'gdisk'
-        system('gdisk', "/dev/#{ disk_device }")
+      if chosen_partition == 'fdisk'
+        system('fdisk', "/dev/#{ disk_device }")
         chosen_partition = 'whole'
       end
 
@@ -495,7 +527,7 @@ module QueryDiskInfo
               .select { |part| part.match(partition_regexp) }
 
       puts "\nPossible partitions are: #{ partitions.join(' ') }"
-      puts "\nYou may choose 'gdisk' to partition this disk,"
+      puts "\nYou may choose 'fdisk' to partition this disk,"
       puts "or choose 'whole' to use the whole disk.\n"
       chosen_partition = UI::ask_with_default('Choose a partition:',
                                               chosen_partition,
