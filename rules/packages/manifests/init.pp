@@ -259,6 +259,7 @@ class packages {
     , 'kwordquiz'
     , 'laby'
     , 'luola'
+    , 'minetest'
     , 'neverball'
     , 'neverputt'
     , 'openttd'

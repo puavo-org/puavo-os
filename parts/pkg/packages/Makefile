@@ -9,6 +9,7 @@ packagedirs += adobe-flashplugin-32bit/
 packagedirs += adobe-pepperflashplugin/
 packagedirs += adobe-pepperflashplugin-32bit/
 packagedirs += adobe-reader/
+packagedirs += airtame/
 packagedirs += appinventor/
 packagedirs += arduino-ide/
 packagedirs += arduino-radiohead/

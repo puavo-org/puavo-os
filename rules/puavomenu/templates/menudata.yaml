@@ -428,6 +428,7 @@ programs:
         name: Pahvi
         url: http://pahvidemo.opinsys.fi/
         icon: /usr/share/icons/Faenza/mimetypes/96/text-html.png
+  - pavucontrol
   - pedanet:
         type: web
         name: Peda.net
@@ -735,6 +736,7 @@ menus:
             - gftp
             - seahorse
             - system-config-printer
+            - pavucontrol
             - org.gnome.Screenshot
             - simplescreenrecorder
             - airtame
