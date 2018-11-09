@@ -366,9 +366,11 @@ module QueryDiskInfo
       (devices_by_size[disk_size.to_i] ||= []) << "#{ disk_name }"
     end
 
-    biggest_common_disksize = devices_by_size.keys.sort.last
-    return nil unless biggest_common_disksize
-    return nil unless devices_by_size[biggest_common_disksize].count > 1
+    duplicate_sized_disks = devices_by_size.select do |size, disks|
+                              disks.count > 1
+                            end
+    return nil if duplicate_sized_disks.empty?
+    biggest_common_disksize = duplicate_sized_disks.keys.sort.last
     return devices_by_size[biggest_common_disksize].sort
   end
 
