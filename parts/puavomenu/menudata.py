@@ -177,7 +177,7 @@ class Menudata:
                     matches.append(program)
                     break
 
-        matches = sorted(matches, key=lambda program: program.title)
+        matches = sorted(matches, key=lambda program: program.title.lower())
 
         return matches
 
