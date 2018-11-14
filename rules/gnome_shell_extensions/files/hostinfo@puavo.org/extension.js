@@ -291,6 +291,7 @@ const HostInfoButton = new Lang.Class(
             // Machine
             this.spacer(c);
             this.category(c, "Machine");
+            this.titleValue(c, "Product name", jval(json, "productname"));
             this.titleValue(c, "BIOS",
                 jval(json, "bios_vendor") + ", " +
                 jval(json, "bios_version") + ", " +

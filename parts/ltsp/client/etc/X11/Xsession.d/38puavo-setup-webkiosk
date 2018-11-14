@@ -10,7 +10,7 @@ if [ "$DESKTOP_SESSION" = 'puavo-webkiosk' ]; then
 
   # Automatically start firefox after session is opened
   mkdir -p ~/.config/autostart
-  cp /usr/share/applications/firefox-esr.desktop ~/.config/autostart/
+  cp /usr/share/applications/firefox.desktop ~/.config/autostart/
 
   export DESKTOP_SESSION=puavo-desktop
   export GDMSESSION=puavo-desktop
