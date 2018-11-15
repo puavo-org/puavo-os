@@ -388,6 +388,23 @@ const HostInfoButton = new Lang.Class(
                 this.spacer(c);
                 this.category(c, "No lspci output listed in the JSON");
             }
+
+            // lsusb values, if present
+            if ("lsusb_values" in json && json["lsusb_values"].length > 0) {
+                this.spacer(c);
+                this.category(c, "lsusb listing");
+
+                // get around JS's variable scoping weirdness
+                let self = this;
+
+                json["lsusb_values"].forEach(function(e) {
+                    self.value(self.infoTextBlock, e);
+                });
+            } else {
+                // this can happen, at least in theory...
+                this.spacer(c);
+                this.category(c, "No lsusb output listed in the JSON");
+            }
         } catch (e) {
             this.errorText(c,
                 "Cannot display system information. Try clicking the \"Try again?\" button to see if\n" +

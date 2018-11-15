@@ -133,6 +133,11 @@ class SystemInfoCollector < DBus::Object
           lspci_raw = `lspci | awk '$2 == "Network" || $2 == "VGA"' | sed 's/^/  /'`
           lspci_raw.strip.split("\n").each { |i| data[:lspci_values] << i.strip }
 
+          # lsusb contents
+          data[:lsusb_values] = []
+          lsusb_raw = `lsusb`
+          lsusb_raw.strip.split("\n").each { |i| data[:lsusb_values] << i.strip }
+
           # wireless info (this needs to be improved)
           x = `lspci -nnk | grep 0280 | cut -c 36-`
           data[:wifi] = x.strip.split("\n").first.strip || ''
