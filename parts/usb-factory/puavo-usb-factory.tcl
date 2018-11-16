@@ -1,5 +1,7 @@
 #!/usr/bin/wish
 
+package require json
+
 wm attributes . -fullscreen 1
 
 # XXX not a correct picture
@@ -18,6 +20,10 @@ set image_info {
   status            ""
   version           ""
 }
+
+set ui_messages {}
+
+set puavo_usb_factory_workpath "$::env(HOME)/.puavo/usb-factory"
 
 set pci_path_dir /dev/disk/by-path
 
@@ -78,6 +84,11 @@ proc queue_background_resizing {width height} {
   after 500 do_background_resizing
 }
 
+proc ui_msg {args} {
+  global ui_messages
+  dict get $ui_messages {*}$args
+}
+
 proc update_ui_info_state {} {
   global bg_image image_info
 
@@ -85,17 +96,18 @@ proc update_ui_info_state {} {
   set version         [dict get $image_info version]
 
   switch -- $download_status {
-    ok            { set download_message "Image is up-to-date." }
-    {in progress} { set download_message "Downloading new version" }
-    failed        { set download_message "Downloading new version failed" }
-    default       { set download_message "No image to write" }
+    up-to-date    -
+    {in progress} -
+    failed        -
+    missing { set download_message [ui_msg {download state} $download_status] }
+    default { set download_message [ui_msg {download state} undefined] }
   }
   .f.download_status configure -text $download_message
 
   if {$version ne ""} {
     set version_message $version
   } else {
-    set version_message "(DOWNLOADING IMAGE)"
+    set version_message -
   }
   .f.version configure -text $version_message
 
@@ -105,41 +117,45 @@ proc update_ui_info_state {} {
   after 10000 update_image_info
 }
 
+proc get_content_dir {} {
+  global puavo_usb_factory_workpath
+
+  if {[catch { glob ${puavo_usb_factory_workpath}/* } res]} {
+    error "${puavo_usb_factory_workpath}/* did not match any files: $res"
+  }
+  set workpath_dirs $res
+
+  set dir_count [llength $workpath_dirs]
+  if {$dir_count == 0} {
+    error "no disk image to write"
+  } elseif {$dir_count > 1} {
+    error "only one disk image is supported for now"
+  }
+
+  lindex $workpath_dirs 0
+}
+
 proc update_image_info {} {
   global image_info
-
-  set puavo_usb_factory_workpath "$::env(HOME)/.puavo/usb-factory"
 
   dict set image_info image_size        ""
   dict set image_info latest_image_path ""
   dict set image_info status            ""
   dict set image_info version           ""
 
-  if {[catch { glob ${puavo_usb_factory_workpath}/* } res]} {
-    puts stderr "${puavo_usb_factory_workpath}/* did not match any files"
-    update_ui_info_state
-    return false
-  }
-  set workpath_dirs $res
-
-  set dir_count [llength $workpath_dirs]
-  set errmsg ""
-  if {$dir_count == 0} {
-    set errmsg "no disk image to write"
-  } elseif {$dir_count > 1} {
-    set errmsg "only one disk image is supported for now"
-  }
-  if {$errmsg ne ""} {
-    puts stderr $errmsg
+  try {
+    set content_dir [get_content_dir]
+  } on error {} {
     update_ui_info_state
     return false
   }
 
-  set content_dir  [lindex $workpath_dirs 0]
   set content_name [file tail $content_dir]
 
   if {![catch { read_file "${content_dir}/DOWNLOAD_STATUS" } res]} {
     dict set image_info status [string trim $res]
+  } else {
+    dict set image_info status missing
   }
 
   if {![catch { read_file "${content_dir}/LATEST_IMAGE" } res]} {
@@ -186,7 +202,8 @@ proc start_preparation {devpath countdown} {
     return
   }
 
-  .f.disks.port_${port}.info.status configure -text "Starting $countdown"
+  .f.disks.port_${port}.info.status configure \
+    -text "[ui_msg messages starting] $countdown"
 
   incr countdown -1
   after 1000 [list start_preparation $devpath $countdown]
@@ -263,7 +280,7 @@ proc handle_fileevent {devpath} {
   set progressline [gets $fh]
 
   if {[eof $fh]} {
-    if {[catch { close $fh } cres e]} {
+    if {[catch { close $fh }]} {
       set_devstate $devpath error
     } else {
       set_devstate $devpath finished
@@ -287,35 +304,33 @@ proc update_disklabel {devpath {label "LOOKUP"}} {
     set device_label $label
   } else {
     set device_label "???"
-    if {[
-      catch {
-        if {![regexp {usb-0:(.*?):} $devpath _ pci_devpath]} {
-          error "$devpath is in unexpected format"
-        }
+    try {
+      if {![regexp {usb-0:(.*?):} $devpath _ pci_devpath]} {
+        error "$devpath is in unexpected format"
+      }
 
-        set matches [glob "/sys/bus/usb/devices/\[0-9\]-${pci_devpath}"]
-        if {[llength $matches] != 1} {
-          error "multiple paths match when looking path under $pci_devpath"
-        }
+      set matches [glob "/sys/bus/usb/devices/\[0-9\]-${pci_devpath}"]
+      if {[llength $matches] != 1} {
+        error "multiple paths match when looking path under $pci_devpath"
+      }
 
-        set device_infodir [lindex $matches 0]
+      set device_infodir [lindex $matches 0]
 
-        set manufacturer [read_file "${device_infodir}/manufacturer"]
-        set product      [read_file "${device_infodir}/product"]
-        set device_size_in_bytes [get_device_size $devpath]
+      set manufacturer [read_file "${device_infodir}/manufacturer"]
+      set product      [read_file "${device_infodir}/product"]
+      set device_size_in_bytes [get_device_size $devpath]
 
-        set device_size "?"
-        if {$device_size_in_bytes ne ""} {
-          set device_size_in_gigabytes [
-            expr { (0.0 + $device_size_in_bytes) / (10**9) }
-          ]
-          set device_size [format "%.1fGB" $device_size_in_gigabytes]
-        }
+      set device_size "?"
+      if {$device_size_in_bytes ne ""} {
+        set device_size_in_gigabytes [
+          expr { (0.0 + $device_size_in_bytes) / (10**9) }
+        ]
+        set device_size [format "%.1fGB" $device_size_in_gigabytes]
+      }
 
-        set device_label "$manufacturer / $product ($device_size)"
-      } err
-    ]} {
-      puts stderr "could not lookup path for $devpath: $err"
+      set device_label "$manufacturer / $product ($device_size)"
+    } on error {errmsg} {
+      puts stderr "could not lookup path for $devpath: $errmsg"
     }
   }
 
@@ -327,7 +342,7 @@ proc set_ui_status_to_nomedia {devpath} {
 
   set port [get_port_num $devpath]
   if {[dict get $diskdevices $devpath state] eq "nomedia"} {
-    .f.disks.port_${port}.info.status configure -text ""
+    .f.disks.port_${port}.info.status  configure -text  ""
     .f.disks.port_${port}.pb_frame.bar configure -value 0
   }
 }
@@ -342,7 +357,8 @@ proc set_devstate {devpath state args} {
       close_if_open $devpath
       dict set diskdevices $devpath state error
 
-      .f.disks.port_${port}.info.status  configure -text  "Error"
+      .f.disks.port_${port}.info.status configure \
+         -text [ui_msg messages error]
       .f.disks.port_${port}.pb_frame.bar configure -value 0
     }
 
@@ -350,7 +366,8 @@ proc set_devstate {devpath state args} {
       close_if_open $devpath
       dict set diskdevices $devpath state finished
 
-      .f.disks.port_${port}.info.status  configure -text  "OK"
+      .f.disks.port_${port}.info.status configure \
+         -text [ui_msg messages finished]
       .f.disks.port_${port}.pb_frame.bar configure -value 100
     }
 
@@ -380,7 +397,8 @@ proc set_devstate {devpath state args} {
       close_if_open $devpath
       dict set diskdevices $devpath state nospaceondevice
       update_disklabel $devpath
-      .f.disks.port_${port}.info.status  configure -text "No space on device"
+      .f.disks.port_${port}.info.status configure \
+        -text [ui_msg messages nospaceondevice]
       .f.disks.port_${port}.pb_frame.bar configure -value 0
     }
 
@@ -424,7 +442,7 @@ proc get_device_size {devpath} {
     set device_size [tell $f]
   }
 
-  close $f
+  catch { close $f }
   return $device_size
 }
 
@@ -481,6 +499,17 @@ foreach devpath $diskdevice_list {
 puts "available themes: [ttk::style theme names]"
 # ttk::style theme use clam
 puts "used theme: [ttk::style theme use]"
+
+# ui messages
+
+try {
+  set ui_messages [
+    ::json::json2dict [read_file "[get_content_dir]/UI.json"]
+  ]
+} on error {} {
+  puts stderr "could not read ui messages from UI.json"
+  exit 1
+}
 
 # ui elements
 
