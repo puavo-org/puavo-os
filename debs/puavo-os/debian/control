@@ -75,7 +75,10 @@ Description: Puavo admin intergration
 Package: puavo-usb-factory
 Architecture: all
 Depends: ${misc:Depends},
- python3
+ python3,
+ tcl8.6,
+ tcllib,
+ tk8.6
 Description: Puavo USB Factory
  Write disk images to usb memory devices in mass production style.
  .
