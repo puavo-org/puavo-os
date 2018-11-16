@@ -314,7 +314,8 @@ class LdapAcl
 					 puavoId
 					 eduPersonPrincipalName
 					 objectClass
-					 puavoEduPersonAffiliation)),	Rule.write(Set.admin),			Rule.read(PuavoUid.pw_mgmt('dn'),
+					 puavoEduPersonAffiliation
+					 puavoRemovalRequestTime)),	Rule.write(Set.admin),			Rule.read(PuavoUid.pw_mgmt('dn'),
                                                                                                                           PuavoUid.puavo('dn'),
 															  PuavoUid.puavo_ticket('dn'),
 															  Set.getent,
