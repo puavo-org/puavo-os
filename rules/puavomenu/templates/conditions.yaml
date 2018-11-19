@@ -17,5 +17,5 @@
 - name: only_teacher_admin
   function: env_var
   params:
-    - name: PUAVO_WEBMENU_SHOW_MY_SCHOOL_USERS
+    - name: PUAVO_MENU_SHOW_MY_SCHOOL_USERS
       value: "1"
