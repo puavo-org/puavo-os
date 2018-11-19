@@ -331,15 +331,22 @@ const HostInfoButton = new Lang.Class(
             }
 
             // Hard drive
-            var hdText = jval(json, "blockdevice_sda_model");
+            var hdText = "";
 
-            hdText += ", ";
-            hdText += (parseFloat(jval(json, "blockdevice_sda_size", 0)) /
-                        (1024.0 * 1024.0 * 1024.0)).toFixed(0);
-            hdText += " GiB";
+            if ("blockdevice_sda_model" in json && json["blockdevice_sda_model"]) {
+                hdText = jval(json, "blockdevice_sda_model");
 
-            if (jval(json, "ssd") == "1")
-                hdText += " [SSD]";
+                hdText += ", ";
+                hdText += (parseFloat(jval(json, "blockdevice_sda_size", 0)) /
+                            (1024.0 * 1024.0 * 1024.0)).toFixed(0);
+                hdText += " GiB";
+
+                if (jval(json, "ssd") == "1")
+                    hdText += " [SSD]";
+            } else {
+                // Juha's old Zotac helped me debug this path :-)
+                hdText = "(no hard drive)";
+            }
 
             this.titleValue(c, "Hard drive", hdText);
 
@@ -387,6 +394,23 @@ const HostInfoButton = new Lang.Class(
                 // this can happen, at least in theory...
                 this.spacer(c);
                 this.category(c, "No lspci output listed in the JSON");
+            }
+
+            // lsusb values, if present
+            if ("lsusb_values" in json && json["lsusb_values"].length > 0) {
+                this.spacer(c);
+                this.category(c, "lsusb listing");
+
+                // get around JS's variable scoping weirdness
+                let self = this;
+
+                json["lsusb_values"].forEach(function(e) {
+                    self.value(self.infoTextBlock, e);
+                });
+            } else {
+                // this can happen, at least in theory...
+                this.spacer(c);
+                this.category(c, "No lsusb output listed in the JSON");
             }
         } catch (e) {
             this.errorText(c,

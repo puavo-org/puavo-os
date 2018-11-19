@@ -314,7 +314,8 @@ class LdapAcl
 					 puavoId
 					 eduPersonPrincipalName
 					 objectClass
-					 puavoEduPersonAffiliation)),	Rule.write(Set.admin),			Rule.read(PuavoUid.pw_mgmt('dn'),
+					 puavoEduPersonAffiliation
+					 puavoRemovalRequestTime)),	Rule.write(Set.admin),			Rule.read(PuavoUid.pw_mgmt('dn'),
                                                                                                                           PuavoUid.puavo('dn'),
 															  PuavoUid.puavo_ticket('dn'),
 															  Set.getent,
@@ -423,6 +424,12 @@ class LdapAcl
       [ Hosts.devices.children,	attrs(%w(puavoDeviceCurrentImage
                                          puavoDevicePrimaryUser
                                          puavoDeviceAvailableImage)),	Rule.write(Set.admin, 'self'),		Rule.read(PuavoUid.monitor,
+															  PuavoUid.puavo_ticket,
+															  Set.externalservice_devices)	],
+# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      [ Hosts.devices.children,	attrs(%w(puavoDeviceHWInfo)),		Rule.write(Hosts.servers.children,
+										   'self'),			Rule.read(Set.admin,
+															  PuavoUid.monitor,
 															  PuavoUid.puavo_ticket,
 															  Set.externalservice_devices)	],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

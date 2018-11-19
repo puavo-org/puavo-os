@@ -6,7 +6,7 @@ inet_aton() {
   local count=3
   local int=0
   for num in $(echo "$1" | tr . ' '); do
-    int=$(($int + $num * 256**$count))
+    int=$(echo "$int + $num * 256^$count" | bc)
     count=$(($count - 1))
   done
   echo "$int"
