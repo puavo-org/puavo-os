@@ -7,6 +7,13 @@ wm attributes . -fullscreen 1
 # XXX not a correct picture
 set bg_image_path /usr/share/backgrounds/Blue_frost_by_ppaabblloo77.jpg
 
+try {
+  set support_logo_path [exec puavo-conf puavo.greeter.logo]
+} on error {errmsg} {
+  puts stderr "puavo-conf could not lookup puavo.greeter.logo: $errmsg"
+  exit 1
+}
+
 set bg_image {
   width      -1
   height     -1
@@ -57,23 +64,30 @@ set diskdevice_list [list pci-0000:00:14.0-usb-0:4.1:1.0-scsi-0:0:0:0       \
 # XXX perhaps do not use cat, but open + read + close ?
 proc read_file {path} { exec cat $path }
 
+proc update_image {image imagepath new_width new_height} {
+  set tmpfile [exec mktemp /tmp/puavo-usb-factory-image.XXXXXXX]
+  set img_size "${new_width}x${new_height}!"
+  exec -ignorestderr convert $imagepath -resize $img_size png:$tmpfile
+  $image read $tmpfile -shrink
+  exec rm -f $tmpfile
+}
+
 proc do_background_resizing {} {
-  global bg_image bg_image_path
+  global bg_image bg_image_path support_logo_path
 
   if {[dict get $bg_image width] != [dict get $bg_image new_width]
         || [dict get $bg_image height] != [dict get $bg_image new_height]} {
 
     # XXX it would be better to use standard output
-    set tmpfile [exec mktemp /tmp/puavo-usb-factory-bg-image.XXXXXXX]
     set new_width  [dict get $bg_image new_width]
     set new_height [dict get $bg_image new_height]
-    set img_size "${new_width}x${new_height}!"
-    exec -ignorestderr convert $bg_image_path -resize $img_size png:$tmpfile
-    bg_photo read $tmpfile -shrink
-    exec rm -f $tmpfile
 
-    dict set bg_image width  [dict get $bg_image new_width]
-    dict set bg_image height [dict get $bg_image new_height]
+    update_image bg_photo $bg_image_path $new_width $new_height
+    # XXX hardcoded pixel sizes
+    update_image support_photo $support_logo_path 966 64
+
+    dict set bg_image width  $new_width
+    dict set bg_image height $new_height
   }
 }
 
@@ -102,14 +116,14 @@ proc update_ui_info_state {} {
     missing { set download_message [ui_msg {download state} $download_status] }
     default { set download_message [ui_msg {download state} undefined] }
   }
-  .f.download_status configure -text $download_message
+  .f.version_status.download_status configure -text $download_message
 
   if {$version ne ""} {
     set version_message $version
   } else {
     set version_message -
   }
-  .f.version configure -text $version_message
+  .f.version_status.version_number configure -text $version_message
 
   set bg_width  [dict get $bg_image width]
   set bg_height [dict get $bg_image height]
@@ -495,10 +509,16 @@ foreach devpath $diskdevice_list {
 
 # style options
 
+# ttk::style theme Instructions Instructions -background black -foreground lightgrey
+
 # XXX theme ?
 puts "available themes: [ttk::style theme names]"
 # ttk::style theme use clam
 puts "used theme: [ttk::style theme use]"
+
+font create titleFont       -family Arial -size 32 -weight bold
+font create descriptionFont -family "Domestic Manners" -size 20 -weight bold
+font create infoFont        -family FreeSans -size 14
 
 # ui messages
 
@@ -514,11 +534,42 @@ try {
 # ui elements
 
 ttk::frame .f
-image create photo bg_photo     ; # XXX using ttk for image?
-label .f.bg -image bg_photo     ; # XXX using ttk for image?
 
-ttk::label .f.download_status
-ttk::label .f.version
+pack .f
+
+# images
+# XXX using ttk for image?
+image create photo bg_photo
+label .f.bg -image bg_photo
+image create photo support_photo
+label .f.support_photo -image support_photo
+
+ttk::frame .f.instructions -width 600 -height 200
+
+ttk::label .f.instructions.title -text [ui_msg title] \
+                                 -wraplength 600      \
+                                 -padding 20          \
+                                 -font titleFont
+ttk::label .f.instructions.description -text [ui_msg description] \
+                                       -wraplength 600            \
+                                       -padding 20                \
+                                       -font descriptionFont
+ttk::label .f.instructions.steps -text [ui_msg instructions] \
+                                 -wraplength 600             \
+                                 -padding 20                 \
+                                 -font descriptionFont
+
+ttk::frame .f.version_status
+ttk::label .f.version_status.version_label \
+           -text [ui_msg "version label"] -font infoFont
+ttk::label .f.version_status.version_number -font infoFont
+ttk::label .f.version_status.download_status_label \
+           -text [ui_msg "download status label"] -font infoFont
+ttk::label .f.version_status.download_status -font infoFont
+ttk::label .f.version_status.hostname_label \
+           -text [ui_msg "hostname label"] -font infoFont
+ttk::label .f.version_status.hostname -text [exec hostname -f] \
+                                      -font infoFont
 
 ttk::frame .f.disks
 
@@ -529,16 +580,20 @@ foreach devpath $diskdevice_list {
   ttk::frame .f.disks.port_${port}.info
   ttk::frame .f.disks.port_${port}.pb_frame -height 8
 
-  ttk::label .f.disks.port_${port}.info.number -text $port -width 3
-  ttk::label .f.disks.port_${port}.info.disklabel -text ""
-  ttk::label .f.disks.port_${port}.info.status -width 10
+  ttk::label .f.disks.port_${port}.info.number -text $port -width 3 \
+             -font infoFont
+  ttk::label .f.disks.port_${port}.info.disklabel -text "" \
+             -font infoFont
+  ttk::label .f.disks.port_${port}.info.status -width 20 \
+             -font infoFont
   ttk::progressbar .f.disks.port_${port}.pb_frame.bar \
                    -orient horizontal -maximum 100 -value 0
 
+  # XXX grid?
   pack .f.disks.port_${port}.info.number    \
        .f.disks.port_${port}.info.status    \
        .f.disks.port_${port}.info.disklabel \
-       -side left
+       -side left -padx 16
   pack .f.disks.port_${port}.info \
        .f.disks.port_${port}.pb_frame -expand 1 -fill x
   place .f.disks.port_${port}.pb_frame.bar -in .f.disks.port_${port}.pb_frame \
@@ -546,9 +601,23 @@ foreach devpath $diskdevice_list {
   pack .f.disks.port_${port} -expand 1 -fill x
 }
 
-place .f.download_status -relx 0.1  -rely 0.8
-place .f.version         -relx 0.2  -rely 0.5
-place .f.disks           -relx 0.52 -rely 0.04
+place .f.instructions -relx 0.02 -rely 0.05
+pack .f.instructions.title \
+     .f.instructions.description \
+     .f.instructions.steps -anchor w
+
+place .f.version_status -relx 0.1 -rely 0.7
+
+grid .f.version_status.version_label         \
+     .f.version_status.version_number -sticky w
+grid .f.version_status.download_status_label \
+     .f.version_status.download_status -sticky w
+grid .f.version_status.hostname_label \
+     .f.version_status.hostname -sticky w
+
+place .f.disks -relx 0.49 -rely 0.05
+
+place .f.support_photo -relx 0.16 -rely 0.88
 
 pack .f .f.bg -fill both -expand 1
 

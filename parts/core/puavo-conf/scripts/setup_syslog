@@ -173,7 +173,7 @@ if (\$hostname == "${hostname}") then {
   if (\$programname == "kernel" and
        (\$msg contains "IPv4: martian source"
           or \$msg contains "ll header:")) then {
-    action(type="omfile" file="/var/log/martians")
+    action(type="omfile" file="/var/log/martians.log")
     stop
   }
 
@@ -183,22 +183,22 @@ if (\$hostname == "${hostname}") then {
   }
 
   if \$programname == "puavo-bootserver-make-homedir" then {
-    action(type="omfile" file="/var/log/puavo/puavo-bootserver-make-homedir")
+    action(type="omfile" file="/var/log/puavo/puavo-bootserver-make-homedir.log")
     stop
   }
 
   if \$programname == "puavo-rest" then {
-    action(type="omfile" file="/var/log/puavo/puavo-rest")
+    action(type="omfile" file="/var/log/puavo/puavo-rest.log")
     stop
   }
 
   if \$programname == "puavo-sharedir-manager" then {
-    action(type="omfile" file="/var/log/puavo/puavo-sharedir-manager")
+    action(type="omfile" file="/var/log/puavo/puavo-sharedir-manager.log")
     stop
   }
 
   if \$programname == "puavo-tftpd" then {
-    action(type="omfile" file="/var/log/puavo/puavo-tftpd")
+    action(type="omfile" file="/var/log/puavo/puavo-tftpd.log")
     stop
   }
 

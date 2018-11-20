@@ -9,11 +9,14 @@ class puavomenu {
     '/etc/puavomenu':
       ensure => directory;
 
+    '/etc/puavomenu/conditions.yaml':
+      content => template('puavomenu/conditions.yaml');
+
     '/etc/puavomenu/menudata.yaml':
       content => template('puavomenu/menudata.yaml');
 
-    '/etc/puavomenu/conditions.yaml':
-      content => template('puavomenu/conditions.yaml');
+    '/etc/X11/Xsession.d/48puavo-menu-show-my-school-users':
+      source => 'puppet:///modules/puavomenu/48puavo-menu-show-my-school-users';
   }
 
   ::puavo_conf::definition {

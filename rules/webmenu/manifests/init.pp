@@ -32,9 +32,6 @@ class webmenu {
                  , Package['oxygen-icon-theme']
                  , Package['tuxpaint-stamps-default'] ];
 
-    '/etc/X11/Xsession.d/48puavo-webmenu-show-my-school-users':
-      source => 'puppet:///modules/webmenu/48puavo-webmenu-show-my-school-users';
-
     '/etc/xdg/autostart/webmenu.desktop':
       content => template('webmenu/webmenu.desktop'),
       require => File['/usr/local/bin/puavo-webmenu'];
