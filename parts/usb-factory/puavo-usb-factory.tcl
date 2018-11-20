@@ -36,31 +36,6 @@ set pci_path_dir /dev/disk/by-path
 
 set diskdevices [dict create]
 
-# These are only valid with 13-post Icybox, and maybe not even with that
-# always... we should check that it is plugged in.
-set diskdevice_list [list pci-0000:00:14.0-usb-0:4.1:1.0-scsi-0:0:0:0       \
-                          pci-0000:00:14.0-usb-0:4.2:1.0-scsi-0:0:0:0       \
-                          pci-0000:00:14.0-usb-0:4.3:1.0-scsi-0:0:0:0       \
-                          pci-0000:00:14.0-usb-0:4.4.1:1.0-scsi-0:0:0:0     \
-                          pci-0000:00:14.0-usb-0:4.4.2:1.0-scsi-0:0:0:0     \
-                          pci-0000:00:14.0-usb-0:4.4.3:1.0-scsi-0:0:0:0     \
-                          pci-0000:00:14.0-usb-0:4.4.4.1:1.0-scsi-0:0:0:0   \
-                          pci-0000:00:14.0-usb-0:4.4.4.2:1.0-scsi-0:0:0:0   \
-                          pci-0000:00:14.0-usb-0:4.4.4.3:1.0-scsi-0:0:0:0   \
-                          pci-0000:00:14.0-usb-0:4.4.4.4.1:1.0-scsi-0:0:0:0 \
-                          pci-0000:00:14.0-usb-0:4.4.4.4.2:1.0-scsi-0:0:0:0 \
-                          pci-0000:00:14.0-usb-0:4.4.4.4.3:1.0-scsi-0:0:0:0 \
-                          pci-0000:00:14.0-usb-0:4.4.4.4.4:1.0-scsi-0:0:0:0]
-
-# XXX Deltaco 7-port usb-hub
-# set diskdevice_list [list pci-0000:00:14.0-usb-0:4.1.1:1.0-scsi-0:0:0:0 \
-#                           pci-0000:00:14.0-usb-0:4.1.2:1.0-scsi-0:0:0:0 \
-#                           pci-0000:00:14.0-usb-0:4.1.3:1.0-scsi-0:0:0:0 \
-#                           pci-0000:00:14.0-usb-0:4.1.4:1.0-scsi-0:0:0:0 \
-#                           pci-0000:00:14.0-usb-0:4.2:1.0-scsi-0:0:0:0   \
-#                           pci-0000:00:14.0-usb-0:4.3:1.0-scsi-0:0:0:0   \
-#                           pci-0000:00:14.0-usb-0:4.4:1.0-scsi-0:0:0:0]
-
 # XXX perhaps do not use cat, but open + read + close ?
 proc read_file {path} { exec cat $path }
 
@@ -187,11 +162,6 @@ proc update_image_info {} {
   update_ui_info_state
 }
 
-proc get_port_num {devpath} {
-  global diskdevice_list
-  expr { 1 + [lsearch $diskdevice_list $devpath] }
-}
-
 proc close_if_open {devpath} {
   global diskdevices
 
@@ -205,18 +175,21 @@ proc close_if_open {devpath} {
 proc start_preparation {devpath countdown} {
   global diskdevices
 
+  if {![dict exists $diskdevices $devpath]} {
+    return
+  }
   if {[dict get $diskdevices $devpath state] ne "starting"} {
     return
   }
 
-  set port [get_port_num $devpath]
+  set ui [dict get $diskdevices $devpath ui]
 
   if {$countdown == 0} {
     set_devstate $devpath writing
     return
   }
 
-  .f.disks.port_${port}.info.status configure \
+  $ui.info.status configure \
     -text "[ui_msg messages starting] $countdown"
 
   incr countdown -1
@@ -243,7 +216,7 @@ proc start_writing {devpath} {
 }
 
 proc set_device_eta {devpath bytes_written} {
-  global diskdevice_list diskdevices image_info
+  global diskdevices image_info
 
   set image_size [dict get $diskdevices $devpath image_size]
 
@@ -312,7 +285,7 @@ proc handle_fileevent {devpath} {
 proc update_disklabel {devpath {label "LOOKUP"}} {
   global diskdevices
 
-  set port [get_port_num $devpath]
+  set ui [dict get $diskdevices $devpath ui]
 
   if {$label ne "LOOKUP"} {
     set device_label $label
@@ -348,41 +321,43 @@ proc update_disklabel {devpath {label "LOOKUP"}} {
     }
   }
 
-  .f.disks.port_${port}.info.disklabel configure -text $device_label
+  $ui.info.disklabel configure -text $device_label
 }
 
 proc set_ui_status_to_nomedia {devpath} {
   global diskdevices
 
-  set port [get_port_num $devpath]
+  if {![dict exists $diskdevices $devpath]} {
+    return
+  }
+
+  set ui [dict get $diskdevices $devpath ui]
   if {[dict get $diskdevices $devpath state] eq "nomedia"} {
-    .f.disks.port_${port}.info.status  configure -text  ""
-    .f.disks.port_${port}.pb_frame.bar configure -value 0
+    $ui.info.status  configure -text  ""
+    $ui.pb_frame.bar configure -value 0
   }
 }
 
 proc set_devstate {devpath state args} {
   global diskdevices
 
-  set port [get_port_num $devpath]
+  set ui [dict get $diskdevices $devpath ui]
 
   switch -- $state {
     error {
       close_if_open $devpath
       dict set diskdevices $devpath state error
 
-      .f.disks.port_${port}.info.status configure \
-         -text [ui_msg messages error]
-      .f.disks.port_${port}.pb_frame.bar configure -value 0
+      $ui.info.status configure -text [ui_msg messages error]
+      $ui.pb_frame.bar configure -value 0
     }
 
     finished {
       close_if_open $devpath
       dict set diskdevices $devpath state finished
 
-      .f.disks.port_${port}.info.status configure \
-         -text [ui_msg messages finished]
-      .f.disks.port_${port}.pb_frame.bar configure -value 100
+      $ui.info.status configure -text [ui_msg messages finished]
+      $ui.pb_frame.bar configure -value 100
     }
 
     nomedia {
@@ -411,15 +386,14 @@ proc set_devstate {devpath state args} {
       close_if_open $devpath
       dict set diskdevices $devpath state nospaceondevice
       update_disklabel $devpath
-      .f.disks.port_${port}.info.status configure \
-        -text [ui_msg messages nospaceondevice]
-      .f.disks.port_${port}.pb_frame.bar configure -value 0
+      $ui.info.status configure -text [ui_msg messages nospaceondevice]
+      $ui.pb_frame.bar configure -value 0
     }
 
     progress {
       lassign $args eta percentage
-      .f.disks.port_${port}.info.status  configure -text  $eta
-      .f.disks.port_${port}.pb_frame.bar configure -value $percentage
+      $ui.info.status  configure -text  $eta
+      $ui.pb_frame.bar configure -value $percentage
     }
 
     starting {
@@ -435,8 +409,8 @@ proc set_devstate {devpath state args} {
       if {$fh ne ""} {
         dict set diskdevices $devpath state writing
 
-        .f.disks.port_${port}.info.status  configure -text  -
-        .f.disks.port_${port}.pb_frame.bar configure -value 0
+        $ui.info.status  configure -text  -
+        $ui.pb_frame.bar configure -value 0
       }
     }
   }
@@ -475,6 +449,8 @@ proc check_for_space_in_device {devpath} {
 proc check_files {} {
   global diskdevices pci_path_dir
 
+  update_diskdevices
+
   dict for {devpath devstate} $diskdevices {
     set full_devpath "${pci_path_dir}/${devpath}"
     if {[file exists $full_devpath]} {
@@ -495,12 +471,76 @@ proc check_files {} {
   after 250 check_files
 }
 
-foreach devpath $diskdevice_list {
-  dict set diskdevices $devpath [
-    dict create fh            ""     \
-                image_size    ""     \
-                progress_list [list] \
-                state         nomedia]
+proc make_diskdevice_ui_elements {devpath} {
+  set dev_id [string map {. _} $devpath]
+
+  ttk::frame .f.disks.dev_${dev_id} -borderwidth 1
+  ttk::frame .f.disks.dev_${dev_id}.info
+  ttk::frame .f.disks.dev_${dev_id}.pb_frame -height 8
+
+  ttk::label .f.disks.dev_${dev_id}.info.number -text $dev_id -font infoFont
+  ttk::label .f.disks.dev_${dev_id}.info.disklabel -text "" \
+             -font infoFont
+  ttk::label .f.disks.dev_${dev_id}.info.status -width 20 \
+             -font infoFont
+  ttk::progressbar .f.disks.dev_${dev_id}.pb_frame.bar \
+                   -orient horizontal -maximum 100 -value 0
+
+  pack .f.disks.dev_${dev_id}.info.number    \
+       .f.disks.dev_${dev_id}.info.status    \
+       .f.disks.dev_${dev_id}.info.disklabel \
+       -side left -padx 16
+  pack .f.disks.dev_${dev_id}.info \
+       .f.disks.dev_${dev_id}.pb_frame -expand 1 -fill x
+  place .f.disks.dev_${dev_id}.pb_frame.bar \
+        -in .f.disks.dev_${dev_id}.pb_frame \
+        -relwidth 1.0 -relheight 1.0
+
+  return .f.disks.dev_${dev_id}
+}
+
+proc update_diskdevices {} {
+  global diskdevices pci_path_dir
+
+  set regrid false
+
+  set diskdevice_list [list]
+  catch {
+    set diskdevice_list [lmap path [glob "${pci_path_dir}/*-0:0:0:0"] {
+                           file tail $path
+                         }]
+  }
+
+  dict for {devpath devstate} $diskdevices {
+    if {$devpath ni $diskdevice_list} {
+      destroy [dict get $devstate ui]
+      close_if_open $devpath
+      dict unset diskdevices $devpath
+    }
+  }
+
+  foreach devpath $diskdevice_list {
+    if {![dict exists $diskdevices $devpath]} {
+      set ui [make_diskdevice_ui_elements $devpath]
+      dict set diskdevices $devpath [
+        dict create fh            ""      \
+                    image_size    ""      \
+                    progress_list [list]  \
+                    state         nomedia \
+                    ui            $ui]
+      set regrid true
+    }
+  }
+
+  # sort/reorder disk device widgets
+  if {$regrid} {
+    set devpaths [lsort [dict keys $diskdevices]]
+    foreach devpath $devpaths {
+      set ui [dict get $diskdevices $devpath ui]
+      grid forget $ui
+      grid $ui -sticky w
+    }
+  }
 }
 
 #
@@ -572,34 +612,6 @@ ttk::label .f.version_status.hostname -text [exec hostname -f] \
                                       -font infoFont
 
 ttk::frame .f.disks
-
-foreach devpath $diskdevice_list {
-  set port [get_port_num $devpath]
-
-  ttk::frame .f.disks.port_${port} -borderwidth 1
-  ttk::frame .f.disks.port_${port}.info
-  ttk::frame .f.disks.port_${port}.pb_frame -height 8
-
-  ttk::label .f.disks.port_${port}.info.number -text $port -width 3 \
-             -font infoFont
-  ttk::label .f.disks.port_${port}.info.disklabel -text "" \
-             -font infoFont
-  ttk::label .f.disks.port_${port}.info.status -width 20 \
-             -font infoFont
-  ttk::progressbar .f.disks.port_${port}.pb_frame.bar \
-                   -orient horizontal -maximum 100 -value 0
-
-  # XXX grid?
-  pack .f.disks.port_${port}.info.number    \
-       .f.disks.port_${port}.info.status    \
-       .f.disks.port_${port}.info.disklabel \
-       -side left -padx 16
-  pack .f.disks.port_${port}.info \
-       .f.disks.port_${port}.pb_frame -expand 1 -fill x
-  place .f.disks.port_${port}.pb_frame.bar -in .f.disks.port_${port}.pb_frame \
-        -relwidth 1.0 -relheight 1.0
-  pack .f.disks.port_${port} -expand 1 -fill x
-}
 
 place .f.instructions -relx 0.02 -rely 0.05
 pack .f.instructions.title \
