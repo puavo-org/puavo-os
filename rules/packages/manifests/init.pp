@@ -753,7 +753,7 @@ class packages {
   $nvidia_dkms_304_module   = 'nvidia-legacy-304xx/304.137'
   $nvidia_dkms_340_module   = 'nvidia-legacy-340xx/340.106'
   $nvidia_dkms_384_module   = 'nvidia-current/384.130'
-  $virtualbox_module        = 'virtualbox/5.2.18'
+  $virtualbox_module        = 'virtualbox/5.2.22'
   # XXX $r8168_dkms_module  = 'r8168/8.040.00'
 
   $all_dkms_modules = [ $broadcom_sta_dkms_module
