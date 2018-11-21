@@ -35,6 +35,10 @@ set puavo_usb_factory_workpath "$::env(HOME)/.puavo/usb-factory"
 set pci_path_dir /dev/disk/by-path
 
 set diskdevices [dict create]
+set usbhubs     [dict create]
+set usbports    [dict create]
+
+set previous_lsusb_output ""
 
 # XXX perhaps do not use cat, but open + read + close ?
 proc read_file {path} { exec cat $path }
@@ -503,16 +507,116 @@ proc make_diskdevice_ui_elements {devpath} {
   return .f.disks.dev_${dev_id}
 }
 
+proc iterate_lshw {lshw {pci_id ""}} {
+  global usbports
+
+  if {![dict exists $lshw children]} {
+    return
+  }
+
+  if {[dict exists $lshw businfo]} {
+    set businfo [dict get $lshw businfo]
+    if {[regexp {^pci@} $businfo]} {
+      set pci_id $businfo
+    }
+  }
+
+  # XXX we should not have an accepted vendor list... ?
+  set accepted_vendor_list [list "VIA Labs, Inc."]
+
+  foreach child [dict get $lshw children] {
+    if {[dict exists $child businfo]} {
+      set businfo [dict get $child businfo]
+
+      if {[dict exists $child vendor]} {
+        set vendor [dict get $child vendor]
+        if {$vendor in $accepted_vendor_list} {
+          if {[dict exists $child configuration slots]} {
+            set slotcount [dict get $child configuration slots]
+            for {set port 1} {$port <= $slotcount} {incr port} {
+              set product [dict get $child product]
+
+              set usbportinfo [dict create pci_id  $pci_id              \
+                                           port    "${businfo}.${port}" \
+                                           product $product             \
+                                           vendor  $vendor]
+              dict set usbports "${businfo}.${port}" $usbportinfo
+            }
+          }
+        }
+      }
+
+      # do not add other hubs as ports to be tracked
+      if {[dict get $child class] eq "bus"} {
+        dict unset usbports $businfo
+      }
+    }
+
+
+    iterate_lshw $child $pci_id
+  }
+}
+
+proc update_usbhubs {} {
+  global usbports usbhubs
+
+  set usbports [dict create]
+
+  # XXX sudo should be configured somewhere
+  set lshw_json [exec sudo lshw -json]
+
+  iterate_lshw [::json::json2dict $lshw_json]
+
+  set usbhubs       [dict create]
+  set by_prodvendor [dict create]
+
+  dict for {usbport portinfo} $usbports {
+    set pci_id  [dict get $portinfo pci_id]
+    set port    [dict get $portinfo port]
+    set product [dict get $portinfo product]
+    set vendor  [dict get $portinfo vendor]
+
+    if {![regexp {^usb@[0-9]+:(.*)$} $port _ port_no_prefix]} {
+      continue
+    }
+    set pci_id [string map {@ -} $pci_id]
+    set devpath "${pci_id}-usb-0:${port_no_prefix}:1.0-scsi-0:0:0:0"
+
+    dict set by_prodvendor $vendor $product $devpath 1
+  }
+
+  dict for {vendor productinfo} $by_prodvendor {
+    dict for {product devpaths} $productinfo {
+      set ports [lsort [dict keys $devpaths]]
+      for {set i 0} {$i < [llength $ports]} {incr i} {
+        set port [expr { $i + 1 }]
+        set devpath [lindex $ports $i]
+        dict set usbhubs "$vendor / $product" $port $devpath
+      }
+    }
+  }
+}
+
 proc update_diskdevices {} {
-  global diskdevices pci_path_dir
+  global diskdevices pci_path_dir previous_lsusb_output usbhubs
+
+  set new_lsusb_output [exec lsusb]
+  if {$previous_lsusb_output ne $new_lsusb_output} {
+    # XXX TOCTOU issues with lsusb/lshw? (but we check with lsusb because it
+    # XXX it considerably faster that lshw
+    update_usbhubs
+    set previous_lsusb_output $new_lsusb_output
+  }
 
   set regrid false
 
+  # XXX this should follow the structure with hubs...
+
   set diskdevice_list [list]
-  catch {
-    set diskdevice_list [lmap path [glob "${pci_path_dir}/*-0:0:0:0"] {
-                           file tail $path
-                         }]
+  dict for {hubname hubinfo} $usbhubs {
+    dict for {portnum devpath} $hubinfo {
+      lappend diskdevice_list $devpath
+    }
   }
 
   dict for {devpath devstate} $diskdevices {
