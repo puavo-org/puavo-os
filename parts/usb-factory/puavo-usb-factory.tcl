@@ -285,6 +285,10 @@ proc handle_fileevent {devpath} {
 proc update_disklabel {devpath {label "LOOKUP"}} {
   global diskdevices
 
+  if {![dict exists $diskdevices $devpath]} {
+    return
+  }
+
   set ui [dict get $diskdevices $devpath ui]
 
   if {$label ne "LOOKUP"} {
@@ -365,11 +369,11 @@ proc set_devstate {devpath state args} {
       set current_state [dict get $diskdevices $devpath state]
 
       if {$current_state ne "nomedia"} {
-        dict set diskdevices $devpath [
-          dict create fh            ""       \
-                      image_size    ""       \
-                      progress_list [list]   \
-                      state         nomedia]
+        # preserve the ui attribute
+        dict set diskdevices $devpath fh            ""
+        dict set diskdevices $devpath image_size    ""
+        dict set diskdevices $devpath progress_list [list]
+        dict set diskdevices $devpath state         nomedia
 
         update_disklabel $devpath ""
 
