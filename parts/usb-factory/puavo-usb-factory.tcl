@@ -36,9 +36,6 @@ set pci_path_dir /dev/disk/by-path
 
 set diskdevices [dict create]
 set usbhubs     [dict create]
-set usbports    [dict create]
-
-set previous_lsusb_output ""
 
 # XXX perhaps do not use cat, but open + read + close ?
 proc read_file {path} { exec cat $path }
@@ -457,8 +454,6 @@ proc check_for_space_in_device {devpath} {
 proc check_files {} {
   global diskdevices pci_path_dir
 
-  update_diskdevices
-
   dict for {devpath devstate} $diskdevices {
     set full_devpath "${pci_path_dir}/${devpath}"
     if {[file exists $full_devpath]} {
@@ -479,32 +474,30 @@ proc check_files {} {
   after 250 check_files
 }
 
-proc make_diskdevice_ui_elements {devpath} {
+proc make_diskdevice_ui_elements {devpath portnum} {
   set dev_id [string map {. _} $devpath]
 
-  ttk::frame .f.disks.dev_${dev_id} -borderwidth 1
-  ttk::frame .f.disks.dev_${dev_id}.info
-  ttk::frame .f.disks.dev_${dev_id}.pb_frame -height 8
+  set dev_widget ".f.disks.dev_${dev_id}"
 
-  ttk::label .f.disks.dev_${dev_id}.info.number -text $dev_id -font infoFont
-  ttk::label .f.disks.dev_${dev_id}.info.disklabel -text "" \
-             -font infoFont
-  ttk::label .f.disks.dev_${dev_id}.info.status -width 20 \
-             -font infoFont
-  ttk::progressbar .f.disks.dev_${dev_id}.pb_frame.bar \
-                   -orient horizontal -maximum 100 -value 0
+  ttk::frame $dev_widget -borderwidth 1
+  ttk::frame ${dev_widget}.info
+  ttk::frame ${dev_widget}.pb_frame -height 8
 
-  pack .f.disks.dev_${dev_id}.info.number    \
-       .f.disks.dev_${dev_id}.info.status    \
-       .f.disks.dev_${dev_id}.info.disklabel \
+  ttk::label ${dev_widget}.info.number    -text $portnum -font infoFont
+  ttk::label ${dev_widget}.info.disklabel -text ""       -font infoFont
+  ttk::label ${dev_widget}.info.status -width 20 -font infoFont
+  ttk::progressbar ${dev_widget}.pb_frame.bar -orient horizontal \
+                   -maximum 100 -value 0
+
+  pack ${dev_widget}.info.number    \
+       ${dev_widget}.info.status    \
+       ${dev_widget}.info.disklabel \
        -side left -padx 16
-  pack .f.disks.dev_${dev_id}.info \
-       .f.disks.dev_${dev_id}.pb_frame -expand 1 -fill x
-  place .f.disks.dev_${dev_id}.pb_frame.bar \
-        -in .f.disks.dev_${dev_id}.pb_frame \
+  pack ${dev_widget}.info ${dev_widget}.pb_frame -expand 1 -fill x
+  place ${dev_widget}.pb_frame.bar -in ${dev_widget}.pb_frame \
         -relwidth 1.0 -relheight 1.0
 
-  return .f.disks.dev_${dev_id}
+  return $dev_widget
 }
 
 proc iterate_lshw {lshw {pci_id ""}} {
@@ -557,17 +550,37 @@ proc iterate_lshw {lshw {pci_id ""}} {
   }
 }
 
-proc update_usbhubs {} {
-  global usbports usbhubs
+proc read_lshw {fh} {
+  global lshw_json
 
-  set usbports [dict create]
+  append lshw_json [gets $fh]
+  if {[eof $fh]} {
+    if {[catch { close $fh } err]} {
+      puts stderr "error running lshw -json: $err"
+    } else {
+      set lshw [::json::json2dict $lshw_json]
+      update_diskdevices $lshw
+    }
 
-  # XXX sudo should be configured somewhere
-  set lshw_json [exec sudo lshw -json]
+    after 1000 update_lshw
+  }
+}
 
-  iterate_lshw [::json::json2dict $lshw_json]
+proc update_lshw {} {
+  global lshw_json
 
-  set usbhubs       [dict create]
+  set lshw_json ""
+  set fh [open "| sudo lshw -json"]
+  fconfigure $fh -buffering line
+  fileevent $fh readable [list read_lshw $fh]
+}
+
+proc update_usbhubs {lshw} {
+  global new_usbhubs usbports
+
+  iterate_lshw $lshw
+
+  set new_usbhubs   [dict create]
   set by_prodvendor [dict create]
 
   dict for {usbport portinfo} $usbports {
@@ -582,71 +595,98 @@ proc update_usbhubs {} {
     set pci_id [string map {@ -} $pci_id]
     set devpath "${pci_id}-usb-0:${port_no_prefix}:1.0-scsi-0:0:0:0"
 
-    dict set by_prodvendor $vendor $product $devpath 1
+    dict set by_prodvendor $vendor $product $pci_id $devpath 1
   }
 
   dict for {vendor productinfo} $by_prodvendor {
-    dict for {product devpaths} $productinfo {
-      set ports [lsort [dict keys $devpaths]]
-      for {set i 0} {$i < [llength $ports]} {incr i} {
-        set port [expr { $i + 1 }]
-        set devpath [lindex $ports $i]
-        dict set usbhubs "$vendor / $product" $port $devpath
+    dict for {product pciinfo} $productinfo {
+      dict for {pci_id devpaths} $pciinfo {
+        set ports [lsort [dict keys $devpaths]]
+        for {set i 0} {$i < [llength $ports]} {incr i} {
+          set portnum [expr { $i + 1 }]
+          set devpath [lindex $ports $i]
+          dict set new_usbhubs $pci_id "$vendor / $product" \
+                               ports $portnum $devpath
+        }
       }
     }
   }
 }
 
-proc update_diskdevices {} {
-  global diskdevices pci_path_dir previous_lsusb_output usbhubs
+proc update_diskdevices {lshw} {
+  global diskdevices pci_path_dir new_usbhubs usbhubs
 
-  set new_lsusb_output [exec lsusb]
-  if {$previous_lsusb_output ne $new_lsusb_output} {
-    # XXX TOCTOU issues with lsusb/lshw? (but we check with lsusb because it
-    # XXX it considerably faster that lshw
-    update_usbhubs
-    set previous_lsusb_output $new_lsusb_output
-  }
+  update_usbhubs $lshw
 
-  set regrid false
+  # destroy usbhubs that are no more
+  dict for {pci_id hubproducts} $usbhubs {
+    dict for {product productinfo} $hubproducts {
+      set portinfo [dict get $productinfo ports]
+      dict for {portnum devpath} $portinfo {
+        # destroy UI for ports which do not exist anymore
+        if {![dict exists $new_usbhubs $pci_id $product ports $portnum]} {
+          if {[dict exists $diskdevices $devpath ui]} {
+            destroy [dict get $diskdevices $devpath ui]
+            close_if_open $devpath
+            dict unset diskdevices $devpath
+          }
+          dict unset usbhubs $pci_id $product ports $portnum
+        }
+      }
 
-  # XXX this should follow the structure with hubs...
-
-  set diskdevice_list [list]
-  dict for {hubname hubinfo} $usbhubs {
-    dict for {portnum devpath} $hubinfo {
-      lappend diskdevice_list $devpath
+      # destroy UI for hubs which do not exists anymore
+      if {![dict exists $new_usbhubs $pci_id $product]} {
+        destroy [dict get $usbhubs $pci_id $product ui]
+        dict unset usbhubs $pci_id $product
+      }
     }
   }
 
-  dict for {devpath devstate} $diskdevices {
-    if {$devpath ni $diskdevice_list} {
-      destroy [dict get $devstate ui]
-      close_if_open $devpath
-      dict unset diskdevices $devpath
+  dict for {pci_id hubproducts} $new_usbhubs {
+    foreach product [dict keys $hubproducts] {
+      if {![dict exists $usbhubs $pci_id $product]} {
+        # add UI for hub
+        set uisym_pci_id  [string map {. _      } $pci_id]
+        set uisym_product [string map {. _ " " _} $product]
+        set hub_ui ".f.disks.hub_${uisym_pci_id}_${uisym_product}"
+
+        ttk::label $hub_ui -text $product
+        grid $hub_ui -sticky w
+
+        dict set usbhubs $pci_id $product ui $hub_ui
+      }
+    }
+
+    dict for {product productinfo} $hubproducts {
+      set portinfo [dict get $productinfo ports]
+      dict for {portnum devpath} $portinfo {
+        # Add UI for port and add it to diskdevices to manage.
+        # Test for diskdevice existence, because the same $devpath
+        # may be in two different products (USB2.0 vs. USB3.0).
+        if {![dict exists $diskdevices $devpath]} {
+          set ui [make_diskdevice_ui_elements $devpath $portnum]
+          dict set diskdevices $devpath [
+            dict create fh            ""      \
+                        image_size    ""      \
+                        progress_list [list]  \
+                        state         nomedia \
+                        ui            $ui]
+          grid $ui -sticky w
+        }
+
+        dict set usbhubs $pci_id $product ports $portnum $devpath
+      }
     }
   }
 
-  foreach devpath $diskdevice_list {
-    if {![dict exists $diskdevices $devpath]} {
-      set ui [make_diskdevice_ui_elements $devpath]
-      dict set diskdevices $devpath [
-        dict create fh            ""      \
-                    image_size    ""      \
-                    progress_list [list]  \
-                    state         nomedia \
-                    ui            $ui]
-      set regrid true
-    }
-  }
-
-  # sort/reorder disk device widgets
-  if {$regrid} {
-    set devpaths [lsort [dict keys $diskdevices]]
-    foreach devpath $devpaths {
-      set ui [dict get $diskdevices $devpath ui]
-      grid forget $ui
-      grid $ui -sticky w
+  # XXX debugging code, delete later
+  puts ">>>>> usbhubs:"
+  dict for {pci_id hubproducts} $new_usbhubs {
+    dict for {product productinfo} $hubproducts {
+      set portinfo [dict get $productinfo ports]
+      dict for {portnum devpath} $portinfo {
+        puts ">>> $pci_id $product ports $portnum $devpath"
+      }
     }
   }
 }
@@ -748,4 +788,5 @@ bind . <Configure> {
 }
 
 update_image_info
+update_lshw
 check_files
