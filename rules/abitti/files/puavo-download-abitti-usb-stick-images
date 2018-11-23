@@ -113,6 +113,33 @@ download_abitti() {
 
 mkdir -p "$abitti_images_dir" "$incoming_dir"
 
+# add UI.json for puavo-usb-factory
+cat <<'EOF' > "${abitti_images_dir}/UI.json.tmp"
+{
+  "title": "Tikkutehdas",
+  "description": "HUOM!  Abittitikun tekeminen aloitetaan automaattisesti, kun usb-tikku liitetään koneeseen.  Kaikki siinä oleva vanha sisältö poistetaan!",
+  "instructions": "- Aseta usb-tikku usb-jakajaan\n- Odota Abitti-tikun valmistumista\n- Irrota valmis tikku",
+  "version label": "Abittiversio:",
+  "hostname label": "Koneen nimi:",
+  "download status label": "Päivitystilanne:",
+  "waiting usb hubs": "Odotellaan USB-hubeja...",
+  "download state": {
+    "up-to-date": "Abitti on ajantasainen.",
+    "in progress": "Tikkutehdas hakee uusinta Abittia.",
+    "failed": "Uusimman Abitin haku epäonnistui",
+    "missing": "Abitti puuttuu.",
+    "undefined": "Lataustila on epämääräinen."
+  },
+  "messages": {
+    "error": "virhe",
+    "finished": "valmis",
+    "nospaceondevice": "liian pieni tikku",
+    "starting": "aloitetaan"
+  }
+}
+EOF
+mv "${abitti_images_dir}/UI.json.tmp" "${abitti_images_dir}/UI.json"
+
 (
   if ! flock -n 9; then
     logmsg -p user.err 'could not get a lock, exiting...'
@@ -126,7 +153,7 @@ mkdir -p "$abitti_images_dir" "$incoming_dir"
     echo failed > "$download_status_path"
     exitstatus=1
   else
-    echo ok > "$download_status_path"
+    echo up-to-date > "$download_status_path"
   fi
 
   if [ "$exitstatus" -ne 0 ]; then
