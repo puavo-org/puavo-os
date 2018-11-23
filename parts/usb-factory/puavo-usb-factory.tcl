@@ -562,6 +562,8 @@ proc read_lshw {fh} {
       update_diskdevices $lshw
     }
 
+    # XXX repeatedly running lshw hangs kernel
+    # XXX should get rid of this
     after 1000 update_lshw
   }
 }
@@ -575,8 +577,10 @@ proc update_lshw {} {
   fileevent $fh readable [list read_lshw $fh]
 }
 
-proc update_usbhubs {lshw} {
+proc update_new_usbhubs {lshw} {
   global new_usbhubs usbports
+
+  set usbports [dict create]
 
   iterate_lshw $lshw
 
@@ -616,32 +620,61 @@ proc update_usbhubs {lshw} {
 proc update_diskdevices {lshw} {
   global diskdevices pci_path_dir new_usbhubs usbhubs
 
-  update_usbhubs $lshw
+  update_new_usbhubs $lshw
 
-  # destroy usbhubs that are no more
-  dict for {pci_id hubproducts} $usbhubs {
+  set diskdevices_in_hubs [dict create]
+  # list all diskdevices in new hubs
+  dict for {pci_id hubproducts} $new_usbhubs {
     dict for {product productinfo} $hubproducts {
       set portinfo [dict get $productinfo ports]
       dict for {portnum devpath} $portinfo {
-        # destroy UI for ports which do not exist anymore
-        if {![dict exists $new_usbhubs $pci_id $product ports $portnum]} {
-          if {[dict exists $diskdevices $devpath ui]} {
-            destroy [dict get $diskdevices $devpath ui]
-            close_if_open $devpath
-            dict unset diskdevices $devpath
+        dict set diskdevices_in_hubs $devpath 1
+      }
+    }
+  }
+
+  # check all our current diskdevices and remove those
+  # that are not in current hubs
+  foreach devpath [dict keys $diskdevices] {
+    if {[dict exists $diskdevices_in_hubs $devpath]} {
+      continue
+    }
+
+    # $devpath is gone from usbhubs, remove it and its UI
+
+    destroy [dict get $diskdevices $devpath ui]
+    close_if_open $devpath
+    dict unset diskdevices $devpath
+
+    dict for {pci_id hubproducts} $usbhubs {
+      dict for {product productinfo} $hubproducts {
+        set portinfo [dict get $productinfo ports]
+        dict for {portnum usbhub_devpath} $portinfo {
+          if {$devpath eq $usbhub_devpath} {
+            dict unset usbhubs $pci_id $product ports $portnum
           }
-          dict unset usbhubs $pci_id $product ports $portnum
         }
       }
+    }
+  }
 
-      # destroy UI for hubs which do not exists anymore
-      if {![dict exists $new_usbhubs $pci_id $product]} {
+  # destroy UI of hubs that have no devices
+  dict for {pci_id hubproducts} $usbhubs {
+    dict for {product productinfo} $hubproducts {
+      set portinfo [dict get $productinfo ports]
+      if {[llength [dict keys $portinfo]] == 0} {
         destroy [dict get $usbhubs $pci_id $product ui]
         dict unset usbhubs $pci_id $product
       }
     }
   }
+  dict for {pci_id hubproducts} $usbhubs {
+    if {[llength [dict keys $hubproducts]] == 0} {
+      dict unset usbhubs $pci_id
+    }
+  }
 
+  # add hubs that are missing
   dict for {pci_id hubproducts} $new_usbhubs {
     foreach product [dict keys $hubproducts] {
       if {![dict exists $usbhubs $pci_id $product]} {
@@ -653,17 +686,24 @@ proc update_diskdevices {lshw} {
         ttk::label $hub_ui -text $product
         grid $hub_ui -sticky w
 
+        grid forget .f.disks.nohubs_message
+
         dict set usbhubs $pci_id $product ui $hub_ui
       }
     }
 
+    # add new hub ports to UI
     dict for {product productinfo} $hubproducts {
       set portinfo [dict get $productinfo ports]
       dict for {portnum devpath} $portinfo {
         # Add UI for port and add it to diskdevices to manage.
         # Test for diskdevice existence, because the same $devpath
         # may be in two different products (USB2.0 vs. USB3.0).
-        if {![dict exists $diskdevices $devpath]} {
+        if {[dict exists $diskdevices $devpath]} {
+          # port number may change if layout changes, thus update those
+          set ui [dict get $diskdevices $devpath ui]
+          $ui.info.number configure -text $portnum
+        } else {
           set ui [make_diskdevice_ui_elements $devpath $portnum]
           dict set diskdevices $devpath [
             dict create fh            ""      \
@@ -679,15 +719,8 @@ proc update_diskdevices {lshw} {
     }
   }
 
-  # XXX debugging code, delete later
-  puts ">>>>> usbhubs:"
-  dict for {pci_id hubproducts} $new_usbhubs {
-    dict for {product productinfo} $hubproducts {
-      set portinfo [dict get $productinfo ports]
-      dict for {portnum devpath} $portinfo {
-        puts ">>> $pci_id $product ports $portnum $devpath"
-      }
-    }
+  if {[llength [dict keys $usbhubs]] == 0} {
+    grid .f.disks.nohubs_message
   }
 }
 
@@ -760,6 +793,8 @@ ttk::label .f.version_status.hostname -text [exec hostname -f] \
                                       -font infoFont
 
 ttk::frame .f.disks
+ttk::label .f.disks.nohubs_message -font infoFont \
+                                   -text [ui_msg "waiting usb hubs"]
 
 place .f.instructions -relx 0.02 -rely 0.05
 pack .f.instructions.title \
@@ -776,6 +811,7 @@ grid .f.version_status.hostname_label \
      .f.version_status.hostname -sticky w
 
 place .f.disks -relx 0.49 -rely 0.05
+grid .f.disks.nohubs_message
 
 place .f.support_photo -relx 0.16 -rely 0.88
 
