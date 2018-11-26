@@ -36,6 +36,7 @@ set pci_path_dir /dev/disk/by-path
 
 set diskdevices [dict create]
 set usbhubs     [dict create]
+set new_usbhubs [dict create]
 
 # XXX perhaps do not use cat, but open + read + close ?
 proc read_file {path} { exec cat $path }
@@ -427,7 +428,8 @@ proc get_device_size {devpath} {
   set device_size ""
   set full_devpath "${pci_path_dir}/${devpath}"
 
-  if {[catch { set f [open $full_devpath r] }]} {
+  if {[catch { set f [open $full_devpath r] } err]} {
+    puts stderr "error while opening $full_devpath: $err"
     return $device_size
   }
   catch {
@@ -443,7 +445,7 @@ proc check_for_space_in_device {devpath} {
   global image_info
 
   set device_size [get_device_size $devpath]
-  set image_size [dict get $image_info image_size]
+  set image_size  [dict get $image_info image_size]
 
   if {$device_size eq ""} { error "could not get device size" }
   if {$image_size  eq ""} { error "could not get image size"  }
@@ -459,6 +461,7 @@ proc check_files {} {
     if {[file exists $full_devpath]} {
       if {[dict get $devstate state] eq "nomedia"} {
         if {[catch { check_for_space_in_device $devpath } res]} {
+          puts stderr "error while checking for space in device: $res"
           set_devstate $devpath error
         } elseif {$res} {
           set_devstate $devpath starting
@@ -500,127 +503,102 @@ proc make_diskdevice_ui_elements {devpath portnum} {
   return $dev_widget
 }
 
-proc iterate_lshw {lshw {pci_id ""}} {
-  global usbports
-
-  if {![dict exists $lshw children]} {
-    return
-  }
-
-  if {[dict exists $lshw businfo]} {
-    set businfo [dict get $lshw businfo]
-    if {[regexp {^pci@} $businfo]} {
-      set pci_id $businfo
+proc usbdevice_is_a_hub {usbpath} {
+  try {
+    set usbdevicepath_list [glob "${usbpath}/*:1.0"]
+    if {[llength $usbdevicepath_list] != 1} {
+      error "multiple device paths"
     }
+
+    set usbdevicepath [lindex $usbdevicepath_list 0]
+
+    set driver_path "${usbdevicepath}/driver"
+    if {![file exists $driver_path]} {
+      return false
+    }
+
+    if {[file tail [file readlink $driver_path]] eq "hub"} {
+      return true
+    }
+  } on error {errmsg} {
+    puts stderr "error determining if $usbpath is a hub: $errmsg"
+    return false
   }
 
-  # XXX we should not have an accepted vendor list... ?
-  set accepted_vendor_list [list "VIA Labs, Inc."]
+  return false
+}
 
-  foreach child [dict get $lshw children] {
-    if {[dict exists $child businfo]} {
-      set businfo [dict get $child businfo]
+proc update_new_usbhubs {} {
+  global new_usbhubs
 
-      if {[dict exists $child vendor]} {
-        set vendor [dict get $child vendor]
-        if {$vendor in $accepted_vendor_list} {
-          if {[dict exists $child configuration slots]} {
-            set slotcount [dict get $child configuration slots]
-            for {set port 1} {$port <= $slotcount} {incr port} {
-              set product [dict get $child product]
+  try {
+    set _new_usbhubs  [dict create]
+    set by_prodvendor [dict create]
 
-              set usbportinfo [dict create pci_id  $pci_id              \
-                                           port    "${businfo}.${port}" \
-                                           product $product             \
-                                           vendor  $vendor]
-              dict set usbports "${businfo}.${port}" $usbportinfo
-            }
+    foreach pci_device_path [glob /sys/devices/pci*/0000:*] {
+      set pci_id [file tail $pci_device_path]
+
+      set paths [exec find $pci_device_path -type d -regex {.*[.-][0-9]+-port[0-9]+$}]
+
+      foreach path $paths {
+        if {![regexp {([0-9]+)$} $path _ portnum]} {
+          continue
+        }
+
+        set _portbase [file tail [file dirname $path]]
+        if {![regexp {^[0-9]+-(.*)$} $_portbase _ portbase]} {
+          continue
+        }
+
+        set usbport [string map [list {:} .$portnum:] \
+                                $portbase]
+
+        set device_link "${path}/device"
+
+        if {[file exists $device_link]} {
+          if {[usbdevice_is_a_hub $device_link]} {
+            continue
+          }
+        }
+
+        try {
+          set hub_manufacturer [exec cat "${path}/../../manufacturer"]
+          set hub_product      [exec cat "${path}/../../product"]
+        } on error {} {
+          continue
+        }
+
+        set devpath "pci-${pci_id}-usb-0:${usbport}-scsi-0:0:0:0"
+
+        dict set by_prodvendor $hub_manufacturer $hub_product $pci_id $devpath 1
+      }
+    }
+
+    dict for {manufacturer productinfo} $by_prodvendor {
+      dict for {product pciinfo} $productinfo {
+        dict for {pci_id devpaths} $pciinfo {
+          set ports [lsort [dict keys $devpaths]]
+          for {set i 0} {$i < [llength $ports]} {incr i} {
+            set portnum [expr { $i + 1 }]
+            set devpath [lindex $ports $i]
+            dict set _new_usbhubs $pci_id "$manufacturer / $product" \
+                                  ports $portnum $devpath
           }
         }
       }
-
-      # do not add other hubs as ports to be tracked
-      if {[dict get $child class] eq "bus"} {
-        dict unset usbports $businfo
-      }
     }
-
-
-    iterate_lshw $child $pci_id
-  }
-}
-
-proc read_lshw {fh} {
-  global lshw_json
-
-  append lshw_json [gets $fh]
-  if {[eof $fh]} {
-    if {[catch { close $fh } err]} {
-      puts stderr "error running lshw -json: $err"
-    } else {
-      set lshw [::json::json2dict $lshw_json]
-      update_diskdevices $lshw
-    }
-
-    # XXX repeatedly running lshw hangs kernel
-    # XXX should get rid of this
-    after 1000 update_lshw
-  }
-}
-
-proc update_lshw {} {
-  global lshw_json
-
-  set lshw_json ""
-  set fh [open "| sudo lshw -json"]
-  fconfigure $fh -buffering line
-  fileevent $fh readable [list read_lshw $fh]
-}
-
-proc update_new_usbhubs {lshw} {
-  global new_usbhubs usbports
-
-  set usbports [dict create]
-
-  iterate_lshw $lshw
-
-  set new_usbhubs   [dict create]
-  set by_prodvendor [dict create]
-
-  dict for {usbport portinfo} $usbports {
-    set pci_id  [dict get $portinfo pci_id]
-    set port    [dict get $portinfo port]
-    set product [dict get $portinfo product]
-    set vendor  [dict get $portinfo vendor]
-
-    if {![regexp {^usb@[0-9]+:(.*)$} $port _ port_no_prefix]} {
-      continue
-    }
-    set pci_id [string map {@ -} $pci_id]
-    set devpath "${pci_id}-usb-0:${port_no_prefix}:1.0-scsi-0:0:0:0"
-
-    dict set by_prodvendor $vendor $product $pci_id $devpath 1
+  } on error {errmsg} {
+    puts stderr "error updating usbhubs: $errmsg"
+    return
   }
 
-  dict for {vendor productinfo} $by_prodvendor {
-    dict for {product pciinfo} $productinfo {
-      dict for {pci_id devpaths} $pciinfo {
-        set ports [lsort [dict keys $devpaths]]
-        for {set i 0} {$i < [llength $ports]} {incr i} {
-          set portnum [expr { $i + 1 }]
-          set devpath [lindex $ports $i]
-          dict set new_usbhubs $pci_id "$vendor / $product" \
-                               ports $portnum $devpath
-        }
-      }
-    }
-  }
+  set new_usbhubs $_new_usbhubs
 }
 
-proc update_diskdevices {lshw} {
+proc update_diskdevices {} {
   global diskdevices pci_path_dir new_usbhubs usbhubs
 
-  update_new_usbhubs $lshw
+  update_new_usbhubs
 
   set diskdevices_in_hubs [dict create]
   # list all diskdevices in new hubs
@@ -722,6 +700,8 @@ proc update_diskdevices {lshw} {
   if {[llength [dict keys $usbhubs]] == 0} {
     grid .f.disks.nohubs_message
   }
+
+  after 5000 update_diskdevices
 }
 
 #
@@ -824,5 +804,5 @@ bind . <Configure> {
 }
 
 update_image_info
-update_lshw
+update_diskdevices
 check_files
