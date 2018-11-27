@@ -505,7 +505,9 @@ proc make_diskdevice_ui_elements {devpath portnum} {
 
 proc usbdevice_is_a_hub {usbpath} {
   try {
-    set usbdevicepath_list [glob "${usbpath}/*:1.0"]
+    if {[catch { set usbdevicepath_list [glob "${usbpath}/*:1.0"] } err]} {
+      return false
+    }
     if {[llength $usbdevicepath_list] != 1} {
       error "multiple device paths"
     }
@@ -569,20 +571,26 @@ proc update_new_usbhubs {} {
           continue
         }
 
+        if {![regexp {^([0-9]+)\.} $usbport _ usbport_firstnum]} {
+          puts stderr "cannot determine the first number of usb port"
+          continue
+        }
+
         set devpath "pci-${pci_id}-usb-0:${usbport}-scsi-0:0:0:0"
 
-        dict set by_prodvendor $hub_manufacturer $hub_product $pci_id $devpath 1
+        set hub_id "${pci_id}/${usbport_firstnum}"
+        dict set by_prodvendor $hub_manufacturer $hub_product $hub_id $devpath 1
       }
     }
 
     dict for {manufacturer productinfo} $by_prodvendor {
       dict for {product pciinfo} $productinfo {
-        dict for {pci_id devpaths} $pciinfo {
+        dict for {hub_id devpaths} $pciinfo {
           set ports [lsort [dict keys $devpaths]]
           for {set i 0} {$i < [llength $ports]} {incr i} {
             set portnum [expr { $i + 1 }]
             set devpath [lindex $ports $i]
-            dict set _new_usbhubs $pci_id "$manufacturer / $product" \
+            dict set _new_usbhubs $hub_id "$manufacturer / $product" \
                                   ports $portnum $devpath
           }
         }
@@ -603,7 +611,7 @@ proc update_diskdevices {} {
 
   set diskdevices_in_hubs [dict create]
   # list all diskdevices in new hubs
-  dict for {pci_id hubproducts} $new_usbhubs {
+  dict for {hub_id hubproducts} $new_usbhubs {
     dict for {product productinfo} $hubproducts {
       set portinfo [dict get $productinfo ports]
       dict for {portnum devpath} $portinfo {
@@ -625,12 +633,12 @@ proc update_diskdevices {} {
     close_if_open $devpath
     dict unset diskdevices $devpath
 
-    dict for {pci_id hubproducts} $usbhubs {
+    dict for {hub_id hubproducts} $usbhubs {
       dict for {product productinfo} $hubproducts {
         set portinfo [dict get $productinfo ports]
         dict for {portnum usbhub_devpath} $portinfo {
           if {$devpath eq $usbhub_devpath} {
-            dict unset usbhubs $pci_id $product ports $portnum
+            dict unset usbhubs $hub_id $product ports $portnum
           }
         }
       }
@@ -638,18 +646,18 @@ proc update_diskdevices {} {
   }
 
   # destroy UI of hubs that have no devices
-  dict for {pci_id hubproducts} $usbhubs {
+  dict for {hub_id hubproducts} $usbhubs {
     dict for {product productinfo} $hubproducts {
       set portinfo [dict get $productinfo ports]
       if {[llength [dict keys $portinfo]] == 0} {
-        destroy [dict get $usbhubs $pci_id $product ui]
-        dict unset usbhubs $pci_id $product
+        destroy [dict get $usbhubs $hub_id $product ui]
+        dict unset usbhubs $hub_id $product
       }
     }
   }
-  dict for {pci_id hubproducts} $usbhubs {
+  dict for {hub_id hubproducts} $usbhubs {
     if {[llength [dict keys $hubproducts]] == 0} {
-      dict unset usbhubs $pci_id
+      dict unset usbhubs $hub_id
     }
   }
 
@@ -657,21 +665,21 @@ proc update_diskdevices {} {
   set ui_elements [list]
 
   # add hubs that are missing
-  dict for {pci_id hubproducts} $new_usbhubs {
+  dict for {hub_id hubproducts} $new_usbhubs {
     foreach product [dict keys $hubproducts] {
-      if {[dict exists $usbhubs $pci_id $product]} {
-        lappend ui_elements [dict get $usbhubs $pci_id $product ui]
+      if {[dict exists $usbhubs $hub_id $product]} {
+        lappend ui_elements [dict get $usbhubs $hub_id $product ui]
         continue
       }
 
       # add UI for hub
-      set uisym_pci_id  [string map {. _      } $pci_id]
+      set uisym_hub_id  [string map {. _      } $hub_id]
       set uisym_product [string map {. _ " " _} $product]
-      set hub_ui ".f.disks.hub_${uisym_pci_id}_${uisym_product}"
+      set hub_ui ".f.disks.hub_${uisym_hub_id}_${uisym_product}"
 
       ttk::label $hub_ui -text $product
 
-      dict set usbhubs $pci_id $product ui $hub_ui
+      dict set usbhubs $hub_id $product ui $hub_ui
 
       lappend ui_elements $hub_ui
       set regrid true
@@ -701,7 +709,7 @@ proc update_diskdevices {} {
           set regrid true
         }
 
-        dict set usbhubs $pci_id $product ports $portnum $devpath
+        dict set usbhubs $hub_id $product ports $portnum $devpath
       }
     }
   }
