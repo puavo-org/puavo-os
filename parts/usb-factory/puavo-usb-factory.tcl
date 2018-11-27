@@ -538,7 +538,8 @@ proc update_new_usbhubs {} {
     foreach pci_device_path [glob /sys/devices/pci*/0000:*] {
       set pci_id [file tail $pci_device_path]
 
-      set paths [exec find $pci_device_path -type d -regex {.*[.-][0-9]+-port[0-9]+$}]
+      set paths [exec find $pci_device_path -type d \
+                           -regex {.*[.-][0-9]+-port[0-9]+$}]
 
       foreach path $paths {
         if {![regexp {([0-9]+)$} $path _ portnum]} {
@@ -652,22 +653,28 @@ proc update_diskdevices {} {
     }
   }
 
+  set regrid false
+  set ui_elements [list]
+
   # add hubs that are missing
   dict for {pci_id hubproducts} $new_usbhubs {
     foreach product [dict keys $hubproducts] {
-      if {![dict exists $usbhubs $pci_id $product]} {
-        # add UI for hub
-        set uisym_pci_id  [string map {. _      } $pci_id]
-        set uisym_product [string map {. _ " " _} $product]
-        set hub_ui ".f.disks.hub_${uisym_pci_id}_${uisym_product}"
-
-        ttk::label $hub_ui -text $product
-        grid $hub_ui -sticky w
-
-        grid forget .f.disks.nohubs_message
-
-        dict set usbhubs $pci_id $product ui $hub_ui
+      if {[dict exists $usbhubs $pci_id $product]} {
+        lappend ui_elements [dict get $usbhubs $pci_id $product ui]
+        continue
       }
+
+      # add UI for hub
+      set uisym_pci_id  [string map {. _      } $pci_id]
+      set uisym_product [string map {. _ " " _} $product]
+      set hub_ui ".f.disks.hub_${uisym_pci_id}_${uisym_product}"
+
+      ttk::label $hub_ui -text $product
+
+      dict set usbhubs $pci_id $product ui $hub_ui
+
+      lappend ui_elements $hub_ui
+      set regrid true
     }
 
     # add new hub ports to UI
@@ -681,6 +688,7 @@ proc update_diskdevices {} {
           # port number may change if layout changes, thus update those
           set ui [dict get $diskdevices $devpath ui]
           $ui.info.number configure -text $portnum
+          lappend ui_elements $ui
         } else {
           set ui [make_diskdevice_ui_elements $devpath $portnum]
           dict set diskdevices $devpath [
@@ -689,7 +697,8 @@ proc update_diskdevices {} {
                         progress_list [list]  \
                         state         nomedia \
                         ui            $ui]
-          grid $ui -sticky w
+          lappend ui_elements $ui
+          set regrid true
         }
 
         dict set usbhubs $pci_id $product ports $portnum $devpath
@@ -699,6 +708,14 @@ proc update_diskdevices {} {
 
   if {[llength [dict keys $usbhubs]] == 0} {
     grid .f.disks.nohubs_message
+  } else {
+    grid forget .f.disks.nohubs_message
+    if {$regrid} {
+      foreach ui $ui_elements {
+        grid forget $ui
+        grid $ui -sticky w
+      }
+    }
   }
 
   after 5000 update_diskdevices
