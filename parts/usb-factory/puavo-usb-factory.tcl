@@ -609,6 +609,8 @@ proc update_diskdevices {} {
 
   update_new_usbhubs
 
+  set regrid false
+
   set diskdevices_in_hubs [dict create]
   # list all diskdevices in new hubs
   dict for {hub_id hubproducts} $new_usbhubs {
@@ -632,6 +634,7 @@ proc update_diskdevices {} {
     destroy [dict get $diskdevices $devpath ui]
     close_if_open $devpath
     dict unset diskdevices $devpath
+    set regrid true
 
     dict for {hub_id hubproducts} $usbhubs {
       dict for {product productinfo} $hubproducts {
@@ -652,6 +655,7 @@ proc update_diskdevices {} {
       if {[llength [dict keys $portinfo]] == 0} {
         destroy [dict get $usbhubs $hub_id $product ui]
         dict unset usbhubs $hub_id $product
+        set regrid true
       }
     }
   }
@@ -661,7 +665,6 @@ proc update_diskdevices {} {
     }
   }
 
-  set regrid false
   set ui_elements [list]
 
   # add hubs that are missing
