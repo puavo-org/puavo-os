@@ -487,13 +487,7 @@ proc make_usbport_label {port_id port_ui {update false}} {
 
   set label_ui $port_ui.info.port_label
   set labelvar "port/${port_id}"
-
-  set port_label ""
-  if {[info exists usb_labels($labelvar)]} {
-    set port_label $usb_labels($labelvar)
-  }
-  if {$port_label eq ""} { set port_label $port_id }
-  set usb_labels($labelvar) $port_label
+  set usb_labels($labelvar) [get_label $labelvar $port_id]
 
   if {$update} { destroy $label_ui }
 
@@ -645,6 +639,25 @@ proc update_diskdevices_loop {} {
   after 3000 update_diskdevices_loop
 }
 
+proc get_label {labelvar default_value} {
+  global usb_labels
+  set label [
+    expr {
+      [info exists usb_labels($labelvar)]
+        ? $usb_labels($labelvar)
+        : $default_value
+    }
+  ]
+  expr { $label ne "" ? $label : $default_value }
+}
+
+
+proc dictionary_sort_by_label {label_prefix lst} {
+  set labels [lmap p $lst { list $p [get_label "${label_prefix}/${p}" $p] } ]
+  lmap x [lsort -index 1 -dictionary $labels] \
+         { lindex $x 0 }
+}
+
 proc update_diskdevices {{force_ui_update false}} {
   global diskdevices pci_path_dir new_usbhubs usbhubs usb_labels writable_labels
 
@@ -710,7 +723,10 @@ proc update_diskdevices {{force_ui_update false}} {
 
   # add hubs that are missing
   dict for {hub_id hubproducts} $new_usbhubs {
-    foreach product [lsort [dict keys $hubproducts]] {
+    set sorted_products [dictionary_sort_by_label "hub/${hub_id}" \
+                                                  [dict keys $hubproducts]]
+
+    foreach product $sorted_products {
       if {[dict exists $usbhubs $hub_id $product]} {
         set hub_ui [dict get $usbhubs $hub_id $product ui]
         if {!$force_ui_update} {
@@ -727,14 +743,7 @@ proc update_diskdevices {{force_ui_update false}} {
       set hub_ui ".f.disks.hub_${uisym_hub_id}_${uisym_product}"
 
       set labelvar "hub/${hub_id}/${product}"
-
-      set hub_label ""
-      if {[info exists usb_labels($labelvar)]} {
-        set hub_label $usb_labels($labelvar)
-      }
-      if {$hub_label eq ""} { set hub_label $product }
-      set usb_labels($labelvar) $hub_label
-
+      set usb_labels($labelvar) [get_label $labelvar $product]
       if {$writable_labels} {
         ttk::entry $hub_ui -textvariable usb_labels($labelvar) -width 50
       } else {
@@ -749,7 +758,12 @@ proc update_diskdevices {{force_ui_update false}} {
 
     # add new hub ports to UI
     dict for {product productinfo} $hubproducts {
-      foreach port_id [lsort [dict keys [dict get $productinfo ports]]] {
+      set sorted_ports [
+        dictionary_sort_by_label port \
+                                 [dict keys [dict get $productinfo ports]]
+      ]
+
+      foreach port_id $sorted_ports {
         set devpath [dict get $productinfo ports $port_id]
         set port_ui ".f.disks.port_[string map {. _} $port_id]"
         # Add UI for port and add it to diskdevices to manage.
