@@ -483,9 +483,14 @@ proc make_usbport_label {port_id port_ui {update false}} {
   global usb_labels writable_labels
 
   set label_ui $port_ui.info.port_label
-
   set labelvar "port/${port_id}"
-  set usb_labels($labelvar) $port_id
+
+  set port_label ""
+  if {[info exists usb_labels($labelvar)]} {
+    set port_label $usb_labels($labelvar)
+  }
+  if {$port_label eq ""} { set port_label $port_id }
+  set usb_labels($labelvar) $port_label
 
   if {$update} { destroy $label_ui }
 
@@ -719,7 +724,14 @@ proc update_diskdevices {{force_ui_update false}} {
       set hub_ui ".f.disks.hub_${uisym_hub_id}_${uisym_product}"
 
       set labelvar "hub/${hub_id}/${product}"
-      set usb_labels($labelvar) $product
+
+      set hub_label ""
+      if {[info exists usb_labels($labelvar)]} {
+        set hub_label $usb_labels($labelvar)
+      }
+      if {$hub_label eq ""} { set hub_label $product }
+      set usb_labels($labelvar) $hub_label
+
       if {$writable_labels} {
         ttk::entry $hub_ui -textvariable usb_labels($labelvar) -width 50
       } else {
