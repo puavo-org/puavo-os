@@ -29,6 +29,8 @@ set image_info {
 }
 
 set ui_messages {}
+array set usb_labels ""
+set writable_labels false
 
 set puavo_usb_factory_workpath "$::env(HOME)/.puavo/usb-factory"
 
@@ -477,30 +479,58 @@ proc check_files {} {
   after 250 check_files
 }
 
-proc make_diskdevice_ui_elements {devpath port_id} {
-  set dev_id [string map {. _} $devpath]
+proc make_usbport_label {port_id port_ui {update false}} {
+  global usb_labels writable_labels
 
-  set dev_widget ".f.disks.dev_${dev_id}"
+  set label_ui $port_ui.info.port_label
 
-  ttk::frame $dev_widget -borderwidth 1
-  ttk::frame ${dev_widget}.info
-  ttk::frame ${dev_widget}.pb_frame -height 8
+  set labelvar "port/${port_id}"
+  set usb_labels($labelvar) $port_id
 
-  ttk::label ${dev_widget}.info.number    -text $port_id -font infoFont
-  ttk::label ${dev_widget}.info.disklabel -text ""       -font infoFont
-  ttk::label ${dev_widget}.info.status -width 20 -font infoFont
-  ttk::progressbar ${dev_widget}.pb_frame.bar -orient horizontal \
+  if {$update} { destroy $label_ui }
+
+  if {$writable_labels} {
+    ttk::entry $label_ui -textvariable usb_labels($labelvar) \
+                                       -font infoFont -width 10
+  } else {
+    ttk::label $label_ui -textvariable usb_labels($labelvar) \
+                                       -font infoFont -width 10
+  }
+
+  if {$update} {
+    pack_usbport_ui_elements $port_ui
+  }
+}
+
+proc make_usbport_ui_elements {devpath port_id port_ui} {
+  ttk::frame ${port_ui} -borderwidth 1
+  ttk::frame ${port_ui}.info
+  ttk::frame ${port_ui}.pb_frame -height 8
+
+  make_usbport_label $port_id $port_ui
+
+  ttk::label ${port_ui}.info.disklabel -text "" -font infoFont
+  ttk::label ${port_ui}.info.status -width 20 -font infoFont
+  ttk::progressbar ${port_ui}.pb_frame.bar -orient horizontal \
                    -maximum 100 -value 0
 
-  pack ${dev_widget}.info.number    \
-       ${dev_widget}.info.status    \
-       ${dev_widget}.info.disklabel \
-       -side left -padx 16
-  pack ${dev_widget}.info ${dev_widget}.pb_frame -expand 1 -fill x
-  place ${dev_widget}.pb_frame.bar -in ${dev_widget}.pb_frame \
-        -relwidth 1.0 -relheight 1.0
+  pack_usbport_ui_elements $port_ui
+}
 
-  return $dev_widget
+proc pack_usbport_ui_elements {port_ui} {
+  pack forget ${port_ui}.info.port_label \
+              ${port_ui}.info.status     \
+              ${port_ui}.info.disklabel  \
+              ${port_ui}.info            \
+              ${port_ui}.pb_frame
+
+  pack ${port_ui}.info.port_label \
+       ${port_ui}.info.status     \
+       ${port_ui}.info.disklabel  \
+       -side left -padx 16
+  pack ${port_ui}.info ${port_ui}.pb_frame -expand 1 -fill x
+  place ${port_ui}.pb_frame.bar -in ${port_ui}.pb_frame \
+        -relwidth 1.0 -relheight 1.0
 }
 
 proc usbdevice_is_a_hub {usbpath} {
@@ -602,8 +632,13 @@ proc update_new_usbhubs {} {
   set new_usbhubs $_new_usbhubs
 }
 
-proc update_diskdevices {} {
-  global diskdevices pci_path_dir new_usbhubs usbhubs
+proc update_diskdevices_loop {} {
+  update_diskdevices
+  after 3000 update_diskdevices_loop
+}
+
+proc update_diskdevices {{force_ui_update false}} {
+  global diskdevices pci_path_dir new_usbhubs usbhubs usb_labels writable_labels
 
   update_new_usbhubs
 
@@ -669,8 +704,13 @@ proc update_diskdevices {} {
   dict for {hub_id hubproducts} $new_usbhubs {
     foreach product [lsort [dict keys $hubproducts]] {
       if {[dict exists $usbhubs $hub_id $product]} {
-        lappend ui_elements [dict get $usbhubs $hub_id $product ui]
-        continue
+        set hub_ui [dict get $usbhubs $hub_id $product ui]
+        if {!$force_ui_update} {
+          lappend ui_elements [dict get $usbhubs $hub_id $product ui]
+          dict set usbhubs $hub_id $product ui $hub_ui
+          continue
+        }
+        destroy $hub_ui
       }
 
       # add UI for hub
@@ -678,38 +718,44 @@ proc update_diskdevices {} {
       set uisym_product [string map {. _ " " _} $product]
       set hub_ui ".f.disks.hub_${uisym_hub_id}_${uisym_product}"
 
-      ttk::label $hub_ui -text $product
-
-      dict set usbhubs $hub_id $product ui $hub_ui
+      set labelvar "hub/${hub_id}/${product}"
+      set usb_labels($labelvar) $product
+      if {$writable_labels} {
+        ttk::entry $hub_ui -textvariable usb_labels($labelvar) -width 50
+      } else {
+        ttk::label $hub_ui -textvariable usb_labels($labelvar)
+      }
 
       lappend ui_elements $hub_ui
       set regrid true
+
+      dict set usbhubs $hub_id $product ui $hub_ui
     }
 
     # add new hub ports to UI
     dict for {product productinfo} $hubproducts {
       foreach port_id [lsort [dict keys [dict get $productinfo ports]]] {
         set devpath [dict get $productinfo ports $port_id]
+        set port_ui ".f.disks.port_[string map {. _} $port_id]"
         # Add UI for port and add it to diskdevices to manage.
         # Test for diskdevice existence, because the same $devpath
         # may be in two different products (USB2.0 vs. USB3.0).
         if {[dict exists $diskdevices $devpath]} {
-          # port number may change if layout changes, thus update those
-          set ui [dict get $diskdevices $devpath ui]
-          $ui.info.number configure -text $port_id
-          lappend ui_elements $ui
+          if {$force_ui_update} {
+            make_usbport_label $port_id $port_ui true
+          }
         } else {
-          set ui [make_diskdevice_ui_elements $devpath $port_id]
+          make_usbport_ui_elements $devpath $port_id $port_ui
           dict set diskdevices $devpath [
             dict create fh            ""      \
                         image_size    ""      \
                         progress_list [list]  \
                         state         nomedia \
-                        ui            $ui]
-          lappend ui_elements $ui
+                        ui            $port_ui]
           set regrid true
         }
 
+        lappend ui_elements $port_ui
         dict set usbhubs $hub_id $product ports $port_id $devpath
       }
     }
@@ -726,8 +772,6 @@ proc update_diskdevices {} {
       }
     }
   }
-
-  after 5000 update_diskdevices
 }
 
 #
@@ -829,6 +873,11 @@ bind . <Configure> {
   }
 }
 
+bind . <Control-x> {
+  set writable_labels [expr { $writable_labels ? "false" : "true" }]
+  update_diskdevices true
+}
+
 update_image_info
-update_diskdevices
+update_diskdevices_loop
 check_files
