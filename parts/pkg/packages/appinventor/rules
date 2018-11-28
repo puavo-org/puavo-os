@@ -14,7 +14,7 @@ case "${command}" in
 	cat <<EOF > /usr/share/applications/appinventor.desktop
 [Desktop Entry]
 Name=AppInventor USB
-Exec="xterm /usr/google/appinventor/commands-for-Appinventor/aiStarter"
+Exec=xterm /usr/google/appinventor/commands-for-Appinventor/aiStarter
 Icon=/usr/share/icons/Faenza/devices/96/drive-removable-media-usb.png
 Terminal=false
 Type=Application
