@@ -1,6 +1,7 @@
 #!/usr/bin/wish
 
 package require json
+package require json::write
 
 wm attributes . -fullscreen 1
 
@@ -116,7 +117,9 @@ proc get_content_dir {} {
   if {[catch { glob ${puavo_usb_factory_workpath}/* } res]} {
     error "${puavo_usb_factory_workpath}/* did not match any files: $res"
   }
-  set workpath_dirs $res
+  set workpath_dirs [
+    lmap path $res { expr { [file isdirectory $path] ? $path : [continue] } }
+  ]
 
   set dir_count [llength $workpath_dirs]
   if {$dir_count == 0} {
@@ -786,6 +789,45 @@ proc update_diskdevices {{force_ui_update false}} {
   }
 }
 
+proc read_usb_labels_from_disk {} {
+  global puavo_usb_factory_workpath usb_labels
+  set usblabels_json_path "${puavo_usb_factory_workpath}/usb_labels.json"
+
+  if {![file exists $usblabels_json_path]} {
+    return
+  }
+
+  try {
+    set labels [::json::json2dict [read_file $usblabels_json_path]]
+  } on error {errmsg} {
+    puts stderr "error reading usb labels from disk: $errmsg"
+    return
+  }
+
+  dict for {key value} $labels {
+    set usb_labels($key) $value
+  }
+}
+
+proc update_usb_labels_on_disk {} {
+  global puavo_usb_factory_workpath usb_labels
+  set usblabels_json_path "${puavo_usb_factory_workpath}/usb_labels.json"
+  set tmpfile "${usblabels_json_path}.tmp"
+
+  set js_object [dict create]
+  foreach {k v} [array get usb_labels] {
+    dict set js_object $k [::json::write string $v]
+  }
+
+  set json [::json::write object {*}$js_object]
+
+  set fh [open $tmpfile w]
+  puts $fh $json
+  close $fh
+
+  file rename -force $tmpfile $usblabels_json_path
+}
+
 #
 # setup UI
 #
@@ -887,9 +929,13 @@ bind . <Configure> {
 
 bind . <Control-x> {
   set writable_labels [expr { $writable_labels ? "false" : "true" }]
+  if {!$writable_labels} {
+    update_usb_labels_on_disk
+  }
   update_diskdevices true
 }
 
+read_usb_labels_from_disk
 update_image_info
 update_diskdevices_loop
 check_files
