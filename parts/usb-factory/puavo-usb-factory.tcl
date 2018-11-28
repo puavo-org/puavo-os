@@ -600,8 +600,8 @@ proc update_new_usbhubs {} {
         }
 
         try {
-          set hub_manufacturer [exec cat "${path}/../../manufacturer"]
-          set hub_product      [exec cat "${path}/../../product"]
+          set hub_manufacturer [read_file "${path}/../../manufacturer"]
+          set hub_product      [read_file "${path}/../../product"]
         } on error {} {
           continue
         }
