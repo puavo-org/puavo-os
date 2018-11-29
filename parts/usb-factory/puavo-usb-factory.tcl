@@ -185,7 +185,7 @@ proc start_preparation {devpath countdown} {
   if {![dict exists $diskdevices $devpath]} {
     return
   }
-  if {[dict get $diskdevices $devpath state] ne "starting"} {
+  if {[dict get $diskdevices $devpath state] ne "start_writing"} {
     return
   }
 
@@ -197,14 +197,14 @@ proc start_preparation {devpath countdown} {
   }
 
   $ui.info.status configure \
-    -text "[ui_msg messages starting] $countdown"
+    -text "[ui_msg messages start_writing] $countdown"
 
   incr countdown -1
   after 1000 [list start_preparation $devpath $countdown]
 }
 
-proc start_writing {devpath} {
-  global diskdevices image_info pci_path_dir
+proc start_operating {devpath cmd} {
+  global diskdevices image_info
 
   set image_size [dict get $image_info image_size]
   set srcfile    [dict get $image_info latest_image_path]
@@ -216,10 +216,25 @@ proc start_writing {devpath} {
 
   dict set diskdevices $devpath image_size $image_size
 
-  set fh [open "| pv -b -n $srcfile | dd of=${pci_path_dir}/${devpath} conv=fsync,nocreat status=none 2>@1"]
+  set fh [open "| $cmd"]
   fconfigure $fh -buffering line
   fileevent $fh readable [list handle_fileevent $devpath]
   return $fh
+}
+
+proc start_verifying {devpath} {
+  global image_info pci_path_dir
+  set image_size [dict get $image_info image_size]
+  set srcfile     [dict get $image_info latest_image_path]
+  set cmd "pv -b -n $srcfile | cmp -n $image_size ${pci_path_dir}/${devpath} - 2>@1"
+  start_operating $devpath $cmd
+}
+
+proc start_writing {devpath} {
+  global image_info pci_path_dir
+  set srcfile [dict get $image_info latest_image_path]
+  set cmd "pv -b -n $srcfile | dd of=${pci_path_dir}/${devpath} conv=fsync,nocreat status=none 2>@1"
+  start_operating $devpath $cmd
 }
 
 proc set_device_eta {devpath bytes_written} {
@@ -275,9 +290,16 @@ proc handle_fileevent {devpath} {
 
   if {[eof $fh]} {
     if {[catch { close $fh }]} {
-      set_devstate $devpath error
+      if {[dict get $diskdevices $devpath state] eq "verifying"} {
+        set_devstate $devpath start_writing
+      } else {
+        set_devstate $devpath error
+      }
     } else {
-      set_devstate $devpath finished
+      switch -- [dict get $diskdevices $devpath state] {
+        writing   { set_devstate $devpath verifying }
+        verifying { set_devstate $devpath finished  }
+      }
     }
     return
   }
@@ -349,8 +371,37 @@ proc set_ui_status_to_nomedia {devpath} {
   }
 }
 
+proc quick_verify_check {devpath} {
+  global image_info pci_path_dir
+
+  # A heuristic, not exact... check if first and last megabytes match
+  # on device with image.  If this succeeds we must verify the whole
+  # disk image on device, and if that fails we will start writing.
+
+  set image_path [dict get $image_info latest_image_path]
+  set image_size [dict get $image_info image_size]
+
+  if {$image_path eq ""} { error "could not lookup image path" }
+  if {$image_size eq ""} { error "could not lookup image size" }
+
+  set chk_bytecount   [expr { min($image_size, 1048576) }]
+  set end_block_start [expr { $image_size - $chk_bytecount }]
+
+  set full_devpath "${pci_path_dir}/${devpath}"
+
+  try {
+    exec cmp -n $chk_bytecount $full_devpath $image_path
+  } on error {} { return false }
+
+  try {
+    exec cmp -i $end_block_start -n $chk_bytecount $full_devpath $image_path
+  } on error {} { return false }
+
+  return true
+}
+
 proc set_devstate {devpath state args} {
-  global diskdevices
+  global diskdevices image_info
 
   set ui [dict get $diskdevices $devpath ui]
 
@@ -359,7 +410,7 @@ proc set_devstate {devpath state args} {
       close_if_open $devpath
       dict set diskdevices $devpath state error
 
-      $ui.info.status configure -text [ui_msg messages error]
+      $ui.info.status  configure -text [ui_msg messages error]
       $ui.pb_frame.bar configure -value 0
     }
 
@@ -403,14 +454,39 @@ proc set_devstate {devpath state args} {
 
     progress {
       lassign $args eta percentage
-      $ui.info.status  configure -text  $eta
-      $ui.pb_frame.bar configure -value $percentage
+      switch -- [dict get $diskdevices $devpath state] {
+        verifying {
+          $ui.info.status  configure -text  "[ui_msg messages verifying] $eta"
+          $ui.pb_frame.bar configure -value $percentage
+        }
+        writing {
+          $ui.info.status  configure -text  "[ui_msg messages writing] $eta"
+          $ui.pb_frame.bar configure -value $percentage
+        }
+      }
     }
 
-    starting {
-      dict set diskdevices $devpath state starting
+    start_writing {
+      dict set diskdevices $devpath state start_writing
       update_disklabel $devpath
       start_preparation $devpath 10
+    }
+
+    verifying {
+      if {[quick_verify_check $devpath]} {
+        update_disklabel $devpath
+        set fh [start_verifying $devpath]
+        dict set diskdevices $devpath fh $fh
+        if {$fh ne ""} {
+          dict set diskdevices $devpath state verifying
+
+          $ui.info.status  configure -text  -
+          $ui.pb_frame.bar configure -value 0
+        }
+      } else {
+        # if image is not in disk, move on to start_writing
+        set_devstate $devpath start_writing
+      }
     }
 
     writing {
@@ -469,7 +545,7 @@ proc check_files {} {
           puts stderr "error while checking for space in device: $res"
           set_devstate $devpath error
         } elseif {$res} {
-          set_devstate $devpath starting
+          set_devstate $devpath verifying
         } else {
           set_devstate $devpath nospaceondevice
         }
