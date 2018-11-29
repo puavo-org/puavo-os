@@ -4,6 +4,7 @@ package require json
 package require json::write
 
 wm attributes . -fullscreen 1
+wm protocol . WM_DELETE_WINDOW { }      ;# do not allow window close
 
 # XXX not a correct picture
 set bg_image_path /usr/share/backgrounds/Blue_frost_by_ppaabblloo77.jpg
