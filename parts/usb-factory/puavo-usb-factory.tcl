@@ -208,13 +208,15 @@ proc start_operating {devpath cmd} {
 
   set image_size [dict get $image_info image_size]
   set srcfile    [dict get $image_info latest_image_path]
+  set version    [dict get $image_info version]
 
-  if {$image_size eq "" || $srcfile eq ""} {
+  if {$image_size eq "" || $srcfile eq "" || $version eq ""} {
     set_devstate $devpath error
     return ""
   }
 
   dict set diskdevices $devpath image_size $image_size
+  dict set diskdevices $devpath version    $version
 
   set fh [open "| $cmd"]
   fconfigure $fh -buffering line
@@ -418,7 +420,8 @@ proc set_devstate {devpath state args} {
       close_if_open $devpath
       dict set diskdevices $devpath state finished
 
-      $ui.info.status configure -text [ui_msg messages finished]
+      set version [dict get $diskdevices $devpath version]
+      $ui.info.status configure -text "[ui_msg messages finished] $version"
       $ui.pb_frame.bar configure -value 100
     }
 
@@ -432,6 +435,7 @@ proc set_devstate {devpath state args} {
         dict set diskdevices $devpath image_size    ""
         dict set diskdevices $devpath progress_list [list]
         dict set diskdevices $devpath state         nomedia
+        dict set diskdevices $devpath version       ""
 
         update_disklabel $devpath ""
 
@@ -852,11 +856,12 @@ proc update_diskdevices {{force_ui_update false}} {
         } else {
           make_usbport_ui_elements $devpath $port_id $port_ui
           dict set diskdevices $devpath [
-            dict create fh            ""      \
-                        image_size    ""      \
-                        progress_list [list]  \
-                        state         nomedia \
-                        ui            $port_ui]
+            dict create fh            ""       \
+                        image_size    ""       \
+                        progress_list [list]   \
+                        state         nomedia  \
+                        ui            $port_ui \
+                        version       ""       ]
           set regrid true
         }
 
