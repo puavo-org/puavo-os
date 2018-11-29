@@ -583,15 +583,14 @@ lookup_image_servers() {
   if [ -z "$image_server_by_dns" ]; then
     log info 'could not find the image server from DNS'
   else
-    all_image_servers="$all_image_servers $image_server_by_dns"
+    all_image_servers="$image_server_by_dns"
   fi
 
-  # XXX not used yet, it is unclear if this will ever be?
-  image_servers_by_devicejson=$(
-    jq -r '.imageservers[]' /etc/puavo/device.json 2>/dev/null || true)
-
-  if [ -n "$image_servers_by_devicejson" ]; then
-    all_image_servers="$all_image_servers $image_servers_by_devicejson"
+  # Add some extra image servers in case those have been set up in puavo-conf
+  # (can be empty, one address, or many separated by whitespace).
+  image_servers_by_puavoconf=$(puavo-conf puavo.image.servers)
+  if [ -n "$image_servers_by_puavoconf" ]; then
+    all_image_servers="$all_image_servers $image_servers_by_puavoconf"
   fi
 
   toplevel_image_server="images.$(cat /etc/puavo/topdomain)"
