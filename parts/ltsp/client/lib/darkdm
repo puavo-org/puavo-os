@@ -143,38 +143,38 @@ darkdm_menu()
 	fi
 
 	case "${command}" in
-	    'build')
+	    build)
 		darkdm_build
 		;;
-            'install')
+            install)
 		darkdm_install
 		;;
-	    'make-install-disk')
+	    make-install-disk)
 		puavo-make-install-disk
 		;;
-	    'nmtui')
+	    nmtui)
 		if [ ! -x /usr/bin/nmtui ]; then
 		    echo 'nmtui not available' >&2
 		else
 		    nmtui || true
 		fi
 		;;
-	    'poweroff')
+	    poweroff)
 		darkdm_poweroff
 		;;
-            'preinstall')
+            preinstall)
 		darkdm_install preinstall
 		;;
-            'preseed-install')
+            preseed-install)
 		darkdm_install preseed-install
 		;;
-	    'reboot')
+	    reboot)
 		darkdm_reboot
 		;;
-	    'shell')
+	    shell)
 		darkdm_shell
 		;;
-	    'update')
+	    update)
 		darkdm_update
 		;;
 	    *)
