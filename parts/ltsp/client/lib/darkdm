@@ -54,6 +54,7 @@ Puavo OS Command Shell
 Commands:
   build             - build Puavo OS image and poweroff
   install           - install Puavo OS to this device and reboot
+  kbd [layout]      - set keyboard layout
   make-install-disk - make a bootable usb flash drive or some such
   nmtui             - configure network (not available on netboot devices)
   poweroff          - poweroff the system in 5 seconds
@@ -117,6 +118,38 @@ darkdm_build()
     darkdm_poweroff
 }
 
+darkdm_kbd() {
+    new_layout=$1
+
+    current_layout=$(localectl status \
+                       | awk '/X11 Layout:/ { split($3, a, ","); print a[1] }')
+
+    if [ -z "$new_layout" ]; then
+        possible_layouts="$(localectl list-x11-keymap-layouts | xargs \
+                              | fmt -w 70 | sed 's/^/  /')"
+
+        cat <<EOF
+Current keyboard layout is: $current_layout
+Choose from layouts:
+$possible_layouts
+EOF
+        read -p 'Choose keyboard layout: ' new_layout
+    fi
+
+    if [ -z "$new_layout" ]; then
+        echo 'Not changing keyboard layout'
+    elif localectl set-keymap "$new_layout"; then
+        echo "Changed keyboard layout to \"${new_layout}\""
+    else
+        echo "Could not change keyboard layout" >&2
+    fi
+
+    setupcon
+
+    sleep 0.5
+    echo
+}
+
 darkdm_menu()
 {
     local command
@@ -136,7 +169,7 @@ darkdm_menu()
             prompt='> '
         fi
 
-	read -e -p "$prompt" command || return 1
+	read -e -p "$prompt" command command_args || return 1
 
 	if [ -z "$command" -a -n "$initial_command" ]; then
 	    command="$initial_command"
@@ -148,6 +181,9 @@ darkdm_menu()
 		;;
             install)
 		darkdm_install
+		;;
+            kbd)
+		darkdm_kbd "$command_args"
 		;;
 	    make-install-disk)
 		puavo-make-install-disk
