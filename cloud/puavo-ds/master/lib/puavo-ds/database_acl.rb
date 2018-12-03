@@ -272,6 +272,13 @@ class LdapAcl
 															  Set.laptops,
 															  Set.externalservice_devices)	],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      # This must be before the following "LdapDn.new.subtree ... Rule.read(Set.syncrepl)" rule or otherwise Hosts.servers.children can not write to Hosts.devices.children/puavoDeviceHWInfo.
+      [ Hosts.devices.children,	attrs(%w(puavoDeviceHWInfo)),		Rule.write(Hosts.servers.children,
+										   'self'),			Rule.read(Set.admin,
+															  PuavoUid.monitor,
+															  PuavoUid.puavo_ticket,
+															  Set.externalservice_devices)	],
+# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ LdapDn.new.subtree,											Rule.read(Set.syncrepl),		RuleBreak.none('*'),			],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       [ People.exact,		attrs(%w(entry
@@ -424,12 +431,6 @@ class LdapAcl
       [ Hosts.devices.children,	attrs(%w(puavoDeviceCurrentImage
                                          puavoDevicePrimaryUser
                                          puavoDeviceAvailableImage)),	Rule.write(Set.admin, 'self'),		Rule.read(PuavoUid.monitor,
-															  PuavoUid.puavo_ticket,
-															  Set.externalservice_devices)	],
-# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-      [ Hosts.devices.children,	attrs(%w(puavoDeviceHWInfo)),		Rule.write(Hosts.servers.children,
-										   'self'),			Rule.read(Set.admin,
-															  PuavoUid.monitor,
 															  PuavoUid.puavo_ticket,
 															  Set.externalservice_devices)	],
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
