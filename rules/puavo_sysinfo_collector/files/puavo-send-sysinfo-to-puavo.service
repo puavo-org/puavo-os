@@ -1,0 +1,9 @@
+[Unit]
+Description=Send sysinfo to Puavo
+After=dbus.service networking.service
+
+[Service]
+ExecStart=/usr/sbin/puavo-send-sysinfo-to-puavo --background-mode
+
+[Install]
+WantedBy=multi-user.target

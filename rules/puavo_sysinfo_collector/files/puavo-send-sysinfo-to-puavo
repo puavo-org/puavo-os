@@ -1,0 +1,50 @@
+#!/bin/sh
+
+set -eu
+
+logmsg() { logger -t puavo-send-sysinfo-to-puavo "$@"; }
+
+background_mode=false
+if [ "${1:-}" = '--background-mode' ]; then
+  background_mode=true
+fi
+
+if $background_mode; then
+  sleep 300
+fi
+
+my_hostname=$(hostname)
+
+if [ -r /etc/puavo/ldap/dn -a -r /etc/puavo/ldap/password ]; then
+  prr_args='--user-etc'
+else
+  prr_args='--user-bootserver'
+fi
+
+while true; do
+  if ! sysinfo_json=$(
+    dbus-send --system --dest=org.puavo.client.systeminfocollectordaemon \
+              --print-reply=literal /systeminfocollector \
+              org.puavo.client.systeminfocollector.CollectSysinfo); then
+    logmsg -p user.err 'could not get sysinfo from sysinfocollector'
+  else
+    tmpfile=$(mktemp /tmp/puavo-send-sysinfo-to-puavo.XXXXXX)
+    if ! echo "$sysinfo_json" | jq 'del(.network_interfaces)' > "$tmpfile"; then
+      logmsg -p user.err 'could not filter out network interfaces info'
+    else
+      if ! puavo-rest-request "v3/devices/${my_hostname}/sysinfo" $prr_args \
+                              -- -F "sysinfo=<$tmpfile" >/dev/null; then
+        logmsg -p user.err 'sending sysinfo to puavo failed'
+      else
+        logmsg -p user.info 'sysinfo sent to puavo successfully'
+      fi
+    fi
+    rm -f "$tmpfile"
+  fi
+
+  if ! $background_mode; then
+    break
+  fi
+
+  sleep 86400
+done
