@@ -2,6 +2,8 @@
 
 set -eu
 
+logmsg() { logger -t puavo-send-sysinfo-to-puavo "$@"; }
+
 background_mode=false
 if [ "${1:-}" = '--background-mode' ]; then
   background_mode=true
@@ -18,8 +20,6 @@ if [ -r /etc/puavo/ldap/dn -a -r /etc/puavo/ldap/password ]; then
 else
   prr_args='--user-bootserver'
 fi
-
-logmsg() { logger -t puavo-send-sysinfo-to-puavo "$@"; }
 
 while true; do
   if ! sysinfo_json=$(
