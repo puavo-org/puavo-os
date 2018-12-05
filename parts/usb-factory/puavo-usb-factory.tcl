@@ -3,7 +3,8 @@
 package require json
 package require json::write
 
-wm attributes . -fullscreen 1
+# wm attributes . -fullscreen 1
+wm minsize  . 800 600
 wm protocol . WM_DELETE_WINDOW { }      ;# do not allow window close
 
 # XXX not a correct picture
@@ -56,9 +57,12 @@ proc update_image {image imagepath new_width new_height} {
 proc do_background_resizing {} {
   global bg_image bg_image_path support_logo_path
 
-  if {[dict get $bg_image width] != [dict get $bg_image new_width]
-        || [dict get $bg_image height] != [dict get $bg_image new_height]} {
+  set size_diff [ expr {
+    max(abs([dict get $bg_image width]  - [dict get $bg_image new_width]),
+        abs([dict get $bg_image height] - [dict get $bg_image new_height]))
+  }]
 
+  if {$size_diff >= 4} {
     # XXX it would be better to use standard output
     set new_width  [dict get $bg_image new_width]
     set new_height [dict get $bg_image new_height]
@@ -72,11 +76,15 @@ proc do_background_resizing {} {
   }
 }
 
+set bg_resizing_event ""
 proc queue_background_resizing {width height} {
-  global bg_image
+  global bg_image bg_resizing_event
+
   dict set bg_image new_width  $width
   dict set bg_image new_height $height
-  after 500 do_background_resizing
+
+  if {$bg_resizing_event ne ""} { after cancel $bg_resizing_event }
+  set bg_resizing_event [after 500 do_background_resizing]
 }
 
 proc ui_msg {args} {
