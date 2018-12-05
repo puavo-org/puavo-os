@@ -937,7 +937,6 @@ puts "available themes: [ttk::style theme names]"
 # ttk::style theme use clam
 puts "used theme: [ttk::style theme use]"
 
-font create titleFont       -family Arial -size 32 -weight bold
 font create descriptionFont -family "Domestic Manners" -size 20 -weight bold
 font create infoFont        -family FreeSans -size 14
 
@@ -966,10 +965,6 @@ label .f.bg -image bg_photo
 ttk::frame .f.instructions
 
 # XXX hardcoded sizes!
-ttk::label .f.instructions.title -text [ui_msg title] \
-                                 -wraplength 600      \
-                                 -padding 20          \
-                                 -font titleFont
 ttk::label .f.instructions.description -text [ui_msg description] \
                                        -wraplength 600            \
                                        -padding 20                \
@@ -1011,8 +1006,7 @@ pack .f.version_status.hostname.label .f.version_status.hostname.value \
      -side left -padx 5
 
 pack .f.instructions -side left -anchor n
-pack .f.instructions.title       \
-     .f.instructions.description \
+pack .f.instructions.description \
      .f.instructions.steps
 
 pack .f.disks -side right
