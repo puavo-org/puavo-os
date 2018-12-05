@@ -3,19 +3,13 @@
 package require json
 package require json::write
 
-# wm attributes . -fullscreen 1
-wm minsize  . 800 600
+wm attributes . -fullscreen 1
+# wm minsize  . 800 600
+# wm maxsize  . 1440 900
 wm protocol . WM_DELETE_WINDOW { }      ;# do not allow window close
 
 # XXX not a correct picture
 set bg_image_path /usr/share/backgrounds/Blue_frost_by_ppaabblloo77.jpg
-
-try {
-  set support_logo_path [exec puavo-conf puavo.greeter.logo]
-} on error {errmsg} {
-  puts stderr "puavo-conf could not lookup puavo.greeter.logo: $errmsg"
-  exit 1
-}
 
 set bg_image {
   width      -1
@@ -55,7 +49,7 @@ proc update_image {image imagepath new_width new_height} {
 }
 
 proc do_background_resizing {} {
-  global bg_image bg_image_path support_logo_path
+  global bg_image bg_image_path
 
   set size_diff [ expr {
     max(abs([dict get $bg_image width]  - [dict get $bg_image new_width]),
@@ -68,8 +62,6 @@ proc do_background_resizing {} {
     set new_height [dict get $bg_image new_height]
 
     update_image bg_photo $bg_image_path $new_width $new_height
-    # XXX hardcoded pixel sizes
-    update_image support_photo $support_logo_path 966 64
 
     dict set bg_image width  $new_width
     dict set bg_image height $new_height
@@ -105,14 +97,14 @@ proc update_ui_info_state {} {
     missing { set download_message [ui_msg {download state} $download_status] }
     default { set download_message [ui_msg {download state} undefined] }
   }
-  .f.version_status.download_status configure -text $download_message
+  .f.version_status.download.status configure -text $download_message
 
   if {$version ne ""} {
     set version_message $version
   } else {
     set version_message -
   }
-  .f.version_status.version_number configure -text $version_message
+  .f.version_status.version.number configure -text $version_message
 
   set bg_width  [dict get $bg_image width]
   set bg_height [dict get $bg_image height]
@@ -970,11 +962,10 @@ pack .f
 # XXX using ttk for image?
 image create photo bg_photo
 label .f.bg -image bg_photo
-image create photo support_photo
-label .f.support_photo -image support_photo
 
-ttk::frame .f.instructions -width 600 -height 200
+ttk::frame .f.instructions
 
+# XXX hardcoded sizes!
 ttk::label .f.instructions.title -text [ui_msg title] \
                                  -wraplength 600      \
                                  -padding 20          \
@@ -989,39 +980,43 @@ ttk::label .f.instructions.steps -text [ui_msg instructions] \
                                  -font descriptionFont
 
 ttk::frame .f.version_status
-ttk::label .f.version_status.version_label \
+ttk::frame .f.version_status.version
+ttk::frame .f.version_status.download
+ttk::frame .f.version_status.hostname
+
+ttk::label .f.version_status.version.label \
            -text [ui_msg "version label"] -font infoFont
-ttk::label .f.version_status.version_number -font infoFont
-ttk::label .f.version_status.download_status_label \
+ttk::label .f.version_status.version.number -font infoFont
+ttk::label .f.version_status.download.label \
            -text [ui_msg "download status label"] -font infoFont
-ttk::label .f.version_status.download_status -font infoFont
-ttk::label .f.version_status.hostname_label \
+ttk::label .f.version_status.download.status -font infoFont
+ttk::label .f.version_status.hostname.label \
            -text [ui_msg "hostname label"] -font infoFont
-ttk::label .f.version_status.hostname -text [exec hostname] \
-                                      -font infoFont
+ttk::label .f.version_status.hostname.value -text [exec hostname] \
+                                            -font infoFont
 
 ttk::frame .f.disks
 ttk::label .f.disks.nohubs_message -font infoFont \
                                    -text [ui_msg "waiting usb hubs"]
 
-place .f.instructions -relx 0.02 -rely 0.05
-pack .f.instructions.title \
+pack .f.version_status -side bottom -pady 12
+pack .f.version_status.version      \
+     .f.version_status.download     \
+     .f.version_status.hostname -side left -padx 50
+pack .f.version_status.version.label .f.version_status.version.number \
+     -side left -padx 5
+pack .f.version_status.download.label .f.version_status.download.status \
+     -side left -padx 5
+pack .f.version_status.hostname.label .f.version_status.hostname.value \
+     -side left -padx 5
+
+pack .f.instructions -side left -anchor n
+pack .f.instructions.title       \
      .f.instructions.description \
-     .f.instructions.steps -anchor w
+     .f.instructions.steps
 
-place .f.version_status -relx 0.1 -rely 0.7
-
-grid .f.version_status.version_label         \
-     .f.version_status.version_number -sticky w
-grid .f.version_status.download_status_label \
-     .f.version_status.download_status -sticky w
-grid .f.version_status.hostname_label \
-     .f.version_status.hostname -sticky w
-
-place .f.disks -relx 0.49 -rely 0.05
+pack .f.disks -side right
 grid .f.disks.nohubs_message
-
-place .f.support_photo -relx 0.16 -rely 0.88
 
 pack .f .f.bg -fill both -expand 1
 
