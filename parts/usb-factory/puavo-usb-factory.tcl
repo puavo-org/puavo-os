@@ -61,7 +61,7 @@ proc do_background_resizing {} {
     set new_width  [dict get $bg_image new_width]
     set new_height [dict get $bg_image new_height]
 
-    update_image bg_photo $bg_image_path $new_width $new_height
+    # update_image bg_photo $bg_image_path $new_width $new_height
 
     dict set bg_image width  $new_width
     dict set bg_image height $new_height
@@ -924,6 +924,17 @@ proc update_usb_labels_on_disk {} {
   file rename -force $tmpfile $usblabels_json_path
 }
 
+proc scroll_topbanner {} {
+  global top_banner_pos topbanner_text_id
+  incr top_banner_pos -1
+  if {$top_banner_pos < 2250} {
+    set top_banner_pos 3000
+  }
+
+  .f.top_banner coords $topbanner_text_id $top_banner_pos 20
+  after 50 scroll_topbanner
+}
+
 #
 # setup UI
 #
@@ -938,7 +949,7 @@ puts "available themes: [ttk::style theme names]"
 puts "used theme: [ttk::style theme use]"
 
 font create descriptionFont -family "Domestic Manners" -size 20 -weight bold
-font create infoFont        -family FreeSans -size 14
+font create infoFont        -family FreeSans -size 14 -weight bold
 
 # ui messages
 
@@ -954,25 +965,29 @@ try {
 # ui elements
 
 ttk::frame .f
-
 pack .f
 
 # images
 # XXX using ttk for image?
-image create photo bg_photo
-label .f.bg -image bg_photo
+# image create photo bg_photo
+# label .f.bg -image bg_photo
 
-ttk::frame .f.instructions
+set top_banner_pos 3000
+set top_banner_description ""
+foreach i {1 2 3 4 5 6 7 8 9} {
+  set top_banner_description "$top_banner_description   [ui_msg description]"
+}
+canvas .f.top_banner -background darkmagenta -height 40
+set topbanner_text_id [
+  .f.top_banner create text $top_banner_pos 20               \
+                -justify center -font infoFont -fill #ffdddd \
+                -text $top_banner_description -width 8000
+]
 
-# XXX hardcoded sizes!
-ttk::label .f.instructions.description -text [ui_msg description] \
-                                       -wraplength 600            \
-                                       -padding 20                \
-                                       -font descriptionFont
-ttk::label .f.instructions.steps -text [ui_msg instructions] \
-                                 -wraplength 600             \
-                                 -padding 20                 \
-                                 -font descriptionFont
+ttk::label .f.instructions -text [ui_msg instructions] \
+                           -wraplength 600             \
+                           -padding 20                 \
+                           -font descriptionFont
 
 ttk::frame .f.version_status
 ttk::frame .f.version_status.version
@@ -994,6 +1009,8 @@ ttk::frame .f.disks
 ttk::label .f.disks.nohubs_message -font infoFont \
                                    -text [ui_msg "waiting usb hubs"]
 
+pack .f.top_banner -side top -fill x
+
 pack .f.version_status -side bottom -pady 12
 pack .f.version_status.version      \
      .f.version_status.download     \
@@ -1006,13 +1023,13 @@ pack .f.version_status.hostname.label .f.version_status.hostname.value \
      -side left -padx 5
 
 pack .f.instructions -side left -anchor n
-pack .f.instructions.description \
-     .f.instructions.steps
 
 pack .f.disks -side right
 grid .f.disks.nohubs_message
 
-pack .f .f.bg -fill both -expand 1
+# pack .f.bg -fill both -expand 1
+
+pack .f -fill both -expand 1
 
 bind . <Configure> {
   if {"%W" eq [winfo toplevel %W]} {
@@ -1028,7 +1045,12 @@ bind . <Control-x> {
   update_diskdevices true
 }
 
+scroll_topbanner
 read_usb_labels_from_disk
 update_image_info
 update_diskdevices_loop
 check_files
+
+# canvas .f.foo -background red -width 100 -height 100
+# .f.foo create rectangle 10 10 20 20 -fill green
+# pack .f.foo
