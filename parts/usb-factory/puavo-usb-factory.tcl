@@ -997,7 +997,7 @@ ttk::label .f.version_status.download_status_label \
 ttk::label .f.version_status.download_status -font infoFont
 ttk::label .f.version_status.hostname_label \
            -text [ui_msg "hostname label"] -font infoFont
-ttk::label .f.version_status.hostname -text [exec hostname -f] \
+ttk::label .f.version_status.hostname -text [exec hostname] \
                                       -font infoFont
 
 ttk::frame .f.disks
