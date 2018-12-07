@@ -26,7 +26,11 @@ set ui_messages {}
 array set usb_labels ""
 set writable_labels false
 
-set puavo_usb_factory_workpath "$::env(HOME)/.puavo/usb-factory"
+array set paths [list \
+  puavo_usb_factory_workdir $::env(HOME)/.puavo/usb-factory \
+  usbstick_empty_path       /usr/share/puavo-usb-factory/usbstick-empty.png \
+  usbstick_full_path        /usr/share/puavo-usb-factory/usbstick-full.png \
+]
 
 set pci_path_dir /dev/disk/by-path
 
@@ -112,10 +116,10 @@ proc update_ui_info_state {} {
 }
 
 proc get_content_dir {} {
-  global puavo_usb_factory_workpath
+  global paths
 
-  if {[catch { glob ${puavo_usb_factory_workpath}/* } res]} {
-    error "${puavo_usb_factory_workpath}/* did not match any files: $res"
+  if {[catch { glob $paths(puavo_usb_factory_workdir)/* } res]} {
+    error "$paths(puavo_usb_factory_workdir)/* did not match any files: $res"
   }
   set workpath_dirs [
     lmap path $res { expr { [file isdirectory $path] ? $path : [continue] } }
@@ -364,8 +368,7 @@ proc set_ui_status_to_nomedia {devpath} {
   set ui [dict get $diskdevices $devpath ui]
   if {[dict get $diskdevices $devpath state] eq "nomedia"} {
     # XXX how to update?
-    # $ui.info.status  configure -text  ""
-    # $ui.pb_frame.bar configure -value 0
+    # $ui.info.status configure -text ""
   }
 }
 
@@ -409,8 +412,7 @@ proc set_devstate {devpath state args} {
       dict set diskdevices $devpath state error
 
       # XXX how to update?
-      # $ui.info.status  configure -text [ui_msg messages error]
-      # $ui.pb_frame.bar configure -value 0
+      # $ui.info.status configure -text [ui_msg messages error]
     }
 
     finished {
@@ -420,7 +422,6 @@ proc set_devstate {devpath state args} {
       set version [dict get $diskdevices $devpath version]
       # XXX how to update?
       # $ui.info.status configure -text "[ui_msg messages finished] $version"
-      # $ui.pb_frame.bar configure -value 100
     }
 
     nomedia {
@@ -452,22 +453,14 @@ proc set_devstate {devpath state args} {
       update_disklabel $devpath
       # XXX how to update?
       # $ui.info.status configure -text [ui_msg messages nospaceondevice]
-      # $ui.pb_frame.bar configure -value 0
     }
 
     progress {
       lassign $args eta percentage
-      switch -- [dict get $diskdevices $devpath state] {
-        verifying {
-          # XXX how to update?
-          # $ui.info.status  configure -text  "[ui_msg messages verifying] $eta"
-          # $ui.pb_frame.bar configure -value $percentage
-        }
-        writing {
-          # XXX how to update?
-          # $ui.info.status  configure -text  "[ui_msg messages writing] $eta"
-          # $ui.pb_frame.bar configure -value $percentage
-        }
+      set state [dict get $diskdevices $devpath state]
+      switch -- $state {
+        verifying -
+        writing   { set_ui_progress $ui $state $percentage $eta }
       }
     }
 
@@ -487,7 +480,6 @@ proc set_devstate {devpath state args} {
 
           # XXX how to update?
           # $ui.info.status  configure -text  -
-          # $ui.pb_frame.bar configure -value 0
         }
       } else {
         # if image is not in disk, move on to start_writing
@@ -504,7 +496,6 @@ proc set_devstate {devpath state args} {
 
         # XXX how to update?
         # $ui.info.status  configure -text  -
-        # $ui.pb_frame.bar configure -value 0
       }
     }
   }
@@ -587,50 +578,66 @@ proc make_usbport_label {port_id port_ui {update false}} {
   }
 }
 
+proc progress_image {port_ui} { return "${port_ui}_progress_image" }
+
 proc make_usbport_ui_elements {devpath port_id port_ui} {
-  global default_background_color
+  global default_background_color paths
   canvas ${port_ui} -height 42 -background $default_background_color \
          -highlightthickness 0
-  ${port_ui} create image 71 22 -image usbstick_empty
+  ${port_ui} create image 0 22 -image usbstick_empty -anchor w
+
+  # XXX how to garbage collect images?
+  image create photo [progress_image $port_ui] -file $paths(usbstick_empty_path)
+  ${port_ui} create image 0 22 -image [progress_image $port_ui] -anchor w
+
   ${port_ui} create text  90 18 -font infoFont -text $port_id
 
+  # XXX
   return
-
-  # XXX these belong to progress setting only
-  # set usbstick_full_image "usbstick_full_${port_ui}"
-   #image create photo "usbstick_full_${port_ui}" -file $usbstick_empty_path
-  # ${port_ui} create image -image $usbstick_full_image
 
   ttk::frame ${port_ui} -borderwidth 1
   ttk::frame ${port_ui}.info
-  ttk::frame ${port_ui}.pb_frame -height 8
 
   make_usbport_label $port_id $port_ui
 
   ttk::label ${port_ui}.info.disklabel -text "" -font infoFont
   ttk::label ${port_ui}.info.status -width 20 -font infoFont
-  ttk::progressbar ${port_ui}.pb_frame.bar -orient horizontal \
-                   -maximum 100 -value 0
 
   pack_usbport_ui_elements $port_ui
 }
 
 proc pack_usbport_ui_elements {port_ui} {
+  # XXX
   return
+
   # XXX how to update?
   pack forget ${port_ui}.info.port_label \
               ${port_ui}.info.status     \
               ${port_ui}.info.disklabel  \
-              ${port_ui}.info            \
-              ${port_ui}.pb_frame
+              ${port_ui}.info
 
   pack ${port_ui}.info.port_label \
        ${port_ui}.info.status     \
        ${port_ui}.info.disklabel  \
        -side left -padx 16
-  pack ${port_ui}.info ${port_ui}.pb_frame -expand 1 -fill x
-  place ${port_ui}.pb_frame.bar -in ${port_ui}.pb_frame \
-        -relwidth 1.0 -relheight 1.0
+}
+
+proc set_ui_progress {port_ui state percentage eta} {
+  global paths usbstick_empty_width
+
+  set initial_offset [expr { 1.0/3 * $usbstick_empty_width }]
+  set new_width [expr {
+    int($initial_offset +
+      ($percentage/100.0) * ($usbstick_empty_width - $initial_offset))
+  }]
+
+  set usbstick_full [progress_image $port_ui]
+
+  set current_width [$usbstick_full cget -width]
+  if {$current_width != $new_width} {
+    image create photo $usbstick_full \
+          -file $paths(usbstick_full_path) -width $new_width
+  }
 }
 
 proc usbdevice_is_a_hub {usbpath} {
@@ -910,8 +917,8 @@ proc update_diskdevices {{force_ui_update false}} {
 }
 
 proc read_usb_labels_from_disk {} {
-  global puavo_usb_factory_workpath usb_labels
-  set usblabels_json_path "${puavo_usb_factory_workpath}/usb_labels.json"
+  global paths usb_labels
+  set usblabels_json_path "$paths(puavo_usb_factory_workdir)/usb_labels.json"
 
   if {![file exists $usblabels_json_path]} {
     return
@@ -930,8 +937,8 @@ proc read_usb_labels_from_disk {} {
 }
 
 proc update_usb_labels_on_disk {} {
-  global puavo_usb_factory_workpath usb_labels
-  set usblabels_json_path "${puavo_usb_factory_workpath}/usb_labels.json"
+  global paths usb_labels
+  set usblabels_json_path "$paths(puavo_usb_factory_workdir)/usb_labels.json"
   set tmpfile "${usblabels_json_path}.tmp"
 
   set js_object [dict create]
@@ -999,10 +1006,8 @@ canvas .f
 image create photo bg_photo
 set canvas_image_index [.f create image 0 0 -image bg_photo]
 
-# XXX paths
-set usbstick_empty_path usbstick-empty.png
-set usbstick_full_path  usbstick-full.png
-image create photo usbstick_empty -file $usbstick_empty_path
+image create photo usbstick_empty -file $paths(usbstick_empty_path)
+set usbstick_empty_width [image width usbstick_empty]
 
 set top_banner_pos 3000
 set top_banner_description ""
