@@ -8,9 +8,6 @@ wm attributes . -fullscreen 1
 # wm maxsize  . 1440 900
 wm protocol . WM_DELETE_WINDOW { }      ;# do not allow window close
 
-# XXX not a correct picture
-set bg_image_path /usr/share/backgrounds/Blue_frost_by_ppaabblloo77.jpg
-
 set bg_image {
   width      -1
   height     -1
@@ -41,6 +38,7 @@ set new_usbhubs [dict create]
 proc read_file {path} { exec cat $path }
 
 proc update_image {image imagepath new_width new_height} {
+  # XXX it would be better to use standard output
   set tmpfile [exec mktemp /tmp/puavo-usb-factory-image.XXXXXXX]
   set img_size "${new_width}x${new_height}!"
   exec -ignorestderr convert $imagepath -resize $img_size png:$tmpfile
@@ -49,7 +47,7 @@ proc update_image {image imagepath new_width new_height} {
 }
 
 proc do_background_resizing {} {
-  global bg_image bg_image_path
+  global bg_image bg_image_path canvas_image_index
 
   set size_diff [ expr {
     max(abs([dict get $bg_image width]  - [dict get $bg_image new_width]),
@@ -57,11 +55,12 @@ proc do_background_resizing {} {
   }]
 
   if {$size_diff >= 4} {
-    # XXX it would be better to use standard output
     set new_width  [dict get $bg_image new_width]
     set new_height [dict get $bg_image new_height]
 
-    # update_image bg_photo $bg_image_path $new_width $new_height
+    update_image bg_photo $bg_image_path $new_width $new_height
+    .f coords $canvas_image_index [expr { $new_width/2 }]  \
+                                  [expr { $new_height/2 }]
 
     dict set bg_image width  $new_width
     dict set bg_image height $new_height
@@ -133,19 +132,12 @@ proc get_content_dir {} {
 }
 
 proc update_image_info {} {
-  global image_info
+  global content_dir image_info
 
   dict set image_info image_size        ""
   dict set image_info latest_image_path ""
   dict set image_info status            ""
   dict set image_info version           ""
-
-  try {
-    set content_dir [get_content_dir]
-  } on error {} {
-    update_ui_info_state
-    return false
-  }
 
   set content_name [file tail $content_dir]
 
@@ -951,26 +943,32 @@ puts "used theme: [ttk::style theme use]"
 font create descriptionFont -family "Domestic Manners" -size 20 -weight bold
 font create infoFont        -family FreeSans -size 14 -weight bold
 
-# ui messages
+# ui messages and background image
 
 try {
-  set ui_messages [
-    ::json::json2dict [read_file "[get_content_dir]/UI.json"]
-  ]
+  set content_dir [get_content_dir]
 } on error {} {
-  puts stderr "could not read ui messages from UI.json"
+  puts stderr "could not get content dir"
+  exit 1
+}
+try {
+  set bg_image_path "${content_dir}/UI.png"
+} on error {} {
+  puts stderr "could not read background image from ${content_dir}/UI.png"
+  exit 1
+}
+try {
+  set ui_messages [::json::json2dict [read_file "${content_dir}/UI.json"]]
+} on error {} {
+  puts stderr "could not read ui messages from ${content_dir}/UI.json"
   exit 1
 }
 
 # ui elements
 
-ttk::frame .f
-pack .f
-
-# images
-# XXX using ttk for image?
-# image create photo bg_photo
-# label .f.bg -image bg_photo
+canvas .f
+image create photo bg_photo
+set canvas_image_index [.f create image 0 0 -image bg_photo]
 
 set top_banner_pos 3000
 set top_banner_description ""
@@ -1027,8 +1025,6 @@ pack .f.instructions -side left -anchor n
 pack .f.disks -side right
 grid .f.disks.nohubs_message
 
-# pack .f.bg -fill both -expand 1
-
 pack .f -fill both -expand 1
 
 bind . <Configure> {
@@ -1050,7 +1046,3 @@ read_usb_labels_from_disk
 update_image_info
 update_diskdevices_loop
 check_files
-
-# canvas .f.foo -background red -width 100 -height 100
-# .f.foo create rectangle 10 10 20 20 -fill green
-# pack .f.foo
