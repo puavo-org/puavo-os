@@ -207,6 +207,8 @@ class packages {
     , 'perl-doc'
     , 'pinfo'
     , 'sloccount'
+    , 'tcl8.6-doc'
+    , 'tk8.6-doc'
     , 'translate-toolkit'
     , 'vim-nox' ]:
       tag => [ 'tag_devel', 'tag_debian_desktop', ];
