@@ -59,8 +59,8 @@ proc do_background_resizing {} {
     set new_height [dict get $bg_image new_height]
 
     update_image bg_photo $bg_image_path $new_width $new_height
-    .f coords $canvas_image_index [expr { $new_width/2 }]  \
-                                  [expr { $new_height/2 }]
+    .f coords $canvas_image_index [expr { int($new_width/2)  }]  \
+                                  [expr { int($new_height/2) }]
 
     dict set bg_image width  $new_width
     dict set bg_image height $new_height
@@ -189,8 +189,9 @@ proc start_preparation {devpath countdown} {
     return
   }
 
-  $ui.info.status configure \
-    -text "[ui_msg messages start_writing] $countdown"
+  # XXX how to update?
+  # $ui.info.status configure \
+  #   -text "[ui_msg messages start_writing] $countdown"
 
   incr countdown -1
   after 1000 [list start_preparation $devpath $countdown]
@@ -349,7 +350,8 @@ proc update_disklabel {devpath {label "LOOKUP"}} {
     }
   }
 
-  $ui.info.disklabel configure -text $device_label
+  # XXX how to update disklabel?
+  # $ui.info.disklabel configure -text $device_label
 }
 
 proc set_ui_status_to_nomedia {devpath} {
@@ -361,8 +363,9 @@ proc set_ui_status_to_nomedia {devpath} {
 
   set ui [dict get $diskdevices $devpath ui]
   if {[dict get $diskdevices $devpath state] eq "nomedia"} {
-    $ui.info.status  configure -text  ""
-    $ui.pb_frame.bar configure -value 0
+    # XXX how to update?
+    # $ui.info.status  configure -text  ""
+    # $ui.pb_frame.bar configure -value 0
   }
 }
 
@@ -405,8 +408,9 @@ proc set_devstate {devpath state args} {
       close_if_open $devpath
       dict set diskdevices $devpath state error
 
-      $ui.info.status  configure -text [ui_msg messages error]
-      $ui.pb_frame.bar configure -value 0
+      # XXX how to update?
+      # $ui.info.status  configure -text [ui_msg messages error]
+      # $ui.pb_frame.bar configure -value 0
     }
 
     finished {
@@ -414,8 +418,9 @@ proc set_devstate {devpath state args} {
       dict set diskdevices $devpath state finished
 
       set version [dict get $diskdevices $devpath version]
-      $ui.info.status configure -text "[ui_msg messages finished] $version"
-      $ui.pb_frame.bar configure -value 100
+      # XXX how to update?
+      # $ui.info.status configure -text "[ui_msg messages finished] $version"
+      # $ui.pb_frame.bar configure -value 100
     }
 
     nomedia {
@@ -445,20 +450,23 @@ proc set_devstate {devpath state args} {
       close_if_open $devpath
       dict set diskdevices $devpath state nospaceondevice
       update_disklabel $devpath
-      $ui.info.status configure -text [ui_msg messages nospaceondevice]
-      $ui.pb_frame.bar configure -value 0
+      # XXX how to update?
+      # $ui.info.status configure -text [ui_msg messages nospaceondevice]
+      # $ui.pb_frame.bar configure -value 0
     }
 
     progress {
       lassign $args eta percentage
       switch -- [dict get $diskdevices $devpath state] {
         verifying {
-          $ui.info.status  configure -text  "[ui_msg messages verifying] $eta"
-          $ui.pb_frame.bar configure -value $percentage
+          # XXX how to update?
+          # $ui.info.status  configure -text  "[ui_msg messages verifying] $eta"
+          # $ui.pb_frame.bar configure -value $percentage
         }
         writing {
-          $ui.info.status  configure -text  "[ui_msg messages writing] $eta"
-          $ui.pb_frame.bar configure -value $percentage
+          # XXX how to update?
+          # $ui.info.status  configure -text  "[ui_msg messages writing] $eta"
+          # $ui.pb_frame.bar configure -value $percentage
         }
       }
     }
@@ -477,8 +485,9 @@ proc set_devstate {devpath state args} {
         if {$fh ne ""} {
           dict set diskdevices $devpath state verifying
 
-          $ui.info.status  configure -text  -
-          $ui.pb_frame.bar configure -value 0
+          # XXX how to update?
+          # $ui.info.status  configure -text  -
+          # $ui.pb_frame.bar configure -value 0
         }
       } else {
         # if image is not in disk, move on to start_writing
@@ -493,8 +502,9 @@ proc set_devstate {devpath state args} {
       if {$fh ne ""} {
         dict set diskdevices $devpath state writing
 
-        $ui.info.status  configure -text  -
-        $ui.pb_frame.bar configure -value 0
+        # XXX how to update?
+        # $ui.info.status  configure -text  -
+        # $ui.pb_frame.bar configure -value 0
       }
     }
   }
@@ -578,6 +588,19 @@ proc make_usbport_label {port_id port_ui {update false}} {
 }
 
 proc make_usbport_ui_elements {devpath port_id port_ui} {
+  global default_background_color
+  canvas ${port_ui} -height 42 -background $default_background_color \
+         -highlightthickness 0
+  ${port_ui} create image 71 22 -image usbstick_empty
+  ${port_ui} create text  90 18 -font infoFont -text $port_id
+
+  return
+
+  # XXX these belong to progress setting only
+  # set usbstick_full_image "usbstick_full_${port_ui}"
+   #image create photo "usbstick_full_${port_ui}" -file $usbstick_empty_path
+  # ${port_ui} create image -image $usbstick_full_image
+
   ttk::frame ${port_ui} -borderwidth 1
   ttk::frame ${port_ui}.info
   ttk::frame ${port_ui}.pb_frame -height 8
@@ -593,6 +616,8 @@ proc make_usbport_ui_elements {devpath port_id port_ui} {
 }
 
 proc pack_usbport_ui_elements {port_ui} {
+  return
+  # XXX how to update?
   pack forget ${port_ui}.info.port_label \
               ${port_ui}.info.status     \
               ${port_ui}.info.disklabel  \
@@ -818,7 +843,7 @@ proc update_diskdevices {{force_ui_update false}} {
       set labelvar "hub/${hub_id}/${product}"
       set usb_labels($labelvar) [get_label $labelvar $product]
       if {$writable_labels} {
-        ttk::entry $hub_ui -textvariable usb_labels($labelvar) -width 50
+        ttk::entry $hub_ui -textvariable usb_labels($labelvar) -width 10
       } else {
         ttk::label $hub_ui -textvariable usb_labels($labelvar)
       }
@@ -858,7 +883,9 @@ proc update_diskdevices {{force_ui_update false}} {
           set regrid true
         }
 
-        lappend ui_elements $port_ui
+        if {$port_ui ni $ui_elements} {
+          lappend ui_elements $port_ui
+        }
         dict set usbhubs $hub_id $product ports $port_id $devpath
       }
     }
@@ -869,9 +896,14 @@ proc update_diskdevices {{force_ui_update false}} {
   } else {
     grid forget .f.disks.nohubs_message
     if {$regrid} {
+      set row_pos 1
+      set column_pos 1
       foreach ui $ui_elements {
         grid forget $ui
-        grid $ui -sticky w
+        grid $ui -row $row_pos -column $column_pos -sticky w
+        # XXX this grid thing does not quite work yet...
+        if {$row_pos % 20 == 0} { incr column_pos; set row_pos 0 }
+        incr row_pos
       }
     }
   }
@@ -931,17 +963,14 @@ proc scroll_topbanner {} {
 # setup UI
 #
 
+font create descriptionFont -family "Domestic Manners" -size 20 -weight bold
+font create infoFont        -family FreeSans           -size 14 -weight bold
+
 # style options
 
-# ttk::style theme Instructions Instructions -background black -foreground lightgrey
-
-# XXX theme ?
-puts "available themes: [ttk::style theme names]"
-# ttk::style theme use clam
-puts "used theme: [ttk::style theme use]"
-
-font create descriptionFont -family "Domestic Manners" -size 20 -weight bold
-font create infoFont        -family FreeSans -size 14 -weight bold
+set default_background_color #9c62ac
+ttk::style configure TFrame -background $default_background_color
+ttk::style configure TLabel -background $default_background_color -font infoFont
 
 # ui messages and background image
 
@@ -969,6 +998,11 @@ try {
 canvas .f
 image create photo bg_photo
 set canvas_image_index [.f create image 0 0 -image bg_photo]
+
+# XXX paths
+set usbstick_empty_path usbstick-empty.png
+set usbstick_full_path  usbstick-full.png
+image create photo usbstick_empty -file $usbstick_empty_path
 
 set top_banner_pos 3000
 set top_banner_description ""
@@ -1009,9 +1043,9 @@ ttk::label .f.disks.nohubs_message -font infoFont \
 
 pack .f.top_banner -side top -fill x
 
-pack .f.version_status -side bottom -pady 12
-pack .f.version_status.version      \
-     .f.version_status.download     \
+pack .f.version_status -side bottom -ipady 14 -fill x
+pack .f.version_status.version  \
+     .f.version_status.download \
      .f.version_status.hostname -side left -padx 50
 pack .f.version_status.version.label .f.version_status.version.number \
      -side left -padx 5
@@ -1020,7 +1054,7 @@ pack .f.version_status.download.label .f.version_status.download.status \
 pack .f.version_status.hostname.label .f.version_status.hostname.value \
      -side left -padx 5
 
-pack .f.instructions -side left -anchor n
+pack .f.instructions -side left -anchor n -padx 40 -pady 40
 
 pack .f.disks -side right
 grid .f.disks.nohubs_message
