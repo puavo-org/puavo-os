@@ -191,19 +191,21 @@ proc start_preparation {devpath countdown} {
     return
   }
 
-  set ui [dict get $diskdevices $devpath ui]
+  set port_ui [dict get $diskdevices $devpath ui]
 
   if {$countdown == 0} {
     set_devstate $devpath writing
     return
   }
 
-  # XXX how to update?
-  # $ui.info.status configure \
-  #   -text "[ui_msg messages start_writing] $countdown"
+  if {$countdown % 2 == 0} {
+    set_usbport_image $port_ui flash_drive_magenta [expr { 1.0/4 }]
+  } else {
+    set_usbport_image $port_ui flash_drive_white
+  }
 
   incr countdown -1
-  after 1000 [list start_preparation $devpath $countdown]
+  after 250 [list start_preparation $devpath $countdown]
 }
 
 proc start_operating {devpath cmd} {
@@ -370,10 +372,11 @@ proc set_ui_status_to_nomedia {devpath} {
     return
   }
 
-  set ui [dict get $diskdevices $devpath ui]
+  set port_ui [dict get $diskdevices $devpath ui]
   if {[dict get $diskdevices $devpath state] eq "nomedia"} {
     # XXX how to update?
     # $ui.info.status configure -text ""
+    set_usbport_image $port_ui flash_drive_white
   }
 }
 
@@ -416,8 +419,11 @@ proc set_devstate {devpath state args} {
       close_if_open $devpath
       dict set diskdevices $devpath state error
 
+      set port_ui [dict get $diskdevices $devpath ui]
+
       # XXX how to update?
       # $ui.info.status configure -text [ui_msg messages error]
+      set_usbport_image $port_ui flash_drive_red
     }
 
     finished {
@@ -425,8 +431,11 @@ proc set_devstate {devpath state args} {
       dict set diskdevices $devpath state finished
 
       set version [dict get $diskdevices $devpath version]
-      # XXX how to update?
+      set port_ui [dict get $diskdevices $devpath ui]
+
+      # XXX how to update version?
       # $ui.info.status configure -text "[ui_msg messages finished] $version"
+      set_usbport_image $port_ui flash_drive_green
     }
 
     nomedia {
@@ -472,7 +481,7 @@ proc set_devstate {devpath state args} {
     start_writing {
       dict set diskdevices $devpath state start_writing
       update_disklabel $devpath
-      start_preparation $devpath 10
+      start_preparation $devpath 40
     }
 
     verifying {
@@ -583,18 +592,15 @@ proc make_usbport_label {port_id port_ui {update false}} {
   }
 }
 
-proc progress_image {port_ui} { return "${port_ui}_progress_image" }
-
 proc make_usbport_ui_elements {devpath port_id port_ui} {
-  global default_background_color paths
+  global default_background_color
+
   canvas ${port_ui} -height 42 -width 215 \
          -background $default_background_color -highlightthickness 0
   ${port_ui} create image 0 22 -image flash_drive_white -anchor w
 
-  # XXX how to garbage collect images?
-  image create photo [progress_image $port_ui] -file $paths(flash_drive_white)
-  ${port_ui} create image 0 22 -image [progress_image $port_ui] -anchor w
-
+  set_usbport_image $port_ui flash_drive_white
+  ${port_ui} create image 0 22 -image "${port_ui}_overlay_image" -anchor w
   ${port_ui} create text  180 18 -font infoFont -text $port_id -anchor e
 
   # XXX
@@ -627,22 +633,48 @@ proc pack_usbport_ui_elements {port_ui} {
        -side left -padx 16
 }
 
-proc set_ui_progress {port_ui state percentage eta} {
-  global paths flash_drive_image_width
+proc set_usbport_image {port_ui imagename {new_width {}}} {
+  global flash_drive_image_width paths
+  set ui_image "${port_ui}_overlay_image"
 
-  set initial_offset [expr { 1.0/4 * $flash_drive_image_width }]
+  if {$new_width ne ""} {
+    set new_width_in_pixels [
+      expr { int($new_width * $flash_drive_image_width) }
+    ]
+
+    set current_width [$ui_image cget -width]
+    if {$current_width != $new_width_in_pixels} {
+      image create photo $ui_image -file $paths($imagename) \
+                                   -width $new_width_in_pixels
+    }
+  } else {
+    image create photo $ui_image -file $paths($imagename)
+  }
+}
+
+proc set_ui_progress {port_ui state percentage eta} {
+  # Make writing progress go from 1/4 to 7/8,
+  # the rest is verification progress (and change colour to indicate that).
+
+  set initial_offset [expr { 1.0/4 }]
+  set cutpoint       [expr { 7.0/8 }]
+
+  if {$state eq "writing"} {
+    set imagename  "flash_drive_blue"
+    set startpoint $initial_offset
+    set endpoint   $cutpoint
+  } else {
+    # this is verifying
+    set imagename  "flash_drive_yellow"
+    set startpoint $cutpoint
+    set endpoint   1.0
+  }
+
   set new_width [expr {
-    int($initial_offset +
-      ($percentage/100.0) * ($flash_drive_image_width - $initial_offset))
+    $startpoint + ($percentage/100.0) * ($endpoint - $startpoint)
   }]
 
-  set flash_drive_green [progress_image $port_ui]
-
-  set current_width [$flash_drive_green cget -width]
-  if {$current_width != $new_width} {
-    image create photo $flash_drive_green \
-          -file $paths(flash_drive_green) -width $new_width
-  }
+  set_usbport_image $port_ui $imagename $new_width
 }
 
 proc usbdevice_is_a_hub {usbpath} {
@@ -874,7 +906,7 @@ proc update_diskdevices {{force_ui_update false}} {
   } else {
     grid forget .f.disks.nohubs_message
     if {$regrid} {
-      set max_row_elements 11
+      set max_row_elements 15
       set total_element_count [llength $ui_elements]
       set element_count $total_element_count
       set need_for_columns 1
