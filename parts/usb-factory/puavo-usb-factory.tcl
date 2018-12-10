@@ -27,9 +27,14 @@ array set usb_labels ""
 set writable_labels false
 
 array set paths [list \
-  puavo_usb_factory_workdir $::env(HOME)/.puavo/usb-factory \
-  usbstick_empty_path       /usr/share/puavo-usb-factory/usbstick-empty.png \
-  usbstick_full_path        /usr/share/puavo-usb-factory/usbstick-full.png \
+  flash_drive_blue      /usr/share/puavo-usb-factory/flash-drive-blue.png    \
+  flash_drive_green     /usr/share/puavo-usb-factory/flash-drive-green.png   \
+  flash_drive_grey      /usr/share/puavo-usb-factory/flash-drive-grey.png    \
+  flash_drive_magenta   /usr/share/puavo-usb-factory/flash-drive-magenta.png \
+  flash_drive_red       /usr/share/puavo-usb-factory/flash-drive-red.png     \
+  flash_drive_white     /usr/share/puavo-usb-factory/flash-drive-white.png   \
+  flash_drive_yellow    /usr/share/puavo-usb-factory/flash-drive-yellow.png  \
+  puavo_usb_factory_workdir $::env(HOME)/.puavo/usb-factory                  \
 ]
 
 set pci_path_dir /dev/disk/by-path
@@ -584,13 +589,13 @@ proc make_usbport_ui_elements {devpath port_id port_ui} {
   global default_background_color paths
   canvas ${port_ui} -height 42 -background $default_background_color \
          -highlightthickness 0
-  ${port_ui} create image 0 22 -image usbstick_empty -anchor w
+  ${port_ui} create image 0 22 -image flash_drive_white -anchor w
 
   # XXX how to garbage collect images?
-  image create photo [progress_image $port_ui] -file $paths(usbstick_empty_path)
+  image create photo [progress_image $port_ui] -file $paths(flash_drive_white)
   ${port_ui} create image 0 22 -image [progress_image $port_ui] -anchor w
 
-  ${port_ui} create text  90 18 -font infoFont -text $port_id
+  ${port_ui} create text  180 18 -font infoFont -text $port_id -anchor e
 
   # XXX
   return
@@ -623,20 +628,20 @@ proc pack_usbport_ui_elements {port_ui} {
 }
 
 proc set_ui_progress {port_ui state percentage eta} {
-  global paths usbstick_empty_width
+  global paths flash_drive_image_width
 
-  set initial_offset [expr { 1.0/3 * $usbstick_empty_width }]
+  set initial_offset [expr { 1.0/4 * $flash_drive_image_width }]
   set new_width [expr {
     int($initial_offset +
-      ($percentage/100.0) * ($usbstick_empty_width - $initial_offset))
+      ($percentage/100.0) * ($flash_drive_image_width - $initial_offset))
   }]
 
-  set usbstick_full [progress_image $port_ui]
+  set flash_drive_green [progress_image $port_ui]
 
-  set current_width [$usbstick_full cget -width]
+  set current_width [$flash_drive_green cget -width]
   if {$current_width != $new_width} {
-    image create photo $usbstick_full \
-          -file $paths(usbstick_full_path) -width $new_width
+    image create photo $flash_drive_green \
+          -file $paths(flash_drive_green) -width $new_width
   }
 }
 
@@ -1006,8 +1011,8 @@ canvas .f
 image create photo bg_photo
 set canvas_image_index [.f create image 0 0 -image bg_photo]
 
-image create photo usbstick_empty -file $paths(usbstick_empty_path)
-set usbstick_empty_width [image width usbstick_empty]
+image create photo flash_drive_white -file $paths(flash_drive_white)
+set flash_drive_image_width [image width flash_drive_white]
 
 set top_banner_pos 3000
 set top_banner_description ""
