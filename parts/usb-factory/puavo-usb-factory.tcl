@@ -587,8 +587,8 @@ proc progress_image {port_ui} { return "${port_ui}_progress_image" }
 
 proc make_usbport_ui_elements {devpath port_id port_ui} {
   global default_background_color paths
-  canvas ${port_ui} -height 42 -background $default_background_color \
-         -highlightthickness 0
+  canvas ${port_ui} -height 42 -width 215 \
+         -background $default_background_color -highlightthickness 0
   ${port_ui} create image 0 22 -image flash_drive_white -anchor w
 
   # XXX how to garbage collect images?
@@ -817,9 +817,7 @@ proc update_diskdevices {{force_ui_update false}} {
     dict for {product productinfo} $hubproducts {
       set portinfo [dict get $productinfo ports]
       if {[llength [dict keys $portinfo]] == 0} {
-        destroy [dict get $usbhubs $hub_id $product ui]
         dict unset usbhubs $hub_id $product
-        set regrid true
       }
     }
   }
@@ -831,42 +829,10 @@ proc update_diskdevices {{force_ui_update false}} {
 
   set ui_elements [list]
 
-  # add hubs that are missing
   dict for {hub_id hubproducts} $new_usbhubs {
     set sorted_products [dictionary_sort_by_label "hub/${hub_id}" \
                                                   [dict keys $hubproducts]]
-
-    foreach product $sorted_products {
-      if {[dict exists $usbhubs $hub_id $product]} {
-        set hub_ui [dict get $usbhubs $hub_id $product ui]
-        if {!$force_ui_update} {
-          lappend ui_elements [dict get $usbhubs $hub_id $product ui]
-          dict set usbhubs $hub_id $product ui $hub_ui
-          continue
-        }
-        destroy $hub_ui
-      }
-
-      # add UI for hub
-      set uisym_hub_id  [string map {. _      } $hub_id]
-      set uisym_product [string map {. _ " " _} $product]
-      set hub_ui ".f.disks.hub_${uisym_hub_id}_${uisym_product}"
-
-      set labelvar "hub/${hub_id}/${product}"
-      set usb_labels($labelvar) [get_label $labelvar $product]
-      if {$writable_labels} {
-        ttk::entry $hub_ui -textvariable usb_labels($labelvar) -width 10
-      } else {
-        ttk::label $hub_ui -textvariable usb_labels($labelvar)
-      }
-
-      lappend ui_elements $hub_ui
-      set regrid true
-
-      dict set usbhubs $hub_id $product ui $hub_ui
-    }
-
-    # add new hub ports to UI
+    # add new ports to UI
     dict for {product productinfo} $hubproducts {
       set sorted_ports [
         dictionary_sort_by_label port \
@@ -908,13 +874,24 @@ proc update_diskdevices {{force_ui_update false}} {
   } else {
     grid forget .f.disks.nohubs_message
     if {$regrid} {
+      set max_row_elements 11
+      set total_element_count [llength $ui_elements]
+      set element_count $total_element_count
+      set need_for_columns 1
+      while {$element_count > $max_row_elements} {
+        set element_count [expr { $element_count - $max_row_elements }]
+        incr need_for_columns
+      }
+      set divisor [expr {
+        int(ceil((0.0 + $total_element_count) / $need_for_columns)) }
+      ]
+
       set row_pos 1
       set column_pos 1
       foreach ui $ui_elements {
         grid forget $ui
-        grid $ui -row $row_pos -column $column_pos -sticky w
-        # XXX this grid thing does not quite work yet...
-        if {$row_pos % 20 == 0} { incr column_pos; set row_pos 0 }
+        grid $ui -row $row_pos -column $column_pos -sticky w -ipadx 5
+        if {$row_pos % $divisor == 0} { incr column_pos; set row_pos 0 }
         incr row_pos
       }
     }
