@@ -4,17 +4,9 @@ package require json
 package require json::write
 
 wm attributes . -fullscreen 1
+# wm minsize  . 800 600
+# wm maxsize  . 1440 900
 wm protocol . WM_DELETE_WINDOW { }      ;# do not allow window close
-
-# XXX not a correct picture
-set bg_image_path /usr/share/backgrounds/Blue_frost_by_ppaabblloo77.jpg
-
-try {
-  set support_logo_path [exec puavo-conf puavo.greeter.logo]
-} on error {errmsg} {
-  puts stderr "puavo-conf could not lookup puavo.greeter.logo: $errmsg"
-  exit 1
-}
 
 set bg_image {
   width      -1
@@ -34,7 +26,16 @@ set ui_messages {}
 array set usb_labels ""
 set writable_labels false
 
-set puavo_usb_factory_workpath "$::env(HOME)/.puavo/usb-factory"
+array set paths [list \
+  flash_drive_blue      /usr/share/puavo-usb-factory/flash-drive-blue.png    \
+  flash_drive_green     /usr/share/puavo-usb-factory/flash-drive-green.png   \
+  flash_drive_grey      /usr/share/puavo-usb-factory/flash-drive-grey.png    \
+  flash_drive_magenta   /usr/share/puavo-usb-factory/flash-drive-magenta.png \
+  flash_drive_red       /usr/share/puavo-usb-factory/flash-drive-red.png     \
+  flash_drive_white     /usr/share/puavo-usb-factory/flash-drive-white.png   \
+  flash_drive_yellow    /usr/share/puavo-usb-factory/flash-drive-yellow.png  \
+  puavo_usb_factory_workdir $::env(HOME)/.puavo/usb-factory                  \
+]
 
 set pci_path_dir /dev/disk/by-path
 
@@ -46,6 +47,7 @@ set new_usbhubs [dict create]
 proc read_file {path} { exec cat $path }
 
 proc update_image {image imagepath new_width new_height} {
+  # XXX it would be better to use standard output
   set tmpfile [exec mktemp /tmp/puavo-usb-factory-image.XXXXXXX]
   set img_size "${new_width}x${new_height}!"
   exec -ignorestderr convert $imagepath -resize $img_size png:$tmpfile
@@ -54,29 +56,35 @@ proc update_image {image imagepath new_width new_height} {
 }
 
 proc do_background_resizing {} {
-  global bg_image bg_image_path support_logo_path
+  global bg_image bg_image_path canvas_image_index
 
-  if {[dict get $bg_image width] != [dict get $bg_image new_width]
-        || [dict get $bg_image height] != [dict get $bg_image new_height]} {
+  set size_diff [ expr {
+    max(abs([dict get $bg_image width]  - [dict get $bg_image new_width]),
+        abs([dict get $bg_image height] - [dict get $bg_image new_height]))
+  }]
 
-    # XXX it would be better to use standard output
+  if {$size_diff >= 4} {
     set new_width  [dict get $bg_image new_width]
     set new_height [dict get $bg_image new_height]
 
     update_image bg_photo $bg_image_path $new_width $new_height
-    # XXX hardcoded pixel sizes
-    update_image support_photo $support_logo_path 966 64
+    .f coords $canvas_image_index [expr { int($new_width/2)  }]  \
+                                  [expr { int($new_height/2) }]
 
     dict set bg_image width  $new_width
     dict set bg_image height $new_height
   }
 }
 
+set bg_resizing_event ""
 proc queue_background_resizing {width height} {
-  global bg_image
+  global bg_image bg_resizing_event
+
   dict set bg_image new_width  $width
   dict set bg_image new_height $height
-  after 500 do_background_resizing
+
+  if {$bg_resizing_event ne ""} { after cancel $bg_resizing_event }
+  set bg_resizing_event [after 500 do_background_resizing]
 }
 
 proc ui_msg {args} {
@@ -97,14 +105,14 @@ proc update_ui_info_state {} {
     missing { set download_message [ui_msg {download state} $download_status] }
     default { set download_message [ui_msg {download state} undefined] }
   }
-  .f.version_status.download_status configure -text $download_message
+  .f.version_status.download.status configure -text $download_message
 
   if {$version ne ""} {
     set version_message $version
   } else {
     set version_message -
   }
-  .f.version_status.version_number configure -text $version_message
+  .f.version_status.version.number configure -text $version_message
 
   set bg_width  [dict get $bg_image width]
   set bg_height [dict get $bg_image height]
@@ -113,10 +121,10 @@ proc update_ui_info_state {} {
 }
 
 proc get_content_dir {} {
-  global puavo_usb_factory_workpath
+  global paths
 
-  if {[catch { glob ${puavo_usb_factory_workpath}/* } res]} {
-    error "${puavo_usb_factory_workpath}/* did not match any files: $res"
+  if {[catch { glob $paths(puavo_usb_factory_workdir)/* } res]} {
+    error "$paths(puavo_usb_factory_workdir)/* did not match any files: $res"
   }
   set workpath_dirs [
     lmap path $res { expr { [file isdirectory $path] ? $path : [continue] } }
@@ -133,19 +141,12 @@ proc get_content_dir {} {
 }
 
 proc update_image_info {} {
-  global image_info
+  global content_dir image_info
 
   dict set image_info image_size        ""
   dict set image_info latest_image_path ""
   dict set image_info status            ""
   dict set image_info version           ""
-
-  try {
-    set content_dir [get_content_dir]
-  } on error {} {
-    update_ui_info_state
-    return false
-  }
 
   set content_name [file tail $content_dir]
 
@@ -190,18 +191,21 @@ proc start_preparation {devpath countdown} {
     return
   }
 
-  set ui [dict get $diskdevices $devpath ui]
+  set port_ui [dict get $diskdevices $devpath ui]
 
   if {$countdown == 0} {
     set_devstate $devpath writing
     return
   }
 
-  $ui.info.status configure \
-    -text "[ui_msg messages start_writing] $countdown"
+  if {$countdown % 2 == 0} {
+    set_usbport_image $port_ui flash_drive_magenta [expr { 1.0/4 }]
+  } else {
+    set_usbport_image $port_ui flash_drive_white
+  }
 
   incr countdown -1
-  after 1000 [list start_preparation $devpath $countdown]
+  after 250 [list start_preparation $devpath $countdown]
 }
 
 proc start_operating {devpath cmd} {
@@ -357,7 +361,8 @@ proc update_disklabel {devpath {label "LOOKUP"}} {
     }
   }
 
-  $ui.info.disklabel configure -text $device_label
+  # XXX how to update disklabel?
+  # $ui.info.disklabel configure -text $device_label
 }
 
 proc set_ui_status_to_nomedia {devpath} {
@@ -367,10 +372,11 @@ proc set_ui_status_to_nomedia {devpath} {
     return
   }
 
-  set ui [dict get $diskdevices $devpath ui]
+  set port_ui [dict get $diskdevices $devpath ui]
   if {[dict get $diskdevices $devpath state] eq "nomedia"} {
-    $ui.info.status  configure -text  ""
-    $ui.pb_frame.bar configure -value 0
+    # XXX how to update?
+    # $ui.info.status configure -text ""
+    set_usbport_image $port_ui flash_drive_white
   }
 }
 
@@ -413,8 +419,11 @@ proc set_devstate {devpath state args} {
       close_if_open $devpath
       dict set diskdevices $devpath state error
 
-      $ui.info.status  configure -text [ui_msg messages error]
-      $ui.pb_frame.bar configure -value 0
+      set port_ui [dict get $diskdevices $devpath ui]
+
+      # XXX how to update?
+      # $ui.info.status configure -text [ui_msg messages error]
+      set_usbport_image $port_ui flash_drive_red
     }
 
     finished {
@@ -422,8 +431,11 @@ proc set_devstate {devpath state args} {
       dict set diskdevices $devpath state finished
 
       set version [dict get $diskdevices $devpath version]
-      $ui.info.status configure -text "[ui_msg messages finished] $version"
-      $ui.pb_frame.bar configure -value 100
+      set port_ui [dict get $diskdevices $devpath ui]
+
+      # XXX how to update version?
+      # $ui.info.status configure -text "[ui_msg messages finished] $version"
+      set_usbport_image $port_ui flash_drive_green
     }
 
     nomedia {
@@ -453,28 +465,23 @@ proc set_devstate {devpath state args} {
       close_if_open $devpath
       dict set diskdevices $devpath state nospaceondevice
       update_disklabel $devpath
-      $ui.info.status configure -text [ui_msg messages nospaceondevice]
-      $ui.pb_frame.bar configure -value 0
+      # XXX how to update?
+      # $ui.info.status configure -text [ui_msg messages nospaceondevice]
     }
 
     progress {
       lassign $args eta percentage
-      switch -- [dict get $diskdevices $devpath state] {
-        verifying {
-          $ui.info.status  configure -text  "[ui_msg messages verifying] $eta"
-          $ui.pb_frame.bar configure -value $percentage
-        }
-        writing {
-          $ui.info.status  configure -text  "[ui_msg messages writing] $eta"
-          $ui.pb_frame.bar configure -value $percentage
-        }
+      set state [dict get $diskdevices $devpath state]
+      switch -- $state {
+        verifying -
+        writing   { set_ui_progress $ui $state $percentage $eta }
       }
     }
 
     start_writing {
       dict set diskdevices $devpath state start_writing
       update_disklabel $devpath
-      start_preparation $devpath 10
+      start_preparation $devpath 40
     }
 
     verifying {
@@ -485,8 +492,8 @@ proc set_devstate {devpath state args} {
         if {$fh ne ""} {
           dict set diskdevices $devpath state verifying
 
-          $ui.info.status  configure -text  -
-          $ui.pb_frame.bar configure -value 0
+          # XXX how to update?
+          # $ui.info.status  configure -text  -
         }
       } else {
         # if image is not in disk, move on to start_writing
@@ -501,8 +508,8 @@ proc set_devstate {devpath state args} {
       if {$fh ne ""} {
         dict set diskdevices $devpath state writing
 
-        $ui.info.status  configure -text  -
-        $ui.pb_frame.bar configure -value 0
+        # XXX how to update?
+        # $ui.info.status  configure -text  -
       }
     }
   }
@@ -586,34 +593,88 @@ proc make_usbport_label {port_id port_ui {update false}} {
 }
 
 proc make_usbport_ui_elements {devpath port_id port_ui} {
+  global default_background_color
+
+  canvas ${port_ui} -height 42 -width 215 \
+         -background $default_background_color -highlightthickness 0
+  ${port_ui} create image 0 22 -image flash_drive_white -anchor w
+
+  set_usbport_image $port_ui flash_drive_white
+  ${port_ui} create image 0 22 -image "${port_ui}_overlay_image" -anchor w
+  ${port_ui} create text  180 18 -font infoFont -text $port_id -anchor e
+
+  # XXX
+  return
+
   ttk::frame ${port_ui} -borderwidth 1
   ttk::frame ${port_ui}.info
-  ttk::frame ${port_ui}.pb_frame -height 8
 
   make_usbport_label $port_id $port_ui
 
   ttk::label ${port_ui}.info.disklabel -text "" -font infoFont
   ttk::label ${port_ui}.info.status -width 20 -font infoFont
-  ttk::progressbar ${port_ui}.pb_frame.bar -orient horizontal \
-                   -maximum 100 -value 0
 
   pack_usbport_ui_elements $port_ui
 }
 
 proc pack_usbport_ui_elements {port_ui} {
+  # XXX
+  return
+
+  # XXX how to update?
   pack forget ${port_ui}.info.port_label \
               ${port_ui}.info.status     \
               ${port_ui}.info.disklabel  \
-              ${port_ui}.info            \
-              ${port_ui}.pb_frame
+              ${port_ui}.info
 
   pack ${port_ui}.info.port_label \
        ${port_ui}.info.status     \
        ${port_ui}.info.disklabel  \
        -side left -padx 16
-  pack ${port_ui}.info ${port_ui}.pb_frame -expand 1 -fill x
-  place ${port_ui}.pb_frame.bar -in ${port_ui}.pb_frame \
-        -relwidth 1.0 -relheight 1.0
+}
+
+proc set_usbport_image {port_ui imagename {new_width {}}} {
+  global flash_drive_image_width paths
+  set ui_image "${port_ui}_overlay_image"
+
+  if {$new_width ne ""} {
+    set new_width_in_pixels [
+      expr { int($new_width * $flash_drive_image_width) }
+    ]
+
+    set current_width [$ui_image cget -width]
+    if {$current_width != $new_width_in_pixels} {
+      image create photo $ui_image -file $paths($imagename) \
+                                   -width $new_width_in_pixels
+    }
+  } else {
+    image create photo $ui_image -file $paths($imagename)
+  }
+}
+
+proc set_ui_progress {port_ui state percentage eta} {
+  # Make writing progress go from 1/4 to 7/8,
+  # the rest is verification progress (and change colour to indicate that).
+
+  set initial_offset [expr { 1.0/4 }]
+  set cutpoint       [expr { 7.0/8 }]
+
+  if {$state eq "writing"} {
+    set imagename  "flash_drive_blue"
+    set startpoint $initial_offset
+    set endpoint   $cutpoint
+  } else {
+    # this is verifying
+    set imagename  "flash_drive_yellow"
+    set startpoint $cutpoint
+    set endpoint   1.0
+  }
+
+  set new_width [expr {
+    $startpoint + ($percentage/100.0) * ($endpoint - $startpoint)
+  }]
+
+  set_usbport_image $port_ui $imagename $new_width
 }
 
 proc usbdevice_is_a_hub {usbpath} {
@@ -788,9 +849,7 @@ proc update_diskdevices {{force_ui_update false}} {
     dict for {product productinfo} $hubproducts {
       set portinfo [dict get $productinfo ports]
       if {[llength [dict keys $portinfo]] == 0} {
-        destroy [dict get $usbhubs $hub_id $product ui]
         dict unset usbhubs $hub_id $product
-        set regrid true
       }
     }
   }
@@ -802,42 +861,10 @@ proc update_diskdevices {{force_ui_update false}} {
 
   set ui_elements [list]
 
-  # add hubs that are missing
   dict for {hub_id hubproducts} $new_usbhubs {
     set sorted_products [dictionary_sort_by_label "hub/${hub_id}" \
                                                   [dict keys $hubproducts]]
-
-    foreach product $sorted_products {
-      if {[dict exists $usbhubs $hub_id $product]} {
-        set hub_ui [dict get $usbhubs $hub_id $product ui]
-        if {!$force_ui_update} {
-          lappend ui_elements [dict get $usbhubs $hub_id $product ui]
-          dict set usbhubs $hub_id $product ui $hub_ui
-          continue
-        }
-        destroy $hub_ui
-      }
-
-      # add UI for hub
-      set uisym_hub_id  [string map {. _      } $hub_id]
-      set uisym_product [string map {. _ " " _} $product]
-      set hub_ui ".f.disks.hub_${uisym_hub_id}_${uisym_product}"
-
-      set labelvar "hub/${hub_id}/${product}"
-      set usb_labels($labelvar) [get_label $labelvar $product]
-      if {$writable_labels} {
-        ttk::entry $hub_ui -textvariable usb_labels($labelvar) -width 50
-      } else {
-        ttk::label $hub_ui -textvariable usb_labels($labelvar)
-      }
-
-      lappend ui_elements $hub_ui
-      set regrid true
-
-      dict set usbhubs $hub_id $product ui $hub_ui
-    }
-
-    # add new hub ports to UI
+    # add new ports to UI
     dict for {product productinfo} $hubproducts {
       set sorted_ports [
         dictionary_sort_by_label port \
@@ -866,7 +893,9 @@ proc update_diskdevices {{force_ui_update false}} {
           set regrid true
         }
 
-        lappend ui_elements $port_ui
+        if {$port_ui ni $ui_elements} {
+          lappend ui_elements $port_ui
+        }
         dict set usbhubs $hub_id $product ports $port_id $devpath
       }
     }
@@ -877,17 +906,33 @@ proc update_diskdevices {{force_ui_update false}} {
   } else {
     grid forget .f.disks.nohubs_message
     if {$regrid} {
+      set max_row_elements 15
+      set total_element_count [llength $ui_elements]
+      set element_count $total_element_count
+      set need_for_columns 1
+      while {$element_count > $max_row_elements} {
+        set element_count [expr { $element_count - $max_row_elements }]
+        incr need_for_columns
+      }
+      set divisor [expr {
+        int(ceil((0.0 + $total_element_count) / $need_for_columns)) }
+      ]
+
+      set row_pos 1
+      set column_pos 1
       foreach ui $ui_elements {
         grid forget $ui
-        grid $ui -sticky w
+        grid $ui -row $row_pos -column $column_pos -sticky w -ipadx 5
+        if {$row_pos % $divisor == 0} { incr column_pos; set row_pos 0 }
+        incr row_pos
       }
     }
   }
 }
 
 proc read_usb_labels_from_disk {} {
-  global puavo_usb_factory_workpath usb_labels
-  set usblabels_json_path "${puavo_usb_factory_workpath}/usb_labels.json"
+  global paths usb_labels
+  set usblabels_json_path "$paths(puavo_usb_factory_workdir)/usb_labels.json"
 
   if {![file exists $usblabels_json_path]} {
     return
@@ -906,8 +951,8 @@ proc read_usb_labels_from_disk {} {
 }
 
 proc update_usb_labels_on_disk {} {
-  global puavo_usb_factory_workpath usb_labels
-  set usblabels_json_path "${puavo_usb_factory_workpath}/usb_labels.json"
+  global paths usb_labels
+  set usblabels_json_path "$paths(puavo_usb_factory_workdir)/usb_labels.json"
   set tmpfile "${usblabels_json_path}.tmp"
 
   set js_object [dict create]
@@ -924,98 +969,116 @@ proc update_usb_labels_on_disk {} {
   file rename -force $tmpfile $usblabels_json_path
 }
 
+proc scroll_topbanner {} {
+  global top_banner_pos topbanner_text_id
+  incr top_banner_pos -1
+  if {$top_banner_pos < 2250} {
+    set top_banner_pos 3000
+  }
+
+  .f.top_banner coords $topbanner_text_id $top_banner_pos 20
+  after 50 scroll_topbanner
+}
+
 #
 # setup UI
 #
 
+font create infoFont -family FreeSans -size 14 -weight bold
+font create biggerInfoFont -family FreeSans -size 22 -weight bold
+
 # style options
 
-# ttk::style theme Instructions Instructions -background black -foreground lightgrey
+set default_background_color #6392ac
+ttk::style configure TFrame -background $default_background_color
+ttk::style configure TLabel -background $default_background_color -font infoFont
 
-# XXX theme ?
-puts "available themes: [ttk::style theme names]"
-# ttk::style theme use clam
-puts "used theme: [ttk::style theme use]"
-
-font create titleFont       -family Arial -size 32 -weight bold
-font create descriptionFont -family "Domestic Manners" -size 20 -weight bold
-font create infoFont        -family FreeSans -size 14
-
-# ui messages
+# ui messages and background image
 
 try {
-  set ui_messages [
-    ::json::json2dict [read_file "[get_content_dir]/UI.json"]
-  ]
+  set content_dir [get_content_dir]
 } on error {} {
-  puts stderr "could not read ui messages from UI.json"
+  puts stderr "could not get content dir"
+  exit 1
+}
+try {
+  set bg_image_path "${content_dir}/UI.png"
+} on error {} {
+  puts stderr "could not read background image from ${content_dir}/UI.png"
+  exit 1
+}
+try {
+  set ui_messages [::json::json2dict [read_file "${content_dir}/UI.json"]]
+} on error {} {
+  puts stderr "could not read ui messages from ${content_dir}/UI.json"
   exit 1
 }
 
 # ui elements
 
-ttk::frame .f
-
-pack .f
-
-# images
-# XXX using ttk for image?
+canvas .f
 image create photo bg_photo
-label .f.bg -image bg_photo
-image create photo support_photo
-label .f.support_photo -image support_photo
+set canvas_image_index [.f create image 0 0 -image bg_photo]
 
-ttk::frame .f.instructions -width 600 -height 200
+image create photo flash_drive_white -file $paths(flash_drive_white)
+set flash_drive_image_width [image width flash_drive_white]
 
-ttk::label .f.instructions.title -text [ui_msg title] \
-                                 -wraplength 600      \
-                                 -padding 20          \
-                                 -font titleFont
-ttk::label .f.instructions.description -text [ui_msg description] \
-                                       -wraplength 600            \
-                                       -padding 20                \
-                                       -font descriptionFont
-ttk::label .f.instructions.steps -text [ui_msg instructions] \
-                                 -wraplength 600             \
-                                 -padding 20                 \
-                                 -font descriptionFont
+set top_banner_pos 3000
+set top_banner_description ""
+foreach i {1 2 3 4 5 6 7 8 9} {
+  set top_banner_description "$top_banner_description   [ui_msg description]"
+}
+canvas .f.top_banner -background darkmagenta -height 40
+set topbanner_text_id [
+  .f.top_banner create text $top_banner_pos 20               \
+                -justify center -font infoFont -fill #ffdddd \
+                -text $top_banner_description -width 8000
+]
+
+ttk::label .f.instructions -text [ui_msg instructions] \
+                           -wraplength 600             \
+                           -padding 20                 \
+                           -font biggerInfoFont
 
 ttk::frame .f.version_status
-ttk::label .f.version_status.version_label \
+ttk::frame .f.version_status.version
+ttk::frame .f.version_status.download
+ttk::frame .f.version_status.hostname
+
+ttk::label .f.version_status.version.label \
            -text [ui_msg "version label"] -font infoFont
-ttk::label .f.version_status.version_number -font infoFont
-ttk::label .f.version_status.download_status_label \
+ttk::label .f.version_status.version.number -font infoFont
+ttk::label .f.version_status.download.label \
            -text [ui_msg "download status label"] -font infoFont
-ttk::label .f.version_status.download_status -font infoFont
-ttk::label .f.version_status.hostname_label \
+ttk::label .f.version_status.download.status -font infoFont
+ttk::label .f.version_status.hostname.label \
            -text [ui_msg "hostname label"] -font infoFont
-ttk::label .f.version_status.hostname -text [exec hostname -f] \
-                                      -font infoFont
+ttk::label .f.version_status.hostname.value -text [exec hostname] \
+                                            -font infoFont
 
 ttk::frame .f.disks
 ttk::label .f.disks.nohubs_message -font infoFont \
                                    -text [ui_msg "waiting usb hubs"]
 
-place .f.instructions -relx 0.02 -rely 0.05
-pack .f.instructions.title \
-     .f.instructions.description \
-     .f.instructions.steps -anchor w
+pack .f.top_banner -side top -fill x
 
-place .f.version_status -relx 0.1 -rely 0.7
+pack .f.version_status -side bottom -ipady 14 -fill x
+pack .f.version_status.version  \
+     .f.version_status.download \
+     .f.version_status.hostname -side left -padx 50
+pack .f.version_status.version.label .f.version_status.version.number \
+     -side left -padx 5
+pack .f.version_status.download.label .f.version_status.download.status \
+     -side left -padx 5
+pack .f.version_status.hostname.label .f.version_status.hostname.value \
+     -side left -padx 5
 
-grid .f.version_status.version_label         \
-     .f.version_status.version_number -sticky w
-grid .f.version_status.download_status_label \
-     .f.version_status.download_status -sticky w
-grid .f.version_status.hostname_label \
-     .f.version_status.hostname -sticky w
+pack .f.instructions -side left -anchor n -padx 40 -pady 40
 
-place .f.disks -relx 0.49 -rely 0.05
+pack .f.disks -side right
 grid .f.disks.nohubs_message
 
-place .f.support_photo -relx 0.16 -rely 0.88
-
-pack .f .f.bg -fill both -expand 1
+pack .f -fill both -expand 1
 
 bind . <Configure> {
   if {"%W" eq [winfo toplevel %W]} {
@@ -1024,6 +1087,7 @@ bind . <Configure> {
 }
 
 bind . <Control-x> {
+  return        ;# XXX disabled until this functionality works again
   set writable_labels [expr { $writable_labels ? "false" : "true" }]
   if {!$writable_labels} {
     update_usb_labels_on_disk
@@ -1031,6 +1095,7 @@ bind . <Control-x> {
   update_diskdevices true
 }
 
+scroll_topbanner
 read_usb_labels_from_disk
 update_image_info
 update_diskdevices_loop
