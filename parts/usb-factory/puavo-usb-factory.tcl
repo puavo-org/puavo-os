@@ -975,12 +975,12 @@ proc scroll_topbanner {} {
 # setup UI
 #
 
-font create descriptionFont -family "Domestic Manners" -size 20 -weight bold
-font create infoFont        -family FreeSans           -size 14 -weight bold
+font create infoFont -family FreeSans -size 14 -weight bold
+font create biggerInfoFont -family FreeSans -size 22 -weight bold
 
 # style options
 
-set default_background_color #9c62ac
+set default_background_color #6392ac
 ttk::style configure TFrame -background $default_background_color
 ttk::style configure TLabel -background $default_background_color -font infoFont
 
@@ -1029,7 +1029,7 @@ set topbanner_text_id [
 ttk::label .f.instructions -text [ui_msg instructions] \
                            -wraplength 600             \
                            -padding 20                 \
-                           -font descriptionFont
+                           -font biggerInfoFont
 
 ttk::frame .f.version_status
 ttk::frame .f.version_status.version
