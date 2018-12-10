@@ -117,28 +117,35 @@ mkdir -p "$abitti_images_dir" "$incoming_dir"
 cat <<'EOF' > "${abitti_images_dir}/UI.json.tmp"
 {
   "title": "Tikkutehdas",
-  "description": "HUOM!  Abittitikun tekeminen aloitetaan automaattisesti, kun usb-tikku liitetään koneeseen.  Kaikki siinä oleva vanha sisältö poistetaan!",
-  "instructions": "- Aseta usb-tikku usb-jakajaan\n- Odota Abitti-tikun valmistumista\n- Irrota valmis tikku",
+  "description": "HUOMIO!  Kun USB-tikku liitetään koneeseen, kaikki siinä oleva sisältö poistetaan!",
+  "instructions": "OHJEET\nAseta usb-tikku usb-jakajaan.\nOdota Abitti-tikun valmistumista.\nIrrota valmis tikku.",
   "version label": "Abittiversio:",
   "hostname label": "Koneen nimi:",
   "download status label": "Päivitystilanne:",
   "waiting usb hubs": "Odotellaan USB-hubeja...",
   "download state": {
-    "up-to-date": "Abitti on ajantasainen.",
-    "in progress": "Tikkutehdas hakee uusinta Abittia.",
+    "up-to-date": "Abitti on ajantasainen",
+    "in progress": "Tikkutehdas hakee uusinta Abittia",
     "failed": "Uusimman Abitin haku epäonnistui",
-    "missing": "Abitti puuttuu.",
-    "undefined": "Lataustila on epämääräinen."
+    "missing": "Abitti puuttuu",
+    "undefined": "Lataustila on epämääräinen"
   },
   "messages": {
     "error": "virhe",
     "finished": "valmis",
     "nospaceondevice": "liian pieni tikku",
-    "starting": "aloitetaan"
+    "start_writing": "aloitetaan",
+    "verifying": "tarkistetaan",
+    "writing": "kirjoitetaan"
   }
 }
 EOF
 mv "${abitti_images_dir}/UI.json.tmp" "${abitti_images_dir}/UI.json"
+if ! cmp "/usr/local/share/puavo-download-abitti-usb-stick-images/UI.png" \
+         "${abitti_images_dir}/UI.png" >/dev/null 2>&1; then
+  cp -p "/usr/local/share/puavo-download-abitti-usb-stick-images/UI.png" \
+        "${abitti_images_dir}/UI.png"
+fi
 
 (
   if ! flock -n 9; then

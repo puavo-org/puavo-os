@@ -3,7 +3,15 @@ class abitti {
   include ::packages
   include ::puavo_conf
 
+  $image_dir = '/usr/local/share/puavo-download-abitti-usb-stick-images':
+
   file {
+    $image_dir:
+      ensure => directory;
+
+    "${image_dir}/UI.png":
+      source => 'puppet:///modules/abitti/UI.png';
+
     '/etc/systemd/system/multi-user.target.wants/puavo-trigger-abitti-updates.service':
       ensure  => link,
       require => File['/etc/systemd/system/puavo-trigger-abitti-updates.service'],
@@ -14,8 +22,9 @@ class abitti {
       source  => 'puppet:///modules/abitti/puavo-trigger-abitti-updates.service';
 
     '/usr/local/bin/puavo-download-abitti-usb-stick-images':
-      mode   => '0755',
-      source => 'puppet:///modules/abitti/puavo-download-abitti-usb-stick-images';
+      mode    => '0755',
+      require => File['/usr/local/share/puavo-download-abitti-usb-stick-images/UI.png'],
+      source  => 'puppet:///modules/abitti/puavo-download-abitti-usb-stick-images';
 
     '/usr/local/lib/puavo-trigger-abitti-updates':
       mode    => '0755',
