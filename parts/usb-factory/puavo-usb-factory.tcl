@@ -1055,6 +1055,7 @@ bind . <Configure> {
 }
 
 bind . <Control-x> {
+  return        ;# XXX disabled until this functionality works again
   set writable_labels [expr { $writable_labels ? "false" : "true" }]
   if {!$writable_labels} {
     update_usb_labels_on_disk
