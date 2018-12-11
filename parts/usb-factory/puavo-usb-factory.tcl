@@ -984,8 +984,8 @@ proc scroll_topbanner {} {
 # setup UI
 #
 
-font create infoFont -family FreeSans -size 14 -weight bold
-font create biggerInfoFont -family FreeSans -size 22 -weight bold
+font create infoFont -family {Ubuntu Condensed} -size 20 -weight bold
+font create biggerInfoFont -family {Ubuntu Condensed} -size 24 -weight bold
 
 # style options
 
@@ -1028,17 +1028,18 @@ set top_banner_description ""
 foreach i {1 2 3 4 5 6 7 8 9} {
   set top_banner_description "$top_banner_description   [ui_msg description]"
 }
-canvas .f.top_banner -background darkmagenta -height 40
+canvas .f.top_banner -background #95b6bf -height 40 \
+                     -highlightthickness 0
 set topbanner_text_id [
-  .f.top_banner create text $top_banner_pos 20               \
-                -justify center -font infoFont -fill #ffdddd \
-                -text $top_banner_description -width 8000
+  .f.top_banner create text $top_banner_pos 30                     \
+                -justify center -font biggerInfoFont -fill #ffdddd \
+                -text $top_banner_description -width 10000
 ]
 
 ttk::label .f.instructions -text [ui_msg instructions] \
                            -wraplength 600             \
                            -padding 20                 \
-                           -font biggerInfoFont
+                           -font infoFont
 
 ttk::frame .f.version_status
 ttk::frame .f.version_status.version
@@ -1063,14 +1064,14 @@ ttk::label .f.disks.nohubs_message -font infoFont \
 pack .f.top_banner -side top -fill x
 
 pack .f.version_status -side bottom -ipady 14 -fill x
-pack .f.version_status.version  \
-     .f.version_status.download \
-     .f.version_status.hostname -side left -padx 50
+pack .f.version_status.hostname \
+     .f.version_status.version  \
+     .f.version_status.download -side left -padx 30
+pack .f.version_status.hostname.label .f.version_status.hostname.value \
+     -side left -padx 5
 pack .f.version_status.version.label .f.version_status.version.number \
      -side left -padx 5
 pack .f.version_status.download.label .f.version_status.download.status \
-     -side left -padx 5
-pack .f.version_status.hostname.label .f.version_status.hostname.value \
      -side left -padx 5
 
 pack .f.instructions -side left -anchor n -padx 40 -pady 40
