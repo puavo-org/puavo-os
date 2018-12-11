@@ -336,56 +336,6 @@ proc handle_fileevent {devpath} {
   }
 }
 
-proc update_disklabel {devpath {label "LOOKUP"}} {
-  global diskdevices
-
-  # XXX this function does not show its result now anywhere, so just return
-  return
-
-  if {![dict exists $diskdevices $devpath]} {
-    return
-  }
-
-  set port_ui [dict get $diskdevices $devpath ui]
-
-  if {$label ne "LOOKUP"} {
-    set device_label $label
-  } else {
-    set device_label "???"
-    try {
-      if {![regexp {usb-0:(.*?):} $devpath _ pci_devpath]} {
-        error "$devpath is in unexpected format"
-      }
-
-      set matches [glob "/sys/bus/usb/devices/\[0-9\]-${pci_devpath}"]
-      if {[llength $matches] != 1} {
-        error "multiple paths match when looking path under $pci_devpath"
-      }
-
-      set device_infodir [lindex $matches 0]
-
-      set manufacturer [read_file "${device_infodir}/manufacturer"]
-      set product      [read_file "${device_infodir}/product"]
-      set device_size_in_bytes [get_device_size $devpath]
-
-      set device_size "?"
-      if {$device_size_in_bytes ne ""} {
-        set device_size_in_gigabytes [
-          expr { (0.0 + $device_size_in_bytes) / (10**9) }
-        ]
-        set device_size [format "%.1fGB" $device_size_in_gigabytes]
-      }
-
-      set device_label "$manufacturer / $product ($device_size)"
-    } on error {errmsg} {
-      puts stderr "could not lookup path for $devpath: $errmsg"
-    }
-  }
-
-  # XXX we could do this somehow?
-  # set_rotating_label $port_ui messages [list $device_label]
-}
-
 proc set_ui_status_to_nomedia {devpath} {
   global diskdevices
 
@@ -466,8 +416,6 @@ proc set_devstate {devpath state args} {
         dict set diskdevices $devpath state         nomedia
         dict set diskdevices $devpath version       ""
 
-        update_disklabel $devpath ""
-
         if {$current_state eq "error"} {
           # show error message for ten seconds in UI
           after 10000 [list set_ui_status_to_nomedia $devpath]
@@ -480,7 +428,6 @@ proc set_devstate {devpath state args} {
     nospaceondevice {
       close_if_open $devpath
       dict set diskdevices $devpath state nospaceondevice
-      update_disklabel $devpath
       set_rotating_label $port_ui messages \
                          [list [ui_msg messages nospaceondevice]]
       set_usbport_image $port_ui flash_drive_red
@@ -498,14 +445,12 @@ proc set_devstate {devpath state args} {
 
     start_writing {
       dict set diskdevices $devpath state start_writing
-      update_disklabel $devpath
       start_preparation $devpath 41
     }
 
     verifying_after_write -
     verifying {
       if {[quick_verify_check $devpath]} {
-        update_disklabel $devpath
         set fh [start_verifying $devpath]
         dict set diskdevices $devpath fh $fh
         if {$fh ne ""} {
