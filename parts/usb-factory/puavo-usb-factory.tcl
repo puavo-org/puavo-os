@@ -1,4 +1,4 @@
-#!/usr/bin/wish
+#!/usr/bin/env wish
 
 package require json
 package require json::write
