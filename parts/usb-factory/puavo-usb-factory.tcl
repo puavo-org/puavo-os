@@ -194,6 +194,8 @@ proc start_preparation {devpath countdown} {
 
   set port_ui [dict get $diskdevices $devpath ui]
 
+  set_rotating_label $port_ui messages [list [ui_msg messages start_writing]]
+
   if {$countdown == 0} {
     set_devstate $devpath writing
     return
@@ -269,11 +271,24 @@ proc set_device_eta {devpath bytes_written} {
 
   lassign $cut_progress_times first_time first_bytes_written
 
+  set percentage [expr { round(100.0 * $bytes_written / $image_size) }]
+
+  if {[dict get $diskdevices $devpath state] eq "writing"} {
+    # We do a strange trick... if we are writing, we know that
+    # there is going to be a verification operation afterwards,
+    # and we want to estimate that in the ETA, so we add a bit to the
+    # image size with the expection that hopefully this estimates the
+    # total time of writing + verification.
+    set phantom_image_size [expr { int(8.0/7 * $image_size) }]
+  } else {
+    set phantom_image_size $image_size
+  }
+
   set eta -
   if {$first_time ne "" && $first_bytes_written ne ""} {
     set bytes_diff [expr { $bytes_written - $first_bytes_written }]
     set time_diff  [expr { $current_time_in_ms - $first_time }]
-    set bytes_left [expr { $image_size - $bytes_written }]
+    set bytes_left [expr { $phantom_image_size - $bytes_written }]
 
     if {$time_diff > 0} {
       set speed [expr { $bytes_diff / $time_diff }]
@@ -285,9 +300,7 @@ proc set_device_eta {devpath bytes_written} {
     }
   }
 
-  set percentage [expr { round(100.0 * $bytes_written / $image_size) }]
-
-  set_devstate $devpath progress $eta $percentage
+  set_devstate $devpath progress $percentage $eta
 }
 
 proc handle_fileevent {devpath} {
@@ -298,15 +311,19 @@ proc handle_fileevent {devpath} {
 
   if {[eof $fh]} {
     if {[catch { close $fh }]} {
-      if {[dict get $diskdevices $devpath state] eq "verifying"} {
+      set state [dict get $diskdevices $devpath state
+      if {$state eq "verifying"} {
         set_devstate $devpath start_writing
       } else {
         set_devstate $devpath error
       }
     } else {
       switch -- [dict get $diskdevices $devpath state] {
-        writing   { set_devstate $devpath verifying }
-        verifying { set_devstate $devpath finished  }
+        writing { set_devstate $devpath verifying_after_write }
+        verifying -
+        verifying_after_write {
+          set_devstate $devpath finished
+        }
       }
     }
     return
@@ -470,29 +487,29 @@ proc set_devstate {devpath state args} {
     }
 
     progress {
-      lassign $args eta percentage
+      lassign $args percentage eta
       set state [dict get $diskdevices $devpath state]
       switch -- $state {
         verifying -
-        writing   { set_ui_progress $port_ui $state $percentage $eta }
+        verifying_after_write -
+        writing { set_ui_progress $port_ui $state $percentage $eta }
       }
     }
 
     start_writing {
       dict set diskdevices $devpath state start_writing
       update_disklabel $devpath
-      set_rotating_label $port_ui messages \
-                         [list [ui_msg messages start_writing]]
       start_preparation $devpath 40
     }
 
+    verifying_after_write -
     verifying {
       if {[quick_verify_check $devpath]} {
         update_disklabel $devpath
         set fh [start_verifying $devpath]
         dict set diskdevices $devpath fh $fh
         if {$fh ne ""} {
-          dict set diskdevices $devpath state verifying
+          dict set diskdevices $devpath state $state
           set_rotating_label $port_ui messages \
                              [list [ui_msg messages verifying]]
         }
@@ -664,17 +681,25 @@ proc set_ui_progress {port_ui state percentage eta} {
   set initial_offset [expr { 1.0/4 }]
   set cutpoint       [expr { 7.0/8 }]
 
-  if {$state eq "writing"} {
-    set imagename  "flash_drive_blue"
-    set startpoint $initial_offset
-    set endpoint   $cutpoint
-    set msg        [ui_msg messages writing]
-  } else {
-    # this is verifying
-    set imagename  "flash_drive_yellow"
-    set startpoint $cutpoint
-    set endpoint   1.0
-    set msg        [ui_msg messages verifying]
+  switch -- $state {
+    verifying {
+      set imagename  "flash_drive_yellow"
+      set startpoint $initial_offset
+      set endpoint   1.0
+      set msg        [ui_msg messages verifying]
+    }
+    verifying_after_write {
+      set imagename  "flash_drive_yellow"
+      set startpoint $cutpoint
+      set endpoint   1.0
+      set msg        [ui_msg messages verifying]
+    }
+    writing {
+      set imagename  "flash_drive_blue"
+      set startpoint $initial_offset
+      set endpoint   $cutpoint
+      set msg        [ui_msg messages writing]
+    }
   }
 
   set new_width [expr {
