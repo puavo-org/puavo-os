@@ -570,67 +570,26 @@ proc check_files {} {
   after 250 check_files
 }
 
-proc make_usbport_label {port_id port_ui {update false}} {
-  global usb_labels writable_labels
+proc make_usbport_label {devpath port_id port_ui {update false}} {
+  global default_background_color usb_labels writable_labels
 
-  set label_ui $port_ui.info.port_label
+  if {$update} { destroy $port_ui }
+
   set labelvar "port/${port_id}"
   set usb_labels($labelvar) [get_label $labelvar $port_id]
 
-  if {$update} { destroy $label_ui }
-
   if {$writable_labels} {
-    ttk::entry $label_ui -textvariable usb_labels($labelvar) \
-                                       -font infoFont -width 10
+    ttk::entry $port_ui -textvariable usb_labels($labelvar) \
+                        -font infoFont -justify center -width 14
   } else {
-    ttk::label $label_ui -textvariable usb_labels($labelvar) \
-                                       -font infoFont -width 10
+    canvas $port_ui -background $default_background_color -height 42 \
+                    -highlightthickness 0 -width 215
+    ${port_ui} create image 0 22 -image flash_drive_white -anchor w
+
+    set_usbport_image $port_ui flash_drive_white
+    ${port_ui} create image 0 22 -image "${port_ui}_overlay_image" -anchor w
+    ${port_ui} create text  120 18 -font infoFont -text $usb_labels($labelvar)
   }
-
-  if {$update} {
-    pack_usbport_ui_elements $port_ui
-  }
-}
-
-proc make_usbport_ui_elements {devpath port_id port_ui} {
-  global default_background_color
-
-  canvas ${port_ui} -height 42 -width 215 \
-         -background $default_background_color -highlightthickness 0
-  ${port_ui} create image 0 22 -image flash_drive_white -anchor w
-
-  set_usbport_image $port_ui flash_drive_white
-  ${port_ui} create image 0 22 -image "${port_ui}_overlay_image" -anchor w
-  ${port_ui} create text  180 18 -font infoFont -text $port_id -anchor e
-
-  # XXX
-  return
-
-  ttk::frame ${port_ui} -borderwidth 1
-  ttk::frame ${port_ui}.info
-
-  make_usbport_label $port_id $port_ui
-
-  ttk::label ${port_ui}.info.disklabel -text "" -font infoFont
-  ttk::label ${port_ui}.info.status -width 20 -font infoFont
-
-  pack_usbport_ui_elements $port_ui
-}
-
-proc pack_usbport_ui_elements {port_ui} {
-  # XXX
-  return
-
-  # XXX how to update?
-  pack forget ${port_ui}.info.port_label \
-              ${port_ui}.info.status     \
-              ${port_ui}.info.disklabel  \
-              ${port_ui}.info
-
-  pack ${port_ui}.info.port_label \
-       ${port_ui}.info.status     \
-       ${port_ui}.info.disklabel  \
-       -side left -padx 16
 }
 
 proc set_usbport_image {port_ui imagename {new_width {}}} {
@@ -879,10 +838,11 @@ proc update_diskdevices {{force_ui_update false}} {
         # may be in two different products (USB2.0 vs. USB3.0).
         if {[dict exists $diskdevices $devpath]} {
           if {$force_ui_update} {
-            make_usbport_label $port_id $port_ui true
+            make_usbport_label $devpath $port_id $port_ui true
+            set regrid true
           }
         } else {
-          make_usbport_ui_elements $devpath $port_id $port_ui
+          make_usbport_label $devpath $port_id $port_ui
           dict set diskdevices $devpath [
             dict create fh            ""       \
                         image_size    ""       \
@@ -1088,7 +1048,6 @@ bind . <Configure> {
 }
 
 bind . <Control-x> {
-  return        ;# XXX disabled until this functionality works again
   set writable_labels [expr { $writable_labels ? "false" : "true" }]
   if {!$writable_labels} {
     update_usb_labels_on_disk
