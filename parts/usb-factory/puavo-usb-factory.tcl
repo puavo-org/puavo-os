@@ -23,6 +23,7 @@ set image_info {
 }
 
 set ui_messages {}
+array set rotating_usb_labels ""
 array set usb_labels ""
 set writable_labels false
 
@@ -321,11 +322,14 @@ proc handle_fileevent {devpath} {
 proc update_disklabel {devpath {label "LOOKUP"}} {
   global diskdevices
 
+  # XXX this function does not show its result now anywhere, so just return
+  return
+
   if {![dict exists $diskdevices $devpath]} {
     return
   }
 
-  set ui [dict get $diskdevices $devpath ui]
+  set port_ui [dict get $diskdevices $devpath ui]
 
   if {$label ne "LOOKUP"} {
     set device_label $label
@@ -361,8 +365,8 @@ proc update_disklabel {devpath {label "LOOKUP"}} {
     }
   }
 
-  # XXX how to update disklabel?
-  # $ui.info.disklabel configure -text $device_label
+  # XXX we could do this somehow?
+  # set_rotating_label $port_ui messages [list $device_label]
 }
 
 proc set_ui_status_to_nomedia {devpath} {
@@ -374,8 +378,7 @@ proc set_ui_status_to_nomedia {devpath} {
 
   set port_ui [dict get $diskdevices $devpath ui]
   if {[dict get $diskdevices $devpath state] eq "nomedia"} {
-    # XXX how to update?
-    # $ui.info.status configure -text ""
+    set_rotating_label $port_ui messages [list]
     set_usbport_image $port_ui flash_drive_white
   }
 }
@@ -412,17 +415,14 @@ proc quick_verify_check {devpath} {
 proc set_devstate {devpath state args} {
   global diskdevices image_info
 
-  set ui [dict get $diskdevices $devpath ui]
+  set port_ui [dict get $diskdevices $devpath ui]
 
   switch -- $state {
     error {
       close_if_open $devpath
       dict set diskdevices $devpath state error
 
-      set port_ui [dict get $diskdevices $devpath ui]
-
-      # XXX how to update?
-      # $ui.info.status configure -text [ui_msg messages error]
+      set_rotating_label $port_ui messages [list [ui_msg messages error]]
       set_usbport_image $port_ui flash_drive_red
     }
 
@@ -431,10 +431,9 @@ proc set_devstate {devpath state args} {
       dict set diskdevices $devpath state finished
 
       set version [dict get $diskdevices $devpath version]
-      set port_ui [dict get $diskdevices $devpath ui]
 
-      # XXX how to update version?
-      # $ui.info.status configure -text "[ui_msg messages finished] $version"
+      set_rotating_label $port_ui messages \
+                         [list "[ui_msg messages finished] $version"]
       set_usbport_image $port_ui flash_drive_green
     }
 
@@ -465,8 +464,9 @@ proc set_devstate {devpath state args} {
       close_if_open $devpath
       dict set diskdevices $devpath state nospaceondevice
       update_disklabel $devpath
-      # XXX how to update?
-      # $ui.info.status configure -text [ui_msg messages nospaceondevice]
+      set_rotating_label $port_ui messages \
+                         [list [ui_msg messages nospaceondevice]]
+      set_usbport_image $port_ui flash_drive_red
     }
 
     progress {
@@ -474,13 +474,15 @@ proc set_devstate {devpath state args} {
       set state [dict get $diskdevices $devpath state]
       switch -- $state {
         verifying -
-        writing   { set_ui_progress $ui $state $percentage $eta }
+        writing   { set_ui_progress $port_ui $state $percentage $eta }
       }
     }
 
     start_writing {
       dict set diskdevices $devpath state start_writing
       update_disklabel $devpath
+      set_rotating_label $port_ui messages \
+                         [list [ui_msg messages start_writing]]
       start_preparation $devpath 40
     }
 
@@ -491,9 +493,8 @@ proc set_devstate {devpath state args} {
         dict set diskdevices $devpath fh $fh
         if {$fh ne ""} {
           dict set diskdevices $devpath state verifying
-
-          # XXX how to update?
-          # $ui.info.status  configure -text  -
+          set_rotating_label $port_ui messages \
+                             [list [ui_msg messages verifying]]
         }
       } else {
         # if image is not in disk, move on to start_writing
@@ -507,9 +508,8 @@ proc set_devstate {devpath state args} {
 
       if {$fh ne ""} {
         dict set diskdevices $devpath state writing
-
-        # XXX how to update?
-        # $ui.info.status  configure -text  -
+        set_rotating_label $port_ui messages \
+                           [list [ui_msg messages writing]]
       }
     }
   }
@@ -570,25 +570,71 @@ proc check_files {} {
   after 250 check_files
 }
 
+proc roll_rotating_usb_labels {list_index} {
+  global diskdevices rotating_usb_labels writable_labels
+
+  if {!$writable_labels} {
+    dict for {devpath devstate} $diskdevices {
+      set port_ui [dict get $devstate ui]
+      set i [expr { $list_index % [llength $rotating_usb_labels($port_ui)] }]
+      set labeltext [lindex $rotating_usb_labels($port_ui) $i]
+      $port_ui itemconfigure port_label -text $labeltext
+    }
+  }
+
+  if {$list_index % (2 * 3 * 5 * 7) == 0} {
+    set list_index 0
+  }
+
+  incr list_index
+  after 1500 [list roll_rotating_usb_labels $list_index]
+}
+
+proc set_rotating_label {port_ui type messages} {
+  global rotating_usb_labels
+
+  if {$type eq "port"} {
+    set list_start [list {*}$messages {*}$messages]
+    if {[info exists rotating_usb_labels($port_ui)]} {
+      set list_end [lrange rotating_usb_labels($port_ui) end-1 end]
+    } else {
+      set list_end [list]
+    }
+  } else {
+    set list_start [lrange $rotating_usb_labels($port_ui) 0 1]
+    if {[llength $messages] == 0} {
+      set list_end $list_start
+    } elseif {[llength $messages] == 1} {
+      set list_end [list {*}$messages {*}$messages]
+    } else {
+      set list_end $messages
+    }
+  }
+
+  set rotating_usb_labels($port_ui) [list {*}$list_start {*}$list_end]
+}
+
 proc make_usbport_label {devpath port_id port_ui {update false}} {
-  global default_background_color usb_labels writable_labels
+  global default_background_color rotating_usb_labels usb_labels writable_labels
 
   if {$update} { destroy $port_ui }
 
   set labelvar "port/${port_id}"
   set usb_labels($labelvar) [get_label $labelvar $port_id]
 
+  set_rotating_label $port_ui port $usb_labels($labelvar)
   if {$writable_labels} {
     ttk::entry $port_ui -textvariable usb_labels($labelvar) \
-                        -font infoFont -justify center -width 14
+                        -font smallInfoFont -justify center -width 14
   } else {
     canvas $port_ui -background $default_background_color -height 42 \
                     -highlightthickness 0 -width 215
-    ${port_ui} create image 0 22 -image flash_drive_white -anchor w
+    $port_ui create image 0 22 -image flash_drive_white -anchor w
 
     set_usbport_image $port_ui flash_drive_white
-    ${port_ui} create image 0 22 -image "${port_ui}_overlay_image" -anchor w
-    ${port_ui} create text  120 18 -font infoFont -text $usb_labels($labelvar)
+    $port_ui create image 0 22 -image "${port_ui}_overlay_image" -anchor w
+    $port_ui create text  120 18 -font smallInfoFont -tags port_label \
+             -text $usb_labels($labelvar)]
   }
 }
 
@@ -622,17 +668,20 @@ proc set_ui_progress {port_ui state percentage eta} {
     set imagename  "flash_drive_blue"
     set startpoint $initial_offset
     set endpoint   $cutpoint
+    set msg        [ui_msg messages writing]
   } else {
     # this is verifying
     set imagename  "flash_drive_yellow"
     set startpoint $cutpoint
     set endpoint   1.0
+    set msg        [ui_msg messages verifying]
   }
 
   set new_width [expr {
     $startpoint + ($percentage/100.0) * ($endpoint - $startpoint)
   }]
 
+  set_rotating_label $port_ui messages [list $msg $eta]
   set_usbport_image $port_ui $imagename $new_width
 }
 
@@ -944,7 +993,8 @@ proc scroll_topbanner {} {
 # setup UI
 #
 
-font create infoFont -family {Ubuntu Condensed} -size 20 -weight bold
+font create smallInfoFont  -family {Ubuntu Condensed} -size 14 -weight bold
+font create infoFont       -family {Ubuntu Condensed} -size 20 -weight bold
 font create biggerInfoFont -family {Ubuntu Condensed} -size 24 -weight bold
 
 # style options
@@ -1060,3 +1110,4 @@ read_usb_labels_from_disk
 update_image_info
 update_diskdevices_loop
 check_files
+roll_rotating_usb_labels 0
