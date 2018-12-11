@@ -236,18 +236,18 @@ proc start_verifying {devpath} {
   global image_info pci_path_dir
   set image_size [dict get $image_info image_size]
   set srcfile     [dict get $image_info latest_image_path]
-  set cmd "pv -b -n $srcfile | cmp -n $image_size ${pci_path_dir}/${devpath} - 2>@1"
+  set cmd "nice -n 20 ionice -c 3 pv -b -n $srcfile | nice -n 20 ionice -c 3 cmp -n $image_size ${pci_path_dir}/${devpath} - 2>@1"
   start_operating $devpath $cmd
 }
 
 proc start_writing {devpath} {
   global image_info pci_path_dir
   set srcfile [dict get $image_info latest_image_path]
-  set cmd "pv -b -n $srcfile | dd of=${pci_path_dir}/${devpath} conv=fsync,nocreat status=none 2>@1"
+  set cmd "nice -n 20 ionice -c 3 pv -b -n $srcfile | nice -n 20 ionice -c 3 dd of=${pci_path_dir}/${devpath} conv=fsync,nocreat status=none 2>@1"
   start_operating $devpath $cmd
 }
 
-proc set_device_eta {devpath bytes_written} {
+proc set_device_eta {devpath bytes_handled} {
   global diskdevices image_info
 
   set image_size [dict get $diskdevices $devpath image_size]
@@ -255,40 +255,40 @@ proc set_device_eta {devpath bytes_written} {
   set current_time_in_ms [clock milliseconds]
 
   set progress_list [dict get $diskdevices $devpath progress_list]
-  lappend progress_list $current_time_in_ms $bytes_written
+  lappend progress_list $current_time_in_ms $bytes_handled
   dict set diskdevices $devpath progress_list $progress_list
 
-  set time_cutpoint [expr { $current_time_in_ms - 30000 }]
+  set time_cutpoint [expr { $current_time_in_ms - 60000 }]
 
   set cut_progress_times [list]
   set progress_list [dict get $diskdevices $devpath progress_list]
-  foreach {old_time_in_ms old_bytes_written} $progress_list {
+  foreach {old_time_in_ms old_bytes_handled} $progress_list {
     if {$old_time_in_ms >= $time_cutpoint} {
-      lappend cut_progress_times $old_time_in_ms $old_bytes_written
+      lappend cut_progress_times $old_time_in_ms $old_bytes_handled
     }
   }
   dict set diskdevices $devpath progress_list $cut_progress_times
 
-  lassign $cut_progress_times first_time first_bytes_written
+  lassign $cut_progress_times first_time first_bytes_handled
 
-  set percentage [expr { round(100.0 * $bytes_written / $image_size) }]
+  set percentage [expr { round(100.0 * $bytes_handled / $image_size) }]
 
   if {[dict get $diskdevices $devpath state] eq "writing"} {
-    # We do a strange trick... if we are writing, we know that
-    # there is going to be a verification operation afterwards,
-    # and we want to estimate that in the ETA, so we add a bit to the
-    # image size with the expection that hopefully this estimates the
-    # total time of writing + verification.
-    set phantom_image_size [expr { int(8.0/7 * $image_size) }]
+    # When we are in writing phase, we do some tricks in the ETA
+    # calculation, because the initial estimates are too optimistic
+    # and there will be a verification step afterwards.
+    set eta_image_size [expr {
+      int($image_size + ((0.3 * ($image_size - 0.95 * $bytes_handled))))
+    }]
   } else {
-    set phantom_image_size $image_size
+    set eta_image_size $image_size
   }
 
-  set eta -
-  if {$first_time ne "" && $first_bytes_written ne ""} {
-    set bytes_diff [expr { $bytes_written - $first_bytes_written }]
+  set eta ""
+  if {$first_time ne "" && $first_bytes_handled ne ""} {
+    set bytes_diff [expr { $bytes_handled - $first_bytes_handled }]
     set time_diff  [expr { $current_time_in_ms - $first_time }]
-    set bytes_left [expr { $phantom_image_size - $bytes_written }]
+    set bytes_left [expr { $eta_image_size - $bytes_handled }]
 
     if {$time_diff > 0} {
       set speed [expr { $bytes_diff / $time_diff }]
@@ -311,7 +311,7 @@ proc handle_fileevent {devpath} {
 
   if {[eof $fh]} {
     if {[catch { close $fh }]} {
-      set state [dict get $diskdevices $devpath state
+      set state [dict get $diskdevices $devpath state]
       if {$state eq "verifying"} {
         set_devstate $devpath start_writing
       } else {
@@ -499,7 +499,7 @@ proc set_devstate {devpath state args} {
     start_writing {
       dict set diskdevices $devpath state start_writing
       update_disklabel $devpath
-      start_preparation $devpath 40
+      start_preparation $devpath 41
     }
 
     verifying_after_write -
@@ -613,18 +613,23 @@ proc set_rotating_label {port_ui type messages} {
   if {$type eq "port"} {
     set list_start [list {*}$messages {*}$messages]
     if {[info exists rotating_usb_labels($port_ui)]} {
-      set list_end [lrange rotating_usb_labels($port_ui) end-1 end]
+      set list_end [lrange $rotating_usb_labels($port_ui) 2 3]
     } else {
       set list_end [list]
     }
   } else {
     set list_start [lrange $rotating_usb_labels($port_ui) 0 1]
-    if {[llength $messages] == 0} {
-      set list_end $list_start
-    } elseif {[llength $messages] == 1} {
-      set list_end [list {*}$messages {*}$messages]
-    } else {
-      set list_end $messages
+    switch -- [llength $messages] {
+      0 { set list_end $list_start }
+      1 { set list_end [list {*}$messages {*}$messages] }
+      2 {
+          if {[lindex $messages 1] eq ""} {
+            set list_end [list [lindex $messages 0] [lindex $messages 0]]
+          } else {
+            set list_end $messages
+          }
+        }
+      default { error "unsupported rotating usb labels count" }
     }
   }
 
@@ -640,6 +645,7 @@ proc make_usbport_label {devpath port_id port_ui {update false}} {
   set usb_labels($labelvar) [get_label $labelvar $port_id]
 
   set_rotating_label $port_ui port $usb_labels($labelvar)
+
   if {$writable_labels} {
     ttk::entry $port_ui -textvariable usb_labels($labelvar) \
                         -font smallInfoFont -justify center -width 14
@@ -651,7 +657,7 @@ proc make_usbport_label {devpath port_id port_ui {update false}} {
     set_usbport_image $port_ui flash_drive_white
     $port_ui create image 0 22 -image "${port_ui}_overlay_image" -anchor w
     $port_ui create text  120 18 -font smallInfoFont -tags port_label \
-             -text $usb_labels($labelvar)]
+             -text $usb_labels($labelvar)
   }
 }
 
@@ -1094,7 +1100,8 @@ ttk::label .f.version_status.hostname.value -text [exec hostname] \
 
 ttk::frame .f.disks
 ttk::label .f.disks.nohubs_message -font infoFont \
-                                   -text [ui_msg "waiting usb hubs"]
+                                   -text [ui_msg "waiting usb hubs"] \
+                                   -padding 40
 
 pack .f.top_banner -side top -fill x
 
