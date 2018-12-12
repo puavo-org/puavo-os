@@ -1,5 +1,4 @@
 class chromium {
-  include ::chromium::office365_tweaks
   include ::dpkg
   include ::packages
 
