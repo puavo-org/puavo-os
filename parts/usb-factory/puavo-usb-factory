@@ -199,7 +199,7 @@ proc start_preparation {devpath countdown} {
     return
   }
 
-  if {$countdown % 2 == 0} {
+  if {([clock milliseconds] / 250) % 2 == 0} {
     set_usbport_image $port_ui flash_drive_magenta [expr { 1.0/4 }]
   } else {
     set_usbport_image $port_ui flash_drive_white
