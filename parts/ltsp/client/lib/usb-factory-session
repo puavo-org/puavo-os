@@ -6,12 +6,27 @@ set -eu
 
 # Download usb-factory images (if download script exists)
 (
-  downloader_path=$(whereis puavo-download-usb-factory-images \
-                      | awk '{ print $2 }')
-  if [ -n "$downloader_path" -a -x "$downloader_path" ]; then
+  image_downloader=$(whereis puavo-download-usb-factory-images \
+                       | awk '{ print $2 }')
+  if [ -n "$image_downloader" -a -x "$image_downloader" ]; then
+    wait_seconds=1
     while true; do
-      $downloader_path || true
-      sleep 5200
+      if $image_downloader; then
+        # if image download succeeds, wait a long time for next check
+        wait_seconds=4096
+      elif [ "$wait_seconds" -eq 4096 ]; then
+        # If image download fails but did succeed in previous attempt,
+        # wait a short time again.
+        wait_seconds=1
+      else
+        # Otherwise (image download has failed), try again with a bit longer
+        # delay, but not too long.
+        wait_seconds=$((2 * $wait_seconds))
+        if [ "$wait_seconds" -gt 256 ]; then
+          wait_seconds=256
+        fi
+      fi
+      sleep "$wait_seconds"
     done
   fi
 ) &
