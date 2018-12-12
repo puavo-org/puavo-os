@@ -1,0 +1,31 @@
+#!/bin/sh
+
+set -eu
+
+chromium_config=$(puavo-conf puavo.www.chromium.config)
+chromium_extensions=$(puavo-conf puavo.www.chromium.extensions)
+
+chromium_dir="/etc/chromium/policies/managed"
+chrome_dir="/etc/opt/chrome/policies/managed"
+
+if [ -n "$chromium_config" ]; then
+  printf "%s\n" "$chromium_config" > "${chromium_dir}/puavo-conf.json.tmp"
+  mv "${chromium_dir}/puavo-conf.json.tmp" "${chromium_dir}/puavo-conf.json"
+  ln -fns "${chromium_dir}/puavo-conf.json" "${chrome_dir}/puavo-conf.json"
+else
+  rm -f "${chromium_dir}/puavo-conf.json" "${chrome_dir}/puavo-conf.json"
+fi
+
+if [ -n "$chromium_extensions" ]; then
+  jq --null-input --arg extensions "$chromium_extensions" '
+    .ExtensionInstallForceList =
+      ($extensions | split(" ") | map(. + ";https://clients2.google.com/service/update2/crx"))
+  ' > "${chromium_dir}/extension_install_forcelist.json.tmp"
+  mv "${chromium_dir}/extension_install_forcelist.json.tmp" \
+     "${chromium_dir}/extension_install_forcelist.json"
+  ln -fns "${chromium_dir}/extension_install_forcelist.json" \
+          "${chrome_dir}/extension_install_forcelist.json"
+else
+  rm -f "${chromium_dir}/extension_install_forcelist.json" \
+        "${chrome_dir}/extension_install_forcelist.json"
+fi
