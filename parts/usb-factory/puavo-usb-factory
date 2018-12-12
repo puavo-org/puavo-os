@@ -278,7 +278,7 @@ proc set_device_eta {devpath bytes_handled} {
     # calculation, because the initial estimates are too optimistic
     # and there will be a verification step afterwards.
     set eta_image_size [expr {
-      int($image_size + ((0.3 * ($image_size - 0.95 * $bytes_handled))))
+      int($image_size + ((0.3 * ($image_size - 0.85 * $bytes_handled))))
     }]
   } else {
     set eta_image_size $image_size
