@@ -742,6 +742,12 @@ proc update_new_usbhubs {} {
 
     dict for {manufacturer productinfo} $by_prodvendor {
       dict for {product hubinfo} $productinfo {
+
+        # XXX Blacklist internal hubs in HP EliteBook 820.
+        # XXX We need to come up with some general solution to this problem.
+        if {$manufacturer eq "SMSC" && $product eq "USB2134B"} { continue }
+        if {$manufacturer eq "SMSC" && $product eq "USB5534B"} { continue }
+
         dict for {hub_id devpaths_by_port_id} $hubinfo {
           dict for {port_id devpath} $devpaths_by_port_id {
             dict set _new_usbhubs $hub_id "$manufacturer / $product" \
