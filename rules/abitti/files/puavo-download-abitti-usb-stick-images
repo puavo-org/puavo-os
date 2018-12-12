@@ -116,13 +116,13 @@ mkdir -p "$abitti_images_dir" "$incoming_dir"
 # add UI.json for puavo-usb-factory
 cat <<'EOF' > "${abitti_images_dir}/UI.json.tmp"
 {
-  "title": "Tikkutehdas",
   "description": "HUOMIO!  Kun USB-tikku liitetään koneeseen, kaikki siinä oleva sisältö poistetaan!",
   "instructions": "OHJEET\nAseta usb-tikku usb-jakajaan.\nOdota Abitti-tikun valmistumista.\nIrrota valmis tikku.",
   "version label": "Abittiversio:",
   "hostname label": "Koneen nimi:",
   "download status label": "Päivitystilanne:",
   "waiting usb hubs": "Odotellaan USB-hubeja...",
+  "support info": "tuki@opinsys.fi\nTukipalvelu 014 4591 624",
   "download state": {
     "up-to-date": "Abitti on ajantasainen",
     "in progress": "Tikkutehdas hakee uusinta Abittia",
