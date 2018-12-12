@@ -361,7 +361,7 @@ proc quick_verify_check {devpath} {
   if {$image_path eq ""} { error "could not lookup image path" }
   if {$image_size eq ""} { error "could not lookup image size" }
 
-  set chk_bytecount   [expr { min($image_size, 1048576) }]
+  set chk_bytecount   [expr { min($image_size, 4096) }]
   set end_block_start [expr { $image_size - $chk_bytecount }]
 
   set full_devpath "${pci_path_dir}/${devpath}"
