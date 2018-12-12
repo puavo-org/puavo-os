@@ -4,6 +4,18 @@
 
 set -eu
 
+# Download usb-factory images (if download script exists)
+(
+  downloader_path=$(whereis puavo-download-usb-factory-images \
+                      | awk '{ print $2 }')
+  if [ -n "$downloader_path" -a -x "$downloader_path" ]; then
+    while true; do
+      $downloader_path || true
+      sleep 5200
+    done
+  fi
+) &
+
 # Start openbox and keep it running
 (
   while true; do
