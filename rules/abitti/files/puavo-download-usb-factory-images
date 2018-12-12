@@ -20,7 +20,7 @@ cleanup() {
 trap cleanup 0 INT TERM
 
 logmsg() {
-  logger -s -t puavo-download-abitti-usb-stick-images "$@" || true
+  logger -s -t puavo-download-usb-factory-images "$@" || true
 }
 
 set_latest_image() {
@@ -141,9 +141,9 @@ cat <<'EOF' > "${abitti_images_dir}/UI.json.tmp"
 }
 EOF
 mv "${abitti_images_dir}/UI.json.tmp" "${abitti_images_dir}/UI.json"
-if ! cmp "/usr/local/share/puavo-download-abitti-usb-stick-images/UI.png" \
+if ! cmp "/usr/local/share/puavo-download-usb-factory-images/UI.png" \
          "${abitti_images_dir}/UI.png" >/dev/null 2>&1; then
-  cp -p "/usr/local/share/puavo-download-abitti-usb-stick-images/UI.png" \
+  cp -p "/usr/local/share/puavo-download-usb-factory-images/UI.png" \
         "${abitti_images_dir}/UI.png"
 fi
 
