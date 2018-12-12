@@ -14,6 +14,8 @@ set -eu
   done
 ) &
 
+unclutter -root &
+
 # Disable screen blanking and power saving features
 xset s 0 0
 xset s off
@@ -22,9 +24,9 @@ xset dpms 0 0 0
 xset -dpms
 
 (
-  # Start idid and keep it running
+  # Start puavo-usb-factory and keep it running
   while true; do
-    puavo-usb-factory --conf ~/.puavo/usb-factory.conf || true
+    puavo-usb-factory || true
     logger -p local0.err -t puavo-usb-factory \
            'The USB stick factory process has exited or crashed, restarting it...'
     sleep 5
@@ -33,5 +35,6 @@ xset -dpms
 
 # We should never get here...
 logger -p local0.err -t puavo-usb-factory \
-       'The usb-factory-session script is exiting! This should not happen!'
+       'The usb-factory-session script is exiting!  This should not happen!'
+
 exit 1
