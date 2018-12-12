@@ -4,8 +4,6 @@ package require json
 package require json::write
 
 wm attributes . -fullscreen 1
-# wm minsize  . 800 600
-# wm maxsize  . 1440 900
 wm protocol . WM_DELETE_WINDOW { }      ;# do not allow window close
 
 set bg_image {
@@ -69,7 +67,7 @@ proc do_background_resizing {} {
     set new_height [dict get $bg_image new_height]
 
     update_image bg_photo $bg_image_path $new_width $new_height
-    .f coords $canvas_image_index [expr { int($new_width/2)  }]  \
+    .f coords $canvas_image_index [expr { int($new_width/2)  }] \
                                   [expr { int($new_height/2) }]
 
     dict set bg_image width  $new_width
@@ -891,7 +889,7 @@ proc update_diskdevices {{force_ui_update false}} {
   } else {
     grid forget .f.disks.nohubs_message
     if {$regrid} {
-      set max_row_elements 15
+      set max_row_elements 13
       set total_element_count [llength $ui_elements]
       set element_count $total_element_count
       set need_for_columns 1
@@ -1048,12 +1046,17 @@ ttk::label .f.disks.nohubs_message -font infoFont \
                                    -text [ui_msg "waiting usb hubs"] \
                                    -padding 40
 
+ttk::label .f.support -font infoFont -anchor e \
+                                     -justify right \
+                                     -padding {0 5 25 5} \
+                                     -text [ui_msg "support info"] \
+
 pack .f.top_banner -side top -fill x
 
 pack .f.version_status -side bottom -ipady 14 -fill x
 pack .f.version_status.hostname \
      .f.version_status.version  \
-     .f.version_status.download -side left -padx 30
+     .f.version_status.download -side left -padx 14
 pack .f.version_status.hostname.label .f.version_status.hostname.value \
      -side left -padx 5
 pack .f.version_status.version.label .f.version_status.version.number \
@@ -1062,6 +1065,8 @@ pack .f.version_status.download.label .f.version_status.download.status \
      -side left -padx 5
 
 pack .f.instructions -side left -anchor n -padx 40 -pady 40
+
+pack .f.support -side bottom -anchor e
 
 pack .f.disks -side right
 grid .f.disks.nohubs_message
