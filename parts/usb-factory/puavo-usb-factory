@@ -199,7 +199,7 @@ proc start_preparation {devpath countdown} {
     return
   }
 
-  if {$countdown % 2 == 0} {
+  if {([clock milliseconds] / 250) % 2 == 0} {
     set_usbport_image $port_ui flash_drive_magenta [expr { 1.0/4 }]
   } else {
     set_usbport_image $port_ui flash_drive_white
@@ -361,7 +361,7 @@ proc quick_verify_check {devpath} {
   if {$image_path eq ""} { error "could not lookup image path" }
   if {$image_size eq ""} { error "could not lookup image size" }
 
-  set chk_bytecount   [expr { min($image_size, 1048576) }]
+  set chk_bytecount   [expr { min($image_size, 4096) }]
   set end_block_start [expr { $image_size - $chk_bytecount }]
 
   set full_devpath "${pci_path_dir}/${devpath}"
@@ -742,6 +742,12 @@ proc update_new_usbhubs {} {
 
     dict for {manufacturer productinfo} $by_prodvendor {
       dict for {product hubinfo} $productinfo {
+
+        # XXX Blacklist internal hubs in HP EliteBook 820.
+        # XXX We need to come up with some general solution to this problem.
+        if {$manufacturer eq "SMSC" && $product eq "USB2134B"} { continue }
+        if {$manufacturer eq "SMSC" && $product eq "USB5534B"} { continue }
+
         dict for {hub_id devpaths_by_port_id} $hubinfo {
           dict for {port_id devpath} $devpaths_by_port_id {
             dict set _new_usbhubs $hub_id "$manufacturer / $product" \
@@ -955,7 +961,7 @@ proc update_usb_labels_on_disk {} {
 proc scroll_topbanner {} {
   global top_banner_pos topbanner_text_id
   incr top_banner_pos -1
-  if {$top_banner_pos < 2250} {
+  if {$top_banner_pos < 1928} {
     set top_banner_pos 3000
   }
 
@@ -976,6 +982,8 @@ font create biggerInfoFont -family {Ubuntu Condensed} -size 24 -weight bold
 set default_background_color #6392ac
 ttk::style configure TFrame -background $default_background_color
 ttk::style configure TLabel -background $default_background_color -font infoFont
+ttk::style configure Instructions.TLabel -foreground white
+ttk::style configure Status.TLabel -foreground #c3c8cc -background #46606d
 
 # ui messages and background image
 
@@ -1016,30 +1024,37 @@ canvas .f.top_banner -background #95b6bf -height 40 \
                      -highlightthickness 0
 set topbanner_text_id [
   .f.top_banner create text $top_banner_pos 30                     \
-                -justify center -font biggerInfoFont -fill #ffdddd \
+                -justify center -font biggerInfoFont -fill #fefefe \
                 -text $top_banner_description -width 10000
 ]
 
 ttk::label .f.instructions -text [ui_msg instructions] \
                            -wraplength 600             \
                            -padding 20                 \
-                           -font infoFont
+                           -font infoFont              \
+                           -style Instructions.TLabel
 
-ttk::frame .f.version_status
-ttk::frame .f.version_status.version
-ttk::frame .f.version_status.download
-ttk::frame .f.version_status.hostname
+ttk::frame .f.version_status -style Status.TLabel
+ttk::frame .f.version_status.version -style Status.TLabel
+ttk::frame .f.version_status.download -style Status.TLabel
+ttk::frame .f.version_status.hostname -style Status.TLabel
 
-ttk::label .f.version_status.version.label \
-           -text [ui_msg "version label"] -font infoFont
-ttk::label .f.version_status.version.number -font infoFont
-ttk::label .f.version_status.download.label \
-           -text [ui_msg "download status label"] -font infoFont
-ttk::label .f.version_status.download.status -font infoFont
-ttk::label .f.version_status.hostname.label \
-           -text [ui_msg "hostname label"] -font infoFont
+ttk::label .f.version_status.version.label               \
+           -text [ui_msg "version label"] -font infoFont \
+           -style Status.TLabel
+ttk::label .f.version_status.version.number -font infoFont \
+           -style Status.TLabel
+ttk::label .f.version_status.download.label                      \
+           -text [ui_msg "download status label"] -font infoFont \
+           -style Status.TLabel
+ttk::label .f.version_status.download.status -font infoFont \
+           -style Status.TLabel
+ttk::label .f.version_status.hostname.label               \
+           -text [ui_msg "hostname label"] -font infoFont \
+           -style Status.TLabel
 ttk::label .f.version_status.hostname.value -text [exec hostname] \
-                                            -font infoFont
+                                            -font infoFont        \
+                                            -style Status.TLabel
 
 ttk::frame .f.disks
 ttk::label .f.disks.nohubs_message -font infoFont \
@@ -1048,7 +1063,7 @@ ttk::label .f.disks.nohubs_message -font infoFont \
 
 ttk::label .f.support -font infoFont -anchor e \
                                      -justify right \
-                                     -padding {0 5 25 5} \
+                                     -padding {0 5 25 10} \
                                      -text [ui_msg "support info"] \
 
 pack .f.top_banner -side top -fill x

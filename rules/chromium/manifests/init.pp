@@ -1,16 +1,12 @@
 class chromium {
-  include ::chromium::office365_tweaks
   include ::dpkg
   include ::packages
+  include ::puavo_conf
 
   dpkg::simpledivert {
     '/usr/bin/chromium':
       before => File['/usr/bin/chromium'];
   }
-
-  # this installs extensions "User-Agent Switcher for Chrome" (for
-  # "chromium::office365_tweaks"), and "Google Cast for Education".
-  chromium::install_policy { 'extension_install_forcelist': ; }
 
   # configuration for Puavo single sign-on
   chromium::install_policy { 'puavo-sso': ; }
@@ -48,6 +44,17 @@ class chromium {
 	require => File["/etc/chromium/policies/managed/${policy_name}.json"],
 	target  => "/etc/chromium/policies/managed/${policy_name}.json";
     }
+  }
+
+  ::puavo_conf::definition {
+    'puavo-www-chromium.json':
+      source => 'puppet:///modules/chromium/puavo-www-chromium.json';
+  }
+
+  ::puavo_conf::script {
+    'setup_chromium':
+      require => ::Puavo_conf::Definition['puavo-www-chromium.json'],
+      source  => 'puppet:///modules/chromium/setup_chromium';
   }
 
   Package <| title == chromium |>
