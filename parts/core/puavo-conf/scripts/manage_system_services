@@ -40,8 +40,18 @@ set services {
     }}
 
   { libvirtd {
+      /etc/rc2.d/S01libvirtd -> /etc/init.d/libvirtd
+      /etc/rc3.d/S01libvirtd -> /etc/init.d/libvirtd
+      /etc/rc4.d/S01libvirtd -> /etc/init.d/libvirtd
+      /etc/rc5.d/S01libvirtd -> /etc/init.d/libvirtd
+      /etc/rc2.d/S01libvirt-guests -> /etc/init.d/libvirt-guests
+      /etc/rc3.d/S01libvirt-guests -> /etc/init.d/libvirt-guests
+      /etc/rc4.d/S01libvirt-guests -> /etc/init.d/libvirt-guests
+      /etc/rc5.d/S01libvirt-guests -> /etc/init.d/libvirt-guests
       /etc/systemd/system/multi-user.target.wants/libvirtd.service
         -> /lib/systemd/system/libvirtd.service
+      /etc/systemd/system/multi-user.target.wants/libvirt-guests.service
+        -> /lib/systemd/system/libvirt-guests.service
       /etc/systemd/system/sockets.target.wants/virtlockd.socket
         -> /lib/systemd/system/virtlockd.socket
       /etc/systemd/system/sockets.target.wants/virtlogd.socket
