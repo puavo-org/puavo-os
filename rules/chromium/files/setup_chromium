@@ -18,7 +18,7 @@ fi
 
 if [ -n "$chromium_extensions" ]; then
   jq --null-input --arg extensions "$chromium_extensions" '
-    .ExtensionInstallForceList =
+    .ExtensionInstallForcelist =
       ($extensions | split(" ") | map(. + ";https://clients2.google.com/service/update2/crx"))
   ' > "${chromium_dir}/extension_install_forcelist.json.tmp"
   mv "${chromium_dir}/extension_install_forcelist.json.tmp" \
