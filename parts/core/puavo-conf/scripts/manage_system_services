@@ -27,7 +27,12 @@ set services {
          -> /lib/systemd/system/incron.service
     }}
 
-  { isc-dhcp-server /etc/init.d/isc-dhcp-server }
+  { isc-dhcp-server {
+      /etc/rc2.d/S01isc-dhcp-server -> /etc/init.d/isc-dhcp-server
+      /etc/rc3.d/S01isc-dhcp-server -> /etc/init.d/isc-dhcp-server
+      /etc/rc4.d/S01isc-dhcp-server -> /etc/init.d/isc-dhcp-server
+      /etc/rc5.d/S01isc-dhcp-server -> /etc/init.d/isc-dhcp-server
+    }}
 
   { krb5-kdc {
       /etc/systemd/system/multi-user.target.wants/krb5-kdc.service
@@ -60,7 +65,12 @@ set services {
         -> /lib/systemd/system/nagios-nrpe-server.service
     }}
 
-  { nbd-server /etc/init.d/nbd-server }
+  { nbd-server {
+      /etc/rc2.d/S01nbd-server -> /etc/init.d/nbd-server
+      /etc/rc3.d/S01nbd-server -> /etc/init.d/nbd-server
+      /etc/rc4.d/S01nbd-server -> /etc/init.d/nbd-server
+      /etc/rc5.d/S01nbd-server -> /etc/init.d/nbd-server
+    }}
 
   { NetworkManager {
       /etc/systemd/system/dbus-org.freedesktop.nm-dispatcher.service
@@ -89,7 +99,12 @@ set services {
         -> /lib/systemd/system/nscd.service
     }}
 
-  { nslcd /etc/init.d/nslcd }
+  { nslcd {
+      /etc/rc2.d/S01nslcd -> /etc/init.d/nslcd
+      /etc/rc3.d/S01nslcd -> /etc/init.d/nslcd
+      /etc/rc4.d/S01nslcd -> /etc/init.d/nslcd
+      /etc/rc5.d/S01nslcd -> /etc/init.d/nslcd
+    }}
 
   { puavo-darkdm {
       /etc/systemd/system/multi-user.target.wants/puavo-darkdm.service
@@ -131,7 +146,12 @@ set services {
         -> /lib/systemd/system/puavo-wlancontroller.service
     }}
 
-  { puavo-wlangw /etc/init.d/puavo-wlangw }
+  { puavo-wlangw {
+      /etc/rc2.d/S01puavo-wlangw -> /etc/init.d/puavo-wlangw
+      /etc/rc3.d/S01puavo-wlangw -> /etc/init.d/puavo-wlangw
+      /etc/rc4.d/S01puavo-wlangw -> /etc/init.d/puavo-wlangw
+      /etc/rc5.d/S01puavo-wlangw -> /etc/init.d/puavo-wlangw
+    }}
 
   { redis-server {
       /etc/systemd/system/multi-user.target.wants/redis-server.service
@@ -164,16 +184,7 @@ set services {
     }}
 }
 
-proc set_service {service_name enabled service_link_defs} {
-  if {[llength $service_link_defs] == 1} {
-    set linkpaths [list "/etc/rc2.d/S01${service_name}" -> $service_link_defs \
-                        "/etc/rc3.d/S01${service_name}" -> $service_link_defs \
-                        "/etc/rc4.d/S01${service_name}" -> $service_link_defs \
-                        "/etc/rc5.d/S01${service_name}" -> $service_link_defs]
-  } else {
-    set linkpaths $service_link_defs
-  }
-
+proc set_service {service_name enabled linkpaths} {
   foreach {source -> target} $linkpaths {
     if {$enabled} {
       set link_dir [file dirname $source]
