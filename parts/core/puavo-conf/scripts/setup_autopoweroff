@@ -6,7 +6,7 @@ if [ "$(puavo-conf puavo.autopoweroff.enabled)" = "true" ]; then
   puavo_daytime_start_hour=$(puavo-conf puavo.autopoweroff.daytime_start_hour)
   puavo_daytime_end_hour=$(puavo-conf puavo.autopoweroff.daytime_end_hour)
 
-  cat <<-EOF > /etc/autopoweroff.conf
+  cat <<-EOF > /etc/autopoweroff/autopoweroff.conf
 	[NO_SHUTDOWN_TIME_RANGE]
 	StartHour=$puavo_daytime_start_hour
 	EndHour=$puavo_daytime_end_hour
@@ -17,6 +17,10 @@ if [ "$(puavo-conf puavo.autopoweroff.enabled)" = "true" ]; then
 	
 	[DEPENDANTS]
 	Hosts=
+
+	[ACTION]
+	Action=Shutdown
+	ActionCommand=None
 	EOF
   ln -fns /lib/systemd/system/autopoweroff.service \
           /etc/systemd/system/multi-user.target.wants/autopoweroff.service
