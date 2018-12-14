@@ -267,27 +267,39 @@ programs:
   - libreoffice-base:
         name:
             fi: LibreOffice Tietokanta
+            de: LibreOffice Basis
+            en: LibreOffice Base
         keywords: libreoffice
   - libreoffice-calc:
-        keywords: calc, spreadsheet, libreoffice
+        keywords: calc, spreadsheet, libreoffice, excel
         name:
             fi: LibreOffice Taulukkolaskenta
+            de: LibreOffice Tabellenkalculation
+            en: LibreOffice Calc
   - libreoffice-draw:
         name:
             fi: LibreOffice Piirros
+            de: LibreOffice Zeichnung
+            en: LibreOffice Draw
         keywords: libreoffice
   - libreoffice-impress:
         name:
             fi: LibreOffice Esitys
-        keywords: libreoffice
+            de: LibreOffice Präsentation
+            en: LibreOffice Impress
+        keywords: libreoffice, powerpoint
   - libreoffice-math:
         name:
             fi: LibreOffice Kaava
+            de: LibreOffice Math
+            en: LibreOffice Math
         keywords: equation, libreoffice
   - libreoffice-writer:
         name:
             fi: LibreOffice Tekstinkäsittely
-        keywords: writer, kirjoitus, libreoffice
+            de: LibreOffice Textverarbeitung
+            en: LibreOffice Writer
+        keywords: writer, kirjoitus, libreoffice, word
   - lmms:
         name:
             en: LMMS - music production suite
@@ -778,7 +790,7 @@ menus:
             en: Internet-applications
             fi: Internet-sovellukset
             sv: Internet-program
-            de: Interent Programme
+            de: Internet Programme
         programs:
             - firefox
             - chromium
@@ -987,8 +999,11 @@ menus:
             en: Abitti-applications
             fi: Abitti-sovellukset
             sv: Abitti-applikationer
+            de: Prüfungsumgebung
         description:
             fi: Sovelluksia sähköiseen ylioppilastutkintoon
+            en: Programs for Grading Environment
+            de: Programme der Prüfungsumgebung
         icon: /usr/share/icons/oxygen/base/48x48/categories/applications-education.png
         programs:
             - gimp
@@ -1047,6 +1062,7 @@ menus:
         name:
             en: Physics
             fi: Fysiikka
+            de: Physik
         icon: /usr/share/icons/hicolor/64x64/apps/step.png
         programs:
             - org.kde.step
@@ -1059,6 +1075,7 @@ menus:
         name:
             en: Chemistry
             fi: Kemia
+            de: Chemie
         icon: /usr/share/icons/hicolor/48x48/apps/kalzium.png
         programs:
             - avogadro
@@ -1074,6 +1091,7 @@ menus:
         name:
             en: Mathematics
             fi: Matematiikka
+            de: Mathematik
         icon: /usr/share/icons/Faenza/categories/64/applications-interfacedesign.png
         programs:
             - tuxmath
@@ -1098,6 +1116,7 @@ menus:
         name:
             en: Geography
             fi: Maantieto
+            de: Geografie
         icon: /usr/share/tuxpaint/stamps/space/planets/3_earth.png
         programs:
             - marble-qt
@@ -1115,6 +1134,7 @@ menus:
         name:
             en: Environmental Science
             fi: Ympäristöoppi
+            de: Umweltwissenschaften
         icon: /usr/share/icons/Faenza/apps/64/tracker.png
         programs:
             - marble-qt
@@ -1131,6 +1151,7 @@ menus:
         name:
             en: Biology
             fi: Biologia
+            de: Biologie
         icon: /opt/webmenu/extra/icons/apps/applications-biology.svg
         programs:
             - perunakellari
@@ -1142,6 +1163,7 @@ menus:
         name:
             en: Social Sciences
             fi: Yhteiskuntaoppi
+            de: Sozialwissenschaften
         icon: /usr/share/icons/Faenza/emblems/64/emblem-sales.png
         programs:
             - ekapeli
@@ -1157,6 +1179,7 @@ menus:
         name:
             en: History
             fi: Historia
+            de: Geschichte
         icon: /usr/share/icons/hicolor/128x128/apps/freeciv-client.png
         programs:
             - marble-qt
@@ -1170,6 +1193,7 @@ menus:
         name:
             en: English and literature
             fi: Äidinkieli ja kirjallisuus
+            de: Englisch
         icon: /usr/share/icons/Faenza/apps/64/gnome-dictionary.png
         programs:
             - ekapeli
@@ -1189,6 +1213,7 @@ menus:
         name:
             en: Foreign languages
             fi: Vieraat kielet
+            de: Muttersprache
         icon: /usr/share/icons/oxygen/base/64x64/categories/applications-education-language.png
         programs:
             - libreoffice-writer
@@ -1201,6 +1226,7 @@ menus:
         name:
             en: Foreign languages
             fi: Toinen kotimainen
+            de: Fremdsprachen
         icon: /usr/share/icons/Faenza/apps/64/config-language.png
         programs:
             - ekapeli
@@ -1216,6 +1242,7 @@ menus:
         name:
             en: Music
             fi: Musiikki
+            de: Musik
         icon: /usr/share/icons/Faenza/apps/64/gmusicbrowser.png
         programs:
             - audacity
@@ -1232,6 +1259,7 @@ menus:
         name:
             en: Handicrafts
             fi: Käsityö
+            de: Gestalten
         icon: /usr/share/icons/Neu/128x128/categories/kcontrol.png
         programs:
             - pinta
@@ -1249,6 +1277,7 @@ menus:
         name:
             en: Arts
             fi: Kuvataide
+            de: Kunst
         icon: /usr/share/icons/Faenza/apps/64/mypaint.png
         programs:
             - tuxpaint
@@ -1268,6 +1297,7 @@ menus:
         name:
             en: Student counseling
             fi: Oppilaanohjaus
+            de: Schülerberatung
         icon: /usr/share/icons/oxygen/base/128x128/apps/system-users.png
         programs:
             - libreoffice-writer
@@ -1278,6 +1308,7 @@ menus:
         name:
             en: Home economics
             fi: Kotitalous
+            de: Wirtschaft
         icon: /opt/webmenu/extra/icons/apps/applications-java.svg
         programs:
             - libreoffice-writer
@@ -1289,6 +1320,7 @@ menus:
         name:
             en: Sports
             fi: Liikunta
+            de: Sport
         icon: /opt/webmenu/extra/icons/apps/applications-sports.svg
         programs:
             - libreoffice-writer
@@ -1300,6 +1332,7 @@ menus:
         name:
             en: Health
             fi: Terveystieto
+            de: Gesundheit
         icon: /usr/share/icons/gnome/48x48/emblems/emblem-favorite.png
         programs:
             - libreoffice-writer
@@ -1311,6 +1344,7 @@ menus:
         name:
             en: Ethics
             fi: Elämänkatsomustieto
+            de: Ethik
         icon: /usr/share/icons/oxygen/base/64x64/status/meeting-participant.png
         programs:
             - libreoffice-writer
@@ -1321,6 +1355,7 @@ menus:
         name:
             en: Religion
             fi: Uskonto
+            de: Religion
         icon: /usr/share/icons/oxygen/base/64x64/places/user-identity.png
         programs:
             - libreoffice-writer
@@ -1361,7 +1396,7 @@ categories:
             en: Subjects
             fi: Oppiaineet
             sv: Ämnen
-            de: Themen
+            de: Fächer
         position: 1
         menus:
             - menu-physics
