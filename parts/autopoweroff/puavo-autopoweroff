@@ -1,0 +1,132 @@
+#!/usr/bin/tclsh
+
+if {[exec puavo-conf puavo.autopoweroff.enabled] ne "true"} {
+  exit 0
+}
+
+set input_devices [dict create]
+
+set latest_event_time [clock seconds]
+set startup_time      [clock seconds]
+
+set start_hour [exec puavo-conf puavo.autopoweroff.daytime_start_hour]
+set end_hour   [exec puavo-conf puavo.autopoweroff.daytime_end_hour]
+
+set idle_time_in_minutes     30
+set startup_delay_in_minutes 30
+
+proc update_input_devices {} {
+  global input_devices latest_event_time
+
+  set fh ""
+  set data ""
+  try {
+    set fh [open /proc/bus/input/devices r]
+    set data [read $fh]
+  } on error {} {
+    puts stderr "could not read data from /proc/bus/input/devices"
+  } finally {
+    if {$fh ne ""} { close $fh }
+  }
+
+  if {$data eq ""} {
+    after 10000 update_input_devices
+    return
+  }
+
+  set new_inputdev_list [list]
+
+  foreach line [split $data "\n"] {
+    if {[regexp {^H: Handlers=(.*)$} $line matchvar firstmatch]} {
+      set got_match false
+      set event ""
+      foreach handler [split $firstmatch " "] {
+        switch -glob -- $handler {
+          event* { set event $handler }
+          kbd -
+          mouse* { set got_match true }
+        }
+      }
+      if {$got_match} {
+        lappend new_inputdev_list "/dev/input/${event}"
+      }
+    }
+  }
+
+  dict for {inputdev fh} $input_devices {
+    if {$inputdev in $new_inputdev_list} { continue }
+    catch { close $fh }
+    dict unset input_devices $inputdev
+  }
+
+  foreach new_inputdev $new_inputdev_list {
+    if {[dict exists $input_devices $new_inputdev]} {
+      continue
+    }
+
+    set latest_event_time [clock seconds]
+
+    try {
+      set fh [open $new_inputdev r]
+    } on error {} {
+      puts stderr "could not open $new_inputdev for reading"
+      continue
+    }
+
+    fconfigure $fh -blocking false
+    dict set input_devices $new_inputdev $fh
+
+    fileevent $fh readable [list handle_fileevent $new_inputdev $fh]
+  }
+
+  check_if_we_should_shut_down
+
+  after 10000 update_input_devices
+}
+
+proc check_if_we_should_shut_down {} {
+  global end_hour idle_time_in_minutes latest_event_time logger \
+         start_hour startup_delay_in_minutes startup_time
+
+  set current_hour [clock format [clock seconds] -format %H]
+
+  if {$start_hour <= $current_hour && $current_hour <= $end_hour} {
+    # do not shut down on daytime hours
+    return
+  }
+
+  if {[clock seconds] < $startup_time + ($startup_delay_in_minutes * 60)} {
+    # do not shut down if we have start only recently daytime hours
+    return
+  }
+
+  if {[clock seconds] < $latest_event_time + ($idle_time_in_minutes * 60)} {
+    # do not shut down if there has been activity in the last
+    # $idle_delay_in_minutes
+    return
+  }
+
+  exec logger -p user.notice -s -t puavo-autopoweroff "shutting down"
+
+  after 5000 [list exec shutdown -h now]
+}
+
+proc handle_fileevent {devpath fh} {
+  global input_devices latest_event_time
+
+  set latest_event_time [clock seconds]
+
+  try {
+    gets $fh
+    if {[eof $fh]} {
+      error "input device $devpath is gone"
+    }
+  } on error {} {
+    catch { close $fh }
+    dict unset input_devices $devpath
+  }
+}
+
+update_input_devices
+
+vwait forever
