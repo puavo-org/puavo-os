@@ -25,6 +25,7 @@ class packages {
     , 'iivari-client'
     , 'opinsys-ca-certificates'
     , 'puavo-autopilot'
+    , 'puavo-autopoweroff'
     , 'puavo-bigtouch-shutdown'
     , 'puavo-blackboard'
     , 'puavo-client'
@@ -726,9 +727,6 @@ class packages {
   #
 
   @package {
-    'autopoweroff':
-      tag => [ 'tag_misc', 'tag_puavo', ];
-
     # [ 'fluent-plugin-puavo'   # XXX not yet packaged for Debian
     # , 'puavo-load-reporter'   # XXX not yet packaged for Debian
 

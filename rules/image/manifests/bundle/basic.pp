@@ -1,5 +1,4 @@
 class image::bundle::basic {
-  include ::autopoweroff
   include ::console
   include ::disable_hp_accel_module
   include ::disable_suspend_by_tag

@@ -5,8 +5,7 @@ _pkgs_builddeps := unicode-data
 
 _pkgs_parts     := puavo-ds \
                    puavo-os
-_pkgs_ports     := autopoweroff    \
-                   fluentd         \
+_pkgs_ports     := fluentd         \
                    gnome-shell     \
                    grub2           \
                    gvfs            \

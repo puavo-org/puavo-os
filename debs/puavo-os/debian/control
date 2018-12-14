@@ -72,6 +72,14 @@ Description: Puavo admin intergration
     via AuthorizedKeysCommand (requires OpenSSH 6.1 or newer).
  .
 
+Package: puavo-autopoweroff
+Architecture: all
+Depends: ${misc:Depends},
+ tcl8.6
+Description: Puavo autopoweroff
+ Shut down hosts after a period of inactivity.
+ .
+
 Package: puavo-usb-factory
 Architecture: all
 Depends: ${misc:Depends},
