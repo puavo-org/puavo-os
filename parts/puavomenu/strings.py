@@ -9,42 +9,49 @@ STRINGS = {
         'fi': 'Etsi...',
         'en': 'Search...',
         'sv': 'Sök...',
-        'de': 'Suchen...'
+        'de': 'Suchen...',
     },
 
     'search_no_results': {
         'fi': 'Ei osumia',
         'en': 'No hits',
+        'de': 'Keine Resultate',
     },
 
     'menu_empty_menu': {
         'fi': 'Tyhjä valikko',
         'en': 'Empty menu',
+        'de': 'Leeres Menu',
     },
 
     'menu_empty_category': {
         'fi': 'Tyhjä kategoria',
         'en': 'Empty category',
+        'de': 'Leere Kategorie',
     },
 
     'menu_no_data_at_all': {
         'fi': 'Ei valikkodataa? Tarkista tilanne!',
         'en': 'No menu data? Check the situation!',
+        'de': 'Kein Menu? Was ist hier los!',
     },
 
     'desktop_link_failed': {
         'en': 'Desktop link could not be created',
-        'fi': 'Työpöytäkuvaketta ei voitu luoda'
+        'fi': 'Työpöytäkuvaketta ei voitu luoda',
+        'de': 'Desktoplink konnte nicht erstellt werden',
     },
 
     'panel_link_failed': {
         'en': 'Panel icon could not be created',
         'fi': 'Paneelin kuvaketta ei voitu luoda',
+        'de': 'Panelicon konnte nicht erstellt werden',
     },
 
     'program_launching_failed': {
         'en': 'Could not launch a program',
         'fi': 'Ohjelmaa ei voitu käynnistää',
+        'de': 'Programm konnte nicht geöffnet werden',
     },
 
     # --------------------------------------------------------------------------
@@ -53,26 +60,31 @@ STRINGS = {
     'sb_avatar_hover': {
         'en': 'Edit your user profile',
         'fi': 'Muokkaa käyttäjäprofiiliasi',
+        'de': 'Ediere Benutzerprofil'
     },
 
     'sb_avatar_link_failed': {
         'en': 'Could not open the user preferences editor',
         'fi': 'Ei voitu avata käyttäjätietojen muokkausta',
+        'de': 'Konnte den Benutzerprofil-Editor nicht öffnen',
     },
 
     'sb_button_failed': {
         'en': 'Sidebar button action failed',
         'fi': 'Sivupaneelin napin toiminnon suoritus ei onnistunut',
+        'de': 'Seitenleisten-Aktion konnte nicht ausgeführt werden',
     },
 
     'sb_change_password': {
         'en': 'Change your password',
         'fi': 'Vaihda salasana',
+        'de': 'Setze ein neues Passwort'
     },
 
     'sb_change_password_window_title': {
         'en': 'Change password',
         'fi': 'Vaihda salasana',
+        'de': 'Setze ein neues Passwort',
     },
 
     'sb_support': {
@@ -93,7 +105,7 @@ STRINGS = {
         'en': 'Lock screen',
         'fi': 'Lukitse näyttö',
         'sv': 'Lås skärmen',
-        'de': 'Bildschirm sperren'
+        'de': 'Bildschirm sperren',
     },
 
     'sb_hibernate': {
@@ -107,14 +119,14 @@ STRINGS = {
         'en': 'Logout',
         'fi': 'Kirjaudu ulos',
         'sv': 'Logga ut',
-        'de': 'Abmelden'
+        'de': 'Abmelden',
     },
 
     'sb_restart': {
         'en': 'Restart',
         'fi': 'Käynnistä uudelleen',
         'sv': 'Starta om',
-        'de': 'Neustarten'
+        'de': 'Neustarten',
     },
 
     'sb_shutdown': {
@@ -127,16 +139,19 @@ STRINGS = {
     'sb_changelog_title': {
         'en': 'Show changes in this version',
         'fi': 'Näytä muutokset tässä versiossa',
+        'de': 'Zeige Änderungen dieser Version',
     },
 
     'sb_changelog_window_title': {
         'en': 'Changelog',
         'fi': 'Muutosloki',
+        'de': 'Changelog',
     },
 
     'sb_changelog_link_failed': {
         'en': 'Could not show the changelog',
         'fi': 'Muutoslokin näyttäminen ei onnistunut',
+        'de': 'Changelog kann nicht angezeigt werden',
     },
 
     # --------------------------------------------------------------------------
@@ -146,20 +161,20 @@ STRINGS = {
         'fi': 'Lisää työpöydälle',
         'en': 'Add to desktop',
         'sv': 'Add to desktop',
-        'de': 'Add to desktop',
+        'de': 'Füge zum Schreibtisch hinzu',
     },
 
     'popup_add_to_panel': {
         'fi': 'Lisää alapaneeliin',
         'en': 'Add to bottom panel',
         'sv': 'Add to bottom panel',
-        'de': 'Add to bottom panel',
+        'de': 'Füge der unteren Leiste hinzu',
     },
 
     'popup_remove_from_faves': {
         'fi': 'Poista suosikeista',
         'en': 'Remove from favorites',
         'sv': 'Remove from favorites',
-        'de': 'Remove from favorites',
+        'de': 'Entferne Lesezeichen',
     },
 }
