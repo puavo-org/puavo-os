@@ -105,7 +105,16 @@ fetch_extra_boot_scripts() {
 
   mkdir -p /state/ebs
 
-  ebs_server=$(lookup_image_server_by_dns)
+  if [ -e /run/puavo/nbd-server ]; then
+    ebs_server=$(lookup_image_server_by_dns)
+  else
+    ebs_server=$(puavo-conf puavo.image.servers | awk '{ print $1 }')
+    if [ -z "$ebs_server" ]; then
+      read topdomain < /etc/puavo/topdomain
+      ebs_server="images.${topdomain}"
+    fi
+  fi
+
   if [ -z "$ebs_server" ]; then
     echo 'Failed to lookup image server from DNS' >&2
     return 2
