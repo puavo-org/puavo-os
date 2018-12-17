@@ -131,8 +131,9 @@ fetch_extra_boot_scripts() {
 execute_extra_boot_scripts() {
   for ebs_filename in $(generate_possible_ebs_names ''); do
     if [ -s "/state/ebs/${ebs_filename}" ]; then
-      echo "======= EXECUTING /state/ebs/${ebs_filename}"
+      echo "======= /state/ebs/${ebs_filename}"
       cat "/state/ebs/${ebs_filename}"
+      echo '------- EXECUTING'
       # execute an extra boot script:
       if "/state/ebs/${ebs_filename}"; then
         echo "------- /state/ebs/${ebs_filename} executed OK"
