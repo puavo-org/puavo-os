@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/bin/bash
+
+# using bash so we can use "wait" with -n
 
 set -eu
 
@@ -110,8 +112,17 @@ fetch_extra_boot_scripts() {
   fi
 
   for ebs_filename in $(generate_possible_ebs_names "$preferred_image"); do
-    try_fetching "$ebs_server" "$ebs_filename" "/state/ebs/${ebs_filename}" \
-      || fetch_status=1
+    try_fetching "$ebs_server" "$ebs_filename" "/state/ebs/${ebs_filename}" &
+  done
+
+  while true; do
+    if wait -n; then
+      :
+    elif [ $? -eq 127 ]; then
+      break
+    else
+      fetch_status=1
+    fi
   done
 
   return $fetch_status
