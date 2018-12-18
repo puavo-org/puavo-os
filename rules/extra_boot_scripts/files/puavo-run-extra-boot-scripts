@@ -136,6 +136,17 @@ try_fetching() {
   return 0
 }
 
+delete_removed_ebs_files() {
+  all_possible_ebs_names=$1
+
+  for ebs_filename in /state/ebs/*.ebs; do
+    test -e "$ebs_filename" || continue
+    if ! echo "$all_possible_ebs_names" | grep -Fqx "$(basename "$ebs_filename")"; then
+      rm -f "$ebs_filename"
+    fi
+  done
+}
+
 fetch_extra_boot_scripts() {
   preferred_image=$1
 
@@ -160,7 +171,20 @@ fetch_extra_boot_scripts() {
     return 2
   fi
 
-  possible_ebs_names=$(generate_possible_ebs_names "$preferred_image")
+  is_bootserver=false
+  if [ "$(puavo-conf puavo.hosttype)" = 'bootserver' ]; then
+    is_bootserver=true
+  fi
+
+  if $is_bootserver; then
+    possible_ebs_names=$(
+      rsync --list-only "rsync://${ebs_server}/images/ebs/*.ebs.asc" \
+         | awk '{ sub(/.asc$/, "", $5); print $5 }')
+    delete_removed_ebs_files "$possible_ebs_names"
+  else
+    possible_ebs_names=$(generate_possible_ebs_names "$preferred_image")
+  fi
+
   for ebs_filename in $possible_ebs_names; do
     try_fetching "$ebs_server" "$ebs_filename" "/state/ebs/${ebs_filename}" \
                  "$gnupg_verify" &
@@ -175,6 +199,10 @@ fetch_extra_boot_scripts() {
       fetch_status=1
     fi
   done
+
+  if $is_bootserver; then
+    rsync -a --delete /state/ebs/ /images/ebs/
+  fi
 
   return $fetch_status
 }
