@@ -30,7 +30,7 @@ generate_possible_ebs_names() {
 
   imagename=$(awk '{ sub(/\.img$/, "", $1); print $1 }' /etc/puavo-image/name)
   if [ -z "$imagename" ]; then
-    echo 'Could not determine image name from /etc/puavo-image/name' >&2
+    echo 'could not determine image name from /etc/puavo-image/name' >&2
     return 1
   fi
 
@@ -71,6 +71,12 @@ try_fetching() {
   ebs_server=$1
   ebs_filename=$2
   ebs_targetpath=$3
+  gnupg_verify=$4
+
+  if $gnupg_verify; then
+    ebs_filename="${ebs_filename}.asc"
+  fi
+
   ebs_tmppath="${ebs_targetpath}.tmp"
 
   if ! status_code=$(fetch_with_curl "$ebs_server"   \
@@ -78,20 +84,36 @@ try_fetching() {
                                      "$ebs_tmppath"); then
     rm -f "$ebs_tmppath"
     if [ "$status_code" != '404' ]; then
-      echo "Curl error when fetching ${ebs_filename}" >&2
+      echo "curl error when fetching ${ebs_filename}" >&2
       return 1
     fi
 
     if [ -e "$ebs_targetpath" ]; then
       rm -f "$ebs_targetpath"
-      echo "Removed ${ebs_targetpath} because it was not found on server"
+      echo "removed ${ebs_targetpath} because it was not found on server"
     fi
     return 0    # 404 is normal
   fi
 
+  if $gnupg_verify; then
+    verified_ebs_tmppath="${ebs_tmppath}.verified"
+    if gpg --decrypt --homedir /root/.ebs-gnupg "$ebs_tmppath" 2>/dev/null \
+         > "$verified_ebs_tmppath"; then
+      mv "$verified_ebs_tmppath" "$ebs_tmppath"
+      verified_msg='(verified)'
+    else
+      echo "verification failed for ${ebs_targetpath}"
+      rm -f "$verified_ebs_tmppath" "$ebs_tmppath"
+      return 1
+    fi
+  else
+    verified_msg='(not verified)'
+  fi
+
   mv "$ebs_tmppath" "$ebs_targetpath" || return 1
 
-  echo "Fetched ${ebs_filename} from ${ebs_server} to ${ebs_targetpath}"
+  echo "fetched ${ebs_filename} from ${ebs_server} to ${ebs_targetpath}" \
+       $verified_msg
 
   chmod 755 "$ebs_targetpath" || return 1
 
@@ -107,21 +129,25 @@ fetch_extra_boot_scripts() {
 
   if [ -e /run/puavo/nbd-server ]; then
     ebs_server=$(lookup_image_server_by_dns)
+    gnupg_verify=false
   else
     ebs_server=$(puavo-conf puavo.image.servers | awk '{ print $1 }')
     if [ -z "$ebs_server" ]; then
       read topdomain < /etc/puavo/topdomain
       ebs_server="images.${topdomain}"
     fi
+    gnupg_verify=true
   fi
 
   if [ -z "$ebs_server" ]; then
-    echo 'Failed to lookup image server from DNS' >&2
+    echo 'failed to lookup image server from DNS' >&2
     return 2
   fi
 
-  for ebs_filename in $(generate_possible_ebs_names "$preferred_image"); do
-    try_fetching "$ebs_server" "$ebs_filename" "/state/ebs/${ebs_filename}" &
+  possible_ebs_names=$(generate_possible_ebs_names "$preferred_image")
+  for ebs_filename in $possible_ebs_names; do
+    try_fetching "$ebs_server" "$ebs_filename" "/state/ebs/${ebs_filename}" \
+                 "$gnupg_verify" &
   done
 
   while true; do
@@ -177,7 +203,7 @@ EOF
 esac
 
 if [ "$ebs_status" != 0 ]; then
-  echo 'Error in fetching/executing extra boot scripts' >&2
+  echo 'error in fetching/executing extra boot scripts' >&2
 fi
 
 exit $ebs_status
