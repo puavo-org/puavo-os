@@ -30,7 +30,6 @@ cleanup_crash_dumps
 setup_extra_environment
 disable_update_initramfs
 setup_display_manager
-setup_systemd
 setup_firewall
 setup_dhcpd
 setup_dns
@@ -43,3 +42,5 @@ setup_slapd
 setup_krb5kdc
 setup_samba
 setup_munin
+setup_systemd
+run_extra_boot_scripts
