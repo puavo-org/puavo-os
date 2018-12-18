@@ -136,12 +136,21 @@ try_fetching() {
   return 0
 }
 
+is_test_ebs() {
+  case "$1" in
+    test*.ebs|test-*.ebs) return 0 ;;
+  esac
+  return 1
+}
+
 delete_removed_ebs_files() {
   all_possible_ebs_names=$1
 
-  for ebs_filename in /state/ebs/*.ebs; do
-    test -e "$ebs_filename" || continue
-    if ! echo "$all_possible_ebs_names" | grep -Fqx "$(basename "$ebs_filename")"; then
+  for ebs_filepath in /state/ebs/*.ebs; do
+    test -e "$ebs_filepath" || continue
+    ebs_filename=$(basename "$ebs_filepath")
+    if ! echo "$all_possible_ebs_names" | grep -Fqx "$ebs_filename"; then
+      if is_test_ebs "$ebs_filename"; then continue; fi
       rm -f "$ebs_filename"
     fi
   done
@@ -186,6 +195,9 @@ fetch_extra_boot_scripts() {
   fi
 
   for ebs_filename in $possible_ebs_names; do
+    if $gnupg_verify && is_test_ebs "$ebs_filename"; then
+      continue
+    fi
     try_fetching "$ebs_server" "$ebs_filename" "/state/ebs/${ebs_filename}" \
                  "$gnupg_verify" &
   done
@@ -201,7 +213,8 @@ fetch_extra_boot_scripts() {
   done
 
   if $is_bootserver; then
-    rsync -a --delete /state/ebs/ /images/ebs/
+    rsync -a --delete --exclude='test.ebs' --exclude='test-*.ebs' \
+          /state/ebs/ /images/ebs/
   fi
 
   return $fetch_status
