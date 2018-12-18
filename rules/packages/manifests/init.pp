@@ -162,6 +162,7 @@ class packages {
     , 'bridge-utils'
     , 'gdebi-core'
     , 'grub-pc'
+    , 'ksh'
     , 'libpam-modules'
     , 'lvm2'
     , 'nfs-common'

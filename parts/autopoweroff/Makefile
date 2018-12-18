@@ -13,6 +13,7 @@ all:
 .PHONY: installdirs
 installdirs:
 	mkdir -p $(DESTDIR)$(sbindir)
+	mkdir -p $(DESTDIR)/lib/systemd/system
 	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants
 
 .PHONY: install

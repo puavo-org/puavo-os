@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/bin/bash
+
+# using bash so we can use "wait" with -n
 
 set -eu
 
@@ -28,9 +30,12 @@ generate_possible_ebs_names() {
 
   imagename=$(awk '{ sub(/\.img$/, "", $1); print $1 }' /etc/puavo-image/name)
   if [ -z "$imagename" ]; then
-    echo 'Could not determine image name from /etc/puavo-image/name' >&2
+    echo 'could not determine image name from /etc/puavo-image/name' >&2
     return 1
   fi
+
+  # allow additional scripts (that may be host or group-specific)
+  ebs_prefixes=$(puavo-conf puavo.admin.extra_boot_script.prefixes)
 
   {
     echo "$imagename"
@@ -38,7 +43,6 @@ generate_possible_ebs_names() {
       echo "$preferred_image"
     fi
   } | awk '{
-
         a_count = split($1, a, "-")
         for (i = 1; i <= a_count; i++) {
           for (j = 1; j <= i; j++) {
@@ -48,7 +52,21 @@ generate_possible_ebs_names() {
         }
       }' \
     | sort -u \
-    | awk '{ print $1 ".ebs" }'
+    | awk -v ebs_prefixes_string="$ebs_prefixes" '
+        BEGIN {
+          split(ebs_prefixes_string, extra_ebs_prefixes)
+          for (i in extra_ebs_prefixes) {
+            if (extra_ebs_prefixes[i] == "default") { continue }
+            print extra_ebs_prefixes[i] ".ebs"
+          }
+        }
+        {
+          for (i in extra_ebs_prefixes) {
+            prefix = (extra_ebs_prefixes[i] == "default") \
+                       ? "" : (extra_ebs_prefixes[i] "-" )
+            print prefix $1 ".ebs"
+          }
+        }'
 }
 
 fetch_with_curl() {
@@ -69,6 +87,12 @@ try_fetching() {
   ebs_server=$1
   ebs_filename=$2
   ebs_targetpath=$3
+  gnupg_verify=$4
+
+  if $gnupg_verify; then
+    ebs_filename="${ebs_filename}.asc"
+  fi
+
   ebs_tmppath="${ebs_targetpath}.tmp"
 
   if ! status_code=$(fetch_with_curl "$ebs_server"   \
@@ -76,24 +100,60 @@ try_fetching() {
                                      "$ebs_tmppath"); then
     rm -f "$ebs_tmppath"
     if [ "$status_code" != '404' ]; then
-      echo "Curl error when fetching ${ebs_filename}" >&2
+      echo "curl error when fetching ${ebs_filename}" >&2
       return 1
     fi
 
     if [ -e "$ebs_targetpath" ]; then
       rm -f "$ebs_targetpath"
-      echo "Removed ${ebs_targetpath} because it was not found on server"
+      echo "removed ${ebs_targetpath} because it was not found on server"
     fi
     return 0    # 404 is normal
   fi
 
+  if $gnupg_verify; then
+    verified_ebs_tmppath="${ebs_tmppath}.verified"
+    if gpg --decrypt --homedir /root/.ebs-gnupg "$ebs_tmppath" 2>/dev/null \
+         > "$verified_ebs_tmppath"; then
+      mv "$verified_ebs_tmppath" "$ebs_tmppath"
+      verified_msg='(verified)'
+    else
+      echo "verification failed for ${ebs_targetpath}"
+      rm -f "$verified_ebs_tmppath" "$ebs_tmppath"
+      return 1
+    fi
+  else
+    verified_msg='(not verified)'
+  fi
+
   mv "$ebs_tmppath" "$ebs_targetpath" || return 1
 
-  echo "Fetched ${ebs_filename} from ${ebs_server} to ${ebs_targetpath}"
+  echo "fetched ${ebs_filename} from ${ebs_server} to ${ebs_targetpath}" \
+       $verified_msg
 
   chmod 755 "$ebs_targetpath" || return 1
 
   return 0
+}
+
+is_test_ebs() {
+  case "$1" in
+    test*.ebs|test-*.ebs) return 0 ;;
+  esac
+  return 1
+}
+
+delete_removed_ebs_files() {
+  all_possible_ebs_names=$1
+
+  for ebs_filepath in /state/ebs/*.ebs; do
+    test -e "$ebs_filepath" || continue
+    ebs_filename=$(basename "$ebs_filepath")
+    if ! echo "$all_possible_ebs_names" | grep -Fqx "$ebs_filename"; then
+      if is_test_ebs "$ebs_filename"; then continue; fi
+      rm -f "$ebs_filename"
+    fi
+  done
 }
 
 fetch_extra_boot_scripts() {
@@ -103,16 +163,59 @@ fetch_extra_boot_scripts() {
 
   mkdir -p /state/ebs
 
-  ebs_server=$(lookup_image_server_by_dns)
+  if [ -e /run/puavo/nbd-server ]; then
+    ebs_server=$(lookup_image_server_by_dns)
+    gnupg_verify=false
+  else
+    ebs_server=$(puavo-conf puavo.image.servers | awk '{ print $1 }')
+    if [ -z "$ebs_server" ]; then
+      read topdomain < /etc/puavo/topdomain
+      ebs_server="images.${topdomain}"
+    fi
+    gnupg_verify=true
+  fi
+
   if [ -z "$ebs_server" ]; then
-    echo 'Failed to lookup image server from DNS' >&2
+    echo 'failed to lookup image server from DNS' >&2
     return 2
   fi
 
-  for ebs_filename in $(generate_possible_ebs_names "$preferred_image"); do
+  is_bootserver=false
+  if [ "$(puavo-conf puavo.hosttype)" = 'bootserver' ]; then
+    is_bootserver=true
+  fi
+
+  if $is_bootserver; then
+    possible_ebs_names=$(
+      rsync --list-only "rsync://${ebs_server}/images/ebs/*.ebs.asc" \
+         | awk '{ sub(/.asc$/, "", $5); print $5 }')
+    delete_removed_ebs_files "$possible_ebs_names"
+  else
+    possible_ebs_names=$(generate_possible_ebs_names "$preferred_image")
+  fi
+
+  for ebs_filename in $possible_ebs_names; do
+    if $gnupg_verify && is_test_ebs "$ebs_filename"; then
+      continue
+    fi
     try_fetching "$ebs_server" "$ebs_filename" "/state/ebs/${ebs_filename}" \
-      || fetch_status=1
+                 "$gnupg_verify" &
   done
+
+  while true; do
+    if wait -n; then
+      :
+    elif [ $? -eq 127 ]; then
+      break
+    else
+      fetch_status=1
+    fi
+  done
+
+  if $is_bootserver; then
+    rsync -a --delete --exclude='test.ebs' --exclude='test-*.ebs' \
+          /state/ebs/ /images/ebs/
+  fi
 
   return $fetch_status
 }
@@ -120,8 +223,9 @@ fetch_extra_boot_scripts() {
 execute_extra_boot_scripts() {
   for ebs_filename in $(generate_possible_ebs_names ''); do
     if [ -s "/state/ebs/${ebs_filename}" ]; then
-      echo "======= EXECUTING /state/ebs/${ebs_filename}"
+      echo "======= /state/ebs/${ebs_filename}"
       cat "/state/ebs/${ebs_filename}"
+      echo '------- EXECUTING'
       # execute an extra boot script:
       if "/state/ebs/${ebs_filename}"; then
         echo "------- /state/ebs/${ebs_filename} executed OK"
@@ -156,7 +260,7 @@ EOF
 esac
 
 if [ "$ebs_status" != 0 ]; then
-  echo 'Error in fetching/executing extra boot scripts' >&2
+  echo 'error in fetching/executing extra boot scripts' >&2
 fi
 
 exit $ebs_status

@@ -106,7 +106,8 @@ proc check_if_we_should_shut_down {} {
     return
   }
 
-  exec logger -p user.notice -s -t puavo-autopoweroff "shutting down"
+  exec -ignorestderr logger -p user.notice -s -t puavo-autopoweroff \
+                     "shutting down"
 
   after 5000 [list exec shutdown -h now]
 }

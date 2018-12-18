@@ -1,5 +1,8 @@
 {
+  "puavo.admin.extra_boot_script.prefix": {
+    "default": "default"
+  },
   "puavo.admin.run_extra_boot_scripts": {
-    "default": "false"
+    "default": "true"
   }
 }
