@@ -2,6 +2,7 @@ class image::opinsys {
   include ::abitti,
           ::art::kemi,
           ::art::opinsys,
+          ::extra_boot_scripts::gnupg,
           ::image::allinone,
           ::install_hp_plugins,
           ::opinsys_dput,
