@@ -34,13 +34,15 @@ generate_possible_ebs_names() {
     return 1
   fi
 
+  # allow additional scripts (that may be host or group-specific)
+  ebs_prefixes=$(puavo-conf puavo.admin.extra_boot_script.prefixes)
+
   {
     echo "$imagename"
     if [ -n "$preferred_image" -a "$preferred_image" != "$imagename" ]; then
       echo "$preferred_image"
     fi
   } | awk '{
-
         a_count = split($1, a, "-")
         for (i = 1; i <= a_count; i++) {
           for (j = 1; j <= i; j++) {
@@ -50,7 +52,21 @@ generate_possible_ebs_names() {
         }
       }' \
     | sort -u \
-    | awk '{ print $1 ".ebs" }'
+    | awk -v ebs_prefixes_string="$ebs_prefixes" '
+        BEGIN {
+          split(ebs_prefixes_string, extra_ebs_prefixes)
+          for (i in extra_ebs_prefixes) {
+            if (extra_ebs_prefixes[i] == "default") { continue }
+            print extra_ebs_prefixes[i] ".ebs"
+          }
+        }
+        {
+          for (i in extra_ebs_prefixes) {
+            prefix = (extra_ebs_prefixes[i] == "default") \
+                       ? "" : (extra_ebs_prefixes[i] "-" )
+            print prefix $1 ".ebs"
+          }
+        }'
 }
 
 fetch_with_curl() {
