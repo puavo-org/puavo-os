@@ -245,7 +245,7 @@ update_functions = [
   is_a_device ? :update_wlan_configurations : :do_nothing,
                 :update_grub_environment,
                 :update_certificate,
-  is_a_device ? :update_extra_boot_scripts  : :do_nothing,
+                :update_extra_boot_scripts,
                 :update_puavoadmins,
 ]
 
