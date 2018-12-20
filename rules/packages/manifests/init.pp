@@ -400,7 +400,7 @@ class packages {
     , 'avr-libc'
     # XXX 'basic256'		# XXX missing from Debian Jessie
     , 'eclipse'
-    , 'emacs24'
+    , 'emacs'
     , 'eric'
     , 'eric-api-files'
     , 'fastboot'
