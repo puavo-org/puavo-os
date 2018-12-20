@@ -180,6 +180,7 @@ class packages {
       tag => [ 'tag_builder', 'tag_debian_desktop', ];
 
     [ 'gdm3'
+    , 'i3'
     , 'network-manager-openvpn-gnome'
     , 'network-manager-vpnc-gnome'
     , 'notify-osd'
@@ -188,7 +189,8 @@ class packages {
     , 'python-appindicator'
     , 'python-gtk2'
     , 'python-notify'
-    , 'shared-mime-info' ]:
+    , 'shared-mime-info'
+    , 'xmonad' ]:
       tag => [ 'tag_desktop', 'tag_debian_desktop', ];
 
     [ 'acct'
@@ -549,7 +551,6 @@ class packages {
     , 'gvfs-bin'
     , 'gvfs-fuse'
     , 'hplip'
-    , 'i3'
     , 'ibus'
     , 'ibus-anthy'
     , 'ibus-gtk3'
