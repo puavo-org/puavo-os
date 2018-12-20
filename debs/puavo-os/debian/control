@@ -414,8 +414,8 @@ Description: Puavo shared directory client
  .
 
 Package: puavo-sharedir-manager
-Architecture: all
-Depends: ${misc:Depends}, ruby, acl, libinotify-ruby, librb-inotify-ruby
+brchitecture: all
+Depends: ${misc:Depends}, ruby, acl, ruby-rb-inotify
 Description: Puavo shared directory manager
  Puavo shared directory manager
  .
