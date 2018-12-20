@@ -351,6 +351,8 @@ class packages {
     , 'libdvd-pkg'
     , 'libdvdread4'
     , 'ogmrip'
+    , 'smplayer'
+    , 'smplayer-translations'
     , 'vlc'
     , 'winff'
     , 'x264' ]:
