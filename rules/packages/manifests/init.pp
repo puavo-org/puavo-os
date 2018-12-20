@@ -423,6 +423,7 @@ class packages {
     , 'qt4-doc'
     , 'racket'
     , 'renpy'
+    , 'sbcl'
     , 'scite'
     , 'scratch'
     , 'sonic-pi'
