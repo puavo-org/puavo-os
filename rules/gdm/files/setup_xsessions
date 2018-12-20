@@ -55,3 +55,27 @@ else
     done
   done
 fi
+
+# setup alternative session languages
+if [ -e /etc/X11/sessions/puavo-desktop.desktop ]; then
+  alt_languages=$(puavo-conf puavo.xsessions.alternative_languages)
+  for lang in $alt_languages; do
+    test -n "$lang" || continue
+    case "$lang" in
+      de) language_message='Deutsch'  ;;
+      en) language_message='English'  ;;
+      fi) language_message='suomi'    ;;
+      fr) language_message='français' ;;
+      sv) language_message='svenska'  ;;
+      *)  language_message=$lang      ;;
+    esac
+
+    # Create language-specific puavo session.
+    # Use "zzz-" prefix so any of these are not chosen as default.
+    awk -v language_message="$language_message" '
+      /^Name=/ { sub(/$/, " (" language_message ")") }
+      { print }
+    ' /etc/X11/sessions/puavo-desktop.desktop \
+        > "/etc/X11/sessions/zzz-puavo-desktop-lang-${lang}.desktop"
+  done
+fi
