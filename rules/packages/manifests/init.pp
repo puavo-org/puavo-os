@@ -414,6 +414,7 @@ class packages {
     , 'idle'
     , 'idle-python2.7'
     , 'idle-python3.5'
+    , 'joe'
     , 'kturtle'
     , 'lokalize'
     , 'meld'
