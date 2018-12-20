@@ -661,6 +661,7 @@ class packages {
     , 'fuse'
     , 'gconf-editor'
     , 'kamerka'
+    , 'mc'
     , 'pass'
     , 'password-gorilla'
     , 'system-config-printer'
