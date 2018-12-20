@@ -389,7 +389,9 @@ class packages {
       tag => [ 'tag_office', 'tag_debian_desktop', ];
 
     [ 'eject'
-    , 'sound-juicer' ]:
+    , 'devede'
+    , 'sound-juicer'
+    , 'xfburn' ]:
       tag => [ 'tag_optical_media', 'tag_debian_desktop', ];
 
     [ 'cups-browsed'
