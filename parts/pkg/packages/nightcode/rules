@@ -1,0 +1,26 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "${command}" in
+    configure)
+	upstream_dir=$1
+	ln -fns "${upstream_dir}/opt/Nightcode" /opt/Nightcode
+	ln -fns /opt/Nightcode/Nightcode.desktop \
+                /usr/share/applications/nightcode.desktop
+	;;
+    unconfigure)
+	rm -f /opt/Nightcode \
+              /usr/share/applications/nightcode.desktop
+	;;
+    unpack)
+	upstream_pack=$1
+	upstream_dir=$2
+	dpkg -x "$upstream_pack" "$upstream_dir"
+	;;
+    *)
+	;;
+esac
