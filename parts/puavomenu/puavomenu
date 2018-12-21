@@ -119,7 +119,7 @@ logging.info('This is PuavoMenu v0.61 (c) Opinsys Oy 2017-2018')
 SETTINGS.res_dir = os.path.join(args.res_dir, '')
 SETTINGS.menu_dir = os.path.join(args.menu_dir, '')
 SETTINGS.user_dir = os.path.join(args.user_dir, '')
-SETTINGS.language = args.lang
+SETTINGS.language = args.lang.lower()
 SETTINGS.socket = args.socket
 SETTINGS.dev_mode = args.dev
 SETTINGS.autohide = args.autohide

@@ -1,0 +1,37 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+symlink_targets='
+  /usr/bin/openscad-nightly
+  /usr/share/applications/openscad-nightly.desktop
+  /usr/share/man/man1/openscad-nightly.1.gz
+  /usr/share/mime/packages/openscad-nightly.xml
+  /usr/share/openscad-nightly
+  /usr/share/pixmaps/openscad-nightly.png
+'
+
+case "$command" in
+  configure)
+    upstream_dir=$1
+    for symlink_target in $symlink_targets; do
+      mkdir -p "$(dirname "$symlink_target")"
+      ln -fns -T "${upstream_dir}${symlink_target}" "$symlink_target"
+    done
+    ;;
+  unconfigure)
+    for symlink_target in $symlink_targets; do
+      rm -f "$symlink_target"
+    done
+    ;;
+  unpack)
+    upstream_pack=$1
+    upstream_dir=$2
+    dpkg -x "$upstream_pack" "$upstream_dir"
+    ;;
+  *)
+    ;;
+esac

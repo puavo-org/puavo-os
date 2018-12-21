@@ -355,7 +355,6 @@ class packages {
     , 'libdvdread4'
     , 'ogmrip'
     , 'smplayer'
-    , 'smplayer-translations'
     , 'vlc'
     , 'winff'
     , 'x264' ]:
@@ -393,8 +392,7 @@ class packages {
 
     [ 'eject'
     , 'devede'
-    , 'sound-juicer'
-    , 'xfburn' ]:
+    , 'sound-juicer' ]:
       tag => [ 'tag_optical_media', 'tag_debian_desktop', ];
 
     [ 'cups-browsed'
@@ -417,7 +415,6 @@ class packages {
     , 'idle'
     , 'idle-python2.7'
     , 'idle-python3.5'
-    , 'joe'
     , 'kturtle'
     , 'lokalize'
     , 'meld'

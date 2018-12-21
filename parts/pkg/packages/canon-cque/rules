@@ -1,0 +1,23 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "${command}" in
+  configure)
+    upstream_dir=$1
+    ln -fns "${upstream_dir}/opt/cel/ppd" /usr/share/ppd/cel
+    ;;
+  unconfigure)
+    rm -f /usr/share/ppd/cel
+    ;;
+  unpack)
+    upstream_pack=$1
+    upstream_dir=$2
+    dpkg -x "$upstream_pack" "$upstream_dir"
+    ;;
+  *)
+    ;;
+esac
