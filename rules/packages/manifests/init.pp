@@ -179,7 +179,8 @@ class packages {
     , 'systemd-container' ]:
       tag => [ 'tag_builder', 'tag_debian_desktop', ];
 
-    [ 'gdm3'
+    [ 'dmenu'
+    , 'gdm3'
     , 'i3'
     , 'network-manager-openvpn-gnome'
     , 'network-manager-vpnc-gnome'
@@ -190,6 +191,7 @@ class packages {
     , 'python-gtk2'
     , 'python-notify'
     , 'shared-mime-info'
+    , 'xmobar'
     , 'xmonad' ]:
       tag => [ 'tag_desktop', 'tag_debian_desktop', ];
 
