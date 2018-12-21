@@ -1,0 +1,39 @@
+#!/usr/bin/expect -f
+
+set timeout -1
+
+set kojo_install_cmd [lindex $argv 0]
+set upstream_dir [lindex $argv 1]
+
+spawn -noecho sh $kojo_install_cmd
+
+expect {
+  -ex {OK [o, Enter], Cancel [c]} { send "\n" }
+}
+
+expect {
+  -ex {[Enter]} { send "\n"; exp_continue }
+  -ex {Yes [1], No [2]} { send "1\n" }
+}
+
+expect {
+  -ex {Where should Kojo Learning Environment be installed?} {
+    send "${upstream_dir}\n"
+  }
+}
+
+expect {
+  -ex {Create a desktop icon?}
+}
+
+expect {
+  -ex {Yes [y, Enter], No [n]} { send "n\n" }
+}
+
+expect {
+  -ex {Run Kojo Learning Environment?}
+}
+
+expect {
+  -ex {Yes [y, Enter], No [n]} { send "n\n" }
+}

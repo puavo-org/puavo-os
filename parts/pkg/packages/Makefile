@@ -31,6 +31,7 @@ packagedirs += google-chrome/
 packagedirs += google-earth/
 packagedirs += idid/
 packagedirs += kdenlive-appimage/
+packagedirs += kojo/
 packagedirs += mafynetti/
 packagedirs += marvinsketch/
 packagedirs += mattermost-desktop/

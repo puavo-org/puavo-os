@@ -28,6 +28,7 @@ class puavo_pkg::packages {
 			, 'google-chrome'
 			, 'google-earth'
 			, 'idid'
+			, 'kojo'
 			, 'mafynetti'
 			, 'marvinsketch'
 			, 'mattermost-desktop'

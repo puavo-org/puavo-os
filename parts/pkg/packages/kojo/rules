@@ -1,0 +1,33 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "$command" in
+  configure)
+    upstream_dir=$1
+    ln -fns "$upstream_dir" /opt/kojo
+    ln -fns /opt/kojo/bin/kojo /usr/local/bin/kojo
+    sed '
+      s|^Exec=.*$|Exec=/opt/kojo/bin/kojo|;
+      s|^Icon=.*$|Icon=/opt/kojo/icons/kojo64.png|;
+    ' "${upstream_dir}/Kojo Learning Environment.desktop" \
+      > /usr/share/applications/kojo.desktop
+    ;;
+  unconfigure)
+    rm -f /opt/kojo \
+          /usr/local/bin/kojo \
+          /usr/share/applications/kojo.desktop
+    ;;
+  unpack)
+    upstream_pack=$1
+    upstream_dir=$2
+    rm -rf "$upstream_dir"
+    expect -f unpack_with_expect "$upstream_pack" "$upstream_dir"
+    rm -rf "${upstream_dir}/jre"
+    ;;
+  *)
+    ;;
+esac
