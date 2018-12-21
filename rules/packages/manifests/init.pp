@@ -180,7 +180,9 @@ class packages {
     , 'systemd-container' ]:
       tag => [ 'tag_builder', 'tag_debian_desktop', ];
 
-    [ 'gdm3'
+    [ 'dmenu'
+    , 'gdm3'
+    , 'i3'
     , 'network-manager-openvpn-gnome'
     , 'network-manager-vpnc-gnome'
     , 'notify-osd'
@@ -189,7 +191,9 @@ class packages {
     , 'python-appindicator'
     , 'python-gtk2'
     , 'python-notify'
-    , 'shared-mime-info' ]:
+    , 'shared-mime-info'
+    , 'xmobar'
+    , 'xmonad' ]:
       tag => [ 'tag_desktop', 'tag_debian_desktop', ];
 
     [ 'acct'
@@ -350,6 +354,8 @@ class packages {
     , 'libdvd-pkg'
     , 'libdvdread4'
     , 'ogmrip'
+    , 'smplayer'
+    , 'smplayer-translations'
     , 'vlc'
     , 'winff'
     , 'x264' ]:
@@ -386,7 +392,9 @@ class packages {
       tag => [ 'tag_office', 'tag_debian_desktop', ];
 
     [ 'eject'
-    , 'sound-juicer' ]:
+    , 'devede'
+    , 'sound-juicer'
+    , 'xfburn' ]:
       tag => [ 'tag_optical_media', 'tag_debian_desktop', ];
 
     [ 'cups-browsed'
@@ -399,7 +407,7 @@ class packages {
     , 'avr-libc'
     # XXX 'basic256'		# XXX missing from Debian Jessie
     , 'eclipse'
-    , 'emacs24'
+    , 'emacs'
     , 'eric'
     , 'eric-api-files'
     , 'fastboot'
@@ -409,6 +417,7 @@ class packages {
     , 'idle'
     , 'idle-python2.7'
     , 'idle-python3.5'
+    , 'joe'
     , 'kturtle'
     , 'lokalize'
     , 'meld'
@@ -422,6 +431,7 @@ class packages {
     , 'qt4-doc'
     , 'racket'
     , 'renpy'
+    , 'sbcl'
     , 'scite'
     , 'scratch'
     , 'sonic-pi'
@@ -550,7 +560,6 @@ class packages {
     , 'gvfs-bin'
     , 'gvfs-fuse'
     , 'hplip'
-    , 'i3'
     , 'ibus'
     , 'ibus-anthy'
     , 'ibus-gtk3'
@@ -656,6 +665,7 @@ class packages {
     , 'fuse'
     , 'gconf-editor'
     , 'kamerka'
+    , 'mc'
     , 'pass'
     , 'password-gorilla'
     , 'system-config-printer'

@@ -15,7 +15,7 @@ configure_rsync_backup_etc_home() {
 
   mkdir -p -m 700 /root/.ssh
   cat <<EOF > /root/.ssh/authorized_keys.tmp
-from="${authorized_hosts}",no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty,command="/usr/local/sbin/rsync-server-backup-etc-home" ${authorized_ssh_pubkey}
+from="${authorized_hosts}",no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty,command="/usr/local/sbin/rsync-server-backup-home-state" ${authorized_ssh_pubkey}
 EOF
   mv /root/.ssh/authorized_keys.tmp /root/.ssh/authorized_keys
 }

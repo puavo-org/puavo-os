@@ -224,7 +224,6 @@ Depends: ${misc:Depends},
  curl,
  dnsmasq,
  elinks,
- emacs23-nox,
  etherwake,
  ethtool,
  foomatic-db,
@@ -252,8 +251,9 @@ Depends: ${misc:Depends},
  openprinting-ppds,
  openssh-server,
  openvpn,
- pnm2ppa,
  printer-driver-gutenprint,
+ printer-driver-pnm2ppa,
+ printer-driver-pxljr,
  puavo-client,
  puavo-devscripts,
  puavo-ds-slave,
@@ -264,7 +264,6 @@ Depends: ${misc:Depends},
  puavo-tftpd,
  puavo-tftpd-hooks,
  puavo-wlangw,
- pxljr,
  qemu-kvm,
  rdiff,
  rsyslog-relp,
@@ -416,8 +415,8 @@ Description: Puavo shared directory client
  .
 
 Package: puavo-sharedir-manager
-Architecture: all
-Depends: ${misc:Depends}, ruby, acl, libinotify-ruby, librb-inotify-ruby
+brchitecture: all
+Depends: ${misc:Depends}, ruby, acl, ruby-rb-inotify
 Description: Puavo shared directory manager
  Puavo shared directory manager
  .

@@ -32,6 +32,15 @@ puavo_find_locale_and_language() {
   [ -n "$puavo_language_short_form" ]
 }
 
+# if a language specific Puavo Desktop session was chosen,
+# setup language and use the normal DESKTOP_SESSION
+case "$DESKTOP_SESSION" in
+  zzz-puavo-desktop-lang-*)
+    PUAVO_SESSION_LANGUAGE=${DESKTOP_SESSION#zzz-puavo-desktop-lang-}
+    DESKTOP_SESSION=puavo-desktop
+    ;;
+esac
+
 if [ "${PUAVO_SESSION_LANGUAGE}" != "" ]; then
   puavo_language_short_form="${PUAVO_SESSION_LANGUAGE}"
   puavo_locale=
