@@ -18,6 +18,7 @@ class puavo_pkg::packages {
 			, 'bluegriffon'
 			, 'cmaptools'
 			, 'cnijfilter2'
+			, 'cura-appimage'
 			, 'dropbox'
 			, 'ekapeli-alku'
 			, 'enchanting'
