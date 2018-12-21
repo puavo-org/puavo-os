@@ -391,8 +391,7 @@ class packages {
 
     [ 'eject'
     , 'devede'
-    , 'sound-juicer'
-    , 'xfburn' ]:
+    , 'sound-juicer' ]:
       tag => [ 'tag_optical_media', 'tag_debian_desktop', ];
 
     [ 'cups-browsed'
