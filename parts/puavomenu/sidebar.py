@@ -33,7 +33,7 @@ SB_CHANGE_PASSWORD = {
 
     'command': {
         'type': 'webwindow',
-        'args': 'https://$(puavo_domain)/users/password/own?changing=$(user_name)',
+        'args': 'https://$(puavo_domain)/users/password/own?changing=$(user_name)&lang=$(user_language)',
         'have_vars': True,
         'webwindow': {
             'title': STRINGS['sb_change_password_window_title'],
@@ -344,6 +344,7 @@ class Sidebar:
         self.__variables['puavo_domain'] = \
             get_file_contents('/etc/puavo/domain', '?')
         self.__variables['user_name'] = getuser()
+        self.__variables['user_language']= SETTINGS.language
 
 
     # Creates the user avatar button
@@ -497,7 +498,7 @@ class Sidebar:
         try:
             web_window(
                 url=expand_variables(
-                    'https://$(puavo_domain)/users/profile/edit',
+                    'https://$(puavo_domain)/users/profile/edit?lang=$(user_language)',
                     self.__variables),
                 title=localize(STRINGS['sb_avatar_hover']),
                 width=1000,
