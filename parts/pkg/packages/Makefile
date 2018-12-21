@@ -16,6 +16,7 @@ packagedirs += arduino-radiohead/
 packagedirs += arduino-TM1637/
 packagedirs += bluegriffon/
 # XXX do not build, not ready # packagedirs += casio-classpad-manager-for-ii/
+packagedirs += canon-cque/
 packagedirs += cmaptools/
 packagedirs += cnijfilter2/
 packagedirs += cura-appimage/
