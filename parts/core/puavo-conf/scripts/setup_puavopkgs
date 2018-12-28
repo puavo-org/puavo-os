@@ -32,26 +32,42 @@ test_puavopkg_installation() {
   [ -h "$installed_path" -a -d "$installed_path" ]
 }
 
+reconfigure_puavopkg() {
+  timeout -k 5 30 puavo-pkg reconfigure "$@"
+}
+
 # We configure the "smartboard" and "ti-nspire-cx-cas-ss" puavo-pkg packages
 # in system image in case those are installed, because they are unconfigured
 # by default and their configuration is dependent on puavo-conf variables
 # "puavo.nonfree.smartboard.enabled" and
 # "puavo.nonfree.ti_nspire_cx_cas_ss.enabled".
 if test_puavopkg_installation smartboard; then
-  puavo-pkg reconfigure smartboard || status=1
+  reconfigure_puavopkg smartboard || status=1
 fi
 if test_puavopkg_installation ti-nspire-cx-cas-ss; then
-  puavo-pkg reconfigure ti-nspire-cx-cas-ss || status=1
+  reconfigure_puavopkg ti-nspire-cx-cas-ss || status=1
 fi
 
 # Then setup puavo-pkg configuration to include possible locally installed
 # puavo-pkg images.  (Note that this does not install or update
 # the puavo-pkg packages, only sets them up at boottime).
 
-host_puavo_pkg_cachedir='/images/puavo-pkg/cache'
-host_puavo_pkg_rootdir='/images/puavo-pkg/root'
+host_puavo_pkg_dir='/images/puavo-pkg'
+host_puavo_pkg_cachedir="${host_puavo_pkg_dir}/cache"
+host_puavo_pkg_rootdir="${host_puavo_pkg_dir}/root"
 
 install_puavo_pkg_conf "$host_puavo_pkg_cachedir" "$host_puavo_pkg_rootdir"
+
+# mount /images/puavo-pkg from bootserver in case we have booted from network
+if [ -e /run/puavo/nbd-server ]; then
+  read nbd_server < /run/puavo/nbd-server
+  mkdir -p "$host_puavo_pkg_dir"
+  if ! timeout -k 5 30 mount -t nfs4 -o sec=sys "${nbd_server}:/puavo-pkg" \
+                                                "$host_puavo_pkg_dir"; then
+    echo "could not mount ${nbd_server}:/puavo-pkg" >&2
+    exit 1
+  fi
+fi
 
 # Setup puavo-pkgs from under /images/puavo-pkg only if they are missing
 # from the system image, or the versions under /images/puavo-pkg are
@@ -66,7 +82,7 @@ for localpkg_instlink in ${host_puavo_pkg_rootdir}/packages/*/installed; do
   sysinst_link="${image_puavo_pkg_rootdir}/packages/${localpkg_name}/installed"
   if [ ! -e "$sysinst_link" \
        -o "$sysinst_link" -ot "$localpkg_instlink" ]; then
-    puavo-pkg reconfigure "$localpkg_name" || status=1
+    reconfigure_puavopkg "$localpkg_name" || status=1
   fi
 done
 
