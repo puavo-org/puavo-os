@@ -1,0 +1,31 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "${command}" in
+    configure)
+	upstream_dir=$1
+
+        mkdir -p /usr/lib/mozilla/native-messaging-hosts/
+	ln -fns "${upstream_dir}/etc/udev/rules.d/vex_robotics.rules" /etc/udev/rules.d/vex_robotics.rules
+	ln -fns "${upstream_dir}/etc/opt/chrome/native-messaging-hosts" /etc/opt/chrome/native-messaging-hosts
+	ln -fns "${upstream_dir}/opt/RobotMeshConnect" /opt/RobotMeshConnect
+	ln -fns "${upstream_dir}/usr/lib/mozilla/native-messaging-hosts/com.robotmesh.robotmeshconnect.json" /usr/lib/mozilla/native-messaging-hosts/com.robotmesh.robotmeshconnect.json
+	ln -fns "${upstream_dir}/usr/share/lintian/robotmeshconnect" /usr/share/lintian/robotmeshconnect 
+
+	;;
+    unconfigure)
+	rm -rf /etc/udev/rules.d/vex_robotics.rules /etc/opt/chrome/native-messaging-hosts /opt/RobotMeshConnect /usr/lib/mozilla/native-messaging-hosts/com.robotmesh.robotmeshconnect.json /usr/share/lintian/robotmeshconnect
+	;;
+    unpack)
+	upstream_pack=$1
+	upstream_dir=$2
+
+	dpkg -x "${upstream_pack}" "${upstream_dir}"
+	;;
+    *)
+	;;
+esac

@@ -47,6 +47,7 @@ packagedirs += oracle-java/
 packagedirs += processing/
 packagedirs += pycharm/
 packagedirs += robboscratch2/
+packagedirs += robotmeshconnect/
 packagedirs += skype/
 packagedirs += smartboard/
 packagedirs += spotify-client/
