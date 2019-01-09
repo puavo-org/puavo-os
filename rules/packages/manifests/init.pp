@@ -182,6 +182,7 @@ class packages {
     [ 'dmenu'
     , 'gdm3'
     , 'i3'
+    , 'libghc-xmonad-contrib-dev'
     , 'network-manager-openvpn-gnome'
     , 'network-manager-vpnc-gnome'
     , 'notify-osd'
