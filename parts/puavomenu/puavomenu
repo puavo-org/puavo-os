@@ -119,17 +119,21 @@ logging.info('This is PuavoMenu v0.61 (c) Opinsys Oy 2017-2018')
 SETTINGS.res_dir = os.path.join(args.res_dir, '')
 SETTINGS.menu_dir = os.path.join(args.menu_dir, '')
 SETTINGS.user_dir = os.path.join(args.user_dir, '')
-SETTINGS.language = args.lang.lower()
 SETTINGS.socket = args.socket
 SETTINGS.dev_mode = args.dev
 SETTINGS.autohide = args.autohide
 
-if SETTINGS.language is None:
+if args.lang:
+    # Override autodetection
+    SETTINGS.language = args.lang.lower()
+else:
+    # Autodetect from system
     if 'LANG' in os.environ:
         SETTINGS.language = os.environ['LANG'][0:2].lower()
     elif 'GDM_LANG' in os.environ:
         SETTINGS.language = os.environ['GDM_LANG'][0:2].lower()
 
+# Regardless of where the language code comes from we validate it
 if SETTINGS.language not in ('en', 'fi', 'sv', 'de'):
     logging.error('Invalid language code "%s", defaulting to "en"',
                   SETTINGS.language)
