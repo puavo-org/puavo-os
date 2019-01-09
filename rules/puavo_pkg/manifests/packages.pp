@@ -11,6 +11,7 @@ class puavo_pkg::packages {
   $available_packages = [ 'adobe-flashplugin-32bit'     # for 32-bit Firefox
 			, 'adobe-pepperflashplugin'     # for 64-bit Chromium
 			, 'adobe-reader'
+			, 'airtame'
 			, 'appinventor'
 			, 'arduino-ide'
 			, 'arduino-radiohead'
@@ -23,6 +24,7 @@ class puavo_pkg::packages {
 			, 'ekapeli-alku'
 			, 'enchanting'
 			, 'extra-xkb-symbols'
+			, 'flashforge-flashprint'
 			, 'geogebra'
 			, 'geogebra6'
 			, 'globilab'
@@ -34,6 +36,7 @@ class puavo_pkg::packages {
 			, 'marvinsketch'
 			, 'mattermost-desktop'
 			, 'msttcorefonts'
+			, 'nightcode'
 			, 'obsidian-icons'
 			, 'ohjelmointi-opetuksessa'
 			, 'openscad-nightly'
@@ -41,6 +44,7 @@ class puavo_pkg::packages {
 			, 'processing'
 			, 'pycharm'
 			, 'robboscratch2'
+			, 'robotmeshconnect'
 			, 'skype'
 			, 'smartboard'
 			, 'spotify-client'
