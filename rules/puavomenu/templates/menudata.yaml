@@ -404,11 +404,19 @@ programs:
             sv: KStars-stjärnhimlen
             de: KStars-Astronomie
   - org.kde.ktouch:
+        type: custom
         name:
             en: KTouch-touch typing
             fi: KTouch-konekirjoitus
             sv: KTouch-maskinskrivning
             de: KTouch-Schreibmaschine
+        command: ktouch
+        description:
+            en: Touch Typing Tutor
+            fi: Konekirjoituksen ohjaaja
+            sv: Maskinskrivningsträning
+            de: Schreibmaschinenkurs
+        icon: ktouch
   - org.kde.kturtle:
         name:
             en: KTurtle - logo programming
