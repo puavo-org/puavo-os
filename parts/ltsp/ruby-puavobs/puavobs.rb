@@ -256,7 +256,7 @@ module PuavoBS
     </controller>
     <interface type='bridge'>
       <mac address='#{mac}'/>
-      <source bridge='ltsp0'/>
+      <source bridge='wlan0'/>
       <model type='e1000'/>
     </interface>
     <serial type='pty'>
