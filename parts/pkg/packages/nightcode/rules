@@ -10,14 +10,14 @@ case "${command}" in
 	upstream_dir=$1
 	ln -fns "${upstream_dir}/opt/Nightcode" /opt/Nightcode
 	ln -fns /opt/Nightcode/Nightcode.desktop \
-		/usr/share/applications/nightcode.desktop
+		/usr/share/applications/Nightcode.desktop
 	ln -fns /opt/Nightcode/Nightcode \
 		/usr/local/bin/Nightcode
 	;;
     unconfigure)
 	rm -f /opt/Nightcode \
 	      /usr/local/bin/Nightcode \
-	      /usr/share/applications/nightcode.desktop
+	      /usr/share/applications/Nightcode.desktop
 	;;
     unpack)
 	upstream_pack=$1
