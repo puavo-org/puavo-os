@@ -21,7 +21,6 @@ class image::bundle::bootserver {
   include ::packages
 
   # include ::bootserver_dummywlan              # XXX needs work
-  # include ::bootserver_fluentd                # XXX needs work
   # include ::bootserver_pam                    # XXX needs work
   # include ::bootserver_ssh_server             # XXX needs work
   # include ::bootserver_utmp                   # XXX needs work
