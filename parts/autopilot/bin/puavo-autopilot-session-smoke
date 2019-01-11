@@ -18,5 +18,8 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
 # Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-puavo-autopilot-logger --tag smoke 'msg=begin-user-session'
+logger -p user.notice -t puavo-autopilot-session-smoke "begin-user-session"
+# XXX remove when possible:
+timeout -k 3 10 puavo-autopilot-logger --tag smoke 'msg=begin-user-session'
+
 gnome-session-quit --force --no-prompt --logout

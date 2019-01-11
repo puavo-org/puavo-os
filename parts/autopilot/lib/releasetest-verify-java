@@ -48,4 +48,6 @@ done
 
 pnggrep --center --try-times 20 "${PUAVO_AUTOPILOT_SHAREDIR}/success.png"
 
-puavo-autopilot-logger --tag=releasetest 'msg=verify-java-ok'
+logger -p user.notice -t puavo-autopilot-releasetest "verify-java-ok"
+# XXX remove when possible:
+timeout -k 3 10 puavo-autopilot-logger --tag=releasetest 'msg=verify-java-ok'
