@@ -17,6 +17,7 @@ class image::bundle::basic {
   include ::motd
   include ::nss
   include ::packages
+  include ::pam
   include ::plymouth
   include ::puavo_shutdown
   include ::puavomenu

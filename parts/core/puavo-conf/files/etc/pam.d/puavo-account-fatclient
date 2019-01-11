@@ -1,0 +1,2 @@
+account required        pam_exec.so quiet /usr/lib/puavo-ltsp-client/pam/check-if-account-is-locked
+account required        pam_permit.so

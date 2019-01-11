@@ -183,6 +183,7 @@ class packages {
     [ 'dmenu'
     , 'gdm3'
     , 'i3'
+    , 'libghc-xmonad-contrib-dev'
     , 'network-manager-openvpn-gnome'
     , 'network-manager-vpnc-gnome'
     , 'notify-osd'
@@ -567,7 +568,6 @@ class packages {
     , 'laptop-detect'
     , 'libatk-adaptor'
     , 'libgail-common'
-    , 'libjavascriptcoregtk-1.0-0'        #citrix client
     , 'libnotify-bin'
     , 'libnss-extrausers'
     , 'libnss-mdns'
@@ -576,8 +576,6 @@ class packages {
     , 'libpam-systemd'
     , 'libproxy1-plugin-gsettings'
     , 'libproxy1-plugin-networkmanager'
-    , 'libqt5quickcontrols2-5'            #mafynetti
-    , 'libqt5quicktemplates2-5'           #mafynetti
     , 'libreoffice-calc'
     , 'libreoffice-gnome'
     , 'libreoffice-impress'
@@ -587,7 +585,6 @@ class packages {
     , 'libreoffice-style-tango'
     , 'libreoffice-writer'
     , 'libsasl2-modules'
-    , 'libwebkitgtk-1.0-0'                #citrix client
     , 'make'
     , 'memtest86+'
     , 'mousetweaks'
@@ -614,8 +611,6 @@ class packages {
     , 'printer-driver-splix'
     , 'pulseaudio'
     , 'pulseaudio-module-bluetooth'
-    , 'qml-module-qtquick-controls2'            # mafynetti
-    , 'qml-module-qtquick-templates2'           # mafynetti
     , 'rfkill'
     , 'rtmpdump'
     , 'rxvt-unicode'
@@ -649,6 +644,17 @@ class packages {
     , 'zenity'
     , 'zip' ]:
       tag => [ 'tag_ubuntu-gnome-desktop', 'tag_debian_desktop', ];
+
+    # some dependencies from puavopkg packages
+    [ 'libjavascriptcoregtk-1.0-0'        # citrix client
+    , 'libopencsg1'                       # openscad-nightly
+    , 'libqt5quickcontrols2-5'            # mafynetti
+    , 'libqt5quicktemplates2-5'           # mafynetti
+    , 'libwebkitgtk-1.0-0'                # citrix client
+    , 'qml-module-qtquick-controls2'      # mafynetti
+    , 'qml-module-qtquick-templates2'     # mafynetti
+    ]:
+      tag => [ 'tag_puavopkg', 'tag_debian_desktop', ];
 
     [ 'anki'
     , 'bindfs'
