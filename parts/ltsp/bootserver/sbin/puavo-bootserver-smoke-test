@@ -84,8 +84,8 @@ class TestRun
     prepare_start_testclient()
   end
 
-  def test(payload)
-    payload['msg'] == 'begin-user-session'
+  def test(line)
+    line =~ /begin-user-session/
   end
 
   def cleanup()
@@ -268,7 +268,7 @@ def execute(server_socket, testrun)
     begin
       client_socket, client_addrinfo = server_socket.accept()
       client_socket.readlines().each() do |line|
-        return if testrun.test(JSON.parse(line))
+        return if testrun.test(line)
       end
     ensure
       if !client_socket.nil? then
@@ -283,7 +283,7 @@ end
 def run_test(admin_username, admin_password, school_name, school_id,
 	     testrun_label)
 
-  server_socket_path = '/tmp/puavo-bootserver-smoke-test.socket'
+  server_socket_path = '/run/puavo/puavo-bootserver-smoke-test.socket'
   server_socket = open_server_socket(server_socket_path)
 
   begin

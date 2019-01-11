@@ -1,0 +1,8 @@
+#!/bin/sh
+
+set -eu
+
+while read message; do
+  printf %s "$message" \
+    | /bin/nc -NU /run/puavo/puavo-bootserver-smoke-test.socket
+done
