@@ -43,10 +43,10 @@ programs:
           de: Blender-3D-Modellierung
   - bluefish:
         name:
-            en: Bluefish HTML-editor
-            fi: Bluefish HTML-editori
-            sv: Bluefish HTML-redigerare
-            de: Bluefish HTML-editor
+           en: Bluefish HTML-editor
+           fi: Bluefish HTML-editori
+           sv: Bluefish HTML-redigerare
+           de: Bluefish HTML-editor
   - bluegriffon
   - brasero:
         name:
@@ -141,6 +141,7 @@ programs:
             fi: Firefox-selain
             sv: Firefox
             de: Firefox
+  - FlashPrint
   - fmit:
         name:
             en: Fmit-instrument tuner
@@ -792,6 +793,7 @@ menus:
             - cura
             - sketchup
             - freecad
+            - FlashPrint
 
   - menu-internet:
         icon: /usr/share/icons/Faenza/categories/48/applications-internet.png
