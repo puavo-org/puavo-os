@@ -59,7 +59,8 @@ host_puavo_pkg_rootdir="${host_puavo_pkg_dir}/root"
 install_puavo_pkg_conf "$host_puavo_pkg_cachedir" "$host_puavo_pkg_rootdir"
 
 # mount /images/puavo-pkg from bootserver in case we have booted from network
-if [ -e /run/puavo/nbd-server ]; then
+# XXX disabled until this works
+if false && [ -e /run/puavo/nbd-server ]; then
   read nbd_server < /run/puavo/nbd-server
   mkdir -p "$host_puavo_pkg_dir"
   if ! timeout -k 5 30 mount -t nfs4 -o ro,sec=sys "${nbd_server}:/puavo-pkg" \
