@@ -353,6 +353,7 @@ programs:
             fi: OpenBoard-älytauluohjelmisto
             sv: OpenBoard
             de: OpenBoard
+  - openscad-nightly
   - openshot
   - openttd
   - org.gnome.Cheese
@@ -793,6 +794,7 @@ menus:
             - cura
             - sketchup
             - freecad
+            - openscad-nightly
             - FlashPrint
 
   - menu-internet:
