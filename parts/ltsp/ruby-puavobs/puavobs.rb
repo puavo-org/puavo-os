@@ -232,8 +232,8 @@ module PuavoBS
 <domain type='kvm'>
   <name>#{hostname}</name>
   <uuid>#{uuid}</uuid>
-  <memory unit='KiB'>524288</memory>
-  <currentMemory unit='KiB'>524288</currentMemory>
+  <memory unit='KiB'>20971552</memory>
+  <currentMemory unit='KiB'>20971552</currentMemory>
   <vcpu placement='static'>1</vcpu>
   <os>
     <type arch='x86_64' machine='pc-1.0'>hvm</type>
