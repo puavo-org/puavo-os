@@ -1,5 +1,20 @@
 class pam {
   file {
+    '/etc/pam.d/common-account':
+      source => 'puppet:///modules/pam/common-account';
+
+    '/etc/pam.d/common-auth':
+      source => 'puppet:///modules/pam/common-auth';
+
+    '/etc/pam.d/common-password':
+      source => 'puppet:///modules/pam/common-password';
+
+    '/etc/pam.d/common-session':
+      source => 'puppet:///modules/pam/common-session';
+
+    '/etc/pam.d/common-session-noninteractive':
+      source => 'puppet:///modules/pam/common-session-noninteractive';
+
     '/etc/pam.d/gdm-autologin':
       source => 'puppet:///modules/pam/gdm-autologin';
 

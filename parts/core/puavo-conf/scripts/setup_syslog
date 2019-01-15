@@ -8,6 +8,7 @@ hostname=$(hostname)
 receive_as_bootserver() {
   do_not_remove_list='
     /etc/logrotate.d/hosts
+    /etc/rsyslog.d/pass_to_smoke_test.conf
     /etc/rsyslog.d/receive_messages_to_var_log_hosts.conf
   '
 
@@ -25,6 +26,23 @@ receive_as_bootserver() {
 }
 EOF
   mv /etc/logrotate.d/hosts.tmp /etc/logrotate.d/hosts
+
+  cat <<'EOF' > /etc/rsyslog.d/pass_to_smoke_test.conf.tmp
+module(load="omprog")
+
+ruleset(name="pass_to_smoke_test") {
+    action(type="omprog"
+           binary="/usr/lib/puavo-ltsp-bootserver/smoke-test-cat")
+}
+
+if (
+  $programname == 'puavo-autopilot-login'
+    or $programname == 'puavo-autopilot-releasetest'
+    or $programname == 'puavo-autopilot-session-smoke'
+) then call pass_to_smoke_test
+EOF
+  mv /etc/rsyslog.d/pass_to_smoke_test.conf.tmp \
+     /etc/rsyslog.d/pass_to_smoke_test.conf
 
   cat <<EOF > /etc/rsyslog.d/receive_messages_to_var_log_hosts.conf.tmp
 # provides TCP syslog reception

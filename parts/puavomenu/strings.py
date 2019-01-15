@@ -76,21 +76,23 @@ STRINGS = {
     },
 
     'sb_change_password': {
-        'en': 'Change your password',
+        'en': 'Change password',
         'fi': 'Vaihda salasana',
+        'sv': 'Byta lösenord',
         'de': 'Setze ein neues Passwort'
     },
 
     'sb_change_password_window_title': {
         'en': 'Change password',
         'fi': 'Vaihda salasana',
+        'sv': 'Byta lösenord',
         'de': 'Setze ein neues Passwort',
     },
 
     'sb_support': {
         'en': 'Support',
         'fi': 'Tukisivusto',
-        'sv': 'Support',
+        'sv': 'Stöd',
         'de': 'Support',
     },
 
@@ -160,21 +162,21 @@ STRINGS = {
     'popup_add_to_desktop': {
         'fi': 'Lisää työpöydälle',
         'en': 'Add to desktop',
-        'sv': 'Add to desktop',
+        'sv': 'Lägg till på skrivbordet',
         'de': 'Füge zum Schreibtisch hinzu',
     },
 
     'popup_add_to_panel': {
         'fi': 'Lisää alapaneeliin',
         'en': 'Add to bottom panel',
-        'sv': 'Add to bottom panel',
+        'sv': 'Lägg till i panel',
         'de': 'Füge der unteren Leiste hinzu',
     },
 
     'popup_remove_from_faves': {
         'fi': 'Poista suosikeista',
         'en': 'Remove from favorites',
-        'sv': 'Remove from favorites',
+        'sv': 'Ta bort från favoriter',
         'de': 'Entferne Lesezeichen',
     },
 }

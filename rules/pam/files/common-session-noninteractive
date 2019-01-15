@@ -1,0 +1,9 @@
+#
+# /etc/pam.d/common-session-noninteractive - session-related modules
+# common to all non-interactive services
+#
+# This file is included from other service-specific PAM config files,
+# and should contain a list of modules that define tasks to be performed
+# at the start and end of all non-interactive sessions.
+
+session	required	pam_unix.so

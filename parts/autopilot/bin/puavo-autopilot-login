@@ -17,7 +17,11 @@ set -eu
 
   if [ -n "$username" -a -n "$password" ]; then
     if [ "${mode}" = "smoke" ]; then
-      puavo-autopilot-logger --tag smoke                        \
+      logger -p user.notice -t puavo-autopilot-login    \
+        "enter-display-manager-screen user=${username}" \
+          || true
+      # XXX remove when possible:
+      timeout -k 3 10 puavo-autopilot-logger --tag smoke        \
                              --                                 \
                              'msg=enter-display-manager-screen' \
                              "user=$username"                   \
@@ -37,7 +41,11 @@ set -eu
     xte 'key Return'
 
     if [ "${mode}" = 'smoke' ]; then
-      puavo-autopilot-logger --tag smoke                     \
+      logger -p user.notice -t puavo-autopilot-login \
+        "try-display-manager-login user=${username}" \
+          || true
+      # XXX remove when possible:
+      timeout -k 3 10 puavo-autopilot-logger --tag smoke     \
                              --                              \
                              'msg=try-display-manager-login' \
                              "user=$username"                \
