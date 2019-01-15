@@ -27,7 +27,7 @@ receive_as_bootserver() {
 EOF
   mv /etc/logrotate.d/hosts.tmp /etc/logrotate.d/hosts
 
-  cat <<EOF > /etc/rsyslog.d/pass_to_smoke_test.conf.tmp
+  cat <<'EOF' > /etc/rsyslog.d/pass_to_smoke_test.conf.tmp
 module(load="omprog")
 
 ruleset(name="pass_to_smoke_test") {
