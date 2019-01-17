@@ -13,8 +13,13 @@ if [ -z "$handle_lid_switch_docked_action" ]; then
   handle_lid_switch_docked_action='ignore'
 fi
 
-puavo_os_group_users=$(getent group puavo-os \
-                         | awk -F: '{ gsub(/,/, " ", $4); print $4 }')
+puavo_os_group_users=$(getent passwd \
+                         | awk -F: -v gid="$(id -g puavo-os)" '
+                             $4 == gid {
+                               groups = (groups != "" ? (groups " " $1) : $1)
+                             }
+                             END { print groups }
+                           ')
 
 cat <<EOF > /etc/systemd/logind.conf.tmp
 #  This file is part of systemd.
