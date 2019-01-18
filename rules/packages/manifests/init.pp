@@ -295,6 +295,7 @@ class packages {
     , 'breeze-icon-theme'	# wanted (not required) by kdenlive
     , 'dia'
     , 'dvgrab'
+    , 'feh'
     , 'fotowall'
     , 'freecad'
     , 'gimp'
