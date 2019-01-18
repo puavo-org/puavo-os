@@ -163,6 +163,9 @@ puavo_conf
 puavo_external_files
     Some helper definitions for setting up links to /state/external_files.
 
+puavomenu
+    Our own branding for puavomenu.
+
 puavo_shutdown
     A helper script to handle shutdown for systems on nbd root.
 
@@ -193,9 +196,6 @@ use_urandom
 
 wacom
     udev-rules for wacom.
-
-webmenu
-    Our own branding for webmenu.
 
 wine
     Configurations for wine.

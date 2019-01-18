@@ -646,7 +646,7 @@ programs:
             fi: Kitaranuotinnus
             sv: Noter för gitarr
             de: Tabulaturen für Gitarre
-        icon: /opt/webmenu/extra/icons/apps/overlord59-tux-guitar-1434.png
+        icon: /opt/puavomenu/icons/overlord59-tux-guitar-1434.png
   - tuxmath:
         icon: /usr/share/pixmaps/tuxmath.svg
         condition: "!personally_administered"
@@ -669,7 +669,7 @@ programs:
         type: web
         name: Unelmakoulu
         url: http://dreamschool.fi
-        icon: /opt/webmenu/extra/icons/apps/unelmakoulu.png
+        icon: /opt/puavomenu/icons/unelmakoulu.png
 
   #V
   - VidyoDesktop
@@ -1168,7 +1168,7 @@ menus:
             en: Biology
             fi: Biologia
             de: Biologie
-        icon: /opt/webmenu/extra/icons/apps/applications-biology.svg
+        icon: /opt/puavomenu/icons/applications-biology.svg
         programs:
             - perunakellari
             - libreoffice-writer
@@ -1325,7 +1325,7 @@ menus:
             en: Home economics
             fi: Kotitalous
             de: Wirtschaft
-        icon: /opt/webmenu/extra/icons/apps/applications-java.svg
+        icon: /opt/puavomenu/icons/applications-java.svg
         programs:
             - libreoffice-writer
             - amme
@@ -1337,7 +1337,7 @@ menus:
             en: Sports
             fi: Liikunta
             de: Sport
-        icon: /opt/webmenu/extra/icons/apps/applications-sports.svg
+        icon: /opt/puavomenu/icons/applications-sports.svg
         programs:
             - libreoffice-writer
             - google-earth

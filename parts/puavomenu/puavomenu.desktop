@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Name=Puavomenu launch
+Comment=A desktop menu application
+Exec=/opt/puavomenu/launch
+Terminal=false
+Type=Application
+Categories=Utility;
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
+X-GNOME-Autostart-Phase=Initialization

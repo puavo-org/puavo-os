@@ -32,11 +32,11 @@ class gnome_shell_extensions {
     , 'Move_Clock@rmy.pobox.com'
     , 'nohotcorner@azuri.free.fr'
     , 'Panel_Favorites@rmy.pobox.com'
+    , 'puavomenu@puavo.org'
     , 'quickoverview@kirby_33@hotmail.fr'
     , 'show-desktop@l300lvl.tk'
     , 'TopIcons@phocean.net'
     , 'uparrows@puavo.org'
-    , 'webmenu@puavo.org'
     , 'window-list-mod@puavo.org' ]:
       ;
   }
