@@ -583,24 +583,3 @@ Depends: ${misc:Depends}, nwjs
 Description: Webkiosk language selector
  Helper for webkiosks to select session language.
  .
-
-Package: webmenu
-Architecture: all
-Depends: ${misc:Depends},
- faenza-icon-theme,
- fluentd,
- gnome-themes-standard,
- libgettextpo0,
- libnotify-bin,
- netcat-openbsd,
- nodejs,
- nwjs,
- ruby,
- socat,
- visionmedia-mon,
- wmctrl,
- xdotool,
- zenity
-Description: Webmenu
- Next generation desktop menu
- .

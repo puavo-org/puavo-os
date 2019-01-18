@@ -9,11 +9,11 @@ class desktop::puavodesktop {
   include ::desktop::mimedefaults
   include ::gnome_shell_extensions
   include ::gnome_shell_helper
-  include ::packages
-  include ::puavo_sysinfo_collector
   include ::nodm
+  include ::packages
+  include ::puavomenu
+  include ::puavo_sysinfo_collector
   include ::themes
-  include ::webmenu
 
   file {
     '/etc/dconf/db/puavo-desktop.d/locks/session_locks':
@@ -25,14 +25,8 @@ class desktop::puavodesktop {
       notify  => Exec['update dconf'],
       require => [ File['/usr/share/puavo-art']
                  , Package['faenza-icon-theme']
-		 , Package['webmenu'] ];
+		 , Package['puavomenu'] ];
                  # , Package['light-themes'] ];	# XXX needs packaging
-
-    # webmenu takes care of the equivalent functionality
-    '/usr/share/icons/Faenza/apps/24/calendar.png':
-      ensure  => link,
-      require => Package['faenza-icon-theme'],
-      target  => 'evolution-calendar.png';
   }
 
   # overwrite /etc/profile with our custom version
@@ -46,5 +40,5 @@ class desktop::puavodesktop {
 
   Package <| title == faenza-icon-theme
           or title == light-themes
-          or title == webmenu |>
+          or title == puavomenu |>
 }

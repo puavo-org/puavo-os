@@ -22,7 +22,6 @@ subdirs         := admins                     \
                    usb-factory                \
                    vpn                        \
                    webkiosk-language-selector \
-                   webmenu                    \
                    webwindow                  \
                    wlan
 subdirs-all     := $(subdirs:%=.all-%)

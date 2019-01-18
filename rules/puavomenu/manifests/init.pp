@@ -17,10 +17,16 @@ class puavomenu {
 
     '/etc/X11/Xsession.d/48puavo-menu-show-my-school-users':
       source => 'puppet:///modules/puavomenu/48puavo-menu-show-my-school-users';
+
+    '/opt/puavomenu/icons':
+      recurse => true,
+      source  => 'puppet:///modules/puavomenu/icons';
   }
 
   ::puavo_conf::definition {
     'puavomenu.json':
       source => 'puppet:///modules/puavomenu/puavomenu.json';
   }
+
+  Package <| title == puavomenu |>
 }

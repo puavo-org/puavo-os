@@ -46,8 +46,7 @@ class packages {
     , 'puavo-wlangw'
     , 'puavomenu'
     , 'ruby-puavowlan'
-    , 'webkiosk-language-selector'
-    , 'webmenu' ]:
+    , 'webkiosk-language-selector' ]:
       ensure => present,
       tag    => [ 'tag_puavo' ];
   }

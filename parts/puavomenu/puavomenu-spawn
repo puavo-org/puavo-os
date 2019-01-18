@@ -1,0 +1,8 @@
+#!/bin/sh
+
+set -eu
+
+hostname=$(hostname)
+exec /opt/puavomenu/send_command                    \
+     "${HOME}/.config/puavomenu/socket_${hostname}" \
+     "$@" toggle
