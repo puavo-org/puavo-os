@@ -4,69 +4,79 @@ datarootdir = $(prefix)/share
 INSTALL = install
 INSTALL_DATA = $(INSTALL) -m 644
 
-packagedirs  = adobe-flashplugin/
-packagedirs += adobe-flashplugin-32bit/
-packagedirs += adobe-pepperflashplugin/
-packagedirs += adobe-pepperflashplugin-32bit/
-packagedirs += adobe-reader/
-packagedirs += airtame/
-packagedirs += appinventor/
-packagedirs += arduino-ide/
-packagedirs += arduino-radiohead/
-packagedirs += arduino-TM1637/
-packagedirs += bluegriffon/
-# XXX do not build, not ready # packagedirs += casio-classpad-manager-for-ii/
-packagedirs += canon-cque/
-packagedirs += cmaptools/
-packagedirs += cnijfilter2/
-packagedirs += cura-appimage/
-packagedirs += dropbox/
-packagedirs += dragonbox_koulu1/
-packagedirs += ekapeli-alku/
-packagedirs += enchanting/
-packagedirs += extra-xkb-symbols/
-packagedirs += flashforge-flashprint/
-packagedirs += geogebra/
-packagedirs += geogebra6/
-packagedirs += globilab/
-packagedirs += google-chrome/
-packagedirs += google-earth/
-packagedirs += idid/
-packagedirs += kdenlive-appimage/
-packagedirs += kojo/
-packagedirs += mafynetti/
-packagedirs += marvinsketch/
-packagedirs += mattermost-desktop/
-packagedirs += msttcorefonts/
-packagedirs += nightcode/
-packagedirs += obsidian-icons/
-packagedirs += ohjelmointi-opetuksessa/
-packagedirs += openscad-nightly/
-packagedirs += openshot-appimage/
-packagedirs += oracle-java/
-packagedirs += processing/
-packagedirs += pycharm/
-packagedirs += robboscratch2/
-packagedirs += robotmeshconnect/
-packagedirs += skype/
-packagedirs += smartboard/
-packagedirs += spotify-client/
-packagedirs += tilitin/
-packagedirs += t-lasku/
-packagedirs += vidyo-client/
-packagedirs += vstloggerpro/
+packagedirs  = adobe-flashplugin
+packagedirs += adobe-flashplugin-32bit
+packagedirs += adobe-pepperflashplugin
+packagedirs += adobe-pepperflashplugin-32bit
+packagedirs += adobe-reader
+packagedirs += airtame
+packagedirs += appinventor
+packagedirs += arduino-ide
+packagedirs += arduino-radiohead
+packagedirs += arduino-TM1637
+packagedirs += bluegriffon
+# XXX do not build, not ready # packagedirs += casio-classpad-manager-for-ii
+packagedirs += canon-cque
+packagedirs += cmaptools
+packagedirs += cnijfilter2
+packagedirs += cura-appimage
+packagedirs += dropbox
+packagedirs += dragonbox_koulu1
+packagedirs += ekapeli-alku
+packagedirs += enchanting
+packagedirs += extra-xkb-symbols
+packagedirs += flashforge-flashprint
+packagedirs += geogebra
+packagedirs += geogebra6
+packagedirs += globilab
+packagedirs += google-chrome
+packagedirs += google-earth
+packagedirs += idid
+packagedirs += kdenlive-appimage
+packagedirs += kojo
+packagedirs += mafynetti
+packagedirs += marvinsketch
+packagedirs += mattermost-desktop
+packagedirs += msttcorefonts
+packagedirs += nightcode
+packagedirs += obsidian-icons
+packagedirs += ohjelmointi-opetuksessa
+packagedirs += openscad-nightly
+packagedirs += openshot-appimage
+packagedirs += oracle-java
+packagedirs += processing
+packagedirs += pycharm
+packagedirs += robboscratch2
+packagedirs += robotmeshconnect
+packagedirs += skype
+packagedirs += smartboard
+packagedirs += spotify-client
+packagedirs += tilitin
+packagedirs += t-lasku
+packagedirs += vidyo-client
+packagedirs += vstloggerpro
 
-packagefiles = $(packagedirs:%/=%.tar.gz)
+packagefiles = $(patsubst %,%.tar.gz,${packagedirs})
 
 .PHONY: all
-all: $(packagefiles) puavo-pkg-installers-bundle.tar
+all: $(packagefiles) puavo-pkg-installers-bundle.tar puavo-pkg.json
+	echo $(packagefiles)
+
+puavo-pkg.json: $(packagefiles)
+	jq --null-input --arg packages "$(packagedirs)" \
+	  '$$packages | split(" ") | reduce .[] as $$item ({}; .["puavo.pkg." + $$item] = { default: "" })' \
+	  > $@.tmp
+	mv $@.tmp $@
 
 .PHONY: installdirs
 installdirs:
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/definitions
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-pkg/packages
 
 .PHONY: install
 install: installdirs
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-conf/definitions \
+		puavo-pkg.json
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-pkg/packages \
 		$(packagefiles)
 
