@@ -57,8 +57,11 @@ packagedirs += vidyo-client
 packagedirs += vstloggerpro
 
 # opinsys-os specific
+packagedirs += av4kav
 packagedirs += ekapeli
 packagedirs += teddybear
+packagedirs += ti-nspire-cx-cas-ss
+packagedirs += vmware-horizon-client
 
 packagefiles = $(patsubst %,%.tar.gz,${packagedirs})
 
