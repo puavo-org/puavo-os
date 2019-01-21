@@ -3,7 +3,6 @@
 # Welcome to PuavoMenu, the modern (?) WebMenu replacement.
 
 import argparse
-import time
 
 
 # Some kind of a help text
@@ -100,6 +99,7 @@ args = parser.parse_args()
 import os
 import os.path
 import logging
+import time
 
 from settings import SETTINGS
 
