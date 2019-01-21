@@ -2,17 +2,13 @@
 # so thoroughly that once it has been loaded, you can just use it without any
 # further checks. (Yeah, right.)
 
-from os.path import join as path_join, \
-                    isfile as is_file, \
-                    splitext as split_ext
-
+import os.path
 import logging
 
-from constants import PROGRAM_TYPE_DESKTOP, PROGRAM_TYPE_CUSTOM, \
-                      PROGRAM_TYPE_WEB, ICON_EXTENSIONS
+from constants import *
 from menudata import Program, Menu, Category
-from utils import localize, is_empty, log_elapsed_time
-from conditionals import is_hidden
+import utils
+import conditionals
 from settings import SETTINGS
 
 
@@ -30,7 +26,7 @@ def __parse_list(lst):
     if isinstance(lst, str):
         lst = lst.split(', ')
 
-    if is_empty(lst):
+    if utils.is_empty(lst):
         return []
 
     return lst
@@ -152,23 +148,23 @@ def __parse_yml_string(string, conditions):
 
         # Conditionally hidden?
         if 'condition' in params and \
-                is_hidden(conditions, params['condition'], name, 'program'):
+                conditionals.is_hidden(conditions, params['condition'], name, 'program'):
             program.hidden = True
             programs[name] = program
             continue
 
         # Load common parameters
         if 'name' in params:
-            program.title = localize(params['name'])
+            program.title = utils.localize(params['name'])
 
-            if is_empty(program.title):
+            if utils.is_empty(program.title):
                 logging.error('Empty name given for "%s"', name)
                 program.title = None
 
         if 'description' in params:
-            program.description = localize(params['description'])
+            program.description = utils.localize(params['description'])
 
-            if is_empty(program.description):
+            if utils.is_empty(program.description):
                 logging.warning('Ignoring empty description for program "%s"',
                                 name)
                 program.description = None
@@ -176,7 +172,7 @@ def __parse_yml_string(string, conditions):
         if 'icon' in params:
             program.icon = str(params['icon'])
 
-            if is_empty(program.icon):
+            if utils.is_empty(program.icon):
                 logging.warning('Ignoring empty icon for "%s"', name)
                 program.icon = None
 
@@ -200,13 +196,13 @@ def __parse_yml_string(string, conditions):
                 # allow overriding of the "Exec" definition
                 program.command = str(params['command'])
 
-                if is_empty(program.command):
+                if utils.is_empty(program.command):
                     logging.warning('Ignoring empty command override for desktop '
                                     'program "%s"', name)
                     program.command = None
 
         elif program.type == PROGRAM_TYPE_CUSTOM:
-            if 'command' not in params or is_empty(params['command']):
+            if 'command' not in params or utils.is_empty(params['command']):
                 logging.error("Custom program \"%s\" has no command defined"
                               "(or it's empty), ignoring command definition",
                               name)
@@ -215,7 +211,7 @@ def __parse_yml_string(string, conditions):
             program.command = str(params['command'])
 
         elif program.type == PROGRAM_TYPE_WEB:
-            if ('url' not in params) or is_empty(params['url']):
+            if ('url' not in params) or utils.is_empty(params['url']):
                 logging.error("Web link \"%s\" has no URL defined (or it's "
                               "empty), ignoring link definition",
                               name)
@@ -253,34 +249,34 @@ def __parse_yml_string(string, conditions):
 
         # Conditionally hidden?
         if 'condition' in params and \
-                is_hidden(conditions, params['condition'], name, 'menu'):
+                conditionals.is_hidden(conditions, params['condition'], name, 'menu'):
             menu.hidden = True
             menus[name] = menu
             continue
 
-        menu.title = localize(params.get('name', ''))
+        menu.title = utils.localize(params.get('name', ''))
 
-        if is_empty(menu.title):
+        if utils.is_empty(menu.title):
             logging.error('Menu "%s" has no name at all, menu ignored', name)
             continue
 
         if 'description' in params:
-            menu.description = localize(params['description'])
+            menu.description = utils.localize(params['description'])
 
-            if is_empty(menu.description):
+            if utils.is_empty(menu.description):
                 logging.warning('Ignoring empty description for menu "%s"', name)
                 menu.description = None
 
         if 'icon' in params:
             menu.icon = str(params['icon'])
 
-        if is_empty(menu.icon):
+        if utils.is_empty(menu.icon):
             logging.warning('Menu "%s" has a missing/empty icon', name)
             menu.icon = None
 
         menu.programs = __parse_list(params.get('programs', []))
 
-        if is_empty(menu.programs):
+        if utils.is_empty(menu.programs):
             logging.warning('Menu "%s" has no programs defined for it at all',
                             name)
             menu.programs = []
@@ -314,14 +310,14 @@ def __parse_yml_string(string, conditions):
         cat.name = name
 
         if 'condition' in params and \
-                is_hidden(conditions, params['condition'], name, 'category'):
+                conditionals.is_hidden(conditions, params['condition'], name, 'category'):
             cat.hidden = True
             categories[name] = cat
             continue
 
-        cat.title = localize(params.get('name', ''))
+        cat.title = utils.localize(params.get('name', ''))
 
-        if is_empty(cat.title):
+        if utils.is_empty(cat.title):
             logging.error('Category "%s" has no name at all, '
                           'category ignored', name)
             continue
@@ -338,7 +334,7 @@ def __parse_yml_string(string, conditions):
         cat.menus = __parse_list(params.get('menus', []))
         cat.programs = __parse_list(params.get('programs', []))
 
-        if is_empty(cat.menus) and is_empty(cat.programs):
+        if utils.is_empty(cat.menus) and utils.is_empty(cat.programs):
             logging.warning('Category "%s" has no menus or programs defined '
                             'for it at all', name)
 
@@ -368,13 +364,13 @@ def __load_dotdesktop_file(name):
     for l in open(name, mode='r', encoding='utf-8').readlines():
         l = l.strip()
 
-        if is_empty(l) or l[0] == '#':
+        if utils.is_empty(l) or l[0] == '#':
             continue
 
         if l[0] == '[' and l[-1] == ']':    # [section name]
             sect_name = l[1:-1].strip()
 
-            if is_empty(sect_name):
+            if utils.is_empty(sect_name):
                 # Nothing in the spec says that empty section names are
                 # invalid, but what on Earth would we do with them?
                 logging.warning('Desktop file "%s" contains an empty '
@@ -399,7 +395,7 @@ def __load_dotdesktop_file(name):
                 # The spec says nothing about empty keys and values, but I
                 # guess it's reasonable to allow empty values but not empty
                 # keys
-                if is_empty(key):
+                if utils.is_empty(key):
                     continue
 
                 if key in section:
@@ -476,14 +472,14 @@ def load_menu_data(source, desktop_dirs, conditions):
     categories = {k: v for k, v in categories.items() if categories[k] is not None}
 
     end_time = time.clock()
-    log_elapsed_time('YAML loading time', start_time, end_time)
+    utils.log_elapsed_time('YAML loading time', start_time, end_time)
 
     # --------------------------------------------------------------------------
     # Step 2: Load the .desktop files for desktop programs
 
     start_time = time.clock()
 
-    if is_empty(desktop_dirs):
+    if utils.is_empty(desktop_dirs):
         logging.warning('No .desktop file search paths specified!')
 
     for i in programs:
@@ -496,9 +492,9 @@ def load_menu_data(source, desktop_dirs, conditions):
         dd_name = None
 
         for d in desktop_dirs:
-            full = path_join(d, p.name + '.desktop')
+            full = os.path.join(d, p.name + '.desktop')
 
-            if is_file(full):
+            if os.path.isfile(full):
                 dd_name = full
                 break
 
@@ -547,7 +543,7 @@ def load_menu_data(source, desktop_dirs, conditions):
                     #                p.name)
                     p.title = entry.get('Name', '')
 
-            if is_empty(p.title):
+            if utils.is_empty(p.title):
                 logging.error('Empty name for program "%s", program ignored',
                               p.name)
                 p.missing_desktop = True
@@ -560,12 +556,12 @@ def load_menu_data(source, desktop_dirs, conditions):
             if key in entry:
                 p.description = entry[key]
 
-                if is_empty(p.description):
+                if utils.is_empty(p.description):
                     logging.warning('Empty comment specified for program "%s" in '
                                     'the .desktop file "%s"', p.name, dd_name)
                     p.comment = None
 
-        if is_empty(p.keywords):
+        if utils.is_empty(p.keywords):
             key = 'Keywords[' + SETTINGS.language + ']'
 
             # Accept *ONLY* localized keyword strings
@@ -579,13 +575,13 @@ def load_menu_data(source, desktop_dirs, conditions):
             else:
                 p.icon = entry.get('Icon', '')
 
-        if is_empty(p.icon):
+        if utils.is_empty(p.icon):
             logging.warning('Program "%s" has an empty/invalid icon name, will '
                             'display incorrectly', p.name)
             p.icon = None
 
         if p.command is None:
-            if 'Exec' not in entry or is_empty(entry['Exec']):
+            if 'Exec' not in entry or utils.is_empty(entry['Exec']):
                 logging.warning('Program "%s" has an empty or missing "Exec" '
                                 'line in the desktop file "%s", program ignored',
                                 p.name, dd_name)
@@ -609,13 +605,13 @@ def load_menu_data(source, desktop_dirs, conditions):
 
         # Is the icon name a full path to an icon file, or just
         # a generic name?
-        _, ext = split_ext(p.icon)
+        _, ext = os.path.splitext(p.icon)
 
-        if not is_empty(ext) and ext in ICON_EXTENSIONS:
+        if not utils.is_empty(ext) and ext in ICON_EXTENSIONS:
             p.icon_is_path = True
 
     end_time = time.clock()
-    log_elapsed_time('Desktop file parsing', start_time, end_time)
+    utils.log_elapsed_time('Desktop file parsing', start_time, end_time)
 
     # --------------------------------------------------------------------------
     # Step 3: Convert textual references into actual object references and
@@ -744,7 +740,7 @@ def load_menu_data(source, desktop_dirs, conditions):
         category_index.append(c[1])
 
     end_time = time.clock()
-    log_elapsed_time('Menu data building time', start_time, end_time)
+    utils.log_elapsed_time('Menu data building time', start_time, end_time)
 
     # --------------------------------------------------------------------------
     # Done
@@ -758,6 +754,6 @@ def load_menu_data(source, desktop_dirs, conditions):
         len(categories), num_used_categories)
 
     end_time = time.clock()
-    log_elapsed_time('Total menu parsing time', total_start, end_time)
+    utils.log_elapsed_time('Total menu parsing time', total_start, end_time)
 
     return programs, menus, categories, category_index

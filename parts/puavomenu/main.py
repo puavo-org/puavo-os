@@ -1,11 +1,8 @@
 # PuavoMenu main
 
-from time import clock
-
-from os import unlink
-
+import time
+import os
 import socket               # for the IPC socket
-
 import logging
 
 import gi
@@ -16,13 +13,10 @@ from gi.repository import Pango
 from gi.repository import GLib
 
 from constants import *
-
 import menudata
-
 from buttons import ProgramButton, MenuButton
-from utils import localize, log_elapsed_time
-from utils_gui import load_image_at_size, create_separator, \
-                      create_desktop_link, create_panel_link
+import utils
+import utils_gui
 import faves
 from sidebar import Sidebar
 from strings import STRINGS
@@ -53,7 +47,7 @@ class PuavoMenu(Gtk.Window):
 
         """This is where the magic happens."""
 
-        start_time = clock()
+        start_time = time.clock()
 
         super().__init__()
 
@@ -72,7 +66,7 @@ class PuavoMenu(Gtk.Window):
 
         try:
             # Clean leftovers
-            unlink(SETTINGS.socket)
+            os.unlink(SETTINGS.socket)
         except OSError:
             pass
 
@@ -136,7 +130,7 @@ class PuavoMenu(Gtk.Window):
 
             # WARNING: Hardcoded image size!
             self.__menu_background = \
-                load_image_at_size(SETTINGS.res_dir + image_name, 150, 110)
+                utils_gui.load_image_at_size(SETTINGS.res_dir + image_name, 150, 110)
         except Exception as exception:
             logging.error("Can't load the menu background image: %s",
                           str(exception))
@@ -217,7 +211,7 @@ class PuavoMenu(Gtk.Window):
         self.__search_keypress_signal = \
             self.__search.connect('key-press-event', self.__search_keypress)
         self.__search.set_placeholder_text(
-            localize(STRINGS['search_placeholder']))
+            utils.localize(STRINGS['search_placeholder']))
         self.__main_container.put(
             self.__search,
             PROGRAMS_LEFT + PROGRAMS_WIDTH - SEARCH_WIDTH - MAIN_PADDING,
@@ -273,12 +267,12 @@ class PuavoMenu(Gtk.Window):
         # ----------------------------------------------------------------------
         # The sidebar: the user avatar, buttons, host infos
 
-        create_separator(container=self.__main_container,
-                         x=SIDEBAR_LEFT - MAIN_PADDING,
-                         y=MAIN_PADDING,
-                         w=1,
-                         h=WINDOW_HEIGHT - (MAIN_PADDING * 2),
-                         orientation=Gtk.Orientation.VERTICAL)
+        utils_gui.create_separator(container=self.__main_container,
+                                   x=SIDEBAR_LEFT - MAIN_PADDING,
+                                   y=MAIN_PADDING,
+                                   w=1,
+                                   h=WINDOW_HEIGHT - (MAIN_PADDING * 2),
+                                   orientation=Gtk.Orientation.VERTICAL)
 
         self.__sidebar = Sidebar(self)
 
@@ -315,8 +309,8 @@ class PuavoMenu(Gtk.Window):
         # that are shown/hidden on demand. And we don't even have any
         # menu data yet to show.
 
-        end_time = clock()
-        log_elapsed_time('Window init time', start_time, end_time)
+        end_time = time.clock()
+        utils.log_elapsed_time('Window init time', start_time, end_time)
 
         # ----------------------------------------------------------------------
         # Load menu data
@@ -438,7 +432,7 @@ class PuavoMenu(Gtk.Window):
     # menu/category is empty, or there are no search results.
     def __show_empty_message(self, msg):
         if isinstance(msg, dict):
-            msg = localize(msg)
+            msg = utils.localize(msg)
 
         self.__empty.set_markup(
             '<span color="#888" size="large"><i>{0}</i></span>'.format(msg))
@@ -501,13 +495,13 @@ class PuavoMenu(Gtk.Window):
                      program.title, name)
 
         try:
-            create_desktop_link(name, program)
+            utils_gui.create_desktop_link(name, program)
         except Exception as exception:
             logging.error('Desktop link creation failed:')
             logging.error(str(exception))
 
             self.error_message(
-                localize(STRINGS['desktop_link_failed']),
+                utils.localize(STRINGS['desktop_link_failed']),
                 str(exception))
 
 
@@ -517,12 +511,12 @@ class PuavoMenu(Gtk.Window):
                      program.title, program.name)
 
         try:
-            create_panel_link(program)
+            utils_gui.create_panel_link(program)
         except Exception as exception:
             logging.error('Panel icon creation failed')
             logging.error(str(exception))
 
-            self.error_message(localize(STRINGS['panel_link_failed']),
+            self.error_message(utils.localize(STRINGS['panel_link_failed']),
                                str(exception))
 
 
@@ -579,7 +573,7 @@ class PuavoMenu(Gtk.Window):
         except Exception as exception:
             logging.error('Could not launch program "%s": %s',
                           program.command, str(exception))
-            self.error_message(localize(STRINGS['program_launching_failed']),
+            self.error_message(utils.localize(STRINGS['program_launching_failed']),
                                str(exception))
             return False
 
@@ -1132,7 +1126,7 @@ def run():
         # Normal exit, try to remove the socket file but don't explode
         # if it fails
         try:
-            unlink(SETTINGS.socket)
+            os.unlink(SETTINGS.socket)
         except OSError:
             pass
 
