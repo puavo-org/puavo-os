@@ -151,13 +151,14 @@ class PuavoMenu(Gtk.Window):
             self.set_skip_taskbar_hint(False)
             self.set_skip_pager_hint(False)
             self.set_deletable(True)
+            self.set_decorated(True)
             self.__exit_permitted = True
         else:
             self.set_skip_taskbar_hint(True)
             self.set_skip_pager_hint(True)
             self.set_deletable(False)       # no close button
+            self.set_decorated(False)
 
-        self.set_decorated(False)
         self.set_resizable(False)
         self.set_title('PuavoMenuUniqueName')
         self.set_size_request(WINDOW_WIDTH, WINDOW_HEIGHT)
