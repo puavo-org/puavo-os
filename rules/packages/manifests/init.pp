@@ -398,6 +398,7 @@ class packages {
     [ 'cups-browsed'
     , 'cups-daemon'
     , 'cups-pk-helper'
+    , 'google-cloud-print-connector'
     , 'gtklp' ]:
       tag => [ 'tag_printing', 'tag_debian_desktop', ];
 
