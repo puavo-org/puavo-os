@@ -2,7 +2,7 @@
 Version=1.0
 Name=Puavomenu launch
 Comment=A desktop menu application
-Exec=/opt/puavomenu/launch
+Exec=/opt/puavomenu/launch --prod
 Terminal=false
 Type=Application
 Categories=Utility;
