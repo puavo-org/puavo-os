@@ -18,42 +18,52 @@ class Program:
                  icon=None,
                  command=None):
 
+        # Type of this program. Affects mostly how it is launched
+        # and how is added on the desktop or the bottom panel.
         self.type = PROGRAM_TYPE_DESKTOP
 
-        # Internal ID
+        # Internal ID (the name given to this program in menudata files)
         self.name = None
 
-        # Displayed in the button
+        # Displayed in the button below the icon
         self.title = title
 
+        # Optional description displayed in a hover text
         self.description = description
+
+        # Used during searching
         self.keywords = []
+
+        # The actual command line for desktop and custom programs;
+        # URL for web links
+        self.command = command
+
+        # How many times this program has been launched. Used to
+        # keep track of faves ("most often used programs").
+        self.uses = 0
 
         # Icon loaded through IconCache
         self.icon = icon
 
-        # If true, this program has been conditionally hidden
+        # Either a generic name for the icon, or an actual path to the
+        # icon file.
+        self.icon_name = None
+
+        # If true, icon_name is a full path to an actual image file.
+        # If false, icon_name is a "generic" icon name and we must
+        # search for the actual file.
+        self.icon_name_is_path = False
+
+        # If true, this program has been conditionally hidden. Load-time
+        # only, hidden programs are removed before final menu data is built.
         self.hidden = False
 
         # If true, the .desktop file for this (desktop) program is
         # missing or it could not be loaded because it was invalid
         self.missing_desktop = False
 
-        # If true, the icon is a full path to an actual image file
-        # instead of a generic name that we have to search for in
-        # the icon directories
-        self.icon_is_path = False
-
-        # If false, this program is defined but not actually used
+        # If false, this program has been defined but not actually used
         self.used = False
-
-        # The actual command line for desktop and custom programs;
-        # URL for web links
-        self.command = command
-
-        # How many times this program has been launched? Used to
-        # keep track of faves.
-        self.uses = 0
 
         # If set, this is the name of the original .desktop file
         # the data was read from. Not always known or applicable.
@@ -80,20 +90,27 @@ class Menu:
                  icon=None,
                  programs=None):
 
-        # Internal ID
+        # Internal ID (the name given to this menu in menudata files)
         self.name = None
 
+        # Displayed in the button below the icon
         self.title = title
+
+        # Optional description displayed in a hover text
         self.description = description
 
         # Icon loaded through IconCache
         self.icon = icon
 
-        # If true, this menu has been conditionally hidden
+        # Full path to the icon file. Generic icon names are not accepted
+        # for men definitions.
+        self.icon_name = None
+
+        # If true, this menu has been conditionally hidden. Load-time
+        # only, hidden menus are removed before final menu data is built.
         self.hidden = False
 
-        # If false, this menu is defined but not actually used in
-        # any category.
+        # If false, this menu has been defined but not actually used
         self.used = False
 
         # Zero or more program IDs (during load time) or actual
@@ -109,10 +126,13 @@ class Category:
                  menus=None,
                  programs=None):
 
-        # Internal ID
+        # Internal ID (the name given to this category in menudata files)
         self.name = None
 
+        # Displayed in the button below the icon
         self.title = title
+
+        # For ordering categories. Can be negative.
         self.position = 0
 
         # If true, this category has been conditionally hidden
