@@ -125,6 +125,27 @@ class Category:
         self.programs = programs or []
 
 
+import re
+
+MENU_FILE_PATTERN = re.compile('^\d\d-')
+
+
+def find_menu_files(*where):
+    import glob
+    import os
+
+    files = []
+
+    for full_name in glob.iglob(os.path.join(*where, '*.yml')):
+        name = os.path.basename(full_name)
+        number = MENU_FILE_PATTERN.search(name)
+
+        if number:
+            files.append((number.group(0), name[number.end(0):], full_name))
+
+    return files
+
+
 class Menudata:
     """Top-level container for all menu data."""
 
@@ -148,8 +169,6 @@ class Menudata:
 
     # Searches for programs
     def search(self, key):
-        import re
-
         matches = []
 
         for name in self.programs:
@@ -187,18 +206,31 @@ class Menudata:
         import logging
         import os.path
 
-        from iconcache import ICONS48
-        from loader import load_menu_data
-        from utils import log_elapsed_time
-        import conditionals
         from settings import SETTINGS
+        from iconcache import ICONS48
         from constants import ICON_EXTENSIONS
+        import loader
+        import utils
+        import conditionals
 
-        # Files/strings to be loaded
-        sources = [
-            ['f', 'menudata.yaml'],
-            #['s', koodi],
-        ]
+        # Get a list of all available condition and menudata files, then sort
+        # them by priority and name. It's possible to scan multiple directories
+        # here, but currently we don't use that functionality.
+        condition_files = []
+        menudata_files = []
+
+        start_time = time.clock()
+
+        condition_files += find_menu_files(SETTINGS.menu_dir, 'conditions')
+        condition_files = sorted(condition_files, key=lambda i: (i[0], i[1]))
+
+        menudata_files += find_menu_files(SETTINGS.menu_dir, 'menudata')
+        menudata_files = sorted(menudata_files, key=lambda i: (i[0], i[1]))
+
+        scan_time = time.clock()
+
+        utils.log_elapsed_time('Condition and menudata files scanning time',
+                               start_time, scan_time)
 
         # Paths for .desktop files
         desktop_dirs = [
@@ -223,48 +255,45 @@ class Menudata:
             '/usr/share/icons/hicolor/32x32/apps',
         ]
 
-        conditional_files = [
-            'conditions.yaml'
-        ]
-
-        for src in sources:
-            if src[0] == 'f':
-                src[1] = SETTINGS.menu_dir + src[1]
-
+        # Load and evaluate conditions
         start_time = time.clock()
 
-        # Load and evaluate conditionals
-        for fname in conditional_files:
-            result = conditionals.evaluate_file(SETTINGS.menu_dir + fname)
-            self.conditions.update(result)
+        logging.info('Have %d source(s) for conditions', len(condition_files))
 
-        conditional_time = time.clock()
+        for name in condition_files:
+            self.conditions.update(conditionals.evaluate_file(name[2]))
 
-        log_elapsed_time('Conditional evaluation time',
-                         start_time, conditional_time)
+        conditions_time = time.clock()
 
-        id_to_path_mapping = {}
+        utils.log_elapsed_time('Conditions evaluation time',
+                               start_time, conditions_time)
 
         # Load menu data
+        start_time = time.clock()
+
+        sources = [n[2] for n in menudata_files]
+
         try:
             self.programs, \
             self.menus, \
             self.categories, \
-            self.category_index = load_menu_data(sources,
-                                                 desktop_dirs,
-                                                 self.conditions)
+            self.category_index = loader.load_menu_data(sources,
+                                                        desktop_dirs,
+                                                        self.conditions)
         except Exception as exception:
             logging.error('Could not load menu data!')
             logging.error(exception, exc_info=True)
             return False
 
+        parsing_time = time.clock()
+
         if not self.programs:
             # No programs at all?
             return False
 
-        parsing_time = time.clock()
-
         # Locate and load icon files
+        id_to_path_mapping = {}
+
         logging.info('Loading icons...')
         num_missing_icons = 0
 
@@ -371,7 +400,7 @@ class Menudata:
         stats = ICONS48.stats()
         logging.info('Number of 48-pixel icons cached: %d', stats['num_icons'])
         logging.info('Number of 48-pixel atlas surfaces: %d', stats['num_atlases'])
-        log_elapsed_time('Icon loading time', parsing_time, end_time)
-        log_elapsed_time('Total loading time', start_time, end_time)
+        utils.log_elapsed_time('Icon loading time', parsing_time, end_time)
+        utils.log_elapsed_time('Total loading time', start_time, end_time)
 
         return True

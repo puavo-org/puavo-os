@@ -188,10 +188,10 @@ __FUNCTIONS = {
 
 
 def evaluate_file(file_name):
-    """Evaluates the conditionals listed in a file and returns their
+    """Evaluates the conditions listed in a file and returns their
     results in a dict."""
 
-    logging.info('Loading a conditionals file "%s"', file_name)
+    logging.info('Loading conditions file "%s"...', file_name)
 
     results = {}
 

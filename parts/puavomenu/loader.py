@@ -430,31 +430,14 @@ def load_menu_data(source, desktop_dirs, conditions):
     total_start = time.clock()
     start_time = total_start
 
-    logging.info('Have %d sources for menu data', len(source))
+    logging.info('Have %d source(s) for menu data', len(source))
 
-    for n, s in enumerate(source):
+    for name in source:
         try:
-            if s[0] == 'f':
-                logging.info('load_menu_data(): loading a file "%s" for '
-                             'locale "%s"...', s[1], SETTINGS.language)
-
-                p, m, c = __parse_yml_file(s[1], conditions)
-            elif s[0] == 's':
-                logging.info('load_menu_data(): loading a string for '
-                             'locale "%s"...', SETTINGS.language)
-
-                p, m, c = __parse_yml_string(s[1], conditions)
-            else:
-                logging.error('Source type "%s" is not valid, skipping', s[0])
-                continue
+            logging.info('Loading menudata file "%s"...', name)
+            p, m, c = __parse_yml_file(name, conditions)
         except Exception as exception:
-            if s[0] == 'f':
-                logging.error('Could not load source file %d ("%s"): %s',
-                              n + 1, s[1], str(exception))
-            else:
-                logging.error('Could not load source string %d: %s',
-                              n + 1, str(exception))
-
+            logging.error('Could not load file "%s": %s', name, str(exception))
             logging.error(exception, exc_info=True)
             continue
 
