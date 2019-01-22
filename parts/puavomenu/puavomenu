@@ -73,6 +73,11 @@ parser.add_argument('--dev',
                     required=False,
                     help='enable development mode')
 
+parser.add_argument('--check',
+                    action='store_true',
+                    required=False,
+                    help='load and verify all menu data files')
+
 required = parser.add_argument_group('required arguments')
 
 required.add_argument('--res_dir',
@@ -122,6 +127,10 @@ SETTINGS.user_dir = os.path.join(args.user_dir, '')
 SETTINGS.socket = args.socket
 SETTINGS.dev_mode = args.dev
 SETTINGS.autohide = args.autohide
+SETTINGS.check_mode = args.check
+
+if not args.dev and args.check:
+    SETTINGS.check_mode = False
 
 if args.lang:
     # Override autodetection
@@ -155,6 +164,9 @@ logging.info('Desktop directory..: "%s"', SETTINGS.desktop_dir)
 
 if SETTINGS.dev_mode:
     logging.info('*** Development mode activated ***')
+
+if SETTINGS.check_mode:
+    logging.info('*** Configuration check mode ***')
 
 if SETTINGS.autohide:
     logging.info('*** Autohide enabled ***')

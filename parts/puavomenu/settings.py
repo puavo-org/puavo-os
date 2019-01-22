@@ -35,6 +35,10 @@ class Settings:
         # development mode)
         self.autohide = True
 
+        # If True, we'll only check the menu data for validity and exit.
+        # Ignored in production mode.
+        self.check_mode = False
+
         # ----------------------------------------------------------------------
         # Automagically detected
 
