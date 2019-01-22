@@ -438,7 +438,6 @@ def load_menu_data(source, desktop_dirs, conditions):
             p, m, c = __parse_yml_file(name, conditions)
         except Exception as exception:
             logging.error('Could not load file "%s": %s', name, str(exception))
-            logging.error(exception, exc_info=True)
             continue
 
         # IDs must be unique within a file, but not across files; a file
