@@ -51,9 +51,6 @@ tls_cacertfile /etc/puavo/certs/rootca.pem
 # The search scope.
 #scope sub
 
-## Filter out adm-users, libnss_puavoadmins.so.2 serves them.
-filter passwd (!(uid=adm-*))
-
 map passwd homeDirectory "/home/\$uid"
 map passwd gecos displayName
 
