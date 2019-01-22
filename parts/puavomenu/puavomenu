@@ -175,14 +175,19 @@ logging.info('=' * 50)
 
 # And go!
 try:
-    import_start = time.clock()
-    import utils
-    import main
-    import_end = time.clock()
+    if SETTINGS.check_mode:
+        # Only load and validate menu data, then exit
+        import menudata
+        menudata.Menudata().load()
+    else:
+        import_start = time.clock()
+        import utils
+        import main
+        import_end = time.clock()
 
-    utils.log_elapsed_time('Main import time', import_start, import_end)
+        utils.log_elapsed_time('Main import time', import_start, import_end)
+        main.run()
 
-    main.run()
 except Exception as exception:
     # This is bad. Very bad. The exception bubbled all the way up to here,
     # so this is fatal.

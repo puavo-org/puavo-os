@@ -1118,11 +1118,6 @@ def setup_signal_handlers(menu):
 # to import all sorts of X libraries and stuff and sometimes that fails
 # and you can't even see the help text!
 def run():
-    if SETTINGS.check_mode:
-        # Only load and validate menu data, then exit
-        menudata.Menudata().load()
-        return
-
     try:
         menu = PuavoMenu()
         setup_signal_handlers(menu)
