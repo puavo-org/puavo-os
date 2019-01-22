@@ -208,6 +208,7 @@ class Menudata:
         import time
         import logging
         import os.path
+        import json
 
         from settings import SETTINGS
         from iconcache import ICONS48
@@ -215,6 +216,30 @@ class Menudata:
         import loader
         import utils
         import conditionals
+
+        # Where to look for .desktop files
+        desktop_dirs = []
+
+        # Where to look for icons
+        icon_dirs = []
+
+        # Load the directories configuration file. This file is required,
+        # so bail out if it fails. JSON is used because JSON is faster
+        # to parse than YAML.
+        dirs_name = os.path.join(SETTINGS.menu_dir, 'dirs.json')
+
+        try:
+            dirs = json.load(open(dirs_name,  'r', encoding='utf-8'))
+
+            if 'desktop_dirs' in dirs:
+                desktop_dirs = dirs['desktop_dirs']
+
+            if 'icon_dirs' in dirs:
+                icon_dirs = dirs['icon_dirs']
+        except Exception as e:
+            logging.error('Failed to load the directories config file "%s": %s',
+                           dirs_name, str(e))
+            return False
 
         # Get a list of all available condition and menudata files, then sort
         # them by priority and name. It's possible to scan multiple directories
@@ -234,29 +259,6 @@ class Menudata:
 
         utils.log_elapsed_time('Condition and menudata files scanning time',
                                start_time, scan_time)
-
-        # Paths for .desktop files
-        desktop_dirs = [
-            '/usr/share/applications',
-            '/usr/share/applications/kde4',
-            '/usr/local/share/applications',
-        ]
-
-        # Where to search for icons
-        icon_dirs = [
-            '/usr/share/icons/hicolor/48x48/apps',
-            '/usr/share/icons/hicolor/64x64/apps',
-            '/usr/share/icons/hicolor/128x128/apps',
-            '/usr/share/icons/Neu/128x128/categories',
-            '/usr/share/icons/hicolor/scalable/apps',
-            '/usr/share/icons/hicolor/scalable',
-            '/usr/share/icons/Faenza/categories/64',
-            '/usr/share/icons/Faenza/apps/48',
-            '/usr/share/icons/Faenza/apps/96',
-            '/usr/share/app-install/icons',
-            '/usr/share/pixmaps',
-            '/usr/share/icons/hicolor/32x32/apps',
-        ]
 
         # Load and evaluate conditions
         start_time = time.clock()
