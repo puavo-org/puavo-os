@@ -317,105 +317,126 @@ class Menudata:
             return False
 
         # Locate and load icon files
-        id_to_path_mapping = {}
-
         logging.info('Loading icons...')
+
+        # Multiple programs can use the same generic icon name.
+        # The IconCache class prevents us from loading multiple
+        # copies of the same image, but this prevents us from
+        # searching for the same generic icon multiple times.
+        generic_name_cache = {}
+
         num_missing_icons = 0
 
+        # Programs first
         for name in self.programs:
             program = self.programs[name]
 
             if not program.used:
                 continue
 
-            if program.icon is None:
+            if program.icon_name is None:
                 # This should not happen, ever
                 logging.error('The impossible happened: program "%s" '
                               'has no icon at all!', name)
                 num_missing_icons += 1
                 continue
 
-            if name in id_to_path_mapping:
-                program.icon_is_path = True
-                program.icon = id_to_path_mapping[name]
+            if (not program.icon_name_is_path) and \
+                    program.icon_name in generic_name_cache:
+                # Reuse a cached generic icon
+                program.icon_name = generic_name_cache[program.icon_name]
+                program.icon_name_is_path = True
 
-            if program.icon_is_path:
-                # Just use it
-                if os.path.isfile(program.icon):
-                    icon = ICONS48.load_icon(program.icon)
+            if program.icon_name_is_path:
+                # Just load it
+                if os.path.isfile(program.icon_name):
+                    icon = ICONS48.load_icon(program.icon_name)
 
                     if icon.usable:
                         program.icon = icon
                         continue
 
-                # Okay, the icon was specified, but it could not be loaded.
-                # Try automatic loading.
-                program.icon_is_path = False
+                # An icon file was specified, but it could not be loaded.
+                # Sometimes icon names contain an extension (ie. "name.png")
+                # that confuses our autodetection. Unless the icon name really
+                # is a full path + filename, try to locate the correct image.
+                if len(os.path.dirname(program.icon_name)) > 0:
+                    logging.error('Could not load icon "%s" for program "%s"',
+                                  program.icon_name, name)
+                    num_missing_icons += 1
+                    continue
 
-            # Locate the icon specified in the .desktop file
+            # Search for the generic icon
             icon_path = None
 
-            for dirname in icon_dirs:
-                # Try the name as-is first
-                path = os.path.join(dirname, program.icon)
+            for dir_name in icon_dirs:
+                # Try the name as-is first (see above, some icons don't have
+                # a path in their names, but they have an extension)
+                candidate = os.path.join(dir_name, program.icon_name)
 
-                if os.path.isfile(path):
-                    icon_path = path
+                if os.path.isfile(candidate):
+                    icon_path = candidate
                     break
 
-                if not icon_path:
-                    # Then try the different extensions
-                    for ext in ICON_EXTENSIONS:
-                        path = os.path.join(dirname, program.icon + ext)
+                # Try different extensions
+                for ext in ICON_EXTENSIONS:
+                    candidate = os.path.join(dir_name,
+                                             program.icon_name + ext)
 
-                        if os.path.isfile(path):
-                            icon_path = path
-                            break
+                    if os.path.isfile(candidate):
+                        icon_path = candidate
+                        break
 
                 if icon_path:
                     break
 
-            # Nothing found
             if not icon_path:
                 logging.error('Icon "%s" for program "%s" not found in '
-                              'icon load paths', program.icon, name)
-                program.icon = None
+                              'icon load paths', program.icon_name, name)
                 num_missing_icons += 1
                 continue
 
-            program.icon = ICONS48.load_icon(path)
+            program.icon = ICONS48.load_icon(icon_path)
 
             if not program.icon.usable:
                 logging.warning('Found icon "%s" for program "%s", but '
-                                'it could not be loaded', path, name)
+                                'it could not be loaded', icon_path, name)
                 num_missing_icons += 1
             else:
-                id_to_path_mapping[name] = path
+                if not program.icon_name_is_path:
+                    # Cache the generic icon name
+                    generic_name_cache[program.icon_name] = icon_path
 
+            program.icon_name = icon_path
+            program.icon_name_is_path = True
+
+        # Then menus. This is much simpler, because menu icons
+        # must always be full paths. No automagic here.
         for name in self.menus:
             menu = self.menus[name]
 
-            if menu.icon is None:
+            if menu.icon_name is None:
                 logging.warning('Menu "%s" has no icon defined', name)
                 num_missing_icons += 1
                 continue
 
-            if not os.path.isfile(menu.icon):
+            if not os.path.isfile(menu.icon_name):
                 logging.error('Icon "%s" for menu "%s" does not exist',
-                              menu.icon, name)
+                              menu.icon_name, name)
                 menu.icon = None
                 num_missing_icons += 1
                 continue
 
-            menu.icon = ICONS48.load_icon(menu.icon)
+            menu.icon = ICONS48.load_icon(menu.icon_name)
 
             if not menu.icon.usable:
                 logging.warning('Found an icon "%s" for menu "%s", but '
-                                'it could not be loaded', path, name)
+                                'it could not be loaded', menu.icon_name, name)
                 num_missing_icons += 1
 
         end_time = time.clock()
 
+        # Show some ending statistics
         if num_missing_icons == 0:
             logging.info('No missing icons')
         else:

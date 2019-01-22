@@ -170,11 +170,11 @@ def __parse_yml_string(string, conditions):
                 program.description = None
 
         if 'icon' in params:
-            program.icon = str(params['icon'])
+            program.icon_name = str(params['icon'])
 
-            if utils.is_empty(program.icon):
+            if utils.is_empty(program.icon_name):
                 logging.warning('Ignoring empty icon for "%s"', name)
-                program.icon = None
+                program.icon_name = None
 
         program.keywords = __parse_list(params.get('keywords', []))
 
@@ -185,7 +185,7 @@ def __parse_yml_string(string, conditions):
                               'all, ignoring definition', name)
                 continue
 
-            if program.icon is None:
+            if program.icon_name is None:
                 # this isn't fatal, it just looks really ugly
                 logging.warning('Custom program/web link "%s" is missing an '
                                 'icon definition', name)
@@ -268,11 +268,11 @@ def __parse_yml_string(string, conditions):
                 menu.description = None
 
         if 'icon' in params:
-            menu.icon = str(params['icon'])
+            menu.icon_name = str(params['icon'])
 
-        if utils.is_empty(menu.icon):
+        if utils.is_empty(menu.icon_name):
             logging.warning('Menu "%s" has a missing/empty icon', name)
-            menu.icon = None
+            menu.icon_name = None
 
         menu.programs = __parse_list(params.get('programs', []))
 
@@ -550,17 +550,17 @@ def load_menu_data(source, desktop_dirs, conditions):
             if key in entry:
                 p.keywords = list(filter(None, entry[key].split(";")))
 
-        if p.icon is None:
+        if p.icon_name is None:
             if 'Icon' not in entry:
                 logging.warning('Program "%s" has no icon defined for it in the '
                                 '.desktop file "%s"', p.name, dd_name)
             else:
-                p.icon = entry.get('Icon', '')
+                p.icon_name = entry.get('Icon', '')
 
-        if utils.is_empty(p.icon):
+        if utils.is_empty(p.icon_name):
             logging.warning('Program "%s" has an empty/invalid icon name, will '
                             'display incorrectly', p.name)
-            p.icon = None
+            p.icon_name = None
 
         if p.command is None:
             if 'Exec' not in entry or utils.is_empty(entry['Exec']):
@@ -582,15 +582,15 @@ def load_menu_data(source, desktop_dirs, conditions):
     for i in programs:
         p = programs[i]
 
-        if p.hidden or p.icon is None:
+        if p.hidden or p.icon_name is None:
             continue
 
         # Is the icon name a full path to an icon file, or just
         # a generic name?
-        _, ext = os.path.splitext(p.icon)
+        _, ext = os.path.splitext(p.icon_name)
 
         if not utils.is_empty(ext) and ext in ICON_EXTENSIONS:
-            p.icon_is_path = True
+            p.icon_name_is_path = True
 
     end_time = time.clock()
     utils.log_elapsed_time('Desktop file parsing', start_time, end_time)
