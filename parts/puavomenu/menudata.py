@@ -141,6 +141,9 @@ def find_menu_files(*where):
         number = MENU_FILE_PATTERN.search(name)
 
         if number:
+            # The first two elements are for sorting (numbers first, then
+            # names), the third element is the actual name you want to use
+            # after sorting.
             files.append((number.group(0), name[number.end(0):], full_name))
 
     return files
