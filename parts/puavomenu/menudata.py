@@ -237,6 +237,9 @@ class Menudata:
         import utils
         import conditionals
 
+        # ----------------------------------------------------------------------
+        # Load the path configuration
+
         # Where to look for .desktop files
         desktop_dirs = []
 
@@ -261,9 +264,11 @@ class Menudata:
                            dirs_name, str(e))
             return False
 
+        # ----------------------------------------------------------------------
         # Get a list of all available condition and menudata files, then sort
         # them by priority and name. It's possible to scan multiple directories
         # here, but currently we don't use that functionality.
+
         condition_files = []
         menudata_files = []
 
@@ -280,6 +285,9 @@ class Menudata:
         utils.log_elapsed_time('Condition and menudata files scanning time',
                                start_time, scan_time)
 
+        # ----------------------------------------------------------------------
+        # Load menu data
+
         # Load and evaluate conditions
         start_time = time.clock()
 
@@ -293,7 +301,7 @@ class Menudata:
         utils.log_elapsed_time('Conditions evaluation time',
                                start_time, conditions_time)
 
-        # Load menu data
+        # Load programs, menus and categories
         start_time = time.clock()
 
         sources = [n[2] for n in menudata_files]
@@ -316,7 +324,9 @@ class Menudata:
             # No programs at all?
             return False
 
-        # Locate and load icon files
+        # ----------------------------------------------------------------------
+        # Locate and load icons for programs and menus
+
         logging.info('Loading icons...')
 
         # Multiple programs can use the same generic icon name.
@@ -436,7 +446,9 @@ class Menudata:
 
         end_time = time.clock()
 
-        # Show some ending statistics
+        # ----------------------------------------------------------------------
+        # Show some end statistics
+
         if num_missing_icons == 0:
             logging.info('No missing icons')
         else:
