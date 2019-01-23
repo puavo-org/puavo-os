@@ -388,7 +388,7 @@ unpack_upstream_pack()
         return 0
     fi
 
-    check_md5sum "${pkg_dir}/upstream_pack_md5sum" "${upstream_pack}" || {
+    check_cksum "${pkg_dir}/upstream_pack_sha384sum" "${upstream_pack}" || {
         log_error "upstream pack has incorrect checksum, " \
             "perhaps you should purge the package and download it again?"
         return 1
@@ -420,26 +420,26 @@ unpack_upstream_pack()
     log_info "${pkg_name}: unpacked upstream pack successfully"
 }
 
-check_md5sum()
+check_cksum()
 {
-    local md5sum_file file actual_md5sum_str expected_md5sum_str
+    local cksum_file file actual_cksum_str expected_cksum_str
 
-    md5sum_file=$1
+    cksum_file=$1
     file=$2
 
     [ -r "${file}" ] || return 1
 
-    [ -r "${md5sum_file}" ] || return 0
-    expected_md5sum_str=$(cat "${md5sum_file}") || return 1
+    [ -r "${cksum_file}" ] || return 0
+    expected_cksum_str=$(cat "${cksum_file}") || return 1
 
-    actual_md5sum_str=$(md5sum "${file}" 2>/dev/null | awk '{ print $1 }')
+    actual_cksum_str=$(sha384sum "${file}" 2>/dev/null | awk '{ print $1 }')
 
-    [ -n "$actual_md5sum_str"   ] || return 1
-    [ -n "$expected_md5sum_str" ] || return 1
+    [ -n "$actual_cksum_str"   ] || return 1
+    [ -n "$expected_cksum_str" ] || return 1
 
-    if [ "$actual_md5sum_str" != "$expected_md5sum_str" ]; then
-        log_error "expected checksum '${expected_md5sum_str}' in '${file}'," \
-                  "yet actual checksum is '${actual_md5sum_str}'"
+    if [ "$actual_cksum_str" != "$expected_cksum_str" ]; then
+        log_error "expected checksum '${expected_cksum_str}' in '${file}'," \
+                  "yet actual checksum is '${actual_cksum_str}'"
         return 1
     fi
 
@@ -448,7 +448,7 @@ check_md5sum()
 
 cache_load_upstream_pack()
 {
-    local pkg_name pkg_version pkg_dir upstream_pack md5sum_file md5sum_str cached_upstream_pack
+    local pkg_name pkg_version pkg_dir upstream_pack cksum_file cksum_str cached_upstream_pack
 
     pkg_name=$1
     pkg_version=$2
@@ -457,14 +457,14 @@ cache_load_upstream_pack()
 
     pkg_dir=$(get_pkg_dir "${pkg_name}" "${pkg_version}") || return 1
     upstream_pack="${pkg_dir}/upstream_pack"
-    md5sum_file="${pkg_dir}/upstream_pack_md5sum"
+    cksum_file="${pkg_dir}/upstream_pack_sha384sum"
 
-    [ -r "${md5sum_file}"  ] || return 0
-    md5sum_str=$(cat "${md5sum_file}") || return 1
+    [ -r "${cksum_file}"  ] || return 0
+    cksum_str=$(cat "${cksum_file}") || return 1
 
-    [ -n "${md5sum_str}" ] || return 0
+    [ -n "${cksum_str}" ] || return 0
 
-    cached_upstream_pack="${g_puavo_pkg_cachedir}/upstream_packs/${pkg_name}/${md5sum_str}"
+    cached_upstream_pack="${g_puavo_pkg_cachedir}/upstream_packs/${pkg_name}/${cksum_str}"
     if [ -r "${cached_upstream_pack}" ]; then
         cp -a -T "${cached_upstream_pack}" "${upstream_pack}" || return 1
         log_info "${pkg_name}: loaded upstream pack from the cache successfully"
@@ -473,7 +473,7 @@ cache_load_upstream_pack()
 
 cache_save_upstream_pack()
 {
-    local pkg_name pkg_version pkg_dir upstream_pack md5sum_str
+    local pkg_name pkg_version pkg_dir upstream_pack cksum_str
 
     pkg_name=$1
     pkg_version=$2
@@ -482,11 +482,11 @@ cache_save_upstream_pack()
 
     pkg_dir=$(get_pkg_dir "${pkg_name}" "${pkg_version}") || return 1
     upstream_pack="${pkg_dir}/upstream_pack"
-    md5sum_str=$(md5sum "${upstream_pack}" | cut -d' ' -f1)
+    cksum_str=$(sha384sum "${upstream_pack}" | cut -d' ' -f1)
 
-    if [ -n "${md5sum_str}" ]; then
+    if [ -n "${cksum_str}" ]; then
         mkdir -p "${g_puavo_pkg_cachedir}/upstream_packs/${pkg_name}"
-        cp -a -T "${upstream_pack}" "${g_puavo_pkg_cachedir}/upstream_packs/${pkg_name}/${md5sum_str}" || return 1
+        cp -a -T "${upstream_pack}" "${g_puavo_pkg_cachedir}/upstream_packs/${pkg_name}/${cksum_str}" || return 1
     fi
 
     log_info "${pkg_name}: saved upstream pack to cache successfully"
@@ -506,7 +506,7 @@ download_upstream_pack()
         log_warning "${pkg_name}: failed to load the upstream pack from the cache"
     }
 
-    if check_md5sum "${pkg_dir}/upstream_pack_md5sum" "${upstream_pack}"; then
+    if check_cksum "${pkg_dir}/upstream_pack_sha384sum" "${upstream_pack}"; then
         return 0
     fi
 
@@ -537,7 +537,7 @@ download_upstream_pack()
         }
     fi
 
-    check_md5sum "${pkg_dir}/upstream_pack_md5sum" "${upstream_tmppack}" || {
+    check_cksum "${pkg_dir}/upstream_pack_sha384sum" "${upstream_tmppack}" || {
         log_error "downloaded upstream pack has incorrect checksum"
         rm -rf "${upstream_tmppack}"
         return 1
@@ -555,12 +555,12 @@ download_upstream_pack()
     log_info "${pkg_name}: downloaded upstream pack successfully"
 }
 
-get_md5sum()
+get_cksum()
 {
     local file output
 
     file=$1
-    output=$(md5sum "${file}") || return 1
+    output=$(sha384sum "${file}") || return 1
 
     awk '{print $1}' <<<"${output}"
 }
@@ -577,7 +577,7 @@ extract_installer()
         return 1
     fi
 
-    pkg_version=$(get_md5sum "${installer}") || return 1
+    pkg_version=$(get_cksum "${installer}") || return 1
 
     pkg_dir=$(get_pkg_dir "${pkg_name}" "${pkg_version}")
     pkg_tmpdir="${pkg_dir}.tmp"
