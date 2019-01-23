@@ -9,25 +9,25 @@ if [ -z "$puavo_pkg" ]; then
   exit 1
 fi
 
-pkg_installer_sha384sum=$(
+pkg_installer_id=$(
   find "$puavo_pkg" -type f ! -name .puavo-pkg-version \
-    | sort | xargs -n 1 sha384sum \
-    | sha384sum \
+    | sort | xargs -n 1 md5sum \
+    | md5sum \
     | awk '{ print $1 }')
 
 timestamp=$(date -Iseconds)
 
 if [ ! -e "${puavo_pkg}/.puavo-pkg-version" ]; then
   cat <<EOF > "${puavo_pkg}/.puavo-pkg-version"
+package-id ${pkg_installer_id}
 pkg-format 1
-sha384sum ${pkg_installer_sha384sum}
 timestamp $timestamp
 version 1
 EOF
 else
-  awk -v new_sha384sum="$pkg_installer_sha384sum" -v timestamp="$timestamp" '
-    $1 == "sha384sum" && $2 != new_sha384sum {
-      $2 = new_sha384sum; bump_version = 1
+  awk -v new_id="$pkg_installer_id" -v timestamp="$timestamp" '
+    $1 == "installer-id" && $2 != new_id {
+      $2 = new_id; bump_version = 1
     }
     $1 == "timestamp" && bump_version { $2 = timestamp }
     $1 == "version" && bump_version { $2 += 1 }
