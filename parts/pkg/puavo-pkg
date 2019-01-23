@@ -107,20 +107,20 @@ log_warning()
 }
 
 gc_installations() {
-    local gc_status installed_pkg_version msg pkg_installation pkg_version \
+    local gc_status installed_pkg_checksum msg pkg_installation pkg_checksum \
           root_basedir
 
     gc_status=$SC_OK
 
     for root_basedir in "${g_puavo_pkg_rootdir}"/packages/*; do
-        installed_pkg_version="$(readlink "${root_basedir}/installed")" || true
+        installed_pkg_checksum="$(readlink "${root_basedir}/installed")" || true
 
         for pkg_installation in "$root_basedir"/*; do
-            pkg_version="$(basename "$pkg_installation")"
-            [ "$pkg_version" != 'installed' ] || continue
+            pkg_checksum="$(basename "$pkg_installation")"
+            [ "$pkg_checksum" != 'installed' ] || continue
             [ -d "$pkg_installation"        ] || continue
 
-            if [ "$installed_pkg_version" != "$pkg_version" ]; then
+            if [ "$installed_pkg_checksum" != "$pkg_checksum" ]; then
                 if rm -rf "$pkg_installation"; then
                     log_info "removed old installation in $pkg_installation"
                 else
@@ -191,9 +191,9 @@ list_installed_pkgs()
     done < <(list_installed_pkg_dirs)
 }
 
-list_installed_pkgs_with_versions()
+list_installed_pkgs_with_checksums()
 {
-    local pkg_dir pkg_name pkg_version col1_len
+    local pkg_dir pkg_name pkg_checksum col1_len
 
     col1_len=$(awk 'BEGIN { max = 0 }
                           { max = (length($0) > max) ? length($0) : max }
@@ -201,8 +201,8 @@ list_installed_pkgs_with_versions()
 
     while read -d '' pkg_dir; do
         pkg_name=$(get_pkg_name "${pkg_dir}") || return 1
-        pkg_version=$(get_pkg_version "${pkg_dir}") || return 1
-        printf "%-${col1_len}s %s\n" "${pkg_name}" "${pkg_version}"
+        pkg_checksum=$(get_pkg_checksum "${pkg_dir}") || return 1
+        printf "%-${col1_len}s %s\n" "${pkg_name}" "${pkg_checksum}"
     done < <(list_installed_pkg_dirs)
 }
 
@@ -242,13 +242,13 @@ get_pkg_link()
 
 get_pkg_dir()
 {
-    local pkg_name pkg_version pkg_basedir
+    local pkg_name pkg_checksum pkg_basedir
 
     pkg_name=$1
-    pkg_version=$2
+    pkg_checksum=$2
     pkg_basedir=$(get_pkg_basedir "${pkg_name}") || return 1
 
-    echo "${pkg_basedir}/${pkg_version}"
+    echo "${pkg_basedir}/${pkg_checksum}"
 }
 
 get_installed_pkg_dir()
@@ -261,7 +261,7 @@ get_installed_pkg_dir()
     readlink -e "${pkg_link}" || true
 }
 
-get_installed_pkg_version()
+get_installed_pkg_checksum()
 {
     local pkg_name pkg_dir
 
@@ -283,25 +283,25 @@ get_pkg_name()
     basename "${pkg_basedir}"
 }
 
-get_pkg_version()
+get_pkg_checksum()
 {
     basename "$1"
 }
 
 configure_pkg()
 {
-    local pkg_name pkg_version pkg_dir upstream_dir installed_pkg_dir pkg_link
+    local pkg_name pkg_checksum pkg_dir upstream_dir installed_pkg_dir pkg_link
 
     pkg_name=$1
-    pkg_version=$2
-    pkg_dir=$(get_pkg_dir "${pkg_name}" "${pkg_version}") || return 1
+    pkg_checksum=$2
+    pkg_dir=$(get_pkg_dir "${pkg_name}" "${pkg_checksum}") || return 1
     upstream_dir="${pkg_dir}/upstream"
     installed_pkg_dir=$(get_installed_pkg_dir "${pkg_name}") || return 1
     pkg_link=$(get_pkg_link "${pkg_name}") || return 1
 
     if [ -n "${installed_pkg_dir}" ]; then
         if [ "${installed_pkg_dir}" != "${pkg_dir}" ]; then
-            log_error "another version of the package has already been " \
+            log_error "another checksum of the package has already been " \
                 "configured, unconfigure it before proceeding"
             return 1
         fi
@@ -315,7 +315,7 @@ configure_pkg()
     }
     popd >/dev/null || return 1
 
-    ln -fns "${pkg_version}" "${pkg_link}" || {
+    ln -fns "${pkg_checksum}" "${pkg_link}" || {
         log_error "failed to create a package link"
         return 1
     }
@@ -325,12 +325,12 @@ configure_pkg()
 
 reconfigure_pkg()
 {
-    local pkg_name pkg_version
+    local pkg_name pkg_checksum
 
     pkg_name=$1
-    pkg_version=$(get_installed_pkg_version "${pkg_name}") || return 1
+    pkg_checksum=$(get_installed_pkg_checksum "${pkg_name}") || return 1
 
-    configure_pkg "${pkg_name}" "${pkg_version}"
+    configure_pkg "${pkg_name}" "${pkg_checksum}"
 }
 
 reconfigure_all_pkgs()
@@ -349,10 +349,10 @@ reconfigure_all_pkgs()
 
 unconfigure_pkg()
 {
-    local pkg_name pkg_link pkg_dir upstream_dir pkg_version
+    local pkg_name pkg_link pkg_dir upstream_dir pkg_checksum
 
     pkg_name=$1
-    pkg_version=$2
+    pkg_checksum=$2
 
     pkg_link=$(get_pkg_link "${pkg_name}") || return 1
     pkg_dir=$(readlink -e "${pkg_link}") || true
@@ -375,11 +375,11 @@ unconfigure_pkg()
 
 unpack_upstream_pack()
 {
-    local pkg_name pkg_version pkg_dir upstream_pack upstream_dir upstream_tmpdir
+    local pkg_name pkg_checksum pkg_dir upstream_pack upstream_dir upstream_tmpdir
 
     pkg_name=$1
-    pkg_version=$2
-    pkg_dir=$(get_pkg_dir "${pkg_name}" "${pkg_version}") || return 1
+    pkg_checksum=$2
+    pkg_dir=$(get_pkg_dir "${pkg_name}" "${pkg_checksum}") || return 1
     upstream_pack="${pkg_dir}/upstream_pack"
     upstream_dir="${pkg_dir}/upstream"
     upstream_tmpdir="${upstream_dir}.tmp"
@@ -448,14 +448,14 @@ check_cksum()
 
 cache_load_upstream_pack()
 {
-    local pkg_name pkg_version pkg_dir upstream_pack cksum_file cksum_str cached_upstream_pack
+    local pkg_name pkg_checksum pkg_dir upstream_pack cksum_file cksum_str cached_upstream_pack
 
     pkg_name=$1
-    pkg_version=$2
+    pkg_checksum=$2
 
     [ -n "${g_puavo_pkg_cachedir}" ] || return 0
 
-    pkg_dir=$(get_pkg_dir "${pkg_name}" "${pkg_version}") || return 1
+    pkg_dir=$(get_pkg_dir "${pkg_name}" "${pkg_checksum}") || return 1
     upstream_pack="${pkg_dir}/upstream_pack"
     cksum_file="${pkg_dir}/upstream_pack_sha384sum"
 
@@ -473,14 +473,14 @@ cache_load_upstream_pack()
 
 cache_save_upstream_pack()
 {
-    local pkg_name pkg_version pkg_dir upstream_pack cksum_str
+    local pkg_name pkg_checksum pkg_dir upstream_pack cksum_str
 
     pkg_name=$1
-    pkg_version=$2
+    pkg_checksum=$2
 
     [ -n "${g_puavo_pkg_cachedir}" ] || return 0
 
-    pkg_dir=$(get_pkg_dir "${pkg_name}" "${pkg_version}") || return 1
+    pkg_dir=$(get_pkg_dir "${pkg_name}" "${pkg_checksum}") || return 1
     upstream_pack="${pkg_dir}/upstream_pack"
     cksum_str=$(sha384sum "${upstream_pack}" | cut -d' ' -f1)
 
@@ -494,15 +494,15 @@ cache_save_upstream_pack()
 
 download_upstream_pack()
 {
-    local pkg_name pkg_version pkg_dir upstream_pack upstream_tmppack
+    local pkg_name pkg_checksum pkg_dir upstream_pack upstream_tmppack
 
     pkg_name=$1
-    pkg_version=$2
-    pkg_dir=$(get_pkg_dir "${pkg_name}" "${pkg_version}") || return 1
+    pkg_checksum=$2
+    pkg_dir=$(get_pkg_dir "${pkg_name}" "${pkg_checksum}") || return 1
     upstream_pack="${pkg_dir}/upstream_pack"
     upstream_tmppack="${upstream_pack}.tmp"
 
-    cache_load_upstream_pack "${pkg_name}" "${pkg_version}" || {
+    cache_load_upstream_pack "${pkg_name}" "${pkg_checksum}" || {
         log_warning "${pkg_name}: failed to load the upstream pack from the cache"
     }
 
@@ -548,26 +548,33 @@ download_upstream_pack()
         return 1
     }
 
-    cache_save_upstream_pack "${pkg_name}" "${pkg_version}" || {
+    cache_save_upstream_pack "${pkg_name}" "${pkg_checksum}" || {
         log_warning "${pkg_name}: failed to save upstream pack to the cache"
     }
 
     log_info "${pkg_name}: downloaded upstream pack successfully"
 }
 
-get_cksum()
+get_checksum_from_installer()
 {
-    local file output
+    local installer pkg_checksum
+    installer=$1
 
-    file=$1
-    output=$(sha384sum "${file}") || return 1
+    pkg_checksum=$(
+      tar --wildcards -Ozx -f "$installer" '*/.puavo-pkg-version' \
+        | awk '$1 == "sha384sum" { print $2 }')
 
-    awk '{print $1}' <<<"${output}"
+    if [ -z "$pkg_checksum" ]; then
+        log_error "could not determine checksum from '${installer}'"
+        return 1
+    fi
+
+    echo "$pkg_checksum"
 }
 
 extract_installer()
 {
-    local installer pkg_name pkg_version pkg_dir pkg_tmpdir pkg_format
+    local installer pkg_name pkg_checksum pkg_dir pkg_tmpdir pkg_format
 
     installer=$1
     pkg_name=$(basename "${installer}" .tar.gz) || return 1
@@ -577,9 +584,9 @@ extract_installer()
         return 1
     fi
 
-    pkg_version=$(get_cksum "${installer}") || return 1
+    pkg_checksum=$(get_checksum_from_installer "$installer") || return 1
 
-    pkg_dir=$(get_pkg_dir "${pkg_name}" "${pkg_version}")
+    pkg_dir=$(get_pkg_dir "${pkg_name}" "${pkg_checksum}")
     pkg_tmpdir="${pkg_dir}.tmp"
 
     if [ -d "${pkg_dir}" ]; then
@@ -590,7 +597,7 @@ extract_installer()
     mkdir -p "${pkg_tmpdir}" || return 1
 
     tar --no-same-owner --no-same-permissions --strip-components=1 \
-        -z -x -f "${installer}" -C "${pkg_tmpdir}"  || {
+        -z -x -f "${installer}" -C "${pkg_tmpdir}" || {
         rm -rf "${pkg_tmpdir}"
         return 1
     }
@@ -623,7 +630,7 @@ extract_installer()
 
 install_pkg_with_installer()
 {
-    local installer pkg_dir pkg_name pkg_version old_pkg_version old_pkg_dir
+    local installer pkg_dir pkg_name pkg_checksum old_pkg_checksum old_pkg_dir
 
     installer=$1
     pkg_dir=$(extract_installer "${installer}") || {
@@ -632,40 +639,40 @@ install_pkg_with_installer()
     }
 
     pkg_name=$(get_pkg_name "${pkg_dir}") || return 1
-    pkg_version=$(get_pkg_version "${pkg_dir}") || return 1
+    pkg_checksum=$(get_pkg_checksum "${pkg_dir}") || return 1
 
-    download_upstream_pack "${pkg_name}" "${pkg_version}" || {
+    download_upstream_pack "${pkg_name}" "${pkg_checksum}" || {
         log_error "failed to download the upstream pack of package '${pkg_name}'"
         return 1
     }
 
-    unpack_upstream_pack "${pkg_name}" "${pkg_version}" || {
+    unpack_upstream_pack "${pkg_name}" "${pkg_checksum}" || {
         log_error "failed to unpack the upstream pack of package '${pkg_name}'"
         return 1
     }
 
-    old_pkg_version=$(get_installed_pkg_version "${pkg_name}") || return 1
-    if [ -n "${old_pkg_version}" -a "${old_pkg_version}" != "${pkg_version}" ]; then
-        unconfigure_pkg "${pkg_name}" "${old_pkg_version}" || {
+    old_pkg_checksum=$(get_installed_pkg_checksum "${pkg_name}") || return 1
+    if [ -n "${old_pkg_checksum}" -a "${old_pkg_checksum}" != "${pkg_checksum}" ]; then
+        unconfigure_pkg "${pkg_name}" "${old_pkg_checksum}" || {
             log_error "failed to unconfigure package '${pkg_name}'"
             return 1
         }
     fi
 
-    configure_pkg "${pkg_name}" "${pkg_version}" || {
-        log_error "${pkg_name}: failed to configure package version '${pkg_version}'"
-        if [ -n "${old_pkg_version}" -a "${old_pkg_version}" != "${pkg_version}" ]; then
-            configure_pkg "${pkg_name}" "${old_pkg_version}" || {
-                log_error "${pkg_name}: failed to reconfigure the previous version '${old_pkg_version}'"
+    configure_pkg "${pkg_name}" "${pkg_checksum}" || {
+        log_error "${pkg_name}: failed to configure package checksum '${pkg_checksum}'"
+        if [ -n "${old_pkg_checksum}" -a "${old_pkg_checksum}" != "${pkg_checksum}" ]; then
+            configure_pkg "${pkg_name}" "${old_pkg_checksum}" || {
+                log_error "${pkg_name}: failed to reconfigure the previous checksum '${old_pkg_checksum}'"
                 return 1
             }
-            log_info "${pkg_name}: reconfigured the previous version '${old_pkg_version}' successfully"
+            log_info "${pkg_name}: reconfigured the previous checksum '${old_pkg_checksum}' successfully"
         fi
         return 1
     }
 
-    if [ -n "${old_pkg_version}" -a "${old_pkg_version}" != "${pkg_version}" ]; then
-        old_pkg_dir=$(get_pkg_dir "${pkg_name}" "${old_pkg_version}") \
+    if [ -n "${old_pkg_checksum}" -a "${old_pkg_checksum}" != "${pkg_checksum}" ]; then
+        old_pkg_dir=$(get_pkg_dir "${pkg_name}" "${old_pkg_checksum}") \
             && rm -rf "${old_pkg_dir}" || true
     fi
 
@@ -674,17 +681,17 @@ install_pkg_with_installer()
 
 remove_pkg()
 {
-    local pkg_name pkg_dir pkg_version
+    local pkg_name pkg_dir pkg_checksum
 
     pkg_name=$1
 
-    pkg_version=$(get_installed_pkg_version "${pkg_name}") || return 1
-    if [ -n "${pkg_version}" ]; then
-        unconfigure_pkg "${pkg_name}" "${pkg_version}" || {
+    pkg_checksum=$(get_installed_pkg_checksum "${pkg_name}") || return 1
+    if [ -n "${pkg_checksum}" ]; then
+        unconfigure_pkg "${pkg_name}" "${pkg_checksum}" || {
             log_error "failed to unconfigure package '${pkg_name}'"
             return 1
         }
-        pkg_dir=$(get_pkg_dir "${pkg_name}" "${pkg_version}") || return 1
+        pkg_dir=$(get_pkg_dir "${pkg_name}" "${pkg_checksum}") || return 1
         rm -rf "${pkg_dir}" || return 1
         log_info "removed package '${pkg_name}'"
         return 0
@@ -710,7 +717,7 @@ remove_all_pkgs()
 
 show_pkg()
 {
-    local pkg_name pkg_dir pkg_version pkg_legend pkg_description pkg_field identifier INSTALLER_REGEX
+    local pkg_name pkg_dir pkg_checksum pkg_legend pkg_description pkg_field identifier INSTALLER_REGEX
 
     identifier=$1
     pkg_field=$2
@@ -727,8 +734,8 @@ show_pkg()
     fi
 
     pkg_name=$(get_pkg_name "${pkg_dir}") || return 1
-    pkg_version=$(get_pkg_version "${pkg_dir}") || return 1
-    if [ -z "${pkg_version}" ]; then
+    pkg_checksum=$(get_pkg_checksum "${pkg_dir}") || return 1
+    if [ -z "${pkg_checksum}" ]; then
         log_error "package ${pkg_name} is not installed"
         return 1
     fi
@@ -748,7 +755,7 @@ show_pkg()
             echo "${pkg_name}"
             ;;
         Version)
-            echo "${pkg_version}"
+            echo "${pkg_checksum}"
             ;;
         Directory)
             echo "${pkg_dir}"
@@ -761,7 +768,7 @@ show_pkg()
             ;;
         '')
             echo "Name: ${pkg_name}"
-            echo "Version: ${pkg_version}"
+            echo "Version: ${pkg_checksum}"
             echo "Directory: ${pkg_dir}"
             echo "Legend: ${pkg_legend}"
             echo "Description:"
@@ -871,7 +878,7 @@ case "${command}" in
         ;;
     list)
         assert_args_count -eq 0 "$@"
-        list_installed_pkgs_with_versions
+        list_installed_pkgs_with_checksums
         ;;
     reconfigure)
         assert_args_count -eq 1 "$@"
