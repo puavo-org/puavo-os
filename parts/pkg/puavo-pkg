@@ -294,6 +294,12 @@ configure_pkg()
     pkg_name=$1
     pkg_id=$2
     pkg_dir=$(get_pkg_dir "${pkg_name}" "${pkg_id}") || return 1
+
+    if [ ! -e "${pkg_dir}/.puavo-pkg-version" ]; then
+      log_error "not configuring ${pkg_name}, it is missing version"
+      return 1
+    fi
+
     upstream_dir="${pkg_dir}/upstream"
     installed_pkg_dir=$(get_installed_pkg_dir "${pkg_name}") || return 1
     pkg_link=$(get_pkg_link "${pkg_name}") || return 1
