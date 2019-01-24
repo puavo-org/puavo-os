@@ -9,8 +9,11 @@ class puavomenu {
     '/etc/puavomenu':
       ensure => directory;
 
-    '/etc/puavomenu/conditions.yaml':
-      content => template('puavomenu/conditions.yaml');
+    '/etc/puavomenu/conditions':
+      ensure => directory;
+
+    '/etc/puavomenu/conditions/50-default.yml':
+      content => template('puavomenu/conditions/50-default.yml');
 
     '/etc/puavomenu/menudata.yaml':
       content => template('puavomenu/menudata.yaml');
