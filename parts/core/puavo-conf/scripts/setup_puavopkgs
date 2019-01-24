@@ -4,8 +4,9 @@ set -eu
 
 status=0
 
-bootserver_cachedir='/var/cache/puavo-pkg.bootserver'
-bootserver_rootdir='/var/lib/puavo-pkg.bootserver'
+remote_mountdir='/mnt/bootserver/puavo-pkg'
+remote_cachedir="${remote_mountdir}/cache"
+remote_rootdir="${remote_mountdir}/root"
 
 local_cachedir='/images/puavo-pkg/cache'
 local_rootdir='/images/puavo-pkg/root'
@@ -16,15 +17,23 @@ system_rootdir='/var/lib/puavo-pkg'
 install_puavo_pkg_conf() {
   puavo_pkg_cachedir=$1
   puavo_pkg_rootdir=$2
+  puavo_pkg_readonly_cachedir=$3
+  puavo_pkg_readonly_rootdir=$4
 
   puavo_pkg_conf_path='/etc/puavo-pkg/puavo-pkg.conf'
 
   mkdir -p /etc/puavo-pkg
 
-  cat <<EOF > "${puavo_pkg_conf_path}.tmp"
-PUAVO_PKG_CACHEDIR=${puavo_pkg_cachedir}
-PUAVO_PKG_ROOTDIR=${puavo_pkg_rootdir}
-EOF
+  {
+    [ -n "$puavo_pkg_cachedir" ] \
+      && echo "PUAVO_PKG_CACHEDIR=${puavo_pkg_cachedir}"
+    [ -n "$puavo_pkg_rootdir" ] \
+      && echo "PUAVO_PKG_ROOTDIR=${puavo_pkg_rootdir}"
+    [ -n "$puavo_pkg_readonly_cachedir" ] \
+      && echo "PUAVO_PKG_READONLY_CACHEDIR=${puavo_pkg_readonly_cachedir}"
+    [ -n "$puavo_pkg_readonly_rootdir" ] \
+      && echo "PUAVO_PKG_READONLY_ROOTDIR=${puavo_pkg_readonly_rootdir}"
+  } > "${puavo_pkg_conf_path}.tmp"
 
   mv "${puavo_pkg_conf_path}.tmp" "$puavo_pkg_conf_path"
 }
@@ -33,11 +42,77 @@ reconfigure_puavopkg() {
   timeout -k 5 30 puavo-pkg reconfigure "$@"
 }
 
-test_puavopkg_installation() {
-  # this is faster than "puavo-pkg show $1"
+get_installed_puavopkg_dir() {
   puavo_pkg=$1
-  installed_path="${puavo_pkg_rootdir}/packages/${puavo_pkg}/installed"
-  [ -h "$installed_path" -a -d "$installed_path" ]
+
+  installed_path="${system_rootdir}/installed/${puavo_pkg}"
+  if ! [ -h "$installed_path" -a -d "$installed_path" ]; then
+    return 1
+  fi
+
+  readlink "$installed_path"
+}
+
+get_installed_version() {
+  pkg_name=$1
+  syspkg_conflink="${system_rootdir}/installed/${pkg_name}"
+  syspkg_version=$(
+    awk '$1 == "version" && $2 ~ /^[0-9]+$/ { print $2 }' \
+      "${syspkg_conflink}/.puavo-pkg-version" 2>/dev/null || true)
+  if [ -z "$syspkg_version" ]; then
+    syspkg_version=0
+  fi
+
+  echo "$syspkg_version"
+}
+
+get_dir_with_latest_version() {
+  other_pkg_dir=$1
+  current_version=$2
+
+  latest_pkg_dir=
+  latest_pkg_version=0
+
+  for pkgid_dir in ${other_pkg_dir}/*; do
+    test -d "$pkgid_dir" || continue
+
+    pkg_version=$(
+      awk '$1 == "version" && $2 ~ /^[0-9]+$/ { print $2 }' \
+        "${pkgid_dir}/.puavo-pkg-version" 2>/dev/null || true)
+    if [ -z "$pkg_version" ]; then
+      echo "Could not lookup version for ${pkgid_dir}" >&2
+      status=1
+      continue
+    fi
+
+    if [ "$latest_pkg_version" -lt "$pkg_version" ]; then
+      latest_pkg_dir="$pkgid_dir"
+      latest_pkg_version="$pkg_version"
+    fi
+  done
+
+  if [ "$latest_pkg_version" -le "$current_version" ]; then
+    return
+  fi
+
+  echo "$latest_pkg_dir"
+}
+
+configure_latest_from() {
+  other_rootdir="$1"
+
+  for other_pkgdir in ${other_rootdir}/packages/*; do
+    test -d "$other_pkgdir" || continue
+
+    pkg_name=$(basename "$other_pkgdir")
+    syspkg_version="$(get_installed_version "$pkg_name")"
+
+    other_pkgid_dir=$(get_dir_with_latest_version "$other_pkgdir" \
+                                                  "$syspkg_version")
+    if [ -d "$other_pkgid_dir" ]; then
+      reconfigure_puavopkg "$other_pkgid_dir" || status=1
+    fi
+  done
 }
 
 setup_puavopkg_for_localboot_devices() {
@@ -45,45 +120,30 @@ setup_puavopkg_for_localboot_devices() {
   # from the system image, or the versions under $local_rootdir are
   # newer than the versions in system image.
 
-  install_puavo_pkg_conf "$local_cachedir" "$local_rootdir"
+  install_puavo_pkg_conf "$local_cachedir"  \
+                         "$local_rootdir"   \
+                         "$system_cachedir" \
+                         "$system_rootdir"
 
-  for localpkg_instlink in ${local_rootdir}/packages/*/installed; do
-    test -e "$localpkg_instlink" || continue
-
-    localpkg_name="$(basename "${localpkg_instlink%%/installed}")"
-    localpkg_version=$(awk '$1 == "version" && $2 ~ /^[0-9]+$/ { print $2 }' \
-                         "${localpkg_instlink}/.puavo-pkg-version" \
-                           2>/dev/null || true)
-    if [ -z "$localpkg_version" ]; then
-      echo "Could not lookup version for locally installed $localpkg_name" >&2
-      status=1
-      continue
-    fi
-
-    syspkg_instlink="${system_rootdir}/packages/${localpkg_name}/installed"
-    syspkg_version=$(awk '$1 == "version" && $2 ~ /^[0-9]+$/ { print $2 }' \
-                       "${sysinst_link}/.puavo-pkg-version" 2>/dev/null || true)
-    if [ -z "$syspkg_version" \
-         -o "$localpkg_version" -gt "$syspkg_version" ]; then
-      reconfigure_puavopkg "$localpkg_name" || status=1
-    fi
-  done
+  configure_latest_from "$local_rootdir"
 }
 
 setup_puavopkg_for_netboot_devices() {
-  # XXX not useful yet
-  return 0
-
   # mount /images/puavo-pkg from bootserver in case we have booted from network
   read nbd_server < /run/puavo/nbd-server
-  mkdir -p "$host_puavo_pkg_dir"
+  mkdir -p "$remote_mountdir"
   if ! timeout -k 5 30 mount -t nfs4 -o ro,sec=sys "${nbd_server}:/puavo-pkg" \
-                                                   "$host_puavo_pkg_dir"; then
+                                                   "$remote_mountdir"; then
     echo "could not mount ${nbd_server}:/puavo-pkg" >&2
     return 1
   fi
 
-  return 0
+  install_puavo_pkg_conf "$system_cachedir" \
+                         "$system_rootdir"  \
+                         "$remote_cachedir" \
+                         "$remote_rootdir"
+
+  configure_latest_from "$remote_rootdir"
 }
 
 setup_puavopkg_common() {
@@ -92,20 +152,18 @@ setup_puavopkg_common() {
   # XXX puavo.nonfree.smartboard.enabled and
   # XXX puavo.nonfree.ti_nspire_cx_cas_ss.enabled as well.
 
-  # as a side-effect sets $puavo_pkg_cachedir and $puavo_pkg_rootdir,
-  # used by test_puavopkg_installation()
-  install_puavo_pkg_conf "$system_cachedir" "$system_rootdir"
+  install_puavo_pkg_conf "$system_cachedir" "$system_rootdir" '' ''
 
   # We configure the "smartboard" and "ti-nspire-cx-cas-ss" puavo-pkg packages
   # in system image in case those are installed, because they are unconfigured
   # by default and their configuration is dependent on puavo-conf variables
   # "puavo.nonfree.smartboard.enabled" and
   # "puavo.nonfree.ti_nspire_cx_cas_ss.enabled".
-  if test_puavopkg_installation smartboard; then
-    reconfigure_puavopkg smartboard || status=1
+  if puavopkg_dir=$(get_installed_puavopkg_dir smartboard); then
+    reconfigure_puavopkg "$puavopkg_dir" || status=1
   fi
-  if test_puavopkg_installation ti-nspire-cx-cas-ss; then
-    reconfigure_puavopkg ti-nspire-cx-cas-ss || status=1
+  if puavopkg_dir=$(get_installed_puavopkg_dir ti-nspire-cx-cas-ss); then
+    reconfigure_puavopkg "$puavopkg_dir" || status=1
   fi
 }
 
