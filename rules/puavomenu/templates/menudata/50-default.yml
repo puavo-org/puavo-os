@@ -5,66 +5,80 @@ programs:
   #A
   - acroread:
         keywords:
-          - pdf
+            - pdf
         name: Acrobat Reader
-  - airtame
+        tags: default
+  - airtame:
+        tags: default
   - amme:
         type: web
         name: Amme
         url: https://www11.edu.fi/materiaali/index.php?id=2
         description: Oppimateriaalia ammatilliseen erityisopetukseen
         icon: /usr/share/icons/Faenza/apps/96/gimp.png
+        tags: default, internet, education
   - anki:
-      name:
-          en: Anki
-          fi: Anki-muistikortit
-  - appinventor
+        name:
+            en: Anki
+            fi: Anki-muistikortit
+        tags: default
+  - appinventor:
+        tags: default
   - arduino:
         icon: /opt/arduino-ide/lib/icons/96x96/apps/arduino.png
+        tags: default
   - audacity:
-      name:
-          en: Audacity-audio editor
-          fi: Audacity-äänieditori
-          sv: Audacity-ljudredigerare
-          de: Audacity Audio bearbeiten
+        name:
+            en: Audacity-audio editor
+            fi: Audacity-äänieditori
+            sv: Audacity-ljudredigerare
+            de: Audacity Audio bearbeiten
+        tags: default
   - avogadro:
-      name:
-          en: Avogadro
-          fi: Avogadro-molekyylimuokkain
-          sv: Avogadro
-          de: Avogadro
+        name:
+            en: Avogadro
+            fi: Avogadro-molekyylimuokkain
+            sv: Avogadro
+            de: Avogadro
+        tags: default
 
   #B
   - blender:
         name:
-          en: Blender
-          fi: Blender-3D-mallinnusohjelma
-          sv: Blender-3D-modellering
-          de: Blender-3D-Modellierung
+            en: Blender
+            fi: Blender-3D-mallinnusohjelma
+            sv: Blender-3D-modellering
+            de: Blender-3D-Modellierung
+        tags: default
   - bluefish:
         name:
-           en: Bluefish HTML-editor
-           fi: Bluefish HTML-editori
-           sv: Bluefish HTML-redigerare
-           de: Bluefish HTML-editor
-  - bluegriffon
+            en: Bluefish HTML-editor
+            fi: Bluefish HTML-editori
+            sv: Bluefish HTML-redigerare
+            de: Bluefish HTML-editor
+        tags: default
+  - bluegriffon:
+        tags: default
   - brasero:
         name:
-          en: Brasero - CD/DVD -writer
-          fi: Brasero - CD/DVD -kirjoitus
-          sv: Brasero - CD/DVD -brännare
-          de: Brasero - CD/DVD -brennen
+            en: Brasero - CD/DVD -writer
+            fi: Brasero - CD/DVD -kirjoitus
+            sv: Brasero - CD/DVD -brännare
+            de: Brasero - CD/DVD -brennen
+        tags: default
 
   #C
   - calibre-gui:
         name: Calibre
         keywords: ebook, e-book
+        tags: default
   - celestia:
         name:
-          en: Celestia-space simulation
-          fi: Avaruussimulaattori
-          sv: Rymdsimulator
-          de: Celestia Weltraum Simulator
+            en: Celestia-space simulation
+            fi: Avaruussimulaattori
+            sv: Rymdsimulator
+            de: Celestia Weltraum Simulator
+        tags: default
   - chromium:
         icon: /usr/share/icons/hicolor/64x64/apps/chromium.png
         name:
@@ -72,16 +86,20 @@ programs:
             fi: Chromium-selain
             sv: Chromium
             de: Chromium-Browser
+        tags: default
   - cmaptools:
         name:
           en: CmapTools-mindmap
           fi: CmapTools-miellekartta
           sv: CmapTools-mindmap
           de: CmapTools-Mindmap
-  - cura-appimage
+        tags: default
+  - cura-appimage:
+        tags: default
 
   #D
-  - db_koulu1
+  - db_koulu1:
+        tags: default
   - designer-qt4:
         name:
             en: Qt4 - graphical UI designer
@@ -89,21 +107,30 @@ programs:
             sv: Användargränssnitt-designer
             de: Qt4 - Grafischer UI Designer
         icon: /usr/share/icons/Faenza/apps/96/qtdesigner.png
-  - dia
-  - dropbox
-  - drracket
+        tags: default
+  - dia:
+        tags: default
+  - dropbox:
+        tags: default
+  - drracket:
+        tags: default
 
   #E
-  - eclipse
+  - eclipse:
+        tags: default
   - edison:
         type: web
         name: Edison
         url: http://app.edison.fi
         icon: /usr/share/icons/Faenza/mimetypes/96/text-html.png
+        tags: default
   - ekapeli:
         condition: "!personally_administered"
-  - ekapeli-alku
+        tags: default
+  - ekapeli-alku:
+        tags: default
   - ekapeli-maahanmuuttaja:
+        tags: default
         condition: "!personally_administered"
   - ekapeliweb:
         type: web
@@ -111,28 +138,35 @@ programs:
         url: http://www.lukimat.fi/lukeminen/materiaalit/ekapeli
         icon: /usr/share/icons/Faenza/categories/96/gnome-joystick.png
         condition: "!personally_administered"
+        tags: default
   - empathy:
         name:
-          en: Empathy-chat client
-          fi: Empathy-pikaviestin
-          sv: Empathy-IM-klient
-          de: Empathy-Chat-Client
-  - enchanting
+            en: Empathy-chat client
+            fi: Empathy-pikaviestin
+            sv: Empathy-IM-klient
+            de: Empathy-Chat-Client
+        tags: default
+  - enchanting:
+        tags: default
   - eog:
-      icon: /usr/share/icons/Faenza/apps/scalable/eog.svg
-  - eric
+        icon: /usr/share/icons/Faenza/apps/scalable/eog.svg
+        tags: default
+  - eric:
+        tags: default
   - evince:
         name:
             en: Evince-document viewer
             fi: Evince-asiakirjakatselin
             sv: Evince-dokumentläsare
             de: Evince Dokumentenbetrachter
+        tags: default
   - evolution:
         name:
             en: Evolution-email
             fi: Evolution-sähköposti
             sv: Evolution-e-post
             de: Evolution-Email
+        tags: default
 
   #F
   - firefox:
@@ -141,7 +175,9 @@ programs:
             fi: Firefox-selain
             sv: Firefox
             de: Firefox
-  - FlashPrint
+        tags: default
+  - FlashPrint:
+        tags: default
   - fmit:
         name:
             en: Fmit-instrument tuner
@@ -149,10 +185,15 @@ programs:
             sv: Stämmningsprogram
             de: Stimmprogramm
         icon: /usr/share/icons/hicolor/scalable/apps/fmit.svg
-  - freecad
-  - freeciv-gtk2
+        tags: default
+  - freecad:
+        tags: default
+  - freeciv-gtk2:
+        tags: default
   - fritzing:
         icon: /usr/share/pixmaps/fritzing_icon.png
+        tags: default
+
   #G
   - gcompris:
         name:
@@ -161,6 +202,7 @@ programs:
             sv: GCompris-pedagogiksvit
             de: GCompris
         condition: "!personally_administered"
+        tags: default
   - geany:
         name:
             en: Geany - text editor
@@ -168,39 +210,51 @@ programs:
             sv: Geany - utvecklingsmiljö
             de: Geany - Textverarbeitung
         icon: /usr/share/icons/hicolor/scalable/apps/geany.svg
+        tags: default
   - geogebra:
-        keywords:
-          - digabi
+        keywords: digabi
         name: Geogebra 5
-  - geogebra6
+        tags: default
+  - geogebra6:
+        tags: default
   - gftp:
         icon: /usr/share/icons/gnome/48x48/places/gnome-fs-ftp.png
+        tags: default
   - gimp:
-        keywords:
-          - photoshop
-          - digabi
         name:
             en: Gimp - GNU Image Manipulation Program
             fi: Gimp-kuvankäsittely
             sv: Gimp
             de: Gimp
-  - GlobiLab
-  - gnome-calculator
-  - gnome-klotski
-  - gnome-mahjongg
-  - gnome-mines
-  - gnome-sudoku
-  - gnubg
+        keywords: photoshop, digabi
+        tags: default
+  - GlobiLab:
+        tags: default
+  - gnome-calculator:
+        tags: default
+  - gnome-klotski:
+        tags: default
+  - gnome-mahjongg:
+        tags: default
+  - gnome-mines:
+        tags: default
+  - gnome-sudoku:
+        tags: default
+  - gnubg:
+        tags: default
   - goobox:
         icon: /usr/share/icons/hicolor/48x48/apps/goobox.png
+        tags: default
   - google-chrome:
         name:
             en: Chrome-browser
             fi: Chrome-selain
             sv: Chrome
             de: Chrome
+        tags: default
   - google-earth:
         icon: /usr/share/icons/Faenza/apps/48/googleearth.png
+        tags: default
   - gthumb:
         icon: /usr/share/icons/hicolor/scalable/apps/gthumb.svg
         name:
@@ -208,8 +262,10 @@ programs:
             fi: gThumb-kuvakatselin
             sv: gThumb-bildvisare
             de: gThumb-Bildbetrachter
+        tags: default
 
-  - gucharmap
+  - gucharmap:
+        tags: default
 
   #H
   - hydrogen:
@@ -218,20 +274,23 @@ programs:
             fi: Hydrogen-rumpukone
             sv: Hydrogen-trummaskin
             de: Hydrogen Drum Machine
+        tags: default
 
   #I
   - idle-python2.7:
         icon: /usr/share/icons/Faenza/mimetypes/96/text-x-python.png
+        tags: default
   - idle-python3.5:
         icon: /usr/share/icons/Faenza/mimetypes/96/text-x-python.png
+        tags: default
   - inkscape:
-        keywords:
-        - digabi
         name:
             en: Inkscape-vector graphics editor
             fi: Inkscape-vektorigrafiikka
             sv: Inkscape-vektorgrafik
             de: Inkscape-Vektorgrafik
+        keywords: digabi
+        tags: default
 
   #J
 
@@ -242,13 +301,16 @@ programs:
         url: https://getkahoot.com/
         description: Kahoot
         icon: /usr/share/icons/Gion/48x48/categories/xfce-internet.png
+        tags: default, education
   - kamerka:
         icon: /usr/share/icons/Faenza/devices/96/camera-web.png
+        tags: default
   - kenavision:
         name: Kena Vision Microscope
         type: custom
         command: /opt/av4kav/lib/av4.sh
         icon: /usr/share/icons/Faenza/devices/96/camera-web.png
+        tags: default
   - kino:
         type: custom
         name:
@@ -263,8 +325,11 @@ programs:
             sv: Redigera videon
             de: Video bearbeiten
         icon: kino
-  - kojo
-  - Nightcode
+        tags: default
+  - kojo:
+        tags: default
+  - Nightcode:
+        tags: default
 
   #L
   - libreoffice-base:
@@ -273,91 +338,118 @@ programs:
             de: LibreOffice Basis
             en: LibreOffice Base
         keywords: libreoffice
+        tags: default
   - libreoffice-calc:
         keywords: calc, spreadsheet, libreoffice, excel
         name:
             fi: LibreOffice Taulukkolaskenta
             de: LibreOffice Tabellenkalculation
             en: LibreOffice Calc
+        tags: default
   - libreoffice-draw:
         name:
             fi: LibreOffice Piirros
             de: LibreOffice Zeichnung
             en: LibreOffice Draw
         keywords: libreoffice
+        tags: default
   - libreoffice-impress:
         name:
             fi: LibreOffice Esitys
             de: LibreOffice Präsentation
             en: LibreOffice Impress
         keywords: libreoffice, powerpoint
+        tags: default
   - libreoffice-math:
         name:
             fi: LibreOffice Kaava
             de: LibreOffice Math
             en: LibreOffice Math
         keywords: equation, libreoffice
+        tags: default
   - libreoffice-writer:
         name:
             fi: LibreOffice Tekstinkäsittely
             de: LibreOffice Textverarbeitung
             en: LibreOffice Writer
         keywords: writer, kirjoitus, libreoffice, word
+        tags: default
   - lmms:
         name:
             en: LMMS - music production suite
             fi: LMMS - musiikkityökalu
             de: LMMS - Software zur Musik-Produktion
-  - LoggerPro
-  - luola
+        tags: default
+  - LoggerPro:
+        tags: default
+  - luola:
+        tags: default, game
 
   #M
-  - mafynetti
-  - mandelbulber
+  - mafynetti:
+        tags: default
+  - mandelbulber:
+        tags: default
   - marble-qt:
         name:
             en: Marble-virtual world
             fi: Marble-maapallo
             sv: Marble-jordglob
             de: Marble virtueller Globus
-  - MarvinSketch
-  - MarvinView
-  - mimio-notebook
+        tags: default
+  - MarvinSketch:
+        tags: default
+  - MarvinView:
+        tags: default
+  - mimio-notebook:
+        tags: default
   - mscore:
         name:
             en: MuseScore-music composition & notation
             fi: Nuotinnusohjelma
             sv: Notering
             de: Musik-Notensatz
+        tags: default
   - mypaint:
         icon: /usr/share/icons/hicolor/48x48/apps/mypaint.png
+        tags: default
 
   #N
-  - net.sourceforge.liferea
-  - neverball
-  - neverputt
+  - net.sourceforge.liferea:
+        tags: default
+  - neverball:
+        tags: default
+  - neverputt:
+        tags: default
 
   #O
   - okular:
-        keywords:
-          - pdf
         name:
           en: Okular-document viewer
           fi: Okular-asiakirjakatselin
           sv: Okular-dokumentläsare
           de: Okular Dokumentenbetrachter
-  - onboard
+        keywords: pdf
+        tags: default
+  - onboard:
+        tags: default
   - openboard:
         name:
             en: OpenBoard
             fi: OpenBoard-älytauluohjelmisto
             sv: OpenBoard
             de: OpenBoard
-  - openscad-nightly
-  - openshot
-  - openttd
-  - org.gnome.Cheese
-  - org.gnome.FileRoller
+        tags: default
+  - openscad-nightly:
+        tags: default
+  - openshot:
+        tags: default
+  - openttd:
+        tags: default
+  - org.gnome.Cheese:
+        tags: default
+  - org.gnome.FileRoller:
+        tags: default
   - org.gnome.gedit:
         name:
             en: Gedit-text editor
@@ -365,12 +457,17 @@ programs:
             sv: Gedit-tekstredigerare
             de: Gedit-Texteditor
         icon: /usr/share/icons/Faenza/apps/96/accessories-text-editor.png
+        tags: default
   - org.gnome.Nautilus:
         icon: /usr/share/icons/Faenza/places/96/user-home.png
-  - org.gnome.Screenshot
+        tags: default
+  - org.gnome.Screenshot:
+        tags: default
   - org.gnome.Terminal:
         keywords: terminal
-  - org.kde.kaffeine
+        tags: default
+  - org.kde.kaffeine:
+        tags: default
   - org.kde.kalzium:
         icon: /usr/share/icons/hicolor/48x48/apps/kalzium.png
         name:
@@ -378,34 +475,43 @@ programs:
             fi: Jaksollinen järjestelmä
             sv: Periodsystem
             de: Periodensystem
-  - org.kde.kbruch
-  - org.kde.kdenlive
+        tags: default
+  - org.kde.kbruch:
+        tags: default
+  - org.kde.kdenlive:
+        tags: default
   - org.kde.kgeography:
-          name:
+        name:
             en: KGeography-geography
             fi: KGeography-maantieto
             sv: KGeography-geografi
             de: Kgeography
-          condition: "!personally_administered"
+        condition: "!personally_administered"
+        tags: default
   - org.kde.khangman:
         name:
-              en: KHangMan
-              fi: Hirsipuu
+            en: KHangMan
+            fi: Hirsipuu
         icon: /usr/share/icons/hicolor/scalable/apps/khangman.svgz
+        tags: default
   - org.kde.kmplot:
         name:
             en: KmPlot-function plotter
             fi: KmPlot-kuvaajat
             sv: KmPlot
             de: KmPlot
-  - org.kde.kolourpaint
-  - org.kde.krita
+        tags: default
+  - org.kde.kolourpaint:
+        tags: default
+  - org.kde.krita:
+        tags: default
   - org.kde.kstars:
         name:
             en: KStars-astronomy
             fi: KStars-planetaario
             sv: KStars-stjärnhimlen
             de: KStars-Astronomie
+        tags: default
   - org.kde.ktouch:
         type: custom
         name:
@@ -420,6 +526,7 @@ programs:
             sv: Maskinskrivningsträning
             de: Schreibmaschinenkurs
         icon: ktouch
+        tags: default
   - org.kde.kturtle:
         name:
             en: KTurtle - logo programming
@@ -428,23 +535,27 @@ programs:
             de: KTurtle - Programieren mit Logo
         command: kturtle
         icon: /usr/share/icons/hicolor/64x64/apps/kturtle.png
+        tags: default
   - org.kde.kwordquiz:
         name:
             en: KWordQuiz-vocabulary learning
             fi: KWordQuiz-sanastoharjoitus
             sv: Ordförrådsövningar
             de: Kreuzworträtsel
+        tags: default
   - org.kde.step:
         name:
              en: Step-physics simulator
              fi: Step-fysiikan simulaattori
              sv: Step-fysik simulator
              de: Step Physik Simulator
+        tags: default
   - otava:
         type: web
         name: Otava - Oppilaan maailma
         url: https://oppilas.otava.fi/
         icon: /usr/share/icons/Faenza/mimetypes/96/text-html.png
+        tags: default, education
 
   #P
   - pahvi:
@@ -452,18 +563,22 @@ programs:
         name: Pahvi
         url: http://pahvidemo.opinsys.fi/
         icon: /usr/share/icons/Faenza/mimetypes/96/text-html.png
-  - pavucontrol
+        tags: default, education
+  - pavucontrol:
+        tags: default
   - pedanet:
         type: web
         name: Peda.net
         url: https://peda.net/:loginopinsys
         icon: /usr/share/icons/Faenza/mimetypes/96/text-html.png
+        tags: default, education
   - perunakellari:
         type: web
         name: Perunakellarin harjoituksia
         url: http://www.perunakellari.fi/ym.html#bi
         description: Perunakellari
         icon: /usr/share/icons/Gion/48x48/categories/xfce-internet.png
+        tags: default, education
   - phet:
         type: web
         name: PhET Simulations Web
@@ -474,24 +589,31 @@ programs:
             sv: PhET web
             de: PhET web
         icon: /usr/share/icons/Faenza/categories/96/applications-internet.png
+        tags: default, education
   - pidgin:
         name:
-          en: Pidgin-chat client
-          fi: Pidgin-pikaviestin
-          sv: Pidgin-IM-klient
-          de: Pidgin-Chat-Client
+            en: Pidgin-chat client
+            fi: Pidgin-pikaviestin
+            sv: Pidgin-IM-klient
+            de: Pidgin-Chat-Client
+        tags: default
   - pinta:
         name:
-          en: Pinta
-          fi: Pinta-kuvankäsittely
-          sv: Pinta
-          de: Pinta
+            en: Pinta
+            fi: Pinta-kuvankäsittely
+            sv: Pinta
+            de: Pinta
         icon: /usr/share/icons/hicolor/scalable/apps/pinta.svg
-  - pitivi
+        tags: default
+  - pitivi:
+        tags: default
   - primusclient:
         condition: "!personally_administered"
-  - processing
-  - pycharm
+        tags: default
+  - processing:
+        tags: default
+  - pycharm:
+        tags: default
   - python-club:
         type: web
         name:
@@ -499,19 +621,25 @@ programs:
             en: Python Club
         url: http://www.teromakotero.fi/python-klubi/
         icon: /usr/share/icons/oxygen/base/64x64/categories/applications-internet.png
+        tags: default, education, development
 
   #Q
-  - qgis
+  - qgis:
+        tags: default
   - qjackctl:
         icon: /usr/share/icons/hicolor/32x32/apps/qjackctl.png
         name: JACK Control
-  - qstopmotion
+        tags: default
+  - qstopmotion:
+        tags: default
   - qsynth:
         icon: /usr/share/icons/hicolor/32x32/apps/qsynth.png
         name: FluidSynth GUI
+        tags: default
 
   #R
-  - robboscratch2
+  - robboscratch2:
+        tags: default
   - rosegarden:
         name:
             en: Rosegarden-sequencer
@@ -519,6 +647,7 @@ programs:
             sv: Rosegarden-sekvenser
             de: Rosegarden Sequencer
         icon: /usr/share/icons/hicolor/64x64/apps/rosegarden.png
+        tags: default
 
   #S
   - sanomapro:
@@ -526,6 +655,7 @@ programs:
         name: SanomaPro
         url: http://sanomapro.fi/
         icon: /usr/share/icons/Faenza/mimetypes/96/text-html.png
+        tags: default, education
   - school-user-list:
         type: web
         name:
@@ -536,7 +666,9 @@ programs:
         url: https://api.opinsys.fi/v3/my_school_users
         icon: /usr/share/icons/Faenza/mimetypes/96/x-office-spreadsheet.png
         condition: "only_teacher_admin"
-  - scratch
+        tags: default, education
+  - scratch:
+        tags: default
   - scratch-club:
         type: web
         name:
@@ -544,19 +676,23 @@ programs:
             en: Scratch Club
         url: http://www.teromakotero.fi/scratch-klubi/
         icon: /usr/share/icons/oxygen/base/64x64/categories/applications-internet.png
+        tags: default
   - scribus:
         name:
             en: Scribus-desktop publishing
             fi: Scribus-julkaisuohjelma
             sv: Scribus Layout
             de: Scribus Seitengestaltung
-  - seahorse
+        tags: default
+  - seahorse:
+        tags: default
   - shotwell:
         name:
             en: Shotwell-photo organizer
             fi: Shotwell-kuva-albumi
             sv: Shotwell-foto-album
             de: Shotwell Fotos verwalten
+        tags: default
   - simple-scan:
         name:
             en: Simple Scan
@@ -564,44 +700,57 @@ programs:
             sv: Enkelt scanningsverktyg
             de: Einfaches Scanner Werkzeug
         icon: /usr/share/icons/Faenza/devices/96/scanner.png
+        tags: default
   - simplescreenrecorder:
         name:
             en: SimpleScreenRecorder
             fi: Työpöytänauhoitus
             sv: SimpleScreenRecorder
             de: SimpleScreenRecorder
+        tags: default
   - sketchup:
         type: web
         name: SketchUp Free (Web)
         url: https://app.sketchup.com/app?hl=en
         icon: /usr/share/icons/Faenza/apps/96/glade.png
+        tags: default
   - skype:
         icon: /usr/share/icons/Faenza/apps/48/skype.png
-  - smarttech-notebook
-  - sol
+        tags: default
+  - smarttech-notebook:
+        tags: default
+  - sol:
+        tags: default
   - solfege:
         name:
             en: Solfege-ear training program
             fi: Korvanharjoitus-ohjelma
             sv: Gehör-övningar
             de: Hörbildung
-  - sound-juicer
+        tags: default
+  - sound-juicer:
+        tags: default
   - spe:
         name:
             en: SPE - Python IDE
             fi: Stanin python-editori
             sv: Stanis python-editor
             de: Stanis Python IDE
+        tags: default
   - spelett:
         condition: "!personally_administered"
-  - spotify
-  - steam
+        tags: default
+  - spotify:
+        tags: default
+  - steam:
+        tags: default
   - stellarium:
         name:
             en: Stellarium-planetarium
             fi: Stellarium-planetaario
             sv: Stellarium-planetarium
             de: Stellarium-Planetarium
+        tags: default
   - sumopaint:
         type: web
         name: Sumopaint
@@ -612,18 +761,23 @@ programs:
             sv: Sumopaint-bildbehandling
             de: Sumopaint Online Bildbearbeitung
         icon: /usr/share/icons/Faenza/apps/96/gimp.png
-  - supertuxkart
+        tags: default
+  - supertuxkart:
+        tags: default
   - system-config-printer:
         icon: /usr/share/icons/Faenza/devices/48/printer.png
+        tags: default
 
   #T
-  - t-lasku
+  - t-lasku:
+        tags: default
   - teddybear:
         name:
             en: Teddy Bear programming
             fi: Nalle-ohjelmointi
             sv: Teddybjörn programmering
             de: Teddy-Programmierung
+        tags: default, education, development
   - tellico:
         keywords: tellico
         name:
@@ -632,14 +786,18 @@ programs:
             sv: Biblotek
             de: Tellico Sammlungs-Verwalter
         icon: /usr/share/icons/hicolor/64x64/apps/tellico.png
+        tags: default
   - thunderbird:
         name:
             en: Thunderbird-email
             fi: Thunderbird-sähköposti
             sv: Thundebird-e-post
             de: Thunderbird-Email
-  - ti_nspire_cx_cas_ss
-  - tilitin
+        tags: default
+  - ti_nspire_cx_cas_ss:
+        tags: default
+  - tilitin:
+        tags: default
   - tuxguitar:
         name:
             en: TuxGuitar-multitrack tablature editor
@@ -647,6 +805,7 @@ programs:
             sv: Noter för gitarr
             de: Tabulaturen für Gitarre
         icon: /opt/puavomenu/icons/overlord59-tux-guitar-1434.png
+        tags: default
   - tuxmath:
         icon: /usr/share/pixmaps/tuxmath.svg
         condition: "!personally_administered"
@@ -655,6 +814,7 @@ programs:
             fi: TuxMath-matikkapeli
             sv: TuxMath-matematikspel
             de: Tuxmath Mathespiel
+        tags: default
   - tuxpaint:
         icon: /usr/share/icons/hicolor/48x48/apps/tuxpaint.png
         name:
@@ -662,6 +822,7 @@ programs:
             fi: Tuxpaint-piirto-ohjelma
             sv: Tuxpaint
             de: Tuxpaint
+        tags: default
 
 
   #U
@@ -670,30 +831,34 @@ programs:
         name: Unelmakoulu
         url: http://dreamschool.fi
         icon: /opt/puavomenu/icons/unelmakoulu.png
+        tags: default, education
 
   #V
-  - VidyoDesktop
-  - vinagre
+  - VidyoDesktop:
+        tags: default
+  - vinagre:
+        tags: default
   - viope:
         type: web
         name: Viope
         url: https://www.viope.com/
         icon: /usr/share/icons/Faenza/mimetypes/96/text-html.png
-  - vlc
+        tags: default
+  - vlc:
+        tags: default
   - vym:
         name:
             en: VYM-mindmap
             fi: Miellekarttasovellus
             sv: Mindmap
             de: Mindmap
+        tags: default
 
   #W
   - walma:
         type: web
         name: Walma
-        keywords:
-            - photoshop
-            - toinen
+        keywords: photoshop, toinen
         url: http://walmademo.opinsys.fi
         description:
             en: Collaborative whiteboard
@@ -701,22 +866,28 @@ programs:
             sv: Kollaborativ whiteboard
             de: Mit dem Whiteboard zusammenarbweiten
         icon: /usr/share/icons/Faenza/mimetypes/96/text-html.png
+        tags: default
   - wikipedia:
         type: web
         name: Wikipedia
         url: https://www.wikipedia.org/
         icon: /usr/share/icons/Faenza/apps/96/wikipedia.png
+        tags: default
   - winff:
         name:
             fi: WinFF-videomuunnin
             en: WinFF
+        tags: default
   - wxMaxima:
         condition: ti_nspire_cx_cas
+        tags: default
 
 
   #X
-  - xmoto
-  - xsane
+  - xmoto:
+        tags: default
+  - xsane:
+        tags: default
 
   #Y
   - yleareena:
@@ -724,16 +895,19 @@ programs:
         name: Yle Areena
         url: http://areena.yle.fi
         icon: /usr/share/icons/Faenza/apps/96/me-tv.png
+        tags: default, internet, audio, video
   - ylearkisto:
         type: web
         name: Yle - Elävä arkisto
         url: http://yle.fi/elavaarkisto/index.html
         icon: /usr/share/icons/Faenza/apps/96/me-tv.png
+        tags: default, internet, audio, video
   - youtube:
         type: web
         name: YouTube
         url: https://youtube.com
         icon: /usr/share/icons/Faenza/apps/96/youtube.png
+        tags: default, internet, audio, video
 
   #Z
 
