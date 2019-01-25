@@ -9,7 +9,7 @@ programs:
         name: Acrobat Reader
         tags: default
   - airtame:
-        tags: default
+        tags: default, audiovideo
   - amme:
         type: web
         name: Amme
@@ -21,7 +21,7 @@ programs:
         name:
             en: Anki
             fi: Anki-muistikortit
-        tags: default
+        tags: default, education
   - appinventor:
         tags: default
   - arduino:
@@ -33,7 +33,7 @@ programs:
             fi: Audacity-äänieditori
             sv: Audacity-ljudredigerare
             de: Audacity Audio bearbeiten
-        tags: default
+        tags: default, audio
   - avogadro:
         name:
             en: Avogadro
@@ -126,11 +126,11 @@ programs:
         tags: default
   - ekapeli:
         condition: "!personally_administered"
-        tags: default
+        tags: default, education
   - ekapeli-alku:
-        tags: default
+        tags: default, education
   - ekapeli-maahanmuuttaja:
-        tags: default
+        tags: default, education
         condition: "!personally_administered"
   - ekapeliweb:
         type: web
@@ -138,7 +138,7 @@ programs:
         url: http://www.lukimat.fi/lukeminen/materiaalit/ekapeli
         icon: /usr/share/icons/Faenza/categories/96/gnome-joystick.png
         condition: "!personally_administered"
-        tags: default
+        tags: default, education
   - empathy:
         name:
             en: Empathy-chat client
@@ -185,7 +185,7 @@ programs:
             sv: Stämmningsprogram
             de: Stimmprogramm
         icon: /usr/share/icons/hicolor/scalable/apps/fmit.svg
-        tags: default
+        tags: default, audio
   - freecad:
         tags: default
   - freeciv-gtk2:
@@ -202,7 +202,7 @@ programs:
             sv: GCompris-pedagogiksvit
             de: GCompris
         condition: "!personally_administered"
-        tags: default
+        tags: default, education
   - geany:
         name:
             en: Geany - text editor
@@ -214,12 +214,12 @@ programs:
   - geogebra:
         keywords: digabi
         name: Geogebra 5
-        tags: default
+        tags: default, education
   - geogebra6:
-        tags: default
+        tags: default, education
   - gftp:
         icon: /usr/share/icons/gnome/48x48/places/gnome-fs-ftp.png
-        tags: default
+        tags: default, network
   - gimp:
         name:
             en: Gimp - GNU Image Manipulation Program
@@ -227,7 +227,7 @@ programs:
             sv: Gimp
             de: Gimp
         keywords: photoshop, digabi
-        tags: default
+        tags: default, graphics
   - GlobiLab:
         tags: default
   - gnome-calculator:
@@ -244,14 +244,14 @@ programs:
         tags: default
   - goobox:
         icon: /usr/share/icons/hicolor/48x48/apps/goobox.png
-        tags: default
+        tags: default, audio
   - google-chrome:
         name:
             en: Chrome-browser
             fi: Chrome-selain
             sv: Chrome
             de: Chrome
-        tags: default
+        tags: default, network
   - google-earth:
         icon: /usr/share/icons/Faenza/apps/48/googleearth.png
         tags: default
@@ -274,7 +274,7 @@ programs:
             fi: Hydrogen-rumpukone
             sv: Hydrogen-trummaskin
             de: Hydrogen Drum Machine
-        tags: default
+        tags: default, audio
 
   #I
   - idle-python2.7:
@@ -290,7 +290,7 @@ programs:
             sv: Inkscape-vektorgrafik
             de: Inkscape-Vektorgrafik
         keywords: digabi
-        tags: default
+        tags: default, graphics
 
   #J
 
@@ -310,7 +310,7 @@ programs:
         type: custom
         command: /opt/av4kav/lib/av4.sh
         icon: /usr/share/icons/Faenza/devices/96/camera-web.png
-        tags: default
+        tags: default, video, science
   - kino:
         type: custom
         name:
@@ -325,7 +325,7 @@ programs:
             sv: Redigera videon
             de: Video bearbeiten
         icon: kino
-        tags: default
+        tags: default, audiovideo
   - kojo:
         tags: default
   - Nightcode:
@@ -338,48 +338,48 @@ programs:
             de: LibreOffice Basis
             en: LibreOffice Base
         keywords: libreoffice
-        tags: default
+        tags: default, office, education
   - libreoffice-calc:
         keywords: calc, spreadsheet, libreoffice, excel
         name:
             fi: LibreOffice Taulukkolaskenta
             de: LibreOffice Tabellenkalculation
             en: LibreOffice Calc
-        tags: default
+        tags: default, office, education
   - libreoffice-draw:
         name:
             fi: LibreOffice Piirros
             de: LibreOffice Zeichnung
             en: LibreOffice Draw
         keywords: libreoffice
-        tags: default
+        tags: default, office, education
   - libreoffice-impress:
         name:
             fi: LibreOffice Esitys
             de: LibreOffice Präsentation
             en: LibreOffice Impress
         keywords: libreoffice, powerpoint
-        tags: default
+        tags: default, office, education
   - libreoffice-math:
         name:
             fi: LibreOffice Kaava
             de: LibreOffice Math
             en: LibreOffice Math
         keywords: equation, libreoffice
-        tags: default
+        tags: default, office, education
   - libreoffice-writer:
         name:
             fi: LibreOffice Tekstinkäsittely
             de: LibreOffice Textverarbeitung
             en: LibreOffice Writer
         keywords: writer, kirjoitus, libreoffice, word
-        tags: default
+        tags: default, office, education
   - lmms:
         name:
             en: LMMS - music production suite
             fi: LMMS - musiikkityökalu
             de: LMMS - Software zur Musik-Produktion
-        tags: default
+        tags: default, audio
   - LoggerPro:
         tags: default
   - luola:
@@ -387,16 +387,16 @@ programs:
 
   #M
   - mafynetti:
-        tags: default
+        tags: default, education
   - mandelbulber:
-        tags: default
+        tags: default, education, science
   - marble-qt:
         name:
             en: Marble-virtual world
             fi: Marble-maapallo
             sv: Marble-jordglob
             de: Marble virtueller Globus
-        tags: default
+        tags: default, science, education
   - MarvinSketch:
         tags: default
   - MarvinView:
@@ -409,10 +409,10 @@ programs:
             fi: Nuotinnusohjelma
             sv: Notering
             de: Musik-Notensatz
-        tags: default
+        tags: default, audio
   - mypaint:
         icon: /usr/share/icons/hicolor/48x48/apps/mypaint.png
-        tags: default
+        tags: default, graphics
 
   #N
   - net.sourceforge.liferea:
@@ -430,7 +430,7 @@ programs:
           sv: Okular-dokumentläsare
           de: Okular Dokumentenbetrachter
         keywords: pdf
-        tags: default
+        tags: default, office
   - onboard:
         tags: default
   - openboard:
@@ -439,7 +439,7 @@ programs:
             fi: OpenBoard-älytauluohjelmisto
             sv: OpenBoard
             de: OpenBoard
-        tags: default
+        tags: default, education
   - openscad-nightly:
         tags: default
   - openshot:
@@ -457,17 +457,17 @@ programs:
             sv: Gedit-tekstredigerare
             de: Gedit-Texteditor
         icon: /usr/share/icons/Faenza/apps/96/accessories-text-editor.png
-        tags: default
+        tags: default, utility
   - org.gnome.Nautilus:
         icon: /usr/share/icons/Faenza/places/96/user-home.png
-        tags: default
+        tags: default, utility
   - org.gnome.Screenshot:
-        tags: default
+        tags: default, utility, graphics
   - org.gnome.Terminal:
-        keywords: terminal
+        keywords: terminal, utility
         tags: default
   - org.kde.kaffeine:
-        tags: default
+        tags: default, audiovideo
   - org.kde.kalzium:
         icon: /usr/share/icons/hicolor/48x48/apps/kalzium.png
         name:
@@ -475,7 +475,7 @@ programs:
             fi: Jaksollinen järjestelmä
             sv: Periodsystem
             de: Periodensystem
-        tags: default
+        tags: default, education, science
   - org.kde.kbruch:
         tags: default
   - org.kde.kdenlive:
@@ -487,20 +487,20 @@ programs:
             sv: KGeography-geografi
             de: Kgeography
         condition: "!personally_administered"
-        tags: default
+        tags: default, education, science
   - org.kde.khangman:
         name:
             en: KHangMan
             fi: Hirsipuu
         icon: /usr/share/icons/hicolor/scalable/apps/khangman.svgz
-        tags: default
+        tags: default, education
   - org.kde.kmplot:
         name:
             en: KmPlot-function plotter
             fi: KmPlot-kuvaajat
             sv: KmPlot
             de: KmPlot
-        tags: default
+        tags: default, education
   - org.kde.kolourpaint:
         tags: default
   - org.kde.krita:
@@ -511,7 +511,7 @@ programs:
             fi: KStars-planetaario
             sv: KStars-stjärnhimlen
             de: KStars-Astronomie
-        tags: default
+        tags: default, education, science
   - org.kde.ktouch:
         type: custom
         name:
@@ -526,7 +526,7 @@ programs:
             sv: Maskinskrivningsträning
             de: Schreibmaschinenkurs
         icon: ktouch
-        tags: default
+        tags: default, education
   - org.kde.kturtle:
         name:
             en: KTurtle - logo programming
@@ -535,21 +535,21 @@ programs:
             de: KTurtle - Programieren mit Logo
         command: kturtle
         icon: /usr/share/icons/hicolor/64x64/apps/kturtle.png
-        tags: default
+        tags: default, education
   - org.kde.kwordquiz:
         name:
             en: KWordQuiz-vocabulary learning
             fi: KWordQuiz-sanastoharjoitus
             sv: Ordförrådsövningar
             de: Kreuzworträtsel
-        tags: default
+        tags: default, education
   - org.kde.step:
         name:
              en: Step-physics simulator
              fi: Step-fysiikan simulaattori
              sv: Step-fysik simulator
              de: Step Physik Simulator
-        tags: default
+        tags: default, education, science
   - otava:
         type: web
         name: Otava - Oppilaan maailma
@@ -604,7 +604,7 @@ programs:
             sv: Pinta
             de: Pinta
         icon: /usr/share/icons/hicolor/scalable/apps/pinta.svg
-        tags: default
+        tags: default, graphics
   - pitivi:
         tags: default
   - primusclient:
@@ -647,7 +647,7 @@ programs:
             sv: Rosegarden-sekvenser
             de: Rosegarden Sequencer
         icon: /usr/share/icons/hicolor/64x64/apps/rosegarden.png
-        tags: default
+        tags: default, audio
 
   #S
   - sanomapro:
@@ -676,14 +676,14 @@ programs:
             en: Scratch Club
         url: http://www.teromakotero.fi/scratch-klubi/
         icon: /usr/share/icons/oxygen/base/64x64/categories/applications-internet.png
-        tags: default
+        tags: default, education
   - scribus:
         name:
             en: Scribus-desktop publishing
             fi: Scribus-julkaisuohjelma
             sv: Scribus Layout
             de: Scribus Seitengestaltung
-        tags: default
+        tags: default, office
   - seahorse:
         tags: default
   - shotwell:
@@ -692,7 +692,7 @@ programs:
             fi: Shotwell-kuva-albumi
             sv: Shotwell-foto-album
             de: Shotwell Fotos verwalten
-        tags: default
+        tags: default, graphics
   - simple-scan:
         name:
             en: Simple Scan
@@ -700,23 +700,23 @@ programs:
             sv: Enkelt scanningsverktyg
             de: Einfaches Scanner Werkzeug
         icon: /usr/share/icons/Faenza/devices/96/scanner.png
-        tags: default
+        tags: default, graphics
   - simplescreenrecorder:
         name:
             en: SimpleScreenRecorder
             fi: Työpöytänauhoitus
             sv: SimpleScreenRecorder
             de: SimpleScreenRecorder
-        tags: default
+        tags: default, video, audiovideo
   - sketchup:
         type: web
         name: SketchUp Free (Web)
         url: https://app.sketchup.com/app?hl=en
         icon: /usr/share/icons/Faenza/apps/96/glade.png
-        tags: default
+        tags: default, graphics
   - skype:
         icon: /usr/share/icons/Faenza/apps/48/skype.png
-        tags: default
+        tags: default, network
   - smarttech-notebook:
         tags: default
   - sol:
@@ -727,7 +727,7 @@ programs:
             fi: Korvanharjoitus-ohjelma
             sv: Gehör-övningar
             de: Hörbildung
-        tags: default
+        tags: default, education
   - sound-juicer:
         tags: default
   - spe:
@@ -750,7 +750,7 @@ programs:
             fi: Stellarium-planetaario
             sv: Stellarium-planetarium
             de: Stellarium-Planetarium
-        tags: default
+        tags: default, education, science
   - sumopaint:
         type: web
         name: Sumopaint
@@ -761,12 +761,12 @@ programs:
             sv: Sumopaint-bildbehandling
             de: Sumopaint Online Bildbearbeitung
         icon: /usr/share/icons/Faenza/apps/96/gimp.png
-        tags: default
+        tags: default, graphics
   - supertuxkart:
         tags: default
   - system-config-printer:
         icon: /usr/share/icons/Faenza/devices/48/printer.png
-        tags: default
+        tags: default, utility
 
   #T
   - t-lasku:
@@ -786,14 +786,14 @@ programs:
             sv: Biblotek
             de: Tellico Sammlungs-Verwalter
         icon: /usr/share/icons/hicolor/64x64/apps/tellico.png
-        tags: default
+        tags: default, office
   - thunderbird:
         name:
             en: Thunderbird-email
             fi: Thunderbird-sähköposti
             sv: Thundebird-e-post
             de: Thunderbird-Email
-        tags: default
+        tags: default, network
   - ti_nspire_cx_cas_ss:
         tags: default
   - tilitin:
@@ -805,7 +805,7 @@ programs:
             sv: Noter för gitarr
             de: Tabulaturen für Gitarre
         icon: /opt/puavomenu/icons/overlord59-tux-guitar-1434.png
-        tags: default
+        tags: default, audio
   - tuxmath:
         icon: /usr/share/pixmaps/tuxmath.svg
         condition: "!personally_administered"
@@ -814,7 +814,7 @@ programs:
             fi: TuxMath-matikkapeli
             sv: TuxMath-matematikspel
             de: Tuxmath Mathespiel
-        tags: default
+        tags: default, education
   - tuxpaint:
         icon: /usr/share/icons/hicolor/48x48/apps/tuxpaint.png
         name:
@@ -822,7 +822,7 @@ programs:
             fi: Tuxpaint-piirto-ohjelma
             sv: Tuxpaint
             de: Tuxpaint
-        tags: default
+        tags: default, graphics, education
 
 
   #U
@@ -843,7 +843,7 @@ programs:
         name: Viope
         url: https://www.viope.com/
         icon: /usr/share/icons/Faenza/mimetypes/96/text-html.png
-        tags: default
+        tags: default, education
   - vlc:
         tags: default
   - vym:
@@ -852,7 +852,7 @@ programs:
             fi: Miellekarttasovellus
             sv: Mindmap
             de: Mindmap
-        tags: default
+        tags: default, education
 
   #W
   - walma:
@@ -866,7 +866,7 @@ programs:
             sv: Kollaborativ whiteboard
             de: Mit dem Whiteboard zusammenarbweiten
         icon: /usr/share/icons/Faenza/mimetypes/96/text-html.png
-        tags: default
+        tags: default, education
   - wikipedia:
         type: web
         name: Wikipedia
@@ -877,7 +877,7 @@ programs:
         name:
             fi: WinFF-videomuunnin
             en: WinFF
-        tags: default
+        tags: default, video, audiovideo
   - wxMaxima:
         condition: ti_nspire_cx_cas
         tags: default
@@ -885,9 +885,9 @@ programs:
 
   #X
   - xmoto:
-        tags: default
+        tags: default, game
   - xsane:
-        tags: default
+        tags: default, graphics
 
   #Y
   - yleareena:
