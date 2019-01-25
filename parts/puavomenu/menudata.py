@@ -58,10 +58,6 @@ class Program:
         # only, hidden programs are removed before final menu data is built.
         self.hidden = False
 
-        # If true, the .desktop file for this (desktop) program is
-        # missing or it could not be loaded because it was invalid
-        self.missing_desktop = False
-
         # If false, this program has been defined but not actually used
         self.used = False
 
@@ -197,7 +193,7 @@ class Menudata:
         for name in self.programs:
             program = self.programs[name]
 
-            if not program.used:
+            if program.hidden:
                 continue
 
             if re.search(key, program.title, re.IGNORECASE):
@@ -320,7 +316,7 @@ class Menudata:
 
         parsing_time = time.clock()
 
-        if not self.programs:
+        if not self.programs and not self.menus and not self.categories:
             # No programs at all?
             return False
 
@@ -341,7 +337,7 @@ class Menudata:
         for name in self.programs:
             program = self.programs[name]
 
-            if not program.used:
+            if program.hidden:
                 continue
 
             if program.icon_name is None:
@@ -424,6 +420,9 @@ class Menudata:
         # must always be full paths. No automagic here.
         for name in self.menus:
             menu = self.menus[name]
+
+            if menu.hidden:
+                continue
 
             if menu.icon_name is None:
                 logging.warning('Menu "%s" has no icon defined', name)

@@ -377,6 +377,9 @@ class PuavoMenu(Gtk.Window):
 
                 # Menus first...
                 for menu in cat.menus:
+                    if menu.hidden:
+                        continue
+
                     button = MenuButton(self, menu.title, menu.icon,
                                         menu.description, menu,
                                         self.__menu_background)
@@ -385,6 +388,9 @@ class PuavoMenu(Gtk.Window):
 
                 # ...then programs
                 for program in cat.programs:
+                    if program.hidden:
+                        continue
+
                     button = ProgramButton(self, program.title, program.icon,
                                            program.description, program)
                     button.connect('clicked', self.clicked_program_button)
@@ -397,6 +403,9 @@ class PuavoMenu(Gtk.Window):
         else:
             # Submenu view, have only programs (no submenu support yet)
             for program in self.current_menu.programs:
+                if program.hidden:
+                    continue
+
                 button = ProgramButton(self, program.title, program.icon,
                                        program.description, program)
                 button.connect('clicked', self.clicked_program_button)
@@ -668,6 +677,9 @@ class PuavoMenu(Gtk.Window):
         # Prepare the user interface
         for index in self.menudata.category_index:
             cat = self.menudata.categories[index]
+
+            if cat.hidden:
+                continue
 
             frame = Gtk.Frame()
             label = Gtk.Label(cat.title)

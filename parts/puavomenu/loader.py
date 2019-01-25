@@ -150,8 +150,6 @@ def __parse_yml_string(string, conditions):
         if 'condition' in params and \
                 conditionals.is_hidden(conditions, params['condition'], name, 'program'):
             program.hidden = True
-            programs[name] = program
-            continue
 
         # Load common parameters
         if 'name' in params:
@@ -251,8 +249,6 @@ def __parse_yml_string(string, conditions):
         if 'condition' in params and \
                 conditionals.is_hidden(conditions, params['condition'], name, 'menu'):
             menu.hidden = True
-            menus[name] = menu
-            continue
 
         menu.title = utils.localize(params.get('name', ''))
 
@@ -309,11 +305,10 @@ def __parse_yml_string(string, conditions):
         cat = Category()
         cat.name = name
 
+        # Conditionally hidden?
         if 'condition' in params and \
                 conditionals.is_hidden(conditions, params['condition'], name, 'category'):
             cat.hidden = True
-            categories[name] = cat
-            continue
 
         cat.title = utils.localize(params.get('name', ''))
 
@@ -425,7 +420,7 @@ def load_menu_data(source, desktop_dirs, conditions):
     category_index = []
 
     # --------------------------------------------------------------------------
-    # Step 1: Parse inputs
+    # Step 1: Parse all available menudata files
 
     total_start = time.clock()
     start_time = total_start
@@ -447,12 +442,6 @@ def load_menu_data(source, desktop_dirs, conditions):
         menus.update(m)
         categories.update(c)
 
-    # Remove missing and/or invalid entries. We've reserved their IDs,
-    # but we couldn't load them.
-    programs = {k: v for k, v in programs.items() if programs[k] is not None}
-    menus = {k: v for k, v in menus.items() if menus[k] is not None}
-    categories = {k: v for k, v in categories.items() if categories[k] is not None}
-
     end_time = time.clock()
     utils.log_elapsed_time('YAML loading time', start_time, end_time)
 
@@ -464,28 +453,31 @@ def load_menu_data(source, desktop_dirs, conditions):
     if utils.is_empty(desktop_dirs):
         logging.warning('No .desktop file search paths specified!')
 
-    for i in programs:
-        p = programs[i]
+    for name, program in programs.items():
+        if not program:
+            continue
 
-        if p.hidden or p.type != PROGRAM_TYPE_DESKTOP:
+        if program.type != PROGRAM_TYPE_DESKTOP:
             continue
 
         # Locate the .desktop file
         dd_name = None
 
         for d in desktop_dirs:
-            full = os.path.join(d, p.name + '.desktop')
+            full = os.path.join(d, program.name + '.desktop')
 
             if os.path.isfile(full):
                 dd_name = full
                 break
 
         if dd_name is None:
-            logging.error('.desktop file for "%s" not found', p.name)
-            p.missing_desktop = True
+            logging.error('.desktop file for "%s" not found', program.name)
+
+            # These programs are broken, so clear them
+            programs[name] = None
             continue
 
-        p.original_desktop_file = p.name + '.desktop'
+        program.original_desktop_file = program.name + '.desktop'
 
         # Try to load it
         try:
@@ -493,24 +485,24 @@ def load_menu_data(source, desktop_dirs, conditions):
         except Exception as exception:
             logging.error('Could not load file "%s":', dd_name)
             logging.error(exception, exc_info=True)
-            p.missing_desktop = True
+            programs[name] = None
             continue
 
         if 'Desktop Entry' not in desktop_data:
             logging.error("Can't load \"%s\" for \"%s\": No [Desktop Entry] "
                           "section in the file", dd_name, i)
-            p.missing_desktop = True
+            programs[name] = None
             continue
 
         entry = desktop_data['Desktop Entry']
 
         # Try to load the parts that we don't have yet from it
-        if p.title is None:
+        if program.title is None:
             key = 'Name[' + SETTINGS.language + ']'
 
             if key in entry:
                 # The best case: we have a localized name
-                p.title = entry[key]
+                program.title = entry[key]
             else:
                 # "Name" and "GenericName" aren't interchangeable, but this
                 # is the best we can do. For example, if "Name" is "Mozilla",
@@ -518,79 +510,72 @@ def load_menu_data(source, desktop_dirs, conditions):
                 key = 'GenericName[' + SETTINGS.language + ']'
 
                 if key in entry:
-                    p.title = entry[key]
+                    program.title = entry[key]
                 else:
                     # Last resort
                     #logging.warning('Have to use "Name" entry for program "%s"'.
-                    #                p.name)
-                    p.title = entry.get('Name', '')
+                    #                program.name)
+                    program.title = entry.get('Name', '')
 
-            if utils.is_empty(p.title):
+            if utils.is_empty(program.title):
                 logging.error('Empty name for program "%s", program ignored',
-                              p.name)
-                p.missing_desktop = True
+                              program.name)
+                programs[name] = None
                 continue
 
-        if p.description is None:
+        if program.description is None:
             key = 'Comment[' + SETTINGS.language + ']'
 
             # Accept *ONLY* localized comments
             if key in entry:
-                p.description = entry[key]
+                program.description = entry[key]
 
-                if utils.is_empty(p.description):
+                if utils.is_empty(program.description):
                     logging.warning('Empty comment specified for program "%s" in '
-                                    'the .desktop file "%s"', p.name, dd_name)
-                    p.comment = None
+                                    'the .desktop file "%s"', program.name, dd_name)
+                    program.comment = None
 
-        if utils.is_empty(p.keywords):
+        if utils.is_empty(program.keywords):
             key = 'Keywords[' + SETTINGS.language + ']'
 
             # Accept *ONLY* localized keyword strings
             if key in entry:
-                p.keywords = list(filter(None, entry[key].split(";")))
+                program.keywords = list(filter(None, entry[key].split(";")))
 
-        if p.icon_name is None:
+        if program.icon_name is None:
             if 'Icon' not in entry:
                 logging.warning('Program "%s" has no icon defined for it in the '
-                                '.desktop file "%s"', p.name, dd_name)
+                                '.desktop file "%s"', program.name, dd_name)
             else:
-                p.icon_name = entry.get('Icon', '')
+                program.icon_name = entry.get('Icon', '')
 
-        if utils.is_empty(p.icon_name):
+        if utils.is_empty(program.icon_name):
             logging.warning('Program "%s" has an empty/invalid icon name, will '
-                            'display incorrectly', p.name)
-            p.icon_name = None
+                            'display incorrectly', program.name)
+            program.icon_name = None
 
-        if p.command is None:
+        if program.command is None:
             if 'Exec' not in entry or utils.is_empty(entry['Exec']):
                 logging.warning('Program "%s" has an empty or missing "Exec" '
                                 'line in the desktop file "%s", program ignored',
-                                p.name, dd_name)
-                p.missing_desktop = True
+                                program.name, dd_name)
+                programs[name] = None
                 continue
 
             # Remove %XX parameters from the Exec key in the same way
             # Webmenu does it. It has worked fine for Webmenu, maybe
             # it works fine for us too...?
             # (Reference: file parts/webmenu/src/parseExec.coffee, line 24)
-            import re
-            p.command = re.sub(r"%[fFuUdDnNickvm]{1}", "", entry['Exec'])
-
-
-    # Detect icon types
-    for i in programs:
-        p = programs[i]
-
-        if p.hidden or p.icon_name is None:
-            continue
+            # TODO: This is NOT okay.
+            program.command = re.sub(r"%[fFuUdDnNickvm]{1}", "", entry['Exec'])
 
         # Is the icon name a full path to an icon file, or just
         # a generic name?
-        _, ext = os.path.splitext(p.icon_name)
+        if program.icon_name:
+            _, ext = os.path.splitext(program.icon_name)
 
-        if not utils.is_empty(ext) and ext in ICON_EXTENSIONS:
-            p.icon_name_is_path = True
+            if (not utils.is_empty(ext)) and (ext in ICON_EXTENSIONS):
+                program.icon_name_is_path = True
 
     end_time = time.clock()
     utils.log_elapsed_time('Desktop file parsing', start_time, end_time)
@@ -605,6 +590,9 @@ def load_menu_data(source, desktop_dirs, conditions):
     for m in menus:
         menu = menus[m]
 
+        if not menu:
+            continue
+
         if menu.hidden:
             continue
 
@@ -612,9 +600,7 @@ def load_menu_data(source, desktop_dirs, conditions):
 
         for p in menu.programs:
             if p in programs:
-                if programs[p].missing_desktop:
-                    # Silently ignore desktop programs with missing
-                    # .desktop files.
+                if not programs[p]:
                     continue
 
                 if not programs[p].hidden:
@@ -629,6 +615,9 @@ def load_menu_data(source, desktop_dirs, conditions):
     for c in categories:
         cat = categories[c]
 
+        if not cat:
+            continue
+
         if cat.hidden:
             continue
 
@@ -637,6 +626,9 @@ def load_menu_data(source, desktop_dirs, conditions):
 
         for m in cat.menus:
             if m in menus:
+                if not menus[m]:
+                    continue
+
                 if not menus[m].hidden:
                     new_menus.append(menus[m])
                     menus[m].used = True
@@ -646,9 +638,7 @@ def load_menu_data(source, desktop_dirs, conditions):
 
         for p in cat.programs:
             if p in programs:
-                if programs[p].missing_desktop:
-                    # silently ignore desktop programs with missing
-                    # .desktop files
+                if not programs[p]:
                     continue
 
                 if not programs[p].hidden:
@@ -661,11 +651,10 @@ def load_menu_data(source, desktop_dirs, conditions):
         cat.menus = new_menus
         cat.programs = new_programs
 
-    # Remove desktop prorgams with .desktop files that could not be loaded.
-    # This is done here so that we don't complain about "missing" programs
-    # above when trying to find programs with broken .desktop files. These
-    # programs exist, they just cannot be used.
-    programs = {k: v for k, v in programs.items() if not programs[k].missing_desktop}
+    # We can finally remove broken entries
+    programs = {k: v for k, v in programs.items() if programs[k] is not None}
+    menus = {k: v for k, v in menus.items() if menus[k] is not None}
+    categories = {k: v for k, v in categories.items() if categories[k] is not None}
 
     # Warn about unused (and unhidden) programs, they just take up resources
     num_used_programs = 0
@@ -695,11 +684,6 @@ def load_menu_data(source, desktop_dirs, conditions):
 
         if not c.hidden:
             num_used_categories += 1
-
-    # Finally remove all hidden items
-    programs = {k: v for k, v in programs.items() if not programs[k].hidden}
-    menus = {k: v for k, v in menus.items() if not menus[k].hidden}
-    categories = {k: v for k, v in categories.items() if not categories[k].hidden}
 
     # --------------------------------------------------------------------------
     # Step 4: Sort the categories
