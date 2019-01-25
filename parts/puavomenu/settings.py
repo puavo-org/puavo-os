@@ -126,7 +126,7 @@ class Settings:
         conf_file = join(self.user_dir, 'puavomenu.conf')
 
         if isfile(conf_file):
-            logging.info('A per-user configuration file "%s" exists,'
+            logging.info('A per-user configuration file "%s" exists, '
                          'trying to load it...', conf_file)
 
             try:
