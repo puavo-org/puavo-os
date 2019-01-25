@@ -761,7 +761,6 @@ class PuavoMenu(Gtk.Window):
         if SETTINGS.dev_mode:
             logging.debug('Ignoring Esc in development mode')
         else:
-            logging.debug('Esc pressed, hiding the window')
             self.set_keep_above(False)
             self.set_visible(False)
 
@@ -777,7 +776,6 @@ class PuavoMenu(Gtk.Window):
             return
 
         if self.__focus_signal:
-            logging.debug('Out-of-focus signal handler deactivated')
             self.disconnect(self.__focus_signal)
             self.__focus_signal = None
 
@@ -789,7 +787,6 @@ class PuavoMenu(Gtk.Window):
             return
 
         if not self.__focus_signal:
-            logging.debug('Out-of-focus signal handler activated')
             self.__focus_signal = \
                 self.connect('focus-out-event', self.__main_lost_focus)
 
@@ -806,7 +803,6 @@ class PuavoMenu(Gtk.Window):
     # from other files.
     def autohide(self, *unused):
         if SETTINGS.autohide:
-            logging.debug('Autohiding the window')
             self.set_keep_above(False)
             self.set_visible(False)
 
