@@ -196,4 +196,4 @@ class IconCache:
 # Instantiate global caches for program/menu buttons and
 # sidebar buttons
 ICONS32 = IconCache(32, 128)
-ICONS48 = IconCache(48, 48 * 14)
+ICONS48 = IconCache(48, 48 * 15)
