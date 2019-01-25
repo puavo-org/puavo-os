@@ -305,6 +305,8 @@ programs:
   - kamerka:
         icon: /usr/share/icons/Faenza/devices/96/camera-web.png
         tags: default
+  - kcalc:
+        tags: default
   - kenavision:
         name: Kena Vision Microscope
         type: custom
@@ -1202,6 +1204,7 @@ menus:
             - geogebra
             - geogebra6
             - wxMaxima
+            - kcalc
             - ti_nspire_cx_cas_ss
             - LoggerPro
             - dia
