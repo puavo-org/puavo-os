@@ -9,6 +9,9 @@ class puavomenu {
     '/etc/puavomenu':
       ensure => directory;
 
+    '/etc/puavomenu/dirs.json':
+      content => template('puavomenu/dirs.json');
+
     '/etc/puavomenu/conditions':
       ensure => directory;
 
