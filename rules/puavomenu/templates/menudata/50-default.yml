@@ -745,6 +745,7 @@ programs:
   - spotify:
         tags: default
   - steam:
+        hidden_by_default: true
         tags: default
   - stellarium:
         name:
