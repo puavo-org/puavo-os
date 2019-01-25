@@ -226,6 +226,14 @@ class Menudata:
         return matches
 
 
+    def clear(self):
+        self.conditions = {}
+        self.programs = {}
+        self.menus = {}
+        self.categories = {}
+        self.category_index = []
+
+
     def load(self):
         import time
         import logging
@@ -328,10 +336,6 @@ class Menudata:
             return False
 
         parsing_time = time.clock()
-
-        if not self.programs and not self.menus and not self.categories:
-            # No programs at all?
-            return False
 
         # ----------------------------------------------------------------------
         # Locate and load icons for programs and menus

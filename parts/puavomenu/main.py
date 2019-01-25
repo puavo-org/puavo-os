@@ -667,12 +667,11 @@ class PuavoMenu(Gtk.Window):
         """Loads menu data and sets up the UI. Returns false if
         something fails."""
 
-        menudata_new = menudata.Menudata()
+        self.menudata = menudata.Menudata()
 
-        if not menudata_new.load():
+        if not self.menudata.load():
+            self.menudata.clear()
             return False
-
-        self.menudata = menudata_new
 
         # Prepare the user interface
         for index in self.menudata.category_index:
