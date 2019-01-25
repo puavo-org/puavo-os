@@ -297,9 +297,9 @@ class Menudata:
                                start_time, scan_time)
 
         # ----------------------------------------------------------------------
-        # Load the tag filterer
+        # Load tags
 
-        tag_filter = Filter('')
+        tag_filter = Filter(utils.puavo_conf('puavo.puavomenu.tags', 'default'))
 
         # ----------------------------------------------------------------------
         # Load menu data
