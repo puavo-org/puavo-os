@@ -176,6 +176,11 @@ def __parse_yml_string(string, conditions):
 
         program.keywords = __parse_list(params.get('keywords', []))
 
+        # Per-program tags, if any
+        for tag in __parse_list(params.get('tags', '')):
+            if len(tag) > 0:
+                program.tags.add(tag.lower())
+
         # Some per-type additional checks
         if program.type in (PROGRAM_TYPE_CUSTOM, PROGRAM_TYPE_WEB):
             if program.title is None:
@@ -568,6 +573,16 @@ def load_menu_data(source, desktop_dirs, conditions):
             # (Reference: file parts/webmenu/src/parseExec.coffee, line 24)
             # TODO: This is NOT okay.
             program.command = re.sub(r"%[fFuUdDnNickvm]{1}", "", entry['Exec'])
+
+        # If the desktop file has categories, store them as tags
+        if 'Categories' in entry:
+            # Annoyingly, .desktop files use semicolons here,
+            # but we use just spaces/commas
+            for raw_tag in filter(None, entry['Categories'].split(';')):
+                tag = raw_tag.strip()
+
+                if len(tag) > 0:
+                    program.tags.add(tag.lower())
 
         # Is the icon name a full path to an icon file, or just
         # a generic name?

@@ -34,6 +34,9 @@ class Program:
         # Used during searching
         self.keywords = []
 
+        # Zero or more tags for classifying this program
+        self.tags = set()
+
         # The actual command line for desktop and custom programs;
         # URL for web links
         self.command = command
@@ -68,13 +71,16 @@ class Program:
 
     def __str__(self):
         return '<Program, type={0}, name="{1}", name="{2}", ' \
-               'description="{3}" command="{4}", icon="{5}">'. \
+               'description="{3}" command="{4}", icon="{5}">' \
+               'tags="{6}" hidden={7}'. \
                format(self.type,
                       self.name,
                       self.title,
                       self.description,
                       self.command,
-                      self.icon)
+                      self.icon,
+                      self.tags,
+                      self.hidden)
 
 
 class Menu:
