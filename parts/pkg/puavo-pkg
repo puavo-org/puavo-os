@@ -285,6 +285,10 @@ get_pkg_id()
     basename "$1"
 }
 
+get_pkg_version() {
+    awk '$1 == "version" { print $2 }' "${1}/.puavo-pkg-version"
+}
+
 configure_pkg()
 {
     local pkg_name pkg_id pkg_dir upstream_dir installed_pkg_dir pkg_link
@@ -753,25 +757,29 @@ show_pkg()
         pkg_description=$(cat "${pkg_dir}/description") || return 1
     fi
 
-    case "${pkg_field}" in
+    case "$pkg_field" in
         Name)
-            echo "${pkg_name}"
+            echo "$pkg_name"
+            ;;
+        Id)
+            echo "$pkg_id"
             ;;
         Version)
-            echo "${pkg_id}"
+            echo "$pkg_version"
             ;;
         Directory)
-            echo "${pkg_dir}"
+            echo "$pkg_dir"
             ;;
         Legend)
-            echo "${pkg_legend}"
+            echo "$pkg_legend"
             ;;
         Description)
-            echo "${pkg_description}"
+            echo "$pkg_description"
             ;;
         '')
             echo "Name: ${pkg_name}"
-            echo "Version: ${pkg_id}"
+            echo "Id: ${pkg_id}"
+            echo "Version: ${pkg_version}"
             echo "Directory: ${pkg_dir}"
             echo "Legend: ${pkg_legend}"
             echo "Description:"
