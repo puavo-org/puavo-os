@@ -151,6 +151,11 @@ def __parse_yml_string(string, conditions):
                 conditionals.is_hidden(conditions, params['condition'], name, 'program'):
             program.hidden = True
 
+        # Permit programs to be hidden by default. They must be made
+        # visible with filters.
+        if 'hidden_by_default' in params and bool(params['hidden_by_default']):
+            program.hidden = True
+
         # Load common parameters
         if 'name' in params:
             program.title = utils.localize(params['name'])
@@ -255,6 +260,11 @@ def __parse_yml_string(string, conditions):
                 conditionals.is_hidden(conditions, params['condition'], name, 'menu'):
             menu.hidden = True
 
+        # Permit menus to be hidden by default. They must be made
+        # visible with filters.
+        if 'hidden_by_default' in params and bool(params['hidden_by_default']):
+            menu.hidden = True
+
         menu.title = utils.localize(params.get('name', ''))
 
         if utils.is_empty(menu.title):
@@ -313,6 +323,11 @@ def __parse_yml_string(string, conditions):
         # Conditionally hidden?
         if 'condition' in params and \
                 conditionals.is_hidden(conditions, params['condition'], name, 'category'):
+            cat.hidden = True
+
+        # Permit categories to be hidden by default. They must be made
+        # visible with filters.
+        if 'hidden_by_default' in params and bool(params['hidden_by_default']):
             cat.hidden = True
 
         cat.title = utils.localize(params.get('name', ''))
