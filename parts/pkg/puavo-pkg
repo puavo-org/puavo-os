@@ -626,30 +626,28 @@ extract_installer()
         return 1
     }
 
-    ## Format file is optional in package format 1.
-    pkg_format=1
-    if [ -f "${pkg_tmpdir}/format" ]; then
-        pkg_format=$(cat "${pkg_tmpdir}/format") || {
-            log_error "failed to read installer format"
-            rm -rf "$pkg_tmpdir"
-            return 1
-        }
-    fi
-
-    if [ "$pkg_format" != "${SUPPORTED_PKG_FORMAT}" ]; then
-        log_error "installer has unsupported format"
-        rm -rf "${pkg_tmpdir}"
+    pkg_format=$(awk '$1 == "pkg-format" && $2 ~ /^[0-9]+$/ { print $2 }' \
+                   "${pkg_tmpdir}/.puavo-pkg-version")
+    if [ -z "$pkg_format" ]; then
+        log_error "failed to read installer format"
+        rm -rf "$pkg_tmpdir"
         return 1
     fi
 
-    mv -T "${pkg_tmpdir}" "${pkg_dir}" || {
-        rm -rf "${pkg_tmpdir}"
+    if [ "$pkg_format" -gt "$SUPPORTED_PKG_FORMAT" ]; then
+        log_error "installer has unsupported format $pkg_format"
+        rm -rf "$pkg_tmpdir"
+        return 1
+    fi
+
+    mv -T "$pkg_tmpdir" "$pkg_dir" || {
+        rm -rf "$pkg_tmpdir"
         return 1
     }
 
     log_info "${pkg_name}: extracted installer file successfully"
 
-    echo "${pkg_dir}"
+    echo "$pkg_dir"
 }
 
 install_pkg_with_installer()
