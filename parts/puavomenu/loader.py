@@ -414,10 +414,12 @@ def __load_dotdesktop_file(name):
 # ------------------------------------------------------------------------------
 
 
-def load_menu_data(source, desktop_dirs, conditions):
+def load_menu_data(source, desktop_dirs, conditions, filters):
     """The main menu loader function. Call this."""
 
     import time
+    import re
+    from tags_filter import Filter, Action
 
     programs = {}
     menus = {}
@@ -596,7 +598,81 @@ def load_menu_data(source, desktop_dirs, conditions):
     utils.log_elapsed_time('Desktop file parsing', start_time, end_time)
 
     # --------------------------------------------------------------------------
-    # Step 3: Convert textual references into actual object references and
+    # Step 3: Apply tag/name filters to everything
+
+    start_time = time.clock()
+
+    if filters.have_data():
+        # Filter programs
+        for name, program in programs.items():
+            if not program:
+                continue
+
+            if len(program.tags) == 0:
+                logging.warning('Program "%s" has no tags, hiding it' % name)
+                program.hidden = True
+                continue
+
+            lname = name.lower()
+
+            for a in filters.actions:
+                if a.target == Action.TAG:
+                    if a.name not in program.tags:
+                        continue
+                elif a.target == Action.PROGRAM:
+                    if a.name != lname:
+                        continue
+                else:
+                    continue
+
+                if a.action == Action.SHOW:
+                    program.hidden = False
+                else:
+                    program.hidden = True
+
+        # Filter menus
+        for name, menu in menus.items():
+            if not menu:
+                continue
+
+            if name not in filters.menu_names:
+                continue
+
+            lname = name.lower()
+
+            for a in filters.actions:
+                if (a.target != Action.MENU) or (a.name != lname):
+                    continue
+
+                if a.action == Action.SHOW:
+                    menu.hidden = False
+                else:
+                    menu.hidden = True
+
+        # Filter categories
+        for name, cat in categories.items():
+            if not cat:
+                continue
+
+            if name not in filters.category_names:
+                continue
+
+            lname = name.lower()
+
+            for a in filters.actions:
+                if (a.target != Action.CATEGORY) or (a.name != lname):
+                    continue
+
+                if a.action == Action.SHOW:
+                    cat.hidden = False
+                else:
+                    cat.hidden = True
+
+    end_time = time.clock()
+    utils.log_elapsed_time('Filtering', start_time, end_time)
+
+    # --------------------------------------------------------------------------
+    # Step 4: Convert textual references into actual object references and
     # build the final menu data. Also mark used programs and menus while
     # we're at it.
 
@@ -701,7 +777,7 @@ def load_menu_data(source, desktop_dirs, conditions):
             num_used_categories += 1
 
     # --------------------------------------------------------------------------
-    # Step 4: Sort the categories
+    # Step 5: Sort the categories
 
     # Sort the categories by position, but if the positions are identical,
     # sort by names. Warning: the sort is not locale-aware or case

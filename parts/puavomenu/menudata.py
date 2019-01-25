@@ -238,6 +238,7 @@ class Menudata:
         import loader
         import utils
         import conditionals
+        from tags_filter import Filter
 
         # ----------------------------------------------------------------------
         # Load the path configuration
@@ -288,6 +289,11 @@ class Menudata:
                                start_time, scan_time)
 
         # ----------------------------------------------------------------------
+        # Load the tag filterer
+
+        tag_filter = Filter('')
+
+        # ----------------------------------------------------------------------
         # Load menu data
 
         # Load and evaluate conditions
@@ -314,7 +320,8 @@ class Menudata:
             self.categories, \
             self.category_index = loader.load_menu_data(sources,
                                                         desktop_dirs,
-                                                        self.conditions)
+                                                        self.conditions,
+                                                        tag_filter)
         except Exception as exception:
             logging.error('Could not load menu data!')
             logging.error(exception, exc_info=True)
