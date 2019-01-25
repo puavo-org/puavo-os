@@ -299,7 +299,7 @@ get_pkg_version() {
 
 configure_pkg()
 {
-    local pkg_name pkg_id pkg_dir upstream_dir installed_pkg_dir pkg_link
+    local pkg_name pkg_id pkg_dir upstream_dir pkg_link
 
     pkg_name=$1
     pkg_id=$2
@@ -311,15 +311,11 @@ configure_pkg()
     fi
 
     upstream_dir="${pkg_dir}/upstream"
-    installed_pkg_dir=$(get_installed_pkg_dir "$pkg_name") || return 1
+    installed_pkg_id=$(get_installed_pkg_id "$pkg_name") || return 1
     pkg_link=$(get_pkg_link "$pkg_name") || return 1
 
-    if [ -n "$installed_pkg_dir" ]; then
-        if [ "$installed_pkg_dir" != "$pkg_dir" ]; then
-            log_error "another version of the package has already been " \
-                "configured, unconfigure it before proceeding"
-            return 1
-        fi
+    if [ -n "$installed_pkg_id" -a "$installed_pkg_id" != "$pkg_id" ]; then
+        unconfigure_pkg "$pkg_name"
     fi
 
     pushd "$pkg_dir" >/dev/null || return 1
@@ -341,9 +337,6 @@ configure_pkg()
 reconfigure_pkg()
 {
     local pkg_name pkg_id
-
-    # XXX this should probably unconfigure the previously installed
-    # XXX package version it there is such
 
     pkg_name=$1
     pkg_id=$(get_installed_pkg_id "$pkg_name") || return 1
@@ -367,10 +360,9 @@ reconfigure_all_pkgs()
 
 unconfigure_pkg()
 {
-    local pkg_name pkg_link pkg_dir upstream_dir pkg_id
+    local pkg_name pkg_link pkg_dir upstream_dir
 
     pkg_name=$1
-    pkg_id=$2
 
     pkg_link=$(get_pkg_link "$pkg_name") || return 1
     pkg_dir=$(readlink -e "$pkg_link") || true
@@ -407,7 +399,7 @@ unpack_upstream_pack()
     fi
 
     check_cksum "${pkg_dir}/upstream_pack_sha384sum" "$upstream_pack" || {
-        log_error "upstream pack has incorrect checksum, " \
+        log_error "upstream pack has incorrect checksum," \
             "perhaps you should purge the package and download it again?"
         return 1
     }
@@ -675,7 +667,7 @@ install_pkg_with_installer()
 
     old_pkg_id=$(get_installed_pkg_id "$pkg_name") || return 1
     if [ -n "$old_pkg_id" -a "$old_pkg_id" != "$pkg_id" ]; then
-        unconfigure_pkg "$pkg_name" "$old_pkg_id" || {
+        unconfigure_pkg "$pkg_name" || {
             log_error "failed to unconfigure package '${pkg_name}'"
             return 1
         }
@@ -709,7 +701,7 @@ remove_pkg()
 
     pkg_id=$(get_installed_pkg_id "$pkg_name") || return 1
     if [ -n "${pkg_id}" ]; then
-        unconfigure_pkg "$pkg_name" "$pkg_id" || {
+        unconfigure_pkg "$pkg_name" || {
             log_error "failed to unconfigure package '${pkg_name}'"
             return 1
         }
