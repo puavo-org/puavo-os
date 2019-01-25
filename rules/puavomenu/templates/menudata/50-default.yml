@@ -668,7 +668,7 @@ programs:
         url: https://api.opinsys.fi/v3/my_school_users
         icon: /usr/share/icons/Faenza/mimetypes/96/x-office-spreadsheet.png
         condition: "only_teacher_admin"
-        tags: default, education
+        tags: education
   - scratch:
         tags: default
   - scratch-club:
