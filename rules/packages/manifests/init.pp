@@ -565,6 +565,7 @@ class packages {
     , 'ibus-table'
     , 'inputattach'
     , 'itstool'
+    , 'kcalc'
     , 'laptop-detect'
     , 'libatk-adaptor'
     , 'libgail-common'
