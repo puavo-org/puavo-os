@@ -70,6 +70,9 @@ Commands:
 
   list                           list installed packages
 
+  prepare INSTALLER              prepare package with an installer,
+                                 but do not configure it into use
+
   reconfigure PACKAGE            reconfigure installed PACKAGE
   reconfigure --all              reconfigure all installed packages
 
@@ -642,11 +645,12 @@ extract_installer()
     echo "$pkg_dir"
 }
 
-install_pkg_with_installer()
+prepare_pkg_with_installer()
 {
-    local installer pkg_dir pkg_name pkg_id old_pkg_id old_pkg_dir
+    local installer pkg_dir pkg_name pkg_id
 
     installer=$1
+
     pkg_dir=$(extract_installer "$installer") || {
         log_error "failed to extract '$installer'"
         return 1
@@ -664,6 +668,21 @@ install_pkg_with_installer()
         log_error "failed to unpack the upstream pack of package '${pkg_name}'"
         return 1
     }
+
+    log_info "${pkg_name}: prepared for configuration"
+
+    echo "$pkg_dir"
+}
+
+install_pkg_with_installer()
+{
+    local installer pkg_dir pkg_name pkg_id old_pkg_id old_pkg_dir
+
+    installer=$1
+    pkg_dir=$(prepare_pkg_with_installer "$installer") || return 1
+
+    pkg_name=$(get_pkg_name "$pkg_dir") || return 1
+    pkg_id=$(get_pkg_id "$pkg_dir") || return 1
 
     old_pkg_id=$(get_installed_pkg_id "$pkg_name") || return 1
     if [ -n "$old_pkg_id" -a "$old_pkg_id" != "$pkg_id" ]; then
@@ -912,6 +931,10 @@ case "${command}" in
     list)
         assert_args_count -eq 0 "$@"
         list_installed_pkgs_with_dirs
+        ;;
+    prepare)
+        assert_args_count -eq 1 "$@"
+        prepare_pkg_with_installer "$1" > /dev/null
         ;;
     reconfigure)
         assert_args_count -eq 1 "$@"
