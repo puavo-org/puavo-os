@@ -263,7 +263,7 @@ get_writable_pkg_dir()
 
 get_installed_pkg_dir()
 {
-    readlink -e "$(get_pkg_link "$1")"
+    readlink -e "$(get_pkg_link "$1")" || true
 }
 
 get_installed_pkg_id()
