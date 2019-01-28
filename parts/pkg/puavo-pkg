@@ -16,8 +16,8 @@
 
 g_puavo_pkg_cachedir=/var/cache/puavo-pkg
 g_puavo_pkg_rootdir=/var/lib/puavo-pkg
-g_puavo_pkg_readonly_cachedir=
-g_puavo_pkg_readonly_rootdir=
+g_puavo_pkg_readonly_cachedir="$g_puavo_pkg_cachedir"
+g_puavo_pkg_readonly_rootdir="$g_puavo_pkg_rootdir"
 
 # this can not be overridden with PUAVO_PKG_ROOTDIR by design
 # (we could also move it somewhere else than /var/lib/puavo-pkg/installed)
@@ -895,15 +895,14 @@ if [ -r /etc/puavo-pkg/puavo-pkg.conf ]; then
         g_puavo_pkg_readonly_cachedir="$PUAVO_PKG_READONLY_CACHEDIR"
     fi
     if [ ! -z ${PUAVO_PKG_READONLY_ROOTDIR+x} ]; then
-        g_puavo_pkg_readonly_cachedir="$PUAVO_PKG_READONLY_ROOTDIR"
+        g_puavo_pkg_readonly_rootdir="$PUAVO_PKG_READONLY_ROOTDIR"
     fi
 fi
 
 ## Validate configuration.
 [[ "$g_puavo_pkg_rootdir" =~ ^/ ]] || usage_error "invalid root dir path"
 
-[ -z "$g_puavo_pkg_readonly_rootdir" ] \
-  || [[ "$g_puavo_pkg_readonly_rootdir" =~ ^/ ]] \
+[[ "$g_puavo_pkg_readonly_rootdir" =~ ^/ ]] \
   || usage_error "invalid readonly root dir path"
 
 mkdir -p "${g_puavo_pkg_rootdir}/packages" "$g_puavo_pkg_installed_dir"
