@@ -867,7 +867,7 @@ fi
 if [ -r /etc/puavo-pkg/puavo-pkg.conf ]; then
     . /etc/puavo-pkg/puavo-pkg.conf
     if [ ! -z ${PUAVO_PKG_CACHEDIR+x} ]; then
-        g_puavo_pkg_cachedir="$PUAVO_PKG_READONLY_CACHEDIR"
+        g_puavo_pkg_cachedir="$PUAVO_PKG_CACHEDIR"
     fi
     if [ ! -z ${PUAVO_PKG_ROOTDIR+x} ]; then
         g_puavo_pkg_rootdir="$PUAVO_PKG_ROOTDIR"
