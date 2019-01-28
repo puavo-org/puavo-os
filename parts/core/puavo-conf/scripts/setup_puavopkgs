@@ -4,7 +4,7 @@ set -eu
 
 status=0
 
-remote_mountdir='/mnt/bootserver/puavo-pkg'
+remote_mountdir='/var/mnt/bootserver/puavo-pkg'
 remote_cachedir="${remote_mountdir}/cache"
 remote_rootdir="${remote_mountdir}/root"
 
