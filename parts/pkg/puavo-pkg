@@ -70,7 +70,7 @@ Commands:
 
   list                           list installed packages
 
-  reconfigure DIR|PACKAGE        reconfigure installed PACKAGE
+  reconfigure PACKAGE            reconfigure installed PACKAGE
   reconfigure --all              reconfigure all installed packages
 
   remove PACKAGE                 remove installed PACKAGE
