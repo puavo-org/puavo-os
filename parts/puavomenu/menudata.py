@@ -271,8 +271,8 @@ class Menudata:
             if 'icon_dirs' in dirs:
                 icon_dirs = dirs['icon_dirs']
         except Exception as e:
-            logging.error('Failed to load the directories config file "%s": %s',
-                           dirs_name, str(e))
+            logging.fatal('Failed to load the directories config file "%s": %s',
+                          dirs_name, str(e))
             return False
 
         # ----------------------------------------------------------------------
@@ -331,7 +331,7 @@ class Menudata:
                                                         self.conditions,
                                                         tag_filter)
         except Exception as exception:
-            logging.error('Could not load menu data!')
+            logging.fatal('Could not load menu data!')
             logging.error(exception, exc_info=True)
             return False
 

@@ -191,7 +191,7 @@ try:
 except Exception as exception:
     # This is bad. Very bad. The exception bubbled all the way up to here,
     # so this is fatal.
-    logging.critical(str(exception))
+    logging.fatal(str(exception))
 
     import syslog
     syslog.syslog(syslog.LOG_CRIT, str(exception))
