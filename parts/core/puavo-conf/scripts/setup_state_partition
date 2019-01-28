@@ -6,11 +6,6 @@ puavo_link_to_state() {
   local current_linktarget dirpath wanted_linktarget
 
   dirpath=$1
-  if [ ! -d "$dirpath" ]; then
-    echo "not linking to $dirpath which does not exist" >&2
-    return 1
-  fi
-
   wanted_linktarget="/state${dirpath}"
 
   current_linktarget=$(readlink "$dirpath" 2>/dev/null || true)
