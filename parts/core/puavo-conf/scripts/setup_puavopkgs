@@ -42,15 +42,15 @@ reconfigure_puavopkg() {
   timeout -k 5 30 puavo-pkg reconfigure "$@"
 }
 
-get_installed_puavopkg_dir() {
+reconfigure_upgrade_pkg() {
+  timeout -k 5 30 puavo-pkg reconfigure-upgrade "$@"
+}
+
+test_puavopkg_installation() {
   puavo_pkg=$1
 
   installed_path="${system_rootdir}/installed/${puavo_pkg}"
-  if ! [ -h "$installed_path" -a -d "$installed_path" ]; then
-    return 1
-  fi
-
-  readlink "$installed_path"
+  test -h "$installed_path" -a -d "$installed_path"
 }
 
 get_installed_version() {
@@ -110,7 +110,7 @@ configure_latest_from() {
     other_pkgid_dir=$(get_dir_with_latest_version "$other_pkgdir" \
                                                   "$syspkg_version")
     if [ -d "$other_pkgid_dir" ]; then
-      reconfigure_puavopkg "$other_pkgid_dir" || status=1
+      reconfigure_upgrade_pkg "$pkg_name" "$other_pkgid_dir" || status=1
     fi
   done
 }
@@ -159,12 +159,11 @@ setup_puavopkg_common() {
   # by default and their configuration is dependent on puavo-conf variables
   # "puavo.nonfree.smartboard.enabled" and
   # "puavo.nonfree.ti_nspire_cx_cas_ss.enabled".
-  if puavopkg_dir=$(get_installed_puavopkg_dir smartboard); then
-    reconfigure_puavopkg "$puavopkg_dir" || status=1
-  fi
-  if puavopkg_dir=$(get_installed_puavopkg_dir ti-nspire-cx-cas-ss); then
-    reconfigure_puavopkg "$puavopkg_dir" || status=1
-  fi
+  for puavo_pkg in smartboard ti-nspire-cx-cas-ss; do
+    if test_puavopkg_installation "$puavopkg"; then
+      reconfigure_puavopkg "$puavopkg" || status=1
+    fi
+  done
 }
 
 setup_puavopkg_common

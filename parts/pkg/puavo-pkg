@@ -76,6 +76,8 @@ Commands:
   reconfigure PACKAGE            reconfigure installed PACKAGE
   reconfigure --all              reconfigure all installed packages
 
+  reconfigure-upgrade PKG DIR    reconfigure package from new directory
+
   remove PACKAGE                 remove installed PACKAGE
   remove --all                   remove all installed packages
 
@@ -674,6 +676,38 @@ prepare_pkg_with_installer()
     echo "$pkg_dir"
 }
 
+reconfigure_upgrade_pkg() {
+    local pkg_name pkg_dir pkg_id old_pkg_id
+
+    pkg_name=$1
+    pkg_dir=$2
+
+    pkg_id=$(get_pkg_id "$pkg_dir") || return 1
+    old_pkg_id=$(get_installed_pkg_id "$pkg_name") || return 1
+
+    if [ -n "$old_pkg_id" -a "$old_pkg_id" != "$pkg_id" ]; then
+        if ! unconfigure_pkg "$pkg_name"; then
+            log_error "failed to unconfigure package '${pkg_name}'"
+            return 1
+        fi
+    fi
+
+    if ! configure_pkg "$pkg_name" "$pkg_id"; then
+        # if configuration fails, try to reconfigure the old version again
+        log_error "${pkg_name}: failed to configure package version '${pkg_id}'"
+        if [ -n "$old_pkg_id" -a "$old_pkg_id" != "$pkg_id" ]; then
+            if ! configure_pkg "$pkg_name" "$old_pkg_id"; then
+                log_error "${pkg_name}: failed to reconfigure the previous" \
+                          "version '${old_pkg_id}'"
+                return 1
+            fi
+            log_info "${pkg_name}: reconfigured the previous" \
+                     "version '${old_pkg_id}' successfully"
+        fi
+        return 1
+    fi
+}
+
 install_pkg_with_installer()
 {
     local installer pkg_dir pkg_name pkg_id old_pkg_id old_pkg_dir
@@ -682,27 +716,11 @@ install_pkg_with_installer()
     pkg_dir=$(prepare_pkg_with_installer "$installer") || return 1
 
     pkg_name=$(get_pkg_name "$pkg_dir") || return 1
+
+    reconfigure_upgrade_pkg "$pkg_name" "$pkg_dir" || return 1
+
     pkg_id=$(get_pkg_id "$pkg_dir") || return 1
-
     old_pkg_id=$(get_installed_pkg_id "$pkg_name") || return 1
-    if [ -n "$old_pkg_id" -a "$old_pkg_id" != "$pkg_id" ]; then
-        unconfigure_pkg "$pkg_name" || {
-            log_error "failed to unconfigure package '${pkg_name}'"
-            return 1
-        }
-    fi
-
-    configure_pkg "$pkg_name" "$pkg_id" || {
-        log_error "${pkg_name}: failed to configure package version '${pkg_id}'"
-        if [ -n "$old_pkg_id" -a "$old_pkg_id" != "$pkg_id" ]; then
-            configure_pkg "$pkg_name" "$old_pkg_id" || {
-                log_error "${pkg_name}: failed to reconfigure the previous version '${old_pkg_id}'"
-                return 1
-            }
-            log_info "${pkg_name}: reconfigured the previous version '${old_pkg_id}' successfully"
-        fi
-        return 1
-    }
 
     if [ -n "$old_pkg_id" -a "$old_pkg_id" != "$pkg_id" ]; then
         old_pkg_dir=$(get_writable_pkg_dir "$pkg_name" "$old_pkg_id") \
@@ -942,6 +960,10 @@ case "${command}" in
         else
             reconfigure_pkg "$1"
         fi
+        ;;
+    reconfigure-upgrade)
+        assert_args_count -eq 2 "$@"
+        reconfigure_upgrade_pkg "$1" "$2"
         ;;
     remove)
         assert_args_count -eq 1 "$@"
