@@ -106,7 +106,7 @@ logmsg()
     # this should behave nicely in image build as well,
     # where /dev/log may not exist
     if [ -S /dev/log ]; then
-        logger -p "$syslog_prio" -t puavo-pkg "$@"
+        logger -p "$syslog_prio" -t puavo-pkg "$@" || true
     fi
     echo "${human_prio}: $@" >&2
 }
