@@ -447,7 +447,7 @@ check_cksum()
 
     [ -r "$cksum_file" ] || return 0
     cksum_file_contents=$(cat "$cksum_file") || return 1
-    expected_cksum_str=${cksum_file_contents#\!}
+    expected_cksum_str=${cksum_file_contents#\! }
 
     actual_cksum_str=$(sha384sum "$file" 2>/dev/null | awk '{ print $1 }')
 
