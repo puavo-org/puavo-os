@@ -96,24 +96,39 @@ EOF
     exit 0
 }
 
+logmsg()
+{
+    local human_prio syslog_prio
+
+    human_prio=$1;  shift
+    syslog_prio=$1; shift
+
+    # this should behave nicely in image build as well,
+    # where /dev/log may not exist
+    if [ -S /dev/log ]; then
+        logger -p "$syslog_prio" -t puavo-pkg "$@"
+    fi
+    echo "${human_prio}: $@" >&2
+}
+
 log_error()
 {
     if [ "$g_log_level" -ge "$LOG_ERR" ]; then
-        logger -p user.err -s -t puavo-pkg "$@"
+        logmsg ERROR user.err "$@"
     fi
 }
 
 log_info()
 {
     if [ "$g_log_level" -ge "$LOG_INFO" ]; then
-        logger -p user.info -s -t puavo-pkg "$@"
+        logmsg INFO user.info "$@"
     fi
 }
 
 log_warning()
 {
     if [ "$g_log_level" -ge "$LOG_WARNING" ]; then
-        logger -p user.warn -s -t puavo-pkg "$@"
+        logmsg WARNING user.warn "$@"
     fi
 }
 
