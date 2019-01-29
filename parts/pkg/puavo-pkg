@@ -98,22 +98,22 @@ EOF
 
 log_error()
 {
-    if [ ${g_log_level} -ge ${LOG_ERR} ]; then
-        echo "ERROR: $@" >&2
+    if [ "$g_log_level" -ge "$LOG_ERR" ]; then
+        logger -p user.err -s -t puavo-pkg "$@"
     fi
 }
 
 log_info()
 {
-    if [ ${g_log_level} -ge ${LOG_INFO} ]; then
-        echo "INFO: $@" >&2
+    if [ "$g_log_level" -ge "$LOG_INFO" ]; then
+        logger -p user.info -s -t puavo-pkg "$@"
     fi
 }
 
 log_warning()
 {
-    if [ ${g_log_level} -ge ${LOG_WARNING} ]; then
-        echo "WARNING: $@" >&2
+    if [ "$g_log_level" -ge "$LOG_WARNING" ]; then
+        logger -p user.warn -s -t puavo-pkg "$@"
     fi
 }
 
@@ -403,11 +403,11 @@ unpack_upstream_pack()
         return 0
     fi
 
-    check_cksum "${pkg_dir}/upstream_pack_sha384sum" "$upstream_pack" || {
-        log_error "upstream pack has incorrect checksum," \
-            "perhaps you should purge the package and download it again?"
+    if ! check_cksum "${pkg_dir}/upstream_pack_sha384sum" "$upstream_pack"; then
+        log_error 'upstream pack has incorrect checksum,' \
+            'perhaps you should purge the package and download it again?'
         return 1
-    }
+    fi
 
     rm -rf "$upstream_tmpdir"
     mkdir "$upstream_tmpdir" || return 1
@@ -437,25 +437,32 @@ unpack_upstream_pack()
 
 check_cksum()
 {
-    local cksum_file file actual_cksum_str expected_cksum_str
+    local cksum_file cksum_file_contents file actual_cksum_str \
+          expected_cksum_str
 
     cksum_file=$1
     file=$2
 
-    [ -r "${file}" ] || return 1
+    [ -r "$file" ] || return 1
 
-    [ -r "${cksum_file}" ] || return 0
-    expected_cksum_str=$(cat "${cksum_file}") || return 1
+    [ -r "$cksum_file" ] || return 0
+    cksum_file_contents=$(cat "$cksum_file") || return 1
+    expected_cksum_str=${cksum_file_contents#\!}
 
-    actual_cksum_str=$(sha384sum "${file}" 2>/dev/null | awk '{ print $1 }')
+    actual_cksum_str=$(sha384sum "$file" 2>/dev/null | awk '{ print $1 }')
 
     [ -n "$actual_cksum_str"   ] || return 1
     [ -n "$expected_cksum_str" ] || return 1
 
     if [ "$actual_cksum_str" != "$expected_cksum_str" ]; then
-        log_error "expected checksum '${expected_cksum_str}' in '${file}'," \
-                  "yet actual checksum is '${actual_cksum_str}'"
-        return 1
+        if [ "$expected_cksum_str" = "$cksum_file_contents" ]; then
+            log_error "expected checksum '${expected_cksum_str}' in '${file}'," \
+                      "yet actual checksum is '${actual_cksum_str}'"
+            return 1
+        fi
+        log_warning "expected checksum '${expected_cksum_str}' in '${file}'," \
+                    "yet actual checksum is '${actual_cksum_str}'," \
+                    "yet continuing as checksum was marked advisory only"
     fi
 
     return 0
@@ -558,20 +565,20 @@ download_upstream_pack()
         }
     fi
 
-    check_cksum "${pkg_dir}/upstream_pack_sha384sum" "${upstream_tmppack}" || {
+    if ! check_cksum "${pkg_dir}/upstream_pack_sha384sum" "${upstream_tmppack}"; then
         log_error "downloaded upstream pack has incorrect checksum"
         rm -rf "${upstream_tmppack}"
         return 1
-    }
+    fi
 
-    mv -T "${upstream_tmppack}" "${upstream_pack}" || {
+    if ! mv -T "${upstream_tmppack}" "${upstream_pack}"; then
         rm -rf "${upstream_pack}"
         return 1
-    }
+    fi
 
-    cache_save_upstream_pack "$pkg_name" "$pkg_id" || {
+    if ! cache_save_upstream_pack "$pkg_name" "$pkg_id"; then
         log_warning "${pkg_name}: failed to save upstream pack to the cache"
-    }
+    fi
 
     log_info "${pkg_name}: downloaded upstream pack successfully"
 }
