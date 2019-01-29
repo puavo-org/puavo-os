@@ -64,7 +64,7 @@ all: $(packagefiles) puavo-pkg-installers-bundle.tar puavo-pkg.json
 
 puavo-pkg.json: $(packagefiles)
 	jq --null-input --arg packages "$(packagedirs)" \
-	  '$$packages | split(" ") | reduce .[] as $$item ({}; .["puavo.pkg." + $$item] = { default: "" })' \
+	  '$$packages | split(" ") | reduce .[] as $$item ({}; .["puavo.pkg." + $$item] = { default: "do-nothing" })' \
 	  > $@.tmp
 	mv $@.tmp $@
 
