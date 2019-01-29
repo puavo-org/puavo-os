@@ -160,8 +160,8 @@ setup_puavopkg_common() {
   # "puavo.nonfree.smartboard.enabled" and
   # "puavo.nonfree.ti_nspire_cx_cas_ss.enabled".
   for puavo_pkg in smartboard ti-nspire-cx-cas-ss; do
-    if test_puavopkg_installation "$puavopkg"; then
-      reconfigure_puavopkg "$puavopkg" || status=1
+    if test_puavopkg_installation "$puavo_pkg"; then
+      reconfigure_puavopkg "$puavo_pkg" || status=1
     fi
   done
 }
