@@ -31,6 +31,7 @@ install: installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-pkg \
 		puavo-pkg-update \
+		puavo-pkg-update-repository \
 		puavo-test-puavo-pkg-installers
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-pkg \
