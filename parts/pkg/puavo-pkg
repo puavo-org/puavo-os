@@ -141,6 +141,8 @@ gc_installations() {
     gc_status=$SC_OK
 
     for pkg_dir in "${g_puavo_pkg_rootdir}"/packages/*; do
+        test -d "$pkg_dir" || continue
+
         pkg_name="$(basename "$pkg_dir")"
         currently_installed_link="${g_puavo_pkg_installed_dir}/${pkg_name}"
 
@@ -178,6 +180,8 @@ gc_upstream_packs() {
     gc_status=$SC_OK
 
     for cache_subdir in "$g_puavo_pkg_cachedir"/upstream_packs/*; do
+        test -d "$cache_subdir" || continue
+
         old_upstream_pack_list=$(ls -1t "$cache_subdir" | sed -n '2,$p')
         for old_upstream_pack in $old_upstream_pack_list; do
             upstream_pack_path="${cache_subdir}/${old_upstream_pack}"
