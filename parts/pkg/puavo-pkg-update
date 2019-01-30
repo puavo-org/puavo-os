@@ -2,7 +2,7 @@
 
 set -eu
 
-baseurl='https://images.opinsys.fi/puavo-pkgs'
+baseurl='https://images.opinsys.fi/puavo-pkg'
 installers_dir='/var/lib/puavo-pkg/installers'
 
 exec 3< "$installers_dir"
@@ -52,7 +52,7 @@ download_installer() {
   # the version number
 
   pkg_id=$(
-    tar --wildcards -Ozx -f "$installer" '*/.puavo-pkg-version' \
+    tar --wildcards -Ozx -f "$installer_tmppath" '*/.puavo-pkg-version' \
       | awk '$1 == "package-id" { print $2 }') || return 1
   if [ -z "$pkg_id" ]; then
     echo "Could not determine package id from ${installer_subpath}" >&2
