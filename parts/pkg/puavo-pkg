@@ -84,6 +84,8 @@ Commands:
   show INSTALLER|PACKAGE         show package details
   show -F|--field FIELD PACKAGE  show specific FIELD
 
+  unconfigure PACKAGE            unconfigure installed PACKAGE
+
 Files:
   /etc/puavo-pkg/puavo-pkg.conf  configuration file
 
@@ -1008,6 +1010,10 @@ case "${command}" in
                 show_pkg "$1" ""
                 ;;
         esac
+        ;;
+    unconfigure)
+        assert_args_count -eq 1 "$@"
+        unconfigure_pkg "$1"
         ;;
     *)
         usage_error "unknown command '${command}'"
