@@ -15,6 +15,18 @@ class Action:
     MENU = 2
     CATEGORY = 3
 
+    ACTIONS_FOR_LOGGER = {
+        HIDE: 'hide',
+        SHOW: 'show'
+    }
+
+    TARGETS_FOR_LOGGER = {
+        TAG: 'tag',
+        PROGRAM: 'program',
+        MENU: 'menu',
+        CATEGORY: 'category'
+    }
+
     def __init__(self, action, target, name):
         self.action = action
         self.target = target
@@ -59,17 +71,6 @@ class Filter:
 
         self.reset()
 
-        actions_for_logger = {
-            Action.HIDE: 'hide',
-            Action.SHOW: 'show'
-        }
-
-        targets_for_logger = {
-            Action.TAG: 'tag',
-            Action.PROGRAM: 'program',
-            Action.MENU: 'menu',
-            Action.CATEGORY: 'category'
-        }
 
         for tag in tags:
             orig_tag = tag
@@ -127,8 +128,8 @@ class Filter:
 
             self.actions.append(Action(action, target, tag))
             logging.debug('Filter action: %s %s "%s"',
-                          actions_for_logger[action],
-                          targets_for_logger[target],
+                          Action.ACTIONS_FOR_LOGGER[action],
+                          Action.TARGETS_FOR_LOGGER[target],
                           tag)
 
         return True
