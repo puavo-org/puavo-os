@@ -107,7 +107,7 @@ class Filter:
                                   'is not a valid tag' %
                                   (tag_string, orig_tag))
                     self.reset()
-                    return False
+                    return
 
                 continue
 
@@ -139,7 +139,7 @@ class Filter:
                                   'is not a valid tag namespace' %
                                   (tag_string, namespace))
                     self.reset()
-                    return False
+                    return
 
                 continue
 
@@ -148,5 +148,3 @@ class Filter:
                           Action.ACTIONS_FOR_LOGGER[action],
                           Action.TARGETS_FOR_LOGGER[target],
                           tag)
-
-        return True
