@@ -201,7 +201,9 @@ def evaluate_file(file_name):
 
     try:
         from yaml import safe_load as yaml_safe_load
-        data = yaml_safe_load(open(file_name, 'r', encoding='utf-8').read())
+
+        with open(file_name, 'r', encoding='utf-8') as f:
+            data = yaml_safe_load(f.read())
     except Exception as exception:
         logging.error(str(exception))
         return results
