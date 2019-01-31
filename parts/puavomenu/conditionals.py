@@ -279,6 +279,7 @@ def evaluate_file(file_name):
             # Don't let a single conditional failure destroy
             # everything in this file
             logging.error(str(exception))
+            logging.error(exception, exc_info=True)
             return results
 
     for key, value in results.items():
