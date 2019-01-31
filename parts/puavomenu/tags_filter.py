@@ -43,14 +43,14 @@ class Filter:
     """Zero or more actions that are applied to programs, menus,
     categories and programs tagged with certain tags."""
 
-    def __init__(self, initial=None):
+    def __init__(self, initial=None, strict_reject=True):
         self.actions = []
         self.program_names = set()
         self.menu_names = set()
         self.category_names = set()
 
         if initial:
-            self.parse_string(initial)
+            self.parse_string(initial, strict_reject)
 
 
     def have_data(self):
