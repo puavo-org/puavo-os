@@ -256,6 +256,11 @@ def evaluate_file(file_name):
                               name)
                 continue
 
+            if len(cond['params']) == 0:
+                logging.error('Conditional "%s" invalid/empty params block, '
+                              'skipping', name)
+                continue
+
             params = cond['params'][0]
 
             if (not isinstance(params, dict)) or utils.is_empty(params):
