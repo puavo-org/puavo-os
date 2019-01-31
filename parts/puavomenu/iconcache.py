@@ -189,7 +189,8 @@ class IconCache:
     def stats(self):
         return {
             'num_atlases': self.__atlas_num + 1,
-            'num_icons': len(self.__lookup)
+            'num_icons': len(self.__lookup),
+            'capacity': (self.__bitmap_size / self.__icon_size) ** 2
         }
 
 
