@@ -111,6 +111,17 @@ class Filter:
 
                 continue
 
+            # The tag can contain + and - characters, but it can't start
+            # with them
+            if (tag.find('-') == 0) or (tag.find('+') == 0):
+                if strict_reject:
+                    logging.error('Rejecting filter string "%s" because "%s" '
+                                  'is not a valid tag' %
+                                 (tag_string, orig_tag))
+                    self.reset()
+                    return
+                continue
+
             if namespace in ('t', 'tag'):
                 target = Action.TAG
             elif namespace in ('p', 'prog', 'program'):
