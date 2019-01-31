@@ -28,7 +28,9 @@ def _save_use_counts(all_programs):
 
     try:
         from os.path import join as path_join
-        open(path_join(SETTINGS.user_dir, 'faves'), 'w').write(out)
+
+        with open(path_join(SETTINGS.user_dir, 'faves'), 'w') as f:
+            f.write(out)
     except Exception as exception:
         logging.error('Could not save favorites: %s', str(exception))
 
