@@ -32,6 +32,12 @@ class Action:
         self.target = target
         self.name = name
 
+    def __str__(self):
+        return '<Filter action: {0} {1} {2}>'.format( \
+            self.ACTIONS_FOR_LOGGER[self.action],
+            self.TARGETS_FOR_LOGGER[self.target],
+            self.name)
+
 
 class Filter:
     """Zero or more actions that are applied to programs, menus,
