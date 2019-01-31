@@ -59,6 +59,11 @@ USER_AVATAR_SIZE = 48
 # Height of the machine name and release info text
 HOSTINFO_LABEL_HEIGHT = 45
 
+# Accepted languages. These are permitted for the --lang parameter and
+# environment variables, and we try to load strings from YAML/.desktop
+# files for each of these. Only one of them will be actually used.
+LANGUAGES = ('en', 'fi', 'sv', 'de')
+
 # Accepted extensions for icon files, in the order we prefer them. Some
 # .desktop file "Icon" entries specify full paths, some only "generic"
 # names, so to tell them apart, we check if the name has an extension.
