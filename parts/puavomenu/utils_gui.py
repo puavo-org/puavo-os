@@ -78,7 +78,7 @@ def create_desktop_link(filename, program):
                           PROGRAM_TYPE_WEB
 
     with open(filename, 'w', encoding='utf-8') as out:
-        if program.type != PROGRAM_TYPE_WEB:
+        if program.program_type != PROGRAM_TYPE_WEB:
             out.write('#!/usr/bin/env xdg-open\n')
 
         out.write('[Desktop Entry]\n')
@@ -86,7 +86,7 @@ def create_desktop_link(filename, program):
         out.write('Version=1.0\n')
         out.write('Name={0}\n'.format(program.title))
 
-        if program.type in (PROGRAM_TYPE_DESKTOP, PROGRAM_TYPE_CUSTOM):
+        if program.program_type in (PROGRAM_TYPE_DESKTOP, PROGRAM_TYPE_CUSTOM):
             out.write('Type=Application\n')
             out.write('Exec={0}\n'.format(program.command))
         else:
@@ -96,11 +96,11 @@ def create_desktop_link(filename, program):
         if program.icon:
             out.write('Icon={0}\n'.format(program.icon.file_name))
         else:
-            if program.type == PROGRAM_TYPE_WEB:
+            if program.program_type == PROGRAM_TYPE_WEB:
                 # a "generic" web icon
                 out.write('Icon=text-html\n')
 
-    if program.type != PROGRAM_TYPE_WEB:
+    if program.program_type != PROGRAM_TYPE_WEB:
         # Make the file runnable, or GNOME won't accept it
         from os import chmod
         import subprocess
@@ -163,7 +163,7 @@ def create_panel_link(program):
             out.write('Name={0}\n'.format(program.title))
             out.write('Type=Application\n')
 
-            if program.type == PROGRAM_TYPE_WEB:
+            if program.program_type == PROGRAM_TYPE_WEB:
                 # GNOME, in its infinite wisdom, has decided that "you shall
                 # not have web links in the panel" and then broke the "Link"
                 # type icons. So let's hope that xdg-open can open the URL in
@@ -176,7 +176,7 @@ def create_panel_link(program):
             if program.icon:
                 out.write('Icon={0}\n'.format(program.icon.file_name))
             else:
-                if program.type == PROGRAM_TYPE_WEB:
+                if program.program_type == PROGRAM_TYPE_WEB:
                     # a "generic" web icon
                     out.write('Icon=text-html\n')
 

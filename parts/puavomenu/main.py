@@ -380,7 +380,7 @@ class PuavoMenu(Gtk.Window):
                     if menu.hidden:
                         continue
 
-                    button = MenuButton(self, menu.title, menu.icon,
+                    button = MenuButton(self, menu.name, menu.icon,
                                         menu.description, menu,
                                         self.__menu_background)
                     button.connect('clicked', self.__clicked_menu_button)
@@ -391,7 +391,7 @@ class PuavoMenu(Gtk.Window):
                     if program.hidden:
                         continue
 
-                    button = ProgramButton(self, program.title, program.icon,
+                    button = ProgramButton(self, program.name, program.icon,
                                            program.description, program)
                     button.connect('clicked', self.clicked_program_button)
                     new_buttons.append(button)
@@ -406,7 +406,7 @@ class PuavoMenu(Gtk.Window):
                 if program.hidden:
                     continue
 
-                button = ProgramButton(self, program.title, program.icon,
+                button = ProgramButton(self, program.name, program.icon,
                                        program.description, program)
                 button.connect('clicked', self.clicked_program_button)
                 new_buttons.append(button)
@@ -425,10 +425,10 @@ class PuavoMenu(Gtk.Window):
             if self.current_menu.description:
                 self.__menu_title.set_markup(
                     '<big>{0}</big>  <small>{1}</small>'.
-                    format(self.current_menu.title, self.current_menu.description))
+                    format(self.current_menu.name, self.current_menu.description))
             else:
                 self.__menu_title.set_markup(
-                    '<big>{0}</big>'.format(self.current_menu.title))
+                    '<big>{0}</big>'.format(self.current_menu.name))
 
             self.__menu_title.show()
 
@@ -498,10 +498,10 @@ class PuavoMenu(Gtk.Window):
 
         # Create the link file
         # TODO: use the *original* .desktop file if it exists
-        name = os.path.join(SETTINGS.desktop_dir, '{0}.desktop'.format(program.title))
+        name = os.path.join(SETTINGS.desktop_dir, '{0}.desktop'.format(program.name))
 
         logging.info('Adding program "%s" to the desktop, destination="%s"',
-                     program.title, name)
+                     program.name, name)
 
         try:
             utils_gui.create_desktop_link(name, program)
@@ -517,7 +517,7 @@ class PuavoMenu(Gtk.Window):
     # Called directly from ProgramButton
     def add_program_to_panel(self, program):
         logging.info('Adding program "%s" (id="%s") to the bottom panel',
-                     program.title, program.name)
+                     program.name, program.name)
 
         try:
             utils_gui.create_panel_link(program)
@@ -531,7 +531,7 @@ class PuavoMenu(Gtk.Window):
 
     # Called directly from ProgramButton
     def remove_program_from_faves(self, p):
-        logging.info('Removing program "%s" from the faves', p.title)
+        logging.info('Removing program "%s" from the faves', p.name)
         p.uses = 0
         self.__faves.update(self.menudata.programs)
 
@@ -544,25 +544,25 @@ class PuavoMenu(Gtk.Window):
         self.__faves.update(self.menudata.programs)
 
         logging.info('Clicked program button "%s", usage counter is %d',
-                     program.title, program.uses)
+                     program.name, program.uses)
 
         if program.command is None:
-            logging.error('No command defined for program "%s"', program.title)
+            logging.error('No command defined for program "%s"', program.name)
             return
 
         # Try to launch the program
         try:
             import subprocess
 
-            if program.type in (PROGRAM_TYPE_DESKTOP, PROGRAM_TYPE_CUSTOM):
+            if program.program_type in (PROGRAM_TYPE_DESKTOP, PROGRAM_TYPE_CUSTOM):
                 # TODO: do we really need to open a shell for this?
                 cmd = ['sh', '-c', program.command, '&']
-            elif program.type == PROGRAM_TYPE_WEB:
+            elif program.program_type == PROGRAM_TYPE_WEB:
                 # Opens in the default browser
                 cmd = ['xdg-open', program.command]
             else:
                 raise RuntimeError('Unknown program type "{0}"'.
-                                   format(program.type))
+                                   format(program.program_type))
 
             logging.info('Executing "%s"', cmd)
 
@@ -616,7 +616,7 @@ class PuavoMenu(Gtk.Window):
         new_buttons = []
 
         for m in matches:
-            b = ProgramButton(self, m.title, m.icon, m.description, m)
+            b = ProgramButton(self, m.name, m.icon, m.description, m)
             b.connect('clicked', self.clicked_program_button)
             new_buttons.append(b)
 
@@ -681,7 +681,7 @@ class PuavoMenu(Gtk.Window):
                 continue
 
             frame = Gtk.Frame()
-            label = Gtk.Label(cat.title)
+            label = Gtk.Label(cat.name)
             frame.show()
             label.show()
             self.__category_buttons.append_page(frame, label)

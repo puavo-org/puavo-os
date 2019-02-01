@@ -1,22 +1,33 @@
-# Converts YAML files and strings into menu data. Tries to validate the data
-# so thoroughly that once it has been loaded, you can just use it without any
-# further checks. (Yeah, right.)
+# Functions to load various menudata YAML and .desktop files and
+# turn them into usable menu data.
 
 import os.path
 import logging
+import re
 
-from constants import *
+from constants import PROGRAM_TYPE_DESKTOP, \
+                      PROGRAM_TYPE_CUSTOM, \
+                      PROGRAM_TYPE_WEB, \
+                      ICON_EXTENSIONS, \
+                      LANGUAGES
 from menudata import Program, Menu, Category
 import utils
 import conditionals
 from settings import SETTINGS
 
 
-# Characters that can be used in program, menu and category IDs
+# Characters that can be used in program, menu and category IDs.
+# For desktop programs, these IDs are also filenames, so anything
+# that's allowed in filenames, must also be allowed here.
+# Within reason, of course.
 ALLOWED_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' \
                 'abcdefghijklmnopqrstuvwxyz' \
                 '0123456789' \
                 '._-'
+
+
+# ------------------------------------------------------------------------------
+# Utility
 
 
 def __parse_list(lst):
@@ -75,17 +86,40 @@ def __is_valid(string):
     return True
 
 
-def __parse_yml_string(string, conditions):
-    """Loads menu data from YAML data stored in a string."""
+# ------------------------------------------------------------------------------
+# Parsers
 
+
+def __load_multilanguage_string(where):
+    out = {}
+
+    if isinstance(where, str):
+        # Just one string, use it for all languages
+        for lang in LANGUAGES:
+            out[lang] = where
+    else:
+        # Load strings only for those languages that exist,
+        # because otherwise, when we merge the, dictionaries,
+        # "None" entries will overwrite not-None strings and
+        # that's the opposite of what we want (permit partial/
+        # complete overrides in YAML files).
+        for lang in LANGUAGES:
+            if lang in where:
+                out[lang] = where[lang]
+
+    return out
+
+
+def load_yaml_file(filename):
     import yaml
 
     programs = {}
     menus = {}
     categories = {}
 
-    # use safe_load(), it does not attempt to construct Python classes
-    data = yaml.safe_load(string)
+    with open(filename, mode='r', encoding='utf-8') as inf:
+        # use safe_load(), it does not attempt to construct Python classes
+        data = yaml.safe_load(inf.read())
 
     if data is None or not isinstance(data, dict):
         logging.warning('__parse_yml_string(): string produced no data, or the '
@@ -106,267 +140,179 @@ def __parse_yml_string(string, conditions):
     # --------------------------------------------------------------------------
     # Parse programs
 
-    for i in data['programs']:
-        status, name, params = __convert_yaml_node(i)
+    for node in data['programs']:
+        status, menudata_id, params = __convert_yaml_node(node)
 
         if not status:
             continue
 
-        if not __is_valid(name):
-            logging.error('Program name "%s" contains invalid characters, '
-                          'ignoring', name)
+        if not __is_valid(menudata_id):
+            logging.error('Program ID "%s" contains invalid characters, '
+                          'program ignored', menudata_id)
             continue
 
-        if name in programs:
-            logging.warning('Program "%s" defined multiple times, ignoring '
-                            'duplicates', name)
+        if menudata_id in programs:
+            logging.warning('Program ID "%s" defined multiple times, ignoring '
+                            'duplicates', menudata_id)
             continue
 
         # "Reserve" the name so it's used even if we can't parse this
         # program definition, otherwise duplicate entries might slip
         # through
-        programs[name] = None
+        programs[menudata_id] = None
 
         # Figure out the type
-        prog_type = str(params.get('type', 'desktop'))
+        program_type = str(params.get('type', 'desktop'))
 
-        if prog_type not in ('desktop', 'custom', 'web'):
+        if program_type not in ('desktop', 'custom', 'web'):
             logging.error('Unknown program type "%s" for "%s", '
-                          'ignoring definition', prog_type, name)
+                          'ignoring definition', program_type, menudata_id)
             continue
 
-        program = Program()
+        program = {}
 
-        if prog_type == 'desktop':
-            program.type = PROGRAM_TYPE_DESKTOP
-        elif prog_type == 'custom':
-            program.type = PROGRAM_TYPE_CUSTOM
+        # The default
+        program['type'] = PROGRAM_TYPE_DESKTOP
+
+        if program_type == 'desktop':
+            program['type'] = PROGRAM_TYPE_DESKTOP
+        elif program_type == 'custom':
+            program['type'] = PROGRAM_TYPE_CUSTOM
         else:
-            program.type = PROGRAM_TYPE_WEB
+            program['type'] = PROGRAM_TYPE_WEB
 
-        program.name = name
+        if 'condition' in params:
+            program['condition'] = str(params['condition'])
 
-        # Conditionally hidden?
-        if 'condition' in params and \
-                conditionals.is_hidden(conditions, params['condition'], name, 'program'):
-            program.hidden = True
+        if 'hidden_by_default' in params:
+            program['hidden'] = bool(params['hidden_by_default'])
 
-        # Permit programs to be hidden by default. They must be made
-        # visible with filters.
-        if 'hidden_by_default' in params and bool(params['hidden_by_default']):
-            program.hidden = True
+        if 'tags' in params:
+            program['tags'] = set()
 
-        # Load common parameters
+            for tag in __parse_list(params['tags']):
+                stag = str(tag)
+
+                if len(stag) > 0:
+                    program['tags'].add(stag.lower())
+
+        if 'keywords' in params:
+            program['keywords'] = set()
+
+            for word in __parse_list(params['keywords']):
+                kwd = str(word)
+
+                if len(kwd) > 0:
+                    program['keywords'].add(kwd.lower())
+
         if 'name' in params:
-            program.title = utils.localize(params['name'])
-
-            if utils.is_empty(program.title):
-                logging.error('Empty name given for "%s"', name)
-                program.title = None
+            program['name'] = __load_multilanguage_string(params['name'])
 
         if 'description' in params:
-            program.description = utils.localize(params['description'])
-
-            if utils.is_empty(program.description):
-                logging.warning('Ignoring empty description for program "%s"',
-                                name)
-                program.description = None
+            program['description'] = __load_multilanguage_string(params['description'])
 
         if 'icon' in params:
-            program.icon_name = str(params['icon'])
+            program['icon'] = str(params['icon'])
 
-            if utils.is_empty(program.icon_name):
-                logging.warning('Ignoring empty icon for "%s"', name)
-                program.icon_name = None
+        if 'command' in params and program['type'] in (PROGRAM_TYPE_DESKTOP, PROGRAM_TYPE_CUSTOM):
+            program['command'] = str(params['command'])
 
-        program.keywords = __parse_list(params.get('keywords', []))
+        if 'url' in params and program['type'] == PROGRAM_TYPE_WEB:
+            # Technically, it is a command...
+            program['command'] = str(params['url'])
 
-        # Per-program tags, if any
-        for tag in __parse_list(params.get('tags', '')):
-            if len(tag) > 0:
-                program.tags.add(tag.lower())
-
-        # Some per-type additional checks
-        if program.type in (PROGRAM_TYPE_CUSTOM, PROGRAM_TYPE_WEB):
-            if program.title is None:
-                logging.error('Custom program/web link "%s" has no name at '
-                              'all, ignoring definition', name)
-                continue
-
-            if program.icon_name is None:
-                # this isn't fatal, it just looks really ugly
-                logging.warning('Custom program/web link "%s" is missing an '
-                                'icon definition', name)
-
-        # Load type-specific parameters
-        if program.type == PROGRAM_TYPE_DESKTOP:
-            if 'command' in params:
-                # allow overriding of the "Exec" definition
-                program.command = str(params['command'])
-
-                if utils.is_empty(program.command):
-                    logging.warning('Ignoring empty command override for desktop '
-                                    'program "%s"', name)
-                    program.command = None
-
-        elif program.type == PROGRAM_TYPE_CUSTOM:
-            if 'command' not in params or utils.is_empty(params['command']):
-                logging.error("Custom program \"%s\" has no command defined"
-                              "(or it's empty), ignoring command definition",
-                              name)
-                continue
-
-            program.command = str(params['command'])
-
-        elif program.type == PROGRAM_TYPE_WEB:
-            if ('url' not in params) or utils.is_empty(params['url']):
-                logging.error("Web link \"%s\" has no URL defined (or it's "
-                              "empty), ignoring link definition",
-                              name)
-                continue
-
-            program.command = str(params['url'])
-
-        # Actually use the reserved slot
-        programs[name] = program
+        programs[menudata_id] = program
 
     # --------------------------------------------------------------------------
     # Parse menus
 
-    for i in data['menus']:
-        status, name, params = __convert_yaml_node(i)
+    for node in data['menus']:
+        status, menudata_id, params = __convert_yaml_node(node)
 
         if not status:
             continue
 
-        if not __is_valid(name):
-            logging.error('Menu name "%s" contains invalid characters, '
-                          'ignoring', name)
+        if not __is_valid(menudata_id):
+            logging.error('Menu ID "%s" contains invalid characters, '
+                          'ignoring', menudata_id)
             continue
 
-        if name in menus:
-            logging.error('Menu "%s" defined multiple times, ignoring '
-                          'duplicates', name)
+        if menudata_id in menus:
+            logging.error('Menu ID "%s" defined multiple times, ignoring '
+                          'duplicates', menudata_id)
             continue
 
-        # Like programs, reserve the name to prevent duplicates
-        menus[name] = None
+        menu = {}
 
-        menu = Menu()
-        menu.name = name
+        if 'condition' in params:
+            menu['condition'] = str(params['condition'])
 
-        # Conditionally hidden?
-        if 'condition' in params and \
-                conditionals.is_hidden(conditions, params['condition'], name, 'menu'):
-            menu.hidden = True
+        if 'hidden_by_default' in params:
+            menu['hidden'] = bool(params['hidden_by_default'])
 
-        # Permit menus to be hidden by default. They must be made
-        # visible with filters.
-        if 'hidden_by_default' in params and bool(params['hidden_by_default']):
-            menu.hidden = True
-
-        menu.title = utils.localize(params.get('name', ''))
-
-        if utils.is_empty(menu.title):
-            logging.error('Menu "%s" has no name at all, menu ignored', name)
-            continue
+        if 'name' in params:
+            menu['name'] = __load_multilanguage_string(params['name'])
 
         if 'description' in params:
-            menu.description = utils.localize(params['description'])
-
-            if utils.is_empty(menu.description):
-                logging.warning('Ignoring empty description for menu "%s"', name)
-                menu.description = None
+            menu['description'] = __load_multilanguage_string(params['description'])
 
         if 'icon' in params:
-            menu.icon_name = str(params['icon'])
+            menu['icon'] = str(params['icon'])
 
-        if utils.is_empty(menu.icon_name):
-            logging.warning('Menu "%s" has a missing/empty icon', name)
-            menu.icon_name = None
+        if 'programs' in params:
+            menu['programs'] = __parse_list(params['programs'])
 
-        menu.programs = __parse_list(params.get('programs', []))
-
-        if utils.is_empty(menu.programs):
-            logging.warning('Menu "%s" has no programs defined for it at all',
-                            name)
-            menu.programs = []
-
-        # Actually use the reserved slot
-        menus[name] = menu
+        menus[menudata_id] = menu
 
     # --------------------------------------------------------------------------
     # Parse categories
 
-    for i in data['categories']:
-        status, name, params = __convert_yaml_node(i)
+    for node in data['categories']:
+        status, menudata_id, params = __convert_yaml_node(node)
 
         if not status:
             continue
 
-        if not __is_valid(name):
-            logging.error('Category name "%s" contains invalid characters, '
-                          'ignoring', name)
+        if not __is_valid(menudata_id):
+            logging.error('Category ID "%s" contains invalid characters, '
+                          'ignoring', menudata_id)
             continue
 
-        if name in categories:
-            logging.error('Category "%s" defined multiple times, ignoring '
-                          'duplicates', name)
+        if menudata_id in categories:
+            logging.error('Category ID "%s" defined multiple times, ignoring '
+                          'duplicates', menudata_id)
             continue
 
-        # Again reserve the name to prevent duplicates
-        categories[name] = None
+        category = {}
 
-        cat = Category()
-        cat.name = name
+        if 'condition' in params:
+            category['condition'] = str(params['condition'])
 
-        # Conditionally hidden?
-        if 'condition' in params and \
-                conditionals.is_hidden(conditions, params['condition'], name, 'category'):
-            cat.hidden = True
+        if 'hidden_by_default' in params:
+            category['hidden'] = bool(params['hidden_by_default'])
 
-        # Permit categories to be hidden by default. They must be made
-        # visible with filters.
-        if 'hidden_by_default' in params and bool(params['hidden_by_default']):
-            cat.hidden = True
+        if 'name' in params:
+            category['name'] = __load_multilanguage_string(params['name'])
 
-        cat.title = utils.localize(params.get('name', ''))
-
-        if utils.is_empty(cat.title):
-            logging.error('Category "%s" has no name at all, '
-                          'category ignored', name)
-            continue
+        if 'description' in params:
+            category['description'] = __load_multilanguage_string(params['description'])
 
         if 'position' in params:
-            try:
-                cat.position = int(params['position'])
-            except ValueError:
-                logging.warning('Cannot interpret "%s" as a position for '
-                                'category "%s", defaulting to 0',
-                                params["position"], name)
-                cat.position = 0
+            # Will be validated later. For now, keep it as a string.
+            category['position'] = str(params['position'])
 
-        cat.menus = __parse_list(params.get('menus', []))
-        cat.programs = __parse_list(params.get('programs', []))
+        if 'menus' in params:
+            category['menus'] = __parse_list(params['menus'])
 
-        if utils.is_empty(cat.menus) and utils.is_empty(cat.programs):
-            logging.warning('Category "%s" has no menus or programs defined '
-                            'for it at all', name)
+        if 'programs' in params:
+            category['programs'] = __parse_list(params['programs'])
 
-        # Actually use the reserved slot
-        categories[name] = cat
+        categories[menudata_id] = category
 
     return programs, menus, categories
 
 
-def __parse_yml_file(name, conditions):
-    """Loads menu data from a YAML file."""
-    return __parse_yml_string(
-        open(name, mode='r', encoding='utf-8'),
-        conditions)
-
-
-def __load_dotdesktop_file(name):
+def load_dotdesktop_file(filename):
     """Fairly robust .desktop file parser. Tries to extract as much
     valid data as possible, returns dicts within dicts.
 
@@ -376,446 +322,886 @@ def __load_dotdesktop_file(name):
     section = None
     data = {}
 
-    for l in open(name, mode='r', encoding='utf-8').readlines():
-        l = l.strip()
+    with open(filename, mode='r', encoding='utf-8') as inf:
+        for line in inf.readlines():
+            line = line.strip()
 
-        if utils.is_empty(l) or l[0] == '#':
-            continue
+            if utils.is_empty(line) or line[0] == '#':
+                continue
 
-        if l[0] == '[' and l[-1] == ']':    # [section name]
-            sect_name = l[1:-1].strip()
+            if line[0] == '[' and line[-1] == ']':  # [section name]
+                sect_name = line[1:-1].strip()
 
-            if utils.is_empty(sect_name):
-                # Nothing in the spec says that empty section names are
-                # invalid, but what on Earth would we do with them?
-                logging.warning('Desktop file "%s" contains an empty '
-                                'section name', name)
-                section = None
+                if utils.is_empty(sect_name):
+                    # Nothing in the spec says that empty section names are
+                    # invalid, but what on Earth would we do with them?
+                    logging.warning('Desktop file "%s" contains an empty '
+                                    'section name', filename)
+                    section = None
 
-            if sect_name in data:
-                # Section names must be unique
-                logging.warning('Desktop file "%s" contains a '
-                                'duplicate section', name)
-                section = None
+                if sect_name in data:
+                    # Section names must be unique
+                    logging.warning('Desktop file "%s" contains a '
+                                    'duplicate section', filename)
+                    section = None
 
-            data[sect_name] = {}
-            section = data[sect_name]
-        else:                                   # key=value
-            equals = l.find('=')
+                data[sect_name] = {}
+                section = data[sect_name]
+            else:                                   # key=value
+                equals = line.find('=')
 
-            if equals != -1 and section is not None:
-                key = l[0:equals].strip()
-                value = l[equals+1:].strip()
+                if equals != -1 and section is not None:
+                    key = line[0:equals].strip()
+                    value = line[equals+1:].strip()
 
-                # The spec says nothing about empty keys and values, but I
-                # guess it's reasonable to allow empty values but not empty
-                # keys
-                if utils.is_empty(key):
-                    continue
+                    # The spec says nothing about empty keys and values, but I
+                    # guess it's reasonable to allow empty values but not empty
+                    # keys
+                    if utils.is_empty(key):
+                        continue
 
-                if key in section:
-                    # The spec does, however, say that keys within a section
-                    # must be unique
-                    logging.warning('Desktop file "%s" contains duplicate '
-                                    'keys ("%s") within the same section',
-                                    name, key)
-                    continue
+                    if key in section:
+                        # The spec does, however, say that keys within a section
+                        # must be unique
+                        logging.warning('Desktop file "%s" contains duplicate '
+                                        'keys ("%s") within the same section',
+                                        filename, key)
+                        continue
 
-                section[key] = value
+                    section[key] = value
 
     return data
 
 
 # ------------------------------------------------------------------------------
+# Menudata builders
 
 
-def load_menu_data(source, desktop_dirs, conditions, filters):
-    """The main menu loader function. Call this."""
+def load_dirs_config(name):
+    import os.path
+    import json
 
-    import time
-    import re
-    from tags_filter import Filter, Action
+    desktop_dirs = []
+    icon_dirs = []
 
+    try:
+        with open(name, 'r', encoding='utf-8') as f:
+            dirs = json.load(f)
+
+        if 'desktop_dirs' in dirs:
+            desktop_dirs = dirs['desktop_dirs']
+
+        if 'icon_dirs' in dirs:
+            icon_dirs = dirs['icon_dirs']
+    except Exception as exception:
+        logging.fatal('Failed to load the directories config file "%s": %s',
+                      name, str(exception))
+        raise exception
+
+    return desktop_dirs, icon_dirs
+
+
+def parse_source_files(sources):
+    raw_programs = {}
+    raw_menus = {}
+    raw_categories = {}
+
+    for name in sources:
+        try:
+            logging.info('Loading menudata file "%s"...', name)
+            progs, menus, cats = load_yaml_file(name)
+        except Exception as exception:
+            logging.error('Could not load file "%s": %s', name, str(exception))
+            logging.error(exception, exc_info=True)
+            continue
+
+        # Program, menu and category IDs must be unique within a file, but
+        # not across files; a file loaded later can replace earlier
+        # definitions. This is by design.
+        raw_programs.update(progs)
+        raw_menus.update(menus)
+        raw_categories.update(cats)
+
+    return raw_programs, raw_menus, raw_categories
+
+
+def merge_dotdesktop_and_yaml_data(yaml_data, desktop_entry):
+    # Load every item we don't *already* have. This allows YAML files
+    # to partially (or completely) override .desktop files.
+
+    # Load program names for languages we don't have yet
+    temp = {}
+
+    for lang in LANGUAGES:
+        key = 'Name[' + lang + ']'
+
+        if key not in desktop_entry:
+            key = 'GenericName[' + lang + ']'
+
+            if key not in desktop_entry:
+                key = 'Name'
+
+        if key in desktop_entry:
+            temp[lang] = desktop_entry[key]
+
+    if 'name' in yaml_data:
+        temp.update(yaml_data['name'])
+
+    yaml_data['name'] = temp
+
+    # Repeat the above mess for descriptions (comments)
+    temp = {}
+
+    for lang in LANGUAGES:
+        key = 'Comment[' + lang + ']'
+
+        if key in desktop_entry:
+            temp[lang] = desktop_entry[key]
+
+    # Use "generic" English description if "en" description does
+    # not exist. Yes, this is a hack.
+    if 'Comment' in desktop_entry and 'en' not in temp:
+        temp['en'] = desktop_entry['Comment']
+
+    if 'description' in yaml_data:
+        temp.update(yaml_data['description'])
+
+    yaml_data['description'] = temp
+
+    # Extract search keywords
+    temp = {}
+
+    for lang in LANGUAGES:
+        key = 'Keywords[' + lang + ']'
+
+        if key not in desktop_entry:
+            key = 'Keywords'
+
+        if key in desktop_entry:
+            temp[lang] = set(filter(None, desktop_entry[key].split(";")))
+        else:
+            temp[lang] = set()
+
+        # TODO: Per-language keywords in YAML files
+        if 'keywords' in yaml_data:
+            temp[lang].update(yaml_data['keywords'])
+
+    yaml_data['keywords'] = temp
+
+    # Get the icon name. These can be localised too, but we ignore that.
+    if ('icon' not in yaml_data) and ('Icon' in desktop_entry):
+        yaml_data['icon'] = str(desktop_entry['Icon'])
+
+    # Command line / URL
+    if ('command' not in yaml_data) and ('Exec' in desktop_entry):
+        yaml_data['command'] = str(desktop_entry['Exec'])
+
+    # Store categories as tags
+    if 'Categories' in desktop_entry:
+        tags = set()
+
+        # Annoyingly, .desktop files use semicolons here,
+        # but we use just spaces/commas
+        for raw_cat in filter(None, desktop_entry['Categories'].split(';')):
+            cat = raw_cat.strip()
+
+            if len(cat) > 0:
+                tags.add(cat.lower())
+
+        if len(tags) > 0:
+            if 'tags' in yaml_data:
+                yaml_data['tags'].update(tags)
+            else:
+                yaml_data['tags'] = tags
+
+
+def load_desktop_files(desktop_dirs, raw_programs):
+    for menudata_id, program in raw_programs.items():
+        if not program or program['type'] != PROGRAM_TYPE_DESKTOP:
+            continue
+
+        # Locate the .desktop file
+        desktop_file = None
+
+        for dir_name in desktop_dirs:
+            full = os.path.join(dir_name, menudata_id + '.desktop')
+
+            if os.path.isfile(full):
+                desktop_file = full
+                break
+
+        if desktop_file is None:
+            logging.error('.desktop file for program "%s" not found',
+                          menudata_id)
+
+            # This program is broken, clear its slot so we won't touch
+            # it again
+            raw_programs[menudata_id] = None
+            continue
+
+        # Try to load it
+        try:
+            desktop_data = load_dotdesktop_file(desktop_file)
+        except Exception as exception:
+            logging.error('Could not load file "%s" for program "%s": %s',
+                          desktop_file, menudata_id, str(exception))
+            raw_programs[menudata_id] = None
+            continue
+
+        if 'Desktop Entry' not in desktop_data:
+            logging.error('Rejecting desktop file "%s" for "%s": No "[Desktop Entry]" '
+                          'section in the file', desktop_file, menudata_id)
+            raw_programs[menudata_id] = None
+            continue
+
+        # Load the parts from the .desktop file we don't have yet
+        merge_dotdesktop_and_yaml_data(program, desktop_data['Desktop Entry'])
+
+
+def apply_filters(raw_programs, raw_menus, raw_categories, conditions, filters):
+    from tags_filter import Action
+
+    # Conditions first...
+    for menudata_id, program in raw_programs.items():
+        if program and ('condition' in program) and program['condition'] and \
+            conditionals.is_hidden(conditions, program['condition'],
+                                   menudata_id, 'Program'):
+            program['hidden'] = True
+
+    for menudata_id, menu in raw_menus.items():
+        if menu and ('condition' in menu) and (menu['condition']) and \
+            conditionals.is_hidden(conditions, menu['condition'], menudata_id,
+                                   'Menu'):
+            menu['hidden'] = True
+
+    for menudata_id, cat in raw_categories.items():
+        if cat and ('condition' in cat) and (cat['condition']) and \
+            conditionals.is_hidden(conditions, cat['condition'], menudata_id,
+                                   'Category'):
+            cat['hidden'] = True
+
+    # ...then tags because they can override conditions (this is by design)
+    if filters.have_data():
+        # Filter programs
+        for menudata_id, program in raw_programs.items():
+            if not program:
+                continue
+
+            # All programs must have at least one tag, again by design
+            if len(program['tags']) == 0:
+                logging.warning('Program "%s" has no tags, hiding it', menudata_id)
+                program['hidden'] = True
+                continue
+
+            lname = menudata_id.lower()
+
+            for act in filters.actions:
+                if act.target == Action.TAG:
+                    if act.name not in program['tags']:
+                        continue
+                elif act.target == Action.PROGRAM:
+                    if act.name != lname:
+                        continue
+                else:
+                    continue
+
+                if act.action == Action.SHOW:
+                    program['hidden'] = False
+                else:
+                    program['hidden'] = True
+
+        # Filter menus
+        for menudata_id, menu in raw_menus.items():
+            if not menu:
+                continue
+
+            if menudata_id not in filters.menu_names:
+                continue
+
+            lname = menudata_id.lower()
+
+            for act in filters.actions:
+                if (act.target != Action.MENU) or (act.name != lname):
+                    continue
+
+                if act.action == Action.SHOW:
+                    menu['hidden'] = False
+                else:
+                    menu['hidden'] = True
+
+        # Filter categories
+        for menudata_id, cat in raw_categories.items():
+            if not cat:
+                continue
+
+            if menudata_id not in filters.category_names:
+                continue
+
+            lname = menudata_id.lower()
+
+            for act in filters.actions:
+                if (act.target != Action.CATEGORY) or (act.name != lname):
+                    continue
+
+                if act.action == Action.SHOW:
+                    cat['hidden'] = False
+                else:
+                    cat['hidden'] = True
+
+
+def build_menu_data(raw_programs, raw_menus, raw_categories):
     programs = {}
     menus = {}
     categories = {}
-    category_index = []
 
-    # --------------------------------------------------------------------------
-    # Step 1: Parse all available menudata files
-
-    total_start = time.clock()
-    start_time = total_start
-
-    logging.info('Have %d source(s) for menu data', len(source))
-
-    for name in source:
-        try:
-            logging.info('Loading menudata file "%s"...', name)
-            p, m, c = __parse_yml_file(name, conditions)
-        except Exception as exception:
-            logging.error('Could not load file "%s": %s', name, str(exception))
+    # Build programs
+    for menudata_id, src_prog in raw_programs.items():
+        if not src_prog:
             continue
 
-        # IDs must be unique within a file, but not across files; a file
-        # loaded later can overwrite/replace earlier definitions. This is
-        # by design.
-        programs.update(p)
-        menus.update(m)
-        categories.update(c)
+        if not 'type' in src_prog:
+            logging.error('Program "%s" has no type specified. '
+                          'This really should not happen.', menudata_id)
+            continue
+
+        dst_prog = Program()
+
+        # Type and menudata ID. Python, why did you have to reserve
+        # common words as "type" and "id" and not let me use them?
+        dst_prog.program_type = src_prog['type']
+        dst_prog.menudata_id = menudata_id
+
+        # We can't actually remove hidden things. as they are referenced
+        # to in menus and categories and if we remove them here, we'll
+        # erroneously report them to be "broken".
+        if 'hidden' in src_prog and src_prog['hidden']:
+            dst_prog.hidden = True
+
+        # Name (required)
+        if 'name' in src_prog and src_prog['name']:
+            dst_prog.name = utils.localize(src_prog['name'])
+
+        if utils.is_empty(dst_prog.name):
+            logging.error('Program "%s" has no name at all, skipping it',
+                          menudata_id)
+            raw_programs[menudata_id] = None
+            continue
+
+        # Description (optional), accept ONLY a localized description
+        if 'description' in src_prog and src_prog['description'] and \
+               SETTINGS.language in src_prog['description']:
+            dst_prog.description = utils.localize(src_prog['description'])
+
+        # Keywords (optional)
+        if 'keywords' in src_prog and SETTINGS.language in src_prog['keywords']:
+            dst_prog.keywords = list(src_prog['keywords'][SETTINGS.language])
+
+        # Command (required)
+        if 'command' in src_prog:
+            dst_prog.command = src_prog['command']
+
+        if utils.is_empty(dst_prog.command):
+            if dst_prog.program_type == PROGRAM_TYPE_WEB:
+                logging.error('Web link "%s" has an empty or missing URL, '
+                              'link ignored', menudata_id)
+            else:
+                logging.error('Program "%s" has an empty or missing command, '
+                              'program ignored', menudata_id)
+
+            raw_programs[menudata_id] = None
+            continue
+
+        if dst_prog.program_type in (PROGRAM_TYPE_DESKTOP, PROGRAM_TYPE_CUSTOM):
+            # Remove the %XX parameters from the Exec key in the same way
+            # Webmenu does it. It has worked fine for Webmenu, maybe
+            # it works fine for us too...?
+            # (Reference: file parts/webmenu/src/parseExec.coffee, line 24)
+            # TODO: This is NOT okay. We could fairly easily fill in
+            # the parameters with correct values. Plus, if the program
+            # is added to the panel/desktop, we could, in some cases,
+            # copy this filtered command line into the new desktop file,
+            # which results in an icon that does not always work properly!
+            dst_prog.command = re.sub(r"%[fFuUdDnNickvm]{1}", "", dst_prog.command)
+
+        # Icon
+        if 'icon' in src_prog:
+            dst_prog.icon_name = src_prog['icon']
+
+        if utils.is_empty(dst_prog.icon_name):
+            logging.warning('Program "%s" has no icon defined for it',
+                            menudata_id)
+        else:
+            # Is the icon name a full path to an icon file, or just
+            # a generic name?
+            _, ext = os.path.splitext(dst_prog.icon_name)
+
+            if (not utils.is_empty(ext)) and (ext in ICON_EXTENSIONS):
+                dst_prog.icon_name_is_path = True
+
+        programs[menudata_id] = dst_prog
+
+    # Build menus and add programs to them
+    for menudata_id, src_menu in raw_menus.items():
+        if not src_menu:
+            continue
+
+        dst_menu = Menu()
+
+        dst_menu.menudata_id = menudata_id
+
+        # Like programs, we only flag menus to be hidden
+        if 'hidden' in src_menu and src_menu['hidden']:
+            dst_menu.hidden = True
+
+        # Name (required)
+        if 'name' in src_menu and src_menu['name']:
+            dst_menu.name = utils.localize(src_menu['name'])
+
+        if utils.is_empty(dst_menu.name):
+            logging.error('Menu "%s" has no name at all, skipping it',
+                          menudata_id)
+            raw_menus[menudata_id] = None
+            continue
+
+        # Description (optional)
+        if 'description' in src_menu and src_menu['description']:
+            dst_menu.description = utils.localize(src_menu['description'])
+
+        # Icon (required, but it's not fatal if it's missing)
+        if 'icon' in src_menu and src_menu['icon']:
+            dst_menu.icon_name = src_menu['icon']
+
+        if utils.is_empty(dst_menu.icon_name):
+            logging.warning('Menu "%s" has no icon defined for it',
+                            menudata_id)
+
+        # List of programs (required, but it's not fatal if it's empty/missing)
+        had_something = False
+
+        if 'programs' in src_menu:
+            for p_name in src_menu['programs']:
+                if p_name not in programs or programs[p_name] is None:
+                    logging.warning('Menu "%s" references to a non-existent program "%s"',
+                                    menudata_id, p_name)
+                    continue
+
+                # Don't whine about an empty menu if all of it's programs
+                # are hidden
+                had_something = True
+
+                # Silently ignore hidden programs
+                if programs[p_name].hidden:
+                    continue
+
+                programs[p_name].used = True
+                dst_menu.programs.append(programs[p_name])
+
+        if len(dst_menu.programs) == 0 and not had_something:
+            logging.warning('Menu "%s" is completely empty', menudata_id)
+
+        menus[menudata_id] = dst_menu
+
+    # Build categories and add menus and programs to them
+    for menudata_id, src_cat in raw_categories.items():
+        if not src_cat:
+            continue
+
+        if 'hidden' in src_cat and src_cat['hidden']:
+            continue
+
+        dst_cat = Category()
+
+        dst_cat.menudata_id = menudata_id
+
+        # Name (required)
+        if 'name' in src_cat and src_cat['name']:
+            dst_cat.name = utils.localize(src_cat['name'])
+
+        if utils.is_empty(dst_cat.name):
+            logging.error('Category "%s" has no name at all, skipping it',
+                          menudata_id)
+            raw_categories[menudata_id] = None
+            continue
+
+        # Description (optional)
+        if 'description' in src_cat and src_cat['description']:
+            dst_cat.description = utils.localize(src_cat['description'])
+
+        # List of menus and programs (technically you need at least one of
+        # either, but it's not a fatal error to omit everything, it just
+        # looks ugly)
+        if 'menus' in src_cat:
+            for m_name in src_cat['menus']:
+                if m_name not in menus or menus[m_name] is None:
+                    logging.warning('Category "%s" references to a non-existent menu "%s"',
+                                    menudata_id, m_name)
+                    continue
+
+                # Silently ignore hidden menus
+                if menus[m_name].hidden:
+                    continue
+
+                menus[m_name].used = True
+                dst_cat.menus.append(menus[m_name])
+
+        if 'programs' in src_cat:
+            for p_name in src_cat['programs']:
+                if p_name not in programs or programs[p_name] is None:
+                    logging.warning('Category "%s" references to a non-existent program "%s"',
+                                    menudata_id, p_name)
+                    continue
+
+                # Silently ignore hidden programs
+                if programs[p_name].hidden:
+                    continue
+
+                programs[p_name].used = True
+                dst_cat.programs.append(programs[p_name])
+
+        # Position
+        if 'position' in src_cat:
+            try:
+                dst_cat.position = int(src_cat['position'])
+            except ValueError:
+                logging.warning('Cannot interpret "%s" as a position for '
+                                'category "%s", defaulting to 0',
+                                src_cat['position'], menudata_id)
+                dst_cat.position = 0
+
+        if len(dst_cat.menus) == 0 and len(dst_cat.programs) == 0:
+            logging.warning('Category "%s" is completely empty', menudata_id)
+
+        categories[menudata_id] = dst_cat
+
+    return programs, menus, categories
+
+
+def sort_categories(categories):
+    # Sort the categories by position, but if the positions are identical,
+    # sort by names. Warning: the sort is not locale-aware or case
+    # insensitive!
+    index = []
+
+    for menudata_id, cat in categories.items():
+        if not cat.hidden:
+            index.append((cat.position, menudata_id))
+
+    index.sort(key=lambda cat: (cat[0], cat[1]))
+
+    return [i[1] for i in index]
+
+
+def load_icons(programs, menus, icon_dirs):
+    from iconcache import ICONS48
+
+    # Multiple programs can use the same generic icon name.
+    # The IconCache class prevents us from loading multiple
+    # copies of the same image, but this prevents us from
+    # searching for the same generic icon multiple times.
+    generic_name_cache = {}
+
+    num_missing_icons = 0
+
+    # Programs first
+    for menudata_id, program in programs.items():
+        if program.hidden:
+            continue
+
+        if program.icon_name is None:
+            # This should not happen, ever
+            logging.error('The impossible happened: program "%s" '
+                          'has no icon at all!', menudata_id)
+            num_missing_icons += 1
+            continue
+
+        if (not program.icon_name_is_path) and \
+                program.icon_name in generic_name_cache:
+            # Reuse a cached generic icon
+            program.icon_name = generic_name_cache[program.icon_name]
+            program.icon_name_is_path = True
+
+        if program.icon_name_is_path:
+            # Just load it
+            if os.path.isfile(program.icon_name):
+                icon = ICONS48.load_icon(program.icon_name)
+
+                if icon.usable:
+                    program.icon = icon
+                    continue
+
+            # An icon file was specified, but it could not be loaded.
+            # Sometimes icon names contain an extension (ie. "name.png")
+            # that confuses our autodetection. Unless the icon name really
+            # is a full path + filename, try to locate the correct image.
+            if len(os.path.dirname(program.icon_name)) > 0:
+                logging.error('Could not load icon "%s" for program "%s"',
+                              program.icon_name, menudata_id)
+                num_missing_icons += 1
+                continue
+
+        # Search for the generic icon
+        icon_path = None
+
+        for dir_name in icon_dirs:
+            # Try the name as-is first (see above, some icons don't have
+            # a path in their names, but they have an extension)
+            candidate = os.path.join(dir_name, program.icon_name)
+
+            if os.path.isfile(candidate):
+                icon_path = candidate
+                break
+
+            # Try different extensions
+            for ext in ICON_EXTENSIONS:
+                candidate = os.path.join(dir_name,
+                                         program.icon_name + ext)
+
+                if os.path.isfile(candidate):
+                    icon_path = candidate
+                    break
+
+            if icon_path:
+                break
+
+        if not icon_path:
+            logging.error('Icon "%s" for program "%s" not found in '
+                          'icon load paths', program.icon_name, menudata_id)
+            num_missing_icons += 1
+            continue
+
+        program.icon = ICONS48.load_icon(icon_path)
+
+        if not program.icon.usable:
+            logging.warning('Found icon "%s" for program "%s", but '
+                            'it could not be loaded', icon_path, menudata_id)
+            num_missing_icons += 1
+        else:
+            if not program.icon_name_is_path:
+                # Cache the generic icon name
+                generic_name_cache[program.icon_name] = icon_path
+
+        program.icon_name = icon_path
+        program.icon_name_is_path = True
+
+    # Then menus. This is much simpler, because menu icons
+    # must always be full paths. No automagic here.
+    for menu_id, menu in menus.items():
+        if menu.hidden:
+            continue
+
+        if menu.icon_name is None:
+            logging.warning('Menu "%s" has no icon defined', menu_id)
+            num_missing_icons += 1
+            continue
+
+        if not os.path.isfile(menu.icon_name):
+            logging.error('Icon "%s" for menu "%s" does not exist',
+                          menu.icon_name, menu_id)
+            menu.icon = None
+            num_missing_icons += 1
+            continue
+
+        menu.icon = ICONS48.load_icon(menu.icon_name)
+
+        if not menu.icon.usable:
+            logging.warning('Found an icon "%s" for menu "%s", but '
+                            'it could not be loaded', menu.icon_name, menu_id)
+            num_missing_icons += 1
+
+    if num_missing_icons:
+        logging.info('Have %d missing or unloadable icons',
+                     num_missing_icons)
+
+    stats = ICONS48.stats()
+
+    logging.info('Number of 48-pixel icons cached: %d (out of %d)',
+                 stats['num_icons'], stats['capacity'])
+
+    logging.info('Number of 48-pixel atlas surfaces: %d',
+                 stats['num_atlases'])
+
+
+# ------------------------------------------------------------------------------
+
+
+MENU_FILE_PATTERN = re.compile(r'^\d\d')
+
+
+def find_menu_files(*where):
+    import glob
+    import os
+
+    files = []
+
+    for full_name in glob.iglob(os.path.join(*where, '*.yml')):
+        name = os.path.basename(full_name)
+        number = MENU_FILE_PATTERN.search(name)
+
+        if number:
+            # The first two elements are for sorting (numbers first, then
+            # names), the third element is the actual name you want to use
+            # after sorting.
+            files.append((number.group(0), name[number.end(0):], full_name))
+
+    return files
+
+
+def sort_menu_files(files):
+    """Sort the filename tuples and return a list of just filenames.
+    So if you have this:
+
+        [
+            ('51', '-fixes.yml', 'foo/bar/51-fixes.yml')
+            ('50', '-default.yml', 'foo/bar/50-default.yml'),
+        ]
+
+    Then this function will return you this:
+
+        ['foo/bar/50-default.yml', 'foo/bar/51-fixes.yml']
+    """
+
+    return [name[2] for name in sorted(files, key=lambda i: (i[0], i[1]))]
+
+
+def load_menu_data(root_dir, filter_string):
+    """The main menu loader function. Call this."""
+
+    import time
+
+    total_start = time.clock()
+
+    # --------------------------------------------------------------------------
+    # Load the paths config file
+
+    desktop_dirs, icon_dirs = load_dirs_config(os.path.join(root_dir, 'dirs.json'))
+
+    # ----------------------------------------------------------------------
+    # Get a list of all available condition and menudata files
+
+    start_time = time.clock()
+
+    condition_files = sort_menu_files(find_menu_files(root_dir, 'conditions'))
+    menudata_files = sort_menu_files(find_menu_files(root_dir, 'menudata'))
 
     end_time = time.clock()
+
+    utils.log_elapsed_time('Condition and menudata files scanning time',
+                           start_time, end_time)
+
+    # --------------------------------------------------------------------------
+    # Load and evaluate conditions
+
+    start_time = time.clock()
+
+    logging.info('Have %d source(s) for conditions', len(condition_files))
+
+    conditions = {}
+
+    for name in condition_files:
+        conditions.update(conditionals.evaluate_file(name))
+
+    end_time = time.clock()
+
+    utils.log_elapsed_time('Conditions evaluation time',
+                           start_time, end_time)
+
+    # --------------------------------------------------------------------------
+    # Load tag filters
+
+    start_time = time.clock()
+
+    from tags_filter import Filter
+
+    tag_filter = Filter(filter_string)
+
+    end_time = time.clock()
+
+    utils.log_elapsed_time('Tag filter load time', start_time, end_time)
+
+    # --------------------------------------------------------------------------
+    # Parse all available menudata files
+
+    start_time = total_start
+
+    logging.info('Have %d source(s) for menu data', len(menudata_files))
+
+    raw_programs, raw_menus, raw_categories = parse_source_files(menudata_files)
+
+    end_time = time.clock()
+
     utils.log_elapsed_time('YAML loading time', start_time, end_time)
 
     # --------------------------------------------------------------------------
-    # Step 2: Load the .desktop files for desktop programs
+    # Locate and load .desktop files for desktop programs
 
     start_time = time.clock()
 
     if utils.is_empty(desktop_dirs):
         logging.warning('No .desktop file search paths specified!')
 
-    for name, program in programs.items():
-        if not program:
-            continue
-
-        if program.type != PROGRAM_TYPE_DESKTOP:
-            continue
-
-        # Locate the .desktop file
-        dd_name = None
-
-        for d in desktop_dirs:
-            full = os.path.join(d, program.name + '.desktop')
-
-            if os.path.isfile(full):
-                dd_name = full
-                break
-
-        if dd_name is None:
-            logging.error('.desktop file for "%s" not found', program.name)
-
-            # These programs are broken, so clear them
-            programs[name] = None
-            continue
-
-        program.original_desktop_file = program.name + '.desktop'
-
-        # Try to load it
-        try:
-            desktop_data = __load_dotdesktop_file(dd_name)
-        except Exception as exception:
-            logging.error('Could not load file "%s":', dd_name)
-            logging.error(exception, exc_info=True)
-            programs[name] = None
-            continue
-
-        if 'Desktop Entry' not in desktop_data:
-            logging.error("Can't load \"%s\" for \"%s\": No [Desktop Entry] "
-                          "section in the file", dd_name, i)
-            programs[name] = None
-            continue
-
-        entry = desktop_data['Desktop Entry']
-
-        # Try to load the parts that we don't have yet from it
-        if program.title is None:
-            key = 'Name[' + SETTINGS.language + ']'
-
-            if key in entry:
-                # The best case: we have a localized name
-                program.title = entry[key]
-            else:
-                # "Name" and "GenericName" aren't interchangeable, but this
-                # is the best we can do. For example, if "Name" is "Mozilla",
-                # then "GenericName" could be "Web Browser".
-                key = 'GenericName[' + SETTINGS.language + ']'
-
-                if key in entry:
-                    program.title = entry[key]
-                else:
-                    # Last resort
-                    #logging.warning('Have to use "Name" entry for program "%s"'.
-                    #                program.name)
-                    program.title = entry.get('Name', '')
-
-            if utils.is_empty(program.title):
-                logging.error('Empty name for program "%s", program ignored',
-                              program.name)
-                programs[name] = None
-                continue
-
-        if program.description is None:
-            key = 'Comment[' + SETTINGS.language + ']'
-
-            # Accept *ONLY* localized comments
-            if key in entry:
-                program.description = entry[key]
-
-                if utils.is_empty(program.description):
-                    logging.warning('Empty comment specified for program "%s" in '
-                                    'the .desktop file "%s"', program.name, dd_name)
-                    program.comment = None
-
-        if utils.is_empty(program.keywords):
-            key = 'Keywords[' + SETTINGS.language + ']'
-
-            # Accept *ONLY* localized keyword strings
-            if key in entry:
-                program.keywords = list(filter(None, entry[key].split(";")))
-
-        if program.icon_name is None:
-            if 'Icon' not in entry:
-                logging.warning('Program "%s" has no icon defined for it in the '
-                                '.desktop file "%s"', program.name, dd_name)
-            else:
-                program.icon_name = entry.get('Icon', '')
-
-        if utils.is_empty(program.icon_name):
-            logging.warning('Program "%s" has an empty/invalid icon name, will '
-                            'display incorrectly', program.name)
-            program.icon_name = None
-
-        if program.command is None:
-            if 'Exec' not in entry or utils.is_empty(entry['Exec']):
-                logging.warning('Program "%s" has an empty or missing "Exec" '
-                                'line in the desktop file "%s", program ignored',
-                                program.name, dd_name)
-                programs[name] = None
-                continue
-
-            # Remove %XX parameters from the Exec key in the same way
-            # Webmenu does it. It has worked fine for Webmenu, maybe
-            # it works fine for us too...?
-            # (Reference: file parts/webmenu/src/parseExec.coffee, line 24)
-            # TODO: This is NOT okay.
-            program.command = re.sub(r"%[fFuUdDnNickvm]{1}", "", entry['Exec'])
-
-        # If the desktop file has categories, store them as tags
-        if 'Categories' in entry:
-            # Annoyingly, .desktop files use semicolons here,
-            # but we use just spaces/commas
-            for raw_tag in filter(None, entry['Categories'].split(';')):
-                tag = raw_tag.strip()
-
-                if len(tag) > 0:
-                    program.tags.add(tag.lower())
-
-        # Is the icon name a full path to an icon file, or just
-        # a generic name?
-        if program.icon_name:
-            _, ext = os.path.splitext(program.icon_name)
-
-            if (not utils.is_empty(ext)) and (ext in ICON_EXTENSIONS):
-                program.icon_name_is_path = True
+    load_desktop_files(desktop_dirs, raw_programs)
 
     end_time = time.clock()
-    utils.log_elapsed_time('Desktop file parsing', start_time, end_time)
+
+    utils.log_elapsed_time('Desktop file loading time', start_time, end_time)
 
     # --------------------------------------------------------------------------
-    # Step 3: Apply tag/name filters to everything
+    # Apply conditions and tag filters
 
     start_time = time.clock()
 
-    if filters.have_data():
-        # Filter programs
-        for name, program in programs.items():
-            if not program:
-                continue
-
-            if len(program.tags) == 0:
-                logging.warning('Program "%s" has no tags, hiding it' % name)
-                program.hidden = True
-                continue
-
-            lname = name.lower()
-
-            for a in filters.actions:
-                if a.target == Action.TAG:
-                    if a.name not in program.tags:
-                        continue
-                elif a.target == Action.PROGRAM:
-                    if a.name != lname:
-                        continue
-                else:
-                    continue
-
-                if a.action == Action.SHOW:
-                    program.hidden = False
-                else:
-                    program.hidden = True
-
-        # Filter menus
-        for name, menu in menus.items():
-            if not menu:
-                continue
-
-            if name not in filters.menu_names:
-                continue
-
-            lname = name.lower()
-
-            for a in filters.actions:
-                if (a.target != Action.MENU) or (a.name != lname):
-                    continue
-
-                if a.action == Action.SHOW:
-                    menu.hidden = False
-                else:
-                    menu.hidden = True
-
-        # Filter categories
-        for name, cat in categories.items():
-            if not cat:
-                continue
-
-            if name not in filters.category_names:
-                continue
-
-            lname = name.lower()
-
-            for a in filters.actions:
-                if (a.target != Action.CATEGORY) or (a.name != lname):
-                    continue
-
-                if a.action == Action.SHOW:
-                    cat.hidden = False
-                else:
-                    cat.hidden = True
+    apply_filters(raw_programs, raw_menus, raw_categories, conditions, tag_filter)
 
     end_time = time.clock()
-    utils.log_elapsed_time('Filtering', start_time, end_time)
+
+    utils.log_elapsed_time('Filtering time', start_time, end_time)
 
     # --------------------------------------------------------------------------
-    # Step 4: Convert textual references into actual object references and
-    # build the final menu data. Also mark used programs and menus while
-    # we're at it.
+    # Build actual program, menu and category objects and build
+    # the actual menu structure
 
     start_time = time.clock()
 
-    for m in menus:
-        menu = menus[m]
+    programs, menus, categories = \
+        build_menu_data(raw_programs, raw_menus, raw_categories)
 
-        if not menu:
-            continue
+    category_index = sort_categories(categories)
 
-        if menu.hidden:
-            continue
+    end_time = time.clock()
 
-        new_programs = []
+    utils.log_elapsed_time('Menu building time', start_time, end_time)
 
-        for p in menu.programs:
-            if p in programs:
-                if not programs[p]:
-                    continue
+    # --------------------------------------------------------------------------
+    # Locate and load icons for programs and menus
 
-                if not programs[p].hidden:
-                    new_programs.append(programs[p])
-                    programs[p].used = True
-            else:
-                logging.error('Menu "%s" references to a non-existent '
-                              'program "%s"', m, p)
+    logging.info('Loading icons...')
 
-        menu.programs = new_programs
+    start_time = time.clock()
 
-    for c in categories:
-        cat = categories[c]
+    load_icons(programs, menus, icon_dirs)
 
-        if not cat:
-            continue
+    end_time = time.clock()
 
-        if cat.hidden:
-            continue
+    utils.log_elapsed_time('Icon loading time', start_time, end_time)
 
-        new_menus = []
-        new_programs = []
+    # --------------------------------------------------------------------------
 
-        for m in cat.menus:
-            if m in menus:
-                if not menus[m]:
-                    continue
-
-                if not menus[m].hidden:
-                    new_menus.append(menus[m])
-                    menus[m].used = True
-            else:
-                logging.error('Category "%s" references to a non-existent '
-                              'menu "%s"', c, m)
-
-        for p in cat.programs:
-            if p in programs:
-                if not programs[p]:
-                    continue
-
-                if not programs[p].hidden:
-                    new_programs.append(programs[p])
-                    programs[p].used = True
-            else:
-                logging.error('Category "%s" references to a non-existent '
-                              'program "%s"', c, p)
-
-        cat.menus = new_menus
-        cat.programs = new_programs
-
-    # We can finally remove broken entries
-    programs = {k: v for k, v in programs.items() if programs[k] is not None}
-    menus = {k: v for k, v in menus.items() if menus[k] is not None}
-    categories = {k: v for k, v in categories.items() if categories[k] is not None}
-
-    # Warn about unused (and unhidden) programs, they just take up resources
+    # Useful little statistics
     num_used_programs = 0
     num_used_menus = 0
     num_used_categories = 0
 
-    for i in programs:
-        p = programs[i]
-
-        if not p.hidden and not p.used:
-            logging.warning('Program "%s" defined but not used', p.name)
-
-        if p.used and not p.hidden:
+    for _, program in programs.items():
+        if not program.hidden:
             num_used_programs += 1
 
-    for i in menus:
-        m = menus[i]
-
-        if not m.hidden and not m.used:
-            logging.warning('Menu "%s" defined but not used', m.name)
-
-        if m.used and not m.hidden:
+    for _, menu in menus.items():
+        if not menu.hidden:
             num_used_menus += 1
 
-    for i in categories:
-        c = categories[i]
-
-        if not c.hidden:
+    for _, cat in categories.items():
+        if not cat.hidden:
             num_used_categories += 1
-
-    # --------------------------------------------------------------------------
-    # Step 5: Sort the categories
-
-    # Sort the categories by position, but if the positions are identical,
-    # sort by names. Warning: the sort is not locale-aware or case
-    # insensitive!
-    index = []
-
-    for i in categories:
-        c = categories[i]
-
-        if not c.hidden:
-            index.append((c.position, c.name, i))
-
-    index.sort(key=lambda c: (c[0], c[1]))
-
-    # only IDs are used from hereon
-    for c in index:
-        category_index.append(c[1])
-
-    end_time = time.clock()
-    utils.log_elapsed_time('Menu data building time', start_time, end_time)
-
-    # --------------------------------------------------------------------------
-    # Done
 
     logging.info(
         'Have %d programs (%d actually used), '
@@ -826,6 +1212,7 @@ def load_menu_data(source, desktop_dirs, conditions, filters):
         len(categories), num_used_categories)
 
     end_time = time.clock()
-    utils.log_elapsed_time('Total menu parsing time', total_start, end_time)
+
+    utils.log_elapsed_time('Total menudata load time', total_start, end_time)
 
     return programs, menus, categories, category_index
