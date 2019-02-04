@@ -212,7 +212,7 @@ class Menudata:
         import utils
 
         # Load the filter string
-        filter_string = utils.puavo_conf('puavo.puavomenu.tags', 'default, -p:wxmaxima')
+        filter_string = utils.puavo_conf('puavo.puavomenu.tags', 'default')
 
         # Load everything
         try:
