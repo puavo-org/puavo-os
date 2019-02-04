@@ -106,6 +106,7 @@ import os.path
 import logging
 import time
 
+from constants import LANGUAGES
 from settings import SETTINGS
 
 if args.log:
@@ -143,7 +144,7 @@ else:
         SETTINGS.language = os.environ['GDM_LANG'][0:2].lower()
 
 # Regardless of where the language code comes from we validate it
-if SETTINGS.language not in ('en', 'fi', 'sv', 'de'):
+if SETTINGS.language not in LANGUAGES:
     logging.error('Invalid language code "%s", defaulting to "en"',
                   SETTINGS.language)
     SETTINGS.language = 'en'
