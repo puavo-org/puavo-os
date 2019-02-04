@@ -110,7 +110,7 @@ def __load_multilanguage_string(where):
     return out
 
 
-def load_yaml_file(filename):
+def load_menudata_yaml_file(filename):
     import yaml
 
     programs = {}
@@ -534,7 +534,7 @@ def parse_source_files(sources):
     for name in sources:
         try:
             logging.info('Loading menudata file "%s"...', name)
-            progs, menus, cats = load_yaml_file(name)
+            progs, menus, cats = load_menudata_yaml_file(name)
         except Exception as exception:
             logging.error('Could not load file "%s": %s', name, str(exception))
             logging.error(exception, exc_info=True)
