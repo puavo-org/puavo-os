@@ -533,7 +533,15 @@ def parse_source_files(sources):
     for name in sources:
         try:
             logging.info('Loading menudata file "%s"...', name)
-            progs, menus, cats = load_menudata_yaml_file(name)
+
+            if name.endswith('.json'):
+                progs, menus, cats = load_menudata_json_file(name)
+            elif name.endswith('.yml'):
+                progs, menus, cats = load_menudata_yaml_file(name)
+            else:
+                logging.error('Unknown format in menudata file "%s"',
+                              name)
+                continue
         except Exception as exception:
             logging.error('Could not load file "%s": %s', name, str(exception))
             logging.error(exception, exc_info=True)
