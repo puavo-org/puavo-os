@@ -127,7 +127,7 @@ else:
                         level=logging.DEBUG)
 
 logging.info('Logging starts')
-logging.info('This is PuavoMenu v0.61 (c) Opinsys Oy 2017-2018')
+logging.info('This is PuavoMenu v0.7 (c) Opinsys Oy 2017-2019')
 
 SETTINGS.res_dir = os.path.join(args.res_dir, '')
 SETTINGS.menu_dir = os.path.join(args.menu_dir, '')
