@@ -312,6 +312,131 @@ def load_yaml_file(filename):
     return programs, menus, categories
 
 
+def load_menudata_json_file(filename):
+    """Loads menudata from a JSON file. The structure is almost identical to
+    how data loaded from YAML files is actually kept in memory, so it's not
+    difficult to convert raw JSON into usable menudata. In addition to that,
+    JSON is *much* faster to parse than YAML. "Compiling" YAML files to JSON
+    easily cuts 200-300 milliseconds from startup time, which is a visible
+    speedup, even by eye.
+
+    JSON's syntax is much stricter than YAML's, so we do only some basic
+    validity checks. If Puavo one day gets the ability to supply extra
+    menudata JSON files to Puavomenu, then this loader must be made to
+    do extra validation."""
+
+    import json
+
+    programs = {}
+    menus = {}
+    categories = {}
+
+    # There's a *LOT* less error handling here, compared to YAML loading.
+    # JSON files are usually produced by us, so we'll assume they're
+    # (mostly) error-free.
+
+    # AFAIK it's not possible to have duplicate keys in a dict/hash
+    # in JSON files, so there are no dupe checks here.
+
+    with open(filename, mode='r', encoding='utf-8') as inf:
+        data = json.load(inf)
+
+    if data is None or not isinstance(data, dict):
+        logging.warning('load_json_file(): got no data, or the data is not a dict')
+        return {}, {}, {}
+
+    if 'programs' in data:
+        for name, src_program in data['programs'].items():
+            if not __is_valid(name):
+                logging.error('JSON program name "%s" contains invalid characters',
+                              name)
+                continue
+
+            if ('type' not in src_program) or \
+                    (src_program['type'] not in \
+                        (PROGRAM_TYPE_DESKTOP,
+                         PROGRAM_TYPE_CUSTOM,
+                         PROGRAM_TYPE_WEB)):
+                logging.error('JSON program "%s" has no type or the specified type is invalid',
+                              name)
+                continue
+
+            dst_program = dict(src_program)
+
+            # Convert lists back to sets
+            if 'keywords' in dst_program:
+                dst_program['keywords'] = set(dst_program['keywords'])
+
+            if 'tags' in dst_program:
+                dst_program['tags'] = set(dst_program['tags'])
+
+            programs[name] = dst_program
+
+    if 'menus' in data:
+        for name, src_menu in data['menus'].items():
+            if not __is_valid(name):
+                logging.error('JSON menu name "%s" contains invalid characters',
+                              name)
+                continue
+
+            menus[name] = dict(src_menu)
+
+    if 'categories' in data:
+        for name, src_cat in data['categories'].items():
+            if not __is_valid(name):
+                logging.error('JSON category name "%s" contains invalid characters',
+                              name)
+                continue
+
+            categories[name] = dict(src_cat)
+
+    return programs, menus, categories
+
+
+def save_menudata_json_file(filename, programs, menus, categories):
+    """Used to convert, or "compile", YAML files to JSON. JSON is faster to
+    load, and for once its much more strict syntax works well, because we
+    have to do less validation for JSON data than for YAML data."""
+
+    # Handle errors internally, don't let them escape this function.
+    # There's another exception handler around the block where this
+    # is called from, but that is used to report failed YAML loading
+    # and we don't want errors happening in this function to end up
+    # in there. Log the error, but do nothing else.
+    try:
+        import json
+
+        data = {}
+        data['programs'] = {}
+        data['menus'] = {}
+        data['categories'] = {}
+
+        # The default JSON serializer doesn't grok sets, so convert them
+        # to lists. To do this, we must manually go through the programs.
+        for name, program in programs.items():
+            pd = dict(program)
+
+            if 'keywords' in pd:
+                pd['keywords'] = list(pd['keywords'])
+
+            if 'tags' in pd:
+                pd['tags'] = list(pd['tags'])
+
+            data['programs'][name] = pd
+
+        # Menus and categories should work as-is
+        if len(menus) > 0:
+            data['menus'] = menus
+
+        if len(categories) > 0:
+            data['categories'] = categories
+
+        with open(filename, mode='w', encoding='utf-8') as out:
+            json.dump(data, out)
+    except Exception as exception:
+        logging.error('Could not save file "%s": %s', filename, str(exception))
+
+
 def load_dotdesktop_file(filename):
     """Fairly robust .desktop file parser. Tries to extract as much
     valid data as possible, returns dicts within dicts.
