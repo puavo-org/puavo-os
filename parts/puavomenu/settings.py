@@ -39,6 +39,10 @@ class Settings:
         # Ignored in production mode.
         self.check_mode = False
 
+        # If true, desktop YAML files are "compiled" to JSON for faster
+        # loading. Nothing else will be done.
+        self.compile_mode = False
+
         # ----------------------------------------------------------------------
         # Automagically detected
 

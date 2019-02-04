@@ -81,6 +81,11 @@ parser.add_argument('--check',
                     required=False,
                     help='load and verify all menu data files')
 
+parser.add_argument('--compile_yaml',
+                    action='store_true',
+                    required=False,
+                    help='converts all YAML menudata files to JSON')
+
 required = parser.add_argument_group('required arguments')
 
 required.add_argument('--res_dir',
@@ -131,39 +136,46 @@ SETTINGS.socket = args.socket
 SETTINGS.dev_mode = args.dev
 SETTINGS.autohide = args.autohide
 SETTINGS.check_mode = args.check
+SETTINGS.compile_mode = args.compile_yaml
 
+# Certain arguments can only be used in development mode
 if not args.dev and args.check:
     SETTINGS.check_mode = False
 
-if args.lang:
-    # Override autodetection
-    SETTINGS.language = args.lang.lower()
-else:
-    # Autodetect from system
-    if 'LANG' in os.environ:
-        SETTINGS.language = os.environ['LANG'][0:2].lower()
-    elif 'GDM_LANG' in os.environ:
-        SETTINGS.language = os.environ['GDM_LANG'][0:2].lower()
+if not args.dev and args.compile_mode:
+    SETTINGS.compile_mode = False
 
-# Regardless of where the language code comes from we validate it
-if SETTINGS.language not in LANGUAGES:
-    logging.error('Invalid language code "%s", defaulting to "en"',
-                  SETTINGS.language)
-    SETTINGS.language = 'en'
+if not SETTINGS.compile_mode:
+    if args.lang:
+        # Override autodetection
+        SETTINGS.language = args.lang.lower()
+    else:
+        # Autodetect from system
+        if 'LANG' in os.environ:
+            SETTINGS.language = os.environ['LANG'][0:2].lower()
+        elif 'GDM_LANG' in os.environ:
+            SETTINGS.language = os.environ['GDM_LANG'][0:2].lower()
 
-logging.info('Resource directory.: "%s"', SETTINGS.res_dir)
-logging.info('Menu data directory: "%s"', SETTINGS.menu_dir)
-logging.info('User directory.....: "%s"', SETTINGS.user_dir)
-logging.info('IPC socket name....: "%s"', SETTINGS.socket)
-logging.info('Language code......: "%s"', SETTINGS.language)
+    # Regardless of where the language code comes from we validate it
+    if SETTINGS.language not in LANGUAGES:
+        logging.error('Invalid language code "%s", defaulting to "en"',
+                      SETTINGS.language)
+        SETTINGS.language = 'en'
+
+    logging.info('Resource directory.: "%s"', SETTINGS.res_dir)
+    logging.info('Menu data directory: "%s"', SETTINGS.menu_dir)
+    logging.info('User directory.....: "%s"', SETTINGS.user_dir)
+    logging.info('IPC socket name....: "%s"', SETTINGS.socket)
+    logging.info('Language code......: "%s"', SETTINGS.language)
 
 if args.log:
     logging.info('Log (this) file....: "%s"', args.log)
 
-# Detect the non-configurable settings
-SETTINGS.detect_environment()
+if not SETTINGS.compile_mode:
+    # Detect the non-configurable settings
+    SETTINGS.detect_environment()
 
-logging.info('Desktop directory..: "%s"', SETTINGS.desktop_dir)
+    logging.info('Desktop directory..: "%s"', SETTINGS.desktop_dir)
 
 if SETTINGS.dev_mode:
     logging.info('*** Development mode activated ***')
@@ -174,11 +186,14 @@ if SETTINGS.check_mode:
 if SETTINGS.autohide:
     logging.info('*** Autohide enabled ***')
 
+if SETTINGS.compile_mode:
+    logging.info('*** Compiling menudata ***')
+
 logging.info('=' * 50)
 
 # And go!
 try:
-    if SETTINGS.check_mode:
+    if SETTINGS.check_mode or SETTINGS.compile_mode:
         # Only load and validate menu data, then exit
         import menudata
         menudata.Menudata().load()
