@@ -354,6 +354,7 @@ class packages {
     , 'libdvd-pkg'
     , 'libdvdread4'
     , 'ogmrip'
+    , 'regionset'
     , 'smplayer'
     , 'vlc'
     , 'winff'
