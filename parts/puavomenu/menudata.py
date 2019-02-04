@@ -197,7 +197,6 @@ class Menudata:
 
 
     def clear(self):
-        self.conditions = {}
         self.programs = {}
         self.menus = {}
         self.categories = {}
@@ -217,8 +216,6 @@ class Menudata:
 
         # Load everything
         try:
-            self.conditions = {}
-
             self.programs, \
             self.menus, \
             self.categories, \

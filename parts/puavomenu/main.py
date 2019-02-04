@@ -1007,14 +1007,6 @@ class PuavoMenu(Gtk.Window):
         def toggle_autohide(menuitem):
             SETTINGS.autohide = not SETTINGS.autohide
 
-        def show_conditionals(menuitem):
-            msg = ''
-
-            for key, value in self.menudata.conditions.items():
-                msg += '"{0}" = "{1}"\n'.format(key, value)
-
-            self.error_message('Conditionals', msg)
-
         def permit_exit(menuitem):
             self.__exit_permitted = not self.__exit_permitted
             logging.debug('Normal exiting ' +
@@ -1037,11 +1029,6 @@ class PuavoMenu(Gtk.Window):
             remove_item.connect('activate', purge)
             remove_item.show()
             dev_menu.append(remove_item)
-
-            conditionals_item = Gtk.MenuItem('Show conditional values...')
-            conditionals_item.connect('activate', show_conditionals)
-            conditionals_item.show()
-            dev_menu.append(conditionals_item)
 
         sep = Gtk.SeparatorMenuItem()
         sep.show()
