@@ -1197,6 +1197,23 @@ def sort_menu_files(files):
     return [name[2] for name in sorted(files, key=lambda i: (i[0], i[1]))]
 
 
+def find_json_replacements(files):
+    """Finds suitable JSON replacements for YAML files, if they exist."""
+
+    for index, name in enumerate(files):
+        # If there's a similarly-named JSON file that's newer (or equally
+        # old) than the YAML, load it instead.
+        json_name = os.path.splitext(name)[0] + '.json'
+
+        if not os.path.isfile(json_name):
+            continue
+
+        if os.path.getmtime(json_name) < os.path.getmtime(name):
+            continue
+
+        files[index] = json_name
+
+
 def load_menu_data(root_dir, filter_string):
     """The main menu loader function. Call this."""
 
@@ -1216,6 +1233,10 @@ def load_menu_data(root_dir, filter_string):
 
     condition_files = sort_menu_files(find_menu_files(root_dir, 'conditions'))
     menudata_files = sort_menu_files(find_menu_files(root_dir, 'menudata'))
+
+    if not SETTINGS.compile_mode:
+        # Don't "recompile" existing files!
+        find_json_replacements(menudata_files)
 
     end_time = time.clock()
 
