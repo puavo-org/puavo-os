@@ -79,6 +79,8 @@ def __convert_yaml_node(node):
 
 
 def __is_valid(string):
+    """Checks if a string is usable as a program, menu or category ID."""
+
     for char in string:
         if char not in ALLOWED_CHARS:
             return False
@@ -87,10 +89,28 @@ def __is_valid(string):
 
 
 # ------------------------------------------------------------------------------
-# Parsers
+# Loaders
 
 
 def __load_multilanguage_string(where):
+    """Loads strings for multiple languages.
+
+    Supports two variants:
+
+        key: Name
+
+    And:
+
+        key:
+            lang1: Name1
+            lang2: Name2
+            ...
+            langN: NameN
+
+    The first variant causes the same string to be used for all languages,
+    while the second variant loads strings only for the languages that
+    have been specified and that are among those we want to load."""
+
     out = {}
 
     if isinstance(where, str):
@@ -111,6 +131,9 @@ def __load_multilanguage_string(where):
 
 
 def load_menudata_yaml_file(filename):
+    """Loads menudata from a YAML file. Returns dicts of programs, menus
+    and categories. Does not catch exceptions."""
+
     import yaml
 
     programs = {}
@@ -503,6 +526,8 @@ def load_dotdesktop_file(filename):
 
 
 def load_dirs_config(name):
+    """Loads the dirs.json file."""
+
     import json
 
     desktop_dirs = []
@@ -525,7 +550,9 @@ def load_dirs_config(name):
     return desktop_dirs, icon_dirs
 
 
-def parse_source_files(sources):
+def parse_menudata_files(sources):
+    """Loads the specified YAML/JSON menudata files. Returns dicts."""
+
     raw_programs = {}
     raw_menus = {}
     raw_categories = {}
@@ -558,6 +585,9 @@ def parse_source_files(sources):
 
 
 def compile_menudata_files(sources):
+    """Converts YAML menudata files to JSON. Output files are placed in
+    the same directory with the YAML files."""
+
     for name in sources:
         json_name = os.path.splitext(name)[0] + '.json'
 
@@ -568,6 +598,9 @@ def compile_menudata_files(sources):
 
 
 def merge_dotdesktop_and_yaml_data(yaml_data, desktop_entry):
+    """Merges data loaded from YAML/JSON files and .desktop files,
+    permitting YAML/JSON to override things defined in.desktop files."""
+
     # Load every item we don't *already* have. This allows YAML files
     # to partially (or completely) override .desktop files.
 
@@ -658,6 +691,9 @@ def merge_dotdesktop_and_yaml_data(yaml_data, desktop_entry):
 
 
 def load_desktop_files(desktop_dirs, raw_programs):
+    """Locates and loads .desktop files for desktop programs. Merges
+    the loaded files with existing data."""
+
     for menudata_id, program in raw_programs.items():
         if not program or program['type'] != PROGRAM_TYPE_DESKTOP:
             continue
@@ -701,6 +737,8 @@ def load_desktop_files(desktop_dirs, raw_programs):
 
 
 def apply_filters(raw_programs, raw_menus, raw_categories, conditions, filters):
+    """Applies conditionals and tag filters to programs, menus and categories."""
+
     from tags_filter import Action
 
     # Conditions first...
@@ -792,6 +830,8 @@ def apply_filters(raw_programs, raw_menus, raw_categories, conditions, filters):
 
 
 def build_menu_data(raw_programs, raw_menus, raw_categories):
+    """Builds the actual menu data from raw menu data."""
+
     programs = {}
     menus = {}
     categories = {}
@@ -1019,6 +1059,8 @@ def build_menu_data(raw_programs, raw_menus, raw_categories):
 
 
 def sort_categories(categories):
+    """Determines the order categories should be put in on the list."""
+
     # Sort the categories by position, but if the positions are identical,
     # sort by names. Warning: the sort is not locale-aware or case
     # insensitive!
@@ -1034,6 +1076,8 @@ def sort_categories(categories):
 
 
 def load_icons(programs, menus, icon_dirs):
+    """Locates and loads icon files for programs and menus."""
+
     from iconcache import ICONS48
 
     # Multiple programs can use the same generic icon name.
@@ -1170,6 +1214,9 @@ MENU_FILE_PATTERN = re.compile(r'^\d\d')
 
 
 def find_menu_files(*where):
+    """Finds  menudata and condition YAML files. They must be sorted
+    by priority and name."""
+
     import glob
     import os
 
@@ -1296,7 +1343,7 @@ def load_menu_data(root_dir, filter_string):
         logging.info('Compilation done')
         return {}, {}, {}, []
 
-    raw_programs, raw_menus, raw_categories = parse_source_files(menudata_files)
+    raw_programs, raw_menus, raw_categories = parse_menudata_files(menudata_files)
 
     end_time = time.clock()
 
