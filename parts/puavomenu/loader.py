@@ -437,15 +437,15 @@ def save_menudata_json_file(filename, programs, menus, categories):
         # The default JSON serializer doesn't grok sets, so convert them
         # to lists. To do this, we must manually go through the programs.
         for name, program in programs.items():
-            pd = dict(program)
+            prog_def = dict(program)
 
-            if 'keywords' in pd:
-                pd['keywords'] = list(pd['keywords'])
+            if 'keywords' in prog_def:
+                prog_def['keywords'] = list(prog_def['keywords'])
 
-            if 'tags' in pd:
-                pd['tags'] = list(pd['tags'])
+            if 'tags' in prog_def:
+                prog_def['tags'] = list(prog_def['tags'])
 
-            data['programs'][name] = pd
+            data['programs'][name] = prog_def
 
         # Menus and categories should work as-is
         if len(menus) > 0:
@@ -1218,7 +1218,6 @@ def find_menu_files(*where):
     by priority and name."""
 
     import glob
-    import os
 
     files = []
 
