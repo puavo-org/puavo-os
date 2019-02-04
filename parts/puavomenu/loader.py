@@ -549,6 +549,16 @@ def parse_source_files(sources):
     return raw_programs, raw_menus, raw_categories
 
 
+def compile_menudata_files(sources):
+    for name in sources:
+        json_name = os.path.splitext(name)[0] + '.json'
+
+        logging.info('Compiling menudata file "%s" to "%s"...',
+                     name, json_name)
+        progs, menus, cats = load_menudata_yaml_file(name)
+        save_menudata_json_file(json_name, progs, menus, cats)
+
+
 def merge_dotdesktop_and_yaml_data(yaml_data, desktop_entry):
     # Load every item we don't *already* have. This allows YAML files
     # to partially (or completely) override .desktop files.
@@ -1215,32 +1225,34 @@ def load_menu_data(root_dir, filter_string):
     # --------------------------------------------------------------------------
     # Load and evaluate conditions
 
-    start_time = time.clock()
+    if not SETTINGS.compile_mode:
+        start_time = time.clock()
 
-    logging.info('Have %d source(s) for conditions', len(condition_files))
+        logging.info('Have %d source(s) for conditions', len(condition_files))
 
-    conditions = {}
+        conditions = {}
 
-    for name in condition_files:
-        conditions.update(conditionals.evaluate_file(name))
+        for name in condition_files:
+            conditions.update(conditionals.evaluate_file(name))
 
-    end_time = time.clock()
+        end_time = time.clock()
 
-    utils.log_elapsed_time('Conditions evaluation time',
-                           start_time, end_time)
+        utils.log_elapsed_time('Conditions evaluation time',
+                               start_time, end_time)
 
     # --------------------------------------------------------------------------
     # Load tag filters
 
-    start_time = time.clock()
+    if not SETTINGS.compile_mode:
+        start_time = time.clock()
 
-    from tags_filter import Filter
+        from tags_filter import Filter
 
-    tag_filter = Filter(filter_string)
+        tag_filter = Filter(filter_string)
 
-    end_time = time.clock()
+        end_time = time.clock()
 
-    utils.log_elapsed_time('Tag filter load time', start_time, end_time)
+        utils.log_elapsed_time('Tag filter load time', start_time, end_time)
 
     # --------------------------------------------------------------------------
     # Parse all available menudata files
@@ -1248,6 +1260,12 @@ def load_menu_data(root_dir, filter_string):
     start_time = total_start
 
     logging.info('Have %d source(s) for menu data', len(menudata_files))
+
+    if SETTINGS.compile_mode:
+        logging.info('Compiling all available YAML files to JSON')
+        compile_menudata_files(menudata_files)
+        logging.info('Compilation done')
+        return {}, {}, {}, []
 
     raw_programs, raw_menus, raw_categories = parse_source_files(menudata_files)
 
