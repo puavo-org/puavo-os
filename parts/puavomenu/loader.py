@@ -503,7 +503,6 @@ def load_dotdesktop_file(filename):
 
 
 def load_dirs_config(name):
-    import os.path
     import json
 
     desktop_dirs = []
