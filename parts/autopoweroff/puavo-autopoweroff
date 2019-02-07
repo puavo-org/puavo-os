@@ -98,7 +98,7 @@ proc check_if_we_should_shut_down {} {
   global end_hour idle_time_in_minutes latest_event_time logger \
          start_hour startup_delay_in_minutes startup_time previous_log_type
 
-  set current_hour [clock format [clock seconds] -format %H]
+  set current_hour [clock format [clock seconds] -format %k]
 
   set daytime_test "$start_hour <= $current_hour < $end_hour"
 
