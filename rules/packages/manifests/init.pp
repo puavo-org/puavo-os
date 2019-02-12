@@ -133,6 +133,7 @@ class packages {
     , 'terminator'
     , 'tmux'
     , 'tshark'
+    , 'ulogd2'
     , 'vagrant'
     , 'vinagre'
     , 'vrms'
