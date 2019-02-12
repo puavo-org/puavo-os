@@ -605,6 +605,7 @@ class packages {
     , 'plymouth'
     , 'plymouth-themes'
     , 'printer-driver-c2esp'
+    , 'printer-driver-cups-pdf'
     , 'printer-driver-foo2zjs'
     , 'printer-driver-min12xxw'
     , 'printer-driver-pnm2ppa'
