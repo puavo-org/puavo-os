@@ -510,6 +510,7 @@ class packages {
     , 'genisoimage'
     , 'ghostscript-x'
     , 'gjs'
+    , 'gksu'
     , 'gnome-accessibility-themes'
     , 'gnome-backgrounds'
     , 'gnome-bluetooth'
