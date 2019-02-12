@@ -625,7 +625,7 @@ class packages {
     , 'youtube-dl'
     , 'zenity'
     , 'zip' ]:
-      tag => [ 'tag_ubuntu-gnome-desktop', 'tag_debian_desktop', ];
+      tag => [ 'tag_gnome_desktop', 'tag_debian_desktop', ];
 
     # some dependencies from puavopkg packages
     [ 'libjavascriptcoregtk-1.0-0'        # citrix client
