@@ -25,6 +25,26 @@ puavo_link_to_state() {
   ln -fns "$wanted_linktarget" "$dirpath"
 }
 
+puavo_setup_admins() {
+  local admins_status
+
+  admins_status=0
+
+  if puavo_link_to_state /adm-home; then
+    rsync -au /adm-home.rofs/ /state/adm-home/ || admins_status=1
+  else
+    admins_status=1
+  fi
+
+  if puavo_link_to_state /root; then
+    rsync -au /root.rofs/ /state/root/ || admins_status=1
+  else
+    admins_status=1
+  fi
+
+  return $admins_status
+}
+
 # CUPS always writes its configuration files as new files and then
 # renames the new file to the old name.  This breaks the /state linking
 # if we just link /etc/cups/printers.conf to /state.  To overcome
@@ -108,5 +128,9 @@ for statedir in $statedirlist; do
 done
 
 puavo_setup_cups_dir || status=1
+
+if [ "$(puavo-conf puavo.admin.persistent_homedirs)" = 'true' ]; then
+  puavo_setup_admins || status=1
+fi
 
 exit $status
