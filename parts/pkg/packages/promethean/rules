@@ -53,6 +53,9 @@ case "$command" in
 a2756c8ea06b7d5fa93a6b6d5c67b39a600ffe43a9934ab10ad3d730428013f879a8aee2ec9a3c15c5ca577bc5f311fc non-oss/a/activaid/activaid_2.0.1~Ubuntu~1604_amd64.deb
 5f896d2ab9adb11bfab2ac45a568ea2631edfcb99cf2c345a1b0d3744a6dc51f4d6841c33cba022db7c87e30437cd1a7 non-oss/a/activtools/activtools_5.17.14-0~Ubuntu~1604_amd64.deb
 EOF
+      # these take space and do not work on Debian Stretch
+      rm -rf promethean/usr/share/promethean/lib
+
       # Set LC_COLLATE=C so that files always sort in the same
       # way (so we get the same tar-archive independent of locales).
       env LC_COLLATE=C \
