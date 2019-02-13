@@ -45,6 +45,7 @@ packagedirs += openscad-nightly
 packagedirs += openshot-appimage
 packagedirs += oracle-java
 packagedirs += processing
+packagedirs += promethean
 packagedirs += pycharm
 packagedirs += robboscratch2
 packagedirs += robotmeshconnect

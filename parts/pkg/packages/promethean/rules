@@ -1,0 +1,66 @@
+#!/bin/bash
+
+set -eu
+
+command=$1
+shift
+
+urlbase='http://activsoftware.co.uk/linux/repos/driver/ubuntu/pool'
+
+case "$command" in
+  configure)
+    upstream_dir=$1
+
+    # XXX
+    ;;
+
+  unconfigure)
+    upstream_dir=$1
+
+    # XXX
+    ;;
+
+  unpack)
+    upstream_pack=$1
+    upstream_dir=$2
+    tar -x -f "$upstream_pack" -C "$upstream_dir"
+    ;;
+
+  download)
+    upstream_pack=$(readlink -f "$1")
+    tmpdir=
+    trap '[ -n "$tmpdir" ] && rm -rf "$tmpdir"' EXIT
+    tmpdir=$(mktemp -d)
+
+    (
+      cd "$tmpdir"
+      while read sha384 debpath; do
+        deb=$(basename "$debpath")
+        wget \
+            --no-use-server-timestamps \
+            --no-check-certificate \
+            --no-cookies \
+            --output-document "$deb" \
+            --progress=dot:mega \
+            "${urlbase}/${debpath}" || {
+            [ $? -eq 4 ] && exit 2 ## Network failure.
+            exit 1
+        }
+        echo "${sha384} ${deb}" | sha384sum --check >/dev/null || exit 1
+        dpkg-deb -x "$deb" promethean || exit 1
+      done <<EOF
+5bed0af13eaeefd802f85e0eb06aca86294b702632401323afc5427b128d543d3a8af59d8ee2aeff74299bd5daab18c0 oss/a/activdriver/activdriver_5.17.14-0~Ubuntu~1604_amd64.deb
+a2756c8ea06b7d5fa93a6b6d5c67b39a600ffe43a9934ab10ad3d730428013f879a8aee2ec9a3c15c5ca577bc5f311fc non-oss/a/activaid/activaid_2.0.1~Ubuntu~1604_amd64.deb
+5f896d2ab9adb11bfab2ac45a568ea2631edfcb99cf2c345a1b0d3744a6dc51f4d6841c33cba022db7c87e30437cd1a7 non-oss/a/activtools/activtools_5.17.14-0~Ubuntu~1604_amd64.deb
+EOF
+      # Set LC_COLLATE=C so that files always sort in the same
+      # way (so we get the same tar-archive independent of locales).
+      env LC_COLLATE=C \
+        tar -C promethean --mtime='2000-01-01 00:00:00 +00:00' -c \
+          -f "$upstream_pack" .
+    )
+    ;;
+
+    *)
+        ;;
+esac
