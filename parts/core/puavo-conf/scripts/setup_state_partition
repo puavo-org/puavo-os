@@ -19,9 +19,11 @@ puavo_link_to_state() {
   # not freak out because something was be missing. The original directory
   # is renamed to ${dirpath}.rofs before replacing the directory with a
   # symbolic link to the /state partition.
-  find "$dirpath" -type d -print0 | cpio -0dpm --quiet /state || return 1
+  if [ -d "$dirpath" ]; then
+    find "$dirpath" -type d -print0 | cpio -0dpm --quiet /state || true
+    mv -T "$dirpath" "${dirpath}.rofs" 2>/dev/null || true
+  fi
 
-  mv -T "$dirpath" "${dirpath}.rofs" 2>/dev/null || true
   ln -fns "$wanted_linktarget" "$dirpath"
 }
 
