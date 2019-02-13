@@ -1,0 +1,13 @@
+[Unit]
+Description=Google Cloud Print service
+After=cups.service
+
+[Service]
+ExecStart=/usr/bin/gcp-cups-connector
+Type=simple
+Restart=on-failure
+RestartSec=300
+User=gcp
+
+[Install]
+WantedBy=multi-user.target

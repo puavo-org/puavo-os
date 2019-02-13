@@ -22,6 +22,11 @@ set services {
         -> /lib/systemd/system/fluentd.service
     }}
 
+  { google-cloud-print {
+      /etc/systemd/system/multi-user.target.wants/google-cloud-print.service
+         -> /etc/systemd/system/google-cloud-print.service
+    }}
+
   { incron {
       /etc/systemd/system/multi-user.target.wants/incron.service
          -> /lib/systemd/system/incron.service

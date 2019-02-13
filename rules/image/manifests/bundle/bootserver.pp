@@ -18,6 +18,7 @@ class image::bundle::bootserver {
   include ::bootserver_pxe
   include ::bootserver_samba
   include ::bootserver_slapd
+  include ::google_cloud_print
   include ::packages
 
   # include ::bootserver_dummywlan              # XXX needs work
