@@ -39,6 +39,10 @@ class Settings:
         # Ignored in production mode.
         self.check_mode = False
 
+        # If true, desktop YAML files are "compiled" to JSON for faster
+        # loading. Nothing else will be done.
+        self.compile_mode = False
+
         # ----------------------------------------------------------------------
         # Automagically detected
 
@@ -126,7 +130,7 @@ class Settings:
         conf_file = join(self.user_dir, 'puavomenu.conf')
 
         if isfile(conf_file):
-            logging.info('A per-user configuration file "%s" exists,'
+            logging.info('A per-user configuration file "%s" exists, '
                          'trying to load it...', conf_file)
 
             try:

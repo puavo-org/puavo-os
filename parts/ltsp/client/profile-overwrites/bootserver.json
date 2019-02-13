@@ -1,6 +1,7 @@
 {
   "puavo.admin.backup.modes":                       "rsync-backup-home-state",
   "puavo.admin.logging.policy":                     "receive-as-bootserver",
+  "puavo.admin.persistent_homedirs":                "true",
   "puavo.admin.run_extra_boot_scripts":             "false",
   "puavo.admin.set_root_password":                  "true",
   "puavo.autopoweroff.enabled":                     "false",

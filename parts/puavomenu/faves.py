@@ -28,7 +28,9 @@ def _save_use_counts(all_programs):
 
     try:
         from os.path import join as path_join
-        open(path_join(SETTINGS.user_dir, 'faves'), 'w').write(out)
+
+        with open(path_join(SETTINGS.user_dir, 'faves'), 'w') as f:
+            f.write(out)
     except Exception as exception:
         logging.error('Could not save favorites: %s', str(exception))
 
@@ -113,7 +115,7 @@ class FavesList(Gtk.ScrolledWindow):
         # in Python 3.5, so programs that have identical use counts are
         # inserted on the list in random order and they tend to switch
         # positions constantly; we need to break that randomness).
-        faves = [(name, p.uses, p.title)
+        faves = [(name, p.uses, p.name)
                  for name, p in all_programs.items() if p.uses > 0]
         faves = sorted(faves,
                        key=lambda p: (p[1], p[2]), reverse=True)[0:NUMBER_OF_FAVES]
@@ -141,7 +143,7 @@ class FavesList(Gtk.ScrolledWindow):
             program = all_programs[fave[0]]
             # use self.__parent as the parent, so popup menu handlers
             # will call the correct methods from the main window class
-            button = ProgramButton(self.__parent, program.title, program.icon,
+            button = ProgramButton(self.__parent, program.name, program.icon,
                                    program.description, data=program,
                                    is_fave=True)
             button.connect('clicked', self.__parent.clicked_program_button)

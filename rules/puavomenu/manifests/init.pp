@@ -9,11 +9,20 @@ class puavomenu {
     '/etc/puavomenu':
       ensure => directory;
 
-    '/etc/puavomenu/conditions.yaml':
-      content => template('puavomenu/conditions.yaml');
+    '/etc/puavomenu/dirs.json':
+      content => template('puavomenu/dirs.json');
 
-    '/etc/puavomenu/menudata.yaml':
-      content => template('puavomenu/menudata.yaml');
+    '/etc/puavomenu/conditions':
+      ensure => directory;
+
+    '/etc/puavomenu/conditions/50-default.yml':
+      content => template('puavomenu/conditions/50-default.yml');
+
+    '/etc/puavomenu/menudata':
+      ensure => directory;
+
+    '/etc/puavomenu/menudata/50-default.yml':
+      content => template('puavomenu/menudata/50-default.yml');
 
     '/etc/X11/Xsession.d/48puavo-menu-show-my-school-users':
       source => 'puppet:///modules/puavomenu/48puavo-menu-show-my-school-users';

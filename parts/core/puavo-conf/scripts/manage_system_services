@@ -197,6 +197,13 @@ set services {
       /etc/systemd/system/multi-user.target.wants/tlp.service
         -> /lib/systemd/system/tlp.service
     }}
+
+  { ulogd2 {
+      /etc/systemd/system/multi-user.target.wants/ulogd2.service
+        -> /lib/systemd/system/ulogd2.service
+      /etc/systemd/system/ulogd.service
+        -> /lib/systemd/system/ulogd2.service
+    }}
 }
 
 proc set_service {service_name enabled linkpaths} {

@@ -134,6 +134,7 @@ class packages {
     , 'terminator'
     , 'tmux'
     , 'tshark'
+    , 'ulogd2'
     , 'vagrant'
     , 'vinagre'
     , 'vrms'
@@ -207,6 +208,7 @@ class packages {
     , 'dpkg-dev'
     , 'dput'
     , 'fakeroot'
+    , 'gcc'
     , 'gdb'
     , 'gettext'
     , 'gnupg'
@@ -224,7 +226,6 @@ class packages {
     , 'glx-alternative-mesa'
     , 'libgl1-mesa-glx'
     , 'nvidia-settings'
-    # , 'r8168-dkms'		# XXX missing from Debian
     , 'update-glx'
     , 'xserver-xorg-input-evdev'
     , 'xserver-xorg-video-all' ]:
@@ -311,14 +312,12 @@ class packages {
     , 'libav-tools'
     , 'libsane'
     , 'libsane-extras'
-    # , 'luciole'		# XXX missing from Debian
     , 'mjpegtools'
     , 'mypaint'
     , 'nautilus-image-converter'
     , 'okular'
     , 'openshot'
     , 'pencil2d'
-    # , 'photofilmstrip'	# XXX missing from Debian
     , 'pinta'
     , 'pitivi'
     , 'python-lxml'
@@ -341,7 +340,6 @@ class packages {
     # [ 'laptop-mode-tools' ]:
     #   tag => [ 'tag_laptop', 'tag_debian_desktop', ];
 
-    # , 'clam-chordata'		# XXX missing from Debian Jessie
     [ 'goobox'
     , 'gstreamer1.0-clutter'
     , 'gstreamer1.0-libav'
@@ -355,6 +353,7 @@ class packages {
     , 'libdvd-pkg'
     , 'libdvdread4'
     , 'ogmrip'
+    , 'regionset'
     , 'smplayer'
     , 'vlc'
     , 'winff'
@@ -405,7 +404,6 @@ class packages {
 
     [ 'adb'
     , 'avr-libc'
-    # XXX 'basic256'		# XXX missing from Debian Jessie
     , 'eclipse'
     , 'emacs'
     , 'eric'
@@ -448,8 +446,6 @@ class packages {
     [ 'avogadro'
     , 'celestia'
     , 'celestia-gnome'
-    # , 'drgeo'		# XXX missing from Debian
-    # , 'ghemical'	# XXX missing from Debian
     , 'gnucap'
     , 'gnuplot'
     , 'gnuplot-x11'
@@ -470,21 +466,18 @@ class packages {
     , 'wxmaxima' ]:
       tag => [ 'tag_science', 'tag_debian_desktop', ];
 
-    # 'breathe-icon-theme'		# XXX missing from Debian
     [ 'gnome-icon-theme'
     , 'gnome-themes-extras'
     , 'gtk2-engines'
     , 'gtk2-engines-pixbuf'
-    # , 'human-theme'			# XXX missing from Debian
-    # , 'light-themes'			# XXX missing from Debian
     , 'openclipart'
     , 'oxygen-icon-theme'
     , 'xscreensaver-data'
     , 'xscreensaver-data-extra' ]:
       tag => [ 'tag_themes', 'tag_debian_desktop', ];
 
-    # the dependencies (and recommends) of ubuntu-gnome-desktop package
-    # without a few packages that we do not want
+    # desktop-packages relating to gnome and other, some of these
+    # maybe belong to other categories or may be removed
     [ 'acpi-support'
     , 'alsa-base'
     , 'alsa-utils'
@@ -504,10 +497,6 @@ class packages {
     , 'cups-client'
     , 'cups-filters'
     , 'dconf-editor'
-    # , 'deja-dup'				# not needed
-    # , 'deja-dup-backend-cloudfiles'
-    # , 'deja-dup-backend-gvfs'
-    # , 'deja-dup-backend-s3'
     , 'empathy'
     , 'eog'
     , 'evince'
@@ -517,12 +506,12 @@ class packages {
     , 'fonts-dejavu-core'
     , 'fonts-freefont-ttf'
     , 'foomatic-db-compressed-ppds'
-    , 'gcc'
     , 'gcr'
     , 'gedit'
     , 'genisoimage'
     , 'ghostscript-x'
     , 'gjs'
+    , 'gksu'
     , 'gnome-accessibility-themes'
     , 'gnome-backgrounds'
     , 'gnome-bluetooth'
@@ -532,8 +521,6 @@ class packages {
     , 'gnome-contacts'
     , 'gnome-control-center'
     , 'gnome-disk-utility'
-    # , 'gnome-documents'	# forces tracker to be installed
-				# (tracker is purged elsewhere)
     , 'gnome-icon-theme-extras'
     , 'gnome-icon-theme-symbolic'
     , 'gnome-keyring'
@@ -566,6 +553,7 @@ class packages {
     , 'ibus-table'
     , 'inputattach'
     , 'itstool'
+    , 'kcalc'
     , 'laptop-detect'
     , 'libatk-adaptor'
     , 'libgail-common'
@@ -592,17 +580,17 @@ class packages {
     , 'mutter'
     , 'nautilus'
     , 'nautilus-sendto'
-    # , 'nautilus-share' # forces software-properties-gtk to be installed
     , 'network-manager'
     , 'network-manager-pptp'
     , 'network-manager-pptp-gnome'
-    , 'nodm'            # for infotv
-    , 'openbox'         # for infotv
+    , 'nodm'                                    # for infotv
+    , 'openbox'                                 # for infotv
     , 'openprinting-ppds'
     , 'pcmciautils'
     , 'plymouth'
     , 'plymouth-themes'
     , 'printer-driver-c2esp'
+    , 'printer-driver-cups-pdf'
     , 'printer-driver-foo2zjs'
     , 'printer-driver-min12xxw'
     , 'printer-driver-pnm2ppa'
@@ -618,17 +606,12 @@ class packages {
     , 'seahorse'
     , 'shotwell'
     , 'simple-scan'
-    # , 'software-properties-gtk'		# (purged elsewhere)
     , 'speech-dispatcher'
     , 'ssh-askpass-gnome'
     , 'telepathy-idle'
     , 'totem'
-    # , 'tracker'				# (purged elsewhere)
     , 'transmission-gtk'
     , 'unzip'
-    # , 'update-manager'			# (purged elsewhere)
-    # , 'update-notifier'			# (purged elsewhere)
-    # , 'usb-creator-gtk'			# XXX missing from Debian
     , 'vino'
     , 'wireless-tools'
     , 'wpasupplicant'
@@ -644,7 +627,7 @@ class packages {
     , 'youtube-dl'
     , 'zenity'
     , 'zip' ]:
-      tag => [ 'tag_ubuntu-gnome-desktop', 'tag_debian_desktop', ];
+      tag => [ 'tag_gnome_desktop', 'tag_debian_desktop', ];
 
     # some dependencies from puavopkg packages
     [ 'libjavascriptcoregtk-1.0-0'        # citrix client
@@ -742,20 +725,6 @@ class packages {
   #
 
   @package {
-    # [ 'fluent-plugin-puavo'   # XXX not yet packaged for Debian
-    # , 'puavo-load-reporter'   # XXX not yet packaged for Debian
-
-    # XXX not yet packaged for Debian
-    # [ 'dymo-cups-drivers' ]:
-    #   tag => [ 'tag_printing', 'tag_puavo', ];
-
-    # XXX not yet packaged for Debian
-    # [ 'bluegriffon'
-    # , 'enchanting'
-    # , 'pycharm'
-    # , 'snap4arduino' ]:
-    #   tag => [ 'tag_programming', 'tag_puavo', ];
-
     'nwjs':
       tag => [ 'tag_web', 'tag_puavo', ];
 
@@ -770,15 +739,13 @@ class packages {
   $nvidia_dkms_304_module   = 'nvidia-legacy-304xx/304.137'
   $nvidia_dkms_340_module   = 'nvidia-legacy-340xx/340.106'
   $nvidia_dkms_384_module   = 'nvidia-current/384.130'
-  $virtualbox_module        = 'virtualbox/5.2.22'
-  # XXX $r8168_dkms_module  = 'r8168/8.040.00'
+  $virtualbox_module        = 'virtualbox/5.2.24'
 
   $all_dkms_modules = [ $broadcom_sta_dkms_module
 		      , $nvidia_dkms_304_module
 		      , $nvidia_dkms_340_module
 		      , $nvidia_dkms_384_module
 		      , $virtualbox_module ]
-                      # XXX $r8168_dkms_module  # XXX missing from Debian
 
   packages::kernels::kernel_package {
     '3.16.0-7-amd64':
@@ -793,13 +760,6 @@ class packages {
       dkms_modules => [ $virtualbox_module ],
       package_name => 'linux-image-4.17.0-0.bpo.1-amd64';
   }
-
-  # XXX missing from Debian
-  # @package {
-  #   XXX missing from Debian
-  #   [ 'vmware-view-client' ]:
-  #     tag => [ 'tag_remote_access', 'tag_partner', 'tag_restricted' ];
-  # }
 
   # Packages which are not restricted per se, but which are required by
   # restricted packages. These need to be installed and distributed in

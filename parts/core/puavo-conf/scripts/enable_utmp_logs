@@ -9,13 +9,15 @@ status=0
 mkdir -p /state/var/log
 
 umask 0007
-for log in btmp wtmp lastlog; do
+for log in btmp lastlog wtmp; do
   {
     touch "/state/var/log/${log}" \
       && chgrp utmp "/state/var/log/${log}"
   } || status=1
 done
 
-chmod o+r /state/var/log/lastlog /state/var/log/wtmp
+chmod o-r /state/var/log/btmp    \
+          /state/var/log/lastlog \
+          /state/var/log/wtmp
 
 exit $status

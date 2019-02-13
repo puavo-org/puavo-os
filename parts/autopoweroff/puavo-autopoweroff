@@ -15,6 +15,16 @@ set end_hour   [exec puavo-conf puavo.autopoweroff.daytime_end_hour]
 set idle_time_in_minutes     30
 set startup_delay_in_minutes 30
 
+set previous_log_msg ""
+
+proc logmsg_if_different {msg} {
+  global previous_log_msg
+  if {$msg ne $previous_log_msg} {
+    exec -ignorestderr logger -p user.notice -t puavo-autopoweroff $msg
+    set previous_log_msg $msg
+  }
+}
+
 proc update_input_devices {} {
   global input_devices latest_event_time
 
@@ -86,28 +96,35 @@ proc update_input_devices {} {
 
 proc check_if_we_should_shut_down {} {
   global end_hour idle_time_in_minutes latest_event_time logger \
-         start_hour startup_delay_in_minutes startup_time
+         start_hour startup_delay_in_minutes startup_time previous_log_type
 
-  set current_hour [clock format [clock seconds] -format %H]
+  set current_hour [clock format [clock seconds] -format %k]
 
-  if {$start_hour <= $current_hour && $current_hour <= $end_hour} {
+  set daytime_test "$start_hour <= $current_hour < $end_hour"
+
+  if {$start_hour <= $current_hour && $current_hour < $end_hour} {
     # do not shut down on daytime hours
+    logmsg_if_different "on daytime hours: $daytime_test"
     return
   }
 
   if {[clock seconds] < $startup_time + ($startup_delay_in_minutes * 60)} {
-    # do not shut down if we have start only recently daytime hours
+    # do not shut down if we have started only recently
+    set msg "not on daytime hours: $daytime_test ... but on startup delay"
+    logmsg_if_different $msg
     return
   }
 
   if {[clock seconds] < $latest_event_time + ($idle_time_in_minutes * 60)} {
+    set msg "not on daytime hours: $daytime_test"
+    set msg "$msg ... not on startup delay ... but input activity seen"
+    logmsg_if_different $msg
     # do not shut down if there has been activity in the last
     # $idle_delay_in_minutes
     return
   }
 
-  exec -ignorestderr logger -p user.notice -s -t puavo-autopoweroff \
-                     "shutting down"
+  logmsg_if_different "shutting down"
 
   after 5000 [list exec shutdown -h now]
 }

@@ -2,6 +2,11 @@
   "puavo.puavomenu.enabled": {
     "default": "true"
   },
+  "puavo.puavomenu.tags": {
+    "typehint": "string",
+    "default": "default",
+    "description": "Control which programs, menus and categories should be visible or hidden in Puavomenu."
+  },
   "puavo.puavomenu.show_my_school_users": {
     "default": "false"
   }

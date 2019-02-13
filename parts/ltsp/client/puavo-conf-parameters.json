@@ -1,4 +1,7 @@
 {
+  "puavo.admin.persistent_homedirs": {
+    "default": "false"
+  },
   "puavo.admin.personally_administered": {
     "default": "false"
   },
@@ -141,6 +144,9 @@
     "default": "false"
   },
   "puavo.service.tlp.enabled": {
+    "default": "false"
+  },
+  "puavo.service.ulogd2.enabled": {
     "default": "false"
   },
   "puavo.support.image_changelog_url": {

@@ -220,6 +220,8 @@ class AvatarDownloaderThread(threading.Thread):
 
         time.sleep(self.INITIAL_WAIT)
 
+        logging.info('The avatar update thread is starting')
+
         for attempt in range(0, self.MAX_ATTEMPTS):
             try:
                 # Figure out the API server address
@@ -286,7 +288,7 @@ class AvatarDownloaderThread(threading.Thread):
                                     'image: %s', str(exception))
                     logging.warning('New avatar image not set')
 
-                logging.info('Avatar thread is exiting')
+                logging.info('The avatar update thread is exiting')
                 return
             except Exception as exception:
                 logging.error('Could not download the user avatar: %s',
@@ -300,7 +302,7 @@ class AvatarDownloaderThread(threading.Thread):
 
         logging.error('Giving up on trying to download the user avatar, ' \
                       'tried %d times', self.MAX_ATTEMPTS)
-        logging.info('Avatar thread is exiting')
+        logging.info('The avatar update thread is exiting')
 
 
 # ------------------------------------------------------------------------------

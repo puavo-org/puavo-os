@@ -1,0 +1,37 @@
+#!/bin/sh
+
+set -eux
+
+command=$1
+shift
+
+case "${command}" in
+    configure)
+	upstream_dir=$1
+
+	ln -fns "${upstream_dir}" /opt/abitti-naksu
+        cat <<EOF > /usr/share/applications/abitti-naksu.desktop
+[Desktop Entry]
+Name=Naksu
+Exec=/opt/abitti-naksu/naksu
+Type=Application
+Terminal=false
+Icon=glade
+StartupNotify=true
+Categories=Education;
+EOF
+	;;
+    unconfigure)
+	rm -f /opt/abitti-naksu \
+              /usr/share/applications/abitti-naksu.desktop
+	;;
+    unpack)
+	upstream_pack=$1
+	upstream_dir=$2
+
+        unzip -q -d "${upstream_dir}" "${upstream_pack}"
+        chmod 755 "${upstream_dir}/naksu"
+	;;
+    *)
+	;;
+esac
