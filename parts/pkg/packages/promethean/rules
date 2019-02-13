@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 set -eu
 
@@ -7,17 +7,137 @@ shift
 
 urlbase='http://activsoftware.co.uk/linux/repos/driver/ubuntu/pool'
 
+promethean_links='
+  /etc/promethean
+  /etc/udev/rules.d/10-board.rules
+  /etc/xdg/autostart/activmgr.desktop
+  /lib/udev/rules.d/10-activ-tpd.rules
+  /lib/udev/rules.d/66-xorg-promethean.rules
+  /opt/bitrock/activaid-2.0.1-0
+  /usr/bin/promethean.sh
+  /usr/lib/X11/xorg.conf.d/10-promethean.conf
+  /usr/local/bin/ac3register
+  /usr/local/bin/ac3register.sh
+  /usr/local/bin/activaid
+  /usr/local/bin/activaid.sh
+  /usr/local/bin/activcalibrate
+  /usr/local/bin/activcalibrate.sh
+  /usr/local/bin/activcheckspecs
+  /usr/local/bin/activ_enumerator
+  /usr/local/bin/activlc
+  /usr/local/bin/activmgr
+  /usr/local/bin/activmgr.sh
+  /usr/local/bin/activmonitor
+  /usr/local/bin/activmonitor.sh
+  /usr/local/bin/dataview
+  /usr/local/bin/dataview.sh
+  /usr/local/bin/detectuserswitch
+  /usr/local/bin/devreg
+  /usr/local/bin/devreg.sh
+  /usr/local/bin/icudtl.dat
+  /usr/local/bin/imageformats
+  /usr/local/bin/modifyxorg.py
+  /usr/local/bin/platforms
+  /usr/local/bin/qtwebengine_locales
+  /usr/local/bin/QtWebEngineProcess
+  /usr/local/bin/qtwebengine_resources_100p.pak
+  /usr/local/bin/qtwebengine_resources_200p.pak
+  /usr/local/bin/qtwebengine_resources.pak
+  /usr/local/bin/timelinkdiagnostics
+  /usr/local/bin/timelinkdiagnostics.sh
+  /usr/local/bin/visual_view
+  /usr/local/bin/visual_view.sh
+  /usr/local/bin/xcbglintegrations
+  /usr/local/lib32/libactivboardex.so.1.0
+  /usr/local/lib/libactivboardex.so.1.0
+  /usr/local/lib/libactivsystem.so
+  /usr/local/lib/libactivsystem.so.2
+  /usr/local/lib/libactivsystem.so.2.4
+  /usr/local/lib/libactivsystem.so.2.4.0
+  /usr/local/lib/libclassflowclient.so
+  /usr/local/lib/libclassflowclient.so.1
+  /usr/local/lib/libclassflowclient.so.1.0
+  /usr/local/lib/libclassflowclient.so.1.0.0
+  /usr/share/applications/activaid.desktop
+  /usr/share/applications/ActivCalibrate.desktop
+  /usr/share/applications/activmonitor.desktop
+  /usr/share/hal/fdi/policy/20thirdparty/12-promethean.fdi
+  /usr/share/icons/hicolor/48x48/apps/activaid.png
+  /usr/share/icons/hicolor/48x48/apps/activcalibrate.png
+  /usr/share/icons/hicolor/48x48/apps/activmonitor.png
+  /usr/share/promethean
+  /usr/src/promethean
+  /usr/tmp-promethean/driver/activdevices
+'
+
+build_and_install_promethean_ko() {
+  cat <<'EOF' > /usr/src/promethean/kernel/Makefile.puavo
+obj-m += promethean.o
+promethean-objs += Mathrout.o usbpromethean.o
+
+all:
+	make -C /lib/modules/$(KERNEL_VERSION)/build SUBDIRS="$(PWD)" modules
+
+clean:
+	make -C /lib/modules/$(KERNEL_VERSION)/build SUBDIRS="$(PWD)" clean
+EOF
+
+  # compile promethean.ko for the default kernel only
+  # (does not compile on "fresh")
+  vmlinuz_version=$(readlink /boot/vmlinuz) || true
+  kernel_version=${vmlinuz_version#vmlinuz-}
+
+  if [ -z "$kernel_version" ]; then
+    echo 'Could not determine the default kernel version' >&2
+    exit 1
+  fi
+
+  (
+    cd /usr/src/promethean/kernel
+    module_file="promethean-${kernel_version}.ko"
+    if [ ! -e "modules/${module_file}" ]; then
+      mkdir -p modules
+      make "KERNEL_VERSION=${kernel_version}" clean all
+      mv promethean.ko "modules/${module_file}"
+    fi
+    ln -fns "/usr/src/promethean/kernel/modules/${module_file}" \
+            "/lib/modules/${kernel_version}/kernel/drivers/input/tablet/promethean.ko"
+    if [ "$(uname -r)" = "$kernel_version" ]; then
+      modprobe promethean
+    fi
+  )
+}
+
 case "$command" in
   configure)
     upstream_dir=$1
 
-    # XXX
+    for f in $promethean_links; do
+      mkdir -p "$(dirname "$f")"
+      ln -fsT "${upstream_dir}/${f}" "$f"
+    done
+
+    ln -fsT /usr/lib/x86_64-linux-gnu /usr/share/promethean/lib
+
+    cat <<'EOF' > /usr/share/X11/xorg.conf.d/75-promethean.conf
+Section "InputClass"
+	Identifier   "calibration"
+	MatchProduct "Promethean Limited ACTIVboard"
+	Driver       "evdev"
+EndSection
+EOF
+
+    build_and_install_promethean_ko
     ;;
 
   unconfigure)
     upstream_dir=$1
 
-    # XXX
+    rm -f /lib/modules/*/kernel/drivers/input/tablet/promethean.ko \
+          ${promethean_links} \
+          /usr/share/promethean/lib \
+          /usr/share/X11/xorg.conf.d/75-promethean.conf \
+    rmmod promethean 2>/dev/null || true
     ;;
 
   unpack)
@@ -29,7 +149,7 @@ case "$command" in
   download)
     upstream_pack=$(readlink -f "$1")
     tmpdir=
-    trap '[ -n "$tmpdir" ] && rm -rf "$tmpdir"' EXIT
+    trap '[ -n "$tmpdir" ] && rm -rf "$tmpdir"' 0 INT TERM
     tmpdir=$(mktemp -d)
 
     (
