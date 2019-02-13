@@ -633,6 +633,7 @@ class packages {
     , 'libopencsg1'                       # openscad-nightly
     , 'libqt5quickcontrols2-5'            # mafynetti
     , 'libqt5quicktemplates2-5'           # mafynetti
+    , 'libqt5webenginewidgets5'           # promethean
     , 'libwebkitgtk-1.0-0'                # citrix client
     , 'qml-module-qtquick-controls2'      # mafynetti
     , 'qml-module-qtquick-templates2'     # mafynetti
