@@ -121,6 +121,11 @@ set services {
       /etc/rc5.d/S01nslcd -> /etc/init.d/nslcd
     }}
 
+  { puavo-autopoweroff {
+      /etc/systemd/system/multi-user.target.wants/puavo-autopoweroff.service
+        -> /lib/systemd/system/puavo-autopoweroff.service
+    }}
+
   { puavo-darkdm {
       /etc/systemd/system/multi-user.target.wants/puavo-darkdm.service
         -> /lib/systemd/system/puavo-darkdm.service
