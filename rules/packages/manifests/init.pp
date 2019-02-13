@@ -756,9 +756,9 @@ class packages {
       dkms_modules => $all_dkms_modules,
       package_name => 'linux-image-4.9.0-8-amd64';
 
-    '4.17.0-0.bpo.1-amd64':
+    '4.19.0-0.bpo.1-amd64':
       dkms_modules => [ $virtualbox_module ],
-      package_name => 'linux-image-4.17.0-0.bpo.1-amd64';
+      package_name => 'linux-image-4.19.0-0.bpo.1-amd64';
   }
 
   # Packages which are not restricted per se, but which are required by
