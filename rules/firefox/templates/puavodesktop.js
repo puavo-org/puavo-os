@@ -17,6 +17,8 @@ homepage=getenv("HOMEPAGE");
 
 if (homepage) {
   lockPref("browser.startup.homepage", homepage);
+  lockPref("datareporting.policy.firstRunURL", "");
+  lockPref("startup.homepage_welcome_url", "");
 }
 
 gfx_xrender_enabled = getenv("FIREFOX_LOCKPREF_GFX_XRENDER_ENABLED");
