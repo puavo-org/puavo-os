@@ -180,8 +180,7 @@ class packages {
     , 'systemd-container' ]:
       tag => [ 'tag_builder', 'tag_debian_desktop', ];
 
-    [ 'dmenu'
-    , 'gdm3'
+    [ 'gdm3'
     , 'i3'
     , 'libghc-xmonad-contrib-dev'
     , 'network-manager-openvpn-gnome'
@@ -193,6 +192,7 @@ class packages {
     , 'python-gtk2'
     , 'python-notify'
     , 'shared-mime-info'
+    , 'suckless-tools'
     , 'xmobar'
     , 'xmonad' ]:
       tag => [ 'tag_desktop', 'tag_debian_desktop', ];
@@ -634,6 +634,7 @@ class packages {
     , 'libopencsg1'                       # openscad-nightly
     , 'libqt5quickcontrols2-5'            # mafynetti
     , 'libqt5quicktemplates2-5'           # mafynetti
+    , 'libqt5webenginewidgets5'           # promethean
     , 'libwebkitgtk-1.0-0'                # citrix client
     , 'qml-module-qtquick-controls2'      # mafynetti
     , 'qml-module-qtquick-templates2'     # mafynetti
@@ -756,9 +757,9 @@ class packages {
       dkms_modules => $all_dkms_modules,
       package_name => 'linux-image-4.9.0-8-amd64';
 
-    '4.17.0-0.bpo.1-amd64':
+    '4.19.0-0.bpo.1-amd64':
       dkms_modules => [ $virtualbox_module ],
-      package_name => 'linux-image-4.17.0-0.bpo.1-amd64';
+      package_name => 'linux-image-4.19.0-0.bpo.1-amd64';
   }
 
   # Packages which are not restricted per se, but which are required by

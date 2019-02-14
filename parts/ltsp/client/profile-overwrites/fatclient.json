@@ -1,9 +1,10 @@
 {
-  "puavo.admin.logging.policy":           "send-everything-to-bootserver",
-  "puavo.autopoweroff.enabled":           "true",
-  "puavo.mounts.nethomes.enabled":        "true",
-  "puavo.printing.use_puavo_permissions": "true",
-  "puavo.service.puavo-wlanap.enabled":   "true",
-  "puavo.service.rpc-gssd.enabled":       "true",
-  "puavo.xsessions.display_manager":      "gdm"
+  "puavo.admin.logging.policy":               "send-everything-to-bootserver",
+  "puavo.autopoweroff.enabled":               "true",
+  "puavo.mounts.nethomes.enabled":            "true",
+  "puavo.printing.use_puavo_permissions":     "true",
+  "puavo.service.puavo-autopoweroff.enabled": "true",
+  "puavo.service.puavo-wlanap.enabled":       "true",
+  "puavo.service.rpc-gssd.enabled":           "true",
+  "puavo.xsessions.display_manager":          "gdm"
 }

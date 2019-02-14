@@ -22,6 +22,11 @@ set services {
         -> /lib/systemd/system/fluentd.service
     }}
 
+  { google-cloud-print {
+      /etc/systemd/system/multi-user.target.wants/google-cloud-print.service
+         -> /etc/systemd/system/google-cloud-print.service
+    }}
+
   { incron {
       /etc/systemd/system/multi-user.target.wants/incron.service
          -> /lib/systemd/system/incron.service
@@ -114,6 +119,11 @@ set services {
       /etc/rc3.d/S01nslcd -> /etc/init.d/nslcd
       /etc/rc4.d/S01nslcd -> /etc/init.d/nslcd
       /etc/rc5.d/S01nslcd -> /etc/init.d/nslcd
+    }}
+
+  { puavo-autopoweroff {
+      /etc/systemd/system/multi-user.target.wants/puavo-autopoweroff.service
+        -> /lib/systemd/system/puavo-autopoweroff.service
     }}
 
   { puavo-darkdm {
