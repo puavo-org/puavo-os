@@ -17,7 +17,7 @@ class google_cloud_print {
 
   ::puavo_conf::definition {
     'puavo-google-cloud-print.json':
-      source => 'puppet://modules/google_cloud_print/puavo-google-cloud-print.json';
+      source => 'puppet:///modules/google_cloud_print/puavo-google-cloud-print.json';
   }
 
   user {
