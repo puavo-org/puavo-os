@@ -1,4 +1,4 @@
-// Copyright (C) 2013-2014 Jonas Kümmerlin <rgcjonas@gmail.com>
+// This file is part of the AppIndicator/KStatusNotifierItem GNOME Shell extension
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -17,15 +17,12 @@ const Gio = imports.gi.Gio
 const GLib = imports.gi.GLib
 
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
-const ExtensionSystem = imports.ui.extensionSystem
 
-const StatusNotifierDispatcher = Extension.imports.statusNotifierDispatcher
 const StatusNotifierWatcher = Extension.imports.statusNotifierWatcher
 const Util = Extension.imports.util
 
 let statusNotifierWatcher = null;
 let isEnabled = false;
-let detectExtensionsID = null;
 
 function init() {
     NameWatchdog.init();
@@ -49,19 +46,8 @@ function init() {
 // monitor the bus manually to find out when the name vanished so we can reclaim it again.
 function maybe_enable_after_name_available() {
     // by the time we get called whe might not be enabled
-    if (isEnabled && !NameWatchdog.isPresent && statusNotifierWatcher === null) {
+    if (isEnabled && !NameWatchdog.isPresent && statusNotifierWatcher === null)
         statusNotifierWatcher = new StatusNotifierWatcher.StatusNotifierWatcher();
-
-    //connect to dash-to-dock extension changes. Compatibility with this extension allows
-    //to place indicators in the dash-to-dock
-    detectExtensionsID = ExtensionSystem.connect('extension-state-changed',
-        function (obj, extension) {
-            if (extension.uuid == 'dash-to-dock@micxgx.gmail.com') {
-                //re-add all indicators if dash-to-dock changes its status
-                StatusNotifierDispatcher.IndicatorDispatcher.instance._settingsChanged(null,null);
-            }
-        });
-    }
 }
 
 function enable() {
@@ -70,19 +56,10 @@ function enable() {
 }
 
 function disable() {
-    // XXX hacks to workaround lock screen -related issues
-    // XXX (puavo-desktop-applet dies for no apparent reason after suspend)
-    Util.Logger.debug('not disabling appindicatorsupport (even though requested) due to lock screen -related bugs');
-    return;
     isEnabled = false;
     if (statusNotifierWatcher !== null) {
         statusNotifierWatcher.destroy();
         statusNotifierWatcher = null;
-
-        if (detectExtensionsID) {
-            ExtensionSystem.disconnect(detectExtensionsID);
-            detectExtensionsID = null;
-        }
     }
 }
 
@@ -92,28 +69,26 @@ function disable() {
 const NameWatchdog = {
     onAppeared: null,
     onVanished: null,
-    
+
     _watcher_id: null,
-    
+
     isPresent: false, //will be set in the handlers which are guaranteed to be called at least once
-    
+
     init: function() {
         this._watcher_id = Gio.DBus.session.watch_name("org.kde.StatusNotifierWatcher", 0,
             this._appeared_handler.bind(this), this._vanished_handler.bind(this));
     },
-    
+
     destroy: function() {
         Gio.DBus.session.unwatch_name(this._watcher_id);
     },
-    
+
     _appeared_handler: function() {
-        Util.Logger.debug("bus name appeared");
         this.isPresent = true;
         if (this.onAppeared) this.onAppeared();
     },
-    
+
     _vanished_handler: function() {
-        Util.Logger.debug("bus name vanished");
         this.isPresent = false;
         if (this.onVanished) this.onVanished();
     }

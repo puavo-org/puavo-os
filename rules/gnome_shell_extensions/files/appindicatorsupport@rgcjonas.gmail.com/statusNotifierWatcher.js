@@ -1,5 +1,4 @@
-// Copyright (C) 2011 Giovanni Campagna
-// Copyright (C) 2013-2014 Jonas Kümmerlin <rgcjonas@gmail.com>
+// This file is part of the AppIndicator/KStatusNotifierItem GNOME Shell extension
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -14,6 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 const Gio = imports.gi.Gio
 const GLib = imports.gi.GLib
 const Gtk = imports.gi.Gtk
@@ -26,22 +26,19 @@ const Signals = imports.signals
 const Extension = imports.misc.extensionUtils.getCurrentExtension()
 
 const AppIndicator = Extension.imports.appIndicator
-const Config = Extension.imports.config
+const IndicatorStatusIcon = Extension.imports.indicatorStatusIcon
 const Interfaces = Extension.imports.interfaces
-const StatusNotifierDispatcher = Extension.imports.statusNotifierDispatcher
 const Util = Extension.imports.util
 
 
 // TODO: replace with org.freedesktop and /org/freedesktop when approved
 const KDE_PREFIX = 'org.kde';
-const AYATANA_PREFIX = 'org.ayatana';
-const AYATANA_PATH_PREFIX = '/org/ayatana';
 
 const WATCHER_BUS_NAME = KDE_PREFIX + '.StatusNotifierWatcher';
 const WATCHER_INTERFACE = WATCHER_BUS_NAME;
 const WATCHER_OBJECT = '/StatusNotifierWatcher';
 
-const ITEM_OBJECT = '/StatusNotifierItem';
+const DEFAULT_ITEM_OBJECT_PATH = '/StatusNotifierItem';
 
 /*
  * The StatusNotifierWatcher class implements the StatusNotifierWatcher dbus object
@@ -52,6 +49,7 @@ const StatusNotifierWatcher = new Lang.Class({
     _init: function() {
         this._dbusImpl = Gio.DBusExportedObject.wrapJSObject(Interfaces.StatusNotifierWatcher, this);
         this._dbusImpl.export(Gio.DBus.session, WATCHER_OBJECT);
+        this._cancellable = new Gio.Cancellable;
         this._everAcquiredName = false;
         this._ownName = Gio.DBus.session.own_name(WATCHER_BUS_NAME,
                                   Gio.BusNameOwnerFlags.NONE,
@@ -59,6 +57,8 @@ const StatusNotifierWatcher = new Lang.Class({
                                   Lang.bind(this, this._lostName));
         this._items = { };
         this._nameWatcher = { };
+
+        this._seekStatusNotifierItems();
     },
 
     _acquiredName: function() {
@@ -78,36 +78,88 @@ const StatusNotifierWatcher = new Lang.Class({
         return bus_name + obj_path;
     },
 
+    _registerItem: function(service, bus_name, obj_path) {
+        let id = this._getItemId(bus_name, obj_path);
+
+        if (this._items[id]) {
+            Util.Logger.warn("Item "+id+" is already registered");
+            return;
+        }
+
+        Util.Logger.debug("Registering StatusNotifierItem "+id);
+
+        let indicator = new AppIndicator.AppIndicator(bus_name, obj_path);
+        let visual = new IndicatorStatusIcon.IndicatorStatusIcon(indicator);
+        indicator.connect('destroy', visual.destroy.bind(visual));
+
+        this._items[id] = indicator;
+
+        this._dbusImpl.emit_signal('StatusNotifierItemRegistered', GLib.Variant.new('(s)', service));
+        this._nameWatcher[id] = Gio.DBus.session.watch_name(bus_name, Gio.BusNameWatcherFlags.NONE, null,
+                                                            this._itemVanished.bind(this));
+
+        this._dbusImpl.emit_property_changed('RegisteredStatusNotifierItems', GLib.Variant.new('as', this.RegisteredStatusNotifierItems));
+    },
+
+    _ensureItemRegistered: function(service, bus_name, obj_path) {
+        let id = this._getItemId(bus_name, obj_path);
+
+        if (this._items[id]) {
+            //delete the old one and add the new indicator
+            Util.Logger.warn("Attempting to re-register "+id+"; resetting instead");
+            this._items[id].reset();
+        }
+
+        this._registerItem(service, bus_name, obj_path)
+    },
+
+    _seekStatusNotifierItems: function() {
+        // Some indicators (*coff*, dropbox, *coff*) do not re-register again
+        // when the plugin is enabled/disabled, thus we need to manually look
+        // for the objects in the session bus that implements the
+        // StatusNotifierItem interface...
+        let self = this;
+        Util.traverseBusNames(Gio.DBus.session, this._cancellable, function(bus, name, cancellable) {
+            Util.introspectBusObject(bus, name, cancellable, function(node_info) {
+                return Util.dbusNodeImplementsInterfaces(node_info, ["org.kde.StatusNotifierItem"]);
+            },
+            function(name, path) {
+                let id = self._getItemId(name, path);
+                if (!self._items[id]) {
+                    Util.Logger.debug("Using Brute-force mode for StatusNotifierItem "+id);
+                    self._registerItem(path, name, path);
+                }
+            })
+        });
+    },
+
     RegisterStatusNotifierItemAsync: function(params, invocation) {
         // it would be too easy if all application behaved the same
         // instead, ayatana patched gnome apps to send a path
         // while kde apps send a bus name
-        let service = params[0];
-        let bus_name, obj_path;
+        let [service] = params;
+        let bus_name = null, obj_path = null;
+
         if (service.charAt(0) == '/') { // looks like a path
             bus_name = invocation.get_sender();
             obj_path = service;
-        } else { // we hope it is a bus name
-            bus_name = service;
-            obj_path = ITEM_OBJECT;
+        } else if (service.match(/([a-zA-Z0-9._-]+\.[a-zA-Z0-9.-]+)|(:[0-9]+\.[0-9]+)$/)) {
+            bus_name = Util.getUniqueBusNameSync(invocation.get_connection(), service);
+            obj_path = DEFAULT_ITEM_OBJECT_PATH;
         }
 
-        let id = this._getItemId(bus_name, obj_path);
+        if (!bus_name || !obj_path) {
+            let error = "Impossible to register an indicator for parameters '"+
+                        service.toString()+"'";
+            Util.Logger.warn(error);
 
-        if(this._items[id]) {
-            //delete the old one and add the new indicator
-            Util.Logger.warn("Attempting to re-register "+id+"; resetting instead");
-            this._items[id].reset();
-        } else {
-            Util.Logger.debug("registering "+id+" for the first time.");
-            this._items[id] = new AppIndicator.AppIndicator(bus_name, obj_path);
-            this._dbusImpl.emit_signal('ServiceRegistered', GLib.Variant.new('(s)', service));
-            this._nameWatcher[id] = Gio.DBus.session.watch_name(bus_name, Gio.BusNameWatcherFlags.NONE, null,
-                                        Lang.bind(this, this._itemVanished));
-            StatusNotifierDispatcher.IndicatorDispatcher.instance.dispatch(this._items[id]);
-            this._dbusImpl.emit_property_changed('RegisteredStatusNotifierItems', GLib.Variant.new('as', this.RegisteredStatusNotifierItems));
-            Util.Logger.debug("done registering");
+            invocation.return_dbus_error('org.gnome.gjs.JSError.ValueError',
+                                         error);
+            return;
         }
+
+        this._ensureItemRegistered(service, bus_name, obj_path);
+
         invocation.return_value(null);
     },
 
@@ -125,7 +177,7 @@ const StatusNotifierWatcher = new Lang.Class({
         delete this._items[id];
         Gio.DBus.session.unwatch_name(this._nameWatcher[id]);
         delete this._nameWatcher[id];
-        this._dbusImpl.emit_signal('ServiceUnregistered', GLib.Variant.new('(s)', id));
+        this._dbusImpl.emit_signal('StatusNotifierItemUnregistered', GLib.Variant.new('(s)', id));
         this._dbusImpl.emit_property_changed('RegisteredStatusNotifierItems', GLib.Variant.new('as', this.RegisteredStatusNotifierItems));
     },
 
@@ -141,7 +193,7 @@ const StatusNotifierWatcher = new Lang.Class({
     ProtocolVersion: function() {
         // "The version of the protocol the StatusNotifierWatcher instance implements." [sic]
         // in what syntax?
-        return "%s/%s (KDE; compatible; mostly) GNOME Shell/%s".format(Config.id, Config.version, ShellConfig.PACKAGE_VERSION);
+        return "appindicatorsupport@rgcjonas.gmail.com (KDE; compatible; mostly) GNOME Shell/%s".format(ShellConfig.PACKAGE_VERSION);
     },
 
     get RegisteredStatusNotifierItems() {
@@ -157,6 +209,7 @@ const StatusNotifierWatcher = new Lang.Class({
             // this doesn't do any sync operation and doesn't allow us to hook up the event of being finished
             // which results in our unholy debounce hack (see extension.js)
             Gio.DBus.session.unown_name(this._ownName);
+            this._cancellable.cancel();
             this._dbusImpl.unexport();
             for (var i in this._nameWatcher) {
                 Gio.DBus.session.unwatch_name(this._nameWatcher[i]);

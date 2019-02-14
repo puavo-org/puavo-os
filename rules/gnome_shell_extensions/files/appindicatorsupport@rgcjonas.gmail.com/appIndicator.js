@@ -1,5 +1,4 @@
-// Copyright (C) 2011 Giovanni Campagna
-// Copyright (C) 2013-2014 Jonas Kümmerlin <rgcjonas@gmail.com>
+// This file is part of the AppIndicator/KStatusNotifierItem GNOME Shell extension
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -31,6 +30,7 @@ const Signals = imports.signals
 const DBusMenu = Extension.imports.dbusMenu;
 const IconCache = Extension.imports.iconCache;
 const Util = Extension.imports.util;
+const Interfaces = Extension.imports.interfaces;
 
 const SNICategory = {
     APPLICATION: 'ApplicationStatus',
@@ -54,168 +54,143 @@ const AppIndicator = new Lang.Class({
 
     _init: function(bus_name, object) {
         this.busName = bus_name
+        this._uniqueId = bus_name + object
 
-        this._proxy = new Util.XmlLessDBusProxy({
-            connection: Gio.DBus.session,
-            name: bus_name,
-            path: object,
-            interface: 'org.kde.StatusNotifierItem',
-            propertyWhitelist: [ //keep sorted alphabetically, please
-                'AttentionIconName',
-                'AttentionIconPixmap',
-                'Category',
-                'IconName',
-                'IconPixmap',
-                'IconThemePath',
-                'Id',
-                'Menu',
-                'OverlayIconName',
-                'OverlayIconPixmap',
-                'Status',
-                'Title',
-                'ToolTip',
-                'XAyatanaLabel'
-            ],
-            onReady: (function() {
-                this.isReady = true
-                this.emit('ready')
-            }).bind(this)
-        })
+        let interface_info = Gio.DBusInterfaceInfo.new_for_xml(Interfaces.StatusNotifierItem)
 
-        this._proxy.connect('-property-changed', this._onPropertyChanged.bind(this))
-        this._proxy.connect('-signal', this._translateNewSignals.bind(this))
+        //HACK: we cannot use Gio.DBusProxy.makeProxyWrapper because we need
+        //      to specify G_DBUS_PROXY_FLAGS_GET_INVALIDATED_PROPERTIES
+        this._proxy = new Gio.DBusProxy({ g_connection: Gio.DBus.session,
+                                          g_interface_name: interface_info.name,
+                                          g_interface_info: interface_info,
+                                          g_name: bus_name,
+                                          g_object_path: object,
+                                          g_flags: Gio.DBusProxyFlags.GET_INVALIDATED_PROPERTIES })
+        this._proxy.init_async(GLib.PRIORITY_DEFAULT, null, (function(initable, result) {
+                try {
+                    initable.init_finish(result);
+
+                    this.isReady = true
+                    this.emit('ready')
+                } catch(e) {
+                    Util.Logger.warn("While intializing proxy for "+bus_name+object+": "+e)
+                }
+            }).bind(this))
+
+        this._proxyPropertyList = interface_info.properties.map(function(propinfo) { return propinfo.name })
+
+
+        Util.connectSmart(this._proxy, 'g-properties-changed', this, '_onPropertiesChanged')
+        Util.connectSmart(this._proxy, 'g-signal', this, '_translateNewSignals')
     },
 
     // The Author of the spec didn't like the PropertiesChanged signal, so he invented his own
-    _translateNewSignals: function(proxy, signal, params) {
+    _translateNewSignals: function(proxy, sender, signal, params) {
         if (signal.substr(0, 3) == 'New') {
             let prop = signal.substr(3)
 
-            if (this._proxy.propertyWhitelist.indexOf(prop) > -1)
-                this._proxy.invalidateProperty(prop)
+            if (this._proxyPropertyList.indexOf(prop) > -1)
+                Util.refreshPropertyOnProxy(this._proxy, prop)
 
-            if (this._proxy.propertyWhitelist.indexOf(prop + 'Pixmap') > -1)
-                this._proxy.invalidateProperty(prop + 'Pixmap')
+            if (this._proxyPropertyList.indexOf(prop + 'Pixmap') > -1)
+                Util.refreshPropertyOnProxy(this._proxy, prop + 'Pixmap')
 
-            if (this._proxy.propertyWhitelist.indexOf(prop + 'Name') > -1)
-                this._proxy.invalidateProperty(prop + 'Name')
+            if (this._proxyPropertyList.indexOf(prop + 'Name') > -1)
+                Util.refreshPropertyOnProxy(this._proxy, prop + 'Name')
         } else if (signal == 'XAyatanaNewLabel') {
             // and the ayatana guys made sure to invent yet another way of composing these signals...
-            this._proxy.invalidateProperty('XAyatanaLabel')
+            Util.refreshPropertyOnProxy(this._proxy, 'XAyatanaLabel')
         }
     },
 
     //public property getters
     get title() {
-        return this._proxy.cachedProperties.Title;
+        return this._proxy.Title;
     },
     get id() {
-        return this._proxy.cachedProperties.Id;
+        return this._proxy.Id;
+    },
+    get uniqueId() {
+        return this._uniqueId;
     },
     get status() {
-        return this._proxy.cachedProperties.Status;
+        return this._proxy.Status;
     },
     get label() {
-        return this._proxy.cachedProperties.XAyatanaLabel;
+        let v = this._proxy.get_cached_property('XAyatanaLabel');
+
+        if (v) return v.deep_unpack()
+        else   return null
+    },
+    get menuPath() {
+        return this._proxy.Menu || "/MenuBar"
     },
 
     get attentionIcon() {
         return [
-            this._proxy.cachedProperties.AttentionIconName,
-            this._proxy.cachedProperties.AttentionIconPixmap,
-            this._proxy.cachedProperties.IconThemePath
+            this._proxy.AttentionIconName,
+            this._proxy.AttentionIconPixmap,
+            this._proxy.IconThemePath
         ]
     },
 
     get icon() {
         return [
-            this._proxy.cachedProperties.IconName,
-            this._proxy.cachedProperties.IconPixmap,
-            this._proxy.cachedProperties.IconThemePath
+            this._proxy.IconName,
+            this._proxy.IconPixmap,
+            this._proxy.IconThemePath
         ]
     },
 
     get overlayIcon() {
         return [
-            this._proxy.cachedProperties.OverlayIconName,
-            this._proxy.cachedProperties.OverlayIconPixmap,
-            this._proxy.cachedProperties.IconThemePath
+            this._proxy.OverlayIconName,
+            this._proxy.OverlayIconPixmap,
+            this._proxy.IconThemePath
         ]
     },
 
-    //async because we may need to check the presence of a menubar object as well as the creation is async.
-    getMenuClient: function(clb) {
-        var path = this._proxy.cachedProperties.Menu || "/MenuBar"
-        this._validateMenu(this.busName, path, function(r, name, path) {
-            if (r) {
-                Util.Logger.debug("creating menu on "+[name, path])
-                clb(new DBusMenu.Client(name, path))
-            } else {
-                clb(null);
+    _onPropertiesChanged: function(proxy, changed, invalidated) {
+        let props = Object.keys(changed.deep_unpack())
+
+        props.forEach(function(property) {
+            // some property changes require updates on our part,
+            // a few need to be passed down to the displaying code
+
+            // all these can mean that the icon has to be changed
+            if (property == 'Status' || property.substr(0, 4) == 'Icon' || property.substr(0, 13) == 'AttentionIcon')
+                this.emit('icon')
+
+            // same for overlays
+            if (property.substr(0, 11) == 'OverlayIcon')
+                this.emit('overlay-icon')
+
+            // this may make all of our icons invalid
+            if (property == 'IconThemePath') {
+                this.emit('icon')
+                this.emit('overlay-icon')
             }
-        });
+
+            // the label will be handled elsewhere
+            if (property == 'XAyatanaLabel')
+                this.emit('label')
+
+            // status updates may cause the indicator to be hidden
+            if (property == 'Status')
+                this.emit('status')
+        }, this);
     },
 
-    _validateMenu: function(bus, path, callback) {
-        Gio.DBus.session.call(
-            bus, path, "org.freedesktop.DBus.Properties", "Get",
-            GLib.Variant.new("(ss)", ["com.canonical.dbusmenu", "Version"]),
-            GLib.VariantType.new("(v)"), Gio.DBusCallFlags.NONE, -1, null, function(conn, result) {
-                try {
-                    var val = conn.call_finish(result);
-                } catch (e) {
-                    Util.Logger.warn("Invalid menu: "+e);
-                    return callback(false);
-                }
-                var version = val.deep_unpack()[0].deep_unpack();
-                //fixme: what do we implement?
-                if (version >= 2) {
-                    return callback(true, bus, path);
-                } else {
-                    Util.Logger.warn("Incompatible dbusmenu version: "+version);
-                    return callback(false);
-                }
-            }, null
-        );
-    },
-
-    _onPropertyChanged: function(proxy, property, newValue) {
-        // some property changes require updates on our part,
-        // a few need to be passed down to the displaying code
-
-        // all these can mean that the icon has to be changed
-        if (property == 'Status' || property.substr(0, 4) == 'Icon' || property.substr(0, 13) == 'AttentionIcon')
-            this.emit('icon')
-
-        // same for overlays
-        if (property.substr(0, 11) == 'OverlayIcon')
-            this.emit('overlay-icon')
-
-        // this may make all of our icons invalid
-        if (property == 'IconThemePath') {
-            this.emit('icon')
-            this.emit('overlay-icon')
-        }
-
-        // the label will be handled elsewhere
-        if (property == 'XAyatanaLabel')
-            this.emit('label')
-
-        // status updates are important for the StatusNotifierDispatcher
-        if (property == 'Status')
-            this.emit('status')
-    },
-
-    // triggers a reload of all properties
-    reset: function(triggerReady) {
-        this._proxy.invalidateAllProperties(this.emit.bind(this, 'reset'))
+    reset: function() {
+        //TODO: reload all properties, or do some other useful things
+        this.emit('reset')
     },
 
     destroy: function() {
         this.emit('destroy')
 
         this.disconnectAll()
-        this._proxy.destroy()
+        delete this._proxy
     },
 
     open: function() {
@@ -223,12 +198,19 @@ const AppIndicator = new Lang.Class({
         // nor can we call any X11 functions. Luckily, the Activate method usually works fine.
         // parameters are "an hint to the item where to show eventual windows" [sic]
         // ... and don't seem to have any effect.
-        this._proxy.call({
-            name: 'Activate',
-            paramTypes: 'ii',
-            paramValues: [0, 0]
-            // we don't care about the result
-        })
+        this._proxy.ActivateRemote(0, 0)
+    },
+
+    secondaryActivate: function () {
+        this._proxy.SecondaryActivateRemote(0, 0)
+    },
+
+    scroll: function(dx, dy) {
+        if (dx != 0)
+            this._proxy.ScrollRemote(Math.floor(dx), 'horizontal')
+
+        if (dy != 0)
+            this._proxy.ScrollRemote(Math.floor(dy), 'vertical')
     }
 });
 Signals.addSignalMethods(AppIndicator.prototype);
@@ -239,12 +221,13 @@ const IconActor = new Lang.Class({
     GTypeName: Util.WORKAROUND_RELOAD_TYPE_REGISTER('AppIndicatorIconActor'),
 
     _init: function(indicator, icon_size) {
-        this.parent()
-        this.width  = icon_size
-        this.height = icon_size
+        this.parent({ reactive: true })
+        let scale_factor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
+        this.width  = icon_size * scale_factor
+        this.height = icon_size * scale_factor
 
         this._indicator     = indicator
-        this._iconSize      = icon_size
+        this._iconSize      = icon_size * scale_factor
         this._iconCache     = new IconCache.IconCache()
 
         this._mainIcon    = new St.Bin()
@@ -253,12 +236,13 @@ const IconActor = new Lang.Class({
         this.add_actor(this._mainIcon)
         this.add_actor(this._overlayIcon)
 
-        Util.connectAndRemoveOnDestroy(this._indicator, {
-            'icon':         this._updateIcon.bind(this),
-            'overlay-icon': this._updateOverlayIcon.bind(this),
-            'ready':        this._invalidateIcon.bind(this)
-        }, this)
-        this._iconThemeChangedHandle = Gtk.IconTheme.get_default().connect('changed', this._invalidateIcon.bind(this))
+        Util.connectSmart(this._indicator, 'icon',         this, '_updateIcon')
+        Util.connectSmart(this._indicator, 'overlay-icon', this, '_updateOverlayIcon')
+        Util.connectSmart(this._indicator, 'ready',        this, '_invalidateIcon')
+
+        Util.connectSmart(this, 'scroll-event', this, '_handleScrollEvent')
+
+        Util.connectSmart(Gtk.IconTheme.get_default(), 'changed', this, '_invalidateIcon')
 
         if (indicator.isReady)
             this._invalidateIcon()
@@ -305,9 +289,6 @@ const IconActor = new Lang.Class({
             // we manually look up the icon instead of letting st.icon do it for us
             // this allows us to sneak in an indicator provided search path and to avoid ugly upscaled icons
 
-            // indicator-application looks up a special "panel" variant, we just replicate that here
-            icon_name = icon_name + "-panel"
-
             // icon info as returned by the lookup
             var icon_info = null
 
@@ -324,6 +305,11 @@ const IconActor = new Lang.Class({
             }
 
             // try to look up the icon in the icon theme
+            // indicator-application looks up a special "panel" variant, we just replicate that here
+            if (icon_theme.has_icon(icon_name + "-panel")) {
+                icon_name = icon_name + "-panel"
+            }
+
             icon_info = icon_theme.lookup_icon(icon_name, icon_size,
                                                Gtk.IconLookupFlags.GENERIC_FALLBACK)
 
@@ -378,15 +364,24 @@ const IconActor = new Lang.Class({
             try {
                 let image = new Clutter.Image()
                 image.set_bytes(bytes,
-                                Cogl.PixelFormat.ABGR_8888,
+                                Cogl.PixelFormat.ARGB_8888,
                                 width,
                                 height,
                                 rowstride)
 
+                let scale_factor = 1
+                if (height != 0)
+                    scale_factor = iconSize / height
+                else
+                    scale_factor = St.ThemeContext.get_for_stage(global.stage).scale_factor
+
                 return new Clutter.Actor({
                     width: Math.min(width, iconSize),
                     height: Math.min(height, iconSize),
-                    content: image
+                    content: image,
+                    scale_x: scale_factor,
+                    scale_y: scale_factor,
+                    pivot_point: new Clutter.Point({ x: .5, y: .5 })
                 })
             } catch (e) {
                 // the image data was probably bogus. We don't really know why, but it _does_ happen.
@@ -468,6 +463,29 @@ const IconActor = new Lang.Class({
         this._overlayIcon.set_child(newIcon)
     },
 
+    _handleScrollEvent: function(actor, event) {
+        if (actor != this)
+            return Clutter.EVENT_PROPAGATE
+
+        if (event.get_source() != this)
+            return Clutter.EVENT_PROPAGATE
+
+        if (event.type() != Clutter.EventType.SCROLL)
+            return Clutter.EVENT_PROPAGATE
+
+        // Since Clutter 1.10, clutter will always send a smooth scrolling event
+        // with explicit deltas, no matter what input device is used
+        // In fact, for every scroll there will be a smooth and non-smooth scroll
+        // event, and we can choose which one we interpret.
+        if (event.get_scroll_direction() == Clutter.ScrollDirection.SMOOTH) {
+            let [ dx, dy ] = event.get_scroll_delta()
+
+            this._indicator.scroll(dx, dy)
+        }
+
+        return Clutter.EVENT_STOP
+    },
+
     // called when the icon theme changes
     _invalidateIcon: function() {
         this._iconCache.clear()
@@ -478,10 +496,6 @@ const IconActor = new Lang.Class({
 
     destroy: function() {
         this._iconCache.destroy()
-
-        Util.Logger.debug("Destroying icon actor")
-
-        Gtk.IconTheme.get_default().disconnect(this._iconThemeChangedHandle)
 
         this.parent()
     }
