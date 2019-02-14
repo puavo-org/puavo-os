@@ -30,6 +30,9 @@ class puavomenu {
     '/opt/puavomenu/icons':
       recurse => true,
       source  => 'puppet:///modules/puavomenu/icons';
+
+    '/usr/share/icons/opinsys-nelio-menu.png':
+      source => 'puppet:///modules/puavomenu/icons/opinsys-nelio-menu.png';
   }
 
   ::puavo_conf::definition {
