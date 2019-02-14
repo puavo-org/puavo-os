@@ -142,7 +142,7 @@ SETTINGS.compile_mode = args.compile_yaml
 if not args.dev and args.check:
     SETTINGS.check_mode = False
 
-if not args.dev and args.compile_mode:
+if not args.dev and args.compile_yaml:
     SETTINGS.compile_mode = False
 
 if not SETTINGS.compile_mode:
