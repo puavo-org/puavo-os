@@ -413,6 +413,21 @@ const HostInfoButton = new Lang.Class(
                 this.spacer(c);
                 this.category(c, "No lsusb output listed in the JSON");
             }
+            // xrandr, if present
+
+            if ("xrandr" in json) {
+                this.spacer(c);
+                this.category(c, "Monitors");
+
+                // get around JS's variable scoping weirdness
+                let self = this;
+
+                self.value(self.infoTextBlock, json["xrandr"]);
+            } else {
+                // this can happen, at least in theory...
+                this.spacer(c);
+                this.category(c, "No xrandr output listed in the JSON");
+            }
         } catch (e) {
             this.errorText(c,
                 "Cannot display system information. Try clicking the \"Try again?\" button to see if\n" +

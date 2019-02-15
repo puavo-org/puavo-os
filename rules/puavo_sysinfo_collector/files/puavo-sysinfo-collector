@@ -20,6 +20,7 @@
 # Why, yes, this is my first DBus service ever, can you tell?
 
 require 'dbus'
+require 'etc'
 require 'json'
 require 'facter'
 
@@ -141,6 +142,19 @@ class SystemInfoCollector < DBus::Object
           # wireless info (this needs to be improved)
           x = `lspci -nnk | grep 0280 | cut -c 36-`
           data[:wifi] = x.strip.split("\n").first.strip || ''
+
+          xrandr_output = nil
+          begin
+            gdm_uid = Etc.getpwnam('Debian-gdm').uid
+            gdm_xauthority_path = "/run/user/#{ gdm_uid }/gdm/Xauthority"
+            cmd_env = { 'DISPLAY' => ':0', 'XAUTHORITY' => gdm_xauthority_path }
+            IO.popen([ cmd_env, 'xrandr', '-q' ]) do |io|
+              xrandr_output = io.read
+            end
+          rescue StandardError => e
+            warn "could not query xrandr output: #{ e.message }"
+          end
+          data[:xrandr] = xrandr_output if xrandr_output
         rescue
         end
 
