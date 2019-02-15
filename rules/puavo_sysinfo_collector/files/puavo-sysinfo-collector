@@ -154,7 +154,50 @@ class SystemInfoCollector < DBus::Object
           rescue StandardError => e
             warn "could not query xrandr output: #{ e.message }"
           end
-          data[:xrandr] = xrandr_output if xrandr_output
+          data[:xrandr] = xrandr_output.rstrip if xrandr_output
+
+          battery = {}
+          begin
+            has_battery = false
+            upower_cmd = [ 'upower',
+                           '--show-info',
+                           '/org/freedesktop/UPower/devices/battery_BAT0' ]
+            IO.popen(upower_cmd) do |io|
+              io.readlines.each do |line|
+                key, value = * line.split(':')
+                next unless key.kind_of?(String) && value.kind_of?(String)
+                key.strip!
+                value.strip!
+
+                if key == 'native-path' && value != '(null)' then
+                  has_battery = true
+                  next
+                end
+
+                next unless has_battery
+
+                accepted_keys = %w(capacity
+                                   energy
+                                   energy-empty
+                                   energy-full
+                                   energy-full-design
+                                   model
+                                   percentage
+                                   serial
+                                   state
+                                   technology
+                                   vendor
+                                   voltage
+                                   warning-level)
+
+                battery[key] = value if accepted_keys.include?(key)
+              end
+            end
+          rescue StandardError => e
+            warn "could not query battery information: #{ e.message }"
+          end
+          data[:battery] = battery unless battery.empty?
+
         rescue
         end
 

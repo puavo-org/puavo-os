@@ -413,8 +413,8 @@ const HostInfoButton = new Lang.Class(
                 this.spacer(c);
                 this.category(c, "No lsusb output listed in the JSON");
             }
-            // xrandr, if present
 
+            // xrandr, if present
             if ("xrandr" in json) {
                 this.spacer(c);
                 this.category(c, "Monitors");
@@ -427,6 +427,32 @@ const HostInfoButton = new Lang.Class(
                 // this can happen, at least in theory...
                 this.spacer(c);
                 this.category(c, "No xrandr output listed in the JSON");
+            }
+
+            if ("battery" in json) {
+                this.spacer(c);
+                this.category(c, "Battery");
+
+                // get around JS's variable scoping weirdness
+                let self = this;
+
+                this.titleValue(c, "Vendor", json['battery']['vendor'] || '?')
+                this.titleValue(c, "Model",  json['battery']['model']  || '?')
+                this.titleValue(c, "Serial", json['battery']['serial'] || '?')
+                this.titleValue(c, "State",  json['battery']['state']  || '?')
+                this.titleValue(c, "Warning level",
+                                   json['battery']['warning-level']     || '?')
+                this.titleValue(c, "Energy",  json['battery']['energy'] || '?')
+                this.titleValue(c, "Energy when empty",
+                                   json['battery']['energy-empty'] || '?')
+                this.titleValue(c, "Energy when full",
+                                   json['battery']['energy-full'] || '?')
+                this.titleValue(c, "Energy when full by design",
+                                   json['battery']['energy-full-design'] || '?')
+                this.titleValue(c, "Voltage", json['battery']['voltage']       || '?')
+                this.titleValue(c, "Percentage", json['battery']['percentage'] || '?')
+                this.titleValue(c, "Capacity", json['battery']['capacity']     || '?')
+                this.titleValue(c, "Technology", json['battery']['technology'] || '?')
             }
         } catch (e) {
             this.errorText(c,
