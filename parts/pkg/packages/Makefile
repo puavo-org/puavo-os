@@ -65,7 +65,7 @@ all: $(packagefiles) puavo-pkg-installers-bundle.tar puavo-pkg.json
 
 puavo-pkg.json: $(packagefiles)
 	jq --null-input --arg packages "$(packagedirs)" \
-	  '$$packages | split(" ") | reduce .[] as $$item ({}; .["puavo.pkg." + $$item] = { default: "" })' \
+	  '$$packages | split(" ") | reduce .[] as $$item ({}; .["puavo.pkg." + $$item] = { default: "do-nothing" })' \
 	  > $@.tmp
 	mv $@.tmp $@
 
@@ -91,6 +91,7 @@ puavo-pkg-installers-bundle.tar: $(packagefiles)
 # XXX different hosts, given the same directory tree (paths and contents).
 # XXX This is *not* true, but should be.
 %.tar.gz: %/ %/*
+	./update_package_version $(patsubst %.tar.gz,%,$@)
 	tar --mtime='2000-01-01 00:00:00 +00:00' -c -f - $< | gzip -n > "$@"
 
 .PHONY: clean

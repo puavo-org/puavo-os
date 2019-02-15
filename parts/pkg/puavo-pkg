@@ -16,6 +16,12 @@
 
 g_puavo_pkg_cachedir=/var/cache/puavo-pkg
 g_puavo_pkg_rootdir=/var/lib/puavo-pkg
+g_puavo_pkg_readonly_cachedir="$g_puavo_pkg_cachedir"
+g_puavo_pkg_readonly_rootdir="$g_puavo_pkg_rootdir"
+
+# this can not be overridden with PUAVO_PKG_ROOTDIR by design
+# (we could also move it somewhere else than /var/lib/puavo-pkg/installed)
+g_puavo_pkg_installed_dir="${g_puavo_pkg_rootdir}/installed"
 
 LOG_EMERG=0
 LOG_ALERT=1
@@ -64,14 +70,21 @@ Commands:
 
   list                           list installed packages
 
+  prepare INSTALLER              prepare package with an installer,
+                                 but do not configure it into use
+
   reconfigure PACKAGE            reconfigure installed PACKAGE
   reconfigure --all              reconfigure all installed packages
+
+  reconfigure-upgrade PKG DIR    reconfigure package from new directory
 
   remove PACKAGE                 remove installed PACKAGE
   remove --all                   remove all installed packages
 
   show INSTALLER|PACKAGE         show package details
   show -F|--field FIELD PACKAGE  show specific FIELD
+
+  unconfigure PACKAGE            unconfigure installed PACKAGE
 
 Files:
   /etc/puavo-pkg/puavo-pkg.conf  configuration file
@@ -85,42 +98,58 @@ EOF
     exit 0
 }
 
+logmsg()
+{
+    local human_prio syslog_prio
+
+    human_prio=$1;  shift
+    syslog_prio=$1; shift
+
+    # this should behave nicely in image build as well,
+    # where /dev/log may not exist
+    if [ -S /dev/log ]; then
+        logger -p "$syslog_prio" -t puavo-pkg "$@" || true
+    fi
+    echo "${human_prio}: $@" >&2
+}
+
 log_error()
 {
-    if [ ${g_log_level} -ge ${LOG_ERR} ]; then
-        echo "ERROR: $@" >&2
+    if [ "$g_log_level" -ge "$LOG_ERR" ]; then
+        logmsg ERROR user.err "$@"
     fi
 }
 
 log_info()
 {
-    if [ ${g_log_level} -ge ${LOG_INFO} ]; then
-        echo "INFO: $@" >&2
+    if [ "$g_log_level" -ge "$LOG_INFO" ]; then
+        logmsg INFO user.info "$@"
     fi
 }
 
 log_warning()
 {
-    if [ ${g_log_level} -ge ${LOG_WARNING} ]; then
-        echo "WARNING: $@" >&2
+    if [ "$g_log_level" -ge "$LOG_WARNING" ]; then
+        logmsg WARNING user.warn "$@"
     fi
 }
 
 gc_installations() {
-    local gc_status installed_pkg_version msg pkg_installation pkg_version \
-          root_basedir
+    local currently_installed_link gc_status msg pkg_dir pkg_installation \
+          pkg_name
 
     gc_status=$SC_OK
 
-    for root_basedir in "${g_puavo_pkg_rootdir}"/packages/*; do
-        installed_pkg_version="$(readlink "${root_basedir}/installed")" || true
+    for pkg_dir in "${g_puavo_pkg_rootdir}"/packages/*; do
+        test -d "$pkg_dir" || continue
 
-        for pkg_installation in "$root_basedir"/*; do
-            pkg_version="$(basename "$pkg_installation")"
-            [ "$pkg_version" != 'installed' ] || continue
-            [ -d "$pkg_installation"        ] || continue
+        pkg_name="$(basename "$pkg_dir")"
+        currently_installed_link="${g_puavo_pkg_installed_dir}/${pkg_name}"
 
-            if [ "$installed_pkg_version" != "$pkg_version" ]; then
+        for pkg_installation in "$pkg_dir"/*; do
+            test -d "$pkg_installation" || continue
+
+            if ! [ "$pkg_installation" -ef "$currently_installed_link" ]; then
                 if rm -rf "$pkg_installation"; then
                     log_info "removed old installation in $pkg_installation"
                 else
@@ -131,7 +160,7 @@ gc_installations() {
             fi
         done
 
-        rmdir --ignore-fail-on-non-empty "$root_basedir" 2>/dev/null || true
+        rmdir --ignore-fail-on-non-empty "$pkg_dir" 2>/dev/null || true
     done
 
     if [ "$gc_status" = "$SC_ERR" ]; then
@@ -151,6 +180,8 @@ gc_upstream_packs() {
     gc_status=$SC_OK
 
     for cache_subdir in "$g_puavo_pkg_cachedir"/upstream_packs/*; do
+        test -d "$cache_subdir" || continue
+
         old_upstream_pack_list=$(ls -1t "$cache_subdir" | sed -n '2,$p')
         for old_upstream_pack in $old_upstream_pack_list; do
             upstream_pack_path="${cache_subdir}/${old_upstream_pack}"
@@ -173,12 +204,12 @@ gc_upstream_packs() {
 
 list_installed_pkg_dirs()
 {
-    find "${g_puavo_pkg_rootdir}/packages" \
-        -maxdepth 2                        \
-        -mindepth 2                        \
-        -type l                            \
-        -name installed                    \
-        -exec readlink -z -e {} \; | sort -z
+    find "$g_puavo_pkg_installed_dir" \
+        -maxdepth 1                   \
+        -mindepth 1                   \
+        -type l                       \
+        -exec readlink -z -e {} \;    \
+      | sort -z
 }
 
 list_installed_pkgs()
@@ -186,23 +217,23 @@ list_installed_pkgs()
     local pkg_dir pkg_name
 
     while read -d '' pkg_dir; do
-        pkg_name=$(get_pkg_name "${pkg_dir}") || return 1
-        echo "${pkg_name}" || return 1
+        pkg_name=$(get_pkg_name "$pkg_dir") || return 1
+        echo "$pkg_name" || return 1
     done < <(list_installed_pkg_dirs)
 }
 
-list_installed_pkgs_with_versions()
+list_installed_pkgs_with_dirs()
 {
-    local pkg_dir pkg_name pkg_version col1_len
+    local pkg_dir pkg_name col1_len
 
     col1_len=$(awk 'BEGIN { max = 0 }
                           { max = (length($0) > max) ? length($0) : max }
                     END   { print max }' < <(list_installed_pkgs)) || return 1
 
     while read -d '' pkg_dir; do
-        pkg_name=$(get_pkg_name "${pkg_dir}") || return 1
-        pkg_version=$(get_pkg_version "${pkg_dir}") || return 1
-        printf "%-${col1_len}s %s\n" "${pkg_name}" "${pkg_version}"
+        pkg_name=$(get_pkg_name "$pkg_dir") || return 1
+        pkg_id=$(get_pkg_id "$pkg_dir")
+        printf "%-${col1_len}s    %s\n" "$pkg_name" "$pkg_id"
     done < <(list_installed_pkg_dirs)
 }
 
@@ -219,58 +250,58 @@ get_license_url()
             return 1
         }
     else
-        pkg_dir=$(get_installed_pkg_dir "${identifier}") || return 1
+        pkg_dir=$(get_installed_pkg_dir "$identifier") || return 1
     fi
 
     [ -f "${pkg_dir}/license" ] && echo "file://${pkg_dir}/license"
 }
 
-get_pkg_basedir()
-{
-    echo "${g_puavo_pkg_rootdir}/packages/$1"
-}
-
 get_pkg_link()
 {
-    local pkg_name pkg_basedir
-
-    pkg_name=$1
-    pkg_basedir=$(get_pkg_basedir "${pkg_name}") || return 1
-
-    echo "${pkg_basedir}/installed"
+    echo "${g_puavo_pkg_installed_dir}/$1"
 }
 
 get_pkg_dir()
 {
-    local pkg_name pkg_version pkg_basedir
+    local pkg_dir pkg_id pkg_name
 
     pkg_name=$1
-    pkg_version=$2
-    pkg_basedir=$(get_pkg_basedir "${pkg_name}") || return 1
+    pkg_id=$2
 
-    echo "${pkg_basedir}/${pkg_version}"
+    pkg_dir="${g_puavo_pkg_readonly_rootdir}/packages/${pkg_name}/${pkg_id}"
+    if [ -d "$pkg_dir" ]; then
+       echo "$pkg_dir"
+       return 0
+    fi
+
+    echo "${g_puavo_pkg_rootdir}/packages/${pkg_name}/${pkg_id}"
+}
+
+get_writable_pkg_dir()
+{
+    local pkg_name pkg_id
+
+    pkg_name=$1
+    pkg_id=$2
+
+    echo "${g_puavo_pkg_rootdir}/packages/${pkg_name}/${pkg_id}"
 }
 
 get_installed_pkg_dir()
 {
-    local pkg_name pkg_link
-
-    pkg_name=$1
-    pkg_link=$(get_pkg_link "${pkg_name}") || return 1
-
-    readlink -e "${pkg_link}" || true
+    readlink -e "$(get_pkg_link "$1")" || true
 }
 
-get_installed_pkg_version()
+get_installed_pkg_id()
 {
     local pkg_name pkg_dir
 
     pkg_name=$1
-    pkg_dir=$(get_installed_pkg_dir "${pkg_name}") || return 1
+    pkg_dir=$(get_installed_pkg_dir "$pkg_name") || return 1
 
-    [ -n "${pkg_dir}" ] || return 0
+    [ -n "$pkg_dir" ] || return 0
 
-    basename "${pkg_dir}"
+    basename "$pkg_dir"
 }
 
 get_pkg_name()
@@ -278,44 +309,50 @@ get_pkg_name()
     local pkg_dir pkg_basedir
 
     pkg_dir=$1
-    pkg_basedir=$(dirname "${pkg_dir}") || return 1
+    pkg_basedir=$(dirname "$pkg_dir") || return 1
 
-    basename "${pkg_basedir}"
+    basename "$pkg_basedir"
 }
 
-get_pkg_version()
+get_pkg_id()
 {
     basename "$1"
 }
 
+get_pkg_version() {
+    awk '$1 == "version" { print $2 }' "${1}/.puavo-pkg-version"
+}
+
 configure_pkg()
 {
-    local pkg_name pkg_version pkg_dir upstream_dir installed_pkg_dir pkg_link
+    local pkg_name pkg_id pkg_dir upstream_dir pkg_link
 
     pkg_name=$1
-    pkg_version=$2
-    pkg_dir=$(get_pkg_dir "${pkg_name}" "${pkg_version}") || return 1
-    upstream_dir="${pkg_dir}/upstream"
-    installed_pkg_dir=$(get_installed_pkg_dir "${pkg_name}") || return 1
-    pkg_link=$(get_pkg_link "${pkg_name}") || return 1
+    pkg_id=$2
+    pkg_dir=$(get_pkg_dir "$pkg_name" "$pkg_id") || return 1
 
-    if [ -n "${installed_pkg_dir}" ]; then
-        if [ "${installed_pkg_dir}" != "${pkg_dir}" ]; then
-            log_error "another version of the package has already been " \
-                "configured, unconfigure it before proceeding"
-            return 1
-        fi
+    if [ ! -e "${pkg_dir}/.puavo-pkg-version" ]; then
+      log_error "not configuring ${pkg_name}, it is missing version"
+      return 1
     fi
 
-    pushd "${pkg_dir}" >/dev/null || return 1
-    ./rules configure "${upstream_dir}" || {
+    upstream_dir="${pkg_dir}/upstream"
+    installed_pkg_id=$(get_installed_pkg_id "$pkg_name") || return 1
+    pkg_link=$(get_pkg_link "$pkg_name") || return 1
+
+    if [ -n "$installed_pkg_id" -a "$installed_pkg_id" != "$pkg_id" ]; then
+        unconfigure_pkg "$pkg_name"
+    fi
+
+    pushd "$pkg_dir" >/dev/null || return 1
+    ./rules configure "$upstream_dir" || {
         popd >/dev/null || true
         log_error "failed to configure package '${pkg_name}'"
         return 1
     }
     popd >/dev/null || return 1
 
-    ln -fns "${pkg_version}" "${pkg_link}" || {
+    ln -fns "$pkg_dir" "$pkg_link" || {
         log_error "failed to create a package link"
         return 1
     }
@@ -325,12 +362,12 @@ configure_pkg()
 
 reconfigure_pkg()
 {
-    local pkg_name pkg_version
+    local pkg_name pkg_id
 
     pkg_name=$1
-    pkg_version=$(get_installed_pkg_version "${pkg_name}") || return 1
+    pkg_id=$(get_installed_pkg_id "$pkg_name") || return 1
 
-    configure_pkg "${pkg_name}" "${pkg_version}"
+    configure_pkg "$pkg_name" "$pkg_id"
 }
 
 reconfigure_all_pkgs()
@@ -341,7 +378,7 @@ reconfigure_all_pkgs()
     retval=0
 
     for pkg in ${pkgs}; do
-        reconfigure_pkg "${pkg}" || retval=1
+        reconfigure_pkg "$pkg" || retval=1
     done
 
     return ${retval}
@@ -349,98 +386,104 @@ reconfigure_all_pkgs()
 
 unconfigure_pkg()
 {
-    local pkg_name pkg_link pkg_dir upstream_dir pkg_version
+    local pkg_name pkg_link pkg_dir upstream_dir
 
     pkg_name=$1
-    pkg_version=$2
 
-    pkg_link=$(get_pkg_link "${pkg_name}") || return 1
-    pkg_dir=$(readlink -e "${pkg_link}") || true
+    pkg_link=$(get_pkg_link "$pkg_name") || return 1
+    pkg_dir=$(readlink -e "$pkg_link") || true
     upstream_dir="${pkg_dir}/upstream"
 
-    [ -n "${pkg_dir}" ] || return 0
+    [ -n "$pkg_dir" ] || return 0
 
-    pushd "${pkg_dir}" >/dev/null || return 1
-    ./rules unconfigure "${upstream_dir}" >/dev/null || {
+    pushd "$pkg_dir" >/dev/null || return 1
+    ./rules unconfigure "$upstream_dir" >/dev/null || {
         popd >/dev/null || true
         log_error "failed to unconfigure package '${pkg_name}'"
         return 1
     }
     popd >/dev/null || return 1
 
-    rm -f "${pkg_link}" || return 1
+    rm -f "$pkg_link" || return 1
 
     log_info "${pkg_name}: unconfigured successfully"
 }
 
 unpack_upstream_pack()
 {
-    local pkg_name pkg_version pkg_dir upstream_pack upstream_dir upstream_tmpdir
+    local pkg_name pkg_id pkg_dir upstream_pack upstream_dir upstream_tmpdir
 
     pkg_name=$1
-    pkg_version=$2
-    pkg_dir=$(get_pkg_dir "${pkg_name}" "${pkg_version}") || return 1
+    pkg_id=$2
+    pkg_dir=$(get_writable_pkg_dir "$pkg_name" "$pkg_id") || return 1
     upstream_pack="${pkg_dir}/upstream_pack"
     upstream_dir="${pkg_dir}/upstream"
     upstream_tmpdir="${upstream_dir}.tmp"
 
-    if [ -d "${upstream_dir}" ]; then
+    if [ -d "$upstream_dir" ]; then
         return 0
     fi
 
-    check_md5sum "${pkg_dir}/upstream_pack_md5sum" "${upstream_pack}" || {
-        log_error "upstream pack has incorrect checksum, " \
-            "perhaps you should purge the package and download it again?"
+    if ! check_cksum "${pkg_dir}/upstream_pack_sha384sum" "$upstream_pack"; then
+        log_error 'upstream pack has incorrect checksum,' \
+            'perhaps you should purge the package and download it again?'
         return 1
-    }
+    fi
 
-    rm -rf "${upstream_tmpdir}"
-    mkdir "${upstream_tmpdir}" || return 1
+    rm -rf "$upstream_tmpdir"
+    mkdir "$upstream_tmpdir" || return 1
 
-    pushd "${pkg_dir}" >/dev/null || return 1
-    ./rules unpack "${upstream_pack}" "${upstream_tmpdir}" || {
+    pushd "$pkg_dir" >/dev/null || return 1
+    ./rules unpack "$upstream_pack" "$upstream_tmpdir" || {
         popd >/dev/null || true
-        rm -rf "${upstream_tmpdir}"
+        rm -rf "$upstream_tmpdir"
         return 1
     }
     popd >/dev/null || {
-        rm -rf "${upstream_tmpdir}"
+        rm -rf "$upstream_tmpdir"
         return 1
     }
 
-    mv -T "${upstream_tmpdir}" "${upstream_dir}" || {
-        rm -rf "${upstream_tmpdir}"
+    mv -T "$upstream_tmpdir" "$upstream_dir" || {
+        rm -rf "$upstream_tmpdir"
         return 1
     }
 
     ## Remove the upstream pack, it is not needed anymore since we just
     ## unpacked it successfully.
-    rm -f "${upstream_pack}"
+    rm -f "$upstream_pack"
 
     log_info "${pkg_name}: unpacked upstream pack successfully"
 }
 
-check_md5sum()
+check_cksum()
 {
-    local md5sum_file file actual_md5sum_str expected_md5sum_str
+    local cksum_file cksum_file_contents file actual_cksum_str \
+          expected_cksum_str
 
-    md5sum_file=$1
+    cksum_file=$1
     file=$2
 
-    [ -r "${file}" ] || return 1
+    [ -r "$file" ] || return 1
 
-    [ -r "${md5sum_file}" ] || return 0
-    expected_md5sum_str=$(cat "${md5sum_file}") || return 1
+    [ -r "$cksum_file" ] || return 0
+    cksum_file_contents=$(cat "$cksum_file") || return 1
+    expected_cksum_str=${cksum_file_contents#\! }
 
-    actual_md5sum_str=$(md5sum "${file}" 2>/dev/null | awk '{ print $1 }')
+    actual_cksum_str=$(sha384sum "$file" 2>/dev/null | awk '{ print $1 }')
 
-    [ -n "$actual_md5sum_str"   ] || return 1
-    [ -n "$expected_md5sum_str" ] || return 1
+    [ -n "$actual_cksum_str"   ] || return 1
+    [ -n "$expected_cksum_str" ] || return 1
 
-    if [ "$actual_md5sum_str" != "$expected_md5sum_str" ]; then
-        log_error "expected checksum '${expected_md5sum_str}' in '${file}'," \
-                  "yet actual checksum is '${actual_md5sum_str}'"
-        return 1
+    if [ "$actual_cksum_str" != "$expected_cksum_str" ]; then
+        if [ "$expected_cksum_str" = "$cksum_file_contents" ]; then
+            log_error "expected checksum '${expected_cksum_str}' in '${file}'," \
+                      "yet actual checksum is '${actual_cksum_str}'"
+            return 1
+        fi
+        log_warning "expected checksum '${expected_cksum_str}' in '${file}'," \
+                    "yet actual checksum is '${actual_cksum_str}'," \
+                    "yet continuing as checksum was marked advisory only"
     fi
 
     return 0
@@ -448,45 +491,51 @@ check_md5sum()
 
 cache_load_upstream_pack()
 {
-    local pkg_name pkg_version pkg_dir upstream_pack md5sum_file md5sum_str cached_upstream_pack
+    local pkg_name pkg_id pkg_dir upstream_pack cksum_file cksum_str cached_upstream_pack
 
     pkg_name=$1
-    pkg_version=$2
+    pkg_id=$2
 
-    [ -n "${g_puavo_pkg_cachedir}" ] || return 0
+    [ -n "$g_puavo_pkg_cachedir" ] || return 0
 
-    pkg_dir=$(get_pkg_dir "${pkg_name}" "${pkg_version}") || return 1
+    pkg_dir=$(get_writable_pkg_dir "$pkg_name" "$pkg_id") || return 1
     upstream_pack="${pkg_dir}/upstream_pack"
-    md5sum_file="${pkg_dir}/upstream_pack_md5sum"
+    cksum_file="${pkg_dir}/upstream_pack_sha384sum"
 
-    [ -r "${md5sum_file}"  ] || return 0
-    md5sum_str=$(cat "${md5sum_file}") || return 1
+    [ -r "${cksum_file}"  ] || return 0
+    cksum_str=$(cat "${cksum_file}") || return 1
 
-    [ -n "${md5sum_str}" ] || return 0
+    [ -n "${cksum_str}" ] || return 0
 
-    cached_upstream_pack="${g_puavo_pkg_cachedir}/upstream_packs/${pkg_name}/${md5sum_str}"
-    if [ -r "${cached_upstream_pack}" ]; then
-        cp -a -T "${cached_upstream_pack}" "${upstream_pack}" || return 1
-        log_info "${pkg_name}: loaded upstream pack from the cache successfully"
+    cached_upstream_pack="${g_puavo_pkg_cachedir}/upstream_packs/${pkg_name}/${cksum_str}"
+    cached_readonly_upstream_pack="${g_puavo_pkg_readonly_cachedir}/upstream_packs/${pkg_name}/${cksum_str}"
+    if [ -r "$cached_upstream_pack" ]; then
+        cp -a -T "$cached_upstream_pack" "$upstream_pack" || return 1
+        log_info "${pkg_name}: loaded the upstream pack from the cache"
+    elif [ -r "$cached_readonly_upstream_pack" ]; then
+        cp -a -T "$cached_readonly_upstream_pack" "$upstream_pack" || return 1
+        log_info "${pkg_name}: loaded the upstream pack from the readonly cache"
     fi
 }
 
 cache_save_upstream_pack()
 {
-    local pkg_name pkg_version pkg_dir upstream_pack md5sum_str
+    local pkg_name pkg_id pkg_dir upstream_pack cksum_str
 
     pkg_name=$1
-    pkg_version=$2
+    pkg_id=$2
 
-    [ -n "${g_puavo_pkg_cachedir}" ] || return 0
+    [ -n "$g_puavo_pkg_cachedir" ] || return 0
 
-    pkg_dir=$(get_pkg_dir "${pkg_name}" "${pkg_version}") || return 1
+    pkg_dir=$(get_writable_pkg_dir "$pkg_name" "$pkg_id") || return 1
     upstream_pack="${pkg_dir}/upstream_pack"
-    md5sum_str=$(md5sum "${upstream_pack}" | cut -d' ' -f1)
+    cksum_str=$(sha384sum "$upstream_pack" | cut -d' ' -f1)
 
-    if [ -n "${md5sum_str}" ]; then
+    if [ -n "$cksum_str" ]; then
         mkdir -p "${g_puavo_pkg_cachedir}/upstream_packs/${pkg_name}"
-        cp -a -T "${upstream_pack}" "${g_puavo_pkg_cachedir}/upstream_packs/${pkg_name}/${md5sum_str}" || return 1
+        cp -a -T "$upstream_pack" \
+                 "${g_puavo_pkg_cachedir}/upstream_packs/${pkg_name}/${cksum_str}" \
+          || return 1
     fi
 
     log_info "${pkg_name}: saved upstream pack to cache successfully"
@@ -494,19 +543,19 @@ cache_save_upstream_pack()
 
 download_upstream_pack()
 {
-    local pkg_name pkg_version pkg_dir upstream_pack upstream_tmppack
+    local pkg_name pkg_id pkg_dir upstream_pack upstream_tmppack
 
     pkg_name=$1
-    pkg_version=$2
-    pkg_dir=$(get_pkg_dir "${pkg_name}" "${pkg_version}") || return 1
+    pkg_id=$2
+    pkg_dir=$(get_writable_pkg_dir "$pkg_name" "$pkg_id") || return 1
     upstream_pack="${pkg_dir}/upstream_pack"
     upstream_tmppack="${upstream_pack}.tmp"
 
-    cache_load_upstream_pack "${pkg_name}" "${pkg_version}" || {
+    cache_load_upstream_pack "$pkg_name" "$pkg_id" || {
         log_warning "${pkg_name}: failed to load the upstream pack from the cache"
     }
 
-    if check_md5sum "${pkg_dir}/upstream_pack_md5sum" "${upstream_pack}"; then
+    if check_cksum "${pkg_dir}/upstream_pack_sha384sum" "${upstream_pack}"; then
         return 0
     fi
 
@@ -537,136 +586,173 @@ download_upstream_pack()
         }
     fi
 
-    check_md5sum "${pkg_dir}/upstream_pack_md5sum" "${upstream_tmppack}" || {
+    if ! check_cksum "${pkg_dir}/upstream_pack_sha384sum" "${upstream_tmppack}"; then
         log_error "downloaded upstream pack has incorrect checksum"
         rm -rf "${upstream_tmppack}"
         return 1
-    }
+    fi
 
-    mv -T "${upstream_tmppack}" "${upstream_pack}" || {
+    if ! mv -T "${upstream_tmppack}" "${upstream_pack}"; then
         rm -rf "${upstream_pack}"
         return 1
-    }
+    fi
 
-    cache_save_upstream_pack "${pkg_name}" "${pkg_version}" || {
+    if ! cache_save_upstream_pack "$pkg_name" "$pkg_id"; then
         log_warning "${pkg_name}: failed to save upstream pack to the cache"
-    }
+    fi
 
     log_info "${pkg_name}: downloaded upstream pack successfully"
 }
 
-get_md5sum()
+get_pkg_id_from_installer()
 {
-    local file output
+    local installer pkg_id
+    installer=$1
 
-    file=$1
-    output=$(md5sum "${file}") || return 1
+    pkg_id=$(
+      tar --wildcards -Ozx -f "$installer" '*/.puavo-pkg-version' \
+        | awk '$1 == "package-id" { print $2 }')
 
-    awk '{print $1}' <<<"${output}"
+    if [ -z "$pkg_id" ]; then
+        log_error "could not determine package id from '${installer}'"
+        return 1
+    fi
+
+    echo "$pkg_id"
 }
 
 extract_installer()
 {
-    local installer pkg_name pkg_version pkg_dir pkg_tmpdir pkg_format
+    local installer pkg_name pkg_id pkg_dir pkg_tmpdir pkg_format
 
     installer=$1
-    pkg_name=$(basename "${installer}" .tar.gz) || return 1
+    pkg_name=$(basename "$installer" .tar.gz) || return 1
 
-    if [ ! -f "${installer}" ]; then
+    if [ ! -f "$installer" ]; then
         log_error "installer '${installer}' does not exist"
         return 1
     fi
 
-    pkg_version=$(get_md5sum "${installer}") || return 1
+    pkg_id=$(get_pkg_id_from_installer "$installer") || return 1
 
-    pkg_dir=$(get_pkg_dir "${pkg_name}" "${pkg_version}")
+    pkg_dir=$(get_writable_pkg_dir "$pkg_name" "$pkg_id")
     pkg_tmpdir="${pkg_dir}.tmp"
 
-    if [ -d "${pkg_dir}" ]; then
-        echo "${pkg_dir}"
+    if [ -d "$pkg_dir" ]; then
+        echo "$pkg_dir"
         return
     fi
 
-    mkdir -p "${pkg_tmpdir}" || return 1
+    mkdir -p "$pkg_tmpdir" || return 1
 
     tar --no-same-owner --no-same-permissions --strip-components=1 \
-        -z -x -f "${installer}" -C "${pkg_tmpdir}"  || {
-        rm -rf "${pkg_tmpdir}"
+        -z -x -f "$installer" -C "$pkg_tmpdir" || {
+        rm -rf "$pkg_tmpdir"
         return 1
     }
 
-    ## Format file is optional in package format 1.
-    pkg_format=1
-    if [ -f "${pkg_tmpdir}/format" ]; then
-        pkg_format=$(cat "${pkg_tmpdir}/format") || {
-            log_error "failed to read installer format"
-            rm -rf "${pkg_tmpdir}"
-            return 1
-        }
-    fi
-
-    if [ "${pkg_format}" != "${SUPPORTED_PKG_FORMAT}" ]; then
-        log_error "installer has unsupported format"
-        rm -rf "${pkg_tmpdir}"
+    pkg_format=$(awk '$1 == "pkg-format" && $2 ~ /^[0-9]+$/ { print $2 }' \
+                   "${pkg_tmpdir}/.puavo-pkg-version")
+    if [ -z "$pkg_format" ]; then
+        log_error "failed to read installer format"
+        rm -rf "$pkg_tmpdir"
         return 1
     fi
 
-    mv -T "${pkg_tmpdir}" "${pkg_dir}" || {
-        rm -rf "${pkg_tmpdir}"
+    if [ "$pkg_format" -gt "$SUPPORTED_PKG_FORMAT" ]; then
+        log_error "installer has unsupported format $pkg_format"
+        rm -rf "$pkg_tmpdir"
+        return 1
+    fi
+
+    mv -T "$pkg_tmpdir" "$pkg_dir" || {
+        rm -rf "$pkg_tmpdir"
         return 1
     }
 
     log_info "${pkg_name}: extracted installer file successfully"
 
-    echo "${pkg_dir}"
+    echo "$pkg_dir"
 }
 
-install_pkg_with_installer()
+prepare_pkg_with_installer()
 {
-    local installer pkg_dir pkg_name pkg_version old_pkg_version old_pkg_dir
+    local installer pkg_dir pkg_name pkg_id
 
     installer=$1
-    pkg_dir=$(extract_installer "${installer}") || {
-        log_error "failed to extract '${installer}'"
+
+    pkg_dir=$(extract_installer "$installer") || {
+        log_error "failed to extract '$installer'"
         return 1
     }
 
-    pkg_name=$(get_pkg_name "${pkg_dir}") || return 1
-    pkg_version=$(get_pkg_version "${pkg_dir}") || return 1
+    pkg_name=$(get_pkg_name "$pkg_dir") || return 1
+    pkg_id=$(get_pkg_id "$pkg_dir") || return 1
 
-    download_upstream_pack "${pkg_name}" "${pkg_version}" || {
+    download_upstream_pack "$pkg_name" "$pkg_id" || {
         log_error "failed to download the upstream pack of package '${pkg_name}'"
         return 1
     }
 
-    unpack_upstream_pack "${pkg_name}" "${pkg_version}" || {
+    unpack_upstream_pack "$pkg_name" "$pkg_id" || {
         log_error "failed to unpack the upstream pack of package '${pkg_name}'"
         return 1
     }
 
-    old_pkg_version=$(get_installed_pkg_version "${pkg_name}") || return 1
-    if [ -n "${old_pkg_version}" -a "${old_pkg_version}" != "${pkg_version}" ]; then
-        unconfigure_pkg "${pkg_name}" "${old_pkg_version}" || {
+    log_info "${pkg_name}: prepared for configuration"
+
+    echo "$pkg_dir"
+}
+
+reconfigure_upgrade_pkg() {
+    local pkg_name pkg_dir pkg_id old_pkg_id
+
+    pkg_name=$1
+    pkg_dir=$2
+
+    pkg_id=$(get_pkg_id "$pkg_dir") || return 1
+    old_pkg_id=$(get_installed_pkg_id "$pkg_name") || return 1
+
+    if [ -n "$old_pkg_id" -a "$old_pkg_id" != "$pkg_id" ]; then
+        if ! unconfigure_pkg "$pkg_name"; then
             log_error "failed to unconfigure package '${pkg_name}'"
             return 1
-        }
+        fi
     fi
 
-    configure_pkg "${pkg_name}" "${pkg_version}" || {
-        log_error "${pkg_name}: failed to configure package version '${pkg_version}'"
-        if [ -n "${old_pkg_version}" -a "${old_pkg_version}" != "${pkg_version}" ]; then
-            configure_pkg "${pkg_name}" "${old_pkg_version}" || {
-                log_error "${pkg_name}: failed to reconfigure the previous version '${old_pkg_version}'"
+    if ! configure_pkg "$pkg_name" "$pkg_id"; then
+        # if configuration fails, try to reconfigure the old version again
+        log_error "${pkg_name}: failed to configure package version '${pkg_id}'"
+        if [ -n "$old_pkg_id" -a "$old_pkg_id" != "$pkg_id" ]; then
+            if ! configure_pkg "$pkg_name" "$old_pkg_id"; then
+                log_error "${pkg_name}: failed to reconfigure the previous" \
+                          "version '${old_pkg_id}'"
                 return 1
-            }
-            log_info "${pkg_name}: reconfigured the previous version '${old_pkg_version}' successfully"
+            fi
+            log_info "${pkg_name}: reconfigured the previous" \
+                     "version '${old_pkg_id}' successfully"
         fi
         return 1
-    }
+    fi
+}
 
-    if [ -n "${old_pkg_version}" -a "${old_pkg_version}" != "${pkg_version}" ]; then
-        old_pkg_dir=$(get_pkg_dir "${pkg_name}" "${old_pkg_version}") \
-            && rm -rf "${old_pkg_dir}" || true
+install_pkg_with_installer()
+{
+    local installer pkg_dir pkg_name pkg_id old_pkg_id old_pkg_dir
+
+    installer=$1
+    pkg_dir=$(prepare_pkg_with_installer "$installer") || return 1
+
+    pkg_name=$(get_pkg_name "$pkg_dir") || return 1
+
+    reconfigure_upgrade_pkg "$pkg_name" "$pkg_dir" || return 1
+
+    pkg_id=$(get_pkg_id "$pkg_dir") || return 1
+    old_pkg_id=$(get_installed_pkg_id "$pkg_name") || return 1
+
+    if [ -n "$old_pkg_id" -a "$old_pkg_id" != "$pkg_id" ]; then
+        old_pkg_dir=$(get_writable_pkg_dir "$pkg_name" "$old_pkg_id") \
+            && rm -rf "$old_pkg_dir" || true
     fi
 
     log_info "${pkg_name}: installed successfully"
@@ -674,17 +760,17 @@ install_pkg_with_installer()
 
 remove_pkg()
 {
-    local pkg_name pkg_dir pkg_version
+    local pkg_name pkg_dir pkg_id
 
     pkg_name=$1
 
-    pkg_version=$(get_installed_pkg_version "${pkg_name}") || return 1
-    if [ -n "${pkg_version}" ]; then
-        unconfigure_pkg "${pkg_name}" "${pkg_version}" || {
+    pkg_id=$(get_installed_pkg_id "$pkg_name") || return 1
+    if [ -n "${pkg_id}" ]; then
+        unconfigure_pkg "$pkg_name" || {
             log_error "failed to unconfigure package '${pkg_name}'"
             return 1
         }
-        pkg_dir=$(get_pkg_dir "${pkg_name}" "${pkg_version}") || return 1
+        pkg_dir=$(get_writable_pkg_dir "$pkg_name" "$pkg_id") || return 1
         rm -rf "${pkg_dir}" || return 1
         log_info "removed package '${pkg_name}'"
         return 0
@@ -702,7 +788,7 @@ remove_all_pkgs()
     retval=0
 
     for pkg in ${pkgs}; do
-        remove_pkg "${pkg}" || retval=1
+        remove_pkg "$pkg" || retval=1
     done
 
     return ${retval}
@@ -710,30 +796,35 @@ remove_all_pkgs()
 
 show_pkg()
 {
-    local pkg_name pkg_dir pkg_version pkg_legend pkg_description pkg_field identifier INSTALLER_REGEX
+    local pkg_name pkg_dir pkg_id pkg_legend pkg_description pkg_field identifier INSTALLER_REGEX
 
     identifier=$1
     pkg_field=$2
 
     INSTALLER_REGEX='\.tar\.gz$'
 
-    if [[ "${identifier}" =~ ${INSTALLER_REGEX} ]]; then
-        pkg_dir=$(extract_installer "${identifier}") || {
+    if [[ "$identifier" =~ ${INSTALLER_REGEX} ]]; then
+        pkg_dir=$(extract_installer "$identifier") || {
             log_error "failed to extract installer '${identifier}'"
             return 1
         }
     else
-        pkg_dir=$(get_installed_pkg_dir "${identifier}") || return 1
+        pkg_dir=$(get_installed_pkg_dir "$identifier") || return 1
     fi
 
-    pkg_name=$(get_pkg_name "${pkg_dir}") || return 1
-    pkg_version=$(get_pkg_version "${pkg_dir}") || return 1
-    if [ -z "${pkg_version}" ]; then
+    pkg_name=$(get_pkg_name "$pkg_dir") || return 1
+    pkg_id=$(get_pkg_id "$pkg_dir") || return 1
+    if [ -z "${pkg_id}" ]; then
         log_error "package ${pkg_name} is not installed"
         return 1
     fi
 
-    pkg_legend="${pkg_name}"
+    pkg_version=$(get_pkg_version "$pkg_dir") || return 1
+    if [ -z "$pkg_version" ]; then
+      pkg_version='?'
+    fi
+
+    pkg_legend="$pkg_name"
     if [ -r "${pkg_dir}/legend" ]; then
         pkg_legend=$(head -n1 "${pkg_dir}/legend") || return 1
     fi
@@ -743,24 +834,28 @@ show_pkg()
         pkg_description=$(cat "${pkg_dir}/description") || return 1
     fi
 
-    case "${pkg_field}" in
+    case "$pkg_field" in
         Name)
-            echo "${pkg_name}"
+            echo "$pkg_name"
+            ;;
+        Id)
+            echo "$pkg_id"
             ;;
         Version)
-            echo "${pkg_version}"
+            echo "$pkg_version"
             ;;
         Directory)
-            echo "${pkg_dir}"
+            echo "$pkg_dir"
             ;;
         Legend)
-            echo "${pkg_legend}"
+            echo "$pkg_legend"
             ;;
         Description)
-            echo "${pkg_description}"
+            echo "$pkg_description"
             ;;
         '')
             echo "Name: ${pkg_name}"
+            echo "Id: ${pkg_id}"
             echo "Version: ${pkg_version}"
             echo "Directory: ${pkg_dir}"
             echo "Legend: ${pkg_legend}"
@@ -836,18 +931,27 @@ fi
 ## Override default configuration with values from the config file.
 if [ -r /etc/puavo-pkg/puavo-pkg.conf ]; then
     . /etc/puavo-pkg/puavo-pkg.conf
-    if [ ! -z ${PUAVO_PKG_ROOTDIR+x} ]; then
-        g_puavo_pkg_rootdir="${PUAVO_PKG_ROOTDIR}"
-    fi
     if [ ! -z ${PUAVO_PKG_CACHEDIR+x} ]; then
-        g_puavo_pkg_cachedir="${PUAVO_PKG_CACHEDIR}"
+        g_puavo_pkg_cachedir="$PUAVO_PKG_CACHEDIR"
+    fi
+    if [ ! -z ${PUAVO_PKG_ROOTDIR+x} ]; then
+        g_puavo_pkg_rootdir="$PUAVO_PKG_ROOTDIR"
+    fi
+    if [ ! -z ${PUAVO_PKG_READONLY_CACHEDIR+x} ]; then
+        g_puavo_pkg_readonly_cachedir="$PUAVO_PKG_READONLY_CACHEDIR"
+    fi
+    if [ ! -z ${PUAVO_PKG_READONLY_ROOTDIR+x} ]; then
+        g_puavo_pkg_readonly_rootdir="$PUAVO_PKG_READONLY_ROOTDIR"
     fi
 fi
 
 ## Validate configuration.
-[[ "${g_puavo_pkg_rootdir}" =~ ^/ ]] || usage_error "invalid root dir path"
+[[ "$g_puavo_pkg_rootdir" =~ ^/ ]] || usage_error "invalid root dir path"
 
-mkdir -p "${g_puavo_pkg_rootdir}/packages"
+[[ "$g_puavo_pkg_readonly_rootdir" =~ ^/ ]] \
+  || usage_error "invalid readonly root dir path"
+
+mkdir -p "${g_puavo_pkg_rootdir}/packages" "$g_puavo_pkg_installed_dir"
 
 command=$1
 shift
@@ -871,7 +975,11 @@ case "${command}" in
         ;;
     list)
         assert_args_count -eq 0 "$@"
-        list_installed_pkgs_with_versions
+        list_installed_pkgs_with_dirs
+        ;;
+    prepare)
+        assert_args_count -eq 1 "$@"
+        prepare_pkg_with_installer "$1" > /dev/null
         ;;
     reconfigure)
         assert_args_count -eq 1 "$@"
@@ -880,6 +988,10 @@ case "${command}" in
         else
             reconfigure_pkg "$1"
         fi
+        ;;
+    reconfigure-upgrade)
+        assert_args_count -eq 2 "$@"
+        reconfigure_upgrade_pkg "$1" "$2"
         ;;
     remove)
         assert_args_count -eq 1 "$@"
@@ -902,6 +1014,10 @@ case "${command}" in
                 show_pkg "$1" ""
                 ;;
         esac
+        ;;
+    unconfigure)
+        assert_args_count -eq 1 "$@"
+        unconfigure_pkg "$1"
         ;;
     *)
         usage_error "unknown command '${command}'"
