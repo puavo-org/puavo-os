@@ -2,89 +2,179 @@
 
 set -eu
 
+status=0
+
+remote_mountdir='/var/mnt/bootserver/puavo-pkg'
+remote_cachedir="${remote_mountdir}/cache"
+remote_rootdir="${remote_mountdir}/root"
+
+local_cachedir='/images/puavo-pkg/cache'
+local_rootdir='/images/puavo-pkg/root'
+
+system_cachedir='/var/cache/puavo-pkg'
+system_rootdir='/var/lib/puavo-pkg'
+
 install_puavo_pkg_conf() {
   puavo_pkg_cachedir=$1
   puavo_pkg_rootdir=$2
+  puavo_pkg_readonly_cachedir=$3
+  puavo_pkg_readonly_rootdir=$4
 
   puavo_pkg_conf_path='/etc/puavo-pkg/puavo-pkg.conf'
 
   mkdir -p /etc/puavo-pkg
 
-  cat <<EOF > "${puavo_pkg_conf_path}.tmp"
-PUAVO_PKG_CACHEDIR=${puavo_pkg_cachedir}
-PUAVO_PKG_ROOTDIR=${puavo_pkg_rootdir}
-EOF
+  {
+    [ -n "$puavo_pkg_cachedir" ] \
+      && echo "PUAVO_PKG_CACHEDIR=${puavo_pkg_cachedir}"
+    [ -n "$puavo_pkg_rootdir" ] \
+      && echo "PUAVO_PKG_ROOTDIR=${puavo_pkg_rootdir}"
+    [ -n "$puavo_pkg_readonly_cachedir" ] \
+      && echo "PUAVO_PKG_READONLY_CACHEDIR=${puavo_pkg_readonly_cachedir}"
+    [ -n "$puavo_pkg_readonly_rootdir" ] \
+      && echo "PUAVO_PKG_READONLY_ROOTDIR=${puavo_pkg_readonly_rootdir}"
+  } > "${puavo_pkg_conf_path}.tmp"
 
   mv "${puavo_pkg_conf_path}.tmp" "$puavo_pkg_conf_path"
-}
-
-status=0
-
-image_puavo_pkg_cachedir='/var/cache/puavo-pkg'
-image_puavo_pkg_rootdir='/var/lib/puavo-pkg'
-
-install_puavo_pkg_conf "$image_puavo_pkg_cachedir" "$image_puavo_pkg_rootdir"
-
-test_puavopkg_installation() {
-  # this is faster than "puavo-pkg show $1"
-  puavo_pkg=$1
-  installed_path="${puavo_pkg_rootdir}/packages/${puavo_pkg}/installed"
-  [ -h "$installed_path" -a -d "$installed_path" ]
 }
 
 reconfigure_puavopkg() {
   timeout -k 5 30 puavo-pkg reconfigure "$@"
 }
 
-# We configure the "smartboard" and "ti-nspire-cx-cas-ss" puavo-pkg packages
-# in system image in case those are installed, because they are unconfigured
-# by default and their configuration is dependent on puavo-conf variables
-# "puavo.nonfree.smartboard.enabled" and
-# "puavo.nonfree.ti_nspire_cx_cas_ss.enabled".
-if test_puavopkg_installation smartboard; then
-  reconfigure_puavopkg smartboard || status=1
-fi
-if test_puavopkg_installation ti-nspire-cx-cas-ss; then
-  reconfigure_puavopkg ti-nspire-cx-cas-ss || status=1
-fi
+reconfigure_upgrade_pkg() {
+  timeout -k 5 30 puavo-pkg reconfigure-upgrade "$@"
+}
 
-# Then setup puavo-pkg configuration to include possible locally installed
-# puavo-pkg images.  (Note that this does not install or update
-# the puavo-pkg packages, only sets them up at boottime).
+test_puavopkg_installation() {
+  puavo_pkg=$1
 
-host_puavo_pkg_dir='/images/puavo-pkg'
-host_puavo_pkg_cachedir="${host_puavo_pkg_dir}/cache"
-host_puavo_pkg_rootdir="${host_puavo_pkg_dir}/root"
+  installed_path="${system_rootdir}/installed/${puavo_pkg}"
+  test -h "$installed_path" -a -d "$installed_path"
+}
 
-install_puavo_pkg_conf "$host_puavo_pkg_cachedir" "$host_puavo_pkg_rootdir"
+get_installed_version() {
+  pkg_name=$1
+  syspkg_conflink="${system_rootdir}/installed/${pkg_name}"
+  syspkg_version=$(
+    awk '$1 == "version" && $2 ~ /^[0-9]+$/ { print $2 }' \
+      "${syspkg_conflink}/.puavo-pkg-version" 2>/dev/null || true)
+  if [ -z "$syspkg_version" ]; then
+    syspkg_version=0
+  fi
 
-# mount /images/puavo-pkg from bootserver in case we have booted from network
-# XXX disabled until this works
-if false && [ -e /run/puavo/nbd-server ]; then
+  echo "$syspkg_version"
+}
+
+get_dir_with_latest_version() {
+  other_pkg_dir=$1
+  current_version=$2
+
+  latest_pkg_dir=
+  latest_pkg_version=0
+
+  for pkgid_dir in ${other_pkg_dir}/*; do
+    test -d "$pkgid_dir" || continue
+
+    pkg_version=$(
+      awk '$1 == "version" && $2 ~ /^[0-9]+$/ { print $2 }' \
+        "${pkgid_dir}/.puavo-pkg-version" 2>/dev/null || true)
+    if [ -z "$pkg_version" ]; then
+      echo "Could not lookup version for ${pkgid_dir}" >&2
+      status=1
+      continue
+    fi
+
+    if [ "$latest_pkg_version" -lt "$pkg_version" ]; then
+      latest_pkg_dir="$pkgid_dir"
+      latest_pkg_version="$pkg_version"
+    fi
+  done
+
+  if [ "$latest_pkg_version" -le "$current_version" ]; then
+    return
+  fi
+
+  echo "$latest_pkg_dir"
+}
+
+configure_latest_from() {
+  other_rootdir="$1"
+
+  for other_pkgdir in ${other_rootdir}/packages/*; do
+    test -d "$other_pkgdir" || continue
+
+    pkg_name=$(basename "$other_pkgdir")
+    syspkg_version="$(get_installed_version "$pkg_name")"
+
+    other_pkgid_dir=$(get_dir_with_latest_version "$other_pkgdir" \
+                                                  "$syspkg_version")
+    if [ -d "$other_pkgid_dir" ]; then
+      reconfigure_upgrade_pkg "$pkg_name" "$other_pkgid_dir" || status=1
+    fi
+  done
+}
+
+setup_puavopkg_for_localboot_devices() {
+  # Setup puavo-pkgs from under $local_rootdir only if they are missing
+  # from the system image, or the versions under $local_rootdir are
+  # newer than the versions in system image.
+
+  install_puavo_pkg_conf "$local_cachedir"  \
+                         "$local_rootdir"   \
+                         "$system_cachedir" \
+                         "$system_rootdir"
+
+  configure_latest_from "$local_rootdir"
+}
+
+setup_puavopkg_for_netboot_devices() {
+  # mount /images/puavo-pkg from bootserver in case we have booted from network
   read nbd_server < /run/puavo/nbd-server
-  mkdir -p "$host_puavo_pkg_dir"
+  mkdir -p "$remote_mountdir"
   if ! timeout -k 5 30 mount -t nfs4 -o ro,sec=sys "${nbd_server}:/puavo-pkg" \
-                                                   "$host_puavo_pkg_dir"; then
+                                                   "$remote_mountdir"; then
     echo "could not mount ${nbd_server}:/puavo-pkg" >&2
-    exit 1
+    return 1
   fi
+
+  install_puavo_pkg_conf "$system_cachedir" \
+                         "$system_rootdir"  \
+                         "$remote_cachedir" \
+                         "$remote_rootdir"
+
+  configure_latest_from "$remote_rootdir"
+}
+
+setup_puavopkg_common() {
+  # XXX This can be removed once smartboard and ti-nspire-cx-cas-ss are
+  # XXX are thrown away from the system image.  I think we can get rid of
+  # XXX puavo.nonfree.smartboard.enabled and
+  # XXX puavo.nonfree.ti_nspire_cx_cas_ss.enabled as well.
+
+  install_puavo_pkg_conf "$system_cachedir" "$system_rootdir" '' ''
+
+  # We configure the "smartboard" and "ti-nspire-cx-cas-ss" puavo-pkg packages
+  # in system image in case those are installed, because they are unconfigured
+  # by default and their configuration is dependent on puavo-conf variables
+  # "puavo.nonfree.smartboard.enabled" and
+  # "puavo.nonfree.ti_nspire_cx_cas_ss.enabled".
+  for puavo_pkg in smartboard ti-nspire-cx-cas-ss; do
+    if test_puavopkg_installation "$puavo_pkg"; then
+      reconfigure_puavopkg "$puavo_pkg" || status=1
+    fi
+  done
+}
+
+setup_puavopkg_common
+
+# Then setup puavo-pkg configuration to include possible packages from
+# bootserver or locally installed puavo-pkg images.  (Note that this does
+# not install or update the puavo-pkg packages, only sets them up at boottime).
+if [ -e /run/puavo/nbd-server ]; then
+  setup_puavopkg_for_netboot_devices
+else
+  setup_puavopkg_for_localboot_devices
 fi
-
-# Setup puavo-pkgs from under /images/puavo-pkg only if they are missing
-# from the system image, or the versions under /images/puavo-pkg are
-# newer than the versions in system image (we determine the age of
-# a puavo-pkg from the installation time).
-
-for localpkg_instlink in ${host_puavo_pkg_rootdir}/packages/*/installed; do
-  test -e "$localpkg_instlink" || continue
-
-  localpkg_name="$(basename "${localpkg_instlink%%/installed}")"
-
-  sysinst_link="${image_puavo_pkg_rootdir}/packages/${localpkg_name}/installed"
-  if [ ! -e "$sysinst_link" \
-       -o "$sysinst_link" -ot "$localpkg_instlink" ]; then
-    reconfigure_puavopkg "$localpkg_name" || status=1
-  fi
-done
 
 exit $status

@@ -1,4 +1,4 @@
-// Copyright (C) 2014 Jonas Kümmerlin <rgcjonas@gmail.com>
+// This file is part of the AppIndicator/KStatusNotifierItem GNOME Shell extension
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -34,36 +34,31 @@ const Util = Extension.imports.util;
 const IndicatorStatusIcon = new Lang.Class({
     Name: 'IndicatorStatusIcon',
     Extends: PanelMenu.Button,
-    
+
     _init: function(indicator) {
         this.parent(null, 'FIXME'); //no name yet (?)
-        
+
         this._indicator = indicator;
-        
+
         // XXX Modified PANEL_ICON_SIZE for puavo-os, there appears to be no
         // XXX place in gnome-shell.css where this could be modified.
-        // this._iconBox = new AppIndicator.IconActor(indicator, Panel.PANEL_ICON_SIZE);
+        // this._iconBox = new AppIndicator.IconActor(indicator, Panel.PANEL_ICON_SIZE + 2);
         this._iconBox = new AppIndicator.IconActor(indicator, 28);
         if (!this._box) // Gnome Shell 3.10
             this.actor.add_actor(this._box = new St.BoxLayout({style_class: 'panel-button-indicator'}));
 
         this._box.destroy_all_children();
         this._box.add_actor(this._iconBox);
-        Util.connectAndRemoveOnDestroy(this.actor, {
-            'button-press-event': this._boxClicked.bind(this)
-        })
+        Util.connectSmart(this.actor, 'button-press-event', this, '_boxClicked')
 
-        Util.Logger.debug("Adding indicator as status menu");
-
-        Util.connectAndRemoveOnDestroy(this._indicator, {
-            'ready': this._display.bind(this),
-            'label': this._updateLabel.bind(this)
-        }, this)
+        Util.connectSmart(this._indicator, 'ready',  this, '_display')
+        Util.connectSmart(this._indicator, 'label',  this, '_updateLabel')
+        Util.connectSmart(this._indicator, 'status', this, '_updateStatus')
 
         if (this._indicator.isReady)
             this._display()
     },
-    
+
     _updateLabel: function() {
         var label = this._indicator.label;
         if (label) {
@@ -85,10 +80,15 @@ const IndicatorStatusIcon = new Lang.Class({
             }
         }
     },
-    
-    destroy: function() {
-        Util.Logger.debug('destroying '+this._indicator.id+'...')
 
+    _updateStatus: function() {
+        if (this._indicator.status != AppIndicator.SNIStatus.PASSIVE)
+            this.actor.show()
+        else
+            this.actor.hide()
+    },
+
+    destroy: function() {
         // destroy stuff owned by us
         if (this._menuClient)
             this._menuClient.destroy()
@@ -96,25 +96,31 @@ const IndicatorStatusIcon = new Lang.Class({
         this._iconBox.destroy()
 
         this._box.destroy_all_children()
-        
+
         //call parent
         this.parent()
     },
-    
+
     _display: function() {
         this._updateLabel()
+        this._updateStatus()
 
-        this._indicator.getMenuClient((function(client){
-            if (client != null) {
-                this._menuClient = client
-                client.attachToMenu(this.menu)
-            }
-            
-            Main.panel.addToStatusArea("appindicator-"+this._indicator.id, this, 1, 'right')
-        }).bind(this));
+        if (!this._menuClient) {
+            this._menuClient = new DBusMenu.Client(this._indicator.busName, this._indicator.menuPath)
+            this._menuClient.attachToMenu(this.menu)
+        }
+
+        Main.panel.addToStatusArea("appindicator-"+this._indicator.uniqueId, this, 1, 'right')
     },
-    
+
     _boxClicked: function(actor, event) {
+        // if middle mouse button clicked send SecondaryActivate dbus event and do not show appindicator menu
+        if (event.get_button() == 2) {
+            Main.panel.menuManager._closeMenu(true, Main.panel.menuManager.activeMenu);
+            this._indicator.secondaryActivate();
+            return;
+        }
+
         //HACK: event should be a ClutterButtonEvent but we get only a ClutterEvent (why?)
         //      because we can't access click_count, we'll create our own double click detector.
         var treshold = Clutter.Settings.get_default().double_click_time;

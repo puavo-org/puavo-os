@@ -1,5 +1,4 @@
-// Copyright (C) 2011 Giovanni Campagna
-// Copyright (C) 2013-2014 Jonas Kümmerlin <rgcjonas@gmail.com>
+// This file is part of the AppIndicator/KStatusNotifierItem GNOME Shell extension
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -18,6 +17,7 @@ const Atk = imports.gi.Atk
 const Clutter = imports.gi.Clutter
 const Gio = imports.gi.Gio
 const GLib = imports.gi.GLib
+const GdkPixbuf = imports.gi.GdkPixbuf
 const Lang = imports.lang
 const PopupMenu = imports.ui.popupMenu
 const Signals = imports.signals
@@ -123,14 +123,9 @@ const DbusMenuItem = new Lang.Class({
     },
 
     property_set: function(prop, value) {
-        let old_value = this._propStore.get(prop)
-
         this._propStore.set(prop, value)
 
-        let new_value = this._propStore.get(prop)
-
-        if (new_value && !old_value || old_value && !new_value || old_value.compare(new_value) != 0)
-            this.emit('property-changed', prop, this.property_get_variant(prop))
+        this.emit('property-changed', prop, this.property_get_variant(prop))
     },
 
     get_children_ids: function() {
@@ -396,6 +391,9 @@ const DBusClient = new Lang.Class({
     },
 
     send_event: function(id, event, params, timestamp) {
+        if (!this._proxy)
+            return
+
         this._proxy.EventRemote(id, event, params, timestamp, function(result, error) { /* we don't care */ })
     },
 
@@ -449,56 +447,6 @@ const NEED_NESTED_SUBMENU_FIX = '_setOpenedSubMenu' in PopupMenu.PopupMenu.proto
  * handlers, so any `this` will refer to a menu item create in createItem
  */
 const MenuItemFactory = {
-    // Ornament polyfill for 3.8
-    OrnamentType: PopupMenu.Ornament ? PopupMenu.Ornament : {
-        NONE: 0,
-        CHECK: 1,
-        DOT: 2
-    },
-
-    _setOrnamentPolyfill: function(ornamentType) {
-        if (ornamentType == MenuItemFactory.OrnamentType.CHECK) {
-            this._ornament.set_text('\u2713')
-            this.actor.add_accessible_state(Atk.StateType.CHECKED)
-        } else if (ornamentType == MenuItemFactory.OrnamentType.DOT) {
-            this._ornament.set_text('\u2022')
-            this.actor.add_accessible_state(Atk.StateType.CHECKED)
-        } else {
-            this._ornament.set_text('')
-            this.actor.remove_accessible_state(Atk.StateType.CHECKED)
-        }
-    },
-
-    // GS3.8 uses a complicated system to compute the allocation for each child in pure JS
-    // we hack together a function that allocates space for our ornament, using the x
-    // calculations normally used for the dot and the y calculations used for every
-    // other item. Thank god they replaced that whole allocation stuff in 3.10, so I don't
-    // really need to understand how it works, as long as it looks right in 3.8
-    _allocateOrnament: function(actor, box, flags) {
-        if (!this._ornament) return
-
-        let height = box.y2 - box.y1;
-        let direction = actor.get_text_direction();
-
-        let dotBox = new Clutter.ActorBox()
-        let dotWidth = Math.round(box.x1 / 2)
-
-        if (direction == Clutter.TextDirection.LTR) {
-            dotBox.x1 = Math.round(box.x1 / 4)
-            dotBox.x2 = dotBox.x1 + dotWidth
-        } else {
-            dotBox.x2 = box.x2 + 3 * Math.round(box.x1 / 4)
-            dotBox.x1 = dotBox.x2 - dotWidth
-        }
-
-        let [minHeight, naturalHeight] = this._ornament.get_preferred_height(dotBox.x2 - dotBox.x1)
-
-        dotBox.y1 = Math.round(box.y1 + (height - naturalHeight) / 2)
-        dotBox.y2 = dotBox.y1 + naturalHeight
-
-        this._ornament.allocate(dotBox, flags)
-    },
-
     createItem: function(client, dbusItem) {
         // first, decide whether it's a submenu or not
         if (dbusItem.property_get("children-display") == "submenu")
@@ -513,21 +461,8 @@ const MenuItemFactory = {
 
         if (shellItem instanceof PopupMenu.PopupMenuItem) {
             shellItem._icon = new St.Icon({ style_class: 'popup-menu-icon', x_align: St.Align.END })
-            if (shellItem.addActor) { //GS 3.8
-                shellItem.addActor(shellItem._icon, { align: St.Align.END })
-            } else { //GS >= 3.10
-                shellItem.actor.add(shellItem._icon, { x_align: St.Align.END })
-                shellItem.label.get_parent().child_set(shellItem.label, { expand: true })
-            }
-
-            // GS3.8: emulate the ornament stuff.
-            // this is similar to how the setShowDot function works
-            if (!shellItem.setOrnament) {
-                shellItem._ornament = new St.Label()
-                shellItem.actor.add_actor(shellItem._ornament)
-                shellItem.setOrnament = MenuItemFactory._setOrnamentPolyfill
-                shellItem.actor.connect('allocate', MenuItemFactory._allocateOrnament.bind(shellItem)) //GS doesn't disconnect that one, either
-            }
+            shellItem.actor.add(shellItem._icon, { x_align: St.Align.END })
+            shellItem.label.get_parent().child_set(shellItem.label, { expand: true })
         }
 
         // initialize our state
@@ -546,20 +481,14 @@ const MenuItemFactory = {
         }
 
         // now, connect various events
-        Util.connectAndRemoveOnDestroy(dbusItem, {
-            'property-changed':   MenuItemFactory._onPropertyChanged.bind(shellItem),
-            'child-added':        MenuItemFactory._onChildAdded.bind(shellItem),
-            'child-removed':      MenuItemFactory._onChildRemoved.bind(shellItem),
-            'child-moved':        MenuItemFactory._onChildMoved.bind(shellItem)
-        }, shellItem)
-        Util.connectAndRemoveOnDestroy(shellItem, {
-            'activate':  MenuItemFactory._onActivate.bind(shellItem)
-        })
+        Util.connectSmart(dbusItem, 'property-changed', shellItem, MenuItemFactory._onPropertyChanged)
+        Util.connectSmart(dbusItem, 'child-added',      shellItem, MenuItemFactory._onChildAdded)
+        Util.connectSmart(dbusItem, 'child-removed',    shellItem, MenuItemFactory._onChildRemoved)
+        Util.connectSmart(dbusItem, 'child-moved',      shellItem, MenuItemFactory._onChildMoved)
+        Util.connectSmart(shellItem, 'activate',        shellItem, MenuItemFactory._onActivate)
 
         if (shellItem.menu)
-            Util.connectAndRemoveOnDestroy(shellItem.menu, {
-                "open-state-changed": MenuItemFactory._onOpenStateChanged.bind(shellItem)
-            })
+            Util.connectSmart(shellItem.menu, "open-state-changed", shellItem,  MenuItemFactory._onOpenStateChanged)
 
         return shellItem
     },
@@ -581,6 +510,12 @@ const MenuItemFactory = {
             this._dbusItem.handle_event("opened", null, 0)
             this._dbusItem.send_about_to_show()
         } else {
+            if (NEED_NESTED_SUBMENU_FIX) {
+                // close our own submenus
+                if (menu._openedSubMenu)
+                    menu._openedSubMenu.close(false)
+            }
+
             this._dbusItem.handle_event("closed", null, 0)
         }
     },
@@ -648,11 +583,11 @@ const MenuItemFactory = {
         if (!this.setOrnament) return // separators and alike might not have gotten the polyfill
 
         if (this._dbusItem.property_get("toggle-type") == "checkmark" && this._dbusItem.property_get_int("toggle-state"))
-            this.setOrnament(MenuItemFactory.OrnamentType.CHECK)
+            this.setOrnament(PopupMenu.Ornament.CHECK)
         else if (this._dbusItem.property_get("toggle-type") == "radio" && this._dbusItem.property_get_int("toggle-state"))
-            this.setOrnament(MenuItemFactory.OrnamentType.DOT)
+            this.setOrnament(PopupMenu.Ornament.DOT)
         else
-            this.setOrnament(MenuItemFactory.OrnamentType.NONE)
+            this.setOrnament(PopupMenu.Ornament.NONE)
     },
 
     _updateImage: function() {
@@ -663,7 +598,7 @@ const MenuItemFactory = {
         if (iconName)
             this._icon.icon_name = iconName
         else if (iconData)
-            this._icon.gicon = Util.createPixbufFromMemoryImage(iconData.get_data_as_bytes())
+            this._icon.gicon = GdkPixbuf.Pixbuf.new_from_stream(Gio.MemoryInputStream.new_from_bytes(iconData.get_data_as_bytes()), null)
     },
 
     _updateVisible: function() {
@@ -742,10 +677,6 @@ const Client = new Lang.Class({
         this._client   = new DBusClient(busName, path)
         this._rootMenu = null // the shell menu
         this._rootItem = null // the DbusMenuItem for the root
-
-        this._rootItemDisconnectHandlers = []
-        this._menuDisconnectHandlers     = []
-        this._rootChangedHandler         = null
     },
 
     // this will attach the client to an already existing menu that will be used as the root menu.
@@ -754,22 +685,22 @@ const Client = new Lang.Class({
         this._rootMenu = menu
         this._rootItem = this._client.get_root()
 
-        // cleanup: remove existing childs (just in case)
+        // cleanup: remove existing children (just in case)
         this._rootMenu.removeAll()
 
         if (NEED_NESTED_SUBMENU_FIX)
             menu._setOpenedSubMenu = this._setOpenedSubmenu.bind(this)
 
         // connect handlers
-        Util.connectAndSaveId(menu, {
-            'open-state-changed': this._onMenuOpened.bind(this),
-            'destroy'           : this.destroy.bind(this)
-        }, this._menuDisconnectHandlers)
-        Util.connectAndSaveId(this._rootItem, {
-            "child-added"   : this._onRootChildAdded.bind(this),
-                                "child-removed" : this._onRootChildRemoved.bind(this),
-                                "child-moved"   : this._onRootChildMoved.bind(this)
-        }, this._rootItemDisconnectHandlers)
+        Util.connectSmart(menu, 'open-state-changed', this, '_onMenuOpened')
+        Util.connectSmart(menu, 'destroy',            this, 'destroy')
+
+        Util.connectSmart(this._rootItem, 'child-added',   this, '_onRootChildAdded')
+        Util.connectSmart(this._rootItem, 'child-removed', this, '_onRootChildRemoved')
+        Util.connectSmart(this._rootItem, 'child-moved',   this, '_onRootChildMoved')
+
+        // Dropbox requires us to call AboutToShow(0) first
+        this._rootItem.send_about_to_show()
 
         // fill the menu for the first time
         this._rootItem.get_children().forEach(function(child) {
@@ -825,11 +756,7 @@ const Client = new Lang.Class({
     },
 
     destroy: function() {
-        if (this._rootMenu)
-            Util.disconnectArray(this._rootMenu, this._menuDisconnectHandlers)
-
-        if (this._rootItem)
-            Util.disconnectArray(this._rootItem, this._rootItemDisconnectHandlers)
+        this.emit('destroy')
 
         if (this._client)
             this._client.destroy()
@@ -839,3 +766,4 @@ const Client = new Lang.Class({
         this._rootMenu = null
     }
 })
+Signals.addSignalMethods(Client.prototype)

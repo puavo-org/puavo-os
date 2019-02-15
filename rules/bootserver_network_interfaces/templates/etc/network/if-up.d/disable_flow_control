@@ -9,6 +9,6 @@ if [ "$puavo_hosttype" != 'bootserver' ]; then
   exit 0
 fi
 
-if [[ "$IFACE" =~ ^eth[0-9.]+$ ]]; then
+if [[ "$IFACE" =~ ^ltsp[0-9.]+$ ]]; then
   /sbin/ethtool -A $IFACE autoneg off rx off tx off
 fi

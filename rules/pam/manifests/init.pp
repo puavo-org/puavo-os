@@ -15,6 +15,9 @@ class pam {
     '/etc/pam.d/common-session-noninteractive':
       source => 'puppet:///modules/pam/common-session-noninteractive';
 
+    '/etc/pam.d/cups':
+      source => 'puppet:///modules/pam/cups';
+
     '/etc/pam.d/gdm-autologin':
       source => 'puppet:///modules/pam/gdm-autologin';
 

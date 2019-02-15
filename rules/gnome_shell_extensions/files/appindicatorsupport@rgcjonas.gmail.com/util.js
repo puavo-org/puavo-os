@@ -1,4 +1,4 @@
-// Copyright (C) 2013-2014 Jonas Kümmerlin <rgcjonas@gmail.com>
+// This file is part of the AppIndicator/KStatusNotifierItem GNOME Shell extension
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -13,287 +13,171 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-const GdkPixbuf = imports.gi.GdkPixbuf
 const Gio = imports.gi.Gio
 const GLib = imports.gi.GLib
-const St = imports.gi.St
+const GObject = imports.gi.GObject
 
 const Lang = imports.lang
 const Signals = imports.signals
 
-/*
- * The standard array map operation, but in async mode
- * `mapFunc` is expected to have the signature `function(element, index, array, callback)` where `callback` is `function(error, result)`.
- * `callback` is expected to have the signature `function(error, result)`
- *
- * The callback function is called when every mapping operation has finished, with the original array as result.
- * or when at least one mapFunc returned an error, then immediately with that error.
- *
- * If you pass any wrong parameters, the result is undefined (most likely some kind of cryptic error)
- */
-function asyncMap(array, mapFunc, callback) {
-    if (!callback) callback = function(){};
+const refreshPropertyOnProxy = function(proxy, property_name) {
+    proxy.g_connection.call(proxy.g_name,
+                            proxy.g_object_path,
+                            'org.freedesktop.DBus.Properties',
+                            'Get',
+                            GLib.Variant.new('(ss)', [ proxy.g_interface_name, property_name ]),
+                            GLib.VariantType.new('(v)'),
+                            Gio.DBusCallFlags.NONE,
+                            -1,
+                            null,
+                            function(conn, result) {
+                                try {
+                                    let value_variant = conn.call_finish(result).deep_unpack()[0]
 
-    var newArray = array.slice(0);
-    var toFinish = 0;
+                                    proxy.set_cached_property(property_name, value_variant)
 
-    // empty object
-    if (newArray.length == 0) {
-        callback(null, newArray);
-        return;
+                                    // synthesize a property changed event
+                                    let changed_obj = {}
+                                    changed_obj[property_name] = value_variant
+                                    proxy.emit('g-properties-changed', GLib.Variant.new('a{sv}', changed_obj), [])
+                                } catch (e) {
+                                    // the property may not even exist, silently ignore it
+                                    //Logger.debug("While refreshing property "+property_name+": "+e)
+                                }
+                            })
+}
+
+const getUniqueBusNameSync = function(bus, name) {
+    if (name[0] == ':')
+        return name;
+
+    if (typeof bus === "undefined" || !bus)
+        bus = Gio.DBus.session;
+
+    let variant_name = new GLib.Variant("(s)", [name]);
+    let [unique] = bus.call_sync("org.freedesktop.DBus", "/", "org.freedesktop.DBus",
+                                 "GetNameOwner", variant_name, null,
+                                 Gio.DBusCallFlags.NONE, -1, null).deep_unpack();
+
+    return unique;
+}
+
+const traverseBusNames = function(bus, cancellable, callback) {
+    if (typeof bus === "undefined" || !bus)
+        bus = Gio.DBus.session;
+
+    if (typeof(callback) !== "function")
+        throw new Error("No traversal callback provided");
+
+    bus.call("org.freedesktop.DBus", "/", "org.freedesktop.DBus",
+             "ListNames", null, new GLib.VariantType("(as)"), 0, -1, cancellable,
+             function (bus, task) {
+                if (task.had_error())
+                    return;
+
+                let [names] = bus.call_finish(task).deep_unpack();
+                let unique_names = [];
+
+                for (let name of names) {
+                    let unique = getUniqueBusNameSync(bus, name);
+                    if (unique_names.indexOf(unique) == -1)
+                        unique_names.push(unique);
+                }
+
+                for (let name of unique_names)
+                    callback(bus, name, cancellable);
+            });
+}
+
+const introspectBusObject = function(bus, name, cancellable, filterFunction, targetCallback, path) {
+    if (typeof path === "undefined" || !path)
+        path = "/";
+
+    if (typeof targetCallback !== "function")
+        throw new Error("No introspection callback defined");
+
+    bus.call (name, path, "org.freedesktop.DBus.Introspectable", "Introspect",
+              null, new GLib.VariantType("(s)"), Gio.DBusCallFlags.NONE, -1,
+              cancellable, function (bus, task) {
+                if (task.had_error())
+                    return;
+
+                let introspection = bus.call_finish(task).deep_unpack().toString();
+                let node_info = Gio.DBusNodeInfo.new_for_xml(introspection);
+
+                if ((typeof filterFunction === "function" && filterFunction(node_info) === true) ||
+                    typeof filterFunction === "undefined" || !filterFunction) {
+                    targetCallback(name, path);
+                }
+
+                if (path === "/")
+                    path = ""
+
+                for (let sub_nodes of node_info.nodes) {
+                    let sub_path = path+"/"+sub_nodes.path;
+                    introspectBusObject (bus, name, cancellable, filterFunction,
+                                         targetCallback, sub_path);
+                }
+            });
+}
+
+const dbusNodeImplementsInterfaces = function(node_info, interfaces) {
+    if (!(node_info instanceof Gio.DBusNodeInfo) || !Array.isArray(interfaces))
+        return false;
+
+    for (let iface of interfaces) {
+        if (node_info.lookup_interface(iface) !== null)
+            return true;
     }
 
-    for (let i = 0; i < newArray.length; ++i) {
-        toFinish += 1;
-        mapFunc(newArray[i], i, newArray, function(i, error, result) {
-            toFinish -= 1;
-            if (error) {
-                callback(error);
-                callback = function(){};
-            } else {
-                newArray[i] = result;
+    return false;
+}
 
-                if (toFinish <= 0) {
-                    callback(null, newArray);
-                }
-            }
-        }.bind(null, i));
+const connectSmart3A = function(src, signal, handler) {
+    let id = src.connect(signal, handler)
+
+    if (src.connect && (!(src instanceof GObject.Object) || GObject.signal_lookup('destroy', src))) {
+        let destroy_id = src.connect('destroy', function() {
+            src.disconnect(id)
+            src.disconnect(destroy_id)
+        })
     }
 }
 
-//data: GBytes
-const createPixbufFromMemoryImage = function(data) {
-    var stream = Gio.MemoryInputStream.new_from_bytes(data);
-    return GdkPixbuf.Pixbuf.new_from_stream(stream, null);
+const connectSmart4A = function(src, signal, target, method) {
+    if (typeof method === 'string')
+        method = target[method].bind(target)
+    if (typeof method === 'function')
+        method = method.bind(target)
+
+    let signal_id = src.connect(signal, method)
+
+    // GObject classes might or might not have a destroy signal
+    // JS Classes will not complain when connecting to non-existent signals
+    let src_destroy_id = src.connect && (!(src instanceof GObject.Object) || GObject.signal_lookup('destroy', src)) ? src.connect('destroy', on_destroy) : 0
+    let tgt_destroy_id = target.connect && (!(target instanceof GObject.Object) || GObject.signal_lookup('destroy', target)) ? target.connect('destroy', on_destroy) : 0
+
+    function on_destroy() {
+        src.disconnect(signal_id)
+        if (src_destroy_id) src.disconnect(src_destroy_id)
+        if (tgt_destroy_id) target.disconnect(tgt_destroy_id)
+    }
 }
 
 /**
- * This proxy works completely without an interface xml, making it both flexible
- * and mistake-prone. It will cache properties and emit events, and provides
- * shortcuts for calling methods.
- */
-const XmlLessDBusProxy = new Lang.Class({
-    Name: 'XmlLessDBusProxy',
-
-    _init: function(params) {
-        if (!params.connection || !params.name || !params.path || !params.interface)
-            throw new Error("XmlLessDBusProxy: please provide connection, name, path and interface")
-
-        this.connection = params.connection
-        this.name = params.name
-        this.path = params.path
-        this.interface = params.interface
-        this.propertyWhitelist = params.propertyWhitelist || []
-        this.cachedProperties = {}
-
-        this.invalidateAllProperties(params.onReady)
-        this._signalId = this.connection.signal_subscribe(this.name,
-                                                          this.interface,
-                                                          null,
-                                                          this.path,
-                                                          null,
-                                                          Gio.DBusSignalFlags.NONE,
-                                                          this._onSignal.bind(this))
-        this._propChangedId = this.connection.signal_subscribe(this.name,
-                                                               'org.freedesktop.DBus.Properties',
-                                                               'PropertiesChanged',
-                                                               this.path,
-                                                               null,
-                                                               Gio.DBusSignalFlags.NONE,
-                                                               this._onPropertyChanged.bind(this))
-    },
-
-    setProperty: function(propertyName, valueVariant) {
-        //TODO: implement
-    },
-
-    /**
-     * Initiates recaching the given property.
-     *
-     * This is useful if the interface notifies the consumer of changed properties
-     * in unorthodox ways or if you changed the whitelist
-     */
-    invalidateProperty: function(propertyName, callback) {
-        this.connection.call(this.name,
-                             this.path,
-                             'org.freedesktop.DBus.Properties',
-                             'Get',
-                             GLib.Variant.new('(ss)', [ this.interface, propertyName ]),
-                             GLib.VariantType.new('(v)'),
-                             Gio.DBusCallFlags.NONE,
-                             -1,
-                             null,
-                             this._getPropertyCallback.bind(this, propertyName, callback))
-    },
-
-    _getPropertyCallback: function(propertyName, callback, conn, result) {
-        try {
-            let newValue = conn.call_finish(result).deep_unpack()[0].deep_unpack()
-
-            if (this.propertyWhitelist.indexOf(propertyName) > -1) {
-                this.cachedProperties[propertyName] = newValue
-                this.emit("-property-changed", propertyName, newValue)
-                this.emit("-property-changed::"+propertyName, newValue)
-            }
-        } catch (e) {
-            // this can mean two things:
-            //  - the interface is gone (or doesn't conform or whatever)
-            //  - the property doesn't exist
-            // we do not care and we don't even log it.
-            //Logger.debug("XmlLessDBusProxy: while getting property: "+e)
-        }
-
-        if (callback) callback()
-    },
-
-    invalidateAllProperties: function(callback) {
-        let waitFor = 0
-
-        this.propertyWhitelist.forEach(function(prop) {
-            waitFor += 1
-            this.invalidateProperty(prop, maybeFinished)
-        }, this)
-
-        function maybeFinished() {
-            waitFor -= 1
-            if (waitFor == 0 && callback)
-                callback()
-        }
-    },
-
-    _onPropertyChanged: function(conn, sender, path, iface, signal, params) {
-        let [ , changed, invalidated ] = params.deep_unpack()
-
-        for (let i in changed) {
-            if (this.propertyWhitelist.indexOf(i) > -1) {
-                this.cachedProperties[i] = changed[i].deep_unpack()
-                this.emit("-property-changed", i, this.cachedProperties[i])
-                this.emit("-property-changed::"+i, this.cachedProperties[i])
-            }
-        }
-
-        for (let i = 0; i < invalidated.length; ++i) {
-            if (this.propertyWhitelist.indexOf(invalidated[i]) > -1)
-                this.invalidateProperty(invalidated[i])
-        }
-    },
-
-    _onSignal: function(conn, sender, path, iface, signal, params) {
-        this.emit("-signal", signal, params)
-        this.emit(signal, params.deep_unpack())
-    },
-
-    call: function(params) {
-        if (!params)
-            throw new Error("XmlLessDBusProxy::call: need params argument")
-
-        if (!params.name)
-            throw new Error("XmlLessDBusProxy::call: missing name")
-
-        if (params.params instanceof GLib.Variant) {
-            // good!
-        } else if (params.paramTypes && params.paramValues) {
-            params.params = GLib.Variant.new('(' + params.paramTypes + ')', params.paramValues)
-        } else {
-            throw new Error("XmlLessDBusProxy::call: provide either paramType (string) and paramValues (array) or params (GLib.Variant)")
-        }
-
-        if (!params.returnTypes)
-            params.returnTypes = ''
-
-        if (!params.onSuccess)
-            params.onSuccess = function() {}
-
-        if (!params.onError)
-            params.onError = function(error) {
-                Logger.warn("XmlLessDBusProxy::call: DBus error: "+error)
-            }
-
-        this.connection.call(this.name,
-                             this.path,
-                             this.interface,
-                             params.name,
-                             params.params,
-                             GLib.VariantType.new('(' + params.returnTypes + ')'),
-                             Gio.DBusCallFlags.NONE,
-                             -1,
-                             null,
-                             function(conn, result) {
-                                 try {
-                                     let returnVariant = conn.call_finish(result)
-                                     params.onSuccess(returnVariant.deep_unpack())
-                                 } catch (e) {
-                                     params.onError(e)
-                                 }
-                             })
-
-    },
-
-    destroy: function() {
-        this.emit('-destroy')
-
-        this.disconnectAll()
-
-        this.connection.signal_unsubscribe(this._signalId)
-        this.connection.signal_unsubscribe(this._propChangedId)
-    }
-})
-Signals.addSignalMethods(XmlLessDBusProxy.prototype)
-
-
-/**
- * Refetches invalidated properties
+ * Connect signals to slots, and remove the connection when either source or
+ * target are destroyed
  *
- * A handler for the "g-properties-changed" signal of a GDbusProxy.
- * It will refetch all invalidated properties and put them in the cache, and
- * then raise another "g-properties-changed" signal with the updated properties.
- *
- * Essentially poor man's G_DBUS_PROXY_FLAGS_GET_INVALIDATED_PROPERTIES.
+ * Usage:
+ *      Util.connectSmart(srcOb, 'signal', tgtObj, 'handler')
+ * or
+ *      Util.connectSmart(srcOb, 'signal', function() { ... })
  */
-function refreshInvalidatedProperties(proxy, changed, invalidated) {
-    if (invalidated.length < 1) return
-
-    asyncMap(invalidated, function(property, i, a, callback) {
-        proxy.g_connection.call(
-            proxy.g_name_owner,
-            proxy.g_object_path,
-            "org.freedesktop.DBus.Properties",
-            "Get",
-            GLib.Variant.new("(ss)", [ proxy.g_interface_name, property ]),
-            GLib.VariantType.new("(v)"),
-            Gio.DBusCallFlags.NONE,
-            -1,
-            null,
-            function(conn, res) {
-                try {
-                    let newValue = proxy.g_connection.call_finish(res).deep_unpack()[0]
-                    callback(null, {
-                        name: property,
-                        value: newValue
-                    })
-                } catch (error) {
-                    callback(error)
-                }
-            }
-        );
-    }, function(error, result) {
-        if (error) {
-            //FIXME: what else can we do?
-            Logger.error("While refreshing invalidated properties: "+error)
-        } else {
-            // build up the dictionary we feed into the variant later
-            let changed = {}
-
-            result.forEach(function(i) {
-                changed[i.name] = i.value
-
-                proxy.set_cached_property(i.name, i.value)
-            })
-
-            // avoid any form of recursion
-            GLib.idle_add(GLib.PRIORITY_DEFAULT, proxy.emit.bind(proxy, "g-properties-changed", new GLib.Variant("a{sv}", changed), []))
-        }
-    });
+const connectSmart = function() {
+    if (arguments.length == 4)
+        return connectSmart4A.apply(null, arguments)
+    else
+        return connectSmart3A.apply(null, arguments)
 }
 
 /**
@@ -320,70 +204,6 @@ const Logger = {
         Logger._log("FATAL", message);
     }
 };
-
-/**
- * will take the given signals and handlers, connect them to the object
- * and push the id needed to disconnect it into the given array.
- * the id array is returned, too
- *
- * if you do not pass a predefined array, it will be created for you.
- */
-const connectAndSaveId = function(target, handlers /* { "signal": handler } */, idArray) {
-    idArray = typeof idArray != 'undefined' ? idArray : []
-    for (let signal in handlers) {
-        idArray.push(target.connect(signal, handlers[signal]))
-    }
-    return idArray
-}
-
-/**
- * will connect the given handlers to the object, and automatically disconnect them
- * when the 'destroy' signal is emitted
- */
-const connectAndRemoveOnDestroy = function(target, handlers, /* optional */ destroyTarget, /* optional */ destroySignal) {
-    var ids, destroyId
-
-    ids = connectAndSaveId(target, handlers)
-
-    if (typeof destroyTarget == 'undefined') destroyTarget = target
-    if (typeof destroySignal == 'undefined') destroySignal = 'destroy'
-
-    destroyId = destroyTarget.connect(destroySignal, function() {
-        disconnectArray(target, ids)
-        destroyTarget.disconnect(destroyId)
-    })
-}
-
-/**
- * disconnect an array of signal handler ids. The ids are then removed from the array.
- */
-const disconnectArray = function(target, idArray) {
-    for (let handler = idArray.shift(); handler !== undefined; handler = idArray.shift()) {
-        target.disconnect(handler);
-    }
-}
-
-/**
- * connects a handler and removes it after the first call, or if the source object is destroyed
- */
-const connectOnce = function(target, signal, handler, /* optional */ destroyTarget, /* optional */ destroySignal) {
-    var signalId, destroyId
-
-    if (typeof destroyTarget == 'undefined') destroyTarget = target
-    if (typeof destroySignal == 'undefined') destroySignal = 'destroy'
-
-    signalId = target.connect(signal, function() {
-        target.disconnect(signalId)
-        handler.apply(this, arguments)
-    })
-
-    if (!destroyTarget.connect)
-        return
-
-    destroyId = destroyTarget.connect(destroySignal, function() {
-        target.disconnect(signalId)
-    })
-}
 
 /**
  * Workaround for https://bugzilla.gnome.org/show_bug.cgi?id=734071

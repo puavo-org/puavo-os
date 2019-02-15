@@ -1,0 +1,193 @@
+#!/bin/sh
+
+set -eu
+
+baseurl='https://images.opinsys.fi/puavo-pkg'
+installers_dir='/var/lib/puavo-pkg/installers'
+
+exec 3< "$installers_dir"
+if ! flock -nx 3; then
+  echo "did not get a lock on ${installers_dir}, exiting" >&2
+  exit 1
+fi
+
+is_version_number() {
+  echo "$1" | grep -Eqx '[0-9]+' && [ "$1" -lt 1000000 ]
+}
+
+download_installer() {
+  puavo_pkg=$1
+  version=$2
+
+  rm -f ${installers_dir}/*/*.tmp
+
+  do_file_check=false
+  if [ "$version" = 'latest' ]; then
+    :
+  elif is_version_number "$version"; then
+    version="version-${version}"
+  else
+    do_file_check=true
+  fi
+
+  installer_subpath="${puavo_pkg}/${version}.tar.gz"
+  installer_fullpath="${installers_dir}/${installer_subpath}"
+
+  if $do_file_check && [ -e "$installer_fullpath" ]; then
+    return 0
+  fi
+
+  pkg_url="${baseurl}/${installer_subpath}"
+  installer_tmppath="${installer_fullpath}.tmp"
+
+  mkdir -p "${installers_dir}/${puavo_pkg}" || true
+  if ! wget -q --ca-certificate=/etc/puavo/certs/rootca.pem \
+         -O "$installer_tmppath" "$pkg_url"; then
+    echo "Could not download installer from ${pkg_url}" >&2
+    rm -f "$installer_tmppath"
+    return 1
+  fi
+
+  # we lookup package id, because $version might be "latest" or just
+  # the version number
+
+  pkg_id=$(
+    tar --wildcards -Ozx -f "$installer_tmppath" '*/.puavo-pkg-version' \
+      | awk '$1 == "package-id" { print $2 }') || return 1
+  if [ -z "$pkg_id" ]; then
+    echo "Could not determine package id from ${installer_subpath}" >&2
+    rm -f "$installer_tmppath"
+    return 1
+  fi
+
+  # get real version and put it into the version specific path
+  installer_fullpath="${installers_dir}/${puavo_pkg}/${pkg_id}.tar.gz"
+
+  mv "$installer_tmppath" "$installer_fullpath" || return 1
+
+  echo "$installer_fullpath"
+}
+
+install_pkg() {
+  puavo_pkg=$1
+  version=$2
+
+  if ! installer_fullpath=$(download_installer "$puavo_pkg" "$version"); then
+    return 1
+  fi
+
+  puavo-pkg install "$installer_fullpath"
+}
+
+prepare_pkg() {
+  puavo_pkg=$1
+  version=$2
+
+  puavo-pkg unconfigure "$puavo_pkg" || return 1
+
+  if ! installer_fullpath=$(download_installer "$puavo_pkg" "$version"); then
+    return 1
+  fi
+
+  puavo-pkg prepare "$installer_fullpath"
+}
+
+maybe_remove_pkg() {
+  puavo_pkg=$1
+  version_to_remove=$2
+
+  installed_pkg_dir=$(
+    readlink "/var/lib/puavo-pkg/installed/${puavo_pkg}" 2> /dev/null) \
+      || true
+
+  if [ ! -e "$installed_pkg_dir" ]; then
+    return 0
+  fi
+
+  if [ -z "$version_to_remove" ]; then
+    puavo-pkg remove "$puavo_pkg"
+    return 0
+  fi
+
+  if is_version_number "$version_to_remove"; then
+    installed_version_number=$(
+      awk '$1 == "version" { print $2 }' \
+        "${installed_pkg_dir}/.puavo-pkg-version" 2>/dev/null) || true
+    if [ -z "$installed_version_number" ]; then
+      echo 'Could not determine installed package version number' >&2
+      return 1
+    fi
+
+    if [ "$installed_version_number" -le "$version_to_remove" ]; then
+      puavo-pkg remove "$puavo_pkg"
+    fi
+
+    return 0
+  fi
+
+  installed_pkg_id=$(awk '$1 == "package-id" { print $2 }' 2>/dev/null \
+                       "${installed_pkg_dir}/.puavo-pkg-version") || true
+  if [ -z "$installed_pkg_id" ]; then
+    echo 'Could not determine installed package id' >&2
+    return 1
+  fi
+
+  if [ "$installed_pkg_id" = "$version_to_remove" ]; then
+    puavo-pkg remove "$puavo_pkg"
+    return 0
+  fi
+}
+
+puavo_pkg_specs=$(
+  puavo-conf | awk '$1 ~ /^puavo.pkg./ { gsub(/^puavo.pkg./, "", $1); print }'
+)
+
+status=0
+
+IFS="
+"
+for pkgspec in $puavo_pkg_specs; do
+  puavo_pkg=$(echo "$pkgspec" | awk '{ print $1 }')
+  action=$(echo "$pkgspec" | awk '{ print $2 }')
+
+  case "$action" in
+    ''|do-nothing)
+      ;;
+    install|latest)
+      install_pkg "$puavo_pkg" latest || status=1
+      ;;
+    install:*)
+      version=${action#*:}
+      install_pkg "$puavo_pkg" "$version" || status=1
+      ;;
+    prepare)
+      prepare_pkg "$puavo_pkg" latest || status=1
+      ;;
+    prepare:*)
+      version=${action#*:}
+      prepare_pkg "$puavo_pkg" "$version" || status=1
+      ;;
+    remove)
+      maybe_remove_pkg "$puavo_pkg" '' || status=1
+      ;;
+    remove:*)
+      version=${action#*:}
+      maybe_remove_pkg "$puavo_pkg" "$version" || status=1
+      ;;
+    *)
+      echo "Unsupported action on package ${puavo_pkg}: ${action}" >&2
+      status=1
+      ;;
+  esac
+done
+
+if ! puavo-pkg gc-installations; then
+  echo 'Problem in garbage collecting puavo packages' >&2
+  exit 1
+fi
+if ! puavo-pkg gc-upstream-packs; then
+  echo 'Problem in garbage collecting puavo-pkg upstream packs' >&2
+  exit 1
+fi
+
+exit $status

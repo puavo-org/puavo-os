@@ -1,0 +1,37 @@
+#!/bin/sh
+
+set -eu
+
+puavo_pkg=${1:-}
+
+if [ -z "$puavo_pkg" ]; then
+  echo "Usage: $(basename $0) puavo-pkg" >&2
+  exit 1
+fi
+
+pkg_installer_id=$(
+  find "$puavo_pkg" -type f ! -name .puavo-pkg-version \
+    | sort | xargs -n 1 md5sum \
+    | md5sum \
+    | awk '{ print $1 }')
+
+timestamp=$(date -Iseconds)
+
+if [ ! -e "${puavo_pkg}/.puavo-pkg-version" ]; then
+  cat <<EOF > "${puavo_pkg}/.puavo-pkg-version"
+package-id ${pkg_installer_id}
+pkg-format 1
+timestamp $timestamp
+version 1
+EOF
+else
+  awk -v new_id="$pkg_installer_id" -v timestamp="$timestamp" '
+    $1 == "package-id" && $2 != new_id {
+      $2 = new_id; bump_version = 1
+    }
+    $1 == "timestamp" && bump_version { $2 = timestamp }
+    $1 == "version" && bump_version { $2 += 1 }
+    { print }
+  ' "${puavo_pkg}/.puavo-pkg-version" > "${puavo_pkg}/.puavo-pkg-version.tmp"
+  mv "${puavo_pkg}/.puavo-pkg-version.tmp" "${puavo_pkg}/.puavo-pkg-version"
+fi
