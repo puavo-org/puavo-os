@@ -103,6 +103,7 @@ EOF
     ln -fns "/usr/src/promethean/kernel/modules/${module_file}" \
             "/lib/modules/${kernel_version}/kernel/drivers/input/tablet/promethean.ko"
     if [ "$(uname -r)" = "$kernel_version" ]; then
+      depmod -a
       modprobe promethean
     fi
   )

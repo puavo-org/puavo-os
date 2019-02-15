@@ -30,7 +30,7 @@ const Clutter = imports.gi.Clutter;
 const Mainloop = imports.mainloop;
 const Gio = imports.gi.Gio;
 
-var hostType, hostName, releaseName;
+var domain, hostName, hostType, releaseName;
 
 // remember to catch and handle exceptions if you call this
 function readTextFile(name)
@@ -353,6 +353,7 @@ const HostInfoButton = new Lang.Class(
             // Network
             this.spacer(c);
             this.category(c, "Network");
+            this.titleValue(c, "Domain", domain);
 
             const network = jval(json, "network_interfaces", null);
 
@@ -382,7 +383,7 @@ const HostInfoButton = new Lang.Class(
             // lspci values, if present
             if ("lspci_values" in json && json["lspci_values"].length > 0) {
                 this.spacer(c);
-                this.category(c, "Some lspci values");
+                this.category(c, "Some PCI devices");
 
                 // get around JS's variable scoping weirdness
                 let self = this;
@@ -399,7 +400,7 @@ const HostInfoButton = new Lang.Class(
             // lsusb values, if present
             if ("lsusb_values" in json && json["lsusb_values"].length > 0) {
                 this.spacer(c);
-                this.category(c, "lsusb listing");
+                this.category(c, "USB devices");
 
                 // get around JS's variable scoping weirdness
                 let self = this;
@@ -411,6 +412,47 @@ const HostInfoButton = new Lang.Class(
                 // this can happen, at least in theory...
                 this.spacer(c);
                 this.category(c, "No lsusb output listed in the JSON");
+            }
+
+            // xrandr, if present
+            if ("xrandr" in json) {
+                this.spacer(c);
+                this.category(c, "Monitors");
+
+                // get around JS's variable scoping weirdness
+                let self = this;
+
+                self.value(self.infoTextBlock, json["xrandr"]);
+            } else {
+                // this can happen, at least in theory...
+                this.spacer(c);
+                this.category(c, "No xrandr output listed in the JSON");
+            }
+
+            if ("battery" in json) {
+                this.spacer(c);
+                this.category(c, "Battery");
+
+                // get around JS's variable scoping weirdness
+                let self = this;
+
+                this.titleValue(c, "Vendor", json['battery']['vendor'] || '?')
+                this.titleValue(c, "Model",  json['battery']['model']  || '?')
+                this.titleValue(c, "Serial", json['battery']['serial'] || '?')
+                this.titleValue(c, "State",  json['battery']['state']  || '?')
+                this.titleValue(c, "Warning level",
+                                   json['battery']['warning-level']     || '?')
+                this.titleValue(c, "Energy",  json['battery']['energy'] || '?')
+                this.titleValue(c, "Energy when empty",
+                                   json['battery']['energy-empty'] || '?')
+                this.titleValue(c, "Energy when full",
+                                   json['battery']['energy-full'] || '?')
+                this.titleValue(c, "Energy when full by design",
+                                   json['battery']['energy-full-design'] || '?')
+                this.titleValue(c, "Voltage", json['battery']['voltage']       || '?')
+                this.titleValue(c, "Percentage", json['battery']['percentage'] || '?')
+                this.titleValue(c, "Capacity", json['battery']['capacity']     || '?')
+                this.titleValue(c, "Technology", json['battery']['technology'] || '?')
             }
         } catch (e) {
             this.errorText(c,
@@ -493,6 +535,12 @@ function init()
         hostName = readTextFile("/etc/puavo/hostname").trim();
     } catch (e) {
         hostName = "<Error>";
+    }
+
+    try {
+        domain = readTextFile("/etc/puavo/domain").trim();
+    } catch (e) {
+        domain = "<Error>";
     }
 
     try {
