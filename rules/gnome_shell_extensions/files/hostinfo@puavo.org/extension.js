@@ -383,7 +383,7 @@ const HostInfoButton = new Lang.Class(
             // lspci values, if present
             if ("lspci_values" in json && json["lspci_values"].length > 0) {
                 this.spacer(c);
-                this.category(c, "Some lspci values");
+                this.category(c, "Some PCI devices");
 
                 // get around JS's variable scoping weirdness
                 let self = this;
@@ -400,7 +400,7 @@ const HostInfoButton = new Lang.Class(
             // lsusb values, if present
             if ("lsusb_values" in json && json["lsusb_values"].length > 0) {
                 this.spacer(c);
-                this.category(c, "lsusb listing");
+                this.category(c, "USB devices");
 
                 // get around JS's variable scoping weirdness
                 let self = this;
