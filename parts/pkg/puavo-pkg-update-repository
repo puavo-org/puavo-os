@@ -61,7 +61,7 @@ for puavo_pkg_path in ${puavo_pkg_packages_path}/*.tar.gz; do
 done
 
 if [ "$status" -eq 0 ]; then
-  rsync -rvHS --progress "${tmpdir}/" "${rsync_target_path}/" || status=1
+  rsync -lrvHS --progress "${tmpdir}/" "${rsync_target_path}/" || status=1
 else
   echo 'not rsyncing due to errors' >&2
 fi
