@@ -30,7 +30,7 @@ const Clutter = imports.gi.Clutter;
 const Mainloop = imports.mainloop;
 const Gio = imports.gi.Gio;
 
-var hostType, hostName, releaseName;
+var domain, hostName, hostType, releaseName;
 
 // remember to catch and handle exceptions if you call this
 function readTextFile(name)
@@ -353,6 +353,7 @@ const HostInfoButton = new Lang.Class(
             // Network
             this.spacer(c);
             this.category(c, "Network");
+            this.titleValue(c, "Domain", domain);
 
             const network = jval(json, "network_interfaces", null);
 
@@ -493,6 +494,12 @@ function init()
         hostName = readTextFile("/etc/puavo/hostname").trim();
     } catch (e) {
         hostName = "<Error>";
+    }
+
+    try {
+        domain = readTextFile("/etc/puavo/domain").trim();
+    } catch (e) {
+        domain = "<Error>";
     }
 
     try {
