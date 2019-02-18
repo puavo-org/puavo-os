@@ -671,6 +671,12 @@ programs:
         tags: education
   - scratch:
         tags: default
+  - scratch3:
+        type: web
+        name: Scratch 3.0 (web)
+        url: https://scratch.mit.edu/projects/editor/
+        icon: /usr/share/icons/hicolor/128x128/apps/scratch.png
+        tags: default, education
   - scratch-club:
         type: web
         name:
@@ -1023,6 +1029,7 @@ menus:
             - geany
             - org.kde.kturtle
             - scratch
+            - scratch3
             - bluefish
             - designer-qt4
             - processing
