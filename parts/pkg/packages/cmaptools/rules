@@ -1017,6 +1017,8 @@ EOF
 
         # Reclaim ownership of all files.
         chown -R root:root "${upstream_dir}"
+
+        touch /usr/share/mime/.puavo_update_mime_database
         ;;
 
     *)

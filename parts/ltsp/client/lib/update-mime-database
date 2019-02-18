@@ -1,0 +1,9 @@
+#!/bin/sh
+
+set -eu
+
+test -e /usr/share/mime/.puavo_update_mime_database || exit 0
+
+update-mime-database /usr/share/mime
+
+rm -f /usr/share/mime/.puavo_update_mime_database

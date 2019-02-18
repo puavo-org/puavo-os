@@ -1,0 +1,9 @@
+[Unit]
+Description=Update MIME database
+
+[Service]
+ExecStart=/usr/lib/puavo-ltsp-client/update-mime-database
+Type=oneshot
+
+[Install]
+WantedBy=multi-user.target
