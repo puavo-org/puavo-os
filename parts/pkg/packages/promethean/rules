@@ -65,13 +65,17 @@ promethean_links='
   /usr/share/icons/hicolor/48x48/apps/activaid.png
   /usr/share/icons/hicolor/48x48/apps/activcalibrate.png
   /usr/share/icons/hicolor/48x48/apps/activmonitor.png
-  /usr/share/promethean
+  /usr/share/promethean/activaid
+  /usr/share/promethean/languages
+  /usr/share/promethean/vasaricontent
   /usr/src/promethean
   /usr/tmp-promethean/driver/activdevices
 '
 
 build_and_install_promethean_ko() {
-  cat <<'EOF' > /usr/src/promethean/kernel/Makefile.puavo
+  tmp_module_build=$(mktemp -d /tmp/promethean.XXXXXX)
+  cp -a -t "${tmp_module_build}/" /usr/src/promethean/*
+  cat <<'EOF' > "${tmp_module_build}/kernel/Makefile.puavo"
 obj-m += promethean.o
 promethean-objs += Mathrout.o usbpromethean.o
 
@@ -93,19 +97,20 @@ EOF
   fi
 
   (
-    cd /usr/src/promethean/kernel
+    cd "${tmp_module_build}/kernel"
     module_file="promethean-${kernel_version}.ko"
     if [ ! -e "modules/${module_file}" ]; then
       mkdir -p modules
       make "KERNEL_VERSION=${kernel_version}" clean all
       mv promethean.ko "modules/${module_file}"
     fi
-    ln -fns "/usr/src/promethean/kernel/modules/${module_file}" \
-            "/lib/modules/${kernel_version}/kernel/drivers/input/tablet/promethean.ko"
+    cp -p "${tmp_module_build}/kernel/modules/${module_file}" \
+          "/lib/modules/${kernel_version}/kernel/drivers/input/tablet/promethean.ko"
     if [ "$(uname -r)" = "$kernel_version" ]; then
       depmod -a
       modprobe promethean
     fi
+    rm -rf "$tmp_module_build"
   )
 }
 
