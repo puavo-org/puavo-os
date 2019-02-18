@@ -185,7 +185,7 @@ EOF
       # Set LC_COLLATE=C so that files always sort in the same
       # way (so we get the same tar-archive independent of locales).
       env LC_COLLATE=C \
-        tar -C promethean --mtime='2000-01-01 00:00:00 +00:00' -c \
+        tar -C promethean --mtime='2000-01-01 00:00:00 +00:00' --sort=name -c \
           -f "$upstream_pack" .
     )
     ;;
