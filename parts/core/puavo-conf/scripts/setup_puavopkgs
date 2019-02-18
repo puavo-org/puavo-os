@@ -80,7 +80,7 @@ get_dir_with_latest_version() {
       awk '$1 == "version" && $2 ~ /^[0-9]+$/ { print $2 }' \
         "${pkgid_dir}/.puavo-pkg-version" 2>/dev/null || true)
     if [ -z "$pkg_version" ]; then
-      echo "Could not lookup version for ${pkgid_dir}" >&2
+      echo "could not lookup version for ${pkgid_dir}" >&2
       status=1
       continue
     fi
@@ -105,13 +105,33 @@ configure_latest_from() {
     test -d "$other_pkgdir" || continue
 
     pkg_name=$(basename "$other_pkgdir")
-    syspkg_version="$(get_installed_version "$pkg_name")"
 
-    other_pkgid_dir=$(get_dir_with_latest_version "$other_pkgdir" \
-                                                  "$syspkg_version")
-    if [ -d "$other_pkgid_dir" ]; then
-      reconfigure_upgrade_pkg "$pkg_name" "$other_pkgid_dir" || status=1
+    # on fatclients we support only configuring the latest version
+    # that is on the bootserver
+    puavo_pkg_spec=$(puavo-conf "puavo.pkg.${pkg_name}" 2>/dev/null) || true
+    if [ -z "$puavo_pkg_spec" ]; then
+      echo "no puavo.pkg.${pkg_name} set - will not configure ${pkg_name}" >&2
+      status=1
+      continue
     fi
+    case "$puavo_pkg_spec" in
+      install|install:*|latest)
+        case "$puavo_pkg_spec" in
+          install:*) echo "ignoring version in puavo.pkg.${pkg_name}" ;;
+        esac
+
+        syspkg_version="$(get_installed_version "$pkg_name")"
+
+        other_pkgid_dir=$(get_dir_with_latest_version "$other_pkgdir" \
+                                                      "$syspkg_version")
+        if [ -d "$other_pkgid_dir" ]; then
+          reconfigure_upgrade_pkg "$pkg_name" "$other_pkgid_dir" || status=1
+        fi
+        ;;
+      remove|remove:*)
+        echo "not removing ${pkg_name}"
+        ;;
+    esac
   done
 }
 
