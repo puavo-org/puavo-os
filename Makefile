@@ -143,6 +143,10 @@ $(image_dir):
 make-release-logos:
 	$(_sudo) /usr/lib/puavo-ltsp-client/make-release-logos
 
+.PHONY: update-mime-database
+update-mime-database:
+	$(_sudo) /usr/lib/puavo-ltsp-client/update-mime-database
+
 # Using -comp lzo instead of gzip, because we prefer to optimize decompression
 # speed for faster boots, even though image sizes are slightly bigger than with
 # gzip.  Especially on some hosts the decompression stage of kernel/initrd is
@@ -159,6 +163,7 @@ rootfs-image: $(rootfs_dir) $(image_dir)
 	$(_sudo) .aux/set-image-release '$(rootfs_dir)' '$(image_class)' \
 	    '$(notdir $(_image_file))' '$(release_name)'
 	$(_chroot_cmd) $(MAKE) -C '/puavo-os' make-release-logos
+	$(_chroot_cmd) $(MAKE) -C '/puavo-os' update-mime-database
 	$(_sudo) mksquashfs '$(rootfs_dir)' '$(_image_file).tmp'	\
 		-noappend -no-recovery -no-sparse -wildcards -comp lzo	\
 		-ef '.aux/$(image_class).excludes'		\

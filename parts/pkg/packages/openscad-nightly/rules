@@ -21,6 +21,7 @@ case "$command" in
       mkdir -p "$(dirname "$symlink_target")"
       ln -fns -T "${upstream_dir}${symlink_target}" "$symlink_target"
     done
+    touch /usr/share/mime/.puavo_update_mime_database
     ;;
   download)
     upstream_pack=$1

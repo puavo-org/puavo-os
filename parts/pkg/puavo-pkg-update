@@ -138,6 +138,8 @@ maybe_remove_pkg() {
   fi
 }
 
+# XXX this presumes that no puavo-conf values has newlines ...
+# XXX that we might actually want to enforce, but it is not currently enforced
 puavo_pkg_specs=$(
   puavo-conf | awk '$1 ~ /^puavo.pkg./ { gsub(/^puavo.pkg./, "", $1); print }'
 )

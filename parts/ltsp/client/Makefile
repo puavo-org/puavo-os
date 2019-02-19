@@ -122,6 +122,10 @@ install : installdirs
 	ln -fs -t $(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants \
 		/lib/systemd/system/puavo-report-system-version.service
 
+	ln -fs -t $(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants \
+		/lib/systemd/system/puavo-update-mime-database.service
+
+
 .PHONY : clean
 clean :
 	rm -rf po/fi/*.mo
