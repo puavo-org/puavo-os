@@ -39,11 +39,11 @@ install_puavo_pkg_conf() {
 }
 
 reconfigure_puavopkg() {
-  timeout -k 5 30 puavo-pkg reconfigure "$@"
+  timeout -k 5 60 puavo-pkg reconfigure "$@"
 }
 
 reconfigure_upgrade_pkg() {
-  timeout -k 5 30 puavo-pkg reconfigure-upgrade "$@"
+  timeout -k 5 60 puavo-pkg reconfigure-upgrade "$@"
 }
 
 test_puavopkg_installation() {
