@@ -2,13 +2,14 @@
 
 set -eu
 
-read puavo_domain    < /etc/puavo/domain
-read puavo_topdomain < /etc/puavo/topdomain || true
+read puavo_domain < /etc/puavo/domain
+
+puavo_topdomain=$(cat /etc/puavo/topdomain 2>/dev/null || true)
 
 if [ -n "${puavo_topdomain:-}" ]; then
   topdomain_confline="server ntp.${puavo_topdomain}"
 else
-  topdomain_confline='# topdomain not available, not configured'
+  topdomain_confline='# (topdomain not available, not configured)'
 fi
 
 cat <<EOF > /etc/ntp.conf.tmp
