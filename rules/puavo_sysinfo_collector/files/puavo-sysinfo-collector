@@ -141,7 +141,7 @@ class SystemInfoCollector < DBus::Object
 
           # wireless info (this needs to be improved)
           x = `lspci -nnk | grep 0280 | cut -c 36-`
-          data[:wifi] = x.strip.split("\n").first.strip || ''
+          data[:wifi] = (x.strip.split("\n").first || '').strip
 
           xrandr_output = nil
           begin
