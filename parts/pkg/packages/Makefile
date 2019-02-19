@@ -5,7 +5,7 @@ INSTALL = install
 INSTALL_DATA = $(INSTALL) -m 644
 
 packagedirs  = abitti-naksu
-packagedirs  = adobe-flashplugin
+packagedirs += adobe-flashplugin
 packagedirs += adobe-flashplugin-32bit
 packagedirs += adobe-pepperflashplugin
 packagedirs += adobe-pepperflashplugin-32bit
