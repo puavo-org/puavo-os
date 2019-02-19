@@ -1,0 +1,94 @@
+#!/bin/bash
+
+set -eu
+
+on_exit()
+{
+    local -r exitval=$?
+    set +e
+
+    echo "Disabling VNC"
+    wsman invoke -a RequestStateChange \
+        http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_KVMRedirectionSAP \
+        -h "${AMT_HOST}" -P 16992 -u admin -p "${AMT_PASSWORD}" \
+        -k RequestedState=3 -O /dev/null
+
+    echo "Randomizing VNC password"
+    wsman put \
+        http://intel.com/wbem/wscim/1/ips-schema/1/IPS_KVMRedirectionSettingData \
+        -h "${AMT_HOST}" -P 16992 -u admin -p "${AMT_PASSWORD}" \
+        -k RFBPassword="$(generate_vnc_password)" -O /dev/null
+
+    echo "Disabling VNC port 5900"
+    wsman put \
+        http://intel.com/wbem/wscim/1/ips-schema/1/IPS_KVMRedirectionSettingData \
+        -h "${AMT_HOST}" -P 16992 -u admin -p "${AMT_PASSWORD}" \
+        -k Is5900PortEnabled=false -O /dev/null
+
+    echo "Enabling Opt-in"
+    wsman put \
+        http://intel.com/wbem/wscim/1/ips-schema/1/IPS_KVMRedirectionSettingData \
+        -h "${AMT_HOST}" -P 16992 -u admin -p "${AMT_PASSWORD}" \
+        -k OptInPolicy=true -O /dev/null
+
+    exit $exitval
+}
+
+generate_vnc_password()
+{
+    local puncts punct punct_ix passwd_len passwd_base passwd_head passwd_tail
+
+    puncts=('!' '%' '.')
+    passwd_len=8
+
+    ## Pick one punctuation char.
+    punct=${puncts[$((RANDOM%${#puncts[@]}))]}
+
+    ## 0 <= i <= passwd_len - 1
+    punct_ix=$((RANDOM%${passwd_len}))
+
+    ## Generate 7 char long base string. Use -n -c to ensure the
+    ## password contains at least one number and one capital letter.
+    passwd_base="$(pwgen -n -c $((passwd_len - 1)) 1)"
+
+    ## Insert the punctuation char to the password.
+    passwd_head="${passwd_base[@]:0:${punct_ix}}"
+    passwd_tail="${passwd_base[@]:${punct_ix}:$((passwd_len - punct_ix))}"
+
+    echo -n "${passwd_head}${punct}${passwd_tail}"
+}
+
+read -p 'AMT hostname: ' AMT_HOST
+read -s -p 'AMT admin password: ' AMT_PASSWORD
+echo
+
+trap on_exit EXIT
+
+vnc_password=$(generate_vnc_password)
+
+echo "Enabling VNC"
+wsman invoke -a RequestStateChange \
+    http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_KVMRedirectionSAP \
+    -h "${AMT_HOST}" -P 16992 -u admin -p "${AMT_PASSWORD}" \
+    -k RequestedState=2 -O /dev/null
+
+echo "Setting VNC password: '${vnc_password}'"
+wsman put \
+    http://intel.com/wbem/wscim/1/ips-schema/1/IPS_KVMRedirectionSettingData \
+    -h "${AMT_HOST}" -P 16992 -u admin -p "${AMT_PASSWORD}" \
+    -k RFBPassword="${vnc_password}" -O /dev/null
+
+echo "Enabling VNC port 5900"
+wsman put \
+    http://intel.com/wbem/wscim/1/ips-schema/1/IPS_KVMRedirectionSettingData \
+    -h "${AMT_HOST}" -P 16992 -u admin -p "${AMT_PASSWORD}" \
+    -k Is5900PortEnabled=true -O /dev/null
+
+echo "Disabling Opt-in"
+wsman put \
+    http://intel.com/wbem/wscim/1/ips-schema/1/IPS_KVMRedirectionSettingData \
+    -h "${AMT_HOST}" -P 16992 -u admin -p "${AMT_PASSWORD}" \
+    -k OptInPolicy=false -O /dev/null
+
+echo "Press ENTER to close the session"
+read -s
