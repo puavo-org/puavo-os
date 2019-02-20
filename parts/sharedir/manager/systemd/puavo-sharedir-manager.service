@@ -7,4 +7,5 @@ After=slapd.service
 WantedBy=multi-user.target
 
 [Service]
+ExecStartPre=/bin/sh -c 'echo 1048576 > /proc/sys/fs/inotify/max_user_watches'
 ExecStart=/usr/sbin/puavo-sharedir-manager
