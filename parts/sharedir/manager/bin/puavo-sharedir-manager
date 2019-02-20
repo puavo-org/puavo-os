@@ -105,9 +105,7 @@ class PuavoShare
 
     begin
       actual_acls = getfacl(path)
-    rescue SignalException
-      raise
-    rescue Exception => e
+    rescue StandardError => e
       Syslog.warning('%s', e.message)
       return
     end
@@ -223,9 +221,7 @@ class PuavoShare
 	File.chown(0, 0, filename)
 
       rescue Errno::ENOENT
-      rescue SignalException
-        raise
-      rescue Exception => e
+      rescue StandardError => e
 	msg = "Error in resetting permissions for #{ filename }: " \
 	      + "#{ e.message }: #{ e.backtrace.inspect }."
         Syslog.err('%s', msg)
@@ -490,9 +486,7 @@ class Control
 	# XXX hopefully this does the same
 	notifier.to_io.close
       end
-    rescue SignalException
-      raise
-    rescue Exception => e
+    rescue StandardError => e
       msg = "Error with inotifier: #{ e.message }: #{ e.backtrace.inspect }." \
 	    + '  Check out the limit in /proc/sys/fs/inotify/max_user_watches.'
       Syslog.err('%s', msg)
@@ -527,10 +521,7 @@ loop do
   rescue LDAP::ResultError => e
     exception_msg = \
       "Error in accessing LDAP: #{ e.message }: #{ e.backtrace.inspect }."
-  rescue SignalException
-    Syslog.notice('%s', 'Received SignalException, terminating.')
-    exit 0
-  rescue Exception => e
+  rescue StandardError => e
     exception_msg = \
       "Unknown error: #{ e.message }: #{ e.backtrace.inspect }."
   end
