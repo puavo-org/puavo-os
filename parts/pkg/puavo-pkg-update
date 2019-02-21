@@ -5,6 +5,8 @@ set -eu
 baseurl='https://images.opinsys.fi/puavo-pkg'
 installers_dir='/var/lib/puavo-pkg/installers'
 
+mkdir -p "$installers_dir"
+
 exec 3< "$installers_dir"
 if ! flock -nx 3; then
   echo "did not get a lock on ${installers_dir}, exiting" >&2
