@@ -305,7 +305,7 @@ programs:
   - kamerka:
         icon: /usr/share/icons/Faenza/devices/96/camera-web.png
         tags: default
-  - kcalc:
+  - org.kde.kcalc:
         tags: default
   - kenavision:
         name: Kena Vision Microscope
@@ -1204,7 +1204,6 @@ menus:
             en: Programs for Grading Environment
             de: Programme der Prüfungsumgebung
         icon: /usr/share/icons/oxygen/base/48x48/categories/applications-education.png
-        hidden_by_default: true
         programs:
             - gimp
             - pinta
@@ -1212,7 +1211,7 @@ menus:
             - geogebra
             - geogebra6
             - wxMaxima
-            - kcalc
+            - org.kde.kcalc
             - ti_nspire_cx_cas_ss
             - LoggerPro
             - dia
