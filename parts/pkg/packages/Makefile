@@ -61,6 +61,7 @@ packagedirs += vstloggerpro
 # opinsys-os specific
 packagedirs += av4kav
 packagedirs += ekapeli
+packagedirs += mimio-studio
 packagedirs += teddybear
 packagedirs += ti-nspire-cx-cas-ss
 packagedirs += vmware-horizon-client
