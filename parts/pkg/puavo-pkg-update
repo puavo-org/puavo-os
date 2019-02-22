@@ -146,9 +146,11 @@ puavo_pkg_specs=$(
 
 status=0
 
+OLDIFS="$IFS"
 IFS="
 "
 for pkgspec in $puavo_pkg_specs; do
+  IFS="$OLDIFS"
   puavo_pkg=$(echo "$pkgspec" | awk '{ print $1 }')
   action=$(echo "$pkgspec" | awk '{ print $2 }')
 
