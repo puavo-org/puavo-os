@@ -5,6 +5,8 @@ set -eu
 baseurl='https://images.opinsys.fi/puavo-pkg'
 installers_dir='/var/lib/puavo-pkg/installers'
 
+mkdir -p "$installers_dir"
+
 exec 3< "$installers_dir"
 if ! flock -nx 3; then
   echo "did not get a lock on ${installers_dir}, exiting" >&2
@@ -138,17 +140,17 @@ maybe_remove_pkg() {
   fi
 }
 
-# XXX this presumes that no puavo-conf values has newlines ...
-# XXX that we might actually want to enforce, but it is not currently enforced
 puavo_pkg_specs=$(
   puavo-conf | awk '$1 ~ /^puavo.pkg./ { gsub(/^puavo.pkg./, "", $1); print }'
 )
 
 status=0
 
+OLDIFS="$IFS"
 IFS="
 "
 for pkgspec in $puavo_pkg_specs; do
+  IFS="$OLDIFS"
   puavo_pkg=$(echo "$pkgspec" | awk '{ print $1 }')
   action=$(echo "$pkgspec" | awk '{ print $2 }')
 

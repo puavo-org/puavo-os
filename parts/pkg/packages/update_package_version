@@ -19,8 +19,9 @@ timestamp=$(date -Iseconds)
 
 if [ ! -e "${puavo_pkg}/.puavo-pkg-version" ]; then
   cat <<EOF > "${puavo_pkg}/.puavo-pkg-version"
+name ${puavo_pkg}
 package-id ${pkg_installer_id}
-pkg-format 1
+pkg-format 2
 timestamp $timestamp
 version 1
 EOF

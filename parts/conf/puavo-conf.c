@@ -23,8 +23,9 @@
 
 static int list_params(puavo_conf_t *const conf)
 {
-        size_t i;
+        size_t i, j;
         size_t keylen;
+        size_t valuelen;
         size_t max_keylen = 0;
         int key_field_width;
         struct puavo_conf_list list;
@@ -46,6 +47,17 @@ static int list_params(puavo_conf_t *const conf)
         key_field_width = (max_keylen > 80) ? 80 : max_keylen;
 
         for (i = 0; i < list.length; i++) {
+                /* Replace newlines with space so when listing all values,
+                 * we have the "key value\n" structure.  The exact value
+                 * with newlines is still obtainable with "puavo-conf key".
+                 * This may be ugly but makes puavo-conf safer to use with
+                 * awk etc.  You should probably not use newlines in
+                 * puavo-conf values anyway. */
+                valuelen = strlen(list.values[i]);
+                for (j = 0; j < valuelen; j++)
+                        if (list.values[i][j] == '\n')
+                                list.values[i][j] = ' ';
+
                 if (printf("%-*s %s\n",
                            key_field_width + 2,
                            list.keys[i],
