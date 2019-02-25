@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2015 Opinsys Oy
+# Copyright (C) 2015, 2019 Opinsys Oy
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ LOG_DEBUG=7
 
 g_log_level=${LOG_INFO}
 
-SUPPORTED_PKG_FORMAT=1
+SUPPORTED_PKG_FORMAT=2
 
 ## Exit status codes:
 SC_OK=0       ## Success
@@ -332,7 +332,7 @@ configure_pkg()
     pkg_dir=$(get_pkg_dir "$pkg_name" "$pkg_id") || return 1
 
     if [ ! -e "${pkg_dir}/.puavo-pkg-version" ]; then
-      log_error "not configuring ${pkg_name}, it is missing version"
+      log_error "not configuring ${pkg_name}, it is missing version info"
       return 1
     fi
 
@@ -604,21 +604,23 @@ download_upstream_pack()
     log_info "${pkg_name}: downloaded upstream pack successfully"
 }
 
-get_pkg_id_from_installer()
+get_pkg_field_from_installer()
 {
-    local installer pkg_id
-    installer=$1
+    local field_key field_value installer
 
-    pkg_id=$(
+    field_key=$1
+    installer=$2
+
+    field_value=$(
       tar --wildcards -Ozx -f "$installer" '*/.puavo-pkg-version' \
-        | awk '$1 == "package-id" { print $2 }')
+        | awk -v field_key="$field_key" '$1 == field_key { print $2 }')
 
-    if [ -z "$pkg_id" ]; then
-        log_error "could not determine package id from '${installer}'"
+    if [ -z "$field_value" ]; then
+        log_error "could not determine '${field_key}' from '${installer}'"
         return 1
     fi
 
-    echo "$pkg_id"
+    printf %s "$field_value"
 }
 
 extract_installer()
@@ -626,14 +628,22 @@ extract_installer()
     local installer pkg_name pkg_id pkg_dir pkg_tmpdir pkg_format
 
     installer=$1
-    pkg_name=$(basename "$installer" .tar.gz) || return 1
 
     if [ ! -f "$installer" ]; then
         log_error "installer '${installer}' does not exist"
         return 1
     fi
 
-    pkg_id=$(get_pkg_id_from_installer "$installer") || return 1
+    pkg_format=$(get_pkg_field_from_installer 'pkg-format' "$installer") \
+                   || true
+    if [ -z "$pkg_format" -o "$pkg_format" -gt "$SUPPORTED_PKG_FORMAT" ]; then
+        log_error "installer has unsupported format '${pkg_format}'"
+        return 1
+    fi
+
+    pkg_name=$(get_pkg_field_from_installer 'name' "$installer") || return 1
+    pkg_id=$(get_pkg_field_from_installer 'package-id' "$installer") \
+              || return 1
 
     pkg_dir=$(get_writable_pkg_dir "$pkg_name" "$pkg_id")
     pkg_tmpdir="${pkg_dir}.tmp"
@@ -650,20 +660,6 @@ extract_installer()
         rm -rf "$pkg_tmpdir"
         return 1
     }
-
-    pkg_format=$(awk '$1 == "pkg-format" && $2 ~ /^[0-9]+$/ { print $2 }' \
-                   "${pkg_tmpdir}/.puavo-pkg-version")
-    if [ -z "$pkg_format" ]; then
-        log_error "failed to read installer format"
-        rm -rf "$pkg_tmpdir"
-        return 1
-    fi
-
-    if [ "$pkg_format" -gt "$SUPPORTED_PKG_FORMAT" ]; then
-        log_error "installer has unsupported format $pkg_format"
-        rm -rf "$pkg_tmpdir"
-        return 1
-    fi
 
     mv -T "$pkg_tmpdir" "$pkg_dir" || {
         rm -rf "$pkg_tmpdir"
@@ -796,7 +792,8 @@ remove_all_pkgs()
 
 show_pkg()
 {
-    local pkg_name pkg_dir pkg_id pkg_legend pkg_description pkg_field identifier INSTALLER_REGEX
+    local pkg_name pkg_dir pkg_id pkg_legend pkg_description pkg_field
+    local identifier INSTALLER_REGEX
 
     identifier=$1
     pkg_field=$2
