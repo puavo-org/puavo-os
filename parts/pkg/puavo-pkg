@@ -695,6 +695,12 @@ prepare_pkg_with_installer()
         return 1
     }
 
+    # Update timestamp so it can be considered in garbage collection.
+    # We do this at preparation stage, because bootservers do not necessarily
+    # want package installation, only preparation, and prepared packages
+    # should not be garbage collected even if those are not installed.
+    touch "${pkg_dir}/.prepared"
+
     log_info "${pkg_name}: prepared for configuration"
 
     echo "$pkg_dir"
