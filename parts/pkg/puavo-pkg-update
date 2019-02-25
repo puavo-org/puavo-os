@@ -78,6 +78,12 @@ install_pkg() {
     return 1
   fi
 
+  installation_dir=$(readlink "/var/lib/puavo-pkg/installed/${puavo_pkg}" \
+                       2>/dev/null || true)
+  if [ -e "$installation_dir" ]; then
+    return 0
+  fi
+
   puavo-pkg install "$installer_fullpath"
 }
 
