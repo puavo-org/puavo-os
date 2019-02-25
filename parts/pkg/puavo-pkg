@@ -43,6 +43,9 @@ SC_ERR_NET=2  ## Network failure
 
 g_sc=${SC_ERR} ## Prime with a generic error.
 
+# XXX get rid of hosttype handling
+puavo_hosttype=$(puavo-conf puavo.hosttype)
+
 on_exit()
 {
   return ${g_sc}
@@ -150,12 +153,27 @@ gc_installations() {
       test -d "$pkg_installation" || continue
 
       if ! [ "$pkg_installation" -ef "$currently_installed_link" ]; then
-        if rm -rf "$pkg_installation"; then
-          log_info "removed old installation in $pkg_installation"
-        else
-          msg="could not remove old installation in $pkg_installation"
-          log_error "$msg"
-          gc_status=$SC_ERR
+
+        latest_prepared_time=''
+        # Because fatclients may need puavo-pkg packages even when they are
+        # not installed on bootservers (only prepared), in bootserver case
+        # we also look at the latest timestamp on ".prepared"-file before
+        # doing any garbage collection.
+        if [ "$puavo_hosttype" = 'bootserver' ]; then
+          latest_prepared_time=$(stat -c %Y "${pkg_installation}/.prepared" \
+                                   2>/dev/null || true)
+        fi
+
+        # 15552000 seconds = 180 days * (24 * 60 * 60) * seconds/day
+        if [ -z "$latest_prepared_time" -o \
+             "$(($latest_prepared_time + 15552000))" -le "$(date +%s)" ]; then
+          if rm -rf "$pkg_installation"; then
+            log_info "removed old installation in $pkg_installation"
+          else
+            msg="could not remove old installation in $pkg_installation"
+            log_error "$msg"
+            gc_status=$SC_ERR
+          fi
         fi
       fi
     done
