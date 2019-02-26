@@ -704,6 +704,7 @@ prepare_pkg_with_installer()
     # If we have already prepared the package, just update the preparation
     # timestamp to delay garbage collection.
     touch "${pkg_dir}/.prepared"
+    echo "$pkg_dir"
     return 0
   fi
 
