@@ -25,7 +25,7 @@ fi
 
 session_args_json=$(puavo-conf puavo.autopilot.session_args)
 
-session_args=$(echo "$session_args_json" \
+session_args=$(printf %s "$session_args_json" \
                  | jq -r '
                      if (.|type != "array") then
                        error("puavo.autopilot.session_args is not an array")

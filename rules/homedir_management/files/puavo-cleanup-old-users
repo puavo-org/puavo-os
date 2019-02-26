@@ -46,7 +46,7 @@ get_organisation_uids() {
     return 1
   fi
 
-  if ! parsed_response=$(echo "$response" | jq -r '.[] | .uid_number'); then
+  if ! parsed_response=$(printf %s "$response" | jq -r '.[] | .uid_number'); then
     logmsg -p user.err 'JSON parsing of organisation uids failed'
     return 1
   fi

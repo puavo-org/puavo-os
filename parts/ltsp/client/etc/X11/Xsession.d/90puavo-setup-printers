@@ -9,7 +9,7 @@ fi
 
 remove_remote_printers() {
     LANG=C lpstat -v | while read line; do
-        name=$(echo "${line}" | sed -r -n 's|^device for (.*): ipp://.*$|\1|p')
+        name=$(printf %s "${line}" | sed -r -n 's|^device for (.*): ipp://.*$|\1|p')
         [ -n "${name}" ] || continue
         lpadmin -x "${name}"
     done
@@ -22,9 +22,9 @@ add_remote_printers() {
     [ -e "${PUAVO_SESSION_PATH}" ] || return 1
 
     cat "${PUAVO_SESSION_PATH}" | jq -r -c .printer_queues[] | while read printer; do
-        name=$(echo "${printer}" | jq -r -c .name)
-        location=$(echo "${printer}" | jq -r -c .location)
-        description=$(echo "${printer}" | jq -r -c .description)
+        name=$(printf %s "${printer}" | jq -r -c .name)
+        location=$(printf %s "${printer}" | jq -r -c .location)
+        description=$(printf %s "${printer}" | jq -r -c .description)
         remote_uri="ipp://cups.${puavo_domain}:631/printers/${name}"
 
         lpadmin -p "${name}" -v "${remote_uri}" -L "${location}" -D "${description}" -E
@@ -37,14 +37,14 @@ get_printer_list() {
     cat "${PUAVO_SESSION_PATH}" | jq -r -c .printer_queues[] | {
         PRINTER_LIST=''
         while read printer; do
-            name=$(echo "${printer}" | jq -r -c .name)
+            name=$(printf %s "${printer}" | jq -r -c .name)
             if [ -z "${PRINTER_LIST}" ]; then
                 PRINTER_LIST="${name}"
             else
                 PRINTER_LIST="${PRINTER_LIST},${name}"
             fi
         done
-        echo -n "${PRINTER_LIST}"
+        printf %s "${PRINTER_LIST}"
     }
 }
 

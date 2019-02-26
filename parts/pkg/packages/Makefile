@@ -14,7 +14,7 @@ packagedirs += airtame
 packagedirs += appinventor
 packagedirs += arduino-ide
 packagedirs += arduino-radiohead
-packagedirs += arduino-TM1637
+packagedirs += arduino-tm1637
 packagedirs += bluegriffon
 # XXX do not build, not ready # packagedirs += casio-classpad-manager-for-ii
 packagedirs += canon-cque
@@ -74,7 +74,7 @@ all: $(packagefiles) puavo-pkg-installers-bundle.tar puavo-pkg.json
 
 puavo-pkg.json: $(packagefiles)
 	jq --null-input --arg packages "$(packagedirs)" \
-	  '$$packages | split(" ") | reduce .[] as $$item ({}; .["puavo.pkg." + $$item] = { default: "do-nothing" })' \
+	  '$$packages | split(" ") | reduce .[] as $$item ({}; .["puavo.pkg." + $$item] = { default: "" })' \
 	  > $@.tmp
 	mv $@.tmp $@
 

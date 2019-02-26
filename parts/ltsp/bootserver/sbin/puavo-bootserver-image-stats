@@ -78,7 +78,7 @@ cd "${tmpdir}"
 	"${puavo_apiserver}/v3/device_images?boot_server=${puavo_hostname}" \
 	>referenced_images.json
 
-    jq -r .[] referenced_images.json
+    jq -r '.[]' referenced_images.json
 ) >referenced_imgs
 
 (

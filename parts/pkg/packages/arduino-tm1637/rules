@@ -7,17 +7,17 @@ shift
 
 # We assume the arduino-ide package has been installed before
 # this package is installed!
-opinsys_dir='/opt/arduino-ide/libraries/TM1637'
+tm1637_dir='/opt/arduino-ide/libraries/TM1637'
 
 case "$command" in
     configure)
         upstream_dir=$1
 
         mkdir -p /opt/arduino-ide/libraries
-        ln -fns "$upstream_dir" "$opinsys_dir"
+        ln -fns "$upstream_dir" "$tm1637_dir"
         ;;
     unconfigure)
-        rm -rf "$opinsys"
+        rm -rf "$tm1637_dir"
         ;;
     unpack)
         upstream_pack=$1

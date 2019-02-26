@@ -105,7 +105,7 @@ if [ -z "$pxegeturl" ]; then
   pxe_error 'PXE url missing'
 fi
 
-mac_address=$(echo "$pxegeturl" \
+mac_address=$(printf %s "$pxegeturl" \
   | sed -nr 's/.*01[-:](([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2})$/\1/p' \
   | tr - :)
 
@@ -117,11 +117,11 @@ if ! host_bootparams=$(get_bootparams "$mac_address"); then
   pxe_error "No configuration for $mac_address"
 fi
 
-boot_mode=$(echo "$host_bootparams" | jq -r .boot_mode)
-hosttype=$(echo "$host_bootparams" | jq -r .type)
-kernel_arguments=$(echo "$host_bootparams" | jq -r .kernel_arguments)
-kernel_version=$(echo "$host_bootparams" | jq -r .kernel_version)
-preferred_boot_image=$(echo "$host_bootparams" | jq -r .preferred_boot_image)
+boot_mode=$(printf %s "$host_bootparams" | jq -r .boot_mode)
+hosttype=$(printf %s "$host_bootparams" | jq -r .type)
+kernel_arguments=$(printf %s "$host_bootparams" | jq -r .kernel_arguments)
+kernel_version=$(printf %s "$host_bootparams" | jq -r .kernel_version)
+preferred_boot_image=$(printf %s "$host_bootparams" | jq -r .preferred_boot_image)
 
 [ "$hosttype" = "null" -o "$hosttype" = '' ] && hosttype='unregistered'
 [ "$kernel_arguments" = "null" ] && kernel_arguments=''
@@ -167,7 +167,7 @@ use_if64cpu=false
 
 kernel_version_suffix=''
 if [ -n "$kernel_version" ]; then
-  if echo "$kernel_version" | grep -Eq -- '-(amd64|i386)$'; then
+  if printf %s "$kernel_version" | grep -Eq -- '-(amd64|i386)$'; then
     # kernel_version set to particular arch
     if test -e "${tftpdir}/vmlinuz-${kernel_version}"; then
       kernel_version_suffix="-$kernel_version"
@@ -255,6 +255,6 @@ EOF
 )
 fi
 
-echo "$boot_header"
+printf "%s\n" "$boot_header"
 echo ""
-echo "$boot_labels"
+printf "%s\n" "$boot_labels"
