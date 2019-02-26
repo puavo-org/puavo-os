@@ -62,11 +62,11 @@ class puavo_pkg::packages {
 
   @puavo_pkg::install { $available_packages: ; }
 
-  # "arduino-TM1637", "arduino-radiohead" and "ohjelmointi-opetuksessa"
+  # "arduino-tm1637", "arduino-radiohead" and "ohjelmointi-opetuksessa"
   # require "arduino-ide" to be installed first.
   Puavo_pkg::Install['arduino-ide'] {
-    before +> [ Puavo_pkg::Install['arduino-TM1637']
-              , Puavo_pkg::Install['arduino-radiohead']
+    before +> [ Puavo_pkg::Install['arduino-radiohead']
+              , Puavo_pkg::Install['arduino-tm1637']
               , Puavo_pkg::Install['ohjelmointi-opetuksessa'] ],
   }
 

@@ -39,6 +39,7 @@ SB_CHANGE_PASSWORD = {
             'title': STRINGS['sb_change_password_window_title'],
             'width': 1000,
             'height': 700,
+            'enable_js': True,
         },
     },
 }
@@ -171,7 +172,7 @@ def get_changelog_url():
 
 
 def web_window(url, title=None, width=None, height=None,
-               enable_plugins=False):
+               enable_js=False, enable_plugins=False):
     """puavo-webwindow call wrapper. Remember to handle exceptions."""
 
     import subprocess
@@ -186,6 +187,9 @@ def web_window(url, title=None, width=None, height=None,
 
     if height:
         cmd += ['--height', str(height)]
+
+    if enable_js:
+        cmd += ['--enable-js']
 
     if enable_plugins:
         cmd += ['--enable-plugins']
@@ -505,7 +509,7 @@ class Sidebar:
                 title=localize(STRINGS['sb_avatar_hover']),
                 width=1000,
                 height=700,
-                enable_plugins=True)   # probably need JS for this?
+                enable_js=True)     # The profile editor needs JavaScript
         except Exception as exception:
             logging.error(str(exception))
             self.__parent.error_message(
@@ -523,7 +527,7 @@ class Sidebar:
                 title=localize(STRINGS['sb_changelog_window_title']),
                 width=1000,
                 height=700,
-                enable_plugins=True)    # markdown is used on the page, need JS
+                enable_js=True)     # Markdown is used on the page, need JS
         except Exception as exception:
             logging.error(str(exception))
             self.__parent.error_message(
@@ -577,6 +581,7 @@ class Sidebar:
                 title = None
                 width = None
                 height = None
+                enable_js = False
 
                 # Allow the window to be customized
                 if 'webwindow' in command:
@@ -584,6 +589,7 @@ class Sidebar:
                     width = settings.get('width', None)
                     height = settings.get('height', None)
                     title = settings.get('title', None)
+                    enable_js = settings.get('enable_js', False)
 
                     if title:
                         title = localize(title)
@@ -592,7 +598,8 @@ class Sidebar:
                     url=arguments,
                     title=title,
                     width=width,
-                    height=height)
+                    height=height,
+                    enable_js=enable_js)
         except Exception as exception:
             logging.error('Could not process a sidebar button click!')
             logging.error(str(exception))

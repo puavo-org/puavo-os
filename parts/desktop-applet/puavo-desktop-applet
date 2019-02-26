@@ -129,7 +129,7 @@ class ChangelogNotifier(PuavoWidget):
         url = url[:-4]
 
     cmd = [ '/usr/bin/puavo-webwindow', '--width', '1000', '--height', '700',
-            '--url', url, '--title', 'Changelog', '--enable-plugins' ]
+            '--url', url, '--title', 'Changelog', '--enable-js' ]
 
     (pid, stdin, stdout, stderr) \
        = GObject.spawn_async(cmd,

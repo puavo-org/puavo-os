@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -eu
+
+# Add (bad) entropy to kernel so that we can get through boot up until
+# systemd takes over.  We are not doing much security critical here so this
+# should be okay.  On the other hand the kernel entropy pool gets tainted
+# with some bad random numbers for some time, which is not good, but hopefully
+# other (better) sources will take over.  But without this boot does not get
+# to systemd-stage on newer kernels, and on diskless clients we do not have
+# much of a choice.  Note that the numbers here are completely deterministic
+# and created with a linear congruential generator (LCG).
+/usr/lib/puavo-core/add_entropy
