@@ -164,9 +164,9 @@ gc_installations() {
                                    2>/dev/null || true)
         fi
 
-        # 15552000 seconds = 180 days * (24 * 60 * 60) * seconds/day
+        # 5184000 seconds = 60 days * (24 * 60 * 60) * seconds/day
         if [ -z "$latest_prepared_time" -o \
-             "$(($latest_prepared_time + 15552000))" -le "$(date +%s)" ]; then
+             "$(($latest_prepared_time + 5184000))" -le "$(date +%s)" ]; then
           if rm -rf "$pkg_installation"; then
             log_info "removed old installation in $pkg_installation"
           else
