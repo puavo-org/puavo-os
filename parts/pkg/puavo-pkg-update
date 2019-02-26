@@ -5,6 +5,9 @@ set -eu
 baseurl='https://images.opinsys.fi/puavo-pkg'
 installers_dir='/var/lib/puavo-pkg/installers'
 
+# XXX get rid of hosttype handling
+puavo_hosttype=$(puavo-conf puavo.hosttype)
+
 mkdir -p "$installers_dir"
 
 exec 3< "$installers_dir"
@@ -160,8 +163,18 @@ for pkgspec in $puavo_pkg_specs; do
   puavo_pkg=$(echo "$pkgspec" | awk '{ print $1 }')
   action=$(echo "$pkgspec" | awk '{ print $2 }')
 
+  if [ -z "$action" ]; then
+    if [ "$puavo_hosttype" = 'bootserver' ]; then
+      # on bootservers, the default action is to prepare the packages
+      action='prepare'
+    else
+      # on others, it is to do nothing
+      action='do-nothing'
+    fi
+  fi
+
   case "$action" in
-    ''|do-nothing)
+    do-nothing)
       ;;
     install|latest)
       install_pkg "$puavo_pkg" latest || status=1
