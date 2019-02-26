@@ -700,6 +700,13 @@ prepare_pkg_with_installer()
     return 1
   }
 
+  if [ -e "${pkg_dir}/.prepared" ]; then
+    # If we have already prepared the package, just update the preparation
+    # timestamp to delay garbage collection.
+    touch "${pkg_dir}/.prepared"
+    return 0
+  fi
+
   pkg_name=$(get_pkg_name "$pkg_dir") || return 1
   pkg_id=$(get_pkg_id "$pkg_dir") || return 1
 
