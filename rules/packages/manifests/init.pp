@@ -813,6 +813,7 @@ class packages {
     , 'firmware-myricom'
     , 'firmware-netxen'
     , 'firmware-qlogic'
+    , 'firmware-ralink'
     , 'firmware-realtek'
     , 'firmware-samsung'
     , 'firmware-siano'
