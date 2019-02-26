@@ -61,6 +61,12 @@ parser.add_argument('--fixed',
                     default=False,
                     help='prevent the window from being resized')
 
+parser.add_argument('--enable-js',
+                    action='store_true',
+                    required=False,
+                    default=False,
+                    help='enable JavaScript (be careful!)')
+
 parser.add_argument('--enable-plugins',
                     action='store_true',
                     required=False,
@@ -100,13 +106,18 @@ class WebWindow(Gtk.Window):
         context = WebKit2.WebContext.new_with_website_data_manager(manager)
         self.webview = WebKit2.WebView.new_with_context(context)
 
-        if not args.enable_plugins:
-            # Disable JavaScript and other junk
-            settings = WebKit2.Settings()
+        settings = WebKit2.Settings()
+
+        if not args.enable_js:
+            # Disable JavaScript
             settings.set_enable_javascript(False)
+
+        if not args.enable_plugins:
+            # Disable plugins (rarely needed)
             settings.set_enable_java(False)
             settings.set_enable_plugins(False)
-            self.webview.set_settings(settings)
+
+        self.webview.set_settings(settings)
 
         # Block the context menu
         self.webview.connect('context_menu', self.block_context_menu)
