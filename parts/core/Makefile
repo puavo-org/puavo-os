@@ -1,3 +1,7 @@
+subdirs = add_entropy
+install-subdirs = $(subdirs:%=install-%)
+clean-subdirs = $(subdirs:%=clean-%)
+
 prefix = /usr/local
 exec_prefix = $(prefix)
 bindir = $(exec_prefix)/bin
@@ -16,7 +20,15 @@ INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL) -m 644
 
 .PHONY : all
-all :
+all : $(subdirs)
+
+.PHONY : $(subdirs)
+$(subdirs) :
+	$(MAKE) -C $@
+
+.PHONY : $(install-subdirs)
+$(install-subdirs) :
+	$(MAKE) -C $(@:install-%=%) install
 
 .PHONY : installdirs
 installdirs :
@@ -31,11 +43,11 @@ installdirs :
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-conf/scripts
 
 .PHONY : install
-install : installdirs
+install : $(install-subdirs) installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/initramfs-tools/hooks \
-                initramfs-tools/hooks/puavo
+		initramfs-tools/hooks/puavo
 	$(INSTALL_PROGRAM) \
-                -t $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-top \
+		-t $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-top \
 		initramfs-tools/scripts/init-top/puavo
 	$(INSTALL_PROGRAM) \
 		-t $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/puavo-postmount \
@@ -44,9 +56,9 @@ install : installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)/sbin init-puavo
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/initramfs-tools/conf.d \
-                initramfs-tools/conf.d/puavo
+		initramfs-tools/conf.d/puavo
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/initramfs-tools/scripts \
-                initramfs-tools/scripts/puavo
+		initramfs-tools/scripts/puavo
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-conf/definitions \
 		puavo-conf/definitions/*.json
@@ -55,5 +67,9 @@ install : installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/puavo-conf/scripts \
 		puavo-conf/scripts/*
 
+.PHONY : $(clean-subdirs)
+$(clean-subdirs) :
+	$(MAKE) -C $(@:clean-%=%) clean
+
 .PHONY : clean
-clean :
+clean : $(clean-subdirs)
