@@ -16,7 +16,7 @@ class puavo_pkg::packages {
 			, 'appinventor'
 			, 'arduino-ide'
 			, 'arduino-radiohead'
-			, 'arduino-TM1637'
+			, 'arduino-tm1637'
 			, 'bluegriffon'
 			, 'cmaptools'
 			, 'cnijfilter2'
