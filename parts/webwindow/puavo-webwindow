@@ -99,6 +99,8 @@ class WebWindow(Gtk.Window):
         if args.fixed:
             self.set_resizable(False)
 
+        self.set_position(Gtk.WindowPosition.CENTER)
+
         # Create an ephemeral context. Ephemeral contexts don't cache
         # anything on disk. Or so the documentation says...
         # (If this caches something somewhere, I can't find it.)
