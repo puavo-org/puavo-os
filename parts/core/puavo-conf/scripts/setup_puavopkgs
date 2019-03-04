@@ -109,11 +109,6 @@ configure_latest_from() {
     # on fatclients we support only configuring the latest version
     # that is on the bootserver
     puavo_pkg_spec=$(puavo-conf "puavo.pkg.${pkg_name}" 2>/dev/null) || true
-    if [ -z "$puavo_pkg_spec" ]; then
-      echo "no puavo.pkg.${pkg_name} set - will not configure ${pkg_name}" >&2
-      status=1
-      continue
-    fi
     case "$puavo_pkg_spec" in
       install|install:*|latest)
         case "$puavo_pkg_spec" in
@@ -127,9 +122,6 @@ configure_latest_from() {
         if [ -d "$other_pkgid_dir" ]; then
           reconfigure_upgrade_pkg "$pkg_name" "$other_pkgid_dir" || status=1
         fi
-        ;;
-      remove|remove:*)
-        echo "not removing ${pkg_name}"
         ;;
     esac
   done

@@ -100,6 +100,8 @@ class Interface
   end
 end
 
+$exitstatus = 0
+
 begin
   puavo_domain = File.open('/etc/puavo/domain', &:readline).chomp
 rescue
@@ -119,11 +121,22 @@ all_interfaces = (%w(/etc/network/interfaces) + Dir.glob('/etc/network/interface
                     .compact \
                     .sort
 
-network_interfaces_for_dhcpd = all_interfaces.select do |interf|
-                                 network_interfaces_filter.any? do |globexpr|
-                                   File.fnmatch(globexpr, interf)
+network_interface_names_for_dhcpd \
+  = all_interfaces.select do |iface|
+                            network_interfaces_filter.any? do |globexpr|
+                              File.fnmatch(globexpr, iface)
+                            end
+                          end
+
+network_interfaces_for_dhcpd = network_interface_names_for_dhcpd.map do |iface|
+                                 begin
+                                   Interface.new(iface)
+                                 rescue StandardError => e
+                                   warn e.message
+                                   $exitstatus = 1
+                                   nil
                                  end
-                               end.map { |interf| Interface.new(interf) }
+                               end.compact
 
 if network_interfaces_for_dhcpd.empty? then
   dhcpd_conf       = "# DISABLED\n"
@@ -211,3 +224,5 @@ INTERFACESv4="#{ (network_interfaces_for_dhcpd.map &:name).join(' ') }"
 INTERFACESv6=""
 EOF
 writeconf('/etc/default/isc-dhcp-server', etc_default_isc_dhcp_server)
+
+exit($exitstatus)

@@ -6,7 +6,8 @@ puavo_keyboard_layout=$( puavo-conf puavo.desktop.keyboard.layout)
 puavo_keyboard_variant=$(puavo-conf puavo.desktop.keyboard.variant)
 
 puavo_generate_dconf_keyboard_layouts() {
-  mkdir -p /etc/dconf/db/puavo-keyboard.d || return 1
+  mkdir -p /etc/dconf/db/puavo-keyboard.d \
+           /etc/dconf/db/puavo-keyboard.d/locks || return 1
 
   echo "$puavo_keyboard_layout" "$puavo_keyboard_variant" \
     | awk "$(cat <<'EOF'
@@ -61,6 +62,11 @@ puavo_generate_dconf_keyboard_layouts() {
       }
 EOF
 )" > /etc/dconf/db/puavo-keyboard.d/puavo-keyboard || return 1
+
+  cat <<'EOF' > /etc/dconf/db/puavo-keyboard.d/locks/puavo_keyboard_locks
+/org/gnome/desktop/input-sources
+/org/gnome/libgnomekbd/keyboard
+EOF
 
   dconf compile /etc/dconf/db/puavo-keyboard \
                 /etc/dconf/db/puavo-keyboard.d

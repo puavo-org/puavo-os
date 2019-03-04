@@ -28,7 +28,7 @@ class google_cloud_print {
       managehome => true,
       shell      => '/bin/false',
       system     => true,
-      uid        => 990;
+      uid        => 996;
   }
 
   Package <| title == 'google-cloud-print-connector' |>
