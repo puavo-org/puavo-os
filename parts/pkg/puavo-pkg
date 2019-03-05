@@ -203,7 +203,7 @@ gc_upstream_packs() {
     old_upstream_pack_list=$(ls -1t "$cache_subdir" | sed -n '2,$p')
     for old_upstream_pack in $old_upstream_pack_list; do
       upstream_pack_path="${cache_subdir}/${old_upstream_pack}"
-      if rm -f "${upstream_pack_path}"; then
+      if rm -f "$upstream_pack_path"; then
         log_info "removed old pack ${upstream_pack_path} from cache"
       else
         log_error "error removing ${upstream_pack_path} from cache"
@@ -429,41 +429,26 @@ unconfigure_pkg()
 
 unpack_upstream_pack()
 {
-  local pkg_name pkg_id pkg_dir upstream_pack upstream_dir upstream_tmpdir
+  local pkg_name pkg_id pkg_dir upstream_dir upstream_pack upstream_tmpdir
 
   pkg_name=$1
   pkg_id=$2
+
   pkg_dir=$(get_writable_pkg_dir "$pkg_name" "$pkg_id") || return 1
-  upstream_pack="${pkg_dir}/upstream_pack"
+  upstream_pack="${pkg_dir}/packs/upstream_pack"
   upstream_dir="${pkg_dir}/upstream"
   upstream_tmpdir="${upstream_dir}.tmp"
 
-  if [ -d "$upstream_dir" ]; then
-    return 0
-  fi
-
+  log_error "trying ${pkg_dir}/upstream_pack_sha384sum $upstream_pack"
   if ! check_cksum "${pkg_dir}/upstream_pack_sha384sum" "$upstream_pack"; then
     log_error 'upstream pack has incorrect checksum,' \
         'perhaps you should purge the package and download it again?'
     return 1
   fi
 
-  rm -rf "$upstream_tmpdir"
-  mkdir "$upstream_tmpdir" || return 1
-
   pushd "$pkg_dir" >/dev/null || return 1
   ./rules unpack "$upstream_pack" "$upstream_tmpdir" || {
     popd >/dev/null || true
-    rm -rf "$upstream_tmpdir"
-    return 1
-  }
-  popd >/dev/null || {
-    rm -rf "$upstream_tmpdir"
-    return 1
-  }
-
-  mv -T "$upstream_tmpdir" "$upstream_dir" || {
-    rm -rf "$upstream_tmpdir"
     return 1
   }
 
@@ -472,6 +457,10 @@ unpack_upstream_pack()
   rm -f "$upstream_pack"
 
   log_info "${pkg_name}: unpacked upstream pack successfully"
+
+  popd >/dev/null || {
+    return 1
+  }
 }
 
 check_cksum()
@@ -517,7 +506,7 @@ cache_load_upstream_pack()
   [ -n "$g_puavo_pkg_cachedir" ] || return 0
 
   pkg_dir=$(get_writable_pkg_dir "$pkg_name" "$pkg_id") || return 1
-  upstream_pack="${pkg_dir}/upstream_pack"
+  upstream_pack="${pkg_dir}/packs/upstream_pack"
   cksum_file="${pkg_dir}/upstream_pack_sha384sum"
 
   [ -r "${cksum_file}"  ] || return 0
@@ -538,7 +527,7 @@ cache_load_upstream_pack()
 
 cache_save_upstream_pack()
 {
-  local pkg_name pkg_id pkg_dir upstream_pack cksum_str
+  local cksum_str pkg_name pkg_id pkg_dir upstream_pack
 
   pkg_name=$1
   pkg_id=$2
@@ -546,7 +535,7 @@ cache_save_upstream_pack()
   [ -n "$g_puavo_pkg_cachedir" ] || return 0
 
   pkg_dir=$(get_writable_pkg_dir "$pkg_name" "$pkg_id") || return 1
-  upstream_pack="${pkg_dir}/upstream_pack"
+  upstream_pack="${pkg_dir}/packs/upstream_pack"
   cksum_str=$(sha384sum "$upstream_pack" | cut -d' ' -f1)
 
   if [ -n "$cksum_str" ]; then
@@ -566,14 +555,14 @@ download_upstream_pack()
   pkg_name=$1
   pkg_id=$2
   pkg_dir=$(get_writable_pkg_dir "$pkg_name" "$pkg_id") || return 1
-  upstream_pack="${pkg_dir}/upstream_pack"
+  upstream_pack="${pkg_dir}/packs/upstream_pack"
   upstream_tmppack="${upstream_pack}.tmp"
 
   cache_load_upstream_pack "$pkg_name" "$pkg_id" || {
     log_warning "${pkg_name}: failed to load the upstream pack from the cache"
   }
 
-  if check_cksum "${pkg_dir}/upstream_pack_sha384sum" "${upstream_pack}"; then
+  if check_cksum "${pkg_dir}/upstream_pack_sha384sum" "$upstream_pack"; then
     return 0
   fi
 
@@ -582,7 +571,7 @@ download_upstream_pack()
     ./rules download "${upstream_tmppack}" || {
       [ $? -eq 2 ] && g_sc=${SC_ERR_NET}
       popd >/dev/null || true
-      rm -rf "${upstream_tmppack}" || true
+      rm -rf "$upstream_tmppack" || true
       log_error "package downloader returned an error!"
       return 1
     }
@@ -596,7 +585,7 @@ download_upstream_pack()
       --no-check-certificate \
       --no-cookies \
       --input-file "${pkg_dir}/upstream_pack_url" \
-      --output-document "${upstream_tmppack}" \
+      --output-document "$upstream_tmppack" \
       --progress=dot:mega || {
       [ $? -eq 4 ] && g_sc=${SC_ERR_NET}
       rm -rf "${upstream_tmppack}"
@@ -610,8 +599,8 @@ download_upstream_pack()
     return 1
   fi
 
-  if ! mv -T "${upstream_tmppack}" "${upstream_pack}"; then
-    rm -rf "${upstream_pack}"
+  if ! mv -T "$upstream_tmppack" "$upstream_pack"; then
+    rm -rf "$upstream_pack"
     return 1
   fi
 
@@ -710,7 +699,7 @@ prepare_pkg_from_dir()
     return 1
   }
 
-  unpack_upstream_pack "$pkg_dir" || {
+  unpack_upstream_pack "$pkg_name" "$pkg_id" || {
     log_error "failed to unpack the upstream pack of package '${pkg_name}'"
     return 1
   }
@@ -739,10 +728,13 @@ prepare_pkg_with_installer()
 
   # drop privileges to "puavo-pkg"-user for preparation stage
   upstream_dir="${pkg_dir}/upstream"
+  upstream_packdir="${pkg_dir}/packs"
   upstream_tmpdir="${pkg_dir}/upstream.tmp"
 
-  rm -rf "$upstream_dir" "$upstream_tmpdir"
-  install -d -o puavo-pkg -g puavo-pkg -m 755 "$upstream_tmpdir"
+  rm -rf "$upstream_dir" "$upstream_packdir" "$upstream_tmpdir"
+  install -d -o puavo-pkg -g puavo-pkg -m 755 "$upstream_packdir" \
+                                              "$upstream_tmpdir"
+
   if ! su puavo-pkg -s /bin/bash -- /usr/sbin/puavo-pkg prepare-from-dir \
     "$pkg_dir" > /dev/null; then
       log_error "failed to run /usr/sbin/puavo-pkg prepare-from-dir $pkg_dir"
@@ -750,10 +742,7 @@ prepare_pkg_with_installer()
       return 1
   fi
   mv "$upstream_tmpdir" "$upstream_dir"
-
-  ## Remove the upstream pack, it is not needed anymore since we just
-  ## unpacked it successfully.
-  rm -f "$upstream_pack"
+  rm -rf "$upstream_packdir"
 
   # Update timestamp so it can be considered in garbage collection.
   # We do this at preparation stage, because bootservers do not necessarily
