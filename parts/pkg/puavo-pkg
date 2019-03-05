@@ -652,6 +652,12 @@ extract_installer()
     return 1
   fi
 
+  if [ "$(id -nu)" != 'puavo-pkg' ]; then
+    echo "Refusing to extract puavo-pkg $installer as '$(id -nu)'" >&2
+    echo "(must be user 'puavo-pkg')." >&2
+    return 1
+  fi
+
   pkg_format=$(get_pkg_field_from_installer 'pkg-format' "$installer") \
                  || true
   if [ -z "$pkg_format" -o "$pkg_format" -gt "$SUPPORTED_PKG_FORMAT" ]; then
@@ -769,13 +775,17 @@ install_pkg_with_installer()
   local installer pkg_dir pkg_name pkg_id old_pkg_id old_pkg_dir
 
   installer=$1
-  pkg_dir=$(prepare_pkg_with_installer "$installer") || return 1
 
-  pkg_name=$(get_pkg_name "$pkg_dir") || return 1
+  # drop privileges to "puavo-pkg"-user for preparation stage
+  su puavo-pkg -s /bin/bash -- /usr/sbin/puavo-pkg prepare "$installer" \
+    || return 1
+  pkg_name=$(get_pkg_field_from_installer 'name' "$installer") || return 1
+  pkg_id=$(get_pkg_field_from_installer 'package-id' "$installer") \
+             || return 1
+  pkg_dir=$(get_writable_pkg_dir "$pkg_name" "$pkg_id")
 
   reconfigure_upgrade_pkg "$pkg_name" "$pkg_dir" || return 1
 
-  pkg_id=$(get_pkg_id "$pkg_dir") || return 1
   old_pkg_id=$(get_installed_pkg_id "$pkg_name") || return 1
 
   if [ -n "$old_pkg_id" -a "$old_pkg_id" != "$pkg_id" ]; then
@@ -980,7 +990,13 @@ fi
 [[ "$g_puavo_pkg_readonly_rootdir" =~ ^/ ]] \
   || usage_error "invalid readonly root dir path"
 
-mkdir -p "${g_puavo_pkg_rootdir}/packages" "$g_puavo_pkg_installed_dir"
+mkdir -p "$g_puavo_pkg_cachedir" \
+         "${g_puavo_pkg_rootdir}/packages" \
+         "$g_puavo_pkg_installed_dir"
+chown puavo-pkg: "$g_puavo_pkg_cachedir" \
+                 "$g_puavo_pkg_rootdir" \
+                 "${g_puavo_pkg_rootdir}/packages" \
+                 "$g_puavo_pkg_installed_dir"
 
 command=$1
 shift
