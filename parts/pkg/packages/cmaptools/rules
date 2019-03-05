@@ -1005,18 +1005,13 @@ EOF
 
         chmod +x "${upstream_pack}"
 
-        # Execute the installer as nobody, the installer should not be
-        # trusted. This is not going to make it 100% safe (not even 50%,
-        # nobody is shared, so is namespace etc. ), but its far better
-        # than running it as root.
-        chown nobody "${upstream_dir}"
-        sudo -u nobody -g nogroup "${upstream_pack}" -f install.conf -i silent || true
+        # XXX We run code from the upstream package at an unpack phase...
+        # XXX this is not good, but it appears there is no other way to
+        # XXX install this.
+        "${upstream_pack}" -f install.conf -i silent || true
 
         # The installer dumps lot of files with mode 777 XD
         chmod -R go-w "${upstream_dir}"
-
-        # Reclaim ownership of all files.
-        chown -R root:root "${upstream_dir}"
 
         touch /usr/share/mime/.puavo_update_mime_database
         ;;
