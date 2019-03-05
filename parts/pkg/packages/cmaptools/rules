@@ -55,7 +55,10 @@ case "${command}" in
     unpack)
         upstream_pack=$1
         upstream_dir=$2
-        cat <<EOF >install.conf
+        install_conf=$(mktemp /tmp/cmaptools_puavo_pkg_install.conf.XXXXXX) \
+                         || return 1
+
+        cat <<EOF > "$install_conf"
 CHOSEN_FEATURE_LIST=Applica
 CHOSEN_INSTALL_FEATURE_LIST=Applica
 CHOSEN_INSTALL_SET=Typical
@@ -1008,7 +1011,8 @@ EOF
         # XXX We run code from the upstream package at an unpack phase...
         # XXX this is not good, but it appears there is no other way to
         # XXX install this.
-        "${upstream_pack}" -f install.conf -i silent || true
+        "${upstream_pack}" -f "$install_conf" -i silent || true
+        rm -f "$install_conf"
 
         # The installer dumps lot of files with mode 777 XD
         chmod -R go-w "${upstream_dir}"

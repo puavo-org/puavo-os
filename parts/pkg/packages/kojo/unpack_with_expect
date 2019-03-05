@@ -23,6 +23,12 @@ expect {
 }
 
 expect {
+  -ex {Would you like to install to that directory anyway?} {
+    send "y\n"
+  }
+}
+
+expect {
   -ex {Create a desktop icon?}
 }
 

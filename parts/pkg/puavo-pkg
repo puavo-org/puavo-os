@@ -439,7 +439,6 @@ unpack_upstream_pack()
   upstream_dir="${pkg_dir}/upstream"
   upstream_tmpdir="${upstream_dir}.tmp"
 
-  log_error "trying ${pkg_dir}/upstream_pack_sha384sum $upstream_pack"
   if ! check_cksum "${pkg_dir}/upstream_pack_sha384sum" "$upstream_pack"; then
     log_error 'upstream pack has incorrect checksum,' \
         'perhaps you should purge the package and download it again?'
