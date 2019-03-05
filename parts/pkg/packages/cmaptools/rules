@@ -1013,7 +1013,7 @@ EOF
         # The installer dumps lot of files with mode 777 XD
         chmod -R go-w "${upstream_dir}"
 
-        touch /usr/share/mime/.puavo_update_mime_database
+        echo cmaptools >> /var/lib/puavo-pkg/.update_mime_database
         ;;
 
     *)

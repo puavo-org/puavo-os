@@ -33,6 +33,11 @@ case "$1" in
 		    --uid 995                 \
 		    puavo-pkg
 	fi
+
+        if [ ! -e /var/lib/puavo-pkg/.update_mime_database ]; then
+            install -o puavo-pkg -g puavo-pkg -m 644 /dev/null \
+                /var/lib/puavo-pkg/.update_mime_database
+        fi
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
