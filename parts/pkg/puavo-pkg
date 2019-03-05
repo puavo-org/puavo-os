@@ -652,12 +652,6 @@ extract_installer()
     return 1
   fi
 
-  if [ "$(id -nu)" != 'puavo-pkg' ]; then
-    echo "Refusing to extract puavo-pkg $installer as '$(id -nu)'" >&2
-    echo "(must be user 'puavo-pkg')." >&2
-    return 1
-  fi
-
   pkg_format=$(get_pkg_field_from_installer 'pkg-format' "$installer") \
                  || true
   if [ -z "$pkg_format" -o "$pkg_format" -gt "$SUPPORTED_PKG_FORMAT" ]; then
@@ -695,9 +689,38 @@ extract_installer()
   echo "$pkg_dir"
 }
 
+prepare_pkg_from_dir()
+{
+  local msg pkg_dir pkg_id pkg_name
+
+  pkg_dir=$1
+
+  if [ "$(id -nu)" != 'puavo-pkg' ]; then
+    msg="refusing to prepare puavo-pkg in $pkg_dir as '$(id -nu)'"
+    msg="${msg} (must be user 'puavo-pkg')."
+    log_error "$msg"
+    return 1
+  fi
+
+  pkg_name=$(get_pkg_name "$pkg_dir") || return 1
+  pkg_id=$(get_pkg_id "$pkg_dir") || return 1
+
+  download_upstream_pack "$pkg_name" "$pkg_id" || {
+    log_error "failed to download the upstream pack of package '${pkg_name}'"
+    return 1
+  }
+
+  unpack_upstream_pack "$pkg_dir" || {
+    log_error "failed to unpack the upstream pack of package '${pkg_name}'"
+    return 1
+  }
+
+  log_info "${pkg_name}: prepared for configuration"
+}
+
 prepare_pkg_with_installer()
 {
-  local installer pkg_dir pkg_name pkg_id
+  local installer upstream_dir upstream_tmpdir
 
   installer=$1
 
@@ -714,26 +737,29 @@ prepare_pkg_with_installer()
     return 0
   fi
 
-  pkg_name=$(get_pkg_name "$pkg_dir") || return 1
-  pkg_id=$(get_pkg_id "$pkg_dir") || return 1
+  # drop privileges to "puavo-pkg"-user for preparation stage
+  upstream_dir="${pkg_dir}/upstream"
+  upstream_tmpdir="${pkg_dir}/upstream.tmp"
 
-  download_upstream_pack "$pkg_name" "$pkg_id" || {
-    log_error "failed to download the upstream pack of package '${pkg_name}'"
-    return 1
-  }
+  rm -rf "$upstream_dir" "$upstream_tmpdir"
+  install -d -o puavo-pkg -g puavo-pkg -m 755 "$upstream_tmpdir"
+  if ! su puavo-pkg -s /bin/bash -- /usr/sbin/puavo-pkg prepare-from-dir \
+    "$pkg_dir" > /dev/null; then
+      log_error "failed to run /usr/sbin/puavo-pkg prepare-from-dir $pkg_dir"
+      rm -rf "$upstream_tmpdir"
+      return 1
+  fi
+  mv "$upstream_tmpdir" "$upstream_dir"
 
-  unpack_upstream_pack "$pkg_name" "$pkg_id" || {
-    log_error "failed to unpack the upstream pack of package '${pkg_name}'"
-    return 1
-  }
+  ## Remove the upstream pack, it is not needed anymore since we just
+  ## unpacked it successfully.
+  rm -f "$upstream_pack"
 
   # Update timestamp so it can be considered in garbage collection.
   # We do this at preparation stage, because bootservers do not necessarily
   # want package installation, only preparation, and prepared packages
   # should not be garbage collected even if those are not installed.
   touch "${pkg_dir}/.prepared"
-
-  log_info "${pkg_name}: prepared for configuration"
 
   echo "$pkg_dir"
 }
@@ -775,17 +801,13 @@ install_pkg_with_installer()
   local installer pkg_dir pkg_name pkg_id old_pkg_id old_pkg_dir
 
   installer=$1
+  pkg_dir=$(prepare_pkg_with_installer "$installer") || return 1
 
-  # drop privileges to "puavo-pkg"-user for preparation stage
-  su puavo-pkg -s /bin/bash -- /usr/sbin/puavo-pkg prepare "$installer" \
-    || return 1
-  pkg_name=$(get_pkg_field_from_installer 'name' "$installer") || return 1
-  pkg_id=$(get_pkg_field_from_installer 'package-id' "$installer") \
-             || return 1
-  pkg_dir=$(get_writable_pkg_dir "$pkg_name" "$pkg_id")
+  pkg_name=$(get_pkg_name "$pkg_dir") || return 1
 
   reconfigure_upgrade_pkg "$pkg_name" "$pkg_dir" || return 1
 
+  pkg_id=$(get_pkg_id "$pkg_dir") || return 1
   old_pkg_id=$(get_installed_pkg_id "$pkg_name") || return 1
 
   if [ -n "$old_pkg_id" -a "$old_pkg_id" != "$pkg_id" ]; then
@@ -993,10 +1015,7 @@ fi
 mkdir -p "$g_puavo_pkg_cachedir" \
          "${g_puavo_pkg_rootdir}/packages" \
          "$g_puavo_pkg_installed_dir"
-chown puavo-pkg: "$g_puavo_pkg_cachedir" \
-                 "$g_puavo_pkg_rootdir" \
-                 "${g_puavo_pkg_rootdir}/packages" \
-                 "$g_puavo_pkg_installed_dir"
+chown puavo-pkg: "$g_puavo_pkg_cachedir"
 
 command=$1
 shift
@@ -1024,7 +1043,12 @@ case "${command}" in
     ;;
   prepare)
     assert_args_count -eq 1 "$@"
-    prepare_pkg_with_installer "$1" > /dev/null
+    prepare_pkg_with_installer "$1"
+    ;;
+  prepare-from-dir)
+    # not in usage() because should be called only internally by puavo-pkg
+    assert_args_count -eq 1 "$@"
+    prepare_pkg_from_dir "$1"
     ;;
   reconfigure)
     assert_args_count -eq 1 "$@"
