@@ -2,8 +2,8 @@
 
 set -eu
 
-test -e /usr/share/mime/.puavo_update_mime_database || exit 0
+if [ -s /var/lib/puavo-pkg/.update_mime_database ]; then
+  update-mime-database /usr/share/mime
+fi
 
-update-mime-database /usr/share/mime
-
-rm -f /usr/share/mime/.puavo_update_mime_database
+cat /dev/null > /var/lib/puavo-pkg/.update_mime_database

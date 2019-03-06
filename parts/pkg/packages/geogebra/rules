@@ -64,7 +64,7 @@ case "${command}" in
             mkdir -p "${dir}"
             ln -fns -T "${upstream_dir}${f}" "${f}"
         done
-        touch /usr/share/mime/.puavo_update_mime_database
+        echo geogebra >> /var/lib/puavo-pkg/.update_mime_database
         ;;
     unconfigure)
         rm -f ${links}

@@ -22,6 +22,8 @@ puavo_link_to_state() {
   if [ -d "$dirpath" ]; then
     find "$dirpath" -type d -print0 | cpio -0dpm --quiet /state || true
     mv -T "$dirpath" "${dirpath}.rofs" 2>/dev/null || true
+  else
+    mkdir -p "/state${dirpath}"
   fi
 
   ln -fns "$wanted_linktarget" "$dirpath"

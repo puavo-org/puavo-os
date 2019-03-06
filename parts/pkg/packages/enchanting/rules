@@ -21,7 +21,7 @@ case "${command}" in
             /usr/share/mime/packages/enchanting.xml
 	ln -fns "${upstream_dir}/usr/share/icons/hicolor/48x48/apps/enchanting.png" \
             /usr/share/pixmaps/enchanting.png
-	touch /usr/share/mime/.puavo_update_mime_database
+        echo enchanting >> /var/lib/puavo-pkg/.update_mime_database
 	;;
     unconfigure)
 	rm -rf /etc/udev/rules.d/70-enchanting-lego-mindstorms-nxt.rules \

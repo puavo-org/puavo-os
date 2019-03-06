@@ -459,7 +459,7 @@ setup_mimetypes() {
 
   # suggestion to image build or system service that mime database should be
   # updated
-  touch /usr/share/mime/.puavo_update_mime_database
+  echo smartboard >> /var/lib/puavo-pkg/.update_mime_database
 }
 
 case "${command}" in
@@ -525,7 +525,7 @@ case "${command}" in
         )
 
         smart_datadir="${upstream_dir}/smartboard${smart_technologies_dir}/common/data"
-        install -d -o root -g root -m 1777 "$smart_datadir"
+        mkdir -m 1777 -p "$smart_datadir"
         ln -fns /state/external_files/smartboard_license \
                 "${smart_datadir}/.mp.1.1.dat"
 

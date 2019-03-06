@@ -24,7 +24,6 @@ case "$command" in
   unpack)
     upstream_pack=$1
     upstream_dir=$2
-    rm -rf "$upstream_dir"
     expect -f unpack_with_expect "$upstream_pack" "$upstream_dir"
     rm -rf "${upstream_dir}/jre"
     ;;

@@ -62,7 +62,7 @@ case "${command}" in
         chmod 777 "${upstream_dir}/vstloggerpro/usr/local/share/LoggerPro/Linux/tmp"
         chmod 777 "${upstream_dir}/vstloggerpro/usr/local/share/LoggerPro/Linux/VSTSupport"
 
-        touch /usr/share/mime/.puavo_update_mime_database
+        echo vstloggerpro >> /var/lib/puavo-pkg/.update_mime_database
         ;;
     unconfigure)
         rm -f ${vstloggerpro_links}                           \
