@@ -2,12 +2,6 @@
 
 set -eu
 
-cleanup() {
-  [ -d "${tmpdir:-}" ] && rm -rf "${tmpdir:-}"
-}
-
-trap cleanup 0 INT TERM
-
 get_puavo_pkg_attribute() {
   field=$1
   installer=$2
@@ -31,27 +25,29 @@ copy_pkg_to_repo() {
   pkg_id=$(get_puavo_pkg_attribute package-id "$puavo_pkg_path")   || return 1
   pkg_version=$(get_puavo_pkg_attribute version "$puavo_pkg_path") || return 1
 
-  pkg_dir="${tmpdir}/${puavo_pkg}"
+  pkg_dir="${target_dir}/${puavo_pkg}"
   pkg_file="${pkg_id}.tar.gz"
-  repo_pkg_path="${pkg_dir}/${pkg_file}"
+  repo_pkg_path="${pkg_dir}/${pkg_file}.gpg"
 
-  mkdir -p "$pkg_dir"                                          || return 1
-  cp -p "$puavo_pkg_path" "$repo_pkg_path"                     || return 1
-  ln -s "$pkg_file" "${pkg_dir}/version-${pkg_version}.tar.gz" || return 1
-  ln -s "$pkg_file" "${pkg_dir}/latest.tar.gz"                 || return 1
+  mkdir -p "$pkg_dir" || return 1
+  rm -f "$repo_pkg_path"
+  gpg --homedir "$gnupg_dir" --sign \
+    --output "$repo_pkg_path" "$puavo_pkg_path" || return 1
+
+  ln -fns "$pkg_file" "${pkg_dir}/version-${pkg_version}.tar.gz.gpg" || return 1
+  ln -fns "$pkg_file" "${pkg_dir}/latest.tar.gz.gpg"                 || return 1
 
   return 0
 }
 
 status=0
 
-tmpdir=$(mktemp -d /tmp/puavo-pkg-repository.XXXXXX) || exit 1
-
 puavo_pkg_packages_path=${1:-}
-rsync_target_path=${2:-}
+target_dir=${2:-}
+gnupg_dir=${3:-}
 
-if ! [ -d "$puavo_pkg_packages_path" ] || [ -z "$rsync_target_path" ]; then
-  echo "Usage: $(basename "$0") puavo_packages_dir rsync_target_path" >&2
+if [ ! -d "$puavo_pkg_packages_path" -o -z "$target_dir" -o ! -d "$gnupg_dir" ]; then
+  echo "Usage: $(basename "$0") puavo_packages_dir target_dir gnupg_dir" >&2
   exit 1
 fi
 
@@ -59,11 +55,5 @@ for puavo_pkg_path in ${puavo_pkg_packages_path}/*.tar.gz; do
   test -e "$puavo_pkg_path" || continue
   copy_pkg_to_repo "$puavo_pkg_path" || status=1
 done
-
-if [ "$status" -eq 0 ]; then
-  rsync -lrvHS --progress "${tmpdir}/" "${rsync_target_path}/" || status=1
-else
-  echo 'not rsyncing due to errors' >&2
-fi
 
 exit $status
