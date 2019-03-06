@@ -42,16 +42,25 @@ download_installer() {
     return 0
   fi
 
-  pkg_url="${baseurl}/${installer_subpath}"
   installer_tmppath="${installer_fullpath}.tmp"
+  pkg_url="${baseurl}/${installer_subpath}.gpg"
+  unverified_installer_tmppath="${installer_fullpath}.gpg.tmp"
 
   mkdir -p "${installers_dir}/${puavo_pkg}" || true
   if ! wget -q --ca-certificate=/etc/puavo/certs/rootca.pem \
-         -O "$installer_tmppath" "$pkg_url"; then
-    echo "Could not download installer from ${pkg_url}" >&2
-    rm -f "$installer_tmppath"
-    return 1
+    -O "$unverified_installer_tmppath" "$pkg_url"; then
+      echo "Could not download installer from ${pkg_url}" >&2
+      rm -f "$unverified_installer_tmppath"
+      return 1
   fi
+
+  if ! gpg --decrypt --homedir /root/.pkg-gnupg \
+    "$unverified_installer_tmppath" 2>/dev/null > "$installer_tmppath"; then
+      echo "verification failed for ${unverified_installer_tmppath}" >&2
+      rm -f "$unverified_installer_tmppath" "$installer_tmppath"
+      return 1
+  fi
+  rm -f "$unverified_installer_tmppath"
 
   # we lookup package id, because $version might be "latest" or just
   # the version number
