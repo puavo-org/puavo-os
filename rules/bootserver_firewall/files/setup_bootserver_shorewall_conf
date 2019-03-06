@@ -88,12 +88,6 @@ get_dhcp_interfaces() {
 
 dhcpd_interfaces=$(get_dhcp_interfaces)
 
-# -- hosts
-cat <<EOF > "${target_dir}/hosts.tmp"
-#ZONE	HOST(S)					OPTIONS
-EOF
-mv "${target_dir}/hosts.tmp" "${target_dir}/hosts"
-
 # -- interfaces
 cat <<EOF > "${target_dir}/interfaces.tmp"
 #ZONE	INTERFACE	BROADCAST	OPTIONS
@@ -142,13 +136,6 @@ ACCEPT		any			any			icmp    8
 #ACCEPT		inet			fw			tcp	22
 EOF
 mv "${target_dir}/rules.tmp" "${target_dir}/rules"
-
-# -- tunnels
-cat <<EOF > "${target_dir}/tunnels.tmp"
-#TYPE			ZONE	GATEWAY		GATEWAY
-#						ZONE
-EOF
-mv "${target_dir}/tunnels.tmp" "${target_dir}/tunnels"
 
 # -- zones
 cat <<EOF > "${target_dir}/zones.tmp"
