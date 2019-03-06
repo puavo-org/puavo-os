@@ -8,6 +8,7 @@ class image::opinsys {
           ::opinsys_dput,
           ::oracle_java,
           ::primus,
+          ::puavo_pkg::gnupg,
           ::puavo_pkg::packages,
           ::ssh_server
 
