@@ -30,9 +30,10 @@ copy_pkg_to_repo() {
   repo_pkg_path="${pkg_dir}/${pkg_file}.gpg"
 
   mkdir -p "$pkg_dir" || return 1
-  rm -f "$repo_pkg_path"
-  gpg --homedir "$gnupg_dir" --sign \
-    --output "$repo_pkg_path" "$puavo_pkg_path" || return 1
+  if [ ! -e "$repo_pkg_path" ]; then
+    gpg --homedir "$gnupg_dir" --sign \
+      --output "$repo_pkg_path" "$puavo_pkg_path" || return 1
+  fi
 
   ln -fns "$pkg_file" "${pkg_dir}/version-${pkg_version}.tar.gz.gpg" || return 1
   ln -fns "$pkg_file" "${pkg_dir}/latest.tar.gz.gpg"                 || return 1
