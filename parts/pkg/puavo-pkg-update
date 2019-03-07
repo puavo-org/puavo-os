@@ -193,14 +193,10 @@ for pkgspec in $puavo_pkg_specs; do
 
   if [ -z "$action" ]; then
     if [ "$puavo_hosttype" = 'bootserver' ]; then
-      # On bootservers, the default action is to prepare the packages,
-      # except if the package is installed, then keep and update the
-      # installation.
-      if [ -e "/var/lib/puavo-pkg/installed/${puavo_pkg}" ]; then
-        action='install'
-      else
-        action='prepare'
-      fi
+      # On bootservers, the default action is to prepare the packages.
+      # This means all packages which are not explicitly marked as installed,
+      # will be unconfigured, which is probably what we actually want.
+      action='prepare'
     else
       # on others, it is to do nothing
       action='do-nothing'
