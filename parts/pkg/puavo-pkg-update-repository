@@ -26,8 +26,8 @@ copy_pkg_to_repo() {
   pkg_version=$(get_puavo_pkg_attribute version "$puavo_pkg_path") || return 1
 
   pkg_dir="${target_dir}/${puavo_pkg}"
-  pkg_file="${pkg_id}.tar.gz"
-  repo_pkg_path="${pkg_dir}/${pkg_file}.gpg"
+  pkg_file="${pkg_id}.tar.gz.gpg"
+  repo_pkg_path="${pkg_dir}/${pkg_file}"
 
   mkdir -p "$pkg_dir" || return 1
   if [ ! -e "$repo_pkg_path" ]; then
