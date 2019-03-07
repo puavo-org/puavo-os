@@ -187,6 +187,8 @@ maybe_remove_pkg() {
   fi
 }
 
+logmsg user.notice 'puavo-pkg-update starting'
+
 puavo_pkg_specs=$(
   puavo-conf | awk '$1 ~ /^puavo.pkg./ { gsub(/^puavo.pkg./, "", $1); print }'
 )
@@ -244,13 +246,18 @@ for pkgspec in $puavo_pkg_specs; do
   esac
 done
 
+logmsg user.notice 'garbage collecting old/broken puavo-pkg packages'
 if ! puavo-pkg gc-installations; then
   logmsg user.err 'problem in garbage collecting puavo packages'
   status=1
 fi
+
+logmsg user.notice 'garbage collecting old puavo-pkg upstream packs'
 if ! puavo-pkg gc-upstream-packs; then
   logmsg user.err 'problem in garbage collecting puavo-pkg upstream packs'
   status=1
 fi
+
+logmsg user.notice "puavo-pkg-update finishing with status ${status}"
 
 exit $status

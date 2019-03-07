@@ -624,6 +624,41 @@ get_pkg_field_from_installer()
   printf %s "$field_value"
 }
 
+check_image_requirements_met() {
+  local current_image_timestamp first_timestamp installer required_image
+
+  installer=$1
+
+  required_image=$(get_pkg_field_from_installer 'required-image' "$installer") \
+                     || true
+  if [ -z "$required_image" ]; then
+    return 0
+  fi
+
+  current_image_timestamp=$(
+    awk '{
+      if (match($1, /^.*?-([0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{6})-/, timestamp)) {
+        print timestamp[1]
+      }
+    }' /etc/puavo-image/name || true)
+
+  if [ -z "$current_image_timestamp" ]; then
+    log_error 'could not determine current image timestamp'
+    return 1
+  fi
+
+  first_timestamp="$(printf "%s\n%s\n" "$current_image_timestamp" \
+                       "$required_image" | sort | head -1)"
+
+  # if $required_image <= $current_image_timestamp, return error
+  if [ "$first_timestamp" != "$required_image" ]; then
+    log_error "${installer} requires image of at least ${required_image}"
+    return 1
+  fi
+
+  return 0
+}
+
 extract_installer()
 {
   local installer pkg_name pkg_id pkg_dir pkg_tmpdir pkg_format
@@ -639,6 +674,10 @@ extract_installer()
                  || true
   if [ -z "$pkg_format" -o "$pkg_format" -gt "$SUPPORTED_PKG_FORMAT" ]; then
     log_error "installer has unsupported format '${pkg_format}'"
+    return 1
+  fi
+
+  if ! check_image_requirements_met "$installer"; then
     return 1
   fi
 
