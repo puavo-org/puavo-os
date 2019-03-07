@@ -364,11 +364,11 @@ configure_pkg()
 
   pushd "$pkg_dir" >/dev/null || return 1
   ./rules configure "$upstream_dir" || {
-    popd >/dev/null || true
+    popd > /dev/null 2>&1 || true
     log_error "failed to configure package '${pkg_name}'"
     return 1
   }
-  popd >/dev/null || return 1
+  popd > /dev/null 2>&1 || true
 
   ln -fns "$pkg_dir" "$pkg_link" || {
     log_error "failed to create a package link"
@@ -416,11 +416,11 @@ unconfigure_pkg()
 
   pushd "$pkg_dir" >/dev/null || return 1
   ./rules unconfigure "$upstream_dir" >/dev/null || {
-    popd >/dev/null || true
+    popd > /dev/null 2>&1 || true
     log_error "failed to unconfigure package '${pkg_name}'"
     return 1
   }
-  popd >/dev/null || return 1
+  popd > /dev/null 2>&1 || true
 
   rm -f "$pkg_link" || return 1
 
@@ -447,7 +447,7 @@ unpack_upstream_pack()
 
   pushd "$pkg_dir" >/dev/null || return 1
   ./rules unpack "$upstream_pack" "$upstream_tmpdir" || {
-    popd >/dev/null || true
+    popd > /dev/null 2>&1 || true
     return 1
   }
 
@@ -457,9 +457,7 @@ unpack_upstream_pack()
 
   log_info "${pkg_name}: unpacked upstream pack successfully"
 
-  popd >/dev/null || {
-    return 1
-  }
+  popd > /dev/null 2>&1 || true
 }
 
 check_cksum()
@@ -569,15 +567,12 @@ download_upstream_pack()
     pushd "${pkg_dir}" >/dev/null || return 1
     ./rules download "${upstream_tmppack}" || {
       [ $? -eq 2 ] && g_sc=${SC_ERR_NET}
-      popd >/dev/null || true
+      popd > /dev/null 2>&1 || true
       rm -rf "$upstream_tmppack" || true
       log_error "package downloader returned an error!"
       return 1
     }
-    popd >/dev/null || {
-      rm -rf "${upstream_tmppack}"
-      return 1
-    }
+    popd > /dev/null 2>&1 || true
   else
     wget \
       --no-use-server-timestamps \
@@ -1007,8 +1002,6 @@ chown puavo-pkg: "$g_puavo_pkg_cachedir"
 
 command=$1
 shift
-
-cd "$g_puavo_pkg_rootdir"
 
 case "${command}" in
   gc-installations)
