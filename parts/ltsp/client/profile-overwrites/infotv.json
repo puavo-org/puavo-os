@@ -1,5 +1,5 @@
 {
-  "puavo.service.cron.cronjobs"    : "infotv-display-control,puavo-autoreboot-at-night",
+  "puavo.service.cron.cronjobs"    : "infotv-display-control,puavo-autoreboot-at-night,puavo-pkg-update",
   "puavo.guestlogin.enabled"       : "true",
   "puavo.guestlogin.mode"          : "automatic",
   "puavo.xsessions.default"        : "puavo-infotv",

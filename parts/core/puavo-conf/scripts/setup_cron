@@ -140,3 +140,10 @@ cron_daily_cond_enable puavo-cleanup-old-users <<'EOF'
 test -x /usr/local/sbin/puavo-cleanup-old-users || exit 0
 /usr/local/sbin/puavo-cleanup-old-users
 EOF
+
+cron_daily_cond_enable puavo-pkg-update <<'EOF'
+#!/bin/sh
+
+test -x /usr/sbin/puavo-pkg-update || exit 0
+/usr/sbin/puavo-pkg-update
+EOF
