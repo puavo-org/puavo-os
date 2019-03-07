@@ -1031,7 +1031,7 @@ case "${command}" in
     ;;
   prepare)
     assert_args_count -eq 1 "$@"
-    prepare_pkg_with_installer "$1"
+    prepare_pkg_with_installer "$1" > /dev/null
     ;;
   prepare-from-dir)
     # not in usage() because should be called only internally by puavo-pkg
