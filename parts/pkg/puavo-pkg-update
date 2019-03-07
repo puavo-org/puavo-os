@@ -10,8 +10,14 @@ logmsg() {
   echo "PUAVO-PKG-UPDATE: $@" >&2
 }
 
+if ! mountpoint -q /images; then
+  logmsg user.err \
+    'trying to run puavo-pkg-update where /images is not a mounted partition'
+  exit 1
+fi
+
 baseurl='https://images.opinsys.fi/puavo-pkg'
-installers_dir='/var/lib/puavo-pkg/installers'
+installers_dir='/images/puavo-pkg/installers'
 
 # XXX get rid of hosttype handling
 puavo_hosttype=$(puavo-conf puavo.hosttype)
