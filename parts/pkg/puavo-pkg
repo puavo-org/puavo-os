@@ -113,7 +113,7 @@ logmsg()
   if [ -S /dev/log ]; then
     logger -p "$syslog_prio" -t puavo-pkg "$@" || true
   fi
-  echo "${human_prio}: $@" >&2
+  echo "PUAVO-PKG ${human_prio}: $@" >&2
 }
 
 log_error()
