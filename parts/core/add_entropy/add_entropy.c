@@ -5,6 +5,7 @@
 #include <err.h>
 #include <fcntl.h>
 #include <linux/random.h>
+#include <time.h>
 #include <unistd.h>
 
 int
@@ -17,6 +18,10 @@ main(void)
 		int size;
 		unsigned char data[1024];
 	} entropy;
+	struct timespec tp;
+
+	if (clock_gettime(CLOCK_REALTIME, &tp) == -1)
+		err(1, "clock_gettime() failed");
 
 	random_fd = open("/dev/random", O_RDWR);
 	if (random_fd == -1)
@@ -26,7 +31,7 @@ main(void)
 	entropy.size = 1024;
 	previous_num = 1103515245;
 	for (i = 0; i < 1024; i++) {
-		entropy.data[i] = previous_num & 0xff;
+		entropy.data[i] = (previous_num ^ tp.tv_nsec) & 0xff;
 		previous_num = (1664525 * previous_num + 1013904223)
 				 & 0xffffffff;
 	}
@@ -36,5 +41,5 @@ main(void)
 
 	(void) close(random_fd);
 
-        return 0;
+	return 0;
 }
