@@ -2,6 +2,10 @@
 
 set -eu
 
+logmsg() {
+  logger -t puavo-pkg-update "$@"
+}
+
 baseurl='https://images.opinsys.fi/puavo-pkg'
 installers_dir='/var/lib/puavo-pkg/installers'
 
@@ -12,7 +16,7 @@ mkdir -p "$installers_dir"
 
 exec 3< "$installers_dir"
 if ! flock -nx 3; then
-  echo "did not get a lock on ${installers_dir}, exiting" >&2
+  logmsg -p user.err "did not get a lock on ${installers_dir}, exiting"
   exit 1
 fi
 
@@ -46,17 +50,21 @@ download_installer() {
   pkg_url="${baseurl}/${installer_subpath}.gpg"
   unverified_installer_tmppath="${installer_fullpath}.gpg.tmp"
 
+  logmsg -p user.info "downloading ${pkg_url}"
+
   mkdir -p "${installers_dir}/${puavo_pkg}" || true
   if ! wget -q --ca-certificate=/etc/puavo/certs/rootca.pem \
     -O "$unverified_installer_tmppath" "$pkg_url"; then
-      echo "Could not download installer from ${pkg_url}" >&2
+      logmsg -p user.err "could not download installer from ${pkg_url}"
       rm -f "$unverified_installer_tmppath"
       return 1
   fi
 
+  logmsg -p user.info "verifying ${pkg_url}"
+
   if ! gpg --decrypt --homedir /root/.pkg-gnupg \
     "$unverified_installer_tmppath" 2>/dev/null > "$installer_tmppath"; then
-      echo "verification failed for ${unverified_installer_tmppath}" >&2
+      logmsg -p user.err "verification failed for ${unverified_installer_tmppath}"
       rm -f "$unverified_installer_tmppath" "$installer_tmppath"
       return 1
   fi
@@ -69,7 +77,7 @@ download_installer() {
     tar --wildcards -Ozx -f "$installer_tmppath" '*/.puavo-pkg-version' \
       | awk '$1 == "package-id" { print $2 }') || return 1
   if [ -z "$pkg_id" ]; then
-    echo "Could not determine package id from ${installer_subpath}" >&2
+    logmsg -p user.err "could not determine package id from ${installer_subpath}"
     rm -f "$installer_tmppath"
     return 1
   fi
@@ -77,7 +85,13 @@ download_installer() {
   # get real version and put it into the version specific path
   installer_fullpath="${installers_dir}/${puavo_pkg}/${pkg_id}.tar.gz"
 
-  mv "$installer_tmppath" "$installer_fullpath" || return 1
+  if [ ! -e "$installer_fullpath" ]; then
+    mv "$installer_tmppath" "$installer_fullpath" || return 1
+    logmsg -p user.notice "downloaded/verified installer for ${puavo_pkg} with id ${pkg_id}"
+  else
+    rm -f "$installer_tmppath"
+    logmsg -p user.info "we already have ${puavo_pkg} with id ${pkg_id}"
+  fi
 
   echo "$installer_fullpath"
 }
@@ -95,6 +109,8 @@ install_pkg() {
   if [ -e "$installation_dir" ]; then
     return 0
   fi
+
+  logmsg -p user.notice "installing ${puavo_pkg} from ${installer_fullpath}"
 
   puavo-pkg install "$installer_fullpath"
 }
@@ -125,6 +141,7 @@ maybe_remove_pkg() {
   fi
 
   if [ -z "$version_to_remove" ]; then
+    logmsg -p user.notice "removing ${puavo_pkg}"
     puavo-pkg remove "$puavo_pkg"
     return 0
   fi
@@ -134,11 +151,12 @@ maybe_remove_pkg() {
       awk '$1 == "version" { print $2 }' \
         "${installed_pkg_dir}/.puavo-pkg-version" 2>/dev/null) || true
     if [ -z "$installed_version_number" ]; then
-      echo 'Could not determine installed package version number' >&2
+      logmsg -p user.err "could not determine installed package version for $puavo_pkg"
       return 1
     fi
 
     if [ "$installed_version_number" -le "$version_to_remove" ]; then
+      logmsg -p user.notice "removing ${puavo_pkg} due to version number match"
       puavo-pkg remove "$puavo_pkg"
     fi
 
@@ -148,11 +166,12 @@ maybe_remove_pkg() {
   installed_pkg_id=$(awk '$1 == "package-id" { print $2 }' 2>/dev/null \
                        "${installed_pkg_dir}/.puavo-pkg-version") || true
   if [ -z "$installed_pkg_id" ]; then
-    echo 'Could not determine installed package id' >&2
+    logmsg -p user.err "could not determine installed package id for ${puavo_pkg}"
     return 1
   fi
 
   if [ "$installed_pkg_id" = "$version_to_remove" ]; then
+    logmsg -p user.notice "removing ${puavo_pkg} due to exact version match"
     puavo-pkg remove "$puavo_pkg"
     return 0
   fi
@@ -213,19 +232,19 @@ for pkgspec in $puavo_pkg_specs; do
       maybe_remove_pkg "$puavo_pkg" "$version" || status=1
       ;;
     *)
-      echo "Unsupported action on package ${puavo_pkg}: ${action}" >&2
+      logmsg -p user.err "unsupported action on package ${puavo_pkg}: ${action}"
       status=1
       ;;
   esac
 done
 
 if ! puavo-pkg gc-installations; then
-  echo 'Problem in garbage collecting puavo packages' >&2
-  exit 1
+  logmsg -p user.err 'problem in garbage collecting puavo packages'
+  status=1
 fi
 if ! puavo-pkg gc-upstream-packs; then
-  echo 'Problem in garbage collecting puavo-pkg upstream packs' >&2
-  exit 1
+  logmsg -p user.err 'problem in garbage collecting puavo-pkg upstream packs'
+  status=1
 fi
 
 exit $status
