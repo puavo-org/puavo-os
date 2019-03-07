@@ -205,6 +205,11 @@ if (\$hostname == "${hostname}") then {
     stop
   }
 
+  if \$programname == "puavo-pkg" or \$programname == "puavo-pkg-update" then {
+    action(type="omfile" file="/var/log/puavo/puavo-pkg.log")
+    stop
+  }
+
   if \$programname == "puavo-rest" then {
     action(type="omfile" file="/var/log/puavo/puavo-rest.log")
     stop
