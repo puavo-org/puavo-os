@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if [ -e /etc/puavo/HOST_REMOVED_FROM_PUAVO ]; then
+if [ -e /state/etc/puavo/HOST_REMOVED_FROM_PUAVO ]; then
   echo "\e[1;31m        THIS HOST HAS BEEN REMOVED FROM PUAVO\e[0m"
   echo
 fi

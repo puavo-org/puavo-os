@@ -101,11 +101,11 @@ def update_device_json(restclient)
     device = restclient.get(uripath).parse()
   rescue PuavoRestClient::BadStatusCode => e
     if e.response.code == 404 then
-      FileUtils.touch('/etc/puavo/HOST_REMOVED_FROM_PUAVO')
+      FileUtils.touch('/state/etc/puavo/HOST_REMOVED_FROM_PUAVO')
     end
     raise e
   end
-  FileUtils.rm_f('/etc/puavo/HOST_REMOVED_FROM_PUAVO')
+  FileUtils.rm_f('/state/etc/puavo/HOST_REMOVED_FROM_PUAVO')
 
   remove_primary_user_override = false
 
