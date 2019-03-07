@@ -1008,6 +1008,8 @@ chown puavo-pkg: "$g_puavo_pkg_cachedir"
 command=$1
 shift
 
+cd "$g_puavo_pkg_rootdir"
+
 case "${command}" in
   gc-installations)
     assert_args_count -eq 0 "$@"
