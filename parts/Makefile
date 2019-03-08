@@ -12,7 +12,6 @@ subdirs         := admins                     \
                    hw-log                     \
                    hw-tools                   \
                    iivari                     \
-                   logrelay                   \
                    ltsp                       \
                    pam                        \
                    pkg                        \
