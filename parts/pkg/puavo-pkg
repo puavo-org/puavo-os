@@ -607,17 +607,20 @@ download_upstream_pack()
 
 get_pkg_field_from_installer()
 {
-  local field_key field_value installer
+  local field_key field_value installer logerror
 
   field_key=$1
   installer=$2
+  logerror=${3:-}
 
   field_value=$(
     tar --wildcards -Ozx -f "$installer" '*/.puavo-pkg-version' \
       | awk -v field_key="$field_key" '$1 == field_key { print $2 }')
 
   if [ -z "$field_value" ]; then
-    log_error "could not determine '${field_key}' from '${installer}'"
+    if [ "$logerror" != 'false' ]; then
+      log_error "could not determine '${field_key}' from '${installer}'"
+    fi
     return 1
   fi
 
@@ -629,8 +632,8 @@ check_image_requirements_met() {
 
   installer=$1
 
-  required_image=$(get_pkg_field_from_installer 'required-image' "$installer") \
-                     || true
+  required_image=$(get_pkg_field_from_installer 'required-image' \
+                     "$installer" false) || true
   if [ -z "$required_image" ]; then
     return 0
   fi
