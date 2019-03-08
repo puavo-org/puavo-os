@@ -52,6 +52,7 @@ function ltsp_image_entry {
   set imagefile="$1"
   set description="$2"
   set kernelparameters="$3"
+  set boottype="$4"
 
   get_pathname $imagefile imagepath
 
@@ -61,6 +62,9 @@ function ltsp_image_entry {
   # ${puavo_kernel_arguments} comes from a grub environment file
   # (if it is defined there)
   set kernelparameters="${kernelparameters} ${puavo_kernel_arguments}"
+  if test "$boottype" = "liveboot"; then
+    set kernelparameters="${kernelparameters} puavo.hosttype=laptop puavo.guestlogin.enabled=true"
+  fi
 
   menuentry "${description} (${imagepath})" "$imagefile" "$imagepath" "$kernelparameters" {
     set imagefile="$2"
@@ -174,6 +178,9 @@ for dev in (lvm/__PUAVO_LVM_PARTITION__); do
 
   if test -f "${default_image}"; then
     ltsp_image_entry "${default_image}" "Normaali käynnistys - ${default_image_alias}"
+    if test "__PUAVO_LIVEBOOT_OPTION__" = "true"; then
+      ltsp_image_entry "${default_image}" "Liveboot käynnistys - ${default_image_alias}" "" "liveboot"
+    fi
     ltsp_image_entry_superlaptop "${default_image}" "Kehittäjätila - ${default_image_alias}"
 
     loopback default_image_loop "${default_image}"
@@ -309,8 +316,10 @@ case "$diskdev" in
 esac
 
 if [ "$hosttype" = 'diskinstaller' ]; then
+  puavo_liveboot_option='true'
   puavo_lvm_partition='puavoinstaller-installimages'
 else
+  puavo_liveboot_option='false'
   puavo_lvm_partition='puavo-images'
 fi
 
@@ -356,6 +365,7 @@ tmp_grub_cfg_path="${grub_cfg_path}.tmp"
 
 grub_m4_template                                              \
   | m4 -D__PUAVO_KERNEL_ARGUMENTS__="$puavo_kernel_arguments" \
+       -D__PUAVO_LIVEBOOT_OPTION__="$puavo_liveboot_option"   \
        -D__PUAVO_LVM_PARTITION__="$puavo_lvm_partition"       \
   > "$tmp_grub_cfg_path"
 
