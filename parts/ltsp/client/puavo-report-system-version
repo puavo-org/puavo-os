@@ -11,7 +11,7 @@ kernel=$(uname -a)
 
 [ -z "$tags" ] && tags='(empty)'
 
-cat <<EOF | logger -s -t "$(basename $0)"
+cat <<EOF | logger -t "$(basename $0)"
 image is $this_puavoimage_name (from $this_puavoimage_class)
 release is $this_puavoimage_release
 kernel is $kernel
