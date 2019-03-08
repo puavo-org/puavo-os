@@ -56,10 +56,12 @@ function ltsp_image_entry {
     set description="$2"
     set kernelparameters=""
     set imagepath="$3"
+    set boottype="$4"
   else
     set abitti=false
     set description="$2"
     set kernelparameters="$3"
+    set boottype="$4"
     get_pathname $imagefile imagepath
   fi
 
@@ -69,8 +71,17 @@ function ltsp_image_entry {
   # ${puavo_kernel_arguments} comes from a grub environment file
   # (if it is defined there)
   set kernelparameters="${kernelparameters} ${puavo_kernel_arguments}"
+  if test "$boottype" = "liveboot"; then
+    set kernelparameters="${kernelparameters} puavo.hosttype=laptop puavo.guestlogin.enabled=true"
+  fi
 
   menuentry "${description} (${imagepath})" "$imagefile" "$imagepath" "$kernelparameters" "$abitti" {
+    set kernel_version=''
+    # --- remove "#" from the following if you need another kernel ---
+    # set kernel_version='default'
+    # set kernel_version='legacy'
+    # set kernel_version='fresh'
+
     set imagefile="$2"
     set imagepath="$3"
 
@@ -81,27 +92,32 @@ function ltsp_image_entry {
     # this mirrors code in puavo-ltspboot-config (puavo-tftpd hook)
     #
 
+    if test "$kernel_version" = ""; then
+      # ${puavo_kernel_version} comes from a grub environment file
+      # (if it is defined there)
+      set kernel_version="$puavo_kernel_version"
+    elif test "$kernel_version" = "default"; then
+      set kernel_version=""
+    fi
+
     set use_if64cpu='false'
 
-    # ${puavo_kernel_version} comes from a grub environment file
-    # (if it is defined there)
-
     set kernel_version_suffix=''
-    if test -n "${puavo_kernel_version}"; then
-      if regexp -- '-(amd64|i386)$' "${puavo_kernel_version}"; then
+    if test -n "${kernel_version}"; then
+      if regexp -- '-(amd64|i386)$' "${kernel_version}"; then
         # kernel_version set to particular arch
-        if test -e "(loop)/boot/vmlinuz-${puavo_kernel_version}"; then
-          set kernel_version_suffix="-${puavo_kernel_version}"
+        if test -e "(loop)/boot/vmlinuz-${kernel_version}"; then
+          set kernel_version_suffix="-${kernel_version}"
         else
           true  # ... but kernel not available, so just use default
         fi
-      elif test -e "(loop)/boot/vmlinuz-${puavo_kernel_version}-amd64" \
-             -a -e "(loop)/boot/vmlinuz-${puavo_kernel_version}-i386"; then
+      elif test -e "(loop)/boot/vmlinuz-${kernel_version}-amd64" \
+             -a -e "(loop)/boot/vmlinuz-${kernel_version}-i386"; then
         set use_if64cpu='true'
-        set kernel_version_suffix="-${puavo_kernel_version}"
-      elif test -e "(loop)/boot/vmlinuz-${puavo_kernel_version}"; then
+        set kernel_version_suffix="-${kernel_version}"
+      elif test -e "(loop)/boot/vmlinuz-${kernel_version}"; then
         # no kernels for both archs, but some kernel exists, so use that
-        set kernel_version_suffix="-${puavo_kernel_version}"
+        set kernel_version_suffix="-${kernel_version}"
       else
         # requested kernel not found, use default
         true
@@ -188,6 +204,9 @@ for dev in (lvm/__PUAVO_LVM_PARTITION__); do
 
   if test -f "${default_image}"; then
     ltsp_image_entry "${default_image}" "Normaali käynnistys - ${default_image_alias}"
+    if test "__PUAVO_LIVEBOOT_OPTION__" = "true"; then
+      ltsp_image_entry "${default_image}" "Liveboot käynnistys - ${default_image_alias}" "" "liveboot"
+    fi
     ltsp_image_entry_superlaptop "${default_image}" "Kehittäjätila - ${default_image_alias}"
 
     loopback default_image_loop "${default_image}"
@@ -341,8 +360,10 @@ case "$diskdev" in
 esac
 
 if [ "$hosttype" = 'diskinstaller' ]; then
+  puavo_liveboot_option='true'
   puavo_lvm_partition='puavoinstaller-installimages'
 else
+  puavo_liveboot_option='false'
   puavo_lvm_partition='puavo-images'
 fi
 
@@ -388,6 +409,7 @@ tmp_grub_cfg_path="${grub_cfg_path}.tmp"
 
 grub_m4_template                                              \
   | m4 -D__PUAVO_KERNEL_ARGUMENTS__="$puavo_kernel_arguments" \
+       -D__PUAVO_LIVEBOOT_OPTION__="$puavo_liveboot_option"   \
        -D__PUAVO_LVM_PARTITION__="$puavo_lvm_partition"       \
   > "$tmp_grub_cfg_path"
 

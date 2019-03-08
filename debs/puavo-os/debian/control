@@ -208,13 +208,6 @@ Description: Puavo configuration tool for local (host-specific) features.
  Puavo configuration tool for local (host-specific) features.
  .
 
-Package: puavo-logrelay
-Architecture: all
-Depends: ${misc:Depends}, nodejs (>= 4.8.6-1nodesource1)
-Description: Buffering log relay
- Buffering log relay from UDP to HTTP
- .
-
 Package: puavo-ltsp-bootserver
 Architecture: all
 Depends: ${misc:Depends},
@@ -258,7 +251,6 @@ Depends: ${misc:Depends},
  puavo-client,
  puavo-devscripts,
  puavo-ds-slave,
- puavo-logrelay,
  puavo-register,
  puavo-rest-bootserver,
  puavo-sharedir-manager,

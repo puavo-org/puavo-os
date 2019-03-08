@@ -2,6 +2,9 @@
 
 set -eu
 
+logger -p user.info -t puavo-initrd < /run/puavo/initrd.log
+logger -p user.info -t init-puavo   < /run/puavo/init-puavo.log
+
 kernel_args=$(cat /proc/cmdline)
 tags=$(jq -r '.tags[]' /etc/puavo/device.json 2>/dev/null | xargs)
 this_puavoimage_name=$(cat /etc/puavo-image/name)
@@ -11,7 +14,7 @@ kernel=$(uname -a)
 
 [ -z "$tags" ] && tags='(empty)'
 
-cat <<EOF | logger -s -t "$(basename $0)"
+cat <<EOF | logger -t "$(basename $0)"
 image is $this_puavoimage_name (from $this_puavoimage_class)
 release is $this_puavoimage_release
 kernel is $kernel
