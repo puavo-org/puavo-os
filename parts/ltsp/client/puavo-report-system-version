@@ -2,6 +2,9 @@
 
 set -eu
 
+logger -p user.info -t puavo-initrd < /run/puavo/initrd.log
+logger -p user.info -t init-puavo   < /run/puavo/init-puavo.log
+
 kernel_args=$(cat /proc/cmdline)
 tags=$(jq -r '.tags[]' /etc/puavo/device.json 2>/dev/null | xargs)
 this_puavoimage_name=$(cat /etc/puavo-image/name)
