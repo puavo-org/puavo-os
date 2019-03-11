@@ -721,10 +721,9 @@ prepare_pkg_from_dir()
   pkg_dir=$1
 
   if [ "$(id -nu)" != 'puavo-pkg' ]; then
-    msg="refusing to prepare puavo-pkg in $pkg_dir as '$(id -nu)'"
-    msg="${msg} (must be user 'puavo-pkg')."
-    log_error "$msg"
-    return 1
+    msg="running prepare puavo-pkg in $pkg_dir as '$(id -nu)'"
+    msg="${msg} (better to be run as user 'puavo-pkg')."
+    log_warning "$msg"
   fi
 
   pkg_name=$(get_pkg_name "$pkg_dir") || return 1
@@ -771,9 +770,21 @@ prepare_pkg_with_installer()
   install -d -o puavo-pkg -g puavo-pkg -m 755 "$upstream_packdir" \
                                               "$upstream_tmpdir"
 
-  if ! su puavo-pkg -s /bin/bash -- /usr/sbin/puavo-pkg prepare-from-dir \
+  # XXX Terrible hack but mimio-studio requires unpack-phase to be run as root.
+  # XXX Remove when possible.
+  pkg_name=$(get_pkg_name "$pkg_dir") || return 1
+  as_root=false
+  if [ "$pkg_name" = 'mimio-studio' ]; then as_root=true; fi
+
+  if $as_root; then
+    if ! puavo-pkg prepare-from-dir "$pkg_dir" > /dev/null; then
+      log_error "failed to run puavo-pkg prepare-from-dir $pkg_dir (as root)"
+      rm -rf "$upstream_tmpdir"
+      return 1
+    fi
+  elif ! su puavo-pkg -s /bin/bash -- /usr/sbin/puavo-pkg prepare-from-dir \
     "$pkg_dir" > /dev/null; then
-      log_error "failed to run /usr/sbin/puavo-pkg prepare-from-dir $pkg_dir"
+      log_error "failed to run puavo-pkg prepare-from-dir $pkg_dir"
       rm -rf "$upstream_tmpdir"
       return 1
   fi

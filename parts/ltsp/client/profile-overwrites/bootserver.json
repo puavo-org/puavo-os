@@ -8,6 +8,7 @@
   "puavo.guestlogin.enabled":                       "false",
   "puavo.networking.bootserver.interfaces.schools": "ltsp*,wlan*:*",
   "puavo.networking.ddns.dhcpd_interfaces":         "ltsp*,wlan*",
+  "puavo.pkg.mimio-studio":                         "do-nothing",
   "puavo.service.cron.cronjobs":                    "fix-homedir-permissions,fstrim,puavo-autopoweron,puavo-bootserver-sync-images,puavo-cleanup-old-users,puavo-pkg-update,puavo-setup-bootserver-printer-restrictions,puavo-update-airprint-ddns,remove-cups-jobs",
   "puavo.service.cups-watchdog.enabled":            "true",
   "puavo.service.incron.enabled":                   "true",
