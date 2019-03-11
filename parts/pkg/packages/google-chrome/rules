@@ -48,6 +48,9 @@ case "${command}" in
             ln -fns google-chrome-stable.puavopkg /usr/bin/google-chrome-stable
         fi
 
+        chown root:root "${upstream_dir}/opt/google/chrome/chrome-sandbox"
+        chmod 4755 "${upstream_dir}/opt/google/chrome/chrome-sandbox"
+
         sed '/^MimeType=/a\
 StartupNotify=true' "${upstream_dir}/usr/share/applications/google-chrome.desktop" \
             > /usr/share/applications/google-chrome.desktop

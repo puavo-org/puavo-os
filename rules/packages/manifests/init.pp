@@ -668,6 +668,7 @@ class packages {
     [ 'bluefish'
     , 'browser-plugin-vlc'
     , 'chromium'
+    , 'chromium-l10n'
     , 'epiphany-browser'
     , 'liferea'
     , 'openjdk-8-jdk'
