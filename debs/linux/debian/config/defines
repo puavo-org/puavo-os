@@ -6,6 +6,8 @@ ignore-changes:
  cxl_*
  inet_frag_*
  inet_frags_*
+ ip6_expire_frag_queue
+ ip6_frag_*
  mm_iommu_*
  mv_mbus_*
  register_cxl_calls
@@ -18,6 +20,7 @@ ignore-changes:
  module:drivers/hv/*
  module:drivers/iio/common/hid-sensors/*
  module:drivers/iio/common/st_sensors/**
+ module:drivers/net/ethernet/**
  module:drivers/net/wireless/**
  module:drivers/nfc/**
  module:drivers/nvdimm/*
@@ -26,6 +29,7 @@ ignore-changes:
  module:drivers/s390/net/qeth
  module:drivers/s390/net/qeth*
  module:drivers/scsi/cxgbi/*
+ module:drivers/scsi/esp_scsi
  module:drivers/scsi/libiscs*
  module:drivers/scsi/qla2xxx/qla2xxx
  module:drivers/scsi/ufs/*
@@ -40,6 +44,7 @@ ignore-changes:
  module:net/l2tp/**
  module:net/vmw_vsock/*
  module:sound/firewire/snd-firewire-lib
+ module:sound/pci/hda/*
 # btree library is only selected by few drivers so not useful OOT
  btree_*
  visitor*
