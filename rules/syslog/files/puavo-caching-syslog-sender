@@ -7,9 +7,16 @@
 # on laptops, with reboots and network outages, we expect a lot of
 # issues that (it appears) rsyslog and syslog-ng do not always handle.
 
+set syslog_host [lindex $argv 0]
+
+if {$syslog_host eq ""} {
+  puts stderr "usage: puavo-caching-syslog-sender syslog_server"
+  exit 1
+}
+
 set puavo_domain [exec cat /etc/puavo/domain]
 
-set remote_cache_path "/var/log/puavo/remote-syslog.cache"
+set remote_cache_path "/var/log/puavo/${syslog_host}.cache"
 
 # If remote cache filesize is greater than 512 megabytes, we simply remove
 # it before doing anything (yes we lose a lot of logs but this should not
@@ -32,11 +39,12 @@ if {[catch { set syslog_filecache [open $remote_cache_path r] }]} {
 set syslog_filecache [open $remote_cache_path a]
 
 proc send_to_syslog {} {
-  global puavo_domain syslog_connection syslog_memcache syslog_sending_state
+  global puavo_domain syslog_connection syslog_host syslog_memcache \
+         syslog_sending_state
 
   if {[
     catch {
-      set syslog_connection [socket "syslog.${puavo_domain}" 514]
+      set syslog_connection [socket $syslog_host 514]
       fconfigure $syslog_connection -translation binary
 
       # ten second timeout for send events
