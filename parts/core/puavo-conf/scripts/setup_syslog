@@ -7,16 +7,22 @@ hostname=$(hostname)
 
 read puavo_domain < /etc/puavo/domain
 
+# XXX should use puavo-conf really
+# syslog_master_server=$(puavo-conf puavo.admin.logging.master)
+syslog_master_server=log.opinsys.fi
+
+do_not_remove() {
+  do_not_remove_list="${do_not_remove_list} $@"
+}
+
 receive_as_bootserver() {
-  do_not_remove_list='
-    /etc/logrotate.d/hosts
-    /etc/rsyslog.d/pass_to_smoke_test.conf
-    /etc/rsyslog.d/receive_messages_to_var_log_hosts.conf
-  '
+  do_not_remove /etc/logrotate.d/hosts \
+                /etc/rsyslog.d/pass_to_smoke_test.conf \
+                /etc/rsyslog.d/receive_messages_to_var_log_hosts.conf
 
   install -o root -g adm -m 750 -d /var/log/hosts
 
-  cat <<'EOF' > /etc/logrotate.d/hosts.tmp
+  cat <<'EOF' > /etc/logrotate.d/hosts
 /var/log/hosts/*.log {
 	compress
 	copytruncate
@@ -27,9 +33,8 @@ receive_as_bootserver() {
 	size 10M
 }
 EOF
-  mv /etc/logrotate.d/hosts.tmp /etc/logrotate.d/hosts
 
-  cat <<'EOF' > /etc/rsyslog.d/pass_to_smoke_test.conf.tmp
+  cat <<'EOF' > /etc/rsyslog.d/pass_to_smoke_test.conf
 ruleset(name="pass_to_smoke_test") {
     action(type="omprog"
            binary="/usr/lib/puavo-ltsp-bootserver/smoke-test-cat")
@@ -41,10 +46,8 @@ if (
     or $programname == 'puavo-autopilot-session-smoke'
 ) then call pass_to_smoke_test
 EOF
-  mv /etc/rsyslog.d/pass_to_smoke_test.conf.tmp \
-     /etc/rsyslog.d/pass_to_smoke_test.conf
 
-  cat <<EOF > /etc/rsyslog.d/receive_messages_to_var_log_hosts.conf.tmp
+  cat <<EOF > /etc/rsyslog.d/receive_messages_to_var_log_hosts.conf
 # provides TCP syslog reception
 module(load="imtcp")
 input(type="imtcp" port="514")
@@ -52,16 +55,20 @@ input(type="imtcp" port="514")
 module(load="imrelp")
 input(type="imrelp" port="20514")
 
-\$template HostFile,"/var/log/hosts/%HOSTNAME%.log"
-
 if (\$hostname != '${hostname}') then ?HostFile
 EOF
-  mv /etc/rsyslog.d/receive_messages_to_var_log_hosts.conf.tmp \
-     /etc/rsyslog.d/receive_messages_to_var_log_hosts.conf
+}
+
+send_everything_to_logmaster_with_cache() {
+  do_not_remove /etc/rsyslog.d/send_everything_to_logmaster_with_cache.conf
+
+  cat <<'EOF' > /etc/rsyslog.d/send_everything_to_logmaster_with_cache.conf
+call cached_logging_to_logmaster
+EOF
 }
 
 send_everything_to_bootserver() {
-  do_not_remove_list='/etc/rsyslog.d/send_everything_to_bootserver.conf'
+  do_not_remove /etc/rsyslog.d/send_everything_to_bootserver.conf
 
   cat <<'EOF' > /etc/rsyslog.d/send_everything_to_bootserver.conf
 $ModLoad omrelp
@@ -71,31 +78,21 @@ EOF
 }
 
 send_as_laptop() {
-  do_not_remove_list='
-    /etc/rsyslog.d/send_session_data_to_bootserver_with_cache.conf
-    /etc/rsyslog.d/send_session_data_to_logmaster_with_cache.conf
-  '
+  do_not_remove /etc/rsyslog.d/send_sessiondata_to_bootserver_with_cache.conf \
+                /etc/rsyslog.d/send_sessiondata_to_logmaster_with_cache.conf
 
-  send_session_data_to_bootserver_with_cache
-  send_session_data_to_logmaster_with_cache
+  send_sessiondata_to_bootserver_with_cache
+  send_sessiondata_to_logmaster_with_cache
 }
 
-send_session_data_to_bootserver_with_cache() {
+send_sessiondata_to_bootserver_with_cache() {
   # XXX for historical reasons, may be removed "later"
   if [ -e /var/log/puavo/remote-syslog.cache ]; then
     mv /var/log/puavo/remote-syslog.cache \
        "/var/log/puavo/syslog.${puavo_domain}.cache"
   fi
 
-  cat <<EOF > /etc/rsyslog.d/send_some_to_bootserver_with_cache.conf
-\$template PuavoBootserverForwardFormat,"<%PRI%>%TIMESTAMP% %HOSTNAME% %syslogtag:1:32%%msg:::sp-if-no-1st-sp%%msg%\n"
-
-ruleset(name="cachedsessionlogging_to_bootserver") {
-    action(type="omprog"
-           binary="/usr/local/lib/puavo-caching-syslog-sender syslog.${puavo_domain}"
-           template="PuavoBootserverForwardFormat")
-}
-
+  cat <<EOF > /etc/rsyslog.d/send_sessiondata_to_bootserver_with_cache.conf
 if (
      (\$programname == 'puavo-login'
         and (   \$msg contains "opening login session"
@@ -107,28 +104,16 @@ if (
         and (   \$msg startswith " Started Session"
              or \$msg startswith " Stopped Session"))
   or \$programname == 'systemd-logind'
-) then call cachedsessionlogging_to_bootserver
+) then call cached_logging_to_bootserver
 EOF
 }
 
-send_session_data_to_logmaster_with_cache() {
-  # XXX should use puavo-conf really
-  # syslog_master_server=$(puavo-conf puavo.admin.logging.master)
-  syslog_master_server=log.opinsys.fi
-
+send_sessiondata_to_logmaster_with_cache() {
   if [ -z "$syslog_master_server" ]; then
     return 0
   fi
 
-  cat <<EOF > /etc/rsyslog.d/send_some_to_logmaster_with_cache.conf
-\$template PuavoLogmasterForwardFormat,"<%PRI%>%TIMESTAMP% %HOSTNAME%.${puavo_domain} %syslogtag:1:32%%msg:::sp-if-no-1st-sp%%msg%\n"
-
-ruleset(name="cachedsessionlogging_to_logmaster") {
-    action(type="omprog"
-           binary="/usr/local/lib/puavo-caching-syslog-sender ${syslog_master_server}"
-           template="PuavoLogmasterForwardFormat")
-}
-
+  cat <<EOF > /etc/rsyslog.d/send_sessiondata_to_logmaster_with_cache.conf
 if (
      (\$programname == 'puavo-login'
         and (   \$msg contains "opening login session"
@@ -140,7 +125,7 @@ if (
         and (   \$msg startswith " Started Session"
              or \$msg startswith " Stopped Session"))
   or \$programname == 'systemd-logind'
-) then call cachedsessionlogging_to_logmaster
+) then call cached_logging_to_logmaster
 EOF
 }
 
@@ -148,7 +133,8 @@ EOF
 # First make configuration that is common to all scenarios.
 #
 
-cat <<EOF > /etc/rsyslog.conf.tmp
+{
+  cat <<EOF
 #  /etc/rsyslog.conf	Configuration file for rsyslog.
 #
 #			For more information see
@@ -206,6 +192,28 @@ module(load="omprog")
 # and do not fill up our local /var.
 \$MainMsgQueueDequeueSlowdown 100000
 
+\$template HostFile,"/var/log/hosts/%HOSTNAME%.log"
+\$template PuavoBootserverForwardFormat,"<%PRI%>%TIMESTAMP% %HOSTNAME% %syslogtag:1:32%%msg:::sp-if-no-1st-sp%%msg%\n"
+\$template PuavoLogmasterForwardFormat,"<%PRI%>%TIMESTAMP% %HOSTNAME%.${puavo_domain} %syslogtag:1:32%%msg:::sp-if-no-1st-sp%%msg%\n"
+
+ruleset(name="cached_logging_to_bootserver") {
+    action(type="omprog"
+           binary="/usr/local/lib/puavo-caching-syslog-sender syslog.${puavo_domain}"
+           template="PuavoBootserverForwardFormat")
+}
+EOF
+
+  if [ -n "$syslog_master_server" ]; then
+    cat <<EOF
+ruleset(name="cached_logging_to_logmaster") {
+  action(type="omprog"
+         binary="/usr/local/lib/puavo-caching-syslog-sender ${syslog_master_server}"
+         template="PuavoLogmasterForwardFormat")
+}
+EOF
+  fi
+
+cat <<EOF
 #
 # Include all config files in /etc/rsyslog.d/
 #
@@ -309,7 +317,7 @@ if (\$hostname == "${hostname}") then {
   *.emerg			:omusrmsg:*
 }
 EOF
-mv /etc/rsyslog.conf.tmp /etc/rsyslog.conf
+} > /etc/rsyslog.conf
 
 #
 # Then continue with policy-specific configurations.
@@ -322,6 +330,7 @@ case "$logging_policy" in
     ;;
   receive-as-bootserver)
     receive_as_bootserver
+    send_everything_to_logmaster_with_cache
     ;;
   send-as-laptop)
     send_as_laptop
@@ -339,8 +348,9 @@ all_configuration_files='
   /etc/logrotate.d/hosts
   /etc/rsyslog.d/receive_messages_to_var_log_hosts.conf
   /etc/rsyslog.d/send_everything_to_bootserver.conf
-  /etc/rsyslog.d/send_session_data_to_bootserver_with_cache.conf
-  /etc/rsyslog.d/send_session_data_to_logmaster_with_cache.conf
+  /etc/rsyslog.d/send_everything_to_logmaster_with_cache.conf
+  /etc/rsyslog.d/send_sessiondata_to_bootserver_with_cache.conf
+  /etc/rsyslog.d/send_sessiondata_to_logmaster_with_cache.conf
 '
 
 for conffile in $all_configuration_files; do

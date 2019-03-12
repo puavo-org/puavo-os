@@ -19,12 +19,12 @@ set puavo_domain [exec cat /etc/puavo/domain]
 set cache_index_path  "/var/log/puavo/${syslog_host}.cache.index"
 set remote_cache_path "/var/log/puavo/${syslog_host}.cache"
 
-# If remote cache filesize is greater than 32 megabytes, we simply remove
+# If remote cache filesize is greater than 512 megabytes, we simply remove
 # it before doing anything (yes we lose logs but this should not normally happen
 # and we do not want to waste exceeding amounts of space for caching logs
 # that are not ending up anywhere).
 catch {
-  if {[file size $remote_cache_path] > 67108864} {
+  if {[file size $remote_cache_path] > 536870912} {
     file delete $remote_cache_path
   }
 }
