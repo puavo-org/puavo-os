@@ -18,21 +18,23 @@ set puavo_domain [exec cat /etc/puavo/domain]
 
 set remote_cache_path "/var/log/puavo/${syslog_host}.cache"
 
-# If remote cache filesize is greater than 512 megabytes, we simply remove
-# it before doing anything (yes we lose a lot of logs but this should not
-# normally happen and we do not want to waste exceeding amounts of space
-# for caching logs that are not ending up anywhere).
+# If remote cache filesize is greater than 32 megabytes, we simply remove
+# it before doing anything (yes we lose logs but this should not normally happen
+# and we do not want to waste exceeding amounts of space for caching logs
+# that are not ending up anywhere).
 catch {
-  if {[file size $remote_cache_path] > 536870912} {
+  if {[file size $remote_cache_path] > 67108864} {
     file delete $remote_cache_path
   }
 }
 
+set syslog_memcache_index -1
+
 # read previous file cache, if any
 if {[catch { set syslog_filecache [open $remote_cache_path r] }]} {
-  set syslog_memcache {}
+  set syslog_memcache [list]
 } else {
-  set syslog_memcache [read $syslog_filecache]
+  set syslog_memcache [split [read $syslog_filecache] "\n"]
   close $syslog_filecache
 }
 
@@ -40,7 +42,7 @@ set syslog_filecache [open $remote_cache_path a]
 
 proc send_to_syslog {} {
   global puavo_domain syslog_connection syslog_host syslog_memcache \
-         syslog_sending_state
+         syslog_memcache_index syslog_sending_state
 
   if {[
     catch {
@@ -48,10 +50,18 @@ proc send_to_syslog {} {
       fconfigure $syslog_connection -translation binary
 
       # ten second timeout for send events
-      after 10000 set syslog_sending_state timeout
+      set syslog_sending_state ""
+      after 10000 [list set syslog_sending_state timeout]
       fileevent $syslog_connection writable {
-	puts -nonewline $syslog_connection $syslog_memcache
-	set syslog_sending_state ok
+        if {[llength $syslog_memcache] <= $syslog_memcache_index} {
+	  set syslog_sending_state ok
+        } else {
+          set line_to_send [lindex $syslog_memcache $syslog_memcache_index]
+          if {$line_to_send ne ""} {
+            puts $syslog_connection $line_to_send
+          }
+          incr syslog_memcache_index
+        }
       }
 
       vwait syslog_sending_state
@@ -69,26 +79,27 @@ proc send_to_syslog {} {
 }
 
 proc send_to_syslog_or_cache {{msg ""}} {
-  global remote_cache_path syslog_filecache syslog_memcache
+  global remote_cache_path syslog_filecache syslog_memcache syslog_memcache_index
 
   if {$msg ne ""} {
     # add new messages to cache first
-    append syslog_memcache $msg
+    lappend syslog_memcache $msg
     puts -nonewline $syslog_filecache $msg
     flush $syslog_filecache
   }
 
-  if {$syslog_memcache eq ""} { return }
+  if {[llength $syslog_memcache] == 0} { return }
 
   # send stuff to syslog
   if {[send_to_syslog]} {
     # everything has been sent to syslog, truncate file cache
     close $syslog_filecache
     set syslog_filecache [open $remote_cache_path w]
-    set syslog_memcache {}
+    set syslog_memcache [list]
+    set syslog_memcache_index 0
   }
 
-  if {$syslog_memcache ne ""} {
+  if {[llength $syslog_memcache] > 0} {
     # try again after 20 seconds, if there is still something to do
     after 20000 send_to_syslog_or_cache
   }
