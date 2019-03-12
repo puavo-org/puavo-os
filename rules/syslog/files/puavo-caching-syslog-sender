@@ -16,6 +16,7 @@ if {$syslog_host eq ""} {
 
 set puavo_domain [exec cat /etc/puavo/domain]
 
+set cache_index_path  "/var/log/puavo/${syslog_host}.cache.index"
 set remote_cache_path "/var/log/puavo/${syslog_host}.cache"
 
 # If remote cache filesize is greater than 32 megabytes, we simply remove
@@ -28,8 +29,6 @@ catch {
   }
 }
 
-set syslog_memcache_index -1
-
 # read previous file cache, if any
 if {[catch { set syslog_filecache [open $remote_cache_path r] }]} {
   set syslog_memcache [list]
@@ -38,11 +37,21 @@ if {[catch { set syslog_filecache [open $remote_cache_path r] }]} {
   close $syslog_filecache
 }
 
+if {[catch { set syslog_cache_index_file [open $cache_index_path r] }]} {
+  set syslog_cache_index 0
+} else {
+  set syslog_cache_index [string trim [read $syslog_cache_index_file]]
+  if {![string is integer -strict $syslog_cache_index]} {
+    set syslog_cache_index 0
+  }
+  close $syslog_cache_index_file
+}
+
 set syslog_filecache [open $remote_cache_path a]
 
 proc send_to_syslog {} {
-  global puavo_domain syslog_connection syslog_host syslog_memcache \
-         syslog_memcache_index syslog_sending_state
+  global cache_index_path puavo_domain syslog_connection syslog_cache_index \
+         syslog_host syslog_memcache syslog_sending_state
 
   if {[
     catch {
@@ -50,17 +59,17 @@ proc send_to_syslog {} {
       fconfigure $syslog_connection -translation binary
 
       # ten second timeout for send events
-      set syslog_sending_state ""
       after 10000 [list set syslog_sending_state timeout]
       fileevent $syslog_connection writable {
-        if {[llength $syslog_memcache] <= $syslog_memcache_index} {
+        if {[llength $syslog_memcache] <= $syslog_cache_index} {
 	  set syslog_sending_state ok
+          catch { file delete $cache_index_path }
         } else {
-          set line_to_send [lindex $syslog_memcache $syslog_memcache_index]
+          set line_to_send [lindex $syslog_memcache $syslog_cache_index]
           if {$line_to_send ne ""} {
             puts $syslog_connection $line_to_send
           }
-          incr syslog_memcache_index
+          incr syslog_cache_index
         }
       }
 
@@ -68,6 +77,10 @@ proc send_to_syslog {} {
       close $syslog_connection
 
       if {$syslog_sending_state eq "timeout"} {
+        set syslog_cache_index_file [open "${cache_index_path}.tmp" w]
+        puts $syslog_cache_index_file $syslog_cache_index
+        close $syslog_cache_index_file
+        file rename -force "${cache_index_path}.tmp" "$cache_index_path"
         error "timeout sending data to remote syslog"
       }
     }
@@ -79,7 +92,7 @@ proc send_to_syslog {} {
 }
 
 proc send_to_syslog_or_cache {{msg ""}} {
-  global remote_cache_path syslog_filecache syslog_memcache syslog_memcache_index
+  global remote_cache_path syslog_filecache syslog_memcache syslog_cache_index
 
   if {$msg ne ""} {
     # add new messages to cache first
@@ -96,7 +109,7 @@ proc send_to_syslog_or_cache {{msg ""}} {
     close $syslog_filecache
     set syslog_filecache [open $remote_cache_path w]
     set syslog_memcache [list]
-    set syslog_memcache_index 0
+    set syslog_cache_index 0
   }
 
   if {[llength $syslog_memcache] > 0} {
