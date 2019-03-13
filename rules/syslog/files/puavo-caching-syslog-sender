@@ -11,6 +11,9 @@ set syslog_host [lindex $argv 0]
 
 set start_hour [exec puavo-conf puavo.autopoweroff.daytime_start_hour]
 set end_hour   [exec puavo-conf puavo.autopoweroff.daytime_end_hour]
+set personally_administered [
+  exec puavo-conf puavo.admin.personally_administered
+]
 
 if {$syslog_host eq ""} {
   puts stderr "usage: puavo-caching-syslog-sender syslog_server"
@@ -53,12 +56,17 @@ if {[catch { set syslog_cache_index_file [open $cache_index_path r] }]} {
 set syslog_filecache [open $remote_cache_path a]
 
 proc get_send_bytes_limit {} {
-  global start_hour end_hour
+  global start_hour end_hour personally_administered
+
+  # on personally administered hosts, always limit log message transfer rates
+  if {$personally_administered eq "true"} {
+    return 16384
+  }
 
   set current_hour [clock format [clock seconds] -format %k]
 
-  if {$start_hour <= $current_hour && $current_hour < $end_hour} {
-    # limit our transfer rates on daytime hours
+  if {$start_hour-1 <= $current_hour && $current_hour < $end_hour+1} {
+    # limit our transfer rates on daytime hours (extending by one hour)
     return 16384
   }
 
