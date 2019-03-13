@@ -76,14 +76,18 @@ EOF
 }
 
 send_as_laptop() {
-  do_not_remove /etc/rsyslog.d/send_sessiondata_to_bootserver_with_cache.conf \
-                /etc/rsyslog.d/send_sessiondata_to_logmaster_with_cache.conf
-
-  send_sessiondata_to_bootserver_with_cache
-  send_sessiondata_to_logmaster_with_cache
+  # if logmaster puavo-conf variable is set, send logs to logmaster only,
+  # if not, we can use the bootserver
+  if [ -n "$syslog_master_server" ]; then
+    send_sessiondata_to_logmaster_with_cache
+  else
+    send_sessiondata_to_bootserver_with_cache
+  fi
 }
 
 send_sessiondata_to_bootserver_with_cache() {
+  do_not_remove /etc/rsyslog.d/send_sessiondata_to_bootserver_with_cache.conf
+
   # XXX for historical reasons, may be removed "later"
   if [ -e /var/log/puavo/remote-syslog.cache ]; then
     mv /var/log/puavo/remote-syslog.cache \
@@ -107,8 +111,12 @@ EOF
 }
 
 send_sessiondata_to_logmaster_with_cache() {
-  if [ -z "$syslog_master_server" ]; then
-    return 0
+  do_not_remove /etc/rsyslog.d/send_sessiondata_to_logmaster_with_cache.conf
+
+  # XXX for historical reasons, may be removed "later"
+  if [ -e /var/log/puavo/remote-syslog.cache ]; then
+    mv /var/log/puavo/remote-syslog.cache \
+       "/var/log/puavo/${syslog_master_server}.cache"
   fi
 
   cat <<EOF > /etc/rsyslog.d/send_sessiondata_to_logmaster_with_cache.conf
