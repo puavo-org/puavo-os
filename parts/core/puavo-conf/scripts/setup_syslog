@@ -57,6 +57,14 @@ if (\$hostname != '${hostname}') then ?HostFile
 EOF
 }
 
+send_everything_to_bootserver_with_cache() {
+  do_not_remove /etc/rsyslog.d/send_everything_to_bootserver_with_cache.conf
+
+  cat <<'EOF' > /etc/rsyslog.d/send_everything_to_bootserver_with_cache.conf
+call cached_logging_to_bootserver
+EOF
+}
+
 send_everything_to_logmaster_with_cache() {
   do_not_remove /etc/rsyslog.d/send_everything_to_logmaster_with_cache.conf
 
@@ -76,6 +84,16 @@ EOF
 }
 
 send_as_laptop() {
+  # if logmaster puavo-conf variable is set, send logs to logmaster only,
+  # if not, we can use the bootserver
+  if [ -n "$syslog_master_server" ]; then
+    send_everything_to_logmaster_with_cache
+  else
+    send_everything_to_bootserver_with_cache
+  fi
+}
+
+send_sessiondata_as_laptop() {
   # if logmaster puavo-conf variable is set, send logs to logmaster only,
   # if not, we can use the bootserver
   if [ -n "$syslog_master_server" ]; then
@@ -344,6 +362,9 @@ case "$logging_policy" in
   send-everything-to-bootserver)
     send_everything_to_bootserver
     ;;
+  send-sessiondata-as-laptop)
+    send_sessiondata_as_laptop
+    ;;
   *)
     echo "Unsupported logging policy: ${logging_policy}" >&2
     exit 1
@@ -354,6 +375,7 @@ all_configuration_files='
   /etc/logrotate.d/hosts
   /etc/rsyslog.d/receive_messages_to_var_log_hosts.conf
   /etc/rsyslog.d/send_everything_to_bootserver.conf
+  /etc/rsyslog.d/send_everything_to_bootserver_with_cache.conf
   /etc/rsyslog.d/send_everything_to_logmaster_with_cache.conf
   /etc/rsyslog.d/send_sessiondata_to_bootserver_with_cache.conf
   /etc/rsyslog.d/send_sessiondata_to_logmaster_with_cache.conf
