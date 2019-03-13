@@ -7,9 +7,7 @@ hostname=$(hostname)
 
 read puavo_domain < /etc/puavo/domain
 
-# XXX should use puavo-conf really
-# syslog_master_server=$(puavo-conf puavo.admin.logging.master)
-syslog_master_server=log.opinsys.fi
+syslog_master_server=$(puavo-conf puavo.admin.logging.master)
 
 do_not_remove() {
   do_not_remove_list="${do_not_remove_list} $@"
