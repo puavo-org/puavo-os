@@ -1051,7 +1051,7 @@ fi
 mkdir -p "$g_puavo_pkg_cachedir" \
          "${g_puavo_pkg_rootdir}/packages" \
          "$g_puavo_pkg_installed_dir"
-chown puavo-pkg: "$g_puavo_pkg_cachedir"
+chown -R puavo-pkg: "$g_puavo_pkg_cachedir"
 
 command=$1
 shift

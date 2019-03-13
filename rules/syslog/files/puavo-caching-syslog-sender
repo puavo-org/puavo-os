@@ -7,14 +7,28 @@
 # on laptops, with reboots and network outages, we expect a lot of
 # issues that (it appears) rsyslog and syslog-ng do not always handle.
 
+set syslog_host [lindex $argv 0]
+
+set start_hour [exec puavo-conf puavo.autopoweroff.daytime_start_hour]
+set end_hour   [exec puavo-conf puavo.autopoweroff.daytime_end_hour]
+set personally_administered [
+  exec puavo-conf puavo.admin.personally_administered
+]
+
+if {$syslog_host eq ""} {
+  puts stderr "usage: puavo-caching-syslog-sender syslog_server"
+  exit 1
+}
+
 set puavo_domain [exec cat /etc/puavo/domain]
 
-set remote_cache_path "/var/log/puavo/remote-syslog.cache"
+set cache_index_path  "/var/log/puavo/${syslog_host}.cache.index"
+set remote_cache_path "/var/log/puavo/${syslog_host}.cache"
 
 # If remote cache filesize is greater than 512 megabytes, we simply remove
-# it before doing anything (yes we lose a lot of logs but this should not
-# normally happen and we do not want to waste exceeding amounts of space
-# for caching logs that are not ending up anywhere).
+# it before doing anything (yes we lose logs but this should not normally happen
+# and we do not want to waste exceeding amounts of space for caching logs
+# that are not ending up anywhere).
 catch {
   if {[file size $remote_cache_path] > 536870912} {
     file delete $remote_cache_path
@@ -23,34 +37,93 @@ catch {
 
 # read previous file cache, if any
 if {[catch { set syslog_filecache [open $remote_cache_path r] }]} {
-  set syslog_memcache {}
+  set syslog_memcache [list]
 } else {
-  set syslog_memcache [read $syslog_filecache]
+  set syslog_memcache [split [read $syslog_filecache] "\n"]
   close $syslog_filecache
+}
+
+if {[catch { set syslog_cache_index_file [open $cache_index_path r] }]} {
+  set syslog_cache_index 0
+} else {
+  set syslog_cache_index [string trim [read $syslog_cache_index_file]]
+  if {![string is integer -strict $syslog_cache_index]} {
+    set syslog_cache_index 0
+  }
+  close $syslog_cache_index_file
 }
 
 set syslog_filecache [open $remote_cache_path a]
 
+proc get_send_bytes_limit {} {
+  global start_hour end_hour personally_administered
+
+  # on personally administered hosts, always limit log message transfer rates
+  if {$personally_administered eq "true"} {
+    return 16384
+  }
+
+  set current_hour [clock format [clock seconds] -format %k]
+
+  if {$start_hour-1 <= $current_hour && $current_hour < $end_hour+1} {
+    # limit our transfer rates on daytime hours (extending by one hour)
+    return 16384
+  }
+
+  # my favourite "large number"
+  return 16777216
+}
+
 proc send_to_syslog {} {
-  global puavo_domain syslog_connection syslog_memcache syslog_sending_state
+  global cache_index_path puavo_domain send_bytes_limit syslog_connection \
+         syslog_cache_index syslog_host syslog_memcache syslog_sending_state
+
+  set send_bytes_limit [get_send_bytes_limit]
 
   if {[
     catch {
-      set syslog_connection [socket "syslog.${puavo_domain}" 514]
+      set syslog_connection [socket $syslog_host 514]
       fconfigure $syslog_connection -translation binary
 
       # ten second timeout for send events
-      after 10000 set syslog_sending_state timeout
+      set timeout_event [after 10000 [list set syslog_sending_state timeout]]
       fileevent $syslog_connection writable {
-	puts -nonewline $syslog_connection $syslog_memcache
-	set syslog_sending_state ok
+        if {[llength $syslog_memcache] <= $syslog_cache_index} {
+	  set syslog_sending_state ok
+          catch { file delete $cache_index_path }
+        } elseif {$send_bytes_limit < 0} {
+          set syslog_sending_state limit_reached
+        } else {
+          set line_to_send [lindex $syslog_memcache $syslog_cache_index]
+          if {$line_to_send ne ""} {
+            puts $syslog_connection $line_to_send
+
+            set send_bytes_limit [
+              expr { $send_bytes_limit - [string length $line_to_send] }
+            ]
+          }
+          incr syslog_cache_index
+        }
       }
 
       vwait syslog_sending_state
+      after cancel $timeout_event
+
       close $syslog_connection
 
-      if {$syslog_sending_state eq "timeout"} {
-        error "timeout sending data to remote syslog"
+      if {$syslog_sending_state ne "ok"} {
+        set syslog_cache_index_file [open "${cache_index_path}.tmp" w]
+        puts $syslog_cache_index_file $syslog_cache_index
+        close $syslog_cache_index_file
+        file rename -force "${cache_index_path}.tmp" "$cache_index_path"
+
+        if {$syslog_sending_state eq "limit_reached"} {
+          # wait a second, with this we ensure that we will not send more
+          # than $send_bytes_limit per second
+          after 1000
+        }
+
+        error "${syslog_sending_state} when sending data to remote syslog"
       }
     }
   ]} {
@@ -61,28 +134,29 @@ proc send_to_syslog {} {
 }
 
 proc send_to_syslog_or_cache {{msg ""}} {
-  global remote_cache_path syslog_filecache syslog_memcache
+  global remote_cache_path syslog_filecache syslog_memcache syslog_cache_index
 
   if {$msg ne ""} {
     # add new messages to cache first
-    append syslog_memcache $msg
+    lappend syslog_memcache $msg
     puts -nonewline $syslog_filecache $msg
     flush $syslog_filecache
   }
 
-  if {$syslog_memcache eq ""} { return }
+  if {[llength $syslog_memcache] == 0} { return }
 
   # send stuff to syslog
   if {[send_to_syslog]} {
     # everything has been sent to syslog, truncate file cache
     close $syslog_filecache
     set syslog_filecache [open $remote_cache_path w]
-    set syslog_memcache {}
+    set syslog_memcache [list]
+    set syslog_cache_index 0
   }
 
-  if {$syslog_memcache ne ""} {
-    # try again after 20 seconds, if there is still something to do
-    after 20000 send_to_syslog_or_cache
+  if {[llength $syslog_memcache] > 0} {
+    # try again after one second, if there is still something to do
+    after 1000 send_to_syslog_or_cache
   }
 }
 
