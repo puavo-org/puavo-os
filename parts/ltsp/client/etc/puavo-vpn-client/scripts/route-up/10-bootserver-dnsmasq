@@ -27,6 +27,8 @@ read kerberos_master < /etc/puavo/kerberos/master
 read ldap_master     < /etc/puavo/ldap/master
 read topdomain       < /etc/puavo/topdomain
 
+log_master=$(puavo-conf puavo.admin.logging.master 2>/dev/null) || true
+
 # XXX $kerberos_master should be independent from $ldap_master,
 # XXX but in our typical configuration these are the same.
 # XXX This should not be the case here.  puavo-register should be fixed
@@ -40,13 +42,20 @@ fi
 
 tmpfile="${conffile}.tmp"
 
-cat <<EOF > "$tmpfile"
-server=/${ldap_master}/${route_vpn_gateway}
+{
+  cat <<EOF
 server=/${kerberos_master}/${route_vpn_gateway}
+server=/${ldap_master}/${route_vpn_gateway}
 server=/ntp.${topdomain}/${route_vpn_gateway}
 server=/private-archive.${topdomain}/${route_vpn_gateway}
 server=/images.${topdomain}/${route_vpn_gateway}
 EOF
+  if [ -n "$log_master" ]; then
+    cat <<EOF
+server=/${log_master}/${route_vpn_gateway}
+EOF
+  fi
+} > "$tmpfile"
 
 if ! cmp "$conffile" "$tmpfile" 2>/dev/null; then
   mv "$tmpfile" "$conffile"
