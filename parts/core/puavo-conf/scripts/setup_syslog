@@ -7,6 +7,15 @@ hostname=$(hostname)
 
 read puavo_domain < /etc/puavo/domain
 
+puavo_hostprofile=$(puavo-conf puavo.profiles.list)
+
+bootserver_for_logs=''
+case "$puavo_hostprofile" in
+  bootserver*)
+    bootserver_for_logs=" <${hostname}>"
+    ;;
+esac
+
 syslog_master_server=$(puavo-conf puavo.admin.logging.master)
 
 do_not_remove() {
@@ -68,18 +77,12 @@ EOF
 send_everything_to_logmaster_with_cache() {
   do_not_remove /etc/rsyslog.d/send_everything_to_logmaster_with_cache.conf
 
-  cat <<'EOF' > /etc/rsyslog.d/send_everything_to_logmaster_with_cache.conf
-call cached_logging_to_logmaster
-EOF
+  cat <<EOF > /etc/rsyslog.d/send_everything_to_logmaster_with_cache.conf
+if (\$hostname == "${hostname}") then {
+  call cached_logging_to_logmaster
+} else {
+  call cached_logging_through_to_logmaster
 }
-
-send_everything_to_bootserver() {
-  do_not_remove /etc/rsyslog.d/send_everything_to_bootserver.conf
-
-  cat <<'EOF' > /etc/rsyslog.d/send_everything_to_bootserver.conf
-$ModLoad omrelp
-
-*.* :omrelp:syslog:20514;RSYSLOG_ForwardFormat
 EOF
 }
 
@@ -217,8 +220,9 @@ module(load="omprog")
 \$MainMsgQueueDequeueSlowdown 100000
 
 \$template HostFile,"/var/log/hosts/%HOSTNAME%.log"
-\$template PuavoBootserverForwardFormat,"<%PRI%>%TIMESTAMP% %HOSTNAME% %syslogtag:1:32%%msg:::sp-if-no-1st-sp%%msg%\n"
-\$template PuavoLogmasterForwardFormat,"<%PRI%>%TIMESTAMP% %HOSTNAME%.${puavo_domain} %syslogtag:1:32%%msg:::sp-if-no-1st-sp%%msg%\n"
+\$template PuavoBootserverForwardFormat,"<%PRI%>%TIMESTAMP% %HOSTNAME% [${puavo_hostprofile}] %syslogtag:1:32%%msg:::sp-if-no-1st-sp%%msg%\n"
+\$template PuavoLogmasterForwardFormat,"<%PRI%>%TIMESTAMP% %HOSTNAME%.${puavo_domain} [${puavo_hostprofile}] %syslogtag:1:32%%msg:::sp-if-no-1st-sp%%msg%\n"
+\$template PuavoLogmasterThroughForwardFormat,"<%PRI%>%TIMESTAMP% %HOSTNAME%.${puavo_domain}${bootserver_for_logs} %syslogtag:1:32%%msg:::sp-if-no-1st-sp%%msg%\n"
 
 ruleset(name="cached_logging_to_bootserver") {
     action(type="omprog"
@@ -229,6 +233,12 @@ EOF
 
   if [ -n "$syslog_master_server" ]; then
     cat <<EOF
+ruleset(name="cached_logging_through_to_logmaster") {
+  action(type="omprog"
+         binary="/usr/local/lib/puavo-caching-syslog-sender ${syslog_master_server}"
+         template="PuavoLogmasterThroughForwardFormat")
+}
+
 ruleset(name="cached_logging_to_logmaster") {
   action(type="omprog"
          binary="/usr/local/lib/puavo-caching-syslog-sender ${syslog_master_server}"
@@ -360,7 +370,7 @@ case "$logging_policy" in
     send_as_laptop
     ;;
   send-everything-to-bootserver)
-    send_everything_to_bootserver
+    send_everything_to_bootserver_with_cache
     ;;
   send-sessiondata-as-laptop)
     send_sessiondata_as_laptop
@@ -374,7 +384,6 @@ esac
 all_configuration_files='
   /etc/logrotate.d/hosts
   /etc/rsyslog.d/receive_messages_to_var_log_hosts.conf
-  /etc/rsyslog.d/send_everything_to_bootserver.conf
   /etc/rsyslog.d/send_everything_to_bootserver_with_cache.conf
   /etc/rsyslog.d/send_everything_to_logmaster_with_cache.conf
   /etc/rsyslog.d/send_sessiondata_to_bootserver_with_cache.conf

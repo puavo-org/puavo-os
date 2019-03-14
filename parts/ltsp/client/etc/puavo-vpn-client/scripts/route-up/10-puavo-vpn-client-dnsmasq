@@ -22,6 +22,8 @@ ldap_master=$(    cat /etc/puavo/ldap/master     2>/dev/null) || true
 ldap_slave=$(     cat /etc/puavo/ldap/slave      2>/dev/null) || true
 topdomain=$(      cat /etc/puavo/topdomain       2>/dev/null) || true
 
+log_master=$(puavo-conf puavo.admin.logging.master 2>/dev/null) || true
+
 params=''
 
 if [ -n "$kerberos_master" ]; then
@@ -34,6 +36,10 @@ fi
 
 if [ -n "$ldap_slave" ]; then
   params="${params} string:${ldap_slave}"
+fi
+
+if [ -n "$log_master" ]; then
+  params="${params} string:${log_master}"
 fi
 
 if [ -n "$topdomain" ]; then

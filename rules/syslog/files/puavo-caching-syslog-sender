@@ -25,16 +25,6 @@ set puavo_domain [exec cat /etc/puavo/domain]
 set cache_index_path  "/var/log/puavo/${syslog_host}.cache.index"
 set remote_cache_path "/var/log/puavo/${syslog_host}.cache"
 
-# If remote cache filesize is greater than 512 megabytes, we simply remove
-# it before doing anything (yes we lose logs but this should not normally happen
-# and we do not want to waste exceeding amounts of space for caching logs
-# that are not ending up anywhere).
-catch {
-  if {[file size $remote_cache_path] > 536870912} {
-    file delete $remote_cache_path
-  }
-}
-
 # read previous file cache, if any
 if {[catch { set syslog_filecache [open $remote_cache_path r] }]} {
   set syslog_memcache [list]
@@ -134,13 +124,26 @@ proc send_to_syslog {} {
 }
 
 proc send_to_syslog_or_cache {{msg ""}} {
-  global remote_cache_path syslog_filecache syslog_memcache syslog_cache_index
+  global remote_cache_path remote_cache_sizelimit syslog_filecache \
+         syslog_memcache syslog_cache_index
+
+  # If our remote cache size is greater than 512 megabytes, we simply truncate
+  # it cache before doing more (yes we lose logs but this should not normally
+  # happen and we do not want to waste exceeding amounts of diskspace and
+  # memory for caching logs that are not ending up anywhere).
+  catch {
+    if {[tell $syslog_filecache] > 536870912} {
+      set syslog_memcache [list]
+      chan truncate $syslog_filecache 0
+      seek $syslog_filecache 0
+    }
+  }
 
   if {$msg ne ""} {
     # add new messages to cache first
-    lappend syslog_memcache $msg
     puts -nonewline $syslog_filecache $msg
     flush $syslog_filecache
+    lappend syslog_memcache $msg
   }
 
   if {[llength $syslog_memcache] == 0} { return }
