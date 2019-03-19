@@ -3,8 +3,12 @@ class apt::backports {
 
   $packages_from_backports = $packages::backports::package_list
 
-  file {
-    '/etc/apt/preferences.d/20-backports.pref':
-      content => template('apt/20-backports.pref');
+  case $debianversioncodename {
+    'stretch': {
+      file {
+        '/etc/apt/preferences.d/20-backports.pref':
+          content => template('apt/20-backports.pref');
+      }
+    }
   }
 }
