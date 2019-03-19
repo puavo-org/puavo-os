@@ -5,19 +5,24 @@ _pkgs_builddeps := unicode-data
 
 _pkgs_parts     := puavo-ds \
                    puavo-os
-_pkgs_ports     := fluentd         \
-                   gnome-shell     \
-                   grub2           \
-                   gvfs            \
-                   linux           \
-                   mutter          \
-                   nwjs            \
-                   openboard       \
-                   openldap        \
-                   visionmedia-mon \
-                   vtun            \
-                   wine            \
-                   wpa
+ifeq "$(debootstrap_suite)" "stretch"
+  _pkgs_ports     := fluentd         \
+                     gnome-shell     \
+                     grub2           \
+                     gvfs            \
+                     linux           \
+                     mutter          \
+                     nwjs            \
+                     openboard       \
+                     openldap        \
+                     visionmedia-mon \
+                     vtun            \
+                     wine            \
+                     wpa
+else
+  _pkgs_ports :=
+endif
+
 _pkgs_image     := $(_pkgs_builddeps) $(_pkgs_parts) $(_pkgs_ports)
 _pkgs_cloud     := krb5 openldap puavo-ds
 
