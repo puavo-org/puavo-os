@@ -21,5 +21,7 @@ deb [trusted=yes] file://<%= @localmirror %> /
 # as the localmirror at "file://<%= @localmirror %> /" (above), but
 # possibly also the 32-bit builds such as wine32.  These have the origin
 # "puavo-os-remote".
+<% if @debianversioncodename == 'stretch' %>
 deb http://archive.opinsys.fi/puavo <%= @debianversioncodename %> main contrib non-free
 deb-src http://archive.opinsys.fi/puavo <%= @debianversioncodename %> main contrib non-free
+<% end %>
