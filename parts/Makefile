@@ -1,3 +1,7 @@
+# XXX not building iivari-client in Buster at the moment
+# XXX because python-pyside dependency is not available
+# iivari
+
 subdirs         := admins                     \
                    autopilot                  \
                    autopoweroff               \
@@ -10,7 +14,6 @@ subdirs         := admins                     \
                    devscripts                 \
                    hw-log                     \
                    hw-tools                   \
-                   iivari                     \
                    ltsp                       \
                    pam                        \
                    pkg                        \
