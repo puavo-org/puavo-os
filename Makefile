@@ -1,6 +1,6 @@
 # Public, configurable variables
 debootstrap_mirror	:= http://httpredir.debian.org/debian/
-debootstrap_suite	:= stretch
+debootstrap_suite	:= buster
 image_class		:= allinone
 image_dir		:= /srv/puavo-os-images
 images_urlbase		:= https://images.puavo.org
