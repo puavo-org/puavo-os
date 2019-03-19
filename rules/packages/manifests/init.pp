@@ -735,27 +735,36 @@ class packages {
       tag => [ 'tag_whiteboard', 'tag_puavo', ];
   }
 
-  $broadcom_sta_dkms_module = 'broadcom-sta/6.30.223.271'
-  $nvidia_dkms_304_module   = 'nvidia-legacy-304xx/304.137'
-  $nvidia_dkms_340_module   = 'nvidia-legacy-340xx/340.106'
-  $nvidia_dkms_390_module   = 'nvidia-current/390.87'
-  $virtualbox_module        = 'virtualbox/5.2.24'
-
-  $all_dkms_modules = [ $broadcom_sta_dkms_module
-		      , $nvidia_dkms_304_module
-		      , $nvidia_dkms_340_module
-		      , $nvidia_dkms_390_module
-		      , $virtualbox_module ]
-
   case $debianversioncodename {
     'buster': {
+      # XXX these versions should be updated
+      $broadcom_sta_dkms_module = 'broadcom-sta/6.30.223.271'
+      $nvidia_dkms_304_module   = 'nvidia-legacy-304xx/304.137'
+      $nvidia_dkms_340_module   = 'nvidia-legacy-340xx/340.106'
+      $nvidia_dkms_390_module   = 'nvidia-current/390.87'
+      $virtualbox_module        = 'virtualbox/5.2.24'
+
+      # XXX do not try to build these yet on Buster
+      $all_dkms_modules = []
       packages::kernels::kernel_package {
         '4.19.0-2-amd64':
-          dkms_modules => [ $virtualbox_module ],
+          dkms_modules => $all_dkms_modules,
           package_name => 'linux-image-4.19.0-2-amd64';
       }
     }
     'stretch': {
+      $broadcom_sta_dkms_module = 'broadcom-sta/6.30.223.271'
+      $nvidia_dkms_304_module   = 'nvidia-legacy-304xx/304.137'
+      $nvidia_dkms_340_module   = 'nvidia-legacy-340xx/340.106'
+      $nvidia_dkms_390_module   = 'nvidia-current/390.87'
+      $virtualbox_module        = 'virtualbox/5.2.24'
+
+      $all_dkms_modules = [ $broadcom_sta_dkms_module
+                          , $nvidia_dkms_304_module
+                          , $nvidia_dkms_340_module
+                          , $nvidia_dkms_390_module
+                          , $virtualbox_module ]
+
       packages::kernels::kernel_package {
         '3.16.0-7-amd64':
           dkms_modules => $all_dkms_modules,
