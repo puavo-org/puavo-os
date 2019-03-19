@@ -20,8 +20,7 @@ class packages {
   }
 
   @package {
-    [ 'fluent-plugin-puavo'
-    , 'iivari-client'
+    [ 'iivari-client'
     , 'opinsys-ca-certificates'
     , 'puavo-autopilot'
     , 'puavo-autopoweroff'

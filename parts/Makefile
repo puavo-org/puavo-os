@@ -8,7 +8,6 @@ subdirs         := admins                     \
                    core                       \
                    desktop-applet             \
                    devscripts                 \
-                   fluent-plugin-puavo        \
                    hw-log                     \
                    hw-tools                   \
                    iivari                     \
