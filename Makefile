@@ -24,11 +24,16 @@ _adm_gid	:= 1000
 _repo_name   := $(shell basename $(shell git rev-parse --show-toplevel))
 _image_file  := $(image_dir)/$(_repo_name)-$(image_class)-$(debootstrap_suite)-$(shell date -u +%Y-%m-%d-%H%M%S)-${target_arch}.img
 
-# Some basic dependencies for our build system.  "python3" is on this list,
-# because installing "devscripts" fails if "python3" has not been installed
-# earlier, working around some bug in Debian (on 2016-11-18).
-_debootstrap_packages := python3,devscripts,equivs,git,jq,locales,lsb-release,\
-			 make,puppet-common,sudo
+# Some basic dependencies for our build system.
+ifeq "$(debootstrap_suite)" "stretch"
+  # "python3" is on this list,
+  # because installing "devscripts" fails if "python3" has not been installed
+  # earlier, working around some bug in Debian (on 2016-11-18).
+  _debootstrap_packages := python3,devscripts,equivs,git,jq,locales,\
+                           lsb-release,make,puppet-common,sudo
+else
+  _debootstrap_packages := git,jq,locales,lsb-release,make,puppet-common,sudo
+endif
 
 _cache_configured := $(shell grep -qs puavo-os /etc/squid/squid.conf \
 			 && echo true || echo false)
