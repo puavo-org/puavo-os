@@ -1,3 +1,6 @@
+# XXX python-pyside should be in puavo-os Build-Depends for iivari-client,
+# XXX but removed because it was not installable on Buster on 2019-03-19.
+
 Source: puavo-os
 Section: misc
 Priority: extra
@@ -16,14 +19,13 @@ Build-Depends: bundler | ruby-bundler,
  libnl-genl-3-dev,
  libpam0g-dev,
  libsqlite3-dev,
- libssl1.0-dev,
+ libssl-dev,
  libtool-bin,
  nodejs (>= 4.8.6-1nodesource1),
  pkg-config,
  pyqt4-dev-tools,
  pyqt5-dev-tools,
  python-all-dev,
- python-pyside,
  python3,
  ruby,
  ruby-dev,
