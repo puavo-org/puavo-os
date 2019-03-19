@@ -747,18 +747,29 @@ class packages {
 		      , $nvidia_dkms_390_module
 		      , $virtualbox_module ]
 
-  packages::kernels::kernel_package {
-    '3.16.0-7-amd64':
-      dkms_modules => $all_dkms_modules,
-      package_name => 'linux-image-3.16.0-7-amd64';
+  case $debianversioncodename {
+    'buster': {
+      packages::kernels::kernel_package {
+        '4.19.0-2-amd64':
+          dkms_modules => [ $virtualbox_module ],
+          package_name => 'linux-image-4.19.0-2-amd64';
+      }
+    }
+    'stretch': {
+      packages::kernels::kernel_package {
+        '3.16.0-7-amd64':
+          dkms_modules => $all_dkms_modules,
+          package_name => 'linux-image-3.16.0-7-amd64';
 
-    '4.9.0-8-amd64':
-      dkms_modules => $all_dkms_modules,
-      package_name => 'linux-image-4.9.0-8-amd64';
+        '4.9.0-8-amd64':
+          dkms_modules => $all_dkms_modules,
+          package_name => 'linux-image-4.9.0-8-amd64';
 
-    '4.19.0-0.bpo.2-amd64':
-      dkms_modules => [ $virtualbox_module ],
-      package_name => 'linux-image-4.19.0-0.bpo.2-amd64';
+        '4.19.0-0.bpo.2-amd64':
+          dkms_modules => [ $virtualbox_module ],
+          package_name => 'linux-image-4.19.0-0.bpo.2-amd64';
+      }
+    }
   }
 
   # Packages which are not restricted per se, but which are required by
