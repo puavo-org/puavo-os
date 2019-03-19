@@ -5,8 +5,8 @@ set -eu
 mkdir -p /var/log/puavo/puppet
 env LC_CTYPE=en_US.UTF-8 puppet apply               \
     --detailed-exitcodes                            \
-    --logdest /var/log/puavo/puppet/apply-rules.log \
     --logdest console                               \
+    --logdest /var/log/puavo/puppet/apply-rules.log \
     --modulepath rules                              \
     rules/site.pp \
   || [ $? -eq 2 ]
