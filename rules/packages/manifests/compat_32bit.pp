@@ -11,12 +11,12 @@ class packages::compat_32bit {
       , 'libatk1.0-0:i386'              # needed by mimio-studio
       , 'libatkmm-1.6-1v5:i386'         # needed by mimio-studio
       , 'libbluetooth3:i386'
-      , 'libbotan-1.10-0:i386'          # needed by mimio-studio
+      , 'libbotan-2-9:i386'          # needed by mimio-studio
       , 'libc6:i386'
       , 'libcairo2:i386'                # needed by mimio-studio
       , 'libcanberra-gtk-module:i386'   # needed by mimio-studio
       , 'libcap-ng0:i386'
-      , 'libcurl3:i386'
+      , 'libcurl4:i386'
       , 'libdbus-1-3:i386'              # needed by mimio-studio
       , 'libdbus-glib-1-2:i386'         # needed by mimio-studio
       , 'libfakekey0:i386'              # needed by mimio-studio
@@ -46,7 +46,7 @@ class packages::compat_32bit {
       , 'libqtwebkit4:i386'
       , 'libselinux1:i386'
       , 'libsm6:i386'
-      , 'libssl1.0.0:i386'
+      , 'libssl1.1:i386'
       , 'libstdc++6:i386'
       , 'libudev0:i386'
       , 'libudev1:i386'
