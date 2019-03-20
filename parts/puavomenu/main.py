@@ -140,18 +140,18 @@ class PuavoMenu(Gtk.Window):
         # Create the window elements
 
         # Set window style
-        if SETTINGS.dev_mode:
+        if SETTINGS.prod_mode:
+            self.set_skip_taskbar_hint(True)
+            self.set_skip_pager_hint(True)
+            self.set_deletable(False)       # no close button
+            self.set_decorated(False)
+        else:
             # makes developing slightly easier
             self.set_skip_taskbar_hint(False)
             self.set_skip_pager_hint(False)
             self.set_deletable(True)
             self.set_decorated(True)
             self.__exit_permitted = True
-        else:
-            self.set_skip_taskbar_hint(True)
-            self.set_skip_pager_hint(True)
-            self.set_deletable(False)       # no close button
-            self.set_decorated(False)
 
         self.set_resizable(False)
         self.set_title('PuavoMenuUniqueName')
@@ -166,8 +166,8 @@ class PuavoMenu(Gtk.Window):
         self.__main_container.set_size_request(WINDOW_WIDTH,
                                                WINDOW_HEIGHT)
 
-        if SETTINGS.dev_mode:
-            # The devtools popup menu
+        if not SETTINGS.prod_mode:
+            # Create the devtools popup menu
             self.menu_signal = \
                 self.connect('button-press-event', self.__devtools_menu)
 
@@ -707,7 +707,7 @@ class PuavoMenu(Gtk.Window):
         """Completely removes all menu data. Hides everything programs-
         related from the UI."""
 
-        if not SETTINGS.dev_mode:
+        if SETTINGS.prod_mode:
             return
 
         self.menudata = menudata.Menudata()
@@ -758,11 +758,11 @@ class PuavoMenu(Gtk.Window):
         if key_event.keyval != Gdk.KEY_Escape:
             return
 
-        if SETTINGS.dev_mode:
-            logging.debug('Ignoring Esc in development mode')
-        else:
+        if SETTINGS.prod_mode:
             self.set_keep_above(False)
             self.set_visible(False)
+        else:
+            logging.debug('Ignoring Esc in development mode')
 
 
     # Removes the out-of-focus autohiding. You need to call this before
@@ -948,10 +948,10 @@ class PuavoMenu(Gtk.Window):
     # The devtools menu and its commands
     def __devtools_menu(self, widget, event):
 
-        if event.button != 3:
+        if SETTINGS.prod_mode:
             return
 
-        if not SETTINGS.dev_mode:
+        if event.button != 3:
             return
 
         def purge(menuitem):
