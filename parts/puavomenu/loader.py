@@ -145,8 +145,9 @@ def load_menudata_yaml_file(filename):
         data = yaml.safe_load(inf.read())
 
     if data is None or not isinstance(data, dict):
-        logging.warning('__parse_yml_string(): string produced no data, or the '
-                        'data is not a dict')
+        logging.warning('load_menudata_yaml_file(): string produced no data, '
+                        'or the data is not a dict')
+
         return programs, menus, categories
 
     # data.get('xxx', []) will fail if the list following the key is
