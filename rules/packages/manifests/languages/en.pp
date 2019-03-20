@@ -1,6 +1,7 @@
 class packages::languages::en {
   @package {
-    [ 'hyphen-en-us'
+    [ 'firefox-esr-l10n-en-gb:i386'
+    , 'hyphen-en-us'
     , 'icedove-l10n-en-gb'
     , 'kde-l10n-engb'
     , 'libreoffice-help-en-gb'

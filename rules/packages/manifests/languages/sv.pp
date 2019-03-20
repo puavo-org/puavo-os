@@ -1,6 +1,7 @@
 class packages::languages::sv {
   @package {
-    [ 'icedove-l10n-sv-se'
+    [ 'firefox-esr-l10n-sv:i386'
+    , 'icedove-l10n-sv-se'
     , 'kde-l10n-sv'
     , 'libreoffice-help-sv'
     , 'libreoffice-l10n-sv'

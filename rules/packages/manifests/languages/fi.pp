@@ -1,6 +1,7 @@
 class packages::languages::fi {
   @package {
-    [ 'icedove-l10n-fi'
+    [ 'firefox-esr-l10n-fi:i386'
+    , 'icedove-l10n-fi'
     , 'kde-l10n-fi'
     , 'libreoffice-help-fi'
     , 'libreoffice-l10n-fi'

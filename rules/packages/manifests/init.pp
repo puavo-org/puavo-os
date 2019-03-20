@@ -667,6 +667,8 @@ class packages {
     , 'chromium'
     , 'chromium-l10n'
     , 'epiphany-browser'
+    , 'firefox-esr:i386'        # use 32-bit version of Firefox to conserve
+                                # memory
     , 'liferea'
     , 'openjdk-8-jdk'
     , 'openjdk-8-jre'
@@ -694,14 +696,6 @@ class packages {
   #
 
   @package {
-    [ 'firefox:i386'
-    , 'firefox-locale-de:i386'
-    , 'firefox-locale-en:i386'
-    , 'firefox-locale-fi:i386'
-    , 'firefox-locale-fr:i386'
-    , 'firefox-locale-sv:i386' ]:
-      tag => [ 'tag_web', 'tag_ubuntu_desktop', ];
-
     [ 'ttf-ubuntu-font-family' ]:
       tag => [ 'tag_fonts', 'tag_ubuntu_desktop', ];
 

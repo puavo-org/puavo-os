@@ -5,8 +5,7 @@ class packages::purged {
   Package { ensure => purged, }
 
   @package {
-    [ 'firefox-esr'	        # we are using the latest Firefox
-    , 'gnome-screensaver'	# not using this for anything
+    [ 'gnome-screensaver'	# not using this for anything
 
     # slows down login considerably
     # (runs dpkg-query without speed considerations)

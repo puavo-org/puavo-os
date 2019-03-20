@@ -5,12 +5,12 @@ class firefox {
   # straightforward way, I would like to hear about it.
   file {
     '/etc/apt/preferences.d/70-firefox.pref':
-      before  => Package['firefox:i386'],
+      before  => Package['firefox-esr:i386'],
       content => template('firefox/70-firefox.pref');
 
     '/etc/firefox/puavodesktop.js':
       content => template('firefox/puavodesktop.js'),
-      require => Package['firefox:i386'];
+      require => Package['firefox-esr:i386'];
 
     '/etc/firefox/syspref.js':
       content => template('firefox/syspref.js'),
@@ -29,6 +29,6 @@ class firefox {
       require => Package['puavo-ltsp-client'];
   }
 
-  Package <| title == "firefox:i386"
+  Package <| title == "firefox-esr:i386"
           or title == puavo-ltsp-client |>
 }
