@@ -59,6 +59,7 @@ build: build-debs-ports build-debs-parts
 
 .PHONY: build-debs-builddeps
 build-debs-builddeps:
+	$(_sudo) apt-get -y install devscripts
 	$(MAKE) -C debs builddeps
 
 .PHONY: build-debs-cloud
