@@ -21,7 +21,6 @@ class packages {
 
   @package {
     [ 'iivari-client'
-    , 'opinsys-ca-certificates'
     , 'puavo-autopilot'
     , 'puavo-autopoweroff'
     , 'puavo-bigtouch-shutdown'
