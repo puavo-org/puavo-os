@@ -201,11 +201,12 @@ try:
     import_end = time.clock()
 
     log_elapsed_time('Main import time', import_start, import_end)
-    main.run()
+
+    main.run_puavomenu()
 except Exception as exception:
     # This is bad. Very bad. The exception bubbled all the way up to here,
     # so this is fatal.
-    logging.fatal(str(exception))
+    logging.fatal(str(exception), exc_info=True)
 
     if SETTINGS.prod_mode:
         # Log fatal exceptions to to syslog

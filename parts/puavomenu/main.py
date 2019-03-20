@@ -1103,15 +1103,14 @@ def setup_signal_handlers(menu):
                       priority=GLib.PRIORITY_HIGH)
 
 
-# ------------------------------------------------------------------------------
-
-
 # Call this. The system has been split this way so that puavomenu only
 # has to parse arguments and once it is one, import this file and run
 # the menu. If you just run puavomenu from the command line, it tries
 # to import all sorts of X libraries and stuff and sometimes that fails
 # and you can't even see the help text!
-def run():
+def run_puavomenu():
+    logging.info('Entering run_puavomenu()')
+
     try:
         menu = PuavoMenu()
         setup_signal_handlers(menu)
@@ -1126,3 +1125,5 @@ def run():
 
     except Exception as exception:
         logging.error(exception, exc_info=True)
+
+    logging.info('Exiting run_puavomenu()')
