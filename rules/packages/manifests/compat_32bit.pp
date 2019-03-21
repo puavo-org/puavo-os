@@ -28,7 +28,7 @@ class packages::compat_32bit {
       , 'libglib2.0-0:i386'
       , 'libgtk2.0-0:i386'
       , 'libice6:i386'
-      , 'libjpeg8:i386'                 # needed by RobboScratch2
+      # XXX buster , 'libjpeg8:i386'                 # needed by RobboScratch2
       , 'libltdl7:i386'
       , 'libmp3lame0:i386'              # needed by mimio-studio
       , 'libnspr4-0d:i386'
@@ -36,7 +36,7 @@ class packages::compat_32bit {
       , 'libnss3:i386'                  # needed by RobboScratch2
       , 'libpango1.0-0:i386'            # needed by mimio-studio
       , 'libpangomm-1.4-1v5:i386'       # needed by mimio-studio
-      , 'libpng12-0:i386'               # needed by GlobiLab
+      # XXX buster , 'libpng12-0:i386'               # needed by GlobiLab
       , 'libpulse0:i386'
       , 'libqt4-dbus:i386'
       , 'libqt4-network:i386'
@@ -48,7 +48,7 @@ class packages::compat_32bit {
       , 'libsm6:i386'
       , 'libssl1.1:i386'
       , 'libstdc++6:i386'
-      , 'libudev0:i386'
+      # XXX buster , 'libudev0:i386'
       , 'libudev1:i386'
       , 'libusb-1.0-0:i386'
       , 'libuuid1:i386'
