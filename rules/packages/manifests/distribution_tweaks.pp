@@ -6,7 +6,6 @@ class packages::distribution_tweaks {
        title == 'denemo'	# dependency conflict with chromium, which wins
     or title == 'libnspr4-0d'
     or title == 'libnspr4-0d:i386'
-    or title == 'myspell-sv-se'
     or title == 'pencil2d'
   |> { ensure => absent, }
 }
