@@ -1115,41 +1115,6 @@ class PuavoMenu(Gtk.Window):
             activate_time=0)
 
 
-# ------------------------------------------------------------------------------
-
-
-# Trap certain signals and exit the menu gracefully if they're caught
-# Taken from https://stackoverflow.com/a/26457317 and then mutilated.
-def setup_signal_handlers(menu):
-    import signal
-
-    def signal_action(signal):
-        if signal in (signal.SIGHUP, signal.SIGINT, signal.SIGTERM):
-            logging.info('Caught signal "%s", exiting gracefully...',
-                         signal)
-            menu.go_away(True)
-
-
-    def idle_handler(*args):
-        GLib.idle_add(signal_action, priority=GLib.PRIORITY_HIGH)
-
-
-    def handler(*args):
-        signal_action(args[0])
-
-
-    def install_glib_handler(sig):
-        GLib.unix_signal_add(GLib.PRIORITY_HIGH, sig, handler, sig)
-
-
-    SIGS = [getattr(signal, s, None) for s in 'SIGHUP SIGINT SIGTERM'.split()]
-
-    for sig in filter(None, SIGS):
-        signal.signal(sig, idle_handler)
-        GLib.idle_add(install_glib_handler, sig,
-                      priority=GLib.PRIORITY_HIGH)
-
-
 # Call this. The system has been split this way so that puavomenu only
 # has to parse arguments and once it is one, import this file and run
 # the menu. If you just run puavomenu from the command line, it tries
@@ -1160,7 +1125,6 @@ def run_puavomenu():
 
     try:
         menu = PuavoMenu()
-        setup_signal_handlers(menu)
         Gtk.main()
 
         # Normal exit, try to remove the socket file but don't explode
