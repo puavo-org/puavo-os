@@ -988,15 +988,16 @@ class PuavoMenu(Gtk.Window):
 
         def reload(menuitem):
             # Remember where we are (a little nice-to-have for development time)
-            if self.current_menu:
-                prev_menu = self.current_menu.name
-            else:
-                prev_menu = None
+            prev_menu = None
+            prev_cat = None
 
-            if len(self.menudata.category_index) > 0 and self.current_category != -1:
-                prev_cat = self.menudata.category_index[self.current_category]
-            else:
-                prev_cat = None
+            if self.menudata:
+                if self.current_menu:
+                    prev_menu = self.current_menu.menudata_id
+
+                if len(self.menudata.category_index) > 0 and \
+                    self.current_category != -1:
+                    prev_cat = self.menudata.category_index[self.current_category]
 
             logging.debug('=' * 20)
             logging.debug('Reloading all menu data!')
@@ -1004,21 +1005,24 @@ class PuavoMenu(Gtk.Window):
 
             # TODO: get rid of this call, so we can retain the old data if
             # we can't load the new data (the loader already supports that)
-            if self.menudata or self.menudata.programs:
-                self.unload_menu_data()
+            self.unload_menu_data()
 
             if not self.load_menu_data():
                 self.error_message('Failed to load menu data',
                                    'See the console for more details')
             else:
                 # Try to restore the previous menu and category
-                for index, cat in enumerate(self.menudata.category_index):
-                    if cat == prev_cat:
-                        logging.debug('Restoring category "%s" after reload',
-                                      prev_cat)
-                        self.current_category = index
-                        self.__category_buttons.set_current_page(index)
-                        break
+                print('Previous category: "{0}"'.format(prev_cat))
+                print('Previous menu: "{0}"'.format(prev_menu))
+
+                if prev_cat:
+                    for index, cat in enumerate(self.menudata.category_index):
+                        if cat == prev_cat:
+                            logging.debug('Restoring category "%s" after reload',
+                                          prev_cat)
+                            self.current_category = index
+                            self.__category_buttons.set_current_page(index)
+                            break
 
                 if prev_menu and (prev_menu in self.menudata.menus):
                     logging.debug('Restoring menu "%s" after reload',
