@@ -1,6 +1,6 @@
 class backgrounds {
   include ::packages
-  include ::backgrounds::thumbs
+  # include ::backgrounds::thumbs       # XXX buster
 
   $backgrounds_dir = '/usr/share/backgrounds/puavo-greeter/default'
 
