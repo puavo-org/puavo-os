@@ -184,6 +184,11 @@ def load_menudata_yaml_file(filename):
         # through
         programs[menudata_id] = None
 
+        if not isinstance(params, dict):
+            logging.error("Don't know what \"%s\" is supposed to mean, ignoring",
+                          str(params))
+            continue
+
         # Figure out the type
         program_type = str(params.get('type', 'desktop'))
 
@@ -265,6 +270,11 @@ def load_menudata_yaml_file(filename):
                           'duplicates', menudata_id)
             continue
 
+        if not isinstance(params, dict):
+            logging.error("Don't know what \"%s\" is supposed to mean, ignoring",
+                          str(params))
+            continue
+
         menu = {}
 
         if 'condition' in params:
@@ -304,6 +314,11 @@ def load_menudata_yaml_file(filename):
         if menudata_id in categories:
             logging.error('Category ID "%s" defined multiple times, ignoring '
                           'duplicates', menudata_id)
+            continue
+
+        if not isinstance(params, dict):
+            logging.error("Don't know what \"%s\" is supposed to mean, ignoring",
+                          str(params))
             continue
 
         category = {}
