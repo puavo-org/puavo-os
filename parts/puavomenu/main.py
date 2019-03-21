@@ -323,7 +323,10 @@ class PuavoMenu(Gtk.Window):
         # This is a bad, bad situation that should never happen in production.
         # It will happen one day.
         if self.menudata is None or len(self.menudata.programs) == 0:
-            self.__show_empty_message(STRINGS['menu_no_data_at_all'])
+            if SETTINGS.prod_mode:
+                self.__show_empty_message(STRINGS['menu_no_data_at_all_prod'])
+            else:
+                self.__show_empty_message(STRINGS['menu_no_data_at_all_dev'])
 
 
     # --------------------------------------------------------------------------

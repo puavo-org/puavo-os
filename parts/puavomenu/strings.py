@@ -30,10 +30,24 @@ STRINGS = {
         'de': 'Leere Kategorie',
     },
 
-    'menu_no_data_at_all': {
+    # Development mode
+    'menu_no_data_at_all_dev': {
         'fi': 'Ei valikkodataa? Tarkista tilanne!',
         'en': 'No menu data? Check the situation!',
         'de': 'Kein Menu? Was ist hier los!',
+    },
+
+    # Longer text in production mode
+    'menu_no_data_at_all_prod': {
+        'fi': 'Valikon lataus ei onnistunut :-(\n\n' \
+              'Kokeile kirjautua sisään uudelleen.\n' \
+              'Jos se ei auta, käynnistä kone uudelleen.\n' \
+              'Jos sekään ei auta, ole hyvä ja ota yhteys tukeen.',
+
+        'en': 'Menu loading did not succeed :-(\n\n' \
+              'Try logging out and back in again.\n' \
+              'If that does not help, try restarting the computer.\n' \
+              'If even that does not help, please contact support.',
     },
 
     'desktop_link_failed': {
