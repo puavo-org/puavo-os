@@ -149,7 +149,6 @@ class packages {
     , 'mumble'
     , 'pavucontrol'
     , 'pavumeter'
-    , 'pulseaudio-esound-compat'
     , 'qstopmotion'
     , 'simplescreenrecorder'
     , 'timidity' ]:
