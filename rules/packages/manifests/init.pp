@@ -13,15 +13,16 @@ class packages {
   # Puavo OS packages
   #
 
-  @package {
-    'puavo-ltsp-bootserver':
-      ensure => present,
-      tag    => [ 'tag_puavo_bootserver' ];
-  }
+# XXX buster
+# @package {
+#   'puavo-ltsp-bootserver':
+#     ensure => present,
+#     tag    => [ 'tag_puavo_bootserver' ];
+# }
 
   @package {
-    [ 'iivari-client'
-    , 'puavo-autopilot'
+    [ # XXX 'iivari-client'
+      'puavo-autopilot'
     , 'puavo-autopoweroff'
     , 'puavo-bigtouch-shutdown'
     , 'puavo-blackboard'
@@ -43,8 +44,8 @@ class packages {
     , 'puavo-wlanmapper'
     , 'puavo-wlangw'
     , 'puavomenu'
-    , 'ruby-puavowlan'
-    , 'webkiosk-language-selector' ]:
+    , 'ruby-puavowlan' ]:
+    # XXX buster'webkiosk-language-selector'
       ensure => present,
       tag    => [ 'tag_puavo' ];
   }
