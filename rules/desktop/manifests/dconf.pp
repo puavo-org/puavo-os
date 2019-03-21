@@ -5,7 +5,7 @@ class desktop::dconf {
     'update dconf':
       command     => '/usr/bin/dconf update',
       refreshonly => true,
-      require     => Package['dconf-tools'];
+      require     => Package['dconf-cli'];
   }
 
   file {
@@ -15,5 +15,5 @@ class desktop::dconf {
       ensure => directory;
   }
 
-  Package <| (title == dconf-tools) |>
+  Package <| (title == dconf-cli) |>
 }

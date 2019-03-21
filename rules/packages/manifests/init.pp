@@ -86,7 +86,7 @@ class packages {
     , 'arandr'
     , 'clusterssh'
     , 'console-setup'
-    , 'dconf-tools'
+    , 'dconf-cli'
     , 'elinks'
     , 'ethtool'
     , 'expect'
