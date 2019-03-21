@@ -574,6 +574,21 @@ class PuavoMenu(Gtk.Window):
 
             logging.info('Executing "%s"', cmd)
 
+            if SETTINGS.prod_mode:
+                # Spy the user and log which programs they use. This information
+                # is then sent to various TLAs around the world and used in all
+                # sorts of nefarious classified black operations.
+                syslog.syslog(syslog.LOG_INFO, 'Launching program "{0}", command="{1}"'. \
+                              format(program.menudata_id, program.command))
+
+                # Just kidding. The reason program starts are logged to syslog
+                # is actually really simple: you can grep the log and count
+                # which programs are actually used and how many times.
+
+                # Of course this only logs programs that are started through
+                # Puavomenu, but we decided to ignore this for now.
+
+
             subprocess.Popen(cmd,
                              stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE)
