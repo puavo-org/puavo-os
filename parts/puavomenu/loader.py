@@ -530,6 +530,8 @@ def load_dirs_config(name):
 
     import json
 
+    logging.info('Loading directory configuration file "{0}"'.format(name))
+
     desktop_dirs = []
     icon_dirs = []
 
