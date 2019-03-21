@@ -8,20 +8,20 @@ class firefox {
       before  => Package['firefox-esr'],
       content => template('firefox/70-firefox.pref');
 
-    '/etc/firefox/puavodesktop.js':
+    '/etc/firefox-esr/puavodesktop.js':
       content => template('firefox/puavodesktop.js'),
       require => Package['firefox-esr'];
 
-    '/etc/firefox/syspref.js':
+    '/etc/firefox-esr/syspref.js':
       content => template('firefox/syspref.js'),
-      require => File['/usr/lib/firefox/firefox-puavodesktop.js'];
+      require => File['/usr/lib/firefox-esr/firefox-puavodesktop.js'];
 
     '/etc/X11/Xsession.d/48puavo-set-apiserver-envvar':
       content => template('firefox/48puavo-set-apiserver-envvar');
 
-    '/usr/lib/firefox/firefox-puavodesktop.js':
+    '/usr/lib/firefox-esr/firefox-puavodesktop.js':
       content => template('firefox/firefox-puavodesktop.js'),
-      require => File['/etc/firefox/puavodesktop.js'];
+      require => File['/etc/firefox-esr/puavodesktop.js'];
 
     '/etc/puavo-external-files-actions.d/firefox':
       content => template('firefox/puavo-external-files-actions.d/firefox'),
