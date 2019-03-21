@@ -1,6 +1,6 @@
 class packages::languages::de {
   @package {
-    [ 'firefox-esr-l10n-de:i386'
+    [ 'firefox-esr-l10n-de'
     , 'hyphen-de'
     , 'icedove-l10n-de'
     , 'kde-l10n-de'

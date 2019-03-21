@@ -667,8 +667,7 @@ class packages {
     , 'chromium'
     , 'chromium-l10n'
     , 'epiphany-browser'
-    , 'firefox-esr:i386'        # use 32-bit version of Firefox to conserve
-                                # memory
+    , 'firefox-esr'     # XXX use 32-bit version of Firefox to conserve memory?
     , 'liferea'
     , 'openjdk-8-jdk'
     , 'openjdk-8-jre'
