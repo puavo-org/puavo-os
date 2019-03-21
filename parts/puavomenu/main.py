@@ -4,6 +4,8 @@ import time
 import os
 import socket               # for the IPC socket
 import logging
+import syslog
+import traceback
 
 import gi
 gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
@@ -362,6 +364,9 @@ class PuavoMenu(Gtk.Window):
 
     # (Re-)Creates the current category or menu view
     def __create_current_menu(self):
+        if self.menudata is None:
+            return
+
         new_buttons = []
 
         self.__empty.hide()
@@ -599,6 +604,9 @@ class PuavoMenu(Gtk.Window):
     # Searches the programs list using a string, then replaces the menu list
     # with results
     def __do_search(self, edit):
+        if self.menudata is None:
+            return
+
         key = self.__get_search_text()
 
         if len(key) == 0:
@@ -667,10 +675,26 @@ class PuavoMenu(Gtk.Window):
         """Loads menu data and sets up the UI. Returns false if
         something fails."""
 
-        self.menudata = menudata.Menudata()
+        try:
+            from iconcache import ICONS48
 
-        if not self.menudata.load():
-            self.menudata.clear()
+            self.menudata = menudata.Menudata()
+
+            self.menudata.load(SETTINGS.language,
+                               SETTINGS.menu_dir,
+                               utils.puavo_conf('puavo.puavomenu.tags', 'default'),
+                               ICONS48)
+
+        except Exception as exception:
+            logging.fatal('Could not load menu data!')
+            logging.error(exception, exc_info=True)
+
+            if SETTINGS.prod_mode:
+                # Log for later examination
+                syslog.syslog(syslog.LOG_CRIT, 'Could not load menu data!')
+                syslog.syslog(syslog.LOG_CRIT, traceback.format_exc())
+
+            self.menudata = None
             return False
 
         # Prepare the user interface
@@ -710,12 +734,6 @@ class PuavoMenu(Gtk.Window):
         if SETTINGS.prod_mode:
             return
 
-        self.menudata = menudata.Menudata()
-        self.current_category = -1
-        self.current_menu = None
-
-        self.__create_current_menu()
-
         self.__category_buttons.hide()
 
         num_pages = self.__category_buttons.get_n_pages()
@@ -739,6 +757,13 @@ class PuavoMenu(Gtk.Window):
         self.__faves_sep.hide()
         self.__faves.clear()
         self.__faves.hide()
+
+        self.__menu_title.hide()
+        self.__programs_container.hide()
+
+        self.menudata = None
+        self.current_category = -1
+        self.current_menu = None
 
         from iconcache import ICONS48
 
@@ -955,7 +980,7 @@ class PuavoMenu(Gtk.Window):
             return
 
         def purge(menuitem):
-            if self.menudata and self.menudata.programs:
+            if self.menudata:
                 logging.debug('=' * 20)
                 logging.debug('Purging all loaded menu data!')
                 logging.debug('=' * 20)
@@ -1024,7 +1049,7 @@ class PuavoMenu(Gtk.Window):
         reload_item.show()
         dev_menu.append(reload_item)
 
-        if not self.menudata or len(self.menudata.programs) > 0:
+        if self.menudata:
             remove_item = Gtk.MenuItem('Unload all menu data')
             remove_item.connect('activate', purge)
             remove_item.show()
