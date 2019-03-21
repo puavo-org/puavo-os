@@ -379,11 +379,11 @@ class packages {
 
     [ 'calibre'
     , 'gummi'
-    , 'icedove'
     , 'libreoffice'
     , 'libreoffice-base'
     , 'scribus'
     , 'tellico'
+    , 'thunderbird'
     , 'vym' ]:
       tag => [ 'tag_office', 'tag_debian_desktop', ];
 
