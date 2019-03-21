@@ -4,9 +4,11 @@ class packages::distribution_tweaks {
 
   Package <|
        title == 'celestia'
+    or title == 'celestia-common-nonfree'
     or title == 'celestia-gnome'
     or title == 'eclipse'
     or title == 'firefox-esr-l10n-sv'
+    or title == 'firmware-crystalhd'
     or title == 'fmit'
     or title == 'fotowall'
     or title == 'gksu'
