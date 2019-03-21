@@ -552,7 +552,7 @@ class PuavoMenu(Gtk.Window):
         self.__faves.update(self.menudata.programs)
 
         logging.info('Clicked program button "%s", usage counter is %d',
-                     program.name, program.uses)
+                     program.menudata_id, program.uses)
 
         if program.command is None:
             logging.error('No command defined for program "%s"', program.name)
