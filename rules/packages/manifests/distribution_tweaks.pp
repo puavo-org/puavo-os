@@ -3,9 +3,10 @@ class packages::distribution_tweaks {
   # (as of 2016-11-21) or there installation problems.
 
   Package <|
-       title == 'denemo'	# dependency conflict with chromium, which wins
-    or title == 'libnspr4-0d'
-    or title == 'libnspr4-0d:i386'
-    or title == 'pencil2d'
+       title == 'firefox-esr-l10n-sv'
+    or title == 'fotowall'
+    or title == 'mypaint'
+    or title == 'mypaint-data'
+    or title == 'python-appindicator'
   |> { ensure => absent, }
 }

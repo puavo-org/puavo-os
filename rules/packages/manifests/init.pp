@@ -185,7 +185,6 @@ class packages {
     , 'notify-osd'
     , 'onboard'
     , 'onboard-data'
-    , 'python-appindicator'
     , 'python-gtk2'
     , 'python-notify'
     , 'shared-mime-info'
@@ -293,7 +292,6 @@ class packages {
     , 'dia'
     , 'dvgrab'
     , 'feh'
-    , 'fotowall'
     , 'freecad'
     , 'gimp'
     , 'gimp-data-extras'
@@ -694,23 +692,24 @@ class packages {
   # packages from the Ubuntu repository
   #
 
-  @package {
-    [ 'ttf-ubuntu-font-family' ]:
-      tag => [ 'tag_fonts', 'tag_ubuntu_desktop', ];
-
-    [ 'edubuntu-wallpapers'
-    , 'ubuntu-wallpapers-lucid'
-    , 'ubuntu-wallpapers-precise'
-    , 'ubuntu-wallpapers-quantal'
-    , 'ubuntu-wallpapers-raring'
-    , 'ubuntu-wallpapers-saucy'
-    , 'ubuntu-wallpapers-trusty'
-    , 'ubuntu-wallpapers-utopic'
-    , 'ubuntu-wallpapers-vivid'
-    , 'ubuntu-wallpapers-wily'
-    , 'ubuntu-wallpapers-xenial' ]:
-      tag => [ 'tag_wallpapers', 'tag_ubuntu_desktop', ];
-  }
+#  XXX not installing Ubuntu packages in Buster (yet?)
+#  @package {
+#    [ 'ttf-ubuntu-font-family' ]:
+#      tag => [ 'tag_fonts', 'tag_ubuntu_desktop', ];
+#
+#    [ 'edubuntu-wallpapers'
+#    , 'ubuntu-wallpapers-lucid'
+#    , 'ubuntu-wallpapers-precise'
+#    , 'ubuntu-wallpapers-quantal'
+#    , 'ubuntu-wallpapers-raring'
+#    , 'ubuntu-wallpapers-saucy'
+#    , 'ubuntu-wallpapers-trusty'
+#    , 'ubuntu-wallpapers-utopic'
+#    , 'ubuntu-wallpapers-vivid'
+#    , 'ubuntu-wallpapers-wily'
+#    , 'ubuntu-wallpapers-xenial' ]:
+#      tag => [ 'tag_wallpapers', 'tag_ubuntu_desktop', ];
+#  }
 
   #
   # packages from the (Opinsys) puavo repository

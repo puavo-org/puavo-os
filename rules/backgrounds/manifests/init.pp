@@ -10,7 +10,7 @@ class backgrounds {
     file {
       "${::backgrounds::backgrounds_dir}/${background_file}":
         ensure  => link,
-        require => Package[$package],
+        # XXX buster require => Package[$package],
         target  => "../../${background_file}";
     }
   }

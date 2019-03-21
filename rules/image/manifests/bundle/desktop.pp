@@ -43,6 +43,6 @@ class image::bundle::desktop {
   include ::xorg
 
   Package <| tag == 'tag_debian_desktop'
-          or tag == 'tag_debian_desktop_backports'
-          or tag == 'tag_ubuntu_desktop' |>
+          or tag == 'tag_debian_desktop_backports' |>
+          # XXX buster or tag == 'tag_ubuntu_desktop' |>
 }
