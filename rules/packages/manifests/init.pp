@@ -277,9 +277,6 @@ class packages {
     , 'gnome-applets'
     , 'gnome-power-manager'
     , 'gnome-user-guide'
-    , 'libgnome2-perl'
-    , 'libgnomevfs2-bin'
-    , 'libgnomevfs2-extra'
     , 'notification-daemon' ]:
       tag => [ 'tag_gnome', 'tag_debian_desktop', ];
 
@@ -300,16 +297,13 @@ class packages {
     , 'kino'
     , 'kolourpaint4'
     , 'krita'
-    , 'libav-tools'
     , 'libsane'
-    , 'libsane-extras'
     , 'mjpegtools'
     , 'mypaint'
     , 'nautilus-image-converter'
     , 'okular'
     , 'openshot'
     , 'pencil2d'
-    , 'pinta'
     , 'pitivi'
     , 'python-lxml'
     , 'sane-utils'
@@ -323,7 +317,6 @@ class packages {
     [ 'irssi'
     , 'irssi-plugin-xmpp'
     , 'pidgin'
-    , 'pidgin-libnotify'
     , 'pidgin-plugin-pack' ]:
       tag => [ 'tag_instant_messaging', 'tag_debian_desktop', ];
 
@@ -357,7 +350,6 @@ class packages {
     , 'hydrogen'
     , 'lmms'
     , 'musescore'
-    , 'musescore-soundfont-gm'
     , 'qsynth'
     , 'rosegarden'
     , 'solfege'
@@ -405,7 +397,7 @@ class packages {
     , 'geany'
     , 'idle'
     , 'idle-python2.7'
-    , 'idle-python3.5'
+    , 'idle-python3.7'
     , 'kturtle'
     , 'lokalize'
     , 'meld'
@@ -458,7 +450,6 @@ class packages {
       tag => [ 'tag_science', 'tag_debian_desktop', ];
 
     [ 'gnome-icon-theme'
-    , 'gnome-themes-extras'
     , 'gtk2-engines'
     , 'gtk2-engines-pixbuf'
     , 'openclipart'
@@ -470,7 +461,6 @@ class packages {
     # desktop-packages relating to gnome and other, some of these
     # maybe belong to other categories or may be removed
     [ 'acpi-support'
-    , 'alsa-base'
     , 'alsa-utils'
     , 'anacron'
     , 'at-spi2-core'
@@ -502,7 +492,6 @@ class packages {
     , 'genisoimage'
     , 'ghostscript-x'
     , 'gjs'
-    , 'gksu'
     , 'gnome-accessibility-themes'
     , 'gnome-backgrounds'
     , 'gnome-bluetooth'
@@ -512,7 +501,6 @@ class packages {
     , 'gnome-contacts'
     , 'gnome-control-center'
     , 'gnome-disk-utility'
-    , 'gnome-icon-theme-extras'
     , 'gnome-icon-theme-symbolic'
     , 'gnome-keyring'
     , 'gnome-menus'
@@ -621,12 +609,12 @@ class packages {
       tag => [ 'tag_gnome_desktop', 'tag_debian_desktop', ];
 
     # some dependencies from puavopkg packages
-    [ 'libjavascriptcoregtk-1.0-0'        # citrix client
-    , 'libopencsg1'                       # openscad-nightly
+    [ # XXX buster 'libjavascriptcoregtk-1.0-0'        # citrix client
+      'libopencsg1'                       # openscad-nightly
     , 'libqt5quickcontrols2-5'            # mafynetti
     , 'libqt5quicktemplates2-5'           # mafynetti
     , 'libqt5webenginewidgets5'           # promethean
-    , 'libwebkitgtk-1.0-0'                # citrix client
+    # XXX buster , 'libwebkitgtk-1.0-0'                # citrix client
     , 'qml-module-qtquick-controls2'      # mafynetti
     , 'qml-module-qtquick-templates2'     # mafynetti
     ]:
@@ -657,7 +645,6 @@ class packages {
       tag => [ 'tag_virtualization', 'tag_debian_desktop', ];
 
     [ 'bluefish'
-    , 'browser-plugin-vlc'
     , 'chromium'
     , 'chromium-l10n'
     , 'epiphany-browser'
@@ -712,14 +699,16 @@ class packages {
   #
 
   @package {
-    'nwjs':
-      tag => [ 'tag_web', 'tag_puavo', ];
+# XXX buster ... could we drop this completely?
+#   'nwjs':
+#     tag => [ 'tag_web', 'tag_puavo', ];
 
     [ 'faenza-icon-theme' ]:
       tag => [ 'tag_themes', 'tag_puavo', ];
 
-    'openboard':
-      tag => [ 'tag_whiteboard', 'tag_puavo', ];
+# XXX buster
+#   'openboard':
+#     tag => [ 'tag_whiteboard', 'tag_puavo', ];
   }
 
   case $debianversioncodename {
@@ -772,13 +761,14 @@ class packages {
   # restricted packages. These need to be installed and distributed in
   # the image to minimize the effort of installing restricted packages
   # "during runtime".
-  @package {
-    [ 'libnspr4-0d'    # spotify
-    , 'libssl1.0.0'    # spotify
-    , 'libudev0:amd64' # vmware-horizon-client
-    , 'lsb-core' ]:    # google-earth
-      tag => [ 'tag_debian_desktop', 'tag_required-by-restricted' ];
-  }
+# XXX buster
+# @package {
+#   [ 'libnspr4-0d'    # spotify
+#   , 'libssl1.0.0'    # spotify
+#   , 'libudev0:amd64' # vmware-horizon-client
+#   , 'lsb-core' ]:    # google-earth
+#     tag => [ 'tag_debian_desktop', 'tag_required-by-restricted' ];
+# }
 
   # various contrib/non-free stuff, firmwares and such
   @package {
