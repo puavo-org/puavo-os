@@ -19,7 +19,7 @@ class image::bundle::desktop {
   include ::image::bundle::basic
   include ::kaffeine
   include ::keyutils
-  include ::ktouch
+  # include ::ktouch                    # XXX buster
   include ::libdvdcss
   include ::libreoffice
   include ::network_manager
