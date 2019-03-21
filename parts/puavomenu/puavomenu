@@ -192,6 +192,7 @@ if SETTINGS.autohide:
 
 import time
 import syslog
+import traceback
 
 logging.info('=' * 50)
 
@@ -212,7 +213,7 @@ except Exception as exception:
     if SETTINGS.prod_mode:
         # Log fatal exceptions to to syslog
         syslog.syslog(syslog.LOG_CRIT, 'Top-level exception caught in puavomenu!')
-        syslog.syslog(syslog.LOG_CRIT, str(exception))
+        syslog.syslog(syslog.LOG_CRIT, traceback.format_exc())
 
 logging.info('=' * 50)
 
