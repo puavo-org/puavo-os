@@ -174,6 +174,10 @@ class Menudata:
             if program.hidden:
                 continue
 
+            if re.search(key, program.menudata_id, re.IGNORECASE):
+                matches.append(program)
+                continue
+
             if re.search(key, program.name, re.IGNORECASE):
                 matches.append(program)
                 continue
