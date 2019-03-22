@@ -36,6 +36,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/conf.d
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/hooks
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts
+	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-bottom
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-top
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/puavo-postmount
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/definitions
@@ -46,6 +47,9 @@ installdirs :
 install : $(install-subdirs) installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(datarootdir)/initramfs-tools/hooks \
 		initramfs-tools/hooks/puavo
+	$(INSTALL_PROGRAM) \
+		-t $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-bottom \
+		initramfs-tools/scripts/init-bottom/puavo-nbd-server
 	$(INSTALL_PROGRAM) \
 		-t $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/init-top \
 		initramfs-tools/scripts/init-top/puavo

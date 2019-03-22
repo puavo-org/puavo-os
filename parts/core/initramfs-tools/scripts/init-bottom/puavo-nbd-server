@@ -1,0 +1,21 @@
+#!/bin/sh
+
+PREREQ=""
+
+prereqs()
+{
+        echo "${PREREQ}"
+}
+
+case ${1} in
+        prereqs)
+                prereqs
+                exit 0
+                ;;
+esac
+
+mkdir -p /run/puavo
+if [ -e /run/net-eth0.conf ]; then
+  . /run/net-eth0.conf
+  printf "%s\n" "$ROOTSERVER" > /run/puavo/nbd-server
+fi

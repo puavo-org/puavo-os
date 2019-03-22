@@ -1,6 +1,5 @@
 add_entropy
 set_puavo_hosttype
-find_nbd_server_address
 mount_local_partitions
 setup_state_partition
 setup_bootserver_persistent_net_rules
