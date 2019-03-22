@@ -13,7 +13,6 @@ from constants import PROGRAM_TYPE_DESKTOP, \
 from menudata import Program, Menu, Category
 import utils
 import conditionals
-from settings import SETTINGS
 
 
 # Characters that can be used in program, menu and category IDs.
@@ -145,8 +144,9 @@ def load_menudata_yaml_file(filename):
         data = yaml.safe_load(inf.read())
 
     if data is None or not isinstance(data, dict):
-        logging.warning('__parse_yml_string(): string produced no data, or the '
-                        'data is not a dict')
+        logging.warning('load_menudata_yaml_file(): string produced no data, '
+                        'or the data is not a dict')
+
         return programs, menus, categories
 
     # data.get('xxx', []) will fail if the list following the key is
@@ -183,6 +183,11 @@ def load_menudata_yaml_file(filename):
         # program definition, otherwise duplicate entries might slip
         # through
         programs[menudata_id] = None
+
+        if not isinstance(params, dict):
+            logging.error("Don't know what \"%s\" is supposed to mean, ignoring",
+                          str(params))
+            continue
 
         # Figure out the type
         program_type = str(params.get('type', 'desktop'))
@@ -265,6 +270,11 @@ def load_menudata_yaml_file(filename):
                           'duplicates', menudata_id)
             continue
 
+        if not isinstance(params, dict):
+            logging.error("Don't know what \"%s\" is supposed to mean, ignoring",
+                          str(params))
+            continue
+
         menu = {}
 
         if 'condition' in params:
@@ -304,6 +314,11 @@ def load_menudata_yaml_file(filename):
         if menudata_id in categories:
             logging.error('Category ID "%s" defined multiple times, ignoring '
                           'duplicates', menudata_id)
+            continue
+
+        if not isinstance(params, dict):
+            logging.error("Don't know what \"%s\" is supposed to mean, ignoring",
+                          str(params))
             continue
 
         category = {}
@@ -530,6 +545,8 @@ def load_dirs_config(name):
 
     import json
 
+    logging.info('Loading directory configuration file "{0}"'.format(name))
+
     desktop_dirs = []
     icon_dirs = []
 
@@ -557,21 +574,17 @@ def parse_menudata_files(sources):
     raw_menus = {}
     raw_categories = {}
 
+    # No exception handling here. If this explodes, bail out all the way.
     for name in sources:
-        try:
-            logging.info('Loading menudata file "%s"...', name)
+        logging.info('Loading menudata file "%s"...', name)
 
-            if name.endswith('.json'):
-                progs, menus, cats = load_menudata_json_file(name)
-            elif name.endswith('.yml'):
-                progs, menus, cats = load_menudata_yaml_file(name)
-            else:
-                logging.error('Unknown format in menudata file "%s"',
-                              name)
-                continue
-        except Exception as exception:
-            logging.error('Could not load file "%s": %s', name, str(exception))
-            logging.error(exception, exc_info=True)
+        if name.endswith('.json'):
+            progs, menus, cats = load_menudata_json_file(name)
+        elif name.endswith('.yml'):
+            progs, menus, cats = load_menudata_yaml_file(name)
+        else:
+            logging.error('Unknown format in menudata file "%s"',
+                          name)
             continue
 
         # Program, menu and category IDs must be unique within a file, but
@@ -717,7 +730,8 @@ def load_desktop_files(desktop_dirs, raw_programs):
             raw_programs[menudata_id] = None
             continue
 
-        # Try to load it
+        # Try to load it. Don't let a single failed .desktop file fail
+        # the whole loading process.
         try:
             desktop_data = load_dotdesktop_file(desktop_file)
         except Exception as exception:
@@ -829,7 +843,7 @@ def apply_filters(raw_programs, raw_menus, raw_categories, conditions, filters):
                     cat['hidden'] = True
 
 
-def build_menu_data(raw_programs, raw_menus, raw_categories):
+def build_menu_data(raw_programs, raw_menus, raw_categories, language):
     """Builds the actual menu data from raw menu data."""
 
     programs = {}
@@ -871,12 +885,12 @@ def build_menu_data(raw_programs, raw_menus, raw_categories):
 
         # Description (optional), accept ONLY a localized description
         if 'description' in src_prog and src_prog['description'] and \
-               SETTINGS.language in src_prog['description']:
+               language in src_prog['description']:
             dst_prog.description = utils.localize(src_prog['description'])
 
         # Keywords (optional)
-        if 'keywords' in src_prog and SETTINGS.language in src_prog['keywords']:
-            dst_prog.keywords = list(src_prog['keywords'][SETTINGS.language])
+        if 'keywords' in src_prog and language in src_prog['keywords']:
+            dst_prog.keywords = list(src_prog['keywords'][language])
 
         # Command (required)
         if 'command' in src_prog:
@@ -1075,10 +1089,8 @@ def sort_categories(categories):
     return [i[1] for i in index]
 
 
-def load_icons(programs, menus, icon_dirs):
+def load_icons(programs, menus, icon_dirs, icon_cache):
     """Locates and loads icon files for programs and menus."""
-
-    from iconcache import ICONS48
 
     # Multiple programs can use the same generic icon name.
     # The IconCache class prevents us from loading multiple
@@ -1109,7 +1121,7 @@ def load_icons(programs, menus, icon_dirs):
         if program.icon_name_is_path:
             # Just load it
             if os.path.isfile(program.icon_name):
-                icon = ICONS48.load_icon(program.icon_name)
+                icon = icon_cache.load_icon(program.icon_name)
 
                 if icon.usable:
                     program.icon = icon
@@ -1155,7 +1167,7 @@ def load_icons(programs, menus, icon_dirs):
             num_missing_icons += 1
             continue
 
-        program.icon = ICONS48.load_icon(icon_path)
+        program.icon = icon_cache.load_icon(icon_path)
 
         if not program.icon.usable:
             logging.warning('Found icon "%s" for program "%s", but '
@@ -1187,7 +1199,7 @@ def load_icons(programs, menus, icon_dirs):
             num_missing_icons += 1
             continue
 
-        menu.icon = ICONS48.load_icon(menu.icon_name)
+        menu.icon = icon_cache.load_icon(menu.icon_name)
 
         if not menu.icon.usable:
             logging.warning('Found an icon "%s" for menu "%s", but '
@@ -1198,7 +1210,7 @@ def load_icons(programs, menus, icon_dirs):
         logging.info('Have %d missing or unloadable icons',
                      num_missing_icons)
 
-    stats = ICONS48.stats()
+    stats = icon_cache.stats()
 
     logging.info('Number of 48-pixel icons cached: %d (out of %d)',
                  stats['num_icons'], stats['capacity'])
@@ -1268,7 +1280,7 @@ def find_json_replacements(files):
         files[index] = json_name
 
 
-def load_menu_data(root_dir, filter_string):
+def load_menu_data(language, root_dir, filter_string, icon_cache):
     """The main menu loader function. Call this."""
 
     import time
@@ -1285,12 +1297,12 @@ def load_menu_data(root_dir, filter_string):
 
     start_time = time.clock()
 
+    # Find available YAML files
     condition_files = sort_menu_files(find_menu_files(root_dir, 'conditions'))
     menudata_files = sort_menu_files(find_menu_files(root_dir, 'menudata'))
 
-    if not SETTINGS.compile_mode:
-        # Don't "recompile" existing files!
-        find_json_replacements(menudata_files)
+    # If there are JSON equivalents of the YAML files, load them instead
+    find_json_replacements(menudata_files)
 
     end_time = time.clock()
 
@@ -1300,34 +1312,32 @@ def load_menu_data(root_dir, filter_string):
     # --------------------------------------------------------------------------
     # Load and evaluate conditions
 
-    if not SETTINGS.compile_mode:
-        start_time = time.clock()
+    start_time = time.clock()
 
-        logging.info('Have %d source(s) for conditions', len(condition_files))
+    logging.info('Have %d source(s) for conditions', len(condition_files))
 
-        conditions = {}
+    conditions = {}
 
-        for name in condition_files:
-            conditions.update(conditionals.evaluate_file(name))
+    for name in condition_files:
+        conditions.update(conditionals.evaluate_file(name))
 
-        end_time = time.clock()
+    end_time = time.clock()
 
-        utils.log_elapsed_time('Conditions evaluation time',
-                               start_time, end_time)
+    utils.log_elapsed_time('Conditions evaluation time',
+                           start_time, end_time)
 
     # --------------------------------------------------------------------------
     # Load tag filters
 
-    if not SETTINGS.compile_mode:
-        start_time = time.clock()
+    start_time = time.clock()
 
-        from tags_filter import Filter
+    from tags_filter import Filter
 
-        tag_filter = Filter(filter_string)
+    tag_filter = Filter(filter_string)
 
-        end_time = time.clock()
+    end_time = time.clock()
 
-        utils.log_elapsed_time('Tag filter load time', start_time, end_time)
+    utils.log_elapsed_time('Tag filter load time', start_time, end_time)
 
     # --------------------------------------------------------------------------
     # Parse all available menudata files
@@ -1335,12 +1345,6 @@ def load_menu_data(root_dir, filter_string):
     start_time = total_start
 
     logging.info('Have %d source(s) for menu data', len(menudata_files))
-
-    if SETTINGS.compile_mode:
-        logging.info('Compiling all available YAML files to JSON')
-        compile_menudata_files(menudata_files)
-        logging.info('Compilation done')
-        return {}, {}, {}, []
 
     raw_programs, raw_menus, raw_categories = parse_menudata_files(menudata_files)
 
@@ -1380,7 +1384,7 @@ def load_menu_data(root_dir, filter_string):
     start_time = time.clock()
 
     programs, menus, categories = \
-        build_menu_data(raw_programs, raw_menus, raw_categories)
+        build_menu_data(raw_programs, raw_menus, raw_categories, language)
 
     category_index = sort_categories(categories)
 
@@ -1395,7 +1399,7 @@ def load_menu_data(root_dir, filter_string):
 
     start_time = time.clock()
 
-    load_icons(programs, menus, icon_dirs)
+    load_icons(programs, menus, icon_dirs, icon_cache)
 
     end_time = time.clock()
 
