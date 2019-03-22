@@ -3,13 +3,19 @@ class packages::backports {
   # up from backports instead of the usual channels.  The inclusion of a
   # package on this list does not trigger the installation of a package,
   # that has to be defined elsewhere.
+
+  # This list does not include "firmware-atheros", because
+  # of this issue seen with updated firmware:
+  # [    9.432952] ath10k_pci 0000:03:00.0: firmware crashed! (uuid n/a)
+  # (03:00.0 Network controller: Qualcomm Atheros QCA9377 802.11ac Wireless Network Adapter (rev 31)
+)
+
   $package_list = $debianversioncodename ? {
                     'stretch' => [
                                  # firmware packages
                                    'amd64-microcode'
                                  , 'b43-fwcutter'
                                  , 'firmware-amd-graphics'
-                                 , 'firmware-atheros'
                                  , 'firmware-b43-installer'
                                  , 'firmware-b43legacy-installer'
                                  , 'firmware-bnx2'
