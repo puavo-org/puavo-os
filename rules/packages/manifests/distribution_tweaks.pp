@@ -18,7 +18,6 @@ class packages::distribution_tweaks {
     or title == 'musescore-soundfont-gm'
     or title == 'mypaint'
     or title == 'mypaint-data'
-    or title == 'python-appindicator'
     or title == 'ttf-freefont'
   |> { ensure => absent, }
 }
