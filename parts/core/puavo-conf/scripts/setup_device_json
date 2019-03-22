@@ -12,7 +12,9 @@ status=1
 # Get device settings.
 # Set --max-time to 30 seconds to allow the boot to continue in case of
 # failure; so we can check out later (with ssh or some such) what went wrong.
-if curl --cacert /etc/puavo/certs/rootca.pem \
+# XXX s|--insecure|--cacert /etc/puavo/certs/rootca.pem|
+# XXX INSECURE DO NOT USE IN PRODUCTION
+if curl --insecure \
         --header 'Authorization: Bootserver' \
         --fail \
         --max-time 30 \

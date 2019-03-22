@@ -342,7 +342,9 @@ fetch_with_wget() {
   wget_error_code=$(
     {
       {
-	wget --ca-certificate=/etc/puavo/certs/rootca.pem \
+        # XXX s|--no-check-certificate|--ca-certificate=/etc/puavo/certs/rootca.pem|
+        # XXX INSECURE DO NOT USE IN PRODUCTION
+	wget --no-check-certificate \
 	     --continue                                   \
 	     --output-document="${output_path}"           \
 	     --progress=dot:mega                          \

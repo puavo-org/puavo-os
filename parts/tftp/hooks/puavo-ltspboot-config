@@ -32,7 +32,9 @@ get_bootparams() {
   #   puavo-rest-client --user-bootserver "v3/bootparams_by_mac/$1"
   # but is more efficient (about 0.1 second in real bootserver hardware)
   api_server=$(puavo-resolve-api-server) || false
-  curl --cacert /etc/puavo/certs/rootca.pem --silent --fail \
+  # XXX s|--insecure|--cacert /etc/puavo/certs/rootca.pem|
+  # XXX INSECURE DO NOT USE IN PRODUCTION
+  curl --insecure --silent --fail \
        -H "Authorization: Bootserver" \
         "${api_server}/v3/bootparams_by_mac/$1"
 }

@@ -74,7 +74,9 @@ fetch_with_curl() {
   curl_ebs_filename=$2
   curl_ebs_filepath=$3
 
-  curl --cacert /etc/puavo/certs/rootca.pem                  \
+  # XXX s|--insecure|--cacert /etc/puavo/certs/rootca.pem|
+  # XXX INSECURE DO NOT USE IN PRODUCTION
+  curl --insecure                                            \
        --fail                                                \
        --max-time 10                                         \
        --silent                                              \

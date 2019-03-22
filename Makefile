@@ -207,6 +207,9 @@ setup-buildhost:
 
 .PHONY: update
 update: prepare /etc/puavo-conf/image.json /etc/puavo-conf/rootca.pem
+	# XXX may be removed once --cacert is properly used
+	# XXX grep 'INSECURE DO NOT USE IN PRODUCTION' comments in code
+	$(_sudo) touch /INSECURE_DO_NOT_USE_IN_PRODUCTION
 	$(MAKE) build
 
 	$(_sudo) apt-get update
