@@ -8,7 +8,6 @@ class packages::backports {
   # of this issue seen with updated firmware:
   # [    9.432952] ath10k_pci 0000:03:00.0: firmware crashed! (uuid n/a)
   # (03:00.0 Network controller: Qualcomm Atheros QCA9377 802.11ac Wireless Network Adapter (rev 31)
-)
 
   $package_list = $debianversioncodename ? {
                     'stretch' => [
