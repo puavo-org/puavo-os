@@ -907,18 +907,6 @@ def build_menu_data(raw_programs, raw_menus, raw_categories, language):
             raw_programs[menudata_id] = None
             continue
 
-        if dst_prog.program_type in (PROGRAM_TYPE_DESKTOP, PROGRAM_TYPE_CUSTOM):
-            # Remove the %XX parameters from the Exec key in the same way
-            # Webmenu does it. It has worked fine for Webmenu, maybe
-            # it works fine for us too...?
-            # (Reference: file parts/webmenu/src/parseExec.coffee, line 24)
-            # TODO: This is NOT okay. We could fairly easily fill in
-            # the parameters with correct values. Plus, if the program
-            # is added to the panel/desktop, we could, in some cases,
-            # copy this filtered command line into the new desktop file,
-            # which results in an icon that does not always work properly!
-            dst_prog.command = re.sub(r"%[fFuUdDnNickvm]{1}", "", dst_prog.command)
-
         # Icon
         if 'icon' in src_prog:
             dst_prog.icon_name = src_prog['icon']

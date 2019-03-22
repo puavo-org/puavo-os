@@ -13,6 +13,7 @@ from gi.repository import Gtk
 from gi.repository import Gdk
 from gi.repository import Pango
 from gi.repository import GLib
+from gi.repository import Gio
 
 from constants import *
 import menudata
@@ -558,24 +559,11 @@ class PuavoMenu(Gtk.Window):
             logging.error('No command defined for program "%s"', program.name)
             return
 
-        # Try to launch the program
+        # Try to launch the program. Use Gio's services, as Gio understands the
+        # "Exec=" keys and we don't have to spawn shells with pipes and "sh".
         try:
-            import subprocess
-
-            if program.program_type in (PROGRAM_TYPE_DESKTOP, PROGRAM_TYPE_CUSTOM):
-                # TODO: do we really need to open a shell for this?
-                cmd = ['sh', '-c', program.command, '&']
-            elif program.program_type == PROGRAM_TYPE_WEB:
-                # Opens in the default browser
-                cmd = ['xdg-open', program.command]
-            else:
-                raise RuntimeError('Unknown program type "{0}"'.
-                                   format(program.program_type))
-
-            logging.info('Executing "%s"', cmd)
-
             if SETTINGS.prod_mode:
-                # Spy the user and log which programs they use. This information
+                # Spy the user and log what programs they use. This information
                 # is then sent to various TLAs around the world and used in all
                 # sorts of nefarious classified black operations.
                 syslog.syslog(syslog.LOG_INFO, 'Launching program "{0}", command="{1}"'. \
@@ -588,10 +576,24 @@ class PuavoMenu(Gtk.Window):
                 # Of course this only logs programs that are started through
                 # Puavomenu, but we decided to ignore this for now.
 
+            logging.info('Executing "%s"', program.command)
 
-            subprocess.Popen(cmd,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
+            if program.program_type in (PROGRAM_TYPE_DESKTOP, PROGRAM_TYPE_CUSTOM):
+                # Set the program name to empty string ('') to force some (KDE)
+                # programs to use their default window titles. These programs
+                # have command-line parameters like "-qwindowtitle" or "-caption"
+                # and Gio, when launching the program, sets the "%c" argument
+                # (in the Exec= key) to the program's name it takes from the
+                # command (program.command). This is Wrong(TM), but during
+                # testing I noticed that if we leave it empty (*NOT* None
+                # because that triggers the unwanted behavior!) then these
+                # programs will use their own default titles.
+                Gio.AppInfo.create_from_commandline(program.command, '', 0).launch()
+            elif program.program_type == PROGRAM_TYPE_WEB:
+                Gio.AppInfo.launch_default_for_uri(program.command, None)
+            else:
+                raise RuntimeError('Unknown program type "{0}"'.
+                                   format(program.program_type))
 
             # Of course, we never check the return value here, so we
             # don't know if the command actually worked...
