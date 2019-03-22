@@ -10,21 +10,37 @@
     <value value='6' nick='METRO'/>
   </enum>
   <enum id='org.gnome.shell.extensions.dash-to-panel.clickAction'>
-    <value value='0' nick='SKIP'/>
+    <value value='0' nick='RAISE'/>
     <value value='1' nick='MINIMIZE'/>
     <value value='2' nick='LAUNCH'/>
     <value value='3' nick='CYCLE'/>
     <value value='4' nick='CYCLE-MIN'/>
     <value value='5' nick='QUIT'/>
+    <value value='6' nick='TOGGLE-SHOWPREVIEW'/>
   </enum>
   <enum id='org.gnome.shell.extensions.dash-to-panel.statusAreaPosition'>
-    <value value='0' nick='NATURAL'/>
+    <value value='0' nick='BUTTONSLEFT'/>
     <value value='1' nick='STATUSLEFT'/>
     <value value='2' nick='STATUSRIGHT'/>
+    <value value='3' nick='BUTTONSRIGHT'/>
+    <value value='4' nick='TASKBARLEFT'/>
+    <value value='5' nick='TASKBARRIGHT'/>
+  </enum>
+  <enum id='org.gnome.shell.extensions.dash-to-panel.taskbarPosition'>
+    <value value='0' nick='LEFTPANEL'/>
+    <value value='1' nick='CENTEREDMONITOR'/>
+    <value value='2' nick='CENTEREDCONTENT'/>
+    <value value='3' nick='LEFTPANEL_FIXEDCENTER'/>
+    <value value='4' nick='LEFTPANEL_FLOATCENTER'/>
   </enum>
   <enum id='org.gnome.shell.extensions.dash-to-panel.hotkeyPrefix'>
     <value value='0' nick='Super'/>
     <value value='1' nick='SuperAlt'/>
+  </enum>
+  <enum id='org.gnome.shell.extensions.dash-to-panel.hotkeyOverlay'>
+    <value value='0' nick='NEVER'/>
+    <value value='1' nick='TEMPORARILY'/>
+    <value value='2' nick='ALWAYS'/>
   </enum>
   <!-- this is mean to Match StSide. LEFT and RIGHT actual position in reversed in
        rtl languages -->
@@ -35,6 +51,18 @@
   <enum id='org.gnome.shell.extensions.dash-to-panel.dotPosition'>
     <value value='0' nick='BOTTOM'/>
     <value value='1' nick='TOP'/>
+  </enum>
+  <enum id='org.gnome.shell.extensions.dash-to-panel.proximityBehavior'>
+    <value value='0' nick='ALL_WINDOWS'/>
+    <value value='1' nick='FOCUSED_WINDOWS'/>
+    <value value='2' nick='MAXIMIZED_WINDOWS'/>
+  </enum>
+  <enum id='org.gnome.shell.extensions.dash-to-panel.fontWeight'>
+    <value value='0' nick='inherit'/>
+    <value value='1' nick='normal'/>
+    <value value='2' nick='lighter'/>
+    <value value='3' nick='bold'/>
+    <value value='4' nick='bolder'/>
   </enum>
   <schema path="/org/gnome/shell/extensions/dash-to-panel/" id="org.gnome.shell.extensions.dash-to-panel">
     <key name="panel-position" enum="org.gnome.shell.extensions.dash-to-panel.panelPosition">
@@ -58,7 +86,7 @@
       <description>Style of the running indicator for the icon for the currently focused application</description>
     </key>
     <key name="dot-style-unfocused" enum="org.gnome.shell.extensions.dash-to-panel.dotStyle">
-      <default>'DOTS'</default>
+      <default>'METRO'</default>
       <summary>Style of the running indicator (unfocused)</summary>
       <description>Style of the running indicator for the icon for applications which are not currently focused</description>
     </key>
@@ -122,15 +150,185 @@
       <summary>Highlight icon of focused application</summary>
       <description>Whether to highlight the background of the currently focused application's icon</description>
     </key>
+    <key type="s" name="focus-highlight-color">
+      <default>"#EEEEEE"</default>
+      <summary>Color of highlight of focused application</summary>
+      <description>Customize the color of the highlight of the focused application</description>
+    </key>
+    <key type="i" name="focus-highlight-opacity">
+      <default>25</default>
+      <summary>Opacity of highlight of focused application</summary>
+      <description>Customize the opacity of the highlight of the focused application</description>
+    </key>
+    <key type="b" name="stockgs-keep-dash">
+      <default>false</default>
+      <summary>Keep dash</summary>
+      <description>Whether to keep the stock gnome-shell dash while in overview</description>
+    </key>
+    <key type="b" name="stockgs-panelbtn-click-only">
+      <default>false</default>
+      <summary>Panel menu buttons require click</summary>
+      <description>Whether to activate the panel menu buttons on hover or on click</description>
+    </key>
     <key name="location-clock" enum="org.gnome.shell.extensions.dash-to-panel.statusAreaPosition">
       <default>'STATUSLEFT'</default>
       <summary>Location of the clock</summary>
       <description>Set the location of the clock on the taskbar</description>
     </key>
+    <key name="taskbar-position" enum="org.gnome.shell.extensions.dash-to-panel.taskbarPosition">
+      <default>'LEFTPANEL'</default>
+      <summary>Position of the taskbar</summary>
+      <description>Set the position of the taskbar on the panel</description>
+    </key>
+    <key type="b" name="taskbar-locked">
+      <default>false</default>
+      <summary>Lock the taskbar</summary>
+      <description>Specifies if the user can modify the taskbar</description>
+    </key>
+    <key type="b" name="trans-use-custom-bg">
+      <default>false</default>
+      <summary>Override theme background color</summary>
+      <description>Replace current theme background color for the panel</description>
+    </key>
+    <key type="s" name="trans-bg-color">
+      <default>"#000"</default>
+      <summary>Custom background color</summary>
+      <description>Custom background color for the panel</description>
+    </key>
+    <key type="b" name="trans-use-custom-opacity">
+      <default>false</default>
+      <summary>Custom background color</summary>
+      <description>Replace current theme background color for the panel</description>
+    </key>
+    <key type="b" name="trans-use-dynamic-opacity">
+      <default>false</default>
+      <summary>Dynamic opacity</summary>
+      <description>Enable dynamic opacity</description>
+    </key>
+    <key type="d" name="trans-panel-opacity">
+      <default>0.4</default>
+      <summary>Panel opacity</summary>
+      <description>Custom opacity for the panel</description>
+    </key>
+    <key name="trans-dynamic-behavior" enum="org.gnome.shell.extensions.dash-to-panel.proximityBehavior">
+      <default>'ALL_WINDOWS'</default>
+      <summary>Dynamic opacity behavior</summary>
+      <description>Dictates which window type affects the panel opacity</description>
+    </key>
+    <key type="i" name="trans-dynamic-distance">
+      <default>20</default>
+      <summary>Distance to change opacity</summary>
+      <description>The distance a window needs to be from the panel to change opacity</description>
+    </key>
+    <key type="d" name="trans-dynamic-anim-target">
+      <default>0.8</default>
+      <summary>Modified panel opacity</summary>
+      <description>Modified opacity for the panel when a window is near</description>
+    </key>
+    <key type="i" name="trans-dynamic-anim-time">
+      <default>300</default>
+      <summary>Opacity change duration</summary>
+      <description>The duration of the animation when the opacity changes</description>
+    </key>
+    <key type="b" name="trans-use-custom-gradient">
+      <default>false</default>
+      <summary>Custom gradient</summary>
+      <description>Replace current theme gradient for the panel</description>
+    </key>
+    <key type="s" name="trans-gradient-top-color">
+      <default>"#000"</default>
+      <summary>Custom gradient top color</summary>
+      <description>Custom gradient top color for the panel</description>
+    </key>
+    <key type="d" name="trans-gradient-top-opacity">
+      <default>0</default>
+      <summary>Custom gradient top opacity</summary>
+      <description>Custom gradient top opacity for the panel</description>
+    </key>
+    <key type="s" name="trans-gradient-bottom-color">
+      <default>"#000"</default>
+      <summary>Custom gradient bottom color</summary>
+      <description>Custom gradient bottom color for the panel</description>
+    </key>
+    <key type="d" name="trans-gradient-bottom-opacity">
+      <default>0.2</default>
+      <summary>Custom gradient bottom opacity</summary>
+      <description>Custom gradient bottom opacity for the panel</description>
+    </key>
+    <key type="b" name="intellihide">
+      <default>false</default>
+      <summary>Intellihide</summary>
+      <description>Whether to intelligently hide the panel</description>
+    </key>
+    <key type="b" name="intellihide-hide-from-windows">
+      <default>false</default>
+      <summary>Only hide from windows</summary>
+      <description>Dictates if the dash should only hide when in conflict with windows</description>
+    </key>
+    <key name="intellihide-behaviour" enum="org.gnome.shell.extensions.dash-to-panel.proximityBehavior">
+      <default>'FOCUSED_WINDOWS'</default>
+      <summary>Intellihide behaviour</summary>
+      <description>Dictates how to intelligently hide the panel</description>
+    </key>
+    <key type="b" name="intellihide-use-pressure">
+      <default>false</default>
+      <summary>Intellihide pressure</summary>
+      <description>To reveal the panel, pressure needs to be applied to the edege of the screen</description>
+    </key>
+    <key type="i" name="intellihide-pressure-threshold">
+      <default>100</default>
+      <summary>Intellihide pressure threshold</summary>
+      <description>The pressure needed to reveal the panel</description>
+    </key>
+    <key type="i" name="intellihide-pressure-time">
+      <default>1000</default>
+      <summary>Intellihide pressure time</summary>
+      <description>The numer of milliseconds that the pressure needs to be applied to reveal the panel</description>
+    </key>
+    <key type="b" name="intellihide-show-in-fullscreen">
+      <default>false</default>
+      <summary>Intellihide pressure</summary>
+      <description>Allow the panel to be revealed while an application is in fullscreen mode</description>
+    </key>
+    <key type="b" name="intellihide-only-secondary">
+      <default>false</default>
+      <summary>Intellihide only secondary</summary>
+      <description>Whether to only hide secondary panels</description>
+    </key>
+    <key type="i" name="intellihide-animation-time">
+      <default>200</default>
+      <summary>Intellihide animation time</summary>
+      <description>The animation time (ms) to hide and reveal the panel</description>
+    </key>
+    <key type="i" name="intellihide-close-delay">
+      <default>400</default>
+      <summary>Intellihide close delay</summary>
+      <description>The delay (ms) before hiding the panel</description>
+    </key>
+    <key type="s" name="intellihide-key-toggle-text">
+      <default>"&lt;Super&gt;i"</default>
+      <summary>Keybinding toggle intellihide</summary>
+      <description>Keybinding to reveal the panel while in intellihide mode</description>
+    </key>
+    <key type="as" name="intellihide-key-toggle">
+      <default><![CDATA[['<Super>i']]]></default>
+      <summary>Keybinding toggle intellihide</summary>
+      <description>Keybinding to reveal the panel while in intellihide mode</description>
+    </key>
     <key type="b" name="show-show-apps-button">
       <default>true</default>
       <summary>Show applications button</summary>
       <description>Show appplications button in the dash</description>
+    </key>
+    <key type="s" name="show-apps-icon-file">
+      <default>""</default>
+      <summary>Custom Show Applications icon</summary>
+      <description>Customize the Show Applications icon</description>
+    </key>
+    <key type="i" name="show-apps-icon-side-padding">
+      <default>8</default>
+      <summary>Show Applications icon side padding</summary>
+      <description>Customize the Show Applications icon side padding</description>
     </key>
     <key type="b" name="animate-show-apps">
       <default>true</default>
@@ -143,13 +341,33 @@
       <description>Show activities button on the left hand side of the taskbar</description>
     </key>
     <key type="b" name="show-showdesktop-button">
-      <default>false</default>
+      <default>true</default>
       <summary>Show desktop button</summary>
       <description>Show button on right side of bar that minimizes/restores all visible windows on current workspace</description>
     </key>
+    <key type="i" name="showdesktop-button-width">
+      <default>8</default>
+      <summary>Width of show Desktop button</summary>
+      <description>Customize the width of the show Desktop button</description>
+    </key>
+    <key type="b" name="show-showdesktop-hover">
+      <default>false</default>
+      <summary>Show desktop on hover</summary>
+      <description>Show the desktop on mouse hover</description>
+    </key>
+    <key type="i" name="show-showdesktop-delay">
+      <default>1000</default>
+      <summary>Delay show desktop</summary>
+      <description>Delay before showing the desktop</description>
+    </key>
+    <key type="i" name="show-showdesktop-time">
+      <default>300</default>
+      <summary>Show desktop animation time</summary>
+      <description>Window fade animation time when showing the destop</description>
+    </key>
     <key type="b" name="show-appmenu">
       <default>false</default>
-      <summary>Show appMenu</summary>
+      <summary>Show appMenu button</summary>
       <description>Show appMenu on the right hand side of the panel</description>
     </key>
     <key type="b" name="show-window-previews">
@@ -157,15 +375,120 @@
       <summary>Show window preview</summary>
       <description>Show preview of running window on hover of app icon</description>
     </key>
+    <key type="b" name="show-tooltip">
+      <default>true</default>
+      <summary>Show tooltip</summary>
+      <description>Show tooltip on hover of app icon</description>
+    </key>
+    <key type="b" name="show-favorites">
+      <default>true</default>
+      <summary>Show favorites apps</summary>
+      <description>Show or hide favorite appplications icons in the dash</description>
+    </key>
     <key type="i" name="show-window-previews-timeout">
       <default>100</default>
       <summary>Icon enter display time</summary>
       <description>Amount of time after entering icon to wait before displaying window preview if icon is not clicked or mouse has not left.</description>
     </key>
+    <key type="b" name="peek-mode">
+      <default>true</default>
+      <summary>Enable peek mode</summary>
+      <description>Peek a window upon hover for some time</description>
+    </key>
+    <key type="b" name="window-preview-show-title">
+      <default>true</default>
+      <summary>Display title in preview</summary>
+      <description>Display window title in preview</description>
+    </key>
+    <key type="i" name="window-preview-width">
+      <default>350</default>
+      <summary>Window previews width</summary>
+      <description>The width of the window previews</description>
+    </key>
+    <key type="i" name="window-preview-height">
+      <default>200</default>
+      <summary>Window previews height</summary>
+      <description>The height of the window previews</description>
+    </key>
+    <key type="i" name="window-preview-padding">
+      <default>20</default>
+      <summary>Window previews padding</summary>
+      <description>The padding of the window previews</description>
+    </key>
     <key type="b" name="isolate-workspaces">
       <default>false</default>
       <summary>Provide workspace isolation</summary>
       <description>Dash shows only windows from the current workspace</description>
+    </key>
+    <key type="b" name="group-apps">
+      <default>true</default>
+      <summary>Group applications</summary>
+      <description>Dash groups the application instances under the same icon</description>
+    </key>
+    <key type="i" name="group-apps-label-font-size">
+      <default>14</default>
+      <summary>Application title font size</summary>
+      <description>When the applications are ungrouped, this defines the application titles font size.</description>
+    </key>
+    <key name="group-apps-label-font-weight" enum="org.gnome.shell.extensions.dash-to-panel.fontWeight">
+      <default>'inherit'</default>
+      <summary>Font weight of application titles</summary>
+      <description>When the applications are ungrouped, this defines font weight of application titles. Supported values: inherit (from theme), normal, lighter, bold and bolder.</description>
+    </key>
+    <key type="s" name="group-apps-label-font-color">
+      <default>"#dddddd"</default>
+      <summary>Application title font color</summary>
+      <description>When the applications are ungrouped, this defines the application titles font color.</description>
+    </key>
+    <key type="i" name="group-apps-label-max-width">
+      <default>160</default>
+      <summary>Application title max width</summary>
+      <description>When the applications are ungrouped, this defines the application titles maximum width.</description>
+    </key>
+    <key type="b" name="group-apps-use-fixed-width">
+      <default>true</default>
+      <summary>Use a fixed width for the application titles</summary>
+      <description>The application titles all have the same width, even if their texts are shorter than the maximum width. The maximum width value is used as the fixed width.</description>
+    </key>
+    <key type="b" name="group-apps-underline-unfocused">
+      <default>true</default>
+      <summary>Display running indicators on unfocused applications</summary>
+      <description>When the applications are ungrouped, this defines if running applications should display an indicator.</description>
+    </key>
+    <key type="b" name="group-apps-use-launchers">
+      <default>false</default>
+      <summary>Use favorite icons as application launchers</summary>
+      <description>When the applications are ungrouped, this defines if running applications stay separate from the favorite icons.</description>
+    </key>
+    <key type="i" name="primary-monitor">
+      <default>-1</default>
+      <summary>Primary monitor index</summary>
+      <description>Specifies the index of the primary monitor (-1 = GNOME Primary Monitor).</description>
+    </key>
+    <key type="b" name="multi-monitors">
+      <default>true</default>
+      <summary>Display panels on all monitors</summary>
+      <description>Specifies if a panel is shown on every monitors</description>
+    </key>
+    <key type="b" name="isolate-monitors">
+      <default>false</default>
+      <summary>Provide monitor isolation</summary>
+      <description>Dash shows only windows from the current monitor</description>
+    </key>
+    <key type="b" name="show-clock-all-monitors">
+      <default>true</default>
+      <summary>Display the clock on all monitors</summary>
+      <description>Specifies if every panel should display the clock. If false, the clock is only displayed on the primary monitor.</description>
+    </key>
+    <key type="b" name="show-status-menu-all-monitors">
+      <default>true</default>
+      <summary>Display the status menu on all monitors</summary>
+      <description>Specifies if every panel should display the status menu. If false, the status menu is only displayed on the primary monitor.</description>
+    </key>
+    <key type="b" name="show-favorites-all-monitors">
+      <default>true</default>
+      <summary>Display the favorites on all monitors</summary>
+      <description>Specifies if every panel should display the favorite applications. If false, the favorite appplications are only displayed on the primary monitor.</description>
     </key>
     <key type="b" name="customize-click">
       <default>true</default>
@@ -205,6 +528,21 @@
       <summary>Icon leave preview timeout</summary>
       <description>Amount of time to leave preview windows open when the mouse has left the application's icon.</description>
     </key>
+    <key type="i" name="enter-peek-mode-timeout">
+      <default>500</default>
+      <summary>Enter window peeking mode timeout</summary>
+      <description>Amount of time of inactivity to enter the window peeking mode when the mouse has entered a window preview.</description>
+    </key>
+    <key type="i" name="peek-mode-opacity">
+      <default>40</default>
+      <summary>Window peeking mode opacity</summary>
+      <description>All windows except for the peeked one have their opacity set to the same value.</description>
+    </key>
+    <key type="b" name="preview-middle-click-close">
+      <default>true</default>
+      <summary>Middle click preview to close window</summary>
+      <description>Middle click on the window preview to close that window</description>
+    </key>
     <key type="i" name="tray-size">
       <default>0</default>
       <summary>Tray font size</summary>
@@ -220,7 +558,12 @@
         <summary>App icon margin</summary>
         <description>Set the margin for application icons in the embedded dash.</description>
     </key>
-      <key type="i" name="tray-padding">
+    <key type="i" name="appicon-padding">
+        <default>4</default>
+        <summary>App icon padding</summary>
+        <description>Set the padding for application icons in the embedded dash.</description>
+    </key>
+    <key type="i" name="tray-padding">
         <default>-1</default>
         <summary>Tray item padding</summary>
         <description>Set the size of the tray padding. (-1 for default)</description>
@@ -243,6 +586,14 @@
       <default>true</default>
       <summary>Animate when new window launched</summary>
     </key>
+    <key type="b" name="secondarymenu-contains-appmenu">
+      <default>true</default>
+      <summary>Integrate items from the gnome appmenu into the right click menu</summary>
+    </key>
+    <key type="b" name="secondarymenu-contains-showdetails">
+      <default>false</default>
+      <summary>Display Show Details to open Gnome Software from right click menu</summary>
+    </key>
     <key type="s" name="shortcut-text">
       <default>"&lt;Super&gt;q"</default>
       <summary>Keybinding to show the dock and the number overlay.</summary>
@@ -263,10 +614,10 @@
       <summary>Timeout to hide the dock, in seconds</summary>
       <description>Sets the time duration before the dock is hidden again.</description>
     </key>
-    <key type="b" name="hotkeys-overlay">
-      <default>true</default>
-      <summary>Show the dock when using the hotkeys</summary>
-      <description>The dock will be quickly shown so that the number-overlay is visible and app activation is easier</description>
+    <key name="hotkeys-overlay-combo" enum="org.gnome.shell.extensions.dash-to-panel.hotkeyOverlay">
+      <default>'TEMPORARILY'</default>
+      <summary>Transitivity of the number overlay</summary>
+      <description>You can choose between NEVER, TEMPORARILY and ALWAYS.</description>
     </key>
     <key type="b" name="hot-keys">
       <default>false</default>
@@ -277,6 +628,11 @@
       <default>'Super'</default>
       <summary>Prefix to use for hotkeys</summary>
       <description>You can choose between Super or SuperAlt as the prefix for hotkeys.</description>
+    </key>
+    <key type="b" name="shortcut-previews">
+      <default>false</default>
+      <summary>Show window previews</summary>
+      <description>When multiple instances of the application are available, show their window previews</description>
     </key>
     <key name="app-ctrl-hotkey-1" type="as">
       <default><![CDATA[['<Ctrl><Super>1']]]></default>

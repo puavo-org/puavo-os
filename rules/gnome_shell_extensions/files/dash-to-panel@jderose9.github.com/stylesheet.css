@@ -21,24 +21,50 @@
  * Some code was also adapted from the upstream Gnome Shell source code.
  */
 
-#dashtopanelScrollview .dash-item-container > StWidget {
+ #dashtopanelScrollview .app-well-app .overview-icon,
+ #dashtopanelTaskbar .show-apps .overview-icon {
+	border: none;
+	margin: 0;
 	padding: 0;
-	margin: 0 8px;
 }
 
-#dashtopanelScrollview .app-well-app .overview-icon {
-	border-radius: 0;
-	padding: 8px;
-	border: none;
+#dashtopanelScrollview .dtp-icon-container {
+	padding: 0 4px;
+}
+
+#dashtopanelScrollview .app-well-app .overview-label {
+	padding-right: 8px;
+}
+
+#dashtopanelThumbnailScrollview {
+	-st-hfade-offset: 48px;
+}
+
+#dashtopanelScrollview .app-well-app:hover .overview-icon,
+#dashtopanelScrollview .app-well-app:focus .overview-icon {
+	background: none;
+}
+
+#dashtopanelScrollview .app-well-app:hover .dtp-container,
+#dashtopanelScrollview .app-well-app:focus .dtp-container {
+	background-color: rgba(238, 238, 236, 0.1);
+}
+
+#dashtopanelScrollview .app-well-app:active .dtp-container {
+	background-color: rgba(238, 238, 236, 0.18);
+}
+
+#dashtopanelScrollview .app-well-app .favorite {
+	background-color: rgba(80, 150, 255, 0.4);
 }
 
 #dashtopanelScrollview .app-well-app-running-dot {
 	margin-bottom: 0;
 }
 
-#dashtopanelThumbnailScrollview,
-#dashtopanelScrollview {
-	-st-hfade-offset: 48px;
+#dashtopanelTaskbar .scrollview-fade {
+	background-gradient-direction: horizontal;
+    background-gradient-end: rgba(0, 0, 0, 0);
 }
 
 .dashtopanelSecondaryMenu {
@@ -51,7 +77,7 @@
 }
 
 #dashtopanelThumbnailList .popup-menu-item {
-	padding: 1em;
+	padding: 0;
 	border-radius: 5px;
 	spacing: 0;
 }
@@ -83,4 +109,14 @@
 
 .showdesktop-button-hovered {
 	background-color: rgba(200, 200, 200, .4);
+}
+
+.panel-corner:active, .panel-corner:overview, .panel-corner:focus {
+    -panel-corner-border-color: rgba(0, 0, 0, .001);
+}
+
+.number-overlay {
+        background-color: rgba(0,0,0,0.8);
+        color: rgba(256, 256, 256, 1);
+        text-align: center;
 }

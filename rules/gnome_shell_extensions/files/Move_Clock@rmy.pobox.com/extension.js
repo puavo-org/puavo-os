@@ -1,4 +1,4 @@
-// Copyright (C) 2011-2013 R M Yorston
+// Copyright (C) 2011-2017 R M Yorston
 // Licence: GPLv2+
 
 const Main = imports.ui.main;
@@ -8,11 +8,8 @@ function init() {
 }
 
 function enable() {
-    let mode = Main.sessionMode.currentMode;
-    let center = SessionMode._modes[mode].panel.center;
-
     // do nothing if the clock isn't centred in this mode
-    if ( center.indexOf('dateMenu') == -1 ) {
+    if ( Main.sessionMode.panel.center.indexOf('dateMenu') == -1 ) {
         return;
     }
 
@@ -31,11 +28,8 @@ function enable() {
 }
 
 function disable() {
-    let mode = Main.sessionMode.currentMode;
-    let center = SessionMode._modes[mode].panel.center;
-
     // do nothing if the clock isn't centred in this mode
-    if ( center.indexOf('dateMenu') == -1 ) {
+    if ( Main.sessionMode.panel.center.indexOf('dateMenu') == -1 ) {
         return;
     }
 

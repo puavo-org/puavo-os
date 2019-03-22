@@ -21,15 +21,13 @@ const Main = imports.ui.main;
 const Me = ExtensionUtils.getCurrentExtension();
 const Convenience = Me.imports.convenience;
 const _ = Gettext.gettext;
-const PopupMenu = imports.ui.popupMenu;
 const System = Main.panel.statusArea.aggregateMenu._system;
-const Clutter = imports.gi.Clutter;
-const St = imports.gi.St;
 
 let _logoutButton = null;
 
 /**
  * Initialises the extension
+ */
 function init() {
     Convenience.initTranslations();
 }
@@ -38,22 +36,6 @@ function init() {
  * Enables the extension
  */
 function enable () {
-
-     // If a separator line is the last item in a menu, GNOME automatically hides it.
-     // This isn't what we want, so create a zero-sized "fake" menuitem after the
-     // separator, so it won't be the last. Thanks, GNOME.
-     var foof = new PopupMenu.PopupBaseMenuItem({
-         reactive: false,
-         can_focus: false,
-         style_class: "foof",
-     });
-
-     // Hide the user switcher menu item
-     Main.panel.statusArea.aggregateMenu._system._switchUserSubMenu.actor.destroy();
-
-     // Add the fake menuitem at the end, so the separator won't be the last
-     Main.panel.statusArea.aggregateMenu._system.menu.addMenuItem(foof, 0);
-
     _logoutButton = System._createActionButton('application-exit-symbolic', _("Log Out"));
     _logoutButton.connect('button-press-event', _logout);
     if (System._session === undefined) { // GNOME >=3.26

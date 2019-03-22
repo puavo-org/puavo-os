@@ -45,18 +45,24 @@ const Util = imports.misc.util;
 const Workspace = imports.ui.workspace;
 
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const Convenience = Me.imports.convenience;
+const Utils = Me.imports.utils;
 const WindowPreview = Me.imports.windowPreview;
 const AppIcons = Me.imports.appIcons;
 
-let DASH_ANIMATION_TIME = Dash.DASH_ANIMATION_TIME;
+var DASH_ANIMATION_TIME = Dash.DASH_ANIMATION_TIME;
 let DASH_ITEM_LABEL_SHOW_TIME = Dash.DASH_ITEM_LABEL_SHOW_TIME;
 let DASH_ITEM_LABEL_HIDE_TIME = Dash.DASH_ITEM_LABEL_HIDE_TIME;
-let DASH_ITEM_HOVER_TIMEOUT = Dash.DASH_ITEM_HOVER_TIMEOUT;
-let HFADE_WIDTH = 48;
+var DASH_ITEM_HOVER_TIMEOUT = Dash.DASH_ITEM_HOVER_TIMEOUT;
 
 function getPosition() {
-    return Main.layoutManager.panelBox.anchor_y == 0 ? St.Side.TOP : St.Side.BOTTOM;
+    let position = St.Side.BOTTOM;
+
+    if (Main.layoutManager.primaryMonitor && Main.layoutManager.panelBox && 
+        Main.layoutManager.panelBox.y == Main.layoutManager.primaryMonitor.y) {
+        position = St.Side.TOP;
+    }
+
+    return position;
 }
 /**
  * Extend DashItemContainer
@@ -69,24 +75,6 @@ function getPosition() {
 
 function extendDashItemContainer(dashItemContainer) {
     dashItemContainer.showLabel = AppIcons.ItemShowLabel;
-
-    // override show so we know when an animation is occurring to suppress indicator animations
-    dashItemContainer.show = Lang.bind(dashItemContainer, function(animate) {
-        if (this.child == null)
-            return;
-
-        let time = animate ? DASH_ANIMATION_TIME : 0;
-        this.animatingIn = true;
-        Tweener.addTween(this,
-                         { childScale: 1.0,
-                           childOpacity: 255,
-                           time: time,
-                           transition: 'easeOutQuad',
-                           onComplete: Lang.bind(this, function() {
-                                this.animatingIn = false;
-                           })
-                         });
-    });
 };
 
 /* This class is a fork of the upstream DashActor class (ui.dash.js)
@@ -96,70 +84,78 @@ function extendDashItemContainer(dashItemContainer) {
  * - handle horizontal dash
  */
 
-const taskbarActor = new Lang.Class({
-    Name: 'DashToPanel.TaskbarActor',
-
-    _init: function() {
-        this._rtl = Clutter.get_default_text_direction() == Clutter.TextDirection.RTL;
-
-        this._position = getPosition();
-
-        let layout = new Clutter.BoxLayout({ orientation: Clutter.Orientation.HORIZONTAL });
-
-        this.actor = new Shell.GenericContainer({ name: 'dashtopanelTaskbar',
-                      layout_manager: layout,
-                      clip_to_allocation: true });
-        this.actor.connect('get-preferred-width', Lang.bind(this, this._getPreferredWidth));
-        this.actor.connect('get-preferred-height', Lang.bind(this, this._getPreferredHeight));
-        this.actor.connect('allocate', Lang.bind(this, this._allocate));
-
-        this.actor._delegate = this;
-
-    },
-
-    _allocate: function(actor, box, flags) {
-        
-        this._isHorizontal = true;
-        this._isAppAtLeft = true;
-        let contentBox = box;
-        let availWidth = contentBox.x2 - contentBox.x1;
-        let availHeight = contentBox.y2 - contentBox.y1;
-
-        let [appIcons, showAppsButton] = actor.get_children();
-        let [showAppsMinHeight, showAppsNatHeight] = showAppsButton.get_preferred_height(availWidth);
-        let [showAppsMinWidth, showAppsNatWidth] = showAppsButton.get_preferred_width(availHeight);
-
-        let childBox = new Clutter.ActorBox();
-        childBox.x1 = contentBox.x1 + showAppsNatWidth;
-        childBox.y1 = contentBox.y1;
-        childBox.x2 = contentBox.x2;
-        childBox.y2 = contentBox.y2;
-        appIcons.allocate(childBox, flags);
-
-        childBox.y1 = contentBox.y1;
-        childBox.x1 = contentBox.x1;
-        childBox.x2 = contentBox.x1 + showAppsNatWidth;
-        childBox.y2 = contentBox.y2;
-        showAppsButton.allocate(childBox, flags);
-    },
-
-    _getPreferredWidth: function(actor, forHeight, alloc) {
-        // We want to request the natural height of all our children
-        // as our natural height, so we chain up to StWidget (which
-        // then calls BoxLayout)
-        let [, natWidth] = this.actor.layout_manager.get_preferred_width(this.actor, forHeight);
-        alloc.min_size = 0;
-        alloc.natural_size = natWidth + HFADE_WIDTH;
-    },
-
-    _getPreferredHeight: function(actor, forWidth, alloc) {
-        // We want to request the natural height of all our children
-        // as our natural height, so we chain up to StWidget (which
-        // then calls BoxLayout)
-        let [, natHeight] = this.actor.layout_manager.get_preferred_height(this.actor, forWidth);
-        alloc.min_size = 0;
-        alloc.natural_size = natHeight;
+function findIndex(array, predicate) {
+    if (Array.prototype.findIndex) {
+        return array.findIndex(predicate);
     }
+
+    for (let i = 0, l = array.length; i < l; ++i) {
+        if (predicate(array[i])) {
+            return i;
+        }
+    }
+
+    return -1;
+};
+
+var taskbarActor = Utils.defineClass({
+    Name: 'DashToPanel-TaskbarActor',
+    Extends: St.Widget,
+
+    _init: function(delegate) {
+        this._delegate = delegate;
+        this._currentBackgroundColor = 0;
+        this.callParent('_init', { name: 'dashtopanelTaskbar',
+                                   layout_manager: new Clutter.BoxLayout({ orientation: Clutter.Orientation.HORIZONTAL }),
+                                   clip_to_allocation: true });
+    },
+
+    vfunc_allocate: function(box, flags)  {
+        this.set_allocation(box, flags);
+
+        let availHeight = box.y2 - box.y1;
+        let [, showAppsButton, scrollview, leftFade, rightFade] = this.get_children();
+        let [, showAppsNatWidth] = showAppsButton.get_preferred_width(availHeight);
+        let childBox = new Clutter.ActorBox();
+
+        childBox.x1 = box.x1;
+        childBox.x2 = box.x1 + showAppsNatWidth;
+        childBox.y1 = box.y1;
+        childBox.y2 = box.y2;
+        showAppsButton.allocate(childBox, flags);
+
+        childBox.x1 = box.x1 + showAppsNatWidth;
+        childBox.x2 = box.x2;
+        scrollview.allocate(childBox, flags);
+
+        let [hvalue, , hupper, , , hpageSize] = scrollview.hscroll.adjustment.get_values();
+        hupper = Math.floor(hupper);
+        scrollview._dtpFadeSize = hupper > hpageSize ? this._delegate.iconSize : 0;
+
+        if (this._currentBackgroundColor !== this._delegate.panelWrapper.dynamicTransparency.currentBackgroundColor) {
+            this._currentBackgroundColor = this._delegate.panelWrapper.dynamicTransparency.currentBackgroundColor;
+            let gradientStart = 'background-gradient-start: ' + this._currentBackgroundColor;
+            leftFade.set_style(gradientStart);
+            rightFade.set_style(gradientStart);
+        }
+        
+        childBox.x1 = box.x1 + showAppsNatWidth;
+        childBox.x2 = childBox.x1 + (hvalue > 0 ? scrollview._dtpFadeSize : 0);
+        leftFade.allocate(childBox, flags);
+
+        childBox.x1 = box.x2 - (hvalue + hpageSize < hupper ? scrollview._dtpFadeSize : 0);
+        childBox.x2 = box.x2;
+        rightFade.allocate(childBox, flags);
+    },
+
+    vfunc_get_preferred_width: function(forHeight) {
+        // We want to request the natural width of all our children
+        // as our natural width, so we chain up to StWidget (which
+        // then calls BoxLayout)
+        let [, natWidth] = St.Widget.prototype.vfunc_get_preferred_width.call(this, forHeight);
+        
+        return [0, natWidth];
+    },
 });
 
 /* This class is a fork of the upstream dash class (ui.dash.js)
@@ -176,63 +172,70 @@ const taskbarActor = new Lang.Class({
  * - Sync minimization application target position.
  */
 
-const baseIconSizes = [ 16, 22, 24, 32, 48, 64, 96, 128 ];
-
-const taskbar = new Lang.Class({
+var taskbar = Utils.defineClass({
     Name: 'DashToPanel.Taskbar',
 
-    _init : function(settings) {
+    _init : function(settings, panelWrapper) {
         this._dtpSettings = settings;
-        this._maxWidth = -1;
-        this.iconSize = 32;
-        this._availableIconSizes = baseIconSizes;
+        this.panelWrapper = panelWrapper;
+        
+        // start at smallest size due to running indicator drawing area expanding but not shrinking
+        this.iconSize = 16;
+
         this._shownInitially = false;
 
         this._position = getPosition();
-        this._signalsHandler = new Convenience.GlobalSignalsHandler();
+        this._signalsHandler = new Utils.GlobalSignalsHandler();
 
-        this._dragPlaceholder = null;
-        this._dragPlaceholderPos = -1;
-        this._animatingPlaceholdersCount = 0;
         this._showLabelTimeoutId = 0;
         this._resetHoverTimeoutId = 0;
         this._ensureAppIconVisibilityTimeoutId = 0;
         this._labelShowing = false;
 
-        this._containerObject = new taskbarActor();
-        this._container = this._containerObject.actor;
+        this._box = new St.BoxLayout({ vertical: false,
+                                       clip_to_allocation: false,
+                                       x_align: Clutter.ActorAlign.START,
+                                       y_align: Clutter.ActorAlign.START });
+
+        this._container = new taskbarActor(this);
         this._scrollView = new St.ScrollView({ name: 'dashtopanelScrollview',
                                                hscrollbar_policy: Gtk.PolicyType.NEVER,
                                                vscrollbar_policy: Gtk.PolicyType.NEVER,
                                                enable_mouse_scrolling: true });
 
         this._scrollView.connect('scroll-event', Lang.bind(this, this._onScrollEvent ));
-
-        this._box = new St.BoxLayout({ vertical: false,
-                                       clip_to_allocation: false,
-                                       x_align: Clutter.ActorAlign.START,
-                                       y_align: Clutter.ActorAlign.START });
-        this._box._delegate = this;
-        this._container.add_actor(this._scrollView);
         this._scrollView.add_actor(this._box);
 
-        this._showAppsIcon = new Dash.ShowAppsIcon();
-        AppIcons.extendShowAppsIcon(this._showAppsIcon, this._dtpSettings);
+        // Create a wrapper around the real showAppsIcon in order to add a popupMenu.
+        this._showAppsIconWrapper = new AppIcons.ShowAppsIconWrapper(this._dtpSettings);
+        this._showAppsIconWrapper.connect('menu-state-changed', Lang.bind(this, function(showAppsIconWrapper, opened) {
+            this._itemMenuStateChanged(showAppsIconWrapper, opened);
+        }));
+        // an instance of the showAppsIcon class is encapsulated in the wrapper
+        this._showAppsIcon = this._showAppsIconWrapper.realShowAppsIcon;
         this.showAppsButton = this._showAppsIcon.toggleButton;
              
         this.showAppsButton.connect('notify::checked', Lang.bind(this, this._onShowAppsButtonToggled));
+        this.showAppsButton.checked = Main.overview.viewSelector._showAppsButton.checked;
 
         this._showAppsIcon.childScale = 1;
         this._showAppsIcon.childOpacity = 255;
         this._showAppsIcon.icon.setIconSize(this.iconSize);
-        this._hookUpLabel(this._showAppsIcon);
+        this._hookUpLabel(this._showAppsIcon, this._showAppsIconWrapper);
 
-        let appsIcon = this._showAppsIcon;
-        appsIcon.connect('menu-state-changed', Lang.bind(this, function(appsIcon, opened) {
-            this._itemMenuStateChanged(appsIcon, opened);
-        }));
-
+        this._container.add_child(new St.Widget({ width: 0, reactive: false }));
         this._container.add_actor(this._showAppsIcon);
+        this._container.add_actor(this._scrollView);
+        this._container.add_actor(new St.Widget({ style_class: 'scrollview-fade', reactive: false }));
+        this._container.add_actor(new St.Widget({ style_class: 'scrollview-fade', 
+                                                  reactive: false,  
+                                                  pivot_point: new Clutter.Point({ x: .5, y: .5 }), 
+                                                  rotation_angle_z: 180 }));
+
+        this.showAppsButton.add_constraint(new Clutter.BindConstraint({
+            source: this._container,
+            coordinate: Clutter.BindCoordinate.HEIGHT
+        }));
 
         if (!this._dtpSettings.get_boolean('show-show-apps-button'))
             this.hideShowAppsButton();
@@ -241,19 +244,6 @@ const taskbar = new Lang.Class({
         this.actor = new St.Bin({ child: this._container,
             y_align: St.Align.START, x_align:rtl?St.Align.END:St.Align.START
         });
-
-        Main.panel.actor.connect('notify::height', Lang.bind(this,
-            function() {
-                this._queueRedisplay();
-            }));
-
-        this.actor.connect('notify::width', Lang.bind(this,
-            function() {
-                if (this._maxWidth < this.actor.width) {
-                    this._maxWidth = this.actor.width;
-                    this._queueRedisplay();
-                }
-            }));
 
         // Update minimization animation target position on allocation of the
         // container and on scrollview change.
@@ -269,6 +259,16 @@ const taskbar = new Lang.Class({
 
         this._signalsHandler.add(
             [
+                this.panelWrapper.panel.actor,
+                'notify::height',
+                () => this._queueRedisplay()
+            ],
+            [
+                this.panelWrapper.panel.actor,
+                'notify::width',
+                () => this._queueRedisplay()
+            ],
+            [
                 this._appSystem,
                 'installed-changed',
                 Lang.bind(this, function() {
@@ -277,14 +277,31 @@ const taskbar = new Lang.Class({
                 })
             ],
             [
+           	    this._appSystem,
+           	    'app-state-changed',
+          	    Lang.bind(this, this._queueRedisplay)
+            ],
+            [
                 AppFavorites.getAppFavorites(),
                 'changed',
                 Lang.bind(this, this._queueRedisplay)
             ],
             [
-                this._appSystem,
-                'app-state-changed',
-                Lang.bind(this, this._queueRedisplay)
+                global.window_manager,
+                'switch-workspace', 
+                () => this._connectWorkspaceSignals()
+            ],
+            [
+                Utils.DisplayWrapper.getScreen(),
+                [
+                    'window-entered-monitor',
+                    'window-left-monitor'
+                ],
+                () => {
+                    if (this._dtpSettings.get_boolean('isolate-monitors')) {
+                        this._queueRedisplay();
+                    }
+                }
             ],
             [
                 Main.overview,
@@ -306,25 +323,62 @@ const taskbar = new Lang.Class({
                 Main.overview.viewSelector._showAppsButton,
                 'notify::checked',
                 Lang.bind(this, this._syncShowAppsButtonToggled)
+            ],
+            [
+                this._dtpSettings,
+                'changed::show-window-previews',
+                Lang.bind(this, this._toggleWindowPreview)
+            ],
+            [
+                this._dtpSettings,
+                'changed::show-show-apps-button',
+                Lang.bind(this, function() {
+                    if (this._dtpSettings.get_boolean('show-show-apps-button'))
+                        this.showShowAppsButton();
+                    else
+                        this.hideShowAppsButton();
+                })
+            ],
+            [
+                this._dtpSettings,
+                [
+                    'changed::dot-size',
+                    'changed::show-favorites',
+                    'changed::show-favorites-all-monitors'
+                ],
+                Lang.bind(this, this._redisplay)
+            ],
+            [
+                this._dtpSettings,
+                'changed::group-apps',
+                Lang.bind(this, function() {
+                    this.isGroupApps = this._dtpSettings.get_boolean('group-apps');
+                    this._connectWorkspaceSignals();
+                    this.resetAppIcons();
+                })
+            ],
+            [
+                this._dtpSettings,
+                [
+                    'changed::group-apps-use-launchers',
+                    'changed::taskbar-locked'
+                ],
+                () => this.resetAppIcons()
             ]
         );
 
-        this._bindSettingsChanges();
+        this.isGroupApps = this._dtpSettings.get_boolean('group-apps');
+
+        this._connectWorkspaceSignals();
     },
 
     destroy: function() {
         this._signalsHandler.destroy();
-    },
+        this._signalsHandler = 0;
+        this._showAppsIconWrapper.destroy();
 
-    _bindSettingsChanges: function () {
-        this._dtpSettings.connect('changed::show-show-apps-button', Lang.bind(this, function() {
-            if (this._dtpSettings.get_boolean('show-show-apps-button'))
-                this.showShowAppsButton();
-            else
-                this.hideShowAppsButton();
-        }));
-
-        this._dtpSettings.connect('changed::dot-size', Lang.bind(this, this._redisplay));
+        this._container.destroy();
+        this._disconnectWorkspaceSignals();
     },
 
     _onScrollEvent: function(actor, event) {
@@ -385,10 +439,17 @@ const taskbar = new Lang.Class({
             this._box.insert_child_at_index(this._emptyDropTarget, 0);
             this._emptyDropTarget.show(true);
         }
+
+        this._toggleFavortieHighlight(true);
     },
 
     _onDragCancelled: function() {
         this._dragCancelled = true;
+
+        if (this._dragInfo) {
+            this._box.set_child_at_index(this._dragInfo[1]._dashItemContainer, this._dragInfo[0]);
+        }
+        
         this._endDrag();
     },
 
@@ -400,10 +461,18 @@ const taskbar = new Lang.Class({
     },
 
     _endDrag: function() {
-        this._clearDragPlaceholder();
+        if (this._dragInfo && this._dragInfo[1]._dashItemContainer instanceof DragPlaceholderItem) {
+            this._box.remove_child(this._dragInfo[1]._dashItemContainer);
+            this._dragInfo[1]._dashItemContainer.destroy();
+            delete this._dragInfo[1]._dashItemContainer;
+        }
+
+        this._dragInfo = null;
         this._clearEmptyDropTarget();
         this._showAppsIcon.setDragApp(null);
         DND.removeDragMonitor(this._dragMonitor);
+        
+        this._toggleFavortieHighlight();
     },
 
     _onDragMotion: function(dragEvent) {
@@ -413,15 +482,20 @@ const taskbar = new Lang.Class({
 
          let showAppsHovered = this._showAppsIcon.contains(dragEvent.targetActor);
 
-        if (!this._box.contains(dragEvent.targetActor) || showAppsHovered)
-            this._clearDragPlaceholder();
-
         if (showAppsHovered)
             this._showAppsIcon.setDragApp(app);
         else
             this._showAppsIcon.setDragApp(null);
 
         return DND.DragMotionResult.CONTINUE;
+    },
+
+    _toggleFavortieHighlight: function(show) {
+        let appFavorites = AppFavorites.getAppFavorites();
+        let cssFuncName = (show ? 'add' : 'remove') + '_style_class_name';
+        
+        this._getAppIcons().filter(appIcon => appFavorites.isFavorite(appIcon.app.get_id()))
+                           .forEach(fav => fav._container[cssFuncName]('favorite'));
     },
 
     _appIdListToHash: function(apps) {
@@ -431,35 +505,73 @@ const taskbar = new Lang.Class({
         return ids;
     },
 
+    handleIsolatedWorkspaceSwitch: function() {
+        if (this.isGroupApps) {
+            this._queueRedisplay();
+        } else {
+            this.resetAppIcons();
+        }
+    },
+
+    _connectWorkspaceSignals: function() {
+        this._disconnectWorkspaceSignals();
+
+        this._lastWorkspace = Utils.DisplayWrapper.getWorkspaceManager().get_active_workspace();
+
+        this._workspaceWindowAddedId = this._lastWorkspace.connect('window-added', () => this._queueRedisplay());
+        this._workspaceWindowRemovedId = this._lastWorkspace.connect('window-removed', () => this._queueRedisplay());
+    },
+
+    _disconnectWorkspaceSignals: function() {
+        if (this._lastWorkspace) {
+            this._lastWorkspace.disconnect(this._workspaceWindowAddedId);
+            this._lastWorkspace.disconnect(this._workspaceWindowRemovedId);
+
+            this._lastWorkspace = null;
+        }
+    },
+
     _queueRedisplay: function () {
         Main.queueDeferredWork(this._workId);
     },
 
-    _hookUpLabel: function(item, appIcon) {
+    _hookUpLabel: function(item, syncHandler) {
         item.child.connect('notify::hover', Lang.bind(this, function() {
-            this._syncLabel(item, appIcon);
+            this._syncLabel(item, syncHandler);
         }));
 
-        if (appIcon) {
-            appIcon.connect('sync-tooltip', Lang.bind(this, function() {
-                this._syncLabel(item, appIcon);
-            }));
-        }
+        syncHandler.connect('sync-tooltip', Lang.bind(this, function() {
+            this._syncLabel(item, syncHandler);
+        }));
     },
 
-    _createAppItem: function(app) {
-        let appIcon = new AppIcons.taskbarAppIcon(this._dtpSettings, app,
-                                             { setSizeManually: true,
-                                               showLabel: false });
+    _createAppItem: function(app, window, isLauncher) {
+        let appIcon = new AppIcons.taskbarAppIcon(
+            this._dtpSettings, 
+            {
+                app: app, 
+                window: window,
+                isLauncher: isLauncher
+            },
+            this.panelWrapper,
+            { 
+                setSizeManually: true,
+                showLabel: false,
+                isDraggable: !this._dtpSettings.get_boolean('taskbar-locked'),
+            }
+        );
 
         if (appIcon._draggable) {
             appIcon._draggable.connect('drag-begin',
                                        Lang.bind(this, function() {
                                            appIcon.actor.opacity = 50;
+                                           this._disableWindowPreview();
                                        }));
             appIcon._draggable.connect('drag-end',
                                        Lang.bind(this, function() {
                                            appIcon.actor.opacity = 255;
+                                           this._enableWindowPreview();
+                                           appIcon.syncWindowPreview(this._getAppIcons());
                                        }));
         }
 
@@ -490,33 +602,6 @@ const taskbar = new Lang.Class({
             }
         }));
 
-        appIcon.windowPreview.connect('menu-closed', Lang.bind(this, function(menu) {
-            let appIcons = this._getAppIcons();
-            // enter-event doesn't fire on an app icon when the popup menu from a previously
-            // hovered app icon is still open, so when a preview menu closes we need to
-            // see if a new app icon is hovered and open its preview menu now.
-            // also, for some reason actor doesn't report being hovered by get_hover()
-            // if the hover started when a popup was opened. So, look for the actor by mouse position.
-            let [x, y,] = global.get_pointer();
-            let hoveredActor = global.stage.get_actor_at_pos(Clutter.PickMode.REACTIVE, x, y);
-            let appIconToOpen;
-            appIcons.forEach(function (appIcon) {
-                if(appIcon.actor == hoveredActor) {
-                    appIconToOpen = appIcon;
-                } else if(appIcon.windowPreview && appIcon.windowPreview.isOpen) {
-                    appIcon.windowPreview.close();
-                }
-            });
-
-            if(appIconToOpen) {
-                appIconToOpen.actor.sync_hover();
-                if(appIconToOpen.windowPreview && appIconToOpen.windowPreview != menu) 
-                    appIconToOpen.windowPreview._onEnter();
-            }
-            return GLib.SOURCE_REMOVE;
-
-        }));
-
         appIcon.actor.connect('clicked',
             Lang.bind(this, function(actor) {
                 ensureActorVisibleInScrollView(this._scrollView, actor);
@@ -544,29 +629,52 @@ const taskbar = new Lang.Class({
         return item;
     },
 
+    _toggleWindowPreview: function() {
+        if (this._dtpSettings.get_boolean('show-window-previews'))
+            this._enableWindowPreview();
+        else
+            this._disableWindowPreview();
+    },
+
+    _enableWindowPreview: function() {
+        let appIcons = this._getAppIcons();
+        
+        appIcons.filter(appIcon => !appIcon.isLauncher)
+                .forEach(function (appIcon) {
+            appIcon.enableWindowPreview(appIcons);
+        });
+    },
+
+    _disableWindowPreview: function() {
+        let appIcons = this._getAppIcons();
+        appIcons.forEach(function (appIcon) {
+            appIcon.disableWindowPreview();
+        });
+    },
+
     // Return an array with the "proper" appIcons currently in the taskbar
     _getAppIcons: function() {
-        // Only consider children which are "proper"
-        // icons (i.e. ignoring drag placeholders) and which are not
+        // Only consider children which are "proper" icons and which are not
         // animating out (which means they will be destroyed at the end of
         // the animation)
-        let iconChildren = this._box.get_children().filter(function(actor) {
+        return this._getTaskbarIcons().map(function(actor){
+            return actor.child._delegate;
+        });
+    },
+
+    _getTaskbarIcons: function(includeAnimated) {
+        return this._box.get_children().filter(function(actor) {
             return actor.child &&
                    actor.child._delegate &&
                    actor.child._delegate.icon &&
-                   !actor.animatingOut;
+                   (includeAnimated || !actor.animatingOut);
         });
-
-        let appIcons = iconChildren.map(function(actor){
-            return actor.child._delegate;
-        });
-
-        return appIcons;
     },
 
     _updateAppIconsGeometry: function() {
         let appIcons = this._getAppIcons();
-        appIcons.forEach(function(icon){
+
+        appIcons.filter(icon => icon.constructor === AppIcons.taskbarAppIcon).forEach(function(icon) {
             icon.updateIconGeometry();
         });
     },
@@ -589,8 +697,8 @@ const taskbar = new Lang.Class({
         }
     },
 
-    _syncLabel: function (item, appIcon) {
-        let shouldShow = appIcon ? appIcon.shouldShowTooltip() : item.child.get_hover();
+    _syncLabel: function (item, syncHandler) {
+        let shouldShow = syncHandler ? syncHandler.shouldShowTooltip() : item.child.get_hover();
 
         if (shouldShow) {
             if (this._showLabelTimeoutId == 0) {
@@ -627,45 +735,31 @@ const taskbar = new Lang.Class({
 
     _adjustIconSize: function() {
         // For the icon size, we only consider children which are "proper"
-        // icons (i.e. ignoring drag placeholders) and which are not
-        // animating out (which means they will be destroyed at the end of
-        // the animation)
-        let iconChildren = this._box.get_children().filter(function(actor) {
-            return actor.child &&
-                   actor.child._delegate &&
-                   actor.child._delegate.icon &&
-                   !actor.animatingOut;
-        });
+        // icons and which are not animating out (which means they will be 
+        // destroyed at the end of the animation)
+        let iconChildren = this._getTaskbarIcons();
 
         iconChildren.push(this._showAppsIcon);
 
-        if (this._maxWidth == -1)
-            return;
-
         let scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
-        let iconSizes = this._availableIconSizes.map(function(s) {
-            return s * scaleFactor;
-        });
 
         // Getting the panel height and making sure that the icon padding is at
         // least the size of the app running indicator on both the top and bottom.
-        let availSize = Main.panel.actor.get_height() - (this._dtpSettings.get_int('dot-size') * scaleFactor * 2);
-
-        let newIconSize = this._availableIconSizes[0];
-        for (let i = 0; i < iconSizes.length ; i++) {
-            if (iconSizes[i] < availSize) {
-                newIconSize = this._availableIconSizes[i];
-            }
-        }
-
-        if (newIconSize == this.iconSize)
+        let availSize = (this.panelWrapper.panel.actor.get_height() - 
+                         (this._dtpSettings.get_int('appicon-padding') * 2)) / scaleFactor;
+        
+        if (availSize == this.iconSize)
             return;
 
+        if (availSize < 1) {
+            availSize = 1;
+        }
+        
         let oldIconSize = this.iconSize;
-        this.iconSize = newIconSize;
+        this.iconSize = availSize;
         this.emit('icon-size-changed');
 
-        let scale = oldIconSize / newIconSize;
+        let scale = oldIconSize / this.iconSize;
         for (let i = 0; i < iconChildren.length; i++) {
             let icon = iconChildren[i].child._delegate.icon;
 
@@ -685,154 +779,101 @@ const taskbar = new Lang.Class({
             // Scale the icon's texture to the previous size and
             // tween to the new size
             icon.icon.set_size(icon.icon.width * scale,
-                               icon.icon.height * scale);
+                                icon.icon.height * scale);
 
             Tweener.addTween(icon.icon,
-                             { width: targetWidth,
-                               height: targetHeight,
-                               time: DASH_ANIMATION_TIME,
-                               transition: 'easeOutQuad',
-                             });
+                        { width: targetWidth,
+                            height: targetHeight,
+                            time: DASH_ANIMATION_TIME,
+                            transition: 'easeOutQuad',
+                        });
         }
     },
 
     sortAppsCompareFunction: function(appA, appB) {
-        let windowA = getAppInterestingWindows(appA)[0];
-        let windowB = getAppInterestingWindows(appB)[0];
-        return windowA.get_stable_sequence() > windowB.get_stable_sequence();
+        return getAppStableSequence(appA, this._dtpSettings, this.panelWrapper.monitor) - 
+               getAppStableSequence(appB, this._dtpSettings, this.panelWrapper.monitor);
+    },
+
+    sortWindowsCompareFunction: function(windowA, windowB) {
+        return getWindowStableSequence(windowA) - getWindowStableSequence(windowB);
     },
 
     _redisplay: function () {
-        let favorites = AppFavorites.getAppFavorites().getFavoriteMap();
-
-        let running = this._appSystem.get_running().sort(this.sortAppsCompareFunction);
-        if (this._dtpSettings.get_boolean('isolate-workspaces')) {
-            // When using isolation, we filter out apps that have no windows in
-            // the current workspace
-            let settings = this._dtpSettings;
-            running = running.filter(function(_app) {
-                return AppIcons.getInterestingWindows(_app, settings).length != 0;
-            });
+        if (!this._signalsHandler) {
+            return;
         }
 
-        let children = this._box.get_children().filter(function(actor) {
-                return actor.child &&
-                       actor.child._delegate &&
-                       actor.child._delegate.app;
-            });
-        // Apps currently in the taskbar
-        let oldApps = children.map(function(actor) {
-                return actor.child._delegate.app;
-            });
-        // Apps supposed to be in the taskbar
-        let newApps = [];
+        let showFavorites = this._dtpSettings.get_boolean('show-favorites') && 
+                            (!this.panelWrapper.isSecondary || this._dtpSettings.get_boolean('show-favorites-all-monitors'));
+        //get the currently displayed appIcons
+        let currentAppIcons = this._getTaskbarIcons();
+        //get the user's favorite apps
+        let favoriteApps = showFavorites ? AppFavorites.getAppFavorites().getFavorites() : [];
 
-        // Adding favorites
-        for (let id in favorites)
-            newApps.push(favorites[id]);
-
-        // Adding running apps
-        for (let i = 0; i < running.length; i++) {
-            let app = running[i];
-            if (app.get_id() in favorites)
-                continue;
-            newApps.push(app);
+        //find the apps that should be in the taskbar: the favorites first, then add the running apps
+        // When using isolation, we filter out apps that have no windows in
+        // the current workspace (this check is done in AppIcons.getInterestingWindows)
+        let runningApps = this._getRunningApps().sort(this.sortAppsCompareFunction.bind(this));
+        let expectedAppInfos;
+        
+        if (!this.isGroupApps && this._dtpSettings.get_boolean('group-apps-use-launchers')) {
+            expectedAppInfos = this._createAppInfos(favoriteApps, [], true)
+                                   .concat(this._createAppInfos(runningApps)
+                                               .filter(appInfo => appInfo.windows.length));
+        } else {
+            expectedAppInfos = this._createAppInfos(favoriteApps.concat(runningApps.filter(app => favoriteApps.indexOf(app) < 0)))
+                                   .filter(appInfo => appInfo.windows.length || favoriteApps.indexOf(appInfo.app) >= 0);
         }
 
-        // Figure out the actual changes to the list of items; we iterate
-        // over both the list of items currently in the taskbar and the list
-        // of items expected there, and collect additions and removals.
-        // Moves are both an addition and a removal, where the order of
-        // the operations depends on whether we encounter the position
-        // where the item has been added first or the one from where it
-        // was removed.
-        // There is an assumption that only one item is moved at a given
-        // time; when moving several items at once, everything will still
-        // end up at the right position, but there might be additional
-        // additions/removals (e.g. it might remove all the launchers
-        // and add them back in the new order even if a smaller set of
-        // additions and removals is possible).
-        // If above assumptions turns out to be a problem, we might need
-        // to use a more sophisticated algorithm, e.g. Longest Common
-        // Subsequence as used by diff.
-        let addedItems = [];
-        let removedActors = [];
+        //remove the appIcons which are not in the expected apps list
+        for (let i = currentAppIcons.length - 1; i > -1; --i) {
+            let appIcon = currentAppIcons[i].child._delegate;
+            let appIndex = findIndex(expectedAppInfos, appInfo => appInfo.app == appIcon.app &&
+                                                                  appInfo.isLauncher == appIcon.isLauncher);
 
-        let newIndex = 0;
-        let oldIndex = 0;
-        while (newIndex < newApps.length || oldIndex < oldApps.length) {
-            // No change at oldIndex/newIndex
-            if (oldApps[oldIndex] == newApps[newIndex]) {
-                oldIndex++;
-                newIndex++;
-                continue;
-            }
-
-            // App removed at oldIndex
-            if (oldApps[oldIndex] &&
-                newApps.indexOf(oldApps[oldIndex]) == -1) {
-                removedActors.push(children[oldIndex]);
-                oldIndex++;
-                continue;
-            }
-
-            // App added at newIndex
-            if (newApps[newIndex] &&
-                oldApps.indexOf(newApps[newIndex]) == -1) {
-                addedItems.push({ app: newApps[newIndex],
-                                  item: this._createAppItem(newApps[newIndex]),
-                                  pos: newIndex });
-                newIndex++;
-                continue;
-            }
-
-            // App moved
-            let insertHere = newApps[newIndex + 1] &&
-                             newApps[newIndex + 1] == oldApps[oldIndex];
-            let alreadyRemoved = removedActors.reduce(function(result, actor) {
-                let removedApp = actor.child._delegate.app;
-                return result || removedApp == newApps[newIndex];
-            }, false);
-
-            if (insertHere || alreadyRemoved) {
-                let newItem = this._createAppItem(newApps[newIndex]);
-                addedItems.push({ app: newApps[newIndex],
-                                  item: newItem,
-                                  pos: newIndex + removedActors.length });
-                newIndex++;
-            } else {
-                removedActors.push(children[oldIndex]);
-                oldIndex++;
+            if (appIndex < 0 || 
+                (appIcon.window && (this.isGroupApps || expectedAppInfos[appIndex].windows.indexOf(appIcon.window) < 0)) ||
+                (!appIcon.window && !appIcon.isLauncher && 
+                 !this.isGroupApps && expectedAppInfos[appIndex].windows.length)) {
+                currentAppIcons[i].animateOutAndDestroy();
+                currentAppIcons.splice(i, 1);
             }
         }
 
-        for (let i = 0; i < addedItems.length; i++)
-            this._box.insert_child_at_index(addedItems[i].item,
-                                            addedItems[i].pos);
+        //if needed, reorder the existing appIcons and create the missing ones
+        let currentPosition = 0;
+        for (let i = 0, l = expectedAppInfos.length; i < l; ++i) {
+            let neededAppIcons = this.isGroupApps || !expectedAppInfos[i].windows.length ? 
+                                 [{ app: expectedAppInfos[i].app, window: null, isLauncher: expectedAppInfos[i].isLauncher }] : 
+                                 expectedAppInfos[i].windows.map(window => ({ app: expectedAppInfos[i].app, window: window, isLauncher: false }));
+                                 
+            for (let j = 0, ll = neededAppIcons.length; j < ll; ++j) {
+                //check if the icon already exists
+                let matchingAppIconIndex = findIndex(currentAppIcons, appIcon => appIcon.child._delegate.app == neededAppIcons[j].app && 
+                                                                                 appIcon.child._delegate.window == neededAppIcons[j].window);
 
-        for (let i = 0; i < removedActors.length; i++) {
-            let item = removedActors[i];
-            item.animateOutAndDestroy();
+                if (matchingAppIconIndex > 0 && matchingAppIconIndex != currentPosition) {
+                    //moved icon, reposition it
+                    this._box.remove_child(currentAppIcons[matchingAppIconIndex]);
+                    this._box.insert_child_at_index(currentAppIcons[matchingAppIconIndex], currentPosition);
+                } else if (matchingAppIconIndex < 0) {
+                    //the icon doesn't exist yet, create a new one
+                    let newAppIcon = this._createAppItem(neededAppIcons[j].app, neededAppIcons[j].window, neededAppIcons[j].isLauncher);
+                    
+                    this._box.insert_child_at_index(newAppIcon, currentPosition);
+                    currentAppIcons.splice(currentPosition, 0, newAppIcon);
+                    
+                    // Skip animations on first run when adding the initial set
+                    // of items, to avoid all items zooming in at once
+                    newAppIcon.show(this._shownInitially);
+                }
+
+                ++currentPosition;
+            }
         }
 
         this._adjustIconSize();
-
-        for (let i = 0; i < addedItems.length; i++){
-            // Emit a custom signal notifying that a new item has been added
-            this.emit('item-added', addedItems[i]);
-        }
-
-        // Skip animations on first run when adding the initial set
-        // of items, to avoid all items zooming in at once
-
-        let animate = this._shownInitially;
-
-        if (!this._shownInitially)
-            this._shownInitially = true;
-
-        for (let i = 0; i < addedItems.length; i++) {
-            addedItems[i].item.show(animate);
-        }
 
         // Workaround for https://bugzilla.gnome.org/show_bug.cgi?id=692744
         // Without it, StBoxLayout may use a stale size cache
@@ -841,18 +882,46 @@ const taskbar = new Lang.Class({
         // This is required for icon reordering when the scrollview is used.
         this._updateAppIconsGeometry();
 
-        // This will update the size, and the corresponding number for each icon
-        this._updateNumberOverlay();
+        // This will update the size, and the corresponding number for each icon on the primary panel
+        if (!this.panelWrapper.isSecondary) {
+            this._updateNumberOverlay();
+        }
+
+        // Connect windows previews to hover events
+        this._toggleWindowPreview();
+
+        this._shownInitially = true;
+    },
+
+    _getRunningApps: function() {
+        let tracker = Shell.WindowTracker.get_default();
+        let windows = global.get_window_actors();
+        let apps = [];
+
+        for (let i = 0, l = windows.length; i < l; ++i) {
+            let app = tracker.get_window_app(windows[i].metaWindow);
+
+            if (app && apps.indexOf(app) < 0) {
+                apps.push(app);
+            }
+        }
+        
+        return apps;
+    },
+
+    _createAppInfos: function(apps, defaultWindows, defaultIsLauncher) {
+        return apps.map(app => ({ 
+            app: app, 
+            isLauncher: defaultIsLauncher || false,
+            windows: defaultWindows || AppIcons.getInterestingWindows(app, this._dtpSettings, this.panelWrapper.monitor)
+                                               .sort(this.sortWindowsCompareFunction)
+        }));
     },
 
     // Reset the displayed apps icon to mantain the correct order
     resetAppIcons : function() {
+        let children = this._getTaskbarIcons(true);
 
-        let children = this._box.get_children().filter(function(actor) {
-            return actor.child &&
-                actor.child._delegate &&
-                actor.child._delegate.icon;
-        });
         for (let i = 0; i < children.length; i++) {
             let item = children[i];
             item.destroy();
@@ -865,24 +934,28 @@ const taskbar = new Lang.Class({
     },
 
     _updateNumberOverlay: function() {
-        let appIcons = this._getAppIcons();
-        let counter = 1;
-        appIcons.forEach(function(icon) {
-            if (counter < 10){
-                icon.setNumberOverlay(counter);
+        let seenApps = {};
+        let counter = 0;
+
+        this._getAppIcons().forEach(function(icon) {
+            if (!seenApps[icon.app]) {
+                seenApps[icon.app] = 1;
                 counter++;
             }
-            else if (counter == 10) {
-                icon.setNumberOverlay(0);
-                counter++;
-            }
-            else {
+
+            if (counter <= 10) {
+                icon.setNumberOverlay(counter == 10 ? 0 : counter);
+            } else {
                 // No overlay after 10
                 icon.setNumberOverlay(-1);
             }
+
             icon.updateNumberOverlay();
         });
 
+        if (this._dtpSettings.get_boolean('hot-keys') &&
+            this._dtpSettings.get_string('hotkeys-overlay-combo') === 'ALWAYS')
+            this.toggleNumberOverlay(true);
     },
 
     toggleNumberOverlay: function(activate) {
@@ -892,19 +965,6 @@ const taskbar = new Lang.Class({
         });
     },
 
-    _clearDragPlaceholder: function() {
-        if (this._dragPlaceholder) {
-            this._animatingPlaceholdersCount++;
-            this._dragPlaceholder.animateOutAndDestroy();
-            this._dragPlaceholder.connect('destroy',
-                Lang.bind(this, function() {
-                    this._animatingPlaceholdersCount--;
-                }));
-            this._dragPlaceholder = null;
-        }
-        this._dragPlaceholderPos = -1;
-    },
-
     _clearEmptyDropTarget: function() {
         if (this._emptyDropTarget) {
             this._emptyDropTarget.animateOutAndDestroy();
@@ -912,148 +972,127 @@ const taskbar = new Lang.Class({
         }
     },
 
-    handleDragOver : function(source, actor, x, y, time) {
+    handleDragOver: function(source, actor, x, y, time) {
         if (source == Main.xdndHandler)
             return DND.DragMotionResult.CONTINUE;
-        
-        let app = Dash.getAppFromSource(source);
 
         // Don't allow favoriting of transient apps
-        if (app == null || app.is_window_backed())
+        if (source.app == null || source.app.is_window_backed())
             return DND.DragMotionResult.NO_DROP;
 
         if (!this._settings.is_writable('favorite-apps'))
             return DND.DragMotionResult.NO_DROP;
 
-        let favorites = AppFavorites.getAppFavorites().getFavorites();
-        let numFavorites = favorites.length;
+        if (!this._box.contains(source.actor) && !source._dashItemContainer) {
+            //not an appIcon of the taskbar, probably from the applications view
+            source._dashItemContainer = new DragPlaceholderItem(source, this.iconSize);
+            this._box.insert_child_above(source._dashItemContainer, null);
+        }
+        
+        x -= this.showAppsButton.width;
 
-        let favPos = favorites.indexOf(app);
-
-        let children = this._box.get_children();
-        let numChildren = children.length;
-        let boxHeight = 0;
-        for (let i = 0; i < numChildren; i++) {
-            boxHeight += children[i].width;
+        let currentAppIcons = this._getAppIcons();
+        let sourceIndex = currentAppIcons.indexOf(source);
+        let hoveredIndex = findIndex(currentAppIcons, 
+                                     appIcon => x >= appIcon._dashItemContainer.x && 
+                                                x <= (appIcon._dashItemContainer.x + appIcon._dashItemContainer.width));
+        
+        if (!this._dragInfo) {
+            this._dragInfo = [sourceIndex, source];
         }
 
-        // Keep the placeholder out of the index calculation; assuming that
-        // the remove target has the same size as "normal" items, we don't
-        // need to do the same adjustment there.
-        if (this._dragPlaceholder) {
-            boxHeight -= this._dragPlaceholder.width;
-            numChildren--;
-        }
+        if (hoveredIndex >= 0) {
+            let isLeft = x < currentAppIcons[hoveredIndex]._dashItemContainer.x + currentAppIcons[hoveredIndex]._dashItemContainer.width * .5;
 
-        let pos;
-        if (!this._emptyDropTarget){
-            pos = Math.floor(x * numChildren / boxHeight);
-            if (pos >  numChildren)
-                pos = numChildren;
-        } else
-            pos = 0; // always insert at the top when taskbar is empty
-
-        /* Take into account childredn position in rtl*/
-        if (Clutter.get_default_text_direction() == Clutter.TextDirection.RTL)
-            pos = numChildren - pos;
-
-        if (pos != this._dragPlaceholderPos && pos <= numFavorites && this._animatingPlaceholdersCount == 0) {
-            this._dragPlaceholderPos = pos;
-
-            // Don't allow positioning before or after self
-            if (favPos != -1 && (pos == favPos || pos == favPos + 1)) {
-                this._clearDragPlaceholder();
-                return DND.DragMotionResult.CONTINUE;
+            // Don't allow positioning before or after self and between icons of same app
+            if (!(hoveredIndex === sourceIndex ||
+                  (isLeft && hoveredIndex - 1 == sourceIndex) ||
+                  (isLeft && hoveredIndex - 1 >= 0 && source.app != currentAppIcons[hoveredIndex - 1].app && 
+                   currentAppIcons[hoveredIndex - 1].app == currentAppIcons[hoveredIndex].app) ||
+                  (!isLeft && hoveredIndex + 1 == sourceIndex) ||
+                  (!isLeft && hoveredIndex + 1 < currentAppIcons.length && source.app != currentAppIcons[hoveredIndex + 1].app && 
+                   currentAppIcons[hoveredIndex + 1].app == currentAppIcons[hoveredIndex].app))) {
+                    this._box.set_child_at_index(source._dashItemContainer, hoveredIndex);
+    
+                    // Ensure the next and previous icon are visible when moving the icon
+                    // (I assume there's room for both of them)
+                    if (hoveredIndex > 1)
+                        ensureActorVisibleInScrollView(this._scrollView, this._box.get_children()[hoveredIndex-1]);
+                    if (hoveredIndex < this._box.get_children().length-1)
+                        ensureActorVisibleInScrollView(this._scrollView, this._box.get_children()[hoveredIndex+1]);
             }
-
-            // If the placeholder already exists, we just move
-            // it, but if we are adding it, expand its size in
-            // an animation
-            let fadeIn;
-            if (this._dragPlaceholder) {
-                this._dragPlaceholder.destroy();
-                fadeIn = false;
-            } else {
-                fadeIn = true;
-            }
-
-            this._dragPlaceholder = new Dash.DragPlaceholderItem();
-            this._dragPlaceholder.child.set_width(this.iconSize);
-            this._dragPlaceholder.child.set_height(this.iconSize);
-            this._box.insert_child_at_index(this._dragPlaceholder,
-                                            this._dragPlaceholderPos);
-            this._dragPlaceholder.show(fadeIn);
-            // Ensure the next and previous icon are visible when moving the placeholder
-            // (I assume there's room for both of them)
-            if (this._dragPlaceholderPos > 1)
-                ensureActorVisibleInScrollView(this._scrollView, this._box.get_children()[this._dragPlaceholderPos-1]);
-            if (this._dragPlaceholderPos < this._box.get_children().length-1)
-                ensureActorVisibleInScrollView(this._scrollView, this._box.get_children()[this._dragPlaceholderPos+1]);
         }
-
-        // Remove the drag placeholder if we are not in the
-        // "favorites zone"
-        if (pos > numFavorites)
-            this._clearDragPlaceholder();
-
-        if (!this._dragPlaceholder)
-            return DND.DragMotionResult.NO_DROP;
-
-        let srcIsFavorite = (favPos != -1);
-
-        if (srcIsFavorite)
-            return DND.DragMotionResult.MOVE_DROP;
-
-        return DND.DragMotionResult.COPY_DROP;
+        
+        return this._dragInfo[0] !== sourceIndex ? DND.DragMotionResult.MOVE_DROP : DND.DragMotionResult.CONTINUE;
     },
 
     // Draggable target interface
     acceptDrop : function(source, actor, x, y, time) {
-
-        let app = Dash.getAppFromSource(source);
-
         // Don't allow favoriting of transient apps
-        if (app == null || app.is_window_backed()) {
+        if (!source.app || source.app.is_window_backed() || !this._settings.is_writable('favorite-apps')) {
             return false;
         }
 
-        if (!this._settings.is_writable('favorite-apps'))
-            return false;
+        let appIcons = this._getAppIcons();
+        let sourceIndex = appIcons.indexOf(source);
+        let usingLaunchers = !this.isGroupApps && this._dtpSettings.get_boolean('group-apps-use-launchers');
 
-        let id = app.get_id();
-
-        let favorites = AppFavorites.getAppFavorites().getFavoriteMap();
-
-        let srcIsFavorite = (id in favorites);
-
-        let favPos = 0;
-        let children = this._box.get_children();
-        for (let i = 0; i < this._dragPlaceholderPos; i++) {
-            if (this._dragPlaceholder &&
-                children[i] == this._dragPlaceholder)
-                continue;
-
-            let childId = children[i].child._delegate.app.get_id();
-            if (childId == id)
-                continue;
-            if (childId in favorites)
-                favPos++;
-        }
-
-        // No drag placeholder means we don't wan't to favorite the app
-        // and we are dragging it to its original position
-        if (!this._dragPlaceholder)
+        // dragging the icon to its original position
+        if (this._dragInfo[0] === sourceIndex) {
             return true;
+        }
 
-        Meta.later_add(Meta.LaterType.BEFORE_REDRAW, Lang.bind(this,
-            function () {
-                let appFavorites = AppFavorites.getAppFavorites();
-                if (srcIsFavorite)
-                    appFavorites.moveFavoriteToPos(id, favPos);
-                else
-                    appFavorites.addFavoriteAtPos(id, favPos);
-                return false;
-            }));
+        let appFavorites = AppFavorites.getAppFavorites();
+        let sourceAppId = source.app.get_id();
+        let appIsFavorite = appFavorites.isFavorite(sourceAppId);
+        let replacingIndex = sourceIndex + (sourceIndex > this._dragInfo[0] ? -1 : 1);
+        let favoriteIndex = replacingIndex >= 0 ? appFavorites.getFavorites().indexOf(appIcons[replacingIndex].app) : 0;
+        let sameApps = appIcons.filter(a => a != source && a.app == source.app);
+        let favoritesCount = 0;
+        let position = 0;
+        let interestingWindows = {};
+        let getAppWindows = app => {
+            if (!interestingWindows[app]) {
+                interestingWindows[app] = AppIcons.getInterestingWindows(app, this._dtpSettings, this.panelWrapper.monitor);
+            }
+
+            let appWindows = interestingWindows[app]; //prevents "reference to undefined property Symbol.toPrimitive" warning
+            return appWindows;
+        };
+        
+        if (sameApps.length && 
+            ((!appIcons[sourceIndex - 1] || appIcons[sourceIndex - 1].app !== source.app) && 
+             (!appIcons[sourceIndex + 1] || appIcons[sourceIndex + 1].app !== source.app))) {
+            appIcons.splice(appIcons.indexOf(sameApps[0]), sameApps.length);
+            Array.prototype.splice.apply(appIcons, [sourceIndex + 1, 0].concat(sameApps));
+        }
+
+        for (let i = 0, l = appIcons.length; i < l; ++i) {
+            let windows = [];
+            
+            if (!usingLaunchers || (!source.isLauncher && !appIcons[i].isLauncher)) {
+                windows = appIcons[i].window ? [appIcons[i].window] : getAppWindows(appIcons[i].app);
+            }
+
+            windows.forEach(w => w._dtpPosition = position++);
+
+            if ((usingLaunchers && appIcons[i].isLauncher) || 
+                (!usingLaunchers && appFavorites.isFavorite(appIcons[i].app.get_id()))) {
+                ++favoritesCount;
+            }
+        }
+
+        if (sourceIndex < favoritesCount) {
+            if (appIsFavorite) {
+                appFavorites.moveFavoriteToPos(sourceAppId, favoriteIndex);
+            } else {
+                appFavorites.addFavoriteAtPos(sourceAppId, favoriteIndex);
+            }
+        } else if (appIsFavorite && (!usingLaunchers || source.isLauncher)) {
+            appFavorites.removeFavorite(sourceAppId);
+        }
+
+        appFavorites.emit('changed');
 
         return true;
     },
@@ -1085,10 +1124,9 @@ const taskbar = new Lang.Class({
                 // runs if we are already inside the overview.
                 if (!Main.overview._shown) {
                     this.forcedOverview = true;
+                    let view = Main.overview.viewSelector.appDisplay._views[visibleView].view;
+                    let grid = view._grid;
                     if (animate) {
-                        let view = Main.overview.viewSelector.appDisplay._views[visibleView].view;
-                        let grid = view._grid;
-
                         // Animate in the the appview, hide the appGrid to avoiud flashing
                         // Go to the appView before entering the overview, skipping the workspaces.
                         // Do this manually avoiding opacity in transitions so that the setting of the opacity
@@ -1111,8 +1149,22 @@ const taskbar = new Lang.Class({
                                 grid.animateSpring(IconGrid.AnimationDirection.IN, this.showAppsButton);
                             }));
                         }));
+                    } else {
+                        Main.overview.viewSelector._activePage = Main.overview.viewSelector._appsPage;
+                        Main.overview.viewSelector._activePage.show();
+                        grid.actor.opacity = 255;
+
                     }
                 }
+
+                //temporarily use as primary the monitor on which the showapps btn was clicked 
+                this.panelWrapper.panelManager.setFocusedMonitor(this.panelWrapper.monitor);
+
+                //reset the primary monitor when exiting the overview
+                let overviewHiddenId = Main.overview.connect('hidden', () => {
+                    Main.overview.disconnect(overviewHiddenId);
+                    this.panelWrapper.panelManager.setFocusedMonitor(this.panelWrapper.panelManager.primaryPanel.monitor, true);
+                });
 
                 // Finally show the overview
                 selector._showAppsButton.checked = true;
@@ -1127,7 +1179,6 @@ const taskbar = new Lang.Class({
                         // workspaceView to avoid the zoomout animation. Hide the appPage
                         // onComplete to avoid ugly flashing of original icons.
                         let view = Main.overview.viewSelector.appDisplay._views[visibleView].view;
-                        let grid = view._grid;
                         view.animate(IconGrid.AnimationDirection.OUT, Lang.bind(this, function() {
                             Main.overview.viewSelector._appsPage.hide();
                             Main.overview.hide();
@@ -1146,11 +1197,6 @@ const taskbar = new Lang.Class({
                 }
             }
         }
-
-        // whenever the button is unactivated even if not by the user still reset the
-        // forcedOverview flag
-        if (this.showAppsButton.checked == false)
-            this.forcedOverview = false;
     },
     
     _syncShowAppsButtonToggled: function() {
@@ -1183,18 +1229,45 @@ const taskbar = new Lang.Class({
                 break;
             }
         }
-    }
-
+    },
 });
 
 Signals.addSignalMethods(taskbar.prototype);
 
-function getAppInterestingWindows(app, settings) {
-    let windows = app.get_windows().filter(function(w) {
-        return !w.skip_taskbar;
-    });
+var DragPlaceholderItem = Utils.defineClass({
+    Name: 'DashToPanel-DragPlaceholderItem',
+    Extends: St.Widget,
 
-    return windows;
+    _init: function(appIcon, iconSize) {
+        this.callParent('_init', { style_class: 'dtp-icon-container', layout_manager: new Clutter.BinLayout() });
+
+        this.child = { _delegate: appIcon };
+
+        this._clone = new Clutter.Clone({ 
+            source: appIcon.icon._iconBin,
+            width: iconSize,
+            height: iconSize
+        });
+
+        this.add_actor(this._clone);
+    },
+
+    destroy: function() {
+        this._clone.destroy();
+        this.callParent('destroy');
+    },
+});
+
+function getAppStableSequence(app, settings, monitor) {
+    let windows = AppIcons.getInterestingWindows(app, settings, monitor);
+    
+    return windows.reduce((prevWindow, window) => {
+        return Math.min(prevWindow, getWindowStableSequence(window));
+    }, Infinity);
+}
+
+function getWindowStableSequence(window) {
+    return ('_dtpPosition' in window ? window._dtpPosition : window.get_stable_sequence()); 
 }
 
 /*
@@ -1216,13 +1289,8 @@ function ensureActorVisibleInScrollView(scrollView, actor) {
     let [hvalue0, vvalue0] = [hvalue, vvalue];
 
     let voffset = 0;
-    let hoffset = 0;
-    let fade = scrollView.get_effect("fade");
-    if (fade){
-        voffset = fade.vfade_offset;
-        hoffset = fade.hfade_offset;
-    }
-
+    let hoffset = scrollView._dtpFadeSize;
+    
     let box = actor.get_allocation_box();
     let y1 = box.y1, y2 = box.y2, x1 = box.x1, x2 = box.x2;
 
