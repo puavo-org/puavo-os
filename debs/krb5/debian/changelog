@@ -1,8 +1,140 @@
-krb5 (1.15-1+puavo1) stretch; urgency=medium
+krb5 (1.17-2) unstable; urgency=medium
 
-  * Added a patch to increase maximum number of realms.
+  * Finish removing the run kadmind debconf template which was obsoleted
+    when the systemd units were installed, LP: #1817376
 
- -- Puavo Org <dev@opinsys.fi>  Mon, 03 Jul 2017 15:53:27 +0300
+ -- Sam Hartman <hartmans@debian.org>  Mon, 25 Feb 2019 13:55:57 -0500
+
+krb5 (1.17-1) unstable; urgency=low
+
+  * New Upstream release
+  * Don't include all memory ccaches in ccache collection, avoids invalid
+    mutex, Closes: #918088
+  * The default path for the KDC database even without a config file is
+    /var/lib/krb5kdc/principal, Closes: #777579
+
+ -- Sam Hartman <hartmans@debian.org>  Sun, 13 Jan 2019 15:59:40 -0500
+
+krb5 (1.16.2-1) unstable; urgency=medium
+
+  [ Ondřej Nový ]
+  * d/changelog: Remove trailing whitespaces
+  * d/control: Remove trailing whitespaces
+  * d/rules: Remove trailing whitespaces
+
+
+  [ Sam Hartman ]
+  * New Upstream version, Closes: #915780
+  * CVE-2018-20217: Incorrect KDC assertion leading to denial of service,
+    Closes: #917387
+  * Fix typo in tests
+
+ -- Sam Hartman <hartmans@debian.org>  Mon, 31 Dec 2018 15:25:16 -0500
+
+krb5 (1.16.1-1) unstable; urgency=medium
+
+  [ Sam Hartman ]
+  * New upstream release
+    - Fix flaws in LDAP DN checking, including a null dereference KDC
+    crash which could be triggered by kadmin clients with administrative
+    privileges [CVE-2018-5729, CVE-2018-5730], Closes: #891869
+  * Install kerberos.openldap.ldif, which is probably more useful than
+    kerberos.ldif if you're hoping to use the Kerberos schema on Debian.
+    Also, the bugs in kerberos.ldif have been corrected; Closes: #660767
+  * Suggest krb5-k5tls from krb5-user, Closes: #887937
+  * Merge dep8 tests, thanks Canonical  and Andreas Hasenack (LP:
+    #1677881)
+
+
+ -- Sam Hartman <hartmans@debian.org>  Mon, 16 Jul 2018 20:09:54 -0400
+
+krb5 (1.16-2) unstable; urgency=medium
+
+  * Update location of packaging GIT repository
+  * krb5-config was incorrectly changed to include the multiarch tripple
+    in include paths.  However, our include files are not architecture
+    specific; fix krb5-config to not include a multiarch tripple in
+    include paths, Closes: #887810
+
+ -- Sam Hartman <hartmans@debian.org>  Sat, 20 Jan 2018 11:02:57 -0500
+
+krb5 (1.16-1) unstable; urgency=medium
+
+  * New Upstream Version, Closes: #884490
+      - libkdb5 soname is now 9
+  * Note that we break moonshot-gss-eap less than 1.0.1.  In particular
+    because /etc/gss/mech.d/README is no longer installed,
+    moonshot-gss-eap will drop a stray file in /usr/etc.
+  *  make krb5-config identical on all architectures and make
+    krb5-multidev and libkrb5-dev multiarch installable; solution based on
+    discussion with Hugh McMaster, Closes: #881597
+
+ -- Sam Hartman <hartmans@debian.org>  Thu, 04 Jan 2018 10:29:06 -0500
+
+krb5 (1.15.2-2) unstable; urgency=medium
+
+  * Apply upstream patch removing a fixed-size buffer in PKINIT client code,
+    Closes: #871698
+
+ -- Benjamin Kaduk <kaduk@mit.edu>  Sat, 28 Oct 2017 18:09:28 -0500
+
+krb5 (1.15.2-1) unstable; urgency=medium
+
+  [ Sam Hartman ]
+  * Fix plugins directory, thanks Andreas Hasenack, Closes: #872140
+  * Move kpropd to krb5-kpropd since stretch is released
+  * Mark krb5-kdc and krb5-addmin-server as multi-arch foreign
+
+  [ Benjamin Kaduk ]
+  * New Upstream Version
+    - Ignore files starting with '.' in profile include directories
+    - Use longer timeout for HTTPS (KKDCP) transport before switching to UDP
+    - Fix kadm5 setkey operations wit LDAP KDB
+    - Fix CVE-2017-11462: preserve GSS context on init/accept failure,
+      Closes: #873563
+    - Prevent NULL dereference with keyboard master key
+  * Update to policy 4.1.1:
+    - Refer to service(8) instead of /etc/init.d/foo
+    - Support the 'nodoc' DEB_BUILD_OPTIONS entry
+    - Make all packages Priority: optional
+
+ -- Benjamin Kaduk <kaduk@mit.edu>  Tue, 24 Oct 2017 17:12:31 -0500
+
+krb5 (1.15.1-2) unstable; urgency=high
+
+  * Depend on libsasl2-dev for LDAP SASL authentication, Thanks Hideki
+    Yamane, Closes: #868035
+  * Remove /etc/gss/mech.d/README on libgssapi-krb5-2 purge, Closes: #868121
+  * CVE-2017-11368: Remote authenticated attackers can crash the KDC,
+    Closes: #869260
+  * Set Restart=on-abnormal in krb5-kdc.service and krb5-admind.service to
+    minimize the impact of future DOS bugs.
+
+ -- Sam Hartman <hartmans@debian.org>  Sun, 23 Jul 2017 14:16:38 -0400
+
+krb5 (1.15.1-1) unstable; urgency=medium
+
+  *  New Upstream Version
+      - Samba wants this, Closes: #861651
+        * Include krb5-otp tmpfile for freeipa, Closes: #859243
+  * Move doxygen to build-indep, Closes: #754139
+  * For stage1 builds, skip LDAP, based on patch by Johannes Schauer and
+    Peter Pentchev, Closes: #752407
+  * Annotate control file for stage1 without ldap, Closes: #752409
+  * Remove /etc/gss/mech.d/README, Closes: #861218
+
+ -- Sam Hartman <hartmans@debian.org>  Sun, 09 Jul 2017 14:38:55 -0400
+
+krb5 (1.15-2) experimental; urgency=medium
+
+
+  * Upstream patches to fix startup if getaddrinfo() returns a wildcard v6
+    address, and to fix handling of explicitly specified v4 wildcard
+    address; regression over previous versions, Closes: #860767
+  * Fix SRV lookups to respect udp_preference_limit, regression over
+    previous versions with OTP, Closes: #856307
+
+ -- Sam Hartman <hartmans@debian.org>  Wed, 19 Apr 2017 16:50:01 -0400
 
 krb5 (1.15-1) unstable; urgency=medium
 
@@ -201,7 +333,7 @@ krb5 (1.12.1+dfsg-17) unstable; urgency=high
   * MITKRB5-SA-2015-001
     - CVE-2014-5352: gss_process_context_token() incorrectly frees context
     - CVE-2014-9421: kadmind doubly frees partial deserialization results
-    - CVE-2014-9422: kadmind incorrectly validates server principal name  
+    - CVE-2014-9422: kadmind incorrectly validates server principal name
       - CVE-2014-9423: libgssrpc server applications leak uninitialized bytes
 
  -- Sam Hartman <hartmans@debian.org>  Tue, 03 Feb 2015 10:29:35 -0500
@@ -422,7 +554,7 @@ krb5 (1.12+dfsg-1) experimental; urgency=low
   * Update HURD compatibility patch (closes: #729191).
   * Move pkgconfig files to krb5-multidev and avoid conflicts with
     heimdal (closes: #730267).
-    
+
  -- Benjamin Kaduk <kaduk@mit.edu>  Mon, 02 Dec 2013 12:25:43 -0500
 
 krb5 (1.12~alpha1+dfsg-1) experimental; urgency=low
@@ -648,7 +780,7 @@ krb5 (1.10+dfsg~alpha1-2) unstable; urgency=low
 krb5 (1.10+dfsg~alpha1-1) unstable; urgency=low
 
   * New upstream release
-  
+
     - mit-krb5-sa-2011-006, Closes: #646367
     - Install k5login.5 not just .k5login.5, Closes: #623068
       - Fixes LDAP file descriptor leak, Closes: #561176
@@ -806,7 +938,7 @@ krb5 (1.8.3+dfsg-2) unstable; urgency=high
 
 krb5 (1.8.3+dfsg-1) unstable; urgency=low
 
-  * New Upstream release; only change is version bump from beta1 to final 
+  * New Upstream release; only change is version bump from beta1 to final
   * Bring back a libkrb53 oldlibs package. Note that this is technically a
     policy violation because it doesn't provide libdes425.so.3 or
     libkrb4.so.2 and thus provides a different ABI. However, some
@@ -836,7 +968,7 @@ krb5 (1.8.3+dfsg~beta1-1) unstable; urgency=low
   * You want this version: it fixes an incompatibility with how PACs are
     verified with Windows 2008
   * As a result of libkrb53 breaks, we no longer get into problems with
-    krb5int_hmac, Closes: #566988 
+    krb5int_hmac, Closes: #566988
   * Note that libkdb5-4 breaks rather than conflicts libkadm5srv6, Closes:
     #565429
   * Start kdc  before x display managers, Closes: #588536
@@ -973,7 +1105,7 @@ krb5 (1.8+dfsg~alpha1-5) unstable; urgency=high
 krb5 (1.8+dfsg~alpha1-4) unstable; urgency=high
 
   * Add replaces to deal with moving files from krb5-multidev to
-    libkrb5-dev, Closes: #565217 
+    libkrb5-dev, Closes: #565217
   * This is definitely the getting all the conflicts combinations right is
     tricky series of releases.  Sorry about the wasted cycles.
 
@@ -982,7 +1114,7 @@ krb5 (1.8+dfsg~alpha1-4) unstable; urgency=high
 krb5 (1.8+dfsg~alpha1-3) unstable; urgency=high
 
   * Move files to avoid overlap between heimdal-dev and krb5-multidev,
-    Closes: #565132 
+    Closes: #565132
 
  -- Sam Hartman <hartmans@debian.org>  Wed, 13 Jan 2010 04:18:32 -0500
 
@@ -1020,12 +1152,12 @@ krb5 (1.8+dfsg~aa+r23527-1) experimental; urgency=low
   * MIT krb5 trunk prior to 1.8 branch
   * Remove krb5-telnet, krb5-ftpd, krb5-clients, krb5-rsh-server, no
     longer provided upstream.  These are provided now in a separate source
-    distribution. 
+    distribution.
   * Bring back functions needed by Samba, Closes: #531635
   * I know that the symbols revisions are generating lintian warnings;
-    that will be cleaned up when upstream actually makes an alpha release 
+    that will be cleaned up when upstream actually makes an alpha release
   * Implement krb5-multidev similar to heimdal-multidev so that packages
-    can be built against both MIT Kerberos and Heimdal 
+    can be built against both MIT Kerberos and Heimdal
 
  -- Sam Hartman <hartmans@debian.org>  Sun, 03 Jan 2010 17:54:04 -0500
 
@@ -1048,7 +1180,7 @@ krb5 (1.7+dfsg-3) unstable; urgency=low
 krb5 (1.7+dfsg-2) unstable; urgency=low
 
   * Only picked up part of the upstream fix to #557979; upstream fully
-    reverted to 1.6. 
+    reverted to 1.6.
 
  -- Sam Hartman <hartmans@debian.org>  Sun, 29 Nov 2009 19:34:44 -0500
 
@@ -1083,7 +1215,7 @@ krb5 (1.7dfsg~beta3-1) unstable; urgency=low
 
   * New upstream release
   * Revert relaxation of Debian symbol versions introduced in
-    1.7dfsg~beta1-3 
+    1.7dfsg~beta1-3
   * Fix kproplog's manpage (LP: #374819)
 
  -- Sam Hartman <hartmans@debian.org>  Wed, 27 May 2009 21:15:41 -0400
@@ -1096,14 +1228,14 @@ krb5 (1.7dfsg~beta2-4) unstable; urgency=low
     encrypted in the subsession key, everyone else expects the session
     key.  Note that a keyed checksum for RC4 would work against WS2008.
   * Patch from Marc Dequ?nes (Duck)   for HURD portability, Closes:
-    #528828 
+    #528828
 
  -- Sam Hartman <hartmans@debian.org>  Wed, 20 May 2009 08:57:53 -0400
 
 krb5 (1.7dfsg~beta2-3) unstable; urgency=low
 
   * Use correct enctype identifier in lucid security context export,
-    Closes: #528514 
+    Closes: #528514
 
  -- Sam Hartman <hartmans@debian.org>  Mon, 18 May 2009 14:59:46 -0400
 
@@ -1111,7 +1243,7 @@ krb5 (1.7dfsg~beta2-2) unstable; urgency=low
 
   * Apply upstream patch from ticket 6488  intended to fix
     gss_krb5_export_lucid_sec_context and thus NFS; hopefully fixes
-    #528514 
+    #528514
   *  Apply patch from ticket 6489 to fix UCS2 handling in RC4 string to
     key and PAC routines
 
@@ -1129,7 +1261,7 @@ krb5 (1.7dfsg~beta2-1) unstable; urgency=low
 krb5 (1.7dfsg~beta1-4) unstable; urgency=low
 
   * When  decrypting the TGS response fails with the subkey, try with the
-    session key to work around Heimdal bug, Closes: #527353 
+    session key to work around Heimdal bug, Closes: #527353
 
  -- Sam Hartman <hartmans@debian.org>  Thu, 07 May 2009 16:16:34 -0400
 
@@ -1160,9 +1292,9 @@ krb5 (1.7dfsg~beta1-1) experimental; urgency=low
 
   * New upstream release
     - kadmin and related commands moved to /usr/bin, Closes: #477296
-    - Kadmin headers are Public: Closes: #191616 
+    - Kadmin headers are Public: Closes: #191616
     - KDC supports loopback address, Closes: #478425
-  
+
  -- Sam Hartman <hartmans@debian.org>  Wed, 22 Apr 2009 09:53:15 -0400
 
 krb5 (1.7dfsg~alpha1-1) experimental; urgency=low
@@ -1198,10 +1330,10 @@ krb5 (1.6.dfsg.4~beta1-12) unstable; urgency=low
 krb5 (1.6.dfsg.4~beta1-11) unstable; urgency=low
 
   * Upload from the partial-krb4 branch not the master branch so we don't
-    break unstable. 
-      - Restore libkrb53 and libkadm55 
+    break unstable.
+      - Restore libkrb53 and libkadm55
   * Resync the aes test files from upstream to fix a line ending problem
-    and significantly shrink the debian diff 
+    and significantly shrink the debian diff
 
  -- Sam Hartman <hartmans@debian.org>  Fri, 13 Mar 2009 10:19:42 -0400
 
@@ -1257,11 +1389,11 @@ krb5 (1.6.dfsg.4~beta1-8) experimental; urgency=low
   * Remove krb4 support from  debconf and init scripts.
   * Remove the krb4 migration guide from doc-base
   * Fix up replaces in control file so that libraries that used to be in
-    libkadm55 claim to replace libkadm55 
+    libkadm55 claim to replace libkadm55
   * Only use parallel builds on the krb5 build; it breaks krb4  enabled
-    builds. 
+    builds.
   * Used versioned replaces; this seems to make it harder to get a system
-    into a broken state if you remove the new packages, Closes: #517483 
+    into a broken state if you remove the new packages, Closes: #517483
 
  -- Sam Hartman <hartmans@debian.org>  Sat, 28 Feb 2009 00:42:51 -0500
 
@@ -1317,8 +1449,8 @@ krb5 (1.6.dfsg.4~beta1-4) unstable; urgency=low
 krb5 (1.6.dfsg.4~beta1-3) unstable; urgency=low
 
   * Set length to 0 on no-salt ldap keys so they do not crash; uupstream
-    ticket 5545, Closes: #480523 
-  * Swedish translations, thanks Martin Bagge, Closes: #487563 
+    ticket 5545, Closes: #480523
+  * Swedish translations, thanks Martin Bagge, Closes: #487563
 
  -- Sam Hartman <hartmans@debian.org>  Sun, 22 Jun 2008 23:00:37 -0400
 
@@ -1341,13 +1473,13 @@ krb5 (1.6.dfsg.4~beta1-2) unstable; urgency=low
     used when copying out to a ccache after delegation, Closes: #480434
   * Ksu now calls krb5_verify_init_creds rather than using its own custom
     logic because that is correct and so it can take advantage of the
-    following change. 
+    following change.
     * krb5_verify_init_creds uses the default realm if it gets a referral
-    realm as input for server, Closes: #435427  
+    realm as input for server, Closes: #435427
   * Add -D_FORTIFY_SOURCE=2 and -fstack-protector on ia32 and x86_64 at
     the request of  Moritz Muehlenhoff ; he was unsure that adding these
     flags on other platforms would be a good idea.  I'd be happy to expand
-    the list at the request of port maintainers, Closes: #484371 
+    the list at the request of port maintainers, Closes: #484371
   * Fix KDC purge code introduced in previous revision.
 
  -- Sam Hartman <hartmans@debian.org>  Mon, 16 Jun 2008 09:29:00 -0400
@@ -1386,7 +1518,7 @@ krb5 (1.6.dfsg.4~beta1-1) experimental; urgency=low
     - fix CVE-2007-5902: integer overflow in svcauth_gss_get_principal()
     - fix CVE-2007-5971: free of non-heap pointer in gss_indicate_mechs()
     - fix CVE-2007-5894: apparent uninit length in ftpd.c:reply()
-  
+
  -- Sam Hartman <hartmans@debian.org>  Sat, 31 May 2008 10:53:21 -0400
 
 krb5 (1.6.dfsg.3-2) unstable; urgency=low
@@ -1549,7 +1681,7 @@ krb5 (1.6.dfsg.1-5) unstable; urgency=emergency
     may lead to execution of arbitrary code.  (CVE-2007-2798)
 
  -- Russ Allbery <rra@debian.org>  Wed, 13 Jun 2007 13:07:44 -0700
-  
+
 krb5 (1.6.dfsg.1-4) unstable; urgency=low
 
   *  Make --deps switch to krb5-config include dependent libraries; otherwise do not, Closes: #422985
@@ -1561,7 +1693,7 @@ krb5 (1.6.dfsg.1-3) unstable; urgency=low
 
   * Upstream bug #5552: krb5_get_init_creds  needs to not dereference
     gic_opts if it is null.  Instead, assume that it is default options,
-    Closes: #422687 
+    Closes: #422687
 
  -- Sam Hartman <hartmans@debian.org>  Tue,  8 May 2007 14:46:55 -0400
 
@@ -1607,7 +1739,7 @@ krb5 (1.6.dfsg~alpha1-1) experimental; urgency=low
 krb5 (1.4.4-8) unstable; urgency=emergency
 
   * MIT-SA-2007-1: telnet allows  login as an arbitrary user when
-    presented with a specially crafted username; CVE-2007-0956 
+    presented with a specially crafted username; CVE-2007-0956
   * krb5_klog_syslog has a trivial buffer overflow that can be exploited
     by network data; CVE-2007-0957.  The upstream patch is very intrusive
     because it fixes each call to syslog to have proper length checking as
@@ -1619,7 +1751,7 @@ krb5 (1.4.4-8) unstable; urgency=emergency
     applications treat certain errors decoding a message as errors that
     require freeing the output buffer.  At least the gssapi rpc library
     does this, so kadmind is vulnerable.    Fix the gssapi library because
-    the spec allows applications to treat errors this way.  CVE-2007-1216 
+    the spec allows applications to treat errors this way.  CVE-2007-1216
   * New Japanese translation, thanks TANAKA Atushi, Closes: #414382
 
  -- Sam Hartman <hartmans@debian.org>  Sun, 11 Mar 2007 19:08:52 -0400
@@ -1758,7 +1890,7 @@ krb5 (1.4.3-4) unstable; urgency=high
   * Fix problem when libpthreads is dynamically loaded into a program
     causing mutexes to sometimes be used and sometimes not be used.  If
     the library starts out without threads support it will never start
-    using threads support; doing anything else causes hangs. 
+    using threads support; doing anything else causes hangs.
 
  -- Sam Hartman <hartmans@debian.org>  Fri, 16 Dec 2005 18:16:53 -0500
 
@@ -1798,7 +1930,7 @@ krb5 (1.4.3-1) experimental; urgency=low
 
   * New upstream release.
   * Install ac_check_krb5 for use by aclocal.
-  
+
  -- Sam Hartman <hartmans@debian.org>  Sat, 19 Nov 2005 16:20:56 -0500
 
 krb5 (1.4.2-1) UNRELEASED; urgency=low
@@ -1823,7 +1955,7 @@ krb5 (1.4.2-1) UNRELEASED; urgency=low
   * Ignore lintian warnings about the library package names.  We'll fix
     them the next time upstream changes SONAMEs.
   * Conflict with packages that used internal symbols not part of the
-    public ABI 
+    public ABI
   * Use "MIT Kerberos" rather than krb5 in the krb5-doc short description.
   * Remove the saved patches that have been applied upstream or are no
     longer applied to the package, update the remaining patches, and move
@@ -1862,7 +1994,7 @@ krb5 (1.3.6-4) unstable; urgency=high
     path for kpropd and may allow arbitrary code execution.
     (CAN-2005-1689)
   * krb5_unparse_name overflows allocated storage by one byte on 0 element
-    principal name.  (CAN-2005-1175, VU#885830) 
+    principal name.  (CAN-2005-1175, VU#885830)
   * Do not free unallocated storage in the KDC's TCP request handling
     path.  (CAN-2005-1174, VU#259798)
 
@@ -1929,7 +2061,7 @@ krb5 (1.3.6-1) unstable; urgency=medium
     reduced may  double free or write past end of an arry; fix
     (CAN-2004-1189 / CERT VU#948033)
   * Conflict between krb5-kdc and kerberos4kth-kdc; also deals with
-    krb5-admin-server conflict indirectly, Closes: #274763 
+    krb5-admin-server conflict indirectly, Closes: #274763
 
  -- Sam Hartman <hartmans@debian.org>  Sun,  2 Jan 2005 15:55:25 -0500
 
@@ -1957,13 +2089,13 @@ krb5 (1.3.4-3) unstable; urgency=high
   * Updated French debconf translation, thanks Martin Quinson, Closes: #264941
   * KDC and clients double-free on error conditions (CAN-2004-0642  VU#795632)
   *krb5_rd_cred() double-frees on error conditions(CAN-2004-0643 , CERT
-    VU#866472 ) 
+    VU#866472 )
   * ASN.1 decoder in MIT Kerberos 5 releases krb5-1.3.4 and
     earlier allows unauthenticated remote attackers to induce
     infinite loop, causing denial of service, including in KDC
     code  (CAN-2004-0644 , CERT VU#550464)
   * Fix double free in krb524d  handling of encrypted ticket contents
-    (CAN-2004-0772)  
+    (CAN-2004-0772)
 
  -- Sam Hartman <hartmans@debian.org>  Tue, 31 Aug 2004 13:04:51 -0400
 
@@ -1977,9 +2109,9 @@ krb5 (1.3.4-1) unstable; urgency=low
 
   * New upstream version
   * Update krb5-doc to include pointers to the right html documents,
-    Closes: #203321 
+    Closes: #203321
   * Patches to find res_search on amd64 and to include new Debian ports in
-    shared library building, Closes: #261712 
+    shared library building, Closes: #261712
   * Install default file for krb5-admin-server, Closes: #262428
   * Patch from Russ Allbery to only prompt for a password once in krb4
     when null is passed in to krb_get_in_pw_tkt, Closes: #262192
@@ -1993,7 +2125,7 @@ krb5 (1.3.3-2) unstable; urgency=high
   * Fix buffer overflow in krb5_aname_to_localname; potential remote root
     exploit in some fairly limited circumstances.  You are not vulnerable
     unless you have enabled aname_to_lname rules in krb5.conf  (CAN-2004-0523)
-  * Fix kadmind template formatting, thanks  Christian Perrier 
+  * Fix kadmind template formatting, thanks  Christian Perrier
 
  -- Sam Hartman <hartmans@debian.org>  Sat,  5 Jun 2004 16:57:44 -0400
 
@@ -2001,14 +2133,14 @@ krb5 (1.3.3-1) unstable; urgency=low
 
   * New upstream version
   * Gettextize my debconf templates, thanks Martin Quinson    , Closes:
-    #236176 
+    #236176
   * Don't remove /etc/krb5.conf on libkrb53 purge
 
  -- Sam Hartman <hartmans@debian.org>  Tue, 13 Apr 2004 20:04:37 -0400
 
 krb5 (1.3.2-2) unstable; urgency=low
 
-  * Don't check for /etc/krb5kdc/kadm5.keytab, Closes: #235966 
+  * Don't check for /etc/krb5kdc/kadm5.keytab, Closes: #235966
   * Fix dangling symlink, Closes: #203622
 
  -- Sam Hartman <hartmans@debian.org>  Sun, 14 Mar 2004 20:46:27 -0500
@@ -2091,9 +2223,9 @@ krb5 (1.2.99-1.3.beta3-1) unstable; urgency=low
     better fit  the build system and to work for all libraries
   * This version builds with GCC 3.3, Closes: #195571
   * Move the rest of the administration libraries into libkadm55 to reduce
-    space required by libkrb53. 
+    space required by libkrb53.
   * libkrb53 conflicts with current openafs-krb5 because of ABI changes in
-    krb524 
+    krb524
 
  -- Sam Hartman <hartmans@debian.org>  Tue, 10 Jun 2003 20:56:33 -0400
 
@@ -2123,12 +2255,12 @@ krb5 (1.2.99-1.3.alpha3-1) experimental; urgency=low
     - Preauthentication has been reworked to improve interoperability with
     older implementations and to comply with Kerberos Clarifications,
     Closes: #169014
-    - Typo in man page fixed, Closes: #127302  
+    - Typo in man page fixed, Closes: #127302
   * Remove dangling symlink, Closes: #133244
   * Depend on sufficiently new com_err and libss
   * Build the crypto library -O9 as it seems to help performance a lot.
   * Bump up shared library versions; all the public libraries have new
-    functions 
+    functions
 
  -- Sam Hartman <hartmans@debian.org>  Mon, 12 May 2003 02:22:37 -0400
 
@@ -2143,9 +2275,9 @@ krb5 (1.2.7-3) unstable; urgency=high
      - Remove support for the MIT extension to krb4 to use 3DES keys as it
     is insecure.
   * Patch to various DOS issues where the KDC assumes principal names have
-    certain components.  Fixes CAN-2003-0072 
+    certain components.  Fixes CAN-2003-0072
   *  VU#516825: Additional errors in XDR that may lead to denial of
-    service. 
+    service.
   * Fix template bug in v5passwd template, Closes: #172565
 
  -- Sam Hartman <hartmans@debian.org>  Tue, 25 Mar 2003 08:03:00 -0500
@@ -2204,7 +2336,7 @@ krb5 (1.2.5-3) unstable; urgency=high
 krb5 (1.2.5-2) unstable; urgency=high
 
   * We are still installing a krb5.conf.template; don't as that is
-    kerberos-configs's job. 
+    kerberos-configs's job.
   * The MIT KDC was not sending etype info padata; this couldcreate a
     problem  if you require preauth and have unusual salts; patch from
     upstream CVS
@@ -2212,7 +2344,7 @@ krb5 (1.2.5-2) unstable; urgency=high
   * Fix typo in alternatives handling so man page symlinks are handled
     correctely, Closes: #152707
   * Include XDR encoding patch for krb5-sa-2002-01; same patch as the
-    woody security update 
+    woody security update
 
  -- Sam Hartman <hartmans@debian.org>  Sat,  3 Aug 2002 17:51:50 -0400
 
@@ -2301,7 +2433,7 @@ krb5 (1.2.2-8) unstable; urgency=low
 krb5 (1.2.2-7) unstable; urgency=low
 
       * Forward only tickets we believe the remote side knows the enctype
-    of, closes: #99320 
+    of, closes: #99320
   * Start krb5-kdc and krb5-admin-server before RPC services, thanks Hein
     Roehrig, closes: #88604
   * Install krb5.conf and kdc.conf man pages in krb5-user.  This is not
@@ -2330,8 +2462,8 @@ krb5 (1.2.2-5) unstable; urgency=low
 
   * Use krb5-config; remove our own krb5.conf handling..  Note this is the
     krb5-config package for /etc/krb5.conf, not the krb5-config library
-    helper command. 
-  * 
+    helper command.
+  *
   * Conflict with kerberos4kth-services, closes: #93303
   * Update config.guess and config.sub, closes: #97585
   * Have telnetd depend on krb5-rsh-server.  I suspect this will make
@@ -2344,7 +2476,7 @@ krb5 (1.2.2-5) unstable; urgency=low
 krb5 (1.2.2-4) unstable; urgency=low
 
   * Fix shared libraries to build with gcc not ld to properly include
-    -lgcc symbols, closes: #94407 
+    -lgcc symbols, closes: #94407
 
  -- Sam Hartman <hartmans@debian.org>  Fri, 20 Apr 2001 02:47:21 -0400
 
@@ -2353,16 +2485,16 @@ krb5 (1.2.2-3) unstable; urgency=high
   * Fix vulnerability with glob call.  CERT claims that Linux is not
     vulnerable, but I believe the krb5 implementation is.  The result of
     glob was copied  into a fixed-sized buffer.  This fixes that
-    closes: #93689 
+    closes: #93689
   * Provide ftp-server not ftpd, closes: #93531
-  * Do not link kadm5clnt against kdb5.  
+  * Do not link kadm5clnt against kdb5.
 
  -- Sam Hartman <hartmans@debian.org>  Wed, 11 Apr 2001 19:50:17 -0400
 
 krb5 (1.2.2-2) unstable; urgency=low
 
   * Work to provide an alternative for telnet and to be a telnet-client,
-    closes: 87914 
+    closes: 87914
     * libkrb5-dev depends on comerr-dev, closes: #87489
   * Make clean target remove configure-stamp
 
@@ -2441,7 +2573,7 @@ krb5 (1.2.1-3) unstable; urgency=low
 
   * Add KDC packages
   * Install login.krb5  Sadly, it is needed to make forwarded credentials
-    work.  This is unfortunate; it is not a  good login program. 
+    work.  This is unfortunate; it is not a  good login program.
 
  -- Sam Hartman <hartmans@mit.edu>  Wed,  8 Nov 2000 16:10:13 -0500
 

@@ -1,0 +1,52 @@
+#!/bin/sh
+
+set -ex
+
+. debian/tests/util
+
+TEST_REALM="EXAMPLE.INTERNAL"
+MYHOSTNAME="krb5-dep8.internal"
+adjust_hostname "${MYHOSTNAME}"
+
+create_realm "${TEST_REALM}" "${MYHOSTNAME}"
+
+# restart slapd
+systemctl restart slapd.service
+
+# create a random-enough principal
+principal="testuser$$"
+kadmin.local -q "addprinc -pw secret ${principal}"
+
+# create an ldap service principal
+kadmin.local -q "addprinc -randkey ldap/${MYHOSTNAME}"
+
+# extract the key into the system keytab
+kadmin.local -q "ktadd -k /etc/krb5.keytab ldap/${MYHOSTNAME}"
+
+# make sure the user under which the service runs can read that keytab
+chown root:openldap /etc/krb5.keytab
+chmod 0640 /etc/krb5.keytab
+
+# Prepare some LDAP defaults
+# The LDAP base doesn't matter for this test
+cat > /etc/ldap/ldap.conf <<EOF
+BASE dc=example,dc=internal
+URI ldap://${MYHOSTNAME}/
+SASL_REALM ${TEST_REALM}
+# Do not perform reverse DNS lookups to canonicalize SASL host names.
+SASL_NOCANON yes
+EOF
+
+# moment of truth
+# first, authenticate ourselves
+echo secret | kinit ${principal}
+klist | grep krbtgt/${TEST_REALM}@${TEST_REALM}
+
+# now let's see if ldap thinks we are authenticated with gssapi
+ldapwhoami -Y GSSAPI -Q | grep -E "^dn:uid=${principal},cn=gssapi,cn=auth"
+
+# and we should have an ldap ticket
+klist | grep ldap/${MYHOSTNAME}@${TEST_REALM}
+
+# remove tickets
+kdestroy

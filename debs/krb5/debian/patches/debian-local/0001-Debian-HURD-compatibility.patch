@@ -1,4 +1,4 @@
-From 6314e4d963f02624c7d413560c8a6ca75bfcca0b Mon Sep 17 00:00:00 2001
+From 85fcf9fc43e0b10fd0f90e056200ed028e50d297 Mon Sep 17 00:00:00 2001
 From: Sam Hartman <hartmans@debian.org>
 Date: Mon, 26 Dec 2011 18:05:13 -0500
 Subject: Debian: HURD compatibility
@@ -10,15 +10,15 @@ Patch-Category: debian-local
  src/clients/ksu/ksu.h                       | 4 ++++
  src/include/k5-int.h                        | 3 +++
  src/kadmin/ktutil/ktutil_funcs.c            | 4 ++++
+ src/kprop/kprop_util.c                      | 4 ++++
  src/lib/gssapi/spnego/spnego_mech.c         | 3 +++
  src/lib/krb5/os/sn2princ.c                  | 4 ++++
  src/plugins/kdb/db2/libdb2/include/db-int.h | 4 ++++
- src/slave/kprop_util.c                      | 4 ++++
  src/tests/resolve/resolve.c                 | 4 ++++
  8 files changed, 30 insertions(+)
 
 diff --git a/src/clients/ksu/ksu.h b/src/clients/ksu/ksu.h
-index ee8e9d6..695305f 100644
+index 3bf0bd4384..f680b332c3 100644
 --- a/src/clients/ksu/ksu.h
 +++ b/src/clients/ksu/ksu.h
 @@ -56,6 +56,10 @@
@@ -33,10 +33,10 @@ index ee8e9d6..695305f 100644
  extern int optind;
  extern char * optarg;
 diff --git a/src/include/k5-int.h b/src/include/k5-int.h
-index 6499173..63c509a 100644
+index 652242207a..e4f1678be6 100644
 --- a/src/include/k5-int.h
 +++ b/src/include/k5-int.h
-@@ -580,6 +580,9 @@ extern char *strdup (const char *);
+@@ -589,6 +589,9 @@ extern char *strdup (const char *);
  #ifdef HAVE_SYS_PARAM_H
  #include <sys/param.h>                  /* MAXPATHLEN */
  #endif
@@ -47,10 +47,10 @@ index 6499173..63c509a 100644
  #ifdef HAVE_SYS_FILE_H
  #include <sys/file.h>                   /* prototypes for file-related
 diff --git a/src/kadmin/ktutil/ktutil_funcs.c b/src/kadmin/ktutil/ktutil_funcs.c
-index 20a348c..b8b61ce 100644
+index 6d119a2b64..fb7fa22f54 100644
 --- a/src/kadmin/ktutil/ktutil_funcs.c
 +++ b/src/kadmin/ktutil/ktutil_funcs.c
-@@ -33,6 +33,10 @@
+@@ -34,6 +34,10 @@
  #include <string.h>
  #include <ctype.h>
  
@@ -61,8 +61,23 @@ index 20a348c..b8b61ce 100644
  /*
   * Free a kt_list
   */
+diff --git a/src/kprop/kprop_util.c b/src/kprop/kprop_util.c
+index c32d174b95..d72ab18967 100644
+--- a/src/kprop/kprop_util.c
++++ b/src/kprop/kprop_util.c
+@@ -32,6 +32,10 @@
+ #include <sys/types.h>
+ #include <sys/socket.h>
+ 
++#ifndef MAXHOSTNAMELEN
++#define MAXHOSTNAMELEN 256
++#endif
++
+ /*
+  * Convert an IPv4 or IPv6 socket address to a newly allocated krb5_address.
+  * There is similar code elsewhere in the tree, so this should possibly become
 diff --git a/src/lib/gssapi/spnego/spnego_mech.c b/src/lib/gssapi/spnego/spnego_mech.c
-index 9d6027c..585d8a6 100644
+index 9d6027ce80..585d8a6581 100644
 --- a/src/lib/gssapi/spnego/spnego_mech.c
 +++ b/src/lib/gssapi/spnego/spnego_mech.c
 @@ -65,6 +65,9 @@
@@ -76,7 +91,7 @@ index 9d6027c..585d8a6 100644
  #undef g_token_size
  #undef g_verify_token_header
 diff --git a/src/lib/krb5/os/sn2princ.c b/src/lib/krb5/os/sn2princ.c
-index 5932fd9..187daa8 100644
+index 5932fd9b3f..187daa84d6 100644
 --- a/src/lib/krb5/os/sn2princ.c
 +++ b/src/lib/krb5/os/sn2princ.c
 @@ -126,6 +126,10 @@ find_trailer(const char *hostname)
@@ -91,7 +106,7 @@ index 5932fd9..187daa8 100644
  krb5_sname_to_principal(krb5_context context, const char *hostname,
                          const char *sname, krb5_int32 type,
 diff --git a/src/plugins/kdb/db2/libdb2/include/db-int.h b/src/plugins/kdb/db2/libdb2/include/db-int.h
-index 7e981d4..d83b3b6 100644
+index 7e981d4a5f..d83b3b6a6f 100644
 --- a/src/plugins/kdb/db2/libdb2/include/db-int.h
 +++ b/src/plugins/kdb/db2/libdb2/include/db-int.h
 @@ -280,4 +280,8 @@ void	 __dbpanic __P((DB *dbp));
@@ -103,23 +118,8 @@ index 7e981d4..d83b3b6 100644
 +# define MAXPATHLEN 4096
 +#endif
  #endif /* _DB_INT_H_ */
-diff --git a/src/slave/kprop_util.c b/src/slave/kprop_util.c
-index f182554..0658390 100644
---- a/src/slave/kprop_util.c
-+++ b/src/slave/kprop_util.c
-@@ -32,6 +32,10 @@
- #include <sys/types.h>
- #include <sys/socket.h>
- 
-+#ifndef MAXHOSTNAMELEN
-+#define MAXHOSTNAMELEN 256
-+#endif
-+
- /*
-  * Convert an IPv4 or IPv6 socket address to a newly allocated krb5_address.
-  * There is similar code elsewhere in the tree, so this should possibly become
 diff --git a/src/tests/resolve/resolve.c b/src/tests/resolve/resolve.c
-index 7339d21..38f7253 100644
+index 7339d21bd9..38f725322b 100644
 --- a/src/tests/resolve/resolve.c
 +++ b/src/tests/resolve/resolve.c
 @@ -73,6 +73,10 @@ char *strchr();

@@ -50,11 +50,6 @@ libkadm5srv_mit.so.11 libkadm5srv-mit11 #MINVER#
  kadm5_setkey_principal_4@kadm5srv_mit_11_MIT 1.15~beta1
  kadm5_setv4key_principal@kadm5srv_mit_11_MIT 1.15~beta1
  kadm5_unlock@kadm5srv_mit_11_MIT 1.15~beta1
- kadm5int_acl_check@kadm5srv_mit_11_MIT 1.15~beta1
- kadm5int_acl_check_krb@kadm5srv_mit_11_MIT 1.15~beta1
- kadm5int_acl_finish@kadm5srv_mit_11_MIT 1.15~beta1
- kadm5int_acl_impose_restrictions@kadm5srv_mit_11_MIT 1.15~beta1
- kadm5int_acl_init@kadm5srv_mit_11_MIT 1.15~beta1
  kadm5srv_mit_11_MIT@kadm5srv_mit_11_MIT 1.15~beta1
  kdb_delete_entry@kadm5srv_mit_11_MIT 1.15~beta1
  kdb_free_entry@kadm5srv_mit_11_MIT 1.15~beta1
@@ -80,6 +75,7 @@ libkadm5srv_mit.so.11 libkadm5srv-mit11 #MINVER#
  krb5_klog_close@kadm5srv_mit_11_MIT 1.15~beta1
  krb5_klog_init@kadm5srv_mit_11_MIT 1.15~beta1
  krb5_klog_reopen@kadm5srv_mit_11_MIT 1.15~beta1
+ krb5_klog_set_context@kadm5srv_mit_11_MIT 1.17
  krb5_klog_syslog@kadm5srv_mit_11_MIT 1.15~beta1
  krb5_string_to_keysalts@kadm5srv_mit_11_MIT 1.15~beta1
  master_db@kadm5srv_mit_11_MIT 1.15~beta1

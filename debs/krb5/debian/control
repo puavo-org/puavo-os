@@ -1,25 +1,26 @@
 Source: krb5
 Section: net
-Priority: standard
-Build-Depends: debhelper (>= 9), byacc | bison,
- comerr-dev, docbook-to-man, doxygen,
- libkeyutils-dev [linux-any], libldap2-dev,
- libncurses5-dev, libssl-dev,  ss-dev, 
- libverto-dev (>= 0.2.4), pkg-config, dh-systemd
-Build-Depends-Indep: python, python-cheetah, python-lxml, python-sphinx, doxygen-latex, texlive-generic-extra
-Standards-Version: 3.9.8
+Priority: optional
+Build-Depends: debhelper (>= 10), byacc | bison,
+ comerr-dev, docbook-to-man,
+ libkeyutils-dev [linux-any], libldap2-dev <!stage1>, libsasl2-dev <!stage1>,
+ libncurses5-dev, libssl-dev,  ss-dev,
+ libverto-dev (>= 0.2.4), pkg-config
+Build-Depends-Indep: python, python-cheetah, python-lxml, python-sphinx, doxygen, doxygen-latex, texlive-generic-extra
+Standards-Version: 4.1.1
 Maintainer: Sam Hartman <hartmans@debian.org>
 Uploaders: Russ Allbery <rra@debian.org>, Benjamin Kaduk <kaduk@mit.edu>
 Homepage: http://web.mit.edu/kerberos/
-VCS-Git: git://git.debian.org/git/pkg-k5-afs/debian-krb5-2013.git
-VCS-Browser: http://git.debian.org/?p=pkg-k5-afs/debian-krb5-2013.git
+VCS-Git: https://salsa.debian.org/debian/krb5
+VCS-Browser: https://salsa.debian.org/debian/krb5
 
 Package: krb5-user
 Architecture: any
-Priority: optional
 Depends: ${misc:Depends}, ${shlibs:Depends}, libkrb5-3 (= ${binary:Version}),
   krb5-config
+Multi-Arch: foreign
 Conflicts: heimdal-clients
+Suggests: krb5-k5tls
 Description: basic programs to authenticate using MIT Kerberos
  Kerberos is a system for authenticating users and services on a network.
  Kerberos is a trusted third-party service.  That means that there is a
@@ -34,13 +35,13 @@ Description: basic programs to authenticate using MIT Kerberos
 
 Package: krb5-kdc
 Architecture: any
-Priority: optional
 Depends: ${misc:Depends}, ${shlibs:Depends}, libkrb5-3 (= ${binary:Version}),
  libkadm5srv-mit11,
  krb5-config, krb5-user, lsb-base (>= 3.0-6), libverto-libev1 | libverto-libevent1,
- libkdb5-8 (>= 1.13.1+dfsg-1)
+ libkdb5-9 (>= 1.13.1+dfsg-1)
 Suggests: krb5-kpropd, krb5-admin-server,
  krb5-kdc-ldap (= ${binary:Version})
+Multi-Arch: foreign
 Description: MIT Kerberos key server (KDC)
  Kerberos is a system for authenticating users and services on a network.
  Kerberos is a trusted third-party service.  That means that there is a
@@ -56,7 +57,7 @@ Description: MIT Kerberos key server (KDC)
 
 Package: krb5-kdc-ldap
 Architecture: any
-Priority: extra
+Build-Profiles: <!stage1>
 Depends: ${misc:Depends}, ${shlibs:Depends}, krb5-kdc (= ${binary:Version})
 Description: MIT Kerberos key server (KDC) LDAP plugin
  Kerberos is a system for authenticating users and services on a network.
@@ -74,9 +75,9 @@ Description: MIT Kerberos key server (KDC) LDAP plugin
 
 Package: krb5-admin-server
 Architecture: any
-Priority: optional
 Depends: ${misc:Depends}, ${shlibs:Depends}, libkrb5-3 (= ${binary:Version}),
  krb5-kdc (>= 1.10+dfsg~), lsb-base (>= 3.0-6)
+Multi-Arch: foreign
 Description: MIT Kerberos master server (kadmind)
  Kerberos is a system for authenticating users and services on a network.
  Kerberos is a trusted third-party service.  That means that there is a
@@ -94,12 +95,13 @@ Description: MIT Kerberos master server (kadmind)
 
 Package: krb5-kpropd
 Architecture: any
-Priority: optional
+Multi-Arch: foreign
 Depends: ${misc:Depends}, ${shlibs:Depends},
  krb5-kdc (= ${binary:Version}),
  lsb-base
+Replaces: krb5-kdc (<< 1.15.1-3~)
 Suggests: openbsd-inetd | inet-superserver
-Description: MIT Kerberos key server (KDC)
+Description: MIT Kerberos key server (Slave KDC Support)
  Kerberos is a system for authenticating users and services on a network.
  Kerberos is a trusted third-party service.  That means that there is a
  third party (the Kerberos server) that is trusted by all the entities on
@@ -120,8 +122,9 @@ Depends: ${misc:Depends}, libkrb5-3 (= ${binary:Version}),
  libgssrpc4 (= ${binary:Version}),
  libkadm5srv-mit11  (= ${binary:Version}),
  libkadm5clnt-mit11 (= ${binary:Version}),
- comerr-dev, 
-Priority: optional
+ comerr-dev
+Pre-Depends: ${misc:Pre-Depends}
+Multi-Arch: same
 Suggests: krb5-doc
 Description: development files for MIT Kerberos without Heimdal conflict
  Kerberos is a system for authenticating users and services on a network.
@@ -140,10 +143,11 @@ Description: development files for MIT Kerberos without Heimdal conflict
 Package: libkrb5-dev
 Section: libdevel
 Architecture: any
+Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends}, krb5-multidev (= ${binary:Version})
 Replaces: krb5-multidev (<< 1.8+dfsg~alpha1-3)
 Conflicts: heimdal-dev
-Priority: extra
+Multi-Arch: same
 Suggests: krb5-doc
 Description: headers and development libraries for MIT Kerberos
  Kerberos is a system for authenticating users and services on a network.
@@ -161,7 +165,6 @@ Architecture: any
 Depends: ${misc:Depends}, libkrb5-3 (= ${binary:Version})
  | libk5crypto3 (= ${binary:Version})
  | libkrb5support0 (= ${binary:Version})
-Priority: extra
 Section: debug
 Multi-Arch: same
 Description: debugging files for MIT Kerberos
@@ -181,7 +184,6 @@ Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}, libkrb5-3 (= ${binary:Version})
 Breaks: krb5-kdc (<< 1.14+dfsg)
 Suggests: opensc
-Priority: extra
 Multi-Arch: same
 Description: PKINIT plugin for MIT Kerberos
  Kerberos is a system for authenticating users and services on a network.
@@ -194,13 +196,12 @@ Description: PKINIT plugin for MIT Kerberos
  This package contains a plugin for the PKINIT protocol, which allows
  Kerberos tickets to be obtained using public-key credentials such as
  X.509 certificates or a smart card.  This plugin can be used by the
- client libraries and the KDC.  
+ client libraries and the KDC.
 
 Package: krb5-otp
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}, libkrad0 (= ${binary:Version}),
  libkrb5-3 (>= 1.12~alpha1+dfsg-1~)
-Priority: extra
 Multi-Arch: same
 Description: OTP plugin for MIT Kerberos
  Kerberos is a system for authenticating users and services on a network.
@@ -218,7 +219,6 @@ Description: OTP plugin for MIT Kerberos
 Package: krb5-k5tls
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}, libkrb5-3 (>= 1.13~alpha1+dfsg~)
-Priority: extra
 Multi-Arch: same
 Description: TLS plugin for MIT Kerberos
  Kerberos is a system for authenticating users and services on a network.
@@ -235,7 +235,6 @@ Description: TLS plugin for MIT Kerberos
 
 Package: krb5-doc
 Architecture: all
-Priority: optional
 Conflicts: heimdal-docs
 Section: doc
 Depends: ${misc:Depends}
@@ -276,10 +275,10 @@ Package: libgssapi-krb5-2
 Section: libs
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}, libkrb5-3 (= ${binary:Version})
+Breaks: moonshot-gss-eap (<= 1.0)
 Suggests: krb5-doc, krb5-user
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Breaks: libgssglue1 (<< 0.2-2)
 Description: MIT Kerberos runtime libraries - krb5 GSS-API Mechanism
  Kerberos is a system for authenticating users and services on a network.
  Kerberos is a trusted third-party service.  That means that there is a
@@ -293,7 +292,6 @@ Description: MIT Kerberos runtime libraries - krb5 GSS-API Mechanism
 
 Package: libgssrpc4
 Section: libs
-Conflicts: libkadm55
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Suggests: krb5-doc, krb5-user
@@ -311,6 +309,7 @@ Description: MIT Kerberos runtime libraries - GSS enabled ONCRPC
  programs and potentially other applications.
 
 Package: libkadm5srv-mit11
+Conflicts: libkdb5-8
 Section: libs
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
@@ -331,6 +330,7 @@ Description: MIT Kerberos runtime libraries - KDC and Admin Server
 Package: libkadm5clnt-mit11
 Section: libs
 Architecture: any
+Conflicts: libkdb5-8
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Suggests: krb5-doc, krb5-user
 Multi-Arch: same
@@ -365,7 +365,7 @@ Description: MIT Kerberos runtime libraries - Crypto Library
  This package contains the runtime cryptography libraries used by
  applications and Kerberos clients.
 
-Package: libkdb5-8
+Package: libkdb5-9
 Section: libs
 Breaks:  libkadm5srv-mit8 (<< 1.11+dfsg~), krb5-kdc (= 1.13~alpha1+dfsg-1)
 Architecture: any
@@ -387,7 +387,7 @@ Package: libkrb5support0
 Section: libs
 Breaks: libgssapi-krb5-2 (<< 1.13~alpha1-1),
  libkadm5srv-mit9 (<< 1.13~alpha1-1), libkadm5clnt-mit9 (<< 1.13~alpha1-1),
- libk5crypto3 (<< 1.13~alpha1-1), libkdb5-7 (<< 1.13~alpha1-1)
+ libk5crypto3 (<< 1.16),  libkdb5-8 (<< 1.16)
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Multi-Arch: same
@@ -423,7 +423,6 @@ Package: krb5-gss-samples
 Section: net
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
-Priority: extra
 Description: MIT Kerberos GSS Sample applications
  Kerberos is a system for authenticating users and services on a network.
  Kerberos is a trusted third-party service.  That means that there is a
@@ -440,7 +439,7 @@ Description: MIT Kerberos GSS Sample applications
 Package: krb5-locales
 Section: localization
 Architecture: all
-Depends: ${misc:Depends}, ${shlibs:Depends}, 
+Depends: ${misc:Depends}, ${shlibs:Depends},
 Pre-Depends: ${misc:Pre-Depends}
 Multi-Arch: foreign
 Description: internationalization support for MIT Kerberos
@@ -458,7 +457,6 @@ Section: libdevel
 Architecture: any
 Depends: ${misc:Depends},  libkrad0 (= ${binary:Version}),
  comerr-dev, libverto-dev (>= 0.2.4)
-Priority: extra
 Suggests: libkrb5-dev
 Replaces: libkrb5-dev (<< 1.12+dfsg-2)
 Breaks: krb5-multidev (<<1.12+dfsg-2), libkrb5-dev (<<1.12+dfsg-2)

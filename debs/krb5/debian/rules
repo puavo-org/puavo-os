@@ -1,8 +1,8 @@
 #!/usr/bin/make -f
-# Based on sample debian/rules that uses debhelper. 
+# Based on sample debian/rules that uses debhelper.
 # GNU copyright 1997 by Joey Hess.
 
-# Uncomment this to turn on verbose mode. 
+# Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
 # This has to be exported to make some magic below work.
@@ -48,8 +48,18 @@ EXCLUDE = -Xtmac.doc -Xexamples/krb5 -Xgnats/mit -Xkrb5-send-pr \
 	-Xsserver -Xsim_server -Xuuserver \
 	-Xsclient -Xsim_client -Xuuclient -Xpreauth/test.so
 
-LIB_PACKAGES = libkrb5-3 libgssapi-krb5-2 libkadm5clnt-mit11 libkadm5srv-mit11 libkdb5-8 libgssrpc4  \
+LIB_PACKAGES = libkrb5-3 libgssapi-krb5-2 libkadm5clnt-mit11 libkadm5srv-mit11 libkdb5-9 libgssrpc4  \
 	libkrb5support0  libk5crypto3 libkrad0
+
+ifneq (,$(filter stage1,$(DEB_BUILD_PROFILES)))
+KRB5_SKIP_LDAP=        1
+endif
+
+ifeq (,$(KRB5_SKIP_LDAP))
+CONFIGURE_LDAP=        --with-ldap
+else
+CONFIGURE_LDAP=        --without-ldap
+endif
 
 # We touch each configure and Autoconf-related file so that we do not attempt
 # to use Autoconf.  The cache is used by the Embdebian project for cross
@@ -66,7 +76,7 @@ configure-stamp:
 	cd build && $(FLAGS) ../src/configure  \
 		--prefix=/usr --localstatedir=/etc --mandir=/usr/share/man \
 		--with-system-et --with-system-ss --disable-rpath  \
-		--enable-shared --with-ldap --without-tcl \
+		--enable-shared $(CONFIGURE_LDAP) --without-tcl \
 	--with-system-verto \
 		--libdir=\$${prefix}/lib/$(DEB_HOST_MULTIARCH) \
 		--sysconfdir=/etc \
@@ -87,12 +97,14 @@ build-stamp: configure-stamp
 	touch build-stamp
 
 build-indep-stamp: build-stamp
-	cd build/doc && make substhtml substpdf
+ifeq (,$(findstring nodoc,$(DEB_BUILD_OPTIONS)))
+	cd build/doc && make PYTHON=python substhtml substpdf
 	ln -sf /usr/share/javascript/jquery/jquery.js build/doc/html_subst/_static/jquery.js
 	ln -sf /usr/share/javascript/underscore/underscore.js build/doc/html_subst/_static/underscore.js
 	ln -sf /usr/share/javascript/sphinxdoc/1.0/doctools.js build/doc/html_subst/_static/doctools.js
 	ln -sf /usr/share/javascript/sphinxdoc/1.0/searchtools.js build/doc/html_subst/_static/searchtools.js
 	touch build-indep-stamp
+endif
 
 clean:
 	dh_testdir
@@ -114,11 +126,14 @@ install: build-arch
 
 	cd build && $(MAKE) install DESTDIR=`pwd`/../debian/tmp
 	install -d $(CURDIR)/debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/krb5 $(CURDIR)/debian/tmp/etc/insserv/overrides
+ifeq (,$(KRB5_SKIP_LDAP))
 	install -m644 debian/krb5-kdc-ldap.insserv-override debian/tmp/etc/insserv/overrides/krb5-kdc
-	install -m644 $(CURDIR)/debian/README.mech.d $(CURDIR)/debian/libgssapi-krb5-2/etc/gss/mech.d/README
 	mv $(CURDIR)/debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/libkdb_ldap* \
 	    $(CURDIR)/debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/krb5/
 	rm -f $(CURDIR)/debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/krb5/libkdb_ldap*.so
+else
+	rm -f $(CURDIR)/debian/tmp/usr/share/man/man8/kdb5_ldap_util.8
+endif
 	mv $(CURDIR)/debian/tmp/usr/bin/krb5-config \
 	    $(CURDIR)/debian/tmp/usr/bin/krb5-config.mit
 	mv $(CURDIR)/debian/tmp/usr/share/man/man1/krb5-config.1 \
@@ -185,9 +200,9 @@ binary-arch: build-arch install
 	dh_installchangelogs
 	dh_installdocs
 	dh_installdebconf
-	DH_OPTIONS= dh_installinit -pkrb5-kdc --error-handler=init_error -- defaults 18 18 
+	DH_OPTIONS= dh_installinit -pkrb5-kdc --error-handler=init_error -- defaults 18 18
 	DH_OPTIONS= dh_installinit -pkrb5-kpropd -- defaults 18 18
-		DH_OPTIONS= dh_installinit -pkrb5-admin-server -- defaults 18 18 
+		DH_OPTIONS= dh_installinit -pkrb5-admin-server -- defaults 18 18
 	dh_systemd_enable
 	dh_lintian
 	set -e ; for pkg in $(LIB_PACKAGES) ; do \

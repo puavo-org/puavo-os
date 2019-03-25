@@ -1,0 +1,27 @@
+#!/bin/sh
+
+set -ex
+
+. debian/tests/util
+
+TEST_REALM="EXAMPLE.INTERNAL"
+MYHOSTNAME="krb5-dep8.internal"
+adjust_hostname "${MYHOSTNAME}"
+
+create_realm "${TEST_REALM}" "${MYHOSTNAME}"
+
+# create a random-enough principal
+principal="testuser$$"
+kadmin.local -q "addprinc -pw secret ${principal}"
+
+# get a ticket
+echo secret | kinit ${principal}
+
+# did we really get a ticket?
+klist | grep krbtgt/${TEST_REALM}@${TEST_REALM}
+
+# destroy it
+kdestroy
+
+# delete the principal
+kadmin.local -q "delprinc -force ${principal}"
