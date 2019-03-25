@@ -64,10 +64,9 @@ class HoverIconButtonBase(Gtk.Button):
         # Hover state
         self.hover = False
 
-        # Use this if you want to open popup menus
-        self.menu_open = False
-
         # Set these in derived classes to control the look
+        # FIXME: Eww, hardcoded colors! Get these from the current
+        # system theme somehow!
         self.icon_size = -1
         self.icon_pos = [-1, -1]
         self.icon_color = [1.0, 0.0, 0.0]
@@ -113,7 +112,7 @@ class HoverIconButtonBase(Gtk.Button):
         try:
             rect = self.get_allocation()
 
-            # clipping area
+            # setup the clipping area
             rounded_rectangle(ctx, 0, 0,
                               rect.width, rect.height,
                               self.corner_rounding)
@@ -132,7 +131,7 @@ class HoverIconButtonBase(Gtk.Button):
 
     # Draw the button background
     def draw_background(self, ctx, rect):
-        if not self.disabled and (self.hover or self.menu_open):
+        if not self.disabled and self.hover:
             rounded_rectangle(ctx, 0, 0, rect.width, rect.height,
                               self.corner_rounding)
             ctx.set_source_rgba(self.background_color[0],
@@ -159,7 +158,7 @@ class HoverIconButtonBase(Gtk.Button):
     def draw_label(self, ctx):
         ctx.move_to(self.label_pos[0], self.label_pos[1])
 
-        if self.hover or self.menu_open:
+        if self.hover:
             ctx.set_source_rgba(self.label_color_hover[0],
                                 self.label_color_hover[1],
                                 self.label_color_hover[2],
@@ -302,7 +301,7 @@ class ProgramButton(HoverIconButtonBase):
         method(self.data)
 
 
-class MenuButton(ProgramButton):
+class MenuButton(HoverIconButtonBase):
     """A submenu button."""
 
     def __init__(self,
@@ -320,17 +319,29 @@ class MenuButton(ProgramButton):
         self.label_color_normal = [0.0, 0.0, 0.0]
         self.label_color_hover = [0.0, 0.0, 0.0]
 
-        # menu buttons don't have popup menus
-        self.disconnect(self.menu_signal)
-        self.menu_signal = None
+
+    def get_preferred_button_size(self):
+        return (PROGRAM_BUTTON_WIDTH, PROGRAM_BUTTON_HEIGHT)
 
 
     def compute_elements(self):
-        super().compute_elements()
+        self.corner_rounding = 5
 
-        # push the elements downwards
-        self.icon_pos[1] += 5
-        self.label_pos[1] += 5
+        self.icon_size = PROGRAM_BUTTON_ICON_SIZE
+
+        # Note the Y positions in icon_pos and label_pos, they must be
+        # shifted down by 5 pixels to "center" them on the button
+
+        self.icon_pos = [
+            (PROGRAM_BUTTON_WIDTH / 2) - (PROGRAM_BUTTON_ICON_SIZE / 2),
+            25
+        ]
+
+        # Center the text horizontally
+        self.label_pos = [
+            10,  # left padding
+            30 + PROGRAM_BUTTON_ICON_SIZE
+        ]
 
 
     def draw_background(self, ctx, rect):
