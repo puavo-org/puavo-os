@@ -1,11 +1,13 @@
 # Various custom buttons
 
 import logging
+import math
 
 import gi
 gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
 gi.require_version('PangoCairo', '1.0')
-from gi.repository import Gtk, Pango, PangoCairo
+from gi.repository import Gtk, Gdk, Pango, PangoCairo
+import cairo
 
 from constants import PROGRAM_BUTTON_WIDTH, PROGRAM_BUTTON_HEIGHT, \
                       PROGRAM_BUTTON_ICON_SIZE, SIDEBAR_WIDTH
@@ -185,7 +187,12 @@ class HoverIconButtonBase(Gtk.Button):
 class ProgramButton(HoverIconButtonBase):
     """A normal program or weblink button."""
 
-    WIDTH = 150
+    # The hover indicator box
+    INDICATOR_WIDTH = 20
+    INDICATOR_HEIGHT = 30
+    INDICATOR_EDGE = 5
+    INDICATOR_ARROW_SIZE = 5
+
 
     def __init__(self,
                  parent,
@@ -198,9 +205,26 @@ class ProgramButton(HoverIconButtonBase):
         super().__init__(parent, label, icon=icon, tooltip=tooltip, data=data)
 
         self.is_fave = is_fave
-        self.menu = None
-        self.menu_signal = self.connect('button-press-event',
-                                        self.open_menu)
+
+        # Setup the popup menu
+        self.__enable_popup = True
+        self.__popup_hover = False
+        self.__popup_open = False
+        self.__hover_signal = None
+
+        self.__menu = None
+        self.__menu_signal = self.connect('button-press-event',
+                                          self.open_menu)
+
+        # We want mouse motion events
+        self.set_events(self.get_events()
+                        | Gdk.EventMask.POINTER_MOTION_MASK)
+
+        # Setup the popup indicator box. Compute its coordinates.
+        self.__indicator_x1 = PROGRAM_BUTTON_WIDTH - self.INDICATOR_WIDTH - self.INDICATOR_EDGE
+        self.__indicator_x2 = self.__indicator_x1 + self.INDICATOR_WIDTH
+        self.__indicator_y1 = self.INDICATOR_EDGE
+        self.__indicator_y2 = self.__indicator_y1 + self.INDICATOR_HEIGHT
 
 
     def get_preferred_button_size(self):
@@ -211,6 +235,7 @@ class ProgramButton(HoverIconButtonBase):
         self.corner_rounding = 5
 
         self.icon_size = PROGRAM_BUTTON_ICON_SIZE
+
         self.icon_pos = [
             (PROGRAM_BUTTON_WIDTH / 2) - (PROGRAM_BUTTON_ICON_SIZE / 2),
             20
@@ -223,65 +248,192 @@ class ProgramButton(HoverIconButtonBase):
         ]
 
 
+    # Mouse enters the button area
+    def on_mouse_enter(self, widget, event):
+        if not self.disabled:
+            self.hover = True
+
+            if self.__enable_popup:
+                # Start tracking mouse movements inside the button
+                self.__hover_signal = \
+                    self.connect('motion-notify-event', self.__on_mouse_hover_move)
+
+        return False
+
+
+    # Mouse leaves the button area
+    def on_mouse_leave(self, widget, event):
+        if not self.disabled:
+            self.hover = False
+
+            if self.__hover_signal:
+                # Stop tracking mouse movements
+                self.disconnect(self.__hover_signal)
+                self.__hover_signal = None
+
+        return False
+
+
+    # Track mouse movements and update the hover indicator box
+    def __on_mouse_hover_move(self, widget, event):
+        if not self.disabled:
+            (window, mouse_x, mouse_y, state) = event.window.get_pointer()
+
+            new_state = (mouse_x >= self.__indicator_x1) and \
+                        (mouse_x <= self.__indicator_x2) and \
+                        (mouse_y >= self.__indicator_y1) and \
+                        (mouse_y <= self.__indicator_y2)
+
+            if new_state != self.__popup_hover:
+                # Only redraw when the hover state actually changes
+                self.__popup_hover = new_state
+                self.queue_draw()
+
+        return False
+
+
+    def on_draw(self, widget, ctx):
+        try:
+            rect = self.get_allocation()
+
+            # setup the clipping area
+            rounded_rectangle(ctx, 0, 0,
+                              rect.width, rect.height,
+                              self.corner_rounding)
+            ctx.clip()
+
+            # I don't want to copy-paste draw_background() and draw-label()
+            # from the base class there, so coalesce both "hover" and
+            # "popup_open" states in one so that the hover background stays
+            # active even when the popup menu is open.
+            old_hover = self.hover
+            self.hover = self.hover or self.__popup_open
+
+            self.draw_background(ctx, rect)
+            self.draw_icon(ctx)
+            self.draw_label(ctx)
+
+            # Restore old state
+            self.hover = old_hover
+
+            # Draw the custom popup indicator
+            if self.__enable_popup and (self.hover or self.__popup_open):
+                self.__draw_popup_indicator(ctx)
+
+        except Exception as exception:
+            logging.error('Could not draw a ProgramButton widget: %s',
+                          str(exception))
+
+        # return True to prevent default event processing
+        return True
+
+
+    # Draw the popup menu indicator
+    def __draw_popup_indicator(self, ctx):
+        # Background
+        ctx.save()
+
+        if self.__popup_hover:
+            ctx.set_source_rgba(0.0, 1.0, 1.0, 1.0)
+        else:
+            ctx.set_source_rgba(0.0, 1.0, 1.0, 0.25)
+
+        rounded_rectangle(ctx,
+                          x=self.__indicator_x1,
+                          y=self.__indicator_y1,
+                          width=self.INDICATOR_WIDTH,
+                          height=self.INDICATOR_HEIGHT,
+                          radius=3.0)
+        ctx.fill()
+        ctx.restore()
+
+        # Foreground
+        ctx.save()
+
+        if self.__popup_hover:
+            ctx.set_source_rgba(0.0, 0.0, 0.0, 1.0)
+        else:
+            ctx.set_source_rgba(0.0, 0.0, 0.0, 0.5)
+
+        dot_radius = 2
+        dot_spacing = 5.0
+        dots_x = self.__indicator_x1 + (self.INDICATOR_WIDTH / 2)
+        dots_y = self.__indicator_y1 + (self.INDICATOR_HEIGHT / 4) + 1
+
+        ctx.arc(dots_x, dots_y, dot_radius, 0.0, math.pi * 2.0)
+        dots_y += dot_radius + dot_spacing
+        ctx.arc(dots_x, dots_y, dot_radius, 0.0, math.pi * 2.0)
+        dots_y += dot_radius + dot_spacing
+        ctx.arc(dots_x, dots_y, dot_radius, 0.0, math.pi * 2.0)
+        ctx.fill()
+
+        ctx.restore()
+
+
     # Create and display the popup menu
     def open_menu(self, widget, event):
         if self.disabled:
             return
 
-        if event.button == 3:
-            self.menu = Gtk.Menu()
+        if event.button in (1, 2, 3):
+            # Clicked the popup menu indicator
+            if self.__enable_popup and self.__popup_hover:
+                self.__menu = Gtk.Menu()
 
-            if SETTINGS.desktop_dir:
-                # Can't do this without the desktop directory
-                desktop_item = Gtk.MenuItem(
-                    localize(STRINGS['popup_add_to_desktop']))
-                desktop_item.connect('activate',
-                                     lambda x: self.__special_operation(
-                                         self.parent.add_program_to_desktop))
-                desktop_item.show()
-                self.menu.append(desktop_item)
+                if SETTINGS.desktop_dir:
+                    # Can't do this without the desktop directory
+                    desktop_item = Gtk.MenuItem(
+                        localize(STRINGS['popup_add_to_desktop']))
+                    desktop_item.connect('activate',
+                                         lambda x: self.__special_operation(
+                                             self.parent.add_program_to_desktop))
+                    desktop_item.show()
+                    self.__menu.append(desktop_item)
 
-            panel_item = Gtk.MenuItem(
-                localize(STRINGS['popup_add_to_panel']))
-            panel_item.connect('activate',
-                               lambda x: self.__special_operation(
-                                   self.parent.add_program_to_panel))
-            panel_item.show()
-            self.menu.append(panel_item)
+                panel_item = Gtk.MenuItem(
+                    localize(STRINGS['popup_add_to_panel']))
+                panel_item.connect('activate',
+                                   lambda x: self.__special_operation(
+                                       self.parent.add_program_to_panel))
+                panel_item.show()
+                self.__menu.append(panel_item)
 
-            if self.is_fave:
-                # special entry for fave buttons
-                remove_fave = Gtk.MenuItem(
-                    localize(STRINGS['popup_remove_from_faves']))
-                remove_fave.connect('activate',
-                                    lambda x: self.__special_operation(
-                                        self.parent.remove_program_from_faves))
-                remove_fave.show()
-                self.menu.append(remove_fave)
+                if self.is_fave:
+                    # special entry for fave buttons
+                    remove_fave = Gtk.MenuItem(
+                        localize(STRINGS['popup_remove_from_faves']))
+                    remove_fave.connect('activate',
+                                        lambda x: self.__special_operation(
+                                            self.parent.remove_program_from_faves))
+                    remove_fave.show()
+                    self.__menu.append(remove_fave)
 
-            # Need to do things when the menu closes...
-            self.menu.connect('deactivate', self.__cancel_menu)
+                # Need to do things when the menu closes...
+                self.__menu.connect('deactivate', self.__cancel_menu)
 
-            # ...and if autohiding is enabled (like it usually is) we
-            # must NOT hide the window when the menu opens!
-            self.parent.disable_out_of_focus_hide()
+                # ...and if autohiding is enabled (like it usually is) we
+                # must NOT hide the window when the menu opens!
+                self.parent.disable_out_of_focus_hide()
 
-            self.menu_open = True
-            self.menu.popup(
-                parent_menu_shell=None,
-                parent_menu_item=None,
-                func=None,
-                data=None,
-                button=event.button,
-                activate_time=event.time)
+                self.__popup_open = True
+                self.__menu.popup(
+                    parent_menu_shell=None,
+                    parent_menu_item=None,
+                    func=None,
+                    data=None,
+                    button=event.button,
+                    activate_time=event.time)
+                return True
 
+        # Clicked on something else
+        return False
 
     # Nothing in the popup menu was clicked
     def __cancel_menu(self, menushell):
         self.parent.enable_out_of_focus_hide()
 
-        self.menu_open = False
-        self.menu = None
+        self.__popup_open = False
+        self.__menu = None
         self.queue_draw()       # force hover state update
 
 
@@ -295,9 +447,11 @@ class ProgramButton(HoverIconButtonBase):
 
         self.parent.enable_out_of_focus_hide()
 
-        self.menu_open = False
-        self.menu = None
-        self.queue_draw()       # force hover state update
+        self.__popup_open = False
+        self.__menu = None
+        self.__popup_hover = False
+        self.queue_draw()       # force hover state update ASAP
+
         method(self.data)
 
 
