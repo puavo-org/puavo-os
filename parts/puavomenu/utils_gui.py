@@ -25,6 +25,9 @@ def rounded_rectangle(ctx, x, y, width, height, radius=20):
     """Creates a path with rounded corners. You must stroke/fill
     the path yourself."""
 
+    # make the arc()'s work correctly
+    ctx.move_to(x, y)
+
     # 2 is the smallest radius that actually is visible.
     # Determined empirically.
     if radius < 2:
