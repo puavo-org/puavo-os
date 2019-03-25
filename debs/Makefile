@@ -11,18 +11,17 @@ endif
 _pkgs_parts     := puavo-ds \
                    puavo-os
 ifeq "$(debootstrap_suite)" "stretch"
-  _pkgs_ports     := fluentd         \
-                     gnome-shell     \
-                     grub2           \
-                     gvfs            \
-                     linux           \
-                     mutter          \
-                     nwjs            \
-                     openboard       \
-                     openldap        \
-                     visionmedia-mon \
-                     vtun            \
-                     wine            \
+  _pkgs_ports     := fluentd     \
+                     gnome-shell \
+                     grub2       \
+                     gvfs        \
+                     linux       \
+                     mutter      \
+                     nwjs        \
+                     openboard   \
+                     openldap    \
+                     vtun        \
+                     wine        \
                      wpa
 else
   _pkgs_ports :=
