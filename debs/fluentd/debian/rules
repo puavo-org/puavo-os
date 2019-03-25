@@ -1,8 +1,0 @@
-#!/usr/bin/make -f
-
-%:
-	dh  $@
-
-override_dh_auto_install:
-	mkdir -p '$(CURDIR)/debian/fluentd/usr/lib/fluentd-gem'
-	cp -a -T fluentd '$(CURDIR)/debian/fluentd/usr/lib/fluentd-gem'
