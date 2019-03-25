@@ -4,8 +4,8 @@ import time
 import os
 import socket               # for the IPC socket
 import logging
-import syslog
 import traceback
+import syslog
 
 import gi
 gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
@@ -78,8 +78,6 @@ class PuavoMenu(Gtk.Window):
             self.__socket.bind(SETTINGS.socket)
         except Exception as exception:
             # Oh dear...
-            import syslog
-
             logging.error('Unable to create a domain socket for IPC!')
             logging.error('Reason: %s', str(exception))
             logging.error('Socket name: "%s"', SETTINGS.socket)

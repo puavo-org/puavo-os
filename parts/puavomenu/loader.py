@@ -545,14 +545,14 @@ def load_dirs_config(name):
 
     import json
 
-    logging.info('Loading directory configuration file "{0}"'.format(name))
+    logging.info('Loading directory configuration file "%s"', name)
 
     desktop_dirs = []
     icon_dirs = []
 
     try:
-        with open(name, 'r', encoding='utf-8') as f:
-            dirs = json.load(f)
+        with open(name, 'r', encoding='utf-8') as dirs_file:
+            dirs = json.load(dirs_file)
 
         if 'desktop_dirs' in dirs:
             desktop_dirs = dirs['desktop_dirs']
