@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: openldap@packages.debian.org\n"
-"POT-Creation-Date: 2017-01-10 05:24+0000\n"
+"POT-Creation-Date: 2017-06-25 02:57+0000\n"
 "PO-Revision-Date: 2017-01-21 16:28+0100\n"
 "Last-Translator: Jean-Pierre Giraud <jean-pierregiraud@neuf.fr>\n"
 "Language-Team: French <debian-l10n-french@lists.debian.org>\n"
@@ -393,7 +393,7 @@ msgstr "Mise à jour manuelle du schéma ppolicy recommandée"
 
 #. Type: select
 #. Description
-#. "ppolicy", "pwdMaxRecordedFailure", and "cn=config" are not translatable.
+#. "ppolicy" and "pwdMaxRecordedFailure" are not translatable.
 #: ../slapd.templates:17002
 msgid ""
 "The new version of the Password Policy (ppolicy) overlay requires the schema "

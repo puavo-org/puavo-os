@@ -1,9 +1,59 @@
 etc/ldap/schema
 usr/lib/slapd usr/sbin
-usr/lib/ldap/*.so*
-usr/lib/ldap/*.la
 usr/lib/*/libslapi-*.so.*
 debian/ldiftopasswd usr/share/slapd
 debian/DB_CONFIG usr/share/slapd
 debian/slapd.conf usr/share/slapd
 debian/slapd.init.ldif usr/share/slapd
+
+usr/lib/ldap/back_*.so*
+usr/lib/ldap/back_*.la
+
+usr/lib/ldap/accesslog*.so*
+usr/lib/ldap/accesslog.la
+usr/lib/ldap/auditlog*.so*
+usr/lib/ldap/auditlog.la
+usr/lib/ldap/constraint*.so*
+usr/lib/ldap/constraint.la
+usr/lib/ldap/dds*.so*
+usr/lib/ldap/dds.la
+usr/lib/ldap/deref*.so*
+usr/lib/ldap/deref.la
+usr/lib/ldap/dyngroup*.so*
+usr/lib/ldap/dyngroup.la
+usr/lib/ldap/dynlist*.so*
+usr/lib/ldap/dynlist.la
+usr/lib/ldap/memberof*.so*
+usr/lib/ldap/memberof.la
+usr/lib/ldap/pcache*.so*
+usr/lib/ldap/pcache.la
+usr/lib/ldap/collect*.so*
+usr/lib/ldap/collect.la
+usr/lib/ldap/ppolicy*.so*
+usr/lib/ldap/ppolicy.la
+usr/lib/ldap/refint*.so*
+usr/lib/ldap/refint.la
+usr/lib/ldap/retcode*.so*
+usr/lib/ldap/retcode.la
+usr/lib/ldap/rwm*.so*
+usr/lib/ldap/rwm.la
+usr/lib/ldap/seqmod*.so*
+usr/lib/ldap/seqmod.la
+usr/lib/ldap/sssvlv*.so*
+usr/lib/ldap/sssvlv.la
+usr/lib/ldap/syncprov*.so*
+usr/lib/ldap/syncprov.la
+usr/lib/ldap/translucent*.so*
+usr/lib/ldap/translucent.la
+usr/lib/ldap/unique*.so*
+usr/lib/ldap/unique.la
+usr/lib/ldap/valsort*.so*
+usr/lib/ldap/valsort.la
+
+# contrib modules installed in main package
+usr/lib/ldap/autogroup.so*
+usr/lib/ldap/autogroup.la
+usr/lib/ldap/lastbind.so*
+usr/lib/ldap/lastbind.la
+usr/lib/ldap/pw-sha2.so*
+usr/lib/ldap/pw-sha2.la

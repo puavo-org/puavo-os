@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openldap_2.4.40-2_eu\n"
 "Report-Msgid-Bugs-To: openldap@packages.debian.org\n"
-"POT-Creation-Date: 2017-01-10 05:24+0000\n"
+"POT-Creation-Date: 2017-06-25 02:57+0000\n"
 "PO-Revision-Date: 2017-01-10 12:14+0100\n"
 "Last-Translator: Iñaki Larrañaga Murgoitio <dooteo@zundan.com>\n"
 "Language-Team: Basque <debian-l10n-basque@lists.debian.org>\n"
@@ -380,7 +380,7 @@ msgstr "ppolicy eskema eskuz eguneratzea gomendatzen da"
 
 #. Type: select
 #. Description
-#. "ppolicy", "pwdMaxRecordedFailure", and "cn=config" are not translatable.
+#. "ppolicy" and "pwdMaxRecordedFailure" are not translatable.
 #: ../slapd.templates:17002
 msgid ""
 "The new version of the Password Policy (ppolicy) overlay requires the schema "
@@ -391,15 +391,12 @@ msgid ""
 "with the upgrade."
 msgstr ""
 "Pasahitzen politikaren (Password Policy, ppolicy) gainjarpenaren bertsio "
-"berriak "
-"eskema behar du, erabiltzen ari den uneko eskeman aurkitzen ez den "
+"berriak eskema behar du, erabiltzen ari den uneko eskeman aurkitzen ez den "
 "\"pwdMaxRecordedFailure\" atributu mota definitzeko. Bertsio-berritzea "
-"oraintxe "
-"bertan behera botatzea gomendatzen da, eta \"ppolicy\" eskema eguneratu "
-"slapd bertsio-berritu aurretik. Erreplikazioa erabiltzen ari bada, eskemaren "
-"eguneraketa zerbitzari bakoitzean aplikatu beharko litzateke "
-"bertsio-berritzearekin "
-"jarraitu aurretik."
+"oraintxe bertan behera botatzea gomendatzen da, eta \"ppolicy\" eskema "
+"eguneratu slapd bertsio-berritu aurretik. Erreplikazioa erabiltzen ari bada, "
+"eskemaren eguneraketa zerbitzari bakoitzean aplikatu beharko litzateke "
+"bertsio-berritzearekin jarraitu aurretik."
 
 #. Type: select
 #. Description
@@ -432,11 +429,9 @@ msgid ""
 "overlays, and replication with other servers may be affected."
 msgstr ""
 "Horren ordez, instalazioarekin aurrera jarraitzea erabakitzen baduzu, "
-"atributu mota "
-"berria automatikoki gehituko da, baina aldaketak ez du eraginik izango "
-"slapd-ren "
-"gainjarpenetan, eta beste zerbitzariekin erreplikazioek eragina jasan "
-"dezakete."
+"atributu mota berria automatikoki gehituko da, baina aldaketak ez du "
+"eraginik izango slapd-ren gainjarpenetan, eta beste zerbitzariekin "
+"erreplikazioek eragina jasan dezakete."
 
 #~ msgid "Allow LDAPv2 protocol?"
 #~ msgstr "Onartu LDAPv2 protokoloa?"

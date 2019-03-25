@@ -2,5 +2,5 @@
 
 version=3
 opts=dversionmangle=s/\+dfsg// \
-http://www.openldap.org/software/download/ \
+https://www.openldap.org/software/download/ \
     (?:.*/)?openldap-?_?([\d+\.]+)\.tgz

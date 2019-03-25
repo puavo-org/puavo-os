@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openldap\n"
 "Report-Msgid-Bugs-To: openldap@packages.debian.org\n"
-"POT-Creation-Date: 2017-01-10 05:24+0000\n"
+"POT-Creation-Date: 2017-06-25 02:57+0000\n"
 "PO-Revision-Date: 2017-01-10 05:26+0100\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <debian-l10n-danish@lists.debian.org>\n"
@@ -375,7 +375,7 @@ msgstr "Manuel ppolicy-skemaopdatering anbefales"
 
 #. Type: select
 #. Description
-#. "ppolicy", "pwdMaxRecordedFailure", and "cn=config" are not translatable.
+#. "ppolicy" and "pwdMaxRecordedFailure" are not translatable.
 #: ../slapd.templates:17002
 msgid ""
 "The new version of the Password Policy (ppolicy) overlay requires the schema "
@@ -387,10 +387,10 @@ msgid ""
 msgstr ""
 "Den nye version af Password Policy-dækket (ppolicy) kræver skemaet for at "
 "definere attributtypen pwdMaxRecordedFailure, som ikke er til stede i "
-"skemaet i brug i øjeblikket. Det anbefales at afbryde opgraderingen nu, "
-"og opdatere ppolicy-skemaet før opgradering af slapd. Hvis replikering "
-"er i brug, så skal skemaopdateringen bruges på alle servere før "
-"opgraderingen fortsættes."
+"skemaet i brug i øjeblikket. Det anbefales at afbryde opgraderingen nu, og "
+"opdatere ppolicy-skemaet før opgradering af slapd. Hvis replikering er i "
+"brug, så skal skemaopdateringen bruges på alle servere før opgraderingen "
+"fortsættes."
 
 #. Type: select
 #. Description
@@ -424,6 +424,5 @@ msgid ""
 msgstr ""
 "Hvis du i stedet for vælger at fortsætte installationen, så vil den nye "
 "attributtype blive tilføjet automatisk, men der vil ikke blive handlet på "
-"ændringen af slapd-overdækker, og replikering med andre servere kan "
-"blive påvirket."
-
+"ændringen af slapd-overdækker, og replikering med andre servere kan blive "
+"påvirket."

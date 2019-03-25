@@ -105,7 +105,7 @@ update_permissions() {	# {{{
 }
 # }}}
 update_databases_permissions() {	# {{{
-	get_suffix | while read suffix; do
+	get_suffix | while read -r suffix; do
 		dbdir=`get_directory "$suffix"`
 		update_permissions "$dbdir"
 	done
@@ -182,11 +182,11 @@ dump_databases() {							# {{{
 
 	dir=`database_dumping_destdir`
 	echo >&2 "  Dumping to $dir: "
-	(get_suffix | while read suffix; do
+	(get_suffix | while read -r suffix; do
 		dbdir=`get_directory "$suffix"`
 		if [ -n "$dbdir" ]; then
 			file="$dir/$suffix.ldif"
-			echo -n "  - directory $suffix... " >&2
+			printf '  - directory %s... ' "$suffix" >&2
 			# Need to support slapd.d migration from preinst
 			if [ -f "${SLAPD_CONF}" ]; then
 				slapcat_opts="-g -f ${SLAPD_CONF}"
@@ -215,7 +215,7 @@ load_databases() {							# {{{
 	echo >&2 "  Loading from $dir: "
 	# restore by increasing suffix length due to possibly glued databases
 	get_suffix | awk '{ print length, $0 }' | sort -n | cut -d ' ' -f 2- \
-	| while read suffix; do
+	| while read -r suffix; do
 		dbdir=`get_directory "$suffix"`
 		if [ -z "$dbdir" ]; then
 			continue
@@ -227,11 +227,11 @@ load_databases() {							# {{{
 		fi
 
 		file="$dir/$suffix.ldif"
-		echo -n "  - directory $suffix... " >&2
+		printf '  - directory %s... ' "$suffix" >&2
 
 		# If there is an old DB_CONFIG file, restore it before
 		# running slapadd
-		backupdir=`compute_backup_path -n "$dbdir" "$suffix"`
+		backupdir="$(compute_backup_path -n "$dbdir" "$suffix")"
 		if [ -e "$backupdir"/DB_CONFIG ]; then
 			cp -a "$backupdir"/DB_CONFIG "$dbdir"/
 		fi
@@ -267,7 +267,7 @@ EOF
 # }}}
 move_incompatible_databases_away() {					# {{{
 	echo >&2 "  Moving old database directories to /var/backups:"
-	(get_suffix | while read suffix; do
+	(get_suffix | while read -r suffix; do
 		dbdir=`get_directory "$suffix"`
 		move_old_database_away "$dbdir" "$suffix" <&5
 	done) 5<&0 </dev/null
@@ -287,7 +287,7 @@ move_incompatible_databases_away() {					# {{{
 get_suffix() {								# {{{
 	if [ -f "${SLAPD_CONF}" ]; then
 		for f in `get_all_slapd_conf_files`; do
-			sed -n -e's/^suffix[[:space:]]\+"*\([^"]\+\)"*/\1/p' $f
+			sed -n -e '/^suffix[[:space:]]/ { s/^suffix[[:space:]]\+"*\([^"]\+\)"*/\1/; s/\\\\/\\/g; p }' $f
 		done
 	else
 		grep -h ^olcSuffix ${SLAPD_CONF}/cn\=config/olcDatabase*.ldif | cut -d: -f 2
@@ -296,14 +296,16 @@ get_suffix() {								# {{{
 # }}}
 get_directory() {							# {{{
 # Returns the db directory for a given suffix
-	if [ -d "${SLAPD_CONF}" ] && get_suffix | grep -q "$1" ; then
-		sed -n 's/^olcDbDirectory: *//p' `grep -l "^olcSuffix: $1" ${SLAPD_CONF}/cn\=config/olcDatabase*.ldif`
+	if [ -d "${SLAPD_CONF}" ] && get_suffix | grep -Fq "$1" ; then
+		sed -n 's/^olcDbDirectory: *//p' `grep -Flx "olcSuffix: $1" ${SLAPD_CONF}/cn\=config/olcDatabase*.ldif`
 	elif [ -f "${SLAPD_CONF}" ]; then
 		# Extract the directory for the given suffix ($1)
+		# Quote backslashes once for slapd.conf parser, again for awk
+		quoted="$(printf '%s' "$1" | sed 's/\\/\\\\\\\\/g')"
 		for f in `get_all_slapd_conf_files`; do
 		awk  ' BEGIN { DB=0; SUF=""; DIR="" } ;
 		       /^database/ { DB=1; SUF=""; DIR="" } ; 
-		       DB==1 && /^suffix[ \t]+"?'"$1"'"?$/ { SUF=$2 ; } ; 
+		       DB==1 && /^suffix[ \t]+"?'"$quoted"'"?$/ { SUF=$2 ; } ; 
 		       DB==1 && /^directory/ { DIR=$2 ;} ; 
 		       DB==1 && SUF!="" && DIR!="" { sub(/^"/,"",DIR) ; sub(/"$/,"",DIR) ; print DIR; SUF=""; DIR="" }' "${f}" | \
 		sed -e's/\([^\\]\|^\)"/\1/g; s/\\"/"/g; s/\\\\/\\/g'
@@ -369,7 +371,7 @@ compute_backup_path() {							# {{{
 		exit 1
 	fi
 
-	echo "$target"
+	printf '%s' "$target"
 }
 
 # }}}
@@ -397,8 +399,8 @@ move_old_database_away() {						# {{{
 	# include mount points as well anyway, but it's much less likely.
 	db_get slapd/move_old_database
 	if [ "$RET" = true ]; then
-		backupdir=`compute_backup_path "$databasedir" "$suffix"`
-		echo -n "  - directory $suffix... " >&2
+		backupdir="$(compute_backup_path "$databasedir" "$suffix")"
+		printf '  - directory %s... ' "$suffix" >&2
 		mkdir -p "$backupdir"
 		find -H "$databasedir" -mindepth 1 -maxdepth 1 -type f \
 			-exec mv {} "$backupdir" \;

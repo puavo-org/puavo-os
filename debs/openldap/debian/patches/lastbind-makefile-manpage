@@ -1,9 +1,9 @@
 --- a/contrib/slapd-modules/lastbind/Makefile
 +++ b/contrib/slapd-modules/lastbind/Makefile
 @@ -17,6 +17,7 @@
- 	$(LDAP_BUILD)/debian/build/libraries/liblber/liblber.la
+ 	$(LDAP_BUILD)/libraries/liblber/liblber.la
  
- LIBTOOL = $(LDAP_BUILD)/debian/build/libtool
+ LIBTOOL = $(LDAP_BUILD)/libtool
 +INSTALL = /usr/bin/install
  CC = gcc
  OPT = -g -O2 -Wall
@@ -14,12 +14,12 @@
  LTVER = 0:0:0
 +MANPAGES = slapo-lastbind.5
  
- prefix=/usr
+ prefix=/usr/local
  exec_prefix=$(prefix)
 @@ -33,6 +35,8 @@
  libdir=$(exec_prefix)/lib
  libexecdir=$(exec_prefix)/libexec
- moduledir = $(libdir)$(ldap_subdir)
+ moduledir = $(libexecdir)$(ldap_subdir)
 +mandir = $(exec_prefix)/share/man
 +man5dir = $(mandir)/man5
  

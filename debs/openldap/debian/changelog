@@ -1,8 +1,168 @@
-openldap (2.4.44-0+puavo1+buildonce) stretch; urgency=medium
+openldap (2.4.47+dfsg-3) unstable; urgency=medium
 
-  * With some patches by Opinsys.
+  * Restore patches to contrib Makefiles to set CFLAGS, CPPFLAGS, and LDFLAGS
+    individually in the relevant command lines instead of overriding OPT. The
+    change to use OPT caused FTBFS on some ports arches where PIE enablement
+    uses spec files, by mixing compile-time and link-time flags.
+    (Closes: #919136)
+  * Fix architecture-specific path in smbk5pwd's binary-or-shlib-defines-rpath
+    Lintian override.
+  * Skip exporting cn=config to LDIF in preinst for upgrades where nothing
+    needs to be checked in it.
+  * Update Standards-Version to 4.3.0.
 
- -- Puavo Org <dev@opinsys.fi>  Mon, 26 Jun 2017 08:28:42 +0300
+ -- Ryan Tandy <ryan@nardis.ca>  Sat, 02 Feb 2019 10:30:10 -0800
+
+openldap (2.4.47+dfsg-2) unstable; urgency=medium
+
+  * Reintroduce slapi-dev binary package. (Closes: #711469)
+    Thanks to Florian Schlichting.
+  * Do not call gnutls_global_set_mutex(). (Closes: #803197)
+  * Use dh_auto_* to build and install contrib modules.
+    - Stop patching the clean rule in smbk5pwd's Makefile.
+  * Explicitly list overlays and man pages installed by slapd package in
+    slapd.install and slapd.manpages files.
+  * Set common variables for contrib Makefiles by make(1) command line instead
+    of patching every Makefile.
+  * Build and install more contrib plugins in a new slapd-contrib package:
+    - pw-apr1 and pw-netscape (Closes: #592362)
+    - pw-pbkdf2 (Closes: #794999)
+  * Import the slapo-pw-pbkdf2 man page from upstream git master and install
+    it with the slapd-contrib package.
+  * Add smbk5pwd to slapd-contrib and turn slapd-smbk5pwd into a transitional
+    package. Drop smbk5pwd README since it now has a man page which is a
+    better resource for users.
+    - Use Breaks to ensure that slapd is not upgraded in between removing the
+      old smbk5pwd module and installing the new one.
+  * Include the apr1-atol.pl and apr1-lota.pl helper scripts in the
+    slapd-contrib package as examples.
+  * Merge remaining contrib Makefile patches into a single contrib-makefiles
+    patch.
+
+ -- Ryan Tandy <ryan@nardis.ca>  Sat, 12 Jan 2019 11:18:03 -0800
+
+openldap (2.4.47+dfsg-1) unstable; urgency=medium
+
+  * New upstream release.
+    - reverted GnuTLS handshake change in libldap as it regressed slapd
+      (Reopens: #861838)
+  * Update Standards-Version to 4.2.1.
+
+ -- Ryan Tandy <ryan@nardis.ca>  Sun, 23 Dec 2018 12:50:40 -0800
+
+openldap (2.4.46+dfsg-5) unstable; urgency=medium
+
+  * Restore slapd-smbk5pwd now that libldap is installable in unstable.
+    This reverts the changes from -3 and -4.
+
+ -- Ryan Tandy <ryan@nardis.ca>  Fri, 04 May 2018 16:12:27 -0700
+
+openldap (2.4.46+dfsg-4) unstable; urgency=medium
+
+  * Disable building the smbk5pwd plugin temporarily.
+
+ -- Ryan Tandy <ryan@nardis.ca>  Fri, 04 May 2018 08:06:58 -0700
+
+openldap (2.4.46+dfsg-3) unstable; urgency=medium
+
+  * Build without heimdal temporarily to resolve BD-Uninstallable loop.
+
+ -- Ryan Tandy <ryan@nardis.ca>  Fri, 04 May 2018 07:36:58 -0700
+
+openldap (2.4.46+dfsg-2) unstable; urgency=medium
+
+  * Remove version constraint from libldap-2.4-2 dependency on libldap-common.
+
+ -- Ryan Tandy <ryan@nardis.ca>  Thu, 03 May 2018 14:16:49 -0700
+
+openldap (2.4.46+dfsg-1) unstable; urgency=medium
+
+  * Move the repository to Salsa.
+    Update debian/control Vcs-* fields.
+  * Remove Matthijs Möhlmann from Uploaders. (Closes: #891308)
+    Thank you Matthijs for your past contributions.
+  * New upstream release.
+    - fixed slapd out-of-sync issue with delta-MMR and memberof overlay
+      (ITS#8444) (Closes: #877166)
+  * Rebase patch no-AM_INIT_AUTOMAKE to apply cleanly.
+  * Drop patch ITS8650-retry-gnutls_handshake-after-GNUTLS_E_AGAIN, applied
+    upstream.
+  * Really fix upgrades when the config contains backslash-escaped special
+    characters. The previous fix was incomplete and didn't fully fix upgrades
+    involving a database reload. (Closes: #864719)
+  * Update Standards-Version to 4.1.4.
+    - Change the Priority of libldap-2.4-2 and libldap-common to optional.
+  * Change download URL in debian/watch to https. Fixes a Lintian info.
+  * Override the binary-or-shlib-defines-rpath Lintian tag for slapd-smbk5pwd.
+    The rpath is set by krb5-config.heimdal; see bug #868840.
+
+ -- Ryan Tandy <ryan@nardis.ca>  Thu, 03 May 2018 07:03:30 -0700
+
+openldap (2.4.45+dfsg-1) unstable; urgency=medium
+
+  * New upstream release.
+    - fixed a use-after-free in GnuTLS options handling
+      (ITS#8385) (Closes: #820244) (LP: #1557248)
+    - fixed unsafe concurrent SASL calls causing memory corruption
+      (ITS#8648) (Closes: #860947) (LP: #1688575)
+    - fixed syncrepl infinite looping with multi-master delta-syncrepl
+      (ITS#8432) (Closes: #868753)
+  * Rebase patches to apply cleanly:
+    - do-not-second-guess-sonames
+    - no-AM_INIT_AUTOMAKE
+  * Drop patches applied upstream:
+    - ITS-8554-kFreeBSD-is-like-BSD.patch
+    - ITS-8644-wait-for-slapd-to-start-in-test064.patch
+    - ITS-8655-paged-results-double-free.patch
+  * Upgrade to debhelper compat level 10.
+    - Depend on debhelper 10.
+    - Stop enabling parallel and autoreconf explicitly. They are now enabled 
+      by default.
+    - Drop dh-autoreconf from build-depends since debhelper requires it.
+  * Add -Wno-format-extra-args to CFLAGS to reduce the noise in the build 
+    logs, as this warning is emitted on each use of the Debug() macro.
+  * Drop libldap-2.4-4-dbg and slapd-dbg binary packages in favour of 
+    automatic dbgsym packages.
+  * Update Standards-Version to 4.0.0; no changes required.
+  * Drop Priority and Section from binary package stanzas when they only 
+    duplicate information from the source stanza.
+  * Update Priority of slapd-smbk5pwd and libldap2-dev to optional to match 
+    the archive.
+  * Remove retired developer, Roland Bauerschmidt, from Uploaders.
+    (Closes: #856422)
+  * Remove Timo Aaltonen from Uploaders, with his agreement.
+  * debian/patches/ITS8650-retry-gnutls_handshake-after-GNUTLS_E_AGAIN.patch: 
+    If gnutls_handshake() returns EAGAIN, call it again. Fixes TLS handshake 
+    failures when the ServerHello message exceeds 16K.
+    (ITS#8650) (Closes: #861838)
+  * Drop time from Build-Depends. The upstream testsuite no longer calls it.
+
+ -- Ryan Tandy <ryan@nardis.ca>  Thu, 27 Jul 2017 18:04:41 -0700
+
+openldap (2.4.44+dfsg-8) unstable; urgency=medium
+
+  * Disable test060-mt-hot on ppc64el temporarily to avoid failing tests until 
+    the underlying kernel bug #866122 is fixed.
+  * Fix FTBFS with Heimdal 7.2.0: Drop patch heimdal-fix as the 
+    hdb_generate_key_set_password change was reverted in heimdal. Depend on an 
+    appropriate minimum version of heimdal.
+
+ -- Ryan Tandy <ryan@nardis.ca>  Sun, 16 Jul 2017 12:57:41 -0700
+
+openldap (2.4.44+dfsg-7) unstable; urgency=medium
+
+  * Relax the dependency of libldap-2.4-2 on libldap-common to also permit 
+    later versions. (Closes: #860774)
+
+ -- Ryan Tandy <ryan@nardis.ca>  Tue, 27 Jun 2017 18:53:12 -0700
+
+openldap (2.4.44+dfsg-6) unstable; urgency=medium
+
+  * Update the list of non-translatable strings for the 
+    slapd/ppolicy_schema_needs_update template. Thanks Ferenc Wágner.
+  * Fix upgrade failure when olcSuffix contains a backslash. (Closes: #864719)
+
+ -- Ryan Tandy <ryan@nardis.ca>  Mon, 26 Jun 2017 19:42:02 -0700
 
 openldap (2.4.44+dfsg-5) unstable; urgency=medium
 
@@ -11,7 +171,7 @@ openldap (2.4.44+dfsg-5) unstable; urgency=medium
     tests. (ITS#8644) (Closes: #770890)
   * debian/patches/ITS-8655-paged-results-double-free.patch: Fix a double free 
     in the MDB backend on a search including the Paged Results control with a 
-    page size of 0. (ITS#8655) (Closes: #863563)
+    page size of 0. (ITS#8655) (CVE-2017-9287) (Closes: #863563)
 
  -- Ryan Tandy <ryan@nardis.ca>  Sun, 28 May 2017 09:59:46 -0700
 

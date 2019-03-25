@@ -1,0 +1,77 @@
+Description: Do not call gnutls_global_set_mutex()
+ Since GnuTLS moved to implicit initialization on library load, calling 
+ this function deinitializes GnuTLS and then re-initializes it.
+ .
+ When GnuTLS uses /dev/urandom as an entropy source (getrandom() not 
+ available, or older versions of GnuTLS), and the application closed all 
+ file descriptors at startup, this could result in GnuTLS opening 
+ /dev/urandom over one of the application's file descriptors when 
+ re-initialized.
+ .
+ Additionally, the custom mutex functions are never reset, so if libldap 
+ is unloaded (for example via dlclose()) after calling this, its code 
+ may be unmapped and the application could crash when GnuTLS calls the 
+ mutex functions.
+ .
+ The default behaviour of GnuTLS, using pthreads, should be suitable on 
+ all Debian systems, and is probably the same as what libldap uses 
+ anyway.
+Author: Ryan Tandy <ryan@nardis.ca>
+Bug-Debian: https://bugs.debian.org/803197
+Forwarded: no
+
+--- a/libraries/libldap/tls_g.c
++++ b/libraries/libldap/tls_g.c
+@@ -67,51 +67,10 @@
+ 
+ #ifdef LDAP_R_COMPILE
+ 
+-static int
+-tlsg_mutex_init( void **priv )
+-{
+-	int err = 0;
+-	ldap_pvt_thread_mutex_t *lock = LDAP_MALLOC( sizeof( ldap_pvt_thread_mutex_t ));
+-
+-	if ( !lock )
+-		err = ENOMEM;
+-	if ( !err ) {
+-		err = ldap_pvt_thread_mutex_init( lock );
+-		if ( err )
+-			LDAP_FREE( lock );
+-		else
+-			*priv = lock;
+-	}
+-	return err;
+-}
+-
+-static int
+-tlsg_mutex_destroy( void **lock )
+-{
+-	int err = ldap_pvt_thread_mutex_destroy( *lock );
+-	LDAP_FREE( *lock );
+-	return err;
+-}
+-
+-static int
+-tlsg_mutex_lock( void **lock )
+-{
+-	return ldap_pvt_thread_mutex_lock( *lock );
+-}
+-
+-static int
+-tlsg_mutex_unlock( void **lock )
+-{
+-	return ldap_pvt_thread_mutex_unlock( *lock );
+-}
+-
+ static void
+ tlsg_thr_init( void )
+ {
+-	gnutls_global_set_mutex (tlsg_mutex_init,
+-		tlsg_mutex_destroy,
+-		tlsg_mutex_lock,
+-		tlsg_mutex_unlock);
++	/* do nothing */
+ }
+ #endif /* LDAP_R_COMPILE */
+ 

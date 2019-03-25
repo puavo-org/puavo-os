@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openldap 2.4.44+dfsg-4\n"
 "Report-Msgid-Bugs-To: openldap@packages.debian.org\n"
-"POT-Creation-Date: 2017-01-10 05:24+0000\n"
+"POT-Creation-Date: 2017-06-25 02:57+0000\n"
 "PO-Revision-Date: 2017-01-15 14:12+0100\n"
 "Last-Translator: Helge Kreutzmann <debian@helgefjell.de>\n"
 "Language-Team: de <debian-l10n-german@lists.debian.org>\n"
@@ -390,7 +390,7 @@ msgstr "Manuelle Aktualisierung des Ppolicy-Schematas empfohlen"
 
 #. Type: select
 #. Description
-#. "ppolicy", "pwdMaxRecordedFailure", and "cn=config" are not translatable.
+#. "ppolicy" and "pwdMaxRecordedFailure" are not translatable.
 #: ../slapd.templates:17002
 msgid ""
 "The new version of the Password Policy (ppolicy) overlay requires the schema "
@@ -401,8 +401,8 @@ msgid ""
 "with the upgrade."
 msgstr ""
 "Die neue Version der Passwort-Richtlinien-Einblendung (Ppolicy) verlangt, "
-"dass im Schema der Attributstyp pwdMaxRecordedFailure definiert wird, der "
-"im aktuell benutzten Schema nicht vorhanden ist. Es wird empfohlen, die "
+"dass im Schema der Attributstyp pwdMaxRecordedFailure definiert wird, der im "
+"aktuell benutzten Schema nicht vorhanden ist. Es wird empfohlen, die "
 "Aktualisierung jetzt abzubrechen und das Ppolicy-Schema zu aktualisieren, "
 "bevor das Upgrade von Slapd durchgeführt wird. Falls Replizierung verwandt "
 "wird, sollte die Schema-Aktualisierung auf jedem Server angewandt werden, "

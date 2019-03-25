@@ -15,7 +15,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openldap\n"
 "Report-Msgid-Bugs-To: openldap@packages.debian.org\n"
-"POT-Creation-Date: 2017-01-10 05:24+0000\n"
+"POT-Creation-Date: 2017-06-25 02:57+0000\n"
 "PO-Revision-Date: 2017-01-22 11:49+0100\n"
 "Last-Translator: Miroslav Kure <kurem@debian.cz>\n"
 "Language-Team: Czech <debian-l10n-czech@lists.debian.org>\n"
@@ -382,7 +382,7 @@ msgstr "Je doporučeno aktualizovat ppolicy schéma ručně"
 
 #. Type: select
 #. Description
-#. "ppolicy", "pwdMaxRecordedFailure", and "cn=config" are not translatable.
+#. "ppolicy" and "pwdMaxRecordedFailure" are not translatable.
 #: ../slapd.templates:17002
 msgid ""
 "The new version of the Password Policy (ppolicy) overlay requires the schema "
@@ -427,9 +427,9 @@ msgid ""
 "will be added automatically, but the change will not be acted on by slapd "
 "overlays, and replication with other servers may be affected."
 msgstr ""
-"Jestliže se rozhodnete pokračovat v instalaci, bude nový typ atributu "
-"přidán automaticky, avšak slapd overlaye tuto změnu nezaregistrují a může "
-"to mít vliv i na replikaci s ostatními servery."
+"Jestliže se rozhodnete pokračovat v instalaci, bude nový typ atributu přidán "
+"automaticky, avšak slapd overlaye tuto změnu nezaregistrují a může to mít "
+"vliv i na replikaci s ostatními servery."
 
 #~ msgid "Allow LDAPv2 protocol?"
 #~ msgstr "Povolit protokol LDAPv2?"

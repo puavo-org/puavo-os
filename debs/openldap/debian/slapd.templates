@@ -155,7 +155,7 @@ Type: select
 __Choices: abort installation, continue regardless
 DefaultChoice: abort installation
 #flag:comment:2
-# "ppolicy", "pwdMaxRecordedFailure", and "cn=config" are not translatable.
+# "ppolicy" and "pwdMaxRecordedFailure" are not translatable.
 #flag:comment:3
 # This paragraph is followed by the path to the generated file (not
 # translatable). The sentence continues in the following paragraph.

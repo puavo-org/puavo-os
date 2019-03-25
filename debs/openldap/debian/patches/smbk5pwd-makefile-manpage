@@ -20,7 +20,7 @@ index 676d914..0042a49 100644
 @@ -25,6 +25,7 @@
  HEIMDAL_LIB = $(shell krb5-config.heimdal --libs kadm-server)
  
- LIBTOOL = $(LDAP_BUILD)/debian/build/libtool
+ LIBTOOL = $(LDAP_BUILD)/libtool
 +INSTALL = /usr/bin/install
  CC = gcc
  OPT = -g -O2 -Wall
@@ -32,11 +32,11 @@ index 676d914..0042a49 100644
 +MANPAGES = slapo-smbk5pwd.5
  LTVER = 0:0:0
  
- prefix=/usr
+ prefix=/usr/local
 @@ -43,6 +45,8 @@
  libdir=$(exec_prefix)/lib
  libexecdir=$(exec_prefix)/libexec
- moduledir = $(libdir)$(ldap_subdir)
+ moduledir = $(libexecdir)$(ldap_subdir)
 +mandir = $(exec_prefix)/share/man
 +man5dir = $(mandir)/man5
  
@@ -44,7 +44,7 @@ index 676d914..0042a49 100644
  
 @@ -58,9 +62,17 @@
  clean:
- 	$(LIBTOOL) --mode=clean rm -f
+ 	rm -rf *.o *.lo *.la .libs
  
 -install: $(PROGRAMS)
 +install: install-lib install-man FORCE

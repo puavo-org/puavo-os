@@ -1,0 +1,4 @@
+# #204975
+slapd-contrib: package-has-unnecessary-activation-of-ldconfig-trigger
+# rpath set by krb5-config.heimdal; #868840
+binary-or-shlib-defines-rpath usr/lib/ldap/smbk5pwd.so.0.0.0 /usr/lib/*/heimdal

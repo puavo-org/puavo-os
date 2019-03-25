@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openldap 2.4.40-2 italian debconf templates\n"
 "Report-Msgid-Bugs-To: openldap@packages.debian.org\n"
-"POT-Creation-Date: 2017-01-10 05:24+0000\n"
+"POT-Creation-Date: 2017-06-25 02:57+0000\n"
 "PO-Revision-Date: 2017-01-21 11:42+0100\n"
 "Last-Translator: Luca Monducci <luca.mo@tiscali.it>\n"
 "Language-Team: Italian <debian-l10n-italian@lists.debian.org>\n"
@@ -380,7 +380,7 @@ msgstr "Aggiornamento manuale dello schema ppolicy"
 
 #. Type: select
 #. Description
-#. "ppolicy", "pwdMaxRecordedFailure", and "cn=config" are not translatable.
+#. "ppolicy" and "pwdMaxRecordedFailure" are not translatable.
 #: ../slapd.templates:17002
 msgid ""
 "The new version of the Password Policy (ppolicy) overlay requires the schema "
@@ -404,8 +404,7 @@ msgstr ""
 #: ../slapd.templates:17002
 msgid ""
 "An LDIF file has been generated with the changes required for the upgrade:"
-msgstr ""
-"È stato generato un file LDIF con le necessarie modifiche allo schema:"
+msgstr "È stato generato un file LDIF con le necessarie modifiche allo schema:"
 
 #. Type: select
 #. Description

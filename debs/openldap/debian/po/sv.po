@@ -1,14 +1,14 @@
 # Translation of openldap debconf template to Swedish
 # Copyright (C) 2010, 2017 Martin Bagge <brother@bsnet.se>
 # This file is distributed under the same license as the openldap package.
-# 
+#
 # Martin Ågren <martin.agren@gmail.com>, 2008.
 # Martin Bagge <brother@bsnet.se>, 2010, 2017
 msgid ""
 msgstr ""
 "Project-Id-Version: openldap_2.4.10-2_sv\n"
 "Report-Msgid-Bugs-To: openldap@packages.debian.org\n"
-"POT-Creation-Date: 2017-01-10 05:24+0000\n"
+"POT-Creation-Date: 2017-06-25 02:57+0000\n"
 "PO-Revision-Date: 2017-01-12 14:59+0100\n"
 "Last-Translator: Martin Bagge / brother <brother@bsnet.se>\n"
 "Language-Team: Swedish <debian-l10n-swedish@lists.debian.org>\n"
@@ -376,7 +376,7 @@ msgstr "Manuell uppdatering av ppolicy-schema rekommenderas"
 
 #. Type: select
 #. Description
-#. "ppolicy", "pwdMaxRecordedFailure", and "cn=config" are not translatable.
+#. "ppolicy" and "pwdMaxRecordedFailure" are not translatable.
 #: ../slapd.templates:17002
 msgid ""
 "The new version of the Password Policy (ppolicy) overlay requires the schema "

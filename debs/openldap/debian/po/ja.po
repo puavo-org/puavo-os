@@ -15,7 +15,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openldap\n"
 "Report-Msgid-Bugs-To: openldap@packages.debian.org\n"
-"POT-Creation-Date: 2017-01-10 05:24+0000\n"
+"POT-Creation-Date: 2017-06-25 02:57+0000\n"
 "PO-Revision-Date: 2017-01-15 13:46+0900\n"
 "Last-Translator: Kenshi Muto <kmuto@debian.org>\n"
 "Language-Team: Japanese <debian-japanese@lists.debian.org>\n"
@@ -377,7 +377,7 @@ msgstr "手動の ppolicy スキーマ更新の推奨"
 
 #. Type: select
 #. Description
-#. "ppolicy", "pwdMaxRecordedFailure", and "cn=config" are not translatable.
+#. "ppolicy" and "pwdMaxRecordedFailure" are not translatable.
 #: ../slapd.templates:17002
 msgid ""
 "The new version of the Password Policy (ppolicy) overlay requires the schema "
@@ -386,7 +386,12 @@ msgid ""
 "to update the ppolicy schema before upgrading slapd. If replication is in "
 "use, the schema update should be applied on every server before continuing "
 "with the upgrade."
-msgstr "Password Policy (ppolicy) オーバレイの新しいバージョンは、現在使用しているスキーマに存在しない pwdMaxRecordedFailure 属性型をスキーマに定義する必要があります。アップグレードを今すぐ中止し、slapd をアップグレードする前に ppolicy スキーマを更新することをお勧めします。レプリケーションが使われている場合、このアップグレードを続ける前にスキーマの更新を各サーバに適用しておくべきです。"
+msgstr ""
+"Password Policy (ppolicy) オーバレイの新しいバージョンは、現在使用しているス"
+"キーマに存在しない pwdMaxRecordedFailure 属性型をスキーマに定義する必要があり"
+"ます。アップグレードを今すぐ中止し、slapd をアップグレードする前に ppolicy ス"
+"キーマを更新することをお勧めします。レプリケーションが使われている場合、この"
+"アップグレードを続ける前にスキーマの更新を各サーバに適用しておくべきです。"
 
 #. Type: select
 #. Description
@@ -405,7 +410,9 @@ msgstr "アップグレードに必要な変更付きの LDIF ファイルが生
 msgid ""
 "so if slapd is using the default access control rules, these changes can be "
 "applied (after starting slapd) by using the command:"
-msgstr "slapd がデフォルトのアクセス制御ルールを使っているのであれば、これらの変更は (slapd が開始した後に) 以下のコマンドによって適用できます:"
+msgstr ""
+"slapd がデフォルトのアクセス制御ルールを使っているのであれば、これらの変更は "
+"(slapd が開始した後に) 以下のコマンドによって適用できます:"
 
 #. Type: select
 #. Description
@@ -414,4 +421,7 @@ msgid ""
 "If instead you choose to continue the installation, the new attribute type "
 "will be added automatically, but the change will not be acted on by slapd "
 "overlays, and replication with other servers may be affected."
-msgstr "インストールを続けることを選ぶと、新しい属性型は自動的に追加されますが、この変更は slapd オーバレイで実行されず、他のサーバとのレプリケーションに影響する可能性があります。"
+msgstr ""
+"インストールを続けることを選ぶと、新しい属性型は自動的に追加されますが、この"
+"変更は slapd オーバレイで実行されず、他のサーバとのレプリケーションに影響する"
+"可能性があります。"

@@ -8,10 +8,10 @@ Upstream ITS #6302 filed.
 
 --- a/libraries/libldap/cyrus.c
 +++ b/libraries/libldap/cyrus.c
-@@ -74,28 +74,6 @@ int ldap_int_sasl_init( void )
- 	/* XXX not threadsafe */
- 	static int sasl_initialized = 0;
- 
+@@ -74,28 +74,6 @@
+  */
+ int ldap_int_sasl_init( void )
+ {
 -#ifdef HAVE_SASL_VERSION
 -	/* stringify the version number, sasl.h doesn't do it for us */
 -#define VSTR0(maj, min, pat)	#maj "." #min "." #pat
@@ -34,9 +34,9 @@ Upstream ITS #6302 filed.
 -	}
 -	}
 -#endif
- 	if ( sasl_initialized ) {
- 		return 0;
- 	}
+ 
+ /* SASL 2 takes care of its own memory completely internally */
+ #if SASL_VERSION_MAJOR < 2 && !defined(CSRIMALLOC)
 --- a/servers/slapd/sasl.c
 +++ b/servers/slapd/sasl.c
 @@ -1145,26 +1145,6 @@ int slap_sasl_init( void )
