@@ -1,4 +1,4 @@
-linux (4.9.144-3+puavo1) stretch; urgency=medium
+linux (4.9.144-3+puavo1) buster; urgency=medium
 
   * Add a patch for enabling/disabling DRRS-feature in "i915"-driver,
     with "i915.enable_drrs=0" or "i915.enable_drrs=1".
