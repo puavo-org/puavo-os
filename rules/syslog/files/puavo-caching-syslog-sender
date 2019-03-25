@@ -156,11 +156,19 @@ proc send_to_syslog_or_cache {{msg ""}} {
     set syslog_memcache [list]
     set syslog_cache_index 0
   }
+}
 
-  if {[llength $syslog_memcache] > 0} {
-    # try again after one second, if there is still something to do
-    after 1000 send_to_syslog_or_cache
+proc resend_loop {} {
+  global syslog_memcache
+
+  catch {
+    if {[llength $syslog_memcache] > 0} {
+      send_to_syslog_or_cache
+    }
   }
+
+  # try resends after 10 seconds, if there are something still in the cache
+  after 10000 resend_loop
 }
 
 fconfigure stdin -blocking 0
@@ -169,5 +177,7 @@ fileevent stdin readable {
   if {[eof stdin]} { exit 0 }
   send_to_syslog_or_cache [read stdin]
 }
+
+resend_loop
 
 vwait forever
