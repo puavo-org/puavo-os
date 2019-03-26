@@ -7,6 +7,7 @@ index-files-created-as-root
 sasl-default-path 
 libldap-symbol-versions
 getaddrinfo-is-threadsafe
+gssapi.diff
 do-not-second-guess-sonames
 contrib-makefiles
 smbk5pwd-makefile-manpage
@@ -20,3 +21,6 @@ no-bdb-ABI-second-guessing
 ITS6035-olcauthzregex-needs-restart.patch
 set-maintainer-name
 no-gnutls_global_set_mutex
+puavo-increase-max-number-of-ldap-keys
+puavo-increase-max-rewrite-passes
+puavo-smbkrb5pwd

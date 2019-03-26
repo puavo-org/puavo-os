@@ -2,7 +2,7 @@
 
 # Set this variable if you're building packages outside of Debian and don't
 # want the checks for DFSG-freeness.
-#DFSG_NONFREE = 1
+DFSG_NONFREE = 1
 
 export DEB_CFLAGS_MAINT_APPEND := -Wall -Wno-format-extra-args -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE
 export DEB_BUILD_MAINT_OPTIONS := hardening=+pie,+bindnow
@@ -23,7 +23,8 @@ ifneq ($(filter stage1,$(DEB_BUILD_PROFILES)),)
 	CONFIG += --disable-slapd
 endif
 
-CONTRIB_MODULES = autogroup lastbind passwd passwd/pbkdf2 passwd/sha2 smbk5pwd
+CONTRIB_MODULES = autogroup lastbind passwd passwd/pbkdf2 passwd/sha2 smbk5pwd \
+                  smbkrb5pwd
 
 # Ensure CC is set correctly for cross builds, unless it has already 
 # been set explicitly.
@@ -50,28 +51,15 @@ CONTRIB_MAKEVARS := \
 VERSION = $(shell dpkg-parsechangelog |grep Version| sed 's/.*: //;s/\+dfsg//;s/-.*//')
 URL     = http://www.openldap.org/software/download/OpenLDAP/openldap-release/
 
-# Download the upstream source and make changes as required for DFSG reasons.
-# Assumes wget is available, as this is generally only used by the package
-# maintainers.
 get-orig-source:
 	@if [ ! -d "debian/schema" ] ; then \
 	    echo 'Run this from the top directory of the Debian source' >&2; \
 	    exit 1; \
 	fi
-	wget $(URL)/openldap-$(VERSION).tgz
-	tar xzf openldap-$(VERSION).tgz
-	rm -r openldap-$(VERSION)/doc/drafts
-	rm -r openldap-$(VERSION)/doc/rfc
-	set -e; for schema in debian/schema/*.schema debian/schema/*.ldif ; do \
-	    file=`basename "$$schema"`; \
-	    rm openldap-$(VERSION)/servers/slapd/schema/$$file; \
-	done
-	mv openldap-$(VERSION) openldap-$(VERSION)+dfsg
-	tar cf openldap_$(VERSION)+dfsg.orig.tar openldap-$(VERSION)+dfsg
-	rm -r openldap-$(VERSION)+dfsg
-	gzip -9 openldap_$(VERSION)+dfsg.orig.tar
+	wget $(URL)/openldap-$(VERSION).tgz -O ../openldap_$(VERSION).orig.tar.gz
+	tar xzf ../openldap_$(VERSION).orig.tar.gz --strip-components=1 -C .
 
-DH = dh $@ --builddirectory=$(builddir)
+DH = dh $@ --with quilt,autoreconf,systemd --builddirectory=$(builddir) --parallel
 .PHONY: build
 build:
 	$(DH)
@@ -156,6 +144,13 @@ endif
 	# Upstream manpages are section 8C but installed as section 8
 	find $(installdir)/usr/share/man -name \*.8 \
 		| xargs perl -pi -e 's#(\.TH \w+ 8)C#$$1#'
+
+ifeq ($(filter stage1,$(DEB_BUILD_PROFILES)),)
+override_dh_install-arch:
+	dh_install
+	rm -rf $(CURDIR)/debian/slapd/usr/lib/ldap/smbk5pwd*
+	rm -rf $(CURDIR)/debian/slapd/usr/lib/ldap/smbkrb5pwd*
+endif
 
 override_dh_installinit:
 	dh_installinit -- "defaults 19 80"
