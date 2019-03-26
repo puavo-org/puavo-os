@@ -8,6 +8,7 @@ Maintainer: Opinsys Developers <dev@opinsys.fi>
 Build-Depends: bundler | ruby-bundler,
  debhelper (>= 8),
  dh-systemd (>= 1.5),
+ jq,
  libctpl-dev,
  libdb-dev,
  libglib2.0-dev,
