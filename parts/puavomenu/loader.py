@@ -212,9 +212,6 @@ def load_menudata_yaml_file(filename):
         if 'condition' in params:
             program['condition'] = str(params['condition'])
 
-        if 'hidden_by_default' in params:
-            program['hidden'] = bool(params['hidden_by_default'])
-
         if 'tags' in params:
             program['tags'] = set()
 
