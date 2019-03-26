@@ -23,7 +23,8 @@ ifneq ($(filter stage1,$(DEB_BUILD_PROFILES)),)
 	CONFIG += --disable-slapd
 endif
 
-CONTRIB_MODULES = autogroup lastbind passwd passwd/pbkdf2 passwd/sha2 smbk5pwd
+CONTRIB_MODULES = autogroup lastbind passwd passwd/pbkdf2 passwd/sha2 smbk5pwd \
+                  smbkrb5pwd
 
 # Ensure CC is set correctly for cross builds, unless it has already 
 # been set explicitly.
@@ -103,11 +104,6 @@ ifeq ($(filter stage1,$(DEB_BUILD_PROFILES)),)
 	for mod in $(CONTRIB_MODULES); do \
 		dh_auto_build -Dcontrib/slapd-modules/$$mod -Bcontrib/slapd-modules/$$mod -- $(CONTRIB_MAKEVARS) || exit $$?; \
 	done
-	$(MAKE) -C contrib/slapd-modules/smbk5pwd CC=$(CC)
-	$(MAKE) -C contrib/slapd-modules/smbkrb5pwd CC=$(CC)
-	$(MAKE) -C contrib/slapd-modules/autogroup CC=$(CC)
-	$(MAKE) -C contrib/slapd-modules/lastbind CC=$(CC)
-	$(MAKE) -C contrib/slapd-modules/passwd/sha2 CC=$(CC)
 endif
 
 override_dh_auto_test:
@@ -123,11 +119,6 @@ ifeq ($(filter stage1,$(DEB_BUILD_PROFILES)),)
 	for mod in $(CONTRIB_MODULES); do \
 		dh_auto_install -Dcontrib/slapd-modules/$$mod -Bcontrib/slapd-modules/$$mod -- $(CONTRIB_MAKEVARS) || exit $$?; \
 	done
-	$(MAKE) -C contrib/slapd-modules/smbk5pwd install DESTDIR=$(installdir)
-	$(MAKE) -C contrib/slapd-modules/smbkrb5pwd install DESTDIR=$(installdir)
-	$(MAKE) -C contrib/slapd-modules/autogroup install DESTDIR=$(installdir)
-	$(MAKE) -C contrib/slapd-modules/lastbind install DESTDIR=$(installdir)
-	$(MAKE) -C contrib/slapd-modules/passwd/sha2 install DESTDIR=$(installdir)
 
 	# Empty the dependency_libs file in the .la files.
 	for F in $(installdir)/usr/lib/ldap/*.la; do \
@@ -227,8 +218,4 @@ ifeq ($(filter stage1,$(DEB_BUILD_PROFILES)),)
 	for mod in $(CONTRIB_MODULES); do \
 		dh_auto_clean -Dcontrib/slapd-modules/$$mod -Bcontrib/slapd-modules/$$mod || exit $?; \
 	done
-	rm -rf contrib/slapd-modules/smbkrb5pwd/.libs \
-		contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.lo \
-		contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.la \
-		contrib/slapd-modules/smbkrb5pwd/smbkrb5pwd.o
 endif
