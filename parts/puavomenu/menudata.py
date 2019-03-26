@@ -174,6 +174,10 @@ class Menudata:
             if program.hidden:
                 continue
 
+            if re.search(key, program.menudata_id, re.IGNORECASE):
+                matches.append(program)
+                continue
+
             if re.search(key, program.name, re.IGNORECASE):
                 matches.append(program)
                 continue
@@ -203,27 +207,22 @@ class Menudata:
         self.category_index = []
 
 
-    def load(self):
-        import time
-        import logging
+    def load(self, language, menudata_root_dir, tag_filter_string, icon_cache):
+        """A high-level interface to everything in loader.py. Loads all the
+        menu data in the specified directory and builds usable menu data
+        out of it."""
 
-        from settings import SETTINGS
+        # If Python allowed class implementation to be spread across multiple
+        # files (like C++ does), I'd move this method to loader.py. Now it's
+        # just a thin wrapper for everything in it.
+
         import loader
-        import utils
 
-        # Load the filter string
-        filter_string = utils.puavo_conf('puavo.puavomenu.tags', 'default')
-
-        # Load everything
-        try:
-            self.programs, \
-            self.menus, \
-            self.categories, \
-            self.category_index = \
-                loader.load_menu_data(SETTINGS.menu_dir, filter_string)
-        except Exception as exception:
-            logging.fatal('Could not load menu data!')
-            logging.error(exception, exc_info=True)
-            return False
-
-        return True
+        self.programs, \
+        self.menus, \
+        self.categories, \
+        self.category_index = \
+            loader.load_menu_data(language,
+                                  menudata_root_dir,
+                                  tag_filter_string,
+                                  icon_cache)

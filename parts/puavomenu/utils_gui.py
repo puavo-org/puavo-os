@@ -25,6 +25,9 @@ def rounded_rectangle(ctx, x, y, width, height, radius=20):
     """Creates a path with rounded corners. You must stroke/fill
     the path yourself."""
 
+    # make the arc()'s work correctly
+    ctx.move_to(x, y)
+
     # 2 is the smallest radius that actually is visible.
     # Determined empirically.
     if radius < 2:
@@ -84,7 +87,7 @@ def create_desktop_link(filename, program):
         out.write('[Desktop Entry]\n')
         out.write('Encoding=UTF-8\n')
         out.write('Version=1.0\n')
-        out.write('Name={0}\n'.format(program.title))
+        out.write('Name={0}\n'.format(program.name))
 
         if program.program_type in (PROGRAM_TYPE_DESKTOP, PROGRAM_TYPE_CUSTOM):
             out.write('Type=Application\n')
@@ -160,7 +163,7 @@ def create_panel_link(program):
             out.write('[Desktop Entry]\n')
             out.write('Encoding=UTF-8\n')
             out.write('Version=1.0\n')
-            out.write('Name={0}\n'.format(program.title))
+            out.write('Name={0}\n'.format(program.name))
             out.write('Type=Application\n')
 
             if program.program_type == PROGRAM_TYPE_WEB:

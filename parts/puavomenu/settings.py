@@ -11,7 +11,18 @@ class Settings:
         # ----------------------------------------------------------------------
         # Configurable from the command line
 
-        # Directory for the built-in resources
+        # True if we're in production mode. Production mode disables the
+        # development mode popup menu, changes some logging-related things,
+        # removes the titlebar and prevents the program from exiting, but
+        # otherwise the two modes are identical. Production mode is not
+        # enabled by default.
+        self.prod_mode = False
+
+        # True if window autohide is enabled (usually not used in development
+        # mode, but can be enabled in it too if wanted)
+        self.autohide = False
+
+        # Directory for the built-in resources (images mostly)
         self.res_dir = ""
 
         # Directory where menudata and conditionals are loaded from
@@ -27,24 +38,11 @@ class Settings:
         # panel button. See /opt/puavomenu/send_command.
         self.socket = ""
 
-        # True if we're in development mode. Enables the development tools
-        # menu and changes slightly certain window behavior.
-        self.dev_mode = False
-
-        # True if window autohide is enabled (usually not used in
-        # development mode)
-        self.autohide = True
-
-        # If True, we'll only check the menu data for validity and exit.
-        # Ignored in production mode.
-        self.check_mode = False
-
-        # If true, desktop YAML files are "compiled" to JSON for faster
-        # loading. Nothing else will be done.
-        self.compile_mode = False
-
         # ----------------------------------------------------------------------
         # Automagically detected
+
+        # Location for desktop icon files
+        self.desktop_dir = None
 
         # Is this a guest session?
         self.is_guest = False
@@ -61,9 +59,6 @@ class Settings:
         # True if we will be saving favorites (ie. the most often used
         # programs). Guest and webkiosk sessions disable this.
         self.enable_faves_saving = True
-
-        # Location for desktop icon files
-        self.desktop_dir = None
 
         # ----------------------------------------------------------------------
         # Per-user settings

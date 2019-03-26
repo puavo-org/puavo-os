@@ -4,6 +4,8 @@ import time
 import os
 import socket               # for the IPC socket
 import logging
+import traceback
+import syslog
 
 import gi
 gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
@@ -11,6 +13,7 @@ from gi.repository import Gtk
 from gi.repository import Gdk
 from gi.repository import Pango
 from gi.repository import GLib
+from gi.repository import Gio
 
 from constants import *
 import menudata
@@ -75,8 +78,6 @@ class PuavoMenu(Gtk.Window):
             self.__socket.bind(SETTINGS.socket)
         except Exception as exception:
             # Oh dear...
-            import syslog
-
             logging.error('Unable to create a domain socket for IPC!')
             logging.error('Reason: %s', str(exception))
             logging.error('Socket name: "%s"', SETTINGS.socket)
@@ -140,21 +141,26 @@ class PuavoMenu(Gtk.Window):
         # Create the window elements
 
         # Set window style
-        if SETTINGS.dev_mode:
+        if SETTINGS.prod_mode:
+            self.set_skip_taskbar_hint(True)
+            self.set_skip_pager_hint(True)
+            self.set_deletable(False)       # no close button
+            self.set_decorated(False)
+        else:
             # makes developing slightly easier
             self.set_skip_taskbar_hint(False)
             self.set_skip_pager_hint(False)
             self.set_deletable(True)
             self.set_decorated(True)
             self.__exit_permitted = True
+
+        # Don't mess with the real menu when running in development mode
+        if SETTINGS.prod_mode:
+            self.set_title('PuavoMenuUniqueName')
         else:
-            self.set_skip_taskbar_hint(True)
-            self.set_skip_pager_hint(True)
-            self.set_deletable(False)       # no close button
-            self.set_decorated(False)
+            self.set_title('DevModePuavoMenu')
 
         self.set_resizable(False)
-        self.set_title('PuavoMenuUniqueName')
         self.set_size_request(WINDOW_WIDTH, WINDOW_HEIGHT)
         self.set_position(Gtk.WindowPosition.CENTER)
 
@@ -166,11 +172,10 @@ class PuavoMenu(Gtk.Window):
         self.__main_container.set_size_request(WINDOW_WIDTH,
                                                WINDOW_HEIGHT)
 
-        if SETTINGS.dev_mode:
-            # The devtools popup menu
+        if not SETTINGS.prod_mode:
+            # Create the devtools popup menu
             self.menu_signal = \
                 self.connect('button-press-event', self.__devtools_menu)
-
 
         # ----------------------------------------------------------------------
         # Menus/programs list
@@ -321,7 +326,10 @@ class PuavoMenu(Gtk.Window):
         # This is a bad, bad situation that should never happen in production.
         # It will happen one day.
         if self.menudata is None or len(self.menudata.programs) == 0:
-            self.__show_empty_message(STRINGS['menu_no_data_at_all'])
+            if SETTINGS.prod_mode:
+                self.__show_empty_message(STRINGS['menu_no_data_at_all_prod'])
+            else:
+                self.__show_empty_message(STRINGS['menu_no_data_at_all_dev'])
 
 
     # --------------------------------------------------------------------------
@@ -362,6 +370,9 @@ class PuavoMenu(Gtk.Window):
 
     # (Re-)Creates the current category or menu view
     def __create_current_menu(self):
+        if self.menudata is None:
+            return
+
         new_buttons = []
 
         self.__empty.hide()
@@ -544,31 +555,47 @@ class PuavoMenu(Gtk.Window):
         self.__faves.update(self.menudata.programs)
 
         logging.info('Clicked program button "%s", usage counter is %d',
-                     program.name, program.uses)
+                     program.menudata_id, program.uses)
 
         if program.command is None:
             logging.error('No command defined for program "%s"', program.name)
             return
 
-        # Try to launch the program
+        # Try to launch the program. Use Gio's services, as Gio understands the
+        # "Exec=" keys and we don't have to spawn shells with pipes and "sh".
         try:
-            import subprocess
+            if SETTINGS.prod_mode:
+                # Spy the user and log what programs they use. This information
+                # is then sent to various TLAs around the world and used in all
+                # sorts of nefarious classified black operations.
+                syslog.syslog(syslog.LOG_INFO, 'Launching program "{0}", command="{1}"'. \
+                              format(program.menudata_id, program.command))
+
+                # Just kidding. The reason program starts are logged to syslog
+                # is actually really simple: you can grep the log and count
+                # which programs are actually used and how many times.
+
+                # Of course this only logs programs that are started through
+                # Puavomenu, but we decided to ignore this for now.
+
+            logging.info('Executing "%s"', program.command)
 
             if program.program_type in (PROGRAM_TYPE_DESKTOP, PROGRAM_TYPE_CUSTOM):
-                # TODO: do we really need to open a shell for this?
-                cmd = ['sh', '-c', program.command, '&']
+                # Set the program name to empty string ('') to force some (KDE)
+                # programs to use their default window titles. These programs
+                # have command-line parameters like "-qwindowtitle" or "-caption"
+                # and Gio, when launching the program, sets the "%c" argument
+                # (in the Exec= key) to the program's name it takes from the
+                # command (program.command). This is Wrong(TM), but during
+                # testing I noticed that if we leave it empty (*NOT* None
+                # because that triggers the unwanted behavior!) then these
+                # programs will use their own default titles.
+                Gio.AppInfo.create_from_commandline(program.command, '', 0).launch()
             elif program.program_type == PROGRAM_TYPE_WEB:
-                # Opens in the default browser
-                cmd = ['xdg-open', program.command]
+                Gio.AppInfo.launch_default_for_uri(program.command, None)
             else:
                 raise RuntimeError('Unknown program type "{0}"'.
                                    format(program.program_type))
-
-            logging.info('Executing "%s"', cmd)
-
-            subprocess.Popen(cmd,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
 
             # Of course, we never check the return value here, so we
             # don't know if the command actually worked...
@@ -599,6 +626,9 @@ class PuavoMenu(Gtk.Window):
     # Searches the programs list using a string, then replaces the menu list
     # with results
     def __do_search(self, edit):
+        if self.menudata is None:
+            return
+
         key = self.__get_search_text()
 
         if len(key) == 0:
@@ -667,10 +697,26 @@ class PuavoMenu(Gtk.Window):
         """Loads menu data and sets up the UI. Returns false if
         something fails."""
 
-        self.menudata = menudata.Menudata()
+        try:
+            from iconcache import ICONS48
 
-        if not self.menudata.load():
-            self.menudata.clear()
+            self.menudata = menudata.Menudata()
+
+            self.menudata.load(SETTINGS.language,
+                               SETTINGS.menu_dir,
+                               utils.puavo_conf('puavo.puavomenu.tags', 'default'),
+                               ICONS48)
+
+        except Exception as exception:
+            logging.fatal('Could not load menu data!')
+            logging.error(exception, exc_info=True)
+
+            if SETTINGS.prod_mode:
+                # Log for later examination
+                syslog.syslog(syslog.LOG_CRIT, 'Could not load menu data!')
+                syslog.syslog(syslog.LOG_CRIT, traceback.format_exc())
+
+            self.menudata = None
             return False
 
         # Prepare the user interface
@@ -707,14 +753,8 @@ class PuavoMenu(Gtk.Window):
         """Completely removes all menu data. Hides everything programs-
         related from the UI."""
 
-        if not SETTINGS.dev_mode:
+        if SETTINGS.prod_mode:
             return
-
-        self.menudata = menudata.Menudata()
-        self.current_category = -1
-        self.current_menu = None
-
-        self.__create_current_menu()
 
         self.__category_buttons.hide()
 
@@ -740,6 +780,13 @@ class PuavoMenu(Gtk.Window):
         self.__faves.clear()
         self.__faves.hide()
 
+        self.__menu_title.hide()
+        self.__programs_container.hide()
+
+        self.menudata = None
+        self.current_category = -1
+        self.current_menu = None
+
         from iconcache import ICONS48
 
         if ICONS48.stats()['num_icons'] != 0:
@@ -758,11 +805,11 @@ class PuavoMenu(Gtk.Window):
         if key_event.keyval != Gdk.KEY_Escape:
             return
 
-        if SETTINGS.dev_mode:
-            logging.debug('Ignoring Esc in development mode')
-        else:
+        if SETTINGS.prod_mode:
             self.set_keep_above(False)
             self.set_visible(False)
+        else:
+            logging.debug('Ignoring Esc in development mode')
 
 
     # Removes the out-of-focus autohiding. You need to call this before
@@ -948,14 +995,14 @@ class PuavoMenu(Gtk.Window):
     # The devtools menu and its commands
     def __devtools_menu(self, widget, event):
 
+        if SETTINGS.prod_mode:
+            return
+
         if event.button != 3:
             return
 
-        if not SETTINGS.dev_mode:
-            return
-
         def purge(menuitem):
-            if self.menudata and self.menudata.programs:
+            if self.menudata:
                 logging.debug('=' * 20)
                 logging.debug('Purging all loaded menu data!')
                 logging.debug('=' * 20)
@@ -963,15 +1010,16 @@ class PuavoMenu(Gtk.Window):
 
         def reload(menuitem):
             # Remember where we are (a little nice-to-have for development time)
-            if self.current_menu:
-                prev_menu = self.current_menu.name
-            else:
-                prev_menu = None
+            prev_menu = None
+            prev_cat = None
 
-            if len(self.menudata.category_index) > 0 and self.current_category != -1:
-                prev_cat = self.menudata.category_index[self.current_category]
-            else:
-                prev_cat = None
+            if self.menudata:
+                if self.current_menu:
+                    prev_menu = self.current_menu.menudata_id
+
+                if len(self.menudata.category_index) > 0 and \
+                    self.current_category != -1:
+                    prev_cat = self.menudata.category_index[self.current_category]
 
             logging.debug('=' * 20)
             logging.debug('Reloading all menu data!')
@@ -979,21 +1027,24 @@ class PuavoMenu(Gtk.Window):
 
             # TODO: get rid of this call, so we can retain the old data if
             # we can't load the new data (the loader already supports that)
-            if self.menudata or self.menudata.programs:
-                self.unload_menu_data()
+            self.unload_menu_data()
 
             if not self.load_menu_data():
                 self.error_message('Failed to load menu data',
                                    'See the console for more details')
             else:
                 # Try to restore the previous menu and category
-                for index, cat in enumerate(self.menudata.category_index):
-                    if cat == prev_cat:
-                        logging.debug('Restoring category "%s" after reload',
-                                      prev_cat)
-                        self.current_category = index
-                        self.__category_buttons.set_current_page(index)
-                        break
+                print('Previous category: "{0}"'.format(prev_cat))
+                print('Previous menu: "{0}"'.format(prev_menu))
+
+                if prev_cat:
+                    for index, cat in enumerate(self.menudata.category_index):
+                        if cat == prev_cat:
+                            logging.debug('Restoring category "%s" after reload',
+                                          prev_cat)
+                            self.current_category = index
+                            self.__category_buttons.set_current_page(index)
+                            break
 
                 if prev_menu and (prev_menu in self.menudata.menus):
                     logging.debug('Restoring menu "%s" after reload',
@@ -1024,7 +1075,7 @@ class PuavoMenu(Gtk.Window):
         reload_item.show()
         dev_menu.append(reload_item)
 
-        if not self.menudata or len(self.menudata.programs) > 0:
+        if self.menudata:
             remove_item = Gtk.MenuItem('Unload all menu data')
             remove_item.connect('activate', purge)
             remove_item.show()
@@ -1068,53 +1119,16 @@ class PuavoMenu(Gtk.Window):
             activate_time=0)
 
 
-# ------------------------------------------------------------------------------
-
-
-# Trap certain signals and exit the menu gracefully if they're caught
-# Taken from https://stackoverflow.com/a/26457317 and then mutilated.
-def setup_signal_handlers(menu):
-    import signal
-
-    def signal_action(signal):
-        if signal in (signal.SIGHUP, signal.SIGINT, signal.SIGTERM):
-            logging.info('Caught signal "%s", exiting gracefully...',
-                         signal)
-            menu.go_away(True)
-
-
-    def idle_handler(*args):
-        GLib.idle_add(signal_action, priority=GLib.PRIORITY_HIGH)
-
-
-    def handler(*args):
-        signal_action(args[0])
-
-
-    def install_glib_handler(sig):
-        GLib.unix_signal_add(GLib.PRIORITY_HIGH, sig, handler, sig)
-
-
-    SIGS = [getattr(signal, s, None) for s in 'SIGHUP SIGINT SIGTERM'.split()]
-
-    for sig in filter(None, SIGS):
-        signal.signal(sig, idle_handler)
-        GLib.idle_add(install_glib_handler, sig,
-                      priority=GLib.PRIORITY_HIGH)
-
-
-# ------------------------------------------------------------------------------
-
-
 # Call this. The system has been split this way so that puavomenu only
 # has to parse arguments and once it is one, import this file and run
 # the menu. If you just run puavomenu from the command line, it tries
 # to import all sorts of X libraries and stuff and sometimes that fails
 # and you can't even see the help text!
-def run():
+def run_puavomenu():
+    logging.info('Entering run_puavomenu()')
+
     try:
         menu = PuavoMenu()
-        setup_signal_handlers(menu)
         Gtk.main()
 
         # Normal exit, try to remove the socket file but don't explode
@@ -1126,3 +1140,5 @@ def run():
 
     except Exception as exception:
         logging.error(exception, exc_info=True)
+
+    logging.info('Exiting run_puavomenu()')

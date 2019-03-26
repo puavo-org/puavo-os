@@ -1,0 +1,38 @@
+#!/usr/bin/python3
+
+# Simple tool for checking syntax errors in menudata YAML/JSON files
+
+import sys
+import os
+import os.path
+
+import logging
+
+import menudata
+import iconcache
+
+
+if len(sys.argv) != 2:
+    quit('Usage: check_menu_data <menudata base directory>')
+
+if not os.path.isdir(sys.argv[1]):
+    quit('ERROR: The directory "{0}" does not exist'.format(sys.argv[1]))
+
+print('Checking menudata in "{0}" for errors...'.format(sys.argv[1]))
+print('Pay attention to WARNING and ERROR lines below')
+print('=' * 20)
+
+# Log everything to console
+logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s',
+                    level=logging.INFO)
+
+# Init placeholder cache
+icons = iconcache.IconCache(48, 48 * 16)
+
+# Try to load everything
+m = menudata.Menudata()
+
+m.load('en', sys.argv[1], 'default', icons)
+
+print('=' * 20)
+print('No parsing errors encountered')

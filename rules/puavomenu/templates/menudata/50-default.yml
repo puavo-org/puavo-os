@@ -432,7 +432,6 @@ programs:
           sv: Okular-dokumentläsare
           de: Okular Dokumentenbetrachter
         keywords: pdf
-        command: okular
         tags: default, office
   - onboard:
         tags: default
@@ -479,7 +478,6 @@ programs:
             sv: Periodsystem
             de: Periodensystem
         tags: default, education, science
-        command: kalzium
   - org.kde.kbruch:
         tags: default
   - org.kde.kdenlive:
@@ -517,13 +515,11 @@ programs:
             de: KStars-Astronomie
         tags: default, education, science
   - org.kde.ktouch:
-        type: custom
         name:
             en: KTouch-touch typing
             fi: KTouch-konekirjoitus
             sv: KTouch-maskinskrivning
             de: KTouch-Schreibmaschine
-        command: ktouch
         description:
             en: Touch Typing Tutor
             fi: Konekirjoituksen ohjaaja
@@ -537,7 +533,6 @@ programs:
             fi: KTurtle - logo-ohjelmointi
             sv: KTurtle - logoprogrammering
             de: KTurtle - Programieren mit Logo
-        command: kturtle
         icon: /usr/share/icons/hicolor/64x64/apps/kturtle.png
         tags: default, education
   - org.kde.kwordquiz:
