@@ -1,3 +1,9 @@
+openldap (2.4.57+dfsg-3+puavo1+buildonce) bullseye; urgency=medium
+
+  * With some patches by Puavo Org.
+
+ -- Puavo Org <dev@opinsys.fi>  Thu, 19 Aug 2021 10:59:18 +0300
+
 openldap (2.4.57+dfsg-3) unstable; urgency=medium
 
   * Link smbk5pwd with -lkrb5. (Closes: #988565)
