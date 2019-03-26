@@ -5,7 +5,7 @@ include /usr/share/dpkg/pkg-info.mk
 
 # Set this variable if you're building packages outside of Debian and don't
 # want the checks for DFSG-freeness.
-#DFSG_NONFREE = 1
+DFSG_NONFREE = 1
 
 export DEB_CFLAGS_MAINT_APPEND := -Wall -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE
 export DEB_BUILD_MAINT_OPTIONS := hardening=+all
@@ -27,7 +27,7 @@ ifneq ($(filter pkg.openldap.noslapd,$(DEB_BUILD_PROFILES)),)
 	CONFIG += --disable-slapd
 endif
 
-CONTRIB_MODULES = autogroup lastbind passwd passwd/pbkdf2 passwd/sha2 smbk5pwd
+CONTRIB_MODULES = autogroup lastbind passwd passwd/pbkdf2 passwd/sha2 smbk5pwd smbkrb5pwd
 
 # Ensure CC is set correctly for cross builds, unless it has already
 # been set explicitly.
@@ -49,6 +49,20 @@ CONTRIB_MAKEVARS := \
 	moduledir='$$(libdir)$$(ldap_subdir)'
 
 DH = dh $@ --builddirectory=$(builddir)
+
+# These variables are used only by get-orig-source, which will normally only
+# be run by maintainers.
+VERSION = $(subst +dfsg,,$(DEB_VERSION_UPSTREAM))
+URL     = https://www.openldap.org/software/download/OpenLDAP/openldap-release/
+
+get-orig-source:
+	@if [ ! -d "debian/schema" ] ; then \
+	    echo 'Run this from the top directory of the Debian source' >&2; \
+	    exit 1; \
+	fi
+	wget $(URL)/openldap-$(VERSION).tgz -O ../openldap_$(VERSION).orig.tar.gz
+	tar xzf ../openldap_$(VERSION).orig.tar.gz --strip-components=1 -C .
+
 .PHONY: build
 build:
 	$(DH)
@@ -128,6 +142,13 @@ endif
 	# Upstream manpages are section 8C but installed as section 8
 	find $(installdir)/usr/share/man -name \*.8 \
 		| xargs perl -pi -e 's#(\.TH \w+ 8)C#$$1#'
+
+ifeq ($(filter stage1,$(DEB_BUILD_PROFILES)),)
+override_dh_install-arch:
+	dh_install
+	rm -rf $(CURDIR)/debian/slapd/usr/lib/ldap/smbk5pwd*
+	rm -rf $(CURDIR)/debian/slapd/usr/lib/ldap/smbkrb5pwd*
+endif
 
 override_dh_installinit:
 	dh_installinit --no-restart-after-upgrade --error-handler=ignore_init_failure -- "defaults 19 80"

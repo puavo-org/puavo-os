@@ -13,3 +13,6 @@ add-tlscacert-option-to-ldap-conf
 fix-build-top-mk
 switch-to-lt_dlopenadvise-to-get-RTLD_GLOBAL-set.diff
 set-maintainer-name
+puavo-increase-max-number-of-ldap-keys
+puavo-increase-max-rewrite-passes
+puavo-smbkrb5pwd

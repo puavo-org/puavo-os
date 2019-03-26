@@ -176,8 +176,8 @@
 #  --with-fetch            with fetch(3) URL support [auto]
 #  --with-threads          with threads library auto|nt|posix|pth|lwp|manual [auto]
 --with-threads
-#  --with-tls              with TLS/SSL support auto|openssl|gnutls [auto]
---with-tls=gnutls
+#  --with-tls		  with TLS/SSL support auto|openssl|gnutls|moznss [auto]
+--with-tls=openssl
 #  --with-yielding-select  with implicitly yielding select [auto]
 #  --with-mp               with multiple precision statistics
 #                          auto|longlong|long|bignum|gmp [auto]

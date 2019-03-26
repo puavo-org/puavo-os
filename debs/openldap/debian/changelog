@@ -1,3 +1,9 @@
+openldap (2.5.13+dfsg-5+puavo1+buildonce) bookworm; urgency=medium
+
+  * With some patches by Puavo Org.
+
+ -- Puavo Org <dev@opinsys.fi>  Mon, 13 Mar 2023 14:44:09 +0200
+
 openldap (2.5.13+dfsg-5) unstable; urgency=medium
 
   * Fix sha2-contrib autopkgtest failure. Call slappasswd using its full path.
