@@ -122,8 +122,14 @@ case "$command" in
       mkdir -p "$(dirname "$f")"
       ln -fsT "${upstream_dir}/${f}" "$f"
     done
+    ln -fsT "${upstream_dir}/libactivboardex.so.1.0" \
+           /usr/local/lib/libactivboardex.so.1
 
     ln -fsT /usr/lib/x86_64-linux-gnu /usr/share/promethean/lib
+
+    install -o root -g root -m 755 /usr/tmp-promethean/driver/activdevices \
+            /etc/init.d/activdevices
+    update-rc.d activdevices defaults
 
     cat <<'EOF' > /usr/share/X11/xorg.conf.d/75-promethean.conf
 Section "InputClass"
@@ -139,10 +145,13 @@ EOF
   unconfigure)
     upstream_dir=$1
 
-    rm -f /lib/modules/*/kernel/drivers/input/tablet/promethean.ko \
+    update-rc.d activdevices remove
+    rm -f /etc/init.d/activdevices \
+          /lib/modules/*/kernel/drivers/input/tablet/promethean.ko \
           ${promethean_links} \
+          /usr/local/lib/libactivboardex.so.1 \
           /usr/share/promethean/lib \
-          /usr/share/X11/xorg.conf.d/75-promethean.conf \
+          /usr/share/X11/xorg.conf.d/75-promethean.conf
     rmmod promethean 2>/dev/null || true
     ;;
 
