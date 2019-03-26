@@ -1,8 +1,7 @@
 #!/bin/sh
 
+# Toggles puavomenu visibility. Called from the shell extension.
+
 set -eu
 
-hostname=$(hostname)
-exec /opt/puavomenu/send_command                    \
-     "${HOME}/.config/puavomenu/socket_${hostname}" \
-     "$@" toggle
+exec /opt/puavomenu/send_command "${XDG_RUNTIME_DIR}/puavomenu" "$@" toggle
