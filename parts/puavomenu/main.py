@@ -154,8 +154,13 @@ class PuavoMenu(Gtk.Window):
             self.set_decorated(True)
             self.__exit_permitted = True
 
+        # Don't mess with the real menu when running in development mode
+        if SETTINGS.prod_mode:
+            self.set_title('PuavoMenuUniqueName')
+        else:
+            self.set_title('DevModePuavoMenu')
+
         self.set_resizable(False)
-        self.set_title('PuavoMenuUniqueName')
         self.set_size_request(WINDOW_WIDTH, WINDOW_HEIGHT)
         self.set_position(Gtk.WindowPosition.CENTER)
 
@@ -171,7 +176,6 @@ class PuavoMenu(Gtk.Window):
             # Create the devtools popup menu
             self.menu_signal = \
                 self.connect('button-press-event', self.__devtools_menu)
-
 
         # ----------------------------------------------------------------------
         # Menus/programs list
