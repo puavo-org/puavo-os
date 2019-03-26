@@ -1,4 +1,4 @@
-gvfs (1.30.4-1+puavo1) buster; urgency=medium
+gvfs (1.30.4-1+puavo1) stretch; urgency=medium
 
   * On gvfs, disable the House Arrest Protocol used by Apple devices.
     It did not work for us with Nautilus, and consequently files
