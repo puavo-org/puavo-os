@@ -20,6 +20,17 @@ set -e
 case "$1" in
     configure)
 	update-initramfs -u -k all
+
+        if ! getent passwd puavo >/dev/null; then
+          adduser --disabled-login      \
+                  --disabled-password   \
+                  --group               \
+                  --home /var/lib/puavo \
+                  --no-create-home      \
+                  --system              \
+                  --uid 994             \
+                  puavo
+        fi
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
