@@ -2,6 +2,7 @@
 
 import time
 import os
+import os.path
 import socket               # for the IPC socket
 import logging
 import traceback
@@ -504,8 +505,6 @@ class PuavoMenu(Gtk.Window):
 
         if not SETTINGS.desktop_dir:
             return
-
-        import os.path
 
         # Create the link file
         # TODO: use the *original* .desktop file if it exists

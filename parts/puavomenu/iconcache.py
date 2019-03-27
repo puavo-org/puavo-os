@@ -97,12 +97,12 @@ class IconCache:
         index = None
 
         for (n, s) in enumerate(self.__icons):
-          if s.icon == None:
-            index = n
-            break
+            if s.icon is None:
+                index = n
+                break
 
         if index is None:
-          raise RuntimeError('the icon cache is full')
+            raise RuntimeError('the icon cache is full')
 
         # There's still room for this icon
         new_icon = Icon()
