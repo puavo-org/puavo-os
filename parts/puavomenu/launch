@@ -10,6 +10,10 @@ if [ ! -d "${CONF_DIR}" ]; then
     mkdir -p "${CONF_DIR}"
 fi
 
+# Remove old socket files (they live in $XDG_RUNTIME_DIR now)
+# TODO: Enable this later.
+# (find "${CONF_DIR}" -name "socket*" -type s -delete) || true
+
 # Development or production mode? Development mode is the default.
 DEV_MODE=1
 
