@@ -97,7 +97,7 @@ def create_desktop_link(filename, program):
             out.write('URL={0}\n'.format(program.command))
 
         if program.icon:
-            out.write('Icon={0}\n'.format(program.icon.file_name))
+            out.write('Icon={0}\n'.format(program.icon.filename))
         else:
             if program.program_type == PROGRAM_TYPE_WEB:
                 # a "generic" web icon
@@ -177,7 +177,7 @@ def create_panel_link(program):
                 out.write('Exec={0}\n'.format(program.command))
 
             if program.icon:
-                out.write('Icon={0}\n'.format(program.icon.file_name))
+                out.write('Icon={0}\n'.format(program.icon.filename))
             else:
                 if program.program_type == PROGRAM_TYPE_WEB:
                     # a "generic" web icon

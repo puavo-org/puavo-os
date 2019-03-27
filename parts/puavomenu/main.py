@@ -789,7 +789,7 @@ class PuavoMenu(Gtk.Window):
 
         from iconcache import ICONS48
 
-        if ICONS48.stats()['num_icons'] != 0:
+        if ICONS48.stats()[0] != 0:
             # Purge existing icons
             ICONS48.clear()
 

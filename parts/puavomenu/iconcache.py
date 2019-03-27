@@ -1,5 +1,7 @@
 # Efficiently (?) caches small icons using larger bitmaps
 
+import math
+
 from collections import OrderedDict
 import logging
 import cairo
@@ -10,20 +12,18 @@ from utils_gui import load_image_at_size, draw_x
 class Icon:
     """A handle to a cached icon."""
     def __init__(self):
-        self.file_name = ""
+        self.index = None
         self.usable = False
         self.size = 0
-        self.atlas = -1
-        self.x = 0
-        self.y = 0
+        self.filename = ""      # needed when creating desktop/panel icons
 
 
 class IconCache:
-    """Efficiently caches multiple small icons in larger atlases."""
-
-    STATE_OK = 0
-    STATE_FAILED = 1
-    STATE_UNKNOWN = 2
+    class CacheSlot:
+        def __init__(self, x, y):
+            self.x = x
+            self.y = y
+            self.icon = None        # the actual Icon instance, or None
 
     def __init__(self,
                  icon_size,
@@ -43,52 +43,44 @@ class IconCache:
         self.__icon_size = icon_size
         self.__bitmap_size = bitmap_size
 
-        # Filename -> icon lookup
-        self.__lookup = OrderedDict()
+        # Filename -> icon lookup. The map value is an index to self.__icons.
+        self.__filename_lookup = OrderedDict()
 
-        # List of (ImageSurface, Context) tuples
-        self.__atlas = []
-
-        # The current atlas
-        self.__atlas_num = -1
-
-        # X and Y position for the next icon
-        self.__x = 0
-        self.__y = 0
-
+        self.__create_slots()
         self.__create_atlas()
 
 
-    def __create_atlas(self):
-        """Creates another atlas surface."""
+    def __create_slots(self):
+        # Create storage for the icons. Each of these "slots" stores
+        # one icon. The icons store their index to self.__icons array.
+        max_icons = math.floor(self.__bitmap_size / self.__icon_size)
+        self.__icons = []
 
-        surface = cairo.ImageSurface(
+        for y in range(0, max_icons):
+            ypos = y * self.__icon_size
+
+            for x in range(0, max_icons):
+                self.__icons.append(self.CacheSlot(x * self.__icon_size, ypos))
+
+
+    def __create_atlas(self):
+        # Create the actual atlas image
+        self.__atlas_surface = cairo.ImageSurface(
             cairo.FORMAT_ARGB32,
             self.__bitmap_size,
             self.__bitmap_size)
-        context = cairo.Context(surface)
 
-        # Fill the surface with nothingness (even the alpha channel) so
+        self.__atlas_context = cairo.Context(self.__atlas_surface)
+
+        # Fill the atlas image with nothingness (even the alpha channel) so
         # we can blit from it without messing up whatever's already behind
         # the icon
-        context.save()
-        context.set_source_rgba(0.0, 0.0, 0.0, 0.0)
-        context.set_operator(cairo.OPERATOR_SOURCE)
-        context.rectangle(0, 0, self.__bitmap_size, self.__bitmap_size)
-        context.paint()
-        context.restore()
-
-        self.__atlas.append((surface, context))
-        self.__atlas_num += 1
-        self.__x = 0
-        self.__y = 0
-
-
-    def is_loaded(self, path):
-        """Checks if this icon has been cached already. Does not
-        actually cache it!"""
-
-        return path in self.__lookup
+        self.__atlas_context.save()
+        self.__atlas_context.set_source_rgba(0.0, 0.0, 0.0, 0.0)
+        self.__atlas_context.set_operator(cairo.OPERATOR_SOURCE)
+        self.__atlas_context.rectangle(0, 0, self.__bitmap_size, self.__bitmap_size)
+        self.__atlas_context.paint()
+        self.__atlas_context.restore()
 
 
     def load_icon(self, path):
@@ -98,38 +90,39 @@ class IconCache:
         handle points to a missing icon."""
 
         # Already loaded?
-        if path in self.__lookup:
-            return self.__lookup[path]
+        if path in self.__filename_lookup:
+            return self.__icons[self.__filename_lookup[path]].icon
 
-        # Load a new icon
-        icon = Icon()
+        # Load a new icon. Find the next free cache slot.
+        index = None
 
-        icon.file_name = path
-        icon.size = self.__icon_size
-        icon.atlas = self.__atlas_num
-        icon.x = self.__x
-        icon.y = self.__y
+        for (n, s) in enumerate(self.__icons):
+          if s.icon == None:
+            index = n
+            break
 
+        if index is None:
+          raise RuntimeError('the icon cache is full')
+
+        # There's still room for this icon
+        new_icon = Icon()
+
+        new_icon.index = index
+        new_icon.size = self.__icon_size
+        new_icon.filename = path
+
+        slot = self.__icons[index]
+
+        # Try to load the actual icon image. If it succeeds, draw it onto the
+        # atlas bitmap.
         try:
             icon_surface = load_image_at_size(
                 path, self.__icon_size, self.__icon_size)
 
-            if (self.__y + self.__icon_size) > self.__bitmap_size:
-                # This atlas is full, create another
-                self.__create_atlas()
-                logging.info('Created a new icon cache atlas for size %d',
-                             self.__icon_size)
+            self.__atlas_context.set_source_surface(icon_surface, slot.x, slot.y)
+            self.__atlas_context.paint()
 
-                icon.atlas = self.__atlas_num
-                icon.x = self.__x
-                icon.y = self.__y
-
-            # Draw the icon onto the current atlas surface
-            ctx = self.__atlas[self.__atlas_num][1]
-            ctx.set_source_surface(icon_surface, self.__x, self.__y)
-            ctx.paint()
-
-            icon.usable = True
+            new_icon.usable = True
         except Exception as e:
             msg = str(e)
 
@@ -138,17 +131,12 @@ class IconCache:
                 msg = '<The exception has no message>'
 
             logging.error('Could not load icon "%s": %s', path, msg)
-            icon.usable = False
 
-        # Compute the position for the next icon (always done)
-        self.__x += self.__icon_size
+        # Regardless of what happened above, we now have a new icon. Store it.
+        slot.icon = new_icon
+        self.__filename_lookup[path] = index
 
-        if (self.__x + self.__icon_size) > self.__bitmap_size:
-            self.__x = 0
-            self.__y += self.__icon_size
-
-        self.__lookup[path] = icon
-        return icon
+        return new_icon
 
 
     def __getitem__(self, path):
@@ -157,15 +145,10 @@ class IconCache:
         return self.load_icon(path)
 
 
-    def clear(self):
-        """Completely clears the cache."""
+    def is_loaded(self, path):
+        """Checks if this icon has been cached already."""
 
-        self.__lookup = OrderedDict()
-        self.__atlas = []
-        self.__atlas_num = -1
-        self.__x = 0
-        self.__y = 0
-        self.__create_atlas()
+        return path in self.__filename_lookup
 
 
     def draw_icon(self, ctx, icon, x, y):
@@ -175,23 +158,27 @@ class IconCache:
         if (not isinstance(icon, Icon)) or \
                 (not icon.usable) or \
                 (icon.size != self.__icon_size) or \
-                (icon.atlas < 0) or \
-                (icon.atlas > len(self.__atlas) - 1):
+                (icon.index < 0) or (icon.index > len(self.__icons) - 1):
             draw_x(ctx, x, y, self.__icon_size, self.__icon_size)
         else:
+            slot = self.__icons[icon.index]
+
             # https://www.cairographics.org/FAQ/#paint_from_a_surface
-            ctx.set_source_surface(
-                self.__atlas[icon.atlas][0], x - icon.x, y - icon.y)
+            ctx.set_source_surface(self.__atlas_surface, x - slot.x, y - slot.y)
             ctx.rectangle(x, y, self.__icon_size, self.__icon_size)
             ctx.fill()
 
 
+    def clear(self):
+        """Completely clears the cache."""
+
+        self.__filename_lookup = OrderedDict()
+        self.__create_slots()
+        self.__create_atlas()
+
+
     def stats(self):
-        return {
-            'num_atlases': self.__atlas_num + 1,
-            'num_icons': len(self.__lookup),
-            'capacity': (self.__bitmap_size / self.__icon_size) ** 2
-        }
+        return (len(self.__filename_lookup), len(self.__icons))
 
 
 # Instantiate global caches for program/menu buttons and

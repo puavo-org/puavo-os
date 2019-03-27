@@ -1194,14 +1194,16 @@ def load_icons(programs, menus, icon_dirs, icon_cache):
     if num_missing_icons:
         logging.info('Have %d missing or unloadable icons',
                      num_missing_icons)
+    else:
+        logging.info('No missing icons')
 
-    stats = icon_cache.stats()
+    num_icons, max_icons = icon_cache.stats()
 
     logging.info('Number of 48-pixel icons cached: %d (out of %d)',
-                 stats['num_icons'], stats['capacity'])
+                 num_icons, max_icons)
 
-    logging.info('Number of 48-pixel atlas surfaces: %d',
-                 stats['num_atlases'])
+    #logging.info('Number of 48-pixel atlas surfaces: %d',
+    #             stats['num_atlases'])
 
 
 # ------------------------------------------------------------------------------
