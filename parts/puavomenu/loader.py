@@ -962,7 +962,7 @@ def build_menu_data(raw_programs, raw_menus, raw_categories, language):
         if 'programs' in src_menu:
             for p_name in src_menu['programs']:
                 if p_name not in programs or programs[p_name] is None:
-                    logging.warning('Menu "%s" references to a non-existent program "%s"',
+                    logging.warning('Menu "%s" references to a non-existing program "%s"',
                                     menudata_id, p_name)
                     continue
 
@@ -1014,7 +1014,7 @@ def build_menu_data(raw_programs, raw_menus, raw_categories, language):
         if 'menus' in src_cat:
             for m_name in src_cat['menus']:
                 if m_name not in menus or menus[m_name] is None:
-                    logging.warning('Category "%s" references to a non-existent menu "%s"',
+                    logging.warning('Category "%s" references to a non-existing menu "%s"',
                                     menudata_id, m_name)
                     continue
 
@@ -1028,7 +1028,7 @@ def build_menu_data(raw_programs, raw_menus, raw_categories, language):
         if 'programs' in src_cat:
             for p_name in src_cat['programs']:
                 if p_name not in programs or programs[p_name] is None:
-                    logging.warning('Category "%s" references to a non-existent program "%s"',
+                    logging.warning('Category "%s" references to a non-existing program "%s"',
                                     menudata_id, p_name)
                     continue
 
