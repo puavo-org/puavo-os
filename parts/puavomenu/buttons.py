@@ -473,6 +473,9 @@ class MenuButton(HoverIconButtonBase):
         self.label_color_normal = [0.0, 0.0, 0.0]
         self.label_color_hover = [0.0, 0.0, 0.0]
 
+        if SETTINGS.dark_theme:
+            self.label_color_normal = [1.0, 1.0, 1.0]
+            self.label_color_hover = [1.0, 1.0, 1.0]
 
     def get_preferred_button_size(self):
         return (PROGRAM_BUTTON_WIDTH, PROGRAM_BUTTON_HEIGHT)
