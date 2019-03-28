@@ -704,7 +704,8 @@ class packages {
   $nvidia_dkms_410_module   = 'nvidia-current/410.104'
   $virtualbox_module        = 'virtualbox/6.0.4'
 
-  $all_dkms_modules = [ $nvidia_dkms_340_module,
+  $all_dkms_modules = [ $broadcom_sta_dkms_module,
+                        $nvidia_dkms_340_module,
                         $nvidia_dkms_390_module,
                         $nvidia_dkms_410_module,
                         $virtualbox_module ]
