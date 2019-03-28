@@ -13,14 +13,14 @@ case "$graphics_driver" in
     nvidia_alternative=current
     xserver_driver=nvidia
     ;;
-  nvidia-304)
-    glx_alternative=/usr/lib/nvidia
-    nvidia_alternative=legacy-304xx
-    xserver_driver=nvidia
-    ;;
   nvidia-340)
     glx_alternative=/usr/lib/nvidia
     nvidia_alternative=legacy-340xx
+    xserver_driver=nvidia
+    ;;
+  nvidia-390)
+    glx_alternative=/usr/lib/nvidia
+    nvidia_alternative=legacy-390xx
     xserver_driver=nvidia
     ;;
   *)

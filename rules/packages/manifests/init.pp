@@ -698,50 +698,20 @@ class packages {
 #     tag => [ 'tag_whiteboard', 'tag_puavo', ];
   }
 
-  case $debianversioncodename {
-    'buster': {
-      # XXX these versions should be updated
-      $broadcom_sta_dkms_module = 'broadcom-sta/6.30.223.271'
-      $nvidia_dkms_304_module   = 'nvidia-legacy-304xx/304.137'
-      $nvidia_dkms_340_module   = 'nvidia-legacy-340xx/340.106'
-      $nvidia_dkms_390_module   = 'nvidia-current/390.87'
-      $virtualbox_module        = 'virtualbox/6.0.4'
+  $broadcom_sta_dkms_module = 'broadcom-sta/6.30.223.271'
+  $nvidia_dkms_340_module   = 'nvidia-legacy-340xx/340.107'
+  $nvidia_dkms_390_module   = 'nvidia-legacy-390xx/390.116'
+  $nvidia_dkms_410_module   = 'nvidia-current/410.104'
+  $virtualbox_module        = 'virtualbox/6.0.4'
 
-      # XXX do not try to build these yet on Buster
-      $all_dkms_modules = [ $virtualbox_module ]
-      packages::kernels::kernel_package {
-        '4.19.0-4-amd64':
-          dkms_modules => $all_dkms_modules,
-          package_name => 'linux-image-4.19.0-4-amd64';
-      }
-    }
-    'stretch': {
-      $broadcom_sta_dkms_module = 'broadcom-sta/6.30.223.271'
-      $nvidia_dkms_304_module   = 'nvidia-legacy-304xx/304.137'
-      $nvidia_dkms_340_module   = 'nvidia-legacy-340xx/340.106'
-      $nvidia_dkms_390_module   = 'nvidia-current/390.87'
-      $virtualbox_module        = 'virtualbox/5.2.24'
-
-      $all_dkms_modules = [ $broadcom_sta_dkms_module
-                          , $nvidia_dkms_304_module
-                          , $nvidia_dkms_340_module
-                          , $nvidia_dkms_390_module
-                          , $virtualbox_module ]
-
-      packages::kernels::kernel_package {
-        '3.16.0-7-amd64':
-          dkms_modules => $all_dkms_modules,
-          package_name => 'linux-image-3.16.0-7-amd64';
-
-        '4.9.0-8-amd64':
-          dkms_modules => $all_dkms_modules,
-          package_name => 'linux-image-4.9.0-8-amd64';
-
-        '4.19.0-0.bpo.2-amd64':
-          dkms_modules => [ $virtualbox_module ],
-          package_name => 'linux-image-4.19.0-0.bpo.2-amd64';
-      }
-    }
+  $all_dkms_modules = [ $nvidia_dkms_340_module,
+                        $nvidia_dkms_390_module,
+                        $nvidia_dkms_410_module,
+                        $virtualbox_module ]
+  packages::kernels::kernel_package {
+    '4.19.0-4-amd64':
+      dkms_modules => $all_dkms_modules,
+      package_name => 'linux-image-4.19.0-4-amd64';
   }
 
   # Packages which are not restricted per se, but which are required by
@@ -765,10 +735,13 @@ class packages {
     [ 'broadcom-sta-dkms'
     , 'libgl1-nvidia-glx'
     , 'libgl1-nvidia-legacy-340xx-glx'
+    , 'libgl1-nvidia-legacy-390xx-glx'
     , 'nvidia-kernel-dkms'
     , 'nvidia-legacy-340xx-kernel-dkms'
+    , 'nvidia-legacy-390xx-kernel-dkms'
     , 'xserver-xorg-video-nvidia'
-    , 'xserver-xorg-video-nvidia-legacy-340xx' ]:
+    , 'xserver-xorg-video-nvidia-legacy-340xx'
+    , 'xserver-xorg-video-nvidia-legacy-390xx' ]:
       tag => [ 'tag_drivers', 'tag_debian_desktop_nonfree', ];
 
     [ 'amd64-microcode'
