@@ -659,19 +659,6 @@ class packages {
   }
 
   #
-  # packages from the Debian backports
-  #
-
-  # These modify apt preferences so that these packages will be picked up
-  # from backports instead of the usual channels.  The inclusion of a package
-  # on this list does not trigger the installation of a package, that has
-  # to be defined elsewhere.
-  $packages_from_backports = $debianversioncodename ? {
-                               'stretch' => [ 'remmina' ],
-                               default   => [],
-                             }
-
-  #
   # packages from the Ubuntu repository
   #
 
