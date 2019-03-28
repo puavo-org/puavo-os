@@ -705,10 +705,10 @@ class packages {
       $nvidia_dkms_304_module   = 'nvidia-legacy-304xx/304.137'
       $nvidia_dkms_340_module   = 'nvidia-legacy-340xx/340.106'
       $nvidia_dkms_390_module   = 'nvidia-current/390.87'
-      $virtualbox_module        = 'virtualbox/5.2.24'
+      $virtualbox_module        = 'virtualbox/6.0.4'
 
       # XXX do not try to build these yet on Buster
-      $all_dkms_modules = []
+      $all_dkms_modules = [ $virtualbox_module ]
       packages::kernels::kernel_package {
         '4.19.0-4-amd64':
           dkms_modules => $all_dkms_modules,
