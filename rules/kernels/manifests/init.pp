@@ -30,7 +30,7 @@ class kernels {
 
   case $debianversioncodename {
     'buster': {
-      $default_kernel = '4.19.0-2-amd64'
+      $default_kernel = '4.19.0-4-amd64'
       ::kernels::all_kernel_links {
         'default': kernel => $default_kernel;
       }

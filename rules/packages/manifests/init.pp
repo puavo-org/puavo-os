@@ -710,9 +710,9 @@ class packages {
       # XXX do not try to build these yet on Buster
       $all_dkms_modules = []
       packages::kernels::kernel_package {
-        '4.19.0-2-amd64':
+        '4.19.0-4-amd64':
           dkms_modules => $all_dkms_modules,
-          package_name => 'linux-image-4.19.0-2-amd64';
+          package_name => 'linux-image-4.19.0-4-amd64';
       }
     }
     'stretch': {
