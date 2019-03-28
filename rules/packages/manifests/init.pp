@@ -13,12 +13,11 @@ class packages {
   # Puavo OS packages
   #
 
-# XXX buster
-# @package {
-#   'puavo-ltsp-bootserver':
-#     ensure => present,
-#     tag    => [ 'tag_puavo_bootserver' ];
-# }
+  @package {
+    'puavo-ltsp-bootserver':
+      ensure => present,
+      tag    => [ 'tag_puavo_bootserver' ];
+  }
 
   @package {
     [ # XXX 'iivari-client'
