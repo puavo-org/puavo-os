@@ -31,6 +31,7 @@ Depends: ${misc:Depends},
  puavo-client,
  ruby,
  ruby-activeldap,
+ ruby-builder,
  slapd,
  slapd-smbkrb5pwd
 Recommends: rng-tools
