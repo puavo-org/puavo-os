@@ -305,7 +305,6 @@ class User < LdapBase
     unless self.gidNumber.nil? || self.puavoSchool.nil?
       self.sambaPrimaryGroupSID = "#{SambaDomain.first.sambaSID}-#{self.school.puavoId}"
     end
-    self.gecos = self.displayName + ',,,'
     self.loginShell = '/bin/bash'
   end
 
