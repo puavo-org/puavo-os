@@ -18,11 +18,11 @@ from gi.repository import Gio
 
 from constants import *
 import menudata
-from buttons import ProgramButton, MenuButton
+import buttons
 import utils
 import utils_gui
 import faves
-from sidebar import Sidebar
+import sidebar
 from strings import STRINGS
 from settings import SETTINGS
 
@@ -280,7 +280,7 @@ class PuavoMenu(Gtk.Window):
                                    h=WINDOW_HEIGHT - (MAIN_PADDING * 2),
                                    orientation=Gtk.Orientation.VERTICAL)
 
-        self.__sidebar = Sidebar(self)
+        self.__sidebar = sidebar.Sidebar(self)
 
         self.__main_container.put(self.__sidebar.container,
                                   SIDEBAR_LEFT,
@@ -392,9 +392,10 @@ class PuavoMenu(Gtk.Window):
                     if menu.hidden:
                         continue
 
-                    button = MenuButton(self, menu.name, menu.icon,
-                                        menu.description, menu,
-                                        self.__menu_background)
+                    button = buttons.MenuButton(
+                        self, menu.name, menu.icon, menu.description, menu,
+                        self.__menu_background)
+
                     button.connect('clicked', self.__clicked_menu_button)
                     new_buttons.append(button)
 
@@ -403,8 +404,10 @@ class PuavoMenu(Gtk.Window):
                     if program.hidden:
                         continue
 
-                    button = ProgramButton(self, program.name, program.icon,
-                                           program.description, program)
+                    button = buttons.ProgramButton(
+                        self, program.name, program.icon,
+                        program.description, program)
+
                     button.connect('clicked', self.clicked_program_button)
                     new_buttons.append(button)
 
@@ -418,8 +421,10 @@ class PuavoMenu(Gtk.Window):
                 if program.hidden:
                     continue
 
-                button = ProgramButton(self, program.name, program.icon,
-                                       program.description, program)
+                button = buttons.ProgramButton(
+                    self, program.name, program.icon,
+                    program.description, program)
+
                 button.connect('clicked', self.clicked_program_button)
                 new_buttons.append(button)
 
@@ -645,7 +650,7 @@ class PuavoMenu(Gtk.Window):
         new_buttons = []
 
         for m in matches:
-            b = ProgramButton(self, m.name, m.icon, m.description, m)
+            b = buttons.ProgramButton(self, m.name, m.icon, m.description, m)
             b.connect('clicked', self.clicked_program_button)
             new_buttons.append(b)
 

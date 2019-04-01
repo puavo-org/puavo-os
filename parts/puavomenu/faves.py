@@ -8,7 +8,7 @@ from gi.repository import Gtk
 
 from constants import PROGRAM_BUTTON_WIDTH, NUMBER_OF_FAVES
 
-from buttons import ProgramButton
+import buttons
 from settings import SETTINGS
 
 
@@ -143,9 +143,11 @@ class FavesList(Gtk.ScrolledWindow):
             program = all_programs[fave[0]]
             # use self.__parent as the parent, so popup menu handlers
             # will call the correct methods from the main window class
-            button = ProgramButton(self.__parent, program.name, program.icon,
-                                   program.description, data=program,
-                                   is_fave=True)
+            button = buttons.ProgramButton(
+                self.__parent, program.name, program.icon,
+                program.description, data=program,
+                is_fave=True)
+
             button.connect('clicked', self.__parent.clicked_program_button)
             self.__fave_buttons.append(button)
             self.__icons.put(button, index * PROGRAM_BUTTON_WIDTH, 0)
