@@ -10,6 +10,10 @@ if [ ! -d "${CONF_DIR}" ]; then
     mkdir -p "${CONF_DIR}"
 fi
 
+# Remove old socket files (they live in $XDG_RUNTIME_DIR now)
+# TODO: Enable this later.
+# (find "${CONF_DIR}" -name "socket*" -type s -delete) || true
+
 # Development or production mode? Development mode is the default.
 DEV_MODE=1
 
@@ -26,7 +30,7 @@ if [ $DEV_MODE -eq 1 ]; then
         --res_dir "./res" \
         --menu_dir "../../rules/puavomenu/templates" \
         --user_dir "${CONF_DIR}" \
-        --socket "${CONF_DIR}/dev_socket_${HOSTNAME}" \
+        --socket "${XDG_RUNTIME_DIR}/puavomenu_dev" \
         "$@" &
 else
     # Production mode. Use real paths.
@@ -37,6 +41,10 @@ else
         --res_dir "/opt/puavomenu/res" \
         --menu_dir "/etc/puavomenu/" \
         --user_dir "${CONF_DIR}" \
-        --socket "${CONF_DIR}/socket_${HOSTNAME}" \
+        --socket "${XDG_RUNTIME_DIR}/puavomenu" \
         &
+
+    # Set the sticky bit to prevent automatic cleanup processes from
+    # deleting the socket
+    chmod u+t "${XDG_RUNTIME_DIR}/puavomenu"
 fi

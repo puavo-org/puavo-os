@@ -148,7 +148,7 @@ SETTINGS.user_dir = os.path.join(args.user_dir, '')
 SETTINGS.socket = args.socket
 
 logging.info('Logging starts')
-logging.info('This is PuavoMenu v0.7 (c) Opinsys Oy 2017-2019')
+logging.info('This is PuavoMenu v0.75 (c) Opinsys Oy 2017-2019')
 
 if args.lang:
     # Override autodetection

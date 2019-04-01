@@ -2,6 +2,7 @@
 
 import time
 import os
+import os.path
 import socket               # for the IPC socket
 import logging
 import traceback
@@ -505,8 +506,6 @@ class PuavoMenu(Gtk.Window):
         if not SETTINGS.desktop_dir:
             return
 
-        import os.path
-
         # Create the link file
         # TODO: use the *original* .desktop file if it exists
         name = os.path.join(SETTINGS.desktop_dir, '{0}.desktop'.format(program.name))
@@ -789,7 +788,7 @@ class PuavoMenu(Gtk.Window):
 
         from iconcache import ICONS48
 
-        if ICONS48.stats()['num_icons'] != 0:
+        if ICONS48.stats()[0] != 0:
             # Purge existing icons
             ICONS48.clear()
 

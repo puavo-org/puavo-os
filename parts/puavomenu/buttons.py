@@ -7,7 +7,6 @@ import gi
 gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
 gi.require_version('PangoCairo', '1.0')
 from gi.repository import Gtk, Gdk, Pango, PangoCairo
-import cairo
 
 from constants import PROGRAM_BUTTON_WIDTH, PROGRAM_BUTTON_HEIGHT, \
                       PROGRAM_BUTTON_ICON_SIZE, SIDEBAR_WIDTH
@@ -473,6 +472,9 @@ class MenuButton(HoverIconButtonBase):
         self.label_color_normal = [0.0, 0.0, 0.0]
         self.label_color_hover = [0.0, 0.0, 0.0]
 
+        if SETTINGS.dark_theme:
+            self.label_color_normal = [1.0, 1.0, 1.0]
+            self.label_color_hover = [1.0, 1.0, 1.0]
 
     def get_preferred_button_size(self):
         return (PROGRAM_BUTTON_WIDTH, PROGRAM_BUTTON_HEIGHT)
