@@ -4,7 +4,6 @@ class apt::repositories {
   $other_releases = $debianversioncodename ? {
                       'buster' => [],
                       default  => {
-                        'wheezy' => 70,
                         'jessie' => 80,
                         'buster' => 60,
                       }
