@@ -1051,10 +1051,16 @@ fi
 mkdir -p "$g_puavo_pkg_cachedir" \
          "${g_puavo_pkg_rootdir}/packages" \
          "$g_puavo_pkg_installed_dir"
-chown -R puavo-pkg: "$g_puavo_pkg_cachedir"
 
 command=$1
 shift
+
+# Some subcommands are useful as non-root as well,
+# so do not change owner when those are used.
+case "${command}" in
+  license|list|show) ;;
+  *) chown -R puavo-pkg: "$g_puavo_pkg_cachedir" ;;
+esac
 
 case "${command}" in
   gc-installations)
