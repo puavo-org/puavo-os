@@ -264,8 +264,8 @@ get_license_url()
 
   if [[ "${identifier}" =~ ${INSTALLER_REGEX} ]]; then
     pkg_dir=$(extract_installer "${identifier}") || {
-        log_error "failed to extract installer '${identifier}'"
-        return 1
+      log_error "failed to extract installer '${identifier}'"
+      return 1
     }
   else
     pkg_dir=$(get_installed_pkg_dir "$identifier") || return 1
@@ -923,12 +923,12 @@ show_pkg()
 
   pkg_legend="$pkg_name"
   if [ -r "${pkg_dir}/legend" ]; then
-      pkg_legend=$(head -n1 "${pkg_dir}/legend") || return 1
+    pkg_legend=$(head -n1 "${pkg_dir}/legend") || return 1
   fi
 
   pkg_description=
   if [ -r "${pkg_dir}/description" ]; then
-      pkg_description=$(cat "${pkg_dir}/description") || return 1
+    pkg_description=$(cat "${pkg_dir}/description") || return 1
   fi
 
   case "$pkg_field" in
