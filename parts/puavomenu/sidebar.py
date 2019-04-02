@@ -14,9 +14,9 @@ from gi.repository import Gio
 from constants import WINDOW_HEIGHT, MAIN_PADDING, SIDEBAR_WIDTH, \
                       USER_AVATAR_SIZE, HOSTINFO_LABEL_HEIGHT, SEPARATOR_SIZE
 
+import iconcache
 import utils
 import utils_gui
-from iconcache import ICONS32
 import buttons
 from strings import STRINGS
 from settings import SETTINGS
@@ -319,6 +319,9 @@ class Sidebar:
 
         self.container = Gtk.Fixed()
 
+        # Storage for the command button icons
+        self.__icons = iconcache.IconCache(32, 128)
+
         self.__get_variables()
         self.__create_avatar()
         self.__create_buttons()
@@ -437,7 +440,7 @@ class Sidebar:
     def __create_button(self, y, data):
         button = buttons.SidebarButton(self,
                                        utils.localize(data['title']),
-                                       ICONS32.load_icon(data['icon']),
+                                       self.__icons[data['icon']],
                                        utils.localize(data.get('description', '')),
                                        data['command'])
 
