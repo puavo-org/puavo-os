@@ -12,10 +12,15 @@ from utils_gui import load_image_at_size, draw_x
 class Icon:
     """A handle to a cached icon."""
     def __init__(self):
+        self.cache = None
         self.index = None
         self.usable = False
         self.size = 0
         self.filename = ""      # needed when creating desktop/panel icons
+
+
+    def draw(self, ctx, x, y):
+        self.cache.draw_icon(ctx, self, x, y)
 
 
 class IconCache:
@@ -107,6 +112,7 @@ class IconCache:
         # There's still room for this icon
         new_icon = Icon()
 
+        new_icon.cache = self
         new_icon.index = index
         new_icon.size = self.__icon_size
         new_icon.filename = path

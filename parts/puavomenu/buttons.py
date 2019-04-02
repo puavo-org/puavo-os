@@ -10,7 +10,6 @@ from gi.repository import Gtk, Gdk, Pango, PangoCairo
 
 from constants import PROGRAM_BUTTON_WIDTH, PROGRAM_BUTTON_HEIGHT, \
                       PROGRAM_BUTTON_ICON_SIZE, SIDEBAR_WIDTH
-from iconcache import ICONS32, ICONS48
 from utils import localize
 from utils_gui import rounded_rectangle, draw_x, load_image_at_size
 from strings import STRINGS
@@ -145,9 +144,7 @@ class HoverIconButtonBase(Gtk.Button):
     # Draw the icon
     def draw_icon(self, ctx):
         if self.icon:
-            ICONS48.draw_icon(ctx,
-                              self.icon,
-                              self.icon_pos[0], self.icon_pos[1])
+            self.icon.draw(ctx, self.icon_pos[0], self.icon_pos[1])
         else:
             draw_x(ctx,
                    self.icon_pos[0], self.icon_pos[1],
@@ -644,11 +641,8 @@ class SidebarButton(HoverIconButtonBase):
 
 
     def draw_icon(self, ctx):
-        # Use the 32-pixel icon cache for sidebar buttons, not 48
         if self.icon:
-            ICONS32.draw_icon(ctx,
-                              self.icon,
-                              self.icon_pos[0], self.icon_pos[1])
+            self.icon.draw(ctx, self.icon_pos[0], self.icon_pos[1])
         else:
             draw_x(ctx,
                    self.icon_pos[0], self.icon_pos[1],
