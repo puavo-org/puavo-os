@@ -264,7 +264,7 @@ class PuavoMenu(Gtk.Window):
                                   PROGRAMS_LEFT,
                                   PROGRAMS_TOP + PROGRAMS_HEIGHT + MAIN_PADDING)
 
-        self.__faves = faves.FavesList(self)
+        self.__faves = faves.FavesList(self, SETTINGS)
         self.__faves.set_size_request(PROGRAMS_WIDTH,
                                       PROGRAM_BUTTON_HEIGHT + 2)
         self.__main_container.put(self.__faves,
@@ -556,10 +556,11 @@ class PuavoMenu(Gtk.Window):
     def clicked_program_button(self, button):
         program = button.data
         program.uses += 1
-        self.__faves.update(self.menudata.programs)
 
         logging.info('Clicked program button "%s", usage counter is %d',
                      program.menudata_id, program.uses)
+
+        self.__faves.update(self.menudata.programs)
 
         if program.command is None:
             logging.error('No command defined for program "%s"', program.name)
@@ -742,7 +743,9 @@ class PuavoMenu(Gtk.Window):
         self.__create_current_menu()
         self.__programs_container.show()
 
-        faves.load_use_counts(self.menudata.programs)
+        if SETTINGS.enable_faves_saving:
+            faves.load_use_counts(self.menudata.programs, SETTINGS.user_dir)
+
         self.__faves.update(self.menudata.programs)
         self.__faves_sep.show()
         self.__faves.show()
