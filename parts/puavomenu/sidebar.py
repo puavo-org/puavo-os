@@ -542,8 +542,6 @@ class Sidebar:
     # Sidebar button command handler
     def __clicked_sidebar_button(self, button):
         try:
-            import subprocess
-
             command = button.data
             arguments = command.get('args', '')
 
@@ -568,9 +566,7 @@ class Sidebar:
 
             if command['type'] == 'command':
                 logging.info('Executing a command')
-                subprocess.Popen(['sh', '-c', arguments, '&'],
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE)
+                Gio.AppInfo.create_from_commandline(arguments, '', 0).launch()
             elif command['type'] == 'url':
                 logging.info('Opening a URL')
                 Gio.AppInfo.launch_default_for_uri(arguments, None)
