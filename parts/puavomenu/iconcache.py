@@ -185,8 +185,3 @@ class IconCache:
 
     def stats(self):
         return (len(self.__filename_lookup), len(self.__icons))
-
-
-# Instantiate global caches for program/menu buttons and
-# sidebar buttons
-ICONS48 = IconCache(48, 48 * 15)

@@ -18,6 +18,7 @@ from gi.repository import Gio
 
 from constants import *
 import menudata
+import iconcache
 import buttons
 import utils
 import utils_gui
@@ -122,6 +123,10 @@ class PuavoMenu(Gtk.Window):
         # The current menu/program buttons in the current
         # category and menu, if any
         self.__buttons = []
+
+        # Storage for 48x48 -pixel program and menu icons. Maintained
+        # separately from the menu data.
+        self.__icons = iconcache.IconCache(48, 48 * 15)
 
         # Background image for top-level menus
         try:
@@ -708,14 +713,12 @@ class PuavoMenu(Gtk.Window):
         something fails."""
 
         try:
-            from iconcache import ICONS48
-
             self.menudata = menudata.Menudata()
 
             self.menudata.load(SETTINGS.language,
                                SETTINGS.menu_dir,
                                utils.puavo_conf('puavo.puavomenu.tags', 'default'),
-                               ICONS48)
+                               self.__icons)
 
         except Exception as exception:
             logging.fatal('Could not load menu data!')
@@ -799,12 +802,7 @@ class PuavoMenu(Gtk.Window):
         self.current_category = -1
         self.current_menu = None
 
-        from iconcache import ICONS48
-
-        if ICONS48.stats()[0] != 0:
-            # Purge existing icons
-            ICONS48.clear()
-
+        self.__icons.clear()
 
     # --------------------------------------------------------------------------
     # Window visibility management
