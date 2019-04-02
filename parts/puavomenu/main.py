@@ -437,6 +437,7 @@ class PuavoMenu(Gtk.Window):
         # Update the menu title
         if self.current_menu is None:
             self.__menu_title.hide()
+            self.__back_button.hide()
         else:
             # TODO: "big" and "small" are not good sizes, we need to be explicit
             if self.current_menu.description:
@@ -448,6 +449,7 @@ class PuavoMenu(Gtk.Window):
                     '<big>{0}</big>'.format(self.current_menu.name))
 
             self.__menu_title.show()
+            self.__back_button.show()
 
 
     # --------------------------------------------------------------------------
@@ -671,6 +673,9 @@ class PuavoMenu(Gtk.Window):
 
     # Responds to Esc and Enter keypresses in the search field
     def __search_keypress(self, widget, key_event):
+        self.__back_button.hide()
+        self.__menu_title.hide()
+
         if key_event.keyval == Gdk.KEY_Escape:
             if len(self.__get_search_text()):
                 # Cancel an ongoing search
