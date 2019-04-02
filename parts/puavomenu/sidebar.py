@@ -197,7 +197,7 @@ def web_window(url, title=None, width=None, height=None,
 
     logging.info('Opening a webwindow: "%s"', cmd)
 
-    subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 class AvatarDownloaderThread(threading.Thread):
