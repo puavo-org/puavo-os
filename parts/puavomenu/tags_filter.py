@@ -67,7 +67,6 @@ class Filter:
     def parse_string(self, tag_string, strict_reject=True):
         import re
         import logging
-        from settings import SETTINGS
 
         logging.info('Parsing filter string: "%s"', str(tag_string))
 
