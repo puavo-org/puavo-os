@@ -9,6 +9,7 @@ import gi
 gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
 from gi.repository import Gtk
 from gi.repository import Pango
+from gi.repository import Gio
 
 from constants import WINDOW_HEIGHT, MAIN_PADDING, SIDEBAR_WIDTH, \
                       USER_AVATAR_SIZE, HOSTINFO_LABEL_HEIGHT, SEPARATOR_SIZE
@@ -572,9 +573,7 @@ class Sidebar:
                                  stderr=subprocess.PIPE)
             elif command['type'] == 'url':
                 logging.info('Opening a URL')
-                subprocess.Popen(['xdg-open', arguments],
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE)
+                Gio.AppInfo.launch_default_for_uri(arguments, None)
             elif command['type'] == 'webwindow':
                 logging.info('Creating a webwindow')
 
