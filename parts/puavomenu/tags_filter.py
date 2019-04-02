@@ -76,7 +76,6 @@ class Filter:
 
         self.reset()
 
-
         for tag in tags:
             orig_tag = tag
 
@@ -103,8 +102,7 @@ class Filter:
             if len(namespace) == 0 or len(tag) == 0:
                 if strict_reject:
                     logging.error('Rejecting filter string "%s" because "%s" '
-                                  'is not a valid tag' %
-                                  (tag_string, orig_tag))
+                                  'is not a valid tag', tag_string, orig_tag)
                     self.reset()
                     return
 
@@ -115,8 +113,7 @@ class Filter:
             if (tag.find('-') == 0) or (tag.find('+') == 0):
                 if strict_reject:
                     logging.error('Rejecting filter string "%s" because "%s" '
-                                  'is not a valid tag' %
-                                 (tag_string, orig_tag))
+                                  'is not a valid tag', tag_string, orig_tag)
                     self.reset()
                     return
                 continue
@@ -135,8 +132,8 @@ class Filter:
             else:
                 if strict_reject:
                     logging.error('Rejecting filter string "%s" because "%s" '
-                                  'is not a valid tag namespace' %
-                                  (tag_string, namespace))
+                                  'is not a valid tag namespace',
+                                  tag_string, namespace)
                     self.reset()
                     return
 
