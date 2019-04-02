@@ -1,0 +1,57 @@
+Source: nbd
+Section: admin
+Priority: optional
+Maintainer: Wouter Verhelst <wouter@debian.org>
+Build-Depends: debhelper (>= 9), libglib2.0-dev (>= 2.26.0), libgnutls28-dev
+Standards-Version: 3.9.4
+Vcs-Git: git://anonscm.debian.org/users/wouter/nbd.git
+Vcs-Browser: http://git.debian.org/?p=users/wouter/nbd.git;a=summary
+Homepage: http://nbd.sourceforge.net/
+
+Package: nbd-server
+Architecture: any
+Depends: ${shlibs:Depends}, debconf (>= 1.2.9) | debconf-2.0, ucf, adduser, ${misc:Depends}
+Description: Network Block Device protocol - server
+ Network Block Device (NBD) is a client/server protocol that
+ emulates a block device (such as a hard disk, a floppy, or a CD-ROM)
+ over the network, thus giving the system the ability to swap over the
+ network, or to use raw network disk space for other purposes.
+ .
+ However, writing to one Network Block Device from different clients
+ simultaneously is not recommended, and would probably result in data
+ loss. If you want multiple clients to share a remote resource, use a
+ network file system such as NFS or Coda.
+ .
+ This package provides the server binary for NBD.
+
+Package: nbd-client
+Architecture: linux-any
+Depends: ${shlibs:Depends}, ${misc:Depends}, debconf | debconf-2.0
+Description: Network Block Device protocol - client
+ Network Block Device (NBD) is a client/server protocol that
+ emulates a block device (such as a hard disk, a floppy, or a CD-ROM)
+ over the network, thus giving the system the ability to swap over the
+ network, or to use raw network disk space for other purposes.
+ .
+ However, writing to one Network Block Device from different clients
+ simultaneously is not recommended, and would probably result in data
+ loss. If you want multiple clients to share a remote resource, use a
+ network file system such as NFS or Coda.
+ .
+ This package provides the client binary for NBD.
+
+Package: nbd-client-udeb
+Section: debian-installer
+Priority: optional
+Depends: ${shlibs:Depends}
+XC-Package-Type: udeb
+Architecture: linux-any
+Description: Network Block Device protocol - client for Debian Installer
+ Network Block Device (NBD) is a client/server protocol that
+ emulates a block device (such as a hard disk, a floppy, or a CD-ROM)
+ over the network, thus giving the system the ability to swap over the
+ network, or to use raw network disks pace for other purposes.
+ .
+ This package provides the client binary for NBD.
+ .
+ It is a minimal version meant for use in the installer only.

@@ -11,6 +11,7 @@ _pkgs_ports     := fluentd         \
                    gvfs            \
                    linux           \
                    mutter          \
+                   nbd             \
                    nwjs            \
                    openboard       \
                    openldap        \

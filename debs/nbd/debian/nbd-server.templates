@@ -1,0 +1,38 @@
+# These templates have been reviewed by the debian-l10n-english
+# team
+#
+# If modifications/additions/rewording are needed, please ask
+# debian-l10n-english@lists.debian.org for advice.
+#
+# Even minor modifications require translation updates and such
+# changes should be coordinated with translators and reviewers.
+
+Template: nbd-server/number
+Type: string
+Default: 0
+_Description: Number of nbd-server instances to run:
+ Multiple nbd-server processes may run to export multiple files or
+ block devices. Please specify how many configurations for such servers you
+ want to generate.
+ .
+ Note that you can always add extra servers by adding them to
+ /etc/nbd-server/config, or by running "dpkg-reconfigure nbd-server".
+
+Template: nbd-server/name
+Type: string
+_Description: Name of export ${number}:
+ Please specify a name for this export.
+
+Template: nbd-server/filename
+Type: string
+_Description: File to export (server number ${number}):
+ Please specify a file name or block device that should be exported
+ over the network. You can export a real block device (for instance
+ "/dev/hda1"); a normal file (such as "/export/nbd/bl1"); or a
+ bunch of files all at once. For the third option, you can
+ use "%s" in the filename, which will be expanded to the
+ IP-address of the connecting client. An example would be
+ "/export/swaps/swp%s".
+ .
+ Note that it is possible to tune the way in which the IP address will
+ be substituted in the file name. See "man 5 nbd-server" for details.
