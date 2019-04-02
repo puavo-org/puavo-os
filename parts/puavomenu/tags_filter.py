@@ -70,7 +70,7 @@ class Filter:
 
         logging.info('Parsing filter string: "%s"', str(tag_string))
 
-        tags = [tag.strip() for tag in re.split(',|;|\ ', str(tag_string) if tag_string else '')]
+        tags = [tag.strip() for tag in re.split(r',|;|\ ', str(tag_string) if tag_string else '')]
         tags = filter(None, tags)
         tags = [p.lower() for p in tags]
 
