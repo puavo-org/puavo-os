@@ -5,7 +5,7 @@ from math import radians
 import gi
 gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
 from gi.repository import Gtk, GdkPixbuf, Gdk
-from cairo import ImageSurface, FORMAT_ARGB32, Context
+import cairo
 
 
 def load_image_at_size(name, width, height):
@@ -13,8 +13,8 @@ def load_image_at_size(name, width, height):
     exceptions!"""
 
     pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(name, width, height)
-    surface = ImageSurface(FORMAT_ARGB32, width, height)
-    ctx = Context(surface)
+    surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
+    ctx = cairo.Context(surface)
     Gdk.cairo_set_source_pixbuf(ctx, pixbuf, 0, 0)
     ctx.paint()
 
