@@ -1,0 +1,34 @@
+--- nbd-3.15.2.orig/nbd-server.c	2017-02-14 03:13:30.000000000 +0200
++++ nbd-3.15.2/nbd-server.c	2019-04-02 13:22:47.789224669 +0300
+@@ -2667,18 +2667,18 @@
+  * is unique among all other servers.
+  *
+  * @param servers an array of servers
++ * @param genconf a pointer to generic configuration
+  * @return the number of new servers appended to the array, or -1 in
+  *         case of an error
+  **/
+-static int append_new_servers(GArray *const servers, GError **const gerror) {
++static int append_new_servers(GArray *const servers, struct generic_conf *genconf, GError **const gerror) {
+         int i;
+         GArray *new_servers;
+         const int old_len = servers->len;
+         int retval = -1;
+-        struct generic_conf genconf;
+ 
+-        new_servers = parse_cfile(config_file_pos, &genconf, true, gerror);
+-	g_thread_pool_set_max_threads(tpool, genconf.threads, NULL);
++        new_servers = parse_cfile(config_file_pos, genconf, true, gerror);
++        g_thread_pool_set_max_threads(tpool, genconf->threads, NULL);
+         if (!new_servers)
+                 goto out;
+ 
+@@ -2789,7 +2789,7 @@
+                         is_sighup_caught = 0; /* Reset to allow catching
+                                                * it again. */
+ 
+-                        n = append_new_servers(servers, &gerror);
++                        n = append_new_servers(servers, genconf, &gerror);
+                         if (n == -1)
+                                 msg(LOG_ERR, "failed to append new servers: %s",
+                                     gerror->message);

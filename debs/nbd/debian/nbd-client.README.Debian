@@ -1,0 +1,87 @@
+Booting a system with root-on-NBD
+=================================
+
+Starting with nbd-client 1:2.9.9-3, there's support for running root on
+an NBD filesystem. There's only support for initramfs for now. If you
+need something else, patches are welcome.
+
+To boot the system, the initramfs script needs to know three parameters:
+(1) the server's IP address, (2) the port number or export name of the
+export to be connected to, and (3) the device node on which to connect
+the nbd connection. To get at these parameters, it examines two kernel
+command-line parameters: the "nbdroot" parameter, and the "root"
+parameter.
+
+The "root" parameter is only examined for the device name. If the device
+name specified in the root parameter starts with "/dev/nbd", then it is
+accepted as the device node for the nbd-client. If the device name
+starts with a different string, then it is ignored.
+
+The "nbdroot" parameter can have several forms, depending on setup.
+- "nbdroot=<server>,<port or name>,<device>". For example:
+  "nbdroot=192.168.1.1,export,nbd0". Note that you *must* specify an IP
+  address; the initramfs environment does not have the ability to do
+  name resolving.
+  Note that if you specify both a three-option nbdroot parameter and a
+  root parameter starting with /dev/nbd, then the value in the root
+  parameter takes precedence.
+- "nbdroot=<server>,<port or name>", or, the above version but without
+  the device part. This will use the device node from the root=
+  parameter.
+- "nbdroot=dhcp". This variant expects a valid nbdroot= parameter to be
+  specified through the DHCP "root-path" variable. With ISC DHCP, this
+  would be specified in dhcpd.conf like so:
+  option root-path "192.168.1.1,export,nbd0";
+  For backwards compatibility, you may also specify the above with
+  "nbdroot=" in the root-device option in dhcpd.conf.
+- "nbdroot=dhcp,<port or name>,<device>". Takes the server IP address
+  from DHCP, but everything else from the kernel command line (can be
+  used in 2- and 3-option variant). Note, if using this variant, you
+  should specify *only* the IP address of the server, nothing more, i.e.:
+  option root-path "192.168.1.1";
+- Finally, other initramfs scripts can set the environment variable
+  NBDROOT to any valid nbdroot= value. For example:
+  export NBDROOT="192.168.1.1,export,nbd0"
+  This will override any nbdroot= parameter that was specified on the
+  kernel command line. It is parsed in exactly the same way. Note,
+  however, that the root= parameter will still be read; so if you used
+  the two-parameter variant of nbdroot=, then the root= kernel
+  command-line parameter must point to a valid nbd device or the system
+  will not boot.
+
+Port numbers are distinguished from name-based exports by checking if
+they contain any non-digit characters. If the second parameter does
+contain a non-digit character, the script will assume that it is a
+name-based export and add the -N parameter, as is required for doing so.
+
+Finally, to make the system work reliably, make sure you do the
+following:
+
+Add a line
+KILLALL=false
+to /etc/nbd-client; this is to prevent the initscript from yanking the
+root filesystem from under your nose during shutdown or upgrade of the
+nbd package.
+
+DO NOT add configuration for the root filesystem to /etc/nbd-client.
+The initramfs will connect the device, and the initscript should not
+know about it (otherwise the above KILLALL configuration has no effect).
+
+DO keep the initscript running and the nbd-client package installed on
+every client that boots off an NBD device, even if no other NBD devices
+are configured; this is required because the initscript will detect that
+you're running off an NBD device and add the nbd-client PID number to
+/run/sendsigs.omit.d, to prevent init from killing nbd-client
+prematurely at shutdown.
+
+Until #632091 is fixed, you must also add a line like
+NETDOWN=no
+to /etc/default/halt. This will make sure halt is not passed the "-i"
+parameter at shutdown, which causes it to bring down the network
+interfaces and thereby saw off the branch on which it's sitting (which
+may cause the kernel to panic rather than powering off the system if
+you're unlucky).
+
+To make the above easy, note that you can boot debian-installer with an
+additional command-line option "modules=partman-nbd". After doing so,
+you'll be able to configure nbd from the installer.

@@ -18,11 +18,12 @@ from gi.repository import Gio
 
 from constants import *
 import menudata
-from buttons import ProgramButton, MenuButton
+import iconcache
+import buttons
 import utils
 import utils_gui
 import faves
-from sidebar import Sidebar
+import sidebar
 from strings import STRINGS
 from settings import SETTINGS
 
@@ -122,6 +123,10 @@ class PuavoMenu(Gtk.Window):
         # The current menu/program buttons in the current
         # category and menu, if any
         self.__buttons = []
+
+        # Storage for 48x48 -pixel program and menu icons. Maintained
+        # separately from the menu data.
+        self.__icons = iconcache.IconCache(48, 48 * 15)
 
         # Background image for top-level menus
         try:
@@ -264,7 +269,7 @@ class PuavoMenu(Gtk.Window):
                                   PROGRAMS_LEFT,
                                   PROGRAMS_TOP + PROGRAMS_HEIGHT + MAIN_PADDING)
 
-        self.__faves = faves.FavesList(self)
+        self.__faves = faves.FavesList(self, SETTINGS)
         self.__faves.set_size_request(PROGRAMS_WIDTH,
                                       PROGRAM_BUTTON_HEIGHT + 2)
         self.__main_container.put(self.__faves,
@@ -280,7 +285,7 @@ class PuavoMenu(Gtk.Window):
                                    h=WINDOW_HEIGHT - (MAIN_PADDING * 2),
                                    orientation=Gtk.Orientation.VERTICAL)
 
-        self.__sidebar = Sidebar(self)
+        self.__sidebar = sidebar.Sidebar(self)
 
         self.__main_container.put(self.__sidebar.container,
                                   SIDEBAR_LEFT,
@@ -392,9 +397,10 @@ class PuavoMenu(Gtk.Window):
                     if menu.hidden:
                         continue
 
-                    button = MenuButton(self, menu.name, menu.icon,
-                                        menu.description, menu,
-                                        self.__menu_background)
+                    button = buttons.MenuButton(
+                        self, menu.name, menu.icon, menu.description, menu,
+                        self.__menu_background)
+
                     button.connect('clicked', self.__clicked_menu_button)
                     new_buttons.append(button)
 
@@ -403,8 +409,10 @@ class PuavoMenu(Gtk.Window):
                     if program.hidden:
                         continue
 
-                    button = ProgramButton(self, program.name, program.icon,
-                                           program.description, program)
+                    button = buttons.ProgramButton(
+                        self, program.name, program.icon,
+                        program.description, program)
+
                     button.connect('clicked', self.clicked_program_button)
                     new_buttons.append(button)
 
@@ -418,8 +426,10 @@ class PuavoMenu(Gtk.Window):
                 if program.hidden:
                     continue
 
-                button = ProgramButton(self, program.name, program.icon,
-                                       program.description, program)
+                button = buttons.ProgramButton(
+                    self, program.name, program.icon,
+                    program.description, program)
+
                 button.connect('clicked', self.clicked_program_button)
                 new_buttons.append(button)
 
@@ -432,6 +442,7 @@ class PuavoMenu(Gtk.Window):
         # Update the menu title
         if self.current_menu is None:
             self.__menu_title.hide()
+            self.__back_button.hide()
         else:
             # TODO: "big" and "small" are not good sizes, we need to be explicit
             if self.current_menu.description:
@@ -443,6 +454,7 @@ class PuavoMenu(Gtk.Window):
                     '<big>{0}</big>'.format(self.current_menu.name))
 
             self.__menu_title.show()
+            self.__back_button.show()
 
 
     # --------------------------------------------------------------------------
@@ -551,10 +563,11 @@ class PuavoMenu(Gtk.Window):
     def clicked_program_button(self, button):
         program = button.data
         program.uses += 1
-        self.__faves.update(self.menudata.programs)
 
         logging.info('Clicked program button "%s", usage counter is %d',
                      program.menudata_id, program.uses)
+
+        self.__faves.update(self.menudata.programs)
 
         if program.command is None:
             logging.error('No command defined for program "%s"', program.name)
@@ -645,7 +658,7 @@ class PuavoMenu(Gtk.Window):
         new_buttons = []
 
         for m in matches:
-            b = ProgramButton(self, m.name, m.icon, m.description, m)
+            b = buttons.ProgramButton(self, m.name, m.icon, m.description, m)
             b.connect('clicked', self.clicked_program_button)
             new_buttons.append(b)
 
@@ -665,6 +678,9 @@ class PuavoMenu(Gtk.Window):
 
     # Responds to Esc and Enter keypresses in the search field
     def __search_keypress(self, widget, key_event):
+        self.__back_button.hide()
+        self.__menu_title.hide()
+
         if key_event.keyval == Gdk.KEY_Escape:
             if len(self.__get_search_text()):
                 # Cancel an ongoing search
@@ -697,14 +713,12 @@ class PuavoMenu(Gtk.Window):
         something fails."""
 
         try:
-            from iconcache import ICONS48
-
             self.menudata = menudata.Menudata()
 
             self.menudata.load(SETTINGS.language,
                                SETTINGS.menu_dir,
                                utils.puavo_conf('puavo.puavomenu.tags', 'default'),
-                               ICONS48)
+                               self.__icons)
 
         except Exception as exception:
             logging.fatal('Could not load menu data!')
@@ -737,7 +751,9 @@ class PuavoMenu(Gtk.Window):
         self.__create_current_menu()
         self.__programs_container.show()
 
-        faves.load_use_counts(self.menudata.programs)
+        if SETTINGS.enable_faves_saving:
+            faves.load_use_counts(self.menudata.programs, SETTINGS.user_dir)
+
         self.__faves.update(self.menudata.programs)
         self.__faves_sep.show()
         self.__faves.show()
@@ -786,12 +802,7 @@ class PuavoMenu(Gtk.Window):
         self.current_category = -1
         self.current_menu = None
 
-        from iconcache import ICONS48
-
-        if ICONS48.stats()[0] != 0:
-            # Purge existing icons
-            ICONS48.clear()
-
+        self.__icons.clear()
 
     # --------------------------------------------------------------------------
     # Window visibility management

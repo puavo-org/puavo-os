@@ -10,9 +10,8 @@ from gi.repository import Gtk, Gdk, Pango, PangoCairo
 
 from constants import PROGRAM_BUTTON_WIDTH, PROGRAM_BUTTON_HEIGHT, \
                       PROGRAM_BUTTON_ICON_SIZE, SIDEBAR_WIDTH
-from iconcache import ICONS32, ICONS48
-from utils import localize
-from utils_gui import rounded_rectangle, draw_x, load_image_at_size
+import utils
+import utils_gui
 from strings import STRINGS
 from settings import SETTINGS
 
@@ -114,9 +113,9 @@ class HoverIconButtonBase(Gtk.Button):
             rect = self.get_allocation()
 
             # setup the clipping area
-            rounded_rectangle(ctx, 0, 0,
-                              rect.width, rect.height,
-                              self.corner_rounding)
+            utils_gui.rounded_rectangle(ctx, 0, 0,
+                                        rect.width, rect.height,
+                                        self.corner_rounding)
             ctx.clip()
 
             self.draw_background(ctx, rect)
@@ -133,8 +132,10 @@ class HoverIconButtonBase(Gtk.Button):
     # Draw the button background
     def draw_background(self, ctx, rect):
         if not self.disabled and self.hover:
-            rounded_rectangle(ctx, 0, 0, rect.width, rect.height,
-                              self.corner_rounding)
+            utils_gui.rounded_rectangle(ctx,
+                                        0, 0,
+                                        rect.width, rect.height,
+                                        self.corner_rounding)
             ctx.set_source_rgba(self.background_color[0],
                                 self.background_color[1],
                                 self.background_color[2],
@@ -145,14 +146,12 @@ class HoverIconButtonBase(Gtk.Button):
     # Draw the icon
     def draw_icon(self, ctx):
         if self.icon:
-            ICONS48.draw_icon(ctx,
-                              self.icon,
-                              self.icon_pos[0], self.icon_pos[1])
+            self.icon.draw(ctx, self.icon_pos[0], self.icon_pos[1])
         else:
-            draw_x(ctx,
-                   self.icon_pos[0], self.icon_pos[1],
-                   self.icon_size, self.icon_size,
-                   self.icon_color)
+            utils_gui.draw_x(ctx,
+                             self.icon_pos[0], self.icon_pos[1],
+                             self.icon_size, self.icon_size,
+                             self.icon_color)
 
 
     # Draw the label
@@ -296,9 +295,10 @@ class ProgramButton(HoverIconButtonBase):
             rect = self.get_allocation()
 
             # setup the clipping area
-            rounded_rectangle(ctx, 0, 0,
-                              rect.width, rect.height,
-                              self.corner_rounding)
+            utils_gui.rounded_rectangle(ctx,
+                                        0, 0,
+                                        rect.width, rect.height,
+                                        self.corner_rounding)
             ctx.clip()
 
             # I don't want to copy-paste draw_background() and draw-label()
@@ -337,12 +337,12 @@ class ProgramButton(HoverIconButtonBase):
         else:
             ctx.set_source_rgba(0.0, 1.0, 1.0, 0.25)
 
-        rounded_rectangle(ctx,
-                          x=self.__indicator_x1,
-                          y=self.__indicator_y1,
-                          width=self.INDICATOR_WIDTH,
-                          height=self.INDICATOR_HEIGHT,
-                          radius=3.0)
+        utils_gui.rounded_rectangle(ctx,
+                                    x=self.__indicator_x1,
+                                    y=self.__indicator_y1,
+                                    width=self.INDICATOR_WIDTH,
+                                    height=self.INDICATOR_HEIGHT,
+                                    radius=3.0)
         ctx.fill()
         ctx.restore()
 
@@ -382,7 +382,7 @@ class ProgramButton(HoverIconButtonBase):
                 if SETTINGS.desktop_dir:
                     # Can't do this without the desktop directory
                     desktop_item = Gtk.MenuItem(
-                        localize(STRINGS['popup_add_to_desktop']))
+                        utils.localize(STRINGS['popup_add_to_desktop']))
                     desktop_item.connect('activate',
                                          lambda x: self.__special_operation(
                                              self.parent.add_program_to_desktop))
@@ -390,7 +390,7 @@ class ProgramButton(HoverIconButtonBase):
                     self.__menu.append(desktop_item)
 
                 panel_item = Gtk.MenuItem(
-                    localize(STRINGS['popup_add_to_panel']))
+                    utils.localize(STRINGS['popup_add_to_panel']))
                 panel_item.connect('activate',
                                    lambda x: self.__special_operation(
                                        self.parent.add_program_to_panel))
@@ -400,7 +400,7 @@ class ProgramButton(HoverIconButtonBase):
                 if self.is_fave:
                     # special entry for fave buttons
                     remove_fave = Gtk.MenuItem(
-                        localize(STRINGS['popup_remove_from_faves']))
+                        utils.localize(STRINGS['popup_remove_from_faves']))
                     remove_fave.connect('activate',
                                         lambda x: self.__special_operation(
                                             self.parent.remove_program_from_faves))
@@ -574,10 +574,10 @@ class AvatarButton(HoverIconButtonBase):
             ctx.rectangle(0, 0, self.ICON_SIZE, self.ICON_SIZE)
             ctx.fill()
         else:
-            draw_x(ctx,
-                   self.icon_pos[0], self.icon_pos[1],
-                   self.icon_size, self.icon_size,
-                   self.icon_color)
+            utils_gui.draw_x(ctx,
+                             self.icon_pos[0], self.icon_pos[1],
+                             self.icon_size, self.icon_size,
+                             self.icon_color)
 
 
     # Loads and resizes the avatar icon
@@ -585,9 +585,9 @@ class AvatarButton(HoverIconButtonBase):
         try:
             logging.info('Loading avatar image "%s"...', path)
 
-            self.icon = load_image_at_size(path,
-                                           self.ICON_SIZE,
-                                           self.ICON_SIZE)
+            self.icon = utils_gui.load_image_at_size(path,
+                                                     self.ICON_SIZE,
+                                                     self.ICON_SIZE)
 
             # trigger a redraw
             self.queue_draw()
@@ -644,16 +644,13 @@ class SidebarButton(HoverIconButtonBase):
 
 
     def draw_icon(self, ctx):
-        # Use the 32-pixel icon cache for sidebar buttons, not 48
         if self.icon:
-            ICONS32.draw_icon(ctx,
-                              self.icon,
-                              self.icon_pos[0], self.icon_pos[1])
+            self.icon.draw(ctx, self.icon_pos[0], self.icon_pos[1])
         else:
-            draw_x(ctx,
-                   self.icon_pos[0], self.icon_pos[1],
-                   self.icon_size, self.icon_size,
-                   self.icon_color)
+            utils_gui.draw_x(ctx,
+                             self.icon_pos[0], self.icon_pos[1],
+                             self.icon_size, self.icon_size,
+                             self.icon_color)
 
         if self.disabled:
             # hack to make the icon look "grayed out"
