@@ -749,9 +749,9 @@ class packages {
 		      , $virtualbox_module ]
 
   packages::kernels::kernel_package {
-    '3.16.0-7-amd64':
+    '3.16.0-6-amd64':
       dkms_modules => $all_dkms_modules,
-      package_name => 'linux-image-3.16.0-7-amd64';
+      package_name => 'linux-image-3.16.0-6-amd64';
 
     '4.9.0-8-amd64':
       dkms_modules => $all_dkms_modules,
