@@ -23,20 +23,20 @@ class Settings:
         self.autohide = False
 
         # Directory for the built-in resources (images mostly)
-        self.res_dir = ""
+        self.res_dir = ''
 
         # Directory where menudata and conditionals are loaded from
-        self.menu_dir = ""
+        self.menu_dir = ''
 
         # Where user settings are saved (usually ~/.config/puavomenu)
-        self.user_dir = ""
+        self.user_dir = ''
 
         # Language code (en/fi/de/sv)
-        self.language = "en"
+        self.language = 'en'
 
         # IPC socket name, for relaying show/hide commands from the
         # panel button. See /opt/puavomenu/send_command.
-        self.socket = ""
+        self.socket = ''
 
         # ----------------------------------------------------------------------
         # Automagically detected
@@ -67,7 +67,6 @@ class Settings:
         # click a program or a search result. Set to False to retain the
         # current view. Can be configured through the per-user config file.
         self.reset_view_after_start = True
-
 
     def detect_environment(self):
         """Detects the runtime-environment for this session. Call once
@@ -154,7 +153,7 @@ class Settings:
         except Exception as exception:
             # Keep as None to signal that we don't know where to put desktop
             # files, this makes desktop link creation always fail
-            logging.error("Could not determine the location of user's " \
+            logging.error("Could not determine the location of user's "
                           "desktop directory")
             logging.error(str(exception))
             self.desktop_dir = None

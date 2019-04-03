@@ -18,7 +18,6 @@ class Icon:
         self.size = 0
         self.filename = ""      # needed when creating desktop/panel icons
 
-
     def draw(self, ctx, x, y):
         self.cache.draw_icon(ctx, self, x, y)
 
@@ -54,7 +53,6 @@ class IconCache:
         self.__create_slots()
         self.__create_atlas()
 
-
     def __create_slots(self):
         # Create storage for the icons. Each of these "slots" stores
         # one icon. The icons store their index to self.__icons array.
@@ -66,7 +64,6 @@ class IconCache:
 
             for x in range(0, max_icons):
                 self.__icons.append(self.CacheSlot(x * self.__icon_size, ypos))
-
 
     def __create_atlas(self):
         # Create the actual atlas image
@@ -86,7 +83,6 @@ class IconCache:
         self.__atlas_context.rectangle(0, 0, self.__bitmap_size, self.__bitmap_size)
         self.__atlas_context.paint()
         self.__atlas_context.restore()
-
 
     def load_icon(self, path):
         """Loads an icon. Returns a handle to a cached icon if the icon
@@ -144,18 +140,15 @@ class IconCache:
 
         return new_icon
 
-
     def __getitem__(self, path):
         """Overload [] for easier access."""
 
         return self.load_icon(path)
 
-
     def is_loaded(self, path):
         """Checks if this icon has been cached already."""
 
         return path in self.__filename_lookup
-
 
     def draw_icon(self, ctx, icon, x, y):
         """Draws the icon onto the Cairo context at the specified
@@ -174,14 +167,12 @@ class IconCache:
             ctx.rectangle(x, y, self.__icon_size, self.__icon_size)
             ctx.fill()
 
-
     def clear(self):
         """Completely clears the cache."""
 
         self.__filename_lookup = OrderedDict()
         self.__create_slots()
         self.__create_atlas()
-
 
     def stats(self):
         return (len(self.__filename_lookup), len(self.__icons))

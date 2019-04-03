@@ -388,10 +388,10 @@ def load_menudata_json_file(filename):
                 continue
 
             if ('type' not in src_program) or \
-                    (src_program['type'] not in \
-                        (PROGRAM_TYPE_DESKTOP,
-                         PROGRAM_TYPE_CUSTOM,
-                         PROGRAM_TYPE_WEB)):
+                    (src_program['type'] not in
+                     (PROGRAM_TYPE_DESKTOP,
+                      PROGRAM_TYPE_CUSTOM,
+                      PROGRAM_TYPE_WEB)):
                 logging.error('JSON program "%s" has no type or the specified type is invalid',
                               name)
                 continue
@@ -852,7 +852,7 @@ def build_menu_data(raw_programs, raw_menus, raw_categories, language):
         if not src_prog:
             continue
 
-        if not 'type' in src_prog:
+        if 'type' not in src_prog:
             logging.error('Program "%s" has no type specified. '
                           'This really should not happen.', menudata_id)
             continue
@@ -882,7 +882,7 @@ def build_menu_data(raw_programs, raw_menus, raw_categories, language):
 
         # Description (optional), accept ONLY a localized description
         if 'description' in src_prog and src_prog['description'] and \
-               language in src_prog['description']:
+           language in src_prog['description']:
             dst_prog.description = utils.localize(src_prog['description'])
 
         # Keywords (optional)
@@ -1201,9 +1201,6 @@ def load_icons(programs, menus, icon_dirs, icon_cache):
 
     logging.info('Number of 48-pixel icons cached: %d (out of %d)',
                  num_icons, max_icons)
-
-    #logging.info('Number of 48-pixel atlas surfaces: %d',
-    #             stats['num_atlases'])
 
 
 # ------------------------------------------------------------------------------

@@ -82,16 +82,13 @@ class HoverIconButtonBase(Gtk.Button):
         self.corner_rounding = 0
         self.compute_elements()
 
-
     def get_preferred_button_size(self):
         # Implement this in derived classes
         pass
 
-
     def compute_elements(self):
         # Implement this in derived classes
         pass
-
 
     # Mouse enters the button area
     def on_mouse_enter(self, widget, event):
@@ -100,12 +97,10 @@ class HoverIconButtonBase(Gtk.Button):
 
         return False
 
-
     # Mouse leaves the button area
     def on_mouse_leave(self, widget, event):
         self.hover = False
         return False
-
 
     # Draw the button
     def on_draw(self, widget, ctx):
@@ -128,7 +123,6 @@ class HoverIconButtonBase(Gtk.Button):
         # return True to prevent default event processing
         return True
 
-
     # Draw the button background
     def draw_background(self, ctx, rect):
         if not self.disabled and self.hover:
@@ -142,7 +136,6 @@ class HoverIconButtonBase(Gtk.Button):
                                 1.0)
             ctx.fill()
 
-
     # Draw the icon
     def draw_icon(self, ctx):
         if self.icon:
@@ -152,7 +145,6 @@ class HoverIconButtonBase(Gtk.Button):
                              self.icon_pos[0], self.icon_pos[1],
                              self.icon_size, self.icon_size,
                              self.icon_color)
-
 
     # Draw the label
     def draw_label(self, ctx):
@@ -172,7 +164,6 @@ class HoverIconButtonBase(Gtk.Button):
         ctx.move_to(self.label_pos[0], self.label_pos[1])
         PangoCairo.show_layout(ctx, self.label_layout)
 
-
     # It's possible to disable buttons, but because it's so rare
     # occurrence, you cannot set the flag in the constructor.
     # Instead, you must call this method. At the moment, a button
@@ -190,7 +181,6 @@ class ProgramButton(HoverIconButtonBase):
     INDICATOR_HEIGHT = 30
     INDICATOR_EDGE = 5
     INDICATOR_ARROW_SIZE = 5
-
 
     def __init__(self,
                  parent,
@@ -224,10 +214,8 @@ class ProgramButton(HoverIconButtonBase):
         self.__indicator_y1 = self.INDICATOR_EDGE
         self.__indicator_y2 = self.__indicator_y1 + self.INDICATOR_HEIGHT
 
-
     def get_preferred_button_size(self):
         return (PROGRAM_BUTTON_WIDTH, PROGRAM_BUTTON_HEIGHT)
-
 
     def compute_elements(self):
         self.corner_rounding = 5
@@ -245,7 +233,6 @@ class ProgramButton(HoverIconButtonBase):
             20 + PROGRAM_BUTTON_ICON_SIZE + 5
         ]
 
-
     # Mouse enters the button area
     def on_mouse_enter(self, widget, event):
         if not self.disabled:
@@ -258,7 +245,6 @@ class ProgramButton(HoverIconButtonBase):
 
         return False
 
-
     # Mouse leaves the button area
     def on_mouse_leave(self, widget, event):
         if not self.disabled:
@@ -270,7 +256,6 @@ class ProgramButton(HoverIconButtonBase):
                 self.__hover_signal = None
 
         return False
-
 
     # Track mouse movements and update the hover indicator box
     def __on_mouse_hover_move(self, widget, event):
@@ -288,7 +273,6 @@ class ProgramButton(HoverIconButtonBase):
                 self.queue_draw()
 
         return False
-
 
     def on_draw(self, widget, ctx):
         try:
@@ -325,7 +309,6 @@ class ProgramButton(HoverIconButtonBase):
 
         # return True to prevent default event processing
         return True
-
 
     # Draw the popup menu indicator
     def __draw_popup_indicator(self, ctx):
@@ -367,7 +350,6 @@ class ProgramButton(HoverIconButtonBase):
         ctx.fill()
 
         ctx.restore()
-
 
     # Create and display the popup menu
     def open_menu(self, widget, event):
@@ -435,7 +417,6 @@ class ProgramButton(HoverIconButtonBase):
         self.__menu = None
         self.queue_draw()       # force hover state update
 
-
     # The ProgramButton does not know how to add the program on the
     # desktop or panel or anything else, but the PuavoMenu class does,
     # so call the relevant method there. This is also a way to get
@@ -479,7 +460,6 @@ class MenuButton(HoverIconButtonBase):
     def get_preferred_button_size(self):
         return (PROGRAM_BUTTON_WIDTH, PROGRAM_BUTTON_HEIGHT)
 
-
     def compute_elements(self):
         self.corner_rounding = 5
 
@@ -498,7 +478,6 @@ class MenuButton(HoverIconButtonBase):
             10,  # left padding
             30 + PROGRAM_BUTTON_ICON_SIZE
         ]
-
 
     def draw_background(self, ctx, rect):
         super().draw_background(ctx, rect)
@@ -543,10 +522,8 @@ class AvatarButton(HoverIconButtonBase):
             Pango.FontDescription('Cantarell Bold 11'))
         self.compute_elements()
 
-
     def get_preferred_button_size(self):
         return (SIDEBAR_WIDTH, self.ICON_SIZE)
-
 
     def compute_elements(self):
         self.corner_rounding = 0
@@ -564,7 +541,6 @@ class AvatarButton(HoverIconButtonBase):
             (self.ICON_SIZE / 2) - ((ink.height / Pango.SCALE) / 2) - 2
         ]
 
-
     # Must override the base method - the user avatar is not stored in
     # any icon cache and the base method is trying to draw it from a
     # cache!
@@ -578,7 +554,6 @@ class AvatarButton(HoverIconButtonBase):
                              self.icon_pos[0], self.icon_pos[1],
                              self.icon_size, self.icon_size,
                              self.icon_color)
-
 
     # Loads and resizes the avatar icon
     def load_avatar(self, path):
@@ -595,7 +570,6 @@ class AvatarButton(HoverIconButtonBase):
             logging.error('Could not load avatar image "%s": %s',
                           path, str(exception))
             self.icon = None
-
 
     def disable(self):
         self.disabled = True
@@ -621,13 +595,11 @@ class SidebarButton(HoverIconButtonBase):
         self.label_layout.set_width(-1)     # -1 turns off wrapping
         self.label_layout.set_ellipsize(Pango.EllipsizeMode.END)
 
-
     def get_preferred_button_size(self):
         return (
             SIDEBAR_WIDTH,
             self.ICON_SIZE + self.PADDING * 2
         )
-
 
     def compute_elements(self):
         self.corner_rounding = 3
@@ -641,7 +613,6 @@ class SidebarButton(HoverIconButtonBase):
             self.PADDING + self.ICON_SIZE + self.PADDING * 2,
             (self.ICON_SIZE + self.PADDING * 2) / 2 - (height / Pango.SCALE / 2)
         ]
-
 
     def draw_icon(self, ctx):
         if self.icon:

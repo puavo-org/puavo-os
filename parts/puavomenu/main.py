@@ -29,7 +29,6 @@ from settings import SETTINGS
 
 
 class PuavoMenu(Gtk.Window):
-
     def error_message(self, message, secondary_message=None):
         """Show a modal error message box."""
 
@@ -46,7 +45,6 @@ class PuavoMenu(Gtk.Window):
         dialog.run()
         dialog.hide()
         self.enable_out_of_focus_hide()
-
 
     def __init__(self):
 
@@ -215,8 +213,7 @@ class PuavoMenu(Gtk.Window):
 
         self.__search = Gtk.SearchEntry()
         self.__search.set_size_request(SEARCH_WIDTH, SEARCH_HEIGHT)
-        self.__search.set_max_length(10)     # if you need more than this,
-                                             # it probably doesn't exist
+        self.__search.set_max_length(10)     # you won't need more than this
         self.__search_changed_signal = \
             self.__search.connect('changed', self.__do_search)
         self.__search_keypress_signal = \
@@ -237,7 +234,7 @@ class PuavoMenu(Gtk.Window):
         self.__menu_title.set_use_markup(True)
         self.__main_container.put(
             self.__menu_title,
-            BACK_BUTTON_X + BACK_BUTTON_WIDTH +  MAIN_PADDING,
+            BACK_BUTTON_X + BACK_BUTTON_WIDTH + MAIN_PADDING,
             BACK_BUTTON_Y + 3)
 
         # The main programs list
@@ -262,8 +259,7 @@ class PuavoMenu(Gtk.Window):
                                   PROGRAMS_LEFT, PROGRAMS_TOP)
 
         # Faves list
-        self.__faves_sep = Gtk.Separator(orientation=
-                                         Gtk.Orientation.HORIZONTAL)
+        self.__faves_sep = Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
         self.__faves_sep.set_size_request(PROGRAMS_WIDTH, 1)
         self.__main_container.put(self.__faves_sep,
                                   PROGRAMS_LEFT,
@@ -337,10 +333,8 @@ class PuavoMenu(Gtk.Window):
             else:
                 self.__show_empty_message(STRINGS['menu_no_data_at_all_dev'])
 
-
     # --------------------------------------------------------------------------
     # Menus and programs list handling
-
 
     # Replaces the existing menu and program buttons (if any) with new
     # buttons. The new button list can be empty.
@@ -373,7 +367,6 @@ class PuavoMenu(Gtk.Window):
         if show:
             self.__programs_icons.show()
 
-
     # (Re-)Creates the current category or menu view
     def __create_current_menu(self):
         if self.menudata is None:
@@ -389,7 +382,7 @@ class PuavoMenu(Gtk.Window):
                self.current_category < len(self.menudata.category_index):
 
                 # We have a valid category
-                cat = self.menudata.categories[ \
+                cat = self.menudata.categories[
                     self.menudata.category_index[self.current_category]]
 
                 # Menus first...
@@ -456,10 +449,8 @@ class PuavoMenu(Gtk.Window):
             self.__menu_title.show()
             self.__back_button.show()
 
-
     # --------------------------------------------------------------------------
     # Menu/category navigation
-
 
     # Shows an "empty" message in the main programs list. Used when a
     # menu/category is empty, or there are no search results.
@@ -471,7 +462,6 @@ class PuavoMenu(Gtk.Window):
             '<span color="#888" size="large"><i>{0}</i></span>'.format(msg))
         self.__empty.show()
 
-
     # Change the category
     def __clicked_category(self, widget, frame, num):
         self.__clear_search_field()
@@ -480,7 +470,6 @@ class PuavoMenu(Gtk.Window):
         self.current_menu = None
         self.__create_current_menu()
 
-
     # Go back to top level
     def __clicked_back_button(self, button):
         self.__clear_search_field()
@@ -488,14 +477,12 @@ class PuavoMenu(Gtk.Window):
         self.current_menu = None
         self.__create_current_menu()
 
-
     # Enter a menu
     def __clicked_menu_button(self, button):
         self.__clear_search_field()
         self.__back_button.show()
         self.current_menu = button.data
         self.__create_current_menu()
-
 
     # Resets the menu back to the default view
     def reset_view(self):
@@ -506,10 +493,8 @@ class PuavoMenu(Gtk.Window):
         self.__create_current_menu()
         self.__category_buttons.set_current_page(0)
 
-
     # --------------------------------------------------------------------------
     # Button click handlers
-
 
     # Called directly from ProgramButton
     def add_program_to_desktop(self, program):
@@ -535,7 +520,6 @@ class PuavoMenu(Gtk.Window):
                 utils.localize(STRINGS['desktop_link_failed']),
                 str(exception))
 
-
     # Called directly from ProgramButton
     def add_program_to_panel(self, program):
         logging.info('Adding program "%s" (id="%s") to the bottom panel',
@@ -550,13 +534,11 @@ class PuavoMenu(Gtk.Window):
             self.error_message(utils.localize(STRINGS['panel_link_failed']),
                                str(exception))
 
-
     # Called directly from ProgramButton
     def remove_program_from_faves(self, p):
         logging.info('Removing program "%s" from the faves', p.name)
         p.uses = 0
         self.__faves.update(self.menudata.programs)
-
 
     # Launch a program. This is a public method, it is called from other
     # files (buttons and faves) to launch programs.
@@ -580,7 +562,7 @@ class PuavoMenu(Gtk.Window):
                 # Spy the user and log what programs they use. This information
                 # is then sent to various TLAs around the world and used in all
                 # sorts of nefarious classified black operations.
-                syslog.syslog(syslog.LOG_INFO, 'Launching program "{0}", command="{1}"'. \
+                syslog.syslog(syslog.LOG_INFO, 'Launching program "{0}", command="{1}"'.
                               format(program.menudata_id, program.command))
 
                 # Just kidding. The reason program starts are logged to syslog
@@ -625,15 +607,12 @@ class PuavoMenu(Gtk.Window):
                                str(exception))
             return False
 
-
     # --------------------------------------------------------------------------
     # Searching
-
 
     # Returns the current search term, filtered and cleaned
     def __get_search_text(self):
         return self.__search.get_text().strip().translate(self.__translation_table)
-
 
     # Searches the programs list using a string, then replaces the menu list
     # with results
@@ -664,7 +643,6 @@ class PuavoMenu(Gtk.Window):
 
         self.__fill_programs_list(new_buttons, True)
 
-
     # Clear the search box without triggering another search
     def __clear_search_field(self):
         self.__search.disconnect(self.__search_keypress_signal)
@@ -674,7 +652,6 @@ class PuavoMenu(Gtk.Window):
             self.__search.connect('key-press-event', self.__search_keypress)
         self.__search_changed_signal = \
             self.__search.connect('changed', self.__do_search)
-
 
     # Responds to Esc and Enter keypresses in the search field
     def __search_keypress(self, widget, key_event):
@@ -703,10 +680,8 @@ class PuavoMenu(Gtk.Window):
 
         return False
 
-
     # --------------------------------------------------------------------------
     # Menu data loading and handling
-
 
     def load_menu_data(self):
         """Loads menu data and sets up the UI. Returns false if
@@ -763,7 +738,6 @@ class PuavoMenu(Gtk.Window):
 
         return True
 
-
     def unload_menu_data(self):
         """Completely removes all menu data. Hides everything programs-
         related from the UI."""
@@ -807,7 +781,6 @@ class PuavoMenu(Gtk.Window):
     # --------------------------------------------------------------------------
     # Window visibility management
 
-
     # Hides the window if Esc is pressed when the keyboard focus
     # is not in the search box (the search box has its own Esc
     # handler).
@@ -820,7 +793,6 @@ class PuavoMenu(Gtk.Window):
             self.set_visible(False)
         else:
             logging.debug('Ignoring Esc in development mode')
-
 
     # Removes the out-of-focus autohiding. You need to call this before
     # displaying popup menus, because they trigger out-of-focus signals!
@@ -836,7 +808,6 @@ class PuavoMenu(Gtk.Window):
             self.disconnect(self.__focus_signal)
             self.__focus_signal = None
 
-
     # (Re)enables window out-of-focus autohiding. You need to call this
     # after a popup menu has been closed.
     def enable_out_of_focus_hide(self, *unused):
@@ -847,14 +818,11 @@ class PuavoMenu(Gtk.Window):
             self.__focus_signal = \
                 self.connect('focus-out-event', self.__main_lost_focus)
 
-
     def __main_lost_focus(self, *unused):
         self.autohide()
 
-
     def __search_out(self, *unused):
         self.__search.grab_focus()
-
 
     # If autohiding is enabled, hides the window when it loses focus. Public method, called
     # from other files.
@@ -862,7 +830,6 @@ class PuavoMenu(Gtk.Window):
         if SETTINGS.autohide:
             self.set_keep_above(False)
             self.set_visible(False)
-
 
     # Quits the program, if permitted. The signal handlers always call
     # this with "force=True" because they HAVE to kill the program.
@@ -876,11 +843,9 @@ class PuavoMenu(Gtk.Window):
             logging.info('Exit not permitted')
             return True
 
-
     # TODO: put this in a lambda
     def __try_exit(self, menu, event):
         return self.go_away()
-
 
     # Extracts X/Y coordinates from a list
     def __parse_position(self, args):
@@ -907,7 +872,6 @@ class PuavoMenu(Gtk.Window):
             pass
 
         return None
-
 
     # Responds to commands sent through the control socket
     def __socket_watcher(self, source, condition, *args):
@@ -997,10 +961,8 @@ class PuavoMenu(Gtk.Window):
         # False will remove the handler, that's not what we want
         return True
 
-
     # --------------------------------------------------------------------------
     # Development helpers
-
 
     # The devtools menu and its commands
     def __devtools_menu(self, widget, event):
@@ -1028,7 +990,7 @@ class PuavoMenu(Gtk.Window):
                     prev_menu = self.current_menu.menudata_id
 
                 if len(self.menudata.category_index) > 0 and \
-                    self.current_category != -1:
+                   self.current_category != -1:
                     prev_cat = self.menudata.category_index[self.current_category]
 
             logging.debug('=' * 20)
@@ -1076,7 +1038,6 @@ class PuavoMenu(Gtk.Window):
         def force_exit(menuitem):
             logging.debug('Devmenu force exit initiated!')
             self.go_away(True)
-
 
         dev_menu = Gtk.Menu()
 
