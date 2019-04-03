@@ -28,7 +28,6 @@ class packages::compat_32bit {
       , 'libglib2.0-0:i386'
       , 'libgtk2.0-0:i386'
       , 'libice6:i386'
-      , 'libjpeg8:i386'                 # needed by RobboScratch2
       , 'libltdl7:i386'
       , 'libmp3lame0:i386'              # needed by mimio-studio
       , 'libnspr4-0d:i386'
