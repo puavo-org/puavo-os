@@ -77,8 +77,7 @@ def create_desktop_link(filename, program):
     here from main.py. Make sure you handle exceptions if you call this!"""
 
     from constants import PROGRAM_TYPE_DESKTOP, \
-                          PROGRAM_TYPE_CUSTOM, \
-                          PROGRAM_TYPE_WEB
+        PROGRAM_TYPE_CUSTOM, PROGRAM_TYPE_WEB
 
     with open(filename, 'w', encoding='utf-8') as out:
         if program.program_type != PROGRAM_TYPE_WEB:
@@ -139,7 +138,7 @@ def create_panel_link(program):
     panel_faves = gsettings.get_value(KEY).unpack()
 
     if desktop_name in panel_faves:
-        logging.info('Desktop file "%s" is already in the panel, ' \
+        logging.info('Desktop file "%s" is already in the panel, '
                      'doing nothing', desktop_name)
         return
 

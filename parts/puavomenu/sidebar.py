@@ -218,7 +218,6 @@ class AvatarDownloaderThread(threading.Thread):
         self.__destination = destination        # where to cache the file
         self.__avatar_object = avatar_object    # the avatar button object
 
-
     def run(self):
         import time             # oh, I wish
         import subprocess
@@ -236,14 +235,14 @@ class AvatarDownloaderThread(threading.Thread):
                 proc.wait()
 
                 if proc.returncode != 0:
-                    raise RuntimeError("'puavo-resolve-api-server' failed " \
+                    raise RuntimeError("'puavo-resolve-api-server' failed "
                                        "with code {0}".format(proc.returncode))
 
                 server = proc.stdout.read().decode('utf-8').strip()
                 uri = server + '/v3/users/' + getuser() + '/profile.jpg'
 
                 # Then download the avatar image
-                logging.info('Downloading user avatar from "%s", ' \
+                logging.info('Downloading user avatar from "%s", '
                              'attempt %d/%d...', uri, attempt + 1,
                              self.MAX_ATTEMPTS)
 
@@ -289,7 +288,7 @@ class AvatarDownloaderThread(threading.Thread):
                     self.__avatar_object.load_avatar(name)
                 except Exception as exception:
                     # Why must everything fail?
-                    logging.warning('Failed to save the downloaded avatar ' \
+                    logging.warning('Failed to save the downloaded avatar '
                                     'image: %s', str(exception))
                     logging.warning('New avatar image not set')
 
@@ -305,7 +304,7 @@ class AvatarDownloaderThread(threading.Thread):
                              self.RETRY_WAIT)
                 time.sleep(self.RETRY_WAIT)
 
-        logging.error('Giving up on trying to download the user avatar, ' \
+        logging.error('Giving up on trying to download the user avatar, '
                       'tried %d times', self.MAX_ATTEMPTS)
         logging.info('The avatar update thread is exiting')
 
@@ -331,7 +330,7 @@ class Sidebar:
 
         # Download a new copy of the user avatar image
         if self.__must_download_avatar:
-            logging.info('Launching a background thread for downloading ' \
+            logging.info('Launching a background thread for downloading '
                          'the avatar image')
 
             try:
@@ -347,7 +346,6 @@ class Sidebar:
                 logging.error('Could not create a new thread: %s',
                               str(exception))
 
-
     # Digs up values for expanding variables in button arguments
     def __get_variables(self):
         self.__variables = {}
@@ -355,7 +353,6 @@ class Sidebar:
             utils.get_file_contents('/etc/puavo/domain', '?')
         self.__variables['user_name'] = getuser()
         self.__variables['user_language'] = SETTINGS.language
-
 
     # Creates the user avatar button
     def __create_avatar(self):
@@ -375,7 +372,7 @@ class Sidebar:
         else:
             # We need to download this avatar image right away, use the
             # default avatar until the download is complete
-            logging.info('Not a guest/webkiosk session and no previously-' \
+            logging.info('Not a guest/webkiosk session and no previously-'
                          'downloaded avatar available, using the default image')
             avatar_image = default_avatar
 
@@ -396,7 +393,6 @@ class Sidebar:
 
         self.container.put(self.__avatar, 0, MAIN_PADDING)
         self.__avatar.show()
-
 
     # Creates the sidebar "system" buttons
     def __create_buttons(self):
@@ -435,7 +431,6 @@ class Sidebar:
 
         logging.info('Support page URL: "%s"', SB_SUPPORT['command']['args'])
 
-
     # Creates a sidebar button
     def __create_button(self, y, data):
         button = buttons.SidebarButton(self,
@@ -451,7 +446,6 @@ class Sidebar:
         # the next available Y coordinate
         return y + button.get_preferred_button_size()[1]
 
-
     # Creates a special sidebar separator
     def __create_separator(self, y):
         padding = 20
@@ -466,7 +460,6 @@ class Sidebar:
 
         # the next available Y coordinate
         return y + MAIN_PADDING * 2 + SEPARATOR_SIZE
-
 
     # Builds the label that contains hostname, host type, image name and
     # a link to the changelog.
@@ -501,7 +494,6 @@ class Sidebar:
         hostname_label.show()
         self.container.put(hostname_label, 0, label_top)
 
-
     # Open the user profile editor
     def __clicked_avatar_button(self, _):
         print('Clicked the user avatar button')
@@ -523,7 +515,6 @@ class Sidebar:
 
         self.__parent.autohide()
 
-
     # Open the changelog
     def __clicked_changelog(self, *unused):
         try:
@@ -540,7 +531,6 @@ class Sidebar:
                 str(exception))
 
         self.__parent.autohide()
-
 
     # Sidebar button command handler
     def __clicked_sidebar_button(self, button):
