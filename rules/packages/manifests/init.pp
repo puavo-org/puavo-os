@@ -63,6 +63,7 @@ class packages {
     , 'incron'
     , 'isc-dhcp-server'
     , 'krb5-kdc'
+    , 'libudev1'
     , 'logrotate'
     , 'mdadm'
     , 'monitoring-plugins'
@@ -589,6 +590,7 @@ class packages {
     , 'pcmciautils'
     , 'plymouth'
     , 'plymouth-themes'
+    , 'printer-driver-all'
     , 'printer-driver-c2esp'
     , 'printer-driver-cups-pdf'
     , 'printer-driver-foo2zjs'
@@ -659,7 +661,8 @@ class packages {
     , 'system-config-printer'
     , 'tlp'
     , 'unace'
-    , 'unionfs-fuse' ]: # Ekapeli might need this.
+    , 'unionfs-fuse'    # Ekapeli might need this.
+    , 'wmctrl' ]:
       tag => [ 'tag_utils', 'tag_debian_desktop', ];
 
     [ 'qemu-kvm' ]:
@@ -750,9 +753,9 @@ class packages {
 		      , $virtualbox_module ]
 
   packages::kernels::kernel_package {
-    '3.16.0-7-amd64':
+    '3.16.0-6-amd64':
       dkms_modules => $all_dkms_modules,
-      package_name => 'linux-image-3.16.0-7-amd64';
+      package_name => 'linux-image-3.16.0-6-amd64';
 
     '4.9.0-8-amd64':
       dkms_modules => $all_dkms_modules,
@@ -770,7 +773,6 @@ class packages {
   @package {
     [ 'libnspr4-0d'    # spotify
     , 'libssl1.0.0'    # spotify
-    , 'libudev0:amd64' # vmware-horizon-client
     , 'lsb-core' ]:    # google-earth
       tag => [ 'tag_debian_desktop', 'tag_required-by-restricted' ];
   }

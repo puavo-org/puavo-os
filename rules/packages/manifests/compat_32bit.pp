@@ -28,7 +28,7 @@ class packages::compat_32bit {
       , 'libglib2.0-0:i386'
       , 'libgtk2.0-0:i386'
       , 'libice6:i386'
-      , 'libjpeg8:i386'                 # needed by RobboScratch2
+      , 'libjpeg9:i386'
       , 'libltdl7:i386'
       , 'libmp3lame0:i386'              # needed by mimio-studio
       , 'libnspr4-0d:i386'
@@ -48,7 +48,6 @@ class packages::compat_32bit {
       , 'libsm6:i386'
       , 'libssl1.0.0:i386'
       , 'libstdc++6:i386'
-      , 'libudev0:i386'
       , 'libudev1:i386'
       , 'libusb-1.0-0:i386'
       , 'libuuid1:i386'
@@ -82,6 +81,26 @@ class packages::compat_32bit {
         target  => '/usr/lib/libnss_extrausers.so.2';
     }
 
-    Package <| title == libnss-extrausers |>
+    # XXX In case there is still something needing libudev0...
+    # XXX we hope that libudev1 fits the bill.
+    # XXX Remove later once it is more clear this is no longer
+    # XXX needed.
+    file {
+      '/lib/i386-linux-gnu/libudev.so.0':
+        ensure  => link,
+        require => Package['libudev1:i386'],
+        target  => 'libudev.so.1';
+
+      '/lib/x86_64-linux-gnu/libudev.so.0':
+        ensure  => link,
+        require => Package['libudev1'],
+        target  => 'libudev.so.1';
+    }
+
+    Package <|
+         title == libnss-extrausers
+      or title == libudev1
+      or title == "libudev1:i386"
+    |>
   }
 }
