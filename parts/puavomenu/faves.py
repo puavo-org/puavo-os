@@ -82,7 +82,6 @@ class FavesList(Gtk.ScrolledWindow):
 
         self.add_with_viewport(self.__icons)
 
-
     def clear(self):
         """Removes all buttons from the faves list."""
 
@@ -93,7 +92,6 @@ class FavesList(Gtk.ScrolledWindow):
         self.__prev_fave_ids = []
 
         logging.info('Faves list cleared')
-
 
     def update(self, all_programs):
         """Recreates the fave buttons if program launch counts have

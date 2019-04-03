@@ -25,7 +25,6 @@ class Conditional:
         # Parameters
         self.params = None
 
-
     def parse_params(self, params):
         """Parses the required 'name' parameter from the params block."""
 
@@ -47,7 +46,6 @@ class Conditional:
 
         return True
 
-
     def evaluate(self):
         """Evaluates the conditional."""
 
@@ -62,7 +60,6 @@ class EnvVar(Conditional):
         super().__init__(name)
         self.present = True     # assume envvars are present by default
         self.value = None
-
 
     def parse_params(self, params):
         if not super().parse_params(params):
@@ -81,7 +78,6 @@ class EnvVar(Conditional):
                 return False
 
         return True
-
 
     def evaluate(self):
         # Is the variable present?
@@ -107,6 +103,7 @@ class EnvVar(Conditional):
 
         return True
 
+
 # Inherit from EnvVar so we get its parse_params() method. These two
 # have the same parameters.
 class PuavoConf(EnvVar):
@@ -116,7 +113,6 @@ class PuavoConf(EnvVar):
         super().__init__(name)
         self.present = True     # assume puavo-conf variables are present by default
         self.value = None
-
 
     def evaluate(self):
         import subprocess
@@ -166,11 +162,9 @@ class Const(Conditional):
         super().__init__(name)
         self.expected = False
 
-
     def parse_params(self, params):
         self.expected = bool(params.get('value', True))
         return True
-
 
     def evaluate(self):
         return self.expected
