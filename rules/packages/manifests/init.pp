@@ -658,7 +658,8 @@ class packages {
     , 'system-config-printer'
     , 'tlp'
     , 'unace'
-    , 'unionfs-fuse' ]: # Ekapeli might need this.
+    , 'unionfs-fuse'    # Ekapeli might need this.
+    , 'wmctrl' ]:
       tag => [ 'tag_utils', 'tag_debian_desktop', ];
 
     [ 'qemu-kvm' ]:
