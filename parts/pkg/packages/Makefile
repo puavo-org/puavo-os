@@ -62,6 +62,7 @@ packagedirs += vstloggerpro
 packagedirs += av4kav
 packagedirs += ekapeli
 packagedirs += mimio-studio
+packagedirs += papercut
 packagedirs += teddybear
 packagedirs += ti-nspire-cx-cas-ss
 packagedirs += vmware-horizon-client

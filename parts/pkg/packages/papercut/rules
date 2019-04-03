@@ -1,0 +1,48 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+setup_papercut_user() {
+  upstream_dir=$1
+
+  if ! getent passwd papercut >/dev/null; then
+    adduser --disabled-login         \
+            --disabled-password      \
+            --group                  \
+            --home /var/lib/papercut \
+            --no-create-home         \
+            --system                 \
+            --uid 993                \
+            papercut
+  fi
+  install -d -o papercut -g papercut "$upstream_dir"
+  ln -fns "$upstream_dir" /var/lib/papercut
+}
+
+case "$command" in
+  configure)
+    upstream_dir=$1
+    setup_papercut_user "$upstream_dir"
+    ;;
+  unconfigure)
+    ;;
+  unpack)
+    upstream_pack=$1
+    upstream_dir=$2
+
+    setup_papercut_user "$upstream_dir"
+    cat <<'EOF' > /etc/sudoers.d/papercut.tmp
+papercut ALL=(ALL) NOPASSWD: ALL
+EOF
+    mv /etc/sudoers.d/papercut.tmp /etc/sudoers.d/papercut
+
+    chmod 755 "$upstream_pack"
+    su -l papercut -s /bin/sh -c "${upstream_pack} --non-interactive" \
+      >> /tmp/puavo-pkg.log # XXX
+    ;;
+  *)
+    ;;
+esac
