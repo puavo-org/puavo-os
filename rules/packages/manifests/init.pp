@@ -589,6 +589,7 @@ class packages {
     , 'pcmciautils'
     , 'plymouth'
     , 'plymouth-themes'
+    , 'printer-driver-all'
     , 'printer-driver-c2esp'
     , 'printer-driver-cups-pdf'
     , 'printer-driver-foo2zjs'
