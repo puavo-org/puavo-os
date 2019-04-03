@@ -62,6 +62,7 @@ class packages {
     , 'incron'
     , 'isc-dhcp-server'
     , 'krb5-kdc'
+    , 'libudev1'
     , 'logrotate'
     , 'mdadm'
     , 'monitoring-plugins'
@@ -770,7 +771,6 @@ class packages {
   @package {
     [ 'libnspr4-0d'    # spotify
     , 'libssl1.0.0'    # spotify
-    , 'libudev0:amd64' # vmware-horizon-client
     , 'lsb-core' ]:    # google-earth
       tag => [ 'tag_debian_desktop', 'tag_required-by-restricted' ];
   }
