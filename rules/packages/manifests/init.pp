@@ -743,12 +743,14 @@ class packages {
   $nvidia_dkms_304_module   = 'nvidia-legacy-304xx/304.137'
   $nvidia_dkms_340_module   = 'nvidia-legacy-340xx/340.106'
   $nvidia_dkms_390_module   = 'nvidia-current/390.87'
+  $r8168_module             = 'r8168/8.043.02'
   $virtualbox_module        = 'virtualbox/5.2.24'
 
   $all_dkms_modules = [ $broadcom_sta_dkms_module
 		      , $nvidia_dkms_304_module
 		      , $nvidia_dkms_340_module
 		      , $nvidia_dkms_390_module
+		      , $r8168_module
 		      , $virtualbox_module ]
 
   packages::kernels::kernel_package {
@@ -788,6 +790,7 @@ class packages {
     , 'nvidia-kernel-dkms'
     , 'nvidia-legacy-304xx-kernel-dkms'
     , 'nvidia-legacy-340xx-kernel-dkms'
+    , 'r8168-dkms'
     , 'xserver-xorg-video-nvidia'
     , 'xserver-xorg-video-nvidia-legacy-304xx'
     , 'xserver-xorg-video-nvidia-legacy-340xx' ]:
