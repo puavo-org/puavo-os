@@ -118,6 +118,7 @@ case "$(puavo-conf puavo.hosttype)" in
       /etc/NetworkManager/system-connections
       /var/cache/ccreds
       /var/lib/AccountsService
+      /var/lib/bluetooth
       /var/lib/extrausers
       /var/lib/logrotate
       /var/lib/puavo-desktop
