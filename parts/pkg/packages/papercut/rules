@@ -5,9 +5,9 @@ set -eu
 command=$1
 shift
 
-install_script_name='pcmf-setup-18.3.5.48032-linux-x64.sh'
+install_script_name='pcmf-setup-19.0.0.48876-linux-x64.sh'
 papercut_home=/state/var/lib/papercut
-papercut_name_and_version='PaperCut MF 18.3.5 (Build 48032)'
+papercut_name_and_version='PaperCut MF 19.0.0 (Build 48876)'
 
 # the paths in this list must not contain "_" !
 papercut_path_list='
