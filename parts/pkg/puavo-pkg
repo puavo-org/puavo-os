@@ -770,12 +770,12 @@ prepare_pkg_with_installer()
   install -d -o puavo-pkg -g puavo-pkg -m 755 "$upstream_packdir" \
                                               "$upstream_tmpdir"
 
-  # XXX Terrible hack but mimio-studio and papercut require unpack-phase
+  # XXX Terrible hack but mimio-studio requires unpack-phase
   # XXX to be run as root.  Remove when possible.
   pkg_name=$(get_pkg_name "$pkg_dir") || return 1
   as_root=false
   case "$pkg_name" in
-    mimio-studio|papercut) as_root=true ;;
+    mimio-studio) as_root=true ;;
   esac
 
   if $as_root; then

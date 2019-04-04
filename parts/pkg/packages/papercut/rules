@@ -5,43 +5,105 @@ set -eu
 command=$1
 shift
 
-setup_papercut_user() {
-  upstream_dir=$1
+install_script_name='pcmf-setup-18.3.5.48032-linux-x64.sh'
+papercut_home=/state/var/lib/papercut
+papercut_name_and_version='PaperCut MF 18.3.5 (Build 48032)'
 
+# the paths in this list must not contain "_" !
+papercut_path_list='
+  /etc/pam.d/papercut
+  /etc/systemd/system/multi-user.target.wants/pc-app-server.service
+  /etc/systemd/system/multi-user.target.wants/pc-event-monitor.service
+  /etc/systemd/system/multi-user.target.wants/pc-web-print.service
+  /etc/systemd/system/pc-app-server.service
+  /etc/systemd/system/pc-event-monitor.service
+  /etc/systemd/system/pc-web-print.service
+  /usr/lib/cups/backend/papercut
+  /usr/lib/cups/filter/papercut
+'
+
+cleanup() {
+  rm -f /etc/sudoers.d/papercut
+}
+
+trap cleanup 0 INT TERM
+
+setup_papercut_user() {
   if ! getent passwd papercut >/dev/null; then
-    adduser --disabled-login         \
-            --disabled-password      \
-            --group                  \
-            --home /var/lib/papercut \
-            --no-create-home         \
-            --system                 \
-            --uid 993                \
+    adduser --disabled-login        \
+            --disabled-password     \
+            --group                 \
+            --home "$papercut_home" \
+            --no-create-home        \
+            --system                \
+            --uid 993               \
             papercut
   fi
-  install -d -o papercut -g papercut "$upstream_dir"
-  ln -fns "$upstream_dir" /var/lib/papercut
+
+  install -d -o papercut -g papercut "$papercut_home"
+}
+
+stop_papercut_services() {
+  service pc-app-server    stop 2>/dev/null || true
+  service pc-event-monitor stop 2>/dev/null || true
+  service pc-web-print     stop 2>/dev/null || true
 }
 
 case "$command" in
   configure)
     upstream_dir=$1
-    setup_papercut_user "$upstream_dir"
-    ;;
-  unconfigure)
-    ;;
-  unpack)
-    upstream_pack=$1
-    upstream_dir=$2
 
-    setup_papercut_user "$upstream_dir"
+    setup_papercut_user
+
+    install_state_path="${papercut_home}/.puavo-pkg/${install_script_name%.sh}"
+
+    if [ -e "${install_state_path}.done" ]; then
+      for papercut_path in $papercut_path_list; do
+        cp -dp "${install_state_path}/$(echo "$papercut_path" | tr / _)" \
+               "$papercut_path"
+      done
+      exit 0
+    fi
+
+    mkdir -p "$install_state_path"
+
+    stop_papercut_services
+    sleep 5
+
     cat <<'EOF' > /etc/sudoers.d/papercut.tmp
 papercut ALL=(ALL) NOPASSWD: ALL
 EOF
     mv /etc/sudoers.d/papercut.tmp /etc/sudoers.d/papercut
 
-    chmod 755 "$upstream_pack"
-    su -l papercut -s /bin/sh -c "${upstream_pack} --non-interactive" \
-      >> /tmp/puavo-pkg.log # XXX
+    su -l papercut -s /bin/sh -c \
+      "${upstream_dir}/${install_script_name} --non-interactive" \
+      > "${install_state_path}.log"
+
+    if ! grep -Fqx "name-with-version=${papercut_name_and_version}" \
+      "${papercut_home}/release/version.txt" 2>/dev/null; then
+        echo 'Installation problem with papercut' >&2
+        exit 1
+    fi
+
+    for papercut_path in $papercut_path_list; do
+      cp -dp "$papercut_path" \
+             "${install_state_path}/$(echo "$papercut_path" | tr / _)"
+    done
+    systemctl daemon-reload || true
+
+    touch "${install_state_path}.done"
+    ;;
+  unconfigure)
+    stop_papercut_services
+    rm -f $papercut_path_list
+    systemctl daemon-reload || true
+    ;;
+  unpack)
+    upstream_pack=$1
+    upstream_dir=$2
+
+    cp -p "$upstream_pack" "${upstream_dir}/${install_script_name}"
+    chmod 755 "${upstream_dir}/${install_script_name}"
     ;;
   *)
     ;;
