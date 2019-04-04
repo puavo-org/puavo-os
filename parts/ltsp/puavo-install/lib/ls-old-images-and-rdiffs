@@ -4,6 +4,7 @@ set -eu
 
 images_dir=$1
 rdiffs_dir=$2
+hosttype=$(puavo-conf puavo.hosttype)
 
 files_managed_by_puavo_bootserver_sync_images() {
   # this file is only created by puavo-bootserver-sync-images on bootservers,
@@ -32,8 +33,21 @@ lookup_old_rdiffs() {
        '(' -name '*.rdiff' -o -name '*.rdiff.tmp' ')'
 }
 
+lookup_temporary_files() {
+  find "$images_dir" -maxdepth 1 -type f -a -name '*.img.tmp'
+  find "$rdiffs_dir" -maxdepth 1 -type f -a -name '*.rdiff.tmp'
+}
+
 managed_files_list=$(files_managed_by_puavo_bootserver_sync_images)
-old_files_list=$(lookup_old_images; lookup_old_rdiffs)
+if [ "$hosttype" = 'bootserver' ]; then
+  # On bootserver we should lookup/cleanup only temporary files,
+  # other images/rdiffs might be placed manually, and in that case
+  # the adminstrator (or puavo-bootserver-sync-images) should clean
+  # those up.
+  old_files_list=$(lookup_temporary_files)
+else
+  old_files_list=$(lookup_old_images; lookup_old_rdiffs)
+fi
 
 IFS='
 '

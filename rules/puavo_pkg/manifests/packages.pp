@@ -33,6 +33,7 @@ class puavo_pkg::packages {
 			, 'google-earth'
 			, 'idid'
 			, 'kojo'
+			, 'launcherone'
 			, 'mafynetti'
 			, 'marvinsketch'
 			, 'mattermost-desktop'

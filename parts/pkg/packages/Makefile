@@ -35,6 +35,7 @@ packagedirs += google-earth
 packagedirs += idid
 packagedirs += kdenlive-appimage
 packagedirs += kojo
+packagedirs += launcherone
 packagedirs += mafynetti
 packagedirs += marvinsketch
 packagedirs += mattermost-desktop

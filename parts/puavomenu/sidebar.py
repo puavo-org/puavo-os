@@ -9,14 +9,15 @@ import gi
 gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
 from gi.repository import Gtk
 from gi.repository import Pango
+from gi.repository import Gio
 
 from constants import WINDOW_HEIGHT, MAIN_PADDING, SIDEBAR_WIDTH, \
                       USER_AVATAR_SIZE, HOSTINFO_LABEL_HEIGHT, SEPARATOR_SIZE
-from utils import localize, expand_variables, get_file_contents, puavo_conf
-from utils_gui import create_separator
 
-from iconcache import ICONS32
-from buttons import AvatarButton, SidebarButton
+import iconcache
+import utils
+import utils_gui
+import buttons
 from strings import STRINGS
 from settings import SETTINGS
 
@@ -53,8 +54,8 @@ SB_SUPPORT = {
 
     'command': {
         'type': 'url',
-        'args': puavo_conf('puavo.support.new_bugreport_url',
-                           'https://tuki.opinsys.fi')
+        'args': utils.puavo_conf('puavo.support.new_bugreport_url',
+                                 'https://tuki.opinsys.fi')
     },
 }
 
@@ -150,8 +151,8 @@ SB_SHUTDOWN = {
 def get_changelog_url():
     """Generates the full URL to the current image's changelog."""
 
-    series = get_file_contents('/etc/puavo-image/class', 'opinsys')
-    version = get_file_contents('/etc/puavo-image/name', '')
+    series = utils.get_file_contents('/etc/puavo-image/class', 'opinsys')
+    version = utils.get_file_contents('/etc/puavo-image/name', '')
 
     logging.info('The current image series is "%s"', series)
     logging.info('The current image version is "%s"', version)
@@ -160,8 +161,8 @@ def get_changelog_url():
         # strip the extension from the image file name
         version = version[:-4]
 
-    url = puavo_conf('puavo.support.image_changelog_url',
-                     'http://changelog.opinsys.fi')
+    url = utils.puavo_conf('puavo.support.image_changelog_url',
+                           'http://changelog.opinsys.fi')
 
     url = url.replace('%%IMAGESERIES%%', series)
     url = url.replace('%%IMAGEVERSION%%', version)
@@ -196,7 +197,7 @@ def web_window(url, title=None, width=None, height=None,
 
     logging.info('Opening a webwindow: "%s"', cmd)
 
-    subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 class AvatarDownloaderThread(threading.Thread):
@@ -217,7 +218,6 @@ class AvatarDownloaderThread(threading.Thread):
         self.__destination = destination        # where to cache the file
         self.__avatar_object = avatar_object    # the avatar button object
 
-
     def run(self):
         import time             # oh, I wish
         import subprocess
@@ -235,14 +235,14 @@ class AvatarDownloaderThread(threading.Thread):
                 proc.wait()
 
                 if proc.returncode != 0:
-                    raise RuntimeError("'puavo-resolve-api-server' failed " \
+                    raise RuntimeError("'puavo-resolve-api-server' failed "
                                        "with code {0}".format(proc.returncode))
 
                 server = proc.stdout.read().decode('utf-8').strip()
                 uri = server + '/v3/users/' + getuser() + '/profile.jpg'
 
                 # Then download the avatar image
-                logging.info('Downloading user avatar from "%s", ' \
+                logging.info('Downloading user avatar from "%s", '
                              'attempt %d/%d...', uri, attempt + 1,
                              self.MAX_ATTEMPTS)
 
@@ -288,7 +288,7 @@ class AvatarDownloaderThread(threading.Thread):
                     self.__avatar_object.load_avatar(name)
                 except Exception as exception:
                     # Why must everything fail?
-                    logging.warning('Failed to save the downloaded avatar ' \
+                    logging.warning('Failed to save the downloaded avatar '
                                     'image: %s', str(exception))
                     logging.warning('New avatar image not set')
 
@@ -304,7 +304,7 @@ class AvatarDownloaderThread(threading.Thread):
                              self.RETRY_WAIT)
                 time.sleep(self.RETRY_WAIT)
 
-        logging.error('Giving up on trying to download the user avatar, ' \
+        logging.error('Giving up on trying to download the user avatar, '
                       'tried %d times', self.MAX_ATTEMPTS)
         logging.info('The avatar update thread is exiting')
 
@@ -318,6 +318,9 @@ class Sidebar:
 
         self.container = Gtk.Fixed()
 
+        # Storage for the command button icons
+        self.__icons = iconcache.IconCache(32, 128)
+
         self.__get_variables()
         self.__create_avatar()
         self.__create_buttons()
@@ -327,7 +330,7 @@ class Sidebar:
 
         # Download a new copy of the user avatar image
         if self.__must_download_avatar:
-            logging.info('Launching a background thread for downloading ' \
+            logging.info('Launching a background thread for downloading '
                          'the avatar image')
 
             try:
@@ -343,15 +346,13 @@ class Sidebar:
                 logging.error('Could not create a new thread: %s',
                               str(exception))
 
-
     # Digs up values for expanding variables in button arguments
     def __get_variables(self):
         self.__variables = {}
         self.__variables['puavo_domain'] = \
-            get_file_contents('/etc/puavo/domain', '?')
+            utils.get_file_contents('/etc/puavo/domain', '?')
         self.__variables['user_name'] = getuser()
-        self.__variables['user_language']= SETTINGS.language
-
+        self.__variables['user_language'] = SETTINGS.language
 
     # Creates the user avatar button
     def __create_avatar(self):
@@ -371,19 +372,17 @@ class Sidebar:
         else:
             # We need to download this avatar image right away, use the
             # default avatar until the download is complete
-            logging.info('Not a guest/webkiosk session and no previously-' \
+            logging.info('Not a guest/webkiosk session and no previously-'
                          'downloaded avatar available, using the default image')
             avatar_image = default_avatar
 
         if SETTINGS.is_guest or SETTINGS.is_webkiosk:
             avatar_tooltip = None
         else:
-            avatar_tooltip = localize(STRINGS['sb_avatar_hover'])
+            avatar_tooltip = utils.localize(STRINGS['sb_avatar_hover'])
 
-        self.__avatar = AvatarButton(self,
-                                     getuser(),
-                                     avatar_image,
-                                     avatar_tooltip)
+        self.__avatar = buttons.AvatarButton(self, getuser(), avatar_image,
+                                             avatar_tooltip)
 
         # No profile editing for guest users
         if SETTINGS.is_guest or SETTINGS.is_webkiosk:
@@ -395,15 +394,15 @@ class Sidebar:
         self.container.put(self.__avatar, 0, MAIN_PADDING)
         self.__avatar.show()
 
-
     # Creates the sidebar "system" buttons
     def __create_buttons(self):
-        create_separator(container=self.container,
-                         x=0,
-                         y=MAIN_PADDING + USER_AVATAR_SIZE + MAIN_PADDING,
-                         w=SIDEBAR_WIDTH,
-                         h=-1,
-                         orientation=Gtk.Orientation.HORIZONTAL)
+        utils_gui.create_separator(
+            container=self.container,
+            x=0,
+            y=MAIN_PADDING + USER_AVATAR_SIZE + MAIN_PADDING,
+            w=SIDEBAR_WIDTH,
+            h=-1,
+            orientation=Gtk.Orientation.HORIZONTAL)
 
         y = MAIN_PADDING + USER_AVATAR_SIZE + MAIN_PADDING * 2 + SEPARATOR_SIZE
 
@@ -432,14 +431,13 @@ class Sidebar:
 
         logging.info('Support page URL: "%s"', SB_SUPPORT['command']['args'])
 
-
     # Creates a sidebar button
     def __create_button(self, y, data):
-        button = SidebarButton(self,
-                               localize(data['title']),
-                               ICONS32.load_icon(data['icon']),
-                               localize(data.get('description', '')),
-                               data['command'])
+        button = buttons.SidebarButton(self,
+                                       utils.localize(data['title']),
+                                       self.__icons[data['icon']],
+                                       utils.localize(data.get('description', '')),
+                                       data['command'])
 
         button.connect('clicked', self.__clicked_sidebar_button)
         button.show()
@@ -448,33 +446,33 @@ class Sidebar:
         # the next available Y coordinate
         return y + button.get_preferred_button_size()[1]
 
-
     # Creates a special sidebar separator
     def __create_separator(self, y):
-        SEP_EDGES_PADDING = 20
+        padding = 20
 
-        create_separator(container=self.container,
-                         x=SEP_EDGES_PADDING,
-                         y=y + MAIN_PADDING,
-                         w=SIDEBAR_WIDTH - SEP_EDGES_PADDING * 2,
-                         h=-1,
-                         orientation=Gtk.Orientation.HORIZONTAL)
+        utils_gui.create_separator(
+            container=self.container,
+            x=padding,
+            y=y + MAIN_PADDING,
+            w=SIDEBAR_WIDTH - padding * 2,
+            h=-1,
+            orientation=Gtk.Orientation.HORIZONTAL)
 
         # the next available Y coordinate
         return y + MAIN_PADDING * 2 + SEPARATOR_SIZE
-
 
     # Builds the label that contains hostname, host type, image name and
     # a link to the changelog.
     def __create_hostinfo(self):
         label_top = WINDOW_HEIGHT - MAIN_PADDING - HOSTINFO_LABEL_HEIGHT
 
-        create_separator(container=self.container,
-                         x=0,
-                         y=label_top - MAIN_PADDING,
-                         w=SIDEBAR_WIDTH,
-                         h=1,
-                         orientation=Gtk.Orientation.HORIZONTAL)
+        utils_gui.create_separator(
+            container=self.container,
+            x=0,
+            y=label_top - MAIN_PADDING,
+            w=SIDEBAR_WIDTH,
+            h=1,
+            orientation=Gtk.Orientation.HORIZONTAL)
 
         hostname_label = Gtk.Label()
         hostname_label.set_size_request(SIDEBAR_WIDTH, HOSTINFO_LABEL_HEIGHT)
@@ -486,16 +484,15 @@ class Sidebar:
         # FIXME: "big" and "small" are not good sizes, we need to be explicit
         hostname_label.set_markup(
             '<big>{0}</big>\n<small><a href="{3}" title="{4}">{1}</a> ({2})</small>'.
-            format(get_file_contents('/etc/puavo/hostname'),
-                   get_file_contents('/etc/puavo-image/release'),
-                   get_file_contents('/etc/puavo/hosttype'),
+            format(utils.get_file_contents('/etc/puavo/hostname'),
+                   utils.get_file_contents('/etc/puavo-image/release'),
+                   utils.get_file_contents('/etc/puavo/hosttype'),
                    '',
-                   localize(STRINGS['sb_changelog_title'])))
+                   utils.localize(STRINGS['sb_changelog_title'])))
 
         hostname_label.connect('activate-link', self.__clicked_changelog)
         hostname_label.show()
         self.container.put(hostname_label, 0, label_top)
-
 
     # Open the user profile editor
     def __clicked_avatar_button(self, _):
@@ -503,45 +500,41 @@ class Sidebar:
 
         try:
             web_window(
-                url=expand_variables(
+                url=utils.expand_variables(
                     'https://$(puavo_domain)/users/profile/edit?lang=$(user_language)',
                     self.__variables),
-                title=localize(STRINGS['sb_avatar_hover']),
+                title=utils.localize(STRINGS['sb_avatar_hover']),
                 width=1000,
                 height=700,
                 enable_js=True)     # The profile editor needs JavaScript
         except Exception as exception:
             logging.error(str(exception))
             self.__parent.error_message(
-                localize(STRINGS['sb_avatar_link_failed']),
+                utils.localize(STRINGS['sb_avatar_link_failed']),
                 str(exception))
 
         self.__parent.autohide()
-
 
     # Open the changelog
     def __clicked_changelog(self, *unused):
         try:
             web_window(
                 url=get_changelog_url(),
-                title=localize(STRINGS['sb_changelog_window_title']),
+                title=utils.localize(STRINGS['sb_changelog_window_title']),
                 width=1000,
                 height=700,
                 enable_js=True)     # Markdown is used on the page, need JS
         except Exception as exception:
             logging.error(str(exception))
             self.__parent.error_message(
-                localize(STRINGS['sb_changelog_link_failed']),
+                utils.localize(STRINGS['sb_changelog_link_failed']),
                 str(exception))
 
         self.__parent.autohide()
 
-
     # Sidebar button command handler
     def __clicked_sidebar_button(self, button):
         try:
-            import subprocess
-
             command = button.data
             arguments = command.get('args', '')
 
@@ -560,20 +553,16 @@ class Sidebar:
 
             # Expand variables
             if command.get('have_vars', False):
-                arguments = expand_variables(arguments, self.__variables)
+                arguments = utils.expand_variables(arguments, self.__variables)
 
             logging.debug('Sidebar button arguments: "%s"', arguments)
 
             if command['type'] == 'command':
                 logging.info('Executing a command')
-                subprocess.Popen(['sh', '-c', arguments, '&'],
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE)
+                Gio.AppInfo.create_from_commandline(arguments, '', 0).launch()
             elif command['type'] == 'url':
                 logging.info('Opening a URL')
-                subprocess.Popen(['xdg-open', arguments],
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE)
+                Gio.AppInfo.launch_default_for_uri(arguments, None)
             elif command['type'] == 'webwindow':
                 logging.info('Creating a webwindow')
 
@@ -592,7 +581,7 @@ class Sidebar:
                     enable_js = settings.get('enable_js', False)
 
                     if title:
-                        title = localize(title)
+                        title = utils.localize(title)
 
                 web_window(
                     url=arguments,
@@ -604,5 +593,5 @@ class Sidebar:
             logging.error('Could not process a sidebar button click!')
             logging.error(str(exception))
             self.__parent.error_message(
-                localize(STRINGS['sb_button_failed']),
+                utils.localize(STRINGS['sb_button_failed']),
                 str(exception))

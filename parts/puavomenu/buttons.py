@@ -7,13 +7,11 @@ import gi
 gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
 gi.require_version('PangoCairo', '1.0')
 from gi.repository import Gtk, Gdk, Pango, PangoCairo
-import cairo
 
 from constants import PROGRAM_BUTTON_WIDTH, PROGRAM_BUTTON_HEIGHT, \
                       PROGRAM_BUTTON_ICON_SIZE, SIDEBAR_WIDTH
-from iconcache import ICONS32, ICONS48
-from utils import localize
-from utils_gui import rounded_rectangle, draw_x, load_image_at_size
+import utils
+import utils_gui
 from strings import STRINGS
 from settings import SETTINGS
 
@@ -84,16 +82,13 @@ class HoverIconButtonBase(Gtk.Button):
         self.corner_rounding = 0
         self.compute_elements()
 
-
     def get_preferred_button_size(self):
         # Implement this in derived classes
         pass
 
-
     def compute_elements(self):
         # Implement this in derived classes
         pass
-
 
     # Mouse enters the button area
     def on_mouse_enter(self, widget, event):
@@ -102,12 +97,10 @@ class HoverIconButtonBase(Gtk.Button):
 
         return False
 
-
     # Mouse leaves the button area
     def on_mouse_leave(self, widget, event):
         self.hover = False
         return False
-
 
     # Draw the button
     def on_draw(self, widget, ctx):
@@ -115,9 +108,9 @@ class HoverIconButtonBase(Gtk.Button):
             rect = self.get_allocation()
 
             # setup the clipping area
-            rounded_rectangle(ctx, 0, 0,
-                              rect.width, rect.height,
-                              self.corner_rounding)
+            utils_gui.rounded_rectangle(ctx, 0, 0,
+                                        rect.width, rect.height,
+                                        self.corner_rounding)
             ctx.clip()
 
             self.draw_background(ctx, rect)
@@ -130,31 +123,28 @@ class HoverIconButtonBase(Gtk.Button):
         # return True to prevent default event processing
         return True
 
-
     # Draw the button background
     def draw_background(self, ctx, rect):
         if not self.disabled and self.hover:
-            rounded_rectangle(ctx, 0, 0, rect.width, rect.height,
-                              self.corner_rounding)
+            utils_gui.rounded_rectangle(ctx,
+                                        0, 0,
+                                        rect.width, rect.height,
+                                        self.corner_rounding)
             ctx.set_source_rgba(self.background_color[0],
                                 self.background_color[1],
                                 self.background_color[2],
                                 1.0)
             ctx.fill()
 
-
     # Draw the icon
     def draw_icon(self, ctx):
         if self.icon:
-            ICONS48.draw_icon(ctx,
-                              self.icon,
-                              self.icon_pos[0], self.icon_pos[1])
+            self.icon.draw(ctx, self.icon_pos[0], self.icon_pos[1])
         else:
-            draw_x(ctx,
-                   self.icon_pos[0], self.icon_pos[1],
-                   self.icon_size, self.icon_size,
-                   self.icon_color)
-
+            utils_gui.draw_x(ctx,
+                             self.icon_pos[0], self.icon_pos[1],
+                             self.icon_size, self.icon_size,
+                             self.icon_color)
 
     # Draw the label
     def draw_label(self, ctx):
@@ -174,7 +164,6 @@ class HoverIconButtonBase(Gtk.Button):
         ctx.move_to(self.label_pos[0], self.label_pos[1])
         PangoCairo.show_layout(ctx, self.label_layout)
 
-
     # It's possible to disable buttons, but because it's so rare
     # occurrence, you cannot set the flag in the constructor.
     # Instead, you must call this method. At the moment, a button
@@ -192,7 +181,6 @@ class ProgramButton(HoverIconButtonBase):
     INDICATOR_HEIGHT = 30
     INDICATOR_EDGE = 5
     INDICATOR_ARROW_SIZE = 5
-
 
     def __init__(self,
                  parent,
@@ -226,10 +214,8 @@ class ProgramButton(HoverIconButtonBase):
         self.__indicator_y1 = self.INDICATOR_EDGE
         self.__indicator_y2 = self.__indicator_y1 + self.INDICATOR_HEIGHT
 
-
     def get_preferred_button_size(self):
         return (PROGRAM_BUTTON_WIDTH, PROGRAM_BUTTON_HEIGHT)
-
 
     def compute_elements(self):
         self.corner_rounding = 5
@@ -247,6 +233,123 @@ class ProgramButton(HoverIconButtonBase):
             20 + PROGRAM_BUTTON_ICON_SIZE + 5
         ]
 
+    # Mouse enters the button area
+    def on_mouse_enter(self, widget, event):
+        if not self.disabled:
+            self.hover = True
+
+            if self.__enable_popup:
+                # Start tracking mouse movements inside the button
+                self.__hover_signal = \
+                    self.connect('motion-notify-event', self.__on_mouse_hover_move)
+
+        return False
+
+    # Mouse leaves the button area
+    def on_mouse_leave(self, widget, event):
+        if not self.disabled:
+            self.hover = False
+
+            if self.__hover_signal:
+                # Stop tracking mouse movements
+                self.disconnect(self.__hover_signal)
+                self.__hover_signal = None
+
+        return False
+
+    # Track mouse movements and update the hover indicator box
+    def __on_mouse_hover_move(self, widget, event):
+        if not self.disabled:
+            (window, mouse_x, mouse_y, state) = event.window.get_pointer()
+
+            new_state = (mouse_x >= self.__indicator_x1) and \
+                        (mouse_x <= self.__indicator_x2) and \
+                        (mouse_y >= self.__indicator_y1) and \
+                        (mouse_y <= self.__indicator_y2)
+
+            if new_state != self.__popup_hover:
+                # Only redraw when the hover state actually changes
+                self.__popup_hover = new_state
+                self.queue_draw()
+
+        return False
+
+    def on_draw(self, widget, ctx):
+        try:
+            rect = self.get_allocation()
+
+            # setup the clipping area
+            utils_gui.rounded_rectangle(ctx,
+                                        0, 0,
+                                        rect.width, rect.height,
+                                        self.corner_rounding)
+            ctx.clip()
+
+            # I don't want to copy-paste draw_background() and draw-label()
+            # from the base class there, so coalesce both "hover" and
+            # "popup_open" states in one so that the hover background stays
+            # active even when the popup menu is open.
+            old_hover = self.hover
+            self.hover = self.hover or self.__popup_open
+
+            self.draw_background(ctx, rect)
+            self.draw_icon(ctx)
+            self.draw_label(ctx)
+
+            # Restore old state
+            self.hover = old_hover
+
+            # Draw the custom popup indicator
+            if self.__enable_popup and (self.hover or self.__popup_open):
+                self.__draw_popup_indicator(ctx)
+
+        except Exception as exception:
+            logging.error('Could not draw a ProgramButton widget: %s',
+                          str(exception))
+
+        # return True to prevent default event processing
+        return True
+
+    # Draw the popup menu indicator
+    def __draw_popup_indicator(self, ctx):
+        # Background
+        ctx.save()
+
+        if self.__popup_hover:
+            ctx.set_source_rgba(0.0, 1.0, 1.0, 1.0)
+        else:
+            ctx.set_source_rgba(0.0, 1.0, 1.0, 0.25)
+
+        utils_gui.rounded_rectangle(ctx,
+                                    x=self.__indicator_x1,
+                                    y=self.__indicator_y1,
+                                    width=self.INDICATOR_WIDTH,
+                                    height=self.INDICATOR_HEIGHT,
+                                    radius=3.0)
+        ctx.fill()
+        ctx.restore()
+
+        # Foreground
+        ctx.save()
+
+        if self.__popup_hover:
+            ctx.set_source_rgba(0.0, 0.0, 0.0, 1.0)
+        else:
+            ctx.set_source_rgba(0.0, 0.0, 0.0, 0.5)
+
+        dot_radius = 2
+        dot_spacing = 5.0
+        dots_x = self.__indicator_x1 + (self.INDICATOR_WIDTH / 2)
+        dots_y = self.__indicator_y1 + (self.INDICATOR_HEIGHT / 4) + 1
+
+        ctx.arc(dots_x, dots_y, dot_radius, 0.0, math.pi * 2.0)
+        dots_y += dot_radius + dot_spacing
+        ctx.arc(dots_x, dots_y, dot_radius, 0.0, math.pi * 2.0)
+        dots_y += dot_radius + dot_spacing
+        ctx.arc(dots_x, dots_y, dot_radius, 0.0, math.pi * 2.0)
+        ctx.fill()
+
+        ctx.restore()
 
     # Mouse enters the button area
     def on_mouse_enter(self, widget, event):
@@ -383,7 +486,7 @@ class ProgramButton(HoverIconButtonBase):
                 if SETTINGS.desktop_dir:
                     # Can't do this without the desktop directory
                     desktop_item = Gtk.MenuItem(
-                        localize(STRINGS['popup_add_to_desktop']))
+                        utils.localize(STRINGS['popup_add_to_desktop']))
                     desktop_item.connect('activate',
                                          lambda x: self.__special_operation(
                                              self.parent.add_program_to_desktop))
@@ -391,7 +494,7 @@ class ProgramButton(HoverIconButtonBase):
                     self.__menu.append(desktop_item)
 
                 panel_item = Gtk.MenuItem(
-                    localize(STRINGS['popup_add_to_panel']))
+                    utils.localize(STRINGS['popup_add_to_panel']))
                 panel_item.connect('activate',
                                    lambda x: self.__special_operation(
                                        self.parent.add_program_to_panel))
@@ -401,7 +504,7 @@ class ProgramButton(HoverIconButtonBase):
                 if self.is_fave:
                     # special entry for fave buttons
                     remove_fave = Gtk.MenuItem(
-                        localize(STRINGS['popup_remove_from_faves']))
+                        utils.localize(STRINGS['popup_remove_from_faves']))
                     remove_fave.connect('activate',
                                         lambda x: self.__special_operation(
                                             self.parent.remove_program_from_faves))
@@ -435,7 +538,6 @@ class ProgramButton(HoverIconButtonBase):
         self.__popup_open = False
         self.__menu = None
         self.queue_draw()       # force hover state update
-
 
     # The ProgramButton does not know how to add the program on the
     # desktop or panel or anything else, but the PuavoMenu class does,
@@ -473,10 +575,12 @@ class MenuButton(HoverIconButtonBase):
         self.label_color_normal = [0.0, 0.0, 0.0]
         self.label_color_hover = [0.0, 0.0, 0.0]
 
+        if SETTINGS.dark_theme:
+            self.label_color_normal = [1.0, 1.0, 1.0]
+            self.label_color_hover = [1.0, 1.0, 1.0]
 
     def get_preferred_button_size(self):
         return (PROGRAM_BUTTON_WIDTH, PROGRAM_BUTTON_HEIGHT)
-
 
     def compute_elements(self):
         self.corner_rounding = 5
@@ -496,7 +600,6 @@ class MenuButton(HoverIconButtonBase):
             10,  # left padding
             30 + PROGRAM_BUTTON_ICON_SIZE
         ]
-
 
     def draw_background(self, ctx, rect):
         super().draw_background(ctx, rect)
@@ -541,10 +644,8 @@ class AvatarButton(HoverIconButtonBase):
             Pango.FontDescription('Cantarell Bold 11'))
         self.compute_elements()
 
-
     def get_preferred_button_size(self):
         return (SIDEBAR_WIDTH, self.ICON_SIZE)
-
 
     def compute_elements(self):
         self.corner_rounding = 0
@@ -562,7 +663,6 @@ class AvatarButton(HoverIconButtonBase):
             (self.ICON_SIZE / 2) - ((ink.height / Pango.SCALE) / 2) - 2
         ]
 
-
     # Must override the base method - the user avatar is not stored in
     # any icon cache and the base method is trying to draw it from a
     # cache!
@@ -572,20 +672,19 @@ class AvatarButton(HoverIconButtonBase):
             ctx.rectangle(0, 0, self.ICON_SIZE, self.ICON_SIZE)
             ctx.fill()
         else:
-            draw_x(ctx,
-                   self.icon_pos[0], self.icon_pos[1],
-                   self.icon_size, self.icon_size,
-                   self.icon_color)
-
+            utils_gui.draw_x(ctx,
+                             self.icon_pos[0], self.icon_pos[1],
+                             self.icon_size, self.icon_size,
+                             self.icon_color)
 
     # Loads and resizes the avatar icon
     def load_avatar(self, path):
         try:
             logging.info('Loading avatar image "%s"...', path)
 
-            self.icon = load_image_at_size(path,
-                                           self.ICON_SIZE,
-                                           self.ICON_SIZE)
+            self.icon = utils_gui.load_image_at_size(path,
+                                                     self.ICON_SIZE,
+                                                     self.ICON_SIZE)
 
             # trigger a redraw
             self.queue_draw()
@@ -593,7 +692,6 @@ class AvatarButton(HoverIconButtonBase):
             logging.error('Could not load avatar image "%s": %s',
                           path, str(exception))
             self.icon = None
-
 
     def disable(self):
         self.disabled = True
@@ -619,13 +717,11 @@ class SidebarButton(HoverIconButtonBase):
         self.label_layout.set_width(-1)     # -1 turns off wrapping
         self.label_layout.set_ellipsize(Pango.EllipsizeMode.END)
 
-
     def get_preferred_button_size(self):
         return (
             SIDEBAR_WIDTH,
             self.ICON_SIZE + self.PADDING * 2
         )
-
 
     def compute_elements(self):
         self.corner_rounding = 3
@@ -640,18 +736,14 @@ class SidebarButton(HoverIconButtonBase):
             (self.ICON_SIZE + self.PADDING * 2) / 2 - (height / Pango.SCALE / 2)
         ]
 
-
     def draw_icon(self, ctx):
-        # Use the 32-pixel icon cache for sidebar buttons, not 48
         if self.icon:
-            ICONS32.draw_icon(ctx,
-                              self.icon,
-                              self.icon_pos[0], self.icon_pos[1])
+            self.icon.draw(ctx, self.icon_pos[0], self.icon_pos[1])
         else:
-            draw_x(ctx,
-                   self.icon_pos[0], self.icon_pos[1],
-                   self.icon_size, self.icon_size,
-                   self.icon_color)
+            utils_gui.draw_x(ctx,
+                             self.icon_pos[0], self.icon_pos[1],
+                             self.icon_size, self.icon_size,
+                             self.icon_color)
 
         if self.disabled:
             # hack to make the icon look "grayed out"

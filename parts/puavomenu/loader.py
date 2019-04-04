@@ -212,9 +212,6 @@ def load_menudata_yaml_file(filename):
         if 'condition' in params:
             program['condition'] = str(params['condition'])
 
-        if 'hidden_by_default' in params:
-            program['hidden'] = bool(params['hidden_by_default'])
-
         if 'tags' in params:
             program['tags'] = set()
 
@@ -391,10 +388,10 @@ def load_menudata_json_file(filename):
                 continue
 
             if ('type' not in src_program) or \
-                    (src_program['type'] not in \
-                        (PROGRAM_TYPE_DESKTOP,
-                         PROGRAM_TYPE_CUSTOM,
-                         PROGRAM_TYPE_WEB)):
+                    (src_program['type'] not in
+                     (PROGRAM_TYPE_DESKTOP,
+                      PROGRAM_TYPE_CUSTOM,
+                      PROGRAM_TYPE_WEB)):
                 logging.error('JSON program "%s" has no type or the specified type is invalid',
                               name)
                 continue
@@ -855,7 +852,7 @@ def build_menu_data(raw_programs, raw_menus, raw_categories, language):
         if not src_prog:
             continue
 
-        if not 'type' in src_prog:
+        if 'type' not in src_prog:
             logging.error('Program "%s" has no type specified. '
                           'This really should not happen.', menudata_id)
             continue
@@ -885,7 +882,7 @@ def build_menu_data(raw_programs, raw_menus, raw_categories, language):
 
         # Description (optional), accept ONLY a localized description
         if 'description' in src_prog and src_prog['description'] and \
-               language in src_prog['description']:
+           language in src_prog['description']:
             dst_prog.description = utils.localize(src_prog['description'])
 
         # Keywords (optional)
@@ -965,7 +962,7 @@ def build_menu_data(raw_programs, raw_menus, raw_categories, language):
         if 'programs' in src_menu:
             for p_name in src_menu['programs']:
                 if p_name not in programs or programs[p_name] is None:
-                    logging.warning('Menu "%s" references to a non-existent program "%s"',
+                    logging.warning('Menu "%s" references to a non-existing program "%s"',
                                     menudata_id, p_name)
                     continue
 
@@ -1017,7 +1014,7 @@ def build_menu_data(raw_programs, raw_menus, raw_categories, language):
         if 'menus' in src_cat:
             for m_name in src_cat['menus']:
                 if m_name not in menus or menus[m_name] is None:
-                    logging.warning('Category "%s" references to a non-existent menu "%s"',
+                    logging.warning('Category "%s" references to a non-existing menu "%s"',
                                     menudata_id, m_name)
                     continue
 
@@ -1031,7 +1028,7 @@ def build_menu_data(raw_programs, raw_menus, raw_categories, language):
         if 'programs' in src_cat:
             for p_name in src_cat['programs']:
                 if p_name not in programs or programs[p_name] is None:
-                    logging.warning('Category "%s" references to a non-existent program "%s"',
+                    logging.warning('Category "%s" references to a non-existing program "%s"',
                                     menudata_id, p_name)
                     continue
 
@@ -1197,14 +1194,13 @@ def load_icons(programs, menus, icon_dirs, icon_cache):
     if num_missing_icons:
         logging.info('Have %d missing or unloadable icons',
                      num_missing_icons)
+    else:
+        logging.info('No missing icons')
 
-    stats = icon_cache.stats()
+    num_icons, max_icons = icon_cache.stats()
 
     logging.info('Number of 48-pixel icons cached: %d (out of %d)',
-                 stats['num_icons'], stats['capacity'])
-
-    logging.info('Number of 48-pixel atlas surfaces: %d',
-                 stats['num_atlases'])
+                 num_icons, max_icons)
 
 
 # ------------------------------------------------------------------------------

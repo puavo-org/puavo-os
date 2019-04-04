@@ -7,17 +7,12 @@ gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
 from gi.repository import Gtk
 
 from constants import PROGRAM_BUTTON_WIDTH, NUMBER_OF_FAVES
-
-from buttons import ProgramButton
-from settings import SETTINGS
+import buttons
 
 
-def _save_use_counts(all_programs):
+def _save_use_counts(all_programs, directory):
     """Serialize the IDs and use counts for programs with use counts
     over zero. Called automatically through FavesList.update()."""
-
-    if not SETTINGS.enable_faves_saving:
-        return
 
     out = ''
 
@@ -29,21 +24,18 @@ def _save_use_counts(all_programs):
     try:
         from os.path import join as path_join
 
-        with open(path_join(SETTINGS.user_dir, 'faves'), 'w') as f:
+        with open(path_join(directory, 'faves'), 'w') as f:
             f.write(out)
     except Exception as exception:
         logging.error('Could not save favorites: %s', str(exception))
 
 
-def load_use_counts(all_programs):
+def load_use_counts(all_programs, directory):
     """Unserialize fave IDs and their counts."""
-
-    if not SETTINGS.enable_faves_saving:
-        return
 
     from os.path import join as path_join, isfile as is_file
 
-    faves_file = path_join(SETTINGS.user_dir, 'faves')
+    faves_file = path_join(directory, 'faves')
 
     if not is_file(faves_file):
         return
@@ -70,10 +62,11 @@ def load_use_counts(all_programs):
 class FavesList(Gtk.ScrolledWindow):
     """The most often used programs list."""
 
-    def __init__(self, parent):
+    def __init__(self, parent, settings):
         super().__init__()
 
         self.__parent = parent
+        self.__settings = settings
 
         self.__fave_buttons = []
         self.__prev_fave_ids = []
@@ -89,7 +82,6 @@ class FavesList(Gtk.ScrolledWindow):
 
         self.add_with_viewport(self.__icons)
 
-
     def clear(self):
         """Removes all buttons from the faves list."""
 
@@ -100,7 +92,6 @@ class FavesList(Gtk.ScrolledWindow):
         self.__prev_fave_ids = []
 
         logging.info('Faves list cleared')
-
 
     def update(self, all_programs):
         """Recreates the fave buttons if program launch counts have
@@ -130,7 +121,8 @@ class FavesList(Gtk.ScrolledWindow):
         logging.info('Faves order has changed (%s -> %s)',
                      str(self.__prev_fave_ids), str(new_ids))
 
-        _save_use_counts(all_programs)
+        if self.__settings.enable_faves_saving:
+            _save_use_counts(all_programs, self.__settings.user_dir)
 
         self.__prev_fave_ids = new_ids
 
@@ -143,9 +135,11 @@ class FavesList(Gtk.ScrolledWindow):
             program = all_programs[fave[0]]
             # use self.__parent as the parent, so popup menu handlers
             # will call the correct methods from the main window class
-            button = ProgramButton(self.__parent, program.name, program.icon,
-                                   program.description, data=program,
-                                   is_fave=True)
+            button = buttons.ProgramButton(
+                self.__parent, program.name, program.icon,
+                program.description, data=program,
+                is_fave=True)
+
             button.connect('clicked', self.__parent.clicked_program_button)
             self.__fave_buttons.append(button)
             self.__icons.put(button, index * PROGRAM_BUTTON_WIDTH, 0)

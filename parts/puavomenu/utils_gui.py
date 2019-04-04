@@ -5,7 +5,7 @@ from math import radians
 import gi
 gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
 from gi.repository import Gtk, GdkPixbuf, Gdk
-from cairo import ImageSurface, FORMAT_ARGB32, Context
+import cairo
 
 
 def load_image_at_size(name, width, height):
@@ -13,8 +13,8 @@ def load_image_at_size(name, width, height):
     exceptions!"""
 
     pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(name, width, height)
-    surface = ImageSurface(FORMAT_ARGB32, width, height)
-    ctx = Context(surface)
+    surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
+    ctx = cairo.Context(surface)
     Gdk.cairo_set_source_pixbuf(ctx, pixbuf, 0, 0)
     ctx.paint()
 
@@ -77,8 +77,7 @@ def create_desktop_link(filename, program):
     here from main.py. Make sure you handle exceptions if you call this!"""
 
     from constants import PROGRAM_TYPE_DESKTOP, \
-                          PROGRAM_TYPE_CUSTOM, \
-                          PROGRAM_TYPE_WEB
+        PROGRAM_TYPE_CUSTOM, PROGRAM_TYPE_WEB
 
     with open(filename, 'w', encoding='utf-8') as out:
         if program.program_type != PROGRAM_TYPE_WEB:
@@ -97,7 +96,7 @@ def create_desktop_link(filename, program):
             out.write('URL={0}\n'.format(program.command))
 
         if program.icon:
-            out.write('Icon={0}\n'.format(program.icon.file_name))
+            out.write('Icon={0}\n'.format(program.icon.filename))
         else:
             if program.program_type == PROGRAM_TYPE_WEB:
                 # a "generic" web icon
@@ -139,7 +138,7 @@ def create_panel_link(program):
     panel_faves = gsettings.get_value(KEY).unpack()
 
     if desktop_name in panel_faves:
-        logging.info('Desktop file "%s" is already in the panel, ' \
+        logging.info('Desktop file "%s" is already in the panel, '
                      'doing nothing', desktop_name)
         return
 
@@ -177,7 +176,7 @@ def create_panel_link(program):
                 out.write('Exec={0}\n'.format(program.command))
 
             if program.icon:
-                out.write('Icon={0}\n'.format(program.icon.file_name))
+                out.write('Icon={0}\n'.format(program.icon.filename))
             else:
                 if program.program_type == PROGRAM_TYPE_WEB:
                     # a "generic" web icon

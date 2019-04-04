@@ -16,6 +16,7 @@ ifeq "$(debootstrap_suite)" "stretch"
                      gvfs        \
                      linux       \
                      mutter      \
+                     nbd         \
                      nwjs        \
                      openboard   \
                      openldap    \
@@ -23,7 +24,7 @@ ifeq "$(debootstrap_suite)" "stretch"
                      wine        \
                      wpa
 else
-  _pkgs_ports := openldap
+  _pkgs_ports := nbd openldap
 endif
 
 _pkgs_image     := $(_pkgs_builddeps) $(_pkgs_parts) $(_pkgs_ports)

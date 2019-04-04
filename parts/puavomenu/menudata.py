@@ -66,7 +66,6 @@ class Program:
         # the data was read from. Not always known or applicable.
         self.original_desktop_file = None
 
-
     def __str__(self):
         return '<Program, type={0}, id="{1}", name="{2}", ' \
                'description="{3}" command="{4}", icon="{5}" ' \
@@ -165,7 +164,6 @@ class Menudata:
         # in the category switcher
         self.category_index = []
 
-
     # Searches for programs, returns them sorted by their names
     def search(self, key):
         matches = []
@@ -199,13 +197,11 @@ class Menudata:
 
         return sorted(matches, key=lambda program: program.name.lower())
 
-
     def clear(self):
         self.programs = {}
         self.menus = {}
         self.categories = {}
         self.category_index = []
-
 
     def load(self, language, menudata_root_dir, tag_filter_string, icon_cache):
         """A high-level interface to everything in loader.py. Loads all the
@@ -218,10 +214,7 @@ class Menudata:
 
         import loader
 
-        self.programs, \
-        self.menus, \
-        self.categories, \
-        self.category_index = \
+        self.programs, self.menus, self.categories, self.category_index = \
             loader.load_menu_data(language,
                                   menudata_root_dir,
                                   tag_filter_string,

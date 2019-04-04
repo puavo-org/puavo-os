@@ -33,7 +33,7 @@ class Action:
         self.name = name
 
     def __str__(self):
-        return '<Filter action: {0} {1} {2}>'.format( \
+        return '<Filter action: {0} {1} {2}>'.format(
             self.ACTIONS_FOR_LOGGER[self.action],
             self.TARGETS_FOR_LOGGER[self.target],
             self.name)
@@ -52,10 +52,8 @@ class Filter:
         if initial:
             self.parse_string(initial, strict_reject)
 
-
     def have_data(self):
         return len(self.actions) > 0
-
 
     def reset(self):
         self.actions = []
@@ -63,20 +61,17 @@ class Filter:
         self.menu_names = set()
         self.category_names = set()
 
-
     def parse_string(self, tag_string, strict_reject=True):
         import re
         import logging
-        from settings import SETTINGS
 
         logging.info('Parsing filter string: "%s"', str(tag_string))
 
-        tags = [tag.strip() for tag in re.split(',|;|\ ', str(tag_string) if tag_string else '')]
+        tags = [tag.strip() for tag in re.split(r',|;|\ ', str(tag_string) if tag_string else '')]
         tags = filter(None, tags)
         tags = [p.lower() for p in tags]
 
         self.reset()
-
 
         for tag in tags:
             orig_tag = tag
@@ -104,8 +99,7 @@ class Filter:
             if len(namespace) == 0 or len(tag) == 0:
                 if strict_reject:
                     logging.error('Rejecting filter string "%s" because "%s" '
-                                  'is not a valid tag' %
-                                  (tag_string, orig_tag))
+                                  'is not a valid tag', tag_string, orig_tag)
                     self.reset()
                     return
 
@@ -116,8 +110,7 @@ class Filter:
             if (tag.find('-') == 0) or (tag.find('+') == 0):
                 if strict_reject:
                     logging.error('Rejecting filter string "%s" because "%s" '
-                                  'is not a valid tag' %
-                                 (tag_string, orig_tag))
+                                  'is not a valid tag', tag_string, orig_tag)
                     self.reset()
                     return
                 continue
@@ -136,8 +129,8 @@ class Filter:
             else:
                 if strict_reject:
                     logging.error('Rejecting filter string "%s" because "%s" '
-                                  'is not a valid tag namespace' %
-                                  (tag_string, namespace))
+                                  'is not a valid tag namespace',
+                                  tag_string, namespace)
                     self.reset()
                     return
 
