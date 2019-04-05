@@ -40,6 +40,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/initramfs-tools/scripts/puavo-postmount
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/definitions
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-conf/files/etc/pam.d
+	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-conf/files/messages
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-conf/scripts
 
 .PHONY : install
@@ -64,6 +65,8 @@ install : $(install-subdirs) installdirs
 		puavo-conf/definitions/*.json
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-conf/files/etc/pam.d/ \
 		puavo-conf/files/etc/pam.d/*
+	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-conf/files/messages/ \
+		puavo-conf/files/messages/*
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/puavo-conf/scripts \
 		puavo-conf/scripts/*
 

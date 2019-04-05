@@ -18,3 +18,15 @@ case "$hosttype" in
                 /etc/pam.d/puavo-session
     ;;
 esac
+
+puavo_locale=$(puavo-conf puavo.l10n.locale | cut -c 1-2)
+
+if ! [ -e "/etc/puavo-conf/files/messages/auth_unavailable-${puavo_locale}.1" \
+  -a -e "/etc/puavo-conf/files/messages/auth_unavailable-${puavo_locale}.2" ]; then
+    puavo_locale=en
+fi
+
+ln -fns "auth_unavailable-${puavo_locale}.1" \
+        "/etc/puavo-conf/files/messages/auth_unavailable.1"
+ln -fns "auth_unavailable-${puavo_locale}.2" \
+        "/etc/puavo-conf/files/messages/auth_unavailable.2"
