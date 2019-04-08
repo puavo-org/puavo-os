@@ -45,9 +45,6 @@ disable_hp_accel
     Disable HP accelerometer (triggers automatic screen rotation but does
     not work properly).
 
-disable_suspend_by_tag
-    Check out for device tag "nosuspend", and possibly block suspend.
-
 disable_suspend_on_halt
     When on runlevel 0 (halt), do not suspend.
 
