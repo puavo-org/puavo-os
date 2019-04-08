@@ -48,9 +48,6 @@ disable_hp_accel
 disable_suspend_on_halt
     When on runlevel 0 (halt), do not suspend.
 
-disable_suspend_on_nbd_devices
-    Do not allow suspend when root directory is on an nbd device.
-
 disable_unclutter
     Disable unclutter, causes problems on some hardware.
 
