@@ -1,7 +1,6 @@
 class image::bundle::basic {
   include ::console
   include ::disable_hp_accel_module
-  include ::disable_suspend_on_halt
   include ::disable_update_initramfs
   include ::extra_boot_scripts
   include ::gdm
