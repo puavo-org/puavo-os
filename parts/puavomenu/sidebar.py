@@ -39,7 +39,7 @@ SB_CHANGE_PASSWORD = {
         'webwindow': {
             'title': STRINGS['sb_change_password_window_title'],
             'width': 1000,
-            'height': 700,
+            'height': 650,
             'enable_js': True,
         },
     },
@@ -505,7 +505,7 @@ class Sidebar:
                     self.__variables),
                 title=utils.localize(STRINGS['sb_avatar_hover']),
                 width=1000,
-                height=700,
+                height=650,
                 enable_js=True)     # The profile editor needs JavaScript
         except Exception as exception:
             logging.error(str(exception))
@@ -522,7 +522,7 @@ class Sidebar:
                 url=get_changelog_url(),
                 title=utils.localize(STRINGS['sb_changelog_window_title']),
                 width=1000,
-                height=700,
+                height=650,
                 enable_js=True)     # Markdown is used on the page, need JS
         except Exception as exception:
             logging.error(str(exception))
