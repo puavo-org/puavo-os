@@ -82,6 +82,9 @@ graphics_drivers
     Setup proprietary nvidia drivers in a such a way they can be used
     (without breaking everything else).
 
+handle_utmp_logs
+    Setup /var/log/utmp and similar with correct permissions.
+
 ibus
     Configurations for ibus.
 

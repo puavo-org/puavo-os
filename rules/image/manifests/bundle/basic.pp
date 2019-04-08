@@ -5,6 +5,7 @@ class image::bundle::basic {
   include ::extra_boot_scripts
   include ::gdm
   include ::grub_themes
+  include ::handle_utmp_logs
   include ::hwquirks
   include ::initramfs
   include ::infotv
