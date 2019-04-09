@@ -1,0 +1,24 @@
+#!/bin/sh
+
+set -eu
+
+lid_state() {
+  awk '$1 == "state:" { print $2 }' /proc/acpi/button/lid/LID/state \
+    2>/dev/null || true
+}
+
+if [ "$(puavo-conf puavo.admin.nightly.updates)" != 'true' ]; then
+  exit 0
+fi
+
+if rtcwake --utc -m show | grep -Fqx 'alarm: off'; then
+  action_time=$(expr "$(printf %d 0x$(hostname -f | md5sum | cut -c 1-8))" % 180)
+  action_hour=$(expr 21 + "$action_time" / 60)
+  action_minute=$(expr "$action_time" % 60)
+
+  rtcwake -m no --date "${action_hour}:${action_minute}"
+fi
+
+if [ -e /state/.suspend_if_lid_closed -a "$(lid_state)" = 'closed' ]; then
+  systemctl suspend
+fi
