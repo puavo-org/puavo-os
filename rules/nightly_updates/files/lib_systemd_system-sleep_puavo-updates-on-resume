@@ -1,0 +1,10 @@
+#!/bin/sh
+
+case "$1" in
+  post)
+    rm -f /state/.suspend_if_lid_closed
+    if [ "$(puavo-conf puavo.admin.nightly_updates)" = 'true' ]; then
+      /usr/local/lib/puavo-updates-on-resume
+    fi
+    ;;
+esac

@@ -1,0 +1,86 @@
+#!/bin/sh
+
+set -eu
+
+# XXX get rid of hosttype handling
+hosttype=$(puavo-conf puavo.hosttype)
+if [ "$hosttype" != 'laptop' ] ; then
+  exit 0
+fi
+
+battery_capacity_over() {
+  requested_capacity=$1
+  capacity=$(cat /sys/class/power_supply/BAT0/capacity 2>/dev/null) || true
+  [ -n "$capacity" -a "$capacity" -ge "$requested_capacity" ]
+}
+
+lid_state() {
+  awk '$1 == "state:" { print $2 }' /proc/acpi/button/lid/LID/state \
+    2>/dev/null || true
+}
+
+on_ac_power() {
+  grep -Fqx 1 /sys/class/power_supply/AC/online 2>/dev/null
+}
+
+image_is_updated() {
+  old_image_inode=$1
+  new_image_inode="$(stat -c %i /images/ltsp.img 2>/dev/null)" || true
+  [ -n "$new_image_inode" -a "$old_image_inode" -ne "$new_image_inode" ]
+}
+
+wait_for_openvpn() {
+  for i in $(seq 16); do
+    vpn0_ip=$(ifdata -pa vpn0 2>/dev/null) || true
+    if [ -n "$vpn0_ip" ]; then
+      return 0
+    fi
+    sleep "$i"
+  done
+
+  return 1
+}
+
+# allow some time for user to open the lid in case this is a normal resume
+sleep 10
+
+if [ "$(lid_state)" != 'closed' ]; then
+  exit 0
+fi
+
+action_time=$(expr "$(printf %d 0x$(hostname -f | md5sum | cut -c 1-8))" % 180)
+action_hour=$(expr 21 + "$action_time" / 60)
+action_minute=$(expr "$action_time" % 60)
+
+current_hour=$(date +%H)
+current_minute=$(date +%M)
+
+if [ "$current_hour" -ne "$action_hour" \
+  -o "$current_minute" -ne "$action_minute" ]; then
+    exit 0
+fi
+
+old_image_inode="$(stat -c %i /images/ltsp.img 2>/dev/null)" || true
+if [ -z "$old_image_inode" ]; then
+  echo 'Could not lookup the current image inode' >&2
+  exit 1
+fi
+
+if on_ac_power; then
+  wait_for_openvpn
+  puavo-update-client --wait-for-image-update || true
+  if image_is_updated "$old_image_inode"; then
+    touch /state/.suspend_if_lid_closed
+    reboot
+    exit 0
+  fi
+elif battery_capacity_over 30; then
+  wait_for_openvpn
+  puavo-update-client --wait-for-image-update || true
+  if image_is_updated "$old_image_inode"; then
+    poweroff
+    exit 0
+  fi
+fi
+
+touch /state/.suspend_if_lid_closed

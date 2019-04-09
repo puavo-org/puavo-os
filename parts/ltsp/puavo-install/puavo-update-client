@@ -32,6 +32,7 @@ automatically_triggered=false
 force_image_update=false
 no_image_update=false
 use_rate_limit=false
+wait_for_image_update=false
 
 while [ $# -gt 0 ]; do
   case $1 in
@@ -66,6 +67,10 @@ while [ $# -gt 0 ]; do
     --use-rate-limit)
       shift
       use_rate_limit=true
+      ;;
+    --wait-for-image-update)
+      shift
+      wait_for_image_update=true
       ;;
     --)
       shift
@@ -152,5 +157,18 @@ else
   else
     log notice 'starting system update failed'
     exit 1
+  fi
+
+  if $wait_for_image_update; then
+    (
+      dbus-monitor --profile --system \
+        "type='signal',interface='org.puavo.client.update'" & \
+      { while sleep 1; do echo quit on sigpipe; done }
+    ) | awk '
+            $1 == "sig" && $6 == "/updater" && $7 == "org.puavo.client.update" {
+              if ($8 == "UpdateCancelled" || $8 == "UpdateFailed")     { exit 1 }
+              if ($8 == "UpdateCompleted" || $8 == "UpdateIsUpToDate") { exit 0 }
+            }
+          '
   fi
 fi

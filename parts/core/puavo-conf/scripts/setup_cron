@@ -120,6 +120,10 @@ cron_d_cond_enable puavo-bootserver-sync-images <<'EOF'
 21 21 * * * root /usr/sbin/puavo-bootserver-sync-images >/dev/null 2>&1
 EOF
 
+cron_d_cond_enable puavo-nightly-updates <<'EOF'
+* * * * * root /usr/local/lib/puavo-trigger-nightly-updates
+EOF
+
 cron_d_cond_enable puavo-setup-bootserver-printer-restrictions <<'EOF'
 */5 * * * * root /etc/puavo-conf/scripts/setup_bootserver_printer_restrictions >/dev/null 2>&1
 EOF
