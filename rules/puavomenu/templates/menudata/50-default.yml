@@ -334,8 +334,6 @@ programs:
         tags: default
 
   #L
-  - novo-launcher:
-        tags: default
   - libreoffice-base:
         name:
             fi: LibreOffice Tietokanta
@@ -424,6 +422,8 @@ programs:
   - neverball:
         tags: default
   - neverputt:
+        tags: default
+  - novo-launcher:
         tags: default
 
   #O
