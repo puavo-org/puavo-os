@@ -779,7 +779,7 @@ def apply_filters(raw_programs, raw_menus, raw_categories, conditions, filters):
                 continue
 
             # All programs must have at least one tag, again by design
-            if len(program['tags']) == 0:
+            if ('tags' not in program) or len(program['tags']) == 0:
                 logging.warning('Program "%s" has no tags, hiding it', menudata_id)
                 program['hidden'] = True
                 continue
