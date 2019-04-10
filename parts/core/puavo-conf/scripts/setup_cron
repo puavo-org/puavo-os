@@ -121,6 +121,8 @@ cron_d_cond_enable puavo-bootserver-sync-images <<'EOF'
 EOF
 
 cron_d_cond_enable puavo-nightly-updates <<'EOF'
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 * * * * * root /usr/local/lib/puavo-trigger-nightly-updates >/dev/null 2>&1
 EOF
 
