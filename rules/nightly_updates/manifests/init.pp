@@ -9,7 +9,7 @@ class nightly_updates {
   }
 
   ::puavo_conf::definition {
-    'puavo-admin-nightly-updates':
+    'puavo-admin-nightly-updates.json':
       source => 'puppet:///modules/nightly_updates/puavo-admin-nightly-updates.json';
   }
 }
