@@ -334,6 +334,8 @@ programs:
         tags: default
 
   #L
+  - novo-launcher:
+        tags: default
   - libreoffice-base:
         name:
             fi: LibreOffice Tietokanta
@@ -943,6 +945,7 @@ menus:
             - org.gnome.Screenshot
             - simplescreenrecorder
             - airtame
+            - novo-launcher
 
   - menu-graphics:
         name:
