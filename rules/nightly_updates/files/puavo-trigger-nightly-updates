@@ -7,7 +7,7 @@ if [ "$(puavo-conf puavo.admin.nightly_updates)" != 'true' ]; then
 fi
 
 exec 3< "$0"
-flock -nx 3 || exit 1
+flock --exclusive --timeout 30 3 || exit 1
 
 ac_online_path='/sys/class/power_supply/AC/online'
 battery_capacity_path='/sys/class/power_supply/BAT0/capacity'
@@ -88,15 +88,22 @@ fi
 setup_rtcwake || true
 
 if [ -e /state/.suspend_if_lid_closed ]; then
-  # wait until gnome-shell is up (on the login screen)
-  pgrep -c -x gnome-shell > /dev/null || exit 0
+  rm -f /state/.suspend_if_lid_closed
+  # must redo systemd-logind configuration, because
+  # removal of /state/.suspend_if_lid_closed may affect it
+  if /etc/puavo-conf/scripts/setup_systemd; then
+    systemctl restart systemd-logind || true
+  fi
+  while ! pgrep -c -x gnome-shell > /dev/null; do
+    sleep 1
+  done
+  sleep 5
 
   if [ "$(lid_state)" = 'closed' ]; then
     logger -t puavo-updates-on-resume -p user.notice \
            'suspending because lid is closed and have pending request'
     systemctl suspend
   fi
-  rm -f /state/.suspend_if_lid_closed
   exit 0
 fi
 
@@ -111,10 +118,6 @@ if [ "$smaller_date" != "$nightly_update_date" ]; then
 fi
 
 rm -f /state/.do_nightly_update
-
-# allow some time for user to open the lid in case this is a normal resume
-# (the host might also be booted up)
-sleep 10
 
 if [ "$(lid_state)" != 'closed' ]; then
   logger -t puavo-updates-on-resume -p user.notice \
@@ -171,7 +174,5 @@ fi
 if [ "$(lid_state)" = 'closed' ]; then
   logger -t puavo-updates-on-resume -p user.notice \
         'suspending, because lid is closed'
-  if ! systemctl suspend; then
-    touch /state/.suspend_if_lid_closed
-  fi
+  systemctl suspend
 fi
