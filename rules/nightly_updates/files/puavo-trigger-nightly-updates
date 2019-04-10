@@ -2,7 +2,7 @@
 
 set -eu
 
-if [ "$(puavo-conf puavo.admin.nightly.updates)" != 'true' ]; then
+if [ "$(puavo-conf puavo.admin.nightly_updates)" != 'true' ]; then
   exit 0
 fi
 
