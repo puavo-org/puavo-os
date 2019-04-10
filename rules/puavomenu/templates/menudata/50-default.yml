@@ -423,6 +423,8 @@ programs:
         tags: default
   - neverputt:
         tags: default
+  - novo-launcher:
+        tags: default
 
   #O
   - okular:
@@ -943,6 +945,7 @@ menus:
             - org.gnome.Screenshot
             - simplescreenrecorder
             - airtame
+            - novo-launcher
 
   - menu-graphics:
         name:
