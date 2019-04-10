@@ -4,7 +4,7 @@ class nightly_updates {
   file {
     '/usr/local/lib/puavo-trigger-nightly-updates':
       mode    => '0755',
-      require => ::Puavo_conf::Definition['puavo-admin-nightly-updates'],
+      require => ::Puavo_conf::Definition['puavo-admin-nightly-updates.json'],
       source  => 'puppet:///modules/nightly_updates/puavo-trigger-nightly-updates';
   }
 
