@@ -176,6 +176,7 @@ domain-needed
 cache-size=10000
 dns-forward-max=1000
 localise-queries
+log-facility=/var/log/dnsmasq.log
 
 # Forward requests to upstream. Requests to puavo domain should be
 # sent to bind that handles DDNS requests
@@ -263,3 +264,27 @@ cat <<EOF > /etc/resolvconf/resolv.conf.d/tail.tmp
 search ltsp.${puavo_domain} wlan.${puavo_domain}
 EOF
 mv /etc/resolvconf/resolv.conf.d/tail.tmp /etc/resolvconf/resolv.conf.d/tail
+
+#
+# settings that are customizable with puavo-conf
+#
+
+log_policy=$(puavo-conf puavo.admin.logging.dnsmasq)
+
+case "$łog_policy" in
+  log-queries)
+    cat <<'EOF' > /etc/dnsmasq.d/05-log-queries.tmp
+log-queries
+EOF
+    mv /etc/dnsmasq.d/05-log-queries.tmp \
+       /etc/dnsmasq.d/05-log-queries
+    ;;
+  '')
+    rm -f /etc/dnsmasq.d/05-log-queries
+    ;;
+  *)
+    rm -f /etc/dnsmasq.d/05-log-queries
+    echo "Unsupported value in puavo.admin.logging.dnsmasq: '${log_policy}'" >&2
+    exit 1
+    ;;
+esac

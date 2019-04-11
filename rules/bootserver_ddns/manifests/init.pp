@@ -8,6 +8,9 @@ class bootserver_ddns {
       require => Package['bind9'],
       source  => 'puppet:///modules/bootserver_ddns/named.conf.options';
 
+    '/etc/logrotate.d/dnsmasq':
+      source  => 'puppet:///modules/bootserver_ddns/etc_logrotate.d_dnsmasq';
+
     '/usr/local/lib/puavo-update-ddns':
       mode   => '0755',
       source => 'puppet:///modules/bootserver_ddns/puavo-update-ddns';
@@ -18,6 +21,9 @@ class bootserver_ddns {
   }
 
   ::puavo_conf::definition {
+    'puavo-admin-logging-dnsmasq.json':
+      source => 'puppet:///modules/bootserver_ddns/puavo-admin-logging-dnsmasq.json';
+
     'puavo-networking.json':
       source => 'puppet:///modules/bootserver_ddns/puavo-networking.json';
   }
