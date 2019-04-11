@@ -271,7 +271,7 @@ mv /etc/resolvconf/resolv.conf.d/tail.tmp /etc/resolvconf/resolv.conf.d/tail
 
 log_policy=$(puavo-conf puavo.admin.logging.dnsmasq)
 
-case "$łog_policy" in
+case "$log_policy" in
   log-queries)
     cat <<'EOF' > /etc/dnsmasq.d/05-log-queries.tmp
 log-queries
