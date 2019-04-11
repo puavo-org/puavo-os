@@ -1,13 +1,11 @@
 class image::bundle::basic {
   include ::console
   include ::disable_hp_accel_module
-  include ::disable_suspend_by_tag
-  include ::disable_suspend_on_halt
-  include ::disable_suspend_on_nbd_devices
   include ::disable_update_initramfs
   include ::extra_boot_scripts
   include ::gdm
   include ::grub_themes
+  include ::handle_utmp_logs
   include ::hwquirks
   include ::initramfs
   include ::infotv
@@ -15,6 +13,7 @@ class image::bundle::basic {
   # include ::keyboard_hw_quirks        # XXX do we need this for Debian?
   include ::locales
   include ::motd
+  include ::nightly_updates
   include ::nss
   include ::packages
   include ::pam

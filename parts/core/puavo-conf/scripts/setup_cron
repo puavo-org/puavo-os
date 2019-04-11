@@ -67,13 +67,13 @@ cron_infotv_display_control() {
   end_hour=$(  get_hour puavo.autopoweroff.daytime_end_hour)
 
   if [ -n "$start_hour" ]; then
-    display_on_line="0 $start_hour * * 1-7 root iivari-display_on >/dev/null"
+    display_on_line="0 $start_hour * * 1-7 root iivari-display_on >/dev/null 2>&1"
   else
     display_on_line=''
   fi
 
   if [ -n "$end_hour" ]; then
-    display_off_line="0 $end_hour * * 1-7 root iivari-display_off >/dev/null"
+    display_off_line="0 $end_hour * * 1-7 root iivari-display_off >/dev/null 2>&1"
   else
     display_off_line=''
   fi
@@ -94,21 +94,21 @@ EOF
 
 cron_d_cond_enable fix-homedir-permissions <<'EOF'
 # Fix home directory permissions every morning at 06:13
-13 06 * * * root /usr/local/sbin/puavo-fix-homedir-permissions >/dev/null
+13 06 * * * root /usr/local/sbin/puavo-fix-homedir-permissions >/dev/null 2>&1
 EOF
 
 # XXX Is this still necessary?
 cron_d_cond_enable fstrim <<'EOF'
 # Trim SSD-cached /home every night at 03:00
 PATH=/bin:/sbin
-00 03 * * * root grep -q '^/dev/mapper/cache-home /home ext4' && fstrim /home >/dev/null
+00 03 * * * root grep -q '^/dev/mapper/cache-home /home ext4' && fstrim /home >/dev/null 2>&1
 EOF
 
 cron_infotv_display_control | cron_d_cond_enable infotv-display-control
 
 cron_d_cond_enable puavo-autopoweron <<'EOF'
 # Run wakeonlan for hosts that should be woken up.
-30 07 * * * root /usr/local/lib/puavo-autopoweron >/dev/null
+30 07 * * * root /usr/local/lib/puavo-autopoweron >/dev/null 2>&1
 EOF
 
 cron_d_cond_enable puavo-autoreboot-at-night <<'EOF'
@@ -120,18 +120,24 @@ cron_d_cond_enable puavo-bootserver-sync-images <<'EOF'
 21 21 * * * root /usr/sbin/puavo-bootserver-sync-images >/dev/null 2>&1
 EOF
 
+cron_d_cond_enable puavo-nightly-updates <<'EOF'
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+* * * * * root /bin/systemd-inhibit --what=handle-lid-switch /usr/local/lib/puavo-nightly-updates >/dev/null 2>&1
+EOF
+
 cron_d_cond_enable puavo-setup-bootserver-printer-restrictions <<'EOF'
 */5 * * * * root /etc/puavo-conf/scripts/setup_bootserver_printer_restrictions >/dev/null 2>&1
 EOF
 
 cron_d_cond_enable puavo-update-airprint-ddns <<'EOF'
 # Update printers on DNS every fifteen minutes.
-*/15 * * * * root /usr/local/sbin/puavo-update-airprint-ddns >/dev/null
+*/15 * * * * root /usr/local/sbin/puavo-update-airprint-ddns >/dev/null 2>&1
 EOF
 
 cron_d_cond_enable remove-cups-jobs <<'EOF'
 # Remove all CUPS jobs every night at 03:00
-00 03 * * * root /usr/bin/cancel -a >/dev/null
+00 03 * * * root /usr/bin/cancel -a >/dev/null 2>&1
 EOF
 
 cron_daily_cond_enable puavo-cleanup-old-users <<'EOF'

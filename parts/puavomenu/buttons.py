@@ -261,7 +261,11 @@ class ProgramButton(HoverIconButtonBase):
     def __on_mouse_hover_move(self, widget, event):
         if not self.disabled:
             (window, mouse_x, mouse_y, state) = event.window.get_pointer()
+            self.__hover_check(mouse_x, mouse_y)
 
+        return False
+
+    def __hover_check(self, mouse_x, mouse_y):
             new_state = (mouse_x >= self.__indicator_x1) and \
                         (mouse_x <= self.__indicator_x2) and \
                         (mouse_y >= self.__indicator_y1) and \
@@ -271,8 +275,6 @@ class ProgramButton(HoverIconButtonBase):
                 # Only redraw when the hover state actually changes
                 self.__popup_hover = new_state
                 self.queue_draw()
-
-        return False
 
     def on_draw(self, widget, ctx):
         try:
@@ -536,6 +538,11 @@ class ProgramButton(HoverIconButtonBase):
         self.parent.enable_out_of_focus_hide()
 
         self.__popup_open = False
+
+        # Force hover state re-check
+        x, y = self.get_pointer()
+        self.__hover_check(x, y)
+
         self.__menu = None
         self.queue_draw()       # force hover state update
 

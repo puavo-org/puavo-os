@@ -2,7 +2,8 @@
 
 set -eu
 
-if [ "$(puavo-conf puavo.pm.lidsuspend.enabled)" = 'true' ]; then
+if [ "$(puavo-conf puavo.pm.lidsuspend.enabled)" = 'true' \
+       -a ! -e /state/.suspend_if_lid_closed ]; then
   handle_lid_switch_action='suspend'
 else
   handle_lid_switch_action='ignore'

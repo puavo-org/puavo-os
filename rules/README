@@ -45,15 +45,6 @@ disable_hp_accel
     Disable HP accelerometer (triggers automatic screen rotation but does
     not work properly).
 
-disable_suspend_by_tag
-    Check out for device tag "nosuspend", and possibly block suspend.
-
-disable_suspend_on_halt
-    When on runlevel 0 (halt), do not suspend.
-
-disable_suspend_on_nbd_devices
-    Do not allow suspend when root directory is on an nbd device.
-
 disable_unclutter
     Disable unclutter, causes problems on some hardware.
 
@@ -90,6 +81,9 @@ google-earth-stable
 graphics_drivers
     Setup proprietary nvidia drivers in a such a way they can be used
     (without breaking everything else).
+
+handle_utmp_logs
+    Setup /var/log/utmp and similar with correct permissions.
 
 ibus
     Configurations for ibus.

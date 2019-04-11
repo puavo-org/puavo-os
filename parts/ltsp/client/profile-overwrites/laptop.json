@@ -5,7 +5,7 @@
   "puavo.pm.suspend.enabled"                      : "true",
   "puavo.printing.dnssd.enabled"                  : "true",
   "puavo.service.avahi-daemon.enabled"            : "true",
-  "puavo.service.cron.cronjobs"                   : "puavo-pkg-update",
+  "puavo.service.cron.cronjobs"                   : "puavo-cleanup-old-users,puavo-nightly-updates,puavo-pkg-update",
   "puavo.service.ModemManager.enabled"            : "true",
   "puavo.service.NetworkManager.enabled"          : "true",
   "puavo.service.puavo-vpn-client-dnsmasq.enabled": "true",
