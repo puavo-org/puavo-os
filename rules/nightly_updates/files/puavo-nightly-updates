@@ -53,7 +53,7 @@ on_ac_power() {
 setup_rtcwake() {
   if rtcwake --utc -m show | grep -Fqx 'alarm: off'; then
     tomorrow=$(date -I --date=tomorrow)
-    logger -t puavo-trigger-nightly-updates -p user.notice \
+    logger -t puavo-nightly-updates -p user.notice \
            "setting rtcwake to $tomorrow ${action_hour}:${action_minute}"
     if rtcwake -m no --date "$tomorrow ${action_hour}:${action_minute}"; then
       if [ ! -e /state/.do_nightly_update ]; then
@@ -68,13 +68,14 @@ wait_for_openvpn() {
   for i in $(seq 16); do
     vpn_ip=$(ifdata -pa "$vpn_interface" 2>/dev/null) || true
     if [ -n "$vpn_ip" ]; then
-      logger -t puavo-updates-on-resume -p user.notice 'vpn is up'
+      logger -t puavo-nightly-updates -p user.notice 'vpn is up'
       return 0
     fi
     sleep "$i"
   done
 
-  logger -t puavo-updates-on-resume -p user.err 'vpn connection not active'
+  logger -t puavo-nightly-updates -p user.err \
+         'vpn connection not active'
 
   return 1
 }
@@ -100,7 +101,7 @@ if [ -e /state/.suspend_if_lid_closed ]; then
   sleep 5
 
   if [ "$(lid_state)" = 'closed' ]; then
-    logger -t puavo-updates-on-resume -p user.notice \
+    logger -t puavo-nightly-updates -p user.notice \
            'suspending because lid is closed and have pending request'
     systemctl suspend
   fi
@@ -120,59 +121,59 @@ fi
 rm -f /state/.do_nightly_update
 
 if [ "$(lid_state)" != 'closed' ]; then
-  logger -t puavo-updates-on-resume -p user.notice \
+  logger -t puavo-nightly-updates -p user.notice \
          'not doing nightly updates today because the lid state is not closed'
   exit 0
 fi
 
-logger -t puavo-updates-on-resume -p user.notice \
+logger -t puavo-nightly-updates -p user.notice \
        "doing nightly updates on ${action_hour}:${action_minute}"
 
 old_image_inode="$(stat -c %i /images/ltsp.img 2>/dev/null)" || true
 if [ -z "$old_image_inode" ]; then
-  logger -t puavo-updates-on-resume \
+  logger -t puavo-nightly-updates \
          -p user.err 'could not lookup the current image inode'
   exit 1
 fi
 
 if on_ac_power; then
-  logger -t puavo-updates-on-resume -p user.notice \
+  logger -t puavo-nightly-updates -p user.notice \
          'on AC power, waiting for openvpn'
   if wait_for_openvpn; then
     puavo-update-client --wait-for-image-update || true
     if image_is_updated "$old_image_inode"; then
-      logger -t puavo-updates-on-resume -p user.notice \
+      logger -t puavo-nightly-updates -p user.notice \
              'image updated, rebooting to suspend'
       touch /state/.suspend_if_lid_closed
       reboot
       exit 0
     else
-      logger -t puavo-updates-on-resume -p user.notice \
+      logger -t puavo-nightly-updates -p user.notice \
              'no image update, not rebooting'
     fi
   fi
 elif battery_capacity_over 30; then
-  logger -t puavo-updates-on-resume -p user.notice \
+  logger -t puavo-nightly-updates -p user.notice \
          'on enough battery power, updating'
   if wait_for_openvpn; then
     puavo-update-client --wait-for-image-update || true
     if image_is_updated "$old_image_inode"; then
-      logger -t puavo-updates-on-resume -p user.notice \
+      logger -t puavo-nightly-updates -p user.notice \
              'image updated, powering off'
       poweroff
       exit 0
     else
-      logger -t puavo-updates-on-resume -p user.notice \
+      logger -t puavo-nightly-updates -p user.notice \
              'no image update, not powering off'
     fi
   fi
 else
-  logger -t puavo-updates-on-resume -p user.notice \
+  logger -t puavo-nightly-updates -p user.notice \
          'not enough battery power, not updating'
 fi
 
 if [ "$(lid_state)" = 'closed' ]; then
-  logger -t puavo-updates-on-resume -p user.notice \
+  logger -t puavo-nightly-updates -p user.notice \
         'suspending, because lid is closed'
   systemctl suspend
 fi
