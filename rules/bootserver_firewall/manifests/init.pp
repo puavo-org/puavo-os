@@ -16,9 +16,15 @@ class bootserver_firewall {
       source  => 'puppet:///modules/bootserver_firewall/etc_shorewall/shorewall.conf';
   }
 
+  ::puavo_conf::definition {
+    'puavo-admin-logging-firewall.json':
+      source => 'puppet:///modules/bootserver_firewall/puavo-admin-logging-firewall.json';
+  }
+
   ::puavo_conf::script {
     'setup_bootserver_shorewall_conf':
-      source => 'puppet:///modules/bootserver_firewall/setup_bootserver_shorewall_conf';
+      require => ::Puavo_conf::Definition['puavo-admin-logging-firewall.json'],
+      source  => 'puppet:///modules/bootserver_firewall/setup_bootserver_shorewall_conf';
 
     'setup_firewall':
       source => 'puppet:///modules/bootserver_firewall/setup_firewall';

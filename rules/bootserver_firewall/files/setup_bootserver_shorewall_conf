@@ -4,6 +4,8 @@ set -eu
 
 target_dir='/etc/shorewall.rofs'
 
+fw_logging_policy=$(puavo-conf puavo.admin.logging.firewall)
+
 iface_to_network_cidr() {
   iface=$1
 
@@ -110,10 +112,31 @@ $(for iface in $dhcpd_interfaces; do
 EOF
 mv "${target_dir}/masq.tmp" "${target_dir}/masq"
 
+# -- params
+case "$fw_logging_policy" in
+  outgoing,rejected)
+    cat <<EOF > "${target_dir}/params.tmp"
+PUAVO_DEFAULT_LOG_LEVEL=NFLOG
+PUAVO_REJECT_LOG_LEVEL=NFLOG
+EOF
+    ;;
+  '')
+    cat <<EOF > "${target_dir}/params.tmp"
+PUAVO_DEFAULT_LOG_LEVEL=info
+PUAVO_REJECT_LOG_LEVEL=
+EOF
+    ;;
+  *)
+    echo "Unknown logging policy '${fw_logging_policy}'" >&2
+    exit 1
+    ;;
+esac
+mv "${target_dir}/params.tmp" "${target_dir}/params"
+
 # -- policy
-cat <<EOF > "${target_dir}/policy.tmp"
+cat <<'EOF' > "${target_dir}/policy.tmp"
 #SOURCE         DEST            POLICY          LOG LEVEL       LIMIT:BURST
-inet            fw              REJECT
+inet            fw              REJECT          $PUAVO_REJECT_LOG_LEVEL
 fw              all		ACCEPT
 ltsp            inet            ACCEPT
 ltsp            ovpn            ACCEPT
@@ -121,13 +144,14 @@ ltsp            fw              ACCEPT
 ovpn            fw              ACCEPT
 wlan            inet            ACCEPT
 wlan            fw              ACCEPT
-wlan            ovpn		REJECT
-all             all             REJECT
+wlan            ovpn		REJECT          $PUAVO_REJECT_LOG_LEVEL
+all             all             REJECT          $PUAVO_REJECT_LOG_LEVEL
 EOF
 mv "${target_dir}/policy.tmp" "${target_dir}/policy"
 
 # -- rules
-cat <<EOF > "${target_dir}/rules.tmp"
+{
+  cat <<EOF
 #ACTION         SOURCE          	DEST            	PROTO   DEST    SOURCE          ORIGINAL        RATE            USER/   MARK    CONNLIMIT       TIME         HEADERS         SWITCH
 #                                                       	PORT    PORT(S) 		DEST            LIMIT           GROUP
 ACCEPT		any			any			icmp    8
@@ -135,6 +159,16 @@ ACCEPT		any			any			icmp    8
 # Maybe enable for some cases:
 #ACCEPT		inet			fw			tcp	22
 EOF
+
+  if [ "$fw_logging_policy" = 'outgoing,rejected' ] ; then
+    cat <<'EOF'
+
+# for logging
+$PUAVO_DEFAULT_LOG_LEVEL        ltsp    inet
+$PUAVO_DEFAULT_LOG_LEVEL        wlan    inet
+EOF
+  fi
+} > "${target_dir}/rules.tmp"
 mv "${target_dir}/rules.tmp" "${target_dir}/rules"
 
 # -- zones
