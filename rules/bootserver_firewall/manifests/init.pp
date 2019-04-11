@@ -7,6 +7,9 @@ class bootserver_firewall {
       require => Package['shorewall'],
       source  => 'puppet:///modules/bootserver_firewall/etc_default_shorewall';
 
+    '/etc/logrotate.d/shorewall-ulogd2':
+      source => 'puppet:///modules/bootserver_firewall/etc_logrotate.d_shorewall-ulogd2';
+
     '/etc/shorewall/Makefile':
       require => Package['shorewall'],
       source  => 'puppet:///modules/bootserver_firewall/etc_shorewall/Makefile';
@@ -14,6 +17,10 @@ class bootserver_firewall {
     '/etc/shorewall/shorewall.conf':
       require => Package['shorewall'],
       source  => 'puppet:///modules/bootserver_firewall/etc_shorewall/shorewall.conf';
+
+    '/etc/ulogd.conf':
+      mode   => '0600',
+      source => 'puppet:///modules/bootserver_firewall/ulogd.conf';
   }
 
   ::puavo_conf::definition {

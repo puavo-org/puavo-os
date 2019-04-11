@@ -1,0 +1,11 @@
+/var/log/shorewall.log {
+        missingok
+        daily
+        rotate 180
+        compress
+        sharedscripts
+        create 640 ulog adm
+        postrotate
+                invoke-rc.d ulogd2 reload > /dev/null
+        endscript
+}
