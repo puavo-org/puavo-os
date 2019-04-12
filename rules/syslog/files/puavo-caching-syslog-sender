@@ -79,10 +79,14 @@ proc send_to_syslog {} {
       set timeout_event [after 10000 [list set syslog_sending_state timeout]]
       fileevent $syslog_connection writable {
         if {[llength $syslog_memcache] <= $syslog_cache_index} {
-	  set syslog_sending_state ok
+          set syslog_sending_state ok
           catch { file delete $cache_index_path }
+          close $syslog_connection
+          set syslog_connection ""
         } elseif {$send_bytes_limit < 0} {
           set syslog_sending_state limit_reached
+          close $syslog_connection
+          set syslog_connection ""
         } else {
           set line_to_send [lindex $syslog_memcache $syslog_cache_index]
           if {$line_to_send ne ""} {
@@ -99,7 +103,7 @@ proc send_to_syslog {} {
       vwait syslog_sending_state
       after cancel $timeout_event
 
-      close $syslog_connection
+      if {$syslog_connection ne ""} { close $syslog_connection }
 
       if {$syslog_sending_state ne "ok"} {
         set syslog_cache_index_file [open "${cache_index_path}.tmp" w]
