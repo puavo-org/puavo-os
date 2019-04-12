@@ -12,6 +12,8 @@ set queue_name  [lindex $argv 1]
 
 set start_hour [exec puavo-conf puavo.autopoweroff.daytime_start_hour]
 set end_hour   [exec puavo-conf puavo.autopoweroff.daytime_end_hour]
+set start_hour 2
+set end_hour   20
 set personally_administered [
   exec puavo-conf puavo.admin.personally_administered
 ]
@@ -107,6 +109,10 @@ proc send_to_syslog {} {
       vwait syslog_sending_state
       after cancel $timeout_event
 
+      # wait a second, with this we ensure that we will not send more
+      # than $send_bytes_limit per second
+      after 1000
+
       if {$syslog_connection ne ""} {
         catch { close $syslog_connection }
         set syslog_connection ""
@@ -117,12 +123,6 @@ proc send_to_syslog {} {
         puts $syslog_cache_index_file $syslog_cache_index
         close $syslog_cache_index_file
         file rename -force "${cache_index_path}.tmp" "$cache_index_path"
-
-        if {$syslog_sending_state eq "limit_reached"} {
-          # wait a second, with this we ensure that we will not send more
-          # than $send_bytes_limit per second
-          after 1000
-        }
 
         error "${syslog_sending_state} when sending data to remote syslog"
       }
@@ -154,7 +154,7 @@ proc send_to_syslog_or_cache {{msg ""}} {
     # add new messages to cache first
     puts -nonewline $syslog_filecache $msg
     flush $syslog_filecache
-    lappend syslog_memcache $msg
+    lappend syslog_memcache {*}[split $msg "\n"]
   }
 
   if {[llength $syslog_memcache] == 0} { return }
