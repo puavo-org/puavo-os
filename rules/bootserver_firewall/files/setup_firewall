@@ -5,6 +5,10 @@ set -eu
 firewall_enable=0
 if [ "$(puavo-conf puavo.hosttype)" = 'bootserver' ]; then
   firewall_enable=1
+
+  touch /var/log/shorewall.log
+  chown ulog:adm /var/log/shorewall.log
+  chmod 640 /var/log/shorewall.log
 fi
 
 sed -i "s/^startup=.*\$/startup=${firewall_enable}/" \
