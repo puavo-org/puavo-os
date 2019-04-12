@@ -8,7 +8,7 @@
 # issues that (it appears) rsyslog and syslog-ng do not always handle.
 
 set syslog_host [lindex $argv 0]
-set syslog_connection ""
+set queue_name  [lindex $argv 1]
 
 set start_hour [exec puavo-conf puavo.autopoweroff.daytime_start_hour]
 set end_hour   [exec puavo-conf puavo.autopoweroff.daytime_end_hour]
@@ -16,15 +16,15 @@ set personally_administered [
   exec puavo-conf puavo.admin.personally_administered
 ]
 
-if {$syslog_host eq ""} {
-  puts stderr "usage: puavo-caching-syslog-sender syslog_server"
+if {($syslog_host eq "") || ($queue_name eq "")} {
+  puts stderr "usage: puavo-caching-syslog-sender syslog_server queuename"
   exit 1
 }
 
 set puavo_domain [exec cat /etc/puavo/domain]
 
-set cache_index_path  "/var/log/puavo/${syslog_host}.cache.index"
-set remote_cache_path "/var/log/puavo/${syslog_host}.cache"
+set cache_index_path  "/var/log/puavo/${syslog_host}.${queue_name}.cache.index"
+set remote_cache_path "/var/log/puavo/${syslog_host}.${queue_name}.cache"
 
 # read previous file cache, if any
 if {[catch { set syslog_filecache [open $remote_cache_path r] }]} {
@@ -44,6 +44,7 @@ if {[catch { set syslog_cache_index_file [open $cache_index_path r] }]} {
   close $syslog_cache_index_file
 }
 
+set syslog_connection ""
 set syslog_filecache [open $remote_cache_path a]
 
 proc get_send_bytes_limit {} {
