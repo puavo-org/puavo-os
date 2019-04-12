@@ -8,6 +8,7 @@
 # issues that (it appears) rsyslog and syslog-ng do not always handle.
 
 set syslog_host [lindex $argv 0]
+set syslog_connection ""
 
 set start_hour [exec puavo-conf puavo.autopoweroff.daytime_start_hour]
 set end_hour   [exec puavo-conf puavo.autopoweroff.daytime_end_hour]
@@ -68,6 +69,8 @@ proc send_to_syslog {} {
   global cache_index_path puavo_domain send_bytes_limit syslog_connection \
          syslog_cache_index syslog_host syslog_memcache syslog_sending_state
 
+  if {$syslog_connection ne ""} { return false }
+
   set send_bytes_limit [get_send_bytes_limit]
 
   if {[
@@ -81,11 +84,11 @@ proc send_to_syslog {} {
         if {[llength $syslog_memcache] <= $syslog_cache_index} {
           set syslog_sending_state ok
           catch { file delete $cache_index_path }
-          close $syslog_connection
+          catch { close $syslog_connection }
           set syslog_connection ""
         } elseif {$send_bytes_limit < 0} {
           set syslog_sending_state limit_reached
-          close $syslog_connection
+          catch { close $syslog_connection }
           set syslog_connection ""
         } else {
           set line_to_send [lindex $syslog_memcache $syslog_cache_index]
@@ -103,7 +106,10 @@ proc send_to_syslog {} {
       vwait syslog_sending_state
       after cancel $timeout_event
 
-      if {$syslog_connection ne ""} { close $syslog_connection }
+      if {$syslog_connection ne ""} {
+        catch { close $syslog_connection }
+        set syslog_connection ""
+      }
 
       if {$syslog_sending_state ne "ok"} {
         set syslog_cache_index_file [open "${cache_index_path}.tmp" w]
