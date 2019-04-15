@@ -364,13 +364,6 @@ programs:
         tags: default, education
   - mandelbulber:
         tags: default, education, science
-  - marble-qt:
-        name:
-            en: Marble-virtual world
-            fi: Marble-maapallo
-            sv: Marble-jordglob
-            de: Marble virtueller Globus
-        tags: default, science, education
   - MarvinSketch:
         tags: default
   - MarvinView:
@@ -545,6 +538,13 @@ programs:
             sv: Ordförrådsövningar
             de: Kreuzworträtsel
         tags: default, education
+  - org.kde.marble-qt:
+        name:
+            en: Marble-virtual world
+            fi: Marble-maapallo
+            sv: Marble-jordglob
+            de: Marble virtueller Globus
+        tags: default, science, education
   - org.kde.step:
         name:
              en: Step-physics simulator
@@ -1062,7 +1062,7 @@ menus:
             - geogebra6
             - org.kde.kmplot
             - mafynetti
-            - marble-qt
+            - org.kde.marble-qt
             - google-earth
             - org.kde.kgeography
             - org.kde.kwordquiz
@@ -1318,7 +1318,7 @@ menus:
             de: Geografie
         icon: /usr/share/tuxpaint/stamps/space/planets/3_earth.png
         programs:
-            - marble-qt
+            - org.kde.marble-qt
             - google-earth
             - org.kde.kgeography
             - celestia
@@ -1336,7 +1336,7 @@ menus:
             de: Umweltwissenschaften
         icon: /usr/share/icons/Faenza/apps/64/tracker.png
         programs:
-            - marble-qt
+            - org.kde.marble-qt
             - google-earth
             - org.kde.kgeography
             - celestia
@@ -1381,7 +1381,7 @@ menus:
             de: Geschichte
         icon: /usr/share/icons/hicolor/128x128/apps/freeciv-client.png
         programs:
-            - marble-qt
+            - org.kde.marble-qt
             - google-earth
             - ylearkisto
             - libreoffice-writer
