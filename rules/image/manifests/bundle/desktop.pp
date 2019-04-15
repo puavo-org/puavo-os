@@ -9,6 +9,7 @@ class image::bundle::desktop {
   include ::disable_geoclue
   include ::disable_unclutter
   include ::firefox
+  include ::flatpak::packages
   include ::fontconfig
   include ::fuse
   include ::gdm
@@ -31,6 +32,7 @@ class image::bundle::desktop {
   include ::packages::languages::sv
   include ::picaxe_udev_rules
   include ::polkit_printers
+  include ::puavo_pkg::packages
   # include ::pycharm	                # XXX pycharm needs to be packaged
   include ::smartboard
   include ::supplementary_groups
@@ -45,4 +47,6 @@ class image::bundle::desktop {
   Package <| tag == 'tag_debian_desktop'
           or tag == 'tag_debian_desktop_backports' |>
           # XXX buster or tag == 'tag_ubuntu_desktop' |>
+
+  ::Flatpak::Install <| |>
 }
