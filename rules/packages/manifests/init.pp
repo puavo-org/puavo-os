@@ -435,7 +435,8 @@ class packages {
     , 'spe' ]:
       tag => [ 'tag_programming', 'tag_debian_desktop', ];
 
-    [ 'gftp'
+    [ 'filezilla'
+    , 'gftp'
     , 'lftp'
     , 'remmina'
     , 'smbclient'
