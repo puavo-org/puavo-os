@@ -467,6 +467,8 @@ programs:
         tags: default, utility
   - org.gnome.Screenshot:
         tags: default, utility, graphics
+  - org.gnome.SoundJuicer:
+        tags: default
   - org.gnome.Terminal:
         keywords: terminal, utility
         tags: default
@@ -735,8 +737,6 @@ programs:
             sv: Gehör-övningar
             de: Hörbildung
         tags: default, education
-  - sound-juicer:
-        tags: default
   - spe:
         name:
             en: SPE - Python IDE
@@ -935,7 +935,7 @@ menus:
             - gucharmap
             - onboard
             - brasero
-            - sound-juicer
+            - org.gnome.SoundJuicer
             - org.gnome.FileRoller
             - org.gnome.Terminal
             - gftp
