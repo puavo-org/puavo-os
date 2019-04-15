@@ -16,8 +16,8 @@ class packages::distribution_tweaks {
     or title == 'gnome-themes-extras'
     or title == 'mandelbulber'
     or title == 'musescore-soundfont-gm'
-    or title == 'mypaint'
-    or title == 'mypaint-data'
+    or title == 'mypaint'               # XXX can not co-exist with gimp
+    or title == 'mypaint-data'          # XXX can not co-exist with gimp
     or title == 'ttf-freefont'
   |> { ensure => absent, }
 }
