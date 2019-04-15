@@ -153,13 +153,6 @@ programs:
         tags: default
   - eric6:
         tags: default
-  - evince:
-        name:
-            en: Evince-document viewer
-            fi: Evince-asiakirjakatselin
-            sv: Evince-dokumentläsare
-            de: Evince Dokumentenbetrachter
-        tags: default
 
   #F
   - firefox-esr:
@@ -396,14 +389,6 @@ programs:
         tags: default
 
   #O
-  - okular:
-        name:
-          en: Okular-document viewer
-          fi: Okular-asiakirjakatselin
-          sv: Okular-dokumentläsare
-          de: Okular Dokumentenbetrachter
-        keywords: pdf
-        tags: default, office
   - onboard:
         tags: default
   - openboard:
@@ -422,6 +407,13 @@ programs:
   - org.gnome.Calculator:
         tags: default
   - org.gnome.Cheese:
+        tags: default
+  - org.gnome.Evince:
+        name:
+            en: Evince-document viewer
+            fi: Evince-asiakirjakatselin
+            sv: Evince-dokumentläsare
+            de: Evince Dokumentenbetrachter
         tags: default
   - org.gnome.Evolution:
         name:
@@ -549,6 +541,14 @@ programs:
             sv: Marble-jordglob
             de: Marble virtueller Globus
         tags: default, science, education
+  - org.kde.okular:
+        name:
+          en: Okular-document viewer
+          fi: Okular-asiakirjakatselin
+          sv: Okular-dokumentläsare
+          de: Okular Dokumentenbetrachter
+        keywords: pdf
+        tags: default, office
   - org.kde.step:
         name:
              en: Step-physics simulator
@@ -1107,8 +1107,8 @@ menus:
             - vym
             - cmaptools
             - acroread
-            - okular
-            - evince
+            - org.kde.okular
+            - org.gnome.Evince
             - calibre-gui
             - tellico
             - openboard
