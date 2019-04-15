@@ -151,7 +151,7 @@ programs:
   - eog:
         icon: /usr/share/icons/Faenza/apps/scalable/eog.svg
         tags: default
-  - eric:
+  - eric6:
         tags: default
   - evince:
         name:
@@ -1020,7 +1020,7 @@ menus:
             - enchanting
             - bluegriffon
             - eclipse
-            - eric
+            - eric6
             - pycharm
             - spe
             - idle-python2.7
