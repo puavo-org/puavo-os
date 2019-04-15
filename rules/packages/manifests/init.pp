@@ -439,7 +439,7 @@ class packages {
     , 'kgeography'
     , 'kmplot'
     , 'kstars'
-    , 'mandelbulber'
+    , 'mandelbulber2'
     , 'marble-qt'
     , 'qgis'
     , 'stellarium'
