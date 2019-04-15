@@ -169,7 +169,7 @@ programs:
         tags: default
 
   #F
-  - firefox:
+  - firefox-esr:
         name:
             en: Firefox-browser
             fi: Firefox-selain
@@ -987,7 +987,7 @@ menus:
             sv: Internet-program
             de: Internet Programme
         programs:
-            - firefox
+            - firefox-esr
             - chromium
             - google-chrome
             - thunderbird
