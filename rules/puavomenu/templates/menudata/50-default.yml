@@ -253,15 +253,6 @@ programs:
   - google-earth:
         icon: /usr/share/icons/Faenza/apps/48/googleearth.png
         tags: default
-  - gthumb:
-        icon: /usr/share/icons/hicolor/scalable/apps/gthumb.svg
-        name:
-            en: gThumb-image viewer
-            fi: gThumb-kuvakatselin
-            sv: gThumb-bildvisare
-            de: gThumb-Bildbetrachter
-        tags: default
-
   - gucharmap:
         tags: default
 
@@ -462,6 +453,14 @@ programs:
             de: Gedit-Texteditor
         icon: /usr/share/icons/Faenza/apps/96/accessories-text-editor.png
         tags: default, utility
+  - org.gnome.gThumb:
+        icon: /usr/share/icons/hicolor/scalable/apps/gthumb.svg
+        name:
+            en: gThumb-image viewer
+            fi: gThumb-kuvakatselin
+            sv: gThumb-bildvisare
+            de: gThumb-Bildbetrachter
+        tags: default
   - org.gnome.Nautilus:
         icon: /usr/share/icons/Faenza/places/96/user-home.png
         tags: default, utility
@@ -966,7 +965,7 @@ menus:
             - mypaint
             - gimp
             - pinta
-            - gthumb
+            - org.gnome.gThumb
             - eog
             - shotwell
             - inkscape
