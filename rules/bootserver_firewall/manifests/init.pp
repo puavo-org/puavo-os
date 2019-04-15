@@ -7,6 +7,9 @@ class bootserver_firewall {
       require => Package['shorewall'],
       source  => 'puppet:///modules/bootserver_firewall/etc_default_shorewall';
 
+    '/etc/logrotate.d/shorewall-ulogd2':
+      source => 'puppet:///modules/bootserver_firewall/etc_logrotate.d_shorewall-ulogd2';
+
     '/etc/shorewall/Makefile':
       require => Package['shorewall'],
       source  => 'puppet:///modules/bootserver_firewall/etc_shorewall/Makefile';
@@ -14,11 +17,21 @@ class bootserver_firewall {
     '/etc/shorewall/shorewall.conf':
       require => Package['shorewall'],
       source  => 'puppet:///modules/bootserver_firewall/etc_shorewall/shorewall.conf';
+
+    '/etc/ulogd.conf':
+      mode   => '0600',
+      source => 'puppet:///modules/bootserver_firewall/ulogd.conf';
+  }
+
+  ::puavo_conf::definition {
+    'puavo-admin-logging-firewall.json':
+      source => 'puppet:///modules/bootserver_firewall/puavo-admin-logging-firewall.json';
   }
 
   ::puavo_conf::script {
     'setup_bootserver_shorewall_conf':
-      source => 'puppet:///modules/bootserver_firewall/setup_bootserver_shorewall_conf';
+      require => ::Puavo_conf::Definition['puavo-admin-logging-firewall.json'],
+      source  => 'puppet:///modules/bootserver_firewall/setup_bootserver_shorewall_conf';
 
     'setup_firewall':
       source => 'puppet:///modules/bootserver_firewall/setup_firewall';
