@@ -160,13 +160,6 @@ programs:
             sv: Evince-dokumentläsare
             de: Evince Dokumentenbetrachter
         tags: default
-  - evolution:
-        name:
-            en: Evolution-email
-            fi: Evolution-sähköposti
-            sv: Evolution-e-post
-            de: Evolution-Email
-        tags: default
 
   #F
   - firefox-esr:
@@ -442,6 +435,13 @@ programs:
   - org.gnome.Calculator:
         tags: default
   - org.gnome.Cheese:
+        tags: default
+  - org.gnome.Evolution:
+        name:
+            en: Evolution-email
+            fi: Evolution-sähköposti
+            sv: Evolution-e-post
+            de: Evolution-Email
         tags: default
   - org.gnome.FileRoller:
         tags: default
@@ -991,7 +991,7 @@ menus:
             - chromium
             - google-chrome
             - thunderbird
-            - evolution
+            - org.gnome.Evolution
             - pidgin
             - gftp
             - net.sourceforge.liferea
