@@ -230,8 +230,6 @@ programs:
         tags: default, graphics
   - GlobiLab:
         tags: default
-  - gnome-calculator:
-        tags: default
   - gnome-klotski:
         tags: default
   - gnome-mahjongg:
@@ -449,6 +447,8 @@ programs:
   - openshot:
         tags: default
   - openttd:
+        tags: default
+  - org.gnome.Calculator:
         tags: default
   - org.gnome.Cheese:
         tags: default
@@ -930,7 +930,7 @@ menus:
             sv: Verktyg
             de: Werkzeuge
         programs:
-            - gnome-calculator
+            - org.gnome.Calculator
             - org.gnome.gedit
             - gucharmap
             - onboard
@@ -1299,7 +1299,7 @@ menus:
             - geogebra
             - geogebra6
             - org.kde.kmplot
-            - gnome-calculator
+            - org.gnome.Calculator
             - teddybear
             - scratch
             - scratch-club
