@@ -262,7 +262,7 @@ programs:
   - idle-python2.7:
         icon: /usr/share/icons/Faenza/mimetypes/96/text-x-python.png
         tags: default
-  - idle-python3.5:
+  - idle-python3.7:
         icon: /usr/share/icons/Faenza/mimetypes/96/text-x-python.png
         tags: default
   - inkscape:
@@ -1024,7 +1024,7 @@ menus:
             - pycharm
             - spe
             - idle-python2.7
-            - idle-python3.5
+            - idle-python3.7
             - geany
             - org.kde.kturtle
             - scratch
