@@ -188,14 +188,6 @@ programs:
         tags: default
 
   #G
-  - gcompris:
-        name:
-            en: GCompris-educational software suite
-            fi: GCompris-opetuspelit
-            sv: GCompris-pedagogiksvit
-            de: GCompris
-        condition: "!personally_administered"
-        tags: default, education
   - geany:
         name:
             en: Geany - text editor
@@ -286,8 +278,6 @@ programs:
         tags: default, education
   - kamerka:
         icon: /usr/share/icons/Faenza/devices/96/camera-web.png
-        tags: default
-  - org.kde.kcalc:
         tags: default
   - kenavision:
         name: Kena Vision Microscope
@@ -471,6 +461,14 @@ programs:
   - org.gnome.Terminal:
         keywords: terminal, utility
         tags: default
+  - org.kde.gcompris:
+        name:
+            en: GCompris-educational software suite
+            fi: GCompris-opetuspelit
+            sv: GCompris-pedagogiksvit
+            de: GCompris
+        condition: "!personally_administered"
+        tags: default, education
   - org.kde.kaffeine:
         tags: default, audiovideo
   - org.kde.kalzium:
@@ -482,6 +480,8 @@ programs:
             de: Periodensystem
         tags: default, education, science
   - org.kde.kbruch:
+        tags: default
+  - org.kde.kcalc:
         tags: default
   - org.kde.kdenlive:
         tags: default
@@ -1055,7 +1055,7 @@ menus:
             - ekapeli-maahanmuuttaja
             - ekapeli-alku
             - db_koulu1
-            - gcompris
+            - org.kde.gcompris
             - tuxmath
             - org.kde.kbruch
             - geogebra
@@ -1399,7 +1399,7 @@ menus:
             - ekapeli-maahanmuuttaja
             - ekapeli-alku
             - libreoffice-writer
-            - gcompris
+            - org.kde.gcompris
             - org.kde.khangman
             - org.kde.kwordquiz
             - org.kde.ktouch
