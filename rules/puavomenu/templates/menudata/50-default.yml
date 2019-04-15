@@ -265,6 +265,10 @@ programs:
             de: Inkscape-Vektorgrafik
         keywords: digabi
         tags: default, graphics
+  - io.github.wxmaxima_developers.wxMaxima:
+        condition: ti_nspire_cx_cas
+        tags: default
+
 
   #J
 
@@ -884,10 +888,6 @@ programs:
             fi: WinFF-videomuunnin
             en: WinFF
         tags: default, video, audiovideo
-  - wxMaxima:
-        condition: ti_nspire_cx_cas
-        tags: default
-
 
   #X
   - xmoto:
@@ -1074,7 +1074,7 @@ menus:
             - org.kde.step
             - LoggerPro
             - GlobiLab
-            - wxMaxima
+            - io.github.wxmaxima_developers.wxMaxima
             - ti_nspire_cx_cas_ss
             - avogadro
             - org.kde.kalzium
@@ -1209,7 +1209,7 @@ menus:
             - inkscape
             - geogebra
             - geogebra6
-            - wxMaxima
+            - io.github.wxmaxima_developers.wxMaxima
             - org.kde.kcalc
             - ti_nspire_cx_cas_ss
             - LoggerPro
@@ -1307,7 +1307,7 @@ menus:
             - libreoffice-calc
             - libreoffice-math
             - libreoffice-writer
-            - wxMaxima
+            - io.github.wxmaxima_developers.wxMaxima
             - kahoot
             - youtube
 
