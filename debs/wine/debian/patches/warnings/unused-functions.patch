@@ -1,0 +1,20 @@
+description: these functions are only used on i386 and amd64
+author: Michael Gilbert <mgilbert@debian.org>
+
+--- a/server/ptrace.c
++++ b/server/ptrace.c
+@@ -163,12 +163,14 @@ static int get_ptrace_pid( struct thread
+     return thread->unix_pid;
+ }
+ 
++#if (defined(__i386__) || defined(__x86_64__))
+ /* return the Unix tid to use in ptrace calls for a given thread */
+ static int get_ptrace_tid( struct thread *thread )
+ {
+     if (thread->unix_tid != -1) return thread->unix_tid;
+     return thread->unix_pid;
+ }
++#endif
+ 
+ /* wait for a ptraced child to get a certain signal */
+ static int waitpid_thread( struct thread *thread, int signal )

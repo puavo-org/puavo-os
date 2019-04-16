@@ -4,7 +4,7 @@ bug-debian: https://bugs.debian.org/687168
 
 --- a/dlls/winspool.drv/generic.ppd
 +++ b/dlls/winspool.drv/generic.ppd
-@@ -101,7 +101,7 @@
+@@ -116,7 +116,7 @@
  
  *OpenUI *Resolution/Output Resolution: PickOne
  *OrderDependency: 20 AnySetup *Resolution

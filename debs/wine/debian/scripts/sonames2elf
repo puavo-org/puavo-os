@@ -1,8 +1,7 @@
 #!/bin/sh
-# encoding=UTF-8
+# Build an ELF depending on specified sonames.
 
-# Build an elf binary depending on sonames.
-# Than dpkg-shlibdeps can compute optional dependencies on dlopen'ed libraries.
+# dpkg-shlibdeps can compute dependencies on dlopen'ed libraries with this ELF.
 # Needed as workaround until this can be done directly with dpkg.  See
 # https://bugs.debian.org/596715 (dpkg-shlibdeps: Please allow to manually add
 # library dependencies via shlibdeps)
@@ -35,7 +34,10 @@ then
 fi
 tmpdir=$(mktemp -d -t sonames2elf.XXXXXX)
 cd "$tmpdir"
-printf 'INPUT(%s)\n' "$@" > libeverything.so
+# Use the unversioned solink because the soname might be not found.
+# solink always points to the default soname, which is what wine uses.
+SOLINKS="$(echo $@ | sed "s|\([[:alnum:]]*\.so\)[\.[0-9]*]*|\1|g")"
+printf 'INPUT(%s)\n' "$SOLINKS" > libeverything.so
 gcc -shared -Wl,--no-as-needed -L. -leverything -o elf
 cat elf
 rm -rf "$tmpdir"

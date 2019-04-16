@@ -3,34 +3,33 @@ author: Michael Gilbert <mgilbert@debian.org>
 
 --- a/dlls/opengl32/make_opengl
 +++ b/dlls/opengl32/make_opengl
-@@ -402,13 +402,6 @@ if ($version eq "1.0") {
+@@ -315,13 +315,6 @@ if ($version eq "1.0") {
  }
  
  #
 -# Fetch the registry files
 -#
---f "gl.xml" || system "wget --no-check-certificate https://cvs.khronos.org/svn/repos/ogl/trunk/doc/registry/public/api/gl.xml" || die "cannot download gl.xml";
---f "wgl.xml" || system "wget --no-check-certificate https://cvs.khronos.org/svn/repos/ogl/trunk/doc/registry/public/api/wgl.xml" || die "cannot download wgl.xml";
+--f "gl.xml" || system "wget https://raw.github.com/KhronosGroup/OpenGL-Registry/master/xml/gl.xml" || die "cannot download gl.xml";
+--f "wgl.xml" || system "wget https://raw.github.com/KhronosGroup/OpenGL-Registry/master/xml/wgl.xml" || die "cannot download wgl.xml";
 -
 -
 -#
  # Then, create the list of all OpenGL functions using the registry
  # files. This will create two hash-tables, one with all the function
  # whose category matches the one listed in '@norm_categories', the other
-@@ -759,20 +752,17 @@ sub parse_file($$)
+@@ -559,21 +552,22 @@ sub parse_file($)
      }
  }
  
--parse_file( "gl.xml", 1 );
--parse_file( "wgl.xml", 0 );
-+parse_file( "/usr/share/khronos-api/gl.xml", 1 );
-+parse_file( "/usr/share/khronos-api/wgl.xml", 0 );
-+
-+my $wgl_version = 11;
+-parse_file( "gl.xml" );
+-parse_file( "wgl.xml" );
++parse_file( "/usr/share/khronos-api/gl.xml" );
++parse_file( "/usr/share/khronos-api/wgl.xml" );
+ parse_file( "winegl.xml" );
  
  #
--# Get the current wgl_driver.h version
-+# Generate the wglext.h file
+ # Get the current wgl_driver.h version
++# Modified by -1, see debian/scripts/import
  #
 -my $wgl_version = 0;
 -open HEADER, "<$wgl_driver_file" or die "cannot open $wgl_driver_file";
@@ -40,6 +39,11 @@ author: Michael Gilbert <mgilbert@debian.org>
 -    $wgl_version = $1;
 -    last;
 -}
++my $wgl_version = 18;
++
++#
++# Generate the wglext.h file
++#
 +my $wglext_file = "../../include/wine/wglext.h";
 +open HEADER, ">$wglext_file" or die "cannot create $wglext_file";
 +print HEADER "#include <khronos-api/GL/wglext.h>";

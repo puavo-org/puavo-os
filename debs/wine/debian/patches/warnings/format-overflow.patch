@@ -1,0 +1,69 @@
+description: fix string format warnings, output buffers were not large enough
+author: Michael Gilbert <mgilbert@debian.org>
+
+--- a/dlls/oleaut32/oleaut.c
++++ b/dlls/oleaut32/oleaut.c
+@@ -832,7 +832,7 @@ static BOOL actctx_get_typelib_module(RE
+ static HRESULT reg_get_typelib_module(REFIID iid, WCHAR *module, DWORD len)
+ {
+     REGSAM opposite = (sizeof(void*) == 8) ? KEY_WOW64_32KEY : KEY_WOW64_64KEY;
+-    char tlguid[200], typelibkey[300], interfacekey[300], ver[100], tlfn[260];
++    char tlguid[200], typelibkey[316], interfacekey[300], ver[100], tlfn[260];
+     DWORD tlguidlen, verlen, type;
+     LONG tlfnlen, err;
+     BOOL is_wow64;
+--- a/programs/winhlp32/hlpfile.h
++++ b/programs/winhlp32/hlpfile.h
+@@ -26,7 +26,7 @@ typedef struct
+ {
+     char        type[10];
+     char        name[9];
+-    char        caption[51];
++    char        caption[132];
+     POINT       origin;
+     SIZE        size;
+     int         style;
+--- a/dlls/winealsa.drv/mmdevdrv.c
++++ b/dlls/winealsa.drv/mmdevdrv.c
+@@ -630,7 +630,7 @@ HRESULT WINAPI AUDDRV_GetEndpointIDs(EDa
+ static snd_config_t *make_handle_underrun_config(const char *name)
+ {
+     snd_config_t *lconf, *dev_node, *hu_node, *type_node;
+-    char dev_node_name[64];
++    char dev_node_name[260];
+     const char *type_str;
+     int err;
+ 
+--- a/dlls/wined3d/arb_program_shader.c
++++ b/dlls/wined3d/arb_program_shader.c
+@@ -226,7 +226,7 @@ struct recorded_instruction
+ 
+ struct shader_arb_ctx_priv
+ {
+-    char addr_reg[20];
++    char addr_reg[50];
+     enum
+     {
+         /* plain GL_ARB_vertex_program or GL_ARB_fragment_program */
+--- a/dlls/krnl386.exe16/interrupts.c
++++ b/dlls/krnl386.exe16/interrupts.c
+@@ -459,7 +459,7 @@ static void WINAPI DOSVM_Int11Handler( C
+     for (x=0; x < 9; x++)
+     {
+         HANDLE handle;
+-        char file[10];
++        char file[20];
+ 
+         /* serial port name */
+         sprintf( file, "\\\\.\\COM%d", x+1 );
+--- a/dlls/msvcrt/string.c
++++ b/dlls/msvcrt/string.c
+@@ -1821,7 +1821,7 @@ int CDECL MSVCRT_I10_OUTPUT(MSVCRT__LDOU
+      * Assume long double uses 80 bit FP, never seen 128 bit FP. */
+     long double ld = 0;
+     double d;
+-    char format[8];
++    char format[16];
+     char buf[I10_OUTPUT_MAX_PREC+9]; /* 9 = strlen("0.e+0000") + '\0' */
+     char *p;
+ 

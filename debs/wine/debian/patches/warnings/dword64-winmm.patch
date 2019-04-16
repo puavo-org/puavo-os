@@ -1,0 +1,59 @@
+description: fix pointer conversion warnings in winmm on 64 bit archs
+author: Michael Gilbert <mgilbert@debian.org>
+
+--- a/include/mmddk.h
++++ b/include/mmddk.h
+@@ -394,7 +394,11 @@ typedef struct {
+ } WAVEOPENDESC, *LPWAVEOPENDESC;
+ 
+ typedef struct {
++#if defined(__x86_64__) || defined(__aarch64__)
++        DWORD64			dwStreamID;
++#else
+         DWORD  			dwStreamID;
++#endif
+         WORD   			wDeviceID;
+ } MIDIOPENSTRMID;
+ 
+--- a/dlls/winmm/winmm.c
++++ b/dlls/winmm/winmm.c
+@@ -1106,8 +1106,13 @@ static	BOOL	MMSYSTEM_MidiStream_MessageH
+ #endif
+             if (((LPMIDIEVENT)lpData)->dwStreamID != 0 &&
+                 ((LPMIDIEVENT)lpData)->dwStreamID != 0xFFFFFFFF &&
++#if defined(__x86_64__) || defined(__aarch64__)
++                ((LPMIDIEVENT)lpData)->dwStreamID != (DWORD64)lpMidiStrm) {
++                FIXME("Dropping bad %s lpMidiHdr (streamID=%08lx)\n",
++#else
+                 ((LPMIDIEVENT)lpData)->dwStreamID != (DWORD)lpMidiStrm) {
+                 FIXME("Dropping bad %s lpMidiHdr (streamID=%08x)\n",
++#endif
+                       (lpMidiHdr->dwFlags & MHDR_ISSTRM) ? "stream" : "regular",
+                       ((LPMIDIEVENT)lpData)->dwStreamID);
+                 lpMidiHdr->dwFlags &= ~MHDR_INQUEUE;
+@@ -1341,7 +1346,11 @@ MMRESULT WINAPI midiStreamOpen(HMIDISTRM
+     lpMidiStrm->status = MSM_STATUS_PAUSED;
+     lpMidiStrm->dwElapsedMS = 0;
+ 
++#if defined(__x86_64__) || defined(__aarch64__)
++    mosm.dwStreamID = (DWORD64)lpMidiStrm;
++#else
+     mosm.dwStreamID = (DWORD)lpMidiStrm;
++#endif
+     /* FIXME: the correct value is not allocated yet for MAPPER */
+     mosm.wDeviceID  = *lpuDeviceID;
+     lpwm = MIDI_OutAlloc(&hMidiOut, &dwCallback, &dwInstance, &fdwOpen, 1, &mosm);
+--- a/include/mmsystem.h
++++ b/include/mmsystem.h
+@@ -751,7 +751,11 @@ typedef struct midiproptimediv_tag {
+ typedef struct midievent_tag {
+     DWORD dwDeltaTime;	/* Time, in MIDI ticks, between the previous
+ 			 * event and the current event. */
++#if defined(__x86_64__) || defined(__aarch64__)
++    DWORD64 dwStreamID;/* Reserved; must be zero. */
++#else
+     DWORD dwStreamID;	/* Reserved; must be zero. */
++#endif
+     DWORD dwEvent;  	/* event => see MEVT_XXX macros */
+     DWORD dwParms[1];	/* extra pmts to dwEvent if F_LONG is set */
+ } MIDIEVENT, *LPMIDIEVENT;

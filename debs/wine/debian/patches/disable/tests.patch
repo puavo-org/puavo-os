@@ -3,7 +3,7 @@ author: Michael Gilbert <mgilbert@debian.org>
 
 --- a/dlls/rpcrt4/tests/Makefile.in
 +++ b/dlls/rpcrt4/tests/Makefile.in
-@@ -4,7 +4,6 @@ EXTRAIDLFLAGS = --prefix-server=s_
+@@ -5,7 +5,6 @@ EXTRADEFS = -DPROXY_DELEGATION
  
  C_SRCS = \
  	cstub.c \
@@ -23,7 +23,7 @@ author: Michael Gilbert <mgilbert@debian.org>
  	metafile.c \
 --- a/dlls/kernel32/tests/Makefile.in
 +++ b/dlls/kernel32/tests/Makefile.in
-@@ -15,7 +15,6 @@ C_SRCS = \
+@@ -17,7 +17,6 @@ SOURCES = \
  	fiber.c \
  	file.c \
  	format_msg.c \
@@ -101,3 +101,11 @@ author: Michael Gilbert <mgilbert@debian.org>
  	joystick.c \
  	mci.c \
  	mcicda.c \
+--- a/dlls/itss/tests/Makefile.in
++++ b/dlls/itss/tests/Makefile.in
+@@ -3,5 +3,3 @@ IMPORTS   = ole32
+ 
+ C_SRCS = \
+ 	protocol.c
+-
+-RC_SRCS = rsrc.rc

@@ -1,7 +1,9 @@
 debian/control
 
 config.*
+con*.file
 configure
+configure.tmp
 tools/config.*
 include/config.h.in
 
@@ -43,6 +45,30 @@ dlls/opengl32/opengl_ext.c
 dlls/opengl32/opengl_norm.c
 dlls/opengl32/opengl32.spec
 
+# automatically generated icon files
+*/*/*.ico
+*/*/*/*.ico
+
+# symlinked svg files
+dlls/comdlg32/cdrom.svg
+dlls/comdlg32/hdisk.svg
+dlls/comdlg32/floppy.svg
+dlls/comdlg32/folder.svg
+dlls/comdlg32/folder2.svg
+dlls/comdlg32/network.svg
+dlls/comctl32/idi_dragarrow.svg
+dlls/comctl32/idi_tt_info_sm.svg
+dlls/comctl32/idi_tt_warn_sm.svg
+dlls/comctl32/idi_tt_error_sm.svg
+dlls/display.drv16/oic_hand.svg
+programs/taskmgr/window.svg
+programs/taskmgr/windowsm.svg
+programs/regedit/bin.svg
+programs/regedit/folder.svg
+programs/regedit/string.svg
+programs/regedit/computer.svg
+programs/regedit/folderopen.svg
+
 # font files
 fonts/*.fon
 fonts/*.ttf
@@ -51,6 +77,9 @@ fonts/Makefile
 tools/sfnt2fon/sfnt2fon
 tools/sfnt2fon/sfnt2fon.o
 tools/sfnt2fon/Makefile
+
+# windows help files
+dlls/itss/tests/data.chm
 
 # things that wine's clean doesn't clean
 po/LINGUAS

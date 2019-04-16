@@ -4,7 +4,27 @@ author: Jens Reyer <jre.winesim@gmail.com>
 
 --- a/dlls/appwiz.cpl/addons.c
 +++ b/dlls/appwiz.cpl/addons.c
-@@ -795,9 +795,8 @@ BOOL install_addon(addon_t addon_type)
+@@ -626,6 +626,7 @@ static const IInternetBindInfoVtbl Insta
+ 
+ static IInternetBindInfo InstallCallbackBindInfo = { &InstallCallbackBindInfoVtbl };
+ 
++/*
+ static void append_url_params( WCHAR *url )
+ {
+     static const WCHAR arch_formatW[] = {'?','a','r','c','h','='};
+@@ -777,6 +778,7 @@ static INT_PTR CALLBACK installer_proc(H
+ 
+     return FALSE;
+ }
++*/
+ 
+ BOOL install_addon(addon_t addon_type)
+ {
+@@ -793,13 +795,11 @@ BOOL install_addon(addon_t addon_type)
+      * - $datadir/$addon_subdir/
+      * - $INSTALL_DATADIR/wine/$addon_subdir/
+      * - /usr/share/wine/$addon_subdir/
+-     * - download from URL stored in $url_config_key value of HKCU/Software/Wine/$config_key key
       */
      if (install_from_registered_dir() == INSTALL_NEXT
          && install_from_default_dir() == INSTALL_NEXT

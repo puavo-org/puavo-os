@@ -4,7 +4,7 @@ author: Jens Reyer <jre.winesim@gmail.com>
 
 --- a/dlls/appwiz.cpl/addons.c
 +++ b/dlls/appwiz.cpl/addons.c
-@@ -209,8 +209,6 @@ static enum install_res install_from_uni
+@@ -212,8 +212,6 @@ static enum install_res install_from_uni
          return INSTALL_FAILED;
  
      memcpy(file_path, dir, len);
@@ -13,12 +13,12 @@ author: Jens Reyer <jre.winesim@gmail.com>
      if(*subdir) {
          strcpy(file_path+len, subdir);
          len += strlen(subdir);
-@@ -320,11 +318,11 @@ static enum install_res install_from_def
+@@ -323,11 +321,12 @@ static enum install_res install_from_def
          return INSTALL_NEXT;
      }
  
--    ret = install_from_unix_file(package_dir, addon->subdir_name, addon->file_name);
-+    ret = install_from_unix_file("/usr/share/wine-", addon->subdir_name, addon->file_name);
++    package_dir = "/usr/share/wine-";
+     ret = install_from_unix_file(package_dir, addon->subdir_name, addon->file_name);
      heap_free(dir_buf);
  
      if (ret == INSTALL_NEXT)

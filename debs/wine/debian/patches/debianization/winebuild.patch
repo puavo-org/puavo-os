@@ -1,0 +1,17 @@
+description: update long winebuild manpage line to fit into 80 characters
+author: Michael Gilbert <mgilbert@debian.org>
+
+--- a/tools/winebuild/winebuild.man.in
++++ b/tools/winebuild/winebuild.man.in
+@@ -156,7 +156,10 @@ option.
+ .B \-m16, -m32, -m64
+ Generate respectively 16-bit, 32-bit or 64-bit code.
+ .TP
+-.BI \-marm,\ \-mthumb,\ \-march= option ,\ \-mcpu= option ,\ \-mfpu= option ,\ \-mfloat-abi= option
++.BI \-marm,\ \-mthumb
++Select between generating code that executes in ARM and Thumb states.
++.TP
++.BI \-march= option ,\ \-mcpu= option ,\ \-mfpu= option ,\ \-mfloat-abi= option
+ Set code generation options for the assembler.
+ .TP
+ .BI \-M,\ --main-module= module

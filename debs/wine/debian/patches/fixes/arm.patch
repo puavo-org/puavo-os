@@ -1,0 +1,20 @@
+description: skip i386 specific code that fails to build on arm
+author: Michael Gilbert <mgilbert@debian.org>
+
+--- a/server/trace.c
++++ b/server/trace.c
+@@ -577,12 +577,14 @@ static void dump_varargs_context( const
+                      ctx.fp.i386_regs.err_off, ctx.fp.i386_regs.err_sel );
+             fprintf( stderr, ",fp.data_off=%08x,fp.data_sel=%08x,fp.cr0npx=%08x",
+                      ctx.fp.i386_regs.data_off, ctx.fp.i386_regs.data_sel, ctx.fp.i386_regs.cr0npx );
++#ifndef __arm__
+             for (i = 0; i < 8; i++)
+             {
+                 long double reg = 0;
+                 memcpy( &reg, &ctx.fp.i386_regs.regs[10 * i], 10 );
+                 fprintf( stderr, ",fp.reg%u=%Lg", i, reg );
+             }
++#endif
+         }
+         if (ctx.flags & SERVER_CTX_EXTENDED_REGISTERS)
+             dump_uints( ",extended=", (const unsigned int *)ctx.ext.i386_regs,

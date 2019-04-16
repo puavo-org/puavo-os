@@ -1,18 +1,42 @@
 Source: wine
 Section: otherosfs
 Priority: optional
-Maintainer: Debian Wine Party <pkg-wine-party@lists.alioth.debian.org>
+Homepage: https://www.winehq.org
+Maintainer: Debian Wine Party <debian-wine@lists.debian.org>
 Uploaders:
  Michael Gilbert <mgilbert@debian.org>,
  Stephen Kitt <skitt@debian.org>,
  Jens Reyer <jre.winesim@gmail.com>,
+Vcs-Git: https://salsa.debian.org/wine-team/wine.git
+Vcs-Browser: https://salsa.debian.org/wine-team/wine
+Standards-Version: 4.3.0
+Rules-Requires-Root: no
 Build-Depends:
- debhelper (>= 10),
+ debhelper (>= 11~),
+ clang [arm64],
+ oss4-dev [kfreebsd-any],
+ freebsd-glue [kfreebsd-any],
+ lzma,
+ flex,
+ bison,
+ quilt,
+ gettext,
+ icoutils,
+ sharutils,
+ pkg-config,
+ dctrl-tools,
+ imagemagick,
+ librsvg2-bin,
+ fontforge-nox,
+ khronos-api (>= 4.6),
+ unicode-data (>= 11),
+ unicode-data (<< 12),
  libxi-dev,
  libxt-dev,
  libxmu-dev,
  libx11-dev,
  libxext-dev,
+ libxfixes-dev,
  libxrandr-dev,
  libxcursor-dev,
  libxrender-dev,
@@ -25,25 +49,15 @@ Build-Depends:
  libxcomposite-dev,
  libxml-simple-perl,
  libxml-parser-perl,
- lzma,
- flex,
- bison,
- quilt,
- gettext,
- oss4-dev [kfreebsd-any],
- sharutils,
- pkg-config,
- dctrl-tools,
- khronos-api,
- unicode-data (>= 10),
- unicode-data (<< 11),
  libpng-dev,
  libssl-dev,
+ libv4l-dev [linux-any kfreebsd-any],
+ libsdl2-dev,
  libxml2-dev,
  libgsm1-dev,
  libjpeg-dev,
+ libkrb5-dev,
  libtiff-dev,
- libpcap-dev,
  libudev-dev [linux-any],
  libpulse-dev [!kfreebsd-any],
  liblcms2-dev,
@@ -51,28 +65,24 @@ Build-Depends:
  libxslt1-dev,
  unixodbc-dev,
  libcups2-dev,
+ libvkd3d-dev [linux-any],
+ libcapi20-dev [linux-any],
+ libvulkan-dev [linux-any],
  libopenal-dev,
  libdbus-1-dev,
  freeglut3-dev,
  libmpg123-dev,
  libasound2-dev,
+ libgphoto2-dev,
  libosmesa6-dev,
+ libpcap0.8-dev,
  libgnutls28-dev,
  libncurses5-dev,
  libgettextpo-dev,
- libfreetype6-dev (>= 2.5.1),
+ libfreetype6-dev (>= 2.6.2),
  libfontconfig1-dev,
- libgstreamer-plugins-base1.0-dev,
- freebsd-glue [kfreebsd-any],
  ocl-icd-opencl-dev,
- icoutils,
- librsvg2-bin,
- imagemagick,
- fontforge-nox | fontforge,
-Standards-Version: 3.9.8
-Homepage: http://www.winehq.org/
-Vcs-Browser: https://anonscm.debian.org/git/pkg-wine/wine.git/?h=buster-2.0
-Vcs-Git: https://anonscm.debian.org/git/pkg-wine/wine.git -b buster-2.0
+ libgstreamer-plugins-base1.0-dev,
 
 Package: wine
 Architecture: all
@@ -83,17 +93,19 @@ Depends:
  wine64 (>= ${source:Version}) | wine32 (>= ${source:Version}),
  wine64 (<< ${source:Version}.1~) | wine32 (<< ${source:Version}.1~),
 Suggests:
+ q4wine,
  winbind,
  winetricks,
  playonlinux,
  wine-binfmt,
  dosbox (>= 0.74-4.2~),
+ exe-thumbnailer | kio-extras,
 Breaks:
- wine1.6 (<< 1:1.8.4ubuntu1~),
- wine1.6-i386 (<< 1:1.8.4ubuntu1~),
+ wine-stable (<< 3.0.1ubuntu1~),
 Replaces:
- wine1.6 (<< 1:1.8.4ubuntu1~),
- wine1.6-i386 (<< 1:1.8.4ubuntu1~),
+ wine-stable (<< 3.0.1ubuntu1~),
+#Provides:
+# wine,
 Description: Windows API implementation - standard suite
  Wine is a free MS-Windows API implementation.
  This is still a work in progress and many applications may still not work.
@@ -113,11 +125,7 @@ Depends:
 Recommends:
  wine (= ${source:Version}),
 Suggests:
- libwine-gecko-2.47 [!armel !armhf !arm64],
  wine32-preloader (= ${binary:Version}),
-Breaks:
- wine (<< 1.7.50-3~),
- wine32-preloader (<< 1.7.51-2~),
 Description: Windows API implementation - 32-bit binary loader
  Wine is a free MS-Windows API implementation.
  This is still a work in progress and many applications may still not work.
@@ -136,14 +144,7 @@ Recommends:
  wine (= ${source:Version}),
  wine32 (= ${binary:Version}),
 Suggests:
- libwine-gecko-2.47 [!armel !armhf !arm64],
  wine64-preloader (= ${binary:Version}),
-Breaks:
- wine (<< 1.7.50-3~),
- wine64-preloader (<< 1.7.51-2~),
- wine1.6-amd64 (<< 1:1.8.4ubuntu1~),
-Replaces:
- wine1.6-amd64 (<< 1:1.8.4ubuntu1~),
 Description: Windows API implementation - 64-bit binary loader
  Wine is a free MS-Windows API implementation.
  This is still a work in progress and many applications may still not work.
@@ -164,7 +165,7 @@ Description: Windows API implementation - prelinked 32-bit binary loader
  This package provides the prelinked loader for 32-bit Windows applications.
 
 Package: wine64-preloader
-Architecture: amd64
+Architecture: amd64 arm64
 Multi-Arch: foreign
 Built-Using: ${built:Using}
 Depends:
@@ -190,12 +191,8 @@ Depends:
 Recommends:
  wine (= ${source:Version}),
  g++ | g++-multilib:amd64 [i386],
-Breaks:
- wine1.6 (<< 1:1.8.4ubuntu1~),
 Conflicts:
  wine64-tools,
-Replaces:
- wine1.6 (<< 1:1.8.4ubuntu1~),
 Description: Windows API implementation - 32-bit developer tools
  Wine is a free MS-Windows API implementation.
  This is still a work in progress and many applications may still not work.
@@ -219,13 +216,10 @@ Depends:
  libwine-dev:armhf (= ${binary:Version}) [arm64],
 Recommends:
  wine (= ${source:Version}),
- g++,
-Breaks:
- wine1.6 (<< 1:1.8.4ubuntu1~),
+ clang [arm64],
+ g++ [!arm64],
 Conflicts:
  wine32-tools,
-Replaces:
- wine1.6 (<< 1:1.8.4ubuntu1~),
 Description: Windows API implementation - 64-bit developer tools
  Wine is a free MS-Windows API implementation.
  This is still a work in progress and many applications may still not work.
@@ -253,14 +247,6 @@ Suggests:
  ttf-mscorefonts-installer,
 Pre-Depends:
  ${misc:Pre-Depends},
-Breaks:
- wine32 (<< 1.7.51-2~),
- wine64 (<< 1.7.51-2~),
- wine1.6-amd64 (<< 1:1.8.4ubuntu1~),
- wine1.6-i386 (<< 1:1.8.4ubuntu1~),
-Replaces:
- wine1.6-amd64 (<< 1:1.8.4ubuntu1~),
- wine1.6-i386 (<< 1:1.8.4ubuntu1~),
 Description: Windows API implementation - library
  Wine is a free MS-Windows API implementation.
  This is still a work in progress and many applications may still not work.
@@ -278,12 +264,6 @@ Depends:
  libc6-dev | libc6.1-dev | libc0.3-dev | libc0.1-dev | libc-dev,
 Recommends:
  wine64-tools (= ${binary:Version}) | wine32-tools (= ${binary:Version}),
-Breaks:
- wine32 (<< 1.7.51-2~),
- wine64 (<< 1.7.51-2~),
- wine1.6-dev (<< 1:1.8.4ubuntu1~),
-Replaces:
- wine1.6-dev (<< 1:1.8.4ubuntu1~),
 Description: Windows API implementation - development files
  Wine is a free MS-Windows API implementation.
  This is still a work in progress and many applications may still not work.
@@ -297,29 +277,30 @@ Depends:
  ${misc:Depends},
  wine,
  binfmt-support,
-Breaks:
- wine1.6 (<< 1:1.8.4ubuntu1~),
-Replaces:
- wine1.6 (<< 1:1.8.4ubuntu1~),
-Description: Windows API implementation - binfmt support
+Description: Register Wine as the interpreter for Windows executables
  Wine is a free MS-Windows API implementation.
  This is still a work in progress and many applications may still not work.
  .
- This package provides support for launching Windows executables directly.
+ This package registers Wine as an interpreter for Windows executables, using
+ the kernel binfmt_misc module.  This causes Wine to be invoked automatically
+ whenever a Windows PE (Portable Executable) file is to be launched.
+ .
+ WARNING:  This increases the risk of inadvertently launching Windows
+ malware, so please make sure that you understand the security risks before
+ blindly installing this package.
+ .
+ This feature is probably most interesting for automatic software testing.
+ Desktop users usually don't need it, so don't install wine-binfmt unless you
+ know that you need it.  Refer to Wine's README.debian for more information.
 
 Package: fonts-wine
 Section: fonts
 Architecture: all
 Multi-Arch: foreign
-Built-Using: ${built:Using}
+Built-Using:
+ ${built:Using}
 Depends:
  ${misc:Depends},
-Breaks:
- libwine (<< 1.7.41-2~),
- wine1.6 (<< 1:1.8.4ubuntu1~),
-Replaces:
- libwine (<< 1.7.41-2~),
- wine1.6 (<< 1:1.8.4ubuntu1~),
 Description: Windows API implementation - fonts
  Wine is a free MS-Windows API implementation.
  This is still a work in progress and many applications may still not work.
