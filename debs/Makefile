@@ -8,24 +8,10 @@ endif
 
 # parts, ports and some cloud packages go into puavo-os images
 
-_pkgs_parts     := puavo-ds \
-                   puavo-os
-ifeq "$(debootstrap_suite)" "stretch"
-  _pkgs_ports     := gnome-shell \
-                     grub2       \
-                     gvfs        \
-                     linux       \
-                     mutter      \
-                     nbd         \
-                     nwjs        \
-                     openboard   \
-                     openldap    \
-                     vtun        \
-                     wine        \
-                     wpa
-else
-  _pkgs_ports := grub2 nbd openldap wine
-endif
+_pkgs_parts := puavo-ds puavo-os
+# XXX gvfs not added to build, because it is unclear
+# XXX if there is any benefit to do so
+_pkgs_ports := grub2 nbd openldap wine
 
 _pkgs_image     := $(_pkgs_builddeps) $(_pkgs_parts) $(_pkgs_ports)
 _pkgs_cloud     := krb5 openldap puavo-ds
