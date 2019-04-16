@@ -303,7 +303,7 @@ class packages {
     , 'mypaint'
     , 'nautilus-image-converter'
     , 'okular'
-    , 'openshot'
+    , 'openshot-qt'
     , 'pencil2d'
     , 'pitivi'
     , 'python-lxml'

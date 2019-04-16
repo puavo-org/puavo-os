@@ -397,7 +397,7 @@ programs:
         tags: default, education
   - openscad-nightly:
         tags: default
-  - openshot:
+  - openshot-qt:
         tags: default
   - openttd:
         tags: default
@@ -565,6 +565,8 @@ programs:
             de: Tellico Sammlungs-Verwalter
         icon: /usr/share/icons/hicolor/64x64/apps/tellico.png
         tags: default, office
+  - org.pitivi.Pitivi:
+        tags: default
   - otava:
         type: web
         name: Otava - Oppilaan maailma
@@ -620,8 +622,6 @@ programs:
             de: Pinta
         icon: /usr/share/icons/hicolor/scalable/apps/pinta.svg
         tags: default, graphics
-  - pitivi:
-        tags: default
   - primusclient:
         condition: "!personally_administered"
         tags: default
@@ -1133,10 +1133,10 @@ menus:
             - org.gnome.Cheese
             - kenavision
             - kamerka
-            - openshot
+            - openshot-qt
             - org.kde.kdenlive
             - kino
-            - pitivi
+            - org.pitivi.Pitivi
             - solfege
             - mscore
             - hydrogen
