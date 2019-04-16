@@ -24,7 +24,7 @@ ifeq "$(debootstrap_suite)" "stretch"
                      wine        \
                      wpa
 else
-  _pkgs_ports := grub2 nbd openldap
+  _pkgs_ports := grub2 nbd openldap wine
 endif
 
 _pkgs_image     := $(_pkgs_builddeps) $(_pkgs_parts) $(_pkgs_ports)
