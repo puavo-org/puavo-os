@@ -3,12 +3,15 @@ Section: education
 Priority: extra
 Maintainer: Puavo Org <dev@opinsys.fi>
 Build-Depends: debhelper (>= 8),
+ libavcodec-dev,
+ libavformat-dev,
  libpaper-dev,
  libpng-dev,
  libqt5svg5-dev,
  libqt5webkit5-dev,
  libqt5xmlpatterns5-dev,
- libssl1.0-dev,
+ libssl-dev,
+ libswscale-dev,
  qt5-default,
  qtbase5-dev,
  qtbase5-dev-tools,
@@ -25,6 +28,8 @@ Homepage: https://github.com/puavo-org/OpenBoard/
 Package: openboard
 Architecture: all
 Depends: libc6,
+ libavcodec58,
+ libavformat58,
  libgcc1,
  libgomp1,
  libqt5core5a,
@@ -39,8 +44,9 @@ Depends: libc6,
  libqt5webkit5,
  libqt5widgets5,
  libqt5xml5,
- libssl1.0.0,
+ libssl1.1,
  libstdc++6,
+ libswscale5,
  libx11-6,
  onboard,
  zlib1g

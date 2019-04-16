@@ -6,10 +6,10 @@ unpack_tar_from_github() {
   wget -O - "$1" | tar -zx
 }
 
-openboard_version=1.3.6
+openboard_version=1.5.3
 openboard_dir="openboard-${openboard_version}"
 
-openboard_commit=8386bf4290703cd93b5b6f679dc6809e8527c960
+openboard_commit=426b1f7a19f5b6d12f8ad8944a109f5a8aadfaab
 importer_commit=47927bda021b4f7f1540b794825fb0d601875e79
 thirdparty_commit=925f2d1949ef159c1efbe1e0a7fe23202de1d3a3
 
