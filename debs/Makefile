@@ -1,10 +1,4 @@
-# a newer version of unicode-data is a dependency for wine
-# (on Stretch)
-ifeq "$(debootstrap_suite)" "stretch"
-  _pkgs_builddeps := unicode-data
-else
-  _pkgs_builddeps :=
-endif
+_pkgs_builddeps :=
 
 # parts, ports and some cloud packages go into puavo-os images
 
