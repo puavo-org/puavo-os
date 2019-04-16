@@ -707,6 +707,13 @@ programs:
         tags: default, office
   - seahorse:
         tags: default
+  - shotcut:
+        command: flatpak run org.shotcut.Shotcut
+        type: custom
+        icon: /var/lib/flatpak/app/org.shotcut.Shotcut/x86_64/stable/active/files/share/icons/hicolor/64x64/apps/org.shotcut.Shotcut.png
+        name:
+            en: Shotcut
+        tags: default, graphics
   - shotwell:
         name:
             en: Shotwell-photo organizer
@@ -1137,6 +1144,7 @@ menus:
             - org.kde.kdenlive
             - kino
             - org.pitivi.Pitivi
+            - shotcut
             - solfege
             - mscore
             - hydrogen
