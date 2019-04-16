@@ -8,4 +8,4 @@ if [ ! -f "${external_file}" ]; then
     exit 0
 fi
 
-install -m 644 -T "${external_file}" /etc/firefox/puavodesktop.js
+install -m 644 -T "${external_file}" /etc/firefox-esr/puavodesktop.js
