@@ -23,6 +23,7 @@ class gnome_shell_extensions {
     , 'audio-menu-modifier@puavo.org'
     , 'bottompanel@tmoer93'
     , 'dash-to-panel@jderose9.github.com'
+    , 'desktop-icons@csoriano'
     , 'hide-activities-button@gnome-shell-extensions.bookmarkd.xyz'
     , 'hide-dash@xenatt.github.com'
     , 'hide-overview-search-entry@puavo.org'

@@ -1,0 +1,38 @@
+.file-item {
+    padding: 4px;
+    border: 1px;
+    margin: 1px;
+}
+
+.file-item:hover {
+   background-color: rgba(238, 238, 238, 0.2);
+}
+
+.name-label {
+    text-shadow: 1px 1px black;
+    color: white;
+    text-align: center;
+}
+
+.draggable {
+    background-color: red;
+}
+
+.rename-popup {
+    min-width: 300px;
+    margin: 6px;
+}
+
+.create-folder-dialog-entry {
+    width: 20em;
+    margin-bottom: 6px;
+}
+
+.create-folder-dialog-label {
+    padding-bottom: .4em;
+}
+
+.create-folder-dialog-error-box {
+    padding-top: 16px;
+    spacing: 6px;
+}

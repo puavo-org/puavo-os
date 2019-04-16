@@ -122,7 +122,7 @@ ambient-enabled=false
 overrides={'Gtk/ShellShowsAppMenu': <0>, 'Gtk/ShellShowsMenubar': <0>, 'Gtk/DecorationLayout': <'menu:minimize,maximize,close'>}
 
 [org/gnome/shell]
-enabled-extensions=['alternate-tab@gnome-shell-extensions.gcampax.github.com', 'appindicatorsupport@rgcjonas.gmail.com', 'audio-menu-modifier@puavo.org', 'dash-to-panel@jderose9.github.com', 'hide-activities-button@gnome-shell-extensions.bookmarkd.xyz', 'hide-dash@xenatt.github.com', 'hide-overview-search-entry@puavo.org', 'hide-panel-power-indicator@puavo.org', 'launch-new-instance@gnome-shell-extensions.gcampax.github.com', 'LogOutButton@kyle.aims.ac.za', 'nohotcorner@azuri.free.fr', 'puavomenu@puavo.org', 'quickoverview@kirby_33@hotmail.fr', 'show-desktop@l300lvl.tk', 'TopIcons@phocean.net', 'uparrows@puavo.org', 'user-theme@gnome-shell-extensions.gcampax.github.com']
+enabled-extensions=['alternate-tab@gnome-shell-extensions.gcampax.github.com', 'appindicatorsupport@rgcjonas.gmail.com', 'audio-menu-modifier@puavo.org', 'dash-to-panel@jderose9.github.com', 'desktop-icons@csoriano', 'hide-activities-button@gnome-shell-extensions.bookmarkd.xyz', 'hide-dash@xenatt.github.com', 'hide-overview-search-entry@puavo.org', 'hide-panel-power-indicator@puavo.org', 'launch-new-instance@gnome-shell-extensions.gcampax.github.com', 'LogOutButton@kyle.aims.ac.za', 'nohotcorner@azuri.free.fr', 'puavomenu@puavo.org', 'quickoverview@kirby_33@hotmail.fr', 'show-desktop@l300lvl.tk', 'TopIcons@phocean.net', 'uparrows@puavo.org', 'user-theme@gnome-shell-extensions.gcampax.github.com']
 
 [org/gnome/shell/extensions/topicons]
 tray-pos='center'
