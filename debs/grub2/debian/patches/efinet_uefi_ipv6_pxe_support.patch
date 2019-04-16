@@ -1,4 +1,4 @@
-From f9afe88794f3bbd1194ffe39e5f954dd2ef4122b Mon Sep 17 00:00:00 2001
+From d948a72a7c909b18c424ea732aec2788705646b5 Mon Sep 17 00:00:00 2001
 From: Michael Chang <mchang@suse.com>
 Date: Thu, 27 Oct 2016 17:41:21 -0400
 Subject: efinet: UEFI IPv6 PXE support
@@ -12,8 +12,8 @@ Signed-off-by: Ken Lin <ken.lin@hpe.com>
 
 Patch-Name: efinet_uefi_ipv6_pxe_support.patch
 ---
- grub-core/net/drivers/efi/efinet.c | 24 +++++++++++++----
- include/grub/efi/api.h             | 55 +++++++++++++++++++++++++++++++++++++-
+ grub-core/net/drivers/efi/efinet.c | 24 ++++++++++---
+ include/grub/efi/api.h             | 55 +++++++++++++++++++++++++++++-
  2 files changed, 73 insertions(+), 6 deletions(-)
 
 diff --git a/grub-core/net/drivers/efi/efinet.c b/grub-core/net/drivers/efi/efinet.c

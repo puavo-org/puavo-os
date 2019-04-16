@@ -1,4 +1,4 @@
-From f00d3163dfde3fb528aee59912748d9d25282a69 Mon Sep 17 00:00:00 2001
+From 3773848cf605c69e54ad802ebf05e3de596eb5aa Mon Sep 17 00:00:00 2001
 From: Colin Watson <cjwatson@ubuntu.com>
 Date: Sun, 18 Sep 2016 17:26:00 +0100
 Subject: syslinux_test: Fix out-of-tree build handling
@@ -19,15 +19,15 @@ Last-Update: 2016-09-19
 Patch-Name: syslinux-test-out-of-tree.patch
 ---
  Makefile.am                            |  6 ------
- tests/syslinux/ubuntu10.04_grub.cfg.in | 30 +++++++++++++++---------------
- tests/syslinux_test.in                 | 14 ++++++++++----
+ tests/syslinux/ubuntu10.04_grub.cfg.in | 30 +++++++++++++-------------
+ tests/syslinux_test.in                 | 14 ++++++++----
  3 files changed, 25 insertions(+), 25 deletions(-)
 
 diff --git a/Makefile.am b/Makefile.am
-index 00a9663b3..bc9030350 100644
+index 7795baeb6..f0ab1adc3 100644
 --- a/Makefile.am
 +++ b/Makefile.am
-@@ -460,9 +460,3 @@ ChangeLog: FORCE
+@@ -473,9 +473,3 @@ ChangeLog: FORCE
  	fi
  
  EXTRA_DIST += ChangeLog ChangeLog-2015

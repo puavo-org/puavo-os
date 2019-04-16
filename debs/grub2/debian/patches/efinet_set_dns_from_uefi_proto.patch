@@ -1,4 +1,4 @@
-From e281ed639ccabe8d83a3b2215e3af4d40f723a00 Mon Sep 17 00:00:00 2001
+From ca0032fc42ff1ee941a77b5b6fdca866c3b94b5b Mon Sep 17 00:00:00 2001
 From: Michael Chang <mchang@suse.com>
 Date: Thu, 27 Oct 2016 17:43:21 -0400
 Subject: efinet: Setting DNS server from UEFI protocol
@@ -30,8 +30,8 @@ Signed-off-by: Ken Lin <ken.lin@hpe.com>
 
 Patch-Name: efinet_set_dns_from_uefi_proto.patch
 ---
- grub-core/net/drivers/efi/efinet.c | 163 +++++++++++++++++++++++++++++++++++++
- include/grub/efi/api.h             |  76 +++++++++++++++++
+ grub-core/net/drivers/efi/efinet.c | 163 +++++++++++++++++++++++++++++
+ include/grub/efi/api.h             |  76 ++++++++++++++
  2 files changed, 239 insertions(+)
 
 diff --git a/grub-core/net/drivers/efi/efinet.c b/grub-core/net/drivers/efi/efinet.c

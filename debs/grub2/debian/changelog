@@ -1,8 +1,304 @@
-grub2 (2.02~beta3-5+puavo1) buster; urgency=medium
+grub2 (2.02+dfsg1-16.1+puavo1) buster; urgency=medium
 
-  * Fix sparsefile support on compressed squashfs.
+  * Build our own grub2 so we have grub-updates better in our control.
 
- -- Puavo Org <dev@opinsys.fi>  Fri, 04 Aug 2017 14:54:37 +0300
+ -- Puavo Org <dev@opinsys.fi>  Tue, 16 Apr 2019 10:33:20 +0300
+
+grub2 (2.02+dfsg1-16) unstable; urgency=medium
+
+  * Fix -Wcast-align diagnostics on ARM.
+
+ -- Colin Watson <cjwatson@debian.org>  Sat, 23 Mar 2019 23:28:17 +0000
+
+grub2 (2.02+dfsg1-15) unstable; urgency=medium
+
+  * Build-depend on libefiboot-dev and libefivar-dev, for EFI variable
+    storage changes.
+  * Drop now-unnecessary dependencies on efibootmgr.
+
+ -- Colin Watson <cjwatson@debian.org>  Sat, 23 Mar 2019 09:56:35 +0000
+
+grub2 (2.02+dfsg1-14) unstable; urgency=medium
+
+  * Make signed packages depend on a matching version of grub-common, in an
+    attempt to prevent incorrect testing migrations (closes: #924814).
+  * Cherry-pick from upstream:
+    - xfs: Accept filesystem with sparse inodes (closes: #924760).
+  * Minimise writes to EFI variable storage (closes: #891434).
+
+ -- Colin Watson <cjwatson@debian.org>  Sat, 23 Mar 2019 09:47:10 +0000
+
+grub2 (2.02+dfsg1-13) unstable; urgency=medium
+
+  * Add regexp module to signed UEFI images.
+  * debian/signing-template.json.in: Use new extendable format.
+
+  [ Debconf translations ]
+  * [nb] Norwegian Bokmål (Petter Reinholdtsen; closes: #924326).
+
+ -- Colin Watson <cjwatson@debian.org>  Thu, 14 Mar 2019 10:33:24 +0000
+
+grub2 (2.02+dfsg1-12) unstable; urgency=medium
+
+  [ Colin Watson ]
+  * Remove code to migrate grub-pc/install_devices to persistent device
+    names under /dev/disk/by-id/.  This migration happened in
+    1.98+20100702-1, which was in squeeze (four stable releases ago), so we
+    no longer need to carry around this complex code.
+  * Preserve previous answer to grub-pc/install_devices if we have to ask
+    grub-pc/install_devices_disks_changed and the user chooses not to
+    install to any devices, so that we can recover from temporary bugs that
+    cause /dev/disk/by-id/ paths to change (closes: #919029).
+  * debian/signing-template.json.in: Add trusted_certs key (empty, since
+    GRUB has no hardcoded list of trusted certificates).
+  * util: Detect more I/O errors (closes: #922741).
+
+  [ Leif Lindholm ]
+  * arm64/efi: Fix grub_efi_get_ram_base().
+
+  [ Steve McIntyre ]
+  * grub-install: Check for arm-efi as a default target (closes: #922104).
+
+  [ James Clarke ]
+  * osdep/freebsd: Fix partition calculation for EBR entries (closes:
+    #923253).
+
+ -- Colin Watson <cjwatson@debian.org>  Fri, 01 Mar 2019 12:34:45 +0000
+
+grub2 (2.02+dfsg1-11) unstable; urgency=medium
+
+  [ Colin Watson ]
+  * Apply patches from Alexander Graf to set arm64-efi code offset to
+    EFI_PAGE_SIZE (closes: #919012, LP: #1812317).
+  * Upgrade to debhelper v10.
+  * Set Rules-Requires-Root: no.
+  * Add help and ls modules to signed UEFI images (closes: #919955).
+  * Fix application of answers from dpkg-reconfigure to /etc/default/grub
+    (based loosely on a patch by Steve Langasek, for which thanks; closes:
+    #921702).
+
+  [ Steve McIntyre ]
+  * Make grub-efi-amd64-signed recommend shim-signed (closes: #919067).
+
+  [ Jeroen Dekkers ]
+  * Initialize keyboard in at_keyboard module init if keyboard is ready
+    (closes: #741464).
+
+  [ John Paul Adrian Glaubitz ]
+  * Include a.out header in assembly of sparc64 boot loader (closes:
+    #921249).
+
+  [ Hervé Werner ]
+  * Fix setup on Secure Boot systems where cryptodisk is in use (closes:
+    #917117).
+
+  [ Debconf translations ]
+  * [de] German (Helge Kreutzmann and Holger Wansing; closes: #921018).
+
+ -- Colin Watson <cjwatson@debian.org>  Sun, 10 Feb 2019 18:53:41 +0000
+
+grub2 (2.02+dfsg1-10) unstable; urgency=medium
+
+  * Apply patch from Heinrich Schuchardt (mentioned in #916695 though
+    unrelated):
+    - grub-core/loader/efi/fdt.c: do not copy random memory
+  * Add luks modules to signed UEFI images (pointed out by Alex Griffin and
+    Hervé Werner; closes: #908162, LP: #1565950).
+  * Keep track of the previous version of /usr/share/grub/default/grub and
+    set UCF_FORCE_CONFFOLD=1 when running ucf if it hasn't changed; ucf
+    can't figure this out for itself since we apply debconf-based
+    customisations on top of the template configuration file (closes:
+    #812574, LP: #564853).
+  * Backport Xen PVH guest support from upstream (closes: #776450).  Thanks
+    to Hans van Kranenburg for testing.
+
+ -- Colin Watson <cjwatson@debian.org>  Fri, 11 Jan 2019 15:24:20 +0000
+
+grub2 (2.02+dfsg1-9) unstable; urgency=medium
+
+  [ Colin Watson ]
+  * Sync Maintainer/Uploaders in debian/signing-template/control.in with the
+    main packaging.
+  * Tell reportbug to submit bug reports against unsigned packages rather
+    than generated signed packages.
+  * Update Homepage, debian/copyright Source, and debian/watch to use HTTPS.
+  * Move bash completions to /usr/share/bash-completion/completions/grub and
+    add appropriate symlinks (closes: #912852).
+  * Build with GCC 8 (closes: #915735).
+
+  [ Leif Lindholm ]
+  * Apply patch series (mostly) from upstream to switch the arm loader over
+    to use the arm64 loader code and improve arm/arm64 initrd handling
+    (closes: #907596, #909420, #915091).
+
+  [ Matthew Garrett ]
+  * Don't enforce Shim signature validation if Secure Boot is disabled.
+
+ -- Colin Watson <cjwatson@debian.org>  Fri, 07 Dec 2018 10:38:37 +0000
+
+grub2 (2.02+dfsg1-8) unstable; urgency=medium
+
+  * Revise grub-<platform>-bin and grub-<platform> package descriptions to
+    try to explain better how they fit together and which one should be used
+    (based loosely on work by Justin B Rye, for which thanks; closes:
+    #630224).
+  * Skip flaky grub_cmd_set_date test (closes: #906470).
+  * Work around bug in obsolete init-select package: add Conflicts/Replaces
+    from grub-common, and take over /etc/default/grub.d/init-select.cfg with
+    a no-op stub (thanks to Guillem Jover for the suggestion; closes:
+    #863801).
+  * Build-depend on dosfstools and mtools on non-Linux variants of
+    i386/amd64/arm64 as well, to match debian/rules.
+  * Cherry-pick from upstream:
+    - i386/linux: Add support for ext_lfb_base (LP: #1785033).
+  * Don't source /etc/default/grub.d/*.cfg in config maintainer scripts,
+    since otherwise we incorrectly merge settings from there into
+    /etc/default/grub (closes: #872637, LP: #1797894).
+  * Add xfs module to signed UEFI images (closes: #911147, LP: #1652822).
+  * Cope with / being on a ZFS root dataset (closes: #886178).
+
+  [ Debconf translations ]
+  * [sv] Swedish (Martin Bagge and Anders Jonsson; closes: #851964).
+
+ -- Colin Watson <cjwatson@debian.org>  Mon, 29 Oct 2018 13:02:08 +0000
+
+grub2 (2.02+dfsg1-7) unstable; urgency=medium
+
+  * Move kernel maintainer script snippets into grub2-common (thanks,
+    Bastian Blank; closes: #910959).
+  * Add cryptodisk and gcry_* modules to signed UEFI images (closes:
+    #908162, LP: #1565950).
+  * Remove dh_builddeb override to use xz compression; this has been the
+    default since dpkg 1.17.0.
+
+ -- Colin Watson <cjwatson@debian.org>  Sat, 27 Oct 2018 13:06:32 +0100
+
+grub2 (2.02+dfsg1-6) unstable; urgency=medium
+
+  * Only build *-signed packages on their native architecture for now, since
+    otherwise we end up with clashing source packages (closes: #906596).
+  * Refer to source packages in Built-Using, not binary packages (closes:
+    #907483).
+
+ -- Colin Watson <cjwatson@debian.org>  Tue, 28 Aug 2018 16:17:21 +0100
+
+grub2 (2.02+dfsg1-5) unstable; urgency=medium
+
+  [ Colin Watson ]
+  * Change Maintainer to pkg-grub-devel@alioth-lists.debian.net, following
+    Alioth lists migration.
+  * Backport from upstream:
+    - Use grub-file to figure out whether multiboot2 should be used for
+      Xen.gz (closes: #898947).
+    - x86-64: Treat R_X86_64_PLT32 as R_X86_64_PC32.
+  * Fix some test failures:
+    - Disable sercon in SeaBIOS.
+    - Fix qemu options for UHCI test.
+
+  [ Philipp Hahn ]
+  * Disallow unsigned kernels if UEFI Secure Boot is enabled
+    (patch by Linn Crosetto <linn@hpe.com>)
+  * Add patch to fix lockdown mode
+    (patch by Luca Boccassi <bluca@debian.org>)
+  * Build monolithic EFI binaries for signing (closes: #851994)
+  * Add template for signing monolithic EFI binaries
+  * debian/build-efi-images: Use correct EFI vendor (closes: #769172)
+
+  [ Luca Boccassi ]
+  * template packages: install changelog and copyright
+  * Override lintian error about template rules file
+  * Add XB-Efi-Vendor metadata to efi-*-bin packages
+
+ -- Colin Watson <cjwatson@debian.org>  Mon, 30 Jul 2018 13:33:23 +0100
+
+grub2 (2.02+dfsg1-4) unstable; urgency=medium
+
+  * Adjust restore_mkdevicemap.patch to fix format-overflow warning with GCC
+    7 (the overflow was in fact impossible in practice, but GCC couldn't
+    prove that).
+  * Cherry-pick upstream patch to disable -Wformat-truncation on GCC >= 7 in
+    printf_unit_test.
+  * Build with GCC 7 (closes: #892397).
+
+ -- Colin Watson <cjwatson@debian.org>  Sun, 01 Apr 2018 10:49:48 +0100
+
+grub2 (2.02+dfsg1-3) unstable; urgency=medium
+
+  * sparc64: Don't use devspec to determine the OBP path (closes: #854568).
+  * ieee1275: Fix crash in of_path_of_nvme when of_path is empty (closes:
+    #891773).
+  * sparc64: Limit nvme of_path_of_nvme to just SPARC.
+
+ -- Colin Watson <cjwatson@debian.org>  Fri, 02 Mar 2018 12:53:34 +0000
+
+grub2 (2.02+dfsg1-2) unstable; urgency=medium
+
+  * Build-depend on libparted-dev on powerpc and ppc64 (closes: #891070).
+  * Add support for modern sparc64 hardware (thanks, Eric Snowberg via John
+    Paul Adrian Glaubitz; closes: #854568).
+  * Build without PIE on sparc and sparc64 (thanks, John Paul Adrian
+    Glaubitz; closes: #891733).
+
+ -- Colin Watson <cjwatson@debian.org>  Wed, 28 Feb 2018 12:03:49 +0000
+
+grub2 (2.02+dfsg1-1) unstable; urgency=medium
+
+  * Switch to tracking debian/grub-extras/ using "git subtree" rather than
+    submodules.
+  * Update debian/README.source for Salsa migration.
+  * Use pkg-config to find FreeType (closes: #887721).
+  * Change various binary packages' priorities to optional, since "Priority:
+    extra" is now deprecated.
+  * Repack upstream tarball without grub-core/lib/libgcrypt*/cipher/crc.c,
+    and provide a replacement implementation backported from more recent
+    versions of libgcrypt (closes: #745409).
+  * Cherry-pick upstream patch to avoid -Werror=unused-value build failure
+    (closes: #890431).
+  * Handle the case where udevadm exists but is non-functional, as warned
+    about by Lintian 2.5.75.
+
+ -- Colin Watson <cjwatson@debian.org>  Sat, 17 Feb 2018 21:28:41 +0000
+
+grub2 (2.02-3) unstable; urgency=medium
+
+  * Use current location for upstream signing key
+    (debian/upstream/signing-key.asc).
+  * Update upstream signing key to a non-expired version.
+  * Install bootinfo.txt and grub.chrp in grub-ieee1275-bin for ppc64, and
+    install and use prep-bootdev on powerpc and ppc64 as well as ppc64el
+    (thanks, John Paul Adrian Glaubitz; closes: #881730).
+  * Cherry-pick upstream patch to change the default TSC calibration method
+    to pmtimer on EFI systems (closes: #883193).
+  * Move VCS to salsa.debian.org.
+  * Consistently create /boot/grub in the postinst of all grub-<platform>
+    packages (closes: #884883).
+
+  [ Debconf translations ]
+  * [sq] Albanian (Silva Arapi; closes: #874497).
+
+ -- Colin Watson <cjwatson@debian.org>  Sat, 10 Feb 2018 03:00:30 +0000
+
+grub2 (2.02-2) unstable; urgency=medium
+
+  * Comment out debian/watch lines for betas and pre-releases for now.
+  * Cherry-pick upstream patch to allow mounting ext2/3/4 file systems that
+    have the 'encrypt' feature enabled (closes: #840204).
+
+ -- Colin Watson <cjwatson@debian.org>  Thu, 06 Jul 2017 18:02:02 +0100
+
+grub2 (2.02-1) unstable; urgency=medium
+
+  * New upstream release.
+    - xen: Fix wrong register in relocator (closes: #799480).
+  * Resolve symlinks for supported init paths as well as for /sbin/init
+    (thanks, Felipe Sateler; closes: #842315).
+
+  [ Debconf translations ]
+  * [sr] Serbian (Karolina Kalic; closes: #691288).
+  * [sr@latin] Serbian Latin (Karolina Kalic; closes: #691289).
+  * [pt] Portuguese (Rui Branco - DebianPT; closes: #864171).
+
+ -- Colin Watson <cjwatson@debian.org>  Fri, 23 Jun 2017 13:47:39 +0100
 
 grub2 (2.02~beta3-5) unstable; urgency=medium
 

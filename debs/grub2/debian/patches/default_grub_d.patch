@@ -1,4 +1,4 @@
-From 3c6068124da8e41247a2e5d9ba61f167093c1993 Mon Sep 17 00:00:00 2001
+From 0c9b39ffe82f8946dce58ff0e45fcf122ed64fe3 Mon Sep 17 00:00:00 2001
 From: Colin Watson <cjwatson@ubuntu.com>
 Date: Mon, 13 Jan 2014 12:13:10 +0000
 Subject: Read /etc/default/grub.d/*.cfg after /etc/default/grub
@@ -9,7 +9,7 @@ Last-Update: 2014-01-28
 
 Patch-Name: default_grub_d.patch
 ---
- grub-core/osdep/unix/config.c | 114 ++++++++++++++++++++++++++++++++++--------
+ grub-core/osdep/unix/config.c | 114 +++++++++++++++++++++++++++-------
  util/grub-mkconfig.in         |   5 ++
  2 files changed, 98 insertions(+), 21 deletions(-)
 
@@ -178,7 +178,7 @@ index 65effa9f3..5478030fd 100644
 +  free (cfgdir);
  }
 diff --git a/util/grub-mkconfig.in b/util/grub-mkconfig.in
-index 4650f4bc8..c05f0d1f3 100644
+index 99ba7acba..b4f0011b5 100644
 --- a/util/grub-mkconfig.in
 +++ b/util/grub-mkconfig.in
 @@ -157,6 +157,11 @@ fi
