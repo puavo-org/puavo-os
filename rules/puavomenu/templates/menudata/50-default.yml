@@ -94,6 +94,14 @@ programs:
           sv: CmapTools-mindmap
           de: CmapTools-Mindmap
         tags: default
+  - com.rosegardenmusic.rosegarden:
+        name:
+            en: Rosegarden-sequencer
+            fi: Rosegarden-sekvensseri
+            sv: Rosegarden-sekvenser
+            de: Rosegarden Sequencer
+        icon: /usr/share/icons/hicolor/64x64/apps/rosegarden.png
+        tags: default, audio
   - cura-appimage:
         tags: default
 
@@ -655,14 +663,6 @@ programs:
   #R
   - robboscratch2:
         tags: default
-  - rosegarden:
-        name:
-            en: Rosegarden-sequencer
-            fi: Rosegarden-sekvensseri
-            sv: Rosegarden-sekvenser
-            de: Rosegarden Sequencer
-        icon: /usr/share/icons/hicolor/64x64/apps/rosegarden.png
-        tags: default, audio
 
   #S
   - sanomapro:
@@ -1141,7 +1141,7 @@ menus:
             - mscore
             - hydrogen
             - lmms
-            - rosegarden
+            - com.rosegardenmusic.rosegarden
             - tuxguitar
             - fmit
             - qstopmotion
