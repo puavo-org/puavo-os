@@ -1,5 +1,6 @@
---- wine.orig/dlls/mountmgr.sys/device.c	2019-01-22 23:25:59.000000000 +0200
-+++ wine/dlls/mountmgr.sys/device.c	2019-04-16 12:54:44.328214484 +0300
+diff -ruN wine.orig/dlls/mountmgr.sys/device.c wine/dlls/mountmgr.sys/device.c
+--- wine.orig/dlls/mountmgr.sys/device.c	2019-04-16 10:45:42.427748179 +0000
++++ wine/dlls/mountmgr.sys/device.c	2019-04-16 10:44:41.995325224 +0000
 @@ -90,6 +90,51 @@
      struct mount_point   *mount;       /* DosDevices mount point */
  };
@@ -52,12 +53,11 @@
  static struct list drives_list = LIST_INIT(drives_list);
  static struct list volumes_list = LIST_INIT(volumes_list);
  
-@@ -951,6 +996,86 @@
+@@ -951,6 +996,84 @@
  
          break;
      }
-+    /* SMART_GET_VERSION ? */
-+    case 0x74080:
++    case StorageDeviceSmartGetVersion:
 +    {
 +	DWORD len = min(sizeof(GETVERSIONINPARAMS), irpsp->Parameters.DeviceIoControl.OutputBufferLength);
 +	GETVERSIONINPARAMS info;
@@ -80,8 +80,7 @@
 +	irp->IoStatus.u.Status = STATUS_SUCCESS;
 +	break;
 +    }
-+    /* SMART_RCV_DRIVE_DATA ? */
-+    case 0x7c088:
++    case StorageDeviceSmartRcvDriveData:
 +    {
 +	DWORD len = min(sizeof(SENDCMDOUTPARAMS) - 1 + 512,
 +	    irpsp->Parameters.DeviceIoControl.OutputBufferLength);
@@ -139,3 +138,17 @@
      default:
          FIXME( "Unsupported property %#x\n", query->PropertyId );
          irp->IoStatus.u.Status = STATUS_NOT_SUPPORTED;
+diff -ruN wine.orig/include/ntddstor.h wine/include/ntddstor.h
+--- wine.orig/include/ntddstor.h	2019-01-22 21:25:59.000000000 +0000
++++ wine/include/ntddstor.h	2019-04-16 10:44:37.983297147 +0000
+@@ -214,7 +214,9 @@
+ 
+ typedef enum _STORAGE_PROPERTY_ID {
+     StorageDeviceProperty = 0,
+-    StorageAdapterProperty
++    StorageAdapterProperty,
++    StorageDeviceSmartGetVersion = 0x74080,
++    StorageDeviceSmartRcvDriveData = 0x7c088,
+ } STORAGE_PROPERTY_ID, *PSTORAGE_PROPERTY_ID;
+ 
+ typedef struct _STORAGE_PROPERTY_QUERY {
