@@ -218,9 +218,6 @@ programs:
         tags: default
   - gnubg:
         tags: default
-  - goobox:
-        icon: /usr/share/icons/hicolor/48x48/apps/goobox.png
-        tags: default, audio
   - google-chrome:
         name:
             en: Chrome-browser
@@ -432,6 +429,9 @@ programs:
             de: Gedit-Texteditor
         icon: /usr/share/icons/Faenza/apps/96/accessories-text-editor.png
         tags: default, utility
+  - org.gnome.Goobox:
+        icon: /usr/share/icons/hicolor/48x48/apps/goobox.png
+        tags: default, audio
   - org.gnome.gThumb:
         icon: /usr/share/icons/hicolor/scalable/apps/gthumb.svg
         name:
@@ -1126,7 +1126,7 @@ menus:
         icon: /usr/share/icons/Faenza/categories/48/applications-multimedia.png
         programs:
             - audacity
-            - goobox
+            - org.gnome.Goobox
             - vlc
             - org.kde.kaffeine
             - spotify
