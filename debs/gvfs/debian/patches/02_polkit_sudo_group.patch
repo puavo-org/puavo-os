@@ -1,10 +1,19 @@
-Description: Use sudo group instead of the wheel one, the later doesn't exist on debian
-Author: Laurent Bigonville <bigon@debian.org>
-Forwarded: not-needed
+From: Laurent Bigonville <bigon@debian.org>
+Date: Tue, 8 Nov 2016 19:44:47 +0100
+Subject: Use sudo group instead of the wheel one
 
+since the wheel group doesn't exist on Debian
+
+Forwarded: not-needed
+---
+ daemon/org.gtk.vfs.file-operations.rules | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/daemon/org.gtk.vfs.file-operations.rules b/daemon/org.gtk.vfs.file-operations.rules
+index fb8d54a..4e90b99 100644
 --- a/daemon/org.gtk.vfs.file-operations.rules
 +++ b/daemon/org.gtk.vfs.file-operations.rules
-@@ -2,7 +2,7 @@ polkit.addRule(function(action, subject)
+@@ -2,7 +2,7 @@ polkit.addRule(function(action, subject) {
          if ((action.id == "org.gtk.vfs.file-operations-helper") &&
              subject.local &&
              subject.active &&

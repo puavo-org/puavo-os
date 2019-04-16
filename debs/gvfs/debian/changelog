@@ -1,10 +1,205 @@
-gvfs (1.30.4-1+puavo1) buster; urgency=medium
+gvfs (1.38.1-3) unstable; urgency=high
 
-  * On gvfs, disable the House Arrest Protocol used by Apple devices.
-    It did not work for us with Nautilus, and consequently files
-    on iOS were inaccessible.
+  * Team upload
+  * d/p/admin-Prevent-access-if-any-authentication-agent-isn-t-av.patch:
+    Add patch from upstream to prevent members of the sudo group from
+    bypassing the intended password check for privileged access to files
+    via the admin: backend if no polkit authentication agents are
+    available (CVE-2019-3827, Closes: #921816)
+  * d/p/*: Update to upstream gnome-3-30 branch, commit 1.38.1-9-gd4dab113
+    - admin: Fix CVE-2019-3827 (see above)
+    - autorun: Don't crash if an autorun file is not valid UTF-8
+    - mtp: Don't busy-loop retrying reading an event after failure
+    - udisks2: Reinstate support for deprecated comment=x-gvfs-show fstab
+      option syntax (but please use x-gvfs-show instead)
+    - tests: Use the right SMB port if running in the sandbox
+    - Update translations: eu, sk, sr
+  * d/gbp.conf: Configure for debian/buster and upstream/1.38.x branches
+  * d/control: Use debian/buster branch in Vcs-Git
 
- -- Puavo Org <dev@opinsys.fi>  Fri, 16 Feb 2018 07:42:13 +0200
+ -- Simon McVittie <smcv@debian.org>  Sat, 09 Feb 2019 12:02:33 +0000
+
+gvfs (1.38.1-2) unstable; urgency=medium
+
+  * Add -Wl,-O1 to our LDFLAGS
+  * debian/rules: Use dh_auto_build instead of make
+  * Bump Standards-Version to 4.3.0
+
+ -- Jeremy Bicha <jbicha@debian.org>  Thu, 27 Dec 2018 10:06:21 -0500
+
+gvfs (1.38.1-1) unstable; urgency=medium
+
+  * New upstream release
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Tue, 13 Nov 2018 17:08:16 +0100
+
+gvfs (1.38.0-2) unstable; urgency=medium
+
+  * Install manpages into gvfs-common, as they were previously
+
+ -- Iain Lane <laney@debian.org>  Tue, 11 Sep 2018 12:42:51 +0100
+
+gvfs (1.38.0-1) unstable; urgency=medium
+
+  * New upstream translation release
+  * Update gbp.conf to pkg-gnome's common file
+  * Bump Standards-Version to 4.2.1 (no changes required)
+  * Revert "d/watch: Watch for development versions"
+  * Build manpages for the deprecated commands too
+
+ -- Iain Lane <laney@debian.org>  Tue, 11 Sep 2018 11:40:16 +0100
+
+gvfs (1.37.90-1) experimental; urgency=medium
+
+  * Team upload
+  * d/watch: Watch for development versions
+  * New upstream release
+  * debian/docs: Don't install AUTHORS, no longer provided upstream
+  * debian/docs: Install README.md
+  * d/source/lintian-overrides: Remove, no longer needed
+    (the Autotools build system has been removed)
+  * Update Meson build-dependency to 0.46.0
+  * Update GLib build-dependency to 2.57.2
+  * Reinstate deprecated command-line tools via debian/extra/ for now
+  * d/p/01_modules_dir.patch: Drop, no longer required
+  * d/p/04_hurd_path_max.patch: Drop, no longer required
+  * Build-depend on polkit 0.105-18~ for ITS rules
+  * d/p/Remove-version-from-polkit-gobject-dependency.patch:
+    Don't require polkit 0.114 for ITS rules since we have backported
+    that feature
+  * Normalize packaging with wrap-and-sort -ab
+  * Standards-Version: 4.2.0
+  * Deprecate the gvfs-bin package
+  * Use /usr/share/dpkg/default.mk
+  * Tell dpkg-shlibdeps about our private libraries
+
+ -- Simon McVittie <smcv@debian.org>  Fri, 17 Aug 2018 12:26:04 +0100
+
+gvfs (1.36.2-1) unstable; urgency=medium
+
+  * Team upload
+
+  [ Rob McQueen ]
+  * Add missing lsof dependency to fix UDisks2VolumeMonitor (!1)
+
+  [ Simon McVittie ]
+  * New upstream release
+  * d/control.in: Remove trailing spaces
+  * Refresh patch series
+  * d/tests/control: Depend on dbus, not dbus-x11 (Closes: #835892)
+  * tests: Depend on openssh-client, for ssh-keygen
+  * tests: Depend on policykit-1, for pkcheck
+  * tests: Depend on python3-dbus, for `import dbus`
+  * Standards-Version: 4.1.5 (no changes required)
+  * Set Rules-Requires-Root to no
+  * Override Lintian warning for configure.ac. Now that this package
+    builds with meson, Autotools bugs are harmless.
+
+ -- Simon McVittie <smcv@debian.org>  Thu, 26 Jul 2018 20:50:24 +0100
+
+gvfs (1.36.1-1) unstable; urgency=medium
+
+  * New upstream release
+  * Drop obsolete dh_translations override
+  * Bump Standards-Version to 4.1.4
+
+ -- Jeremy Bicha <jbicha@debian.org>  Sat, 14 Apr 2018 15:51:37 -0400
+
+gvfs (1.36.0-1) unstable; urgency=medium
+
+  [ Iain Lane ]
+  * New upstream translation release
+  * debian/patches/0009-gvfs-test-Increase-timeout-to-10s.patch: Backport
+    patch from upstream #794487 to increase test timeouts, hopefully to reduce
+    flakiness.
+
+  [ Sebastien Bacher ]
+  * debian/patches/0008-Skip-the-umockdev-test.patch:
+    - the umockdev ioctl emulation is currently buggy, skip the gphoto
+      integration test that would need record update
+
+ -- Iain Lane <laney@debian.org>  Mon, 19 Mar 2018 16:10:38 +0000
+
+gvfs (1.35.91-1) experimental; urgency=medium
+
+  * New upstream development release
+  * Drop no longer needed Files-Excluded
+  * Add workaround for Ubuntu translations issue
+  * Drop 0008-test-Make-etc-init-optional.patch: Applied in new release
+
+ -- Jeremy Bicha <jbicha@debian.org>  Mon, 19 Feb 2018 16:54:17 -0500
+
+gvfs (1.35.90-1) experimental; urgency=medium
+
+  [ Jeremy Bicha ]
+  * New upstream development release
+    - Fixes "MTP volume not removed after disconnecting" (Closes: #882353)
+      (LP: #1739537)
+  * debian/copyright: Use Files-Excluded to avoid non-free RFCs.
+  * Update Vcs fields for migration to https://salsa.debian.org/
+  * Drop obsolete Build-Depends on libudev-dev
+  * Build with meson
+  * Don't build the Blu-ray backend on Ubuntu since the required library
+    is in universe. See bug 1746629.
+  * Cherry-pick 0008-test-Make-etc-init-optional.patch:
+    - Fix tests when /etc/init/ doesn't exist (on minimal systems)
+
+  [ Martin Pitt ]
+  * Run autopkgtests through sudo starting as normal user, so that it can
+    find a non-root user.
+
+ -- Jeremy Bicha <jbicha@debian.org>  Fri, 09 Feb 2018 10:23:43 -0500
+
+gvfs (1.34.1-2) unstable; urgency=medium
+
+  * Update Vcs fields for conversion to git
+  * Add debian/gbp.conf
+  * Bump Standards-Version to 4.1.2
+  * Bump debhelper compat to 11
+
+ -- Jeremy Bicha <jbicha@debian.org>  Sun, 17 Dec 2017 19:09:49 -0500
+
+gvfs (1.34.1-1) unstable; urgency=medium
+
+  * New upstream release
+  * Drop programs-Fix-bashism-in-gvfs-wrapper-script.patch:
+    Applied in new release
+  * Bump Standards-Version to 4.1.1
+
+ -- Jeremy Bicha <jbicha@debian.org>  Mon, 02 Oct 2017 21:21:13 -0400
+
+gvfs (1.34.0-3) unstable; urgency=medium
+
+  * Fix bashism in gvfs-* wrapper script. (Closes: #877068)
+
+ -- Michael Biebl <biebl@debian.org>  Thu, 28 Sep 2017 14:24:21 +0200
+
+gvfs (1.34.0-2) unstable; urgency=medium
+
+  * debian/gvfs-bin.install: Don't try to install bash-completion
+    files dropped in new release
+
+ -- Jeremy Bicha <jbicha@debian.org>  Wed, 27 Sep 2017 13:39:41 -0400
+
+gvfs (1.34.0-1) unstable; urgency=medium
+
+  [ Jeremy Bicha ]
+  * New upstream release
+  * debian/control.in:
+    - Drop obsolete Build-Depends on libgtk-3-dev
+    - Bump minimum libgdata-dev to 0.17.9
+    - Have gvfs-bin depend on libglib2.0-bin because the gvfs utilities
+      have been deprecated in favor of 'gio' in this release
+  * Refresh 04_hurd_path_max.patch
+  * Drop disable-polkit-rules-no-admin.patch: Applied in new release
+  * Bump Standards-Version to 4.1.0
+
+  [ Laurent Bigonville ]
+  * Move org.gtk.vfs.file-operations.rules back to the polkit rules directory,
+    the behaviour looks more sane now and a password is asked everytime a file
+    owned by root is opened.
+
+ -- Jeremy Bicha <jbicha@debian.org>  Wed, 27 Sep 2017 12:41:02 -0400
 
 gvfs (1.30.4-1) unstable; urgency=medium
 
@@ -354,9 +549,9 @@ gvfs (1.23.1-1) experimental; urgency=medium
 gvfs (1.22.2-1) unstable; urgency=medium
 
   * New upstream translation and bugfix release.
-  * fix-unmout-crash.patch: patch from upstream git. Fix crashes when 
+  * fix-unmout-crash.patch: patch from upstream git. Fix crashes when
     unmounting shares with pending operations.
-  * fix-cancellation: patch from upstream git. Fix user cancellation of 
+  * fix-cancellation: patch from upstream git. Fix user cancellation of
     file operations.
 
  -- Josselin Mouette <joss@debian.org>  Sun, 30 Nov 2014 22:18:27 +0100
@@ -569,10 +764,10 @@ gvfs (1.15.4-1) experimental; urgency=low
 
   [ Josselin Mouette ]
   * New upstream release.
-  * Add dependency on desktop-file-utils since many operations won’t 
+  * Add dependency on desktop-file-utils since many operations won’t
     work without mimeinfo.cache.
-  * 06_metadata_nfs.patch: new patch. Disable gvfsd-metadata entirely on 
-    remote filesystems. It is better to miss functionality than to 
+  * 06_metadata_nfs.patch: new patch. Disable gvfsd-metadata entirely on
+    remote filesystems. It is better to miss functionality than to
     hammer the server. Closes: #624507.
 
   [ Emilio Pozuelo Monfort ]
@@ -590,15 +785,15 @@ gvfs (1.15.4-1) experimental; urgency=low
 
 gvfs (1.12.3-4) unstable; urgency=low
 
-  * 06_metadata_nfs.patch: new patch. Disable gvfsd-metadata entirely on 
-    remote filesystems. It is better to miss functionality than to 
+  * 06_metadata_nfs.patch: new patch. Disable gvfsd-metadata entirely on
+    remote filesystems. It is better to miss functionality than to
     hammer the server. Closes: #624507.
 
  -- Josselin Mouette <joss@debian.org>  Tue, 05 Feb 2013 14:02:04 +0100
 
 gvfs (1.12.3-3) unstable; urgency=low
 
-  * Add dependency on desktop-file-utils since many operations won’t 
+  * Add dependency on desktop-file-utils since many operations won’t
     work without mimeinfo.cache.
 
  -- Josselin Mouette <joss@debian.org>  Sat, 05 Jan 2013 12:09:20 +0100
@@ -657,7 +852,7 @@ gvfs (1.12.2-1) unstable; urgency=low
 gvfs (1.12.1-1) unstable; urgency=low
 
   [ Josselin Mouette ]
-  * Move gsettings schemas to gvfs-backends, they are only used by smb 
+  * Move gsettings schemas to gvfs-backends, they are only used by smb
     and dns-sd.
   * Add Breaks/Replaces accordingly.
 
@@ -706,7 +901,7 @@ gvfs (1.10.1-3) unstable; urgency=low
 gvfs (1.10.1-2) unstable; urgency=low
 
   [ Josselin Mouette ]
-  * Drop dependency gvfs-bin→gvfs. The support binaries only need GIO, 
+  * Drop dependency gvfs-bin→gvfs. The support binaries only need GIO,
     nothing more.
 
   [ Michael Biebl ]
@@ -727,7 +922,7 @@ gvfs (1.10.1-1) experimental; urgency=low
   * Install afp backend.
   * Drop gvfs.postinst, it’s been here in squeeze.
   * Make gvfs multiarch-compatible:
-    + 01_modules_dir.patch: query the modules dir from gio instead of 
+    + 01_modules_dir.patch: query the modules dir from gio instead of
       hardcoding it.
     + Split the gvfs package between all sub-components.
       - gvfs: holds the GIO module (multiarch: same)
@@ -774,7 +969,7 @@ gvfs (1.8.1-1) experimental; urgency=low
 
   [ Raphaël Hertzog ]
   * Changes default section to libs to fix overrides disparities.
-  * Fix watch file. 
+  * Fix watch file.
 
   [ Martin Pitt ]
   * New upstream release.
@@ -819,8 +1014,8 @@ gvfs (1.7.2-1) experimental; urgency=low
 gvfs (1.7.1-1) experimental; urgency=low
 
   [ Josselin Mouette ]
-  * 07_smb_initialdir.patch: new patch by Tomas Bzatek and myself. Take 
-    into account initial path when doing a SMB mount, to avoid 
+  * 07_smb_initialdir.patch: new patch by Tomas Bzatek and myself. Take
+    into account initial path when doing a SMB mount, to avoid
     permission issues. Closes: #533417.
 
   [ Emilio Pozuelo Monfort ]
@@ -859,15 +1054,15 @@ gvfs (1.6.4-4) unstable; urgency=low
 
 gvfs (1.6.4-3) unstable; urgency=low
 
-  * 07_smb_initialdir.patch: new patch by Tomas Bzatek and myself. Take 
-    into account initial path when doing a SMB mount, to avoid 
+  * 07_smb_initialdir.patch: new patch by Tomas Bzatek and myself. Take
+    into account initial path when doing a SMB mount, to avoid
     permission issues. Closes: #533417.
 
  -- Josselin Mouette <joss@debian.org>  Wed, 22 Dec 2010 20:45:43 +0100
 
 gvfs (1.6.4-2) unstable; urgency=low
 
-  * 06_sftp_timeout.patch: patch from Andreas Henriksson to fix 
+  * 06_sftp_timeout.patch: patch from Andreas Henriksson to fix
     incorrect timeout introduced by the openssh 5.6 portability change.
 
  -- Josselin Mouette <joss@debian.org>  Sun, 03 Oct 2010 00:44:17 +0200
@@ -895,7 +1090,7 @@ gvfs (1.6.3-1) unstable; urgency=low
 
   [ Josselin Mouette ]
   * New upstream release.
-  * 01_maintainer_mode.patch, 90_relibtoolize.patch: updated for the new 
+  * 01_maintainer_mode.patch, 90_relibtoolize.patch: updated for the new
     version.
 
  -- Josselin Mouette <joss@debian.org>  Mon, 19 Jul 2010 18:37:07 +0200
@@ -978,7 +1173,7 @@ gvfs (1.4.2-1) unstable; urgency=low
   * Refresh patches and recreate 90_relibtoolize.patch
 
   [ Josselin Mouette ]
-  * Break rhythmbox < 0.12.6-2. See #561083 for bugs that can happen 
+  * Break rhythmbox < 0.12.6-2. See #561083 for bugs that can happen
     when RB and gvfs don’t use the same backend.
 
  -- Josselin Mouette <joss@debian.org>  Mon, 14 Dec 2009 14:39:01 +0100
@@ -997,9 +1192,9 @@ gvfs (1.4.1-5+gdu) experimental; urgency=low
   * Require dk-disks >> 009-1 to have IDE support.
   * Replace part of the sed magic by linux-any magic.
   * 05_shared_libdaemon.patch:
-    + Put the common code for all gvfsd-* in a private library in 
-      /usr/lib/gvfs/libgvfsdaemon.so. This reduces binary sizes and 
-      memory overhead caused by the multiple running daemons. 
+    + Put the common code for all gvfsd-* in a private library in
+      /usr/lib/gvfs/libgvfsdaemon.so. This reduces binary sizes and
+      memory overhead caused by the multiple running daemons.
     + Move libgvfscommon* to /usr/lib/gvfs as well.
   * Install libgvfsdaemon.
   * 90_relibtoolize.patch: refresh accordingly.
@@ -1057,7 +1252,7 @@ gvfs (1.4.1-1) unstable; urgency=low
 
 gvfs (1.4.0-3) unstable; urgency=low
 
-  * Break brasero < 2.28.0-2 because it locks the CD device, preventing 
+  * Break brasero < 2.28.0-2 because it locks the CD device, preventing
     ejection.
   * Only install xdg-mount.1 on !linux.
 
@@ -1067,7 +1262,7 @@ gvfs (1.4.0-2+gdu1) experimental; urgency=low
 
   * Enable GDU support on Linux.
   * Disable HAL on Linux.
-  * Recommend policykit 1 (to mount stuff using devicekit-disks) instead 
+  * Recommend policykit 1 (to mount stuff using devicekit-disks) instead
     of gnome-mount.
   * Only install xdg-mount on !linux.
 
@@ -1076,7 +1271,7 @@ gvfs (1.4.0-2+gdu1) experimental; urgency=low
 gvfs (1.4.0-2) unstable; urgency=low
 
   * Do not build-depend on libudev on !linux.
-  * gvfs.postinst: add big fat warning asking to restart the session 
+  * gvfs.postinst: add big fat warning asking to restart the session
     after the upgrade. Closes: #548898.
   * Enable libgudev on linux.
 
@@ -1099,12 +1294,12 @@ gvfs (1.4.0-1) unstable; urgency=low
 
 gvfs (1.2.3-3) unstable; urgency=low
 
-  * xdg-mount: new utility, that will spawn gnome-mount or exo-mount 
+  * xdg-mount: new utility, that will spawn gnome-mount or exo-mount
     depending on the running environment.
   * Depend on x11-utils for xprop.
   * Recommend gnome-mount | exo-utils.
   * Install the script and its manual page in gvfs.
-  * 03_xdg-mount.patch: new patch. Use xdg-mount instead of gnome-mount. 
+  * 03_xdg-mount.patch: new patch. Use xdg-mount instead of gnome-mount.
     Handle its specific return code by displaying the appropriate error.
 
  -- Josselin Mouette <joss@debian.org>  Mon, 17 Aug 2009 17:39:43 +0200
@@ -1124,12 +1319,12 @@ gvfs (1.2.3-2) unstable; urgency=low
 gvfs (1.2.3-1) unstable; urgency=low
 
   * Add back fuse and cdio support for kfreebsd.
-  * 10_kfreebsd.patch: patch from Aurélien Jarno to add gphoto2 support 
+  * 10_kfreebsd.patch: patch from Aurélien Jarno to add gphoto2 support
     on kfreebsd. Closes: #528539.
     + Update 90_relibtoolize.patch accordingly.
   * Enable obexftp backend again now that bluez 4 is available.
     Closes: #530435.
-  * Only suggest obex-data-server, it’s not as if it was so much related 
+  * Only suggest obex-data-server, it’s not as if it was so much related
     to gvfs which does file browsing, not file sharing.
   * New upstream release.
   * Refresh a pair of patches accordingly.
@@ -1149,22 +1344,22 @@ gvfs (1.2.2-1) unstable; urgency=low
   * New upstream release.
     + Allows to trash read-only directories. Closes: #341949.
   * Update build dependencies and dependencies.
-  * Require fuse, cdparanoia and bluetooth only on Linux. Use 
+  * Require fuse, cdparanoia and bluetooth only on Linux. Use
     type-handling to only build gvfs-fuse on Linux architectures.
     Closes: #526073.
   * Disable obexftp backend until bluez 4.0 is available.
   * 02_http_unescape.patch: removed, merged upstream.
-  * 02_deprecated.patch: new patch. Don’t use G_DISABLE_DEPRECATED in 
+  * 02_deprecated.patch: new patch. Don’t use G_DISABLE_DEPRECATED in
     production, it’s like shooting ourselves in the foot.
     Closes: #524905.
   * Regenerate or refresh other patches.
   * Update shlibs version to 1.2.1.
   * Add the newly shipped file to gvfs-backends.
   * Fix debug package priority.
-  * Remove the library packages for now, there is no guarantee of 
-    API/ABI stability, and the shipped headers don’t correspond with the 
+  * Remove the library packages for now, there is no guarantee of
+    API/ABI stability, and the shipped headers don’t correspond with the
     shipped libraries.
-  * Move libgvfscommon.so.0 to gvfs, and libgvfscommon-dnssd.so.0 to 
+  * Move libgvfscommon.so.0 to gvfs, and libgvfscommon-dnssd.so.0 to
     gvfs-backends.
   * Don’t tempt people with development symlinks.
   * Add proper Conflicts/Replaces in gvfs.
@@ -1180,7 +1375,7 @@ gvfs (1.0.3-4) unstable; urgency=low
 
 gvfs (1.0.3-3) unstable; urgency=low
 
-  * 02_http_unescape.patch: new patch, stolen upstream. Fix escaping of 
+  * 02_http_unescape.patch: new patch, stolen upstream. Fix escaping of
     HTTP uris that leads to a crash. Closes: #519722.
 
  -- Josselin Mouette <joss@debian.org>  Sat, 14 Mar 2009 18:50:49 +0100
@@ -1221,7 +1416,7 @@ gvfs (1.0.2-1) experimental; urgency=low
   * Build-depend on openssh-client.
   * Bump requirement on libgphoto2.
   * Bump shlibs version to 0.99.6.
-  * Fix D-Bus spelling error in descriptions. Make them a bit more 
+  * Fix D-Bus spelling error in descriptions. Make them a bit more
     complete.
   * Include clean-la.mk; require gnome-pkg-tools 0.7.
   * Include the volume monitors.
@@ -1311,7 +1506,7 @@ gvfs (0.2.0.1-2) unstable; urgency=low
 
   [ Josselin Mouette ]
   * Use quilt for patch handling.
-  * 01_sftp_krb5.patch: ported from GnomeVFS. Make the sftp backend work 
+  * 01_sftp_krb5.patch: ported from GnomeVFS. Make the sftp backend work
     when pam_krb5 is used on the server side.
 
   [ Sebastian Dröge ]
@@ -1426,6 +1621,6 @@ gvfs (0.2.2-2.1) unstable; urgency=low
   * debian/gvfs-backends.postinst:
     + Use killall -q to not complain if there are no gvfsd processes. Thanks
       to Daniel Hahler (Closes: #473172).
-  * 
+  *
 
  -- Sebastian Dröge <slomo@debian.org>  Tue, 08 Apr 2008 13:24:00 +0200

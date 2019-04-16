@@ -3,59 +3,60 @@ Section: gnome
 Priority: optional
 Maintainer: Debian GNOME Maintainers <pkg-gnome-maintainers@lists.alioth.debian.org>
 Uploaders: @GNOME_TEAM@
-Build-Depends: debhelper (>= 10),
+Build-Depends: debhelper (>= 11.1.3),
                dh-exec (>= 0.13),
                gnome-pkg-tools (>= 0.7),
-               pkg-config,
                gtk-doc-tools,
-               libcap-dev [linux-any],
-               libglib2.0-dev (>= 2.49.3),
-               libdbus-1-dev,
-               openssh-client,
-               libsoup2.4-dev (>= 2.42.0),
-               libxml2-dev,
-               libudev-dev (>= 0.138) [linux-any],
-               libavahi-glib-dev (>= 0.6),
-               libavahi-client-dev (>= 0.6),
-               libfuse-dev [!hurd-any],
-               libgudev-1.0-dev (>= 147) [linux-any],
-               libcdio-paranoia-dev (>= 0.78.2),
-               libbluetooth-dev (>= 4.0) [linux-any],
-               libgoa-1.0-dev (>= 3.17.1),
-               libgdata-dev (>= 0.17.3),
-               libexpat1-dev,
-               libgphoto2-dev (>= 2.5.0),
-               libsecret-1-dev,
-               libbluray-dev,
-               libmtp-dev (>= 1.1.6),
-               libpolkit-gobject-1-dev,
-               libsmbclient-dev (>= 3.4.0) [!hurd-any],
                libarchive-dev,
-               libgcrypt20-dev (>= 1.2.2),
-               libltdl-dev,
-               libimobiledevice-dev (>= 1.2) [!hurd-any],
-               libplist-dev,
-               libudisks2-dev (>= 1.97) [linux-any],
-               libsystemd-dev [linux-any],
-               systemd (>= 206) [linux-any],
+               libavahi-client-dev (>= 0.6),
+               libavahi-glib-dev (>= 0.6),
+               libbluetooth-dev (>= 4.0) [linux-any],
+               libbluray-dev,
+               libcap-dev [linux-any],
+               libcdio-paranoia-dev (>= 0.78.2),
+               libdbus-1-dev,
+               libexpat1-dev,
+               libfuse-dev [!hurd-any],
                libgcr-3-dev,
-               libgtk-3-dev,
-               libnfs-dev (>= 1.9.7)
-Standards-Version: 3.9.8
+               libgcrypt20-dev (>= 1.2.2),
+               libgdata-dev (>= 0.17.9),
+               libglib2.0-dev (>= 2.57.2),
+               libgoa-1.0-dev (>= 3.17.1),
+               libgphoto2-dev (>= 2.5.0),
+               libgudev-1.0-dev (>= 147) [linux-any],
+               libimobiledevice-dev (>= 1.2) [!hurd-any],
+               libltdl-dev,
+               libmtp-dev (>= 1.1.6),
+               libnfs-dev (>= 1.9.7),
+               libplist-dev,
+               libpolkit-gobject-1-dev,
+               libsecret-1-dev,
+               libsmbclient-dev (>= 3.4.0) [!hurd-any],
+               libsoup2.4-dev (>= 2.42.0),
+               libsystemd-dev [linux-any],
+               libudisks2-dev (>= 1.97) [linux-any],
+               libxml2-dev,
+               meson (>= 0.46.0),
+               openssh-client,
+               pkg-config,
+               policykit-1 (>= 0.105-18~),
+               systemd (>= 206) [linux-any]
+Rules-Requires-Root: no
+Standards-Version: 4.3.0
+Vcs-Git: https://salsa.debian.org/gnome-team/gvfs.git -b debian/buster
+Vcs-Browser: https://salsa.debian.org/gnome-team/gvfs
 Homepage: https://wiki.gnome.org/Projects/gvfs
-Vcs-Svn: svn://anonscm.debian.org/pkg-gnome/desktop/unstable/gvfs
-Vcs-Browser: https://anonscm.debian.org/viewvc/pkg-gnome/desktop/unstable/gvfs/
 
 Package: gvfs
 Architecture: any
 Multi-Arch: same
 Section: libs
-Depends: ${shlibs:Depends},
-         ${misc:Depends},
-         gvfs-daemons (>= ${source:Version}),
+Depends: gvfs-common (= ${source:Version}),
          gvfs-daemons (<< ${source:Version}.1~),
+         gvfs-daemons (>= ${source:Version}),
          gvfs-libs (= ${binary:Version}),
-         gvfs-common (= ${source:Version})
+         ${misc:Depends},
+         ${shlibs:Depends}
 Suggests: gvfs-backends
 Description: userspace virtual filesystem - GIO module
  gvfs is a userspace virtual filesystem where mounts run as separate
@@ -64,19 +65,81 @@ Description: userspace virtual filesystem - GIO module
  API. It also supports exposing the gvfs mounts to non-gio applications
  using fuse.
  .
- This package contains the GIO module that lets applications use gvfs 
+ This package contains the GIO module that lets applications use gvfs
  mounts.
+
+Package: gvfs-backends
+Architecture: any
+Multi-Arch: foreign
+Depends: gvfs (= ${binary:Version}),
+         gvfs-common (= ${source:Version}),
+         gvfs-daemons (= ${binary:Version}),
+         gvfs-libs (= ${binary:Version}),
+         psmisc,
+         ${misc:Depends},
+         ${shlibs:Depends}
+Recommends: gnome-keyring
+Suggests: bluez-obexd,
+          samba-common
+Description: userspace virtual filesystem - backends
+ gvfs is a userspace virtual filesystem where mounts run as separate
+ processes which you talk to via D-Bus. It also contains a gio module
+ that seamlessly adds gvfs support to all applications using the gio
+ API. It also supports exposing the gvfs mounts to non-gio applications
+ using fuse.
+ .
+ This package contains the afc, afp, archive, cdda, dav, dnssd, ftp,
+ gphoto2, http, mtp, network, sftp, smb and smb-browse backends.
+
+Package: gvfs-bin
+Section: oldlibs
+Architecture: any
+Multi-Arch: foreign
+Pre-Depends: ${misc:Pre-Depends}
+Depends: gvfs-common (= ${source:Version}),
+         libglib2.0-bin,
+         ${misc:Depends},
+         ${shlibs:Depends}
+Suggests: gvfs
+Description: userspace virtual filesystem - deprecated command-line tools
+ gvfs is a userspace virtual filesystem where mounts run as separate
+ processes which you talk to via D-Bus. It also contains a gio module
+ that seamlessly adds gvfs support to all applications using the gio
+ API. It also supports exposing the gvfs mounts to non-gio applications
+ using fuse.
+ .
+ This package contains deprecated command-line tools such as gvfs-copy
+ and gvfs-rename. Please use the gio(1) tool in the libglib2.0-bin
+ package instead.
+
+Package: gvfs-common
+Architecture: all
+Multi-Arch: foreign
+Section: libs
+Depends: desktop-file-utils,
+         ${misc:Depends}
+Recommends: gvfs
+Description: userspace virtual filesystem - common data files
+ gvfs is a userspace virtual filesystem where mounts run as separate
+ processes which you talk to via D-Bus. It also contains a gio module
+ that seamlessly adds gvfs support to all applications using the gio
+ API. It also supports exposing the gvfs mounts to non-gio applications
+ using fuse.
+ .
+ This package contains the data files and translations used by all gvfs
+ components.
 
 Package: gvfs-daemons
 Architecture: any
 Multi-Arch: foreign
 Section: libs
-Depends: ${shlibs:Depends},
-         ${misc:Depends},
-         x11-utils,
-         udisks2 [linux-any],
+Depends: gvfs-common (= ${source:Version}),
          gvfs-libs (= ${binary:Version}),
-         gvfs-common (= ${source:Version})
+         lsof,
+         udisks2 [linux-any],
+         x11-utils,
+         ${misc:Depends},
+         ${shlibs:Depends}
 Recommends: dbus,
             gvfs
 Suggests: gvfs-backends
@@ -89,45 +152,12 @@ Description: userspace virtual filesystem - servers
  .
  This package contains the gvfs server and the minimal set of backends.
 
-Package: gvfs-libs
-Architecture: any
-Multi-Arch: same
-Section: libs
-Depends: ${shlibs:Depends},
-         ${misc:Depends},
-         gvfs-common (= ${source:Version})
-Description: userspace virtual filesystem - private libraries
- gvfs is a userspace virtual filesystem where mounts run as separate
- processes which you talk to via D-Bus. It also contains a gio module
- that seamlessly adds gvfs support to all applications using the gio
- API. It also supports exposing the gvfs mounts to non-gio applications
- using fuse.
- .
- This package contains private libraries with common functions between 
- the daemons and the GIO module.
-
-Package: gvfs-common
-Architecture: all
-Multi-Arch: foreign
-Section: libs
-Depends: ${misc:Depends}, desktop-file-utils
-Recommends: gvfs
-Description: userspace virtual filesystem - common data files
- gvfs is a userspace virtual filesystem where mounts run as separate
- processes which you talk to via D-Bus. It also contains a gio module
- that seamlessly adds gvfs support to all applications using the gio
- API. It also supports exposing the gvfs mounts to non-gio applications
- using fuse.
- .
- This package contains the data files and translations used by all gvfs 
- components.
-
 Package: gvfs-fuse
-Architecture: linux-any kfreebsd-any
-Depends: ${shlibs:Depends},
-         ${misc:Depends},
+Architecture: kfreebsd-any linux-any
+Depends: fuse (>= 2.8.4) [linux-any],
          gvfs (= ${binary:Version}),
-         fuse (>= 2.8.4) [linux-any]
+         ${misc:Depends},
+         ${shlibs:Depends}
 Description: userspace virtual filesystem - fuse server
  gvfs is a userspace virtual filesystem where mounts run as separate
  processes which you talk to via D-Bus. It also contains a gio module
@@ -138,41 +168,19 @@ Description: userspace virtual filesystem - fuse server
  This package contains the gvfs-fuse server that exports gvfs mounts to
  all applications using FUSE.
 
-Package: gvfs-backends
+Package: gvfs-libs
 Architecture: any
-Multi-Arch: foreign
-Depends: ${shlibs:Depends},
+Multi-Arch: same
+Section: libs
+Depends: gvfs-common (= ${source:Version}),
          ${misc:Depends},
-         gvfs (= ${binary:Version}),
-         gvfs-daemons (= ${binary:Version}),
-         gvfs-libs (= ${binary:Version}),
-         gvfs-common (= ${source:Version}),
-         psmisc
-Recommends: gnome-keyring
-Suggests: bluez-obexd, samba-common
-Description: userspace virtual filesystem - backends
+         ${shlibs:Depends}
+Description: userspace virtual filesystem - private libraries
  gvfs is a userspace virtual filesystem where mounts run as separate
  processes which you talk to via D-Bus. It also contains a gio module
  that seamlessly adds gvfs support to all applications using the gio
  API. It also supports exposing the gvfs mounts to non-gio applications
  using fuse.
  .
- This package contains the afc, afp, archive, cdda, dav, dnssd, ftp,
- gphoto2, http, mtp, network, sftp, smb and smb-browse backends.
-
-Package: gvfs-bin
-Architecture: any
-Multi-Arch: foreign
-Pre-Depends: ${misc:Pre-Depends}
-Depends: ${shlibs:Depends},
-         ${misc:Depends},
-         gvfs-common (= ${source:Version})
-Suggests: gvfs
-Description: userspace virtual filesystem - binaries
- gvfs is a userspace virtual filesystem where mounts run as separate
- processes which you talk to via D-Bus. It also contains a gio module
- that seamlessly adds gvfs support to all applications using the gio
- API. It also supports exposing the gvfs mounts to non-gio applications
- using fuse.
- .
- This package contains the support binaries.
+ This package contains private libraries with common functions between
+ the daemons and the GIO module.

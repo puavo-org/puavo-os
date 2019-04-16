@@ -1,12 +1,20 @@
-Description: If the VFS never initialized, don't crash when creating volume monitors
+From: Michael Terry <mterry@ubuntu.com>
+Date: Wed, 11 Apr 2012 16:01:32 -0400
+Subject: Don't crash when creating volume monitors
+
+if the VFS was never initialized
+
 Origin: vendor, Ubuntu
 Bug-Ubuntu: LP #832533
+---
+ client/gdaemonvfs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Index: b/client/gdaemonvfs.c
-===================================================================
+diff --git a/client/gdaemonvfs.c b/client/gdaemonvfs.c
+index bae13eb..e3fbd8a 100644
 --- a/client/gdaemonvfs.c
 +++ b/client/gdaemonvfs.c
-@@ -1432,7 +1432,7 @@
+@@ -1434,7 +1434,7 @@ g_daemon_vfs_deserialize_icon (GVfs     *vfs,
  GDBusConnection *
  _g_daemon_vfs_get_async_bus (void)
  {

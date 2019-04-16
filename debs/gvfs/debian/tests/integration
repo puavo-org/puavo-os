@@ -1,4 +1,7 @@
 #!/bin/sh
 set -e
 unset TMPDIR
-test/gvfs-testbed test/gvfs-test
+# While this works on Ubuntu, more work will be needed to
+# add a user, possibly configure sudo permissions, and switch
+# to that user for this to work on Debian.
+sudo test/gvfs-testbed test/gvfs-test

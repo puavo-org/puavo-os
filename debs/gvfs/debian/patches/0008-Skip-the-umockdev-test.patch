@@ -1,0 +1,29 @@
+From: Sebastien Bacher <seb128@ubuntu.com>
+Date: Mon, 19 Mar 2018 15:51:12 +0000
+Subject: Skip the umockdev test
+
+The trace is out of date & needs to be re-recorded by somebody who has
+the hardware.
+
+Origin: vendor, Ubuntu
+Bug-Upstream: https://bugzilla.gnome.org/show_bug.cgi?id=794488
+---
+ test/gvfs-test | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/test/gvfs-test b/test/gvfs-test
+index 8b9e028..82321f3 100755
+--- a/test/gvfs-test
++++ b/test/gvfs-test
+@@ -1723,8 +1723,9 @@ class Trash(GvfsTestCase):
+             self.assertTrue(os.path.exists(self.my_file))
+ 
+ 
+-@unittest.skipUnless(have_umockdev,
+-                     'umockdev not installed; get it from https://launchpad.net/umockdev')
++#@unittest.skipUnless(have_umockdev,
++#                     'umockdev not installed; get it from https://launchpad.net/umockdev')
++@unittest.skip("umockdev/ioctl recording is currently known to have issue and not to be reworked")
+ class GPhoto(GvfsTestCase):
+     def test_mount_api(self):
+         '''gphoto2:// mount with Gio API'''

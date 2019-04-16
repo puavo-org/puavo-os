@@ -1,0 +1,45 @@
+From: Iain Lane <iain@orangesquash.org.uk>
+Date: Mon, 19 Mar 2018 15:25:17 +0000
+Subject: gvfs-test: Increase timeout to 10s
+
+In normal operation some operations - particularly unmounting - can take
+quite a while. Let's give things a bit longer before giving up.
+
+Patch originally by Andreas Hasenack <andreas.hasenack@canonical.com>
+
+Forwarded: https://bugzilla.gnome.org/show_bug.cgi?id=794487
+---
+ test/gvfs-test | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/test/gvfs-test b/test/gvfs-test
+index 82321f3..c569f9f 100755
+--- a/test/gvfs-test
++++ b/test/gvfs-test
+@@ -175,7 +175,7 @@ class GvfsTestCase(unittest.TestCase):
+     def unmount(self, uri):
+         self.program_out_success(['gio', 'mount', '-u', uri])
+ 
+-        timeout = 5
++        timeout = 10
+         while timeout > 0:
+             (out, err) = self.program_out_err(['gio', 'mount', '-li'])
+             if not re.search('Mount.*' + uri, out):
+@@ -264,7 +264,7 @@ class GvfsTestCase(unittest.TestCase):
+     def unmount_api(self, gfile):
+         '''Umount a mounted Gio.File using the Gio API
+ 
+-        This times out after 5 seconds.
++        This times out after 10 seconds.
+         '''
+         self.cb_result = None
+ 
+@@ -281,7 +281,7 @@ class GvfsTestCase(unittest.TestCase):
+         mount.unmount_with_operation(Gio.MountUnmountFlags.NONE, None, None,
+                                      unmount_done, ml)
+         # ensure we are timing out
+-        GLib.timeout_add_seconds(5, lambda data: ml.quit(), None)
++        GLib.timeout_add_seconds(10, lambda data: ml.quit(), None)
+         ml.run()
+ 
+         self.assertNotEqual(self.cb_result, None, 'operation timed out')

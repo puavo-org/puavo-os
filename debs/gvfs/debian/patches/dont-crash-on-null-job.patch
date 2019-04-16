@@ -1,10 +1,18 @@
-Description: Don't try to announce the finish of a NULL job.
+From: Michael Terry <mterry@ubuntu.com>
+Date: Wed, 11 Apr 2012 16:01:32 -0400
+Subject: Don't try to announce the finish of a NULL job.
+
 Origin: vendor, Ubuntu
 Bug-Ubuntu: LP #345754, #838464
+---
+ daemon/gvfschannel.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
+diff --git a/daemon/gvfschannel.c b/daemon/gvfschannel.c
+index cc07988..c0c26da 100644
 --- a/daemon/gvfschannel.c
 +++ b/daemon/gvfschannel.c
-@@ -611,7 +611,8 @@
+@@ -612,7 +612,8 @@ send_reply_cb (GObject *source_object,
  
    job = channel->priv->current_job;
    channel->priv->current_job = NULL;
@@ -14,7 +22,7 @@ Bug-Ubuntu: LP #345754, #838464
  
    class = G_VFS_CHANNEL_GET_CLASS (channel);
    
-@@ -632,7 +633,7 @@
+@@ -633,7 +634,7 @@ send_reply_cb (GObject *source_object,
      }
    /* Start queued request or readahead */
    else if (!start_queued_request (channel) &&

@@ -1,0 +1,43 @@
+From: Iain Lane <iainl@gnome.org>
+Date: Mon, 24 Sep 2018 15:09:47 +0000
+Subject: gvfs-test: Don't specify the port if we are running in the sandbox
+
+In this case the smb config is set up using the default port by the
+sandbox itself - the config in the testsuite is not used.
+
+(cherry picked from commit dd7abaffa1d1154afd8b27ea83428837d25c9f14)
+
+Origin: upstream, 1.38.2, commit:29302bb775ba1c1d265c304a5bda30d88950b9f8
+---
+ test/gvfs-test | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/test/gvfs-test b/test/gvfs-test
+index 93822c0..8b9e028 100755
+--- a/test/gvfs-test
++++ b/test/gvfs-test
+@@ -839,7 +839,10 @@ ncalrpc dir = %(workdir)s/samba
+     def test_anonymous(self):
+         '''smb:// anonymous'''
+ 
+-        uri = 'smb://%s:%d/public' % (os.uname()[1], SMB_USER_PORT)
++        if in_testbed:
++            uri = 'smb://%s/public' % (os.uname()[1])
++        else:
++            uri = 'smb://%s:%d/public' % (os.uname()[1], SMB_USER_PORT)
+ 
+         # ensure that this does not ask for any credentials
+         mount = subprocess.Popen(['gio', 'mount', '-a', uri])
+@@ -860,7 +863,11 @@ ncalrpc dir = %(workdir)s/samba
+     def test_authenticated(self):
+         '''smb:// authenticated'''
+ 
+-        uri = 'smb://%s@%s:%d/private' % (os.environ['USER'], os.uname()[1], SMB_USER_PORT)
++        if in_testbed:
++            uri = 'smb://%s@%s/private' % (os.environ['USER'], os.uname()[1])
++        else:
++            uri = 'smb://%s@%s:%d/private' % (os.environ['USER'], os.uname()[1], SMB_USER_PORT)
++
+         mount = subprocess.Popen(['gio', 'mount', uri],
+                                  stdin=subprocess.PIPE,
+                                  stdout=subprocess.PIPE,

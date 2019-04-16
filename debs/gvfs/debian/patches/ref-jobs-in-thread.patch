@@ -1,9 +1,48 @@
-Description: make sure to keep a ref to jobs while they run in a thread
-Origin: vendor, Ubuntu
+From: Michael Terry <mterry@ubuntu.com>
+Date: Thu, 12 Apr 2012 15:14:55 -0400
+Subject: make sure to keep a ref to jobs while they run in a thread
 
+Origin: vendor, Ubuntu
+---
+ daemon/gvfschannel.c | 5 +++--
+ daemon/gvfsdaemon.c  | 7 +++++--
+ 2 files changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/daemon/gvfschannel.c b/daemon/gvfschannel.c
+index c0c26da..fa490f6 100644
+--- a/daemon/gvfschannel.c
++++ b/daemon/gvfschannel.c
+@@ -644,6 +644,7 @@ send_reply_cb (GObject *source_object,
+     }
+ 
+   g_object_unref (job);
++  g_object_unref (channel);
+ }
+ 
+ /* Might be called on an i/o thread */
+@@ -667,7 +668,7 @@ g_vfs_channel_send_reply (GVfsChannel *channel,
+ 				   channel->priv->reply_buffer,
+ 				   G_VFS_DAEMON_SOCKET_PROTOCOL_REPLY_SIZE,
+ 				   0, NULL,
+-				   send_reply_cb, channel);  
++				   send_reply_cb, g_object_ref (channel));
+     }
+   else
+     {
+@@ -676,7 +677,7 @@ g_vfs_channel_send_reply (GVfsChannel *channel,
+ 				   channel->priv->output_data,
+ 				   channel->priv->output_data_size,
+ 				   0, NULL,
+-				   send_reply_cb, channel);  
++				   send_reply_cb, g_object_ref (channel));
+     }
+ }
+ 
+diff --git a/daemon/gvfsdaemon.c b/daemon/gvfsdaemon.c
+index 406d4f8..61e5904 100644
 --- a/daemon/gvfsdaemon.c
 +++ b/daemon/gvfsdaemon.c
-@@ -206,6 +206,7 @@
+@@ -206,6 +206,7 @@ job_handler_callback (gpointer       data,
    GVfsJob *job = G_VFS_JOB (data);
  
    g_vfs_job_run (job);
@@ -11,7 +50,7 @@ Origin: vendor, Ubuntu
  }
  
  static void
-@@ -599,7 +600,8 @@
+@@ -597,7 +598,8 @@ g_vfs_daemon_queue_job (GVfsDaemon *daemon,
    if (!g_vfs_job_try (job))
      {
        /* Couldn't finish / run async, queue worker thread */
@@ -21,7 +60,7 @@ Origin: vendor, Ubuntu
      }
  }
  
-@@ -1115,7 +1117,8 @@
+@@ -1118,7 +1120,8 @@ void
  g_vfs_daemon_run_job_in_thread (GVfsDaemon *daemon,
  				GVfsJob    *job)
  {
@@ -31,31 +70,3 @@ Origin: vendor, Ubuntu
  }
  
  void
---- a/daemon/gvfschannel.c
-+++ b/daemon/gvfschannel.c
-@@ -643,6 +643,7 @@
-     }
- 
-   g_object_unref (job);
-+  g_object_unref (channel);
- }
- 
- /* Might be called on an i/o thread */
-@@ -666,7 +667,7 @@
- 				   channel->priv->reply_buffer,
- 				   G_VFS_DAEMON_SOCKET_PROTOCOL_REPLY_SIZE,
- 				   0, NULL,
--				   send_reply_cb, channel);  
-+				   send_reply_cb, g_object_ref (channel));  
-     }
-   else
-     {
-@@ -675,7 +676,7 @@
- 				   channel->priv->output_data,
- 				   channel->priv->output_data_size,
- 				   0, NULL,
--				   send_reply_cb, channel);  
-+				   send_reply_cb, g_object_ref (channel));  
-     }
- }
- 

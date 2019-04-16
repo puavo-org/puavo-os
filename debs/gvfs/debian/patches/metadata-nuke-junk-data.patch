@@ -1,15 +1,16 @@
-From 1148581b7306d9e2505cbf0241809428cf6e6cc8 Mon Sep 17 00:00:00 2001
 From: Christian Kellner <gicmo@gnome.org>
 Date: Wed, 4 Nov 2009 16:40:24 +0100
-Subject: [PATCH] Nuke the metadata file if magic blob is wrong
+Subject: Nuke the metadata file if magic blob is wrong
 
 ---
- metadata/metatree.c |   12 +++++++++++-
- 1 files changed, 11 insertions(+), 1 deletions(-)
+ metadata/metatree.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
+diff --git a/metadata/metatree.c b/metadata/metatree.c
+index 0ba9dba..9131d56 100644
 --- a/metadata/metatree.c
 +++ b/metadata/metatree.c
-@@ -445,7 +445,15 @@
+@@ -451,7 +451,15 @@ meta_tree_init (MetaTree *tree)
    if (memcmp (tree->header->magic, MAGIC, MAGIC_LEN) != 0)
      {
        g_warning ("can't init metadata tree %s: wrong magic", tree->filename);

@@ -1,3 +1,3 @@
 Tests: integration
-Depends: @, python-twisted-core, dbus-x11, samba, apache2, apache2-dev, umockdev (>= 0.2.9), python3-gi, gir1.2-umockdev-1.0
-Restrictions: needs-root isolation-machine allow-stderr
+Depends: @, python-twisted-core, sudo, dbus, samba, apache2, apache2-dev, umockdev (>= 0.2.9), python3-gi, gir1.2-umockdev-1.0, openssh-client, policykit-1, python3-dbus
+Restrictions: isolation-machine allow-stderr
