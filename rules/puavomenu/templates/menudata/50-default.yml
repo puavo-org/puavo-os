@@ -556,6 +556,15 @@ programs:
              sv: Step-fysik simulator
              de: Step Physik Simulator
         tags: default, education, science
+  - org.kde.tellico:
+        keywords: tellico
+        name:
+            en: Tellico-collection manager
+            fi: Kirjasto-ohjelma
+            sv: Biblotek
+            de: Tellico Sammlungs-Verwalter
+        icon: /usr/share/icons/hicolor/64x64/apps/tellico.png
+        tags: default, office
   - otava:
         type: web
         name: Otava - Oppilaan maailma
@@ -788,15 +797,6 @@ programs:
             sv: Teddybjörn programmering
             de: Teddy-Programmierung
         tags: default, education, development
-  - tellico:
-        keywords: tellico
-        name:
-            en: Tellico-collection manager
-            fi: Kirjasto-ohjelma
-            sv: Biblotek
-            de: Tellico Sammlungs-Verwalter
-        icon: /usr/share/icons/hicolor/64x64/apps/tellico.png
-        tags: default, office
   - thunderbird:
         name:
             en: Thunderbird-email
@@ -1110,7 +1110,7 @@ menus:
             - org.kde.okular
             - org.gnome.Evince
             - calibre-gui
-            - tellico
+            - org.kde.tellico
             - openboard
             - primusclient
             - dia
