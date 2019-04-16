@@ -29,7 +29,6 @@ pipeline {
     stage('Build wine') {
       steps {
         sh '''
-          make -C debs .dpkg-buildpackage-unicode-data
           make -C debs update-repo
 
           cat <<'EOF' >> /etc/apt/sources.list
