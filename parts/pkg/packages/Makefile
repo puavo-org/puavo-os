@@ -56,6 +56,7 @@ packagedirs += smartboard
 packagedirs += spotify-client
 packagedirs += tilitin
 packagedirs += t-lasku
+packagedirs += ubuntu-wallpapers
 packagedirs += vidyo-client
 packagedirs += vstloggerpro
 
