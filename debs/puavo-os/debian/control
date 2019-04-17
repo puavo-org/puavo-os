@@ -565,7 +565,7 @@ Description: Customized shutdown dialog for BigTouch
 
 Package: webkiosk-language-selector
 Architecture: all
-Depends: ${misc:Depends}, nwjs
+Depends: ${misc:Depends}, tcl, tk
 Description: Webkiosk language selector
  Helper for webkiosks to select session language.
  .
