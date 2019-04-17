@@ -1,7 +1,6 @@
 class apt::default_repositories {
   include ::apt::backports
   include ::apt::multiarch
-  include ::apt::nodejs
   include ::apt::repositories
 
   # XXX issues with using Ubuntu repositories in Buster
