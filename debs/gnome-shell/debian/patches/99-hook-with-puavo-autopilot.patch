@@ -1,7 +1,7 @@
-diff -ruN gnome-shell.orig/js/gdm/loginDialog.js gnome-shell/js/gdm/loginDialog.js
---- gnome-shell.orig/js/gdm/loginDialog.js	2017-02-16 18:48:07.000000000 +0200
-+++ gnome-shell/js/gdm/loginDialog.js	2017-08-16 07:07:33.553279247 +0300
-@@ -817,6 +817,8 @@
+diff -ruN gnome-shell-3.30.2.build-4/js/gdm/loginDialog.js gnome-shell-3.30.2.build-5/js/gdm/loginDialog.js
+--- gnome-shell-3.30.2.build-4/js/gdm/loginDialog.js	2019-04-17 12:00:25.946460901 +0300
++++ gnome-shell-3.30.2.build-5/js/gdm/loginDialog.js	2019-04-17 12:50:31.497279528 +0300
+@@ -865,6 +865,8 @@
          } else {
              this._hideUserListAndBeginVerification();
          }
@@ -9,4 +9,4 @@ diff -ruN gnome-shell.orig/js/gdm/loginDialog.js gnome-shell/js/gdm/loginDialog.
 +        GLib.spawn_command_line_async('/usr/bin/puavo-autopilot-login');
      },
  
-     _onDefaultSessionChanged: function(client, sessionId) {
+     _onDefaultSessionChanged(client, sessionId) {
