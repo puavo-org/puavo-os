@@ -1,9 +1,10 @@
---- gnome-shell-3.22.3.orig/js/ui/screenShield.js	2017-02-16 18:48:04.000000000 +0200
-+++ gnome-shell-3.22.3/js/ui/screenShield.js	2017-11-02 12:03:53.753389592 +0200
-@@ -715,6 +715,11 @@
+diff -ruN gnome-shell-3.30.2.build-6/js/ui/screenShield.js gnome-shell-3.30.2.build-7/js/ui/screenShield.js
+--- gnome-shell-3.30.2.build-6/js/ui/screenShield.js	2018-11-14 00:50:31.000000000 +0200
++++ gnome-shell-3.30.2.build-7/js/ui/screenShield.js	2019-04-17 12:57:56.389629168 +0300
+@@ -726,6 +726,11 @@
      },
  
-     _prepareForSleep: function(loginManager, aboutToSuspend) {
+     _prepareForSleep(loginManager, aboutToSuspend) {
 +        // do not activate screenShield on greeter when going to suspend
 +        if (Main.sessionMode.isGreeter) {
 +            return;
