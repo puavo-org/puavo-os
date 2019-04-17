@@ -1,8 +1,7 @@
-Description: Allow extensions in gdm mode
-
---- gnome-shell-3.22.3.orig/js/ui/sessionMode.js
-+++ gnome-shell-3.22.3/js/ui/sessionMode.js
-@@ -42,6 +42,7 @@ const _modes = {
+diff -ruN gnome-shell-3.30.2.build-2/js/ui/sessionMode.js gnome-shell-3.30.2.build-3/js/ui/sessionMode.js
+--- gnome-shell-3.30.2.build-2/js/ui/sessionMode.js	2018-11-14 00:50:31.000000000 +0200
++++ gnome-shell-3.30.2.build-3/js/ui/sessionMode.js	2019-04-17 12:34:15.649040481 +0300
+@@ -41,6 +41,7 @@
      },
  
      'gdm': {
