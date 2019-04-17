@@ -45,7 +45,9 @@ packagedirs += obsidian-icons
 packagedirs += ohjelmointi-opetuksessa
 packagedirs += openscad-nightly
 packagedirs += openshot-appimage
-packagedirs += oracle-java
+# XXX packagedirs += oracle-java        # dropped due licensing changes,
+                                        # we should evaluate if openjre-11
+                                        # works for all use cases
 packagedirs += processing
 packagedirs += promethean
 packagedirs += pycharm
