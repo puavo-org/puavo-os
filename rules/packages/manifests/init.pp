@@ -695,14 +695,14 @@ class packages {
   $nvidia_dkms_390_module   = 'nvidia-legacy-390xx/390.116'
   $nvidia_dkms_410_module   = 'nvidia-current/410.104'
   $r8168_module             = 'r8168/8.043.02'
-  $virtualbox_module        = 'virtualbox/6.0.4'
+  # XXX buster $virtualbox_module        = 'virtualbox/6.0.4'
 
   $all_dkms_modules = [ $broadcom_sta_dkms_module
                       , $nvidia_dkms_340_module
                       , $nvidia_dkms_390_module
                       , $nvidia_dkms_410_module
-		      , $r8168_module
-                      , $virtualbox_module ]
+		      , $r8168_module ]
+                      # XXX buster , $virtualbox_module ]
 
   packages::kernels::kernel_package {
     '4.19.0-4-amd64':

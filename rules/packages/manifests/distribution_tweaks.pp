@@ -18,5 +18,7 @@ class packages::distribution_tweaks {
     or title == 'mypaint'               # XXX can not co-exist with gimp
     or title == 'mypaint-data'          # XXX can not co-exist with gimp
     or title == 'ttf-freefont'
+    or title == 'virtualbox'
+    or title == 'virtualbox-dkms'
   |> { ensure => absent, }
 }
