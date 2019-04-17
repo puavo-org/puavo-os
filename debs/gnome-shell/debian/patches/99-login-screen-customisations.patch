@@ -1,11 +1,12 @@
-diff -ruN gnome-shell.orig/data/theme/gnome-shell.css gnome-shell/data/theme/gnome-shell.css
---- gnome-shell.orig/data/theme/gnome-shell.css	2017-02-16 19:31:17.000000000 +0200
-+++ gnome-shell/data/theme/gnome-shell.css	2018-08-22 07:42:37.528611449 +0300
-@@ -1849,3 +1849,11 @@
-   border: 2px solid grey;
-   border-radius: 4px;
-   padding: 6px; }
+diff -ruN gnome-shell-3.30.2.build-1/data/theme/gnome-shell-sass/_common.scss gnome-shell-3.30.2.build-2/data/theme/gnome-shell-sass/_common.scss
+--- gnome-shell-3.30.2.build-1/data/theme/gnome-shell-sass/_common.scss	2018-11-14 00:50:31.000000000 +0200
++++ gnome-shell-3.30.2.build-2/data/theme/gnome-shell-sass/_common.scss	2019-04-17 12:00:13.822245368 +0300
+@@ -2020,3 +2020,12 @@
+     border-radius: 4px;
+     padding: 6px;
+   }
 +
++// Puavo customizations
 +.destroy-user-session {
 +  color: #cc8800;
 +  font-size: 70%;
@@ -13,15 +14,16 @@ diff -ruN gnome-shell.orig/data/theme/gnome-shell.css gnome-shell/data/theme/gno
 +  margin-top: 3em; }
 +  .destroy-user-session:hover {
 +    color: #ffaa00; }
-diff -ruN gnome-shell.orig/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
---- gnome-shell.orig/js/gdm/authPrompt.js	2017-02-16 18:48:04.000000000 +0200
-+++ gnome-shell/js/gdm/authPrompt.js	2018-08-22 07:48:40.391688449 +0300
-@@ -2,9 +2,12 @@
+diff -ruN gnome-shell-3.30.2.build-1/js/gdm/authPrompt.js gnome-shell-3.30.2.build-2/js/gdm/authPrompt.js
+--- gnome-shell-3.30.2.build-1/js/gdm/authPrompt.js	2019-04-17 10:37:49.000000000 +0300
++++ gnome-shell-3.30.2.build-2/js/gdm/authPrompt.js	2019-04-17 12:09:07.903789884 +0300
+@@ -2,10 +2,13 @@
  
  const Clutter = imports.gi.Clutter;
  const Gio = imports.gi.Gio;
 +const GLib = imports.gi.GLib;
  const Lang = imports.lang;
+ const Pango = imports.gi.Pango;
  const Signals = imports.signals;
  const St = imports.gi.St;
 +const Shell = imports.gi.Shell;
@@ -29,7 +31,7 @@ diff -ruN gnome-shell.orig/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
  
  const Animation = imports.ui.animation;
  const Batch = imports.gdm.batch;
-@@ -37,6 +40,12 @@
+@@ -39,6 +42,12 @@
      DONT_PROVIDE_USERNAME: 1
  };
  
@@ -39,10 +41,10 @@ diff -ruN gnome-shell.orig/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
 +    return Shell.get_file_contents_utf8_sync(name);
 +}
 +
- const AuthPrompt = new Lang.Class({
+ var AuthPrompt = new Lang.Class({
      Name: 'AuthPrompt',
  
-@@ -46,6 +55,13 @@
+@@ -48,6 +57,13 @@
          this._gdmClient = gdmClient;
          this._mode = mode;
  
@@ -56,24 +58,24 @@ diff -ruN gnome-shell.orig/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
          let reauthenticationOnly;
          if (this._mode == AuthPromptMode.UNLOCK_ONLY)
              reauthenticationOnly = true;
-@@ -66,6 +82,14 @@
-         this.connect('next', Lang.bind(this, function() {
-                          this.updateSensitivity(false);
-                          this.startSpinning();
+@@ -68,6 +84,14 @@
+         this.connect('next', () => {
+                 this.updateSensitivity(false);
+                 this.startSpinning();
 +
-+                         if (this._userName && !this._userNameEntered) {
-+                             if (!this._entry.menu.isPassword) {    // don't show passwords!
-+                                 this._userName.text = this._entry.text;
-+                                 this._userNameEntered = true;
-+                             }
-+                         }
++                if (this._userName && !this._userNameEntered) {
++                        if (!this._entry.menu.isPassword) {    // don't show passwords!
++                                this._userName.text = this._entry.text;
++                                this._userNameEntered = true;
++                        }
++                }
 +
-                          if (this._queryingService) {
-                              this._userVerifier.answerQuery(this._queryingService, this._entry.text);
-                          } else {
-@@ -73,6 +97,11 @@
-                          }
-                      }));
+                 if (this._queryingService) {
+                     this._userVerifier.answerQuery(this._queryingService, this._entry.text);
+                 } else {
+@@ -75,6 +99,11 @@
+                 }
+             });
  
 +        this.connect('guest', Lang.bind(this, function() {
 +                         this._entry.text = this._guestuser_login;
@@ -82,7 +84,7 @@ diff -ruN gnome-shell.orig/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
 +
          this.actor = new St.BoxLayout({ style_class: 'login-dialog-prompt-layout',
                                          vertical: true });
-         this.actor.connect('destroy', Lang.bind(this, this._onDestroy));
+         this.actor.connect('destroy', this._onDestroy.bind(this));
 @@ -91,6 +120,25 @@
                           x_fill: true,
                           y_fill: true,
@@ -109,7 +111,7 @@ diff -ruN gnome-shell.orig/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
          this._label = new St.Label({ style_class: 'login-dialog-prompt-label' });
  
          this.actor.add(this._label,
-@@ -122,6 +170,74 @@
+@@ -123,6 +171,74 @@
                           x_align: St.Align.MIDDLE,
                           y_align: St.Align.END });
  
@@ -184,29 +186,19 @@ diff -ruN gnome-shell.orig/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
          this._defaultButtonWell = new St.Widget({ layout_manager: new Clutter.BinLayout() });
          this._defaultButtonWellActor = null;
  
-@@ -186,6 +302,8 @@
-                                              if (!this._userVerifier.hasPendingMessages)
-                                                  this._fadeOutMessage();
+@@ -180,6 +296,7 @@
+             if (!this._userVerifier.hasPendingMessages)
+                 this._fadeOutMessage();
  
-+                                             this._updateGuestButtonSensitivity(this._entry.text.length == 0 &&
-+                                                !this._userNameEntered);
-                                              this._updateNextButtonSensitivity(this._entry.text.length > 0);
-                                          }));
-         this._entry.clutter_text.connect('activate', Lang.bind(this, function() {
-@@ -261,7 +379,7 @@
-     _onVerificationComplete: function() {
-         this.setActorInDefaultButtonWell(null);
-         this.verificationStatus = AuthPromptStatus.VERIFICATION_SUCCEEDED;
--	this.cancelButton.reactive = false;
-+        this.cancelButton.reactive = false;
-     },
- 
-     _onReset: function() {
-@@ -408,6 +526,17 @@
++            this._updateGuestButtonSensitivity(this._entry.text.length == 0 && !this._userNameEntered);
+             this._updateNextButtonSensitivity(this._entry.text.length > 0 || this.verificationStatus == AuthPromptStatus.VERIFYING);
+         });
+         this._entry.clutter_text.connect('activate', () => {
+@@ -402,6 +519,17 @@
          }
      },
  
-+    _updateGuestButtonSensitivity: function(sensitive) {
++    _updateGuestButtonSensitivity(sensitive) {
 +        if (this._guestuser_login !== 'guest') {
 +            // forcibly hide the guest login button if guest logins are disabled
 +            this.guestButton.hide();
@@ -217,12 +209,12 @@ diff -ruN gnome-shell.orig/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
 +        this.guestButton.can_focus = sensitive;
 +    },
 +
-     _updateNextButtonSensitivity: function(sensitive) {
+     _updateNextButtonSensitivity(sensitive) {
          this.nextButton.reactive = sensitive;
          this.nextButton.can_focus = sensitive;
-@@ -447,6 +576,18 @@
-         this.cancelButton.reactive = true;
+@@ -442,6 +570,18 @@
          this.nextButton.label = _("Next");
+         this._preemptiveAnswer = null;
  
 +        if (this._userName)
 +            this._userName.text = " ";
@@ -239,63 +231,65 @@ diff -ruN gnome-shell.orig/js/gdm/authPrompt.js gnome-shell/js/gdm/authPrompt.js
          if (this._userVerifier)
              this._userVerifier.cancel();
  
-diff -ruN gnome-shell.orig/js/gdm/loginDialog.js gnome-shell/js/gdm/loginDialog.js
---- gnome-shell.orig/js/gdm/loginDialog.js	2018-08-14 14:38:01.761528924 +0300
-+++ gnome-shell/js/gdm/loginDialog.js	2018-08-22 07:42:37.540611676 +0300
-@@ -1111,6 +1111,7 @@
-     _showUserList: function() {
+diff -ruN gnome-shell-3.30.2.build-1/js/gdm/loginDialog.js gnome-shell-3.30.2.build-2/js/gdm/loginDialog.js
+--- gnome-shell-3.30.2.build-1/js/gdm/loginDialog.js	2019-04-17 10:39:54.111002882 +0300
++++ gnome-shell-3.30.2.build-2/js/gdm/loginDialog.js	2019-04-17 12:00:25.946460901 +0300
+@@ -1138,6 +1138,7 @@
+     _showUserList() {
          this._ensureUserListLoaded();
          this._authPrompt.hide();
 +        this._authPrompt._updateGuestButtonSensitivity(true);
          this._hideBannerView();
          this._sessionMenuButton.close();
          this._setUserListExpanded(true);
-@@ -1120,6 +1121,7 @@
+@@ -1147,6 +1148,7 @@
  
-     _beginVerificationForItem: function(item) {
+     _beginVerificationForItem(item) {
          this._authPrompt.setUser(item.user);
 +        this._authPrompt.guestButton.hide();
  
          let userName = item.user.get_user_name();
          let hold = new Batch.Hold();
-diff -ruN gnome-shell.orig/js/gdm/util.js gnome-shell/js/gdm/util.js
---- gnome-shell.orig/js/gdm/util.js	2016-11-18 18:44:21.000000000 +0200
-+++ gnome-shell/js/gdm/util.js	2018-08-22 07:42:37.540611676 +0300
+diff -ruN gnome-shell-3.30.2.build-1/js/gdm/util.js gnome-shell-3.30.2.build-2/js/gdm/util.js
+--- gnome-shell-3.30.2.build-1/js/gdm/util.js	2018-11-14 00:50:31.000000000 +0200
++++ gnome-shell-3.30.2.build-2/js/gdm/util.js	2019-04-17 12:26:39.672082249 +0300
 @@ -31,6 +31,7 @@
- const BANNER_MESSAGE_KEY = 'banner-message-enable';
- const BANNER_MESSAGE_TEXT_KEY = 'banner-message-text';
- const ALLOWED_FAILURES_KEY = 'allowed-failures';
-+const GUESTUSER_KEY = 'enable-guestuser';
+ var BANNER_MESSAGE_KEY = 'banner-message-enable';
+ var BANNER_MESSAGE_TEXT_KEY = 'banner-message-text';
+ var ALLOWED_FAILURES_KEY = 'allowed-failures';
++var GUESTUSER_KEY = 'enable-guestuser';
  
- const LOGO_KEY = 'logo';
- const DISABLE_USER_LIST_KEY = 'disable-user-list';
-@@ -529,8 +530,9 @@
-         // go back to the welcome screen.
+ var LOGO_KEY = 'logo';
+ var DISABLE_USER_LIST_KEY = 'disable-user-list';
+@@ -541,10 +542,9 @@
+         // After that, we go back to the welcome screen.
  
          this._failCounter++;
 -        let canRetry = retry && this._userName &&
--            this._failCounter < this._settings.get_int(ALLOWED_FAILURES_KEY);
+-            (this._reauthOnly ||
+-             this._failCounter < this._settings.get_int(ALLOWED_FAILURES_KEY));
+-
 +        let canRetry = retry && this._userName;     // let the user re-enter the password as
 +                                                    // many times as they want, they aren't
 +                                                    // going to brute-force it this way...
- 
          if (canRetry) {
              if (!this.hasPendingMessages) {
-diff -ruN gnome-shell.orig/po/de.po gnome-shell/po/de.po
---- gnome-shell.orig/po/de.po	2017-02-16 18:48:04.000000000 +0200
-+++ gnome-shell/po/de.po	2018-08-22 07:42:37.540611676 +0300
-@@ -343,6 +343,10 @@
- msgid "GNOME Shell Extensions"
- msgstr "GNOME-Shell-Erweiterungen"
+                 this._retry();
+diff -ruN gnome-shell-3.30.2.build-1/po/de.po gnome-shell-3.30.2.build-2/po/de.po
+--- gnome-shell-3.30.2.build-1/po/de.po	2019-04-17 10:37:49.000000000 +0300
++++ gnome-shell-3.30.2.build-2/po/de.po	2019-04-17 12:01:14.679323879 +0300
+@@ -352,6 +352,10 @@
+ msgid "There was an error loading the preferences dialog for %s:"
+ msgstr "Beim Laden des Einstellungsdialogs für %s ist ein Fehler aufgetreten:"
  
 +#: js/gdm/authPrompt.js:141
 +msgid "Login as guest"
 +msgstr "Als Gast anmelden"
 +
  #: js/gdm/authPrompt.js:147 js/ui/audioDeviceSelection.js:71
- #: js/ui/components/networkAgent.js:145 js/ui/components/polkitAgent.js:179
- #: js/ui/endSessionDialog.js:483 js/ui/extensionDownloader.js:195
-@@ -364,6 +368,10 @@
+ #: js/ui/components/networkAgent.js:117 js/ui/components/polkitAgent.js:153
+ #: js/ui/endSessionDialog.js:482 js/ui/extensionDownloader.js:197
+@@ -373,6 +377,10 @@
  msgid "Sign In"
  msgstr "Anmelden"
  
@@ -303,24 +297,24 @@ diff -ruN gnome-shell.orig/po/de.po gnome-shell/po/de.po
 +msgid "End session"
 +msgstr "Sitzung beenden"
 +
- #: js/gdm/loginDialog.js:285
+ #: js/gdm/loginDialog.js:319
  msgid "Choose Session"
  msgstr "Sitzung wählen"
-diff -ruN gnome-shell.orig/po/fi.po gnome-shell/po/fi.po
---- gnome-shell.orig/po/fi.po	2017-02-16 18:48:04.000000000 +0200
-+++ gnome-shell/po/fi.po	2018-08-22 07:42:37.544611751 +0300
-@@ -342,6 +342,10 @@
- msgid "GNOME Shell Extensions"
- msgstr "GNOME Shell -laajennukset"
+diff -ruN gnome-shell-3.30.2.build-1/po/fi.po gnome-shell-3.30.2.build-2/po/fi.po
+--- gnome-shell-3.30.2.build-1/po/fi.po	2018-11-14 00:50:31.000000000 +0200
++++ gnome-shell-3.30.2.build-2/po/fi.po	2019-04-17 12:02:57.833135200 +0300
+@@ -72,6 +72,10 @@
+ msgid "Configure GNOME Shell Extensions"
+ msgstr "Hallitse Gnome Shell -laajennuksia"
  
 +#: js/gdm/authPrompt.js:141
 +msgid "Login as guest"
 +msgstr "Kirjaudu vieraana"
 +
- #: js/gdm/authPrompt.js:147 js/ui/audioDeviceSelection.js:71
- #: js/ui/components/networkAgent.js:145 js/ui/components/polkitAgent.js:179
- #: js/ui/endSessionDialog.js:483 js/ui/extensionDownloader.js:195
-@@ -363,6 +367,10 @@
+ #: data/org.gnome.Shell.desktop.in.in:4
+ msgid "GNOME Shell"
+ msgstr "Gnome Shell"
+@@ -380,6 +384,10 @@
  msgid "Sign In"
  msgstr "Kirjaudu sisään"
  
@@ -328,24 +322,24 @@ diff -ruN gnome-shell.orig/po/fi.po gnome-shell/po/fi.po
 +msgid "End session"
 +msgstr "Lopeta istunto"
 +
- #: js/gdm/loginDialog.js:285
+ #: js/gdm/loginDialog.js:319
  msgid "Choose Session"
  msgstr "Valitse istunto"
-diff -ruN gnome-shell.orig/po/fr.po gnome-shell/po/fr.po
---- gnome-shell.orig/po/fr.po	2017-02-14 00:21:02.000000000 +0200
-+++ gnome-shell/po/fr.po	2018-08-22 07:42:37.544611751 +0300
-@@ -353,6 +353,10 @@
- msgid "GNOME Shell Extensions"
- msgstr "Extensions GNOME Shell"
+diff -ruN gnome-shell-3.30.2.build-1/po/fr.po gnome-shell-3.30.2.build-2/po/fr.po
+--- gnome-shell-3.30.2.build-1/po/fr.po	2019-04-17 10:37:49.000000000 +0300
++++ gnome-shell-3.30.2.build-2/po/fr.po	2019-04-17 12:03:39.001859724 +0300
+@@ -64,6 +64,10 @@
+ msgid "Configure GNOME Shell Extensions"
+ msgstr "Configurer les extensions Shell de GNOME"
  
 +#: js/gdm/authPrompt.js:141
 +msgid "Login as guest"
 +msgstr "Connectez-vous comme invité"
 +
- #: js/gdm/authPrompt.js:147 js/ui/audioDeviceSelection.js:71
- #: js/ui/components/networkAgent.js:145 js/ui/components/polkitAgent.js:179
- #: js/ui/endSessionDialog.js:483 js/ui/extensionDownloader.js:195
-@@ -374,6 +378,10 @@
+ #: data/org.gnome.Shell.desktop.in.in:4
+ msgid "GNOME Shell"
+ msgstr "Shell de GNOME"
+@@ -382,6 +386,10 @@
  msgid "Sign In"
  msgstr "Se connecter"
  
@@ -353,24 +347,24 @@ diff -ruN gnome-shell.orig/po/fr.po gnome-shell/po/fr.po
 +msgid "End session"
 +msgstr "Fin de session"
 +
- #: js/gdm/loginDialog.js:285
+ #: js/gdm/loginDialog.js:319
  msgid "Choose Session"
  msgstr "Choisir une session"
-diff -ruN gnome-shell.orig/po/sv.po gnome-shell/po/sv.po
---- gnome-shell.orig/po/sv.po	2017-02-16 18:48:04.000000000 +0200
-+++ gnome-shell/po/sv.po	2018-08-22 07:42:37.544611751 +0300
-@@ -323,6 +323,10 @@
- msgid "GNOME Shell Extensions"
- msgstr "Tillägg för GNOME-skal"
+diff -ruN gnome-shell-3.30.2.build-1/po/sv.po gnome-shell-3.30.2.build-2/po/sv.po
+--- gnome-shell-3.30.2.build-1/po/sv.po	2019-04-17 10:37:49.000000000 +0300
++++ gnome-shell-3.30.2.build-2/po/sv.po	2019-04-17 12:01:55.832045706 +0300
+@@ -331,6 +331,10 @@
+ msgid "There was an error loading the preferences dialog for %s:"
+ msgstr "Det uppstod ett fel vid inläsning av inställningsdialogen för %s:"
  
 +#: js/gdm/authPrompt.js:141
 +msgid "Login as guest"
 +msgstr "Logga in som gäst"
 +
  #: js/gdm/authPrompt.js:147 js/ui/audioDeviceSelection.js:71
- #: js/ui/components/networkAgent.js:145 js/ui/components/polkitAgent.js:179
- #: js/ui/endSessionDialog.js:483 js/ui/extensionDownloader.js:195
-@@ -344,6 +348,10 @@
+ #: js/ui/components/networkAgent.js:117 js/ui/components/polkitAgent.js:153
+ #: js/ui/endSessionDialog.js:482 js/ui/extensionDownloader.js:197
+@@ -352,6 +356,10 @@
  msgid "Sign In"
  msgstr "Logga in"
  
@@ -378,6 +372,6 @@ diff -ruN gnome-shell.orig/po/sv.po gnome-shell/po/sv.po
 +msgid "End session"
 +msgstr "Avsluta sessionen"
 +
- #: js/gdm/loginDialog.js:285
+ #: js/gdm/loginDialog.js:319
  msgid "Choose Session"
  msgstr "Välj session"
