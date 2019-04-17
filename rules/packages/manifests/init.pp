@@ -43,8 +43,8 @@ class packages {
     , 'puavo-wlanmapper'
     , 'puavo-wlangw'
     , 'puavomenu'
-    , 'ruby-puavowlan' ]:
-    # XXX buster'webkiosk-language-selector'
+    , 'ruby-puavowlan'
+    , 'webkiosk-language-selector' ]:
       ensure => present,
       tag    => [ 'tag_puavo' ];
   }

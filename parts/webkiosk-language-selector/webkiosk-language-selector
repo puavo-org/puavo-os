@@ -1,3 +1,26 @@
-#!/bin/sh
+#!/usr/bin/wish
 
-nw /usr/lib/webkiosk-language-selector/
+wm attributes . -fullscreen 1
+wm protocol . WM_DELETE_WINDOW { }      ;# do not allow window close
+
+set bg_color "#93b176"
+
+. configure -bg $bg_color
+
+frame .buttons -bg $bg_color
+
+font create buttonFont -family {Ubuntu Condensed} -size 20 -weight bold
+
+set button_opts [list -background $bg_color          \
+		      -borderwidth 0                 \
+	              -highlightbackground $bg_color \
+		      -font buttonFont               \
+		      -padx 80                       \
+		      -pady 20]
+
+button .buttons.en -text Start  {*}$button_opts -command { puts "en"; exit 0 }
+button .buttons.fi -text Aloita {*}$button_opts -command { puts "fi"; exit 0 }
+button .buttons.sv -text Börja  {*}$button_opts -command { puts "sv"; exit 0 }
+
+pack .buttons -fill y -expand 1
+pack .buttons.en .buttons.fi .buttons.sv -side right
