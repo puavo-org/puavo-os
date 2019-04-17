@@ -1,22 +1,22 @@
-diff -ruN gnome-shell.orig/js/ui/status/network.js gnome-shell/js/ui/status/network.js
---- gnome-shell.orig/js/ui/status/network.js	2017-06-13 15:06:18.084094143 +0300
-+++ gnome-shell/js/ui/status/network.js	2017-06-13 15:11:26.461382710 +0300
-@@ -365,8 +365,7 @@
+diff -ruN gnome-shell-3.30.2.build-5/js/ui/status/network.js gnome-shell-3.30.2.build-6/js/ui/status/network.js
+--- gnome-shell-3.30.2.build-5/js/ui/status/network.js	2019-04-17 12:45:11.472940702 +0300
++++ gnome-shell-3.30.2.build-6/js/ui/status/network.js	2019-04-17 12:54:46.826158478 +0300
+@@ -332,8 +332,7 @@
      },
  
-     _autoConnect: function() {
--        let connection = new NetworkManager.Connection();
--        this._client.add_and_activate_connection(connection, this._device, null, null);
+     _autoConnect() {
+-        let connection = new NM.SimpleConnection();
+-        this._client.add_and_activate_connection_async(connection, this._device, null, null, null);
 +        this._addAndActivateNewConnection(null);
      },
  
-     destroy: function() {
-@@ -944,14 +943,43 @@
-                 Util.spawn(['gnome-control-center', 'network', 'connect-8021x-wifi',
-                             this._device.get_path(), accessPoints[0].dbus_path]);
+     destroy() {
+@@ -923,14 +922,43 @@
+                 Util.spawn(['gnome-control-center', 'wifi', 'connect-8021x-wifi',
+                             this._device.get_path(), accessPoints[0].get_path()]);
              } else {
--                let connection = new NetworkManager.Connection();
--                this._client.add_and_activate_connection(connection, this._device, accessPoints[0].dbus_path, null)
+-                let connection = new NM.SimpleConnection();
+-                this._client.add_and_activate_connection_async(connection, this._device, accessPoints[0].get_path(), null, null)
 +                this._addAndActivateNewConnection(accessPoints[0].dbus_path);
              }
          }
@@ -24,7 +24,7 @@ diff -ruN gnome-shell.orig/js/ui/status/network.js gnome-shell/js/ui/status/netw
          this.close();
      },
  
-+    _addAndActivateNewConnection: function(dbus_path) {
++    _addAndActivateNewConnection(dbus_path) {
 +      let connection = new NetworkManager.Connection();
 +
 +      let cmd = '/usr/lib/puavo-ltsp-client/puavo-network-connections --ask-if-must-be-private';
@@ -54,7 +54,6 @@ diff -ruN gnome-shell.orig/js/ui/status/network.js gnome-shell/js/ui/status/netw
 +          dbus_path, null);
 +    },
 +
-     _notifySsidCb: function(accessPoint) {
+     _notifySsidCb(accessPoint) {
          if (accessPoint.get_ssid() != null) {
              accessPoint.disconnect(accessPoint._notifySsidId);
-Binääritiedostot gnome-shell.orig/js/ui/status/.network.js.swp ja gnome-shell/js/ui/status/.network.js.swp eroavat
