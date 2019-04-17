@@ -655,8 +655,8 @@ class packages {
     , 'epiphany-browser'
     , 'firefox-esr'     # XXX use 32-bit version of Firefox to conserve memory?
     , 'liferea'
-    , 'openjdk-8-jdk'
-    , 'openjdk-8-jre'
+    , 'openjdk-11-jdk'
+    , 'openjdk-11-jre'
     , 'php-cli'
     , 'php-sqlite3'
     , 'sqlite3' ]:
