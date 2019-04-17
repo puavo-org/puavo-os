@@ -23,4 +23,4 @@ button .buttons.fi -text Aloita {*}$button_opts -command { puts "fi"; exit 0 }
 button .buttons.sv -text Börja  {*}$button_opts -command { puts "sv"; exit 0 }
 
 pack .buttons -fill y -expand 1
-pack .buttons.en .buttons.fi .buttons.sv -side right
+pack .buttons.en .buttons.fi .buttons.sv -side left
