@@ -1,7 +1,7 @@
-diff -ruN gnome-shell.orig/js/ui/sessionMode.js gnome-shell/js/ui/sessionMode.js
---- gnome-shell.orig/js/ui/sessionMode.js	2017-06-07 10:03:40.689655163 +0300
-+++ gnome-shell/js/ui/sessionMode.js	2017-06-07 13:17:53.560344183 +0300
-@@ -47,7 +47,9 @@
+diff -ruN gnome-shell-3.30.2.build-3/js/ui/sessionMode.js gnome-shell-3.30.2.build-4/js/ui/sessionMode.js
+--- gnome-shell-3.30.2.build-3/js/ui/sessionMode.js	2019-04-17 12:34:15.649040481 +0300
++++ gnome-shell-3.30.2.build-4/js/ui/sessionMode.js	2019-04-17 12:44:39.076357325 +0300
+@@ -46,7 +46,9 @@
          isGreeter: true,
          isPrimary: true,
          unlockDialog: imports.gdm.loginDialog.LoginDialog,
@@ -12,13 +12,13 @@ diff -ruN gnome-shell.orig/js/ui/sessionMode.js gnome-shell/js/ui/sessionMode.js
          panel: {
              left: [],
              center: ['dateMenu'],
-diff -ruN gnome-shell.orig/js/ui/status/network.js gnome-shell/js/ui/status/network.js
---- gnome-shell.orig/js/ui/status/network.js	2017-02-16 18:48:04.000000000 +0200
-+++ gnome-shell/js/ui/status/network.js	2017-06-07 13:19:01.065513829 +0300
-@@ -1663,7 +1663,7 @@
+diff -ruN gnome-shell-3.30.2.build-3/js/ui/status/network.js gnome-shell-3.30.2.build-4/js/ui/status/network.js
+--- gnome-shell-3.30.2.build-3/js/ui/status/network.js	2018-11-14 00:50:31.000000000 +0200
++++ gnome-shell-3.30.2.build-4/js/ui/status/network.js	2019-04-17 12:45:11.472940702 +0300
+@@ -1681,7 +1681,7 @@
      },
  
-     _sessionUpdated: function() {
+     _sessionUpdated() {
 -        let sensitive = !Main.sessionMode.isLocked && !Main.sessionMode.isGreeter;
 +        let sensitive = !Main.sessionMode.isLocked;
          this.menu.setSensitive(sensitive);
