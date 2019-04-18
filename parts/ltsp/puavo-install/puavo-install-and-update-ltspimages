@@ -246,6 +246,7 @@ cleanup_previous_runs() {
     printf %s "$old_imagesync_files" \
       | fgrep -vx "${images_dir}/${preserve_imagefile}" \
       | fgrep -vx "${images_dir}/${preserve_rdifffile}" \
+      | fgrep -vx "${images_dir}/${preserve_rdifffile}.tmp" \
       | xargs -r -d'\n' -L1 rm -f
   fi
 }
