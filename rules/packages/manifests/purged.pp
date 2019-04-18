@@ -29,7 +29,7 @@ class packages::purged {
     , 'texlive-pictures-doc'
     , 'texlive-pstricks-doc'
 
-    , 'tftpd-hpa' ]             # this is suggested by ltsp-server, but
+    , 'tftpd-hpa' ]:            # this is suggested by ltsp-server, but
                                 # we do not actually use tftpd on ltsp-server
                                 # (we use a separate boot server)
       tag => [ 'tag_debian_desktop' ];
