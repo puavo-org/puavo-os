@@ -694,7 +694,7 @@ class packages {
   $nvidia_dkms_340_module   = 'nvidia-legacy-340xx/340.107'
   $nvidia_dkms_390_module   = 'nvidia-legacy-390xx/390.116'
   $nvidia_dkms_410_module   = 'nvidia-current/410.104'
-  $r8168_module             = 'r8168/8.043.02'
+  $r8168_module             = 'r8168/8.046.00'
   # XXX buster $virtualbox_module        = 'virtualbox/6.0.4'
 
   $all_dkms_modules = [ $broadcom_sta_dkms_module
