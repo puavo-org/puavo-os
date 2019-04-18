@@ -185,6 +185,7 @@ class packages {
     , 'network-manager-openvpn-gnome'
     , 'network-manager-vpnc-gnome'
     , 'nextcloud-desktop'
+    , 'nextcloud-desktop-cmd'
     , 'notify-osd'
     , 'onboard'
     , 'onboard-data'
