@@ -678,10 +678,6 @@ class packages {
   #
 
   @package {
-# XXX buster ... could we drop this completely?
-#   'nwjs':
-#     tag => [ 'tag_web', 'tag_puavo', ];
-
     [ 'faenza-icon-theme' ]:
       tag => [ 'tag_themes', 'tag_puavo', ];
 

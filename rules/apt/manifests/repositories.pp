@@ -2,7 +2,7 @@ class apt::repositories {
   include ::apt
 
   $other_releases = $debianversioncodename ? {
-                      'buster' => [],
+                      'buster' => {},
                       default  => {
                         'jessie' => 80,
                         'buster' => 60,

@@ -47,7 +47,6 @@ class image::bundle::desktop {
 
   Package <| tag == 'tag_debian_desktop'
           or tag == 'tag_debian_desktop_backports' |>
-          # XXX buster or tag == 'tag_ubuntu_desktop' |>
 
   ::Flatpak::Install <| |>
 }
