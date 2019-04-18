@@ -4,17 +4,9 @@ class graphics_drivers {
 
   $glx_packages = [ 'glx-alternative-mesa', 'libgl1-mesa-glx', 'update-glx' ]
 
-  case $debianversioncodename {
-    'buster': {
-      # XXX update this list
-      $nvidia_packages = []
-    }
-    'stretch': {
-      $nvidia_packages = [ 'nvidia-legacy-304xx-kernel-dkms'
-                         , 'nvidia-legacy-340xx-kernel-dkms'
-                         , 'nvidia-kernel-dkms' ]
-    }
-  }
+  $nvidia_packages = [ 'nvidia-legacy-340xx-kernel-dkms'
+                     , 'nvidia-legacy-390xx-kernel-dkms'
+                     , 'nvidia-kernel-dkms' ]
 
   ::puavo_conf::script {
     'setup_graphics_drivers':
