@@ -83,7 +83,8 @@ class adm {
       mode    => '0440';
 
     $adm::home_basedir:
-      ensure  => directory;
+      ensure  => directory,
+      replace => false;
   }
 
   # sets up $common_group as well.
