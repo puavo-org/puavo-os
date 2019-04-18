@@ -1,0 +1,39 @@
+Description: Make the build reproducible
+Author: Chris Lamb <lamby@debian.org>
+Last-Update: 2016-07-18
+
+--- vtun-3.0.3.orig/configure.in
++++ vtun-3.0.3/configure.in
+@@ -274,6 +274,12 @@ changequote(<,>)
+ REL=`echo 'BRANCH-3_X' | tr -d '$: \-' | sed 's/^[A-Za-z]*//' | sed 's/\_/\./'`
+ changequote([,])
+ 
+-AC_DEFINE_UNQUOTED(VTUN_VER, "$REL `date '+%m/%d/%Y'`")
++if test -n "$SOURCE_DATE_EPOCH"; then
++	BUILD_DATE=`date --utc --date="@${SOURCE_DATE_EPOCH}" '+%m/%d/%Y'`
++else
++	BUILD_DATE=`date '+%m/%d/%Y'`
++fi
++
++AC_DEFINE_UNQUOTED(VTUN_VER, "$REL $BUILD_DATE")
+ 
+ AC_OUTPUT(Makefile)
+
+--- vtun-3.0.3.orig/configure
++++ vtun-3.0.3/configure
+@@ -6539,9 +6539,14 @@ echo "${ECHO_T}" >&6
+ 
+ REL=`echo 'BRANCH-3_X' | tr -d '$: \-' | sed 's/^[A-Za-z]*//' | sed 's/\_/\./'`
+ 
++if test -n "$SOURCE_DATE_EPOCH"; then
++	BUILD_DATE=`date --utc --date="@${SOURCE_DATE_EPOCH}" '+%m/%d/%Y'`
++else
++	BUILD_DATE=`date '+%m/%d/%Y'`
++fi
+ 
+ cat >>confdefs.h <<_ACEOF
+-#define VTUN_VER "$REL `date '+%m/%d/%Y'`"
++#define VTUN_VER "$REL $BUILD_DATE"
+ _ACEOF
+ 
+ 

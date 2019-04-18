@@ -6,4 +6,7 @@
 05-unix98pty.patch
 06-ipv6.patch
 07-64bits-segfault.patch
-08-wait-for-tunnelcmd-setup.patch
+09-client-uses-lot-of-CPU-after-a-SIGHUP.patch
+10-reproducible-build.patch
+11-libssl-1.1.patch
+12-wait-for-tunnelcmd-setup.patch

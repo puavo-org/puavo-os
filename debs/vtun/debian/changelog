@@ -1,3 +1,10 @@
+vtun (3.0.2-4+puavo2) buster; urgency=medium
+
+  * Added patches from the vtun-package in Debian Buster
+    so that this can be compiled on Buster.
+
+ -- Puavo Org <dev@opinsys.fi>  Thu, 18 Apr 2019 14:34:10 +0300
+
 vtun (3.0.2-4+puavo1) buster; urgency=medium
 
   * Added a patch to make vtun wait for subprocess resposible for
