@@ -671,19 +671,6 @@ class packages {
 #  @package {
 #    [ 'ttf-ubuntu-font-family' ]:
 #      tag => [ 'tag_fonts', 'tag_ubuntu_desktop', ];
-#
-#    [ 'edubuntu-wallpapers'
-#    , 'ubuntu-wallpapers-lucid'
-#    , 'ubuntu-wallpapers-precise'
-#    , 'ubuntu-wallpapers-quantal'
-#    , 'ubuntu-wallpapers-raring'
-#    , 'ubuntu-wallpapers-saucy'
-#    , 'ubuntu-wallpapers-trusty'
-#    , 'ubuntu-wallpapers-utopic'
-#    , 'ubuntu-wallpapers-vivid'
-#    , 'ubuntu-wallpapers-wily'
-#    , 'ubuntu-wallpapers-xenial' ]:
-#      tag => [ 'tag_wallpapers', 'tag_ubuntu_desktop', ];
 #  }
 
   #

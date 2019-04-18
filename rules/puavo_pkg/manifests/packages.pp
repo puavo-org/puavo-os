@@ -52,6 +52,7 @@ class puavo_pkg::packages {
 			, 'spotify-client'
 			, 'tilitin'
 			, 't-lasku'
+			, 'ubuntu-wallpapers'
 			, 'vidyo-client'
 			, 'vstloggerpro' ]
 

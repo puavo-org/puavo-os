@@ -4,6 +4,7 @@ class gdm {
   include ::dpkg
   include ::guest
   include ::packages
+  include ::puavo_pkg::packages
   include ::puavo_conf
 
   ::dpkg::simpledivert {
@@ -21,7 +22,7 @@ class gdm {
     '/etc/gdm3/background.img':
       ensure  => link,
       replace => false, # just initial setup, see setup_loginscreen_background
-      # XXX buster require => [ Package['gdm3'], Package['ubuntu-wallpapers-saucy'], ],
+      require => [ Package['gdm3'], Puavo_pkg::Install['ubuntu-wallpapers'], ],
       target  => '/usr/share/backgrounds/Grass_by_Jeremy_Hill.jpg';
 
     '/etc/gdm3/daemon.conf':
@@ -91,6 +92,7 @@ class gdm {
   Package <|
        title == gdm3
     or title == puavo-ltsp-client
-    or title == ubuntu-wallpapers-saucy
   |>
+
+  Puavo_pkg::Install <| title == ubuntu-wallpapers |>
 }
