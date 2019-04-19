@@ -1,79 +1,115 @@
---- mutter.build.0/src/backends/meta-monitor-config.c	2017-02-16 18:24:00.000000000 +0200
-+++ mutter.build.3/src/backends/meta-monitor-config.c	2017-11-01 14:58:35.249271917 +0200
+diff -ruN mutter.0/src/backends/meta-monitor-config-migration.c mutter.5/src/backends/meta-monitor-config-migration.c
+--- mutter.0/src/backends/meta-monitor-config-migration.c	2018-07-14 21:49:25.000000000 +0300
++++ mutter.5/src/backends/meta-monitor-config-migration.c	2019-04-19 09:57:24.932363764 +0300
 @@ -37,6 +37,7 @@
- #include "boxes-private.h"
- #include "meta-monitor-config.h"
+ #include "backends/meta-monitor-config-migration.h"
  
+ #include <gio/gio.h>
 +#include <stdlib.h>
  #include <string.h>
- #include <clutter/clutter.h>
- #include <libupower-glib/upower.h>
-@@ -793,8 +794,21 @@
- static void
- meta_monitor_config_load (MetaMonitorConfig *self)
- {
--  if (self->user_file && load_config_file (self, self->user_file))
--    return;
+ 
+ #include "backends/meta-monitor-config-manager.h"
+@@ -1158,9 +1159,14 @@
+   g_autoptr (GFile) backup_file = NULL;
+   g_autofree char *user_file_path = NULL;
+   g_autoptr (GFile) user_file = NULL;
++  char *monitors_file_path;
++
++  monitors_file_path = getenv("MUTTER_MONITOR_FILENAME");
++  if (monitors_file_path == NULL)
++    monitors_file_path = "monitors.xml";
+ 
+   user_file_path = g_build_filename (g_get_user_config_dir (),
+-                                     "monitors.xml",
++                                     monitors_file_path,
+                                      NULL);
+   user_file = g_file_new_for_path (user_file_path);
+   backup_path = g_build_filename (g_get_user_config_dir (),
+@@ -1173,8 +1179,8 @@
+                     NULL, NULL, NULL,
+                     error))
+     {
+-      g_warning ("Failed to make a backup of monitors.xml: %s",
+-                 (*error)->message);
++      g_warning ("Failed to make a backup of %s: %s",
++                 monitors_file_path, (*error)->message);
+       g_clear_error (error);
+     }
+ 
+diff -ruN mutter.0/src/backends/meta-monitor-config-store.c mutter.5/src/backends/meta-monitor-config-store.c
+--- mutter.0/src/backends/meta-monitor-config-store.c	2018-07-14 21:49:25.000000000 +0300
++++ mutter.5/src/backends/meta-monitor-config-store.c	2019-04-19 11:07:13.199170777 +0300
+@@ -24,6 +24,7 @@
+ #include "backends/meta-monitor-config-store.h"
+ 
+ #include <gio/gio.h>
++#include <stdlib.h>
+ #include <string.h>
+ 
+ #include "backends/meta-monitor-config-manager.h"
+@@ -1487,13 +1488,28 @@
+   MetaMonitorConfigStore *config_store = META_MONITOR_CONFIG_STORE (object);
+   char *user_file_path;
+   GError *error = NULL;
++  char *monitors_file_path;
 +  char *mutter_allow_configuration;
 +  gboolean load_user_config = TRUE;
 +
-+  if (self->user_file) {
-+    /* If MUTTER_ALLOW_CONFIGURATION is set and does not contain "user",
-+     * do not load user configuration file. */
-+    mutter_allow_configuration = getenv("MUTTER_ALLOW_CONFIGURATION");
-+    if (mutter_allow_configuration != NULL) {
-+      if (strstr(mutter_allow_configuration, "user") == NULL)
-+        load_user_config = FALSE;
-+    }
-+
-+    if (load_user_config && load_config_file (self, self->user_file))
-+      return;
++  /* If MUTTER_ALLOW_CONFIGURATION is set and does not contain "user",
++   * do not load user configuration file. */
++  mutter_allow_configuration = getenv("MUTTER_ALLOW_CONFIGURATION");
++  if (mutter_allow_configuration != NULL) {
++    if (strstr(mutter_allow_configuration, "user") == NULL)
++      load_user_config = FALSE;
 +  }
-   if (self->system_file && load_config_file (self, self->system_file))
-     return;
- }
-@@ -1465,7 +1479,10 @@
-   unsigned n_outputs;
-   gboolean ok = FALSE;
-   int max_width, max_height;
--  gboolean use_stored_config;
-+  gboolean use_stored_config, do_configuration;
-+  char *mutter_allow_configuration;
 +
-+  do_configuration = TRUE;
++  monitors_file_path = getenv("MUTTER_MONITOR_FILENAME");
++  if (monitors_file_path == NULL)
++    monitors_file_path = "monitors.xml";
  
-   outputs = meta_monitor_manager_get_outputs (manager, &n_outputs);
-   meta_monitor_manager_get_screen_limits (manager, &max_width, &max_height);
-@@ -1486,7 +1503,22 @@
-   use_stored_config = !meta_monitor_manager_has_hotplug_mode_update (manager);
-   default_config = make_default_config (self, outputs, n_outputs, max_width, max_height, use_stored_config);
+   user_file_path = g_build_filename (g_get_user_config_dir (),
+-                                     "monitors.xml",
++                                     monitors_file_path,
+                                      NULL);
+   config_store->user_file = g_file_new_for_path (user_file_path);
  
--  if (default_config != NULL)
+-  if (g_file_test (user_file_path, G_FILE_TEST_EXISTS))
++  if (load_user_config && g_file_test (user_file_path, G_FILE_TEST_EXISTS))
+     {
+       if (!read_config_file (config_store, config_store->user_file, &error))
+         {
+diff -ruN mutter.0/src/backends/meta-monitor-manager.c mutter.5/src/backends/meta-monitor-manager.c
+--- mutter.0/src/backends/meta-monitor-manager.c	2019-04-19 08:02:46.653942851 +0300
++++ mutter.5/src/backends/meta-monitor-manager.c	2019-04-19 10:52:23.574658550 +0300
+@@ -487,6 +487,7 @@
+   MetaMonitorsConfigMethod method;
+   MetaMonitorsConfigMethod fallback_method =
+     META_MONITORS_CONFIG_METHOD_TEMPORARY;
++  char *mutter_allow_configuration;
+ 
+   use_stored_config = should_use_stored_config (manager);
+   if (use_stored_config)
+@@ -517,6 +518,16 @@
+         }
+     }
+ 
 +  /* If MUTTER_ALLOW_CONFIGURATION is set and does not contain "default",
 +   * do nothing. */
 +  mutter_allow_configuration = getenv("MUTTER_ALLOW_CONFIGURATION");
 +  if (mutter_allow_configuration != NULL) {
-+    if (strstr(mutter_allow_configuration, "default") == NULL)
-+      do_configuration = FALSE;
++    if (strstr(mutter_allow_configuration, "default") == NULL) {
++      g_warning ("Not applying default configuration because of MUTTER_ALLOW_CONFIGURATION settings");
++      return NULL;
++    }
 +  }
 +
-+  if (!do_configuration)
-+    {
-+      ok = FALSE;
-+      if (default_config != NULL) {
-+          config_unref (default_config);
-+      }
-+    }
-+  else if (default_config != NULL)
+   config = meta_monitor_config_manager_create_suggested (manager->config_manager);
+   if (config)
      {
-       ok = apply_configuration_with_lid (self, default_config, manager);
-       config_unref (default_config);
---- mutter.build.0/src/backends/meta-monitor-manager.c	2017-02-16 18:24:02.000000000 +0200
-+++ mutter.build.3/src/backends/meta-monitor-manager.c	2017-10-30 11:14:05.623418906 +0200
-@@ -811,6 +811,19 @@
-   guint transform;
-   guint output_index;
-   GPtrArray *crtc_infos, *output_infos;
+@@ -1910,6 +1921,19 @@
+   MetaMonitorsConfig *config;
+   GList *logical_monitor_configs = NULL;
+   GError *error = NULL;
 +  char *mutter_allow_configuration;
 +
 +  /* If MUTTER_ALLOW_CONFIGURATION is set and does not contain "temporary",
