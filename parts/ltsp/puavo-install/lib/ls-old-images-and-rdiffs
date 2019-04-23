@@ -34,8 +34,12 @@ lookup_old_rdiffs() {
 }
 
 lookup_temporary_files() {
-  find "$images_dir" -maxdepth 1 -type f -a -name '*.img.tmp'
-  find "$rdiffs_dir" -maxdepth 1 -type f -a -name '*.rdiff.tmp'
+  if [ -d "$images_dir" ]; then
+    find "$images_dir" -maxdepth 1 -type f -a -name '*.img.tmp'
+  fi
+  if [ -d "$rdiffs_dir" ]; then
+    find "$rdiffs_dir" -maxdepth 1 -type f -a -name '*.rdiff.tmp'
+  fi
 }
 
 managed_files_list=$(files_managed_by_puavo_bootserver_sync_images)
