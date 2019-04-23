@@ -40,7 +40,7 @@ let indicatorBox, icon, _desktopShown, _alreadyMinimizedWindows, box, _settings,
     //get currently focused window this was pulled from https://github.com/mathematicalcoffee/Gnome-Shell-Window-Buttons-Extension
 function _getWindowToControl () {
     let win = global.display.focus_window,
-    workspace = global.screen.get_active_workspace(),
+    workspace = global.workspace_manager.get_active_workspace(),
     windows = workspace.list_windows().filter(function (w) {
         return w.get_window_type() !== Meta.WindowType.DESKTOP;
     });
@@ -61,7 +61,7 @@ function _getWindowToControl () {
 }
     //toggles the desktop and icon when clicked
 function _showDesktop() {
-    let metaWorkspace = global.screen.get_active_workspace();
+    let metaWorkspace = global.workspace_manager.get_active_workspace();
     let windows = metaWorkspace.list_windows();
 
     if (_desktopShown) {
