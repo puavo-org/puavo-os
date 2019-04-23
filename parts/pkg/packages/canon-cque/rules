@@ -8,10 +8,16 @@ shift
 case "${command}" in
   configure)
     upstream_dir=$1
-    ln -fns "${upstream_dir}/opt/cel/ppd" /usr/share/ppd/cel
+    ln -fns "${upstream_dir}/opt/cel" /opt/cel
+    ln -fns /opt/cel/bin/sicgsfilter  /usr/lib/cups/filter/sicgsfilter
+    ln -fns /opt/cel/bin/sicnc        /usr/lib/cups/filter/sicnc
+    ln -fns /opt/cel/ppd              /usr/share/ppd/cel
     ;;
   unconfigure)
-    rm -f /usr/share/ppd/cel
+    rm -f /opt/cel \
+          /usr/lib/cups/filter/sicgsfilter \
+          /usr/lib/cups/filter/sicnc \
+          /usr/share/ppd/cel
     ;;
   unpack)
     upstream_pack=$1
