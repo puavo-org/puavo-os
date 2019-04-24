@@ -39,8 +39,12 @@ else
 _proxywrap_cmd := $(CURDIR)/.aux/proxywrap
 endif
 
-_chroot_cmd := sudo env 'PUAVO_CACHE_PROXY=$(_proxy_address)' .aux/chroot-cmd \
-                    '$(rootfs_dir)'
+_systemd_nspawn_machine_name := \
+  $(notdir $(rootfs_dir))-$(shell tr -dc A-Za-z0-9 < /dev/urandom | head -c8)
+_systemd_nspawn_cmd := sudo systemd-nspawn -D '$(rootfs_dir)' \
+			 -M '$(_systemd_nspawn_machine_name)' \
+			 -u '$(_adm_user)'                    \
+			 --setenv="PUAVO_CACHE_PROXY=$(_proxy_address)"
 
 _sudo := sudo $(_proxywrap_cmd)
 export _sudo
@@ -159,8 +163,8 @@ rootfs-image: $(rootfs_dir) $(image_dir)
 	    '$(rootfs_dir).var_cache_backup/'
 	$(_sudo) .aux/set-image-release '$(rootfs_dir)' '$(image_class)' \
 	    '$(notdir $(_image_file))' '$(release_name)'
-	$(_chroot_cmd) $(MAKE) -C '/puavo-os' make-release-logos
-	$(_chroot_cmd) $(MAKE) -C '/puavo-os' update-mime-database
+	$(_systemd_nspawn_cmd) $(MAKE) -C '/puavo-os' make-release-logos
+	$(_systemd_nspawn_cmd) $(MAKE) -C '/puavo-os' update-mime-database
 	$(_sudo) mksquashfs '$(rootfs_dir)' '$(_image_file).tmp'	\
 		-noappend -no-recovery -no-sparse -wildcards -comp lzo	\
 		-ef '.aux/$(image_class).excludes'		\
@@ -170,7 +174,8 @@ rootfs-image: $(rootfs_dir) $(image_dir)
 
 .PHONY: rootfs-shell
 rootfs-shell: $(rootfs_dir)
-	$(_chroot_cmd) '/puavo-os/.aux/proxywrap' sh -c 'cd ~ && exec bash'
+	$(_systemd_nspawn_cmd) '/puavo-os/.aux/proxywrap' \
+	   sh -c 'cd ~ && exec bash'
 
 .PHONY: rootfs-sync-repo
 rootfs-sync-repo: $(rootfs_dir)
@@ -182,7 +187,7 @@ rootfs-sync-repo: $(rootfs_dir)
 
 .PHONY: rootfs-update
 rootfs-update: rootfs-sync-repo
-	$(_chroot_cmd) $(MAKE) -C '/puavo-os' update
+	$(_systemd_nspawn_cmd) $(MAKE) -C '/puavo-os' update
 
 .PHONY: setup-buildhost
 setup-buildhost:
