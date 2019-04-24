@@ -25,7 +25,6 @@ class gnome_shell_extensions {
     , 'dash-to-panel@jderose9.github.com'
     , 'desktop-icons@csoriano'
     , 'hide-activities-button@gnome-shell-extensions.bookmarkd.xyz'
-    , 'hide-dash@xenatt.github.com'
     , 'hide-overview-search-entry@puavo.org'
     , 'hostinfo@puavo.org'
     , 'LogOutButton@kyle.aims.ac.za'
