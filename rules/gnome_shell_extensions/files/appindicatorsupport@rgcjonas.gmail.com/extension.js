@@ -23,11 +23,10 @@ const Util = Extension.imports.util
 
 let statusNotifierWatcher = null;
 let isEnabled = false;
-let watchDog = null;
 
 function init() {
-    watchDog = new NameWatchdog();
-    watchDog.onVanished = maybe_enable_after_name_available;
+    NameWatchdog.init();
+    NameWatchdog.onVanished = maybe_enable_after_name_available;
 
     //HACK: we want to leave the watchdog alive when disabling the extension,
     // but if we are being reloaded, we destroy it since it could be considered
@@ -35,9 +34,9 @@ function init() {
     if (typeof global['--appindicator-extension-on-reload'] == 'function')
         global['--appindicator-extension-on-reload']()
 
-    global['--appindicator-extension-on-reload'] = () => {
+    global['--appindicator-extension-on-reload'] = function() {
         Util.Logger.debug("Reload detected, destroying old watchdog")
-        watchDog.destroy();
+        NameWatchdog.destroy()
     }
 }
 
@@ -47,7 +46,7 @@ function init() {
 // monitor the bus manually to find out when the name vanished so we can reclaim it again.
 function maybe_enable_after_name_available() {
     // by the time we get called whe might not be enabled
-    if (isEnabled && !watchDog.isPresent && statusNotifierWatcher === null)
+    if (isEnabled && !NameWatchdog.isPresent && statusNotifierWatcher === null)
         statusNotifierWatcher = new StatusNotifierWatcher.StatusNotifierWatcher();
 }
 
@@ -67,29 +66,29 @@ function disable() {
 /**
  * NameWatchdog will monitor the ork.kde.StatusNotifierWatcher bus name for us
  */
-var NameWatchdog = class AppIndicators_NameWatchdog {
+const NameWatchdog = {
+    onAppeared: null,
+    onVanished: null,
 
-    constructor() {
-        this.onAppeared = null;
-        this.onVanished = null;
+    _watcher_id: null,
 
-        // will be set in the handlers which are guaranteed to be called at least once
-        this.isPresent = false;
+    isPresent: false, //will be set in the handlers which are guaranteed to be called at least once
 
+    init: function() {
         this._watcher_id = Gio.DBus.session.watch_name("org.kde.StatusNotifierWatcher", 0,
             this._appeared_handler.bind(this), this._vanished_handler.bind(this));
-    }
+    },
 
-    destroy() {
+    destroy: function() {
         Gio.DBus.session.unwatch_name(this._watcher_id);
-    }
+    },
 
-    _appeared_handler() {
+    _appeared_handler: function() {
         this.isPresent = true;
         if (this.onAppeared) this.onAppeared();
-    }
+    },
 
-    _vanished_handler() {
+    _vanished_handler: function() {
         this.isPresent = false;
         if (this.onVanished) this.onVanished();
     }

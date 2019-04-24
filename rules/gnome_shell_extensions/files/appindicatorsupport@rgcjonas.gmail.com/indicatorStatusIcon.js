@@ -14,9 +14,9 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 const Clutter = imports.gi.Clutter;
-const GObject = imports.gi.GObject;
 const St = imports.gi.St;
 
+const Lang = imports.lang;
 const Main = imports.ui.main;
 const Panel = imports.ui.panel;
 const PanelMenu = imports.ui.panelMenu;
@@ -31,10 +31,13 @@ const Util = Extension.imports.util;
 /*
  * IndicatorStatusIcon implements an icon in the system status area
  */
-var IndicatorStatusIcon = GObject.registerClass(
-class AppIndicators_IndicatorStatusIcon extends PanelMenu.Button {
-    _init(indicator) {
-        super._init(null, indicator._uniqueId);
+var IndicatorStatusIcon = new Lang.Class({
+    Name: 'IndicatorStatusIcon',
+    Extends: PanelMenu.Button,
+
+    _init: function(indicator) {
+        this.parent(null, 'FIXME'); //no name yet (?)
+
         this._indicator = indicator;
 
         this._iconBox = new AppIndicator.IconActor(indicator, Panel.PANEL_ICON_SIZE + 6);
@@ -46,6 +49,7 @@ class AppIndicators_IndicatorStatusIcon extends PanelMenu.Button {
         Util.connectSmart(this.actor, 'button-press-event', this, '_boxClicked')
 
         Util.connectSmart(this._indicator, 'ready',  this, '_display')
+        Util.connectSmart(this._indicator, 'menu',  this, '_updateMenu')
         Util.connectSmart(this._indicator, 'label',  this, '_updateLabel')
         Util.connectSmart(this._indicator, 'status', this, '_updateStatus')
 
@@ -58,9 +62,9 @@ class AppIndicators_IndicatorStatusIcon extends PanelMenu.Button {
 
         if (this._indicator.isReady)
             this._display()
-    }
+    },
 
-    _updateLabel() {
+    _updateLabel: function() {
         var label = this._indicator.label;
         if (label) {
             if (!this._label || !this._labelBin) {
@@ -80,28 +84,38 @@ class AppIndicators_IndicatorStatusIcon extends PanelMenu.Button {
                 delete this._label;
             }
         }
-    }
+    },
 
-    _updateStatus() {
+    _updateStatus: function() {
         if (this._indicator.status != AppIndicator.SNIStatus.PASSIVE)
             this.actor.show()
         else
             this.actor.hide()
-    }
+    },
 
-    _display() {
-        this._updateLabel()
-        this._updateStatus()
-
-        if (!this._menuClient) {
-            this._menuClient = new DBusMenu.Client(this._indicator.busName, this._indicator.menuPath)
-            this._menuClient.attachToMenu(this.menu)
+    _updateMenu: function() {
+        if (this._menuClient) {
+            this._menuClient.destroy();
+            this._menuClient = null;
+            this.menu.removeAll();
         }
 
-        Main.panel.addToStatusArea("appindicator-"+this._indicator.uniqueId, this, 1, 'right')
-    }
+        if (this._indicator.menuPath) {
+            this._menuClient = new DBusMenu.Client(this._indicator.busName,
+                                                   this._indicator.menuPath);
+            this._menuClient.attachToMenu(this.menu);
+        }
+    },
 
-    _boxClicked(actor, event) {
+    _display: function() {
+        this._updateLabel();
+        this._updateStatus();
+        this._updateMenu();
+
+        Main.panel.addToStatusArea("appindicator-"+this._indicator.uniqueId, this, 1, 'right')
+    },
+
+    _boxClicked: function(actor, event) {
         // if middle mouse button clicked send SecondaryActivate dbus event and do not show appindicator menu
         if (event.get_button() == 2) {
             Main.panel.menuManager._closeMenu(true, Main.panel.menuManager.activeMenu);

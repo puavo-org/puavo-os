@@ -17,6 +17,7 @@ const Gio = imports.gi.Gio
 const GLib = imports.gi.GLib
 const GObject = imports.gi.GObject
 
+const Lang = imports.lang
 const Signals = imports.signals
 
 var refreshPropertyOnProxy = function(proxy, property_name) {
@@ -50,7 +51,7 @@ var getUniqueBusNameSync = function(bus, name) {
     if (name[0] == ':')
         return name;
 
-    if (typeof bus === "undefined" || !bus)
+    if (!bus)
         bus = Gio.DBus.session;
 
     let variant_name = new GLib.Variant("(s)", [name]);
@@ -62,7 +63,7 @@ var getUniqueBusNameSync = function(bus, name) {
 }
 
 var traverseBusNames = function(bus, cancellable, callback) {
-    if (typeof bus === "undefined" || !bus)
+    if (!bus)
         bus = Gio.DBus.session;
 
     if (typeof(callback) !== "function")
@@ -89,7 +90,7 @@ var traverseBusNames = function(bus, cancellable, callback) {
 }
 
 var introspectBusObject = function(bus, name, cancellable, filterFunction, targetCallback, path) {
-    if (typeof path === "undefined" || !path)
+    if (!path)
         path = "/";
 
     if (typeof targetCallback !== "function")
@@ -105,7 +106,7 @@ var introspectBusObject = function(bus, name, cancellable, filterFunction, targe
                 let node_info = Gio.DBusNodeInfo.new_for_xml(introspection);
 
                 if ((typeof filterFunction === "function" && filterFunction(node_info) === true) ||
-                    typeof filterFunction === "undefined" || !filterFunction) {
+                    !filterFunction) {
                     targetCallback(name, path);
                 }
 
@@ -136,7 +137,7 @@ const connectSmart3A = function(src, signal, handler) {
     let id = src.connect(signal, handler)
 
     if (src.connect && (!(src instanceof GObject.Object) || GObject.signal_lookup('destroy', src))) {
-        let destroy_id = src.connect('destroy', () => {
+        let destroy_id = src.connect('destroy', function() {
             src.disconnect(id)
             src.disconnect(destroy_id)
         })
@@ -170,7 +171,7 @@ const connectSmart4A = function(src, signal, target, method) {
  * Usage:
  *      Util.connectSmart(srcOb, 'signal', tgtObj, 'handler')
  * or
- *      Util.connectSmart(srcOb, 'signal', () => { ... })
+ *      Util.connectSmart(srcOb, 'signal', function() { ... })
  */
 var connectSmart = function() {
     if (arguments.length == 4)
@@ -182,25 +183,40 @@ var connectSmart = function() {
 /**
  * Helper class for logging stuff
  */
-var Logger = class AppIndicators_Logger {
-    static _log(prefix, message) {
+var Logger = {
+    _log: function(prefix, message) {
         global.log("[AppIndicatorSupport-"+prefix+"] "+message)
-    }
+    },
 
-    static debug(message) {
+    debug: function(message) {
         // CHeck the shell env variable to get what level to use
         Logger._log("DEBUG", message);
-    }
+    },
 
-    static warn(message) {
+    warn: function(message) {
         Logger._log("WARN", message);
-    }
+    },
 
-    static error(message) {
+    error: function(message) {
         Logger._log("ERROR", message);
-    }
+    },
 
-    static fatal(message) {
+    fatal: function(message) {
         Logger._log("FATAL", message);
     }
 };
+
+/**
+ * Workaround for https://bugzilla.gnome.org/show_bug.cgi?id=734071
+ *
+ * Will append the given name with a number to distinguish code loaded later from the last loaded version
+ */
+var WORKAROUND_RELOAD_TYPE_REGISTER = function(name) {
+    return 'Gjs_' + name + '__' + global['--appindicator-loaded-count']
+}
+
+// this will only execute once when the extension is loaded
+if (!global['--appindicator-loaded-count'])
+    global['--appindicator-loaded-count'] = 1
+else
+    global['--appindicator-loaded-count']++

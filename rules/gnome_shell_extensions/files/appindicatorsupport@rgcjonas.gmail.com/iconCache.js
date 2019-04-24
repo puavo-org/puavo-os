@@ -17,6 +17,7 @@
 const GLib = imports.gi.GLib
 const GObject = imports.gi.GObject
 
+const Lang = imports.lang
 const Mainloop = imports.mainloop
 
 const Util = imports.misc.extensionUtils.getCurrentExtension().imports.util;
@@ -31,14 +32,16 @@ const LIFETIME_TIMESPAN = 5000; // milli-seconds
 const GC_INTERVAL = 10; // seconds
 
 // how to use: see IconCache.add, IconCache.get
-var IconCache = class AppIndicators_IconCache {
-    constructor() {
+var IconCache = new Lang.Class({
+    Name: 'IconCache',
+
+    _init: function() {
         this._cache = {};
         this._lifetime = {}; //we don't want to attach lifetime to the object
         this._destroyNotify = {};
-    }
+    },
 
-    add(id, o) {
+    add: function(id, o) {
         if (!(o && id))
             return null;
 
@@ -59,9 +62,9 @@ var IconCache = class AppIndicators_IconCache {
         this._checkGC();
 
         return o;
-    }
+    },
 
-    _remove(id) {
+    _remove: function(id) {
         if (!(id in this._cache))
             return;
 
@@ -80,27 +83,27 @@ var IconCache = class AppIndicators_IconCache {
         delete this._destroyNotify[id];
 
         this._checkGC();
-    }
+    },
 
-    _renewLifetime(id) {
+    _renewLifetime: function(id) {
         if (id in this._cache)
             this._lifetime[id] = new Date().getTime() + LIFETIME_TIMESPAN;
-    }
+    },
 
-    forceDestroy(id) {
+    forceDestroy: function(id) {
         this._remove(id);
-    }
+    },
 
     // removes everything from the cache
-    clear() {
+    clear: function() {
         for (let id in this._cache)
             this._remove(id)
 
         this._checkGC();
-    }
+    },
 
     // returns an object from the cache, or null if it can't be found.
-    get(id) {
+    get: function(id) {
         if (id in this._cache) {
             //Util.Logger.debug('IconCache: retrieving '+id);
             this._renewLifetime(id);
@@ -108,9 +111,9 @@ var IconCache = class AppIndicators_IconCache {
         }
 
         return null;
-    }
+    },
 
-    _checkGC() {
+    _checkGC: function() {
         let cacheIsEmpty = (Object.keys(this._cache).length === 0);
 
         if (!cacheIsEmpty && !this._gcTimeout) {
@@ -122,9 +125,9 @@ var IconCache = class AppIndicators_IconCache {
             GLib.Source.remove(this._gcTimeout);
             this._gcTimeout = 0;
         }
-    }
+    },
 
-    _gc() {
+    _gc: function() {
         var time = new Date().getTime();
         for (var id in this._cache) {
             if (this._cache[id].inUse) {
@@ -138,9 +141,9 @@ var IconCache = class AppIndicators_IconCache {
         }
 
         return true;
-    }
+    },
 
-    destroy() {
+    destroy: function() {
         this.clear();
     }
-};
+});

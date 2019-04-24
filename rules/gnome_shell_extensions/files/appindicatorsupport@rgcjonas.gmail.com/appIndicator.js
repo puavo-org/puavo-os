@@ -19,12 +19,13 @@ const Cogl = imports.gi.Cogl
 const GdkPixbuf = imports.gi.GdkPixbuf
 const Gio = imports.gi.Gio
 const GLib = imports.gi.GLib
-const GObject = imports.gi.GObject
 const Gtk = imports.gi.Gtk
 const St = imports.gi.St
 const Shell = imports.gi.Shell
+const Mainloop = imports.mainloop
 
 const Extension = imports.misc.extensionUtils.getCurrentExtension();
+const Lang = imports.lang
 const Signals = imports.signals
 
 const DBusMenu = Extension.imports.dbusMenu;
@@ -49,9 +50,10 @@ var SNIStatus = {
  * the AppIndicator class serves as a generic container for indicator information and functions common
  * for every displaying implementation (IndicatorMessageSource and IndicatorStatusIcon)
  */
-var AppIndicator = class AppIndicators_AppIndicator {
+var AppIndicator = new Lang.Class({
+    Name: 'AppIndicator',
 
-    constructor(bus_name, object) {
+    _init: function(bus_name, object) {
         this.busName = bus_name
         this._uniqueId = bus_name + object
 
@@ -65,16 +67,22 @@ var AppIndicator = class AppIndicators_AppIndicator {
                                           g_name: bus_name,
                                           g_object_path: object,
                                           g_flags: Gio.DBusProxyFlags.GET_INVALIDATED_PROPERTIES })
-        this._proxy.init_async(GLib.PRIORITY_DEFAULT, null, ((initable, result) => {
+        this._proxy.init_async(GLib.PRIORITY_DEFAULT, null, (function(initable, result) {
                 try {
                     initable.init_finish(result);
+                    this._checkIfReady();
 
-                    this.isReady = true
-                    this.emit('ready')
+                    if (!this.isReady && !this.menuPath) {
+                        let checks = 0;
+                        this._delayCheck = Mainloop.timeout_add_seconds(1, () => {
+                            Util.refreshPropertyOnProxy(this._proxy, 'Menu');
+                            return !this.isReady && ++checks < 3;
+                        });
+                    }
                 } catch(e) {
                     Util.Logger.warn("While intializing proxy for "+bus_name+object+": "+e)
                 }
-            }))
+            }).bind(this))
 
         this._proxyPropertyList = interface_info.properties.map((propinfo) => { return propinfo.name })
         this._addExtraProperty('XAyatanaLabel');
@@ -83,9 +91,37 @@ var AppIndicator = class AppIndicators_AppIndicator {
 
         Util.connectSmart(this._proxy, 'g-properties-changed', this, '_onPropertiesChanged')
         Util.connectSmart(this._proxy, 'g-signal', this, '_translateNewSignals')
-    }
+        Util.connectSmart(this._proxy, 'notify::g-name-owner', this, '_nameOwnerChanged')
+    },
 
-    _addExtraProperty(name) {
+    _checkIfReady: function() {
+        let wasReady = this.isReady;
+        let isReady = false;
+
+        if (this._proxy.g_name_owner && this.menuPath)
+            isReady = true;
+
+        this.isReady = isReady;
+
+        if (this.isReady && !wasReady) {
+            if (this._delayCheck) {
+                GLib.Source.remove(this._delayCheck);
+                delete this._delayCheck;
+            }
+
+            this.emit('ready');
+            return true;
+        }
+
+        return false;
+    },
+
+    _nameOwnerChanged: function() {
+        if (!this._proxy.g_name_owner)
+            this._checkIfReady();
+    },
+
+    _addExtraProperty: function(name) {
         let propertyProps = { configurable: false, enumerable: true };
 
         propertyProps.get = () => {
@@ -95,10 +131,10 @@ var AppIndicator = class AppIndicators_AppIndicator {
 
         Object.defineProperty(this._proxy, name, propertyProps);
         this._proxyPropertyList.push(name);
-    }
+    },
 
     // The Author of the spec didn't like the PropertiesChanged signal, so he invented his own
-    _translateNewSignals(proxy, sender, signal, params) {
+    _translateNewSignals: function(proxy, sender, signal, params) {
         let prop = null;
 
         if (signal.substr(0, 3) == 'New')
@@ -116,27 +152,30 @@ var AppIndicator = class AppIndicators_AppIndicator {
             if (this._proxyPropertyList.indexOf(prop + 'Name') > -1)
                 Util.refreshPropertyOnProxy(this._proxy, prop + 'Name')
         }
-    }
+    },
 
     //public property getters
     get title() {
         return this._proxy.Title;
-    }
+    },
     get id() {
         return this._proxy.Id;
-    }
+    },
     get uniqueId() {
         return this._uniqueId;
-    }
+    },
     get status() {
         return this._proxy.Status;
-    }
+    },
     get label() {
         return this._proxy.XAyatanaLabel;
-    }
+    },
     get menuPath() {
-        return this._proxy.Menu || "/MenuBar"
-    }
+        if (this._proxy.Menu == '/NO_DBUSMENU')
+            return null;
+
+        return this._proxy.Menu || '/MenuBar';
+    },
 
     get attentionIcon() {
         return [
@@ -144,7 +183,7 @@ var AppIndicator = class AppIndicators_AppIndicator {
             this._proxy.AttentionIconPixmap,
             this._proxy.IconThemePath
         ]
-    }
+    },
 
     get icon() {
         return [
@@ -152,7 +191,7 @@ var AppIndicator = class AppIndicators_AppIndicator {
             this._proxy.IconPixmap,
             this._proxy.IconThemePath
         ]
-    }
+    },
 
     get overlayIcon() {
         return [
@@ -160,12 +199,12 @@ var AppIndicator = class AppIndicators_AppIndicator {
             this._proxy.OverlayIconPixmap,
             this._proxy.IconThemePath
         ]
-    }
+    },
 
-    _onPropertiesChanged(proxy, changed, invalidated) {
+    _onPropertiesChanged: function(proxy, changed, invalidated) {
         let props = Object.keys(changed.deep_unpack())
 
-        props.forEach((property) => {
+        props.forEach(function(property) {
             // some property changes require updates on our part,
             // a few need to be passed down to the displaying code
 
@@ -187,56 +226,66 @@ var AppIndicator = class AppIndicators_AppIndicator {
             if (property == 'XAyatanaLabel')
                 this.emit('label')
 
+            if (property == 'Menu') {
+                if (!this._checkIfReady() && this.isReady)
+                    this.emit('menu')
+            }
+
             // status updates may cause the indicator to be hidden
             if (property == 'Status')
                 this.emit('status')
         }, this);
-    }
+    },
 
-    reset() {
+    reset: function() {
         //TODO: reload all properties, or do some other useful things
         this.emit('reset')
-    }
+    },
 
-    destroy() {
+    destroy: function() {
         this.emit('destroy')
 
         this.disconnectAll()
         delete this._proxy
-    }
 
-    open() {
+        if (this._delayCheck) {
+            GLib.Source.remove(this._delayCheck);
+            delete this._delayCheck;
+        }
+    },
+
+    open: function() {
         // we can't use WindowID because we're not able to get the x11 window id from a MetaWindow
         // nor can we call any X11 functions. Luckily, the Activate method usually works fine.
         // parameters are "an hint to the item where to show eventual windows" [sic]
         // ... and don't seem to have any effect.
         this._proxy.ActivateRemote(0, 0)
-    }
+    },
 
-    secondaryActivate() {
+    secondaryActivate: function () {
         this._proxy.SecondaryActivateRemote(0, 0)
-    }
+    },
 
-    scroll(dx, dy) {
+    scroll: function(dx, dy) {
         if (dx != 0)
             this._proxy.ScrollRemote(Math.floor(dx), 'horizontal')
 
         if (dy != 0)
             this._proxy.ScrollRemote(Math.floor(dy), 'vertical')
     }
-};
+});
 Signals.addSignalMethods(AppIndicator.prototype);
 
-var IconActor = GObject.registerClass(
-class AppIndicators_IconActor extends Shell.Stack {
+var IconActor = new Lang.Class({
+    Name: 'AppIndicatorIconActor',
+    Extends: Shell.Stack,
+    GTypeName: Util.WORKAROUND_RELOAD_TYPE_REGISTER('AppIndicatorIconActor'),
 
-    _init(indicator, icon_size) {
-        super._init({ reactive: true })
-        this.name = this.constructor.name;
-
-        let scale_factor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
-        this.width  = icon_size * scale_factor
-        this.height = icon_size * scale_factor
+    _init: function(indicator, icon_size) {
+        this.parent({ reactive: true })
+        let themeContext = St.ThemeContext.get_for_stage(global.stage);
+        this.width = icon_size * themeContext.scale_factor;
+        this.height = icon_size * themeContext.scale_factor;
 
         this._indicator     = indicator
         this._iconSize      = icon_size
@@ -252,17 +301,20 @@ class AppIndicators_IconActor extends Shell.Stack {
         Util.connectSmart(this._indicator, 'overlay-icon', this, '_updateOverlayIcon')
         Util.connectSmart(this._indicator, 'ready',        this, '_invalidateIcon')
 
-        Util.connectSmart(this, 'scroll-event', this, '_handleScrollEvent')
+        Util.connectSmart(themeContext, 'notify::scale-factor', this, '_updateScaleFactor')
 
         Util.connectSmart(Gtk.IconTheme.get_default(), 'changed', this, '_invalidateIcon')
 
         if (indicator.isReady)
             this._invalidateIcon()
+    },
 
-        this.connect('destroy', () => {
-            this._iconCache.destroy();
-        });
-    }
+    _updateScaleFactor: function(themeContext) {
+        this.width = this._iconSize * themeContext.scale_factor;
+        this.height = this._iconSize * themeContext.scale_factor;
+        this._updateIcon();
+        this._updateOverlayIcon();
+    },
 
     // Will look the icon up in the cache, if it's found
     // it will return it. Otherwise, it will create it and cache it.
@@ -270,7 +322,7 @@ class AppIndicators_IconActor extends Shell.Stack {
     // the returned icon anymore, make sure to check the .inUse property
     // and set it to false if needed so that it can be picked up by the garbage
     // collector.
-    _cacheOrCreateIconByName(iconSize, iconName, themePath) {
+    _cacheOrCreateIconByName: function(iconSize, iconName, themePath) {
         let id = iconName + '@' + iconSize + (themePath ? '##' + themePath : '')
 
         let icon = this._iconCache.get(id) || this._createIconByName(iconSize, iconName, themePath)
@@ -281,9 +333,9 @@ class AppIndicators_IconActor extends Shell.Stack {
         }
 
         return icon
-    }
+    },
 
-    _createIconByName(icon_size, icon_name, themePath) {
+    _createIconByName: function(icon_size, icon_name, themePath) {
         // real_icon_size will contain the actual icon size in contrast to the requested icon size
         var real_icon_size = icon_size
         var gicon = null
@@ -311,7 +363,7 @@ class AppIndicators_IconActor extends Shell.Stack {
             // we try to avoid messing with the default icon theme, so we'll create a new one if needed
             if (themePath) {
                 var icon_theme = new Gtk.IconTheme()
-                Gtk.IconTheme.get_default().get_search_path().forEach((path) => {
+                Gtk.IconTheme.get_default().get_search_path().forEach(function(path) {
                     icon_theme.append_search_path(path)
                 });
                 icon_theme.append_search_path(themePath)
@@ -329,10 +381,8 @@ class AppIndicators_IconActor extends Shell.Stack {
             icon_info = icon_theme.lookup_icon(icon_name, icon_size,
                                                Gtk.IconLookupFlags.GENERIC_FALLBACK)
 
-            // no icon? that's bad!
-            if (icon_info === null) {
-                Util.Logger.fatal("unable to lookup icon for "+icon_name);
-            } else { // we have an icon
+            // we have an icon
+            if (icon_info !== null) {
                 // the icon size may not match the requested size, especially with custom themes
                 if (icon_info.get_base_size() < icon_size) {
                     // stretched icons look very ugly, we avoid that and just show the smaller icon
@@ -348,10 +398,11 @@ class AppIndicators_IconActor extends Shell.Stack {
             return new St.Icon({ gicon: gicon, icon_size: real_icon_size })
         else
             return null
-    }
+    },
 
-    _createIconFromPixmap(iconSize, iconPixmapArray) {
-        let scale_factor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
+    _createIconFromPixmap: function(iconSize, iconPixmapArray) {
+        let themeContext = St.ThemeContext.get_for_stage(global.stage);
+        let scale_factor = themeContext.scale_factor;
         iconSize = iconSize * scale_factor
         // the pixmap actually is an array of pixmaps with different sizes
         // we use the one that is smaller or equal the iconSize
@@ -360,7 +411,7 @@ class AppIndicators_IconActor extends Shell.Stack {
         if (!iconPixmapArray || iconPixmapArray.length < 1)
             return null
 
-            let sortedIconPixmapArray = iconPixmapArray.sort((pixmapA, pixmapB) => {
+            let sortedIconPixmapArray = iconPixmapArray.sort(function(pixmapA, pixmapB) {
                 // we sort biggest to smallest
                 let areaA = pixmapA[0] * pixmapA[1]
                 let areaB = pixmapB[0] * pixmapB[1]
@@ -368,7 +419,7 @@ class AppIndicators_IconActor extends Shell.Stack {
                 return areaB - areaA
             })
 
-            let qualifiedIconPixmapArray = sortedIconPixmapArray.filter((pixmap) => {
+            let qualifiedIconPixmapArray = sortedIconPixmapArray.filter(function(pixmap) {
                 // we disqualify any pixmap that is bigger than our requested size
                 return pixmap[0] <= iconSize && pixmap[1] <= iconSize
             })
@@ -387,11 +438,9 @@ class AppIndicators_IconActor extends Shell.Stack {
                                 height,
                                 rowstride)
 
-                let scale_factor = 1
+                let scale_factor = themeContext.scale_factor;
                 if (height != 0)
                     scale_factor = iconSize / height
-                else
-                    scale_factor = St.ThemeContext.get_for_stage(global.stage).scale_factor
 
                 return new Clutter.Actor({
                     width: Math.min(width, iconSize),
@@ -406,10 +455,10 @@ class AppIndicators_IconActor extends Shell.Stack {
                 // we could log it here, but that doesn't really help in tracking it down.
                 return null
             }
-    }
+    },
 
     // updates the base icon
-    _updateIcon() {
+    _updateIcon: function() {
         // remove old icon
         if (this._mainIcon.get_child()) {
             let child = this._mainIcon.get_child()
@@ -446,10 +495,15 @@ class AppIndicators_IconActor extends Shell.Stack {
                 newIcon = this._createIconFromPixmap(this._iconSize, pixmap)
         }
 
-        this._mainIcon.set_child(newIcon)
-    }
+        if (!newIcon) {
+            Util.Logger.fatal("unable to update icon");
+            return;
+        }
 
-    _updateOverlayIcon() {
+        this._mainIcon.set_child(newIcon)
+    },
+
+    _updateOverlayIcon: function() {
         // remove old icon
         if (this._overlayIcon.get_child()) {
             let child = this._overlayIcon.get_child()
@@ -478,10 +532,15 @@ class AppIndicators_IconActor extends Shell.Stack {
         if (!newIcon && pixmap)
             newIcon = this._createIconFromPixmap(iconSize, pixmap)
 
-        this._overlayIcon.set_child(newIcon)
-    }
+        if (!newIcon) {
+            Util.Logger.fatal("unable to update overlay icon");
+            return;
+        }
 
-    _handleScrollEvent(actor, event) {
+        this._overlayIcon.set_child(newIcon)
+    },
+
+    _handleScrollEvent: function(actor, event) {
         if (actor != this)
             return Clutter.EVENT_PROPAGATE
 
@@ -502,13 +561,19 @@ class AppIndicators_IconActor extends Shell.Stack {
         }
 
         return Clutter.EVENT_STOP
-    }
+    },
 
     // called when the icon theme changes
-    _invalidateIcon() {
+    _invalidateIcon: function() {
         this._iconCache.clear()
 
         this._updateIcon()
         this._updateOverlayIcon()
+    },
+
+    destroy: function() {
+        this._iconCache.destroy()
+
+        this.parent()
     }
-});
+})

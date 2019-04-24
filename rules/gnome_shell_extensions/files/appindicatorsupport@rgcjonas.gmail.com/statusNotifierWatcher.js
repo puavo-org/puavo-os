@@ -18,6 +18,7 @@ const Gio = imports.gi.Gio
 const GLib = imports.gi.GLib
 const Gtk = imports.gi.Gtk
 
+const Lang = imports.lang
 const Mainloop = imports.mainloop
 const ShellConfig = imports.misc.config
 const Signals = imports.signals
@@ -42,41 +43,42 @@ const DEFAULT_ITEM_OBJECT_PATH = '/StatusNotifierItem';
 /*
  * The StatusNotifierWatcher class implements the StatusNotifierWatcher dbus object
  */
-var StatusNotifierWatcher = class AppIndicators_StatusNotifierWatcher {
+var StatusNotifierWatcher = new Lang.Class({
+    Name: 'StatusNotifierWatcher',
 
-    constructor() {
+    _init: function() {
         this._dbusImpl = Gio.DBusExportedObject.wrapJSObject(Interfaces.StatusNotifierWatcher, this);
         this._dbusImpl.export(Gio.DBus.session, WATCHER_OBJECT);
         this._cancellable = new Gio.Cancellable;
         this._everAcquiredName = false;
         this._ownName = Gio.DBus.session.own_name(WATCHER_BUS_NAME,
-                                                  Gio.BusNameOwnerFlags.NONE,
-                                                  this._acquiredName.bind(this),
-                                                  this._lostName.bind(this));
+                                  Gio.BusNameOwnerFlags.NONE,
+                                  Lang.bind(this, this._acquiredName),
+                                  Lang.bind(this, this._lostName));
         this._items = { };
         this._nameWatcher = { };
 
         this._seekStatusNotifierItems();
-    }
+    },
 
-    _acquiredName() {
+    _acquiredName: function() {
         this._everAcquiredName = true;
-    }
+    },
 
-    _lostName() {
+    _lostName: function() {
         if (this._everAcquiredName)
             Util.Logger.debug('Lost name' + WATCHER_BUS_NAME);
         else
             Util.Logger.warn('Failed to acquire ' + WATCHER_BUS_NAME);
-    }
+    },
 
 
     // create a unique index for the _items dictionary
-    _getItemId(bus_name, obj_path) {
+    _getItemId: function(bus_name, obj_path) {
         return bus_name + obj_path;
-    }
+    },
 
-    _registerItem(service, bus_name, obj_path) {
+    _registerItem: function(service, bus_name, obj_path) {
         let id = this._getItemId(bus_name, obj_path);
 
         if (this._items[id]) {
@@ -97,9 +99,9 @@ var StatusNotifierWatcher = class AppIndicators_StatusNotifierWatcher {
                                                             this._itemVanished.bind(this));
 
         this._dbusImpl.emit_property_changed('RegisteredStatusNotifierItems', GLib.Variant.new('as', this.RegisteredStatusNotifierItems));
-    }
+    },
 
-    _ensureItemRegistered(service, bus_name, obj_path) {
+    _ensureItemRegistered: function(service, bus_name, obj_path) {
         let id = this._getItemId(bus_name, obj_path);
 
         if (this._items[id]) {
@@ -109,9 +111,9 @@ var StatusNotifierWatcher = class AppIndicators_StatusNotifierWatcher {
         }
 
         this._registerItem(service, bus_name, obj_path)
-    }
+    },
 
-    _seekStatusNotifierItems() {
+    _seekStatusNotifierItems: function() {
         // Some indicators (*coff*, dropbox, *coff*) do not re-register again
         // when the plugin is enabled/disabled, thus we need to manually look
         // for the objects in the session bus that implements the
@@ -127,9 +129,9 @@ var StatusNotifierWatcher = class AppIndicators_StatusNotifierWatcher {
                 }
             })
         });
-    }
+    },
 
-    RegisterStatusNotifierItemAsync(params, invocation) {
+    RegisterStatusNotifierItemAsync: function(params, invocation) {
         // it would be too easy if all application behaved the same
         // instead, ayatana patched gnome apps to send a path
         // while kde apps send a bus name
@@ -157,50 +159,50 @@ var StatusNotifierWatcher = class AppIndicators_StatusNotifierWatcher {
         this._ensureItemRegistered(service, bus_name, obj_path);
 
         invocation.return_value(null);
-    }
+    },
 
-    _itemVanished(proxy, bus_name) {
+    _itemVanished: function(proxy, bus_name) {
         // FIXME: this is useless if the path name disappears while the bus stays alive (not unheard of)
         for (var i in this._items) {
             if (i.indexOf(bus_name) == 0) {
                 this._remove(i);
             }
         }
-    }
+    },
 
-    _remove(id) {
+    _remove: function(id) {
         this._items[id].destroy();
         delete this._items[id];
         Gio.DBus.session.unwatch_name(this._nameWatcher[id]);
         delete this._nameWatcher[id];
         this._dbusImpl.emit_signal('StatusNotifierItemUnregistered', GLib.Variant.new('(s)', id));
         this._dbusImpl.emit_property_changed('RegisteredStatusNotifierItems', GLib.Variant.new('as', this.RegisteredStatusNotifierItems));
-    }
+    },
 
-    RegisterNotificationHost(service) {
+    RegisterNotificationHost: function(service) {
         throw new Gio.DBusError('org.gnome.Shell.UnsupportedMethod',
                         'Registering additional notification hosts is not supported');
-    }
+    },
 
-    IsNotificationHostRegistered() {
+    IsNotificationHostRegistered: function() {
         return true;
-    }
+    },
 
-    ProtocolVersion() {
+    ProtocolVersion: function() {
         // "The version of the protocol the StatusNotifierWatcher instance implements." [sic]
         // in what syntax?
         return `${Extension.uuid} (KDE; compatible; mostly) GNOME Shell/${ShellConfig.PACKAGE_VERSION}`;
-    }
+    },
 
     get RegisteredStatusNotifierItems() {
         return Object.keys(this._items);
-    }
+    },
 
     get IsStatusNotifierHostRegistered() {
         return true;
-    }
+    },
 
-    destroy() {
+    destroy: function() {
         if (!this._isDestroyed) {
             // this doesn't do any sync operation and doesn't allow us to hook up the event of being finished
             // which results in our unholy debounce hack (see extension.js)
@@ -218,4 +220,4 @@ var StatusNotifierWatcher = class AppIndicators_StatusNotifierWatcher {
             this._isDestroyed = true;
         }
     }
-};
+});
