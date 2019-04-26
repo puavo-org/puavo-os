@@ -55,6 +55,7 @@ Commands:
   build             - build Puavo OS image and poweroff
   install           - install Puavo OS to this device and reboot
   kbd [layout]      - set keyboard layout
+  live              - switch to graphical mode
   make-install-disk - make a bootable usb flash drive or some such
   nmtui             - configure network (not available on netboot devices)
   poweroff          - poweroff the system in 5 seconds
@@ -150,6 +151,18 @@ EOF
     echo
 }
 
+darkdm_live() {
+    echo -n 'switching to graphical mode'
+    # needed due to some bug in Buster:
+    service accounts-daemon start || true
+    echo -n .; sleep 1
+    echo -n .; sleep 1
+    echo -n .; sleep 1
+
+    # switch to GUI mode (should stop puavo-darkdm as a side effect)
+    systemctl isolate graphical.target
+}
+
 darkdm_menu()
 {
     local command
@@ -179,11 +192,14 @@ darkdm_menu()
 	    build)
 		darkdm_build
 		;;
-            install)
+	    install)
 		darkdm_install
 		;;
-            kbd)
+	    kbd)
 		darkdm_kbd "$command_args"
+		;;
+	    live)
+		darkdm_live
 		;;
 	    make-install-disk)
 		puavo-make-install-disk
