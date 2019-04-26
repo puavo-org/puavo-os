@@ -315,6 +315,7 @@ proc handle_fileevent {devpath} {
     if {[catch { close $fh }]} {
       set state [dict get $diskdevices $devpath state]
       if {$state eq "verifying"} {
+        logger -p user.notice "verification failed on $devpath"
         set_devstate $devpath start_writing
       } else {
         set_devstate $devpath error
@@ -344,6 +345,8 @@ proc set_ui_status_to_nomedia {devpath} {
   if {![dict exists $diskdevices $devpath]} {
     return
   }
+
+  logger -p user.info "no media on device $devpath"
 
   set port_ui [dict get $diskdevices $devpath ui]
   if {[dict get $diskdevices $devpath state] eq "nomedia"} {
@@ -388,6 +391,8 @@ proc set_devstate {devpath state args} {
 
   switch -- $state {
     error {
+      logger -p user.warning "error occurred on device $devpath"
+
       close_if_open $devpath
       dict set diskdevices $devpath state error
 
@@ -396,6 +401,8 @@ proc set_devstate {devpath state args} {
     }
 
     finished {
+      logger -p user.noticee "finished writing to device $devpath"
+
       close_if_open $devpath
       dict set diskdevices $devpath state finished
 
@@ -428,6 +435,8 @@ proc set_devstate {devpath state args} {
     }
 
     nospaceondevice {
+      logger -p user.warning "not enough space on device $devpath"
+
       close_if_open $devpath
       dict set diskdevices $devpath state nospaceondevice
       set_rotating_label $port_ui messages \
@@ -446,12 +455,16 @@ proc set_devstate {devpath state args} {
     }
 
     start_writing {
+      logger -p user.notice "preparing to write to device $devpath"
+
       dict set diskdevices $devpath state start_writing
       start_preparation $devpath 41
     }
 
     verifying_after_write -
     verifying {
+      logger -p user.warning "verifying device $devpath"
+
       if {[quick_verify_check $devpath]} {
         set fh [start_verifying $devpath]
         dict set diskdevices $devpath fh $fh
@@ -462,11 +475,14 @@ proc set_devstate {devpath state args} {
         }
       } else {
         # if image is not in disk, move on to start_writing
+        logger -p user.warning "quick verification check failed on $devpath"
         set_devstate $devpath start_writing
       }
     }
 
     writing {
+      logger -p user.info "writing to device $devpath"
+
       set fh [start_writing $devpath]
       dict set diskdevices $devpath fh $fh
 
@@ -821,6 +837,8 @@ proc update_diskdevices {{force_ui_update false}} {
 
     # $devpath is gone from usbhubs, remove it and its UI
 
+    logger -p user.info "removing $devpath because it is no longer attached"
+
     destroy [dict get $diskdevices $devpath ui]
     close_if_open $devpath
     dict unset diskdevices $devpath
@@ -843,12 +861,14 @@ proc update_diskdevices {{force_ui_update false}} {
     dict for {product productinfo} $hubproducts {
       set portinfo [dict get $productinfo ports]
       if {[llength [dict keys $portinfo]] == 0} {
+        logger -p user.info "hub $hub_id/$product no longer has attached ports"
         dict unset usbhubs $hub_id $product
       }
     }
   }
   dict for {hub_id hubproducts} $usbhubs {
     if {[llength [dict keys $hubproducts]] == 0} {
+      logger -p user.info "hub $hub_id no longer has attached products"
       dict unset usbhubs $hub_id
     }
   }
@@ -878,6 +898,7 @@ proc update_diskdevices {{force_ui_update false}} {
           }
         } else {
           make_usbport_label $devpath $port_id $port_ui
+          logger -p user.info "device $devpath attached"
           dict set diskdevices $devpath [
             dict create fh            ""       \
                         image_size    ""       \
