@@ -12,7 +12,6 @@ subdirs         := admins                     \
                    core                       \
                    desktop-applet             \
                    devscripts                 \
-                   hw-log                     \
                    hw-tools                   \
                    ltsp                       \
                    pam                        \

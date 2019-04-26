@@ -178,13 +178,6 @@ Description: Puavo lxc developer tools
  Few scripts to manage lxc containers
  .
 
-Package: puavo-hw-log
-Architecture: any
-Depends: ${misc:Depends}, ruby, ohai
-Description: Log hardware information to fluentd
- Log hardware information to fluentd
- .
-
 Package: puavo-hw-tools
 Architecture: all
 Depends: ${misc:Depends},
