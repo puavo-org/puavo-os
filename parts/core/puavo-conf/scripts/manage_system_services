@@ -17,11 +17,6 @@ set services {
         -> /etc/systemd/system/cups-watchdog.service
     }}
 
-  { fluentd {
-      /etc/systemd/system/multi-user.target.wants/fluentd.service
-        -> /lib/systemd/system/fluentd.service
-    }}
-
   { google-cloud-print {
       /etc/systemd/system/multi-user.target.wants/google-cloud-print.service
          -> /etc/systemd/system/google-cloud-print.service
