@@ -78,6 +78,7 @@ Description: Puavo autopoweroff
 Package: puavo-usb-factory
 Architecture: all
 Depends: ${misc:Depends},
+ fonts-ubuntu,
  python3,
  tcl8.6,
  tcllib,

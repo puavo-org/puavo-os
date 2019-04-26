@@ -246,6 +246,7 @@ class packages {
       tag => [ 'tag_firmware', 'tag_debian_desktop', ];
 
     [ 'fontconfig'
+    , 'fonts-ubuntu'
     , 'gnome-font-viewer'
     , 'ttf-freefont'
     , 'xfonts-terminus'
