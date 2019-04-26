@@ -35,7 +35,7 @@ set -eu
 (
   while true; do
     openbox || true
-    logger -p local0.err -t puavo-usb-factory \
+    logger -p local0.err -t usb-factory-session \
            'openbox has exited or crashed, restarting it...'
     sleep 5
   done
@@ -54,14 +54,14 @@ xset -dpms
   # Start puavo-usb-factory and keep it running
   while true; do
     puavo-usb-factory || true
-    logger -p local0.err -t puavo-usb-factory \
+    logger -p local0.err -t usb-factory-session \
            'The USB stick factory process has exited or crashed, restarting it...'
     sleep 5
   done
 )
 
 # We should never get here...
-logger -p local0.err -t puavo-usb-factory \
+logger -p local0.err -t usb-factory-session \
        'The usb-factory-session script is exiting!  This should not happen!'
 
 exit 1
