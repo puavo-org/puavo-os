@@ -42,6 +42,10 @@ set diskdevices [dict create]
 set usbhubs     [dict create]
 set new_usbhubs [dict create]
 
+proc logger {args} {
+  catch { exec logger -t puavo-usb-factory {*}$args }
+}
+
 # XXX perhaps do not use cat, but open + read + close ?
 proc read_file {path} { exec cat $path }
 
@@ -482,7 +486,7 @@ proc get_device_size {devpath} {
   set full_devpath "${pci_path_dir}/${devpath}"
 
   if {[catch { set f [open $full_devpath r] } err]} {
-    puts stderr "error while opening $full_devpath: $err"
+    logger -p user.warning "error while opening $full_devpath: $err"
     return $device_size
   }
   catch {
@@ -514,7 +518,8 @@ proc check_files {} {
     if {[file exists $full_devpath]} {
       if {[dict get $devstate state] eq "nomedia"} {
         if {[catch { check_for_space_in_device $devpath } res]} {
-          puts stderr "error while checking for space in device: $res"
+          logger -p user.warning \
+                 "error while checking for space in device: $res"
           set_devstate $devpath error
         } elseif {$res} {
           set_devstate $devpath verifying
@@ -679,7 +684,7 @@ proc usbdevice_is_a_hub {usbpath} {
       return true
     }
   } on error {errmsg} {
-    puts stderr "error determining if $usbpath is a hub: $errmsg"
+    logger -p user.warning "error determining if $usbpath is a hub: $errmsg"
     return false
   }
 
@@ -728,7 +733,8 @@ proc update_new_usbhubs {} {
         }
 
         if {![regexp {^([0-9]+)\.(.*):} $usbport _ port_firstnum port_id]} {
-          puts stderr "cannot determine the first number of usb port"
+          logger -p user.warning \
+                 "cannot determine the first number of usb port"
           continue
         }
 
@@ -757,7 +763,7 @@ proc update_new_usbhubs {} {
       }
     }
   } on error {errmsg} {
-    puts stderr "error updating usbhubs: $errmsg"
+    logger -p user.warning "error updating usbhubs: $errmsg"
     return
   }
 
@@ -930,7 +936,7 @@ proc read_usb_labels_from_disk {} {
   try {
     set labels [::json::json2dict [read_file $usblabels_json_path]]
   } on error {errmsg} {
-    puts stderr "error reading usb labels from disk: $errmsg"
+    logger -p user.warning "error reading usb labels from disk: $errmsg"
     return
   }
 
@@ -969,6 +975,8 @@ proc scroll_topbanner {} {
   after 50 scroll_topbanner
 }
 
+logger -p user.notice "starting up"
+
 #
 # setup UI
 #
@@ -990,19 +998,20 @@ ttk::style configure Status.TLabel -foreground #c3c8cc -background #46606d
 try {
   set content_dir [get_content_dir]
 } on error {} {
-  puts stderr "could not get content dir"
+  logger -p user.err "could not get content dir"
   exit 1
 }
 try {
   set bg_image_path "${content_dir}/UI.png"
 } on error {} {
-  puts stderr "could not read background image from ${content_dir}/UI.png"
+  logger -p user.err \
+         "could not read background image from ${content_dir}/UI.png"
   exit 1
 }
 try {
   set ui_messages [::json::json2dict [read_file "${content_dir}/UI.json"]]
 } on error {} {
-  puts stderr "could not read ui messages from ${content_dir}/UI.json"
+  logger -p user.err "could not read ui messages from ${content_dir}/UI.json"
   exit 1
 }
 
@@ -1108,3 +1117,5 @@ update_image_info
 update_diskdevices_loop
 check_files
 roll_rotating_usb_labels 0
+
+logger -p user.info "gui done, processing events"
