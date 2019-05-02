@@ -110,10 +110,9 @@ def create_desktop_link(filename, program):
         chmod(filename, 0o755)
 
         # Mark the file as trusted (I hate you GNOME)
-        subprocess.Popen(['gvfs-set-attribute', filename,
-                          'metadata::trusted', 'yes'],
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE)
+        subprocess.Popen(['gio', 'set', filename, 'metadata::trusted', 'true'],
+                         stdout=subprocess.DEVNULL,
+                         stderr=subprocess.DEVNULL)
 
 
 def create_panel_link(program):
