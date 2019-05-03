@@ -140,7 +140,7 @@ import os.path
 
 import settings
 
-settings = settings.SETTINGS
+settings = settings.Settings()
 
 settings.prod_mode = args.prod
 settings.autohide = args.autohide

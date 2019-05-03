@@ -1,5 +1,5 @@
-# Program-wide runtime settings. Determined once at start-up, can be used
-# freely after that.
+# Program settings. Determined at startup, then used everywhere. The program
+# never *writes* any settings back to disk.
 
 # IMPORTANT NOTICE: Do not import GTK or Cairo or other such modules
 # here! This file is used in places where no graphical libraries have
@@ -157,7 +157,3 @@ class Settings:
                           "desktop directory")
             logging.error(str(exception))
             self.desktop_dir = None
-
-
-# Global settings
-SETTINGS = Settings()
