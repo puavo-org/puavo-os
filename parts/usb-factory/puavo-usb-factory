@@ -582,7 +582,7 @@ proc set_rotating_label {port_ui type messages} {
   global rotating_usb_labels
 
   if {$type eq "port"} {
-    set list_start [list {*}$messages {*}$messages]
+    set list_start [list $messages $messages]
     if {[info exists rotating_usb_labels($port_ui)]} {
       set list_end [lrange $rotating_usb_labels($port_ui) 2 3]
     } else {
