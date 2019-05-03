@@ -381,7 +381,10 @@ class Sidebar:
         else:
             avatar_tooltip = utils.localize(STRINGS['sb_avatar_hover'])
 
-        self.__avatar = buttons.AvatarButton(self, getuser(), avatar_image,
+        self.__avatar = buttons.AvatarButton(self,
+                                             self.__settings,
+                                             getuser(),
+                                             avatar_image,
                                              avatar_tooltip)
 
         # No profile editing for guest users
@@ -434,6 +437,7 @@ class Sidebar:
     # Creates a sidebar button
     def __create_button(self, y, data):
         button = buttons.SidebarButton(self,
+                                       self.__settings,
                                        utils.localize(data['title']),
                                        self.__icons[data['icon']],
                                        utils.localize(data.get('description', '')),

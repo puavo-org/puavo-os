@@ -93,7 +93,7 @@ class FavesList(Gtk.ScrolledWindow):
 
         logging.info('Faves list cleared')
 
-    def update(self, all_programs):
+    def update(self, all_programs, settings):
         """Recreates the fave buttons if program launch counts have
         changed enough since the last update."""
 
@@ -136,8 +136,12 @@ class FavesList(Gtk.ScrolledWindow):
             # use self.__parent as the parent, so popup menu handlers
             # will call the correct methods from the main window class
             button = buttons.ProgramButton(
-                self.__parent, program.name, program.icon,
-                program.description, data=program,
+                self.__parent,
+                settings,
+                program.name,
+                program.icon,
+                program.description,
+                data=program,
                 is_fave=True)
 
             button.connect('clicked', self.__parent.clicked_program_button)

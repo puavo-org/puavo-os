@@ -392,7 +392,11 @@ class PuavoMenu(Gtk.Window):
                         continue
 
                     button = buttons.MenuButton(
-                        self, menu.name, menu.icon, menu.description, menu,
+                        self,
+                        self.__settings,
+                        menu.name,
+                        menu.icon, menu.description,
+                        menu,
                         self.__menu_background)
 
                     button.connect('clicked', self.__clicked_menu_button)
@@ -404,8 +408,12 @@ class PuavoMenu(Gtk.Window):
                         continue
 
                     button = buttons.ProgramButton(
-                        self, program.name, program.icon,
-                        program.description, program)
+                        self,
+                        self.__settings,
+                        program.name,
+                        program.icon,
+                        program.description,
+                        program)
 
                     button.connect('clicked', self.clicked_program_button)
                     new_buttons.append(button)
@@ -421,8 +429,12 @@ class PuavoMenu(Gtk.Window):
                     continue
 
                 button = buttons.ProgramButton(
-                    self, program.name, program.icon,
-                    program.description, program)
+                    self,
+                    self.__settings,
+                    program.name,
+                    program.icon,
+                    program.description,
+                    program)
 
                 button.connect('clicked', self.clicked_program_button)
                 new_buttons.append(button)
@@ -539,7 +551,7 @@ class PuavoMenu(Gtk.Window):
     def remove_program_from_faves(self, p):
         logging.info('Removing program "%s" from the faves', p.name)
         p.uses = 0
-        self.__faves.update(self.menudata.programs)
+        self.__faves.update(self.menudata.programs, self.__settings)
 
     # Launch a program. This is a public method, it is called from other
     # files (buttons and faves) to launch programs.
@@ -550,7 +562,7 @@ class PuavoMenu(Gtk.Window):
         logging.info('Clicked program button "%s", usage counter is %d',
                      program.menudata_id, program.uses)
 
-        self.__faves.update(self.menudata.programs)
+        self.__faves.update(self.menudata.programs, self.__settings)
 
         if program.command is None:
             logging.error('No command defined for program "%s"', program.name)
@@ -730,7 +742,7 @@ class PuavoMenu(Gtk.Window):
         if self.__settings.enable_faves_saving:
             faves.load_use_counts(self.menudata.programs, self.__settings.user_dir)
 
-        self.__faves.update(self.menudata.programs)
+        self.__faves.update(self.menudata.programs, self.__settings)
         self.__faves_sep.show()
         self.__faves.show()
 
