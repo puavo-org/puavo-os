@@ -305,6 +305,12 @@ proc set_device_eta {devpath bytes_handled} {
   set_devstate $devpath progress $percentage $eta
 }
 
+proc dev_logid {devpath} {
+  global diskdevices pci_path_dir
+  set port_id [dict get $diskdevices $devpath port_id]
+  return "[get_label "port/${port_id}" $port_id] (${pci_path_dir}/${devpath})"
+}
+
 proc handle_fileevent {devpath} {
   global diskdevices
 
@@ -315,7 +321,7 @@ proc handle_fileevent {devpath} {
     if {[catch { close $fh }]} {
       set state [dict get $diskdevices $devpath state]
       if {$state eq "verifying"} {
-        logger -p user.notice "verification failed on $devpath"
+        logger -p user.notice "verification failed on [dev_logid $devpath]"
         set_devstate $devpath start_writing
       } else {
         set_devstate $devpath error
@@ -346,7 +352,7 @@ proc set_ui_status_to_nomedia {devpath} {
     return
   }
 
-  logger -p user.info "no media on device $devpath"
+  logger -p user.info "no media on [dev_logid $devpath]"
 
   set port_ui [dict get $diskdevices $devpath ui]
   if {[dict get $diskdevices $devpath state] eq "nomedia"} {
@@ -391,7 +397,7 @@ proc set_devstate {devpath state args} {
 
   switch -- $state {
     error {
-      logger -p user.warning "error occurred on device $devpath"
+      logger -p user.warning "error occurred on [dev_logid $devpath]"
 
       close_if_open $devpath
       dict set diskdevices $devpath state error
@@ -401,7 +407,7 @@ proc set_devstate {devpath state args} {
     }
 
     finished {
-      logger -p user.noticee "finished writing to device $devpath"
+      logger -p user.noticee "finished writing to [dev_logid $devpath]"
 
       close_if_open $devpath
       dict set diskdevices $devpath state finished
@@ -418,7 +424,7 @@ proc set_devstate {devpath state args} {
       set current_state [dict get $diskdevices $devpath state]
 
       if {$current_state ne "nomedia"} {
-        # preserve the ui attribute
+        # preserve the "port_id"- and "ui"-attributes
         dict set diskdevices $devpath fh            ""
         dict set diskdevices $devpath image_size    ""
         dict set diskdevices $devpath progress_list [list]
@@ -435,7 +441,7 @@ proc set_devstate {devpath state args} {
     }
 
     nospaceondevice {
-      logger -p user.warning "not enough space on device $devpath"
+      logger -p user.warning "not enough space on [dev_logid $devpath]"
 
       close_if_open $devpath
       dict set diskdevices $devpath state nospaceondevice
@@ -455,7 +461,7 @@ proc set_devstate {devpath state args} {
     }
 
     start_writing {
-      logger -p user.notice "preparing to write to device $devpath"
+      logger -p user.notice "preparing to write to [dev_logid $devpath]"
 
       dict set diskdevices $devpath state start_writing
       start_preparation $devpath 41
@@ -463,7 +469,7 @@ proc set_devstate {devpath state args} {
 
     verifying_after_write -
     verifying {
-      logger -p user.warning "verifying device $devpath"
+      logger -p user.warning "verifying device [dev_logid $devpath]"
 
       if {[quick_verify_check $devpath]} {
         set fh [start_verifying $devpath]
@@ -475,13 +481,14 @@ proc set_devstate {devpath state args} {
         }
       } else {
         # if image is not in disk, move on to start_writing
-        logger -p user.warning "quick verification check failed on $devpath"
+        logger -p user.warning \
+               "quick verification check failed on [dev_logid $devpath]"
         set_devstate $devpath start_writing
       }
     }
 
     writing {
-      logger -p user.info "writing to device $devpath"
+      logger -p user.info "writing to device [dev_logid $devpath]"
 
       set fh [start_writing $devpath]
       dict set diskdevices $devpath fh $fh
@@ -535,7 +542,7 @@ proc check_files {} {
       if {[dict get $devstate state] eq "nomedia"} {
         if {[catch { check_for_space_in_device $devpath } res]} {
           logger -p user.warning \
-                 "error while checking for space in device: $res"
+                 "error while checking for space on [dev_logid $devpath]: $res"
           set_devstate $devpath error
         } elseif {$res} {
           set_devstate $devpath verifying
@@ -605,13 +612,13 @@ proc make_usbport_label {devpath port_id port_ui {update false}} {
 
   if {$update} { destroy $port_ui }
 
-  set labelvar "port/${port_id}"
-  set usb_labels($labelvar) [get_label $labelvar $port_id]
+  set label_id "port/${port_id}"
+  set usb_labels($label_id) [get_label $label_id $port_id]
 
-  set_rotating_label $port_ui port $usb_labels($labelvar)
+  set_rotating_label $port_ui port $usb_labels($label_id)
 
   if {$writable_labels} {
-    ttk::entry $port_ui -textvariable usb_labels($labelvar) \
+    ttk::entry $port_ui -textvariable usb_labels($label_id) \
                         -font smallInfoFont -justify center -width 14
   } else {
     canvas $port_ui -background $default_background_color -height 42 \
@@ -621,7 +628,7 @@ proc make_usbport_label {devpath port_id port_ui {update false}} {
     set_usbport_image $port_ui flash_drive_white
     $port_ui create image 0 22 -image "${port_ui}_overlay_image" -anchor w
     $port_ui create text  120 18 -font smallInfoFont -tags port_label \
-             -text $usb_labels($labelvar)
+             -text $usb_labels($label_id)
   }
 }
 
@@ -791,12 +798,12 @@ proc update_diskdevices_loop {} {
   after 3000 update_diskdevices_loop
 }
 
-proc get_label {labelvar default_value} {
+proc get_label {label_id default_value} {
   global usb_labels
   set label [
     expr {
-      [info exists usb_labels($labelvar)]
-        ? $usb_labels($labelvar)
+      [info exists usb_labels($label_id)]
+        ? $usb_labels($label_id)
         : $default_value
     }
   ]
@@ -837,7 +844,8 @@ proc update_diskdevices {{force_ui_update false}} {
 
     # $devpath is gone from usbhubs, remove it and its UI
 
-    logger -p user.info "removing $devpath because it is no longer attached"
+    logger -p user.info \
+           "removing [dev_logid $devpath] because it is no longer attached"
 
     destroy [dict get $diskdevices $devpath ui]
     close_if_open $devpath
@@ -898,14 +906,15 @@ proc update_diskdevices {{force_ui_update false}} {
           }
         } else {
           make_usbport_label $devpath $port_id $port_ui
-          logger -p user.info "device $devpath attached"
           dict set diskdevices $devpath [
             dict create fh            ""       \
                         image_size    ""       \
+                        port_id       $port_id \
                         progress_list [list]   \
                         state         nomedia  \
                         ui            $port_ui \
                         version       ""       ]
+          logger -p user.info "device [dev_logid $devpath] attached"
           set regrid true
         }
 
