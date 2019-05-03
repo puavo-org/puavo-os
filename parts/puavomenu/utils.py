@@ -3,7 +3,7 @@
 import logging
 
 
-def localize(where):
+def localize(where, lang):
     """Given a string/list/dict, looks up a localized string using the
     current language."""
 
@@ -18,11 +18,9 @@ def localize(where):
         # a list of dicts, merge them
         where = {k: v for p in where for k, v in p.items()}
 
-    from settings import SETTINGS
-
-    if SETTINGS.language in where:
+    if lang in where:
         # have a localized string, use it
-        return str(where[SETTINGS.language])
+        return str(where[lang])
 
     if 'en' in where:
         # no localized string available; try English, it's the default
@@ -31,7 +29,7 @@ def localize(where):
     # it's a list with only one entry and it's not the language
     # we want, but we have to use it anyway
     logging.warning('localize(): missing localization for "%s" in "%s"',
-                    SETTINGS.language, where)
+                    lang, where)
 
     return str(where[list(where)[0]])
 

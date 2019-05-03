@@ -220,7 +220,7 @@ class PuavoMenu(Gtk.Window):
         self.__search_keypress_signal = \
             self.__search.connect('key-press-event', self.__search_keypress)
         self.__search.set_placeholder_text(
-            utils.localize(STRINGS['search_placeholder']))
+            utils.localize(STRINGS['search_placeholder'], self.__settings.language))
         self.__main_container.put(
             self.__search,
             PROGRAMS_LEFT + PROGRAMS_WIDTH - SEARCH_WIDTH - MAIN_PADDING,
@@ -469,7 +469,7 @@ class PuavoMenu(Gtk.Window):
     # menu/category is empty, or there are no search results.
     def __show_empty_message(self, msg):
         if isinstance(msg, dict):
-            msg = utils.localize(msg)
+            msg = utils.localize(msg, self.__settings.language)
 
         self.__empty.set_markup(
             '<span color="#888" size="large"><i>{0}</i></span>'.format(msg))
@@ -530,7 +530,7 @@ class PuavoMenu(Gtk.Window):
             logging.error(str(exception))
 
             self.error_message(
-                utils.localize(STRINGS['desktop_link_failed']),
+                utils.localize(STRINGS['desktop_link_failed'], self.__settings.language),
                 str(exception))
 
     # Called directly from ProgramButton
@@ -544,8 +544,9 @@ class PuavoMenu(Gtk.Window):
             logging.error('Panel icon creation failed')
             logging.error(str(exception))
 
-            self.error_message(utils.localize(STRINGS['panel_link_failed']),
-                               str(exception))
+            self.error_message(
+                utils.localize(STRINGS['panel_link_failed'], self.__settings.language),
+                str(exception))
 
     # Called directly from ProgramButton
     def remove_program_from_faves(self, p):
@@ -616,8 +617,9 @@ class PuavoMenu(Gtk.Window):
         except Exception as exception:
             logging.error('Could not launch program "%s": %s',
                           program.command, str(exception))
-            self.error_message(utils.localize(STRINGS['program_launching_failed']),
-                               str(exception))
+            self.error_message(
+                utils.localize(STRINGS['program_launching_failed'], self.__settings.language),
+                str(exception))
             return False
 
     # --------------------------------------------------------------------------
@@ -650,7 +652,14 @@ class PuavoMenu(Gtk.Window):
         new_buttons = []
 
         for m in matches:
-            b = buttons.ProgramButton(self, m.name, m.icon, m.description, m)
+            b = buttons.ProgramButton(
+                    self,
+                    self.__settings,
+                    m.name,
+                    m.icon,
+                    m.description,
+                    m)
+
             b.connect('clicked', self.clicked_program_button)
             new_buttons.append(b)
 

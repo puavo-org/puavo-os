@@ -872,7 +872,7 @@ def build_menu_data(raw_programs, raw_menus, raw_categories, language):
 
         # Name (required)
         if 'name' in src_prog and src_prog['name']:
-            dst_prog.name = utils.localize(src_prog['name'])
+            dst_prog.name = utils.localize(src_prog['name'], language)
 
         if utils.is_empty(dst_prog.name):
             logging.error('Program "%s" has no name at all, skipping it',
@@ -883,7 +883,8 @@ def build_menu_data(raw_programs, raw_menus, raw_categories, language):
         # Description (optional), accept ONLY a localized description
         if 'description' in src_prog and src_prog['description'] and \
            language in src_prog['description']:
-            dst_prog.description = utils.localize(src_prog['description'])
+            dst_prog.description = \
+                utils.localize(src_prog['description'], language)
 
         # Keywords (optional)
         if 'keywords' in src_prog and language in src_prog['keywords']:
@@ -936,7 +937,7 @@ def build_menu_data(raw_programs, raw_menus, raw_categories, language):
 
         # Name (required)
         if 'name' in src_menu and src_menu['name']:
-            dst_menu.name = utils.localize(src_menu['name'])
+            dst_menu.name = utils.localize(src_menu['name'], language)
 
         if utils.is_empty(dst_menu.name):
             logging.error('Menu "%s" has no name at all, skipping it',
@@ -946,7 +947,7 @@ def build_menu_data(raw_programs, raw_menus, raw_categories, language):
 
         # Description (optional)
         if 'description' in src_menu and src_menu['description']:
-            dst_menu.description = utils.localize(src_menu['description'])
+            dst_menu.description = utils.localize(src_menu['description'], language)
 
         # Icon (required, but it's not fatal if it's missing)
         if 'icon' in src_menu and src_menu['icon']:
@@ -996,7 +997,7 @@ def build_menu_data(raw_programs, raw_menus, raw_categories, language):
 
         # Name (required)
         if 'name' in src_cat and src_cat['name']:
-            dst_cat.name = utils.localize(src_cat['name'])
+            dst_cat.name = utils.localize(src_cat['name'], language)
 
         if utils.is_empty(dst_cat.name):
             logging.error('Category "%s" has no name at all, skipping it',
@@ -1006,7 +1007,7 @@ def build_menu_data(raw_programs, raw_menus, raw_categories, language):
 
         # Description (optional)
         if 'description' in src_cat and src_cat['description']:
-            dst_cat.description = utils.localize(src_cat['description'])
+            dst_cat.description = utils.localize(src_cat['description'], language)
 
         # List of menus and programs (technically you need at least one of
         # either, but it's not a fatal error to omit everything, it just

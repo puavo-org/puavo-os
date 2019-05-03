@@ -379,7 +379,8 @@ class Sidebar:
         if self.__settings.is_guest or self.__settings.is_webkiosk:
             avatar_tooltip = None
         else:
-            avatar_tooltip = utils.localize(STRINGS['sb_avatar_hover'])
+            avatar_tooltip = \
+                utils.localize(STRINGS['sb_avatar_hover'], self.__settings.language)
 
         self.__avatar = buttons.AvatarButton(self,
                                              self.__settings,
@@ -436,12 +437,13 @@ class Sidebar:
 
     # Creates a sidebar button
     def __create_button(self, y, data):
-        button = buttons.SidebarButton(self,
-                                       self.__settings,
-                                       utils.localize(data['title']),
-                                       self.__icons[data['icon']],
-                                       utils.localize(data.get('description', '')),
-                                       data['command'])
+        button = buttons.SidebarButton(
+            self,
+            self.__settings,
+            utils.localize(data['title'], self.__settings.language),
+            self.__icons[data['icon']],
+            utils.localize(data.get('description', ''), self.__settings.language),
+            data['command'])
 
         button.connect('clicked', self.__clicked_sidebar_button)
         button.show()
@@ -492,7 +494,7 @@ class Sidebar:
                    utils.get_file_contents('/etc/puavo-image/release'),
                    utils.get_file_contents('/etc/puavo/hosttype'),
                    '',
-                   utils.localize(STRINGS['sb_changelog_title'])))
+                   utils.localize(STRINGS['sb_changelog_title'], self.__settings.language)))
 
         hostname_label.connect('activate-link', self.__clicked_changelog)
         hostname_label.show()
@@ -507,14 +509,14 @@ class Sidebar:
                 url=utils.expand_variables(
                     'https://$(puavo_domain)/users/profile/edit?lang=$(user_language)',
                     self.__variables),
-                title=utils.localize(STRINGS['sb_avatar_hover']),
+                title=utils.localize(STRINGS['sb_avatar_hover'], self.__settings.language),
                 width=1000,
                 height=650,
                 enable_js=True)     # The profile editor needs JavaScript
         except Exception as exception:
             logging.error(str(exception))
             self.__parent.error_message(
-                utils.localize(STRINGS['sb_avatar_link_failed']),
+                utils.localize(STRINGS['sb_avatar_link_failed'], self.__settings.language),
                 str(exception))
 
         self.__parent.autohide()
@@ -524,14 +526,14 @@ class Sidebar:
         try:
             web_window(
                 url=get_changelog_url(),
-                title=utils.localize(STRINGS['sb_changelog_window_title']),
+                title=utils.localize(STRINGS['sb_changelog_window_title'], self.__settings.language),
                 width=1000,
                 height=650,
                 enable_js=True)     # Markdown is used on the page, need JS
         except Exception as exception:
             logging.error(str(exception))
             self.__parent.error_message(
-                utils.localize(STRINGS['sb_changelog_link_failed']),
+                utils.localize(STRINGS['sb_changelog_link_failed'], self.__settings.language),
                 str(exception))
 
         self.__parent.autohide()
@@ -585,7 +587,7 @@ class Sidebar:
                     enable_js = settings.get('enable_js', False)
 
                     if title:
-                        title = utils.localize(title)
+                        title = utils.localize(title, self.__settings.language)
 
                 web_window(
                     url=arguments,
@@ -597,5 +599,5 @@ class Sidebar:
             logging.error('Could not process a sidebar button click!')
             logging.error(str(exception))
             self.__parent.error_message(
-                utils.localize(STRINGS['sb_button_failed']),
+                utils.localize(STRINGS['sb_button_failed'], self.__settings.language),
                 str(exception))
