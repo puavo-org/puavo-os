@@ -311,6 +311,16 @@ proc dev_logid {devpath} {
   return "[get_label "port/${port_id}" $port_id] (${pci_path_dir}/${devpath})"
 }
 
+proc log_operation_time {devpath op_name op_time_key} {
+  global diskdevices
+  set op_time [expr {
+    int(([clock milliseconds]
+           - [dict get $diskdevices $devpath $op_time_key]) / 1000.0)
+  }]
+  logger -p user.notice \
+         "$op_name of [dev_logid $devpath] finished in $op_time seconds"
+}
+
 proc handle_fileevent {devpath} {
   global diskdevices
 
@@ -407,7 +417,7 @@ proc set_devstate {devpath state args} {
     }
 
     finished {
-      logger -p user.noticee "finished writing to [dev_logid $devpath]"
+      log_operation_time $devpath verifying verify_start_time
 
       close_if_open $devpath
       dict set diskdevices $devpath state finished
@@ -469,12 +479,17 @@ proc set_devstate {devpath state args} {
 
     verifying_after_write -
     verifying {
+      if {$state eq "verifying_after_write"} {
+        log_operation_time $devpath writing write_start_time
+      }
+
       logger -p user.warning "verifying device [dev_logid $devpath]"
 
       if {[quick_verify_check $devpath]} {
         set fh [start_verifying $devpath]
         dict set diskdevices $devpath fh $fh
         if {$fh ne ""} {
+          dict set diskdevices $devpath verify_start_time [clock milliseconds]
           dict set diskdevices $devpath state $state
           set_rotating_label $port_ui messages \
                              [list [ui_msg messages verifying]]
@@ -494,6 +509,7 @@ proc set_devstate {devpath state args} {
       dict set diskdevices $devpath fh $fh
 
       if {$fh ne ""} {
+        dict set diskdevices $devpath write_start_time [clock milliseconds]
         dict set diskdevices $devpath state writing
         set_rotating_label $port_ui messages \
                            [list [ui_msg messages writing]]
@@ -907,13 +923,15 @@ proc update_diskdevices {{force_ui_update false}} {
         } else {
           make_usbport_label $devpath $port_id $port_ui
           dict set diskdevices $devpath [
-            dict create fh            ""       \
-                        image_size    ""       \
-                        port_id       $port_id \
-                        progress_list [list]   \
-                        state         nomedia  \
-                        ui            $port_ui \
-                        version       ""       ]
+            dict create fh                ""       \
+                        image_size        ""       \
+                        port_id           $port_id \
+                        progress_list     [list]   \
+                        state             nomedia  \
+                        ui                $port_ui \
+                        verify_start_time ""       \
+                        version           ""       \
+                        write_start_time  ""       ]
           logger -p user.info "device [dev_logid $devpath] attached"
           set regrid true
         }
