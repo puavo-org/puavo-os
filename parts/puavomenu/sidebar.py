@@ -19,7 +19,6 @@ import utils
 import utils_gui
 import buttons
 from strings import STRINGS
-from settings import SETTINGS
 
 
 # ------------------------------------------------------------------------------
@@ -313,8 +312,9 @@ class AvatarDownloaderThread(threading.Thread):
 # The sidebar class
 
 class Sidebar:
-    def __init__(self, parent):
+    def __init__(self, parent, settings):
         self.__parent = parent
+        self.__settings = settings
 
         self.container = Gtk.Fixed()
 
@@ -335,7 +335,7 @@ class Sidebar:
 
             try:
                 self.__avatar_thread = \
-                    AvatarDownloaderThread(SETTINGS.user_dir, self.__avatar)
+                    AvatarDownloaderThread(self.__settings.user_dir, self.__avatar)
 
                 # Daemonize the thread so that if we exit before
                 # the thread exists, it is also destroyed
@@ -352,16 +352,16 @@ class Sidebar:
         self.__variables['puavo_domain'] = \
             utils.get_file_contents('/etc/puavo/domain', '?')
         self.__variables['user_name'] = getuser()
-        self.__variables['user_language'] = SETTINGS.language
+        self.__variables['user_language'] = self.__settings.language
 
     # Creates the user avatar button
     def __create_avatar(self):
         self.__must_download_avatar = True
 
-        default_avatar = path_join(SETTINGS.res_dir, 'default_avatar.png')
-        existing_avatar = path_join(SETTINGS.user_dir, 'avatar.jpg')
+        default_avatar = path_join(self.__settings.res_dir, 'default_avatar.png')
+        existing_avatar = path_join(self.__settings.user_dir, 'avatar.jpg')
 
-        if SETTINGS.is_guest or SETTINGS.is_webkiosk:
+        if self.__settings.is_guest or self.__settings.is_webkiosk:
             # Always use the default avatar for guests and webkiosk sessions
             logging.info('Not loading avatar for a guest/webkiosk session')
             avatar_image = default_avatar
@@ -376,7 +376,7 @@ class Sidebar:
                          'downloaded avatar available, using the default image')
             avatar_image = default_avatar
 
-        if SETTINGS.is_guest or SETTINGS.is_webkiosk:
+        if self.__settings.is_guest or self.__settings.is_webkiosk:
             avatar_tooltip = None
         else:
             avatar_tooltip = utils.localize(STRINGS['sb_avatar_hover'])
@@ -385,7 +385,7 @@ class Sidebar:
                                              avatar_tooltip)
 
         # No profile editing for guest users
-        if SETTINGS.is_guest or SETTINGS.is_webkiosk:
+        if self.__settings.is_guest or self.__settings.is_webkiosk:
             logging.info('Disabling the avatar button for guest user')
             self.__avatar.disable()
         else:
@@ -409,24 +409,24 @@ class Sidebar:
         # Since Python won't let you modify arguments (no pass-by-reference),
         # each of these returns the next Y position. X coordinates are fixed.
 
-        if not (SETTINGS.is_guest or SETTINGS.is_webkiosk):
+        if not (self.__settings.is_guest or self.__settings.is_webkiosk):
             y = self.__create_button(y, SB_CHANGE_PASSWORD)
 
         y = self.__create_button(y, SB_SUPPORT)
         y = self.__create_button(y, SB_SYSTEM_SETTINGS)
         y = self.__create_separator(y)
 
-        if not (SETTINGS.is_guest or SETTINGS.is_webkiosk):
+        if not (self.__settings.is_guest or self.__settings.is_webkiosk):
             y = self.__create_button(y, SB_LOCK_SCREEN)
 
-        if not (SETTINGS.is_fatclient or SETTINGS.is_webkiosk):
+        if not (self.__settings.is_fatclient or self.__settings.is_webkiosk):
             y = self.__create_button(y, SB_SLEEP_MODE)
 
         y = self.__create_button(y, SB_LOGOUT)
         y = self.__create_separator(y)
         y = self.__create_button(y, SB_RESTART)
 
-        if not SETTINGS.is_webkiosk:
+        if not self.__settings.is_webkiosk:
             y = self.__create_button(y, SB_SHUTDOWN)
 
         logging.info('Support page URL: "%s"', SB_SUPPORT['command']['args'])
