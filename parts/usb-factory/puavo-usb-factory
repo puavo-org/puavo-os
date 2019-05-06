@@ -305,10 +305,32 @@ proc set_device_eta {devpath bytes_handled} {
   set_devstate $devpath progress $percentage $eta
 }
 
+proc lookup_usbdevice_model {devpath} {
+  set usbdevice_model "?"
+
+  if {![regexp {usb-[0-9]+:(.*)-scsi-} $devpath _ usbport]} {
+    return $usbdevice_model
+  }
+  catch {
+    set paths [glob "/sys/bus/usb/devices/*-${usbport}"]
+    if {[llength $paths] == 1} {
+      set usbport_syspath [lindex $paths 0]
+      set manufacturer [read_file "${usbport_syspath}/../manufacturer"]
+      set product      [read_file "${usbport_syspath}/../product"]
+      set usbdevice_model "${manufacturer} ${product}"
+    }
+  }
+
+  return $usbdevice_model
+}
+
 proc dev_logid {devpath} {
   global diskdevices pci_path_dir
+
   set port_id [dict get $diskdevices $devpath port_id]
-  return "[get_label "port/${port_id}" $port_id] (${pci_path_dir}/${devpath})"
+  set label [get_label "port/${port_id}" $port_id]
+  set usbdevice_model [dict get $diskdevices $devpath model]
+  return "$label (${pci_path_dir}/${devpath} | $usbdevice_model)"
 }
 
 proc log_operation_time {devpath op_name op_time_key} {
@@ -437,6 +459,7 @@ proc set_devstate {devpath state args} {
         # preserve the "port_id"- and "ui"-attributes
         dict set diskdevices $devpath fh            ""
         dict set diskdevices $devpath image_size    ""
+        dict set diskdevices $devpath model         ""
         dict set diskdevices $devpath progress_list [list]
         dict set diskdevices $devpath state         nomedia
         dict set diskdevices $devpath version       ""
@@ -556,6 +579,9 @@ proc check_files {} {
     set full_devpath "${pci_path_dir}/${devpath}"
     if {[file exists $full_devpath]} {
       if {[dict get $devstate state] eq "nomedia"} {
+        # new usb device has been inserted, do something
+        dict set diskdevices $devpath model [lookup_usbdevice_model $devpath]
+
         if {[catch { check_for_space_in_device $devpath } res]} {
           logger -p user.warning \
                  "error while checking for space on [dev_logid $devpath]: $res"
@@ -925,6 +951,7 @@ proc update_diskdevices {{force_ui_update false}} {
           dict set diskdevices $devpath [
             dict create fh                ""       \
                         image_size        ""       \
+                        model             ""       \
                         port_id           $port_id \
                         progress_list     [list]   \
                         state             nomedia  \
