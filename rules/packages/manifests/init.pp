@@ -609,6 +609,7 @@ class packages {
     , 'shotwell'
     , 'simple-scan'
     , 'speech-dispatcher'
+    , 'speedcrunch'
     , 'ssh-askpass-gnome'
     , 'telepathy-idle'
     , 'totem'
