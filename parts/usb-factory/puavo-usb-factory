@@ -1181,7 +1181,10 @@ bind . <Configure> {
 bind . <Control-x> {
   set writable_labels [expr { $writable_labels ? "false" : "true" }]
   if {!$writable_labels} {
+    wm attributes . -fullscreen 1
     update_usb_labels_on_disk
+  } else {
+    wm attributes . -fullscreen 0
   }
   update_diskdevices true
 }
