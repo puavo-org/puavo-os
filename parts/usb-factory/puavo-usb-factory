@@ -1060,18 +1060,11 @@ proc scroll_topbanner {} {
 proc setup_requested_version_ui {} {
   global requested_version_type requested_version_path requested_version_value
 
-  set puavo_conf_key [ui_msg __version_puavo_conf_key]
-  set puavo_conf_requested_version ""
-  catch { set puavo_conf_requested_version [exec puavo-conf $puavo_conf_key] }
-
-  set by_puavo_conf_msg \
-      "[ui_msg version {by puavo-conf}] ($puavo_conf_requested_version)"
-
   ttk::frame .f.requested_version
   ttk::frame .f.requested_version.choices
   ttk::frame .f.requested_version.choices.version
   ttk::radiobutton .f.requested_version.choices.by_puavo_conf \
-    -text $by_puavo_conf_msg -value "by puavo-conf" -command {
+    -value "by puavo-conf" -command {
       set requested_version_type "by puavo-conf"
     }
   ttk::radiobutton .f.requested_version.choices.latest \
@@ -1086,6 +1079,48 @@ proc setup_requested_version_ui {} {
     -justify center -textvariable requested_version_any -font smallInfoFont \
     -width 6 -textvariable requested_version_value
 
+  update_requested_version_ui false
+
+  pack .f.requested_version -side bottom -anchor w
+  pack .f.requested_version.choices.by_puavo_conf \
+       .f.requested_version.choices.latest \
+       .f.requested_version.choices.version \
+       -anchor w
+  pack .f.requested_version.choices.version.button -anchor w -side left
+  pack .f.requested_version.choices.version.number -anchor w -side left -padx 3
+}
+
+proc update_requested_version_ui {visible} {
+  global requested_version_path requested_version_type requested_version_value
+
+  if {!$visible} {
+    pack forget .f.requested_version.choices
+
+    set requested_version $requested_version_type
+    if {$requested_version_type eq "this version"} {
+      set trimmed_value [string trim $requested_version_value]
+      if {$trimmed_value ne ""} {
+        set requested_version       $trimmed_value
+        set requested_version_value $trimmed_value
+      } else {
+        set requested_version "by puavo-conf"
+        set requested_version_value ""
+      }
+    }
+    write_file $requested_version_path $requested_version
+    return
+  }
+
+  set puavo_conf_key [ui_msg __version_puavo_conf_key]
+  set puavo_conf_requested_version ""
+  catch { set puavo_conf_requested_version [exec puavo-conf $puavo_conf_key] }
+
+  set by_puavo_conf_msg \
+      "[ui_msg version {by puavo-conf}] ($puavo_conf_requested_version)"
+
+  .f.requested_version.choices.by_puavo_conf configure \
+    -text $by_puavo_conf_msg
+
   set requested_version ""
   catch { set requested_version [read_file $requested_version_path] }
   switch -- $requested_version {
@@ -1098,13 +1133,7 @@ proc setup_requested_version_ui {} {
     }
   }
 
-  pack .f.requested_version -side bottom -anchor w
-  pack .f.requested_version.choices.by_puavo_conf \
-       .f.requested_version.choices.latest \
-       .f.requested_version.choices.version \
-       -anchor w
-  pack .f.requested_version.choices.version.button -anchor w -side left
-  pack .f.requested_version.choices.version.number -anchor w -side left -padx 3
+  pack .f.requested_version.choices
 }
 
 logger -p user.notice "starting up"
@@ -1239,33 +1268,14 @@ bind . <Configure> {
   }
 }
 
-proc update_requested_version_on_disk {} {
-  global requested_version_path requested_version_type requested_version_value
-
-  set requested_version $requested_version_type
-  if {$requested_version_type eq "this version"} {
-    set trimmed_value [string trim $requested_version_value]
-    if {$trimmed_value ne ""} {
-      set requested_version       $trimmed_value
-      set requested_version_value $trimmed_value
-    } else {
-      set requested_version "by puavo-conf"
-      set requested_version_value ""
-    }
-  }
-
-  write_file $requested_version_path $requested_version
-}
-
 bind . <Control-x> {
   set writable_labels [expr { $writable_labels ? "false" : "true" }]
   if {!$writable_labels} {
     wm attributes . -fullscreen 1
-    pack forget .f.requested_version.choices
-    update_requested_version_on_disk
+    update_requested_version_ui false
     update_usb_labels_on_disk
   } else {
-    pack .f.requested_version.choices
+    update_requested_version_ui true
     wm attributes . -fullscreen 0
   }
   update_diskdevices true
