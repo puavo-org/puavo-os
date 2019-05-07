@@ -64,7 +64,7 @@ proc download_image {} {
 
     set pid [pid $image_downloader_fh]
     catch { exec kill -$pid }
-    after 3000
+    after 1000
     catch { exec kill -9 -$pid }
     catch { close $image_downloader_fh }
   }
