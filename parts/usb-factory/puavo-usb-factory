@@ -26,6 +26,7 @@ array set usb_labels ""
 set writable_labels false
 set requested_version_type ""
 set requested_version_value ""
+set image_downloader_fh ""
 
 array set paths [list \
   flash_drive_blue      /usr/share/puavo-usb-factory/flash-drive-blue.png    \
@@ -51,7 +52,33 @@ proc logger {args} {
 # XXX perhaps do not use cat, but open + read + close ?
 proc read_file {path} { exec cat $path }
 
-proc update_image {image imagepath new_width new_height} {
+proc download_image {} {
+  global image_downloader_fh
+
+  logger -p user.warning "starting download"
+
+  if {$image_downloader_fh ne ""} {
+    set pid [pid $image_downloader_fh]
+    catch { exec kill -$pid }
+    catch { close $image_downloader_fh }
+  }
+
+  set image_downloader_fh [open "| setsid puavo-download-usb-factory-images"]
+  fconfigure $image_downloader_fh -buffering line
+  fileevent $image_downloader_fh readable {
+    catch { gets $image_downloader_fh }
+    if {[eof $image_downloader_fh]} {
+      if {[catch { close $image_downloader_fh }]} {
+        after 30000 download_image      ; # failed, try again after 30 seconds
+      } else {
+        after 3600000 download_image    ; # success, try again after 1 hour
+      }
+      set image_downloader_fh ""
+    }
+  }
+}
+
+proc update_background {image imagepath new_width new_height} {
   # XXX it would be better to use standard output
   set tmpfile [exec mktemp /tmp/puavo-usb-factory-image.XXXXXXX]
   set img_size "${new_width}x${new_height}!"
@@ -72,7 +99,7 @@ proc do_background_resizing {} {
     set new_width  [dict get $bg_image new_width]
     set new_height [dict get $bg_image new_height]
 
-    update_image bg_photo $bg_image_path $new_width $new_height
+    update_background bg_photo $bg_image_path $new_width $new_height
     .f coords $canvas_image_index [expr { int($new_width/2)  }] \
                                   [expr { int($new_height/2) }]
 
@@ -1154,6 +1181,10 @@ ttk::style configure TLabel -background $default_background_color -font infoFont
 ttk::style configure Instructions.TLabel -foreground white
 ttk::style configure Status.TLabel -foreground #c3c8cc -background #46606d
 
+# start download image
+download_image
+after 1000      ;# wait a bit so that download_image sets up UI.json
+
 # ui messages and background image
 
 try {
@@ -1274,6 +1305,7 @@ bind . <Control-x> {
     wm attributes . -fullscreen 1
     update_requested_version_ui false
     update_usb_labels_on_disk
+    download_image
   } else {
     update_requested_version_ui true
     wm attributes . -fullscreen 0
