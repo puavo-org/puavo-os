@@ -24,6 +24,8 @@ set ui_messages {}
 array set rotating_usb_labels ""
 array set usb_labels ""
 set writable_labels false
+set image_downloading_version ""
+set requested_version ""
 set requested_version_type ""
 set requested_version_value ""
 set image_downloader_fh ""
@@ -53,15 +55,19 @@ proc logger {args} {
 proc read_file {path} { exec cat $path }
 
 proc download_image {} {
-  global image_downloader_fh
+  global image_downloader_fh image_downloading_version requested_version
 
   logger -p user.warning "starting download"
 
   if {$image_downloader_fh ne ""} {
+    if {$requested_version eq $image_downloading_version} { return }
+
     set pid [pid $image_downloader_fh]
     catch { exec kill -$pid }
     catch { close $image_downloader_fh }
   }
+
+  set image_downloading_version $requested_version
 
   set image_downloader_fh [open "| setsid puavo-download-usb-factory-images"]
   fconfigure $image_downloader_fh -buffering line
@@ -1118,7 +1124,8 @@ proc setup_requested_version_ui {} {
 }
 
 proc update_requested_version_ui {visible} {
-  global requested_version_path requested_version_type requested_version_value
+  global requested_version requested_version_path requested_version_type \
+         requested_version_value
 
   if {!$visible} {
     pack forget .f.requested_version.choices
@@ -1148,7 +1155,6 @@ proc update_requested_version_ui {visible} {
   .f.requested_version.choices.by_puavo_conf configure \
     -text $by_puavo_conf_msg
 
-  set requested_version ""
   catch { set requested_version [read_file $requested_version_path] }
   switch -- $requested_version {
     ""              -
@@ -1181,10 +1187,6 @@ ttk::style configure TLabel -background $default_background_color -font infoFont
 ttk::style configure Instructions.TLabel -foreground white
 ttk::style configure Status.TLabel -foreground #c3c8cc -background #46606d
 
-# start download image
-download_image
-after 1000      ;# wait a bit so that download_image sets up UI.json
-
 # ui messages and background image
 
 try {
@@ -1193,6 +1195,7 @@ try {
   logger -p user.err "could not get content dir"
   exit 1
 }
+
 try {
   set bg_image_path "${content_dir}/UI.png"
 } on error {} {
@@ -1200,14 +1203,20 @@ try {
          "could not read background image from ${content_dir}/UI.png"
   exit 1
 }
+
+set requested_version_path "${content_dir}/REQUESTED_VERSION"
+catch { set requested_version [read_file $requested_version_path] }
+
+# start download image
+download_image
+after 1000      ;# wait a bit so that download_image sets up UI.json
+
 try {
   set ui_messages [::json::json2dict [read_file "${content_dir}/UI.json"]]
 } on error {} {
   logger -p user.err "could not read ui messages from ${content_dir}/UI.json"
   exit 1
 }
-
-set requested_version_path "${content_dir}/REQUESTED_VERSION"
 
 # ui elements
 
