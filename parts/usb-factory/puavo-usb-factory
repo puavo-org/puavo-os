@@ -24,6 +24,8 @@ set ui_messages {}
 array set rotating_usb_labels ""
 array set usb_labels ""
 set writable_labels false
+set requested_version_type ""
+set requested_version_value ""
 
 array set paths [list \
   flash_drive_blue      /usr/share/puavo-usb-factory/flash-drive-blue.png    \
@@ -1020,23 +1022,28 @@ proc read_usb_labels_from_disk {} {
   }
 }
 
+proc write_file {path data} {
+  set tmpfile "${path}.tmp"
+
+  set fh [open $tmpfile w]
+  puts $fh $data
+  close $fh
+
+  file rename -force $tmpfile $path
+
+}
+
 proc update_usb_labels_on_disk {} {
   global paths usb_labels
   set usblabels_json_path "$paths(puavo_usb_factory_workdir)/usb_labels.json"
-  set tmpfile "${usblabels_json_path}.tmp"
 
   set js_object [dict create]
   foreach {k v} [array get usb_labels] {
     dict set js_object $k [::json::write string $v]
   }
 
-  set json [::json::write object {*}$js_object]
-
-  set fh [open $tmpfile w]
-  puts $fh $json
-  close $fh
-
-  file rename -force $tmpfile $usblabels_json_path
+  write_file $usblabels_json_path \
+             [::json::write object {*}$js_object]
 }
 
 proc scroll_topbanner {} {
@@ -1048,6 +1055,56 @@ proc scroll_topbanner {} {
 
   .f.top_banner coords $topbanner_text_id $top_banner_pos 20
   after 50 scroll_topbanner
+}
+
+proc setup_requested_version_ui {} {
+  global requested_version_type requested_version_path requested_version_value
+
+  set puavo_conf_key [ui_msg __version_puavo_conf_key]
+  set puavo_conf_requested_version ""
+  catch { set puavo_conf_requested_version [exec puavo-conf $puavo_conf_key] }
+
+  set by_puavo_conf_msg \
+      "[ui_msg version {by puavo-conf}] ($puavo_conf_requested_version)"
+
+  ttk::frame .f.requested_version
+  ttk::frame .f.requested_version.choices
+  ttk::frame .f.requested_version.choices.version
+  ttk::radiobutton .f.requested_version.choices.by_puavo_conf \
+    -text $by_puavo_conf_msg -value "by puavo-conf" -command {
+      set requested_version_type "by puavo-conf"
+    }
+  ttk::radiobutton .f.requested_version.choices.latest \
+    -text [ui_msg version latest] -value "latest" -command {
+      set requested_version_type "latest"
+    }
+  ttk::radiobutton .f.requested_version.choices.version.button \
+    -text "[ui_msg version {this version}]:" -value "this version" -command {
+      set requested_version_type "this version"
+    }
+  ttk::entry .f.requested_version.choices.version.number \
+    -justify center -textvariable requested_version_any -font smallInfoFont \
+    -width 6 -textvariable requested_version_value
+
+  set requested_version ""
+  catch { set requested_version [read_file $requested_version_path] }
+  switch -- $requested_version {
+    ""              -
+    {by puavo-conf} { .f.requested_version.choices.by_puavo_conf invoke }
+    {latest}        { .f.requested_version.choices.latest        invoke }
+    default {
+      .f.requested_version.choices.version.button invoke
+      set requested_version_value $requested_version
+    }
+  }
+
+  pack .f.requested_version -side bottom -anchor w
+  pack .f.requested_version.choices.by_puavo_conf \
+       .f.requested_version.choices.latest \
+       .f.requested_version.choices.version \
+       -anchor w
+  pack .f.requested_version.choices.version.button -anchor w -side left
+  pack .f.requested_version.choices.version.number -anchor w -side left -padx 3
 }
 
 logger -p user.notice "starting up"
@@ -1089,6 +1146,8 @@ try {
   logger -p user.err "could not read ui messages from ${content_dir}/UI.json"
   exit 1
 }
+
+set requested_version_path "${content_dir}/REQUESTED_VERSION"
 
 # ui elements
 
@@ -1163,6 +1222,8 @@ pack .f.version_status.version.label .f.version_status.version.number \
 pack .f.version_status.download.label .f.version_status.download.status \
      -side left -padx 5
 
+setup_requested_version_ui
+
 pack .f.instructions -side left -anchor n -padx 40 -pady 40
 
 pack .f.support -side bottom -anchor e
@@ -1178,12 +1239,33 @@ bind . <Configure> {
   }
 }
 
+proc update_requested_version_on_disk {} {
+  global requested_version_path requested_version_type requested_version_value
+
+  set requested_version $requested_version_type
+  if {$requested_version_type eq "this version"} {
+    set trimmed_value [string trim $requested_version_value]
+    if {$trimmed_value ne ""} {
+      set requested_version       $trimmed_value
+      set requested_version_value $trimmed_value
+    } else {
+      set requested_version "by puavo-conf"
+      set requested_version_value ""
+    }
+  }
+
+  write_file $requested_version_path $requested_version
+}
+
 bind . <Control-x> {
   set writable_labels [expr { $writable_labels ? "false" : "true" }]
   if {!$writable_labels} {
     wm attributes . -fullscreen 1
+    pack forget .f.requested_version.choices
+    update_requested_version_on_disk
     update_usb_labels_on_disk
   } else {
+    pack .f.requested_version.choices
     wm attributes . -fullscreen 0
   }
   update_diskdevices true
