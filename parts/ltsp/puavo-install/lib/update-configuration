@@ -90,7 +90,8 @@ def update_device_json(restclient)
   # We override the primary_user information in device.json from
   # /state/etc/puavo/primary_user_override if that exists.
 
-  device_json_path = '/state/etc/puavo/device.json'
+  device_json_path       = '/etc/puavo/device.json'
+  state_device_json_path = "/state#{ device_json_path }"
 
   uripath = ($puavo_hosttype == 'bootserver' \
 	       ? "v3/boot_servers/#{ get_hostname() }" \
@@ -141,10 +142,10 @@ def update_device_json(restclient)
     device['conf']['puavo.admin.primary_user'] = primary_user_override
   end
 
-  tmp_filepath = "#{ device_json_path }.tmp"
+  tmp_filepath = "#{ state_device_json_path }.tmp"
   File.open(tmp_filepath, 'w') { |f| f.write(device.to_json) }
 
-  replace_if_changed(device_json_path, tmp_filepath)
+  replace_if_changed(state_device_json_path, tmp_filepath)
 
   if remove_primary_user_override then
     log(Syslog::LOG_NOTICE,
@@ -152,8 +153,11 @@ def update_device_json(restclient)
     FileUtils.rm_f('/state/etc/puavo/primary_user_override')
   end
 
-  run('puavo-conf-update',
-      '--devicejson-path', '/state/etc/puavo/device.json')
+  tmp_filepath = "#{ device_json_path }.tmp"
+  FileUtils.cp(state_device_json_path, tmp_filepath)
+  replace_if_changed(device_json_path, tmp_filepath)
+
+  run('puavo-conf-update')
 end
 
 def update_external_files(restclient)
