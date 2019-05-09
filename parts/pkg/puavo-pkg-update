@@ -183,9 +183,19 @@ maybe_remove_pkg() {
 
 logmsg user.notice 'puavo-pkg-update starting'
 
+puavo_pkg_package=${1:-}
+
 puavo_pkg_specs=$(
-  puavo-conf | awk '$1 ~ /^puavo.pkg./ { gsub(/^puavo.pkg./, "", $1); print }'
-)
+  puavo-conf \
+    | awk -v pkg="$puavo_pkg_package" '
+        $1 ~ /^puavo.pkg./ { gsub(/^puavo.pkg./, "", $1)
+        if (pkg == "" || pkg == $1) { print }
+      }')
+
+if [ -n "$puavo_pkg_package" -a -z "$puavo_pkg_specs" ]; then
+  logmsg user.err "no such puavo-pkg package as '${puavo_pkg_package}'"
+  exit 1
+fi
 
 status=0
 
@@ -217,6 +227,8 @@ for pkgspec in $puavo_pkg_specs; do
       action='do-nothing'
     fi
   fi
+
+  logmsg user.info "installation directive on ${puavo_pkg} is: $action"
 
   case "$action" in
     do-nothing)
