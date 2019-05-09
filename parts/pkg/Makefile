@@ -3,6 +3,7 @@ exec_prefix = $(prefix)
 bindir = $(exec_prefix)/bin
 sbindir = $(exec_prefix)/sbin
 sysconfdir = /etc
+datarootdir = $(prefix)/share
 
 INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
@@ -17,6 +18,7 @@ installdirs:
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-pkg
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/definitions
 	${MAKE} -C packages installdirs
 
 # XXX We do not install puavo-pkg-updater, puavo-pkg-updater.conf and
@@ -25,6 +27,8 @@ installdirs:
 
 .PHONY: install
 install: installdirs
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-conf/definitions \
+                puavo-pkgs-ui.json
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
 		puavo-pkg-wine-helper
 
