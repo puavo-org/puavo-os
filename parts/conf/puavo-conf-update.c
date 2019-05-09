@@ -41,6 +41,7 @@
 #define DMI_ID_PATH     "/sys/class/dmi/id"
 #define HWQUIRKS_DIR    "/usr/share/puavo-conf/hwquirk-overwrites"
 #define IMAGE_CONF_PATH "/etc/puavo-conf/image.json"
+#define LOCAL_CONF_PATH "/state/etc/puavo/local/puavo_conf.json"
 #define PROFILES_DIR    "/usr/share/puavo-conf/profile-overwrites"
 
 #define PCI_MAX         1024
@@ -74,6 +75,7 @@ static int	 apply_kernel_arguments(puavo_conf_t *, int);
 static int	 apply_one_profile(puavo_conf_t *, const char *, int);
 static int	 apply_parameter_definitions(puavo_conf_t *, int, int);
 static int	 apply_profiles(puavo_conf_t *, int);
+static int	 check_file_exists(const char *);
 static int	 check_match_for_hwquirk_rule(const char *, const char *,
     const char *, struct hw_characteristics *);
 static char	*get_cmdline(void);
@@ -178,7 +180,8 @@ usage(void)
 	       "  2. requested puavo-conf profiles (using puavo.profiles.list)\n"
 	       "  3. hardware quirks\n"
 	       "  4. device specific settings from " DEVICEJSON_PATH "\n"
-	       "  5. kernel command line\n"
+	       "  5. local settings from " LOCAL_CONF_PATH "\n"
+	       "  6. kernel command line\n"
 	       "\n"
 	       "Options:\n"
 	       "  --help                    display this help and exit\n"
@@ -316,6 +319,14 @@ handle_one_paramdef(puavo_conf_t *conf, const char *param_name,
 }
 
 static int
+check_file_exists(const char *pathname)
+{
+	struct stat buf;
+
+	return (stat(pathname, &buf) == 0);
+}
+
+static int
 update_puavoconf(puavo_conf_t *conf, int verbose)
 {
 	int retvalue;
@@ -346,6 +357,12 @@ update_puavoconf(puavo_conf_t *conf, int verbose)
 	 * profiles and hwquirks. */
 	if (apply_device_settings(conf, verbose) != 0)
 		retvalue = 1;
+
+	/* Apply possible local puavo-conf configurations. */
+	if (check_file_exists(LOCAL_CONF_PATH)) {
+		if (apply_one_profile(conf, LOCAL_CONF_PATH, verbose) != 0)
+			retvalue = 1;
+	}
 
 	/* Apply kernel arguments again,
 	 * because those override everything else. */
