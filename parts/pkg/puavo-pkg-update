@@ -24,12 +24,6 @@ puavo_hosttype=$(puavo-conf puavo.hosttype)
 
 mkdir -p "$installers_dir"
 
-exec 3< "$installers_dir"
-if ! flock -nx 3; then
-  logmsg user.err "did not get a lock on ${installers_dir}, exiting"
-  exit 1
-fi
-
 is_version_number() {
   echo "$1" | grep -Eqx '[0-9]+' && [ "$1" -lt 1000000 ]
 }
@@ -203,6 +197,15 @@ for pkgspec in $puavo_pkg_specs; do
   puavo_pkg=$(echo "$pkgspec" | awk '{ print $1 }')
   action=$(echo "$pkgspec" | awk '{ print $2 }')
 
+  puavo_pkg_installers_dir="${installers_dir}/${puavo_pkg}"
+  mkdir -p "$puavo_pkg_installers_dir"
+  exec 3< "$puavo_pkg_installers_dir"
+  if ! flock -w 10 -x 3; then
+    logmsg user.err "did not get a lock on ${puavo_pkg_installers_dir}"
+    status=1
+    continue
+  fi
+
   if [ -z "$action" ]; then
     if [ "$puavo_hosttype" = 'bootserver' ]; then
       # On bootservers, the default action is to prepare the packages.
@@ -244,7 +247,15 @@ for pkgspec in $puavo_pkg_specs; do
       status=1
       ;;
   esac
+
+  flock -u 3
 done
+
+exec 3< "$installers_dir"
+if ! flock -w 10 -x 3; then
+  logmsg user.err "did not get a lock on ${installers_dir}, exiting"
+  exit 1
+fi
 
 logmsg user.notice 'garbage collecting old/broken puavo-pkg packages'
 if ! puavo-pkg gc-installations; then
