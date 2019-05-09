@@ -188,7 +188,7 @@ puavo_pkg_package=${1:-}
 puavo_pkg_specs=$(
   puavo-conf \
     | awk -v pkg="$puavo_pkg_package" '
-        $1 ~ /^puavo.pkg./ { gsub(/^puavo.pkg./, "", $1)
+        $1 ~ /^puavo\.pkg\./ { gsub(/^puavo\.pkg\./, "", $1)
         if (pkg == "" || pkg == $1) { print }
       }')
 
