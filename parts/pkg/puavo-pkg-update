@@ -100,6 +100,18 @@ download_installer() {
   echo "$installer_fullpath"
 }
 
+extract_pkg() {
+  puavo_pkg=$1
+  version=$2
+
+  if ! installer_fullpath=$(download_installer "$puavo_pkg" "$version"); then
+    return 1
+  fi
+  if ! puavo-pkg show "$installer_fullpath" > /dev/null 2>&1; then
+    return 1
+  fi
+}
+
 install_pkg() {
   puavo_pkg=$1
   version=$2
@@ -183,14 +195,22 @@ maybe_remove_pkg() {
 
 logmsg user.notice 'puavo-pkg-update starting'
 
-puavo_pkg_package=${1:-}
-
-puavo_pkg_specs=$(
-  puavo-conf \
-    | awk -v pkg="$puavo_pkg_package" '
-        $1 ~ /^puavo\.pkg\./ { gsub(/^puavo\.pkg\./, "", $1)
-        if (pkg == "" || pkg == $1) { print }
-      }')
+if [ "${1:-}" = '--update-installers' ]; then
+  puavo_pkg_package=''
+  puavo_pkg_specs=$(puavo-conf puavo.pkgs.ui.pkglist \
+                      | awk '
+                          BEGIN { RS = " " }
+                          $1 != " " { print $1, "extract" }
+                        ')
+else
+  puavo_pkg_package=${1:-}
+  puavo_pkg_specs=$(
+    puavo-conf \
+      | awk -v pkg="$puavo_pkg_package" '
+          $1 ~ /^puavo\.pkg\./ { gsub(/^puavo\.pkg\./, "", $1)
+          if (pkg == "" || pkg == $1) { print }
+        }')
+fi
 
 if [ -n "$puavo_pkg_package" -a -z "$puavo_pkg_specs" ]; then
   logmsg user.err "no such puavo-pkg package as '${puavo_pkg_package}'"
@@ -232,6 +252,13 @@ for pkgspec in $puavo_pkg_specs; do
 
   case "$action" in
     do-nothing)
+      ;;
+    extract)
+      extract_pkg "$puavo_pkg" latest || status=1
+      ;;
+    extract:*)
+      version=${action#*:}
+      extract_pkg "$puavo_pkg" "$version" || status=1
       ;;
     install|latest)
       install_pkg "$puavo_pkg" latest || status=1
