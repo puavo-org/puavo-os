@@ -19,8 +19,9 @@ g_puavo_pkg_rootdir=/var/lib/puavo-pkg
 g_puavo_pkg_readonly_cachedir="$g_puavo_pkg_cachedir"
 g_puavo_pkg_readonly_rootdir="$g_puavo_pkg_rootdir"
 
-# this can not be overridden with PUAVO_PKG_ROOTDIR by design
-# (we could also move it somewhere else than /var/lib/puavo-pkg/installed)
+# These can not be overridden with PUAVO_PKG_ROOTDIR by design
+# (we could also move it somewhere else than /var/lib/puavo-pkg/*).
+g_puavo_pkg_available_dir="${g_puavo_pkg_rootdir}/available"
 g_puavo_pkg_installed_dir="${g_puavo_pkg_rootdir}/installed"
 
 LOG_EMERG=0
@@ -138,7 +139,7 @@ log_warning()
 }
 
 gc_installations() {
-  local currently_installed_link gc_status msg pkg_dir pkg_installation \
+  local currently_available_link gc_status msg pkg_dir pkg_installation \
         pkg_name
 
   gc_status=$SC_OK
@@ -147,13 +148,12 @@ gc_installations() {
     test -d "$pkg_dir" || continue
 
     pkg_name="$(basename "$pkg_dir")"
-    currently_installed_link="${g_puavo_pkg_installed_dir}/${pkg_name}"
+    currently_available_link="${g_puavo_pkg_available_dir}/${pkg_name}"
 
     for pkg_installation in "$pkg_dir"/*; do
       test -d "$pkg_installation" || continue
 
-      if ! [ "$pkg_installation" -ef "$currently_installed_link" ]; then
-
+      if ! [ "$pkg_installation" -ef "$currently_available_link" ]; then
         latest_prepared_time=''
         # Because fatclients may need puavo-pkg packages even when they are
         # not installed on bootservers (only prepared), in bootserver case
@@ -711,6 +711,8 @@ extract_installer()
 
   log_info "${pkg_name}: extracted installer file successfully"
 
+  ln -fns "$pkg_dir" "${g_puavo_pkg_available_dir}/${pkg_name}"
+
   echo "$pkg_dir"
 }
 
@@ -1050,6 +1052,7 @@ fi
 
 mkdir -p "$g_puavo_pkg_cachedir" \
          "${g_puavo_pkg_rootdir}/packages" \
+         "$g_puavo_pkg_available_dir"      \
          "$g_puavo_pkg_installed_dir"
 
 command=$1
