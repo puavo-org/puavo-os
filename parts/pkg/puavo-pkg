@@ -867,7 +867,7 @@ remove_pkg()
       return 1
     }
     pkg_dir=$(get_writable_pkg_dir "$pkg_name" "$pkg_id") || return 1
-    rm -rf "${pkg_dir}" || return 1
+    rm -rf "${pkg_dir}/.prepared" "${pkg_dir}/upstream" || return 1
     log_info "removed package '${pkg_name}'"
     return 0
   fi
