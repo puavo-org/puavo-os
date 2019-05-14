@@ -151,6 +151,8 @@ programs:
   - eog:
         icon: /usr/share/icons/Faenza/apps/scalable/eog.svg
         tags: default
+  - epiphany:
+        tags: epiphany
   - eric:
         tags: default
   - evince:
@@ -995,6 +997,7 @@ menus:
             - firefox
             - chromium
             - google-chrome
+            - epiphany
             - thunderbird
             - evolution
             - pidgin
