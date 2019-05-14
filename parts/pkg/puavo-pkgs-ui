@@ -26,6 +26,7 @@ class PuavoPkg:
         self.label = Gtk.Label(label=self.legend)
 
         button = Gtk.Button(label='INSTALL')
+        self.label.set_property('tooltip-text', self.description)
         if not previous_pkg:
              grid.add(self.label)
         else:
