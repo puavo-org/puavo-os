@@ -17,24 +17,30 @@ pkglist = puavoconf_get('puavo.pkgs.ui.pkglist').split()
 
 win = Gtk.Window()
 win.connect('destroy', Gtk.main_quit)
+win.set_border_width(10)
 
-grid = Gtk.Grid()
-win.add(grid)
+box_outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+win.add(box_outer)
 
 button = Gtk.Button(label='INSTALL ALL')
 button.connect('clicked', on_button_clicked)
-grid.attach(button, 1, 1, 1, 1)
+box_outer.pack_start(button, True, True, 0)
 
-previous_widget = button
+listbox = Gtk.ListBox()
+listbox.set_selection_mode(Gtk.SelectionMode.NONE)
+box_outer.pack_start(listbox, True, True, 0)
 
 for pkg in pkglist:
-    pkg_widget = Gtk.Label(label=pkg)
-    grid.attach_next_to(pkg_widget,
-                        previous_widget,
-                        Gtk.PositionType.BOTTOM,
-                        1,
-                        1)
-    previous_widget = pkg_widget
+    row = Gtk.ListBoxRow()
+    hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
+    row.add(hbox)
+
+    label = Gtk.Label(label=pkg)
+    button = Gtk.Button(label='INSTALL')
+    hbox.pack_start(label, True, True, 0)
+    hbox.pack_start(button, True, True, 0)
+
+    listbox.add(row)
 
 win.show_all()
 
