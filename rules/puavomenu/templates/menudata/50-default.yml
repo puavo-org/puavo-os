@@ -744,6 +744,9 @@ programs:
             sv: Stanis python-editor
             de: Stanis Python IDE
         tags: default
+  - speedcrunch:
+        tags: default
+        icon: /usr/share/pixmaps/speedcrunch.png
   - spelett:
         condition: "!personally_administered"
         tags: default
@@ -931,6 +934,7 @@ menus:
             de: Werkzeuge
         programs:
             - gnome-calculator
+            - speedcrunch
             - org.gnome.gedit
             - gucharmap
             - onboard
