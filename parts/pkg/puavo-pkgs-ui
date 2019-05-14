@@ -33,7 +33,12 @@ class PuavoPkg:
              grid.attach_next_to(self.label, previous_pkg.label,
                Gtk.PositionType.BOTTOM, 1, 1)
 
-        grid.attach_next_to(button, self.label, Gtk.PositionType.RIGHT, 1, 1)
+        license_link = Gtk.Label()
+        license_link.set_markup('<a href="%s">lisenssiehdot</a>' % self.license)
+        grid.attach_next_to(license_link, self.label, Gtk.PositionType.RIGHT,
+            1, 1)
+
+        grid.attach_next_to(button, license_link, Gtk.PositionType.RIGHT, 1, 1)
 
         return True
 
