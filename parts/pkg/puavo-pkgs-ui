@@ -8,16 +8,21 @@ from gi.repository import Gtk
 
 class PuavoPkg:
     def __init__(self, pkgname):
-        available_puavo_packages_path = '/var/lib/puavo-pkg/available'
-
         self.pkgname = pkgname
 
+
+    def lookup_fields(self):
         self.description = self.field('Description')
         self.legend      = self.field('Legend')
         self.license     = self.license()
 
 
     def add_to_grid(self, grid, previous_pkg):
+        try:
+            self.lookup_fields()
+        except:
+            return False
+
         self.label = Gtk.Label(label=self.legend)
 
         button = Gtk.Button(label='INSTALL')
@@ -28,6 +33,8 @@ class PuavoPkg:
                Gtk.PositionType.BOTTOM, 1, 1)
 
         grid.attach_next_to(button, self.label, Gtk.PositionType.RIGHT, 1, 1)
+
+        return True
 
 
     def cmd_output(self, cmd):
@@ -73,9 +80,11 @@ previous_pkg = None
 
 for pkgname in pkglist:
     pkg = PuavoPkg(pkgname)
-    pkg.add_to_grid(grid, previous_pkg)
-    previous_pkg = pkg
+    if pkg.add_to_grid(grid, previous_pkg):
+        previous_pkg = pkg
 
+# XXX if previous_pkg is None, there are no packages to install and an error
+# XXX should be presented to user
 
 win.show_all()
 
