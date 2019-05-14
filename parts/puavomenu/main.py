@@ -125,7 +125,7 @@ class PuavoMenu(Gtk.Window):
 
         # Storage for 48x48 -pixel program and menu icons. Maintained
         # separately from the menu data.
-        self.__icons = iconcache.IconCache(48, 48 * 15)
+        self.__icons = iconcache.IconCache(48, 48 * 20)
 
         # Background image for top-level menus
         try:
