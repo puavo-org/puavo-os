@@ -26,21 +26,22 @@ button = Gtk.Button(label='INSTALL ALL')
 button.connect('clicked', on_button_clicked)
 box_outer.pack_start(button, True, True, 0)
 
-listbox = Gtk.ListBox()
-listbox.set_selection_mode(Gtk.SelectionMode.NONE)
-box_outer.pack_start(listbox, True, True, 0)
+grid = Gtk.Grid()
+box_outer.pack_start(grid, True, True, 0)
+
+previous_label = None
 
 for pkg in pkglist:
-    row = Gtk.ListBoxRow()
-    hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
-    row.add(hbox)
-
     label = Gtk.Label(label=pkg)
     button = Gtk.Button(label='INSTALL')
-    hbox.pack_start(label, True, True, 0)
-    hbox.pack_start(button, True, True, 0)
+    if not previous_label:
+        grid.add(label)
+    else:
+        grid.attach_next_to(label, previous_label, Gtk.PositionType.BOTTOM,
+            1, 1)
+    previous_label = label
 
-    listbox.add(row)
+    grid.attach_next_to(button, label, Gtk.PositionType.RIGHT, 1, 1)
 
 win.show_all()
 
