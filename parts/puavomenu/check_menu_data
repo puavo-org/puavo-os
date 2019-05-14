@@ -26,8 +26,8 @@ print('=' * 20)
 logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s',
                     level=logging.INFO)
 
-# Init placeholder cache
-icons = iconcache.IconCache(48, 48 * 16)
+# Init the placeholder cache
+icons = iconcache.IconCache(48, 48 * 20)
 
 # Try to load everything
 m = menudata.Menudata()
