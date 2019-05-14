@@ -269,10 +269,10 @@ update_functions = [
   is_a_device ? :update_external_files      : :do_nothing,
   is_a_device ? :update_wlan_configurations : :do_nothing,
                 :update_grub_environment,
-                :update_puavopkg_installers,
                 :update_certificate,
                 :update_extra_boot_scripts,
                 :update_puavoadmins,
+                :update_puavopkg_installers,
 ]
 
 exitcode = 0
