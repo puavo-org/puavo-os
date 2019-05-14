@@ -6,6 +6,46 @@ import subprocess
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
+class PuavoPkg:
+    def __init__(self, pkgname):
+        available_puavo_packages_path = '/var/lib/puavo-pkg/available'
+
+        self.pkgname = pkgname
+
+        self.description = self.field('Description')
+        self.legend      = self.field('Legend')
+        self.license     = self.license()
+
+
+    def add_to_grid(self, grid, previous_pkg):
+        self.label = Gtk.Label(label=self.legend)
+
+        button = Gtk.Button(label='INSTALL')
+        if not previous_pkg:
+             grid.add(self.label)
+        else:
+             grid.attach_next_to(self.label, previous_pkg.label,
+               Gtk.PositionType.BOTTOM, 1, 1)
+
+        grid.attach_next_to(button, self.label, Gtk.PositionType.RIGHT, 1, 1)
+
+
+    def cmd_output(self, cmd):
+        return subprocess.check_output(cmd).rstrip().decode('utf-8')
+
+
+    def field(self, fieldname):
+        # XXX would be faster to skip puavo-pkg
+        cmd = [ 'puavo-pkg', 'show', '-F', fieldname, self.pkgname ]
+        return self.cmd_output(cmd)
+
+
+    def license(self):
+        # XXX would be faster to skip puavo-pkg
+        cmd = [ 'puavo-pkg', 'license', self.pkgname ]
+        return self.cmd_output(cmd)
+
+
 def on_button_clicked(widget):
     print('button clicked')
 
@@ -29,19 +69,13 @@ box_outer.pack_start(button, True, True, 0)
 grid = Gtk.Grid()
 box_outer.pack_start(grid, True, True, 0)
 
-previous_label = None
+previous_pkg = None
 
-for pkg in pkglist:
-    label = Gtk.Label(label=pkg)
-    button = Gtk.Button(label='INSTALL')
-    if not previous_label:
-        grid.add(label)
-    else:
-        grid.attach_next_to(label, previous_label, Gtk.PositionType.BOTTOM,
-            1, 1)
-    previous_label = label
+for pkgname in pkglist:
+    pkg = PuavoPkg(pkgname)
+    pkg.add_to_grid(grid, previous_pkg)
+    previous_pkg = pkg
 
-    grid.attach_next_to(button, label, Gtk.PositionType.RIGHT, 1, 1)
 
 win.show_all()
 
