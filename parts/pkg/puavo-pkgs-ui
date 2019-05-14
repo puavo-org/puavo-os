@@ -1,0 +1,41 @@
+#!/usr/bin/python3
+
+import gi
+import subprocess
+
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
+
+def on_button_clicked(widget):
+    print('button clicked')
+
+def puavoconf_get(puavoconf_key):
+  return subprocess.check_output([ 'puavo-conf', puavoconf_key ]).rstrip() \
+                   .decode('utf-8')
+
+pkglist = puavoconf_get('puavo.pkgs.ui.pkglist').split()
+
+win = Gtk.Window()
+win.connect('destroy', Gtk.main_quit)
+
+grid = Gtk.Grid()
+win.add(grid)
+
+button = Gtk.Button(label='INSTALL ALL')
+button.connect('clicked', on_button_clicked)
+grid.attach(button, 1, 1, 1, 1)
+
+previous_widget = button
+
+for pkg in pkglist:
+    pkg_widget = Gtk.Label(label=pkg)
+    grid.attach_next_to(pkg_widget,
+                        previous_widget,
+                        Gtk.PositionType.BOTTOM,
+                        1,
+                        1)
+    previous_widget = pkg_widget
+
+win.show_all()
+
+Gtk.main()
