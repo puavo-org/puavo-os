@@ -198,10 +198,7 @@ logmsg user.notice 'puavo-pkg-update starting'
 if [ "${1:-}" = '--update-installers' ]; then
   puavo_pkg_package=''
   puavo_pkg_specs=$(puavo-conf puavo.pkgs.ui.pkglist \
-                      | awk '
-                          BEGIN { RS = " " }
-                          $1 != " " { print $1, "extract" }
-                        ')
+                      | xargs -n 1 | awk '$1 != "" { print $1, "extract" }')
 else
   puavo_pkg_package=${1:-}
   puavo_pkg_specs=$(
