@@ -1,20 +1,71 @@
 #!/usr/bin/python3
 
 import gi
+import os
 import subprocess
 
 gi.require_version('Gtk', '3.0')
+from gi.repository import GLib
+from gi.repository import GObject
 from gi.repository import Gtk
 
 class PuavoPkg:
     def __init__(self, pkgname):
         self.pkgname = pkgname
+        self.command = None
+        self.install_log = []
 
 
     def lookup_fields(self):
         self.description = self.field('Description')
         self.legend      = self.field('Legend')
         self.license     = self.license()
+
+
+    def install(self, widget):
+        puavo_conf_key = 'puavo.pkg.%s' % self.pkgname
+
+        cmd = [ 'sudo', '/usr/sbin/puavo-conf-local', puavo_conf_key, 'latest' ]
+        subprocess.check_output(cmd).rstrip().decode('utf-8')
+
+        cmd = [ '/usr/bin/sudo', '/usr/sbin/puavo-pkg-update', self.pkgname ]
+        (pid, stdin, stdout, stderr) \
+          = GObject.spawn_async(cmd, flags=GLib.SPAWN_DO_NOT_REAP_CHILD,
+              standard_output=True, standard_error=True)
+
+        self.pkg_update_pid    = pid
+        self.pkg_update_stdout = stdout
+        self.pkg_update_stderr = stderr
+
+        for fd in [ stdout, stderr ]:
+            GObject.io_add_watch(fd, GObject.IO_HUP|GObject.IO_IN,
+                                 self.pkg_update_callback, os.fdopen(fd))
+
+
+    def pkg_update_callback(self, fd, condition, channel):
+        if condition == GObject.IO_HUP:
+            channel.close()
+            if fd == self.pkg_update_stdout:
+                self.pkg_update_stdout = None
+            else:
+                self.pkg_update_stderr = None
+
+            if not self.pkg_update_stdout and not self.pkg_update_stderr:
+                (pid, status) = os.waitpid(self.pkg_update_pid, 0)
+                if status == 0:
+                    # XXX
+                    print("OK")
+                else:
+                    # XXX
+                    print("ERROR")
+                print(''.join(self.install_log))
+
+            return False
+
+        if condition == GObject.IO_IN:
+            self.install_log.append( channel.readline() )
+
+        return True
 
 
     def add_to_grid(self, grid, previous_pkg):
@@ -24,8 +75,6 @@ class PuavoPkg:
             return False
 
         self.label = Gtk.Label(label=self.legend)
-
-        button = Gtk.Button(label='INSTALL')
         self.label.set_property('tooltip-text', self.description)
         if not previous_pkg:
              grid.add(self.label)
@@ -38,6 +87,8 @@ class PuavoPkg:
         grid.attach_next_to(license_link, self.label, Gtk.PositionType.RIGHT,
             1, 1)
 
+        button = Gtk.ToggleButton(label='INSTALL')
+        button.connect('toggled', self.install)
         grid.attach_next_to(button, license_link, Gtk.PositionType.RIGHT, 1, 1)
 
         return True
