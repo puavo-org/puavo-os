@@ -1337,6 +1337,9 @@ def load_menu_data(language, root_dir, filter_string, icon_cache):
 
     utils.log_elapsed_time('YAML loading time', start_time, end_time)
 
+    logging.info('(Raw) Have %d programs, %d menus and %d categores',
+                 len(raw_programs), len(raw_menus), len(raw_categories))
+
     # --------------------------------------------------------------------------
     # Locate and load .desktop files for desktop programs
 
@@ -1375,6 +1378,8 @@ def load_menu_data(language, root_dir, filter_string, icon_cache):
 
     end_time = time.clock()
 
+    logging.info('(Actual) Have %d programs, %d menus and %d categories',
+                 len(programs), len(menus), len(categories))
     utils.log_elapsed_time('Menu building time', start_time, end_time)
 
     # --------------------------------------------------------------------------
