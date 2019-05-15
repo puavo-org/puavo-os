@@ -57,9 +57,13 @@ class Filter:
 
     def reset(self):
         self.actions = []
+        self.visible_tags = set()
         self.program_names = set()
         self.menu_names = set()
         self.category_names = set()
+
+    def tag_visible(self, tag):
+        return tag in self.visible_tags
 
     def parse_string(self, tag_string, strict_reject=True):
         import re
@@ -141,3 +145,10 @@ class Filter:
                           Action.ACTIONS_FOR_LOGGER[action],
                           Action.TARGETS_FOR_LOGGER[target],
                           tag)
+
+            if target == Action.TAG:
+                if action == Action.SHOW:
+                    self.visible_tags.add(tag)
+                else:
+                    if tag in self.visible_tags:
+                        self.visible_tags.remove(tag)
