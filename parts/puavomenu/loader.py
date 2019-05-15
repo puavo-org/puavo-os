@@ -772,72 +772,74 @@ def apply_filters(raw_programs, raw_menus, raw_categories, conditions, filters):
             cat['hidden'] = True
 
     # ...then tags because they can override conditions (this is by design)
-    if filters.have_data():
-        # Filter programs
-        for menudata_id, program in raw_programs.items():
-            if not program:
+    if not filters.have_data():
+        return
+
+    # Filter programs
+    for menudata_id, program in raw_programs.items():
+        if not program:
+            continue
+
+        # All programs must have at least one tag, again by design
+        if ('tags' not in program) or len(program['tags']) == 0:
+            logging.warning('Program "%s" has no tags, hiding it', menudata_id)
+            program['hidden'] = True
+            continue
+
+        lname = menudata_id.lower()
+
+        for act in filters.actions:
+            if act.target == Action.TAG:
+                if act.name not in program['tags']:
+                    continue
+            elif act.target == Action.PROGRAM:
+                if act.name != lname:
+                    continue
+            else:
                 continue
 
-            # All programs must have at least one tag, again by design
-            if ('tags' not in program) or len(program['tags']) == 0:
-                logging.warning('Program "%s" has no tags, hiding it', menudata_id)
+            if act.action == Action.SHOW:
+                program['hidden'] = False
+            else:
                 program['hidden'] = True
+
+    # Filter menus
+    for menudata_id, menu in raw_menus.items():
+        if not menu:
+            continue
+
+        if menudata_id not in filters.menu_names:
+            continue
+
+        lname = menudata_id.lower()
+
+        for act in filters.actions:
+            if (act.target != Action.MENU) or (act.name != lname):
                 continue
 
-            lname = menudata_id.lower()
+            if act.action == Action.SHOW:
+                menu['hidden'] = False
+            else:
+                menu['hidden'] = True
 
-            for act in filters.actions:
-                if act.target == Action.TAG:
-                    if act.name not in program['tags']:
-                        continue
-                elif act.target == Action.PROGRAM:
-                    if act.name != lname:
-                        continue
-                else:
-                    continue
+    # Filter categories
+    for menudata_id, cat in raw_categories.items():
+        if not cat:
+            continue
 
-                if act.action == Action.SHOW:
-                    program['hidden'] = False
-                else:
-                    program['hidden'] = True
+        if menudata_id not in filters.category_names:
+            continue
 
-        # Filter menus
-        for menudata_id, menu in raw_menus.items():
-            if not menu:
+        lname = menudata_id.lower()
+
+        for act in filters.actions:
+            if (act.target != Action.CATEGORY) or (act.name != lname):
                 continue
 
-            if menudata_id not in filters.menu_names:
-                continue
-
-            lname = menudata_id.lower()
-
-            for act in filters.actions:
-                if (act.target != Action.MENU) or (act.name != lname):
-                    continue
-
-                if act.action == Action.SHOW:
-                    menu['hidden'] = False
-                else:
-                    menu['hidden'] = True
-
-        # Filter categories
-        for menudata_id, cat in raw_categories.items():
-            if not cat:
-                continue
-
-            if menudata_id not in filters.category_names:
-                continue
-
-            lname = menudata_id.lower()
-
-            for act in filters.actions:
-                if (act.target != Action.CATEGORY) or (act.name != lname):
-                    continue
-
-                if act.action == Action.SHOW:
-                    cat['hidden'] = False
-                else:
-                    cat['hidden'] = True
+            if act.action == Action.SHOW:
+                cat['hidden'] = False
+            else:
+                cat['hidden'] = True
 
 
 def build_menu_data(raw_programs, raw_menus, raw_categories, language):
