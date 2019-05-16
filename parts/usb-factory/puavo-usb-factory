@@ -63,19 +63,18 @@ proc download_image {} {
     if {$requested_version eq $image_downloading_version} { return }
 
     set pid [pid $image_downloader_fh]
-    catch { exec kill -$pid }
-    after 1000
-    catch { exec kill -9 -$pid }
+    catch { exec pkill -s $pid }
     catch { close $image_downloader_fh }
   }
 
   set image_downloading_version $requested_version
 
-  set image_downloader_fh [open "| setsid puavo-download-usb-factory-images"]
-  fconfigure $image_downloader_fh -buffering line
+  set image_downloader_fh [open "| setsid -w puavo-download-usb-factory-images"]
+  fconfigure $image_downloader_fh -blocking 0
   fileevent $image_downloader_fh readable {
-    catch { gets $image_downloader_fh }
+    catch { read $image_downloader_fh }
     if {[eof $image_downloader_fh]} {
+      fconfigure $image_downloader_fh -blocking 1
       if {[catch { close $image_downloader_fh }]} {
         after 30000 download_image      ; # failed, try again after 30 seconds
       } else {
