@@ -1,0 +1,36 @@
+#!/usr/bin/tclsh
+
+# Run /usr/sbin/puavo-pkg-update with arguments given,
+# except that when input is coming from standard input,
+# terminate the puavo-pkg-update process (and subprocesses).
+# Needed, because this should be run through sudo and a normal
+# process kill does not work in that case (unless user is root).
+
+set puavo_pkg_update [
+  open "|[list /usr/bin/setsid -w /usr/sbin/puavo-pkg-update {*}$argv 2>@1]"
+]
+
+fconfigure stdin -blocking 0
+fileevent stdin readable {
+  catch { close $stdin }
+
+  set pid [pid $puavo_pkg_update]
+  catch { exec pkill -s $pid }
+}
+
+fconfigure $puavo_pkg_update -blocking 0
+fileevent $puavo_pkg_update readable {
+  puts -nonewline [read $puavo_pkg_update]
+  flush stdout
+  if {[eof $puavo_pkg_update]} {
+    fconfigure $puavo_pkg_update -blocking 1
+    if {[catch { close $puavo_pkg_update } result options]} {
+      set code [dict get $options -errorcode]
+      if {[lindex $code 0] eq "CHILDSTATUS"} { exit [lindex $code 2] }
+      exit 1
+    }
+    exit 0
+  }
+}
+
+vwait forever

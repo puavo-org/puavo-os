@@ -37,7 +37,7 @@ case "$superusers_mode" in
 
     cat <<EOF > "${primary_user_conf_path}.tmp"
 ${primary_user} ALL=(ALL) ALL
-${primary_user} ALL = NOPASSWD: /usr/sbin/puavo-pkg-update
+${primary_user} ALL = NOPASSWD: /usr/sbin/puavo-pkg-update-from-gui
 ${primary_user} ALL = NOPASSWD: /usr/sbin/puavo-conf-local
 EOF
     mv "${primary_user_conf_path}.tmp" "$primary_user_conf_path"

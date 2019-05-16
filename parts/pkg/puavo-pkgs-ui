@@ -15,11 +15,13 @@ from gi.repository import Gtk
 
 class PkgState(Enum):
     ABSENT          = 1
-    INSTALL_ERROR   = 2
-    INSTALL_SUCCESS = 3
-    INSTALLED       = 4
-    INSTALLING      = 5
-    REMOVING        = 6
+    INSTALLED       = 2
+    INSTALL_ERROR   = 3
+    INSTALLING      = 4
+    INSTALL_SUCCESS = 5
+    REMOVE_ERROR    = 6
+    REMOVE_SUCCESS  = 7
+    REMOVING        = 8
 
 
 class PuavoPkg:
@@ -30,11 +32,10 @@ class PuavoPkg:
         self.pkg_update_pid = None
 
 
-    def lookup_pkg_state(self):
+    def lookup_pkg_fields(self):
         self.description = self.field('Description')
         self.legend      = self.field('Legend')
         self.license     = self.license()
-        self.pkg_state   = PkgState.ABSENT      # XXX
 
 
     def set_puavoconf(self, value):
@@ -47,20 +48,20 @@ class PuavoPkg:
     def run_puavo_pkg_update(self):
         # XXX what if this is already running?  might that happen?
 
-        cmd = [ '/usr/bin/sudo', '/usr/sbin/puavo-pkg-update', self.pkgname ]
-        (pid, stdin, stdout, stderr) \
-          = GObject.spawn_async(cmd, flags=GLib.SPAWN_DO_NOT_REAP_CHILD,
-              standard_output=True, standard_error=True)
+        cmd = [ '/usr/bin/sudo',
+                '/usr/sbin/puavo-pkg-update-from-gui',
+                self.pkgname ]
+        (pid, stdin, stdout, stderr) = GObject.spawn_async(cmd,
+            flags=GLib.SPAWN_DO_NOT_REAP_CHILD|GLib.SPAWN_STDERR_TO_DEV_NULL,
+            standard_input=True, standard_output=True)
 
-        self.pkg_update_pid    = pid
-        self.pkg_update_stdout = stdout
-        self.pkg_update_stderr = stderr
+        self.pkg_update_pid   = pid
+        self.pkg_update_stdin = os.fdopen(stdin, 'w')
 
-        for fd in [ stdout, stderr ]:
-            fl = fcntl.fcntl(fd, fcntl.F_GETFL)
-            fcntl.fcntl(fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
-            GObject.io_add_watch(fd, GObject.IO_HUP|GObject.IO_IN,
-                                 self.pkg_update_callback, os.fdopen(fd))
+        fl = fcntl.fcntl(stdout, fcntl.F_GETFL)
+        fcntl.fcntl(stdout, fcntl.F_SETFL, fl | os.O_NONBLOCK)
+        GObject.io_add_watch(stdout, GObject.IO_HUP|GObject.IO_IN,
+                             self.pkg_update_callback, os.fdopen(stdout))
 
 
     def install_pkg(self, widget):
@@ -70,8 +71,8 @@ class PuavoPkg:
 
 
     def cancel_installation(self, widget):
-        if self.pkg_update_pid:
-            os.kill(self.pkg_update_pid, signal.SIGINT)
+        if self.pkg_update_stdin:
+            print('quit', file=self.pkg_update_stdin, flush=True)
 
 
     def remove_pkg(self, widget):
@@ -95,10 +96,17 @@ class PuavoPkg:
 
         self.pkg_state = new_state
 
-        if new_state == PkgState.ABSENT:
+        absent_states = [ PkgState.ABSENT,
+                          PkgState.REMOVE_ERROR,
+                          PkgState.REMOVE_SUCCESS ]
+
+        if new_state in absent_states:
             self.button.set_label('INSTALL')
             self.button_conn = self.button.connect('clicked', self.install_pkg)
             self.button.set_sensitive(True)
+
+            self.progressbar.set_show_text(False)
+            self.progressbar.set_fraction(0.0)
 
         elif new_state == PkgState.INSTALLING:
             self.button.set_label('CANCEL')
@@ -141,31 +149,29 @@ class PuavoPkg:
     def pkg_update_callback(self, fd, condition, channel):
         if condition == GObject.IO_HUP:
             channel.close()
-            if fd == self.pkg_update_stdout:
-                self.pkg_update_stdout = None
-            else:
-                self.pkg_update_stderr = None
 
-            if not self.pkg_update_stdout and not self.pkg_update_stderr:
-                (pid, status) = os.waitpid(self.pkg_update_pid, 0)
+            (pid, status) = os.waitpid(self.pkg_update_pid, 0)
 
-                # ignore error code when removing package
-                if self.pkg_state == PkgState.REMOVING:
-                    self.set_ui_state(PkgState.ABSENT)
+            if self.pkg_state == PkgState.REMOVING:
+                if status == 0:
+                    self.set_ui_state(PkgState.REMOVE_SUCCESS)
                 else:
-                    if status == 0:
-                        self.set_ui_state(PkgState.INSTALL_SUCCESS)
-                    else:
-                        self.set_ui_state(PkgState.INSTALL_ERROR)
+                    self.set_ui_state(PkgState.REMOVE_ERROR)
+            else:
+                if status == 0:
+                    self.set_ui_state(PkgState.INSTALL_SUCCESS)
+                else:
+                    self.set_ui_state(PkgState.INSTALL_ERROR)
 
-                print(''.join(self.install_log))        # XXX where to put this?
-                self.pkg_update_pid = None
+            print(''.join(self.install_log))        # XXX where to put this?
+            self.pkg_update_pid   = None
+            self.pkg_update_stdin = None
 
             return False
 
         if condition == GObject.IO_IN:
             self.install_log.append( channel.read() )
-            print(self.install_log[-1])      # XXX
+            print(self.install_log[-1], end='')      # XXX
 
         return True
 
@@ -173,7 +179,7 @@ class PuavoPkg:
     def add_to_grid(self, grid, previous_pkg):
         # package may not be available, so skip those packages
         try:
-            self.lookup_pkg_state()
+            self.lookup_pkg_fields()
         except:
             return False
 
