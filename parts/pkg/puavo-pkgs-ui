@@ -171,6 +171,7 @@ class PuavoPkg:
 
 
     def add_to_grid(self, grid, previous_pkg):
+        # package may not be available, so skip those packages
         try:
             self.lookup_pkg_state()
         except:
@@ -197,8 +198,9 @@ class PuavoPkg:
         grid.attach_next_to(self.progressbar, self.button,
                             Gtk.PositionType.RIGHT, 1, 1)
 
-        # XXX
-        if False:
+        installed_link = os.path.join('/var/lib/puavo-pkg/installed',
+                                      self.pkgname)
+        if os.path.exists(installed_link):
             self.set_ui_state(PkgState.INSTALLED)
         else:
             self.set_ui_state(PkgState.ABSENT)
