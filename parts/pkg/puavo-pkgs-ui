@@ -5,6 +5,7 @@ import gi
 import os
 import signal
 import subprocess
+import sys
 
 from enum import Enum
 
@@ -299,7 +300,6 @@ pkg_list = []
 for pkgname in puavoconf_get('puavo.pkgs.ui.pkglist').split():
     pkg_list.append( PuavoPkg(pkgname) )
 
-
 win = Gtk.Window()
 win.connect('destroy', Gtk.main_quit)
 win.set_border_width(10)
@@ -319,8 +319,11 @@ for pkg in pkg_list:
     if pkg.add_to_grid(grid, previous_pkg):
         previous_pkg = pkg
 
-# XXX if previous_pkg is None, there are no packages to install and an error
-# XXX should be presented to user
+if not previous_pkg:
+    dialog = Gtk.MessageDialog(win, 0, Gtk.MessageType.ERROR,
+       Gtk.ButtonsType.CANCEL, 'ERROR: no packages to install')
+    dialog.run()
+    sys.exit(1)
 
 win.show_all()
 
