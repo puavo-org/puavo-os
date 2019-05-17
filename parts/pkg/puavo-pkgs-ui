@@ -27,10 +27,12 @@ class PkgState(Enum):
 
 class PuavoPkg:
     def __init__(self, pkgname):
-        self.action_button_conn = None
-        self.pkgname            = pkgname
-        self.pkg_state          = None
-        self.pkg_update_pid     = None
+        self.action_button_conn   = None
+        self.install_log          = []
+        self.install_log_textview = None
+        self.pkgname              = pkgname
+        self.pkg_state            = None
+        self.pkg_update_pid       = None
 
 
     def lookup_pkg_fields(self):
@@ -138,8 +140,10 @@ class PuavoPkg:
 
     def pkg_update_callback(self, fd, condition, channel):
         if condition & GObject.IO_IN:
-            logtext = channel.read()
-            self.install_log_textview.get_buffer().insert_at_cursor(logtext)
+            text = channel.read()
+            self.install_log.append(text)
+            if self.install_log_textview:
+                self.install_log_textview.get_buffer().insert_at_cursor(text)
 
         if condition & GObject.IO_HUP:
             channel.close()
@@ -194,26 +198,10 @@ class PuavoPkg:
         grid.attach_next_to(self.progressbar, self.action_button,
                             Gtk.PositionType.RIGHT, 1, 1)
 
-        self.install_log_win = Gtk.Window()
-        self.install_log_win.set_default_geometry(800, 220)
-        self.install_log_win.set_title('puavo-pkgs-ui / %s' % self.pkgname)
-        self.install_log_textview = Gtk.TextView()
-        self.install_log_textview.set_border_width(10)
-        self.install_log_textview.set_cursor_visible(False)
-        self.install_log_textview.set_editable(False)
-
-        scrolled_win = Gtk.ScrolledWindow()
-        scrolled_win.add(self.install_log_textview)
-
-        self.install_log_win.add(scrolled_win)
-
         self.toggle_log_button = Gtk.ToggleButton(label='show log')
         self.toggle_log_button.connect('clicked', self.show_or_hide_log)
         grid.attach_next_to(self.toggle_log_button, self.progressbar,
                             Gtk.PositionType.RIGHT, 1, 1)
-
-        self.install_log_win.connect('destroy',
-          lambda x: self.toggle_log_button.set_active(False))
 
         installed_link = os.path.join('/var/lib/puavo-pkg/installed',
                                       self.pkgname)
@@ -227,9 +215,29 @@ class PuavoPkg:
 
     def show_or_hide_log(self, widget):
         if widget.get_active():
+            self.install_log_win = Gtk.Window()
+            self.install_log_win.set_default_geometry(800, 220)
+            self.install_log_win.set_title('puavo-pkgs-ui / %s'
+                                             % self.pkgname)
+            self.install_log_win.connect('destroy',
+              lambda x: self.toggle_log_button.set_active(False))
+
+            self.install_log_textview = Gtk.TextView()
+            self.install_log_textview.set_border_width(10)
+            self.install_log_textview.set_cursor_visible(False)
+            self.install_log_textview.set_editable(False)
+            self.install_log_textview.get_buffer() \
+              .insert_at_cursor(''.join(self.install_log))
+
+            scrolled_win = Gtk.ScrolledWindow()
+            scrolled_win.add(self.install_log_textview)
+
+            self.install_log_win.add(scrolled_win)
             self.install_log_win.show_all()
-        else:
-            self.install_log_win.hide()
+
+        elif self.install_log_win:
+            self.install_log_win.destroy()
+            self.install_log_win = None
 
 
     def field(self, fieldname):
