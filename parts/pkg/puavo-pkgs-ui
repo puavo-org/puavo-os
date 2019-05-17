@@ -25,6 +25,17 @@ class PkgState(Enum):
     REMOVING        = 8
 
 
+def _state_msg(msg, color=None):
+    text = '<b>' + msg + '</b>'
+    if color:
+        text = '<span background="%s">%s</span>' % (color, text)
+    return text
+
+
+def _tr(msg):
+    return msg
+
+
 class PuavoPkg:
     def __init__(self, pkgname):
         self.action_button_conn   = None
@@ -85,14 +96,6 @@ class PuavoPkg:
         self.run_puavo_pkg_update()
 
 
-    def pulse_progressbar(self):
-        if self.pkg_update_pid:
-            self.progressbar.pulse()
-            return True
-
-        return False
-
-
     def set_ui_state(self, new_state):
         if self.action_button_conn:
             self.action_button.disconnect(self.action_button_conn)
@@ -100,40 +103,40 @@ class PuavoPkg:
 
         self.action_button.set_sensitive( new_state != PkgState.REMOVING )
         self.pkg_state = new_state
-        self.progressbar.set_fraction(0.0)
 
         if new_state in [ PkgState.ABSENT, PkgState.REMOVE_SUCCESS ]:
-            self.progressbar.set_text('NOT INSTALLED')
-            self.action_button.set_label('INSTALL')
+            self.state_msg.set_markup(
+              _state_msg('NOT INSTALLED', 'lightblue') )
+            self.action_button.set_label( _tr('INSTALL') )
             self.action_button_conn \
               = self.action_button.connect('clicked', self.install_pkg)
 
         elif new_state == PkgState.INSTALLING:
-            self.progressbar.set_text('INSTALLING')
-            self.action_button.set_label('CANCEL')
+            self.state_msg.set_markup( _state_msg('INSTALLING', 'yellow') )
+            self.action_button.set_label( _tr('CANCEL') )
             self.action_button_conn \
               = self.action_button.connect('clicked', self.cancel_installation)
-            GObject.timeout_add(100, self.pulse_progressbar)
+            self.spinner.start()
 
         elif new_state == PkgState.INSTALL_ERROR:
-            self.progressbar.set_text('INSTALLATION ERROR')
-            self.action_button.set_label('INSTALL')
+            self.state_msg.set_markup( _state_msg('ERROR', 'sandybrown') )
+            self.action_button.set_label( _tr('INSTALL') )
             self.action_button_conn \
               = self.action_button.connect('clicked', self.install_pkg)
 
         elif new_state in [ PkgState.INSTALL_SUCCESS, PkgState.INSTALLED ]:
-            self.progressbar.set_text('INSTALLED')
-            self.action_button.set_label('REMOVE')
+            self.state_msg.set_markup( _state_msg('INSTALLED', 'lightgreen') )
+            self.action_button.set_label( _tr('REMOVE') )
             self.action_button_conn \
               = self.action_button.connect('clicked', self.remove_pkg)
 
         elif new_state == PkgState.REMOVING:
-            self.progressbar.set_text('REMOVING')
-            GObject.timeout_add(100, self.pulse_progressbar)
+            self.state_msg.set_markup( _state_msg('REMOVING', 'orange') )
+            self.spinner.start()
 
         elif new_state == PkgState.REMOVE_ERROR:
-            self.progressbar.set_text('ERROR IN REMOVING')
-            self.action_button.set_label('INSTALL')
+            self.state_msg.set_markup( _state_msg('ERROR', 'sandybrown') )
+            self.action_button.set_label( _tr('INSTALL') )
             self.action_button_conn \
               = self.action_button.connect('clicked', self.install_pkg)
 
@@ -161,6 +164,7 @@ class PuavoPkg:
                 else:
                     self.set_ui_state(PkgState.INSTALL_ERROR)
 
+            self.spinner.stop()
             self.pkg_update_pid   = None
             self.pkg_update_stdin = None
 
@@ -185,7 +189,9 @@ class PuavoPkg:
                Gtk.PositionType.BOTTOM, 1, 1)
 
         license_link = Gtk.Label()
-        license_link.set_markup('<a href="%s">lisenssiehdot</a>' % self.license)
+        license_text \
+          = '<a href="%s">%s</a>' % (self.license, _tr('license terms'))
+        license_link.set_markup(license_text)
         grid.attach_next_to(license_link, self.label, Gtk.PositionType.RIGHT,
             1, 1)
 
@@ -193,14 +199,17 @@ class PuavoPkg:
         grid.attach_next_to(self.action_button, license_link,
                             Gtk.PositionType.RIGHT, 1, 1)
 
-        self.progressbar = Gtk.ProgressBar()
-        self.progressbar.set_show_text(True)
-        grid.attach_next_to(self.progressbar, self.action_button,
+        self.spinner = Gtk.Spinner()
+        grid.attach_next_to(self.spinner, self.action_button,
+                            Gtk.PositionType.RIGHT, 1, 1)
+
+        self.state_msg = Gtk.Label()
+        grid.attach_next_to(self.state_msg, self.spinner,
                             Gtk.PositionType.RIGHT, 1, 1)
 
         self.toggle_log_button = Gtk.ToggleButton(label='show log')
         self.toggle_log_button.connect('clicked', self.show_or_hide_log)
-        grid.attach_next_to(self.toggle_log_button, self.progressbar,
+        grid.attach_next_to(self.toggle_log_button, self.state_msg,
                             Gtk.PositionType.RIGHT, 1, 1)
 
         installed_link = os.path.join('/var/lib/puavo-pkg/installed',
@@ -286,7 +295,7 @@ win.set_default_geometry(780, 700)
 box_outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
 win.add(box_outer)
 
-button = Gtk.Button(label='ACCEPT ALL LICENSES AND INSTALL ALL SOFTWARE')
+button = Gtk.Button(label=_tr('ACCEPT ALL LICENSES AND INSTALL ALL SOFTWARE'))
 button.connect('clicked', lambda w: install_all_packages(w, pkg_list))
 box_outer.pack_start(button, False, False, 0)
 
@@ -304,7 +313,7 @@ for pkg in pkg_list:
 
 if not previous_pkg:
     dialog = Gtk.MessageDialog(win, 0, Gtk.MessageType.ERROR,
-       Gtk.ButtonsType.CANCEL, 'ERROR: no packages to install')
+       Gtk.ButtonsType.CANCEL, _tr('ERROR: no packages to install'))
     dialog.run()
     sys.exit(1)
 
