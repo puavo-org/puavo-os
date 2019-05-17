@@ -223,21 +223,27 @@ class PuavoPkg:
               lambda x: self.toggle_log_button.set_active(False))
 
             self.install_log_textview = Gtk.TextView()
+            self.install_log_textview.connect('size-allocate', self.autoscroll)
             self.install_log_textview.set_border_width(10)
             self.install_log_textview.set_cursor_visible(False)
             self.install_log_textview.set_editable(False)
             self.install_log_textview.get_buffer() \
               .insert_at_cursor(''.join(self.install_log))
 
-            scrolled_win = Gtk.ScrolledWindow()
-            scrolled_win.add(self.install_log_textview)
+            self.scrolled_win = Gtk.ScrolledWindow()
+            self.scrolled_win.add(self.install_log_textview)
 
-            self.install_log_win.add(scrolled_win)
+            self.install_log_win.add(self.scrolled_win)
             self.install_log_win.show_all()
 
         elif self.install_log_win:
             self.install_log_win.destroy()
             self.install_log_win = None
+
+
+    def autoscroll(self, *args):
+        adj = self.scrolled_win.get_vadjustment()
+        adj.set_value(adj.get_upper() - adj.get_page_size())
 
 
     def field(self, fieldname):
