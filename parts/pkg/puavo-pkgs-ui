@@ -34,8 +34,8 @@ class PuavoPkg:
 
 
     def lookup_pkg_fields(self):
-        self.description = self.field('Description')
-        self.legend      = self.field('Legend')
+        self.description = self.field('description')
+        self.legend      = self.field('legend')
         self.license     = self.license()
 
 
@@ -258,10 +258,6 @@ class PuavoPkg:
         return True
 
 
-    def cmd_output(self, cmd):
-        return subprocess.check_output(cmd).rstrip().decode('utf-8')
-
-
     def show_or_hide_log(self, widget):
         if widget.get_active():
             self.install_log_win.show_all()
@@ -270,15 +266,16 @@ class PuavoPkg:
 
 
     def field(self, fieldname):
-        # XXX would be faster to skip puavo-pkg
-        cmd = [ 'puavo-pkg', 'show', '-F', fieldname, self.pkgname ]
-        return self.cmd_output(cmd)
+        path = '/var/lib/puavo-pkg/available/%s/%s' % (self.pkgname, fieldname)
+        with open(path) as file:
+            return file.read().rstrip()
 
 
     def license(self):
-        # XXX would be faster to skip puavo-pkg
-        cmd = [ 'puavo-pkg', 'license', self.pkgname ]
-        return self.cmd_output(cmd)
+        path = '/var/lib/puavo-pkg/available/%s/license' % self.pkgname
+        if not os.path.exists(path):
+            raise ValueError('license not found')
+        return 'file://%s' % path
 
 
 def install_all_packages(widget, pkg_list):
