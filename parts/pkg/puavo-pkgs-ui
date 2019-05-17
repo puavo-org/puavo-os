@@ -93,8 +93,6 @@ class PuavoPkg:
 
 
     def set_ui_state(self, new_state):
-        print("setting UI state for %s to %s" % (self.pkgname, new_state))
-
         if self.action_button_conn:
             self.action_button.disconnect(self.action_button_conn)
             self.action_button_conn = None
@@ -119,7 +117,6 @@ class PuavoPkg:
             GObject.timeout_add(100, self.pulse_progressbar)
 
         elif new_state == PkgState.INSTALL_ERROR:
-            print("at INSTALL_ERROR for %s" % self.pkgname)
             self.progressbar.set_text('ERROR')
             self.progressbar.set_show_text(True)
             self.progressbar.set_fraction(0.0)
@@ -173,12 +170,14 @@ class PuavoPkg:
 
 
     def pkg_update_callback(self, fd, condition, channel):
-        if condition == GObject.IO_HUP:
+        if condition & GObject.IO_IN:
+            logtext = channel.read()
+            self.install_log_textview.get_buffer().insert_at_cursor(logtext)
+
+        if condition & GObject.IO_HUP:
             channel.close()
 
             (pid, status) = os.waitpid(self.pkg_update_pid, 0)
-
-            print("status for %s is %s" % (self.pkgname, status))
 
             if self.pkg_state == PkgState.REMOVING:
                 if status == 0:
@@ -195,10 +194,6 @@ class PuavoPkg:
             self.pkg_update_stdin = None
 
             return False
-
-        if condition == GObject.IO_IN:
-            logtext = channel.read()
-            self.install_log_textview.get_buffer().insert_at_cursor(logtext)
 
         return True
 
