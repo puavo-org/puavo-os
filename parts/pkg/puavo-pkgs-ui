@@ -286,8 +286,13 @@ class PuavoPkg:
 
 
 def install_all_packages(widget, pkg_list):
+    possible_to_install_states = [ PkgState.ABSENT,
+                                   PkgState.INSTALL_ERROR,
+                                   PkgState.REMOVE_ERROR,
+                                   PkgState.REMOVE_SUCCESS ]
     for pkg in pkg_list:
-        pkg.install_pkg(widget)
+        if pkg.pkg_state in possible_to_install_states:
+            pkg.action_button.clicked()
 
 
 def puavoconf_get(puavoconf_key):
