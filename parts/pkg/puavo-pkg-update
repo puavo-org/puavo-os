@@ -32,7 +32,7 @@ download_installer() {
   puavo_pkg=$1
   version=$2
 
-  rm -f ${installers_dir}/*/*.tmp
+  rm -f ${installers_dir}/${puavo_pkg}/*.tmp
 
   do_file_check=false
   if [ "$version" = 'latest' ]; then
