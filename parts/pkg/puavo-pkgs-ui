@@ -26,10 +26,10 @@ class PkgState(Enum):
 
 class PuavoPkg:
     def __init__(self, pkgname):
-        self.button_conn    = None
-        self.install_log    = []
-        self.pkgname        = pkgname
-        self.pkg_update_pid = None
+        self.action_button_conn = None
+        self.pkgname            = pkgname
+        self.pkg_state          = None
+        self.pkg_update_pid     = None
 
 
     def lookup_pkg_fields(self):
@@ -65,6 +65,9 @@ class PuavoPkg:
 
 
     def install_pkg(self, widget):
+        if self.pkg_update_pid:
+            return
+
         self.set_ui_state(PkgState.INSTALLING)
         self.set_puavoconf('latest')
         self.run_puavo_pkg_update()
@@ -90,60 +93,83 @@ class PuavoPkg:
 
 
     def set_ui_state(self, new_state):
-        if self.button_conn:
-            self.button.disconnect(self.button_conn)
-            self.button_conn = None
+        print("setting UI state for %s to %s" % (self.pkgname, new_state))
+
+        if self.action_button_conn:
+            self.action_button.disconnect(self.action_button_conn)
+            self.action_button_conn = None
 
         self.pkg_state = new_state
 
-        absent_states = [ PkgState.ABSENT,
-                          PkgState.REMOVE_ERROR,
-                          PkgState.REMOVE_SUCCESS ]
-
-        if new_state in absent_states:
-            self.button.set_label('INSTALL')
-            self.button_conn = self.button.connect('clicked', self.install_pkg)
-            self.button.set_sensitive(True)
+        if new_state == PkgState.ABSENT:
+            self.action_button.set_label('INSTALL')
+            self.action_button_conn \
+              = self.action_button.connect('clicked', self.install_pkg)
+            self.action_button.set_sensitive(True)
 
             self.progressbar.set_show_text(False)
             self.progressbar.set_fraction(0.0)
 
         elif new_state == PkgState.INSTALLING:
-            self.button.set_label('CANCEL')
-            self.button_conn = self.button.connect('clicked',
-                                                   self.cancel_installation)
-            self.button.set_sensitive(True)
+            self.action_button.set_label('CANCEL')
+            self.action_button_conn \
+              = self.action_button.connect('clicked', self.cancel_installation)
+            self.action_button.set_sensitive(True)
 
             GObject.timeout_add(100, self.pulse_progressbar)
 
         elif new_state == PkgState.INSTALL_ERROR:
+            print("at INSTALL_ERROR for %s" % self.pkgname)
             self.progressbar.set_text('ERROR')
             self.progressbar.set_show_text(True)
             self.progressbar.set_fraction(0.0)
 
-            self.button.set_label('INSTALL')
-            self.button_conn = self.button.connect('clicked', self.install_pkg)
-            self.button.set_sensitive(True)
+            self.action_button.set_label('INSTALL')
+            self.action_button_conn \
+              = self.action_button.connect('clicked', self.install_pkg)
+            self.action_button.set_sensitive(True)
 
         elif new_state == PkgState.INSTALL_SUCCESS:
             self.progressbar.set_text('SUCCESS')
             self.progressbar.set_show_text(True)
             self.progressbar.set_fraction(0.0)
 
-            self.button.set_label('REMOVE')
-            self.button_conn = self.button.connect('clicked', self.remove_pkg)
-            self.button.set_sensitive(True)
+            self.action_button.set_label('REMOVE')
+            self.action_button_conn \
+              = self.action_button.connect('clicked', self.remove_pkg)
+            self.action_button.set_sensitive(True)
 
         elif new_state == PkgState.INSTALLED:
-            self.button.set_label('REMOVE')
-            self.button_conn = self.button.connect('clicked', self.remove_pkg)
-            self.button.set_sensitive(True)
+            self.action_button.set_label('REMOVE')
+            self.action_button_conn \
+              = self.action_button.connect('clicked', self.remove_pkg)
+            self.action_button.set_sensitive(True)
 
         elif new_state == PkgState.REMOVING:
-            self.button.set_label('REMOVING')
-            self.button.set_sensitive(False)
+            self.action_button.set_label('REMOVING')
+            self.action_button.set_sensitive(False)
 
             GObject.timeout_add(100, self.pulse_progressbar)
+
+        elif new_state == PkgState.REMOVE_ERROR:
+            self.progressbar.set_text('ERROR IN REMOVAL')
+            self.progressbar.set_show_text(True)
+            self.progressbar.set_fraction(0.0)
+
+            self.action_button.set_label('INSTALL')
+            self.action_button_conn \
+              = self.action_button.connect('clicked', self.install_pkg)
+            self.action_button.set_sensitive(True)
+
+        elif new_state == PkgState.REMOVE_SUCCESS:
+            self.progressbar.set_text('REMOVED')
+            self.progressbar.set_show_text(True)
+            self.progressbar.set_fraction(0.0)
+
+            self.action_button.set_label('INSTALL')
+            self.action_button_conn \
+              = self.action_button.connect('clicked', self.install_pkg)
+            self.action_button.set_sensitive(True)
 
 
     def pkg_update_callback(self, fd, condition, channel):
@@ -151,6 +177,8 @@ class PuavoPkg:
             channel.close()
 
             (pid, status) = os.waitpid(self.pkg_update_pid, 0)
+
+            print("status for %s is %s" % (self.pkgname, status))
 
             if self.pkg_state == PkgState.REMOVING:
                 if status == 0:
@@ -163,15 +191,14 @@ class PuavoPkg:
                 else:
                     self.set_ui_state(PkgState.INSTALL_ERROR)
 
-            print(''.join(self.install_log))        # XXX where to put this?
             self.pkg_update_pid   = None
             self.pkg_update_stdin = None
 
             return False
 
         if condition == GObject.IO_IN:
-            self.install_log.append( channel.read() )
-            print(self.install_log[-1], end='')      # XXX
+            logtext = channel.read()
+            self.install_log_textview.get_buffer().insert_at_cursor(logtext)
 
         return True
 
@@ -196,13 +223,34 @@ class PuavoPkg:
         grid.attach_next_to(license_link, self.label, Gtk.PositionType.RIGHT,
             1, 1)
 
-        self.button = Gtk.Button()
-        grid.attach_next_to(self.button, license_link, Gtk.PositionType.RIGHT,
-                            1, 1)
+        self.action_button = Gtk.Button()
+        grid.attach_next_to(self.action_button, license_link,
+                            Gtk.PositionType.RIGHT, 1, 1)
 
         self.progressbar = Gtk.ProgressBar()
-        grid.attach_next_to(self.progressbar, self.button,
+        grid.attach_next_to(self.progressbar, self.action_button,
                             Gtk.PositionType.RIGHT, 1, 1)
+
+        self.install_log_win = Gtk.Window()
+        self.install_log_win.set_default_geometry(800, 450)
+        self.install_log_win.set_title('puavo-pkgs-ui / %s' % self.pkgname)
+        self.install_log_textview = Gtk.TextView()
+        self.install_log_textview.set_border_width(10)
+        self.install_log_textview.set_cursor_visible(False)
+        self.install_log_textview.set_editable(False)
+
+        scrolled_win = Gtk.ScrolledWindow()
+        scrolled_win.add(self.install_log_textview)
+
+        self.install_log_win.add(scrolled_win)
+
+        self.toggle_log_button = Gtk.ToggleButton(label='show log')
+        self.toggle_log_button.connect('clicked', self.show_or_hide_log)
+        grid.attach_next_to(self.toggle_log_button, self.progressbar,
+                            Gtk.PositionType.RIGHT, 1, 1)
+
+        self.install_log_win.connect('destroy',
+          lambda x: self.toggle_log_button.set_active(False))
 
         installed_link = os.path.join('/var/lib/puavo-pkg/installed',
                                       self.pkgname)
@@ -218,6 +266,13 @@ class PuavoPkg:
         return subprocess.check_output(cmd).rstrip().decode('utf-8')
 
 
+    def show_or_hide_log(self, widget):
+        if widget.get_active():
+            self.install_log_win.show_all()
+        else:
+            self.install_log_win.hide()
+
+
     def field(self, fieldname):
         # XXX would be faster to skip puavo-pkg
         cmd = [ 'puavo-pkg', 'show', '-F', fieldname, self.pkgname ]
@@ -230,14 +285,20 @@ class PuavoPkg:
         return self.cmd_output(cmd)
 
 
-def on_button_clicked(widget):
-    print('button clicked')
+def install_all_packages(widget, pkg_list):
+    for pkg in pkg_list:
+        pkg.install_pkg(widget)
+
 
 def puavoconf_get(puavoconf_key):
-  return subprocess.check_output([ 'puavo-conf', puavoconf_key ]).rstrip() \
-                   .decode('utf-8')
+    return subprocess.check_output([ 'puavo-conf', puavoconf_key ]).rstrip() \
+                     .decode('utf-8')
 
-pkglist = puavoconf_get('puavo.pkgs.ui.pkglist').split()
+
+pkg_list = []
+for pkgname in puavoconf_get('puavo.pkgs.ui.pkglist').split():
+    pkg_list.append( PuavoPkg(pkgname) )
+
 
 win = Gtk.Window()
 win.connect('destroy', Gtk.main_quit)
@@ -246,20 +307,15 @@ win.set_border_width(10)
 box_outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
 win.add(box_outer)
 
-button = Gtk.Button(label='INSTALL ALL')
-button.connect('clicked', on_button_clicked)
+button = Gtk.Button(label='ACCEPT ALL LICENSES AND INSTALL ALL SOFTWARE')
+button.connect('clicked', lambda w: install_all_packages(w, pkg_list))
 box_outer.pack_start(button, True, True, 0)
 
 grid = Gtk.Grid()
 box_outer.pack_start(grid, True, True, 0)
 
 previous_pkg = None
-
-pkg_list = []
-
-for pkgname in pkglist:
-    pkg = PuavoPkg(pkgname)
-    pkg_list.append(pkg)
+for pkg in pkg_list:
     if pkg.add_to_grid(grid, previous_pkg):
         previous_pkg = pkg
 
