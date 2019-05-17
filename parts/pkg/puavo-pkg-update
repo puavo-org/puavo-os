@@ -6,8 +6,8 @@ logmsg() {
   priority=$1
   shift
 
-  logger -p "$priority" -t puavo-pkg-update "$@"
-  echo "PUAVO-PKG-UPDATE: $@" >&2
+  logger -p "$priority" -t puavo-pkg-update "$@" || true
+  echo "PUAVO-PKG-UPDATE: $@" >&2 || true
 }
 
 if ! mountpoint -q /images; then
@@ -66,12 +66,19 @@ download_installer() {
 
   logmsg user.info "verifying ${pkg_url}"
 
+  exec 4< /root/.pkg-gnupg
+  if ! flock -w 10 -x 4; then
+    echo 'could not lock /root/.pkg-gnupg for gpg verification' >&2
+    return 1
+  fi
   if ! gpg --decrypt --homedir /root/.pkg-gnupg \
     "$unverified_installer_tmppath" 2>/dev/null > "$installer_tmppath"; then
       logmsg user.err "verification failed for ${unverified_installer_tmppath}"
-      rm -f "$unverified_installer_tmppath" "$installer_tmppath"
+      rm -f "$unverified_installer_tmppath" "$installer_tmppath" || true
+      flock -u 4
       return 1
   fi
+  flock -u 4
   rm -f "$unverified_installer_tmppath"
 
   # we lookup package id, because $version might be "latest" or just
