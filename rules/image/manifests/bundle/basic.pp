@@ -27,6 +27,7 @@ class image::bundle::basic {
   include ::systemd
   include ::udev
   include ::use_urandom
+  include ::woeusb
   include ::zram_configuration
 
   Package <| title == ltsp-client
