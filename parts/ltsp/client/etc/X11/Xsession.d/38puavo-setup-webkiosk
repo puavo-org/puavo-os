@@ -8,9 +8,9 @@ if [ "$DESKTOP_SESSION" = 'puavo-webkiosk' ]; then
   # Logout user automatically if nothing has been done in 10 minutes
   xautolock -locker "kill -9 -1" -time 10 &
 
-  # Automatically start firefox after session is opened
+  # Automatically start chromium after session is opened
   mkdir -p ~/.config/autostart
-  cp /usr/share/applications/firefox.desktop ~/.config/autostart/
+  cp /usr/share/applications/chromium.desktop ~/.config/autostart/
 
   export DESKTOP_SESSION=puavo-desktop
   export GDMSESSION=puavo-desktop
