@@ -152,7 +152,12 @@ programs:
         icon: /usr/share/icons/Faenza/apps/scalable/eog.svg
         tags: default
   - epiphany:
-        tags: epiphany
+        tags: default
+        name:
+            en: Epiphany
+            fi: Epiphany-selain
+            sv: Epiphany
+            de: Epiphany
   - eric:
         tags: default
   - evince:
@@ -424,6 +429,8 @@ programs:
   - neverball:
         tags: default
   - neverputt:
+        tags: default
+  - nextcloud:
         tags: default
   - novo-launcher:
         tags: default
@@ -1008,6 +1015,7 @@ menus:
             - empathy
             - vinagre
             - dropbox
+            - nextcloud
             - VidyoDesktop
 
   - menu-programming:
@@ -1219,6 +1227,7 @@ menus:
             - geogebra6
             - wxMaxima
             - org.kde.kcalc
+            - speedcrunch
             - ti_nspire_cx_cas_ss
             - LoggerPro
             - dia
@@ -1228,7 +1237,7 @@ menus:
             - libreoffice-draw
             - libreoffice-base
             - libreoffice-math
-
+ 
   - menu-whiteboards:
         name:
             en: "Interactive\nwhiteboards"
