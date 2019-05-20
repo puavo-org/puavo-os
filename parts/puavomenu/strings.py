@@ -49,7 +49,7 @@ STRINGS = {
               'If that does not help, try restarting the computer.\n' \
               'If even that does not help, please contact support.',
 
-        'en': 'Das Menu konnte nicht geladen werden :-(\n\n' \
+        'de': 'Das Menu konnte nicht geladen werden :-(\n\n' \
               'Versuche dich abzumelden und wieder anzumelden.\n' \
               'Wenn das nicht hilft, starte den Computer neu.\n' \
               'Wenn das nicht hilft, wende dich an den Support.',
