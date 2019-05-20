@@ -185,6 +185,7 @@ class packages {
     , 'libghc-xmonad-contrib-dev'
     , 'network-manager-openvpn-gnome'
     , 'network-manager-vpnc-gnome'
+    , 'nextcloud-desktop'
     , 'notify-osd'
     , 'onboard'
     , 'onboard-data'
