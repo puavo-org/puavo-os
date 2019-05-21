@@ -1,0 +1,16 @@
+#!/bin/sh
+
+set -eu
+
+status=0
+
+case "$(puavo-conf puavo.xsessions.user_registration.enabled)" in
+  true)
+    puavo-conf puavo.guestlogin.enabled true                    || status=1
+    puavo-conf puavo.guestlogin.mode    automatic               || status=1
+    puavo-conf puavo.xsessions.default  puavo-user-registration || status=1
+    puavo-conf puavo.xsessions.display_manager nodm             || status=1
+    ;;
+esac
+
+exit $status

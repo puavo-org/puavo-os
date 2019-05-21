@@ -14,8 +14,11 @@ case "$(puavo-conf puavo.xsessions.default)" in
     nodm_user='puavo-usb-factory'
     xsession_path="/usr/lib/puavo-ltsp-client/usb-factory-session"
     ;;
+  puavo-user-registration)
+    nodm_user='guest'
+    xsession_path='/usr/lib/puavo-ltsp-client/user-registration-session'
+    ;;
   puavo-webkiosk)
-    # XXX this has not been properly tested yet
     nodm_user='guest'
     xsession_path='/usr/lib/puavo-ltsp-client/webkiosk-session'
     ;;

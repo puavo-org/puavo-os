@@ -1,0 +1,11 @@
+if [ "$DESKTOP_SESSION" = 'puavo-user-registration' ]; then
+  /usr/bin/openbsd-cwm & cwm_pid=$!
+
+  export PUAVO_SESSION_LANGUAGE=$(puavo-user-registration)
+
+  kill -9 "$cwm_pid"
+
+  export DESKTOP_SESSION=puavo-desktop
+  export GDMSESSION=puavo-desktop
+  export XDG_SESSION_DESKTOP=puavo-desktop
+fi
