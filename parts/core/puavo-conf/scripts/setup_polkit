@@ -17,3 +17,21 @@ EOF
 else
   rm -f "$deny_in_webkiosk_mode_path"
 fi
+
+allow_modify_by_primary_user_path='/etc/polkit-1/localauthority/50-local.d/10.org.freedesktop.networkmanager.allow_modify_by_primary_user.pkla'
+
+primary_user=$(puavo-conf puavo.admin.primary_user)
+if [ -n "$primary_user" ]; then
+  cat <<EOF > "${allow_modify_by_primary_user_path}.tmp"
+[Primary user permissions]
+Identity=unix-user:${primary_user}
+Action=org.freedesktop.NetworkManager.settings.modify.system
+ResultAny=no
+ResultInactive=no
+ResultActive=yes
+EOF
+  mv "${allow_modify_by_primary_user_path}.tmp" \
+     "$allow_modify_by_primary_user_path"
+else
+  rm -f "$allow_modify_by_primary_user_path"
+fi

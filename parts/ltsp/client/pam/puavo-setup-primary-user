@@ -28,7 +28,16 @@ mv "${primary_user_override_path}.tmp" "$primary_user_override_path"
 
 puavo-conf puavo.admin.primary_user "$PAM_USER"
 
-# XXX we should run "puavo-local-config --admins --networkmanager-policy"
-# XXX or something equivalent to setup special permissions for the primary user
+#
+# Run some puavo-conf scripts because puavo.admin.primary_user value affects
+# those and we want those to be effective immediately.
+#
 
-exit 0
+status=0
+
+/etc/puavo-conf/scripts/setup_dbus       || status=1
+/etc/puavo-conf/scripts/setup_gdm        || status=1
+/etc/puavo-conf/scripts/setup_polkit     || status=1
+/etc/puavo-conf/scripts/setup_superusers || status=1
+
+exit $status
