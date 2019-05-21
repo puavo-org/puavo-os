@@ -95,7 +95,7 @@ def show_error_message(parent, message, secondary_message=None):
 
 
 builder = Gtk.Builder()
-builder.add_from_file('register.glade')
+builder.add_from_file('/usr/share/puavo-user-registration/puavo-user-registration.glade')
 main_window = builder.get_object('register_window')
 
 # Get object handles
