@@ -127,6 +127,11 @@ class UserRegistration:
         self.set_submit_state()
         self.status.set_text('')
 
+        self.window.set_skip_taskbar_hint(True)
+        self.window.set_skip_pager_hint(True)
+        self.window.set_deletable(False)
+        self.window.set_decorated(False)
+
         # Go!
         self.window.show_all()
 
