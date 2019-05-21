@@ -6,7 +6,7 @@
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">Uuden käyttäjän rekisteröinti</property>
     <property name="window_position">center-always</property>
-    <property name="default_width">800</property>
+    <property name="default_width">480</property>
     <property name="skip_pager_hint">True</property>
     <property name="gravity">static</property>
     <property name="has_resize_grip">True</property>
@@ -265,6 +265,7 @@
                 <property name="halign">start</property>
                 <property name="valign">start</property>
                 <property name="label" translatable="yes">Saat sähköpostiisi vahvistuksen rekisteröinnistä. Osoitetta käytetään myös salasanan nollaukseen.</property>
+                <property name="wrap">True</property>
                 <attributes>
                   <attribute name="foreground" value="#88888a8a8585"/>
                 </attributes>
