@@ -312,7 +312,7 @@ def handle_server_409(response):
     elif response['status'] == 'duplicate_email':
         show_error_message(main_window, 'Sähköpostiosoite on jo käytössä',
             'Tämä sähköpostiosoite on jo käytössä. Käytä toista osoitetta.\n\n'
-            'Jos toisen osoitten käyttö ei ole mahdollista, ota yhteys tukeen. '
+            'Jos toisen osoitteen käyttö ei ole mahdollista, ota yhteys tukeen. '
             'Anna heille tämä koodi:\n\n'
             '<big>{0}</big>'.format(response['log_id']))
 
