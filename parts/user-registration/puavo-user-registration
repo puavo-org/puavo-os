@@ -554,7 +554,7 @@ class NetworkThread(threading.Thread):
 
         try:
             conn.request('POST',
-                         '/try_register_user',
+                         '/register_user',
                          body=bytes(self.json, 'utf-8'),
                          headers=headers)
 
