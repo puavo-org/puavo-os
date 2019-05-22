@@ -65,11 +65,20 @@ LANGUAGES = [
 USERNAME_FILTER = re.compile(r'[^a-z|0-9|.|\-|_]')
 
 
+def make_undecorated_window(window):
+    window.set_skip_taskbar_hint(True)
+    window.set_skip_pager_hint(True)
+    window.set_deletable(False)
+    window.set_decorated(False)
+
+
 class UserRegistration:
     def __init__(self):
         self.builder = Gtk.Builder()
         self.builder.add_from_file('./puavo-user-registration.glade')
         self.window = self.builder.get_object('register_window')
+
+        make_undecorated_window(self.window)
 
         # Get object handles
         self.first_name_field = self.builder.get_object('first_name')
@@ -126,11 +135,6 @@ class UserRegistration:
         self.set_username_hint_status(True)
         self.set_submit_state()
         self.status.set_text('')
-
-        self.window.set_skip_taskbar_hint(True)
-        self.window.set_skip_pager_hint(True)
-        self.window.set_deletable(False)
-        self.window.set_decorated(False)
 
         # Go!
         self.window.show_all()
@@ -211,6 +215,7 @@ class UserRegistration:
                isinstance(obj, Gtk.Button) or \
                isinstance(obj, Gtk.ComboBoxText):
                 obj.set_sensitive(state)
+
 
     def update_username(self):
         fn = self.first_name_field.get_text().strip()
@@ -537,6 +542,90 @@ class UserRegistration:
         Gtk.main_quit()
 
 
+class WifiConnector:
+    def __init__(self):
+        self.window = Gtk.Window()
+        self.window.set_default_geometry(800, 220)
+
+        make_undecorated_window(self.window)
+
+        self.network_choice_widget = Gtk.ListBox()
+        self.network_choice_widget.connect('row-activated',
+                                           self.wifi_connection_chosen)
+
+        box = Gtk.Box()
+        scrolled_win = Gtk.ScrolledWindow()
+        scrolled_win.add(self.network_choice_widget)
+        self.password_entry = Gtk.Entry()
+        self.password_entry.set_visibility(False)
+        connect_button = Gtk.Button(label='connect')
+        connect_button.connect('clicked', self.connect_to_wifi)
+
+        box.pack_start(scrolled_win, True, True, 0)
+        box.pack_start(self.password_entry, True, True, 0)
+        box.pack_start(connect_button, True, True, 0)
+
+        self.network_ssid = None
+
+        self.window.connect('destroy', Gtk.main_quit)
+        self.window.add(box)
+        self.window.show_all()
+
+
+    def connect_to_wifi(self, widget):
+        if not self.network_ssid:
+            return
+        wifi_password = self.password_entry.get_buffer().get_text()
+        cmd = [ 'nmcli', 'device', 'wifi', 'connect', self.network_ssid,
+                'password', wifi_password ]
+        subprocess.check_call(cmd)
+
+
+    def wifi_connection_chosen(self, listbox, row):
+        self.network_ssid = self.networks_by_widgets[row]
+
+
+    def prepare_ui(self):
+        self.networks = self.get_networks_info()
+        self.networks_by_widgets = {}
+
+        sorted_by_signal = sorted(self.networks,
+                                  key=lambda x: self.networks.get(x)['signal'],
+                                  reverse=True)
+        for ssid in sorted_by_signal:
+            row = Gtk.ListBoxRow()
+            label = Gtk.Label(label=ssid)
+            row.add(label)
+            self.network_choice_widget.add(row)
+            self.networks_by_widgets[row] = ssid
+
+        self.window.show_all()
+
+
+    def get_networks_info(self):
+        cmd = [ 'nmcli', '-t', '-f', 'SSID,SIGNAL,SECURITY', 'dev', 'wifi' ]
+        output = subprocess.check_output(cmd).rstrip().decode('utf-8')
+        networks = {}
+        for network_line in output.split("\n"):
+            network_line_fields = network_line.split(':')
+            if len(network_line_fields) != 3:
+                continue
+
+            (ssid, signal, security) = network_line_fields
+
+            if not ssid in networks:
+                networks[ssid] = { 'signal': 0, 'security': None }
+
+            try:
+                max_signal = max(int(signal), networks[ssid]['signal'])
+                networks[ssid]['signal'] = max_signal
+            except ValueError:
+                pass
+
+        return networks
+
+
+
 class NetworkThread(threading.Thread):
     def __init__(self, json, event):
         super().__init__()
@@ -587,6 +676,9 @@ class NetworkThread(threading.Thread):
         print('Network thread exiting')
 
 
-registration = UserRegistration()
+
+wifi_connector = WifiConnector()
+wifi_connector.prepare_ui()
+# registration = UserRegistration()
 
 Gtk.main()
