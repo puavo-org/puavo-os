@@ -119,7 +119,7 @@
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="hexpand">True</property>
-            <property name="max_length">50</property>
+            <property name="max_length">32</property>
             <property name="caps_lock_warning">False</property>
             <property name="input_purpose">name</property>
             <signal name="changed" handler="on_first_name_changed" swapped="no"/>
@@ -133,7 +133,7 @@
           <object class="GtkEntry" id="last_name">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
-            <property name="max_length">50</property>
+            <property name="max_length">32</property>
             <property name="input_purpose">password</property>
             <signal name="changed" handler="on_last_name_changed" swapped="no"/>
           </object>
@@ -146,7 +146,7 @@
           <object class="GtkEntry" id="username">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
-            <property name="max_length">50</property>
+            <property name="max_length">32</property>
           </object>
           <packing>
             <property name="left_attach">1</property>
@@ -157,7 +157,7 @@
           <object class="GtkEntry" id="email">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
-            <property name="max_length">50</property>
+            <property name="max_length">100</property>
             <property name="input_purpose">email</property>
             <signal name="changed" handler="on_email_changed" swapped="no"/>
           </object>
@@ -170,6 +170,7 @@
           <object class="GtkEntry" id="password">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
+            <property name="max_length">32</property>
             <property name="visibility">False</property>
             <property name="input_purpose">password</property>
             <signal name="changed" handler="on_password_changed" swapped="no"/>
@@ -183,6 +184,7 @@
           <object class="GtkEntry" id="password_confirm">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
+            <property name="max_length">32</property>
             <property name="visibility">False</property>
             <property name="input_purpose">password</property>
             <signal name="changed" handler="on_password_confirm_changed" swapped="no"/>
@@ -196,7 +198,7 @@
           <object class="GtkEntry" id="phone_number">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
-            <property name="max_length">50</property>
+            <property name="max_length">32</property>
             <property name="input_purpose">phone</property>
             <signal name="changed" handler="on_phone_number_changed" swapped="no"/>
           </object>
