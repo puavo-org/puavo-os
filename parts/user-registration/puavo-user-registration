@@ -52,6 +52,15 @@ FIELD_ERRORS = {
             'failed_validation': 'sisältää virheellisiä merkkejä',
         }
     },
+
+    'phone': {
+        'name': 'puhelinnumero',
+        'reasons': {
+            'empty': 'on tyhjä',
+            'failed_validation': 'sisältää virheellisiä merkkejä',
+            'too_long': 'on liian pitkä',
+        }
+    },
 }
 
 # These language codes must be the same that are configured/allowed on the server!
@@ -289,13 +298,14 @@ class UserRegistration:
     def handle_server_400(self, response):
         if response['status'] == 'missing_data':
             if len(response['failed_fields']) > 0:
-                msg = 'Näiden kenttien sisältö ei ole kunnollinen. Tarkista niiden sisältö.\n\n'
+                msg = 'Näiden kenttien sisällössä on jotain vikaa. Tarkista niiden sisältö ' \
+                      'ja yritä uudelleen.\n\n'
 
                 for field in response['failed_fields']:
                     error = FIELD_ERRORS[field['name']]
                     msg += '- {0} {1}\n'.format(error['name'], error['reasons'][field['reason']])
 
-                self.show_error_message(self.window,'Virheellinen data', msg)
+                self.show_error_message(self.window,'Virheelliset tiedot', msg)
 
         elif response['status'] == 'malformed_json':
             # *we* sent invalid data :-(
