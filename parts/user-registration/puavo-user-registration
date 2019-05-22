@@ -297,6 +297,20 @@ class UserRegistration:
 
                 self.show_error_message(self.window,'Virheellinen data', msg)
 
+        elif response['status'] == 'malformed_json':
+            # *we* sent invalid data :-(
+            self.show_error_message(self.window, 'Virheelliset tiedot',
+                               'Rekisteröintiohjelma lähetti palvelimelle virheellisiä tietoja. '
+                               'Ole hyvä ja ota yhteys tukeen. Anna tuelle tämä koodi:\n\n'
+                               '<big>{0}</big>'.format(response['log_id']))
+
+        elif response['status'] == 'incomplete_data':
+            # *we* sent incomplete/missing data :-(
+            self.show_error_message(self.window, 'Puutteelliset tiedot',
+                               'Rekisteröintiohjelma lähetti palvelimelle puutteellisia tietoja. '
+                               'Ole hyvä ja ota yhteys tukeen. Anna tuelle tämä koodi:\n\n'
+                               '<big>{0}</big>'.format(response['log_id']))
+
         elif response['status'] == 'invalid_username':
             self.show_error_message(self.window, 'Virheellinen data',
                                'Käyttäjätunnus sisältää virheellisiä merkkejä.')
