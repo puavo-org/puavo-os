@@ -66,24 +66,24 @@ USERNAME_FILTER = re.compile(r'[^a-z|0-9|.|\-|_]')
 
 
 class UserRegistration:
-    def __init__(self, builder):
+    def __init__(self, builder, register_frame):
         self.builder = builder
-        self.window = self.builder.get_object('register_window')
+        self.register_frame = register_frame
 
         # Get object handles
-        self.frame = self.builder.get_object('register_frame')
-        self.first_name_field = self.builder.get_object('first_name')
-        self.last_name_field  = self.builder.get_object('last_name')
-        self.username_field   = self.builder.get_object('username')
-        self.username_hint    = self.builder.get_object('username_hint')
-        self.email_field      = self.builder.get_object('email')
-        self.password_field   = self.builder.get_object('password')
+        self.register_user_box = self.builder.get_object('register_user')
+        self.first_name_field  = self.builder.get_object('first_name')
+        self.last_name_field   = self.builder.get_object('last_name')
+        self.username_field    = self.builder.get_object('username')
+        self.username_hint     = self.builder.get_object('username_hint')
+        self.email_field       = self.builder.get_object('email')
+        self.password_field    = self.builder.get_object('password')
         self.password_confirm_field \
             = self.builder.get_object('password_confirm')
-        self.language_combo   = self.builder.get_object('language')
-        self.phone_field      = self.builder.get_object('phone_number')
-        self.spinner          = self.builder.get_object('spinner')
-        self.status           = self.builder.get_object('status_message')
+        self.language_combo    = self.builder.get_object('language')
+        self.phone_field       = self.builder.get_object('phone_number')
+        self.spinner           = self.builder.get_object('spinner')
+        self.status            = self.builder.get_object('status_message')
 
         self.submit_button = self.builder.get_object('submit')
         self.reset_button  = self.builder.get_object('reset')
@@ -126,6 +126,12 @@ class UserRegistration:
         self.set_username_hint_status(True)
         self.set_submit_state()
         self.status.set_text('')
+
+
+    def activate(self):
+        for child in self.register_frame.get_children():
+            self.register_frame.remove(child)
+        self.register_frame.add(self.register_user_box)
 
 
     def show_info_message(self, parent, message, secondary_message=None):
@@ -531,9 +537,11 @@ class UserRegistration:
 
 
 class WifiConnector:
-    def __init__(self):
-        self.window = Gtk.Window()
-        self.window.set_default_geometry(800, 220)
+    def __init__(self, user_registration, register_frame):
+        self.user_registration = user_registration
+        self.register_frame = register_frame
+
+        self.wifi_connector_frame = Gtk.Frame()
 
         self.network_choice_widget = Gtk.ListBox()
         self.network_choice_widget.connect('row-activated',
@@ -553,9 +561,13 @@ class WifiConnector:
 
         self.network_ssid = None
 
-        self.window.connect('destroy', Gtk.main_quit)
-        self.window.add(box)
-        self.window.show_all()
+        self.wifi_connector_frame.add(box)
+
+
+    def activate(self):
+        for child in self.register_frame.get_children():
+            self.register_frame.remove(child)
+        self.register_frame.add(self.wifi_connector_frame)
 
 
     def connect_to_wifi(self, widget):
@@ -565,6 +577,7 @@ class WifiConnector:
         cmd = [ 'nmcli', 'device', 'wifi', 'connect', self.network_ssid,
                 'password', wifi_password ]
         subprocess.check_call(cmd)
+        self.user_registration.activate()
 
 
     def wifi_connection_chosen(self, listbox, row):
@@ -584,8 +597,6 @@ class WifiConnector:
             row.add(label)
             self.network_choice_widget.add(row)
             self.networks_by_widgets[row] = ssid
-
-        self.window.show_all()
 
 
     def get_networks_info(self):
@@ -666,11 +677,15 @@ class NetworkThread(threading.Thread):
 builder = Gtk.Builder()
 builder.add_from_file('./puavo-user-registration.glade')        # XXX path
 
-registration_window = UserRegistration(builder)
-app_window = registration_window.window
-app_window.show_all()
+app_window = builder.get_object('register_window')
+register_frame = builder.get_object('register_frame')
 
-# wifi_connector = WifiConnector()
-# wifi_connector.prepare_ui()
+user_registration = UserRegistration(builder, register_frame)
+
+wifi_connector = WifiConnector(user_registration, register_frame)
+wifi_connector.prepare_ui()
+wifi_connector.activate()
+
+app_window.show_all()
 
 Gtk.main()
