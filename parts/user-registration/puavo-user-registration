@@ -65,22 +65,13 @@ LANGUAGES = [
 USERNAME_FILTER = re.compile(r'[^a-z|0-9|.|\-|_]')
 
 
-def make_undecorated_window(window):
-    window.set_skip_taskbar_hint(True)
-    window.set_skip_pager_hint(True)
-    window.set_deletable(False)
-    window.set_decorated(False)
-
-
 class UserRegistration:
-    def __init__(self):
-        self.builder = Gtk.Builder()
-        self.builder.add_from_file('./puavo-user-registration.glade')
+    def __init__(self, builder):
+        self.builder = builder
         self.window = self.builder.get_object('register_window')
 
-        make_undecorated_window(self.window)
-
         # Get object handles
+        self.frame = self.builder.get_object('register_frame')
         self.first_name_field = self.builder.get_object('first_name')
         self.last_name_field  = self.builder.get_object('last_name')
         self.username_field   = self.builder.get_object('username')
@@ -135,9 +126,6 @@ class UserRegistration:
         self.set_username_hint_status(True)
         self.set_submit_state()
         self.status.set_text('')
-
-        # Go!
-        self.window.show_all()
 
 
     def show_info_message(self, parent, message, secondary_message=None):
@@ -547,8 +535,6 @@ class WifiConnector:
         self.window = Gtk.Window()
         self.window.set_default_geometry(800, 220)
 
-        make_undecorated_window(self.window)
-
         self.network_choice_widget = Gtk.ListBox()
         self.network_choice_widget.connect('row-activated',
                                            self.wifi_connection_chosen)
@@ -640,7 +626,8 @@ class NetworkThread(threading.Thread):
 
         response = None
 
-        conn = http.client.HTTPConnection('10.246.144.92', 9491, timeout=10)
+        # XXX ip address should change to something stable/configurable
+        conn = http.client.HTTPConnection('10.246.133.169', 9491, timeout=10)
 
         headers = {
             'Content-type': 'application/json',
@@ -676,9 +663,14 @@ class NetworkThread(threading.Thread):
         print('Network thread exiting')
 
 
+builder = Gtk.Builder()
+builder.add_from_file('./puavo-user-registration.glade')        # XXX path
 
-wifi_connector = WifiConnector()
-wifi_connector.prepare_ui()
-# registration = UserRegistration()
+registration_window = UserRegistration(builder)
+app_window = registration_window.window
+app_window.show_all()
+
+# wifi_connector = WifiConnector()
+# wifi_connector.prepare_ui()
 
 Gtk.main()
