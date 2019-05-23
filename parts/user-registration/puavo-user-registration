@@ -668,7 +668,7 @@ class WifiConnector:
 
 
     def ask_if_wireless_network_is_wanted(self, app_window):
-        short_msg = 'Use current network?'
+        short_msg = 'Join wireless network?'
         long_msg = 'You are connected to a network that is not a' \
                      + ' wireless network.  Do you want to join'  \
                      + ' a wireless network?'
