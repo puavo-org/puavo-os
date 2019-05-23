@@ -631,7 +631,11 @@ class WifiConnector:
         wifi_password = self.password_entry.get_buffer().get_text()
 
         cmd = [ '/usr/bin/nmcli', 'device', 'wifi', 'connect',
-                self.network_ssid, 'password', wifi_password ]
+                self.network_ssid ]
+        if wifi_password:
+            cmd += 'password'
+            cmd += wifi_password
+
         flags = GLib.SPAWN_DO_NOT_REAP_CHILD|GObject.SPAWN_STDERR_TO_DEV_NULL
         (self.wifi_connect_pid, stdin, stdout, stderr) \
             = GObject.spawn_async(cmd, flags=flags, standard_output=True)
