@@ -22,7 +22,8 @@ key=$1
 value=$2
 
 case "$key" in
-  puavo.pkg.*)
+  puavo.pkg.* \
+  | puavo.xsessions.user_registration.enabled)
     ;;
   *)
     echo "no permission to change puavo-conf '$key' --> '$value'" >&2

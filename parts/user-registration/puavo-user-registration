@@ -87,6 +87,14 @@ def go_to_desktop(app_window, widget):
     dialog.destroy()
 
 
+def set_puavoconf_switch():
+    cmd = [ 'sudo', '-n',
+            '/usr/sbin/puavo-conf-local',
+            'puavo.xsessions.user_registration.enabled',
+            'false' ]
+    subprocess.check_call(cmd)
+
+
 def usage():
     print("usage: puavo-user-registration [--at-session-startup]",
           file=sys.stderr)
@@ -486,8 +494,8 @@ class UserRegistration:
                 self.show_info_message(self.window,
                     'Tunnus luotu',
                     'Tunnuksesi on luotu. Voit aloittaa koneen käytön.\n\nMukavia hetkiä opiskelun pariin!')
-                self.enable_inputs(True)
 
+                set_puavoconf_switch()
                 # Quit
                 Gtk.main_quit()
 
