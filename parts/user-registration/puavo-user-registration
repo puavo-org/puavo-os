@@ -5,16 +5,17 @@
 # TODO:
 #  - everything
 
-import re
-import json
-import time
-import socket
-import threading
-import subprocess
-import unicodedata
-import http.client
-
 import gi
+import http.client
+import json
+import re
+import socket
+import subprocess
+import threading
+import time
+import unicodedata
+import sys
+
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GLib, Pango
 
@@ -72,6 +73,17 @@ LANGUAGES = [
 ]
 
 USERNAME_FILTER = re.compile(r'[^a-z|0-9|.|\-|_]')
+
+
+def go_to_desktop(app_window, widget):
+    dialog = Gtk.MessageDialog(app_window, 0, Gtk.MessageType.WARNING,
+       Gtk.ButtonsType.OK_CANCEL, "Go to desktop?")
+    dialog.format_secondary_text("Are you sure you do not want to create a user account?  Without user account, your files will be lost after your desktop session ends.")
+    response = dialog.run()
+    if response == Gtk.ResponseType.OK:
+        Gtk.main_quit()
+        sys.exit(0)
+    dialog.destroy()
 
 
 class UserRegistration:
@@ -693,6 +705,8 @@ builder.add_from_file('./puavo-user-registration.glade')        # XXX path
 
 app_window = builder.get_object('register_window')
 register_frame = builder.get_object('register_frame')
+go_to_desktop_button = builder.get_object('go_to_desktop')
+go_to_desktop_button.connect('clicked', lambda x: go_to_desktop(app_window, x))
 
 user_registration = UserRegistration(builder, register_frame)
 

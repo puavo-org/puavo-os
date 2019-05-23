@@ -401,17 +401,16 @@
           </packing>
         </child>
         <child>
-          <object class="GtkLinkButton" id="go_to_desktop">
+          <object class="GtkButton" id="go_to_desktop">
             <property name="label" translatable="yes">go to desktop</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
-            <property name="action_name">go_to_desktop</property>
-            <property name="relief">none</property>
+            <property name="halign">start</property>
           </object>
           <packing>
             <property name="expand">False</property>
-            <property name="fill">False</property>
+            <property name="fill">True</property>
             <property name="position">1</property>
           </packing>
         </child>
