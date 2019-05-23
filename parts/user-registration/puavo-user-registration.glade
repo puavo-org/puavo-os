@@ -274,7 +274,7 @@
             <property name="margin_bottom">10</property>
             <property name="column_spacing">10</property>
             <child>
-              <object class="GtkSpinner" id="spinner">
+              <object class="GtkSpinner" id="registration_spinner">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="valign">center</property>
@@ -495,6 +495,7 @@
           <object class="GtkButton" id="network_connect_button">
             <property name="label" translatable="yes">Connect</property>
             <property name="visible">True</property>
+            <property name="sensitive">False</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
           </object>

@@ -8,6 +8,7 @@
 import gi
 import http.client
 import json
+import os
 import re
 import socket
 import subprocess
@@ -17,7 +18,7 @@ import unicodedata
 import sys
 
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, GLib, Pango
+from gi.repository import GLib, Gtk, GObject
 
 
 # Used when interpreting a failed server response
@@ -103,7 +104,7 @@ class UserRegistration:
             = self.builder.get_object('password_confirm')
         self.language_combo    = self.builder.get_object('language')
         self.phone_field       = self.builder.get_object('phone_number')
-        self.spinner           = self.builder.get_object('spinner')
+        self.spinner           = self.builder.get_object('registration_spinner')
         self.status            = self.builder.get_object('status_message')
 
         self.submit_button = self.builder.get_object('submit')
@@ -578,14 +579,20 @@ class WifiConnector:
         self.register_frame = register_frame
 
         self.wifi_connector_box = builder.get_object('wifi_connector_box')
+        self.wifi_connect_pid = None
 
         self.network_choice_widget = builder.get_object('networks_list')
         self.network_choice_widget.connect('row-activated',
                                            self.wifi_connection_chosen)
 
         self.password_entry = builder.get_object('network_password_entry')
-        connect_button = builder.get_object('network_connect_button')
-        connect_button.connect('clicked', self.connect_to_wifi)
+        self.password_entry.connect('activate', self.connect_to_wifi)
+        self.password_entry.connect('changed', self.password_changed)
+
+        self.spinner = builder.get_object('network_connector_spinner')
+
+        self.connect_button = builder.get_object('network_connect_button')
+        self.connect_button.connect('clicked', self.connect_to_wifi)
 
         self.network_ssid = None
 
@@ -596,22 +603,52 @@ class WifiConnector:
         self.register_frame.add(self.wifi_connector_box)
 
 
+    def password_changed(self, widget):
+        wifi_password = self.password_entry.get_buffer().get_text()
+        if wifi_password:
+            self.connect_button.set_sensitive(True)
+        else:
+            self.connect_button.set_sensitive(False)
+
+
     def connect_to_wifi(self, widget):
         if not self.network_ssid:
             return
         wifi_password = self.password_entry.get_buffer().get_text()
-        cmd = [ 'nmcli', 'device', 'wifi', 'connect', self.network_ssid,
-                'password', wifi_password ]
-        subprocess.check_call(cmd)
-        self.user_registration.activate()
+
+        cmd = [ '/usr/bin/nmcli', 'device', 'wifi', 'connect',
+                self.network_ssid, 'password', wifi_password ]
+        flags = GLib.SPAWN_DO_NOT_REAP_CHILD|GObject.SPAWN_STDERR_TO_DEV_NULL
+        (self.wifi_connect_pid, stdin, stdout, stderr) \
+            = GObject.spawn_async(cmd, flags=flags, standard_output=True)
+
+        GObject.io_add_watch(stdout,
+                             GObject.IO_HUP,
+                             self.wifi_connect_callback,
+                             os.fdopen(stdout))
+
+        self.connect_button.set_sensitive(False)
+        self.spinner.start()
+
+
+    def wifi_connect_callback(self, fd, condition, channel):
+        channel.close()
+        (pid, status) = os.waitpid(self.wifi_connect_pid, 0)
+        if status == 0:
+            self.user_registration.activate()
+        else:
+            pass # XXX error message somewhere
 
 
     def wifi_connection_chosen(self, listbox, row):
         self.network_ssid = self.networks_by_widgets[row]
         network_info = self.networks[self.network_ssid]
+        self.password_entry.set_text('')
         if network_info['security']:
+            self.connect_button.set_sensitive(False)
             self.password_entry.set_sensitive(True)
         else:
+            self.connect_button.set_sensitive(True)
             self.password_entry.set_sensitive(False)
 
 
@@ -669,12 +706,18 @@ class WifiConnector:
         sorted_by_signal = sorted(self.networks,
                                   key=lambda x: self.networks.get(x)['signal'],
                                   reverse=True)
+
+        selected = False
         for ssid in sorted_by_signal:
             row = Gtk.ListBoxRow()
             label = Gtk.Label(label=ssid)
             row.add(label)
             self.network_choice_widget.add(row)
             self.networks_by_widgets[row] = ssid
+            if not selected:
+                self.network_choice_widget.select_row(row)
+                self.wifi_connection_chosen(self.network_choice_widget, row)
+                selected = True
 
         self.activate()
 
