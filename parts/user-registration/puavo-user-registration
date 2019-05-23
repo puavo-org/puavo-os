@@ -643,6 +643,7 @@ class WifiConnector:
     def wifi_connection_chosen(self, listbox, row):
         self.network_ssid = self.networks_by_widgets[row]
         network_info = self.networks[self.network_ssid]
+        self.password_entry.grab_focus()
         self.password_entry.set_text('')
         if network_info['security']:
             self.connect_button.set_sensitive(False)
@@ -693,6 +694,7 @@ class WifiConnector:
                 if self.ask_if_wifi_network_is_okay(app_window, network_ssid):
                     self.user_registration.activate()
                     return
+                break
 
         if not wireless_active and self.check_network_connectivity():
             if not self.ask_if_wireless_network_is_wanted(app_window):

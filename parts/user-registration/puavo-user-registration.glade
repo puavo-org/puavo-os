@@ -2,9 +2,15 @@
 <!-- Generated with glade 3.20.0 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
+  <object class="GtkMenu">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+  </object>
   <object class="GtkBox" id="register_user">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
+    <property name="hexpand">True</property>
+    <property name="vexpand">True</property>
     <property name="orientation">vertical</property>
     <child>
       <object class="GtkGrid">
@@ -372,6 +378,7 @@
     <property name="title" translatable="yes">Uuden käyttäjän rekisteröinti</property>
     <property name="window_position">center-always</property>
     <property name="default_width">480</property>
+    <property name="default_height">420</property>
     <property name="skip_taskbar_hint">True</property>
     <property name="skip_pager_hint">True</property>
     <property name="decorated">False</property>
@@ -420,12 +427,27 @@
   <object class="GtkBox" id="wifi_connector_box">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
+    <property name="hexpand">True</property>
+    <property name="vexpand">True</property>
     <property name="spacing">5</property>
     <property name="homogeneous">True</property>
     <child>
-      <object class="GtkListBox" id="networks_list">
+      <object class="GtkScrolledWindow">
         <property name="visible">True</property>
-        <property name="can_focus">False</property>
+        <property name="can_focus">True</property>
+        <property name="shadow_type">in</property>
+        <child>
+          <object class="GtkViewport">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <child>
+              <object class="GtkListBox" id="networks_list">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+              </object>
+            </child>
+          </object>
+        </child>
       </object>
       <packing>
         <property name="expand">True</property>
@@ -524,7 +546,6 @@
               <object class="GtkLabel" id="network_connection_status">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="label" translatable="yes">Not connected to any network.</property>
               </object>
               <packing>
                 <property name="expand">True</property>
