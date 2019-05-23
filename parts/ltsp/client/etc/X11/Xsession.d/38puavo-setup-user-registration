@@ -1,7 +1,8 @@
 if [ "$DESKTOP_SESSION" = 'puavo-user-registration' ]; then
   /usr/bin/openbsd-cwm & cwm_pid=$!
 
-  export PUAVO_SESSION_LANGUAGE=$(puavo-user-registration)
+  qiv -mz /usr/share/backgrounds/edubuntu-periodic-breakout.jpg || true
+  puavo-user-registration --at-session-startup || true
 
   kill -9 "$cwm_pid"
 
