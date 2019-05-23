@@ -608,11 +608,38 @@ class WifiConnector:
 
     def wifi_connection_chosen(self, listbox, row):
         self.network_ssid = self.networks_by_widgets[row]
+        network_info = self.networks[self.network_ssid]
+        if network_info['security']:
+            self.password_entry.set_sensitive(True)
+        else:
+            self.password_entry.set_sensitive(False)
 
 
-    def prepare_ui(self):
+    def ask_if_network_is_okay(self, app_window, network_ssid):
+        short_msg = 'Use network "%s"?' % network_ssid
+        long_msg = ('You are connected to network "%s",' \
+                      + ' do you want to use this network?') % network_ssid
+        dialog = Gtk.MessageDialog(app_window, 0, Gtk.MessageType.QUESTION,
+            Gtk.ButtonsType.OK_CANCEL, short_msg)
+        dialog.format_secondary_text(long_msg)
+        response = dialog.run()
+        dialog.destroy()
+        return response == Gtk.ResponseType.OK
+
+
+    def prepare_ui_and_activate(self, app_window):
+        # XXX should also check if some wired network is active
+
         self.networks = self.get_networks_info()
+        for network_ssid, network_info in self.networks.items():
+            if network_info['active']:
+                if self.ask_if_network_is_okay(app_window, network_ssid):
+                    self.user_registration.activate()
+                    return
+
         self.networks_by_widgets = {}
+
+        # XXX what if networks hash is empty?  (no wireless networks at all)
 
         sorted_by_signal = sorted(self.networks,
                                   key=lambda x: self.networks.get(x)['signal'],
@@ -624,21 +651,28 @@ class WifiConnector:
             self.network_choice_widget.add(row)
             self.networks_by_widgets[row] = ssid
 
+        self.activate()
+
 
     def get_networks_info(self):
-        cmd = [ 'nmcli', '-t', '-f', 'SSID,SIGNAL,SECURITY', 'dev', 'wifi' ]
+        cmd = [ 'env', 'LANG=C', 'nmcli', '-t', '-f',
+                'SSID,ACTIVE,SIGNAL,SECURITY', 'dev', 'wifi', 'list' ]
         output = subprocess.check_output(cmd).rstrip().decode('utf-8')
         networks = {}
         for network_line in output.split("\n"):
             network_line_fields = network_line.split(':')
-            if len(network_line_fields) != 3:
+            if len(network_line_fields) != 4:
                 continue
 
-            (ssid, signal, security) = network_line_fields
+            (ssid, active_str, signal, security) = network_line_fields
+            active = False
+            if active_str == 'yes':
+                active = True
 
             if not ssid in networks:
-                networks[ssid] = { 'signal': 0, 'security': None }
-
+                networks[ssid] = { 'active':   active,
+                                   'signal':   0,
+                                   'security': security }
             try:
                 max_signal = max(int(signal), networks[ssid]['signal'])
                 networks[ssid]['signal'] = max_signal
@@ -711,8 +745,7 @@ go_to_desktop_button.connect('clicked', lambda x: go_to_desktop(app_window, x))
 user_registration = UserRegistration(builder, register_frame)
 
 wifi_connector = WifiConnector(builder, user_registration, register_frame)
-wifi_connector.prepare_ui()
-wifi_connector.activate()
+wifi_connector.prepare_ui_and_activate(app_window)
 
 app_window.show_all()
 
