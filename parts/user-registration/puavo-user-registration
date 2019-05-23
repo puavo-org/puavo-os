@@ -615,27 +615,52 @@ class WifiConnector:
             self.password_entry.set_sensitive(False)
 
 
-    def ask_if_network_is_okay(self, app_window, network_ssid):
+    def ask_if_wireless_network_is_wanted(self, app_window):
+        short_msg = 'Use current network?'
+        long_msg = 'You are connected to a network that is not a' \
+                     + ' wireless network.  Do you want to join'  \
+                     + ' a wireless network?'
+        dialog = Gtk.MessageDialog(app_window, 0, Gtk.MessageType.QUESTION,
+            Gtk.ButtonsType.YES_NO, short_msg)
+        dialog.format_secondary_text(long_msg)
+        response = dialog.run()
+        dialog.destroy()
+        return response == Gtk.ResponseType.YES
+
+
+    def ask_if_wifi_network_is_okay(self, app_window, network_ssid):
         short_msg = 'Use network "%s"?' % network_ssid
         long_msg = ('You are connected to network "%s",' \
                       + ' do you want to use this network?') % network_ssid
         dialog = Gtk.MessageDialog(app_window, 0, Gtk.MessageType.QUESTION,
-            Gtk.ButtonsType.OK_CANCEL, short_msg)
+            Gtk.ButtonsType.YES_NO, short_msg)
         dialog.format_secondary_text(long_msg)
         response = dialog.run()
         dialog.destroy()
-        return response == Gtk.ResponseType.OK
+        return response == Gtk.ResponseType.YES
+
+
+    def check_network_connectivity(self):
+        # XXX how are exceptions handled, for example here?
+        cmd = [ 'env', 'LANG=C', 'nmcli', 'networking', 'connectivity' ]
+        output = subprocess.check_output(cmd).rstrip().decode('utf-8')
+        return output == 'full'
 
 
     def prepare_ui_and_activate(self, app_window):
-        # XXX should also check if some wired network is active
-
+        wireless_active = False
         self.networks = self.get_networks_info()
         for network_ssid, network_info in self.networks.items():
             if network_info['active']:
-                if self.ask_if_network_is_okay(app_window, network_ssid):
+                wireless_active = True
+                if self.ask_if_wifi_network_is_okay(app_window, network_ssid):
                     self.user_registration.activate()
                     return
+
+        if not wireless_active and self.check_network_connectivity():
+            if not self.ask_if_wireless_network_is_wanted(app_window):
+                self.user_registration.activate()
+                return
 
         self.networks_by_widgets = {}
 
