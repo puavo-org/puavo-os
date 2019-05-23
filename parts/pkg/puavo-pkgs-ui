@@ -55,12 +55,13 @@ class PuavoPkg:
     def set_puavoconf(self, value):
         puavo_conf_key = 'puavo.pkg.%s' % self.pkgname
 
-        cmd = [ 'sudo', '/usr/sbin/puavo-conf-local', puavo_conf_key, value ]
+        cmd = [ 'sudo', '-n', '/usr/sbin/puavo-conf-local', puavo_conf_key,
+                value ]
         subprocess.check_output(cmd).rstrip().decode('utf-8')
 
 
     def run_puavo_pkg_update(self):
-        cmd = [ '/usr/bin/sudo',
+        cmd = [ '/usr/bin/sudo', '-n',
                 '/usr/sbin/puavo-pkg-update-from-gui',
                 self.pkgname ]
         (pid, stdin, stdout, stderr) = GObject.spawn_async(cmd,
