@@ -473,6 +473,7 @@
             <child>
               <object class="GtkEntry" id="network_password_entry">
                 <property name="visible">True</property>
+                <property name="sensitive">False</property>
                 <property name="can_focus">True</property>
                 <property name="visibility">False</property>
                 <property name="input_purpose">password</property>
