@@ -18,20 +18,29 @@ else
   rm -f "$deny_in_webkiosk_mode_path"
 fi
 
-allow_modify_by_primary_user_path='/etc/polkit-1/localauthority/50-local.d/10.org.freedesktop.networkmanager.allow_modify_by_primary_user.pkla'
+allow_modify_by_special_user_path='/etc/polkit-1/localauthority/50-local.d/10.org.freedesktop.networkmanager.allow_modify_by_special_user.pkla'
 
-primary_user=$(puavo-conf puavo.admin.primary_user)
-if [ -n "$primary_user" ]; then
-  cat <<EOF > "${allow_modify_by_primary_user_path}.tmp"
+user_for_system_network_permissions=''
+if [ "$(puavo-conf puavo.xsessions.user_registration.enabled)" = 'true' ]; then
+  user_for_system_network_permissions='guest'
+else
+  primary_user=$(puavo-conf puavo.admin.primary_user)
+  if [ -n "$primary_user" ]; then
+    user_for_system_network_permissions="$primary_user"
+  fi
+fi
+
+if [ -n "$user_for_system_network_permissions" ]; then
+  cat <<EOF > "${allow_modify_by_special_user_path}.tmp"
 [Primary user permissions]
-Identity=unix-user:${primary_user}
+Identity=unix-user:${user_for_system_network_permissions}
 Action=org.freedesktop.NetworkManager.settings.modify.system
 ResultAny=no
 ResultInactive=no
 ResultActive=yes
 EOF
-  mv "${allow_modify_by_primary_user_path}.tmp" \
-     "$allow_modify_by_primary_user_path"
+  mv "${allow_modify_by_special_user_path}.tmp" \
+     "$allow_modify_by_special_user_path"
 else
-  rm -f "$allow_modify_by_primary_user_path"
+  rm -f "$allow_modify_by_special_user_path"
 fi
