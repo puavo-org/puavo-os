@@ -39,6 +39,7 @@ class packages {
     , 'puavo-pkg'
     , 'puavo-sharedir-client'
     , 'puavo-usb-factory'
+    , 'puavo-user-registration'
     , 'puavo-vpn-client'
     , 'puavo-webwindow'
     , 'puavo-wlanap'

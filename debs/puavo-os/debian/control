@@ -436,6 +436,17 @@ Description: Puavo-service hooks for Puavo TFTP server
  This package provides hook files desinged for Puavo-service.
  .
 
+Package: puavo-user-registration
+Architecture: all
+Depends: ${misc:Depends},
+ network-manager,
+ python3,
+ python3-gi
+Description: Puavo User Registration
+ Puavo User Registration is a tool to create a user account
+ on a Puavo machine.
+ .
+
 Package: puavo-vpn-client
 Architecture: all
 Depends: ${misc:Depends}, coreutils, openvpn, puavo-conf, resolvconf

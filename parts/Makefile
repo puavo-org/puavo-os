@@ -19,6 +19,7 @@ subdirs         := admins                     \
                    sharedir                   \
                    tftp                       \
                    usb-factory                \
+                   user-registration          \
                    vpn                        \
                    webkiosk-language-selector \
                    webwindow                  \
