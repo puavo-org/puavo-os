@@ -595,6 +595,7 @@ class WifiConnector:
         self.wifi_connector_box = builder.get_object('wifi_connector_box')
         self.wifi_connect_pid = None
 
+        self.networks = {}
         self.network_choice_widget = builder.get_object('networks_list')
         self.network_choice_widget.connect('row-activated',
                                            self.wifi_connection_chosen)
@@ -659,7 +660,11 @@ class WifiConnector:
 
 
     def wifi_connection_chosen(self, listbox, row):
-        self.network_ssid = self.networks_by_widgets[row]
+        for network_ssid, network_info in self.networks.items():
+            if network_info['widget'] == row:
+                self.network_ssid = network_ssid
+                break
+
         network_info = self.networks[self.network_ssid]
         self.password_entry.grab_focus()
         self.password_entry.set_text('')
@@ -705,7 +710,7 @@ class WifiConnector:
 
     def prepare_ui_and_activate(self, app_window):
         wireless_active = False
-        self.networks = self.get_networks_info()
+        self.update_networks_info()
         for network_ssid, network_info in self.networks.items():
             if network_info['active']:
                 wireless_active = True
@@ -719,34 +724,22 @@ class WifiConnector:
                 self.user_registration.activate()
                 return
 
-        self.networks_by_widgets = {}
-
         # XXX what if networks hash is empty?  (no wireless networks at all)
-
-        sorted_by_signal = sorted(self.networks,
-                                  key=lambda x: self.networks.get(x)['signal'],
-                                  reverse=True)
-
-        selected = False
-        for ssid in sorted_by_signal:
-            row = Gtk.ListBoxRow()
-            label = Gtk.Label(label=ssid)
-            row.add(label)
-            self.network_choice_widget.add(row)
-            self.networks_by_widgets[row] = ssid
-            if not selected:
-                self.network_choice_widget.select_row(row)
-                self.wifi_connection_chosen(self.network_choice_widget, row)
-                selected = True
 
         self.activate()
 
 
-    def get_networks_info(self):
+    def update_networks_info(self):
+        # XXX should we remove some networks that disappear?
+        # XXX maybe needs sudo -n (or system-wide networks permission)
+        cmd = [ 'nmcli', 'radio', 'wifi', 'on' ]
+        output = subprocess.check_call(cmd)     # XXX does not matter if fails?
+
+        new_networks = {}
+
         cmd = [ 'env', 'LANG=C', 'nmcli', '-t', '-f',
                 'SSID,ACTIVE,SIGNAL,SECURITY', 'dev', 'wifi', 'list' ]
         output = subprocess.check_output(cmd).rstrip().decode('utf-8')
-        networks = {}
         for network_line in output.split("\n"):
             network_line_fields = network_line.split(':')
             if len(network_line_fields) != 4:
@@ -757,17 +750,49 @@ class WifiConnector:
             if active_str == 'yes':
                 active = True
 
-            if not ssid in networks:
-                networks[ssid] = { 'active':   active,
-                                   'signal':   0,
-                                   'security': security }
+            if not ssid in new_networks:
+                new_networks[ssid] = { 'active':   active,
+                                       'signal':   0,
+                                       'security': security }
             try:
-                max_signal = max(int(signal), networks[ssid]['signal'])
-                networks[ssid]['signal'] = max_signal
+                max_signal = max(int(signal), new_networks[ssid]['signal'])
+                new_networks[ssid]['signal'] = max_signal
             except ValueError:
                 pass
 
-        return networks
+        sorted_by_signal = sorted(new_networks,
+                                  key=lambda x: new_networks.get(x)['signal'],
+                                  reverse=True)
+
+        # add new interface elements
+        for network_ssid in sorted_by_signal:
+            if network_ssid in self.networks:
+                continue
+            row = Gtk.ListBoxRow()
+            label = Gtk.Label(label=network_ssid)
+            row.add(label)
+            self.network_choice_widget.add(row)
+            self.networks[network_ssid] = new_networks[network_ssid]
+            self.networks[network_ssid]['widget'] = row
+
+        # remove old interface elements
+        for network_ssid in self.networks.copy():
+            if network_ssid in new_networks:
+                continue
+            self.networks[network_ssid]['widget'].destroy()
+            del self.networks[network_ssid]
+            if self.network_ssid == network_ssid:
+               self.network_ssid = None
+
+        # choose first network in case self.network_ssid is not set
+        for network_ssid in sorted_by_signal:
+            if not self.network_ssid:
+                row = self.networks[network_ssid]['widget']
+                self.network_choice_widget.select_row(row)
+                # this sets self.network_ssid:
+                self.wifi_connection_chosen(self.network_choice_widget, row)
+
+        self.network_choice_widget.show_all()
 
 
 
