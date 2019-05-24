@@ -709,6 +709,9 @@ class WifiConnector:
 
 
     def prepare_ui_and_activate(self, app_window):
+        cmd = [ 'nmcli', 'radio', 'wifi', 'on' ]
+        output = subprocess.run(cmd)
+
         wireless_active = False
         self.update_networks_info()
         for network_ssid, network_info in self.networks.items():
@@ -724,17 +727,12 @@ class WifiConnector:
                 self.user_registration.activate()
                 return
 
-        # XXX what if networks hash is empty?  (no wireless networks at all)
+        GObject.timeout_add_seconds(8, self.update_networks_info)
 
         self.activate()
 
 
     def update_networks_info(self):
-        # XXX should we remove some networks that disappear?
-        # XXX maybe needs sudo -n (or system-wide networks permission)
-        cmd = [ 'nmcli', 'radio', 'wifi', 'on' ]
-        output = subprocess.check_call(cmd)     # XXX does not matter if fails?
-
         new_networks = {}
 
         cmd = [ 'env', 'LANG=C', 'nmcli', '-t', '-f',
@@ -759,6 +757,9 @@ class WifiConnector:
                 new_networks[ssid]['signal'] = max_signal
             except ValueError:
                 pass
+
+        # XXX what if new_networks is empty?  (no wireless networks at all?)
+        # XXX should we show some message?
 
         sorted_by_signal = sorted(new_networks,
                                   key=lambda x: new_networks.get(x)['signal'],
@@ -794,6 +795,7 @@ class WifiConnector:
 
         self.network_choice_widget.show_all()
 
+        return True
 
 
 class NetworkThread(threading.Thread):
