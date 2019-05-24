@@ -635,8 +635,8 @@ class WifiConnector:
         cmd = [ '/usr/bin/nmcli', 'device', 'wifi', 'connect',
                 self.network_ssid ]
         if wifi_password:
-            cmd += 'password'
-            cmd += wifi_password
+            cmd += [ 'password' ]
+            cmd += [ wifi_password ]
 
         flags = GLib.SPAWN_DO_NOT_REAP_CHILD|GObject.SPAWN_STDERR_TO_DEV_NULL
         (self.wifi_connect_pid, stdin, stdout, stderr) \
