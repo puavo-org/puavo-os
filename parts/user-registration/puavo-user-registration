@@ -600,6 +600,7 @@ class WifiConnector:
         self.network_choice_widget = builder.get_object('networks_list')
         self.network_choice_widget.connect('row-activated',
                                            self.wifi_connection_chosen)
+        self.searching_for_networks = True
 
         self.password_entry = builder.get_object('network_password_entry')
         self.password_entry.connect('activate', self.connect_to_wifi)
@@ -844,9 +845,11 @@ class WifiConnector:
         if len(self.networks) == 0:
             self.spinner.start()
             self.connection_status.set_text('searching for networks')
-        else:
+            self.searching_for_networks = True
+        elif self.searching_for_networks:
             self.spinner.stop()
             self.connection_status.set_text('')
+            self.searching_for_networks = False
 
         self.network_choice_widget.show_all()
 
