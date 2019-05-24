@@ -1,9 +1,6 @@
 #!/usr/bin/python3
 
-# New user registration dialog v0.5
-
-# TODO:
-#  - everything
+# New user registration dialog
 
 import fcntl
 import gi
@@ -103,8 +100,9 @@ def usage():
 
 
 class UserRegistration:
-    def __init__(self, builder, register_frame):
+    def __init__(self, builder, app_window, register_frame):
         self.builder = builder
+        self.app_window = app_window
         self.register_frame = register_frame
 
         # Get object handles
@@ -318,7 +316,7 @@ class UserRegistration:
 
 
     def handle_server_error(self, response):
-        self.show_error_message(self.window, 'Virhe',
+        self.show_error_message(self.app_window, 'Virhe',
            'Palvelinpäässä meni jokin pieleen. Ole hyvä ja ota yhteys tukeen. '
            'Anna tuelle tämä koodi:\n\n<big>{0}</big>'.format(response['log_id']))
 
@@ -333,40 +331,40 @@ class UserRegistration:
                     error = FIELD_ERRORS[field['name']]
                     msg += '- {0} {1}\n'.format(error['name'], error['reasons'][field['reason']])
 
-                self.show_error_message(self.window,'Virheelliset tiedot', msg)
+                self.show_error_message(self.app_window,'Virheelliset tiedot', msg)
 
         elif response['status'] == 'malformed_json':
             # *we* sent invalid data :-(
-            self.show_error_message(self.window, 'Virheelliset tiedot',
+            self.show_error_message(self.app_window, 'Virheelliset tiedot',
                                'Rekisteröintiohjelma lähetti palvelimelle virheellisiä tietoja. '
                                'Ole hyvä ja ota yhteys tukeen. Anna tuelle tämä koodi:\n\n'
                                '<big>{0}</big>'.format(response['log_id']))
 
         elif response['status'] == 'incomplete_data':
             # *we* sent incomplete/missing data :-(
-            self.show_error_message(self.window, 'Puutteelliset tiedot',
+            self.show_error_message(self.app_window, 'Puutteelliset tiedot',
                                'Rekisteröintiohjelma lähetti palvelimelle puutteellisia tietoja. '
                                'Ole hyvä ja ota yhteys tukeen. Anna tuelle tämä koodi:\n\n'
                                '<big>{0}</big>'.format(response['log_id']))
 
         elif response['status'] == 'invalid_username':
-            self.show_error_message(self.window, 'Virheellinen data',
+            self.show_error_message(self.app_window, 'Virheellinen data',
                                'Käyttäjätunnus sisältää virheellisiä merkkejä.')
 
         elif response['status'] == 'invalid_email':
-            self.show_error_message(self.window, 'Virheellinen data',
+            self.show_error_message(self.app_window, 'Virheellinen data',
                                'Sähköpostiosoite ei ole kunnollinen.')
 
         elif response['status'] == 'password_mismatch':
-            self.show_error_message(self.window, 'Virheellinen data',
+            self.show_error_message(self.app_window, 'Virheellinen data',
                                'Salasana ja sen varmistus eivät täsmää.')
 
         elif response['status'] == 'invalid_language':
-            self.show_error_message(self.window, 'Virheellinen data',
+            self.show_error_message(self.app_window, 'Virheellinen data',
                                'Kieli on virheellinen.')
 
         else:
-            self.show_error_message(self.window, 'Virhe',
+            self.show_error_message(self.app_window, 'Virhe',
                'Käyttäjätietojen käsittelyssä tapahtui tuntematon virhe. '
                'Ota yhteys tukeen ja anne heille tämä koodi:\n\n'
                '<big>{0}</big>'.format(response['log_id']))
@@ -375,14 +373,14 @@ class UserRegistration:
     def handle_server_401(self, response):
         if response['status'] == 'unknown_machine':
             # This machine does not exist in the database
-            self.show_error_message(self.window, 'Rekisteröimätön kone',
+            self.show_error_message(self.app_window, 'Rekisteröimätön kone',
                 'Koneesi tietoja ei löydy tietokannasta. Ole hyvä ja ota '
                 'yhteys tukeen. Anna tuelle tämä koodi:\n\n<big>{0}</big>'.
                 format(response['log_id']))
 
         elif response['status'] == 'device_already_in_use':
             # This machine already has a user. THIS SHOULD NOT HAPPEN.
-            self.show_error_message(self.window, 'Kone on jo käytössä',
+            self.show_error_message(self.app_window, 'Kone on jo käytössä',
                 'Tältä koneelta on jo suoritettu käyttäjän luonti. Ole hyvä ja ota '
                 'yhteys tukeen. Anna tuelle tämä koodi:\n\n<big>{0}</big>'.
                 format(response['log_id']))
@@ -391,7 +389,7 @@ class UserRegistration:
             self.handle_server_error(response)
 
         else:
-            self.show_error_message(self.window, 'Virhe',
+            self.show_error_message(self.app_window, 'Virhe',
                'Laitetietojen käsittelyssä tapahtui tuntematon virhe. '
                'Ota yhteys tukeen ja anne heille tämä koodi:\n\n'
                '<big>{0}</big>'.format(response['log_id']))
@@ -399,18 +397,18 @@ class UserRegistration:
 
     def handle_server_409(response):
         if response['status'] == 'username_unavailable':
-            self.show_error_message(self.window, 'Käyttäjätunnus on jo käytössä',
+            self.show_error_message(self.app_window, 'Käyttäjätunnus on jo käytössä',
                 'Valitsemasi käyttäjätunnus on jo käytössä. Valitse toinen nimi.')
 
         elif response['status'] == 'duplicate_email':
-            self.show_error_message(self.window, 'Sähköpostiosoite on jo käytössä',
+            self.show_error_message(self.app_window, 'Sähköpostiosoite on jo käytössä',
                 'Tämä sähköpostiosoite on jo käytössä. Käytä toista osoitetta.\n\n'
                 'Jos toisen osoitteen käyttö ei ole mahdollista, ota yhteys tukeen. '
                 'Anna heille tämä koodi:\n\n'
                 '<big>{0}</big>'.format(response['log_id']))
 
         else:
-            self.show_error_message(self.window, 'Virhe',
+            self.show_error_message(self.app_window, 'Virhe',
                'Käyttäjätietojen käsittelyssä tapahtui tuntematon virhe. '
                'Ota yhteys tukeen ja anne heille tämä koodi:\n\n<big>{0}</big>'.
                format(response['log_id']))
@@ -421,7 +419,7 @@ class UserRegistration:
 
 
     def handle_network_error(self, msg):
-        self.show_error_message(self.window, 'Virhe',
+        self.show_error_message(self.app_window, 'Virhe',
             'Palvelimeen ei saada yhteyttä:\n\n\t{0}\n\n'
             'Tarkista verkkoyhteyden tila ja yritä uudelleen. Jos ongelma toistuu,'
             'ota yhteys tukeen.'.format(msg))
@@ -435,7 +433,7 @@ class UserRegistration:
 
             if thread.response['failed']:
                 if thread.response['error'] == 'timeout':
-                    self.show_error_message(self.window, 'Virhe',
+                    self.show_error_message(self.app_window, 'Virhe',
                         'Palvelin ei vastaa pyyntöön. Yritä lähetystä uudelleen hetken kuluttua. '
                         'Jos tilanne toistuu, ota yhteys tukeen.')
                 else:
@@ -468,7 +466,7 @@ class UserRegistration:
             server_data = response_data.decode('utf-8')
             server_json = json.loads(server_data)
         except Exception as e:
-            self.show_error_message(self.window, 'Virhe',
+            self.show_error_message(self.app_window, 'Virhe',
                 'Palvelimen lähettämää vastausta ei pystytty tulkitsemaan.\n\n'
                 'Ole hyvä ja ota yhteys tukeen.')
             self.enable_inputs(True)
@@ -492,7 +490,7 @@ class UserRegistration:
                 self.enable_inputs(True)
                 return
             elif response_code == 200:          # the good response
-                self.show_info_message(self.window,
+                self.show_info_message(self.app_window,
                     'Tunnus luotu',
                     'Tunnuksesi on luotu. Voit aloittaa koneen käytön.\n\nMukavia hetkiä opiskelun pariin!')
 
@@ -506,13 +504,13 @@ class UserRegistration:
             # block below
 
         except Exception as e:
-            self.show_error_message(self.window,
+            self.show_error_message(self.app_window,
                 'Jokin meni pieleen',
                 'Palvelimen palauttamaa viestiä ei pystytty tulkitsemaan. Ole hyvä ja ota yhteys tukeen.')
             return
 
         # If we get here, something has gone horribly wrong
-        self.show_error_message(self.window,
+        self.show_error_message(self.app_window,
             'Jokin meni pieleen',
             'Tätä viestiä ei pitäisi tulla. Koska luet sitä nyt, on jokin mennyt pahasti pieleen.'
             'Ole hyvä ja ota yhteys tukeen.')
@@ -926,7 +924,7 @@ if at_session_startup:
     go_to_desktop_button.connect('clicked',
                                  lambda x: go_to_desktop(app_window, x))
 
-user_registration = UserRegistration(builder, register_frame)
+user_registration = UserRegistration(builder, app_window, register_frame)
 
 if at_session_startup:
     wifi_connector = WifiConnector(builder, user_registration, register_frame)
