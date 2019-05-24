@@ -5,6 +5,7 @@
 # TODO:
 #  - everything
 
+import fcntl
 import gi
 import http.client
 import json
@@ -630,20 +631,28 @@ class WifiConnector:
     def connect_to_wifi(self, widget):
         if not self.network_ssid:
             return
+        if self.wifi_connect_pid:
+            return
+
         wifi_password = self.password_entry.get_buffer().get_text()
 
-        cmd = [ '/usr/bin/nmcli', 'device', 'wifi', 'connect',
+        cmd = [ '/usr/bin/env', 'LANG=C', 'nmcli', 'device', 'wifi', 'connect',
                 self.network_ssid ]
         if wifi_password:
             cmd += [ 'password' ]
             cmd += [ wifi_password ]
 
+        self.wifi_connect_output = ''
+
         flags = GLib.SPAWN_DO_NOT_REAP_CHILD|GObject.SPAWN_STDERR_TO_DEV_NULL
         (self.wifi_connect_pid, stdin, stdout, stderr) \
             = GObject.spawn_async(cmd, flags=flags, standard_output=True)
 
+        fl = fcntl.fcntl(stdout, fcntl.F_GETFL)
+        fcntl.fcntl(stdout, fcntl.F_SETFL, fl | os.O_NONBLOCK)
+
         GObject.io_add_watch(stdout,
-                             GObject.IO_HUP,
+                             GObject.IO_HUP|GObject.IO_IN,
                              self.wifi_connect_callback,
                              os.fdopen(stdout))
 
@@ -653,14 +662,27 @@ class WifiConnector:
 
 
     def wifi_connect_callback(self, fd, condition, channel):
-        channel.close()
-        (pid, status) = os.waitpid(self.wifi_connect_pid, 0)
-        self.spinner.stop()
-        if status == 0:
-            self.connection_status.set_text('connection successful')
-            self.user_registration.activate()
-        else:
-            self.connection_status.set_text('error connecting to network')
+        if condition & GObject.IO_IN:
+            self.wifi_connect_output += channel.read()
+
+        if condition & GObject.IO_HUP:
+            channel.close()
+            (pid, status) = os.waitpid(self.wifi_connect_pid, 0)
+            self.wifi_connect_pid = None
+            self.spinner.stop()
+
+            # status should be > 0 in case of error, but it is not, so instead
+            # we look at the output :-(
+            if "successfully activated" in self.wifi_connect_output:
+                self.connection_status.set_text('connection successful')
+                self.user_registration.activate()
+            else:
+                self.connection_status.set_text('error connecting to network')
+            self.wifi_connect_output = ''
+
+            return False
+
+        return True
 
 
     def wifi_connection_chosen(self, listbox, row):
