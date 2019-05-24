@@ -628,11 +628,30 @@ class WifiConnector:
             self.connect_button.set_sensitive(False)
 
 
+    def remove_all_wireless_connections(self):
+        cmd = [ 'env', 'LANG=C', 'nmcli', '-t', '-f', 'NAME,TYPE',
+                'connection', 'show' ]
+        output = subprocess.check_output(cmd).rstrip().decode('utf-8')
+        for connection_line in output.split("\n"):
+            connection_line_fields = connection_line.split(':')
+            if len(connection_line_fields) != 2:
+                continue
+            (connection_name, connection_type) = connection_line_fields
+            if "wireless" in connection_type:
+                cmd = [ 'nmcli', 'connection', 'delete', connection_name ]
+                subprocess.run(cmd)
+
+
     def connect_to_wifi(self, widget):
         if not self.network_ssid:
             return
         if self.wifi_connect_pid:
             return
+
+        # The connect operation always creates a new connection to
+        # NetworkManager configuration even if it fails.  Clear up all
+        # previous wireless connections (yes this is a big hammer).
+        self.remove_all_wireless_connections()
 
         wifi_password = self.password_entry.get_buffer().get_text()
 
@@ -678,6 +697,7 @@ class WifiConnector:
                 self.user_registration.activate()
             else:
                 self.connection_status.set_text('error connecting to network')
+                self.remove_all_wireless_connections()
             self.wifi_connect_output = ''
 
             return False
