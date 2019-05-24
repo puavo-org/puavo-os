@@ -42,6 +42,7 @@ EOF
 
   user-registration)
     cat <<EOF > "${user_registration_conf_path}.tmp"
+guest ALL = NOPASSWD: /bin/cat /etc/puavo/ldap/password
 guest ALL = NOPASSWD: /usr/sbin/puavo-conf-local
 EOF
     mv "${user_registration_conf_path}.tmp" "$user_registration_conf_path"
