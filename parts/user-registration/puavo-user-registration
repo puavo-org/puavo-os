@@ -873,7 +873,7 @@ else:
 
 
 builder = Gtk.Builder()
-builder.add_from_file('./puavo-user-registration.glade')        # XXX path
+builder.add_from_file('/usr/share/puavo-user-registration/puavo-user-registration.glade')
 
 app_window = builder.get_object('register_window')
 register_frame = builder.get_object('register_frame')
