@@ -670,12 +670,13 @@ class WifiConnector:
                 break
 
         network_info = self.networks[self.network_ssid]
-        self.password_entry.grab_focus()
         self.password_entry.set_text('')
         if network_info['security']:
             self.connect_button.set_sensitive(False)
+            self.password_entry.grab_focus()
             self.password_entry.set_sensitive(True)
         else:
+            self.connect_button.grab_focus()
             self.connect_button.set_sensitive(True)
             self.password_entry.set_sensitive(False)
 
