@@ -757,6 +757,10 @@ class WifiConnector:
                 new_networks[ssid] = { 'active':   active,
                                        'signal':   0,
                                        'security': security }
+            if not new_networks[ssid]['active']:
+                new_networks[ssid]['active'] = active
+            if not new_networks[ssid]['security']:
+                new_networks[ssid]['security'] = security
             try:
                 max_signal = max(int(signal), new_networks[ssid]['signal'])
                 new_networks[ssid]['signal'] = max_signal
