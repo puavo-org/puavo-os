@@ -100,10 +100,11 @@ def usage():
 
 
 class UserRegistration:
-    def __init__(self, builder, app_window, register_frame):
+    def __init__(self, builder, app_window, register_frame, at_session_startup):
         self.builder = builder
         self.app_window = app_window
         self.register_frame = register_frame
+        self.at_session_startup = at_session_startup
 
         # Get object handles
         self.register_user_box = self.builder.get_object('register_user')
@@ -495,6 +496,8 @@ class UserRegistration:
                     'Tunnuksesi on luotu. Voit aloittaa koneen käytön.\n\nMukavia hetkiä opiskelun pariin!')
 
                 set_puavoconf_switch()
+                if self.at_session_startup:
+                    subprocess.run([ 'systemctl', 'reboot', '-i'])
                 # Quit
                 Gtk.main_quit()
 
@@ -924,7 +927,8 @@ if at_session_startup:
     go_to_desktop_button.connect('clicked',
                                  lambda x: go_to_desktop(app_window, x))
 
-user_registration = UserRegistration(builder, app_window, register_frame)
+user_registration = UserRegistration(builder, app_window, register_frame,
+                                     at_session_startup)
 
 if at_session_startup:
     wifi_connector = WifiConnector(builder, user_registration, register_frame)
