@@ -8,7 +8,17 @@ INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL) -m 644
 
 .PHONY: all
-all:
+all: po/fi/puavo-user-registration.mo
+
+puavo-user-registration.pot: puavo-user-registration
+	xgettext --omit-header --language python --keyword=_tr -o $@ $^
+
+%.po: po/puavo-user-registration.pot
+	msgmerge --update --no-fuzzy-matching --backup=off $@ $<
+	touch $@
+
+%.mo: %.po
+	msgfmt $< --output-file $@
 
 .PHONY: installdirs
 installdirs:
@@ -26,3 +36,4 @@ install: installdirs
 
 .PHONY: clean
 clean:
+	rm -rf po/*/*.mo po/*.pot
