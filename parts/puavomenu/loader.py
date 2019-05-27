@@ -290,7 +290,7 @@ def load_menudata_yaml_file(filename):
             menu['icon'] = str(params['icon'])
 
         if 'programs' in params:
-            menu['programs'] = __parse_list(params['programs'])
+            menu['programs'] = utils.dedupe_list(__parse_list(params['programs']))
 
         menus[menudata_id] = menu
 
@@ -337,10 +337,10 @@ def load_menudata_yaml_file(filename):
             category['position'] = str(params['position'])
 
         if 'menus' in params:
-            category['menus'] = __parse_list(params['menus'])
+            category['menus'] = utils.dedupe_list(__parse_list(params['menus']))
 
         if 'programs' in params:
-            category['programs'] = __parse_list(params['programs'])
+            category['programs'] = utils.dedupe_list(__parse_list(params['programs']))
 
         categories[menudata_id] = category
 
