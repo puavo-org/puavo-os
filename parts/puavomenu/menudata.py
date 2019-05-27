@@ -1,7 +1,13 @@
 # Core menu data types. Menu data loading.
 
 import re
-from constants import PROGRAM_TYPE_DESKTOP
+from enum import Enum
+
+# Program types. Desktop is the default.
+class ProgramType(Enum):
+    DESKTOP = 0
+    CUSTOM = 1
+    WEB = 2
 
 
 # Python has no structs, so classes are (ab)used instead. namedtuples
@@ -21,7 +27,7 @@ class Program:
 
         # Type of this program. Affects mostly how it is launched
         # and how is added on the desktop or the bottom panel.
-        self.program_type = PROGRAM_TYPE_DESKTOP
+        self.program_type = ProgramType.DESKTOP
 
         # Internal ID (the name given to this program in menudata files)
         self.menudata_id = None

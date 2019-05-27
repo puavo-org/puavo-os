@@ -588,7 +588,7 @@ class PuavoMenu(Gtk.Window):
 
             logging.info('Executing "%s"', program.command)
 
-            if program.program_type in (PROGRAM_TYPE_DESKTOP, PROGRAM_TYPE_CUSTOM):
+            if program.program_type in (menudata.ProgramType.DESKTOP, menudata.ProgramType.CUSTOM):
                 # Set the program name to empty string ('') to force some (KDE)
                 # programs to use their default window titles. These programs
                 # have command-line parameters like "-qwindowtitle" or "-caption"
@@ -599,7 +599,7 @@ class PuavoMenu(Gtk.Window):
                 # because that triggers the unwanted behavior!) then these
                 # programs will use their own default titles.
                 Gio.AppInfo.create_from_commandline(program.command, '', 0).launch()
-            elif program.program_type == PROGRAM_TYPE_WEB:
+            elif program.program_type == menudata.ProgramType.WEB:
                 Gio.AppInfo.launch_default_for_uri(program.command, None)
             else:
                 raise RuntimeError('Unknown program type "{0}"'.

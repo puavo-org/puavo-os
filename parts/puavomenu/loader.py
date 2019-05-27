@@ -5,14 +5,10 @@ import os.path
 import logging
 import re
 
-from constants import PROGRAM_TYPE_DESKTOP, \
-                      PROGRAM_TYPE_CUSTOM, \
-                      PROGRAM_TYPE_WEB, \
-                      ICON_EXTENSIONS, \
-                      LANGUAGES
-from menudata import Program, Menu, Category
-import utils
+from constants import ICON_EXTENSIONS, LANGUAGES
+from menudata import ProgramType, Program, Menu, Category
 import conditionals
+import utils
 
 
 # Characters that can be used in program, menu and category IDs.
@@ -200,14 +196,14 @@ def load_menudata_yaml_file(filename):
         program = {}
 
         # The default
-        program['type'] = PROGRAM_TYPE_DESKTOP
+        program['type'] = ProgramType.DESKTOP
 
         if program_type == 'desktop':
-            program['type'] = PROGRAM_TYPE_DESKTOP
+            program['type'] = ProgramType.DESKTOP
         elif program_type == 'custom':
-            program['type'] = PROGRAM_TYPE_CUSTOM
+            program['type'] = ProgramType.CUSTOM
         else:
-            program['type'] = PROGRAM_TYPE_WEB
+            program['type'] = ProgramType.WEB
 
         if 'condition' in params:
             program['condition'] = str(params['condition'])
@@ -239,10 +235,10 @@ def load_menudata_yaml_file(filename):
         if 'icon' in params:
             program['icon'] = str(params['icon'])
 
-        if 'command' in params and program['type'] in (PROGRAM_TYPE_DESKTOP, PROGRAM_TYPE_CUSTOM):
+        if 'command' in params and program['type'] in (ProgramType.DESKTOP, ProgramType.CUSTOM):
             program['command'] = str(params['command'])
 
-        if 'url' in params and program['type'] == PROGRAM_TYPE_WEB:
+        if 'url' in params and program['type'] == ProgramType.WEB:
             # Technically, it is a command...
             program['command'] = str(params['url'])
 
@@ -387,11 +383,7 @@ def load_menudata_json_file(filename):
                               name)
                 continue
 
-            if ('type' not in src_program) or \
-                    (src_program['type'] not in
-                     (PROGRAM_TYPE_DESKTOP,
-                      PROGRAM_TYPE_CUSTOM,
-                      PROGRAM_TYPE_WEB)):
+            if ('type' not in src_program) or (src_program['type'] not in ProgramType):
                 logging.error('JSON program "%s" has no type or the specified type is invalid',
                               name)
                 continue
@@ -705,7 +697,7 @@ def load_desktop_files(desktop_dirs, raw_programs):
     the loaded files with existing data."""
 
     for menudata_id, program in raw_programs.items():
-        if not program or program['type'] != PROGRAM_TYPE_DESKTOP:
+        if not program or program['type'] != ProgramType.DESKTOP:
             continue
 
         # Locate the .desktop file
@@ -897,7 +889,7 @@ def build_menu_data(raw_programs, raw_menus, raw_categories, language):
             dst_prog.command = src_prog['command']
 
         if utils.is_empty(dst_prog.command):
-            if dst_prog.program_type == PROGRAM_TYPE_WEB:
+            if dst_prog.program_type == ProgramType.WEB:
                 logging.error('Web link "%s" has an empty or missing URL, '
                               'link ignored', menudata_id)
             else:
