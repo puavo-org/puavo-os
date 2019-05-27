@@ -25,6 +25,7 @@ installdirs:
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/definitions
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-user-registration
+	mkdir -p $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES
 
 .PHONY: install
 install: installdirs
@@ -33,6 +34,8 @@ install: installdirs
 		puavo-user-registration.json
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-user-registration \
 		puavo-user-registration.glade
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES \
+		po/fi/puavo-user-registration.mo
 
 .PHONY: clean
 clean:

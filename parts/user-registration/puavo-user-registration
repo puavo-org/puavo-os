@@ -26,43 +26,43 @@ _tr = gettext.gettext
 # Used when interpreting a failed server response
 FIELD_ERRORS = {
     'first_name': {
-        'name': _tr('etunimi'),
+        'name': _tr('first name'),
         'reasons': {
-            'empty': _tr('on tyhjä'),
-            'failed_validation': _tr('sisältää virheellisiä merkkejä'),
+            'empty': _tr('is empty'),
+            'failed_validation': _tr('contains bad characters'),
         }
     },
 
     'last_name': {
-        'name': _tr('sukunimi'),
+        'name': _tr('last name'),
         'reasons': {
-            'empty': _tr('on tyhjä'),
-            'failed_validation': _tr('sisältää virheellisiä merkkejä'),
+            'empty': _tr('is empty'),
+            'failed_validation': _tr('contains bad characters'),
         }
     },
 
     'username': {
-        'name': _tr('käyttäjänimi'),
+        'name': _tr('loginname'),
         'reasons': {
-            'empty': _tr('on tyhjä'),
-            'failed_validation': _tr('sisältää virheellisiä merkkejä'),
+            'empty': _tr('is empty'),
+            'failed_validation': _tr('contains bad characters'),
         }
     },
 
     'email': {
-        'name': _tr('email'),
+        'name': _tr('email address'),
         'reasons': {
-            'empty': _tr('on tyhjä'),
-            'failed_validation': _tr('sisältää virheellisiä merkkejä'),
+            'empty': _tr('is empty'),
+            'failed_validation': _tr('contains bad characters'),
         }
     },
 
     'phone': {
-        'name': _tr('puhelinnumero'),
+        'name': _tr('phone number'),
         'reasons': {
-            'empty': _tr('on tyhjä'),
-            'failed_validation': _tr('sisältää virheellisiä merkkejä'),
-            'too_long': _tr('on liian pitkä'),
+            'empty': _tr('is empty'),
+            'failed_validation': _tr('contains bad characters'),
+            'too_long': _tr('is too long'),
         }
     },
 }
@@ -70,10 +70,10 @@ FIELD_ERRORS = {
 # These language codes must be the same that are configured/allowed
 # on the server!
 LANGUAGES = [
-    ('fi_FI.UTF-8', _tr('Suomi')),
-    ('sv_FI.UTF-8', _tr('Ruotsi')),
-    ('en_US.UTF-8', _tr('Englanti')),
-    ('de_CH.UTF-8', _tr('Saksa')),
+    ('fi_FI.UTF-8', _tr('Finnish')),
+    ('sv_FI.UTF-8', _tr('Swedish')),
+    ('en_US.UTF-8', _tr('English')),
+    ('de_CH.UTF-8', _tr('German')),
 ]
 
 USERNAME_FILTER = re.compile(r'[^a-z|0-9|.|\-|_]')
@@ -82,7 +82,7 @@ USERNAME_FILTER = re.compile(r'[^a-z|0-9|.|\-|_]')
 def go_to_desktop(app_window, widget):
     dialog = Gtk.MessageDialog(app_window, 0, Gtk.MessageType.WARNING,
        Gtk.ButtonsType.OK_CANCEL, _tr('Go to desktop?'))
-    dialog.format_secondary_text( _tr('Are you sure you do not want to create a user account?  Without user account, your files will be lost after your desktop session ends.')
+    dialog.format_secondary_text( _tr('Are you sure you do not want to create a user account?  Without user account, your files will be lost after your desktop session ends.'))
     response = dialog.run()
     if response == Gtk.ResponseType.OK:
         Gtk.main_quit()
@@ -209,7 +209,7 @@ class UserRegistration:
 
     def set_username_hint_status(self, is_good=True):
         color = '#888' if is_good else '#f00'
-        msg = _tr('Käyttäjätunnuksiin kelpaavat merkit a-z, 0-9, -, _ ja piste.')
+        msg = _tr('Loginnames may contain only characters a-z, 0-9, -, _ and a dot.')
         self.username_hint.set_markup(
           '<span color="%s">%s</span>' % (color, msg))
 
@@ -324,111 +324,113 @@ class UserRegistration:
 
 
     def handle_server_error(self, response):
-        self.show_error_message(self.app_window, _tr('Virhe'),
-           _tr('Palvelinpäässä meni jokin pieleen.  Ole hyvä ja ota yhteys' \
-               ' tukeen.  Anna tuelle tämä koodi:') \
-                 + '\n\n<big>{0}</big>'.format(response['log_id']))
+        self.show_error_message(self.app_window, _tr('Error'),
+           _tr('Something went wrong on the server.') \
+           + ' ' + _tr('Please contact support and give this code:') \
+           + '\n\n<big>{0}</big>'.format(response['log_id']))
 
 
     def handle_server_400(self, response):
         if response['status'] == 'missing_data':
             if len(response['failed_fields']) > 0:
-                msg = _tr('Näiden kenttien sisällössä on jotain vikaa.' \
-                        ' Tarkista niiden sisältö ja yritä uudelleen.\n\n')
+                msg = _tr('Something is wrong in the following form fields.' \
+                          ' Check their contents and try again.')
 
                 for field in response['failed_fields']:
                     error = FIELD_ERRORS[field['name']]
-                    msg += '- {0} {1}\n'.format(error['name'], error['reasons'][field['reason']])
+                    msg += '- {0} {1}\n'.format(error['name'],
+                                                error['reasons'][field['reason']])
 
                 self.show_error_message(self.app_window,
-                                        _tr('Virheelliset tiedot'),
+                                        _tr('Bad information'),
                                         msg)
 
         elif response['status'] == 'malformed_json':
             # *we* sent invalid data :-(
-            self.show_error_message(self.app_window, _tr('Virheelliset tiedot'),
-              _tr('Rekisteröintiohjelma lähetti palvelimelle virheellisiä' \
-                  ' tietoja. Ole hyvä ja ota yhteys tukeen. Anna tuelle tämä' \
-                  ' koodi:' + '\n\n<big>{0}</big>'.format(response['log_id'])))
+            self.show_error_message(self.app_window, _tr('Bad information'),
+              _tr('Registration program sent bad information to the server.') \
+                  + _tr('Please contact support and give this code:') \
+                  + '\n\n<big>{0}</big>'.format(response['log_id']))
 
         elif response['status'] == 'incomplete_data':
             # *we* sent incomplete/missing data :-(
             self.show_error_message(self.app_window,
-              _tr('Puutteelliset tiedot'),
-              _tr('Rekisteröintiohjelma lähetti palvelimelle puutteellisia' \
-              ' tietoja.  Ole hyvä ja ota yhteys tukeen.  Anna tuelle tämä' \
-              ' koodi:') + '\n\n<big>{0}</big>'.format(response['log_id']))
+              _tr('Missing information'),
+              _tr('Registration program did not send all required information' \
+                  ' to server.') \
+              + ' ' + _tr('Please contact support and give this code:') \
+              + '\n\n<big>{0}</big>'.format(response['log_id']))
 
         elif response['status'] == 'invalid_username':
-            self.show_error_message(self.app_window, _tr('Virheellinen data'),
-              _tr('Käyttäjätunnus sisältää virheellisiä merkkejä.'))
+            self.show_error_message(self.app_window, _tr('Invalid input'),
+              _tr('Loginname contains bad characters.'))
 
         elif response['status'] == 'invalid_email':
-            self.show_error_message(self.app_window, _tr('Virheellinen data'),
-              _tr('Sähköpostiosoite ei ole kunnollinen.'))
+            self.show_error_message(self.app_window, _tr('Invalid input'),
+              _tr('Email address is not valid.'))
 
         elif response['status'] == 'password_mismatch':
-            self.show_error_message(self.app_window, _tr('Virheellinen data'),
-              _tr('Salasana ja sen varmistus eivät täsmää.'))
+            self.show_error_message(self.app_window, _tr('Invalid input'),
+              _tr('Password and its confirmation do not match.'))
 
         elif response['status'] == 'invalid_language':
-            self.show_error_message(self.app_window, _tr('Virheellinen data'),
-              _tr('Kieli on virheellinen.'))
+            self.show_error_message(self.app_window, _tr('Invalid input'),
+              _tr('Language choice is invalid.'))
 
         else:
-            self.show_error_message(self.app_window, _tr('Virhe'),
-               _tr('Käyttäjätietojen käsittelyssä tapahtui tuntematon virhe.' \
-               ' Ota yhteys tukeen ja anne heille tämä koodi:') \
-               '\n\n<big>{0}</big>'.format(response['log_id']))
+            self.show_error_message(self.app_window, _tr('Error'),
+               _tr('An unknown error occurred when handling user information.') \
+               + _tr('Please contact support and give this code:') \
+               + '\n\n<big>{0}</big>'.format(response['log_id']))
 
 
     def handle_server_401(self, response):
         if response['status'] == 'unknown_machine':
             # This machine does not exist in the database
             self.show_error_message(self.app_window,
-                _tr('Rekisteröimätön kone'),
-                _tr('Koneesi tietoja ei löydy tietokannasta. Ole hyvä ja ota' \
-                    ' yhteys tukeen. Anna tuelle tämä koodi:') \
+                _tr('Unregistered host'),
+                _tr('This host is not found from database.') \
+                + ' ' + _tr('Please contact support and give this code:') \
                 + '\n\n<big>{0}</big>'.format(response['log_id']))
 
         elif response['status'] == 'device_already_in_use':
             # This machine already has a user. THIS SHOULD NOT HAPPEN.
-            self.show_error_message(self.app_window, _tr('Kone on jo käytössä'),
-                _tr('Tältä koneelta on jo suoritettu käyttäjän luonti.' \
-                    ' Ole hyvä ja ota yhteys tukeen. Anna tuelle tämä koodi:') \
+            self.show_error_message(self.app_window, _tr('Host is in use.'),
+                _tr('User registration has already been done in this host.') \
+                 + ' ' + _tr('Please contact support and give this code:') \
                 + '\n\n<big>{0}</big>'.format(response['log_id']))
 
         elif response['status'] == 'server_error':
             self.handle_server_error(response)
 
         else:
-            self.show_error_message(self.app_window, _tr('Virhe'),
-               _tr('Laitetietojen käsittelyssä tapahtui tuntematon virhe.' \
-               ' Ota yhteys tukeen ja anne heille tämä koodi:') \
-               + '\n\n<big>{0}</big>'.format(response['log_id']))
+            self.show_error_message(self.app_window, _tr('Error'),
+               _tr('Unknown error occurred when handling host information.' \
+               + _tr('Please contact support and give this code:') \
+               + '\n\n<big>{0}</big>'.format(response['log_id'])))
 
 
     def handle_server_409(response):
         if response['status'] == 'username_unavailable':
             self.show_error_message(self.app_window,
-                _tr('Käyttäjätunnus on jo käytössä'),
-                _tr('Valitsemasi käyttäjätunnus on jo käytössä.  Valitse' \
-                      + ' toinen nimi.'))
+                _tr('Loginname already in use.'),
+                _tr('The loginname you have chosen is already in use.' \
+                    ' Choose another loginname.'))
 
         elif response['status'] == 'duplicate_email':
             self.show_error_message(self.app_window,
-                _tr('Sähköpostiosoite on jo käytössä'),
-                _tr('Tämä sähköpostiosoite on jo käytössä.  Käytä toista' \
-                    'osoitetta.') \
+                _tr('Email address is already in use.'),
+                _tr('This email address is already in use.' \
+                    ' Use another address.') \
                 + '\n\n' \
-                + _tr('Jos toisen osoitteen käyttö ei ole mahdollista,' \
-                     + ' ota yhteys tukeen.  Anna heille tämä koodi:') \
+                + _tr('If using another email address is not possible,' \
+                     + ' contact support and give this code:') \
                 + '\n\n<big>{0}</big>'.format(response['log_id']))
 
         else:
-            self.show_error_message(self.app_window, _tr('Virhe'),
-               _tr('Käyttäjätietojen käsittelyssä tapahtui tuntematon virhe.' \
-                   'Ota yhteys tukeen ja anne heille tämä koodi:') \
+            self.show_error_message(self.app_window, _tr('Error'),
+               _tr('An unknown error occurred when handling user information.') \
+               + ' ' + _tr('Please contact support and give this code:') \
                + '\n\n<big>{0}</big>'.format(response['log_id']))
 
 
@@ -437,11 +439,11 @@ class UserRegistration:
 
 
     def handle_network_error(self, msg):
-        self.show_error_message(self.app_window, _tr('Virhe'),
-            _tr('Palvelimeen ei saada yhteyttä:') \
+        self.show_error_message(self.app_window, _tr('Error'),
+            _tr('Can not contact server:') \
             + '\n\n\t{0}\n\n'.format(msg) \
-            + _tr('Tarkista verkkoyhteyden tila ja yritä uudelleen.') \
-            + _tr(' Jos ongelma toistuu, ota yhteys tukeen.'))
+            + _tr('Check network connection and try again.') \
+            + ' ' + _tr('If problem persists, contact support.'))
 
 
     def idle_func(self, event, thread):
@@ -452,10 +454,10 @@ class UserRegistration:
 
             if thread.response['failed']:
                 if thread.response['error'] == 'timeout':
-                    self.show_error_message(self.app_window, _tr('Virhe'),
-                        _tr('Palvelin ei vastaa pyyntöön.' \
-                            ' Yritä lähetystä uudelleen hetken kuluttua.' \
-                            ' Jos tilanne toistuu, ota yhteys tukeen.'))
+                    self.show_error_message(self.app_window, _tr('Error'),
+                        _tr('Server is not responding.' \
+                            ' Try again after a while.' \
+                            ' If the problem persists, contact support.'))
                 else:
                     self.handle_network_error(thread.response['error'])
             else:
@@ -486,10 +488,10 @@ class UserRegistration:
             server_data = response_data.decode('utf-8')
             server_json = json.loads(server_data)
         except Exception as e:
-            self.show_error_message(self.app_window, _tr('Virhe'),
-              _tr('Palvelimen lähettämää vastausta ei pystytty tulkitsemaan.') \
+            self.show_error_message(self.app_window, _tr('Error'),
+              _tr('Can not interpret the response sent by the server.') \
               + '\n\n'
-              _tr('Ole hyvä ja ota yhteys tukeen.'))
+              + _tr('Please contact support.'))
             self.enable_inputs(True)
             return
 
@@ -512,12 +514,13 @@ class UserRegistration:
                 return
             elif response_code == 200:          # the good response
                 self.show_info_message(self.app_window,
-                    _tr('Tunnus luotu'),
-                    _tr('Tunnuksesi on luotu. Voit aloittaa koneen käytön.') \
+                    _tr('User account created'),
+                    _tr('Your user account has been created.') \
                       + '\n\n' \
-                      + 'Mukavia hetkiä opiskelun pariin!')
+                      + _tr('Have a nice time with your studies!'))
 
                 set_puavoconf_switch()
+                # XXX should warn user about the reboot
                 if self.at_session_startup:
                     subprocess.run([ 'systemctl', 'reboot', '-i'])
                 # Quit
@@ -530,15 +533,16 @@ class UserRegistration:
 
         except Exception as e:
             self.show_error_message(self.app_window,
-                _tr('Jokin meni pieleen'),
-                _tr('Palvelimen palauttamaa viestiä ei pystytty tulkitsemaan. Ole hyvä ja ota yhteys tukeen.'))
+                _tr('Something went wrong'),
+                _tr('Could not interpret the response sent by the server.') \
+                  + ' ' + _tr('Please contact support.'))
             return
 
         # If we get here, something has gone horribly wrong
         self.show_error_message(self.app_window,
-            _tr('Jokin meni pieleen'),
-            _tr('Tätä viestiä ei pitäisi tulla.  Koska luet sitä nyt, on jokin mennyt pahasti pieleen.') \
-            + _tr('Ole hyvä ja ota yhteys tukeen.'))
+            _tr('Something went wrong'),
+            _tr('This situation should never happen, something is very wrong.')
+              + ' ' + _tr('Please contact support.'))
 
 
     def on_submit_clicked(self, button):
@@ -573,7 +577,7 @@ class UserRegistration:
         # --------------------------------------------------------------------------
         # Launch a background thread
 
-        self.status.set_text(_tr('Lähetetään tiedot palvelimelle...'))
+        self.status.set_text(_tr('Sending information to server...'))
         self.enable_inputs(False)
         self.spinner.start()
 
@@ -764,7 +768,7 @@ class WifiConnector:
     def ask_if_wifi_network_is_okay(self, app_window, network_ssid):
         short_msg = _tr('Use network "%s"?') % network_ssid
         long_msg = _tr('You are connected to network "%s",' \
-                         + ' do you want to use this network?')) % network_ssid
+                       ' do you want to use this network?') % network_ssid
         dialog = Gtk.MessageDialog(app_window, 0, Gtk.MessageType.QUESTION,
             Gtk.ButtonsType.YES_NO, short_msg)
         dialog.format_secondary_text(long_msg)
