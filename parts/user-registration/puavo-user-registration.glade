@@ -27,7 +27,7 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="halign">end</property>
-            <property name="label" translatable="yes">Etunimi:</property>
+            <property name="label" translatable="yes">First name:</property>
           </object>
           <packing>
             <property name="left_attach">0</property>
@@ -39,7 +39,7 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="halign">end</property>
-            <property name="label" translatable="yes">Sukunimi:</property>
+            <property name="label" translatable="yes">Last name:</property>
           </object>
           <packing>
             <property name="left_attach">0</property>
@@ -52,7 +52,7 @@
             <property name="can_focus">False</property>
             <property name="halign">end</property>
             <property name="valign">center</property>
-            <property name="label" translatable="yes">Käyttäjätunnus:</property>
+            <property name="label" translatable="yes">Loginname:</property>
           </object>
           <packing>
             <property name="left_attach">0</property>
@@ -64,7 +64,7 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="halign">end</property>
-            <property name="label" translatable="yes">Email:</property>
+            <property name="label" translatable="yes">Email address:</property>
           </object>
           <packing>
             <property name="left_attach">0</property>
@@ -76,7 +76,7 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="halign">end</property>
-            <property name="label" translatable="yes">Kirjautumissalasana:</property>
+            <property name="label" translatable="yes">Login password:</property>
           </object>
           <packing>
             <property name="left_attach">0</property>
@@ -88,7 +88,7 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="halign">end</property>
-            <property name="label" translatable="yes">Salasanan vahvistus:</property>
+            <property name="label" translatable="yes">Password confirmation:</property>
           </object>
           <packing>
             <property name="left_attach">0</property>
@@ -100,7 +100,7 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="halign">end</property>
-            <property name="label" translatable="yes">Kieli:</property>
+            <property name="label" translatable="yes">Language:</property>
           </object>
           <packing>
             <property name="left_attach">0</property>
@@ -113,7 +113,7 @@
             <property name="can_focus">False</property>
             <property name="halign">end</property>
             <property name="valign">center</property>
-            <property name="label" translatable="yes">Puhelinnumero:</property>
+            <property name="label" translatable="yes">Phone number:</property>
           </object>
           <packing>
             <property name="left_attach">0</property>
@@ -231,7 +231,6 @@
             <property name="can_focus">False</property>
             <property name="halign">start</property>
             <property name="valign">start</property>
-            <property name="label" translatable="yes">          </property>
             <property name="use_markup">True</property>
           </object>
           <packing>
@@ -245,7 +244,7 @@
             <property name="can_focus">False</property>
             <property name="halign">start</property>
             <property name="valign">start</property>
-            <property name="label" translatable="yes">Puhelinnumero on valinnainen. Sitä käytetään vain tukitilanteissa.</property>
+            <property name="label" translatable="yes">Phone number is optional.  It is used only in support situations.</property>
             <attributes>
               <attribute name="foreground" value="#88888a8a8585"/>
             </attributes>
@@ -261,7 +260,7 @@
             <property name="can_focus">False</property>
             <property name="halign">start</property>
             <property name="valign">start</property>
-            <property name="label" translatable="yes">Saat sähköpostiisi vahvistuksen rekisteröinnistä. Osoitetta käytetään myös salasanan nollaukseen.</property>
+            <property name="label" translatable="yes">You will receive confirmation to your email address.  The address is also used for password reset.</property>
             <property name="wrap">True</property>
             <attributes>
               <attribute name="foreground" value="#88888a8a8585"/>
@@ -296,7 +295,6 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="valign">center</property>
-                <property name="label" translatable="yes">label</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -336,7 +334,7 @@
         <property name="layout_style">center</property>
         <child>
           <object class="GtkButton" id="submit">
-            <property name="label" translatable="yes">Luo tunnus</property>
+            <property name="label" translatable="yes">Create user account</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
@@ -350,7 +348,7 @@
         </child>
         <child>
           <object class="GtkButton" id="reset">
-            <property name="label" translatable="yes">Nollaa lomake</property>
+            <property name="label" translatable="yes">Reset form</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
@@ -375,7 +373,7 @@
     <property name="width_request">480</property>
     <property name="height_request">420</property>
     <property name="can_focus">False</property>
-    <property name="title" translatable="yes">Uuden käyttäjän rekisteröinti</property>
+    <property name="title" translatable="yes">New user registration</property>
     <property name="window_position">center-always</property>
     <property name="default_width">480</property>
     <property name="default_height">420</property>
@@ -405,7 +403,7 @@
         </child>
         <child>
           <object class="GtkButton" id="go_to_desktop">
-            <property name="label" translatable="yes">go to desktop</property>
+            <property name="label" translatable="yes">Go to desktop</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
             <property name="no_show_all">True</property>
@@ -462,7 +460,7 @@
           <object class="GtkLabel" id="wifi_connector_description">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="label" translatable="yes">Yhdistä verkkoon</property>
+            <property name="label" translatable="yes">Connect to network</property>
           </object>
           <packing>
             <property name="expand">False</property>

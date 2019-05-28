@@ -334,7 +334,7 @@ class UserRegistration:
         if response['status'] == 'missing_data':
             if len(response['failed_fields']) > 0:
                 msg = _tr('Something is wrong in the following form fields.' \
-                          ' Check their contents and try again.')
+                          '  Check their contents and try again.')
 
                 for field in response['failed_fields']:
                     error = FIELD_ERRORS[field['name']]
@@ -415,13 +415,13 @@ class UserRegistration:
             self.show_error_message(self.app_window,
                 _tr('Loginname already in use.'),
                 _tr('The loginname you have chosen is already in use.' \
-                    ' Choose another loginname.'))
+                    '  Choose another loginname.'))
 
         elif response['status'] == 'duplicate_email':
             self.show_error_message(self.app_window,
                 _tr('Email address is already in use.'),
                 _tr('This email address is already in use.' \
-                    ' Use another address.') \
+                    '  Use another address.') \
                 + '\n\n' \
                 + _tr('If using another email address is not possible,' \
                      + ' contact support and give this code:') \
@@ -456,8 +456,8 @@ class UserRegistration:
                 if thread.response['error'] == 'timeout':
                     self.show_error_message(self.app_window, _tr('Error'),
                         _tr('Server is not responding.' \
-                            ' Try again after a while.' \
-                            ' If the problem persists, contact support.'))
+                            '  Try again after a while.' \
+                            '  If the problem persists, contact support.'))
                 else:
                     self.handle_network_error(thread.response['error'])
             else:
@@ -705,7 +705,8 @@ class WifiConnector:
 
         self.connect_button.set_sensitive(False)
         self.spinner.start()
-        self.connection_status.set_text('connecting to %s' % self.network_ssid)
+        self.connection_status.set_text(
+          _tr('connecting to %s') % self.network_ssid)
 
 
     def wifi_connect_callback(self, fd, condition, channel):
@@ -946,6 +947,7 @@ else:
 
 
 builder = Gtk.Builder()
+builder.set_translation_domain('puavo-user-registration')
 builder.add_from_file('/usr/share/puavo-user-registration/puavo-user-registration.glade')
 
 app_window = builder.get_object('register_window')
