@@ -623,7 +623,8 @@ programs:
   - processing:
         tags: default
   - puavo-user-registration:
-        tags: default
+        condition: user_registration
+        tags: user_registration
   - pycharm:
         tags: default
   - python-club:
