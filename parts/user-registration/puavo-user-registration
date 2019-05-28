@@ -521,8 +521,11 @@ class UserRegistration:
                       + _tr('Have a nice time with your studies!'))
 
                 set_puavoconf_switch()
-                # XXX should warn user about the reboot
                 if self.at_session_startup:
+                    dialog = Gtk.MessageDialog(self.app_window, 0,
+                        Gtk.MessageType.INFO, Gtk.ButtonsType.OK,
+                        _tr('System must be rebooted, press OK when ready!'))
+                    dialog.run()
                     subprocess.run([ 'systemctl', 'reboot', '-i'])
                 # Quit
                 Gtk.main_quit()
