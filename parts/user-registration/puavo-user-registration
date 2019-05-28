@@ -952,6 +952,8 @@ builder.add_from_file('/usr/share/puavo-user-registration/puavo-user-registratio
 app_window = builder.get_object('register_window')
 register_frame = builder.get_object('register_frame')
 
+app_window.set_icon_name('user-info')
+
 try:
     get_password_cmd = [ 'sudo', '-n', 'cat', '/etc/puavo/ldap/password' ]
     host_ldap_password = subprocess.check_output(get_password_cmd) \
