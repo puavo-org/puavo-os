@@ -23,6 +23,7 @@ puavo-user-registration.pot: puavo-user-registration
 .PHONY: installdirs
 installdirs:
 	mkdir -p $(DESTDIR)$(bindir)
+	mkdir -p $(DESTDIR)$(datarootdir)/applications
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/definitions
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-user-registration
 	mkdir -p $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES
@@ -30,8 +31,11 @@ installdirs:
 .PHONY: install
 install: installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) puavo-user-registration
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/applications \
+		puavo-user-registration.desktop
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-conf/definitions \
 		puavo-user-registration.json
+	mkdir -p $(DESTDIR)$(datarootdir)/applications
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-user-registration \
 		puavo-user-registration.glade
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES \

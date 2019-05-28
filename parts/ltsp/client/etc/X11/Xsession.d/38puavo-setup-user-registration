@@ -9,4 +9,6 @@ if [ "$DESKTOP_SESSION" = 'puavo-user-registration' ]; then
   export DESKTOP_SESSION=puavo-desktop
   export GDMSESSION=puavo-desktop
   export XDG_SESSION_DESKTOP=puavo-desktop
+
+  export PUAVO_USER_REGISTRATION=true
 fi

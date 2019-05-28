@@ -622,6 +622,8 @@ programs:
         tags: default
   - processing:
         tags: default
+  - puavo-user-registration:
+        tags: default
   - pycharm:
         tags: default
   - python-club:
@@ -1606,6 +1608,7 @@ categories:
         programs:
             - org.gnome.Nautilus
             - school-user-list
+            - puavo-user-registration
 
   - category-subjects:
         name:

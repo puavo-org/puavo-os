@@ -19,3 +19,9 @@
   params:
     - name: PUAVO_MENU_SHOW_MY_SCHOOL_USERS
       value: "1"
+
+- name: user_registration
+  function: env_var
+  params:
+    - name: PUAVO_USER_REGISTRATION
+      value: "true"
