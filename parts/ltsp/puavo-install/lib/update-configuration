@@ -177,7 +177,7 @@ def update_grub_environment(restclient)
     grubedit('unset', 'puavo_kernel_version')
   end
 
-  if puavoconf_get('puavo.admin.personally_administered') == 'true' then
+  if puavoconf_get('puavo.grub.developer_mode.enabled') == 'true' then
     grubedit('set', 'puavo_show_imageoverlays=true')
   else
     grubedit('unset', 'puavo_show_imageoverlays')
