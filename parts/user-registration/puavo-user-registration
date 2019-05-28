@@ -78,6 +78,7 @@ LANGUAGES = [
 
 USERNAME_FILTER = re.compile(r'[^a-z|0-9|.|\-|_]')
 
+host_ldap_password = None
 
 def go_to_desktop(app_window, widget):
     dialog = Gtk.MessageDialog(app_window, 0, Gtk.MessageType.WARNING,
@@ -559,13 +560,12 @@ class UserRegistration:
         user['language'] = LANGUAGES[self.language_combo.get_active()][0]
         user['phone'] = self.phone_field.get_text().strip()
 
-        get_password_cmd = [ 'sudo', '-n', 'cat', '/etc/puavo/ldap/password' ]
+        print("host_ldap_password=%s" % host_ldap_password)
         machine = {
           'dn':       open('/etc/puavo/ldap/dn', 'rb').read() \
                         .decode('utf-8').rstrip(),
           'hostname': socket.gethostname(),
-          'password': subprocess.check_output(get_password_cmd) \
-                        .decode('utf-8').rstrip(),
+          'password': host_ldap_password,
         }
 
         data = {}
@@ -945,13 +945,24 @@ elif len(sys.argv) == 2:
 else:
     usage()
 
-
 builder = Gtk.Builder()
 builder.set_translation_domain('puavo-user-registration')
 builder.add_from_file('/usr/share/puavo-user-registration/puavo-user-registration.glade')
 
 app_window = builder.get_object('register_window')
 register_frame = builder.get_object('register_frame')
+
+try:
+    get_password_cmd = [ 'sudo', '-n', 'cat', '/etc/puavo/ldap/password' ]
+    host_ldap_password = subprocess.check_output(get_password_cmd) \
+                           .decode('utf-8').rstrip()
+except subprocess.CalledProcessError:
+    errmsg = _tr('You do not have the required permissions to run this tool.')
+    dialog = Gtk.MessageDialog(app_window, 0, Gtk.MessageType.ERROR,
+               Gtk.ButtonsType.CANCEL, errmsg)
+    dialog.run()
+    sys.exit(1)
+
 if at_session_startup:
     go_to_desktop_button = builder.get_object('go_to_desktop')
     go_to_desktop_button.show()
