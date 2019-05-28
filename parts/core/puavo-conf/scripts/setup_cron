@@ -94,13 +94,16 @@ EOF
 
 cron_d_cond_enable fix-homedir-permissions <<'EOF'
 # Fix home directory permissions every morning at 06:13
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 13 06 * * * root /usr/local/sbin/puavo-fix-homedir-permissions >/dev/null 2>&1
 EOF
 
 # XXX Is this still necessary?
 cron_d_cond_enable fstrim <<'EOF'
 # Trim SSD-cached /home every night at 03:00
-PATH=/bin:/sbin
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 00 03 * * * root grep -q '^/dev/mapper/cache-home /home ext4' && fstrim /home >/dev/null 2>&1
 EOF
 
@@ -108,15 +111,21 @@ cron_infotv_display_control | cron_d_cond_enable infotv-display-control
 
 cron_d_cond_enable puavo-autopoweron <<'EOF'
 # Run wakeonlan for hosts that should be woken up.
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 30 07 * * * root /usr/local/lib/puavo-autopoweron >/dev/null 2>&1
 EOF
 
 cron_d_cond_enable puavo-autoreboot-at-night <<'EOF'
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 00 03 * * * root /sbin/reboot >/dev/null 2>&1
 EOF
 
 cron_d_cond_enable puavo-bootserver-sync-images <<'EOF'
 # Sync images (for other hosts mostly).
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 21 21 * * * root /usr/sbin/puavo-bootserver-sync-images >/dev/null 2>&1
 EOF
 
@@ -127,16 +136,22 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 EOF
 
 cron_d_cond_enable puavo-setup-bootserver-printer-restrictions <<'EOF'
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 */5 * * * * root /etc/puavo-conf/scripts/setup_bootserver_printer_restrictions >/dev/null 2>&1
 EOF
 
 cron_d_cond_enable puavo-update-airprint-ddns <<'EOF'
 # Update printers on DNS every fifteen minutes.
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 */15 * * * * root /usr/local/sbin/puavo-update-airprint-ddns >/dev/null 2>&1
 EOF
 
 cron_d_cond_enable remove-cups-jobs <<'EOF'
 # Remove all CUPS jobs every night at 03:00
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 00 03 * * * root /usr/bin/cancel -a >/dev/null 2>&1
 EOF
 
