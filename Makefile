@@ -166,7 +166,7 @@ rootfs-image: $(rootfs_dir) $(image_dir)
 	$(_chroot_cmd) $(MAKE) -C '/puavo-os' update-mime-database
 	$(_sudo) mksquashfs '$(rootfs_dir)' '$(_image_file).tmp'	\
 		-noappend -no-recovery -no-sparse -wildcards -comp lzo	\
-		-ef '.aux/$(image_class).excludes'		\
+		-ef 'config/excludes/$(image_class)'		        \
 		|| { rm -f '$(_image_file).tmp'; false; }
 	$(_sudo) mv '$(_image_file).tmp' '$(_image_file)'
 	@echo Built '$(_image_file)' successfully.
