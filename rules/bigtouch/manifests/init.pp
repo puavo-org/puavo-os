@@ -20,6 +20,4 @@ class bigtouch {
     or title == onboard
     or title == openboard
   |>
-
-  Puavo_pkg::Install <| title == google-chrome |>
 }

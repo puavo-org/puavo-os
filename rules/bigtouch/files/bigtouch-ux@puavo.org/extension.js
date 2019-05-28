@@ -101,13 +101,13 @@ function enable() {
 
     let launchChromeIcon = new St.Icon(
         {
-            icon_name: "google-chrome",
+            icon_name: "chromium",
             reactive: true,
             track_hover: true,
             style_class: "launcher-box-item"
         });
     launchChromeIcon.connect('button-press-event',
-                               function() { Util.spawn(["google-chrome-stable"]) });
+                               function() { Util.spawn(["chromium"]) });
 
     let launchGnomeClocksIcon = new St.Icon(
         {
