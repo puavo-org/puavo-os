@@ -1,0 +1,15 @@
+#!/usr/bin/python3
+
+import gi
+
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
+
+builder = Gtk.Builder()
+builder.add_from_file('./puavo-laptop-setup.glade')
+
+app_window = builder.get_object('app_window')
+app_window.connect('destroy', Gtk.main_quit)
+app_window.show_all()
+
+Gtk.main()
