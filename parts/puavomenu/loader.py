@@ -771,6 +771,10 @@ def load_desktop_files(desktop_dirs, raw_programs):
         # Load the parts from the .desktop file we don't have yet
         merge_dotdesktop_and_yaml_data(program, desktop_data['Desktop Entry'])
 
+        # Keep track of the original desktop file name. We need it,
+        # for example, when creating panel icons.
+        program['original_desktop_file'] = menudata_id + '.desktop'
+
 
 def apply_filters(raw_programs, raw_menus, raw_categories, conditions, filters):
     """Applies conditionals and tag filters to programs, menus and categories."""
@@ -1007,6 +1011,9 @@ def build_menu_data(raw_programs, raw_menus, raw_categories, language, installer
 
             if (not utils.is_empty(ext)) and (ext in ICON_EXTENSIONS):
                 dst_prog.icon_name_is_path = True
+
+        if 'original_desktop_file' in src_prog:
+            dst_prog.original_desktop_file = src_prog['original_desktop_file']
 
         programs[menudata_id] = dst_prog
 
