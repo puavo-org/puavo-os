@@ -213,6 +213,7 @@ class packages {
     , 'gcc'
     , 'gdb'
     , 'gettext'
+    , 'glade'
     , 'gnupg'
     , 'manpages-dev'
     , 'perl-doc'
