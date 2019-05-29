@@ -10,6 +10,12 @@ class ProgramType(Enum):
     WEB = 2
 
 
+class PuavoPkgState(Enum):
+    UNKNOWN = -1
+    NOT_INSTALLED = 0
+    INSTALLED = 1
+
+
 # Python has no structs, so classes are (ab)used instead. namedtuples
 # could be used, but they're classes in disguise, so let's cut out the
 # middle man. Because we're not expecting to actually add new program
@@ -71,6 +77,21 @@ class Program:
         # If set, this is the name of the original .desktop file
         # the data was read from. Not always known or applicable.
         self.original_desktop_file = None
+
+        # If not None, this is a unique ID/filename of the puavo-pkg package
+        # that installs/contains this program. Its .desktop file, icons
+        # and other files might not be always available.
+        self.puavopkg_id = None
+        self.puavopkg_state = PuavoPkgState.UNKNOWN
+        self.puavopkg_icon_name = None
+
+    def is_puavopkg_installer(self):
+        """Returns True if the program is merely an installer for a
+        puavo-pkg program that has not been installed yet."""
+
+        return self.program_type == ProgramType.DESKTOP and \
+               self.puavopkg_id and \
+               self.puavopkg_state == PuavoPkgState.NOT_INSTALLED
 
     def __str__(self):
         return '<Program, type={0}, id="{1}", name="{2}", ' \
@@ -209,7 +230,13 @@ class Menudata:
         self.categories = {}
         self.category_index = []
 
-    def load(self, language, menudata_root_dir, tag_filter_string, icon_cache):
+    def load(self,
+             language,
+             menudata_root_dir,
+             tag_filter_string,
+             puavopkg_data,
+             icon_cache):
+
         """A high-level interface to everything in loader.py. Loads all the
         menu data in the specified directory and builds usable menu data
         out of it."""
@@ -224,4 +251,5 @@ class Menudata:
             loader.load_menu_data(language,
                                   menudata_root_dir,
                                   tag_filter_string,
+                                  puavopkg_data,
                                   icon_cache)

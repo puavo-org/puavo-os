@@ -6,7 +6,7 @@ import logging
 import re
 
 from constants import ICON_EXTENSIONS, LANGUAGES
-from menudata import ProgramType, Program, Menu, Category
+from menudata import ProgramType, PuavoPkgState, Program, Menu, Category
 import conditionals
 import utils
 
@@ -241,6 +241,33 @@ def load_menudata_yaml_file(filename):
         if 'url' in params and program['type'] == ProgramType.WEB:
             # Technically, it is a command...
             program['command'] = str(params['url'])
+
+        if 'puavopkg' in params and isinstance(params['puavopkg'], dict):
+            if 'name' not in program or utils.is_empty(program['name']):
+                # The name is required for puavo-pkg programs, because if
+                # the .desktop file does not exist, we won't have a name
+                # for the program that we could display.
+                logging.error('puavo-pkg program "%s" does not have a name, program ignored',
+                              menudata_id)
+                continue
+
+            if 'id' in params['puavopkg']:
+                # This program is installed through puavo-pkg and its
+                # .desktop files/etc. might not be always available.
+                program['puavopkg_id'] = str(params['puavopkg']['id'])
+                program['puavopkg_state'] = PuavoPkgState.UNKNOWN
+                program['puavopkg_icon'] = None
+
+                if 'icon' in params['puavopkg']:
+                    # A temporary icon that will be used until
+                    # the program is actually installed
+                    pkg_icon = params['puavopkg']['icon']
+
+                    if isinstance(pkg_icon, str) and not utils.is_empty(pkg_icon):
+                        program['puavopkg_icon'] = pkg_icon
+            else:
+                logging.warning('Program "%s" has a puavopkg section, but no puavopkg package ID',
+                                menudata_id)
 
         programs[menudata_id] = program
 
@@ -700,6 +727,12 @@ def load_desktop_files(desktop_dirs, raw_programs):
         if not program or program['type'] != ProgramType.DESKTOP:
             continue
 
+        if 'puavopkg_id' in program:
+            if program['puavopkg_state'] == PuavoPkgState.NOT_INSTALLED:
+                # This puavo-pkg program has not bee installed yet,
+                # don't waste time looking for the .desktop file
+                continue
+
         # Locate the .desktop file
         desktop_file = None
 
@@ -834,7 +867,37 @@ def apply_filters(raw_programs, raw_menus, raw_categories, conditions, filters):
                 cat['hidden'] = True
 
 
-def build_menu_data(raw_programs, raw_menus, raw_categories, language):
+def set_puavpkg_program_states(raw_programs, puavopkg_data):
+    """Sets puavo-pkg states for puavo-pkg programs, and filters out invalid
+    entries."""
+    for menudata_id, program in raw_programs.items():
+        if program is None:
+            continue
+
+        if 'puavopkg_id' not in program:
+            continue
+
+        if program['puavopkg_id'] not in puavopkg_data:
+            # This program has not been permitted to be used
+            logging.info('Program "%s" has a puavo-pkg package ID ("%s") ' \
+                         'but the ID is not listed in puavo.pkgs.ui.pkglist',
+                         menudata_id, program['puavopkg_id'])
+            del program['puavopkg_id']
+            continue
+
+        if puavopkg_data[program['puavopkg_id']] == True:
+            # This program is already installed and can be used.
+            program['puavopkg_state'] = PuavoPkgState.INSTALLED
+        else:
+            # This puavo-pkg program is valid, but it has not
+            # been installed yet. Requires special handling.
+            program['puavopkg_state'] = PuavoPkgState.NOT_INSTALLED
+
+            logging.info('puavo-pkg program "%s" (ID "%s") has not been installed yet',
+                         program['puavopkg_id'], menudata_id)
+
+
+def build_menu_data(raw_programs, raw_menus, raw_categories, language, installer_icon):
     """Builds the actual menu data from raw menu data."""
 
     programs = {}
@@ -858,7 +921,7 @@ def build_menu_data(raw_programs, raw_menus, raw_categories, language):
         dst_prog.program_type = src_prog['type']
         dst_prog.menudata_id = menudata_id
 
-        # We can't actually remove hidden things. as they are referenced
+        # We can't actually remove hidden things, as they are referenced
         # to in menus and categories and if we remove them here, we'll
         # erroneously report them to be "broken".
         if 'hidden' in src_prog and src_prog['hidden']:
@@ -874,6 +937,17 @@ def build_menu_data(raw_programs, raw_menus, raw_categories, language):
             raw_programs[menudata_id] = None
             continue
 
+        puavopkg_not_installed_yet = False
+
+        if 'puavopkg_id' in src_prog:
+            # This is a puavo-pkg program, it might need special handling
+            dst_prog.puavopkg_id = src_prog['puavopkg_id']
+            dst_prog.puavopkg_state = src_prog['puavopkg_state']
+
+            if dst_prog.puavopkg_state == PuavoPkgState.NOT_INSTALLED:
+                # This program has not been installed yet
+                puavopkg_not_installed_yet = True
+
         # Description (optional), accept ONLY a localized description
         if 'description' in src_prog and src_prog['description'] and \
            language in src_prog['description']:
@@ -884,24 +958,44 @@ def build_menu_data(raw_programs, raw_menus, raw_categories, language):
         if 'keywords' in src_prog and language in src_prog['keywords']:
             dst_prog.keywords = list(src_prog['keywords'][language])
 
-        # Command (required)
+        # Command (required...)
         if 'command' in src_prog:
             dst_prog.command = src_prog['command']
 
         if utils.is_empty(dst_prog.command):
-            if dst_prog.program_type == ProgramType.WEB:
+            remove_program = True
+
+            if dst_prog.program_type == ProgramType.DESKTOP:
+                # ...but permit missing commands for puavo-pkg programs
+                if puavopkg_not_installed_yet:
+                    remove_program = False
+                else:
+                    logging.error('Desktop program "%s" has an empty or missing command, '
+                                  'program ignored', menudata_id)
+            elif dst_prog.program_type == ProgramType.WEB:
                 logging.error('Web link "%s" has an empty or missing URL, '
                               'link ignored', menudata_id)
-            else:
-                logging.error('Program "%s" has an empty or missing command, '
+            else:   # custom programs
+                logging.error('Custom program "%s" has an empty or missing command, '
                               'program ignored', menudata_id)
 
-            raw_programs[menudata_id] = None
-            continue
+            if remove_program:
+                raw_programs[menudata_id] = None
+                continue
 
         # Icon
         if 'icon' in src_prog:
             dst_prog.icon_name = src_prog['icon']
+        else:
+            if puavopkg_not_installed_yet and src_prog['puavopkg_icon']:
+                # A custom "installer" icon exists for a puavo-pkg
+                # program that has not been installed yet
+                dst_prog.puavopkg_icon_name = src_prog['puavopkg_icon']
+            else:
+                # Use the default "installer" icon then
+                dst_prog.puavopkg_icon_name = installer_icon
+
+            dst_prog.icon_name = dst_prog.puavopkg_icon_name
 
         if utils.is_empty(dst_prog.icon_name):
             logging.warning('Program "%s" has no icon defined for it',
@@ -1259,7 +1353,7 @@ def find_json_replacements(files):
         files[index] = json_name
 
 
-def load_menu_data(language, root_dir, filter_string, icon_cache):
+def load_menu_data(language, root_dir, filter_string, puavopkg_data, icon_cache):
     """The main menu loader function. Call this."""
 
     import time
@@ -1335,6 +1429,11 @@ def load_menu_data(language, root_dir, filter_string, icon_cache):
                  len(raw_programs), len(raw_menus), len(raw_categories))
 
     # --------------------------------------------------------------------------
+    # Deal with puavo-pkg programs and their installers
+
+    set_puavpkg_program_states(raw_programs, puavopkg_data)
+
+    # --------------------------------------------------------------------------
     # Locate and load .desktop files for desktop programs
 
     start_time = time.clock()
@@ -1365,8 +1464,12 @@ def load_menu_data(language, root_dir, filter_string, icon_cache):
 
     start_time = time.clock()
 
-    programs, menus, categories = \
-        build_menu_data(raw_programs, raw_menus, raw_categories, language)
+    # A generic icon used for puavo-pkg installers in case the menudata
+    # does not specify any other icons
+    installer_icon = '/usr/share/icons/Faenza/apps/48/system-installer.png'
+
+    programs, menus, categories = build_menu_data(
+        raw_programs, raw_menus, raw_categories, language, installer_icon)
 
     category_index = sort_categories(categories)
 

@@ -107,7 +107,9 @@ class FavesList(Gtk.ScrolledWindow):
         # inserted on the list in random order and they tend to switch
         # positions constantly; we need to break that randomness).
         faves = [(name, p.uses, p.name)
-                 for name, p in all_programs.items() if p.uses > 0]
+                 for name, p in all_programs.items() \
+                    if p.uses > 0 and not p.is_puavopkg_installer()]
+
         faves = sorted(faves,
                        key=lambda p: (p[1], p[2]), reverse=True)[0:NUMBER_OF_FAVES]
 

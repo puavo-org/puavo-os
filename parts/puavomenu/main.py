@@ -18,6 +18,7 @@ from gi.repository import Gio
 
 from constants import *
 import menudata
+import puavopkg
 import iconcache
 import buttons
 import utils
@@ -392,12 +393,13 @@ class PuavoMenu(Gtk.Window):
                         continue
 
                     button = buttons.MenuButton(
-                        self,
-                        self.__settings,
-                        menu.name,
-                        menu.icon, menu.description,
-                        menu,
-                        self.__menu_background)
+                        parent=self,
+                        settings=self.__settings,
+                        label=menu.name,
+                        icon=menu.icon,
+                        tooltip=menu.description,
+                        data=menu,
+                        background=self.__menu_background)
 
                     button.connect('clicked', self.__clicked_menu_button)
                     new_buttons.append(button)
@@ -408,12 +410,13 @@ class PuavoMenu(Gtk.Window):
                         continue
 
                     button = buttons.ProgramButton(
-                        self,
-                        self.__settings,
-                        program.name,
-                        program.icon,
-                        program.description,
-                        program)
+                        parent=self,
+                        settings=self.__settings,
+                        label=program.name,
+                        icon=program.icon,
+                        tooltip=program.description,
+                        data=program,
+                        is_installer=program.is_puavopkg_installer())
 
                     button.connect('clicked', self.clicked_program_button)
                     new_buttons.append(button)
@@ -429,12 +432,13 @@ class PuavoMenu(Gtk.Window):
                     continue
 
                 button = buttons.ProgramButton(
-                    self,
-                    self.__settings,
-                    program.name,
-                    program.icon,
-                    program.description,
-                    program)
+                    parent=self,
+                    settings=self.__settings,
+                    label=program.name,
+                    icon=program.icon,
+                    tooltip=program.description,
+                    data=program,
+                    is_installer=program.is_puavopkg_installer())
 
                 button.connect('clicked', self.clicked_program_button)
                 new_buttons.append(button)
@@ -516,6 +520,10 @@ class PuavoMenu(Gtk.Window):
         if not self.__settings.desktop_dir:
             return
 
+        if program.is_puavopkg_installer():
+            # Nope
+            return
+
         # Create the link file
         # TODO: use the *original* .desktop file if it exists
         name = os.path.join(self.__settings.desktop_dir, '{0}.desktop'.format(program.name))
@@ -535,6 +543,10 @@ class PuavoMenu(Gtk.Window):
 
     # Called directly from ProgramButton
     def add_program_to_panel(self, program):
+        if program.is_puavopkg_installer():
+            # Nuh-uh
+            return
+
         logging.info('Adding program "%s" (id="%s") to the bottom panel',
                      program.name, program.name)
 
@@ -554,10 +566,8 @@ class PuavoMenu(Gtk.Window):
         p.uses = 0
         self.__faves.update(self.menudata.programs, self.__settings)
 
-    # Launch a program. This is a public method, it is called from other
-    # files (buttons and faves) to launch programs.
-    def clicked_program_button(self, button):
-        program = button.data
+    # Launch a normal program
+    def __launch_normal_program(self, program):
         program.uses += 1
 
         logging.info('Clicked program button "%s", usage counter is %d',
@@ -622,6 +632,21 @@ class PuavoMenu(Gtk.Window):
                 str(exception))
             return False
 
+    # Launch an installer for a puavo-pkg program that hasn't been
+    # installed yet
+    def __launch_puavopkg_installer(self, program):
+        print('Installing program %s!' % (program.name))
+
+    # Launch a program. This is a public method, it is called from other
+    # files (buttons and faves) to launch programs.
+    def clicked_program_button(self, button):
+        program = button.data
+
+        if program.is_puavopkg_installer():
+            return self.__launch_puavopkg_installer(program)
+
+        return self.__launch_normal_program(program)
+
     # --------------------------------------------------------------------------
     # Searching
 
@@ -653,12 +678,13 @@ class PuavoMenu(Gtk.Window):
 
         for m in matches:
             b = buttons.ProgramButton(
-                    self,
-                    self.__settings,
-                    m.name,
-                    m.icon,
-                    m.description,
-                    m)
+                    parent=self,
+                    settings=self.__settings,
+                    label=m.name,
+                    icon=m.icon,
+                    tooltip=m.description,
+                    data=m,
+                    is_installer=m.is_puavopkg_installer())
 
             b.connect('clicked', self.clicked_program_button)
             new_buttons.append(b)
@@ -709,13 +735,23 @@ class PuavoMenu(Gtk.Window):
         """Loads menu data and sets up the UI. Returns false if
         something fails."""
 
+        #puavopkg_id_string = utils.puavo_conf('puavo.pkgs.ui.pkglist', '')
+
+        puavopkg_root_dir = '/var/lib/puavo-pkg/installed'
+        puavopkg_id_string = 'tilitin t-lasku'
+
         try:
+            puavopkg_data = puavopkg.detect_package_states(
+                puavopkg_root_dir, puavopkg_id_string)
+
             self.menudata = menudata.Menudata()
 
-            self.menudata.load(self.__settings.language,
-                               self.__settings.menu_dir,
-                               utils.puavo_conf('puavo.puavomenu.tags', 'default'),
-                               self.__icons)
+            self.menudata.load( \
+                language=self.__settings.language,
+                menudata_root_dir=self.__settings.menu_dir,
+                tag_filter_string=utils.puavo_conf('puavo.puavomenu.tags', 'default'),
+                puavopkg_data=puavopkg_data,
+                icon_cache=self.__icons)
 
         except Exception as exception:
             logging.fatal('Could not load menu data!')
@@ -895,6 +931,36 @@ class PuavoMenu(Gtk.Window):
 
         return None
 
+    # Socket handler: update puavo-pkg program state
+    def __update_puavopkg(self, data):
+        if len(data) != 1:
+            logging.warning('__update_puavopkg(): malformed arguments ("%s")', data)
+            return
+
+        pkg_id = data[0]
+
+        # Find the target program
+        target_id = None
+        target_program = None
+
+        for menudata_id, program in self.menudata.programs.items():
+            if program.puavopkg_id and program.puavopkg_id == pkg_id:
+                target_id = menudata_id
+                target_program = program
+                break
+
+        if not target_program:
+            logging.error('__update_puavopkg(): no valid puavo-pkg program with the ID "%s" found',
+                          pkg_id)
+            return
+
+        # Update its information
+        print('Updating program "%s"' % (target_id))
+
+        #self.unload_menu_data()
+        #self.load_menu_data()
+
+
     # Responds to commands sent through the control socket
     def __socket_watcher(self, source, condition, *args):
         try:
@@ -973,6 +1039,9 @@ class PuavoMenu(Gtk.Window):
 
                     self.__search.grab_focus()
                     self.activate_focus()
+            elif cmd == 'update-puavopkg':
+                # Update a puavo-pkg program state
+                self.__update_puavopkg(data)
             else:
                 logging.warning('Unknown command "%s" received, args="%s"',
                                 cmd, data)

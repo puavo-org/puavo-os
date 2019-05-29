@@ -189,7 +189,9 @@ class ProgramButton(HoverIconButtonBase):
                  icon=None,
                  tooltip=None,
                  data=None,
-                 is_fave=False):
+                 is_fave=False,
+                 is_installer=False,
+                 enable_popup=True):
 
         super().__init__(parent, settings, label, icon, tooltip, data)
 
@@ -204,10 +206,23 @@ class ProgramButton(HoverIconButtonBase):
             self.__have_desktop_dir = True
 
         # Setup the popup menu
-        self.__enable_popup = True
+        self.__enable_popup = enable_popup
         self.__popup_hover = False
         self.__popup_open = False
         self.__hover_signal = None
+
+        # Setup "installer" buttons
+        self.__is_installer = is_installer
+
+        if self.__is_installer:
+            # No popup menus for installers, they are not going to work
+            # from the panel or the desktop...
+            self.__enable_popup = False
+
+            self.label_layout.set_markup(
+                label + '\n<span foreground="#444"><i><small>[asennin]</small></i></span>')
+
+            self.set_property('tooltip-text', 'Klikkaa asentaaksesi tämän ohjelman')
 
         self.__menu = None
         self.__menu_signal = self.connect('button-press-event',
