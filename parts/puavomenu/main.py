@@ -369,6 +369,26 @@ class PuavoMenu(Gtk.Window):
         if show:
             self.__programs_icons.show()
 
+    def __make_menu_button(self, menu):
+        return buttons.MenuButton(
+            parent=self,
+            settings=self.__settings,
+            label=menu.name,
+            icon=menu.icon,
+            tooltip=menu.description,
+            data=menu,
+            background=self.__menu_background)
+
+    def __make_program_button(self, program):
+        return buttons.ProgramButton(
+            parent=self,
+            settings=self.__settings,
+            label=program.name,
+            icon=program.icon,
+            tooltip=program.description,
+            data=program,
+            is_installer=program.is_puavopkg_installer())
+
     # (Re-)Creates the current category or menu view
     def __create_current_menu(self):
         if self.menudata is None:
@@ -392,15 +412,7 @@ class PuavoMenu(Gtk.Window):
                     if menu.hidden:
                         continue
 
-                    button = buttons.MenuButton(
-                        parent=self,
-                        settings=self.__settings,
-                        label=menu.name,
-                        icon=menu.icon,
-                        tooltip=menu.description,
-                        data=menu,
-                        background=self.__menu_background)
-
+                    button = self.__make_menu_button(menu)
                     button.connect('clicked', self.__clicked_menu_button)
                     new_buttons.append(button)
 
@@ -409,15 +421,7 @@ class PuavoMenu(Gtk.Window):
                     if program.hidden:
                         continue
 
-                    button = buttons.ProgramButton(
-                        parent=self,
-                        settings=self.__settings,
-                        label=program.name,
-                        icon=program.icon,
-                        tooltip=program.description,
-                        data=program,
-                        is_installer=program.is_puavopkg_installer())
-
+                    button = self.__make_program_button(program)
                     button.connect('clicked', self.clicked_program_button)
                     new_buttons.append(button)
 
@@ -431,15 +435,7 @@ class PuavoMenu(Gtk.Window):
                 if program.hidden:
                     continue
 
-                button = buttons.ProgramButton(
-                    parent=self,
-                    settings=self.__settings,
-                    label=program.name,
-                    icon=program.icon,
-                    tooltip=program.description,
-                    data=program,
-                    is_installer=program.is_puavopkg_installer())
-
+                button = self.__make_program_button(program)
                 button.connect('clicked', self.clicked_program_button)
                 new_buttons.append(button)
 
@@ -677,15 +673,7 @@ class PuavoMenu(Gtk.Window):
         new_buttons = []
 
         for m in matches:
-            b = buttons.ProgramButton(
-                    parent=self,
-                    settings=self.__settings,
-                    label=m.name,
-                    icon=m.icon,
-                    tooltip=m.description,
-                    data=m,
-                    is_installer=m.is_puavopkg_installer())
-
+            b = self.__make_program_button(m)
             b.connect('clicked', self.clicked_program_button)
             new_buttons.append(b)
 
