@@ -1,15 +1,85 @@
 #!/usr/bin/python3
 
 import gi
+import subprocess
+import sys
 
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
+
+puavo_conf = {
+    'puavo.abitti.version':               None,
+    'puavo.grub.boot_default':            None,
+    'puavo.grub.developer_mode.enabled':  None,
+}
+
+def puavoconf_get(puavoconf_key):
+    return subprocess.check_output([ 'puavo-conf', puavoconf_key ]).rstrip() \
+                     .decode('utf-8')
+
+
+def remove_grid_entry(grid, label):
+    if not label:
+        return
+
+    i = 0
+    while True:
+        child_at = grid.get_child_at(i, 0)
+        if not child_at:
+            break
+        if child_at == label:
+             grid.remove_row(i)
+        i += 1
+
+def save_state():
+    for key, value in puavo_conf.items():
+        subprocess.check_call([ 'puavo-conf-local', key, value ])
+
 
 builder = Gtk.Builder()
 builder.add_from_file('./puavo-laptop-setup.glade')
 
 app_window = builder.get_object('app_window')
 app_window.connect('destroy', Gtk.main_quit)
+
+puavo_conf_grid = builder.get_object('puavo_conf_grid')
+
+for puavo_conf_key in puavo_conf.copy():
+    try:
+        puavo_conf[puavo_conf_key] = puavoconf_get(puavo_conf_key)
+    except subprocess.CalledProcessError:
+        print("could not get puavo-conf key for %s" % puavo_conf_key,
+              file=sys.stderr)
+        remove_grid_entry(puavo_conf_grid, builder.get_object(puavo_conf_key))
+        del puavo_conf[puavo_conf_key]
+
+abitti_version_latest_button = builder.get_object('abitti_version_latest')
+abitti_version_any_button = builder.get_object('abitti_version_any')
+abitti_version_entry = builder.get_object('abitti_version')
+
+boot_puavo_os_button = builder.get_object('boot_puavo_os')
+boot_windows_button  = builder.get_object('boot_windows')
+
+developer_mode_switch = builder.get_object('developer_mode_switch')
+
+for key, value in puavo_conf.items():
+    if key == 'puavo.abitti.version':
+        if value == 'latest':
+            abitti_version_latest_button.set_active(True)
+            abitti_version_entry.set_text('')
+        else:
+            abitti_version_any_button.set_active(True)
+            abitti_version_entry.set_text(value)
+    elif key == 'puavo.grub.boot_default':
+        if value == 'windows':
+            boot_windows_button.set_active(True)
+        else:
+            boot_puavo_os_button.set_active(True)
+    elif key == 'puavo.grub.developer_mode.enabled':
+        developer_mode_switch.set_state(value == 'true')
+
+# XXX save_state()
+
 app_window.show_all()
 
 Gtk.main()

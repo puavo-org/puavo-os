@@ -29,6 +29,9 @@
   "puavo.grub.developer_mode.enabled": {
     "default": "false"
   },
+  "puavo.grub.boot_default": {
+    "default": "puavo-os"
+  },
   "puavo.guestlogin.enabled": {
     "default": "true"
   },

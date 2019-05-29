@@ -7,13 +7,13 @@
     <property name="margin_top">9</property>
     <property name="border_width">20</property>
     <child>
-      <object class="GtkGrid" id="grid1">
+      <object class="GtkGrid" id="puavo_conf_grid">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="row_spacing">10</property>
         <property name="column_spacing">10</property>
         <child>
-          <object class="GtkLabel" id="b">
+          <object class="GtkLabel" id="puavo.grub.boot_default">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="label" translatable="yes">Default operating system at boot</property>
@@ -25,7 +25,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkLabel" id="E">
+          <object class="GtkLabel" id="puavo.grub.developer_mode.enabled">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="label" translatable="yes">Show developer mode in boot menu</property>
@@ -36,7 +36,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkLabel" id="A">
+          <object class="GtkLabel" id="puavo.abitti.version">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="label" translatable="yes">Abitti-version</property>
@@ -118,7 +118,7 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <child>
-              <object class="GtkRadioButton" id="boot_linux">
+              <object class="GtkRadioButton" id="boot_puavo_os">
                 <property name="label" translatable="yes">Linux</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
@@ -142,7 +142,7 @@
                 <property name="xalign">0</property>
                 <property name="active">True</property>
                 <property name="draw_indicator">True</property>
-                <property name="group">boot_linux</property>
+                <property name="group">boot_puavo_os</property>
               </object>
               <packing>
                 <property name="expand">False</property>

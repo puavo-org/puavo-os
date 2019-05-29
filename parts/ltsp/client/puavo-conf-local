@@ -22,7 +22,10 @@ key=$1
 value=$2
 
 case "$key" in
-  puavo.pkg.* \
+  puavo.abitti.version \
+  | puavo.grub.boot_default \
+  | puavo.grub.developer_mode.enabled \
+  | puavo.pkg.* \
   | puavo.xsessions.user_registration.enabled)
     ;;
   *)
