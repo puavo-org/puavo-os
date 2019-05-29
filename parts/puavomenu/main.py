@@ -919,8 +919,73 @@ class PuavoMenu(Gtk.Window):
 
         return None
 
+    # --------------------------------------------------------------------------
+    # IPC socket command handlers
+
+    # Socket handler: explicitly hide the window
+    def __socket_hide_window(self, data):
+        if self.__settings.reset_view_after_start:
+            # Go back to the default view
+            self.reset_view()
+
+        if self.is_visible():
+            logging.debug('Hiding the window')
+            self.__search.grab_focus()
+            self.set_keep_above(False)
+            self.set_visible(False)
+        else:
+            logging.debug('Already hidden')
+
+    # Socket handler: explicitly show the window
+    def __socket_show_window(self, data):
+        if self.is_visible():
+            logging.debug('Already visible')
+        else:
+            if self.__settings.reset_view_after_start:
+                # Go back to the default view
+                self.reset_view()
+
+            coords = self.__parse_position(data)
+
+            if coords:
+                logging.debug(coords)
+                self.move(coords[0], coords[1])
+
+            self.set_keep_above(True)
+            self.set_visible(True)
+            self.present()
+
+            self.__search.grab_focus()
+            self.activate_focus()
+
+    # Socket handler: toggle window visibility
+    def __socket_toggle_window(self, data):
+        if self.__settings.reset_view_after_start:
+            # Go back to the default view
+            self.reset_view()
+
+        if self.is_visible():
+            logging.debug('Toggling window visibility (hide)')
+            self.__search.grab_focus()
+            self.set_keep_above(False)
+            self.set_visible(False)
+        else:
+            logging.debug('Toggling window visibility (show)')
+            coords = self.__parse_position(data)
+
+            if coords:
+                logging.debug(coords)
+                self.move(coords[0], coords[1])
+
+            self.set_keep_above(True)
+            self.set_visible(True)
+            self.present()
+
+            self.__search.grab_focus()
+            self.activate_focus()
+
     # Socket handler: update puavo-pkg program state
-    def __update_puavopkg(self, data):
+    def __socket_update_puavopkg(self, data):
         if len(data) != 1:
             logging.warning('__update_puavopkg(): malformed arguments ("%s")', data)
             return
@@ -962,77 +1027,19 @@ class PuavoMenu(Gtk.Window):
             cmd = data[0]
             data = data[1:]
 
-            logging.debug('Socket command: "%s"', cmd)
-            logging.debug('Socket arguments: "%s"', data)
+            logging.debug('Socket command: "%s", arguments: "%s"', cmd, data)
 
-            if cmd == 'hide':
-                # Hide the window
+            socket_handlers = {
+                'hide': self.__socket_hide_window,
+                'show': self.__socket_show_window,
+                'toggle': self.__socket_toggle_window,
+                'update-puavopkg': self.__socket_update_puavopkg,
+            }
 
-                if self.__settings.reset_view_after_start:
-                    # Go back to the default view
-                    self.reset_view()
-
-                if self.is_visible():
-                    logging.debug('Hiding the window')
-                    self.__search.grab_focus()
-                    self.set_keep_above(False)
-                    self.set_visible(False)
-                else:
-                    logging.debug('Already hidden')
-            elif cmd == 'show':
-                # Show the window
-
-                if self.is_visible():
-                    logging.debug('Already visible')
-                else:
-                    if self.__settings.reset_view_after_start:
-                        # Go back to the default view
-                        self.reset_view()
-
-                    coords = self.__parse_position(data)
-
-                    if coords:
-                        logging.debug(coords)
-                        self.move(coords[0], coords[1])
-
-                    self.set_keep_above(True)
-                    self.set_visible(True)
-                    self.present()
-
-                    self.__search.grab_focus()
-                    self.activate_focus()
-            elif cmd == 'toggle':
-                # Toggle the window visibility
-
-                if self.__settings.reset_view_after_start:
-                    # Go back to the default view
-                    self.reset_view()
-
-                if self.is_visible():
-                    logging.debug('Toggling window visibility (hide)')
-                    self.__search.grab_focus()
-                    self.set_keep_above(False)
-                    self.set_visible(False)
-                else:
-                    logging.debug('Toggling window visibility (show)')
-                    coords = self.__parse_position(data)
-
-                    if coords:
-                        logging.debug(coords)
-                        self.move(coords[0], coords[1])
-
-                    self.set_keep_above(True)
-                    self.set_visible(True)
-                    self.present()
-
-                    self.__search.grab_focus()
-                    self.activate_focus()
-            elif cmd == 'update-puavopkg':
-                # Update a puavo-pkg program state
-                self.__update_puavopkg(data)
+            if cmd in socket_handlers:
+                socket_handlers[cmd](data)
             else:
-                logging.warning('Unknown command "%s" received, args="%s"',
-                                cmd, data)
+                logging.warning('Unknown socket command "%s"', cmd)
         except Exception as exception:
             logging.error('Socket command processing failed!')
             logging.error(str(exception))
