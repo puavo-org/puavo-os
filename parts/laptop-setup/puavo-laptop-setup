@@ -31,6 +31,8 @@ class PuavoLaptopSetup:
         self.abitti_version_any_button \
           = builder.get_object('abitti_version_any')
         self.abitti_version_entry = builder.get_object('abitti_version')
+        self.abitti_version_entry_error \
+          = builder.get_object('abitti_version_error')
 
         self.boot_puavo_os_button = builder.get_object('boot_puavo_os')
         self.boot_windows_button  = builder.get_object('boot_windows')
@@ -61,28 +63,39 @@ class PuavoLaptopSetup:
         if not widget.get_active():
             return
         widget.grab_focus()
-        self.puavo_conf['puavo.abitti.version'] = 'latest'
-        self.save_state_flag = True
+        self.set_abitti_version('latest')
 
 
     def set_abitti_version(self, version):
+        version = version.strip()
         if version == '':
             version = 'latest'
+        elif version == 'latest':
+            pass
+        else:
+            try:
+                version_number = int(version)
+                version = 'abitti-v%d' % version_number
+            except ValueError:
+                self.abitti_version_entry_error.set_markup(
+                  '<span color="red">%s</span>' % 'should be a number')
+                return
+
+        self.abitti_version_entry_error.set_text('')
         self.puavo_conf['puavo.abitti.version'] = version
+        self.save_state_flag = True
 
 
     def abitti_version_any_chosen(self, widget):
         if not widget.get_active():
             return
-        # XXX validation?
         self.abitti_version_entry.grab_focus()
         self.set_abitti_version( self.abitti_version_entry.get_text() )
-        self.save_state_flag = True
 
 
     def abitti_version_entry_changed(self, widget):
-        self.set_abitti_version( self.abitti_version_entry.get_text() )
-        self.save_state_flag = True
+        if self.abitti_version_any_button.get_active():
+            self.set_abitti_version( self.abitti_version_entry.get_text() )
 
 
     def boot_puavo_os_chosen(self, widget):
@@ -127,6 +140,8 @@ class PuavoLaptopSetup:
                     self.abitti_version_entry.set_text('')
                 else:
                     self.abitti_version_any_button.set_active(True)
+                    if value.startswith('abitti-v'):
+                        value = value.replace('abitti-v', '')
                     self.abitti_version_entry.set_text(value)
             elif key == 'puavo.grub.boot_default':
                 if value == 'windows':
