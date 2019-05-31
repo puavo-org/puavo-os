@@ -24,6 +24,7 @@ class PuavoLaptopSetup:
             'puavo.abitti.version':               None,
             'puavo.grub.boot_default':            None,
             'puavo.grub.developer_mode.enabled':  None,
+            'puavo.grub.windows.enabled':         None,
         }
         self.save_state_flag = True
 
@@ -43,7 +44,7 @@ class PuavoLaptopSetup:
         self.boot_windows_button  = builder.get_object('boot_windows')
 
         self.developer_mode_switch = builder.get_object('developer_mode_switch')
-
+        self.use_windows_switch = builder.get_object('use_windows_switch')
 
         self.abitti_version_latest_button.connect('toggled',
             self.abitti_version_latest_chosen)
@@ -57,6 +58,8 @@ class PuavoLaptopSetup:
         self.boot_windows_button.connect('toggled', self.boot_windows_chosen)
         self.developer_mode_switch.connect('notify::active',
             self.developer_mode_switch_changed)
+        self.use_windows_switch.connect('notify::active',
+            self.use_windows_switch_changed)
 
         self.remove_entries_without_puavoconf()
         self.update_gui_state_from_puavoconf()
@@ -126,6 +129,17 @@ class PuavoLaptopSetup:
         self.save_state_flag = True
 
 
+    def use_windows_switch_changed(self, widget, gparam):
+        if widget.get_active():
+            self.puavo_conf['puavo.grub.windows.enabled'] = 'true'
+            self.boot_windows_button.set_sensitive(True)
+        else:
+            self.puavo_conf['puavo.grub.windows.enabled'] = 'false'
+            self.boot_puavo_os_button.set_active(True)
+            self.boot_windows_button.set_sensitive(False)
+        self.save_state_flag = True
+
+
     def remove_entries_without_puavoconf(self):
         for puavo_conf_key in self.puavo_conf.copy():
             try:
@@ -154,6 +168,8 @@ class PuavoLaptopSetup:
                     self.boot_windows_button.set_active(True)
                 else:
                     self.boot_puavo_os_button.set_active(True)
+            elif key == 'puavo.grub.windows.enabled':
+                    self.use_windows_switch.set_state(value == 'true')
             elif key == 'puavo.grub.developer_mode.enabled':
                 self.developer_mode_switch.set_state(value == 'true')
 
