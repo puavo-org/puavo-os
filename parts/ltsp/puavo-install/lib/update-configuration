@@ -177,12 +177,6 @@ def update_grub_environment(restclient)
     grubedit('unset', 'puavo_kernel_version')
   end
 
-  if puavoconf_get('puavo.grub.developer_mode.enabled') == 'true' then
-    grubedit('set', 'puavo_show_imageoverlays=true')
-  else
-    grubedit('unset', 'puavo_show_imageoverlays')
-  end
-
   kernel_arguments = puavoconf_get('puavo.kernel.arguments')
   if kernel_arguments && !kernel_arguments.empty? then
     grubedit('set', "puavo_kernel_arguments=#{ kernel_arguments }")
@@ -190,11 +184,30 @@ def update_grub_environment(restclient)
     grubedit('unset', 'puavo_kernel_arguments')
   end
 
-  puavo_grub_theme = puavoconf_get('puavo.grub.theme')
-  if puavo_grub_theme && !puavo_grub_theme.empty? then
-    grubedit('set', "puavo_grub_theme=#{ puavo_grub_theme }")
+  boot_default = puavoconf_get('puavo.grub.boot_default')
+  if boot_default && !boot_default.empty? then
+    grubedit('set', "puavo_grub_boot_default=#{ boot_default }")
+  else
+    grubedit('unset', 'puavo_grub_boot_default')
+  end
+
+  if puavoconf_get('puavo.grub.developer_mode.enabled') == 'true' then
+    grubedit('set', 'puavo_show_imageoverlays=true')
+  else
+    grubedit('unset', 'puavo_show_imageoverlays')
+  end
+
+  grub_theme = puavoconf_get('puavo.grub.theme')
+  if grub_theme && !grub_theme.empty? then
+    grubedit('set', "puavo_grub_theme=#{ grub_theme }")
   else
     grubedit('unset', 'puavo_grub_theme')
+  end
+
+  if puavoconf_get('puavo.grub.windows.enabled') == 'true' then
+    grubedit('set', 'puavo_grub_windows_enabled=true')
+  else
+    grubedit('unset', 'puavo_grub_windows_enabled')
   end
 end
 
