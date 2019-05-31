@@ -200,7 +200,7 @@ builder.set_translation_domain('puavo-laptop-setup')
 builder.add_from_file('/usr/share/puavo-laptop-setup/puavo-laptop-setup.glade')
 
 app_window = builder.get_object('app_window')
-app_window.set_icon_name('computer')
+app_window.set_icon_name('drive-harddisk-system')
 app_window.connect('destroy', Gtk.main_quit)
 
 laptop_setup = PuavoLaptopSetup(app_window, builder)

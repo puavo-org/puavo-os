@@ -103,6 +103,13 @@ STRINGS = {
         'de': 'Setze ein neues Passwort',
     },
 
+    'sb_laptop_setup': {
+        'en': 'Laptop setup',
+        'fi': 'Kannettavan asetukset',
+        'sv': 'Laptop inställning',
+        'de': 'Laptop-Setup',
+    },
+
     'sb_support': {
         'en': 'Support',
         'fi': 'Tukisivusto',

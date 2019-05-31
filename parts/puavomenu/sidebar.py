@@ -4,6 +4,8 @@ from os.path import exists as file_exists, join as path_join
 from getpass import getuser
 import threading
 import logging
+import os
+import pwd
 
 import gi
 gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
@@ -55,6 +57,19 @@ SB_SUPPORT = {
         'type': 'url',
         'args': utils.puavo_conf('puavo.support.new_bugreport_url',
                                  'https://tuki.opinsys.fi')
+    },
+}
+
+SB_LAPTOP_SETTINGS = {
+    'name': 'laptop-settings',
+
+    'title': STRINGS['sb_laptop_setup'],
+
+    'icon': '/usr/share/icons/Faenza/devices/96/drive-harddisk-system.png',
+
+    'command': {
+        'type': 'command',
+        'args': 'puavo-laptop-setup',
     },
 }
 
@@ -418,6 +433,8 @@ class Sidebar:
 
         y = self.__create_button(y, SB_SUPPORT)
         y = self.__create_button(y, SB_SYSTEM_SETTINGS)
+        if self.__show_laptop_setup():
+            y = self.__create_button(y, SB_LAPTOP_SETTINGS)
         y = self.__create_separator(y)
 
         if not (self.__settings.is_guest or self.__settings.is_webkiosk):
@@ -434,6 +451,17 @@ class Sidebar:
             y = self.__create_button(y, SB_SHUTDOWN)
 
         logging.info('Support page URL: "%s"', SB_SUPPORT['command']['args'])
+
+    def __show_laptop_setup(self):
+        personally_administered \
+          = utils.puavo_conf('puavo.admin.personally_administered', 'false')
+        if personally_administered != 'true':
+            return False
+
+        primary_user = utils.puavo_conf('puavo.admin.primary_user', '')
+        current_user = pwd.getpwuid( os.getuid() ).pw_name
+        return current_user == primary_user
+
 
     # Creates a sidebar button
     def __create_button(self, y, data):
