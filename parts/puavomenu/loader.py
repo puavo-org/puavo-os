@@ -410,12 +410,24 @@ def load_menudata_json_file(filename):
                               name)
                 continue
 
-            if ('type' not in src_program) or (src_program['type'] not in ProgramType):
+            if 'type' not in src_program:
+                logging.error('JSON program "%s" has no type or the specified type is invalid',
+                              name)
+                continue
+
+            if src_program['type'] == 0:
+                prog_type = ProgramType.DESKTOP
+            elif src_program['type'] == 1:
+                prog_type = ProgramType.CUSTOM
+            elif src_program['type'] == 2:
+                prog_type = ProgramType.WEB
+            else:
                 logging.error('JSON program "%s" has no type or the specified type is invalid',
                               name)
                 continue
 
             dst_program = dict(src_program)
+            dst_program['type'] = prog_type
 
             # Convert lists back to sets
             if 'keywords' in dst_program:

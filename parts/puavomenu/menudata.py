@@ -1,16 +1,16 @@
 # Core menu data types. Menu data loading.
 
 import re
-from enum import Enum
+from enum import IntEnum
 
 # Program types. Desktop is the default.
-class ProgramType(Enum):
+class ProgramType(IntEnum):
     DESKTOP = 0
     CUSTOM = 1
     WEB = 2
 
 
-class PuavoPkgState(Enum):
+class PuavoPkgState(IntEnum):
     UNKNOWN = -1
     NOT_INSTALLED = 0
     INSTALLED = 1
