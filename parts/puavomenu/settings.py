@@ -60,6 +60,10 @@ class Settings:
         # programs). Guest and webkiosk sessions disable this.
         self.enable_faves_saving = True
 
+        # The "root" directory for puavo-pkg installed packages.
+        # A constant, but this object is a good place for it.
+        self.puavopkg_root_dir = '/var/lib/puavo-pkg/installed'
+
         # ----------------------------------------------------------------------
         # Per-user settings
 

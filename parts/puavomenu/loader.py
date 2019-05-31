@@ -957,10 +957,11 @@ def build_menu_data(raw_programs, raw_menus, raw_categories, language, installer
 
         if 'puavopkg_id' in src_prog:
             # This is a puavo-pkg program, it might need special handling
-            dst_prog.puavopkg_id = src_prog['puavopkg_id']
-            dst_prog.puavopkg_state = src_prog['puavopkg_state']
+            dst_prog.puavopkg = {}
+            dst_prog.puavopkg['id'] = src_prog['puavopkg_id']
+            dst_prog.puavopkg['state'] = src_prog['puavopkg_state']
 
-            if dst_prog.puavopkg_state == PuavoPkgState.NOT_INSTALLED:
+            if src_prog['puavopkg_state'] == PuavoPkgState.NOT_INSTALLED:
                 # This program has not been installed yet
                 puavopkg_not_installed_yet = True
 

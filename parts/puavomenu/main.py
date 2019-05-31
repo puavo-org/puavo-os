@@ -723,14 +723,11 @@ class PuavoMenu(Gtk.Window):
         """Loads menu data and sets up the UI. Returns false if
         something fails."""
 
-        #puavopkg_id_string = utils.puavo_conf('puavo.pkgs.ui.pkglist', '')
-
-        puavopkg_root_dir = '/var/lib/puavo-pkg/installed'
-        puavopkg_id_string = 'tilitin t-lasku'
+        allowed_puavopkg = utils.puavo_conf('puavo.pkgs.ui.pkglist', '')
 
         try:
             puavopkg_data = puavopkg.detect_package_states(
-                puavopkg_root_dir, puavopkg_id_string)
+                self.__settings.puavopkg_root_dir, allowed_puavopkg)
 
             self.menudata = menudata.Menudata()
 
@@ -997,7 +994,7 @@ class PuavoMenu(Gtk.Window):
         target_program = None
 
         for menudata_id, program in self.menudata.programs.items():
-            if program.puavopkg_id and program.puavopkg_id == pkg_id:
+            if program.puavopkg and program.puavopkg['id'] == pkg_id:
                 target_id = menudata_id
                 target_program = program
                 break
