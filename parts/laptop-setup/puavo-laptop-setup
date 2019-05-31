@@ -1,11 +1,16 @@
 #!/usr/bin/python3
 
+import gettext
 import gi
 import subprocess
 import sys
 
 gi.require_version('Gtk', '3.0')
 from gi.repository import GObject, Gtk
+
+gettext.bindtextdomain('puavo-laptop-setup', '/usr/share/locale')
+gettext.textdomain('puavo-laptop-setup')
+_tr = gettext.gettext
 
 def puavoconf_get(puavoconf_key):
     return subprocess.check_output([ 'puavo-conf', puavoconf_key ]).rstrip() \
@@ -77,8 +82,9 @@ class PuavoLaptopSetup:
                 version_number = int(version)
                 version = 'abitti-v%d' % version_number
             except ValueError:
+                error_msg =  _tr('should be a number')
                 self.abitti_version_entry_error.set_markup(
-                  '<span color="red">%s</span>' % 'should be a number')
+                  '<span color="red"><b>%s</b></span>' % error_msg)
                 return
 
         self.abitti_version_entry_error.set_text('')
@@ -174,7 +180,8 @@ class PuavoLaptopSetup:
             self.save_state_flag = False
         except:
             dialog = Gtk.MessageDialog(self.app_window, 0,
-              Gtk.MessageType.ERROR, Gtk.ButtonsType.OK, 'error saving changes')
+              Gtk.MessageType.ERROR, Gtk.ButtonsType.OK,
+              _tr('error saving changes'))
             dialog.run()
             dialog.destroy()
 
@@ -189,9 +196,11 @@ class PuavoLaptopSetup:
 
 
 builder = Gtk.Builder()
-builder.add_from_file('./puavo-laptop-setup.glade')
+builder.set_translation_domain('puavo-laptop-setup')
+builder.add_from_file('/usr/share/puavo-laptop-setup/puavo-laptop-setup.glade')
 
 app_window = builder.get_object('app_window')
+app_window.set_icon_name('computer')
 app_window.connect('destroy', Gtk.main_quit)
 
 laptop_setup = PuavoLaptopSetup(app_window, builder)
