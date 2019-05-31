@@ -35,7 +35,6 @@ install: installdirs
 		puavo-user-registration.desktop
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-conf/definitions \
 		puavo-user-registration.json
-	mkdir -p $(DESTDIR)$(datarootdir)/applications
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-user-registration \
 		puavo-user-registration.glade
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES \
