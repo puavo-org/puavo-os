@@ -41,6 +41,7 @@ case "$key" in
   puavo.abitti.version \
   | puavo.grub.boot_default \
   | puavo.grub.developer_mode.enabled \
+  | puavo.grub.windows.enabled \
   | puavo.pkg.* \
   | puavo.xsessions.user_registration.enabled)
     ;;

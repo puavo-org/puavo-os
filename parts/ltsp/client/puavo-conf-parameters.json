@@ -26,11 +26,14 @@
   "puavo.graphics.driver": {
     "default": ""
   },
+  "puavo.grub.boot_default": {
+    "default": "puavo-os"
+  },
   "puavo.grub.developer_mode.enabled": {
     "default": "false"
   },
-  "puavo.grub.boot_default": {
-    "default": "puavo-os"
+  "puavo.grub.windows.enabled": {
+    "default": "true"
   },
   "puavo.guestlogin.enabled": {
     "default": "true"
