@@ -203,6 +203,15 @@ app_window = builder.get_object('app_window')
 app_window.set_icon_name('drive-harddisk-system')
 app_window.connect('destroy', Gtk.main_quit)
 
+try:
+    subprocess.check_call([ 'sudo', '-n', 'puavo-conf-local', '--check'])
+except subprocess.CalledProcessError:
+    errmsg = _tr('You do not have the required permissions to use this tool.')
+    dialog = Gtk.MessageDialog(app_window, 0, Gtk.MessageType.ERROR,
+               Gtk.ButtonsType.CANCEL, errmsg)
+    dialog.run()
+    sys.exit(1)
+
 laptop_setup = PuavoLaptopSetup(app_window, builder)
 laptop_setup.prepare()
 laptop_setup.save_state_flag = True

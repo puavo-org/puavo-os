@@ -961,7 +961,7 @@ try:
     host_ldap_password = subprocess.check_output(get_password_cmd) \
                            .decode('utf-8').rstrip()
 except subprocess.CalledProcessError:
-    errmsg = _tr('You do not have the required permissions to run this tool.')
+    errmsg = _tr('You do not have the required permissions to use this tool.')
     dialog = Gtk.MessageDialog(app_window, 0, Gtk.MessageType.ERROR,
                Gtk.ButtonsType.CANCEL, errmsg)
     dialog.run()
