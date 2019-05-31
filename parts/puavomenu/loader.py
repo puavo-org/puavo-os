@@ -1003,16 +1003,15 @@ def build_menu_data(raw_programs, raw_menus, raw_categories, language, installer
         # Icon
         if 'icon' in src_prog:
             dst_prog.icon_name = src_prog['icon']
-        else:
-            if puavopkg_not_installed_yet and src_prog['puavopkg_icon']:
-                # A custom "installer" icon exists for a puavo-pkg
-                # program that has not been installed yet
-                dst_prog.puavopkg_icon_name = src_prog['puavopkg_icon']
-            else:
-                # Use the default "installer" icon then
-                dst_prog.puavopkg_icon_name = installer_icon
 
-            dst_prog.icon_name = dst_prog.puavopkg_icon_name
+        if ('puavopkg_id' in src_prog) and puavopkg_not_installed_yet:
+            # This is a puavo-pkg program that has not been installed yet.
+            # Use a generic "installer" icon for it unless the program has
+            # its own installer icon.
+            if 'puavopkg_icon' in src_prog and src_prog['puavopkg_icon']:
+                dst_prog.icon_name = src_prog['puavopkg_icon']
+            else:
+                dst_prog.icon_name = installer_icon
 
         if utils.is_empty(dst_prog.icon_name):
             logging.warning('Program "%s" has no icon defined for it',
