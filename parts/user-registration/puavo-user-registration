@@ -563,7 +563,6 @@ class UserRegistration:
         user['language'] = LANGUAGES[self.language_combo.get_active()][0]
         user['phone'] = self.phone_field.get_text().strip()
 
-        print("host_ldap_password=%s" % host_ldap_password)
         machine = {
           'dn':       open('/etc/puavo/ldap/dn', 'rb').read() \
                         .decode('utf-8').rstrip(),
