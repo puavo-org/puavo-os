@@ -5,6 +5,7 @@
   <object class="GtkApplicationWindow" id="app_window">
     <property name="can_focus">False</property>
     <property name="border_width">20</property>
+    <property name="window_position">center-always</property>
     <child>
       <object class="GtkGrid" id="puavo_conf_grid">
         <property name="visible">True</property>
