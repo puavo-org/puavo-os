@@ -5,21 +5,22 @@ import subprocess
 import sys
 
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
+from gi.repository import GObject, Gtk
 
 def puavoconf_get(puavoconf_key):
     return subprocess.check_output([ 'puavo-conf', puavoconf_key ]).rstrip() \
                      .decode('utf-8')
 
 class PuavoLaptopSetup:
-    def __init__(self, builder):
+    def __init__(self, app_window, builder):
+        self.app_window = app_window
         self.builder = builder
         self.puavo_conf = {
             'puavo.abitti.version':               None,
             'puavo.grub.boot_default':            None,
             'puavo.grub.developer_mode.enabled':  None,
         }
-        self.initializing_ui = True
+        self.save_state_flag = True
 
 
     def prepare(self):
@@ -53,7 +54,7 @@ class PuavoLaptopSetup:
         self.remove_entries_without_puavoconf()
         self.update_gui_state_from_puavoconf()
 
-        self.initializing_ui = False
+        GObject.timeout_add(500, self.save_state)
 
 
     def abitti_version_latest_chosen(self, widget):
@@ -61,7 +62,7 @@ class PuavoLaptopSetup:
             return
         widget.grab_focus()
         self.puavo_conf['puavo.abitti.version'] = 'latest'
-        self.save_state()
+        self.save_state_flag = True
 
 
     def set_abitti_version(self, version):
@@ -76,28 +77,26 @@ class PuavoLaptopSetup:
         # XXX validation?
         self.abitti_version_entry.grab_focus()
         self.set_abitti_version( self.abitti_version_entry.get_text() )
-        self.save_state()
+        self.save_state_flag = True
 
 
     def abitti_version_entry_changed(self, widget):
-        # XXX save_state() is a bit too slow... should we do it asynchronously
-        # XXX and put it into a queue if it is in progress?
         self.set_abitti_version( self.abitti_version_entry.get_text() )
-        self.save_state()
+        self.save_state_flag = True
 
 
     def boot_puavo_os_chosen(self, widget):
         if not widget.get_active():
             return
         self.puavo_conf['puavo.grub.boot_default'] = 'puavo-os'
-        self.save_state()
+        self.save_state_flag = True
 
 
     def boot_windows_chosen(self, widget):
         if not widget.get_active():
             return
         self.puavo_conf['puavo.grub.boot_default'] = 'windows'
-        self.save_state()
+        self.save_state_flag = True
 
 
     def developer_mode_switch_changed(self, widget, gparam):
@@ -105,7 +104,7 @@ class PuavoLaptopSetup:
             self.puavo_conf['puavo.grub.developer_mode.enabled'] = 'true'
         else:
             self.puavo_conf['puavo.grub.developer_mode.enabled'] = 'false'
-        self.save_state()
+        self.save_state_flag = True
 
 
     def remove_entries_without_puavoconf(self):
@@ -153,9 +152,21 @@ class PuavoLaptopSetup:
 
 
     def save_state(self):
-        if self.initializing_ui:
-            return
-        print("saving state")
+        if not self.save_state_flag:
+            return True
+        try:
+            self.save_state_now()
+            self.save_state_flag = False
+        except:
+            dialog = Gtk.MessageDialog(self.app_window, 0,
+              Gtk.MessageType.ERROR, Gtk.ButtonsType.OK, 'error saving changes')
+            dialog.run()
+            dialog.destroy()
+
+        return True
+
+
+    def save_state_now(self):
         for key, value in self.puavo_conf.items():
             cmd = [ 'sudo', '-n', 'puavo-conf-local', key, value ]
             subprocess.check_call(cmd)
@@ -168,9 +179,9 @@ builder.add_from_file('./puavo-laptop-setup.glade')
 app_window = builder.get_object('app_window')
 app_window.connect('destroy', Gtk.main_quit)
 
-laptop_setup = PuavoLaptopSetup(builder)
+laptop_setup = PuavoLaptopSetup(app_window, builder)
 laptop_setup.prepare()
-laptop_setup.save_state()
+laptop_setup.save_state_flag = True
 
 app_window.show_all()
 
