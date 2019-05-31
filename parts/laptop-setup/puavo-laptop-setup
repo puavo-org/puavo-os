@@ -40,6 +40,7 @@ class PuavoLaptopSetup:
         self.abitti_version_entry_error \
           = builder.get_object('abitti_version_error')
 
+        self.boot_abitti_button   = builder.get_object('boot_abitti')
         self.boot_puavo_os_button = builder.get_object('boot_puavo_os')
         self.boot_windows_button  = builder.get_object('boot_windows')
 
@@ -54,6 +55,7 @@ class PuavoLaptopSetup:
         self.abitti_version_entry.connect('changed',
                                           self.abitti_version_entry_changed)
 
+        self.boot_abitti_button.connect('toggled', self.boot_abitti_chosen)
         self.boot_puavo_os_button.connect('toggled', self.boot_puavo_os_chosen)
         self.boot_windows_button.connect('toggled', self.boot_windows_chosen)
         self.developer_mode_switch.connect('notify::active',
@@ -107,6 +109,13 @@ class PuavoLaptopSetup:
             self.set_abitti_version( self.abitti_version_entry.get_text() )
 
 
+    def boot_abitti_chosen(self, widget):
+        if not widget.get_active():
+            return
+        self.puavo_conf['puavo.grub.boot_default'] = 'abitti'
+        self.save_state_flag = True
+
+
     def boot_puavo_os_chosen(self, widget):
         if not widget.get_active():
             return
@@ -135,8 +144,9 @@ class PuavoLaptopSetup:
             self.boot_windows_button.set_sensitive(True)
         else:
             self.puavo_conf['puavo.grub.windows.enabled'] = 'false'
-            self.boot_puavo_os_button.set_active(True)
             self.boot_windows_button.set_sensitive(False)
+            if self.boot_windows_button.get_active():
+                self.boot_puavo_os_button.set_active(True)
         self.save_state_flag = True
 
 
@@ -166,6 +176,8 @@ class PuavoLaptopSetup:
             elif key == 'puavo.grub.boot_default':
                 if value == 'windows':
                     self.boot_windows_button.set_active(True)
+                elif value == 'abitti':
+                    self.boot_abitti_button.set_active(True)
                 else:
                     self.boot_puavo_os_button.set_active(True)
             elif key == 'puavo.grub.windows.enabled':
