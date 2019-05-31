@@ -4,7 +4,6 @@
   <requires lib="gtk+" version="3.12"/>
   <object class="GtkApplicationWindow" id="app_window">
     <property name="can_focus">False</property>
-    <property name="margin_top">9</property>
     <property name="border_width">20</property>
     <child>
       <object class="GtkGrid" id="puavo_conf_grid">
