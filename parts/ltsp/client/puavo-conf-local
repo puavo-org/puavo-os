@@ -6,11 +6,20 @@ puavo_conf_json_dir='/state/etc/puavo/local'
 puavo_conf_json_path="${puavo_conf_json_dir}/puavo_conf.json"
 
 read_old_config() {
-  if [ -e "$puavo_conf_json_path" ]; then
-    cat "$puavo_conf_json_path"
-  else
-    echo '{}'
+  if [ -s "$puavo_conf_json_path" ]; then
+    if old_config=$(jq -r '
+                      if (.|type) != "object" then error("not an object")
+                      else . end
+                    ' "$puavo_conf_json_path" 2>/dev/null); then
+      printf %s "$old_config"
+      return 0
+    else
+      # parsing of old config failed, move it aside but keep a backup
+      mv "$puavo_conf_json_path" "${puavo_conf_json_path}.$(date +%s)"
+    fi
   fi
+
+  echo '{}'
 }
 
 if [ $# -ne 2 ]; then
@@ -35,6 +44,13 @@ case "$key" in
 esac
 
 install -d -o root -g root -m 755 "$puavo_conf_json_dir"
+
+test -e "$puavo_conf_json_path" || touch "$puavo_conf_json_path"
+exec 3< "$puavo_conf_json_path"
+if ! flock -w 10 -x 3; then
+  echo "could not get a lock on $puavo_conf_json_path" >&2
+  exit 1
+fi
 
 puavo-conf "$key" "$value"
 
