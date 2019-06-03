@@ -57,7 +57,7 @@ function ltsp_image_entry {
   get_pathname $imagefile imagepath
 
   # if changing menuentry description, update correspondingly on
-  # (XXX currently not installed) puavo-local-config configure_grub_default()
+  # /etc/puavo-conf/scripts/setup_grub_default
 
   # ${puavo_kernel_arguments} comes from a grub environment file
   # (if it is defined there)
@@ -234,6 +234,32 @@ find_grub_target_devices_on_raid() {
            }'
 }
 
+handle_windows_partion_file() {
+  local possible_windows_disk_dev windows_partition_number \
+        windows_partition_path
+
+  # set up this file so that UI tools can check if host has
+  # a Windows-partition
+
+  possible_windows_disk_dev=$1
+  windows_partition_number=$2
+  windows_partition_path=/var/lib/puavo-desktop/windows_partition
+
+  windows_partition_number=2
+  if [ -n "$windows_partition_number" ]; then
+    printf "%s%s\n" "$possible_windows_disk_dev" "$windows_partition_number" \
+      > "${windows_partition_path}.tmp"
+    if ! cmp "${windows_partition_path}.tmp" \
+             "$windows_partition_path" 2>/dev/null; then
+      mv "${windows_partition_path}.tmp" "$windows_partition_path"
+    else
+      rm -f "${windows_partition_path}.tmp"
+    fi
+  else
+    rm -f "$windows_partition_path"
+  fi
+}
+
 lookup_windows_partition_number() {
   # Presume that the first partition not containing "Linux"
   # is a Windows-partition.
@@ -384,14 +410,19 @@ if [ -n "$possible_windows_disk_dev" ]; then
   windows_partition_number=$(lookup_windows_partition_number \
                                "$possible_windows_disk_dev")
 
+  handle_windows_partion_file "$possible_windows_disk_dev" \
+                              "$windows_partition_number"
+
   if [ -n "$windows_partition_number" ]; then
     cat <<EOF >> "$tmp_grub_cfg_path"
 
-menuentry "Windows" {
-  insmod ntfs
-  set root=(hd0,$windows_partition_number)
-  chainloader +1
-}
+if test "\${puavo_grub_windows_enabled}" = "true"; then
+  menuentry "Windows" {
+    insmod ntfs
+    set root=(hd0,$windows_partition_number)
+    chainloader +1
+  }
+fi
 EOF
   fi
 fi
