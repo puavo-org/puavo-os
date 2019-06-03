@@ -1007,7 +1007,7 @@ class PuavoMenu(Gtk.Window):
         # Update its information
         print('Updating program "%s"' % (target_id))
 
-        allowed_puavopkg = utils.puavo_conf('puavo.pkgs.ui.pkglxist', 'tilitin t-lasku')
+        allowed_puavopkg = utils.puavo_conf('puavo.pkgs.ui.pkglist', '')
 
         try:
             puavopkg_data = puavopkg.detect_package_states(
