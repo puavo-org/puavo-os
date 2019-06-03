@@ -1577,8 +1577,28 @@ def puavopkg_program_removed(language, root_dir, puavopkg_data, icon_cache, old_
     new_menudata = dict(old_program.puavopkg['menudata'])
 
     if not convert_program_definition(new_menudata, new_program,
-                               new_program.menudata_id, language):
+                                      new_program.menudata_id, language):
         return None
+
+    # Restore the old icon
+    if 'puavopkg_icon' in new_menudata and new_menudata['puavopkg_icon']:
+        # TODO: Support generic/searchable icon names here, not only
+        # direct paths
+        new_program.icon_name = new_menudata['puavopkg_icon']
+    else:
+        new_program.icon_name = INSTALLER_ICON
+
+    if os.path.isfile(new_program.icon_name):
+        icon = icon_cache.load_icon(new_program.icon_name)
+
+        if icon.usable:
+            new_program.icon = icon
+
+    if not new_program.icon:
+        logging.error('puavopkg_program_removed(): unable to load installer icon ' \
+                      '"%s" for removed program "%s"', new_program.icon_name,
+                      new_program.menudata_id)
+        new_program.icon = None
 
     return new_program
 
