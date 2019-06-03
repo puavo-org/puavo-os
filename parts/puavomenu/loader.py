@@ -20,6 +20,10 @@ ALLOWED_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' \
                 '0123456789' \
                 '._-'
 
+# Placeholder icon used for puavo-pkg programs that are not installed yet
+# *and* that do not have a custom installer icon
+INSTALLER_ICON = '/usr/share/icons/Faenza/apps/48/system-installer.png'
+
 
 # ------------------------------------------------------------------------------
 # Utility
@@ -889,6 +893,7 @@ def apply_filters(raw_programs, raw_menus, raw_categories, conditions, filters):
 def set_puavpkg_program_states(raw_programs, puavopkg_data):
     """Sets puavo-pkg states for puavo-pkg programs, and filters out invalid
     entries."""
+
     for menudata_id, program in raw_programs.items():
         if program is None:
             continue
@@ -916,7 +921,7 @@ def set_puavpkg_program_states(raw_programs, puavopkg_data):
                          program['puavopkg_id'], menudata_id)
 
 
-def convert_program_definition(src_prog, dst_prog, menudata_id, language, installer_icon):
+def convert_program_definition(src_prog, dst_prog, menudata_id, language):
     """Converts data from a "raw" program definition (a dict with entries like
     "name", "icon", etc.) to a menudata.Program object. Returns False if
     the conversion failed and the program (in dst_prog) should not be used."""
@@ -994,7 +999,7 @@ def convert_program_definition(src_prog, dst_prog, menudata_id, language, instal
         if 'puavopkg_icon' in src_prog and src_prog['puavopkg_icon']:
             dst_prog.icon_name = src_prog['puavopkg_icon']
         else:
-            dst_prog.icon_name = installer_icon
+            dst_prog.icon_name = INSTALLER_ICON
 
     if utils.is_empty(dst_prog.icon_name):
         logging.warning('Program "%s" has no icon defined for it',
@@ -1010,7 +1015,7 @@ def convert_program_definition(src_prog, dst_prog, menudata_id, language, instal
     return True
 
 
-def build_menu_data(raw_programs, raw_menus, raw_categories, language, installer_icon):
+def build_menu_data(raw_programs, raw_menus, raw_categories, language):
     """Builds the actual menu data from raw menu data."""
 
     programs = {}
@@ -1035,8 +1040,7 @@ def build_menu_data(raw_programs, raw_menus, raw_categories, language, installer
         dst_prog.menudata_id = menudata_id
 
         if not convert_program_definition(src_prog, dst_prog,
-                                          menudata_id, language,
-                                          installer_icon):
+                                          menudata_id, language):
             # This program failed, mark it as such
             raw_programs[menudata_id] = None
             continue
@@ -1500,12 +1504,8 @@ def load_menu_data(language, root_dir, filter_string, puavopkg_data, icon_cache)
 
     start_time = time.clock()
 
-    # A generic icon used for puavo-pkg installers in case the menudata
-    # does not specify any other icons
-    installer_icon = '/usr/share/icons/Faenza/apps/48/system-installer.png'
-
     programs, menus, categories = build_menu_data(
-        raw_programs, raw_menus, raw_categories, language, installer_icon)
+        raw_programs, raw_menus, raw_categories, language)
 
     category_index = sort_categories(categories)
 
@@ -1560,3 +1560,145 @@ def load_menu_data(language, root_dir, filter_string, puavopkg_data, icon_cache)
     utils.log_elapsed_time('Total menudata load time', total_start, end_time)
 
     return programs, menus, categories, category_index
+
+
+def puavopkg_program_removed(language, root_dir, puavopkg_data, icon_cache, old_program):
+    # Build a new program object
+    new_program = Program()
+
+    new_program.program_type = old_program.program_type
+    new_program.menudata_id = old_program.menudata_id
+    new_program.puavopkg = dict(old_program.puavopkg)
+
+    # The program is now *not* installed
+    new_program.puavopkg['state'] = PuavoPkgState.NOT_INSTALLED
+    new_program.puavopkg['menudata']['puavopkg_state'] = PuavoPkgState.NOT_INSTALLED
+
+    new_menudata = dict(old_program.puavopkg['menudata'])
+
+    if not convert_program_definition(new_menudata, new_program,
+                               new_program.menudata_id, language):
+        return None
+
+    return new_program
+
+
+def puavopkg_program_installed(language, root_dir, puavopkg_data, icon_cache, old_program):
+    # Build a new program object
+    new_program = Program()
+
+    new_program.program_type = old_program.program_type
+    new_program.menudata_id = old_program.menudata_id
+    new_program.puavopkg = dict(old_program.puavopkg)
+
+    # --------------------------------------------------------------------------
+    # Load the paths config file
+
+    desktop_dirs, icon_dirs = load_dirs_config(os.path.join(root_dir, 'dirs.json'))
+
+    # --------------------------------------------------------------------------
+
+    # Locate the .desktop file
+    desktop_file = locate_desktop_file(desktop_dirs, old_program.menudata_id + '.desktop')
+
+    if desktop_file is None:
+        logging.error('.desktop file for program "%s" not found', menudata_id)
+        return None
+
+    logging.info('Found the desktop file: "%s"' % desktop_file)
+
+    # Try to load it
+    try:
+        desktop_data = load_dotdesktop_file(desktop_file)
+    except Exception as exception:
+        logging.error('Could not load file "%s" for program "%s": %s',
+                      desktop_file, old_program.menudata_id, str(exception))
+        return None
+
+    if 'Desktop Entry' not in desktop_data:
+        logging.error('Rejecting desktop file "%s" for "%s": No "[Desktop Entry]" ' \
+                      'section in the file', desktop_file, old_program.menudata_id)
+        return None
+
+    # Merge the stored menudata with the newly-loaded .desktop data
+    new_menudata = dict(old_program.puavopkg['menudata'])
+
+    merge_dotdesktop_and_yaml_data(new_menudata, desktop_data['Desktop Entry'])
+
+    # --------------------------------------------------------------------------
+    # Build a new program object that replaces the old one
+
+    if not convert_program_definition(new_menudata, new_program,
+                               new_program.menudata_id, language):
+        return None
+
+    new_program.original_desktop_file = old_program.menudata_id + '.desktop'
+
+    # The program is now installed
+    new_program.puavopkg['state'] = PuavoPkgState.INSTALLED
+    new_program.puavopkg['menudata']['puavopkg_state'] = PuavoPkgState.INSTALLED
+
+    return new_program
+
+
+def reload_puavopkg_program(language, root_dir, puavopkg_data, icon_cache, program):
+    """Reloads the data for a *single* puavo-pkg program."""
+
+    # --------------------------------------------------------------------------
+    # Is the program now installed or uninstalled?
+
+    pkg_id = program.puavopkg['id']
+
+    if pkg_id not in puavopkg_data:
+        logging.error('reload_puavopkg_program(): program "%s" not in puavopkg_data, '
+                      'doing nothing', pkg_id)
+        return None
+
+    old_state = program.puavopkg['state']
+    new_state = PuavoPkgState.INSTALLED if puavopkg_data[pkg_id] else PuavoPkgState.NOT_INSTALLED
+
+    logging.info('reload_puavopkg_program(): puavo-pkg program "%s":', pkg_id)
+    logging.info('  old state: %s', old_state)
+    logging.info('  new state: %s', new_state)
+
+    if old_state == new_state:
+        logging.info('reload_puavopkg_program(): no changes')
+        return None
+
+    # --------------------------------------------------------------------------
+
+    import time
+
+    total_start = time.clock()
+
+    if old_state == PuavoPkgState.INSTALLED and new_state == PuavoPkgState.NOT_INSTALLED:
+        # This program has been uninstalled
+        logging.info('puavo-pkg program "%s" has been uninstalled', pkg_id)
+
+        new_prog = puavopkg_program_removed(language,
+                                            root_dir,
+                                            puavopkg_data,
+                                            icon_cache,
+                                            program)
+    else:
+        # This program has been installed
+        logging.info('puavo-pkg program "%s" has been installed', pkg_id)
+
+        new_prog = puavopkg_program_installed(language,
+                                              root_dir,
+                                              puavopkg_data,
+                                              icon_cache,
+                                              program)
+
+    if not new_prog:
+        # Something went wrong, don't replace the existing program
+        logging.warning('No new program data!')
+        return None
+
+    # --------------------------------------------------------------------------
+
+    end_time = time.clock()
+
+    utils.log_elapsed_time('puavopkg program reload time', total_start, end_time)
+
+    return new_prog

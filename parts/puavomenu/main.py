@@ -1007,8 +1007,28 @@ class PuavoMenu(Gtk.Window):
         # Update its information
         print('Updating program "%s"' % (target_id))
 
-        #self.unload_menu_data()
-        #self.load_menu_data()
+        allowed_puavopkg = utils.puavo_conf('puavo.pkgs.ui.pkglxist', 'tilitin t-lasku')
+
+        try:
+            puavopkg_data = puavopkg.detect_package_states(
+                self.__settings.puavopkg_root_dir, allowed_puavopkg)
+
+            # Reload a *single* program
+            new_program = self.menudata.reload_puavopkg_program(
+                language=self.__settings.language,
+                menudata_root_dir=self.__settings.menu_dir,
+                puavopkg_data=puavopkg_data,
+                icon_cache=self.__icons,
+                program=target_program)
+
+            if new_program:
+                # Replace the old program object and update the UI
+                self.menudata.replace_program(target_program, new_program)
+                self.__create_current_menu()
+                self.__faves.update(self.menudata.programs, self.__settings)
+
+        except Exception as exception:
+            logging.error(str(exception))
 
 
     # Responds to commands sent through the control socket

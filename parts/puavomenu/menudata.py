@@ -250,3 +250,31 @@ class Menudata:
                                   tag_filter_string,
                                   puavopkg_data,
                                   icon_cache)
+
+    def reload_puavopkg_program(self,
+                                language,
+                                menudata_root_dir,
+                                puavopkg_data,
+                                icon_cache,
+                                program):
+
+        import loader
+
+        return loader.reload_puavopkg_program(
+            language, menudata_root_dir, puavopkg_data, icon_cache, program)
+
+    def replace_program(self, program, new_program):
+        # I'm regretting my decision to store actual program objects (instead
+        # of their unique ID strings) in menus and categories...
+
+        for menudata_id, menu in self.menus.items():
+            for index, prog in enumerate(menu.programs):
+                if prog == program:
+                    menu.programs[index] = new_program
+
+        for menudata_id, cat in self.categories.items():
+            for index, prog in enumerate(cat.programs):
+                if prog == program:
+                    cat.programs[index] = new_program
+
+        self.programs[program.menudata_id] = new_program
