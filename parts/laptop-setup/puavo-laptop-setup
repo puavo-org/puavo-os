@@ -18,6 +18,10 @@ def puavoconf_get(puavoconf_key):
     return subprocess.check_output([ 'puavo-conf', puavoconf_key ]).rstrip() \
                      .decode('utf-8')
 
+def we_have_windows():
+    return os.path.exists('/var/lib/puavo-desktop/windows_partition')
+
+
 class PuavoLaptopSetup:
     def __init__(self, app_window, builder):
         self.app_window = app_window
@@ -141,6 +145,9 @@ class PuavoLaptopSetup:
 
 
     def use_windows_switch_changed(self, widget, gparam):
+        if not self.boot_windows_button:
+           return
+
         if widget.get_active():
             self.puavo_conf['puavo.grub.windows.enabled'] = 'true'
             self.boot_windows_button.set_sensitive(True)
@@ -153,15 +160,33 @@ class PuavoLaptopSetup:
 
 
     def remove_entries_without_puavoconf(self):
+        remove_gui_elements = {}
+
+        if not we_have_windows():
+            self.boot_windows_button.destroy()
+            self.boot_windows_button = None
+            del self.puavo_conf['puavo.grub.windows.enabled']
+            remove_gui_elements['puavo.grub.windows.enabled'] = True
+
         for puavo_conf_key in self.puavo_conf.copy():
             try:
                 self.puavo_conf[puavo_conf_key] = puavoconf_get(puavo_conf_key)
             except subprocess.CalledProcessError:
                 print("could not get puavo-conf key for %s" % puavo_conf_key,
                       file=sys.stderr)
-                self.remove_grid_entry(self.puavo_conf_grid,
-                                       self.builder.get_object(puavo_conf_key))
                 del self.puavo_conf[puavo_conf_key]
+                remove_gui_elements[puavo_conf_key] = True
+                if puavo_conf_key == 'puavo.abitti.version':
+                    self.boot_abitti_button.destroy()
+                    self.boot_abitti_button = None
+
+        if not self.boot_abitti_button and not self.boot_windows_button:
+            del self.puavo_conf['puavo.grub.boot_default']
+            remove_gui_elements['puavo.grub.boot_default'] = True
+
+        for puavo_conf_key in remove_gui_elements:
+            self.remove_grid_entry(self.puavo_conf_grid,
+                                   self.builder.get_object(puavo_conf_key))
 
 
     def update_gui_state_from_puavoconf(self):
@@ -176,9 +201,9 @@ class PuavoLaptopSetup:
                         value = value.replace('abitti-v', '')
                     self.abitti_version_entry.set_text(value)
             elif key == 'puavo.grub.boot_default':
-                if value == 'windows':
+                if value == 'windows' and self.boot_windows_button:
                     self.boot_windows_button.set_active(True)
-                elif value == 'abitti':
+                elif value == 'abitti' and self.boot_abitti_button:
                     self.boot_abitti_button.set_active(True)
                 else:
                     self.boot_puavo_os_button.set_active(True)
@@ -189,16 +214,14 @@ class PuavoLaptopSetup:
 
 
     def remove_grid_entry(self, grid, label):
-        if not label:
-            return
-
         i = 0
         while True:
-            child_at = grid.get_child_at(i, 0)
-            if not child_at:
-                break
+            child_at = grid.get_child_at(0, i)
+            if child_at == None:
+                return
             if child_at == label:
-                 grid.remove_row(i)
+                grid.remove_row(i)
+                return
             i += 1
 
 
@@ -222,7 +245,6 @@ class PuavoLaptopSetup:
         for key, value in self.puavo_conf.items():
             cmd = [ 'sudo', '-n', 'puavo-conf-local', key, value ]
             subprocess.check_call(cmd)
-
 
 
 builder = Gtk.Builder()
