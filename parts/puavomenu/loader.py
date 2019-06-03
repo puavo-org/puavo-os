@@ -921,7 +921,7 @@ def set_puavpkg_program_states(raw_programs, puavopkg_data):
                          program['puavopkg_id'], menudata_id)
 
 
-def convert_program_definition(src_prog, dst_prog, menudata_id, language):
+def convert_program_definition(src_prog, dst_prog, menudata_id, language, is_puavopkg_reload=False):
     """Converts data from a "raw" program definition (a dict with entries like
     "name", "icon", etc.) to a menudata.Program object. Returns False if
     the conversion failed and the program (in dst_prog) should not be used."""
@@ -992,14 +992,16 @@ def convert_program_definition(src_prog, dst_prog, menudata_id, language):
     if 'icon' in src_prog:
         dst_prog.icon_name = src_prog['icon']
 
-    if puavopkg_not_installed_yet and ('puavopkg_id' in src_prog):
-        # This is a puavo-pkg program that has not been installed yet.
-        # Use a generic "installer" icon for it unless the program has
-        # its own installer icon.
-        if 'puavopkg_icon' in src_prog and src_prog['puavopkg_icon']:
-            dst_prog.icon_name = src_prog['puavopkg_icon']
-        else:
-            dst_prog.icon_name = INSTALLER_ICON
+    if not is_puavopkg_reload:
+        # We're NOT reloading an existing puavo-pkg program, check the icon
+        if puavopkg_not_installed_yet and ('puavopkg_id' in src_prog):
+            # This is a puavo-pkg program that has not been installed yet.
+            # Use a generic "installer" icon for it unless the program has
+            # its own installer icon.
+            if 'puavopkg_icon' in src_prog and src_prog['puavopkg_icon']:
+                dst_prog.icon_name = src_prog['puavopkg_icon']
+            else:
+                dst_prog.icon_name = INSTALLER_ICON
 
     if utils.is_empty(dst_prog.icon_name):
         logging.warning('Program "%s" has no icon defined for it',
@@ -1203,6 +1205,25 @@ def sort_categories(categories):
     return [i[1] for i in index]
 
 
+def search_for_generic_icon(generic_name, icon_dirs):
+    for dir_name in icon_dirs:
+        # Try the name as-is first (some icon names are just "name.ext"
+        # without a path)
+        candidate = os.path.join(dir_name, generic_name)
+
+        if os.path.isfile(candidate):
+            return candidate
+
+        # Try all the variants
+        for ext in ICON_EXTENSIONS:
+            candidate = os.path.join(dir_name, generic_name + ext)
+
+            if os.path.isfile(candidate):
+                return candidate
+
+    return None
+
+
 def load_icons(programs, menus, icon_dirs, icon_cache):
     """Locates and loads icon files for programs and menus."""
 
@@ -1252,28 +1273,7 @@ def load_icons(programs, menus, icon_dirs, icon_cache):
                 continue
 
         # Search for the generic icon
-        icon_path = None
-
-        for dir_name in icon_dirs:
-            # Try the name as-is first (see above, some icons don't have
-            # a path in their names, but they have an extension)
-            candidate = os.path.join(dir_name, program.icon_name)
-
-            if os.path.isfile(candidate):
-                icon_path = candidate
-                break
-
-            # Try different extensions
-            for ext in ICON_EXTENSIONS:
-                candidate = os.path.join(dir_name,
-                                         program.icon_name + ext)
-
-                if os.path.isfile(candidate):
-                    icon_path = candidate
-                    break
-
-            if icon_path:
-                break
+        icon_path = search_for_generic_icon(program.icon_name, icon_dirs)
 
         if not icon_path:
             logging.error('Icon "%s" for program "%s" not found in '
@@ -1289,7 +1289,7 @@ def load_icons(programs, menus, icon_dirs, icon_cache):
             num_missing_icons += 1
         else:
             if not program.icon_name_is_path:
-                # Cache the generic icon name
+                # Cache a generic icon name
                 generic_name_cache[program.icon_name] = icon_path
 
         program.icon_name = icon_path
@@ -1649,7 +1649,7 @@ def puavopkg_program_installed(language, root_dir, puavopkg_data, icon_cache, ol
     # Build a new program object that replaces the old one
 
     if not convert_program_definition(new_menudata, new_program,
-                               new_program.menudata_id, language):
+                                      new_program.menudata_id, language, True):
         return None
 
     new_program.original_desktop_file = old_program.menudata_id + '.desktop'
@@ -1657,6 +1657,40 @@ def puavopkg_program_installed(language, root_dir, puavopkg_data, icon_cache, ol
     # The program is now installed
     new_program.puavopkg['state'] = PuavoPkgState.INSTALLED
     new_program.puavopkg['menudata']['puavopkg_state'] = PuavoPkgState.INSTALLED
+
+    # Load the icon
+    # FIXME: This code is copy-pasted from other function, with slight modifications
+    logging.info('Icon name: "%s" (path=%d)',
+                 new_program.icon_name, new_program.icon_name_is_path)
+
+    if new_program.icon_name_is_path:
+        # Just load it
+        if os.path.isfile(new_program.icon_name):
+            icon = icon_cache.load_icon(new_program.icon_name)
+
+            if icon.usable:
+                new_program.icon = icon
+
+        if len(os.path.dirname(new_program.icon_name)) > 0:
+            logging.error('Could not load icon "%s" for program "%s"',
+                          new_program.icon_name, menudata_id)
+    else:
+        # Search for the generic icon
+        icon_path = search_for_generic_icon(new_program.icon_name, icon_dirs)
+
+        if not icon_path:
+            logging.error('Icon "%s" for program "%s" not found in '
+                          'icon load paths', new_program.icon_name, menudata_id)
+        else:
+            logging.info('Found the icon: "%s"', icon_path)
+
+            new_program.icon = icon_cache.load_icon(icon_path)
+            new_program.icon_name = icon_path
+            new_program.icon_name_is_path = True
+
+            if not new_program.icon.usable:
+                logging.warning('Found icon "%s" for program "%s", but '
+                                'it could not be loaded', icon_path, menudata_id)
 
     return new_program
 
