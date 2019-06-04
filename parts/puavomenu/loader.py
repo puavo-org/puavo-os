@@ -916,7 +916,7 @@ def set_puavpkg_program_states(raw_programs, puavopkg_states):
 
             continue
 
-        if puavopkg_states[program['puavopkg_id']] == True:
+        if puavopkg_states[program['puavopkg_id']]:
             # This program is already installed and can be used.
             program['puavopkg_state'] = PuavoPkgState.INSTALLED
         else:
@@ -1626,25 +1626,26 @@ def puavopkg_program_installed(language, root_dir, icon_cache, old_program):
     # --------------------------------------------------------------------------
 
     # Locate the .desktop file
-    desktop_file = locate_desktop_file(desktop_dirs, old_program.menudata_id + '.desktop')
+    desktop_file = locate_desktop_file(desktop_dirs, new_program.menudata_id + '.desktop')
 
     if desktop_file is None:
-        logging.error('.desktop file for program "%s" not found', menudata_id)
+        logging.error('.desktop file for program "%s" not found',
+                      new_program.menudata_id)
         return None
 
-    logging.info('Found the desktop file: "%s"' % desktop_file)
+    logging.info('Found the desktop file: "%s"', desktop_file)
 
     # Try to load it
     try:
         desktop_data = load_dotdesktop_file(desktop_file)
     except Exception as exception:
         logging.error('Could not load file "%s" for program "%s": %s',
-                      desktop_file, old_program.menudata_id, str(exception))
+                      desktop_file, new_program.menudata_id, str(exception))
         return None
 
     if 'Desktop Entry' not in desktop_data:
         logging.error('Rejecting desktop file "%s" for "%s": No "[Desktop Entry]" ' \
-                      'section in the file', desktop_file, old_program.menudata_id)
+                      'section in the file', desktop_file, new_program.menudata_id)
         return None
 
     # Merge the stored menudata with the newly-loaded .desktop data
@@ -1680,14 +1681,15 @@ def puavopkg_program_installed(language, root_dir, icon_cache, old_program):
 
         if len(os.path.dirname(new_program.icon_name)) > 0:
             logging.error('Could not load icon "%s" for program "%s"',
-                          new_program.icon_name, menudata_id)
+                          new_program.icon_name, new_program.menudata_id)
     else:
         # Search for the generic icon
         icon_path = search_for_generic_icon(new_program.icon_name, icon_dirs)
 
         if not icon_path:
             logging.error('Icon "%s" for program "%s" not found in '
-                          'icon load paths', new_program.icon_name, menudata_id)
+                          'icon load paths', new_program.icon_name,
+                          new_program.menudata_id)
         else:
             logging.info('Found the icon: "%s"', icon_path)
 
@@ -1697,7 +1699,8 @@ def puavopkg_program_installed(language, root_dir, icon_cache, old_program):
 
             if not new_program.icon.usable:
                 logging.warning('Found icon "%s" for program "%s", but '
-                                'it could not be loaded', icon_path, menudata_id)
+                                'it could not be loaded', icon_path,
+                                new_program.menudata_id)
 
     return new_program
 
