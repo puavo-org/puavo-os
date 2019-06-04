@@ -32,6 +32,7 @@ class PuavoLaptopSetup:
             'puavo.grub.developer_mode.enabled':  None,
             'puavo.grub.windows.enabled':         None,
         }
+        self.initializing_ui = True
         self.save_state_flag = True
 
 
@@ -73,6 +74,7 @@ class PuavoLaptopSetup:
         self.update_gui_state_from_puavoconf()
 
         GObject.timeout_add(500, self.save_state)
+        self.initializing_ui = False
 
 
     def abitti_version_latest_chosen(self, widget):
@@ -145,12 +147,23 @@ class PuavoLaptopSetup:
 
 
     def use_windows_switch_changed(self, widget, gparam):
-        if not self.boot_windows_button:
-           return
-
         if widget.get_active():
             self.puavo_conf['puavo.grub.windows.enabled'] = 'true'
             self.boot_windows_button.set_sensitive(True)
+
+            if not self.initializing_ui:
+                msg = _tr('It is now possible to choose Windows from' \
+                          ' the boot menu when starting up the computer.')
+                if self.boot_abitti_button:
+                    msg += '  ' \
+                       + _tr('Abitti is not updated when running Windows,' \
+                             ' you have to boot into the current system to update it.')
+                dialog = Gtk.MessageDialog(self.app_window, 0,
+                  Gtk.MessageType.WARNING, Gtk.ButtonsType.OK,
+                  msg)
+                dialog.run()
+                dialog.destroy()
+
         else:
             self.puavo_conf['puavo.grub.windows.enabled'] = 'false'
             self.boot_windows_button.set_sensitive(False)
