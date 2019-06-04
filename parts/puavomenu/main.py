@@ -631,7 +631,13 @@ class PuavoMenu(Gtk.Window):
     # Launch an installer for a puavo-pkg program that hasn't been
     # installed yet
     def __launch_puavopkg_installer(self, program):
-        print('Installing program %s!' % (program.name))
+        logging.info('Launching puavo-pkgs-ui for program "%s", package ID "%s"',
+                     program.name, program.puavopkg['id'])
+
+        import subprocess
+        subprocess.Popen(['puavo-pkgs-ui'],
+                         stdout=subprocess.DEVNULL,
+                         stderr=subprocess.DEVNULL)
 
     # Launch a program. This is a public method, it is called from other
     # files (buttons and faves) to launch programs.
