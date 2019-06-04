@@ -36,6 +36,27 @@ def _tr(msg):
     return msg
 
 
+def send_puavomenu_command(socket_file, args):
+    if os.path.exists(socket_file):
+        # This instance is running, send the command
+        subprocess.Popen(
+            ['/opt/puavomenu/send_command', socket_file] + args,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL)
+
+
+def update_puavomenu(package_id):
+    """Sends a 'update-puavopkg' command to all running instances of
+    puavomenu."""
+
+    path = '/run/user/{0}'.format(os.getuid())
+    args = ['update-puavopkg', package_id]
+
+    # Try both production and development menus
+    send_puavomenu_command(path + '/puavomenu', args)
+    send_puavomenu_command(path + '/puavomenu_dev', args)
+
+
 class PuavoPkg:
     def __init__(self, pkgname):
         self.action_button_conn   = None
@@ -157,11 +178,13 @@ class PuavoPkg:
             if self.pkg_state == PkgState.REMOVING:
                 if status == 0:
                     self.set_ui_state(PkgState.REMOVE_SUCCESS)
+                    update_puavomenu(self.pkgname)
                 else:
                     self.set_ui_state(PkgState.REMOVE_ERROR)
             else:
                 if status == 0:
                     self.set_ui_state(PkgState.INSTALL_SUCCESS)
+                    update_puavomenu(self.pkgname)
                 else:
                     self.set_ui_state(PkgState.INSTALL_ERROR)
 
