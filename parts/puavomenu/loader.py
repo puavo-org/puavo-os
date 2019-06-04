@@ -890,7 +890,7 @@ def apply_filters(raw_programs, raw_menus, raw_categories, conditions, filters):
                 cat['hidden'] = True
 
 
-def set_puavpkg_program_states(raw_programs, puavopkg_data):
+def set_puavpkg_program_states(raw_programs, puavopkg_states):
     """Sets puavo-pkg states for puavo-pkg programs, and filters out invalid
     entries."""
 
@@ -901,15 +901,22 @@ def set_puavpkg_program_states(raw_programs, puavopkg_data):
         if 'puavopkg_id' not in program:
             continue
 
-        if program['puavopkg_id'] not in puavopkg_data:
-            # This program has not been permitted to be used
-            logging.info('Program "%s" has a puavo-pkg package ID ("%s") ' \
-                         'but the ID is not listed in puavo.pkgs.ui.pkglist',
-                         menudata_id, program['puavopkg_id'])
+        if program['puavopkg_id'] not in puavopkg_states:
+            # puavo.pkgs.ui.pkglist only lists programs that can be dynamically
+            # installed/uninstalled, so we assume this puavo-pkg program is
+            # part of the desktop image
+            logging.info('puavo-pkg program "%s" is already part of the desktop image',
+                         menudata_id)
+
+            # This program "technically" is not a puavo-pkg program anymore
+            # (from our perspective) because it comes with the system. Prevent
+            # it from being installed/uninstalled.
+            # TODO: This should not be needed
             del program['puavopkg_id']
+
             continue
 
-        if puavopkg_data[program['puavopkg_id']] == True:
+        if puavopkg_states[program['puavopkg_id']] == True:
             # This program is already installed and can be used.
             program['puavopkg_state'] = PuavoPkgState.INSTALLED
         else:
@@ -1393,7 +1400,7 @@ def find_json_replacements(files):
         files[index] = json_name
 
 
-def load_menu_data(language, root_dir, filter_string, puavopkg_data, icon_cache):
+def load_menu_data(language, root_dir, filter_string, puavopkg_states, icon_cache):
     """The main menu loader function. Call this."""
 
     import time
@@ -1469,9 +1476,9 @@ def load_menu_data(language, root_dir, filter_string, puavopkg_data, icon_cache)
                  len(raw_programs), len(raw_menus), len(raw_categories))
 
     # --------------------------------------------------------------------------
-    # Deal with puavo-pkg programs and their installers
+    # Deal with puavo-pkg programs and their installation states
 
-    set_puavpkg_program_states(raw_programs, puavopkg_data)
+    set_puavpkg_program_states(raw_programs, puavopkg_states)
 
     # --------------------------------------------------------------------------
     # Locate and load .desktop files for desktop programs
@@ -1562,7 +1569,7 @@ def load_menu_data(language, root_dir, filter_string, puavopkg_data, icon_cache)
     return programs, menus, categories, category_index
 
 
-def puavopkg_program_removed(language, root_dir, puavopkg_data, icon_cache, old_program):
+def puavopkg_program_removed(language, root_dir, icon_cache, old_program):
     # Build a new program object
     new_program = Program()
 
@@ -1603,7 +1610,7 @@ def puavopkg_program_removed(language, root_dir, puavopkg_data, icon_cache, old_
     return new_program
 
 
-def puavopkg_program_installed(language, root_dir, puavopkg_data, icon_cache, old_program):
+def puavopkg_program_installed(language, root_dir, icon_cache, old_program):
     # Build a new program object
     new_program = Program()
 
@@ -1695,7 +1702,7 @@ def puavopkg_program_installed(language, root_dir, puavopkg_data, icon_cache, ol
     return new_program
 
 
-def reload_puavopkg_program(language, root_dir, puavopkg_data, icon_cache, program):
+def reload_puavopkg_program(language, root_dir, puavopkg_states, icon_cache, program):
     """Reloads the data for a *single* puavo-pkg program."""
 
     # --------------------------------------------------------------------------
@@ -1703,13 +1710,13 @@ def reload_puavopkg_program(language, root_dir, puavopkg_data, icon_cache, progr
 
     pkg_id = program.puavopkg['id']
 
-    if pkg_id not in puavopkg_data:
-        logging.error('reload_puavopkg_program(): program "%s" not in puavopkg_data, '
+    if pkg_id not in puavopkg_states:
+        logging.error('reload_puavopkg_program(): program "%s" is part of the desktop image, '
                       'doing nothing', pkg_id)
         return None
 
     old_state = program.puavopkg['state']
-    new_state = PuavoPkgState.INSTALLED if puavopkg_data[pkg_id] else PuavoPkgState.NOT_INSTALLED
+    new_state = PuavoPkgState.INSTALLED if puavopkg_states[pkg_id] else PuavoPkgState.NOT_INSTALLED
 
     logging.info('reload_puavopkg_program(): puavo-pkg program "%s":', pkg_id)
     logging.info('  old state: %s', old_state)
@@ -1731,7 +1738,6 @@ def reload_puavopkg_program(language, root_dir, puavopkg_data, icon_cache, progr
 
         new_prog = puavopkg_program_removed(language,
                                             root_dir,
-                                            puavopkg_data,
                                             icon_cache,
                                             program)
     else:
@@ -1740,7 +1746,6 @@ def reload_puavopkg_program(language, root_dir, puavopkg_data, icon_cache, progr
 
         new_prog = puavopkg_program_installed(language,
                                               root_dir,
-                                              puavopkg_data,
                                               icon_cache,
                                               program)
 

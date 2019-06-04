@@ -231,7 +231,7 @@ class Menudata:
              language,
              menudata_root_dir,
              tag_filter_string,
-             puavopkg_data,
+             puavopkg_states,
              icon_cache):
 
         """A high-level interface to everything in loader.py. Loads all the
@@ -248,20 +248,20 @@ class Menudata:
             loader.load_menu_data(language,
                                   menudata_root_dir,
                                   tag_filter_string,
-                                  puavopkg_data,
+                                  puavopkg_states,
                                   icon_cache)
 
     def reload_puavopkg_program(self,
                                 language,
                                 menudata_root_dir,
-                                puavopkg_data,
+                                puavopkg_states,
                                 icon_cache,
                                 program):
 
         import loader
 
         return loader.reload_puavopkg_program(
-            language, menudata_root_dir, puavopkg_data, icon_cache, program)
+            language, menudata_root_dir, puavopkg_states, icon_cache, program)
 
     def replace_program(self, program, new_program):
         # I'm regretting my decision to store actual program objects (instead

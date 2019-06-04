@@ -723,11 +723,13 @@ class PuavoMenu(Gtk.Window):
         """Loads menu data and sets up the UI. Returns false if
         something fails."""
 
-        allowed_puavopkg = utils.puavo_conf('puavo.pkgs.ui.pkglist', '')
+        # puavo-pkg programs that are NOT part of the desktop image
+        # and can be installed/uninstalled dynamically
+        dynamic_puavopkg_ids = utils.puavo_conf('puavo.pkgs.ui.pkglist', '')
 
         try:
-            puavopkg_data = puavopkg.detect_package_states(
-                self.__settings.puavopkg_root_dir, allowed_puavopkg)
+            puavopkg_states = puavopkg.detect_dynamic_package_states(
+                self.__settings.puavopkg_root_dir, dynamic_puavopkg_ids)
 
             self.menudata = menudata.Menudata()
 
@@ -735,7 +737,7 @@ class PuavoMenu(Gtk.Window):
                 language=self.__settings.language,
                 menudata_root_dir=self.__settings.menu_dir,
                 tag_filter_string=utils.puavo_conf('puavo.puavomenu.tags', 'default'),
-                puavopkg_data=puavopkg_data,
+                puavopkg_states=puavopkg_states,
                 icon_cache=self.__icons)
 
         except Exception as exception:
@@ -1007,17 +1009,19 @@ class PuavoMenu(Gtk.Window):
         # Update its information
         print('Updating program "%s"' % (target_id))
 
-        allowed_puavopkg = utils.puavo_conf('puavo.pkgs.ui.pkglist', '')
+        # puavo-pkg programs that are NOT part of the desktop image
+        # and can be installed/uninstalled dynamically
+        dynamic_puavopkg_ids = utils.puavo_conf('puavo.pkgs.ui.pkglist', '')
 
         try:
-            puavopkg_data = puavopkg.detect_package_states(
-                self.__settings.puavopkg_root_dir, allowed_puavopkg)
+            puavopkg_states = puavopkg.detect_dynamic_package_states(
+                self.__settings.puavopkg_root_dir, dynamic_puavopkg_ids)
 
             # Reload a *single* program
             new_program = self.menudata.reload_puavopkg_program(
                 language=self.__settings.language,
                 menudata_root_dir=self.__settings.menu_dir,
-                puavopkg_data=puavopkg_data,
+                puavopkg_states=puavopkg_states,
                 icon_cache=self.__icons,
                 program=target_program)
 
