@@ -8,8 +8,13 @@ programs:
             - pdf
         name: Acrobat Reader
         tags: default
+        puavopkg:
+            id: adobe-reader
   - airtame:
+        name: Airtame
         tags: default, audiovideo
+        puavopkg:
+            id: airtame
   - amme:
         type: web
         name: Amme
@@ -23,10 +28,16 @@ programs:
             fi: Anki-muistikortit
         tags: default, education
   - appinventor:
+        name: AppInventor USB
         tags: default
+        puavopkg:
+            id: appinventor
   - arduino:
+        name: Arduino IDE
         icon: /opt/arduino-ide/lib/icons/96x96/apps/arduino.png
         tags: default
+        puavopkg:
+            id: arduino-ide
   - audacity:
         name:
             en: Audacity-audio editor
@@ -58,7 +69,10 @@ programs:
             de: Bluefish HTML-editor
         tags: default
   - bluegriffon:
+        name: Bluegriffon
         tags: default
+        puavopkg:
+            id: bluegriffon
   - brasero:
         name:
             en: Brasero - CD/DVD -writer
@@ -94,8 +108,13 @@ programs:
           sv: CmapTools-mindmap
           de: CmapTools-Mindmap
         tags: default
+        puavopkg:
+            id: cmaptools
   - cura-appimage:
+        name: Cura
         tags: default
+        puavopkg:
+            id: cura-appimage
 
   #D
   - db_koulu1:
@@ -111,7 +130,10 @@ programs:
   - dia:
         tags: default
   - dropbox:
+        name: Dropbox
         tags: default
+        puavopkg:
+            id: dropbox
   - drracket:
         tags: default
 
@@ -125,10 +147,16 @@ programs:
         icon: /usr/share/icons/Faenza/mimetypes/96/text-html.png
         tags: default
   - ekapeli:
+        name: Ekapeli
         condition: "!personally_administered"
         tags: default, education
+        puavopkg:
+            id: ekapeli
   - ekapeli-alku:
+        name: Ekapeli Alku
         tags: default, education
+        puavopkg:
+            id: ekapeli-alku
   - ekapeli-maahanmuuttaja:
         tags: default, education
         condition: "!personally_administered"
@@ -147,7 +175,10 @@ programs:
             de: Empathy-Chat-Client
         tags: default
   - enchanting:
+        name: Enchanting
         tags: default
+        puavopkg:
+            id: enchanting
   - eog:
         icon: /usr/share/icons/Faenza/apps/scalable/eog.svg
         tags: default
@@ -184,7 +215,10 @@ programs:
             de: Firefox
         tags: default
   - FlashPrint:
+        name: FlashForge 3D
         tags: default
+        puavopkg:
+            id: flashforge-flashprint
   - fmit:
         name:
             en: Fmit-instrument tuner
@@ -222,8 +256,13 @@ programs:
         keywords: digabi
         name: Geogebra 5
         tags: default, education
+        puavopkg:
+            id: geogebra
   - geogebra6:
+        name: Geogebra 6
         tags: default, education
+        puavopkg:
+            id: geogebra6
   - gftp:
         icon: /usr/share/icons/gnome/48x48/places/gnome-fs-ftp.png
         tags: default, network
@@ -236,7 +275,10 @@ programs:
         keywords: photoshop, digabi
         tags: default, graphics
   - GlobiLab:
+        name: GlobiLab
         tags: default
+        puavopkg:
+            id: globilab
   - gnome-calculator:
         tags: default
   - gnome-klotski:
@@ -259,9 +301,14 @@ programs:
             sv: Chrome
             de: Chrome
         tags: default, network
+        puavopkg:
+            id: google-chrome
   - google-earth:
+        name: Google Earth
         icon: /usr/share/icons/Faenza/apps/48/googleearth.png
         tags: default
+        puavopkg:
+            id: google-earth
   - gthumb:
         icon: /usr/share/icons/hicolor/scalable/apps/gthumb.svg
         name:
@@ -320,6 +367,8 @@ programs:
         command: /opt/av4kav/lib/av4.sh
         icon: /usr/share/icons/Faenza/devices/96/camera-web.png
         tags: default, video, science
+        puavopkg:
+            id: av4kav
   - kino:
         type: custom
         name:
@@ -336,9 +385,15 @@ programs:
         icon: kino
         tags: default, audiovideo
   - kojo:
+        name: Kojo
         tags: default
+        puavopkg:
+            id: kojo
   - Nightcode:
+        name: Nightcode
         tags: default
+        puavopkg:
+            id: nightcode
 
   #L
   - libreoffice-base:
@@ -390,13 +445,19 @@ programs:
             de: LMMS - Software zur Musik-Produktion
         tags: default, audio
   - LoggerPro:
+        name: LoggerPro
         tags: default
+        puavopkg:
+            id: vstloggerpto
   - luola:
         tags: default, game
 
   #M
   - mafynetti:
+        name: Mafynetti
         tags: default, education
+        puavopkg:
+            id: mafynetti
   - mandelbulber:
         tags: default, education, science
   - marble-qt:
@@ -407,7 +468,10 @@ programs:
             de: Marble virtueller Globus
         tags: default, science, education
   - MarvinSketch:
+        name: MarvinSketch
         tags: default
+        puavopkg:
+            id: marvinsketch
   - MarvinView:
         tags: default
   - mimio-notebook:
@@ -433,7 +497,10 @@ programs:
   - nextcloud:
         tags: default
   - novo-launcher:
+        name: LauncherOne
         tags: default
+        puavopkg:
+            id: launcherone
 
   #O
   - okular:
@@ -454,7 +521,10 @@ programs:
             de: OpenBoard
         tags: default, education
   - openscad-nightly:
+        name: OpenSCAD
         tags: default
+        puavopkg:
+            id: openscad-nightly
   - openshot:
         tags: default
   - openttd:
@@ -621,12 +691,18 @@ programs:
         condition: "!personally_administered"
         tags: default
   - processing:
+        name: Processing
         tags: default
+        puavopkg:
+            id: processing
   - puavo-user-registration:
         condition: user_registration
         tags: user_registration
   - pycharm:
+        name: PyCharm
         tags: default
+        puavopkg:
+            id: pycharm
   - python-club:
         type: web
         name:
@@ -652,7 +728,10 @@ programs:
 
   #R
   - robboscratch2:
+        name: RobboScratch
         tags: default
+        puavopkg:
+            id: robboscratch2
   - rosegarden:
         name:
             en: Rosegarden-sequencer
@@ -734,10 +813,16 @@ programs:
         icon: /usr/share/icons/Faenza/apps/96/glade.png
         tags: default, graphics
   - skype:
+        name: Skype
         icon: /usr/share/icons/Faenza/apps/48/skype.png
         tags: default, network
+        puavopkg:
+            id: skype
   - smarttech-notebook:
+        name: Notebook-ohjelmisto
         tags: default
+        puavopkg:
+            id: smartboard
   - sol:
         tags: default
   - solfege:
@@ -763,7 +848,10 @@ programs:
         condition: "!personally_administered"
         tags: default
   - spotify:
+        name: Spotify
         tags: default
+        puavopkg:
+            id: spotify-client
   - steam:
         tags: steam
   - stellarium:
@@ -792,7 +880,10 @@ programs:
 
   #T
   - t-lasku:
+        name: T-Lasku
         tags: default
+        puavopkg:
+            id: t-lasku
   - teddybear:
         name:
             en: Teddy Bear programming
@@ -800,6 +891,8 @@ programs:
             sv: Teddybjörn programmering
             de: Teddy-Programmierung
         tags: default, education, development
+        puavopkg:
+            id: teddybear
   - tellico:
         keywords: tellico
         name:
@@ -817,9 +910,15 @@ programs:
             de: Thunderbird-Email
         tags: default, network
   - ti_nspire_cx_cas_ss:
+        name: TI-Nspire CX Cas
         tags: default
+        puavopkg:
+            id: ti-nspire-cx-cas-ss
   - tilitin:
+        name: Tilitin
         tags: default
+        puavopkg:
+            id: tilitin
   - tuxguitar:
         name:
             en: TuxGuitar-multitrack tablature editor
@@ -857,7 +956,10 @@ programs:
 
   #V
   - VidyoDesktop:
+        name: VidyoDesktop
         tags: default
+        puavopkg:
+            id: vidyo-client
   - vinagre:
         tags: default
   - viope:
