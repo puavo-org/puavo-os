@@ -1012,9 +1012,6 @@ class PuavoMenu(Gtk.Window):
                           pkg_id)
             return
 
-        # Update its information
-        print('Updating program "%s"' % (target_id))
-
         # puavo-pkg programs that are NOT part of the desktop image
         # and can be installed/uninstalled dynamically
         dynamic_puavopkg_ids = utils.puavo_conf('puavo.pkgs.ui.pkglist', '')
