@@ -30,6 +30,7 @@ installdirs :
 install : installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-client-daemon \
+		puavo-disk-clone \
 		puavo-install \
 		puavo-install-and-update-ltspimages \
 		puavo-install-grub \

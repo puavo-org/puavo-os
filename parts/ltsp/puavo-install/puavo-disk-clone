@@ -1,0 +1,66 @@
+#!/bin/sh
+
+set -eu
+
+image_dir=/home/partimag
+
+ask_disk() {
+  disks=$(awk '$4 ~ /^sd/ && $4 !~ /[0-9]+$/ { print $4 }' /proc/partitions)
+  [ -n "$disks" ] || return 1
+  printf %s "$disks" | fzf -1 --height=1 --layout=reverse-list
+}
+
+ask_restore_image() {
+  available_images=$(
+    find "$image_dir" -mindepth 1 -maxdepth 1 -type d ! -name '.*' -print0 \
+      | xargs -0 --no-run-if-empty -n 1 basename)
+  [ -n "$available_images" ] || return 1
+  printf %s "$available_images" | fzf -1 --height=1 --layout=reverse-list
+}
+
+bootserver_address=$(cat /run/puavo/nbd-server 2>/dev/null) || true
+
+if [ -z "$bootserver_address" ]; then
+  echo 'Not running on netboot device, exiting...' >&2
+  exit 1
+fi
+
+mkdir -p "$image_dir"
+if ! mountpoint -q "$image_dir"; then
+  sshfs "clonezilla.images@${bootserver_address}:" /home/partimag
+fi
+
+mode=${1:-}
+
+case "$mode" in
+  restoredisk)
+    if ! restore_image=$(ask_restore_image); then
+      echo 'No images to restore from' >&2
+      exit 1
+    fi
+    echo 'Choose a target disk for restore:'
+    if ! target_disk=$(ask_disk); then
+      echo 'No disk to restore to' >&2
+      exit 1
+    fi
+    ocs-sr -g auto -e1 auto -e2 -r -j2 -scr -p true \
+           restoredisk "$restore_image" "$target_disk"
+    ;;
+  savedisk)
+    product_name=$(dmidecode -s system-product-name | tr ' /.' ___)
+    image_name="${product_name}-$(date -u +%Y-%m-%d-%H%M%S)"
+
+    echo 'Choose a source disk to save image from:'
+    if ! source_disk=$(ask_disk); then
+      echo 'No disk to save' >&2
+      exit 1
+    fi
+
+    ocs-sr -q2 -j2 -z1p -i 4096 -fsck-src-part -scs -p true \
+           savedisk "$image_name" "$source_disk"
+    ;;
+  *)
+    echo "Unknown mode '${mode}'" >&2
+    exit 1
+    ;;
+esac

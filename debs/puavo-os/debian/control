@@ -340,8 +340,11 @@ Description: Bits and pieces needed inside the LTSP chroot image.
 Package: puavo-ltsp-install
 Architecture: all
 Depends: ${misc:Depends},
+ clonezilla,
  curl,
+ dmidecode,
  expect-dev,
+ fzf,
  jq,
  m4,
  mdadm,
