@@ -44,7 +44,7 @@ case "$mode" in
       exit 1
     fi
     echo "Chosen << ${target_disk} >>"
-    ocs-sr -g auto -e1 auto -e2 -r -j2 -scr -k1 -p true \
+    ocs-sr -g auto -e1 auto -c -e2 -r -j2 -scr -k1 -p true \
            restoredisk "$restore_image" "$target_disk"
     ;;
   savedisk)
