@@ -43,17 +43,27 @@ case "$mode" in
       echo 'No disk to restore to' >&2
       exit 1
     fi
+    echo "Chosen << ${target_disk} >>"
     ocs-sr -g auto -e1 auto -e2 -r -j2 -scr -k1 -p true \
            restoredisk "$restore_image" "$target_disk"
     ;;
   savedisk)
     product_name=$(dmidecode -s system-product-name | tr ' /.' ___)
-    image_name="${product_name}-$(date -u +%Y-%m-%d-%H%M%S)"
 
     echo 'Choose a source disk to save image from:'
     if ! source_disk=$(ask_disk); then
       echo 'No disk to save' >&2
       exit 1
+    fi
+    echo "Chosen << ${source_disk} >>"
+
+    if ! disk_size="$(facter "blockdevice_${source_disk}_size")"; then
+      disk_size="0"
+    fi
+    if [ "$disk_size" -gt 0 ]; then
+      image_name="${product_name}_${disk_size}-$(date -u +%Y-%m-%d-%H%M%S)"
+    else
+      image_name="${product_name}-$(date -u +%Y-%m-%d-%H%M%S)"
     fi
 
     ocs-sr -q2 -j2 -z1p -i 4096 -fsck-src-part -scs -p true \
