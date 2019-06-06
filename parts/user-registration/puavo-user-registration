@@ -901,14 +901,16 @@ class NetworkThread(threading.Thread):
 
         response = None
 
-        # XXX ip address should change to something stable/configurable
-        conn = http.client.HTTPConnection('10.246.133.169', 9491, timeout=10)
-
         headers = {
             'Content-type': 'application/json',
         }
 
+        conn = None
+
         try:
+            server_addr = open('/etc/puavo/domain', 'rb').read().decode('utf-8').rstrip()
+
+            conn = http.client.HTTPSConnection(server_addr, timeout=10)
             conn.request('POST',
                          '/register_user',
                          body=bytes(self.json, 'utf-8'),
@@ -932,7 +934,8 @@ class NetworkThread(threading.Thread):
             self.response['error'] = e
             self.response['failed'] = True
         finally:
-            conn.close()
+            if conn:
+                conn.close()
 
         self.event.set()
         print('Network thread exiting')
