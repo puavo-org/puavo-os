@@ -36,6 +36,20 @@ def _tr(msg):
     return msg
 
 
+def error_message(parent, message, secondary_message):
+    dialog = Gtk.MessageDialog(parent=parent,
+                               flags=Gtk.DialogFlags.MODAL,
+                               type=Gtk.MessageType.ERROR,
+                               buttons=Gtk.ButtonsType.OK,
+                               message_format=message)
+
+    if secondary_message:
+        dialog.format_secondary_markup(secondary_message)
+
+    dialog.run()
+    dialog.hide()
+
+
 def send_puavomenu_command(socket_file, args):
     if os.path.exists(socket_file):
         # This instance is running, send the command
