@@ -19,6 +19,23 @@ require 'dbus'
 
 require 'puavo/conf'
 
+Puavoconf_hooks_dir = '/etc/puavo-conf/hooks'
+
+def run_hook(puavoconf_key)
+  # XXX no error handling, no logging, is this okay... ?
+  # XXX maybe (for now) log this event and take stdout/stderr and
+  # XXX put that to syslog?
+  # XXX and if an error occurred mark that somehow?
+
+  hook_path = "#{ Puavoconf_hooks_dir }/#{ puavoconf_key }"
+  return unless File.executable?(hook_path)
+
+  pid = spawn(hook_path, :in  => '/dev/null',
+                         :out => '/dev/null',
+                         :err => '/dev/null')
+  Process.detach(pid)
+end
+
 class Conf1 < DBus::Object
 
   def initialize(object_path, puavoconf)
@@ -30,6 +47,7 @@ class Conf1 < DBus::Object
 
     dbus_method :Add, 'in key:s, in value:s' do |key, value|
       @puavoconf.add(key, value)
+      run_hook(key)
     end
 
     dbus_method :Clear, '' do
@@ -50,11 +68,19 @@ class Conf1 < DBus::Object
     end
 
     dbus_method :Overwrite, 'in key:s, in value:s' do |key, value|
+      old_value = @puavoconf.get(key) rescue false
       @puavoconf.overwrite(key, value)
+      if old_value && old_value != value then
+        run_hook(key)
+      end
     end
 
     dbus_method :Set, 'in key:s, in value:s' do |key, value|
+      old_value = @puavoconf.get(key) rescue false
       @puavoconf.set(key, value)
+      if old_value && old_value != value then
+        run_hook(key)
+      end
     end
 
   end
