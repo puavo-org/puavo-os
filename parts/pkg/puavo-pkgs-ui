@@ -350,9 +350,12 @@ for pkg in pkg_list:
         previous_pkg = pkg
 
 if not previous_pkg:
-    dialog = Gtk.MessageDialog(win, 0, Gtk.MessageType.ERROR,
-       Gtk.ButtonsType.CANCEL, _tr('ERROR: no packages to install'))
-    dialog.run()
+    error_message(win,
+        _tr("No packages"),
+        _tr('No packages have been listed for installation or removal.\n\n' \
+            'Please check the contents of the <tt>puavo.pkgs.ui.pkglist</tt> ' \
+            'puavo-conf setting.'))
+
     sys.exit(1)
 
 win.show_all()
