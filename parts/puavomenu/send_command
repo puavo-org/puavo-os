@@ -13,7 +13,7 @@ socket=$1
 cmd=$2
 shift
 
-echo "$@" | nc -U -u -w 0 "${socket}"
+echo "$@" | nc -U -u -w 5 "${socket}"
 
 if [ $cmd = "show" -o $cmd = "toggle" ]; then
     window=$(xdotool search --name PuavoMenuUniqueName) || return 1
