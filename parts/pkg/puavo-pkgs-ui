@@ -211,44 +211,61 @@ class PuavoPkg:
         return True
 
 
-    def add_to_grid(self, grid, previous_pkg):
+    def add_to_grid(self, list_win, previous_pkg):
         # package may not be available, so skip those packages
         try:
             self.lookup_pkg_fields()
         except:
             return False
 
-        self.label = Gtk.Label(label=self.legend)
-        self.label.set_property('tooltip-text', self.description)
-        if not previous_pkg:
-             grid.add(self.label)
-        else:
-             grid.attach_next_to(self.label, previous_pkg.label,
-               Gtk.PositionType.BOTTOM, 1, 1)
+        # Row 1
+        box_upper = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
+        box_upper.set_margin_top(5)
+        box_upper.set_margin_bottom(5)
 
-        license_link = Gtk.Label()
-        license_text \
-          = '<a href="%s">%s</a>' % (self.license, _tr('license terms'))
-        license_link.set_markup(license_text)
-        grid.attach_next_to(license_link, self.label, Gtk.PositionType.RIGHT,
-            1, 1)
+        self.package_name = Gtk.Label()
+        self.package_name.set_markup('<b><big>' + self.legend + '</big></b>')
+        self.package_name.set_margin_left(5)
+        box_upper.pack_start(self.package_name, False, False, 0)
 
-        self.action_button = Gtk.Button()
-        grid.attach_next_to(self.action_button, license_link,
-                            Gtk.PositionType.RIGHT, 1, 1)
-
-        self.spinner = Gtk.Spinner()
-        grid.attach_next_to(self.spinner, self.action_button,
-                            Gtk.PositionType.RIGHT, 1, 1)
-
-        self.state_msg = Gtk.Label()
-        grid.attach_next_to(self.state_msg, self.spinner,
-                            Gtk.PositionType.RIGHT, 1, 1)
+        # Note the reverse order of elements, we're using pack_end()
+        self.action_button = Gtk.Button("Install")
+        box_upper.pack_end(self.action_button, False, False, 0)
 
         self.toggle_log_button = Gtk.ToggleButton(label='show log')
         self.toggle_log_button.connect('clicked', self.show_or_hide_log)
-        grid.attach_next_to(self.toggle_log_button, self.state_msg,
-                            Gtk.PositionType.RIGHT, 1, 1)
+        box_upper.pack_end(self.toggle_log_button, False, False, 0)
+
+        self.spinner = Gtk.Spinner()
+        box_upper.pack_end(self.spinner, False, False, 0)
+
+        self.license_link = Gtk.Label()
+        self.license_link.set_markup('<a href="%s">%s</a>' % (self.license, _tr('Show license')))
+        box_upper.pack_end(self.license_link, False, False, 0)
+
+        self.state_msg = Gtk.Label("State")
+        box_upper.pack_end(self.state_msg, False, False, 0)
+
+        # Row 2
+        box_lower = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        box_lower.set_margin_bottom(25)
+
+        self.package_description = Gtk.Label(self.description)
+        self.package_description.set_line_wrap(True)
+        self.package_description.set_alignment(0.0, 0.0)
+        self.package_description.set_margin_left(25)
+        self.package_description.set_margin_right(25)
+
+        box_lower.pack_start(self.package_description, False, False, 0)
+
+        # Item wrapper
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        vbox.pack_start(box_upper, True, True, 0)
+        vbox.pack_start(box_lower, True, True, 0)
+
+        row_container = Gtk.ListBoxRow()
+        row_container.add(vbox)
+        list_win.add(row_container)
 
         installed_link = os.path.join('/var/lib/puavo-pkg/installed',
                                       self.pkgname)
@@ -337,16 +354,16 @@ button = Gtk.Button(label=_tr('ACCEPT ALL LICENSES AND INSTALL ALL SOFTWARE'))
 button.connect('clicked', lambda w: install_all_packages(w, pkg_list))
 box_outer.pack_start(button, False, False, 0)
 
-grid = Gtk.Grid()
-grid.set_column_spacing(10)
-grid.set_row_spacing(5)
+list_win = Gtk.ListBox()
+
 scrolled_win = Gtk.ScrolledWindow()
-scrolled_win.add(grid)
+scrolled_win.add(list_win)
 box_outer.pack_start(scrolled_win, True, True, 0)
 
 previous_pkg = None
+
 for pkg in pkg_list:
-    if pkg.add_to_grid(grid, previous_pkg):
+    if pkg.add_to_grid(list_win, previous_pkg):
         previous_pkg = pkg
 
 if not previous_pkg:
