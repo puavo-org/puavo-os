@@ -28,7 +28,8 @@ Build-Depends: bundler | ruby-bundler,
  ruby,
  ruby-dev,
  ruby-eventmachine,
- ruby-minitest
+ ruby-minitest,
+ uthash-dev
 Standards-Version: 3.9.6
 Homepage: http://github.com/puavo-org/puavo-os/
 
@@ -126,7 +127,8 @@ Depends: ${misc:Depends},
  pciutils,
  ruby-ffi,
  ruby,
- usbutils
+ usbutils,
+ uthash-dev
 Description: Puavo configuration
  Puavo Conf is the configuration system of Puavo OS. It consists of a
  parameter database, a C library (`libpuavoconf`) and a set of
