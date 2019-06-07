@@ -6,6 +6,7 @@ import os
 import signal
 import subprocess
 import sys
+import html
 
 from enum import Enum
 
@@ -228,53 +229,58 @@ class PuavoPkg:
         except:
             return False
 
-        # Row 1
-        box_upper = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
-        set_widget_style(box_upper, 'box_upper', style_provider)
+        # Header row
+        header_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
+        set_widget_style(header_row, 'header_row', style_provider)
 
         self.package_name = Gtk.Label()
         self.package_name.set_text(self.legend)
         set_widget_style(self.package_name, 'package_name', style_provider)
-        box_upper.pack_start(self.package_name, False, False, 0)
-
-        # Note the reverse order of elements, we're using pack_end()
-        self.action_button = Gtk.Button("Install")
-        set_widget_style(self.action_button, 'action_button', style_provider)
-        box_upper.pack_end(self.action_button, False, False, 0)
-
-        self.toggle_log_button = Gtk.ToggleButton(label='show log')
-        set_widget_style(self.toggle_log_button, 'log_button', style_provider)
-        self.toggle_log_button.connect('clicked', self.show_or_hide_log)
-        box_upper.pack_end(self.toggle_log_button, False, False, 0)
-
-        self.spinner = Gtk.Spinner()
-        set_widget_style(self.spinner, 'action_spinner', style_provider)
-        box_upper.pack_end(self.spinner, False, False, 0)
-
-        self.license_link = Gtk.Label()
-        set_widget_style(self.license_link, 'license_link', style_provider)
-        self.license_link.set_markup('<a href="%s">%s</a>' % (self.license, _tr('Show license')))
-        box_upper.pack_end(self.license_link, False, False, 0)
+        header_row.pack_start(self.package_name, False, False, 0)
 
         self.state_msg = Gtk.Label("State")
-        set_widget_style(self.state_msg, 'state_message', style_provider)
-        box_upper.pack_end(self.state_msg, False, False, 0)
+        set_widget_style(self.state_msg, 'package_state', style_provider)
+        header_row.pack_end(self.state_msg, False, False, 0)
 
-        # Row 2
-        box_lower = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-        set_widget_style(box_lower, 'box_lower', style_provider)
+        # Package description and control buttons
+        details_row = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        set_widget_style(details_row, 'details_row', style_provider)
 
-        self.package_description = Gtk.Label(self.description)
+        desc_text = html.escape(self.description)
+        desc_text += '\n\n<a href="%s">%s</a>' % (self.license, _tr('Show License'))
+
+        #self.package_description = Gtk.Label(self.description)
+        self.package_description = Gtk.Label()
+        self.package_description.set_markup(desc_text)
         self.package_description.set_line_wrap(True)
         self.package_description.set_alignment(0.0, 0.0)
         set_widget_style(self.package_description, 'package_description', style_provider)
 
-        box_lower.pack_start(self.package_description, False, False, 0)
+        # Buttons container
+        buttons_container = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        set_widget_style(buttons_container, 'buttons_container', style_provider)
+
+        self.action_button = Gtk.Button("Install")
+        set_widget_style(self.action_button, 'action_button', style_provider)
+
+        self.spinner = Gtk.Spinner()
+        set_widget_style(self.spinner, 'action_spinner', style_provider)
+
+        self.toggle_log_button = Gtk.ToggleButton(label='Show install/remove log')
+        set_widget_style(self.toggle_log_button, 'log_button', style_provider)
+        self.toggle_log_button.connect('clicked', self.show_or_hide_log)
+
+        buttons_container.pack_start(self.action_button, False, False, 0)
+        buttons_container.pack_start(self.spinner, False, False, 0)
+        buttons_container.pack_start(self.toggle_log_button, False, False, 0)
+
+        details_row.pack_start(self.package_description, False, False, 0)
+        details_row.pack_start(buttons_container, False, False, 0)
 
         # Row wrappers/containers
         vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        vbox.pack_start(box_upper, True, True, 0)
-        vbox.pack_start(box_lower, True, True, 0)
+        vbox.pack_start(header_row, True, True, 0)
+        vbox.pack_start(details_row, True, True, 0)
         set_widget_style(vbox, 'package_vbox', style_provider)
 
         row_container = Gtk.ListBoxRow()
@@ -412,22 +418,40 @@ style_provider.load_from_data(b"""
 }
 
 .package_vbox {
-    padding: 0px 0px 25px 0px;
+    /* Space between list entries */
+    padding-bottom: 10px;
 
+    /* Don't let the scrollbar cover any texts or buttons */
+    padding-right: 20px;
 }
 
-.box_upper {
+.header_row {
     background: #ddd;
     border-radius: 5px;
-    padding: 5px 25px 5px 10px;
+    padding: 5px 10px;
 }
 
-.box_lower {
+.details_row {
+    padding: 0 20px;
+}
+
+.buttons_container {
+    padding-top: 5px;
 }
 
 .package_name {
     font-weight: bold;
     font-size: 110%;
+}
+
+.package_state {
+}
+
+.package_description {
+    padding-top: 10px;
+}
+
+.license_link {
 }
 
 .action_button {
@@ -437,18 +461,6 @@ style_provider.load_from_data(b"""
 }
 
 .action_spinner {
-}
-
-.license_link {
-}
-
-.state_message {
-}
-
-.package_description {
-    padding-top: 10px;
-    padding-left: 20px;
-    padding-right: 20px;
 }
 
 """)
