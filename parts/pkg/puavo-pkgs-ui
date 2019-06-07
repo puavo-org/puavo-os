@@ -28,7 +28,7 @@ class PkgState(Enum):
 def _state_msg(msg, color=None):
     text = '<b>' + msg + '</b>'
     if color:
-        text = '<span background="%s">%s</span>' % (color, text)
+        text = '<span background="%s" foreground="black">%s</span>' % (color, text)
     return text
 
 
@@ -347,12 +347,14 @@ for pkgname in puavoconf_get('puavo.pkgs.ui.pkglist').split():
 win = Gtk.Window()
 win.connect('destroy', Gtk.main_quit)
 win.set_border_width(10)
-win.set_default_geometry(780, 700)
+win.set_size_request(1000, 600)
+win.set_position(Gtk.WindowPosition.CENTER)
+win.set_title(_tr('Package Installer'))
 
 box_outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
 win.add(box_outer)
 
-button = Gtk.Button(label=_tr('ACCEPT ALL LICENSES AND INSTALL ALL SOFTWARE'))
+button = Gtk.Button(label=_tr('Accept all licenses and install everything'))
 button.connect('clicked', lambda w: install_all_packages(w, pkg_list))
 box_outer.pack_start(button, False, False, 0)
 
