@@ -466,6 +466,7 @@ button.connect('clicked', lambda w: confirm_install_all_packages(win, pkg_list))
 box_outer.pack_start(button, False, False, 0)
 
 list_win = Gtk.ListBox()
+list_win.set_selection_mode(Gtk.SelectionMode.NONE)
 
 scrolled_win = Gtk.ScrolledWindow()
 scrolled_win.add(list_win)
