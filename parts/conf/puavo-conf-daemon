@@ -36,28 +36,28 @@ def run_hook(puavoconf_key)
     return
   end
 
-  hook_file = File.open(hook_path, 'r')
-  lock_countdown = 30
-  until hook_file.flock(File::LOCK_NB|File::LOCK_EX) do
-    sleep(1)
-    lock_countdown -= 1
-    if lock_countdown == 0 then
-      hook_file.close
-      return
+  begin
+    File.open(hook_path, 'r') do |hook_file|
+      lock_countdown = 30
+      until hook_file.flock(File::LOCK_NB|File::LOCK_EX) do
+        sleep(1)
+        lock_countdown -= 1
+        if lock_countdown == 0 then
+          raise "could not get a lock to #{ hook_path }"
+        end
+      end
+
+      # pass hook_file to exec so that executing scripts
+      # hold the relevant flock
+      exec(hook_path, :in  => '/dev/null',
+                      :out => '/dev/null',
+                      :err => '/dev/null',
+                      3    => hook_file)
     end
+  rescue StandardError => e
+    warn "error in executing '#{ hook_path }': #{ e.message }"
+    exit(1)
   end
-
-  # XXX this fork would not be necessary if exec would inherit the
-  # XXX lock...
-  pid = fork
-  if pid then
-    status = Process.waitpid(pid)
-    exit(0)
-  end
-
-  exec(hook_path, :in  => '/dev/null',
-                  :out => '/dev/null',
-                  :err => '/dev/null')
 end
 
 class Conf1 < DBus::Object
