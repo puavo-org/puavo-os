@@ -30,10 +30,34 @@ def run_hook(puavoconf_key)
   hook_path = "#{ Puavoconf_hooks_dir }/#{ puavoconf_key }"
   return unless File.executable?(hook_path)
 
-  pid = spawn(hook_path, :in  => '/dev/null',
-                         :out => '/dev/null',
-                         :err => '/dev/null')
-  Process.detach(pid)
+  pid = fork
+  if pid then
+    Process.detach(pid)
+    return
+  end
+
+  hook_file = File.open(hook_path, 'r')
+  lock_countdown = 30
+  until hook_file.flock(File::LOCK_NB|File::LOCK_EX) do
+    sleep(1)
+    lock_countdown -= 1
+    if lock_countdown == 0 then
+      hook_file.close
+      return
+    end
+  end
+
+  # XXX this fork would not be necessary if exec would inherit the
+  # XXX lock...
+  pid = fork
+  if pid then
+    status = Process.waitpid(pid)
+    exit(0)
+  end
+
+  exec(hook_path, :in  => '/dev/null',
+                  :out => '/dev/null',
+                  :err => '/dev/null')
 end
 
 class Conf1 < DBus::Object
