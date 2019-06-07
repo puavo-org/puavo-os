@@ -86,6 +86,8 @@ class PuavoPkg:
         self.legend      = self.field('legend')
         self.license     = self.license()
 
+        self.description = self.description.replace('\n', ' ')
+
 
     def set_puavoconf(self, value):
         puavo_conf_key = 'puavo.pkg.%s' % self.pkgname
