@@ -340,6 +340,37 @@ def puavoconf_get(puavoconf_key):
                      .decode('utf-8')
 
 
+def confirm_install_all_packages(parent, pkg_list):
+    dialog = Gtk.MessageDialog(parent=parent,
+                               flags=Gtk.DialogFlags.MODAL,
+                               type=Gtk.MessageType.QUESTION,
+                               buttons=Gtk.ButtonsType.YES_NO,
+                               message_format=_tr('Install everything?'))
+
+    secondary_message = """
+Installing all programs at once will consume large amounts of network bandwidth,
+as the total amount of downloaded data can easily climb to several hundred
+megabytes. The installation process can significantly slow down your computer.
+
+If your internet connection is not fast, or you have important work to do right
+now, it is recommended that you install programs one-by-one to avoid errors and
+interruptions.
+
+Also, if you continue, it is assumed that you accept all the licenses in all
+programs.
+
+Do you want to continue?
+"""
+
+    dialog.format_secondary_markup(secondary_message)
+
+    ret = dialog.run()
+    dialog.hide()
+
+    if ret == Gtk.ResponseType.YES:
+        install_all_packages(parent, pkg_list)
+
+
 pkg_list = []
 for pkgname in puavoconf_get('puavo.pkgs.ui.pkglist').split():
     pkg_list.append( PuavoPkg(pkgname) )
@@ -355,7 +386,7 @@ box_outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
 win.add(box_outer)
 
 button = Gtk.Button(label=_tr('Accept all licenses and install everything'))
-button.connect('clicked', lambda w: install_all_packages(w, pkg_list))
+button.connect('clicked', lambda w: confirm_install_all_packages(win, pkg_list))
 box_outer.pack_start(button, False, False, 0)
 
 list_win = Gtk.ListBox()
