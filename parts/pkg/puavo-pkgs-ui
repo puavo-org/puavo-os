@@ -27,11 +27,25 @@ class PkgState(Enum):
     REMOVING        = 8
 
 
-def _state_msg(msg, color=None):
-    text = '<b>' + msg + '</b>'
-    if color:
-        text = '<span background="%s" foreground="black">%s</span>' % (color, text)
-    return text
+def set_state_message(widget, msg, current_state_class):
+    # All possible CSS class names a status message can have
+    state_classes = (
+        'state-not-installed',
+        'state-installing',
+        'state-installed',
+        'state-removing',
+        'state-error'
+    )
+
+    ctx = widget.get_style_context()
+
+    for sc in state_classes:
+        if ctx.has_class(sc):
+            ctx.remove_class(sc)
+
+    ctx.add_class(current_state_class)
+
+    widget.set_label(msg)
 
 
 def _tr(msg):
@@ -152,38 +166,37 @@ class PuavoPkg:
         self.pkg_state = new_state
 
         if new_state in [ PkgState.ABSENT, PkgState.REMOVE_SUCCESS ]:
-            self.state_msg.set_markup(
-              _state_msg('NOT INSTALLED', 'lightblue') )
-            self.action_button.set_label( _tr('INSTALL') )
+            set_state_message(self.state_msg, 'NOT INSTALLED', 'state-not-installed')
+            self.action_button.set_label( _tr('Install') )
             self.action_button_conn \
               = self.action_button.connect('clicked', self.install_pkg)
 
         elif new_state == PkgState.INSTALLING:
-            self.state_msg.set_markup( _state_msg('INSTALLING', 'yellow') )
-            self.action_button.set_label( _tr('CANCEL') )
+            set_state_message(self.state_msg, 'INSTALLING', 'state-installing')
+            self.action_button.set_label( _tr('Cancel') )
             self.action_button_conn \
               = self.action_button.connect('clicked', self.cancel_installation)
             self.spinner.start()
 
         elif new_state == PkgState.INSTALL_ERROR:
-            self.state_msg.set_markup( _state_msg('ERROR', 'sandybrown') )
-            self.action_button.set_label( _tr('INSTALL') )
+            set_state_message(self.state_msg, 'ERROR', 'state-error')
+            self.action_button.set_label( _tr('Install') )
             self.action_button_conn \
               = self.action_button.connect('clicked', self.install_pkg)
 
         elif new_state in [ PkgState.INSTALL_SUCCESS, PkgState.INSTALLED ]:
-            self.state_msg.set_markup( _state_msg('INSTALLED', 'lightgreen') )
-            self.action_button.set_label( _tr('REMOVE') )
+            set_state_message(self.state_msg, 'INSTALLED', 'state-installed')
+            self.action_button.set_label( _tr('Remove') )
             self.action_button_conn \
               = self.action_button.connect('clicked', self.remove_pkg)
 
         elif new_state == PkgState.REMOVING:
-            self.state_msg.set_markup( _state_msg('REMOVING', 'orange') )
+            set_state_message(self.state_msg, 'REMOVING', 'state-removing')
             self.spinner.start()
 
         elif new_state == PkgState.REMOVE_ERROR:
-            self.state_msg.set_markup( _state_msg('ERROR', 'sandybrown') )
-            self.action_button.set_label( _tr('INSTALL') )
+            set_state_message(self.state_msg, 'ERROR', 'state-error')
+            self.action_button.set_label( _tr('Install') )
             self.action_button_conn \
               = self.action_button.connect('clicked', self.install_pkg)
 
@@ -422,13 +435,13 @@ style_provider.load_from_data(b"""
     padding-bottom: 10px;
 
     /* Don't let the scrollbar cover any texts or buttons */
-    padding-right: 20px;
+    padding-right: 14px;
 }
 
 .header_row {
     background: #ddd;
     border-radius: 5px;
-    padding: 5px 10px;
+    padding: 5px 5px 5px 10px;
 }
 
 .details_row {
@@ -442,9 +455,6 @@ style_provider.load_from_data(b"""
 .package_name {
     font-weight: bold;
     font-size: 110%;
-}
-
-.package_state {
 }
 
 .package_description {
@@ -461,6 +471,33 @@ style_provider.load_from_data(b"""
 }
 
 .action_spinner {
+}
+
+/* Package state indicators */
+.package_state {
+    border-radius: 5px;
+    font-weight: bold;
+    padding: 5px;
+}
+
+.state-not-installed {
+    background: lightblue;
+}
+
+.state-installing {
+    background: yellow;
+}
+
+.state-installed {
+    background: lightgreen;
+}
+
+.state-removing {
+    background: orange;
+}
+
+.state-error {
+    background: sandybrown;
 }
 
 """)
