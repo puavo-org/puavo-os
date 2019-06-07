@@ -163,8 +163,6 @@ main(int argc, char *argv[])
 	}
 
 	return status;
-
-	return 0;
 }
 
 static void
