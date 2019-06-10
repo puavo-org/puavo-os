@@ -168,36 +168,36 @@ class PuavoPkg:
         self.pkg_state = new_state
 
         if new_state in [ PkgState.ABSENT, PkgState.REMOVE_SUCCESS ]:
-            set_state_message(self.state_msg, 'NOT INSTALLED', 'state-not-installed')
+            set_state_message(self.state_msg, _tr('NOT INSTALLED') , 'state-not-installed')
             self.action_button.set_label( _tr('Install') )
             self.action_button_conn \
               = self.action_button.connect('clicked', self.install_pkg)
 
         elif new_state == PkgState.INSTALLING:
-            set_state_message(self.state_msg, 'INSTALLING', 'state-installing')
+            set_state_message(self.state_msg, _tr('INSTALLING') , 'state-installing')
             self.action_button.set_label( _tr('Cancel') )
             self.action_button_conn \
               = self.action_button.connect('clicked', self.cancel_installation)
             self.spinner.start()
 
         elif new_state == PkgState.INSTALL_ERROR:
-            set_state_message(self.state_msg, 'ERROR', 'state-error')
+            set_state_message(self.state_msg, _tr('ERROR') , 'state-error')
             self.action_button.set_label( _tr('Install') )
             self.action_button_conn \
               = self.action_button.connect('clicked', self.install_pkg)
 
         elif new_state in [ PkgState.INSTALL_SUCCESS, PkgState.INSTALLED ]:
-            set_state_message(self.state_msg, 'INSTALLED', 'state-installed')
+            set_state_message(self.state_msg, _tr('INSTALLED') , 'state-installed')
             self.action_button.set_label( _tr('Remove') )
             self.action_button_conn \
               = self.action_button.connect('clicked', self.remove_pkg)
 
         elif new_state == PkgState.REMOVING:
-            set_state_message(self.state_msg, 'REMOVING', 'state-removing')
+            set_state_message(self.state_msg, _tr('REMOVING') , 'state-removing')
             self.spinner.start()
 
         elif new_state == PkgState.REMOVE_ERROR:
-            set_state_message(self.state_msg, 'ERROR', 'state-error')
+            set_state_message(self.state_msg, _tr('ERROR') , 'state-error')
             self.action_button.set_label( _tr('Install') )
             self.action_button_conn \
               = self.action_button.connect('clicked', self.install_pkg)
@@ -396,7 +396,7 @@ def confirm_install_all_packages(parent, pkg_list):
                                buttons=Gtk.ButtonsType.YES_NO,
                                message_format=_tr('Install everything?'))
 
-    secondary_message = """
+    secondary_message = _tr("""
 Installing all programs at once will consume large amounts of network bandwidth,
 as the total amount of downloaded data can easily climb to several hundred
 megabytes. The installation process can significantly slow down your computer.
@@ -408,7 +408,7 @@ interruptions.
 Also, if you continue, it is assumed that you accept the license of every program.
 
 Do you want to continue?
-"""
+""")
 
     dialog.format_secondary_markup(secondary_message)
 
