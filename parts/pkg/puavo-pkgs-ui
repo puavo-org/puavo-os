@@ -532,7 +532,7 @@ except:
 screen_height = int(screen_height * 0.75)
 screen_height = max(min(screen_height, 800), 400)
 
-win.set_size_request(1000, screen_height)
+win.set_default_size(1000, screen_height)
 
 # Outer container
 box_outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
