@@ -1,0 +1,65 @@
+#!/bin/sh
+
+set -eu
+
+grubedit() {
+  grubenv_path='/images/boot/grub/grubenv'
+  if ! grub-editenv "$grubenv_path" "$@"; then
+    echo 'Creating new grubenv because of an error' >&2
+    grub-editenv "$grubenv_path" create
+    grub-editenv "$grubenv_path" "$@"
+  fi
+}
+
+setup_kernel_version() {
+  kernel_version=$(puavo-conf puavo.kernel.version)
+  if [ -n "$kernel_version" ]; then
+    grubedit set "puavo_kernel_version=${kernel_version}"
+  else
+    grubedit unset puavo_kernel_version
+  fi
+}
+
+setup_kernel_arguments() {
+  kernel_arguments=$(puavo-conf puavo.kernel.arguments)
+  if [ -n "$kernel_arguments" ]; then
+    grubedit set "puavo_kernel_arguments=${kernel_arguments}"
+  else
+    grubedit unset puavo_kernel_arguments
+  fi
+}
+
+setup_developer_mode() {
+  if [ "$(puavo-conf puavo.grub.developer_mode.enabled)" = 'true' ]; then
+    grubedit set "puavo_show_imageoverlays=true"
+  else
+    grubedit unset puavo_show_imageoverlays
+  fi
+}
+
+setup_grub_theme() {
+  grub_theme=$(puavo-conf puavo.grub.theme)
+  if [ -n "$grub_theme" ]; then
+    grubedit set "puavo_grub_theme=${grub_theme}"
+  else
+    grubedit unset puavo_grub_theme
+  fi
+}
+
+setup_windows_enabled() {
+  if [ "$(puavo-conf puavo.grub.windows.enabled)" = 'true' ]; then
+    grubedit set "puavo_grub_windows_enabled=true"
+  else
+    grubedit unset puavo_grub_windows_enabled
+  fi
+}
+
+status=0
+
+setup_kernel_version   || status=1
+setup_kernel_arguments || status=1
+setup_developer_mode   || status=1
+setup_grub_theme       || status=1
+setup_windows_enabled  || status=1
+
+exit $status

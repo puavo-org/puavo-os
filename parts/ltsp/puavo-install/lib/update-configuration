@@ -56,17 +56,6 @@ def run(*args)
   system(*args) or raise "Running system command #{ args } returned failure"
 end
 
-def grubedit(*args)
-  grubenv_path = '/images/boot/grub/grubenv'
-  begin
-    run('grub-editenv', grubenv_path, *args)
-  rescue StandardError => e
-    logerr(Syslog::LOG_ERR, "Creating new grubenv because of an error: %s\n", e.message)
-    run('grub-editenv', grubenv_path, 'create')
-    run('grub-editenv', grubenv_path, *args)
-  end
-end
-
 def send_changed_primary_user_to_puavo(primary_user)
   log(Syslog::LOG_NOTICE,
       "Sending overridden primary user %s to Puavo\n",
@@ -170,45 +159,19 @@ end
 def update_grub_environment(restclient)
   log(Syslog::LOG_INFO, ">>> Updating grub environment\n")
 
-  kernel_version = puavoconf_get('puavo.kernel.version')
-  if kernel_version && !kernel_version.empty? then
-    grubedit('set', "puavo_kernel_version=#{ kernel_version }")
-  else
-    grubedit('unset', 'puavo_kernel_version')
+  errors = []
+  begin
+    run('/etc/puavo-conf/scripts/setup_grub_default')
+  rescue StandardError => e
+    errors << e
+  end
+  begin
+    run('/etc/puavo-conf/scripts/setup_grub_environment')
+  rescue StandardError => e
+    errors << e
   end
 
-  kernel_arguments = puavoconf_get('puavo.kernel.arguments')
-  if kernel_arguments && !kernel_arguments.empty? then
-    grubedit('set', "puavo_kernel_arguments=#{ kernel_arguments }")
-  else
-    grubedit('unset', 'puavo_kernel_arguments')
-  end
-
-  boot_default = puavoconf_get('puavo.grub.boot_default')
-  if boot_default && !boot_default.empty? then
-    grubedit('set', "puavo_grub_boot_default=#{ boot_default }")
-  else
-    grubedit('unset', 'puavo_grub_boot_default')
-  end
-
-  if puavoconf_get('puavo.grub.developer_mode.enabled') == 'true' then
-    grubedit('set', 'puavo_show_imageoverlays=true')
-  else
-    grubedit('unset', 'puavo_show_imageoverlays')
-  end
-
-  grub_theme = puavoconf_get('puavo.grub.theme')
-  if grub_theme && !grub_theme.empty? then
-    grubedit('set', "puavo_grub_theme=#{ grub_theme }")
-  else
-    grubedit('unset', 'puavo_grub_theme')
-  end
-
-  if puavoconf_get('puavo.grub.windows.enabled') == 'true' then
-    grubedit('set', 'puavo_grub_windows_enabled=true')
-  else
-    grubedit('unset', 'puavo_grub_windows_enabled')
-  end
+  raise e.first unless e.empty?
 end
 
 def update_wlan_configurations(restclient)
