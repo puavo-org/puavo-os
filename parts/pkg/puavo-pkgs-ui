@@ -437,7 +437,7 @@ style_provider.load_from_data(b"""
 
 .package_vbox {
     /* Space between list entries */
-    padding-bottom: 10px;
+    padding-bottom: 20px;
 
     /* Don't let the scrollbar cover any texts or buttons */
     padding-right: 14px;
@@ -446,7 +446,7 @@ style_provider.load_from_data(b"""
 .header_row {
     background: #ddd;
     border-radius: 5px;
-    padding: 5px 5px 5px 10px;
+    padding-left: 20px;
 }
 
 .details_row {
@@ -454,7 +454,7 @@ style_provider.load_from_data(b"""
 }
 
 .buttons_container {
-    padding-top: 5px;
+    padding-top: 10px;
 }
 
 .package_name {
@@ -480,9 +480,9 @@ style_provider.load_from_data(b"""
 
 /* Package state indicators */
 .package_state {
-    border-radius: 5px;
+    border-radius: 0 5px 5px 0;
     font-weight: bold;
-    padding: 5px;
+    padding: 10px 20px;  /* This makes the entire header bar tall */
 }
 
 .state-not-installed {
