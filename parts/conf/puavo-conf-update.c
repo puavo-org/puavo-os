@@ -364,7 +364,7 @@ update_cache(struct conf_cache **cache, int verbose)
 static int
 apply_profiles(struct conf_cache **cache, int verbose)
 {
-	char *profile, *profiles, *profile_path;
+	char *profile, *profiles, *profiles_tmp, *profile_path;
 	int retvalue, ret;
 	struct conf_cache *item;
 
@@ -373,7 +373,10 @@ apply_profiles(struct conf_cache **cache, int verbose)
 		warnx("error getting puavo.profiles.list");
 		return 1;
 	}
-	profiles = item->value;
+	if ((profiles = strdup(item->value)) == NULL) {
+		warn("strdup error in apply_profiles()");
+		return 1;
+	}
 
 	/*
 	 * If no profiles have been set, use puavo.hosttype variable as
@@ -392,9 +395,9 @@ apply_profiles(struct conf_cache **cache, int verbose)
 
 	retvalue = 0;
 
-	while ((profile = strsep(&profiles, ",")) != NULL) {
-		ret = asprintf(&profile_path, PROFILES_DIR "/%s.json",
-		    profile);
+	profiles_tmp = profiles;
+	while ((profile = strsep(&profiles_tmp, ",")) != NULL) {
+		ret = asprintf(&profile_path, PROFILES_DIR "/%s.json", profile);
 		if (ret == -1) {
 			warnx("asprintf() error in apply_hosttype_profile()");
 			retvalue = 1;
@@ -430,7 +433,6 @@ apply_hosttype_profile(struct conf_cache **cache, int verbose)
 	    hosttype);
 	if (ret == -1) {
 		warnx("asprintf() error in apply_hosttype_profile()");
-		free(hosttype);
 		return 1;
 	}
 
@@ -439,7 +441,6 @@ apply_hosttype_profile(struct conf_cache **cache, int verbose)
 	if (apply_one_profile(cache, hosttype_profile_path, verbose) != 0)
 		retvalue = 1;
 
-	free(hosttype);
 	free(hosttype_profile_path);
 
 	return retvalue;
@@ -686,6 +687,8 @@ apply_hwquirks_from_rules(struct conf_cache **cache,
 		json_decref(root);
 	}
 
+	globfree(&globbuf);
+
 	return retvalue;
 }
 
@@ -888,13 +891,16 @@ lookup_ids_from_cmd(const char *cmd_string, size_t fieldnum, char **idtable,
 		n = 0;
 		len = getline(&line, &n, cmd_pipe);
 		if (len == -1) {
-			if (feof(cmd_pipe))
+			if (feof(cmd_pipe)) {
+				free(line);
 				break;
+			}
 			warn("could not read a line from %s", cmd_string);
 			free(line);
 			retvalue = 1;
 			break;
 		} else if (len < 1) {
+			free(line);
 			continue;
 		}
 		line[len-1] = '\0';	/* remove newline */
@@ -906,6 +912,7 @@ lookup_ids_from_cmd(const char *cmd_string, size_t fieldnum, char **idtable,
 				warn("could not parse a line from %s",
 				    cmd_string);
 				retvalue = 1;
+				free(line);
 				break;
 			}
 		}
@@ -1005,7 +1012,7 @@ update_dmi_table(struct dmi *dmi_table, size_t tablesize)
 static int
 apply_kernel_arguments(struct conf_cache **cache)
 {
-	char *cmdarg, *cmdline, *param_name, *param_value;
+	char *cmdarg, *cmdline, *orig_cmdline, *param_name, *param_value;
 	size_t prefix_len;
 	int ret, retvalue;
 
@@ -1016,6 +1023,8 @@ apply_kernel_arguments(struct conf_cache **cache)
 		warnx("could not read /proc/cmdline");
 		return 1;
 	}
+
+	orig_cmdline = cmdline;
 
 	retvalue = 0;
 
@@ -1035,7 +1044,7 @@ apply_kernel_arguments(struct conf_cache **cache)
 			retvalue = 1;
 	}
 
-	free(cmdline);
+	free(orig_cmdline);
 
 	return retvalue;
 }
@@ -1121,6 +1130,8 @@ write_to_puavo_conf(struct conf_cache **cache, int init, int verbose)
 		if (r != 0)
 			ret = 1;
 		HASH_DEL(*cache, item);
+		free(item->key);
+		free(item->value);
 		free(item);
 	}
 
@@ -1167,8 +1178,8 @@ add_cacheitem_to_puavo_conf(puavo_conf_t *conf, struct conf_cache *item,
 
 	r = puavo_conf_overwrite(conf, item->key, item->value, &err);
 	if (r != 0) {
-		warnx("error overwriting %s: %s --> '%s': %s",
-		    item->key, old_value, item->value, err.msg);
+		warnx("error overwriting %s: %s --> '%s': %s", item->key,
+		    old_value, item->value, err.msg);
 		return 1;
 	}
 
