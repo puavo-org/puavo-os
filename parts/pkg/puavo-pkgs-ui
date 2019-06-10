@@ -323,14 +323,20 @@ class PuavoPkg:
     def show_or_hide_log(self, widget):
         if widget.get_active():
             self.install_log_win = Gtk.Window()
-            self.install_log_win.set_default_geometry(800, 220)
-            self.install_log_win.set_title('puavo-pkgs-ui / %s'
+            self.install_log_win.set_position(Gtk.WindowPosition.CENTER)
+            self.install_log_win.set_default_geometry(800, 320)
+            self.install_log_win.set_title(_tr('Package Installer') + ' / %s'
                                              % self.pkgname)
             self.install_log_win.connect('destroy',
               lambda x: self.toggle_log_button.set_active(False))
 
             self.install_log_textview = Gtk.TextView()
             self.install_log_textview.connect('size-allocate', self.autoscroll)
+
+            style_provider = Gtk.CssProvider()
+            style_provider.load_from_data(b""".log { font-family: monospace; }""")
+            set_widget_style(self.install_log_textview, 'log', style_provider)
+
             self.install_log_textview.set_border_width(10)
             self.install_log_textview.set_cursor_visible(False)
             self.install_log_textview.set_editable(False)
