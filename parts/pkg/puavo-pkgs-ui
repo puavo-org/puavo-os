@@ -142,6 +142,7 @@ class PuavoPkg:
             return
 
         self.set_ui_state(PkgState.INSTALLING)
+        self.toggle_log_button.show()
         self.set_puavoconf('latest')
         self.run_puavo_pkg_update()
 
@@ -153,6 +154,7 @@ class PuavoPkg:
 
     def remove_pkg(self, widget):
         self.set_ui_state(PkgState.REMOVING)
+        self.toggle_log_button.show()
         self.set_puavoconf('remove')
         self.run_puavo_pkg_update()
 
@@ -282,6 +284,9 @@ class PuavoPkg:
         self.toggle_log_button = Gtk.ToggleButton(label='Show install/remove log')
         set_widget_style(self.toggle_log_button, 'log_button', style_provider)
         self.toggle_log_button.connect('clicked', self.show_or_hide_log)
+
+        # These buttons are only shown when we have something to show
+        self.toggle_log_button.set_no_show_all(True)
 
         buttons_container.pack_start(self.action_button, False, False, 0)
         buttons_container.pack_start(self.spinner, False, False, 0)
@@ -568,7 +573,5 @@ if not previous_pkg:
 
     sys.exit(1)
 
-# Go
 win.show_all()
-
 Gtk.main()
