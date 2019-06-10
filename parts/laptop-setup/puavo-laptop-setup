@@ -19,7 +19,7 @@ def puavoconf_get(puavoconf_key):
                      .decode('utf-8')
 
 def we_have_windows():
-    return os.path.exists('/var/lib/puavo-desktop/windows_partition')
+    return os.path.exists('/images/boot/.puavo_windows_partition')
 
 
 class PuavoLaptopSetup:

@@ -243,7 +243,7 @@ handle_windows_partion_file() {
 
   possible_windows_disk_dev=$1
   windows_partition_number=$2
-  windows_partition_path=/var/lib/puavo-desktop/windows_partition
+  windows_partition_path=/images/boot/.puavo_windows_partition
 
   windows_partition_number=2
   if [ -n "$windows_partition_number" ]; then
