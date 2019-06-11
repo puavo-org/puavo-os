@@ -76,8 +76,11 @@ class PuavoMenu(Gtk.Window):
             pass
 
         try:
-            self.__socket = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+            # A domain socket in stream mode!
+            self.__socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            self.__socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self.__socket.bind(self.__settings.socket)
+            self.__socket.listen(10)
         except Exception as exception:
             # Oh dear...
             logging.error('Unable to create a domain socket for IPC!')
@@ -103,7 +106,7 @@ class PuavoMenu(Gtk.Window):
         #   function-glib--io-add-watch
         GLib.io_add_watch(self.__socket,
                           GLib.IO_IN,
-                          self.__socket_watcher)
+                          self.__socket_accept)
 
         # ----------------------------------------------------------------------
 
@@ -1039,14 +1042,14 @@ class PuavoMenu(Gtk.Window):
 
 
     # Responds to commands sent through the control socket
-    def __socket_watcher(self, source, condition, *args):
+    def __socket_watcher(self, conn, *args):
         try:
-            data, _ = self.__socket.recvfrom(1024)
+            data = conn.recv(1024)
             data = (data or b'').decode('utf-8').strip().split(' ')
 
             if len(data) == 0:
                 logging.debug('Received an empty command through the socket?')
-                return True
+                return False
 
             cmd = data[0]
             data = data[1:]
@@ -1068,7 +1071,14 @@ class PuavoMenu(Gtk.Window):
             logging.error('Socket command processing failed!')
             logging.error(str(exception))
 
-        # False will remove the handler, that's not what we want
+        # MUST RETURN FALSE HERE, otherwise we get stuck in an infinite loop
+        return False
+
+    # Accepts incoming IPC socket connections
+    def __socket_accept(self, sock, *args):
+        # http://rox.sourceforge.net/desktop/node/413.html
+        conn, addr = sock.accept()
+        GLib.io_add_watch(conn, GLib.IO_IN, self.__socket_watcher)
         return True
 
     # --------------------------------------------------------------------------
