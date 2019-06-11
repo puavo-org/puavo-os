@@ -491,6 +491,7 @@ win.connect('destroy', Gtk.main_quit)
 win.set_border_width(10)
 win.set_position(Gtk.WindowPosition.CENTER)
 win.set_title(_tr('Lisäohjelmistojen asennin'))
+win.set_icon_name('system-installer')
 
 this_script = open(os.path.realpath(sys.argv[0]), 'r')
 try:
