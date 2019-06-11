@@ -73,6 +73,19 @@ SB_LAPTOP_SETTINGS = {
     },
 }
 
+SB_PUAVOPKG_INSTALLER = {
+    'name': 'puavopkg-installer',
+
+    'title': STRINGS['sb_puavopkg_installer'],
+
+    'icon': '/usr/share/icons/Faenza/apps/48/system-installer.png',
+
+    'command': {
+        'type': 'command',
+        'args': 'puavo-pkgs-ui',
+    },
+}
+
 SB_SYSTEM_SETTINGS = {
     'name': 'system-settings',
 
@@ -435,6 +448,7 @@ class Sidebar:
         y = self.__create_button(y, SB_SYSTEM_SETTINGS)
         if self.__show_laptop_setup():
             y = self.__create_button(y, SB_LAPTOP_SETTINGS)
+            y = self.__create_button(y, SB_PUAVOPKG_INSTALLER)
         y = self.__create_separator(y)
 
         if not (self.__settings.is_guest or self.__settings.is_webkiosk):

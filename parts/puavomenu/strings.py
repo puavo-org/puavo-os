@@ -110,6 +110,13 @@ STRINGS = {
         'de': 'Laptop-Setup',
     },
 
+    'sb_puavopkg_installer': {
+        'en': 'Additional software installation',
+        'fi': 'Lisäohjelmistojen asennus',
+        'sv': 'Ytterligare programinstallation',
+        'de': 'Zusätzliche Softwareinstallation',
+    },
+
     'sb_support': {
         'en': 'Support',
         'fi': 'Tukisivusto',
