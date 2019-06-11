@@ -1194,6 +1194,10 @@ ttk::style configure Status.TLabel -foreground #c3c8cc -background #46606d
 
 # ui messages and background image
 
+# start download image
+download_image
+after 3000      ;# wait a bit so that download_image sets up UI.json
+
 try {
   set content_dir [get_content_dir]
 } on error {} {
@@ -1211,10 +1215,6 @@ try {
 
 set requested_version_path "${content_dir}/REQUESTED_VERSION"
 catch { set requested_version [read_file $requested_version_path] }
-
-# start download image
-download_image
-after 1000      ;# wait a bit so that download_image sets up UI.json
 
 try {
   set ui_messages [::json::json2dict [read_file "${content_dir}/UI.json"]]
