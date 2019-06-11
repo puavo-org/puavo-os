@@ -1,7 +1,7 @@
 # Public, configurable variables
 debootstrap_mirror	:= http://httpredir.debian.org/debian/
 debootstrap_suite	:= stretch
-image_class		:= allinone
+default_image_class	:= allinone
 image_dir		:= /srv/puavo-os-images
 images_urlbase		:= https://images.puavo.org
 mirror_dir		:= $(image_dir)/mirror
@@ -20,6 +20,19 @@ _adm_user	:= puavo-os
 _adm_group	:= puavo-os
 _adm_uid	:= 1000
 _adm_gid	:= 1000
+
+ifeq "$(image_class)" ""
+  image_class := $(shell cat "$(rootfs_dir)/etc/puavo-image/class" 2>/dev/null)
+endif
+ifeq "$(image_class)" ""
+  image_class := $(shell cat /etc/puavo-image/class 2>/dev/null)
+endif
+ifeq "$(image_class)" ""
+  image_class := $(default_image_class)
+endif
+ifeq "$(image_class)" ""
+  $(error can not determine image class)
+endif
 
 _repo_name   := $(shell basename $(shell git rev-parse --show-toplevel))
 _image_file  := $(image_dir)/$(_repo_name)-$(image_class)-$(debootstrap_suite)-$(shell date -u +%Y-%m-%d-%H%M%S)-${target_arch}.img
@@ -135,6 +148,9 @@ rootfs-debootstrap:
 		'$(rootfs_dir).tmp/usr/sbin/policy-rc.d'
 
 	$(_sudo) mv '$(rootfs_dir).tmp' '$(rootfs_dir)'
+	$(_sudo) mkdir -p '$(rootfs_dir)/etc/puavo-image'
+	$(_sudo) sh -c \
+	  'printf "%s\n" "$(image_class)" > $(rootfs_dir)/etc/puavo-image/class'
 
 $(image_dir):
 	$(_sudo) mkdir -p '$(image_dir)'
@@ -160,7 +176,7 @@ update-mime-database:
 rootfs-image: $(rootfs_dir) $(image_dir)
 	$(_sudo) rsync -a '$(rootfs_dir)/var/cache/' \
 	    '$(rootfs_dir).var_cache_backup/'
-	$(_sudo) .aux/set-image-release '$(rootfs_dir)' '$(image_class)' \
+	$(_sudo) .aux/set-image-release '$(rootfs_dir)' \
 	    '$(notdir $(_image_file))' '$(release_name)'
 	$(_chroot_cmd) $(MAKE) -C '/puavo-os' make-release-logos
 	$(_chroot_cmd) $(MAKE) -C '/puavo-os' update-mime-database
