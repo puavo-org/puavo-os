@@ -282,7 +282,7 @@ this_script = open(os.path.realpath(sys.argv[0]), 'r')
 try:
     fcntl.flock(this_script, fcntl.LOCK_EX | fcntl.LOCK_NB)
 except BlockingIOError:
-    errmsg = ('"%s" ' % _tr('Laptop setup')) + ' ' + _tr('is already running')
+    errmsg = ('"%s"' % _tr('Laptop setup')) + ' ' + _tr('is already running')
     dialog = Gtk.MessageDialog(app_window, 0, Gtk.MessageType.ERROR,
                Gtk.ButtonsType.CANCEL, errmsg)
     dialog.run()
