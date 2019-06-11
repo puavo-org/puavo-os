@@ -422,6 +422,9 @@ if test "\${puavo_grub_windows_enabled}" = "true"; then
     set root=(hd0,$windows_partition_number)
     chainloader +1
   }
+  if test "\${puavo_grub_boot_default}" = "windows"; then
+    set default="Windows"
+  fi
 fi
 EOF
   fi

@@ -16,6 +16,8 @@ grubedit() {
 }
 
 setup_puavo_os_boot_default() {
+  grubedit set "puavo_grub_boot_default=puavo-os"
+
   if [ "$(puavo-conf puavo.admin.personally_administered)" != 'true' ]; then
     grubedit unset default
     return 0
@@ -67,13 +69,15 @@ setup_puavo_os_boot_default() {
 boot_default="$(puavo-conf puavo.grub.boot_default)"
 case "$boot_default" in
   abitti)
-    grubedit set 'default=Abitti'
+    grubedit set "puavo_grub_boot_default=abitti"
+    grubedit unset default
     ;;
   puavo-os)
     setup_puavo_os_boot_default
     ;;
   windows)
-    grubedit set 'default=Windows'
+    grubedit set "puavo_grub_boot_default=windows"
+    grubedit unset default
     ;;
   *)
     echo "Unsupported boot mode '${boot_default}'" >&2
