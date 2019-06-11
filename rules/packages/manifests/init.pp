@@ -34,6 +34,7 @@ class packages {
     , 'puavo-devscripts'
     , 'puavo-hw-log'
     , 'puavo-hw-tools'
+    , 'puavo-laptop-setup'
     , 'puavo-ltsp-client'
     , 'puavo-ltsp-install'
     , 'puavo-pkg'

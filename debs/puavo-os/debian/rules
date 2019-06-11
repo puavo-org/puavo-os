@@ -71,6 +71,10 @@ override_dh_auto_install:
 		install prefix=/usr sysconfdir=/etc \
 		DESTDIR=$(CURDIR)/debian/iivari-client
 
+	$(MAKE) -C laptop-setup					\
+		install prefix=/usr sysconfdir=/etc		\
+		DESTDIR=$(CURDIR)/debian/puavo-laptop-setup
+
 	$(MAKE) -C ltsp/bootserver			\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-ltsp-bootserver

@@ -81,17 +81,6 @@ Description: Puavo autopoweroff
  Shut down hosts after a period of inactivity.
  .
 
-Package: puavo-usb-factory
-Architecture: all
-Depends: ${misc:Depends},
- python3,
- tcl8.6,
- tcllib,
- tk8.6
-Description: Puavo USB Factory
- Write disk images to usb memory devices in mass production style.
- .
-
 Package: puavo-autopilot
 Architecture: all
 Depends: ${misc:Depends},
@@ -200,6 +189,17 @@ Depends: ${misc:Depends},
  ruby
 Description: Puavo enabled tools and tweaks to enable and fix hardware features
  Puavo enabled tools and tweaks to enable and fix hardware features
+ .
+
+Package: puavo-laptop-setup
+Architecture: all
+Depends: ${misc:Depends},
+ python3,
+ python3-gi
+Description: Puavo Laptop Setup
+ Puavo Laptop Setup is a tool to set some laptop-specific puavo-conf
+ settings to configure a machine.  This tool can be used by primary
+ users on personally administered hosts.
  .
 
 Package: puavo-local-config
@@ -450,6 +450,17 @@ Depends: ${misc:Depends},
 Description: Puavo User Registration
  Puavo User Registration is a tool to create a user account
  on a Puavo machine.
+ .
+
+Package: puavo-usb-factory
+Architecture: all
+Depends: ${misc:Depends},
+ python3,
+ tcl8.6,
+ tcllib,
+ tk8.6
+Description: Puavo USB Factory
+ Write disk images to usb memory devices in mass production style.
  .
 
 Package: puavo-vpn-client

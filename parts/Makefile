@@ -12,6 +12,7 @@ subdirs         := admins                     \
                    hw-log                     \
                    hw-tools                   \
                    iivari                     \
+                   laptop-setup               \
                    ltsp                       \
                    pam                        \
                    pkg                        \
