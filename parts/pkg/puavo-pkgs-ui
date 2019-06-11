@@ -325,8 +325,8 @@ class PuavoPkg:
             self.install_log_win = Gtk.Window()
             self.install_log_win.set_position(Gtk.WindowPosition.CENTER)
             self.install_log_win.set_default_geometry(800, 320)
-            self.install_log_win.set_title(_tr('Pakettiasennin') + ' / %s'
-                                             % self.pkgname)
+            self.install_log_win.set_title(
+              _tr('Lisäohjelmistojen asennin') + ' / %s' % self.pkgname)
             self.install_log_win.connect('destroy',
               lambda x: self.toggle_log_button.set_active(False))
 
@@ -520,7 +520,18 @@ win.connect('destroy', Gtk.main_quit)
 
 win.set_border_width(10)
 win.set_position(Gtk.WindowPosition.CENTER)
-win.set_title(_tr('Pakettiasennin'))
+win.set_title(_tr('Lisäohjelmistojen asennin'))
+
+this_script = open(os.path.realpath(sys.argv[0]), 'r')
+try:
+    fcntl.flock(this_script, fcntl.LOCK_EX | fcntl.LOCK_NB)
+except BlockingIOError:
+    errmsg = ('"%s"' % _tr('Lisäohjelmistojen asennin')) \
+                + ' ' + _tr('on jo käynnissä')
+    dialog = Gtk.MessageDialog(win, 0, Gtk.MessageType.ERROR,
+               Gtk.ButtonsType.CANCEL, errmsg)
+    dialog.run()
+    sys.exit(1)
 
 # The package list can be very long on some machines, so try to use as much
 # space on the screen as possible, within limits
