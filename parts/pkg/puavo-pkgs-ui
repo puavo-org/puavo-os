@@ -168,37 +168,37 @@ class PuavoPkg:
         self.pkg_state = new_state
 
         if new_state in [ PkgState.ABSENT, PkgState.REMOVE_SUCCESS ]:
-            set_state_message(self.state_msg, _tr('NOT INSTALLED') , 'state-not-installed')
-            self.action_button.set_label( _tr('Install') )
+            set_state_message(self.state_msg, _tr('EI ASENNETTU') , 'state-not-installed')
+            self.action_button.set_label( _tr('Asenna') )
             self.action_button_conn \
               = self.action_button.connect('clicked', self.install_pkg)
 
         elif new_state == PkgState.INSTALLING:
-            set_state_message(self.state_msg, _tr('INSTALLING') , 'state-installing')
-            self.action_button.set_label( _tr('Cancel') )
+            set_state_message(self.state_msg, _tr('ASENNETAAN') , 'state-installing')
+            self.action_button.set_label( _tr('Keskeytä') )
             self.action_button_conn \
               = self.action_button.connect('clicked', self.cancel_installation)
             self.spinner.start()
 
         elif new_state == PkgState.INSTALL_ERROR:
-            set_state_message(self.state_msg, _tr('ERROR') , 'state-error')
-            self.action_button.set_label( _tr('Install') )
+            set_state_message(self.state_msg, _tr('VIRHE') , 'state-error')
+            self.action_button.set_label( _tr('Asenna') )
             self.action_button_conn \
               = self.action_button.connect('clicked', self.install_pkg)
 
         elif new_state in [ PkgState.INSTALL_SUCCESS, PkgState.INSTALLED ]:
-            set_state_message(self.state_msg, _tr('INSTALLED') , 'state-installed')
-            self.action_button.set_label( _tr('Remove') )
+            set_state_message(self.state_msg, _tr('ASENNETTU') , 'state-installed')
+            self.action_button.set_label( _tr('Poista') )
             self.action_button_conn \
               = self.action_button.connect('clicked', self.remove_pkg)
 
         elif new_state == PkgState.REMOVING:
-            set_state_message(self.state_msg, _tr('REMOVING') , 'state-removing')
+            set_state_message(self.state_msg, _tr('POISTETAAN') , 'state-removing')
             self.spinner.start()
 
         elif new_state == PkgState.REMOVE_ERROR:
-            set_state_message(self.state_msg, _tr('ERROR') , 'state-error')
-            self.action_button.set_label( _tr('Install') )
+            set_state_message(self.state_msg, _tr('VIRHE') , 'state-error')
+            self.action_button.set_label( _tr('Asenna') )
             self.action_button_conn \
               = self.action_button.connect('clicked', self.install_pkg)
 
@@ -262,7 +262,7 @@ class PuavoPkg:
         set_widget_style(details_row, 'details_row', style_provider)
 
         desc_text = html.escape(self.description)
-        desc_text += '\n\n<a href="%s">%s</a>' % (self.license, _tr('Show License'))
+        desc_text += '\n\n<a href="%s">%s</a>' % (self.license, _tr('Näytä lisenssi'))
 
         #self.package_description = Gtk.Label(self.description)
         self.package_description = Gtk.Label()
@@ -275,7 +275,7 @@ class PuavoPkg:
         buttons_container = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         set_widget_style(buttons_container, 'buttons_container', style_provider)
 
-        self.action_button = Gtk.Button("Install")
+        self.action_button = Gtk.Button()
         set_widget_style(self.action_button, 'action_button', style_provider)
 
         self.spinner = Gtk.Spinner()
@@ -325,7 +325,7 @@ class PuavoPkg:
             self.install_log_win = Gtk.Window()
             self.install_log_win.set_position(Gtk.WindowPosition.CENTER)
             self.install_log_win.set_default_geometry(800, 320)
-            self.install_log_win.set_title(_tr('Package Installer') + ' / %s'
+            self.install_log_win.set_title(_tr('Pakettiasennin') + ' / %s'
                                              % self.pkgname)
             self.install_log_win.connect('destroy',
               lambda x: self.toggle_log_button.set_active(False))
@@ -394,20 +394,20 @@ def confirm_install_all_packages(parent, pkg_list):
                                flags=Gtk.DialogFlags.MODAL,
                                type=Gtk.MessageType.QUESTION,
                                buttons=Gtk.ButtonsType.YES_NO,
-                               message_format=_tr('Install everything?'))
+                               message_format=_tr('Asenna kaikki paketit?'))
 
     secondary_message = _tr("""
-Installing all programs at once will consume large amounts of network bandwidth,
-as the total amount of downloaded data can easily climb to several hundred
-megabytes. The installation process can significantly slow down your computer.
+Kaikkien ohjelmien asentaminen yhdellä kertaa vie huomattavasti verkon kaistaa,
+koska kopioitavia tiedostoja voi helposti kertyä useampi sata megatavua.
+Asennusprosessi voi myös merkittävästi hidastaa koneesi toimintaa.
 
-If your internet connection is not fast, or you have important work to do right
-now, it is recommended that you install programs one-by-one to avoid errors and
-interruptions.
+Jos internet-yhteytesi on hidas, tai sinulla on juuri nyt jotain tärkeää kesken,
+on suositeltavaa, että asennat ohjelmat yksi kerrallaan tarpeen mukaan
+välttääksesi virheet ja keskeytykset.
 
-Also, if you continue, it is assumed that you accept the license of every program.
+Lisäksi, jos jatkat, sinun oletetaan automaattisesti hyväksyneen kaikki lisenssit.
 
-Do you want to continue?
+Haluatko jatkaa?
 """)
 
     dialog.format_secondary_markup(secondary_message)
@@ -520,7 +520,7 @@ win.connect('destroy', Gtk.main_quit)
 
 win.set_border_width(10)
 win.set_position(Gtk.WindowPosition.CENTER)
-win.set_title(_tr('Package Installer'))
+win.set_title(_tr('Pakettiasennin'))
 
 # The package list can be very long on some machines, so try to use as much
 # space on the screen as possible, within limits
@@ -538,7 +538,7 @@ win.set_default_size(1000, screen_height)
 box_outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
 win.add(box_outer)
 
-button = Gtk.Button(label=_tr('Accept all licenses and install everything'))
+button = Gtk.Button(label=_tr('Hyväksy kaikki lisenssit ja asenna kaikki paketit'))
 button.connect('clicked', lambda w: confirm_install_all_packages(win, pkg_list))
 box_outer.pack_start(button, False, False, 0)
 
@@ -571,10 +571,9 @@ for pkg in pkg_list:
 
 if not previous_pkg:
     error_message(win,
-        _tr("No packages"),
-        _tr('No packages have been listed for installation or removal.\n\n' \
-            'Please check the contents of the <tt>puavo.pkgs.ui.pkglist</tt> ' \
-            'puavo-conf setting.'))
+        _tr('Ei paketteja'),
+        _tr('Yhtään pakettia ei ole listattu asennettavaksi tai poistettavaksi.\n\n'
+            'Tarkista <tt>puavo.pkgs.ui.pkglist</tt> -puavoconf -asetuksen sisältö.'))
 
     sys.exit(1)
 
