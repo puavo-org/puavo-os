@@ -19,6 +19,9 @@ class grub::themes {
     '/boot/grub/themes/Vimix':
       recurse => true,
       source  => 'puppet:///modules/grub/Vimix';
+
+    '/boot/grub/themes/Vimix/icons/vendor_logo.png':
+      source => $vendor_logo_src_path;
   }
 
   ::puavo_conf::definition {
