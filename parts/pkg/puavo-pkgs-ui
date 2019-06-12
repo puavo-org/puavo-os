@@ -366,7 +366,15 @@ class PuavoPkg:
 
 
     def field(self, fieldname):
-        path = '/var/lib/puavo-pkg/available/%s/%s' % (self.pkgname, fieldname)
+        path = '/var/lib/puavo-pkg/available/%s/%s' \
+                  % (self.pkgname, fieldname)
+
+        if 'LANGUAGE' in os.environ:
+            path_with_lang = '/var/lib/puavo-pkg/available/%s/%s.%s' \
+                % (self.pkgname, fieldname, os.environ['LANGUAGE'])
+            if os.path.exists(path_with_lang):
+                path = path_with_lang
+
         with open(path) as file:
             return file.read().rstrip()
 
