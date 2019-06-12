@@ -81,6 +81,10 @@ def send_puavomenu_command(socket_file, args):
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL)
 
+def quit(pkg_list, widget):
+    for pkg in pkg_list:
+        pkg.cancel_installation()
+    Gtk.main_quit()
 
 def update_puavomenu(package_id):
     """Sends a 'update-puavopkg' command to all running instances of
@@ -102,6 +106,7 @@ class PuavoPkg:
         self.pkgname              = pkgname
         self.pkg_state            = None
         self.pkg_update_pid       = None
+        self.pkg_update_stdin     = None
 
 
     def lookup_pkg_fields(self):
@@ -147,9 +152,10 @@ class PuavoPkg:
         self.run_puavo_pkg_update()
 
 
-    def cancel_installation(self, widget):
+    def cancel_installation(self, widget=None):
         if self.pkg_update_stdin:
             print('quit', file=self.pkg_update_stdin, flush=True)
+            self.pkg_update_stdin.close()
 
 
     def remove_pkg(self, widget):
@@ -486,7 +492,6 @@ style_provider.load_from_data(b"""
 # Create the main window
 
 win = Gtk.Window()
-win.connect('destroy', Gtk.main_quit)
 
 win.set_border_width(10)
 win.set_position(Gtk.WindowPosition.CENTER)
@@ -559,6 +564,8 @@ if not previous_pkg:
             'Tarkista <tt>puavo.pkgs.ui.pkglist</tt> -puavoconf -asetuksen sisältö.'))
 
     sys.exit(1)
+
+win.connect('destroy', lambda w: quit(pkg_list, w))
 
 win.show_all()
 Gtk.main()

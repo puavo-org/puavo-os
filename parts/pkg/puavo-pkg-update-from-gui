@@ -16,6 +16,7 @@ fileevent stdin readable {
 
   set pid [pid $puavo_pkg_update]
   catch { exec pkill -s $pid }
+  exit 0
 }
 
 fconfigure $puavo_pkg_update -blocking 0
