@@ -1,4 +1,4 @@
-class grub_themes {
+class grub::themes {
   include ::art
   include ::puavo_conf
 
@@ -11,18 +11,18 @@ class grub_themes {
 
     '/boot/grub/themes/StylishDark':
       recurse => true,
-      source  => 'puppet:///modules/grub_themes/StylishDark';
+      source  => 'puppet:///modules/grub/StylishDark';
 
     '/boot/grub/themes/StylishDark/icons/vendor_logo.png':
       source => $vendor_logo_src_path;
 
     '/boot/grub/themes/Vimix':
       recurse => true,
-      source  => 'puppet:///modules/grub_themes/Vimix';
+      source  => 'puppet:///modules/grub/Vimix';
   }
 
   ::puavo_conf::definition {
     'puavo-grub.json':
-      source => 'puppet:///modules/grub_themes/puavo-grub.json';
+      source => 'puppet:///modules/grub/puavo-grub.json';
   }
 }
