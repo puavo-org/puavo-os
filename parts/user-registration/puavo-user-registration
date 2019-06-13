@@ -804,7 +804,6 @@ class WifiConnector:
 
 
     def ask_if_wifi_network_is_okay(self, app_window, network_ssid):
-        return False
         short_msg = _tr('Use network "%s"?') % network_ssid
         long_msg = _tr('You are connected to network "%s",' \
                        ' do you want to use this network?') % network_ssid
@@ -1090,6 +1089,8 @@ upper_frame = builder.get_object('upper_frame')
 main_window.set_icon_name('user-info')
 main_window.fullscreen()
 
+main_window.connect('destroy', lambda w: Gtk.main_quit())
+
 if os.path.exists(os.path.join(DATA_ROOT, 'privacy_policy.html')):
     builder.get_object('privacy_policy').connect(
         'clicked', lambda x: show_privacy_policy(main_window))
@@ -1109,25 +1110,66 @@ except subprocess.CalledProcessError:
     dialog.run()
     sys.exit(1)
 
+go_to_desktop_button = builder.get_object('go_to_desktop')
+go_to_desktop_button.show()
+
 if at_session_startup:
-    go_to_desktop_button = builder.get_object('go_to_desktop')
-    go_to_desktop_button.show()
     go_to_desktop_button.connect('clicked',
                                  lambda x: go_to_desktop(main_window, x))
+else:
+    go_to_desktop_button.connect('clicked', lambda x: Gtk.main_quit())
 
 user_registration = UserRegistration(builder, main_window, upper_frame,
                                      at_session_startup)
 
-if at_session_startup:
-    wifi_connector = WifiConnector(builder, main_window, upper_frame)
-    wifi_connector.prepare_ui_and_activate(main_window)
-    main_window.set_decorated(False)
-    main_window.set_deletable(False)
-    main_window.set_skip_pager_hint(True)
-    main_window.set_skip_taskbar_hint(True)
-else:
-    user_registration.activate()
+# Create the welcome screen
+welcome_label = Gtk.Label('Tervetuloa!')
+welcome_label.get_style_context().add_class('welcome_label')
 
-main_window.show_all()
+welcome_text = Gtk.Label()
+welcome_text.set_markup('Uuden kannettavasi käyttöönottamiseksi, sinut opastetaan seuraavaksi:\n\n' \
+'<span color="#0f0"><big>1.</big></span> Liity langattomaan verkkoon\n' \
+'<span color="#0f0"><big>2.</big></span> Rekisteröi itsellesi uusi käyttäjätunnus')
+welcome_text.get_style_context().add_class('welcome_text')
+
+welcome_footer = Gtk.Label()
+welcome_footer.set_markup('<span color="#0f0">Vinkki:</span> Mikäli et pysty liittämään kannettavaa verkkoon juuri nyt, ' \
+'voit tehdä sen myös\nmyöhemmin ja käyttää konetta tilapäisesti' \
+'vieras-tilassa napsauttamalla alareunassa\nolevaa <i>"Siirry työpöydälle"</i> -painiketta.')
+welcome_footer.get_style_context().add_class('welcome_footer')
+
+welcome_button = Gtk.Button('Jatka')
+welcome_button.set_size_request(250, 50)
+
+welcome_container = Gtk.Fixed()
+welcome_container.put(welcome_label, 700, 100)
+welcome_container.put(welcome_text, 550, 250)
+welcome_container.put(welcome_footer, 550, 450)
+welcome_container.put(welcome_button, 700, 600)
+
+main_container = builder.get_object('main_container')
+main_container.add(welcome_container)
+main_container.show_all()
+upper_frame.hide()
+
+def welcome_step2(main_window, builder, welcome_container, upper_frame):
+    welcome_container.hide()
+    welcome_container = None
+    upper_frame.show()
+
+    if at_session_startup:
+        wifi_connector = WifiConnector(builder, user_registration, upper_frame)
+        wifi_connector.prepare_ui_and_activate(main_window)
+        main_window.set_decorated(False)
+        main_window.set_deletable(False)
+        main_window.set_skip_pager_hint(True)
+        main_window.set_skip_taskbar_hint(True)
+    else:
+        user_registration.activate()
+
+welcome_button.connect('clicked', \
+    lambda x: welcome_step2(main_window, builder, welcome_container, upper_frame))
+
+main_window.show()
 
 Gtk.main()

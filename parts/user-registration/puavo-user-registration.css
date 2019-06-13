@@ -21,7 +21,6 @@
 }
 
 .upper_frame {
-/*    border: 1px solid red;*/
     padding-right: 50px;
     padding-top: 50px;
 }
@@ -162,4 +161,32 @@ combobox {
 
 .network_password_entry {
     padding: 5px 10px;
+}
+
+.welcome_label {
+/*    border: 1px solid red;*/
+
+    font-size: 500%;
+    font-weight: bold;
+    color: #fff;
+}
+
+.welcome_text {
+/*    border: 1px solid red;*/
+
+    font-size: 150%;
+    color: #fff;
+    font-weight: normal;
+}
+
+.welcome_footer {
+/*    border: 1px solid red;*/
+
+    font-size: 120%;
+    color: #fff;
+    font-weight: normal;
+}
+
+.welcome_button {
+    padding: 10px 150px;
 }
