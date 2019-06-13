@@ -17,7 +17,13 @@ import unicodedata
 import sys
 
 gi.require_version('Gtk', '3.0')
-from gi.repository import GLib, Gtk, GObject
+gi.require_version('WebKit2', '4.0')
+from gi.repository import GLib, Gtk, Gdk, GdkPixbuf, GObject
+from gi.repository import WebKit2
+
+# Where to load all resources. Must not end in a slash, or the CSS will break!
+DATA_ROOT = '/home/jarmo/puavo-os/parts/user-registration'
+#DATA_ROOT = '/usr/share/puavo-user-registration'
 
 gettext.bindtextdomain('puavo-user-registration', '/usr/share/locale')
 gettext.textdomain('puavo-user-registration')
@@ -105,6 +111,13 @@ def usage():
     sys.exit(1)
 
 
+def set_widget_style(widget, class_name, style_provider):
+    ctx = widget.get_style_context()
+
+    ctx.add_class(class_name)
+    ctx.add_provider(style_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+
 class UserRegistration:
     def __init__(self, builder, app_window, register_frame, at_session_startup):
         self.builder = builder
@@ -119,11 +132,13 @@ class UserRegistration:
         self.username_field    = self.builder.get_object('username')
         self.username_hint     = self.builder.get_object('username_hint')
         self.email_field       = self.builder.get_object('email')
+        self.email_hint        = self.builder.get_object('email_hint')
         self.password_field    = self.builder.get_object('password')
         self.password_confirm_field \
             = self.builder.get_object('password_confirm')
         self.language_combo    = self.builder.get_object('language')
         self.phone_field       = self.builder.get_object('phone_number')
+        self.phone_hint        = self.builder.get_object('phone_number_hint')
         self.spinner           = self.builder.get_object('registration_spinner')
         self.status            = self.builder.get_object('status_message')
 
@@ -134,6 +149,23 @@ class UserRegistration:
 
         self.network_thread = None
         self.network_thread_event = None
+
+        self.email_hint.set_line_wrap(True)
+        self.email_hint.set_alignment(0.0, 0.0)     # don't center the text
+
+        try:
+            # It's not possible to specify the image pixel size in the .glade
+            # file, so load and resize the image manually, then set it
+            pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(
+                    filename=os.path.join(DATA_ROOT, 'contact_info.png'),
+                    width=-1,
+                    height=32,
+                    preserve_aspect_ratio=True)
+
+            self.builder.get_object('contact_info').set_from_pixbuf(pixbuf)
+        except Exception as e:
+            # The image does not exist, so don't display any contact info
+            self.builder.get_object('contact_info').hide()
 
         # Setup initial values
         for lang in LANGUAGES:
@@ -638,6 +670,8 @@ class WifiConnector:
         self.spinner = builder.get_object('network_connector_spinner')
         self.connection_status = builder.get_object('network_connection_status')
 
+        self.wifi_title = builder.get_object('wifi_connector_description')
+
         self.connect_button = builder.get_object('network_connect_button')
         self.connect_button.connect('clicked', self.connect_to_wifi)
 
@@ -743,6 +777,8 @@ class WifiConnector:
                 self.network_ssid = network_ssid
                 break
 
+        self.wifi_title.set_label(_tr('Connect to network') + ' ' + network_ssid)
+
         network_info = self.networks[self.network_ssid]
         self.password_entry.set_text('')
         if network_info['security']:
@@ -769,6 +805,7 @@ class WifiConnector:
 
 
     def ask_if_wifi_network_is_okay(self, app_window, network_ssid):
+        return False
         short_msg = _tr('Use network "%s"?') % network_ssid
         long_msg = _tr('You are connected to network "%s",' \
                        ' do you want to use this network?') % network_ssid
@@ -849,9 +886,33 @@ class WifiConnector:
         for network_ssid in sorted_by_signal:
             if network_ssid in self.networks:
                 continue
+
+            network = new_networks[network_ssid]
+
+            row_container = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+
+            ssid_label = Gtk.Label(network_ssid)
+
+            security = network['security']
+
+            if security is None or len(security) == 0:
+                security = '?'
+
+            signal = str(network['signal'])
+
+            if len(signal) == 0:
+                signal = '?'
+
+            signal_label = Gtk.Label('%s (%s%%)' % (security, signal))
+
+            row_container.pack_start(ssid_label, False, False, 0)
+            row_container.pack_end(signal_label, False, False, 0)
+
+            #row_container.set_property('tooltip-text', '')
+
             row = Gtk.ListBoxRow()
-            label = Gtk.Label(label=network_ssid)
-            row.add(label)
+            row.add(row_container)
+
             self.network_choice_widget.add(row)
             self.networks[network_ssid] = new_networks[network_ssid]
             self.networks[network_ssid]['widget'] = row
@@ -940,6 +1001,60 @@ class NetworkThread(threading.Thread):
         self.event.set()
         print('Network thread exiting')
 
+
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+# THE PRIVACY POLICY DIALOG
+
+class PrivacyPolicy(Gtk.Dialog):
+    def __init__(self, parent):
+        Gtk.Dialog.__init__(self, _tr('Privacy Policy'), parent, 0,
+                            (Gtk.STOCK_OK, Gtk.ResponseType.OK))
+
+        self.set_title(_tr('Privacy Policy'))
+        self.set_default_size(1000, 500)
+        self.set_position(Gtk.WindowPosition.CENTER)
+
+        manager = WebKit2.WebsiteDataManager.new_ephemeral()
+        context = WebKit2.WebContext.new_with_website_data_manager(manager)
+        self.webview = WebKit2.WebView.new_with_context(context)
+        settings = WebKit2.Settings()
+        settings.set_enable_javascript(False)
+        settings.set_enable_java(False)
+        settings.set_enable_plugins(False)
+
+        self.webview.set_settings(settings)
+        self.webview.connect('context_menu', self.block_context_menu)
+
+        policy_file = 'file://%s' % os.path.join(DATA_ROOT, 'privacy_policy.html')
+        self.webview.load_uri(policy_file)
+
+        # TODO: The content area does not seem to resize its child elements
+        # automatically?
+        self.webview.set_size_request(-1, 500)
+
+        self.get_content_area().add(self.webview)
+        self.get_content_area().show_all()
+
+        self.show()
+
+
+    def block_context_menu(self, webview, context_menu, event, hit_test_result):
+        # Completely block the context menu
+        return True
+
+
+def show_privacy_policy(parent):
+    dlg = PrivacyPolicy(main_window)
+
+    dlg.run()
+    dlg.destroy()
+
+
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+# MAIN
+
 at_session_startup = False
 if len(sys.argv) == 1:
     pass
@@ -950,14 +1065,39 @@ elif len(sys.argv) == 2:
 else:
     usage()
 
+# ------------------------------------------------------------------------------
+# Load and setup custom CSS for the program
+
+css = open(os.path.join(DATA_ROOT, 'puavo-user-registration.css')).read()
+css = css.replace('DATA_ROOT', DATA_ROOT)
+
+style_provider = Gtk.CssProvider()
+style_provider.load_from_data(bytes(css, 'utf-8'))
+
+Gtk.StyleContext.add_provider_for_screen(
+    Gdk.Screen.get_default(),
+    style_provider,
+    Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+# ------------------------------------------------------------------------------
+# Setup the main window
+
 builder = Gtk.Builder()
 builder.set_translation_domain('puavo-user-registration')
-builder.add_from_file('/usr/share/puavo-user-registration/puavo-user-registration.glade')
+builder.add_from_file(os.path.join(DATA_ROOT, 'puavo-user-registration.glade'))
 
-app_window = builder.get_object('register_window')
-register_frame = builder.get_object('register_frame')
+main_window = builder.get_object('main_window')
+upper_frame = builder.get_object('upper_frame')
+main_window.set_icon_name('user-info')
+main_window.fullscreen()
 
-app_window.set_icon_name('user-info')
+if os.path.exists(os.path.join(DATA_ROOT, 'privacy_policy.html')):
+    builder.get_object('privacy_policy').connect(
+        'clicked', lambda x: show_privacy_policy(main_window))
+    builder.get_object('privacy_policy').show()
+else:
+    # No license privacy available
+    builder.get_object('privacy_policy').hide()
 
 try:
     get_password_cmd = [ 'sudo', '-n', 'cat', '/etc/puavo/ldap/password' ]
@@ -965,7 +1105,7 @@ try:
                            .decode('utf-8').rstrip()
 except subprocess.CalledProcessError:
     errmsg = _tr('You do not have the required permissions to use this tool.')
-    dialog = Gtk.MessageDialog(app_window, 0, Gtk.MessageType.ERROR,
+    dialog = Gtk.MessageDialog(main_window, 0, Gtk.MessageType.ERROR,
                Gtk.ButtonsType.CANCEL, errmsg)
     dialog.run()
     sys.exit(1)
@@ -974,21 +1114,23 @@ if at_session_startup:
     go_to_desktop_button = builder.get_object('go_to_desktop')
     go_to_desktop_button.show()
     go_to_desktop_button.connect('clicked',
-                                 lambda x: go_to_desktop(app_window, x))
+                                 lambda x: go_to_desktop(main_window, x))
 
-user_registration = UserRegistration(builder, app_window, register_frame,
+user_registration = UserRegistration(builder, main_window, upper_frame,
                                      at_session_startup)
 
 if at_session_startup:
-    wifi_connector = WifiConnector(builder, user_registration, register_frame)
-    wifi_connector.prepare_ui_and_activate(app_window)
-    app_window.set_decorated(False)
-    app_window.set_deletable(False)
-    app_window.set_skip_pager_hint(True)
-    app_window.set_skip_taskbar_hint(True)
+    wifi_connector = WifiConnector(builder, main_window, upper_frame)
+    wifi_connector.prepare_ui_and_activate(main_window)
+    #main_window.set_decorated(False)
+    #main_window.set_deletable(False)
+    #main_window.set_skip_pager_hint(True)
+    #main_window.set_skip_taskbar_hint(True)
 else:
     user_registration.activate()
 
-app_window.show_all()
+#user_registration.activate()
+
+main_window.show_all()
 
 Gtk.main()

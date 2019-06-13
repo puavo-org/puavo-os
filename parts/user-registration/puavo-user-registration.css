@@ -1,0 +1,165 @@
+/*
+================================================================================
+
+                 NEW USER REGISTRATION / WIRELESS CONFIGURATION
+
+================================================================================
+*/
+
+/*
+--------------------------------------------------------------------------------
+    MAIN WINDOW
+--------------------------------------------------------------------------------
+*/
+
+.main_window {
+    /* data root prefix is filled in in the code */
+    background: url("DATA_ROOT/background.jpg");
+}
+
+.main_container {
+}
+
+.upper_frame {
+/*    border: 1px solid red;*/
+    padding-right: 50px;
+    padding-top: 50px;
+}
+
+.upper_frame > border {
+    border: none;
+}
+
+label.contact_info {
+    color: #fff;
+}
+
+/*
+--------------------------------------------------------------------------------
+    UPPER FRAME DIALOG
+--------------------------------------------------------------------------------
+*/
+
+label, entry, button, combobox {
+    font-size: 110%;
+    font-weight: bold;
+    font-family: Roboto;
+}
+
+.upper_frame label {
+    color: #fff;
+    text-shadow: 1px 1px 0 #000;
+}
+
+label.email_hint, label.phone_number_hint {
+    color: #888;
+}
+
+.upper_frame entry {
+    border: 2px solid #aaa;
+    border-radius: 0;
+    background: #fff;
+    color: #000;
+}
+
+.upper_frame entry:focus {
+    background: #fff;
+    color: #000;
+}
+
+.main_window button {
+    background: #005b9e;
+    border: 2px solid #0067b3;
+    box-shadow: none;
+    text-shadow: none;
+    padding: 5px 25px;
+    border-radius: 0;
+    color: #ddd;
+}
+
+.main_window button:hover {
+    background: #116caf;
+    border: 2px solid #1178c4;
+    color: #fff;
+}
+
+.main_window button:focus {
+    outline-width: 1px;
+    outline-offset: -5px;
+    outline-style: dotted;
+    outline-color: #000;
+}
+
+.main_window button:active {
+    background: #227dbf;
+    border: 2px solid #227dbf;
+    color: #fff;
+}
+
+.main_window button:disabled {
+    background: #00397c;
+    border: 2px solid #0045a1;
+}
+
+/* For some reason, this requires its own selector? */
+.main_window button:disabled label {
+    color: #888;
+}
+
+combobox {
+}
+
+.scrolled_window {
+    border: 2px solid #aaa;
+    background: rgba(39, 39, 39, 0.9);
+}
+
+.networks_list {
+    background: none;
+    padding: 5px;
+}
+
+.networks_list row {
+    padding: 5px;
+    border: none;
+}
+
+.networks_list row:hover {
+    background: #116caf;
+}
+
+.networks_list row:active {
+}
+
+.networks_list row:selected {
+    background: #227dbf;
+}
+
+.networks_list row label {
+    color: #fff;
+    text-shadow: 1px 1px 0 #000;
+    background: none;
+    font-size: 110%;
+    font-weight: normal;
+}
+
+.networks_list row:selected label {
+    color: #fff;
+}
+
+.password_container {
+}
+
+.network_main_label {
+    font-size: 150%;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.password_box {
+    margin-bottom: 20px;
+}
+
+.network_password_entry {
+    padding: 5px 10px;
+}

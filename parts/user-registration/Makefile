@@ -37,6 +37,10 @@ install: installdirs
 		puavo-user-registration.json
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-user-registration \
 		puavo-user-registration.glade
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-user-registration.css \
+		puavo-user-registration.css
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/background.jpg \
+		background.jpg
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES \
 		po/fi/puavo-user-registration.mo
 
