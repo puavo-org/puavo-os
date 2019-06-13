@@ -530,6 +530,19 @@ win.add(box_outer)
 
 pkg_list = []
 
+banner_message \
+  = _tr('Here you can install software, that are not preinstalled on this'
+        ' laptop due to licensing restrictions.  By installing the software'
+        ' you accept its licensing terms.  Installation requires network'
+        ' connectivity.')
+entry_text = Gtk.Label()
+entry_text.set_halign(Gtk.Align.CENTER)
+entry_text.set_justify(Gtk.Justification.FILL)
+entry_text.set_line_wrap(True)
+entry_text.set_max_width_chars(72)
+entry_text.set_text(banner_message)
+box_outer.pack_start(entry_text, False, False, 0)
+
 button = Gtk.Button(label=_tr('Accept all licenses and install all packages'))
 button.connect('clicked', lambda w: install_all_packages(win, pkg_list))
 
