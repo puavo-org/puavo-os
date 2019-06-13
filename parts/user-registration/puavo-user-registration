@@ -22,8 +22,7 @@ from gi.repository import GLib, Gtk, Gdk, GdkPixbuf, GObject
 from gi.repository import WebKit2
 
 # Where to load all resources. Must not end in a slash, or the CSS will break!
-DATA_ROOT = '/home/jarmo/puavo-os/parts/user-registration'
-#DATA_ROOT = '/usr/share/puavo-user-registration'
+DATA_ROOT = '/usr/share/puavo-user-registration'
 
 gettext.bindtextdomain('puavo-user-registration', '/usr/share/locale')
 gettext.textdomain('puavo-user-registration')
