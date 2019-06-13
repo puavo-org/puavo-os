@@ -1121,10 +1121,10 @@ user_registration = UserRegistration(builder, main_window, upper_frame,
 if at_session_startup:
     wifi_connector = WifiConnector(builder, main_window, upper_frame)
     wifi_connector.prepare_ui_and_activate(main_window)
-    #main_window.set_decorated(False)
-    #main_window.set_deletable(False)
-    #main_window.set_skip_pager_hint(True)
-    #main_window.set_skip_taskbar_hint(True)
+    main_window.set_decorated(False)
+    main_window.set_deletable(False)
+    main_window.set_skip_pager_hint(True)
+    main_window.set_skip_taskbar_hint(True)
 else:
     user_registration.activate()
 
