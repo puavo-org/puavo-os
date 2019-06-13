@@ -10,8 +10,18 @@ INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL) -m 644
 
 .PHONY: all
-all:
+all: po/fi/puavo-pkgs-ui.mo
 	${MAKE} -C packages all
+
+puavo-pkgs-ui.pot: puavo-pkgs-ui
+	xgettext --omit-header --language python --keyword=_tr -o $@ $^
+
+%.po: po/puavo-pkgs-ui.pot
+	msgmerge --update --no-fuzzy-matching --backup=off $@ $<
+	touch $@
+
+%.mo: %.po
+	msgfmt $< --output-file $@
 
 .PHONY: installdirs
 installdirs:
@@ -19,6 +29,7 @@ installdirs:
 	mkdir -p $(DESTDIR)$(sbindir)
 	mkdir -p $(DESTDIR)$(sysconfdir)/puavo-pkg
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/definitions
+	mkdir -p $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES
 	${MAKE} -C packages installdirs
 
 # XXX We do not install puavo-pkg-updater, puavo-pkg-updater.conf and
@@ -43,8 +54,12 @@ install: installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/puavo-pkg \
 		puavo-pkg.conf
 
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES \
+		po/fi/puavo-pkgs-ui.mo
+
 	${MAKE} -C packages install
 
 .PHONY: clean
 clean:
 	${MAKE} -C packages clean
+	rm -rf po/*/*.mo po/*.pot

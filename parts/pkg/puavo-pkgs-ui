@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import fcntl
+import gettext
 import gi
 import os
 import signal
@@ -15,6 +16,10 @@ from gi.repository import GLib
 from gi.repository import GObject
 from gi.repository import Gtk
 from gi.repository import Gdk
+
+gettext.bindtextdomain('puavo-pkgs-ui', '/usr/share/locale')
+gettext.textdomain('puavo-pkgs-ui')
+_tr = gettext.gettext
 
 class PkgState(Enum):
     ABSENT          = 1
@@ -46,10 +51,6 @@ def set_state_message(widget, msg, current_state_class):
     ctx.add_class(current_state_class)
 
     widget.set_label(msg)
-
-
-def _tr(msg):
-    return msg
 
 
 def error_message(parent, message, secondary_message):
@@ -174,37 +175,37 @@ class PuavoPkg:
         self.pkg_state = new_state
 
         if new_state in [ PkgState.ABSENT, PkgState.REMOVE_SUCCESS ]:
-            set_state_message(self.state_msg, _tr('EI ASENNETTU') , 'state-not-installed')
-            self.action_button.set_label( _tr('Asenna') )
+            set_state_message(self.state_msg, _tr('NOT INSTALLED') , 'state-not-installed')
+            self.action_button.set_label( _tr('Install') )
             self.action_button_conn \
               = self.action_button.connect('clicked', self.install_pkg)
 
         elif new_state == PkgState.INSTALLING:
-            set_state_message(self.state_msg, _tr('ASENNETAAN') , 'state-installing')
-            self.action_button.set_label( _tr('Keskeytä') )
+            set_state_message(self.state_msg, _tr('INSTALLING') , 'state-installing')
+            self.action_button.set_label( _tr('Cancel') )
             self.action_button_conn \
               = self.action_button.connect('clicked', self.cancel_installation)
             self.spinner.start()
 
         elif new_state == PkgState.INSTALL_ERROR:
-            set_state_message(self.state_msg, _tr('VIRHE') , 'state-error')
-            self.action_button.set_label( _tr('Asenna') )
+            set_state_message(self.state_msg, _tr('ERROR') , 'state-error')
+            self.action_button.set_label( _tr('Install') )
             self.action_button_conn \
               = self.action_button.connect('clicked', self.install_pkg)
 
         elif new_state in [ PkgState.INSTALL_SUCCESS, PkgState.INSTALLED ]:
-            set_state_message(self.state_msg, _tr('ASENNETTU') , 'state-installed')
-            self.action_button.set_label( _tr('Poista') )
+            set_state_message(self.state_msg, _tr('INSTALLED') , 'state-installed')
+            self.action_button.set_label( _tr('Remove') )
             self.action_button_conn \
               = self.action_button.connect('clicked', self.remove_pkg)
 
         elif new_state == PkgState.REMOVING:
-            set_state_message(self.state_msg, _tr('POISTETAAN') , 'state-removing')
+            set_state_message(self.state_msg, _tr('REMOVING') , 'state-removing')
             self.spinner.start()
 
         elif new_state == PkgState.REMOVE_ERROR:
-            set_state_message(self.state_msg, _tr('VIRHE') , 'state-error')
-            self.action_button.set_label( _tr('Asenna') )
+            set_state_message(self.state_msg, _tr('ERROR') , 'state-error')
+            self.action_button.set_label( _tr('Install') )
             self.action_button_conn \
               = self.action_button.connect('clicked', self.install_pkg)
 
@@ -262,7 +263,7 @@ class PuavoPkg:
         set_widget_style(details_row, 'details_row', style_provider)
 
         desc_text = html.escape(self.description)
-        desc_text += '\n\n<a href="%s">%s</a>' % (self.license, _tr('Näytä lisenssi'))
+        desc_text += '\n\n<a href="%s">%s</a>' % (self.license, _tr('Show license'))
 
         #self.package_description = Gtk.Label(self.description)
         self.package_description = Gtk.Label()
@@ -281,7 +282,7 @@ class PuavoPkg:
         self.spinner = Gtk.Spinner()
         set_widget_style(self.spinner, 'action_spinner', style_provider)
 
-        self.toggle_log_button = Gtk.ToggleButton(label='Show install/remove log')
+        self.toggle_log_button = Gtk.ToggleButton(label=_tr('Show install/remove log'))
         set_widget_style(self.toggle_log_button, 'log_button', style_provider)
         self.toggle_log_button.connect('clicked', self.show_or_hide_log)
 
@@ -326,7 +327,7 @@ class PuavoPkg:
             self.install_log_win.set_position(Gtk.WindowPosition.CENTER)
             self.install_log_win.set_default_geometry(800, 320)
             self.install_log_win.set_title(
-              _tr('Lisäohjelmistojen asennin') + ' / %s' % self.pkgname)
+              _tr('Extra software installer') + ' / %s' % self.pkgname)
             self.install_log_win.connect('destroy',
               lambda x: self.toggle_log_button.set_active(False))
 
@@ -497,15 +498,15 @@ win = Gtk.Window()
 
 win.set_border_width(10)
 win.set_position(Gtk.WindowPosition.CENTER)
-win.set_title(_tr('Lisäohjelmistojen asennin'))
+win.set_title(_tr('Extra software installer'))
 win.set_icon_name('system-installer')
 
 this_script = open(os.path.realpath(sys.argv[0]), 'r')
 try:
     fcntl.flock(this_script, fcntl.LOCK_EX | fcntl.LOCK_NB)
 except BlockingIOError:
-    errmsg = ('"%s"' % _tr('Lisäohjelmistojen asennin')) \
-                + ' ' + _tr('on jo käynnissä')
+    errmsg = ('"%s"' % _tr('Extra software installer')) \
+                + ' ' + _tr('is already running')
     dialog = Gtk.MessageDialog(win, 0, Gtk.MessageType.ERROR,
                Gtk.ButtonsType.CANCEL, errmsg)
     dialog.run()
@@ -529,7 +530,7 @@ win.add(box_outer)
 
 pkg_list = []
 
-button = Gtk.Button(label=_tr('Hyväksy kaikki lisenssit ja asenna kaikki paketit'))
+button = Gtk.Button(label=_tr('Accept all licenses and install all packages'))
 button.connect('clicked', lambda w: install_all_packages(win, pkg_list))
 
 box_outer.pack_start(button, False, False, 0)
@@ -572,9 +573,10 @@ for pkg in pkg_list:
 
 if not previous_pkg:
     error_message(win,
-        _tr('Ei paketteja'),
-        _tr('Yhtään pakettia ei ole listattu asennettavaksi tai poistettavaksi.\n\n'
-            'Tarkista <tt>puavo.pkgs.ui.pkglist</tt> -puavoconf -asetuksen sisältö.'))
+        _tr('No packages'),
+        _tr('No packages have been listed as to be installed or removed.') \
+          + '\n\n' \
+          + _tr('Check <tt>puavo.pkgs.ui.pkglist</tt> -puavoconf setting.'))
 
     sys.exit(1)
 
