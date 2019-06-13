@@ -70,8 +70,8 @@ msgid ""
 "Are you sure you do not want to create a user account?  Without user"
 " account, your files will be lost after your desktop session ends."
 msgstr ""
-"Oletko varma että et halua luoda käyttäjätunnusta?"
-"  Ilman käyttäjätunnusta tiedostosi katoavat kun työpöytäsessiosi loppuu."
+"Oletko varma, että et halua luoda käyttäjätunnusta?"
+"  Ilman käyttäjätunnusta tiedostosi katoavat, kun työpöytäsessiosi loppuu."
 
 #: puavo-user-registration:212
 msgid "Loginnames may contain only characters a-z, 0-9, -, _ and a dot."
@@ -281,7 +281,7 @@ msgid "You do not have the required permissions to use this tool."
 msgstr "Sinulla ei ole tarvittavia oikeuksia tämän työkalun käyttöön."
 
 msgid "System must be rebooted, press OK when ready!"
-msgstr "Systeemi täytyy uudelleenkäynnistää, paina OK kun olet valmis!"
+msgstr "Kannettava täytyy nyt käynnistää uudelleen, paina OK kun olet valmis!"
 
 # in puavo-user-registration.glade
 msgid "First name:"
@@ -297,7 +297,7 @@ msgid "Email address:"
 msgstr "Sähköpostiosoite:"
 
 msgid "Login password:"
-msgstr "Kirjautumissalasana:"
+msgstr "Salasana:"
 
 msgid "Password confirmation:"
 msgstr "Salasanan vahvistus:"
