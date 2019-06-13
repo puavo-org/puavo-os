@@ -244,12 +244,6 @@ class PuavoPkg:
 
 
     def add_to_grid(self, list_win, style_provider, previous_pkg):
-        # package may not be available, so skip those packages
-        try:
-            self.lookup_pkg_fields()
-        except:
-            return False
-
         # Header row
         header_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
         set_widget_style(header_row, 'header_row', style_provider)
@@ -533,6 +527,8 @@ win.set_default_size(1000, screen_height)
 box_outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
 win.add(box_outer)
 
+pkg_list = []
+
 button = Gtk.Button(label=_tr('Hyväksy kaikki lisenssit ja asenna kaikki paketit'))
 button.connect('clicked', lambda w: install_all_packages(win, pkg_list))
 
@@ -553,14 +549,23 @@ set_widget_style(scrolled_win, 'scrolled_window', style_provider)
 # ------------------------------------------------------------------------------
 # Setup packages
 
-pkg_list = []
+unsorted_pkg_list = []
 
 for pkgname in puavoconf_get('puavo.pkgs.ui.pkglist').split():
-    pkg_list.append( PuavoPkg(pkgname) )
+    pkg = PuavoPkg(pkgname)
+    try:
+        pkg.lookup_pkg_fields()
+        unsorted_pkg_list.append(pkg)
+    except Exception as e:
+        print("error looking up package fields for %s: %s" \
+                % (pkg.pkgname, e), file=sys.stderr)
+
+
 
 # Fill the package list
 previous_pkg = None
 
+pkg_list = sorted(unsorted_pkg_list, key=lambda pkg: pkg.legend)
 for pkg in pkg_list:
     if pkg.add_to_grid(list_win, style_provider, previous_pkg):
         previous_pkg = pkg
