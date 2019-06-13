@@ -1128,8 +1128,6 @@ if at_session_startup:
 else:
     user_registration.activate()
 
-#user_registration.activate()
-
 main_window.show_all()
 
 Gtk.main()
