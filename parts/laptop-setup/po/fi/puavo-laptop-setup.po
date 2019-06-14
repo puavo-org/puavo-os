@@ -27,10 +27,10 @@ msgid "is already running"
 msgstr "on jo käynnissä"
 
 msgid "It is now possible to choose Windows from the boot menu when starting up the computer."
-msgstr "Nyt on mahdollista valita Windows valikosta konetta käynnistettäessä."
+msgstr "Windows on nyt lisätty käynnistysvaihtoehdoksi tietokoneen käynnistysvalikkoon. Käynnistysvalikko tulee näkyviin aina tietokoneen uudelleen käynnistyksen yhteydessä."
 
 msgid "Abitti is not updated when running Windows, you have to boot into the current system to update it."
-msgstr "Abittia ei päivitetä Windowsia käytettäessä.  Sinun täytyy käyttää tätä käyttöjärjestelmää, jotta Abitti päivittyisi."
+msgstr "Huomioi, että Abitti-koejärjestelmää ei päivitetä silloin, kun tietokone on käynnistetty Windowsiin. Vaihtaaksesi/päivittääksesi kannettavan Abitti-versiota, sinun tulee valita tietokoneen käynnistyksen yhteydessä 'Normaali käynnistys' ja käynnistää tähän nyt käytössä olevaan Opinsys OS -käyttöjärjestelmään."
 
 # from puavo-laptop-setup.glade
 msgid "Start using Windows"
@@ -40,7 +40,7 @@ msgid "Default operating system at boot"
 msgstr "Oletuksena käynnistettävä järjestelmä"
 
 msgid "Show developer mode in boot menu"
-msgstr "Näytä kehittäjätila käynnistysmenussa"
+msgstr "Näytä kehittäjätila tietokonetta käynnistettäessä"
 
 msgid "Abitti-version"
 msgstr "Abitti-versio"
