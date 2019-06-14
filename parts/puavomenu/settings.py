@@ -53,6 +53,13 @@ class Settings:
         # Is this a fatclient system?
         self.is_fatclient = False
 
+        # Is this device personally administered?
+        self.is_personally_administered = False
+
+        # Is the current user the device's primary user? Cannot be True
+        # unless 'is_personally_administered' is also True.
+        self.is_user_primary_user = False
+
         # True if the global GNOME dark theme is enabled
         self.dark_theme = False
 
@@ -102,6 +109,26 @@ class Settings:
             # No point in loading them, either.
             logging.info('Faves loading/saving is disabled for this session')
             self.enable_faves_saving = False
+
+        if utils.puavo_conf('puavo.admin.personally_administered',
+                            'false') == 'true':
+            self.is_personally_administered = True
+
+            try:
+                import pwd
+
+                configured_primary_user = \
+                    utils.puavo_conf('puavo.admin.primary_user', None)
+                current_user = pwd.getpwuid(os.getuid()).pw_name
+
+                if configured_primary_user == current_user:
+                    # The current user is this personally administered
+                    # device's configured primary user
+                    self.is_user_primary_user = True
+            except Exception as e:
+                logging.error("Cannot determine if the current user is this " \
+                              "device's configured primary user:")
+                logging.error(str(e))
 
         # Detect dark theme usage
         try:

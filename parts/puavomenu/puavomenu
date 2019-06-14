@@ -196,6 +196,9 @@ if not settings.prod_mode:
 if settings.autohide:
     logging.info('*** Autohide enabled ***')
 
+if settings.is_personally_administered and settings.is_user_primary_user:
+    logging.info('*** Device primary user using a personally administered device ***')
+
 # ------------------------------------------------------------------------------
 # And go!
 
