@@ -219,10 +219,15 @@ class ProgramButton(HoverIconButtonBase):
             # from the panel or the desktop...
             self.__enable_popup = False
 
-            self.label_layout.set_markup(
-                label + '\n<span foreground="#444"><i><small>[asennin]</small></i></span>')
+            markup = '{0}\n<span foreground="#444"><i><small>[{1}]</small></i></span>' \
+                     .format(label,
+                            utils.localize(STRINGS['button_puavopkg_installer_suffix'],
+                                           settings.language))
 
-            self.set_property('tooltip-text', 'Klikkaa asentaaksesi tämän ohjelman')
+            self.label_layout.set_markup(markup)
+
+            self.set_property('tooltip-text',
+                utils.localize(STRINGS['button_puavopkg_installer_tooltip'], settings.language))
 
         self.__menu = None
         self.__menu_signal = self.connect('button-press-event',

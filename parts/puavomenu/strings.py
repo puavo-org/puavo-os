@@ -69,6 +69,24 @@ STRINGS = {
     },
 
     # --------------------------------------------------------------------------
+    # Buttons
+
+    # This must be *SHORT* as it must fit below the normal icon text!
+    'button_puavopkg_installer_suffix': {
+        'en': 'installer',
+        'fi': 'asennin',
+        'sv': 'installer',
+        'de': 'Installateur',
+    },
+
+    'button_puavopkg_installer_tooltip': {
+        'en': 'Click to install this program',
+        'fi': 'Klikkaa asentaaksesi tämä ohjelma',
+        'sv': 'Klicka för att installera det här programmet',
+        'de': 'Klicken Sie hier, um dieses Programm zu installieren',
+    },
+
+    # --------------------------------------------------------------------------
     # Sidebar
 
     'sb_avatar_hover': {
