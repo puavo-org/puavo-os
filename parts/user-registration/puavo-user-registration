@@ -1136,7 +1136,7 @@ welcome_text.get_style_context().add_class('welcome_text')
 
 welcome_footer = Gtk.Label()
 welcome_footer.set_markup('<span color="#0f0">Vinkki:</span> Mikäli et pysty liittämään kannettavaa verkkoon juuri nyt, ' \
-'voit tehdä sen myös\nmyöhemmin ja käyttää konetta tilapäisesti' \
+'voit tehdä sen myös\nmyöhemmin ja käyttää konetta tilapäisesti ' \
 'vieras-tilassa napsauttamalla alareunassa\nolevaa <i>"Siirry työpöydälle"</i> -painiketta.')
 welcome_footer.get_style_context().add_class('welcome_footer')
 
