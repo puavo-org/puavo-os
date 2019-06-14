@@ -118,7 +118,7 @@
             <property name="can_focus">False</property>
             <child>
               <object class="GtkRadioButton" id="boot_puavo_os">
-                <property name="label" translatable="yes">Linux</property>
+                <property name="label" translatable="yes">Puavo OS (Linux)</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
