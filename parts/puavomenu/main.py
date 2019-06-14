@@ -392,14 +392,28 @@ class PuavoMenu(Gtk.Window):
             data=program,
             is_installer=program.is_puavopkg_installer())
 
+    # Returns True if puavo-pkg installer icons should be hidden
+    # in this session
+    def __are_installers_hidden(self):
+        if not self.__settings.is_user_primary_user:
+            return True
+
+        if self.__settings.is_guest:
+            return True
+
+        if self.__settings.is_fatclient:
+            return True
+
+        return False
+
     # (Re-)Creates the current category or menu view
     def __create_current_menu(self):
         if self.menudata is None:
             return
 
-        new_buttons = []
-
         self.__empty.hide()
+
+        new_buttons = []
 
         if self.current_menu is None:
             # Top-level category view
@@ -424,6 +438,9 @@ class PuavoMenu(Gtk.Window):
                     if program.hidden:
                         continue
 
+                    if program.is_puavopkg_installer() and self.__are_installers_hidden():
+                        continue
+
                     button = self.__make_program_button(program)
                     button.connect('clicked', self.clicked_program_button)
                     new_buttons.append(button)
@@ -436,6 +453,9 @@ class PuavoMenu(Gtk.Window):
             # Submenu view, have only programs (no submenu support yet)
             for program in self.current_menu.programs:
                 if program.hidden:
+                    continue
+
+                if program.is_puavopkg_installer() and self.__are_installers_hidden():
                     continue
 
                 button = self.__make_program_button(program)
@@ -671,7 +691,7 @@ class PuavoMenu(Gtk.Window):
             self.__create_current_menu()
             return
 
-        matches = self.menudata.search(key)
+        matches = self.menudata.search(key, self.__are_installers_hidden())
 
         if len(matches) > 0:
             self.__empty.hide()

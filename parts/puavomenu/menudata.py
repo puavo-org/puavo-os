@@ -189,11 +189,15 @@ class Menudata:
         self.category_index = []
 
     # Searches for programs, returns them sorted by their names
-    def search(self, key):
+    def search(self, key, hide_puavopkg_installers):
         matches = []
 
         for _, program in self.programs.items():
             if program.hidden:
+                continue
+
+            if program.is_puavopkg_installer() and hide_puavopkg_installers:
+                # Don't show puavopkg installers if they cannot be used
                 continue
 
             if re.search(key, program.menudata_id, re.IGNORECASE):
