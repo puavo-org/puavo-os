@@ -1,7 +1,9 @@
 if [ "$DESKTOP_SESSION" = 'puavo-user-registration' ]; then
   /usr/bin/openbsd-cwm & cwm_pid=$!
 
-  qiv -mz /usr/share/backgrounds/edubuntu-periodic-breakout.jpg || true
+  if [ -e /boot/grub/themes/Vimix/background.jpeg ]; then
+    qiv -mz /boot/grub/themes/Vimix/background.jpeg || true
+  fi
   puavo-user-registration --at-session-startup || true
 
   kill -9 "$cwm_pid"
