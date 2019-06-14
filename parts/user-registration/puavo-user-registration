@@ -442,7 +442,7 @@ class UserRegistration:
                + '\n\n<big>{0}</big>'.format(response['log_id'])))
 
 
-    def handle_server_409(response):
+    def handle_server_409(self, response):
         if response['status'] == 'username_unavailable':
             self.show_error_message(self.app_window,
                 _tr('Loginname already in use.'),
