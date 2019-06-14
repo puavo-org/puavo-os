@@ -1053,7 +1053,9 @@ def show_privacy_policy(parent):
 # ------------------------------------------------------------------------------
 # MAIN
 
-at_session_startup = False
+# XXX Always use session startup mode for now.  Maybe later fix the normal
+# XXX mode (intended for user registration only) or remove it.
+at_session_startup = True
 if len(sys.argv) == 1:
     pass
 elif len(sys.argv) == 2:
