@@ -446,9 +446,11 @@ class Sidebar:
 
         y = self.__create_button(y, SB_SUPPORT)
         y = self.__create_button(y, SB_SYSTEM_SETTINGS)
-        if self.__show_laptop_setup():
+
+        if self.__settings.is_user_primary_user:
             y = self.__create_button(y, SB_LAPTOP_SETTINGS)
             y = self.__create_button(y, SB_PUAVOPKG_INSTALLER)
+
         y = self.__create_separator(y)
 
         if not (self.__settings.is_guest or self.__settings.is_webkiosk):
@@ -465,17 +467,6 @@ class Sidebar:
             y = self.__create_button(y, SB_SHUTDOWN)
 
         logging.info('Support page URL: "%s"', SB_SUPPORT['command']['args'])
-
-    def __show_laptop_setup(self):
-        personally_administered \
-          = utils.puavo_conf('puavo.admin.personally_administered', 'false')
-        if personally_administered != 'true':
-            return False
-
-        primary_user = utils.puavo_conf('puavo.admin.primary_user', '')
-        current_user = pwd.getpwuid( os.getuid() ).pw_name
-        return current_user == primary_user
-
 
     # Creates a sidebar button
     def __create_button(self, y, data):
