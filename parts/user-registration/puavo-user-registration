@@ -1130,8 +1130,8 @@ welcome_label.get_style_context().add_class('welcome_label')
 
 welcome_text = Gtk.Label()
 welcome_text.set_markup('Uuden kannettavasi käyttöönottamiseksi, sinut opastetaan seuraavaksi:\n\n' \
-'<span color="#0f0"><big>1.</big></span> Liity langattomaan verkkoon\n' \
-'<span color="#0f0"><big>2.</big></span> Rekisteröi itsellesi uusi käyttäjätunnus')
+'<span color="#0f0"><big>1.</big></span> Liittymään langattomaan verkkoon\n' \
+'<span color="#0f0"><big>2.</big></span> Rekisteröimään itsellesi uusi käyttäjätunnus')
 welcome_text.get_style_context().add_class('welcome_text')
 
 welcome_footer = Gtk.Label()
