@@ -76,24 +76,23 @@ class Settings:
         """Detects the runtime-environment for this session. Call once
         at startup."""
 
-        from os import environ
-        from os.path import expanduser, join, isfile
+        import os
+        import os.path
         import configparser
         import subprocess
-
         import logging
-        from utils import puavo_conf
+        import utils
 
         # Detect the session and device types
-        if 'GUEST_SESSION' in environ:
+        if 'GUEST_SESSION' in os.environ:
             logging.info('This is a guest user session')
             self.is_guest = True
 
-        if puavo_conf('puavo.hosttype', 'laptop') == 'fatclient':
+        if utils.puavo_conf('puavo.hosttype', 'laptop') == 'fatclient':
             logging.info('This is a fatclient device')
             self.is_fatclient = True
 
-        if puavo_conf('puavo.webmenu.webkiosk', '') == 'true':
+        if utils.puavo_conf('puavo.webmenu.webkiosk', '') == 'true':
             # I don't know if this actually works!
             logging.info('This is a webkiosk session')
             self.is_webkiosk = True
@@ -106,7 +105,7 @@ class Settings:
 
         # Detect dark theme usage
         try:
-            name = join(expanduser('~'),
+            name = os.path.join(os.path.expanduser('~'),
                         '.config',
                         'gtk-3.0',
                         'settings.ini')
@@ -125,9 +124,9 @@ class Settings:
             logging.error(str(exception))
 
         # Load the per-user config file, if it exists
-        conf_file = join(self.user_dir, 'puavomenu.conf')
+        conf_file = os.path.join(self.user_dir, 'puavomenu.conf')
 
-        if isfile(conf_file):
+        if os.path.isfile(conf_file):
             logging.info('A per-user configuration file "%s" exists, '
                          'trying to load it...', conf_file)
 
