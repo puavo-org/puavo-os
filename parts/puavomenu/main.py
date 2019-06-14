@@ -657,6 +657,11 @@ class PuavoMenu(Gtk.Window):
         logging.info('Launching puavo-pkgs-ui for program "%s", package ID "%s"',
                      program.name, program.puavopkg['id'])
 
+        self.autohide()
+
+        if self.__settings.reset_view_after_start:
+            self.reset_view()
+
         import subprocess
         subprocess.Popen(['puavo-pkgs-ui'],
                          stdout=subprocess.DEVNULL,
