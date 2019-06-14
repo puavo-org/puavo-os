@@ -219,10 +219,14 @@ class ProgramButton(HoverIconButtonBase):
             # from the panel or the desktop...
             self.__enable_popup = False
 
-            markup = '{0}\n<span foreground="#444"><i><small>[{1}]</small></i></span>' \
+            # UGLY UGLY UGLY
+            color = '#888' if settings.dark_theme else '#444'
+
+            markup = '{0}\n<span foreground="{1}"><i><small>[{2}]</small></i></span>' \
                      .format(label,
-                            utils.localize(STRINGS['button_puavopkg_installer_suffix'],
-                                           settings.language))
+                             color,
+                             utils.localize(STRINGS['button_puavopkg_installer_suffix'],
+                                            settings.language))
 
             self.label_layout.set_markup(markup)
 
