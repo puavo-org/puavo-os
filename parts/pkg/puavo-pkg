@@ -372,6 +372,10 @@ configure_pkg()
   }
   popd > /dev/null 2>&1 || true
 
+  ln -fns "$pkg_dir" "${g_puavo_pkg_available_dir}/${pkg_name}" || {
+    log_error "failed to create an available package link"
+    return 1
+  }
   ln -fns "$pkg_dir" "$pkg_link" || {
     log_error "failed to create a package link"
     return 1
