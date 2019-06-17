@@ -3,3 +3,10 @@
 set -eu
 
 puavo-conf-update
+
+# XXX another hackish workaround for the primary_user.
+primary_user_override_path='/state/etc/puavo/primary_user_override'
+if [ -r "$primary_user_override_path" ]; then
+  puavo-conf puavo.admin.primary_user \
+             "$(cat "$primary_user_override_path" 2>/dev/null || true)"
+fi
