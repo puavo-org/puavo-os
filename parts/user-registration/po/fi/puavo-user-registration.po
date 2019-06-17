@@ -229,7 +229,7 @@ msgstr "Tunnuksesi on luotu."
 
 #: puavo-user-registration:520
 msgid "Have a nice time with your studies!"
-msgstr "Mukavaa opiskelu-aikaa!"
+msgstr "Mukavaa opiskeluaikaa!"
 
 #: puavo-user-registration:536 puavo-user-registration:543
 msgid "Something went wrong"
@@ -344,3 +344,18 @@ msgstr "yhdistetään verkkoon %s"
 
 msgid "Privacy Policy"
 msgstr "Rekisteriseloste"
+
+msgid "internal error: username and password missing"
+msgstr "sisäinen virhe: käyttäjänimi ja salasana puuttuvat"
+
+msgid ""
+"Could not do initial login with new user credentials."
+"  Please remember your username \"%s\" for the first login."
+"  Contact support if there are problems."
+msgstr ""
+"Ensikirjautuminen uudella tunnuksella ei onnistunut."
+"  Muista käyttäjätunnuksesi \"%s\" ensikirjautumista varten."
+"  Ota ongelmatilanteissa yhteys tukeen."
+
+msgid "unknown login error"
+msgstr "tuntematon kirjautumisvirhe"

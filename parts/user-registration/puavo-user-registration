@@ -124,6 +124,9 @@ class UserRegistration:
         self.register_frame = register_frame
         self.at_session_startup = at_session_startup
 
+        self.username = None
+        self.password = None
+
         # Get object handles
         self.register_user_box = self.builder.get_object('register_user')
         self.first_name_field  = self.builder.get_object('first_name')
@@ -557,6 +560,7 @@ class UserRegistration:
                       + _tr('Have a nice time with your studies!'))
 
                 set_puavoconf_switch()
+                self.login_locally()
                 if self.at_session_startup:
                     dialog = Gtk.MessageDialog(self.app_window, 0,
                         Gtk.MessageType.INFO, Gtk.ButtonsType.OK,
@@ -585,6 +589,37 @@ class UserRegistration:
               + ' ' + _tr('Please contact support.'))
 
 
+    def login_locally(self):
+        error_msg = None
+
+        if not (self.username and self.password):
+            error_msg = _tr('internal error: username and password missing')
+
+        if not error_msg:
+            try:
+                cmd = [ 'sudo',
+                        '/usr/lib/puavo-ltsp-client/firstlogin-to-account',
+                        self.username ]
+                proc = subprocess.Popen(cmd, stdin=subprocess.PIPE,
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                proc.stdin.write(self.password.encode())
+                proc.stdin.close()
+                proc.wait()
+                if proc.returncode != 0:
+                    error_msg \
+                      = _tr('Could not do initial login with new user' \
+                            ' credentials.  Please remember your username' \
+                            ' "%s" for the first login.  Contact support if' \
+                            ' there are problems.') % self.username
+            except Exception as e:
+               error_msg = _tr('unknown login error') + ' ' + str(e)
+
+        if error_msg:
+            dialog = Gtk.MessageDialog(self.app_window, 0,
+                Gtk.MessageType.WARNING, Gtk.ButtonsType.OK, error_msg)
+            dialog.run()
+
+
     def on_submit_clicked(self, button):
         # --------------------------------------------------------------------------
         # Gather data
@@ -598,6 +633,9 @@ class UserRegistration:
         user['password_confirm'] = self.password_confirm_field.get_text()
         user['language'] = LANGUAGES[self.language_combo.get_active()][0]
         user['phone'] = self.phone_field.get_text().strip()
+
+        self.username = user['username']
+        self.password = user['password']
 
         machine = {
           'dn':       open('/etc/puavo/ldap/dn', 'rb').read() \

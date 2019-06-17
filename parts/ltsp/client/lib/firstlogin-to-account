@@ -1,0 +1,26 @@
+#!/usr/bin/python3
+
+import os
+import pam
+import sys
+
+p = pam.pam()
+
+if len(sys.argv) != 2:
+    sys.exit(1)
+
+username = sys.argv[1]
+password = sys.stdin.read()
+
+if not p.authenticate(username, password, 'gdm-password'):
+    sys.exit(1)
+
+account_path = '/var/lib/AccountsService/users/%s' % username
+
+if not os.path.exists(account_path):
+    tmp_account_path = '%s.tmp' % account_path
+    with open(tmp_account_path, 'w') as acc_file:
+       acc_file.write('[User]\nLanguage=\nXSession=\nSystemAccount=false\n')
+    os.rename(tmp_account_path, account_path)
+
+sys.exit(0)
