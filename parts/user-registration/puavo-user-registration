@@ -209,6 +209,8 @@ class UserRegistration:
         self.builder.get_object('titlebar_container').show()
         self.builder.get_object('titlebar_text').set_label(_tr('Käyttäjätunnuksen luonti'))
 
+        self.first_name_field.grab_focus()
+
 
     def show_info_message(self, parent, message, secondary_message=None):
         """Show a modal information message box."""
