@@ -53,7 +53,6 @@
           <object class="GtkBox" id="lower_button_box">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="margin_left">10</property>
             <property name="spacing">10</property>
             <property name="baseline_position">bottom</property>
             <child>
@@ -497,6 +496,9 @@
         <property name="position">1</property>
       </packing>
     </child>
+    <style>
+      <class name="register_user"/>
+    </style>
   </object>
   <object class="GtkFixed" id="welcome_screen">
     <property name="can_focus">False</property>

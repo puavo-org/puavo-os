@@ -7,14 +7,18 @@
 */
 
 /*
+$(NAME) variables are replaced in the code before the styles are used.
+*/
+
+/*
 --------------------------------------------------------------------------------
     MAIN WINDOW
 --------------------------------------------------------------------------------
 */
 
 .main_window {
-    /* data root prefix is filled in in the code */
-    background: url("DATA_ROOT/background.jpg");
+    background: url("$(DATA_ROOT)background_$(BACKGROUND_SIZE).png");
+    font-size: $(FONT_SCALE)%;
 }
 
 .main_container {
@@ -33,8 +37,8 @@
 }
 
 .upper_frame {
-    padding-right: 50px;
-    padding-top: 50px;
+    padding-right: $(PADDING-RIGHT)px;
+    padding-top: $(PADDING-TOP)px;
 }
 
 .upper_frame > border {
@@ -45,6 +49,10 @@ label.contact_info {
     color: #fff;
 }
 
+.lower_button_box {
+    padding: 0 10px;
+}
+
 /*
 --------------------------------------------------------------------------------
     UPPER FRAME DIALOG
@@ -52,9 +60,12 @@ label.contact_info {
 */
 
 label, entry, button, combobox {
-    font-size: 110%;
     font-weight: bold;
     font-family: Roboto;
+}
+
+.register_user {
+    font-size: 120%;
 }
 
 .upper_frame label {
@@ -160,6 +171,7 @@ combobox {
 }
 
 .password_container {
+    font-size: 120%;
 }
 
 .network_main_label {

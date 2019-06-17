@@ -1078,8 +1078,34 @@ else:
 # ------------------------------------------------------------------------------
 # Load and setup custom CSS for the program
 
+try:
+    width = Gdk.Screen.get_default().width()
+except:
+    width = 1366
+
+if width == 1366:
+    background_size = 1366
+    padding_top = 50
+    padding_right = 100
+    font_scale = 110
+else:
+    background_size = 1920
+    padding_top = 100
+    padding_right = 150
+    font_scale = 150
+
+CSS_VARIABLES = {
+    '$(DATA_ROOT)': DATA_ROOT,
+    '$(BACKGROUND_SIZE)': background_size,
+    '$(PADDING-TOP)': padding_top,
+    '$(PADDING-RIGHT)': padding_right,
+    '$(FONT_SCALE)': font_scale
+}
+
 css = open(os.path.join(DATA_ROOT, 'puavo-user-registration.css')).read()
-css = css.replace('DATA_ROOT', DATA_ROOT)
+
+for key, value in CSS_VARIABLES.items():
+    css = css.replace(key, str(value))
 
 style_provider = Gtk.CssProvider()
 style_provider.load_from_data(bytes(css, 'utf-8'))
@@ -1154,10 +1180,17 @@ welcome_button = Gtk.Button('Jatka')
 welcome_button.set_size_request(250, 50)
 
 welcome_container = Gtk.Fixed()
-welcome_container.put(welcome_label, 700, 100)
-welcome_container.put(welcome_text, 550, 250)
-welcome_container.put(welcome_footer, 550, 450)
-welcome_container.put(welcome_button, 700, 600)
+
+if width == 1366:
+    welcome_container.put(welcome_label, 700, 100)
+    welcome_container.put(welcome_text, 550, 250)
+    welcome_container.put(welcome_footer, 550, 450)
+    welcome_container.put(welcome_button, 700, 600)
+else:
+    welcome_container.put(welcome_label, 900, 150)
+    welcome_container.put(welcome_text, 750, 350)
+    welcome_container.put(welcome_footer, 750, 600)
+    welcome_container.put(welcome_button, 900, 800)
 
 main_container = builder.get_object('main_container')
 main_container.add(welcome_container)
