@@ -20,6 +20,18 @@
 .main_container {
 }
 
+.titlebar_container {
+    background: rgba(0, 103, 179, 0.75);
+    padding: 20px 0;
+}
+
+.titlebar_text {
+    font-size: 200%;
+    font-weight: bold;
+    text-shadow: 2px 2px 2px #000;
+    color: #fff;
+}
+
 .upper_frame {
     padding-right: 50px;
     padding-top: 50px;
@@ -59,6 +71,7 @@ label.email_hint, label.phone_number_hint {
     border-radius: 0;
     background: #fff;
     color: #000;
+    padding: 5px;
 }
 
 .upper_frame entry:focus {
@@ -164,24 +177,18 @@ combobox {
 }
 
 .welcome_label {
-/*    border: 1px solid red;*/
-
     font-size: 500%;
     font-weight: bold;
     color: #fff;
 }
 
 .welcome_text {
-/*    border: 1px solid red;*/
-
     font-size: 150%;
     color: #fff;
     font-weight: normal;
 }
 
 .welcome_footer {
-/*    border: 1px solid red;*/
-
     font-size: 120%;
     color: #fff;
     font-weight: normal;

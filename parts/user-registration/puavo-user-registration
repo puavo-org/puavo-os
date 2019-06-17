@@ -206,6 +206,9 @@ class UserRegistration:
             self.register_frame.remove(child)
         self.register_frame.add(self.register_user_box)
 
+        self.builder.get_object('titlebar_container').show()
+        self.builder.get_object('titlebar_text').set_label(_tr('Käyttäjätunnuksen luonti'))
+
 
     def show_info_message(self, parent, message, secondary_message=None):
         """Show a modal information message box."""
@@ -653,6 +656,8 @@ class WifiConnector:
         self.user_registration = user_registration
         self.register_frame = register_frame
 
+        self.builder = builder
+
         self.wifi_connector_box = builder.get_object('wifi_connector_box')
         self.wifi_connect_pid = None
 
@@ -681,6 +686,9 @@ class WifiConnector:
         for child in self.register_frame.get_children():
             self.register_frame.remove(child)
         self.register_frame.add(self.wifi_connector_box)
+
+        self.builder.get_object('titlebar_container').show()
+        self.builder.get_object('titlebar_text').set_label(_tr('Verkkoyhteyden määritys'))
 
 
     def password_changed(self, widget):
@@ -1151,6 +1159,9 @@ welcome_container.put(welcome_button, 700, 600)
 
 main_container = builder.get_object('main_container')
 main_container.add(welcome_container)
+
+builder.get_object('titlebar_container').hide()
+
 main_container.show_all()
 upper_frame.hide()
 
