@@ -1065,6 +1065,15 @@ class PuavoMenu(Gtk.Window):
         except Exception as exception:
             logging.error(str(exception))
 
+    # Socket handler: reload menudata
+    def __socket_reload_menudata(self, data):
+        print('Reloading all menudata')
+        self.unload_menu_data()
+        self.load_menu_data()
+        self.current_category = 0
+        self.current_menu = None
+        self.__create_current_menu()
+
 
     # Responds to commands sent through the control socket
     def __socket_watcher(self, conn, *args):
@@ -1086,6 +1095,7 @@ class PuavoMenu(Gtk.Window):
                 'show': self.__socket_show_window,
                 'toggle': self.__socket_toggle_window,
                 'update-puavopkg': self.__socket_update_puavopkg,
+                'reload-menudata': self.__socket_reload_menudata,
             }
 
             if cmd in socket_handlers:
