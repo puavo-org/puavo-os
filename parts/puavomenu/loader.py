@@ -1682,10 +1682,6 @@ def puavopkg_program_installed(language, root_dir, icon_cache, old_program):
             # The name didn't work, force generic icon searching
             new_program.icon_name_is_path = False
 
-        if len(os.path.dirname(new_program.icon_name)) > 0:
-            logging.error('Could not load icon "%s" for program "%s"',
-                          new_program.icon_name, new_program.menudata_id)
-
     if not new_program.icon_name_is_path:
         # Search for the generic icon
         icon_path = search_for_generic_icon(new_program.icon_name, icon_dirs)
