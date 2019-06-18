@@ -13,11 +13,4 @@ if [ -n "$SESSIONFILES" ]; then
   done
 fi
 
-# Because puavo-user-registration is typically run when
-# "puavo.admin.personally_administered" is "true", meaning incoming
-# connections are not accepted, we should run this before going to
-# desktop session.  This is to make it possible to remotely figure out
-# possible problems with registration.
-/usr/lib/puavo-ltsp-client/admin-remote-connections --accept-incoming || true
-
 exec /usr/lib/puavo-ltsp-client/desktop-session "$@"
