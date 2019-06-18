@@ -17,7 +17,7 @@ $(NAME) variables are replaced in the code before the styles are used.
 */
 
 .main_window {
-    background: url("$(DATA_ROOT)background_$(BACKGROUND_SIZE).png");
+    background: url("$(DATA_ROOT)/background_$(BACKGROUND_SIZE).png");
     font-size: $(FONT_SCALE)%;
 }
 
