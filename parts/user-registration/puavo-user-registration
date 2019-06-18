@@ -1123,9 +1123,9 @@ except:
 
 if width == 1366:
     background_size = 1366
-    padding_top = 50
+    padding_top = 30
     padding_right = 100
-    font_scale = 110
+    font_scale = 100
 else:
     background_size = 1920
     padding_top = 100
