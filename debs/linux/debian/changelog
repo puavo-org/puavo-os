@@ -1,9 +1,142 @@
-linux (4.9.168-1+puavo1) stretch; urgency=medium
+linux (4.9.168-1+deb9u3+puavo1) stretch; urgency=medium
 
   * Add a patch for enabling/disabling DRRS-feature in "i915"-driver,
     with "i915.enable_drrs=0" or "i915.enable_drrs=1".
 
  -- Puavo Org <dev@opinsys.fi>  Fri, 16 Feb 2018 07:43:58 +0200
+
+linux (4.9.168-1+deb9u3) stretch-security; urgency=high
+
+  [ Salvatore Bonaccorso ]
+  * tcp: limit payload size of sacked skbs (CVE-2019-11477)
+  * tcp: tcp_fragment() should apply sane memory limits (CVE-2019-11478)
+  * tcp: add tcp_min_snd_mss sysctl (CVE-2019-11479)
+  * tcp: enforce tcp_min_snd_mss in tcp_mtu_probing()
+  * tcp: fix fack_count accounting on tcp_shift_skb_data()
+
+  [ Ben Hutchings ]
+  * tcp: Avoid ABI change for DoS fixes
+  * mm/mincore.c: make mincore() more conservative (CVE-2019-5489)
+  * brcmfmac: add length checks in scheduled scan result handler
+  * brcmfmac: assure SSID length from firmware is limited (CVE-2019-9500)
+  * brcmfmac: add subtype check for event handling in data path (CVE-2019-9503)
+  * tty: mark Siemens R3964 line discipline as BROKEN (CVE-2019-11486)
+  * coredump: fix race condition between mmget_not_zero()/get_task_mm() and
+    core dumping (CVE-2019-11599)
+  * net: rds: force to destroy connection if t_sock is NULL in
+    rds_tcp_kill_sock(). (CVE-2019-11815) (Closes: #928989)
+  * ext4: zero out the unused memory region in the extent tree block
+    (CVE-2019-11833)
+  * Bluetooth: hidp: fix buffer overflow (CVE-2019-11884)
+  * mwifiex: Fix possible buffer overflows at parsing bss descriptor
+    (CVE-2019-3846)
+  * mwifiex: Abort at too short BSS descriptor element
+  * mwifiex: Don't abort on small, spec-compliant vendor IEs
+  * mwifiex: Fix heap overflow in mwifiex_uap_parse_tail_ies()
+    (CVE-2019-10126)
+
+ -- Ben Hutchings <ben@decadent.org.uk>  Sun, 16 Jun 2019 15:38:39 +0100
+
+linux (4.9.168-1+deb9u2) stretch-security; urgency=high
+
+  [ Salvatore Bonaccorso ]
+  * Revert "block/loop: Use global lock for ioctl() operation."
+    (Closes: #928125)
+
+ -- Ben Hutchings <ben@decadent.org.uk>  Mon, 13 May 2019 21:59:18 +0100
+
+linux (4.9.168-1+deb9u1) stretch-security; urgency=high
+
+  * [x86] Update speculation mitigations:
+    - x86/MCE: Save microcode revision in machine check records
+    - x86/cpufeatures: Hide AMD-specific speculation flags
+    - x86/bugs: Add AMD's variant of SSB_NO
+    - x86/bugs: Add AMD's SPEC_CTRL MSR usage
+    - x86/bugs: Switch the selection of mitigation from CPU vendor to CPU
+      features
+    - x86/bugs: Fix the AMD SSBD usage of the SPEC_CTRL MSR
+    - x86/microcode/intel: Add a helper which gives the microcode revision
+    - x86/microcode/intel: Check microcode revision before updating sibling
+      threads
+    - x86/microcode: Make sure boot_cpu_data.microcode is up-to-date
+    - x86/microcode: Update the new microcode revision unconditionally
+    - x86/mm: Use WRITE_ONCE() when setting PTEs
+    - bitops: avoid integer overflow in GENMASK(_ULL)
+    - x86/speculation: Simplify the CPU bug detection logic
+    - locking/atomics, asm-generic: Move some macros from <linux/bitops.h> to a
+      new <linux/bits.h> file
+    - x86/speculation: Remove SPECTRE_V2_IBRS in enum spectre_v2_mitigation
+    - x86/cpu: Sanitize FAM6_ATOM naming
+    - Documentation/l1tf: Fix small spelling typo
+    - x86/speculation: Apply IBPB more strictly to avoid cross-process data
+      leak
+    - x86/speculation: Enable cross-hyperthread spectre v2 STIBP mitigation
+    - x86/speculation: Propagate information about RSB filling mitigation to
+      sysfs
+    - x86/speculation/l1tf: Drop the swap storage limit restriction when
+      l1tf=off
+    - x86/speculation: Update the TIF_SSBD comment
+    - x86/speculation: Clean up spectre_v2_parse_cmdline()
+    - x86/speculation: Remove unnecessary ret variable in cpu_show_common()
+    - x86/speculation: Move STIPB/IBPB string conditionals out of
+      cpu_show_common()
+    - x86/speculation: Disable STIBP when enhanced IBRS is in use
+    - x86/speculation: Rename SSBD update functions
+    - x86/speculation: Reorganize speculation control MSRs update
+    - x86/Kconfig: Select SCHED_SMT if SMP enabled
+    - sched: Add sched_smt_active()
+    - x86/speculation: Rework SMT state change
+    - x86/l1tf: Show actual SMT state
+    - x86/speculation: Reorder the spec_v2 code
+    - x86/speculation: Mark string arrays const correctly
+    - x86/speculataion: Mark command line parser data __initdata
+    - x86/speculation: Unify conditional spectre v2 print functions
+    - x86/speculation: Add command line control for indirect branch speculation
+    - x86/speculation: Prepare for per task indirect branch speculation control
+    - x86/process: Consolidate and simplify switch_to_xtra() code
+    - x86/speculation: Avoid __switch_to_xtra() calls
+    - x86/speculation: Prepare for conditional IBPB in switch_mm()
+    - x86/speculation: Split out TIF update
+    - x86/speculation: Prepare arch_smt_update() for PRCTL mode
+    - x86/speculation: Prevent stale SPEC_CTRL msr content
+    - x86/speculation: Add prctl() control for indirect branch speculation
+    - x86/speculation: Enable prctl mode for spectre_v2_user
+    - x86/speculation: Add seccomp Spectre v2 user space protection mode
+    - x86/speculation: Provide IBPB always command line options
+    - kvm: x86: Report STIBP on GET_SUPPORTED_CPUID
+    - x86/msr-index: Cleanup bit defines
+    - x86/speculation: Consolidate CPU whitelists
+    - Documentation: Move L1TF to separate directory
+    - cpu/speculation: Add 'mitigations=' cmdline option
+    - x86/speculation: Support 'mitigations=' cmdline option
+    - x86/speculation/mds: Add 'mitigations=' support for MDS
+    - x86/cpu/bugs: Use __initconst for 'const' init data
+  * [x86] Mitigate Microarchitectural Data Sampling (MDS) vulnerabilities
+    (CVE-2018-12126, CVE-2018-12127, CVE-2018-12130, CVE-2019-11091):
+    - x86/speculation/mds: Add basic bug infrastructure for MDS
+    - x86/speculation/mds: Add BUG_MSBDS_ONLY
+    - x86/kvm: Expose X86_FEATURE_MD_CLEAR to guests
+    - x86/speculation/mds: Add mds_clear_cpu_buffers()
+    - x86/speculation/mds: Clear CPU buffers on exit to user
+    - x86/kvm/vmx: Add MDS protection when L1D Flush is not active
+    - x86/speculation/mds: Conditionally clear CPU buffers on idle entry
+    - x86/speculation/mds: Add mitigation control for MDS
+    - x86/speculation/mds: Add sysfs reporting for MDS
+    - x86/speculation/mds: Add mitigation mode VMWERV
+    - Documentation: Add MDS vulnerability documentation
+    - x86/speculation/mds: Add mds=full,nosmt cmdline option
+    - x86/speculation: Move arch_smt_update() call to after mitigation decisions
+    - x86/speculation/mds: Add SMT warning message
+    - x86/speculation/mds: Fix comment
+    - x86/speculation/mds: Print SMT vulnerable on MSBDS with mitigations off
+    - x86/mds: Add MDSUM variant to the MDS documentation
+    - Documentation: Correct the possible MDS sysfs values
+    - x86/speculation/mds: Fix documentation typo
+  * [x86] msr-index: Remove dependency on <linux/bits.h>
+  * [rt] Update patches to apply on top of the speculation mitigation changes
+  * [x86] mce, tlb: Ignore ABI changes
+
+ -- Ben Hutchings <ben@decadent.org.uk>  Mon, 13 May 2019 21:51:01 +0100
 
 linux (4.9.168-1) stretch; urgency=medium
 

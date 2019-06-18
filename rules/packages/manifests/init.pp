@@ -764,9 +764,9 @@ class packages {
       dkms_modules => $all_dkms_modules,
       package_name => 'linux-image-3.16.0-6-amd64';
 
-    '4.9.0-8-amd64':
+    '4.9.0-9-amd64':
       dkms_modules => $all_dkms_modules,
-      package_name => 'linux-image-4.9.0-8-amd64';
+      package_name => 'linux-image-4.9.0-9-amd64';
 
     '4.19.0-0.bpo.5-amd64':
       dkms_modules => [ $virtualbox_module ],
