@@ -597,7 +597,7 @@ class UserRegistration:
 
         if not error_msg:
             try:
-                cmd = [ 'sudo',
+                cmd = [ 'sudo', '-n',
                         '/usr/lib/puavo-ltsp-client/firstlogin-to-account',
                         self.username ]
                 proc = subprocess.Popen(cmd, stdin=subprocess.PIPE,
