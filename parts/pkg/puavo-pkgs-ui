@@ -270,6 +270,7 @@ class PuavoPkg:
         self.package_description.set_markup(desc_text)
         self.package_description.set_line_wrap(True)
         self.package_description.set_alignment(0.0, 0.0)
+        self.package_description.connect('activate-link', self.show_license)
         set_widget_style(self.package_description, 'package_description', style_provider)
 
         # Buttons container
@@ -317,6 +318,15 @@ class PuavoPkg:
             self.set_ui_state(PkgState.INSTALLED)
         else:
             self.set_ui_state(PkgState.ABSENT)
+
+        return True
+
+
+    def show_license(self, *unused):
+        # XXX leaves zombies...
+        subprocess.Popen([ 'firefox', self.license ],
+                         stdout=subprocess.DEVNULL,
+                         stderr=subprocess.DEVNULL)
 
         return True
 
