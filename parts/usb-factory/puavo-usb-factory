@@ -43,12 +43,12 @@ array set paths [list \
 
 set pci_path_dir /dev/disk/by-path
 
-set diskdevices [dict create]
-set usbhubs     [dict create]
-set new_usbhubs [dict create]
+set diskdevices  [dict create]
+set usbports     [dict create]
+set new_usbport  [dict create]
 
 proc logger {args} {
-  catch { exec logger -t puavo-usb-factory {*}$args }
+  catch { exec logger -t puavo-usb-factory {*}$args & }
 }
 
 # XXX perhaps do not use cat, but open + read + close ?
@@ -792,12 +792,11 @@ proc usbdevice_is_a_hub {usbpath} {
   return false
 }
 
-proc update_new_usbhubs {} {
-  global new_usbhubs
+proc update_new_usbports {} {
+  global new_usbports
 
   try {
-    set _new_usbhubs  [dict create]
-    set by_prodvendor [dict create]
+    set _new_usbports  [dict create]
 
     foreach pci_device_path [glob /sys/devices/pci*/0000:*] {
       set pci_id [file tail $pci_device_path]
@@ -817,8 +816,12 @@ proc update_new_usbhubs {} {
 
         set usbport [string map [list {:} .$portname:] \
                                 $portbase]
-
         set device_link "${path}/device"
+
+        if {![regexp {^(.*):} $usbport _ port_id]} {
+          logger -p user.warning \
+                    "cannot determine the port id from usbport $usbport"
+        }
 
         if {[file exists $device_link]} {
           if {[usbdevice_is_a_hub $device_link]} {
@@ -826,49 +829,16 @@ proc update_new_usbhubs {} {
           }
         }
 
-        try {
-          set hub_manufacturer [read_file "${path}/../../manufacturer"]
-          set hub_product      [read_file "${path}/../../product"]
-        } on error {} {
-          continue
-        }
-
-        if {![regexp {^([0-9]+)\.(.*):} $usbport _ port_firstnum port_id]} {
-          logger -p user.warning \
-                 "cannot determine the first number of usb port"
-          continue
-        }
-
         set devpath "pci-${pci_id}-usb-0:${usbport}-scsi-0:0:0:0"
-
-        set hub_id "${pci_id}/${port_firstnum}"
-        dict set by_prodvendor $hub_manufacturer $hub_product $hub_id \
-                 $port_id $devpath
-      }
-    }
-
-    dict for {manufacturer productinfo} $by_prodvendor {
-      dict for {product hubinfo} $productinfo {
-
-        # XXX Blacklist internal hubs in HP EliteBook 820.
-        # XXX We need to come up with some general solution to this problem.
-        if {$manufacturer eq "SMSC" && $product eq "USB2134B"} { continue }
-        if {$manufacturer eq "SMSC" && $product eq "USB5534B"} { continue }
-
-        dict for {hub_id devpaths_by_port_id} $hubinfo {
-          dict for {port_id devpath} $devpaths_by_port_id {
-            dict set _new_usbhubs $hub_id "$manufacturer / $product" \
-                                  ports $port_id $devpath
-          }
-        }
+        dict set _new_usbports $port_id $devpath
       }
     }
   } on error {errmsg} {
-    logger -p user.warning "error updating usbhubs: $errmsg"
+    logger -p user.warning "error updating usbports: $errmsg"
     return
   }
 
-  set new_usbhubs $_new_usbhubs
+  set new_usbports $_new_usbports
 }
 
 proc update_diskdevices_loop {} {
@@ -889,28 +859,24 @@ proc get_label {label_id default_value} {
 }
 
 
-proc dictionary_sort_by_label {label_prefix lst} {
-  set labels [lmap p $lst { list $p [get_label "${label_prefix}/${p}" $p] } ]
+proc dictionary_sort_by_label {lst} {
+  set labels [lmap p $lst { list $p [get_label "port/$p" $p] } ]
   lmap x [lsort -index 1 -dictionary $labels] \
          { lindex $x 0 }
 }
 
 proc update_diskdevices {{force_ui_update false}} {
-  global diskdevices pci_path_dir new_usbhubs usbhubs usb_labels writable_labels
+  global diskdevices pci_path_dir new_usbports usbports usb_labels \
+         writable_labels
 
-  update_new_usbhubs
+  update_new_usbports
 
   set regrid false
 
   set diskdevices_in_hubs [dict create]
   # list all diskdevices in new hubs
-  dict for {hub_id hubproducts} $new_usbhubs {
-    dict for {product productinfo} $hubproducts {
-      set portinfo [dict get $productinfo ports]
-      dict for {port_id devpath} $portinfo {
-        dict set diskdevices_in_hubs $devpath 1
-      }
-    }
+  foreach devpath [dict values $new_usbports] {
+    dict set diskdevices_in_hubs $devpath 1
   }
 
   # check all our current diskdevices and remove those
@@ -920,7 +886,7 @@ proc update_diskdevices {{force_ui_update false}} {
       continue
     }
 
-    # $devpath is gone from usbhubs, remove it and its UI
+    # $devpath is gone from usbports, remove it and its UI
 
     logger -p user.info \
            "removing [dev_logid $devpath] because it is no longer attached"
@@ -930,84 +896,53 @@ proc update_diskdevices {{force_ui_update false}} {
     dict unset diskdevices $devpath
     set regrid true
 
-    dict for {hub_id hubproducts} $usbhubs {
-      dict for {product productinfo} $hubproducts {
-        set portinfo [dict get $productinfo ports]
-        dict for {port_id usbhub_devpath} $portinfo {
-          if {$devpath eq $usbhub_devpath} {
-            dict unset usbhubs $hub_id $product ports $port_id
-          }
-        }
+    dict for {port_id usbport_devpath} $usbports {
+      if {$devpath eq $usbport_devpath} {
+        dict unset usbports $port_id
       }
-    }
-  }
-
-  # destroy UI of hubs that have no devices
-  dict for {hub_id hubproducts} $usbhubs {
-    dict for {product productinfo} $hubproducts {
-      set portinfo [dict get $productinfo ports]
-      if {[llength [dict keys $portinfo]] == 0} {
-        logger -p user.info "hub $hub_id/$product no longer has attached ports"
-        dict unset usbhubs $hub_id $product
-      }
-    }
-  }
-  dict for {hub_id hubproducts} $usbhubs {
-    if {[llength [dict keys $hubproducts]] == 0} {
-      logger -p user.info "hub $hub_id no longer has attached products"
-      dict unset usbhubs $hub_id
     }
   }
 
   set ui_elements [list]
 
-  dict for {hub_id hubproducts} $new_usbhubs {
-    set sorted_products [dictionary_sort_by_label "hub/${hub_id}" \
-                                                  [dict keys $hubproducts]]
-    # add new ports to UI
-    dict for {product productinfo} $hubproducts {
-      set sorted_ports [
-        dictionary_sort_by_label port \
-                                 [dict keys [dict get $productinfo ports]]
-      ]
+  set sorted_ports [dictionary_sort_by_label [dict keys $new_usbports]]
 
-      foreach port_id $sorted_ports {
-        set devpath [dict get $productinfo ports $port_id]
-        set port_ui ".f.disks.port_[string map {. _} $port_id]"
-        # Add UI for port and add it to diskdevices to manage.
-        # Test for diskdevice existence, because the same $devpath
-        # may be in two different products (USB2.0 vs. USB3.0).
-        if {[dict exists $diskdevices $devpath]} {
-          if {$force_ui_update} {
-            make_usbport_label $devpath $port_id $port_ui true
-            set regrid true
-          }
-        } else {
-          make_usbport_label $devpath $port_id $port_ui
-          dict set diskdevices $devpath [
-            dict create fh                ""       \
-                        image_size        ""       \
-                        model             ""       \
-                        port_id           $port_id \
-                        progress_list     [list]   \
-                        state             nomedia  \
-                        ui                $port_ui \
-                        verify_start_time ""       \
-                        version           ""       \
-                        write_start_time  ""       ]
-          logger -p user.info "device [dev_logid $devpath] attached"
-          set regrid true
-        }
+  foreach port_id $sorted_ports {
+    set devpath [dict get $new_usbports $port_id]
+    set port_ui ".f.disks.port_[string map {. _} $port_id]"
 
-        if {$port_ui ni $ui_elements} {
-          lappend ui_elements $port_ui
-        }
-        dict set usbhubs $hub_id $product ports $port_id $devpath
+    # Add UI for port and add it to diskdevices to manage.
+    # Test for diskdevice existence, because the same $devpath
+    # may be in two different products (USB2.0 vs. USB3.0).
+    if {[dict exists $diskdevices $devpath]} {
+      if {$force_ui_update} {
+        make_usbport_label $devpath $port_id $port_ui true
+        set regrid true
       }
+    } else {
+      make_usbport_label $devpath $port_id $port_ui
+      dict set diskdevices $devpath [
+        dict create fh                ""       \
+                    image_size        ""       \
+                    model             ""       \
+                    port_id           $port_id \
+                    progress_list     [list]   \
+                    state             nomedia  \
+                    ui                $port_ui \
+                    verify_start_time ""       \
+                    version           ""       \
+                    write_start_time  ""       ]
+      logger -p user.info "device [dev_logid $devpath] attached"
+      set regrid true
     }
+
+    if {$port_ui ni $ui_elements} {
+      lappend ui_elements $port_ui
+    }
+    dict set usbports $port_id $devpath
   }
 
-  if {[llength [dict keys $usbhubs]] == 0} {
+  if {[llength [dict keys $usbports]] == 0} {
     grid .f.disks.nohubs_message
   } else {
     grid forget .f.disks.nohubs_message
