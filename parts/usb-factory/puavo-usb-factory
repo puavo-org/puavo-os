@@ -272,7 +272,7 @@ proc start_operating {devpath cmd} {
   dict set diskdevices $devpath version    $version
 
   set fh [open "| $cmd"]
-  fconfigure $fh -buffering line
+  fconfigure $fh -blocking 0
   fileevent $fh readable [list handle_fileevent $devpath]
   return $fh
 }
@@ -390,9 +390,10 @@ proc handle_fileevent {devpath} {
   global diskdevices
 
   set fh [dict get $diskdevices $devpath fh]
-  set progressline [gets $fh]
+  set chars_returned [gets $fh progressline]
 
   if {[eof $fh]} {
+    fconfigure $fh -blocking 1
     if {[catch { close $fh }]} {
       set state [dict get $diskdevices $devpath state]
       if {$state eq "verifying"} {
@@ -412,6 +413,8 @@ proc handle_fileevent {devpath} {
     }
     return
   }
+
+  if {$chars_returned <= 0} { return }
 
   set bytes_written [string trim $progressline]
   # $bytes_written might be an error string, do not handle that
