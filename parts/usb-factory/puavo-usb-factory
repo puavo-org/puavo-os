@@ -45,14 +45,21 @@ set pci_path_dir /dev/disk/by-path
 
 set diskdevices  [dict create]
 set usbports     [dict create]
-set new_usbport  [dict create]
+set new_usbports [dict create]
 
 proc logger {args} {
   catch { exec logger -t puavo-usb-factory {*}$args & }
 }
 
-# XXX perhaps do not use cat, but open + read + close ?
-proc read_file {path} { exec cat $path }
+proc read_file {path} {
+  set f [open $path]
+  try {
+    set data [read $f]
+  } finally {
+    close $f
+  }
+  return [string trimright $data "\n"]
+}
 
 proc download_image {} {
   global image_downloader_fh image_downloading_version requested_version
@@ -765,28 +772,29 @@ proc set_ui_progress {port_ui state percentage eta} {
   set_usbport_image $port_ui $imagename $new_width
 }
 
-proc usbdevice_is_a_hub {usbpath} {
+proc usbpath_is_a_writable_port {usbpath} {
   try {
-    if {[catch { set usbdevicepath_list [glob "${usbpath}/*:1.0"] } err]} {
-      return false
-    }
-    if {[llength $usbdevicepath_list] != 1} {
-      error "multiple device paths"
-    }
-
-    set usbdevicepath [lindex $usbdevicepath_list 0]
-
-    set driver_path "${usbdevicepath}/driver"
-    if {![file exists $driver_path]} {
+    set removable [read_file "${usbpath}/../../removable"]
+    if {$removable eq "fixed"} {
       return false
     }
 
-    if {[file tail [file readlink $driver_path]] eq "hub"} {
-      return true
+    set interface_class [read_file "${usbpath}/../bInterfaceClass"]
+    if {$interface_class eq "09"} {
+      if {[file exists "${usbpath}/device"]} {
+        if {[catch { set portpaths [glob "${usbpath}/device/*:1.0"] }]} {
+          return false
+        }
+        if {[llength $portpaths] != 1} { return false }
+        set device_interface_class [read_file "${portpaths}/bInterfaceClass"]
+        if {$device_interface_class eq "09"} {
+          # another hub has already been connected to this port
+          return false
+        }
+      }
     }
-  } on error {errmsg} {
-    logger -p user.warning "error determining if $usbpath is a hub: $errmsg"
-    return false
+
+    return true
   }
 
   return false
@@ -796,7 +804,7 @@ proc update_new_usbports {} {
   global new_usbports
 
   try {
-    set _new_usbports  [dict create]
+    set _new_usbports [dict create]
 
     foreach pci_device_path [glob /sys/devices/pci*/0000:*] {
       set pci_id [file tail $pci_device_path]
@@ -816,21 +824,20 @@ proc update_new_usbports {} {
 
         set usbport [string map [list {:} .$portname:] \
                                 $portbase]
-        set device_link "${path}/device"
 
         if {![regexp {^(.*):} $usbport _ port_id]} {
           logger -p user.warning \
                     "cannot determine the port id from usbport $usbport"
         }
 
-        if {[file exists $device_link]} {
-          if {[usbdevice_is_a_hub $device_link]} {
-            continue
-          }
+        if {![usbpath_is_a_writable_port $path]} {
+          continue
         }
 
         set devpath "pci-${pci_id}-usb-0:${usbport}-scsi-0:0:0:0"
-        dict set _new_usbports $port_id $devpath
+        if {![dict exists $_new_usbports $port_id]} {
+          dict set _new_usbports $port_id $devpath
+        }
       }
     }
   } on error {errmsg} {
