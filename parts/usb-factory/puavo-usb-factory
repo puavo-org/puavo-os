@@ -834,20 +834,11 @@ proc update_new_usbports {} {
         }
 
         if {![usbpath_is_a_writable_port $path]} {
-          dict set _new_usbports $port_id ""
           continue
         }
 
         set devpath "pci-${pci_id}-usb-0:${usbport}-scsi-0:0:0:0"
-        if {![dict exists $_new_usbports $port_id]} {
-          dict set _new_usbports $port_id $devpath
-        }
-      }
-    }
-
-    dict for {port_id devpath} $_new_usbports {
-      if {$devpath eq ""} {
-        dict unset _new_usbports $port_id
+        dict set _new_usbports $port_id $devpath
       }
     }
   } on error {errmsg} {
