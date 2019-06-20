@@ -1243,12 +1243,12 @@ pack .f.version_status.download.label .f.version_status.download.status \
 
 setup_requested_version_ui
 
-pack .f.instructions -side left -anchor n -padx 40 -pady 40
-
 pack .f.support -side bottom -anchor e
 
 pack .f.disks -side right
 grid .f.disks.nohubs_message
+
+pack .f.instructions -side left -anchor n -padx 40 -pady 40
 
 pack .f -fill both -expand 1
 
