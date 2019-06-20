@@ -790,8 +790,8 @@ proc usbpath_is_a_writable_port {usbpath} {
         }
         if {[llength $portpaths] != 1} { return false }
         set device_interface_class [read_file "${portpaths}/bInterfaceClass"]
-        if {$device_interface_class eq "09"} {
-          # another hub has already been connected to this port
+        if {$device_interface_class ne "08"} {
+          # some non-mass storage device has been connected to this port
           return false
         }
       }
@@ -834,6 +834,7 @@ proc update_new_usbports {} {
         }
 
         if {![usbpath_is_a_writable_port $path]} {
+          dict set _new_usbports $port_id ""
           continue
         }
 
@@ -841,6 +842,12 @@ proc update_new_usbports {} {
         if {![dict exists $_new_usbports $port_id]} {
           dict set _new_usbports $port_id $devpath
         }
+      }
+    }
+
+    dict for {port_id devpath} $_new_usbports {
+      if {$devpath eq ""} {
+        dict unset _new_usbports $port_id
       }
     }
   } on error {errmsg} {
