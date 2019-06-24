@@ -626,11 +626,15 @@ proc add_new_port_if_calibrating {port_id} {
 
   if {!$calibration_in_progress} { return }
 
+  set next_calibration_entry [string trim $next_calibration_entry]
   set port_labels($port_id) $next_calibration_entry
-  # XXX this should be able to increment every kind of string
-  # XXX we should calculate the initial next_calibration_entry from the
-  # XXX old ones... with "0" included (so "1" would be normally the default)?
-  incr next_calibration_entry
+
+  if {[regexp {^(.*)([0-9]+)$} $next_calibration_entry _ prefix number]} {
+    set next_calibration_entry "${prefix}[expr { $number + 1 }]"
+  } else {
+    set next_calibration_entry "${next_calibration_entry} 2"
+  }
+
   update_port_labels_on_disk
   update_diskdevices true
 }
