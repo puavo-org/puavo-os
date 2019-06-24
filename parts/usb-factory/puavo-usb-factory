@@ -47,7 +47,7 @@ set diskdevices  [dict create]
 set usbports     [dict create]
 set new_usbports [dict create]
 
-set doing_calibration false
+set calibration_in_progress false
 set next_calibration_entry 1
 
 proc logger {args} {
@@ -374,7 +374,7 @@ proc dev_logid {devpath} {
   global diskdevices pci_path_dir
 
   set port_id [dict get $diskdevices $devpath port_id]
-  set label [get_label "port/${port_id}" $port_id]
+  set label [get_label "port/${port_id}"]
   set usbdevice_model [dict get $diskdevices $devpath model]
   return "$label (${pci_path_dir}/${devpath} | $usbdevice_model)"
 }
@@ -621,6 +621,20 @@ proc check_for_space_in_device {devpath} {
   expr { $device_size >= $image_size }
 }
 
+proc add_new_port_if_calibrating {port_id} {
+  global calibration_in_progress next_calibration_entry usb_labels
+
+  if {!$calibration_in_progress} { return }
+
+  set usb_labels(port/${port_id}) $next_calibration_entry
+  # XXX this should be able to increment every kind of string
+  # XXX we should calculate the initial next_calibration_entry from the
+  # XXX old ones... with "0" included (so "1" would be normally the default)?
+  incr next_calibration_entry
+  update_usb_labels_on_disk
+  update_diskdevices true
+}
+
 proc check_files {} {
   global diskdevices pci_path_dir
 
@@ -629,6 +643,7 @@ proc check_files {} {
     if {[file exists $full_devpath]} {
       if {[dict get $devstate state] eq "nomedia"} {
         # new usb device has been inserted, do something
+        add_new_port_if_calibrating [dict get $devstate port_id]
         dict set diskdevices $devpath model [lookup_usbdevice_model $devpath]
 
         if {[catch { check_for_space_in_device $devpath } res]} {
@@ -704,7 +719,7 @@ proc make_usbport_label {devpath port_id port_ui {update false}} {
   if {$update} { destroy $port_ui }
 
   set label_id "port/${port_id}"
-  set usb_labels($label_id) [get_label $label_id $port_id]
+  set usb_labels($label_id) [get_label $label_id]
 
   set_rotating_label $port_ui port $usb_labels($label_id)
 
@@ -721,6 +736,8 @@ proc make_usbport_label {devpath port_id port_ui {update false}} {
     $port_ui create text  120 18 -font smallInfoFont -tags port_label \
              -text $usb_labels($label_id)
   }
+
+  return $usb_labels($label_id)
 }
 
 proc set_usbport_image {port_ui imagename {new_width {}}} {
@@ -857,27 +874,23 @@ proc update_diskdevices_loop {} {
   after 3000 update_diskdevices_loop
 }
 
-proc get_label {label_id default_value} {
+proc get_label {label_id} {
   global usb_labels
-  set label [
-    expr {
-      [info exists usb_labels($label_id)]
-        ? $usb_labels($label_id)
-        : $default_value
-    }
-  ]
-  expr { $label ne "" ? $label : $default_value }
+  expr {
+    [info exists usb_labels($label_id)]
+      ? $usb_labels($label_id)
+      : ""
+  }
 }
 
-
 proc dictionary_sort_by_label {lst} {
-  set labels [lmap p $lst { list $p [get_label "port/$p" $p] } ]
+  set labels [lmap p $lst { list $p [get_label "port/$p"] } ]
   lmap x [lsort -index 1 -dictionary $labels] \
          { lindex $x 0 }
 }
 
 proc update_diskdevices {{force_ui_update false}} {
-  global diskdevices pci_path_dir new_usbports usbports usb_labels \
+  global bg_image diskdevices pci_path_dir new_usbports usbports usb_labels \
          writable_labels
 
   update_new_usbports
@@ -921,17 +934,18 @@ proc update_diskdevices {{force_ui_update false}} {
   foreach port_id $sorted_ports {
     set devpath [dict get $new_usbports $port_id]
     set port_ui ".f.disks.port_[string map {. _} $port_id]"
+    set usbport_label ""
 
     # Add UI for port and add it to diskdevices to manage.
     # Test for diskdevice existence, because the same $devpath
     # may be in two different products (USB2.0 vs. USB3.0).
     if {[dict exists $diskdevices $devpath]} {
       if {$force_ui_update} {
-        make_usbport_label $devpath $port_id $port_ui true
+        set usbport_label [make_usbport_label $devpath $port_id $port_ui true]
         set regrid true
       }
     } else {
-      make_usbport_label $devpath $port_id $port_ui
+      set usbport_label [make_usbport_label $devpath $port_id $port_ui]
       dict set diskdevices $devpath [
         dict create fh                ""       \
                     image_size        ""       \
@@ -947,16 +961,18 @@ proc update_diskdevices {{force_ui_update false}} {
       set regrid true
     }
 
-    if {$port_ui ni $ui_elements} {
-      lappend ui_elements $port_ui
+    if {$usbport_label ne ""} {
+      if {$port_ui ni $ui_elements} {
+        lappend ui_elements $port_ui
+      }
+      dict set usbports $port_id $devpath
     }
-    dict set usbports $port_id $devpath
   }
 
   if {[llength [dict keys $usbports]] == 0} {
-    grid .f.disks.nohubs_message
+    grid .f.disks.noports_message
   } else {
-    grid forget .f.disks.nohubs_message
+    grid forget .f.disks.noports_message
     if {$regrid} {
       set max_row_elements 13
       set total_element_count [llength $ui_elements]
@@ -983,10 +999,11 @@ proc update_diskdevices {{force_ui_update false}} {
 }
 
 proc read_usb_labels_from_disk {} {
-  global paths usb_labels
+  global calibration_in_progress paths usb_labels
   set usblabels_json_path "$paths(puavo_usb_factory_workdir)/usb_labels.json"
 
   if {![file exists $usblabels_json_path]} {
+    set calibration_in_progress true
     return
   }
 
@@ -1120,12 +1137,13 @@ proc update_requested_version_ui {visible} {
 }
 
 proc switch_ui_mode {{uimode ""}} {
-  global doing_calibration writable_labels
+  global calibration_in_progress writable_labels
 
   if {$uimode eq "calibration"} {
-    set doing_calibration true
+    set calibration_in_progress true
     set writable_labels false
   } else {
+    set calibration_in_progress false
     set writable_labels [expr { $writable_labels ? "false" : "true" }]
   }
 
@@ -1145,11 +1163,11 @@ proc switch_ui_mode {{uimode ""}} {
 }
 
 proc update_calibration_ui {show_calibration} {
-  global doing_calibration
+  global calibration_in_progress
 
   if {$show_calibration} {
     pack forget .f.start_calibration
-    if {$doing_calibration} {
+    if {$calibration_in_progress} {
       pack .f.calibration -side bottom -anchor w -before .f.instructions
     } else {
       pack forget .f.calibration
@@ -1261,9 +1279,9 @@ ttk::label .f.version_status.hostname.value -text [exec hostname] \
                                             -style Status.TLabel
 
 ttk::frame .f.disks
-ttk::label .f.disks.nohubs_message -font infoFont \
-                                   -text [ui_msg "waiting usb hubs"] \
-                                   -padding 40
+ttk::label .f.disks.noports_message -font infoFont \
+                                    -text [ui_msg "waiting usb drives"] \
+                                    -padding 40
 
 ttk::label .f.support -font infoFont -anchor e \
                                      -justify right \
@@ -1296,7 +1314,7 @@ setup_requested_version_ui
 pack .f.support -side bottom -anchor e
 
 pack .f.disks -side right -after .f.support
-grid .f.disks.nohubs_message
+grid .f.disks.noports_message
 
 pack .f.instructions -side left -anchor n -padx 40 -pady 40 -after .f.disks
 
@@ -1318,5 +1336,9 @@ update_image_info
 update_diskdevices_loop
 check_files
 roll_rotating_usb_labels 0
+
+if {$calibration_in_progress} {
+  switch_ui_mode calibration
+}
 
 logger -p user.info "gui done, processing events"
