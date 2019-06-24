@@ -21,8 +21,8 @@ set image_info {
 }
 
 set ui_messages {}
-array set rotating_usb_labels ""
-array set usb_labels ""
+array set rotating_port_labels ""
+array set port_labels ""
 set writable_labels false
 set image_downloading_version ""
 set requested_version ""
@@ -374,7 +374,7 @@ proc dev_logid {devpath} {
   global diskdevices pci_path_dir
 
   set port_id [dict get $diskdevices $devpath port_id]
-  set label [get_label "port/${port_id}"]
+  set label [get_label $port_id]
   set usbdevice_model [dict get $diskdevices $devpath model]
   return "$label (${pci_path_dir}/${devpath} | $usbdevice_model)"
 }
@@ -622,16 +622,16 @@ proc check_for_space_in_device {devpath} {
 }
 
 proc add_new_port_if_calibrating {port_id} {
-  global calibration_in_progress next_calibration_entry usb_labels
+  global calibration_in_progress next_calibration_entry port_labels
 
   if {!$calibration_in_progress} { return }
 
-  set usb_labels(port/${port_id}) $next_calibration_entry
+  set port_labels($port_id) $next_calibration_entry
   # XXX this should be able to increment every kind of string
   # XXX we should calculate the initial next_calibration_entry from the
   # XXX old ones... with "0" included (so "1" would be normally the default)?
   incr next_calibration_entry
-  update_usb_labels_on_disk
+  update_port_labels_on_disk
   update_diskdevices true
 }
 
@@ -664,14 +664,14 @@ proc check_files {} {
   after 250 check_files
 }
 
-proc roll_rotating_usb_labels {list_index} {
-  global diskdevices rotating_usb_labels writable_labels
+proc roll_rotating_port_labels {list_index} {
+  global diskdevices rotating_port_labels writable_labels
 
   if {!$writable_labels} {
     dict for {devpath devstate} $diskdevices {
       set port_ui [dict get $devstate ui]
-      set i [expr { $list_index % [llength $rotating_usb_labels($port_ui)] }]
-      set labeltext [lindex $rotating_usb_labels($port_ui) $i]
+      set i [expr { $list_index % [llength $rotating_port_labels($port_ui)] }]
+      set labeltext [lindex $rotating_port_labels($port_ui) $i]
       $port_ui itemconfigure port_label -text $labeltext
     }
   }
@@ -681,21 +681,21 @@ proc roll_rotating_usb_labels {list_index} {
   }
 
   incr list_index
-  after 1500 [list roll_rotating_usb_labels $list_index]
+  after 1500 [list roll_rotating_port_labels $list_index]
 }
 
 proc set_rotating_label {port_ui type messages} {
-  global rotating_usb_labels
+  global rotating_port_labels
 
   if {$type eq "port"} {
     set list_start [list $messages $messages]
-    if {[info exists rotating_usb_labels($port_ui)]} {
-      set list_end [lrange $rotating_usb_labels($port_ui) 2 3]
+    if {[info exists rotating_port_labels($port_ui)]} {
+      set list_end [lrange $rotating_port_labels($port_ui) 2 3]
     } else {
       set list_end [list]
     }
   } else {
-    set list_start [lrange $rotating_usb_labels($port_ui) 0 1]
+    set list_start [lrange $rotating_port_labels($port_ui) 0 1]
     switch -- [llength $messages] {
       0 { set list_end $list_start }
       1 { set list_end [list {*}$messages {*}$messages] }
@@ -710,21 +710,20 @@ proc set_rotating_label {port_ui type messages} {
     }
   }
 
-  set rotating_usb_labels($port_ui) [list {*}$list_start {*}$list_end]
+  set rotating_port_labels($port_ui) [list {*}$list_start {*}$list_end]
 }
 
 proc make_usbport_label {devpath port_id port_ui {update false}} {
-  global default_background_color rotating_usb_labels usb_labels writable_labels
+  global default_background_color rotating_port_labels port_labels \
+         writable_labels
 
   if {$update} { destroy $port_ui }
 
-  set label_id "port/${port_id}"
-  set usb_labels($label_id) [get_label $label_id]
-
-  set_rotating_label $port_ui port $usb_labels($label_id)
+  set port_labels($port_id) [get_label $port_id]
+  set_rotating_label $port_ui port $port_labels($port_id)
 
   if {$writable_labels} {
-    ttk::entry $port_ui -textvariable usb_labels($label_id) \
+    ttk::entry $port_ui -textvariable port_labels($port_id) \
                         -font smallInfoFont -justify center -width 14
   } else {
     canvas $port_ui -background $default_background_color -height 42 \
@@ -734,10 +733,10 @@ proc make_usbport_label {devpath port_id port_ui {update false}} {
     set_usbport_image $port_ui flash_drive_white
     $port_ui create image 0 22 -image "${port_ui}_overlay_image" -anchor w
     $port_ui create text  120 18 -font smallInfoFont -tags port_label \
-             -text $usb_labels($label_id)
+             -text $port_labels($port_id)
   }
 
-  return $usb_labels($label_id)
+  return $port_labels($port_id)
 }
 
 proc set_usbport_image {port_ui imagename {new_width {}}} {
@@ -875,22 +874,22 @@ proc update_diskdevices_loop {} {
 }
 
 proc get_label {label_id} {
-  global usb_labels
+  global port_labels
   expr {
-    [info exists usb_labels($label_id)]
-      ? $usb_labels($label_id)
+    [info exists port_labels($label_id)]
+      ? $port_labels($label_id)
       : ""
   }
 }
 
 proc dictionary_sort_by_label {lst} {
-  set labels [lmap p $lst { list $p [get_label "port/$p"] } ]
+  set labels [lmap p $lst { list $p [get_label $p] } ]
   lmap x [lsort -index 1 -dictionary $labels] \
          { lindex $x 0 }
 }
 
 proc update_diskdevices {{force_ui_update false}} {
-  global bg_image diskdevices pci_path_dir new_usbports usbports usb_labels \
+  global bg_image diskdevices pci_path_dir new_usbports usbports port_labels \
          writable_labels
 
   update_new_usbports
@@ -998,24 +997,24 @@ proc update_diskdevices {{force_ui_update false}} {
   }
 }
 
-proc read_usb_labels_from_disk {} {
-  global calibration_in_progress paths usb_labels
-  set usblabels_json_path "$paths(puavo_usb_factory_workdir)/usb_labels.json"
+proc read_port_labels_from_disk {} {
+  global calibration_in_progress paths port_labels
+  set config_json_path "$paths(puavo_usb_factory_workdir)/config.json"
 
-  if {![file exists $usblabels_json_path]} {
+  if {![file exists $config_json_path]} {
     set calibration_in_progress true
     return
   }
 
   try {
-    set labels [::json::json2dict [read_file $usblabels_json_path]]
+    set config [::json::json2dict [read_file $config_json_path]]
   } on error {errmsg} {
-    logger -p user.warning "error reading usb labels from disk: $errmsg"
+    logger -p user.warning "error reading config from disk: $errmsg"
     return
   }
 
-  dict for {key value} $labels {
-    set usb_labels($key) $value
+  dict for {key value} [dict get $config port_labels] {
+    set port_labels($key) $value
   }
 }
 
@@ -1030,17 +1029,18 @@ proc write_file {path data} {
 
 }
 
-proc update_usb_labels_on_disk {} {
-  global paths usb_labels
-  set usblabels_json_path "$paths(puavo_usb_factory_workdir)/usb_labels.json"
+proc update_port_labels_on_disk {} {
+  global paths port_labels
+  set usblabels_json_path "$paths(puavo_usb_factory_workdir)/config.json"
 
-  set js_object [dict create]
-  foreach {k v} [array get usb_labels] {
-    dict set js_object $k [::json::write string $v]
+  set port_labels_obj [dict create]
+  foreach {k v} [array get port_labels] {
+    dict set port_labels_obj $k [::json::write string $v]
   }
 
   write_file $usblabels_json_path \
-             [::json::write object {*}$js_object]
+             [::json::write object port_labels \
+                                   [::json::write object {*}$port_labels_obj]]
 }
 
 proc scroll_topbanner {} {
@@ -1151,7 +1151,7 @@ proc switch_ui_mode {{uimode ""}} {
     wm attributes . -fullscreen 1
     update_requested_version_ui false
     update_calibration_ui true
-    update_usb_labels_on_disk
+    update_port_labels_on_disk
     download_image
   } else {
     update_calibration_ui false
@@ -1331,11 +1331,11 @@ bind . <Configure> {
 bind . <Control-x> switch_ui_mode
 
 scroll_topbanner
-read_usb_labels_from_disk
+read_port_labels_from_disk
 update_image_info
 update_diskdevices_loop
 check_files
-roll_rotating_usb_labels 0
+roll_rotating_port_labels 0
 
 if {$calibration_in_progress} {
   switch_ui_mode calibration

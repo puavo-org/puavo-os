@@ -43,6 +43,9 @@ xset s noblank
 xset dpms 0 0 0
 xset -dpms
 
+# remove obsolete configurations
+rm -f ~/.puavo/usb-factory/usb_labels.json
+
 (
   # Start puavo-usb-factory and keep it running
   while true; do
