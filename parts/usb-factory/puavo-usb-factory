@@ -47,6 +47,9 @@ set diskdevices  [dict create]
 set usbports     [dict create]
 set new_usbports [dict create]
 
+set doing_calibration false
+set next_calibration_entry 1
+
 proc logger {args} {
   catch { exec logger -t puavo-usb-factory {*}$args & }
 }
@@ -1116,6 +1119,47 @@ proc update_requested_version_ui {visible} {
   pack .f.requested_version -after .f.disks -side right -anchor w
 }
 
+proc switch_ui_mode {{uimode ""}} {
+  global doing_calibration writable_labels
+
+  if {$uimode eq "calibration"} {
+    set doing_calibration true
+    set writable_labels false
+  } else {
+    set writable_labels [expr { $writable_labels ? "false" : "true" }]
+  }
+
+  if {!$writable_labels} {
+    wm attributes . -fullscreen 1
+    update_requested_version_ui false
+    update_calibration_ui true
+    update_usb_labels_on_disk
+    download_image
+  } else {
+    update_calibration_ui false
+    update_requested_version_ui true
+    update_calibration_ui false
+    wm attributes . -fullscreen 0
+  }
+  update_diskdevices true
+}
+
+proc update_calibration_ui {show_calibration} {
+  global doing_calibration
+
+  if {$show_calibration} {
+    pack forget .f.start_calibration
+    if {$doing_calibration} {
+      pack .f.calibration -side bottom -anchor w -before .f.instructions
+    } else {
+      pack forget .f.calibration
+    }
+  } else {
+    pack forget .f.calibration
+    pack .f.start_calibration -side bottom -anchor w -before .f.instructions
+  }
+}
+
 logger -p user.notice "starting up"
 
 #
@@ -1226,6 +1270,14 @@ ttk::label .f.support -font infoFont -anchor e \
                                      -padding {0 5 25 10} \
                                      -text [ui_msg "support info"] \
 
+ttk::frame .f.calibration
+ttk::label .f.calibration.description -font infoFont -text "Next port:"
+ttk::entry .f.calibration.entry -font infoFont -justify center -width 10 \
+                                -textvariable next_calibration_entry
+
+ttk::button .f.start_calibration -text "Start calibration" \
+                                 -command [list switch_ui_mode calibration]
+
 pack .f.top_banner -side top -fill x
 
 pack .f.version_status -side bottom -ipady 14 -fill x
@@ -1250,25 +1302,15 @@ pack .f.instructions -side left -anchor n -padx 40 -pady 40 -after .f.disks
 
 pack .f -fill both -expand 1
 
+pack .f.calibration.description .f.calibration.entry -side left
+
 bind . <Configure> {
   if {"%W" eq [winfo toplevel %W]} {
     queue_background_resizing %w %h
   }
 }
 
-bind . <Control-x> {
-  set writable_labels [expr { $writable_labels ? "false" : "true" }]
-  if {!$writable_labels} {
-    wm attributes . -fullscreen 1
-    update_requested_version_ui false
-    update_usb_labels_on_disk
-    download_image
-  } else {
-    update_requested_version_ui true
-    wm attributes . -fullscreen 0
-  }
-  update_diskdevices true
-}
+bind . <Control-x> switch_ui_mode
 
 scroll_topbanner
 read_usb_labels_from_disk
