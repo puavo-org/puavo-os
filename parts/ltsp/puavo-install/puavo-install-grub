@@ -245,7 +245,6 @@ handle_windows_partion_file() {
   windows_partition_number=$2
   windows_partition_path=/images/boot/.puavo_windows_partition
 
-  windows_partition_number=2
   if [ -n "$windows_partition_number" ]; then
     printf "%s%s\n" "$possible_windows_disk_dev" "$windows_partition_number" \
       > "${windows_partition_path}.tmp"
