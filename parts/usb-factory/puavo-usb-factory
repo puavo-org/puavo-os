@@ -650,12 +650,18 @@ proc find_next_calibration_entry {} {
 }
 
 proc activate_calibration {{mode ""}} {
-  global next_calibration_entry port_labels writable_labels
+  global diskdevices next_calibration_entry port_labels writable_labels
 
   if {$mode eq "initial"} {
     foreach {k v} [array get port_labels] {
       set port_labels($k) ""
     }
+    dict for {devpath devstate} $diskdevices {
+      set port_ui [dict get $devstate ui]
+      set_rotating_label $port_ui port ""
+      set_rotating_label $port_ui messages [list]
+    }
+
     set next_calibration_entry 1
 
     update_port_labels_on_disk
