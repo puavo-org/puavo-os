@@ -515,7 +515,7 @@ proc set_devstate {devpath state args} {
 
         if {$current_state eq "error"} {
           # show error message for ten seconds in UI
-          after 10000 [list set_ui_status_to_nomedia $devpath]
+          after 5000 [list set_ui_status_to_nomedia $devpath]
         } else {
           set_ui_status_to_nomedia $devpath
         }
@@ -761,11 +761,11 @@ proc set_rotating_label {port_ui type messages} {
   set rotating_port_labels($port_ui) [list {*}$list_start {*}$list_end]
 }
 
-proc make_usbport_label {devpath port_id port_ui {update false}} {
+proc make_usbport_label {devpath port_id port_ui {port_state ""}} {
   global default_background_color rotating_port_labels port_labels \
          writable_labels
 
-  if {$update} { destroy $port_ui }
+  if {$port_state ne ""} { destroy $port_ui }
 
   set port_labels($port_id) [get_label $port_id]
   set_rotating_label $port_ui port $port_labels($port_id)
@@ -778,7 +778,14 @@ proc make_usbport_label {devpath port_id port_ui {update false}} {
                     -highlightthickness 0 -width 215
     $port_ui create image 0 22 -image flash_drive_white -anchor w
 
-    set_usbport_image $port_ui flash_drive_white
+    switch -- $port_state {
+      error           -
+      nospaceondevice { set_usbport_image $port_ui flash_drive_red   }
+      finished        { set_usbport_image $port_ui flash_drive_green }
+      nomedia         { set_usbport_image $port_ui flash_drive_white }
+      default         { set_usbport_image $port_ui flash_drive_grey  }
+    }
+
     $port_ui create image 0 22 -image "${port_ui}_overlay_image" -anchor w
     $port_ui create text  120 18 -font smallInfoFont -tags port_label \
              -text $port_labels($port_id)
@@ -983,7 +990,8 @@ proc update_diskdevices {{force_ui_update false}} {
     # may be in two different products (USB2.0 vs. USB3.0).
     if {[dict exists $diskdevices $devpath]} {
       if {$force_ui_update} {
-        make_usbport_label $devpath $port_id $port_ui true
+        set port_state [dict get $diskdevices $devpath state]
+        make_usbport_label $devpath $port_id $port_ui $port_state
         set regrid true
       }
 
@@ -1105,8 +1113,8 @@ proc scroll_topbanner {} {
 }
 
 proc setup_requested_version_ui {} {
-  global default_background_color requested_version_type requested_version_path \
-         requested_version_value
+  global default_background_color requested_version_type \
+         requested_version_path requested_version_value
 
   set button_opts [list -background         $default_background_color \
                         -font               smallInfoFont             \
