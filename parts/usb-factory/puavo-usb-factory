@@ -643,10 +643,33 @@ proc find_next_calibration_entry {} {
   }
 }
 
+proc activate_calibration {{mode ""}} {
+  global next_calibration_entry port_labels writable_labels
+
+  if {$mode eq "initial"} {
+    foreach {k v} [array get port_labels] {
+      set port_labels($k) ""
+    }
+    set next_calibration_entry 1
+
+    update_port_labels_on_disk
+    update_diskdevices true
+  }
+
+  if {$writable_labels} {
+    switch_ui_mode calibration
+  } else {
+    switch_ui_mode normal
+  }
+}
+
 proc add_new_port_if_calibrating {port_id} {
   global calibration_in_progress next_calibration_entry port_labels
 
   if {!$calibration_in_progress} { return }
+  if {$port_labels($port_id) ne ""} {
+    return
+  }
 
   set next_calibration_entry [string trim $next_calibration_entry]
   if {$next_calibration_entry eq ""} {
@@ -954,18 +977,18 @@ proc update_diskdevices {{force_ui_update false}} {
   foreach port_id $sorted_ports {
     set devpath [dict get $new_usbports $port_id]
     set port_ui ".f.disks.port_[string map {. _} $port_id]"
-    set usbport_label ""
 
     # Add UI for port and add it to diskdevices to manage.
     # Test for diskdevice existence, because the same $devpath
     # may be in two different products (USB2.0 vs. USB3.0).
     if {[dict exists $diskdevices $devpath]} {
       if {$force_ui_update} {
-        set usbport_label [make_usbport_label $devpath $port_id $port_ui true]
+        make_usbport_label $devpath $port_id $port_ui true
         set regrid true
       }
+
     } else {
-      set usbport_label [make_usbport_label $devpath $port_id $port_ui]
+      make_usbport_label $devpath $port_id $port_ui
       dict set diskdevices $devpath [
         dict create fh                ""       \
                     image_size        ""       \
@@ -981,7 +1004,7 @@ proc update_diskdevices {{force_ui_update false}} {
       set regrid true
     }
 
-    if {$usbport_label ne ""} {
+    if {$port_labels($port_id) ne ""} {
       if {$port_ui ni $ui_elements} {
         lappend ui_elements $port_ui
       }
@@ -989,7 +1012,7 @@ proc update_diskdevices {{force_ui_update false}} {
     }
   }
 
-  if {[llength [dict keys $usbports]] == 0} {
+  if {[llength $ui_elements] == 0} {
     grid .f.disks.noports_message
   } else {
     grid forget .f.disks.noports_message
@@ -1202,7 +1225,7 @@ proc update_calibration_ui {show_calibration} {
     if {$calibration_in_progress} {
       pack .f.calibration_info -side bottom -anchor w -before .f.instructions
       .f.calibration_info configure \
-        -text [ui_msg "stop calibration by pressing Ctrl+R"]
+        -text [ui_msg "Stop calibration by pressing Ctrl+R"]
       pack .f.calibration -side bottom -anchor w -before .f.instructions
     } else {
       pack forget .f.calibration .f.calibration_info
@@ -1210,8 +1233,9 @@ proc update_calibration_ui {show_calibration} {
   } else {
     pack forget .f.calibration
     pack .f.calibration_info -side bottom -anchor w -before .f.instructions
-    .f.calibration_info configure \
-      -text [ui_msg "start calibration by pressing Ctrl+R"]
+    set msg [ui_msg "Continue calibration by pressing Ctrl+R"]
+    set msg "${msg}\n[ui_msg "Recalibrate all by pressing Ctrl+Shift+R"]"
+    .f.calibration_info configure -text $msg
   }
 }
 
@@ -1327,7 +1351,7 @@ ttk::label .f.support -font infoFont -anchor e \
 
 ttk::frame .f.calibration
 ttk::label .f.calibration.description -font infoFont \
-           -text [ui_msg "put the next usb drive into port:"]
+           -text [ui_msg "Put the next usb drive into port:"]
 ttk::entry .f.calibration.entry -font infoFont -justify center -width 8 \
                                 -textvariable next_calibration_entry
 
@@ -1365,14 +1389,12 @@ bind . <Configure> {
   }
 }
 
-bind . <Control-r> {
-  if {$writable_labels} {
-    switch_ui_mode calibration
-  } else {
-    switch_ui_mode normal
-  }
-}
+bind . <Shift-Control-r> { activate_calibration initial }
+bind . <Shift-Control-R> { activate_calibration initial }
+bind . <Control-r> activate_calibration
+bind . <Control-R> activate_calibration
 bind . <Control-x> switch_ui_mode
+bind . <Control-X> switch_ui_mode
 
 scroll_topbanner
 read_port_labels_from_disk
