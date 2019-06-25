@@ -219,6 +219,7 @@ class packages {
     , 'manpages-dev'
     , 'perl-doc'
     , 'pinfo'
+    , 'shellcheck'
     , 'sloccount'
     , 'tcl8.6-doc'
     , 'tk8.6-doc'
