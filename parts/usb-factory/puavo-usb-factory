@@ -860,34 +860,6 @@ proc set_ui_progress {port_ui state percentage eta} {
   set_usbport_image $port_ui $imagename $new_width
 }
 
-proc usbpath_is_a_writable_port {usbpath} {
-  try {
-    set removable [read_file "${usbpath}/../../removable"]
-    if {$removable eq "fixed"} {
-      return false
-    }
-
-    set interface_class [read_file "${usbpath}/../bInterfaceClass"]
-    if {$interface_class eq "09"} {
-      if {[file exists "${usbpath}/device"]} {
-        if {[catch { set portpaths [glob "${usbpath}/device/*:1.0"] }]} {
-          return false
-        }
-        if {[llength $portpaths] != 1} { return false }
-        set device_interface_class [read_file "${portpaths}/bInterfaceClass"]
-        if {$device_interface_class ne "08"} {
-          # some non-mass storage device has been connected to this port
-          return false
-        }
-      }
-    }
-
-    return true
-  }
-
-  return false
-}
-
 proc update_new_usbports {} {
   global new_usbports
 
@@ -912,11 +884,6 @@ proc update_new_usbports {} {
 
         set usbport [string map [list {:} .$portname:] \
                                 $portbase]
-
-        if {![usbpath_is_a_writable_port $path]} {
-          continue
-        }
-
         set port_id "${pci_id}/${usbport}"
         set devpath "pci-${pci_id}-usb-0:${usbport}-scsi-0:0:0:0"
         dict set _new_usbports $port_id $devpath
