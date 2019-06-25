@@ -472,7 +472,13 @@ proc quick_verify_check {devpath} {
 }
 
 proc set_devstate {devpath state args} {
-  global diskdevices image_info
+  global diskdevices image_info port_labels
+
+  set port_id [dict get $diskdevices $devpath port_id]
+  if {($port_labels($port_id) eq "") && ($state ne "nomedia")} {
+    # do not act on devices that are not mapped to UI, except for "nomedia"
+    return
+  }
 
   set port_ui [dict get $diskdevices $devpath ui]
 
@@ -505,7 +511,7 @@ proc set_devstate {devpath state args} {
       set current_state [dict get $diskdevices $devpath state]
 
       if {$current_state ne "nomedia"} {
-        # preserve the "port_id"- and "ui"-attributes
+        # preserve some of the attributes
         dict set diskdevices $devpath fh            ""
         dict set diskdevices $devpath image_size    ""
         dict set diskdevices $devpath model         ""
