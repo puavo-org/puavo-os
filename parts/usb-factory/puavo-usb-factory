@@ -872,15 +872,11 @@ proc update_new_usbports {} {
         set usbport [string map [list {:} .$portname:] \
                                 $portbase]
 
-        if {![regexp {^(.*):} $usbport _ port_id]} {
-          logger -p user.warning \
-                    "cannot determine the port id from usbport $usbport"
-        }
-
         if {![usbpath_is_a_writable_port $path]} {
           continue
         }
 
+        set port_id "${pci_id}/${usbport}"
         set devpath "pci-${pci_id}-usb-0:${usbport}-scsi-0:0:0:0"
         dict set _new_usbports $port_id $devpath
       }
