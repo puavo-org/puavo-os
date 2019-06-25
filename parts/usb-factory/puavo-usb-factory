@@ -782,8 +782,7 @@ proc make_usbport_label {devpath port_id port_ui {port_state ""}} {
       error           -
       nospaceondevice { set_usbport_image $port_ui flash_drive_red   }
       finished        { set_usbport_image $port_ui flash_drive_green }
-      nomedia         { set_usbport_image $port_ui flash_drive_white }
-      default         { set_usbport_image $port_ui flash_drive_grey  }
+      default         { set_usbport_image $port_ui flash_drive_white }
     }
 
     $port_ui create image 0 22 -image "${port_ui}_overlay_image" -anchor w
