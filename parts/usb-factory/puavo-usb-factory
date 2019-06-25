@@ -47,8 +47,8 @@ set diskdevices  [dict create]
 set usbports     [dict create]
 set new_usbports [dict create]
 
-set calibration_in_progress false
-set next_calibration_entry 1
+set calibration_in_progress true
+set next_calibration_entry ""
 
 proc logger {args} {
   catch { exec logger -t puavo-usb-factory {*}$args & }
@@ -621,19 +621,40 @@ proc check_for_space_in_device {devpath} {
   expr { $device_size >= $image_size }
 }
 
+proc find_next_calibration_entry {} {
+  global next_calibration_entry port_labels
+
+  if {$next_calibration_entry eq ""} {
+    set sorted_entries [
+      lsort -dictionary \
+            [lmap {k v} [array get port_labels] { expr {$v} } ]
+    ]
+    if {[llength $sorted_entries] == 0} {
+      set next_calibration_entry 1
+    } else {
+      set next_calibration_entry [string trim [lindex $sorted_entries end]]
+    }
+  }
+
+  if {[regexp {^(.*?)([0-9]+)$} $next_calibration_entry _ prefix number]} {
+    set next_calibration_entry "${prefix}[expr { $number + 1 }]"
+  } else {
+    set next_calibration_entry "${next_calibration_entry} 2"
+  }
+}
+
 proc add_new_port_if_calibrating {port_id} {
   global calibration_in_progress next_calibration_entry port_labels
 
   if {!$calibration_in_progress} { return }
 
   set next_calibration_entry [string trim $next_calibration_entry]
-  set port_labels($port_id) $next_calibration_entry
-
-  if {[regexp {^(.*)([0-9]+)$} $next_calibration_entry _ prefix number]} {
-    set next_calibration_entry "${prefix}[expr { $number + 1 }]"
-  } else {
-    set next_calibration_entry "${next_calibration_entry} 2"
+  if {$next_calibration_entry eq ""} {
+    set next_calibration_entry [find_next_calibration_entry]
   }
+
+  set port_labels($port_id) $next_calibration_entry
+  set next_calibration_entry [find_next_calibration_entry]
 
   update_port_labels_on_disk
   update_diskdevices true
@@ -1002,11 +1023,11 @@ proc update_diskdevices {{force_ui_update false}} {
 }
 
 proc read_port_labels_from_disk {} {
-  global calibration_in_progress paths port_labels
+  global calibration_in_progress next_calibration_entry paths port_labels
   set config_json_path "$paths(puavo_usb_factory_workdir)/config.json"
 
   if {![file exists $config_json_path]} {
-    set calibration_in_progress true
+    set next_calibration_entry 1
     return
   }
 
@@ -1014,12 +1035,17 @@ proc read_port_labels_from_disk {} {
     set config [::json::json2dict [read_file $config_json_path]]
   } on error {errmsg} {
     logger -p user.warning "error reading config from disk: $errmsg"
+    set next_calibration_entry 1
     return
   }
 
   dict for {key value} [dict get $config port_labels] {
+    # we have at least one port label, thus we do not need to force calibration
+    set calibration_in_progress false
     set port_labels($key) $value
   }
+
+  set next_calibration_entry [find_next_calibration_entry]
 }
 
 proc write_file {path data} {
@@ -1039,6 +1065,7 @@ proc update_port_labels_on_disk {} {
 
   set port_labels_obj [dict create]
   foreach {k v} [array get port_labels] {
+    if {$v eq ""} { continue }
     dict set port_labels_obj $k [::json::write string $v]
   }
 
@@ -1143,22 +1170,28 @@ proc update_requested_version_ui {visible} {
 proc switch_ui_mode {{uimode ""}} {
   global calibration_in_progress writable_labels
 
-  if {$uimode eq "calibration"} {
-    set calibration_in_progress true
-    set writable_labels false
-  } else {
-    set calibration_in_progress false
-    set writable_labels [expr { $writable_labels ? "false" : "true" }]
+  switch -- $uimode {
+    calibration {
+      set calibration_in_progress true
+      set writable_labels false
+    }
+    normal {
+      set calibration_in_progress false
+      set writable_labels false
+    }
+    default {
+      set calibration_in_progress false
+      set writable_labels [expr { $writable_labels ? "false" : "true" }]
+    }
   }
 
   if {!$writable_labels} {
     wm attributes . -fullscreen 1
-    update_requested_version_ui false
     update_calibration_ui true
+    update_requested_version_ui false
     update_port_labels_on_disk
     download_image
   } else {
-    update_calibration_ui false
     update_requested_version_ui true
     update_calibration_ui false
     wm attributes . -fullscreen 0
@@ -1170,15 +1203,19 @@ proc update_calibration_ui {show_calibration} {
   global calibration_in_progress
 
   if {$show_calibration} {
-    pack forget .f.start_calibration
     if {$calibration_in_progress} {
+      pack .f.calibration_info -side bottom -anchor w -before .f.instructions
+      .f.calibration_info configure \
+        -text [ui_msg "stop calibration by pressing Ctrl+R"]
       pack .f.calibration -side bottom -anchor w -before .f.instructions
     } else {
-      pack forget .f.calibration
+      pack forget .f.calibration .f.calibration_info
     }
   } else {
     pack forget .f.calibration
-    pack .f.start_calibration -side bottom -anchor w -before .f.instructions
+    pack .f.calibration_info -side bottom -anchor w -before .f.instructions
+    .f.calibration_info configure \
+      -text [ui_msg "start calibration by pressing Ctrl+R"]
   }
 }
 
@@ -1293,12 +1330,12 @@ ttk::label .f.support -font infoFont -anchor e \
                                      -text [ui_msg "support info"] \
 
 ttk::frame .f.calibration
-ttk::label .f.calibration.description -font infoFont -text "Next port:"
-ttk::entry .f.calibration.entry -font infoFont -justify center -width 10 \
+ttk::label .f.calibration.description -font infoFont \
+           -text [ui_msg "put the next usb drive into port:"]
+ttk::entry .f.calibration.entry -font infoFont -justify center -width 8 \
                                 -textvariable next_calibration_entry
 
-ttk::button .f.start_calibration -text "Start calibration" \
-                                 -command [list switch_ui_mode calibration]
+ttk::label .f.calibration_info -font infoFont
 
 pack .f.top_banner -side top -fill x
 
@@ -1332,6 +1369,13 @@ bind . <Configure> {
   }
 }
 
+bind . <Control-r> {
+  if {$writable_labels} {
+    switch_ui_mode calibration
+  } else {
+    switch_ui_mode normal
+  }
+}
 bind . <Control-x> switch_ui_mode
 
 scroll_topbanner
@@ -1343,6 +1387,8 @@ roll_rotating_port_labels 0
 
 if {$calibration_in_progress} {
   switch_ui_mode calibration
+} else {
+  switch_ui_mode normal
 }
 
 logger -p user.info "gui done, processing events"
