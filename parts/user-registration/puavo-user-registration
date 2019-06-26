@@ -263,8 +263,9 @@ class UserRegistration:
         if len(self.last_name_field.get_text().strip()) == 0:
             state = False
 
-        if len(self.username_field.get_text().strip()) == 0 or \
-          re.search(USERNAME_FILTER, self.username_field.get_text()):
+        if len(self.username_field.get_text().strip()) < 3 or \
+          re.search(USERNAME_FILTER, self.username_field.get_text()) or \
+          self.username_field.get_text().strip()[0] not in 'abcdefghijklmnopqrstuvwxyz0123456789':
             state = False
 
         if len(self.email_field.get_text().strip()) == 0:
@@ -456,6 +457,11 @@ class UserRegistration:
                 _tr('Loginname already in use.'),
                 _tr('The loginname you have chosen is already in use.' \
                     '  Choose another loginname.'))
+
+        elif response['status'] == 'username_too_short':
+            self.show_error_message(self.app_window,
+                _tr('Too Short Login Name'),
+                _tr('Your login name is too short. It must have at least three characters.'))
 
         elif response['status'] == 'duplicate_email':
             self.show_error_message(self.app_window,

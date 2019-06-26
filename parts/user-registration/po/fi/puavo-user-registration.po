@@ -168,6 +168,14 @@ msgstr "Laitetietojen käsittelyssä tapahtui tuntematon virhe."
 msgid "Loginname already in use."
 msgstr "Käyttäjätunnus on jo käytössä."
 
+#: puavo-user-registration:464
+msgid "Too Short Login Name"
+msgstr "Liian lyhyt käyttäjänimi"
+
+#: puavo-user-registration:465
+msgid "Your login name is too short. It must have at least three characters"
+msgstr "Käyttäjänimesi on liian lyhyt. Sen on oltava vähintään kolme merkkiä pitkä."
+
 #: puavo-user-registration:417
 msgid ""
 "The loginname you have chosen is already in use.  Choose another loginname."
