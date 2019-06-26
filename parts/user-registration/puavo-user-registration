@@ -249,7 +249,7 @@ class UserRegistration:
 
     def set_username_hint_status(self, is_good=True):
         color = '#888' if is_good else '#f00'
-        msg = _tr('Loginnames may contain only characters a-z, 0-9, -, _ and a dot.')
+        msg = _tr('Loginnames may contain only characters a-z, 0-9, -, _ and a dot.\nMust be at least three characters long.')
         self.username_hint.set_markup(
           '<span color="%s">%s</span>' % (color, msg))
 
