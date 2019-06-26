@@ -34,7 +34,7 @@ setup_keyboard
 set_timezone
 setup_locale
 setup_powersave
-setup_hwlock
+setup_hwclock
 setup_ntp
 manage_module_blacklist
 cleanup_crash_dumps
