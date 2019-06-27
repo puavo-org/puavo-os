@@ -291,7 +291,7 @@ proc start_verifying {devpath} {
 proc start_writing {devpath} {
   global image_info pci_path_dir
   set srcfile [dict get $image_info latest_image_path]
-  set cmd "nice -n 20 ionice -c 3 pv -b -n $srcfile | nice -n 20 ionice -c 3 dd of=${pci_path_dir}/${devpath} conv=fsync,nocreat status=none 2>@1"
+  set cmd "nice -n 20 ionice -c 3 pv -b -n $srcfile | nice -n 20 ionice -c 3 dd of=${pci_path_dir}/${devpath} bs=8192 conv=fsync,nocreat oflag=nocache status=none 2>@1"
   start_operating $devpath $cmd
 }
 
@@ -325,9 +325,7 @@ proc set_device_eta {devpath bytes_handled} {
     # When we are in writing phase, we do some tricks in the ETA
     # calculation, because the initial estimates are too optimistic
     # and there will be a verification step afterwards.
-    set eta_image_size [expr {
-      int($image_size + ((0.3 * ($image_size - 0.85 * $bytes_handled))))
-    }]
+    set eta_image_size [expr { int(1.17 * $image_size) }]
   } else {
     set eta_image_size $image_size
   }
