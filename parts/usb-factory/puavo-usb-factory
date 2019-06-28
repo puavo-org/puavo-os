@@ -423,10 +423,8 @@ proc set_ui_status_to_nomedia {devpath} {
     return
   }
 
-  logger -p user.info "no media on [dev_logid $devpath]"
-
-  set port_ui [dict get $diskdevices $devpath ui]
   if {[dict get $diskdevices $devpath state] eq "nomedia"} {
+    logger -p user.info "no media on [dev_logid $devpath]"
     set_usbicon_state $devpath nomedia
   }
 }
@@ -487,23 +485,31 @@ proc set_devstate {devpath state args} {
     }
 
     nomedia {
-      close_if_open $devpath
       set current_state [dict get $diskdevices $devpath state]
+      switch -- $current_state {
+        nomedia               {}
+        verifying             -
+        verifying_after_write -
+        writing               {
+          set_devstate $devpath error
+        }
+        default {
+          close_if_open $devpath
 
-      if {$current_state ne "nomedia"} {
-        # preserve some of the attributes
-        dict set diskdevices $devpath fh            ""
-        dict set diskdevices $devpath image_size    ""
-        dict set diskdevices $devpath model         ""
-        dict set diskdevices $devpath progress_list [list]
-        dict set diskdevices $devpath state         nomedia
-        dict set diskdevices $devpath version       ""
+          # preserve some of the attributes
+          dict set diskdevices $devpath fh            ""
+          dict set diskdevices $devpath image_size    ""
+          dict set diskdevices $devpath model         ""
+          dict set diskdevices $devpath progress_list [list]
+          dict set diskdevices $devpath state         nomedia
+          dict set diskdevices $devpath version       ""
 
-        if {$current_state eq "error"} {
-          # show error message for ten seconds in UI
-          after 5000 [list set_ui_status_to_nomedia $devpath]
-        } else {
-          set_ui_status_to_nomedia $devpath
+          if {$current_state eq "error"} {
+            # show error message for five seconds in UI
+            after 5000 [list set_ui_status_to_nomedia $devpath]
+          } else {
+            set_ui_status_to_nomedia $devpath
+          }
         }
       }
     }
@@ -621,7 +627,7 @@ proc find_next_calibration_entry {} {
   if {[regexp {^(.*?)([0-9]+)$} $next_calibration_entry _ prefix number]} {
     set next_calibration_entry "${prefix}[expr { $number + 1 }]"
   } else {
-    set next_calibration_entry "${next_calibration_entry} 2"
+    set next_calibration_entry "${next_calibration_entry}2"
   }
 }
 
