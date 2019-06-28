@@ -1117,8 +1117,7 @@ proc scroll_topbanner {} {
 }
 
 proc setup_requested_version_ui {} {
-  global default_background_color requested_version_type \
-         requested_version_path requested_version_value
+  global default_background_color requested_version_type requested_version_value
 
   set button_opts [list -background         $default_background_color \
                         -font               smallInfoFont             \
@@ -1156,6 +1155,24 @@ proc update_requested_version_ui {visible} {
   global requested_version requested_version_path requested_version_type \
          requested_version_value
 
+  # initial setup
+  if {$requested_version_type eq ""} {
+    catch { set requested_version [read_file $requested_version_path] }
+    set requested_version_value ""
+    switch -- $requested_version {
+      {by puavo-conf} {
+        set requested_version_type "by puavo-conf"
+      }
+      latest {
+        set requested_version_type "latest"
+      }
+      default {
+        set requested_version_type "this version"
+        set requested_version_value $requested_version
+      }
+    }
+  }
+
   if {!$visible} {
     pack forget .f.requested_version
 
@@ -1184,7 +1201,6 @@ proc update_requested_version_ui {visible} {
   .f.requested_version.by_puavo_conf configure \
     -text $by_puavo_conf_msg
 
-  catch { set requested_version [read_file $requested_version_path] }
   switch -- $requested_version {
     ""              -
     {by puavo-conf} { .f.requested_version.by_puavo_conf invoke }
@@ -1291,15 +1307,14 @@ try {
   exit 1
 }
 
-set requested_version_path "${content_dir}/REQUESTED_VERSION"
-catch { set requested_version [read_file $requested_version_path] }
-
 try {
   set ui_messages [::json::json2dict [read_file "${content_dir}/UI.json"]]
 } on error {} {
   logger -p user.err "could not read ui messages from ${content_dir}/UI.json"
   exit 1
 }
+
+set requested_version_path "${content_dir}/REQUESTED_VERSION"
 
 # ui elements
 
