@@ -759,6 +759,8 @@ proc set_rotating_label {port_id type messages} {
   set rotating_port_labels($port_id) [list {*}$list_start {*}$list_end]
 }
 
+proc validate_label {value} { expr {[string length $value] <= 12} }
+
 proc make_usbport_label {devpath port_id port_ui {port_state ""}} {
   global default_background_color rotating_port_labels port_labels \
          writable_labels
@@ -769,7 +771,9 @@ proc make_usbport_label {devpath port_id port_ui {port_state ""}} {
 
   if {$writable_labels} {
     ttk::entry $port_ui -textvariable port_labels($port_id) \
-                        -font smallInfoFont -justify center -width 14
+                        -font smallInfoFont -justify center -width 16 \
+           -validatecommand [list validate_label %P] \
+           -validate all
   } else {
     canvas $port_ui -background $default_background_color -height 42 \
                     -highlightthickness 0 -width 215
@@ -1358,7 +1362,9 @@ ttk::frame .f.oper.calibration.input
 ttk::label .f.oper.calibration.input.descr -font infoFont \
            -text [ui_msg "Put the next usb drive into port:"]
 ttk::entry .f.oper.calibration.input.entry -font infoFont -justify center \
-           -width 8 -textvariable next_calibration_entry
+           -width 16 -textvariable next_calibration_entry \
+           -validatecommand [list validate_label %P] \
+           -validate all
 ttk::label .f.oper.calibration.info -font infoFont
 
 ttk::label .f.oper.support -font infoFont -anchor e -justify right \
