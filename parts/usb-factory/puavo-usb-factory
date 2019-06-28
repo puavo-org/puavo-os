@@ -862,7 +862,7 @@ proc set_usbicon_state {devpath state {percentage ""} {eta ""}} {
     }
     verifying_after_write {
       set imagename  flash_drive_yellow
-      set startpoint $cutpoint
+      set startpoint [expr { $cutpoint + 0.02 }]
       set msg        [ui_msg messages verifying]
     }
     writing {
