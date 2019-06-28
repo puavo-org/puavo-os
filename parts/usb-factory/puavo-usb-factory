@@ -147,10 +147,15 @@ proc update_ui_info_state {} {
   set download_status [dict get $image_info status]
   set version         [dict get $image_info version]
 
-  switch -- $download_status {
-    up-to-date    -
-    {in progress} -
-    failed        -
+  switch -glob -- $download_status {
+    {in progress *} {
+      set download_version "?"
+      regexp {^in progress (.*)$} $download_status _ download_version
+      set download_message \
+          "[ui_msg {download state} "in progress"] $download_version"
+    }
+    up-to-date -
+    failed     -
     missing { set download_message [ui_msg {download state} $download_status] }
     default { set download_message [ui_msg {download state} undefined] }
   }
