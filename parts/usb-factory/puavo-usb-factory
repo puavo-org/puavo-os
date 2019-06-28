@@ -1231,19 +1231,19 @@ proc update_calibration_ui {show_calibration} {
 
   if {$show_calibration} {
     if {$calibration_in_progress} {
-      pack .f.calibration_info -side bottom -anchor w -before .f.instructions
-      .f.calibration_info configure \
+      pack .f.oper.calibration.input -anchor w
+      .f.oper.calibration.info configure \
         -text [ui_msg "Stop calibration by pressing Ctrl+R"]
-      pack .f.calibration -side bottom -anchor w -before .f.instructions
+      pack .f.oper.calibration.info -anchor w
     } else {
-      pack forget .f.calibration .f.calibration_info
+      pack forget .f.oper.calibration.input .f.oper.calibration.info
     }
   } else {
-    pack forget .f.calibration
-    pack .f.calibration_info -side bottom -anchor w -before .f.instructions
+    pack forget .f.oper.calibration.input .f.oper.calibration.info
     set msg [ui_msg "Continue calibration by pressing Ctrl+R"]
     set msg "${msg}\n[ui_msg "Recalibrate all by pressing Ctrl+Shift+R"]"
-    .f.calibration_info configure -text $msg
+    .f.oper.calibration.info configure -text $msg
+    pack .f.oper.calibration.info -anchor w
   }
 }
 
@@ -1352,18 +1352,17 @@ ttk::label .f.disks.noports_message -font infoFont \
                                     -text [ui_msg "waiting usb drives"] \
                                     -padding 40
 
-ttk::label .f.support -font infoFont -anchor e \
-                                     -justify right \
-                                     -padding {0 5 25 10} \
-                                     -text [ui_msg "support info"] \
-
-ttk::frame .f.calibration
-ttk::label .f.calibration.description -font infoFont \
+ttk::frame .f.oper
+ttk::frame .f.oper.calibration
+ttk::frame .f.oper.calibration.input
+ttk::label .f.oper.calibration.input.descr -font infoFont \
            -text [ui_msg "Put the next usb drive into port:"]
-ttk::entry .f.calibration.entry -font infoFont -justify center -width 8 \
-                                -textvariable next_calibration_entry
+ttk::entry .f.oper.calibration.input.entry -font infoFont -justify center \
+           -width 8 -textvariable next_calibration_entry
+ttk::label .f.oper.calibration.info -font infoFont
 
-ttk::label .f.calibration_info -font infoFont
+ttk::label .f.oper.support -font infoFont -anchor e -justify right \
+                           -padding {0 5 25 10} -text [ui_msg "support info"]
 
 pack .f.top_banner -side top -fill x
 
@@ -1380,16 +1379,19 @@ pack .f.version_status.download.label .f.version_status.download.status \
 
 setup_requested_version_ui
 
-pack .f.support -side bottom -anchor e
+pack .f.oper -side bottom -fill x
+pack .f.oper.calibration -padx {100 0}
+pack .f.oper.calibration .f.oper.support -side left -expand 1 -fill x
+pack .f.oper.calibration.input .f.oper.calibration.info
+pack .f.oper.calibration.input.descr .f.oper.calibration.input.entry -side left
+pack .f.oper.calibration.input.entry -padx {24 0}
 
-pack .f.disks -side right -after .f.support
+pack .f.disks -side right -after .f.oper
 grid .f.disks.noports_message
 
 pack .f.instructions -side left -anchor n -padx 40 -pady 40 -after .f.disks
 
 pack .f -fill both -expand 1
-
-pack .f.calibration.description .f.calibration.entry -side left
 
 bind . <Configure> {
   if {"%W" eq [winfo toplevel %W]} {
