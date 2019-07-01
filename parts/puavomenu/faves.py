@@ -93,7 +93,7 @@ class FavesList(Gtk.ScrolledWindow):
 
         logging.info('Faves list cleared')
 
-    def update(self, all_programs):
+    def update(self, all_programs, settings):
         """Recreates the fave buttons if program launch counts have
         changed enough since the last update."""
 
@@ -107,7 +107,9 @@ class FavesList(Gtk.ScrolledWindow):
         # inserted on the list in random order and they tend to switch
         # positions constantly; we need to break that randomness).
         faves = [(name, p.uses, p.name)
-                 for name, p in all_programs.items() if p.uses > 0]
+                 for name, p in all_programs.items() \
+                    if p.uses > 0 and not p.is_puavopkg_installer()]
+
         faves = sorted(faves,
                        key=lambda p: (p[1], p[2]), reverse=True)[0:NUMBER_OF_FAVES]
 
@@ -136,8 +138,12 @@ class FavesList(Gtk.ScrolledWindow):
             # use self.__parent as the parent, so popup menu handlers
             # will call the correct methods from the main window class
             button = buttons.ProgramButton(
-                self.__parent, program.name, program.icon,
-                program.description, data=program,
+                self.__parent,
+                settings,
+                program.name,
+                program.icon,
+                program.description,
+                data=program,
                 is_fave=True)
 
             button.connect('clicked', self.__parent.clicked_program_button)

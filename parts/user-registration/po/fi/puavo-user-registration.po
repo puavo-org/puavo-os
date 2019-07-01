@@ -1,0 +1,369 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: puavo-user-registration\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"Language: fi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: puavo-user-registration:29
+msgid "first name"
+msgstr "etunimi"
+
+#: puavo-user-registration:31 puavo-user-registration:39
+#: puavo-user-registration:47 puavo-user-registration:55
+#: puavo-user-registration:63
+msgid "is empty"
+msgstr "on tyhjä"
+
+#: puavo-user-registration:32 puavo-user-registration:40
+#: puavo-user-registration:48 puavo-user-registration:56
+#: puavo-user-registration:64
+msgid "contains bad characters"
+msgstr "sisältää virheellisiä merkkejä"
+
+#: puavo-user-registration:37
+msgid "last name"
+msgstr "sukunimi"
+
+#: puavo-user-registration:45
+msgid "loginname"
+msgstr "käyttäjätunnus"
+
+#: puavo-user-registration:53
+msgid "email address"
+msgstr "sähköpostiosoite"
+
+#: puavo-user-registration:61
+msgid "phone number"
+msgstr "puhelinnumero"
+
+#: puavo-user-registration:65
+msgid "is too long"
+msgstr "on liian pitkä"
+
+#: puavo-user-registration:73
+msgid "Finnish"
+msgstr "Suomi"
+
+#: puavo-user-registration:74
+msgid "Swedish"
+msgstr "Ruotsi"
+
+#: puavo-user-registration:75
+msgid "English"
+msgstr "Englanti"
+
+#: puavo-user-registration:76
+msgid "German"
+msgstr "Saksa"
+
+#: puavo-user-registration:84
+msgid "Go to desktop?"
+msgstr "Siirry työpöydälle?"
+
+#: puavo-user-registration:85
+msgid ""
+"Are you sure you do not want to create a user account?  Without user"
+" account, your files will be lost after your desktop session ends."
+msgstr ""
+"Oletko varma, että et halua luoda käyttäjätunnusta?"
+"  Ilman käyttäjätunnusta tiedostosi katoavat, kun työpöytäsessiosi loppuu."
+
+#: puavo-user-registration:212
+msgid "Loginnames may contain only characters a-z, 0-9, - and a dot.\nMust be at least three characters long."
+msgstr "Käyttäjätunnuksiin kelpaavat merkit a-z, 0-9, - ja piste.\nNimen on oltava vähintään kolme merkkiä pitkä."
+
+#: puavo-user-registration:327 puavo-user-registration:381
+#: puavo-user-registration:407 puavo-user-registration:431
+#: puavo-user-registration:442 puavo-user-registration:457
+#: puavo-user-registration:491
+msgid "Error"
+msgstr "Virhe"
+
+#: puavo-user-registration:328
+msgid "Something went wrong on the server."
+msgstr "Palvelinpäässä meni jokin pieleen."
+
+#: puavo-user-registration:336
+msgid ""
+"Something is wrong in the following form fields."
+"  Check their contents and try again."
+msgstr ""
+"Näiden kenttien sisällössä on jotain vikaa."
+"  Tarkista niiden sisältö ja yritä uudelleen."
+
+#: puavo-user-registration:345 puavo-user-registration:350
+msgid "Bad information"
+msgstr "Virheelliset tiedot"
+
+#: puavo-user-registration:351
+msgid "Registration program sent bad information to the server."
+msgstr "Rekisteröintiohjelma lähetti virheellistä tietoa palvelimelle."
+
+#: puavo-user-registration:352 puavo-user-registration:361
+#: puavo-user-registration:383 puavo-user-registration:393
+#: puavo-user-registration:400 puavo-user-registration:409
+#: puavo-user-registration:433
+msgid "Please contact support and give this code:"
+msgstr "Ole hyvä ja ota yhteys tukeen, anna tämä koodi:"
+
+#: puavo-user-registration:358
+msgid "Missing information"
+msgstr "Puutteelliset tiedot"
+
+#: puavo-user-registration:359
+msgid "Registration program did not send all required information to server."
+msgstr "Rekisteröintiohjelma lähetti palvelimelle puutteellisia tietoja."
+
+#: puavo-user-registration:365 puavo-user-registration:369
+#: puavo-user-registration:373 puavo-user-registration:377
+msgid "Invalid input"
+msgstr "Virheellinen tieto"
+
+#: puavo-user-registration:366
+msgid "Loginname contains bad characters."
+msgstr "Käyttäjätunnus sisältää virheellisiä merkkejä."
+
+#: puavo-user-registration:370
+msgid "Email address is not valid."
+msgstr "Sähköpostiosoite ei ole kunnollinen."
+
+#: puavo-user-registration:374
+msgid "Password and its confirmation do not match."
+msgstr "Salasana ja sen varmistus eivät täsmää."
+
+#: puavo-user-registration:378
+msgid "Language choice is invalid."
+msgstr "Kieli on virheellinen."
+
+#: puavo-user-registration:382
+msgid "An unknown error occurred when handling user information."
+msgstr "Käyttäjätietojen käsittelyssä tapahtui tuntematon virhe."
+
+#: puavo-user-registration:391
+msgid "Unregistered host"
+msgstr "Rekisteröimätön kone"
+
+#: puavo-user-registration:392
+msgid "This host is not found from database."
+msgstr "Koneesi tietoja ei löydy tietokannasta."
+
+#: puavo-user-registration:398
+msgid "Host is in use."
+msgstr "Kone on jo käytössä."
+
+#: puavo-user-registration:399
+msgid "User registration has already been done in this host."
+msgstr "Tältä koneelta on jo suoritettu käyttäjän luonti."
+
+#: puavo-user-registration:408
+msgid "Unknown error occurred when handling host information."
+msgstr "Laitetietojen käsittelyssä tapahtui tuntematon virhe."
+
+#: puavo-user-registration:416
+msgid "Loginname already in use."
+msgstr "Käyttäjätunnus on jo käytössä."
+
+#: puavo-user-registration:464
+msgid "Too Short Login Name"
+msgstr "Liian lyhyt käyttäjänimi"
+
+#: puavo-user-registration:465
+msgid "Your login name is too short. It must have at least three characters"
+msgstr "Käyttäjänimesi on liian lyhyt. Sen on oltava vähintään kolme merkkiä pitkä."
+
+#: puavo-user-registration:417
+msgid ""
+"The loginname you have chosen is already in use.  Choose another loginname."
+msgstr ""
+"Valitsemasi käyttäjätunnus on jo käytössä.  Valitse toinen käyttäjätunnus."
+
+#: puavo-user-registration:422
+msgid "Email address is already in use."
+msgstr "Sähköpostiosoite on jo käytössä."
+
+#: puavo-user-registration:423
+msgid "This email address is already in use.  Use another address."
+msgstr "Tämä sähköpostiosoite on jo käytössä.  Käytä toista osoitetta."
+
+#: puavo-user-registration:426
+msgid ""
+"If using another email address is not possible, contact support and give"
+" this code:"
+msgstr ""
+"Jos toisen osoitteen käyttö ei ole mahdollista, ota yhteys tukeen."
+"  Anna heille tämä koodi:"
+
+#: puavo-user-registration:443
+msgid "Can not contact server:"
+msgstr "Palvelimeen ei saada yhteyttä:"
+
+#: puavo-user-registration:445
+msgid "Check network connection and try again."
+msgstr "Tarkista verkkoyhteyden tila ja yritä uudelleen."
+
+#: puavo-user-registration:446
+msgid "If problem persists, contact support."
+msgstr "Jos ongelma toistuu, ota yhteys tukeen."
+
+#: puavo-user-registration:458
+msgid ""
+"Server is not responding.  Try again after a while.  If the problem persists,"
+" contact support."
+msgstr ""
+"Palvelin ei vastaa pyyntöön.  Yritä lähetystä uudelleen hetken kuluttua."
+"  Jos tilanne toistuu, ota yhteys tukeen."
+
+#: puavo-user-registration:492
+msgid "Can not interpret the response sent by the server."
+msgstr "Palvelimen lähettämää vastausta ei pystytty tulkitsemaan."
+
+#: puavo-user-registration:494 puavo-user-registration:538
+#: puavo-user-registration:545
+msgid "Please contact support."
+msgstr "Ole hyvä ja ota yhteys tukeen."
+
+#: puavo-user-registration:517
+msgid "User account created"
+msgstr "Käyttäjätunnus luotu"
+
+#: puavo-user-registration:518
+msgid "Your user account has been created."
+msgstr "Tunnuksesi on luotu."
+
+#: puavo-user-registration:520
+msgid "Have a nice time with your studies!"
+msgstr "Mukavaa opiskeluaikaa!"
+
+#: puavo-user-registration:536 puavo-user-registration:543
+msgid "Something went wrong"
+msgstr "Jokin meni pieleen"
+
+#: puavo-user-registration:537
+msgid "Could not interpret the response sent by the server."
+msgstr "Palvelimen palauttamaa viestiä ei pystytty tulkitsemaan."
+
+#: puavo-user-registration:544
+msgid "This situation should never happen, something is very wrong."
+msgstr "Tätä ei pitäisi koskaan tapahtua, jokin on pahasti pielessä."
+
+#: puavo-user-registration:580
+msgid "Sending information to server..."
+msgstr "Lähetetään tiedot palvelimelle..."
+
+#: puavo-user-registration:724
+msgid "connection successful"
+msgstr "yhteys muodostettu"
+
+#: puavo-user-registration:728
+msgid "error connecting to network"
+msgstr "virhe liityttäessä verkkoon"
+
+#: puavo-user-registration:756
+msgid "Join wireless network?"
+msgstr "Liity langattomaan verkkoon?"
+
+#: puavo-user-registration:757
+msgid ""
+"You are connected to a network that is not a wireless network."
+"  Do you want to join a wireless network?"
+msgstr ""
+"Olet liittyneenä verkkoon joka ei ole langaton verkko."
+"  Haluatko liittyä langattomaan verkkoon?"
+
+#: puavo-user-registration:769
+#, python-format
+msgid "Use network \"%s\"?"
+msgstr "Käytä verkkoa \"%s\"?"
+
+#: puavo-user-registration:770
+#, python-format
+msgid "You are connected to network \"%s\", do you want to use this network?"
+msgstr "Olet liittyneenä verkkoon \"%s\", haluatko käyttää tätä verkkoa?"
+
+msgid "You do not have the required permissions to use this tool."
+msgstr "Sinulla ei ole tarvittavia oikeuksia tämän työkalun käyttöön."
+
+msgid "System must be rebooted, press OK when ready!"
+msgstr "Tietokoneesi käynnistetään uudelleen. Napsauta OK."
+
+# in puavo-user-registration.glade
+msgid "First name:"
+msgstr "Etunimi:"
+
+msgid "Last name:"
+msgstr "Sukunimi:"
+
+msgid "Loginname:"
+msgstr "Käyttäjätunnus:"
+
+msgid "Email address:"
+msgstr "Sähköpostiosoite:"
+
+msgid "Login password:"
+msgstr "Salasana:"
+
+msgid "Password confirmation:"
+msgstr "Salasanan vahvistus:"
+
+msgid "Language:"
+msgstr "Kieli:"
+
+msgid "Phone number:"
+msgstr "Puhelinnumero:"
+
+msgid "Phone number is optional.  It is used only in support situations."
+msgstr "Puhelinnumero on valinnainen.  Sitä käytetään vain tukitilanteissa."
+
+msgid ""
+"You will receive confirmation to your email address."
+"  The address is also used for password reset."
+msgstr ""
+"Saat sähköpostiisi vahvistuksen rekisteröinnistä."
+"  Osoitetta käytetään myös salasanan nollaukseen."
+
+msgid "Create user account"
+msgstr "Luo tunnus"
+
+msgid "Reset form"
+msgstr "Nollaa lomake"
+
+msgid "New user registration"
+msgstr "Uuden käyttäjän rekisteröinti"
+
+msgid "Go to desktop"
+msgstr "Siirry työpöydälle"
+
+msgid "Connect to network"
+msgstr "Yhdistä verkkoon"
+
+msgid "Password:"
+msgstr "Salasana:"
+
+msgid "Connect"
+msgstr "Yhdistä"
+
+msgid "connecting to %s"
+msgstr "yhdistetään verkkoon %s"
+
+msgid "Privacy Policy"
+msgstr "Rekisteriseloste"
+
+msgid "internal error: username and password missing"
+msgstr "sisäinen virhe: käyttäjänimi ja salasana puuttuvat"
+
+msgid ""
+"Could not do initial login with new user credentials."
+"  Please remember your username \"%s\" for the first login."
+"  Contact support if there are problems."
+msgstr ""
+"Ensikirjautuminen uudella tunnuksella ei onnistunut."
+"  Muista käyttäjätunnuksesi \"%s\" ensikirjautumista varten."
+"  Ota ongelmatilanteissa yhteys tukeen."
+
+msgid "unknown login error"
+msgstr "tuntematon kirjautumisvirhe"

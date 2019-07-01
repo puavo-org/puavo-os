@@ -74,6 +74,7 @@ install : installdirs
 		puavo-rest-request
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
+		puavo-conf-local \
 		puavo-dnssd-printer-client \
 		puavo-handle-external-files-actions \
 		puavo-netboot-init-nfs \

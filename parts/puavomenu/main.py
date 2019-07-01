@@ -18,6 +18,7 @@ from gi.repository import Gio
 
 from constants import *
 import menudata
+import puavopkg
 import iconcache
 import buttons
 import utils
@@ -25,7 +26,6 @@ import utils_gui
 import faves
 import sidebar
 from strings import STRINGS
-from settings import SETTINGS
 
 
 class PuavoMenu(Gtk.Window):
@@ -46,13 +46,15 @@ class PuavoMenu(Gtk.Window):
         dialog.hide()
         self.enable_out_of_focus_hide()
 
-    def __init__(self):
+    def __init__(self, settings):
 
         """This is where the magic happens."""
 
         start_time = time.clock()
 
         super().__init__()
+
+        self.__settings = settings
 
         # Ensure the window is not visible until it's ready
         self.set_visible(False)
@@ -69,23 +71,26 @@ class PuavoMenu(Gtk.Window):
 
         try:
             # Clean leftovers
-            os.unlink(SETTINGS.socket)
+            os.unlink(self.__settings.socket)
         except OSError:
             pass
 
         try:
-            self.__socket = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
-            self.__socket.bind(SETTINGS.socket)
+            # A domain socket in stream mode!
+            self.__socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            self.__socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.__socket.bind(self.__settings.socket)
+            self.__socket.listen(10)
         except Exception as exception:
             # Oh dear...
             logging.error('Unable to create a domain socket for IPC!')
             logging.error('Reason: %s', str(exception))
-            logging.error('Socket name: "%s"', SETTINGS.socket)
+            logging.error('Socket name: "%s"', self.__settings.socket)
             logging.error('This is a fatal error, stopping here.')
 
             syslog.syslog(syslog.LOG_CRIT,
                           'PuavoMenu IPC socket "%s" creation failed: %s',
-                          SETTINGS.socket, str(exception))
+                          self.__settings.socket, str(exception))
 
             syslog.syslog(syslog.LOG_CRIT,
                           'PuavoMenu stops here. Contact Opinsys support.')
@@ -101,7 +106,7 @@ class PuavoMenu(Gtk.Window):
         #   function-glib--io-add-watch
         GLib.io_add_watch(self.__socket,
                           GLib.IO_IN,
-                          self.__socket_watcher)
+                          self.__socket_accept)
 
         # ----------------------------------------------------------------------
 
@@ -124,18 +129,18 @@ class PuavoMenu(Gtk.Window):
 
         # Storage for 48x48 -pixel program and menu icons. Maintained
         # separately from the menu data.
-        self.__icons = iconcache.IconCache(48, 48 * 15)
+        self.__icons = iconcache.IconCache(48, 48 * 20)
 
         # Background image for top-level menus
         try:
-            if SETTINGS.dark_theme:
+            if self.__settings.dark_theme:
                 image_name = 'folder_dark.png'
             else:
                 image_name = 'folder.png'
 
             # WARNING: Hardcoded image size!
             self.__menu_background = \
-                utils_gui.load_image_at_size(SETTINGS.res_dir + image_name, 150, 110)
+                utils_gui.load_image_at_size(self.__settings.res_dir + image_name, 150, 110)
         except Exception as exception:
             logging.error("Can't load the menu background image: %s",
                           str(exception))
@@ -145,7 +150,7 @@ class PuavoMenu(Gtk.Window):
         # Create the window elements
 
         # Set window style
-        if SETTINGS.prod_mode:
+        if self.__settings.prod_mode:
             self.set_skip_taskbar_hint(True)
             self.set_skip_pager_hint(True)
             self.set_deletable(False)       # no close button
@@ -159,7 +164,7 @@ class PuavoMenu(Gtk.Window):
             self.__exit_permitted = True
 
         # Don't mess with the real menu when running in development mode
-        if SETTINGS.prod_mode:
+        if self.__settings.prod_mode:
             self.set_title('PuavoMenuUniqueName')
         else:
             self.set_title('DevModePuavoMenu')
@@ -176,7 +181,7 @@ class PuavoMenu(Gtk.Window):
         self.__main_container.set_size_request(WINDOW_WIDTH,
                                                WINDOW_HEIGHT)
 
-        if not SETTINGS.prod_mode:
+        if not self.__settings.prod_mode:
             # Create the devtools popup menu
             self.menu_signal = \
                 self.connect('button-press-event', self.__devtools_menu)
@@ -219,7 +224,7 @@ class PuavoMenu(Gtk.Window):
         self.__search_keypress_signal = \
             self.__search.connect('key-press-event', self.__search_keypress)
         self.__search.set_placeholder_text(
-            utils.localize(STRINGS['search_placeholder']))
+            utils.localize(STRINGS['search_placeholder'], self.__settings.language))
         self.__main_container.put(
             self.__search,
             PROGRAMS_LEFT + PROGRAMS_WIDTH - SEARCH_WIDTH - MAIN_PADDING,
@@ -265,7 +270,7 @@ class PuavoMenu(Gtk.Window):
                                   PROGRAMS_LEFT,
                                   PROGRAMS_TOP + PROGRAMS_HEIGHT + MAIN_PADDING)
 
-        self.__faves = faves.FavesList(self, SETTINGS)
+        self.__faves = faves.FavesList(self, self.__settings)
         self.__faves.set_size_request(PROGRAMS_WIDTH,
                                       PROGRAM_BUTTON_HEIGHT + 2)
         self.__main_container.put(self.__faves,
@@ -281,7 +286,7 @@ class PuavoMenu(Gtk.Window):
                                    h=WINDOW_HEIGHT - (MAIN_PADDING * 2),
                                    orientation=Gtk.Orientation.VERTICAL)
 
-        self.__sidebar = sidebar.Sidebar(self)
+        self.__sidebar = sidebar.Sidebar(self, self.__settings)
 
         self.__main_container.put(self.__sidebar.container,
                                   SIDEBAR_LEFT,
@@ -296,7 +301,7 @@ class PuavoMenu(Gtk.Window):
 
         self.__focus_signal = None
 
-        if not SETTINGS.autohide:
+        if not self.__settings.autohide:
             # Keep the window on top of everything and show it
             self.set_visible(True)
             self.set_keep_above(True)
@@ -328,7 +333,7 @@ class PuavoMenu(Gtk.Window):
         # This is a bad, bad situation that should never happen in production.
         # It will happen one day.
         if self.menudata is None or len(self.menudata.programs) == 0:
-            if SETTINGS.prod_mode:
+            if self.__settings.prod_mode:
                 self.__show_empty_message(STRINGS['menu_no_data_at_all_prod'])
             else:
                 self.__show_empty_message(STRINGS['menu_no_data_at_all_dev'])
@@ -367,14 +372,48 @@ class PuavoMenu(Gtk.Window):
         if show:
             self.__programs_icons.show()
 
+    def __make_menu_button(self, menu):
+        return buttons.MenuButton(
+            parent=self,
+            settings=self.__settings,
+            label=menu.name,
+            icon=menu.icon,
+            tooltip=menu.description,
+            data=menu,
+            background=self.__menu_background)
+
+    def __make_program_button(self, program):
+        return buttons.ProgramButton(
+            parent=self,
+            settings=self.__settings,
+            label=program.name,
+            icon=program.icon,
+            tooltip=program.description,
+            data=program,
+            is_installer=program.is_puavopkg_installer())
+
+    # Returns True if puavo-pkg installer icons should be hidden
+    # in this session
+    def __are_installers_hidden(self):
+        if not self.__settings.is_user_primary_user:
+            return True
+
+        if self.__settings.is_guest:
+            return True
+
+        if self.__settings.is_fatclient:
+            return True
+
+        return False
+
     # (Re-)Creates the current category or menu view
     def __create_current_menu(self):
         if self.menudata is None:
             return
 
-        new_buttons = []
-
         self.__empty.hide()
+
+        new_buttons = []
 
         if self.current_menu is None:
             # Top-level category view
@@ -390,10 +429,7 @@ class PuavoMenu(Gtk.Window):
                     if menu.hidden:
                         continue
 
-                    button = buttons.MenuButton(
-                        self, menu.name, menu.icon, menu.description, menu,
-                        self.__menu_background)
-
+                    button = self.__make_menu_button(menu)
                     button.connect('clicked', self.__clicked_menu_button)
                     new_buttons.append(button)
 
@@ -402,10 +438,10 @@ class PuavoMenu(Gtk.Window):
                     if program.hidden:
                         continue
 
-                    button = buttons.ProgramButton(
-                        self, program.name, program.icon,
-                        program.description, program)
+                    if program.is_puavopkg_installer() and self.__are_installers_hidden():
+                        continue
 
+                    button = self.__make_program_button(program)
                     button.connect('clicked', self.clicked_program_button)
                     new_buttons.append(button)
 
@@ -419,10 +455,10 @@ class PuavoMenu(Gtk.Window):
                 if program.hidden:
                     continue
 
-                button = buttons.ProgramButton(
-                    self, program.name, program.icon,
-                    program.description, program)
+                if program.is_puavopkg_installer() and self.__are_installers_hidden():
+                    continue
 
+                button = self.__make_program_button(program)
                 button.connect('clicked', self.clicked_program_button)
                 new_buttons.append(button)
 
@@ -456,7 +492,7 @@ class PuavoMenu(Gtk.Window):
     # menu/category is empty, or there are no search results.
     def __show_empty_message(self, msg):
         if isinstance(msg, dict):
-            msg = utils.localize(msg)
+            msg = utils.localize(msg, self.__settings.language)
 
         self.__empty.set_markup(
             '<span color="#888" size="large"><i>{0}</i></span>'.format(msg))
@@ -500,12 +536,16 @@ class PuavoMenu(Gtk.Window):
     def add_program_to_desktop(self, program):
         """Creates a desktop shortcut to a program."""
 
-        if not SETTINGS.desktop_dir:
+        if not self.__settings.desktop_dir:
+            return
+
+        if program.is_puavopkg_installer():
+            # Nope
             return
 
         # Create the link file
         # TODO: use the *original* .desktop file if it exists
-        name = os.path.join(SETTINGS.desktop_dir, '{0}.desktop'.format(program.name))
+        name = os.path.join(self.__settings.desktop_dir, '{0}.desktop'.format(program.name))
 
         logging.info('Adding program "%s" to the desktop, destination="%s"',
                      program.name, name)
@@ -517,11 +557,15 @@ class PuavoMenu(Gtk.Window):
             logging.error(str(exception))
 
             self.error_message(
-                utils.localize(STRINGS['desktop_link_failed']),
+                utils.localize(STRINGS['desktop_link_failed'], self.__settings.language),
                 str(exception))
 
     # Called directly from ProgramButton
     def add_program_to_panel(self, program):
+        if program.is_puavopkg_installer():
+            # Nuh-uh
+            return
+
         logging.info('Adding program "%s" (id="%s") to the bottom panel',
                      program.name, program.name)
 
@@ -531,25 +575,24 @@ class PuavoMenu(Gtk.Window):
             logging.error('Panel icon creation failed')
             logging.error(str(exception))
 
-            self.error_message(utils.localize(STRINGS['panel_link_failed']),
-                               str(exception))
+            self.error_message(
+                utils.localize(STRINGS['panel_link_failed'], self.__settings.language),
+                str(exception))
 
     # Called directly from ProgramButton
     def remove_program_from_faves(self, p):
         logging.info('Removing program "%s" from the faves', p.name)
         p.uses = 0
-        self.__faves.update(self.menudata.programs)
+        self.__faves.update(self.menudata.programs, self.__settings)
 
-    # Launch a program. This is a public method, it is called from other
-    # files (buttons and faves) to launch programs.
-    def clicked_program_button(self, button):
-        program = button.data
+    # Launch a normal program
+    def __launch_normal_program(self, program):
         program.uses += 1
 
         logging.info('Clicked program button "%s", usage counter is %d',
                      program.menudata_id, program.uses)
 
-        self.__faves.update(self.menudata.programs)
+        self.__faves.update(self.menudata.programs, self.__settings)
 
         if program.command is None:
             logging.error('No command defined for program "%s"', program.name)
@@ -558,7 +601,7 @@ class PuavoMenu(Gtk.Window):
         # Try to launch the program. Use Gio's services, as Gio understands the
         # "Exec=" keys and we don't have to spawn shells with pipes and "sh".
         try:
-            if SETTINGS.prod_mode:
+            if self.__settings.prod_mode:
                 # Spy the user and log what programs they use. This information
                 # is then sent to various TLAs around the world and used in all
                 # sorts of nefarious classified black operations.
@@ -574,7 +617,7 @@ class PuavoMenu(Gtk.Window):
 
             logging.info('Executing "%s"', program.command)
 
-            if program.program_type in (PROGRAM_TYPE_DESKTOP, PROGRAM_TYPE_CUSTOM):
+            if program.program_type in (menudata.ProgramType.DESKTOP, menudata.ProgramType.CUSTOM):
                 # Set the program name to empty string ('') to force some (KDE)
                 # programs to use their default window titles. These programs
                 # have command-line parameters like "-qwindowtitle" or "-caption"
@@ -585,7 +628,7 @@ class PuavoMenu(Gtk.Window):
                 # because that triggers the unwanted behavior!) then these
                 # programs will use their own default titles.
                 Gio.AppInfo.create_from_commandline(program.command, '', 0).launch()
-            elif program.program_type == PROGRAM_TYPE_WEB:
+            elif program.program_type == menudata.ProgramType.WEB:
                 Gio.AppInfo.launch_default_for_uri(program.command, None)
             else:
                 raise RuntimeError('Unknown program type "{0}"'.
@@ -596,16 +639,43 @@ class PuavoMenu(Gtk.Window):
 
             self.autohide()
 
-            if SETTINGS.reset_view_after_start:
+            if self.__settings.reset_view_after_start:
                 # Go back to the default view
                 self.reset_view()
 
         except Exception as exception:
             logging.error('Could not launch program "%s": %s',
                           program.command, str(exception))
-            self.error_message(utils.localize(STRINGS['program_launching_failed']),
-                               str(exception))
+            self.error_message(
+                utils.localize(STRINGS['program_launching_failed'], self.__settings.language),
+                str(exception))
             return False
+
+    # Launch an installer for a puavo-pkg program that hasn't been
+    # installed yet
+    def __launch_puavopkg_installer(self, program):
+        logging.info('Launching puavo-pkgs-ui for program "%s", package ID "%s"',
+                     program.name, program.puavopkg['id'])
+
+        self.autohide()
+
+        if self.__settings.reset_view_after_start:
+            self.reset_view()
+
+        import subprocess
+        subprocess.Popen(['puavo-pkgs-ui'],
+                         stdout=subprocess.DEVNULL,
+                         stderr=subprocess.DEVNULL)
+
+    # Launch a program. This is a public method, it is called from other
+    # files (buttons and faves) to launch programs.
+    def clicked_program_button(self, button):
+        program = button.data
+
+        if program.is_puavopkg_installer():
+            return self.__launch_puavopkg_installer(program)
+
+        return self.__launch_normal_program(program)
 
     # --------------------------------------------------------------------------
     # Searching
@@ -626,7 +696,7 @@ class PuavoMenu(Gtk.Window):
             self.__create_current_menu()
             return
 
-        matches = self.menudata.search(key)
+        matches = self.menudata.search(key, self.__are_installers_hidden())
 
         if len(matches) > 0:
             self.__empty.hide()
@@ -637,7 +707,7 @@ class PuavoMenu(Gtk.Window):
         new_buttons = []
 
         for m in matches:
-            b = buttons.ProgramButton(self, m.name, m.icon, m.description, m)
+            b = self.__make_program_button(m)
             b.connect('clicked', self.clicked_program_button)
             new_buttons.append(b)
 
@@ -687,19 +757,28 @@ class PuavoMenu(Gtk.Window):
         """Loads menu data and sets up the UI. Returns false if
         something fails."""
 
+        # puavo-pkg programs that are NOT part of the desktop image
+        # and can be installed/uninstalled dynamically
+        dynamic_puavopkg_ids = utils.puavo_conf('puavo.pkgs.ui.pkglist', '')
+
         try:
+            puavopkg_states = puavopkg.detect_dynamic_package_states(
+                self.__settings.puavopkg_root_dir, dynamic_puavopkg_ids)
+
             self.menudata = menudata.Menudata()
 
-            self.menudata.load(SETTINGS.language,
-                               SETTINGS.menu_dir,
-                               utils.puavo_conf('puavo.puavomenu.tags', 'default'),
-                               self.__icons)
+            self.menudata.load( \
+                language=self.__settings.language,
+                menudata_root_dir=self.__settings.menu_dir,
+                tag_filter_string=utils.puavo_conf('puavo.puavomenu.tags', 'default'),
+                puavopkg_states=puavopkg_states,
+                icon_cache=self.__icons)
 
         except Exception as exception:
             logging.fatal('Could not load menu data!')
             logging.error(exception, exc_info=True)
 
-            if SETTINGS.prod_mode:
+            if self.__settings.prod_mode:
                 # Log for later examination
                 syslog.syslog(syslog.LOG_CRIT, 'Could not load menu data!')
                 syslog.syslog(syslog.LOG_CRIT, traceback.format_exc())
@@ -726,10 +805,10 @@ class PuavoMenu(Gtk.Window):
         self.__create_current_menu()
         self.__programs_container.show()
 
-        if SETTINGS.enable_faves_saving:
-            faves.load_use_counts(self.menudata.programs, SETTINGS.user_dir)
+        if self.__settings.enable_faves_saving:
+            faves.load_use_counts(self.menudata.programs, self.__settings.user_dir)
 
-        self.__faves.update(self.menudata.programs)
+        self.__faves.update(self.menudata.programs, self.__settings)
         self.__faves_sep.show()
         self.__faves.show()
 
@@ -742,7 +821,7 @@ class PuavoMenu(Gtk.Window):
         """Completely removes all menu data. Hides everything programs-
         related from the UI."""
 
-        if SETTINGS.prod_mode:
+        if self.__settings.prod_mode:
             return
 
         self.__category_buttons.hide()
@@ -788,7 +867,7 @@ class PuavoMenu(Gtk.Window):
         if key_event.keyval != Gdk.KEY_Escape:
             return
 
-        if SETTINGS.prod_mode:
+        if self.__settings.prod_mode:
             self.set_keep_above(False)
             self.set_visible(False)
         else:
@@ -801,7 +880,7 @@ class PuavoMenu(Gtk.Window):
     # useless (to us) arguments to the function, so they're collected
     # and ignored.
     def disable_out_of_focus_hide(self, *unused):
-        if not SETTINGS.autohide:
+        if not self.__settings.autohide:
             return
 
         if self.__focus_signal:
@@ -811,7 +890,7 @@ class PuavoMenu(Gtk.Window):
     # (Re)enables window out-of-focus autohiding. You need to call this
     # after a popup menu has been closed.
     def enable_out_of_focus_hide(self, *unused):
-        if not SETTINGS.autohide:
+        if not self.__settings.autohide:
             return
 
         if not self.__focus_signal:
@@ -827,7 +906,7 @@ class PuavoMenu(Gtk.Window):
     # If autohiding is enabled, hides the window when it loses focus. Public method, called
     # from other files.
     def autohide(self, *unused):
-        if SETTINGS.autohide:
+        if self.__settings.autohide:
             self.set_keep_above(False)
             self.set_visible(False)
 
@@ -873,92 +952,168 @@ class PuavoMenu(Gtk.Window):
 
         return None
 
-    # Responds to commands sent through the control socket
-    def __socket_watcher(self, source, condition, *args):
+    # --------------------------------------------------------------------------
+    # IPC socket command handlers
+
+    # Socket handler: explicitly hide the window
+    def __socket_hide_window(self, data):
+        if self.__settings.reset_view_after_start:
+            # Go back to the default view
+            self.reset_view()
+
+        if self.is_visible():
+            logging.debug('Hiding the window')
+            self.__search.grab_focus()
+            self.set_keep_above(False)
+            self.set_visible(False)
+        else:
+            logging.debug('Already hidden')
+
+    # Socket handler: explicitly show the window
+    def __socket_show_window(self, data):
+        if self.is_visible():
+            logging.debug('Already visible')
+        else:
+            if self.__settings.reset_view_after_start:
+                # Go back to the default view
+                self.reset_view()
+
+            coords = self.__parse_position(data)
+
+            if coords:
+                logging.debug(coords)
+                self.move(coords[0], coords[1])
+
+            self.set_keep_above(True)
+            self.set_visible(True)
+            self.present()
+
+            self.__search.grab_focus()
+            self.activate_focus()
+
+    # Socket handler: toggle window visibility
+    def __socket_toggle_window(self, data):
+        if self.__settings.reset_view_after_start:
+            # Go back to the default view
+            self.reset_view()
+
+        if self.is_visible():
+            logging.debug('Toggling window visibility (hide)')
+            self.__search.grab_focus()
+            self.set_keep_above(False)
+            self.set_visible(False)
+        else:
+            logging.debug('Toggling window visibility (show)')
+            coords = self.__parse_position(data)
+
+            if coords:
+                logging.debug(coords)
+                self.move(coords[0], coords[1])
+
+            self.set_keep_above(True)
+            self.set_visible(True)
+            self.present()
+
+            self.__search.grab_focus()
+            self.activate_focus()
+
+    # Socket handler: update puavo-pkg program state
+    def __socket_update_puavopkg(self, data):
+        if len(data) != 1:
+            logging.warning('__update_puavopkg(): malformed arguments ("%s")', data)
+            return
+
+        pkg_id = data[0]
+
+        # Find the target program
+        target_id = None
+        target_program = None
+
+        for menudata_id, program in self.menudata.programs.items():
+            if program.puavopkg and program.puavopkg['id'] == pkg_id:
+                target_id = menudata_id
+                target_program = program
+                break
+
+        if not target_program:
+            logging.error('__update_puavopkg(): no valid puavo-pkg program with the ID "%s" found',
+                          pkg_id)
+            return
+
+        # puavo-pkg programs that are NOT part of the desktop image
+        # and can be installed/uninstalled dynamically
+        dynamic_puavopkg_ids = utils.puavo_conf('puavo.pkgs.ui.pkglist', '')
+
         try:
-            data, _ = self.__socket.recvfrom(1024)
+            puavopkg_states = puavopkg.detect_dynamic_package_states(
+                self.__settings.puavopkg_root_dir, dynamic_puavopkg_ids)
+
+            # Reload a *single* program
+            new_program = self.menudata.reload_puavopkg_program(
+                language=self.__settings.language,
+                menudata_root_dir=self.__settings.menu_dir,
+                puavopkg_states=puavopkg_states,
+                icon_cache=self.__icons,
+                program=target_program)
+
+            if new_program:
+                # Replace the old program object and update the UI
+                self.menudata.replace_program(target_program, new_program)
+                self.__create_current_menu()
+                self.__faves.update(self.menudata.programs, self.__settings)
+
+        except Exception as exception:
+            logging.error(str(exception))
+
+    # Socket handler: reload menudata
+    def __socket_reload_menudata(self, data):
+        print('Reloading all menudata')
+        self.unload_menu_data()
+        self.load_menu_data()
+        self.current_category = 0
+        self.current_menu = None
+        self.__create_current_menu()
+
+
+    # Responds to commands sent through the control socket
+    def __socket_watcher(self, conn, *args):
+        try:
+            data = conn.recv(1024)
             data = (data or b'').decode('utf-8').strip().split(' ')
 
             if len(data) == 0:
                 logging.debug('Received an empty command through the socket?')
-                return True
+                return False
 
             cmd = data[0]
             data = data[1:]
 
-            logging.debug('Socket command: "%s"', cmd)
-            logging.debug('Socket arguments: "%s"', data)
+            logging.debug('Socket command: "%s", arguments: "%s"', cmd, data)
 
-            if cmd == 'hide':
-                # Hide the window
+            socket_handlers = {
+                'hide': self.__socket_hide_window,
+                'show': self.__socket_show_window,
+                'toggle': self.__socket_toggle_window,
+                'update-puavopkg': self.__socket_update_puavopkg,
+                'reload-menudata': self.__socket_reload_menudata,
+            }
 
-                if SETTINGS.reset_view_after_start:
-                    # Go back to the default view
-                    self.reset_view()
-
-                if self.is_visible():
-                    logging.debug('Hiding the window')
-                    self.__search.grab_focus()
-                    self.set_keep_above(False)
-                    self.set_visible(False)
-                else:
-                    logging.debug('Already hidden')
-            elif cmd == 'show':
-                # Show the window
-
-                if self.is_visible():
-                    logging.debug('Already visible')
-                else:
-                    if SETTINGS.reset_view_after_start:
-                        # Go back to the default view
-                        self.reset_view()
-
-                    coords = self.__parse_position(data)
-
-                    if coords:
-                        logging.debug(coords)
-                        self.move(coords[0], coords[1])
-
-                    self.set_keep_above(True)
-                    self.set_visible(True)
-                    self.present()
-
-                    self.__search.grab_focus()
-                    self.activate_focus()
-            elif cmd == 'toggle':
-                # Toggle the window visibility
-
-                if SETTINGS.reset_view_after_start:
-                    # Go back to the default view
-                    self.reset_view()
-
-                if self.is_visible():
-                    logging.debug('Toggling window visibility (hide)')
-                    self.__search.grab_focus()
-                    self.set_keep_above(False)
-                    self.set_visible(False)
-                else:
-                    logging.debug('Toggling window visibility (show)')
-                    coords = self.__parse_position(data)
-
-                    if coords:
-                        logging.debug(coords)
-                        self.move(coords[0], coords[1])
-
-                    self.set_keep_above(True)
-                    self.set_visible(True)
-                    self.present()
-
-                    self.__search.grab_focus()
-                    self.activate_focus()
+            if cmd in socket_handlers:
+                socket_handlers[cmd](data)
             else:
-                logging.warning('Unknown command "%s" received, args="%s"',
-                                cmd, data)
+                logging.warning('Unknown socket command "%s"', cmd)
         except Exception as exception:
             logging.error('Socket command processing failed!')
             logging.error(str(exception))
 
-        # False will remove the handler, that's not what we want
+        # MUST RETURN FALSE HERE, otherwise we get stuck in an infinite loop
+        return False
+
+    # Accepts incoming IPC socket connections
+    def __socket_accept(self, sock, *args):
+        # http://rox.sourceforge.net/desktop/node/413.html
+        conn, addr = sock.accept()
+        GLib.io_add_watch(conn, GLib.IO_IN, self.__socket_watcher)
         return True
 
     # --------------------------------------------------------------------------
@@ -967,7 +1122,7 @@ class PuavoMenu(Gtk.Window):
     # The devtools menu and its commands
     def __devtools_menu(self, widget, event):
 
-        if SETTINGS.prod_mode:
+        if self.__settings.prod_mode:
             return
 
         if event.button != 3:
@@ -1028,7 +1183,7 @@ class PuavoMenu(Gtk.Window):
             logging.debug('Menu data reload complete')
 
         def toggle_autohide(menuitem):
-            SETTINGS.autohide = not SETTINGS.autohide
+            self.__settings.autohide = not self.__settings.autohide
 
         def permit_exit(menuitem):
             self.__exit_permitted = not self.__exit_permitted
@@ -1057,7 +1212,7 @@ class PuavoMenu(Gtk.Window):
         dev_menu.append(sep)
 
         autohide_item = Gtk.CheckMenuItem('Autohide window')
-        autohide_item.set_active(SETTINGS.autohide)
+        autohide_item.set_active(self.__settings.autohide)
         autohide_item.connect('activate', toggle_autohide)
         autohide_item.show()
         dev_menu.append(autohide_item)
@@ -1095,17 +1250,17 @@ class PuavoMenu(Gtk.Window):
 # the menu. If you just run puavomenu from the command line, it tries
 # to import all sorts of X libraries and stuff and sometimes that fails
 # and you can't even see the help text!
-def run_puavomenu():
+def run_puavomenu(settings):
     logging.info('Entering run_puavomenu()')
 
     try:
-        menu = PuavoMenu()
+        menu = PuavoMenu(settings)
         Gtk.main()
 
         # Normal exit, try to remove the socket file but don't explode
         # if it fails
         try:
-            os.unlink(SETTINGS.socket)
+            os.unlink(settings.socket)
         except OSError:
             pass
 

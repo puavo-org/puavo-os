@@ -1,0 +1,16 @@
+if [ "$DESKTOP_SESSION" = 'puavo-user-registration' ]; then
+  /usr/bin/openbsd-cwm & cwm_pid=$!
+
+  if [ -e /boot/grub/themes/Vimix/background.jpeg ]; then
+    qiv -mz /boot/grub/themes/Vimix/background.jpeg || true
+  fi
+  puavo-user-registration --at-session-startup || true
+
+  kill -9 "$cwm_pid"
+
+  export DESKTOP_SESSION=puavo-desktop
+  export GDMSESSION=puavo-desktop
+  export XDG_SESSION_DESKTOP=puavo-desktop
+
+  export PUAVO_USER_REGISTRATION=true
+fi

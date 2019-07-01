@@ -1,0 +1,16 @@
+#!/bin/sh
+
+set -eu
+
+# If we have Windows in the hard disk (this file setup by puavo-install-grub),
+# we should assume clock is in local time and not UTC.
+if [ -e /images/boot/.puavo_windows_partition ]; then
+  cat <<'EOF' > /etc/adjtime.tmp
+0.0 0 0
+0
+LOCAL
+EOF
+  mv /etc/adjtime.tmp /etc/adjtime
+else
+  rm -f /etc/adjtime
+fi

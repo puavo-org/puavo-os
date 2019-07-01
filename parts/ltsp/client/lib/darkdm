@@ -62,6 +62,8 @@ Commands:
   preinstall        - install without registering
   preseed-install   - install with a preseed
   reboot            - reboot the system in 5 seconds
+  restoredisk       - restore from bootserver (only on netboot devices)
+  savedisk          - save to bootserver (only on netboot devices)
   shell             - spawn a shell
   update            - update the local Puavo OS installation and reboot
 EOF
@@ -222,6 +224,12 @@ darkdm_menu()
 		;;
 	    reboot)
 		darkdm_reboot
+		;;
+	    restoredisk)
+                puavo-disk-clone restoredisk
+		;;
+	    savedisk)
+                puavo-disk-clone savedisk
 		;;
 	    shell)
 		darkdm_shell

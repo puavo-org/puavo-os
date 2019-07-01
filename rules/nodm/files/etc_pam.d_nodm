@@ -2,7 +2,10 @@
 # /etc/pam.d/nodm - specify the PAM behaviour of nodm
 #
 
-# No authentication, as nodm skips by design
+# No authentication, as nodm skips by design,
+# but include pam_group so that group memberships from
+# /etc/security/group.conf are effective.
+auth    optional        pam_group.so
 
 # This module parses environment configuration file(s)
 # and also allows you to use an extended config

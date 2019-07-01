@@ -1,7 +1,19 @@
 # Core menu data types. Menu data loading.
 
 import re
-from constants import PROGRAM_TYPE_DESKTOP
+from enum import IntEnum
+
+# Program types. Desktop is the default.
+class ProgramType(IntEnum):
+    DESKTOP = 0
+    CUSTOM = 1
+    WEB = 2
+
+
+class PuavoPkgState(IntEnum):
+    UNKNOWN = -1
+    NOT_INSTALLED = 0
+    INSTALLED = 1
 
 
 # Python has no structs, so classes are (ab)used instead. namedtuples
@@ -21,7 +33,7 @@ class Program:
 
         # Type of this program. Affects mostly how it is launched
         # and how is added on the desktop or the bottom panel.
-        self.program_type = PROGRAM_TYPE_DESKTOP
+        self.program_type = ProgramType.DESKTOP
 
         # Internal ID (the name given to this program in menudata files)
         self.menudata_id = None
@@ -65,6 +77,18 @@ class Program:
         # If set, this is the name of the original .desktop file
         # the data was read from. Not always known or applicable.
         self.original_desktop_file = None
+
+        # If not None, this will be a dict containing puavo-pkg installer
+        # data. Only a few programs use this.
+        self.puavopkg = None
+
+    def is_puavopkg_installer(self):
+        """Returns True if the program is merely an installer for a
+        puavo-pkg program that has not been installed yet."""
+
+        return self.program_type == ProgramType.DESKTOP and \
+               self.puavopkg and \
+               self.puavopkg['state'] == PuavoPkgState.NOT_INSTALLED
 
     def __str__(self):
         return '<Program, type={0}, id="{1}", name="{2}", ' \
@@ -165,11 +189,15 @@ class Menudata:
         self.category_index = []
 
     # Searches for programs, returns them sorted by their names
-    def search(self, key):
+    def search(self, key, hide_puavopkg_installers):
         matches = []
 
         for _, program in self.programs.items():
             if program.hidden:
+                continue
+
+            if program.is_puavopkg_installer() and hide_puavopkg_installers:
+                # Don't show puavopkg installers if they cannot be used
                 continue
 
             if re.search(key, program.menudata_id, re.IGNORECASE):
@@ -203,7 +231,13 @@ class Menudata:
         self.categories = {}
         self.category_index = []
 
-    def load(self, language, menudata_root_dir, tag_filter_string, icon_cache):
+    def load(self,
+             language,
+             menudata_root_dir,
+             tag_filter_string,
+             puavopkg_states,
+             icon_cache):
+
         """A high-level interface to everything in loader.py. Loads all the
         menu data in the specified directory and builds usable menu data
         out of it."""
@@ -218,4 +252,33 @@ class Menudata:
             loader.load_menu_data(language,
                                   menudata_root_dir,
                                   tag_filter_string,
+                                  puavopkg_states,
                                   icon_cache)
+
+    def reload_puavopkg_program(self,
+                                language,
+                                menudata_root_dir,
+                                puavopkg_states,
+                                icon_cache,
+                                program):
+
+        import loader
+
+        return loader.reload_puavopkg_program(
+            language, menudata_root_dir, puavopkg_states, icon_cache, program)
+
+    def replace_program(self, program, new_program):
+        # I'm regretting my decision to store actual program objects (instead
+        # of their unique ID strings) in menus and categories...
+
+        for menudata_id, menu in self.menus.items():
+            for index, prog in enumerate(menu.programs):
+                if prog == program:
+                    menu.programs[index] = new_program
+
+        for menudata_id, cat in self.categories.items():
+            for index, prog in enumerate(cat.programs):
+                if prog == program:
+                    cat.programs[index] = new_program
+
+        self.programs[program.menudata_id] = new_program

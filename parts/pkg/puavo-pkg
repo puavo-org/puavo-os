@@ -19,8 +19,9 @@ g_puavo_pkg_rootdir=/var/lib/puavo-pkg
 g_puavo_pkg_readonly_cachedir="$g_puavo_pkg_cachedir"
 g_puavo_pkg_readonly_rootdir="$g_puavo_pkg_rootdir"
 
-# this can not be overridden with PUAVO_PKG_ROOTDIR by design
-# (we could also move it somewhere else than /var/lib/puavo-pkg/installed)
+# These can not be overridden with PUAVO_PKG_ROOTDIR by design
+# (we could also move it somewhere else than /var/lib/puavo-pkg/*).
+g_puavo_pkg_available_dir="${g_puavo_pkg_rootdir}/available"
 g_puavo_pkg_installed_dir="${g_puavo_pkg_rootdir}/installed"
 
 LOG_EMERG=0
@@ -138,8 +139,8 @@ log_warning()
 }
 
 gc_installations() {
-  local currently_installed_link gc_status msg pkg_dir pkg_installation \
-        pkg_name
+  local currently_available_link currently_installed_link gc_status msg \
+        pkg_dir pkg_installation pkg_name
 
   gc_status=$SC_OK
 
@@ -147,13 +148,14 @@ gc_installations() {
     test -d "$pkg_dir" || continue
 
     pkg_name="$(basename "$pkg_dir")"
+    currently_available_link="${g_puavo_pkg_available_dir}/${pkg_name}"
     currently_installed_link="${g_puavo_pkg_installed_dir}/${pkg_name}"
 
     for pkg_installation in "$pkg_dir"/*; do
       test -d "$pkg_installation" || continue
 
-      if ! [ "$pkg_installation" -ef "$currently_installed_link" ]; then
-
+      if ! [ "$pkg_installation" -ef "$currently_available_link" \
+               -o "$pkg_installation" -ef "$currently_installed_link" ]; then
         latest_prepared_time=''
         # Because fatclients may need puavo-pkg packages even when they are
         # not installed on bootservers (only prepared), in bootserver case
@@ -268,7 +270,7 @@ get_license_url()
       return 1
     }
   else
-    pkg_dir=$(get_installed_pkg_dir "$identifier") || return 1
+    pkg_dir=$(get_available_pkg_dir "$identifier") || return 1
   fi
 
   [ -f "${pkg_dir}/license" ] && echo "file://${pkg_dir}/license"
@@ -305,9 +307,9 @@ get_writable_pkg_dir()
   echo "${g_puavo_pkg_rootdir}/packages/${pkg_name}/${pkg_id}"
 }
 
-get_installed_pkg_dir()
+get_available_pkg_dir()
 {
-  readlink -e "$(get_pkg_link "$1")" || true
+  readlink -e "${g_puavo_pkg_available_dir}/$1"
 }
 
 get_installed_pkg_id()
@@ -315,7 +317,7 @@ get_installed_pkg_id()
   local pkg_name pkg_dir
 
   pkg_name=$1
-  pkg_dir=$(get_installed_pkg_dir "$pkg_name") || return 1
+  pkg_dir=$(readlink -e "$(get_pkg_link "$1")") || true
 
   [ -n "$pkg_dir" ] || return 0
 
@@ -370,6 +372,10 @@ configure_pkg()
   }
   popd > /dev/null 2>&1 || true
 
+  ln -fns "$pkg_dir" "${g_puavo_pkg_available_dir}/${pkg_name}" || {
+    log_error "failed to create an available package link"
+    return 1
+  }
   ln -fns "$pkg_dir" "$pkg_link" || {
     log_error "failed to create a package link"
     return 1
@@ -711,6 +717,8 @@ extract_installer()
 
   log_info "${pkg_name}: extracted installer file successfully"
 
+  ln -fns "$pkg_dir" "${g_puavo_pkg_available_dir}/${pkg_name}"
+
   echo "$pkg_dir"
 }
 
@@ -867,7 +875,7 @@ remove_pkg()
       return 1
     }
     pkg_dir=$(get_writable_pkg_dir "$pkg_name" "$pkg_id") || return 1
-    rm -rf "${pkg_dir}" || return 1
+    rm -rf "${pkg_dir}/.prepared" "${pkg_dir}/upstream" || return 1
     log_info "removed package '${pkg_name}'"
     return 0
   fi
@@ -906,7 +914,7 @@ show_pkg()
       return 1
     }
   else
-    pkg_dir=$(get_installed_pkg_dir "$identifier") || return 1
+    pkg_dir=$(get_available_pkg_dir "$identifier") || return 1
   fi
 
   pkg_name=$(get_pkg_name "$pkg_dir") || return 1
@@ -1050,6 +1058,7 @@ fi
 
 mkdir -p "$g_puavo_pkg_cachedir" \
          "${g_puavo_pkg_rootdir}/packages" \
+         "$g_puavo_pkg_available_dir"      \
          "$g_puavo_pkg_installed_dir"
 
 command=$1

@@ -13,6 +13,7 @@ subdirs         := admins                     \
                    desktop-applet             \
                    devscripts                 \
                    hw-tools                   \
+                   laptop-setup               \
                    ltsp                       \
                    pam                        \
                    pkg                        \
@@ -20,6 +21,7 @@ subdirs         := admins                     \
                    sharedir                   \
                    tftp                       \
                    usb-factory                \
+                   user-registration          \
                    vpn                        \
                    webkiosk-language-selector \
                    webwindow                  \

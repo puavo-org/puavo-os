@@ -5,14 +5,10 @@ import os.path
 import logging
 import re
 
-from constants import PROGRAM_TYPE_DESKTOP, \
-                      PROGRAM_TYPE_CUSTOM, \
-                      PROGRAM_TYPE_WEB, \
-                      ICON_EXTENSIONS, \
-                      LANGUAGES
-from menudata import Program, Menu, Category
-import utils
+from constants import ICON_EXTENSIONS, LANGUAGES
+from menudata import ProgramType, PuavoPkgState, Program, Menu, Category
 import conditionals
+import utils
 
 
 # Characters that can be used in program, menu and category IDs.
@@ -23,6 +19,10 @@ ALLOWED_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' \
                 'abcdefghijklmnopqrstuvwxyz' \
                 '0123456789' \
                 '._-'
+
+# Placeholder icon used for puavo-pkg programs that are not installed yet
+# *and* that do not have a custom installer icon
+INSTALLER_ICON = '/usr/share/icons/Faenza/apps/48/system-installer.png'
 
 
 # ------------------------------------------------------------------------------
@@ -200,14 +200,14 @@ def load_menudata_yaml_file(filename):
         program = {}
 
         # The default
-        program['type'] = PROGRAM_TYPE_DESKTOP
+        program['type'] = ProgramType.DESKTOP
 
         if program_type == 'desktop':
-            program['type'] = PROGRAM_TYPE_DESKTOP
+            program['type'] = ProgramType.DESKTOP
         elif program_type == 'custom':
-            program['type'] = PROGRAM_TYPE_CUSTOM
+            program['type'] = ProgramType.CUSTOM
         else:
-            program['type'] = PROGRAM_TYPE_WEB
+            program['type'] = ProgramType.WEB
 
         if 'condition' in params:
             program['condition'] = str(params['condition'])
@@ -239,12 +239,39 @@ def load_menudata_yaml_file(filename):
         if 'icon' in params:
             program['icon'] = str(params['icon'])
 
-        if 'command' in params and program['type'] in (PROGRAM_TYPE_DESKTOP, PROGRAM_TYPE_CUSTOM):
+        if 'command' in params and program['type'] in (ProgramType.DESKTOP, ProgramType.CUSTOM):
             program['command'] = str(params['command'])
 
-        if 'url' in params and program['type'] == PROGRAM_TYPE_WEB:
+        if 'url' in params and program['type'] == ProgramType.WEB:
             # Technically, it is a command...
             program['command'] = str(params['url'])
+
+        if 'puavopkg' in params and isinstance(params['puavopkg'], dict):
+            if 'name' not in program or utils.is_empty(program['name']):
+                # The name is required for puavo-pkg programs, because if
+                # the .desktop file does not exist, we won't have a name
+                # for the program that we could display.
+                logging.error('puavo-pkg program "%s" does not have a name, program ignored',
+                              menudata_id)
+                continue
+
+            if 'id' in params['puavopkg']:
+                # This program is installed through puavo-pkg and its
+                # .desktop files/etc. might not be always available.
+                program['puavopkg_id'] = str(params['puavopkg']['id'])
+                program['puavopkg_state'] = PuavoPkgState.UNKNOWN
+                program['puavopkg_icon'] = None
+
+                if 'icon' in params['puavopkg']:
+                    # A temporary icon that will be used until
+                    # the program is actually installed
+                    pkg_icon = params['puavopkg']['icon']
+
+                    if isinstance(pkg_icon, str) and not utils.is_empty(pkg_icon):
+                        program['puavopkg_icon'] = pkg_icon
+            else:
+                logging.warning('Program "%s" has a puavopkg section, but no puavopkg package ID',
+                                menudata_id)
 
         programs[menudata_id] = program
 
@@ -290,7 +317,7 @@ def load_menudata_yaml_file(filename):
             menu['icon'] = str(params['icon'])
 
         if 'programs' in params:
-            menu['programs'] = __parse_list(params['programs'])
+            menu['programs'] = utils.dedupe_list(__parse_list(params['programs']))
 
         menus[menudata_id] = menu
 
@@ -337,10 +364,10 @@ def load_menudata_yaml_file(filename):
             category['position'] = str(params['position'])
 
         if 'menus' in params:
-            category['menus'] = __parse_list(params['menus'])
+            category['menus'] = utils.dedupe_list(__parse_list(params['menus']))
 
         if 'programs' in params:
-            category['programs'] = __parse_list(params['programs'])
+            category['programs'] = utils.dedupe_list(__parse_list(params['programs']))
 
         categories[menudata_id] = category
 
@@ -387,16 +414,24 @@ def load_menudata_json_file(filename):
                               name)
                 continue
 
-            if ('type' not in src_program) or \
-                    (src_program['type'] not in
-                     (PROGRAM_TYPE_DESKTOP,
-                      PROGRAM_TYPE_CUSTOM,
-                      PROGRAM_TYPE_WEB)):
+            if 'type' not in src_program:
+                logging.error('JSON program "%s" has no type or the specified type is invalid',
+                              name)
+                continue
+
+            if src_program['type'] == 0:
+                prog_type = ProgramType.DESKTOP
+            elif src_program['type'] == 1:
+                prog_type = ProgramType.CUSTOM
+            elif src_program['type'] == 2:
+                prog_type = ProgramType.WEB
+            else:
                 logging.error('JSON program "%s" has no type or the specified type is invalid',
                               name)
                 continue
 
             dst_program = dict(src_program)
+            dst_program['type'] = prog_type
 
             # Convert lists back to sets
             if 'keywords' in dst_program:
@@ -700,23 +735,32 @@ def merge_dotdesktop_and_yaml_data(yaml_data, desktop_entry):
                 yaml_data['tags'] = tags
 
 
+def locate_desktop_file(desktop_dirs, filename):
+    for dir_name in desktop_dirs:
+        full = os.path.join(dir_name, filename)
+
+        if os.path.isfile(full):
+            return full
+
+    return None
+
+
 def load_desktop_files(desktop_dirs, raw_programs):
     """Locates and loads .desktop files for desktop programs. Merges
     the loaded files with existing data."""
 
     for menudata_id, program in raw_programs.items():
-        if not program or program['type'] != PROGRAM_TYPE_DESKTOP:
+        if not program or program['type'] != ProgramType.DESKTOP:
             continue
 
+        if 'puavopkg_id' in program:
+            if program['puavopkg_state'] == PuavoPkgState.NOT_INSTALLED:
+                # This puavo-pkg program has not bee installed yet,
+                # don't waste time looking for the .desktop file
+                continue
+
         # Locate the .desktop file
-        desktop_file = None
-
-        for dir_name in desktop_dirs:
-            full = os.path.join(dir_name, menudata_id + '.desktop')
-
-            if os.path.isfile(full):
-                desktop_file = full
-                break
+        desktop_file = locate_desktop_file(desktop_dirs, menudata_id + '.desktop')
 
         if desktop_file is None:
             logging.error('.desktop file for program "%s" not found',
@@ -746,6 +790,10 @@ def load_desktop_files(desktop_dirs, raw_programs):
         # Load the parts from the .desktop file we don't have yet
         merge_dotdesktop_and_yaml_data(program, desktop_data['Desktop Entry'])
 
+        # Keep track of the original desktop file name. We need it,
+        # for example, when creating panel icons.
+        program['original_desktop_file'] = menudata_id + '.desktop'
+
 
 def apply_filters(raw_programs, raw_menus, raw_categories, conditions, filters):
     """Applies conditionals and tag filters to programs, menus and categories."""
@@ -772,72 +820,208 @@ def apply_filters(raw_programs, raw_menus, raw_categories, conditions, filters):
             cat['hidden'] = True
 
     # ...then tags because they can override conditions (this is by design)
-    if filters.have_data():
-        # Filter programs
-        for menudata_id, program in raw_programs.items():
-            if not program:
+    if not filters.have_data():
+        return
+
+    # Filter programs
+    for menudata_id, program in raw_programs.items():
+        if not program:
+            continue
+
+        # All programs must have at least one tag, again by design
+        if ('tags' not in program) or len(program['tags']) == 0:
+            logging.warning('Program "%s" has no tags, hiding it', menudata_id)
+            program['hidden'] = True
+            continue
+
+        lname = menudata_id.lower()
+
+        for act in filters.actions:
+            if act.target == Action.TAG:
+                if act.name not in program['tags']:
+                    continue
+            elif act.target == Action.PROGRAM:
+                if act.name != lname:
+                    continue
+            else:
                 continue
 
-            # All programs must have at least one tag, again by design
-            if ('tags' not in program) or len(program['tags']) == 0:
-                logging.warning('Program "%s" has no tags, hiding it', menudata_id)
+            if act.action == Action.SHOW:
+                program['hidden'] = False
+            else:
                 program['hidden'] = True
+
+    # Filter menus
+    for menudata_id, menu in raw_menus.items():
+        if not menu:
+            continue
+
+        if menudata_id not in filters.menu_names:
+            continue
+
+        lname = menudata_id.lower()
+
+        for act in filters.actions:
+            if (act.target != Action.MENU) or (act.name != lname):
                 continue
 
-            lname = menudata_id.lower()
+            if act.action == Action.SHOW:
+                menu['hidden'] = False
+            else:
+                menu['hidden'] = True
 
-            for act in filters.actions:
-                if act.target == Action.TAG:
-                    if act.name not in program['tags']:
-                        continue
-                elif act.target == Action.PROGRAM:
-                    if act.name != lname:
-                        continue
-                else:
-                    continue
+    # Filter categories
+    for menudata_id, cat in raw_categories.items():
+        if not cat:
+            continue
 
-                if act.action == Action.SHOW:
-                    program['hidden'] = False
-                else:
-                    program['hidden'] = True
+        if menudata_id not in filters.category_names:
+            continue
 
-        # Filter menus
-        for menudata_id, menu in raw_menus.items():
-            if not menu:
+        lname = menudata_id.lower()
+
+        for act in filters.actions:
+            if (act.target != Action.CATEGORY) or (act.name != lname):
                 continue
 
-            if menudata_id not in filters.menu_names:
-                continue
+            if act.action == Action.SHOW:
+                cat['hidden'] = False
+            else:
+                cat['hidden'] = True
 
-            lname = menudata_id.lower()
 
-            for act in filters.actions:
-                if (act.target != Action.MENU) or (act.name != lname):
-                    continue
+def set_puavpkg_program_states(raw_programs, puavopkg_states):
+    """Sets puavo-pkg states for puavo-pkg programs, and filters out invalid
+    entries."""
 
-                if act.action == Action.SHOW:
-                    menu['hidden'] = False
-                else:
-                    menu['hidden'] = True
+    for menudata_id, program in raw_programs.items():
+        if program is None:
+            continue
 
-        # Filter categories
-        for menudata_id, cat in raw_categories.items():
-            if not cat:
-                continue
+        if 'puavopkg_id' not in program:
+            continue
 
-            if menudata_id not in filters.category_names:
-                continue
+        if program['puavopkg_id'] not in puavopkg_states:
+            # puavo.pkgs.ui.pkglist only lists programs that can be dynamically
+            # installed/uninstalled, so we assume this puavo-pkg program is
+            # part of the desktop image
+            logging.info('puavo-pkg program "%s" is already part of the desktop image',
+                         menudata_id)
 
-            lname = menudata_id.lower()
+            # This program "technically" is not a puavo-pkg program anymore
+            # (from our perspective) because it comes with the system. Prevent
+            # it from being installed/uninstalled.
+            # TODO: This should not be needed
+            del program['puavopkg_id']
 
-            for act in filters.actions:
-                if (act.target != Action.CATEGORY) or (act.name != lname):
-                    continue
+            continue
 
-                if act.action == Action.SHOW:
-                    cat['hidden'] = False
-                else:
-                    cat['hidden'] = True
+        if puavopkg_states[program['puavopkg_id']]:
+            # This program is already installed and can be used.
+            program['puavopkg_state'] = PuavoPkgState.INSTALLED
+        else:
+            # This puavo-pkg program is valid, but it has not
+            # been installed yet. Requires special handling.
+            program['puavopkg_state'] = PuavoPkgState.NOT_INSTALLED
+
+            logging.info('puavo-pkg program "%s" (ID "%s") has not been installed yet',
+                         program['puavopkg_id'], menudata_id)
+
+
+def convert_program_definition(src_prog, dst_prog, menudata_id, language, is_puavopkg_reload=False):
+    """Converts data from a "raw" program definition (a dict with entries like
+    "name", "icon", etc.) to a menudata.Program object. Returns False if
+    the conversion failed and the program (in dst_prog) should not be used."""
+
+    # We can't actually remove hidden things, as they are referenced
+    # to in menus and categories and if we remove them here, we'll
+    # erroneously report them to be "broken".
+    if 'hidden' in src_prog and src_prog['hidden']:
+        dst_prog.hidden = True
+
+    # Name (required)
+    if 'name' in src_prog and src_prog['name']:
+        dst_prog.name = utils.localize(src_prog['name'], language)
+
+    if utils.is_empty(dst_prog.name):
+        logging.error('Program "%s" has no name at all, skipping it',
+                      menudata_id)
+        return False
+
+    puavopkg_not_installed_yet = False
+
+    if 'puavopkg_id' in src_prog:
+        # This is a puavo-pkg program, it might need special handling
+        dst_prog.puavopkg = {}
+        dst_prog.puavopkg['id'] = src_prog['puavopkg_id']
+        dst_prog.puavopkg['state'] = src_prog['puavopkg_state']
+
+        # Make a copy the original YAML/JSON menudata, so if the
+        # program state (installed/uninstalled) changes later, we
+        # can rebuild the program object.
+        dst_prog.puavopkg['menudata'] = dict(src_prog)
+
+        if src_prog['puavopkg_state'] == PuavoPkgState.NOT_INSTALLED:
+            # This program has not been installed yet
+            puavopkg_not_installed_yet = True
+
+    # Description (optional), accept ONLY a localized description
+    if 'description' in src_prog and src_prog['description'] and \
+       language in src_prog['description']:
+        dst_prog.description = \
+            utils.localize(src_prog['description'], language)
+
+    # Keywords (optional)
+    if 'keywords' in src_prog and language in src_prog['keywords']:
+        dst_prog.keywords = list(src_prog['keywords'][language])
+
+    # Command (required...)
+    if 'command' in src_prog:
+        dst_prog.command = src_prog['command']
+
+    if utils.is_empty(dst_prog.command):
+        if dst_prog.program_type == ProgramType.DESKTOP:
+            # ...but permit missing commands for puavo-pkg programs
+            if not puavopkg_not_installed_yet:
+                logging.error('Desktop program "%s" has an empty or missing command, '
+                              'program ignored', menudata_id)
+                return False
+        elif dst_prog.program_type == ProgramType.WEB:
+            logging.error('Web link "%s" has an empty or missing URL, '
+                          'link ignored', menudata_id)
+            return False
+        else:   # custom programs
+            logging.error('Custom program "%s" has an empty or missing command, '
+                          'program ignored', menudata_id)
+            return False
+
+    # Icon
+    if 'icon' in src_prog:
+        dst_prog.icon_name = src_prog['icon']
+
+    if not is_puavopkg_reload:
+        # We're NOT reloading an existing puavo-pkg program, check the icon
+        if puavopkg_not_installed_yet and ('puavopkg_id' in src_prog):
+            # This is a puavo-pkg program that has not been installed yet.
+            # Use a generic "installer" icon for it unless the program has
+            # its own installer icon.
+            if 'puavopkg_icon' in src_prog and src_prog['puavopkg_icon']:
+                dst_prog.icon_name = src_prog['puavopkg_icon']
+            else:
+                dst_prog.icon_name = INSTALLER_ICON
+
+    if utils.is_empty(dst_prog.icon_name):
+        logging.warning('Program "%s" has no icon defined for it',
+                        menudata_id)
+    else:
+        # Is the icon name a full path to an icon file, or just
+        # a generic name?
+        _, ext = os.path.splitext(dst_prog.icon_name)
+
+        if (not utils.is_empty(ext)) and (ext in ICON_EXTENSIONS):
+            dst_prog.icon_name_is_path = True
+
+    return True
 
 
 def build_menu_data(raw_programs, raw_menus, raw_categories, language):
@@ -864,60 +1048,14 @@ def build_menu_data(raw_programs, raw_menus, raw_categories, language):
         dst_prog.program_type = src_prog['type']
         dst_prog.menudata_id = menudata_id
 
-        # We can't actually remove hidden things. as they are referenced
-        # to in menus and categories and if we remove them here, we'll
-        # erroneously report them to be "broken".
-        if 'hidden' in src_prog and src_prog['hidden']:
-            dst_prog.hidden = True
-
-        # Name (required)
-        if 'name' in src_prog and src_prog['name']:
-            dst_prog.name = utils.localize(src_prog['name'])
-
-        if utils.is_empty(dst_prog.name):
-            logging.error('Program "%s" has no name at all, skipping it',
-                          menudata_id)
+        if not convert_program_definition(src_prog, dst_prog,
+                                          menudata_id, language):
+            # This program failed, mark it as such
             raw_programs[menudata_id] = None
             continue
 
-        # Description (optional), accept ONLY a localized description
-        if 'description' in src_prog and src_prog['description'] and \
-           language in src_prog['description']:
-            dst_prog.description = utils.localize(src_prog['description'])
-
-        # Keywords (optional)
-        if 'keywords' in src_prog and language in src_prog['keywords']:
-            dst_prog.keywords = list(src_prog['keywords'][language])
-
-        # Command (required)
-        if 'command' in src_prog:
-            dst_prog.command = src_prog['command']
-
-        if utils.is_empty(dst_prog.command):
-            if dst_prog.program_type == PROGRAM_TYPE_WEB:
-                logging.error('Web link "%s" has an empty or missing URL, '
-                              'link ignored', menudata_id)
-            else:
-                logging.error('Program "%s" has an empty or missing command, '
-                              'program ignored', menudata_id)
-
-            raw_programs[menudata_id] = None
-            continue
-
-        # Icon
-        if 'icon' in src_prog:
-            dst_prog.icon_name = src_prog['icon']
-
-        if utils.is_empty(dst_prog.icon_name):
-            logging.warning('Program "%s" has no icon defined for it',
-                            menudata_id)
-        else:
-            # Is the icon name a full path to an icon file, or just
-            # a generic name?
-            _, ext = os.path.splitext(dst_prog.icon_name)
-
-            if (not utils.is_empty(ext)) and (ext in ICON_EXTENSIONS):
-                dst_prog.icon_name_is_path = True
+        if 'original_desktop_file' in src_prog:
+            dst_prog.original_desktop_file = src_prog['original_desktop_file']
 
         programs[menudata_id] = dst_prog
 
@@ -936,7 +1074,7 @@ def build_menu_data(raw_programs, raw_menus, raw_categories, language):
 
         # Name (required)
         if 'name' in src_menu and src_menu['name']:
-            dst_menu.name = utils.localize(src_menu['name'])
+            dst_menu.name = utils.localize(src_menu['name'], language)
 
         if utils.is_empty(dst_menu.name):
             logging.error('Menu "%s" has no name at all, skipping it',
@@ -946,7 +1084,7 @@ def build_menu_data(raw_programs, raw_menus, raw_categories, language):
 
         # Description (optional)
         if 'description' in src_menu and src_menu['description']:
-            dst_menu.description = utils.localize(src_menu['description'])
+            dst_menu.description = utils.localize(src_menu['description'], language)
 
         # Icon (required, but it's not fatal if it's missing)
         if 'icon' in src_menu and src_menu['icon']:
@@ -996,7 +1134,7 @@ def build_menu_data(raw_programs, raw_menus, raw_categories, language):
 
         # Name (required)
         if 'name' in src_cat and src_cat['name']:
-            dst_cat.name = utils.localize(src_cat['name'])
+            dst_cat.name = utils.localize(src_cat['name'], language)
 
         if utils.is_empty(dst_cat.name):
             logging.error('Category "%s" has no name at all, skipping it',
@@ -1006,7 +1144,7 @@ def build_menu_data(raw_programs, raw_menus, raw_categories, language):
 
         # Description (optional)
         if 'description' in src_cat and src_cat['description']:
-            dst_cat.description = utils.localize(src_cat['description'])
+            dst_cat.description = utils.localize(src_cat['description'], language)
 
         # List of menus and programs (technically you need at least one of
         # either, but it's not a fatal error to omit everything, it just
@@ -1074,6 +1212,25 @@ def sort_categories(categories):
     return [i[1] for i in index]
 
 
+def search_for_generic_icon(generic_name, icon_dirs):
+    for dir_name in icon_dirs:
+        # Try the name as-is first (some icon names are just "name.ext"
+        # without a path)
+        candidate = os.path.join(dir_name, generic_name)
+
+        if os.path.isfile(candidate):
+            return candidate
+
+        # Try all the variants
+        for ext in ICON_EXTENSIONS:
+            candidate = os.path.join(dir_name, generic_name + ext)
+
+            if os.path.isfile(candidate):
+                return candidate
+
+    return None
+
+
 def load_icons(programs, menus, icon_dirs, icon_cache):
     """Locates and loads icon files for programs and menus."""
 
@@ -1123,28 +1280,7 @@ def load_icons(programs, menus, icon_dirs, icon_cache):
                 continue
 
         # Search for the generic icon
-        icon_path = None
-
-        for dir_name in icon_dirs:
-            # Try the name as-is first (see above, some icons don't have
-            # a path in their names, but they have an extension)
-            candidate = os.path.join(dir_name, program.icon_name)
-
-            if os.path.isfile(candidate):
-                icon_path = candidate
-                break
-
-            # Try different extensions
-            for ext in ICON_EXTENSIONS:
-                candidate = os.path.join(dir_name,
-                                         program.icon_name + ext)
-
-                if os.path.isfile(candidate):
-                    icon_path = candidate
-                    break
-
-            if icon_path:
-                break
+        icon_path = search_for_generic_icon(program.icon_name, icon_dirs)
 
         if not icon_path:
             logging.error('Icon "%s" for program "%s" not found in '
@@ -1160,7 +1296,7 @@ def load_icons(programs, menus, icon_dirs, icon_cache):
             num_missing_icons += 1
         else:
             if not program.icon_name_is_path:
-                # Cache the generic icon name
+                # Cache a generic icon name
                 generic_name_cache[program.icon_name] = icon_path
 
         program.icon_name = icon_path
@@ -1264,7 +1400,7 @@ def find_json_replacements(files):
         files[index] = json_name
 
 
-def load_menu_data(language, root_dir, filter_string, icon_cache):
+def load_menu_data(language, root_dir, filter_string, puavopkg_states, icon_cache):
     """The main menu loader function. Call this."""
 
     import time
@@ -1336,6 +1472,14 @@ def load_menu_data(language, root_dir, filter_string, icon_cache):
 
     utils.log_elapsed_time('YAML loading time', start_time, end_time)
 
+    logging.info('(Raw) Have %d programs, %d menus and %d categores',
+                 len(raw_programs), len(raw_menus), len(raw_categories))
+
+    # --------------------------------------------------------------------------
+    # Deal with puavo-pkg programs and their installation states
+
+    set_puavpkg_program_states(raw_programs, puavopkg_states)
+
     # --------------------------------------------------------------------------
     # Locate and load .desktop files for desktop programs
 
@@ -1367,13 +1511,15 @@ def load_menu_data(language, root_dir, filter_string, icon_cache):
 
     start_time = time.clock()
 
-    programs, menus, categories = \
-        build_menu_data(raw_programs, raw_menus, raw_categories, language)
+    programs, menus, categories = build_menu_data(
+        raw_programs, raw_menus, raw_categories, language)
 
     category_index = sort_categories(categories)
 
     end_time = time.clock()
 
+    logging.info('(Actual) Have %d programs, %d menus and %d categories',
+                 len(programs), len(menus), len(categories))
     utils.log_elapsed_time('Menu building time', start_time, end_time)
 
     # --------------------------------------------------------------------------
@@ -1421,3 +1567,200 @@ def load_menu_data(language, root_dir, filter_string, icon_cache):
     utils.log_elapsed_time('Total menudata load time', total_start, end_time)
 
     return programs, menus, categories, category_index
+
+
+def puavopkg_program_removed(language, root_dir, icon_cache, old_program):
+    # Build a new program object
+    new_program = Program()
+
+    new_program.program_type = old_program.program_type
+    new_program.menudata_id = old_program.menudata_id
+    new_program.puavopkg = dict(old_program.puavopkg)
+
+    # The program is now *not* installed
+    new_program.puavopkg['state'] = PuavoPkgState.NOT_INSTALLED
+    new_program.puavopkg['menudata']['puavopkg_state'] = PuavoPkgState.NOT_INSTALLED
+
+    new_menudata = dict(old_program.puavopkg['menudata'])
+
+    if not convert_program_definition(new_menudata, new_program,
+                                      new_program.menudata_id, language):
+        return None
+
+    # Restore the old icon
+    if 'puavopkg_icon' in new_menudata and new_menudata['puavopkg_icon']:
+        # TODO: Support generic/searchable icon names here, not only
+        # direct paths
+        new_program.icon_name = new_menudata['puavopkg_icon']
+    else:
+        new_program.icon_name = INSTALLER_ICON
+
+    if os.path.isfile(new_program.icon_name):
+        icon = icon_cache.load_icon(new_program.icon_name)
+
+        if icon.usable:
+            new_program.icon = icon
+
+    if not new_program.icon:
+        logging.error('puavopkg_program_removed(): unable to load installer icon ' \
+                      '"%s" for removed program "%s"', new_program.icon_name,
+                      new_program.menudata_id)
+        new_program.icon = None
+
+    return new_program
+
+
+def puavopkg_program_installed(language, root_dir, icon_cache, old_program):
+    # Build a new program object
+    new_program = Program()
+
+    new_program.program_type = old_program.program_type
+    new_program.menudata_id = old_program.menudata_id
+    new_program.puavopkg = dict(old_program.puavopkg)
+
+    # --------------------------------------------------------------------------
+    # Load the paths config file
+
+    desktop_dirs, icon_dirs = load_dirs_config(os.path.join(root_dir, 'dirs.json'))
+
+    # --------------------------------------------------------------------------
+
+    # Locate the .desktop file
+    desktop_file = locate_desktop_file(desktop_dirs, new_program.menudata_id + '.desktop')
+
+    if desktop_file is None:
+        logging.error('.desktop file for program "%s" not found',
+                      new_program.menudata_id)
+        return None
+
+    logging.info('Found the desktop file: "%s"', desktop_file)
+
+    # Try to load it
+    try:
+        desktop_data = load_dotdesktop_file(desktop_file)
+    except Exception as exception:
+        logging.error('Could not load file "%s" for program "%s": %s',
+                      desktop_file, new_program.menudata_id, str(exception))
+        return None
+
+    if 'Desktop Entry' not in desktop_data:
+        logging.error('Rejecting desktop file "%s" for "%s": No "[Desktop Entry]" ' \
+                      'section in the file', desktop_file, new_program.menudata_id)
+        return None
+
+    # Merge the stored menudata with the newly-loaded .desktop data
+    new_menudata = dict(old_program.puavopkg['menudata'])
+
+    merge_dotdesktop_and_yaml_data(new_menudata, desktop_data['Desktop Entry'])
+
+    # --------------------------------------------------------------------------
+    # Build a new program object that replaces the old one
+
+    if not convert_program_definition(new_menudata, new_program,
+                                      new_program.menudata_id, language, True):
+        return None
+
+    new_program.original_desktop_file = old_program.menudata_id + '.desktop'
+
+    # The program is now installed
+    new_program.puavopkg['state'] = PuavoPkgState.INSTALLED
+    new_program.puavopkg['menudata']['puavopkg_state'] = PuavoPkgState.INSTALLED
+
+    # Load the icon
+    # FIXME: This code is copy-pasted from other function, with slight modifications
+    logging.info('Icon name: "%s" (path=%d)',
+                 new_program.icon_name, new_program.icon_name_is_path)
+
+    if new_program.icon_name_is_path:
+        # Just load it
+        if os.path.isfile(new_program.icon_name):
+            icon = icon_cache.load_icon(new_program.icon_name)
+
+            if icon.usable:
+                new_program.icon = icon
+        else:
+            # The name didn't work, force generic icon searching
+            new_program.icon_name_is_path = False
+
+    if not new_program.icon_name_is_path:
+        # Search for the generic icon
+        icon_path = search_for_generic_icon(new_program.icon_name, icon_dirs)
+
+        if not icon_path:
+            logging.error('Icon "%s" for program "%s" not found in '
+                          'icon load paths', new_program.icon_name,
+                          new_program.menudata_id)
+        else:
+            logging.info('Found the icon: "%s"', icon_path)
+
+            new_program.icon = icon_cache.load_icon(icon_path)
+            new_program.icon_name = icon_path
+            new_program.icon_name_is_path = True
+
+            if not new_program.icon.usable:
+                logging.warning('Found icon "%s" for program "%s", but '
+                                'it could not be loaded', icon_path,
+                                new_program.menudata_id)
+
+    return new_program
+
+
+def reload_puavopkg_program(language, root_dir, puavopkg_states, icon_cache, program):
+    """Reloads the data for a *single* puavo-pkg program."""
+
+    # --------------------------------------------------------------------------
+    # Is the program now installed or uninstalled?
+
+    pkg_id = program.puavopkg['id']
+
+    if pkg_id not in puavopkg_states:
+        logging.error('reload_puavopkg_program(): program "%s" is part of the desktop image, '
+                      'doing nothing', pkg_id)
+        return None
+
+    old_state = program.puavopkg['state']
+    new_state = PuavoPkgState.INSTALLED if puavopkg_states[pkg_id] else PuavoPkgState.NOT_INSTALLED
+
+    logging.info('reload_puavopkg_program(): puavo-pkg program "%s":', pkg_id)
+    logging.info('  old state: %s', old_state)
+    logging.info('  new state: %s', new_state)
+
+    if old_state == new_state:
+        logging.info('reload_puavopkg_program(): no changes')
+        return None
+
+    # --------------------------------------------------------------------------
+
+    import time
+
+    total_start = time.clock()
+
+    if old_state == PuavoPkgState.INSTALLED and new_state == PuavoPkgState.NOT_INSTALLED:
+        # This program has been uninstalled
+        logging.info('puavo-pkg program "%s" has been uninstalled', pkg_id)
+
+        new_prog = puavopkg_program_removed(language,
+                                            root_dir,
+                                            icon_cache,
+                                            program)
+    else:
+        # This program has been installed
+        logging.info('puavo-pkg program "%s" has been installed', pkg_id)
+
+        new_prog = puavopkg_program_installed(language,
+                                              root_dir,
+                                              icon_cache,
+                                              program)
+
+    if not new_prog:
+        # Something went wrong, don't replace the existing program
+        logging.warning('No new program data!')
+        return None
+
+    # --------------------------------------------------------------------------
+
+    end_time = time.clock()
+
+    utils.log_elapsed_time('puavopkg program reload time', total_start, end_time)
+
+    return new_prog

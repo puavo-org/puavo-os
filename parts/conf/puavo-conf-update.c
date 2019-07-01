@@ -33,6 +33,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <uthash.h>
 
 #include "conf.h"
 
@@ -41,6 +42,7 @@
 #define DMI_ID_PATH     "/sys/class/dmi/id"
 #define HWQUIRKS_DIR    "/usr/share/puavo-conf/hwquirk-overwrites"
 #define IMAGE_CONF_PATH "/etc/puavo-conf/image.json"
+#define LOCAL_CONF_PATH "/state/etc/puavo/local/puavo_conf.json"
 #define PROFILES_DIR    "/usr/share/puavo-conf/profile-overwrites"
 
 #define PCI_MAX         1024
@@ -62,45 +64,53 @@ struct hw_characteristics {
 	size_t		 usb_id_count;
 };
 
-static int	 apply_device_settings(puavo_conf_t *, const char *, int);
-static int	 apply_hosttype_profile(puavo_conf_t *, int);
-static int	 apply_hwquirk_rule_parameters(puavo_conf_t *, json_t *, int);
-static int	 apply_hwquirks(puavo_conf_t *, int);
-static int	 apply_hwquirks_from_rules(puavo_conf_t *,
+struct conf_cache {
+	char            *key;
+	char            *value;
+	UT_hash_handle   hh;
+};
+
+static int	 add_cacheitem_to_puavo_conf(puavo_conf_t *,
+    struct conf_cache *, int, int);
+static int	 apply_device_settings(struct conf_cache **, int);
+static int	 apply_hosttype_profile(struct conf_cache **, int);
+static int	 apply_hwquirk_rule_parameters(struct conf_cache **, json_t *);
+static int	 apply_hwquirks(struct conf_cache **, int);
+static int	 apply_hwquirks_from_rules(struct conf_cache **,
     struct hw_characteristics *, int);
-static int	 apply_hwquirks_from_a_json_root(puavo_conf_t *, json_t *,
+static int	 apply_hwquirks_from_a_json_root(struct conf_cache **, json_t *,
     struct hw_characteristics *, int);
-static int	 apply_kernel_arguments(puavo_conf_t *, int);
-static int	 apply_one_profile(puavo_conf_t *, const char *, int);
-static int	 apply_parameter_definitions(puavo_conf_t *, int, int);
-static int	 apply_profiles(puavo_conf_t *, int);
+static int	 apply_kernel_arguments(struct conf_cache **);
+static int	 apply_one_profile(struct conf_cache **, const char *, int);
+static int	 apply_parameter_definitions(struct conf_cache **);
+static int	 apply_profiles(struct conf_cache **, int);
+static int	 check_file_exists(const char *);
 static int	 check_match_for_hwquirk_rule(const char *, const char *,
     const char *, struct hw_characteristics *);
 static char	*get_cmdline(void);
 static char	*get_first_line(const char *);
 static int	 glob_error(const char *, int);
-static int	 handle_one_paramdef(puavo_conf_t *, const char *, json_t *,
-    int, int);
-static int	 handle_paramdef_file(puavo_conf_t *, const char *, int, int);
+static int	 handle_one_paramdef(struct conf_cache **, const char *,
+    json_t *);
+static int	 handle_paramdef_file(struct conf_cache **, const char *);
 static int	 lookup_ids_from_cmd(const char *, size_t, char **, size_t *,
     size_t);
 static int	 match_pattern(const char *, const char *, const regex_t *,
     const char *);
-static int	 overwrite_value(puavo_conf_t *, const char *, const char *,
-    int);
+static int	 overwrite_value(struct conf_cache **, const char *,
+    const char *);
 static json_t	*parse_json_file(const char *);
 static int	 update_dmi_table(struct dmi *, size_t);
-static int	 update_puavoconf(puavo_conf_t *, const char *, int);
+static int	 update_cache(struct conf_cache **, int);
+static int       write_to_puavo_conf(struct conf_cache **, int, int);
 static void	 usage(void);
+static struct conf_cache *make_cache_item(const char *, const char *);
 
 int
 main(int argc, char *argv[])
 {
-	puavo_conf_t *conf;
-	struct puavo_conf_err err;
-	const char *device_json_path;
+	struct conf_cache *cache;
 	static struct option long_options[] = {
-	    { "devicejson-path", required_argument, 0, 0 },
 	    { "help",            no_argument,       0, 0 },
 	    { "init",            no_argument,       0, 0 },
 	    { "verbose",         no_argument,       0, 0 },
@@ -111,8 +121,7 @@ main(int argc, char *argv[])
 	init = 0;
 	status = 0;
 	verbose = 0;
-
-	device_json_path = DEVICEJSON_PATH;
+	cache = NULL;
 
 	for (;;) {
 		option_index = 0;
@@ -127,15 +136,12 @@ main(int argc, char *argv[])
 
 		switch (option_index) {
 		case 0:
-			device_json_path = optarg;
-			break;
-		case 1:
 			usage();
 			return 0;
-		case 2:
+		case 1:
 			init = 1;
 			break;
-		case 3:
+		case 2:
 			verbose = 1;
 			break;
 		default:
@@ -149,27 +155,22 @@ main(int argc, char *argv[])
 		return 1;
 	}
 
-	if (puavo_conf_open(&conf, &err))
-		errx(1, "Failed to open config backend: %s", err.msg);
-
-	if (apply_parameter_definitions(conf, verbose, init) != 0) {
+	if (apply_parameter_definitions(&cache) != 0) {
 		warnx("failure in initializing puavo conf db");
 		status = EXIT_FAILURE;
 	}
 
-	if (update_puavoconf(conf, device_json_path, verbose) != 0) {
-		warnx("problem in updating puavoconf");
+	if (update_cache(&cache, verbose) != 0) {
+		warnx("problem in updating cache");
 		status = EXIT_FAILURE;
 	}
 
-	if (puavo_conf_close(conf, &err) == -1) {
-		warnx("Failed to close config backend: %s", err.msg);
+	if (write_to_puavo_conf(&cache, init, verbose) != 0) {
+		warnx("problem in writing values to puavoconf");
 		status = EXIT_FAILURE;
 	}
 
 	return status;
-
-	return 0;
 }
 
 static void
@@ -185,19 +186,18 @@ usage(void)
 	       "  2. requested puavo-conf profiles (using puavo.profiles.list)\n"
 	       "  3. hardware quirks\n"
 	       "  4. device specific settings from " DEVICEJSON_PATH "\n"
-	       "  5. kernel command line\n"
+	       "  5. local settings from " LOCAL_CONF_PATH "\n"
+	       "  6. kernel command line\n"
 	       "\n"
 	       "Options:\n"
 	       "  --help                    display this help and exit\n"
-	       "  --devicejson-path FILE    filepath of the device.json,\n"
-	       "                            defaults to " DEVICEJSON_PATH "\n"
 	       "  --init                    initialize the database\n"
 	       "  --verbose                 verbose output\n"
 	       "\n");
 }
 
 static int
-apply_parameter_definitions(puavo_conf_t *conf, int verbose, int init)
+apply_parameter_definitions(struct conf_cache **cache)
 {
 	glob_t globbuf;
 	size_t i;
@@ -215,8 +215,7 @@ apply_parameter_definitions(puavo_conf_t *conf, int verbose, int init)
 	}
 
 	for (i = 0; i < globbuf.gl_pathc; i++) {
-		ret = handle_paramdef_file(conf, globbuf.gl_pathv[i], verbose,
-		    init);
+		ret = handle_paramdef_file(cache, globbuf.gl_pathv[i]);
 		if (ret != 0) {
 			warnx("error handling %s", globbuf.gl_pathv[i]);
 			/* Return error, but try other files. */
@@ -241,8 +240,7 @@ glob_error(const char *epath, int eerrno)
 }
 
 static int
-handle_paramdef_file(puavo_conf_t *conf, const char *filepath, int verbose,
-    int init)
+handle_paramdef_file(struct conf_cache **cache, const char *filepath)
 {
 	json_t *root, *param_value;
 	const char *param_name;
@@ -262,8 +260,7 @@ handle_paramdef_file(puavo_conf_t *conf, const char *filepath, int verbose,
 	}
 
 	json_object_foreach(root, param_name, param_value) {
-		ret = handle_one_paramdef(conf, param_name, param_value,
-		    verbose, init);
+		ret = handle_one_paramdef(cache, param_name, param_value);
 		if (ret != 0) {
 			warnx("error handling %s in %s", param_name, filepath);
 			/* Return error, but try other keys. */
@@ -278,11 +275,11 @@ finish:
 }
 
 static int
-handle_one_paramdef(puavo_conf_t *conf, const char *param_name,
-    json_t *param_value, int verbose, int init)
+handle_one_paramdef(struct conf_cache **cache, const char *param_name,
+    json_t *param_value)
 {
 	json_t *default_node;
-	struct puavo_conf_err err;
+	struct conf_cache *item;
 	const char *value;
 
 	if (!json_is_object(param_value)) {
@@ -301,31 +298,25 @@ handle_one_paramdef(puavo_conf_t *conf, const char *param_name,
 		return 1;
 	}
 
-	if (init) {
-		if (puavo_conf_add(conf, param_name, value, &err) != 0) {
-			warnx("error adding %s --> '%s' : %s", param_name, value,
-			    err.msg);
-			return 1;
-		}
-	} else {
-		if (puavo_conf_overwrite(conf, param_name, value, &err) != 0) {
-			warnx("error overwriting %s --> '%s' : %s", param_name,
-			    value, err.msg);
-			return 1;
-		}
+	if ((item = make_cache_item(param_name, value)) == NULL) {
+		warn("error adding %s --> '%s'", param_name, value);
+		return 1;
 	}
-
-	if (verbose) {
-		(void) printf("puavo-conf-update: initialized/%s"
-		    " puavo conf key %s --> %s\n",
-		    (init ? "added" : "overwrote"), param_name, value);
-	}
+	HASH_ADD_KEYPTR(hh, *cache, item->key, strlen(item->key), item);
 
 	return 0;
 }
 
 static int
-update_puavoconf(puavo_conf_t *conf, const char *device_json_path, int verbose)
+check_file_exists(const char *pathname)
+{
+	struct stat buf;
+
+	return (stat(pathname, &buf) == 0);
+}
+
+static int
+update_cache(struct conf_cache **cache, int verbose)
 {
 	int retvalue;
 
@@ -334,46 +325,56 @@ update_puavoconf(puavo_conf_t *conf, const char *device_json_path, int verbose)
 	/* First apply kernel arguments, because we get puavo.hosttype
 	 * and puavo.profiles.list from there, which affect subsequent
 	 * settings. */
-	if (apply_kernel_arguments(conf, verbose) != 0)
+	if (apply_kernel_arguments(cache) != 0)
 		retvalue = 1;
 
 	/* Also apply device settings now, because that might affect
 	 * puavo.hosttype and puavo.profiles.list. */
-	if (apply_device_settings(conf, device_json_path, verbose) != 0)
+	if (apply_device_settings(cache, verbose) != 0)
 		retvalue = 1;
 
-	if (apply_one_profile(conf, IMAGE_CONF_PATH, verbose) != 0)
+	if (apply_one_profile(cache, IMAGE_CONF_PATH, verbose) != 0)
 		retvalue = 1;
 
-	if (apply_profiles(conf, verbose) != 0)
+	if (apply_profiles(cache, verbose) != 0)
 		retvalue = 1;
 
-	if (apply_hwquirks(conf, verbose) != 0)
+	if (apply_hwquirks(cache, verbose) != 0)
 		retvalue = 1;
 
 	/* Apply device settings again, because those override
 	 * profiles and hwquirks. */
-	if (apply_device_settings(conf, device_json_path, verbose) != 0)
+	if (apply_device_settings(cache, verbose) != 0)
 		retvalue = 1;
+
+	/* Apply possible local puavo-conf configurations. */
+	if (check_file_exists(LOCAL_CONF_PATH)) {
+		if (apply_one_profile(cache, LOCAL_CONF_PATH, verbose) != 0)
+			retvalue = 1;
+	}
 
 	/* Apply kernel arguments again,
 	 * because those override everything else. */
-	if (apply_kernel_arguments(conf, verbose) != 0)
+	if (apply_kernel_arguments(cache) != 0)
 		retvalue = 1;
 
 	return retvalue;
 }
 
 static int
-apply_profiles(puavo_conf_t *conf, int verbose)
+apply_profiles(struct conf_cache **cache, int verbose)
 {
-	struct puavo_conf_err err;
-	char *profile, *profiles, *profile_path;
+	char *profile, *profiles, *profiles_tmp, *profile_path;
 	int retvalue, ret;
+	struct conf_cache *item;
 
-	ret = puavo_conf_get(conf, "puavo.profiles.list", &profiles, &err);
-	if (ret == -1) {
-		warnx("error getting puavo.profiles.list: %s", err.msg);
+	HASH_FIND_STR(*cache, "puavo.profiles.list", item);
+	if (item == NULL) {
+		warnx("error getting puavo.profiles.list");
+		return 1;
+	}
+	if ((profiles = strdup(item->value)) == NULL) {
+		warn("strdup error in apply_profiles()");
 		return 1;
 	}
 
@@ -389,21 +390,21 @@ apply_profiles(puavo_conf_t *conf, int verbose)
 		}
 
 		free(profiles);
-		return apply_hosttype_profile(conf, verbose);
+		return apply_hosttype_profile(cache, verbose);
 	}
 
 	retvalue = 0;
 
-	while ((profile = strsep(&profiles, ",")) != NULL) {
-		ret = asprintf(&profile_path, PROFILES_DIR "/%s.json",
-		    profile);
+	profiles_tmp = profiles;
+	while ((profile = strsep(&profiles_tmp, ",")) != NULL) {
+		ret = asprintf(&profile_path, PROFILES_DIR "/%s.json", profile);
 		if (ret == -1) {
 			warnx("asprintf() error in apply_hosttype_profile()");
 			retvalue = 1;
 			continue;
 		}
 
-		if (apply_one_profile(conf, profile_path, verbose) != 0)
+		if (apply_one_profile(cache, profile_path, verbose) != 0)
 			retvalue = 1;
 		free(profile_path);
 	}
@@ -414,32 +415,32 @@ apply_profiles(puavo_conf_t *conf, int verbose)
 }
 
 static int
-apply_hosttype_profile(puavo_conf_t *conf, int verbose)
+apply_hosttype_profile(struct conf_cache **cache, int verbose)
 {
-	struct puavo_conf_err err;
 	char *hosttype;
 	char *hosttype_profile_path;
 	int ret, retvalue;
+	struct conf_cache *item;
 
-	if (puavo_conf_get(conf, "puavo.hosttype", &hosttype, &err) == -1) {
-		warnx("error getting puavo.hosttype: %s", err.msg);
+	HASH_FIND_STR(*cache, "puavo.hosttype", item);
+	if (item == NULL) {
+		warnx("error getting puavo.hosttype");
 		return 1;
 	}
+	hosttype = item->value;
 
 	ret = asprintf(&hosttype_profile_path, PROFILES_DIR "/%s.json",
 	    hosttype);
 	if (ret == -1) {
 		warnx("asprintf() error in apply_hosttype_profile()");
-		free(hosttype);
 		return 1;
 	}
 
 	retvalue = 0;
 
-	if (apply_one_profile(conf, hosttype_profile_path, verbose) != 0)
+	if (apply_one_profile(cache, hosttype_profile_path, verbose) != 0)
 		retvalue = 1;
 
-	free(hosttype);
 	free(hosttype_profile_path);
 
 	return retvalue;
@@ -471,8 +472,7 @@ get_cmdline(void)
 }
 
 static int
-apply_device_settings(puavo_conf_t *conf, const char *device_json_path,
-    int verbose)
+apply_device_settings(struct conf_cache **cache, int verbose)
 {
 	json_t *root, *device_conf, *node_value;
 	const char *param_name, *param_value;
@@ -480,26 +480,26 @@ apply_device_settings(puavo_conf_t *conf, const char *device_json_path,
 
 	if (verbose) {
 		(void) printf("puavo-conf-update: applying device settings"
-		    " from %s\n", device_json_path);
+		    " from %s\n", DEVICEJSON_PATH);
 	}
 
 	retvalue = 0;
 
-	if ((root = parse_json_file(device_json_path)) == NULL) {
-		warnx("parse_json_file() failed for %s", device_json_path);
+	if ((root = parse_json_file(DEVICEJSON_PATH)) == NULL) {
+		warnx("parse_json_file() failed for %s", DEVICEJSON_PATH);
 		return 1;
 	}
 
 	if (!json_is_object(root)) {
 		warnx("device settings in %s are not in correct format",
-		    device_json_path);
+		    DEVICEJSON_PATH);
 		retvalue = 1;
 		goto finish;
 	}
 
 	if ((device_conf = json_object_get(root, "conf")) == NULL) {
 		warnx("device settings in %s are lacking configuration values",
-		    device_json_path);
+		    DEVICEJSON_PATH);
 		retvalue = 1;
 		goto finish;
 	}
@@ -507,11 +507,11 @@ apply_device_settings(puavo_conf_t *conf, const char *device_json_path,
 	json_object_foreach(device_conf, param_name, node_value) {
 		if ((param_value = json_string_value(node_value)) == NULL) {
 			warnx("device settings in %s has a non-string value"
-			    " for key %s", device_json_path, param_name);
+			    " for key %s", DEVICEJSON_PATH, param_name);
 			retvalue = 1;
 			continue;
 		}
-		ret = overwrite_value(conf, param_name, param_value, verbose);
+		ret = overwrite_value(cache, param_name, param_value);
 		if (ret != 0)
 			retvalue = 1;
 	}
@@ -523,7 +523,8 @@ finish:
 }
 
 static int
-apply_one_profile(puavo_conf_t *conf, const char *profile_path, int verbose)
+apply_one_profile(struct conf_cache **cache, const char *profile_path,
+    int verbose)
 {
 	json_t *root, *node_value;
 	const char *param_name, *param_value;
@@ -556,7 +557,7 @@ apply_one_profile(puavo_conf_t *conf, const char *profile_path, int verbose)
 			retvalue = 1;
 			continue;
 		}
-		ret = overwrite_value(conf, param_name, param_value, verbose);
+		ret = overwrite_value(cache, param_name, param_value);
 		if (ret != 0)
 			retvalue = 1;
 	}
@@ -569,7 +570,7 @@ finish:
 }
 
 static int
-apply_hwquirks(puavo_conf_t *conf, int verbose)
+apply_hwquirks(struct conf_cache **cache, int verbose)
 {
 	struct dmi dmi_table[] = {
 		{ "bios_date",         NULL, },
@@ -632,7 +633,7 @@ apply_hwquirks(puavo_conf_t *conf, int verbose)
 		}
 	}
 
-	ret = apply_hwquirks_from_rules(conf, &hw, verbose);
+	ret = apply_hwquirks_from_rules(cache, &hw, verbose);
 	if (ret != 0)
 		retvalue = ret;
 
@@ -648,8 +649,8 @@ apply_hwquirks(puavo_conf_t *conf, int verbose)
 }
 
 static int
-apply_hwquirks_from_rules(puavo_conf_t *conf, struct hw_characteristics *hw,
-    int verbose)
+apply_hwquirks_from_rules(struct conf_cache **cache,
+    struct hw_characteristics *hw, int verbose)
 {
 	json_t *root;
 	glob_t globbuf;
@@ -676,7 +677,7 @@ apply_hwquirks_from_rules(puavo_conf_t *conf, struct hw_characteristics *hw,
 			retvalue = 1;
 			continue;
 		}
-		ret = apply_hwquirks_from_a_json_root(conf, root, hw, verbose);
+		ret = apply_hwquirks_from_a_json_root(cache, root, hw, verbose);
 		if (ret != 0) {
 			warnx("apply_hwquirks_from_a_json_root() failed for %s",
 			    quirkfilepath);
@@ -686,11 +687,13 @@ apply_hwquirks_from_rules(puavo_conf_t *conf, struct hw_characteristics *hw,
 		json_decref(root);
 	}
 
+	globfree(&globbuf);
+
 	return retvalue;
 }
 
 static int
-apply_hwquirks_from_a_json_root(puavo_conf_t *conf, json_t *root,
+apply_hwquirks_from_a_json_root(struct conf_cache **cache, json_t *root,
     struct hw_characteristics *hw, int verbose)
 {
 	json_t *rule, *key_obj, *mm_obj, *pattern_obj, *params_obj;
@@ -750,8 +753,7 @@ apply_hwquirks_from_a_json_root(puavo_conf_t *conf, json_t *root,
 				    pattern);
 			}
 
-			ret = apply_hwquirk_rule_parameters(conf, params_obj,
-			    verbose);
+			ret = apply_hwquirk_rule_parameters(cache, params_obj);
 			if (ret != 0)
 				retvalue = 1;
 			if (verbose) {
@@ -839,8 +841,7 @@ match_pattern(const char *matchmethod, const char *pattern,
 }
 
 static int
-apply_hwquirk_rule_parameters(puavo_conf_t *conf, json_t *params_obj,
-    int verbose)
+apply_hwquirk_rule_parameters(struct conf_cache **cache, json_t *params_obj)
 {
 	json_t *node_value;
 	const char *param_name, *param_value;
@@ -858,7 +859,7 @@ apply_hwquirk_rule_parameters(puavo_conf_t *conf, json_t *params_obj,
 			warnx("parameter value in hwquirk is not a string");
 			retvalue = 1;
 		}
-		ret = overwrite_value(conf, param_name, param_value, verbose);
+		ret = overwrite_value(cache, param_name, param_value);
 		if (ret != 0)
 			retvalue = 1;
 
@@ -890,13 +891,16 @@ lookup_ids_from_cmd(const char *cmd_string, size_t fieldnum, char **idtable,
 		n = 0;
 		len = getline(&line, &n, cmd_pipe);
 		if (len == -1) {
-			if (feof(cmd_pipe))
+			if (feof(cmd_pipe)) {
+				free(line);
 				break;
+			}
 			warn("could not read a line from %s", cmd_string);
 			free(line);
 			retvalue = 1;
 			break;
 		} else if (len < 1) {
+			free(line);
 			continue;
 		}
 		line[len-1] = '\0';	/* remove newline */
@@ -908,6 +912,7 @@ lookup_ids_from_cmd(const char *cmd_string, size_t fieldnum, char **idtable,
 				warn("could not parse a line from %s",
 				    cmd_string);
 				retvalue = 1;
+				free(line);
 				break;
 			}
 		}
@@ -1005,9 +1010,9 @@ update_dmi_table(struct dmi *dmi_table, size_t tablesize)
 }
 
 static int
-apply_kernel_arguments(puavo_conf_t *conf, int verbose)
+apply_kernel_arguments(struct conf_cache **cache)
 {
-	char *cmdarg, *cmdline, *param_name, *param_value;
+	char *cmdarg, *cmdline, *orig_cmdline, *param_name, *param_value;
 	size_t prefix_len;
 	int ret, retvalue;
 
@@ -1018,6 +1023,8 @@ apply_kernel_arguments(puavo_conf_t *conf, int verbose)
 		warnx("could not read /proc/cmdline");
 		return 1;
 	}
+
+	orig_cmdline = cmdline;
 
 	retvalue = 0;
 
@@ -1032,31 +1039,31 @@ apply_kernel_arguments(puavo_conf_t *conf, int verbose)
 		if (param_value == NULL)
 			continue;
 
-		ret = overwrite_value(conf, param_name, param_value, verbose);
+		ret = overwrite_value(cache, param_name, param_value);
 		if (ret != 0)
 			retvalue = 1;
 	}
 
-	free(cmdline);
+	free(orig_cmdline);
 
 	return retvalue;
 }
 
 static int
-overwrite_value(puavo_conf_t *conf, const char *key, const char *value,
-    int verbose)
+overwrite_value(struct conf_cache **cache, const char *key, const char *value)
 {
-	struct puavo_conf_err err;
+	struct conf_cache *item, *old_item;
 
-	if (puavo_conf_overwrite(conf, key, value, &err) != 0) {
-		warnx("error overwriting %s --> '%s' : %s", key, value,
-		    err.msg);
+	if ((item = make_cache_item(key, value)) == NULL) {
+		warn("error overwriting %s --> '%s'", key, value);
 		return 1;
 	}
 
-	if (verbose) {
-		(void) printf("puavo-conf-update: setting puavo conf key %s"
-		    " --> %s\n", key, value);
+	HASH_REPLACE_STR(*cache, key, item, old_item);
+	if (old_item) {
+		free(old_item->key);
+		free(old_item->value);
+		free(old_item);
 	}
 
 	return 0;
@@ -1101,4 +1108,111 @@ finish:
 	(void) close(fd);
 
 	return root;
+}
+
+static int
+write_to_puavo_conf(struct conf_cache **cache, int init, int verbose)
+{
+	puavo_conf_t *conf;
+	struct puavo_conf_err err;
+	struct conf_cache *item, *tmp;
+	int ret, r;
+
+	ret = 0;
+
+	if (puavo_conf_open(&conf, &err)) {
+		warnx("Failed to open config backend: %s", err.msg);
+		return 1;
+	}
+
+	HASH_ITER(hh, *cache, item, tmp) {
+		r = add_cacheitem_to_puavo_conf(conf, item, init, verbose);
+		if (r != 0)
+			ret = 1;
+		HASH_DEL(*cache, item);
+		free(item->key);
+		free(item->value);
+		free(item);
+	}
+
+	if (puavo_conf_close(conf, &err) == -1) {
+		warnx("Failed to close config backend: %s", err.msg);
+		ret = 1;
+	}
+
+	return ret;
+}
+
+static int
+add_cacheitem_to_puavo_conf(puavo_conf_t *conf, struct conf_cache *item,
+    int init, int verbose)
+{
+	struct puavo_conf_err err;
+	char *old_value;
+	int r;
+
+	if (init) {
+		r = puavo_conf_add(conf, item->key, item->value, &err);
+		if (r != 0) {
+			warnx("error adding %s --> '%s' : %s",
+			    item->key, item->value, err.msg);
+			return 1;
+		}
+		if (verbose) {
+			(void) printf("puavo-conf-update:"
+			    " initialized puavo conf key %s --> %s\n",
+			    item->key, item->value);
+		}
+		return 0;
+	}
+
+	r = puavo_conf_get(conf, item->key, &old_value, &err);
+	if (r != 0) {
+		warnx("could not read the old value of '%s': %s", item->key,
+		    err.msg);
+		return 1;
+	}
+
+	if (strcmp(old_value, item->value) == 0)
+		return 0;
+
+	r = puavo_conf_overwrite(conf, item->key, item->value, &err);
+	if (r != 0) {
+		warnx("error overwriting %s: %s --> '%s': %s", item->key,
+		    old_value, item->value, err.msg);
+		return 1;
+	}
+
+	if (verbose) {
+		(void) printf("puavo-conf-update: overwrote puavoconf"
+		   " key %s: %s --> %s\n", item->key, old_value, item->value);
+	}
+
+	return 0;
+}
+
+static struct conf_cache *
+make_cache_item(const char *key, const char *value)
+{
+	struct conf_cache *p;
+
+	if ((p = malloc(sizeof(struct conf_cache))) == NULL) {
+		warn("malloc");
+		return NULL;
+	}
+
+	if ((p->key = strdup(key)) == NULL) {
+		warn("strdup");
+		free(p);
+		return NULL;
+	}
+
+	if ((p->value = strdup(value)) == NULL) {
+		warn("strdup");
+		free(p->key);
+		free(p);
+		return NULL;
+	}
+
+	return p;
 }

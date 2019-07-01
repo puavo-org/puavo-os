@@ -279,6 +279,8 @@ install_localbootdevice() {
   puavo_install_hosttype=$2
   puavo_preseed_setup_filesystems_args=$3
 
+  update_configuration_retstatus=0
+
   puavo-setup-filesystems $puavo_preseed_setup_filesystems_args
   setup_state "$puavo_hosttype"
 
@@ -289,10 +291,21 @@ install_localbootdevice() {
   install_image "$puavo_install_hosttype"
 
   if [ "$puavo_hosttype" = 'bootserver' ]; then
-    /usr/local/lib/puavo-handle-image-changes
+    /usr/local/lib/puavo-handle-image-changes \
+      || update_configuration_retstatus=1
   fi
 
-  update_configuration
+  update_configuration || update_configuration_retstatus=1
+
+  if [ "$puavo_hosttype" = 'laptop' \
+    -a -n "$(puavo-conf puavo.abitti.version 2>/dev/null || true)" ]; then
+      /usr/local/sbin/puavo-update-abitti-image \
+        || update_configuration_retstatus=1
+  fi
+
+  if [ "$update_configuration_retstatus" -ne 0 ]; then
+    return $update_configuration_retstatus
+  fi
 
   do_umounts
 }

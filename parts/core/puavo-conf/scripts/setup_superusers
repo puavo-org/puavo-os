@@ -11,19 +11,17 @@ if [ -e /run/puavo/nbd-server ]; then
 fi
 
 primary_user_conf_path=/etc/sudoers.d/primary_user
+user_registration_conf_path=/etc/sudoers.d/user_registration
 
-if [ "$(puavo-conf puavo.admin.personally_administered)" != 'true' ]; then
-  rm -f "$primary_user_conf_path"
-  exit 0
-fi
+rm -f "$primary_user_conf_path" "$user_registration_conf_path"
 
 superusers_mode=$(puavo-conf puavo.admin.superusers)
 
 case "$superusers_mode" in
-  primary_user)
+  primary-user)
     primary_user=$(puavo-conf puavo.admin.primary_user)
-    if [ -z "$primary_user" ]; then
-      rm -f "$primary_user_conf_path"
+    if [ -z "$primary_user" -o \
+         "$(puavo-conf puavo.admin.personally_administered)" != 'true' ]; then
       exit 0
     fi
 
@@ -31,21 +29,31 @@ case "$superusers_mode" in
     # access rights
     if ! id -u "$primary_user" >/dev/null 2>&1; then
       echo "User '${primary_user}' does not exist!" >&2
-      rm -f "$primary_user_conf_path"
       exit 1
     fi
 
     cat <<EOF > "${primary_user_conf_path}.tmp"
 ${primary_user} ALL=(ALL) ALL
+${primary_user} ALL = NOPASSWD: /usr/sbin/puavo-pkg-update-from-gui
+${primary_user} ALL = NOPASSWD: /usr/sbin/puavo-conf-local
 EOF
     mv "${primary_user_conf_path}.tmp" "$primary_user_conf_path"
     ;;
-  '')
-    rm -f "$primary_user_conf_path"
+
+  user-registration)
+    cat <<EOF > "${user_registration_conf_path}.tmp"
+guest ALL = NOPASSWD: /bin/cat /etc/puavo/ldap/password
+guest ALL = NOPASSWD: /usr/lib/puavo-ltsp-client/firstlogin-to-account
+guest ALL = NOPASSWD: /usr/sbin/puavo-conf-local
+EOF
+    mv "${user_registration_conf_path}.tmp" "$user_registration_conf_path"
     ;;
+
+  '')
+    ;;
+
   *)
     echo "Unsupported mode in puavo.admin.superusers: '${superusers_mode}'" >&2
-    rm -f "$primary_user_conf_path"
     exit 1
     ;;
 esac

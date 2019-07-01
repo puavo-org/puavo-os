@@ -1,0 +1,69 @@
+#!/bin/sh
+
+set -eu
+
+puavo_conf_json_dir='/state/etc/puavo/local'
+puavo_conf_json_path="${puavo_conf_json_dir}/puavo_conf.json"
+
+read_old_config() {
+  if [ -s "$puavo_conf_json_path" ]; then
+    if old_config=$(jq -r '
+                      if (.|type) != "object" then error("not an object")
+                      else . end
+                    ' "$puavo_conf_json_path" 2>/dev/null); then
+      printf %s "$old_config"
+      return 0
+    else
+      # parsing of old config failed, move it aside but keep a backup
+      mv "$puavo_conf_json_path" "${puavo_conf_json_path}.$(date +%s)"
+    fi
+  fi
+
+  echo '{}'
+}
+
+# this is to allow checking permissions to run this tool (through sudo)
+if [ $# -eq 1 ]; then
+  if [ "$1" = '--check' ]; then
+    exit 0
+  fi
+fi
+
+if [ $# -ne 2 ]; then
+  echo "usage: $(basename $0) key value" >&2
+  exit 1
+fi
+
+key=$1
+value=$2
+
+case "$key" in
+  puavo.abitti.version \
+  | puavo.grub.boot_default \
+  | puavo.grub.developer_mode.enabled \
+  | puavo.grub.windows.enabled \
+  | puavo.pkg.* \
+  | puavo.xsessions.user_registration.enabled)
+    ;;
+  *)
+    echo "no permission to change puavo-conf '$key' --> '$value'" >&2
+    exit 1
+    ;;
+esac
+
+install -d -o root -g root -m 755 "$puavo_conf_json_dir"
+
+test -e "$puavo_conf_json_path" || touch "$puavo_conf_json_path"
+exec 3< "$puavo_conf_json_path"
+if ! flock -w 10 -x 3; then
+  echo "could not get a lock on $puavo_conf_json_path" >&2
+  exit 1
+fi
+
+puavo-conf "$key" "$value"
+
+read_old_config \
+  | jq --arg key "$key" --arg value "$value" '.[$key] = $value' \
+  > "${puavo_conf_json_path}.tmp"
+mv "${puavo_conf_json_path}.tmp" \
+   "$puavo_conf_json_path"

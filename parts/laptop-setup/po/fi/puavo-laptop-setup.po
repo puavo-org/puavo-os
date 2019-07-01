@@ -1,0 +1,52 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: puavo-laptop-setup\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"Language: fi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: puavo-laptop-setup:85
+msgid "should be a number"
+msgstr "pitää olla numero"
+
+#: puavo-laptop-setup:184
+msgid "error saving changes"
+msgstr "virhe tallennuksessa"
+
+msgid "You do not have the required permissions to use this tool."
+msgstr "Sinulla ei ole tarvittavia oikeuksia tämän työkalun käyttöön."
+
+msgid "Laptop setup"
+msgstr "Kannettavan asetukset"
+
+msgid "is already running"
+msgstr "on jo käynnissä"
+
+msgid "It is now possible to choose Windows from the boot menu when starting up the computer."
+msgstr "Windows on nyt lisätty käynnistysvaihtoehdoksi tietokoneen käynnistysvalikkoon. Käynnistysvalikko tulee näkyviin aina tietokoneen uudelleen käynnistyksen yhteydessä."
+
+msgid "Abitti is not updated when running Windows, you have to boot into the current system to update it."
+msgstr "Huomioi, että Abitti-koejärjestelmää ei päivitetä silloin, kun tietokone on käynnistetty Windowsiin. Vaihtaaksesi/päivittääksesi kannettavan Abitti-versiota, sinun tulee valita tietokoneen käynnistyksen yhteydessä 'Normaali käynnistys' ja käynnistää tähän nyt käytössä olevaan Opinsys OS -käyttöjärjestelmään."
+
+# from puavo-laptop-setup.glade
+msgid "Start using Windows"
+msgstr "Ota Windows käyttöön"
+
+msgid "Default operating system at boot"
+msgstr "Oletuksena käynnistettävä järjestelmä"
+
+msgid "Show developer mode in boot menu"
+msgstr "Näytä kehittäjätila tietokonetta käynnistettäessä"
+
+msgid "Abitti-version"
+msgstr "Abitti-versio"
+
+msgid "latest version"
+msgstr "viimeisin versio"
+
+msgid "this version:"
+msgstr "tämä versio:"

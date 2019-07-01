@@ -76,11 +76,10 @@ def create_desktop_link(filename, program):
     """Adds program (an instance of Program class) to the desktop. Moved
     here from main.py. Make sure you handle exceptions if you call this!"""
 
-    from constants import PROGRAM_TYPE_DESKTOP, \
-        PROGRAM_TYPE_CUSTOM, PROGRAM_TYPE_WEB
+    from menudata import ProgramType
 
     with open(filename, 'w', encoding='utf-8') as out:
-        if program.program_type != PROGRAM_TYPE_WEB:
+        if program.program_type != ProgramType.WEB:
             out.write('#!/usr/bin/env xdg-open\n')
 
         out.write('[Desktop Entry]\n')
@@ -88,7 +87,7 @@ def create_desktop_link(filename, program):
         out.write('Version=1.0\n')
         out.write('Name={0}\n'.format(program.name))
 
-        if program.program_type in (PROGRAM_TYPE_DESKTOP, PROGRAM_TYPE_CUSTOM):
+        if program.program_type in (ProgramType.DESKTOP, ProgramType.CUSTOM):
             out.write('Type=Application\n')
             out.write('Exec={0}\n'.format(program.command))
         else:
@@ -98,11 +97,11 @@ def create_desktop_link(filename, program):
         if program.icon:
             out.write('Icon={0}\n'.format(program.icon.filename))
         else:
-            if program.program_type == PROGRAM_TYPE_WEB:
+            if program.program_type == ProgramType.WEB:
                 # a "generic" web icon
                 out.write('Icon=text-html\n')
 
-    if program.program_type != PROGRAM_TYPE_WEB:
+    if program.program_type != ProgramType.WEB:
         # Make the file runnable, or GNOME won't accept it
         from os import chmod
         import subprocess
@@ -110,10 +109,9 @@ def create_desktop_link(filename, program):
         chmod(filename, 0o755)
 
         # Mark the file as trusted (I hate you GNOME)
-        subprocess.Popen(['gvfs-set-attribute', filename,
-                          'metadata::trusted', 'yes'],
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE)
+        subprocess.Popen(['gio', 'set', filename, 'metadata::trusted', 'true'],
+                         stdout=subprocess.DEVNULL,
+                         stderr=subprocess.DEVNULL)
 
 
 def create_panel_link(program):
@@ -147,7 +145,7 @@ def create_panel_link(program):
         # create it manually.
         from os import environ
         from os.path import join as path_join
-        from constants import PROGRAM_TYPE_WEB
+        from menudata import ProgramType
 
         name = path_join(environ['HOME'],
                          '.local',
@@ -165,7 +163,7 @@ def create_panel_link(program):
             out.write('Name={0}\n'.format(program.name))
             out.write('Type=Application\n')
 
-            if program.program_type == PROGRAM_TYPE_WEB:
+            if program.program_type == ProgramType.WEB:
                 # GNOME, in its infinite wisdom, has decided that "you shall
                 # not have web links in the panel" and then broke the "Link"
                 # type icons. So let's hope that xdg-open can open the URL in
@@ -178,7 +176,7 @@ def create_panel_link(program):
             if program.icon:
                 out.write('Icon={0}\n'.format(program.icon.filename))
             else:
-                if program.program_type == PROGRAM_TYPE_WEB:
+                if program.program_type == ProgramType.WEB:
                     # a "generic" web icon
                     out.write('Icon=text-html\n')
 

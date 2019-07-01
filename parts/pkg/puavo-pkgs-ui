@@ -1,0 +1,609 @@
+#!/usr/bin/python3
+
+import fcntl
+import gettext
+import gi
+import os
+import signal
+import subprocess
+import sys
+import html
+
+from enum import Enum
+
+gi.require_version('Gtk', '3.0')
+from gi.repository import GLib
+from gi.repository import GObject
+from gi.repository import Gtk
+from gi.repository import Gdk
+
+gettext.bindtextdomain('puavo-pkgs-ui', '/usr/share/locale')
+gettext.textdomain('puavo-pkgs-ui')
+_tr = gettext.gettext
+
+class PkgState(Enum):
+    ABSENT          = 1
+    INSTALLED       = 2
+    INSTALL_ERROR   = 3
+    INSTALLING      = 4
+    INSTALL_SUCCESS = 5
+    REMOVE_ERROR    = 6
+    REMOVE_SUCCESS  = 7
+    REMOVING        = 8
+
+
+def set_state_message(widget, msg, current_state_class):
+    # All possible CSS class names a status message can have
+    state_classes = (
+        'state-not-installed',
+        'state-installing',
+        'state-installed',
+        'state-removing',
+        'state-error'
+    )
+
+    ctx = widget.get_style_context()
+
+    for sc in state_classes:
+        if ctx.has_class(sc):
+            ctx.remove_class(sc)
+
+    ctx.add_class(current_state_class)
+
+    widget.set_label(msg)
+
+
+def error_message(parent, message, secondary_message):
+    dialog = Gtk.MessageDialog(parent=parent,
+                               flags=Gtk.DialogFlags.MODAL,
+                               type=Gtk.MessageType.ERROR,
+                               buttons=Gtk.ButtonsType.OK,
+                               message_format=message)
+
+    if secondary_message:
+        dialog.format_secondary_markup(secondary_message)
+
+    dialog.run()
+    dialog.hide()
+
+
+def set_widget_style(widget, class_name, style_provider):
+    ctx = widget.get_style_context()
+
+    ctx.add_class(class_name)
+    ctx.add_provider(style_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+
+def send_puavomenu_command(socket_file, args):
+    if os.path.exists(socket_file):
+        # This instance is running, send the command
+        subprocess.Popen(
+            ['/opt/puavomenu/send_command', socket_file] + args,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL)
+
+def quit(pkg_list, widget):
+    for pkg in pkg_list:
+        pkg.cancel_installation()
+    Gtk.main_quit()
+
+def update_puavomenu(package_id):
+    """Sends a 'update-puavopkg' command to all running instances of
+    puavomenu."""
+
+    path = '/run/user/{0}'.format(os.getuid())
+    args = ['update-puavopkg', package_id]
+
+    # Try both production and development menus
+    send_puavomenu_command(path + '/puavomenu', args)
+    send_puavomenu_command(path + '/puavomenu_dev', args)
+
+
+class PuavoPkg:
+    def __init__(self, pkgname):
+        self.action_button_conn   = None
+        self.install_log          = []
+        self.install_log_textview = None
+        self.pkgname              = pkgname
+        self.pkg_state            = None
+        self.pkg_update_pid       = None
+        self.pkg_update_stdin     = None
+
+
+    def lookup_pkg_fields(self):
+        self.description = self.field('description')
+        self.legend      = self.field('legend')
+        self.license     = self.license()
+
+        self.description = self.description.replace('\n', ' ')
+
+
+    def set_puavoconf(self, value):
+        puavo_conf_key = 'puavo.pkg.%s' % self.pkgname
+
+        cmd = [ 'sudo', '-n', '/usr/sbin/puavo-conf-local', puavo_conf_key,
+                value ]
+        subprocess.check_output(cmd).rstrip().decode('utf-8')
+
+
+    def run_puavo_pkg_update(self):
+        cmd = [ '/usr/bin/sudo', '-n',
+                '/usr/sbin/puavo-pkg-update-from-gui',
+                self.pkgname ]
+        (pid, stdin, stdout, stderr) = GObject.spawn_async(cmd,
+            flags=GLib.SPAWN_DO_NOT_REAP_CHILD|GLib.SPAWN_STDERR_TO_DEV_NULL,
+            standard_input=True, standard_output=True)
+
+        self.pkg_update_pid   = pid
+        self.pkg_update_stdin = os.fdopen(stdin, 'w')
+
+        fl = fcntl.fcntl(stdout, fcntl.F_GETFL)
+        fcntl.fcntl(stdout, fcntl.F_SETFL, fl | os.O_NONBLOCK)
+        GObject.io_add_watch(stdout, GObject.IO_HUP|GObject.IO_IN,
+                             self.pkg_update_callback, os.fdopen(stdout))
+
+
+    def install_pkg(self, widget):
+        if self.pkg_update_pid:
+            return
+
+        self.set_ui_state(PkgState.INSTALLING)
+        self.toggle_log_button.show()
+        self.set_puavoconf('latest')
+        self.run_puavo_pkg_update()
+
+
+    def cancel_installation(self, widget=None):
+        if self.pkg_update_stdin:
+            print('quit', file=self.pkg_update_stdin, flush=True)
+            self.pkg_update_stdin.close()
+
+
+    def remove_pkg(self, widget):
+        self.set_ui_state(PkgState.REMOVING)
+        self.toggle_log_button.show()
+        self.set_puavoconf('remove')
+        self.run_puavo_pkg_update()
+
+
+    def set_ui_state(self, new_state):
+        if self.action_button_conn:
+            self.action_button.disconnect(self.action_button_conn)
+            self.action_button_conn = None
+
+        self.action_button.set_sensitive( new_state != PkgState.REMOVING )
+        self.pkg_state = new_state
+
+        if new_state in [ PkgState.ABSENT, PkgState.REMOVE_SUCCESS ]:
+            set_state_message(self.state_msg, _tr('NOT INSTALLED') , 'state-not-installed')
+            self.action_button.set_label( _tr('Install') )
+            self.action_button_conn \
+              = self.action_button.connect('clicked', self.install_pkg)
+
+        elif new_state == PkgState.INSTALLING:
+            set_state_message(self.state_msg, _tr('INSTALLING') , 'state-installing')
+            self.action_button.set_label( _tr('Cancel') )
+            self.action_button_conn \
+              = self.action_button.connect('clicked', self.cancel_installation)
+            self.spinner.start()
+
+        elif new_state == PkgState.INSTALL_ERROR:
+            set_state_message(self.state_msg, _tr('ERROR') , 'state-error')
+            self.action_button.set_label( _tr('Install') )
+            self.action_button_conn \
+              = self.action_button.connect('clicked', self.install_pkg)
+
+        elif new_state in [ PkgState.INSTALL_SUCCESS, PkgState.INSTALLED ]:
+            set_state_message(self.state_msg, _tr('INSTALLED') , 'state-installed')
+            self.action_button.set_label( _tr('Remove') )
+            self.action_button_conn \
+              = self.action_button.connect('clicked', self.remove_pkg)
+
+        elif new_state == PkgState.REMOVING:
+            set_state_message(self.state_msg, _tr('REMOVING') , 'state-removing')
+            self.spinner.start()
+
+        elif new_state == PkgState.REMOVE_ERROR:
+            set_state_message(self.state_msg, _tr('ERROR') , 'state-error')
+            self.action_button.set_label( _tr('Install') )
+            self.action_button_conn \
+              = self.action_button.connect('clicked', self.install_pkg)
+
+
+    def pkg_update_callback(self, fd, condition, channel):
+        if condition & GObject.IO_IN:
+            text = channel.read()
+            self.install_log.append(text)
+            if self.install_log_textview:
+                self.install_log_textview.get_buffer().insert_at_cursor(text)
+
+        if condition & GObject.IO_HUP:
+            channel.close()
+
+            (pid, status) = os.waitpid(self.pkg_update_pid, 0)
+
+            if self.pkg_state == PkgState.REMOVING:
+                if status == 0:
+                    self.set_ui_state(PkgState.REMOVE_SUCCESS)
+                    update_puavomenu(self.pkgname)
+                else:
+                    self.set_ui_state(PkgState.REMOVE_ERROR)
+            else:
+                if status == 0:
+                    self.set_ui_state(PkgState.INSTALL_SUCCESS)
+                    update_puavomenu(self.pkgname)
+                else:
+                    self.set_ui_state(PkgState.INSTALL_ERROR)
+
+            self.spinner.stop()
+            self.pkg_update_pid   = None
+            self.pkg_update_stdin = None
+
+            return False
+
+        return True
+
+
+    def add_to_grid(self, list_win, style_provider, previous_pkg):
+        # Header row
+        header_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
+        set_widget_style(header_row, 'header_row', style_provider)
+
+        self.package_name = Gtk.Label()
+        self.package_name.set_text(self.legend)
+        set_widget_style(self.package_name, 'package_name', style_provider)
+        header_row.pack_start(self.package_name, False, False, 0)
+
+        self.state_msg = Gtk.Label("State")
+        set_widget_style(self.state_msg, 'package_state', style_provider)
+        header_row.pack_end(self.state_msg, False, False, 0)
+
+        # Package description and control buttons
+        details_row = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        set_widget_style(details_row, 'details_row', style_provider)
+
+        desc_text = html.escape(self.description)
+        desc_text += '\n\n<a href="%s">%s</a>' % (self.license, _tr('Show license'))
+
+        #self.package_description = Gtk.Label(self.description)
+        self.package_description = Gtk.Label()
+        self.package_description.set_markup(desc_text)
+        self.package_description.set_line_wrap(True)
+        self.package_description.set_alignment(0.0, 0.0)
+        self.package_description.connect('activate-link', self.show_license)
+        set_widget_style(self.package_description, 'package_description', style_provider)
+
+        # Buttons container
+        buttons_container = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        set_widget_style(buttons_container, 'buttons_container', style_provider)
+
+        self.action_button = Gtk.Button()
+        set_widget_style(self.action_button, 'action_button', style_provider)
+
+        self.spinner = Gtk.Spinner()
+        set_widget_style(self.spinner, 'action_spinner', style_provider)
+
+        self.toggle_log_button = Gtk.ToggleButton(label=_tr('Show install/remove log'))
+        set_widget_style(self.toggle_log_button, 'log_button', style_provider)
+        self.toggle_log_button.connect('clicked', self.show_or_hide_log)
+
+        # These buttons are only shown when we have something to show
+        self.toggle_log_button.set_no_show_all(True)
+
+        buttons_container.pack_start(self.action_button, False, False, 0)
+        buttons_container.pack_start(self.spinner, False, False, 0)
+        buttons_container.pack_start(self.toggle_log_button, False, False, 0)
+
+        details_row.pack_start(self.package_description, False, False, 0)
+        details_row.pack_start(buttons_container, False, False, 0)
+
+        # Row wrappers/containers
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        vbox.pack_start(header_row, True, True, 0)
+        vbox.pack_start(details_row, True, True, 0)
+        set_widget_style(vbox, 'package_vbox', style_provider)
+
+        row_container = Gtk.ListBoxRow()
+        set_widget_style(row_container, 'row_container', style_provider)
+        row_container.get_style_context().add_class('row_container')
+
+        row_container.add(vbox)
+        list_win.add(row_container)
+
+        # Set the initial state
+        installed_link = os.path.join('/var/lib/puavo-pkg/installed',
+                                      self.pkgname)
+
+        if os.path.exists(installed_link):
+            self.set_ui_state(PkgState.INSTALLED)
+        else:
+            self.set_ui_state(PkgState.ABSENT)
+
+        return True
+
+
+    def show_license(self, *unused):
+        # XXX leaves zombies...
+        subprocess.Popen([ 'firefox', self.license ],
+                         stdout=subprocess.DEVNULL,
+                         stderr=subprocess.DEVNULL)
+
+        return True
+
+
+    def show_or_hide_log(self, widget):
+        if widget.get_active():
+            self.install_log_win = Gtk.Window()
+            self.install_log_win.set_position(Gtk.WindowPosition.CENTER)
+            self.install_log_win.set_default_geometry(800, 320)
+            self.install_log_win.set_title(
+              _tr('Extra software installer') + ' / %s' % self.pkgname)
+            self.install_log_win.connect('destroy',
+              lambda x: self.toggle_log_button.set_active(False))
+
+            self.install_log_textview = Gtk.TextView()
+            self.install_log_textview.connect('size-allocate', self.autoscroll)
+
+            style_provider = Gtk.CssProvider()
+            style_provider.load_from_data(b""".log { font-family: monospace; }""")
+            set_widget_style(self.install_log_textview, 'log', style_provider)
+
+            self.install_log_textview.set_border_width(10)
+            self.install_log_textview.set_cursor_visible(False)
+            self.install_log_textview.set_editable(False)
+            self.install_log_textview.get_buffer() \
+              .insert_at_cursor(''.join(self.install_log))
+
+            self.scrolled_win = Gtk.ScrolledWindow()
+            self.scrolled_win.add(self.install_log_textview)
+
+            self.install_log_win.add(self.scrolled_win)
+            self.install_log_win.show_all()
+
+        elif self.install_log_win:
+            self.install_log_win.destroy()
+            self.install_log_win = None
+
+
+    def autoscroll(self, *args):
+        adj = self.scrolled_win.get_vadjustment()
+        adj.set_value(adj.get_upper() - adj.get_page_size())
+
+
+    def field(self, fieldname):
+        path = '/var/lib/puavo-pkg/available/%s/%s' \
+                  % (self.pkgname, fieldname)
+
+        if 'LANGUAGE' in os.environ:
+            path_with_lang = '/var/lib/puavo-pkg/available/%s/%s.%s' \
+                % (self.pkgname, fieldname, os.environ['LANGUAGE'])
+            if os.path.exists(path_with_lang):
+                path = path_with_lang
+
+        with open(path) as file:
+            return file.read().rstrip()
+
+
+    def license(self):
+        path = '/var/lib/puavo-pkg/available/%s/license' % self.pkgname
+        if not os.path.exists(path):
+            raise ValueError('license not found')
+        return 'file://%s' % path
+
+
+# ------------------------------------------------------------------------------
+
+def install_all_packages(widget, pkg_list):
+    possible_to_install_states = [ PkgState.ABSENT,
+                                   PkgState.INSTALL_ERROR,
+                                   PkgState.REMOVE_ERROR,
+                                   PkgState.REMOVE_SUCCESS ]
+    for pkg in pkg_list:
+        if pkg.pkg_state in possible_to_install_states:
+            pkg.action_button.clicked()
+
+
+def puavoconf_get(puavoconf_key):
+    return subprocess.check_output([ 'puavo-conf', puavoconf_key ]).rstrip() \
+                     .decode('utf-8')
+
+
+# ------------------------------------------------------------------------------
+# Custom CSS for te program
+# TODO: Make this work properly with dark themes
+# TODO: Load this from a file
+
+style_provider = Gtk.CssProvider()
+
+style_provider.load_from_data(b"""
+
+.scrolled_window {
+}
+
+.package_list {
+    background: transparent;
+}
+
+.row_container {
+    background: transparent;
+    outline: none;
+}
+
+.package_vbox {
+    /* Space between list entries */
+    padding-bottom: 20px;
+
+    /* Don't let the scrollbar cover any texts or buttons */
+    padding-right: 14px;
+}
+
+.header_row {
+    background: #ddd;
+    border-radius: 5px;
+    padding-left: 20px;
+}
+
+.details_row {
+    padding: 0 20px;
+}
+
+.buttons_container {
+    padding-top: 10px;
+}
+
+.package_name {
+    font-weight: bold;
+    font-size: 110%;
+}
+
+.package_description {
+    padding-top: 10px;
+}
+
+.license_link {
+}
+
+.action_button {
+}
+
+.log_button {
+}
+
+.action_spinner {
+}
+
+/* Package state indicators */
+.package_state {
+    border-radius: 0 5px 5px 0;
+    font-weight: bold;
+    padding: 10px 20px;  /* This makes the entire header bar tall */
+}
+
+.state-not-installed {
+    background: lightblue;
+}
+
+.state-installing {
+    background: yellow;
+}
+
+.state-installed {
+    background: lightgreen;
+}
+
+.state-removing {
+    background: orange;
+}
+
+.state-error {
+    background: sandybrown;
+}
+
+""")
+
+# ------------------------------------------------------------------------------
+# Create the main window
+
+win = Gtk.Window()
+
+win.set_border_width(10)
+win.set_position(Gtk.WindowPosition.CENTER)
+win.set_title(_tr('Extra software installer'))
+win.set_icon_name('system-installer')
+
+this_script = open(os.path.realpath(sys.argv[0]), 'r')
+try:
+    fcntl.flock(this_script, fcntl.LOCK_EX | fcntl.LOCK_NB)
+except BlockingIOError:
+    errmsg = ('"%s"' % _tr('Extra software installer')) \
+                + ' ' + _tr('is already running')
+    dialog = Gtk.MessageDialog(win, 0, Gtk.MessageType.ERROR,
+               Gtk.ButtonsType.CANCEL, errmsg)
+    dialog.run()
+    sys.exit(1)
+
+# The package list can be very long on some machines, so try to use as much
+# space on the screen as possible, within limits
+try:
+    screen_height = Gdk.Screen.get_default().height()
+except:
+    screen_height = 768
+
+screen_height = int(screen_height * 0.75)
+screen_height = max(min(screen_height, 800), 400)
+
+win.set_default_size(1000, screen_height)
+
+# Outer container
+box_outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+win.add(box_outer)
+
+pkg_list = []
+
+banner_message \
+  = _tr('Here you can install software, that are not preinstalled on this'
+        ' laptop due to licensing restrictions.  By installing the software'
+        ' you accept its licensing terms.  Installation requires network'
+        ' connectivity.')
+entry_text = Gtk.Label()
+entry_text.set_halign(Gtk.Align.CENTER)
+entry_text.set_justify(Gtk.Justification.FILL)
+entry_text.set_line_wrap(True)
+entry_text.set_max_width_chars(72)
+entry_text.set_text(banner_message)
+box_outer.pack_start(entry_text, False, False, 0)
+
+button = Gtk.Button(label=_tr('Accept all licenses and install all packages'))
+button.connect('clicked', lambda w: install_all_packages(win, pkg_list))
+
+box_outer.pack_start(button, False, False, 0)
+
+# The package list widget
+list_win = Gtk.ListBox()
+list_win.set_selection_mode(Gtk.SelectionMode.NONE)
+
+# Outermost container for the package list
+scrolled_win = Gtk.ScrolledWindow()
+scrolled_win.add(list_win)
+box_outer.pack_start(scrolled_win, True, True, 0)
+
+set_widget_style(list_win, 'package_list', style_provider)
+set_widget_style(scrolled_win, 'scrolled_window', style_provider)
+
+# ------------------------------------------------------------------------------
+# Setup packages
+
+unsorted_pkg_list = []
+
+for pkgname in puavoconf_get('puavo.pkgs.ui.pkglist').split():
+    pkg = PuavoPkg(pkgname)
+    try:
+        pkg.lookup_pkg_fields()
+        unsorted_pkg_list.append(pkg)
+    except Exception as e:
+        print("error looking up package fields for %s: %s" \
+                % (pkg.pkgname, e), file=sys.stderr)
+
+
+
+# Fill the package list
+previous_pkg = None
+
+pkg_list = sorted(unsorted_pkg_list, key=lambda pkg: pkg.legend)
+for pkg in pkg_list:
+    if pkg.add_to_grid(list_win, style_provider, previous_pkg):
+        previous_pkg = pkg
+
+if not previous_pkg:
+    error_message(win,
+        _tr('No packages'),
+        _tr('No packages have been listed as to be installed or removed.') \
+          + '\n\n' \
+          + _tr('Check <tt>puavo.pkgs.ui.pkglist</tt> -puavoconf setting.'))
+
+    sys.exit(1)
+
+win.connect('destroy', lambda w: quit(pkg_list, w))
+
+win.show_all()
+Gtk.main()

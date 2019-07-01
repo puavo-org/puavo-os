@@ -1,6 +1,6 @@
 #!/usr/bin/ruby
 
-# Copyright (C) 2016 Opinsys Oy
+# Copyright (C) 2016, 2019 Opinsys Oy
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,8 +16,67 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 require 'dbus'
-
 require 'puavo/conf'
+require 'syslog'
+
+Puavoconf_hooks_dir = '/etc/puavo-conf/hooks'
+
+def run_hook(puavoconf_key, old_value, new_value)
+  # no error handling for hook scripts,
+  # even though that might be a good idea
+
+  if old_value && old_value == new_value then
+    return
+  end
+
+  Syslog.log(Syslog::LOG_INFO,
+             "puavo-conf key '%s' has changed value %s --> '%s'",
+             puavoconf_key,
+             old_value ? "'#{ old_value }'" : 'NONE',
+             new_value)
+
+  hook_path = "#{ Puavoconf_hooks_dir }/#{ puavoconf_key }"
+  return unless File.executable?(hook_path)
+
+  Syslog.log(Syslog::LOG_NOTICE,
+             "puavo-conf key '%s' has a hook, running it",
+             puavoconf_key)
+
+  pid = fork
+  if pid then
+    Process.detach(pid)
+    return
+  end
+
+  begin
+    File.open(hook_path, 'r') do |hook_file|
+      lock_countdown = 30
+      until hook_file.flock(File::LOCK_NB|File::LOCK_EX) do
+        sleep(1)
+        lock_countdown -= 1
+        if lock_countdown == 0 then
+          raise "could not get a lock to #{ hook_path }"
+        end
+      end
+
+      IO.popen([ 'logger', '-p', 'user.info', '-t', hook_path ], 'w',
+               :err => '/dev/null',
+               :out => '/dev/null') do |stdin|
+        # pass hook_file to exec so that executing scripts
+        # hold the relevant flock
+        exec(hook_path, :in            => '/dev/null',
+                        [ :out, :err ] => stdin,
+                        3              => hook_file)
+      end
+    end
+  rescue StandardError => e
+    Syslog.log(Syslog::LOG_ERR,
+               "error in running hook for '%s': %s",
+               puavoconf_key,
+               e.message)
+    exit(1)
+  end
+end
 
 class Conf1 < DBus::Object
 
@@ -28,8 +87,9 @@ class Conf1 < DBus::Object
 
   dbus_interface "org.puavo.Conf1" do
 
-    dbus_method :Add, 'in key:s, in value:s' do |key, value|
-      @puavoconf.add(key, value)
+    dbus_method :Add, 'in key:s, in value:s' do |key, new_value|
+      @puavoconf.add(key, new_value)
+      run_hook(key, nil, new_value)
     end
 
     dbus_method :Clear, '' do
@@ -49,17 +109,23 @@ class Conf1 < DBus::Object
       @puavoconf.has_key?(key)
     end
 
-    dbus_method :Overwrite, 'in key:s, in value:s' do |key, value|
-      @puavoconf.overwrite(key, value)
+    dbus_method :Overwrite, 'in key:s, in value:s' do |key, new_value|
+      old_value = @puavoconf.get(key) rescue false
+      @puavoconf.overwrite(key, new_value)
+      run_hook(key, old_value, new_value)
     end
 
-    dbus_method :Set, 'in key:s, in value:s' do |key, value|
-      @puavoconf.set(key, value)
+    dbus_method :Set, 'in key:s, in value:s' do |key, new_value|
+      old_value = @puavoconf.get(key) rescue false
+      @puavoconf.set(key, new_value)
+      run_hook(key, old_value, new_value)
     end
 
   end
 
 end
+
+Syslog.open(File.basename($0), Syslog::LOG_CONS)
 
 bus = DBus::SystemBus.instance
 
@@ -74,4 +140,5 @@ begin
   loop.run
 ensure
   puavoconf.close
+  Syslog.close()
 end

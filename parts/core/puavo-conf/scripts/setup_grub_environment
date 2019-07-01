@@ -1,0 +1,89 @@
+#!/bin/sh
+
+set -eu
+
+grubedit() {
+  grubenv_path='/images/boot/grub/grubenv'
+  if ! grub-editenv "$grubenv_path" "$@"; then
+    echo 'Creating new grubenv because of an error' >&2
+    grub-editenv "$grubenv_path" create
+    grub-editenv "$grubenv_path" "$@"
+  fi
+}
+
+setup_kernel_version() {
+  kernel_version=$(puavo-conf puavo.kernel.version)
+  if [ -n "$kernel_version" ]; then
+    grubedit set "puavo_kernel_version=${kernel_version}"
+  else
+    grubedit unset puavo_kernel_version
+  fi
+}
+
+setup_kernel_arguments() {
+  kernel_arguments="$(puavo-conf puavo.kernel.arguments)$(selected_puavo_conf_arguments_as_kernel_args)"
+  if [ -n "$kernel_arguments" ]; then
+    grubedit set "puavo_kernel_arguments=${kernel_arguments}"
+  else
+    grubedit unset puavo_kernel_arguments
+  fi
+}
+
+setup_developer_mode() {
+  if [ "$(puavo-conf puavo.grub.developer_mode.enabled)" = 'true' ]; then
+    grubedit set "puavo_show_imageoverlays=true"
+  else
+    grubedit unset puavo_show_imageoverlays
+  fi
+}
+
+setup_grub_theme() {
+  grub_theme=$(puavo-conf puavo.grub.theme)
+  if [ -n "$grub_theme" ]; then
+    grubedit set "puavo_grub_theme=${grub_theme}"
+  else
+    grubedit unset puavo_grub_theme
+  fi
+}
+
+get_puavoconf_value() {
+  # Do not use puavo-conf to look this up.  We only pass this to kernel
+  # arguments only if it has been changed to non-default from Puavo.
+  # At least puavo.* values from kernel arguments should be ignored here.
+  jq -r --arg puavo_conf_key "$1" '.puavoconf[$puavo_conf_key]' \
+    /state/etc/puavo/device.json || true
+}
+
+selected_puavo_conf_arguments_as_kernel_args() {
+  puavo_conf_to_kernel_args='
+    puavo.admin.persistent_homedirs
+    puavo.boot.plymouth.theme
+    puavo.image.overlay
+  '
+
+  for puavo_conf_key in $puavo_conf_to_kernel_args; do
+    # "null" can not be a valid value for the above puavo-conf variables.
+    puavo_conf_value=$(get_puavoconf_value "$puavo_conf_key")
+    if [ "$puavo_conf_value" != 'null' ]; then
+      printf " %s" "${puavo_conf_key}=${puavo_conf_value}"
+    fi
+  done
+}
+
+setup_windows_enabled() {
+  if [ "$(puavo-conf puavo.grub.windows.enabled)" = 'true' ]; then
+    grubedit set "puavo_grub_windows_enabled=true"
+  else
+    grubedit unset puavo_grub_windows_enabled
+  fi
+}
+
+status=0
+
+setup_kernel_version   || status=1
+setup_kernel_arguments || status=1
+setup_developer_mode   || status=1
+setup_grub_theme       || status=1
+setup_windows_enabled  || status=1
+
+exit $status

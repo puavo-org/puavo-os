@@ -30,7 +30,8 @@ Build-Depends: bundler | ruby-bundler,
  ruby,
  ruby-dev,
  ruby-eventmachine,
- ruby-minitest
+ ruby-minitest,
+ uthash-dev
 Standards-Version: 3.9.6
 Homepage: http://github.com/puavo-org/puavo-os/
 
@@ -75,18 +76,6 @@ Description: Puavo autopoweroff
  Shut down hosts after a period of inactivity.
  .
 
-Package: puavo-usb-factory
-Architecture: all
-Depends: ${misc:Depends},
- fonts-ubuntu,
- python3,
- tcl8.6,
- tcllib,
- tk8.6
-Description: Puavo USB Factory
- Write disk images to usb memory devices in mass production style.
- .
-
 Package: puavo-autopilot
 Architecture: all
 Depends: ${misc:Depends},
@@ -122,7 +111,8 @@ Depends: ${misc:Depends},
  pciutils,
  ruby-ffi,
  ruby,
- usbutils
+ usbutils,
+ uthash-dev
 Description: Puavo configuration
  Puavo Conf is the configuration system of Puavo OS. It consists of a
  parameter database, a C library (`libpuavoconf`) and a set of
@@ -187,6 +177,17 @@ Depends: ${misc:Depends},
  ruby
 Description: Puavo enabled tools and tweaks to enable and fix hardware features
  Puavo enabled tools and tweaks to enable and fix hardware features
+ .
+
+Package: puavo-laptop-setup
+Architecture: all
+Depends: ${misc:Depends},
+ python3,
+ python3-gi
+Description: Puavo Laptop Setup
+ Puavo Laptop Setup is a tool to set some laptop-specific puavo-conf
+ settings to configure a machine.  This tool can be used by primary
+ users on personally administered hosts.
  .
 
 Package: puavo-local-config
@@ -309,7 +310,9 @@ Depends: ${misc:Depends},
  puavo-pam,
  puavo-vpn-client,
  python,
+ python3-pampy,
  python-serial,
+ qiv,
  ruby-dnsruby,
  ruby-json,
  ruby-ldap,
@@ -325,8 +328,11 @@ Description: Bits and pieces needed inside the LTSP chroot image.
 Package: puavo-ltsp-install
 Architecture: all
 Depends: ${misc:Depends},
+ clonezilla,
  curl,
+ dmidecode,
  expect-dev,
+ fzf,
  jq,
  m4,
  mdadm,
@@ -418,6 +424,29 @@ Description: Puavo-service hooks for Puavo TFTP server
  for pxelinux boot configuration.
  .
  This package provides hook files desinged for Puavo-service.
+ .
+
+Package: puavo-user-registration
+Architecture: all
+Depends: ${misc:Depends},
+ network-manager,
+ python3,
+ python3-gi
+Description: Puavo User Registration
+ Puavo User Registration is a tool to create a user account
+ on a Puavo machine.
+ .
+
+Package: puavo-usb-factory
+Architecture: all
+Depends: ${misc:Depends},
+ fonts-ubuntu,
+ python3,
+ tcl8.6,
+ tcllib,
+ tk8.6
+Description: Puavo USB Factory
+ Write disk images to usb memory devices in mass production style.
  .
 
 Package: puavo-vpn-client

@@ -4,6 +4,8 @@ from os.path import exists as file_exists, join as path_join
 from getpass import getuser
 import threading
 import logging
+import os
+import pwd
 
 import gi
 gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
@@ -19,7 +21,6 @@ import utils
 import utils_gui
 import buttons
 from strings import STRINGS
-from settings import SETTINGS
 
 
 # ------------------------------------------------------------------------------
@@ -56,6 +57,32 @@ SB_SUPPORT = {
         'type': 'url',
         'args': utils.puavo_conf('puavo.support.new_bugreport_url',
                                  'https://tuki.opinsys.fi')
+    },
+}
+
+SB_LAPTOP_SETTINGS = {
+    'name': 'laptop-settings',
+
+    'title': STRINGS['sb_laptop_setup'],
+
+    'icon': '/usr/share/icons/Faenza/devices/96/drive-harddisk-system.png',
+
+    'command': {
+        'type': 'command',
+        'args': 'puavo-laptop-setup',
+    },
+}
+
+SB_PUAVOPKG_INSTALLER = {
+    'name': 'puavopkg-installer',
+
+    'title': STRINGS['sb_puavopkg_installer'],
+
+    'icon': '/usr/share/icons/Faenza/apps/48/system-installer.png',
+
+    'command': {
+        'type': 'command',
+        'args': 'puavo-pkgs-ui',
     },
 }
 
@@ -313,8 +340,9 @@ class AvatarDownloaderThread(threading.Thread):
 # The sidebar class
 
 class Sidebar:
-    def __init__(self, parent):
+    def __init__(self, parent, settings):
         self.__parent = parent
+        self.__settings = settings
 
         self.container = Gtk.Fixed()
 
@@ -335,7 +363,7 @@ class Sidebar:
 
             try:
                 self.__avatar_thread = \
-                    AvatarDownloaderThread(SETTINGS.user_dir, self.__avatar)
+                    AvatarDownloaderThread(self.__settings.user_dir, self.__avatar)
 
                 # Daemonize the thread so that if we exit before
                 # the thread exists, it is also destroyed
@@ -352,16 +380,16 @@ class Sidebar:
         self.__variables['puavo_domain'] = \
             utils.get_file_contents('/etc/puavo/domain', '?')
         self.__variables['user_name'] = getuser()
-        self.__variables['user_language'] = SETTINGS.language
+        self.__variables['user_language'] = self.__settings.language
 
     # Creates the user avatar button
     def __create_avatar(self):
         self.__must_download_avatar = True
 
-        default_avatar = path_join(SETTINGS.res_dir, 'default_avatar.png')
-        existing_avatar = path_join(SETTINGS.user_dir, 'avatar.jpg')
+        default_avatar = path_join(self.__settings.res_dir, 'default_avatar.png')
+        existing_avatar = path_join(self.__settings.user_dir, 'avatar.jpg')
 
-        if SETTINGS.is_guest or SETTINGS.is_webkiosk:
+        if self.__settings.is_guest or self.__settings.is_webkiosk:
             # Always use the default avatar for guests and webkiosk sessions
             logging.info('Not loading avatar for a guest/webkiosk session')
             avatar_image = default_avatar
@@ -376,16 +404,20 @@ class Sidebar:
                          'downloaded avatar available, using the default image')
             avatar_image = default_avatar
 
-        if SETTINGS.is_guest or SETTINGS.is_webkiosk:
+        if self.__settings.is_guest or self.__settings.is_webkiosk:
             avatar_tooltip = None
         else:
-            avatar_tooltip = utils.localize(STRINGS['sb_avatar_hover'])
+            avatar_tooltip = \
+                utils.localize(STRINGS['sb_avatar_hover'], self.__settings.language)
 
-        self.__avatar = buttons.AvatarButton(self, getuser(), avatar_image,
+        self.__avatar = buttons.AvatarButton(self,
+                                             self.__settings,
+                                             getuser(),
+                                             avatar_image,
                                              avatar_tooltip)
 
         # No profile editing for guest users
-        if SETTINGS.is_guest or SETTINGS.is_webkiosk:
+        if self.__settings.is_guest or self.__settings.is_webkiosk:
             logging.info('Disabling the avatar button for guest user')
             self.__avatar.disable()
         else:
@@ -409,35 +441,42 @@ class Sidebar:
         # Since Python won't let you modify arguments (no pass-by-reference),
         # each of these returns the next Y position. X coordinates are fixed.
 
-        if not (SETTINGS.is_guest or SETTINGS.is_webkiosk):
+        if not (self.__settings.is_guest or self.__settings.is_webkiosk):
             y = self.__create_button(y, SB_CHANGE_PASSWORD)
 
         y = self.__create_button(y, SB_SUPPORT)
         y = self.__create_button(y, SB_SYSTEM_SETTINGS)
+
+        if self.__settings.is_user_primary_user:
+            y = self.__create_button(y, SB_LAPTOP_SETTINGS)
+            y = self.__create_button(y, SB_PUAVOPKG_INSTALLER)
+
         y = self.__create_separator(y)
 
-        if not (SETTINGS.is_guest or SETTINGS.is_webkiosk):
+        if not (self.__settings.is_guest or self.__settings.is_webkiosk):
             y = self.__create_button(y, SB_LOCK_SCREEN)
 
-        if not (SETTINGS.is_fatclient or SETTINGS.is_webkiosk):
+        if not (self.__settings.is_fatclient or self.__settings.is_webkiosk):
             y = self.__create_button(y, SB_SLEEP_MODE)
 
         y = self.__create_button(y, SB_LOGOUT)
         y = self.__create_separator(y)
         y = self.__create_button(y, SB_RESTART)
 
-        if not SETTINGS.is_webkiosk:
+        if not self.__settings.is_webkiosk:
             y = self.__create_button(y, SB_SHUTDOWN)
 
         logging.info('Support page URL: "%s"', SB_SUPPORT['command']['args'])
 
     # Creates a sidebar button
     def __create_button(self, y, data):
-        button = buttons.SidebarButton(self,
-                                       utils.localize(data['title']),
-                                       self.__icons[data['icon']],
-                                       utils.localize(data.get('description', '')),
-                                       data['command'])
+        button = buttons.SidebarButton(
+            self,
+            self.__settings,
+            utils.localize(data['title'], self.__settings.language),
+            self.__icons[data['icon']],
+            utils.localize(data.get('description', ''), self.__settings.language),
+            data['command'])
 
         button.connect('clicked', self.__clicked_sidebar_button)
         button.show()
@@ -488,7 +527,7 @@ class Sidebar:
                    utils.get_file_contents('/etc/puavo-image/release'),
                    utils.get_file_contents('/etc/puavo/hosttype'),
                    '',
-                   utils.localize(STRINGS['sb_changelog_title'])))
+                   utils.localize(STRINGS['sb_changelog_title'], self.__settings.language)))
 
         hostname_label.connect('activate-link', self.__clicked_changelog)
         hostname_label.show()
@@ -503,14 +542,14 @@ class Sidebar:
                 url=utils.expand_variables(
                     'https://$(puavo_domain)/users/profile/edit?lang=$(user_language)',
                     self.__variables),
-                title=utils.localize(STRINGS['sb_avatar_hover']),
+                title=utils.localize(STRINGS['sb_avatar_hover'], self.__settings.language),
                 width=1000,
                 height=650,
                 enable_js=True)     # The profile editor needs JavaScript
         except Exception as exception:
             logging.error(str(exception))
             self.__parent.error_message(
-                utils.localize(STRINGS['sb_avatar_link_failed']),
+                utils.localize(STRINGS['sb_avatar_link_failed'], self.__settings.language),
                 str(exception))
 
         self.__parent.autohide()
@@ -520,14 +559,14 @@ class Sidebar:
         try:
             web_window(
                 url=get_changelog_url(),
-                title=utils.localize(STRINGS['sb_changelog_window_title']),
+                title=utils.localize(STRINGS['sb_changelog_window_title'], self.__settings.language),
                 width=1000,
                 height=650,
                 enable_js=True)     # Markdown is used on the page, need JS
         except Exception as exception:
             logging.error(str(exception))
             self.__parent.error_message(
-                utils.localize(STRINGS['sb_changelog_link_failed']),
+                utils.localize(STRINGS['sb_changelog_link_failed'], self.__settings.language),
                 str(exception))
 
         self.__parent.autohide()
@@ -581,7 +620,7 @@ class Sidebar:
                     enable_js = settings.get('enable_js', False)
 
                     if title:
-                        title = utils.localize(title)
+                        title = utils.localize(title, self.__settings.language)
 
                 web_window(
                     url=arguments,
@@ -593,5 +632,5 @@ class Sidebar:
             logging.error('Could not process a sidebar button click!')
             logging.error(str(exception))
             self.__parent.error_message(
-                utils.localize(STRINGS['sb_button_failed']),
+                utils.localize(STRINGS['sb_button_failed'], self.__settings.language),
                 str(exception))

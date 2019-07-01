@@ -56,17 +56,6 @@ def run(*args)
   system(*args) or raise "Running system command #{ args } returned failure"
 end
 
-def grubedit(*args)
-  grubenv_path = '/images/boot/grub/grubenv'
-  begin
-    run('grub-editenv', grubenv_path, *args)
-  rescue StandardError => e
-    logerr(Syslog::LOG_ERR, "Creating new grubenv because of an error: %s\n", e.message)
-    run('grub-editenv', grubenv_path, 'create')
-    run('grub-editenv', grubenv_path, *args)
-  end
-end
-
 def send_changed_primary_user_to_puavo(primary_user)
   log(Syslog::LOG_NOTICE,
       "Sending overridden primary user %s to Puavo\n",
@@ -90,7 +79,8 @@ def update_device_json(restclient)
   # We override the primary_user information in device.json from
   # /state/etc/puavo/primary_user_override if that exists.
 
-  device_json_path = '/state/etc/puavo/device.json'
+  device_json_path       = '/etc/puavo/device.json'
+  state_device_json_path = "/state#{ device_json_path }"
 
   uripath = ($puavo_hosttype == 'bootserver' \
 	       ? "v3/boot_servers/#{ get_hostname() }" \
@@ -141,10 +131,10 @@ def update_device_json(restclient)
     device['conf']['puavo.admin.primary_user'] = primary_user_override
   end
 
-  tmp_filepath = "#{ device_json_path }.tmp"
+  tmp_filepath = "#{ state_device_json_path }.tmp"
   File.open(tmp_filepath, 'w') { |f| f.write(device.to_json) }
 
-  replace_if_changed(device_json_path, tmp_filepath)
+  replace_if_changed(state_device_json_path, tmp_filepath)
 
   if remove_primary_user_override then
     log(Syslog::LOG_NOTICE,
@@ -152,8 +142,11 @@ def update_device_json(restclient)
     FileUtils.rm_f('/state/etc/puavo/primary_user_override')
   end
 
-  run('puavo-conf-update',
-      '--devicejson-path', '/state/etc/puavo/device.json')
+  tmp_filepath = "#{ device_json_path }.tmp"
+  FileUtils.cp(state_device_json_path, tmp_filepath)
+  replace_if_changed(device_json_path, tmp_filepath)
+
+  run('puavo-conf-update')
 end
 
 def update_external_files(restclient)
@@ -166,32 +159,19 @@ end
 def update_grub_environment(restclient)
   log(Syslog::LOG_INFO, ">>> Updating grub environment\n")
 
-  kernel_version = puavoconf_get('puavo.kernel.version')
-  if kernel_version && !kernel_version.empty? then
-    grubedit('set', "puavo_kernel_version=#{ kernel_version }")
-  else
-    grubedit('unset', 'puavo_kernel_version')
+  errors = []
+  begin
+    run('/etc/puavo-conf/scripts/setup_grub_default')
+  rescue StandardError => e
+    errors << e
+  end
+  begin
+    run('/etc/puavo-conf/scripts/setup_grub_environment')
+  rescue StandardError => e
+    errors << e
   end
 
-  if puavoconf_get('puavo.admin.personally_administered') == 'true' then
-    grubedit('set', 'puavo_show_imageoverlays=true')
-  else
-    grubedit('unset', 'puavo_show_imageoverlays')
-  end
-
-  kernel_arguments = puavoconf_get('puavo.kernel.arguments')
-  if kernel_arguments && !kernel_arguments.empty? then
-    grubedit('set', "puavo_kernel_arguments=#{ kernel_arguments }")
-  else
-    grubedit('unset', 'puavo_kernel_arguments')
-  end
-
-  puavo_grub_theme = puavoconf_get('puavo.grub.theme')
-  if puavo_grub_theme && !puavo_grub_theme.empty? then
-    grubedit('set', "puavo_grub_theme=#{ puavo_grub_theme }")
-  else
-    grubedit('unset', 'puavo_grub_theme')
-  end
+  raise errors.first unless errors.empty?
 end
 
 def update_wlan_configurations(restclient)
@@ -202,6 +182,18 @@ def update_wlan_configurations(restclient)
                                  wlan_networks_uri,
                                  '/state/etc/puavo/wlan.json')
 end
+
+def update_puavopkg_installers(restclient)
+  unless puavoconf_get('puavo.admin.personally_administered') == 'true' then
+    log(Syslog::LOG_DEBUG,
+        "Not personally administered, so not updating puavo-pkg installers\n")
+    return
+  end
+
+  log(Syslog::LOG_INFO, ">>> Updating puavo-pkg installers\n")
+  run('puavo-pkg-update', '--update-installers')
+end
+
 
 def update_certificate(restclient)
   log(Syslog::LOG_INFO, ">>> Updating host certificate\n")
@@ -256,6 +248,7 @@ update_functions = [
                 :update_certificate,
                 :update_extra_boot_scripts,
                 :update_puavoadmins,
+                :update_puavopkg_installers,
 ]
 
 exitcode = 0

@@ -3,12 +3,11 @@
 set -eu
 
 rootfs=${1:-}
-image_class=${2:-}
-image_filename=${3:-}
-release_name=${4:-}
+image_filename=${2:-}
+release_name=${3:-}
 
-if [ -z "$rootfs" -o -z "$image_class" -o -z "$image_filename" ]; then
-  echo "Usage: $(basename $0) rootfs image_class image_filename" >&2
+if [ -z "$rootfs" -o -z "$image_filename" ]; then
+  echo "Usage: $(basename $0) rootfs image_filename" >&2
   exit 1
 fi
 
@@ -24,6 +23,5 @@ if [ -z "$release_name" ]; then
 fi
 
 mkdir -p "${rootfs}/etc/puavo-image"
-echo "$image_class"    > "${rootfs}/etc/puavo-image/class"
 echo "$image_filename" > "${rootfs}/etc/puavo-image/name"
 echo "$release_name"   > "${rootfs}/etc/puavo-image/release"

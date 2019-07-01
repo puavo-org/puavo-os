@@ -1,0 +1,1267 @@
+#!/usr/bin/python3
+
+# New user registration dialog
+
+import fcntl
+import gettext
+import gi
+import http.client
+import json
+import os
+import re
+import socket
+import subprocess
+import threading
+import time
+import unicodedata
+import sys
+
+gi.require_version('Gtk', '3.0')
+gi.require_version('WebKit2', '4.0')
+from gi.repository import GLib, Gtk, Gdk, GdkPixbuf, GObject
+from gi.repository import WebKit2
+
+# Where to load all resources. Must not end in a slash, or the CSS will break!
+DATA_ROOT = '/usr/share/puavo-user-registration'
+
+gettext.bindtextdomain('puavo-user-registration', '/usr/share/locale')
+gettext.textdomain('puavo-user-registration')
+_tr = gettext.gettext
+
+# Used when interpreting a failed server response
+FIELD_ERRORS = {
+    'first_name': {
+        'name': _tr('first name'),
+        'reasons': {
+            'empty': _tr('is empty'),
+            'failed_validation': _tr('contains bad characters'),
+        }
+    },
+
+    'last_name': {
+        'name': _tr('last name'),
+        'reasons': {
+            'empty': _tr('is empty'),
+            'failed_validation': _tr('contains bad characters'),
+        }
+    },
+
+    'username': {
+        'name': _tr('loginname'),
+        'reasons': {
+            'empty': _tr('is empty'),
+            'failed_validation': _tr('contains bad characters'),
+        }
+    },
+
+    'email': {
+        'name': _tr('email address'),
+        'reasons': {
+            'empty': _tr('is empty'),
+            'failed_validation': _tr('contains bad characters'),
+        }
+    },
+
+    'phone': {
+        'name': _tr('phone number'),
+        'reasons': {
+            'empty': _tr('is empty'),
+            'failed_validation': _tr('contains bad characters'),
+            'too_long': _tr('is too long'),
+        }
+    },
+}
+
+# These language codes must be the same that are configured/allowed
+# on the server!
+LANGUAGES = [
+    ('fi_FI.UTF-8', _tr('Finnish')),
+    ('sv_FI.UTF-8', _tr('Swedish')),
+    ('en_US.UTF-8', _tr('English')),
+    ('de_CH.UTF-8', _tr('German')),
+]
+
+USERNAME_FILTER = re.compile(r'[^a-z|0-9|.|\-]')
+
+host_ldap_password = None
+
+def go_to_desktop(app_window, widget):
+    dialog = Gtk.MessageDialog(app_window, 0, Gtk.MessageType.WARNING,
+       Gtk.ButtonsType.OK_CANCEL, _tr('Go to desktop?'))
+    dialog.format_secondary_text( _tr('Are you sure you do not want to create a user account?  Without user account, your files will be lost after your desktop session ends.'))
+    response = dialog.run()
+    if response == Gtk.ResponseType.OK:
+        Gtk.main_quit()
+        sys.exit(0)
+    dialog.destroy()
+
+
+def set_puavoconf_switch():
+    cmd = [ 'sudo', '-n',
+            '/usr/sbin/puavo-conf-local',
+            'puavo.xsessions.user_registration.enabled',
+            'false' ]
+    subprocess.check_call(cmd)
+
+
+def usage():
+    print("usage: puavo-user-registration [--at-session-startup]",
+          file=sys.stderr)
+    sys.exit(1)
+
+
+def set_widget_style(widget, class_name, style_provider):
+    ctx = widget.get_style_context()
+
+    ctx.add_class(class_name)
+    ctx.add_provider(style_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+
+class UserRegistration:
+    def __init__(self, builder, app_window, register_frame, at_session_startup):
+        self.builder = builder
+        self.app_window = app_window
+        self.register_frame = register_frame
+        self.at_session_startup = at_session_startup
+
+        self.username = None
+        self.password = None
+
+        # Get object handles
+        self.register_user_box = self.builder.get_object('register_user')
+        self.first_name_field  = self.builder.get_object('first_name')
+        self.last_name_field   = self.builder.get_object('last_name')
+        self.username_field    = self.builder.get_object('username')
+        self.username_hint     = self.builder.get_object('username_hint')
+        self.email_field       = self.builder.get_object('email')
+        self.email_hint        = self.builder.get_object('email_hint')
+        self.password_field    = self.builder.get_object('password')
+        self.password_confirm_field \
+            = self.builder.get_object('password_confirm')
+        self.language_combo    = self.builder.get_object('language')
+        self.phone_field       = self.builder.get_object('phone_number')
+        self.phone_hint        = self.builder.get_object('phone_number_hint')
+        self.spinner           = self.builder.get_object('registration_spinner')
+        self.status            = self.builder.get_object('status_message')
+
+        self.submit_button = self.builder.get_object('submit')
+        self.reset_button  = self.builder.get_object('reset')
+
+        self.username_change_signal = -1
+
+        self.network_thread = None
+        self.network_thread_event = None
+
+        self.email_hint.set_line_wrap(True)
+        self.email_hint.set_alignment(0.0, 0.0)     # don't center the text
+
+        try:
+            # It's not possible to specify the image pixel size in the .glade
+            # file, so load and resize the image manually, then set it
+            pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(
+                    filename=os.path.join(DATA_ROOT, 'contact_info.png'),
+                    width=-1,
+                    height=32,
+                    preserve_aspect_ratio=True)
+
+            self.builder.get_object('contact_info').set_from_pixbuf(pixbuf)
+        except Exception as e:
+            # The image does not exist, so don't display any contact info
+            self.builder.get_object('contact_info').hide()
+
+        # Setup initial values
+        for lang in LANGUAGES:
+            self.language_combo.insert(-1, lang[0], lang[1])
+
+        self.language_combo.set_active(0)
+
+        # Setup event handling
+        handlers = {
+            'on_first_name_changed': self.on_first_name_changed,
+            'on_last_name_changed': self.on_last_name_changed,
+            'on_username_changed': self.on_username_changed,
+            'on_email_changed': self.on_email_changed,
+            'on_password_changed': self.on_password_changed,
+            'on_password_confirm_changed': self.on_password_confirm_changed,
+            'on_language_changed': self.on_language_changed,
+            'on_phone_number_changed': self.on_phone_number_changed,
+
+            'on_submit_clicked': self.on_submit_clicked,
+            'on_reset_clicked': self.on_reset_clicked,
+
+            'on_destroy': self.on_destroy,
+        }
+
+        self.builder.connect_signals(handlers)
+
+        # Manually bind this event because we need the signal ID and
+        # connect_signals() won't return them
+        self.username_change_signal \
+            = self.username_field.connect('changed', self.on_username_changed)
+
+        self.set_username_hint_status(True)
+        self.set_submit_state()
+        self.status.set_text('')
+
+
+    def activate(self):
+        for child in self.register_frame.get_children():
+            self.register_frame.remove(child)
+        self.register_frame.add(self.register_user_box)
+
+        self.builder.get_object('titlebar_container').show()
+        self.builder.get_object('titlebar_text').set_label(_tr('Käyttäjätunnuksen luonti'))
+
+        self.first_name_field.grab_focus()
+
+
+    def show_info_message(self, parent, message, secondary_message=None):
+        """Show a modal information message box."""
+
+        dialog = Gtk.MessageDialog(parent=parent,
+                                   flags=Gtk.DialogFlags.MODAL,
+                                   type=Gtk.MessageType.INFO,
+                                   buttons=Gtk.ButtonsType.OK,
+                                   message_format=message)
+
+        if secondary_message:
+            dialog.format_secondary_markup(secondary_message)
+
+        dialog.run()
+        dialog.hide()
+
+
+    def show_error_message(self, parent, message, secondary_message=None):
+        """Show a modal error message box."""
+
+        dialog = Gtk.MessageDialog(parent=parent,
+                                   flags=Gtk.DialogFlags.MODAL,
+                                   type=Gtk.MessageType.ERROR,
+                                   buttons=Gtk.ButtonsType.OK,
+                                   message_format=message)
+
+        if secondary_message:
+            dialog.format_secondary_markup(secondary_message)
+
+        dialog.run()
+        dialog.hide()
+
+
+    def set_username_hint_status(self, is_good=True):
+        color = '#888' if is_good else '#f00'
+        msg = _tr('Loginnames may contain only characters a-z, 0-9, - and a dot.\nMust be at least three characters long.')
+        self.username_hint.set_markup(
+          '<span color="%s">%s</span>' % (color, msg))
+
+
+    def set_submit_state(self):
+        state = True
+
+        if len(self.first_name_field.get_text().strip()) == 0:
+            state = False
+
+        if len(self.last_name_field.get_text().strip()) == 0:
+            state = False
+
+        if len(self.username_field.get_text().strip()) < 3 or \
+          re.search(USERNAME_FILTER, self.username_field.get_text()) or \
+          self.username_field.get_text().strip()[0] not in 'abcdefghijklmnopqrstuvwxyz0123456789':
+            state = False
+
+        if len(self.email_field.get_text().strip()) == 0:
+            state = False
+
+        if len(self.password_field.get_text()) == 0:
+            state = False
+
+        if len(self.password_confirm_field.get_text()) == 0:
+            state = False
+
+        if self.password_field.get_text() != self.password_confirm_field.get_text():
+            state = False
+
+        self.submit_button.set_sensitive(state)
+
+
+    def enable_inputs(self, state):
+        for obj in self.builder.get_objects():
+            if obj is self.status:
+                continue
+
+            if isinstance(obj, Gtk.Entry) or \
+               isinstance(obj, Gtk.Label) or \
+               isinstance(obj, Gtk.Button) or \
+               isinstance(obj, Gtk.ComboBoxText):
+                obj.set_sensitive(state)
+
+
+    def update_username(self):
+        fn = self.first_name_field.get_text().strip()
+        ln = self.last_name_field.get_text().strip()
+
+        if len(fn) == 0 and len(ln) == 0:
+            username = ''
+        elif len(fn) > 0 and len(ln) == 0:
+            username = fn
+        elif len(fn) == 0 and len(ln) > 0:
+            username = ln
+        else:
+            username = fn + '.' + ln
+
+        username = username.lower()
+
+        # Decompose Unicode into separate combining characters
+        username = unicodedata.normalize('NFD', username)
+
+        # Then remove all bytes outside of the a-z/number/some punctuation range.
+        # All accents, diacritics, etc. will disappear, leaving only unaccented
+        # characters behind.
+        username = re.sub(USERNAME_FILTER, r'', username)
+
+        # Update the username without triggering a "changed" event
+        with self.username_field.handler_block(self.username_change_signal):
+            self.username_field.set_text(username)
+
+
+    def on_first_name_changed(self, edit):
+        self.update_username()
+        self.set_submit_state()
+
+
+    def on_last_name_changed(self, edit):
+        self.update_username()
+        self.set_submit_state()
+
+
+    def on_username_changed(self, edit):
+        username = edit.get_text()
+
+        if re.search(USERNAME_FILTER, username):
+            self.set_username_hint_status(False)
+        else:
+            self.set_username_hint_status(True)
+
+        self.set_submit_state()
+
+
+    def on_email_changed(self, edit):
+        self.set_submit_state()
+
+
+    def on_password_changed(self, edit):
+        self.set_submit_state()
+
+
+    def on_password_confirm_changed(self, edit):
+        self.set_submit_state()
+
+
+    def on_language_changed(self, combo):
+        self.set_submit_state()
+
+
+    def on_phone_number_changed(self, edit):
+        self.set_submit_state()
+
+
+    def handle_server_error(self, response):
+        self.show_error_message(self.app_window, _tr('Error'),
+           _tr('Something went wrong on the server.') \
+           + ' ' + _tr('Please contact support and give this code:') \
+           + '\n\n<big>{0}</big>'.format(response['log_id']))
+
+
+    def handle_server_400(self, response):
+        if response['status'] == 'missing_data':
+            if len(response['failed_fields']) > 0:
+                msg = _tr('Something is wrong in the following form fields.' \
+                          '  Check their contents and try again.')
+
+                for field in response['failed_fields']:
+                    error = FIELD_ERRORS[field['name']]
+                    msg += '- {0} {1}\n'.format(error['name'],
+                                                error['reasons'][field['reason']])
+
+                self.show_error_message(self.app_window,
+                                        _tr('Bad information'),
+                                        msg)
+
+        elif response['status'] == 'malformed_json':
+            # *we* sent invalid data :-(
+            self.show_error_message(self.app_window, _tr('Bad information'),
+              _tr('Registration program sent bad information to the server.') \
+                  + _tr('Please contact support and give this code:') \
+                  + '\n\n<big>{0}</big>'.format(response['log_id']))
+
+        elif response['status'] == 'incomplete_data':
+            # *we* sent incomplete/missing data :-(
+            self.show_error_message(self.app_window,
+              _tr('Missing information'),
+              _tr('Registration program did not send all required information' \
+                  ' to server.') \
+              + ' ' + _tr('Please contact support and give this code:') \
+              + '\n\n<big>{0}</big>'.format(response['log_id']))
+
+        elif response['status'] == 'invalid_username':
+            self.show_error_message(self.app_window, _tr('Invalid input'),
+              _tr('Loginname contains bad characters.'))
+
+        elif response['status'] == 'invalid_email':
+            self.show_error_message(self.app_window, _tr('Invalid input'),
+              _tr('Email address is not valid.'))
+
+        elif response['status'] == 'password_mismatch':
+            self.show_error_message(self.app_window, _tr('Invalid input'),
+              _tr('Password and its confirmation do not match.'))
+
+        elif response['status'] == 'invalid_language':
+            self.show_error_message(self.app_window, _tr('Invalid input'),
+              _tr('Language choice is invalid.'))
+
+        else:
+            self.show_error_message(self.app_window, _tr('Error'),
+               _tr('An unknown error occurred when handling user information.') \
+               + _tr('Please contact support and give this code:') \
+               + '\n\n<big>{0}</big>'.format(response['log_id']))
+
+
+    def handle_server_401(self, response):
+        if response['status'] == 'unknown_machine':
+            # This machine does not exist in the database
+            self.show_error_message(self.app_window,
+                _tr('Unregistered host'),
+                _tr('This host is not found from database.') \
+                + ' ' + _tr('Please contact support and give this code:') \
+                + '\n\n<big>{0}</big>'.format(response['log_id']))
+
+        elif response['status'] == 'device_already_in_use':
+            # This machine already has a user. THIS SHOULD NOT HAPPEN.
+            self.show_error_message(self.app_window, _tr('Host is in use.'),
+                _tr('User registration has already been done in this host.') \
+                 + ' ' + _tr('Please contact support and give this code:') \
+                + '\n\n<big>{0}</big>'.format(response['log_id']))
+
+        elif response['status'] == 'server_error':
+            self.handle_server_error(response)
+
+        else:
+            self.show_error_message(self.app_window, _tr('Error'),
+               _tr('Unknown error occurred when handling host information.' \
+               + _tr('Please contact support and give this code:') \
+               + '\n\n<big>{0}</big>'.format(response['log_id'])))
+
+
+    def handle_server_409(self, response):
+        if response['status'] == 'username_unavailable':
+            self.show_error_message(self.app_window,
+                _tr('Loginname already in use.'),
+                _tr('The loginname you have chosen is already in use.' \
+                    '  Choose another loginname.'))
+
+        elif response['status'] == 'username_too_short':
+            self.show_error_message(self.app_window,
+                _tr('Too Short Login Name'),
+                _tr('Your login name is too short. It must have at least three characters.'))
+
+        elif response['status'] == 'duplicate_email':
+            self.show_error_message(self.app_window,
+                _tr('Email address is already in use.'),
+                _tr('This email address is already in use.' \
+                    '  Use another address.') \
+                + '\n\n' \
+                + _tr('If using another email address is not possible,' \
+                     + ' contact support and give this code:') \
+                + '\n\n<big>{0}</big>'.format(response['log_id']))
+
+        else:
+            self.show_error_message(self.app_window, _tr('Error'),
+               _tr('An unknown error occurred when handling user information.') \
+               + ' ' + _tr('Please contact support and give this code:') \
+               + '\n\n<big>{0}</big>'.format(response['log_id']))
+
+
+    def handle_server_500(self, response):
+        self.handle_server_error(response)
+
+
+    def handle_network_error(self, msg):
+        self.show_error_message(self.app_window, _tr('Error'),
+            _tr('Can not contact server:') \
+            + '\n\n\t{0}\n\n'.format(msg) \
+            + _tr('Check network connection and try again.') \
+            + ' ' + _tr('If problem persists, contact support.'))
+
+
+    def idle_func(self, event, thread):
+        if event.is_set():
+            print('Thread event set, idle function is exiting')
+            self.status.set_text('')
+            self.spinner.stop()
+
+            if thread.response['failed']:
+                if thread.response['error'] == 'timeout':
+                    self.show_error_message(self.app_window, _tr('Error'),
+                        _tr('Server is not responding.' \
+                            '  Try again after a while.' \
+                            '  If the problem persists, contact support.'))
+                else:
+                    self.handle_network_error(thread.response['error'])
+            else:
+                self.interpret_server_response(
+                    thread.response['code'],
+                    thread.response['headers'],
+                    thread.response['data'])
+
+            self.enable_inputs(True)
+
+            # Remove the idle function
+            return False
+
+        # Don't make CPU fans spin. This idle function is called where there
+        # are no other messages to handle and that includes the server response
+        # waiting. It's a long time to listen to CPU fans whirring...
+        time.sleep(0.05)
+
+        # Don't remove the idle function yet
+        return True
+
+
+    def interpret_server_response(self, response_code, response_headers,
+      response_data):
+        # Parse the returned JSON
+        try:
+            print('Trying to parse server response |{0}|'.format(response_data))
+            server_data = response_data.decode('utf-8')
+            server_json = json.loads(server_data)
+        except Exception as e:
+            self.show_error_message(self.app_window, _tr('Error'),
+              _tr('Can not interpret the response sent by the server.') \
+              + '\n\n'
+              + _tr('Please contact support.'))
+            self.enable_inputs(True)
+            return
+
+        try:
+            if response_code == 400:            # missing/incomplete/invalid data
+                self.handle_server_400(server_json)
+                self.enable_inputs(True)
+                return
+            elif response_code == 401:          # device errors
+                self.handle_server_401(server_json)
+                self.enable_inputs(True)
+                return
+            elif response_code == 409:          # unavailable username/email
+                self.handle_server_409(server_json)
+                self.enable_inputs(True)
+                return
+            elif response_code == 500:          # server errors
+                self.handle_server_500(server_json)
+                self.enable_inputs(True)
+                return
+            elif response_code == 200:          # the good response
+                self.show_info_message(self.app_window,
+                    _tr('User account created'),
+                    _tr('Your user account has been created.') \
+                      + '\n\n' \
+                      + _tr('Have a nice time with your studies!'))
+
+                set_puavoconf_switch()
+                self.login_locally()
+                if self.at_session_startup:
+                    dialog = Gtk.MessageDialog(self.app_window, 0,
+                        Gtk.MessageType.INFO, Gtk.ButtonsType.OK,
+                        _tr('System must be rebooted, press OK when ready!'))
+                    dialog.run()
+                    subprocess.run([ 'systemctl', 'reboot', '-i'])
+                # Quit
+                Gtk.main_quit()
+
+                return
+
+            # All other return codes fall through to the "should not get here"
+            # block below
+
+        except Exception as e:
+            self.show_error_message(self.app_window,
+                _tr('Something went wrong'),
+                _tr('Could not interpret the response sent by the server.') \
+                  + ' ' + _tr('Please contact support.'))
+            return
+
+        # If we get here, something has gone horribly wrong
+        self.show_error_message(self.app_window,
+            _tr('Something went wrong'),
+            _tr('This situation should never happen, something is very wrong.')
+              + ' ' + _tr('Please contact support.'))
+
+
+    def login_locally(self):
+        error_msg = None
+
+        if not (self.username and self.password):
+            error_msg = _tr('internal error: username and password missing')
+
+        if not error_msg:
+            try:
+                cmd = [ 'sudo', '-n',
+                        '/usr/lib/puavo-ltsp-client/firstlogin-to-account',
+                        self.username ]
+                proc = subprocess.Popen(cmd, stdin=subprocess.PIPE,
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                proc.stdin.write(self.password.encode())
+                proc.stdin.close()
+                proc.wait()
+                if proc.returncode != 0:
+                    error_msg \
+                      = _tr('Could not do initial login with new user' \
+                            ' credentials.  Please remember your username' \
+                            ' "%s" for the first login.  Contact support if' \
+                            ' there are problems.') % self.username
+            except Exception as e:
+               error_msg = _tr('unknown login error') + ' ' + str(e)
+
+        if error_msg:
+            dialog = Gtk.MessageDialog(self.app_window, 0,
+                Gtk.MessageType.WARNING, Gtk.ButtonsType.OK, error_msg)
+            dialog.run()
+
+
+    def on_submit_clicked(self, button):
+        # --------------------------------------------------------------------------
+        # Gather data
+
+        user = {}
+        user['first_name'] = self.first_name_field.get_text().strip()
+        user['last_name'] = self.last_name_field.get_text().strip()
+        user['username'] = self.username_field.get_text()
+        user['email'] = self.email_field.get_text().strip()
+        user['password'] = self.password_field.get_text()
+        user['password_confirm'] = self.password_confirm_field.get_text()
+        user['language'] = LANGUAGES[self.language_combo.get_active()][0]
+        user['phone'] = self.phone_field.get_text().strip()
+
+        self.username = user['username']
+        self.password = user['password']
+
+        machine = {
+          'dn':       open('/etc/puavo/ldap/dn', 'rb').read() \
+                        .decode('utf-8').rstrip(),
+          'hostname': socket.gethostname(),
+          'password': host_ldap_password,
+        }
+
+        data = {}
+        data['user'] = user
+        data['machine'] = machine
+
+        json_data = json.dumps(data, ensure_ascii=False)
+
+        # --------------------------------------------------------------------------
+        # Launch a background thread
+
+        self.status.set_text(_tr('Sending information to server...'))
+        self.enable_inputs(False)
+        self.spinner.start()
+
+        self.network_thread_event = threading.Event()
+
+        self.network_thread = NetworkThread(json_data,
+                                            self.network_thread_event)
+        self.network_thread.daemon = True
+        self.network_thread.start()
+
+        # This will interpret the server's response
+        GLib.idle_add(self.idle_func, self.network_thread_event,
+            self.network_thread)
+
+
+    def on_reset_clicked(self, button):
+        self.first_name_field.set_text('')
+        self.last_name_field.set_text('')
+
+        with self.username_field.handler_block(self.username_change_signal):
+            self.username_field.set_text('')
+
+        self.email_field.set_text('')
+        self.password_field.set_text('')
+        self.password_confirm_field.set_text('')
+        self.language_combo.set_active(0)        # triggers a "change" event, but it's okay
+        self.phone_field.set_text('')
+
+        self.submit_button.set_sensitive(False)
+
+        self.first_name_field.grab_focus()
+
+
+    def on_destroy(self, *args):
+        Gtk.main_quit()
+
+
+class WifiConnector:
+    def __init__(self, builder, user_registration, register_frame):
+        self.user_registration = user_registration
+        self.register_frame = register_frame
+
+        self.builder = builder
+
+        self.wifi_connector_box = builder.get_object('wifi_connector_box')
+        self.wifi_connect_pid = None
+
+        self.networks = {}
+        self.network_choice_widget = builder.get_object('networks_list')
+        self.network_choice_widget.connect('row-activated',
+                                           self.wifi_connection_chosen)
+        self.searching_for_networks = True
+
+        self.password_entry = builder.get_object('network_password_entry')
+        self.password_entry.connect('activate', self.connect_to_wifi)
+        self.password_entry.connect('changed', self.password_changed)
+
+        self.spinner = builder.get_object('network_connector_spinner')
+        self.connection_status = builder.get_object('network_connection_status')
+
+        self.wifi_title = builder.get_object('wifi_connector_description')
+
+        self.connect_button = builder.get_object('network_connect_button')
+        self.connect_button.connect('clicked', self.connect_to_wifi)
+
+        self.network_ssid = None
+
+
+    def activate(self):
+        for child in self.register_frame.get_children():
+            self.register_frame.remove(child)
+        self.register_frame.add(self.wifi_connector_box)
+
+        self.builder.get_object('titlebar_container').show()
+        self.builder.get_object('titlebar_text').set_label(_tr('Verkkoyhteyden määritys'))
+
+
+    def password_changed(self, widget):
+        wifi_password = self.password_entry.get_buffer().get_text()
+        if wifi_password:
+            self.connect_button.set_sensitive(True)
+        else:
+            self.connect_button.set_sensitive(False)
+
+
+    def remove_all_wireless_connections(self):
+        cmd = [ 'env', 'LANG=C', 'nmcli', '-t', '-f', 'NAME,TYPE',
+                'connection', 'show' ]
+        output = subprocess.check_output(cmd).rstrip().decode('utf-8')
+        for connection_line in output.split("\n"):
+            connection_line_fields = connection_line.split(':')
+            if len(connection_line_fields) != 2:
+                continue
+            (connection_name, connection_type) = connection_line_fields
+            if "wireless" in connection_type:
+                cmd = [ 'nmcli', 'connection', 'delete', connection_name ]
+                subprocess.run(cmd)
+
+
+    def connect_to_wifi(self, widget):
+        if not self.network_ssid:
+            return
+        if self.wifi_connect_pid:
+            return
+
+        # The connect operation always creates a new connection to
+        # NetworkManager configuration even if it fails.  Clear up all
+        # previous wireless connections (yes this is a big hammer).
+        self.remove_all_wireless_connections()
+
+        wifi_password = self.password_entry.get_buffer().get_text()
+
+        cmd = [ '/usr/bin/env', 'LANG=C', 'nmcli', 'device', 'wifi', 'connect',
+                self.network_ssid ]
+        if wifi_password:
+            cmd += [ 'password' ]
+            cmd += [ wifi_password ]
+
+        self.wifi_connect_output = ''
+
+        flags = GLib.SPAWN_DO_NOT_REAP_CHILD|GObject.SPAWN_STDERR_TO_DEV_NULL
+        (self.wifi_connect_pid, stdin, stdout, stderr) \
+            = GObject.spawn_async(cmd, flags=flags, standard_output=True)
+
+        fl = fcntl.fcntl(stdout, fcntl.F_GETFL)
+        fcntl.fcntl(stdout, fcntl.F_SETFL, fl | os.O_NONBLOCK)
+
+        GObject.io_add_watch(stdout,
+                             GObject.IO_HUP|GObject.IO_IN,
+                             self.wifi_connect_callback,
+                             os.fdopen(stdout))
+
+        self.connect_button.set_sensitive(False)
+        self.spinner.start()
+        self.connection_status.set_text(
+          _tr('connecting to %s') % self.network_ssid)
+
+
+    def wifi_connect_callback(self, fd, condition, channel):
+        if condition & GObject.IO_IN:
+            self.wifi_connect_output += channel.read()
+
+        if condition & GObject.IO_HUP:
+            channel.close()
+            (pid, status) = os.waitpid(self.wifi_connect_pid, 0)
+            self.wifi_connect_pid = None
+            self.spinner.stop()
+
+            # status should be > 0 in case of error, but it is not,
+            # so instead we look at the output :-(
+            if "successfully activated" in self.wifi_connect_output:
+                self.connection_status.set_text(_tr('connection successful'))
+                self.user_registration.activate()
+            else:
+                self.connection_status.set_text(
+                  _tr('error connecting to network'))
+                self.remove_all_wireless_connections()
+            self.wifi_connect_output = ''
+
+            return False
+
+        return True
+
+
+    def wifi_connection_chosen(self, listbox, row):
+        for network_ssid, network_info in self.networks.items():
+            if network_info['widget'] == row:
+                self.network_ssid = network_ssid
+                break
+
+        self.wifi_title.set_label(_tr('Connect to network') + ' ' + network_ssid)
+
+        network_info = self.networks[self.network_ssid]
+        self.password_entry.set_text('')
+        if network_info['security']:
+            self.connect_button.set_sensitive(False)
+            self.password_entry.grab_focus()
+            self.password_entry.set_sensitive(True)
+        else:
+            self.connect_button.grab_focus()
+            self.connect_button.set_sensitive(True)
+            self.password_entry.set_sensitive(False)
+
+
+    def ask_if_wireless_network_is_wanted(self, app_window):
+        short_msg = _tr('Join wireless network?')
+        long_msg = _tr('You are connected to a network that is not a' \
+                         + ' wireless network.  Do you want to join'  \
+                         + ' a wireless network?')
+        dialog = Gtk.MessageDialog(app_window, 0, Gtk.MessageType.QUESTION,
+            Gtk.ButtonsType.YES_NO, short_msg)
+        dialog.format_secondary_text(long_msg)
+        response = dialog.run()
+        dialog.destroy()
+        return response == Gtk.ResponseType.YES
+
+
+    def ask_if_wifi_network_is_okay(self, app_window, network_ssid):
+        short_msg = _tr('Use network "%s"?') % network_ssid
+        long_msg = _tr('You are connected to network "%s",' \
+                       ' do you want to use this network?') % network_ssid
+        dialog = Gtk.MessageDialog(app_window, 0, Gtk.MessageType.QUESTION,
+            Gtk.ButtonsType.YES_NO, short_msg)
+        dialog.format_secondary_text(long_msg)
+        response = dialog.run()
+        dialog.destroy()
+        return response == Gtk.ResponseType.YES
+
+
+    def check_network_connectivity(self):
+        # XXX how are exceptions handled, for example here?
+        cmd = [ 'env', 'LANG=C', 'nmcli', 'networking', 'connectivity' ]
+        output = subprocess.check_output(cmd).rstrip().decode('utf-8')
+        return output == 'full'
+
+
+    def prepare_ui_and_activate(self, app_window):
+        cmd = [ 'nmcli', 'radio', 'wifi', 'on' ]
+        output = subprocess.run(cmd)
+
+        wireless_active = False
+        self.update_networks_info()
+        for network_ssid, network_info in self.networks.items():
+            if network_info['active']:
+                wireless_active = True
+                if self.ask_if_wifi_network_is_okay(app_window, network_ssid):
+                    self.user_registration.activate()
+                    return
+                break
+
+        if not wireless_active and self.check_network_connectivity():
+            if not self.ask_if_wireless_network_is_wanted(app_window):
+                self.user_registration.activate()
+                return
+
+        GObject.timeout_add_seconds(8, self.update_networks_info)
+
+        self.activate()
+
+
+    def update_networks_info(self):
+        new_networks = {}
+
+        cmd = [ 'env', 'LANG=C', 'nmcli', '-t', '-f',
+                'SSID,ACTIVE,SIGNAL,SECURITY', 'dev', 'wifi', 'list' ]
+        output = subprocess.check_output(cmd).rstrip().decode('utf-8')
+        for network_line in output.split("\n"):
+            network_line_fields = network_line.split(':')
+            if len(network_line_fields) != 4:
+                continue
+
+            (ssid, active_str, signal, security) = network_line_fields
+            active = False
+            if active_str == 'yes':
+                active = True
+
+            if not ssid in new_networks:
+                new_networks[ssid] = { 'active':   active,
+                                       'signal':   0,
+                                       'security': security }
+            if not new_networks[ssid]['active']:
+                new_networks[ssid]['active'] = active
+            if not new_networks[ssid]['security']:
+                new_networks[ssid]['security'] = security
+            try:
+                max_signal = max(int(signal), new_networks[ssid]['signal'])
+                new_networks[ssid]['signal'] = max_signal
+            except ValueError:
+                pass
+
+        sorted_by_signal = sorted(new_networks,
+                                  key=lambda x: new_networks.get(x)['signal'],
+                                  reverse=True)
+
+        # add new interface elements
+        for network_ssid in sorted_by_signal:
+            if network_ssid in self.networks:
+                continue
+
+            network = new_networks[network_ssid]
+
+            row_container = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+
+            ssid_label = Gtk.Label(network_ssid)
+
+            security = network['security']
+
+            if security is None or len(security) == 0:
+                security = '?'
+
+            signal = str(network['signal'])
+
+            if len(signal) == 0:
+                signal = '?'
+
+            signal_label = Gtk.Label('%s (%s%%)' % (security, signal))
+
+            row_container.pack_start(ssid_label, False, False, 0)
+            row_container.pack_end(signal_label, False, False, 0)
+
+            #row_container.set_property('tooltip-text', '')
+
+            row = Gtk.ListBoxRow()
+            row.add(row_container)
+
+            self.network_choice_widget.add(row)
+            self.networks[network_ssid] = new_networks[network_ssid]
+            self.networks[network_ssid]['widget'] = row
+
+        # remove old interface elements
+        for network_ssid in self.networks.copy():
+            if network_ssid in new_networks:
+                continue
+            self.networks[network_ssid]['widget'].destroy()
+            del self.networks[network_ssid]
+            if self.network_ssid == network_ssid:
+               self.network_ssid = None
+
+        # choose first network in case self.network_ssid is not set
+        for network_ssid in sorted_by_signal:
+            if not self.network_ssid:
+                row = self.networks[network_ssid]['widget']
+                self.network_choice_widget.select_row(row)
+                # this sets self.network_ssid:
+                self.wifi_connection_chosen(self.network_choice_widget, row)
+
+        if len(self.networks) == 0:
+            self.spinner.start()
+            self.connection_status.set_text('searching for networks')
+            self.searching_for_networks = True
+        elif self.searching_for_networks:
+            self.spinner.stop()
+            self.connection_status.set_text('')
+            self.searching_for_networks = False
+
+        self.network_choice_widget.show_all()
+
+        return True
+
+
+class NetworkThread(threading.Thread):
+    def __init__(self, json, event):
+        super().__init__()
+        self.json = json
+        self.event = event
+        self.response = {}
+
+
+    def run(self):
+        self.response['failed'] = False
+        self.response['error'] = None
+
+        response = None
+
+        headers = {
+            'Content-type': 'application/json',
+        }
+
+        conn = None
+
+        try:
+            server_addr = open('/etc/puavo/domain', 'rb').read().decode('utf-8').rstrip()
+
+            conn = http.client.HTTPSConnection(server_addr, timeout=10)
+            conn.request('POST',
+                         '/register_user',
+                         body=bytes(self.json, 'utf-8'),
+                         headers=headers)
+
+            # Must read the response here, because the "finally" handler
+            # closes the connection and that happens before we can read
+            # the response
+            response = conn.getresponse()
+            self.response['code'] = response.status
+            self.response['headers'] = response.getheaders()
+            self.response['data'] = response.read()
+
+        except socket.timeout as st:
+            self.response['error'] = 'timeout'
+            self.response['failed'] = True
+        except http.client.HTTPException as e:
+            self.response['error'] = e
+            self.response['failed'] = True
+        except Exception as e:
+            self.response['error'] = e
+            self.response['failed'] = True
+        finally:
+            if conn:
+                conn.close()
+
+        self.event.set()
+        print('Network thread exiting')
+
+
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+# THE PRIVACY POLICY DIALOG
+
+class PrivacyPolicy(Gtk.Dialog):
+    def __init__(self, parent):
+        Gtk.Dialog.__init__(self, _tr('Privacy Policy'), parent, 0,
+                            (Gtk.STOCK_OK, Gtk.ResponseType.OK))
+
+        self.set_title(_tr('Privacy Policy'))
+        self.set_default_size(1000, 500)
+        self.set_position(Gtk.WindowPosition.CENTER)
+
+        manager = WebKit2.WebsiteDataManager.new_ephemeral()
+        context = WebKit2.WebContext.new_with_website_data_manager(manager)
+        self.webview = WebKit2.WebView.new_with_context(context)
+        settings = WebKit2.Settings()
+        settings.set_enable_javascript(False)
+        settings.set_enable_java(False)
+        settings.set_enable_plugins(False)
+
+        self.webview.set_settings(settings)
+        self.webview.connect('context_menu', self.block_context_menu)
+
+        policy_file = 'file://%s' % os.path.join(DATA_ROOT, 'privacy_policy.html')
+        self.webview.load_uri(policy_file)
+
+        # TODO: The content area does not seem to resize its child elements
+        # automatically?
+        self.webview.set_size_request(-1, 500)
+
+        self.get_content_area().add(self.webview)
+        self.get_content_area().show_all()
+
+        self.show()
+
+
+    def block_context_menu(self, webview, context_menu, event, hit_test_result):
+        # Completely block the context menu
+        return True
+
+
+def show_privacy_policy(parent):
+    dlg = PrivacyPolicy(main_window)
+
+    dlg.run()
+    dlg.destroy()
+
+
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+# MAIN
+
+# XXX Always use session startup mode for now.  Maybe later fix the normal
+# XXX mode (intended for user registration only) or remove it.
+at_session_startup = True
+if len(sys.argv) == 1:
+    pass
+elif len(sys.argv) == 2:
+    if sys.argv[1] != '--at-session-startup':
+        usage()
+    at_session_startup = True
+else:
+    usage()
+
+# ------------------------------------------------------------------------------
+# Load and setup custom CSS for the program
+
+try:
+    width = Gdk.Screen.get_default().width()
+except:
+    width = 1366
+
+if width == 1366:
+    background_size = 1366
+    padding_top = 30
+    padding_right = 100
+    font_scale = 100
+else:
+    background_size = 1920
+    padding_top = 100
+    padding_right = 150
+    font_scale = 150
+
+CSS_VARIABLES = {
+    '$(DATA_ROOT)': DATA_ROOT,
+    '$(BACKGROUND_SIZE)': background_size,
+    '$(PADDING-TOP)': padding_top,
+    '$(PADDING-RIGHT)': padding_right,
+    '$(FONT_SCALE)': font_scale
+}
+
+css = open(os.path.join(DATA_ROOT, 'puavo-user-registration.css')).read()
+
+for key, value in CSS_VARIABLES.items():
+    css = css.replace(key, str(value))
+
+style_provider = Gtk.CssProvider()
+style_provider.load_from_data(bytes(css, 'utf-8'))
+
+Gtk.StyleContext.add_provider_for_screen(
+    Gdk.Screen.get_default(),
+    style_provider,
+    Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+# ------------------------------------------------------------------------------
+# Setup the main window
+
+builder = Gtk.Builder()
+builder.set_translation_domain('puavo-user-registration')
+builder.add_from_file(os.path.join(DATA_ROOT, 'puavo-user-registration.glade'))
+
+main_window = builder.get_object('main_window')
+upper_frame = builder.get_object('upper_frame')
+main_window.set_icon_name('user-info')
+main_window.fullscreen()
+
+main_window.connect('destroy', lambda w: Gtk.main_quit())
+
+if os.path.exists(os.path.join(DATA_ROOT, 'privacy_policy.html')):
+    builder.get_object('privacy_policy').connect(
+        'clicked', lambda x: show_privacy_policy(main_window))
+    builder.get_object('privacy_policy').show()
+else:
+    # No license privacy available
+    builder.get_object('privacy_policy').hide()
+
+try:
+    get_password_cmd = [ 'sudo', '-n', 'cat', '/etc/puavo/ldap/password' ]
+    host_ldap_password = subprocess.check_output(get_password_cmd) \
+                           .decode('utf-8').rstrip()
+except subprocess.CalledProcessError:
+    errmsg = _tr('You do not have the required permissions to use this tool.')
+    dialog = Gtk.MessageDialog(main_window, 0, Gtk.MessageType.ERROR,
+               Gtk.ButtonsType.CANCEL, errmsg)
+    dialog.run()
+    sys.exit(1)
+
+go_to_desktop_button = builder.get_object('go_to_desktop')
+go_to_desktop_button.show()
+
+if at_session_startup:
+    go_to_desktop_button.connect('clicked',
+                                 lambda x: go_to_desktop(main_window, x))
+else:
+    go_to_desktop_button.connect('clicked', lambda x: Gtk.main_quit())
+
+user_registration = UserRegistration(builder, main_window, upper_frame,
+                                     at_session_startup)
+
+# Create the welcome screen
+welcome_label = Gtk.Label('Tervetuloa!')
+welcome_label.get_style_context().add_class('welcome_label')
+
+welcome_text = Gtk.Label()
+welcome_text.set_markup('Uuden kannettavasi käyttöönottamiseksi, sinut opastetaan seuraavaksi:\n\n' \
+'<span color="#0f0"><big>1.</big></span> Liittymään langattomaan verkkoon\n' \
+'<span color="#0f0"><big>2.</big></span> Rekisteröimään itsellesi uusi käyttäjätunnus')
+welcome_text.get_style_context().add_class('welcome_text')
+
+welcome_footer = Gtk.Label()
+welcome_footer.set_markup('<span color="#0f0">Vinkki:</span> Mikäli et pysty liittämään kannettavaa verkkoon juuri nyt, ' \
+'voit tehdä sen myös\nmyöhemmin ja käyttää konetta tilapäisesti ' \
+'vieras-tilassa napsauttamalla alareunassa\nolevaa <i>"Siirry työpöydälle"</i> -painiketta.')
+welcome_footer.get_style_context().add_class('welcome_footer')
+
+welcome_button = Gtk.Button('Jatka')
+welcome_button.set_size_request(250, 50)
+
+welcome_container = Gtk.Fixed()
+
+if width == 1366:
+    welcome_container.put(welcome_label, 700, 100)
+    welcome_container.put(welcome_text, 550, 250)
+    welcome_container.put(welcome_footer, 550, 450)
+    welcome_container.put(welcome_button, 700, 600)
+else:
+    welcome_container.put(welcome_label, 900, 150)
+    welcome_container.put(welcome_text, 750, 350)
+    welcome_container.put(welcome_footer, 750, 600)
+    welcome_container.put(welcome_button, 900, 800)
+
+main_container = builder.get_object('main_container')
+main_container.add(welcome_container)
+
+builder.get_object('titlebar_container').hide()
+
+main_container.show_all()
+upper_frame.hide()
+
+def welcome_step2(main_window, builder, welcome_container, upper_frame):
+    welcome_container.hide()
+    welcome_container = None
+    upper_frame.show()
+
+    if at_session_startup:
+        wifi_connector = WifiConnector(builder, user_registration, upper_frame)
+        wifi_connector.prepare_ui_and_activate(main_window)
+        main_window.set_decorated(False)
+        main_window.set_deletable(False)
+        main_window.set_skip_pager_hint(True)
+        main_window.set_skip_taskbar_hint(True)
+    else:
+        user_registration.activate()
+
+welcome_button.connect('clicked', \
+    lambda x: welcome_step2(main_window, builder, welcome_container, upper_frame))
+
+main_window.show()
+
+Gtk.main()

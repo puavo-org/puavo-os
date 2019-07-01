@@ -1,10 +1,5 @@
 # PuavoMenu constants
 
-# Program types. Desktop is the default.
-PROGRAM_TYPE_DESKTOP = 0
-PROGRAM_TYPE_CUSTOM = 1
-PROGRAM_TYPE_WEB = 2
-
 # Size of the main menu window. Can be changed, but you have to change
 # other element sizes too to accommodate the new size.
 WINDOW_WIDTH = 955

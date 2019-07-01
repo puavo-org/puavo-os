@@ -6,51 +6,80 @@ if [ -e /run/puavo/nbd-server ]; then
   exit 0
 fi
 
-if [ "$(puavo-conf puavo.admin.personally_administered)" != 'true' ]; then
-  exit 0
-fi
+grubedit() {
+  grubenv_path='/images/boot/grub/grubenv'
+  if ! grub-editenv "$grubenv_path" "$@"; then
+    echo 'Creating new grubenv because of an error' >&2
+    grub-editenv "$grubenv_path" create
+    grub-editenv "$grubenv_path" "$@"
+  fi
+}
 
-image_path=$(puavo-conf puavo.image.path)
-if [ -z "$image_path" ]; then
-  echo 'Could not determine puavo.image.path' >&2
-  exit 1
-fi
+setup_puavo_os_boot_default() {
+  grubedit set "puavo_grub_boot_default=puavo-os"
 
-read this_puavoimage_name < /etc/puavo-image/name
+  if [ "$(puavo-conf puavo.admin.personally_administered)" != 'true' ]; then
+    grubedit unset default
+    return 0
+  fi
 
-development_mode=false
-if [ "$(puavo-conf puavo.image.overlay)" = 'personal' ]; then
-  development_mode=true
-fi
+  image_path=$(puavo-conf puavo.image.path)
+  if [ -z "$image_path" ]; then
+    echo 'Could not determine puavo.image.path' >&2
+    return 1
+  fi
+  read this_puavoimage_name < /etc/puavo-image/name
 
-# XXX localisations are needed
-# XXX check out puavo-install-grub for the description format here
-case "$image_path" in
-  /ltsp.img)
-    if $development_mode; then
-      grub_description='Kehittäjätila'
-    else
-      grub_description='Normaali käynnistys'
-    fi
+  development_mode=false
+  if [ "$(puavo-conf puavo.image.overlay)" = 'personal' ]; then
+    development_mode=true
+  fi
+
+  # XXX localisations are needed
+  # XXX check out puavo-install-grub for the description format here
+  case "$image_path" in
+    /ltsp.img)
+      if $development_mode; then
+        grub_description='Kehittäjätila'
+      else
+        grub_description='Normaali käynnistys'
+      fi
+      ;;
+    /ltsp-backup.img)
+      if $development_mode; then
+        grub_description='Varajärjestelmä, kehittäjätila'
+      else
+        grub_description='Varajärjestelmä, normaali käynnistys'
+      fi
+      ;;
+    *)
+      if $development_mode; then
+        grub_description='Muu järjestelmä, kehittäjätila'
+      else
+        grub_description='Muu järjestelmä, normaali käynnistys'
+      fi
+      ;;
+  esac
+
+  grub_default="${grub_description} - (lvm/puavo-images)/${this_puavoimage_name} (${image_path})"
+
+  grubedit set "default=${grub_default}"
+}
+
+boot_default="$(puavo-conf puavo.grub.boot_default)"
+case "$boot_default" in
+  abitti)
+    grubedit set "puavo_grub_boot_default=abitti"
+    grubedit unset default
     ;;
-  /ltsp-backup.img)
-    if $development_mode; then
-      grub_description='Varajärjestelmä, kehittäjätila'
-    else
-      grub_description='Varajärjestelmä, normaali käynnistys'
-    fi
+  puavo-os)
+    setup_puavo_os_boot_default
+    ;;
+  windows)
+    grubedit set "puavo_grub_boot_default=windows"
+    grubedit unset default
     ;;
   *)
-    if $development_mode; then
-      grub_description='Muu järjestelmä, kehittäjätila'
-    else
-      grub_description='Muu järjestelmä, normaali käynnistys'
-    fi
+    echo "Unsupported boot mode '${boot_default}'" >&2
     ;;
 esac
-
-grub_default="${grub_description} - (lvm/puavo-images)/${this_puavoimage_name} (${image_path})"
-
-/usr/bin/grub-editenv /images/boot/grub/grubenv \
-                      set                       \
-                      "default=${grub_default}"

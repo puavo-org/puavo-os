@@ -1,0 +1,297 @@
+#!/usr/bin/python3
+
+import fcntl
+import gettext
+import gi
+import os
+import subprocess
+import sys
+
+gi.require_version('Gtk', '3.0')
+from gi.repository import GObject, Gtk
+
+gettext.bindtextdomain('puavo-laptop-setup', '/usr/share/locale')
+gettext.textdomain('puavo-laptop-setup')
+_tr = gettext.gettext
+
+def puavoconf_get(puavoconf_key):
+    return subprocess.check_output([ 'puavo-conf', puavoconf_key ]).rstrip() \
+                     .decode('utf-8')
+
+def we_have_windows():
+    return os.path.exists('/images/boot/.puavo_windows_partition')
+
+
+class PuavoLaptopSetup:
+    def __init__(self, app_window, builder):
+        self.app_window = app_window
+        self.builder = builder
+        self.puavo_conf = {
+            'puavo.abitti.version':               None,
+            'puavo.grub.boot_default':            None,
+            'puavo.grub.developer_mode.enabled':  None,
+            'puavo.grub.windows.enabled':         None,
+        }
+        self.initializing_ui = True
+        self.save_state_flag = True
+
+
+    def prepare(self):
+        self.puavo_conf_grid = builder.get_object('puavo_conf_grid')
+
+        self.abitti_version_latest_button \
+          = builder.get_object('abitti_version_latest')
+        self.abitti_version_any_button \
+          = builder.get_object('abitti_version_any')
+        self.abitti_version_entry = builder.get_object('abitti_version')
+        self.abitti_version_entry_error \
+          = builder.get_object('abitti_version_error')
+
+        self.boot_abitti_button   = builder.get_object('boot_abitti')
+        self.boot_puavo_os_button = builder.get_object('boot_puavo_os')
+        self.boot_windows_button  = builder.get_object('boot_windows')
+
+        self.developer_mode_switch = builder.get_object('developer_mode_switch')
+        self.use_windows_switch = builder.get_object('use_windows_switch')
+
+        self.abitti_version_latest_button.connect('toggled',
+            self.abitti_version_latest_chosen)
+
+        self.abitti_version_any_button.connect('toggled',
+                                               self.abitti_version_any_chosen)
+        self.abitti_version_entry.connect('changed',
+                                          self.abitti_version_entry_changed)
+
+        self.boot_abitti_button.connect('toggled', self.boot_abitti_chosen)
+        self.boot_puavo_os_button.connect('toggled', self.boot_puavo_os_chosen)
+        self.boot_windows_button.connect('toggled', self.boot_windows_chosen)
+        self.developer_mode_switch.connect('notify::active',
+            self.developer_mode_switch_changed)
+        self.use_windows_switch.connect('notify::active',
+            self.use_windows_switch_changed)
+
+        self.remove_entries_without_puavoconf()
+        self.update_gui_state_from_puavoconf()
+
+        GObject.timeout_add(500, self.save_state)
+        self.initializing_ui = False
+
+
+    def abitti_version_latest_chosen(self, widget):
+        if not widget.get_active():
+            return
+        widget.grab_focus()
+        self.set_abitti_version('latest')
+
+
+    def set_abitti_version(self, version):
+        version = version.strip()
+        if version == '':
+            version = 'latest'
+        elif version == 'latest':
+            pass
+        else:
+            try:
+                version_number = int(version)
+                version = 'abitti-v%d' % version_number
+            except ValueError:
+                error_msg =  _tr('should be a number')
+                self.abitti_version_entry_error.set_markup(
+                  '<span color="red"><b>%s</b></span>' % error_msg)
+                return
+
+        self.abitti_version_entry_error.set_text('')
+        self.puavo_conf['puavo.abitti.version'] = version
+        self.save_state_flag = True
+
+
+    def abitti_version_any_chosen(self, widget):
+        if not widget.get_active():
+            return
+        self.abitti_version_entry.grab_focus()
+        self.set_abitti_version( self.abitti_version_entry.get_text() )
+
+
+    def abitti_version_entry_changed(self, widget):
+        if self.abitti_version_any_button.get_active():
+            self.set_abitti_version( self.abitti_version_entry.get_text() )
+
+
+    def boot_abitti_chosen(self, widget):
+        if not widget.get_active():
+            return
+        self.puavo_conf['puavo.grub.boot_default'] = 'abitti'
+        self.save_state_flag = True
+
+
+    def boot_puavo_os_chosen(self, widget):
+        if not widget.get_active():
+            return
+        self.puavo_conf['puavo.grub.boot_default'] = 'puavo-os'
+        self.save_state_flag = True
+
+
+    def boot_windows_chosen(self, widget):
+        if not widget.get_active():
+            return
+        self.puavo_conf['puavo.grub.boot_default'] = 'windows'
+        self.save_state_flag = True
+
+
+    def developer_mode_switch_changed(self, widget, gparam):
+        if widget.get_active():
+            self.puavo_conf['puavo.grub.developer_mode.enabled'] = 'true'
+        else:
+            self.puavo_conf['puavo.grub.developer_mode.enabled'] = 'false'
+        self.save_state_flag = True
+
+
+    def use_windows_switch_changed(self, widget, gparam):
+        if widget.get_active():
+            self.puavo_conf['puavo.grub.windows.enabled'] = 'true'
+            self.boot_windows_button.set_sensitive(True)
+
+            if not self.initializing_ui:
+                msg = _tr('It is now possible to choose Windows from' \
+                          ' the boot menu when starting up the computer.')
+                if self.boot_abitti_button:
+                    msg += '  ' \
+                       + _tr('Abitti is not updated when running Windows,' \
+                             ' you have to boot into the current system to update it.')
+                dialog = Gtk.MessageDialog(self.app_window, 0,
+                  Gtk.MessageType.WARNING, Gtk.ButtonsType.OK,
+                  msg)
+                dialog.run()
+                dialog.destroy()
+
+        else:
+            self.puavo_conf['puavo.grub.windows.enabled'] = 'false'
+            self.boot_windows_button.set_sensitive(False)
+            if self.boot_windows_button.get_active():
+                self.boot_puavo_os_button.set_active(True)
+        self.save_state_flag = True
+
+
+    def remove_entries_without_puavoconf(self):
+        remove_gui_elements = {}
+
+        if not we_have_windows():
+            self.boot_windows_button.destroy()
+            self.boot_windows_button = None
+            del self.puavo_conf['puavo.grub.windows.enabled']
+            remove_gui_elements['puavo.grub.windows.enabled'] = True
+
+        for puavo_conf_key in self.puavo_conf.copy():
+            try:
+                self.puavo_conf[puavo_conf_key] = puavoconf_get(puavo_conf_key)
+            except subprocess.CalledProcessError:
+                print("could not get puavo-conf key for %s" % puavo_conf_key,
+                      file=sys.stderr)
+                del self.puavo_conf[puavo_conf_key]
+                remove_gui_elements[puavo_conf_key] = True
+                if puavo_conf_key == 'puavo.abitti.version':
+                    self.boot_abitti_button.destroy()
+                    self.boot_abitti_button = None
+
+        if not self.boot_abitti_button and not self.boot_windows_button:
+            del self.puavo_conf['puavo.grub.boot_default']
+            remove_gui_elements['puavo.grub.boot_default'] = True
+
+        for puavo_conf_key in remove_gui_elements:
+            self.remove_grid_entry(self.puavo_conf_grid,
+                                   self.builder.get_object(puavo_conf_key))
+
+
+    def update_gui_state_from_puavoconf(self):
+        for key, value in self.puavo_conf.items():
+            if key == 'puavo.abitti.version':
+                if value == 'latest':
+                    self.abitti_version_latest_button.set_active(True)
+                    self.abitti_version_entry.set_text('')
+                else:
+                    self.abitti_version_any_button.set_active(True)
+                    if value.startswith('abitti-v'):
+                        value = value.replace('abitti-v', '')
+                    self.abitti_version_entry.set_text(value)
+            elif key == 'puavo.grub.boot_default':
+                if value == 'windows' and self.boot_windows_button:
+                    self.boot_windows_button.set_active(True)
+                elif value == 'abitti' and self.boot_abitti_button:
+                    self.boot_abitti_button.set_active(True)
+                else:
+                    self.boot_puavo_os_button.set_active(True)
+            elif key == 'puavo.grub.windows.enabled':
+                    self.use_windows_switch.set_state(value == 'true')
+            elif key == 'puavo.grub.developer_mode.enabled':
+                self.developer_mode_switch.set_state(value == 'true')
+
+
+    def remove_grid_entry(self, grid, label):
+        i = 0
+        while True:
+            child_at = grid.get_child_at(0, i)
+            if child_at == None:
+                return
+            if child_at == label:
+                grid.remove_row(i)
+                return
+            i += 1
+
+
+    def save_state(self):
+        if not self.save_state_flag:
+            return True
+        try:
+            self.save_state_now()
+            self.save_state_flag = False
+        except:
+            dialog = Gtk.MessageDialog(self.app_window, 0,
+              Gtk.MessageType.ERROR, Gtk.ButtonsType.OK,
+              _tr('error saving changes'))
+            dialog.run()
+            dialog.destroy()
+
+        return True
+
+
+    def save_state_now(self):
+        for key, value in self.puavo_conf.items():
+            cmd = [ 'sudo', '-n', 'puavo-conf-local', key, value ]
+            subprocess.check_call(cmd)
+
+
+builder = Gtk.Builder()
+builder.set_translation_domain('puavo-laptop-setup')
+builder.add_from_file('/usr/share/puavo-laptop-setup/puavo-laptop-setup.glade')
+
+app_window = builder.get_object('app_window')
+app_window.set_icon_name('drive-harddisk-system')
+app_window.set_title(_tr('Laptop setup'))
+app_window.connect('destroy', Gtk.main_quit)
+
+try:
+    subprocess.check_call([ 'sudo', '-n', 'puavo-conf-local', '--check'])
+except subprocess.CalledProcessError:
+    errmsg = _tr('You do not have the required permissions to use this tool.')
+    dialog = Gtk.MessageDialog(app_window, 0, Gtk.MessageType.ERROR,
+               Gtk.ButtonsType.CANCEL, errmsg)
+    dialog.run()
+    sys.exit(1)
+
+this_script = open(os.path.realpath(sys.argv[0]), 'r')
+try:
+    fcntl.flock(this_script, fcntl.LOCK_EX | fcntl.LOCK_NB)
+except BlockingIOError:
+    errmsg = ('"%s"' % _tr('Laptop setup')) + ' ' + _tr('is already running')
+    dialog = Gtk.MessageDialog(app_window, 0, Gtk.MessageType.ERROR,
+               Gtk.ButtonsType.CANCEL, errmsg)
+    dialog.run()
+    sys.exit(1)
+
+laptop_setup = PuavoLaptopSetup(app_window, builder)
+laptop_setup.prepare()
+laptop_setup.save_state_flag = True
+
+app_window.show_all()
+
+Gtk.main()

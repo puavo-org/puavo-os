@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# prevent from restarting session if we are shutting down
+shutdown_state=$(busctl get-property org.freedesktop.login1 \
+	                /org/freedesktop/login1 org.freedesktop.login1.Manager \
+			ScheduledShutdown 2>/dev/null \
+                   | awk '{ print $3 }')
+if [ "$shutdown_state" != "0" ]; then
+  exit 1
+fi
+
+exec "$@"

@@ -1,5 +1,5 @@
-# Program-wide runtime settings. Determined once at start-up, can be used
-# freely after that.
+# Program settings. Determined at startup, then used everywhere. The program
+# never *writes* any settings back to disk.
 
 # IMPORTANT NOTICE: Do not import GTK or Cairo or other such modules
 # here! This file is used in places where no graphical libraries have
@@ -53,12 +53,23 @@ class Settings:
         # Is this a fatclient system?
         self.is_fatclient = False
 
+        # Is this device personally administered?
+        self.is_personally_administered = False
+
+        # Is the current user the device's primary user? Cannot be True
+        # unless 'is_personally_administered' is also True.
+        self.is_user_primary_user = False
+
         # True if the global GNOME dark theme is enabled
         self.dark_theme = False
 
         # True if we will be saving favorites (ie. the most often used
         # programs). Guest and webkiosk sessions disable this.
         self.enable_faves_saving = True
+
+        # The "root" directory for puavo-pkg installed packages.
+        # A constant, but this object is a good place for it.
+        self.puavopkg_root_dir = '/var/lib/puavo-pkg/installed'
 
         # ----------------------------------------------------------------------
         # Per-user settings
@@ -72,24 +83,23 @@ class Settings:
         """Detects the runtime-environment for this session. Call once
         at startup."""
 
-        from os import environ
-        from os.path import expanduser, join, isfile
+        import os
+        import os.path
         import configparser
         import subprocess
-
         import logging
-        from utils import puavo_conf
+        import utils
 
         # Detect the session and device types
-        if 'GUEST_SESSION' in environ:
+        if 'GUEST_SESSION' in os.environ:
             logging.info('This is a guest user session')
             self.is_guest = True
 
-        if puavo_conf('puavo.hosttype', 'laptop') == 'fatclient':
+        if utils.puavo_conf('puavo.hosttype', 'laptop') == 'fatclient':
             logging.info('This is a fatclient device')
             self.is_fatclient = True
 
-        if puavo_conf('puavo.webmenu.webkiosk', '') == 'true':
+        if utils.puavo_conf('puavo.webmenu.webkiosk', '') == 'true':
             # I don't know if this actually works!
             logging.info('This is a webkiosk session')
             self.is_webkiosk = True
@@ -100,9 +110,29 @@ class Settings:
             logging.info('Faves loading/saving is disabled for this session')
             self.enable_faves_saving = False
 
+        if utils.puavo_conf('puavo.admin.personally_administered',
+                            'false') == 'true':
+            self.is_personally_administered = True
+
+            try:
+                import pwd
+
+                configured_primary_user = \
+                    utils.puavo_conf('puavo.admin.primary_user', None)
+                current_user = pwd.getpwuid(os.getuid()).pw_name
+
+                if configured_primary_user == current_user:
+                    # The current user is this personally administered
+                    # device's configured primary user
+                    self.is_user_primary_user = True
+            except Exception as e:
+                logging.error("Cannot determine if the current user is this " \
+                              "device's configured primary user:")
+                logging.error(str(e))
+
         # Detect dark theme usage
         try:
-            name = join(expanduser('~'),
+            name = os.path.join(os.path.expanduser('~'),
                         '.config',
                         'gtk-3.0',
                         'settings.ini')
@@ -121,9 +151,9 @@ class Settings:
             logging.error(str(exception))
 
         # Load the per-user config file, if it exists
-        conf_file = join(self.user_dir, 'puavomenu.conf')
+        conf_file = os.path.join(self.user_dir, 'puavomenu.conf')
 
-        if isfile(conf_file):
+        if os.path.isfile(conf_file):
             logging.info('A per-user configuration file "%s" exists, '
                          'trying to load it...', conf_file)
 
@@ -157,7 +187,3 @@ class Settings:
                           "desktop directory")
             logging.error(str(exception))
             self.desktop_dir = None
-
-
-# Global settings
-SETTINGS = Settings()

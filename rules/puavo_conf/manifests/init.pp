@@ -2,6 +2,11 @@ class puavo_conf {
   include ::initramfs
   include ::packages
 
+  file {
+    '/etc/puavo-conf/hooks':
+      ensure => directory;
+  }
+
   define definition ($source) {
     $definition_name = $title
 
@@ -10,6 +15,16 @@ class puavo_conf {
         notify  => Exec['update initramfs'],
         require => Package['puavo-conf'],
         source  => $source;
+    }
+  }
+
+  define hook ($script) {
+    $puavo_conf_key = $title
+
+    file {
+      "/etc/puavo-conf/hooks/${puavo_conf_key}":
+        ensure => link,
+        target => "../scripts/${script}";
     }
   }
 

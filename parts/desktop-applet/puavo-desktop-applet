@@ -143,11 +143,7 @@ class ChangelogNotifier(PuavoWidget):
 
 
   def pww_stdout_callback(self, fd, condition, channel):
-    if condition == GObject.IO_HUP:
-      channel.close()
-      return False
-
-    if condition == GObject.IO_IN:
+    if condition & GObject.IO_IN:
       line = channel.readline()
       changelog_ok = False
 
@@ -164,6 +160,10 @@ class ChangelogNotifier(PuavoWidget):
         self.write_user_versions(True)
         self.enabled = False
         self.applet.create_menu()
+
+    if condition & GObject.IO_HUP:
+      channel.close()
+      return False
 
     return True
 

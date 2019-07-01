@@ -117,6 +117,13 @@ class OverlayHandler < DBus::Object
 end
 
 class ContentUpdates < DBus::Object
+  EXTRA_CONTENT_SCRIPTS_PATH = '/etc/puavo-extra-contents/scripts'
+
+  def initialize(subpath)
+    super
+    @puavo_extra_content_updates = {}
+  end
+
   dbus_interface "org.puavo.client.contentupdates" do
     dbus_signal :UpdateStarted,   'in contentname:s, in version:s'
     dbus_signal :UpdateProgress,
@@ -139,6 +146,61 @@ class ContentUpdates < DBus::Object
       end
 
       [ extra_contents.to_a.flatten.map { |s| s.to_s } ]
+    end
+
+    dbus_method :StartUpdate, 'in contentname:s, in version:s' do
+      |contentname, version|
+
+      return unless contentname.match(/\A[A-Za-z0-9]+\z/)
+
+      if @puavo_extra_content_updates.has_key?(contentname) then
+	# check if we are already updating
+	return if version == @puavo_extra_content_updates[contentname]['version']
+
+	# cancel previous if we are going to update to a different version
+	thread = @puavo_extra_content_updates[contentname]['thread']
+	thread.raise(CancelledUpdate, "cancel #{ contentname } update")
+	thread.join rescue nil
+	@puavo_extra_content_updates.delete(contentname)
+      end
+
+      script_path = File.join(EXTRA_CONTENT_SCRIPTS_PATH, contentname)
+      return unless File.executable?(script_path)
+
+      @puavo_extra_content_updates[contentname] = {}
+      @puavo_extra_content_updates[contentname]['version'] = version
+      @puavo_extra_content_updates[contentname]['thread'] = Thread.new do
+	pid = spawn(script_path, version, :in  => '/dev/null',
+					  :out => '/dev/null',
+					  :err => '/dev/null',
+					  :pgroup => true)
+	begin
+	  Process.waitpid(pid)
+	rescue CancelledUpdate => e
+	  begin
+	    Process.kill('-TERM', pid)
+	    sleep(2)
+	    Process.kill('-KILL', pid)
+	  rescue
+	  end
+	  Process.waitpid(pid) rescue nil
+	ensure
+	  @puavo_extra_content_updates.delete(contentname)
+	end
+      end
+
+      return true
+    end
+
+    dbus_method :CancelUpdate, 'in contentname:s' do |contentname|
+      return unless contentname.match(/\A[A-Za-z0-9]+\z/)
+      return unless @puavo_extra_content_updates.has_key?(contentname)
+
+      thread = @puavo_extra_content_updates[contentname]['thread']
+      thread.raise(CancelledUpdate, "cancel #{ contentname } update")
+      thread.join rescue nil
+
+      @puavo_extra_content_updates.delete(contentname)
     end
 
     dbus_method :SetUpdateStarted, 'in contentname:s, in version:s' do
@@ -381,10 +443,10 @@ class Updater < DBus::Object
     dbus_signal :UpdateStarted
 
     dbus_method :CancelImageUpdate, '' do
-      image_update_thread     = $image_update_thread
+      image_update_thread = $image_update_thread
 
       if image_update_thread then
-        image_update_thread.raise(CancelledUpdate, 'Cancel image update')
+        image_update_thread.raise(CancelledUpdate, 'cancel image update')
         image_update_thread.join rescue nil
       end
 

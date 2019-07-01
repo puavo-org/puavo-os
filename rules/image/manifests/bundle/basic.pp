@@ -4,7 +4,7 @@ class image::bundle::basic {
   include ::disable_update_initramfs
   include ::extra_boot_scripts
   include ::gdm
-  include ::grub_themes
+  include ::grub
   include ::handle_utmp_logs
   include ::hwquirks
   include ::initramfs
@@ -27,6 +27,7 @@ class image::bundle::basic {
   include ::systemd
   include ::udev
   include ::use_urandom
+  include ::woeusb
   include ::zram_configuration
 
   Package <| title == ltsp-client

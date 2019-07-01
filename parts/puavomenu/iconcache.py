@@ -176,3 +176,6 @@ class IconCache:
 
     def stats(self):
         return (len(self.__filename_lookup), len(self.__icons))
+
+    def save(self, name):
+        self.__atlas_surface.write_to_png(name)

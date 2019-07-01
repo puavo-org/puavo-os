@@ -6,8 +6,8 @@ logmsg() {
   priority=$1
   shift
 
-  logger -p "$priority" -t puavo-pkg-update "$@"
-  echo "PUAVO-PKG-UPDATE: $@" >&2
+  logger -p "$priority" -t puavo-pkg-update "$@" || true
+  echo "PUAVO-PKG-UPDATE: $@" >&2 || true
 }
 
 if ! mountpoint -q /images; then
@@ -24,12 +24,6 @@ puavo_hosttype=$(puavo-conf puavo.hosttype)
 
 mkdir -p "$installers_dir"
 
-exec 3< "$installers_dir"
-if ! flock -nx 3; then
-  logmsg user.err "did not get a lock on ${installers_dir}, exiting"
-  exit 1
-fi
-
 is_version_number() {
   echo "$1" | grep -Eqx '[0-9]+' && [ "$1" -lt 1000000 ]
 }
@@ -38,7 +32,7 @@ download_installer() {
   puavo_pkg=$1
   version=$2
 
-  rm -f ${installers_dir}/*/*.tmp
+  rm -f ${installers_dir}/${puavo_pkg}/*.tmp
 
   do_file_check=false
   if [ "$version" = 'latest' ]; then
@@ -74,12 +68,19 @@ download_installer() {
 
   logmsg user.info "verifying ${pkg_url}"
 
+  exec 4< /root/.pkg-gnupg
+  if ! flock -w 10 -x 4; then
+    echo 'could not lock /root/.pkg-gnupg for gpg verification' >&2
+    return 1
+  fi
   if ! gpg --decrypt --homedir /root/.pkg-gnupg \
     "$unverified_installer_tmppath" 2>/dev/null > "$installer_tmppath"; then
       logmsg user.err "verification failed for ${unverified_installer_tmppath}"
-      rm -f "$unverified_installer_tmppath" "$installer_tmppath"
+      rm -f "$unverified_installer_tmppath" "$installer_tmppath" || true
+      flock -u 4
       return 1
   fi
+  flock -u 4
   rm -f "$unverified_installer_tmppath"
 
   # we lookup package id, because $version might be "latest" or just
@@ -106,6 +107,18 @@ download_installer() {
   fi
 
   echo "$installer_fullpath"
+}
+
+extract_pkg() {
+  puavo_pkg=$1
+  version=$2
+
+  if ! installer_fullpath=$(download_installer "$puavo_pkg" "$version"); then
+    return 1
+  fi
+  if ! puavo-pkg show "$installer_fullpath" > /dev/null 2>&1; then
+    return 1
+  fi
 }
 
 install_pkg() {
@@ -191,9 +204,24 @@ maybe_remove_pkg() {
 
 logmsg user.notice 'puavo-pkg-update starting'
 
-puavo_pkg_specs=$(
-  puavo-conf | awk '$1 ~ /^puavo.pkg./ { gsub(/^puavo.pkg./, "", $1); print }'
-)
+if [ "${1:-}" = '--update-installers' ]; then
+  puavo_pkg_package=''
+  puavo_pkg_specs=$(puavo-conf puavo.pkgs.ui.pkglist \
+                      | xargs -n 1 | awk '$1 != "" { print $1, "extract" }')
+else
+  puavo_pkg_package=${1:-}
+  puavo_pkg_specs=$(
+    puavo-conf \
+      | awk -v pkg="$puavo_pkg_package" '
+          $1 ~ /^puavo\.pkg\./ { gsub(/^puavo\.pkg\./, "", $1)
+          if (pkg == "" || pkg == $1) { print }
+        }')
+fi
+
+if [ -n "$puavo_pkg_package" -a -z "$puavo_pkg_specs" ]; then
+  logmsg user.err "no such puavo-pkg package as '${puavo_pkg_package}'"
+  exit 1
+fi
 
 status=0
 
@@ -204,6 +232,15 @@ for pkgspec in $puavo_pkg_specs; do
   IFS="$OLDIFS"
   puavo_pkg=$(echo "$pkgspec" | awk '{ print $1 }')
   action=$(echo "$pkgspec" | awk '{ print $2 }')
+
+  puavo_pkg_installers_dir="${installers_dir}/${puavo_pkg}"
+  mkdir -p "$puavo_pkg_installers_dir"
+  exec 3< "$puavo_pkg_installers_dir"
+  if ! flock -w 10 -x 3; then
+    logmsg user.err "did not get a lock on ${puavo_pkg_installers_dir}"
+    status=1
+    continue
+  fi
 
   if [ -z "$action" ]; then
     if [ "$puavo_hosttype" = 'bootserver' ]; then
@@ -217,8 +254,17 @@ for pkgspec in $puavo_pkg_specs; do
     fi
   fi
 
+  logmsg user.info "installation directive on ${puavo_pkg} is: $action"
+
   case "$action" in
     do-nothing)
+      ;;
+    extract)
+      extract_pkg "$puavo_pkg" latest || status=1
+      ;;
+    extract:*)
+      version=${action#*:}
+      extract_pkg "$puavo_pkg" "$version" || status=1
       ;;
     install|latest)
       install_pkg "$puavo_pkg" latest || status=1
@@ -246,7 +292,15 @@ for pkgspec in $puavo_pkg_specs; do
       status=1
       ;;
   esac
+
+  flock -u 3
 done
+
+exec 3< "$installers_dir"
+if ! flock -w 10 -x 3; then
+  logmsg user.err "did not get a lock on ${installers_dir}, exiting"
+  exit 1
+fi
 
 logmsg user.notice 'garbage collecting old/broken puavo-pkg packages'
 if ! puavo-pkg gc-installations; then

@@ -1,6 +1,5 @@
 class image::bundle::desktop {
   include ::blueman
-  include ::chrome
   include ::chromium
   include ::desktop
   include ::desktop_cups
@@ -41,8 +40,6 @@ class image::bundle::desktop {
   include ::wacom
   include ::wine
   include ::workaround_firefox_local_swf_bug
-  # include ::workaround_icedtea_netx_bug       # XXX broken without
-                                                # XXX oracle-java
   include ::xorg
 
   Package <| tag == 'tag_debian_desktop'

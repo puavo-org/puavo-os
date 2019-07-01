@@ -8,16 +8,19 @@ set -eu
 case "$(puavo-conf puavo.xsessions.default)" in
   puavo-infotv)
     nodm_user='puavo-infotv'
-    xsession_path='/usr/lib/puavo-ltsp-client/infotv-session'
+    xsession_path='infotv-session'
     ;;
   puavo-usb-factory)
     nodm_user='puavo-usb-factory'
-    xsession_path="/usr/lib/puavo-ltsp-client/usb-factory-session"
+    xsession_path='usb-factory-session'
+    ;;
+  puavo-user-registration)
+    nodm_user='guest'
+    xsession_path='user-registration-session'
     ;;
   puavo-webkiosk)
-    # XXX this has not been properly tested yet
     nodm_user='guest'
-    xsession_path='/usr/lib/puavo-ltsp-client/webkiosk-session'
+    xsession_path='webkiosk-session'
     ;;
   *)
     exit 0
@@ -37,7 +40,7 @@ NODM_USER=${nodm_user}
 NODM_FIRST_VT=7
 
 # X session
-NODM_XSESSION=${xsession_path}
+NODM_XSESSION=/usr/lib/puavo-ltsp-client/run-nodm-session /usr/lib/puavo-ltsp-client/${xsession_path}
 
 # Options for nodm itself
 NODM_OPTIONS=
