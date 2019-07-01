@@ -974,9 +974,6 @@ proc update_diskdevices {{force_ui_update false}} {
     logger -p user.info \
            "removing [dev_logid $devpath] because it is no longer attached"
 
-    logger -p user.info \
-           "removing [dev_logid $devpath] because it is no longer attached"
-
     destroy [dict get $diskdevices $devpath ui]
     close_if_open $devpath
     dict unset diskdevices $devpath
