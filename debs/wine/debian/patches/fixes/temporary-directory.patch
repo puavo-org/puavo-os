@@ -62,7 +62,7 @@ bug-upstream: https://bugs.winehq.org/show_bug.cgi?id=39013
 +        tmp_env = secure_getenv("TMPDIR");
 +        if (tmp_env)
 +        {
-+            tmp_dir = xmalloc( sizeof(tmp_env) );
++            tmp_dir = xmalloc( strlen(tmp_env) + 1 );
 +            strcpy( tmp_dir, tmp_env );
 +        }
 +        else
@@ -107,7 +107,7 @@ bug-upstream: https://bugs.winehq.org/show_bug.cgi?id=39013
 +            stream = fdopen( fd, "w" );
 +            if (!stream)
 +                fatal_error("error opening wineserver tmpdir file\n");
-+            n = fputs( root + sizeof(tmp_dir) + 1, stream );
++            n = fputs( root + strlen(tmp_dir) + 1, stream );
 +            if (n < 0)
 +                fatal_error("error writing to wineserver tmpdir file\n");
 +            error = fclose( stream );

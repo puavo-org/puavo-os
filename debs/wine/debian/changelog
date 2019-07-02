@@ -1,8 +1,19 @@
-wine (4.0-1+puavo1+buildonce) buster; urgency=medium
+wine (4.0-2+puavo1+buildonce) buster; urgency=medium
 
   * Add puavo-support-ata-id.patch.
 
  -- Puavo Org <dev@opinsys.fi>  Tue, 16 Apr 2019 12:46:02 +0300
+
+wine (4.0-2) unstable; urgency=medium
+
+  * Point to branch buster in the Vcs fields.
+  * Support building with unicode-data 12.
+    Build against new unicode-data supporting the new Japanese era
+    "令和 (Reiwa)" (closes: #928013).
+  * Fix incorrect uses of sizeof in temporary-directory.patch (closes: #928084).
+    Thanks to Konstantin Demin.
+
+ -- Jens Reyer <jre.winesim@gmail.com>  Sat, 27 Apr 2019 20:20:01 +0200
 
 wine (4.0-1) unstable; urgency=medium
 
