@@ -24,9 +24,7 @@ proc make_request {url curl_args {password ""}} {
 
   # use curl instead of puavo-rest-client for efficiency reasons
 
-  # XXX s|--insecure|--cacert /etc/puavo/certs/rootca.pem|
-  # XXX INSECURE DO NOT USE IN PRODUCTION
-  set exec_curl_args [list --insecure                           \
+  set exec_curl_args [list --cacert /etc/puavo/certs/rootca.pem \
                            --fail                               \
                            --show-error                         \
                            --silent                             \

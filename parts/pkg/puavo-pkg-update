@@ -57,9 +57,7 @@ download_installer() {
   logmsg user.info "downloading ${pkg_url}"
 
   mkdir -p "${installers_dir}/${puavo_pkg}" || true
-  # XXX s|--no-check-certificate|--ca-certificate=/etc/puavo/certs/rootca.pem|
-  # XXX INSECURE DO NOT USE IN PRODUCTION
-  if ! wget -q --no-check-certificate \
+  if ! wget -q --ca-certificate=/etc/puavo/certs/rootca.pem \
     -O "$unverified_installer_tmppath" "$pkg_url"; then
       logmsg user.err "could not download installer from ${pkg_url}"
       rm -f "$unverified_installer_tmppath"
