@@ -55,10 +55,6 @@ override_dh_auto_install:
 		install-dch-suffix prefix=/usr sysconfdir=/etc	\
 		DESTDIR=$(CURDIR)/debian/dch-suffix
 
-	$(MAKE) -C hw-log					\
-		install prefix=/usr sysconfdir=/etc		\
-		DESTDIR=$(CURDIR)/debian/puavo-hw-log
-
 	$(MAKE) -C hw-tools				\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/puavo-hw-tools
