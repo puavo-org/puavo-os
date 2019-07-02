@@ -1132,6 +1132,11 @@ if width == 1366:
     padding_top = 30
     padding_right = 100
     font_scale = 100
+elif width in (1600, 1680):
+    background_size = 1920
+    padding_top = 50
+    padding_right = 125
+    font_scale = 120
 else:
     background_size = 1920
     padding_top = 100
@@ -1230,6 +1235,11 @@ if width == 1366:
     welcome_container.put(welcome_text, 550, 250)
     welcome_container.put(welcome_footer, 550, 450)
     welcome_container.put(welcome_button, 700, 600)
+elif width in (1600, 1680):
+    welcome_container.put(welcome_label, 900, 100)
+    welcome_container.put(welcome_text, 750, 300)
+    welcome_container.put(welcome_footer, 750, 500)
+    welcome_container.put(welcome_button, 900, 650)
 else:
     welcome_container.put(welcome_label, 900, 150)
     welcome_container.put(welcome_text, 750, 350)
