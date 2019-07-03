@@ -42,10 +42,6 @@ class puavo_pkg::packages {
 			, 'obsidian-icons'
 			, 'ohjelmointi-opetuksessa'
 			, 'openscad-nightly'
-			# XXX , 'oracle-java'   # dropped due licensing
-                                                # changes, we should evaluate
-                                                # if openjre-11 works for all
-                                                # use cases
 			, 'processing'
 			, 'pycharm'
 			, 'robboscratch2'

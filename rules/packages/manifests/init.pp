@@ -663,6 +663,7 @@ class packages {
     , 'chromium-l10n'
     , 'epiphany-browser'
     , 'firefox-esr'     # XXX use 32-bit version of Firefox to conserve memory?
+    , 'icedtea-netx'
     , 'liferea'
     , 'openjdk-11-jdk'
     , 'openjdk-11-jre'
