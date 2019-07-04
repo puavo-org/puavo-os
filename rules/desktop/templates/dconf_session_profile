@@ -118,6 +118,7 @@ name='Gnome screenshot'
 
 [org/gnome/settings-daemon/plugins/power]
 ambient-enabled=false
+power-button-action='interactive'
 sleep-inactive-ac-type='nothing'
 
 [org/gnome/settings-daemon/plugins/xsettings]
