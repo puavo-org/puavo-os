@@ -60,7 +60,7 @@ class PuavoRestClient
     return ctx
   end
 
-  def self.custom_ssl(ca_file="/etc/puavo/certs/rootca.pem")
+  def self.custom_ssl(ca_file="/etc/puavo-conf/rootca.pem")
     ctx = OpenSSL::SSL::SSLContext.new
     ctx.verify_mode = OpenSSL::SSL::VERIFY_PEER
     ctx.ca_file = ca_file

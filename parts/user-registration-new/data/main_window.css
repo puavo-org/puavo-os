@@ -1,0 +1,338 @@
+/*
+================================================================================
+
+                 NEW USER REGISTRATION / WIRELESS CONFIGURATION
+
+================================================================================
+*/
+
+/* Gtk message dialogs */
+messagedialog {
+    font-family: "Noto Sans";
+    font-size: $(gtk_dialog_font_scale);
+}
+
+/*
+--------------------------------------------------------------------------------
+THE MAIN WINDOW
+--------------------------------------------------------------------------------
+*/
+
+/* The main window */
+.main_window {
+    background: url('$(background_image)') #272727;
+    background-position: -100px 0;
+    background-repeat: no-repeat;
+}
+
+/* Main vertical box layout */
+.main_layout {
+    font-family: "Noto Sans";
+    font-size: $(main_font_scale);
+}
+
+/* Page title bar */
+.main_title {
+    background: rgba(0, 103, 179, 0.5);
+    padding: 10px;
+
+    font-size: 150%;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 2px 0px 0 #000, -2px 0px 0 #000, 0px -2px 0 #000, 0px 2px 0 #000;
+}
+
+/* Outer container (GtkFrame) for the actual page contents */
+.middle_box {
+}
+
+/* The GtkFrame border */
+.middle_box > border {
+    border: none;
+}
+
+/* Buttons, contact info, etc. */
+.lower_box {
+    background: rgba(0, 103, 179, 0.25);
+    padding: 10px;
+}
+
+.main_window button, .policy_buttons button {
+    background: rgba(0x00, 0x5b, 0x9e, 0.75);
+    border: 2px solid #0067b3;
+    box-shadow: none;
+    text-shadow: none;
+    padding: 5px 25px;
+    border-radius: 0;
+    color: #ddd;
+}
+
+.main_window button:hover, .policy_buttons button:hover {
+    background: rgba(0x11, 0x6c, 0xaf, 0.75);
+    border: 2px solid #1178c4;
+    color: #fff;
+}
+
+.main_window button:focus {
+    outline-width: 1px;
+    outline-offset: -5px;
+    outline-style: dotted;
+    outline-color: #000;
+}
+
+.main_window button:active, .policy_buttons button:active {
+    background: #227dbf;
+    border: 2px solid #227dbf;
+    color: #fff;
+}
+
+.main_window button:disabled {
+    background: rgba(0x00, 0x39, 0x7c, 0.75);
+    border: 2px solid #0045a1;
+}
+
+/* For some reason, this requires its own selector? */
+.main_window button:disabled label {
+    color: #888;
+}
+
+/* The "button box" in the privacy policy window */
+.policy_buttons {
+    border-top: 2px solid #ccc;
+    background: #383838;
+    padding: 10px;
+}
+
+/*
+--------------------------------------------------------------------------------
+CHILD WINDOWS
+--------------------------------------------------------------------------------
+*/
+
+/*
+
+THE WELCOME PAGE
+
+*/
+.welcome_texts_container {
+    padding-top: $(welcome_padding_top);
+    padding-left: $(welcome_padding_left);
+    padding-right: $(welcome_padding_right);
+    font-size: 100%;
+    color: #fff;
+}
+
+.welcome_texts_container .welcome_title {
+    font-size: 500%;
+    font-weight: bold;
+    text-shadow: 5px 5px 0 #000;
+}
+
+.welcome_texts_container .welcome_text {
+    font-size: 150%;
+    font-weight: normal;
+}
+
+.welcome_texts_container .welcome_footer {
+    font-size: 125%;
+    font-weight: normal;
+}
+
+.welcome_texts_container .welcome_next {
+    /* Keeps the button *roughly* at the same position it's
+       on the network setup page */
+    margin-top: 50px;
+    margin-right: 100px;
+}
+
+/*
+
+THE NETWORK CONNECTIONS PAGE
+
+*/
+
+.network_container {
+    padding: 50px 150px;
+}
+
+.network_container .scrolled_window {
+    border: 2px solid #aaa;
+    background: rgba(39, 39, 39, 0.9);
+}
+
+.network_container .networks_list {
+    background: none;
+    padding: 5px;
+}
+
+.network_container .networks_list row {
+    padding: 5px;
+    border: none;
+}
+
+.network_container .networks_list row:hover {
+    /* Hovered network row */
+    background: #116caf;
+}
+
+.network_container .networks_list row:active {
+    /* Row that's currently being clicked */
+}
+
+.network_container .networks_list row:selected {
+    /* The currently selected network row */
+    background: #227dbf;
+}
+
+.network_container .networks_list row label {
+    /* Common styles for all network list labels */
+    color: #fff;
+    text-shadow: 1px 1px 0 #000;
+    background: none;
+    font-size: 110%;
+    font-weight: normal;
+}
+
+.network_container .networks_list row:selected label {
+    /* Selected network label */
+    color: #fff;
+}
+
+.network_container .password_container {
+    padding-left: 25px;
+    color: #fff;
+}
+
+.network_container .password_container label:disabled {
+    color: #666;
+}
+
+.network_container .password_container .network_main_label {
+    font-size: 150%;
+    font-weight: bold;
+    text-shadow: 2px 2px 0 #000;
+    padding-bottom: 25px;
+}
+
+.network_container .password_container .password_box {
+    padding-bottom: 25px;
+}
+
+.network_container .password_container .network_password_label {
+    padding-right: 10px;
+}
+
+.network_container .password_container .network_password_entry {
+    padding: 2px 5px;
+    border: 2px solid #888;
+    outline: none;
+    font-weight: bold;
+    font-size: $(entry_font_size);
+}
+
+.network_container .password_container .network_password_entry:disabled {
+    background: #666;
+}
+
+.network_container .password_container .network_connect_button {
+}
+
+.network_container .password_container .network_status_box {
+    padding-top: 25px;
+}
+
+.network_container .password_container .network_connection_status {
+    color: #0ff;
+    font-size: 110%;
+}
+
+/*
+
+THE ACCOUNT CREATION PAGE
+
+*/
+.register_user {
+    padding-top: $(account_top_padding);
+    padding-left: $(account_left_padding);
+    font-size: 100%;
+}
+
+.register_user entry {
+    padding: 2px 5px;
+    border: 2px solid #888;
+    outline: none;
+    font-size: $(entry_font_size);
+    font-family: "Noto Sans";
+}
+
+.register_user entry:focus {
+    border: 2px solid #ddd;
+    outline: none;
+}
+
+.register_user .account_label {
+    color: #fff;
+    text-shadow: 1px 1px 0 #000;
+}
+
+.register_user .account_hint {
+    color: #888;
+}
+
+.register_user .language {
+}
+
+.register_user .language button {
+    /* The language combobox */
+    border: 2px solid #888;
+    background: #fff;
+    color: #000;
+    padding: 2px 5px;
+    font-size: $(entry_font_size);
+}
+
+.register_user .language button:disabled {
+    color: #888;
+}
+
+.register_user .status_message {
+    color: #0ff;
+}
+
+.register_user .account_button_box {
+}
+
+/*
+
+THE COMPLETE PAGE
+
+*/
+
+.complete_texts_container {
+    padding-top: $(complete_top_padding);
+    padding-left: $(complete_left_padding);
+}
+
+.complete_texts_container label {
+    color: #fff;
+}
+
+.complete_texts_container label:disabled {
+    color: #fff;
+}
+
+.complete_texts_container .complete_title {
+    font-size: 500%;
+    font-weight: bold;
+    text-shadow: 5px 5px 0 #000;
+}
+
+.complete_texts_container .complete_text {
+    padding-top: 50px;
+    font-size: 125%;
+}
+
+.complete_texts_container .complete_reboot {
+    margin-top: 50px;
+    padding: 10px 150px;
+}

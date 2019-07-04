@@ -74,7 +74,7 @@ fetch_with_curl() {
   curl_ebs_filename=$2
   curl_ebs_filepath=$3
 
-  curl --cacert /etc/puavo/certs/rootca.pem                  \
+  curl --cacert /etc/puavo-conf/rootca.pem                   \
        --fail                                                \
        --max-time 10                                         \
        --silent                                              \

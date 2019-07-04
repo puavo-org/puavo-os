@@ -139,7 +139,7 @@ if $do_prune; then
 
     if [ -e "${PUAVO_TFTP_BOOT_DIR:-/var/lib/tftpboot/ltsp}" ]; then
         # Save the list of boot directories to a temporary file.
-        find "${PUAVO_TFTP_BOOT_DIR:-/var/lib/tftpboot/ltsp}"  \
+        find "${PUAVO_TFTP_BOOT_DIR:-/var/lib/tftpboot/ltsp}"/  \
             -mindepth 1 -maxdepth 1 -type d >"${bootdirs}"
     else
         echo >"${bootdirs}"
