@@ -23,7 +23,7 @@ EOF
 fi
 
 /usr/sbin/openvpn                                          \
-    --ca /etc/puavo/certs/orgcabundle.pem                  \
+    --ca /etc/puavo-conf/rootca.pem                        \
     --cert /etc/puavo/certs/host.crt                       \
     --client                                               \
     --dev vpn0                                             \

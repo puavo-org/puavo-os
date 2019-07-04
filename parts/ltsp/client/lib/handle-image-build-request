@@ -28,7 +28,7 @@ def get_url(uri)
   parsed_uri = URI.parse(uri)
 
   http = Net::HTTP.new(parsed_uri.host, parsed_uri.port)
-  http.ca_file = '/etc/puavo/certs/rootca.pem'
+  http.ca_file = '/etc/puavo-conf/rootca.pem'
   http.use_ssl = true
   http.verify_mode = OpenSSL::SSL::VERIFY_PEER
 

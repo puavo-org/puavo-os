@@ -40,10 +40,16 @@ if ARGV.length != 0 then
   exit(1)
 end
 
-# Use SSL certificate that was acquired when the host was
-# registered to Puavo.
+# Use SSL certificate from the image, or if that does not
+# exist (we not an image based ldap-slave), use the cert that
+# was acquired when the host was registered to Puavo.
 ENV["LDAPTLS_REQCERT"] = "demand"
-ENV["LDAPTLS_CACERT"] = "/etc/puavo/certs/rootca.pem"
+
+if File.exists?('/etc/puavo-conf/rootca.pem') then
+  ENV["LDAPTLS_CACERT"] = '/etc/puavo-conf/rootca.pem'
+else
+  ENV["LDAPTLS_CACERT"] = '/etc/puavo/certs/rootca.pem'
+end
 
 Sentinel_file = '/state/var/lib/ldap/init_ldap_slave_done'
 

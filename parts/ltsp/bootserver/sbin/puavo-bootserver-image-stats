@@ -72,7 +72,7 @@ cd "${tmpdir}"
     puavo_hostname=$(cat /etc/puavo/hostname)
     puavo_apiserver=$(puavo-resolve-api-server)
 
-    curl --cacert /etc/puavo/certs/rootca.pem \
+    curl --cacert /etc/puavo-conf/rootca.pem \
 	--header 'Authorization: Bootserver' \
 	--silent --show-error \
 	"${puavo_apiserver}/v3/device_images?boot_server=${puavo_hostname}" \

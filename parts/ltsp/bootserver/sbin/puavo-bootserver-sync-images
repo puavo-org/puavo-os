@@ -500,7 +500,7 @@ class SyncFileWithMetadata < SyncFile
     uri = URI.parse(url)
 
     http = Net::HTTP.new(uri.host, uri.port)
-    http.ca_file = "/etc/puavo/certs/rootca.pem"
+    http.ca_file = "/etc/puavo-conf/rootca.pem"
     http.verify_mode = OpenSSL::SSL::VERIFY_PEER
     http.use_ssl = true
 
@@ -1170,7 +1170,7 @@ module SeriesControl
     uri = URI.parse(source_url)
 
     http = Net::HTTP.new(uri.host, uri.port)
-    http.ca_file = "/etc/puavo/certs/rootca.pem"
+    http.ca_file = "/etc/puavo-conf/rootca.pem"
     http.verify_mode = OpenSSL::SSL::VERIFY_PEER
     http.use_ssl = true
 

@@ -46,7 +46,7 @@ bindpw ${puavo_ldap_password}
 # SSL options
 ssl start_tls
 tls_reqcert demand
-tls_cacertfile /etc/puavo/certs/rootca.pem
+tls_cacertfile /etc/puavo-conf/rootca.pem
 
 # The search scope.
 #scope sub

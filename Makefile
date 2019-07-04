@@ -211,9 +211,15 @@ setup-buildhost:
 	$(_sudo) mkdir -p $(@D)
 	$(_sudo) cp $< $@
 
-/etc/puavo-conf/rootca.pem: config/rootca.pem
+/etc/puavo-conf/rootca.pem: config/rootca
 	$(_sudo) mkdir -p $(@D)
-	$(_sudo) cp $< $@
+	@if $(_sudo) sh -c 'cat $</*.pem > $@' 2>/dev/null; then \
+	  echo 'Created/updated $@'; \
+        else \
+	  echo 'Could not create $@, do you have any certificates in $< ?' >&2; \
+          $(_sudo) rm -f $@; \
+	  exit 1; \
+	fi
 
 .PHONY: update
 update: prepare /etc/puavo-conf/image.json /etc/puavo-conf/rootca.pem

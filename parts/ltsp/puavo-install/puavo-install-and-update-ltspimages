@@ -343,12 +343,12 @@ fetch_with_wget() {
   wget_error_code=$(
     {
       {
-	wget --ca-certificate=/etc/puavo/certs/rootca.pem \
-	     --continue                                   \
-	     --output-document="${output_path}"           \
-	     --progress=dot:mega                          \
-	     $wgetopts                                    \
-	     "$url" >/dev/null                            \
+	wget --ca-certificate=/etc/puavo-conf/rootca.pem \
+	     --continue                                  \
+	     --output-document="${output_path}"          \
+	     --progress=dot:mega                         \
+	     $wgetopts                                   \
+	     "$url" >/dev/null                           \
 	  || echo $?
       } 3>&1 1>&2 2>&3 3>&- \
 	| unbuffer -p awk '

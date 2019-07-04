@@ -24,11 +24,11 @@ proc make_request {url curl_args {password ""}} {
 
   # use curl instead of puavo-rest-client for efficiency reasons
 
-  set exec_curl_args [list --cacert /etc/puavo/certs/rootca.pem \
-                           --fail                               \
-                           --show-error                         \
-                           --silent                             \
-                           {*}$curl_args                        \
+  set exec_curl_args [list --cacert /etc/puavo-conf/rootca.pem \
+                           --fail                              \
+                           --show-error                        \
+                           --silent                            \
+                           {*}$curl_args                       \
                            $url]
 
   # no timeouts here, it is the caller's responsibility to decide on that
