@@ -43,7 +43,7 @@ if [ -n "$log_master" ]; then
 fi
 
 if [ -n "$topdomain" ]; then
-  params="${params} string:images.${topdomain} string:imageproxy.${topdomain}"
+  params="${params} string:cdn.${topdomain} string:images.${topdomain}"
 fi
 
 [ -z "$params" ] && exit 0

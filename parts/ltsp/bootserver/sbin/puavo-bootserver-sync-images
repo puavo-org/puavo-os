@@ -1298,7 +1298,7 @@ parser = OptionParser.new do |opts|
       {
         "version": "20160121120716",
         "urls": [
-          "https://images.opinsys.fi/ltsp-lukiolaiskannettava-trusty-2016-01-21-120716-i386.img"
+          "https://cdn.opinsys.fi/ltsp-lukiolaiskannettava-trusty-2016-01-21-120716-i386.img"
         ],
         "size": 8438857728,
         "sha256": "b2efc0f546cc6aaa84c75dd4ac1a519d90f74561faa04c66ea71ab69c0f563dd",
@@ -1310,7 +1310,7 @@ parser = OptionParser.new do |opts|
       {
         "version": "20160303082253",
         "urls": [
-          "https://images.opinsys.fi/ltsp-lukiolaiskannettava-trusty-2016-03-03-082253-i386.img"
+          "https://cdn.opinsys.fi/ltsp-lukiolaiskannettava-trusty-2016-03-03-082253-i386.img"
         ],
         "size": 8692178944,
         "sha256": "74afeb7458299e30647660bd0a68eca8a20aec9495f60314390cb0384fe4805c",
@@ -1320,7 +1320,7 @@ parser = OptionParser.new do |opts|
           {
             "version": "20150623102329",
             "urls": [
-              "https://images.opinsys.fi/rdiffs/ltsp-lukiolaiskannettava-trusty-2015-06-23-102329--2016-03-03-082253-i386.rdiff"
+              "https://cdn.opinsys.fi/rdiffs/ltsp-lukiolaiskannettava-trusty-2015-06-23-102329--2016-03-03-082253-i386.rdiff"
             ],
             "size": 3167354864,
             "sha256": "0b0180004a357aaff3129e8f01d00bc2a38c529c1778be1f3b9262d9d14848fb",

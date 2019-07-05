@@ -16,7 +16,8 @@ if ! mountpoint -q /images; then
   exit 1
 fi
 
-baseurl='https://images.opinsys.fi/puavo-pkg'
+topdomain=$(cat /etc/puavo/topdomain)
+baseurl="https://cdn.${topdomain}/puavo-pkg"
 installers_dir='/images/puavo-pkg/installers'
 
 # XXX get rid of hosttype handling

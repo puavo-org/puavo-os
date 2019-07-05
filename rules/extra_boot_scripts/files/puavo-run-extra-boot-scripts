@@ -177,7 +177,7 @@ fetch_extra_boot_scripts() {
     ebs_server=$(puavo-conf puavo.image.servers | awk '{ print $1 }')
     if [ -z "$ebs_server" ]; then
       read topdomain < /etc/puavo/topdomain
-      ebs_server="images.${topdomain}"
+      ebs_server="cdn.${topdomain}"
     fi
     gnupg_verify=true
   fi

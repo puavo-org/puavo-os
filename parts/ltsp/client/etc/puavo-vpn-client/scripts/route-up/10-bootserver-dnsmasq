@@ -49,6 +49,7 @@ server=/${ldap_master}/${route_vpn_gateway}
 server=/ntp.${topdomain}/${route_vpn_gateway}
 server=/private-archive.${topdomain}/${route_vpn_gateway}
 server=/images.${topdomain}/${route_vpn_gateway}
+server=/cdn.${topdomain}/${route_vpn_gateway}
 EOF
   if [ -n "$log_master" ]; then
     cat <<EOF

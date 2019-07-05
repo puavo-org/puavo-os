@@ -594,7 +594,7 @@ lookup_image_servers() {
     all_image_servers="$all_image_servers $image_servers_by_puavoconf"
   fi
 
-  toplevel_image_server="images.$(cat /etc/puavo/topdomain)"
+  toplevel_image_server="cdn.$(cat /etc/puavo/topdomain)"
 
   all_image_servers="$all_image_servers $toplevel_image_server"
 
