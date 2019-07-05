@@ -30,8 +30,8 @@ fi
     --dev-type tap                                         \
     --keepalive 10 60                                      \
     --key /etc/puavo/certs/host.key                        \
-    --ns-cert-type server                                  \
     --proto tcp-client                                     \
+    --remote-cert-tls server                               \
     --remote-random                                        \
     --route-up '/usr/lib/puavo-vpn-client/runme route-up'  \
     --script-security 2                                    \
