@@ -8,15 +8,14 @@ The packages can be tested/installed with
 
     puavo-pkg install examplepkg.tar.gz
 
-# Updating the installer bundle
+# Updating the packages
 
-The puavo-pkg package contains a script to update the
-``puavo-pkg-installers-bundle.tar`` at ``images.${topdomain}``.
-It can be run with:
+To update/remove packages according to specifications in puavo-conf, run:
 
-    puavo-update-remote-pkginstaller-bundle
+    puavo-pkg-update
 
-It asks the necessary passwords to do this operation.
+It is possible to update/remove only one package by giving the package name
+as a command argument.
 
 # Fixing the installers
 
