@@ -5,9 +5,31 @@ set -eu
 command=$1
 shift
 
+version=68.0.1
+urlbase="https://download-installer.cdn.mozilla.net/pub/firefox/releases/${version}/linux-x86_64"
+
+setup_firefox_wrapper() {
+  cat <<'EOF' > /usr/local/bin/firefox
+#!/bin/sh
+
+set -eu
+
+case "$LANG" in
+  de_*) firefox_dir=/opt/firefox/de    ;;
+  fi_*) firefox_dir=/opt/firefox/fi    ;;
+  fr_*) firefox_dir=/opt/firefox/fr    ;;
+  sv_*) firefox_dir=/opt/firefox/sv-SE ;;
+  *)    firefox_dir=/opt/firefox/en-GB ;;
+esac
+
+exec "${firefox_dir}/firefox" "$@"
+EOF
+  chmod 755 /usr/local/bin/firefox
+}
+
 case "${command}" in
-    configure)
-	upstream_dir=$1
+  configure)
+    upstream_dir=$1
 cat <<'EOF' > /usr/share/applications/firefox.desktop
 [Desktop Entry]
 Name=Firefox
@@ -18,26 +40,78 @@ Exec=/usr/local/bin/firefox %u
 Terminal=false
 X-MultipleArgs=false
 Type=Application
-Icon=/opt/firefox/browser/chrome/icons/default/default128.png
+Icon=/opt/firefox/en-GB/browser/chrome/icons/default/default128.png
 Categories=Network;WebBrowser;
 MimeType=text/html;text/xml;application/xhtml+xml;application/xml;application/vnd.mozilla.xul+xml;application/rss+xml;application/rdf+xml;image/gif;image/jpeg;image/png;x-scheme-handler/http;x-scheme-handler/https;
 StartupWMClass=Firefox
 StartupNotify=true
 EOF
-	ln -fns "${upstream_dir}/firefox" /opt/firefox
-	ln -fns /opt/firefox/firefox /usr/local/bin/firefox
-	;;
-    unconfigure)
-	rm -f /opt/firefox \
-              /usr/local/bin/firefox \
-              /usr/share/applications/firefox.desktop
-	;;
-    unpack)
-	upstream_pack=$1
-	upstream_dir=$2
 
-	tar --no-same-owner -jx -f "${upstream_pack}" -C "${upstream_dir}"
-	;;
-    *)
-	;;
+    ln -fns "$upstream_dir" /opt/firefox
+
+    setup_firefox_wrapper
+    ;;
+
+  unconfigure)
+    rm -f /opt/firefox \
+          /usr/local/bin/firefox \
+          /usr/share/applications/firefox.desktop
+    ;;
+
+  unpack)
+    upstream_pack=$1
+    upstream_dir=$2
+
+    tar --no-same-owner -jx -f "$upstream_pack" -C "$upstream_dir"
+    ;;
+
+  download)
+    upstream_pack=$(readlink -f "$1")
+    tmpdir=
+    trap '[ -n "$tmpdir" ] && rm -rf "$tmpdir"' 0 INT TERM
+    tmpdir=$(mktemp -d)
+
+    (
+      cd "$tmpdir"
+      while read sha384 tarpath; do
+        tarfile=$(basename "$tarpath")
+        wget \
+            --no-use-server-timestamps \
+            --no-check-certificate \
+            --no-cookies \
+            --output-document "$tarfile" \
+            --progress=dot:mega \
+            "${urlbase}/${tarpath}" || {
+            [ $? -eq 4 ] && exit 2 ## Network failure.
+            exit 1
+        }
+        if ! echo "${sha384} ${tarfile}" | sha384sum --check >/dev/null; then
+          actual_checksum=$(sha384sum "$tarfile" | awk '{ print $1 }')
+          echo "checksum NOT matching for $tarpath" >&2
+          echo "expected: ${sha384} / actual: ${actual_checksum}" >&2
+          exit 1
+        fi
+        mkdir -p "firefox/$(dirname "$tarpath")"
+        tar -C "firefox/$(dirname "$tarpath")" --strip-components=1 \
+            -jx -f "$tarfile" || exit 1
+      done <<EOF
+d77a97b64a155be0019e50a4f3336960d6386c8435a76c64499daade54507c4223eff82bce76b34d6a4b3533c4904362 de/firefox-${version}.tar.bz2
+08c6875e9e124128ae6627c94ea3cbaf3fdc65e652acd92915b684df308a11cfec20d549501fde18bdad92208cc2e290 en-GB/firefox-${version}.tar.bz2
+55a80fe796bd44627684783dcd91a369f86fc21e4d5a4364a8e4fa767a28eb0eaa8d3372cb2f3bfc8243d250e2ff1d1f fi/firefox-${version}.tar.bz2
+3902203a6c9dcf80f969d33547aa580079c9acc142fd87656a432d932843687bcbaaa8926ba13408335106afdaa0693f fr/firefox-${version}.tar.bz2
+f5f264cd0da11aebf2661e10195c9e189c5e481c098b570a7bfa6d662027341062f27bb70278129bfb259a3ac67a298d sv-SE/firefox-${version}.tar.bz2
+EOF
+
+      # hard link many duplicate files
+      rdfind -makehardlinks true firefox/*
+
+      # Set LC_COLLATE=C so that files always sort in the same
+      # way (so we get the same tar-archive independent of locales).
+      env LC_COLLATE=C \
+        tar -C firefox -j --mtime='2000-01-01 00:00:00 +00:00' --sort=name -c \
+          -f "$upstream_pack" .
+    )
+    ;;
+  *)
+    ;;
 esac
