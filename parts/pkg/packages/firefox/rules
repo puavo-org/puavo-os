@@ -1,0 +1,43 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "${command}" in
+    configure)
+	upstream_dir=$1
+cat <<'EOF' > /usr/share/applications/firefox.desktop
+[Desktop Entry]
+Name=Firefox
+Comment=Web Browser
+GenericName=Web Browser
+X-GNOME-FullName=Firefox Web Browser
+Exec=/usr/local/bin/firefox %u
+Terminal=false
+X-MultipleArgs=false
+Type=Application
+Icon=/opt/firefox/browser/chrome/icons/default/default128.png
+Categories=Network;WebBrowser;
+MimeType=text/html;text/xml;application/xhtml+xml;application/xml;application/vnd.mozilla.xul+xml;application/rss+xml;application/rdf+xml;image/gif;image/jpeg;image/png;x-scheme-handler/http;x-scheme-handler/https;
+StartupWMClass=Firefox
+StartupNotify=true
+EOF
+	ln -fns "${upstream_dir}/firefox" /opt/firefox
+	ln -fns /opt/firefox/firefox /usr/local/bin/firefox
+	;;
+    unconfigure)
+	rm -f /opt/firefox \
+              /usr/local/bin/firefox \
+              /usr/share/applications/firefox.desktop
+	;;
+    unpack)
+	upstream_pack=$1
+	upstream_dir=$2
+
+	tar --no-same-owner -jx -f "${upstream_pack}" -C "${upstream_dir}"
+	;;
+    *)
+	;;
+esac
