@@ -50,9 +50,14 @@ EOF
     ln -fns "$upstream_dir" /opt/firefox
 
     setup_firefox_wrapper
+
+    update-alternatives --install /usr/bin/x-www-browser x-www-browser \
+                        /usr/local/bin/firefox 200
+    update-alternatives --set x-www-browser /usr/local/bin/firefox
     ;;
 
   unconfigure)
+    update-alternatives --remove x-www-browser /usr/local/bin/firefox
     rm -f /opt/firefox \
           /usr/local/bin/firefox \
           /usr/share/applications/firefox.desktop
