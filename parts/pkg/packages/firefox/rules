@@ -30,7 +30,7 @@ EOF
 case "${command}" in
   configure)
     upstream_dir=$1
-cat <<'EOF' > /usr/share/applications/firefox.desktop
+cat <<'EOF' > /usr/share/applications/firefox.desktop.tmp
 [Desktop Entry]
 Name=Firefox
 Comment=Web Browser
@@ -46,6 +46,8 @@ MimeType=text/html;text/xml;application/xhtml+xml;application/xml;application/vn
 StartupWMClass=Firefox
 StartupNotify=true
 EOF
+    mv /usr/share/applications/firefox.desktop.tmp \
+       /usr/share/applications/firefox.desktop
 
     ln -fns "$upstream_dir" /opt/firefox
 
@@ -96,9 +98,17 @@ EOF
           echo "expected: ${sha384} / actual: ${actual_checksum}" >&2
           exit 1
         fi
-        mkdir -p "firefox/$(dirname "$tarpath")"
-        tar -C "firefox/$(dirname "$tarpath")" --strip-components=1 \
-            -jx -f "$tarfile" || exit 1
+        firefox_langdir="firefox/$(dirname "$tarpath")"
+        mkdir -p "$firefox_langdir"
+        tar -C "$firefox_langdir" --strip-components=1 -jx -f "$tarfile" \
+          || exit 1
+        ln -fns /etc/firefox/syspref.js \
+                "${firefox_langdir}/defaults/pref/syspref.js"
+        cat <<'FF_PUAVO_JS_EOF' > "${firefox_langdir}/firefox-puavodesktop.js"
+// 
+
+lockPref("autoadmin.global_config_url", "file:///etc/firefox/puavodesktop.js");
+FF_PUAVO_JS_EOF
       done <<EOF
 d77a97b64a155be0019e50a4f3336960d6386c8435a76c64499daade54507c4223eff82bce76b34d6a4b3533c4904362 de/firefox-${version}.tar.bz2
 08c6875e9e124128ae6627c94ea3cbaf3fdc65e652acd92915b684df308a11cfec20d549501fde18bdad92208cc2e290 en-GB/firefox-${version}.tar.bz2
