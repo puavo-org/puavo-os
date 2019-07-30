@@ -9,12 +9,11 @@ class firefox {
       ensure => directory;
 
     '/etc/firefox/puavodesktop.js':
-      content => template('firefox/puavodesktop.js'),
-      require => Puavo_pkg::Install['firefox'];
+      content => template('firefox/puavodesktop.js');
 
     '/etc/firefox/syspref.js':
       content => template('firefox/syspref.js'),
-      require => File['/usr/lib/firefox/firefox-puavodesktop.js'];
+      require => Puavo_pkg::Install['firefox'];
 
     '/etc/puavo-external-files-actions.d/firefox':
       content => template('firefox/puavo-external-files-actions.d/firefox'),
