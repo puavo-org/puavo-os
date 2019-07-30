@@ -22,6 +22,12 @@ case "$LANG" in
   *)    firefox_dir=/opt/firefox/en-GB ;;
 esac
 
+# This is needed since Firefox 68, otherwise each language installation
+# (and Firefox 68 from Mozilla binaries compared to old Firefox binaries
+# from Ubuntu) will have their own profile (and users are missing bookmarks
+# and such).
+export MOZ_LEGACY_PROFILES=1
+
 exec "${firefox_dir}/firefox" "$@"
 EOF
   chmod 755 /usr/local/bin/firefox
