@@ -10,8 +10,6 @@ lockPref("network.dns.disableIPv6", true);
 lockPref("network.seer.enabled", false);
 lockPref("print.postscript.paper_size", "iso_a4");
 lockPref("toolkit.storage.synchronous", 1);
-pref("flashblock.html5video.blocked", false);
-pref("flashblock.whitelist", "elisaviihde.fi,rockway.fi,ugri.net,sanomapro.fi,pelastusopisto.fi,suomeasavelin.net,vetamix.net,vimeo.com,youtube.com,google.com,ksml.fi,quizlet.com,downloads.bbc.co.uk,play.spotify.com,satunetti.fi,fun4thebrain.com,veljeksethanhela.net,starfall.com,gapminder.org,openmatikka.fi,ihmisoikeuspeli.fi,yle.fi,ruutu.fi,twitter.com,facebook.com,dreambroker.com,twitch.tv,adobeconnect.com,yahoo.com,bing.com,mll.fi");
 
 homepage=getenv("HOMEPAGE");
 
