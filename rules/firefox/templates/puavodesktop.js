@@ -19,13 +19,6 @@ if (homepage) {
   lockPref("startup.homepage_welcome_url", "");
 }
 
-gfx_xrender_enabled = getenv("FIREFOX_LOCKPREF_GFX_XRENDER_ENABLED");
-if (gfx_xrender_enabled === "false") {
-    lockPref("gfx.xrender.enabled", false);
-} else if (gfx_xrender_enabled === "true") {
-    lockPref("gfx.xrender.enabled", true);
-}
-
 apiserver = getenv("PUAVO_APISERVER");
 if (apiserver) {
   lockPref("network.negotiate-auth.delegation-uris", apiserver);
