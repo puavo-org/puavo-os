@@ -662,6 +662,7 @@ class packages {
     , 'gconf-editor'
     , 'kamerka'
     , 'mc'
+    , 'mousepad'
     , 'pass'
     , 'password-gorilla'
     , 'system-config-printer'
