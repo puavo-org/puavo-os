@@ -46,7 +46,6 @@ packagedirs += obsidian-icons
 packagedirs += ohjelmointi-opetuksessa
 packagedirs += openscad-nightly
 packagedirs += openshot-appimage
-packagedirs += oracle-java
 packagedirs += processing
 packagedirs += promethean
 packagedirs += pycharm

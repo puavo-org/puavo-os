@@ -43,7 +43,6 @@ class puavo_pkg::packages {
 			, 'obsidian-icons'
 			, 'ohjelmointi-opetuksessa'
 			, 'openscad-nightly'
-			, 'oracle-java'
 			, 'processing'
 			, 'pycharm'
 			, 'robboscratch2'
