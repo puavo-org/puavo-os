@@ -2,6 +2,17 @@
 
 set -eu
 
+{
+  # XXX clean up old messes... may be removed "later"
+  if [ -e /state/etc/puavo/local/puavo_conf.json ]; then
+    if [ "$(jq -r '.["puavo.pkg.adobe-flashplugin-32bit"]' \
+                  /state/etc/puavo/local/puavo_conf.json)" = 'latest' ]; then
+      puavo-conf-local puavo.pkg.adobe-flashplugin-32bit remove \
+        && puavo-conf-local puavo.pkg.adobe-flashplugin latest
+    fi
+  fi
+} || true
+
 puavo-conf-update
 
 # XXX another hackish workaround for the primary_user.

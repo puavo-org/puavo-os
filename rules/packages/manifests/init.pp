@@ -706,14 +706,6 @@ class packages {
   #
 
   @package {
-    [ 'firefox:i386'
-    , 'firefox-locale-de:i386'
-    , 'firefox-locale-en:i386'
-    , 'firefox-locale-fi:i386'
-    , 'firefox-locale-fr:i386'
-    , 'firefox-locale-sv:i386' ]:
-      tag => [ 'tag_web', 'tag_ubuntu_desktop', ];
-
     [ 'ttf-ubuntu-font-family' ]:
       tag => [ 'tag_fonts', 'tag_ubuntu_desktop', ];
 
