@@ -1,7 +1,5 @@
 defaultPref("browser.search.defaultenginename", "Google");
 defaultPref("browser.search.selectedEngine", "Google");
-lockPref("browser.cache.disk.capacity", 0);
-lockPref("browser.cache.disk.enable", false);
 lockPref("browser.safebrowsing.enabled", false);
 lockPref("browser.safebrowsing.malware.enabled", false);
 lockPref("browser.search.showOneOffButtons", false);
