@@ -1,5 +1,8 @@
 defaultPref("browser.search.defaultenginename", "Google");
 defaultPref("browser.search.selectedEngine", "Google");
+lockPref("app.update.auto", false);
+lockPref("app.update.doorhanger", false);
+lockPref("app.update.enabled", false);
 lockPref("browser.search.showOneOffButtons", false);
 lockPref("extensions.blocklist.enabled", false);
 lockPref("network.dns.disableIPv6", true);
