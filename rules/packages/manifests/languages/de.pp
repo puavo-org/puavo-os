@@ -1,7 +1,6 @@
 class packages::languages::de {
   @package {
-    [ 'firefox-esr-l10n-de'
-    , 'hunspell-de-ch'
+    [ 'hunspell-de-ch'
     , 'hunspell-de-de'
     , 'hyphen-de'
     , 'kde-l10n-de'

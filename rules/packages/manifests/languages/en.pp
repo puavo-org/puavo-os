@@ -1,7 +1,6 @@
 class packages::languages::en {
   @package {
-    [ 'firefox-esr-l10n-en-gb'
-    , 'hunspell-en-gb'
+    [ 'hunspell-en-gb'
     , 'hyphen-en-us'
     , 'kde-l10n-engb'
     , 'libreoffice-help-en-gb'

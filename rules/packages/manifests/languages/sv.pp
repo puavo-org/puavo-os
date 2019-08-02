@@ -1,7 +1,6 @@
 class packages::languages::sv {
   @package {
-    [ 'firefox-esr-l10n-sv'
-    , 'hunspell-sv-se'
+    [ 'hunspell-sv-se'
     , 'kde-l10n-sv'
     , 'libreoffice-help-sv'
     , 'libreoffice-l10n-sv'

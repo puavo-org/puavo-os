@@ -1,7 +1,6 @@
 class packages::languages::fr {
   @package {
-    [ 'firefox-esr-l10n-fr'
-    , 'hunspell-fr'
+    [ 'hunspell-fr'
     , 'hyphen-fr'
     , 'kde-l10n-fr'
     , 'libreoffice-help-fr'
