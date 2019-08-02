@@ -646,6 +646,7 @@ class packages {
     , 'gconf-editor'
     , 'kamerka'
     , 'mc'
+    , 'mousepad'
     , 'pass'
     , 'password-gorilla'
     , 'system-config-printer'
@@ -672,16 +673,6 @@ class packages {
     , 'sqlite3' ]:
       tag => [ 'tag_web', 'tag_debian_desktop', ];
   }
-
-  #
-  # packages from the Ubuntu repository
-  #
-
-#  XXX not installing Ubuntu packages in Buster (yet?)
-#  @package {
-#    [ 'ttf-ubuntu-font-family' ]:
-#      tag => [ 'tag_fonts', 'tag_ubuntu_desktop', ];
-#  }
 
   #
   # packages from the (Opinsys) puavo repository

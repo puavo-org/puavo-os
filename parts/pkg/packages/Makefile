@@ -24,6 +24,7 @@ packagedirs += dragonbox_koulu1
 packagedirs += ekapeli-alku
 packagedirs += enchanting
 packagedirs += extra-xkb-symbols
+packagedirs += firefox
 packagedirs += flashforge-flashprint
 packagedirs += geogebra
 packagedirs += geogebra6

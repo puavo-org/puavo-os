@@ -436,6 +436,8 @@ programs:
         tags: default
   - mimio-notebook:
         tags: default
+  - mousepad:
+        tags: default
   - mscore:
         name:
             en: MuseScore-music composition & notation
@@ -1049,6 +1051,7 @@ menus:
             - org.gnome.Calculator
             - speedcrunch
             - org.gnome.gedit
+            - mousepad
             - gucharmap
             - onboard
             - brasero
