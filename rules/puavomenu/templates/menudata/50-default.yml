@@ -207,6 +207,8 @@ programs:
         tags: default
 
   #F
+  - filezilla:
+        tags: default
   - firefox:
         name:
             en: Firefox-browser
@@ -1060,6 +1062,7 @@ menus:
             - org.gnome.FileRoller
             - org.gnome.Terminal
             - gftp
+            - filezilla
             - seahorse
             - system-config-printer
             - pavucontrol
