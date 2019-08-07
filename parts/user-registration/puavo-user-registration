@@ -249,7 +249,7 @@ class UserRegistration:
 
     def set_username_hint_status(self, is_good=True):
         color = '#888' if is_good else '#f00'
-        msg = _tr('Loginnames may contain only characters a-z, 0-9, - and a dot.\nMust be at least three characters long.')
+        msg = _tr('Loginnames may contain only characters a-z, 0-9, - and a dot. It must\nstart with a lowercase letter and it must be at least three characters long.')
         self.username_hint.set_markup(
           '<span color="%s">%s</span>' % (color, msg))
 
@@ -263,9 +263,11 @@ class UserRegistration:
         if len(self.last_name_field.get_text().strip()) == 0:
             state = False
 
-        if len(self.username_field.get_text().strip()) < 3 or \
-          re.search(USERNAME_FILTER, self.username_field.get_text()) or \
-          self.username_field.get_text().strip()[0] not in 'abcdefghijklmnopqrstuvwxyz0123456789':
+        username = self.username_field.get_text()
+
+        if (len(username) < 3) or \
+            (re.search(USERNAME_FILTER, username)) or \
+            (username[0] not in 'abcdefghijklmnopqrstuvwxyz'):
             state = False
 
         if len(self.email_field.get_text().strip()) == 0:
@@ -336,7 +338,9 @@ class UserRegistration:
     def on_username_changed(self, edit):
         username = edit.get_text()
 
-        if re.search(USERNAME_FILTER, username):
+        if (len(username) < 3) or \
+            (re.search(USERNAME_FILTER, username)) or \
+            (username[0] not in 'abcdefghijklmnopqrstuvwxyz'):
             self.set_username_hint_status(False)
         else:
             self.set_username_hint_status(True)
