@@ -1,0 +1,39 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "${command}" in
+    configure)
+	upstream_dir=$1
+
+	ln -fns "${upstream_dir}/DB_Koulu_2_Pro_linux" \
+		/opt/DB-Koulu2
+        cat <<'EOF' > /usr/share/applications/db_koulu2.desktop
+[Desktop Entry]
+Name=DB Koulu 2
+Exec=/opt/DB-Koulu2/DB\ Koulu\ 2\ Pro.x86_64
+Type=Application
+Terminal=false
+Icon=glade
+StartupNotify=true
+Categories=Education;
+EOF
+	;;
+    unconfigure)
+	rm -f /opt/DB-Koulu2 \
+              /usr/share/applications/db_koulu2.desktop
+	;;
+    unpack)
+	upstream_pack=$1
+	upstream_dir=$2
+
+        unzip -q -d "${upstream_dir}" "${upstream_pack}"
+        chmod +x "${upstream_dir}/DB_Koulu_2_Pro_linux/DB Koulu 2 Pro.x86_64"
+        chmod +x "${upstream_dir}/DB_Koulu_2_Pro_linux/DB Koulu 2 Pro.x86"
+	;;
+    *)
+	;;
+esac
