@@ -57,7 +57,7 @@ get_installed_version() {
   pkg_name=$1
   syspkg_conflink="${system_rootdir}/installed/${pkg_name}"
   syspkg_version=$(
-    awk '$1 == "version" && $2 ~ /^[0-9]+$/ { print $2 }' \
+    mawk '$1 == "version" && $2 ~ /^[0-9]+$/ { print $2 }' \
       "${syspkg_conflink}/.puavo-pkg-version" 2>/dev/null || true)
   if [ -z "$syspkg_version" ]; then
     syspkg_version=0
@@ -77,7 +77,7 @@ get_dir_with_latest_version() {
     test -d "$pkgid_dir" || continue
 
     pkg_version=$(
-      awk '$1 == "version" && $2 ~ /^[0-9]+$/ { print $2 }' \
+      mawk '$1 == "version" && $2 ~ /^[0-9]+$/ { print $2 }' \
         "${pkgid_dir}/.puavo-pkg-version" 2>/dev/null || true)
     if [ -z "$pkg_version" ]; then
       echo "could not lookup version for ${pkgid_dir}" >&2
@@ -104,26 +104,30 @@ configure_latest_from() {
   for other_pkgdir in ${other_rootdir}/packages/*; do
     test -d "$other_pkgdir" || continue
 
-    pkg_name=$(basename "$other_pkgdir")
+    pkg_name=${other_pkgdir##${other_rootdir}/packages/}
 
-    # on fatclients we support only configuring the latest version
-    # that is on the bootserver
-    puavo_pkg_spec=$(puavo-conf "puavo.pkg.${pkg_name}" 2>/dev/null) || true
-    case "$puavo_pkg_spec" in
-      install|install:*|latest)
-        case "$puavo_pkg_spec" in
-          install:*) echo "ignoring version in puavo.pkg.${pkg_name}" ;;
-        esac
+    syspkg_version="$(get_installed_version "$pkg_name")"
 
-        syspkg_version="$(get_installed_version "$pkg_name")"
+    other_pkgid_dir=$(get_dir_with_latest_version "$other_pkgdir" \
+                                                  "$syspkg_version")
 
-        other_pkgid_dir=$(get_dir_with_latest_version "$other_pkgdir" \
-                                                      "$syspkg_version")
-        if [ -d "$other_pkgid_dir" ]; then
+    if [ -d "$other_pkgid_dir" ]; then
+      ln -fns "$other_pkgid_dir" "/var/lib/puavo-pkg/available/${pkg_name}"
+
+      # on fatclients we support only configuring the latest version
+      # that is on the bootserver
+      puavo_pkg_spec=$(puavo-conf "puavo.pkg.${pkg_name}" 2>/dev/null) || true
+      case "$puavo_pkg_spec" in
+        install|install:*|latest)
+          case "$puavo_pkg_spec" in
+            install:*) echo "ignoring version in puavo.pkg.${pkg_name}" ;;
+          esac
+
           reconfigure_upgrade_pkg "$pkg_name" "$other_pkgid_dir" || status=1
-        fi
-        ;;
-    esac
+          ;;
+      esac
+  fi
+
   done
 }
 
