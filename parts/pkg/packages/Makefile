@@ -23,6 +23,7 @@ packagedirs += cnijfilter2
 packagedirs += cura-appimage
 packagedirs += dropbox
 packagedirs += dragonbox_koulu1
+packagedirs += dragonbox_koulu2
 packagedirs += ekapeli-alku
 packagedirs += enchanting
 packagedirs += extra-xkb-symbols
