@@ -16,7 +16,7 @@
           <object class="GtkLabel" id="puavo.abitti.version">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="label" translatable="yes">Abitti-version</property>
+            <property name="label" translatable="yes">eExam-system version (Abitti-compatible)</property>
           </object>
           <packing>
             <property name="left_attach">0</property>
@@ -134,7 +134,7 @@
             </child>
             <child>
               <object class="GtkRadioButton" id="boot_abitti">
-                <property name="label" translatable="yes">Abitti</property>
+                <property name="label" translatable="yes">eExam-system</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
