@@ -14,6 +14,7 @@ class packages::backports {
                                  # firmware packages
                                    'amd64-microcode'
                                  , 'b43-fwcutter'
+                                 , 'broadcom-sta-dkms'
                                  , 'firmware-amd-graphics'
                                  , 'firmware-b43-installer'
                                  , 'firmware-b43legacy-installer'
