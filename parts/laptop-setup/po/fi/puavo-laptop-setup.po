@@ -29,8 +29,8 @@ msgstr "on jo käynnissä"
 msgid "It is now possible to choose Windows from the boot menu when starting up the computer."
 msgstr "Windows on nyt lisätty käynnistysvaihtoehdoksi tietokoneen käynnistysvalikkoon. Käynnistysvalikko tulee näkyviin aina tietokoneen uudelleen käynnistyksen yhteydessä."
 
-msgid "Abitti is not updated when running Windows, you have to boot into the current system to update it."
-msgstr "Huomioi, että Abitti-koejärjestelmää ei päivitetä silloin, kun tietokone on käynnistetty Windowsiin. Vaihtaaksesi/päivittääksesi kannettavan Abitti-versiota, sinun tulee valita tietokoneen käynnistyksen yhteydessä 'Normaali käynnistys' ja käynnistää tähän nyt käytössä olevaan Opinsys OS -käyttöjärjestelmään."
+msgid "Abitti-compatible eExam-system is not updated when running Windows, you have to boot into the current system to update it."
+msgstr "Huomioi, että Abitti-yhteensopivaa koejärjestelmää ei päivitetä silloin, kun tietokone on käynnistetty Windowsiin. Vaihtaaksesi/päivittääksesi kannettavan koejärjestelmäversiota, sinun tulee valita tietokoneen käynnistyksen yhteydessä 'Normaali käynnistys' ja käynnistää tähän nyt käytössä olevaan Opinsys OS -käyttöjärjestelmään."
 
 # from puavo-laptop-setup.glade
 msgid "Start using Windows"
@@ -42,8 +42,11 @@ msgstr "Oletuksena käynnistettävä järjestelmä"
 msgid "Show developer mode in boot menu"
 msgstr "Näytä kehittäjätila tietokonetta käynnistettäessä"
 
-msgid "Abitti-version"
-msgstr "Abitti-versio"
+msgid "eExam-system"
+msgstr "Koejärjestelmä"
+
+msgid "eExam-system version (Abitti-compatible)"
+msgstr "Koejärjestelmäversio (Abitti-yhteensopiva)"
 
 msgid "latest version"
 msgstr "viimeisin versio"

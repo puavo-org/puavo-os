@@ -156,7 +156,7 @@ class PuavoLaptopSetup:
                           ' the boot menu when starting up the computer.')
                 if self.boot_abitti_button:
                     msg += '  ' \
-                       + _tr('Abitti is not updated when running Windows,' \
+                       + _tr('Abitti-compatible eExam-system is not updated when running Windows,' \
                              ' you have to boot into the current system to update it.')
                 dialog = Gtk.MessageDialog(self.app_window, 0,
                   Gtk.MessageType.WARNING, Gtk.ButtonsType.OK,

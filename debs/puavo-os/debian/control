@@ -127,6 +127,7 @@ Package: puavo-core
 Architecture: all
 Depends: ${misc:Depends},
  initramfs-tools,
+ mawk,
  puavo-conf,
  rdate,
  rsyslog-relp,

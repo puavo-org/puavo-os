@@ -4,6 +4,7 @@ lockPref("app.update.auto", false);
 lockPref("app.update.doorhanger", false);
 lockPref("app.update.enabled", false);
 lockPref("browser.search.showOneOffButtons", false);
+lockPref("browser.shell.checkDefaultBrowser", false);
 lockPref("extensions.blocklist.enabled", false);
 lockPref("network.dns.disableIPv6", true);
 lockPref("network.seer.enabled", false);

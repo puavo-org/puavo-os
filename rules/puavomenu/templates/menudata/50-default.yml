@@ -194,7 +194,9 @@ programs:
         tags: default
 
   #F
-  - firefox-esr:
+  - filezilla:
+        tags: default
+  - firefox:
         name:
             en: Firefox-browser
             fi: Firefox-selain
@@ -1059,6 +1061,7 @@ menus:
             - org.gnome.FileRoller
             - org.gnome.Terminal
             - gftp
+            - filezilla
             - seahorse
             - system-config-printer
             - pavucontrol
@@ -1323,7 +1326,7 @@ menus:
             sv: Abitti-applikationer
             de: Prüfungsumgebung
         description:
-            fi: Sovelluksia sähköiseen ylioppilastutkintoon
+            fi: Kokoelma Abitti-koeympäristössä käytettäviä sovelluksia
             en: Programs for Grading Environment
             de: Programme der Prüfungsumgebung
         icon: /usr/share/icons/oxygen/base/48x48/categories/applications-education.png
@@ -1339,6 +1342,7 @@ menus:
             - ti_nspire_cx_cas_ss
             - LoggerPro
             - dia
+            - mousepad
             - libreoffice-writer
             - libreoffice-calc
             - libreoffice-impress
