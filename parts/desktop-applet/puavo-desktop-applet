@@ -292,7 +292,7 @@ class ContentUpdates(PuavoWidget):
       new_content_elements[new_content_name] = {
         'menuitem': None,
         'refresh':  False,
-        'text':     '%s: %s' % (translate_contentname(new_content_name),
+        'text':     '%s: %s' % (self.translate_contentname(new_content_name),
                                 new_content_version),
         'version':  new_content_version,
       }
@@ -337,7 +337,7 @@ class ContentUpdates(PuavoWidget):
 
 
   def update_started(self, contentname, version):
-    self.notify('%s%s%s%s' % (translate_contentname(contentname),
+    self.notify('%s%s%s%s' % (self.translate_contentname(contentname),
                               _tr(' update to version '),
                               version,
                               _tr(' has started.')))
@@ -353,7 +353,7 @@ class ContentUpdates(PuavoWidget):
       return
 
     progress = "%s: %s --> %s [%d%%] (%s)" \
-                 % (translate_contentname(contentname),
+                 % (self.translate_contentname(contentname),
                     current_version, new_version, progress, _tr('is updating'))
 
     self.content_elements[contentname]['text'] = progress
@@ -362,7 +362,7 @@ class ContentUpdates(PuavoWidget):
 
 
   def update_completed(self, contentname, version):
-    self.notify('%s%s%s%s' % (translate_contentname(contentname),
+    self.notify('%s%s%s%s' % (self.translate_contentname(contentname),
                               _tr(' update to version '),
                               version,
                               _tr(' has completed successfully.')))
@@ -376,7 +376,7 @@ class ContentUpdates(PuavoWidget):
 
 
   def update_failed(self, contentname, version, errmsg):
-    self.notify('%s%s%s%s %s' % (translate_contentname(contentname),
+    self.notify('%s%s%s%s %s' % (self.translate_contentname(contentname),
                                  _tr(' update to version '),
                                  version,
                                  _tr(' has failed:'),
