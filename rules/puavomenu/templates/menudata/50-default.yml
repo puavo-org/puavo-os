@@ -478,6 +478,8 @@ programs:
         tags: default
   - mimio-notebook:
         tags: default
+  - minetest:
+        tags: default
   - mousepad:
         tags: default
   - mscore:
@@ -1294,6 +1296,7 @@ menus:
             - openttd
             - gnubg
             - freeciv-gtk2
+            - minetest
 
   - menu-games-personal:
         name:
@@ -1318,6 +1321,7 @@ menus:
             - steam
             - gnubg
             - freeciv-gtk2
+            - minetest
 
   - menu-abitti:
         name:
