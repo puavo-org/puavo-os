@@ -279,7 +279,8 @@ Depends: ${misc:Depends},
  tshark,
  vim,
  w3m,
- winbind
+ winbind,
+ wsmancli
 Recommends:
  gdisk,
  ifenslave,
