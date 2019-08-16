@@ -1,5 +1,6 @@
 # a newer version of unicode-data is a dependency for wine
-_pkgs_builddeps := unicode-data
+# sblim-sfcc openwsman are dependencies for wsmancli
+_pkgs_builddeps := sblim-sfcc openwsman unicode-data
 
 # parts, ports and some cloud packages go into puavo-os images
 
@@ -18,7 +19,8 @@ _pkgs_ports     := fluentd         \
                    visionmedia-mon \
                    vtun            \
                    wine            \
-                   wpa
+                   wpa             \
+                   wsmancli
 _pkgs_image     := $(_pkgs_builddeps) $(_pkgs_parts) $(_pkgs_ports)
 _pkgs_cloud     := krb5 openldap puavo-ds
 
