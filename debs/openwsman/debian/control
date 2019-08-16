@@ -1,0 +1,153 @@
+Source: openwsman
+Section: admin
+Priority: extra
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Build-Depends: debhelper (>= 9.0.0), cmake (>= 2.8.5), libssl-dev, libpam0g-dev, libxml2-dev, libcurl4-openssl-dev, libcimcclient0-dev, swig, python-dev
+Standards-Version: 3.9.5
+Homepage: http://openwsman.github.io/
+
+Package: openwsman
+Architecture: any
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Open Web Services Manager
+ Openwsman is a project intended to provide an open-source implementation of
+ the Web Services Management specification (WS-Management) and to expose
+ system management information on the Linux operating system using the
+ WS-Management protocol. WS-Management is based on a suite of web services
+ specifications and usage requirements that exposes a set of operations
+ focused on and covers all system management aspects.
+ .
+ This package provides a basic WS Manager daemon.
+
+Package: libwsman-server1
+Architecture: any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Open Web Services Manager run-time libraries
+ Openwsman is a project intended to provide an open-source implementation of
+ the Web Services Management specification (WS-Management) and to expose
+ system management information on the Linux operating system using the
+ WS-Management protocol. WS-Management is based on a suite of web services
+ specifications and usage requirements that exposes a set of operations
+ focused on and covers all system management aspects.
+ .
+ This package provides the core run-time libraries.
+
+Package: libopenwsman1
+Depends: libwsman1, ${misc:Depends}
+Architecture: all
+Section: oldlibs
+Description: Transitional dummy package for libwsman
+ This is a transitional dummy package. It can be safely removed.
+
+Package: libwsman1
+Architecture: any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Replaces: libopenwsman1 (<< 2.4.3-0ubuntu4)
+Breaks: libopenwsman1 (<< 2.4.3-0ubuntu4)
+Description: Open Web Services Manager run-time libraries
+ Openwsman is a project intended to provide an open-source implementation of
+ the Web Services Management specification (WS-Management) and to expose
+ system management information on the Linux operating system using the
+ WS-Management protocol. WS-Management is based on a suite of web services
+ specifications and usage requirements that exposes a set of operations
+ focused on and covers all system management aspects.
+ .
+ This package provides the core run-time libraries.
+
+Package: libwsman-client4
+Architecture: any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Replaces: libopenwsman1 (<< 2.4.3-0ubuntu4), libwsman-client2
+Breaks: libopenwsman1 (<< 2.4.3-0ubuntu4), libwsman-client2
+Description: Open Web Services Manager run-time libraries
+ Openwsman is a project intended to provide an open-source implementation of
+ the Web Services Management specification (WS-Management) and to expose
+ system management information on the Linux operating system using the
+ WS-Management protocol. WS-Management is based on a suite of web services
+ specifications and usage requirements that exposes a set of operations
+ focused on and covers all system management aspects.
+ .
+ This package provides the client run-time libraries.
+
+Package: libwsman-curl-client-transport1
+Architecture: any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Replaces: libopenwsman1 (<< 2.4.3-0ubuntu4)
+Breaks: libopenwsman1 (<< 2.4.3-0ubuntu4)
+Description: Open Web Services Manager run-time libraries
+ Openwsman is a project intended to provide an open-source implementation of
+ the Web Services Management specification (WS-Management) and to expose
+ system management information on the Linux operating system using the
+ WS-Management protocol. WS-Management is based on a suite of web services
+ specifications and usage requirements that exposes a set of operations
+ focused on and covers all system management aspects.
+ .
+ This package provides the curl client transport run-time libraries.
+
+Package: libopenwsman-dev
+Section: libdevel
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libwsman1 (= ${binary:Version}), openwsman (= ${binary:Version})
+Description: Open Web Services Manager library development files
+ Openwsman is a project intended to provide an open-source implementation of
+ the Web Services Management specification (WS-Management) and to expose
+ system management information on the Linux operating system using the
+ WS-Management protocol. WS-Management is based on a suite of web services
+ specifications and usage requirements that exposes a set of operations
+ focused on and covers all system management aspects.
+ .
+ This package provides the library development headers.
+
+Package: libwsman-clientpp1
+Architecture: any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, libwsman1 (= ${binary:Version})
+Description: Open Web Services Manager C++ bindings
+ Openwsman is a project intended to provide an open-source implementation of
+ the Web Services Management specification (WS-Management) and to expose
+ system management information on the Linux operating system using the
+ WS-Management protocol. WS-Management is based on a suite of web services
+ specifications and usage requirements that exposes a set of operations
+ focused on and covers all system management aspects.
+ .
+ This package provides the C++ bindings to the Openwsman client libraries
+
+Package: libwsman-clientpp-dev
+Section: libdevel
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libwsman-clientpp1 (= ${binary:Version})
+Description: Open Web Services Manager C++ bindings development files
+ Openwsman is a project intended to provide an open-source implementation of
+ the Web Services Management specification (WS-Management) and to expose
+ system management information on the Linux operating system using the
+ WS-Management protocol. WS-Management is based on a suite of web services
+ specifications and usage requirements that exposes a set of operations
+ focused on and covers all system management aspects.
+ .
+ This package provides the development files for the C++ interface to the
+ Openwsman client libraries
+
+Package: python-openwsman
+Section: python
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libwsman1 (= ${binary:Version})
+Description: Open Web Services Manager Python bindings
+ Openwsman is a project intended to provide an open-source implementation of
+ the Web Services Management specification (WS-Management) and to expose
+ system management information on the Linux operating system using the
+ WS-Management protocol. WS-Management is based on a suite of web services
+ specifications and usage requirements that exposes a set of operations
+ focused on and covers all system management aspects.
+ .
+ This package provides the Python bindings for the Openwsman client API.
+

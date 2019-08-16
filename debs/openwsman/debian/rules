@@ -1,0 +1,31 @@
+#!/usr/bin/make -f
+
+export DH_VERBOSE=1
+export DH_OPTIONS
+
+export CFLAGS=$(shell dpkg-buildflags --get CFLAGS)
+export CXXFLAGS=$(shell dpkg-buildflags --get CXXFLAGS)
+export DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
+
+%:
+	dh $@ --builddirectory=build
+
+override_dh_auto_configure: 
+	mkdir build
+	cd build && cmake .. \
+	  -DLIB=$${prefix}/lib/$(DEB_HOST_MULTIARCH) \
+	  -DCMAKE_LIBRARY_ARCHITECTURE=$(DEB_HOST_MULTIARCH) \
+	  -DCMAKE_INSTALL_PREFIX=/usr \
+	  -DCMAKE_VERBOSE_MAKEFILE=TRUE \
+	  -DEXPLICIT_TARGET="$(EXPLICIT_TARGET)" \
+	  -DBUILD_RUBY_GEM=no
+
+override_dh_auto_install:
+	mkdir -p debian/tmp/etc/openwsman
+	install -m 644 etc/openwsman_client.conf debian/tmp/etc/openwsman/
+	dh_auto_install -O--builddirectory=build
+	mv debian/tmp/etc/openwsman/owsmangencert.sh \
+	   debian/tmp/usr/sbin/owsmangencert
+
+override_dh_auto_test:
+

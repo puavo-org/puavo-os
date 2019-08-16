@@ -1,0 +1,98 @@
+sblim-sfcc (2.2.8-0ubuntu2) bionic; urgency=medium
+
+  * No-change rebuild against libcurl4
+
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Wed, 28 Feb 2018 08:48:29 +0000
+
+sblim-sfcc (2.2.8-0ubuntu1) zesty; urgency=medium
+
+  * New upstream release.
+  * Bugs:
+    - [bugs:#2730] back out original patch
+    - [bugs:#2730] redo: More memory leaks in backend/cimxml/grammer.c
+  * Bump standards to 3.9.8.
+  * Add Homepage.  
+
+ -- Bhavani Shankar <bhavi@ubuntu.com>  Sat, 21 Jan 2017 17:59:09 +0530
+
+sblim-sfcc (2.2.7-0ubuntu1) utopic; urgency=low
+
+  * New upstream release (LP: #1335941). 
+  * New Features:
+   - [bugs:#2692] SFCC: SfcbLocal interface should expose markHeap() and releaseHeap()
+
+   Bugs:
+   - [bugs:#2728] Missing tag definition for REFARRAY
+   - [bugs:#2729] Improper type handling for EmbeddedObject in PARAMVALUE
+   - [bugs:#2730] More memory leaks in backend/cimxml/grammer.c
+ 
+ -- Kent Baxley <kent.baxley@canonical.com>  Wed, 25 Jun 2014 13:34:21 -0500
+
+sblim-sfcc (2.2.6-0ubuntu2) trusty; urgency=medium
+
+  * debian/control: bump standards version to 3.9.5.
+  * Reintroduce 2.2.5-0ubuntu2 changes, dropped in previous upload.
+
+ -- Kent Baxley <kent.baxley@canonical.com>  Mon, 13 Jan 2014 09:43:34 -0600
+
+sblim-sfcc (2.2.6-0ubuntu1) trusty; urgency=medium
+
+  * New upstream release
+
+ -- Kent Baxley <kent.baxley@canonical.com>  Mon, 16 Dec 2013 15:29:54 -0600
+
+sblim-sfcc (2.2.5-0ubuntu2) trusty; urgency=medium
+
+  * Use dh-autoreconf.
+  * Bump to debhelper compat 9.
+
+ -- Dimitri John Ledkov <xnox@ubuntu.com>  Mon, 23 Dec 2013 17:41:23 +0000
+
+sblim-sfcc (2.2.5-0ubuntu1) saucy; urgency=low
+
+  * New Upstream release
+  * Bump up standards to 3.9.4
+  * Add Build depend on autotools-dev to regenerate autotools helper file
+  * Wrap and sort Build deps in d/control
+
+ -- Bhavani Shankar <bhavi@ubuntu.com>  Wed, 26 Jun 2013 13:28:21 +0530
+
+sblim-sfcc (2.2.4-0ubuntu1) raring; urgency=low
+
+  * New upstream release.
+  * Add debian/watch file.
+
+ -- Logan Rosen <logatronico@gmail.com>  Thu, 15 Nov 2012 11:49:36 -0500
+
+sblim-sfcc (2.2.1-0ubuntu2) precise; urgency=low
+
+  * No-change rebuild to drop spurious libsfgcc1 dependency on armhf.
+
+ -- Adam Conrad <adconrad@0c3.net>  Fri, 02 Dec 2011 21:19:27 -0700
+
+sblim-sfcc (2.2.1-0ubuntu1) maverick; urgency=low
+
+  * New upstream version.
+
+ -- Guillaume BOTTEX <guillaumebottex@uxsystem.net>  Mon, 7 Jun 2010 14:34:00 +0900
+
+sblim-sfcc (2.2.0-0ubuntu1) karmic; urgency=low
+
+  * New upstream version.
+  * debian/libcimcclient0.install: Ship missing libcmpisfcc library
+  * debian/control:
+    - Switch to libcurl4-openssl-dev to match the rest of the SBLIM stack
+    - Bump debhelper depend to >=5 to match debian/compat
+    - Fix section names, add missing ${misc:Depends}
+  * debian/copyright: Add missing copyright notice
+  * debian/rules: Removed spurious DH_MAKESHLIBS argument
+
+ -- Thierry Carrez <thierry.carrez@ubuntu.com>  Wed, 19 Aug 2009 14:41:55 +0200
+
+sblim-sfcc (2.0.1-0) gutsy; urgency=low
+
+  * Initial Release.
+
+ -- Kyle McMartin <kyle@ubuntu.com>  Fri, 05 Oct 2007 16:45:17 -0400
+
+
