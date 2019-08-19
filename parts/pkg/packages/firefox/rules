@@ -108,6 +108,7 @@ EOF
         mkdir -p "$firefox_langdir"
         tar -C "$firefox_langdir" --strip-components=1 -jx -f "$tarfile" \
           || exit 1
+        ln -fns /etc/firefox/distribution "${firefox_langdir}/distribution"
         ln -fns /etc/firefox/syspref.js \
                 "${firefox_langdir}/defaults/pref/syspref.js"
         cat <<'FF_PUAVO_JS_EOF' > "${firefox_langdir}/firefox-puavodesktop.js"
