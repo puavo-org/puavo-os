@@ -44,6 +44,7 @@ fi
 
 if [ -n "$topdomain" ]; then
   params="${params} string:images.${topdomain} string:imageproxy.${topdomain}"
+  params="${params} string:private-archive.${topdomain}"
 fi
 
 [ -z "$params" ] && exit 0
