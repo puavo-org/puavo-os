@@ -1,0 +1,16 @@
+#!/usr/bin/make -f
+# makefile for sblim-sfcc 
+
+# Uncomment this to turn on verbose mode. 
+#export DH_VERBOSE=1
+
+include /usr/share/cdbs/1/rules/debhelper.mk
+include /usr/share/cdbs/1/rules/autoreconf.mk
+include /usr/share/cdbs/1/class/autotools.mk
+
+#DEB_DH_MAKESHLIBS_ARGS_ALL = -V 'libcimcclient (>= 2.0.1)'
+
+common-install-arch::
+	find debian/tmp/usr/lib -name "*.la" -exec \
+		sed -i -e "s,^dependency_libs=.*,dependency_libs=''," {} +
+

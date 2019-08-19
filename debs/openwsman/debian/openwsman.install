@@ -1,0 +1,9 @@
+etc/openwsman/openwsman.conf
+etc/openwsman/ssleay.cnf
+etc/pam.d/openwsman
+usr/sbin/openwsmand
+usr/sbin/owsmangencert
+usr/lib/*/openwsman/authenticators/*.so
+usr/lib/*/openwsman/authenticators/*.so.*
+usr/lib/*/openwsman/plugins/*.so
+usr/lib/*/openwsman/plugins/*.so.*

@@ -1,0 +1,82 @@
+wsmancli (2.6.0-0ubuntu1) bionic; urgency=medium
+
+  * New upstream release
+
+ -- Andres Rodriguez <andreserl@ubuntu.com>  Thu, 08 Mar 2018 08:41:15 -0500
+
+wsmancli (2.3.1-0ubuntu1) utopic; urgency=medium
+
+  [ Kent Baxley ]
+  * New upstream release (LP: #1335324).
+    - includes all fixes in 2.3.0 Ubuntu versions.
+    - new feature -  read credentials from environment
+      wsman: WSMAN_USER, WSMAN_PASS, WSMAN_EVENT_USER, WSMAN_EVENT_PASS
+      wseventmgr: WSEVENTMGR_USER, WSEVENTMGR_PASS, WSEVENTMGR_EVENT_USER, 
+      WSEVENTMGR_EVENT_PASS
+    - new feature - add --non-interactive option to prevent asking 
+      for credentials in scripts    
+  
+  [ Michael Vogt ]
+  * debian/watch: updated to point to github
+  * debian/control: fix typo in Homepage field
+  * debian/rules: use dh-autoreconf
+
+ -- Kent Baxley <kent.baxley@canonical.com>  Thu, 26 Jun 2014 13:10:08 -0500
+
+wsmancli (2.3.0-0ubuntu4) trusty; urgency=low
+
+  * debian/patches: add fix-return-value.patch. 
+    Fixes issue where wsman returns zero even when
+    the connection fails (LP: #1274550). 
+
+ -- Kent Baxley <kent.baxley@canonical.com>  Thu, 30 Jan 2014 09:27:29 -0600
+
+wsmancli (2.3.0-0ubuntu3) trusty; urgency=low
+
+  [ Kent Baxley ]
+  * debian/control: update standards version to 3.9.5
+  * rebuild against openwsman-2.4.3 (LP: #1272059)
+
+  [ Dustin Kirkland ]
+  * debian/control: ensure that we block this build until
+    openwsman-2.4.3-0ubuntu4 libraries are in the archive
+
+ -- Kent Baxley <kent.baxley@canonical.com>  Thu, 23 Jan 2014 21:17:47 -0600
+
+wsmancli (2.3.0-0ubuntu2) trusty; urgency=low
+
+  * debian/copyright: cleanup copyright file. 
+  * debian/rules: add hardening flags to satisfy inclusion in main (LP #1262290)
+
+ -- Kent Baxley <kent.baxley@canonical.com>  Wed, 08 Jan 2014 11:55:27 -0600
+
+wsmancli (2.3.0-0ubuntu1) trusty; urgency=low
+
+  [ Kent Baxley ]
+  * New upstream release:
+  * fix the default port setting to match wsmc_create() call. Use
+    https (port 5986) when cainfo is set.
+  * in debug mode, dump the complete response XML if it can't
+    be parsed [Chris Poblete]
+  * adapt to reduced libu exposure in openwsman
+  * don't crash on filter parse error [Zoltan Micskei]
+  * remove -Q (don't send request) option
+  * complain about bad filter expression
+  * fix autotools build for MacOS [Dan Villiom Podlaski Christiansen]
+
+  [ Dustin Kirkland ]
+  * debian/copyright:
+    - fix syntax error, missing whitespace
+  * debian/control:
+    - bump standards version
+    - update maintainers
+  * debian/changelog:
+    - fix version
+
+ -- Kent Baxley <kent.baxley@canonical.com>  Mon, 25 Mar 2013 16:21:17 -0500
+
+wsmancli (2.2.6-1) precise; urgency=low
+
+  * Initial release
+
+ -- Daniel Jared Dominguez <Jared_Dominguez@Dell.com>  Tue, 31 Jul 2012 10:41:05 -0500

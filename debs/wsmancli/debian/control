@@ -1,0 +1,15 @@
+Source: wsmancli
+Section: admin
+Priority: extra
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+XSBC-Original-Maintainer: Daniel Jared Dominguez <Jared_Dominguez@Dell.com>
+Build-Depends: debhelper (>= 8.0.0), autotools-dev, libopenwsman-dev (>= 2.6.5-0ubuntu1), libcurl4-openssl-dev, pkg-config, dh-autoreconf
+Standards-Version: 3.9.5
+Homepage: http://openwsman.github.io/
+
+Package: wsmancli
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Opensource Implementation of WS-Management - Command line utility
+ Part of Openwsman, an Opensource Implementation of WS-Management. This
+ package contains the command line utility to interact with a wsman server.

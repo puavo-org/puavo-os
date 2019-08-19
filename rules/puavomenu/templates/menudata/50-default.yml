@@ -175,6 +175,13 @@ programs:
         icon: /usr/share/icons/Faenza/categories/96/gnome-joystick.png
         condition: "!personally_administered"
         tags: default, education
+  - elmo-imagemate:
+        type: custom
+        name: Elmo Imagemate
+        command: "chromium --app=https://imagemate-c.com --new-window --temp-profile" 
+        description: Document camera
+        icon: /usr/share/icons/Faenza/devices/scalable/camera.svg
+        tags: default
   - empathy:
         name:
             en: Empathy-chat client
@@ -437,6 +444,8 @@ programs:
   - MarvinView:
         tags: default
   - mimio-notebook:
+        tags: default
+  - minetest:
         tags: default
   - mousepad:
         tags: default
@@ -1259,6 +1268,7 @@ menus:
             - org.gnome.Cheese
             - kenavision
             - kamerka
+            - elmo-imagemate
             - openshot-qt
             - org.kde.kdenlive
             - kino
@@ -1294,6 +1304,7 @@ menus:
             - openttd
             - gnubg
             - freeciv-gtk2
+            - minetest
 
   - menu-games-personal:
         name:
@@ -1318,6 +1329,7 @@ menus:
             - steam
             - gnubg
             - freeciv-gtk2
+            - minetest
 
   - menu-abitti:
         name:

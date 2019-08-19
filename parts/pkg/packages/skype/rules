@@ -39,6 +39,9 @@ case "${command}" in
         ln -fns /usr/share/applications/skypeforlinux.desktop \
                 /usr/share/applications/skype.desktop
 
+        chown root:root "${upstream_dir}/usr/share/skypeforlinux/chrome-sandbox"
+        chmod 4755      "${upstream_dir}/usr/share/skypeforlinux/chrome-sandbox"
+
         add_disable_autostart
         ;;
 

@@ -1,0 +1,171 @@
+openwsman (2.6.5-0ubuntu3) bionic; urgency=medium
+
+  * debian/control: breaks/replaces for libwsman-client2.
+
+ -- Andres Rodriguez <andreserl@ubuntu.com>  Sat, 10 Mar 2018 05:32:44 -0500
+
+openwsman (2.6.5-0ubuntu2) bionic; urgency=medium
+
+  * Fix binary package to reflect the bumped soname from libwsman-client2
+    to libwsman-client4.
+
+ -- Andres Rodriguez <andreserl@ubuntu.com>  Fri, 09 Mar 2018 10:07:10 -0500
+
+openwsman (2.6.5-0ubuntu1) bionic; urgency=medium
+
+  * New upstream release
+  * d/p/fix_with_openssl1.11: Allow build with openssl 1.11 (LP: #1754012)
+
+ -- Andres Rodriguez <andreserl@ubuntu.com>  Thu, 08 Mar 2018 08:19:15 -0500
+
+openwsman (2.4.7-0ubuntu2) utopic; urgency=medium
+
+  * Fix typo in control file.  
+
+ -- Kent Baxley <kent.baxley@canonical.com>  Thu, 10 Jul 2014 08:13:06 -0500
+
+openwsman (2.4.7-0ubuntu1) utopic; urgency=low
+
+  * New upstream release (LP: #1334832) 
+
+ -- Kent Baxley <kent.baxley@canonical.com>  Fri, 27 Jun 2014 11:07:16 -0500
+
+openwsman (2.4.3-0ubuntu4.1) trusty-security; urgency=low
+
+  * SECURITY UPDATE: Add security fixes from upstream openwsman (LP: #1319089)
+    - debian/patches/ws-xml-make-default-prefix-buff-overflow-fix.patch:
+      ws_xml_make_default_prefix() can overflow buf parameter via sprintf()
+    - debian/patches/wsmc-create-request-fix-buff-overflow.patch:
+      wsmc_create_request() potential buf[20] overflow via WSMAN_ACTION_RENEW
+    - debian/patches/LocalSubscriptionOpUpdate-fix-fopen.patch:
+      address LocalSubscriptionOpUpdate() unchecked fopen()
+    - debian/patches/wsman-get-fault-status-sanity-guard-fix.patch:
+      Fix incorrect order of sanity guards in wsman_get_fault_status_from_doc()
+    - debian/patches/mem-allocation-wsman-init-plugins-fix.patch:
+      Fix unchecked memory allocation in wsman_init_plugins(), p->ifc
+    - debian/patches/mem-allocation-mem-double-newptr-fix.patch:
+      Fix unchecked memory allocation in mem_double(), newptr
+    - debian/patches/mem-allocation-dictionary-new-fix.patch:
+      Fix unchecked memory allocation in dictionary_new(), d, d->val, d->key,
+      d->hash
+    - debian/patches/mem-allocation-u-error-new-fix.patch:
+      Fix unchecked memory allocation in u_error_new(), *error
+    - debian/patches/remove-unsafe-debug-call-from-sighup-handler.patch:
+      sighup_handler() in wsmand.c use of unsafe functions in a signal handler
+    - debian/patches/SHA512-password-fixes.patch:
+      Support SHA512 password encoding, use safe_cmp to prevent brute-force
+      attacks
+    - debian/patches/increase-password-upper-limit.patch:
+      increase password upper limit to 128 characters (from 64)
+
+ -- Kent Baxley <kent.baxley@canonical.com>  Fri, 06 Jun 2014 12:55:02 -0500
+
+openwsman (2.4.3-0ubuntu4) trusty; urgency=low
+
+  * debian/control: fix the breaks and replaces version numbers 
+    for libopenwsman1.
+
+ -- Kent Baxley <kent.baxley@canonical.com>  Fri, 24 Jan 2014 08:45:40 -0600
+
+openwsman (2.4.3-0ubuntu3) trusty; urgency=low
+
+  * debian/control: Added 'Breaks' to each of the new libwsman packages.
+  * debian/control: Added a libopenwsman1 transitional package.
+  * clean up control and .install files to remove extra newlines.  
+
+ -- Kent Baxley <kent.baxley@canonical.com>  Fri, 24 Jan 2014 06:57:58 -0600
+
+openwsman (2.4.3-0ubuntu2) trusty; urgency=low
+
+  * debian/control: convert libopenwsman package into libwsman1,  
+    libwsman-client2, libwsman-curl-client-transport1. 
+  * debain/control: break libwsman-server1 into its own package. 
+  * Fixes ABI breakage for wsmancli (LP: #1272059). 
+
+ -- Kent Baxley <kent.baxley@canonical.com>  Thu, 23 Jan 2014 15:32:43 -0600
+
+openwsman (2.4.3-0ubuntu1) trusty; urgency=low
+
+  * Sync with upstream 2.4.3 (LP: #1268707)
+  * debian/control: bump standards version to 3.9.5
+  * debian/patches: removed cmake-findruby.patch. FTBFS no longer occurs due to
+    overhauled ruby cmake file upstream. 
+
+ -- Kent Baxley <kent.baxley@canonical.com>  Mon, 13 Jan 2014 12:11:37 -0600
+
+openwsman (2.3.6-0ubuntu1) raring; urgency=low
+
+  * Sync with upstream 2.3.6
+  * debian/control: Move to standards version 3.9.2
+    - debian/*.install: Use relative source paths
+    - debian/*.conffiles: Dropped
+    - debian/source/format: New: "3.0 (quilt)"
+    - debian/control: Add debhelper (>= 9.0.0) as build-dependency
+    - debian/rules: Use dh format
+    - debian/rules: Disable dh_auto_test. Testcases fail
+    - debian/rules: Override dh_auto_install to install the client config
+  * debian/control: Add build-dependency on cmake
+  * debian/control: Drop build-dependency on cdbs
+  * debian/control: Multi-Arch conversion for libopenwsman1 and
+                    libwsman-clientpp1.
+  * debian/rules: Drop cdbs includes
+  * debian/rules: Drop extra build flags (not required anymore)
+  * debian/libopenwsman-dev.install: Don't install .a files (not built)
+  * debian/patches/cmake-findruby.patch: Fix FTBS caused by a certain
+    usage of braces.
+  * debian/patches/cmake-python-includes.patch: Need to use a different
+    variable which has architecture specific include path as well.
+
+ -- Stefan Bader <stefan.bader@canonical.com>  Wed, 06 Feb 2013 13:59:29 +0100
+
+openwsman (2.2.3-0ubuntu4) precise; urgency=low
+
+  * debian/libopenwsman-dev.install: Don't install la-file (LP: #905538)
+
+ -- Andreas Moog <amoog@ubuntu.com>  Fri, 16 Dec 2011 23:00:37 +0100
+
+openwsman (2.2.3-0ubuntu3) oneiric; urgency=low
+
+  * No-change rebuild for libssl0.9.8 -> libssl1.0.0 transition.
+
+ -- Ilya Barygin <barygin@gmail.com>  Sun, 21 Aug 2011 20:45:34 +0400
+
+openwsman (2.2.3-0ubuntu2) natty; urgency=low
+
+  [ Mathieu Trudel-Lapierre ]
+  * debian/control: Add build-dep for libcimcclient0-dev, so that the CIM
+    plugins gets built. (LP: #760835) 
+
+ -- Timo Aaltonen <tjaalton@ubuntu.com>  Fri, 15 Apr 2011 13:35:38 +0300
+
+openwsman (2.2.3-0ubuntu1) maverick; urgency=low
+
+  * New upstream release. (LP: #600392)
+
+ -- Charlie Smotherman <cjsmo@cableone.net>  Sat, 10 Jul 2010 21:42:15 -0500
+
+openwsman (2.0.0b1-0ubuntu2.2) lucid; urgency=low
+
+  * Fixes typo in control (LP: #486823)
+
+ -- arky <rakesh_ambati@yahoo.com>  Wed, 10 Feb 2010 18:42:15 +0530
+
+openwsman (2.0.0b1-0ubuntu2.1) karmic-proposed; urgency=low
+
+  * add "--disable-more-warnings" to fix FTBFS (LP: #427217)
+
+ -- Whoopie <whoopie79@gmx.net>  Sun, 01 Nov 2009 04:11:16 +0100
+
+openwsman (2.0.0b1-0ubuntu2) hardy; urgency=low
+
+  * Missing depends on library by -dev package.
+
+ -- Ben Collins <bcollins@ubuntu.com>  Tue, 04 Mar 2008 13:03:17 -0500
+
+openwsman (2.0.0b1-0ubuntu1) hardy; urgency=low
+
+  * Initial release
+  * Disable eventing support. Causes re-entrant building
+  * src/server/wsmand-daemon.c: Wrap some usages of eventing in ifdef's
+
+ -- Ben Collins <bcollins@ubuntu.com>  Fri, 29 Feb 2008 14:06:25 -0500

@@ -1,0 +1,222 @@
+Description: fix manpage-mismatch warnings at build time
+ .
+ sblim-sfcc (2.2.7-0ubuntu1) UNRELEASED; urgency=medium
+ .
+Author: Kent Baxley <kent.baxley@canonical.com>
+
+--- sblim-sfcc-2.2.7.orig/man/man3/CMCIClient.3
++++ sblim-sfcc-2.2.7/man/man3/CMCIClient.3
+@@ -1,4 +1,4 @@
+-.TH  3  2005-06-09 "sfcc" "SFCBroker Client Library"
++.TH CMCICLENT  3  2005-06-09 "sfcc" "SFCBroker Client Library"
+ .SH NAME
+ CMCIClient \- CIMOM Client Library object
+ .SH SYNOPSIS
+--- sblim-sfcc-2.2.7.orig/man/man3/CMCIClientFT.associatorNames.3
++++ sblim-sfcc-2.2.7/man/man3/CMCIClientFT.associatorNames.3
+@@ -1,4 +1,4 @@
+-.TH  3  2005-06-09 "sfcc" "SFCBroker Client Library"
++.TH CMCICLENTFT.ASSOSCIATORNAMES 3  2005-06-09 "sfcc" "SFCBroker Client Library"
+ .SH NAME
+ CMCICLientFT.associatorNames() \- Enumerate ObjectPaths associated with an Instance
+ .SH SYNOPSIS
+--- sblim-sfcc-2.2.7.orig/man/man3/CMCIClientFT.associators.3
++++ sblim-sfcc-2.2.7/man/man3/CMCIClientFT.associators.3
+@@ -1,4 +1,4 @@
+-.TH  3  2005-06-09 "sfcc" "SFCBroker Client Library"
++.TH CMCICLIENTFT.ASSOCIATORS 3  2005-06-09 "sfcc" "SFCBroker Client Library"
+ .SH NAME
+ CMCIClientFT.associators() \- Enumerate instances associated with an Instance
+ .SH SYNOPSIS
+--- sblim-sfcc-2.2.7.orig/man/man3/CMCIClientFT.createInstance.3
++++ sblim-sfcc-2.2.7/man/man3/CMCIClientFT.createInstance.3
+@@ -1,4 +1,4 @@
+-.TH  3  2005-06-09 "sfcc" "SFCBroker Client Library"
++.TH CMCICLENTFT.CREATEINSTANCE 3  2005-06-09 "sfcc" "SFCBroker Client Library"
+ .SH NAME
+ CMCIClientFT.createInstance() \- Create class instance
+ .SH SYNOPSIS
+--- sblim-sfcc-2.2.7.orig/man/man3/CMCIClientFT.deleteInstance.3
++++ sblim-sfcc-2.2.7/man/man3/CMCIClientFT.deleteInstance.3
+@@ -1,4 +1,4 @@
+-.TH  3  2005-06-09 "sfcc" "SFCBroker Client Library"
++.TH CMCICLIENTFT.DELETEINSTANCE  3  2005-06-09 "sfcc" "SFCBroker Client Library"
+ .SH NAME
+ CMCIClientFT.deleteInstance() \- Delete class instance
+ .SH SYNOPSIS
+--- sblim-sfcc-2.2.7.orig/man/man3/CMCIClientFT.enumClassNames.3
++++ sblim-sfcc-2.2.7/man/man3/CMCIClientFT.enumClassNames.3
+@@ -1,4 +1,4 @@
+-.TH  3  2005-06-09 "sfcc" "SFCBroker Client Library"
++.TH CMCICLIENTFT.ENUMCLASSNAMES 3  2005-06-09 "sfcc" "SFCBroker Client Library"
+ .SH NAME
+ CMCICLientFT.enumClassNames() \- Enumerate class names
+ .SH SYNOPSIS
+--- sblim-sfcc-2.2.7.orig/man/man3/CMCIClientFT.enumClasses.3
++++ sblim-sfcc-2.2.7/man/man3/CMCIClientFT.enumClasses.3
+@@ -1,4 +1,4 @@
+-.TH  3  2005-06-09 "sfcc" "SFCBroker Client Library"
++.TH CMCICLIENTFT.ENUMCLASSES 3  2005-06-09 "sfcc" "SFCBroker Client Library"
+ .SH NAME
+ CMCICLientFT.enumClasses() \- Enumerate classes and subclasss
+ .SH SYNOPSIS
+--- sblim-sfcc-2.2.7.orig/man/man3/CMCIClientFT.enumInstanceNames.3
++++ sblim-sfcc-2.2.7/man/man3/CMCIClientFT.enumInstanceNames.3
+@@ -1,4 +1,4 @@
+-.TH  3  2005-06-09 "sfcc" "SFCBroker Client Library"
++.TH CMCICLIENTFT.ENUMINSTANCENAMES  3  2005-06-09 "sfcc" "SFCBroker Client Library"
+ .SH NAME
+ CMCIClientFT.enumInstanceNames() \- Enumerate instance names of a class
+ .SH SYNOPSIS
+--- sblim-sfcc-2.2.7.orig/man/man3/CMCIClientFT.enumInstances.3
++++ sblim-sfcc-2.2.7/man/man3/CMCIClientFT.enumInstances.3
+@@ -1,4 +1,4 @@
+-.TH  3  2005-06-09 "sfcc" "SFCBroker Client Library"
++.TH CMCICLIENTFT.ENUMINSTANCES 3  2005-06-09 "sfcc" "SFCBroker Client Library"
+ .SH NAME
+ CMCIClientFT.enumInstances() \- Enumerate instances of a class
+ .SH SYNOPSIS
+--- sblim-sfcc-2.2.7.orig/man/man3/CMCIClientFT.execQuery.3
++++ sblim-sfcc-2.2.7/man/man3/CMCIClientFT.execQuery.3
+@@ -1,4 +1,4 @@
+-.TH  3  2005-06-09 "sfcc" "SFCBroker Client Library"
++.TH CMCICLIENTFT.EXECQUERY 3  2005-06-09 "sfcc" "SFCBroker Client Library"
+ .SH NAME
+ CMCIClientFT.execQuery() \- Query the enumeration of instances of a class
+ .SH SYNOPSIS
+--- sblim-sfcc-2.2.7.orig/man/man3/CMCIClientFT.getClass.3
++++ sblim-sfcc-2.2.7/man/man3/CMCIClientFT.getClass.3
+@@ -1,4 +1,4 @@
+-.TH  3  2005-06-09 "sfcc" "SFCBroker Client Library"
++.TH CMCILIENTFT.GETCLASS 3  2005-06-09 "sfcc" "SFCBroker Client Library"
+ .SH NAME
+ CMCIClientFT.getClass() \- Get class as reference
+ .SH SYNOPSIS
+--- sblim-sfcc-2.2.7.orig/man/man3/CMCIClientFT.getInstance.3
++++ sblim-sfcc-2.2.7/man/man3/CMCIClientFT.getInstance.3
+@@ -1,4 +1,4 @@
+-.TH  3  2005-06-09 "sfcc" "SFCBroker Client Library"
++.TH CMCICLIENTFT.GETINSTANCE 3  2005-06-09 "sfcc" "SFCBroker Client Library"
+ .SH NAME
+ CMCIClientFT.getInstance() \- Get class instance
+ .SH SYNOPSIS
+--- sblim-sfcc-2.2.7.orig/man/man3/CMCIClientFT.getProperty.3
++++ sblim-sfcc-2.2.7/man/man3/CMCIClientFT.getProperty.3
+@@ -1,4 +1,4 @@
+-.TH  3  2005-06-09 "sfcc" "SFCBroker Client Library"
++.TH CMCICLIENTFT.GETPROPERTY 3  2005-06-09 "sfcc" "SFCBroker Client Library"
+ .SH NAME
+ CMCIClientFT.getProperty() \- Get a named property value of an instance
+ .SH SYNOPSIS
+--- sblim-sfcc-2.2.7.orig/man/man3/CMCIClientFT.invokeMethod.3
++++ sblim-sfcc-2.2.7/man/man3/CMCIClientFT.invokeMethod.3
+@@ -1,4 +1,4 @@
+-.TH  3  2005-06-09 "sfcc" "SFCBroker Client Library"
++.TH CMCIClientFT.inovkeMethod 3  2005-06-09 "sfcc" "SFCBroker Client Library"
+ .SH NAME
+ CMCIClientFT.invokeMethod() \- Invoke a named method of an instance
+ .SH SYNOPSIS
+--- sblim-sfcc-2.2.7.orig/man/man3/CMCIClientFT.referenceNames.3
++++ sblim-sfcc-2.2.7/man/man3/CMCIClientFT.referenceNames.3
+@@ -1,4 +1,4 @@
+-.TH  3  2005-06-09 "sfcc" "SFCBroker Client Library"
++.TH CMCICLIENTFT.REFERENCENAMES 3  2005-06-09 "sfcc" "SFCBroker Client Library"
+ .SH NAME
+ CMCIClientFT.referenceNames() \- Enumerate association ObjectPaths for a class instance
+ .SH SYNOPSIS
+--- sblim-sfcc-2.2.7.orig/man/man3/CMCIClientFT.references.3
++++ sblim-sfcc-2.2.7/man/man3/CMCIClientFT.references.3
+@@ -1,4 +1,4 @@
+-.TH  3  2005-06-09 "sfcc" "SFCBroker Client Library"
++.TH CMCICLIENTFT.REFERENCES 3  2005-06-09 "sfcc" "SFCBroker Client Library"
+ .SH NAME
+ CMCIClientFT.references() \- Enumerate association instances for a class instance
+ .SH SYNOPSIS
+--- sblim-sfcc-2.2.7.orig/man/man3/CMCIClientFT.setInstance.3
++++ sblim-sfcc-2.2.7/man/man3/CMCIClientFT.setInstance.3
+@@ -1,4 +1,4 @@
+-.TH  3  2005-06-09 "sfcc" "SFCBroker Client Library"
++.TH CMCICLIENTFT.SETINSTANCE 3  2005-06-09 "sfcc" "SFCBroker Client Library"
+ .SH NAME
+ CMCIClientFT.setInstance() \- Replace class instance
+ .SH SYNOPSIS
+--- sblim-sfcc-2.2.7.orig/man/man3/CMCIClientFT.setProperty.3
++++ sblim-sfcc-2.2.7/man/man3/CMCIClientFT.setProperty.3
+@@ -1,4 +1,4 @@
+-.TH  3  2005-06-09 "sfcc" "SFCBroker Client Library"
++.TH CMCICLIENTFT.SETPROPERTY 3  2005-06-09 "sfcc" "SFCBroker Client Library"
+ .SH NAME
+ CMCIClientFT.setProperty() \- Set a named property value of an instance
+ .SH SYNOPSIS
+--- sblim-sfcc-2.2.7.orig/man/man3/CMPIArgs.3
++++ sblim-sfcc-2.2.7/man/man3/CMPIArgs.3
+@@ -1,4 +1,4 @@
+-.TH  3  2005-06-09 "sfcc" "SFCBroker Client Library"
++.TH CMPIARGS 3  2005-06-09 "sfcc" "SFCBroker Client Library"
+ .SH NAME
+ CMPIArgs \- CMPIArgs class implementation
+ .SH SYNOPSIS
+--- sblim-sfcc-2.2.7.orig/man/man3/CMPIDateTime.3
++++ sblim-sfcc-2.2.7/man/man3/CMPIDateTime.3
+@@ -1,4 +1,4 @@
+-.TH  3  2005-06-09 "sfcc" "SFCBroker Client Library"
++.TH CMPIDATETIME 3  2005-06-09 "sfcc" "SFCBroker Client Library"
+ .SH NAME
+ CMPIDateTime \- CMPIDateTime class implementation
+ .SH SYNOPSIS
+--- sblim-sfcc-2.2.7.orig/man/man3/CMPIEnumeration.3
++++ sblim-sfcc-2.2.7/man/man3/CMPIEnumeration.3
+@@ -1,4 +1,4 @@
+-.TH  3  2005-06-09 "sfcc" "SFCBroker Client Library"
++.TH CMPIENUMERATION 3  2005-06-09 "sfcc" "SFCBroker Client Library"
+ .SH NAME
+ CMPIEnumeration \- CMPIEnumeration class implementation
+ .SH SYNOPSIS
+--- sblim-sfcc-2.2.7.orig/man/man3/CMPIInstance.3
++++ sblim-sfcc-2.2.7/man/man3/CMPIInstance.3
+@@ -1,4 +1,4 @@
+-.TH  3  2005-06-09 "sfcc" "SFCBroker Client Library"
++.TH CMPIINSTANCE 3  2005-06-09 "sfcc" "SFCBroker Client Library"
+ .SH NAME
+ CMPIInstance \- CMPIInstance class implementation
+ .SH SYNOPSIS
+--- sblim-sfcc-2.2.7.orig/man/man3/CMPIObjectPath.3
++++ sblim-sfcc-2.2.7/man/man3/CMPIObjectPath.3
+@@ -1,4 +1,4 @@
+-.TH  3  2005-06-09 "sfcc" "SFCBroker Client Library"
++.TH CMPIOBJECTPATH 3  2005-06-09 "sfcc" "SFCBroker Client Library"
+ .SH NAME
+ CMPIObjectPath \- CMPIObjectPath class implementation
+ .SH SYNOPSIS
+--- sblim-sfcc-2.2.7.orig/man/man3/CMPIStatus.3
++++ sblim-sfcc-2.2.7/man/man3/CMPIStatus.3
+@@ -1,4 +1,4 @@
+-.TH  3  2005-06-09 "sfcc" "SFCBroker Client Library"
++.TH CMPISTATUS 3  2005-06-09 "sfcc" "SFCBroker Client Library"
+ .SH NAME
+ CMPIStatus \- CMPIStatus class implementation
+ .SH SYNOPSIS
+--- sblim-sfcc-2.2.7.orig/man/man3/CMPIString.3
++++ sblim-sfcc-2.2.7/man/man3/CMPIString.3
+@@ -1,4 +1,4 @@
+-.TH  3  2005-06-09 "sfcc" "SFCBroker Client Library"
++.TH CMPISTRING 3  2005-06-09 "sfcc" "SFCBroker Client Library"
+ .SH NAME
+ CMPIString \- CMPIString class implementation
+ .SH SYNOPSIS
+--- sblim-sfcc-2.2.7.orig/man/man3/CMPIValue.3
++++ sblim-sfcc-2.2.7/man/man3/CMPIValue.3
+@@ -1,4 +1,4 @@
+-.TH  3  2005-06-09 "sfcc" "SFCBroker Client Library"
++.TH CMPIValue 3  2005-06-09 "sfcc" "SFCBroker Client Library"
+ .SH NAME
+ CMPIValue \- CMPIValue class implementation
+ .SH SYNOPSIS
+--- sblim-sfcc-2.2.7.orig/man/man3/cmciConnect.3
++++ sblim-sfcc-2.2.7/man/man3/cmciConnect.3
+@@ -1,4 +1,4 @@
+-.TH  3  2005-06-09 "sfcc" "SFCBroker Client Library"
++.TH CMCICONNECT 3  2005-06-09 "sfcc" "SFCBroker Client Library"
+ .SH NAME
+ cmciConnect() \- Create a CMCIClient object and connection
+ .SH SYNOPSIS

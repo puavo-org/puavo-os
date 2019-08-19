@@ -1,4 +1,5 @@
-_pkgs_builddeps :=
+# sblim-sfcc openwsman are dependencies for wsmancli
+_pkgs_builddeps := sblim-sfcc openwsman
 
 # parts, ports and some cloud packages go into puavo-os images
 
@@ -7,6 +8,25 @@ _pkgs_parts := puavo-ds puavo-os
 # XXX if there is any benefit to do so
 _pkgs_ports := gnome-shell grub2 mutter nbd openboard openldap vtun wine
 
+# parts, ports and some cloud packages go into puavo-os images
+
+_pkgs_parts     := puavo-ds \
+                   puavo-os
+_pkgs_ports     := fluentd         \
+                   gnome-shell     \
+                   grub2           \
+                   gvfs            \
+                   linux           \
+                   mutter          \
+                   nbd             \
+                   nwjs            \
+                   openboard       \
+                   openldap        \
+                   visionmedia-mon \
+                   vtun            \
+                   wine            \
+                   wpa             \
+                   wsmancli
 _pkgs_image     := $(_pkgs_builddeps) $(_pkgs_parts) $(_pkgs_ports)
 _pkgs_cloud     := krb5 openldap puavo-ds
 

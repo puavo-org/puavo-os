@@ -142,6 +142,7 @@ class packages {
     , 'w3m'
     , 'wakeonlan'
     , 'whois'
+    , 'wsmancli'
     , 'x11vnc'
     , 'xbacklight'
     , 'xinput-calibrator' ]:

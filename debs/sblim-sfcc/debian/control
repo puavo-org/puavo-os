@@ -1,0 +1,37 @@
+Source: sblim-sfcc
+Priority: optional
+Section: libs
+Build-Depends: autotools-dev,
+               cdbs,
+               debhelper (>= 9),
+               dh-autoreconf,
+               gettext,
+               libcurl4-openssl-dev
+Maintainer: Ubuntu developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Standards-Version: 3.9.8
+Homepage: http://sblim.sourceforge.net/wiki/index.php/Sfcc
+
+Package: libcimcclient0
+Architecture: any
+Depends: ${misc:Depends},
+         ${shlibs:Depends}
+Description: small footprint CIM client libraries
+ The small footprint CIM client library is a C API allowing client
+ applications to interface with CIM implementations (e.g. CIM servers).
+ Due to it's small memory and disk footprint it is well-suited for
+ embedded environments.
+
+Package: libcimcclient0-dev
+Architecture: any
+Section: libdevel
+Depends: libcimcclient0 (=${binary:Version}),
+         pkg-config,
+         ${misc:Depends}
+Description: small footprint CIM client development headers
+ The small footprint CIM client library is a C API allowing client
+ applications to interface with CIM implementations (e.g. CIM
+ servers). Due to it's small memory and disk footprint it is
+ well-suited for embedded environments.
+ .
+ This package provides the development headers for building
+ packages against the cimcclient.
