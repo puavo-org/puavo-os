@@ -5,8 +5,11 @@ class firefox {
   # Firefox configuration system is still a mess... if there really is a more
   # straightforward way, I would like to hear about it.
   file {
-    '/etc/firefox':
+    [ '/etc/firefox', '/etc/firefox/distribution', ]:
       ensure => directory;
+
+    '/etc/firefox/distribution/policies.json':
+      content => template('firefox/policies.json');
 
     '/etc/firefox/puavodesktop.js':
       content => template('firefox/puavodesktop.js');
