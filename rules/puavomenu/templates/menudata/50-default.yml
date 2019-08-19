@@ -167,6 +167,13 @@ programs:
         icon: /usr/share/icons/Faenza/categories/96/gnome-joystick.png
         condition: "!personally_administered"
         tags: default, education
+  - elmo-imagemate:
+        type: custom
+        name: Elmo Imagemate
+        command: "chromium --app=https://imagemate-c.com --new-window --temp-profile" 
+        description: Document camera
+        icon: /usr/share/icons/Faenza/devices/scalable/camera.svg
+        tags: default
   - empathy:
         name:
             en: Empathy-chat client
@@ -1262,6 +1269,7 @@ menus:
             - org.gnome.Cheese
             - kenavision
             - kamerka
+            - elmo-imagemate
             - openshot
             - org.kde.kdenlive
             - kino
