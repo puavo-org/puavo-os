@@ -1,0 +1,20 @@
+#!/bin/sh
+
+set -eu
+
+if [ "$(puavo-conf puavo.pm.display.drrs.enabled)" != 'false' ]; then
+  exit 0
+fi
+
+test -e /sys/kernel/debug/dri/0/i915_drrs_ctl    || exit 0
+test -e /sys/kernel/debug/dri/0/i915_drrs_status || exit 0
+
+for i in $(seq 20); do
+  if grep -q CRTC /sys/kernel/debug/dri/0/i915_drrs_status; then
+    echo 0 > /sys/kernel/debug/dri/0/i915_drrs_ctl
+    exit 0
+  fi
+  sleep 1
+done
+
+exit 1
