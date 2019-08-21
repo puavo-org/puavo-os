@@ -19,7 +19,7 @@ override_dh_auto_configure:
 	  -DCMAKE_VERBOSE_MAKEFILE=TRUE \
 	  -DEXPLICIT_TARGET="$(EXPLICIT_TARGET)" \
 	  -DBUILD_RUBY_GEM=no \
-	  -DBUILD_RUBY=no
+	  -DBUILD_PYTHON=no
 
 override_dh_auto_install:
 	mkdir -p debian/tmp/etc/openwsman
