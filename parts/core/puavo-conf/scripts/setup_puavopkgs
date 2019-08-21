@@ -74,6 +74,11 @@ get_dir_with_latest_version() {
   latest_pkg_version=0
 
   for pkgid_dir in ${other_pkg_dir}/*; do
+    # XXX these three lines may be removed later once migration is ok
+    if [ ! -e "${pkgid_dir}/.installed" -a -e "${pkgid_dir}/upstream" ]; then
+      touch "${pkgid_dir}/.installed"
+    fi
+
     test -e "${pkgid_dir}/.installed" || continue
 
     pkg_version=$(
