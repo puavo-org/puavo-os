@@ -46,11 +46,11 @@ reconfigure_upgrade_pkg() {
   timeout -k 5 60 puavo-pkg reconfigure-upgrade "$@"
 }
 
-test_puavopkg_installation() {
+test_puavopkg_system_installation() {
   puavo_pkg=$1
 
-  installed_path="${system_rootdir}/installed/${puavo_pkg}"
-  test -h "$installed_path" -a -d "$installed_path"
+  installed_path="${system_rootdir}/packages/${puavo_pkg}"
+  test -d "$installed_path"
 }
 
 get_installed_version() {
@@ -181,7 +181,7 @@ setup_puavopkg_common() {
   # "puavo.nonfree.smartboard.enabled" and
   # "puavo.nonfree.ti_nspire_cx_cas_ss.enabled".
   for puavo_pkg in smartboard ti-nspire-cx-cas-ss; do
-    if test_puavopkg_installation "$puavo_pkg"; then
+    if test_puavopkg_system_installation "$puavo_pkg"; then
       reconfigure_puavopkg "$puavo_pkg" || status=1
     fi
   done
