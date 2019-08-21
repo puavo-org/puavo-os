@@ -74,7 +74,7 @@ get_dir_with_latest_version() {
   latest_pkg_version=0
 
   for pkgid_dir in ${other_pkg_dir}/*; do
-    test -d "$pkgid_dir" || continue
+    test -e "${pkgid_dir}/.installed" || continue
 
     pkg_version=$(
       mawk '$1 == "version" && $2 ~ /^[0-9]+$/ { print $2 }' \
