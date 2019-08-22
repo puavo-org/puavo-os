@@ -69,13 +69,17 @@ get_installed_version() {
 get_dir_with_latest_version() {
   other_pkg_dir=$1
   current_version=$2
+  other_rootdir=$3
 
   latest_pkg_dir=
   latest_pkg_version=0
 
   for pkgid_dir in ${other_pkg_dir}/*; do
-    # XXX these three lines may be removed later once migration is ok
-    if [ ! -e "${pkgid_dir}/.installed" -a -e "${pkgid_dir}/upstream" ]; then
+    # XXX these four lines may be removed later once migration is ok
+    # XXX (and $other_rootdir argument is then useless in this function)
+    if [ "$other_rootdir" = "$local_rootdir" \
+         -a ! -e "${pkgid_dir}/.installed"   \
+         -a -e "${pkgid_dir}/upstream" ]; then
       touch "${pkgid_dir}/.installed"
     fi
 
@@ -113,8 +117,9 @@ configure_latest_from() {
 
     syspkg_version="$(get_installed_version "$pkg_name")"
 
-    other_pkgid_dir=$(get_dir_with_latest_version "$other_pkgdir" \
-                                                  "$syspkg_version")
+    other_pkgid_dir=$(get_dir_with_latest_version "$other_pkgdir"   \
+                                                  "$syspkg_version" \
+                                                  "$other_rootdir")
 
     if [ -d "$other_pkgid_dir" ]; then
       ln -fns "$other_pkgid_dir" "/var/lib/puavo-pkg/available/${pkg_name}"
