@@ -66,24 +66,25 @@ get_installed_version() {
   echo "$syspkg_version"
 }
 
-get_dir_with_latest_version() {
+get_dir_with_latest_installed_version() {
   other_pkg_dir=$1
   current_version=$2
-  other_rootdir=$3
+  pkg_name=$3
+  other_rootdir=$4
 
-  latest_pkg_dir=
-  latest_pkg_version=0
+  latest_available_pkg_dir=
+  latest_available_pkg_version=0
+  latest_installed_pkg_dir=
+  latest_installed_pkg_version=0
 
   for pkgid_dir in ${other_pkg_dir}/*; do
-    # XXX these four lines may be removed later once migration is ok
+    # XXX these five lines may be removed later once migration is ok
     # XXX (and $other_rootdir argument is then useless in this function)
     if [ "$other_rootdir" = "$local_rootdir" \
          -a ! -e "${pkgid_dir}/.installed"   \
          -a -e "${pkgid_dir}/upstream" ]; then
       touch "${pkgid_dir}/.installed"
     fi
-
-    test -e "${pkgid_dir}/.installed" || continue
 
     pkg_version=$(
       mawk '$1 == "version" && $2 ~ /^[0-9]+$/ { print $2 }' \
@@ -94,17 +95,26 @@ get_dir_with_latest_version() {
       continue
     fi
 
-    if [ "$latest_pkg_version" -lt "$pkg_version" ]; then
-      latest_pkg_dir="$pkgid_dir"
-      latest_pkg_version="$pkg_version"
+    if [ "$latest_available_pkg_version" -lt "$pkg_version" ]; then
+      latest_available_pkg_dir="$pkgid_dir"
+      latest_available_pkg_version="$pkg_version"
+    fi
+    if [ "$latest_installed_pkg_version" -lt "$pkg_version" \
+         -a -e "${pkgid_dir}/.installed" ]; then
+      latest_installed_pkg_dir="$pkgid_dir"
+      latest_installed_pkg_version="$pkg_version"
     fi
   done
 
-  if [ "$latest_pkg_version" -le "$current_version" ]; then
+  if [ -n "$latest_available_pkg_dir" ]; then
+    ln -fns "$latest_available_pkg_dir" "/var/lib/puavo-pkg/available/${pkg_name}"
+  fi
+
+  if [ "$latest_installed_pkg_version" -le "$current_version" ]; then
     return
   fi
 
-  echo "$latest_pkg_dir"
+  echo "$latest_installed_pkg_dir"
 }
 
 configure_latest_from() {
@@ -117,13 +127,12 @@ configure_latest_from() {
 
     syspkg_version="$(get_installed_version "$pkg_name")"
 
-    other_pkgid_dir=$(get_dir_with_latest_version "$other_pkgdir"   \
-                                                  "$syspkg_version" \
-                                                  "$other_rootdir")
+    other_pkgid_dir=$(get_dir_with_latest_installed_version "$other_pkgdir"   \
+                                                            "$syspkg_version" \
+                                                            "$pkg_name"       \
+                                                            "$other_rootdir")
 
     if [ -d "$other_pkgid_dir" ]; then
-      ln -fns "$other_pkgid_dir" "/var/lib/puavo-pkg/available/${pkg_name}"
-
       # on fatclients we support only configuring the latest version
       # that is on the bootserver
       puavo_pkg_spec=$(puavo-conf "puavo.pkg.${pkg_name}" 2>/dev/null) || true
