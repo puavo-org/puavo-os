@@ -1,10 +1,10 @@
 [Unit]
 Description=Disable DRRS conditionally
-After=multi-user.target sleep.target
+After=multi-user.target
 
 [Service]
 Type=oneshot
 ExecStart=/usr/local/lib/puavo-maybe-disable-drrs
 
 [Install]
-WantedBy=multi-user.target sleep.target
+WantedBy=multi-user.target

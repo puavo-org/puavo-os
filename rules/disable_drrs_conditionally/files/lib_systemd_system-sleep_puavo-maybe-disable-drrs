@@ -1,0 +1,6 @@
+#!/bin/sh
+
+test "$1" = 'post' || exit 0
+
+/usr/local/lib/puavo-maybe-disable-drrs
+exit 0
