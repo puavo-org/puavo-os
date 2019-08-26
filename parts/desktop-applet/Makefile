@@ -9,7 +9,7 @@ INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL) -m 644
 
 .PHONY: all
-all: po/fi/puavo-desktop-applet.mo po/sv/puavo-desktop-applet.mo
+all: po/de/puavo-desktop-applet.mo po/fi/puavo-desktop-applet.mo po/sv/puavo-desktop-applet.mo
 
 puavo-desktop-applet.pot: puavo-desktop-applet
 	xgettext --omit-header --language Python --keyword=_tr -o $@ $^
@@ -26,6 +26,7 @@ installdirs:
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
 	mkdir -p $(DESTDIR)$(datarootdir)/icons/hicolor/scalable/status
+	mkdir -p $(DESTDIR)$(datarootdir)/locale/de/LC_MESSAGES
 	mkdir -p $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES
 	mkdir -p $(DESTDIR)$(datarootdir)/locale/sv/LC_MESSAGES
 
@@ -34,6 +35,8 @@ install: installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) puavo-desktop-applet
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
 		puavo-desktop-applet.desktop
+        $(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/de/LC_MESSAGES \
+                po/de/puavo-desktop-applet.mo
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES \
 		po/fi/puavo-desktop-applet.mo
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/sv/LC_MESSAGES \
