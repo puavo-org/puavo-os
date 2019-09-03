@@ -5,6 +5,7 @@ require 'json'
 Image_dir      = ENV['image_dir']
 Images_urlbase = ENV['images_urlbase']
 Mirror_dir     = ENV['mirror_dir']
+Mode           = ENV['mode']
 
 raise '"image_dir" environment variable not defined' \
   if Image_dir.nil? || Image_dir.empty?
@@ -59,6 +60,23 @@ def find_rdiff_file(source_image, target_image)
 		 source_match[2],
 		 target_match[2],
 		 source_match[3])
+end
+
+def generate_development_image_series()
+  image_series = {}
+
+  image_paths = Dir.glob("#{ Image_dir }/*.img").map { |p| File.basename(p) }
+  image_paths.each do |path|
+    m = path.match(/\A(.*?)-\d/)
+    if m then
+      series_name = "#{ m[1] }-devel"
+      (image_series[ series_name ] ||= []) << path
+    end
+  end
+  image_series.each do |series_name, images|
+    # take only the latest four images after sorting each series
+    image_series[series_name] = (images.sort)[-4..-1]
+  end
 end
 
 def get_cksum_path(filename)
@@ -234,11 +252,18 @@ end
 # main
 #
 
-begin
-  image_series = parse_image_series(Image_series_json_path)
-rescue StandardError => err
-  warn "Error in parsing #{ Image_series_json_path }: #{ err.message }"
-  exit 1
+case Mode
+  when 'development'
+    image_series = generate_development_image_series()
+  when 'production'
+    begin
+      image_series = parse_image_series(Image_series_json_path)
+    rescue StandardError => err
+      warn "Error in parsing #{ Image_series_json_path }: #{ err.message }"
+      exit 1
+    end
+  else
+    raise "Unknown mode: #{ mode }"
 end
 
 #

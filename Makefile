@@ -5,6 +5,7 @@ default_image_class	:= allinone
 image_dir		:= /srv/puavo-os-images
 images_urlbase		:= https://cdn.puavo.org
 mirror_dir		:= $(image_dir)/mirror
+mode                    := development
 release_name            :=
 rootfs_dir		:= /var/tmp/puavo-os/rootfs
 target_arch             := amd64
@@ -260,7 +261,7 @@ apply-rules: /puavo-os
 rdiffs: $(image_dir) $(mirror_dir)
 	$(_sudo) .aux/make-rdiffs image_dir="$(image_dir)" \
 		images_urlbase="$(images_urlbase)" \
-		mirror_dir="$(mirror_dir)" $(rdiff_targets)
+		mirror_dir="$(mirror_dir)" mode="$(mode)" $(rdiff_targets)
 
 .PHONY: clean
 clean:
