@@ -127,6 +127,8 @@ programs:
   #D
   - db_koulu1:
         tags: default
+  - db_koulu2:
+        tags: default
   - designer-qt4:
         name:
             en: Qt4 - graphical UI designer
@@ -1190,6 +1192,7 @@ menus:
             - ekapeli-maahanmuuttaja
             - ekapeli-alku
             - db_koulu1
+            - db_koulu2
             - org.kde.gcompris
             - tuxmath
             - org.kde.kbruch

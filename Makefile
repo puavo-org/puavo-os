@@ -234,6 +234,8 @@ update: prepare /etc/puavo-conf/image.json /etc/puavo-conf/rootca.pem
 
 	$(MAKE) apply-rules
 
+	$(_sudo) puavo-pkg gc-installations
+	$(_sudo) puavo-pkg gc-upstream-packs
 	$(_sudo) update-initramfs -u -k all
 	$(_sudo) systemd-sysusers
 	$(_sudo) updatedb

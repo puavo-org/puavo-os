@@ -847,19 +847,21 @@ install_pkg_with_installer()
   installer=$1
   pkg_dir=$(prepare_pkg_with_installer "$installer") || return 1
 
-  pkg_name=$(get_pkg_name "$pkg_dir") || return 1
+  pkg_name=$(get_pkg_name "$pkg_dir")            || return 1
+  pkg_id=$(get_pkg_id "$pkg_dir")                || return 1
+  old_pkg_id=$(get_installed_pkg_id "$pkg_name") || return 1
 
   reconfigure_upgrade_pkg "$pkg_name" "$pkg_dir" || return 1
 
-  pkg_id=$(get_pkg_id "$pkg_dir") || return 1
-  old_pkg_id=$(get_installed_pkg_id "$pkg_name") || return 1
-
-  if [ -n "$old_pkg_id" -a "$old_pkg_id" != "$pkg_id" ]; then
-    old_pkg_dir=$(get_writable_pkg_dir "$pkg_name" "$old_pkg_id") \
-        && rm -rf "$old_pkg_dir" || true
-  fi
+  touch "${pkg_dir}/.installed"
 
   log_info "${pkg_name}: installed successfully"
+
+  # remove old package if there was one
+  if [ -n "$old_pkg_id" -a "$old_pkg_id" != "$pkg_id" ]; then
+    old_pkg_dir=$(get_writable_pkg_dir "$pkg_name" "$old_pkg_id") \
+      && rm -rf "$old_pkg_dir" || true
+  fi
 }
 
 remove_pkg()
@@ -875,7 +877,7 @@ remove_pkg()
       return 1
     }
     pkg_dir=$(get_writable_pkg_dir "$pkg_name" "$pkg_id") || return 1
-    rm -rf "${pkg_dir}/.prepared" "${pkg_dir}/upstream" || return 1
+    rm -rf "${pkg_dir}/.installed" "${pkg_dir}/.prepared" "${pkg_dir}/upstream" || return 1
     log_info "removed package '${pkg_name}'"
     return 0
   fi
