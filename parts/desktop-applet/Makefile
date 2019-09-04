@@ -35,8 +35,8 @@ install: installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) puavo-desktop-applet
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
 		puavo-desktop-applet.desktop
-        $(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/de/LC_MESSAGES \
-                po/de/puavo-desktop-applet.mo
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/de/LC_MESSAGES \
+		po/de/puavo-desktop-applet.mo
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES \
 		po/fi/puavo-desktop-applet.mo
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/sv/LC_MESSAGES \
