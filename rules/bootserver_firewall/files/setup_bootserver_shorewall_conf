@@ -102,15 +102,7 @@ EOF
 mv "${target_dir}/interfaces.tmp" "${target_dir}/interfaces"
 
 # -- masq
-cat <<EOF > "${target_dir}/masq.tmp"
-#INTERFACE:DEST         SOURCE          ADDRESS         PROTO   PORT(S) IPSEC   MARK    USER/
-#                                                                                       GROUP
-$(for iface in $dhcpd_interfaces; do
-    echo "inet0		$(iface_to_network_cidr "$iface")"
-    echo "vpn0		$(iface_to_network_cidr "$iface")"
-  done)
-EOF
-mv "${target_dir}/masq.tmp" "${target_dir}/masq"
+rm -f "${target_dir}/masq"
 
 # -- params
 case "$fw_logging_policy" in
@@ -170,6 +162,16 @@ EOF
   fi
 } > "${target_dir}/rules.tmp"
 mv "${target_dir}/rules.tmp" "${target_dir}/rules"
+
+# -- snat
+cat <<EOF > "${target_dir}/snat.tmp"
+#ACTION         SOURCE          DEST            PROTO   PORT   IPSEC  MARK   USER    SWITCH  ORIGDEST   PROBABILITY
+$(for iface in $dhcpd_interfaces; do
+    echo "MASQUERADE	$(iface_to_network_cidr "$iface")	inet0"
+    echo "MASQUERADE	$(iface_to_network_cidr "$iface")	vpn0"
+  done)
+EOF
+mv "${target_dir}/snat.tmp" "${target_dir}/snat"
 
 # -- zones
 cat <<EOF > "${target_dir}/zones.tmp"
