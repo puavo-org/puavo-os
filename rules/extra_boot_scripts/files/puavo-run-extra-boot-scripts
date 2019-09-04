@@ -113,12 +113,13 @@ try_fetching() {
 
   if $gnupg_verify; then
     verified_ebs_tmppath="${ebs_tmppath}.verified"
-    exec 3< /root/.ebs-gnupg
+    gnupg_dir="/root/.puavo/gnupg/${ebs_server}/ebs"
+    exec 3< "$gnupg_dir"
     if ! flock -w 10 -x 3; then
-      echo 'could not lock /root/.ebs-gnupg for gpg verification' >&2
+      echo "could not lock $gnupg_dir for gpg verification" >&2
       return 1
     fi
-    if gpg --decrypt --homedir /root/.ebs-gnupg "$ebs_tmppath" 2>/dev/null \
+    if gpg --decrypt --homedir "$gnupg_dir" "$ebs_tmppath" 2>/dev/null \
          > "$verified_ebs_tmppath"; then
       mv "$verified_ebs_tmppath" "$ebs_tmppath"
       verified_msg='(verified)'

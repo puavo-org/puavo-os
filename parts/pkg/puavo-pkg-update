@@ -16,9 +16,14 @@ if ! mountpoint -q /images; then
   exit 1
 fi
 
-topdomain=$(cat /etc/puavo/topdomain)
-baseurl="https://cdn.${topdomain}/puavo-pkg"
 installers_dir='/images/puavo-pkg/installers'
+topdomain=$(cat /etc/puavo/topdomain)
+
+puavo_pkg_server=$(puavo-conf puavo.image.servers | awk '{ print $1 }')
+if [ -z "$puavo_pkg_server" ]; then
+  read topdomain < /etc/puavo/topdomain
+  puavo_pkg_server="cdn.${topdomain}"
+fi
 
 # XXX get rid of hosttype handling
 puavo_hosttype=$(puavo-conf puavo.hosttype)
@@ -52,7 +57,7 @@ download_installer() {
   fi
 
   installer_tmppath="${installer_fullpath}.tmp"
-  pkg_url="${baseurl}/${installer_subpath}.gpg"
+  pkg_url="https://${puavo_pkg_server}/puavo-pkg/${installer_subpath}.gpg"
   unverified_installer_tmppath="${installer_fullpath}.gpg.tmp"
 
   logmsg user.info "downloading ${pkg_url}"
@@ -67,12 +72,13 @@ download_installer() {
 
   logmsg user.info "verifying ${pkg_url}"
 
-  exec 4< /root/.pkg-gnupg
+  gnupg_dir="/root/.puavo/gnupg/${puavo_pkg_server}/pkg"
+  exec 4< "$gnupg_dir"
   if ! flock -w 10 -x 4; then
-    echo 'could not lock /root/.pkg-gnupg for gpg verification' >&2
+    echo "could not lock $gnupg_dir for gpg verification" >&2
     return 1
   fi
-  if ! gpg --decrypt --homedir /root/.pkg-gnupg \
+  if ! gpg --decrypt --homedir "$gnupg_dir" \
     "$unverified_installer_tmppath" 2>/dev/null > "$installer_tmppath"; then
       logmsg user.err "verification failed for ${unverified_installer_tmppath}"
       rm -f "$unverified_installer_tmppath" "$installer_tmppath" || true
