@@ -3,9 +3,10 @@ debootstrap_mirror	:= http://httpredir.debian.org/debian/
 debootstrap_suite	:= buster
 default_image_class	:= allinone
 image_dir		:= /srv/puavo-os-images
-images_urlbase		:= https://cdn.puavo.org
 mirror_dir		:= $(image_dir)/mirror
 mode                    := development
+remote_devel_mirror     := cdn.puavo.org
+remote_prod_mirror      := cdn.puavo.org
 release_name            :=
 rootfs_dir		:= /var/tmp/puavo-os/rootfs
 target_arch             := amd64
@@ -16,6 +17,18 @@ upload_pkgregex         :=
 upload_server           :=
 
 include defaults.mk
+
+ifeq "$(remote_mirror)" ""
+  ifeq "$(mode)" "development"
+    remote_mirror	:= $(remote_devel_mirror)
+  else
+    remote_mirror	:= $(remote_prod_mirror)
+  endif
+endif
+
+ifeq "$(images_urlbase)" ""
+  images_urlbase	:= https://$(remote_mirror)
+endif
 
 _adm_user	:= puavo-os
 _adm_group	:= puavo-os
@@ -270,6 +283,13 @@ clean:
 
 $(mirror_dir):
 	$(_sudo) mkdir -p '$(mirror_dir)'
+
+# only for development to prevent mistakes
+ifeq "$(mode)" "development"
+.PHONY: update-mirror
+update-mirror: rdiffs $(mirror_dir)
+	rsync -av --progress $(mirror_dir)/ $(remote_mirror):/images/
+endif
 
 /puavo-os:
 	@echo ERROR: localhost is not Puavo OS system >&2
