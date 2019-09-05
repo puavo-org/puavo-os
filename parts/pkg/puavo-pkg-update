@@ -254,8 +254,8 @@ for pkgspec in $puavo_pkg_specs; do
       # will be unconfigured, which is probably what we actually want.
       action='prepare'
     else
-      # on others, it is to do nothing
-      action='do-nothing'
+      # on others, it is "install"
+      action='install'
     fi
   fi
 
