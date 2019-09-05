@@ -8,7 +8,7 @@ server {
 	ssl_certificate /etc/puavo/certs/hostorgcabundle.pem;
 	ssl_certificate_key /etc/puavo/certs/host.key;
 
-	ssl_protocols SSLv3 TLSv1;
+	ssl_protocols TLSv1.1 TLSv1.2 TLSv1.3;
 	ssl_ciphers ALL:!ADH:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv3:+EXP;
 	ssl_prefer_server_ciphers on;
 
