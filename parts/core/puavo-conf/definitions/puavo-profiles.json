@@ -1,8 +1,47 @@
 {
-  "puavo.hosttype" : {
+  "puavo.hosttype": {
     "default": ""
   },
-  "puavo.profiles.list" : {
+  "puavo.profile.bigtouch": {
+    "default": "false"
+  },
+  "puavo.profile.bootserver": {
+    "default": "false"
+  },
+  "puavo.profile.diskinstaller": {
+    "default": "false"
+  },
+  "puavo.profile.fatclient": {
+    "default": "false"
+  },
+  "puavo.profile.infotv": {
+    "default": "false"
+  },
+  "puavo.profile.laptop": {
+    "default": "false"
+  },
+  "puavo.profile.personal": {
+    "default": "false"
+  },
+  "puavo.profile.preinstalled": {
+    "default": "false"
+  },
+  "puavo.profile.restricted": {
+    "default": "false"
+  },
+  "puavo.profile.unregistered": {
+    "default": "false"
+  },
+  "puavo.profile.usb-factory": {
+    "default": "false"
+  },
+  "puavo.profile.webkiosk": {
+    "default": "false"
+  },
+  "puavo.profile.wirelessaccesspoint": {
+    "default": "false"
+  },
+  "puavo.profiles.list": {
     "default": ""
   }
 }
