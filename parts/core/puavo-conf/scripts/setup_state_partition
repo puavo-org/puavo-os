@@ -90,7 +90,8 @@ status=0
 
 # must fix in case puavo gid has changed...
 chgrp puavo /state/etc/puavo/ldap/password || status=1
-cp -aT /state/etc/puavo /etc/puavo         || status=1
+rsync -a --exclude=certificates --exclude=certs /state/etc/puavo/ /etc/puavo/ \
+  || status=1
 
 case "$(puavo-conf puavo.hosttype)" in
   bootserver)

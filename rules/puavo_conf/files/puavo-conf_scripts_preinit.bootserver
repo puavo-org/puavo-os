@@ -2,6 +2,7 @@ add_entropy
 set_puavo_hosttype
 mount_local_partitions
 setup_state_partition
+setup_certs
 setup_bootserver_persistent_net_rules
 correct_file_ownership
 handle_utmp_logs
