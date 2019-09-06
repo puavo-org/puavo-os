@@ -1,0 +1,41 @@
+#!/bin/sh
+
+set -eu
+
+mountpoint -q /state || exit 0
+
+cert_version_list=$(puavo-conf puavo.admin.certs.versions)
+old_certs_dir='/state/etc/puavo/certs'
+certificates_dir='/state/etc/puavo/certificates'
+
+# copy $old_certs_dir to 20101001 in case it is missing
+if [ -d "$old_certs_dir" -a ! -d "${certificates_dir}/20101001" ]; then
+  old_certs_as_new_dir="${certificates_dir}/20101001"
+  rm -rf "${old_certs_as_new_dir}.tmp"
+  mkdir -p "$certificates_dir"
+  cp -a "$old_certs_dir" "${old_certs_as_new_dir}.tmp"
+  mv "${old_certs_as_new_dir}.tmp" "$old_certs_as_new_dir"
+fi
+
+# use the first certificate version we have in $cert_version_list
+for cert_version in $cert_version_list; do
+  cert_dir="${certificates_dir}/${cert_version}"
+  if [ -d "$cert_dir" ]; then
+    ln -fns "$cert_dir" /etc/puavo/certs
+    exit 0
+  fi
+done
+
+# if we could not find a certificate directory matching versions in
+# "puavo.admin.certs.versions", we take the latest certificate directory
+last_cert_dir=
+for cert_dir in ${certificates_dir}/*; do
+  [ -d "$cert_dir" ] && last_cert_dir=$cert_dir
+done
+if [ -n "$last_cert_dir" ]; then
+  ln -fns "$last_cert_dir" /etc/puavo/certs
+  exit 0
+fi
+
+echo "Could not put certificates from ${certificates_dir} into use" >&2
+exit 1
