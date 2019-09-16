@@ -1,5 +1,5 @@
 [abi]
-abiname: 9
+abiname: 11
 ignore-changes:
  __cpuhp_*
  bpf_analyzer
@@ -42,6 +42,7 @@ ignore-changes:
  module:drivers/usb/gadget/**
  module:drivers/usb/host/**
  module:drivers/usb/musb/**
+ module:drivers/vhost/vhost
  module:fs/nfs/nfs
  module:net/ceph/libceph
  module:net/nfc/hci/hci
