@@ -60,6 +60,7 @@ packagedirs += tilitin
 packagedirs += t-lasku
 packagedirs += vidyo-client
 packagedirs += vstloggerpro
+packagedirs += zoom
 
 packagefiles = $(patsubst %,%.tar.gz,${packagedirs})
 
