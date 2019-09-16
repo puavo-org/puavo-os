@@ -581,6 +581,7 @@ class packages {
     , 'libreoffice-style-tango'
     , 'libreoffice-writer'
     , 'libsasl2-modules'
+    , 'libxcb-xtest0' #dependency for Zoom
     , 'make'
     , 'memtest86+'
     , 'mousetweaks'
