@@ -35,7 +35,7 @@ SB_CHANGE_PASSWORD = {
 
     'command': {
         'type': 'webwindow',
-        'args': 'https://$(puavo_domain)/users/password/own?changing=$(user_name)&lang=$(user_language)',
+        'args': 'http://$(puavo_domain)/users/password/own?changing=$(user_name)&lang=$(user_language)$(password_tabs)',
         'have_vars': True,
         'webwindow': {
             'title': STRINGS['sb_change_password_window_title'],
@@ -381,6 +381,14 @@ class Sidebar:
             utils.get_file_contents('/etc/puavo/domain', '?')
         self.__variables['user_name'] = getuser()
         self.__variables['user_language'] = self.__settings.language
+
+        if self.__settings.user_type not in ('teacher', 'admin'):
+            # For non-teachers and non-admins, don't show the "change someone else's password"
+            # tab on the password form. Not a very good protection, but it's not the only one
+            # we have and it will filter out the most basic hacker wannabes.
+            self.__variables['password_tabs'] = '&hidetabs'
+        else:
+            self.__variables['password_tabs'] = ''
 
     # Creates the user avatar button
     def __create_avatar(self):
