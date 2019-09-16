@@ -60,6 +60,10 @@ class Settings:
         # unless 'is_personally_administered' is also True.
         self.is_user_primary_user = False
 
+        # User type (student, teacher, etc.) some of the web services that are
+        # opened from the menu needs to know this.
+        self.user_type = 'student'
+
         # True if the global GNOME dark theme is enabled
         self.dark_theme = False
 
@@ -129,6 +133,30 @@ class Settings:
                 logging.error("Cannot determine if the current user is this " \
                               "device's configured primary user:")
                 logging.error(str(e))
+
+        # User type
+        try:
+            import json
+
+            if 'PUAVO_SESSION_PATH' in os.environ:
+                filename = os.environ['PUAVO_SESSION_PATH']
+
+                with open(filename, mode='r', encoding='utf-8') as session:
+                    session_data = json.load(session)
+
+                self.user_type = session_data['user']['user_type']
+
+                if self.user_type not in ('student', 'teacher', 'admin', 'staff', 'visitor', 'guest'):
+                    logging.warning('Unknown user type "%s", defaulting to "student"', self.user_type)
+                    self.user_type = 'student'
+            else:
+                logging.warning('"PUAVO_SESSION_PATH" not in environment variables, user type '
+                                'cannot be determined, assuming "student"')
+                self.user_type = 'student'
+        except Exception as e:
+            logging.error('Cannot determine user type, assuming "student":')
+            logging.error(str(e))
+            self.user_type = 'student'
 
         # Detect dark theme usage
         try:
