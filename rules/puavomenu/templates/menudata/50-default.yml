@@ -1051,6 +1051,8 @@ programs:
         tags: default, internet, audio, video
 
   #Z
+  - Zoom:
+        tags: default, internet
 
 # ------------------------------------------------------------------------------
 
@@ -1141,6 +1143,7 @@ menus:
             - dropbox
             - nextcloud
             - VidyoDesktop
+            - Zoom
 
   - menu-programming:
         name:
