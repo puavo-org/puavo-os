@@ -52,6 +52,7 @@ packagedirs += promethean
 packagedirs += pycharm
 packagedirs += robboscratch2
 packagedirs += robotmeshconnect
+packagedirs += shotcut
 packagedirs += skype
 packagedirs += smartboard
 packagedirs += spotify-client

@@ -799,6 +799,8 @@ programs:
         tags: default, office
   - seahorse:
         tags: default
+  - shotcut:
+        tags: default
   - shotwell:
         name:
             en: Shotwell-photo organizer
@@ -1277,6 +1279,7 @@ menus:
             - org.kde.kdenlive
             - kino
             - pitivi
+            - shotcut
             - solfege
             - mscore
             - hydrogen

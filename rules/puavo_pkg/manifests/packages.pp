@@ -47,6 +47,7 @@ class puavo_pkg::packages {
 			, 'pycharm'
 			, 'robboscratch2'
 			, 'robotmeshconnect'
+			, 'shotcut'
 			, 'skype'
 			, 'smartboard'
 			, 'spotify-client'
