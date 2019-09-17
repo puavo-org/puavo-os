@@ -172,7 +172,7 @@ programs:
   - elmo-imagemate:
         type: custom
         name: Elmo Imagemate
-        command: "chromium --app=https://imagemate-c.com --new-window --temp-profile" 
+        command: "chromium --app=https://imagemate-c.com --new-window --temp-profile"
         description: Document camera
         icon: /usr/share/icons/Faenza/devices/scalable/camera.svg
         tags: default
