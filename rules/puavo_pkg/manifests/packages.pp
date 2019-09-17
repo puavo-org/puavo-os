@@ -54,7 +54,8 @@ class puavo_pkg::packages {
 			, 'tilitin'
 			, 't-lasku'
 			, 'vidyo-client'
-			, 'vstloggerpro' ]
+			, 'vstloggerpro'
+			, 'zoom' ]
 
   @puavo_pkg::install { $available_packages: ; }
 
