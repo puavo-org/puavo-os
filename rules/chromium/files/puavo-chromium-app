@@ -1,0 +1,48 @@
+#!/bin/sh
+
+set -eu
+
+usage() {
+  echo "Usage: $(basename "$0") create|run app_name"
+}
+
+mode=${1:-}
+app_name=${2:-}
+
+case "$mode" in
+  create|run)
+    ;;
+  *)
+    usage >&2
+    exit 1
+    ;;
+esac
+
+if [ -z "$app_name" ]; then
+  usage >&2
+  exit 1
+fi
+
+data_dir=$(mktemp -d /tmp/puavo-chrome-app.XXXXXX)
+
+case "$mode" in
+  create)
+    if [ -d /etc/chromium/policies/managed ]; then
+      echo 'Please remove /etc/chromium/policies/managed before using "create"-mode!' >&2
+      exit 1
+    fi
+    chromium --temp-profile --user-data-dir="$data_dir" \
+             "http://www.google.com/search?q=${app_name}"
+    blob_path="/tmp/puavo-chromium-app-${app_name}.tar.gz"
+    tar -C "$data_dir" -zcf "$blob_path" .
+    echo "chromium app tarball is in $blob_path"
+    ;;
+  run)
+    tar -C "$data_dir" -zx \
+        -f "/opt/puavo-chromium-apps/${app_name}/puavo-chromium-app.tar.gz"
+    read app_id < "/opt/puavo-chromium-apps/${app_name}/app_id"
+    echo "app_id=|${app_id}|"   # XXX
+    chromium --app-id="${app_id}" --new-window --temp-profile \
+             --user-data-dir="$data_dir"
+    ;;
+esac

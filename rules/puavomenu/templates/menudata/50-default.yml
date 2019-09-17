@@ -511,6 +511,13 @@ programs:
         tags: default
   - nextcloud:
         tags: default
+  - novo_desktop_streamer:
+        type: custom
+        name: Novo Desktop Streamer
+        command: "puavo-chromium-app run novo_desktop_streamer"
+        description: Novo Desktop Streamer
+        icon: /opt/puavo-chromium-apps/novo_desktop_streamer/logo.png
+        tags: default
   - novo-launcher:
         name: LauncherOne
         tags: default
@@ -851,6 +858,13 @@ programs:
         tags: default, education
   - sound-juicer:
         tags: default
+  - sphere_lite:
+        type: custom
+        name: Sphere Lite
+        command: "puavo-chromium-app run sphere_lite"
+        description: Sphere Lite
+        icon: /opt/puavo-chromium-apps/sphere_lite/logo.png
+        tags: default
   - spe:
         name:
             en: SPE - Python IDE
@@ -1085,6 +1099,7 @@ menus:
             - simplescreenrecorder
             - airtame
             - novo-launcher
+            - novo_desktop_streamer
 
   - menu-graphics:
         name:
@@ -1294,6 +1309,7 @@ menus:
             - qsynth
             - qjackctl
             - winff
+            - sphere_lite
 
   - menu-games:
         name:
