@@ -41,7 +41,6 @@ case "$mode" in
     tar -C "$data_dir" -zx \
         -f "/opt/puavo-chromium-apps/${app_name}/puavo-chromium-app.tar.gz"
     read app_id < "/opt/puavo-chromium-apps/${app_name}/app_id"
-    echo "app_id=|${app_id}|"   # XXX
     chromium --app-id="${app_id}" --new-window --temp-profile \
              --user-data-dir="$data_dir"
     ;;
