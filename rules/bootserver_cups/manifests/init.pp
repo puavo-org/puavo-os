@@ -26,8 +26,14 @@ class bootserver_cups {
        mode    => '0755',
        require => Package['cups-client'],
        source  => 'puppet:///modules/bootserver_cups/cups-watchdog';
+
+     '/usr/local/lib/puavo-handle-cups-changes':
+       mode    => '0755',
+       require => Package['puavo-client'],
+       source  => 'puppet:///modules/bootserver_cups/puavo-handle-cups-changes';
   }
 
   Package <| title == cups
-          or title == cups-client |>
+          or title == cups-client
+          or title == puavo-client |>
 }

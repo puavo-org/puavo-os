@@ -16,13 +16,4 @@ class bootserver_ltspimages {
       ensure  => directory,
       replace => false;
   }
-
-  ::puavo_conf::script {
-    'setup_incrond':
-      require => [ File['/usr/local/lib/puavo-handle-image-changes']
-                 , Package['incron'] ],
-      source  => 'puppet:///modules/bootserver_ltspimages/setup_incrond';
-  }
-
-  Package <| title == incron |>
 }
