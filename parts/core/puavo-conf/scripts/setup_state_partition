@@ -123,6 +123,7 @@ case "$(puavo-conf puavo.hosttype)" in
       /var/lib/extrausers
       /var/lib/logrotate
       /var/lib/puavo-desktop
+      /var/lib/systemd/backlight
       /var/log
       /var/spool/anacron
     '
