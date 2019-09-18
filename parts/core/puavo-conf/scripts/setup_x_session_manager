@@ -13,6 +13,7 @@ case "$(puavo-conf puavo.xsessions.default)" in
     useradd --system --create-home --home-dir "$ers_home"      \
             --comment Puavo-ERS --user-group --shell /bin/bash \
             --uid "$ers_uid" "$ers_user"
+    chmod 700 "$ers_home"
     ;;
 
   puavo-infotv)
