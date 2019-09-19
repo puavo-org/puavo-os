@@ -862,7 +862,11 @@ programs:
         type: custom
         name: Sphere Lite
         command: "puavo-chromium-app run sphere_lite"
-        description: Sphere Lite
+        description:
+            en: View and annotate live video from AVer DocCam.
+            fi: Sovellus jolla voit näyttää kuvaa AVer -dokumenttikameroista ja piirtää sen päälle.
+            sv: Aver DocCam - Sphere lite.
+            de: Aver DocCam - Sphere lite.
         icon: /opt/puavo-chromium-apps/sphere_lite/logo.png
         tags: default
   - spe:
@@ -1067,6 +1071,11 @@ programs:
   #Z
   - Zoom:
         tags: default, internet
+        description:
+            en: Video conference application
+            fi: Videokonferenssisovellus
+            sv: Zoom videokonferens
+            de: Zoom Videokonferenz
 
 # ------------------------------------------------------------------------------
 
@@ -1293,6 +1302,7 @@ menus:
             - kenavision
             - kamerka
             - elmo-imagemate
+            - sphere_lite
             - openshot
             - org.kde.kdenlive
             - kino
@@ -1309,7 +1319,6 @@ menus:
             - qsynth
             - qjackctl
             - winff
-            - sphere_lite
 
   - menu-games:
         name:
