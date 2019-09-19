@@ -27,7 +27,7 @@ xset -dpms
 (
   # Start puavo-usb-factory and keep it running
   while true; do
-    puavo-manage-ers || true
+    xterm -e 'tmux new-session puavo-manage-ers' || true
     logger -p local0.err -t ers-session \
            'The Puavo ERS manage process has exited or crashed, restarting it...'
     sleep 5

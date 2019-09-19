@@ -11,3 +11,6 @@ cd $ers_dir
 cp -p /usr/share/puavo-ers/Vagrantfile .
 
 vagrant up
+
+# wait forever
+read forever
