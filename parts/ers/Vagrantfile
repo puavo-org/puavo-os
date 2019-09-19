@@ -1,6 +1,11 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+require 'facter'
+
+cpus = [ 1, Facter['processorcount'].value.to_i - 1 ].max
+mem  = (0.75 * Facter['memorysize_mb'].value.to_i).to_i
+
 # All Vagrant configuration is done below. The "2" in Vagrant.configure
 # configures the configuration version (we support older styles for
 # backwards compatibility). Please don't change it unless you know what
@@ -13,8 +18,8 @@ Vagrant.configure("2") do |config|
     vb.name = 'Puavo ERS'
     vb.gui = true
     vb.customize [ 'modifyvm',     :id, '--ioapic',       'on'            ]
-    vb.customize [ 'modifyvm',     :id, '--cpus',         2               ]
-    vb.customize [ 'modifyvm',     :id, '--memory',       4096            ]
+    vb.customize [ 'modifyvm',     :id, '--cpus',         cpus            ]
+    vb.customize [ 'modifyvm',     :id, '--memory',       mem             ]
     vb.customize [ 'modifyvm',     :id, '--nictype1',     'virtio'        ]
     vb.customize [ 'modifyvm',     :id, '--clipboard',    'bidirectional' ]
     vb.customize [ 'modifyvm',     :id, '--vram',          24             ]
@@ -29,9 +34,4 @@ Vagrant.configure("2") do |config|
 
   config.vm.synced_folder '~/ktp-jako', '/media/usb1', id: 'media_usb1'
   config.vm.network 'public_network', :adapter => 1, bridge: 'eth0', auto_config: false
-
-  config.vm.provision "shell", inline: <<-SHELL
-    apt-get update
-    apt-get install -y detox
-  SHELL
 end
