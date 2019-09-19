@@ -20,6 +20,11 @@ Vagrant.configure("2") do |config|
     vb.customize [ 'modifyvm',     :id, '--vram',          24             ]
     vb.customize [ 'modifyvm',     :id, '--description',  'digabi/ktp-qa' ]
     vb.customize [ 'setextradata', :id, 'GUI/Fullscreen', 'true'          ]
+
+    vb.customize [ 'setextradata', 'global', 'GUI/SuppressMessages',
+                                             %w(confirmGoingFullscreen
+                                                remindAboutAutoCapture
+                                                remindAboutMouseIntegration).join(',') ]
   end
 
   config.vm.synced_folder '~/ktp-jako', '/media/usb1', id: 'media_usb1'
