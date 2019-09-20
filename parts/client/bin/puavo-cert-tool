@@ -1,0 +1,182 @@
+#!/usr/bin/ruby
+
+require 'fileutils'
+require 'openssl'
+require 'puavo/conf'
+require 'puavo/rest-client'
+
+mode              = ARGV[0]
+certchain_version = ARGV[1]
+
+def rest_client()
+  PuavoRestClient.new(:auth => :etc, :dns => :no)
+end
+
+class Certificates
+  def initialize(certchain_version)
+    @certchain_version = certchain_version
+  end
+
+  def certdir; "/state/etc/puavo/certificates/#{ @certchain_version }"; end
+  def tmp_certdir; "#{ certdir }.tmp"; end
+
+  def certificate_path(d)            ; "#{ d }/host.crt"           ; end
+  def certificate_private_key_path(d); "#{ d }/host.key"           ; end
+  def hostorgcabundle_path(d)        ; "#{ d }/hostorgcabundle.pem"; end
+  def orgcabundle_path(d)            ; "#{ d }/orgcabundle.pem"    ; end
+  def rootca_path(d)                 ; "#{ d }/rootca.pem"         ; end
+
+  def cert_ok?(textstr)
+    textstr.kind_of?(String) && !textstr.empty?
+  end
+
+  def create()
+    make_certificate_request
+    sign_in_puavo
+    write_to_filesystem
+  end
+
+  def update()
+    raise 'unimplemented'
+
+    # XXX what if certificate file is not found?
+    # XXX should it automatically create a new one?
+
+    cert = OpenSSL::X509::Certificate.new( File.read(certificate_file) )
+    # do not update if certificate is valid for the next half a year
+    return if (Time.now + 60 * 60 * 24 * 180) < cert.not_after
+
+    key_pem = File.read('XXX certificate private key path')
+    make_certificate_request(key_pem)
+    sign_in_puavo
+    write_to_filesystem
+  end
+
+  def make_certificate_request
+    @key = OpenSSL::PKey::RSA.new(4096)
+    csr = OpenSSL::X509::Request.new
+    csr.version = 0
+    csr.public_key = @key.public_key
+    csr.sign(@key, OpenSSL::Digest::SHA512.new)
+
+    @csr = csr
+  end
+
+  def sign_in_puavo
+    begin
+      msgobj = {
+                 'certchain_version'   => @certchain_version,
+                 'certificate_request' => @csr.to_pem,
+               }
+      response = rest_client().post('/v3/hosts/certs/sign',
+                                    :json => msgobj)
+    rescue PuavoRestClient::BadStatusCode => e
+      begin
+        error = JSON.parse(e.response.body)['error']['message']
+      rescue StandardError => e
+        raise "can not parse error message: #{ e.message }"
+      end
+      raise "error returned by server: #{ error }"
+    end
+
+    begin
+      certificates = response.parse
+    rescue StandardError => e
+      raise "could not parse certificate signing response: #{ e.message }"
+    end
+
+    raise 'no host certificate in the server response' \
+      unless cert_ok?(certificates['certificate'])
+    raise 'no organisation ca certificate bundle in the server response' \
+      unless cert_ok?(certificates['org_ca_certificate_bundle'])
+    raise 'no root ca certificate in the server response' \
+      unless cert_ok?(certificates['root_ca_certificate'])
+
+    @host_cert     = certificates['certificate']
+    @org_ca_bundle = certificates['org_ca_certificate_bundle']
+    @root_ca       = certificates['root_ca_certificate']
+  end
+
+  def write_to_filesystem
+    d = tmp_certdir
+
+    FileUtils.mkdir_p(d)
+
+    File.open(certificate_path(d), 'w', 0444) do |f|
+      f.write(@host_cert)
+    end
+    File.open(certificate_private_key_path(d), 'w', 0400) do |f|
+      f.print(@key.to_pem)
+    end
+    File.open(hostorgcabundle_path(d), 'w', 0444) do |f|
+      f.print(@host_cert + @org_ca_bundle)
+    end
+    File.open(orgcabundle_path(d), 'w', 0444) do |f|
+      f.print(@org_ca_bundle)
+    end
+    File.open(rootca_path(d), 'w', 0444) do |f|
+      f.print(@root_ca)
+    end
+
+    # XXX how to update the real certificates file atomically?
+
+  end
+end
+
+def usage
+  puts <<EOF
+Usage:
+        #{ File.basename($0) } create [certchain_version]
+        #{ File.basename($0) } update [certchain_version]
+EOF
+
+end
+
+# XXX perhaps a --force option that creates certificates even if some
+# XXX already exist...
+# XXX and a --force option that updates certificates even if those are not
+# XXX expiring soon...
+
+case mode
+  when 'create'
+    action_method = :create
+  when 'update'
+    action_method = :update
+  when nil
+    usage
+    exit 0
+  else
+    warn "unsupported mode: #{ mode }"
+    usage
+    exit 1
+end
+
+if certchain_version.nil? then
+  puavoconf = Puavo::Conf.new
+  certchain_version_list = puavoconf.get('puavo.admin.certs.versions').split
+  puavoconf.close
+else
+  certchain_version_list = [ certchain_version ]
+end
+
+if certchain_version_list.empty? then
+  warn 'no certificates to update in "puavo.admin.certs.versions"'
+  exit 1
+end
+
+status = 0
+
+certchain_version_list.each do |certchain_version|
+  begin
+    raise 'certificate chain version is not made of digits' \
+      unless certchain_version.match(/\A\d+\z/)
+    certificates = Certificates.new(certchain_version)
+    certificates.send(action_method)
+  rescue StandardError => e
+    warn "error with certificate chain version #{ certchain_version }: " \
+           + e.message
+    status = 1
+  end
+end
+
+exit(status)
