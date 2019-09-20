@@ -12,19 +12,26 @@ def rest_client()
   PuavoRestClient.new(:auth => :etc, :dns => :no)
 end
 
+class CertificatePaths
+  attr_reader :certdir
+
+  def initialize(certchain_version, suffix='')
+    @certdir = "/state/etc/puavo/certificates/#{ certchain_version }#{ suffix }"
+  end
+
+  def certificate    ; "#{ @certdir }/host.crt"           ; end
+  def hostorgcabundle; "#{ @certdir }/hostorgcabundle.pem"; end
+  def orgcabundle    ; "#{ @certdir }/orgcabundle.pem"    ; end
+  def private_key    ; "#{ @certdir }/host.key"           ; end
+  def rootca         ; "#{ @certdir }/rootca.pem"         ; end
+end
+
 class Certificates
   def initialize(certchain_version)
     @certchain_version = certchain_version
+    @paths     = CertificatePaths.new(certchain_version)
+    @tmp_paths = CertificatePaths.new(certchain_version, '.tmp')
   end
-
-  def certdir; "/state/etc/puavo/certificates/#{ @certchain_version }"; end
-  def tmp_certdir; "#{ certdir }.tmp"; end
-
-  def certificate_path(d)            ; "#{ d }/host.crt"           ; end
-  def certificate_private_key_path(d); "#{ d }/host.key"           ; end
-  def hostorgcabundle_path(d)        ; "#{ d }/hostorgcabundle.pem"; end
-  def orgcabundle_path(d)            ; "#{ d }/orgcabundle.pem"    ; end
-  def rootca_path(d)                 ; "#{ d }/rootca.pem"         ; end
 
   def cert_ok?(textstr)
     textstr.kind_of?(String) && !textstr.empty?
@@ -98,28 +105,44 @@ class Certificates
   end
 
   def write_to_filesystem
-    d = tmp_certdir
+    FileUtils.remove_entry_secure(@tmp_paths.certdir) \
+      if File.exists?(@tmp_paths.certdir)
 
-    FileUtils.mkdir_p(d)
+    FileUtils.mkdir_p(@tmp_paths.certdir)
 
-    File.open(certificate_path(d), 'w', 0444) do |f|
+    File.open(@tmp_paths.certificate, 'w', 0444) do |f|
       f.write(@host_cert)
     end
-    File.open(certificate_private_key_path(d), 'w', 0400) do |f|
+    File.open(@tmp_paths.private_key, 'w', 0400) do |f|
       f.print(@key.to_pem)
     end
-    File.open(hostorgcabundle_path(d), 'w', 0444) do |f|
+    File.open(@tmp_paths.hostorgcabundle, 'w', 0444) do |f|
       f.print(@host_cert + @org_ca_bundle)
     end
-    File.open(orgcabundle_path(d), 'w', 0444) do |f|
+    File.open(@tmp_paths.orgcabundle, 'w', 0444) do |f|
       f.print(@org_ca_bundle)
     end
-    File.open(rootca_path(d), 'w', 0444) do |f|
+    File.open(@tmp_paths.rootca, 'w', 0444) do |f|
       f.print(@root_ca)
     end
 
-    # XXX how to update the real certificates file atomically?
+    old_certdir = "#{ @paths.certdir }.old"
 
+    FileUtils.remove_entry_secure(old_certdir) \
+      if File.exists?(old_certdir)
+
+    # XXX How to update the real certificates file atomically?
+    # XXX Or do we need to care (if not, then "update" should also
+    # XXX be able to create certificates in case sometimes the first mv
+    # XXX succeeds and the latter does not... otherwise the system will not
+    # XXX be in a self-repairing state).
+
+    FileUtils.mv(@paths.certdir, old_certdir) \
+      if File.exists?(@paths.certdir)
+    FileUtils.mv(@tmp_paths.certdir, @paths.certdir)
+
+    FileUtils.remove_entry_secure(old_certdir) \
+      if File.exists?(old_certdir)
   end
 end
 
