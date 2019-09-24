@@ -202,4 +202,6 @@ certchain_version_list.each do |certchain_version|
   end
 end
 
+system('/etc/puavo-conf/scripts/setup_certs') or status = 1
+
 exit(status)
