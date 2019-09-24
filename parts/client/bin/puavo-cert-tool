@@ -134,34 +134,38 @@ class Certificates
 
     FileUtils.mkdir_p(@paths.certdir)
 
-    File.open(@paths.certificate, 'w', 0444) do |f|
-      f.write(@host_cert)
-    end
-    File.open(@paths.private_key, 'w', 0400) do |f|
-      f.print(@key.to_pem)
-    end
-    File.open(@paths.hostorgcabundle, 'w', 0444) do |f|
-      f.print(@host_cert + @org_ca_bundle)
-    end
-    File.open(@paths.orgcabundle, 'w', 0444) do |f|
-      f.print(@org_ca_bundle)
-    end
-    File.open(@paths.rootca, 'w', 0444) do |f|
-      f.print(@root_ca)
-    end
+    File.open(@paths.certdir, 'r') do |certdir_fh|
+      certdir_fh.flock(File::LOCK_EX)
 
-    tmp_link = "#{ @paths.certchain_link }.tmp"
-    FileUtils.rm_f(tmp_link)
-    FileUtils.symlink(File.basename(@paths.certdir), tmp_link)
-    File.rename(tmp_link, @paths.certchain_link)
+      File.open(@paths.certificate, 'w', 0444) do |f|
+        f.write(@host_cert)
+      end
+      File.open(@paths.private_key, 'w', 0400) do |f|
+        f.print(@key.to_pem)
+      end
+      File.open(@paths.hostorgcabundle, 'w', 0444) do |f|
+        f.print(@host_cert + @org_ca_bundle)
+      end
+      File.open(@paths.orgcabundle, 'w', 0444) do |f|
+        f.print(@org_ca_bundle)
+      end
+      File.open(@paths.rootca, 'w', 0444) do |f|
+        f.print(@root_ca)
+      end
 
-    Syslog.info('certificates written successfully for chain version %s',
-                @certchain_version)
+      tmp_link = "#{ @paths.certchain_link }.tmp"
+      FileUtils.rm_f(tmp_link)
+      FileUtils.symlink(File.basename(@paths.certdir), tmp_link)
+      File.rename(tmp_link, @paths.certchain_link)
 
-    Dir.glob("#{ @paths.certchain_link }.*") do |dir|
-      next if dir == @paths.certdir
-      Syslog.info('removing %s', dir)
-      FileUtils.remove_entry_secure(dir)
+      Syslog.info('certificates written successfully for chain version %s',
+                  @certchain_version)
+
+      Dir.glob("#{ @paths.certchain_link }.*") do |dir|
+        next if dir == @paths.certdir
+        Syslog.info('removing %s', dir)
+        FileUtils.remove_entry_secure(dir)
+      end
     end
   end
 end
