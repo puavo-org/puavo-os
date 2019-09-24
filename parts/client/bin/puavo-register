@@ -28,13 +28,6 @@ require 'uri'
 
 Puavodir            = '/etc/puavo'
 Puavo_hosttype_path = "#{ Puavodir }/hosttype"
-Puavo_id_path       = "#{ Puavodir }/id"
-
-HostCrtPath     = "#{ Puavodir }/certs/host.crt"
-HostKeyPath     = "#{ Puavodir }/certs/host.key"
-OrgCABundlePath = "#{ Puavodir }/certs/orgcabundle.pem"
-RootCAPath      = "#{ Puavodir }/certs/rootca.pem"
-Hosttype_path   = "#{ Puavodir }/hosttype"
 
 class Tools
 
