@@ -25,13 +25,14 @@ install-dirs:
 	mkdir -p $(DESTDIR)$(sbindir)
 
 install: install-dirs
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) bin/puavo-register
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) bin/puavo-sync-external-files
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) bin/puavo-sync-printers
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) bin/puavo-resolve-api-server
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) bin/puavo-update-certificate
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) bin/puavo-feed
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) bin/puavo-rest-client
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
+		bin/puavo-cert-tool \
+		bin/puavo-feed \
+		bin/puavo-register \
+		bin/puavo-resolve-api-server \
+		bin/puavo-rest-client \
+		bin/puavo-sync-external-files \
+		bin/puavo-sync-printers
 	cp -r lib/* $(DESTDIR)$(RUBY_LIB_DIR)
 
 # XXX Care should be taken if this is done, the latest available gems break

@@ -197,7 +197,7 @@ end
 
 def update_certificate(restclient)
   log(Syslog::LOG_INFO, ">>> Updating host certificate\n")
-  run('puavo-update-certificate')
+  run('puavo-cert-tool', 'update')
 end
 
 def update_extra_boot_scripts(restclient)
