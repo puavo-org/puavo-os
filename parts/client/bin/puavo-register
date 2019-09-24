@@ -627,7 +627,7 @@ class Control
   def self.update
     puavo = Puavo::Client::Base.new
 
-    if ["bootserver"].include?(PUAVO_ETC.hosttype)
+    if PUAVO_ETC.hosttype == 'bootserver' then
       device_info = puavo.servers.find_by_id(PUAVO_ETC.id)
     else
       device_info = puavo.devices.find_by_id(PUAVO_ETC.id)
