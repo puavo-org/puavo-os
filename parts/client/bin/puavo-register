@@ -95,49 +95,10 @@ end
 
 class HttpAuthError < StandardError; end
 
-class HostCertificate
-  def initialize
-    @key = OpenSSL::PKey::RSA.new(2048)
-    @csr = OpenSSL::X509::Request.new
-    @csr.version = 0
-    @csr.public_key = @key.public_key
-
-    @csr.sign(@key, OpenSSL::Digest::SHA256.new)
-  end
-
-  def accept_signed_certificate(certificate, rootca, orgcabundle)
-    @crt         = OpenSSL::X509::Certificate.new(certificate)
-    @rootca      = rootca
-    @orgcabundle = orgcabundle
-  end
-
-  def fqdn
-    self.class.fqdn_from_cert(@crt)
-  end
-
-  def self.fqdn_from_cert(cert)
-    ((/^.*CN=(.*?)(\/|$)/.match(cert.subject.to_s))[1])
-  end
-
-  def request
-    @csr.to_pem
-  end
-
-  def write_to_filesystem(certpath, keypath, rootcapath, hostorgcabundlepath, orgcabundlepath)
-    File.open(certpath,            'w', 0444) { |f| f.print @crt.to_pem                 }
-    File.open(keypath,             'w', 0400) { |f| f.print @key.to_pem                 }
-    File.open(rootcapath,          'w', 0444) { |f| f.print @rootca                     }
-    File.open(hostorgcabundlepath, 'w', 0444) { |f| f.print @crt.to_pem + @orgcabundle  }
-    File.open(orgcabundlepath,     'w', 0444) { |f| f.print @orgcabundle                }
-
-    Tools.goodmsg('Certificates have been written to filesystem.')
-  end
-end
-
 class RegisterUserInterface
   attr_accessor :responses, :connection
 
-  def initialize(cmdline_params, cert)
+  def initialize(cmdline_params)
     @responses       = {}
     @cmdline_params  = cmdline_params
 
@@ -156,7 +117,6 @@ class RegisterUserInterface
     facts = Facter.to_hash
 
     @system_defaults = {
-      'host_certificate_request' => cert.request,
       'macAddress'               => lookup_macaddresses(facts),
       'puavoDeviceManufacturer'  => facts['manufacturer'],
       'puavoDeviceModel'         => facts['productname'],
@@ -349,16 +309,9 @@ class RegisterUserInterface
 
       HighLine.say 'Sending host information to puavo server...'
       response_data = @connection.post_host(@host)
-      if response_data['register_info']
-        if @host['host_certificate_request'] \
-          and not response_data['register_info']['userCertificate']
-            Tools.errmsg('Server did not send a signed certificate.')
-        else
-          info['registration'] = response_data['register_info']
-          Tools.goodmsg('This machine is now successfully registered.')
-
-          break
-        end
+      if response_data['register_info'] then
+        info['registration'] = response_data['register_info']
+        Tools.goodmsg('This machine is now successfully registered.')
       else
         ask_machine_info(response_data['errors'], false)
       end
@@ -527,10 +480,7 @@ end
 
 class Control
   def self.authenticate_only(cmdline_params)
-    # XXX cert should not be needed in this case
-    cert = HostCertificate.new
-
-    rui = RegisterUserInterface.new(cmdline_params, cert)
+    rui = RegisterUserInterface.new(cmdline_params)
 
     # the authentication happens here
     rui.connect_to_puavo()
@@ -548,15 +498,12 @@ class Control
         exit 1
     end
 
-    cert = HostCertificate.new
-
-    rui  = RegisterUserInterface.new(cmdline_params, cert)
+    rui  = RegisterUserInterface.new(cmdline_params)
     info = rui.register_to_server()
 
-    return if ['fatclient'].include?( info['registration']['puavoDeviceType'] )
+    return if 'fatclient' == info['registration']['puavoDeviceType']
 
     organisation_info = rui.connection.get("/users/organisation.json")
-    # org["ldap_host"], org["domain"]
 
     raise 'Did not receive host configuration from Puavo' \
         unless info['registration']['host_configuration']
@@ -564,25 +511,6 @@ class Control
     begin
       FileUtils.remove_entry_secure(Puavodir)
     rescue Errno::ENOENT
-    end
-
-    if info['registration']['userCertificate']
-      raise 'Root CA missing' \
-        unless info['registration']['rootca']
-      raise 'Organisation CA bundle missing' \
-        unless info['registration']['orgcabundle']
-
-      cert.accept_signed_certificate(info['registration']['userCertificate'],
-                                      info['registration']['rootca'],
-                                      info['registration']['orgcabundle'])
-
-      Tools.mkdir(Puavodir)
-      Tools.mkdir("#{ Puavodir }/certs")
-      cert.write_to_filesystem("#{ Puavodir }/certs/host.crt",
-                                "#{ Puavodir }/certs/host.key",
-                                "#{ Puavodir }/certs/rootca.pem",
-                                "#{ Puavodir }/certs/hostorgcabundle.pem",
-                                "#{ Puavodir }/certs/orgcabundle.pem")
     end
 
     top_domain = Tools.topdomain(organisation_info['ldap_host'])
