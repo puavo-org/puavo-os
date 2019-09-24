@@ -20,8 +20,6 @@ class CertificatePaths
 
   def initialize(certchain_version, suffix)
     @certchain_version = certchain_version
-
-    raise 'bad suffix' unless suffix.kind_of?(String) && !suffix.empty?
     @certdir = "#{ certchain_link }#{ suffix }"
   end
 
@@ -55,19 +53,21 @@ class Certificates
   end
 
   def update()
-    raise 'unimplemented'
+    current_cert_paths = CertificatePaths.new(@certchain_version, '')
 
-    # XXX what if certificate file is not found?
-    # XXX should it automatically create a new one?
+    begin
+      certificate_pem = File.read( current_cert_paths.certificate )
+    rescue Errno::ENOENT
+      create
+      return
+    end
 
-    cert = OpenSSL::X509::Certificate.new( File.read(certificate_file) )
+    cert = OpenSSL::X509::Certificate.new(certificate_pem)
+
     # do not update if certificate is valid for the next half a year
     return if (Time.now + 60 * 60 * 24 * 180) < cert.not_after
 
-    key_pem = File.read('XXX certificate private key path')
-    make_certificate_request(key_pem)
-    sign_in_puavo
-    write_to_filesystem
+    create
   end
 
   def make_certificate_request
