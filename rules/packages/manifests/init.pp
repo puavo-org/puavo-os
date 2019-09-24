@@ -93,7 +93,6 @@ class packages {
     , 'elinks'
     , 'ethtool'
     , 'expect'
-    , 'flatpak'
     , 'fping'
     , 'gawk'
     , 'git'

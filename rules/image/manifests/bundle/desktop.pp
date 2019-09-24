@@ -8,7 +8,6 @@ class image::bundle::desktop {
   include ::disable_geoclue
   include ::disable_unclutter
   include ::firefox
-  include ::flatpak::packages
   include ::fontconfig
   include ::fuse
   include ::gdm
@@ -44,6 +43,4 @@ class image::bundle::desktop {
 
   Package <| tag == 'tag_debian_desktop'
           or tag == 'tag_debian_desktop_backports' |>
-
-  ::Flatpak::Install <| |>
 }
