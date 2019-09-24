@@ -312,6 +312,7 @@ class RegisterUserInterface
       if response_data['register_info'] then
         info['registration'] = response_data['register_info']
         Tools.goodmsg('This machine is now successfully registered.')
+        break
       else
         ask_machine_info(response_data['errors'], false)
       end
