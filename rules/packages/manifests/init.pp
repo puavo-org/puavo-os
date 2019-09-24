@@ -183,7 +183,6 @@ class packages {
 
     [ 'gdm3'
     , 'i3'
-    , 'libghc-xmonad-contrib-dev'
     , 'nautilus-nextcloud'
     , 'network-manager-openvpn-gnome'
     , 'network-manager-vpnc-gnome'
@@ -564,6 +563,7 @@ class packages {
     , 'libreoffice-style-tango'
     , 'libreoffice-writer'
     , 'libsasl2-modules'
+    , 'libxcb-xtest0' #dependency for Zoom
     , 'make'
     , 'memtest86+'
     , 'mousetweaks'

@@ -190,6 +190,8 @@ settings.detect_environment()
 
 logging.info('Desktop directory..: "%s"', settings.desktop_dir)
 
+logging.info('User type..........: "%s"', settings.user_type)
+
 if not settings.prod_mode:
     logging.info('*** Running in DEVELOPMENT mode ***')
 

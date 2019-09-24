@@ -7,6 +7,10 @@ require "socket"
 
 require "puavo/api-server"
 
+# !!! Note that this script should not modify anything under /etc/cups in any
+# !!! way, because this might be run from incron (monitoring /etc/cups)
+# !!! that triggers this script when something changes there.
+
 def assert_response(res)
   if ![200, 201, 202].include?(res.code)
     raise "Bad response status #{ res.code } for #{ res.request.path.to_s }: #{ res }"

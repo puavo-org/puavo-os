@@ -180,7 +180,7 @@ programs:
   - elmo-imagemate:
         type: custom
         name: Elmo Imagemate
-        command: "chromium --app=https://imagemate-c.com --new-window --temp-profile" 
+        command: "chromium --app=https://imagemate-c.com --new-window --temp-profile"
         description: Document camera
         icon: /usr/share/icons/Faenza/devices/scalable/camera.svg
         tags: default
@@ -470,6 +470,13 @@ programs:
   - neverputt:
         tags: default
   - nextcloud:
+        tags: default
+  - novo_desktop_streamer:
+        type: custom
+        name: Novo Desktop Streamer
+        command: "puavo-chromium-app run novo_desktop_streamer"
+        description: Novo Desktop Streamer
+        icon: /opt/puavo-chromium-apps/novo_desktop_streamer/logo.png
         tags: default
   - novo-launcher:
         name: LauncherOne
@@ -807,12 +814,7 @@ programs:
   - seahorse:
         tags: default
   - shotcut:
-        command: flatpak run org.shotcut.Shotcut
-        type: custom
-        icon: /var/lib/flatpak/app/org.shotcut.Shotcut/x86_64/stable/active/files/share/icons/hicolor/64x64/apps/org.shotcut.Shotcut.png
-        name:
-            en: Shotcut
-        tags: default, graphics
+        tags: default
   - shotwell:
         name:
             en: Shotwell-photo organizer
@@ -861,6 +863,17 @@ programs:
             sv: Gehör-övningar
             de: Hörbildung
         tags: default, education
+  - sphere_lite:
+        type: custom
+        name: Sphere Lite
+        command: "puavo-chromium-app run sphere_lite"
+        description:
+            en: View and annotate live video from AVer DocCam.
+            fi: Sovellus jolla voit näyttää kuvaa AVer -dokumenttikameroista ja piirtää sen päälle.
+            sv: Aver DocCam - Sphere lite.
+            de: Aver DocCam - Sphere lite.
+        icon: /opt/puavo-chromium-apps/sphere_lite/logo.png
+        tags: default
   - spe:
         name:
             en: SPE - Python IDE
@@ -1048,6 +1061,13 @@ programs:
         tags: default, internet, audio, video
 
   #Z
+  - Zoom:
+        tags: default, internet
+        description:
+            en: Video conference application
+            fi: Videokonferenssisovellus
+            sv: Zoom videokonferens
+            de: Zoom Videokonferenz
 
 # ------------------------------------------------------------------------------
 
@@ -1080,6 +1100,7 @@ menus:
             - simplescreenrecorder
             - airtame
             - novo-launcher
+            - novo_desktop_streamer
 
   - menu-graphics:
         name:
@@ -1138,6 +1159,7 @@ menus:
             - dropbox
             - nextcloud
             - VidyoDesktop
+            - Zoom
 
   - menu-programming:
         name:
@@ -1272,6 +1294,7 @@ menus:
             - kenavision
             - kamerka
             - elmo-imagemate
+            - sphere_lite
             - openshot-qt
             - org.kde.kdenlive
             - kino
@@ -1393,6 +1416,7 @@ menus:
             - sumopaint
             - walma
             - pahvi
+            - kahoot
             - sanomapro
             - otava
             - ekapeliweb

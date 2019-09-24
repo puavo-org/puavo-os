@@ -1,0 +1,12 @@
+#!/bin/sh
+
+set -eu
+
+exec 3< "$0"
+
+if ! flock -w 60 3; then
+  echo "Could not flock $0, exiting." >&2
+  exit 1
+fi
+
+/usr/sbin/puavo-sync-printers

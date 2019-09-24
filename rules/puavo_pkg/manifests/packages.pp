@@ -47,6 +47,7 @@ class puavo_pkg::packages {
 			, 'pycharm'
 			, 'robboscratch2'
 			, 'robotmeshconnect'
+			, 'shotcut'
 			, 'skype'
 			, 'smartboard'
 			, 'spotify-client'
@@ -54,7 +55,8 @@ class puavo_pkg::packages {
 			, 't-lasku'
 			, 'ubuntu-wallpapers'
 			, 'vidyo-client'
-			, 'vstloggerpro' ]
+			, 'vstloggerpro'
+			, 'zoom' ]
 
   @puavo_pkg::install { $available_packages: ; }
 

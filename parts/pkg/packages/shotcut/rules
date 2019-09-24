@@ -1,0 +1,31 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "${command}" in
+    configure)
+        upstream_dir=$1
+        ln -fns "${upstream_dir}/Shotcut/Shotcut.app" /opt/shotcut
+        ln -fns /opt/shotcut/shotcut /usr/local/bin/shotcut
+        sed '/^Exec/s|=.*$|=/opt/shotcut/shotcut "%F"|' \
+            "${upstream_dir}/Shotcut/Shotcut.desktop" \
+            > /usr/share/applications/shotcut.desktop.tmp
+        mv /usr/share/applications/shotcut.desktop.tmp \
+           /usr/share/applications/shotcut.desktop
+        ;;
+    unconfigure)
+        rm -f /opt/shotcut \
+              /usr/local/bin/shotcut \
+              /usr/share/applications/shotcut.desktop
+        ;;
+    unpack)
+        upstream_pack=$1
+        upstream_dir=$2
+        tar --no-same-owner -J -x -f "$upstream_pack" -C "$upstream_dir"
+        ;;
+    *)
+        ;;
+esac

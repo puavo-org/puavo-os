@@ -35,7 +35,7 @@ SB_CHANGE_PASSWORD = {
 
     'command': {
         'type': 'webwindow',
-        'args': 'https://$(puavo_domain)/users/password/own?changing=$(user_name)&lang=$(user_language)',
+        'args': 'http://$(puavo_domain)/users/password/own?changing=$(user_name)&lang=$(user_language)&theme=$(user_theme)$(password_tabs)',
         'have_vars': True,
         'webwindow': {
             'title': STRINGS['sb_change_password_window_title'],
@@ -381,6 +381,15 @@ class Sidebar:
             utils.get_file_contents('/etc/puavo/domain', '?')
         self.__variables['user_name'] = getuser()
         self.__variables['user_language'] = self.__settings.language
+        self.__variables['user_theme'] = 'dark' if self.__settings.dark_theme else 'light'
+
+        if self.__settings.user_type not in ('teacher', 'admin'):
+            # For non-teachers and non-admins, don't show the "change someone else's password"
+            # tab on the password form. Not a very good protection, but it's not the only one
+            # we have and it will filter out the most basic hacker wannabes.
+            self.__variables['password_tabs'] = '&hidetabs'
+        else:
+            self.__variables['password_tabs'] = ''
 
     # Creates the user avatar button
     def __create_avatar(self):
@@ -540,7 +549,7 @@ class Sidebar:
         try:
             web_window(
                 url=utils.expand_variables(
-                    'https://$(puavo_domain)/users/profile/edit?lang=$(user_language)',
+                    'https://$(puavo_domain)/users/profile/edit?lang=$(user_language)&theme=$(user_theme)',
                     self.__variables),
                 title=utils.localize(STRINGS['sb_avatar_hover'], self.__settings.language),
                 width=1000,
@@ -558,7 +567,7 @@ class Sidebar:
     def __clicked_changelog(self, *unused):
         try:
             web_window(
-                url=get_changelog_url(),
+                url=utils.expand_variables(get_changelog_url() + '&theme=$(user_theme)', self.__variables),
                 title=utils.localize(STRINGS['sb_changelog_window_title'], self.__settings.language),
                 width=1000,
                 height=650,

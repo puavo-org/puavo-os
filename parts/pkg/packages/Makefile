@@ -50,6 +50,7 @@ packagedirs += promethean
 packagedirs += pycharm
 packagedirs += robboscratch2
 packagedirs += robotmeshconnect
+packagedirs += shotcut
 packagedirs += skype
 packagedirs += smartboard
 packagedirs += spotify-client
@@ -58,6 +59,7 @@ packagedirs += t-lasku
 packagedirs += ubuntu-wallpapers
 packagedirs += vidyo-client
 packagedirs += vstloggerpro
+packagedirs += zoom
 
 packagefiles = $(patsubst %,%.tar.gz,${packagedirs})
 
