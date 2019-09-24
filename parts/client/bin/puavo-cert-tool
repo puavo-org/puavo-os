@@ -4,6 +4,7 @@ require 'fileutils'
 require 'openssl'
 require 'puavo/conf'
 require 'puavo/rest-client'
+require 'syslog'
 require 'time'
 
 mode              = ARGV[0]
@@ -58,6 +59,8 @@ class Certificates
     begin
       certificate_pem = File.read( current_cert_paths.certificate )
     rescue Errno::ENOENT
+      Syslog.info('no certificate exists for certchain version %s, creating',
+                  @certchain_version)
       create
       return
     end
@@ -67,6 +70,9 @@ class Certificates
     # do not update if certificate is valid for the next half a year
     return if (Time.now + 60 * 60 * 24 * 180) < cert.not_after
 
+    Syslog.info('certificate for chain version %s is expiring in half a year' \
+                  + ' (or has already expired), updating',
+                @certchain_version)
     create
   end
 
@@ -81,6 +87,10 @@ class Certificates
   end
 
   def sign_in_puavo
+    Syslog.notice('sending a new certificate signing request to Puavo for' \
+                    + ' chain version %s',
+                  @certchain_version)
+
     begin
       msgobj = {
                  'certchain_version'   => @certchain_version,
@@ -110,12 +120,18 @@ class Certificates
     raise 'no root ca certificate in the server response' \
       unless cert_ok?(certificates['root_ca_certificate'])
 
+    Syslog.notice('got certificates from Puavo for chain version %s',
+                  @certchain_version)
+
     @host_cert     = certificates['certificate']
     @org_ca_bundle = certificates['org_ca_certificate_bundle']
     @root_ca       = certificates['root_ca_certificate']
   end
 
   def write_to_filesystem
+    Syslog.info('writing certificates for chain version %s to %s',
+                @certchain_version, @paths.certdir)
+
     FileUtils.mkdir_p(@paths.certdir)
 
     File.open(@paths.certificate, 'w', 0444) do |f|
@@ -139,8 +155,12 @@ class Certificates
     FileUtils.symlink(File.basename(@paths.certdir), tmp_link)
     File.rename(tmp_link, @paths.certchain_link)
 
+    Syslog.info('certificates written successfully for chain version %s',
+                @certchain_version)
+
     Dir.glob("#{ @paths.certchain_link }.*") do |dir|
       next if dir == @paths.certdir
+      Syslog.info('removing %s', dir)
       FileUtils.remove_entry_secure(dir)
     end
   end
@@ -155,10 +175,7 @@ EOF
 
 end
 
-# XXX perhaps a --force option that creates certificates even if some
-# XXX already exist...
-# XXX and a --force option that updates certificates even if those are not
-# XXX expiring soon...
+Syslog.open(File.basename($0), Syslog::LOG_PERROR)
 
 case mode
   when 'create'
@@ -169,7 +186,7 @@ case mode
     usage
     exit 0
   else
-    warn "unsupported mode: #{ mode }"
+    Syslog.err('unsupported mode: %s', mode)
     usage
     exit 1
 end
@@ -183,7 +200,7 @@ else
 end
 
 if certchain_version_list.empty? then
-  warn 'no certificates to update in "puavo.admin.certs.versions"'
+  Syslog.err('no certificates to update in "puavo.admin.certs.versions"')
   exit 1
 end
 
@@ -196,12 +213,19 @@ certchain_version_list.each do |certchain_version|
     certificates = Certificates.new(certchain_version)
     certificates.send(action_method)
   rescue StandardError => e
-    warn "error with certificate chain version #{ certchain_version }: " \
-           + e.message
+    Syslog.err('error with certificate chain version %s: %s',
+               certchain_version, e.message)
     status = 1
   end
 end
 
-system('/etc/puavo-conf/scripts/setup_certs') or status = 1
+unless system('/etc/puavo-conf/scripts/setup_certs') then
+  Syslog.err('error running /etc/puavo-conf/scripts/setup_certs')
+  status = 1
+end
+
+Syslog.err('errors occurred!') unless status == 0
+
+Syslog.close
 
 exit(status)
