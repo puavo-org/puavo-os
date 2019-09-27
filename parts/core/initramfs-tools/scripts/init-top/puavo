@@ -99,6 +99,7 @@ if [ "$(puavo-conf puavo.pm.display.drrs.enabled)" != 'true' ]; then
   echo 'options i915 enable_drrs=0' > /etc/modprobe.d/i915_disable_drrs.conf
 fi
 
+# duplicate code with /etc/puavo-conf/scripts/manage_module_blacklist
 puavo_wireless_broadcom_driver=$(puavo-conf puavo.wireless.broadcom.driver)
 case "$puavo_wireless_broadcom_driver" in
   b43)       blacklist_broadcom_modules='    b43legacy b44 brcmsmac wl' ;;
