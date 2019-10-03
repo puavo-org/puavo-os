@@ -8,7 +8,7 @@ set -eu
 case "$(puavo-conf puavo.xsessions.default)" in
   puavo-ers)
     nodm_user='puavo-ers'
-    xsession_path='ers-session'
+    xsession_path='desktop-session'
     ;;
   puavo-infotv)
     nodm_user='puavo-infotv'

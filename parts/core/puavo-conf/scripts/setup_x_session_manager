@@ -4,7 +4,7 @@ set -eu
 
 case "$(puavo-conf puavo.xsessions.default)" in
   puavo-ers)
-    session_manager='/usr/lib/puavo-ltsp-client/ers-session'
+    session_manager='/usr/lib/puavo-ltsp-client/desktop-session'
 
     ers_home='/home/puavo-ers'
     ers_uid='992'
