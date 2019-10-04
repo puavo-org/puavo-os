@@ -1,5 +1,9 @@
 #!/usr/bin/wish
 
+wm attributes . -type splash
+wm maxsize    . 700 36
+wm minsize    . 700 36
+
 # XXX network_adapter setting could come from puavo-conf?
 # XXX where to get box number and server version?  should these be
 # XXX on some abitti-ktp.json, downloaded from somewhere, or such?
@@ -100,7 +104,13 @@ proc handle_vagrant_output {} {
   global vagrant
 
   set count [gets $vagrant line]
-  if {$count > 0 } { puts "vagrant: $line" }
+  if {$count > 0 } {
+    puts $line
+    .activity configure -text $line
+    if {[regexp {Progress: (\d+)%} $line _ progress]} {
+      # puts "GOT PROGRESS $progress"
+    }
+  }
 
   if {[eof $vagrant]} {
     close $vagrant
@@ -122,6 +132,15 @@ proc update_exams_from_media {} {
   }
 
   after 3000 update_exams_from_media
+}
+
+proc maybe_close_window {} {
+  if {![catch { exec vagrant status | grep -q {default.*running} }]} {
+    wm withdraw .
+    return
+  }
+
+  after 1000 [list maybe_close_window]
 }
 
 proc update_vagrantfile {} {
@@ -152,3 +171,15 @@ set vagrant [open "|[list vagrant --box-number=${box_number}           \
                                   --server-version=${server_version} up]"]
 fconfigure $vagrant -blocking 0
 fileevent $vagrant readable [list handle_vagrant_output]
+
+label .activity -text "Waiting vagrant..."
+ttk::progressbar .progressbar -length 700           \
+                              -mode   indeterminate \
+                              -orient horizontal
+
+pack .activity    -fill both -expand 1
+pack .progressbar -fill both -expand 1
+
+.progressbar start
+
+maybe_close_window
