@@ -11,15 +11,15 @@ set vagrantfile {
   require 'getoptlong'
 
   opts = GetoptLong.new(
-    [ '--public-network-adapter', GetoptLong::OPTIONAL_ARGUMENT ]
+    [ '--network-adapter', GetoptLong::OPTIONAL_ARGUMENT ]
   )
 
-  public_network_adapter = 'eth0'
+  network_adapter = 'eth0'
 
   opts.each do |opt, arg|
     case opt
-      when '--public-network-adapter'
-        public_network_adapter = arg
+      when '--network-adapter'
+        network_adapter = arg
     end
   end
 
@@ -57,7 +57,7 @@ set vagrantfile {
     config.vm.synced_folder '~/ktp-jako', '/media/usb1', id: 'media_usb1'
     config.vm.network 'public_network',
                       :adapter => 1,
-                      bridge: public_network_adapter,
+                      bridge: network_adapter,
                       auto_config: false
   end
 }
@@ -109,31 +109,36 @@ cd $ers_dir
 
 update_vagrantfile
 
-set public_network_adapter "eth0"
+# XXX network_adapter setting should be saved somewhere and read here?
+# XXX perhaps GUI could be a simple python applet that controls the
+# XXX virtual machine?  Maybe startup fullscreen but leaving the gnome-panel?
+set network_adapter "eth0"
 
 frame .network_chooser
 
 foreach network [split [exec facter interfaces] ,] {
   if {$network eq "lo"} { continue }
   # XXX what if $network is not a valid gui path component?
-  radiobutton .network_chooser.$network -text $network \
-                                        -value $network \
-                                        -variable public_network_adapter
+  # XXX what to display to user?
+  # XXX should this be choosable at all?
+  # XXX should present a dialog warning about restart?
+  radiobutton .network_chooser.$network \
+              -text $network \
+              -value $network \
+              -variable network_adapter \
+              -command [list \
+                exec vagrant "--network-adapter=${network_adapter}" \
+                reload]
+
   pack .network_chooser.$network -anchor w
 }
 
-button .start_button -text "Start!" -command {
-  catch {
-    puts [exec -ignorestderr \
-               vagrant "--public-network-adapter=${public_network_adapter}" up]
-  }
-}
-
 pack .network_chooser
-pack .start_button -fill both -expand 1
 
 set old_exam_share_meb_paths [list]
 set old_media_meb_paths      [list]
 
 update_all_exams_pack
 update_exams_from_media
+
+exec vagrant "--network-adapter=${network_adapter}" up
