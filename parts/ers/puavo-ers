@@ -1,5 +1,81 @@
 #!/usr/bin/wish
 
-button .start_button -text "Start!"
+set ers_dir "$env(HOME)/.puavo/puavo-ers"
 
-pack .start_button
+set vagrantfile {
+  # -*- mode: ruby -*-
+  # vi: set ft=ruby :
+
+  require 'facter'
+  require 'getoptlong'
+
+  opts = GetoptLong.new(
+    [ '--public-network-adapter', GetoptLong::OPTIONAL_ARGUMENT ]
+  )
+
+  public_network_adapter = 'eth0'
+
+  opts.each do |opt, arg|
+    case opt
+      when '--public-network-adapter'
+        public_network_adapter = arg
+    end
+  end
+
+  cpus = [ 1, Facter['processorcount'].value.to_i - 1 ].max
+  mem  = (0.75 * Facter['memorysize_mb'].value.to_i).to_i
+
+  # All Vagrant configuration is done below. The "2" in Vagrant.configure
+  # configures the configuration version (we support older styles for
+  # backwards compatibility). Please don't change it unless you know what
+  # you're doing.
+  Vagrant.configure('2') do |config|
+    config.vm.boot_timeout = 300
+    config.vm.box = 'digabi/ktp-qa'
+    config.vm.box_url = 'https://s3-eu-west-1.amazonaws.com/static.abitti.fi/usbimg/qa/vagrant/metadata.json'
+    config.vm.provider :virtualbox do |vb|
+      vb.name = 'Puavo ERS'
+      vb.gui = true
+      vb.customize [ 'modifyvm',     :id, '--ioapic',       'on'            ]
+      vb.customize [ 'modifyvm',     :id, '--cpus',         cpus            ]
+      vb.customize [ 'modifyvm',     :id, '--memory',       mem             ]
+      vb.customize [ 'modifyvm',     :id, '--nictype1',     'virtio'        ]
+      vb.customize [ 'modifyvm',     :id, '--clipboard',    'bidirectional' ]
+      vb.customize [ 'modifyvm',     :id, '--vram',          24             ]
+      vb.customize [ 'modifyvm',     :id, '--description',  'digabi/ktp-qa' ]
+      vb.customize [ 'setextradata', :id, 'GUI/Fullscreen', 'true'          ]
+
+      vb.customize [ 'setextradata',
+                     'global',
+                     'GUI/SuppressMessages',
+                     %w(confirmGoingFullscreen
+                        remindAboutAutoCapture
+                        remindAboutMouseIntegration).join(',') ]
+    end
+
+    config.vm.synced_folder '~/ktp-jako', '/media/usb1', id: 'media_usb1'
+    config.vm.network 'public_network',
+                      :adapter => 1,
+                      bridge: public_network_adapter,
+                      auto_config: false
+  end
+}
+
+proc update_vagrantfile {} {
+  global vagrantfile
+
+  set vagrant_fh [open Vagrantfile w]
+  puts $vagrant_fh $vagrantfile
+  close $vagrant_fh
+}
+
+exec mkdir -p $ers_dir "$env(HOME)/ktp-jako"
+cd $ers_dir
+
+update_vagrantfile
+
+button .start_button -text "Start!" -command {
+  puts [exec -ignorestderr vagrant --public-network-adapter=eth0 up]
+}
+
+pack .start_button -fill both -expand 1

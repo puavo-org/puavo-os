@@ -20,7 +20,6 @@ installdirs:
 .PHONY: install
 install: installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) puavo-ers
-	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ers Vagrantfile
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart puavo-ers.desktop
 
 .PHONY: clean
