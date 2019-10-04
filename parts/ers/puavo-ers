@@ -1,6 +1,14 @@
 #!/usr/bin/wish
 
-set ers_dir       "$env(HOME)/.puavo/puavo-ers"
+# XXX network_adapter setting could come from puavo-conf?
+# XXX where to get box number and server version?  should these be
+# XXX on some abitti-ktp.json, downloaded from somewhere, or such?
+# XXX maybe we could map Abitti-versions to box number and server version?
+set box_number      138
+set network_adapter "eth0"
+set server_version  "SERVER1937W v138"
+
+set ers_dir       "$env(HOME)/.puavo/puavo-ers/${box_number}"
 set exam_sharedir "$env(HOME)/ktp-jako"
 
 set vagrantfile {
@@ -11,15 +19,23 @@ set vagrantfile {
   require 'getoptlong'
 
   opts = GetoptLong.new(
-    [ '--network-adapter', GetoptLong::OPTIONAL_ARGUMENT ]
+    [ '--box-number',      GetoptLong::REQUIRED_ARGUMENT ],
+    [ '--network-adapter', GetoptLong::OPTIONAL_ARGUMENT ],
+    [ '--server-version',  GetoptLong::REQUIRED_ARGUMENT ],
   )
 
+  box_number      = nil
   network_adapter = 'eth0'
+  server_version  = nil
 
   opts.each do |opt, arg|
     case opt
+      when '--box-number'
+        box_number = arg
       when '--network-adapter'
         network_adapter = arg
+      when '--server-version'
+        server_version = arg
     end
   end
 
@@ -33,9 +49,9 @@ set vagrantfile {
   Vagrant.configure('2') do |config|
     config.vm.boot_timeout = 300
     config.vm.box = 'digabi/ktp-qa'
-    config.vm.box_url = 'https://s3-eu-west-1.amazonaws.com/static.abitti.fi/usbimg/qa/vagrant/metadata.json'
+    config.vm.box_url = "https://s3-eu-west-1.amazonaws.com/static.abitti.fi/usbimg/qa/vagrant/package-#{ box_number }.box"
     config.vm.provider :virtualbox do |vb|
-      vb.name = 'Puavo ERS'
+      vb.name = server_version
       vb.gui = true
       vb.customize [ 'modifyvm',     :id, '--ioapic',       'on'            ]
       vb.customize [ 'modifyvm',     :id, '--cpus',         cpus            ]
@@ -80,6 +96,18 @@ proc update_all_exams_pack {} {
   after 3000 update_all_exams_pack
 }
 
+proc handle_vagrant_output {} {
+  global vagrant
+
+  set count [gets $vagrant line]
+  if {$count > 0 } { puts "vagrant: $line" }
+
+  if {[eof $vagrant]} {
+    close $vagrant
+    # XXX vagrant has shut down, what should we do?
+  }
+}
+
 proc update_exams_from_media {} {
   global env exam_sharedir old_media_meb_paths
 
@@ -100,6 +128,7 @@ proc update_vagrantfile {} {
   global vagrantfile
 
   set vagrant_fh [open Vagrantfile w]
+
   puts $vagrant_fh $vagrantfile
   close $vagrant_fh
 }
@@ -109,36 +138,17 @@ cd $ers_dir
 
 update_vagrantfile
 
-# XXX network_adapter setting should be saved somewhere and read here?
-# XXX perhaps GUI could be a simple python applet that controls the
-# XXX virtual machine?  Maybe startup fullscreen but leaving the gnome-panel?
-set network_adapter "eth0"
-
-frame .network_chooser
-
-foreach network [split [exec facter interfaces] ,] {
-  if {$network eq "lo"} { continue }
-  # XXX what if $network is not a valid gui path component?
-  # XXX what to display to user?
-  # XXX should this be choosable at all?
-  # XXX should present a dialog warning about restart?
-  radiobutton .network_chooser.$network \
-              -text $network \
-              -value $network \
-              -variable network_adapter \
-              -command [list \
-                exec vagrant "--network-adapter=${network_adapter}" \
-                reload]
-
-  pack .network_chooser.$network -anchor w
-}
-
-pack .network_chooser
-
 set old_exam_share_meb_paths [list]
 set old_media_meb_paths      [list]
 
 update_all_exams_pack
 update_exams_from_media
 
-exec vagrant "--network-adapter=${network_adapter}" up
+# XXX should we restart vagrant if it shuts down?
+# XXX we need progress bar for the first time (and when updating later)
+# XXX how do we recognize download is over and virtual machine is running?
+set vagrant [open "|[list vagrant --box-number=${box_number}           \
+                                  --network-adapter=${network_adapter} \
+                                  --server-version=${server_version} up]"]
+fconfigure $vagrant -blocking 0
+fileevent $vagrant readable [list handle_vagrant_output]
