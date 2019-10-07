@@ -1,18 +1,13 @@
 #!/usr/bin/wish
 
+package require json
+
 wm attributes . -type splash
 wm maxsize    . 700 36
 wm minsize    . 700 36
 
 # XXX network_adapter setting could come from puavo-conf?
-# XXX where to get box number and server version?  should these be
-# XXX on some abitti-ktp.json, downloaded from somewhere, or such?
-# XXX maybe we could map Abitti-versions to box number and server version?
-set box_number      138
 set network_adapter "eth0"
-set server_version  "SERVER1937W v138"
-
-set ers_dir       "$env(HOME)/.puavo/puavo-ers/${box_number}"
 set exam_sharedir "$env(HOME)/ktp-jako"
 
 set vagrantfile {
@@ -23,23 +18,27 @@ set vagrantfile {
   require 'getoptlong'
 
   opts = GetoptLong.new(
-    [ '--box-number',      GetoptLong::REQUIRED_ARGUMENT ],
+    [ '--abitti-version',  GetoptLong::REQUIRED_ARGUMENT ],
     [ '--network-adapter', GetoptLong::OPTIONAL_ARGUMENT ],
     [ '--server-version',  GetoptLong::REQUIRED_ARGUMENT ],
+    [ '--virtual-box-url', GetoptLong::REQUIRED_ARGUMENT ],
   )
 
-  box_number      = nil
+  abitti_version  = nil
   network_adapter = 'eth0'
   server_version  = nil
+  virtual_box_url = nil
 
   opts.each do |opt, arg|
     case opt
-      when '--box-number'
-        box_number = arg
+      when '--abitti-version'
+        abitti_version = arg
       when '--network-adapter'
         network_adapter = arg
       when '--server-version'
         server_version = arg
+      when '--virtual-box-url'
+        virtual_box_url = arg
     end
   end
 
@@ -52,10 +51,10 @@ set vagrantfile {
   # you're doing.
   Vagrant.configure('2') do |config|
     config.vm.boot_timeout = 300
-    config.vm.box = 'digabi/ktp-qa'
-    config.vm.box_url = "https://s3-eu-west-1.amazonaws.com/static.abitti.fi/usbimg/qa/vagrant/package-#{ box_number }.box"
+    config.vm.box = "digabi/ktp-qa-abitti-v#{ abitti_version }"
+    config.vm.box_url = virtual_box_url
     config.vm.provider :virtualbox do |vb|
-      vb.name = server_version
+      vb.name = "#{ server_version } (#{ abitti_version })"
       vb.gui = true
       vb.customize [ 'modifyvm',     :id, '--ioapic',       'on'            ]
       vb.customize [ 'modifyvm',     :id, '--cpus',         cpus            ]
@@ -82,6 +81,48 @@ set vagrantfile {
   end
 }
 
+proc handle_vagrant_output {} {
+  global vagrant
+
+  set count [gets $vagrant line]
+  if {$count > 0} {
+    puts $line
+    .activity configure -text $line
+    if {[regexp {Progress: (\d+)%} $line _ progress]} {
+      # puts "GOT PROGRESS $progress"
+    }
+  }
+
+  if {[eof $vagrant]} {
+    fconfigure $vagrant -blocking 1
+    if {[catch { close $vagrant } errormsg]} {
+      puts stderr "vagrant returned error:\n$errormsg"
+      exit 1
+    }
+    # XXX vagrant has shut down, should we do something else than this?
+    exit 0
+  }
+}
+
+proc maybe_close_window {} {
+  if {![catch { exec vagrant status | grep -q {default.*running} }]} {
+    wm withdraw .
+    return
+  }
+
+  after 1000 [list maybe_close_window]
+}
+
+proc read_file {path} {
+  set f [open $path]
+  try {
+    set data [read $f]
+  } finally {
+    close $f
+  }
+  return [string trimright $data "\n"]
+}
+
 proc update_all_exams_pack {} {
   global env exam_sharedir old_exam_share_meb_paths
 
@@ -100,24 +141,6 @@ proc update_all_exams_pack {} {
   after 3000 update_all_exams_pack
 }
 
-proc handle_vagrant_output {} {
-  global vagrant
-
-  set count [gets $vagrant line]
-  if {$count > 0 } {
-    puts $line
-    .activity configure -text $line
-    if {[regexp {Progress: (\d+)%} $line _ progress]} {
-      # puts "GOT PROGRESS $progress"
-    }
-  }
-
-  if {[eof $vagrant]} {
-    close $vagrant
-    # XXX vagrant has shut down, what should we do?
-  }
-}
-
 proc update_exams_from_media {} {
   global env exam_sharedir old_media_meb_paths
 
@@ -134,13 +157,11 @@ proc update_exams_from_media {} {
   after 3000 update_exams_from_media
 }
 
-proc maybe_close_window {} {
-  if {![catch { exec vagrant status | grep -q {default.*running} }]} {
-    wm withdraw .
-    return
-  }
-
-  after 1000 [list maybe_close_window]
+proc download_abitti_json {} {
+  # XXX error handling, paths, urls and other things...
+  exec wget -q --ca-certificate=/etc/puavo/certs/rootca.pem \
+       -O abitti.json.tmp https://images.opinsys.fi/abitti-images/abitti.json
+  file rename -force abitti.json.tmp abitti.json
 }
 
 proc update_vagrantfile {} {
@@ -151,6 +172,18 @@ proc update_vagrantfile {} {
   puts $vagrant_fh $vagrantfile
   close $vagrant_fh
 }
+
+# XXX error handling!
+download_abitti_json
+
+set abitti_version [exec puavo-conf puavo.abitti.version]
+# XXX what if abitti_version is "latest"?
+# XXX it should be mapped to actual latest!
+# XXX error handling!
+set config [json::json2dict [read_file abitti.json]]
+set server_version  [dict get $config server $abitti_version server_version]
+set virtual_box_url [dict get $config server $abitti_version virtual_box_url]
+set ers_dir "$env(HOME)/.puavo/puavo-ers/${abitti_version}"
 
 exec mkdir -p $ers_dir $exam_sharedir
 cd $ers_dir
@@ -163,12 +196,15 @@ set old_media_meb_paths      [list]
 update_all_exams_pack
 update_exams_from_media
 
+set abitti_version_num [string map {abitti-v ""} $abitti_version]
+
 # XXX should we restart vagrant if it shuts down?
 # XXX we need progress bar for the first time (and when updating later)
 # XXX how do we recognize download is over and virtual machine is running?
-set vagrant [open "|[list vagrant --box-number=${box_number}           \
-                                  --network-adapter=${network_adapter} \
-                                  --server-version=${server_version} up]"]
+set vagrant [open "|[list vagrant --abitti-version=${abitti_version_num} \
+                                  --network-adapter=${network_adapter}   \
+                                  --server-version=${server_version}     \
+                                  --virtual-box-url=${virtual_box_url} up]"]
 fconfigure $vagrant -blocking 0
 fileevent $vagrant readable [list handle_vagrant_output]
 
