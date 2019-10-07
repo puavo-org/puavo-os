@@ -361,7 +361,7 @@ class ContentUpdates(PuavoWidget):
 
   def update_completed(self, contentname, version):
     self.notify(self.translate_contentname(contentname),
-                '%s %s %s' % (_tr('Update to version '),
+                '%s %s %s' % (_tr('Update to version'),
                               version,
                               _tr('has completed successfully.')))
 
