@@ -157,11 +157,11 @@ proc update_exams_from_media {} {
   after 3000 update_exams_from_media
 }
 
-proc download_abitti_json {} {
-  # XXX error handling, paths, urls and other things...
+proc download_abitti_json {abitti_json_path} {
   exec wget -q --ca-certificate=/etc/puavo/certs/rootca.pem \
-       -O abitti.json.tmp https://images.opinsys.fi/abitti-images/abitti.json
-  file rename -force abitti.json.tmp abitti.json
+            -O "${abitti_json_path}.tmp" \
+            https://images.opinsys.fi/abitti-images/abitti.json
+  file rename -force "${abitti_json_path}.tmp" $abitti_json_path
 }
 
 proc update_vagrantfile {} {
@@ -173,17 +173,32 @@ proc update_vagrantfile {} {
   close $vagrant_fh
 }
 
-# XXX error handling!
-download_abitti_json
+set ers_basedir      "$env(HOME)/.puavo/puavo-ers"
+set abitti_json_path "${ers_basedir}/abitti.json"
+
+catch { download_abitti_json $abitti_json_path }
+if {![file exists $abitti_json_path]} {
+  tk_messageBox -icon error \
+                -message "could not retrieve abitti version information"
+  exit 1
+}
+
+set config [json::json2dict [read_file abitti.json]]
 
 set abitti_version [exec puavo-conf puavo.abitti.version]
-# XXX what if abitti_version is "latest"?
-# XXX it should be mapped to actual latest!
-# XXX error handling!
-set config [json::json2dict [read_file abitti.json]]
+if {$abitti_version eq "latest"} {
+  set abitti_version [dict get $config latest]
+}
+if {![dict exists $config server $abitti_version]} {
+  tk_messageBox -icon error \
+                -message "requested an unknown abitti version: $abitti_version"
+  exit 1
+}
+
 set server_version  [dict get $config server $abitti_version server_version]
 set virtual_box_url [dict get $config server $abitti_version virtual_box_url]
-set ers_dir "$env(HOME)/.puavo/puavo-ers/${abitti_version}"
+
+set ers_dir "${ers_basedir}/${abitti_version}"
 
 exec mkdir -p $ers_dir $exam_sharedir
 cd $ers_dir
@@ -198,9 +213,6 @@ update_exams_from_media
 
 set abitti_version_num [string map {abitti-v ""} $abitti_version]
 
-# XXX should we restart vagrant if it shuts down?
-# XXX we need progress bar for the first time (and when updating later)
-# XXX how do we recognize download is over and virtual machine is running?
 set vagrant [open "|[list vagrant --abitti-version=${abitti_version_num} \
                                   --network-adapter=${network_adapter}   \
                                   --server-version=${server_version}     \
