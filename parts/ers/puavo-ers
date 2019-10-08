@@ -17,14 +17,14 @@ set vagrantfile {
 
   opts = GetoptLong.new(
     [ '--abitti-version',  GetoptLong::REQUIRED_ARGUMENT ],
-    [ '--network-adapter', GetoptLong::OPTIONAL_ARGUMENT ],
+    [ '--network-adapter', GetoptLong::REQUIRED_ARGUMENT ],
     [ '--prepare',         GetoptLong::NO_ARGUMENT       ],
     [ '--server-version',  GetoptLong::REQUIRED_ARGUMENT ],
     [ '--virtual-box-url', GetoptLong::REQUIRED_ARGUMENT ],
   )
 
   abitti_version  = nil
-  network_adapter = 'eth0'
+  network_adapter = nil
   prepare         = false
   server_version  = nil
   virtual_box_url = nil
@@ -56,7 +56,7 @@ set vagrantfile {
     config.vm.box = "digabi/ktp-qa-abitti-v#{ abitti_version }"
     config.vm.box_url = virtual_box_url
     config.vm.provider :virtualbox do |vb|
-      vb.name = "#{ server_version } (#{ abitti_version })"
+      vb.name = server_version
       vb.gui = (prepare ? false : true)
       vb.customize [ 'modifyvm',     :id, '--ioapic',       'on'            ]
       vb.customize [ 'modifyvm',     :id, '--cpus',         cpus            ]
@@ -90,8 +90,8 @@ proc download_abitti_json {abitti_json_path} {
   file rename -force "${abitti_json_path}.tmp" $abitti_json_path
 }
 
-proc handle_vagrant_output {vagrant_fh ers_dir prepare} {
-  global vagrant
+proc handle_vagrant_output {vagrant_fh abitti_version mode} {
+  global esr_basedir vagrant
 
   set count [gets $vagrant_fh line]
   if {$count > 0} {
@@ -102,21 +102,23 @@ proc handle_vagrant_output {vagrant_fh ers_dir prepare} {
   if {[eof $vagrant_fh]} {
     fconfigure $vagrant_fh -blocking 1
     if {[catch { close $vagrant_fh } errormsg]} {
+      # XXX how to handle error?  should we show it?
       puts stderr "vagrant returned error:\n$errormsg"
-    }
-    puts "vagrant returned successfully"
-    if {$prepare} {
-      puts "virtual machine startup was only for preparing, halting"
-      cd $ers_dir
-      exec vagrant halt
     } else {
-      # XXX should we ever show the window again?
-      # XXX or show we just destroy it?
-      # XXX and put it back when we are starting up a virtual machine
-      # XXX that we need to download right now?
-      # XXX perhaps all virtual machines should go through the preparation
-      # XXX stage, even the first one?
-      wm withdraw .
+      puts "vagrant returned successfully"
+    }
+    switch -- $mode {
+      prepare_and_start {
+        manage_virtual_machine start $abitti_version
+      }
+      prepare {
+        set ers_dir "${ers_basedir}/${abitti_version}"
+        cd $ers_dir
+        exec vagrant halt
+      }
+      start {
+        wm withdraw .
+      }
     }
   }
 }
@@ -131,22 +133,40 @@ proc read_file {path} {
   return [string trimright $data "\n"]
 }
 
-proc start_virtual_machine {abitti_version {prepare false}} {
-  global abitti_config ers_basedir
+proc manage_virtual_machine {mode abitti_version} {
+  global abitti_config env ers_basedir
+
+  puts ">>>>>>>>>>>> called manage_virtual_machine $mode $abitti_version"
 
   set network_adapter "eth0"
-  set server_version  [dict get $abitti_config server $abitti_version \
-                                                      server_version]
+  set server_version [dict get $abitti_config server $abitti_version \
+                                                     server_version]
   set virtual_box_url [dict get $abitti_config server $abitti_version \
                                                       virtual_box_url]
+  set vm_dir "$env(HOME)/VirtualBox VMs/${server_version}"
+
+  switch -- $mode {
+    prepare_and_start {
+      if {[file exists $vm_dir]} {
+        set mode start
+      } else {
+        lappend vagrant_args --prepare
+      }
+    }
+    prepare {
+      if {[file exists $vm_dir]} {
+        # already prepared
+        return
+      }
+      lappend vagrant_args --prepare
+    }
+    start {}
+  }
 
   set vagrant_args [list --abitti-version=${abitti_version}   \
                          --network-adapter=${network_adapter} \
                          --server-version=${server_version}   \
                          --virtual-box-url=${virtual_box_url}]
-  if {$prepare} {
-    lappend vagrant_args --prepare
-  }
 
   set ers_dir "${ers_basedir}/${abitti_version}"
   update_vagrantfile $ers_dir
@@ -155,12 +175,12 @@ proc start_virtual_machine {abitti_version {prepare false}} {
 
   fconfigure $vagrant_fh -blocking 0
   fileevent $vagrant_fh readable [
-    list handle_vagrant_output $vagrant_fh $ers_dir $prepare
+    list handle_vagrant_output $vagrant_fh $abitti_version $mode
   ]
 }
 
 proc update_all_exams_pack {} {
-  global env exam_sharedir old_exam_share_meb_paths
+  global exam_sharedir old_exam_share_meb_paths
 
   catch {
     set exam_share_meb_paths [exec find $exam_sharedir -maxdepth 1 -name *.meb]
@@ -178,7 +198,7 @@ proc update_all_exams_pack {} {
 }
 
 proc update_exams_from_media {} {
-  global env exam_sharedir old_media_meb_paths
+  global exam_sharedir old_media_meb_paths
 
   catch {
     set media_meb_paths [exec find "/media/$env(USER)" -name *.meb]
@@ -230,7 +250,7 @@ if {![dict exists $abitti_config server $abitti_version]} {
 
 exec mkdir -p $exam_sharedir
 
-start_virtual_machine $abitti_version
+manage_virtual_machine prepare_and_start $abitti_version
 
 set old_exam_share_meb_paths [list]
 set old_media_meb_paths      [list]
@@ -238,6 +258,7 @@ set old_media_meb_paths      [list]
 update_all_exams_pack
 update_exams_from_media
 
+# XXX these do not work with multiple machines preparing/starting
 label .activity -text "Waiting vagrant..."
 ttk::progressbar .progressbar -length 700           \
                               -mode   indeterminate \
