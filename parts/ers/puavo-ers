@@ -6,8 +6,6 @@ wm attributes . -type splash
 wm maxsize    . 700 36
 wm minsize    . 700 36
 
-# XXX network_adapter setting could come from puavo-conf?
-set network_adapter "eth0"
 set exam_sharedir "$env(HOME)/ktp-jako"
 
 set vagrantfile {
@@ -20,21 +18,25 @@ set vagrantfile {
   opts = GetoptLong.new(
     [ '--abitti-version',  GetoptLong::REQUIRED_ARGUMENT ],
     [ '--network-adapter', GetoptLong::OPTIONAL_ARGUMENT ],
+    [ '--prepare',         GetoptLong::NO_ARGUMENT       ],
     [ '--server-version',  GetoptLong::REQUIRED_ARGUMENT ],
     [ '--virtual-box-url', GetoptLong::REQUIRED_ARGUMENT ],
   )
 
   abitti_version  = nil
   network_adapter = 'eth0'
+  prepare         = false
   server_version  = nil
   virtual_box_url = nil
 
   opts.each do |opt, arg|
     case opt
       when '--abitti-version'
-        abitti_version = arg
+        abitti_version = arg.sub(/^abitti-v/, '')
       when '--network-adapter'
         network_adapter = arg
+      when '--prepare'
+        prepare = true
       when '--server-version'
         server_version = arg
       when '--virtual-box-url'
@@ -50,12 +52,12 @@ set vagrantfile {
   # backwards compatibility). Please don't change it unless you know what
   # you're doing.
   Vagrant.configure('2') do |config|
-    config.vm.boot_timeout = 300
+    config.vm.boot_timeout = 1
     config.vm.box = "digabi/ktp-qa-abitti-v#{ abitti_version }"
     config.vm.box_url = virtual_box_url
     config.vm.provider :virtualbox do |vb|
       vb.name = "#{ server_version } (#{ abitti_version })"
-      vb.gui = true
+      vb.gui = (prepare ? false : true)
       vb.customize [ 'modifyvm',     :id, '--ioapic',       'on'            ]
       vb.customize [ 'modifyvm',     :id, '--cpus',         cpus            ]
       vb.customize [ 'modifyvm',     :id, '--memory',       mem             ]
@@ -81,36 +83,42 @@ set vagrantfile {
   end
 }
 
-proc handle_vagrant_output {} {
+proc download_abitti_json {abitti_json_path} {
+  exec wget -q --ca-certificate=/etc/puavo/certs/rootca.pem \
+            -O "${abitti_json_path}.tmp" \
+            https://images.opinsys.fi/abitti-images/abitti.json
+  file rename -force "${abitti_json_path}.tmp" $abitti_json_path
+}
+
+proc handle_vagrant_output {vagrant_fh ers_dir prepare} {
   global vagrant
 
-  set count [gets $vagrant line]
+  set count [gets $vagrant_fh line]
   if {$count > 0} {
     puts $line
     .activity configure -text $line
-    if {[regexp {Progress: (\d+)%} $line _ progress]} {
-      # puts "GOT PROGRESS $progress"
-    }
   }
 
-  if {[eof $vagrant]} {
-    fconfigure $vagrant -blocking 1
-    if {[catch { close $vagrant } errormsg]} {
+  if {[eof $vagrant_fh]} {
+    fconfigure $vagrant_fh -blocking 1
+    if {[catch { close $vagrant_fh } errormsg]} {
       puts stderr "vagrant returned error:\n$errormsg"
-      exit 1
     }
-    # XXX vagrant has shut down, should we do something else than this?
-    exit 0
+    puts "vagrant returned successfully"
+    if {$prepare} {
+      puts "virtual machine startup was only for preparing, halting"
+      cd $ers_dir
+      exec vagrant halt
+    } else {
+      # XXX should we ever show the window again?
+      # XXX or show we just destroy it?
+      # XXX and put it back when we are starting up a virtual machine
+      # XXX that we need to download right now?
+      # XXX perhaps all virtual machines should go through the preparation
+      # XXX stage, even the first one?
+      wm withdraw .
+    }
   }
-}
-
-proc maybe_close_window {} {
-  if {![catch { exec vagrant status | grep -q {default.*running} }]} {
-    wm withdraw .
-    return
-  }
-
-  after 1000 [list maybe_close_window]
 }
 
 proc read_file {path} {
@@ -121,6 +129,34 @@ proc read_file {path} {
     close $f
   }
   return [string trimright $data "\n"]
+}
+
+proc start_virtual_machine {abitti_version {prepare false}} {
+  global abitti_config ers_basedir
+
+  set network_adapter "eth0"
+  set server_version  [dict get $abitti_config server $abitti_version \
+                                                      server_version]
+  set virtual_box_url [dict get $abitti_config server $abitti_version \
+                                                      virtual_box_url]
+
+  set vagrant_args [list --abitti-version=${abitti_version}   \
+                         --network-adapter=${network_adapter} \
+                         --server-version=${server_version}   \
+                         --virtual-box-url=${virtual_box_url}]
+  if {$prepare} {
+    lappend vagrant_args --prepare
+  }
+
+  set ers_dir "${ers_basedir}/${abitti_version}"
+  update_vagrantfile $ers_dir
+  cd $ers_dir
+  set vagrant_fh [open "|[list vagrant {*}$vagrant_args up]"]
+
+  fconfigure $vagrant_fh -blocking 0
+  fileevent $vagrant_fh readable [
+    list handle_vagrant_output $vagrant_fh $ers_dir $prepare
+  ]
 }
 
 proc update_all_exams_pack {} {
@@ -157,17 +193,12 @@ proc update_exams_from_media {} {
   after 3000 update_exams_from_media
 }
 
-proc download_abitti_json {abitti_json_path} {
-  exec wget -q --ca-certificate=/etc/puavo/certs/rootca.pem \
-            -O "${abitti_json_path}.tmp" \
-            https://images.opinsys.fi/abitti-images/abitti.json
-  file rename -force "${abitti_json_path}.tmp" $abitti_json_path
-}
-
-proc update_vagrantfile {} {
+proc update_vagrantfile {ers_dir} {
   global vagrantfile
 
-  set vagrant_fh [open Vagrantfile w]
+  exec mkdir -p $ers_dir
+
+  set vagrant_fh [open "${ers_dir}/Vagrantfile" w]
 
   puts $vagrant_fh $vagrantfile
   close $vagrant_fh
@@ -176,6 +207,7 @@ proc update_vagrantfile {} {
 set ers_basedir      "$env(HOME)/.puavo/puavo-ers"
 set abitti_json_path "${ers_basedir}/abitti.json"
 
+exec mkdir -p $ers_basedir
 catch { download_abitti_json $abitti_json_path }
 if {![file exists $abitti_json_path]} {
   tk_messageBox -icon error \
@@ -183,42 +215,28 @@ if {![file exists $abitti_json_path]} {
   exit 1
 }
 
-set config [json::json2dict [read_file abitti.json]]
+set abitti_config [json::json2dict [read_file $abitti_json_path]]
 
 set abitti_version [exec puavo-conf puavo.abitti.version]
 if {$abitti_version eq "latest"} {
-  set abitti_version [dict get $config latest]
+  set abitti_version [dict get $abitti_config latest]
 }
-if {![dict exists $config server $abitti_version]} {
+if {![dict exists $abitti_config server $abitti_version]} {
   tk_messageBox -icon error \
                 -message "requested an unknown abitti version: $abitti_version"
+  # XXX should we try to use some other abitti version?
   exit 1
 }
 
-set server_version  [dict get $config server $abitti_version server_version]
-set virtual_box_url [dict get $config server $abitti_version virtual_box_url]
+exec mkdir -p $exam_sharedir
 
-set ers_dir "${ers_basedir}/${abitti_version}"
-
-exec mkdir -p $ers_dir $exam_sharedir
-cd $ers_dir
-
-update_vagrantfile
+start_virtual_machine $abitti_version
 
 set old_exam_share_meb_paths [list]
 set old_media_meb_paths      [list]
 
 update_all_exams_pack
 update_exams_from_media
-
-set abitti_version_num [string map {abitti-v ""} $abitti_version]
-
-set vagrant [open "|[list vagrant --abitti-version=${abitti_version_num} \
-                                  --network-adapter=${network_adapter}   \
-                                  --server-version=${server_version}     \
-                                  --virtual-box-url=${virtual_box_url} up]"]
-fconfigure $vagrant -blocking 0
-fileevent $vagrant readable [list handle_vagrant_output]
 
 label .activity -text "Waiting vagrant..."
 ttk::progressbar .progressbar -length 700           \
@@ -229,5 +247,3 @@ pack .activity    -fill both -expand 1
 pack .progressbar -fill both -expand 1
 
 .progressbar start
-
-maybe_close_window
