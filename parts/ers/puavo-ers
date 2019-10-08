@@ -3,10 +3,9 @@
 package require json
 
 wm attributes . -type splash
-wm maxsize    . 700 36
-wm minsize    . 700 36
 
 set exam_sharedir "$env(HOME)/ktp-jako"
+set we_have_abitti_json false
 
 set vagrantfile {
   # -*- mode: ruby -*-
@@ -83,20 +82,28 @@ set vagrantfile {
   end
 }
 
-proc download_abitti_json {abitti_json_path} {
-  exec wget -q --ca-certificate=/etc/puavo/certs/rootca.pem \
-            -O "${abitti_json_path}.tmp" \
-            https://images.opinsys.fi/abitti-images/abitti.json
-  file rename -force "${abitti_json_path}.tmp" $abitti_json_path
+proc abitti_version_num {abitti_version} {
+  if {![regsub -- {^abitti-v(\d+)$} $abitti_version {\1} abitti_version_num]} {
+    error "bad abitti version number in $abitti_version"
+  }
+  return $abitti_version_num
+}
+
+proc get_version_gui {abitti_version} {
+  set abitti_version_num [abitti_version_num $abitti_version]
+  return ".abitti_v${abitti_version_num}"
 }
 
 proc handle_vagrant_output {vagrant_fh abitti_version mode} {
-  global esr_basedir vagrant
+  global ers_basedir vagrant
+
+  set gui [get_version_gui $abitti_version]
 
   set count [gets $vagrant_fh line]
   if {$count > 0} {
-    puts $line
-    .activity configure -text $line
+    set message "Abitti [abitti_version_num $abitti_version]: $line"
+    puts $message
+    ${gui}.activity configure -text $message
   }
 
   if {[eof $vagrant_fh]} {
@@ -123,20 +130,25 @@ proc handle_vagrant_output {vagrant_fh abitti_version mode} {
   }
 }
 
-proc read_file {path} {
-  set f [open $path]
-  try {
-    set data [read $f]
-  } finally {
-    close $f
-  }
-  return [string trimright $data "\n"]
+proc make_abitti_gui {abitti_version} {
+  set gui [get_version_gui $abitti_version]
+
+  frame $gui
+  label ${gui}.activity -text "Waiting vagrant..."
+  ttk::progressbar ${gui}.progressbar -length 100           \
+                                      -mode   indeterminate \
+                                      -orient horizontal
+
+  # XXX should maybe use grid
+  pack ${gui}.activity ${gui}.progressbar -fill both -expand 1 -side left
+
+  ${gui}.progressbar start
+
+  pack $gui
 }
 
 proc manage_virtual_machine {mode abitti_version} {
   global abitti_config env ers_basedir
-
-  puts ">>>>>>>>>>>> called manage_virtual_machine $mode $abitti_version"
 
   set network_adapter "eth0"
   set server_version [dict get $abitti_config server $abitti_version \
@@ -177,6 +189,69 @@ proc manage_virtual_machine {mode abitti_version} {
   fileevent $vagrant_fh readable [
     list handle_vagrant_output $vagrant_fh $abitti_version $mode
   ]
+}
+
+proc read_file {path} {
+  set f [open $path]
+  try {
+    set data [read $f]
+  } finally {
+    close $f
+  }
+  return [string trimright $data "\n"]
+}
+
+proc trigger_updates {} {
+  global abitti_config abitti_json_path
+
+  set abitti_config [json::json2dict [read_file $abitti_json_path]]
+
+  set target_abitti_version [exec puavo-conf puavo.abitti.version]
+  if {$target_abitti_version eq "latest"} {
+    set target_abitti_version [dict get $abitti_config latest]
+  }
+  if {![dict exists $abitti_config server $target_abitti_version]} {
+    tk_messageBox -icon error \
+      -message "requested an unknown abitti version: $target_abitti_version"
+  }
+
+  set abitti_version_list [dict keys [dict get $abitti_config server]]
+
+  # XXX should not try to do this if there is already something running
+  # XXX for this version (should keep track of those)
+  foreach abitti_version $abitti_version_list {
+    make_abitti_gui $abitti_version
+    if {$abitti_version eq $target_abitti_version} {
+      manage_virtual_machine prepare_and_start $abitti_version
+    } else {
+      set abitti_version_num        [abitti_version_num $abitti_version]
+      set target_abitti_version_num [abitti_version_num $target_abitti_version]
+      if {$target_abitti_version_num < $abitti_version_num} {
+        manage_virtual_machine prepare $abitti_version
+      }
+    }
+  }
+}
+
+proc update_abitti_json {abitti_json_path} {
+  global we_have_abitti_json
+
+  catch {
+    exec wget -q --ca-certificate=/etc/puavo/certs/rootca.pem \
+              -O "${abitti_json_path}.tmp" \
+              https://images.opinsys.fi/abitti-images/abitti.json
+    file rename -force "${abitti_json_path}.tmp" $abitti_json_path
+  }
+
+  if {[file exists $abitti_json_path]} {
+    set we_have_abitti_json true
+    trigger_updates
+    set next_try_in_ms 3600000; # lookup abitti.json every hour
+  } else {
+    set next_try_in_ms 60000;   # lookup abitti.json every minute
+  }
+
+  after $next_try_in_ms [list update_abitti_json $abitti_json_path]
 }
 
 proc update_all_exams_pack {} {
@@ -227,44 +302,19 @@ proc update_vagrantfile {ers_dir} {
 set ers_basedir      "$env(HOME)/.puavo/puavo-ers"
 set abitti_json_path "${ers_basedir}/abitti.json"
 
-exec mkdir -p $ers_basedir
-catch { download_abitti_json $abitti_json_path }
-if {![file exists $abitti_json_path]} {
-  tk_messageBox -icon error \
-                -message "could not retrieve abitti version information"
-  exit 1
+exec mkdir -p $ers_basedir $exam_sharedir
+
+# also triggers updates when successful:
+update_abitti_json $abitti_json_path
+
+if {!$we_have_abitti_json} {
+  # XXX we could show some error message here?
+  # XXX perhaps allow user to retry?
+  vwait we_have_abitti_json
 }
-
-set abitti_config [json::json2dict [read_file $abitti_json_path]]
-
-set abitti_version [exec puavo-conf puavo.abitti.version]
-if {$abitti_version eq "latest"} {
-  set abitti_version [dict get $abitti_config latest]
-}
-if {![dict exists $abitti_config server $abitti_version]} {
-  tk_messageBox -icon error \
-                -message "requested an unknown abitti version: $abitti_version"
-  # XXX should we try to use some other abitti version?
-  exit 1
-}
-
-exec mkdir -p $exam_sharedir
-
-manage_virtual_machine prepare_and_start $abitti_version
 
 set old_exam_share_meb_paths [list]
 set old_media_meb_paths      [list]
 
 update_all_exams_pack
 update_exams_from_media
-
-# XXX these do not work with multiple machines preparing/starting
-label .activity -text "Waiting vagrant..."
-ttk::progressbar .progressbar -length 700           \
-                              -mode   indeterminate \
-                              -orient horizontal
-
-pack .activity    -fill both -expand 1
-pack .progressbar -fill both -expand 1
-
-.progressbar start
