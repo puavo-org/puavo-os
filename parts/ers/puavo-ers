@@ -2,9 +2,8 @@
 
 package require json
 
-wm attributes . -type splash
-wm maxsize    . 700 36
-wm minsize    . 700 36
+wm attributes . -topmost 1
+wm attributes . -type notification
 
 set exam_sharedir "$env(HOME)/ktp-jako"
 set last_vagrant_abitti_version ""
@@ -67,8 +66,10 @@ set vagrantfile {
       vb.customize [ 'modifyvm',     :id, '--clipboard',    'bidirectional' ]
       vb.customize [ 'modifyvm',     :id, '--vram',          24             ]
       vb.customize [ 'modifyvm',     :id, '--description',  'digabi/ktp-qa' ]
-      vb.customize [ 'setextradata', :id, 'GUI/Fullscreen', 'true'          ]
 
+      vb.customize [ 'setextradata', 'global', 'GUI/MenuBar/Enabled', 'false' ]
+      vb.customize [ 'setextradata', 'global', 'GUI/StatusBar/Enabled',
+                                               'false' ]
       vb.customize [ 'setextradata',
                      'global',
                      'GUI/SuppressMessages',
@@ -104,7 +105,7 @@ proc handle_vagrant_output {abitti_version mode} {
   if {$count > 0} {
     set message "Abitti [abitti_version_num $abitti_version]: $line"
     puts $message
-    .activity configure -text $message
+    .startup.activity configure -text $message
   }
 
   if {[eof $vagrant_process_fh]} {
@@ -130,7 +131,7 @@ proc handle_vagrant_output {abitti_version mode} {
         trigger_next_virtual_machine
       }
       start {
-        wm withdraw .
+        show_passwords_on_window
         trigger_next_virtual_machine
       }
     }
@@ -190,6 +191,19 @@ proc read_file {path} {
     close $f
   }
   return [string trimright $data "\n"]
+}
+
+proc show_passwords_on_window {} {
+  pack forget .startup
+
+  label .passwords -anchor w -padx 20 -pady 4
+  button .close_button -command { wm withdraw . } -text X
+  pack .passwords -expand 1 -fill both -side left
+  pack .close_button -fill y -expand 1 -side right
+
+  wm minsize . 64 36
+
+  update_passwords_on_window
 }
 
 proc trigger_next_virtual_machine {} {
@@ -292,6 +306,26 @@ proc update_exams_from_media {} {
   after 3000 update_exams_from_media
 }
 
+proc set_window_placement {} {
+  set x [expr { ([winfo screenwidth  .] - [winfo width  .]) }]
+  set y [expr { ([winfo screenheight .] - [winfo height .]) }]
+  wm geometry . +$x+$y
+}
+
+proc update_passwords_on_window {} {
+  global exam_sharedir
+
+  catch {
+    set passwords_text "?"
+    catch { set passwords_text [read_file "${exam_sharedir}/salasanat.txt"] }
+    .passwords configure -text $passwords_text
+
+    after 10 set_window_placement
+  }
+
+  after 5000 update_passwords_on_window
+}
+
 proc update_vagrantfile {ers_dir} {
   global vagrantfile
 
@@ -308,12 +342,18 @@ set abitti_json_path "${ers_basedir}/abitti.json"
 
 exec mkdir -p $ers_basedir $exam_sharedir
 
-label .activity -text "Waiting vagrant..."
-ttk::progressbar .progressbar -length 100           \
-                              -mode   indeterminate \
-                              -orient horizontal
-pack .activity .progressbar -fill both -expand 1
-.progressbar start
+wm minsize . 700 36
+
+frame .startup
+label .startup.activity -text "Waiting vagrant..."
+ttk::progressbar .startup.progressbar -length 100           \
+                                      -mode   indeterminate \
+                                      -orient horizontal
+pack .startup.activity .startup.progressbar -fill both -expand 1
+pack .startup -fill both -expand 1
+.startup.progressbar start
+
+set_window_placement
 
 # also triggers updates when successful:
 update_abitti_json $abitti_json_path
