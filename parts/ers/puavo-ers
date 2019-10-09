@@ -3,9 +3,12 @@
 package require json
 
 wm attributes . -type splash
+wm maxsize    . 700 36
+wm minsize    . 700 36
 
 set exam_sharedir "$env(HOME)/ktp-jako"
-set we_have_abitti_json false
+set last_vagrant_abitti_version ""
+set vagrant_process_fh ""
 
 set vagrantfile {
   # -*- mode: ruby -*-
@@ -94,26 +97,28 @@ proc get_version_gui {abitti_version} {
   return ".abitti_v${abitti_version_num}"
 }
 
-proc handle_vagrant_output {vagrant_fh abitti_version mode} {
-  global ers_basedir vagrant
+proc handle_vagrant_output {abitti_version mode} {
+  global ers_basedir last_vagrant_abitti_version vagrant_process_fh
 
-  set gui [get_version_gui $abitti_version]
-
-  set count [gets $vagrant_fh line]
+  set count [gets $vagrant_process_fh line]
   if {$count > 0} {
     set message "Abitti [abitti_version_num $abitti_version]: $line"
     puts $message
-    ${gui}.activity configure -text $message
+    .activity configure -text $message
   }
 
-  if {[eof $vagrant_fh]} {
-    fconfigure $vagrant_fh -blocking 1
-    if {[catch { close $vagrant_fh } errormsg]} {
+  if {[eof $vagrant_process_fh]} {
+    fconfigure $vagrant_process_fh -blocking 1
+    if {[catch { close $vagrant_process_fh } errormsg]} {
       # XXX how to handle error?  should we show it?
       puts stderr "vagrant returned error:\n$errormsg"
     } else {
       puts "vagrant returned successfully"
     }
+
+    set last_vagrant_abitti_version $abitti_version
+    set vagrant_process_fh ""
+
     switch -- $mode {
       prepare_and_start {
         manage_virtual_machine start $abitti_version
@@ -121,34 +126,20 @@ proc handle_vagrant_output {vagrant_fh abitti_version mode} {
       prepare {
         set ers_dir "${ers_basedir}/${abitti_version}"
         cd $ers_dir
-        exec vagrant halt
+        catch { exec vagrant halt }
+        trigger_next_virtual_machine
       }
       start {
         wm withdraw .
+        trigger_next_virtual_machine
       }
     }
   }
 }
 
-proc make_abitti_gui {abitti_version} {
-  set gui [get_version_gui $abitti_version]
-
-  frame $gui
-  label ${gui}.activity -text "Waiting vagrant..."
-  ttk::progressbar ${gui}.progressbar -length 100           \
-                                      -mode   indeterminate \
-                                      -orient horizontal
-
-  # XXX should maybe use grid
-  pack ${gui}.activity ${gui}.progressbar -fill both -expand 1 -side left
-
-  ${gui}.progressbar start
-
-  pack $gui
-}
-
 proc manage_virtual_machine {mode abitti_version} {
-  global abitti_config env ers_basedir
+  global abitti_config env ers_basedir last_vagrant_abitti_version \
+         vagrant_process_fh
 
   set network_adapter "eth0"
   set server_version [dict get $abitti_config server $abitti_version \
@@ -156,6 +147,11 @@ proc manage_virtual_machine {mode abitti_version} {
   set virtual_box_url [dict get $abitti_config server $abitti_version \
                                                       virtual_box_url]
   set vm_dir "$env(HOME)/VirtualBox VMs/${server_version}"
+
+  set vagrant_args [list --abitti-version=${abitti_version}   \
+                         --network-adapter=${network_adapter} \
+                         --server-version=${server_version}   \
+                         --virtual-box-url=${virtual_box_url}]
 
   switch -- $mode {
     prepare_and_start {
@@ -175,19 +171,14 @@ proc manage_virtual_machine {mode abitti_version} {
     start {}
   }
 
-  set vagrant_args [list --abitti-version=${abitti_version}   \
-                         --network-adapter=${network_adapter} \
-                         --server-version=${server_version}   \
-                         --virtual-box-url=${virtual_box_url}]
-
   set ers_dir "${ers_basedir}/${abitti_version}"
   update_vagrantfile $ers_dir
   cd $ers_dir
-  set vagrant_fh [open "|[list vagrant {*}$vagrant_args up]"]
+  set vagrant_process_fh [open "|[list vagrant {*}$vagrant_args up]"]
 
-  fconfigure $vagrant_fh -blocking 0
-  fileevent $vagrant_fh readable [
-    list handle_vagrant_output $vagrant_fh $abitti_version $mode
+  fconfigure $vagrant_process_fh -blocking 0
+  fileevent $vagrant_process_fh readable [
+    list handle_vagrant_output $abitti_version $mode
   ]
 }
 
@@ -201,8 +192,13 @@ proc read_file {path} {
   return [string trimright $data "\n"]
 }
 
-proc trigger_updates {} {
-  global abitti_config abitti_json_path
+proc trigger_next_virtual_machine {} {
+  global abitti_config abitti_json_path last_vagrant_abitti_version \
+         vagrant_process_fh
+
+  if {$vagrant_process_fh ne ""} {
+    return
+  }
 
   set abitti_config [json::json2dict [read_file $abitti_json_path]]
 
@@ -215,27 +211,36 @@ proc trigger_updates {} {
       -message "requested an unknown abitti version: $target_abitti_version"
   }
 
-  set abitti_version_list [dict keys [dict get $abitti_config server]]
+  set last_vagrant_abitti_version_num ""
+  if {$last_vagrant_abitti_version ne ""} {
+    set last_vagrant_abitti_version_num [
+      abitti_version_num $last_vagrant_abitti_version]
+  }
+  set target_abitti_version_num [abitti_version_num $target_abitti_version]
 
-  # XXX should not try to do this if there is already something running
-  # XXX for this version (should keep track of those)
+  set abitti_version_list [lsort -dictionary \
+                                 [dict keys [dict get $abitti_config server]]]
+
   foreach abitti_version $abitti_version_list {
-    make_abitti_gui $abitti_version
+    set abitti_version_num [abitti_version_num $abitti_version]
+    if {$last_vagrant_abitti_version_num ne "" \
+          && $abitti_version_num <= $last_vagrant_abitti_version_num} {
+      continue
+    }
+    if {$abitti_version_num < $target_abitti_version_num} {
+      continue
+    }
+
     if {$abitti_version eq $target_abitti_version} {
       manage_virtual_machine prepare_and_start $abitti_version
     } else {
-      set abitti_version_num        [abitti_version_num $abitti_version]
-      set target_abitti_version_num [abitti_version_num $target_abitti_version]
-      if {$target_abitti_version_num < $abitti_version_num} {
-        manage_virtual_machine prepare $abitti_version
-      }
+      manage_virtual_machine prepare $abitti_version
     }
+    break
   }
 }
 
 proc update_abitti_json {abitti_json_path} {
-  global we_have_abitti_json
-
   catch {
     exec wget -q --ca-certificate=/etc/puavo/certs/rootca.pem \
               -O "${abitti_json_path}.tmp" \
@@ -244,8 +249,7 @@ proc update_abitti_json {abitti_json_path} {
   }
 
   if {[file exists $abitti_json_path]} {
-    set we_have_abitti_json true
-    trigger_updates
+    trigger_next_virtual_machine
     set next_try_in_ms 3600000; # lookup abitti.json every hour
   } else {
     set next_try_in_ms 60000;   # lookup abitti.json every minute
@@ -304,14 +308,15 @@ set abitti_json_path "${ers_basedir}/abitti.json"
 
 exec mkdir -p $ers_basedir $exam_sharedir
 
+label .activity -text "Waiting vagrant..."
+ttk::progressbar .progressbar -length 100           \
+                              -mode   indeterminate \
+                              -orient horizontal
+pack .activity .progressbar -fill both -expand 1
+.progressbar start
+
 # also triggers updates when successful:
 update_abitti_json $abitti_json_path
-
-if {!$we_have_abitti_json} {
-  # XXX we could show some error message here?
-  # XXX perhaps allow user to retry?
-  vwait we_have_abitti_json
-}
 
 set old_exam_share_meb_paths [list]
 set old_media_meb_paths      [list]
