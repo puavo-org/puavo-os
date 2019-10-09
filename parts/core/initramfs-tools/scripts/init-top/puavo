@@ -99,6 +99,20 @@ if [ "$(puavo-conf puavo.pm.display.drrs.enabled)" != 'true' ]; then
   echo 'options i915 enable_drrs=0' > /etc/modprobe.d/i915_disable_drrs.conf
 fi
 
+# duplicate code with /etc/puavo-conf/scripts/manage_module_blacklist
+puavo_wireless_broadcom_driver=$(puavo-conf puavo.wireless.broadcom.driver)
+case "$puavo_wireless_broadcom_driver" in
+  b43)       blacklist_broadcom_modules='    b43legacy b44 brcmsmac wl' ;;
+  b43legacy) blacklist_broadcom_modules='b43           b44 brcmsmac wl' ;;
+  b44)       blacklist_broadcom_modules='b43 b43legacy     brcmsmac wl' ;;
+  brcm80211) blacklist_broadcom_modules='b43 b43legacy b44          wl' ;;
+  wl)        blacklist_broadcom_modules='b43 b43legacy b44 bcma brcm80211 brcmsmac ssb' ;;
+  *)         blacklist_broadcom_modules='' ;;
+esac
+for broadcom_module in $blacklist_broadcom_modules; do
+  echo "blacklist $broadcom_module"
+done > /etc/modprobe.d/broadcom-sta-dkms.conf
+
 plymouth_theme=$(puavo-conf puavo.boot.plymouth.theme)
 if [ -n "$plymouth_theme" ]; then
   cat <<EOF > /etc/plymouth/plymouthd.conf

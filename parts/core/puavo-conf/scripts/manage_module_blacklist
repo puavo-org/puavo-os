@@ -2,6 +2,20 @@
 
 set -eu
 
+# duplicate code with initramfs-tools/scripts/init-top/puavo
+puavo_wireless_broadcom_driver=$(puavo-conf puavo.wireless.broadcom.driver)
+case "$puavo_wireless_broadcom_driver" in
+  b43)       blacklist_broadcom_modules='    b43legacy b44 brcmsmac wl' ;;
+  b43legacy) blacklist_broadcom_modules='b43           b44 brcmsmac wl' ;;
+  b44)       blacklist_broadcom_modules='b43 b43legacy     brcmsmac wl' ;;
+  brcm80211) blacklist_broadcom_modules='b43 b43legacy b44          wl' ;;
+  wl)        blacklist_broadcom_modules='b43 b43legacy b44 bcma brcm80211 brcmsmac ssb' ;;
+  *)         blacklist_broadcom_modules='' ;;
+esac
+for broadcom_module in $blacklist_broadcom_modules; do
+  echo "blacklist $broadcom_module"
+done > /etc/modprobe.d/broadcom-sta-dkms.conf
+
 blacklist_filepath='/etc/modprobe.d/blacklist-by-puavo-conf.conf'
 
 puavo_blacklist=$(puavo-conf puavo.kernel.modules.blacklist)

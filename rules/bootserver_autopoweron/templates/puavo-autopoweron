@@ -3,7 +3,7 @@
 require 'puavo/rest-client'
 
 bcast_ip = IO.popen(['ifconfig', 'ltsp0']) do |io|
-  $1 if io.read.match /Bcast:([0-9.]+)/
+  $1 if io.read.match /broadcast ([0-9.]+)/
 end
 
 if bcast_ip.nil?
