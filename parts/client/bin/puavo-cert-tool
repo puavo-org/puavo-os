@@ -57,7 +57,13 @@ class Certificates
     current_cert_paths = CertificatePaths.new(@certchain_version, '')
 
     begin
-      certificate_pem = File.read( current_cert_paths.certificate )
+      end_cert_marker = "-----END CERTIFICATE-----\n"
+      all_certificates \
+        = (File.read( current_cert_paths.certificate )    \
+            + File.read( current_cert_paths.orgcabundle ) \
+            + File.read( current_cert_paths.rootca ))     \
+          .split(end_cert_marker) \
+          .map { |pem| pem + end_cert_marker }
     rescue Errno::ENOENT
       Syslog.info('no certificate exists for certchain version %s, creating',
                   @certchain_version)
@@ -65,13 +71,21 @@ class Certificates
       return
     end
 
-    cert = OpenSSL::X509::Certificate.new(certificate_pem)
+    must_renew = false
+    all_certificates.each do |cert_pem|
+      cert = OpenSSL::X509::Certificate.new(cert_pem)
+      if (Time.now + 60 * 60 * 24 * 180) >= cert.not_after then
+        # update certificates in case any of the certificates will expire
+        # in half a year
+        must_renew = true
+        break
+      end
+    end
 
-    # do not update if certificate is valid for the next half a year
-    return if (Time.now + 60 * 60 * 24 * 180) < cert.not_after
+    return unless must_renew
 
-    Syslog.info('certificate for chain version %s is expiring in half a year' \
-                  + ' (or has already expired), updating',
+    Syslog.info('some certificate for chain version %s is expiring in half' \
+                  + ' a year (or has already expired), updating',
                 @certchain_version)
     create
   end
