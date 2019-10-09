@@ -9,6 +9,8 @@ set exam_sharedir "$env(HOME)/ktp-jako"
 set last_vagrant_abitti_version ""
 set vagrant_process_fh ""
 
+set previous_window_placement "bottom"
+
 set vagrantfile {
   # -*- mode: ruby -*-
   # vi: set ft=ruby :
@@ -203,6 +205,8 @@ proc show_passwords_on_window {} {
 
   wm minsize . 64 36
 
+  bind .passwords <Enter> { set_window_placement change }
+
   update_passwords_on_window
 }
 
@@ -306,10 +310,25 @@ proc update_exams_from_media {} {
   after 3000 update_exams_from_media
 }
 
-proc set_window_placement {} {
-  set x [expr { ([winfo screenwidth  .] - [winfo width  .]) }]
-  set y [expr { ([winfo screenheight .] - [winfo height .]) }]
+proc set_window_placement {{placement keep}} {
+  global previous_window_placement
+
+  switch -- $placement {
+    change {
+      set placement [
+        expr { $previous_window_placement eq "bottom" ? "up" : "bottom" }
+      ]
+    }
+    keep { set placement $previous_window_placement }
+  }
+
+  set x [expr { ([winfo screenwidth  .] - [winfo width .]) }]
+  set y [expr { $placement eq "bottom"
+                  ? ([winfo screenheight .] - [winfo height .])
+                  : 0 }]
   wm geometry . +$x+$y
+
+  set previous_window_placement $placement
 }
 
 proc update_passwords_on_window {} {
@@ -353,7 +372,7 @@ pack .startup.activity .startup.progressbar -fill both -expand 1
 pack .startup -fill both -expand 1
 .startup.progressbar start
 
-set_window_placement
+set_window_placement bottom
 
 # also triggers updates when successful:
 update_abitti_json $abitti_json_path
