@@ -1,0 +1,384 @@
+#!/usr/bin/wish
+
+package require json
+
+wm attributes . -topmost 1
+wm attributes . -type notification
+
+set exam_sharedir "$env(HOME)/ktp-jako"
+set last_vagrant_abitti_version ""
+set vagrant_process_fh ""
+
+set previous_window_placement "bottom"
+
+set vagrantfile {
+  # -*- mode: ruby -*-
+  # vi: set ft=ruby :
+
+  require 'facter'
+  require 'getoptlong'
+
+  opts = GetoptLong.new(
+    [ '--abitti-version',  GetoptLong::REQUIRED_ARGUMENT ],
+    [ '--network-adapter', GetoptLong::REQUIRED_ARGUMENT ],
+    [ '--prepare',         GetoptLong::NO_ARGUMENT       ],
+    [ '--server-version',  GetoptLong::REQUIRED_ARGUMENT ],
+    [ '--virtual-box-url', GetoptLong::REQUIRED_ARGUMENT ],
+  )
+
+  abitti_version  = nil
+  network_adapter = nil
+  prepare         = false
+  server_version  = nil
+  virtual_box_url = nil
+
+  opts.each do |opt, arg|
+    case opt
+      when '--abitti-version'
+        abitti_version = arg.sub(/^abitti-v/, '')
+      when '--network-adapter'
+        network_adapter = arg
+      when '--prepare'
+        prepare = true
+      when '--server-version'
+        server_version = arg
+      when '--virtual-box-url'
+        virtual_box_url = arg
+    end
+  end
+
+  cpus = [ 1, Facter['processorcount'].value.to_i - 1 ].max
+  mem  = (0.75 * Facter['memorysize_mb'].value.to_i).to_i
+
+  # All Vagrant configuration is done below. The "2" in Vagrant.configure
+  # configures the configuration version (we support older styles for
+  # backwards compatibility). Please don't change it unless you know what
+  # you're doing.
+  Vagrant.configure('2') do |config|
+    config.vm.boot_timeout = 1
+    config.vm.box = "digabi/ktp-qa-abitti-v#{ abitti_version }"
+    config.vm.box_url = virtual_box_url
+    config.vm.provider :virtualbox do |vb|
+      vb.name = server_version
+      vb.gui = (prepare ? false : true)
+      vb.customize [ 'modifyvm',     :id, '--ioapic',       'on'            ]
+      vb.customize [ 'modifyvm',     :id, '--cpus',         cpus            ]
+      vb.customize [ 'modifyvm',     :id, '--memory',       mem             ]
+      vb.customize [ 'modifyvm',     :id, '--nictype1',     'virtio'        ]
+      vb.customize [ 'modifyvm',     :id, '--clipboard',    'bidirectional' ]
+      vb.customize [ 'modifyvm',     :id, '--vram',          24             ]
+      vb.customize [ 'modifyvm',     :id, '--description',  'digabi/ktp-qa' ]
+
+      vb.customize [ 'setextradata', 'global', 'GUI/MenuBar/Enabled', 'false' ]
+      vb.customize [ 'setextradata', 'global', 'GUI/StatusBar/Enabled',
+                                               'false' ]
+      vb.customize [ 'setextradata',
+                     'global',
+                     'GUI/SuppressMessages',
+                     %w(confirmGoingFullscreen
+                        remindAboutAutoCapture
+                        remindAboutMouseIntegration).join(',') ]
+    end
+
+    config.vm.synced_folder '~/ktp-jako', '/media/usb1', id: 'media_usb1'
+    config.vm.network 'public_network',
+                      :adapter => 1,
+                      bridge: network_adapter,
+                      auto_config: false
+  end
+}
+
+proc abitti_version_num {abitti_version} {
+  if {![regsub -- {^abitti-v(\d+)$} $abitti_version {\1} abitti_version_num]} {
+    error "bad abitti version number in $abitti_version"
+  }
+  return $abitti_version_num
+}
+
+proc get_version_gui {abitti_version} {
+  set abitti_version_num [abitti_version_num $abitti_version]
+  return ".abitti_v${abitti_version_num}"
+}
+
+proc handle_vagrant_output {abitti_version mode} {
+  global ers_basedir last_vagrant_abitti_version vagrant_process_fh
+
+  set count [gets $vagrant_process_fh line]
+  if {$count > 0} {
+    set message "Abitti [abitti_version_num $abitti_version]: $line"
+    puts $message
+    .startup.activity configure -text $message
+  }
+
+  if {[eof $vagrant_process_fh]} {
+    fconfigure $vagrant_process_fh -blocking 1
+    if {[catch { close $vagrant_process_fh } errormsg]} {
+      # XXX how to handle error?  should we show it?
+      puts stderr "vagrant returned error:\n$errormsg"
+    } else {
+      puts "vagrant returned successfully"
+    }
+
+    set last_vagrant_abitti_version $abitti_version
+    set vagrant_process_fh ""
+
+    switch -- $mode {
+      prepare_and_start {
+        manage_virtual_machine start $abitti_version
+      }
+      prepare {
+        set ers_dir "${ers_basedir}/${abitti_version}"
+        cd $ers_dir
+        catch { exec vagrant halt }
+        trigger_next_virtual_machine
+      }
+      start {
+        show_passwords_on_window
+        trigger_next_virtual_machine
+      }
+    }
+  }
+}
+
+proc manage_virtual_machine {mode abitti_version} {
+  global abitti_config env ers_basedir last_vagrant_abitti_version \
+         vagrant_process_fh
+
+  set network_adapter "eth0"
+  set server_version [dict get $abitti_config server $abitti_version \
+                                                     server_version]
+  set virtual_box_url [dict get $abitti_config server $abitti_version \
+                                                      virtual_box_url]
+  set vm_dir "$env(HOME)/VirtualBox VMs/${server_version}"
+
+  set vagrant_args [list --abitti-version=${abitti_version}   \
+                         --network-adapter=${network_adapter} \
+                         --server-version=${server_version}   \
+                         --virtual-box-url=${virtual_box_url}]
+
+  switch -- $mode {
+    prepare_and_start {
+      if {[file exists $vm_dir]} {
+        set mode start
+      } else {
+        lappend vagrant_args --prepare
+      }
+    }
+    prepare {
+      if {[file exists $vm_dir]} {
+        # already prepared
+        return
+      }
+      lappend vagrant_args --prepare
+    }
+    start {}
+  }
+
+  set ers_dir "${ers_basedir}/${abitti_version}"
+  update_vagrantfile $ers_dir
+  cd $ers_dir
+  set vagrant_process_fh [open "|[list vagrant {*}$vagrant_args up]"]
+
+  fconfigure $vagrant_process_fh -blocking 0
+  fileevent $vagrant_process_fh readable [
+    list handle_vagrant_output $abitti_version $mode
+  ]
+}
+
+proc read_file {path} {
+  set f [open $path]
+  try {
+    set data [read $f]
+  } finally {
+    close $f
+  }
+  return [string trimright $data "\n"]
+}
+
+proc show_passwords_on_window {} {
+  pack forget .startup
+
+  label .passwords -anchor w -padx 20 -pady 4
+  button .close_button -command { wm withdraw . } -text X
+  pack .passwords -expand 1 -fill both -side left
+  pack .close_button -fill y -expand 1 -side right
+
+  wm minsize . 64 36
+
+  bind .passwords <Enter> { set_window_placement change }
+
+  update_passwords_on_window
+}
+
+proc trigger_next_virtual_machine {} {
+  global abitti_config abitti_json_path last_vagrant_abitti_version \
+         vagrant_process_fh
+
+  if {$vagrant_process_fh ne ""} {
+    return
+  }
+
+  set abitti_config [json::json2dict [read_file $abitti_json_path]]
+
+  set target_abitti_version [exec puavo-conf puavo.abitti.version]
+  if {$target_abitti_version eq "latest"} {
+    set target_abitti_version [dict get $abitti_config latest]
+  }
+  if {![dict exists $abitti_config server $target_abitti_version]} {
+    tk_messageBox -icon error \
+      -message "requested an unknown abitti version: $target_abitti_version"
+  }
+
+  set last_vagrant_abitti_version_num ""
+  if {$last_vagrant_abitti_version ne ""} {
+    set last_vagrant_abitti_version_num [
+      abitti_version_num $last_vagrant_abitti_version]
+  }
+  set target_abitti_version_num [abitti_version_num $target_abitti_version]
+
+  set abitti_version_list [lsort -dictionary \
+                                 [dict keys [dict get $abitti_config server]]]
+
+  foreach abitti_version $abitti_version_list {
+    set abitti_version_num [abitti_version_num $abitti_version]
+    if {$last_vagrant_abitti_version_num ne "" \
+          && $abitti_version_num <= $last_vagrant_abitti_version_num} {
+      continue
+    }
+    if {$abitti_version_num < $target_abitti_version_num} {
+      continue
+    }
+
+    if {$abitti_version eq $target_abitti_version} {
+      manage_virtual_machine prepare_and_start $abitti_version
+    } else {
+      manage_virtual_machine prepare $abitti_version
+    }
+    break
+  }
+}
+
+proc update_abitti_json {abitti_json_path} {
+  catch {
+    exec wget -q --ca-certificate=/etc/puavo/certs/rootca.pem \
+              -O "${abitti_json_path}.tmp" \
+              https://images.opinsys.fi/abitti-images/abitti.json
+    file rename -force "${abitti_json_path}.tmp" $abitti_json_path
+  }
+
+  if {[file exists $abitti_json_path]} {
+    trigger_next_virtual_machine
+    set next_try_in_ms 3600000; # lookup abitti.json every hour
+  } else {
+    set next_try_in_ms 60000;   # lookup abitti.json every minute
+  }
+
+  after $next_try_in_ms [list update_abitti_json $abitti_json_path]
+}
+
+proc update_all_exams_pack {} {
+  global exam_sharedir old_exam_share_meb_paths
+
+  catch {
+    set exam_share_meb_paths [exec find $exam_sharedir -maxdepth 1 -name *.meb]
+    if {$old_exam_share_meb_paths ne $exam_share_meb_paths} {
+      set all_zip_path  "${exam_sharedir}/Kaikki.zip"
+      file delete $all_zip_path
+      if {[llength $exam_share_meb_paths] > 0} {
+        exec zip $all_zip_path {*}$exam_share_meb_paths
+      }
+      set old_exam_share_meb_paths $exam_share_meb_paths
+    }
+  }
+
+  after 3000 update_all_exams_pack
+}
+
+proc update_exams_from_media {} {
+  global exam_sharedir old_media_meb_paths
+
+  catch {
+    set media_meb_paths [exec find "/media/$env(USER)" -name *.meb]
+    if {$old_media_meb_paths ne $media_meb_paths} {
+      foreach meb_path $media_meb_paths {
+        file copy -force $meb_path $exam_sharedir
+      }
+      set old_media_meb_paths $media_meb_paths
+    }
+  }
+
+  after 3000 update_exams_from_media
+}
+
+proc set_window_placement {{placement keep}} {
+  global previous_window_placement
+
+  switch -- $placement {
+    change {
+      set placement [
+        expr { $previous_window_placement eq "bottom" ? "up" : "bottom" }
+      ]
+    }
+    keep { set placement $previous_window_placement }
+  }
+
+  set x [expr { ([winfo screenwidth  .] - [winfo width .]) }]
+  set y [expr { $placement eq "bottom"
+                  ? ([winfo screenheight .] - [winfo height .])
+                  : 0 }]
+  wm geometry . +$x+$y
+
+  set previous_window_placement $placement
+}
+
+proc update_passwords_on_window {} {
+  global exam_sharedir
+
+  catch {
+    set passwords_text "?"
+    catch { set passwords_text [read_file "${exam_sharedir}/salasanat.txt"] }
+    .passwords configure -text $passwords_text
+
+    after 10 set_window_placement
+  }
+
+  after 5000 update_passwords_on_window
+}
+
+proc update_vagrantfile {ers_dir} {
+  global vagrantfile
+
+  exec mkdir -p $ers_dir
+
+  set vagrant_fh [open "${ers_dir}/Vagrantfile" w]
+
+  puts $vagrant_fh $vagrantfile
+  close $vagrant_fh
+}
+
+set ers_basedir      "$env(HOME)/.puavo/puavo-ers"
+set abitti_json_path "${ers_basedir}/abitti.json"
+
+exec mkdir -p $ers_basedir $exam_sharedir
+
+wm minsize . 700 36
+
+frame .startup
+label .startup.activity -text "Waiting vagrant..."
+ttk::progressbar .startup.progressbar -length 100           \
+                                      -mode   indeterminate \
+                                      -orient horizontal
+pack .startup.activity .startup.progressbar -fill both -expand 1
+pack .startup -fill both -expand 1
+.startup.progressbar start
+
+set_window_placement bottom
+
+# also triggers updates when successful:
+update_abitti_json $abitti_json_path
+
+set old_exam_share_meb_paths [list]
+set old_media_meb_paths      [list]
+
+update_all_exams_pack
+update_exams_from_media
