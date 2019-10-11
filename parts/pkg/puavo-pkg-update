@@ -248,18 +248,11 @@ for pkgspec in $puavo_pkg_specs; do
   fi
 
   if [ -z "$action" ]; then
-    if [ "$puavo_hosttype" = 'bootserver' ]; then
-      # On bootservers, the default action is to prepare the packages.
-      # This means all packages which are not explicitly marked as installed,
-      # will be unconfigured, which is probably what we actually want.
-      action='prepare'
-    else
-      # on others, it is "install"
-      action='install'
-    fi
+    logmsg user.info "installation directive on ${puavo_pkg} is not set, doing nothing"
+    action='do-nothing'
+  else
+    logmsg user.info "installation directive on ${puavo_pkg} is: $action"
   fi
-
-  logmsg user.info "installation directive on ${puavo_pkg} is: $action"
 
   case "$action" in
     do-nothing)
