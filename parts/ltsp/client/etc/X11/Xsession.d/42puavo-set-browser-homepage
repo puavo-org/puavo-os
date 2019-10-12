@@ -1,32 +1,27 @@
 # Set the browser homepage in environmental variable HOMEPAGE
 # that firefox-puavodesktop.js uses to set startpage when the
-# browser start.
+# browser start (and also our google-chrome wrapper in its own way).
 
-DEVICE_HOMEPAGE=$(jq -r .homepage "/etc/puavo/device.json")
+puavo_device_homepage=$(puavo-conf puavo.www.homepage)
 
-if [ -f "${PUAVO_SESSION_PATH}" ]; then
-  USER_HOMEPAGE=$(jq -r .user.homepage "${PUAVO_SESSION_PATH}")
-  DEVICE_HOMEPAGE=$(jq -r .device.homepage "${PUAVO_SESSION_PATH}")
-fi
-
-if [ "${USER_HOMEPAGE}" = "null" ]; then
-  USER_HOMEPAGE=""
-fi
-
-if [ "${DEVICE_HOMEPAGE}" = "null" ]; then
-  DEVICE_HOMEPAGE=""
-fi
-
-export HOMEPAGE=${DEVICE_HOMEPAGE}
-
-if [ "${USER_HOMEPAGE}" != "" ]; then
-  if [ "${DEVICE_HOMEPAGE}" != "" ]; then
-    if [ "${USER_HOMEPAGE}" != "${DEVICE_HOMEPAGE}" ]; then
-      export HOMEPAGE="${DEVICE_HOMEPAGE}|${USER_HOMEPAGE}"
-    else
-      export HOMEPAGE="${USER_HOMEPAGE}"
-    fi
-  else
-    export HOMEPAGE="${USER_HOMEPAGE}"
+puavo_user_homepage=''
+if [ -f "$PUAVO_SESSION_PATH" ]; then
+  puavo_user_homepage=$(jq -r .user.homepage "$PUAVO_SESSION_PATH")
+  if [ "$puavo_user_homepage" = 'null' ]; then
+    puavo_user_homepage=''
   fi
 fi
+
+HOMEPAGE="$puavo_device_homepage"
+
+if [ -n "$puavo_user_homepage" ]; then
+  if [ -n "$puavo_device_homepage" ]; then
+    if [ "$puavo_user_homepage" != "$puavo_device_homepage" ]; then
+      HOMEPAGE="${puavo_device_homepage}|${puavo_user_homepage}"
+    fi
+  else
+    HOMEPAGE="$puavo_user_homepage"
+  fi
+fi
+
+export HOMEPAGE
