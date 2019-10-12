@@ -8,6 +8,7 @@ _pkgs_parts := puavo-ds puavo-os
 # XXX if there is any benefit to do so
 _pkgs_ports := gnome-shell \
                grub2       \
+               incron      \
                mutter      \
                nbd         \
                openboard   \
