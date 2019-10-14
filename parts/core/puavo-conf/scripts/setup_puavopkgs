@@ -167,8 +167,8 @@ setup_puavopkg_for_netboot_devices() {
   # mount /images/puavo-pkg from bootserver in case we have booted from network
   read nbd_server < /run/puavo/nbd-server
   mkdir -p "$remote_mountdir"
-  if ! timeout -k 5 30 mount -t nfs -o ro,nfsvers=3 "${nbd_server}:/images/puavo-pkg" \
-                                                    "$remote_mountdir"; then
+  if ! timeout -k 5 30 mount -t nfs4 -o ro,sec=sys "${nbd_server}:/puavo-pkg" \
+                                                   "$remote_mountdir"; then
     echo "could not mount ${nbd_server}:/puavo-pkg" >&2
     return 1
   fi

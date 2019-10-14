@@ -41,7 +41,7 @@ EOF
 cat <<'EOF' > /etc/exports.tmp
 /images/.export *(rw,fsid=0,async,subtree_check,no_root_squash,sec=krb5p:krb5i:krb5:sys:null)
 /images/.export/home *(rw,async,subtree_check,no_root_squash,sec=krb5p:krb5i:krb5)
-/images/puavo-pkg *(ro,async,subtree_check,no_root_squash,sec=sys)
+/images/.export/puavo-pkg *(ro,async,subtree_check,no_root_squash,sec=sys)
 EOF
 mv /etc/exports.tmp /etc/exports
 
