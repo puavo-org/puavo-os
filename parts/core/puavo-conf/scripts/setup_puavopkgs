@@ -166,14 +166,17 @@ setup_puavopkg_for_localboot_devices() {
 setup_puavopkg_for_netboot_devices() {
   # mount /images/puavo-pkg from bootserver in case we have booted from network
   read nbd_server < /run/puavo/nbd-server
-  mkdir -p "$remote_mountdir"
-  if ! timeout -k 5 30 mount -t nfs4 -o ro,sec=sys "${nbd_server}:/images/puavo-pkg" \
-                                                   "$remote_mountdir"; then
+  mkdir -p /cow/puavo-pkg "$remote_mountdir" "${remote_mountdir}.rofs"
+  mount -t ramfs none /cow/puavo-pkg
+  mkdir -p /cow/puavo-pkg/rootdir /cow/puavo-pkg/workdir
+  if ! timeout -k 5 30 mount -t nfs4 -o ro,sec=sys "${nbd_server}:/puavo-pkg" \
+                                                   "${remote_mountdir}.rofs"; then
     echo "could not mount ${nbd_server}:/puavo-pkg" >&2
     return 1
   fi
 
-  mount -t overlay -o "upperdir=/cow/puavo-pkg.rootdir,lowerdir=${remote_mountdir}.rofs,workdir=/cow/puavo-pkg.workdir" \
+  mount -t overlay \
+        -o "upperdir=/cow/puavo-pkg/rootdir,lowerdir=${remote_mountdir}.rofs,workdir=/cow/puavo-pkg/workdir" \
         overlay "$remote_mountdir"
 
   install_puavo_pkg_conf "$system_cachedir" \
