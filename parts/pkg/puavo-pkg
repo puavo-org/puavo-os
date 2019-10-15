@@ -580,17 +580,11 @@ download_upstream_pack()
     }
     popd > /dev/null 2>&1 || true
   else
-    wget \
-      --no-use-server-timestamps \
-      --no-check-certificate \
-      --no-cookies \
-      --input-file "${pkg_dir}/upstream_pack_url" \
-      --output-document "$upstream_tmppack" \
-      --progress=dot:mega || {
-      [ $? -eq 4 ] && g_sc=${SC_ERR_NET}
-      rm -rf "${upstream_tmppack}"
+    if ! download_upstream_pack_from_multiple_urls "$pkg_dir" \
+                                                   "$upstream_tmppack"; then
+      rm -rf "$upstream_tmppack"
       return 1
-    }
+    fi
   fi
 
   if ! check_cksum "${pkg_dir}/upstream_pack_sha384sum" "${upstream_tmppack}"; then
@@ -609,6 +603,39 @@ download_upstream_pack()
   fi
 
   log_info "${pkg_name}: downloaded upstream pack successfully"
+}
+
+download_upstream_pack_from_multiple_urls()
+{
+  local pkg_dir upstream_tmppack
+
+  pkg_dir=$1
+  upstream_tmppack=$2
+
+  # try to lookup files from our own servers first, then the upstream url
+
+  read upstream_pack_url < "${pkg_dir}/upstream_pack_url" || return 1
+  upstream_pack_filename="${upstream_pack_url##*/}"
+
+  distfile_url_list=''
+  for distfile_server in $(puavo-conf puavo.image.servers) \
+                         "cdn.$(cat /etc/puavo/topdomain)"; do
+    distfile_url_list="$distfile_url_list https://${distfile_server}/distfiles/${upstream_pack_filename}"
+  done
+  distfile_url_list="$distfile_url_list $upstream_pack_url"
+
+  for distfile_url in $distfile_url_list; do
+    if wget --no-use-server-timestamps            \
+            --no-check-certificate                \
+            --no-cookies                          \
+            --output-document "$upstream_tmppack" \
+            --progress=dot:mega "$distfile_url"; then
+      return 0
+    fi
+  done
+
+  [ $? -eq 4 ] && g_sc=${SC_ERR_NET}
+  return 1
 }
 
 get_pkg_field_from_installer()
