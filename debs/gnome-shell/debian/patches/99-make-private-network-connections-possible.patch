@@ -1,6 +1,5 @@
-diff -ruN gnome-shell-3.30.2.build-5/js/ui/status/network.js gnome-shell-3.30.2.build-6/js/ui/status/network.js
---- gnome-shell-3.30.2.build-5/js/ui/status/network.js	2019-04-17 12:45:11.472940702 +0300
-+++ gnome-shell-3.30.2.build-6/js/ui/status/network.js	2019-04-17 12:54:46.826158478 +0300
+--- gnome-shell.orig/js/ui/status/network.js	2019-10-15 12:38:03.000000000 +0300
++++ gnome-shell/js/ui/status/network.js	2019-10-15 12:40:16.392550480 +0300
 @@ -332,8 +332,7 @@
      },
  
@@ -11,13 +10,13 @@ diff -ruN gnome-shell-3.30.2.build-5/js/ui/status/network.js gnome-shell-3.30.2.
      },
  
      destroy() {
-@@ -923,14 +922,43 @@
+@@ -923,14 +922,41 @@
                  Util.spawn(['gnome-control-center', 'wifi', 'connect-8021x-wifi',
                              this._device.get_path(), accessPoints[0].get_path()]);
              } else {
 -                let connection = new NM.SimpleConnection();
 -                this._client.add_and_activate_connection_async(connection, this._device, accessPoints[0].get_path(), null, null)
-+                this._addAndActivateNewConnection(accessPoints[0].dbus_path);
++                this._addAndActivateNewConnection(accessPoints[0].get_path());
              }
          }
  
@@ -25,11 +24,10 @@ diff -ruN gnome-shell-3.30.2.build-5/js/ui/status/network.js gnome-shell-3.30.2.
      },
  
 +    _addAndActivateNewConnection(dbus_path) {
-+      let connection = new NetworkManager.Connection();
++      let connection = new NM.SimpleConnection();
 +
 +      let cmd = '/usr/lib/puavo-ltsp-client/puavo-network-connections --ask-if-must-be-private';
 +      let [res, out, err, status] = GLib.spawn_command_line_sync(cmd);
-+
 +      if (res && status == 0) {
 +          // We do a similar trick as "nmcli"-utility does when given
 +          // "private yes" as parameters.  Set the user of the network
@@ -41,17 +39,16 @@ diff -ruN gnome-shell-3.30.2.build-5/js/ui/status/network.js gnome-shell-3.30.2.
 +          // the above command is not found, the default behaviour of using
 +          // system-level permission is retained.
 +          let username = GLib.get_user_name();
-+
 +          if (username && username != "") {
-+              let s_con = new NetworkManager.SettingConnection();
++              let s_con = new NM.SettingConnection();
 +              connection.add_setting(s_con);
 +
 +              s_con.add_permission("user", username, null);
 +          }
 +      }
 +
-+      this._client.add_and_activate_connection(connection, this._device,
-+          dbus_path, null);
++      this._client.add_and_activate_connection_async(connection, this._device,
++          dbus_path, null, null);
 +    },
 +
      _notifySsidCb(accessPoint) {
