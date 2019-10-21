@@ -3,6 +3,19 @@
 set -eu
 
 case "$(puavo-conf puavo.xsessions.default)" in
+  puavo-ers)
+    session_manager='/usr/lib/puavo-ltsp-client/desktop-session'
+
+    ers_home='/home/puavo-ers'
+    ers_uid='992'
+    ers_user='puavo-ers'
+
+    useradd --system --create-home --home-dir "$ers_home"      \
+            --comment Puavo-ERS --user-group --shell /bin/bash \
+            --uid "$ers_uid" "$ers_user"
+    chmod 700 "$ers_home"
+    ;;
+
   puavo-infotv)
     session_manager='/usr/lib/puavo-ltsp-client/infotv-session'
 

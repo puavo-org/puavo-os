@@ -22,6 +22,13 @@ expect {
 }
 
 expect {
+  -ex "Do you still want to install the plug-in? (y=yes, n=no*, q=quit) ? " {
+    # unfortunately very frequently there is a
+    # "error: Unable to recieve key from keyserver" message from hp-plugin
+    send "y\n"
+    exp_continue
+  }
+
   -ex "Do you accept the license terms for the plug-in (y=yes*, n=no, q=quit) ? " {
     send "\n"
   }

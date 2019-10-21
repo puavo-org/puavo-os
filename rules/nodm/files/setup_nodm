@@ -6,6 +6,10 @@ set -eu
 # but this should be fast so we will do this anyway.
 
 case "$(puavo-conf puavo.xsessions.default)" in
+  puavo-ers)
+    nodm_user='puavo-ers'
+    xsession_path='desktop-session'
+    ;;
   puavo-infotv)
     nodm_user='puavo-infotv'
     xsession_path='infotv-session'
