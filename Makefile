@@ -223,7 +223,7 @@ rootfs-update: rootfs-sync-repo
 setup-buildhost:
 	.aux/setup-buildhost
 
-/etc/puavo-conf/image.json: config/puavo_conf.json
+/etc/puavo-conf/image.json: config/puavo_conf/$(image_class).json
 	$(_sudo) mkdir -p $(@D)
 	$(_sudo) cp $< $@
 
