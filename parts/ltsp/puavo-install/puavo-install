@@ -284,8 +284,6 @@ install_localbootdevice() {
   puavo-setup-filesystems $puavo_preseed_setup_filesystems_args
   setup_state "$puavo_hosttype"
 
-  puavo-cert-tool create
-
   # Grub needs to be installed before images, because grub
   # configuration is updated during image installation by
   # puavo-image-preinst.
@@ -352,6 +350,9 @@ setup_state() {
   mkdir -p /state/etc
   cp -aT /etc/puavo /state/etc/puavo
   sync
+
+  puavo-cert-tool create
+  echo
 
   if [ "$puavo_hosttype" = 'bootserver' ]; then
     bootserver_setup_state
