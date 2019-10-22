@@ -9,4 +9,12 @@ if [ "$shutdown_state" != "0" ]; then
   exit 1
 fi
 
+SYSSESSIONDIR=/etc/X11/Xsession.d
+SESSIONFILES=$(run-parts --list $SYSSESSIONDIR)
+if [ -n "$SESSIONFILES" ]; then
+  for SESSIONFILE in $SESSIONFILES; do
+    . $SESSIONFILE
+  done
+fi
+
 exec "$@"
