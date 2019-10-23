@@ -9,12 +9,40 @@ read puavo_ldap_base      < /etc/puavo/ldap/base
 read puavo_ldap_dn        < /etc/puavo/ldap/dn
 read puavo_ldap_master    < /etc/puavo/ldap/master
 
-ldap_filter="ldap:///${puavo_ldap_base}???(puavoDomain=${puavo_domain})"
-puavo_samba_domain=$(slapcat -H "$ldap_filter" \
-  | awk '$1 == "sambaDomainName:" { print $2; exit 0 }')
+if [ "${PUAVO_BOOTSERVER_INSTALLATION:-}" = 'true' ]; then
+  # slapcat can not be used at boot time because in case of stale locks in database
+  # this just hangs
+  ldap_filter="ldap:///${puavo_ldap_base}???(puavoDomain=${puavo_domain})"
+  puavo_samba_domain=$(slapcat -H "$ldap_filter" \
+    | awk '$1 == "sambaDomainName:" { print $2; exit 0 }')
+  if [ -z "$puavo_samba_domain" ]; then
+    echo 'could not determine sambaDomainName from ldap database, exiting' >&2
+    exit 1
+  fi
+  printf "%s\n" "$puavo_samba_domain" > /state/etc/puavo/sambadomainname
+  printf "%s\n" "$puavo_samba_domain" > /etc/puavo/sambadomainname
+fi
+
+# XXX This if-else-statement can be removed later when all bootservers
+# XXX have /etc/puavo/sambadomainname set up properly
+# XXX (then we can just read puavo_samba_domain from /etc/puavo/sambadomainname)
+if [ -r /etc/puavo/sambadomainname ]; then
+  read puavo_samba_domain < /etc/puavo/sambadomainname
+else
+  # XXX this is an ugly hack
+  puavo_samba_domain=$(awk -F= '
+    /^olcAccess:.*sambaDomainName/ { sub(/,.*$/, "", $3); print $3; exit 0 }' \
+    '/state/etc/ldap/slapd.d/cn=config/olcDatabase={1}hdb.ldif')
+  if [ -z "$puavo_samba_domain" ]; then
+    echo 'could not determine sambaDomainName from slapd config, exiting' >&2
+    exit 1
+  fi
+  printf "%s\n" "$puavo_samba_domain" > /state/etc/puavo/sambadomainname
+  printf "%s\n" "$puavo_samba_domain" > /etc/puavo/sambadomainname
+fi
 
 if [ -z "$puavo_samba_domain" ]; then
-  echo 'Could not determine Samba domain name' >&2
+  echo 'could not determine Samba domain name' >&2
   exit 1
 fi
 
