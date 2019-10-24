@@ -70,7 +70,9 @@ set -eu
 puavo_domain=$(cat /etc/puavo/domain)
 
 lookup_puavo_apiserver() {
-  host -t SRV -W 2 "_puavo-api._tcp.${puavo_domain}" \
+  cert_version=$(puavo-conf puavo.admin.certs.versions | awk '{ print $1 }')
+
+  host -t SRV -W 2 "_puavo-api_${cert_version}._tcp.${puavo_domain}" \
       | awk -v puavo_domain="$puavo_domain" '
             $2 == "has" && $3 == "SRV" && $4 == "record" {
                 sub(/\.$/, "", $8)

@@ -5,6 +5,7 @@ require "http"
 require "optparse"
 require "resolv"
 require "addressable/uri"
+require "puavo/conf"
 
 
 if ENV["PUAVO_REST_CLIENT_VERBOSE"]
@@ -69,10 +70,17 @@ class PuavoRestClient
 
 
   def self.resolve_apiserver_dns(puavo_domain)
+      begin
+        puavoconf = Puavo::Conf.new
+        cert_version = puavoconf.get('puavo.admin.certs.versions').split.first
+        puavoconf.close
+      rescue StandardError => e
+        raise ResolvFail, 'Could not determine certificate version'
+      end
 
       res = Resolv::DNS.open do |dns|
         dns.getresources(
-          "_puavo-api._tcp.#{ puavo_domain }",
+          "_puavo-api_#{ cert_version }._tcp.#{ puavo_domain }",
           Resolv::DNS::Resource::IN::SRV
         )
       end

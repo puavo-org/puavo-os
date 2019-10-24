@@ -6,25 +6,6 @@ set -eu
 
 ebs_status=0
 
-# from /usr/sbin/puavo-install-and-update-ltspimages
-lookup_image_server_by_dns() {
-  read puavo_domain < /etc/puavo/domain
-
-  host -t SRV -W 5 "_imageserver._tcp.${puavo_domain}" \
-    | awk -v puavo_domain="$puavo_domain" '
-        $2 == "has" && $3 == "SRV" && $4 == "record" {
-          sub(/\.$/, "", $8)
-
-          # check that $8 has puavo_domain-suffix
-          i = index($8, puavo_domain)
-          if (i == 0) { next }
-          if ($8 == (substr($8, 0, i-1) puavo_domain)) {
-            printf "%s:%s\n", $8, $7
-            exit(0)
-          }
-      }'
-}
-
 generate_possible_ebs_names() {
   preferred_image=$1
 
@@ -172,7 +153,10 @@ fetch_extra_boot_scripts() {
   mkdir -p /state/ebs
 
   if [ -e /run/puavo/nbd-server ]; then
-    ebs_server=$(lookup_image_server_by_dns)
+    if ! ebs_server=$(/usr/lib/puavo-ltsp-client/lookup-image-server-by-dns); then
+      echo 'failed to lookup image server from DNS' >&2
+      return 2
+    fi
     gnupg_verify=false
   else
     ebs_server=$(puavo-conf puavo.image.servers | awk '{ print $1 }')
@@ -181,11 +165,6 @@ fetch_extra_boot_scripts() {
       ebs_server="cdn.${topdomain}"
     fi
     gnupg_verify=true
-  fi
-
-  if [ -z "$ebs_server" ]; then
-    echo 'failed to lookup image server from DNS' >&2
-    return 2
   fi
 
   is_bootserver=false
