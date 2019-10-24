@@ -130,24 +130,6 @@ to /etc/ldap/ldap.conf for ldapsearch and other ldap-tools to work,
 but this should not be strictly necessary.
 
 
-Laptop updates
---------------
-
-Nginx is used for distributing puavo image binary patches to laptops
-for updating laptops.
-
-  # enable puavo-rest
-  sudo ln -fns /etc/nginx/sites-available/puavo-rest \
-               /etc/nginx/sites-enabled/puavo-rest
-
-  # enable puavo-image / binary patch distribution (for laptops only)
-  sudo ln -fns /etc/nginx/sites-available/puavo-images \
-               /etc/nginx/sites-enabled/puavo-images
-
-  # make changes effective
-  sudo service nginx reload
-
-
 Cups
 ----
 

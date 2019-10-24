@@ -10,11 +10,13 @@ certificates_dir='/state/etc/puavo/certificates'
 
 # copy $old_certs_dir to 20101001 in case it is missing
 if [ -d "$old_certs_dir" -a ! -d "${certificates_dir}/20101001" ]; then
-  old_certs_as_new_dir="${certificates_dir}/20101001"
+  timestamped_certdir="20101001.$(date +%s)"
+  old_certs_as_new_dir="${certificates_dir}/${timestamped_certdir}"
   rm -rf "${old_certs_as_new_dir}.tmp"
   mkdir -p "$certificates_dir"
   cp -a "$old_certs_dir" "${old_certs_as_new_dir}.tmp"
   mv "${old_certs_as_new_dir}.tmp" "$old_certs_as_new_dir"
+  ln -fns "$timestamped_certdir" "${certificates_dir}/20101001"
 fi
 
 # use the first certificate version we have in $cert_version_list

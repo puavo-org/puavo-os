@@ -170,6 +170,10 @@ EOF
 mv /etc/bind/named.conf.local.tmp \
    /etc/bind/named.conf.local
 
+puavo_cert_version_list=$(puavo-conf puavo.admin.certs.versions)
+puavo_api_server_port=444
+puavo_imageserver_port=873
+
 cat <<EOF > /etc/dnsmasq.conf.tmp
 domain=${puavo_domain}
 domain-needed
@@ -222,6 +226,15 @@ $(for subdomain in $dhcpd_subdomain_list; do
     echo "srv-host=_puavo._tcp.${subdomain}.${puavo_domain},\"${puavo_domain}\",80"
   done)
 srv-host=_puavo-api._tcp.${puavo_domain},"${puavo_hostname}.${puavo_domain}",443
+
+$(for puavo_cert_version in $puavo_cert_version_list; do
+    # this logic must match the logic in setup_nginx
+    [ "$puavo_cert_version" = '20101001' ] && continue
+    echo "srv-host=_imageserver_${puavo_cert_version}._tcp.${puavo_domain},\"${puavo_hostname}.${puavo_domain}\",${puavo_imageserver_port}"
+    echo "srv-host=_puavo-api_${puavo_cert_version}._tcp.${puavo_domain},\"${puavo_hostname}.${puavo_domain}\",${puavo_api_server_port}"
+    puavo_api_server_port=$(($puavo_api_server_port + 1))
+    puavo_imageserver_port=$(($puavo_imageserver_port + 1))
+  done)
 
 # DNS entries needed for AirPrint printing
 ptr-record=b._dns-sd._udp,${puavo_domain}

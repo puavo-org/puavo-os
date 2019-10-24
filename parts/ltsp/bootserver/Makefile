@@ -40,9 +40,6 @@ install : installdirs
 	$(INSTALL) -m 440 -t $(DESTDIR)$(sysconfdir)/sudoers.d \
 		etc/sudoers.d/puavo-bootserver
 
-	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/nginx/sites-available \
-		etc/nginx/sites-available/puavo-images
-
 	$(INSTALL_DATA) -t $(DESTDIR)$(templatedir)/etc/apparmor.d/local \
 		templates/etc/apparmor.d/local/usr.sbin.dhcpd
 

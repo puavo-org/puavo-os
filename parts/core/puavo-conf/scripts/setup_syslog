@@ -48,9 +48,9 @@ ruleset(name="pass_to_smoke_test") {
 }
 
 if (
-  $programname == 'puavo-autopilot-login'
-    or $programname == 'puavo-autopilot-releasetest'
-    or $programname == 'puavo-autopilot-session-smoke'
+  $msg contains 'puavo-autopilot-login'
+    or $msg contains 'puavo-autopilot-releasetest'
+    or $msg contains 'puavo-autopilot-session-smoke'
 ) then call pass_to_smoke_test
 EOF
 

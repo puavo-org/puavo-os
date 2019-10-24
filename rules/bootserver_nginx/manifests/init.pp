@@ -45,5 +45,12 @@ class bootserver_nginx {
       source => 'puppet:///modules/bootserver_nginx/puavo-nginx.json';
   }
 
-  Package <| title == nginx |>
+  ::puavo_conf::script {
+    'setup_nginx':
+      source => 'puppet:///modules/bootserver_nginx/setup_nginx';
+  }
+
+  Package <| title == nginx
+          or title == puavo-rest
+          or title == redis-server |>
 }
