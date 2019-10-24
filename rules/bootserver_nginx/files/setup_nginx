@@ -1,0 +1,93 @@
+#!/bin/sh
+
+set -eu
+
+puavo_cert_version_list=$(puavo-conf puavo.admin.certs.versions)
+puavo_api_server_port=444
+puavo_cdn_server_port=873
+
+cdn_conf() {
+  cert_version=$1
+  port=$2
+
+  if [ ! -d "/state/etc/puavo/certificates/${cert_version}" ]; then
+    return 1
+  fi
+
+  cat <<EOF
+server {
+    listen ${port};
+
+    # XXX should we perhaps not serve *everything* under /images ?
+    root /images;
+
+    ssl on;
+    ssl_certificate /state/etc/puavo/certificates/${cert_version}/hostorgcabundle.pem;
+    ssl_certificate_key /state/etc/puavo/certificates/${cert_version}/host.key;
+
+    ssl_protocols SSLv3 TLSv1;
+    ssl_ciphers ALL:!ADH:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv3:+EXP;
+    ssl_prefer_server_ciphers on;
+
+    access_log /var/log/nginx/images-access.log;
+    error_log /var/log/nginx/images-error.log;
+}
+EOF
+}
+
+puavo_rest_conf() {
+  cert_version=$1
+  port=$2
+
+  cat <<EOF
+server {
+   listen ${port};
+
+   root /usr/share/nginx/www;
+
+   ssl on;
+   ssl_certificate /state/etc/puavo/certificates/${cert_version}/hostorgcabundle.pem;
+   ssl_certificate_key /state/etc/puavo/certificates/${cert_version}/host.key;
+
+   location / {
+       # https://github.com/opinsys/puavo-users/blob/master/rest/middleware/virtual_host_base.rb
+       proxy_pass http://127.0.0.1:9292/VirtualHostBase/https/\$host:${port}\$request_uri;
+
+       proxy_set_header HOST \$host;
+       proxy_set_header X-Real-IP \$remote_addr;
+       proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+   }
+
+   access_log /var/log/nginx/puavo-rest-access.log;
+   error_log /var/log/nginx/puavo-rest-error.log;
+}
+EOF
+}
+
+for puavo_cert_version in $puavo_cert_version_list; do
+  if [ "$puavo_cert_version" = '20101001' ]; then
+    cdn_port=872
+  else
+    cdn_port="$puavo_cdn_server_port"
+    puavo_cdn_server_port=$(($puavo_cdn_server_port + 1))
+  fi
+  cdn_conf "$puavo_cert_version" "$cdn_port"
+done > /etc/nginx/sites-available/puavo-images.tmp
+mv /etc/nginx/sites-available/puavo-images.tmp \
+   /etc/nginx/sites-available/puavo-images
+ln -fns /etc/nginx/sites-available/puavo-images \
+        /etc/nginx/sites-enabled/puavo-images
+
+for puavo_cert_version in $puavo_cert_version_list; do
+  if [ "$puavo_cert_version" = '20101001' ]; then
+    puavo_rest_port=443
+  else
+    puavo_rest_port="$puavo_api_server_port"
+    puavo_api_server_port=$(($puavo_api_server_port + 1))
+  fi
+  puavo_rest_conf "$puavo_cert_version" "$puavo_rest_port"
+done > /etc/nginx/sites-available/puavo-rest.tmp
+mv /etc/nginx/sites-available/puavo-rest.tmp \
+   /etc/nginx/sites-available/puavo-rest
+ln -fns /etc/nginx/sites-available/puavo-rest \
+        /etc/nginx/sites-enabled/puavo-rest

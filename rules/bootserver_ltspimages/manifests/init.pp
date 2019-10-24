@@ -1,10 +1,4 @@
 class bootserver_ltspimages {
-  include ::bootserver_nginx
-  include ::packages
-  include ::puavo_conf
-
-  ::bootserver_nginx::enable { 'ltsp-images': ; }
-
   file {
     '/usr/local/lib/puavo-handle-image-changes':
       mode   => '0755',
