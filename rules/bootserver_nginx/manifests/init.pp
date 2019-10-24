@@ -50,5 +50,7 @@ class bootserver_nginx {
       source => 'puppet:///modules/bootserver_nginx/setup_nginx';
   }
 
-  Package <| title == nginx |>
+  Package <| title == nginx
+          or title == puavo-rest
+          or title == redis-server |>
 }

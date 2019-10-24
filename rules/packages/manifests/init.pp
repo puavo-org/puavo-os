@@ -14,7 +14,7 @@ class packages {
   #
 
   @package {
-    'puavo-ltsp-bootserver':
+    [ 'puavo-ltsp-bootserver', 'puavo-rest', ]:
       ensure => present,
       tag    => [ 'tag_puavo_bootserver' ];
   }
@@ -77,6 +77,7 @@ class packages {
     , 'python-numpy'
     , 'python-redis'
     , 'pxelinux'
+    , 'redis-server'
     , 'ruby-ipaddress'
     , 'samba'
     , 'shorewall'
