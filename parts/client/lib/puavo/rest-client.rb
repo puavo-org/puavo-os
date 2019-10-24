@@ -94,8 +94,10 @@ class PuavoRestClient
         raise ResolvFail, "Invalid value. #{ server_host } does not match with requested puavo domain #{ puavo_domain }. Using master puavo-rest as fallback"
       end
 
-      verbose("Resolved #{ server_host } from DNS")
-      return Addressable::URI.parse("https://#{ server_host }:443")
+      server_port = res.first.port
+
+      verbose("Resolved #{ server_host }:#{ server_port } from DNS")
+      return Addressable::URI.parse("https://#{ server_host }:#{ server_port }")
   end
 
   def self.read_apiserver_file
