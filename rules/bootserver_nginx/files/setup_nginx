@@ -25,10 +25,6 @@ server {
     ssl_certificate /state/etc/puavo/certificates/${cert_version}/hostorgcabundle.pem;
     ssl_certificate_key /state/etc/puavo/certificates/${cert_version}/host.key;
 
-    ssl_protocols SSLv3 TLSv1;
-    ssl_ciphers ALL:!ADH:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv3:+EXP;
-    ssl_prefer_server_ciphers on;
-
     access_log /var/log/nginx/images-access.log;
     error_log /var/log/nginx/images-error.log;
 }
