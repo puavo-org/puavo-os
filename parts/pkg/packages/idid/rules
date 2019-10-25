@@ -13,6 +13,9 @@ case "${command}" in
 	upstream_dir=$1
 	ln -fns "${upstream_dir}/opt/idid" /opt/idid
 	ln -fns /opt/idid/idid /usr/local/bin/idid
+
+	chown root:root "${upstream_dir}/opt/idid/chrome-sandbox"
+	chmod 4755      "${upstream_dir}/opt/idid/chrome-sandbox"
 	;;
     unconfigure)
 	rm -rf /usr/local/bin/idid /opt/idid
