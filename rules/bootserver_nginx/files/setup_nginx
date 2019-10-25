@@ -11,7 +11,7 @@ cdn_conf() {
   port=$2
 
   if [ ! -d "/state/etc/puavo/certificates/${cert_version}" ]; then
-    return 1
+    return 0
   fi
 
   cat <<EOF
@@ -34,6 +34,10 @@ EOF
 puavo_rest_conf() {
   cert_version=$1
   port=$2
+
+  if [ ! -d "/state/etc/puavo/certificates/${cert_version}" ]; then
+    return 0
+  fi
 
   cat <<EOF
 server {
