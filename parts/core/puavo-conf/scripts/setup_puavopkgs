@@ -14,9 +14,6 @@ local_rootdir='/images/puavo-pkg/root'
 system_cachedir='/var/cache/puavo-pkg'
 system_rootdir='/var/lib/puavo-pkg'
 
-# XXX remove once you have removed the hack that needs this
-read image_class < /etc/puavo-image/class
-
 install_puavo_pkg_conf() {
   puavo_pkg_cachedir=$1
   puavo_pkg_rootdir=$2
@@ -82,15 +79,6 @@ get_dir_with_latest_installed_version() {
   latest_installed_pkg_version=0
 
   for pkgid_dir in ${other_pkg_dir}/*; do
-    # XXX remove this ugly hack sometime in 2020 (or Buster)
-    # XXX $other_rootdir is then no longer needed in this function
-    if [ "$image_class" = 'lukiolaiskannettava' \
-         -a "$other_rootdir" = "$local_rootdir" \
-         -a ! -e "${pkgid_dir}/.installed"   \
-         -a -e "${pkgid_dir}/upstream" ]; then
-      touch "${pkgid_dir}/.installed"
-    fi
-
     pkg_version=$(
       mawk '$1 == "version" && $2 ~ /^[0-9]+$/ { print $2 }' \
         "${pkgid_dir}/.puavo-pkg-version" 2>/dev/null || true)
