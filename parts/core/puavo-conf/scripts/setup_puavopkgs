@@ -73,7 +73,8 @@ get_dir_with_latest_installed_version() {
   other_pkg_dir=$1
   current_version=$2
   pkg_name=$3
-  other_rootdir=$4
+  installed_marker_name=$4
+  other_rootdir=$5
 
   latest_available_pkg_dir=
   latest_available_pkg_version=0
@@ -104,7 +105,7 @@ get_dir_with_latest_installed_version() {
       latest_available_pkg_version="$pkg_version"
     fi
     if [ "$latest_installed_pkg_version" -lt "$pkg_version" \
-         -a -e "${pkgid_dir}/.installed" ]; then
+         -a -e "${pkgid_dir}/${installed_marker_name}" ]; then
       latest_installed_pkg_dir="$pkgid_dir"
       latest_installed_pkg_version="$pkg_version"
     fi
@@ -122,7 +123,8 @@ get_dir_with_latest_installed_version() {
 }
 
 configure_latest_from() {
-  other_rootdir="$1"
+  other_rootdir=$1
+  installed_marker_name=$2
 
   for other_pkgdir in ${other_rootdir}/packages/*; do
     test -d "$other_pkgdir" || continue
@@ -131,10 +133,12 @@ configure_latest_from() {
 
     syspkg_version="$(get_installed_version "$pkg_name")"
 
-    other_pkgid_dir=$(get_dir_with_latest_installed_version "$other_pkgdir"   \
-                                                            "$syspkg_version" \
-                                                            "$pkg_name"       \
-                                                            "$other_rootdir")
+    other_pkgid_dir=$(get_dir_with_latest_installed_version \
+                        "$other_pkgdir"                     \
+                        "$syspkg_version"                   \
+                        "$pkg_name"                         \
+                        "$installed_marker_name"            \
+                        "$other_rootdir")
 
     if [ -d "$other_pkgid_dir" ]; then
       # on fatclients we support only configuring the latest version
@@ -164,7 +168,7 @@ setup_puavopkg_for_localboot_devices() {
                          "$system_cachedir" \
                          "$system_rootdir"
 
-  configure_latest_from "$local_rootdir"
+  configure_latest_from "$local_rootdir" .installed
 }
 
 setup_puavopkg_for_netboot_devices() {
@@ -182,7 +186,7 @@ setup_puavopkg_for_netboot_devices() {
                          "$remote_cachedir" \
                          "$remote_rootdir"
 
-  configure_latest_from "$remote_rootdir"
+  configure_latest_from "$remote_rootdir" .prepared
 }
 
 setup_puavopkg_common() {
