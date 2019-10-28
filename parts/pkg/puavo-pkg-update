@@ -17,6 +17,7 @@ if ! mountpoint -q /images; then
 fi
 
 baseurl='https://images.opinsys.fi/puavo-pkg'
+installed_links_dir='/var/lib/puavo-pkg/installed'
 installers_dir='/images/puavo-pkg/installers'
 
 # XXX get rid of hosttype handling
@@ -127,7 +128,7 @@ install_pkg() {
     return 1
   fi
 
-  installation_dir=$(readlink "/var/lib/puavo-pkg/installed/${puavo_pkg}" \
+  installation_dir=$(readlink "${installed_links_dir}/${puavo_pkg}" \
                        2>/dev/null || true)
   if [ -e "$installation_dir" ]; then
     return 0
@@ -142,7 +143,16 @@ prepare_pkg() {
   puavo_pkg=$1
   version=$2
 
-  puavo-pkg unconfigure "$puavo_pkg" || return 1
+  installation_dir=$(readlink "${installed_links_dir}/${puavo_pkg}" \
+                       2>/dev/null || true)
+  # Do not unconfigure if installed into the image
+  # (or if not installed at all).  Allows preparing packages on the side
+  # while they are still in the image.
+  case "$installation_dir" in
+    '')                            ;;
+    /var/lib/puavo-pkg/packages/*) ;;
+    *)                             puavo-pkg unconfigure "$puavo_pkg" || return 1 ;;
+  esac
 
   if ! installer_fullpath=$(download_installer "$puavo_pkg" "$version"); then
     return 1
@@ -156,8 +166,7 @@ maybe_remove_pkg() {
   version_to_remove=$2
 
   installed_pkg_dir=$(
-    readlink "/var/lib/puavo-pkg/installed/${puavo_pkg}" 2> /dev/null) \
-      || true
+    readlink "${installed_links_dir}/${puavo_pkg}" 2> /dev/null) || true
 
   if [ ! -e "$installed_pkg_dir" ]; then
     return 0
