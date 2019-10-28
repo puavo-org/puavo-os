@@ -7,7 +7,7 @@ set -eu
 
 case "$(puavo-conf puavo.xsessions.default)" in
   puavo-ers)
-    desktop_session_name='puavo-ers'
+    desktop_session_name='puavo-desktop'
     nodm_user='puavo-ers'
     xsession='desktop-session'
     ;;

@@ -19,8 +19,8 @@ installdirs:
 
 .PHONY: install
 install: installdirs
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) puavo-ers
-	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart puavo-ers.desktop
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) puavo-ers puavo-startup-ers
+	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart puavo-startup-ers.desktop
 
 .PHONY: clean
 clean:
