@@ -128,15 +128,21 @@ install_pkg() {
     return 1
   fi
 
-  installation_dir=$(readlink "${installed_links_dir}/${puavo_pkg}" \
-                       2>/dev/null || true)
-  if [ -e "$installation_dir" ]; then
-    return 0
+  old_package_version=$(
+    awk '$1 == "version" { print $2 }' \
+      "${installed_links_dir}/${puavo_pkg}/.puavo-pkg-version" 2>/dev/null || true)
+  if ! new_package_version=$(
+         tar --wildcards -Ozx -f "$installer_fullpath" '*/.puavo-pkg-version' \
+           | awk '$1 == "version" { print $2 }'); then
+    echo "Could not determine new package version for $puavo_pkg $version" >&2
+    return 1
   fi
 
-  logmsg user.notice "installing ${puavo_pkg} from ${installer_fullpath}"
-
-  puavo-pkg install "$installer_fullpath"
+  if [ -z "$old_package_version" ] \
+    || [ "$old_package_version" -lt "$new_package_version" ]; then
+      logmsg user.notice "installing ${puavo_pkg} from ${installer_fullpath}"
+      puavo-pkg install "$installer_fullpath"
+  fi
 }
 
 prepare_pkg() {
