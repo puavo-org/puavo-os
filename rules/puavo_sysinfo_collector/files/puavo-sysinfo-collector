@@ -198,6 +198,17 @@ class SystemInfoCollector < DBus::Object
           end
           data[:battery] = battery unless battery.empty?
 
+          # contains version information on Abitti-version or some other such
+          # extra contents
+          extra_system_contents = {}
+          begin
+            esc_path = '/var/lib/puavo-desktop/extra_system_contents.json'
+            extra_system_contents = JSON.parse( IO.read(esc_path) )
+          rescue StandardError => e
+            warn "could not query extra system contents: #{ e.message }"
+          end
+          data[:extra_system_contents] = extra_system_contents
+
         rescue
         end
 
