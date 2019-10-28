@@ -334,14 +334,16 @@ proc set_window_placement {{placement keep}} {
 proc update_passwords_on_window {} {
   global exam_sharedir
 
-  catch {
-    set passwords_text "?"
-    catch { set passwords_text [read_file "${exam_sharedir}/salasanat.txt"] }
-    .passwords configure -text $passwords_text
-
-    after 10 set_window_placement
+  try {
+    set passwords_text [read_file "${exam_sharedir}/.exam_passwords.txt"]
+  } on error {} {
+    wm withdraw .
+    return
   }
 
+  .passwords configure -text $passwords_text
+
+  after 10 set_window_placement
   after 5000 update_passwords_on_window
 }
 
