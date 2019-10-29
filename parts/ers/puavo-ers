@@ -6,7 +6,6 @@ wm attributes . -topmost 1
 wm attributes . -type notification
 
 set exam_sharedir "$env(HOME)/ktp-jako"
-set last_vagrant_abitti_version ""
 set vagrant_process_fh ""
 
 set previous_window_placement "bottom"
@@ -101,7 +100,7 @@ proc get_version_gui {abitti_version} {
 }
 
 proc handle_vagrant_output {abitti_version mode} {
-  global ers_basedir last_vagrant_abitti_version vagrant_process_fh
+  global ers_basedir vagrant_process_fh
 
   set count [gets $vagrant_process_fh line]
   if {$count > 0} {
@@ -120,7 +119,6 @@ proc handle_vagrant_output {abitti_version mode} {
       puts "vagrant returned successfully"
     }
 
-    set last_vagrant_abitti_version $abitti_version
     set vagrant_process_fh ""
 
     switch -- $mode {
@@ -142,37 +140,22 @@ proc handle_vagrant_output {abitti_version mode} {
 }
 
 proc manage_virtual_machine {mode abitti_version} {
-  global abitti_config env ers_basedir last_vagrant_abitti_version \
-         vagrant_process_fh
+  global abitti_config ers_basedir vagrant_process_fh
 
   set network_adapter "eth0"
   set server_version [dict get $abitti_config server $abitti_version \
                                                      server_version]
   set virtual_box_url [dict get $abitti_config server $abitti_version \
                                                       virtual_box_url]
-  set vm_dir "$env(HOME)/VirtualBox VMs/${server_version}"
-
   set vagrant_args [list --abitti-version=${abitti_version}   \
                          --network-adapter=${network_adapter} \
                          --server-version=${server_version}   \
                          --virtual-box-url=${virtual_box_url}]
 
   switch -- $mode {
-    prepare_and_start {
-      if {[file exists $vm_dir]} {
-        set mode start
-      } else {
-        lappend vagrant_args --prepare
-      }
-    }
-    prepare {
-      if {[file exists $vm_dir]} {
-        # already prepared
-        return
-      }
-      lappend vagrant_args --prepare
-    }
-    start {}
+    prepare_and_start -
+    prepare { lappend vagrant_args --prepare }
+    start   {}
   }
 
   set ers_dir "${ers_basedir}/${abitti_version}"
@@ -211,9 +194,12 @@ proc show_passwords_on_window {} {
   update_passwords_on_window
 }
 
+proc there_is_a_virtual_machine_running {} {
+  expr { [exec VBoxManage list runningvms] ne "" ? "true" : "false" }
+}
+
 proc trigger_next_virtual_machine {} {
-  global abitti_config abitti_json_path last_vagrant_abitti_version \
-         vagrant_process_fh
+  global abitti_config abitti_json_path env vagrant_process_fh
 
   if {$vagrant_process_fh ne ""} {
     return
@@ -230,32 +216,48 @@ proc trigger_next_virtual_machine {} {
       -message "requested an unknown abitti version: $target_abitti_version"
   }
 
-  set last_vagrant_abitti_version_num ""
-  if {$last_vagrant_abitti_version ne ""} {
-    set last_vagrant_abitti_version_num [
-      abitti_version_num $last_vagrant_abitti_version]
-  }
   set target_abitti_version_num [abitti_version_num $target_abitti_version]
 
   set abitti_version_list [lsort -dictionary \
                                  [dict keys [dict get $abitti_config server]]]
 
+  set installed_versions [dict create]
+  set latest_installed_version     ""
+  set next_to_be_installed_version ""
+
   foreach abitti_version $abitti_version_list {
     set abitti_version_num [abitti_version_num $abitti_version]
-    if {$last_vagrant_abitti_version_num ne "" \
-          && $abitti_version_num <= $last_vagrant_abitti_version_num} {
-      continue
-    }
-    if {$abitti_version_num < $target_abitti_version_num} {
-      continue
-    }
+    set server_version [dict get $abitti_config server $abitti_version \
+                                                       server_version]
 
-    if {$abitti_version eq $target_abitti_version} {
-      manage_virtual_machine prepare_and_start $abitti_version
-    } else {
-      manage_virtual_machine prepare $abitti_version
+    if {[file exists "$env(HOME)/VirtualBox VMs/${server_version}"]} {
+      dict set installed_versions $abitti_version 1
+      set latest_installed_version $abitti_version
+    } elseif {$target_abitti_version ne $next_to_be_installed_version
+                && $abitti_version_num >= $target_abitti_version_num} {
+      set next_to_be_installed_version $abitti_version
     }
-    break
+  }
+
+  set version_to_start ""
+  if {[dict exists $installed_versions $target_abitti_version]} {
+    set version_to_start $target_abitti_version
+  } elseif {$latest_installed_version ne ""} {
+    set version_to_start $latest_installed_version
+  }
+
+  if {$version_to_start ne "" && ![there_is_a_virtual_machine_running]} {
+    manage_virtual_machine start $version_to_start
+    return
+  }
+
+  if {$next_to_be_installed_version ne ""} {
+    if {$next_to_be_installed_version eq $target_abitti_version
+          && ![there_is_a_virtual_machine_running]} {
+      manage_virtual_machine prepare_and_start $next_to_be_installed_version
+    } else {
+      manage_virtual_machine prepare $next_to_be_installed_version
+    }
   }
 }
 
