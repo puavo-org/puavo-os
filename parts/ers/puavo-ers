@@ -181,9 +181,6 @@ proc read_file {path} {
 
 proc show_passwords_on_window {} {
   pack forget .startup
-
-  label .passwords -anchor w -padx 20 -pady 4
-  button .close_button -command { wm withdraw . } -text X
   pack .passwords -expand 1 -fill both -side left
   pack .close_button -fill y -expand 1 -side right
 
@@ -358,7 +355,7 @@ proc update_passwords_on_window {} {
 
   .passwords configure -text $passwords_text
 
-  after 10 set_window_placement
+  after 100 set_window_placement
   after 5000 update_passwords_on_window
 }
 
@@ -388,6 +385,10 @@ ttk::progressbar .startup.progressbar -length 100           \
 pack .startup.activity .startup.progressbar -fill both -expand 1
 pack .startup -fill both -expand 1
 .startup.progressbar start
+
+# do not pack yet
+label .passwords -anchor w -padx 20 -pady 4
+button .close_button -command { wm withdraw . } -text X
 
 set_window_placement bottom
 
