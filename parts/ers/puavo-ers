@@ -105,7 +105,8 @@ proc handle_vagrant_output {abitti_version mode} {
 
   set count [gets $vagrant_process_fh line]
   if {$count > 0} {
-    set message "Abitti [abitti_version_num $abitti_version]: $line"
+    set line_no_cntrl [regsub -all {[[:cntrl:]]\[K} $line ""]
+    set message "Abitti [abitti_version_num $abitti_version]: $line_no_cntrl"
     puts $message
     .startup.activity configure -text $message
   }
