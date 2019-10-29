@@ -276,35 +276,46 @@ proc update_abitti_json {abitti_json_path} {
   after $next_try_in_ms [list update_abitti_json $abitti_json_path]
 }
 
+proc find_files {args} {
+  lmap _ [split [exec find {*}$args -print0] "\0"] \
+         { expr { $_ ne "" ? $_ : [continue] } }
+}
+
 proc update_all_exams_pack {} {
   global exam_sharedir old_exam_share_meb_paths
 
-  catch {
-    set exam_share_meb_paths [exec find $exam_sharedir -maxdepth 1 -name *.meb]
-    if {$old_exam_share_meb_paths ne $exam_share_meb_paths} {
-      set all_zip_path  "${exam_sharedir}/Kaikki.zip"
-      file delete $all_zip_path
-      if {[llength $exam_share_meb_paths] > 0} {
-        exec zip $all_zip_path {*}$exam_share_meb_paths
-      }
-      set old_exam_share_meb_paths $exam_share_meb_paths
+  set exam_share_meb_paths [find_files $exam_sharedir -maxdepth 1 -name *.meb]
+  set all_zip_path "${exam_sharedir}/Kaikki.zip"
+  if {![file exists $all_zip_path]
+       || $old_exam_share_meb_paths ne $exam_share_meb_paths} {
+    file delete $all_zip_path
+    if {[llength $exam_share_meb_paths] > 0} {
+      exec zip $all_zip_path {*}$exam_share_meb_paths
     }
+    set old_exam_share_meb_paths $exam_share_meb_paths
   }
+}
 
-  after 3000 update_all_exams_pack
+proc update_all_exams_pack_loop {} {
+  catch { update_all_exams_pack }
+  after 3000 update_all_exams_pack_loop
 }
 
 proc update_exams_from_media {} {
-  global exam_sharedir old_media_meb_paths
+  global env exam_sharedir old_media_meb_paths
 
   catch {
-    set media_meb_paths [exec find "/media/$env(USER)" -name *.meb]
-    if {$old_media_meb_paths ne $media_meb_paths} {
-      foreach meb_path $media_meb_paths {
-        file copy -force $meb_path $exam_sharedir
+    set media_meb_paths [find_files "/media/$env(USER)" -name *.meb]
+    if {[llength $media_meb_paths] > 0} {
+      if {$old_media_meb_paths ne $media_meb_paths} {
+        catch { exec find $exam_sharedir -name *.meb -delete }
+        foreach meb_path $media_meb_paths {
+          file copy -force $meb_path $exam_sharedir
+        }
+        update_all_exams_pack
       }
-      set old_media_meb_paths $media_meb_paths
     }
+    set old_media_meb_paths $media_meb_paths
   }
 
   after 3000 update_exams_from_media
@@ -382,5 +393,5 @@ update_abitti_json $abitti_json_path
 set old_exam_share_meb_paths [list]
 set old_media_meb_paths      [list]
 
-update_all_exams_pack
 update_exams_from_media
+update_all_exams_pack_loop
