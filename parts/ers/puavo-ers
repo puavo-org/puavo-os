@@ -284,13 +284,14 @@ proc find_files {args} {
 proc update_all_exams_pack {} {
   global exam_sharedir old_exam_share_meb_paths
 
-  set exam_share_meb_paths [find_files $exam_sharedir -maxdepth 1 -name *.meb]
+  set exam_share_meb_paths [find_files $exam_sharedir -maxdepth 1 \
+                                                      -name exam_*.meb]
   set all_zip_path "${exam_sharedir}/Kaikki.zip"
   if {![file exists $all_zip_path]
        || $old_exam_share_meb_paths ne $exam_share_meb_paths} {
     file delete $all_zip_path
     if {[llength $exam_share_meb_paths] > 0} {
-      exec zip $all_zip_path {*}$exam_share_meb_paths
+      exec zip -j $all_zip_path {*}$exam_share_meb_paths
     }
     set old_exam_share_meb_paths $exam_share_meb_paths
   }
@@ -305,10 +306,10 @@ proc update_exams_from_media {} {
   global env exam_sharedir old_media_meb_paths
 
   catch {
-    set media_meb_paths [find_files "/media/$env(USER)" -name *.meb]
+    set media_meb_paths [find_files "/media/$env(USER)" -name exam_*.meb]
     if {[llength $media_meb_paths] > 0} {
       if {$old_media_meb_paths ne $media_meb_paths} {
-        catch { exec find $exam_sharedir -name *.meb -delete }
+        catch { exec find $exam_sharedir -name exam_*.meb -delete }
         foreach meb_path $media_meb_paths {
           file copy -force $meb_path $exam_sharedir
         }
