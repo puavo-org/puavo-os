@@ -87,6 +87,10 @@ set vagrantfile {
   end
 }
 
+proc logger {msg} {
+  catch { exec logger -t puavo-ers $msg }
+}
+
 proc abitti_version_num {abitti_version} {
   if {![regsub -- {^abitti-v(\d+)$} $abitti_version {\1} abitti_version_num]} {
     error "bad abitti version number in $abitti_version"
@@ -101,17 +105,16 @@ proc handle_vagrant_output {abitti_version mode} {
   if {$count > 0} {
     set line_no_cntrl [regsub -all {[[:cntrl:]]\[K} $line ""]
     set message "Abitti [abitti_version_num $abitti_version]: $line_no_cntrl"
-    puts $message
+    logger "vagrant: $message"
     .startup.activity configure -text $message
   }
 
   if {[eof $vagrant_process_fh]} {
     fconfigure $vagrant_process_fh -blocking 1
-    if {[catch { close $vagrant_process_fh } errormsg]} {
-      # XXX how to handle error?  should we show it?
-      puts stderr "vagrant returned error:\n$errormsg"
+    if {[catch { close $vagrant_process_fh } errmsg]} {
+      logger "vagrant for $abitti_version (mode=$mode) returned error: $errmsg"
     } else {
-      puts "vagrant returned successfully"
+      logger "vagrant for $abitti_version returned successfully"
     }
 
     set vagrant_process_fh ""
@@ -138,6 +141,8 @@ proc handle_vagrant_output {abitti_version mode} {
 
 proc manage_virtual_machine {mode abitti_version} {
   global abitti_config ers_basedir vagrant_process_fh
+
+  logger "running vagrant for virtual machine $abitti_version (mode=$mode)"
 
   set network_adapter "eth0"
   set server_version [dict get $abitti_config server $abitti_version \
@@ -180,6 +185,8 @@ proc show_passwords_on_window {} {
   pack forget .startup
   pack .passwords -expand 1 -fill both -side left
   pack .close_button -fill y -expand 1 -side right
+
+  logger "showing passwords on window (if there are any)"
 
   wm minsize . 64 36
 
@@ -267,10 +274,12 @@ proc trigger_next_virtual_machine {} {
 
 proc update_abitti_json {abitti_json_path} {
   catch {
-    exec wget -q --ca-certificate=/etc/puavo/certs/rootca.pem \
+    logger "downloading $abitti_json_path"
+    exec wget -q --ca-certificate=/etc/puavo/certs/rootca.pem --timeout=15 \
               -O "${abitti_json_path}.tmp" \
               https://images.opinsys.fi/abitti-images/abitti.json
     file rename -force "${abitti_json_path}.tmp" $abitti_json_path
+    logger "updated $abitti_json_path"
   }
 
   if {[file exists $abitti_json_path]} {
@@ -298,6 +307,9 @@ proc update_all_exams_pack {} {
        || $old_exam_share_meb_paths ne $exam_share_meb_paths} {
     file delete $all_zip_path
     if {[llength $exam_share_meb_paths] > 0} {
+      set msg "updating $all_zip_path with current exams:"
+      set msg "${msg} [join $exam_share_meb_paths " / " ]"
+      logger $msg
       exec zip -j $all_zip_path {*}$exam_share_meb_paths
     }
     set old_exam_share_meb_paths $exam_share_meb_paths
@@ -316,8 +328,10 @@ proc update_exams_from_media {} {
     set media_meb_paths [find_files "/media/$env(USER)" -name exam_*.meb]
     if {[llength $media_meb_paths] > 0} {
       if {$old_media_meb_paths ne $media_meb_paths} {
+        logger "new exams in external media, deleting exams in $exam_sharedir"
         catch { exec find $exam_sharedir -name exam_*.meb -delete }
         foreach meb_path $media_meb_paths {
+          logger "copying an exam from $meb_path to $exam_sharedir"
           file copy -force $meb_path $exam_sharedir
         }
         update_all_exams_pack
@@ -347,6 +361,10 @@ proc set_window_placement {{placement keep}} {
                   : 0 }]
   wm geometry . +$x+$y
 
+  if {$placement ne $previous_window_placement} {
+    logger "placing passwords window to $placement"
+  }
+
   set previous_window_placement $placement
 }
 
@@ -356,6 +374,7 @@ proc update_passwords_on_window {} {
   try {
     set passwords_text [read_file "${exam_sharedir}/.exam_passwords.txt"]
   } on error {} {
+    logger "closing passwords window (because no passwords to show)"
     wm withdraw .
     return
   }
@@ -377,6 +396,8 @@ proc update_vagrantfile {ers_dir} {
   close $vagrant_fh
 }
 
+logger "starting up puavo-ers"
+
 set ers_basedir      "$env(HOME)/.puavo/puavo-ers"
 set abitti_json_path "${ers_basedir}/abitti.json"
 
@@ -395,7 +416,10 @@ pack .startup -fill both -expand 1
 
 # do not pack yet
 label .passwords -anchor w -padx 20 -pady 4
-button .close_button -command { wm withdraw . } -text X
+button .close_button -text X -command {
+  logger "closing passwords window because close button is pressed"
+  wm withdraw .
+}
 
 set_window_placement bottom
 
