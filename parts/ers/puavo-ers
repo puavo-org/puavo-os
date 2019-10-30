@@ -94,11 +94,6 @@ proc abitti_version_num {abitti_version} {
   return $abitti_version_num
 }
 
-proc get_version_gui {abitti_version} {
-  set abitti_version_num [abitti_version_num $abitti_version]
-  return ".abitti_v${abitti_version_num}"
-}
-
 proc handle_vagrant_output {abitti_version mode} {
   global ers_basedir vagrant_process_fh
 
