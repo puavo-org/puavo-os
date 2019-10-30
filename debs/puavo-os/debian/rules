@@ -55,6 +55,10 @@ override_dh_auto_install:
 		install-dch-suffix prefix=/usr sysconfdir=/etc	\
 		DESTDIR=$(CURDIR)/debian/dch-suffix
 
+	$(MAKE) -C ers				        \
+		install prefix=/usr sysconfdir=/etc		\
+		DESTDIR=$(CURDIR)/debian/puavo-ers
+
 	$(MAKE) -C fluent-plugin-puavo				\
 		install prefix=/usr sysconfdir=/etc		\
 		DESTDIR=$(CURDIR)/debian/fluent-plugin-puavo

@@ -32,6 +32,7 @@ class packages {
     , 'puavo-core'
     , 'puavo-desktop-applet'
     , 'puavo-devscripts'
+    , 'puavo-ers'
     , 'puavo-hw-log'
     , 'puavo-hw-tools'
     , 'puavo-laptop-setup'

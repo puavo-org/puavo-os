@@ -8,6 +8,7 @@ subdirs         := admins                     \
                    core                       \
                    desktop-applet             \
                    devscripts                 \
+                   ers                        \
                    fluent-plugin-puavo        \
                    hw-log                     \
                    hw-tools                   \
