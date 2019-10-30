@@ -129,11 +129,13 @@ proc handle_vagrant_output {abitti_version mode} {
         set ers_dir "${ers_basedir}/${abitti_version}"
         cd $ers_dir
         catch { exec vagrant halt }
-        trigger_next_virtual_machine
+        # after five minutes try preparing next virtual machine
+        after 300000 trigger_next_virtual_machine
       }
       start {
         show_passwords_on_window
-        trigger_next_virtual_machine
+        # after five minutes try preparing next virtual machine
+        after 300000 trigger_next_virtual_machine
       }
     }
   }
@@ -199,6 +201,8 @@ proc trigger_next_virtual_machine {} {
   global abitti_config abitti_json_path env vagrant_process_fh
 
   if {$vagrant_process_fh ne ""} {
+    # wait a minute and then try again
+    after 60000 trigger_next_virtual_machine
     return
   }
 
