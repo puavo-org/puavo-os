@@ -197,12 +197,20 @@ proc there_is_a_virtual_machine_running {} {
   expr { [exec VBoxManage list runningvms] ne "" ? "true" : "false" }
 }
 
+proc ensure_there_is_a_virtual_machine_running {} {
+  catch {
+    if {![there_is_a_virtual_machine_running]} {
+      trigger_next_virtual_machine
+    }
+  }
+
+  after 15000 ensure_there_is_a_virtual_machine_running
+}
+
 proc trigger_next_virtual_machine {} {
   global abitti_config abitti_json_path env vagrant_process_fh
 
   if {$vagrant_process_fh ne ""} {
-    # wait a minute and then try again
-    after 60000 trigger_next_virtual_machine
     return
   }
 
@@ -404,3 +412,4 @@ set old_media_meb_paths      [list]
 
 update_exams_from_media
 update_all_exams_pack_loop
+ensure_there_is_a_virtual_machine_running
