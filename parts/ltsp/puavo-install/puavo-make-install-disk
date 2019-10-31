@@ -2,8 +2,15 @@
 
 set -eu
 
+# XXX cleanup should be done in case this is interrupted
+
+imagefile=${1:-}
 images_dir=/installimages
 puavoimage_name=$(cat /etc/puavo-image/name)
+
+calc_required_imagefile_gigabytes() {
+  echo "$(($(df --block-size=1G --output=size /rofs | awk 'NR == 2') + 2))"
+}
 
 install_image() {
   # There should be no need to run the preinst-hook, because for now it
@@ -22,7 +29,25 @@ else
   install_args="--install-from-file /images/${puavoimage_name}"
 fi
 
-puavo-setup-filesystems --hosttype diskinstaller
+loopdev=''
+if [ -n "$imagefile" ]; then
+  if [ -e "$imagefile" ]; then
+    echo "target file $imagefile exists, not overwriting" >&2
+    exit 1
+  fi
+
+  dd if=/dev/null "of=${imagefile}" bs=1M \
+     seek="$(calc_required_imagefile_gigabytes)K"
+  loopdev=$(losetup --show -f "$imagefile")
+
+  puavo-setup-filesystems --accept-defaults \
+                          --default-confirm-partitions yes \
+                          --default-disk-device "${loopdev#/dev/}" \
+                          --hosttype diskinstaller \
+                          --loopback-only
+else
+  puavo-setup-filesystems --hosttype diskinstaller
+fi
 
 puavo-install-grub --hosttype   diskinstaller  \
                    --images-dir "$images_dir"  \
@@ -37,3 +62,7 @@ dmsetup remove puavoinstaller-installimages
 vgchange -a n puavoinstaller 3>&- 4>&- 5>&-
 
 rmdir /installimages
+
+if [ -n "$loopdev" ]; then
+  losetup -d "$loopdev"
+fi
