@@ -3,7 +3,7 @@
 set -eu
 
 images_dir=/installimages
-ltspimage_name=$(cat /etc/puavo-image/name)
+puavoimage_name=$(cat /etc/puavo-image/name)
 
 install_image() {
   # There should be no need to run the preinst-hook, because for now it
@@ -13,13 +13,13 @@ install_image() {
                                       --images-dir "$images_dir" \
                                       --no-preinst-hook          \
                                       "$@"                       \
-                                      "$ltspimage_name"
+                                      "$puavoimage_name"
 }
 
 if [ -e /run/puavo/nbd-server ]; then
   install_args='--install-from-nbd /dev/nbd0'
 else
-  install_args="--install-from-file /images/${ltspimage_name}"
+  install_args="--install-from-file /images/${puavoimage_name}"
 fi
 
 puavo-setup-filesystems --hosttype diskinstaller
