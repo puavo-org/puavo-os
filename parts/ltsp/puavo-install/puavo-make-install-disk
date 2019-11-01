@@ -2,14 +2,36 @@
 
 set -eu
 
-# XXX cleanup should be done in case this is interrupted
-
-imagefile=${1:-}
 images_dir=/installimages
-puavoimage_name=$(cat /etc/puavo-image/name)
+loopdev=''
+
+cleanup() {
+  {
+    umount "$images_dir" || true
+    dmsetup remove puavoinstaller-installimages || true
+
+    # do not leak file descriptors to vgchange, hence "3>&- 4>&- 5>&-"
+    vgchange -a n puavoinstaller 3>&- 4>&- 5>&- || true
+
+    rmdir /installimages || true
+
+    if [ -n "$loopdev" ]; then
+      losetup -d "$loopdev" || true
+    fi
+  } > /dev/null 2>&1
+}
 
 calc_required_imagefile_gigabytes() {
-  echo "$(($(df --block-size=1G --output=size /rofs | awk 'NR == 2') + 2))"
+  local source_image
+
+  source_image=$1
+
+  if [ -n "$source_image" ]; then
+    ls --block-size=950M -ds "$source_image" | awk '{ print $1 + 1 }'
+    return 0
+  fi
+
+  echo "$(($(df --block-size=950M --output=size /rofs | awk 'NR == 2') + 1))"
 }
 
 install_image() {
@@ -19,26 +41,50 @@ install_image() {
   puavo-install-and-update-ltspimages --hosttype diskinstaller   \
                                       --images-dir "$images_dir" \
                                       --no-preinst-hook          \
-                                      "$@"                       \
-                                      "$puavoimage_name"
+                                      "$@"
 }
 
-if [ -e /run/puavo/nbd-server ]; then
-  install_args='--install-from-nbd /dev/nbd0'
-else
-  install_args="--install-from-file /images/${puavoimage_name}"
+trap cleanup 0 INT TERM
+
+usage() {
+  cat <<EOF
+Usage: $(basename $0) [--source-image source] [--target-image target]
+EOF
+}
+
+if ! args=$(getopt -n "$0" -o +hs:t: -l help,source-image:,target-image: \
+              -- "$@"); then
+  usage
+  exit 1
 fi
 
-loopdev=''
-if [ -n "$imagefile" ]; then
-  if [ -e "$imagefile" ]; then
-    echo "target file $imagefile exists, not overwriting" >&2
+source_image=''
+target_image=''
+
+eval "set -- $args"
+while [ $# -ne 0 ]; do
+  case "$1" in
+    --help) usage; exit 0                           ;;
+    --source-image) source_image="$2"; shift; shift ;;
+    --target-image) target_image="$2"; shift; shift ;;
+    --) shift; break;;
+   esac
+done
+
+if [ -n "$source_image" -a ! -e "$source_image" ]; then
+  echo "source image $source_image does not exist!" >&2
+  exit 1
+fi
+
+if [ -n "$target_image" ]; then
+  if [ -e "$target_image" ]; then
+    echo "target file $target_image exists, not overwriting" >&2
     exit 1
   fi
 
-  dd if=/dev/null "of=${imagefile}" bs=1M \
-     seek="$(calc_required_imagefile_gigabytes)K"
-  loopdev=$(losetup --show -f "$imagefile")
+  dd if=/dev/null "of=${target_image}" bs=1M \
+     seek="$(calc_required_imagefile_gigabytes "$source_image")K"
+  loopdev=$(losetup --show -f "$target_image")
 
   puavo-setup-filesystems --accept-defaults \
                           --default-confirm-partitions yes \
@@ -53,16 +99,16 @@ puavo-install-grub --hosttype   diskinstaller  \
                    --images-dir "$images_dir"  \
                    --vgname     puavoinstaller
 
-install_image $install_args
+if [ -n "$source_image" ]; then
+  install_image --install-from-file "$source_image" \
+                "$(basename "$source_image")"
+  exit 0
+fi
 
-umount "$images_dir"
-dmsetup remove puavoinstaller-installimages
-
-# do not leak file descriptors to vgchange, hence "3>&- 4>&- 5>&-"
-vgchange -a n puavoinstaller 3>&- 4>&- 5>&-
-
-rmdir /installimages
-
-if [ -n "$loopdev" ]; then
-  losetup -d "$loopdev"
+read puavoimage_name < /etc/puavo-image/name
+if [ -e /run/puavo/nbd-server ]; then
+  install_image --install-from-nbd /dev/nbd0 "$puavoimage_name"
+else
+  install_image --install-from-file "/images/${puavoimage_name}" \
+                "$puavoimage_name"
 fi
