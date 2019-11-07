@@ -377,6 +377,7 @@ class packages {
     , 'libreoffice'
     , 'libreoffice-base'
     , 'scribus'
+    , 'sent'
     , 'tellico'
     , 'thunderbird'
     , 'vym' ]:
