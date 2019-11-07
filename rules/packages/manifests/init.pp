@@ -390,6 +390,7 @@ class packages {
     [ 'calibre'
     , 'gummi'
     , 'icedove'
+    , 'impressive'
     , 'libreoffice'
     , 'libreoffice-base'
     , 'scribus'
