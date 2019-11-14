@@ -430,6 +430,8 @@ class packages {
     , 'python-doc'
     , 'python-jsonpickle' # a dependency for
                           # http://meetedison.com/robot-programming-software/
+    , 'python3-pip'
+    , 'python-pip'
     , 'python-pygame'
     , 'pythontracer'
     , 'qt4-designer'
