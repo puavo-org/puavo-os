@@ -328,8 +328,10 @@ proc update_exams_from_media {} {
     set media_meb_paths [find_files "/media/$env(USER)" -name exam_*.meb]
     if {[llength $media_meb_paths] > 0} {
       if {$old_media_meb_paths ne $media_meb_paths} {
-        logger "new exams in external media, deleting exams in $exam_sharedir"
-        catch { exec find $exam_sharedir -name exam_*.meb -delete }
+        # XXX do not delete exams for now, because some of the exams
+        # XXX might come from the exam distribution server
+        # logger "new exams in external media, deleting exams in $exam_sharedir"
+        # catch { exec find $exam_sharedir -name exam_*.meb -delete }
         foreach meb_path $media_meb_paths {
           logger "copying an exam from $meb_path to $exam_sharedir"
           file copy -force $meb_path $exam_sharedir
