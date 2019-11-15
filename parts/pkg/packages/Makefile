@@ -58,6 +58,7 @@ packagedirs += smartboard
 packagedirs += spotify-client
 packagedirs += tilitin
 packagedirs += t-lasku
+packagedirs += veracrypt
 packagedirs += vidyo-client
 packagedirs += vstloggerpro
 packagedirs += zoom
