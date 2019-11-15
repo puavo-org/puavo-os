@@ -2,6 +2,8 @@
 
 set -eu
 
+version=91
+
 command=$1
 shift
 
@@ -10,7 +12,7 @@ extract_icon() {
 
   # from http://www.lukimat.fi/lukeminen/materiaalit/ekapeli/ekapeli-alku/ekapeli_alku_title.png
   # (it's a ".jpg", though)
-  base64 -d <<'EOF' > "${upstream_dir}/ekapeli_alku_title.jpg"
+  base64 -d <<'EOF' > "${upstream_dir}/Ekapeli_Alku_Linux_${version}/ekapeli_alku_title.jpg"
 /9j/4QAYRXhpZgAASUkqAAgAAAAAAAAAAAAAAP/sABFEdWNreQABAAQAAABHAAD/4QMraHR0cDov
 L25zLmFkb2JlLmNvbS94YXAvMS4wLwA8P3hwYWNrZXQgYmVnaW49Iu+7vyIgaWQ9Ilc1TTBNcENl
 aGlIenJlU3pOVGN6a2M5ZCI/PiA8eDp4bXBtZXRhIHhtbG5zOng9ImFkb2JlOm5zOm1ldGEvIiB4
@@ -797,11 +799,11 @@ case "${command}" in
 	upstream_dir=$1
 
 	mkdir -p /opt/ekapeli-alku
-	ln -fns "${upstream_dir}/Ekapeli-Alku.x86" \
+	ln -fns "${upstream_dir}/Ekapeli_Alku_Linux_${version}/Ekapeli-Alku.x86" \
 		/opt/ekapeli-alku/Ekapeli-Alku.x86
-	ln -fns "${upstream_dir}/Ekapeli-Alku_Data" \
+	ln -fns "${upstream_dir}/Ekapeli_Alku_Linux_${version}/Ekapeli-Alku_Data" \
 		/opt/ekapeli-alku/Ekapeli-Alku_Data
-	ln -fns "${upstream_dir}/ekapeli_alku_title.jpg" \
+	ln -fns "${upstream_dir}/Ekapeli_Alku_Linux_${version}/ekapeli_alku_title.jpg" \
 		/opt/ekapeli-alku/ekapeli_alku_title.jpg
 
 	cat <<'EOF' > /usr/share/applications/ekapeli-alku.desktop
@@ -823,7 +825,7 @@ EOF
 	upstream_dir=$2
 	unzip -q -d "${upstream_dir}" "${upstream_pack}"
 	extract_icon "$upstream_dir"
-        chmod 755 "${upstream_dir}/Ekapeli-Alku.x86"
+        chmod 755 "${upstream_dir}/Ekapeli_Alku_Linux_${version}/Ekapeli-Alku.x86"
 	;;
     *)
 	;;
