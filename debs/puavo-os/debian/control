@@ -180,6 +180,7 @@ Architecture: all
 Depends: ${misc:Depends},
  tcl8.6,
  tcllib,
+ tcl-tls,
  tk8.6
 Description: Puavo Examination Room Server
  A script for managing virtual machines for examination room servers

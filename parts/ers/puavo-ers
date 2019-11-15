@@ -1,6 +1,15 @@
 #!/usr/bin/wish
 
+package require http
 package require json
+package require tls
+
+::http::register https 443 ::tls::socket
+
+set exam_server_address [exec puavo-conf puavo.abitti.exam_server]
+if {$exam_server_address eq ""} {
+  exit 0
+}
 
 wm attributes . -topmost 1
 wm attributes . -type notification
@@ -96,6 +105,19 @@ proc abitti_version_num {abitti_version} {
     error "bad abitti version number in $abitti_version"
   }
   return $abitti_version_num
+}
+
+proc write_file {filepath data} {
+  set fd ""
+  try {
+    set fd [open "${filepath}.tmp" w]
+    puts -nonewline $fd $data
+    file rename -force "${filepath}.tmp" $filepath
+  } on error {errmsg} {
+    logger "error in writing $filepath: $errmsg"
+  } finally {
+    if {$fd ne ""} { close $fd }
+  }
 }
 
 proc handle_vagrant_output {abitti_version mode} {
@@ -328,8 +350,10 @@ proc update_exams_from_media {} {
     set media_meb_paths [find_files "/media/$env(USER)" -name exam_*.meb]
     if {[llength $media_meb_paths] > 0} {
       if {$old_media_meb_paths ne $media_meb_paths} {
-        logger "new exams in external media, deleting exams in $exam_sharedir"
-        catch { exec find $exam_sharedir -name exam_*.meb -delete }
+        # XXX do not delete exams for now, because some of the exams
+        # XXX might come from the exam distribution server
+        # logger "new exams in external media, deleting exams in $exam_sharedir"
+        # catch { exec find $exam_sharedir -name exam_*.meb -delete }
         foreach meb_path $media_meb_paths {
           logger "copying an exam from $meb_path to $exam_sharedir"
           file copy -force $meb_path $exam_sharedir
@@ -341,6 +365,73 @@ proc update_exams_from_media {} {
   }
 
   after 3000 update_exams_from_media
+}
+
+proc handle_exams_index_fetch {token} {
+  upvar #0 $token state
+  global exam_server_address exam_sharedir
+
+  if {[::http::ncode $token] ne 200} {
+    logger "exam index fetch returned [::http::code $token]: $state(body)"
+    return
+  }
+
+  logger "fetched exam index"
+
+  # XXX we should also probably remove exams that are not
+  # XXX scheduled on this time
+
+  set passwords [list]
+
+  set exam_list [::json::json2dict $state(body)]
+  foreach exam $exam_list {
+    # XXX we do not have passwords yet here
+    # XXX lappend passwords [dict get $exam password]
+    lappend passwords [dict get $exam hash]
+
+    set exam_filename [dict get $exam file]
+    set exam_uuid [dict get $exam uuid]
+
+    # XXX maybe we should validate the exam filename a bit?
+    if {[file exists "${exam_sharedir}/${exam_filename}"]} {
+      continue
+    }
+
+    logger "exam $exam_filename ($exam_uuid) is missing, fetching it"
+
+    ::http::geturl "https://${exam_server_address}/tests/1234/${exam_uuid}" \
+                   -command [list handle_exam_fetch $exam]
+  }
+
+  set passwords_data [join [lmap _ $passwords { format "%s\n" $_ }] ""]
+  write_file "${exam_sharedir}/.exam_passwords.txt" \
+             $passwords_data
+}
+
+proc handle_exam_fetch {exam token} {
+  upvar #0 $token state
+  global exam_sharedir
+
+  if {[::http::ncode $token] ne 200} {
+    puts stderr "exam fetch returned [::http::code $token]: $state(body)"
+    return
+  }
+
+  write_file "${exam_sharedir}/[dict get $exam file]" \
+             $state(body)
+}
+
+proc update_exams_from_server {} {
+  global exam_server_address
+
+  catch {
+    # XXX can this be executing twice at the same time?  no locking?
+    ::http::geturl "https://${exam_server_address}/tests/1234" \
+                   -command handle_exams_index_fetch
+  }
+
+  # XXX check the index again after one minute (!)
+  after 60000 update_exams_from_server
 }
 
 proc set_window_placement {{placement keep}} {
@@ -430,5 +521,6 @@ set old_exam_share_meb_paths [list]
 set old_media_meb_paths      [list]
 
 update_exams_from_media
+update_exams_from_server
 update_all_exams_pack_loop
 ensure_there_is_a_virtual_machine_running
