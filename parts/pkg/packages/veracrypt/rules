@@ -6,23 +6,30 @@ command=$1
 shift
 
 case "${command}" in
-    configure)
-	upstream_dir=$1
+  configure)
+    upstream_dir=$1
 
-	ln -fns "${upstream_dir}/usr/bin/veracrypt" /usr/bin/veracrypt
-	ln -fns "${upstream_dir}/usr/share/applications/veracrypt.desktop" /usr/share/applications/veracrypt.desktop
-	ln -fns "${upstream_dir}/usr/share/pixmaps/veracrypt.xpm" /usr/share/pixmaps/veracrypt.xpm
-	ln -fns "${upstream_dir}/usr/share/doc/veracrypt" /usr/share/doc/veracrypt
-	;;
-    unconfigure)
-	rm -rf /usr/bin/veracrypt /usr/share/applications/veracrypt.desktop /usr/share/pixmaps/veracrypt.xpm /usr/share/doc/veracrypt
-	;;
-    unpack)
-	upstream_pack=$1
-	upstream_dir=$2
+    ln -fns "${upstream_dir}/usr/bin/veracrypt" \
+            /usr/bin/veracrypt
+    ln -fns "${upstream_dir}/usr/share/applications/veracrypt.desktop" \
+            /usr/share/applications/veracrypt.desktop
+    ln -fns "${upstream_dir}/usr/share/doc/veracrypt" \
+            /usr/share/doc/veracrypt
+    ln -fns "${upstream_dir}/usr/share/pixmaps/veracrypt.xpm" \
+            /usr/share/pixmaps/veracrypt.xpm
+    ;;
+  unconfigure)
+    rm -f /usr/bin/veracrypt \
+          /usr/share/applications/veracrypt.desktop \
+          /usr/share/doc/veracrypt \
+          /usr/share/pixmaps/veracrypt.xpm
+    ;;
+  unpack)
+    upstream_pack=$1
+    upstream_dir=$2
 
-	dpkg -x "${upstream_pack}" "${upstream_dir}"
-	;;
-    *)
-	;;
+    dpkg -x "$upstream_pack" "$upstream_dir"
+    ;;
+  *)
+    ;;
 esac
