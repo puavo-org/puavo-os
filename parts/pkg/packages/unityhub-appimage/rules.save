@@ -1,0 +1,41 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "${command}" in
+    configure)
+	upstream_dir=$1
+
+	ln -fns "${upstream_dir}" /opt/
+        ln -fns "${upstream_dir}"/squashfs-root/unityhub.png /usr/share/icons/
+        cat <<EOF > /usr/share/applications/unityhub.desktop
+[Desktop Entry]
+Name=Unity Hub
+Exec=/opt/unity-hub/unityhub.AppImage
+Type=Application
+Terminal=false
+Icon=unityhub.png
+StartupNotify=true
+Categories=Education;
+EOF
+	;;
+    unconfigure)
+	rm -f /opt/unityhub \
+              /usr/share/applications/unityhub.desktop \
+              /usr/share/icons/unityhub.png
+	;;
+    unpack)
+	upstream_pack=$1
+	upstream_dir=$2
+
+        cp "${upstream_pack}" "${upstream_dir}/unityhub.AppImage"
+        chmod 755 "${upstream_dir}/unityhub.AppImage"
+        "${upstream_dir}"/unityhub.AppImage --appimage-extract unityhub.png
+        cp squashfs-root/unityhub.png "${upstream_dir}"
+	;;
+    *)
+	;;
+esac
