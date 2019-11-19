@@ -30,6 +30,7 @@ class packages {
     , 'puavo-core'
     , 'puavo-desktop-applet'
     , 'puavo-devscripts'
+    , 'puavo-ers'
     , 'puavo-hw-log'
     , 'puavo-hw-tools'
     , 'puavo-laptop-setup'
@@ -374,6 +375,7 @@ class packages {
 
     [ 'calibre'
     , 'gummi'
+    , 'impressive'
     , 'libreoffice'
     , 'libreoffice-base'
     , 'scribus'
@@ -415,6 +417,8 @@ class packages {
     , 'python-doc'
     , 'python-jsonpickle' # a dependency for
                           # http://meetedison.com/robot-programming-software/
+    , 'python3-pip'
+    , 'python-pip'
     , 'python-pygame'
     , 'pythontracer'
     , 'qt4-designer'

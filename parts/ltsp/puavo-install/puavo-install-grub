@@ -325,6 +325,7 @@ fi
 diskdev=$(pvs 3>&- 4>&- 5>&-                                            \
             | awk -v vgname="$vgname" '$2 == vgname { print $1; exit }' \
             | sed -E '
+                /\/dev\/loop/   { s|p[0-9]+$|| }
                 /\/dev\/mmcblk/ { s|p[0-9]+$|| }
                 /\/dev\/md/     { s|p[0-9]+$|| }
                 /\/dev\/nvme/   { s|p[0-9]+$|| }

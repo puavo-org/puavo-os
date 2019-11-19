@@ -16,6 +16,7 @@ if ! mountpoint -q /images; then
   exit 1
 fi
 
+installed_links_dir='/var/lib/puavo-pkg/installed'
 installers_dir='/images/puavo-pkg/installers'
 topdomain=$(cat /etc/puavo/topdomain)
 
@@ -134,22 +135,37 @@ install_pkg() {
     return 1
   fi
 
-  installation_dir=$(readlink "/var/lib/puavo-pkg/installed/${puavo_pkg}" \
-                       2>/dev/null || true)
-  if [ -e "$installation_dir" ]; then
-    return 0
+  old_package_version=$(
+    awk '$1 == "version" { print $2 }' \
+      "${installed_links_dir}/${puavo_pkg}/.puavo-pkg-version" 2>/dev/null || true)
+  if ! new_package_version=$(
+         tar --wildcards -Ozx -f "$installer_fullpath" '*/.puavo-pkg-version' \
+           | awk '$1 == "version" { print $2 }'); then
+    echo "Could not determine new package version for $puavo_pkg $version" >&2
+    return 1
   fi
 
-  logmsg user.notice "installing ${puavo_pkg} from ${installer_fullpath}"
-
-  puavo-pkg install "$installer_fullpath"
+  if [ -z "$old_package_version" ] \
+    || [ "$old_package_version" -lt "$new_package_version" ]; then
+      logmsg user.notice "installing ${puavo_pkg} from ${installer_fullpath}"
+      puavo-pkg install "$installer_fullpath"
+  fi
 }
 
 prepare_pkg() {
   puavo_pkg=$1
   version=$2
 
-  puavo-pkg unconfigure "$puavo_pkg" || return 1
+  installation_dir=$(readlink "${installed_links_dir}/${puavo_pkg}" \
+                       2>/dev/null || true)
+  # Do not unconfigure if installed into the image
+  # (or if not installed at all).  Allows preparing packages on the side
+  # while they are still in the image.
+  case "$installation_dir" in
+    '')                            ;;
+    /var/lib/puavo-pkg/packages/*) ;;
+    *)                             puavo-pkg unconfigure "$puavo_pkg" || return 1 ;;
+  esac
 
   if ! installer_fullpath=$(download_installer "$puavo_pkg" "$version"); then
     return 1
@@ -163,8 +179,7 @@ maybe_remove_pkg() {
   version_to_remove=$2
 
   installed_pkg_dir=$(
-    readlink "/var/lib/puavo-pkg/installed/${puavo_pkg}" 2> /dev/null) \
-      || true
+    readlink "${installed_links_dir}/${puavo_pkg}" 2> /dev/null) || true
 
   if [ ! -e "$installed_pkg_dir" ]; then
     return 0

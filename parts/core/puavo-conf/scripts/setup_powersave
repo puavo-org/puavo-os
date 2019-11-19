@@ -19,6 +19,13 @@ sata_alpm() {
   fi
 }
 
+usbcore_autosuspend() {
+  autosuspend_value=$(puavo-conf puavo.pm.usbcore.autosuspend)
+  if [ -n "$autosuspend_value" ]; then
+    printf %s "$autosuspend_value" > /sys/module/usbcore/parameters/autosuspend
+  fi
+}
+
 wireless() {
   if [ "$(puavo-conf puavo.pm.wireless.enabled)" = 'false' ]; then
     if [ -e /etc/pm/power.d/wireless ]; then
@@ -48,8 +55,9 @@ EOF
 
 status=0
 
-nmi_watchdog || status=1
-sata_alpm    || status=1
-wireless     || status=1
+nmi_watchdog        || status=1
+sata_alpm           || status=1
+usbcore_autosuspend || status=1
+wireless            || status=1
 
 exit $status

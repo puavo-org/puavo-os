@@ -23,6 +23,25 @@ require 'dbus'
 require 'etc'
 require 'json'
 require 'facter'
+require 'open3'
+
+def lookup_free_space(fs_path)
+  begin
+    return nil unless system('mountpoint', '-q', fs_path)
+
+    blocksize, status = Open3.capture2('stat', '-f', '-c', '%S', fs_path)
+    raise 'error running stat for blocksize' unless status.success?
+    free_blocks, status = Open3.capture2('stat', '-f', '-c', '%a', fs_path)
+    raise 'error running stat for free blocks' unless status.success?
+
+    return (blocksize.to_i * free_blocks.to_i)
+
+  rescue StandardError => e
+    warn "could not lookup free space for #{ fs_path }: #{ e.message }"
+  end
+
+  return nil
+end
 
 class SystemInfoCollector < DBus::Object
   dbus_interface 'org.puavo.client.systeminfocollector' do
@@ -198,6 +217,25 @@ class SystemInfoCollector < DBus::Object
           end
           data[:battery] = battery unless battery.empty?
 
+          # contains version information on Abitti-version or some other such
+          # extra contents
+          extra_system_contents = {}
+          begin
+            esc_path = '/var/lib/puavo-desktop/extra_system_contents.json'
+            extra_system_contents = JSON.parse( IO.read(esc_path) )
+          rescue StandardError => e
+            warn "could not query extra system contents: #{ e.message }"
+          end
+          data[:extra_system_contents] = extra_system_contents
+
+          free_space = {}
+          fs_paths = %w(/home /imageoverlays /images /installimages /state /tmp)
+          fs_paths.each do |fs_path|
+            free_space_for_fs_path = lookup_free_space(fs_path)
+            free_space[fs_path] = free_space_for_fs_path \
+              if free_space_for_fs_path
+          end
+          data[:free_space] = free_space
         rescue
         end
 

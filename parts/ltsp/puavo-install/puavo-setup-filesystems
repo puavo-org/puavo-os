@@ -240,7 +240,7 @@ module DiskHandler
     if fs_conf['partition'] == 'whole' then
       fs_setup_phases += [ :wipe_device ] if conf['wipe']
       fs_setup_phases += [ :lvm_partition, :puavo_filesystems ]
-      special_disk_regexp = %r{\A((md|mmcblk)[0-9]+|nvme[0-9]+n[0-9]+)\z}
+      special_disk_regexp = %r{\A((loop|md|mmcblk)[0-9]+|nvme[0-9]+n[0-9]+)\z}
       partnum = (partitioning_scheme == 'BIOS/GPT' ? 2 : 1)
       if fs_conf['device'].match(special_disk_regexp) then
         fs_conf['partition'] = "#{ fs_conf['device'] }p#{ partnum }"
@@ -287,6 +287,9 @@ module DiskHandler
         f.print "n\np\n1\n#{ fs_conf['first_sector'] }\n\nt\n8e\na\np\nw\n"
       end
     end
+
+    run('partprobe', fs_conf['device'], { :err => '/dev/null' })
+    sleep 2
   end
 
   def self.non_swap_filesystems(hosttype)
@@ -350,8 +353,14 @@ module DiskHandler
 end
 
 module QueryDiskInfo
-  # possible choices here should sort so that "md0" is the first if it exists
-  Disk_device_regexp = /\A((md|mmcblk)[0-9]+|nvme[0-9]+n[0-9]+|[sv]d[a-z])\z/
+  def self.disk_device_regexp()
+    if UI::loopback_only then
+      return /\Aloop[0-9]+\z/
+    else
+      # possible choices here should sort so that "md0" is the first if it exists
+      return /\A((md|mmcblk)[0-9]+|nvme[0-9]+n[0-9]+|[sv]d[a-z])\z/
+    end
+  end
 
   def self.list_disks_for_mirroring()
     # return a list of devices if there are multiple disks with the same size,
@@ -361,7 +370,7 @@ module QueryDiskInfo
     IO.readlines('/proc/partitions').each do |line|
       disk_size, disk_name = * line.split(' ')[2,3]
       next unless disk_size && disk_name
-      next unless disk_name.match(Disk_device_regexp)
+      next unless disk_name.match(disk_device_regexp)
       next if disk_name.match(/\Amd[0-9]+\z/)       # no raid devices
       (devices_by_size[disk_size.to_i] ||= []) << "#{ disk_name }"
     end
@@ -392,7 +401,7 @@ module QueryDiskInfo
       # these should sort here so that "md0" is the first if it exists
       all_disk_devices = IO.readlines('/proc/partitions') \
                            .map { |s| s.split(' ')[3] }   \
-                           .select { |s| s && s.match(Disk_device_regexp) } \
+                           .select { |s| s && s.match(disk_device_regexp) } \
                            .sort
 
       # do not allow installation to the device where the currently running
@@ -626,8 +635,10 @@ module UI
   @accept_defaults = false
   @defaults = {}
   @hosttype = nil
+  @loopback_only = false
 
-  def self.hosttype; @hosttype end
+  def self.hosttype     ; @hosttype      end
+  def self.loopback_only; @loopback_only end
 
   def self.help_and_exit
     puts <<-EOF
@@ -641,6 +652,7 @@ puavo-setup-filesystems [OPTIONS]
     --default-imageoverlay-size   default value for imageoverlay size prompt
     --default-partition           default value for partition prompt
     --default-unpartitioned-space default value for partitioned space prompt
+    --loopback-only               use only loopback devices
 
 EOF
   end
@@ -656,6 +668,7 @@ EOF
                             [ '--default-partition'          , GetoptLong::REQUIRED_ARGUMENT,],
                             [ '--default-unpartitioned-space', GetoptLong::REQUIRED_ARGUMENT,],
                             [ '--hosttype'                   , GetoptLong::REQUIRED_ARGUMENT,],
+                            [ '--loopback-only'              , GetoptLong::NO_ARGUMENT      ,],
                             )
 
       opts.each do |opt, arg|
@@ -677,6 +690,8 @@ EOF
           @defaults[UnpartitionedSpacePrompt] = arg
         when '--hosttype'
           @hosttype = arg
+        when '--loopback-only'
+          @loopback_only = true
         end
       end
     rescue GetoptLong::InvalidOption => e

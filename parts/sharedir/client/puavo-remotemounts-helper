@@ -1,7 +1,8 @@
 #!/usr/bin/ruby
 # encoding: UTF-8
 
-exit(0) if ENV['GUEST_SESSION'] == 'true'
+# do not run this as non-Puavo users (such as guest user)
+exit(0) if Process.uid < 10000
 
 require 'puavo/conf'
 

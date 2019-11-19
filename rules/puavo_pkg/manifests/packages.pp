@@ -54,6 +54,8 @@ class puavo_pkg::packages {
 			, 'tilitin'
 			, 't-lasku'
 			, 'ubuntu-wallpapers'
+			, 'unityhub-appimage'
+			, 'veracrypt'
 			, 'vidyo-client'
 			, 'vstloggerpro'
 			, 'zoom' ]

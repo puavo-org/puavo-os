@@ -12,6 +12,7 @@ subdirs         := admins                     \
                    core                       \
                    desktop-applet             \
                    devscripts                 \
+                   ers                        \
                    hw-tools                   \
                    laptop-setup               \
                    ltsp                       \
