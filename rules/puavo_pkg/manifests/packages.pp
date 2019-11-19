@@ -53,6 +53,7 @@ class puavo_pkg::packages {
 			, 'spotify-client'
 			, 'tilitin'
 			, 't-lasku'
+			, 'unityhub-appimage'
 			, 'veracrypt'
 			, 'vidyo-client'
 			, 'vstloggerpro'
