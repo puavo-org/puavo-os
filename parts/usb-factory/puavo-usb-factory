@@ -288,7 +288,7 @@ proc start_verifying {devpath} {
 proc start_writing {devpath} {
   global image_info pci_path_dir
   set srcfile [dict get $image_info latest_image_path]
-  set cmd "nice -n 20 ionice -c 3 pv -b -n $srcfile | nice -n 20 ionice -c 3 dd of=${pci_path_dir}/${devpath} bs=8192 conv=fsync,nocreat oflag=nocache status=none 2>@1"
+  set cmd "nice -n 20 ionice -c 3 pv -b -n $srcfile | nice -n 20 ionice -c 3 dd of=${pci_path_dir}/${devpath} conv=fsync,nocreat status=none 2>@1"
   start_operating $devpath $cmd
 }
 
