@@ -1,8 +1,7 @@
-diff --git a/src/podcast/ffmpeg/UBFFmpegVideoEncoder.cpp b/src/podcast/ffmpeg/UBFFmpegVideoEncoder.cpp
-index c0eb9e9d..4773e0a9 100644
---- a/src/podcast/ffmpeg/UBFFmpegVideoEncoder.cpp
-+++ b/src/podcast/ffmpeg/UBFFmpegVideoEncoder.cpp
-@@ -744,6 +744,7 @@ void UBFFmpegVideoEncoderWorker::writeLatestVideoFrame()
+diff -ruN OpenBoard.orig/src/podcast/ffmpeg/UBFFmpegVideoEncoder.cpp OpenBoard/src/podcast/ffmpeg/UBFFmpegVideoEncoder.cpp
+--- a/OpenBoard/src/podcast/ffmpeg/UBFFmpegVideoEncoder.cpp	2019-04-10 10:04:25.000000000 +0300
++++ b/OpenBoard/src/podcast/ffmpeg/UBFFmpegVideoEncoder.cpp	2019-11-19 13:55:15.200526785 +0200
+@@ -744,6 +744,7 @@
  {
      AVFrame* frame = mImageQueue.dequeue();
      writeFrame(frame, mVideoPacket, mController->mVideoStream, mController->mOutputFormatContext);
@@ -10,7 +9,7 @@ index c0eb9e9d..4773e0a9 100644
      av_frame_free(&frame);
  }
  
-@@ -756,6 +757,7 @@ void UBFFmpegVideoEncoderWorker::writeLatestAudioFrame()
+@@ -756,6 +757,7 @@
  #if LIBAVFORMAT_VERSION_MICRO < 100
      if (audio_samples_buffer) {
          av_free(audio_samples_buffer);

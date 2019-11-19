@@ -1,8 +1,7 @@
-diff --git a/src/desktop/UBDesktopAnnotationController.cpp b/src/desktop/UBDesktopAnnotationController.cpp
-index f9ddb023..36c011b6 100644
---- a/src/desktop/UBDesktopAnnotationController.cpp
-+++ b/src/desktop/UBDesktopAnnotationController.cpp
-@@ -102,7 +102,7 @@ UBDesktopAnnotationController::UBDesktopAnnotationController(QObject *parent, UB
+diff -ruN OpenBoard.orig/src/desktop/UBDesktopAnnotationController.cpp OpenBoard/src/desktop/UBDesktopAnnotationController.cpp
+--- a/OpenBoard/src/desktop/UBDesktopAnnotationController.cpp	2019-04-10 10:04:25.000000000 +0300
++++ b/OpenBoard/src/desktop/UBDesktopAnnotationController.cpp	2019-11-19 13:53:44.988528636 +0200
+@@ -102,7 +102,7 @@
      mTransparentDrawingView->setScene(mTransparentDrawingScene);
      mTransparentDrawingScene->setDrawingMode(true);
  
@@ -11,7 +10,7 @@ index f9ddb023..36c011b6 100644
      // This was not fix, parent reverted
      // FIX #633: The palette must be 'floating' in order to stay on top of the library palette
  
-@@ -903,6 +903,10 @@ void UBDesktopAnnotationController::updateMask(bool bTransparent)
+@@ -903,6 +903,10 @@
          }
  
  #ifdef Q_OS_LINUX
