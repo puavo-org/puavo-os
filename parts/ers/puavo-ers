@@ -111,6 +111,7 @@ proc write_file {filepath data} {
   set fd ""
   try {
     set fd [open "${filepath}.tmp" w]
+    fconfigure $fd -translation binary
     puts -nonewline $fd $data
     file rename -force "${filepath}.tmp" $filepath
   } on error {errmsg} {
@@ -368,11 +369,12 @@ proc update_exams_from_media {} {
 }
 
 proc handle_exams_index_fetch {token} {
-  upvar #0 $token state
   global exam_server_address exam_sharedir
 
   if {[::http::ncode $token] ne 200} {
-    logger "exam index fetch returned [::http::code $token]: $state(body)"
+    set logmsg "exam index fetch returned [::http::code $token]"
+    set logmsg "${logmsg}: [::http::data $token]"
+    logger $logmsg
     return
   }
 
@@ -383,7 +385,7 @@ proc handle_exams_index_fetch {token} {
 
   set passwords [list]
 
-  set exam_list [::json::json2dict $state(body)]
+  set exam_list [::json::json2dict [::http::data $token]]
   foreach exam $exam_list {
     # XXX we do not have passwords yet here
     # XXX lappend passwords [dict get $exam password]
@@ -409,16 +411,15 @@ proc handle_exams_index_fetch {token} {
 }
 
 proc handle_exam_fetch {exam token} {
-  upvar #0 $token state
   global exam_sharedir
 
   if {[::http::ncode $token] ne 200} {
-    puts stderr "exam fetch returned [::http::code $token]: $state(body)"
+    logger "exam fetch returned [::http::code $token]: [::http::data $token]"
     return
   }
 
   write_file "${exam_sharedir}/[dict get $exam file]" \
-             $state(body)
+             [::http::data $token]
 }
 
 proc update_exams_from_server {} {
