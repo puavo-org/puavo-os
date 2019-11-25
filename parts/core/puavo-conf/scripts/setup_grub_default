@@ -19,7 +19,8 @@ setup_puavo_os_boot_default() {
   grubedit set "puavo_grub_boot_default=puavo-os"
 
   if [ "$(puavo-conf puavo.admin.personally_administered)" != 'true' ]; then
-    grubedit unset default
+    grubedit unset puavo_grub_puavo_os_default_image
+    grubedit unset puavo_grub_puavo_os_default_mode
     return 0
   fi
 
@@ -28,58 +29,33 @@ setup_puavo_os_boot_default() {
     echo 'Could not determine puavo.image.path' >&2
     return 1
   fi
-  read this_puavoimage_name < /etc/puavo-image/name
 
-  development_mode=false
+  default_image="$image_path"
+
+  default_mode='normal'
   if [ "$(puavo-conf puavo.image.overlay)" = 'personal' ]; then
-    development_mode=true
+    default_mode='developer'
   fi
 
-  # XXX localisations are needed
-  # XXX check out puavo-install-grub for the description format here
-  case "$image_path" in
-    /ltsp.img)
-      if $development_mode; then
-        grub_description='Kehittäjätila'
-      else
-        grub_description='Normaali käynnistys'
-      fi
-      ;;
-    /ltsp-backup.img)
-      if $development_mode; then
-        grub_description='Varajärjestelmä, kehittäjätila'
-      else
-        grub_description='Varajärjestelmä, normaali käynnistys'
-      fi
-      ;;
-    *)
-      if $development_mode; then
-        grub_description='Muu järjestelmä, kehittäjätila'
-      else
-        grub_description='Muu järjestelmä, normaali käynnistys'
-      fi
-      ;;
-  esac
-
-  grub_default="${grub_description} - (lvm/puavo-images)/${this_puavoimage_name} (${image_path})"
-
-  grubedit set "default=${grub_default}"
+  grubedit set "puavo_grub_puavo_os_default_image=${default_image}"
+  grubedit set "puavo_grub_puavo_os_default_mode=${default_mode}"
 }
 
 boot_default="$(puavo-conf puavo.grub.boot_default)"
 case "$boot_default" in
   abitti)
     grubedit set "puavo_grub_boot_default=abitti"
-    grubedit unset default
     ;;
   puavo-os)
     setup_puavo_os_boot_default
     ;;
   windows)
     grubedit set "puavo_grub_boot_default=windows"
-    grubedit unset default
     ;;
   *)
     echo "Unsupported boot mode '${boot_default}'" >&2
     ;;
 esac
+
+# XXX just cleanup old stuff
+grubedit unset default

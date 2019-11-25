@@ -55,14 +55,16 @@ function ltsp_image_entry {
 
   get_pathname $imagefile imagepath
 
-  # if changing menuentry description, update correspondingly on
-  # /etc/puavo-conf/scripts/setup_grub_default
-
   # ${puavo_kernel_arguments} comes from a grub environment file
   # (if it is defined there)
   set kernelparameters="${kernelparameters} ${puavo_kernel_arguments}"
   if test "$boottype" = "liveboot"; then
     set kernelparameters="${kernelparameters} puavo.hosttype=laptop puavo.guestlogin.enabled=true"
+  fi
+
+  if test "$imagefile" = "$puavo_grub_puavo_os_default_image" \
+       -a "$boottype" = "$puavo_grub_puavo_os_default_mode"; then
+    set default="${description} (${imagepath})"
   fi
 
   menuentry "${description} (${imagepath})" "$imagefile" "$imagepath" "$kernelparameters" {
@@ -155,7 +157,7 @@ function ltsp_image_entry_superlaptop {
             -a -d (lvm/puavo-imageoverlays); then
     set kernelparameters="$kernelparameters puavo.image.overlay=personal"
 
-    ltsp_image_entry "${imagefile}" "${description}" "${kernelparameters}"
+    ltsp_image_entry "${imagefile}" "${description}" "${kernelparameters}" "developer"
   fi
 }
 
@@ -229,7 +231,7 @@ for dev in (lvm/__PUAVO_LVM_PARTITION__); do
   fi
 
   if test -f "${default_image}"; then
-    ltsp_image_entry "${default_image}" "${text_normal_startup} - ${default_image_alias}"
+    ltsp_image_entry "${default_image}" "${text_normal_startup} - ${default_image_alias}" "normal"
     if test "__PUAVO_LIVEBOOT_OPTION__" = "true"; then
       ltsp_image_entry "${default_image}" "${text_liveboot_startup} - ${default_image_alias}" "" "liveboot"
     fi
@@ -242,7 +244,7 @@ for dev in (lvm/__PUAVO_LVM_PARTITION__); do
     fi
   fi
   if test -f "${backup_image}"; then
-    ltsp_image_entry "${backup_image}" "${text_backup_normal_startup} - ${backup_image_alias}"
+    ltsp_image_entry "${backup_image}" "${text_backup_normal_startup} - ${backup_image_alias}" "normal"
     ltsp_image_entry_superlaptop "${backup_image}" "${text_backup_developer_mode} - ${backup_image_alias}"
   fi
 
@@ -252,7 +254,7 @@ for dev in (lvm/__PUAVO_LVM_PARTITION__); do
     if test "${file}" = "${default_image_alias}"; then continue; fi
     if test "${file}" = "${backup_image_alias}";  then continue; fi
 
-    ltsp_image_entry "${file}" "${text_other_system_normal_startup}"
+    ltsp_image_entry "${file}" "${text_other_system_normal_startup}" "normal"
     ltsp_image_entry_superlaptop "${file}" "${text_other_system_developer_mode}"
   done
 done
