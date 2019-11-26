@@ -18,7 +18,10 @@ grubedit() {
 setup_puavo_os_boot_default() {
   grubedit set "puavo_grub_boot_default=puavo-os"
 
-  if [ "$(puavo-conf puavo.admin.personally_administered)" != 'true' ]; then
+  # do not set the default image/mode boot option if image has been updated
+  # after last reboot, or this host is not personally administered
+  if [ /run/puavo/init-puavo.log -ot /images/ltsp.img \
+       -o "$(puavo-conf puavo.admin.personally_administered)" != 'true' ]; then
     grubedit unset puavo_grub_puavo_os_default_image
     grubedit unset puavo_grub_puavo_os_default_mode
     return 0

@@ -854,7 +854,10 @@ update_image_labels_for_grub() {
 
   # the system default is the new default now,
   # irrespective of what user has booted to before
-  grub-editenv "${images_dir}/boot/grub/grubenv" unset default
+  grub-editenv "${images_dir}/boot/grub/grubenv" \
+               unset puavo_grub_puavo_os_default_image
+  grub-editenv "${images_dir}/boot/grub/grubenv" \
+               unset puavo_grub_puavo_os_default_mode
 
   return 0
 }
