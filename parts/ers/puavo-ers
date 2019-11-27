@@ -389,7 +389,7 @@ proc handle_exams_index_fetch {token} {
   foreach exam $exam_list {
     # XXX we do not have passwords yet here
     # XXX lappend passwords [dict get $exam password]
-    lappend passwords [dict get $exam hash]
+    lappend passwords [dict get $exam password]
 
     set exam_filename [dict get $exam file]
     set exam_uuid [dict get $exam uuid]
