@@ -176,24 +176,27 @@ proc update_ui_info_state {} {
   after 10000 update_image_info
 }
 
-proc get_content_dir {} {
+proc get_available_content_dirs {} {
   global paths
 
   if {[catch { glob $paths(puavo_usb_factory_workdir)/* } res]} {
     error "$paths(puavo_usb_factory_workdir)/* did not match any files: $res"
   }
-  set workpath_dirs [
+  lsort [
     lmap path $res { expr { [file isdirectory $path] ? $path : [continue] } }
   ]
+}
 
-  set dir_count [llength $workpath_dirs]
+proc get_default_content_dir {} {
+  set content_dir_paths [get_available_content_dirs]
+
+  set dir_count [llength $content_dir_paths]
   if {$dir_count == 0} {
-    error "no disk image to write"
-  } elseif {$dir_count > 1} {
-    error "only one disk image is supported for now"
+    error "no content directories"
   }
 
-  lindex $workpath_dirs 0
+  # get the the first one (alphabetically) in case there are many
+  lindex $content_dir_paths 0
 }
 
 proc update_image_info {} {
@@ -1300,9 +1303,9 @@ download_images
 after 3000      ;# wait a bit so that download_images sets up UI.json
 
 try {
-  set content_dir [get_content_dir]
-} on error {} {
-  logger -p user.err "could not get content dir"
+  set content_dir [get_default_content_dir]
+} on error {errmsg} {
+  logger -p user.err "could not get the default content dir: $errmsg"
   exit 1
 }
 
