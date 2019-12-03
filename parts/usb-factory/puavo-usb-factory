@@ -1307,17 +1307,19 @@ try {
 }
 
 try {
-  set bg_image_path "${content_dir}/UI.png"
+  set bg_image_path "$paths(puavo_usb_factory_workdir)/UI.png"
 } on error {} {
   logger -p user.err \
-         "could not read background image from ${content_dir}/UI.png"
+         "could not read image from $paths(puavo_usb_factory_workdir)/UI.png"
   exit 1
 }
 
 try {
-  set ui_messages [::json::json2dict [read_file "${content_dir}/UI.json"]]
+  set ui_messages [
+    ::json::json2dict [read_file "$paths(puavo_usb_factory_workdir)/UI.json"]
+  ]
 } on error {} {
-  logger -p user.err "could not read ui messages from ${content_dir}/UI.json"
+  logger -p user.err "could not read $paths(puavo_usb_factory_workdir)/UI.json"
   exit 1
 }
 
