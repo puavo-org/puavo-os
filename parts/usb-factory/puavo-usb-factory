@@ -24,11 +24,11 @@ set ui_messages {}
 array set rotating_port_labels ""
 array set port_labels ""
 set writable_labels false
-set image_downloading_version ""
+set images_downloading_version ""
 set requested_version ""
 set requested_version_type ""
 set requested_version_value ""
-set image_downloader_fh ""
+set images_downloader_fh ""
 
 array set paths [list \
   flash_drive_blue      /usr/share/puavo-usb-factory/flash-drive-blue.png    \
@@ -64,33 +64,35 @@ proc read_file {path} {
   return [string trimright $data "\n"]
 }
 
-proc download_image {} {
-  global image_downloader_fh image_downloading_version requested_version
+proc download_images {} {
+  global images_downloader_fh images_downloading_version requested_version
 
   logger -p user.warning "starting download"
 
-  if {$image_downloader_fh ne ""} {
-    if {$requested_version eq $image_downloading_version} { return }
+  if {$images_downloader_fh ne ""} {
+    if {$requested_version eq $images_downloading_version} { return }
 
-    set pid [pid $image_downloader_fh]
+    set pid [pid $images_downloader_fh]
     catch { exec pkill -s $pid }
-    catch { close $image_downloader_fh }
+    catch { close $images_downloader_fh }
   }
 
-  set image_downloading_version $requested_version
+  set images_downloading_version $requested_version
 
-  set image_downloader_fh [open "| setsid -w puavo-download-usb-factory-images"]
-  fconfigure $image_downloader_fh -blocking 0
-  fileevent $image_downloader_fh readable {
-    catch { read $image_downloader_fh }
-    if {[eof $image_downloader_fh]} {
-      fconfigure $image_downloader_fh -blocking 1
-      if {[catch { close $image_downloader_fh }]} {
-        after 30000 download_image      ; # failed, try again after 30 seconds
+  set images_downloader_fh [
+    open "| setsid -w puavo-download-usb-factory-images"
+  ]
+  fconfigure $images_downloader_fh -blocking 0
+  fileevent $images_downloader_fh readable {
+    catch { read $images_downloader_fh }
+    if {[eof $images_downloader_fh]} {
+      fconfigure $images_downloader_fh -blocking 1
+      if {[catch { close $images_downloader_fh }]} {
+        after 30000 download_images      ; # failed, try again after 30 seconds
       } else {
-        after 3600000 download_image    ; # success, try again after 1 hour
+        after 3600000 download_images    ; # success, try again after 1 hour
       }
-      set image_downloader_fh ""
+      set images_downloader_fh ""
     }
   }
 }
@@ -1242,7 +1244,7 @@ proc switch_ui_mode {{uimode ""}} {
     update_calibration_ui true
     update_requested_version_ui false
     update_port_labels_on_disk
-    download_image
+    download_images
   } else {
     update_requested_version_ui true
     update_calibration_ui false
@@ -1294,8 +1296,8 @@ ttk::style configure Status.TLabel -foreground #c3c8cc -background #46606d
 # ui messages and background image
 
 # start download image
-download_image
-after 3000      ;# wait a bit so that download_image sets up UI.json
+download_images
+after 3000      ;# wait a bit so that download_images sets up UI.json
 
 try {
   set content_dir [get_content_dir]
