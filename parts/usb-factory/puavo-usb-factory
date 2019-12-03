@@ -172,8 +172,6 @@ proc update_ui_info_state {} {
 
   set bg_width  [dict get $bg_image width]
   set bg_height [dict get $bg_image height]
-
-  after 10000 update_image_info
 }
 
 proc get_available_content_dirs {} {
@@ -228,6 +226,11 @@ proc update_image_info {} {
   }
 
   update_ui_info_state
+}
+
+proc update_image_info_loop {} {
+  catch { update_image_info }
+  after 10000 update_image_info_loop
 }
 
 proc close_if_open {devpath} {
@@ -1130,38 +1133,49 @@ proc scroll_topbanner {} {
 }
 
 proc setup_requested_version_ui {} {
-  global default_background_color requested_version_type requested_version_value
+  global content_dir default_background_color requested_version_type \
+         requested_version_value
 
   set button_opts [list -background         $default_background_color \
                         -font               smallInfoFont             \
                         -highlightthickness 0]
 
   ttk::frame .f.requested_version -style Changes.TFrame
-  ttk::frame .f.requested_version.version
-  radiobutton .f.requested_version.by_puavo_conf {*}$button_opts \
-    -value "by puavo-conf" -command {
-      set requested_version_type "by puavo-conf"
-    }
-  radiobutton .f.requested_version.latest {*}$button_opts \
-    -text [ui_msg version latest] -value "latest" -command {
-      set requested_version_type "latest"
-    }
-  radiobutton .f.requested_version.version.button {*}$button_opts \
-    -text "[ui_msg version {this version}]:" -value "this version" -command {
-      set requested_version_type "this version"
-    }
-  ttk::entry .f.requested_version.version.number \
+  ttk::frame .f.requested_version.number -style Changes.TFrame
+
+  ttk::frame .f.requested_version.number.version
+  radiobutton .f.requested_version.number.by_puavo_conf {*}$button_opts \
+    -value "by puavo-conf" -variable requested_version_type
+  radiobutton .f.requested_version.number.latest {*}$button_opts \
+    -text [ui_msg version latest] -value "latest" \
+    -variable requested_version_type
+  radiobutton .f.requested_version.number.version.button {*}$button_opts \
+    -text "[ui_msg version {this version}]:" -value "this version" \
+    -variable requested_version_type
+  ttk::entry .f.requested_version.number.version.number \
     -justify center -textvariable requested_version_any -font smallInfoFont \
     -width 6 -textvariable requested_version_value
 
+  ttk::frame .f.requested_version.image_series -style Changes.TFrame
+  set i 1
+  foreach content_dir_choice [get_available_content_dirs] {
+    radiobutton .f.requested_version.image_series.$i {*}$button_opts \
+       -text [file tail $content_dir_choice] -value $content_dir_choice \
+       -variable content_dir -command update_image_info
+    pack .f.requested_version.image_series.$i -anchor w
+    incr i
+  }
+
   update_requested_version_ui false
 
-  pack .f.requested_version.by_puavo_conf \
-       .f.requested_version.latest \
-       .f.requested_version.version \
+  pack .f.requested_version.number -anchor w
+  pack .f.requested_version.image_series -anchor w -pady 30 -padx 10
+  pack .f.requested_version.number.by_puavo_conf \
+       .f.requested_version.number.latest \
+       .f.requested_version.number.version \
        -anchor w -padx 10 -pady 2
-  pack .f.requested_version.version.button -anchor w -side left
-  pack .f.requested_version.version.number -anchor w -side left -padx 3
+  pack .f.requested_version.number.version.button -anchor w -side left
+  pack .f.requested_version.number.version.number -anchor w -side left -padx 3
 }
 
 proc update_requested_version_ui {visible} {
@@ -1211,15 +1225,15 @@ proc update_requested_version_ui {visible} {
   set by_puavo_conf_msg \
       "[ui_msg version {by puavo-conf}] ($puavo_conf_requested_version)"
 
-  .f.requested_version.by_puavo_conf configure \
+  .f.requested_version.number.by_puavo_conf configure \
     -text $by_puavo_conf_msg
 
   switch -- $requested_version {
     ""              -
-    {by puavo-conf} { .f.requested_version.by_puavo_conf invoke }
-    {latest}        { .f.requested_version.latest        invoke }
+    {by puavo-conf} { .f.requested_version.number.by_puavo_conf invoke }
+    {latest}        { .f.requested_version.number.latest        invoke }
     default {
-      .f.requested_version.version.button invoke
+      .f.requested_version.number.version.button invoke
       set requested_version_value $requested_version
     }
   }
@@ -1444,7 +1458,7 @@ bind . <Control-X> switch_ui_mode
 
 scroll_topbanner
 read_port_labels_from_disk
-update_image_info
+update_image_info_loop
 update_diskdevices_loop
 check_files
 roll_rotating_port_labels 0
