@@ -861,20 +861,23 @@ proc set_usbicon_state {devpath state {percentage ""} {eta ""}} {
       set msg [ui_msg messages start_writing]
     }
     verifying {
+      set version [dict get $diskdevices $devpath version]
       set imagename  flash_drive_yellow
       set startpoint $initial_offset
-      set msg        [ui_msg messages verifying]
+      set msg        "[ui_msg messages verifying] $version"
     }
     verifying_after_write {
+      set version [dict get $diskdevices $devpath version]
       set imagename  flash_drive_yellow
       set startpoint [expr { $cutpoint + 0.02 }]
-      set msg        [ui_msg messages verifying]
+      set msg        "[ui_msg messages verifying] $version"
     }
     writing {
+      set version [dict get $diskdevices $devpath version]
       set imagename  flash_drive_blue
       set startpoint $initial_offset
       set endpoint   $cutpoint
-      set msg        [ui_msg messages writing]
+      set msg        "[ui_msg messages writing] $version"
     }
   }
 
@@ -1283,7 +1286,7 @@ logger -p user.notice "starting up"
 # setup UI
 #
 
-font create smallInfoFont  -family {Ubuntu Condensed} -size 14 -weight bold
+font create smallInfoFont  -family {Ubuntu Condensed} -size 12 -weight bold
 font create infoFont       -family {Ubuntu Condensed} -size 20 -weight bold
 font create biggerInfoFont -family {Ubuntu Condensed} -size 24 -weight bold
 
