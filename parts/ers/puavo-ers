@@ -3,6 +3,7 @@
 package require http
 package require json
 package require tls
+package require tooltip
 
 ::http::register https 443 ::tls::socket
 
@@ -206,14 +207,13 @@ proc read_file {path} {
 
 proc show_passwords_on_window {} {
   pack forget .startup
+  pack .move_button -fill y -expand 1 -side left
   pack .passwords -expand 1 -fill both -side left
   pack .close_button -fill y -expand 1 -side right
 
   logger "showing passwords on window (if there are any)"
 
   wm minsize . 64 36
-
-  bind .passwords <Enter> { set_window_placement change }
 
   update_passwords_on_window
 }
@@ -460,8 +460,13 @@ proc set_window_placement {{placement keep}} {
   set previous_window_placement $placement
 }
 
+proc update_clipboard {text} {
+  clipboard clear
+  clipboard append $text
+}
+
 proc update_passwords_on_window {} {
-  global exam_sharedir
+  global exam_sharedir old_passwords
 
   try {
     set passwords_text [read_file "${exam_sharedir}/.exam_passwords.txt"]
@@ -471,7 +476,18 @@ proc update_passwords_on_window {} {
     return
   }
 
-  .passwords configure -text $passwords_text
+  if {$old_passwords ne $passwords_text} {
+    set i 1
+    foreach password [split $passwords_text "\n"] {
+      catch { destroy .passwords.$i }
+      button .passwords.$i -text $password \
+                           -command [list update_clipboard $password]
+      pack .passwords.$i -expand 1 -fill both
+      tooltip::tooltip .passwords.$i "copy password to clipboard"
+      incr i
+    }
+    set old_passwords $passwords_text
+  }
 
   after 100 set_window_placement
   after 5000 update_passwords_on_window
@@ -492,6 +508,7 @@ logger "starting up puavo-ers"
 
 set ers_basedir      "$env(HOME)/.puavo/puavo-ers"
 set abitti_json_path "${ers_basedir}/abitti.json"
+set old_passwords    ""
 
 exec mkdir -p $ers_basedir $exam_sharedir
 
@@ -507,7 +524,8 @@ pack .startup -fill both -expand 1
 .startup.progressbar start
 
 # do not pack yet
-label .passwords -anchor w -padx 20 -pady 4
+frame .passwords
+button .move_button -text "O" -command { set_window_placement change }
 button .close_button -text X -command {
   logger "closing passwords window because close button is pressed"
   wm withdraw .
