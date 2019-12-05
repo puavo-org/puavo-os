@@ -303,7 +303,7 @@ proc start_verifying {devpath} {
 
   # set access time of image file so that it can be used
   # by other scripts to test if it is still in use (or may be removed?)
-  catch { exec touch -a $srcfile }
+  catch { file atime $srcfile [clock seconds] }
 
   set cmd "nice -n 20 ionice -c 3 pv -b -n $srcfile | nice -n 20 ionice -c 3 cmp -n $image_size ${pci_path_dir}/${devpath} - 2>@1"
   start_operating $devpath $cmd
@@ -315,7 +315,7 @@ proc start_writing {devpath} {
 
   # set access time of image file so that it can be used
   # by other scripts to test if it is still in use (or may be removed?)
-  catch { exec touch -a $srcfile }
+  catch { file atime $srcfile [clock seconds] }
 
   set cmd "nice -n 20 ionice -c 3 pv -b -n $srcfile | nice -n 20 ionice -c 3 dd of=${pci_path_dir}/${devpath} conv=fsync,nocreat status=none 2>@1"
   start_operating $devpath $cmd
