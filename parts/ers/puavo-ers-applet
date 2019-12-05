@@ -1,0 +1,96 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import errno
+import gettext
+import gi
+import os
+import signal
+import sys
+
+gi.require_version('AppIndicator3', '0.1')
+gi.require_version('Gtk', '3.0')
+gi.require_version('Notify', '0.7')
+
+from gi.repository import AppIndicator3
+from gi.repository import Gdk
+from gi.repository import GObject
+from gi.repository import Gtk
+from gi.repository import Notify
+
+gettext.bindtextdomain('puavo-ers-applet', '/usr/share/locale')
+gettext.textdomain('puavo-ers-applet')
+_tr = gettext.gettext
+
+
+class PuavoErsApplet:
+  def __init__(self):
+    self.indicator \
+      = AppIndicator3.Indicator.new('puavo-ers-applet',
+          '/usr/share/icons/Faenza/emblems/64/emblem-default.png',
+          AppIndicator3.IndicatorCategory.SYSTEM_SERVICES)
+    self.indicator.set_status(AppIndicator3.IndicatorStatus.ACTIVE)
+
+    self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+
+    Notify.init('puavo-ers-applet')
+
+    self.menu = Gtk.Menu()
+    self.old_passwords = []
+    self.password_buttons = []
+
+    self.indicator.set_menu(self.menu)
+
+    self.menu.show_all()
+
+
+  def main(self):
+    GObject.timeout_add_seconds(1, self.update_passwords)
+    Gtk.main()
+
+
+  def update_passwords(self):
+    error = None
+    try:
+      path = "%s/ktp-jako/.exam_passwords.txt" % os.environ['HOME']
+      with open(path) as file:
+        new_passwords = file.read().splitlines()
+        if (self.old_passwords != new_passwords):
+          self.update_passwords_in_ui(new_passwords)
+        self.old_passwords = new_passwords
+    except OSError as e:
+      if e.errno != errno.EEXIST:
+        error = e
+    except Exception as e:
+      error = e
+
+    if error:
+      print("error when updating passwords: %s" % error, file=sys.stderr)
+
+    return True
+
+
+  def update_passwords_in_ui(self, new_passwords):
+    for button in self.password_buttons:
+      button.destroy()
+
+    for password in new_passwords:
+      button = Gtk.MenuItem(password)
+      button.show()
+      button.connect('activate', self.copy_password_to_clipboard)
+      self.menu.append(button)
+      self.password_buttons.append(button)
+
+
+  def copy_password_to_clipboard(self, widget):
+    password = widget.get_label()
+
+    print("password %s to clipboard" % password)
+    self.clipboard.set_text(password, -1)
+
+
+applet = PuavoErsApplet()
+
+if __name__ == '__main__':
+  signal.signal(signal.SIGINT, signal.SIG_DFL)
+  applet.main()
