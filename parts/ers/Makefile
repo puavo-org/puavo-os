@@ -14,15 +14,17 @@ all:
 .PHONY: installdirs
 installdirs:
 	mkdir -p $(DESTDIR)$(bindir)
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ers
+	mkdir -p $(DESTDIR)$(sysconfdir)/sudoers.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
 
 .PHONY: install
 install: installdirs
-	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) puavo-ers puavo-ers-applet \
-		puavo-startup-ers
+	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) puavo-ers-applet \
+		puavo-ers-startup
+	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/sudoers.d \
+		etc/sudoers.d/puavo-ers-applet
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/xdg/autostart \
-		puavo-ers-applet.desktop puavo-startup-ers.desktop
+		puavo-ers-startup.desktop
 
 .PHONY: clean
 clean:

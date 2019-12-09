@@ -69,10 +69,9 @@ class PuavoErsApplet:
     if not os.path.exists(self.NAKSU_BIN_PATH):
       shutil.copy2(self.NAKSU_ORIGIN_PATH, self.NAKSU_BIN_PATH)
 
-    self.run_naksu()
-
 
   def main(self):
+    self.run_naksu()
     GObject.timeout_add_seconds(1, self.update_passwords)
     Gtk.main()
 
@@ -152,6 +151,11 @@ class PuavoErsApplet:
 class PuavoErsExamSync:
   def __init__(self):
     self.exam_index_file = None
+
+    with open('/etc/puavo/ldap/dn') as f:
+      self.dn = f.read().rstrip()
+    with open('/etc/puavo/ldap/password') as f:
+      self.password = f.read().rstrip()
 
   # XXX periodically one Kaikki.zip file should also be created that
   # XXX contains all the exams
