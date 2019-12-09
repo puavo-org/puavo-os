@@ -6,9 +6,11 @@ import gettext
 import gi
 import json
 import os
+import shutil
 import signal
 import subprocess
 import sys
+import time
 
 gi.require_version('AppIndicator3', '0.1')
 gi.require_version('Gtk', '3.0')
@@ -17,6 +19,7 @@ gi.require_version('Notify', '0.7')
 from gi.repository import AppIndicator3
 from gi.repository import Gdk
 from gi.repository import Gio
+from gi.repository import GLib
 from gi.repository import GObject
 from gi.repository import Gtk
 from gi.repository import Notify
@@ -25,8 +28,8 @@ gettext.bindtextdomain('puavo-ers-applet', '/usr/share/locale')
 gettext.textdomain('puavo-ers-applet')
 _tr = gettext.gettext
 
-KTP_jako_dir = '%s/ktp-jako' % os.environ['HOME']
-Exam_passwords_file = '%s/.exam_passwords.txt' % KTP_jako_dir
+KTP_JAKO_DIR = os.path.join(os.environ['HOME'], 'ktp-jako')
+EXAM_PASSWORDS_FILE = os.path.join(KTP_JAKO_DIR, '.exam_passwords.txt')
 
 def puavoconf_get(puavoconf_key):
   return subprocess.check_output([ 'puavo-conf', puavoconf_key ]).rstrip() \
@@ -34,6 +37,10 @@ def puavoconf_get(puavoconf_key):
 
 
 class PuavoErsApplet:
+  NAKSU_ORIGIN_PATH = '/opt/abitti-naksu/naksu'
+  PUAVO_ERS_DIR = os.path.join(os.environ['HOME'], '.puavo', 'puavo-ers')
+  NAKSU_BIN_PATH = os.path.join(PUAVO_ERS_DIR, 'naksu')
+
   def __init__(self):
     self.indicator \
       = AppIndicator3.Indicator.new('puavo-ers-applet',
@@ -46,6 +53,8 @@ class PuavoErsApplet:
     # XXX do we need this?
     Notify.init('puavo-ers-applet')
 
+    os.makedirs(self.PUAVO_ERS_DIR, exist_ok=True)
+
     self.menu = Gtk.Menu()
     self.old_passwords = []
     self.password_buttons = []
@@ -57,16 +66,55 @@ class PuavoErsApplet:
     self.exam_sync = PuavoErsExamSync()
     self.exam_sync.sync_exams()
 
+    if not os.path.exists(self.NAKSU_BIN_PATH):
+      shutil.copy2(self.NAKSU_ORIGIN_PATH, self.NAKSU_BIN_PATH)
+
+    self.run_naksu()
+
 
   def main(self):
     GObject.timeout_add_seconds(1, self.update_passwords)
     Gtk.main()
 
 
+  def run_naksu(self):
+    cmd = [ self.NAKSU_BIN_PATH, '--self-update=enabled' ]
+    (pid, stdin, stdout, stderr) = GObject.spawn_async(cmd,
+      flags=GLib.SPAWN_DO_NOT_REAP_CHILD|GLib.SPAWN_STDERR_TO_DEV_NULL,
+      standard_input=True, standard_output=True)
+
+    self.naksu_pid = pid
+
+    GObject.io_add_watch(stdout, GObject.IO_HUP|GObject.IO_IN,
+                         self.handle_naksu, os.fdopen(stdout))
+
+
+  def handle_naksu(self, fd, condition, channel):
+    try:
+      if condition & GObject.IO_IN:
+        channel.read()
+
+      if condition & GObject.IO_HUP:
+        channel.close()
+        (pid, status) = os.waitpid(self.naksu_pid, 0)
+        if status != 0:
+          print("naksu pid %d returned exit status %s" % (pid, status),
+                file=sys.stderr)
+
+        time.sleep(3)
+        self.run_naksu()
+
+    except Exception as e:
+      print("error when handling naksu: %s" % e)
+      return False
+
+    return True
+
+
   def update_passwords(self):
     error = None
     try:
-      with open(Exam_passwords_file) as file:
+      with open(EXAM_PASSWORDS_FILE) as file:
         new_passwords = file.read().splitlines()
         if (self.old_passwords != new_passwords):
           self.update_passwords_in_ui(new_passwords)
@@ -105,6 +153,8 @@ class PuavoErsExamSync:
   def __init__(self):
     self.exam_index_file = None
 
+  # XXX periodically one Kaikki.zip file should also be created that
+  # XXX contains all the exams
 
   def sync_exams(self):
     self.exam_server_address = puavoconf_get('puavo.abitti.exam_server')
@@ -131,18 +181,18 @@ class PuavoErsExamSync:
 
   def update_passwords_on_disk(self, password_list):
     try:
-      tmpfile = '%s.tmp' % Exam_passwords_file
+      tmpfile = '%s.tmp' % EXAM_PASSWORDS_FILE
       with open(tmpfile, 'w') as f:
         for password in password_list:
           f.write(password + "\n")
-      os.rename(tmpfile, Exam_passwords_file)
+      os.rename(tmpfile, EXAM_PASSWORDS_FILE)
     except Exception as e:
       # XXX should user be notified?
-      print('error in writing passwords to %s: %s' % (Exam_passwords_file, e))
+      print('error in writing passwords to %s: %s' % (EXAM_PASSWORDS_FILE, e))
 
 
   def sync_one_exam(self, exam):
-    exam_file_path = '%s/%s' % (KTP_jako_dir, exam['file'])
+    exam_file_path = os.path.join(KTP_JAKO_DIR, exam['file'])
     if os.path.isfile(exam_file_path):
       return
 
