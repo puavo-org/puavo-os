@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import errno
+import fcntl
 import gettext
 import gi
 import glob
@@ -100,6 +101,8 @@ class PuavoErsApplet:
 
     self.naksu_pid = pid
 
+    fl = fcntl.fcntl(stdout, fcntl.F_GETFL)
+    fcntl.fcntl(stdout, fcntl.F_SETFL, fl | os.O_NONBLOCK)
     GObject.io_add_watch(stdout, GObject.IO_HUP|GObject.IO_IN,
                          self.handle_naksu, os.fdopen(stdout))
 
@@ -120,7 +123,7 @@ class PuavoErsApplet:
         self.run_naksu()
 
     except Exception as e:
-      print("error when handling naksu: %s" % e)
+      print("error when handling naksu: %s" % e, file=sys.stderr)
       return False
 
     return True
@@ -153,8 +156,8 @@ class PuavoErsApplet:
 
     for password in new_passwords:
       button = Gtk.MenuItem(password)
-      button.show()
       button.connect('activate', self.copy_password_to_clipboard)
+      button.show()
       self.menu.append(button)
       self.password_buttons.append(button)
 
