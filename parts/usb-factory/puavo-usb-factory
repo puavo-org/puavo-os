@@ -11,6 +11,8 @@ set bg_image {
   height     -1
   new_width  0
   new_height 0
+  path       ""
+  bg_color   "#6392ac"
 }
 
 set image_info {
@@ -24,11 +26,11 @@ set ui_messages {}
 array set rotating_port_labels ""
 array set port_labels ""
 set writable_labels false
-set image_downloading_version ""
+set images_downloading_version ""
 set requested_version ""
 set requested_version_type ""
 set requested_version_value ""
-set image_downloader_fh ""
+set images_downloader_fh ""
 
 array set paths [list \
   flash_drive_blue      /usr/share/puavo-usb-factory/flash-drive-blue.png    \
@@ -64,33 +66,35 @@ proc read_file {path} {
   return [string trimright $data "\n"]
 }
 
-proc download_image {} {
-  global image_downloader_fh image_downloading_version requested_version
+proc download_images {} {
+  global images_downloader_fh images_downloading_version requested_version
 
   logger -p user.warning "starting download"
 
-  if {$image_downloader_fh ne ""} {
-    if {$requested_version eq $image_downloading_version} { return }
+  if {$images_downloader_fh ne ""} {
+    if {$requested_version eq $images_downloading_version} { return }
 
-    set pid [pid $image_downloader_fh]
+    set pid [pid $images_downloader_fh]
     catch { exec pkill -s $pid }
-    catch { close $image_downloader_fh }
+    catch { close $images_downloader_fh }
   }
 
-  set image_downloading_version $requested_version
+  set images_downloading_version $requested_version
 
-  set image_downloader_fh [open "| setsid -w puavo-download-usb-factory-images"]
-  fconfigure $image_downloader_fh -blocking 0
-  fileevent $image_downloader_fh readable {
-    catch { read $image_downloader_fh }
-    if {[eof $image_downloader_fh]} {
-      fconfigure $image_downloader_fh -blocking 1
-      if {[catch { close $image_downloader_fh }]} {
-        after 30000 download_image      ; # failed, try again after 30 seconds
+  set images_downloader_fh [
+    open "| setsid -w puavo-download-usb-factory-images"
+  ]
+  fconfigure $images_downloader_fh -blocking 0
+  fileevent $images_downloader_fh readable {
+    catch { read $images_downloader_fh }
+    if {[eof $images_downloader_fh]} {
+      fconfigure $images_downloader_fh -blocking 1
+      if {[catch { close $images_downloader_fh }]} {
+        after 30000 download_images      ; # failed, try again after 30 seconds
       } else {
-        after 3600000 download_image    ; # success, try again after 1 hour
+        after 3600000 download_images    ; # success, try again after 1 hour
       }
-      set image_downloader_fh ""
+      set images_downloader_fh ""
     }
   }
 }
@@ -105,35 +109,47 @@ proc update_background {image imagepath new_width new_height} {
 }
 
 proc do_background_resizing {} {
-  global bg_image bg_image_path canvas_image_index
+  global bg_image canvas_image_index
 
-  set size_diff [ expr {
-    max(abs([dict get $bg_image width]  - [dict get $bg_image new_width]),
-        abs([dict get $bg_image height] - [dict get $bg_image new_height]))
-  }]
-
-  if {$size_diff >= 4} {
-    set new_width  [dict get $bg_image new_width]
-    set new_height [dict get $bg_image new_height]
-
-    update_background bg_photo $bg_image_path $new_width $new_height
-    .f coords $canvas_image_index [expr { int($new_width/2)  }] \
-                                  [expr { int($new_height/2) }]
-
-    dict set bg_image width  $new_width
-    dict set bg_image height $new_height
+  set update false
+  if {[dict get $bg_image path] != [dict get $bg_image new_path]} {
+    set update true
+  } else {
+    set size_diff [ expr {
+      max(abs([dict get $bg_image width]  - [dict get $bg_image new_width]),
+          abs([dict get $bg_image height] - [dict get $bg_image new_height]))
+    }]
+    if {$size_diff >= 4} {
+      set update true
+    }
   }
+
+  if {!$update} { return }
+
+  set new_width  [dict get $bg_image new_width]
+  set new_height [dict get $bg_image new_height]
+  set new_path   [dict get $bg_image new_path]
+
+  setup_styles
+
+  update_background bg_photo $new_path $new_width $new_height
+  .f coords $canvas_image_index [expr { int($new_width/2)  }] \
+                                [expr { int($new_height/2) }]
+
+  dict set bg_image width  $new_width
+  dict set bg_image height $new_height
+  dict set bg_image path   $new_path
 }
 
 set bg_resizing_event ""
-proc queue_background_resizing {width height} {
+proc queue_background_resizing {ms {width ""} {height ""}} {
   global bg_image bg_resizing_event
 
-  dict set bg_image new_width  $width
-  dict set bg_image new_height $height
+  if {$width  ne ""} { dict set bg_image new_width  $width  }
+  if {$height ne ""} { dict set bg_image new_height $height }
 
   if {$bg_resizing_event ne ""} { after cancel $bg_resizing_event }
-  set bg_resizing_event [after 500 do_background_resizing]
+  set bg_resizing_event [after $ms do_background_resizing]
 }
 
 proc ui_msg {args} {
@@ -142,7 +158,7 @@ proc ui_msg {args} {
 }
 
 proc update_ui_info_state {} {
-  global bg_image image_info
+  global image_info
 
   set download_status [dict get $image_info status]
   set version         [dict get $image_info version]
@@ -167,31 +183,29 @@ proc update_ui_info_state {} {
     set version_message -
   }
   .f.version_status.version.number configure -text $version_message
-
-  set bg_width  [dict get $bg_image width]
-  set bg_height [dict get $bg_image height]
-
-  after 10000 update_image_info
 }
 
-proc get_content_dir {} {
+proc get_available_content_dirs {} {
   global paths
 
   if {[catch { glob $paths(puavo_usb_factory_workdir)/* } res]} {
     error "$paths(puavo_usb_factory_workdir)/* did not match any files: $res"
   }
-  set workpath_dirs [
+  lsort [
     lmap path $res { expr { [file isdirectory $path] ? $path : [continue] } }
   ]
+}
 
-  set dir_count [llength $workpath_dirs]
+proc get_default_content_dir {} {
+  set content_dirs [get_available_content_dirs]
+
+  set dir_count [llength $content_dirs]
   if {$dir_count == 0} {
-    error "no disk image to write"
-  } elseif {$dir_count > 1} {
-    error "only one disk image is supported for now"
+    error "no content directories"
   }
 
-  lindex $workpath_dirs 0
+  # get the the first one (alphabetically) in case there are many
+  lindex $content_dirs 0
 }
 
 proc update_image_info {} {
@@ -223,6 +237,11 @@ proc update_image_info {} {
   }
 
   update_ui_info_state
+}
+
+proc update_image_info_loop {} {
+  catch { update_image_info }
+  after 10000 update_image_info_loop
 }
 
 proc close_if_open {devpath} {
@@ -280,7 +299,12 @@ proc start_operating {devpath cmd} {
 proc start_verifying {devpath} {
   global image_info pci_path_dir
   set image_size [dict get $image_info image_size]
-  set srcfile     [dict get $image_info latest_image_path]
+  set srcfile    [dict get $image_info latest_image_path]
+
+  # set access time of image file so that it can be used
+  # by other scripts to test if it is still in use (or may be removed?)
+  catch { file atime $srcfile [clock seconds] }
+
   set cmd "nice -n 20 ionice -c 3 pv -b -n $srcfile | nice -n 20 ionice -c 3 cmp -n $image_size ${pci_path_dir}/${devpath} - 2>@1"
   start_operating $devpath $cmd
 }
@@ -288,6 +312,11 @@ proc start_verifying {devpath} {
 proc start_writing {devpath} {
   global image_info pci_path_dir
   set srcfile [dict get $image_info latest_image_path]
+
+  # set access time of image file so that it can be used
+  # by other scripts to test if it is still in use (or may be removed?)
+  catch { file atime $srcfile [clock seconds] }
+
   set cmd "nice -n 20 ionice -c 3 pv -b -n $srcfile | nice -n 20 ionice -c 3 dd of=${pci_path_dir}/${devpath} conv=fsync,nocreat status=none 2>@1"
   start_operating $devpath $cmd
 }
@@ -767,8 +796,7 @@ proc set_rotating_label {port_id type messages} {
 proc validate_label {value} { expr {[string length $value] <= 12} }
 
 proc make_usbport_label {devpath port_id port_ui {port_state ""}} {
-  global default_background_color rotating_port_labels port_labels \
-         writable_labels
+  global bg_image port_labels rotating_port_labels writable_labels
 
   if {$port_state ne ""} { destroy $port_ui }
 
@@ -780,8 +808,9 @@ proc make_usbport_label {devpath port_id port_ui {port_state ""}} {
            -validatecommand [list validate_label %P] \
            -validate all
   } else {
-    canvas $port_ui -background $default_background_color -height 42 \
-                    -highlightthickness 0 -width 215
+    set bg_color [dict get $bg_image bg_color]
+    canvas $port_ui -background $bg_color -height 42 -highlightthickness 0 \
+                    -width 215
     $port_ui create image 0 22 -image flash_drive_white -anchor w
 
     if {$port_state eq ""} { set port_state nomedia }
@@ -856,20 +885,23 @@ proc set_usbicon_state {devpath state {percentage ""} {eta ""}} {
       set msg [ui_msg messages start_writing]
     }
     verifying {
+      set version [dict get $diskdevices $devpath version]
       set imagename  flash_drive_yellow
       set startpoint $initial_offset
-      set msg        [ui_msg messages verifying]
+      set msg        "[ui_msg messages verifying] $version"
     }
     verifying_after_write {
+      set version [dict get $diskdevices $devpath version]
       set imagename  flash_drive_yellow
       set startpoint [expr { $cutpoint + 0.02 }]
-      set msg        [ui_msg messages verifying]
+      set msg        "[ui_msg messages verifying] $version"
     }
     writing {
+      set version [dict get $diskdevices $devpath version]
       set imagename  flash_drive_blue
       set startpoint $initial_offset
       set endpoint   $cutpoint
-      set msg        [ui_msg messages writing]
+      set msg        "[ui_msg messages writing] $version"
     }
   }
 
@@ -1121,44 +1153,71 @@ proc scroll_topbanner {} {
   after 50 scroll_topbanner
 }
 
-proc setup_requested_version_ui {} {
-  global default_background_color requested_version_type requested_version_value
+proc update_content_dir {} {
+  global bg_image content_dir
 
-  set button_opts [list -background         $default_background_color \
-                        -font               smallInfoFont             \
+  dict set bg_image new_path "${content_dir}/UI.png"
+  catch {
+    dict set bg_image bg_color [read_file "${content_dir}/UI.png.bg_color"]
+  }
+
+  update_image_info
+  update_requested_version_ui true
+  queue_background_resizing 0
+}
+
+proc setup_requested_version_ui {} {
+  global bg_image content_dir requested_version_type requested_version_value
+
+  set button_opts [list -background         [dict get $bg_image bg_color] \
+                        -font               smallInfoFont \
                         -highlightthickness 0]
 
   ttk::frame .f.requested_version -style Changes.TFrame
-  ttk::frame .f.requested_version.version
-  radiobutton .f.requested_version.by_puavo_conf {*}$button_opts \
-    -value "by puavo-conf" -command {
-      set requested_version_type "by puavo-conf"
-    }
-  radiobutton .f.requested_version.latest {*}$button_opts \
-    -text [ui_msg version latest] -value "latest" -command {
-      set requested_version_type "latest"
-    }
-  radiobutton .f.requested_version.version.button {*}$button_opts \
-    -text "[ui_msg version {this version}]:" -value "this version" -command {
-      set requested_version_type "this version"
-    }
-  ttk::entry .f.requested_version.version.number \
+  ttk::frame .f.requested_version.number -style Changes.TFrame
+
+  ttk::frame .f.requested_version.number.version
+  radiobutton .f.requested_version.number.by_puavo_conf {*}$button_opts \
+    -value "by puavo-conf" -variable requested_version_type
+  radiobutton .f.requested_version.number.latest {*}$button_opts \
+    -text [ui_msg version latest] -value "latest" \
+    -variable requested_version_type
+  radiobutton .f.requested_version.number.version.button {*}$button_opts \
+    -text "[ui_msg version {this version}]:" -value "this version" \
+    -variable requested_version_type
+  ttk::entry .f.requested_version.number.version.number \
     -justify center -textvariable requested_version_any -font smallInfoFont \
     -width 6 -textvariable requested_version_value
 
+  ttk::frame .f.requested_version.series -style Changes.TFrame
+
   update_requested_version_ui false
 
-  pack .f.requested_version.by_puavo_conf \
-       .f.requested_version.latest \
-       .f.requested_version.version \
+  pack .f.requested_version.number -anchor w
+  pack .f.requested_version.series -anchor w -pady 30 -padx 10
+  pack .f.requested_version.number.by_puavo_conf \
+       .f.requested_version.number.latest \
+       .f.requested_version.number.version \
        -anchor w -padx 10 -pady 2
-  pack .f.requested_version.version.button -anchor w -side left
-  pack .f.requested_version.version.number -anchor w -side left -padx 3
+  pack .f.requested_version.number.version.button -anchor w -side left
+  pack .f.requested_version.number.version.number -anchor w -side left -padx 3
+}
+
+proc setup_styles {} {
+  global bg_image
+
+  set bg_color [dict get $bg_image bg_color]
+
+  ttk::style configure TFrame -background $bg_color
+  ttk::style configure TLabel -background $bg_color -font infoFont
+  ttk::style configure Changes.TFrame -background $bg_color
+  ttk::style configure Instructions.TLabel -foreground white
+  ttk::style configure Status.TLabel -foreground #c3c8cc -background #46606d
 }
 
 proc update_requested_version_ui {visible} {
-  global requested_version requested_version_path requested_version_type \
-         requested_version_value
+  global bg_image content_dir_paths requested_version requested_version_path \
+         requested_version_type requested_version_value
 
   # initial setup
   if {$requested_version_type eq ""} {
@@ -1203,19 +1262,48 @@ proc update_requested_version_ui {visible} {
   set by_puavo_conf_msg \
       "[ui_msg version {by puavo-conf}] ($puavo_conf_requested_version)"
 
-  .f.requested_version.by_puavo_conf configure \
+  .f.requested_version.number.by_puavo_conf configure \
     -text $by_puavo_conf_msg
 
   switch -- $requested_version {
     ""              -
-    {by puavo-conf} { .f.requested_version.by_puavo_conf invoke }
-    {latest}        { .f.requested_version.latest        invoke }
+    {by puavo-conf} { .f.requested_version.number.by_puavo_conf invoke }
+    {latest}        { .f.requested_version.number.latest        invoke }
     default {
-      .f.requested_version.version.button invoke
+      .f.requested_version.number.version.button invoke
       set requested_version_value $requested_version
     }
   }
 
+  set bg_color [dict get $bg_image bg_color]
+  .f.requested_version.number.by_puavo_conf  configure -background $bg_color
+  .f.requested_version.number.latest         configure -background $bg_color
+  .f.requested_version.number.version.button configure -background $bg_color
+
+  set new_content_dir_paths [get_available_content_dirs]
+  if {$content_dir_paths ne $new_content_dir_paths} {
+    catch { destroy .f.requested_version.series.choices }
+    ttk::frame .f.requested_version.series.choices -style Changes.TFrame
+
+    set i 1
+    foreach content_dir_choice $new_content_dir_paths {
+      radiobutton .f.requested_version.series.choices.$i \
+        -background $bg_color -font smallInfoFont -highlightthickness 0 \
+        -text [file tail $content_dir_choice] -value $content_dir_choice \
+        -variable content_dir -command update_content_dir
+      pack .f.requested_version.series.choices.$i -anchor w
+      incr i
+    }
+    set content_dir_paths $new_content_dir_paths
+  } else {
+    for {set i 1} \
+        {[winfo exists .f.requested_version.series.choices.$i]} \
+        {incr i} {
+      .f.requested_version.series.choices.$i configure -background $bg_color
+    }
+  }
+
+  pack .f.requested_version.series.choices
   pack .f.requested_version -after .f.disks -side right -anchor w
 }
 
@@ -1242,7 +1330,7 @@ proc switch_ui_mode {{uimode ""}} {
     update_calibration_ui true
     update_requested_version_ui false
     update_port_labels_on_disk
-    download_image
+    download_images
   } else {
     update_requested_version_ui true
     update_calibration_ui false
@@ -1278,50 +1366,41 @@ logger -p user.notice "starting up"
 # setup UI
 #
 
-font create smallInfoFont  -family {Ubuntu Condensed} -size 14 -weight bold
+font create smallInfoFont  -family {Ubuntu Condensed} -size 12 -weight bold
 font create infoFont       -family {Ubuntu Condensed} -size 20 -weight bold
 font create biggerInfoFont -family {Ubuntu Condensed} -size 24 -weight bold
-
-# style options
-
-set default_background_color #6392ac
-ttk::style configure TFrame -background $default_background_color
-ttk::style configure TLabel -background $default_background_color -font infoFont
-ttk::style configure Changes.TFrame -background $default_background_color
-ttk::style configure Instructions.TLabel -foreground white
-ttk::style configure Status.TLabel -foreground #c3c8cc -background #46606d
 
 # ui messages and background image
 
 # start download image
-download_image
-after 3000      ;# wait a bit so that download_image sets up UI.json
+download_images
+after 3000      ;# wait a bit so that download_images sets up UI.json
 
+set content_dir_paths ""
 try {
-  set content_dir [get_content_dir]
-} on error {} {
-  logger -p user.err "could not get content dir"
+  set content_dir [get_default_content_dir]
+} on error {errmsg} {
+  logger -p user.err "could not get the default content dir: $errmsg"
   exit 1
 }
 
-try {
-  set bg_image_path "${content_dir}/UI.png"
-} on error {} {
-  logger -p user.err \
-         "could not read background image from ${content_dir}/UI.png"
-  exit 1
-}
+dict set bg_image path     "${content_dir}/UI.png"
+dict set bg_image new_path "${content_dir}/UI.png"
 
 try {
-  set ui_messages [::json::json2dict [read_file "${content_dir}/UI.json"]]
+  set ui_messages [
+    ::json::json2dict [read_file "$paths(puavo_usb_factory_workdir)/UI.json"]
+  ]
 } on error {} {
-  logger -p user.err "could not read ui messages from ${content_dir}/UI.json"
+  logger -p user.err "could not read $paths(puavo_usb_factory_workdir)/UI.json"
   exit 1
 }
 
 set requested_version_path "${content_dir}/REQUESTED_VERSION"
 
 # ui elements
+
+setup_styles
 
 canvas .f
 image create photo bg_photo
@@ -1421,7 +1500,7 @@ pack .f -fill both -expand 1
 
 bind . <Configure> {
   if {"%W" eq [winfo toplevel %W]} {
-    queue_background_resizing %w %h
+    queue_background_resizing 500 %w %h
   }
 }
 
@@ -1434,7 +1513,7 @@ bind . <Control-X> switch_ui_mode
 
 scroll_topbanner
 read_port_labels_from_disk
-update_image_info
+update_image_info_loop
 update_diskdevices_loop
 check_files
 roll_rotating_port_labels 0

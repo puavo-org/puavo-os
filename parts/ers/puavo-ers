@@ -3,6 +3,7 @@
 package require http
 package require json
 package require tls
+package require tooltip
 
 ::http::register https 443 ::tls::socket
 
@@ -111,6 +112,7 @@ proc write_file {filepath data} {
   set fd ""
   try {
     set fd [open "${filepath}.tmp" w]
+    fconfigure $fd -translation binary
     puts -nonewline $fd $data
     file rename -force "${filepath}.tmp" $filepath
   } on error {errmsg} {
@@ -205,14 +207,13 @@ proc read_file {path} {
 
 proc show_passwords_on_window {} {
   pack forget .startup
+  pack .move_button -fill y -expand 1 -side left
   pack .passwords -expand 1 -fill both -side left
   pack .close_button -fill y -expand 1 -side right
 
   logger "showing passwords on window (if there are any)"
 
   wm minsize . 64 36
-
-  bind .passwords <Enter> { set_window_placement change }
 
   update_passwords_on_window
 }
@@ -368,11 +369,12 @@ proc update_exams_from_media {} {
 }
 
 proc handle_exams_index_fetch {token} {
-  upvar #0 $token state
   global exam_server_address exam_sharedir
 
   if {[::http::ncode $token] ne 200} {
-    logger "exam index fetch returned [::http::code $token]: $state(body)"
+    set logmsg "exam index fetch returned [::http::code $token]"
+    set logmsg "${logmsg}: [::http::data $token]"
+    logger $logmsg
     return
   }
 
@@ -383,11 +385,11 @@ proc handle_exams_index_fetch {token} {
 
   set passwords [list]
 
-  set exam_list [::json::json2dict $state(body)]
+  set exam_list [::json::json2dict [::http::data $token]]
   foreach exam $exam_list {
     # XXX we do not have passwords yet here
     # XXX lappend passwords [dict get $exam password]
-    lappend passwords [dict get $exam hash]
+    lappend passwords [dict get $exam password]
 
     set exam_filename [dict get $exam file]
     set exam_uuid [dict get $exam uuid]
@@ -409,16 +411,15 @@ proc handle_exams_index_fetch {token} {
 }
 
 proc handle_exam_fetch {exam token} {
-  upvar #0 $token state
   global exam_sharedir
 
   if {[::http::ncode $token] ne 200} {
-    puts stderr "exam fetch returned [::http::code $token]: $state(body)"
+    logger "exam fetch returned [::http::code $token]: [::http::data $token]"
     return
   }
 
   write_file "${exam_sharedir}/[dict get $exam file]" \
-             $state(body)
+             [::http::data $token]
 }
 
 proc update_exams_from_server {} {
@@ -459,8 +460,13 @@ proc set_window_placement {{placement keep}} {
   set previous_window_placement $placement
 }
 
+proc update_clipboard {text} {
+  clipboard clear
+  clipboard append $text
+}
+
 proc update_passwords_on_window {} {
-  global exam_sharedir
+  global exam_sharedir old_passwords
 
   try {
     set passwords_text [read_file "${exam_sharedir}/.exam_passwords.txt"]
@@ -470,7 +476,18 @@ proc update_passwords_on_window {} {
     return
   }
 
-  .passwords configure -text $passwords_text
+  if {$old_passwords ne $passwords_text} {
+    set i 1
+    foreach password [split $passwords_text "\n"] {
+      catch { destroy .passwords.$i }
+      button .passwords.$i -text $password \
+                           -command [list update_clipboard $password]
+      pack .passwords.$i -expand 1 -fill both
+      tooltip::tooltip .passwords.$i "copy password to clipboard"
+      incr i
+    }
+    set old_passwords $passwords_text
+  }
 
   after 100 set_window_placement
   after 5000 update_passwords_on_window
@@ -491,6 +508,7 @@ logger "starting up puavo-ers"
 
 set ers_basedir      "$env(HOME)/.puavo/puavo-ers"
 set abitti_json_path "${ers_basedir}/abitti.json"
+set old_passwords    ""
 
 exec mkdir -p $ers_basedir $exam_sharedir
 
@@ -506,7 +524,8 @@ pack .startup -fill both -expand 1
 .startup.progressbar start
 
 # do not pack yet
-label .passwords -anchor w -padx 20 -pady 4
+frame .passwords
+button .move_button -text "O" -command { set_window_placement change }
 button .close_button -text X -command {
   logger "closing passwords window because close button is pressed"
   wm withdraw .

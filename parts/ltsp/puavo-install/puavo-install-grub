@@ -30,7 +30,6 @@ if loadfont unicode ; then
   load_video
   insmod gfxterm
   set locale_dir=$prefix/locale
-  set lang=fi_FI
   insmod gettext
 fi
 terminal_output gfxterm
@@ -56,14 +55,16 @@ function ltsp_image_entry {
 
   get_pathname $imagefile imagepath
 
-  # if changing menuentry description, update correspondingly on
-  # /etc/puavo-conf/scripts/setup_grub_default
-
   # ${puavo_kernel_arguments} comes from a grub environment file
   # (if it is defined there)
   set kernelparameters="${kernelparameters} ${puavo_kernel_arguments}"
   if test "$boottype" = "liveboot"; then
     set kernelparameters="${kernelparameters} puavo.hosttype=laptop puavo.guestlogin.enabled=true"
+  fi
+
+  if test "$imagepath" = "/${puavo_grub_puavo_os_default_image}" \
+       -a "$boottype" = "$puavo_grub_puavo_os_default_mode"; then
+    set default="${description} (${imagepath})"
   fi
 
   menuentry "${description} (${imagepath})" "$imagefile" "$imagepath" "$kernelparameters" {
@@ -156,7 +157,7 @@ function ltsp_image_entry_superlaptop {
             -a -d (lvm/puavo-imageoverlays); then
     set kernelparameters="$kernelparameters puavo.image.overlay=personal"
 
-    ltsp_image_entry "${imagefile}" "${description}" "${kernelparameters}"
+    ltsp_image_entry "${imagefile}" "${description}" "${kernelparameters}" "developer"
   fi
 }
 
@@ -187,12 +188,54 @@ for dev in (lvm/__PUAVO_LVM_PARTITION__); do
   set default_image_alias="${default_alias_no_suffix}.img"
   set backup_image_alias="${backup_alias_no_suffix}.img"
 
+  if test "$lang" = "de_CH.UTF-8" -o "$lang" = "de_DE.UTF-8"; then
+    set text_normal_startup="Normaler Start"
+    set text_liveboot_startup="Liveboot-Start"
+    set text_developer_mode="Entwicklermodus"
+    set text_backup_normal_startup="Backup-System, normaler Start"
+    set text_backup_developer_mode="Backup-System, Entwicklermodus"
+    set text_other_system_normal_startup="Anderes System, normaler Start"
+    set text_other_system_developer_mode="Anderes System, Entwicklermodus"
+  elif test "$lang" = "fi_FI.UTF-8"; then
+    set text_normal_startup="Normaali käynnistys"
+    set text_liveboot_startup="Liveboot-käynnistys"
+    set text_developer_mode="Kehittäjätila"
+    set text_backup_normal_startup="Varajärjestelmä, normaali käynnistys"
+    set text_backup_developer_mode="Varajärjestelmä, kehittäjätila"
+    set text_other_system_normal_startup="Muu järjestelmä, normaali käynnistys"
+    set text_other_system_developer_mode="Muu järjestelmä, kehittäjätila"
+  elif test "$lang" = "fr_CH.UTF-8"; then
+    set text_normal_startup="Démarrage normal"
+    set text_liveboot_startup="Démarrage live"
+    set text_developer_mode="Mode développeur"
+    set text_backup_normal_startup="Système de secours, démarrage normal"
+    set text_backup_developer_mode="Système de secours, mode développeur"
+    set text_other_system_normal_startup="Autre système, démarrage normal"
+    set text_other_system_developer_mode="Autre système, mode développeur"
+  elif test "$lang" = "sv_FI.UTF-8"; then
+    set text_normal_startup="Normal start"
+    set text_liveboot_startup="Start av liveboot"
+    set text_developer_mode="Utvecklarläge"
+    set text_backup_normal_startup="Backup-system, normal start"
+    set text_backup_developer_mode="Backup-system, utvecklarläge"
+    set text_other_system_normal_startup="Annat system, normal start"
+    set text_other_system_developer_mode="Annat system, utvecklarläge"
+  else
+    set text_normal_startup="Normal startup"
+    set text_liveboot_startup="Liveboot startup"
+    set text_developer_mode="Developer mode"
+    set text_backup_normal_startup="Backup system, normal startup"
+    set text_backup_developer_mode="Backup-system, developer mode"
+    set text_other_system_normal_startup="Other system, normal startup"
+    set text_other_system_developer_mode="Other system, developer mode"
+  fi
+
   if test -f "${default_image}"; then
-    ltsp_image_entry "${default_image}" "Normaali käynnistys - ${default_image_alias}"
+    ltsp_image_entry "${default_image}" "${text_normal_startup} - ${default_image_alias}" "" "normal"
     if test "__PUAVO_LIVEBOOT_OPTION__" = "true"; then
-      ltsp_image_entry "${default_image}" "Liveboot käynnistys - ${default_image_alias}" "" "liveboot"
+      ltsp_image_entry "${default_image}" "${text_liveboot_startup} - ${default_image_alias}" "" "liveboot"
     fi
-    ltsp_image_entry_superlaptop "${default_image}" "Kehittäjätila - ${default_image_alias}"
+    ltsp_image_entry_superlaptop "${default_image}" "${text_developer_mode} - ${default_image_alias}"
 
     loopback default_image_loop "${default_image}"
     set possible_puavo_grub_theme_path="(default_image_loop)/boot/grub/themes/${puavo_grub_theme}/theme.txt"
@@ -201,8 +244,8 @@ for dev in (lvm/__PUAVO_LVM_PARTITION__); do
     fi
   fi
   if test -f "${backup_image}"; then
-    ltsp_image_entry "${backup_image}" "Varajärjestelmä, normaali käynnistys - ${backup_image_alias}"
-    ltsp_image_entry_superlaptop "${backup_image}" "Varajärjestelmä, kehittäjätila - ${backup_image_alias}"
+    ltsp_image_entry "${backup_image}" "${text_backup_normal_startup} - ${backup_image_alias}" "" "normal"
+    ltsp_image_entry_superlaptop "${backup_image}" "${text_backup_developer_mode} - ${backup_image_alias}"
   fi
 
   for file in ${dev}/*.img; do
@@ -211,8 +254,8 @@ for dev in (lvm/__PUAVO_LVM_PARTITION__); do
     if test "${file}" = "${default_image_alias}"; then continue; fi
     if test "${file}" = "${backup_image_alias}";  then continue; fi
 
-    ltsp_image_entry "${file}" "Muu järjestelmä, normaali käynnistys"
-    ltsp_image_entry_superlaptop "${file}" "Muu järjestelmä, kehittäjätila"
+    ltsp_image_entry "${file}" "${text_other_system_normal_startup}" "" "normal"
+    ltsp_image_entry_superlaptop "${file}" "${text_other_system_developer_mode}"
   done
 done
 EOF

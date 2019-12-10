@@ -984,8 +984,13 @@ programs:
         url: http://dreamschool.fi
         icon: /opt/puavomenu/icons/unelmakoulu.png
         tags: default, education
+  - unityhub:
+        tags: default
+        condition: "personally_administered"
 
   #V
+  - veracrypt:
+        tags: default
   - VidyoDesktop:
         name: VidyoDesktop
         tags: default
@@ -1094,6 +1099,7 @@ menus:
             - gftp
             - filezilla
             - seahorse
+            - veracrypt
             - system-config-printer
             - pavucontrol
             - org.gnome.Screenshot
