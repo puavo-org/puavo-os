@@ -6,10 +6,12 @@ import gettext
 import gi
 import json
 import os
+import requests
 import shutil
 import signal
 import subprocess
 import sys
+import threading
 import time
 
 gi.require_version('AppIndicator3', '0.1')
@@ -23,6 +25,8 @@ from gi.repository import GLib
 from gi.repository import GObject
 from gi.repository import Gtk
 from gi.repository import Notify
+
+from requests.auth import HTTPBasicAuth
 
 gettext.bindtextdomain('puavo-ers-applet', '/usr/share/locale')
 gettext.textdomain('puavo-ers-applet')
@@ -64,7 +68,7 @@ class PuavoErsApplet:
     self.menu.show_all()
 
     self.exam_sync = PuavoErsExamSync()
-    self.exam_sync.sync_exams()
+    self.exam_sync.start()
 
     if not os.path.exists(self.NAKSU_BIN_PATH):
       shutil.copy2(self.NAKSU_ORIGIN_PATH, self.NAKSU_BIN_PATH)
@@ -148,39 +152,42 @@ class PuavoErsApplet:
     self.clipboard.set_text(password, -1)
 
 
-class PuavoErsExamSync:
+class PuavoErsExamSync (threading.Thread):
   def __init__(self):
-    self.exam_index_file = None
+    threading.Thread.__init__(self)
 
     with open('/etc/puavo/ldap/dn') as f:
       self.dn = f.read().rstrip()
     with open('/etc/puavo/ldap/password') as f:
       self.password = f.read().rstrip()
 
+
   # XXX periodically one Kaikki.zip file should also be created that
   # XXX contains all the exams
+
+  def run(self):
+     while True:
+       self.sync_exams()
+       time.sleep(60)
+
 
   def sync_exams(self):
     self.exam_server_address = puavoconf_get('puavo.abitti.exam_server')
     index_uri = 'https://%s/tests/1234' % self.exam_server_address
 
-    self.exam_index_file = Gio.File.new_for_uri(index_uri)
-    self.exam_index_file.load_contents_async(None, self.exam_index_ready, None)
+    response = requests.get(index_uri,
+                            auth=HTTPBasicAuth(self.dn, self.password))
+    if not response:
+      print('error when getting exam index from %s: (%s) %s' \
+              % (index_uri, response.status_code, response.text),
+            file=sys.stderr)
+      return
 
+    exam_list = json.loads(response.content.decode('utf-8'))
+    self.update_passwords_on_disk([ e['password'] for e in exam_list ])
 
-  def exam_index_ready(self, source_object, result, user_data):
-    try:
-      success, content, etag = source_object.load_contents_finish(result)
-      if success:
-        exam_list = json.loads(content.decode('utf-8'))
-        self.update_passwords_on_disk([ e['password'] for e in exam_list ])
-        for exam in exam_list:
-          self.sync_one_exam(exam)
-      # XXX what if there is no success?  show error?
-    except Exception as e:
-      print('error %s on exam_index_ready()' % e, file=sys.stderr)
-
-    GObject.timeout_add_seconds(10, self.sync_exams)
+    for exam in exam_list:
+      self.sync_one_exam(exam)
 
 
   def update_passwords_on_disk(self, password_list):
@@ -204,21 +211,18 @@ class PuavoErsExamSync:
     exam_uri = 'https://%s/tests/1234/%s' % (self.exam_server_address,
                                              exam_uuid)
 
-    exam_fetch = Gio.File.new_for_uri(exam_uri)
-    exam_fetch.load_contents_async(None, self.sync_exam_ready, exam_file_path)
+    response = requests.get(exam_uri,
+                            auth=HTTPBasicAuth(self.dn, self.password))
+    if not response:
+      print('error when getting an exam from %s: (%s) %s' \
+              % (exam_uri, response.status_code, response.text),
+            file=sys.stderr)
+      return
 
-
-  def sync_exam_ready(self, source_object, result, exam_file_path):
-    try:
-      success, content, etag = source_object.load_contents_finish(result)
-      if success:
-        tmpfile = '%s.tmp' % exam_file_path
-        with open(tmpfile, 'wb') as f:
-          f.write(content)
-        os.rename(tmpfile, exam_file_path)
-      # XXX what if there is no success?  show error?  notification?
-    except Exception as e:
-      print('error %s on sync_exam_ready()' % e, file=sys.stderr)
+    tmpfile = '%s.tmp' % exam_file_path
+    with open(tmpfile, 'wb') as f:
+      f.write(response.content)
+    os.rename(tmpfile, exam_file_path)
 
 
 applet = PuavoErsApplet()
