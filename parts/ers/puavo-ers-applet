@@ -4,6 +4,7 @@
 import errno
 import gettext
 import gi
+import glob
 import json
 import os
 import requests
@@ -69,6 +70,9 @@ class PuavoErsApplet:
 
     self.exam_sync = PuavoErsExamSync()
     self.exam_sync.start()
+
+    self.exam_zipper = PuavoErsExamZipper()
+    self.exam_zipper.start()
 
     if not os.path.exists(self.NAKSU_BIN_PATH):
       shutil.copy2(self.NAKSU_ORIGIN_PATH, self.NAKSU_BIN_PATH)
@@ -162,9 +166,6 @@ class PuavoErsExamSync (threading.Thread):
       self.password = f.read().rstrip()
 
 
-  # XXX periodically one Kaikki.zip file should also be created that
-  # XXX contains all the exams
-
   def run(self):
      while True:
        self.sync_exams()
@@ -178,9 +179,8 @@ class PuavoErsExamSync (threading.Thread):
     response = requests.get(index_uri,
                             auth=HTTPBasicAuth(self.dn, self.password))
     if not response:
-      print('error when getting exam index from %s: (%s) %s' \
-              % (index_uri, response.status_code, response.text),
-            file=sys.stderr)
+      print('error when getting exam index from %s: %s' \
+              % (index_uri, response.status_code), file=sys.stderr)
       return
 
     exam_list = json.loads(response.content.decode('utf-8'))
@@ -214,15 +214,49 @@ class PuavoErsExamSync (threading.Thread):
     response = requests.get(exam_uri,
                             auth=HTTPBasicAuth(self.dn, self.password))
     if not response:
-      print('error when getting an exam from %s: (%s) %s' \
-              % (exam_uri, response.status_code, response.text),
-            file=sys.stderr)
+      print('error when getting an exam from %s: %s' \
+              % (exam_uri, response.status_code), file=sys.stderr)
       return
 
     tmpfile = '%s.tmp' % exam_file_path
     with open(tmpfile, 'wb') as f:
       f.write(response.content)
     os.rename(tmpfile, exam_file_path)
+
+
+class PuavoErsExamZipper (threading.Thread):
+  def __init__(self):
+    threading.Thread.__init__(self)
+
+    self.previous_meb_files = []
+
+
+  def run(self):
+    while True:
+      self.zip_exams()
+      time.sleep(5)
+
+
+  def zip_exams(self):
+    meb_files = glob.glob(os.path.join(KTP_JAKO_DIR, '*.meb'))
+    meb_files.sort()
+
+    all_zip_path = os.path.join(KTP_JAKO_DIR, 'Kaikki.zip')
+
+    if not os.path.exists(all_zip_path) or meb_files != self.previous_meb_files:
+      try:
+        os.remove(all_zip_path)
+      except FileNotFoundError:
+        pass
+
+      if len(meb_files) > 0:
+        try:
+          subprocess.check_output([ 'zip', '-j', all_zip_path ] + meb_files)
+        except Exception as e:
+          print('error when zipping exam files: %s' % meb_files,
+                file=sys.stderr)
+
+    self.previous_meb_files = meb_files
 
 
 applet = PuavoErsApplet()
