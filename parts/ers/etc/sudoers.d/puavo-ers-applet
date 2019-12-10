@@ -1,1 +1,2 @@
+Defaults!/usr/bin/puavo-ers-applet env_keep+="DBUS_SESSION_BUS_ADDRESS"
 %puavo-ers      ALL=(:puavo) NOPASSWD: /usr/bin/puavo-ers-applet
