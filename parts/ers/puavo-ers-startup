@@ -6,4 +6,4 @@ if [ "$(puavo-conf puavo.xsessions.default)" != 'puavo-ers' ]; then
   exit 0
 fi
 
-exec puavo-ers "$@"
+exec sudo -g puavo /usr/bin/puavo-ers-applet "$@"

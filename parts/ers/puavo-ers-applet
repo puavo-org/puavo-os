@@ -1,0 +1,277 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import errno
+import fcntl
+import gettext
+import gi
+import glob
+import json
+import os
+import requests
+import shutil
+import signal
+import subprocess
+import sys
+import threading
+import time
+
+gi.require_version('AppIndicator3', '0.1')
+gi.require_version('Gtk', '3.0')
+gi.require_version('Notify', '0.7')
+
+from gi.repository import AppIndicator3
+from gi.repository import Gdk
+from gi.repository import Gio
+from gi.repository import GLib
+from gi.repository import GObject
+from gi.repository import Gtk
+from gi.repository import Notify
+
+from requests.auth import HTTPBasicAuth
+
+gettext.bindtextdomain('puavo-ers-applet', '/usr/share/locale')
+gettext.textdomain('puavo-ers-applet')
+_tr = gettext.gettext
+
+KTP_JAKO_DIR = os.path.join(os.environ['HOME'], 'ktp-jako')
+EXAM_PASSWORDS_FILE = os.path.join(KTP_JAKO_DIR, '.exam_passwords.txt')
+
+def puavoconf_get(puavoconf_key):
+  return subprocess.check_output([ 'puavo-conf', puavoconf_key ]).rstrip() \
+                   .decode('utf-8')
+
+
+class PuavoErsApplet:
+  NAKSU_ORIGIN_PATH = '/opt/abitti-naksu/naksu'
+  PUAVO_ERS_DIR = os.path.join(os.environ['HOME'], '.puavo', 'puavo-ers')
+  NAKSU_BIN_PATH = os.path.join(PUAVO_ERS_DIR, 'naksu')
+
+  def __init__(self):
+    self.indicator \
+      = AppIndicator3.Indicator.new('puavo-ers-applet',
+          '/usr/share/icons/Faenza/emblems/64/emblem-default.png',
+          AppIndicator3.IndicatorCategory.SYSTEM_SERVICES)
+    self.indicator.set_status(AppIndicator3.IndicatorStatus.ACTIVE)
+
+    self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+
+    # XXX do we need this?
+    Notify.init('puavo-ers-applet')
+
+    os.makedirs(self.PUAVO_ERS_DIR, exist_ok=True)
+
+    self.menu = Gtk.Menu()
+    self.old_passwords = []
+    self.password_buttons = []
+
+    self.indicator.set_menu(self.menu)
+
+    instructions = Gtk.MenuItem(
+                     _tr('click passphrase below put it into clipboard'))
+    instructions.set_sensitive(False)
+    self.menu.append(instructions)
+    separator = Gtk.SeparatorMenuItem()
+    self.menu.append(separator)
+
+    self.menu.show_all()
+
+    # XXX some changes incoming on the server, disable for now
+    # self.exam_sync = PuavoErsExamSync()
+    # self.exam_sync.start()
+
+    self.exam_zipper = PuavoErsExamZipper()
+    self.exam_zipper.start()
+
+    if not os.path.exists(self.NAKSU_BIN_PATH):
+      shutil.copy2(self.NAKSU_ORIGIN_PATH, self.NAKSU_BIN_PATH)
+
+
+  def main(self):
+    self.run_naksu()
+    GObject.timeout_add_seconds(1, self.update_passwords)
+    Gtk.main()
+
+
+  def run_naksu(self):
+    cmd = [ self.NAKSU_BIN_PATH, '--self-update=enabled' ]
+    (pid, stdin, stdout, stderr) = GObject.spawn_async(cmd,
+      flags=GLib.SPAWN_DO_NOT_REAP_CHILD|GLib.SPAWN_STDERR_TO_DEV_NULL,
+      standard_input=True, standard_output=True)
+
+    self.naksu_pid = pid
+
+    fl = fcntl.fcntl(stdout, fcntl.F_GETFL)
+    fcntl.fcntl(stdout, fcntl.F_SETFL, fl | os.O_NONBLOCK)
+    GObject.io_add_watch(stdout, GObject.IO_HUP|GObject.IO_IN,
+                         self.handle_naksu, os.fdopen(stdout))
+
+
+  def handle_naksu(self, fd, condition, channel):
+    try:
+      if condition & GObject.IO_IN:
+        channel.read()
+
+      if condition & GObject.IO_HUP:
+        channel.close()
+        (pid, status) = os.waitpid(self.naksu_pid, 0)
+        if status != 0:
+          print("naksu pid %d returned exit status %s" % (pid, status),
+                file=sys.stderr)
+
+        time.sleep(3)
+        self.run_naksu()
+
+    except Exception as e:
+      print("error when handling naksu: %s" % e, file=sys.stderr)
+      return False
+
+    return True
+
+
+  def update_passwords(self):
+    error = None
+    try:
+      with open(EXAM_PASSWORDS_FILE) as file:
+        new_passwords = file.read().splitlines()
+        if (self.old_passwords != new_passwords):
+          self.update_passwords_in_ui(new_passwords)
+        self.old_passwords = new_passwords
+    except OSError as e:
+      if e.errno != errno.EEXIST:
+        error = e
+    except Exception as e:
+      error = e
+
+    if error:
+      # XXX should user be notified?
+      print('error when updating passwords: %s' % error, file=sys.stderr)
+
+    return True
+
+
+  def update_passwords_in_ui(self, new_passwords):
+    for button in self.password_buttons:
+      button.destroy()
+
+    for password in new_passwords:
+      button = Gtk.MenuItem(password)
+      button.connect('activate', self.copy_password_to_clipboard)
+      button.show()
+      self.menu.append(button)
+      self.password_buttons.append(button)
+
+
+  def copy_password_to_clipboard(self, widget):
+    password = widget.get_label()
+    self.clipboard.set_text(password, -1)
+
+
+class PuavoErsExamSync (threading.Thread):
+  def __init__(self):
+    threading.Thread.__init__(self)
+
+    with open('/etc/puavo/ldap/dn') as f:
+      self.dn = f.read().rstrip()
+    with open('/etc/puavo/ldap/password') as f:
+      self.password = f.read().rstrip()
+
+
+  def run(self):
+     while True:
+       self.sync_exams()
+       time.sleep(60)
+
+
+  def sync_exams(self):
+    self.exam_server_address = puavoconf_get('puavo.abitti.exam_server')
+    index_uri = 'https://%s/tests/1234' % self.exam_server_address
+
+    response = requests.get(index_uri,
+                            auth=HTTPBasicAuth(self.dn, self.password))
+    if not response:
+      print('error when getting exam index from %s: %s' \
+              % (index_uri, response.status_code), file=sys.stderr)
+      return
+
+    exam_list = json.loads(response.content.decode('utf-8'))
+    self.update_passwords_on_disk([ e['password'] for e in exam_list ])
+
+    for exam in exam_list:
+      self.sync_one_exam(exam)
+
+
+  def update_passwords_on_disk(self, password_list):
+    try:
+      tmpfile = '%s.tmp' % EXAM_PASSWORDS_FILE
+      with open(tmpfile, 'w') as f:
+        for password in password_list:
+          f.write(password + "\n")
+      os.rename(tmpfile, EXAM_PASSWORDS_FILE)
+    except Exception as e:
+      # XXX should user be notified?
+      print('error in writing passwords to %s: %s' % (EXAM_PASSWORDS_FILE, e))
+
+
+  def sync_one_exam(self, exam):
+    exam_file_path = os.path.join(KTP_JAKO_DIR, exam['file'])
+    if os.path.isfile(exam_file_path):
+      return
+
+    exam_uuid = exam['uuid']
+    exam_uri = 'https://%s/tests/1234/%s' % (self.exam_server_address,
+                                             exam_uuid)
+
+    response = requests.get(exam_uri,
+                            auth=HTTPBasicAuth(self.dn, self.password))
+    if not response:
+      print('error when getting an exam from %s: %s' \
+              % (exam_uri, response.status_code), file=sys.stderr)
+      return
+
+    tmpfile = '%s.tmp' % exam_file_path
+    with open(tmpfile, 'wb') as f:
+      f.write(response.content)
+    os.rename(tmpfile, exam_file_path)
+
+
+class PuavoErsExamZipper (threading.Thread):
+  def __init__(self):
+    threading.Thread.__init__(self)
+
+    self.previous_meb_files = []
+
+
+  def run(self):
+    while True:
+      self.zip_exams()
+      time.sleep(5)
+
+
+  def zip_exams(self):
+    meb_files = glob.glob(os.path.join(KTP_JAKO_DIR, '*.meb'))
+    meb_files.sort()
+
+    all_zip_path = os.path.join(KTP_JAKO_DIR, 'Kaikki.zip')
+
+    if not os.path.exists(all_zip_path) or meb_files != self.previous_meb_files:
+      try:
+        os.remove(all_zip_path)
+      except FileNotFoundError:
+        pass
+
+      if len(meb_files) > 0:
+        try:
+          subprocess.check_output([ 'zip', '-j', all_zip_path ] + meb_files)
+        except Exception as e:
+          print('error when zipping exam files: %s' % meb_files,
+                file=sys.stderr)
+
+    self.previous_meb_files = meb_files
+
+
+applet = PuavoErsApplet()
+
+if __name__ == '__main__':
+  signal.signal(signal.SIGINT, signal.SIG_DFL)
+  applet.main()
