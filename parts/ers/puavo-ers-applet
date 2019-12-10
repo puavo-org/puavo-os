@@ -66,10 +66,18 @@ class PuavoErsApplet:
 
     self.indicator.set_menu(self.menu)
 
+    instructions = Gtk.MenuItem(
+                     _tr('click passphrase below put it into clipboard'))
+    instructions.set_sensitive(False)
+    self.menu.append(instructions)
+    separator = Gtk.SeparatorMenuItem()
+    self.menu.append(separator)
+
     self.menu.show_all()
 
-    self.exam_sync = PuavoErsExamSync()
-    self.exam_sync.start()
+    # XXX some changes incoming on the server, disable for now
+    # self.exam_sync = PuavoErsExamSync()
+    # self.exam_sync.start()
 
     self.exam_zipper = PuavoErsExamZipper()
     self.exam_zipper.start()
