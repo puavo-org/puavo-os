@@ -1,0 +1,41 @@
+<?xml version="1.0" ?>
+<background>
+  <static>
+    <!-- Duration in seconds to display the background -->
+    <duration>3600.0</duration>
+    <file>/usr/share/backgrounds/gnome/Fabric.jpg</file>
+  </static>
+  <transition>
+    <!-- Duration of the transition in seconds, default is 2 seconds -->
+    <duration>0.5</duration>
+    <from>/usr/share/backgrounds/gnome/Fabric.jpg</from>
+    <to>/usr/share/backgrounds/gnome/Wood.jpg</to>
+  </transition>
+  <static>
+    <duration>3600</duration>
+    <file>/usr/share/backgrounds/gnome/Wood.jpg</file>
+  </static>
+  <transition>
+    <duration>0.5</duration>
+    <from>/usr/share/backgrounds/gnome/Wood.jpg</from>
+    <to>/usr/share/backgrounds/gnome/ColdWarm.jpg</to>
+  </transition>
+  <static>
+    <duration>3600</duration>
+    <file>/usr/share/backgrounds/gnome/ColdWarm.jpg</file>
+  </static>
+  <transition>
+    <duration>0.5</duration>
+    <from>/usr/share/backgrounds/gnome/ColdWarm.jpg</from>
+    <to>/usr/share/backgrounds/gnome/AndICallItBoke.jpg</to>
+  </transition>
+  <static>
+    <duration>3600</duration>
+    <file>/usr/share/backgrounds/gnome/AndICallItBoke.jpg</file>
+  </static>
+  <transition>
+    <duration>0.5</duration>
+    <from>/usr/share/backgrounds/gnome/AndICallItBoke.jpg</from>
+    <to>/usr/share/backgrounds/gnome/Fabric.jpg</to>
+  </transition>
+</background>
