@@ -10,9 +10,9 @@ show-weekdate=true
 
 [org/gnome/desktop/interface]
 document-font-name='Sans 10'
-font-name='Cantarell 10'
-gtk-theme='Minwaita-Vanilla-Puavo'
-icon-theme='Faenza'
+font-name='Cantarell 9'
+gtk-theme='Arc'
+icon-theme='deepin'
 monospace-font-name='Monospace 10'
 
 [org/gnome/desktop/lockdown]
@@ -131,7 +131,7 @@ enabled-extensions=['alternate-tab@gnome-shell-extensions.gcampax.github.com', '
 tray-pos='center'
 
 [org/gnome/shell/extensions/user-theme]
-name='Geos-puavo-dark-panel'
+name='Arc'
 
 [org/gnome/shell/overrides]
 attach-modal-dialogs=false
