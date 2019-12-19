@@ -684,7 +684,10 @@ class packages {
   #
 
   @package {
-    [ 'faenza-icon-theme' ]:
+    [ 'arc-theme'
+    , 'deepin-icon-theme'
+    , 'faenza-icon-theme'
+    , 'obsidian-icon-theme' ]:
       tag => [ 'tag_themes', 'tag_puavo', ];
 
    'openboard':
