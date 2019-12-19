@@ -40,7 +40,6 @@ class puavo_pkg::packages {
 			, 'mattermost-desktop'
 			, 'msttcorefonts'
 			, 'nightcode'
-			, 'obsidian-icons'
 			, 'ohjelmointi-opetuksessa'
 			, 'openscad-nightly'
 			, 'processing'

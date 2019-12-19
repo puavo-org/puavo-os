@@ -41,7 +41,6 @@ packagedirs += marvinsketch
 packagedirs += mattermost-desktop
 packagedirs += msttcorefonts
 packagedirs += nightcode
-packagedirs += obsidian-icons
 packagedirs += ohjelmointi-opetuksessa
 packagedirs += openscad-nightly
 packagedirs += openshot-appimage
