@@ -16,10 +16,10 @@ set bg_image {
 }
 
 set image_info {
-  image_size        ""
-  latest_image_path ""
-  status            ""
-  version           ""
+  image_path ""
+  image_size ""
+  status     ""
+  version    ""
 }
 
 set ui_messages {}
@@ -211,10 +211,10 @@ proc get_default_content_dir {} {
 proc update_image_info {} {
   global content_dir image_info
 
-  dict set image_info image_size        ""
-  dict set image_info latest_image_path ""
-  dict set image_info status            ""
-  dict set image_info version           ""
+  dict set image_info image_path ""
+  dict set image_info image_size ""
+  dict set image_info status     ""
+  dict set image_info version    ""
 
   set content_name [file tail $content_dir]
 
@@ -225,10 +225,10 @@ proc update_image_info {} {
   }
 
   if {![catch { read_file "${content_dir}/LATEST_IMAGE" } res]} {
-    set latest_image_path "${content_dir}/[string trim $res]"
-    if {[file exists $latest_image_path]} {
-      dict set image_info image_size [file size $latest_image_path]
-      dict set image_info latest_image_path $latest_image_path
+    set image_path "${content_dir}/[string trim $res]"
+    if {[file exists $image_path]} {
+      dict set image_info image_path $image_path
+      dict set image_info image_size [file size $image_path]
     }
   }
 
@@ -276,20 +276,6 @@ proc start_preparation {devpath countdown} {
 }
 
 proc start_operating {devpath cmd} {
-  global diskdevices image_info
-
-  set image_size [dict get $image_info image_size]
-  set srcfile    [dict get $image_info latest_image_path]
-  set version    [dict get $image_info version]
-
-  if {$image_size eq "" || $srcfile eq "" || $version eq ""} {
-    set_devstate $devpath error
-    return ""
-  }
-
-  dict set diskdevices $devpath image_size $image_size
-  dict set diskdevices $devpath version    $version
-
   set fh [open "| $cmd"]
   fconfigure $fh -blocking 0
   fileevent $fh readable [list handle_fileevent $devpath]
@@ -297,32 +283,45 @@ proc start_operating {devpath cmd} {
 }
 
 proc start_verifying {devpath} {
-  global image_info pci_path_dir
-  set image_size [dict get $image_info image_size]
-  set srcfile    [dict get $image_info latest_image_path]
+  global diskdevices pci_path_dir
+
+  set image_path [dict get $diskdevices $devpath image_path]
+  set image_size [dict get $diskdevices $devpath image_size]
+  set version    [dict get $diskdevices $devpath version]
+  if {$image_path eq "" || $image_size eq "" || $version eq ""} {
+    set_devstate $devpath error
+    return ""
+  }
 
   # set access time of image file so that it can be used
   # by other scripts to test if it is still in use (or may be removed?)
-  catch { file atime $srcfile [clock seconds] }
+  catch { file atime $image_path [clock seconds] }
 
-  set cmd "nice -n 20 ionice -c 3 pv -b -n $srcfile | nice -n 20 ionice -c 3 cmp -n $image_size ${pci_path_dir}/${devpath} - 2>@1"
+  set cmd "nice -n 20 ionice -c 3 pv -b -n $image_path | nice -n 20 ionice -c 3 cmp -n $image_size ${pci_path_dir}/${devpath} - 2>@1"
   start_operating $devpath $cmd
 }
 
 proc start_writing {devpath} {
-  global image_info pci_path_dir
-  set srcfile [dict get $image_info latest_image_path]
+  global diskdevices pci_path_dir
+
+  set image_path [dict get $diskdevices $devpath image_path]
+  set image_size [dict get $diskdevices $devpath image_size]
+  set version    [dict get $diskdevices $devpath version]
+  if {$image_path eq "" || $image_size eq "" || $version eq ""} {
+    set_devstate $devpath error
+    return ""
+  }
 
   # set access time of image file so that it can be used
   # by other scripts to test if it is still in use (or may be removed?)
-  catch { file atime $srcfile [clock seconds] }
+  catch { file atime $image_path [clock seconds] }
 
-  set cmd "nice -n 20 ionice -c 3 pv -b -n $srcfile | nice -n 20 ionice -c 3 dd of=${pci_path_dir}/${devpath} conv=fsync,nocreat status=none 2>@1"
+  set cmd "nice -n 20 ionice -c 3 pv -b -n $image_path | nice -n 20 ionice -c 3 dd of=${pci_path_dir}/${devpath} conv=fsync,nocreat status=none 2>@1"
   start_operating $devpath $cmd
 }
 
 proc set_device_eta {devpath bytes_handled} {
-  global diskdevices image_info
+  global diskdevices
 
   set image_size [dict get $diskdevices $devpath image_size]
 
@@ -464,14 +463,14 @@ proc set_ui_status_to_nomedia {devpath} {
 }
 
 proc quick_verify_check {devpath} {
-  global image_info pci_path_dir
+  global diskdevices pci_path_dir
 
   # A heuristic, not exact... check if first and last megabytes match
   # on device with image.  If this succeeds we must verify the whole
   # disk image on device, and if that fails we will start writing.
 
-  set image_path [dict get $image_info latest_image_path]
-  set image_size [dict get $image_info image_size]
+  set image_path [dict get $diskdevices $devpath image_path]
+  set image_size [dict get $diskdevices $devpath image_size]
 
   if {$image_path eq ""} { error "could not lookup image path" }
   if {$image_size eq ""} { error "could not lookup image size" }
@@ -493,7 +492,7 @@ proc quick_verify_check {devpath} {
 }
 
 proc set_devstate {devpath state args} {
-  global diskdevices image_info port_labels
+  global diskdevices port_labels
 
   set port_id [dict get $diskdevices $devpath port_id]
   if {($port_labels($port_id) eq "") && ($state ne "nomedia")} {
@@ -532,6 +531,7 @@ proc set_devstate {devpath state args} {
 
           # preserve some of the attributes
           dict set diskdevices $devpath fh            ""
+          dict set diskdevices $devpath image_path    ""
           dict set diskdevices $devpath image_size    ""
           dict set diskdevices $devpath model         ""
           dict set diskdevices $devpath progress_list [list]
@@ -632,10 +632,10 @@ proc get_device_size {devpath} {
 }
 
 proc check_for_space_in_device {devpath} {
-  global image_info
+  global diskdevices
 
   set device_size [get_device_size $devpath]
-  set image_size  [dict get $image_info image_size]
+  set image_size  [dict get $diskdevices $devpath image_size]
 
   if {$device_size eq ""} { error "could not get device size" }
   if {$image_size  eq ""} { error "could not get image size"  }
@@ -715,7 +715,7 @@ proc add_new_port_if_calibrating {port_id} {
 }
 
 proc check_files {} {
-  global diskdevices pci_path_dir
+  global diskdevices image_info pci_path_dir
 
   dict for {devpath devstate} $diskdevices {
     set full_devpath "${pci_path_dir}/${devpath}"
@@ -724,6 +724,14 @@ proc check_files {} {
         # new usb device has been inserted, do something
         add_new_port_if_calibrating [dict get $devstate port_id]
         dict set diskdevices $devpath model [lookup_usbdevice_model $devpath]
+
+        # set current device image information from $image_info
+        dict set diskdevices $devpath image_path \
+                 [dict get $image_info image_path]
+        dict set diskdevices $devpath image_size \
+                 [dict get $image_info image_size]
+        dict set diskdevices $devpath version \
+                 [dict get $image_info version]
 
         if {[catch { check_for_space_in_device $devpath } res]} {
           logger -p user.warning \
