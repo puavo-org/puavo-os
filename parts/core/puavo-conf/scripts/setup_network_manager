@@ -259,12 +259,12 @@ EOF
         File.open(tmppath, 'w') { |f| f.write(data) }
         File.rename(tmppath, path)
       else
-        File.unlink(path)
+        File.unlink(path) rescue true
       end
     end
 
     if !@ca_cert && !@client_cert && !@client_key then
-      File.unlink(certdir)
+      Dir.rmdir(certdir) rescue true
     end
 
     super
