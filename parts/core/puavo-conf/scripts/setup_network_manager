@@ -271,6 +271,10 @@ EOF
   end
 end
 
+class Wlan::Eap::Peap < Wlan::Eap
+  def eap_type; 'peap'; end
+end
+
 class Wlan::Eap::Tls < Wlan::Eap
   def eap_type; 'tls'; end
 end
@@ -357,17 +361,23 @@ puavo_networks = []
 networks.each do |network|
   puavo_networks << network['ssid']
 
+  eap_network_fn = lambda do |wlan_class, network|
+                     wlan_class.new(network['ssid'],
+                                    network['identity'],
+                                    network['password'],
+                                    network['certs'],
+                                    network['phase2-autheap'])
+                   end
+
   begin
     wlan \
       = case network['type']
-          when 'eap-tls', 'eap-ttls'
-            wlan_class = (network['type'] == 'eap-tls') \
-                            ? Wlan::Eap::Tls : Wlan::Eap::Ttls
-            wlan_class.new(network['ssid'],
-                           network['identity'],
-                           network['password'],
-                           network['certs'],
-                           network['phase2-autheap'])
+          when 'eap-peap'
+            eap_network_fn.call(Wlan::Eap::Peap, network)
+          when 'eap-tls'
+            eap_network_fn.call(Wlan::Eap::Tls, network)
+          when 'eap-ttls'
+            eap_network_fn.call(Wlan::Eap::Ttls, network)
           when 'open'
             Wlan::Open.new(network['ssid'])
           when 'psk'
