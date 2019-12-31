@@ -366,7 +366,7 @@ networks.each do |network|
                                     network['identity'],
                                     network['password'],
                                     network['certs'],
-                                    network['phase2-autheap'])
+                                    network['phase2_autheap'])
                    end
 
   begin
