@@ -144,23 +144,31 @@ class Wlan::EapTls < Wlan
       unless ssid.kind_of?(String) && !ssid.empty?
     raise 'Wlan eap-tls identity is not a non-empty string' \
       unless identity.kind_of?(String) && !identity.empty?
-    raise 'Wlan eap-tls certs is not a hash' unless certs.kind_of?(Hash)
-    raise 'Wlan eap-tls certs/ca_cert is not a string' \
-      unless certs['ca_cert'].kind_of?(String) && !certs['ca_cert'].empty?
-    raise 'Wlan eap-tls certs/client_cert is not a non-empty string' \
-      unless certs['client_cert'].kind_of?(String) \
-               && !certs['client_cert'].empty?
-    raise 'Wlan eap-tls certs/client_key is not a non-empty string' \
-      unless certs['client_key'].kind_of?(String) \
-               && !certs['client_key'].empty?
-    raise 'Wlan eap-tls certs/client_key_password is not a string' \
-      unless certs['client_key_password'].kind_of?(String)
 
-    @ca_cert             = Base64.decode64(certs['ca_cert'])
-    @client_cert         = Base64.decode64(certs['client_cert'])
-    @client_key          = Base64.decode64(certs['client_key'])
-    @client_key_password = certs['client_key_password']
-    @identity            = identity
+    @identity = identity
+
+    @ca_cert             = nil
+    @client_cert         = nil
+    @client_key          = nil
+    @client_key_password = nil
+
+    if certs.kind_of?(Hash) then
+      if certs['ca_cert'].kind_of?(String) && !certs['ca_cert'].empty? then
+        @ca_cert = Base64.decode64(certs['ca_cert'])
+      end
+      if certs['client_cert'].kind_of?(String) \
+           && !certs['client_cert'].empty? then
+        @client_cert = Base64.decode64(certs['client_cert'])
+      end
+      if certs['client_key'].kind_of?(String) \
+           && !certs['client_key'].empty? then
+        @client_key = Base64.decode64(certs['client_key'])
+      end
+      if certs['client_key_password'].kind_of?(String) \
+           && !certs['client_key_password'].empty? then
+        @client_key_password = certs['client_key_password']
+      end
+    end
 
     super(ssid)
   end
@@ -181,12 +189,9 @@ ssid=#{ @ssid }
 key-mgmt=wpa-eap
 
 [802-1x]
-ca-cert=#{ ca_cert_path }
-client-cert=#{ client_cert_path }
 eap=tls;
 identity=#{ @identity }
-private-key=#{ client_key_path }
-private-key-password=#{ @client_key_password }
+#{ certificates_for_network_manager }
 
 [ipv4]
 dns-search=
@@ -199,14 +204,29 @@ method=auto
 EOF
   end
 
+  def certificates_for_network_manager
+    return "# no certificates" \
+      unless @ca_cert || @client_cert || @client_key || @client_key_password
+
+    [
+      @ca_cert     ? "ca-cert=#{ ca_cert_path }"         : nil,
+      @client_cert ? "client-cert=#{ client_cert_path }" : nil,
+      @client_key  ? "private-key=#{ client_key_path }"  : nil,
+      @client_key_password \
+        ? "private-key-password=#{ @client_key_password }" : nil,
+    ].compact.join("\n")
+  end
+
   def update_file
-    begin
-      Dir.mkdir(Network_manager_certs_dir)
-    rescue Errno::EEXIST
-    end
-    begin
-      Dir.mkdir(certdir)
-    rescue Errno::EEXIST
+    if @ca_cert || @client_cert || @client_key then
+      begin
+        Dir.mkdir(Network_manager_certs_dir)
+      rescue Errno::EEXIST
+      end
+      begin
+        Dir.mkdir(certdir)
+      rescue Errno::EEXIST
+      end
     end
 
     cert_file_paths = {
@@ -216,9 +236,17 @@ EOF
     }
 
     cert_file_paths.each do |path, data|
-      tmppath = "#{ path }.tmp"
-      File.open(tmppath, 'w') { |f| f.write(data) }
-      File.rename(tmppath, path)
+      if data then
+        tmppath = "#{ path }.tmp"
+        File.open(tmppath, 'w') { |f| f.write(data) }
+        File.rename(tmppath, path)
+      else
+        File.unlink(path)
+      end
+    end
+
+    if !@ca_cert && !@client_cert && !@client_key then
+      File.unlink(certdir)
     end
 
     super
@@ -318,7 +346,7 @@ networks.each do |network|
             warn "Unsupported wlan type #{ network['type'] }"
         end
 
-    if wlan
+    if wlan then
       wlan.update_file
     end
   rescue StandardError => e
