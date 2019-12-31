@@ -6,9 +6,12 @@
 #
 # Reads json from /etc/puavo/wlan.json
 # and excepts it to contain something like this
-# (only "type", "ssid" and possibly "password"/"identity"/"certs" are used,
+# (only "type", "ssid" and possibly
+#  "password"/"identity"/"certs"/"phase2-autheap" are used,
 # "wlan_ap" is not used by this script).
-# The "type" can be "open", "psk" or "eap-tls".
+# The "type" can be "open", "psk", "eap-tls" or "eap-ttls".
+#
+# EXAMPLES:
 #
 # [
 #   {
@@ -34,6 +37,13 @@
 #       "client_key":          "...",
 #       "client_key_password": "mysecretclientkeypassword"
 #     }
+#   },
+#   {
+#     "type":     "eap-ttls",
+#     "ssid":     "Hogwarts
+#     "wlan_ap":  null,
+#     "identity": "Dumbledore",
+#     "password": "H0rcrux"
 #   }
 # ]
 #
@@ -126,7 +136,7 @@ class Wlan
   end
 end
 
-class Wlan::EapTls < Wlan
+class Wlan::Eap < Wlan
   # This path must be linked under /state on laptops, that is why it is
   # under /etc/NetworkManager/system-connections.
   Network_manager_certs_dir = '/etc/NetworkManager/system-connections/.certs'
@@ -139,13 +149,15 @@ class Wlan::EapTls < Wlan
   def client_cert_path; "#{ certdir }/client_cert"; end
   def client_key_path;  "#{ certdir }/client_key";  end
 
-  def initialize(ssid, identity, certs)
+  def initialize(ssid, identity, password, certs, phase2_autheap)
     raise 'Wlan eap-tls ssid is not a non-empty string' \
       unless ssid.kind_of?(String) && !ssid.empty?
     raise 'Wlan eap-tls identity is not a non-empty string' \
       unless identity.kind_of?(String) && !identity.empty?
 
-    @identity = identity
+    @identity       = identity
+    @password       = password
+    @phase2_autheap = phase2_autheap
 
     @ca_cert             = nil
     @client_cert         = nil
@@ -186,12 +198,18 @@ mode=infrastructure
 ssid=#{ @ssid }
 
 [wifi-security]
+auth-alg=open
 key-mgmt=wpa-eap
 
 [802-1x]
-eap=tls;
-identity=#{ @identity }
-#{ certificates_for_network_manager }
+#{
+  [ "eap=#{ eap_type }",
+    "identity=#{ @identity }",
+    @password ? "password=#{ @password }" : nil,
+    @phase2_autheap ? "phase2-autheap=#{ @phase2_autheap }" : nil,
+    certificates_for_network_manager,
+  ].compact.join("\n")
+}
 
 [ipv4]
 dns-search=
@@ -205,7 +223,7 @@ EOF
   end
 
   def certificates_for_network_manager
-    return "# no certificates" \
+    return nil \
       unless @ca_cert || @client_cert || @client_key || @client_key_password
 
     [
@@ -251,6 +269,14 @@ EOF
 
     super
   end
+end
+
+class Wlan::Eap::Tls < Wlan::Eap
+  def eap_type; 'tls'; end
+end
+
+class Wlan::Eap::Ttls < Wlan::Eap
+  def eap_type; 'ttls'; end
 end
 
 class Wlan::Open < Wlan
@@ -334,10 +360,14 @@ networks.each do |network|
   begin
     wlan \
       = case network['type']
-          when 'eap-tls'
-            Wlan::EapTls.new(network['ssid'],
-                             network['identity'],
-                             network['certs'])
+          when 'eap-tls', 'eap-ttls'
+            wlan_class = (network['type'] == 'eap-tls') \
+                            ? Wlan::Eap::Tls : Wlan::Eap::Ttls
+            wlan_class.new(network['ssid'],
+                           network['identity'],
+                           network['password'],
+                           network['certs'],
+                           network['phase2-autheap'])
           when 'open'
             Wlan::Open.new(network['ssid'])
           when 'psk'
