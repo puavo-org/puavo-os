@@ -3,10 +3,7 @@ class packages::distribution_tweaks {
   # (as of 2016-11-21) or there installation problems.
 
   Package <|
-       title == 'celestia'
-    or title == 'celestia-common-nonfree'
-    or title == 'celestia-gnome'
-    or title == 'eclipse'
+       title == 'eclipse'
     or title == 'firmware-crystalhd'
     or title == 'fotowall'
     or title == 'gksu'

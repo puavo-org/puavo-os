@@ -1,0 +1,137 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+urlbase='https://dl.bintray.com/celestia/releases-deb/pool/c/celestia'
+
+celestia_links='
+  /etc/celestia.cfg
+  /usr/bin/celestia-gtk
+  /usr/share/applications/celestia.desktop
+  /usr/share/celestia
+  /usr/share/locale/ar/LC_MESSAGES/celestia_constellations.mo
+  /usr/share/locale/ar/LC_MESSAGES/celestia.mo
+  /usr/share/locale/be/LC_MESSAGES/celestia_constellations.mo
+  /usr/share/locale/be/LC_MESSAGES/celestia.mo
+  /usr/share/locale/bg/LC_MESSAGES/celestia_constellations.mo
+  /usr/share/locale/bg/LC_MESSAGES/celestia.mo
+  /usr/share/locale/de/LC_MESSAGES/celestia_constellations.mo
+  /usr/share/locale/de/LC_MESSAGES/celestia.mo
+  /usr/share/locale/el/LC_MESSAGES/celestia_constellations.mo
+  /usr/share/locale/el/LC_MESSAGES/celestia.mo
+  /usr/share/locale/en/LC_MESSAGES/celestia_constellations.mo
+  /usr/share/locale/es/LC_MESSAGES/celestia_constellations.mo
+  /usr/share/locale/es/LC_MESSAGES/celestia.mo
+  /usr/share/locale/fr/LC_MESSAGES/celestia_constellations.mo
+  /usr/share/locale/fr/LC_MESSAGES/celestia.mo
+  /usr/share/locale/gl/LC_MESSAGES/celestia_constellations.mo
+  /usr/share/locale/gl/LC_MESSAGES/celestia.mo
+  /usr/share/locale/hu/LC_MESSAGES/celestia_constellations.mo
+  /usr/share/locale/hu/LC_MESSAGES/celestia.mo
+  /usr/share/locale/it/LC_MESSAGES/celestia_constellations.mo
+  /usr/share/locale/it/LC_MESSAGES/celestia.mo
+  /usr/share/locale/ja/LC_MESSAGES/celestia_constellations.mo
+  /usr/share/locale/ja/LC_MESSAGES/celestia.mo
+  /usr/share/locale/ko/LC_MESSAGES/celestia_constellations.mo
+  /usr/share/locale/ko/LC_MESSAGES/celestia.mo
+  /usr/share/locale/lt/LC_MESSAGES/celestia_constellations.mo
+  /usr/share/locale/lt/LC_MESSAGES/celestia.mo
+  /usr/share/locale/lv/LC_MESSAGES/celestia_constellations.mo
+  /usr/share/locale/lv/LC_MESSAGES/celestia.mo
+  /usr/share/locale/nl/LC_MESSAGES/celestia_constellations.mo
+  /usr/share/locale/nl/LC_MESSAGES/celestia.mo
+  /usr/share/locale/no/LC_MESSAGES/celestia_constellations.mo
+  /usr/share/locale/no/LC_MESSAGES/celestia.mo
+  /usr/share/locale/pl/LC_MESSAGES/celestia_constellations.mo
+  /usr/share/locale/pl/LC_MESSAGES/celestia.mo
+  /usr/share/locale/pt_BR/LC_MESSAGES/celestia_constellations.mo
+  /usr/share/locale/pt_BR/LC_MESSAGES/celestia.mo
+  /usr/share/locale/pt/LC_MESSAGES/celestia_constellations.mo
+  /usr/share/locale/pt/LC_MESSAGES/celestia.mo
+  /usr/share/locale/ro/LC_MESSAGES/celestia_constellations.mo
+  /usr/share/locale/ro/LC_MESSAGES/celestia.mo
+  /usr/share/locale/ru/LC_MESSAGES/celestia_constellations.mo
+  /usr/share/locale/ru/LC_MESSAGES/celestia.mo
+  /usr/share/locale/sk/LC_MESSAGES/celestia_constellations.mo
+  /usr/share/locale/sk/LC_MESSAGES/celestia.mo
+  /usr/share/locale/sv/LC_MESSAGES/celestia_constellations.mo
+  /usr/share/locale/sv/LC_MESSAGES/celestia.mo
+  /usr/share/locale/tr/LC_MESSAGES/celestia_constellations.mo
+  /usr/share/locale/tr/LC_MESSAGES/celestia.mo
+  /usr/share/locale/uk/LC_MESSAGES/celestia_constellations.mo
+  /usr/share/locale/uk/LC_MESSAGES/celestia.mo
+  /usr/share/locale/zh_CN/LC_MESSAGES/celestia_constellations.mo
+  /usr/share/locale/zh_CN/LC_MESSAGES/celestia.mo
+  /usr/share/locale/zh_TW/LC_MESSAGES/celestia_constellations.mo
+  /usr/share/locale/zh_TW/LC_MESSAGES/celestia.mo
+  /usr/share/man/man1/celestia-gtk.1.gz
+  /usr/share/menu/celestia-gtk
+  /usr/share/pixmaps/celestia.png
+'
+
+case "$command" in
+  configure)
+    upstream_dir=$1
+    for f in $celestia_links; do
+      ln -fns -T "${upstream_dir}${f}" "$f"
+    done
+    ;;
+
+  unconfigure)
+    rm -f $celestia_links
+    ;;
+
+  unpack)
+    upstream_pack=$1
+    upstream_dir=$2
+
+    tar -x -f "$upstream_pack" -C "$upstream_dir"
+    ;;
+
+  download)
+    upstream_pack=$(readlink -f "$1")
+    tmpdir=
+    trap '[ -n "$tmpdir" ] && rm -rf "$tmpdir"' 0 INT TERM
+    tmpdir=$(mktemp -d)
+
+    (
+      cd "$tmpdir"
+      while read sha384 debfile; do
+        deb=$(basename "$debfile")
+        wget \
+            --no-use-server-timestamps \
+            --no-check-certificate \
+            --no-cookies \
+            --output-document "$deb" \
+            --progress=dot:mega \
+            "${urlbase}/${debfile}" || {
+            [ $? -eq 4 ] && exit 2 ## Network failure.
+            exit 1
+        }
+        if ! echo "${sha384} ${debfile}" | sha384sum --check >/dev/null; then
+          actual_checksum=$(sha384sum "$debfile" | awk '{ print $1 }')
+          echo "checksum NOT matching for $debfile" >&2
+          echo "expected: ${sha384} / actual: ${actual_checksum}" >&2
+          exit 1
+        fi
+        dpkg-deb -x "$deb" celestia || exit 1
+      done <<EOF
+db0eb073b841d71b64cb2b78d95e14d702dde844d987bb1e566b399e3e0fde5aaa7d30ac6a8af677f586935f71e17b06  celestia-common-nonfree_1.6.1-1_all.deb
+f82c93fc5f665f5984c9aea41dcdcaf3f65d2ad3f4b72dd79bcd60314b0e2a9005da2c99cfd335ef36dc96ca8c969c80  celestia-common_1.6.1+dfsg-3.2deb10_all.deb
+1906096e7ed6bba229e4154295390c69ea1f5d7263c9c20a52ea3f3e587b7b91ac27cf7d9a47b1f3827429ce037ca290  celestia-gtk_1.6.1+dfsg-3.2deb10_amd64.deb
+2cb67c66f383724bc1cb42ac037253d5169c3ffca459f11a5f1ff4c8208ecce698b6fcf0a3923103e49703994136852f  celestia_1.6.1+dfsg-3.2deb10_all.deb
+EOF
+      # Set LC_COLLATE=C so that files always sort in the same
+      # way (so we get the same tar-archive independent of locales).
+      env LC_COLLATE=C \
+        tar -C celestia --mtime='2000-01-01 00:00:00 +00:00' --sort=name -c \
+          -f "$upstream_pack" .
+    )
+    ;;
+
+    *)
+        ;;
+esac
