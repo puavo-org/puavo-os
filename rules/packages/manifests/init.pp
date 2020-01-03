@@ -442,8 +442,6 @@ class packages {
       tag => [ 'tag_remote_access', 'tag_debian_desktop', ];
 
     [ 'avogadro'
-    , 'celestia'
-    , 'celestia-gnome'
     , 'gnucap'
     , 'gnuplot'
     , 'gnuplot-x11'
@@ -783,10 +781,6 @@ class packages {
 
     'scribus-doc':
       tag => [ 'tag_office', 'tag_debian_desktop_nonfree', ];
-
-    'celestia-common-nonfree':
-      ensure => present,
-      tag    => [ 'tag_science', 'tag_debian_desktop_nonfree', ];
 
     'unrar':
       tag => [ 'tag_utils', 'tag_debian_nonfree', ];
