@@ -9,7 +9,7 @@ Build-Depends:
  itstool,
  libasound2-dev [linux-any],
  libfftw3-dev,
- libjack-dev,
+ libjack-jackd2-dev,
  libqt5opengl5-desktop-dev,
  libqt5svg5-dev,
  portaudio19-dev,
