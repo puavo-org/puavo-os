@@ -8,7 +8,6 @@ class packages::distribution_tweaks {
     or title == 'celestia-gnome'
     or title == 'eclipse'
     or title == 'firmware-crystalhd'
-    or title == 'fmit'
     or title == 'fotowall'
     or title == 'gksu'
     or title == 'gnome-icon-theme-extras'

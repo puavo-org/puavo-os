@@ -1,0 +1,322 @@
+From: Boyuan Yang <byang@debian.org>
+Date: Fri, 6 Sep 2019 12:29:22 -0400
+Subject: Install appdata file into new location with new format
+
+---
+ distrib/fmit.appdata.xml.in  | 132 -------------------------------------------
+ distrib/fmit.metainfo.xml.in | 132 +++++++++++++++++++++++++++++++++++++++++++
+ fmit.pro                     |  14 ++---
+ 3 files changed, 139 insertions(+), 139 deletions(-)
+ delete mode 100644 distrib/fmit.appdata.xml.in
+ create mode 100644 distrib/fmit.metainfo.xml.in
+
+diff --git a/distrib/fmit.appdata.xml.in b/distrib/fmit.appdata.xml.in
+deleted file mode 100644
+index c8608f6..0000000
+--- a/distrib/fmit.appdata.xml.in
++++ /dev/null
+@@ -1,132 +0,0 @@
+-<?xml version="1.0" encoding="UTF-8"?>
+-<!-- Copyright 2014 Gilles Degottex <gilles.degottex@gmail.com> -->
+-<application>
+-  <id type="desktop">fmit.desktop</id>
+-  <metadata_license>CC0-1.0</metadata_license>
+-  <project_license>GPL-2.0+</project_license>
+-  <name>FMIT</name>
+-  <summary>Free Musical Instrument Tuner (FMIT), a Tool for tuning musical instrument</summary>
+-  <description>
+-    <p>
+-      Find an estimation of the fundamental frequency (f0, not the perceived pitch) 
+-      of an audio signal, in real-time, and compare it with the closest note in the 
+-      scale.
+-    </p>
+-    <p>
+-      Tune your musical instruments with advanced features, including traces of 
+-      frequency and volume, adjustable base tuning frequency, multiple choices of 
+-      tuning scale (chromatic, Werckmeister III, Kirnberger III, diatonic and 
+-      meantone), microtonal tuning with Scala file (.scl) support and statistics.
+-    </p>
+-    <p>
+-      Perform real-time sound analysis with views for waveform period, harmonics 
+-      amplitude and Discrete Fourier Transform (DFT). Change various analysis 
+-      parameters and tradeoff between precision and speed.
+-    </p>
+-    <p>
+-      Choose between multiple sound capture systems, including ALSA and JACK.
+-    </p>
+-    <p>
+-      Show or hide individual panels and go from a simple analog tuner view to an 
+-      advanced real-time analysis toolset, or anywhere in between.
+-    </p>
+-  </description>
+-  <screenshots>
+-    <screenshot type="default">
+-      <image width="1200" height="675">https://gillesdegottex.github.io/fmit/figs/complete.png</image>
+-      <caption>Volume view and previous notes</caption>
+-    </screenshot>
+-    <screenshot>
+-      <image width="1200" height="675">https://gillesdegottex.github.io/fmit/figs/simple-2.png</image>
+-      <caption>Simplest view</caption>
+-    </screenshot>
+-    <screenshot>
+-      <image width="1200" height="675">https://gillesdegottex.github.io/fmit/figs/microtonal.png</image>
+-      <caption>Microtonal view</caption>
+-    </screenshot>
+-    <screenshot>
+-      <image width="1200" height="675">https://gillesdegottex.github.io/fmit/figs/statistics.png</image>
+-      <caption>Statistics view</caption>
+-    </screenshot>
+-    <screenshot>
+-      <image width="1200" height="675">https://gillesdegottex.github.io/fmit/figs/sample.png</image>
+-      <caption>Waveform view</caption>
+-    </screenshot>
+-    <screenshot>
+-      <image width="1200" height="675">https://gillesdegottex.github.io/fmit/figs/harmonics.png</image>
+-      <caption>Harmonics view</caption>
+-    </screenshot>
+-    <screenshot>
+-      <image width="1200" height="675">https://gillesdegottex.github.io/fmit/figs/FFT.png</image>
+-      <caption>Fourier transform view</caption>
+-    </screenshot>
+-    <screenshot>
+-      <image width="1200" height="675">https://gillesdegottex.github.io/fmit/figs/settings-general.png</image>
+-      <caption>General settings</caption>
+-    </screenshot>
+-    <screenshot>
+-      <image width="1200" height="675">https://gillesdegottex.github.io/fmit/figs/settings-capture.png</image>
+-      <caption>Capture systems settings</caption>
+-    </screenshot>
+-    <screenshot>
+-      <image width="1200" height="675">https://gillesdegottex.github.io/fmit/figs/settings-analysis.png</image>
+-      <caption>Sound analysis settings</caption>
+-    </screenshot>
+-  </screenshots>
+-  <url type="homepage">https://gillesdegottex.github.io/fmit/</url>
+-  <url type="translate">https://hosted.weblate.org/projects/fmit/</url>
+-  <url type="bugtracker">https://github.com/gillesdegottex/fmit/issues</url>
+-  <url type="faq">http://gillesdegottex.github.io/fmit/faq.html</url>
+-  <developer_name>Gilles Degottex</developer_name>
+-  <updatecontact>gilles.degottex@gmail.com</updatecontact>
+-  <translation type="qt">fmit</translation>
+-  <content_rating type="oars-1.1">
+-    <content_attribute id="violence-cartoon">none</content_attribute>
+-    <content_attribute id="violence-fantasy">none</content_attribute>
+-    <content_attribute id="violence-realistic">none</content_attribute>
+-    <content_attribute id="violence-bloodshed">none</content_attribute>
+-    <content_attribute id="violence-sexual">none</content_attribute>
+-    <content_attribute id="violence-desecration">none</content_attribute>
+-    <content_attribute id="violence-slavery">none</content_attribute>
+-    <content_attribute id="violence-worship">none</content_attribute>
+-    <content_attribute id="drugs-alcohol">none</content_attribute>
+-    <content_attribute id="drugs-narcotics">none</content_attribute>
+-    <content_attribute id="drugs-tobacco">none</content_attribute>
+-    <content_attribute id="sex-nudity">none</content_attribute>
+-    <content_attribute id="sex-themes">none</content_attribute>
+-    <content_attribute id="sex-homosexuality">none</content_attribute>
+-    <content_attribute id="sex-prostitution">none</content_attribute>
+-    <content_attribute id="sex-adultery">none</content_attribute>
+-    <content_attribute id="sex-appearance">none</content_attribute>
+-    <content_attribute id="language-profanity">none</content_attribute>
+-    <content_attribute id="language-humor">none</content_attribute>
+-    <content_attribute id="language-discrimination">none</content_attribute>
+-    <content_attribute id="social-chat">none</content_attribute>
+-    <content_attribute id="social-info">none</content_attribute>
+-    <content_attribute id="social-audio">none</content_attribute>
+-    <content_attribute id="social-location">none</content_attribute>
+-    <content_attribute id="social-contacts">none</content_attribute>
+-    <content_attribute id="money-purchasing">none</content_attribute>
+-    <content_attribute id="money-gambling">none</content_attribute>
+-  </content_rating>
+-  <releases>
+-    <release version="1.2.1" date="2018-05-14">
+-      <description>
+-        <ul>
+-          <li>New note names: Hindustani, Byzantine</li>
+-          <li>Use unicode flat and sharp signs</li>
+-          <li>Use custom save settings and pause icons that better fits the other icons design</li>
+-        </ul>
+-      </description>
+-    </release>
+-    <release version="1.1.18" date="2018-05-09">
+-      <description>
+-        <ul>
+-          <li>New icons</li>
+-          <li>Added F tonality</li>
+-          <li>Fixed graphical glitches</li>
+-        </ul>
+-      </description>
+-    </release>
+-  </releases>
+-</application>
+diff --git a/distrib/fmit.metainfo.xml.in b/distrib/fmit.metainfo.xml.in
+new file mode 100644
+index 0000000..932c337
+--- /dev/null
++++ b/distrib/fmit.metainfo.xml.in
+@@ -0,0 +1,132 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<!-- Copyright 2014 Gilles Degottex <gilles.degottex@gmail.com> -->
++<component type="desktop">
++  <id>fmit.desktop</id>
++  <metadata_license>CC0-1.0</metadata_license>
++  <project_license>GPL-2.0+</project_license>
++  <name>FMIT</name>
++  <summary>Free Musical Instrument Tuner (FMIT), a Tool for tuning musical instrument</summary>
++  <description>
++    <p>
++      Find an estimation of the fundamental frequency (f0, not the perceived pitch) 
++      of an audio signal, in real-time, and compare it with the closest note in the 
++      scale.
++    </p>
++    <p>
++      Tune your musical instruments with advanced features, including traces of 
++      frequency and volume, adjustable base tuning frequency, multiple choices of 
++      tuning scale (chromatic, Werckmeister III, Kirnberger III, diatonic and 
++      meantone), microtonal tuning with Scala file (.scl) support and statistics.
++    </p>
++    <p>
++      Perform real-time sound analysis with views for waveform period, harmonics 
++      amplitude and Discrete Fourier Transform (DFT). Change various analysis 
++      parameters and tradeoff between precision and speed.
++    </p>
++    <p>
++      Choose between multiple sound capture systems, including ALSA and JACK.
++    </p>
++    <p>
++      Show or hide individual panels and go from a simple analog tuner view to an 
++      advanced real-time analysis toolset, or anywhere in between.
++    </p>
++  </description>
++  <screenshots>
++    <screenshot type="default">
++      <image width="1200" height="675">https://gillesdegottex.github.io/fmit/figs/complete.png</image>
++      <caption>Volume view and previous notes</caption>
++    </screenshot>
++    <screenshot>
++      <image width="1200" height="675">https://gillesdegottex.github.io/fmit/figs/simple-2.png</image>
++      <caption>Simplest view</caption>
++    </screenshot>
++    <screenshot>
++      <image width="1200" height="675">https://gillesdegottex.github.io/fmit/figs/microtonal.png</image>
++      <caption>Microtonal view</caption>
++    </screenshot>
++    <screenshot>
++      <image width="1200" height="675">https://gillesdegottex.github.io/fmit/figs/statistics.png</image>
++      <caption>Statistics view</caption>
++    </screenshot>
++    <screenshot>
++      <image width="1200" height="675">https://gillesdegottex.github.io/fmit/figs/sample.png</image>
++      <caption>Waveform view</caption>
++    </screenshot>
++    <screenshot>
++      <image width="1200" height="675">https://gillesdegottex.github.io/fmit/figs/harmonics.png</image>
++      <caption>Harmonics view</caption>
++    </screenshot>
++    <screenshot>
++      <image width="1200" height="675">https://gillesdegottex.github.io/fmit/figs/FFT.png</image>
++      <caption>Fourier transform view</caption>
++    </screenshot>
++    <screenshot>
++      <image width="1200" height="675">https://gillesdegottex.github.io/fmit/figs/settings-general.png</image>
++      <caption>General settings</caption>
++    </screenshot>
++    <screenshot>
++      <image width="1200" height="675">https://gillesdegottex.github.io/fmit/figs/settings-capture.png</image>
++      <caption>Capture systems settings</caption>
++    </screenshot>
++    <screenshot>
++      <image width="1200" height="675">https://gillesdegottex.github.io/fmit/figs/settings-analysis.png</image>
++      <caption>Sound analysis settings</caption>
++    </screenshot>
++  </screenshots>
++  <url type="homepage">https://gillesdegottex.github.io/fmit/</url>
++  <url type="translate">https://hosted.weblate.org/projects/fmit/</url>
++  <url type="bugtracker">https://github.com/gillesdegottex/fmit/issues</url>
++  <url type="faq">http://gillesdegottex.github.io/fmit/faq.html</url>
++  <developer_name>Gilles Degottex</developer_name>
++  <update_contact>gilles.degottex@gmail.com</update_contact>
++  <translation type="qt">fmit</translation>
++  <content_rating type="oars-1.1">
++    <content_attribute id="violence-cartoon">none</content_attribute>
++    <content_attribute id="violence-fantasy">none</content_attribute>
++    <content_attribute id="violence-realistic">none</content_attribute>
++    <content_attribute id="violence-bloodshed">none</content_attribute>
++    <content_attribute id="violence-sexual">none</content_attribute>
++    <content_attribute id="violence-desecration">none</content_attribute>
++    <content_attribute id="violence-slavery">none</content_attribute>
++    <content_attribute id="violence-worship">none</content_attribute>
++    <content_attribute id="drugs-alcohol">none</content_attribute>
++    <content_attribute id="drugs-narcotics">none</content_attribute>
++    <content_attribute id="drugs-tobacco">none</content_attribute>
++    <content_attribute id="sex-nudity">none</content_attribute>
++    <content_attribute id="sex-themes">none</content_attribute>
++    <content_attribute id="sex-homosexuality">none</content_attribute>
++    <content_attribute id="sex-prostitution">none</content_attribute>
++    <content_attribute id="sex-adultery">none</content_attribute>
++    <content_attribute id="sex-appearance">none</content_attribute>
++    <content_attribute id="language-profanity">none</content_attribute>
++    <content_attribute id="language-humor">none</content_attribute>
++    <content_attribute id="language-discrimination">none</content_attribute>
++    <content_attribute id="social-chat">none</content_attribute>
++    <content_attribute id="social-info">none</content_attribute>
++    <content_attribute id="social-audio">none</content_attribute>
++    <content_attribute id="social-location">none</content_attribute>
++    <content_attribute id="social-contacts">none</content_attribute>
++    <content_attribute id="money-purchasing">none</content_attribute>
++    <content_attribute id="money-gambling">none</content_attribute>
++  </content_rating>
++  <releases>
++    <release version="1.2.1" date="2018-05-14">
++      <description>
++        <ul>
++          <li>New note names: Hindustani, Byzantine</li>
++          <li>Use unicode flat and sharp signs</li>
++          <li>Use custom save settings and pause icons that better fits the other icons design</li>
++        </ul>
++      </description>
++    </release>
++    <release version="1.1.18" date="2018-05-09">
++      <description>
++        <ul>
++          <li>New icons</li>
++          <li>Added F tonality</li>
++          <li>Fixed graphical glitches</li>
++        </ul>
++      </description>
++    </release>
++  </releases>
++</component>
+diff --git a/fmit.pro b/fmit.pro
+index a4f045b..fe795a4 100644
+--- a/fmit.pro
++++ b/fmit.pro
+@@ -249,14 +249,14 @@ linux {
+     appdata_po.commands = $$QMAKE_MKDIR_CMD $(dir $@) && msgfmt $< -o $@
+     QMAKE_EXTRA_TARGETS += appdata_po
+ 
+-    appdata_tr.depends = $$PWD/distrib/fmit.appdata.xml.in $(patsubst $$PWD/%.po,$$OUT_PWD/%.mo,$(wildcard $$PWD/distrib/appdata_tr/*.po))
+-    appdata_tr.target = $$OUT_PWD/distrib/fmit.appdata.xml
+-    appdata_tr.commands = $$sprintf($$QMAKE_MKDIR_CMD, $$OUT_PWD/distrib/) && itstool -j $$PWD/distrib/fmit.appdata.xml.in -o $@ $(wildcard $$OUT_PWD/distrib/appdata_tr/*.mo)
++    appdata_tr.depends = $$PWD/distrib/fmit.metainfo.xml.in $(patsubst $$PWD/%.po,$$OUT_PWD/%.mo,$(wildcard $$PWD/distrib/appdata_tr/*.po))
++    appdata_tr.target = $$OUT_PWD/distrib/fmit.metainfo.xml
++    appdata_tr.commands = $$sprintf($$QMAKE_MKDIR_CMD, $$OUT_PWD/distrib/) && itstool -j $$PWD/distrib/fmit.metainfo.xml.in -o $@ $(wildcard $$OUT_PWD/distrib/appdata_tr/*.mo)
+     QMAKE_EXTRA_TARGETS += appdata_tr
+     PRE_TARGETDEPS += $$appdata_tr.target
+ } else {
+-    appdata_no_tr.depends = $$PWD/distrib/fmit.appdata.xml.in
+-    appdata_no_tr.target = $$OUT_PWD/distrib/fmit.appdata.xml
++    appdata_no_tr.depends = $$PWD/distrib/fmit.metainfo.xml.in
++    appdata_no_tr.target = $$OUT_PWD/distrib/fmit.metainfo.xml
+     appdata_no_tr.commands = $$sprintf($$QMAKE_MKDIR_CMD, $$system_path($$OUT_PWD/distrib/)) && $$QMAKE_COPY $$system_path($$appdata_no_tr.depends) $$system_path($$appdata_no_tr.target)
+     QMAKE_EXTRA_TARGETS += appdata_no_tr
+     PRE_TARGETDEPS += $$appdata_no_tr.target
+@@ -276,7 +276,7 @@ iconsym.path = $$PREFIX/share/icons/hicolor/symbolic/apps
+ iconsym.files = ui/images/fmit-symbolic.svg
+ iconpng.path = $$PREFIX/share/icons/hicolor/128x128/apps
+ iconpng.files = ui/images/fmit.png
+-appdata.path = $$PREFIX/share/appdata
+-appdata.files = $$OUT_PWD/distrib/fmit.appdata.xml
++appdata.path = $$PREFIX/share/metainfo
++appdata.files = $$OUT_PWD/distrib/fmit.metainfo.xml
+ appdata.CONFIG += no_check_exist
+ INSTALLS += target scales translations shortcut iconsvg iconsym iconpng appdata

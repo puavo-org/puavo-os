@@ -1,0 +1,36 @@
+Source: fmit
+Section: sound
+Priority: optional
+Maintainer: John Wright <jsw@debian.org>
+Build-Depends:
+ debhelper-compat (= 12),
+ freeglut3-dev,
+ gettext,
+ itstool,
+ libasound2-dev [linux-any],
+ libfftw3-dev,
+ libjack-dev,
+ libqt5opengl5-desktop-dev,
+ libqt5svg5-dev,
+ portaudio19-dev,
+ qt5-qmake,
+ qtbase5-dev,
+ qtmultimedia5-dev,
+ qttools5-dev-tools,
+Standards-Version: 4.4.0
+Rules-Requires-Root: no
+Homepage: http://gillesdegottex.github.io/fmit
+Vcs-Git: https://salsa.debian.org/debian/fmit.git
+Vcs-Browser: https://salsa.debian.org/debian/fmit
+
+Package: fmit
+Architecture: any
+Depends:
+ ${misc:Depends},
+ ${shlibs:Depends},
+Description: Free Music Instrument Tuner
+ FMIT is a graphical utility for tuning your musical instruments, with
+ error and volume history and advanced features like microtonal tuning,
+ statistics, and various views like waveform shape, harmonics ratios and
+ real-time Discrete Fourier Transform (DFT). All views and advanced features
+ are optional so that the interface can also be very simple.

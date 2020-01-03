@@ -1,0 +1,168 @@
+fmit (1.2.6-0.2) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * debian/control: Explicitly build-depends on
+    libqt5opengl5-desktop-dev to avoid the package to be built
+    on armel/armhf.
+  * debian/docs: Install README.txt as documentation.
+
+ -- Boyuan Yang <byang@debian.org>  Sat, 07 Sep 2019 14:48:24 -0400
+
+fmit (1.2.6-0.1) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * Upload to unstable.
+  * debian/rules: Fix build of translation files.
+  * debian/patches: Add patch 0001 to install the appdata files
+    to the new location (instead of the legacy location).
+  * debian/copyright: Correctly document the appdata metadata
+    file as licensed under CC0-1.0.
+
+ -- Boyuan Yang <byang@debian.org>  Fri, 06 Sep 2019 12:55:10 -0400
+
+fmit (1.2.6-0.1~exp1) experimental; urgency=medium
+
+  * Non-maintainer upload.
+  * New upstream release 1.2.6. (Closes: #899420)
+    + Do not translate "default" as device name.
+      (Closes: #802924)
+  * debian/control:
+    + Bump debhelper compat to v12.
+    + Use Rules-Requires-Root: no.
+    + Update build-dependency and use qmake toolchain.
+    + Update build-dependency and use Qt5 toolchain.
+      (Closes: #874884)
+  * debian/rules:
+    + Enable full hardening.
+  * debian/menu: Dropped.
+  * debian/dirs: Dropped.
+  * debian/copyright: Refresh information.
+  * debian/source/local-options: Removed, no longer necessary.
+
+ -- Boyuan Yang <byang@debian.org>  Sun, 02 Jun 2019 14:27:36 -0400
+
+fmit (1.0.0-1.1) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * debian/control:
+    + Update Vcs-* fields and use git repo under Salsa Debian team.
+  * debian/patches: Add a patch to fix FTBFS against glibc 2.27.
+    (Closes: #890669).
+
+ -- Boyuan Yang <byang@debian.org>  Wed, 29 May 2019 17:56:13 -0400
+
+fmit (1.0.0-1) unstable; urgency=medium
+
+  * New upstream version
+    - All patches dropped, since they are now included upstream
+  * Update description and VCS URLs
+  * Update copyright file, and convert to DEP5
+  * Update upstream information in contributed man page
+  * Update Standards-Version to 3.9.6 (no changes required)
+  * Use debhelper compat=9 to pick up hardening flags with cmake (fixes
+    Lintian hardening-no-relro warning)
+
+ -- John Wright <jsw@debian.org>  Sat, 13 Jun 2015 20:42:40 -0700
+
+fmit (0.99.2-1) unstable; urgency=low
+
+  * New upstream version
+    - Drop jackd2 patch (fixed upstream)
+    - Now builds against Qt4 (Closes: #604517)
+  * Remove unused library dependencies
+  * Use linux-any instead of a hardcoded list of negated architectures
+    for the libasound2-dev Build-Depends (Closes: #634733)
+
+ -- John Wright <jsw@debian.org>  Thu, 29 Dec 2011 01:46:00 -0800
+
+fmit (0.97.7-3) unstable; urgency=low
+
+  * Change Build-Depends on fftw3-dev to libfftw3-dev, to avoid depending
+    on a virtual package
+  * Upgrade to "3.0 (quilt)" source format
+  * Update debhelper compatibility level to 7 and use dh
+  * Update Standards-Version to 3.8.4
+  * Correct build and runtime issues with jackd2.  Thanks to Adrian
+    Knoth for the patch. (Closes: #561415, #581276)
+  * debian/menu: Fix syntax errors (thanks, lintian)
+
+ -- John Wright <jsw@debian.org>  Mon, 17 May 2010 00:18:26 -0600
+
+fmit (0.97.7-2.1) unstable; urgency=low
+
+  * Non-maintainer upload.
+  * Fix FTBFS on GNU/kFreeBSD (Closes: #542540):
+     - Add a <cstdlib> include (for exit) to src/main.cc.
+
+ -- Cyril Brulebois <kibi@debian.org>  Mon, 21 Dec 2009 09:36:33 +0100
+
+fmit (0.97.7-2) unstable; urgency=low
+
+  * Update Standards-Version to 3.7.3 (no changes needed to be made)
+  * Promote XS-Vcs-* fields to Vcs-* fields, since they are now natively
+    supported by dpkg.
+  * Use a Homepage field instead of a pseudo-field in the Description
+  * Remove dpatch dependency and references in debian/rules (no upstream
+    patches right now, and when I need some, I'll probably be using quilt)
+  * Don't ignore a make clean error (check for the existance of Makefile
+    instead)
+
+ -- John Wright <jsw@debian.org>  Wed, 02 Jan 2008 13:29:01 -0700
+
+fmit (0.97.7-1) unstable; urgency=low
+
+  * New upstream version
+
+ -- John Wright <jsw@debian.org>  Fri, 23 Nov 2007 13:56:36 -0700
+
+fmit (0.97.6-3) unstable; urgency=low
+
+  * debian/control:
+    - Update my email address
+    - Update the XS-Vcs-* fields to indicate my new revision control system and
+      URIs
+    - Clarify the Description field a bit
+  * debian/rules:
+    - Add some hg cleanup stuff to the 'clean' target
+
+ -- John Wright <jsw@debian.org>  Tue, 18 Sep 2007 00:41:36 -0600
+
+fmit (0.97.6-2) unstable; urgency=low
+
+  * New maintainer. (Closes: 429756)
+  * Allow building on platforms without ALSA, thanks to Cyril Brulebois.
+    (Closes: 414391)
+  * Add XS-Vcs-Svn and XS-Vcs-Browser fields.
+
+ -- John Wright <john@movingsucks.org>  Fri, 22 Jun 2007 17:03:48 +0100
+
+fmit (0.97.6-1) unstable; urgency=low
+
+  * New upstream version. Closes: #421099.
+  * upstream-fix: Immediate segfault problem. Closes: #403567.
+  * debian/patches/01_Upstream_TODO.dpatch: Update for new TODO file.
+
+ -- Ludovic RESLINGER <lr@cuivres.net>  Sat, 16 Jun 2007 23:52:33 +0200
+
+fmit (0.96.7-1) unstable; urgency=high
+
+  * New upstream version.
+  * upstream-fix: Alsa bug in case of multiple channels. Closes: #400483.
+  * debian/control: Add Build-Dependency on fftw3-dev, required with new
+    version.
+  * debian/rules: Change QTDIR by --with-Qt-dir for ./configure.
+  * debian/patches/01_Upstream_TODO.dpatch: Update for new TODO file.
+
+ -- Ludovic RESLINGER <lr@cuivres.net>  Sat, 09 Dec 2006 14:50:20 +0100
+
+fmit (0.96.5-1) unstable; urgency=low
+
+  * Initial release: Closes: #280876 Closes: #380500.
+  * debian/docs: Remove README and NEWS because upstream's files are empty.
+  * debian/rules: Add QTDIR=/usr/share/qt3 to ./configure.
+  * Add debian/fmit.1: Manpage for fmit.
+  * Add dpatch packaging system.
+  * Add patches/01_Upstream_TODO.dpatch: Traducting some parts of TODO in
+    english.
+
+ -- Ludovic RESLINGER <lr@cuivres.net>  Sun, 13 Aug 2006 15:28:57 +0200
