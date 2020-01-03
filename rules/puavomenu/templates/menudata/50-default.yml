@@ -507,6 +507,8 @@ programs:
         tags: default
   - org.gnome.Cheese:
         tags: default
+  - org.gnome.Epiphany:
+        tags: default
   - org.gnome.Evince:
         name:
             en: Evince-document viewer
@@ -1152,7 +1154,7 @@ menus:
             - firefox
             - chromium
             - google-chrome
-            - epiphany
+            - org.gnome.Epiphany
             - thunderbird
             - org.gnome.Evolution
             - pidgin
