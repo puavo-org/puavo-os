@@ -5,7 +5,7 @@ set -eu
 command=$1
 shift
 
-version=70.0.1
+version=71.0
 urlbase="https://download-installer.cdn.mozilla.net/pub/firefox/releases/${version}/linux-x86_64"
 
 setup_firefox_wrapper() {
@@ -117,11 +117,11 @@ EOF
 lockPref("autoadmin.global_config_url", "file:///etc/firefox/puavodesktop.js");
 FF_PUAVO_JS_EOF
       done <<EOF
-d295766fdded8454638f12dd1cfeed938b2fb3436f55f054facb9d95a85cd2e28260bd2b60862b5931e19cac2625145d de/firefox-${version}.tar.bz2
-95e4f9f8de0143eb5b9fb4bdaf7e31a7fe13b1f721631198045782a2e3f166a3a70542bd68f55af2a4785eb113925fe2 en-GB/firefox-${version}.tar.bz2
-778ab29a35cfb76c68b248461c9f7f753cad8069117df27e88b0f14f308c9df2c0ee786eaad127ee29ba810e3db74ec9 fi/firefox-${version}.tar.bz2
-f3f6aa405c7470a6dbed6b9d111f54e41afc6ba89f08c142e38fe6dc8c09a6be041b23ba417c475c604b88ee8d2bac68 fr/firefox-${version}.tar.bz2
-48ce906aca6519146171d3e4fd970303f473500960279ec7f59d16c5d8c1e26747f3d42c46b14a24f2b253c50b54b698 sv-SE/firefox-${version}.tar.bz2
+a9d434484ac0eb1c48bc016ea35f20ea0f3f6e8942a2eac05f6e26934e305f1ce68aab46720a4f9e349b19fcb196dd4b de/firefox-${version}.tar.bz2
+0409c3535af0364c5d7c20170b11fb7aa440ba19d668c5863c32bd663a655ea91408f47d780bb7b86787f67532490431 en-GB/firefox-${version}.tar.bz2
+6f38e65c6cd6fca8865dcc655c17c23b57c0c4288d96d8f296763afec86d482d2d4286a9b50c9f36b00593d6fb72e4b8 fi/firefox-${version}.tar.bz2
+79a8bf37a60b5bffc1ae695e32da67a1a7670f96d20ac1b1b100465f542ce116d4e78129b96db71d5c85744114ebb217 fr/firefox-${version}.tar.bz2
+6ba66a25ceaa487eaad2591f872af42ae1cd1be4573891be0e3f67b3bb7b4241fe23945c803a1f912405b96c0f239b2e sv-SE/firefox-${version}.tar.bz2
 EOF
 
       # hard link many duplicate files
