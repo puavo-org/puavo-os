@@ -7,7 +7,7 @@
 # Reads json from /etc/puavo/wlan.json
 # and excepts it to contain something like this
 # (only "type", "ssid" and possibly
-#  "password"/"identity"/"certs"/"phase2-autheap" are used,
+#  "password"/"identity"/"certs"/"phase2-auth" are used,
 # "wlan_ap" is not used by this script).
 # The "type" can be "open", "psk", "eap-tls" or "eap-ttls".
 #
@@ -149,15 +149,15 @@ class Wlan::Eap < Wlan
   def client_cert_path; "#{ certdir }/client_cert"; end
   def client_key_path;  "#{ certdir }/client_key";  end
 
-  def initialize(ssid, identity, password, certs, phase2_autheap)
+  def initialize(ssid, identity, password, certs, phase2_auth)
     raise 'Wlan eap-tls ssid is not a non-empty string' \
       unless ssid.kind_of?(String) && !ssid.empty?
     raise 'Wlan eap-tls identity is not a non-empty string' \
       unless identity.kind_of?(String) && !identity.empty?
 
-    @identity       = identity
-    @password       = password
-    @phase2_autheap = phase2_autheap
+    @identity    = identity
+    @password    = password
+    @phase2_auth = phase2_auth
 
     @ca_cert             = nil
     @client_cert         = nil
@@ -206,7 +206,7 @@ key-mgmt=wpa-eap
   [ "eap=#{ eap_type }",
     "identity=#{ @identity }",
     @password ? "password=#{ @password }" : nil,
-    @phase2_autheap ? "phase2-autheap=#{ @phase2_autheap }" : nil,
+    @phase2_auth ? "phase2-auth=#{ @phase2_auth }" : nil,
     certificates_for_network_manager,
   ].compact.join("\n")
 }
@@ -366,7 +366,7 @@ networks.each do |network|
                                     network['identity'],
                                     network['password'],
                                     network['certs'],
-                                    network['phase2_autheap'])
+                                    network['phase2_auth'])
                    end
 
   begin
