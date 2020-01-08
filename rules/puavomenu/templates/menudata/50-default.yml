@@ -454,8 +454,8 @@ programs:
   - mscore:
         name:
             en: MuseScore-music composition & notation
-            fi: Nuotinnusohjelma
-            sv: Notering
+            fi: MuseScore-nuotinnusohjelma
+            sv: MuseScore-notering
             de: Musik-Notensatz
         tags: default, audio
   - mypaint:
@@ -1159,6 +1159,7 @@ menus:
             - org.gnome.Evolution
             - pidgin
             - gftp
+            - filezilla
             - net.sourceforge.liferea
             - google-earth
             - skype
