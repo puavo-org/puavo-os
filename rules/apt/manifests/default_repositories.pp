@@ -2,9 +2,8 @@ class apt::default_repositories {
   include ::apt::backports
   include ::apt::multiarch
   include ::apt::repositories
+  include ::apt::virtualbox
 
-  # XXX issues with using Ubuntu repositories in Buster
-  # XXX (could we drop them?)
   case $debianversioncodename {
     'stretch': { include ::apt::ubuntu_repository }
   }
