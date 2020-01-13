@@ -4,7 +4,6 @@
 auth    [success=1 default=ignore]      pam_unix.so nullok_secure
 auth    requisite                       pam_deny.so
 auth    required                        pam_permit.so
-auth    optional                        pam_cap.so
 
 account [success=2 new_authtok_reqd=done default=ignore]        pam_exec.so quiet /usr/lib/puavoadmins-validate-pam-user
 account [success=1 new_authtok_reqd=done default=ignore]        pam_unix.so

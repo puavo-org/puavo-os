@@ -23,5 +23,4 @@ auth    optional                        pam_puavo.so    exitcode_to_pam expose_a
 
 auth    optional        pam_exec.so quiet /usr/lib/puavo-ltsp-client/pam/puavo-setup-primary-user
 auth    optional        pam_gnome_keyring.so
-auth    optional        pam_cap.so
 auth    sufficient      pam_permit.so
