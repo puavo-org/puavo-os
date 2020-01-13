@@ -1,7 +1,7 @@
 class supplementary_groups {
   include ::packages
 
-  $groups = [ 'bluebooth'
+  $groups = [ 'bluetooth'
             , 'cdrom'
             , 'dialout'
             , 'floppy'

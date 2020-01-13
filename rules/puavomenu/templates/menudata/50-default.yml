@@ -952,6 +952,8 @@ programs:
         tags: default
         puavopkg:
             id: tilitin
+  - tracker:
+        tags: default
   - tuxguitar:
         name:
             en: TuxGuitar-multitrack tablature editor
@@ -1241,6 +1243,7 @@ menus:
             - stellarium
             - org.kde.kstars
             - org.kde.step
+            - tracker
             - LoggerPro
             - GlobiLab
             - io.github.wxmaxima_developers.wxMaxima
@@ -1442,6 +1445,7 @@ menus:
         icon: /usr/share/icons/hicolor/64x64/apps/step.png
         programs:
             - org.kde.step
+            - tracker
             - LoggerPro
             - libreoffice-writer
             - phet
