@@ -5,7 +5,9 @@ set -eu
 guestuser='guest'
 guesthome="$(getent passwd "$guestuser" | awk -F: '{ print $6 }')"
 
-pkill -9 -U guest || [ $? -eq 1 ]
+if [ "${1:-}" = '--do-process-kill' ]; then
+  pkill -9 -U guest || [ $? -eq 1 ]
+fi
 
 # Make sure guestuser home directory is what we expect it to be, for safety.
 # (We do not hardcode $guesthome because this script should fail if these

@@ -35,6 +35,11 @@ class gdm {
       require => [ File['/etc/guest-session'], Package['gdm3'], ],
       source  => 'puppet:///modules/gdm/PostLogin_Default';
 
+    '/etc/gdm3/PostSession/Default':
+      mode    => '0755',
+      require => [ File['/etc/guest-session'], Package['gdm3'], ],
+      source  => 'puppet:///modules/gdm/PostSession_Default';
+
     '/usr/share/gdm/greeter/autostart/puavo-desktop-applet.desktop':
       ensure  => link,
       require => [ Package['gdm3'], Package['puavo-desktop-applet'], ],
