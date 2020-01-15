@@ -28,6 +28,7 @@ class image::bundle::basic {
   include ::systemd
   include ::udev
   include ::use_urandom
+  include ::wlanap
   include ::woeusb
   include ::zram_configuration
 
