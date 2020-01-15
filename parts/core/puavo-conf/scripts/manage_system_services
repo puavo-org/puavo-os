@@ -22,11 +22,6 @@ set services {
          -> /etc/systemd/system/google-cloud-print.service
     }}
 
-  { hostapd {
-      /etc/systemd/system/multi-user.target.wants/hostapd.service
-        -> /lib/systemd/system/hostapd.service
-    }}
-
   { incron {
       /etc/systemd/system/multi-user.target.wants/incron.service
          -> /lib/systemd/system/incron.service

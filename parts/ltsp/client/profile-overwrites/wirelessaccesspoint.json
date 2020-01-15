@@ -1,7 +1,6 @@
 {
   "puavo.networking.dhcp.interfaces":               "eth*",
   "puavo.service.cron.cronjobs":                    "puavo-pkg-update",
-  "puavo.service.hostapd.enabled":                  "true",
   "puavo.service.puavo-vpn-client-openvpn.enabled": "true",
   "puavo.service.puavo-wlanap.enabled":             "true",
   "puavo.support.vino_network_interface":           "vpn0",
