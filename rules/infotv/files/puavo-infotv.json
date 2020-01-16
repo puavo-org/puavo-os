@@ -2,7 +2,7 @@
   "puavo.infotv.software": {
     "typehint": "string",
     "choices": ["iivari", "idid"],
-    "default": "iivari",
+    "default": "idid",
     "description": "Which digital signage software is used when the device is in infotv mode"
   }
 }
