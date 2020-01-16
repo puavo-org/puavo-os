@@ -1224,12 +1224,19 @@ proc setup_styles {} {
 }
 
 proc update_requested_version_ui {visible} {
-  global bg_image content_dir_paths requested_version requested_version_path \
+  global bg_image content_dir_paths requested_version \
          requested_version_type requested_version_value
+
+  set new_content_dir_paths [get_available_content_dirs]
+  set requested_version_path_list [
+    lmap p $new_content_dir_paths { format "%s/REQUESTED_VERSION" $p }
+  ]
 
   # initial setup
   if {$requested_version_type eq ""} {
-    catch { set requested_version [read_file $requested_version_path] }
+    catch {
+      set requested_version [read_file [lindex $requested_version_path_list 0]]
+    }
     set requested_version_value ""
     switch -- $requested_version {
       {by puavo-conf} {
@@ -1259,7 +1266,10 @@ proc update_requested_version_ui {visible} {
         set requested_version_value ""
       }
     }
-    write_file $requested_version_path $requested_version
+
+    foreach requested_version_path $requested_version_path_list {
+      write_file $requested_version_path $requested_version
+    }
     return
   }
 
@@ -1403,8 +1413,6 @@ try {
   logger -p user.err "could not read $paths(puavo_usb_factory_workdir)/UI.json"
   exit 1
 }
-
-set requested_version_path "${content_dir}/REQUESTED_VERSION"
 
 # ui elements
 
