@@ -42,6 +42,7 @@ packagedirs += mafynetti
 packagedirs += marvinsketch
 packagedirs += mattermost-desktop
 packagedirs += msttcorefonts
+packagedirs += netbeans
 packagedirs += nightcode
 packagedirs += ohjelmointi-opetuksessa
 packagedirs += openscad-nightly

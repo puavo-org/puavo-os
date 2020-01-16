@@ -41,6 +41,7 @@ class puavo_pkg::packages {
 			, 'marvinsketch'
 			, 'mattermost-desktop'
 			, 'msttcorefonts'
+			, 'netbeans'
 			, 'nightcode'
 			, 'ohjelmointi-opetuksessa'
 			, 'openscad-nightly'

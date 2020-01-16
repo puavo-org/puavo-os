@@ -469,6 +469,8 @@ programs:
         tags: default, graphics
 
   #N
+  - netbeans:
+        tags: default
   - net.sourceforge.liferea:
         tags: default
   - neverball:
@@ -1215,6 +1217,7 @@ menus:
             - appinventor
             - kojo
             - Nightcode
+            - netbeans
 
   - menu-education:
         name:
