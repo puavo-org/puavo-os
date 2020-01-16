@@ -148,7 +148,13 @@ programs:
         tags: default
 
   #E
-  - eclipse:
+  - eclipse-cpp:
+        tags: default
+  - eclipse-java:
+        tags: default
+  - eclipse-javascript:
+        tags: default
+  - eclipse-php:
         tags: default
   - edison:
         type: web
@@ -1189,7 +1195,10 @@ menus:
             - drracket
             - enchanting
             - bluegriffon
-            - eclipse
+            - eclipse-cpp
+            - eclipse-java
+            - eclipse-javascript
+            - eclipse-php
             - eric6
             - pycharm
             - spe

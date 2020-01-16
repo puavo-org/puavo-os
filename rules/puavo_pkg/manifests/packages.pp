@@ -23,6 +23,7 @@ class puavo_pkg::packages {
 			, 'cnijfilter2'
 			, 'cura-appimage'
 			, 'dropbox'
+			, 'eclipse'
 			, 'ekapeli-alku'
 			, 'enchanting'
 			, 'extra-xkb-symbols'

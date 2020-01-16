@@ -1,0 +1,105 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+version='2019-12'
+urlbase='http://eclipse.mirror.garr.it/mirrors/eclipse/technology/epp/downloads/release'
+
+make_desktop_file() {
+  eclipse_lang=$1
+  eclipse_lang_for_humans=$2
+
+  cat <<EOF > "/usr/share/applications/eclipse-${eclipse_lang}.desktop"
+[Desktop Entry]
+Encoding=UTF-8
+Name=Eclipse (${eclipse_lang_for_humans})
+Comment=Eclipse (${eclipse_lang_for_humans})
+Exec=/opt/eclipse/${eclipse_lang}/eclipse
+Icon=/opt/eclipse/${eclipse_lang}/icon.xpm
+Terminal=false
+Type=Application
+Categories=Development;IDE;Debugger;
+StartupNotify=true
+EOF
+}
+
+case "${command}" in
+  configure)
+    upstream_dir=$1
+
+    ln -fns "$upstream_dir" /opt/eclipse
+
+    make_desktop_file cpp        C++
+    make_desktop_file java       Java
+    make_desktop_file javascript Javascript
+    make_desktop_file php        PHP
+    ;;
+
+  unconfigure)
+    rm -f /opt/eclipse                                       \
+          /usr/share/applications/eclipse-cpp.desktop        \
+          /usr/share/applications/eclipse-java.desktop       \
+          /usr/share/applications/eclipse-javascript.desktop \
+          /usr/share/applications/eclipse-php.desktop
+    ;;
+
+  unpack)
+    upstream_pack=$1
+    upstream_dir=$2
+
+    tar --no-same-owner -jx -f "$upstream_pack" -C "$upstream_dir"
+    ;;
+
+  download)
+    upstream_pack=$(readlink -f "$1")
+    tmpdir=
+    trap '[ -n "$tmpdir" ] && rm -rf "$tmpdir"' 0 INT TERM
+    tmpdir=$(mktemp -d)
+
+    (
+      cd "$tmpdir"
+      while read sha384 lang_subdir tarpath; do
+        tarfile=$(basename "$tarpath")
+        wget \
+            --no-use-server-timestamps \
+            --no-check-certificate \
+            --no-cookies \
+            --output-document "$tarfile" \
+            --progress=dot:mega \
+            "${urlbase}/${tarpath}" || {
+            [ $? -eq 4 ] && exit 2 ## Network failure.
+            exit 1
+        }
+        if ! echo "${sha384} ${tarfile}" | sha384sum --check >/dev/null; then
+          actual_checksum=$(sha384sum "$tarfile" | awk '{ print $1 }')
+          echo "checksum NOT matching for $tarpath" >&2
+          echo "expected: ${sha384} / actual: ${actual_checksum}" >&2
+          exit 1
+        fi
+        eclipse_langdir="eclipse/${lang_subdir}"
+        mkdir -p "$eclipse_langdir"
+        tar -C "$eclipse_langdir" --strip-components=1 -zx -f "$tarfile" \
+          || exit 1
+      done <<EOF
+eb5b99e0bb9da29fd8c5ba1322636c82b2237b49d86de212f479369a757334565c5ef05a2bfbe87c07b226be62cef5c9 cpp ${version}/R/eclipse-cpp-${version}-R-linux-gtk-x86_64.tar.gz
+a8d891a0db3f56bc026b0022ed51883fd14415178948e385aff0aa24cee39cd746867c9e9b5a128d2db499abfb79c6ab java ${version}/R/eclipse-java-${version}-R-linux-gtk-x86_64.tar.gz
+236d6478c23925cd18074b2171abc6961167f02364354bc36ee76522e2c4f83b565d488b1962d0c59706ad36ac376b5d javascript ${version}/R/eclipse-javascript-${version}-R-linux-gtk-x86_64.tar.gz
+4acd13ccf06f59014a4b8c713305af9bf49e24ec4039850a8e84a96a3276d1fb12e4a8e872df2093f165484c76469b3b php ${version}/R/eclipse-php-${version}-R-linux-gtk-x86_64.tar.gz
+EOF
+
+      # hard link many duplicate files
+      rdfind -makehardlinks true eclipse/*
+
+      # Set LC_COLLATE=C so that files always sort in the same
+      # way (so we get the same tar-archive independent of locales).
+      env LC_COLLATE=C \
+        tar -C eclipse -j --mtime='2000-01-01 00:00:00 +00:00' --sort=name -c \
+          -f "$upstream_pack" .
+    )
+    ;;
+  *)
+    ;;
+esac
