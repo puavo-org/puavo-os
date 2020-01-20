@@ -7,188 +7,234 @@
 # on laptops, with reboots and network outages, we expect a lot of
 # issues that (it appears) rsyslog and syslog-ng do not always handle.
 
+package require Thread
+
 set syslog_host [lindex $argv 0]
 set queue_name  [lindex $argv 1]
-
-set start_hour [exec puavo-conf puavo.autopoweroff.daytime_start_hour]
-set end_hour   [exec puavo-conf puavo.autopoweroff.daytime_end_hour]
-set start_hour 2
-set end_hour   20
-set personally_administered [
-  exec puavo-conf puavo.admin.personally_administered
-]
 
 if {($syslog_host eq "") || ($queue_name eq "")} {
   puts stderr "usage: puavo-caching-syslog-sender syslog_server queuename"
   exit 1
 }
 
-set puavo_domain [exec cat /etc/puavo/domain]
-
 set cache_index_path  "/var/log/puavo/${syslog_host}.${queue_name}.cache.index"
 set remote_cache_path "/var/log/puavo/${syslog_host}.${queue_name}.cache"
 
+set must_send [thread::cond create]
+
+proc nonempty_lines {data} {
+  set lines [split $data "\n"]
+  lmap _ $lines { expr { $_ ne "" ? $_ : [continue] } }
+}
+
 # read previous file cache, if any
 if {[catch { set syslog_filecache [open $remote_cache_path r] }]} {
-  set syslog_memcache [list]
+  tsv::set app syslog_memcache [list]
+  tsv::set app syslog_cache_index 0
 } else {
-  set syslog_memcache [split [read $syslog_filecache] "\n"]
+  tsv::set app syslog_memcache [nonempty_lines [read $syslog_filecache]]
   close $syslog_filecache
-}
 
-if {[catch { set syslog_cache_index_file [open $cache_index_path r] }]} {
-  set syslog_cache_index 0
-} else {
-  set syslog_cache_index [string trim [read $syslog_cache_index_file]]
-  if {![string is integer -strict $syslog_cache_index]} {
-    set syslog_cache_index 0
+  if {[catch { set syslog_cache_index_file [open $cache_index_path r] }]} {
+    tsv::set app syslog_cache_index 0
+  } else {
+    tsv::set app syslog_cache_index [
+      string trim [read $syslog_cache_index_file]
+    ]
+    if {![string is integer -strict [tsv::get app syslog_cache_index]]} {
+      tsv::set app syslog_cache_index 0
+    }
+    close $syslog_cache_index_file
   }
-  close $syslog_cache_index_file
 }
 
-set syslog_connection ""
 set syslog_filecache [open $remote_cache_path a]
 
-proc get_send_bytes_limit {} {
-  global start_hour end_hour personally_administered
+proc clear_cache_in_filesystem {} {
+  global cache_index_path syslog_filecache
 
-  # on personally administered hosts, always limit log message transfer rates
-  if {$personally_administered eq "true"} {
-    return 16384
-  }
-
-  set current_hour [clock format [clock seconds] -format %k]
-
-  if {$start_hour-1 <= $current_hour && $current_hour < $end_hour+1} {
-    # limit our transfer rates on daytime hours (extending by one hour)
-    return 16384
-  }
-
-  # my favourite "large number"
-  return 16777216
+  chan truncate $syslog_filecache 0
+  seek $syslog_filecache 0
+  catch { file delete $cache_index_path }
 }
 
-proc send_to_syslog {} {
-  global cache_index_path puavo_domain send_bytes_limit syslog_connection \
-         syslog_cache_index syslog_host syslog_memcache syslog_sending_state
-
-  if {$syslog_connection ne ""} { return false }
-
-  set send_bytes_limit [get_send_bytes_limit]
-
-  if {[
-    catch {
-      set syslog_connection [socket $syslog_host 514]
-      fconfigure $syslog_connection -translation binary
-
-      # ten second timeout for send events
-      set timeout_event [after 10000 [list set syslog_sending_state timeout]]
-      fileevent $syslog_connection writable {
-        if {[llength $syslog_memcache] <= $syslog_cache_index} {
-          set syslog_sending_state ok
-          catch { file delete $cache_index_path }
-          catch { close $syslog_connection }
-          set syslog_connection ""
-        } elseif {$send_bytes_limit < 0} {
-          set syslog_sending_state limit_reached
-          catch { close $syslog_connection }
-          set syslog_connection ""
-        } else {
-          set line_to_send [lindex $syslog_memcache $syslog_cache_index]
-          if {$line_to_send ne ""} {
-            puts $syslog_connection $line_to_send
-
-            set send_bytes_limit [
-              expr { $send_bytes_limit - [string length $line_to_send] }
-            ]
-          }
-          incr syslog_cache_index
-        }
-      }
-
-      vwait syslog_sending_state
-      after cancel $timeout_event
-
-      # wait a second, with this we ensure that we will not send more
-      # than $send_bytes_limit per second
-      after 1000
-
-      if {$syslog_connection ne ""} {
-        catch { close $syslog_connection }
-        set syslog_connection ""
-      }
-
-      if {$syslog_sending_state ne "ok"} {
-        set syslog_cache_index_file [open "${cache_index_path}.tmp" w]
-        puts $syslog_cache_index_file $syslog_cache_index
-        close $syslog_cache_index_file
-        file rename -force "${cache_index_path}.tmp" "$cache_index_path"
-
-        error "${syslog_sending_state} when sending data to remote syslog"
-      }
-    }
-  ]} {
-    return false
-  }
-
-  return true
-}
-
-proc send_to_syslog_or_cache {{msg ""}} {
-  global remote_cache_path remote_cache_sizelimit syslog_filecache \
-         syslog_memcache syslog_cache_index
+proc handle_new_incoming_messages {msg} {
+  global must_send syslog_filecache
 
   # If our remote cache size is greater than 512 megabytes, we simply truncate
-  # it cache before doing more (yes we lose logs but this should not normally
+  # it before doing more (yes we lose logs but this should not normally
   # happen and we do not want to waste exceeding amounts of diskspace and
   # memory for caching logs that are not ending up anywhere).
-  catch {
-    if {[tell $syslog_filecache] > 536870912} {
-      set syslog_memcache [list]
-      chan truncate $syslog_filecache 0
-      seek $syslog_filecache 0
-    }
+  if {[tell $syslog_filecache] > 536870912} {
+    tsv::set app syslog_memcache [list]
   }
 
-  if {$msg ne ""} {
-    # add new messages to cache first
-    puts -nonewline $syslog_filecache $msg
-    flush $syslog_filecache
-    lappend syslog_memcache {*}[split $msg "\n"]
+  if {[tsv::llength app syslog_memcache] == 0} {
+    clear_cache_in_filesystem
   }
 
-  if {[llength $syslog_memcache] == 0} { return }
+  if {$msg eq ""} { return }
 
-  # send stuff to syslog
-  if {[send_to_syslog]} {
-    # everything has been sent to syslog, truncate file cache
-    close $syslog_filecache
-    set syslog_filecache [open $remote_cache_path w]
-    set syslog_memcache [list]
-    set syslog_cache_index 0
+  # add new messages to cache first
+  puts -nonewline $syslog_filecache $msg
+  flush $syslog_filecache
+
+  set nonempty_lines [nonempty_lines $msg]
+  if {[llength $nonempty_lines] > 0} {
+    tsv::lappend app syslog_memcache {*}$nonempty_lines
+    thread::cond notify $must_send
   }
 }
 
-proc resend_loop {} {
-  global syslog_memcache
+proc retry_send {} {
+  global must_send
 
-  catch {
-    if {[llength $syslog_memcache] > 0} {
-      send_to_syslog_or_cache
-    }
+  if {[tsv::llength app syslog_memcache] == 0} {
+    clear_cache_in_filesystem
+    return
   }
 
-  # try resends after 10 seconds, if there are something still in the cache
-  after 10000 resend_loop
+  # notify syslog sending thread that there is something to do
+  thread::cond notify $must_send
 }
+
+proc retry_send_loop {} {
+  global memcache_mutex
+  catch { thread::eval -lock $memcache_mutex retry_send }
+  after 1000 retry_send_loop
+}
+
+set sending_thread [
+  thread::create {
+    set start_hour [exec puavo-conf puavo.autopoweroff.daytime_start_hour]
+    set end_hour   [exec puavo-conf puavo.autopoweroff.daytime_end_hour]
+    if {![string is integer -strict $start_hour]} { set start_hour 2  }
+    if {![string is integer -strict $end_hour  ]} { set start_hour 20 }
+
+    set personally_administered [
+      exec puavo-conf puavo.admin.personally_administered
+    ]
+
+    proc get_send_bytes_limit {} {
+      global start_hour end_hour personally_administered
+
+      # on personally administered hosts, always limit log message transfer
+      # rates
+      if {$personally_administered eq "true"} {
+        return 16384
+      }
+
+      set current_hour [clock format [clock seconds] -format %k]
+
+      if {$start_hour-1 <= $current_hour && $current_hour < $end_hour+1} {
+        # limit our transfer rates on daytime hours (extending by one hour)
+        return 16384
+      }
+
+      # a nice "large number"
+      return 1048576
+    }
+
+    proc get_messages_to_send {} {
+      if {[tsv::llength app syslog_memcache] == 0} {
+        return [list [list] 0]
+      }
+
+      set send_bytes_limit [get_send_bytes_limit]
+
+      set messages_to_send [list]
+      set next_message_index [tsv::get app syslog_cache_index]
+      while {$send_bytes_limit > 0} {
+        if {[tsv::llength app syslog_memcache] <= $next_message_index} {
+          break
+        }
+
+        set msg [tsv::lindex app syslog_memcache $next_message_index]
+        set send_bytes_limit [
+          expr { $send_bytes_limit - [string length $msg] }
+        ]
+        lappend messages_to_send $msg
+        incr next_message_index
+      }
+
+      list $messages_to_send $next_message_index
+    }
+
+    proc update_cache_state {next_message_index cache_index_path} {
+      if {[tsv::llength app syslog_memcache] <= $next_message_index} {
+        # all done for now!
+        tsv::set app syslog_memcache [list]
+        tsv::set app syslog_cache_index 0
+      } else {
+        # still something to do, update cache index
+        tsv::set app syslog_cache_index $next_message_index
+
+        set syslog_cache_index_file ""
+        try {
+          set syslog_cache_index_file [open "${cache_index_path}.tmp" w]
+          puts $syslog_cache_index_file $next_message_index
+          file rename -force "${cache_index_path}.tmp" "$cache_index_path"
+        } finally {
+          if {$syslog_cache_index_file ne ""} {
+            close $syslog_cache_index_file
+          }
+        }
+      }
+    }
+
+    proc run {must_send memcache_mutex syslog_host cache_index_path} {
+      set condvar_mutex [thread::mutex create]
+      thread::mutex lock $condvar_mutex
+
+      while true {
+        catch {
+          thread::cond wait $must_send $condvar_mutex
+
+          lassign [thread::eval -lock $memcache_mutex get_messages_to_send] \
+                  messages_to_send next_message_index
+
+          if {[llength $messages_to_send] == 0} { continue }
+
+          set syslog_connection ""
+          try {
+            set syslog_connection [socket $syslog_host 514]
+            fconfigure $syslog_connection -translation binary
+            foreach line_to_send $messages_to_send {
+              puts $syslog_connection $line_to_send
+            }
+          } finally {
+            if {$syslog_connection ne ""} {
+              close $syslog_connection
+            }
+          }
+
+          thread::eval -lock $memcache_mutex \
+            [list update_cache_state $next_message_index $cache_index_path]
+
+          # wait a second, with this we ensure that we will not send more
+          # than $send_bytes_limit per second
+          after 1000
+        }
+      }
+    }
+
+    thread::wait
+  }
+]
+
+set memcache_mutex [thread::mutex create]
+
+thread::send -async $sending_thread [
+  list run $must_send $memcache_mutex $syslog_host $cache_index_path
+]
 
 fconfigure stdin -blocking 0
-
 fileevent stdin readable {
   if {[eof stdin]} { exit 0 }
-  send_to_syslog_or_cache [read stdin]
+  thread::eval -lock $memcache_mutex \
+    [list handle_new_incoming_messages [read stdin]]
 }
 
-resend_loop
+retry_send_loop
 
 vwait forever

@@ -12,7 +12,7 @@ class syslog {
 
     '/usr/local/lib/puavo-caching-syslog-sender':
       mode    => '0755',
-      require => File['/var/log/puavo'],
+      require => [ File['/var/log/puavo'], Package['tcl-thread'] ],
       source  => 'puppet:///modules/syslog/puavo-caching-syslog-sender';
 
     '/var/log/puavo':
@@ -23,5 +23,6 @@ class syslog {
   }
 
   Package <| title == logrotate
-          or title == rsyslog |>
+          or title == rsyslog
+          or title == tcl-thread |>
 }
