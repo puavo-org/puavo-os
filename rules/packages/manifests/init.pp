@@ -223,6 +223,7 @@ class packages {
     , 'shellcheck'
     , 'sloccount'
     , 'tcl8.6-doc'
+    , 'tcl-thread'
     , 'tk8.6-doc'
     , 'translate-toolkit'
     , 'vim-nox' ]:
