@@ -67,6 +67,7 @@ proc handle_new_incoming_messages {msg} {
   # memory for caching logs that are not ending up anywhere).
   if {[tell $syslog_filecache] > 536870912} {
     tsv::set app syslog_memcache [list]
+    tsv::set app syslog_cache_index 0
   }
 
   if {[tsv::llength app syslog_memcache] == 0} {
