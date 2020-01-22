@@ -9,7 +9,6 @@ class packages::distribution_tweaks {
     or title == 'gksu'
     or title == 'gnome-icon-theme-extras'
     or title == 'gnome-themes-extras'
-    or title == 'musescore-soundfont-gm'
     or title == 'mypaint'               # XXX can not co-exist with gimp
     or title == 'mypaint-data'          # XXX can not co-exist with gimp
     or title == 'ttf-freefont'

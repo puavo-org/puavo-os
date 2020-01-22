@@ -457,7 +457,7 @@ programs:
         tags: default
   - mousepad:
         tags: default
-  - mscore:
+  - mscore3:
         name:
             en: MuseScore-music composition & notation
             fi: MuseScore-nuotinnusohjelma
@@ -1325,7 +1325,7 @@ menus:
             - org.pitivi.Pitivi
             - shotcut
             - solfege
-            - mscore
+            - mscore3
             - hydrogen
             - lmms
             - com.rosegardenmusic.rosegarden
@@ -1641,7 +1641,7 @@ menus:
             - solfege
             - hydrogen
             - lmms
-            - mscore
+            - mscore3
             - spotify
             - libreoffice-writer
             - kahoot

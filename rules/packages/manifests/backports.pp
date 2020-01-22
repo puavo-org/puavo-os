@@ -5,7 +5,9 @@ class packages::backports {
   # that has to be defined elsewhere.
 
   $package_list = $debianversioncodename ? {
-                    'buster' => [ 'musescore' ],
+                    'buster' => [ 'musescore3'
+                                , 'musescore3-common'
+                                , 'musescore-general-soundfont' ],
                     default  => [],
                   }
 }
