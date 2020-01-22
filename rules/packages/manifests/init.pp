@@ -202,7 +202,7 @@ class packages {
       tag => [ 'tag_desktop', 'tag_debian_desktop', ];
 
     [ 'acct'
-    , 'ack-grep'
+    , 'ack'
     , 'build-essential'
     , 'bvi'
     , 'cdbs'
@@ -336,7 +336,7 @@ class packages {
     #   tag => [ 'tag_laptop', 'tag_debian_desktop', ];
 
     [ 'goobox'
-    , 'gstreamer1.0-clutter'
+    , 'gstreamer1.0-clutter-3.0'
     , 'gstreamer1.0-libav'
     , 'gstreamer1.0-plugins-bad'
     , 'gstreamer1.0-plugins-base'
@@ -476,6 +476,7 @@ class packages {
     # desktop-packages relating to gnome and other, some of these
     # maybe belong to other categories or may be removed
     [ 'acpi-support'
+    , 'adwaita-icon-theme'
     , 'alsa-utils'
     , 'anacron'
     , 'at-spi2-core'
@@ -516,7 +517,6 @@ class packages {
     , 'gnome-contacts'
     , 'gnome-control-center'
     , 'gnome-disk-utility'
-    , 'gnome-icon-theme-symbolic'
     , 'gnome-keyring'
     , 'gnome-menus'
     , 'gnome-online-accounts'
