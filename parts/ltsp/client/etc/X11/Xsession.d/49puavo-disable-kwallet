@@ -1,0 +1,5 @@
+[ -d ~/.kde/share/config ] || mkdir -p ~/.kde/share/config
+printf "%s\n%s\n%s\n%s\n%s\n" \
+       '[Wallet]' 'Close When Idle=false' 'Enabled=false' 'First Use=false' \
+       'Use One Wallet=true' \
+  > ~/.kde/share/config/kwalletrc
