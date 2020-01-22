@@ -4,10 +4,8 @@ deb-src http://<%= @mirror %><%= @mirror_path %>/debian <%= @debianversioncodena
 deb http://<%= @mirror %><%= @mirror_path %>/debian <%= @debianversioncodename %>-updates main contrib non-free
 deb-src http://<%= @mirror %><%= @mirror_path %>/debian <%= @debianversioncodename %>-updates main contrib non-free
 
-<% if @debianversioncodename == 'stretch' %>
 deb http://<%= @mirror %><%= @mirror_path %>/debian <%= @debianversioncodename %>-backports main contrib non-free
 deb-src http://<%= @mirror %><%= @mirror_path %>/debian <%= @debianversioncodename %>-backports main contrib non-free
-<% end %>
 
 deb http://<%= @securitymirror %><%= @securitymirror_path %>/ <%= @debianversioncodename %>/updates main contrib non-free
 deb-src http://<%= @securitymirror %><%= @securitymirror_path %>/ <%= @debianversioncodename %>/updates main contrib non-free
