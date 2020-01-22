@@ -1,7 +1,0 @@
-Package: *
-Pin: release n=<%= @ubuntu_version %>
-Pin-Priority: 30
-
-Package: *
-Pin: release n=<%= @old_ubuntu_version %>
-Pin-Priority: 20
