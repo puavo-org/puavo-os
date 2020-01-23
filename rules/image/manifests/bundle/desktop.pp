@@ -36,6 +36,7 @@ class image::bundle::desktop {
   include ::supplementary_groups
   include ::ti_nspire_cx_cas
   include ::tuxpaint
+  include ::virtualbox
   include ::vym
   include ::wacom
   include ::wine
