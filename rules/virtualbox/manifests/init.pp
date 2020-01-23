@@ -8,7 +8,7 @@ class virtualbox {
 
     exec {
       "create virtualbox driver modules for kernel $kernel_version":
-        command => "/usr/lib/virtualbox/puavo-vboxdrv.sh setup ${kernel_version} && /usr/bin/touch ${sentinel_path}",
+        command => "/usr/lib/virtualbox/puavo-vboxdrv.sh puavo_build_modules ${kernel_version} && /usr/bin/touch ${sentinel_path}",
         creates => $sentinel_path,
         require => [ File['/usr/lib/virtualbox/puavo-vboxdrv.sh']
                    , Kernels::All_kernel_links[$label]

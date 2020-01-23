@@ -586,6 +586,11 @@ force-reload)
 status)
     dmnstatus
     ;;
+puavo_build_modules)
+    test -n "$2" && export KERN_VER="$2"
+    setup_usb "$GROUP" "$DEVICE_MODE" "$INSTALL_DIR"
+    setup
+    ;;
 *)
     echo "Usage: $0 {start|stop|stop_vms|restart|force-reload|status}"
     exit 1
