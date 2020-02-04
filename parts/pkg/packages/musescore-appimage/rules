@@ -1,0 +1,40 @@
+#!/bin/sh
+
+set -eux
+
+command=$1
+shift
+
+case "$command" in
+  configure)
+    upstream_dir=$1
+
+    ln -fns "$upstream_dir" /opt/musescore-appimage
+    ln -fns "${upstream_dir}/mscore-appimage.svg" /usr/share/icons/mscore-appimage.svg
+    cat <<EOF > /usr/share/applications/musescore-appimage.desktop
+[Desktop Entry]
+Name=MuseScore 3
+Exec=/opt/musescore-appimage/musescore.AppImage
+Type=Application
+Terminal=false
+Icon=mscore-appimage.svg
+StartupNotify=true
+Categories=Education;
+EOF
+    ;;
+  unconfigure)
+    rm -f /opt/musescore-appimage \
+          /usr/share/applications/musescore-appimage.desktop \
+          /usr/share/icons/mscore-appimage.svg
+    ;;
+  unpack)
+    upstream_pack=$1
+    upstream_dir=$2
+
+    cp -p "$upstream_pack" "${upstream_dir}/musescore.AppImage"
+    chmod 755 "${upstream_dir}/musescore.AppImage"
+    cp -p mscore-appimage.svg "$upstream_dir"
+    ;;
+  *)
+    ;;
+esac

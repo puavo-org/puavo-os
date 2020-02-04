@@ -43,6 +43,7 @@ packagedirs += mafynetti
 packagedirs += marvinsketch
 packagedirs += mattermost-desktop
 packagedirs += msttcorefonts
+packagedirs += musescore-appimage
 packagedirs += nightcode
 packagedirs += obsidian-icons
 packagedirs += ohjelmointi-opetuksessa
