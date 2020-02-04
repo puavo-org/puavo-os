@@ -1,6 +1,6 @@
 #!/bin/sh
 
-set -eux
+set -eu
 
 command=$1
 shift
