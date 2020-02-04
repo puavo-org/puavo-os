@@ -1,143 +1,91 @@
 #!/bin/sh
 
-set -eux
+set -eu
 
 command=$1
 shift
 
 aseba_links='
-/usr/bin/asebachallenge
-/usr/bin/asebacmd
-/usr/bin/asebadummynode
-/usr/bin/asebadump
-/usr/bin/asebaexec
-/usr/bin/asebahttp
-/usr/bin/asebahttp2
-/usr/bin/asebajoy
-/usr/bin/asebamassloader
-/usr/bin/asebamedulla
-/usr/bin/asebaplay
-/usr/bin/asebaplayground
-/usr/bin/asebarec
-/usr/bin/asebastudio
-/usr/bin/asebaswitch
-/usr/bin/thymioupgrader
-/usr/bin/thymiovpl
-/usr/bin/thymiownetconfig
-/usr/bin/thymiownetconfig-cli
-/usr/include/aseba/common/consts.h
-/usr/include/aseba/common/msg/NodesManager.h
-/usr/include/aseba/common/msg/TargetDescription.h
-/usr/include/aseba/common/msg/msg.h
-/usr/include/aseba/common/productids.h
-/usr/include/aseba/common/types.h
-/usr/include/aseba/common/utils/FormatableString.h
-/usr/include/aseba/common/utils/utils.h
-/usr/include/aseba/common/zeroconf/zeroconf-dashelhub.h
-/usr/include/aseba/common/zeroconf/zeroconf-qt.h
-/usr/include/aseba/common/zeroconf/zeroconf-thread.h
-/usr/include/aseba/common/zeroconf/zeroconf.h
-/usr/include/aseba/compiler/compiler.h
-/usr/include/aseba/compiler/errors_code.h
-/usr/include/aseba/switches/http/http.h
-/usr/include/aseba/switches/http2/AeslProgram.h
-/usr/include/aseba/switches/http2/HttpDashelTarget.h
-/usr/include/aseba/switches/http2/HttpHandler.h
-/usr/include/aseba/switches/http2/HttpInterface.h
-/usr/include/aseba/switches/http2/HttpInterfaceHandlers.h
-/usr/include/aseba/switches/http2/HttpRequest.h
-/usr/include/aseba/switches/http2/HttpResponse.h
-/usr/include/aseba/transport/buffer/vm-buffer.h
-/usr/include/aseba/transport/dashel_plugins/dashel-plugins.h
-/usr/include/aseba/vm/natives.h
-/usr/include/aseba/vm/vm.h
-/usr/lib/libasebacommon.a
-/usr/lib/libasebacompiler.a
-/usr/lib/libasebadashelplugins.a
-/usr/lib/libasebahttp2hub.a
-/usr/lib/libasebahttphub.a
-/usr/lib/libasebaqtabout.a
-/usr/lib/libasebasim.a
-/usr/lib/libasebavm.a
-/usr/lib/libasebavmbuffer.a
-/usr/lib/libasebazeroconf.a
-/usr/lib/libasebazeroconfqt.a
-/usr/share/applications/asebachallenge.desktop
-/usr/share/applications/asebaonlinehelp.desktop
-/usr/share/applications/asebaplayground.desktop
-/usr/share/applications/asebastudio.desktop
-/usr/share/applications/asebastudiothymio.desktop
-/usr/share/applications/asebawebridge.desktop
-/usr/share/applications/thymioupgrader.desktop
-/usr/share/applications/thymiovpl.desktop
-/usr/share/applications/thymiownetconfig.desktop
-/usr/share/doc/aseba/README.Debian
-/usr/share/doc/aseba/changelog
-/usr/share/doc/aseba/changelog.debian
-/usr/share/doc/aseba/copyright
-/usr/share/doc/aseba/example-code/challenge-goto-energy.aesl
-/usr/share/doc/aseba/example-code/thymio-default-behaviours.aesl
-/usr/share/doc/aseba/example-code/thymio-track-following.aesl
-/usr/share/doc/aseba/example-scenarios/r2t2-complete.playground
-/usr/share/doc/aseba/example-scenarios/r2t2-complete.png
-/usr/share/doc/aseba/example-scenarios/r2t2-final.playground
-/usr/share/doc/aseba/example-scenarios/r2t2-practice.playground
-/usr/share/doc/aseba/example-scenarios/r2t2-practice.png
-/usr/share/doc/aseba/example-scenarios/thymio-barcodelightpainting.playground
-/usr/share/doc/aseba/example-scenarios/thymio-barcodelightpainting.png
-/usr/share/doc/aseba/example-scenarios/thymio-challenge-pack-web-bridge.playground
-/usr/share/doc/aseba/example-scenarios/thymio-challenge-pack.playground
-/usr/share/doc/aseba/example-scenarios/thymio-default-behaviours.aesl
-/usr/share/doc/aseba/example-scenarios/thymio-discovery-maisondailleurs.playground
-/usr/share/doc/aseba/example-scenarios/thymio-discovery-otter.playground
-/usr/share/doc/aseba/example-scenarios/thymio-discovery-yeti.playground
-/usr/share/doc/aseba/example-scenarios/thymio-maze-6x6.playground
-/usr/share/doc/aseba/example-scenarios/thymio-maze-6x6.png
-/usr/share/doc/aseba/example-scenarios/thymio-track-maisondailleurs.png
-/usr/share/doc/aseba/example-scenarios/thymio-track-otter.png
-/usr/share/doc/aseba/example-scenarios/thymio-track-yeti.png
-/usr/share/doc/aseba/example-scenarios/thymio.playground
-/usr/share/doc/aseba/example-scenarios/unifr.playground
-/usr/share/icons/hicolor/48x48/apps/asebachallenge.png
-/usr/share/icons/hicolor/48x48/apps/asebahelp.png
-/usr/share/icons/hicolor/48x48/apps/asebaplayground.png
-/usr/share/icons/hicolor/48x48/apps/asebastudio.png
-/usr/share/icons/hicolor/48x48/apps/asebastudiothymio.png
-/usr/share/icons/hicolor/48x48/apps/scratchblock.png
-/usr/share/icons/hicolor/48x48/apps/thymioupgrader.png
-/usr/share/icons/hicolor/48x48/apps/thymiovpl.png
-/usr/share/icons/hicolor/48x48/apps/thymiowebbridge.png
-/usr/share/icons/hicolor/48x48/apps/thymiownetconfig.png
-/usr/share/icons/hicolor/scalable/apps/asebachallenge.svg
-/usr/share/icons/hicolor/scalable/apps/asebahelp.svg
-/usr/share/icons/hicolor/scalable/apps/asebaplayground.svg
-/usr/share/icons/hicolor/scalable/apps/asebastudio.svg
-/usr/share/icons/hicolor/scalable/apps/asebastudiothymio.svg
-/usr/share/icons/hicolor/scalable/apps/scratchblock.svg
-/usr/share/icons/hicolor/scalable/apps/thymioupgrader.svg
-/usr/share/icons/hicolor/scalable/apps/thymiovpl.svg
-/usr/share/icons/hicolor/scalable/apps/thymiowebbridge.svg
-/usr/share/icons/hicolor/scalable/apps/thymiownetconfig.svg
+  /usr/bin/asebachallenge
+  /usr/bin/asebacmd
+  /usr/bin/asebadummynode
+  /usr/bin/asebadump
+  /usr/bin/asebaexec
+  /usr/bin/asebahttp
+  /usr/bin/asebahttp2
+  /usr/bin/asebajoy
+  /usr/bin/asebamassloader
+  /usr/bin/asebamedulla
+  /usr/bin/asebaplay
+  /usr/bin/asebaplayground
+  /usr/bin/asebarec
+  /usr/bin/asebastudio
+  /usr/bin/asebaswitch
+  /usr/bin/thymioupgrader
+  /usr/bin/thymiovpl
+  /usr/bin/thymiownetconfig
+  /usr/bin/thymiownetconfig-cli
+  /usr/include/aseba
+  /usr/lib/libasebacommon.a
+  /usr/lib/libasebacompiler.a
+  /usr/lib/libasebadashelplugins.a
+  /usr/lib/libasebahttp2hub.a
+  /usr/lib/libasebahttphub.a
+  /usr/lib/libasebaqtabout.a
+  /usr/lib/libasebasim.a
+  /usr/lib/libasebavm.a
+  /usr/lib/libasebavmbuffer.a
+  /usr/lib/libasebazeroconf.a
+  /usr/lib/libasebazeroconfqt.a
+  /usr/share/applications/asebachallenge.desktop
+  /usr/share/applications/asebaonlinehelp.desktop
+  /usr/share/applications/asebaplayground.desktop
+  /usr/share/applications/asebastudio.desktop
+  /usr/share/applications/asebastudiothymio.desktop
+  /usr/share/applications/asebawebridge.desktop
+  /usr/share/applications/thymioupgrader.desktop
+  /usr/share/applications/thymiovpl.desktop
+  /usr/share/applications/thymiownetconfig.desktop
+  /usr/share/doc/aseba
+  /usr/share/icons/hicolor/48x48/apps/asebachallenge.png
+  /usr/share/icons/hicolor/48x48/apps/asebahelp.png
+  /usr/share/icons/hicolor/48x48/apps/asebaplayground.png
+  /usr/share/icons/hicolor/48x48/apps/asebastudio.png
+  /usr/share/icons/hicolor/48x48/apps/asebastudiothymio.png
+  /usr/share/icons/hicolor/48x48/apps/scratchblock.png
+  /usr/share/icons/hicolor/48x48/apps/thymioupgrader.png
+  /usr/share/icons/hicolor/48x48/apps/thymiovpl.png
+  /usr/share/icons/hicolor/48x48/apps/thymiowebbridge.png
+  /usr/share/icons/hicolor/48x48/apps/thymiownetconfig.png
+  /usr/share/icons/hicolor/scalable/apps/asebachallenge.svg
+  /usr/share/icons/hicolor/scalable/apps/asebahelp.svg
+  /usr/share/icons/hicolor/scalable/apps/asebaplayground.svg
+  /usr/share/icons/hicolor/scalable/apps/asebastudio.svg
+  /usr/share/icons/hicolor/scalable/apps/asebastudiothymio.svg
+  /usr/share/icons/hicolor/scalable/apps/scratchblock.svg
+  /usr/share/icons/hicolor/scalable/apps/thymioupgrader.svg
+  /usr/share/icons/hicolor/scalable/apps/thymiovpl.svg
+  /usr/share/icons/hicolor/scalable/apps/thymiowebbridge.svg
+  /usr/share/icons/hicolor/scalable/apps/thymiownetconfig.svg
 '
 
-
 case "${command}" in
-    configure)
-	upstream_dir=$1
-        for f in $aseba_links; do
-          mkdir -p "$(dirname "$f")"
-          ln -fns -T "${upstream_dir}${f}" "$f"
-        done
-	;;
-    unconfigure)
-	rm -rf $aseba_links
-	;;
-    unpack)
-	upstream_pack=$1
-	upstream_dir=$2
+  configure)
+    upstream_dir=$1
+    for f in $aseba_links; do
+      mkdir -p "$(dirname "$f")"
+      ln -fns -T "${upstream_dir}${f}" "$f"
+    done
+    ;;
+  unconfigure)
+    rm -rf $aseba_links
+    ;;
+  unpack)
+    upstream_pack=$1
+    upstream_dir=$2
 
-	dpkg -x "${upstream_pack}" "${upstream_dir}"
-	;;
-    *)
-	;;
+    dpkg -x "$upstream_pack" "$upstream_dir"
+    ;;
+  *)
+    ;;
 esac
