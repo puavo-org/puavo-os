@@ -15,6 +15,7 @@ packagedirs += appinventor
 packagedirs += arduino-ide
 packagedirs += arduino-radiohead
 packagedirs += arduino-tm1637
+packagedirs += aseba
 packagedirs += bluegriffon
 # XXX do not build, not ready # packagedirs += casio-classpad-manager-for-ii
 packagedirs += canon-cque
