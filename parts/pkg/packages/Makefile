@@ -63,7 +63,6 @@ packagedirs += t-lasku
 packagedirs += unityhub-appimage
 packagedirs += veracrypt
 packagedirs += vidyo-client
-packagedirs += vstloggerpro
 packagedirs += zoom
 
 packagefiles = $(patsubst %,%.tar.gz,${packagedirs})
