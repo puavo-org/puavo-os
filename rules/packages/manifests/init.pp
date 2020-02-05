@@ -373,8 +373,6 @@ class packages {
     , 'fmit'
     , 'hydrogen'
     , 'lmms'
-    , 'musescore'
-    , 'musescore-soundfont-gm'
     , 'qsynth'
     , 'rosegarden'
     , 'solfege'
