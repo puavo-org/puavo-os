@@ -485,6 +485,13 @@ programs:
         tags: default
         puavopkg:
             id: marvinsketch
+  - mathdemo-abitti:
+        type: web
+        name: Abitin kaavaeditori
+        url:  https://math-demo.abitti.fi
+        description: Abitti Mathdemo-kaavaeditori
+        icon: xournal
+        tags: default, internet, education
   - MarvinView:
         tags: default
   - mimio-notebook:
@@ -1443,6 +1450,7 @@ menus:
             - yleareena
             - ylearkisto
             - sumopaint
+            - mathdemo-abitti
             - walma
             - pahvi
             - kahoot
@@ -1497,6 +1505,7 @@ menus:
             - geogebra6
             - org.kde.kmplot
             - gnome-calculator
+            - mathdemo-abitti
             - teddybear
             - scratch
             - scratch-club
