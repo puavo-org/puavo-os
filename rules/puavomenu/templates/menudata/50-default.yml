@@ -45,6 +45,8 @@ programs:
             sv: Audacity-ljudredigerare
             de: Audacity Audio bearbeiten
         tags: default, audio
+  - asebastudiothymio:
+        tags: defult
   - avogadro:
         name:
             en: Avogadro
@@ -1197,6 +1199,7 @@ menus:
         icon: /usr/share/icons/Faenza/categories/48/gnome-devel.png
         programs:
             - arduino
+            - asebastudiothymio
             - fritzing
             - teddybear
             - drracket
