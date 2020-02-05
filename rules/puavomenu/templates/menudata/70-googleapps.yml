@@ -58,6 +58,13 @@ programs:
         description: Google Sheets
         icon: gnumeric
         tags: default, internet, education
+  - google-sites:
+        type: web
+        name: Google Sites
+        url:  https://sites.google.com
+        description: Google Sites
+        icon: google
+        tags: default, internet, education
   - google-slides:
         type: web
         name: Google Slides
@@ -94,3 +101,4 @@ categories:
             - google-forms
             - google-meet
             - google-keep
+            - google-sites
