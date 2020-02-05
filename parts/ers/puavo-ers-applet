@@ -76,9 +76,8 @@ class PuavoErsApplet:
 
     self.menu.show_all()
 
-    # XXX some changes incoming on the server, disable for now
-    # self.exam_sync = PuavoErsExamSync()
-    # self.exam_sync.start()
+    self.exam_sync = PuavoErsExamSync()
+    self.exam_sync.start()
 
     self.exam_zipper = PuavoErsExamZipper()
     self.exam_zipper.start()
@@ -171,10 +170,16 @@ class PuavoErsExamSync (threading.Thread):
   def __init__(self):
     threading.Thread.__init__(self)
 
+    with open('/etc/puavo/domain') as f:
+      self.domain = f.read().rstrip()
+    with open('/etc/puavo/hostname') as f:
+      self.hostname = f.read().rstrip()
+    with open('/etc/puavo/id') as f:
+      self.id = f.read().rstrip()
     with open('/etc/puavo/ldap/dn') as f:
-      self.dn = f.read().rstrip()
+      self.ldap_dn = f.read().rstrip()
     with open('/etc/puavo/ldap/password') as f:
-      self.password = f.read().rstrip()
+      self.ldap_password = f.read().rstrip()
 
 
   def run(self):
@@ -185,17 +190,24 @@ class PuavoErsExamSync (threading.Thread):
 
   def sync_exams(self):
     self.exam_server_address = puavoconf_get('puavo.abitti.exam_server')
-    index_uri = 'https://%s/tests/1234' % self.exam_server_address
+    index_uri = 'https://%s/schedules/query_exam_server_schedule' \
+                   % self.exam_server_address
 
     response = requests.get(index_uri,
-                            auth=HTTPBasicAuth(self.dn, self.password))
+                            auth=HTTPBasicAuth(self.ldap_dn,
+                                               self.ldap_password),
+                            params={
+                              'domain':   self.domain,
+                              'hostname': self.hostname,
+                              'id':       self.id,
+                            })
     if not response:
       print('error when getting exam index from %s: %s' \
               % (index_uri, response.status_code), file=sys.stderr)
       return
 
     exam_list = json.loads(response.content.decode('utf-8'))
-    self.update_passwords_on_disk([ e['password'] for e in exam_list ])
+    self.update_passwords_on_disk([ e['decrypt_code'] for e in exam_list ])
 
     for exam in exam_list:
       self.sync_one_exam(exam)
@@ -214,16 +226,22 @@ class PuavoErsExamSync (threading.Thread):
 
 
   def sync_one_exam(self, exam):
-    exam_file_path = os.path.join(KTP_JAKO_DIR, exam['file'])
+    exam_file_path = os.path.join(KTP_JAKO_DIR, exam['file_name'])
     if os.path.isfile(exam_file_path):
       return
 
-    exam_uuid = exam['uuid']
-    exam_uri = 'https://%s/tests/1234/%s' % (self.exam_server_address,
-                                             exam_uuid)
+    exam_hash = exam['file_sha256']
+    exam_uri = 'https://%s/exams/raw_file' % self.exam_server_address
 
     response = requests.get(exam_uri,
-                            auth=HTTPBasicAuth(self.dn, self.password))
+                            auth=HTTPBasicAuth(self.ldap_dn,
+                                               self.ldap_password),
+                            params={
+                              'domain': self.domain,
+                              'hash': exam_hash,
+                              'hostname': self.hostname,
+                              'id': self.id,
+                            })
     if not response:
       print('error when getting an exam from %s: %s' \
               % (exam_uri, response.status_code), file=sys.stderr)

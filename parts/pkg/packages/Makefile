@@ -13,6 +13,7 @@ packagedirs += appinventor
 packagedirs += arduino-ide
 packagedirs += arduino-radiohead
 packagedirs += arduino-tm1637
+packagedirs += aseba
 packagedirs += bluegriffon
 # XXX do not build, not ready # packagedirs += casio-classpad-manager-for-ii
 packagedirs += canon-cque
@@ -62,7 +63,6 @@ packagedirs += ubuntu-wallpapers
 packagedirs += unityhub-appimage
 packagedirs += veracrypt
 packagedirs += vidyo-client
-packagedirs += vstloggerpro
 packagedirs += zoom
 
 packagefiles = $(patsubst %,%.tar.gz,${packagedirs})

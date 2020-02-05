@@ -17,6 +17,7 @@ class puavo_pkg::packages {
 			, 'arduino-ide'
 			, 'arduino-radiohead'
 			, 'arduino-tm1637'
+			, 'aseba'
 			, 'bluegriffon'
 			, 'celestia'
 			, 'cmaptools'
@@ -59,7 +60,6 @@ class puavo_pkg::packages {
 			, 'unityhub-appimage'
 			, 'veracrypt'
 			, 'vidyo-client'
-			, 'vstloggerpro'
 			, 'zoom' ]
 
   @puavo_pkg::install { $available_packages: ; }
@@ -70,11 +70,5 @@ class puavo_pkg::packages {
     before +> [ Puavo_pkg::Install['arduino-radiohead']
               , Puavo_pkg::Install['arduino-tm1637']
               , Puavo_pkg::Install['ohjelmointi-opetuksessa'] ],
-  }
-
-  Puavo_pkg::Install['vstloggerpro'] {
-    require +> [ ::Trusty_libs::Deb_unpack['x64_64-linux-gnu/libcairomm-1.0.so.1']
-               , ::Trusty_libs::Deb_unpack['x64_64-linux-gnu/libglibmm-2.4.so.1']
-               , ::Trusty_libs::Deb_unpack['x64_64-linux-gnu/libgtkmm-2.4.so.1'] ],
   }
 }

@@ -361,7 +361,6 @@ class packages {
     , 'hydrogen'
     , 'lmms'
     , 'musescore3'
-    , 'musescore-general-soundfont'
     , 'qsynth'
     , 'rosegarden'
     , 'solfege'
@@ -579,7 +578,6 @@ class packages {
     , 'network-manager-pptp'
     , 'network-manager-pptp-gnome'
     , 'nodm'                                    # for infotv
-    , 'openbox'                                 # for infotv
     , 'openprinting-ppds'
     , 'pcmciautils'
     , 'plymouth'
@@ -634,6 +632,7 @@ class packages {
     , 'libqt5quicktemplates2-5'           # mafynetti
     , 'libqt5webenginewidgets5'           # promethean
     # XXX buster , 'libwebkitgtk-1.0-0'                # citrix client
+    , 'libqwt5-qt4'                       # aseba
     , 'qml-module-qtquick-controls2'      # mafynetti
     , 'qml-module-qtquick-templates2'     # mafynetti
     ]:

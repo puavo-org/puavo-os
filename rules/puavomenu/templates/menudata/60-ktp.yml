@@ -1,0 +1,42 @@
+---
+
+programs:
+
+  - oma-abitti:
+        type: web
+        name: Oma Abitti
+        url:  https://oma.abitti.fi
+        description: Oma abitti
+        icon: web-browser
+        tags: default, internet, education
+
+  - koejakaja:
+        type: web
+        name: Opinsys Koejakaja
+        url:  https://koepalvelin.opinsys.fi
+        description: Koejakaja
+        icon: alacarte
+        tags: default, internet, education
+
+  - ktp-jako:
+        type: custom
+        name: Ktp-jako-kansio
+        command:  "nautilus /home/puavo-ers/ktp-jako"
+        description: Ktp koe-kansio
+        icon: /usr/share/icons/Faenza/places/64/folder-documents.png
+        tags: default, internet, education
+
+# ------------------------------------------------------------------------------
+
+categories:
+
+  - category-ktp:
+        name: KTP
+        position: -100
+        hidden_by_default: true 
+        programs:
+            - google-chrome
+            - firefox
+            - oma-abitti
+            - koejakaja
+            - ktp-jako

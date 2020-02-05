@@ -45,6 +45,8 @@ programs:
             sv: Audacity-ljudredigerare
             de: Audacity Audio bearbeiten
         tags: default, audio
+  - asebastudiothymio:
+        tags: defult
   - avogadro:
         name:
             en: Avogadro
@@ -449,6 +451,13 @@ programs:
         tags: default
         puavopkg:
             id: marvinsketch
+  - mathdemo-abitti:
+        type: web
+        name: Abitin kaavaeditori
+        url:  https://math-demo.abitti.fi
+        description: Abitti Mathdemo-kaavaeditori
+        icon: xournal
+        tags: default, internet, education
   - MarvinView:
         tags: default
   - mimio-notebook:
@@ -458,6 +467,13 @@ programs:
   - mousepad:
         tags: default
   - mscore3:
+        name:
+            en: MuseScore-music composition & notation
+            fi: MuseScore-nuotinnusohjelma
+            sv: MuseScore-notering
+            de: Musik-Notensatz
+        tags: default, audio
+  - musescore-appimage:
         name:
             en: MuseScore-music composition & notation
             fi: MuseScore-nuotinnusohjelma
@@ -1192,6 +1208,7 @@ menus:
         icon: /usr/share/icons/Faenza/categories/48/gnome-devel.png
         programs:
             - arduino
+            - asebastudiothymio
             - fritzing
             - teddybear
             - drracket
@@ -1438,6 +1455,7 @@ menus:
             - yleareena
             - ylearkisto
             - sumopaint
+            - mathdemo-abitti
             - walma
             - pahvi
             - kahoot
@@ -1492,6 +1510,7 @@ menus:
             - geogebra6
             - org.kde.kmplot
             - org.gnome.Calculator
+            - mathdemo-abitti
             - teddybear
             - scratch
             - scratch-club
