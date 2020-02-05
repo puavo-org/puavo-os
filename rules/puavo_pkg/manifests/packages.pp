@@ -17,6 +17,7 @@ class puavo_pkg::packages {
 			, 'arduino-ide'
 			, 'arduino-radiohead'
 			, 'arduino-tm1637'
+			, 'aseba'
 			, 'bluegriffon'
 			, 'cmaptools'
 			, 'cnijfilter2'
