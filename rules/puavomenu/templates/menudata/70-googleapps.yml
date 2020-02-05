@@ -1,0 +1,96 @@
+---
+
+programs:
+
+  - google-calendar:
+        type: web
+        name: Google Calendar
+        url:  https://calendar.google.com
+        description: Google Calendar
+        icon: gnome-calendar
+        tags: default, internet, education
+  - google-classroom:
+        type: web
+        name: Google Classroom
+        url:  https://classroom.google.com/?emr=0
+        description: Google Classroom
+        icon: google-chrome
+        tags: default, internet, education
+  - google-docs:        
+        type: web
+        name: Google Docs
+        url:  https://docs.google.com
+        description: Google Docs
+        icon: gnome-word
+        tags: default, internet, education
+  - google-drive:        
+        type: web
+        name: Google Drive
+        url:  https://drive.google.com
+        description: Google Drive
+        icon: google
+        tags: default, internet, education
+  - google-forms:        
+        type: web
+        name: Google Forms
+        url:  https://forms.google.com
+        description: Google Forms
+        icon: gnome-documents
+        tags: default, internet, education
+  - google-keep:
+        type: web
+        name: Google Keep
+        url:  https://keep.google.com
+        description: Google Keep
+        tags: default, internet, education
+        icon: gnote
+  - google-meet:
+        type: web
+        name: Google Meet
+        url:  https://meet.google.com
+        description: Google Meet
+        tags: default, internet, education
+        icon: config-users
+  - google-sheets:
+        type: web
+        name: Google Sheets
+        url:  https://sheets.google.com
+        description: Google Sheets
+        icon: gnumeric
+        tags: default, internet, education
+  - google-slides:
+        type: web
+        name: Google Slides
+        url:  https://slides.google.com
+        description: Google Slides
+        icon: google
+        tags: default, internet, education
+  - gmail:
+        type: web
+        name: GMail
+        url:  https://gmail.com
+        description: Google Email
+        icon: gmail
+        tags: default, internet, education
+
+
+# ------------------------------------------------------------------------------
+
+categories:
+
+  - category-google:
+        name: Google Apps
+        position: 20
+        hidden_by_default: true 
+        programs:
+            - google-chrome
+            - google-drive
+            - google-classroom
+            - google-calendar
+            - gmail
+            - google-sheets
+            - google-docs
+            - google-slides
+            - google-forms
+            - google-meet
+            - google-keep
