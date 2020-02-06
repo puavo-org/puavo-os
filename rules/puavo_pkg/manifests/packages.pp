@@ -40,6 +40,7 @@ class puavo_pkg::packages {
 			, 'marvinsketch'
 			, 'mattermost-desktop'
 			, 'msttcorefonts'
+			, 'musescore-appimage'
 			, 'nightcode'
 			, 'obsidian-icons'
 			, 'ohjelmointi-opetuksessa'
