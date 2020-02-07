@@ -1005,16 +1005,25 @@ USER_SHORTCUTS=Do Not Install
 -fileOverwrite_${upstream_dir}/UninstallerData/uninstaller.jar=Yes
 EOF
 
-        chmod +x "${upstream_pack}"
+        chmod +x "$upstream_pack"
 
         # XXX We run code from the upstream package at an unpack phase...
         # XXX this is not good, but it appears there is no other way to
         # XXX install this.
         "$upstream_pack" -f "$install_conf" -i silent || true
-        rm -f "$install_conf"
+
+        rm -rf "$install_conf"                       \
+               "${upstream_dir}/CmapTools"           \
+               "${upstream_dir}/Uninstall CmapTools" \
+               "${upstream_dir}/UninstallerData"
+
+        sed -i 's/upstream.tmp/upstream/'         \
+            "$upstream_dir"/lib/pkgconfig/lib*.pc \
+            "${upstream_dir}/bin/CmapTools.lax"   \
+            "${upstream_dir}/bin/Updater.lax"
 
         # The installer dumps lot of files with mode 777 XD
-        chmod -R go-w "${upstream_dir}"
+        chmod -R go-w "$upstream_dir"
 
         echo cmaptools >> /var/lib/puavo-pkg/.update_mime_database
         ;;
