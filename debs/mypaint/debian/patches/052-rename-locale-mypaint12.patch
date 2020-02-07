@@ -1,0 +1,230 @@
+Index: mypaint-1.2.0/po/SConscript
+===================================================================
+--- mypaint-1.2.0.orig/po/SConscript
++++ mypaint-1.2.0/po/SConscript
+@@ -11,7 +11,7 @@ languages = []
+ for src in env.Glob('*.po'):
+     lang = basename(str(src))[:-3]
+     languages.append(lang)
+-    dst = join(lang, "LC_MESSAGES", 'mypaint.mo')
++    dst = join(lang, "LC_MESSAGES", 'mypaint12.mo')
+     env.Command(dst, src, 'msgfmt $SOURCE -o $TARGET')
+ 
+ 
+@@ -19,7 +19,7 @@ for src in env.Glob('*.po'):
+ 
+ for lang in languages:
+     install_perms(env, '$prefix/share/locale/%s/LC_MESSAGES' % lang,
+-                 '%s/LC_MESSAGES/mypaint.mo' % lang)
++                 '%s/LC_MESSAGES/mypaint12.mo' % lang)
+ 
+ 
+ # Alternatively, when scons is called with the translate=* option,
+@@ -27,10 +27,10 @@ for lang in languages:
+ # translation maintenance mode instead.
+ #
+ #  translate=pot
+-#     Generate template for .po files (mypaint.pot) only
++#     Generate template for .po files (mypaint12.pot) only
+ #     Use when starting to translate for a new language.
+ #  translate=LANGCODE
+-#     Update src .po file for just one language (updates mypaint.pot,
++#     Update src .po file for just one language (updates mypaint12.pot,
+ #     then merges fresh/updated strings into LANGCODE.po)
+ #     Individual translators can do just this for their language
+ #     if they want to keep things updated.
+@@ -99,7 +99,7 @@ if lang:
+         # for review by translators.
+         env.Execute(build_potfiles_in)
+         env.Execute([
+-            ["intltool-update", "-g", "mypaint", "--pot"],
++            ["intltool-update", "-g", "mypaint12", "--pot"],
+         ])
+         translate = languages
+     elif lang == 'pot':
+@@ -110,7 +110,7 @@ if lang:
+         # WebLate sould be kept in sync with their .pot.
+         env.Execute(build_potfiles_in)
+         env.Execute([
+-            ["intltool-update", "-g", "mypaint", "--pot"],
++            ["intltool-update", "-g", "mypaint12", "--pot"],
+         ])
+         translate = []
+     else:
+@@ -120,7 +120,7 @@ if lang:
+         translate = [lang]
+     for lang in translate:
+         env.Execute([
+-            ["intltool-update", "-g", "mypaint", "--dist", lang],
++            ["intltool-update", "-g", "mypaint12", "--dist", lang],
+         ])
+     # Exit now, and don't build or install any regular targets
+     Exit()
+Index: mypaint-1.2.0/gui/application.py
+===================================================================
+--- mypaint-1.2.0.orig/gui/application.py
++++ mypaint-1.2.0/gui/application.py
+@@ -233,7 +233,7 @@ class Application (object):
+         # Core actions and menu structure
+         resources_xml = join(self.datapath, "gui", "resources.xml")
+         self.builder = Gtk.Builder()
+-        self.builder.set_translation_domain("mypaint")
++        self.builder.set_translation_domain("mypaint12")
+         self.builder.add_from_file(resources_xml)
+ 
+         self.ui_manager = self.builder.get_object("app_ui_manager")
+Index: mypaint-1.2.0/gui/autorecover.py
+===================================================================
+--- mypaint-1.2.0.orig/gui/autorecover.py
++++ mypaint-1.2.0/gui/autorecover.py
+@@ -46,7 +46,7 @@ class Presenter (object):
+         self._app = weakref.proxy(app)
+         builder_xml = os.path.splitext(__file__)[0] + ".glade"
+         builder = Gtk.Builder()
+-        builder.set_translation_domain("mypaint")
++        builder.set_translation_domain("mypaint12")
+         builder.add_from_file(builder_xml)
+         builder.connect_signals(self)
+         self._dialog = builder.get_object("recovery_dialog")
+Index: mypaint-1.2.0/gui/brusheditor.py
+===================================================================
+--- mypaint-1.2.0.orig/gui/brusheditor.py
++++ mypaint-1.2.0/gui/brusheditor.py
+@@ -81,7 +81,7 @@ class BrushEditorWindow (SubWindow):
+         ))
+         self._setting = None
+         self._builder = Gtk.Builder()
+-        self._builder.set_translation_domain("mypaint")
++        self._builder.set_translation_domain("mypaint12")
+         self._build_ui()
+         self.connect_after("show", self._post_show_cb)
+         editor = self._builder.get_object("brush_editor")
+Index: mypaint-1.2.0/gui/inktool.py
+===================================================================
+--- mypaint-1.2.0.orig/gui/inktool.py
++++ mypaint-1.2.0/gui/inktool.py
+@@ -1078,7 +1078,7 @@ class OptionsPresenter (object):
+             return
+         builder_xml = os.path.splitext(__file__)[0] + ".glade"
+         builder = Gtk.Builder()
+-        builder.set_translation_domain("mypaint")
++        builder.set_translation_domain("mypaint12")
+         builder.add_from_file(builder_xml)
+         builder.connect_signals(self)
+         self._options_grid = builder.get_object("options_grid")
+Index: mypaint-1.2.0/gui/preferenceswindow.py
+===================================================================
+--- mypaint-1.2.0.orig/gui/preferenceswindow.py
++++ mypaint-1.2.0/gui/preferenceswindow.py
+@@ -46,7 +46,7 @@ class PreferencesWindow (windowing.Dialo
+ 
+         # Set up widgets
+         builder = gtk.Builder()
+-        builder.set_translation_domain("mypaint")
++        builder.set_translation_domain("mypaint12")
+         xml_path = os.path.join(app.datapath, 'gui/preferenceswindow.glade')
+         builder.add_from_file(xml_path)
+         self._builder = builder
+Index: mypaint-1.2.0/mypaint.py
+===================================================================
+--- mypaint-1.2.0.orig/mypaint.py
++++ mypaint-1.2.0/mypaint.py
+@@ -354,10 +354,10 @@ def init_gettext(localepath, localepath_
+     # Bind text domains, i.e. tell libintl+GtkBuilder and Python's where
+     # to find message catalogs containing translations.
+     textdomains = [
+-        ("mypaint", localepath),
+-        ("libmypaint", localepath_brushlib),
++        ("mypaint12", localepath),
++        ("libmypaint12", localepath_brushlib),
+     ]
+-    defaultdom = "mypaint"
++    defaultdom = "mypaint12"
+     codeset = "UTF-8"
+     for dom, path in textdomains:
+         # Only call the C library gettext setup funcs if there's a
+Index: mypaint-1.2.0/brushlib/po/SConscript
+===================================================================
+--- mypaint-1.2.0.orig/brushlib/po/SConscript
++++ mypaint-1.2.0/brushlib/po/SConscript
+@@ -5,13 +5,13 @@ languages = []
+ for src in env.Glob('*.po'):
+     lang = basename(str(src))[:-3]
+     languages.append(lang)
+-    dst = join(lang, "LC_MESSAGES", 'libmypaint.mo')
++    dst = join(lang, "LC_MESSAGES", 'libmypaint12.mo')
+     env.Command(dst, src, 'msgfmt $SOURCE -o $TARGET')
+ 
+ # translations
+ for lang in languages:
+     install_perms(env, '$prefix/share/locale/%s/LC_MESSAGES' % lang,
+-                 '%s/LC_MESSAGES/libmypaint.mo' % lang)
++                 '%s/LC_MESSAGES/libmypaint12.mo' % lang)
+ 
+ lang = ARGUMENTS.get('translate')
+ if lang:
+@@ -22,7 +22,7 @@ if lang:
+         # WebLate will receive a new template and flag string changes
+         # for review by translators.
+         env.Execute('cd .. && ls *.[ch] | sort > po/POTFILES.in')
+-        env.Execute('intltool-update -g libmypaint --pot')
++        env.Execute('intltool-update -g libmypaint12 --pot')
+         translate = languages
+     elif lang == 'pot':
+         # For programmers and program maintainers.
+@@ -31,7 +31,7 @@ if lang:
+         # but it's best not to commit alone - .po files on
+         # WebLate sould be kept in sync with their .pot.
+         env.Execute('cd .. && ls *.[ch] | sort > po/POTFILES.in')
+-        env.Execute('intltool-update -g libmypaint --pot')
++        env.Execute('intltool-update -g libmypaint12 --pot')
+         translate = []
+     else:
+         # For individual language maintainers.
+@@ -39,6 +39,6 @@ if lang:
+         # and do not update the .pot file itself.
+         translate = [lang]
+     for lang in translate:
+-        env.Execute('intltool-update -g libmypaint --dist %s' % lang)
++        env.Execute('intltool-update -g libmypaint12 --dist %s' % lang)
+ 
+ Return('languages')
+Index: mypaint-1.2.0/brushlib/brushsettings.py
+===================================================================
+--- mypaint-1.2.0.orig/brushlib/brushsettings.py
++++ mypaint-1.2.0/brushlib/brushsettings.py
+@@ -75,8 +75,8 @@ for i_list in inputs_list:
+ 
+     i.name, i.hard_min, i.soft_min, i.normal, i.soft_max, i.hard_max, i.dname, i.tooltip = i_list
+ 
+-    i.dname = gettext.dgettext("libmypaint", i.dname)
+-    i.tooltip = gettext.dgettext("libmypaint", i.tooltip)
++    i.dname = gettext.dgettext("libmypaint12", i.dname)
++    i.tooltip = gettext.dgettext("libmypaint12", i.tooltip)
+ 
+     i.index = len(inputs)
+     inputs.append(i)
+@@ -92,8 +92,8 @@ for s_list in settings_list:
+     s = BrushSetting()
+     s.cname, s.name, s.constant, s.min, s.default, s.max, s.tooltip = s_list
+ 
+-    s.name = gettext.dgettext("libmypaint", s.name)
+-    s.tooltip = gettext.dgettext("libmypaint", s.tooltip)
++    s.name = gettext.dgettext("libmypaint12", s.name)
++    s.tooltip = gettext.dgettext("libmypaint12", s.tooltip)
+ 
+     s.index = len(settings)
+     settings.append(s)
+Index: mypaint-1.2.0/brushlib/mypaint-brush-settings.c
+===================================================================
+--- mypaint-1.2.0.orig/brushlib/mypaint-brush-settings.c
++++ mypaint-1.2.0/brushlib/mypaint-brush-settings.c
+@@ -19,7 +19,7 @@
+ #include <string.h>
+ #include <assert.h>
+ 
+-#define GETTEXT_PACKAGE "libmypaint"
++#define GETTEXT_PACKAGE "libmypaint12"
+ 
+ #ifdef HAVE_GETTEXT
+   #include <libintl.h>

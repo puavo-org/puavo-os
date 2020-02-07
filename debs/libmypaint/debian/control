@@ -59,7 +59,6 @@ Package: libmypaint-common
 Architecture: all
 Multi-Arch: foreign
 Depends: ${misc:Depends},
-Conflicts: mypaint-data
 Description: brush library for mypaint - common files
  MyPaint is a pressure- and tilt-sensitive painting program which works well
  with Wacom graphics tablets and other similar devices. It comes with a large
