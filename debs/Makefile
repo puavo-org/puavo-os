@@ -16,6 +16,7 @@ _pkgs_ports := fmit        \
                nbd         \
                openboard   \
                openldap    \
+               pinta       \
                vtun        \
                wine        \
                wsmancli

@@ -1,0 +1,13 @@
+#!/usr/bin/make -f
+
+override_dh_auto_clean:
+	$(MAKE) cleanall || true
+
+override_dh_clideps:
+	dh_clideps --exclude-moduleref=libigemacintegration.dylib \
+		--exclude-moduleref=/System/Library/Frameworks/Carbon.framework/Versions/Current/Carbon \
+		--exclude-moduleref=/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation \
+		--exclude-moduleref=/System/Library/Frameworks/ApplicationServices.framework/Versions/A/ApplicationServices
+
+%:
+	dh $@ --with cli

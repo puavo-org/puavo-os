@@ -315,6 +315,7 @@ class packages {
     , 'okular'
     , 'openshot-qt'
     , 'pencil2d'
+    , 'pinta'
     , 'pitivi'
     , 'python-lxml'
     , 'sane-utils'

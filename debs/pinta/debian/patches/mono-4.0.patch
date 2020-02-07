@@ -1,0 +1,103 @@
+Index: b/Pinta.Effects/Pinta.Effects.csproj
+===================================================================
+--- a/Pinta.Effects/Pinta.Effects.csproj
++++ b/Pinta.Effects/Pinta.Effects.csproj
+@@ -10,7 +10,7 @@
+     <AppDesignerFolder>Properties</AppDesignerFolder>
+     <RootNamespace>Pinta.Effects</RootNamespace>
+     <AssemblyName>Pinta.Effects</AssemblyName>
+-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
++    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+     <FileAlignment>512</FileAlignment>
+     <FileUpgradeFlags>
+     </FileUpgradeFlags>
+@@ -58,7 +58,7 @@
+     <Reference Include="gdk-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f" />
+     <Reference Include="glib-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f" />
+     <Reference Include="gtk-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f" />
+-    <Reference Include="Mono.Posix, Version=2.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL" />
++    <Reference Include="Mono.Posix, Version=4.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL" />
+     <Reference Include="System" />
+     <Reference Include="System.Core">
+     </Reference>
+Index: b/Pinta.Gui.Widgets/Pinta.Gui.Widgets.csproj
+===================================================================
+--- a/Pinta.Gui.Widgets/Pinta.Gui.Widgets.csproj
++++ b/Pinta.Gui.Widgets/Pinta.Gui.Widgets.csproj
+@@ -9,7 +9,7 @@
+     <OutputType>Library</OutputType>
+     <RootNamespace>Pinta.Gui.Widgets</RootNamespace>
+     <AssemblyName>Pinta.Gui.Widgets</AssemblyName>
+-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
++    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+     <CodePage>65001</CodePage>
+     <FileUpgradeFlags>
+     </FileUpgradeFlags>
+@@ -54,7 +54,7 @@
+     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+   </PropertyGroup>
+   <ItemGroup>
+-    <Reference Include="Mono.Posix, Version=2.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL" />
++    <Reference Include="Mono.Posix, Version=4.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL" />
+     <Reference Include="System" />
+     <Reference Include="gtk-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f" />
+     <Reference Include="gdk-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f" />
+Index: b/Pinta.Tools/Pinta.Tools.csproj
+===================================================================
+--- a/Pinta.Tools/Pinta.Tools.csproj
++++ b/Pinta.Tools/Pinta.Tools.csproj
+@@ -10,7 +10,7 @@
+     <AppDesignerFolder>Properties</AppDesignerFolder>
+     <RootNamespace>Pinta.Tools</RootNamespace>
+     <AssemblyName>Pinta.Tools</AssemblyName>
+-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
++    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+     <FileAlignment>512</FileAlignment>
+     <FileUpgradeFlags>
+     </FileUpgradeFlags>
+@@ -54,7 +54,7 @@
+     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+   </PropertyGroup>
+   <ItemGroup>
+-    <Reference Include="Mono.Posix, Version=2.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL" />
++    <Reference Include="Mono.Posix, Version=4.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL" />
+     <Reference Include="System" />
+     <Reference Include="System.Core" />
+     <Reference Include="System.Xml" />
+Index: b/Pinta.Install.proj
+===================================================================
+--- a/Pinta.Install.proj
++++ b/Pinta.Install.proj
+@@ -1,5 +1,5 @@
+ <?xml version="1.0" encoding="utf-8"?>
+-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
++<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+ 
+   <!-- Set some paths -->
+   <PropertyGroup>
+Index: b/Pinta.Core/Pinta.Core.csproj
+===================================================================
+--- a/Pinta.Core/Pinta.Core.csproj
++++ b/Pinta.Core/Pinta.Core.csproj
+@@ -55,7 +55,7 @@
+     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+   </PropertyGroup>
+   <ItemGroup>
+-    <Reference Include="Mono.Posix, Version=2.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL" />
++    <Reference Include="Mono.Posix, Version=4.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL" />
+     <Reference Include="System" />
+     <Reference Include="gtk-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f" />
+     <Reference Include="System.Core" />
+Index: b/Pinta/Pinta.csproj
+===================================================================
+--- a/Pinta/Pinta.csproj
++++ b/Pinta/Pinta.csproj
+@@ -80,7 +80,7 @@
+     <Reference Include="atk-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f">
+       <Package>gtk-sharp-2.0</Package>
+     </Reference>
+-    <Reference Include="Mono.Posix, Version=2.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL" />
++    <Reference Include="Mono.Posix, Version=4.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL" />
+     <Reference Include="System" />
+     <Reference Include="gtk-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f">
+       <Package>gtk-sharp-2.0</Package>
