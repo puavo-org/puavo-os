@@ -1,0 +1,4 @@
+version=3
+opts="uversionmangle=s/(\d)-((rc|beta|alpha)[a-z.\d]*)$/$1~$2/, pgpsigurlmangle=s/$/.asc/" \
+  https://github.com/mypaint/mypaint/releases \
+  .*/mypaint-(\d+[.]\d+[.]\d+(?:-[a-z.\d]+)?).tar.xz

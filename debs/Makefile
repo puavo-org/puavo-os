@@ -11,6 +11,7 @@ _pkgs_ports := fmit        \
                grub2       \
                incron      \
                mutter      \
+               mypaint     \
                nbd         \
                openboard   \
                openldap    \
