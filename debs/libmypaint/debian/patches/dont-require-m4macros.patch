@@ -1,0 +1,34 @@
+From: Jeremy Bicha <jbicha@ubuntu.com>
+Date: Sun, 1 Apr 2018 15:19:10 -0400
+Subject: [PATCH] Don't require m4macros directory
+
+https://github.com/mypaint/libmypaint/pull/120
+---
+ Makefile.am  | 1 -
+ configure.ac | 1 -
+ 2 files changed, 2 deletions(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index 1c28b54..f0aaa8e 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -147,7 +147,6 @@ endif
+ 
+ SUBDIRS = \
+ 	.			\
+-	m4macros	\
+ 	doc			\
+ 	gegl		\
+ 	tests		\
+diff --git a/configure.ac b/configure.ac
+index 7a5b231..0f456ab 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -324,7 +324,6 @@ AC_CONFIG_FILES([
+   gegl/libmypaint-gegl.pc:gegl/libmypaint-gegl.pc.in
+   gegl/Makefile
+   libmypaint.pc:libmypaint.pc.in
+-  m4macros/Makefile
+   Makefile
+   po/Makefile.in
+   tests/Makefile

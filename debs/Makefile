@@ -10,6 +10,7 @@ _pkgs_ports := fmit        \
                gnome-shell \
                grub2       \
                incron      \
+               libmypaint  \
                mutter      \
                mypaint     \
                nbd         \

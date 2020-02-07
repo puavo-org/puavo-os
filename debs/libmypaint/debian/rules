@@ -1,0 +1,28 @@
+#!/usr/bin/make -f
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+export DEB_LDFLAGS_MAINT_APPEND = -Wl,-z,defs -Wl,--as-needed
+
+ifeq ($(filter nodoc, $(DEB_BUILD_PROFILES)),)
+	ENABLE_DOCS = --enable-docs
+else
+	ENABLE_DOCS = --disable-docs
+endif
+
+%:
+	dh $@ --with gir
+
+override_dh_auto_configure:
+	dh_auto_configure -- $(ENABLE_DOCS)
+
+override_dh_install:
+	find debian/tmp -name '*.la' -print -delete
+	find debian/tmp -name jquery.js -print -delete
+	find debian/tmp -name underscore.js -print -delete
+	dh_install
+
+override_dh_missing:
+	dh_missing --fail-missing
+
+override_dh_makeshlibs:
+	dh_makeshlibs -- -c4
