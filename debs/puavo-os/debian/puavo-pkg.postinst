@@ -25,13 +25,12 @@ case "$1" in
         # and if system updates break access to those (by using a different uid)
         # trouble ensues.
 	if ! getent passwd puavo-pkg >/dev/null; then
-	    adduser --disabled-login          \
-		    --disabled-password       \
-		    --group                   \
-		    --home /var/lib/puavo-pkg \
-		    --no-create-home          \
-		    --system                  \
-		    --uid 995                 \
+	    adduser --disabled-login                \
+		    --disabled-password             \
+		    --group                         \
+		    --home /var/lib/puavo-pkg/.home \
+		    --system                        \
+		    --uid 995                       \
 		    puavo-pkg
 	fi
 
