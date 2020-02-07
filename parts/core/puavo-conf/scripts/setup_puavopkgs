@@ -183,28 +183,6 @@ setup_puavopkg_for_netboot_devices() {
   configure_latest_from "$remote_rootdir" .prepared
 }
 
-setup_puavopkg_common() {
-  # XXX This can be removed once smartboard and ti-nspire-cx-cas-ss are
-  # XXX are thrown away from the system image.  I think we can get rid of
-  # XXX puavo.nonfree.smartboard.enabled and
-  # XXX puavo.nonfree.ti_nspire_cx_cas_ss.enabled as well.
-
-  install_puavo_pkg_conf "$system_cachedir" "$system_rootdir" '' ''
-
-  # We configure the "smartboard" and "ti-nspire-cx-cas-ss" puavo-pkg packages
-  # in system image in case those are installed, because they are unconfigured
-  # by default and their configuration is dependent on puavo-conf variables
-  # "puavo.nonfree.smartboard.enabled" and
-  # "puavo.nonfree.ti_nspire_cx_cas_ss.enabled".
-  for puavo_pkg in smartboard ti-nspire-cx-cas-ss; do
-    if test_puavopkg_system_installation "$puavo_pkg"; then
-      reconfigure_puavopkg "$puavo_pkg" || status=1
-    fi
-  done
-}
-
-setup_puavopkg_common
-
 # Then setup puavo-pkg configuration to include possible packages from
 # bootserver or locally installed puavo-pkg images.  (Note that this does
 # not install or update the puavo-pkg packages, only sets them up at boottime).

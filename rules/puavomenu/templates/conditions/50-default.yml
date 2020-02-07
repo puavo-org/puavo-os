@@ -11,8 +11,8 @@
 - name: ti_nspire_cx_cas
   function: puavo_conf
   params:
-    - name: puavo.nonfree.ti_nspire_cx_cas_ss.enabled
-      value: "true"
+    - name: puavo.pkg.ti-nspire-cx-cas-ss
+      value: "install"
 
 - name: only_teacher_admin
   function: env_var

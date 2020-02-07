@@ -32,9 +32,7 @@ class image::bundle::desktop {
   include ::polkit_printers
   include ::puavo_pkg::packages
   # include ::pycharm	                # XXX pycharm needs to be packaged
-  include ::smartboard
   include ::supplementary_groups
-  include ::ti_nspire_cx_cas
   include ::tuxpaint
   include ::virtualbox
   include ::vym
