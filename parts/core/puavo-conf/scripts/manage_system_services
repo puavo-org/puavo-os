@@ -87,6 +87,8 @@ set services {
         -> /lib/systemd/system/NetworkManager-dispatcher.service
       /etc/systemd/system/multi-user.target.wants/NetworkManager.service
         -> /lib/systemd/system/NetworkManager.service
+      /etc/systemd/system/network-online.target.wants/NetworkManager-wait-online.service
+        -> /lib/systemd/system/NetworkManager-wait-online.service
     }}
 
   { nfs-server {
