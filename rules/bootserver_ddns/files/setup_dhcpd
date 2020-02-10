@@ -166,6 +166,8 @@ class "ubnt" {
 
 include "/etc/dhcp.d/ubnt.conf";
 
+option architecture-type code 93 = unsigned integer 16;
+
 #{
   network_interfaces_for_dhcpd.map do |iface|
     <<IFACE_EOF
@@ -186,8 +188,16 @@ subnet #{ iface.subnet } netmask #{ iface.ip.netmask } {
     option routers              #{ iface.ip };
     next-server                 #{ iface.ip };
 
-    if substring( option vendor-class-identifier, 0, 9 ) = "PXEClient" {
-      filename "/pxelinux.0";
+    if substring(option vendor-class-identifier, 0, 9) = "PXEClient" {
+      if option architecture-type = 00:06 {
+        filename "/efi32/syslinux.efi";
+      } elsif option architecture-type = 00:07 {
+        filename "/efi64/syslinux.efi";
+      } elsif option architecture-type = 00:09 {
+        filename "/efi64/syslinux.efi";
+      } else {
+        filename "/pxelinux.0";
+      }
     }
 
     on commit {

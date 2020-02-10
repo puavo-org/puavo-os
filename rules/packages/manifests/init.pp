@@ -84,6 +84,7 @@ class packages {
     , 'shorewall'
     , 'slapd'
     , 'syslinux-common'
+    , 'syslinux-efi'
     , 'winbind' ]:
       tag => [ 'tag_basic', 'tag_debian_bootserver', ];
   }
