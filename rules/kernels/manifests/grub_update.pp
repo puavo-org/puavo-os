@@ -12,12 +12,16 @@ class kernels::grub_update {
   file {
     $grub_update_files:
       ensure  => absent,
-      require => Package['grub-pc'];
+      require => [ Package['grub-efi-ia32-bin']
+                 , Package['grub-efi-amd64-bin']
+                 , Package['grub-pc-bin'] ];
   }
 
   Package <| tag == 'tag_kernel' |> {
     require +> File[ $grub_update_files ],
   }
 
-  Package <| title == grub-pc |>
+  Package <| title == grub-efi-ia32-bin
+          or title == grub-efi-amd64-bin
+          or title == grub-pc-bin |>
 }
