@@ -6,6 +6,11 @@ set -eu
 # /images is writable!  (and some other pseudo-filesystems such as /dev and
 # /proc are accessible as well).
 
+grub_efi_arguments() {
+  [ -d /sys/firmware/efi ] || return 0
+  echo "--target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=debian"
+}
+
 grub_m4_template() {
   cat <<'EOF'
 set default="0"
@@ -363,6 +368,8 @@ if [ -z "$hosttype" ]; then
   exit 1
 fi
 
+boot_dir="${images_dir}/boot"
+
 # pvs and assorted utilities complain if we leak file descriptors, that is
 # why we do "3>&- 4>&- 5>&-" (same with grub-install)
 diskdev=$(pvs 3>&- 4>&- 5>&-                                            \
@@ -421,26 +428,26 @@ esac
 
 if ! $only_update_config; then
   for grubdev in $grub_target_devices; do
-    if ! grub_msg=$(grub-install --boot-directory=${images_dir}/boot \
-                      "$grubdev" 3>&- 4>&- 5>&- 2>&1); then
+    if ! grub_msg=$(grub-install --boot-directory="$boot_dir" \
+                     $(grub_efi_arguments) "$grubdev" \
+                     3>&- 4>&- 5>&- 2>&1); then
           echo "Grub installation to $grubdev failed: $grub_msg" >&2
           exit 1
     fi
   done
 
-  grub-install --version | awk '{ print $3 }' \
-    > "${images_dir}/boot/grub/version.tmp"
-  if [ ! -s "${images_dir}/boot/grub/version.tmp" ]; then
+  grub-install --version | awk '{ print $3 }' > "${boot_dir}/grub/version.tmp"
+  if [ ! -s "${boot_dir}/grub/version.tmp" ]; then
     echo 'Could not determine new grub version' >&2
-    rm -f "${images_dir}/boot/grub/version.tmp"
+    rm -f "${boot_dir}/grub/version.tmp"
     exitstatus=1
   else
-    mv "${images_dir}/boot/grub/version.tmp" "${images_dir}/boot/grub/version"
+    mv "${boot_dir}/grub/version.tmp" "${boot_dir}/grub/version"
     echo "Grub has been installed to: $(echo $grub_target_devices)."
   fi
 fi
 
-grub_cfg_path="${images_dir}/boot/grub/grub.cfg"
+grub_cfg_path="${boot_dir}/grub/grub.cfg"
 tmp_grub_cfg_path="${grub_cfg_path}.tmp"
 
 grub_m4_template                                              \

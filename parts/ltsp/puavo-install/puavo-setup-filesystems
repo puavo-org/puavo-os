@@ -206,7 +206,7 @@ module DiskHandler
                  '--raid-devices=2',
                  *spare_args,
                  *(devicepaths_for_mirroring.map do |dev|
-                     partitioning_scheme == 'BIOS/GPT' \
+                     partitioning_scheme == 'UEFI/GPT' \
                        ? "#{ dev }2" \
                        : "#{ dev }1"
                    end))
@@ -221,9 +221,9 @@ module DiskHandler
     run('dd', 'if=/dev/zero', "of=#{ device }", 'count=2K',
         { :err => '/dev/null' })
 
-    if partitioning_scheme == 'BIOS/GPT' then
+    if partitioning_scheme == 'UEFI/GPT' then
       IO.popen([ 'gdisk', device ], 'w') do |f|
-        f.print "2\no\ny\nn\n1\n\n+2M\nef02\nn\n2\n\n\nfd00\nw\ny\n"
+        f.print "2\no\ny\nn\n1\n\n+260M\nef00\nn\n2\n\n\nfd00\nw\ny\n"
       end
     else
       IO.popen("fdisk #{ device }", 'w') do |f|
@@ -238,15 +238,24 @@ module DiskHandler
     fs_setup_phases = []
 
     if fs_conf['partition'] == 'whole' then
-      fs_setup_phases += [ :wipe_device ] if conf['wipe']
-      fs_setup_phases += [ :lvm_partition, :puavo_filesystems ]
       special_disk_regexp = %r{\A((loop|md|mmcblk)[0-9]+|nvme[0-9]+n[0-9]+)\z}
-      partnum = (partitioning_scheme == 'BIOS/GPT' ? 2 : 1)
-      if fs_conf['device'].match(special_disk_regexp) then
-        fs_conf['partition'] = "#{ fs_conf['device'] }p#{ partnum }"
+      part_prefix = fs_conf['device'].match(special_disk_regexp) ? 'p' : ''
+
+      fs_setup_phases += [ :wipe_device ] if conf['wipe']
+      fs_setup_phases += [ :create_partitions ]
+
+      if partitioning_scheme == 'UEFI/GPT' then
+        fs_setup_phases += [ :create_efi_filesystem ]
+        fs_conf['efi_partition'] \
+          = "/dev/#{ fs_conf['device'] }#{ part_prefix }1"
+        puavo_partnum = 2
       else
-        fs_conf['partition'] = "#{ fs_conf['device'] }#{ partnum }"
+        puavo_partnum = 1
       end
+
+      fs_conf['partition'] \
+        = "#{ fs_conf['device'] }#{ part_prefix }#{ puavo_partnum }"
+      fs_setup_phases += [ :puavo_filesystems ]
     else
       fs_setup_phases += [ :wipe_partition ] if conf['wipe']
       fs_setup_phases += [ :puavo_filesystems ]
@@ -260,7 +269,7 @@ module DiskHandler
     fs_setup_phases.each do |fn_sym|
       args = [ :mount_filesystems, :puavo_filesystems ].include?(fn_sym) \
                 ? [ fs_conf, vgname ] :                                  \
-             :lvm_partition == fn_sym                                    \
+             :create_partitions == fn_sym                                    \
                 ? [ fs_conf, partitioning_scheme ]                       \
                 : [ fs_conf ]
       method(fn_sym).call(*args)
@@ -271,14 +280,14 @@ module DiskHandler
     system(*cmd) or raise "Error running command: '#{ cmd.inspect }'"
   end
 
-  def self.lvm_partition(fs_conf, partitioning_scheme)
+  def self.create_partitions(fs_conf, partitioning_scheme)
     # clean up possible confusing mess from the device
     run('dd', 'if=/dev/zero', "of=#{ fs_conf['device'] }", 'count=2K',
         { :err => '/dev/null' })
 
-    if partitioning_scheme == 'BIOS/GPT' then
+    if partitioning_scheme == 'UEFI/GPT' then
       IO.popen([ 'gdisk', fs_conf['device'] ], 'w') do |f|
-        f.print "2\no\ny\nn\n1\n\n+2M\nef02\nn\n2\n\n\n8e00\nw\ny\n"
+        f.print "2\no\ny\nn\n1\n\n+260M\nef00\nn\n2\n\n\n8e00\nw\ny\n"
       end
     else
       # create an lvm partition
@@ -295,6 +304,13 @@ module DiskHandler
   def self.non_swap_filesystems(hosttype)
     Filesystems[ hosttype ] \
       .select { |name, attrs| attrs['type'] != 'swap' }
+  end
+
+  def self.create_efi_filesystem(fs_conf)
+    run('mkfs.fat', '-F32', fs_conf['efi_partition'])
+    FileUtils.mkdir_p('/boot/efi')      # XXX should the mount directory be
+                                        # XXX setup in the squashfs already?
+    run('mount', fs_conf['efi_partition'], '/boot/efi')
   end
 
   def self.puavo_filesystems(fs_conf, vgname)
@@ -532,7 +548,7 @@ module QueryDiskInfo
               .compact \
               .select { |part| part.match(partition_regexp) }
 
-      partedit_program = (partitioning_scheme == 'BIOS/GPT' ? 'gdisk' : 'fdisk')
+      partedit_program = (partitioning_scheme == 'UEFI/GPT' ? 'gdisk' : 'fdisk')
 
       puts "\nPossible partitions are: #{ partitions.join(' ') }"
       puts "\nYou may choose '#{ partedit_program }' to partition this disk,"
@@ -747,11 +763,10 @@ vgname = (hosttype == 'diskinstaller') ? 'puavoinstaller' : 'puavo'
 
 DiskHandler::cleanup_disk_environment(hosttype, vgname)
 
-partitioning_scheme = 'BIOS/MBR'
+partitioning_scheme = Dir.exists?('/sys/firmware/efi') ? 'UEFI/GPT' : 'BIOS/MBR'
 
 raid_setup_done = false
 if hosttype == 'bootserver' then
-  partitioning_scheme = 'BIOS/GPT'
   raid_setup_done = DiskHandler::setup_raid_if_possible(partitioning_scheme)
 end
 
