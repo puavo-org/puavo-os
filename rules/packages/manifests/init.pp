@@ -167,6 +167,7 @@ class packages {
     , 'gdebi-core'
     , 'grub-efi-amd64-bin'
     , 'grub-efi-ia32-bin'
+    , 'grub-pc'
     , 'grub-pc-bin'
     , 'ksh'
     , 'libpam-modules'

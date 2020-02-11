@@ -14,6 +14,7 @@ class kernels::grub_update {
       ensure  => absent,
       require => [ Package['grub-efi-ia32-bin']
                  , Package['grub-efi-amd64-bin']
+                 , Package['grub-pc']
                  , Package['grub-pc-bin'] ];
   }
 
@@ -23,5 +24,6 @@ class kernels::grub_update {
 
   Package <| title == grub-efi-ia32-bin
           or title == grub-efi-amd64-bin
+          or title == grub-pc
           or title == grub-pc-bin |>
 }
