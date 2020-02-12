@@ -223,7 +223,7 @@ module DiskHandler
 
     if partitioning_scheme == 'UEFI/GPT' then
       IO.popen([ 'gdisk', device ], 'w') do |f|
-        f.print "2\no\ny\nn\n1\n\n+260M\nef00\nn\n2\n\n\nfd00\nw\ny\n"
+        f.print "2\no\ny\nn\n1\n\n+512M\nef00\nn\n2\n\n\nfd00\nw\ny\n"
       end
     else
       IO.popen("fdisk #{ device }", 'w') do |f|
@@ -287,7 +287,7 @@ module DiskHandler
 
     if partitioning_scheme == 'UEFI/GPT' then
       IO.popen([ 'gdisk', fs_conf['device'] ], 'w') do |f|
-        f.print "2\no\ny\nn\n1\n\n+260M\nef00\nn\n2\n\n\n8e00\nw\ny\n"
+        f.print "2\no\ny\nn\n1\n\n+512M\nef00\nn\n2\n\n\n8e00\nw\ny\n"
       end
     else
       # create an lvm partition
