@@ -8,7 +8,10 @@ set -eu
 
 grub_efi_arguments() {
   [ -d /sys/firmware/efi ] || return 0
-  echo "--target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=debian"
+  echo '--target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=debian'
+  if [ "$(puavo-conf puavo.grub.efi.force_extra_removable)" = 'true' ]; then
+    echo '--force-extra-removable'
+  fi
 }
 
 grub_m4_template() {

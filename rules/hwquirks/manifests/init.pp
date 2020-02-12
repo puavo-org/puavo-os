@@ -6,6 +6,9 @@ class hwquirks {
       ensure  => directory,
       require => Package['puavo-conf'];
 
+    '/usr/share/puavo-conf/hwquirk-overwrites/40-broken-uefi.json':
+      source => 'puppet:///modules/hwquirks/40-broken-uefi.json';
+
     '/usr/share/puavo-conf/hwquirk-overwrites/50-pm-lidswitchdocked.json':
       source => 'puppet:///modules/hwquirks/50-pm-lidswitchdocked.json';
 
