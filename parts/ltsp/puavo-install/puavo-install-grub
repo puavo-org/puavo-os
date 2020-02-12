@@ -6,8 +6,7 @@ set -eu
 # /images is writable!  (and some other pseudo-filesystems such as /dev and
 # /proc are accessible as well).
 
-grub_efi_arguments() {
-  [ -d /sys/firmware/efi ] || return 0
+get_grub_efi_arguments() {
   echo '--target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=debian'
   if [ "$(puavo-conf puavo.grub.efi.force_extra_removable)" = 'true' ]; then
     echo '--force-extra-removable'
@@ -270,8 +269,10 @@ EOF
 }
 
 find_grub_target_devices_on_raid() {
-  _diskdev=$1
-  mdadm --detail "$_diskdev" \
+  local diskdev
+
+  diskdev=$1
+  mdadm --detail "$diskdev" \
     | awk '   $1 ~ /^[0-9]+$/ \
            && $2 ~ /^[0-9]+$/ \
            && $3 ~ /^[0-9]+$/ {
@@ -310,12 +311,19 @@ handle_windows_partion_file() {
   fi
 }
 
+get_efi_devpath() {
+  env LANG=C fdisk -l "$1" \
+    | awk '$1 ~ "^/dev/" && /EFI System/ { print $1; exit(0) }'
+}
+
 lookup_windows_partition_number() {
   # Presume that the first partition not containing "Linux"
   # is a Windows-partition.
-  _diskdev=$1
-  env LANG=C fdisk -l "$_diskdev" \
-    | awk '$1 ~ "^/dev/" && !/(BIOS boot|Extended|Linux)/ {
+  local diskdev
+
+  diskdev=$1
+  env LANG=C fdisk -l "$diskdev" \
+    | awk '$1 ~ "^/dev/" && !/(BIOS boot|EFI System|Extended|Linux)/ {
 	     if (match($1, /[0-9]+$/, _)) { print _[0]; exit }
            }'
 }
@@ -429,13 +437,33 @@ case "$hosttype" in
     ;;
 esac
 
+mount_efi_partition() {
+  local efi_devpath
+  efi_devpath=$1
+  fsck.fat -a "$efi_devpath" > /dev/null 2>&1 || true
+  mkdir -p /boot/efi             || return 1
+  mount "$efi_devpath" /boot/efi || return 1
+}
+
 if ! $only_update_config; then
   for grubdev in $grub_target_devices; do
+    efi_devpath=$(get_efi_devpath "$grubdev")
+
+    grub_efi_arguments=''
+    if [ -n "$efi_devpath" ]; then
+      if ! mount_efi_partition "$efi_devpath"; then
+        echo "Could not mount /boot/efi from $efi_devpath" >&2
+        exit 1
+      fi
+      grub_efi_arguments=$(get_grub_efi_arguments)
+    fi
     if ! grub_msg=$(grub-install --boot-directory="$boot_dir" \
-                     $(grub_efi_arguments) "$grubdev" \
-                     3>&- 4>&- 5>&- 2>&1); then
-          echo "Grub installation to $grubdev failed: $grub_msg" >&2
-          exit 1
+                      $grub_efi_arguments "$grubdev" 3>&- 4>&- 5>&- 2>&1); then
+      echo "Grub installation to $grubdev failed: $grub_msg" >&2
+      exit 1
+    fi
+    if [ -n "$efi_devpath" ]; then
+      umount /boot/efi || true
     fi
   done
 

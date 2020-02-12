@@ -308,9 +308,6 @@ module DiskHandler
 
   def self.create_efi_filesystem(fs_conf)
     run('mkfs.fat', '-F32', fs_conf['efi_partition'])
-    FileUtils.mkdir_p('/boot/efi')      # XXX should the mount directory be
-                                        # XXX setup in the squashfs already?
-    run('mount', fs_conf['efi_partition'], '/boot/efi')
   end
 
   def self.puavo_filesystems(fs_conf, vgname)
