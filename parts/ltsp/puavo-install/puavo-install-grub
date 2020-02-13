@@ -441,7 +441,6 @@ mount_efi_partition() {
   local efi_devpath
   efi_devpath=$1
   fsck.fat -a "$efi_devpath" > /dev/null 2>&1 || true
-  mkdir -p /boot/efi             || return 1
   mount "$efi_devpath" /boot/efi || return 1
 }
 

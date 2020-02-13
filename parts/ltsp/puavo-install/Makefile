@@ -21,6 +21,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-install
 	mkdir -p $(DESTDIR)$(libdir)/puavo-ltsp-install
 	mkdir -p $(DESTDIR)$(sbindir)
+	mkdir -p $(DESTDIR)/boot/efi    # needed by puavo-install-grub
 	mkdir -p $(DESTDIR)/images      # needed by puavo-image-preinst
 	mkdir -p $(DESTDIR)/lib/systemd/system
 	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants
