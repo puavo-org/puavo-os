@@ -167,8 +167,6 @@ module DiskHandler
       return false if answer == 'yes'
     end
 
-    devicepaths_for_mirroring = disks_for_mirroring.map { |d| "/dev/#{ d }" }
-
     loop do
       puts "\nThe following disks can be used for mirroring RAID:\n"
       QueryDiskInfo::show_disk_devices(disks_for_mirroring)
@@ -190,8 +188,8 @@ module DiskHandler
 
     maybe_wipe_current_raid_setups()
 
-    devicepaths_for_mirroring.each do |diskdev|
-      raid_partition(diskdev, partitioning_scheme)
+    disks_for_mirroring.each do |disk|
+      raid_partition(disk, partitioning_scheme)
     end
 
     spare_args = (disks_for_mirroring.count > 2) \
@@ -205,10 +203,10 @@ module DiskHandler
                  '--level=mirror',
                  '--raid-devices=2',
                  *spare_args,
-                 *(devicepaths_for_mirroring.map do |dev|
+                 *(disks_for_mirroring.map do |dev|
                      partitioning_scheme == 'UEFI/GPT' \
-                       ? "#{ dev }2" \
-                       : "#{ dev }1"
+                       ? "/dev/#{ dev }2" \
+                       : "/dev/#{ dev }1"
                    end))
 
     puts ''
@@ -218,53 +216,49 @@ module DiskHandler
 
   def self.raid_partition(device, partitioning_scheme)
     # clean up possible confusing mess from the device
-    run('dd', 'if=/dev/zero', "of=#{ device }", 'count=2K',
+    run('dd', 'if=/dev/zero', "of=/dev/#{ device }", 'count=2K',
         { :err => '/dev/null' })
 
     if partitioning_scheme == 'UEFI/GPT' then
-      IO.popen([ 'gdisk', device ], 'w') do |f|
+      IO.popen([ 'gdisk', "/dev/#{ device }" ], 'w') do |f|
         f.print "2\no\ny\nn\n1\n\n+512M\nef00\nn\n2\n\n\nfd00\nw\ny\n"
       end
+      create_efi_filesystem(device)
     else
-      IO.popen("fdisk #{ device }", 'w') do |f|
+      IO.popen("fdisk /dev/#{ device }", 'w') do |f|
         f.print "n\np\n1\n\n\nt\nfd\na\np\nw\n"
       end
     end
+  end
+
+  def self.get_partition(device, partitioning_scheme, numstart)
+    special_disk_regexp = %r{\A((loop|md|mmcblk)[0-9]+|nvme[0-9]+n[0-9]+)\z}
+    part_prefix = device.match(special_disk_regexp) ? 'p' : ''
+    puavo_partnum = (partitioning_scheme == 'UEFI/GPT') \
+                       ? (numstart + 1) \
+                       : numstart
+    [ device, part_prefix, puavo_partnum ].join
+  end
+
+  def self.get_puavo_partition(device, partitioning_scheme)
+    get_partition(device, partitioning_scheme, 1)
   end
 
   def self.do_fs_setup(conf, vgname, partitioning_scheme)
     fs_conf = conf.clone
 
     fs_setup_phases = []
-
     if fs_conf['partition'] == 'whole' then
-      special_disk_regexp = %r{\A((loop|md|mmcblk)[0-9]+|nvme[0-9]+n[0-9]+)\z}
-      part_prefix = fs_conf['device'].match(special_disk_regexp) ? 'p' : ''
-
       fs_setup_phases += [ :wipe_device ] if conf['wipe']
-      fs_setup_phases += [ :create_partitions ]
-
-      if partitioning_scheme == 'UEFI/GPT' then
-        fs_setup_phases += [ :create_efi_filesystem ]
-        fs_conf['efi_partition'] \
-          = "/dev/#{ fs_conf['device'] }#{ part_prefix }1"
-        puavo_partnum = 2
-      else
-        puavo_partnum = 1
-      end
-
-      fs_conf['partition'] \
-        = "#{ fs_conf['device'] }#{ part_prefix }#{ puavo_partnum }"
-      fs_setup_phases += [ :puavo_filesystems ]
+      fs_conf['partition'] = get_puavo_partition(fs_conf['device'],
+                                                 partitioning_scheme)
+      fs_setup_phases += [ :create_partitions, :puavo_filesystems ]
     else
       fs_setup_phases += [ :wipe_partition ] if conf['wipe']
       fs_setup_phases += [ :puavo_filesystems ]
     end
 
     fs_setup_phases += [ :mount_filesystems ]
-
-    fs_conf.merge!({ 'device'    => "/dev/#{ fs_conf['device'   ] }",
-		     'partition' => "/dev/#{ fs_conf['partition'] }" })
 
     fs_setup_phases.each do |fn_sym|
       args = [ :mount_filesystems, :puavo_filesystems ].include?(fn_sym) \
@@ -282,22 +276,25 @@ module DiskHandler
 
   def self.create_partitions(fs_conf, partitioning_scheme)
     # clean up possible confusing mess from the device
-    run('dd', 'if=/dev/zero', "of=#{ fs_conf['device'] }", 'count=2K',
+    run('dd', 'if=/dev/zero', "of=/dev/#{ fs_conf['device'] }", 'count=2K',
         { :err => '/dev/null' })
 
     if partitioning_scheme == 'UEFI/GPT' then
-      IO.popen([ 'gdisk', fs_conf['device'] ], 'w') do |f|
+      # (we also create an EFI partition on a RAID device
+      # even though it is pointless in that case)
+      IO.popen([ 'gdisk', "/dev/#{ fs_conf['device'] }"], 'w') do |f|
         f.print "2\no\ny\nn\n1\n\n+512M\nef00\nn\n2\n\n\n8e00\nw\ny\n"
       end
+      create_efi_filesystem(fs_conf['device'])
     else
       # create an lvm partition
       # see http://www.walkernews.net/2007/07/02/how-to-create-linux-lvm-in-3-minutes/
-      IO.popen("fdisk #{ fs_conf['device'] }", 'w') do |f|
+      IO.popen("fdisk /dev/#{ fs_conf['device'] }", 'w') do |f|
         f.print "n\np\n1\n#{ fs_conf['first_sector'] }\n\nt\n8e\na\np\nw\n"
       end
     end
 
-    run('partprobe', fs_conf['device'], { :err => '/dev/null' })
+    run('partprobe', "/dev/#{ fs_conf['device'] }", { :err => '/dev/null' })
     sleep 2
   end
 
@@ -306,18 +303,19 @@ module DiskHandler
       .select { |name, attrs| attrs['type'] != 'swap' }
   end
 
-  def self.create_efi_filesystem(fs_conf)
-    run('mkfs.fat', '-F32', fs_conf['efi_partition'])
+  def self.create_efi_filesystem(device)
+    efi_partition = get_partition(device, 'UEFI/GPT', 0)
+    run('mkfs.fat', '-F32', "/dev/#{ efi_partition }")
   end
 
   def self.puavo_filesystems(fs_conf, vgname)
     # clean up possible confusing mess from the partition
-    run('dd', 'if=/dev/zero', "of=#{ fs_conf['partition'] }", 'count=2K',
+    run('dd', 'if=/dev/zero', "of=/dev/#{ fs_conf['partition'] }", 'count=2K',
        { :err => '/dev/null' })
 
     # create LVM volume groups
-    run('pvcreate', fs_conf['partition'], { :close_others => true })
-    run('vgcreate', '-s', '64M', vgname, fs_conf['partition'],
+    run('pvcreate', "/dev/#{ fs_conf['partition'] }", { :close_others => true })
+    run('vgcreate', '-s', '64M', vgname, "/dev/#{ fs_conf['partition'] }",
 	{ :close_others => true })
 
     Filesystems[ fs_conf['hosttype'] ].each do |name, attrs|
@@ -358,7 +356,7 @@ module DiskHandler
                  '--method=quick',
                  '--nowait',
                  '--verify=off',
-                 device)
+                 "/dev/#{ device }")
   end
 
   def self.wipe_device(fs_conf)   ; wipe(fs_conf['device'])   ; end
