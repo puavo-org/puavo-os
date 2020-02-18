@@ -440,6 +440,9 @@ esac
 mount_efi_partition() {
   local efi_devpath
   efi_devpath=$1
+
+  mountpoint -q /boot/efi && return 0
+
   fsck.fat -a "$efi_devpath" > /dev/null 2>&1 || true
   mount "$efi_devpath" /boot/efi || return 1
 }
