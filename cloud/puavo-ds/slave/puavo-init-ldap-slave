@@ -43,7 +43,9 @@ end
 # Use SSL certificate from the image, or if that does not
 # exist (we not an image based ldap-slave), use the cert that
 # was acquired when the host was registered to Puavo.
-ENV["LDAPTLS_REQCERT"] = "demand"
+# ENV["LDAPTLS_REQCERT"] = "demand"
+# XXX revert this commit when going to production!
+ENV["LDAPTLS_REQCERT"] = "never"
 
 if File.exists?('/etc/puavo-conf/rootca.pem') then
   ENV["LDAPTLS_CACERT"] = '/etc/puavo-conf/rootca.pem'
