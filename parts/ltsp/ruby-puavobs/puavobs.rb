@@ -19,10 +19,8 @@ module PuavoBS
     "Basic #{basic_auth_creds}"
   end
 
-  def self.get_api_url(path, writable=false)
-    cmd = [ 'puavo-resolve-api-server' ]
-    cmd << '--writable' if writable
-    uri = IO.popen(cmd) do |io|
+  def self.get_api_url(path)
+    uri = IO.popen([ 'puavo-resolve-api-server', '--writable' ]) do |io|
       output = io.read().strip()
       io.close()
       $?.success? ? URI(output) : nil
@@ -183,7 +181,7 @@ module PuavoBS
       'username'   => testuser_username,
     }
 
-    url = self.get_api_url('/v3/users', true)
+    url = self.get_api_url('/v3/users')
     response = HTTP
       .auth(self.basic_auth(admin_username, admin_password))
       .accept(:json)
@@ -205,8 +203,7 @@ module PuavoBS
   def self.remove_user(admin_username, admin_password, user_username)
     user_id = self.get_user_id(admin_username, admin_password, user_username)
 
-    url = self.get_api_url("/v3/users/#{ user_username }/mark_for_deletion",
-                           true)
+    url = self.get_api_url("/v3/users/#{ user_username }/mark_for_deletion")
     response = HTTP
       .auth(self.basic_auth(admin_username, admin_password))
       .delete(url)
