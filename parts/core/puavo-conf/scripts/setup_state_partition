@@ -97,10 +97,10 @@ case "$(puavo-conf puavo.hosttype)" in
   bootserver)
     statedirlist='
       /etc/ldap/slapd.d
+      /etc/libvirt
       /etc/nbd-server/conf.d
       /etc/network/interfaces.d
       /etc/shorewall
-      /etc/libvirt
       /var/lib/bind
       /var/lib/dhcp
       /var/lib/krb5kdc
