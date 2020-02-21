@@ -20,7 +20,7 @@ module PuavoBS
   end
 
   def self.get_api_url(path)
-    uri = IO.popen('puavo-resolve-api-server') do |io|
+    uri = IO.popen([ 'puavo-resolve-api-server', '--writable' ]) do |io|
       output = io.read().strip()
       io.close()
       $?.success? ? URI(output) : nil
@@ -58,8 +58,7 @@ module PuavoBS
     return [] if school_ids.empty?
 
     school_ids.collect() do |school_id|
-      school = self.get_school(admin_username, admin_password, school_id)
-      [school_id, school["name"]]
+      self.get_school(admin_username, admin_password, school_id)
     end
   end
 
@@ -114,14 +113,14 @@ module PuavoBS
     school_ids = self.get_school_ids(admin_username, admin_password)
     return nil if school_ids.empty?
 
-    school_names = school_ids.collect() do |school_id|
-      self.get_school(admin_username, admin_password, school_id)["name"]
+    schools = school_ids.collect() do |school_id|
+      self.get_school(admin_username, admin_password, school_id)
     end
 
     say("Select the school which the device shall be registered to")
     choose() do |menu|
-      school_ids.each_with_index() do |id, i|
-        menu.choice(school_names[i]) { [school_names[i], id] }
+      schools.each() do |school|
+        menu.choice(school['name']) { school }
       end
     end
   end
@@ -166,34 +165,27 @@ module PuavoBS
     end
   end
 
-  def self.create_testuser(admin_username, admin_password, school_id,
+  def self.create_testuser(admin_username, admin_password, school,
                            testuser_username='test.user.**********')
     testuser_username.gsub!('*') { SecureRandom.hex(1) }
     testuser_password = SecureRandom.hex(32)
 
-    formdata = {
-      "user[givenName]"                 => "test",
-      "user[sn]"                        => "user",
-      "user[uid]"                       => testuser_username,
-      "user[puavoEduPersonAffiliation][]" => "testuser",
-      "user[new_password]"              => testuser_password,
-      "user[new_password_confirmation]" => testuser_password,
+    ldap_base = File.read('/etc/puavo/ldap/base').strip()
+    school_dn = "puavoId=#{ school['puavo_id'] },ou=Groups,#{ ldap_base }"
+    user = {
+      'first_name' => 'test',
+      'last_name'  => 'user',
+      'password'   => testuser_password,
+      'roles'      => [ 'testuser' ],
+      'school_dns' => [ school_dn ],
+      'username'   => testuser_username,
     }
 
-    role_ids = self.get_role_ids(admin_username, admin_password, school_id)
-    if role_ids.empty? then
-      # it appears the new group/role interface is in use for this organisation
-      formdata['user[role]'] = 'testuser'
-    else
-      # using the legacy roles interface
-      formdata['user[role_ids][]'] = role_ids[0]
-    end
-
-    url = self.get_puavo_url("/users/#{school_id}/users")
+    url = self.get_api_url('/v3/users')
     response = HTTP
       .auth(self.basic_auth(admin_username, admin_password))
       .accept(:json)
-      .post(url, :form => formdata)
+      .post(url, :json => user)
     self.check_response_code(response.code)
     [testuser_username, testuser_password]
   end
@@ -208,10 +200,10 @@ module PuavoBS
     Integer(/^puavoId=([0-9]+),/.match(user_json['dn'])[1])
   end
 
-  def self.remove_user(admin_username, admin_password, school_id, user_username)
+  def self.remove_user(admin_username, admin_password, user_username)
     user_id = self.get_user_id(admin_username, admin_password, user_username)
 
-    url = self.get_puavo_url("/users/#{school_id}/users/#{user_id}.xml")
+    url = self.get_api_url("/v3/users/#{ user_username }/mark_for_deletion")
     response = HTTP
       .auth(self.basic_auth(admin_username, admin_password))
       .delete(url)

@@ -56,10 +56,10 @@ end
 
 class TestRun
 
-  def initialize(admin_username, admin_password, school_id)
+  def initialize(admin_username, admin_password, school)
     @admin_username             = admin_username
     @admin_password             = admin_password
-    @school_id                  = school_id
+    @school                     = school
     @testclient_hostname        = nil
     @testclient_image           = nil
     @testclient_tags            = []
@@ -121,7 +121,7 @@ class TestRun
   def prepare_add_testuser()
     userdata = PuavoBS.create_testuser(@admin_username,
                                        @admin_password,
-                                       @school_id)
+                                       @school)
     if userdata.empty? then
       raise TestRunError.new('failed to create a test user')
     end
@@ -155,7 +155,7 @@ class TestRun
   def prepare_register_testclient()
     @testclient_register_status = PuavoBS.register_device(@admin_username,
                                                           @admin_password,
-                                                          @school_id,
+                                                          @school['puavo_id'],
                                                           @testclient_hostname,
                                                           @testclient_mac,
                                                           'fatclient',
@@ -207,8 +207,7 @@ class TestRun
 
   def cleanup_remove_testuser()
     if !@testuser_username.nil? then
-      PuavoBS.remove_user(@admin_username, @admin_password,
-                          @school_id, @testuser_username)
+      PuavoBS.remove_user(@admin_username, @admin_password, @testuser_username)
     end
   end
 
@@ -280,21 +279,20 @@ def execute(server_socket, testrun)
 
 end
 
-def run_test(admin_username, admin_password, school_name, school_id,
-	     testrun_label)
+def run_test(admin_username, admin_password, school, testrun_label)
 
   server_socket_path = '/run/puavo/puavo-bootserver-smoke-test.socket'
   server_socket = open_server_socket(server_socket_path)
 
   begin
-    testrun = TestRun.new(admin_username, admin_password, school_id)
+    testrun = TestRun.new(admin_username, admin_password, school)
     begin
       puts()
       puts("=== Test run #{testrun_label} ===")
       print('Prepare ...')
       testrun.prepare()
       puts_ok()
-      puts("    School   : #{school_name}")
+      puts("    School   : #{school['name']}")
       puts("    Hostname : #{testrun.testclient_hostname}")
       puts("    MAC      : #{testrun.testclient_mac}")
       puts("    Image    : #{testrun.testclient_image}")
@@ -393,13 +391,12 @@ if do_run_all_tests then
 
   testrun_number = 1
 
-  schools.each do |school_id, school_name|
-    school_results = all_results[school_name] = {}
+  schools.each do |school|
+    school_results = all_results[ school['name'] ] = {}
     begin
       school_results = run_test(admin_username,
 				admin_password,
-				school_name,
-				school_id,
+				school,
 				"##{testrun_number}")
     rescue Interrupt
       exit(1)
@@ -447,11 +444,9 @@ while true do
     STDERR.puts('ERROR: this bootserver is not affiliated with any school')
     next
   end
-  school_name, school_id = school
 
   begin
-    run_test(admin_username, admin_password, school_name, school_id,
-	     "##{testrun_number}")
+    run_test(admin_username, admin_password, school, "##{testrun_number}")
   rescue Interrupt
     next
   end
