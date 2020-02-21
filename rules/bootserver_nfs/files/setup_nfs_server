@@ -11,7 +11,7 @@ fi
 # XXX case, but when our "/" is on overlay, /export
 # XXX "does not support NFS export" according to "exportfs".
 
-mkdir -p /images/.export/home
+mkdir -p /images/.export/home /images/.export/puavo-pkg
 
 export_line='/home	/images/.export/home	none	rw,bind	0	0'
 if ! grep -Fqx "$export_line" /etc/fstab; then
