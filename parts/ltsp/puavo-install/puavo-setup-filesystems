@@ -97,6 +97,10 @@ module DiskHandler
         rescue true
     end
 
+    # XXX give some time for "dmsetup remove --force" to have an effect in
+    # XXX (frankly: I do not know why this is needed in some situations)
+    sleep(2)
+
     # switch off all volume groups that may interfere with following operations
     run('vgchange', '-a', 'n', vgname,
 	{ :close_others => :true, :err => '/dev/null' }) \
@@ -150,7 +154,8 @@ module DiskHandler
     raid_disk_partitions.each do |raid_partition|
       run('mdadm', '--zero-superblock', '--force', raid_partition)
     end
-    run('mdadm', '--remove', md_device_path)
+    sleep(2)    # give some time for kernel
+    run('mdadm', '--remove', md_device_path) if File.exists?(md_device_path)
   end
 
   def self.setup_raid_if_possible(partitioning_scheme)
@@ -192,6 +197,9 @@ module DiskHandler
       raid_partition(disk, partitioning_scheme)
     end
 
+    # gdisk may activate a partial old RAID setup (!?!)
+    maybe_wipe_current_raid_setups()
+
     spare_args = (disks_for_mirroring.count > 2) \
                    ? [ "--spare-devices=#{ disks_for_mirroring.count - 2 }" ] \
                    : []
@@ -214,21 +222,34 @@ module DiskHandler
     return true
   end
 
-  def self.raid_partition(device, partitioning_scheme)
+  def self.setup_partition(device, partitioning_scheme, mbr_format, gpt_format)
     # clean up possible confusing mess from the device
     run('dd', 'if=/dev/zero', "of=/dev/#{ device }", 'count=2K',
         { :err => '/dev/null' })
 
     if partitioning_scheme == 'UEFI/GPT' then
-      IO.popen([ 'gdisk', "/dev/#{ device }" ], 'w') do |f|
-        f.print "2\no\ny\nn\n1\n\n+512M\nef00\nn\n2\n\n\nfd00\nw\ny\n"
+      # (we also create an EFI partition on a RAID device
+      # even though it is pointless in that case)
+      IO.popen([ 'gdisk', "/dev/#{ device }"], 'w') do |f|
+        f.print(gpt_format)
       end
-      create_efi_filesystem(device)
     else
-      IO.popen("fdisk /dev/#{ device }", 'w') do |f|
-        f.print "n\np\n1\n\n\nt\nfd\na\np\nw\n"
+      # create an lvm partition
+      # see http://www.walkernews.net/2007/07/02/how-to-create-linux-lvm-in-3-minutes/
+      IO.popen([ 'fdisk', "/dev/#{ device }" ], 'w') do |f|
+        f.print(mbr_format)
       end
     end
+
+    if partitioning_scheme == 'UEFI/GPT' then
+      create_efi_filesystem(device)
+    end
+  end
+
+  def self.raid_partition(device, partitioning_scheme)
+    setup_partition(device, partitioning_scheme,
+                    "n\np\n1\n\n\nt\nfd\na\np\nw\n",
+                    "2\no\ny\nn\n1\n\n+512M\nef00\nn\n2\n\n\nfd00\nw\ny\n")
   end
 
   def self.get_partition(device, partitioning_scheme, numstart)
@@ -261,9 +282,10 @@ module DiskHandler
     fs_setup_phases += [ :mount_filesystems ]
 
     fs_setup_phases.each do |fn_sym|
-      args = [ :mount_filesystems, :puavo_filesystems ].include?(fn_sym) \
-                ? [ fs_conf, vgname ] :                                  \
-             :create_partitions == fn_sym                                    \
+      args = [ :cleanup_disk_environment,
+               :mount_filesystems,
+               :puavo_filesystems ].include?(fn_sym) ? [ fs_conf, vgname ] : \
+             :create_partitions == fn_sym                                \
                 ? [ fs_conf, partitioning_scheme ]                       \
                 : [ fs_conf ]
       method(fn_sym).call(*args)
@@ -275,27 +297,9 @@ module DiskHandler
   end
 
   def self.create_partitions(fs_conf, partitioning_scheme)
-    # clean up possible confusing mess from the device
-    run('dd', 'if=/dev/zero', "of=/dev/#{ fs_conf['device'] }", 'count=2K',
-        { :err => '/dev/null' })
-
-    if partitioning_scheme == 'UEFI/GPT' then
-      # (we also create an EFI partition on a RAID device
-      # even though it is pointless in that case)
-      IO.popen([ 'gdisk', "/dev/#{ fs_conf['device'] }"], 'w') do |f|
-        f.print "2\no\ny\nn\n1\n\n+512M\nef00\nn\n2\n\n\n8e00\nw\ny\n"
-      end
-      create_efi_filesystem(fs_conf['device'])
-    else
-      # create an lvm partition
-      # see http://www.walkernews.net/2007/07/02/how-to-create-linux-lvm-in-3-minutes/
-      IO.popen("fdisk /dev/#{ fs_conf['device'] }", 'w') do |f|
-        f.print "n\np\n1\n#{ fs_conf['first_sector'] }\n\nt\n8e\na\np\nw\n"
-      end
-    end
-
-    run('partprobe', "/dev/#{ fs_conf['device'] }", { :err => '/dev/null' })
-    sleep 2
+    setup_partition(fs_conf['device'], partitioning_scheme,
+                    "n\np\n1\n#{ fs_conf['first_sector'] }\n\nt\n8e\na\np\nw\n",
+                    "2\no\ny\nn\n1\n\n+512M\nef00\nn\n2\n\n\n8e00\nw\ny\n")
   end
 
   def self.non_swap_filesystems(hosttype)
@@ -309,6 +313,11 @@ module DiskHandler
   end
 
   def self.puavo_filesystems(fs_conf, vgname)
+    # this is needed again, because gdisk may activate kernel with the
+    # new partitions, with lvm activated as well (probably only in the case
+    # where the partitioning is the same)
+    cleanup_disk_environment(fs_conf['hosttype'], vgname)
+
     # clean up possible confusing mess from the partition
     run('dd', 'if=/dev/zero', "of=/dev/#{ fs_conf['partition'] }", 'count=2K',
        { :err => '/dev/null' })
