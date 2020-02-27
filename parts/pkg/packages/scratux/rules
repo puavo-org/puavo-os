@@ -1,0 +1,41 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+scratux_links='
+/opt/scratux
+/usr/share/doc/scratux
+/usr/share/applications/scratux.desktop
+/usr/share/icons/hicolor/32x32/apps/scratux.png
+/usr/share/icons/hicolor/256x256/apps/scratux.png
+/usr/share/icons/hicolor/96x96/apps/scratux.png
+/usr/share/icons/hicolor/128x128/apps/scratux.png
+/usr/share/icons/hicolor/512x512/apps/scratux.png
+/usr/share/icons/hicolor/16x16/apps/scratux.png
+/usr/share/icons/hicolor/24x24/apps/scratux.png
+/usr/share/icons/hicolor/64x64/apps/scratux.png
+'
+
+case "${command}" in
+  configure)
+    upstream_dir=$1
+    for f in $scratux_links; do
+      mkdir -p "$(dirname "$f")"
+      ln -fns -T "${upstream_dir}${f}" "$f"
+    done
+    ;;
+  unconfigure)
+    rm -rf $scratux_links
+    ;;
+  unpack)
+    upstream_pack=$1
+    upstream_dir=$2
+
+    dpkg -x "$upstream_pack" "$upstream_dir"
+    ;;
+  *)
+    ;;
+esac
