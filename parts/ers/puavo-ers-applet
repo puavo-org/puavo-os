@@ -36,7 +36,7 @@ gettext.textdomain('puavo-ers-applet')
 _tr = gettext.gettext
 
 KTP_JAKO_DIR = os.path.join(os.environ['HOME'], 'ktp-jako')
-EXAM_PASSWORDS_FILE = os.path.join(KTP_JAKO_DIR, '.exam_passwords.txt')
+EXAMS_JSON_FILE = os.path.join(KTP_JAKO_DIR, '.exam_passwords.json')
 
 def puavoconf_get(puavoconf_key):
   return subprocess.check_output([ 'puavo-conf', puavoconf_key ]).rstrip() \
@@ -63,7 +63,7 @@ class PuavoErsApplet:
     os.makedirs(self.PUAVO_ERS_DIR, exist_ok=True)
 
     self.menu = Gtk.Menu()
-    self.old_passwords = []
+    self.old_exams = []
     self.password_buttons = []
 
     self.indicator.set_menu(self.menu)
@@ -134,11 +134,11 @@ class PuavoErsApplet:
   def update_passwords(self):
     error = None
     try:
-      with open(EXAM_PASSWORDS_FILE) as file:
-        new_passwords = file.read().splitlines()
-        if (self.old_passwords != new_passwords):
-          self.update_passwords_in_ui(new_passwords)
-        self.old_passwords = new_passwords
+      with open(EXAMS_JSON_FILE) as file:
+        new_exams = json.load(file)
+        if (self.old_exams != new_exams):
+          self.update_passwords_in_ui(new_exams)
+        self.old_exams = new_exams
     except OSError as e:
       if e.errno != errno.EEXIST:
         error = e
@@ -152,12 +152,15 @@ class PuavoErsApplet:
     return True
 
 
-  def update_passwords_in_ui(self, new_passwords):
+  def update_passwords_in_ui(self, new_exams):
+    self.exams_by_widgets = {}
     for button in self.password_buttons:
       button.destroy()
 
-    for password in new_passwords:
-      button = Gtk.MenuItem(password)
+    for exam in new_exams:
+      label = "%s (%s)" % (exam['decrypt_code'], exam['file_name'])
+      button = Gtk.MenuItem(label)
+      self.exams_by_widgets[button] = exam
       button.connect('activate', self.copy_password_to_clipboard)
       button.show()
       self.menu.append(button)
@@ -165,7 +168,7 @@ class PuavoErsApplet:
 
 
   def copy_password_to_clipboard(self, widget):
-    password = widget.get_label()
+    password = self.exams_by_widgets[widget]['decrypt_code']
     self.clipboard.set_text(password, -1)
 
 
@@ -209,23 +212,22 @@ class PuavoErsExamSync (threading.Thread):
               % (index_uri, response.status_code), file=sys.stderr)
       return
 
-    exam_list = json.loads(response.content.decode('utf-8'))
-    self.update_passwords_on_disk([ e['decrypt_code'] for e in exam_list ])
+    exams_json = response.content.decode('utf-8')
+    self.update_exams_json_on_disk(exams_json)
 
-    for exam in exam_list:
+    for exam in json.loads(exams_json):
       self.sync_one_exam(exam)
 
 
-  def update_passwords_on_disk(self, password_list):
+  def update_exams_json_on_disk(self, exams_json):
     try:
-      tmpfile = '%s.tmp' % EXAM_PASSWORDS_FILE
+      tmpfile = '%s.tmp' % EXAMS_JSON_FILE
       with open(tmpfile, 'w') as f:
-        for password in password_list:
-          f.write(password + "\n")
-      os.rename(tmpfile, EXAM_PASSWORDS_FILE)
+        f.write(exams_json)
+      os.rename(tmpfile, EXAMS_JSON_FILE)
     except Exception as e:
       # XXX should user be notified?
-      print('error in writing passwords to %s: %s' % (EXAM_PASSWORDS_FILE, e))
+      print('error in writing passwords to %s: %s' % (EXAMS_JSON_FILE, e))
 
 
   def sync_one_exam(self, exam):
