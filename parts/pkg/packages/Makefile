@@ -53,6 +53,7 @@ packagedirs += promethean
 packagedirs += pycharm
 packagedirs += robboscratch2
 packagedirs += robotmeshconnect
+packagedirs += scratux
 packagedirs += shotcut
 packagedirs += skype
 packagedirs += smartboard

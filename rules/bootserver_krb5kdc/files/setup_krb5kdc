@@ -21,7 +21,7 @@ read puavo_topdomain          < /etc/puavo/topdomain
 
 cat <<EOF > /etc/krb5kdc/kdc.conf.tmp
 [kdcdefaults]
-    kdc_ports = 750,88
+    kdc_ports = 88
 
 [realms]
     ${puavo_kerberos_realm} = {
