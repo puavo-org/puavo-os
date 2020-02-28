@@ -5,8 +5,9 @@ class packages::purged {
   Package { ensure => purged, }
 
   @package {
-    [ 'firefox-esr'	        # we are using the latest Firefox
-    , 'gnome-screensaver'	# not using this for anything
+    [ 'firefox-esr'             # we are using the latest Firefox
+    , 'ghc'                     # takes too much space
+    , 'gnome-screensaver'       # not using this for anything
 
     # slows down login considerably
     # (runs dpkg-query without speed considerations)
@@ -17,6 +18,8 @@ class packages::purged {
     , 'lilypond-doc-pdf'
 
     , 'linux-image-generic'             # we want to choose kernels explicitly
+
+    , 'racket-doc'                      # takes too much space
 
     # the functionality in these is not for our end users
     , 'software-properties-gtk'
