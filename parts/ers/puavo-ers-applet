@@ -28,6 +28,7 @@ from gi.repository import GObject
 from gi.repository import Gtk
 from gi.repository import Notify
 
+from datetime import date
 from requests.auth import HTTPBasicAuth
 
 gettext.bindtextdomain('puavo-ers-applet', '/usr/share/locale')
@@ -272,7 +273,8 @@ class PuavoErsExamZipper (threading.Thread):
     meb_files = glob.glob(os.path.join(KTP_JAKO_DIR, '*.meb'))
     meb_files.sort()
 
-    all_zip_path = os.path.join(KTP_JAKO_DIR, 'Kaikki.zip')
+    current_date = date.today().strftime('%Y-%m-%d')
+    all_zip_path = os.path.join(KTP_JAKO_DIR, 'Kaikki-%s.zip' % current_date)
 
     if not os.path.exists(all_zip_path) or meb_files != self.previous_meb_files:
       try:
