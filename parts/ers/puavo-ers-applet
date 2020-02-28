@@ -93,7 +93,9 @@ class PuavoErsApplet:
 
 
   def run_naksu(self):
-    cmd = [ self.NAKSU_BIN_PATH, '--self-update=enabled' ]
+    cmd = [ '/usr/bin/terminator', '-T', 'naksu terminal',
+            '--working-directory=' + self.PUAVO_ERS_DIR,
+            '-x', './naksu', '--self-update=enabled' ]
     (pid, stdin, stdout, stderr) = GObject.spawn_async(cmd,
       flags=GLib.SPAWN_DO_NOT_REAP_CHILD|GLib.SPAWN_STDERR_TO_DEV_NULL,
       standard_input=True, standard_output=True)
