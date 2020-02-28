@@ -813,6 +813,10 @@ programs:
         url: http://www.teromakotero.fi/scratch-klubi/
         icon: /usr/share/icons/oxygen/base/64x64/categories/applications-internet.png
         tags: default, education
+  - scratux:
+        name: Scratux (Scratch 3 Offline)
+        icon: /usr/share/icons/hicolor/96x96/apps/scratux.png
+        tags: default, education
   - scribus:
         name:
             en: Scribus-desktop publishing
@@ -1221,6 +1225,7 @@ menus:
             - geany
             - org.kde.kturtle
             - scratch
+            - scratux
             - scratch3
             - bluefish
             - designer-qt4
@@ -1508,6 +1513,7 @@ menus:
             - mathdemo-abitti
             - teddybear
             - scratch
+            - scratux
             - scratch-club
             - python-club
             - arduino
