@@ -494,7 +494,6 @@ case "${command}" in
         done
         update-mime-database /usr/share/mime
         rm -f "${upstream_dir}/.mimetype_setup_done"
-        chmod 700 "${upstream_dir}"
         ;;
     unpack)
         upstream_pack=$1
@@ -520,10 +519,6 @@ case "${command}" in
         mkdir -m 1777 -p "$smart_datadir"
         ln -fns /state/external_files/smartboard_license \
                 "${smart_datadir}/.mp.1.1.dat"
-
-        # Because this is proprietary software, set ${upstream_dir}
-        # permissions to 0700 by default.
-        chmod 700 "${upstream_dir}"
         ;;
     *)
         ;;
