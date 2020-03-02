@@ -61,5 +61,6 @@ setup_puavopkgs
 setup_grub_default
 setup_superusers
 setup_chromium
+setup_exec_restrictions
 setup_systemd
 run_extra_boot_scripts
