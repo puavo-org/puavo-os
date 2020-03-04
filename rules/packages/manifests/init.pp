@@ -713,9 +713,9 @@ class packages {
                       # XXX buster , $virtualbox_module ]
 
   packages::kernels::kernel_package {
-    '4.19.0-6-amd64':
+    '4.19.0-8-amd64':
       dkms_modules => $all_dkms_modules,
-      package_name => 'linux-image-4.19.0-6-amd64';
+      package_name => 'linux-image-4.19.0-8-amd64';
 
     '5.4.0-0.bpo.2-amd64':
       dkms_modules => [], # XXX these should be tested
