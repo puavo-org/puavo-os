@@ -317,8 +317,8 @@ USER_SHORTCUTS=Do Not Install
 -fileOverwrite_${upstream_dir}/jre/lib/deploy/MixedCodeMainDialogJs.ui=Yes
 -fileOverwrite_${upstream_dir}/jre/lib/deploy/MixedCodeMainDialog.ui=Yes
 -fileOverwrite_${upstream_dir}/jre/lib/deploy/splash.gif=Yes
--fileOverwrite_${upstream_dir}/jre/lib/desktop/applications/sun_java.desktop=Yes
 -fileOverwrite_${upstream_dir}/jre/lib/desktop/applications/sun-java.desktop=Yes
+-fileOverwrite_${upstream_dir}/jre/lib/desktop/applications/sun_java.desktop=Yes
 -fileOverwrite_${upstream_dir}/jre/lib/desktop/applications/sun-javaws.desktop=Yes
 -fileOverwrite_${upstream_dir}/jre/lib/desktop/icons/hicolor/16x16/apps/sun-java.png=Yes
 -fileOverwrite_${upstream_dir}/jre/lib/desktop/icons/hicolor/16x16/apps/sun-javaws.png=Yes
@@ -766,32 +766,32 @@ USER_SHORTCUTS=Do Not Install
 -fileOverwrite_${upstream_dir}/jre/lib/zi/EST=Yes
 -fileOverwrite_${upstream_dir}/jre/lib/zi/EST5EDT=Yes
 -fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/GMT=Yes
--fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/GMT-1=Yes
 -fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/GMT+1=Yes
--fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/GMT-10=Yes
+-fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/GMT-1=Yes
 -fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/GMT+10=Yes
--fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/GMT-11=Yes
+-fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/GMT-10=Yes
 -fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/GMT+11=Yes
--fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/GMT-12=Yes
+-fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/GMT-11=Yes
 -fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/GMT+12=Yes
+-fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/GMT-12=Yes
 -fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/GMT-13=Yes
 -fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/GMT-14=Yes
--fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/GMT-2=Yes
 -fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/GMT+2=Yes
--fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/GMT-3=Yes
+-fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/GMT-2=Yes
 -fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/GMT+3=Yes
--fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/GMT-4=Yes
+-fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/GMT-3=Yes
 -fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/GMT+4=Yes
--fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/GMT-5=Yes
+-fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/GMT-4=Yes
 -fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/GMT+5=Yes
--fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/GMT-6=Yes
+-fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/GMT-5=Yes
 -fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/GMT+6=Yes
--fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/GMT-7=Yes
+-fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/GMT-6=Yes
 -fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/GMT+7=Yes
--fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/GMT-8=Yes
+-fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/GMT-7=Yes
 -fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/GMT+8=Yes
--fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/GMT-9=Yes
+-fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/GMT-8=Yes
 -fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/GMT+9=Yes
+-fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/GMT-9=Yes
 -fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/UCT=Yes
 -fileOverwrite_${upstream_dir}/jre/lib/zi/Etc/UTC=Yes
 -fileOverwrite_${upstream_dir}/jre/lib/zi/Europe/Amsterdam=Yes
@@ -906,7 +906,6 @@ USER_SHORTCUTS=Do Not Install
 -fileOverwrite_${upstream_dir}/jre/lib/zi/WET=Yes
 -fileOverwrite_${upstream_dir}/jre/lib/zi/ZoneInfoMappings=Yes
 -fileOverwrite_${upstream_dir}/jre/LICENSE=Yes
--fileOverwrite_${upstream_dir}/jre/man/ja=Yes
 -fileOverwrite_${upstream_dir}/jre/man/ja_JP.UTF-8/man1/java.1=Yes
 -fileOverwrite_${upstream_dir}/jre/man/ja_JP.UTF-8/man1/javaws.1=Yes
 -fileOverwrite_${upstream_dir}/jre/man/ja_JP.UTF-8/man1/keytool.1=Yes
@@ -978,7 +977,7 @@ USER_SHORTCUTS=Do Not Install
 -fileOverwrite_${upstream_dir}/licenses/PDFBox-license.txt=Yes
 -fileOverwrite_${upstream_dir}/licenses/tm-extractors-license.txt=Yes
 -fileOverwrite_${upstream_dir}/licenses/winlaf-license.txt=Yes
--fileOverwrite_${upstream_dir}/logs/IHMC_CmapTools_v6.02_Install_09_09_2016_16_24_09.log=Yes
+-fileOverwrite_${upstream_dir}/logs/IHMC_CmapTools_v6.04_Install_02_06_2020_15_49_30.log=Yes
 -fileOverwrite_${upstream_dir}/share/ffmpeg/ffprobe.xsd=Yes
 -fileOverwrite_${upstream_dir}/share/ffmpeg/libvpx-1080p50_60.ffpreset=Yes
 -fileOverwrite_${upstream_dir}/share/ffmpeg/libvpx-1080p.ffpreset=Yes
@@ -1006,16 +1005,25 @@ USER_SHORTCUTS=Do Not Install
 -fileOverwrite_${upstream_dir}/UninstallerData/uninstaller.jar=Yes
 EOF
 
-        chmod +x "${upstream_pack}"
+        chmod +x "$upstream_pack"
 
         # XXX We run code from the upstream package at an unpack phase...
         # XXX this is not good, but it appears there is no other way to
         # XXX install this.
-        "${upstream_pack}" -f "$install_conf" -i silent || true
-        rm -f "$install_conf"
+        "$upstream_pack" -f "$install_conf" -i silent || true
+
+        rm -rf "$install_conf"                       \
+               "${upstream_dir}/CmapTools"           \
+               "${upstream_dir}/Uninstall CmapTools" \
+               "${upstream_dir}/UninstallerData"
+
+        sed -i 's/upstream.tmp/upstream/'         \
+            "$upstream_dir"/lib/pkgconfig/lib*.pc \
+            "${upstream_dir}/bin/CmapTools.lax"   \
+            "${upstream_dir}/bin/Updater.lax"
 
         # The installer dumps lot of files with mode 777 XD
-        chmod -R go-w "${upstream_dir}"
+        chmod -R go-w "$upstream_dir"
 
         echo cmaptools >> /var/lib/puavo-pkg/.update_mime_database
         ;;

@@ -1,0 +1,244 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+ubuntu_backgrounds_links="
+  /usr/share/backgrounds/150305-cinqAA_by_Pierre_Cante.jpg
+  /usr/share/backgrounds/160218-deux-two_by_Pierre_Cante.jpg
+  /usr/share/backgrounds/163_by_e4v.jpg
+  /usr/share/backgrounds/Abstract_Ubuntu_by_Marek_Koteluk.jpg
+  /usr/share/backgrounds/Alien_wing_by_Ralph_Crützen.jpg
+  /usr/share/backgrounds/A_Little_Quetzal_by_vgerasimov.jpg
+  /usr/share/backgrounds/A_star_has_fallen_by_Juan_Pablo_Lauriente.jpg
+  /usr/share/backgrounds/Backyard_Mushrooms_by_Kurt_Zitzelman.jpg
+  /usr/share/backgrounds/Beach_by_Renato_Giordanelli.jpg
+  /usr/share/backgrounds/Begonia_by_fatpoint21.jpg
+  /usr/share/backgrounds/Below_Clouds_by_kobinho.jpg
+  /usr/share/backgrounds/Berries_by_Tom_Kijas.jpg
+  /usr/share/backgrounds/Black_hole_by_Marek_Koteluk.jpg
+  /usr/share/backgrounds/Blue_by_dariuskws.jpg
+  /usr/share/backgrounds/Blue_frost_by_ppaabblloo77.jpg
+  /usr/share/backgrounds/BosqueTK.jpg
+  /usr/share/backgrounds/Breaker_by_Lyle_Nel.jpg
+  /usr/share/backgrounds/Brother_typewriter_by_awdean1.jpg
+  /usr/share/backgrounds/BusquedaNocturna.jpg
+  /usr/share/backgrounds/Cacomixtle_Ubunteño_by_Carlos_and_Paula_Morales.jpg
+  /usr/share/backgrounds/Cairn_by_Sylvain_Naudin.jpg
+  /usr/share/backgrounds/Candy_by_Bernhard_Hanakam.jpg
+  /usr/share/backgrounds/Cedar_Wax_Wing_by_Raymond_Lavoie.jpg
+  /usr/share/backgrounds/Christmas_Lights_by_RaDu_GaLaN.jpg
+  /usr/share/backgrounds/Cielo_estrellado_by_Eduardo_Diez_Viñuela.jpg
+  /usr/share/backgrounds/Classic_Guitar_Detail_by_Sten_Jørgen_Pettersen.jpg
+  /usr/share/backgrounds/clock_by_Bernhard_Hanakam.jpg
+  /usr/share/backgrounds/Cornered.jpg
+  /usr/share/backgrounds/CurlsbyCandy.jpg
+  /usr/share/backgrounds/Cyclotron_by_cyclotron_beam.jpg
+  /usr/share/backgrounds/Daisy.jpg
+  /usr/share/backgrounds/Dans_ma_bulle_by_Christophe_Weibel.jpg
+  /usr/share/backgrounds/Delicate_Petals_by_lefthandgergo.jpg
+  /usr/share/backgrounds/DSC3907_by_Todor_Velichkov.jpg
+  /usr/share/backgrounds/Early_Blossom_by_Dh0r.jpg
+  /usr/share/backgrounds/Early_Morning_by_Robert_Katzki.jpg
+  /usr/share/backgrounds/Empty_Space_by_Glenn_Rayat.jpg
+  /usr/share/backgrounds/Espaciolandia_by_Nando_uy.jpg
+  /usr/share/backgrounds/Euphoria!_by_Tomasino.cz.jpg
+  /usr/share/backgrounds/FallDrops,AncientLight.jpg
+  /usr/share/backgrounds/Fleurs_de_Prunus_24_by_Jérôme_Boivin.jpg
+  /usr/share/backgrounds/Flocking_by_noombox.jpg
+  /usr/share/backgrounds/Floorboards_by_Dawid_Huczyński.jpg
+  /usr/share/backgrounds/Flora_by_Marek_Koteluk.jpg
+  /usr/share/backgrounds/Fluffodome.jpg
+  /usr/share/backgrounds/Foggy_Forest_by_Jake_Stewart.jpg
+  /usr/share/backgrounds/Forest_by_Moritz_Reisinger.jpg
+  /usr/share/backgrounds/Forever_by_Shady_S.jpg
+  /usr/share/backgrounds/Frozen_by_fernando_garcila_redondo.jpg
+  /usr/share/backgrounds/Golden_Bloom_by_Twinmama.jpg
+  /usr/share/backgrounds/Golden_leaves_by_Mauro_Campanelli.jpg
+  /usr/share/backgrounds/Gota_D'água_by_Eiti_Kimura.jpg
+  /usr/share/backgrounds/Gran_Canaria_by_ALF.jpg
+  /usr/share/backgrounds/Grass_by_Jeremy_Hill.jpg
+  /usr/share/backgrounds/Green_Plant_by_Simon_Schlegl.jpg
+  /usr/share/backgrounds/Haukland_Beach_view_by_Michele_Agostini.jpg
+  /usr/share/backgrounds/H_by_Manuel_Sagredo.jpg
+  /usr/share/backgrounds/Horses_on_sand_dunes_by_Matthias_Siewert.jpg
+  /usr/share/backgrounds/Hotel_by_sarcasmrules2011.jpg
+  /usr/share/backgrounds/I_am_a_Saucy_Salamander..._by_Juan_Pablo_Lauriente.jpg
+  /usr/share/backgrounds/Ibanez_Infinity_by_Jaco_Kok.jpg
+  /usr/share/backgrounds/Icy_Grass_by_Raymond_Lavoie.jpg
+  /usr/share/backgrounds/Icystones2.jpg
+  /usr/share/backgrounds/IMG_0081_by_Jobin_Babu.jpg
+  /usr/share/backgrounds/IMG_7632_by_Jobin_Babu.jpg
+  /usr/share/backgrounds/InthedarkRedux.jpg
+  /usr/share/backgrounds/Jelly_Fish_by_RaDu_GaLaN.jpg
+  /usr/share/backgrounds/Kronach_leuchtet_2014_by_Brian_Fox.jpg
+  /usr/share/backgrounds/La_Gomera_by_Alfonso_Aguirre_Arbex.jpg
+  /usr/share/backgrounds/Landing_by_Nic_Dahlquist.jpg
+  /usr/share/backgrounds/larung_gar_by_night_by_Geza_Radics.jpg
+  /usr/share/backgrounds/Last_breath…_by_Francisco_Javier_Epinoza_Pérez.jpg
+  /usr/share/backgrounds/Leftover_by_Sagar_Jain.jpg
+  /usr/share/backgrounds/Light_my_fire_evening_sun_by_Dariusz_Duma.jpg
+  /usr/share/backgrounds/London_Eye_From_Beneath_by_Fernando_García.jpg
+  /usr/share/backgrounds/Maraetaibeforesunrise.jpg
+  /usr/share/backgrounds/Mediterranean_Sea_by_simosx.jpg
+  /usr/share/backgrounds/Mono_Lake_by_Angela_Henderson.jpg
+  /usr/share/backgrounds/Morning_Dew_by_Lars_Clausen.jpg
+  /usr/share/backgrounds/Morning_Sun_on_Frost-Covered_Leaves_by_Gary_A_Stafford.jpg
+  /usr/share/backgrounds/Moss_inflorescence_by_carmelo75.jpg
+  /usr/share/backgrounds/Mountains_by_JamesPickles.jpg
+  /usr/share/backgrounds/Mr._Tau_and_The_Tree_-_by_TJ.jpg
+  /usr/share/backgrounds/Murales_by_Jan_Bencini.jpg
+  /usr/share/backgrounds/Mushrooms_3_by_moritzmhmk.jpg
+  /usr/share/backgrounds/Music_by_tomasino.cz.jpg
+  /usr/share/backgrounds/Night_lights_by_Alberto_Salvia_Novella.jpg
+  /usr/share/backgrounds/Night_Seascape_by_Davor_Dopar.jpg
+  /usr/share/backgrounds/Nylon_Rainbow_by_Sam_Hewitt.jpg
+  /usr/share/backgrounds/Oak_by_Lyle_Nel.jpg
+  /usr/share/backgrounds/Outoffocus.jpg
+  /usr/share/backgrounds/Oyster_Catcher_in_the_Rocks_by_Raymond_Lavoie.jpg
+  /usr/share/backgrounds/P1310728_by_Ferran_Reyes.jpg
+  /usr/share/backgrounds/Pantano_de_Orellana_by_mgarciaiz.jpg
+  /usr/share/backgrounds/Partitura_by_Vincijun.jpg
+  /usr/share/backgrounds/Passion_by_Vilia_Majere.jpg
+  /usr/share/backgrounds/passion_flower_by_Irene_Gr.jpg
+  /usr/share/backgrounds/Pink_and_Blue_by_Ashwin_Deshpande.jpg
+  /usr/share/backgrounds/Pointy.jpg
+  /usr/share/backgrounds/Polka_Dots_and_Moonbeams_by_SirPecanGum.jpg
+  /usr/share/backgrounds/Precise_Pangolin_by_Vlad_Gerasimov.jpg
+  /usr/share/backgrounds/Primavera_by_Vivian_Morales.jpg
+  /usr/share/backgrounds/Purple_Daisy_by_Maria_Scotto.jpg
+  /usr/share/backgrounds/Redes_de_hilo_by_Juan_Pablo_Lauriente.jpg
+  /usr/share/backgrounds/Reflections_by_Trenton_Fox.jpg
+  /usr/share/backgrounds/Road_to_Nowhere_by_Matt_Bailey.jpg
+  /usr/share/backgrounds/Roof_Tiles_by_Finn_Sturdy.jpg
+  /usr/share/backgrounds/Salamander_by_Lucas_Romero_Di_Benedetto.jpg
+  /usr/share/backgrounds/salcantayperu_by_Life_Nomadic.jpg
+  /usr/share/backgrounds/Saucy_Salamander_Abstract_by_José_Vera_alcivar.jpg
+  /usr/share/backgrounds/Savannah_Lilian_Blot_by_a_Blot_on_the_landscape.jpg
+  /usr/share/backgrounds/Sea_Fury_by_Ian_Worrall.jpg
+  /usr/share/backgrounds/Seebrücke_Graal-Müritz_by_Oliver_hb.jpg
+  /usr/share/backgrounds/Sitting_Here,_Making_Fun_by_Philipp_Haegi.jpg
+  /usr/share/backgrounds/SmoothMoment.jpg
+  /usr/share/backgrounds/Some_Light_Reading_by_Brandilyn_Carpenter.jpg
+  /usr/share/backgrounds/Speaker_Weave_by_Phil_Jackson.jpg
+  /usr/share/backgrounds/Spring_by_Peter_Apas.jpg
+  /usr/share/backgrounds/Stop_the_light_by_Mato_Rachela.jpg
+  /usr/share/backgrounds/Sunny_Autumn_by_Joel_Heaps.jpg
+  /usr/share/backgrounds/Taxus_baccata_by_baubusiukas.jpg
+  /usr/share/backgrounds/TCP118v1_by_Tiziano_Consonni.jpg
+  /usr/share/backgrounds/Tenerife_Roques_de_Anaga_by_Frederik_Schulz.jpg
+  /usr/share/backgrounds/Tesla_by_Tomasino.cz.jpg
+  /usr/share/backgrounds/The_City_of_Polen_by_MilanVankovski.jpg
+  /usr/share/backgrounds/The_Forbidden_City_by_Daniel_Mathis.jpg
+  /usr/share/backgrounds/The_Land_of_Edonias_by_Γιωργος_Αργυροπουλος.jpg
+  /usr/share/backgrounds/THE_'OUT'_STANDING_by_ydristi.jpg
+  /usr/share/backgrounds/there_is_something_human_in_that_stuff_by_Pierre_Cante.jpg
+  /usr/share/backgrounds/Thingvellir_by_pattersa.jpg
+  /usr/share/backgrounds/Tie_My_Boat_by_Ray_García.jpg
+  /usr/share/backgrounds/Tramonto_a_Scalea_by_Renatvs88.jpg
+  /usr/share/backgrounds/Tranquil_by_Pat_David.jpg
+  /usr/share/backgrounds/Traviny_by_Tomasino.cz.jpg
+  /usr/share/backgrounds/Trazo_solitario_by_Julio_Diliegros.jpg
+  /usr/share/backgrounds/Twilight_Frost_by_Phil_Jackson.jpg
+  /usr/share/backgrounds/ubuntu16_10_by_Khoir_Rudin.png
+  /usr/share/backgrounds/ubuntu_wallpaper_16_10_02_by_screen_name_007.jpg
+  /usr/share/backgrounds/Untitled_by_Garazi_Unzueta.jpg
+  /usr/share/backgrounds/Utopic_Unicorn__by_Bedis_ElAchКche.jpg
+  /usr/share/backgrounds/Vanishing_by_James_Wilson.jpg
+  /usr/share/backgrounds/Wanaka_Tree_by_Stephane_Pakula.jpg
+  /usr/share/backgrounds/Warm_grasses_by_dcsearle.t21.jpg
+  /usr/share/backgrounds/Warmlights.jpg
+  /usr/share/backgrounds/Water_Lily_by_Denis_Dugushkin.jpg
+  /usr/share/backgrounds/Water_web_by_Tom_Kijas.jpg
+  /usr/share/backgrounds/Winter_Fog_by_Daniel_Vesterskov.jpg
+  /usr/share/backgrounds/Winter_Morning_by_Shannon_Lucas.jpg
+  /usr/share/backgrounds/Xerus_Wallpaper_Grey_4096x2304.png
+  /usr/share/backgrounds/xgu472hf2_by_lariliikala.jpg
+  /usr/share/backgrounds/Yak_Wallpaper_Grey_4096x2304.png
+  /usr/share/backgrounds/Yala_mountain_by_Geza_Radics.jpg
+  /usr/share/backgrounds/Yellowflower.jpg
+  /usr/share/backgrounds/Zapus_Wallpaper_Grey_4096x2304.png
+  /usr/share/gnome-background-properties/lucid-wallpapers.xml
+  /usr/share/gnome-background-properties/precise-wallpapers.xml
+  /usr/share/gnome-background-properties/quantal-wallpapers.xml
+  /usr/share/gnome-background-properties/raring-wallpapers.xml
+  /usr/share/gnome-background-properties/saucy-wallpapers.xml
+  /usr/share/gnome-background-properties/trusty-wallpapers.xml
+  /usr/share/gnome-background-properties/utopic-wallpapers.xml
+  /usr/share/gnome-background-properties/vivid-wallpapers.xml
+  /usr/share/gnome-background-properties/wily-wallpapers.xml
+  /usr/share/gnome-background-properties/xenial-wallpapers.xml
+  /usr/share/gnome-background-properties/yakkety-wallpapers.xml
+  /usr/share/gnome-background-properties/zesty-wallpapers.xml
+"
+
+urlbase='http://cz.archive.ubuntu.com/ubuntu/pool/universe/u/ubuntu-wallpapers'
+
+case "$command" in
+  configure)
+    upstream_dir=$1
+    for f in $ubuntu_backgrounds_links; do
+      ln -fns -T "${upstream_dir}${f}" "$f"
+    done
+    ;;
+
+  unconfigure)
+    rm -f $ubuntu_backgrounds_links
+    ;;
+
+  unpack)
+    upstream_pack=$1
+    upstream_dir=$2
+
+    tar -x -f "$upstream_pack" -C "$upstream_dir"
+    ;;
+
+  download)
+    upstream_pack=$(readlink -f "$1")
+    tmpdir=
+    trap '[ -n "$tmpdir" ] && rm -rf "$tmpdir"' 0 INT TERM
+    tmpdir=$(mktemp -d)
+
+    (
+      cd "$tmpdir"
+      while read sha384 debpath; do
+        deb=$(basename "$debpath")
+        wget \
+            --no-use-server-timestamps \
+            --no-check-certificate \
+            --no-cookies \
+            --output-document "$deb" \
+            --progress=dot:mega \
+            "${urlbase}/${debpath}" || {
+            [ $? -eq 4 ] && exit 2 ## Network failure.
+            exit 1
+        }
+        echo "${sha384} ${deb}" | sha384sum --check >/dev/null || exit 1
+        dpkg-deb -x "$deb" ubuntu-wallpapers || exit 1
+      done <<EOF
+a893f2cdff222c2c9f345283f637a75f7e3ad4143e5a5dea13d3807a5607894849a87a01b0e9fc61056d51a87304bf9b  ubuntu-wallpapers-lucid_18.04.1-0ubuntu1_all.deb
+6750635551182ad21a81da49db1a382e12885a19263883780cf6e42392ffc7944797d20f379d3ac829cffe5d5f8dbffc  ubuntu-wallpapers-precise_18.04.1-0ubuntu1_all.deb
+80e7fce6883014da2ce384314f4e8ecae622ca5d2cb669b79fbd59c9829534e8d0c42384b972c064d0ce4bf34aea0cf8  ubuntu-wallpapers-quantal_18.04.1-0ubuntu1_all.deb
+0f8d0769e3d09ed4ea9aaa3366ba2de2cb95d28301e215afdf722ed0477817e078d690fd437d18418a417a95d3f32a46  ubuntu-wallpapers-raring_18.04.1-0ubuntu1_all.deb
+c386627cd0a45117e5649d88f93d3d64bfc937589fed2c7387e6cc4539243d7a5957810ee525b9c47f2d03f95f783731  ubuntu-wallpapers-saucy_18.04.1-0ubuntu1_all.deb
+1d7304390800aa375c78d69affbb1f772402f13eadd669df5fb43f67851d58a12174132c78e818d3259882f2705083d5  ubuntu-wallpapers-trusty_18.04.1-0ubuntu1_all.deb
+88654112c819ffe844bd12726d156c4b220ab584f3fac808a373878e3f5e9a1b10988f126bb8608f8e617902cfa21760  ubuntu-wallpapers-utopic_18.04.1-0ubuntu1_all.deb
+647495372630ca84bd26ec56a685ffeb91f19e88991687a0beea25b0567736d775a90f82d5635c6a4023ed27988cecbf  ubuntu-wallpapers-vivid_18.04.1-0ubuntu1_all.deb
+fdfd3b77d8776481b2f37abf6f2973031bbb7f7d0988b5e805fe7fc0ef4e1d0935c39d93a95932fbafc468361f999000  ubuntu-wallpapers-wily_18.04.1-0ubuntu1_all.deb
+43afa0238df626359635af86aced64a455741cf18c51e6ffc36c1483975c6a9661e91f9d0bb3c7743e5a7554593a7802  ubuntu-wallpapers-xenial_18.04.1-0ubuntu1_all.deb
+239ff6e8e972f5ed95f9bfaebe02d6574fe21319b441cd9b9b3e191f0b879e0336f5a68cec59be2faf7140dfa1c6636f  ubuntu-wallpapers-yakkety_18.04.1-0ubuntu1_all.deb
+d05d835d2bf1be17896c27e973a70e585ede9ebbbc81183415f1a81c0a617eb70f76605e23f5f01c6d54668ca8473d56  ubuntu-wallpapers-zesty_18.04.1-0ubuntu1_all.deb
+EOF
+      # Set LC_COLLATE=C so that files always sort in the same
+      # way (so we get the same tar-archive independent of locales).
+      env LC_COLLATE=C \
+        tar -C ubuntu-wallpapers --mtime='2000-01-01 00:00:00 +00:00' --sort=name -c \
+          -f "$upstream_pack" .
+    )
+    ;;
+
+    *)
+        ;;
+esac

@@ -1,0 +1,38 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+# see https://linuxhint.com/install_netbeans_ide_debian_10/
+
+case "$command" in
+  configure)
+    upstream_dir=$1
+    ln -fns "${upstream_dir}/netbeans" /opt/netbeans
+
+    cat <<'EOF' > /usr/share/applications/netbeans.desktop
+[Desktop Entry]
+Name=NetBeans 11.0 IDE
+Comment=NetBeans 11.0 IDE
+Type=Application
+Encoding=UTF-8
+Exec=/opt/netbeans/bin/netbeans
+Icon=/opt/netbeans/nb/netbeans.png
+Categories=GNOME;Application;Development;
+Terminal=false
+StartupNotify=true
+EOF
+    ;;
+  unconfigure)
+    rm -f /opt/netbeans /usr/share/applications/netbeans.desktop
+    ;;
+  unpack)
+    upstream_pack=$1
+    upstream_dir=$2
+    unzip -q -d "$upstream_dir" "$upstream_pack"
+    ;;
+  *)
+    ;;
+esac

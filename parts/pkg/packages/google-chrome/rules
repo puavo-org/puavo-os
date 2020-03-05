@@ -5,9 +5,82 @@ set -eu
 command=$1
 shift
 
+write_startup_wrapper() {
+  cat <<'EOF' > /usr/bin/google-chrome-stable.tmp
+#!/bin/sh
+
+set -eu
+
+browser_running() {
+  pgrep -x -U "$USER" chrome >/dev/null
+}
+
+manage_preferences() {
+  tmpfile="${preferences_file}.tmp"
+
+  if [ -e "$preferences_file" ]; then
+    jq "$@" "$preferences_file" > "$tmpfile" || return 1
+  else
+    jq --null-input "$@" > "$tmpfile" || return 1
+  fi
+
+  mv "$tmpfile" "$preferences_file"
+}
+
+set_first_homepage() {
+  first_homepage=$1
+
+  manage_preferences --arg first_homepage "$first_homepage" '
+    .browser.show_home_button = true
+    | .homepage = $first_homepage
+    | .homepage_is_newtabpage = false
+    | .session.restore_on_startup = 4
+    | .session.startup_urls = [ $first_homepage ]
+  '
+}
+
+default_args="--disable-infobars --no-default-browser-check --no-first-run"
+
+if ! browser_running; then
+  preferences_dir=~/.config/google-chrome/Default
+  preferences_file="${preferences_dir}/Preferences"
+
+  mkdir -p "$preferences_dir"
+
+  first_homepage=$( echo "$HOMEPAGE" | awk -F '|' '{ print $1 }')
+  second_homepage=$(echo "$HOMEPAGE" | awk -F '|' '{ print $2 }')
+
+  if [ -n "$first_homepage" ]; then
+    if set_first_homepage "$first_homepage"; then
+      if [ -n "$second_homepage" ]; then
+        manage_preferences --arg second_homepage "$second_homepage" '
+          .session.startup_urls += [ $second_homepage ]
+        ' || true
+      fi
+    fi
+  fi
+
+  manage_preferences '.browser.custom_chrome_frame = false' || true
+fi
+
+pepperflash_path="/usr/lib/adobe-flashplugin/libpepflashplayer.so"
+
+if [ -s "$pepperflash_path" ]; then
+  default_args="$default_args --ppapi-flash-path=$pepperflash_path --ppapi-flash-version="
+fi
+
+exec /usr/bin/google-chrome-stable.puavopkg $default_args "$@"
+EOF
+  chmod 755 /usr/bin/google-chrome-stable.tmp
+  mv /usr/bin/google-chrome-stable.tmp /usr/bin/google-chrome-stable
+}
+
 case "${command}" in
     configure)
         upstream_dir=$1
+
+        chown root:root "${upstream_dir}/opt/google/chrome/chrome-sandbox"
+        chmod 4755 "${upstream_dir}/opt/google/chrome/chrome-sandbox"
 
         mkdir -p /usr/bin
         mkdir -p /usr/share/applications
@@ -40,55 +113,38 @@ case "${command}" in
         ln -fns "${upstream_dir}/usr/share/man/man1/google-chrome.1" \
             /usr/share/man/man1/google-chrome.1
 
-        # Do not overwrite /usr/bin/google-chrome-stable in case there is
-        # a wrapper for google-chrome.
         ln -fns "${upstream_dir}/opt/google/chrome/google-chrome" \
             /usr/bin/google-chrome-stable.puavopkg
-        if [ ! -e /usr/bin/google-chrome-stable ]; then
-            ln -fns google-chrome-stable.puavopkg /usr/bin/google-chrome-stable
-        fi
-
-        chown root:root "${upstream_dir}/opt/google/chrome/chrome-sandbox"
-        chmod 4755 "${upstream_dir}/opt/google/chrome/chrome-sandbox"
+        write_startup_wrapper
 
         sed '/^MimeType=/a\
 StartupNotify=true' "${upstream_dir}/usr/share/applications/google-chrome.desktop" \
             > /usr/share/applications/google-chrome.desktop
         ;;
     unconfigure)
-        if [ "$(readlink /usr/bin/google-chrome-stable)" \
-            = 'google-chrome-stable.puavopkg' ] ; then
-                rm -f /usr/bin/google-chrome-stable
-        fi
-        rm -f /usr/bin/google-chrome-stable.puavopkg
-        rm -f /usr/share/applications/google-chrome.desktop
-        rm -f /usr/share/man/man1/google-chrome.1
-        rm -f /usr/share/icons/hicolor/256x256/apps/google-chrome.png
-        rm -f /usr/share/icons/hicolor/128x128/apps/google-chrome.png
-        rm -f /usr/share/icons/hicolor/64x64/apps/google-chrome.png
-        rm -f /usr/share/icons/hicolor/48x48/apps/google-chrome.png
-        rm -f /usr/share/icons/hicolor/32x32/apps/google-chrome.png
-        rm -f /usr/share/icons/hicolor/24x24/apps/google-chrome.png
-        rm -f /usr/share/icons/hicolor/22x22/apps/google-chrome.png
-        rm -f /usr/share/icons/hicolor/16x16/apps/google-chrome.png
+        rm -f /usr/bin/google-chrome-stable                           \
+              /usr/bin/google-chrome-stable.puavopkg                  \
+              /usr/share/applications/google-chrome.desktop           \
+              /usr/share/man/man1/google-chrome.1                     \
+              /usr/share/icons/hicolor/256x256/apps/google-chrome.png \
+              /usr/share/icons/hicolor/128x128/apps/google-chrome.png \
+              /usr/share/icons/hicolor/64x64/apps/google-chrome.png   \
+              /usr/share/icons/hicolor/48x48/apps/google-chrome.png   \
+              /usr/share/icons/hicolor/32x32/apps/google-chrome.png   \
+              /usr/share/icons/hicolor/24x24/apps/google-chrome.png   \
+              /usr/share/icons/hicolor/22x22/apps/google-chrome.png   \
+              /usr/share/icons/hicolor/16x16/apps/google-chrome.png
         ;;
     unpack)
         upstream_pack=$1
         upstream_dir=$2
-        dpkg -x "${upstream_pack}" "${upstream_dir}"
-        chmod 0755 "${upstream_dir}"
+        dpkg -x "$upstream_pack" "$upstream_dir"
+        chmod 0755 "$upstream_dir"
         ;;
     download)
-        # Tested with version 56.0.2924.76-1.
         upstream_pack=$1
         baseurl="https://dl.google.com/linux/chrome/deb"
         tmpfile=$(mktemp)
-
-        dpkg_arch=$(dpkg --print-architecture)
-        if [ "$dpkg_arch" != "amd64" ]; then
-            echo 'Google Chrome is for amd64 only.' >&2
-            exit 1
-        fi
 
         wget \
             --no-use-server-timestamps \
@@ -96,19 +152,19 @@ StartupNotify=true' "${upstream_dir}/usr/share/applications/google-chrome.deskto
             --no-cookies \
             --output-document "${tmpfile}" \
             --progress=dot:mega \
-            "${baseurl}/dists/stable/main/binary-${dpkg_arch}/Packages" || {
+            "${baseurl}/dists/stable/main/binary-amd64/Packages" || {
             wget_err=$?
-            rm -f "${tmpfile}" || true
+            rm -f "$tmpfile" || true
             [ ${wget_err} -eq 4 ] && exit 2 ## Network failure.
             exit 1
         }
         poolpath=$(sed -r '0,/^Package: google-chrome-stable$/ d' "${tmpfile}" | sed -r -n 's/^Filename: (.*)/\1/p' | head -n1)
-        rm -f "${tmpfile}"
+        rm -f "$tmpfile"
         wget \
             --no-use-server-timestamps \
             --no-check-certificate \
             --no-cookies \
-            --output-document "${upstream_pack}" \
+            --output-document "$upstream_pack" \
             "${baseurl}/${poolpath}" || {
             [ $? -eq 4 ] && exit 2 ## Network failure.
             exit 1

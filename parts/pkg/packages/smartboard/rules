@@ -462,17 +462,24 @@ setup_mimetypes() {
   echo smartboard >> /var/lib/puavo-pkg/.update_mime_database
 }
 
+if [ "$(lsb_release -cs)" = 'stretch' ]; then
+  is_stretch=true
+else
+  is_stretch=false
+fi
+
 case "${command}" in
     configure)
         upstream_dir=$1
 
-        # If smartboard license is not enabled, do not configure a package.
-        if [ "$(puavo-conf puavo.nonfree.smartboard.enabled)" != 'true' ]; then
-            chmod 700 "${upstream_dir}"
-            exit 0
+        if $is_stretch; then
+          # If smartboard license is not enabled, do not configure a package.
+          if [ "$(puavo-conf puavo.nonfree.smartboard.enabled)" != 'true' ]; then
+              chmod 700 "$upstream_dir"
+              exit 0
+          fi
         fi
-
-        chmod 755 "${upstream_dir}"
+        chmod 755 "$upstream_dir"
 
         for f in "$smart_technologies_dir" ${smartboard_links}; do
             mkdir -p "$(dirname "$f")"
@@ -502,7 +509,7 @@ case "${command}" in
         done
         update-mime-database /usr/share/mime
         rm -f "${upstream_dir}/.mimetype_setup_done"
-        chmod 700 "${upstream_dir}"
+        $is_stretch && chmod 700 "$upstream_dir"
         ;;
     unpack)
         upstream_pack=$1
@@ -531,7 +538,7 @@ case "${command}" in
 
         # Because this is proprietary software, set ${upstream_dir}
         # permissions to 0700 by default.
-        chmod 700 "${upstream_dir}"
+        $is_stretch && chmod 700 "${upstream_dir}"
         ;;
     *)
         ;;
