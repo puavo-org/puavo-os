@@ -7,6 +7,7 @@ class image::bundle::desktop {
   include ::disable_accounts_service
   include ::disable_geoclue
   include ::disable_unclutter
+  include ::exec_restrictions
   include ::firefox
   include ::fontconfig
   include ::fuse

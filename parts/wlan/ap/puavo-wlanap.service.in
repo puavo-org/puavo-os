@@ -8,3 +8,5 @@ WantedBy=multi-user.target
 
 [Service]
 ExecStart=#FILLED BY MAKEFILE DURING INSTALL
+RestartSec=600
+Restart=on-failure

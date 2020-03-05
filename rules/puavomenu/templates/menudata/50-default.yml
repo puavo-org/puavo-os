@@ -444,6 +444,13 @@ programs:
         tags: default, education
         puavopkg:
             id: mafynetti
+  - makecode:
+        type: web
+        name: Makecode (Web)
+        url:  https://makecode.mindstorms.com/
+        description: Makecode -ohjelmointi
+        icon: /usr/share/icons/Faenza/mimetypes/96/text-html.png
+        tags: default, internet, education
   - mandelbulber2:
         tags: default, education, science
   - MarvinSketch:
@@ -818,7 +825,7 @@ programs:
         tags: default
   - scratch3:
         type: web
-        name: Scratch 3.0 (web)
+        name: Scratch 3.0 (Web)
         url: https://scratch.mit.edu/projects/editor/
         icon: /usr/share/icons/hicolor/128x128/apps/scratch.png
         tags: default, education
@@ -1217,6 +1224,7 @@ menus:
             - teddybear
             - drracket
             - enchanting
+            - makecode
             - bluegriffon
             - eclipse-cpp
             - eclipse-java
@@ -1461,6 +1469,7 @@ menus:
             - ylearkisto
             - sumopaint
             - mathdemo-abitti
+            - makecode
             - walma
             - pahvi
             - kahoot

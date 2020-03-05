@@ -1,0 +1,28 @@
+#!/bin/sh
+
+set -eu
+
+menuprof=$(puavo-conf puavo.puavomenu.tags)
+
+steam_perms=0755
+transmission_perms=0755
+
+handle_item() {
+  item=$1
+  name=$2
+  good_perms=$3
+  bad_perms=$4
+
+  case "$item" in
+    -$name|-*:$name)               eval "${name}_perms=${bad_perms}"  ;;
+    $name|+$name|*:$name|+*:$name) eval "${name}_perms=${good_perms}" ;;
+  esac
+}
+
+for item in $menuprof; do
+  handle_item "$item" steam        0755 0000
+  handle_item "$item" transmission 0755 0000
+done
+
+chmod $steam_perms        /usr/games/steam
+chmod $transmission_perms /usr/bin/transmission-gtk
