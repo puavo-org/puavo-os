@@ -6,7 +6,7 @@ command=$1
 shift
 
 write_startup_wrapper() {
-  cat <<'EOF' > /usr/bin/google-chrome-stable
+  cat <<'EOF' > /usr/bin/google-chrome-stable.tmp
 #!/bin/sh
 
 set -eu
@@ -71,12 +71,16 @@ fi
 
 exec /usr/bin/google-chrome-stable.puavopkg $default_args "$@"
 EOF
-  chmod 755 /usr/bin/google-chrome-stable
+  chmod 755 /usr/bin/google-chrome-stable.tmp
+  mv /usr/bin/google-chrome-stable.tmp /usr/bin/google-chrome-stable
 }
 
 case "${command}" in
     configure)
         upstream_dir=$1
+
+        chown root:root "${upstream_dir}/opt/google/chrome/chrome-sandbox"
+        chmod 4755 "${upstream_dir}/opt/google/chrome/chrome-sandbox"
 
         mkdir -p /usr/bin
         mkdir -p /usr/share/applications
@@ -113,9 +117,6 @@ case "${command}" in
             /usr/bin/google-chrome-stable.puavopkg
         write_startup_wrapper
 
-        chown root:root "${upstream_dir}/opt/google/chrome/chrome-sandbox"
-        chmod 4755 "${upstream_dir}/opt/google/chrome/chrome-sandbox"
-
         sed '/^MimeType=/a\
 StartupNotify=true' "${upstream_dir}/usr/share/applications/google-chrome.desktop" \
             > /usr/share/applications/google-chrome.desktop
@@ -137,20 +138,13 @@ StartupNotify=true' "${upstream_dir}/usr/share/applications/google-chrome.deskto
     unpack)
         upstream_pack=$1
         upstream_dir=$2
-        dpkg -x "${upstream_pack}" "${upstream_dir}"
-        chmod 0755 "${upstream_dir}"
+        dpkg -x "$upstream_pack" "$upstream_dir"
+        chmod 0755 "$upstream_dir"
         ;;
     download)
-        # Tested with version 56.0.2924.76-1.
         upstream_pack=$1
         baseurl="https://dl.google.com/linux/chrome/deb"
         tmpfile=$(mktemp)
-
-        dpkg_arch=$(dpkg --print-architecture)
-        if [ "$dpkg_arch" != "amd64" ]; then
-            echo 'Google Chrome is for amd64 only.' >&2
-            exit 1
-        fi
 
         wget \
             --no-use-server-timestamps \
@@ -158,19 +152,19 @@ StartupNotify=true' "${upstream_dir}/usr/share/applications/google-chrome.deskto
             --no-cookies \
             --output-document "${tmpfile}" \
             --progress=dot:mega \
-            "${baseurl}/dists/stable/main/binary-${dpkg_arch}/Packages" || {
+            "${baseurl}/dists/stable/main/binary-amd64/Packages" || {
             wget_err=$?
-            rm -f "${tmpfile}" || true
+            rm -f "$tmpfile" || true
             [ ${wget_err} -eq 4 ] && exit 2 ## Network failure.
             exit 1
         }
         poolpath=$(sed -r '0,/^Package: google-chrome-stable$/ d' "${tmpfile}" | sed -r -n 's/^Filename: (.*)/\1/p' | head -n1)
-        rm -f "${tmpfile}"
+        rm -f "$tmpfile"
         wget \
             --no-use-server-timestamps \
             --no-check-certificate \
             --no-cookies \
-            --output-document "${upstream_pack}" \
+            --output-document "$upstream_pack" \
             "${baseurl}/${poolpath}" || {
             [ $? -eq 4 ] && exit 2 ## Network failure.
             exit 1
