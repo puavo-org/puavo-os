@@ -405,6 +405,7 @@ class packages {
       tag => [ 'tag_printing', 'tag_debian_desktop', ];
 
     [ 'adb'
+    , 'aseba'
     , 'avr-libc'
     , 'eclipse'
     , 'emacs'
