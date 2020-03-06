@@ -509,7 +509,7 @@ case "${command}" in
         done
         update-mime-database /usr/share/mime
         rm -f "${upstream_dir}/.mimetype_setup_done"
-        $is_stretch && chmod 700 "$upstream_dir"
+        if $is_stretch; then chmod 700 "$upstream_dir"; fi
         ;;
     unpack)
         upstream_pack=$1
@@ -538,7 +538,7 @@ case "${command}" in
 
         # Because this is proprietary software, set ${upstream_dir}
         # permissions to 0700 by default.
-        $is_stretch && chmod 700 "${upstream_dir}"
+        if $is_stretch; then chmod 700 "${upstream_dir}"; fi
         ;;
     *)
         ;;

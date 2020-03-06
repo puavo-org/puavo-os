@@ -6,7 +6,7 @@ command=$1
 shift
 
 version='2019-12'
-urlbase='http://eclipse.mirror.garr.it/mirrors/eclipse/technology/epp/downloads/release'
+urlbase='http://ftp.fau.de/eclipse/technology/epp/downloads/release'
 
 make_desktop_file() {
   eclipse_lang=$1
