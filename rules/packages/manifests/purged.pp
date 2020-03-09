@@ -25,6 +25,7 @@ class packages::purged {
     , 'software-properties-gtk'
     , 'synaptic'
 
+    , 'texlive-fonts-extra'
     , 'texlive-fonts-extra-doc'
     , 'texlive-fonts-recommended-doc'
     , 'texlive-latex-base-doc'

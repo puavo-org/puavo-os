@@ -463,7 +463,6 @@ class packages {
     , 'qgis'
     , 'stellarium'
     , 'step'
-    , 'texlive-fonts-extra'
     , 'texlive-fonts-recommended'
     , 'texlive-latex-extra'
     , 'texlive-latex-recommended'

@@ -25,6 +25,5 @@ class fontconfig {
   }
 
   Package <| title == fontconfig
-          or title == texlive-fonts-extra
           or title == xfonts-utils |>
 }
