@@ -3,8 +3,7 @@
 # The machine id should be unique for each client, otherwise problems may
 # occur.  It also helps if it's constant, so we generate it from the client
 # MAC address, or FQDN as a fallback.  That way we don't pollute
-# e.g. ~/.pulse/* with random entries on fat clients.  systemd-journald also
-# uses /etc/machine-id for /var/log/journal/* directories.
+# e.g. ~/.pulse/* with random entries on fat clients.
 
 set -eu
 

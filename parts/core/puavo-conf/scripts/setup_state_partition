@@ -142,4 +142,7 @@ if [ "$(puavo-conf puavo.admin.persistent_homedirs)" = 'true' ]; then
   puavo_setup_admins || status=1
 fi
 
+# clean up old systemd-journald files
+rm -rf /var/log/journal || status=1
+
 exit $status
