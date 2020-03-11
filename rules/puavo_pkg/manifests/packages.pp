@@ -62,6 +62,22 @@ class puavo_pkg::packages {
 			, 'vidyo-client'
 			, 'zoom' ]
 
+  # Not all puavo-pkg packages have been tested with all distribution
+  # release versions, so keep track of which packages are intended for
+  # which versions (all others should be compatible with all supported
+  # versions).
+  $stretch_specific_packages = [ 'aseba'
+                               , 'musescore-appimage'
+                               , 'obsidian-icons' ]
+  $buster_specific_packages  = [ 'celestia'
+                               , 'eclipse'
+                               , 'netbeans'
+                               , 'ubuntu-wallpapers' ]
+  case $debianversioncodename {
+    'stretch': { $available_packages += $stretch_specific_packages }
+    'buster':  { $available_packages += $buster_specific_packages  }
+  }
+
   @puavo_pkg::install { $available_packages: ; }
 
   # "arduino-tm1637", "arduino-radiohead" and "ohjelmointi-opetuksessa"
