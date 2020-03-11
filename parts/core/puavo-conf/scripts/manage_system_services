@@ -3,6 +3,11 @@
 # we do not use systemctl here, because we want this script to be fast
 
 set services {
+  { autofs {
+      /etc/systemd/system/multi-user.target.wants/autofs.service
+        -> /usr/lib/systemd/system/autofs.service
+    }}
+
   { avahi-daemon {
       /etc/systemd/system/dbus-org.freedesktop.Avahi.service
         -> /lib/systemd/system/avahi-daemon.service
