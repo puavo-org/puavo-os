@@ -29,12 +29,21 @@ set services {
 
   { google-cloud-print {
       /etc/systemd/system/multi-user.target.wants/google-cloud-print.service
-         -> /etc/systemd/system/google-cloud-print.service
+        -> /etc/systemd/system/google-cloud-print.service
     }}
 
   { incron {
       /etc/systemd/system/multi-user.target.wants/incron.service
-         -> /lib/systemd/system/incron.service
+        -> /lib/systemd/system/incron.service
+    }}
+
+  { inetd {
+      /etc/systemd/system/multi-user.target.wants/inetd.service
+        -> /lib/systemd/system/inetd.service
+      /etc/rc2.d/S01openbsd-inetd -> /etc/init.d/openbsd-inetd
+      /etc/rc3.d/S01openbsd-inetd -> /etc/init.d/openbsd-inetd
+      /etc/rc4.d/S01openbsd-inetd -> /etc/init.d/openbsd-inetd
+      /etc/rc5.d/S01openbsd-inetd -> /etc/init.d/openbsd-inetd
     }}
 
   { isc-dhcp-server {
