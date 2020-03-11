@@ -5,7 +5,11 @@ class packages::purged {
   Package { ensure => purged, }
 
   @package {
-    [ 'firefox-esr'             # we are using the latest Firefox
+    [ 'exim4-base'              # we do not need an MTA
+    , 'exim4-config',
+    , 'exim4-daemon-light'
+
+    , 'firefox-esr'             # we are using the latest Firefox
     , 'ghc'                     # takes too much space
     , 'gnome-screensaver'       # not using this for anything
 
