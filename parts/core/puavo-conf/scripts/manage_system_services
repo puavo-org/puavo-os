@@ -66,7 +66,7 @@ set services {
     }}
 
   { munin-node {
-      /etc/systemd/system/sockets.target.wants/munin-node.service
+      /etc/systemd/system/multi-user.target.wants/munin-node.service
         -> /lib/systemd/system/munin-node.service
     }}
 
