@@ -17,6 +17,11 @@ set services {
         -> /lib/systemd/system/avahi-daemon.socket
     }}
 
+  { bind9 {
+      /etc/system/multi-user.target.wants/bind9.service
+        -> /lib/systemd/system/bind9.service
+    }}
+
   { cups-watchdog {
       /etc/systemd/system/multi-user.target.wants/cups-watchdog.service
         -> /etc/systemd/system/cups-watchdog.service

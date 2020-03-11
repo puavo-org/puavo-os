@@ -77,6 +77,9 @@
   "puavo.service.avahi-daemon.enabled": {
     "default": "false"
   },
+  "puavo.service.bind9.enabled": {
+    "default": "false"
+  },
   "puavo.service.cron.cronjobs": {
     "default": "puavo-cleanup-old-users"
   },
