@@ -6,7 +6,7 @@ class packages::purged {
 
   @package {
     [ 'exim4-base'              # we do not need an MTA
-    , 'exim4-config',
+    , 'exim4-config'
     , 'exim4-daemon-light'
 
     , 'firefox-esr'             # we are using the latest Firefox
