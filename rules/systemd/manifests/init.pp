@@ -14,6 +14,10 @@ class systemd {
 
     '/etc/sysusers.d/puavo-os.conf':
       source => 'puppet:///modules/systemd/etc_sysusers.d_puavo-os.conf';
+
+    # no persistent journal logs by default (not useful on fatclients)
+    '/var/log/journal':
+      ensure => absent;
   }
 
   Package <| title == systemd |>
