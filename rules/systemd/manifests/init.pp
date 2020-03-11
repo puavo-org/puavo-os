@@ -17,7 +17,8 @@ class systemd {
 
     # no persistent journal logs by default (not useful on fatclients)
     '/var/log/journal':
-      ensure => absent;
+      ensure => absent,
+      force  => true;
   }
 
   Package <| title == systemd |>
