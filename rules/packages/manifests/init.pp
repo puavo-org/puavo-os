@@ -131,6 +131,7 @@ class packages {
     , 'sshfs'
     , 'strace'
     , 'sudo'
+    , 'sysbench'
     , 'sysfsutils'
     , 'sysstat'
     , 'tftp'
