@@ -92,6 +92,7 @@ class packages {
   @package {
     [ 'acpitool'
     , 'arandr'
+    , 'atop'
     , 'clusterssh'
     , 'console-setup'
     , 'dconf-tools'
