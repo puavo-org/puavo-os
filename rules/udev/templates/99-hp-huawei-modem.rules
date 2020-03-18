@@ -1,0 +1,2 @@
+# HP hs3110 (Huawei MU736)
+ATTR{idVendor}=="03f0", ATTR{idProduct}=="521d", RUN+="/bin/sh -c 'modprobe option && sleep 1 && echo 03f0 521d > /sys/bus/usb-serial/drivers/option1/new_id'"
