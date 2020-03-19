@@ -82,7 +82,11 @@ proc handle_new_incoming_messages {msg} {
 
   set nonempty_lines [nonempty_lines $msg]
   if {[llength $nonempty_lines] > 0} {
-    tsv::lappend app syslog_memcache {*}$nonempty_lines
+    # Not using tsv::lappend because of performance reasons.
+    # See https://wiki.tcl-lang.org/page/thread "Gotcha: tsv::lappend".
+    foreach line $nonempty_lines {
+      tsv::lpush app syslog_memcache $line end
+    }
     thread::cond notify $must_send
   }
 }
