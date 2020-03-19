@@ -1,0 +1,57 @@
+#!/bin/sh
+
+set -eu
+
+version='6.1.4'
+
+mntpoint='/mnt'
+tmpdir=$(mktemp -d /tmp/VBoxGuestAdditions_${version}.iso.XXXXXX)
+
+cleanup() {
+  rm -f "$tmpdir"
+}
+
+trap cleanup 0 INT TERM
+
+isofile="VBoxGuestAdditions_${version}.iso"
+urlbase="https://download.virtualbox.org/virtualbox/${version}"
+
+sha384_checksum='9bf67dc4831911314f8c8542d10df482ac3f94ca092e0ffb1998e1ffc258521dc598fc0fed6c3e156c25b1662ba65631'
+
+wget -O "${tmpdir}/${isofile}" "${urlbase}/${isofile}"
+contents_dir="${tmpdir}/contents"
+
+file_checksum="$(sha384sum "${tmpdir}/${isofile}" | awk '{ print $1 }')"
+if [ "$sha384_checksum" != "$file_checksum" ]; then
+  echo "bad checksum: should be '$sha384_checksum', not '$file_checksum'" >&2
+  exit 1
+fi
+
+mkdir -p "$contents_dir"
+(cd "$contents_dir" && 7z x "../${isofile}")
+
+chmod 755 "${contents_dir}/VBoxLinuxAdditions.run"
+
+# This fails because we can not load vboxguest module,
+# so we let it fail and test some things afterwards.
+"${contents_dir}/VBoxLinuxAdditions.run" 2>/dev/null || true
+
+vmlinuz=$(readlink /boot/vmlinuz)
+default_kernel_version=${vmlinuz#vmlinuz-}
+
+if [ ! -e "/lib/modules/${default_kernel_version}/misc/vboxguest.ko" ]; then
+  echo 'could not find vboxguest.ko for the default kernel' >&2
+  exit 1
+fi
+
+if [ ! -e /lib/systemd/system/vboxadd.service ]; then
+  echo 'Could not find /lib/systemd/system/vboxadd.service' >&2
+  exit 1
+fi
+
+if [ ! -e /lib/systemd/system/vboxadd-service.service ]; then
+  echo 'Could not find /lib/systemd/system/vboxadd-service.service' >&2
+  exit 1
+fi
+
+exit 0

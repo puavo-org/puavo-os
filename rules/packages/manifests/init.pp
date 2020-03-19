@@ -660,6 +660,7 @@ class packages {
     , 'kamerka'
     , 'mc'
     , 'mousepad'
+    , 'p7zip-full'
     , 'pass'
     , 'password-gorilla'
     , 'system-config-printer'
