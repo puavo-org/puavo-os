@@ -241,6 +241,19 @@ module DiskHandler
       end
     end
 
+    # when creating a disk image file (with puavo-make-install-disk)
+    # we need to do this, otherwise this appears to be useless
+    if UI::loopback_only then
+      wait_iterations = 0
+      partition_dev = "/dev/#{ device }p1"
+      until File.exists?(partition_dev) do
+        run('partprobe', "/dev/#{ device }")
+        sleep(1)
+        wait_iterations += 1
+        raise "could not find #{ partition_dev }" if wait_iterations > 30
+      end
+    end
+
     if partitioning_scheme == 'UEFI/GPT' then
       create_efi_filesystem(device)
     end
@@ -642,9 +655,7 @@ module Size
 
 end
 
-# XXX could be shared with puavo-register
 module UI
-
   ConfirmPartitionsPrompt,
   DiskDevicePrompt,
   ImageoverlaySizePrompt,
