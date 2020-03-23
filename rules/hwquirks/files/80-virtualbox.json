@@ -1,0 +1,11 @@
+[
+  {
+    "key": "product_name",
+    "matchmethod": "exact",
+    "pattern": "VirtualBox",
+    "parameters": {
+      "puavo.service.vboxadd.enabled": "true",
+      "puavo.service.vboxadd-service.enabled": "true"
+    }
+  }
+]

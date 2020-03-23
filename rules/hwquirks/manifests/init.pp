@@ -17,6 +17,9 @@ class hwquirks {
 
     '/usr/share/puavo-conf/hwquirk-overwrites/70-i915-disable-drrs.json':
       source => 'puppet:///modules/hwquirks/70-i915-disable-drrs.json';
+
+    '/usr/share/puavo-conf/hwquirk-overwrites/80-virtualbox.json':
+      source => 'puppet:///modules/hwquirks/80-virtualbox.json';
   }
 
   Package <| title == puavo-conf |>
