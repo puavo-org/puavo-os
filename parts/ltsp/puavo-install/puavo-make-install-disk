@@ -48,11 +48,14 @@ trap cleanup 0 INT TERM
 
 usage() {
   cat <<EOF
-Usage: $(basename $0) [--source-image source] [--target-image target]
+Usage: $(basename $0) [--source-image source]
+                      [--target-image target]
+                      [--with-vdi] (only when using --target-image)
 EOF
 }
 
-if ! args=$(getopt -n "$0" -o +hs:t: -l help,source-image:,target-image: \
+if ! args=$(getopt -n "$0" -o +hs:t:v \
+              -l help,source-image:,target-image:,with-vdi \
               -- "$@"); then
   usage
   exit 1
@@ -60,6 +63,7 @@ fi
 
 source_image=''
 target_image=''
+with_vdi=false
 
 eval "set -- $args"
 while [ $# -ne 0 ]; do
@@ -67,6 +71,7 @@ while [ $# -ne 0 ]; do
     --help) usage; exit 0                           ;;
     --source-image) source_image="$2"; shift; shift ;;
     --target-image) target_image="$2"; shift; shift ;;
+    --with-vdi)     with_vdi=true;     shift        ;;
     --) shift; break;;
    esac
 done
@@ -74,6 +79,17 @@ done
 if [ -n "$source_image" -a ! -e "$source_image" ]; then
   echo "source image $source_image does not exist!" >&2
   exit 1
+fi
+
+if $with_vdi; then
+  if [ -z "$target_image" ]; then
+    echo 'No target image set, yet using --with-vdi' >&2
+    exit 1
+  fi
+  if ! which VBoxManage >/dev/null 2>&1; then
+    echo 'could not find VBoxManage, yet using --with-vdi' >&2
+    exit 1
+  fi
 fi
 
 if [ -n "$target_image" ]; then
@@ -102,13 +118,18 @@ puavo-install-grub --hosttype   diskinstaller  \
 if [ -n "$source_image" ]; then
   install_image --install-from-file "$source_image" \
                 "$(basename "$source_image")"
-  exit 0
+else
+  read puavoimage_name < /etc/puavo-image/name
+  if [ -e /run/puavo/nbd-server ]; then
+    install_image --install-from-nbd /dev/nbd0 "$puavoimage_name"
+  else
+    install_image --install-from-file "/images/${puavoimage_name}" \
+                  "$puavoimage_name"
+  fi
 fi
 
-read puavoimage_name < /etc/puavo-image/name
-if [ -e /run/puavo/nbd-server ]; then
-  install_image --install-from-nbd /dev/nbd0 "$puavoimage_name"
-else
-  install_image --install-from-file "/images/${puavoimage_name}" \
-                "$puavoimage_name"
+if $with_vdi; then
+  vdi_image="${target_image%.*}.vdi"
+  VBoxManage convertdd "$target_image" "${vdi_image}.tmp" --format VDI
+  mv "${vdi_image}.tmp" "$vdi_image"
 fi
