@@ -37,6 +37,8 @@ _tr = gettext.gettext
 
 KTP_JAKO_DIR = os.path.join(os.environ['HOME'], 'ktp-jako')
 EXAMS_DIR = os.path.join(KTP_JAKO_DIR, '.exams')
+EXAMS_ARCHIVE_DIR = os.path.join(KTP_JAKO_DIR, 'Arkisto')
+EXAMS_UPCOMING_DIR = os.path.join(KTP_JAKO_DIR, 'Tulevat')
 EXAMS_JSON_FILE = os.path.join(KTP_JAKO_DIR, '.exams.json')
 
 def puavoconf_get(puavoconf_key):
@@ -285,51 +287,59 @@ class PuavoErsExamZipper (threading.Thread):
   def __init__(self):
     threading.Thread.__init__(self)
 
-    self.previous_meb_files = []
+    self.previous_meb_files_by_date = {}
 
 
   def run(self):
     while True:
+      self.current_date = datetime.date.today().strftime('%Y-%m-%d')
       self.zip_exams()
-      time.sleep(5)
+      self.link_exams_for_today()
+      time.sleep(10)
+
+  def link_exams_for_today(self):
+    # XXX
 
 
   def zip_exams(self):
-    meb_files = glob.glob(os.path.join(KTP_JAKO_DIR, '*.meb'))
-    meb_files.sort()
+    exam_dirs_by_date = glob.glob(os.path.join(EXAMS_DIR, '*'))
 
-    current_date = datetime.date.today().strftime('%Y-%m-%d')
-    all_zip_path = os.path.join(KTP_JAKO_DIR, 'Kaikki-%s.zip' % current_date)
+    for exam_dir_with_date in exam_dirs_by_date:
+      meb_files = glob.glob(os.path.join(exam_dir_with_date, '*.meb'))
+      meb_files.sort()
 
-    if not os.path.exists(all_zip_path) or meb_files != self.previous_meb_files:
-      try:
-        os.remove(all_zip_path)
-      except FileNotFoundError:
-        pass
+      exams_date = os.path.basename(exam_dir_with_date)
+      all_zip_path = os.path.join(exam_dir_with_date,
+                                  'Kaikki-%s.zip' % exams_date)
 
-      if len(meb_files) > 0:
-        try:
-          subprocess.check_output([ 'zip', '-j', all_zip_path ] + meb_files)
-        except Exception as e:
-          print('error when zipping exam files: %s' % meb_files,
-                file=sys.stderr)
+      if not exams_date in self.previous_meb_files_by_date:
+        self.previous_meb_files_by_date[exams_date] = []
 
-    self.previous_meb_files = meb_files
+      if not os.path.exists(all_zip_path) \
+        or meb_files != self.previous_meb_files_by_date[exams_date]:
+          try:
+            os.remove(all_zip_path)
+          except FileNotFoundError:
+            pass
+
+          if len(meb_files) > 0:
+            try:
+              subprocess.check_output([ 'zip', '-j', all_zip_path ] + meb_files)
+            except Exception as e:
+              print('error when zipping exam files to %s: %s' \
+                      % (all_zip_path, meb_files), file=sys.stderr)
+
+      self.previous_meb_files_by_date[exams_date] = meb_files
 
 
 applet = PuavoErsApplet()
 
-try:
-  os.mkdir(KTP_JAKO_DIR)
-except OSError as e:
-  if e.errno != errno.EEXIST:
-    raise e
-
-try:
-  os.mkdir(EXAMS_DIR)
-except OSError as e:
-  if e.errno != errno.EEXIST:
-    raise e
+for dir in [ KTP_JAKO_DIR, EXAMS_DIR, EXAMS_ARCHIVE_DIR, EXAMS_UPCOMING_DIR ]:
+  try:
+    os.mkdir(dir)
+  except OSError as e:
+    if e.errno != errno.EEXIST:
+      raise e
 
 if __name__ == '__main__':
   signal.signal(signal.SIGINT, signal.SIG_DFL)
