@@ -57,6 +57,7 @@ class puavo_pkg::packages {
 			, 'skype'
 			, 'smartboard'
 			, 'spotify-client'
+			, 'teams'
 			, 'tilitin'
 			, 't-lasku'
 			, 'unityhub-appimage'
