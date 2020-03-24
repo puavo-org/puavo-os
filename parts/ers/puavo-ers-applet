@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import datetime
 import errno
 import fcntl
 import gettext
@@ -28,7 +29,6 @@ from gi.repository import GObject
 from gi.repository import Gtk
 from gi.repository import Notify
 
-from datetime import date
 from requests.auth import HTTPBasicAuth
 
 gettext.bindtextdomain('puavo-ers-applet', '/usr/share/locale')
@@ -217,7 +217,10 @@ class PuavoErsExamSync (threading.Thread):
     self.update_exams_json_on_disk(exams_json)
 
     for exam in json.loads(exams_json):
-      self.sync_one_exam(exam)
+      try:
+        self.sync_one_exam(exam)
+      except Exception as e:
+        print('error in syncing one exam: %s' % e, file=sys.stderr)
 
 
   def update_exams_json_on_disk(self, exams_json):
@@ -232,26 +235,45 @@ class PuavoErsExamSync (threading.Thread):
 
 
   def sync_one_exam(self, exam):
-    exam_file_path = os.path.join(EXAMS_DIR, exam['file_name'])
+    exam_file_name = exam['file_name']
+
+    if not isinstance(exam_file_name, str):
+      raise Exception('could not determine exam filename')
+    if exam_file_name == '':
+      raise Exception('exam filename is an empty string')
+
+    exam_start_time = datetime.datetime.fromtimestamp(exam['start_time'])
+    exam_start_date = exam_start_time.strftime('%Y-%m-%d')
+    exam_date_dir = os.path.join(EXAMS_DIR, exam_start_date)
+
+    try:
+      os.mkdir(exam_date_dir)
+    except OSError as e:
+      if e.errno != errno.EEXIST:
+        raise e
+
+    exam_file_path = os.path.join(exam_date_dir, exam_file_name)
     if os.path.isfile(exam_file_path):
       return
 
     exam_hash = exam['file_sha256']
+    if not isinstance(exam_hash, str):
+      raise Exception('could not determine exam hash for %s' % exam_file_name)
+
     exam_uri = 'https://%s/exams/raw_file' % self.exam_server_address
 
     response = requests.get(exam_uri,
                             auth=HTTPBasicAuth(self.ldap_dn,
                                                self.ldap_password),
                             params={
-                              'domain': self.domain,
-                              'hash': exam_hash,
+                              'domain':   self.domain,
+                              'hash':     exam_hash,
                               'hostname': self.hostname,
-                              'id': self.id,
+                              'id':       self.id,
                             })
     if not response:
-      print('error when getting an exam from %s: %s' \
-              % (exam_uri, response.status_code), file=sys.stderr)
-      return
+      raise Exception('error when getting an exam from %s: %s' \
+              % (exam_uri, response.status_code))
 
     tmpfile = '%s.tmp' % exam_file_path
     with open(tmpfile, 'wb') as f:
@@ -276,7 +298,7 @@ class PuavoErsExamZipper (threading.Thread):
     meb_files = glob.glob(os.path.join(KTP_JAKO_DIR, '*.meb'))
     meb_files.sort()
 
-    current_date = date.today().strftime('%Y-%m-%d')
+    current_date = datetime.date.today().strftime('%Y-%m-%d')
     all_zip_path = os.path.join(KTP_JAKO_DIR, 'Kaikki-%s.zip' % current_date)
 
     if not os.path.exists(all_zip_path) or meb_files != self.previous_meb_files:
@@ -301,13 +323,13 @@ try:
   os.mkdir(KTP_JAKO_DIR)
 except OSError as e:
   if e.errno != errno.EEXIST:
-    raise
+    raise e
 
 try:
   os.mkdir(EXAMS_DIR)
 except OSError as e:
   if e.errno != errno.EEXIST:
-    raise
+    raise e
 
 if __name__ == '__main__':
   signal.signal(signal.SIGINT, signal.SIG_DFL)
