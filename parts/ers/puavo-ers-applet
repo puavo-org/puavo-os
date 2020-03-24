@@ -297,8 +297,31 @@ class PuavoErsExamZipper (threading.Thread):
       self.link_exams_for_today()
       time.sleep(10)
 
+
   def link_exams_for_today(self):
-    # XXX
+    todays_dir = os.path.join(EXAMS_DIR, self.current_date)
+    should_be_exams_of_today = glob.glob(os.path.join(todays_dir, '*.meb'))
+    current_exams_of_today = glob.glob(os.path.join(KTP_JAKO_DIR, '*.meb'))
+
+    for current_exam_path in current_exams_of_today:
+      should_be_exam_path = os.path.join(todays_dir,
+                                         os.path.basename(current_exam_path))
+      if not os.path.isfile(should_be_exam_path):
+        try:
+          os.unlink(current_exam_path)
+        except OSError as e:
+          if e.errno != errno.ENOENT:
+            raise e
+
+    for should_be_exam_path in should_be_exams_of_today:
+      current_exam_path = os.path.join(KTP_JAKO_DIR,
+                                       os.path.basename(should_be_exam_path))
+      if not os.path.isfile(current_exam_path):
+        try:
+          os.link(should_be_exam_path, current_exam_path)
+        except OSError as e:
+          if e.errno != errno.EEXIST:
+            raise e
 
 
   def zip_exams(self):
