@@ -946,6 +946,11 @@ programs:
         tags: default
         puavopkg:
             id: t-lasku
+  - teams:
+        name: Teams
+        tags: default
+        puavopkg:
+            id: teams
   - teddybear:
         name:
             en: Teddy Bear programming
@@ -1198,12 +1203,13 @@ menus:
             - net.sourceforge.liferea
             - google-earth
             - skype
+            - teams
+            - Zoom
             - empathy
             - vinagre
             - dropbox
             - nextcloud
             - VidyoDesktop
-            - Zoom
 
   - menu-programming:
         name:
