@@ -6,10 +6,10 @@ command=$1
 shift
 
 teams_links='
-/usr/bin/teams
-/usr/share/applications/teams.desktop
-/usr/share/pixmaps/teams.png
-/usr/share/teams
+  /usr/bin/teams
+  /usr/share/applications/teams.desktop
+  /usr/share/pixmaps/teams.png
+  /usr/share/teams
 '
 
 case "${command}" in
@@ -21,7 +21,7 @@ case "${command}" in
     done
     ;;
   unconfigure)
-    rm -rf $teams_links
+    rm -f $teams_links
     ;;
   unpack)
     upstream_pack=$1
