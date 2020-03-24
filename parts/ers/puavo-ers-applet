@@ -36,7 +36,8 @@ gettext.textdomain('puavo-ers-applet')
 _tr = gettext.gettext
 
 KTP_JAKO_DIR = os.path.join(os.environ['HOME'], 'ktp-jako')
-EXAMS_JSON_FILE = os.path.join(KTP_JAKO_DIR, '.exam_passwords.json')
+EXAMS_DIR = os.path.join(KTP_JAKO_DIR, '.exams')
+EXAMS_JSON_FILE = os.path.join(KTP_JAKO_DIR, '.exams.json')
 
 def puavoconf_get(puavoconf_key):
   return subprocess.check_output([ 'puavo-conf', puavoconf_key ]).rstrip() \
@@ -231,7 +232,7 @@ class PuavoErsExamSync (threading.Thread):
 
 
   def sync_one_exam(self, exam):
-    exam_file_path = os.path.join(KTP_JAKO_DIR, exam['file_name'])
+    exam_file_path = os.path.join(EXAMS_DIR, exam['file_name'])
     if os.path.isfile(exam_file_path):
       return
 
@@ -295,6 +296,18 @@ class PuavoErsExamZipper (threading.Thread):
 
 
 applet = PuavoErsApplet()
+
+try:
+  os.mkdir(KTP_JAKO_DIR)
+except OSError as e:
+  if e.errno != errno.EEXIST:
+    raise
+
+try:
+  os.mkdir(EXAMS_DIR)
+except OSError as e:
+  if e.errno != errno.EEXIST:
+    raise
 
 if __name__ == '__main__':
   signal.signal(signal.SIGINT, signal.SIG_DFL)
