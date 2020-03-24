@@ -225,6 +225,9 @@ class PuavoErsExamSync (threading.Thread):
       except Exception as e:
         print('error in syncing one exam: %s' % e, file=sys.stderr)
 
+    # XXX should remove all today's and future exams that have been removed
+    # XXX from upstream
+
 
   def update_exams_json_on_disk(self, exams_json):
     try:
@@ -296,7 +299,49 @@ class PuavoErsExamZipper (threading.Thread):
       self.current_date = datetime.date.today().strftime('%Y-%m-%d')
       self.zip_exams()
       self.link_exams_for_today()
+      self.link_exam_dates_to_dirs()
       time.sleep(10)
+
+
+  def link_exam_dates_to_dirs(self):
+    archive_dates = []
+    upcoming_dates = []
+
+    # sort all exam date directories to archives or upcoming
+
+    exam_dirs_by_date = glob.glob( os.path.join(EXAMS_DIR, '*') )
+    for exam_dir in exam_dirs_by_date:
+      exam_date = os.path.basename(exam_dir)
+      if exam_date < self.current_date:
+        archive_dates.append(exam_date)
+      elif exam_date > self.current_date:
+        upcoming_dates.append(exam_date)
+
+    # remove obsolete ones
+
+    for path in glob.glob( os.path.join(EXAMS_ARCHIVE_DIR, '*') ):
+      exam_date = os.path.basename(path)
+      if not exam_date in archive_dates:
+        os.unlink(path)
+
+    for path in glob.glob( os.path.join(EXAMS_UPCOMING_DIR, '*') ):
+      exam_date = os.path.basename(path)
+      if not exam_date in upcoming_dates:
+        os.unlink(path)
+
+    # link new or missing
+
+    for exam_date in archive_dates:
+      path = os.path.join(EXAMS_ARCHIVE_DIR, exam_date)
+      if not os.path.islink(path):
+        os.symlink(os.path.join('..', '.exams', exam_date),
+                   path)
+
+    for exam_date in upcoming_dates:
+      path = os.path.join(EXAMS_UPCOMING_DIR, exam_date)
+      if not os.path.islink(path):
+        os.symlink(os.path.join('..', '.exams', exam_date),
+                   path)
 
 
   def link_exams_for_today(self):
