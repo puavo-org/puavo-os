@@ -4,6 +4,7 @@
 import datetime
 import errno
 import fcntl
+import filecmp
 import gettext
 import gi
 import glob
@@ -35,11 +36,11 @@ gettext.bindtextdomain('puavo-ers-applet', '/usr/share/locale')
 gettext.textdomain('puavo-ers-applet')
 _tr = gettext.gettext
 
-KTP_JAKO_DIR = os.path.join(os.environ['HOME'], 'ktp-jako')
-EXAMS_DIR = os.path.join(KTP_JAKO_DIR, '.exams')
-EXAMS_ARCHIVE_DIR = os.path.join(KTP_JAKO_DIR, 'Arkisto')
+KTP_JAKO_DIR       = os.path.join(os.environ['HOME'], 'ktp-jako')
+EXAMS_ARCHIVE_DIR  = os.path.join(KTP_JAKO_DIR, 'Arkisto')
+EXAMS_DIR          = os.path.join(KTP_JAKO_DIR, '.exams')
+EXAMS_JSON_FILE    = os.path.join(KTP_JAKO_DIR, '.exams.json')
 EXAMS_UPCOMING_DIR = os.path.join(KTP_JAKO_DIR, 'Tulevat')
-EXAMS_JSON_FILE = os.path.join(KTP_JAKO_DIR, '.exams.json')
 
 def puavoconf_get(puavoconf_key):
   return subprocess.check_output([ 'puavo-conf', puavoconf_key ]).rstrip() \
@@ -300,8 +301,8 @@ class PuavoErsExamZipper (threading.Thread):
 
   def link_exams_for_today(self):
     todays_dir = os.path.join(EXAMS_DIR, self.current_date)
-    should_be_exams_of_today = glob.glob(os.path.join(todays_dir, '*.meb'))
-    current_exams_of_today = glob.glob(os.path.join(KTP_JAKO_DIR, '*.meb'))
+    should_be_exams_of_today = glob.glob( os.path.join(todays_dir, '*.meb') )
+    current_exams_of_today = glob.glob( os.path.join(KTP_JAKO_DIR, '*.meb') )
 
     for current_exam_path in current_exams_of_today:
       should_be_exam_path = os.path.join(todays_dir,
@@ -323,12 +324,35 @@ class PuavoErsExamZipper (threading.Thread):
           if e.errno != errno.EEXIST:
             raise e
 
+    current_all_zip = os.path.join(KTP_JAKO_DIR,
+                                   'Kaikki-%s.zip' % self.current_date)
+    should_be_all_zip = os.path.join(todays_dir,
+                                     'Kaikki-%s.zip' % self.current_date)
+
+    if os.path.isfile(should_be_all_zip):
+      if not os.path.isfile(current_all_zip) \
+        or not filecmp.cmp(should_be_all_zip, current_all_zip):
+          try:
+            os.unlink(current_all_zip)
+          except OSError as e:
+            if e.errno != errno.ENOENT:
+              raise e
+          os.link(should_be_all_zip, current_all_zip)
+
+    for all_zip in glob.glob( os.path.join(KTP_JAKO_DIR, 'Kaikki-*.zip') ):
+      if all_zip != current_all_zip:
+        try:
+          os.unlink(all_zip)
+        except OSError as e:
+          if e.errno != errno.ENOENT:
+            raise e
+
 
   def zip_exams(self):
-    exam_dirs_by_date = glob.glob(os.path.join(EXAMS_DIR, '*'))
+    exam_dirs_by_date = glob.glob( os.path.join(EXAMS_DIR, '*') )
 
     for exam_dir_with_date in exam_dirs_by_date:
-      meb_files = glob.glob(os.path.join(exam_dir_with_date, '*.meb'))
+      meb_files = glob.glob( os.path.join(exam_dir_with_date, '*.meb') )
       meb_files.sort()
 
       exams_date = os.path.basename(exam_dir_with_date)
