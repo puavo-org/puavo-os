@@ -393,6 +393,8 @@ class PuavoErsExamZipper (threading.Thread):
         or not filecmp.cmp(should_be_all_zip, current_all_zip):
           rm_f(current_all_zip)
           os.link(should_be_all_zip, current_all_zip)
+    else:
+      rm_f(current_all_zip)
 
     for all_zip in glob.glob( os.path.join(KTP_JAKO_DIR, 'Kaikki-*.zip') ):
       if all_zip != current_all_zip:
@@ -413,19 +415,16 @@ class PuavoErsExamZipper (threading.Thread):
       if not exams_date in self.previous_meb_files_by_date:
         self.previous_meb_files_by_date[exams_date] = []
 
-      if not os.path.exists(all_zip_path) \
+      if len(meb_files) == 0:
+        rm_f(all_zip_path)
+      elif not os.path.exists(all_zip_path) \
         or meb_files != self.previous_meb_files_by_date[exams_date]:
+          rm_f(all_zip_path)
           try:
-            os.remove(all_zip_path)
-          except FileNotFoundError:
-            pass
-
-          if len(meb_files) > 0:
-            try:
-              subprocess.check_output([ 'zip', '-j', all_zip_path ] + meb_files)
-            except Exception as e:
-              print('error when zipping exam files to %s: %s' \
-                      % (all_zip_path, meb_files), file=sys.stderr)
+            subprocess.check_output([ 'zip', '-j', all_zip_path ] + meb_files)
+          except Exception as e:
+            print('error when zipping exam files to %s: %s' \
+                    % (all_zip_path, meb_files), file=sys.stderr)
 
       self.previous_meb_files_by_date[exams_date] = meb_files
 
