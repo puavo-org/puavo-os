@@ -244,7 +244,10 @@ class PuavoErsExamSync (threading.Thread):
     # clean up old exams that no longer belong to exams subdirectories
     for exam_path in glob.glob( os.path.join(EXAMS_DIR, '*.meb') ):
       if not os.path.basename(exam_path) in exam_name_list:
-        rm_f(exam_path)
+        # We check that file hard link count must be over 1, in which case
+        # it has already been archived and we can delete it here.
+        if os.stat(exam_path).st_nlink > 1:
+          rm_f(exam_path)
 
 
   def update_exams_json_on_disk(self, exams_json):
