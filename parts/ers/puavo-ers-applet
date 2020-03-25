@@ -332,16 +332,18 @@ class PuavoErsExamZipper (threading.Thread):
       except Exception as e:
         print('could not handle an exam for some reason', file=sys.stderr)
 
-    self.link_exams_to_dir(EXAMS_ARCHIVE_DIR, archived_exams)
+    self.link_exams_to_dir(EXAMS_ARCHIVE_DIR, archived_exams,
+                           remove_other=False)
     self.link_exams_to_dir(KTP_JAKO_DIR, current_exams)
     self.zip_todays_exams()
     self.link_exams_to_dir(EXAMS_UPCOMING_DIR, upcoming_exams)
 
 
-  def link_exams_to_dir(self, linkdir, exam_names_list):
-    for path in glob.glob( os.path.join(linkdir, '*.meb') ):
-      if not os.path.basename(path) in exam_names_list:
-        rm_f(path)
+  def link_exams_to_dir(self, linkdir, exam_names_list, remove_other=True):
+    if remove_other:
+      for path in glob.glob( os.path.join(linkdir, '*.meb') ):
+        if not os.path.basename(path) in exam_names_list:
+          rm_f(path)
 
     for exam_name in exam_names_list:
       try:
