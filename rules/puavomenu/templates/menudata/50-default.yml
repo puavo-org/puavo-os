@@ -548,6 +548,9 @@ programs:
             id: launcherone
 
   #O
+  - obs:
+        icon: /usr/share/icons/hicolor/256x256/apps/obs.png
+        tags: default
   - okular:
         name:
           en: Okular-document viewer
@@ -1349,6 +1352,7 @@ menus:
             - kamerka
             - elmo-imagemate
             - sphere_lite
+            - obs
             - openshot
             - org.kde.kdenlive
             - kino

@@ -325,6 +325,7 @@ class packages {
     , 'mjpegtools'
     , 'mypaint'
     , 'nautilus-image-converter'
+    , 'obs-studio'
     , 'okular'
     , 'openshot'
     , 'pencil2d'
