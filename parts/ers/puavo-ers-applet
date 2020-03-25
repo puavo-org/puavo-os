@@ -235,7 +235,7 @@ class PuavoErsExamSync (threading.Thread):
       if exam_file_name == '':
         print('could not determine exam filename', file=sys.stderr)
 
-      exam_names.append(exam)
+      exam_names.append(exam_file_name)
       try:
         self.sync_one_exam(exam_file_name, exam)
       except Exception as e:
