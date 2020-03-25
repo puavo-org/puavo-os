@@ -208,7 +208,7 @@ class PuavoErsExamSync (threading.Thread):
 
   def sync_exams(self):
     self.exam_server_address = puavoconf_get('puavo.abitti.exam_server')
-    index_uri = 'https://%s/schedules/query_exam_server_schedule' \
+    index_uri = 'https://%s/v1/schedules/query_exam_server_schedule' \
                    % self.exam_server_address
 
     response = requests.get(index_uri,
@@ -270,7 +270,7 @@ class PuavoErsExamSync (threading.Thread):
     if not isinstance(exam_hash, str):
       raise Exception('could not determine exam hash for %s' % exam_file_name)
 
-    exam_uri = 'https://%s/exams/raw_file' % self.exam_server_address
+    exam_uri = 'https://%s/v1/exams/raw_file' % self.exam_server_address
 
     response = requests.get(exam_uri,
                             auth=HTTPBasicAuth(self.ldap_dn,
