@@ -227,24 +227,29 @@ class PuavoErsExamSync (threading.Thread):
     exams_json = response.content.decode('utf-8')
     self.update_exams_json_on_disk(exams_json)
 
-    exam_names = []
+    exam_file_paths = []
     for exam in json.loads(exams_json):
-      exam_file_name = exam['file_name']
-      if not isinstance(exam_file_name, str):
-        print('could not determine exam filename', file=sys.stderr)
-      if exam_file_name == '':
-        print('could not determine exam filename', file=sys.stderr)
-
-      exam_names.append(exam_file_name)
       try:
-        self.sync_one_exam(exam_file_name, exam)
+        exam_file_name = exam['file_name']
+        if not isinstance(exam_file_name, str):
+          print('could not determine exam filename', file=sys.stderr)
+        if exam_file_name == '':
+          print('could not determine exam filename', file=sys.stderr)
+
+        exam_start_time = datetime.datetime.fromtimestamp(exam['start_time'])
+        exam_start_date = exam_start_time.strftime('%Y-%m-%d')
+        exam_date_dir = os.path.join(EXAMS_DIR, exam_start_date)
+        exam_file_path = os.path.join(exam_date_dir, exam_file_name)
+
+        self.sync_one_exam(exam_date_dir, exam_file_name, exam)
+        exam_file_paths.append(exam_file_path)
       except Exception as e:
         print('error in syncing one exam: %s' % e, file=sys.stderr)
 
     # clean up old exams that no longer belong to exams subdirectories
     for exam_date_dir in glob.glob( os.path.join(EXAMS_DIR, '*') ):
       for exam_path in glob.glob( os.path.join(exam_date_dir, '*.meb') ):
-        if not os.path.basename(exam_path) in exam_names:
+        if not exam_path in exam_file_paths:
           rm_f(exam_path)
       try:
         os.rmdir(exam_date_dir)
@@ -264,11 +269,7 @@ class PuavoErsExamSync (threading.Thread):
       print('error in writing passwords to %s: %s' % (EXAMS_JSON_FILE, e))
 
 
-  def sync_one_exam(self, exam_file_name, exam):
-    exam_start_time = datetime.datetime.fromtimestamp(exam['start_time'])
-    exam_start_date = exam_start_time.strftime('%Y-%m-%d')
-    exam_date_dir = os.path.join(EXAMS_DIR, exam_start_date)
-
+  def sync_one_exam(self, exam_date_dir, exam_file_name, exam):
     try:
       os.mkdir(exam_date_dir)
     except OSError as e:
