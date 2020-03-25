@@ -292,124 +292,82 @@ class PuavoErsExamZipper (threading.Thread):
   def __init__(self):
     threading.Thread.__init__(self)
 
-    self.previous_meb_files_by_date = {}
+    self.previous_meb_files_in_all_zip = []
 
 
   def run(self):
     while True:
-      self.current_date = datetime.date.today().strftime('%Y-%m-%d')
-      self.zip_exams()
-      self.link_exams_for_today()
-      self.link_exam_dates_to_dirs()
+      self.current_time = datetime.datetime.now()
+      with open(EXAMS_JSON_FILE) as file:
+        self.current_exams = json.load(file)
+
+      archived_exams = []
+      current_exams  = []
+      upcoming_exams = []
+
+      for exam in self.current_exams:
+        try:
+          exam_start_time = datetime.datetime.fromtimestamp(exam['start_time'])
+          exam_end_time   = datetime.datetime.fromtimestamp(exam['end_time'])
+
+          if exam_end_time < self.current_time:
+            archived_exams.append(exam['file_name'])
+          elif self.current_time < exam_start_time:
+            upcoming_exams.append(exam['file_name'])
+          elif exam_start_time <= self.current_time \
+            and self.current_time < exam_end_time:
+              current_exams.append(exam['file_name'])
+        except Exception as e:
+          print('could not handle an exam for some reason', file=sys.stderr)
+
+      self.link_exams_to_dir(EXAMS_ARCHIVE_DIR, archived_exams)
+      self.link_exams_to_dir(KTP_JAKO_DIR, current_exams)
+      self.zip_todays_exams()
+      self.link_exams_to_dir(EXAMS_UPCOMING_DIR, upcoming_exams)
+
       time.sleep(10)
 
 
-  def link_exam_dates_to_dirs(self):
-    archive_dates = []
-    upcoming_dates = []
-
-    # sort all exam date directories to archives or upcoming
-
-    exam_dirs_by_date = glob.glob( os.path.join(EXAMS_DIR, '*') )
-    for exam_dir in exam_dirs_by_date:
-      exam_date = os.path.basename(exam_dir)
-      if exam_date < self.current_date:
-        archive_dates.append(exam_date)
-      elif exam_date > self.current_date:
-        upcoming_dates.append(exam_date)
-
-    # remove obsolete ones
-
-    for path in glob.glob( os.path.join(EXAMS_ARCHIVE_DIR, '*') ):
-      exam_date = os.path.basename(path)
-      if not exam_date in archive_dates:
+  def link_exams_to_dir(self, linkdir, exam_names_list):
+    for path in glob.glob( os.path.join(linkdir, '*.meb') ):
+      if not os.path.basename(path) in exam_names_list:
         rm_f(path)
 
-    for path in glob.glob( os.path.join(EXAMS_UPCOMING_DIR, '*') ):
-      exam_date = os.path.basename(path)
-      if not exam_date in upcoming_dates:
-        rm_f(path)
-
-    # link new or missing
-
-    for exam_date in archive_dates:
-      path = os.path.join(EXAMS_ARCHIVE_DIR, exam_date)
-      if not os.path.islink(path):
-        os.symlink(os.path.join('..', '.exams', exam_date),
-                   path)
-
-    for exam_date in upcoming_dates:
-      path = os.path.join(EXAMS_UPCOMING_DIR, exam_date)
-      if not os.path.islink(path):
-        os.symlink(os.path.join('..', '.exams', exam_date),
-                   path)
+    for exam_name in exam_names_list:
+      try:
+        os.link(os.path.join(EXAMS_DIR, exam_name),
+                os.path.join(linkdir, exam_name))
+      except OSError as e:
+        if e.errno != errno.EEXIST:
+          raise e
 
 
-  def link_exams_for_today(self):
-    todays_dir = os.path.join(EXAMS_DIR, self.current_date)
-    should_be_exams_of_today = glob.glob( os.path.join(todays_dir, '*.meb') )
-    current_exams_of_today = glob.glob( os.path.join(KTP_JAKO_DIR, '*.meb') )
+  def zip_todays_exams(self):
+    meb_files = glob.glob( os.path.join(KTP_JAKO_DIR, '*.meb') )
+    meb_files.sort()
 
-    for current_exam_path in current_exams_of_today:
-      should_be_exam_path = os.path.join(todays_dir,
-                                         os.path.basename(current_exam_path))
-      if not os.path.isfile(should_be_exam_path):
-        rm_f(current_exam_path)
+    current_date = self.current_time.strftime('%Y-%m-%d')
+    current_all_zip_path = os.path.join(KTP_JAKO_DIR,
+                                        'Kaikki-%s.zip' % current_date)
 
-    for should_be_exam_path in should_be_exams_of_today:
-      current_exam_path = os.path.join(KTP_JAKO_DIR,
-                                       os.path.basename(should_be_exam_path))
-      if not os.path.isfile(current_exam_path):
+    if len(meb_files) == 0:
+      rm_f(current_all_zip_path)
+    elif not os.path.exists(current_all_zip_path) \
+      or meb_files != self.previous_meb_files_in_all_zip:
+        rm_f(current_all_zip_path)
         try:
-          os.link(should_be_exam_path, current_exam_path)
-        except OSError as e:
-          if e.errno != errno.EEXIST:
-            raise e
+          subprocess.check_output([ 'zip', '-j', current_all_zip_path ] \
+                                    + meb_files)
+        except Exception as e:
+          print('error when zipping exam files to %s: %s' \
+                  % (current_all_zip_path, meb_files), file=sys.stderr)
 
-    current_all_zip = os.path.join(KTP_JAKO_DIR,
-                                   'Kaikki-%s.zip' % self.current_date)
-    should_be_all_zip = os.path.join(todays_dir,
-                                     'Kaikki-%s.zip' % self.current_date)
+    self.previous_meb_files_in_all_zip = meb_files
 
-    if os.path.isfile(should_be_all_zip):
-      if not os.path.isfile(current_all_zip) \
-        or not filecmp.cmp(should_be_all_zip, current_all_zip):
-          rm_f(current_all_zip)
-          os.link(should_be_all_zip, current_all_zip)
-    else:
-      rm_f(current_all_zip)
-
-    for all_zip in glob.glob( os.path.join(KTP_JAKO_DIR, 'Kaikki-*.zip') ):
-      if all_zip != current_all_zip:
-        rm_f(all_zip)
-
-
-  def zip_exams(self):
-    exam_dirs_by_date = glob.glob( os.path.join(EXAMS_DIR, '*') )
-
-    for exam_dir_with_date in exam_dirs_by_date:
-      meb_files = glob.glob( os.path.join(exam_dir_with_date, '*.meb') )
-      meb_files.sort()
-
-      exams_date = os.path.basename(exam_dir_with_date)
-      all_zip_path = os.path.join(exam_dir_with_date,
-                                  'Kaikki-%s.zip' % exams_date)
-
-      if not exams_date in self.previous_meb_files_by_date:
-        self.previous_meb_files_by_date[exams_date] = []
-
-      if len(meb_files) == 0:
-        rm_f(all_zip_path)
-      elif not os.path.exists(all_zip_path) \
-        or meb_files != self.previous_meb_files_by_date[exams_date]:
-          rm_f(all_zip_path)
-          try:
-            subprocess.check_output([ 'zip', '-j', all_zip_path ] + meb_files)
-          except Exception as e:
-            print('error when zipping exam files to %s: %s' \
-                    % (all_zip_path, meb_files), file=sys.stderr)
-
-      self.previous_meb_files_by_date[exams_date] = meb_files
+    all_zip_files = glob.glob( os.path.join(KTP_JAKO_DIR, 'Kaikki-*.zip') )
+    for zipfile in all_zip_files:
+      if current_all_zip_path != zipfile:
+        rm_f(zipfile)
 
 
 applet = PuavoErsApplet()
