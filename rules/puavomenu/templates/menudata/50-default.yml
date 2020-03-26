@@ -133,6 +133,18 @@ programs:
         tags: default
   - dia:
         tags: default
+  - discord:
+        type: web
+        name: Discord (web)
+        url:  https://discordapp.com/
+        description: 
+                   de: Discord is an app to communicate over voice, video, and text.
+                   en: Discord is an app to communicate over voice, video, and text.
+                   fi: Pelaajille suunnattu puhe- ja tekstichat, joka on palveluna monelle oppilaalle tuttu. Tunnuksen luominen edellyttää suostumusta vanhemmilta.
+                   sv: Discord is an app to communicate over voice, video, and text.
+        icon: config-users
+        keywords: etäopetus, etätyö, etä, remote, distance
+        tags: default, internet, education
   - dropbox:
         name: Dropbox
         tags: default
@@ -322,6 +334,14 @@ programs:
         tags: default
         puavopkg:
             id: google-earth
+  - google-meet:
+        type: web
+        name: Google Meet
+        url:  https://meet.google.com
+        description: Google Meet
+        tags: default, internet, education
+        keywords: etäopetus, etätyö, etä, remote, distance
+        icon: config-users
   - gthumb:
         icon: /usr/share/icons/hicolor/scalable/apps/gthumb.svg
         name:
@@ -360,7 +380,18 @@ programs:
         tags: default, graphics
 
   #J
-
+  - jitsi:
+        type: web
+        name: Jitsi Meet (web)
+        url:  https://meet.jit.si
+        description: 
+                   de: Jitsi Meet
+                   en: Jitsi Meet
+                   fi: Jitsi on maksuton ja tietoturvaan keskittynyt keskustelualusta, jonka käyttö ei vaadi erillistä sovellusta tai tunnuksia.
+                   sv: Jitsi Meet
+        icon: config-users
+        keywords: etäopetus, etätyö, etä, remote, distance
+        tags: default, internet, education
   #K
   - kahoot:
         type: web
@@ -1097,6 +1128,14 @@ programs:
         url: http://areena.yle.fi
         icon: /usr/share/icons/Faenza/apps/96/me-tv.png
         tags: default, internet, audio, video
+  - yleareenaetaopetus:
+        type: web
+        name: YLE Areena - Etäopetus
+        url:  https://areena.yle.fi/tv/ohjelmat/57-6AXjXXPdl
+        description: YLE Areenan materiaaleja etäopetukseen 
+        icon: /usr/share/icons/Faenza/apps/96/me-tv.png
+        keywords: etäopetus, etätyö, etä, remote, distance
+        tags: default, internet, education
   - ylearkisto:
         type: web
         name: Yle - Elävä arkisto
@@ -1200,18 +1239,21 @@ menus:
             - epiphany
             - thunderbird
             - evolution
+            - google-earth
+            - discord
+            - jitsi
+            - skype
+            - teams
+            - Zoom
+            - google-meet
+            - dropbox
+            - nextcloud
+            - empathy
             - pidgin
             - gftp
             - filezilla
             - net.sourceforge.liferea
-            - google-earth
-            - skype
-            - teams
-            - Zoom
-            - empathy
             - vinagre
-            - dropbox
-            - nextcloud
             - VidyoDesktop
 
   - menu-programming:
@@ -1471,16 +1513,13 @@ menus:
             - youtube
             - wikipedia
             - yleareena
+            - yleareenaetaopetus
             - ylearkisto
-            - sumopaint
             - mathdemo-abitti
             - makecode
-            - walma
-            - pahvi
             - kahoot
             - sanomapro
             - otava
-            - ekapeliweb
             - edison
             - unelmakoulu
             - pedanet
