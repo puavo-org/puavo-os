@@ -75,6 +75,7 @@ class packages::backports {
                                  , 'libreoffice-l10n-en-za'
                                  , 'libreoffice-l10n-fi'
                                  , 'libreoffice-l10n-fr'
+                                 , 'libreoffice-l10n-id'
                                  , 'libreoffice-l10n-sv'
                                  , 'libreoffice-math'
                                  , 'libreoffice-ogltrans'
