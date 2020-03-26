@@ -87,11 +87,21 @@ fi
 
 puavo_desktop_background=$(puavo-conf puavo.desktop.background)
 
-if [ -n "$puavo_desktop_background" \
-     -a -e "/usr/share/backgrounds/${puavo_desktop_background}" ]; then
+if [ -n "$puavo_desktop_background" ]; then
+  case "$puavo_desktop_background" in
+    /*) desktop_background_path="$puavo_desktop_background" ;;
+    *)  desktop_background_path=$(find /usr/share/backgrounds \
+          '(' -type f -or -type l ')' -name "$puavo_desktop_background" \
+          -print -quit) ;;
+  esac
+  if [ ! -e "$desktop_background_path" ]; then
+    echo "could not find background ${desktop_background_path}" >&2
+    rm -f /etc/dconf/db/puavo-desktopbackground
+    exit 1
+  fi
   new_dconf_chunk puavo-desktopbackground <<EOF
 [org/gnome/desktop/background]
-picture-uri='file:///usr/share/backgrounds/${puavo_desktop_background}'
+picture-uri='file://${desktop_background_path}'
 EOF
 else
   rm -f /etc/dconf/db/puavo-desktopbackground

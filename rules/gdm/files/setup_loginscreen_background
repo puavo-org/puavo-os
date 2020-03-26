@@ -5,16 +5,16 @@ set -eu
 set_background() {
   background_path=$1
 
-  [ -e "$background_path" ] || return 1
+  if [ ! -e "$background_path" ]; then
+    echo "could not find background ${background_path}" >&2
+    return 1
+  fi
 
   ln -fns "$background_path" /etc/gdm3/background.img
 }
 
-backgrounds_basedir=/usr/share/backgrounds/puavo-greeter
-backgrounds_randomdir="${backgrounds_basedir}/default"
-
+backgrounds_basedir=/usr/share/backgrounds
 background_firstlogin=$(puavo-conf puavo.greeter.background.firstlogin)
-
 background_path=''
 
 if [ ! -s /var/lib/extrausers/passwd -a -n "$background_firstlogin" ]; then
@@ -33,21 +33,24 @@ case "$background_mode" in
     ;;
   dynamic|firstlogin)
     if [ -n "$background" ]; then
-      if find "$backgrounds_basedir" '(' -type f -o -type l ')' -printf '%P\n' \
-        | grep -qx "$background"; then
-          background_path="${backgrounds_basedir}/${background}"
-      fi
+      case "$background" in
+        /*) background_path=$background ;;
+        *)  background_path=$(find "$backgrounds_basedir" \
+                                '(' -type f -o -type l ')' \
+                                 -name "$background" -print -quit) ;;
+      esac
     fi
     ;;
   random)
-    bg_random_subdir=$(puavo-conf puavo.greeter.background.random.subdir)
-    if [ -n "$bg_random_subdir" ]; then
-      if find "$backgrounds_basedir" -mindepth 1 -type d -printf '%P\n' \
-        | grep -qx "$bg_random_subdir"; then
-          backgrounds_randomdir="${backgrounds_basedir}/${bg_random_subdir}"
-          background_path=$(find "$backgrounds_randomdir" \
-            '(' -type f -o -type l ')' | sort -R | head -n1)
-      fi
+    bg_random_dir=$(puavo-conf puavo.greeter.background.random.dir)
+    if [ -n "$bg_random_dir" ]; then
+      case "$bg_random_dir" in
+        /*) ;;
+        *)  bg_random_dir=$(find "$backgrounds_basedir" -type d \
+                              -name "$bg_random_dir" -print -quit) ;;
+      esac
+      background_path=$(find "$bg_random_dir" \
+        '(' -type f -o -type l ')' | sort -R | head -n1)
     fi
     ;;
   *)

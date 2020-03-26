@@ -2,7 +2,7 @@ class backgrounds {
   include ::packages
   include ::backgrounds::thumbs
 
-  $backgrounds_dir = '/usr/share/backgrounds/puavo-greeter/default'
+  $backgrounds_dir = '/usr/share/backgrounds/puavo-greeter-default-random'
 
   define background () {
     $background_file = $title
@@ -11,14 +11,12 @@ class backgrounds {
       "${::backgrounds::backgrounds_dir}/${background_file}":
         ensure  => link,
         require => Puavo_pkg::Install['ubuntu-wallpapers'],
-        target  => "../../${background_file}";
+        target  => "../${background_file}";
     }
   }
 
   file {
-    [ '/usr/share/backgrounds'
-    , '/usr/share/backgrounds/puavo-greeter'
-    , $backgrounds_dir ]:
+    [ '/usr/share/backgrounds', $backgrounds_dir ]:
       ensure => directory;
   }
 
@@ -28,6 +26,7 @@ class backgrounds {
     , 'Candy_by_Bernhard_Hanakam.jpg'
     , 'Classic_Guitar_Detail_by_Sten_Jørgen_Pettersen.jpg'
     , 'Cyclotron_by_cyclotron_beam.jpg'
+    , 'Flocking_by_noombox.jpg'
     , 'Floorboards_by_Dawid_Huczyński.jpg'
     , 'Forest_by_Moritz_Reisinger.jpg'
     , 'Forever_by_Shady_S.jpg'
@@ -52,8 +51,7 @@ class backgrounds {
     , 'ubuntu16_10_by_Khoir_Rudin.png'
     , 'Wanaka_Tree_by_Stephane_Pakula.jpg'
     , 'Winter_Fog_by_Daniel_Vesterskov.jpg'
-    , 'Yala_mountain_by_Geza_Radics.jpg'
-    , 'Flocking_by_noombox.jpg' ]: ;
+    , 'Yala_mountain_by_Geza_Radics.jpg' ]: ;
   }
 
   Puavo_pkg::Install <| title == 'ubuntu-wallpapers' |>
