@@ -55,8 +55,8 @@ index_json=$(puavo-rest-request "/v3/devices/$(hostname)/external_files" \
 
 external_files_spec=$(printf "%s" "$index_json" \
   | jq -r '.[] | (.name + "|" + .data_hash)
-               | if test("\\s") then
-                   error("unexpected whitespace external files index data")
+               | if test("\\s") or test("/") then
+                   error("unexpected characters in external files index data")
                  else . end')
 
 extfiles_needing_update=''
