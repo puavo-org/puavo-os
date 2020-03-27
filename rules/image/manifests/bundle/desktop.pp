@@ -28,6 +28,7 @@ class image::bundle::desktop {
   include ::packages::languages::en
   include ::packages::languages::fi
   include ::packages::languages::fr
+  include ::packages::languages::id
   include ::packages::languages::sv
   include ::picaxe_udev_rules
   include ::polkit_printers

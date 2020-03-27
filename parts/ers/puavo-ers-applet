@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import datetime
 import errno
 import fcntl
+import filecmp
 import gettext
 import gi
 import glob
@@ -28,15 +30,25 @@ from gi.repository import GObject
 from gi.repository import Gtk
 from gi.repository import Notify
 
-from datetime import date
 from requests.auth import HTTPBasicAuth
 
 gettext.bindtextdomain('puavo-ers-applet', '/usr/share/locale')
 gettext.textdomain('puavo-ers-applet')
 _tr = gettext.gettext
 
-KTP_JAKO_DIR = os.path.join(os.environ['HOME'], 'ktp-jako')
-EXAMS_JSON_FILE = os.path.join(KTP_JAKO_DIR, '.exam_passwords.json')
+KTP_JAKO_DIR       = os.path.join(os.environ['HOME'], 'ktp-jako')
+EXAMS_ARCHIVE_DIR  = os.path.join(KTP_JAKO_DIR, 'Arkisto')
+EXAMS_DIR          = os.path.join(KTP_JAKO_DIR, '.exams')
+EXAMS_JSON_FILE    = os.path.join(KTP_JAKO_DIR, '.exams.json')
+EXAMS_UPCOMING_DIR = os.path.join(KTP_JAKO_DIR, 'Tulevat')
+
+def rm_f(path):
+  try:
+    os.unlink(path)
+  except OSError as e:
+    if e.errno != errno.ENOENT:
+      raise e
+
 
 def puavoconf_get(puavoconf_key):
   return subprocess.check_output([ 'puavo-conf', puavoconf_key ]).rstrip() \
@@ -196,7 +208,7 @@ class PuavoErsExamSync (threading.Thread):
 
   def sync_exams(self):
     self.exam_server_address = puavoconf_get('puavo.abitti.exam_server')
-    index_uri = 'https://%s/schedules/query_exam_server_schedule' \
+    index_uri = 'https://%s/v1/schedules/query_exam_server_schedule' \
                    % self.exam_server_address
 
     response = requests.get(index_uri,
@@ -215,8 +227,27 @@ class PuavoErsExamSync (threading.Thread):
     exams_json = response.content.decode('utf-8')
     self.update_exams_json_on_disk(exams_json)
 
+    exam_name_list = []
     for exam in json.loads(exams_json):
-      self.sync_one_exam(exam)
+      try:
+        exam_file_name = exam['file_name']
+        if not isinstance(exam_file_name, str):
+          print('could not determine exam filename', file=sys.stderr)
+        if exam_file_name == '':
+          print('could not determine exam filename', file=sys.stderr)
+
+        self.sync_one_exam(exam_file_name, exam)
+        exam_name_list.append(exam_file_name)
+      except Exception as e:
+        print('error in syncing one exam: %s' % e, file=sys.stderr)
+
+    # clean up old exams that no longer belong to exams subdirectories
+    for exam_path in glob.glob( os.path.join(EXAMS_DIR, '*.meb') ):
+      if not os.path.basename(exam_path) in exam_name_list:
+        # We check that file hard link count must be over 1, in which case
+        # it has already been archived and we can delete it here.
+        if os.stat(exam_path).st_nlink > 1:
+          rm_f(exam_path)
 
 
   def update_exams_json_on_disk(self, exams_json):
@@ -230,27 +261,29 @@ class PuavoErsExamSync (threading.Thread):
       print('error in writing passwords to %s: %s' % (EXAMS_JSON_FILE, e))
 
 
-  def sync_one_exam(self, exam):
-    exam_file_path = os.path.join(KTP_JAKO_DIR, exam['file_name'])
+  def sync_one_exam(self, exam_file_name, exam):
+    exam_file_path = os.path.join(EXAMS_DIR, exam_file_name)
     if os.path.isfile(exam_file_path):
       return
 
     exam_hash = exam['file_sha256']
-    exam_uri = 'https://%s/exams/raw_file' % self.exam_server_address
+    if not isinstance(exam_hash, str):
+      raise Exception('could not determine exam hash for %s' % exam_file_name)
+
+    exam_uri = 'https://%s/v1/exams/raw_file' % self.exam_server_address
 
     response = requests.get(exam_uri,
                             auth=HTTPBasicAuth(self.ldap_dn,
                                                self.ldap_password),
                             params={
-                              'domain': self.domain,
-                              'hash': exam_hash,
+                              'domain':   self.domain,
+                              'hash':     exam_hash,
                               'hostname': self.hostname,
-                              'id': self.id,
+                              'id':       self.id,
                             })
     if not response:
-      print('error when getting an exam from %s: %s' \
-              % (exam_uri, response.status_code), file=sys.stderr)
-      return
+      raise Exception('error when getting an exam from %s: %s' \
+              % (exam_uri, response.status_code))
 
     tmpfile = '%s.tmp' % exam_file_path
     with open(tmpfile, 'wb') as f:
@@ -262,39 +295,101 @@ class PuavoErsExamZipper (threading.Thread):
   def __init__(self):
     threading.Thread.__init__(self)
 
-    self.previous_meb_files = []
+    self.previous_meb_files_in_all_zip = []
 
 
   def run(self):
     while True:
-      self.zip_exams()
-      time.sleep(5)
+      try:
+        self.sort_exams_to_dirs()
+      except Exception as e:
+        print('some error when sorting exams: %s' % e, file=sys.stderr)
+
+      time.sleep(10)
 
 
-  def zip_exams(self):
-    meb_files = glob.glob(os.path.join(KTP_JAKO_DIR, '*.meb'))
+  def sort_exams_to_dirs(self):
+    self.current_time = datetime.datetime.now()
+    with open(EXAMS_JSON_FILE) as file:
+      self.current_exams = json.load(file)
+
+    archived_exams = []
+    current_exams  = []
+    upcoming_exams = []
+
+    for exam in self.current_exams:
+      try:
+        exam_start_time = datetime.datetime.fromtimestamp(exam['start_time'])
+        exam_end_time   = datetime.datetime.fromtimestamp(exam['end_time'])
+
+        if exam_end_time < self.current_time:
+          archived_exams.append(exam['file_name'])
+        elif self.current_time < exam_start_time:
+          upcoming_exams.append(exam['file_name'])
+        elif exam_start_time <= self.current_time \
+          and self.current_time < exam_end_time:
+            current_exams.append(exam['file_name'])
+      except Exception as e:
+        print('could not handle an exam for some reason', file=sys.stderr)
+
+    self.link_exams_to_dir(EXAMS_ARCHIVE_DIR, archived_exams,
+                           remove_other=False)
+    self.link_exams_to_dir(KTP_JAKO_DIR, current_exams)
+    self.zip_todays_exams()
+    self.link_exams_to_dir(EXAMS_UPCOMING_DIR, upcoming_exams)
+
+
+  def link_exams_to_dir(self, linkdir, exam_names_list, remove_other=True):
+    if remove_other:
+      for path in glob.glob( os.path.join(linkdir, '*.meb') ):
+        if not os.path.basename(path) in exam_names_list:
+          rm_f(path)
+
+    for exam_name in exam_names_list:
+      try:
+        os.link(os.path.join(EXAMS_DIR, exam_name),
+                os.path.join(linkdir, exam_name))
+      except OSError as e:
+        if e.errno != errno.EEXIST:
+          raise e
+
+
+  def zip_todays_exams(self):
+    meb_files = glob.glob( os.path.join(KTP_JAKO_DIR, '*.meb') )
     meb_files.sort()
 
-    current_date = date.today().strftime('%Y-%m-%d')
-    all_zip_path = os.path.join(KTP_JAKO_DIR, 'Kaikki-%s.zip' % current_date)
+    current_date = self.current_time.strftime('%Y-%m-%d')
+    current_all_zip_path = os.path.join(KTP_JAKO_DIR,
+                                        'Kaikki-%s.zip' % current_date)
 
-    if not os.path.exists(all_zip_path) or meb_files != self.previous_meb_files:
-      try:
-        os.remove(all_zip_path)
-      except FileNotFoundError:
-        pass
-
-      if len(meb_files) > 0:
+    if len(meb_files) == 0:
+      rm_f(current_all_zip_path)
+    elif not os.path.exists(current_all_zip_path) \
+      or meb_files != self.previous_meb_files_in_all_zip:
+        rm_f(current_all_zip_path)
         try:
-          subprocess.check_output([ 'zip', '-j', all_zip_path ] + meb_files)
+          subprocess.check_output([ 'zip', '-j', current_all_zip_path ] \
+                                    + meb_files)
         except Exception as e:
-          print('error when zipping exam files: %s' % meb_files,
-                file=sys.stderr)
+          print('error when zipping exam files to %s: %s' \
+                  % (current_all_zip_path, meb_files), file=sys.stderr)
 
-    self.previous_meb_files = meb_files
+    self.previous_meb_files_in_all_zip = meb_files
+
+    all_zip_files = glob.glob( os.path.join(KTP_JAKO_DIR, 'Kaikki-*.zip') )
+    for zipfile in all_zip_files:
+      if current_all_zip_path != zipfile:
+        rm_f(zipfile)
 
 
 applet = PuavoErsApplet()
+
+for dir in [ KTP_JAKO_DIR, EXAMS_DIR, EXAMS_ARCHIVE_DIR, EXAMS_UPCOMING_DIR ]:
+  try:
+    os.mkdir(dir)
+  except OSError as e:
+    if e.errno != errno.EEXIST:
+      raise e
 
 if __name__ == '__main__':
   signal.signal(signal.SIGINT, signal.SIG_DFL)
