@@ -1,129 +1,90 @@
-#!/usr/bin/ruby
+#!/bin/sh
 
-require "digest/sha1"
-require "fileutils"
-require "json"
-require "optparse"
-require "puavo"
-require "puavo/rest-client"
-require "uri"
+set -eu
 
-options = {}
+external_files_dir='/state/external_files'
 
-parser = OptionParser.new do |opts|
-  opts.banner = "Usage: #{ File.basename(__FILE__) } [options] [target]"
+if [ -e /etc/puavo/ldap/dn -a -e /etc/puavo/ldap/password ]; then
+  puavo_rest_request_args='--user-etc'
+else
+  puavo_rest_request_args='--user-bootserver'
+fi
 
-  opts.on("-s", "--server [SERVER]", "Puavo REST server URI") do |server|
-    options[:server] = server
-  end
+extfile_needs_update() {
+  local extfile_name extfile_hash
 
-  opts.on("-h", "--hostname [HOSTNAME]", "Client hostname") do |hostname|
-    options[:hostname] = hostname
-  end
+  extfile_name=$1
+  extfile_hash=$2
 
-  opts.on_tail("-h", "--help", "Show this message") do
-    puts opts
-    exit
-  end
+  target_file_path="${external_files_dir}/${extfile_name}"
 
-end
-parser.parse!
+  if [ -r "$target_file_path" ]; then
+    sha1=$(sha1sum "$target_file_path" | awk '{ print $1 }')
+    if [ "$sha1" = "$extfile_hash" ]; then
+      return 1
+    fi
+  fi
 
-def check_call(cmd)
-  res = `#{ cmd }`
-  if $?.success?
-    return res.chomp
-  else
-    raise "Failed to execute '#{ cmd }'"
-  end
-end
+  return 0
+}
 
-options[:target] = ARGV[0] || "/state/external_files"
-options[:server] ||= check_call "puavo-resolve-api-server"
-options[:hostname] ||= PUAVO_ETC.hostname
+get_extfiles() {
+  extfile_urls=''
+  curl_args=''
 
-def read_current_files(dirpath)
-  Dir.entries(dirpath).map do |name|
-    begin
-      File.open(File.join(dirpath, name), "rb") do |f|
-        sha1 = Digest::SHA1.new
+  for extfile_name in $@; do
+    extfile_urls="${extfile_urls} /v3/devices/$(hostname)/external_files/${extfile_name}"
+    curl_args="${curl_args} --output ${external_files_dir}/${extfile_name}"
+  done
 
-        while data = f.read(512)
-          sha1.update(data)
-        end
+  if [ -z "$curl_args" ]; then
+    return 0
+  fi
 
-        {
-          "name" => name,
-          "data_hash" => sha1.hexdigest
-        }
-      end
-    rescue Errno::EISDIR
-    end
-  end.compact
-end
+  if ! puavo-rest-request $extfile_urls $puavo_rest_request_args \
+         -- $curl_args; then
+    echo "error when fetching $extfile_urls" >&2
+    return 1
+  fi
+}
 
-class ExternalFiles
-  def initialize(base_path)
-    @base_path = base_path
+read hostname < /etc/puavo/hostname
 
-    case PUAVO_ETC.hosttype
-      when 'laptop', 'wirelessaccesspoint'
-        auth_type = :etc
-      else
-        auth_type = :bootserver
-    end
+index_json=$(puavo-rest-request "/v3/devices/$(hostname)/external_files" \
+	       $puavo_rest_request_args)
 
-    @client = PuavoRestClient.new :auth => auth_type
-  end
+external_files_spec=$(printf "%s" "$index_json" \
+  | jq -r '.[] | (.name + "|" + .data_hash)
+               | if test("\\s") then
+                   error("unexpected whitespace external files index data")
+                 else . end')
 
-  def data(name='')
-    uri =  name != ''  ?  "#{ @base_path }/#{ name }"  :  @base_path
-    @client.get(uri)
-  end
+extfiles_needing_update=''
 
-  def index
-    JSON.parse( data() )
-  end
-end
+for extfile_spec in $external_files_spec; do
+  extfile_name="${extfile_spec%%|*}"
+  extfile_hash="${extfile_spec##*|}"
 
-def main(options)
-  FileUtils.mkdir_p(options[:target])
+  if extfile_needs_update "$extfile_name" "$extfile_hash"; then
+    extfiles_needing_update="${extfiles_needing_update} ${extfile_name}"
+  fi
+done
 
-  files_to_remove = Hash[
-    Dir.glob("#{ options[:target] }/*").map { |k| [ k, 1 ] }
-  ]
+get_extfiles $extfiles_needing_update
 
-  current_files = read_current_files(options[:target])
+# cleanup old files
+for extfile in ${external_files_dir}/*; do
+  found=false
+  for extfile_spec in $external_files_spec; do
+    extfile_name="${extfile_spec%%|*}"
+    if [ "$extfile_name" = "${extfile##*/}" ]; then
+      found=true
+      break
+    fi
+  done
+  if ! $found; then
+    rm -f "$extfile"
+  fi
+done
 
-  ef_urlpath = "/v3/devices/#{ options[:hostname] }/external_files"
-  ef = ExternalFiles.new(ef_urlpath)
-
-  ef.index.each do |meta|
-    file_path = File.join(options[:target], meta["name"])
-
-    files_to_remove.delete(file_path)
-
-    if current_files.include?(meta)
-      puts "OK #{ file_path } #{ meta["data_hash"] }"
-      next
-    end
-
-    File.open(file_path, "w") do |f|
-      puts "Writing #{ file_path } #{ meta["data_hash"] }"
-      f.write(ef.data(meta["name"]))
-    end
-  end
-
-  files_to_remove.each_key do |path|
-    begin
-      puts "Removing #{ path }"
-      File.unlink(path)
-    rescue StandardError => e
-      warn("Could not unlink #{ path }: #{ e.message }")
-    end
-  end
-end
-
-if __FILE__ == $0
-  main(options)
-end
+exit 0

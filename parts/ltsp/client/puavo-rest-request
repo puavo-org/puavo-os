@@ -5,8 +5,9 @@ package require cmdline
 proc usage {} {
   puts stderr {
 Usage:
-  puavo-rest-request urlpath
+  puavo-rest-request urlpath(s)
                      [--authoritative]
+                     [--debug]
                      [--post]
                      [--send-device-credentials]
                      [--send-device-school-dn]
@@ -19,7 +20,7 @@ Usage:
 }
 }
 
-proc make_request {url curl_args {password ""}} {
+proc make_request {curl_args {password ""}} {
   global debug_mode
 
   # use curl instead of puavo-rest-client for efficiency reasons
@@ -28,8 +29,7 @@ proc make_request {url curl_args {password ""}} {
                            --fail                              \
                            --show-error                        \
                            --silent                            \
-                           {*}$curl_args                       \
-                           $url]
+                           {*}$curl_args]
 
   # no timeouts here, it is the caller's responsibility to decide on that
 
@@ -94,12 +94,23 @@ if {[catch {
   set user_username      ""
   set user_password      ""
 
-  set urlpath [lindex $argv 0]
-  if { $urlpath eq "" } {
-    usage
-    error {no urlpath set}
+  set urlpaths [list]
+
+  for {set i 0} {true} {incr i} {
+    set next_arg [lindex $argv $i]
+    switch -glob -- $next_arg {
+      --* -
+      ""  { break }
+      default { lappend urlpaths $next_arg }
+    }
   }
-  set argv [lrange $argv 1 end]
+
+  if {[llength $urlpaths] == 0} {
+    usage
+    error "no urlpath(s) set"
+  }
+
+  set argv [lrange $argv $i end]
 
   set options {
     authoritative
@@ -200,17 +211,17 @@ if {[catch {
     error {Could not resolve Puavo API server}
   }
 
-  set url "${api_server}/${urlpath}"
+  set urls [lmap _ $urlpaths { format "%s/%s" $api_server $_ }]
 
   switch -- $auth_mode {
     {} {
-      lappend curl_args {*}$argv
-      make_request $url $curl_args
+      lappend curl_args {*}$urls {*}$argv
+      make_request $curl_args
     }
 
     bootserver {
-      lappend curl_args --header {Authorization: Bootserver} {*}$argv
-      make_request $url $curl_args
+      lappend curl_args --header {Authorization: Bootserver} {*}$urls {*}$argv
+      make_request $curl_args
     }
 
     etc {
@@ -224,22 +235,23 @@ if {[catch {
         error {Could not determine device password for this host}
       }
 
-      lappend curl_args --user $device_dn {*}$argv
+      lappend curl_args --user $device_dn {*}$urls {*}$argv
 
-      make_request $url $curl_args $device_password
+      make_request $curl_args $device_password
     }
 
     krb {
       lappend curl_args --delegation always \
                         --negotiate         \
                         --user :            \
+                        {*}$urls            \
                         {*}$argv
-      make_request $url $curl_args
+      make_request $curl_args
     }
 
     user {
-      lappend curl_args --user $user_username {*}$argv
-      make_request $url $curl_args $user_password
+      lappend curl_args --user $user_username {*}$urls {*}$argv
+      make_request $curl_args $user_password
     }
 
     default {
