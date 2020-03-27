@@ -3,6 +3,10 @@ class art {
   include ::puavo_conf
 
   file {
+    '/etc/puavo-external-files-actions.d/background_images':
+      mode   => '0755',
+      source => 'puppet:///modules/art/etc_puavo-external-files-actions.d_background_images';
+
     '/usr/share/puavo-art':
       source  => 'puppet:///modules/art/puavo-art',
       recurse => true;

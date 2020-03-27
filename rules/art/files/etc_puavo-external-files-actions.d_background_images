@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -eu
+
+target_dir='/usr/share/backgrounds/external_files'
+zip_file='/state/external_files/background_images'
+
+if [ -e "$zip_file" ]; then
+  if [ ! -d "$target_dir" -o "$zip_file" -nt "$target_dir" ]; then
+    unzip -o -q -d "$target_dir" "$zip_file"
+    touch "$target_dir"
+  fi
+fi
