@@ -2,7 +2,11 @@
 
 set -eu
 
+status=0
+
 for script in /etc/puavo-external-files-actions.d/*; do
   test -x "$script" || continue
-  $script || true
+  $script || status=1
 done
+
+exit $status

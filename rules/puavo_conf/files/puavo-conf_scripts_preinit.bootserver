@@ -30,7 +30,8 @@ manage_module_blacklist
 cleanup_crash_dumps
 setup_extra_environment
 disable_update_initramfs
-setup_display_manager
+setup_external_files
+eetup_display_manager
 setup_firewall
 setup_dhcpd
 setup_dns

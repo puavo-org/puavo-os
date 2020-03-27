@@ -23,7 +23,6 @@ setup_syslog
 setup_polkit
 setup_xorg
 setup_xorg_inputs_calibration
-setup_dconf_settings
 setup_dbus
 setup_kerberos
 setup_idmapd
@@ -47,6 +46,8 @@ setup_xsessions
 setup_devilspie
 setup_primary_disk_id
 setup_preinstalled_mode
+setup_external_files
+setup_dconf_settings
 setup_loginscreen_background
 setup_guestuser
 setup_nfs_client

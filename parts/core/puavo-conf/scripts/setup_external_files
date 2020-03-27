@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -eu
+
+status=0
+
+if [ -e /run/puavo/nbd-server ]; then
+  puavo-sync-external-files || status=1
+fi
+
+puavo-handle-external-files-actions || status=1
+
+exit $status

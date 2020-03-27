@@ -10,10 +10,6 @@ set -eu
 puavo_hosttype=$(puavo-conf puavo.hosttype)
 
 case "$puavo_hosttype" in
-  fatclient)
-    puavo-sync-external-files
-    puavo-handle-external-files-actions
-    ;;
   bootserver|laptop|wirelessaccesspoint)
     # Do not do updates when booting from network.
     test -e /run/puavo/nbd-server && exit 0
