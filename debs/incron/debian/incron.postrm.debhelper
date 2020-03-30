@@ -1,0 +1,14 @@
+# Automatically added by dh_systemd_enable/12.1.1
+if [ "$1" = "remove" ]; then
+	if [ -x "/usr/bin/deb-systemd-helper" ]; then
+		deb-systemd-helper mask 'incron.service' >/dev/null || true
+	fi
+fi
+
+if [ "$1" = "purge" ]; then
+	if [ -x "/usr/bin/deb-systemd-helper" ]; then
+		deb-systemd-helper purge 'incron.service' >/dev/null || true
+		deb-systemd-helper unmask 'incron.service' >/dev/null || true
+	fi
+fi
+# End automatically added section

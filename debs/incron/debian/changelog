@@ -1,34 +1,8 @@
-incron (0.5.12-1+puavo1) buster; urgency=medium
+incron (0.5.10-3+puavo1) buster; urgency=medium
 
-  * Patch with https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=930526#5
+  * Build for Buster.
 
- -- Puavo Org <dev@opinsys.fi>  Sat, 12 Oct 2019 11:40:23 +0300
-
-incron (0.5.12-1) unstable; urgency=medium
-
-  * New upstream release (Closes: #860199)
-    - Fix bug 'incron silently discards command output' (Closes: 419518)
-    - Fix bug 'incron logs command to execute but command is not
-      executed' (Closes: #584134)
-    - Fix bug 'allow whitespace delimiters in incrontab files'
-      (Closes: #456821)
-    - Fix bug 'ignore dotfiles in /etc/incron.d' (Closes: #606770)
-    - Fix bug 'avoids shadowing a variable and also enables more warnings
-      when compiling' (Closes: #503973)
-  * Remove all patches (merged upstream)
-  * Upstream development has moved to github:
-    - Update watch file accordingly
-    - Update homepage in control file
-  * New upstream developer: update copyright file accordingly
-  * Bump Standards-Version to 4.3.0
-  * Switch debhelper compatibility to 12
-  * Update Vcs-Git and Vcs-Browser with new repository on salsa.debian.org
-  * Change priority from extra to optional
-  * Fix debian/copyright Format URI to use https
-  * Add debian/upstream/metadata
-  * Add a patch to fix manpages typos
-
- -- Emmanuel Bouthenot <kolter@debian.org>  Tue, 19 Feb 2019 02:44:46 +0000
+ -- Puavo Org <dev@opinsys.fi>  Mon, 30 Mar 2020 16:38:44 +0300
 
 incron (0.5.10-3) unstable; urgency=medium
 
@@ -153,3 +127,5 @@ incron (0.5.5-1) unstable; urgency=low
   * Initial release (Closes: #409173)
 
  -- Emmanuel Bouthenot <kolter@openics.org>  Sat, 17 Feb 2007 11:03:57 +0100
+
+

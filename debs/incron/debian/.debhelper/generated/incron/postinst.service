@@ -1,0 +1,8 @@
+# Automatically added by dh_installinit/12.1.1
+if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-deconfigure" ] || [ "$1" = "abort-remove" ] ; then
+	if [ -x "/etc/init.d/incron" ]; then
+		update-rc.d incron defaults >/dev/null
+		invoke-rc.d incron start || exit 1
+	fi
+fi
+# End automatically added section

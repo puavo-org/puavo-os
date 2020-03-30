@@ -1,19 +1,12 @@
-Source: incron
+Package: incron
+Version: 0.5.10-3
+Architecture: amd64
+Maintainer: Emmanuel Bouthenot <kolter@debian.org>
+Installed-Size: 275
+Depends: libc6 (>= 2.14), libgcc1 (>= 1:3.0), libstdc++6 (>= 5.2), lsb-base (>= 3.2-14), adduser
 Section: admin
 Priority: extra
-Maintainer: Emmanuel Bouthenot <kolter@debian.org>
-Uploaders: Michael Prokop <mika@grml.org>
-Build-Depends:
-    debhelper (>= 9),
-    dh-systemd (>= 1.5)
-Standards-Version: 3.9.5
 Homepage: http://inotify.aiken.cz/
-Vcs-Git: git://anonscm.debian.org/users/kolter/incron.git
-Vcs-Browser: http://anonscm.debian.org/git/users/kolter/incron.git
-
-Package: incron
-Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, lsb-base (>= 3.2-14), adduser
 Description: cron-like daemon which handles filesystem events
  incron is an "inotify cron" system. It works like the regular cron but is
  driven by filesystem events instead of time events. This package provides two

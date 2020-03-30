@@ -1,0 +1,44 @@
+#!/bin/sh
+#
+# postrm script for incron
+#
+
+set -e
+
+case "$1" in
+    remove)
+        if dpkg-statoverride --list /usr/bin/incrontab > /dev/null ; then
+            dpkg-statoverride --remove /usr/bin/incrontab
+        fi
+        ;;
+    purge)
+        for f in /etc/incron.allow /etc/incron.deny /var/spool/incron ; do
+            if dpkg-statoverride --list $f > /dev/null ; then
+                dpkg-statoverride --remove $f
+            fi
+        done
+        ;;
+esac
+
+# Automatically added by dh_installinit/12.1.1
+if [ "$1" = "purge" ] ; then
+	update-rc.d incron remove >/dev/null
+fi
+# End automatically added section
+# Automatically added by dh_systemd_enable/12.1.1
+if [ "$1" = "remove" ]; then
+	if [ -x "/usr/bin/deb-systemd-helper" ]; then
+		deb-systemd-helper mask 'incron.service' >/dev/null || true
+	fi
+fi
+
+if [ "$1" = "purge" ]; then
+	if [ -x "/usr/bin/deb-systemd-helper" ]; then
+		deb-systemd-helper purge 'incron.service' >/dev/null || true
+		deb-systemd-helper unmask 'incron.service' >/dev/null || true
+	fi
+fi
+# End automatically added section
+
+
+exit 0

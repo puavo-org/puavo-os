@@ -1,0 +1,12 @@
+Package: incron-dbgsym
+Source: incron
+Version: 0.5.10-3
+Auto-Built-Package: debug-symbols
+Architecture: amd64
+Maintainer: Emmanuel Bouthenot <kolter@debian.org>
+Installed-Size: 1362
+Depends: incron (= 0.5.10-3)
+Section: debug
+Priority: optional
+Description: debug symbols for incron
+Build-Ids: 1b191461b3e88b5bb180ffcd469538f15aace8f9 762a816e5c5f40bd0aafc23c0f4032b18f60c1ff

@@ -2,8 +2,6 @@
 
 PACKAGE = incron
 
-export DEB_BUILD_MAINT_OPTIONS=hardening=+all
-
 override_dh_auto_install:
 	echo
 
@@ -14,4 +12,4 @@ override_dh_install:
 	touch $(CURDIR)/debian/$(PACKAGE)/etc/incron.deny
 
 %:
-	dh $@
+	dh $@ --with systemd
