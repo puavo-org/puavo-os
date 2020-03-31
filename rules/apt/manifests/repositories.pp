@@ -37,6 +37,7 @@ class apt::repositories {
         notify  => Exec['apt update'];
 
       '/etc/apt/trusted.gpg.d/opinsys.gpg':
+        before => Exec['apt update'],
         source => 'puppet:///modules/apt/opinsys.gpg';
     }
   }
