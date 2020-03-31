@@ -1,4 +1,5 @@
 # Public, configurable variables
+all_image_classes       := allinone
 debootstrap_mirror	:= http://httpredir.debian.org/debian/
 debootstrap_suite	:= buster
 default_image_class	:= allinone
@@ -8,7 +9,7 @@ mode                    := development
 remote_devel_mirror     := cdn.puavo.org
 remote_prod_mirror      := cdn.puavo.org
 release_name            :=
-rootfs_dir		:= /var/tmp/puavo-os/rootfs
+rootfs_dir_base         := /var/tmp/puavo-os/rootfs
 target_arch             := amd64
 upload_codename         := $(debootstrap_suite)
 upload_dir              :=
@@ -30,6 +31,14 @@ ifeq "$(images_urlbase)" ""
   images_urlbase	:= https://$(remote_mirror)
 endif
 
+ifeq "$(rootfs_dir)" ""
+  rootfs_dir            := $(rootfs_dir_base)/$(default_image_class)
+endif
+
+ifeq "$(install_image_dir)" ""
+  install_image_dir     := $(image_dir)/install
+endif
+
 _adm_user	:= puavo-os
 _adm_group	:= puavo-os
 _adm_uid	:= 1000
@@ -49,7 +58,7 @@ ifeq "$(image_class)" ""
 endif
 
 _repo_name   := $(shell basename $(shell git rev-parse --show-toplevel))
-_image_file  := $(image_dir)/$(_repo_name)-$(image_class)-$(debootstrap_suite)-$(shell date -u +%Y-%m-%d-%H%M%S)-${target_arch}.img
+_image_file  := $(_repo_name)-$(image_class)-$(debootstrap_suite)-$(shell date -u +%Y-%m-%d-%H%M%S)-${target_arch}.img
 
 _debootstrap_packages := git,jq,locales,lsb-release,make,puppet-common,sudo,wget
 
@@ -75,6 +84,9 @@ _systemd_nspawn_cmd := sudo systemd-nspawn -D '$(rootfs_dir)' \
 
 _sudo := sudo $(_proxywrap_cmd)
 export _sudo
+
+.PHONY: build-image
+build-image: build-${default_image_class}-image
 
 .PHONY: build
 build: build-debs-ports build-debs-parts
@@ -117,9 +129,12 @@ help:
 	@echo 'Targets:'
 	@echo '    [build]              build all'
 	@echo '    apply-rules          apply all Puppet rules'
+	@echo '    build-all-images     build all images'
+	@echo '    build-$${class}-image build image for class $${class}'
 	@echo '    build-debs-cloud     build Puavo OS (cloud) Debian packages'
 	@echo '    build-debs-parts     build Puavo OS Debian packages'
 	@echo '    build-debs-ports     build all external Debian packages'
+	@echo '    build-image          build image for the default class'
 	@echo '    build-parts          build all parts'
 	@echo '    clean                clean debs and parts'
 	@echo '    help                 display this help and exit'
@@ -128,6 +143,7 @@ help:
 	@echo '    rdiffs               make rdiffs for images (uses "rdiff_targets"-variable)'
 	@echo '    rootfs-debootstrap   build Puavo OS rootfs from scratch'
 	@echo '    rootfs-image         pack rootfs to a squashfs image'
+	@echo '    rootfs-install-image make rootfs-image with installation images'
 	@echo '    rootfs-shell         spawn shell from Puavo OS rootfs'
 	@echo '    rootfs-sync-repo     sync Puavo OS rootfs repo with the current repo'
 	@echo '    rootfs-update        update Puavo OS rootfs'
@@ -137,7 +153,8 @@ help:
 	@echo
 	@echo 'Variables:'
 	@echo '    debootstrap_mirror   debootstrap mirror [$(debootstrap_mirror)]'
-	@echo '    image_dir            directory where images are built [$(image_dir)]'
+	@echo '    image_dir            directory for images [$(image_dir)]'
+	@echo '    install_image_dir    directory for install images [\$(image_dir)/install]'
 	@echo '    images_urlbase       Prefix for image urls (https://...)'
 	@echo '    mirror_dir           Mirror directory (for images and rdiffs)'
 	@echo '    rootfs_dir           Puavo OS rootfs directory [$(rootfs_dir)]'
@@ -170,6 +187,9 @@ rootfs-debootstrap:
 $(image_dir):
 	$(_sudo) mkdir -p '$(image_dir)'
 
+$(install_image_dir):
+	$(_sudo) mkdir -p '$(install_image_dir)'
+
 .PHONY: make-release-logos
 make-release-logos:
 	$(_sudo) /usr/lib/puavo-ltsp-client/make-release-logos
@@ -192,15 +212,22 @@ rootfs-image: $(rootfs_dir) $(image_dir)
 	$(_sudo) rsync -a '$(rootfs_dir)/var/cache/' \
 	    '$(rootfs_dir).var_cache_backup/'
 	$(_sudo) .aux/set-image-release '$(rootfs_dir)' \
-	    '$(notdir $(_image_file))' '$(release_name)'
+	    '$(_image_file)' '$(release_name)'
 	$(_systemd_nspawn_cmd) $(MAKE) -C '/puavo-os' make-release-logos
 	$(_systemd_nspawn_cmd) $(MAKE) -C '/puavo-os' update-mime-database
-	$(_sudo) mksquashfs '$(rootfs_dir)' '$(_image_file).tmp'	\
+	$(_sudo) mksquashfs '$(rootfs_dir)' '$(image_dir)/$(_image_file).tmp'	\
 		-noappend -no-recovery -no-sparse -wildcards -comp lzo	\
 		-ef 'config/excludes/$(image_class)'		        \
-		|| { rm -f '$(_image_file).tmp'; false; }
-	$(_sudo) mv '$(_image_file).tmp' '$(_image_file)'
-	@echo Built '$(_image_file)' successfully.
+		|| { rm -f '$(image_dir)/$(_image_file).tmp'; false; }
+	$(_sudo) mv '$(image_dir)/$(_image_file).tmp' '$(image_dir)/$(_image_file)'
+	@echo Built '$(image_dir)/$(_image_file)' successfully.
+
+# this target requires that this host is running a puavo-os system
+.PHONY: rootfs-install-image
+rootfs-install-image: rootfs-image $(install_image_dir)
+	puavo-make-install-disk --source_image '$(image_dir)/$(_image_file)' \
+	    --target_image '$(install_image_dir)/$(_image_file)' \
+	    --with-vdi
 
 .PHONY: rootfs-shell
 rootfs-shell: $(rootfs_dir)
@@ -290,6 +317,27 @@ ifeq "$(mode)" "development"
 update-mirror: rdiffs $(mirror_dir)
 	rsync -av --progress $(mirror_dir)/ $(remote_mirror):/images/
 endif
+
+.PHONY: build-all-images
+build-all-images: $(patsubst %,build-%-image,$(all_image_classes))
+
+.PHONY: check-all-release-names
+check-all-release-names: $(patsubst %,check-%-release-name,$(all_image_classes))
+
+.PHONY: $(patsubst %,check-%-release-name,$(all_image_classes))
+$(patsubst %,check-%-release-name,$(all_image_classes)):
+	@if [ -z "$($(patsubst check-%-release-name,%,$@)_release_name)" ]; \
+	then \
+	    echo "set $(patsubst check-%-release-name,%,$@)_release_name for release builds:" >&2; \
+            echo "    make $(patsubst check-%-release-name,%,$@)_release_name=YOURRELEASE ..." >&2; \
+	    exit 1; \
+	fi
+
+.PHONY: $(patsubst %,build-%-image,$(all_image_classes))
+$(patsubst %,build-%-image,$(all_image_classes)): check-all-release-names
+	$(MAKE) image_class='$(patsubst build-%-image,%,$@)' \
+		release_name='$($(patsubst build-%-image,%,$@)_release_name)' \
+		rootfs-debootstrap rootfs-update rootfs-install-image
 
 /puavo-os:
 	@echo ERROR: localhost is not Puavo OS system >&2
