@@ -86,7 +86,7 @@ build-debs-builddeps:
 
 .PHONY: build-debs-cloud
 build-debs-cloud: build-debs-builddeps
-	$(MAKE) -C debs cloud
+	env DEB_BUILD_OPTIONS=nocheck $(MAKE) -C debs cloud
 
 .PHONY: build-debs-parts
 build-debs-parts: build-debs-builddeps
@@ -94,7 +94,7 @@ build-debs-parts: build-debs-builddeps
 
 .PHONY: build-debs-ports
 build-debs-ports: build-debs-builddeps
-	$(MAKE) -C debs ports
+	env DEB_BUILD_OPTIONS=nocheck $(MAKE) -C debs ports
 
 # mainly for development use
 .PHONY: build-parts
