@@ -1,0 +1,86 @@
+From: =?utf-8?b?Ik1hcmNvIFRyZXZpc2FuIChUcmV2acOxbyki?= <mail@3v1n0.net>
+Date: Fri, 28 Jun 2019 11:45:22 +0200
+Subject: surface-actor-x11: Bind the surface actor resources to window actor
+ life
+
+X11 actors need to release the server data (pixmap and damage) before the
+display is closed.
+During the close phase all the windows are unmanaged and this causes the window
+actors to be removed from the compositor, unsetting their actor surface.
+
+However, in case a window is animating the surface might not be destroyed until
+the animation is completed and a reference to it kept around by gjs in the shell
+case. By the way, per commit 7718e67f all window actors (even the animating
+ones) are destroyed before the display is closed, but this is not true for the
+child surface, because the parent window will just unref it, leaving it around
+if reffed somewhere else. This is fine for wayland surfaces, but not for X11
+ones which are bound to server-side pixmaps.
+
+So, connect to the parent MetaWindowActor "destroy" signal, releasing the x11
+resources that implies detaching the pixmap (unsetting the texture) and removing
+the damages.
+
+(cherry picked from commit de97b54595cf4662c437fecf26ca2e08339a13a3)
+
+Bug: https://gitlab.gnome.org/GNOME/mutter/issues/629
+Forwarded: https://gitlab.gnome.org/GNOME/mutter/merge_requests/660
+Origin: upstream, 3.30.3, commit:9f98743cfccaec396c835094d43f392f5ccb5390
+---
+ src/compositor/meta-surface-actor-x11.c | 18 ++++++++++++++----
+ 1 file changed, 14 insertions(+), 4 deletions(-)
+
+diff --git a/src/compositor/meta-surface-actor-x11.c b/src/compositor/meta-surface-actor-x11.c
+index fd00721..1f63e18 100644
+--- a/src/compositor/meta-surface-actor-x11.c
++++ b/src/compositor/meta-surface-actor-x11.c
+@@ -33,6 +33,7 @@
+ #include <meta/meta-x11-errors.h>
+ #include "window-private.h"
+ #include "meta-shaped-texture-private.h"
++#include "meta-window-actor-private.h"
+ #include "meta-cullable.h"
+ #include "x11/window-x11.h"
+ #include "x11/meta-x11-display-private.h"
+@@ -357,13 +358,19 @@ meta_surface_actor_x11_is_unredirected (MetaSurfaceActor *actor)
+   return priv->unredirected;
+ }
+ 
++static void
++release_x11_resources (MetaSurfaceActorX11 *self)
++{
++  detach_pixmap (self);
++  free_damage (self);
++}
++
+ static void
+ meta_surface_actor_x11_dispose (GObject *object)
+ {
+   MetaSurfaceActorX11 *self = META_SURFACE_ACTOR_X11 (object);
+ 
+-  detach_pixmap (self);
+-  free_damage (self);
++  release_x11_resources (self);
+ 
+   G_OBJECT_CLASS (meta_surface_actor_x11_parent_class)->dispose (object);
+ }
+@@ -421,8 +428,7 @@ window_decorated_notify (MetaWindow *window,
+ {
+   MetaSurfaceActorX11 *self = META_SURFACE_ACTOR_X11 (user_data);
+ 
+-  detach_pixmap (self);
+-  free_damage (self);
++  release_x11_resources (self);
+   create_damage (self);
+ }
+ 
+@@ -461,6 +467,10 @@ meta_surface_actor_x11_new (MetaWindow *window)
+   g_signal_connect_object (priv->window, "notify::decorated",
+                            G_CALLBACK (window_decorated_notify), self, 0);
+ 
++  g_signal_connect_object (meta_window_actor_from_window (window), "destroy",
++                           G_CALLBACK (release_x11_resources), self,
++                           G_CONNECT_SWAPPED);
++
+   priv->unredirected = FALSE;
+   sync_unredirected (self);
+ 

@@ -1,0 +1,51 @@
+From: Andrea Azzarone <andrea.azzarone@canonical.com>
+Date: Tue, 22 Jan 2019 17:20:37 +0000
+Subject: clutter/x11: Consider remapped keys when guessing the keycode from
+ the keysym
+
+Since e3e933c4 a keyval can be temporarily remapped to an unused keycode. Due to
+some limitations in XTestFakeKeyEvent, the remapping has to be done in the first
+xkb group/layout. In case there are two or more keyboard layouts enabled and the
+selected keyboard layout is not the first, clutter_keymap_x11_keycode_for_keyval
+will fail to retrieve the correct keycode for a remapped keyval. Let's use the
+reserved_keycodes map in order to retrieve the correct keycode if needed.
+
+(cherry picked from commit e0811ce1416f93906026a18fda4cd6811594cfb2)
+
+Bug: https://gitlab.gnome.org/GNOME/mutter/issues/443
+Origin: upstream, 3.30.3, commit:0f7c35b94a14b06d2d606f4cf13800b6557cbb86
+---
+ clutter/clutter/x11/clutter-keymap-x11.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
+
+diff --git a/clutter/clutter/x11/clutter-keymap-x11.c b/clutter/clutter/x11/clutter-keymap-x11.c
+index c34e676..32cb5a2 100644
+--- a/clutter/clutter/x11/clutter-keymap-x11.c
++++ b/clutter/clutter/x11/clutter-keymap-x11.c
+@@ -838,6 +838,26 @@ clutter_keymap_x11_keycode_for_keyval (ClutterKeymapX11 *keymap_x11,
+         }
+     }
+ 
++  if (!found)
++    {
++      GHashTableIter iter;
++      gpointer key, value;
++
++      g_hash_table_iter_init (&iter, keymap_x11->reserved_keycodes);
++      while (!found && g_hash_table_iter_next (&iter, &key, &value))
++        {
++          guint reserved_keycode = GPOINTER_TO_UINT (key);
++          guint reserved_keysym = GPOINTER_TO_UINT (value);
++
++          if (keyval == reserved_keysym)
++            {
++              *keycode_out = reserved_keycode;
++              *level_out = 0;
++              found = TRUE;
++            }
++        }
++    }
++
+   g_free (keys);
+   return found;
+ }

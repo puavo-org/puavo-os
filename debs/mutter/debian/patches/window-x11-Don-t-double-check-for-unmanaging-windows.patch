@@ -1,0 +1,32 @@
+From: =?utf-8?b?Ik1hcmNvIFRyZXZpc2FuIChUcmV2acOxbyki?= <mail@3v1n0.net>
+Date: Mon, 1 Jul 2019 08:38:02 +0000
+Subject: window-x11: Don't double-check for unmanaging windows
+
+When looking for the best fallback focus window, we ignore it if it is in the
+unmanaging state, but meta_stack_get_default_focus_window() does this is check
+for us already.
+
+So, ignore the redundant test.
+
+(cherry picked from commit 9aee47daa984e5cc4a1ccefb3aacfbb2729cfbc1)
+
+Forwarded: https://gitlab.gnome.org/GNOME/mutter/merge_requests/669
+Origin: upstream, 3.30.3, commit:bee55a27f4d78f2b5dd5c3a3141427fc6b2f8a6b
+---
+ src/x11/window-x11.c | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/src/x11/window-x11.c b/src/x11/window-x11.c
+index 360299c..18a97f3 100644
+--- a/src/x11/window-x11.c
++++ b/src/x11/window-x11.c
+@@ -865,9 +865,6 @@ meta_window_x11_focus (MetaWindow *window,
+                       if (!focus_window)
+                         break;
+ 
+-                      if (focus_window->unmanaging)
+-                        continue;
+-
+                       if (focus_window->input)
+                         break;
+ 

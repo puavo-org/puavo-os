@@ -267,7 +267,7 @@ index 5f77f19..3e3f45c 100644
  
  void meta_gpu_kms_flip_closure_container_free (MetaGpuKmsFlipClosureContainer *closure_container);
 diff --git a/src/backends/native/meta-renderer-native.c b/src/backends/native/meta-renderer-native.c
-index f58e6b3..24d6b8b 100644
+index b5c5e42..30bce3f 100644
 --- a/src/backends/native/meta-renderer-native.c
 +++ b/src/backends/native/meta-renderer-native.c
 @@ -60,8 +60,9 @@
@@ -349,7 +349,7 @@ index f58e6b3..24d6b8b 100644
  #ifdef HAVE_EGL_DEVICE
    if (renderer_gpu_data->mode == META_RENDERER_NATIVE_MODE_EGL_DEVICE)
      COGL_FLAGS_SET (cogl_context->features,
-@@ -2616,8 +2646,12 @@ meta_renderer_native_create_onscreen (MetaRendererNative   *renderer_native,
+@@ -2645,8 +2675,12 @@ meta_renderer_native_create_onscreen (MetaRendererNative   *renderer_native,
      }
  
    onscreen = cogl_onscreen_new (context, width, height);
@@ -364,7 +364,7 @@ index f58e6b3..24d6b8b 100644
  
    if (!cogl_framebuffer_allocate (COGL_FRAMEBUFFER (onscreen), error))
      {
-@@ -2687,6 +2721,15 @@ meta_renderer_native_create_offscreen (MetaRendererNative    *renderer,
+@@ -2716,6 +2750,15 @@ meta_renderer_native_create_offscreen (MetaRendererNative    *renderer,
    return fb;
  }
  
@@ -380,7 +380,7 @@ index f58e6b3..24d6b8b 100644
  static const CoglWinsysVtable *
  get_native_cogl_winsys_vtable (CoglRenderer *cogl_renderer)
  {
-@@ -2715,6 +2758,8 @@ get_native_cogl_winsys_vtable (CoglRenderer *cogl_renderer)
+@@ -2744,6 +2787,8 @@ get_native_cogl_winsys_vtable (CoglRenderer *cogl_renderer)
        vtable.onscreen_swap_buffers_with_damage =
          meta_onscreen_native_swap_buffers_with_damage;
  

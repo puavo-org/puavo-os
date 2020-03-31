@@ -1,0 +1,292 @@
+From: Andrea Azzarone <azzaronea@gmail.com>
+Date: Fri, 13 Jul 2018 14:49:38 +0200
+Subject: clutter/x11: Implement keycode remap to keysyms on virtual key
+ devices
+
+Keycode lookup can fail for serveral reasons, e.g. if there is no combination of
+modifiers and keycodes that can produce the target keysym with the current
+keyboard layout.
+
+In case the keycode lookup fails, remap temporarily the keysym to an unused
+keycodes.
+
+(cherry-picked from commit e3e933c47a69bd137bb83b3692d105d1261d16ff)
+
+Bug: https://gitlab.gnome.org/GNOME/gnome-shell/issues/109
+Origin: upstream, 3.30.3, commit:956bb8066758fcd27b0bc593227d40551ed85275
+---
+ clutter/clutter/x11/clutter-keymap-x11.c           | 167 +++++++++++++++++++++
+ clutter/clutter/x11/clutter-keymap-x11.h           |   6 +-
+ .../clutter/x11/clutter-virtual-input-device-x11.c |  19 ++-
+ 3 files changed, 186 insertions(+), 6 deletions(-)
+
+diff --git a/clutter/clutter/x11/clutter-keymap-x11.c b/clutter/clutter/x11/clutter-keymap-x11.c
+index 32cb5a2..f1bdf16 100644
+--- a/clutter/clutter/x11/clutter-keymap-x11.c
++++ b/clutter/clutter/x11/clutter-keymap-x11.c
+@@ -79,6 +79,9 @@ struct _ClutterKeymapX11
+   guint current_cache_serial;
+   DirectionCacheEntry group_direction_cache[4];
+   int current_group;
++
++  GHashTable *reserved_keycodes;
++  GQueue *available_keycodes;
+ #endif
+ 
+   guint caps_lock_state : 1;
+@@ -441,16 +444,100 @@ clutter_keymap_x11_set_property (GObject      *gobject,
+     }
+ }
+ 
++#ifdef HAVE_XKB
++static void
++clutter_keymap_x11_refresh_reserved_keycodes (ClutterKeymapX11 *keymap_x11)
++{
++  Display *dpy = clutter_x11_get_default_display ();
++  GHashTableIter iter;
++  gpointer key, value;
++
++  g_hash_table_iter_init (&iter, keymap_x11->reserved_keycodes);
++  while (g_hash_table_iter_next (&iter, &key, &value))
++    {
++      guint reserved_keycode = GPOINTER_TO_UINT (key);
++      guint reserved_keysym = GPOINTER_TO_UINT (value);
++      guint actual_keysym = XkbKeycodeToKeysym (dpy, reserved_keycode, 0, 0);
++
++      /* If an available keycode is no longer mapped to the stored keysym, then
++       * the keycode should not be considered available anymore and should be
++       * removed both from the list of available and reserved keycodes.
++       */
++      if (reserved_keysym != actual_keysym)
++        {
++          g_hash_table_iter_remove (&iter);
++          g_queue_remove (keymap_x11->available_keycodes, key);
++        }
++    }
++}
++
++static gboolean
++clutter_keymap_x11_replace_keycode (ClutterKeymapX11 *keymap_x11,
++                                    KeyCode           keycode,
++                                    KeySym            keysym)
++{
++  if (CLUTTER_BACKEND_X11 (keymap_x11->backend)->use_xkb)
++    {
++      Display *dpy = clutter_x11_get_default_display ();
++      XkbDescPtr xkb = get_xkb (keymap_x11);
++      XkbMapChangesRec changes;
++
++      XFlush (dpy);
++
++      xkb->device_spec = XkbUseCoreKbd;
++      memset (&changes, 0, sizeof(changes));
++
++      if (keysym != NoSymbol)
++        {
++          int types[XkbNumKbdGroups] = { XkbOneLevelIndex };
++          XkbChangeTypesOfKey (xkb, keycode, 1, XkbGroup1Mask, types, &changes);
++          XkbKeySymEntry (xkb, keycode, 0, 0) = keysym;
++        }
++      else
++        {
++          /* Reset to NoSymbol */
++          XkbChangeTypesOfKey (xkb, keycode, 0, XkbGroup1Mask, NULL, &changes);
++        }
++
++      changes.changed = XkbKeySymsMask | XkbKeyTypesMask;
++      changes.first_key_sym = keycode;
++      changes.num_key_syms = 1;
++      changes.first_type = 0;
++      changes.num_types = xkb->map->num_types;
++      XkbChangeMap (dpy, xkb, &changes);
++
++      XFlush (dpy);
++
++      return TRUE;
++    }
++
++  return FALSE;
++}
++#endif
++
+ static void
+ clutter_keymap_x11_finalize (GObject *gobject)
+ {
+   ClutterKeymapX11 *keymap;
+   ClutterEventTranslator *translator;
++  GHashTableIter iter;
++  gpointer key, value;
+ 
+   keymap = CLUTTER_KEYMAP_X11 (gobject);
+   translator = CLUTTER_EVENT_TRANSLATOR (keymap);
+ 
+ #ifdef HAVE_XKB
++  clutter_keymap_x11_refresh_reserved_keycodes (keymap);
++  g_hash_table_iter_init (&iter, keymap->reserved_keycodes);
++  while (g_hash_table_iter_next (&iter, &key, &value))
++    {
++      guint keycode = GPOINTER_TO_UINT (key);
++      clutter_keymap_x11_replace_keycode (keymap, keycode, NoSymbol);
++    }
++
++  g_hash_table_destroy (keymap->reserved_keycodes);
++  g_queue_free (keymap->available_keycodes);
++
+   _clutter_backend_remove_event_translator (keymap->backend, translator);
+ 
+   if (keymap->xkb_desc != NULL)
+@@ -460,6 +547,7 @@ clutter_keymap_x11_finalize (GObject *gobject)
+   G_OBJECT_CLASS (clutter_keymap_x11_parent_class)->finalize (gobject);
+ }
+ 
++
+ static void
+ clutter_keymap_x11_class_init (ClutterKeymapX11Class *klass)
+ {
+@@ -483,6 +571,11 @@ clutter_keymap_x11_init (ClutterKeymapX11 *keymap)
+ {
+   keymap->current_direction = PANGO_DIRECTION_NEUTRAL;
+   keymap->current_group = -1;
++
++#ifdef HAVE_XKB
++  keymap->reserved_keycodes = g_hash_table_new (NULL, NULL);
++  keymap->available_keycodes = g_queue_new ();
++#endif
+ }
+ 
+ static ClutterTranslateReturn
+@@ -766,6 +859,80 @@ clutter_keymap_x11_get_entries_for_keyval (ClutterKeymapX11  *keymap_x11,
+     }
+ }
+ 
++#ifdef HAVE_XKB
++static guint
++clutter_keymap_x11_get_available_keycode (ClutterKeymapX11 *keymap_x11)
++{
++  if (CLUTTER_BACKEND_X11 (keymap_x11->backend)->use_xkb)
++    {
++      clutter_keymap_x11_refresh_reserved_keycodes (keymap_x11);
++
++      if (g_hash_table_size (keymap_x11->reserved_keycodes) < 5)
++        {
++          Display *dpy = clutter_x11_get_default_display ();
++          XkbDescPtr xkb = get_xkb (keymap_x11);
++          guint i;
++
++          for (i = xkb->max_key_code; i >= xkb->min_key_code; --i)
++            {
++              if (XkbKeycodeToKeysym (dpy, i, 0, 0) == NoSymbol)
++                return i;
++            }
++        }
++
++      return GPOINTER_TO_UINT (g_queue_pop_head (keymap_x11->available_keycodes));
++    }
++
++  return 0;
++}
++#endif
++
++gboolean clutter_keymap_x11_reserve_keycode (ClutterKeymapX11 *keymap_x11,
++                                             guint             keyval,
++                                             guint            *keycode_out)
++{
++  g_return_val_if_fail (CLUTTER_IS_KEYMAP_X11 (keymap_x11), FALSE);
++  g_return_val_if_fail (keyval != 0, FALSE);
++  g_return_val_if_fail (keycode_out != NULL, FALSE);
++
++#ifdef HAVE_XKB
++  *keycode_out = clutter_keymap_x11_get_available_keycode (keymap_x11);
++
++  if (*keycode_out == NoSymbol)
++    {
++      g_warning ("Cannot reserve a keycode for keyval %d: no available keycode", keyval);
++      return FALSE;
++    }
++
++  if (!clutter_keymap_x11_replace_keycode (keymap_x11, *keycode_out, keyval))
++    {
++      g_warning ("Failed to remap keycode %d to keyval %d", *keycode_out, keyval);
++      return FALSE;
++    }
++
++  g_hash_table_insert (keymap_x11->reserved_keycodes, GUINT_TO_POINTER (*keycode_out), GUINT_TO_POINTER (keyval));
++  g_queue_remove (keymap_x11->available_keycodes, GUINT_TO_POINTER (*keycode_out));
++
++  return TRUE;
++#else
++  return FALSE;
++#endif
++}
++
++void clutter_keymap_x11_release_keycode_if_needed (ClutterKeymapX11 *keymap_x11,
++                                                   guint             keycode)
++{
++  g_return_if_fail (CLUTTER_IS_KEYMAP_X11 (keymap_x11));
++
++#ifdef HAVE_XKB
++  if (!g_hash_table_contains (keymap_x11->reserved_keycodes, GUINT_TO_POINTER (keycode)) ||
++      g_queue_index (keymap_x11->available_keycodes, GUINT_TO_POINTER (keycode)) != -1)
++    return;
++
++  g_queue_push_tail (keymap_x11->available_keycodes, GUINT_TO_POINTER (keycode));
++#endif
++}
++
+ void
+ clutter_keymap_x11_latch_modifiers (ClutterKeymapX11 *keymap_x11,
+                                     uint32_t          level,
+diff --git a/clutter/clutter/x11/clutter-keymap-x11.h b/clutter/clutter/x11/clutter-keymap-x11.h
+index 4b5b403..4decb44 100644
+--- a/clutter/clutter/x11/clutter-keymap-x11.h
++++ b/clutter/clutter/x11/clutter-keymap-x11.h
+@@ -58,7 +58,11 @@ gboolean clutter_keymap_x11_keycode_for_keyval (ClutterKeymapX11 *keymap_x11,
+ void     clutter_keymap_x11_latch_modifiers (ClutterKeymapX11 *keymap_x11,
+                                              uint32_t          level,
+                                              gboolean          enable);
+-
++gboolean clutter_keymap_x11_reserve_keycode (ClutterKeymapX11 *keymap_x11,
++                                             guint             keyval,
++                                             guint            *keycode_out);
++void     clutter_keymap_x11_release_keycode_if_needed (ClutterKeymapX11 *keymap_x11,
++                                                       guint             keycode);
+ G_END_DECLS
+ 
+ #endif /* __CLUTTER_KEYMAP_X11_H__ */
+diff --git a/clutter/clutter/x11/clutter-virtual-input-device-x11.c b/clutter/clutter/x11/clutter-virtual-input-device-x11.c
+index e16ba3f..cab26c3 100644
+--- a/clutter/clutter/x11/clutter-virtual-input-device-x11.c
++++ b/clutter/clutter/x11/clutter-virtual-input-device-x11.c
+@@ -143,8 +143,13 @@ clutter_virtual_input_device_x11_notify_keyval (ClutterVirtualInputDevice *virtu
+ 
+   if (!clutter_keymap_x11_keycode_for_keyval (keymap, keyval, &keycode, &level))
+     {
+-      g_warning ("No keycode found for keyval %x in current group", keyval);
+-      return;
++      level = 0;
++
++      if (!clutter_keymap_x11_reserve_keycode (keymap, keyval, &keycode))
++        {
++          g_warning ("No keycode found for keyval %x in current group", keyval);
++          return;
++        }
+     }
+ 
+   if (!_clutter_keymap_x11_get_is_modifier (keymap, keycode) &&
+@@ -155,9 +160,13 @@ clutter_virtual_input_device_x11_notify_keyval (ClutterVirtualInputDevice *virtu
+                      (KeyCode) keycode,
+                      key_state == CLUTTER_KEY_STATE_PRESSED, 0);
+ 
+-  if (!_clutter_keymap_x11_get_is_modifier (keymap, keycode) &&
+-      key_state == CLUTTER_KEY_STATE_RELEASED)
+-    clutter_keymap_x11_latch_modifiers (keymap, level, FALSE);
++
++  if (key_state == CLUTTER_KEY_STATE_RELEASED)
++    {
++      if (!_clutter_keymap_x11_get_is_modifier (keymap, keycode))
++        clutter_keymap_x11_latch_modifiers (keymap, level, FALSE);
++      clutter_keymap_x11_release_keycode_if_needed (keymap, keycode);
++    }
+ }
+ 
+ static void

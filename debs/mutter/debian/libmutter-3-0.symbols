@@ -699,6 +699,7 @@ libmutter-3.so.0 libmutter-3-0 #MINVER#
  (arch=linux-any)meta_gpu_kms_can_have_outputs@Base 3.29.92
  (arch=linux-any)meta_gpu_kms_flip_closure_container_free@Base 3.29.4
  (arch=linux-any)meta_gpu_kms_flip_crtc@Base 3.28.2
+ (arch=linux-any)meta_gpu_kms_get_current_time_ns@Base 3.30.2-2~
  (arch=linux-any)meta_gpu_kms_get_fd@Base 3.28.2
  (arch=linux-any)meta_gpu_kms_get_file_path@Base 3.28.2
  (arch=linux-any)meta_gpu_kms_get_max_buffer_size@Base 3.28.2
@@ -1246,6 +1247,7 @@ libmutter-3.so.0 libmutter-3-0 #MINVER#
  meta_stack_get_above@Base 3.28.2
  meta_stack_get_below@Base 3.28.2
  meta_stack_get_bottom@Base 3.28.2
+ meta_stack_get_default_focus_candidates@Base 3.30.2-8~
  meta_stack_get_default_focus_window@Base 3.28.2
  meta_stack_get_default_focus_window_at_point@Base 3.28.2
  meta_stack_get_positions@Base 3.28.2

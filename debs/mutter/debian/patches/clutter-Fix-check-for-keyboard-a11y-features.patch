@@ -1,0 +1,26 @@
+From: Carlos Garnacho <carlosg@gnome.org>
+Date: Thu, 28 Mar 2019 11:58:35 +0100
+Subject: clutter: Fix check for keyboard a11y features
+
+The typo was actually toggling the feature on for those who had it
+disabled.
+
+Bug: https://gitlab.gnome.org/GNOME/mutter/issues/529
+Origin: upstream, 3.30.3, commit:db8a29b34821130e3cd530da392de7af403db848
+---
+ clutter/clutter/evdev/clutter-input-device-evdev.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/clutter/clutter/evdev/clutter-input-device-evdev.c b/clutter/clutter/evdev/clutter-input-device-evdev.c
+index b4e1445..a904d5a 100644
+--- a/clutter/clutter/evdev/clutter-input-device-evdev.c
++++ b/clutter/clutter/evdev/clutter-input-device-evdev.c
+@@ -1133,7 +1133,7 @@ clutter_input_device_evdev_process_kbd_a11y_event (ClutterEvent               *e
+   if (event->key.flags & CLUTTER_EVENT_FLAG_INPUT_METHOD)
+     goto emit_event;
+ 
+-  if (!device_evdev->a11y_flags & CLUTTER_A11Y_KEYBOARD_ENABLED)
++  if (!(device_evdev->a11y_flags & CLUTTER_A11Y_KEYBOARD_ENABLED))
+     goto emit_event;
+ 
+   if (event->type == CLUTTER_KEY_PRESS)

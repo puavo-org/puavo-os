@@ -1,0 +1,127 @@
+From: =?utf-8?b?Ik1hcmNvIFRyZXZpc2FuIChUcmV2acOxbyki?= <mail@3v1n0.net>
+Date: Wed, 3 Jul 2019 16:48:07 +0000
+Subject: stack: Add a function to get a sorted list of focus candidates
+
+Use a static function if a window can be the default focus window, and use such
+function to return a filtered list of the stack.
+
+(cherry picked from commit 2439255f32b4e775d4427c92a6797b8bd33e7d5a)
+
+Forwarded: https://gitlab.gnome.org/GNOME/mutter/merge_requests/669
+Origin: upstream, 3.30.3, commit:60ea32330a6c92760f79dba9c86bcc385ca0d348
+---
+ src/core/stack.c | 55 ++++++++++++++++++++++++++++++++++++++++++-------------
+ src/core/stack.h | 15 +++++++++++++++
+ 2 files changed, 57 insertions(+), 13 deletions(-)
+
+diff --git a/src/core/stack.c b/src/core/stack.c
+index c00e86c..78bfc4b 100644
+--- a/src/core/stack.c
++++ b/src/core/stack.c
+@@ -1183,6 +1183,27 @@ window_contains_point (MetaWindow *window,
+   return POINT_IN_RECT (root_x, root_y, rect);
+ }
+ 
++static gboolean
++window_can_get_default_focus (MetaWindow *window)
++{
++  if (window->unmaps_pending > 0)
++    return FALSE;
++
++  if (window->unmanaging)
++    return FALSE;
++
++  if (!(window->input || window->take_focus))
++    return FALSE;
++
++  if (!meta_window_should_be_showing (window))
++    return FALSE;
++
++  if (window->type == META_WINDOW_DOCK)
++    return FALSE;
++
++  return TRUE;
++}
++
+ static MetaWindow*
+ get_default_focus_window (MetaStack     *stack,
+                           MetaWorkspace *workspace,
+@@ -1210,24 +1231,12 @@ get_default_focus_window (MetaStack     *stack,
+       if (window == not_this_one)
+         continue;
+ 
+-      if (window->unmaps_pending > 0)
+-        continue;
+-
+-      if (window->unmanaging)
+-        continue;
+-
+-      if (!(window->input || window->take_focus))
+-        continue;
+-
+-      if (!meta_window_should_be_showing (window))
++      if (!window_can_get_default_focus (window))
+         continue;
+ 
+       if (must_be_at_point && !window_contains_point (window, root_x, root_y))
+         continue;
+ 
+-      if (window->type == META_WINDOW_DOCK)
+-        continue;
+-
+       return window;
+     }
+ 
+@@ -1282,6 +1291,26 @@ meta_stack_list_windows (MetaStack     *stack,
+   return workspace_windows;
+ }
+ 
++GList *
++meta_stack_get_default_focus_candidates (MetaStack     *stack,
++                                         MetaWorkspace *workspace)
++{
++  GList *windows = meta_stack_list_windows (stack, workspace);
++  GList *l;
++
++  for (l = windows; l;)
++    {
++      GList *next = l->next;
++
++      if (!window_can_get_default_focus (l->data))
++        windows = g_list_delete_link (windows, l);
++
++      l = next;
++    }
++
++  return windows;
++}
++
+ int
+ meta_stack_windows_cmp  (MetaStack  *stack,
+                          MetaWindow *window_a,
+diff --git a/src/core/stack.h b/src/core/stack.h
+index d976067..b8dc782 100644
+--- a/src/core/stack.h
++++ b/src/core/stack.h
+@@ -337,6 +337,21 @@ MetaWindow* meta_stack_get_default_focus_window_at_point (MetaStack     *stack,
+                                                           int            root_x,
+                                                           int            root_y);
+ 
++/**
++ * meta_stack_get_default_focus_candidates:
++ * @stack: The stack to examine.
++ * @workspace: If not %NULL, only windows on this workspace will be
++ *             returned; otherwise all windows in the stack will be
++ *             returned.
++ *
++ * Returns all the focus candidate windows in the stack, in order.
++ *
++ * Returns: (transfer container) (element-type Meta.Window):
++ *     A #GList of #MetaWindow, in stacking order, honouring layers.
++ */
++GList *     meta_stack_get_default_focus_candidates (MetaStack     *stack,
++                                                     MetaWorkspace *workspace);
++
+ /**
+  * meta_stack_list_windows:
+  * @stack: The stack to examine.

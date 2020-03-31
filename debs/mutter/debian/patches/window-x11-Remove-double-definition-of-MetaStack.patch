@@ -1,0 +1,28 @@
+From: =?utf-8?b?Ik1hcmNvIFRyZXZpc2FuIChUcmV2acOxbyki?= <mail@3v1n0.net>
+Date: Thu, 18 Jul 2019 11:33:55 +0200
+Subject: window-x11: Remove double definition of MetaStack
+
+In commit c05fe4ae9 we introduced a double definition of MetaStack due to a
+wrong cherry-pick conflict resolution.
+
+Fix this by removing the invalid duplicated line.
+
+Related to https://gitlab.gnome.org/GNOME/mutter/merge_requests/688
+
+Origin: upstream, 3.30.3, commit:2a81dc45e7474a4b48b6e3a4ce572a7795ad320d
+---
+ src/x11/window-x11.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/src/x11/window-x11.c b/src/x11/window-x11.c
+index 6acdbfc..29bd645 100644
+--- a/src/x11/window-x11.c
++++ b/src/x11/window-x11.c
+@@ -852,7 +852,6 @@ maybe_focus_default_window (MetaDisplay *display,
+ {
+   MetaWorkspace *workspace;
+   MetaStack *stack = display->stack;
+-  MetaStack *stack = workspace->display->stack;
+   g_autoptr (GList) focusable_windows = NULL;
+   g_autoptr (GQueue) focus_candidates = NULL;
+   GList *l;

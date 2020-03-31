@@ -1,8 +1,122 @@
-mutter (3.30.2-6+puavo1) buster; urgency=medium
+mutter (3.30.2-9~deb10u1+puavo1) buster; urgency=medium
 
   * Add our own patch puavo_allow_configurations.patch.
 
- -- Puavo Org <dev@opinsys.fi>  Wed, 17 Apr 2019 10:25:36 +0300
+ -- Puavo Org <dev@opinsys.fi>  Tue, 31 Mar 2020 08:11:29 +0300
+
+mutter (3.30.2-9~deb10u1) buster; urgency=medium
+
+  * Team upload
+  * Rebuild for Debian 10
+  * d/gbp.conf: Set packaging branch to debian/buster
+
+ -- Simon McVittie <smcv@debian.org>  Sun, 18 Aug 2019 19:51:33 +0100
+
+mutter (3.30.2-9) unstable; urgency=medium
+
+  * Team upload
+  * d/libmutter-3-0.bug-control: Include GL drivers in bug reports
+  * d/p/renderer-native-Fix-EGLSurface-destruction-order.patch:
+    Fix attribution
+  * d/p/wayland-output-Set-user-data-of-xdg_output-resource.patch:
+    Add bug references for #932428, #932767 and #932781, and retroactively
+    mark them as closed by this patch in the previous changelog entry,
+    based on feedback from bug reporters
+
+ -- Simon McVittie <smcv@debian.org>  Sun, 18 Aug 2019 17:23:17 +0100
+
+mutter (3.30.2-8) unstable; urgency=medium
+
+  * Team upload
+  * Update to upstream gnome-3-30 branch at 3.30.2-42-g2a81dc45e
+    - d/p/clutter-x11-Consider-remapped-keys-when-guessing-the-keyc.patch:
+      Fix repeated inputs from extended characters (long-press) in
+      on-screen keyboard
+    - d/p/compositor-Destroy-window-actors-list-on-destruction.patch,
+      d/p/window-actor-Set-actor-as-compositor-private-in-window-be.patch,
+      d/p/surface-actor-x11-Assign-X11-Display-only-if-we-have-reso.patch,
+      d/p/surface-actor-x11-Bind-the-surface-actor-resources-to-win.patch,
+      Fix intermittent crashes on exit/reload
+    - d/p/compositor-Disconnect-from-stage-signals-on-destruction.patch:
+      Fix stuck windows if an application stops responding and one of its
+      windows gets unmanaged
+    - d/p/clutter-x11-Implement-keycode-remap-to-keysyms-on-virtual.patch:
+      Fix missing inputs from extended characters (long-press) in
+      on-screen keyboard
+    - d/p/cursor-renderer-native-Free-MetaCursorNativePrivate-struc.patch:
+      Fix a small memory leak
+    - d/p/wayland-seat-Use-g_free-to-cleanup-MetaWaylandSeat.patch:
+      Fix an incorrect free-function that could lead to memory corruption
+    - d/p/cogl-pipeline-Don-t-try-to-access-to-free-d-pointer-data.patch:
+      Fix use-after-free
+    - d/p/renderer-native-add-missing-eglTerminate-in-EGLDevice-err.patch:
+      Avoid reusing an amdgpu display connection if EGL is missing the
+      desired extensions
+    - d/p/workspace-Focus-only-ancestors-that-are-focusable.patch,
+      d/p/window-x11-Focus-the-default-window-with-delay-while-wait.patch,
+      d/p/window-x11-Add-lost-definition-for-TAKE_FOCUS_FALLBACK_DE.patch,
+      d/p/window-x11-Focus-a-window-in-the-active-workspace-as-take.patch,
+      d/p/window-x11-Remove-double-definition-of-MetaStack.patch:
+      Fix crashes involving window focus with some applications, notably
+      JetBrains IDE
+    - d/p/window-Emit-an-error-and-return-when-trying-to-activate-a.patch:
+      Fix crashes when an unmanaged window is activated
+    - d/p/window-x11-Don-t-double-check-for-unmanaging-windows.patch,
+      d/p/window-x11-Accept-any-focusable-window-as-fallback-focus.patch,
+      d/p/stack-Add-a-function-to-get-a-sorted-list-of-focus-candid.patch,
+      d/p/window-x11-Use-any-focusable-window-as-fallback-delayed-f.patch:
+      Fix hang when windows take focus but do not accept input
+    - d/p/Updated-Spanish-translation.patch:
+      Update translations
+    - d/p/tests-Add-accept_focus-command-to-runner-and-client.patch,
+      d/p/tests-Add-can_take_focus-command-to-runner-and-client.patch,
+      d/p/tests-stacking-Add-tests-with-no-input-and-no-take-focus-.patch,
+      d/p/test-runner-Add-assert_focused-command.patch,
+      d/p/tests-Verify-focused-window-in-closed-transient-tests.patch,
+      d/p/test-runner-Add-sleep-command.patch,
+      d/p/test-runner-Add-dispatch-command.patch,
+      d/p/Makefile-tests-Fix-paths-for-stacking-metatests.patch,
+      d/p/test-client-Add-x11-events-GSource-handler.patch,
+      d/p/tests-Add-accept_take_focus-command.patch:
+      Improve test coverage related to the above bug fixes
+  * d/p/wayland-output-Set-user-data-of-xdg_output-resource.patch:
+    Backport patch from 3.32.1 to fix use-after-free in Wayland monitor
+    management (Closes: #932428, #932767, #932781)
+  * d/libmutter-3-0.symbols:
+    Add meta_stack_get_default_focus_candidates(), which is added by a
+    patch
+  * d/gbp.conf: Set branch to debian/unstable
+  * d/p/renderer-native-Use-g_set_error-instead-of-_cogl_set_erro.patch,
+    d/p/renderer-native-Make-sure-we-re-not-destroying-an-active-.patch,
+    d/p/renderer-native-Fix-EGLSurface-destruction-order.patch:
+    Backport patches from upstream gnome-3-32 branch to fix another
+    use-after-free crash that can be triggered by suspend/resume
+
+ -- Simon McVittie <smcv@debian.org>  Tue, 30 Jul 2019 10:40:38 +0100
+
+mutter (3.30.2-7) unstable; urgency=medium
+
+  * Team upload
+
+  [ Iain Lane ]
+  * Update metadata for debian/buster branch
+
+  [ Simon McVittie ]
+  * Update to upstream gnome-3-30 branch at 3.30.2-10-gdb8a29b34
+    - d/p/clutter-evdev-Fix-toggling-accessibility-features-from-ke.patch:
+      Allow keyboard accessibility features to be switched on when using
+      Wayland mode. Previously, this was wrongly controlled by the
+      "togglekeys" setting, which is off by default and has no UI, meaning
+      that in practice keyboard accessibility features were always off.
+    - d/p/clutter-Fix-check-for-keyboard-a11y-features.patch:
+      Fix the sense of the check for keyboard accessibility features.
+      Previously, they were enabled when disabled in gnome-control-center
+      and vice versa.
+  * d/libmutter-3-0.symbols: Add meta_gpu_kms_get_current_time_ns,
+    which was added in 3.30.2-2 by
+    d/p/Sync-to-the-hardware-refresh-rate-not-just-60.00Hz.patch
+
+ -- Simon McVittie <smcv@debian.org>  Sun, 28 Apr 2019 00:13:35 +0100
 
 mutter (3.30.2-6) unstable; urgency=medium
 
