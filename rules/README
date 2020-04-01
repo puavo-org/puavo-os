@@ -126,9 +126,6 @@ network_manager
 nss
     Setup /etc/nsswitch.conf.
 
-opinsys_apt_repositories
-    The public apt repositories maintained by Opinsys.
-
 packages
     Lists packages that are to be installed to ltsp images,
     and those that should be kept out.
