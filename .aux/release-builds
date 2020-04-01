@@ -1,0 +1,56 @@
+#!/bin/sh
+
+set -eu
+
+if [ -z "${rootfs_dir_base:-}" ]; then
+  echo 'rootfs_dir_base is not set!' >&2
+  exit 1
+fi
+
+make build-all-images
+
+for image_class in "$@"; do
+  image_build_dir="${rootfs_dir_base}/${image_class}"
+
+  latest_image_name="$(cat "${image_build_dir}/etc/puavo-image/name" \
+                         2>/dev/null || true)"
+  latest_image_release="$(cat "${image_build_dir}/etc/puavo-image/release" \
+                            2>/dev/null || true)"
+
+  if [ -z "${latest_image_name:-}" ]; then
+    echo 'could not determine latest image name' >&2
+    exit 1
+  fi
+  if [ -z "${latest_image_release:-}" ]; then
+    echo 'could not determine latest image release' >&2
+    exit 1
+  fi
+
+  image_branch=$(echo "$latest_image_name" \
+                   | sed -E 's/-[0-9]+-[0-9]+-[0-9]+-[0-9]+//; s/\.img$//')
+
+  cp -p images.json images.json.tmp     # make a copy to preserve permissions
+  jq --arg image_branch "$image_branch" \
+     --arg latest_image_name "$latest_image_name" '
+    if (.[$image_branch] | contains([$latest_image_name]) | not) then
+      .[$image_branch] += [$latest_image_name]
+    else . end
+  ' images.json > images.json.tmp
+  mv images.json.tmp images.json
+
+  make image_class="$image_class" rootfs_dir_base="$rootfs_dir_base" \
+       release_name="${latest_image_release} + 1" rootfs-image
+
+  latest_devel_image_name="$(cat "${image_build_dir}/etc/puavo-image/name" \
+                               2>/dev/null || true)"
+
+  cp -p images.json images.json.tmp     # make a copy to preserve permissions
+  jq --arg image_branch "${image_branch}-devel" \
+     --arg latest_image_name "$latest_image_name" \
+     --arg latest_devel_image_name "$latest_devel_image_name" '
+    .[$image_branch] = [$latest_image_name, $latest_devel_image_name]
+  ' images.json > images.json.tmp
+  mv images.json.tmp images.json
+done
+
+make rdiffs

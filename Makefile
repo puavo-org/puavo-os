@@ -339,6 +339,11 @@ $(patsubst %,build-%-image,$(all_image_classes)): check-all-release-names
 		release_name='$($(patsubst build-%-image,%,$@)_release_name)' \
 		rootfs-debootstrap rootfs-update rootfs-install-image
 
+.PHONY: release-builds
+release-builds:
+	sudo -E rootfs_dir_base=$(rootfs_dir_base) \
+	    .aux/release-builds $(all_image_classes)
+
 /puavo-os:
 	@echo ERROR: localhost is not Puavo OS system >&2
 	@false
