@@ -85,8 +85,8 @@ _systemd_nspawn_cmd := sudo systemd-nspawn -D '$(rootfs_dir)' \
 _sudo := sudo $(_proxywrap_cmd)
 export _sudo
 
-.PHONY: build-image
-build-image: build-${default_image_class}-image
+.PHONY: build-all-images
+build-all-images: $(patsubst %,build-%-image,$(all_image_classes))
 
 .PHONY: build
 build: build-debs-ports build-debs-parts
@@ -129,7 +129,7 @@ help:
 	@echo 'Targets:'
 	@echo '    [build]              build all'
 	@echo '    apply-rules          apply all Puppet rules'
-	@echo '    build-all-images     build all images'
+	@echo '    build-all-images     build all images (the default target)'
 	@echo '    build-$${class}-image build image for class $${class}'
 	@echo '    build-debs-cloud     build Puavo OS (cloud) Debian packages'
 	@echo '    build-debs-parts     build Puavo OS Debian packages'
@@ -318,8 +318,8 @@ update-mirror: rdiffs $(mirror_dir)
 	rsync -av --progress $(mirror_dir)/ $(remote_mirror):/images/
 endif
 
-.PHONY: build-all-images
-build-all-images: $(patsubst %,build-%-image,$(all_image_classes))
+.PHONY: build-image
+build-image: build-${default_image_class}-image
 
 .PHONY: check-all-release-names
 check-all-release-names: $(patsubst %,check-%-release-name,$(all_image_classes))
