@@ -46,5 +46,6 @@ setup_samba
 setup_nginx
 setup_munin
 setup_puavopkgs
+setup_apt
 setup_systemd
 run_extra_boot_scripts
