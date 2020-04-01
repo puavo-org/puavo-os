@@ -62,6 +62,13 @@ prepare: $(_workdir) update-repo
 update-repo:
 	$(MAKE) .archive/Release
 
+.PHONY: remove-build-deps
+remove-build-deps:
+	$(_sudo) apt-get -y purge \
+	    $$(echo $(patsubst %,%-build-deps,$(_pkgs_image)) \
+		 | xargs -n 1 dpkg --status 2>/dev/null \
+		 | awk '$$1 == "Package:" { print $$2 }')
+
 $(_workdir):
 	mkdir -p $(_workdir)
 

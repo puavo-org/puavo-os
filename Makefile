@@ -208,7 +208,7 @@ update-mime-database:
 # May be removed only when sure that grub has been updated on all hosts
 # updating to images made with this.
 .PHONY: rootfs-image
-rootfs-image: $(rootfs_dir) $(image_dir)
+rootfs-image: prepare-for-squashfs $(rootfs_dir) $(image_dir)
 	$(_sudo) rsync -a '$(rootfs_dir)/var/cache/' \
 	    '$(rootfs_dir).var_cache_backup/'
 	$(_sudo) .aux/set-image-release '$(rootfs_dir)' \
@@ -221,6 +221,12 @@ rootfs-image: $(rootfs_dir) $(image_dir)
 		|| { rm -f '$(image_dir)/$(_image_file).tmp'; false; }
 	$(_sudo) mv '$(image_dir)/$(_image_file).tmp' '$(image_dir)/$(_image_file)'
 	@echo Built '$(image_dir)/$(_image_file)' successfully.
+
+.PHONY: prepare-for-squashfs
+prepare-for-squashfs: $(rootfs_dir)
+	$(MAKE) -C debs remove-build-deps
+	$(_sudo) apt-get -y autoremove
+	$(_sudo) updatedb
 
 # this target requires that this host is running a puavo-os system
 .PHONY: rootfs-install-image
@@ -279,7 +285,6 @@ update: prepare /etc/puavo-conf/image.json /etc/puavo-conf/rootca.pem
 	$(_sudo) puavo-pkg gc-upstream-packs
 	$(_sudo) update-initramfs -u -k all
 	$(_sudo) systemd-sysusers
-	$(_sudo) updatedb
 
 .PHONY: prepare
 prepare:
