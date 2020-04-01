@@ -1,5 +1,0 @@
-#!/bin/sh
-
-set -eu
-
-sed -i '/^deb.*puavo-os\/debs\/.archive/s/^/# /' /etc/apt/sources.list

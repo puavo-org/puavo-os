@@ -10,11 +10,6 @@ deb-src http://<%= @mirror %><%= @mirror_path %>/debian <%= @debianversioncodena
 deb http://<%= @securitymirror %><%= @securitymirror_path %>/ <%= @debianversioncodename %>/updates main contrib non-free
 deb-src http://<%= @securitymirror %><%= @securitymirror_path %>/ <%= @debianversioncodename %>/updates main contrib non-free
 
-<% unless @localmirror.empty? %>
-# This has the origin "puavo-os-local".
-deb [trusted=yes] file://<%= @localmirror %> /
-<% end %>
-
 # Use the opinsys-archive for Puavo.  This should contain mostly the same
 # as the localmirror at "file://<%= @localmirror %> /" (above), but
 # possibly also the 32-bit builds such as wine32.  These have the origin

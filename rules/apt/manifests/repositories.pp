@@ -36,6 +36,12 @@ class apt::repositories {
         content => template('apt/sources.list'),
         notify  => Exec['apt update'];
 
+      # Put the local this into a separate file so it can be excluded
+      # in the image build along with the actual archive.
+      '/etc/apt/sources.list.d/puavo-os-local.list':
+        content => template('apt/puavo-os-local.list'),
+        notify  => Exec['apt update'];
+
       '/etc/apt/trusted.gpg.d/opinsys.gpg':
         before => Exec['apt update'],
         source => 'puppet:///modules/apt/opinsys.gpg';
