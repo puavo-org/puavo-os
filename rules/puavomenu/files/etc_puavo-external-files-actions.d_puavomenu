@@ -1,0 +1,19 @@
+#!/bin/sh
+
+set -eu
+
+status=0
+
+if [ -e /state/external_files/puavomenu_conditions ]; then
+  ln -fns /state/external_files/puavomenu_conditions \
+          /etc/puavomenu/conditions/99-external_files.json \
+    || status=1
+fi
+
+if [ -e /state/external_files/puavomenu_menudata ]; then
+  ln -fns /state/external_files/puavomenu_menudata \
+          /etc/puavomenu/menudata/99-external_files.json \
+    || status=1
+fi
+
+exit $status

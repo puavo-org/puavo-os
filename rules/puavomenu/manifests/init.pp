@@ -6,6 +6,10 @@ class puavomenu {
   File { require => Package['puavomenu'], }
 
   file {
+    '/etc/puavo-external-files-actions.d/puavomenu':
+      mode   => '0755',
+      source => 'puppet:///modules/puavomenu/etc_puavo-external-files-actions.d_puavomenu';
+
     '/etc/puavomenu':
       ensure => directory;
 
