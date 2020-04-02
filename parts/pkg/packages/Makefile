@@ -62,6 +62,7 @@ packagedirs += smartboard
 packagedirs += spotify-client
 packagedirs += teams
 packagedirs += teamviewer
+packagedirs += tela-icon-theme
 packagedirs += tilitin
 packagedirs += t-lasku
 packagedirs += ubuntu-wallpapers
