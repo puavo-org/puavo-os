@@ -86,7 +86,7 @@ _sudo := sudo $(_proxywrap_cmd)
 export _sudo
 
 .PHONY: build-all-images
-build-all-images: $(patsubst %,build-%-image,$(all_image_classes))
+build-all-images: check-all-release-names $(patsubst %,build-%-image,$(all_image_classes))
 
 .PHONY: build
 build: build-debs-ports build-debs-parts
@@ -334,7 +334,8 @@ $(patsubst %,check-%-release-name,$(all_image_classes)):
 	fi
 
 .PHONY: $(patsubst %,build-%-image,$(all_image_classes))
-$(patsubst %,build-%-image,$(all_image_classes)): check-all-release-names
+.SECONDEXPANSION:
+$(patsubst %,build-%-image,$(all_image_classes)): $$(patsubst build-%-image,check-%-release-name,$$@)
 	$(MAKE) image_class='$(patsubst build-%-image,%,$@)' \
 		release_name='$($(patsubst build-%-image,%,$@)_release_name)' \
 		rootfs-debootstrap rootfs-update rootfs-install-image
