@@ -8,7 +8,7 @@ mntpoint='/mnt'
 tmpdir=$(mktemp -d /tmp/VBoxGuestAdditions_${version}.iso.XXXXXX)
 
 cleanup() {
-  rm -f "$tmpdir"
+  rm -rf "$tmpdir"
 }
 
 trap cleanup 0 INT TERM
