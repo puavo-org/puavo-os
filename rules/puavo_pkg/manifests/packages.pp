@@ -59,6 +59,7 @@ class puavo_pkg::packages {
 			, 'smartboard'
 			, 'spotify-client'
 			, 'teams'
+			, 'tela-icon-theme'
 			, 'tilitin'
 			, 't-lasku'
 			, 'unityhub-appimage'
