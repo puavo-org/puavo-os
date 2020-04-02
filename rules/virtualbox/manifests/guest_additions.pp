@@ -1,11 +1,13 @@
 class virtualbox::guest_additions {
+  include ::kernels
   include ::packages
 
   exec {
     '/usr/local/lib/install-virtualbox-guest-additions && /usr/bin/touch /var/opt/.virtuabox-guest-additions-installed':
       creates => '/var/opt/.virtuabox-guest-additions-installed',
       require => [ File['/etc/login.defs'],
-                   File['/usr/local/lib/install-virtualbox-guest-additions'], ];
+                   File['/usr/local/lib/install-virtualbox-guest-additions'],
+                   Kernels::All_kernel_links['default'] ];
   }
 
   file {
