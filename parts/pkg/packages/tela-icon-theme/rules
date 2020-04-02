@@ -1,0 +1,32 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+tela_links='
+  /usr/share/icons/Tela
+  /usr/share/icons/Tela-dark
+'
+
+case "${command}" in
+  configure)
+    upstream_dir=$1
+    for f in $tela_links; do
+      mkdir -p "$(dirname "$f")"
+      ln -fns -T "${upstream_dir}${f}" "$f"
+    done
+    ;;
+  unconfigure)
+    rm -f $tela_links
+    ;;
+  unpack)
+    upstream_pack=$1
+    upstream_dir=$2
+
+    dpkg -x "$upstream_pack" "$upstream_dir"
+    ;;
+  *)
+    ;;
+esac
