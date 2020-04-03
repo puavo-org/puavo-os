@@ -1,4 +1,5 @@
 class image::bundle::desktop {
+  include ::autostart
   include ::blueman
   include ::chromium
   include ::desktop

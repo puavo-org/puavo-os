@@ -5,7 +5,9 @@
     "pattern": "VirtualBox",
     "parameters": {
       "puavo.service.vboxadd.enabled": "true",
-      "puavo.service.vboxadd-service.enabled": "true"
+      "puavo.service.vboxadd-service.enabled": "true",
+      "puavo.xdg.autostart.vboxclient": "true",
+      "puavo.xsessions.x11.98vboxadd-xclient": "true"
     }
   }
 ]

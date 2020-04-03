@@ -1,0 +1,33 @@
+#!/bin/sh
+
+set -eu
+
+enable_disable() {
+  puavo_conf_key=$1
+  service_dir=$2
+  service_filename=$3
+
+  enabled_path="${service_dir}/${service_filename}"
+  disabled_path="${service_dir}.disabled/${service_filename}"
+
+  if [ "$(puavo-conf "$puavo_conf_key")" = 'true' ]; then
+    if [ ! -e "$enabled_path" -a -e "$disabled_path" ]; then
+      mv "$disabled_path" "$enabled_path"
+    fi
+  else
+    if [ -e "$enabled_path" ]; then
+      mv "$enabled_path" "$disabled_path"
+    fi
+  fi
+}
+
+status=0
+
+enable_disable puavo.xsessions.autostart.vboxclient \
+               /etc/xdg/autostart                   \
+               vboxclient.desktop || status=1
+enable_disable puavo.xsessions.x11.98vboxadd-xclient \
+               /etc/X11/Xsession.d                   \
+               98vboxadd-xclient || status=1
+
+exit $status
