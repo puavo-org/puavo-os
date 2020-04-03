@@ -1,5 +1,6 @@
 class firefox {
   include ::packages
+  include ::puavo_external_files
   include ::puavo_pkg::packages
 
   # Firefox configuration system is still a mess... if there really is a more

@@ -19,6 +19,7 @@ class image::bundle::basic {
   include ::packages
   include ::pam
   include ::plymouth
+  include ::puavo_external_files
   include ::puavo_shutdown
   include ::puavomenu
   include ::rpcgssd

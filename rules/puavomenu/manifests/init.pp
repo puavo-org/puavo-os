@@ -2,6 +2,7 @@ class puavomenu {
   include ::dpkg
   include ::packages
   include ::puavo_conf
+  include ::puavo_external_files
 
   File { require => Package['puavomenu'], }
 

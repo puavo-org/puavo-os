@@ -1,6 +1,7 @@
 class art {
   include ::backgrounds
   include ::puavo_conf
+  include ::puavo_external_files
 
   file {
     '/etc/puavo-external-files-actions.d/background_images':
