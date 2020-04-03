@@ -7,6 +7,9 @@ class console {
       content => template('console/console-setup.default'),
       require => Package['console-setup'];
 
+    '/etc/init':
+      ensure => directory;
+
     '/etc/init/ttyS0.conf':
       content => template('console/ttyS0.conf');
 
