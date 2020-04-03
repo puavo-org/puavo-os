@@ -14,12 +14,14 @@ class bootserver_cups {
 
   file {
      '/etc/systemd/system/cups-watchdog.service':
-       require => File['/usr/local/lib/cups-watchdog'],
+       require => [ File['/usr/local/lib/cups-watchdog']
+                  , Package['systemd'] ],
        source  => 'puppet:///modules/bootserver_cups/cups-watchdog.service';
 
      '/etc/systemd/system/multi-user.target.wants/cups-watchdog.service':
        ensure  => link,
-       require => File['/etc/systemd/system/cups-watchdog.service'],
+       require => [ File['/etc/systemd/system/cups-watchdog.service']
+                  , Package['systemd'] ],
        target  => '/etc/systemd/system/cups-watchdog.service';
 
      '/usr/local/lib/cups-watchdog':
@@ -35,5 +37,6 @@ class bootserver_cups {
 
   Package <| title == cups
           or title == cups-client
-          or title == puavo-client |>
+          or title == puavo-client
+          or title == systemd |>
 }

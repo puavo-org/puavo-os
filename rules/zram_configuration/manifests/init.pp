@@ -1,6 +1,7 @@
 class zram_configuration {
   # These configurations are mostly copied from the Ubuntu "zram-config"
   # package.
+  include ::packages
 
   file {
     '/etc/systemd/system/multi-user.target.wants/zram-config.service':
@@ -10,7 +11,8 @@ class zram_configuration {
 
     '/etc/systemd/system/zram-config.service':
       require => [ File['/usr/local/bin/end-zram-swapping']
-                 , File['/usr/local/bin/init-zram-swapping'] ],
+                 , File['/usr/local/bin/init-zram-swapping']
+                 , Package['systemd'] ],
       source  => 'puppet:///modules/zram_configuration/zram-config.service';
 
     '/usr/local/bin/end-zram-swapping':
@@ -21,4 +23,6 @@ class zram_configuration {
       mode   => '0755',
       source => 'puppet:///modules/zram_configuration/init-zram-swapping';
   }
+
+  Package <| title == systemd |>
 }

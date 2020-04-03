@@ -21,7 +21,8 @@ class supplementary_groups {
       require => Package['libpam-modules'];
 
     '/etc/systemd/system/user@.service.d':
-      ensure => directory;
+      ensure  => directory,
+      require => Package['systemd'];
 
     '/etc/systemd/system/user@.service.d/override.conf':
       content => template('supplementary_groups/user@.service.d_override.conf'),

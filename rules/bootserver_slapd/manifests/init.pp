@@ -9,7 +9,8 @@ class bootserver_slapd {
       source => 'puppet:///modules/bootserver_slapd/local-apparmor-inclusions';
 
     '/etc/systemd/system/slapd.service':
-      source => 'puppet:///modules/bootserver_slapd/slapd.service';
+      require => Package['systemd'],
+      source  => 'puppet:///modules/bootserver_slapd/slapd.service';
 
     '/usr/local/lib/puavo-service-wait-for-slapd':
       mode   => '0755',
@@ -21,5 +22,5 @@ class bootserver_slapd {
       source => 'puppet:///modules/bootserver_slapd/setup_slapd';
   }
 
-  Package <| title == slapd |>
+  Package <| title == slapd or title == systemd |>
 }

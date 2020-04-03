@@ -14,7 +14,8 @@ class bootserver_samba {
       source => 'puppet:///modules/bootserver_samba/etc_pam.d_samba';
 
     '/etc/systemd/system/smbd.service.d':
-      ensure => directory;
+      ensure  => directory,
+      require => Package['systemd'];
 
     '/etc/systemd/system/smbd.service.d/override.conf':
       require => File['/usr/local/lib/puavo-service-wait-for-slapd'],
@@ -26,5 +27,5 @@ class bootserver_samba {
       source => 'puppet:///modules/bootserver_samba/setup_samba';
   }
 
-  Package <| title == samba or title == winbind |>
+  Package <| title == samba or title == systemd or title == winbind |>
 }

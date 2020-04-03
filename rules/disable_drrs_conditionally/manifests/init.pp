@@ -1,12 +1,16 @@
 class disable_drrs_conditionally {
+  include ::packages
+
   file {
     '/etc/systemd/system/multi-user.target.wants/puavo-maybe-disable-drrs.service':
       ensure  => link,
-      require => File['/etc/systemd/system/puavo-maybe-disable-drrs.service'],
+      require => [ File['/etc/systemd/system/puavo-maybe-disable-drrs.service']
+                 , Package['systemd'] ],
       target  => '/etc/systemd/system/puavo-maybe-disable-drrs.service';
 
     '/etc/systemd/system/puavo-maybe-disable-drrs.service':
-      require => File['/usr/local/lib/puavo-maybe-disable-drrs'],
+      require => [ File['/usr/local/lib/puavo-maybe-disable-drrs']
+                 , Package['systemd'] ],
       source  => 'puppet:///modules/disable_drrs_conditionally/puavo-maybe-disable-drrs.service';
 
     '/lib/systemd/system-sleep/puavo-maybe-disable-drrs':
@@ -17,4 +21,6 @@ class disable_drrs_conditionally {
       mode   => '0755',
       source => 'puppet:///modules/disable_drrs_conditionally/puavo-maybe-disable-drrs';
   }
+
+  Package <| title == systemd |>
 }

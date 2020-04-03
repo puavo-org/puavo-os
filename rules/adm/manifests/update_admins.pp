@@ -1,4 +1,6 @@
 class adm::update_admins {
+  include ::packages
+
   file {
     '/etc/systemd/system/multi-user.target.wants/puavo-update-admins.service':
       ensure  => link,
@@ -6,11 +8,14 @@ class adm::update_admins {
       target  => '/etc/systemd/system/puavo-update-admins.service';
 
     '/etc/systemd/system/puavo-update-admins.service':
-      require => File['/usr/local/sbin/puavo-update-admins'],
+      require => [ File['/usr/local/sbin/puavo-update-admins']
+                 , Package['systemd'] ],
       source  => 'puppet:///modules/adm/puavo-update-admins.service';
 
     '/usr/local/sbin/puavo-update-admins':
       mode   => '0755',
       source => 'puppet:///modules/adm/puavo-update-admins';
   }
+
+  Package <| title == systemd |>
 }

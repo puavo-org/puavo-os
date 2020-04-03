@@ -3,16 +3,17 @@ class google_cloud_print {
   include puavo_conf
 
   file {
-    '/etc/systemd/system/multi-user.target.wants/google-cloud-print.service':
-      ensure  => link,
-      require => File['/etc/systemd/system/google-cloud-print.service'],
-      target  => '/etc/systemd/system/google-cloud-print.service';
-
     '/etc/systemd/system/google-cloud-print.service':
-      require => [ Package['google-cloud-print-connector'],
-                   User['gcp'], ],
+      require => [ Package['google-cloud-print-connector']
+                 , Package['systemd']
+                 , User['gcp'] ],
       source  => 'puppet:///modules/google_cloud_print/google-cloud-print.service';
 
+    '/etc/systemd/system/multi-user.target.wants/google-cloud-print.service':
+      ensure  => link,
+      require => [ File['/etc/systemd/system/google-cloud-print.service']
+                 , Package['systemd'] ],
+      target  => '/etc/systemd/system/google-cloud-print.service';
   }
 
   ::puavo_conf::definition {
@@ -31,5 +32,5 @@ class google_cloud_print {
       uid        => 996;
   }
 
-  Package <| title == 'google-cloud-print-connector' |>
+  Package <| title == 'google-cloud-print-connector' or title == systemd |>
 }
