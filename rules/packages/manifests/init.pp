@@ -116,6 +116,7 @@ class packages {
     , 'ltrace'
     , 'lynx'
     , 'm4'
+    , 'mesa-utils'
     , 'mlocate'
     , 'moreutils'
     , 'nmap'
