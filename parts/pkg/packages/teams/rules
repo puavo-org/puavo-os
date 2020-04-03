@@ -5,6 +5,13 @@ set -eu
 command=$1
 shift
 
+add_disable_autostart() {
+  cat <<'EOF' > /etc/X11/Xsession.d/65teams-disable-autostart
+# teams creates this on every startup.
+rm -f ~/.config/autostart/teams.desktop
+EOF
+}
+
 teams_links='
   /usr/bin/teams
   /usr/share/applications/teams.desktop
@@ -19,6 +26,8 @@ case "${command}" in
       mkdir -p "$(dirname "$f")"
       ln -fns -T "${upstream_dir}${f}" "$f"
     done
+
+    add_disable_autostart
     ;;
   unconfigure)
     rm -f $teams_links
