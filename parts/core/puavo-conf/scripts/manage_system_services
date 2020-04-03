@@ -246,10 +246,11 @@ proc set_service {service_name enabled linkpaths} {
   foreach {source -> target} $linkpaths {
     if {$enabled} {
       set link_dir [file dirname $source]
-      if {![file isdirectory $link_dir]} { exec mkdir -p $link_dir }
-      exec ln -fns $target $source
+      if {![file isdirectory $link_dir]} { file mkdir $link_dir }
+      file delete $source
+      file link -symbolic $source $target
     } else {
-      exec rm -f $source
+      file delete $source
     }
   }
 }
