@@ -74,6 +74,7 @@ class packages {
     , 'nagios-plugins-contrib'
     , 'nginx'
     , 'openbsd-inetd'
+    , 'policykit-1'
     , 'python-numpy'
     , 'python-redis'
     , 'pxelinux'
