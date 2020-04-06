@@ -6,9 +6,20 @@ command=$1
 shift
 
 add_disable_autostart() {
+  # do this in a slightly complicated way in case user wants to enable
+  # the teams autostart
   cat <<'EOF' > /etc/X11/Xsession.d/65teams-disable-autostart
-# teams creates this on every startup.
-rm -f ~/.config/autostart/teams.desktop
+puavo_ms_teams_confdir=~/.config/Microsoft/Microsoft\ Teams
+if [ -e "${puavo_ms_teams_confdir}/desktop-config.json" \
+     -a ! -e "${puavo_ms_teams_confdir}/.puavo-disable-autostart" ]; then
+  jq '.["appPreferenceSettings"]["openAtLogin"] = false' \
+    "${puavo_ms_teams_confdir}/desktop-config.json" \
+      > "${puavo_ms_teams_confdir}/desktop-config.json.tmp" \
+    && mv "${puavo_ms_teams_confdir}/desktop-config.json.tmp" \
+          "${puavo_ms_teams_confdir}/desktop-config.json" \
+    && rm -f ~/.config/autostart/teams.desktop \
+    && touch "${puavo_ms_teams_confdir}/.puavo-disable-autostart"
+fi
 EOF
 }
 
