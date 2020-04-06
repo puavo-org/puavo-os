@@ -86,6 +86,7 @@ class PuavoErsApplet:
     self.menu.append(instructions)
     separator = Gtk.SeparatorMenuItem()
     self.menu.append(separator)
+    self.latest_chosen_password = None
 
     self.menu.show_all()
 
@@ -143,12 +144,12 @@ class PuavoErsApplet:
     return True
 
 
-  def update_passwords(self):
+  def update_passwords(self, force_update=False):
     error = None
     try:
       with open(EXAMS_JSON_FILE) as file:
         new_exams = json.load(file)
-        if (self.old_exams != new_exams):
+        if (force_update or self.old_exams != new_exams):
           self.update_passwords_in_ui(new_exams)
         self.old_exams = new_exams
     except OSError as e:
@@ -171,6 +172,9 @@ class PuavoErsApplet:
 
     for exam in new_exams:
       label = "%s (%s)" % (exam['decrypt_code'], exam['file_name'])
+      if exam['decrypt_code'] == self.latest_chosen_password:
+        label = '***** %s *****' % label
+
       button = Gtk.MenuItem(label)
       self.exams_by_widgets[button] = exam
       button.connect('activate', self.copy_password_to_clipboard)
@@ -182,6 +186,8 @@ class PuavoErsApplet:
   def copy_password_to_clipboard(self, widget):
     password = self.exams_by_widgets[widget]['decrypt_code']
     self.clipboard.set_text(password, -1)
+    self.latest_chosen_password = password
+    self.update_passwords(True)
 
 
 class PuavoErsExamSync (threading.Thread):
