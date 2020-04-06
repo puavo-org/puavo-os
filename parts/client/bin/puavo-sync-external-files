@@ -32,6 +32,10 @@ get_extfiles() {
   extfile_urls=''
   curl_args=''
 
+  if [ ! -d "$external_files_dir" ]; then
+    mkdir -p "$external_files_dir"
+  fi
+
   for extfile_name in $@; do
     extfile_urls="${extfile_urls} /v3/devices/$(hostname)/external_files/${extfile_name}"
     curl_args="${curl_args} --output ${external_files_dir}/${extfile_name}"
