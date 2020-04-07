@@ -170,8 +170,15 @@ class PuavoErsApplet:
     for button in self.password_buttons:
       button.destroy()
 
+    labels = {}
     for exam in new_exams:
       label = "%s (%s)" % (exam['decrypt_code'], exam['file_name'])
+      # Exams may have duplicates, in case there is one exam with multiple
+      # start_time/end_times.  Weed out duplicates based on labels.
+      if label in labels:
+        continue
+      labels[label] = 1
+
       if exam['decrypt_code'] == self.latest_chosen_password:
         label = '***** %s *****' % label
 
