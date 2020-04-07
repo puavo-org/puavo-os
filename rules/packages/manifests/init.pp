@@ -210,6 +210,7 @@ class packages {
     , 'python-notify'
     , 'shared-mime-info'
     , 'suckless-tools'
+    , 'unclutter'
     , 'xmobar'
     , 'xmonad' ]:
       tag => [ 'tag_desktop', 'tag_debian_desktop', ];
