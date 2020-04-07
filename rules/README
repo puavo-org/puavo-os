@@ -37,9 +37,6 @@ disable_accounts_service
     slows system down in Trusty, at login time and otherwise.  This module
     disables it (while leaving the package intact).
 
-disable_geoclue
-    Disable Ubuntu's geoclue-stuff.
-
 disable_hp_accel
     Disable HP accelerometer (triggers automatic screen rotation but does
     not work properly).
