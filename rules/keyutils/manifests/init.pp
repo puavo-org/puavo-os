@@ -14,12 +14,12 @@ class keyutils {
   file {
     '/etc/request-key.d/cifs.idmap.conf':
       content => template('keyutils/cifs.idmap.conf'),
-      require => Package['keyutils'];
+      require => Package['cifs-utils'];
 
     '/etc/request-key.d/cifs.spnego.conf':
       content => template('keyutils/cifs.spnego.conf'),
-      require => Package['keyutils'];
+      require => Package['cifs-utils'];
   }
 
-  Package <| title == keyutils |>
+  Package <| title == "cifs-utils" |>
 }

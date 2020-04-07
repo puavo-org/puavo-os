@@ -61,6 +61,7 @@ class packages {
   @package {
     [ 'bind9'
     , 'bind9utils'
+    , 'cifs-utils'
     , 'dnsmasq'
     , 'incron'
     , 'isc-dhcp-server'
