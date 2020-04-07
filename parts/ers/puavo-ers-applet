@@ -172,6 +172,11 @@ class PuavoErsApplet:
 
     labels = {}
     for exam in new_exams:
+      # do not show passwords for old exams
+      exam_end_time = datetime.datetime.fromtimestamp(exam['end_time'])
+      if exam_end_time < datetime.datetime.now():
+        continue
+
       label = "%s (%s)" % (exam['decrypt_code'], exam['file_name'])
       # Exams may have duplicates, in case there is one exam with multiple
       # start_time/end_times.  Weed out duplicates based on labels.
