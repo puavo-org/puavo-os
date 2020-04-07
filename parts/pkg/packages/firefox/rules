@@ -18,6 +18,7 @@ case "$LANG" in
   de_*) firefox_dir=/opt/firefox/de    ;;
   fi_*) firefox_dir=/opt/firefox/fi    ;;
   fr_*) firefox_dir=/opt/firefox/fr    ;;
+  id_*) firefox_dir=/opt/firefox/id    ;;
   sv_*) firefox_dir=/opt/firefox/sv-SE ;;
   *)    firefox_dir=/opt/firefox/en-GB ;;
 esac

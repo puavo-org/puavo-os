@@ -10,6 +10,7 @@ import gi
 import glob
 import json
 import os
+import re
 import requests
 import shutil
 import signal
@@ -86,6 +87,7 @@ class PuavoErsApplet:
     self.menu.append(instructions)
     separator = Gtk.SeparatorMenuItem()
     self.menu.append(separator)
+    self.latest_chosen_password = None
 
     self.menu.show_all()
 
@@ -143,12 +145,12 @@ class PuavoErsApplet:
     return True
 
 
-  def update_passwords(self):
+  def update_passwords(self, force_update=False):
     error = None
     try:
       with open(EXAMS_JSON_FILE) as file:
         new_exams = json.load(file)
-        if (self.old_exams != new_exams):
+        if (force_update or self.old_exams != new_exams):
           self.update_passwords_in_ui(new_exams)
         self.old_exams = new_exams
     except OSError as e:
@@ -169,8 +171,28 @@ class PuavoErsApplet:
     for button in self.password_buttons:
       button.destroy()
 
+    labels = {}
     for exam in new_exams:
+      if not re.match('^exam_', exam['file_name']):
+        print('not showing password for exam %s' % exam['file_name'],
+              file=sys.stderr)
+        continue
+
+      # do not show passwords for old exams
+      exam_end_time = datetime.datetime.fromtimestamp(exam['end_time'])
+      if exam_end_time < datetime.datetime.now():
+        continue
+
       label = "%s (%s)" % (exam['decrypt_code'], exam['file_name'])
+      # Exams may have duplicates, in case there is one exam with multiple
+      # start_time/end_times.  Weed out duplicates based on labels.
+      if label in labels:
+        continue
+      labels[label] = 1
+
+      if exam['decrypt_code'] == self.latest_chosen_password:
+        label = '***** %s *****' % label
+
       button = Gtk.MenuItem(label)
       self.exams_by_widgets[button] = exam
       button.connect('activate', self.copy_password_to_clipboard)
@@ -182,6 +204,8 @@ class PuavoErsApplet:
   def copy_password_to_clipboard(self, widget):
     password = self.exams_by_widgets[widget]['decrypt_code']
     self.clipboard.set_text(password, -1)
+    self.latest_chosen_password = password
+    self.update_passwords(True)
 
 
 class PuavoErsExamSync (threading.Thread):
@@ -232,9 +256,12 @@ class PuavoErsExamSync (threading.Thread):
       try:
         exam_file_name = exam['file_name']
         if not isinstance(exam_file_name, str):
-          print('could not determine exam filename', file=sys.stderr)
+          raise Exception('could not determine exam filename')
         if exam_file_name == '':
-          print('could not determine exam filename', file=sys.stderr)
+          raise Exception('could not determine exam filename')
+        if not re.match('^exam_', exam_file_name):
+          raise Exception('not syncing exam with a filename %s' \
+                            % exam_file_name)
 
         self.sync_one_exam(exam_file_name, exam)
         exam_name_list.append(exam_file_name)
@@ -242,7 +269,7 @@ class PuavoErsExamSync (threading.Thread):
         print('error in syncing one exam: %s' % e, file=sys.stderr)
 
     # clean up old exams that no longer belong to exams subdirectories
-    for exam_path in glob.glob( os.path.join(EXAMS_DIR, '*.meb') ):
+    for exam_path in glob.glob( os.path.join(EXAMS_DIR, 'exam_*.meb') ):
       if not os.path.basename(exam_path) in exam_name_list:
         # We check that file hard link count must be over 1, in which case
         # it has already been archived and we can delete it here.
@@ -311,14 +338,18 @@ class PuavoErsExamZipper (threading.Thread):
   def sort_exams_to_dirs(self):
     self.current_time = datetime.datetime.now()
     with open(EXAMS_JSON_FILE) as file:
-      self.current_exams = json.load(file)
+      current_exams = json.load(file)
 
-    archived_exams = []
-    current_exams  = []
-    upcoming_exams = []
+    archived_exams          = []
+    currently_running_exams = []
+    upcoming_exams          = []
 
-    for exam in self.current_exams:
+    for exam in current_exams:
       try:
+        if not re.match('^exam_', exam['file_name']):
+          raise Exception('ignoring exam with a file name %s' \
+                            % exam['file_name'])
+
         exam_start_time = datetime.datetime.fromtimestamp(exam['start_time'])
         exam_end_time   = datetime.datetime.fromtimestamp(exam['end_time'])
 
@@ -328,20 +359,20 @@ class PuavoErsExamZipper (threading.Thread):
           upcoming_exams.append(exam['file_name'])
         elif exam_start_time <= self.current_time \
           and self.current_time < exam_end_time:
-            current_exams.append(exam['file_name'])
+            currently_running_exams.append(exam['file_name'])
       except Exception as e:
-        print('could not handle an exam for some reason', file=sys.stderr)
+        print('could not handle an exam: %s' % e, file=sys.stderr)
 
     self.link_exams_to_dir(EXAMS_ARCHIVE_DIR, archived_exams,
                            remove_other=False)
-    self.link_exams_to_dir(KTP_JAKO_DIR, current_exams)
+    self.link_exams_to_dir(KTP_JAKO_DIR, currently_running_exams)
     self.zip_todays_exams()
     self.link_exams_to_dir(EXAMS_UPCOMING_DIR, upcoming_exams)
 
 
   def link_exams_to_dir(self, linkdir, exam_names_list, remove_other=True):
     if remove_other:
-      for path in glob.glob( os.path.join(linkdir, '*.meb') ):
+      for path in glob.glob( os.path.join(linkdir, 'exam_*.meb') ):
         if not os.path.basename(path) in exam_names_list:
           rm_f(path)
 
@@ -355,7 +386,7 @@ class PuavoErsExamZipper (threading.Thread):
 
 
   def zip_todays_exams(self):
-    meb_files = glob.glob( os.path.join(KTP_JAKO_DIR, '*.meb') )
+    meb_files = glob.glob( os.path.join(KTP_JAKO_DIR, 'exam_*.meb') )
     meb_files.sort()
 
     current_date = self.current_time.strftime('%Y-%m-%d')
