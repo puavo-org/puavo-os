@@ -1,4 +1,16 @@
 class pam {
+  include ::packages
+
+  $pam_packages = [ 'libpam-ccreds'
+                  , 'libpam-gnome-keyring'
+                  , 'libpam-krb5'
+                  , 'libpam-ldapd'
+                  , 'libpam-modules'
+                  , 'libpam-runtime'
+                  , 'libpam-systemd'
+                  , 'puavo-pam' ]
+
+  File { require => Package[$pam_packages] }
   file {
     '/etc/pam.d/common-account':
       source => 'puppet:///modules/pam/common-account';
@@ -43,4 +55,6 @@ class pam {
       ensure => link,
       target => 'ccreds/ccreds.db';
   }
+
+  Package <| title == $pam_packages |>
 }
