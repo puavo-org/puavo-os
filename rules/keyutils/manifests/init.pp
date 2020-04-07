@@ -1,5 +1,5 @@
 class keyutils {
-  require packages
+  include ::packages
 
   dpkg::divert {
     '/etc/request-key.d/cifs.idmap.conf':
@@ -13,10 +13,12 @@ class keyutils {
 
   file {
     '/etc/request-key.d/cifs.idmap.conf':
-      content => template('keyutils/cifs.idmap.conf');
+      content => template('keyutils/cifs.idmap.conf'),
+      require => Package['keyutils'];
 
     '/etc/request-key.d/cifs.spnego.conf':
-      content => template('keyutils/cifs.spnego.conf');
+      content => template('keyutils/cifs.spnego.conf'),
+      require => Package['keyutils'];
   }
 
   Package <| title == keyutils |>

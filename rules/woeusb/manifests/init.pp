@@ -1,5 +1,5 @@
 class woeusb {
-  require ::packages
+  include ::packages
 
   exec {
     'fetch woeusb':

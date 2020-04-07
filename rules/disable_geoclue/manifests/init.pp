@@ -1,13 +1,14 @@
 class disable_geoclue {
   include ::dpkg
-  require ::packages
+  include ::packages
 
   dpkg::statoverride {
     [ '/usr/lib/geoclue/geoclue-master'
     , '/usr/lib/ubuntu-geoip/ubuntu-geoip-provider' ]:
-      owner => 'root',
-      group => 'root',
-      mode  => '0000';
+      owner   => 'root',
+      group   => 'root',
+      mode    => '0000',
+      require => Package['indicator-datetime'];
   }
 
   # indicator-datetime depends on geoclue and geoclue-ubuntu-geoip,

@@ -1,5 +1,5 @@
 class gnome_terminal {
-  require packages
+  include ::packages
 
   exec {
     "set as x-terminal-emulator":
