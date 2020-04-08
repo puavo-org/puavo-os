@@ -232,8 +232,8 @@ prepare-for-squashfs:
 # this target requires that this host is running a puavo-os system
 .PHONY: rootfs-install-image
 rootfs-install-image: rootfs-image $(install_image_dir)
-	puavo-make-install-disk --source_image '$(image_dir)/$(_image_file)' \
-	    --target_image '$(install_image_dir)/$(_image_file)' \
+	puavo-make-install-disk --source-image '$(image_dir)/$(_image_file)' \
+	    --target-image '$(install_image_dir)/$(_image_file)' \
 	    --with-vdi
 
 .PHONY: rootfs-shell
