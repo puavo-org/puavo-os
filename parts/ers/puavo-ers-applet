@@ -173,7 +173,7 @@ class PuavoErsApplet:
 
     labels = {}
     for exam in new_exams:
-      if not re.match('^exam_', exam['file_name']):
+      if not re.match('^exam_.*\.meb$', exam['file_name']):
         print('not showing password for exam %s' % exam['file_name'],
               file=sys.stderr)
         continue
@@ -259,7 +259,7 @@ class PuavoErsExamSync (threading.Thread):
           raise Exception('could not determine exam filename')
         if exam_file_name == '':
           raise Exception('could not determine exam filename')
-        if not re.match('^exam_', exam_file_name):
+        if not re.match('^exam_.*\.meb$', exam_file_name):
           raise Exception('not syncing exam with a filename %s' \
                             % exam_file_name)
 
@@ -346,7 +346,7 @@ class PuavoErsExamZipper (threading.Thread):
 
     for exam in current_exams:
       try:
-        if not re.match('^exam_', exam['file_name']):
+        if not re.match('^exam_.*\.meb$', exam['file_name']):
           raise Exception('ignoring exam with a file name %s' \
                             % exam['file_name'])
 
