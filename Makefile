@@ -31,12 +31,16 @@ ifeq "$(images_urlbase)" ""
   images_urlbase	:= https://$(remote_mirror)
 endif
 
-ifeq "$(rootfs_dir)" ""
-  rootfs_dir            := $(rootfs_dir_base)/$(default_image_class)
-endif
-
 ifeq "$(install_image_dir)" ""
   install_image_dir     := $(image_dir)/install
+endif
+
+ifeq "$(rootfs_dir)" ""
+  ifeq "$(image_class)" ""
+    rootfs_dir  := $(rootfs_dir_base)/$(default_image_class)
+  else
+    rootfs_dir  := $(rootfs_dir_base)/$(image_class)
+  endif
 endif
 
 _adm_user	:= puavo-os
