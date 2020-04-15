@@ -70,7 +70,7 @@ if [ -s "$pepperflash_path" ]; then
 fi
 
 exec /usr/bin/google-chrome-stable.puavopkg $default_args \
-       --simulate-outdated-no-au='Tue, 31 Dec 2099 23:59:59 GMT' "$@"
+       --simulate-outdated-no-au='Thu, 31 Dec 2099 23:59:59 GMT' "$@"
 EOF
   chmod 755 /usr/bin/google-chrome-stable.tmp
   mv /usr/bin/google-chrome-stable.tmp /usr/bin/google-chrome-stable
