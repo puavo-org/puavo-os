@@ -145,7 +145,6 @@ class packages {
     , 'tmux'
     , 'tshark'
     , 'ulogd2'
-    , 'vagrant'
     , 'vinagre'
     , 'vrms'
     , 'w3m'
