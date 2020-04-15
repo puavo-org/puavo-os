@@ -9,6 +9,12 @@
 set -eu
 
 monitor_is_connected() {
+  # This test does not work except on Xorg, but maybe Wayland does not need
+  # it either?
+  if [ "$(puavo-conf puavo.graphics.display_server)" != 'xorg' ]; then
+    return 0
+  fi
+
   xrandr -q | awk '
     BEGIN { status = 1 }
     $2 == "connected" { status = 0 }

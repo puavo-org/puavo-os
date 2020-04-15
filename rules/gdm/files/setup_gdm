@@ -8,8 +8,7 @@ puavo-template /etc/gdm3/daemon.conf <<'EOF'
 # See /usr/share/gdm/gdm.schemas for a list of available options.
 
 [daemon]
-# Uncoment the line below to force the login screen to use Xorg
-WaylandEnable=false
+{if (puavo_graphics_display_server == "xorg") }WaylandEnable=false{else}WaylandEnable=true{end}
 
 # Enabling automatic login
 {if (puavo_guestlogin_enabled == "true")

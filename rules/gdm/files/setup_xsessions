@@ -4,11 +4,9 @@ set -eu
 
 xsession_dirs="
   /usr/share/gdm/BuiltInSessions
-  /usr/share/xsessions
   /usr/share/wayland-sessions
+  /usr/share/xsessions
 "
-
-puavo_xsessions_dir="/usr/share/puavo-ltsp-client/xsessions"
 
 #
 # setup default xsession
@@ -16,10 +14,15 @@ puavo_xsessions_dir="/usr/share/puavo-ltsp-client/xsessions"
 
 default_xsession=$(puavo-conf puavo.xsessions.default)
 
+if [ "$default_xsession" = 'puavo-desktop' \
+       -a "$(puavo-conf puavo.graphics.display_server)" = 'wayland' ]; then
+  default_xsession='puavo-desktop-wayland'
+fi
+
 mkdir -p /etc/X11/sessions
 
 default_xsession_desktop=
-for xsession_dir in $puavo_xsessions_dir $xsession_dirs; do
+for xsession_dir in $xsession_dirs; do
   default_xsession_desktop="${xsession_dir}/${default_xsession}.desktop"
   if [ -e "${default_xsession_desktop}.puavo_disabled" ]; then
     mv "${default_xsession_desktop}.puavo_disabled" \
@@ -56,7 +59,7 @@ else
   done
 fi
 
-# setup alternative session languages
+# setup alternative session languages (for Xorg-based sessions)
 if [ -e /etc/X11/sessions/puavo-desktop.desktop ]; then
   alt_languages=$(puavo-conf puavo.xsessions.alternative_languages)
   for lang in $alt_languages; do

@@ -41,7 +41,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(datarootdir)/pam-configs
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/definitions
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/profile-overwrites
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-ltsp-client/xsessions
+	mkdir -p $(DESTDIR)$(datarootdir)/wayland-sessions
 	mkdir -p $(DESTDIR)$(datarootdir)/xsessions
 	mkdir -p $(DESTDIR)/var/lib/puavo-desktop/shared
 	mkdir -p $(DESTDIR)/var/lib/puavo-desktop/users
@@ -49,6 +49,9 @@ installdirs :
 
 .PHONY : install
 install : installdirs
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/gdm/greeter/autostart \
+		gdm/greeter/autostart/puavo-run-xrandr.desktop
+
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/pam-configs \
 		pam/configs/puavo-local-access
 
@@ -58,11 +61,8 @@ install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-conf/profile-overwrites \
 		profile-overwrites/*.json
 
-	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/gdm/greeter/autostart \
-		gdm/greeter/autostart/puavo-run-xrandr.desktop
-
-	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-ltsp-client/xsessions \
-		xsessions/*
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/wayland-sessions \
+		wayland-sessions/*
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/xsessions \
 		xsessions/*
