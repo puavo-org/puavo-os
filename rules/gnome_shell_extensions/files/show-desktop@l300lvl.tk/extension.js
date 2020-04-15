@@ -32,8 +32,8 @@ const Atk = imports.gi.Atk;
 const Clutter = imports.gi.Clutter;
 
     //moved from gio why did we do this anyways for hover icons move away from stylesheet _finally_
-const baseGIcon = 'my-show-desktop';
-const hoverGIcon = 'my-show-desktop-hover';
+const baseGIcon = 'user-desktop';
+const hoverGIcon = 'purple-user-desktop';
 
 let indicatorBox, icon, _desktopShown, _alreadyMinimizedWindows, box, _settings, shouldrestore;
 
