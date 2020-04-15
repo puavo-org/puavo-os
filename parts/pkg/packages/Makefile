@@ -66,6 +66,7 @@ packagedirs += tilitin
 packagedirs += t-lasku
 packagedirs += ubuntu-wallpapers
 packagedirs += unityhub-appimage
+packagedirs += vagrant
 packagedirs += veracrypt
 packagedirs += vidyo-client
 packagedirs += zoom
