@@ -7,7 +7,8 @@ set -eu
 # so if you change the interpreter or the script name, please make sure to
 # change that as well.  Thank you!
 
-if [ "${1:-}" = 'xorg' -a -x ~/.xsession ]; then
+if [ "$(puavo-conf puavo.graphics.display_server)" = 'xorg' \
+     -a -x ~/.xsession ]; then
   /etc/X11/Xsession
 else
   gnome-session "$@"
