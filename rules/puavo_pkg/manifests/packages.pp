@@ -12,7 +12,8 @@ class puavo_pkg::packages {
   $buster_specific_packages  = [ 'celestia'
                                , 'eclipse'
                                , 'netbeans'
-                               , 'ubuntu-wallpapers' ]
+                               , 'ubuntu-wallpapers'
+                               , 'vagrant' ]
 
   $available_packages = [ 'abitti-naksu'
                         , 'adobe-flashplugin'
