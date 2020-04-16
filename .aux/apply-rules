@@ -8,10 +8,22 @@ set -eu
 test -e /etc/mtab || touch /etc/mtab
 
 mkdir -p /var/log/puavo/puppet
-env LC_CTYPE=en_US.UTF-8 puppet apply               \
-    --detailed-exitcodes                            \
-    --logdest console                               \
-    --logdest /var/log/puavo/puppet/apply-rules.log \
-    --modulepath rules                              \
-    rules/site.pp \
-  || [ $? -eq 2 ]
+
+apply_rules() {
+  env LC_CTYPE=en_US.UTF-8 puppet apply               \
+      --detailed-exitcodes                            \
+      --logdest console                               \
+      --logdest /var/log/puavo/puppet/apply-rules.log \
+      --modulepath rules                              \
+      rules/site.pp
+}
+
+# With --detailed-exitcodes, we get code 2 if some resources where changed,
+# and that is okay the first time we run this.
+apply_rules || [ $? -eq 2 ]
+
+# Next time however, there should be no changes, otherwise there is
+# some problem with the rules that should be fixed (running once did
+# not configure everything as it should be, and we will never know for
+# sure unless we test it).
+apply_rules
