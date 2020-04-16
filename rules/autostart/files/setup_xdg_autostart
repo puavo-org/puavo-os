@@ -23,11 +23,11 @@ enable_disable() {
 
 status=0
 
-enable_disable puavo.xsessions.autostart.vboxclient \
-               /etc/xdg/autostart                   \
+enable_disable puavo.xdg.autostart.vboxclient \
+               /etc/xdg/autostart             \
                vboxclient.desktop || status=1
-enable_disable puavo.xsessions.x11.98vboxadd-xclient \
-               /etc/X11/Xsession.d                   \
+enable_disable puavo.xdg.x11.98vboxadd-xclient \
+               /etc/X11/Xsession.d             \
                98vboxadd-xclient || status=1
 
 exit $status
