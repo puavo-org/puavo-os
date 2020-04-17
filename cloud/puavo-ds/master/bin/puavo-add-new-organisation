@@ -8,6 +8,7 @@ $LOAD_PATH.unshift(
   )
 )
 
+require 'open3'
 require 'optparse'
 require 'puavo-ds'
 
@@ -331,3 +332,34 @@ ldap_organisation = LdapOrganisation.first
 ldap_organisation.owner = Array(ldap_organisation.owner).push user.dn
 ldap_organisation.save
 
+#
+# create cross-realm support principals
+#
+
+top_realm = kerberos_realm.split('.')[1..-1].join('.')
+cross_realm_password = newpass(32)
+
+add_princ_cmd \
+  = %w(addprinc -kvno 1 -e des3-hmac-sha1:normal,aes256-cts:normal) \
+      + %w(-requires_preauth) + [ "krbtgt/#{ top_realm }@#{ kerberos_realm }" ]
+kadmin_stdin_str = "#{ cross_realm_password }\n#{ cross_realm_password }\n"
+
+out, errmsg, status = Open3.capture3('kadmin.local', '-r', top_realm,
+                                       *add_princ_cmd,
+                                     stdin_data: kadmin_stdin_str)
+if status.exitstatus != 0 then
+  warn "could not create cross-realm principal for #{ kerberos_realm } to" \
+         + " #{ top_realm }: #{ errmsg }"
+  exit 1
+end
+
+out, errmsg, status = Open3.capture3('kadmin.local', '-r', kerberos_realm,
+                                       *add_princ_cmd,
+                                     stdin_data: kadmin_stdin_str)
+if status.exitstatus != 0 then
+  warn "could not create cross-realm principal to #{ kerberos_realm }: " \
+         + errmsg
+  exit 1
+end
+
+puts "Created cross-realm support from #{ kerberos_realm } to #{ top_realm }."
