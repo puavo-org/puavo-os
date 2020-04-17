@@ -3,8 +3,10 @@ class wlanap {
 
   service {
     'hostapd':
-      enable => false;
+      enable  => false,
+      require => Package['hostapd'];
   }
 
-  Package <| title == puavo-wlanap |>
+  Package <| title == hostapd
+          or title == puavo-wlanap |>
 }
