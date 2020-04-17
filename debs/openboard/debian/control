@@ -41,6 +41,7 @@ Architecture: all
 Depends: libc6,
  libavcodec58,
  libavformat58,
+ libfdk-aac1,
  libgcc1,
  libgomp1,
  libqt5core5a,
