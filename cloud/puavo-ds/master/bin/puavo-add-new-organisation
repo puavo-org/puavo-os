@@ -90,6 +90,10 @@ parser = OptionParser.new do |opts|
     options[:password] = password
   end
 
+  opts.on("--no-cross-realm", "No cross realm") do |ncr|
+    options[:no_cross_realm] = ncr
+  end
+
   opts.on_tail("-h", "--help", "Show this message") do
     puts opts
     exit
@@ -328,6 +332,10 @@ ldap_organisation.save
 #
 # create cross-realm support principals
 #
+
+if options[:no_cross_realm] then
+  exit(0)
+end
 
 top_realm = kerberos_realm.split('.')[1..-1].join('.')
 cross_realm_password = newpass(32)
