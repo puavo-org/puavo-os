@@ -1,6 +1,6 @@
 # LDAP master setup tools
 
-Install package from [opinsys/opinsys-debs](https://github.com/opinsys/opinsys-debs/tree/master/packages/puavo-ds)
+Install package puavo-ds-master [puavo-org/puavo-os](https://github.com/puavo-org/puavo-os/tree/master/cloud/puavo-ds)
 
 As root init database
 
