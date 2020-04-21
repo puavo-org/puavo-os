@@ -44,7 +44,7 @@ parser = OptionParser.new do |opts|
 
   opts.on("--domain [DOMAIN]",
     "Force domain. By default it's generated from organisation and top domain"
-  ) do |top_domain|
+  ) do |domain|
     options[:domain] = domain
   end
 
