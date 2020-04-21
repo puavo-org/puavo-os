@@ -233,14 +233,32 @@ puts `echo "#{master_password}\\n#{master_password}\\n" | kdb5_ldap_util -D #{PU
 puts `echo "#{PUAVO_ETC.ds_kdc_password}\\n#{PUAVO_ETC.ds_kdc_password}\\n" | /usr/sbin/kdb5_ldap_util stashsrvpw -f /etc/krb5.secrets "#{PUAVO_ETC.ds_kdc_dn}" 2>/dev/null`
 puts `echo "#{PUAVO_ETC.ds_kadmin_password}\\n#{PUAVO_ETC.ds_kadmin_password}\\n" | /usr/sbin/kdb5_ldap_util stashsrvpw -f /etc/krb5.secrets "#{PUAVO_ETC.ds_kadmin_dn}" 2>/dev/null`
 
+top_organisation = PUAVO_ETC.topdomain.split('.').first
+samba_domain = top_organisation.upcase
+suffix = PUAVO_ETC.topdomain.split('.').map { |dc| "dc=#{ dc }" }.join(',')
+toplevel_organisation_admin_pw = KerberosSettings.generate_new_password(20)
 
-FileUtils.rm_rf("/etc/ldap/krb5.keytab")
+if !system('puavo-add-new-organisation', '--yes', top_organisation,
+             '--domain',       PUAVO_ETC.topdomain,
+             '--given-name',   'Admin',
+             '--krb-realm',    PUAVO_ETC.krb_toprealm,
+             '--no-cross-realm',
+             '--password',     toplevel_organisation_admin_pw,
+             '--samba-domain', samba_domain,
+             '--suffix',       suffix,
+             '--surname',      'Administrator',
+             '--username',     'admin') then
+  warn "error when adding new toplevel organisation #{ PUAVO_ETC.topdomain }"
+  exit 1
+end
+
+FileUtils.rm_rf('/etc/krb5.keytab')
 puts assert_exec "kadmin.local -r #{PUAVO_ETC.krb_toprealm} -q \"addprinc -randkey ldap/#{PUAVO_ETC.ldap_master}\""
-puts assert_exec "kadmin.local -r #{PUAVO_ETC.krb_toprealm} -q \"ktadd -norandkey -k /etc/ldap/krb5.keytab ldap/#{PUAVO_ETC.ldap_master}\""
+puts assert_exec "kadmin.local -r #{PUAVO_ETC.krb_toprealm} -q \"ktadd -norandkey -k /etc/krb5.keytab ldap/#{PUAVO_ETC.ldap_master}\""
 
 # Fix file permissions
-FileUtils.chown 'root', 'openldap', '/etc/ldap/krb5.keytab'
-FileUtils.chmod 0640, '/etc/ldap/krb5.keytab'
+FileUtils.chown 'root', 'openldap', '/etc/krb5.keytab'
+FileUtils.chmod 0640, '/etc/krb5.keytab'
 
 
 puts "Test: ldapsearch -ZZ -h #{ PUAVO_ETC.ldap_master } -D uid=admin,o=puavo -w #{ @rootpw } -x -b o=puavo"
