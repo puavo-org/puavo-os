@@ -224,18 +224,20 @@ kerberos_configuration = KerberosSettings.new(:ldap_host => PUAVO_ETC.ldap_maste
 kerberos_configuration.write_configurations_to_file
 kerberos_configuration.replace_server_configurations
 
+topdomain_ldap_suffix \
+  = PUAVO_ETC.topdomain.split('.').map { |dc| "dc=#{ dc }" }.join(',')
+
 # FIXME
 master_password = KerberosSettings.generate_new_password(20)
 
 puts "master password: #{master_password}"
 
-puts `echo "#{master_password}\\n#{master_password}\\n" | kdb5_ldap_util -D #{PUAVO_ETC.ldap_dn} create -k aes256-cts-hmac-sha1-96 -subtrees \"o=puavo\" -s -sf /etc/krb5kdc/stash.toprealm -H ldaps://#{PUAVO_ETC.ldap_master} -r #{PUAVO_ETC.krb_toprealm} -w #{ @rootpw }`
+puts `echo "#{master_password}\\n#{master_password}\\n" | kdb5_ldap_util -D #{PUAVO_ETC.ldap_dn} create -k aes256-cts-hmac-sha1-96 -subtrees \"#{topdomain_ldap_suffix}\" -s -sf /etc/krb5kdc/stash.toprealm -H ldaps://#{PUAVO_ETC.ldap_master} -r #{PUAVO_ETC.krb_toprealm} -w #{ @rootpw }`
 puts `echo "#{PUAVO_ETC.ds_kdc_password}\\n#{PUAVO_ETC.ds_kdc_password}\\n" | /usr/sbin/kdb5_ldap_util stashsrvpw -f /etc/krb5.secrets "#{PUAVO_ETC.ds_kdc_dn}" 2>/dev/null`
 puts `echo "#{PUAVO_ETC.ds_kadmin_password}\\n#{PUAVO_ETC.ds_kadmin_password}\\n" | /usr/sbin/kdb5_ldap_util stashsrvpw -f /etc/krb5.secrets "#{PUAVO_ETC.ds_kadmin_dn}" 2>/dev/null`
 
 top_organisation = PUAVO_ETC.topdomain.split('.').first
 samba_domain = top_organisation.upcase
-suffix = PUAVO_ETC.topdomain.split('.').map { |dc| "dc=#{ dc }" }.join(',')
 toplevel_organisation_admin_pw = KerberosSettings.generate_new_password(20)
 
 if !system('puavo-add-new-organisation', '--yes', top_organisation,
@@ -245,7 +247,7 @@ if !system('puavo-add-new-organisation', '--yes', top_organisation,
              '--no-cross-realm',
              '--password',     toplevel_organisation_admin_pw,
              '--samba-domain', samba_domain,
-             '--suffix',       suffix,
+             '--suffix',       topdomain_ldap_suffix,
              '--surname',      'Administrator',
              '--username',     'admin') then
   warn "error when adding new toplevel organisation #{ PUAVO_ETC.topdomain }"
