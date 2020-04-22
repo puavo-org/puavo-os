@@ -91,7 +91,7 @@ parser = OptionParser.new do |opts|
   end
 
   opts.on("--no-cross-realm", "No cross realm") do |ncr|
-    options[:no_cross_realm] = ncr
+    options[:no_cross_realm] = true
   end
 
   opts.on_tail("-h", "--help", "Show this message") do
