@@ -224,9 +224,6 @@ kerberos_configuration = KerberosSettings.new(:ldap_host => PUAVO_ETC.ldap_maste
 kerberos_configuration.write_configurations_to_file
 kerberos_configuration.replace_server_configurations
 
-topdomain_ldap_suffix \
-  = PUAVO_ETC.topdomain.split('.').map { |dc| "dc=#{ dc }" }.join(',')
-
 # FIXME
 master_password = KerberosSettings.generate_new_password(20)
 
@@ -236,6 +233,8 @@ puts `echo "#{PUAVO_ETC.ds_kdc_password}\\n#{PUAVO_ETC.ds_kdc_password}\\n" | /u
 puts `echo "#{PUAVO_ETC.ds_kadmin_password}\\n#{PUAVO_ETC.ds_kadmin_password}\\n" | /usr/sbin/kdb5_ldap_util stashsrvpw -f /etc/krb5.secrets "#{PUAVO_ETC.ds_kadmin_dn}" 2>/dev/null`
 
 top_organisation = PUAVO_ETC.topdomain.split('.').first
+topdomain_ldap_suffix \
+  = PUAVO_ETC.topdomain.split('.').map { |dc| "dc=#{ dc }" }.join(',')
 samba_domain = top_organisation.upcase
 toplevel_organisation_admin_pw = KerberosSettings.generate_new_password(20)
 
