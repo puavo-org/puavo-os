@@ -180,7 +180,7 @@ FileUtils.rm_r Dir.glob('/etc/ldap/slapd.d/*')
 end
 
 # Replace slapd configuration file
-puts "Replace /etc/defaul/slapd configuration file"
+puts "Replace /etc/default/slapd configuration file"
 tempfile = parse_erb("default_slapd")
 FileUtils.cp(tempfile.path, "/etc/default/slapd")
 tempfile.delete
