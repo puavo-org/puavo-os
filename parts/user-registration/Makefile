@@ -25,7 +25,7 @@ installdirs:
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(datarootdir)/applications
 	mkdir -p $(DESTDIR)$(datarootdir)/puavo-conf/definitions
-	mkdir -p $(DESTDIR)$(datarootdir)/puavo-user-registration
+	mkdir -p $(DESTDIR)$(datarootdir)/puavo-user-registration/data
 	mkdir -p $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES
 
 .PHONY: install
@@ -35,11 +35,9 @@ install: installdirs
 		puavo-user-registration.desktop
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-conf/definitions \
 		puavo-user-registration.json
-	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-user-registration \
-		background_1366.png \
-		background_1920.png \
-		puavo-user-registration.css \
-		puavo-user-registration.glade
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-user-registration *.py
+	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/puavo-user-registration/data \
+		data/*
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/locale/fi/LC_MESSAGES \
 		po/fi/puavo-user-registration.mo
 
