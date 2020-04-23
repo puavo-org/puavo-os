@@ -35,7 +35,9 @@ class PageDefinition:
 
     # Loads a Glade UI file and locates the child container in it
     def load_file(self, file_name, container_name):
-        self.builder = Gtk.Builder.new_from_file(os.path.join(self.data_dir, file_name))
+        self.builder = Gtk.Builder()
+        self.builder.set_translation_domain('puavo-user-registration')
+        self.builder.add_from_file(os.path.join(self.data_dir, file_name))
         self.child = self.builder.get_object(container_name)
 
 

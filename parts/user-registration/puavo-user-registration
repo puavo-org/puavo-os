@@ -189,9 +189,10 @@ class NewUserRegistrationWindow:
 
         try:
             # Load the main UI file
-            self.main_builder = \
-                Gtk.Builder.new_from_file(os.path.join(self.data_dir,
-                                                       'main_window.glade'))
+            self.main_builder = Gtk.Builder()
+            self.main_builder.set_translation_domain('puavo-user-registration')
+            self.main_builder.add_from_file(os.path.join(self.data_dir,
+                                                         'main_window.glade'))
 
             # Load custom CSS
             css = open(os.path.join(self.data_dir, 'main_window.css')).read()
