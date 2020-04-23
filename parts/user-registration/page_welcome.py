@@ -13,17 +13,22 @@ class PageWelcome(PageDefinition):
 
         self.load_file('welcome.glade', 'welcome_texts')
 
-        self.builder.get_object('welcome_title').set_markup(_tr('Tervetuloa!'))
+        self.builder.get_object('welcome_title').set_markup(_tr('Welcome!'))
 
-        self.builder.get_object('welcome_text').set_markup(_tr('\n' \
-'Uuden kannettavasi käyttöönottamiseksi, sinut opastetaan seuraavaksi:\n\n' \
-'\t<span color="#0f0"><big>1.</big></span> Liittymään langattomaan verkkoon\n' \
-'\t<span color="#0f0"><big>2.</big></span> Rekisteröimään itsellesi uusi käyttäjätunnus\n\n'))
+        self.builder.get_object('welcome_text').set_markup('\n' \
+          + _tr('To put your new laptop into use, we guide you to:') \
+          + '\n\n\t<span color="#0f0"><big>1.</big></span>' \
+          + _tr('Join a wireless network') \
+          + '\n\t<span color="#0f0"><big>2.</big></span>' \
+          + _tr('Register your new login') + '\n\n')
 
         self.builder.get_object('welcome_footer').set_markup( \
-_tr('<span color="#0f0">Vinkki:</span> Mikäli et pysty liittämään kannettavaa verkkoon juuri nyt, ' \
-'voit tehdä sen myös\nmyöhemminja käyttää konetta tilapäisesti vieras-tilassa napsauttamalla ' \
-'alareunassa\nolevaa <i>"Siirry työpöydälle"</i> -painiketta.'))
+          '<span color="#0f0">' + _tr('Tip:') + '</span>' \
+            + _tr('In case you can not connect to a wireless network right now, '
+                  'you can do that later and use this host temporarily in ' \
+                  'guest-mode by clicking the') \
+            + '\n' + '<i>"' + _tr('Go to desktop') + '"</i>-' \
+            + _tr('button in the bottom corner.'))
 
         self.builder.get_object('welcome_next').connect('clicked', self.welcome_next_clicked)
 

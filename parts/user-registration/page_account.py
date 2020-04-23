@@ -384,7 +384,7 @@ class PageAccount(PageDefinition):
             self.parent_window,
             _tr('Error'),
             _tr('Something went wrong on the server end.') \
-            + ' ' + _tr('Please contact support and give them this code:') \
+            + '  ' + _tr('Please contact support and give them this code:') \
             + '\n\n<big>{0}</big>'.format(response['log_id']))
 
 
@@ -423,32 +423,32 @@ class PageAccount(PageDefinition):
                 self.parent_window,
                 _tr('Missing information'),
                 _tr('Registration program did not send all required information to server.') + \
-                ' ' +
-                _tr('Please contact support and give this code:') + \
+                '  ' +
+                _tr('Please contact support and give them this code:') + \
                 '\n\n<big>{0}</big>'.format(response['log_id']))
 
         elif response['status'] == 'invalid_username':
             utils.show_error_message(
                 self.parent_window,
-                _tr('Invalid Input'),
+                _tr('Invalid input'),
                 _tr('The login name contains invalid characters.'))
 
         elif response['status'] == 'invalid_email':
             utils.show_error_message(
                 self.parent_window,
-                _tr('Invalid Input'),
+                _tr('Invalid input'),
                 _tr('The email address is not valid.'))
 
         elif response['status'] == 'password_mismatch':
             utils.show_error_message(
                 self.parent_window,
-                _tr('Invalid Input'),
+                _tr('Invalid input'),
                 _tr('The password and its confirmation do not match.'))
 
         elif response['status'] == 'invalid_language':
             utils.show_error_message(
                 self.parent_window,
-                _tr('Invalid Input'),
+                _tr('Invalid input'),
                 _tr('The selected language is not valid.'))
 
         else:
@@ -468,18 +468,18 @@ class PageAccount(PageDefinition):
             # This machine does not exist in the database
             utils.show_error_message(
                 self.parent_window,
-                _tr('Unregistered Machine'),
-                _tr('This machine was not found on the database. Please contact ' \
-                    'support and give them this code:') + \
-                '\n\n<big>{0}</big>'.format(response['log_id']))
+                _tr('Unregistered host'),
+                _tr('This host was not found on the database.') \
+                  + '  ' + _tr('Please contact support and give them this code:') \
+                  + '\n\n<big>{0}</big>'.format(response['log_id']))
 
         elif response['status'] == 'device_already_in_use':
             # This machine already has a user. THIS SHOULD NOT HAPPEN.
             utils.show_error_message(
                 self.parent_window,
-                _tr('Machine is already in use'),
-                _tr('User registration has already been done on this machine. ' \
-                    'Please contact support and give them this code:') +
+                _tr('Host is already in use'),
+                _tr('User registration has already been done on this host.') \
+                   + '  ' + _tr('Please contact support and give them this code:') +
                 '\n\n<big>{0}</big>'.format(response['log_id']))
 
         elif response['status'] == 'server_error':
@@ -489,9 +489,8 @@ class PageAccount(PageDefinition):
             utils.show_error_message(
                 self.parent_window,
                 _tr('Error'),
-                _tr('An unknown error occurred when handling host information. ' \
-                    'Please contact support and give them this code:') + \
-                    '\n\n<big>{0}</big>'.format(response['log_id']))
+                _tr('An unknown error occurred when handling host information.') \
+                  + '\n\n<big>{0}</big>'.format(response['log_id']))
 
 
     def handle_server_409(self, response):
@@ -501,19 +500,19 @@ class PageAccount(PageDefinition):
             utils.show_error_message(
                 self.parent_window,
                 _tr('Login name already in use'),
-                _tr('The login name you have chosen is already in use. Please choose another.'))
+                _tr('The login name you have chosen is already in use.  Please choose another.'))
 
         elif response['status'] == 'username_too_short':
             utils.show_error_message(
                 self.parent_window,
-                _tr('Too Short Login Name'),
-                _tr('Your login name is too short. It must have at least three characters .'))
+                _tr('Too short login name'),
+                _tr('Your login name is too short.  It must have at least three characters.'))
 
         elif response['status'] == 'duplicate_email':
             utils.show_error_message(
                 self.parent_window,
                 _tr('Email address is already in use'),
-                _tr('This email address is already in use. Please use another address.') +
+                _tr('This email address is already in use.  Please use another address.') +
                 '\n\n' +
                 _tr('If using another email address is not possible, please contact support ' \
                     'and give them this code:') + \
@@ -523,9 +522,8 @@ class PageAccount(PageDefinition):
             utils.show_error_message(
                 self.parent_window,
                 _tr('Error'),
-                _tr('An unknown error occurred when handling user information. ' \
-                    'Please contact support and give them this code:') + \
-               '\n\n<big>{0}</big>'.format(response['log_id']))
+                _tr('An unknown error occurred when handling user information.') \
+                 + '\n\n<big>{0}</big>'.format(response['log_id']))
 
 
     def handle_server_500(self, response):
@@ -540,8 +538,8 @@ class PageAccount(PageDefinition):
             self.parent_window,
             _tr('Error'),
             _tr('Could not contact the server:') + '\n\n\t{0}\n\n'.format(msg) + \
-            _tr('Check the network connection and try again. If the problem ' \
-                'persists, contact support.'))
+            _tr('Check the network connection and try again.') \
+              + '  ' + _tr('If the problem persists, contact support.'))
 
 
     def idle_func(self, event, thread):
@@ -557,7 +555,7 @@ class PageAccount(PageDefinition):
                     utils.show_error_message(
                         self.parent_window,
                         _tr('Error'),
-                        _tr('The server is not responding. Try again after a minute or two. ' \
+                        _tr('The server is not responding.  Try again after a while.  ' \
                             'If the problem persists, contact support.'))
                 else:
                     self.handle_network_error(thread.response['error'])
@@ -593,8 +591,8 @@ class PageAccount(PageDefinition):
             utils.show_error_message(
                 self.parent_window,
                 _tr('Error'),
-                _tr('Cannot interpret the response sent by the server.') + \
-                '\n\n' +
+                _tr('Could not interpret the response sent by the server.') \
+                  + '\n\n' +
                 _tr('Please contact support.'))
 
             self.enable_inputs(True)
@@ -640,8 +638,8 @@ class PageAccount(PageDefinition):
             utils.show_error_message(
                 self.parent_window,
                 _tr('Something went wrong'),
-                _tr('Cannot interpret the response sent by the server. ' \
-                    'Please contact support.'))
+                _tr('Could not interpret the response sent by the server.') \
+                  + '  ' + _tr('Please contact support.'))
             return
 
         # If we get here, something has gone horribly wrong
@@ -649,7 +647,7 @@ class PageAccount(PageDefinition):
             self.parent_window,
             _tr('Something went wrong'),
             _tr('This situation should never happen, something has gone very ' \
-                'badly wrong. Please contact support.'))
+                'badly wrong.') + '  ' + _tr('Please contact support.'))
 
 
 class NetworkThread(threading.Thread):

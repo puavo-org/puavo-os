@@ -10,8 +10,11 @@ INSTALL_DATA = $(INSTALL) -m 644
 .PHONY: all
 all: po/fi/puavo-user-registration.mo
 
-puavo-user-registration.pot: puavo-user-registration
-	xgettext --omit-header --language python --keyword=_tr -o $@ $^
+PY_FILES = page_account.py page_complete.py page_definition.py \
+           page_network.py page_welcome.py privacy_policy.py utils.py
+puavo-user-registration.pot: puavo-user-registration ${PY_FILES}
+	xgettext --from-code UTF-8 --omit-header --language python \
+            --keyword=_tr -o $@ $^
 
 %.po: po/puavo-user-registration.pot
 	msgmerge --update --no-fuzzy-matching --backup=off $@ $<

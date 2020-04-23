@@ -292,7 +292,7 @@ class NewUserRegistrationWindow:
             Gtk.ButtonsType.OK_CANCEL, _tr('Go to desktop?'))
 
         dialog.format_secondary_text( \
-            _tr('Are you sure you do not want to create a user account? ' \
+            _tr('Are you sure you do not want to create a user account?  ' \
                 'Without a user account, your files will be lost after your ' \
                 'desktop session ends.'))
 
@@ -344,7 +344,7 @@ class NewUserRegistrationWindow:
             utils.show_error_message( \
                 self.main_window,
                 _tr('Fatal Error'),
-                _tr('Could not finish the registration process. Please contact support.'))
+                _tr('Could not finish the registration process.  Please contact support.'))
 
 
     # Returns the machine data needed on the accounts page, when sending

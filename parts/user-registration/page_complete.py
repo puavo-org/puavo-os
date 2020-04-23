@@ -13,14 +13,13 @@ class PageComplete(PageDefinition):
 
         self.load_file('complete.glade', 'complete_texts')
 
-        self.builder.get_object('complete_title').set_markup(_tr('Onneksi olkoon!'))
+        self.builder.get_object('complete_title').set_markup(_tr('Congratulations!'))
 
         self.builder.get_object('complete_text').set_markup( \
-            _tr('Käyttäjätunnuksesi on luotu. Onnea opintojesi pariin!') +
+            _tr('Your user account has been created.') \
+              + '  ' + _tr('Have a nice time with your studies!') +
             '\n\n' +
-            _tr('Järjestelmä on käynnistettävä uudelleen yhden kerran, jotta ' \
-                'asennusprosessi\nvoidaan viimeistellä. Paina allaolevaa nappia, ' \
-                'kun olet valmis.'))
+            _tr('System must be rebooted, press OK when ready!'))
 
         self.builder.get_object('complete_reboot').connect('clicked', self.reboot_clicked)
 
