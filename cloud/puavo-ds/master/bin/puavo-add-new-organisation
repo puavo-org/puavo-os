@@ -130,7 +130,7 @@ domain ||= "#{ organisation_name }.#{ top_domain }"
 top_domain ||= domain.split(".")[1..-1].join(".")
 
 samba_domain = options[:samba_domain] || "EDU%s" % organisation_name.upcase
-suffix = options[:suffix] || "dc=edu,dc=%s,dc=fi" % organisation_name.downcase
+suffix = options[:suffix] || "dc=edu,dc=%s,dc=net" % organisation_name.downcase
 suffix_start = suffix.split(',')[0]
 legal_name = options[:legal_name] || organisation_name
 kerberos_realm = options[:kerberos_realm] || domain.upcase
