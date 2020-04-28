@@ -127,23 +127,23 @@ class NewUserRegistrationWindow:
             screen_width = 1366
             screen_height = 768
 
-        if screen_width == 1366:
+        if screen_width == 1920:
             css_variables = {
-                'gtk_dialog_font_scale': '110%',
-                'main_font_scale': '110%',
-                'background_image': 'background_1366.png',
+                'gtk_dialog_font_scale': '150%',
+                'main_font_scale': '200%',
+                'background_image': 'background_1920.png',
 
                 'welcome_padding_top': '75px',
                 'welcome_padding_left': '250px',
                 'welcome_padding_right': '50px',
 
-                'account_top_padding': '25px',
-                'account_left_padding': '550px',
+                'account_top_padding': '75px',
+                'account_left_padding': '500px',
 
-                'complete_top_padding': '100px',
+                'complete_top_padding': '200px',
                 'complete_left_padding': '250px',
 
-                'entry_font_size': '16px',
+                'entry_font_size': '28px',
             }
         elif screen_width in (1600, 1680):
             # Weirdo resolutions we see sometimes. The background
@@ -165,23 +165,23 @@ class NewUserRegistrationWindow:
 
                 'entry_font_size': '20px',
             }
-        else: # if screen_width == 1920:
+        else:
             css_variables = {
-                'gtk_dialog_font_scale': '150%',
-                'main_font_scale': '200%',
-                'background_image': 'background_1920.png',
+                'gtk_dialog_font_scale': '110%',
+                'main_font_scale': '110%',
+                'background_image': 'background_1366.png',
 
                 'welcome_padding_top': '75px',
                 'welcome_padding_left': '250px',
                 'welcome_padding_right': '50px',
 
-                'account_top_padding': '75px',
-                'account_left_padding': '500px',
+                'account_top_padding': '25px',
+                'account_left_padding': '550px',
 
-                'complete_top_padding': '200px',
+                'complete_top_padding': '100px',
                 'complete_left_padding': '250px',
 
-                'entry_font_size': '28px',
+                'entry_font_size': '16px',
             }
 
         css_variables['background_image'] = \
