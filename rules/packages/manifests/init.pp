@@ -592,6 +592,8 @@ class packages {
     , 'nautilus'
     , 'nautilus-sendto'
     , 'network-manager'
+    , 'network-manager-l2tp'                    # needed by citrix
+    , 'network-manager-l2tp-gnome'              # needed by citrix
     , 'network-manager-pptp'
     , 'network-manager-pptp-gnome'
     , 'nodm'                                    # for infotv
