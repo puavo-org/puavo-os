@@ -12,6 +12,7 @@ class puavo_pkg::packages {
   $buster_specific_packages  = [ 'celestia'
                                , 'eclipse'
                                , 'netbeans'
+                               , 'tela-icon-theme'
                                , 'ubuntu-wallpapers'
                                , 'vagrant' ]
 
@@ -59,7 +60,6 @@ class puavo_pkg::packages {
 			, 'smartboard'
 			, 'spotify-client'
 			, 'teams'
-			, 'tela-icon-theme'
 			, 'tilitin'
 			, 't-lasku'
 			, 'unityhub-appimage'
