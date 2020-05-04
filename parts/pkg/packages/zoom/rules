@@ -23,6 +23,7 @@ case "${command}" in
           mkdir -p "$(dirname "$f")"
           ln -fns -T "${upstream_dir}/${f}" "$f"
         done
+        echo zoom >> /var/lib/puavo-pkg/.update_mime_database
 	;;
     unconfigure)
 	rm -rf $zoom_links

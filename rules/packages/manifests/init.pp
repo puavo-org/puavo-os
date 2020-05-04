@@ -291,6 +291,8 @@ class packages {
     , 'neverball'
     , 'neverputt'
     , 'openttd'
+    , 'qml-module-qtquick-dialogs'	        # needed by teamviewer
+    , 'qml-module-qtquick-privatewidgets'	# needed by teamviewer
     , 'qml-module-qtmultimedia'		# required by khangman
     , 'supertuxkart'
     , 'tuxmath'
