@@ -1,0 +1,55 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+teamviewer_links='
+  /opt/teamviewer
+  /usr/bin/teamviewer
+  /usr/share/applications/com.teamviewer.TeamViewer.desktop
+  /usr/share/dbus-1/services/com.teamviewer.TeamViewer.Desktop.service
+  /usr/share/dbus-1/services/com.teamviewer.TeamViewer.service
+  /usr/share/icons/hicolor/16x16/apps/TeamViewer.png
+  /usr/share/icons/hicolor/20x20/apps/TeamViewer.png
+  /usr/share/icons/hicolor/24x24/apps/TeamViewer.png
+  /usr/share/icons/hicolor/256x256/apps/TeamViewer.png
+  /usr/share/icons/hicolor/32x32/apps/TeamViewer.png
+  /usr/share/icons/hicolor/48x48/apps/TeamViewer.png
+  /usr/share/polkit-1/actions/com.teamviewer.TeamViewer.policy
+'
+
+
+case "${command}" in
+  configure)
+    upstream_dir=$1
+    for f in $teamviewer_links; do
+      mkdir -p "$(dirname "$f")"
+      ln -fns -T "${upstream_dir}/${f}" "$f"
+    done
+
+    mkdir -p /etc/teamviewer /var/log/teamviewer15
+    # from .postinst
+    cat <<'EOF' | bash -x
+      TV_SCRIPT_DIR='/opt/teamviewer/tv_bin/script'
+      source "$TV_SCRIPT_DIR/tvw_aux"
+      source "$TV_SCRIPT_DIR/tvw_config"
+      source "$TV_SCRIPT_DIR/tvw_daemon"
+      source "$TV_SCRIPT_DIR/tvw_profile"
+      source "$TV_SCRIPT_DIR/tvw_update"
+      InitGlobalSettings
+      installDaemon
+EOF
+    ;;
+  unconfigure)
+      rm -rf $teamviewer_links
+      ;;
+  unpack)
+      upstream_pack=$1
+      upstream_dir=$2
+      dpkg -x "$upstream_pack" "$upstream_dir"
+      ;;
+  *)
+      ;;
+esac
