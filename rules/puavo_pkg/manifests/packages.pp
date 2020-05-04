@@ -66,6 +66,16 @@ class puavo_pkg::packages {
 			, 'vidyo-client'
 			, 'zoom' ]
 
+  # List some packages here which are available, but probably should be
+  # installed only for a very few, and this is why they are not on the above
+  # list.
+  $other_available_packages = [ 'canon-cque'
+                              , 'dragonbox_koulu1'
+                              , 'dragonbox_koulu2'
+                              , 'kdenlive-appimage'
+                              , 'promethean'
+                              , 'teamviewer' ]
+
   @puavo_pkg::install { $available_packages: ; }
 
   case $debianversioncodename {
