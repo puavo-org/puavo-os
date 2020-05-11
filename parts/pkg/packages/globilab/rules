@@ -18,7 +18,7 @@ case "${command}" in
 	cat <<EOF > /usr/share/applications/GlobiLab.desktop
 [Desktop Entry]
 Name=GlobiLab
-Exec=env LD_LIBRARY_PATH=${upstream_dir}/usr/local/lib GlobiLab
+Exec=env LD_LIBRARY_PATH=${upstream_dir}/usr/local/lib:/opt/trusty/lib/i386-linux-gnu GlobiLab
 Icon=GlobiLab
 Type=Application
 Categories=GNOME;GTK;Science;
