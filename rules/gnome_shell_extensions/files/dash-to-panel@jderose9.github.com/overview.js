@@ -30,17 +30,18 @@ const Main = imports.ui.main;
 const Shell = imports.gi.Shell;
 const Gtk = imports.gi.Gtk;
 const Gdk = imports.gi.Gdk;
+const Gio = imports.gi.Gio;
 const Mainloop = imports.mainloop;
 
 const Meta = imports.gi.Meta;
 
+const GS_HOTKEYS_KEY = 'switch-to-application-';
+
 var dtpOverview = Utils.defineClass({
     Name: 'DashToPanel.Overview',
 
-    _numHotkeys: 10,
-
-    _init: function(settings) {
-        this._dtpSettings = settings;
+    _init: function() {
+        this._numHotkeys = 10;
     },
 
     enable : function(panel) {
@@ -50,26 +51,27 @@ var dtpOverview = Utils.defineClass({
         this._injectionsHandler = new Utils.InjectionsHandler();
         this._signalsHandler = new Utils.GlobalSignalsHandler();
 
-        this._isolation = this._optionalWorkspaceIsolation();
+        this._optionalWorkspaceIsolation();
         this._optionalHotKeys();
         this._optionalNumberOverlay();
         this._toggleDash();
-        this._stockgsKeepDashId = this._dtpSettings.connect('changed::stockgs-keep-dash', () => this._toggleDash());
+        
+        this._signalsHandler.add([
+            Me.settings,
+            'changed::stockgs-keep-dash', 
+            () => this._toggleDash()
+        ]);
     },
 
     disable: function () {
-        this._dtpSettings.disconnect(this._stockgsKeepDashId);
+        this._signalsHandler.destroy();
+        this._injectionsHandler.destroy();
         
         this._toggleDash(true);
-
-        // reset stored icon size  to the default dash
-        Main.overview.dashIconSize = Main.overview._controls.dash.iconSize;
 
         // Remove key bindings
         this._disableHotKeys();
         this._disableExtraShortcut();
-
-        this._isolation.disable.apply(this);
     },
 
     _toggleDash: function(visible) {
@@ -81,40 +83,40 @@ var dtpOverview = Utils.defineClass({
         // 1 static workspace only)
 
         if (visible === undefined) {
-            visible = this._dtpSettings.get_boolean('stockgs-keep-dash');
+            visible = Me.settings.get_boolean('stockgs-keep-dash');
         }
 
         let visibilityFunc = visible ? 'show' : 'hide';
         let width = visible ? -1 : 1;
-        
-        Main.overview._controls.dash.actor[visibilityFunc]();
-        Main.overview._controls.dash.actor.set_width(width);
+        let overviewControls = Main.overview._overview._controls || Main.overview._controls;
+
+        overviewControls.dash.actor[visibilityFunc]();
+        overviewControls.dash.actor.set_width(width);
 
         // This force the recalculation of the icon size
-        Main.overview._controls.dash._maxHeight = -1;
+        overviewControls.dash._maxHeight = -1;
     },
 
     /**
      * Isolate overview to open new windows for inactive apps
      */
     _optionalWorkspaceIsolation: function() {
-
         let label = 'optionalWorkspaceIsolation';
-
-        this._signalsHandler.addWithLabel(label, [
-            this._dtpSettings,
+        
+        this._signalsHandler.add([
+            Me.settings,
             'changed::isolate-workspaces',
             Lang.bind(this, function() {
                 this._panel.panelManager.allPanels.forEach(p => p.taskbar.resetAppIcons());
 
-                if (this._dtpSettings.get_boolean('isolate-workspaces'))
+                if (Me.settings.get_boolean('isolate-workspaces'))
                     Lang.bind(this, enable)();
                 else
                     Lang.bind(this, disable)();
             })
         ]);
 
-        if (this._dtpSettings.get_boolean('isolate-workspaces'))
+        if (Me.settings.get_boolean('isolate-workspaces'))
             Lang.bind(this, enable)();
 
         function enable() {
@@ -138,26 +140,20 @@ var dtpOverview = Utils.defineClass({
         function disable() {
             this._signalsHandler.removeWithLabel(label);
             this._injectionsHandler.removeWithLabel(label);
-
-            this._signalsHandler.destroy();
-            this._injectionsHandler.destroy();
         }
 
         function IsolatedOverview() {
             // These lines take care of Nautilus for icons on Desktop
-            let windows = this.get_windows().filter(function(w) {
-                return w.get_workspace().index() == Utils.DisplayWrapper.getWorkspaceManager().get_active_workspace_index();
-            });
-            if (windows.length == 1)
-                if (windows[0].skip_taskbar)
-                    return this.open_new_window(-1);
+            let activeWorkspace = Utils.DisplayWrapper.getWorkspaceManager().get_active_workspace();
+            let windows = this.get_windows().filter(w => w.get_workspace().index() == activeWorkspace.index());
 
-            if (this.is_on_workspace(Utils.DisplayWrapper.getWorkspaceManager().get_active_workspace()))
+            if (windows.length > 0 && 
+                (!(windows.length == 1 && windows[0].skip_taskbar) || 
+                 this.is_on_workspace(activeWorkspace)))
                 return Main.activateWindow(windows[0]);
+            
             return this.open_new_window(-1);
         }
-
-        return { disable: disable };
     },
 
     // Hotkeys
@@ -173,70 +169,67 @@ var dtpOverview = Utils.defineClass({
             seenApps[appIcon.app] = (seenApps[appIcon.app] || 0) + 1;
         });
 
+        this._showOverlay();
+
         if (appIndex < apps.length) {
             let appIcon = apps[appIndex];
-            let windowCount = !appIcon.window ? appIcon._nWindows : seenApps[appIcon.app];
+            let seenAppCount = seenApps[appIcon.app];
+            let windowCount = appIcon.window || appIcon._hotkeysCycle ? seenAppCount : appIcon._nWindows;
 
-            if (this._dtpSettings.get_boolean('shortcut-previews') && windowCount > 1) {
-                let windowIndex = 0;
-                let currentWindow = appIcon.window;
-                let hotkeyPrefix = this._dtpSettings.get_string('hotkey-prefix-text');
-                let shortcutKeys = (hotkeyPrefix == 'Super' ? [Clutter.Meta_L] : [Clutter.Meta_L, Clutter.Alt_L]).concat([Clutter['KEY_' + (appIndex + 1)]]);
-                let currentKeys = shortcutKeys.slice();
-                let setFocus = windowIndex => global.stage.set_key_focus(appIcon.windowPreview._previewBox.box.get_children()[windowIndex]);
-                let capturedEventId = global.stage.connect('captured-event', (actor, event) => {
-                    if (event.type() == Clutter.EventType.KEY_PRESS) {
-                        let pressedKey = event.get_key_symbol();
-
-                        if (shortcutKeys.indexOf(pressedKey) >= 0 && currentKeys.indexOf(pressedKey) < 0) {
-                            currentKeys.push(pressedKey);
-
-                            if (shortcutKeys.length === currentKeys.length) {
-                                windowIndex = windowIndex < windowCount - 1 ? windowIndex + 1 : 0;
-                                setFocus(windowIndex);
+            if (Me.settings.get_boolean('shortcut-previews') && windowCount > 1 && 
+                !(Clutter.get_current_event().get_state() & ~(Clutter.ModifierType.MOD1_MASK | Clutter.ModifierType.MOD4_MASK))) { //ignore the alt (MOD1_MASK) and super key (MOD4_MASK)
+                if (!this._hotkeyPreviewCycleInfo) {
+                    this._hotkeyPreviewCycleInfo = {
+                        appIcon: appIcon,
+                        currentWindow: appIcon.window,
+                        keyFocusOutId: appIcon.actor.connect('key-focus-out', () => appIcon.actor.grab_key_focus()),
+                        capturedEventId: global.stage.connect('captured-event', (actor, e) => {
+                            if (e.type() == Clutter.EventType.KEY_RELEASE && e.get_key_symbol() == Clutter.Super_L) {
+                                this._endHotkeyPreviewCycle();
                             }
-                        } 
-                    } else if (event.type() == Clutter.EventType.KEY_RELEASE) {
-                        let keyIndex = currentKeys.indexOf(event.get_key_symbol());
+        
+                            return Clutter.EVENT_PROPAGATE;
+                        })
+                    };
 
-                        if (keyIndex >= 0) {
-                            currentKeys.splice(keyIndex, 1);
-                        }
-                    }
-
-                    return Clutter.EVENT_PROPAGATE;
-                });
-                let hotkeyOpenStateChangedId = appIcon.windowPreview.connect('open-state-changed', (menu, isOpen) => {
-                    if (!isOpen) {
-                        global.stage.disconnect(capturedEventId);
-                        appIcon.windowPreview.disconnect(hotkeyOpenStateChangedId);
-                        appIcon.windowPreview._previewBox._resetPreviews();
-                        appIcon.window = currentWindow;
-                    }
-                });
-
-                appIcon.window = null;
-                appIcon.windowPreview.popup();
-                appIcon.menuManagerWindowPreview._onMenuOpenState(appIcon.windowPreview, true);
-                setFocus(windowIndex);
+                    appIcon._hotkeysCycle = appIcon.window;
+                    appIcon.window = null;
+                    appIcon._previewMenu.open(appIcon);
+                    appIcon.actor.grab_key_focus();
+                }
+                
+                appIcon._previewMenu.focusNext();
             } else {
                 // Activate with button = 1, i.e. same as left click
                 let button = 1;
+                this._endHotkeyPreviewCycle();
                 appIcon.activate(button, true);
             }
         }
     },
 
+    _endHotkeyPreviewCycle: function() {
+        if (this._hotkeyPreviewCycleInfo) {
+            global.stage.disconnect(this._hotkeyPreviewCycleInfo.capturedEventId);
+            this._hotkeyPreviewCycleInfo.appIcon.actor.disconnect(this._hotkeyPreviewCycleInfo.keyFocusOutId);
+
+            this._hotkeyPreviewCycleInfo.appIcon._previewMenu.activateFocused();
+            this._hotkeyPreviewCycleInfo.appIcon.window = this._hotkeyPreviewCycleInfo.currentWindow;
+            delete this._hotkeyPreviewCycleInfo.appIcon._hotkeysCycle;
+            this._hotkeyPreviewCycleInfo = 0;
+        }
+    },
+
     _optionalHotKeys: function() {
         this._hotKeysEnabled = false;
-        if (this._dtpSettings.get_boolean('hot-keys'))
+        if (Me.settings.get_boolean('hot-keys'))
             this._enableHotKeys();
 
         this._signalsHandler.add([
-            this._dtpSettings,
+            Me.settings,
             'changed::hot-keys',
             Lang.bind(this, function() {
-                    if (this._dtpSettings.get_boolean('hot-keys'))
+                    if (Me.settings.get_boolean('hot-keys'))
                         Lang.bind(this, this._enableHotKeys)();
                     else
                         Lang.bind(this, this._disableHotKeys)();
@@ -244,32 +237,46 @@ var dtpOverview = Utils.defineClass({
         ]);
     },
 
+    _resetHotkeys: function() {
+        this._disableHotKeys();
+        this._enableHotKeys();
+    },
+
     _enableHotKeys: function() {
         if (this._hotKeysEnabled)
             return;
 
+        //3.32 introduced app hotkeys, disable them to prevent conflicts
+        if (Main.wm._switchToApplication) {
+            for (let i = 1; i < 10; ++i) {
+                Utils.removeKeybinding(GS_HOTKEYS_KEY + i);
+            }
+        }
+
         // Setup keyboard bindings for taskbar elements
-        let keys = ['app-hotkey-', 'app-shift-hotkey-', 'app-ctrl-hotkey-',  // Regular numbers
-                    'app-hotkey-kp-', 'app-shift-hotkey-kp-', 'app-ctrl-hotkey-kp-']; // Key-pad numbers
+        let shortcutNumKeys = Me.settings.get_string('shortcut-num-keys');
+        let bothNumKeys = shortcutNumKeys == 'BOTH';
+        let keys = [];
+        
+        if (bothNumKeys || shortcutNumKeys == 'NUM_ROW') {
+            keys.push('app-hotkey-', 'app-shift-hotkey-', 'app-ctrl-hotkey-'); // Regular numbers
+        }
+        
+        if (bothNumKeys || shortcutNumKeys == 'NUM_KEYPAD') {
+            keys.push('app-hotkey-kp-', 'app-shift-hotkey-kp-', 'app-ctrl-hotkey-kp-'); // Key-pad numbers
+        }
+
         keys.forEach( function(key) {
             for (let i = 0; i < this._numHotkeys; i++) {
                 let appNum = i;
 
-                if (!Main.wm._allowedKeybindings[key + (i + 1)]) {
-                    Main.wm.addKeybinding(key + (i + 1), this._dtpSettings,
-                                        Meta.KeyBindingFlags.NONE,
-                                        Shell.ActionMode.NORMAL | Shell.ActionMode.OVERVIEW,
-                                        Lang.bind(this, function() {
-                                            this._activateApp(appNum);
-                                            this._showOverlay();
-                                        }));
-                }
+                Utils.addKeybinding(key + (i + 1), Me.settings, () => this._activateApp(appNum));
             }
         }, this);
 
         this._hotKeysEnabled = true;
 
-        if (this._dtpSettings.get_string('hotkeys-overlay-combo') === 'ALWAYS')
+        if (Me.settings.get_string('hotkeys-overlay-combo') === 'ALWAYS')
             this.taskbar.toggleNumberOverlay(true);
     },
 
@@ -281,11 +288,17 @@ var dtpOverview = Utils.defineClass({
                     'app-hotkey-kp-', 'app-shift-hotkey-kp-', 'app-ctrl-hotkey-kp-']; // Key-pad numbers
         keys.forEach( function(key) {
             for (let i = 0; i < this._numHotkeys; i++) {
-                if (Main.wm._allowedKeybindings[key + (i + 1)]) {
-                    Main.wm.removeKeybinding(key + (i + 1));
-                }
+                Utils.removeKeybinding(key + (i + 1));
             }
         }, this);
+        
+        if (Main.wm._switchToApplication) {
+            let gsSettings = new Gio.Settings({ schema_id: imports.ui.windowManager.SHELL_KEYBINDINGS_SCHEMA });
+
+            for (let i = 1; i < 10; ++i) {
+                Utils.addKeybinding(GS_HOTKEYS_KEY + i, gsSettings, Main.wm._switchToApplication.bind(Main.wm));
+            }
+        }
 
         this._hotKeysEnabled = false;
 
@@ -294,57 +307,57 @@ var dtpOverview = Utils.defineClass({
 
     _optionalNumberOverlay: function() {
         // Enable extra shortcut
-        if (this._dtpSettings.get_boolean('hot-keys'))
+        if (Me.settings.get_boolean('hot-keys'))
             this._enableExtraShortcut();
 
         this._signalsHandler.add([
-            this._dtpSettings,
+            Me.settings,
             'changed::hot-keys',
             Lang.bind(this, this._checkHotkeysOptions)
         ], [
-            this._dtpSettings,
+            Me.settings,
             'changed::hotkeys-overlay-combo',
             Lang.bind(this, function() {
-                if (this._dtpSettings.get_boolean('hot-keys') && this._dtpSettings.get_string('hotkeys-overlay-combo') === 'ALWAYS')
+                if (Me.settings.get_boolean('hot-keys') && Me.settings.get_string('hotkeys-overlay-combo') === 'ALWAYS')
                     this.taskbar.toggleNumberOverlay(true);
                 else
                     this.taskbar.toggleNumberOverlay(false);
             })
+        ], [
+            Me.settings,
+            'changed::shortcut-num-keys',
+            () =>  this._resetHotkeys()
         ]);
     },
 
     _checkHotkeysOptions: function() {
-        if (this._dtpSettings.get_boolean('hot-keys'))
+        if (Me.settings.get_boolean('hot-keys'))
             this._enableExtraShortcut();
         else
             this._disableExtraShortcut();
     },
 
     _enableExtraShortcut: function() {
-        if (!Main.wm._allowedKeybindings['shortcut']) {
-            Main.wm.addKeybinding('shortcut', this._dtpSettings,
-                                  Meta.KeyBindingFlags.NONE,
-                                  Shell.ActionMode.NORMAL | Shell.ActionMode.OVERVIEW,
-                                  Lang.bind(this, function() {
-                                      this._showOverlay(true);
-                                  }));
-        }
+        Utils.addKeybinding('shortcut', Me.settings, () => this._showOverlay(true));
     },
 
     _disableExtraShortcut: function() {
-        if (Main.wm._allowedKeybindings['shortcut']) {
-            Main.wm.removeKeybinding('shortcut');
-        }
+        Utils.removeKeybinding('shortcut');
     },
 
     _showOverlay: function(overlayFromShortcut) {
+        //wait for intellihide timeout initialization
+        if (!this._panel.intellihide) {
+            return;
+        }
+
         // Restart the counting if the shortcut is pressed again
         if (this._numberOverlayTimeoutId) {
             Mainloop.source_remove(this._numberOverlayTimeoutId);
             this._numberOverlayTimeoutId = 0;
         }
 
-        let hotkey_option = this._dtpSettings.get_string('hotkeys-overlay-combo');
+        let hotkey_option = Me.settings.get_string('hotkeys-overlay-combo');
 
         if (hotkey_option === 'NEVER')
             return;
@@ -354,10 +367,10 @@ var dtpOverview = Utils.defineClass({
 
         this._panel.intellihide.revealAndHold(Intellihide.Hold.TEMPORARY);
 
-        let timeout = this._dtpSettings.get_int('overlay-timeout');
+        let timeout = Me.settings.get_int('overlay-timeout');
         
         if (overlayFromShortcut) {
-            timeout = this._dtpSettings.get_int('shortcut-timeout');
+            timeout = Me.settings.get_int('shortcut-timeout');
         }
 
         // Hide the overlay/dock after the timeout

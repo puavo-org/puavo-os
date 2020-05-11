@@ -23,6 +23,7 @@
 
 
 const Clutter = imports.gi.Clutter;
+const Config = imports.misc.config;
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const Gtk = imports.gi.Gtk;
@@ -40,30 +41,18 @@ const DND = imports.ui.dnd;
 const IconGrid = imports.ui.iconGrid;
 const Main = imports.ui.main;
 const PopupMenu = imports.ui.popupMenu;
-const Tweener = imports.ui.tweener;
-const Util = imports.misc.util;
 const Workspace = imports.ui.workspace;
 
 const Me = imports.misc.extensionUtils.getCurrentExtension();
+const AppIcons = Me.imports.appIcons;
+const Panel = Me.imports.panel;
 const Utils = Me.imports.utils;
 const WindowPreview = Me.imports.windowPreview;
-const AppIcons = Me.imports.appIcons;
 
-var DASH_ANIMATION_TIME = Dash.DASH_ANIMATION_TIME;
-let DASH_ITEM_LABEL_SHOW_TIME = Dash.DASH_ITEM_LABEL_SHOW_TIME;
-let DASH_ITEM_LABEL_HIDE_TIME = Dash.DASH_ITEM_LABEL_HIDE_TIME;
+var DASH_ANIMATION_TIME = Dash.DASH_ANIMATION_TIME / (Dash.DASH_ANIMATION_TIME > 1 ? 1000 : 1);
 var DASH_ITEM_HOVER_TIMEOUT = Dash.DASH_ITEM_HOVER_TIMEOUT;
+var MIN_ICON_SIZE = 4;
 
-function getPosition() {
-    let position = St.Side.BOTTOM;
-
-    if (Main.layoutManager.primaryMonitor && Main.layoutManager.panelBox && 
-        Main.layoutManager.panelBox.y == Main.layoutManager.primaryMonitor.y) {
-        position = St.Side.TOP;
-    }
-
-    return position;
-}
 /**
  * Extend DashItemContainer
  *
@@ -83,21 +72,6 @@ function extendDashItemContainer(dashItemContainer) {
  * - modified chldBox calculations for when 'show-apps-at-top' option is checked
  * - handle horizontal dash
  */
-
-function findIndex(array, predicate) {
-    if (Array.prototype.findIndex) {
-        return array.findIndex(predicate);
-    }
-
-    for (let i = 0, l = array.length; i < l; ++i) {
-        if (predicate(array[i])) {
-            return i;
-        }
-    }
-
-    return -1;
-};
-
 var taskbarActor = Utils.defineClass({
     Name: 'DashToPanel-TaskbarActor',
     Extends: St.Widget,
@@ -106,55 +80,67 @@ var taskbarActor = Utils.defineClass({
         this._delegate = delegate;
         this._currentBackgroundColor = 0;
         this.callParent('_init', { name: 'dashtopanelTaskbar',
-                                   layout_manager: new Clutter.BoxLayout({ orientation: Clutter.Orientation.HORIZONTAL }),
+                                   layout_manager: new Clutter.BoxLayout({ orientation: Clutter.Orientation[Panel.getOrientation().toUpperCase()] }),
                                    clip_to_allocation: true });
     },
 
     vfunc_allocate: function(box, flags)  {
         this.set_allocation(box, flags);
 
-        let availHeight = box.y2 - box.y1;
+        let availFixedSize = box[Panel.fixedCoord.c2] - box[Panel.fixedCoord.c1];
+        let availVarSize = box[Panel.varCoord.c2] - box[Panel.varCoord.c1];
         let [, showAppsButton, scrollview, leftFade, rightFade] = this.get_children();
-        let [, showAppsNatWidth] = showAppsButton.get_preferred_width(availHeight);
+        let [, showAppsNatSize] = showAppsButton[Panel.sizeFunc](availFixedSize);
+        let [, natSize] = this[Panel.sizeFunc](availFixedSize);
         let childBox = new Clutter.ActorBox();
+        let orientation = Panel.getOrientation().toLowerCase();
 
-        childBox.x1 = box.x1;
-        childBox.x2 = box.x1 + showAppsNatWidth;
-        childBox.y1 = box.y1;
-        childBox.y2 = box.y2;
+        childBox[Panel.varCoord.c1] = box[Panel.varCoord.c1];
+        childBox[Panel.fixedCoord.c1] = box[Panel.fixedCoord.c1];
+
+        childBox[Panel.varCoord.c2] = box[Panel.varCoord.c1] + showAppsNatSize;
+        childBox[Panel.fixedCoord.c2] = box[Panel.fixedCoord.c2];
         showAppsButton.allocate(childBox, flags);
 
-        childBox.x1 = box.x1 + showAppsNatWidth;
-        childBox.x2 = box.x2;
+        childBox[Panel.varCoord.c1] = box[Panel.varCoord.c1] + showAppsNatSize;
+        childBox[Panel.varCoord.c2] = Math.min(availVarSize, natSize);
         scrollview.allocate(childBox, flags);
 
-        let [hvalue, , hupper, , , hpageSize] = scrollview.hscroll.adjustment.get_values();
+        let [hvalue, , hupper, , , hpageSize] = scrollview[orientation[0] + 'scroll'].adjustment.get_values();
         hupper = Math.floor(hupper);
         scrollview._dtpFadeSize = hupper > hpageSize ? this._delegate.iconSize : 0;
 
-        if (this._currentBackgroundColor !== this._delegate.panelWrapper.dynamicTransparency.currentBackgroundColor) {
-            this._currentBackgroundColor = this._delegate.panelWrapper.dynamicTransparency.currentBackgroundColor;
-            let gradientStart = 'background-gradient-start: ' + this._currentBackgroundColor;
-            leftFade.set_style(gradientStart);
-            rightFade.set_style(gradientStart);
+        if (this._currentBackgroundColor !== this._delegate.dtpPanel.dynamicTransparency.currentBackgroundColor) {
+            this._currentBackgroundColor = this._delegate.dtpPanel.dynamicTransparency.currentBackgroundColor;
+            let gradientStyle = 'background-gradient-start: ' + this._currentBackgroundColor +
+                                'background-gradient-direction: ' + orientation;
+
+            leftFade.set_style(gradientStyle);
+            rightFade.set_style(gradientStyle);
         }
         
-        childBox.x1 = box.x1 + showAppsNatWidth;
-        childBox.x2 = childBox.x1 + (hvalue > 0 ? scrollview._dtpFadeSize : 0);
+        childBox[Panel.varCoord.c1] = box[Panel.varCoord.c1] + showAppsNatSize;
+        childBox[Panel.varCoord.c2] = childBox[Panel.varCoord.c1] + (hvalue > 0 ? scrollview._dtpFadeSize : 0);
         leftFade.allocate(childBox, flags);
 
-        childBox.x1 = box.x2 - (hvalue + hpageSize < hupper ? scrollview._dtpFadeSize : 0);
-        childBox.x2 = box.x2;
+        childBox[Panel.varCoord.c1] = box[Panel.varCoord.c2] - (hvalue + hpageSize < hupper ? scrollview._dtpFadeSize : 0);
+        childBox[Panel.varCoord.c2] = box[Panel.varCoord.c2];
         rightFade.allocate(childBox, flags);
     },
 
+    // We want to request the natural size of all our children
+    // as our natural width, so we chain up to StWidget (which
+    // then calls BoxLayout)
     vfunc_get_preferred_width: function(forHeight) {
-        // We want to request the natural width of all our children
-        // as our natural width, so we chain up to StWidget (which
-        // then calls BoxLayout)
         let [, natWidth] = St.Widget.prototype.vfunc_get_preferred_width.call(this, forHeight);
         
         return [0, natWidth];
+    },
+
+    vfunc_get_preferred_height: function(forWidth) {
+        let [, natHeight] = St.Widget.prototype.vfunc_get_preferred_height.call(this, forWidth);
+        
+        return [0, natHeight];
     },
 });
 
@@ -175,16 +161,14 @@ var taskbarActor = Utils.defineClass({
 var taskbar = Utils.defineClass({
     Name: 'DashToPanel.Taskbar',
 
-    _init : function(settings, panelWrapper) {
-        this._dtpSettings = settings;
-        this.panelWrapper = panelWrapper;
+    _init : function(panel) {
+        this.dtpPanel = panel;
         
         // start at smallest size due to running indicator drawing area expanding but not shrinking
         this.iconSize = 16;
 
         this._shownInitially = false;
 
-        this._position = getPosition();
         this._signalsHandler = new Utils.GlobalSignalsHandler();
 
         this._showLabelTimeoutId = 0;
@@ -192,7 +176,9 @@ var taskbar = Utils.defineClass({
         this._ensureAppIconVisibilityTimeoutId = 0;
         this._labelShowing = false;
 
-        this._box = new St.BoxLayout({ vertical: false,
+        let isVertical = Panel.checkIfVertical();
+
+        this._box = new St.BoxLayout({ vertical: isVertical,
                                        clip_to_allocation: false,
                                        x_align: Clutter.ActorAlign.START,
                                        y_align: Clutter.ActorAlign.START });
@@ -207,14 +193,18 @@ var taskbar = Utils.defineClass({
         this._scrollView.add_actor(this._box);
 
         // Create a wrapper around the real showAppsIcon in order to add a popupMenu.
-        this._showAppsIconWrapper = new AppIcons.ShowAppsIconWrapper(this._dtpSettings);
+        this._showAppsIconWrapper = new AppIcons.ShowAppsIconWrapper();
         this._showAppsIconWrapper.connect('menu-state-changed', Lang.bind(this, function(showAppsIconWrapper, opened) {
             this._itemMenuStateChanged(showAppsIconWrapper, opened);
         }));
         // an instance of the showAppsIcon class is encapsulated in the wrapper
         this._showAppsIcon = this._showAppsIconWrapper.realShowAppsIcon;
         this.showAppsButton = this._showAppsIcon.toggleButton;
-             
+
+        if (isVertical) {
+            this.showAppsButton.set_width(panel.geom.w);
+        }
+
         this.showAppsButton.connect('notify::checked', Lang.bind(this, this._onShowAppsButtonToggled));
         this.showAppsButton.checked = Main.overview.viewSelector._showAppsButton.checked;
 
@@ -226,18 +216,24 @@ var taskbar = Utils.defineClass({
         this._container.add_child(new St.Widget({ width: 0, reactive: false }));
         this._container.add_actor(this._showAppsIcon);
         this._container.add_actor(this._scrollView);
-        this._container.add_actor(new St.Widget({ style_class: 'scrollview-fade', reactive: false }));
-        this._container.add_actor(new St.Widget({ style_class: 'scrollview-fade', 
-                                                  reactive: false,  
-                                                  pivot_point: new Clutter.Point({ x: .5, y: .5 }), 
-                                                  rotation_angle_z: 180 }));
+        
+        let fadeStyle = 'background-gradient-direction:' + Panel.getOrientation();
+        let fade1 = new St.Widget({ style_class: 'scrollview-fade', reactive: false });
+        let fade2 = new St.Widget({ style_class: 'scrollview-fade', 
+                                    reactive: false,  
+                                    pivot_point: Utils.getPoint({ x: .5, y: .5 }), 
+                                    rotation_angle_z: 180 });
 
-        this.showAppsButton.add_constraint(new Clutter.BindConstraint({
-            source: this._container,
-            coordinate: Clutter.BindCoordinate.HEIGHT
-        }));
+        fade1.set_style(fadeStyle);
+        fade2.set_style(fadeStyle);
 
-        if (!this._dtpSettings.get_boolean('show-show-apps-button'))
+        this._container.add_actor(fade1);
+        this._container.add_actor(fade2);
+
+        this.previewMenu = new WindowPreview.PreviewMenu(panel);
+        this.previewMenu.enable();
+
+        if (!Me.settings.get_boolean('show-show-apps-button'))
             this.hideShowAppsButton();
 
         let rtl = Clutter.get_default_text_direction() == Clutter.TextDirection.RTL;
@@ -247,9 +243,9 @@ var taskbar = Utils.defineClass({
 
         // Update minimization animation target position on allocation of the
         // container and on scrollview change.
-        this._box.connect('notify::allocation', Lang.bind(this, this._updateAppIconsGeometry));
+        this._box.connect('notify::allocation', Lang.bind(this, this._updateAppIcons));
         let scrollViewAdjustment = this._scrollView.hscroll.adjustment;
-        scrollViewAdjustment.connect('notify::value', Lang.bind(this, this._updateAppIconsGeometry));
+        scrollViewAdjustment.connect('notify::value', Lang.bind(this, this._updateAppIcons));
 
         this._workId = Main.initializeDeferredWork(this._box, Lang.bind(this, this._redisplay));
 
@@ -259,12 +255,12 @@ var taskbar = Utils.defineClass({
 
         this._signalsHandler.add(
             [
-                this.panelWrapper.panel.actor,
+                this.dtpPanel.panel.actor,
                 'notify::height',
                 () => this._queueRedisplay()
             ],
             [
-                this.panelWrapper.panel.actor,
+                this.dtpPanel.panel.actor,
                 'notify::width',
                 () => this._queueRedisplay()
             ],
@@ -298,7 +294,7 @@ var taskbar = Utils.defineClass({
                     'window-left-monitor'
                 ],
                 () => {
-                    if (this._dtpSettings.get_boolean('isolate-monitors')) {
+                    if (Me.settings.get_boolean('isolate-monitors')) {
                         this._queueRedisplay();
                     }
                 }
@@ -325,40 +321,37 @@ var taskbar = Utils.defineClass({
                 Lang.bind(this, this._syncShowAppsButtonToggled)
             ],
             [
-                this._dtpSettings,
-                'changed::show-window-previews',
-                Lang.bind(this, this._toggleWindowPreview)
-            ],
-            [
-                this._dtpSettings,
+                Me.settings,
                 'changed::show-show-apps-button',
                 Lang.bind(this, function() {
-                    if (this._dtpSettings.get_boolean('show-show-apps-button'))
+                    if (Me.settings.get_boolean('show-show-apps-button'))
                         this.showShowAppsButton();
                     else
                         this.hideShowAppsButton();
+
+                    this.resetAppIcons();
                 })
             ],
             [
-                this._dtpSettings,
+                Me.settings,
                 [
                     'changed::dot-size',
                     'changed::show-favorites',
+                    'changed::show-running-apps',
                     'changed::show-favorites-all-monitors'
                 ],
                 Lang.bind(this, this._redisplay)
             ],
             [
-                this._dtpSettings,
+                Me.settings,
                 'changed::group-apps',
                 Lang.bind(this, function() {
-                    this.isGroupApps = this._dtpSettings.get_boolean('group-apps');
+                    this.isGroupApps = Me.settings.get_boolean('group-apps');
                     this._connectWorkspaceSignals();
-                    this.resetAppIcons();
                 })
             ],
             [
-                this._dtpSettings,
+                Me.settings,
                 [
                     'changed::group-apps-use-launchers',
                     'changed::taskbar-locked'
@@ -367,7 +360,7 @@ var taskbar = Utils.defineClass({
             ]
         );
 
-        this.isGroupApps = this._dtpSettings.get_boolean('group-apps');
+        this.isGroupApps = Me.settings.get_boolean('group-apps');
 
         this._connectWorkspaceSignals();
     },
@@ -378,6 +371,10 @@ var taskbar = Utils.defineClass({
         this._showAppsIconWrapper.destroy();
 
         this._container.destroy();
+        
+        this.previewMenu.disable();
+        this.previewMenu.destroy();
+
         this._disconnectWorkspaceSignals();
     },
 
@@ -408,9 +405,11 @@ var taskbar = Utils.defineClass({
 
         switch ( event.get_scroll_direction() ) {
         case Clutter.ScrollDirection.UP:
+        case Clutter.ScrollDirection.LEFT:
             delta = -increment;
             break;
         case Clutter.ScrollDirection.DOWN:
+        case Clutter.ScrollDirection.RIGHT:
             delta = +increment;
             break;
         case Clutter.ScrollDirection.SMOOTH:
@@ -498,19 +497,9 @@ var taskbar = Utils.defineClass({
                            .forEach(fav => fav._container[cssFuncName]('favorite'));
     },
 
-    _appIdListToHash: function(apps) {
-        let ids = {};
-        for (let i = 0; i < apps.length; i++)
-            ids[apps[i].get_id()] = apps[i];
-        return ids;
-    },
-
     handleIsolatedWorkspaceSwitch: function() {
-        if (this.isGroupApps) {
-            this._queueRedisplay();
-        } else {
-            this.resetAppIcons();
-        }
+        this._shownInitially = this.isGroupApps;
+        this._queueRedisplay();
     },
 
     _connectWorkspaceSignals: function() {
@@ -547,31 +536,28 @@ var taskbar = Utils.defineClass({
 
     _createAppItem: function(app, window, isLauncher) {
         let appIcon = new AppIcons.taskbarAppIcon(
-            this._dtpSettings, 
             {
                 app: app, 
                 window: window,
                 isLauncher: isLauncher
             },
-            this.panelWrapper,
+            this.dtpPanel,
             { 
                 setSizeManually: true,
                 showLabel: false,
-                isDraggable: !this._dtpSettings.get_boolean('taskbar-locked'),
-            }
+                isDraggable: !Me.settings.get_boolean('taskbar-locked'),
+            },
+            this.previewMenu
         );
 
         if (appIcon._draggable) {
             appIcon._draggable.connect('drag-begin',
                                        Lang.bind(this, function() {
                                            appIcon.actor.opacity = 50;
-                                           this._disableWindowPreview();
                                        }));
             appIcon._draggable.connect('drag-end',
                                        Lang.bind(this, function() {
                                            appIcon.actor.opacity = 255;
-                                           this._enableWindowPreview();
-                                           appIcon.syncWindowPreview(this._getAppIcons());
                                        }));
         }
 
@@ -590,7 +576,7 @@ var taskbar = Utils.defineClass({
         appIcon.actor.connect('notify::hover', Lang.bind(this, function() {
             if (appIcon.actor.hover){
                 this._ensureAppIconVisibilityTimeoutId = Mainloop.timeout_add(100, Lang.bind(this, function(){
-                    ensureActorVisibleInScrollView(this._scrollView, appIcon.actor);
+                    Utils.ensureActorVisibleInScrollView(this._scrollView, appIcon.actor, this._scrollView._dtpFadeSize);
                     this._ensureAppIconVisibilityTimeoutId = 0;
                     return GLib.SOURCE_REMOVE;
                 }));
@@ -604,11 +590,11 @@ var taskbar = Utils.defineClass({
 
         appIcon.actor.connect('clicked',
             Lang.bind(this, function(actor) {
-                ensureActorVisibleInScrollView(this._scrollView, actor);
+                Utils.ensureActorVisibleInScrollView(this._scrollView, actor, this._scrollView._dtpFadeSize);
         }));
 
         appIcon.actor.connect('key-focus-in', Lang.bind(this, function(actor) {
-                let [x_shift, y_shift] = ensureActorVisibleInScrollView(this._scrollView, actor);
+                let [x_shift, y_shift] = Utils.ensureActorVisibleInScrollView(this._scrollView, actor, this._scrollView._dtpFadeSize);
 
                 // This signal is triggered also by mouse click. The popup menu is opened at the original
                 // coordinates. Thus correct for the shift which is going to be applied to the scrollview.
@@ -627,29 +613,6 @@ var taskbar = Utils.defineClass({
         this._hookUpLabel(item, appIcon);
 
         return item;
-    },
-
-    _toggleWindowPreview: function() {
-        if (this._dtpSettings.get_boolean('show-window-previews'))
-            this._enableWindowPreview();
-        else
-            this._disableWindowPreview();
-    },
-
-    _enableWindowPreview: function() {
-        let appIcons = this._getAppIcons();
-        
-        appIcons.filter(appIcon => !appIcon.isLauncher)
-                .forEach(function (appIcon) {
-            appIcon.enableWindowPreview(appIcons);
-        });
-    },
-
-    _disableWindowPreview: function() {
-        let appIcons = this._getAppIcons();
-        appIcons.forEach(function (appIcon) {
-            appIcon.disableWindowPreview();
-        });
     },
 
     // Return an array with the "proper" appIcons currently in the taskbar
@@ -671,11 +634,11 @@ var taskbar = Utils.defineClass({
         });
     },
 
-    _updateAppIconsGeometry: function() {
+    _updateAppIcons: function() {
         let appIcons = this._getAppIcons();
 
-        appIcons.filter(icon => icon.constructor === AppIcons.taskbarAppIcon).forEach(function(icon) {
-            icon.updateIconGeometry();
+        appIcons.filter(icon => icon.constructor === AppIcons.taskbarAppIcon).forEach(icon => {
+            icon.updateIcon();
         });
     },
 
@@ -734,32 +697,25 @@ var taskbar = Utils.defineClass({
     },
 
     _adjustIconSize: function() {
-        // For the icon size, we only consider children which are "proper"
-        // icons and which are not animating out (which means they will be 
-        // destroyed at the end of the animation)
-        let iconChildren = this._getTaskbarIcons();
+        let panelSize = Me.settings.get_int('panel-size');
+        let availSize = panelSize - Me.settings.get_int('appicon-padding') * 2;
+        let minIconSize = MIN_ICON_SIZE + panelSize % 2;
 
-        iconChildren.push(this._showAppsIcon);
-
-        let scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
-
-        // Getting the panel height and making sure that the icon padding is at
-        // least the size of the app running indicator on both the top and bottom.
-        let availSize = (this.panelWrapper.panel.actor.get_height() - 
-                         (this._dtpSettings.get_int('appicon-padding') * 2)) / scaleFactor;
-        
         if (availSize == this.iconSize)
             return;
 
-        if (availSize < 1) {
-            availSize = 1;
+        if (availSize < minIconSize) {
+            availSize = minIconSize;
         }
         
-        let oldIconSize = this.iconSize;
+        // For the icon size, we only consider children which are "proper"
+        // icons and which are not animating out (which means they will be 
+        // destroyed at the end of the animation)
+        let iconChildren = this._getTaskbarIcons().concat([this._showAppsIcon]);
+        let scale = this.iconSize / availSize;
+        
         this.iconSize = availSize;
-        this.emit('icon-size-changed');
 
-        let scale = oldIconSize / this.iconSize;
         for (let i = 0; i < iconChildren.length; i++) {
             let icon = iconChildren[i].child._delegate.icon;
 
@@ -778,10 +734,9 @@ var taskbar = Utils.defineClass({
 
             // Scale the icon's texture to the previous size and
             // tween to the new size
-            icon.icon.set_size(icon.icon.width * scale,
-                                icon.icon.height * scale);
+            icon.icon.set_size(icon.icon.width * scale, icon.icon.height * scale);
 
-            Tweener.addTween(icon.icon,
+            Utils.animate(icon.icon,
                         { width: targetWidth,
                             height: targetHeight,
                             time: DASH_ANIMATION_TIME,
@@ -791,12 +746,27 @@ var taskbar = Utils.defineClass({
     },
 
     sortAppsCompareFunction: function(appA, appB) {
-        return getAppStableSequence(appA, this._dtpSettings, this.panelWrapper.monitor) - 
-               getAppStableSequence(appB, this._dtpSettings, this.panelWrapper.monitor);
+        return getAppStableSequence(appA, this.dtpPanel.monitor) - 
+               getAppStableSequence(appB, this.dtpPanel.monitor);
     },
 
-    sortWindowsCompareFunction: function(windowA, windowB) {
-        return getWindowStableSequence(windowA) - getWindowStableSequence(windowB);
+    getAppInfos: function() {
+        //get the user's favorite apps
+        let favoriteApps = this._checkIfShowingFavorites() ? AppFavorites.getAppFavorites().getFavorites() : [];
+
+        //find the apps that should be in the taskbar: the favorites first, then add the running apps
+        // When using isolation, we filter out apps that have no windows in
+        // the current workspace (this check is done in AppIcons.getInterestingWindows)
+        let runningApps = this._checkIfShowingRunningApps() ? this._getRunningApps().sort(this.sortAppsCompareFunction.bind(this)) : [];
+
+        if (!this.isGroupApps && Me.settings.get_boolean('group-apps-use-launchers')) {
+            return this._createAppInfos(favoriteApps, [], true)
+                       .concat(this._createAppInfos(runningApps)
+                       .filter(appInfo => appInfo.windows.length));
+        } else {
+            return this._createAppInfos(favoriteApps.concat(runningApps.filter(app => favoriteApps.indexOf(app) < 0)))
+                       .filter(appInfo => appInfo.windows.length || favoriteApps.indexOf(appInfo.app) >= 0);
+        }
     },
 
     _redisplay: function () {
@@ -804,39 +774,21 @@ var taskbar = Utils.defineClass({
             return;
         }
 
-        let showFavorites = this._dtpSettings.get_boolean('show-favorites') && 
-                            (!this.panelWrapper.isSecondary || this._dtpSettings.get_boolean('show-favorites-all-monitors'));
         //get the currently displayed appIcons
         let currentAppIcons = this._getTaskbarIcons();
-        //get the user's favorite apps
-        let favoriteApps = showFavorites ? AppFavorites.getAppFavorites().getFavorites() : [];
-
-        //find the apps that should be in the taskbar: the favorites first, then add the running apps
-        // When using isolation, we filter out apps that have no windows in
-        // the current workspace (this check is done in AppIcons.getInterestingWindows)
-        let runningApps = this._getRunningApps().sort(this.sortAppsCompareFunction.bind(this));
-        let expectedAppInfos;
-        
-        if (!this.isGroupApps && this._dtpSettings.get_boolean('group-apps-use-launchers')) {
-            expectedAppInfos = this._createAppInfos(favoriteApps, [], true)
-                                   .concat(this._createAppInfos(runningApps)
-                                               .filter(appInfo => appInfo.windows.length));
-        } else {
-            expectedAppInfos = this._createAppInfos(favoriteApps.concat(runningApps.filter(app => favoriteApps.indexOf(app) < 0)))
-                                   .filter(appInfo => appInfo.windows.length || favoriteApps.indexOf(appInfo.app) >= 0);
-        }
+        let expectedAppInfos = this.getAppInfos();
 
         //remove the appIcons which are not in the expected apps list
         for (let i = currentAppIcons.length - 1; i > -1; --i) {
             let appIcon = currentAppIcons[i].child._delegate;
-            let appIndex = findIndex(expectedAppInfos, appInfo => appInfo.app == appIcon.app &&
-                                                                  appInfo.isLauncher == appIcon.isLauncher);
+            let appIndex = Utils.findIndex(expectedAppInfos, appInfo => appInfo.app == appIcon.app &&
+                                                                        appInfo.isLauncher == appIcon.isLauncher);
 
             if (appIndex < 0 || 
                 (appIcon.window && (this.isGroupApps || expectedAppInfos[appIndex].windows.indexOf(appIcon.window) < 0)) ||
                 (!appIcon.window && !appIcon.isLauncher && 
                  !this.isGroupApps && expectedAppInfos[appIndex].windows.length)) {
-                currentAppIcons[i].animateOutAndDestroy();
+                currentAppIcons[i][this._shownInitially ? 'animateOutAndDestroy' : 'destroy']();
                 currentAppIcons.splice(i, 1);
             }
         }
@@ -850,8 +802,8 @@ var taskbar = Utils.defineClass({
                                  
             for (let j = 0, ll = neededAppIcons.length; j < ll; ++j) {
                 //check if the icon already exists
-                let matchingAppIconIndex = findIndex(currentAppIcons, appIcon => appIcon.child._delegate.app == neededAppIcons[j].app && 
-                                                                                 appIcon.child._delegate.window == neededAppIcons[j].window);
+                let matchingAppIconIndex = Utils.findIndex(currentAppIcons, appIcon => appIcon.child._delegate.app == neededAppIcons[j].app && 
+                                                                                       appIcon.child._delegate.window == neededAppIcons[j].window);
 
                 if (matchingAppIconIndex > 0 && matchingAppIconIndex != currentPosition) {
                     //moved icon, reposition it
@@ -880,17 +832,23 @@ var taskbar = Utils.defineClass({
         this._box.queue_relayout();
 
         // This is required for icon reordering when the scrollview is used.
-        this._updateAppIconsGeometry();
+        this._updateAppIcons();
 
         // This will update the size, and the corresponding number for each icon on the primary panel
-        if (!this.panelWrapper.isSecondary) {
+        if (!this.dtpPanel.isSecondary) {
             this._updateNumberOverlay();
         }
 
-        // Connect windows previews to hover events
-        this._toggleWindowPreview();
-
         this._shownInitially = true;
+    },
+
+    _checkIfShowingRunningApps: function() {
+        return Me.settings.get_boolean('show-running-apps');
+    },
+    
+    _checkIfShowingFavorites: function() {
+        return Me.settings.get_boolean('show-favorites') && 
+               (!this.dtpPanel.isSecondary || Me.settings.get_boolean('show-favorites-all-monitors'));
     },
 
     _getRunningApps: function() {
@@ -913,8 +871,8 @@ var taskbar = Utils.defineClass({
         return apps.map(app => ({ 
             app: app, 
             isLauncher: defaultIsLauncher || false,
-            windows: defaultWindows || AppIcons.getInterestingWindows(app, this._dtpSettings, this.panelWrapper.monitor)
-                                               .sort(this.sortWindowsCompareFunction)
+            windows: defaultWindows || AppIcons.getInterestingWindows(app, this.dtpPanel.monitor)
+                                               .sort(sortWindowsCompareFunction)
         }));
     },
 
@@ -931,6 +889,10 @@ var taskbar = Utils.defineClass({
         this._shownInitially = false;
         this._redisplay();
 
+        if (Panel.checkIfVertical()) {
+            this.showAppsButton.set_width(this.dtpPanel.geom.w);
+            this.previewMenu._updateClip();
+        }
     },
 
     _updateNumberOverlay: function() {
@@ -950,11 +912,11 @@ var taskbar = Utils.defineClass({
                 icon.setNumberOverlay(-1);
             }
 
-            icon.updateNumberOverlay();
+            icon.updateHotkeyNumberOverlay();
         });
 
-        if (this._dtpSettings.get_boolean('hot-keys') &&
-            this._dtpSettings.get_string('hotkeys-overlay-combo') === 'ALWAYS')
+        if (Me.settings.get_boolean('hot-keys') &&
+            Me.settings.get_string('hotkeys-overlay-combo') === 'ALWAYS')
             this.toggleNumberOverlay(true);
     },
 
@@ -983,26 +945,33 @@ var taskbar = Utils.defineClass({
         if (!this._settings.is_writable('favorite-apps'))
             return DND.DragMotionResult.NO_DROP;
 
-        if (!this._box.contains(source.actor) && !source._dashItemContainer) {
+        let sourceActor = source instanceof St.Widget ? source : source.actor;
+
+        if (!this._box.contains(sourceActor) && !source._dashItemContainer) {
             //not an appIcon of the taskbar, probably from the applications view
             source._dashItemContainer = new DragPlaceholderItem(source, this.iconSize);
             this._box.insert_child_above(source._dashItemContainer, null);
         }
         
-        x -= this.showAppsButton.width;
+        let isVertical = Panel.checkIfVertical();
+        let sizeProp = isVertical ? 'height' : 'width';
+        let posProp = isVertical ? 'y' : 'x';
+        let pos = isVertical ? y : x;
+
+        pos -= this.showAppsButton[sizeProp];
 
         let currentAppIcons = this._getAppIcons();
         let sourceIndex = currentAppIcons.indexOf(source);
-        let hoveredIndex = findIndex(currentAppIcons, 
-                                     appIcon => x >= appIcon._dashItemContainer.x && 
-                                                x <= (appIcon._dashItemContainer.x + appIcon._dashItemContainer.width));
+        let hoveredIndex = Utils.findIndex(currentAppIcons, 
+                                           appIcon => pos >= appIcon._dashItemContainer[posProp] && 
+                                                      pos <= (appIcon._dashItemContainer[posProp] + appIcon._dashItemContainer[sizeProp]));
         
         if (!this._dragInfo) {
             this._dragInfo = [sourceIndex, source];
         }
 
         if (hoveredIndex >= 0) {
-            let isLeft = x < currentAppIcons[hoveredIndex]._dashItemContainer.x + currentAppIcons[hoveredIndex]._dashItemContainer.width * .5;
+            let isLeft = pos < currentAppIcons[hoveredIndex]._dashItemContainer[posProp] + currentAppIcons[hoveredIndex]._dashItemContainer[sizeProp] * .5;
 
             // Don't allow positioning before or after self and between icons of same app
             if (!(hoveredIndex === sourceIndex ||
@@ -1017,9 +986,9 @@ var taskbar = Utils.defineClass({
                     // Ensure the next and previous icon are visible when moving the icon
                     // (I assume there's room for both of them)
                     if (hoveredIndex > 1)
-                        ensureActorVisibleInScrollView(this._scrollView, this._box.get_children()[hoveredIndex-1]);
+                        Utils.ensureActorVisibleInScrollView(this._scrollView, this._box.get_children()[hoveredIndex-1], this._scrollView._dtpFadeSize);
                     if (hoveredIndex < this._box.get_children().length-1)
-                        ensureActorVisibleInScrollView(this._scrollView, this._box.get_children()[hoveredIndex+1]);
+                        Utils.ensureActorVisibleInScrollView(this._scrollView, this._box.get_children()[hoveredIndex+1], this._scrollView._dtpFadeSize);
             }
         }
         
@@ -1035,7 +1004,7 @@ var taskbar = Utils.defineClass({
 
         let appIcons = this._getAppIcons();
         let sourceIndex = appIcons.indexOf(source);
-        let usingLaunchers = !this.isGroupApps && this._dtpSettings.get_boolean('group-apps-use-launchers');
+        let usingLaunchers = !this.isGroupApps && Me.settings.get_boolean('group-apps-use-launchers');
 
         // dragging the icon to its original position
         if (this._dragInfo[0] === sourceIndex) {
@@ -1048,12 +1017,13 @@ var taskbar = Utils.defineClass({
         let replacingIndex = sourceIndex + (sourceIndex > this._dragInfo[0] ? -1 : 1);
         let favoriteIndex = replacingIndex >= 0 ? appFavorites.getFavorites().indexOf(appIcons[replacingIndex].app) : 0;
         let sameApps = appIcons.filter(a => a != source && a.app == source.app);
+        let showingFavorites = this._checkIfShowingFavorites();
         let favoritesCount = 0;
         let position = 0;
         let interestingWindows = {};
         let getAppWindows = app => {
             if (!interestingWindows[app]) {
-                interestingWindows[app] = AppIcons.getInterestingWindows(app, this._dtpSettings, this.panelWrapper.monitor);
+                interestingWindows[app] = AppIcons.getInterestingWindows(app, this.dtpPanel.monitor);
             }
 
             let appWindows = interestingWindows[app]; //prevents "reference to undefined property Symbol.toPrimitive" warning
@@ -1076,8 +1046,9 @@ var taskbar = Utils.defineClass({
 
             windows.forEach(w => w._dtpPosition = position++);
 
-            if ((usingLaunchers && appIcons[i].isLauncher) || 
-                (!usingLaunchers && appFavorites.isFavorite(appIcons[i].app.get_id()))) {
+            if (showingFavorites && 
+                ((usingLaunchers && appIcons[i].isLauncher) || 
+                 (!usingLaunchers && appFavorites.isFavorite(appIcons[i].app.get_id())))) {
                 ++favoritesCount;
             }
         }
@@ -1088,7 +1059,7 @@ var taskbar = Utils.defineClass({
             } else {
                 appFavorites.addFavoriteAtPos(sourceAppId, favoriteIndex);
             }
-        } else if (appIsFavorite && (!usingLaunchers || source.isLauncher)) {
+        } else if (appIsFavorite && showingFavorites && (!usingLaunchers || source.isLauncher)) {
             appFavorites.removeFavorite(sourceAppId);
         }
 
@@ -1104,7 +1075,7 @@ var taskbar = Utils.defineClass({
         // status (due to the _syncShowAppsButtonToggled function below) and it
         // has already performed the desired action.
 
-        let animate = this._dtpSettings.get_boolean('animate-show-apps');
+        let animate = Me.settings.get_boolean('animate-show-apps');
         let selector = Main.overview.viewSelector;
 
         if (selector._showAppsButton.checked !== this.showAppsButton.checked) {
@@ -1124,14 +1095,18 @@ var taskbar = Utils.defineClass({
                 // runs if we are already inside the overview.
                 if (!Main.overview._shown) {
                     this.forcedOverview = true;
-                    let view = Main.overview.viewSelector.appDisplay._views[visibleView].view;
-                    let grid = view._grid;
+                    let grid = Main.overview.viewSelector.appDisplay._views[visibleView].view._grid;
+                    let onShownCb;
+                    let overviewShownId = Main.overview.connect('shown', () => {
+                        Main.overview.disconnect(overviewShownId);
+                        onShownCb();
+                    });
+
                     if (animate) {
                         // Animate in the the appview, hide the appGrid to avoiud flashing
                         // Go to the appView before entering the overview, skipping the workspaces.
                         // Do this manually avoiding opacity in transitions so that the setting of the opacity
                         // to 0 doesn't get overwritten.
-                        Main.overview.viewSelector._activePage.opacity = 0;
                         Main.overview.viewSelector._activePage.hide();
                         Main.overview.viewSelector._activePage = Main.overview.viewSelector._appsPage;
                         Main.overview.viewSelector._activePage.show();
@@ -1142,28 +1117,24 @@ var taskbar = Utils.defineClass({
                         // and the appgrid could already be allocated from previous shown.
                         // It has to be triggered after the overview is shown as wrong coordinates are obtained
                         // otherwise.
-                        let overviewShownId = Main.overview.connect('shown', Lang.bind(this, function() {
-                            Main.overview.disconnect(overviewShownId);
-                            Meta.later_add(Meta.LaterType.BEFORE_REDRAW, Lang.bind(this, function() {
-                                grid.actor.opacity = 255;
-                                grid.animateSpring(IconGrid.AnimationDirection.IN, this.showAppsButton);
-                            }));
-                        }));
+                        onShownCb = () => Meta.later_add(Meta.LaterType.BEFORE_REDRAW, () => {
+                            grid.actor.opacity = 255;
+                            grid.animateSpring(IconGrid.AnimationDirection.IN, this.showAppsButton);
+                        });
                     } else {
                         Main.overview.viewSelector._activePage = Main.overview.viewSelector._appsPage;
                         Main.overview.viewSelector._activePage.show();
-                        grid.actor.opacity = 255;
-
+                        onShownCb = () => grid.emit('animation-done');
                     }
                 }
 
                 //temporarily use as primary the monitor on which the showapps btn was clicked 
-                this.panelWrapper.panelManager.setFocusedMonitor(this.panelWrapper.monitor);
+                this.dtpPanel.panelManager.setFocusedMonitor(this.dtpPanel.monitor);
 
                 //reset the primary monitor when exiting the overview
                 let overviewHiddenId = Main.overview.connect('hidden', () => {
                     Main.overview.disconnect(overviewHiddenId);
-                    this.panelWrapper.panelManager.setFocusedMonitor(this.panelWrapper.panelManager.primaryPanel.monitor, true);
+                    this.dtpPanel.panelManager.setFocusedMonitor(this.dtpPanel.panelManager.primaryPanel.monitor, true);
                 });
 
                 // Finally show the overview
@@ -1219,13 +1190,17 @@ var taskbar = Utils.defineClass({
 
     popupFocusedAppSecondaryMenu: function() {
         let appIcons = this._getAppIcons();
+        let tracker = Shell.WindowTracker.get_default();
+
         for(let i in appIcons) {
             if(appIcons[i].app == tracker.focus_app) {
                 let appIcon = appIcons[i];
                 if(appIcon._menu && appIcon._menu.isOpen)
                     appIcon._menu.close();
                 else
-                    appIcons[i].popupMenu();
+                    appIcon.popupMenu();
+
+                appIcon.sync_hover();
                 break;
             }
         }
@@ -1239,7 +1214,7 @@ var DragPlaceholderItem = Utils.defineClass({
     Extends: St.Widget,
 
     _init: function(appIcon, iconSize) {
-        this.callParent('_init', { style_class: 'dtp-icon-container', layout_manager: new Clutter.BinLayout() });
+        this.callParent('_init', { style: AppIcons.getIconContainerStyle(), layout_manager: new Clutter.BinLayout() });
 
         this.child = { _delegate: appIcon };
 
@@ -1258,78 +1233,18 @@ var DragPlaceholderItem = Utils.defineClass({
     },
 });
 
-function getAppStableSequence(app, settings, monitor) {
-    let windows = AppIcons.getInterestingWindows(app, settings, monitor);
+function getAppStableSequence(app, monitor) {
+    let windows = AppIcons.getInterestingWindows(app, monitor);
     
     return windows.reduce((prevWindow, window) => {
         return Math.min(prevWindow, getWindowStableSequence(window));
     }, Infinity);
 }
 
-function getWindowStableSequence(window) {
-    return ('_dtpPosition' in window ? window._dtpPosition : window.get_stable_sequence()); 
+function sortWindowsCompareFunction(windowA, windowB) {
+    return getWindowStableSequence(windowA) - getWindowStableSequence(windowB);
 }
 
-/*
- * This is a copy of the same function in utils.js, but also adjust horizontal scrolling
- * and perform few further cheks on the current value to avoid changing the values when
- * it would be clamp to the current one in any case.
- * Return the amount of shift applied
-*/
-function ensureActorVisibleInScrollView(scrollView, actor) {
-
-    let adjust_v = true;
-    let adjust_h = true;
-
-    let vadjustment = scrollView.vscroll.adjustment;
-    let hadjustment = scrollView.hscroll.adjustment;
-    let [vvalue, vlower, vupper, vstepIncrement, vpageIncrement, vpageSize] = vadjustment.get_values();
-    let [hvalue, hlower, hupper, hstepIncrement, hpageIncrement, hpageSize] = hadjustment.get_values();
-
-    let [hvalue0, vvalue0] = [hvalue, vvalue];
-
-    let voffset = 0;
-    let hoffset = scrollView._dtpFadeSize;
-    
-    let box = actor.get_allocation_box();
-    let y1 = box.y1, y2 = box.y2, x1 = box.x1, x2 = box.x2;
-
-    let parent = actor.get_parent();
-    while (parent != scrollView) {
-        if (!parent)
-            throw new Error("actor not in scroll view");
-
-        let box = parent.get_allocation_box();
-        y1 += box.y1;
-        y2 += box.y1;
-        x1 += box.x1;
-        x2 += box.x1;
-        parent = parent.get_parent();
-    }
-
-    if (y1 < vvalue + voffset)
-        vvalue = Math.max(0, y1 - voffset);
-    else if (vvalue < vupper - vpageSize && y2 > vvalue + vpageSize - voffset)
-        vvalue = Math.min(vupper -vpageSize, y2 + voffset - vpageSize);
-
-    if (x1 < hvalue + hoffset)
-        hvalue = Math.max(0, x1 - hoffset);
-    else if (hvalue < hupper - hpageSize && x2 > hvalue + hpageSize - hoffset)
-        hvalue = Math.min(hupper - hpageSize, x2 + hoffset - hpageSize);
-
-    if (vvalue !== vvalue0) {
-        Tweener.addTween(vadjustment,
-                         { value: vvalue,
-                           time: Util.SCROLL_TIME,
-                           transition: 'easeOutQuad' });
-    }
-
-    if (hvalue !== hvalue0) {
-        Tweener.addTween(hadjustment,
-                         { value: hvalue,
-                           time: Util.SCROLL_TIME,
-                           transition: 'easeOutQuad' });
-    }
-
-    return [hvalue- hvalue0, vvalue - vvalue0];
+function getWindowStableSequence(window) {
+    return ('_dtpPosition' in window ? window._dtpPosition : window.get_stable_sequence()); 
 }

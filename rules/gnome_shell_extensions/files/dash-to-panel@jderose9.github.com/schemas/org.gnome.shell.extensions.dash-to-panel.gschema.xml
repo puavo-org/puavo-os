@@ -18,6 +18,13 @@
     <value value='5' nick='QUIT'/>
     <value value='6' nick='TOGGLE-SHOWPREVIEW'/>
   </enum>
+  <enum id='org.gnome.shell.extensions.dash-to-panel.scrollAction'>
+    <value value='0' nick='NOTHING'/>
+    <value value='1' nick='SWITCH_WORKSPACE'/>
+    <value value='2' nick='CYCLE_WINDOWS'/>
+    <value value='3' nick='PASS_THROUGH'/>
+    <value value='4' nick='CHANGE_VOLUME'/>
+  </enum>
   <enum id='org.gnome.shell.extensions.dash-to-panel.statusAreaPosition'>
     <value value='0' nick='BUTTONSLEFT'/>
     <value value='1' nick='STATUSLEFT'/>
@@ -42,15 +49,11 @@
     <value value='1' nick='TEMPORARILY'/>
     <value value='2' nick='ALWAYS'/>
   </enum>
-  <!-- this is mean to Match StSide. LEFT and RIGHT actual position in reversed in
-       rtl languages -->
-  <enum id='org.gnome.shell.extensions.dash-to-panel.panelPosition'>
+  <enum id='org.gnome.shell.extensions.dash-to-panel.position'>
     <value value='0' nick='BOTTOM'/>
     <value value='1' nick='TOP'/>
-  </enum>
-  <enum id='org.gnome.shell.extensions.dash-to-panel.dotPosition'>
-    <value value='0' nick='BOTTOM'/>
-    <value value='1' nick='TOP'/>
+    <value value='2' nick='LEFT'/>
+    <value value='3' nick='RIGHT'/>
   </enum>
   <enum id='org.gnome.shell.extensions.dash-to-panel.proximityBehavior'>
     <value value='0' nick='ALL_WINDOWS'/>
@@ -64,8 +67,22 @@
     <value value='3' nick='bold'/>
     <value value='4' nick='bolder'/>
   </enum>
+  <enum id='org.gnome.shell.extensions.dash-to-panel.hotkeyNumberKeys'>
+    <value value='0' nick='NUM_ROW'/>
+    <value value='1' nick='NUM_KEYPAD'/>
+    <value value='2' nick='BOTH'/>
+  </enum>
   <schema path="/org/gnome/shell/extensions/dash-to-panel/" id="org.gnome.shell.extensions.dash-to-panel">
-    <key name="panel-position" enum="org.gnome.shell.extensions.dash-to-panel.panelPosition">
+    <key type="b" name="check-update">
+      <default>false</default>
+    </key>
+    <key type="b" name="force-check-update">
+      <default>false</default>
+    </key>
+    <key type="s" name="version-to-install">
+      <default>''</default>
+    </key>
+    <key name="panel-position" enum="org.gnome.shell.extensions.dash-to-panel.position">
       <default>'BOTTOM'</default>
       <summary>Panel position</summary>
       <description>Panel is shown on the Bottom or Top of the screen.</description>
@@ -75,7 +92,7 @@
       <summary>Panel size</summary>
       <description>Set the size of the panel.</description>
     </key>
-    <key name="dot-position" enum="org.gnome.shell.extensions.dash-to-panel.dotPosition">
+    <key name="dot-position" enum="org.gnome.shell.extensions.dash-to-panel.position">
       <default>'BOTTOM'</default>
       <summary>Dot position</summary>
       <description>Running indicators are shown on the Bottom or Top of the screen.</description>
@@ -89,6 +106,11 @@
       <default>'METRO'</default>
       <summary>Style of the running indicator (unfocused)</summary>
       <description>Style of the running indicator for the icon for applications which are not currently focused</description>
+    </key>
+    <key type="b" name="dot-color-dominant">
+      <default>false</default>
+      <summary>Running indicator dominant color</summary>
+      <description>Whether to use the app icon's dominant color for .app-well-running-dot</description>
     </key>
     <key type="b" name="dot-color-override">
       <default>false</default>
@@ -150,6 +172,11 @@
       <summary>Highlight icon of focused application</summary>
       <description>Whether to highlight the background of the currently focused application's icon</description>
     </key>
+    <key type="b" name="focus-highlight-dominant">
+      <default>false</default>
+      <summary>Highlight icon dominant color</summary>
+      <description>Base the active window highlight color on that application's icon</description>
+    </key>
     <key type="s" name="focus-highlight-color">
       <default>"#EEEEEE"</default>
       <summary>Color of highlight of focused application</summary>
@@ -169,6 +196,11 @@
       <default>false</default>
       <summary>Panel menu buttons require click</summary>
       <description>Whether to activate the panel menu buttons on hover or on click</description>
+    </key>
+    <key type="b" name="stockgs-force-hotcorner">
+      <default>false</default>
+      <summary>Force hot corner</summary>
+      <description>Wheter to force having an Activities hot corner on the primary monitor</description>
     </key>
     <key name="location-clock" enum="org.gnome.shell.extensions.dash-to-panel.statusAreaPosition">
       <default>'STATUSLEFT'</default>
@@ -315,6 +347,11 @@
       <summary>Keybinding toggle intellihide</summary>
       <description>Keybinding to reveal the panel while in intellihide mode</description>
     </key>
+    <key type="i" name="intellihide-enable-start-delay">
+      <default>2000</default>
+      <summary>Intellihide enable start delay</summary>
+      <description>The delay before enabling intellihide on start</description>
+    </key>
     <key type="b" name="show-show-apps-button">
       <default>true</default>
       <summary>Show applications button</summary>
@@ -334,6 +371,26 @@
       <default>true</default>
       <summary>Animate Show Applications from the desktop</summary>
       <description>Animate Show Applications from the desktop</description>
+    </key>
+    <key type="as" name="show-apps-button-context-menu-commands">
+     <default>[]</default>
+     <summary>Show Apps button context menu commands</summary>
+     <description>Commands to add to the Show Apps button right click menu</description>
+    </key>
+    <key type="as" name="show-apps-button-context-menu-titles">
+     <default>[]</default>
+     <summary>Show Apps button context menu titles</summary>
+     <description>Titles for commands added to Show Apps button right click menu</description>
+    </key>
+    <key type="as" name="panel-context-menu-commands">
+     <default>[]</default>
+     <summary>Panel context menu commands</summary>
+     <description>Commands to add to the panel right click menu</description>
+    </key>
+    <key type="as" name="panel-context-menu-titles">
+     <default>[]</default>
+     <summary>Panel context menu titles</summary>
+     <description>Titles for commands added to panel right click menu</description>
     </key>
     <key type="b" name="show-activities-button">
       <default>false</default>
@@ -380,10 +437,15 @@
       <summary>Show tooltip</summary>
       <description>Show tooltip on hover of app icon</description>
     </key>
+    <key type="b" name="show-running-apps">
+      <default>true</default>
+      <summary>Show running apps</summary>
+      <description>Show or hide running application icons in the dash</description>
+    </key>
     <key type="b" name="show-favorites">
       <default>true</default>
       <summary>Show favorites apps</summary>
-      <description>Show or hide favorite appplications icons in the dash</description>
+      <description>Show or hide favorite application icons in the dash</description>
     </key>
     <key type="i" name="show-window-previews-timeout">
       <default>100</default>
@@ -400,20 +462,70 @@
       <summary>Display title in preview</summary>
       <description>Display window title in preview</description>
     </key>
-    <key type="i" name="window-preview-width">
-      <default>350</default>
-      <summary>Window previews width</summary>
-      <description>The width of the window previews</description>
+    <key type="b" name="window-preview-manual-styling">
+      <default>false</default>
+      <summary>Window previews manual styling</summary>
+      <description>This defines if the default window previews styling should be applied</description>
     </key>
-    <key type="i" name="window-preview-height">
-      <default>200</default>
-      <summary>Window previews height</summary>
-      <description>The height of the window previews</description>
+    <key name="window-preview-title-position" enum="org.gnome.shell.extensions.dash-to-panel.position">
+      <default>'TOP'</default>
+      <summary>Title position</summary>
+      <description>Position of the window title, close button and icon in preview.</description>
+    </key>
+    <key type="s" name="window-preview-title-font-color">
+      <default>"#dddddd"</default>
+      <summary>Window previews title font color</summary>
+      <description>This defines the window preview titles font color.</description>
+    </key>
+    <key type="i" name="window-preview-title-font-size">
+      <default>14</default>
+      <summary>Window previews title font size</summary>
+      <description>This defines the window preview titles font size.</description>
+    </key>
+    <key type="i" name="window-preview-animation-time">
+      <default>260</default>
+      <summary>Window previews animation time</summary>
+      <description>This defines the window previews animation time.</description>
+    </key>
+    <key name="window-preview-title-font-weight" enum="org.gnome.shell.extensions.dash-to-panel.fontWeight">
+      <default>'inherit'</default>
+      <summary>Font weight of window preview titles</summary>
+      <description>This defines the font weight of window preview titles. Supported values: inherit (from theme), normal, lighter, bold and bolder.</description>
+    </key>
+    <key type="i" name="window-preview-size">
+      <default>240</default>
+      <summary>Window previews size</summary>
+      <description>Preferred window previews size</description>
+    </key>
+    <key type="b" name="window-preview-fixed-x">
+      <default>false</default>
+      <summary>Fixed aspect ratio X</summary>
+      <description>This defines if the window previews use a fixed aspect ratio X.</description>
+    </key>
+    <key type="b" name="window-preview-fixed-y">
+      <default>true</default>
+      <summary>Fixed aspect ratio Y</summary>
+      <description>This defines if the window previews use a fixed aspect ratio Y.</description>
     </key>
     <key type="i" name="window-preview-padding">
-      <default>20</default>
+      <default>8</default>
       <summary>Window previews padding</summary>
       <description>The padding of the window previews</description>
+    </key>
+    <key type="i" name="window-preview-aspect-ratio-x">
+      <default>16</default>
+      <summary>Aspect ratio X</summary>
+      <description>The window previews respected aspect ratio X.</description>
+    </key>
+    <key type="i" name="window-preview-aspect-ratio-y">
+      <default>9</default>
+      <summary>Aspect ratio Y</summary>
+      <description>The window previews respected aspect ratio Y.</description>
+    </key>
+    <key type="b" name="window-preview-hide-immediate-click">
+      <default>false</default>
+      <summary>Immediate hide on icon click</summary>
+      <description>The window previews immediately hide when an application icon is clicked.</description>
     </key>
     <key type="b" name="isolate-workspaces">
       <default>false</default>
@@ -523,6 +635,26 @@
       <summary>Action when clicking on a running app</summary>
       <description>Set the action that is executed when shift+middle-clicking on the icon of a running application</description>
     </key>
+    <key name="scroll-panel-action" enum="org.gnome.shell.extensions.dash-to-panel.scrollAction">
+      <default>'SWITCH_WORKSPACE'</default>
+      <summary>Action when scrolling over the panel</summary>
+      <description>Set the action that is executed when scrolling over the panel</description>
+    </key>
+    <key type="i" name="scroll-panel-delay">
+      <default>0</default>
+      <summary>Delay between panel mouse scroll events</summary>
+      <description>Set the minimum delay between panel mouse scroll events</description>
+    </key>
+    <key name="scroll-icon-action" enum="org.gnome.shell.extensions.dash-to-panel.scrollAction">
+      <default>'CYCLE_WINDOWS'</default>
+      <summary>Action when scrolling over a running app</summary>
+      <description>Set the action that is executed when scrolling over a running application</description>
+    </key>
+    <key type="i" name="scroll-icon-delay">
+      <default>0</default>
+      <summary>Delay between icon mouse scroll events</summary>
+      <description>Set the minimum delay between icon mouse scroll events</description>
+    </key>
     <key type="i" name="leave-timeout">
       <default>100</default>
       <summary>Icon leave preview timeout</summary>
@@ -542,6 +674,16 @@
       <default>true</default>
       <summary>Middle click preview to close window</summary>
       <description>Middle click on the window preview to close that window</description>
+    </key>
+    <key type="b" name="preview-use-custom-opacity">
+      <default>true</default>
+      <summary>Window previews use custom opacity</summary>
+      <description>Window previews background use a different opacity from the panel</description>
+    </key>
+    <key type="i" name="preview-custom-opacity">
+      <default>80</default>
+      <summary>Window previews background opacity</summary>
+      <description>Window previews use this custom background opacity.</description>
     </key>
     <key type="i" name="tray-size">
       <default>0</default>
@@ -633,6 +775,11 @@
       <default>false</default>
       <summary>Show window previews</summary>
       <description>When multiple instances of the application are available, show their window previews</description>
+    </key>
+    <key name="shortcut-num-keys" enum="org.gnome.shell.extensions.dash-to-panel.hotkeyNumberKeys">
+      <default>'BOTH'</default>
+      <summary>Hotkeys number keys</summary>
+      <description>Which number keys are used for the hotkeys</description>
     </key>
     <key name="app-ctrl-hotkey-1" type="as">
       <default><![CDATA[['<Ctrl><Super>1']]]></default>
@@ -1053,6 +1200,16 @@
       <description>
         Keybinding to either show or launch the 10th application in the dash.
       </description>
+    </key>
+     <key type="b" name="progress-show-bar">
+      <default>true</default>
+      <summary>Show progress bar on app icon</summary>
+      <description>Whether to show progress bar overlay on app icon, for supported applications.</description>
+    </key>
+    <key type="b" name="progress-show-count">
+      <default>true</default>
+      <summary>Show badge count on app icon</summary>
+      <description>Whether to show badge count overlay on app icon, for supported applications.</description>
     </key>
   </schema>
 </schemalist>

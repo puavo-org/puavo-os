@@ -29,14 +29,15 @@ const Mainloop = imports.mainloop;
 const St = imports.gi.St;
 const Shell = imports.gi.Shell;
 
+const Panel = Me.imports.panel;
 const Taskbar = Me.imports.taskbar;
 const Utils = Me.imports.utils;
 
 var dtpPanelStyle = Utils.defineClass({
     Name: 'DashToPanel.PanelStyle',
 
-    _init: function(settings) {
-        this._dtpSettings = settings;
+    _init: function() {
+
     },
 
     enable : function(panel) {
@@ -49,7 +50,7 @@ var dtpPanelStyle = Utils.defineClass({
 
     disable: function () {
         for (let i = 0; i < this._dtpSettingsSignalIds.length; ++i) {
-            this._dtpSettings.disconnect(this._dtpSettingsSignalIds[i]);
+            Me.settings.disconnect(this._dtpSettingsSignalIds[i]);
         }
 
         this._removeStyles();
@@ -67,7 +68,7 @@ var dtpPanelStyle = Utils.defineClass({
         this._dtpSettingsSignalIds = [];
         
         for(let i in configKeys) {
-            this._dtpSettingsSignalIds.push(this._dtpSettings.connect('changed::' + configKeys[i], Lang.bind(this, function () {
+            this._dtpSettingsSignalIds.push(Me.settings.connect('changed::' + configKeys[i], Lang.bind(this, function () {
                 this._removeStyles();
                 this._applyStyles();
             })));
@@ -77,25 +78,41 @@ var dtpPanelStyle = Utils.defineClass({
     _applyStyles: function() {
         this._rightBoxOperations = [];
         
-        let trayPadding = this._dtpSettings.get_int('tray-padding');
+        let trayPadding = Me.settings.get_int('tray-padding');
+        let isVertical = Panel.checkIfVertical();
+        let paddingStyle = 'padding: ' + (isVertical ? '%dpx 0' : '0 %dpx');
+
         if(trayPadding >= 0) {
-            let trayPaddingStyleLine = '-natural-hpadding: %dpx'.format(trayPadding);
-            if (trayPadding < 6) {
-                trayPaddingStyleLine += '; -minimum-hpadding: %dpx'.format(trayPadding);
-            }
             let operation = {};
-            operation.compareFn = function (actor) {
-                return (actor.has_style_class_name && actor.has_style_class_name('panel-button'));
-            };
+            let trayPaddingStyleLine;
+
+            if (isVertical) {
+                trayPaddingStyleLine = paddingStyle.format(trayPadding);
+                operation.compareFn = function (actor) {
+                    let parent = actor.get_parent();
+                    return (parent && parent.has_style_class_name && parent.has_style_class_name('panel-button'));
+                };
+            } else {
+                trayPaddingStyleLine = '-natural-hpadding: %dpx'.format(trayPadding);
+                if (trayPadding < 6) {
+                    trayPaddingStyleLine += '; -minimum-hpadding: %dpx'.format(trayPadding);
+                }
+                
+                operation.compareFn = function (actor) {
+                    return (actor.has_style_class_name && actor.has_style_class_name('panel-button'));
+                };
+            }
+            
             operation.applyFn = Lang.bind(this, function (actor, operationIdx) {
                 this._overrideStyle(actor, trayPaddingStyleLine, operationIdx);
+                this._refreshPanelButton(actor);
             });
             this._rightBoxOperations.push(operation);
         }
 
-        let statusIconPadding = this._dtpSettings.get_int('status-icon-padding');
+        let statusIconPadding = Me.settings.get_int('status-icon-padding');
         if(statusIconPadding >= 0) {
-            let statusIconPaddingStyleLine = 'padding-left: %dpx; padding-right: %dpx'.format(statusIconPadding, statusIconPadding)
+            let statusIconPaddingStyleLine = paddingStyle.format(statusIconPadding)
             let operation = {};
             operation.compareFn = function (actor) {
                 return (actor.has_style_class_name && actor.has_style_class_name('system-status-icon'));
@@ -106,7 +123,7 @@ var dtpPanelStyle = Utils.defineClass({
             this._rightBoxOperations.push(operation);
         }
 
-        let trayContentSize = this._dtpSettings.get_int('tray-size');
+        let trayContentSize = Me.settings.get_int('tray-size');
         if(trayContentSize > 0) {
             let trayIconSizeStyleLine = 'icon-size: %dpx'.format(trayContentSize)
             let operation = {};
@@ -137,15 +154,13 @@ var dtpPanelStyle = Utils.defineClass({
 
         this._leftBoxOperations = [];
 
-        let leftboxPadding = this._dtpSettings.get_int('leftbox-padding');
+        let leftboxPadding = Me.settings.get_int('leftbox-padding');
         if(leftboxPadding >= 0) {
-            let leftboxPaddingStyleLine = '-natural-hpadding: %dpx'.format(leftboxPadding);
-            if (leftboxPadding < 6) {
-                leftboxPaddingStyleLine += '; -minimum-hpadding: %dpx'.format(leftboxPadding);
-            }
+            let leftboxPaddingStyleLine = paddingStyle.format(leftboxPadding);
             let operation = {};
             operation.compareFn = function (actor) {
-                return (actor.has_style_class_name && actor.has_style_class_name('panel-button'));
+                let parent = actor.get_parent();
+                return (parent && parent.has_style_class_name && parent.has_style_class_name('panel-button'));
             };
             operation.applyFn = Lang.bind(this, function (actor, operationIdx) {
                 this._overrideStyle(actor, leftboxPaddingStyleLine, operationIdx);
@@ -153,7 +168,7 @@ var dtpPanelStyle = Utils.defineClass({
             this._leftBoxOperations.push(operation);
         }
 
-        let leftboxContentSize = this._dtpSettings.get_int('leftbox-size');
+        let leftboxContentSize = Me.settings.get_int('leftbox-size');
         if(leftboxContentSize > 0) {
             let leftboxIconSizeStyleLine = 'icon-size: %dpx'.format(leftboxContentSize)
             let operation = {};
@@ -289,6 +304,18 @@ var dtpPanelStyle = Utils.defineClass({
             actor.set_style(actor._dtp_original_inline_style);
             delete actor._dtp_original_inline_style;
             delete actor._dtp_style_overrides;
+        }
+
+        if (actor.has_style_class_name('panel-button')) {
+            this._refreshPanelButton(actor);
+        }
+    },
+
+    _refreshPanelButton: function(actor) {
+        if (actor.visible && imports.misc.config.PACKAGE_VERSION >= '3.34.0') {
+            //force gnome 3.34 to refresh (having problem with the -natural-hpadding)
+            actor.hide();
+            Mainloop.idle_add(() => actor.show());
         }
     }
     

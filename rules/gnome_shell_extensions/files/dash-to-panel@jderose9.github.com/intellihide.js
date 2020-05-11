@@ -19,15 +19,16 @@ const Lang = imports.lang;
 const Clutter = imports.gi.Clutter;
 const Meta = imports.gi.Meta;
 const Shell = imports.gi.Shell;
+const St = imports.gi.St;
 
 const GrabHelper = imports.ui.grabHelper;
 const Layout = imports.ui.layout;
 const Main = imports.ui.main;
 const OverviewControls = imports.ui.overviewControls;
 const PointerWatcher = imports.ui.pointerWatcher;
-const Tweener = imports.ui.tweener;
 
 const Me = imports.misc.extensionUtils.getCurrentExtension();
+const Panel = Me.imports.panel;
 const Proximity = Me.imports.proximity;
 const Utils = Me.imports.utils;
 
@@ -41,6 +42,9 @@ const MIN_UPDATE_MS = 250;
 const T1 = 'checkGrabTimeout';
 const T2 = 'limitUpdateTimeout';
 const T3 = 'postAnimateTimeout';
+const T4 = 'panelBoxClipTimeout';
+
+var SIDE_CONTROLS_ANIMATION_TIME = OverviewControls.SIDE_CONTROLS_ANIMATION_TIME / (OverviewControls.SIDE_CONTROLS_ANIMATION_TIME > 1 ? 1000 : 1);
 
 var Hold = {
     NONE: 0,
@@ -53,7 +57,6 @@ var Intellihide = Utils.defineClass({
 
     _init: function(dtpPanel) {
         this._dtpPanel = dtpPanel;
-        this._dtpSettings = dtpPanel._dtpSettings;
         this._panelBox = dtpPanel.panelBox;
         this._panelManager = dtpPanel.panelManager;
         this._proximityManager = this._panelManager.proximityManager;
@@ -62,35 +65,32 @@ var Intellihide = Utils.defineClass({
         this._signalsHandler = new Utils.GlobalSignalsHandler();
         this._timeoutsHandler = new Utils.TimeoutsHandler();
 
-        this._intellihideChangedId = this._dtpSettings.connect('changed::intellihide', () => this._changeEnabledStatus());
-        this._intellihideOnlySecondaryChangedId = this._dtpSettings.connect('changed::intellihide-only-secondary', () => this._changeEnabledStatus());
+        this._intellihideChangedId = Me.settings.connect('changed::intellihide', () => this._changeEnabledStatus());
+        this._intellihideOnlySecondaryChangedId = Me.settings.connect('changed::intellihide-only-secondary', () => this._changeEnabledStatus());
 
-        this._enabled = false;
+        this.enabled = false;
         this._changeEnabledStatus();
     },
 
-    enable: function(reset) {
-        this._enabled = true;
+    enable: function() {
+        this.enabled = true;
         this._monitor = this._dtpPanel.monitor;
         this._animationDestination = -1;
         this._pendingUpdate = false;
         this._hoveredOut = false;
         this._windowOverlap = false;
-        this._panelAtTop = this._dtpSettings.get_string('panel-position') === 'TOP';
+        this._translationProp = 'translation_' + (Panel.checkIfVertical() ? 'x' : 'y');
 
-        if (this._panelAtTop && this._panelBox.translation_y > 0 || 
-            !this._panelAtTop && this._panelBox.translation_y < 0) {
-            //the panel changed position while being hidden, so revert the hiding position
-            this._panelBox.translation_y *= -1;
-        }
+        this._panelBox.translation_y = 0;
+        this._panelBox.translation_x = 0;
 
-        this._setTrackPanel(reset, true);
+        this._setTrackPanel(true);
         this._bindGeneralSignals();
 
-        if (this._dtpSettings.get_boolean('intellihide-hide-from-windows')) {
+        if (Me.settings.get_boolean('intellihide-hide-from-windows')) {
             this._proximityWatchId = this._proximityManager.createWatch(
-                this._panelBox, 
-                Proximity.Mode[this._dtpSettings.get_string('intellihide-behaviour')], 
+                this._panelBox.get_parent(), 
+                Proximity.Mode[Me.settings.get_string('intellihide-behaviour')], 
                 0, 0,
                 overlap => { 
                     this._windowOverlap = overlap;
@@ -108,7 +108,7 @@ var Intellihide = Utils.defineClass({
             this._proximityManager.removeWatch(this._proximityWatchId);
         }
 
-        this._setTrackPanel(reset, false);
+        this._setTrackPanel(false);
 
         this._signalsHandler.destroy();
         this._timeoutsHandler.destroy();
@@ -117,13 +117,16 @@ var Intellihide = Utils.defineClass({
 
         this._revealPanel(!reset);
         
-        this._enabled = false;
+        this.enabled = false;
     },
 
     destroy: function() {
-        this._dtpSettings.disconnect(this._intellihideChangedId);
-        this._dtpSettings.disconnect(this._intellihideOnlySecondaryChangedId);
-        this.disable();
+        Me.settings.disconnect(this._intellihideChangedId);
+        Me.settings.disconnect(this._intellihideOnlySecondaryChangedId);
+        
+        if (this.enabled) {
+            this.disable();
+        }
     },
 
     toggle: function() {
@@ -131,7 +134,7 @@ var Intellihide = Utils.defineClass({
     },
 
     revealAndHold: function(holdStatus) {
-        if (this._enabled && !this._holdStatus) {
+        if (this.enabled && !this._holdStatus) {
             this._revealPanel();
         }
         
@@ -141,22 +144,22 @@ var Intellihide = Utils.defineClass({
     release: function(holdStatus) {
         this._holdStatus -= holdStatus;
 
-        if (this._enabled && !this._holdStatus) {
+        if (this.enabled && !this._holdStatus) {
             this._queueUpdatePanelPosition();
         }
     },
 
-    _reset: function() {
+    reset: function() {
         this.disable(true);
-        this.enable(true);
+        this.enable();
     },
 
     _changeEnabledStatus: function() {
-        let intellihide = this._dtpSettings.get_boolean('intellihide');
-        let onlySecondary = this._dtpSettings.get_boolean('intellihide-only-secondary');
+        let intellihide = Me.settings.get_boolean('intellihide');
+        let onlySecondary = Me.settings.get_boolean('intellihide-only-secondary');
         let enabled = intellihide && (this._dtpPanel.isSecondary || !onlySecondary);
 
-        if (this._enabled !== enabled) {
+        if (this.enabled !== enabled) {
             this[enabled ? 'enable' : 'disable']();
         }
     },
@@ -169,28 +172,23 @@ var Intellihide = Utils.defineClass({
                 () => this._panelBox.sync_hover()
             ],
             [
-                this._dtpSettings, 
+                Me.settings, 
                 [
-                    'changed::panel-position',
-                    'changed::panel-size',
                     'changed::intellihide-use-pressure',
                     'changed::intellihide-hide-from-windows',
                     'changed::intellihide-behaviour'
                 ],
-                () => this._reset()
-            ],
-            [
-                Main.layoutManager,
-                'monitors-changed',
-                () => this._reset()
+                () => this.reset()
             ],
             [
                 this._panelBox,
                 'notify::hover',
-                () => {
-                    this._hoveredOut = !this._panelBox.hover;
-                    this._queueUpdatePanelPosition();
-                }
+                () => this._onHoverChanged()
+            ],
+            [
+                this._dtpPanel.taskbar.previewMenu,
+                'open-state-changed',
+                () => this._queueUpdatePanelPosition()
             ],
             [
                 Main.overview,
@@ -203,23 +201,31 @@ var Intellihide = Utils.defineClass({
         );
     },
 
-    _setTrackPanel: function(reset, enable) {
-        if (!reset) {
-            Main.layoutManager._untrackActor(this._panelBox);
-            Main.layoutManager._trackActor(this._panelBox, { affectsStruts: !enable, trackFullscreen: !enable });
-    
-            this._panelBox.track_hover = enable;
-            this._panelBox.reactive = enable;
-            this._panelBox.visible = enable ? enable : this._panelBox.visible;
-        }
+    _onHoverChanged: function() {
+        this._hoveredOut = !this._panelBox.hover;
+        this._queueUpdatePanelPosition();
+    },
+
+    _setTrackPanel: function(enable) {
+        let trackedIndex = Main.layoutManager._findActor(this._panelBox);
+        let actorData = Main.layoutManager._trackedActors[trackedIndex]
+            
+        actorData.affectsStruts = !enable;
+        actorData.trackFullscreen = !enable;
+
+        this._panelBox.track_hover = enable;
+        this._panelBox.reactive = enable;
+        this._panelBox.visible = enable ? enable : this._panelBox.visible;
+        
+        Main.layoutManager._queueUpdateRegions();
     },
 
     _setRevealMechanism: function() {
-        if (global.display.supports_extended_barriers() && this._dtpSettings.get_boolean('intellihide-use-pressure')) {
+        if (global.display.supports_extended_barriers() && Me.settings.get_boolean('intellihide-use-pressure')) {
             this._edgeBarrier = this._createBarrier();
             this._pressureBarrier = new Layout.PressureBarrier(
-                this._dtpSettings.get_int('intellihide-pressure-threshold'), 
-                this._dtpSettings.get_int('intellihide-pressure-time'), 
+                Me.settings.get_int('intellihide-pressure-threshold'), 
+                Me.settings.get_int('intellihide-pressure-time'), 
                 Shell.ActionMode.NORMAL
             );
             this._pressureBarrier.addBarrier(this._edgeBarrier);
@@ -242,32 +248,44 @@ var Intellihide = Utils.defineClass({
     },
 
     _createBarrier: function() {
-        let opts = { 
-            display: global.display,
-            x1: this._monitor.x + 1,
-            x2: this._monitor.x + this._monitor.width - 1 
-        };
+        let position = this._dtpPanel.geom.position;
+        let opts = { display: global.display };
 
-        if (this._panelAtTop) {
+        if (Panel.checkIfVertical()) {
             opts.y1 = this._monitor.y;
-            opts.y2 = this._monitor.y;
-            opts.directions = Meta.BarrierDirection.POSITIVE_Y;
+            opts.y2 = this._monitor.y + this._monitor.height;
+            opts.x1 = opts.x2 = this._monitor.x;
         } else {
-            let screenBottom = this._monitor.y + this._monitor.height;
+            opts.x1 = this._monitor.x;
+            opts.x2 = this._monitor.x + this._monitor.width;
+            opts.y1 = opts.y2 = this._monitor.y;
+        }
 
-            opts.y1 = screenBottom;
-            opts.y2 = screenBottom;
+        if (position == St.Side.TOP) {
+            opts.directions = Meta.BarrierDirection.POSITIVE_Y;
+        } else if (position == St.Side.BOTTOM) {
+            opts.y1 = opts.y2 = opts.y1 + this._monitor.height;
             opts.directions = Meta.BarrierDirection.NEGATIVE_Y;
+        } else if (position == St.Side.LEFT) {
+            opts.directions = Meta.BarrierDirection.POSITIVE_X;
+        } else {
+            opts.x1 = opts.x2 = opts.x1 + this._monitor.width;
+            opts.directions = Meta.BarrierDirection.NEGATIVE_X;
         }
 
         return new Meta.Barrier(opts);
     },
 
     _checkMousePointer: function(x, y) {
+        let position = this._dtpPanel.geom.position;
+
         if (!this._panelBox.hover && !Main.overview.visible &&
-            ((this._panelAtTop && y <= this._monitor.y + 1) || 
-             (!this._panelAtTop && y >= this._monitor.y + this._monitor.height - 1)) &&
-            (x > this._monitor.x && x < this._monitor.x + this._monitor.width)) {
+            ((position == St.Side.TOP && y <= this._monitor.y + 1) || 
+             (position == St.Side.BOTTOM && y >= this._monitor.y + this._monitor.height - 1) ||
+             (position == St.Side.LEFT && x <= this._monitor.x + 1) ||
+             (position == St.Side.RIGHT && x >= this._monitor.x + this._monitor.width - 1)) &&
+            ((x >= this._monitor.x && x < this._monitor.x + this._monitor.width) && 
+             (y >= this._monitor.y && y < this._monitor.y + this._monitor.height))) {
             this._queueUpdatePanelPosition(true);
         }
     },
@@ -291,7 +309,8 @@ var Intellihide = Utils.defineClass({
     },
 
     _checkIfShouldBeVisible: function(fromRevealMechanism) {
-        if (Main.overview.visibleTarget || this._checkIfGrab() || this._panelBox.get_hover()) {
+        if (Main.overview.visibleTarget || this._dtpPanel.taskbar.previewMenu.opened || 
+            this._panelBox.get_hover() || this._checkIfGrab()) {
             return true;
         }
 
@@ -300,13 +319,13 @@ var Intellihide = Utils.defineClass({
             
             //the user is trying to reveal the panel
             if (this._monitor.inFullscreen && !mouseBtnIsPressed) {
-                return this._dtpSettings.get_boolean('intellihide-show-in-fullscreen');
+                return Me.settings.get_boolean('intellihide-show-in-fullscreen');
             }
 
             return !mouseBtnIsPressed;
         }
 
-        if (!this._dtpSettings.get_boolean('intellihide-hide-from-windows')) {
+        if (!Me.settings.get_boolean('intellihide-hide-from-windows')) {
             return this._panelBox.hover;
         }
 
@@ -314,62 +333,64 @@ var Intellihide = Utils.defineClass({
     },
 
     _checkIfGrab: function() {
-        if (GrabHelper._grabHelperStack.some(gh => this._panelBox.contains(gh._owner))) {
+        if (GrabHelper._grabHelperStack.some(gh => gh._owner == this._dtpPanel.panel.actor)) {
             //there currently is a grab on a child of the panel, check again soon to catch its release
             this._timeoutsHandler.add([T1, CHECK_GRAB_MS, () => this._queueUpdatePanelPosition()]);
 
             return true;
         }
-
-        return false;
     },
 
     _revealPanel: function(immediate) {
+        this._panelBox.visible = true;
+        this._dtpPanel.taskbar._shownInitially = false;
         this._animatePanel(0, immediate);
     },
 
     _hidePanel: function(immediate) {
-        this._animatePanel(this._panelBox.height * (this._panelAtTop ? -1 : 1), immediate);
+        let position = this._dtpPanel.geom.position;
+        let size = this._panelBox[position == St.Side.LEFT || position == St.Side.RIGHT ? 'width' : 'height']; 
+        let coefficient = position == St.Side.TOP || position == St.Side.LEFT ? -1 : 1;
+
+        this._animatePanel(size * coefficient, immediate);
     },
 
-    _animatePanel: function(destination, immediate, onComplete) {
-        let animating = Tweener.isTweening(this._panelBox);
+    _animatePanel: function(destination, immediate) {
+        let animating = Utils.isAnimating(this._panelBox, this._translationProp);
 
         if (!((animating && destination === this._animationDestination) || 
-              (!animating && destination === this._panelBox.translation_y))) {
+              (!animating && destination === this._panelBox[this._translationProp]))) {
             //the panel isn't already at, or animating to the asked destination
             if (animating) {
-                Tweener.removeTweens(this._panelBox);
+                Utils.stopAnimations(this._panelBox);
             }
 
             this._animationDestination = destination;
-    
+
             if (immediate) {
-                this._panelBox.translation_y = destination;
-                this._invokeIfExists(onComplete);
+                this._panelBox[this._translationProp] = destination;
+                this._panelBox.visible = !destination;
             } else {
-                Tweener.addTween(this._panelBox, {
-                    translation_y: destination,
+                let tweenOpts = {
                     //when entering/leaving the overview, use its animation time instead of the one from the settings
                     time: Main.overview.visible ? 
-                          OverviewControls.SIDE_CONTROLS_ANIMATION_TIME :
-                          this._dtpSettings.get_int('intellihide-animation-time') * 0.001,
+                          SIDE_CONTROLS_ANIMATION_TIME :
+                          Me.settings.get_int('intellihide-animation-time') * 0.001,
                     //only delay the animation when hiding the panel after the user hovered out
-                    delay: destination != 0 && this._hoveredOut ? this._dtpSettings.get_int('intellihide-close-delay') * 0.001 : 0,
+                    delay: destination != 0 && this._hoveredOut ? Me.settings.get_int('intellihide-close-delay') * 0.001 : 0,
                     transition: 'easeOutQuad',
                     onComplete: () => {
-                        this._invokeIfExists(onComplete);
+                        this._panelBox.visible = !destination;
                         Main.layoutManager._queueUpdateRegions();
                         this._timeoutsHandler.add([T3, POST_ANIMATE_MS, () => this._queueUpdatePanelPosition()]);
                     }
-                });
+                };
+
+                tweenOpts[this._translationProp] = destination;
+                Utils.animate(this._panelBox, tweenOpts);
             }
         }
 
         this._hoveredOut = false;
     },
-
-    _invokeIfExists: function(func) {
-        func ? func.call(this) : null;
-    }
 });

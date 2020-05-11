@@ -105,7 +105,9 @@ To install a development version from source, please see the [Installation wiki 
 ## 
 ### FAQ
 
-How do I embed my bottom left notification drawer into the panel like a system tray? [Top Icons Plus](https://extensions.gnome.org/extension/1031/topicons) or [(K)StatusNotifierItem/AppIndicator Support](https://extensions.gnome.org/extension/615/appindicator-support)
+How do I customize the panel? [See the Wiki](https://github.com/home-sweet-gnome/dash-to-panel/wiki/Enable-and-Customize#customize-it)
+
+How do I embed my bottom left notification drawer into the panel like a system tray? [Top Icons Plus](https://extensions.gnome.org/extension/2311/topicons-plus) or [(K)StatusNotifierItem/AppIndicator Support](https://extensions.gnome.org/extension/615/appindicator-support)
 
 How do I add a traditional start menu? [Arc Menu](https://extensions.gnome.org/extension/1228/arc-menu/)
 
@@ -113,11 +115,9 @@ How do I disable the hot corner? [No Topleft Hot Corner](https://extensions.gnom
 
 How do I move the notifications to somewhere other than the top center? [Panel OSD](https://extensions.gnome.org/extension/708/panel-osd)
 
-How do I change workspaces by scrolling the mouse wheel in the empty space? [Top Panel Workspace Scroll](https://extensions.gnome.org/extension/701/top-panel-workspace-scroll/)
-
 How do I display Minimize & Maximize buttons? In the Tweak Tool application, turn on `Windows > Titlebar Buttons > Minimize & Maximize`.
 
-Why can't I put the panel vertically on the left or right of the display? Gnome-shell and it's numerous extensions add widgets to the panel. These widgets have been designed using padding and absolute positioning assuming a horizontal layout. At this point in time, I don't think it is possible to allow for a vertical layout and still maintain any sort of reasonable compatibility with many of the other features of Gnome.
+How do I reset the extension to its default settings? `dconf reset -f /org/gnome/shell/extensions/dash-to-panel/`.
 
 ## 
 ### Themes
@@ -132,6 +132,13 @@ While this extension works well with most popular Gnome Shell themes, the follow
 This extension has been tested with Gnome 3.18+.
 
 This extension manipulates the Gnome Main Panel, aka Top Bar. So, most other extensions which operate on the top bar should be compatible.
+
+## 
+### Donation
+
+Dash-to-Panel is provided free of charge. If it has improved your workflow, or you had a great support experience, feel free to say thanks by making a donation to the developers. (If you would like your donation to go to a specific developer, you may mention it in the note field during payment)
+
+[![Donate via Paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=Y5PBB2CRJ6F2W&source=url)
 
 ##
 ### Volunteers needed!
@@ -161,12 +168,17 @@ Ideas for recursing child actors and assigning inline styles are based on code f
 - @jackwickham for thumbnail middle and right click actions
 - @abakkk for centering the taskbar icons in the panel
 - @quasoft for changing of font weight of ungrouped application titles
+- @jordanribera for using icon's dominant color as running indicator color
+- @tper0700 for dynamically building context menu based on system capabilities
 
 #### Bug Fixes: 
-@imrvelj, @Teslator, @bil-elmoussaoui, @brandon-schumann, @sw9, @rockon999 , @lexruee, @3v1n0, @freeroot, @moqmar, @ArtyomZorin, @lkc0987, @saibotk, @vanillajonathan, @Zkdc
+@imrvelj, @Teslator, @bil-elmoussaoui, @brandon-schumann, @sw9, @rockon999 , @lexruee, @3v1n0, @freeroot, @moqmar, @ArtyomZorin, @lkc0987, @saibotk, @vanillajonathan, @Zkdc, @leebickmtu
+
+#### Documentation Improvements:
+@BoQsc, @zakkak, @dandv
 
 #### Translations: 
-@frnogueira (pt_BR), @zeten30 (cs), @franglais125 (es), @LaurentTreguier / @SolarLiner (fr), @elsieholmes (uk), @hosiet (zh\_CN), @jonnius (de), @urbalazs / @pappfer (hu), @crayxt (kk), @pkomur / MartinPL (pl), @AlexGluck / @GoodNike (ru), @sicklylife-jp (jp), @oltulu / @TeknoMobil / @daenney (tr), @sbadux (it), @OriginCode (zh\_TW)
+@frnogueira (pt_BR), @zeten30 (cs), @franglais125 / @calotam (es), @LaurentTreguier / @SolarLiner (fr), @elsieholmes (uk), @hosiet (zh\_CN), @jonnius / @linuxr01 (de), @urbalazs / @pappfer (hu), @crayxt (kk), @pkomur / @MartinPL / @alex4401 (pl), @AlexGluck / @GoodNike / @rjapolov (ru), @sicklylife-jp / @ryonakano (ja), @oltulu / @TeknoMobil / @daenney (tr), @sbadux / @kowalski7cc (it), @OriginCode / @pan93412 (zh\_TW), @ojn (sv)
 
 
 ## 
