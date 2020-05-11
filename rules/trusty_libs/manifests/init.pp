@@ -35,6 +35,10 @@ class trusty_libs {
       srcpath => '/usr/lib/i386-linux-gnu/libgtkmm-2.4.so.1.1.0',
       url     => "${trusty_mirror_base}/ubuntu/pool/main/g/gtkmm2.4/libgtkmm-2.4-1c2a_2.24.4-1ubuntu1_i386.deb";
 
+    'i386-linux-gnu/libpng12.so.0':
+      srcpath => '/lib/i386-linux-gnu/libpng12.so.0.54.0',
+      url     => "${trusty_mirror_base}/ubuntu/pool/main/libp/libpng/libpng12-0_1.2.54-1ubuntu1.1_i386.deb";
+
     'x64_64-linux-gnu/libatkmm-1.6.so.1':
       srcpath => '/usr/lib/x86_64-linux-gnu/libatkmm-1.6.so.1.1.0',
       url     => "${trusty_mirror_base}/ubuntu/pool/main/a/atkmm1.6/libatkmm-1.6-1_2.22.7-2ubuntu1_amd64.deb";
