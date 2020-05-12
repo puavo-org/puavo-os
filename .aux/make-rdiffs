@@ -75,8 +75,10 @@ def generate_development_image_series()
   end
   image_series.each do |series_name, images|
     # take only the latest four images after sorting each series
-    image_series[series_name] = (images.sort)[-4..-1]
+    image_series[series_name] = images.sort.last(4)
   end
+
+  image_series
 end
 
 def get_cksum_path(filename)
