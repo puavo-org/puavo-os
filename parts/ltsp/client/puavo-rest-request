@@ -36,10 +36,19 @@ proc make_request {curl_args {password ""}} {
   if {$debug_mode} { puts stderr "Running curl $exec_curl_args" }
 
   if {$password eq ""} {
-    if {[catch { exec curl {*}$exec_curl_args } result]} {
-      error "error executing curl:\n${result}"
+    try {
+      set fh [open "|[list curl {*}$exec_curl_args]"]
+      fconfigure $fh -translation binary
+      set curl_output [read $fh]
+      close $fh
+    } on error {errmsg} {
+      error "error executing curl:\n  ${errmsg}"
+    } finally {
+      catch { close $fh }
     }
-    puts -nonewline stdout $result
+
+    fconfigure stdout -translation binary
+    puts -nonewline stdout $curl_output
     flush stdout
     return
   }
