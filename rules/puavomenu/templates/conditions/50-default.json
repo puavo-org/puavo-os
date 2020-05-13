@@ -1,0 +1,33 @@
+{
+    "personally_administered": {
+        "function": "puavo_conf",
+        "params": {
+            "name": "puavo.admin.personally_administered",
+            "value": "true"
+        }
+    },
+
+    "ti_nspire_cx_cas": {
+        "function": "puavo_conf",
+        "params": {
+            "name": "puavo.pkg.ti-nspire-cx-cas-ss",
+            "value": "install"
+        }
+    },
+
+    "only_teacher_admin": {
+        "function": "env_var",
+        "params": {
+            "name": "PUAVO_MENU_SHOW_MY_SCHOOL_USERS",
+            "value": "1"
+        }
+    },
+
+    "user_registration": {
+        "function": "env_var",
+        "params": {
+            "name": "PUAVO_USER_REGISTRATION",
+            "value": "true"
+        }
+    }
+}

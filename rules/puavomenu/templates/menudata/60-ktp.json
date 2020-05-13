@@ -1,0 +1,42 @@
+{
+    "programs": {
+        "koejakaja": {
+            "type": "web",
+            "url": "https://koepalvelin.opinsys.fi",
+            "name": "Opinsys Koejakaja",
+            "description": "Koejakaja",
+            "icon": "alacarte",
+            "tags": "default, internet, education"
+        },
+        "ktp-jako": {
+            "type": "custom",
+            "command": "nautilus /home/puavo-ers/ktp-jako",
+            "name": "Ktp-jako-kansio",
+            "description": "Ktp koe-kansio",
+            "icon": "/usr/share/icons/Faenza/places/64/folder-documents.png",
+            "tags": "default, internet, education"
+        },
+        "oma-abitti": {
+            "type": "web",
+            "url": "https://oma.abitti.fi",
+            "name": "Oma Abitti",
+            "description": "Oma abitti",
+            "icon": "web-browser",
+            "tags": "default, internet, education"
+        }
+    },
+    "categories": {
+        "category-ktp": {
+            "position": -100,
+            "name": "KTP",
+            "hidden_by_default": true,
+            "programs": [
+                "google-chrome",
+                "firefox",
+                "oma-abitti",
+                "koejakaja",
+                "ktp-jako"
+            ]
+        }
+    }
+}
