@@ -255,7 +255,18 @@ class AvatarDownloaderThread(threading.Thread):
 
         for attempt in range(0, self.MAX_ATTEMPTS):
             try:
-                uri = '/v3/users/' + getuser() + '/profile.jpg'
+                # Figure out the API server address
+                proc = subprocess.Popen(['puavo-resolve-api-server'],
+                                        stdout=subprocess.PIPE,
+                                        stderr=subprocess.PIPE)
+                proc.wait()
+
+                if proc.returncode != 0:
+                    raise RuntimeError("'puavo-resolve-api-server' failed "
+                                       "with code {0}".format(proc.returncode))
+
+                server = proc.stdout.read().decode('utf-8').strip()
+                uri = server + '/v3/users/' + getuser() + '/profile.jpg'
 
                 # Then download the avatar image
                 logging.info('Downloading user avatar from "%s", '
@@ -264,14 +275,26 @@ class AvatarDownloaderThread(threading.Thread):
 
                 start_time = time.clock()
 
-                command = [ 'puavo-rest-request', uri, '--user-krb' ]
+                # I gave up pretty quickly on trying to replicate this in
+                # Python's http.client. It needs Kerberos authentication
+                # and other bells and whistles. I probably could figure
+                # it out, but I'd just introduce subtle bugs in it. Let
+                # curl deal with it.
+                command = [
+                    'curl',
+                    '--fail',
+                    '--negotiate', '--user', ':',
+                    '--delegation', 'always',
+                    uri
+                ]
+
                 proc = subprocess.Popen(command,
                                         stdout=subprocess.PIPE,
                                         stderr=subprocess.PIPE)
                 proc.wait()
 
                 if proc.returncode != 0:
-                    raise RuntimeError("'puavo-rest-request' failed with code {0}".
+                    raise RuntimeError("'curl' failed with code {0}".
                                        format(proc.returncode))
 
                 # Got it! We didn't specify -o, so the image data waits for
