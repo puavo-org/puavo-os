@@ -1,7 +1,8 @@
 #!/bin/sh
 
-# Toggles puavomenu visibility. Called from the shell extension.
+# Toggles puavomenu visibility. Called from the shell extension
+# and desktop hotkey handlers.
 
 set -eu
 
-exec /opt/puavomenu/send_command "${XDG_RUNTIME_DIR}/puavomenu" "$@" toggle
+exec /opt/puavomenu/send_command "${XDG_RUNTIME_DIR}/puavomenu" "$@"

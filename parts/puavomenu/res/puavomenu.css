@@ -1,0 +1,177 @@
+/*
+================================================================================
+                            PUAVOMENU WINDOW STYLES
+      All colors must be defined with variables! Do not hardcode anything!
+================================================================================
+*/
+
+/* Main window */
+#root {
+    /*background: rgba(232, 232, 232, 0.95);*/
+    /*background: rgba(255, 255, 255, 0.95);*/
+    /*background: rgba(95, 197, 255, 0.95);*/
+    /*background: rgba(152, 218, 255, 0.95);*/
+
+    background: @MAIN_WINDOW;
+    border-radius: 0 10px 0 0;
+}
+
+/* Menu container (ie. "left side") */
+#menubox { }
+
+/* The category selector */
+#category {
+    border: 0;
+    background: none;
+    box-shadow: none;
+    font-size: 110%;
+    font-weight: normal;
+}
+
+#category header {
+    background: none;
+    border-bottom: 2px solid @HOVER_COLOR;
+    box-shadow: none;
+}
+
+#category tabs {
+    border: none;
+    background: none;
+    box-shadow: none;
+    margin: 0;
+    padding: 0;
+}
+
+#category tab {
+    border: 0;
+    box-shadow: none;
+    margin: 0 1px 0 0;
+    padding: 5px 15px;
+    color: @CATEGORY_FORE;
+}
+
+#category tab:hover {
+    background: @CATEGORY_BACK_HOVER;
+    color: @CATEGORY_FORE_HOVER;
+}
+
+#category tab:checked {
+    background: @HOVER_COLOR;
+    color: @CATEGORY_FORE_HOVER;
+}
+
+#category border {  /* Targets the "frame" element below the notebook widget */
+    border: none;
+    background: none;
+    box-shadow: none;
+}
+
+/* The search box */
+entry {
+    border-radius: 0;
+}
+
+/* Title of the current menu */
+#menu_title {
+    color: @MENU_TITLE_FORE;
+}
+
+/* The "empty" message, displayed when there's nothing to display */
+#empty {
+    color: @EMPTY_FORE;
+    font-size: 125%;
+    font-style: italic;
+}
+
+/* The main progams list */
+#programs { }
+
+/* Frequently-used programs */
+#frequent { }
+
+/* Sidebar container (ie. "right side") */
+#sidebar { }
+
+/* The host info label */
+#hostinfo { }
+
+/* Base menu button class */
+.pm_button {
+    background: none;
+    box-shadow: none;
+    border: none;
+    border-radius: 0;
+    color: @BUTTON_FORE;
+    text-shadow: none;
+}
+
+.pm_button:hover {
+    color: @BUTTON_FORE_HOVER;
+}
+
+.pm_button:backdrop {
+    /* Used when the window is not focused */
+    color: @BUTTON_FORE_INDETERMINATE;
+}
+
+/* Program buttons */
+.button_program { }
+
+.button_program:hover {
+    border-radius: 5px;
+    background: @HOVER_COLOR;
+    /*color: @BUTTON_FORE_HOVER;*/
+}
+
+/* Menu buttons */
+.button_menu {
+    border: 1px solid @MENU_BUTTON_BORDER;
+    font-style: italic;
+}
+
+.button_menu:hover {
+    border: none;
+    background: @HOVER_COLOR;
+}
+
+/* Extra stuff for frequently-used programs */
+.frequent_button { }
+
+/* Extra styles for puavo-pkg installer buttons */
+.installer {
+    color: #888;
+}
+
+/* Sidebar buttons */
+.button_sidebar { }
+
+.button_sidebar:hover {
+    background: @HOVER_COLOR;
+    color: @BUTTON_FORE_HOVER;
+}
+
+/* User avatar button */
+.button_avatar {
+    text-shadow: 2px 2px 2px @AVATAR_TEXT_SHADOW, 0 0 2px @AVATAR_TEXT_SHADOW, 0 0 2px @AVATAR_TEXT_SHADOW;
+    color: @BUTTON_FORE_HOVER;
+    font-size: 120%;
+    font-weight: bold;
+    border-radius: 0 5px 0 0;
+}
+
+.button_avatar:hover {
+    background: @HOVER_COLOR;
+    color: @BUTTON_FORE_HOVER;
+}
+
+#menu_indicator {
+    background: #f0f;
+    border: none;
+    box-shadow: none;
+    color: #fff;
+    border-radius: 5px;
+}
+
+#menu_indicator:hover {
+    background: #f00;
+}

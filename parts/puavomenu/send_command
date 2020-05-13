@@ -15,24 +15,14 @@ shift
 
 echo "$@" | nc -U -w 1 "${socket}"
 
-if [ $cmd = "show" -o $cmd = "toggle" ]; then
+# FIXME: This is an excessively ugly hack, but it works and
+# it fixes the keyboard focus problem. We can't use this
+# forever though...
+if [ "$cmd" = "show" -o "$cmd" = "toggle" ]; then
     window=$(xdotool search --name PuavoMenuUniqueName) || return 1
 
     if [ -n "$window" ]; then
-        # FIXME: This is an excessively ugly hack, but it works and
-        # it fixes the keyboard focus problem. We can't use this
-        # forever though...
         sleep 0.2
         xdotool windowactivate "$window" || return 1
-
-        # Set the window type to menu to stop window animations. This
-        # needs to be done only once but that needs extra brittle
-        # logic. This needs to be done BEFORE the window is shown for
-        # the first time, but now it obviously isn't. So the animation
-        # plays on the first time, but then it stops.
-        xprop -id "$window" -f _NET_WM_WINDOW_TYPE 32a \
-              -set _NET_WM_WINDOW_TYPE _NET_WM_WINDOW_TYPE_MENU
-
-        # Sigh... one day I will fix these. One day...
     fi
 fi

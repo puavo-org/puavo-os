@@ -76,10 +76,12 @@ def create_desktop_link(filename, program):
     """Adds program (an instance of Program class) to the desktop. Moved
     here from main.py. Make sure you handle exceptions if you call this!"""
 
-    from menudata import ProgramType
+    import menudata
+
+    is_web = isinstance(program, menudata.WebLink)
 
     with open(filename, 'w', encoding='utf-8') as out:
-        if program.program_type != ProgramType.WEB:
+        if not is_web:
             out.write('#!/usr/bin/env xdg-open\n')
 
         out.write('[Desktop Entry]\n')
@@ -87,26 +89,29 @@ def create_desktop_link(filename, program):
         out.write('Version=1.0\n')
         out.write('Name={0}\n'.format(program.name))
 
-        if program.program_type in (ProgramType.DESKTOP, ProgramType.CUSTOM):
+        if is_web:
+            out.write('Type=Link\n')
+            out.write('URL={0}\n'.format(program.url))
+        else:
             out.write('Type=Application\n')
             out.write('Exec={0}\n'.format(program.command))
-        else:
-            out.write('Type=Link\n')
-            out.write('URL={0}\n'.format(program.command))
 
-        if program.icon:
-            out.write('Icon={0}\n'.format(program.icon.filename))
+        if program.original_icon_name:
+            out.write('Icon={0}\n'.format(program.original_icon_name))
         else:
-            if program.program_type == ProgramType.WEB:
+            if is_web:
                 # a "generic" web icon
                 out.write('Icon=text-html\n')
 
-    if program.program_type != ProgramType.WEB:
+        # Mark .desktop files that we create
+        out.write('X-Puavomenu-Created=1\n')
+
+    if not is_web:
         # Make the file runnable, or GNOME won't accept it
-        from os import chmod
+        import os
         import subprocess
 
-        chmod(filename, 0o755)
+        os.chmod(filename, 0o755)
 
         # Mark the file as trusted (I hate you GNOME)
         subprocess.Popen(['gio', 'set', filename, 'metadata::trusted', 'true'],
@@ -118,69 +123,105 @@ def create_panel_link(program):
     """Adds a program to the bottom panel. Moved here from main.py. Remember
     to handle exceptions if you call this!"""
 
+    import os.path
     from gi.repository import GLib, Gio
     import logging
+    import menudata
+
+    schema_name = 'org.gnome.shell'
+    key_name = 'favorite-apps'
+
+    if isinstance(program, menudata.UserProgram):
+        # User programs are stored in the same directory where the
+        # custom-created panel link .desktop files are. So this
+        # program already has a .desktop file in there, we just
+        # have to append it to the panel icon list.
+        gsettings = Gio.Settings.new(schema_name)
+        panel_faves = gsettings.get_value(key_name).unpack()
+
+        if program.original_desktop_file in panel_faves:
+            logging.info('User program "%s" is already in org.gnome.shell.favorite-apps, '
+                         'doing nothing', program.menudata_id)
+            return
+
+        logging.info('Appending user program "%s" to org.gnome.shell.favorite-apps',
+                     program.original_desktop_file)
+        panel_faves.append(program.original_desktop_file)
+        gsettings.set_value(key_name, GLib.Variant.new_strv(panel_faves))
+        return
 
     if program.original_desktop_file:
-        desktop_name = program.original_desktop_file
+        desktop_name = os.path.split(program.original_desktop_file)[1]
     else:
-        desktop_name = program.name + '.desktop'
+        desktop_name = program.menudata_id + '.desktop'
 
     logging.debug('Desktop file name is "%s"', desktop_name)
 
-    SCHEMA = 'org.gnome.shell'
-    KEY = 'favorite-apps'
-
     # Is the program already in the panel?
-    gsettings = Gio.Settings.new(SCHEMA)
-    panel_faves = gsettings.get_value(KEY).unpack()
+    gsettings = Gio.Settings.new(schema_name)
+    panel_faves = gsettings.get_value(key_name).unpack()
 
     if desktop_name in panel_faves:
-        logging.info('Desktop file "%s" is already in the panel, '
-                     'doing nothing', desktop_name)
-        return
+        if program.original_desktop_file is not None:
+            logging.info('Desktop file "%s" is already in the panel, '
+                         'doing nothing', desktop_name)
+            return
 
-    if not program.original_desktop_file:
+    if program.original_desktop_file is None:
         # Not all programs have a .desktop file, so we have to
         # create it manually.
         from os import environ
         from os.path import join as path_join
-        from menudata import ProgramType
+        import menudata
 
-        name = path_join(environ['HOME'],
-                         '.local',
-                         'share',
-                         'applications',
-                         desktop_name)
+        name = path_join(
+            environ['HOME'], '.local', 'share', 'applications', desktop_name)
 
-        logging.debug('Creating a local .desktop file for "%s", '
-                      'name="%s"', program.name, name)
+        if os.path.exists(name):
+            logging.info('Local .desktop file for "%s" ("%s") already exists',
+                          program.name, name)
+        else:
+            logging.info('Creating a local .desktop file for "%s", '
+                         'name="%s"', program.name, name)
 
-        with open(name, 'w', encoding='utf-8') as out:
-            out.write('[Desktop Entry]\n')
-            out.write('Encoding=UTF-8\n')
-            out.write('Version=1.0\n')
-            out.write('Name={0}\n'.format(program.name))
-            out.write('Type=Application\n')
+            with open(name, 'w', encoding='utf-8') as out:
+                out.write('[Desktop Entry]\n')
+                out.write('Encoding=UTF-8\n')
+                out.write('Version=1.0\n')
+                out.write('Name={0}\n'.format(program.name))
 
-            if program.program_type == ProgramType.WEB:
-                # GNOME, in its infinite wisdom, has decided that "you shall
-                # not have web links in the panel" and then broke the "Link"
-                # type icons. So let's hope that xdg-open can open the URL in
-                # whatever browser is the default browser.
-                # This *WILL* fail one day with some really weird URLs...
-                out.write('Exec=xdg-open "{0}"\n'.format(program.command))
-            else:
-                out.write('Exec={0}\n'.format(program.command))
+                # If this type is omitted, GNOME will ignore the file,
+                # no matter what
+                out.write('Type=Application\n')
 
-            if program.icon:
-                out.write('Icon={0}\n'.format(program.icon.filename))
-            else:
-                if program.program_type == ProgramType.WEB:
-                    # a "generic" web icon
-                    out.write('Icon=text-html\n')
+                if isinstance(program, menudata.WebLink):
+                    # GNOME, in its infinite wisdom, has decided that "you shall
+                    # not have web links in the panel" and then broke the "Link"
+                    # type icons. So let's hope that xdg-open can open the URL in
+                    # whatever browser is the default browser.
+                    # This *WILL* fail one day with some really weird URLs...
+                    out.write('Exec=xdg-open "{0}"\n'.format(program.url))
+                else:
+                    out.write('Exec={0}\n'.format(program.command))
 
-    # Add the new .desktop file to the list
-    panel_faves.append(desktop_name)
-    gsettings.set_value(KEY, GLib.Variant.new_strv(panel_faves))
-    logging.info('Panel icon created')
+                if program.original_icon_name is not None:
+                    logging.info('Setting the panel icon to "%s"',
+                                 program.original_icon_name)
+                    out.write('Icon={0}\n'.format(program.original_icon_name))
+                else:
+                    if isinstance(program, menudata.WebLink):
+                        # a "generic" web icon
+                        out.write('Icon=text-html\n')
+                        logging.info('Using a generic icon for a web link without an icon')
+                    else:
+                        out.write('Icon=/opt/puavomenu/res/missing_icon.png\n')
+                        logging.info('Using a generic icon for a panel launcher without an icon')
+
+                # Mark .desktop files that we create
+                out.write('X-Puavomenu-Created=1\n')
+
+    if desktop_name not in panel_faves:
+        logging.info('Appending program "%s" ("%s") to org.gnome.shell.favorite-apps',
+                     program.menudata_id, desktop_name)
+        panel_faves.append(desktop_name)
+        gsettings.set_value(key_name, GLib.Variant.new_strv(panel_faves))

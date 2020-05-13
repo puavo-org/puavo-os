@@ -1,9 +1,9 @@
 # Program settings. Determined at startup, then used everywhere. The program
 # never *writes* any settings back to disk.
 
-# IMPORTANT NOTICE: Do not import GTK or Cairo or other such modules
-# here! This file is used in places where no graphical libraries have
-# been used, or even needed.
+# IMPORTANT NOTICE: Do not import GTK or Cairo or other such modules in
+# this file! This file is used in places where no graphical libraries
+# have been used, or even needed.
 
 
 class Settings:
@@ -14,12 +14,11 @@ class Settings:
         # True if we're in production mode. Production mode disables the
         # development mode popup menu, changes some logging-related things,
         # removes the titlebar and prevents the program from exiting, but
-        # otherwise the two modes are identical. Production mode is not
-        # enabled by default.
+        # otherwise the two modes are identical.
         self.prod_mode = False
 
         # True if window autohide is enabled (usually not used in development
-        # mode, but can be enabled in it too if wanted)
+        # mode, but it can be enabled if so desired)
         self.autohide = False
 
         # Directory for the built-in resources (images mostly)
@@ -29,9 +28,13 @@ class Settings:
         self.menu_dir = ''
 
         # Where user settings are saved (usually ~/.config/puavomenu)
-        self.user_dir = ''
+        self.user_conf = ''
 
-        # Language code (en/fi/de/sv)
+        # The directory where user-defined programs are automatically loaded
+        # and updated from. Not always specified.
+        self.user_progs = None
+
+        # Language code (en/fi/de/sv/etc.)
         self.language = 'en'
 
         # IPC socket name, for relaying show/hide commands from the
@@ -60,20 +63,17 @@ class Settings:
         # unless 'is_personally_administered' is also True.
         self.is_user_primary_user = False
 
-        # User type (student, teacher, etc.) some of the web services that are
-        # opened from the menu needs to know this.
+        # User type (student, teacher, etc.). Some of the web services
+        # that are opened from the menu needs to know this.
         self.user_type = 'student'
 
         # True if the global GNOME dark theme is enabled
         self.dark_theme = False
 
-        # True if we will be saving favorites (ie. the most often used
-        # programs). Guest and webkiosk sessions disable this.
-        self.enable_faves_saving = True
-
-        # The "root" directory for puavo-pkg installed packages.
-        # A constant, but this object is a good place for it.
-        self.puavopkg_root_dir = '/var/lib/puavo-pkg/installed'
+        # True if we will be saving program usage counts. Guest and webkiosk
+        # sessions disable this. The frequently used programs list is built
+        # from these numbers.
+        self.save_usage_counters = True
 
         # ----------------------------------------------------------------------
         # Per-user settings
@@ -82,6 +82,7 @@ class Settings:
         # click a program or a search result. Set to False to retain the
         # current view. Can be configured through the per-user config file.
         self.reset_view_after_start = True
+
 
     def detect_environment(self):
         """Detects the runtime-environment for this session. Call once
@@ -92,30 +93,33 @@ class Settings:
         import configparser
         import subprocess
         import logging
+        import json
         import utils
 
         # Detect the session and device types
         if 'GUEST_SESSION' in os.environ:
-            logging.info('This is a guest user session')
+            logging.info('detect_environment(): this is a guest user session')
             self.is_guest = True
 
         if utils.puavo_conf('puavo.hosttype', 'laptop') == 'fatclient':
-            logging.info('This is a fatclient device')
+            logging.info('detect_environment(): this is a fatclient device')
             self.is_fatclient = True
 
         if utils.puavo_conf('puavo.webmenu.webkiosk', '') == 'true':
             # I don't know if this actually works!
-            logging.info('This is a webkiosk session')
+            logging.info('detect_environment(): this is a webkiosk session')
             self.is_webkiosk = True
 
         if self.is_guest or self.is_webkiosk:
-            # No point in saving faves when they get blown away upon logout.
-            # No point in loading them, either.
-            logging.info('Faves loading/saving is disabled for this session')
-            self.enable_faves_saving = False
+            # No point in saving frequently-used programs when they get blown
+            # away upon logout. No point in loading them, either.
+            logging.info(
+                'detect_environment(): program usage counter loading/saving ' \
+                'is disabled for this session'
+            )
+            self.save_usage_counters = False
 
-        if utils.puavo_conf('puavo.admin.personally_administered',
-                            'false') == 'true':
+        if utils.puavo_conf('puavo.admin.personally_administered', 'false') == 'true':
             self.is_personally_administered = True
 
             try:
@@ -130,15 +134,24 @@ class Settings:
                     # device's configured primary user
                     self.is_user_primary_user = True
             except Exception as e:
-                logging.error("Cannot determine if the current user is this " \
-                              "device's configured primary user:")
+                logging.error(
+                    "detect_environment(): cannot determine if the " \
+                    "current user is this device's configured primary user:"
+                )
                 logging.error(str(e))
 
         # User type
         try:
-            import json
-
             if 'PUAVO_SESSION_PATH' in os.environ:
+                VALID_TYPES = frozenset((
+                    'student',
+                    'teacher',
+                    'admin',
+                    'staff',
+                    'visitor',
+                    'guest'
+                ))
+
                 filename = os.environ['PUAVO_SESSION_PATH']
 
                 with open(filename, mode='r', encoding='utf-8') as session:
@@ -146,24 +159,30 @@ class Settings:
 
                 self.user_type = session_data['user']['user_type']
 
-                if self.user_type not in ('student', 'teacher', 'admin', 'staff', 'visitor', 'guest'):
-                    logging.warning('Unknown user type "%s", defaulting to "student"', self.user_type)
+                if self.user_type not in VALID_TYPES:
+                    logging.warning(
+                        'detect_environment(): unknown user type "%s", ' \
+                        'defaulting to "student"', self.user_type
+                    )
                     self.user_type = 'student'
             else:
-                logging.warning('"PUAVO_SESSION_PATH" not in environment variables, user type '
-                                'cannot be determined, assuming "student"')
+                logging.warning(
+                    'detect_environment(): "PUAVO_SESSION_PATH" not in environment ' \
+                    'variables, user type cannot be determined, assuming "student"'
+                )
                 self.user_type = 'student'
         except Exception as e:
-            logging.error('Cannot determine user type, assuming "student":')
+            logging.error(
+                'detect_environment(): cannot determine user type, assuming "student":'
+            )
             logging.error(str(e))
             self.user_type = 'student'
 
         # Detect dark theme usage
+        # FIXME: Does not work in Buster. The setting still exists, but it
+        # doesn't seem to be used? Figure out where it is stored.
         try:
-            name = os.path.join(os.path.expanduser('~'),
-                        '.config',
-                        'gtk-3.0',
-                        'settings.ini')
+            name = os.path.join(os.path.expanduser('~'), '.config', 'gtk-3.0', 'settings.ini')
 
             config = configparser.ConfigParser()
             config.read(name)
@@ -172,29 +191,35 @@ class Settings:
                                  'gtk-application-prefer-dark-theme',
                                  fallback=False):
                 self.dark_theme = True
-                logging.info('Dark theme has been enabled')
+                logging.info('detect_environment(): dark theme has been enabled')
         except Exception as exception:
             # okay then, no dark theme for you
-            logging.error('Dark theme check failed')
+            logging.error('detect_environment(): dark theme check failed')
             logging.error(str(exception))
 
         # Load the per-user config file, if it exists
-        conf_file = os.path.join(self.user_dir, 'puavomenu.conf')
+        if not (self.is_guest or self.is_webkiosk):
+            conf_file = os.path.join(self.user_conf, 'puavomenu.conf')
 
-        if os.path.isfile(conf_file):
-            logging.info('A per-user configuration file "%s" exists, '
-                         'trying to load it...', conf_file)
+            if os.path.isfile(conf_file):
+                logging.info(
+                    'detect_environment(): a per-user configuration file "%s" exists, '
+                    'trying to load it...', conf_file
+                )
 
-            try:
-                config = configparser.ConfigParser()
-                config.read(conf_file)
+                try:
+                    config = configparser.ConfigParser()
+                    config.read(conf_file)
 
-                self.reset_view_after_start = \
-                    config.getboolean('puavomenu',
-                                      'reset_view_after_start',
-                                      fallback=True)
-            except Exception as exception:
-                logging.error(str(exception))
+                    self.reset_view_after_start = \
+                        config.getboolean('puavomenu',
+                                          'reset_view_after_start',
+                                          fallback=True)
+                except Exception as exception:
+                    logging.error(
+                        'detect_environment(): failed to load file "%s":', conf_file
+                    )
+                    logging.error(str(exception))
 
         # Determine the location of the desktop directory
         try:
@@ -211,7 +236,8 @@ class Settings:
         except Exception as exception:
             # Keep as None to signal that we don't know where to put desktop
             # files, this makes desktop link creation always fail
-            logging.error("Could not determine the location of user's "
-                          "desktop directory")
+            logging.error(
+                "detect_environment(): could not determine the " \
+                "location of the user's desktop directory:")
             logging.error(str(exception))
             self.desktop_dir = None

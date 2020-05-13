@@ -1,65 +1,75 @@
 # PuavoMenu constants
 
-# Size of the main menu window. Can be changed, but you have to change
-# other element sizes too to accommodate the new size.
-WINDOW_WIDTH = 955
-WINDOW_HEIGHT = 592
+import enum
 
-# Main padding, used everywhere
-# !!! DO NOT CHANGE! DOES NOT WORK PROPERLY YET! !!!
+# ------------------------------------------------------------------------------
+# Changing these will change the main window size!
+
+# Main padding, used everywhere. Changing this shouldn't break anything,
+# but it's still not recommended unless you know what you're doing.
 MAIN_PADDING = 10
+
+# Width of a scrollbar. I don't know any way to query this from GNOME,
+# so I took a screenshot and measured it.
+SCROLLBAR_WIDTH = 16
+
+# Icons per row in program lists
+PROGRAMS_PER_ROW = 4
+
+PROGRAM_BUTTON_WIDTH = 150
+PROGRAM_BUTTON_HEIGHT = 110
+PROGRAM_ROW_PADDING = 5
+PROGRAM_COL_PADDING = 5
+
+# Depends on how tall the category selector is
+PROGRAMS_TOP = 80
+
+# Size of the programs list
+PROGRAMS_WIDTH = (PROGRAM_BUTTON_WIDTH + PROGRAM_ROW_PADDING) * PROGRAMS_PER_ROW - \
+    PROGRAM_ROW_PADDING + SCROLLBAR_WIDTH
+PROGRAMS_HEIGHT = 400
+
+# Frequently-used programs list
+FREQUENT_TOP = PROGRAMS_TOP + PROGRAMS_HEIGHT + (MAIN_PADDING * 2)
+
+# Can be whatever you want
+SIDEBAR_WIDTH = 280
+
+# Main window size
+WINDOW_WIDTH = PROGRAMS_WIDTH + SIDEBAR_WIDTH + (MAIN_PADDING * 4)
+WINDOW_HEIGHT = FREQUENT_TOP + PROGRAM_BUTTON_HEIGHT + MAIN_PADDING * 2
+
+# Sidebar
+SIDEBAR_TOP = MAIN_PADDING
+SIDEBAR_LEFT = PROGRAMS_WIDTH + (MAIN_PADDING * 3)
+SIDEBAR_HEIGHT = WINDOW_HEIGHT - (MAIN_PADDING * 2)
+
+# ------------------------------------------------------------------------------
+# Element positioning and sizing. Some of these do affect the main window size.
 
 # Size, in pixels, of the separator lines. Depends on the theme, so
 # this unfortunately isn't very reliable.
 SEPARATOR_SIZE = 1
 
 # Width of the category selector
-CATEGORIES_WIDTH = 400
+CATEGORIES_WIDTH = PROGRAMS_WIDTH
 
 # The back button
-BACK_BUTTON_X = MAIN_PADDING
-BACK_BUTTON_Y = 45
+BACK_BUTTON_Y = 40
 BACK_BUTTON_WIDTH = 50
 
+# Search box
 SEARCH_WIDTH = 150
-SEARCH_HEIGHT = 30
-
-# Main programs list (also used to position/size the faves list)
-PROGRAMS_TOP = 75
-PROGRAMS_LEFT = MAIN_PADDING
-PROGRAMS_HEIGHT = 375
-PROGRAMS_WIDTH = 618
-FAVES_TOP = PROGRAMS_TOP + PROGRAMS_HEIGHT + (MAIN_PADDING * 2)
-
-# Icons per row in the programs/faves lists. DO NOT CHANGE unless you
-# also make the window wider! The lists don't have horizontal scrollbars.
-PROGRAMS_PER_ROW = 4
 
 # Size of a program button
-PROGRAM_BUTTON_WIDTH = 150
-PROGRAM_BUTTON_HEIGHT = 110
 PROGRAM_BUTTON_ICON_SIZE = 48
 
-# How many faves to display
-NUMBER_OF_FAVES = 4
-
-# Sidebar main
-SIDEBAR_TOP = 0
-SIDEBAR_LEFT = PROGRAMS_LEFT + PROGRAMS_WIDTH + (MAIN_PADDING * 2)
-SIDEBAR_WIDTH = WINDOW_WIDTH - SIDEBAR_LEFT - MAIN_PADDING
-
-USER_AVATAR_TOP = MAIN_PADDING
 USER_AVATAR_SIZE = 48
 
 # Height of the machine name and release info text
-HOSTINFO_LABEL_HEIGHT = 45
+HOSTINFO_LABEL_HEIGHT = 36
 
 # Accepted languages. These are permitted for the --lang parameter and
-# environment variables, and we try to load strings from YAML/.desktop
-# files for each of these. Only one of them will be actually used.
-LANGUAGES = ('en', 'fi', 'sv', 'de')
-
-# Accepted extensions for icon files, in the order we prefer them. Some
-# .desktop file "Icon" entries specify full paths, some only "generic"
-# names, so to tell them apart, we check if the name has an extension.
-ICON_EXTENSIONS = ('.svg', '.svgz', '.png', '.xpm', '.jpg', '.jpeg')
+# environment variables, and we try to load strings from YAML/JSON/
+# .desktop files for each of these.
+LANGUAGES = frozenset(('en', 'fi', 'sv', 'de'))

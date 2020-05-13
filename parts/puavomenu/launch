@@ -6,13 +6,16 @@ HOSTNAME=$(hostname)
 TIMESTAMP=$(date +"%Y%m%d-%H%M%S.%N")
 CONF_DIR="${HOME}/.config/puavomenu"
 
+# While this can be changed, it's not advisable to do so unless
+# you have a really good reason for it
+USER_PROGS="${HOME}/.local/share/applications"
+
 if [ ! -d "${CONF_DIR}" ]; then
     mkdir -p "${CONF_DIR}"
 fi
 
 # Remove old socket files (they live in $XDG_RUNTIME_DIR now)
-# TODO: Enable this later.
-# (find "${CONF_DIR}" -name "socket*" -type s -delete) || true
+(find "${CONF_DIR}" -name "socket*" -type s -delete) || true
 
 # Development or production mode? Development mode is the default.
 DEV_MODE=1
@@ -26,25 +29,29 @@ fi
 if [ $DEV_MODE -eq 1 ]; then
     # Development mode. Assume this is a local copy of the
     # puavo-os/opinsys-os repo.
-    ./puavomenu \
+    python3 ./puavomenu \
         --res_dir "./res" \
         --menu_dir "../../rules/puavomenu/templates" \
-        --user_dir "${CONF_DIR}" \
+        --user_conf "${CONF_DIR}" \
+        --user_progs "${USER_PROGS}" \
         --socket "${XDG_RUNTIME_DIR}/puavomenu_dev" \
         "$@" &
+
+    # No user programs monitoring here. If you want to monitor a specific
+    # directory, run monitor-userprogs yourself.
 else
     # Production mode. Use real paths.
-    /opt/puavomenu/puavomenu \
+    python3 /opt/puavomenu/puavomenu \
         --prod \
         --autohide \
         --log "/tmp/puavomenu_${TIMESTAMP}.log" \
         --res_dir "/opt/puavomenu/res" \
         --menu_dir "/etc/puavomenu/" \
-        --user_dir "${CONF_DIR}" \
+        --user_conf "${CONF_DIR}" \
+        --user_progs "${USER_PROGS}" \
         --socket "${XDG_RUNTIME_DIR}/puavomenu" \
         &
 
-    # Set the sticky bit to prevent automatic cleanup processes from
-    # deleting the socket
-    chmod u+t "${XDG_RUNTIME_DIR}/puavomenu"
+    # Monitor the contents of the user programs directory
+    /opt/puavomenu/monitor-userprogs "${USER_PROGS}" "${XDG_RUNTIME_DIR}/puavomenu" &
 fi

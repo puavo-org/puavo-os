@@ -2,9 +2,13 @@
 
 # Parse the command line, figure out program settings and then launch the menu.
 
+import os
 import argparse
+import time
 
 from constants import LANGUAGES
+
+program_start = time.perf_counter()
 
 
 # Some kind of a help text
@@ -16,22 +20,25 @@ this, use the --prod command line switch. When running in production mode, you
 also need to specify the log file with --log (console logging is only available
 in development mode, but file logging can be used in development mode if
 desired), and --autohide to actually make the menu window hide itself when it
-loses focus. --autohide is never enabled by default, because it complicates
-development considerably.
+loses focus. --autohide is never enabled by default, because it considerably
+hinders development.
 
 Socket names and IPC commands
 -----------------------------
 PuavoMenu uses a Unix domain socket for IPC. You can use it to send simple
 commands to it. See send_command for more information. The main PuavoMenu
-instance uses a socket file ~/.config/puavomenu/socket_(hostname); if
-you're running other copies of PuavoMenu, you *need* to use other socket
-names, so the commands you send to your copies do not interfere with the
-system menu.
+instance uses a socket file XDG_RUNTIME_DIR/puavomenu; if you're running other
+copies of PuavoMenu, you *need* to use other socket names, so the commands
+you send to your copies do not interfere with the system menu.
 
 Known IPC commands are:
-    show: Show the menu
+
+    show <pos>: Show the menu
     hide: Hide the menu
-    toggle: Show or hide the menu, depending on its current visibility
+    toggle <pos>: Show or hide the menu, depending on its current visibility
+    update-puavopkg: Reloads puavo-pkg program install states
+    reload-menudata: Completely reloads the menudata
+    reload-userprogs: Reloads the contents of the user programs directory
 
 'show' and 'toggle' also accept a position parameter, which tells the
 menu where the window should be shown at. Known positions are:
@@ -102,10 +109,15 @@ required.add_argument('--menu_dir',
                       type=str,
                       help='location of the menu data')
 
-required.add_argument('--user_dir',
+required.add_argument('--user_conf',
                       required=True,
                       type=str,
-                      help='location of user-specific data (faves, etc.)')
+                      help='location of user-specific configuration')
+
+required.add_argument('--user_progs',
+                      required=False,
+                      type=str,
+                      help='directory where user-defined programs are loaded from')
 
 required.add_argument('--socket',
                       required=True,
@@ -127,6 +139,12 @@ if args.log:
     logging.basicConfig(filename=args.log,
                         format='%(asctime)s %(levelname)s: %(message)s',
                         level=logging.DEBUG)
+
+    # don't let others see what you're doing
+    try:
+        os.chmod(args.log, 0o600)
+    except:
+        pass
 else:
     # log to console
     logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s',
@@ -134,16 +152,18 @@ else:
 
     # colored warnings and errors
     logging.addLevelName(
-        logging.WARNING, '\033[1;33m%s\033[0m' % logging.getLevelName(logging.WARNING))
+        logging.WARNING, '\033[1;93m%s\033[0m' % logging.getLevelName(logging.WARNING))
     logging.addLevelName(
-        logging.ERROR, '\033[1;31m%s\033[0m' % logging.getLevelName(logging.ERROR))
-
+        logging.ERROR, '\033[1;91m%s\033[0m' % logging.getLevelName(logging.ERROR))
+    logging.addLevelName(
+        logging.CRITICAL, '\033[1;93;101m%s\033[0m' % logging.getLevelName(logging.CRITICAL))
 
 # ------------------------------------------------------------------------------
 # Create settings and detect the environment
 
 import os
 import os.path
+import stat
 
 import settings
 
@@ -153,11 +173,14 @@ settings.prod_mode = args.prod
 settings.autohide = args.autohide
 settings.res_dir = os.path.join(args.res_dir, '')
 settings.menu_dir = os.path.join(args.menu_dir, '')
-settings.user_dir = os.path.join(args.user_dir, '')
+settings.user_conf = os.path.join(args.user_conf, '')
 settings.socket = args.socket
 
 logging.info('Logging starts')
-logging.info('This is PuavoMenu v0.75 (c) Opinsys Oy 2017-2019')
+logging.info('This is PuavoMenu v0.9 (c) Opinsys Oy 2017-2020')
+
+# Detect the non-configurable settings
+settings.detect_environment()
 
 if args.lang:
     # Override autodetection
@@ -175,50 +198,91 @@ if settings.language not in LANGUAGES:
                   settings.language)
     settings.language = 'en'
 
-logging.info('Language code......: "%s"', settings.language)
+# Set up the user programs directory, but only in certain sessions
+if args.user_progs and not (settings.is_guest or settings.is_webkiosk):
+    settings.user_progs = os.path.join(args.user_progs, '')
+
+logging.info('Language...........: "%s"', settings.language)
 
 if args.log:
-    logging.info('Log (this) file....: "%s"', args.log)
+    logging.info('Log file...........: "%s"', args.log)
 
-logging.info('Resource directory.: "%s"', settings.res_dir)
-logging.info('Menu data directory: "%s"', settings.menu_dir)
-logging.info('User directory.....: "%s"', settings.user_dir)
-logging.info('IPC socket name....: "%s"', settings.socket)
+logging.info('Resources..........: "%s"', settings.res_dir)
+logging.info('Menu data..........: "%s"', settings.menu_dir)
+logging.info('User config........: "%s"', settings.user_conf)
 
-# Detect the non-configurable settings
-settings.detect_environment()
+if settings.user_progs:
+    logging.info('User programs......: "%s"', settings.user_progs)
 
+logging.info('IPC socket.........: "%s"', settings.socket)
 logging.info('Desktop directory..: "%s"', settings.desktop_dir)
 
 logging.info('User type..........: "%s"', settings.user_type)
 
 if not settings.prod_mode:
-    logging.info('*** Running in DEVELOPMENT mode ***')
+    logging.info('Running in development mode')
 
 if settings.autohide:
-    logging.info('*** Autohide enabled ***')
+    logging.info('Window autohide enabled')
 
 if settings.is_personally_administered and settings.is_user_primary_user:
-    logging.info('*** Device primary user using a personally administered device ***')
+    logging.info('Device primary user using their personally administered device')
+
+# ------------------------------------------------------------------------------
+# Set up a domain socket
+
+# This is done early, because if it fails, we simply exit.
+# We can't do *anything* without it.
+
+import syslog
+import socket
+
+sock = None
+
+try:
+    # Clean leftovers
+    os.unlink(settings.socket)
+except OSError:
+    pass
+
+try:
+    # A domain socket in stream mode!
+    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    sock.bind(settings.socket)
+    sock.listen(10)
+except Exception as exception:
+    # Oh dear...
+    logging.error('Unable to create the domain socket for IPC!')
+    logging.error('Reason: %s', str(exception))
+    logging.error('This is a fatal error, stopping here.')
+
+    syslog.syslog(syslog.LOG_CRIT,
+                  'PuavoMenu IPC socket "{0}" creation failed: {1}'.format(
+                  settings.socket, str(exception)))
+
+    syslog.syslog(syslog.LOG_CRIT,
+                  'PuavoMenu stops here. Contact Opinsys support.')
+
+    logging.info('Logging ends')
+    logging.shutdown()
+    exit(1)
 
 # ------------------------------------------------------------------------------
 # And go!
 
-import time
-import syslog
 import traceback
+import utils
 
 logging.info('=' * 50)
 
 try:
-    import_start = time.clock()
-    from utils import log_elapsed_time
+    import_start = time.perf_counter()
     import main
-    import_end = time.clock()
+    import_end = time.perf_counter()
 
-    log_elapsed_time('Main import time', import_start, import_end)
-
-    main.run_puavomenu(settings)
+    utils.log_elapsed_time('Main import time', import_start, import_end)
+    main.run_puavomenu(settings, sock, program_start)
 except Exception as exception:
     # This is bad. Very bad. The exception bubbled all the way up to here,
     # so this is fatal.

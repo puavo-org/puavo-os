@@ -1,39 +1,52 @@
-# Core menu data types. Menu data loading.
+# Core menu data definitions
 
 import re
+
 from enum import IntEnum
 
-# Program types. Desktop is the default.
-class ProgramType(IntEnum):
-    DESKTOP = 0
-    CUSTOM = 1
-    WEB = 2
 
-
+# puavo-pkg program installer status
 class PuavoPkgState(IntEnum):
     UNKNOWN = -1
     NOT_INSTALLED = 0
     INSTALLED = 1
 
 
-# Python has no structs, so classes are (ab)used instead. namedtuples
-# could be used, but they're classes in disguise, so let's cut out the
-# middle man. Because we're not expecting to actually add new program
-# types any time soon, OOP is not actualy used; you won't find
-# type-specific parsing or launching methods here. It's just data.
+class ProgramFlags(IntEnum):
+    HIDDEN = 0x01
 
-class Program:
-    """Programs, web links, etc."""
+    BROKEN = 0x02
+
+    # the icon name is a full path to an image file, otherwise it's
+    # a "generic" name that must be searched for
+    ICON_NAME_IS_PATH = 0x04
+
+    # this program is actually referenced somewhere
+    USED = 0x08
+
+
+class MenuFlags(IntEnum):
+    HIDDEN = 0x01
+    USED = 0x02
+
+
+class CategoryFlags(IntEnum):
+    HIDDEN = 0x01
+    USED = 0x02
+    USER_CATEGORY = 0x04
+
+
+# Base class for all program types
+class ProgramBase:
+    __slots__ = (
+        'menudata_id', 'name', 'description', 'icon', 'keywords',
+        'flags', 'original_desktop_file', 'original_icon_name'
+    )
 
     def __init__(self,
                  name=None,
                  description=None,
-                 icon=None,
-                 command=None):
-
-        # Type of this program. Affects mostly how it is launched
-        # and how is added on the desktop or the bottom panel.
-        self.program_type = ProgramType.DESKTOP
+                 icon=None):
 
         # Internal ID (the name given to this program in menudata files)
         self.menudata_id = None
@@ -44,74 +57,140 @@ class Program:
         # Optional description displayed in a hover text
         self.description = description
 
-        # Used during searching
-        self.keywords = []
-
-        # The actual command line for desktop and custom programs;
-        # URL for web links
-        self.command = command
-
-        # How many times this program has been launched. Used to
-        # keep track of faves ("most often used programs").
-        self.uses = 0
-
         # Icon loaded through IconCache
         self.icon = icon
 
-        # Either a generic name for the icon, or an actual path to the
-        # icon file.
-        self.icon_name = None
+        # Used during searching
+        self.keywords = frozenset()
 
-        # If true, icon_name is a full path to an actual image file.
-        # If false, icon_name is a "generic" icon name and we must
-        # search for the actual file.
-        self.icon_name_is_path = False
+        # See ProgramFlags. Not all of them apply.
+        self.flags = 0
 
-        # If true, this program has been conditionally hidden. Load-time
-        # only, hidden programs are removed before final menu data is built.
-        self.hidden = False
-
-        # If false, this program has been defined but not actually used
-        self.used = False
-
-        # If set, this is the name of the original .desktop file
-        # the data was read from. Not always known or applicable.
+        # These are needed when we're creating desktop icons and panel links.
+        # Their values are not always known.
         self.original_desktop_file = None
+        self.original_icon_name = None
 
-        # If not None, this will be a dict containing puavo-pkg installer
-        # data. Only a few programs use this.
-        self.puavopkg = None
-
-    def is_puavopkg_installer(self):
-        """Returns True if the program is merely an installer for a
-        puavo-pkg program that has not been installed yet."""
-
-        return self.program_type == ProgramType.DESKTOP and \
-               self.puavopkg and \
-               self.puavopkg['state'] == PuavoPkgState.NOT_INSTALLED
 
     def __str__(self):
-        return '<Program, type={0}, id="{1}", name="{2}", ' \
-               'description="{3}" command="{4}", icon="{5}" ' \
-               'keywords={6} hidden={7}>'. \
-               format(self.program_type,
-                      self.menudata_id,
-                      self.name,
-                      self.description,
-                      self.command,
-                      self.icon_name,
-                      self.keywords,
-                      self.hidden)
+        return ''
 
 
-class Menu:
-    """Groups zero or more programs."""
+# Desktop and custom programs use both this, as the only difference
+# between them is that desktop programs have automatic .desktop file
+# loading, but custom programs don't.
+class Program(ProgramBase):
+    __slots__ = ('command')
 
     def __init__(self,
                  name=None,
                  description=None,
                  icon=None,
-                 programs=None):
+                 command=None):
+
+        super().__init__(name, description, icon)
+
+        # The actual command line to be executed
+        self.command = command
+
+
+    def __str__(self):
+        return '<Program, id="{id}", name="{name}", ' \
+               'description="{desc}" command="{cmd}", icon="{icon}" ' \
+               'keywords={kw}>'. \
+               format(id=self.menudata_id,
+                      name=self.name,
+                      desc=self.description,
+                      cmd=self.command,
+                      icon=self.icon,
+                      kw=self.keywords)
+
+
+# A puavo-pkg program launcher/installer
+class PuavoPkgProgram(Program):
+    __slots__ = ('package_id', 'state', 'installer_icon', 'raw_menudata')
+
+    def __init__(self,
+                 name=None,
+                 description=None,
+                 icon=None,
+                 command=None):
+
+        super().__init__(name, description, icon)
+
+        self.package_id = None
+        self.state = PuavoPkgState.UNKNOWN
+        self.installer_icon = None
+
+        # A copy of the "raw" menudata loaded from the menudata JSON files.
+        # Needed, because when a puavopkg program is installed, it must go
+        # through the same motions as any other program. This data can be
+        # empty, if there was nothing special configured for the program.
+        self.raw_menudata = None
+
+
+    def is_installer(self):
+        # Can only install programs that aren't installed yet
+        return self.state == PuavoPkgState.NOT_INSTALLED
+
+
+# User-defined programs
+class UserProgram(Program):
+    __slots__ = ('command', 'filename', 'modified', 'size')
+
+    def __init__(self,
+                 name=None,
+                 description=None,
+                 icon=None,
+                 command=None):
+
+        super().__init__(name, description, icon)
+
+        # The actual command line to be executed
+        self.command = command
+
+        # For tracking .desktop file changes
+        self.filename = None
+        self.modified = None
+        self.size = None
+
+
+class WebLink(ProgramBase):
+    __slots__ = ('url')
+
+    def __init__(self,
+                 name=None,
+                 description=None,
+                 icon=None,
+                 url=None):
+
+        super().__init__(name, description, icon)
+
+        # The URL to be opened
+        self.url = url
+
+
+    def __str__(self):
+        return '<WebLink, id="{id}", name="{name}", ' \
+               'description="{desc}" url="{url}", icon="{icon}" ' \
+               'keywords={kw}>'. \
+               format(id=self.menudata_id,
+                      name=self.name,
+                      desc=self.description,
+                      url=self.url,
+                      icon=self.icon,
+                      kw=self.keywords)
+
+
+# Groups zero or more programs
+class Menu:
+    __slots__ = ('menudata_id', 'name', 'description', 'icon', 'flags', 'program_ids')
+
+    def __init__(self,
+                 name=None,
+                 description=None,
+                 icon=None,
+                 program_ids=None):
 
         # Internal ID (the name given to this menu in menudata files)
         self.menudata_id = None
@@ -125,29 +204,21 @@ class Menu:
         # Icon loaded through IconCache
         self.icon = icon
 
-        # Full path to the icon file. Generic icon names are not accepted
-        # for men definitions.
-        self.icon_name = None
+        # See MenuFlags. Not all of them apply.
+        self.flags = 0
 
-        # If true, this menu has been conditionally hidden. Load-time
-        # only, hidden menus are removed before final menu data is built.
-        self.hidden = False
-
-        # If false, this menu has been defined but not actually used
-        self.used = False
-
-        # Zero or more program IDs (during load time) or actual
-        # references (after loading is done).
-        self.programs = programs or []
+        # Zero or more program IDs
+        self.program_ids = program_ids or []
 
 
+# Groups zero or more menus and programs
 class Category:
-    """Groups multiple menus and programs."""
+    __slots__ = ('menudata_id', 'name', 'position', 'flags', 'menu_ids', 'program_ids')
 
     def __init__(self,
                  name=None,
-                 menus=None,
-                 programs=None):
+                 menu_ids=None,
+                 program_ids=None):
 
         # Internal ID (the name given to this category in menudata files)
         self.menudata_id = None
@@ -158,48 +229,32 @@ class Category:
         # For ordering categories. Can be negative.
         self.position = 0
 
-        # If true, this category has been conditionally hidden
-        self.hidden = False
+        # See CategoryFlags. Not all of them apply.
+        self.flags = 0
 
-        # Zero or more menu IDs/instances
-        self.menus = menus or []
+        # Zero or more menu IDs
+        self.menu_ids = menu_ids or []
 
-        # Zero or more program IDs/instances
-        self.programs = programs or []
+        # Zero or more program IDs
+        self.program_ids = program_ids or []
 
 
+# Wraps all of the above in a handy structure
 class Menudata:
-    """Top-level container for all menu data."""
+    __slots__ = ('programs', 'menus', 'categories', 'category_index')
 
     def __init__(self):
-        # Conditions
-        self.conditions = {}
-
-        # All programs, indexed by their menudata IDs
         self.programs = {}
-
-        # All menus, indexed by their menudata IDs
         self.menus = {}
-
-        # All categories, indexed by their menudata IDs
         self.categories = {}
-
-        # A list of category menudata IDs, in the order they appear
-        # in the category switcher
         self.category_index = []
 
+
     # Searches for programs, returns them sorted by their names
-    def search(self, key, hide_puavopkg_installers):
+    def search(self, key, skip_puavopkg_installers):
         matches = []
 
         for _, program in self.programs.items():
-            if program.hidden:
-                continue
-
-            if program.is_puavopkg_installer() and hide_puavopkg_installers:
-                # Don't show puavopkg installers if they cannot be used
-                continue
-
             if re.search(key, program.menudata_id, re.IGNORECASE):
                 matches.append(program)
                 continue
@@ -208,11 +263,12 @@ class Menudata:
                 matches.append(program)
                 continue
 
-            # Check the .desktop file name
-            if program.original_desktop_file:
-                if re.search(key,
-                             program.original_desktop_file.replace('.desktop', ''),
-                             re.IGNORECASE):
+            # Check the .desktop file name if it's available
+            if program.original_desktop_file is not None:
+                if re.search(
+                        key,
+                        program.original_desktop_file.replace('.desktop', ''),
+                        re.IGNORECASE):
                     matches.append(program)
                     continue
 
@@ -224,61 +280,3 @@ class Menudata:
                     break
 
         return sorted(matches, key=lambda program: program.name.lower())
-
-    def clear(self):
-        self.programs = {}
-        self.menus = {}
-        self.categories = {}
-        self.category_index = []
-
-    def load(self,
-             language,
-             menudata_root_dir,
-             tag_filter_string,
-             puavopkg_states,
-             icon_cache):
-
-        """A high-level interface to everything in loader.py. Loads all the
-        menu data in the specified directory and builds usable menu data
-        out of it."""
-
-        # If Python allowed class implementation to be spread across multiple
-        # files (like C++ does), I'd move this method to loader.py. Now it's
-        # just a thin wrapper for everything in it.
-
-        import loader
-
-        self.programs, self.menus, self.categories, self.category_index = \
-            loader.load_menu_data(language,
-                                  menudata_root_dir,
-                                  tag_filter_string,
-                                  puavopkg_states,
-                                  icon_cache)
-
-    def reload_puavopkg_program(self,
-                                language,
-                                menudata_root_dir,
-                                puavopkg_states,
-                                icon_cache,
-                                program):
-
-        import loader
-
-        return loader.reload_puavopkg_program(
-            language, menudata_root_dir, puavopkg_states, icon_cache, program)
-
-    def replace_program(self, program, new_program):
-        # I'm regretting my decision to store actual program objects (instead
-        # of their unique ID strings) in menus and categories...
-
-        for menudata_id, menu in self.menus.items():
-            for index, prog in enumerate(menu.programs):
-                if prog == program:
-                    menu.programs[index] = new_program
-
-        for menudata_id, cat in self.categories.items():
-            for index, prog in enumerate(cat.programs):
-                if prog == program:
-                    cat.programs[index] = new_program
-
-        self.programs[program.menudata_id] = new_program

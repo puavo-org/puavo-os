@@ -1,0 +1,26 @@
+/*
+--------------------------------------------------------------------------------
+                             PUAVOMENU LIGHT THEME
+--------------------------------------------------------------------------------
+*/
+
+@define-color MAIN_WINDOW rgba(255, 255, 255, 0.95);
+
+@define-color HOVER_COLOR rgb(74, 144, 217);
+
+@define-color CATEGORY_FORE #000;
+@define-color CATEGORY_FORE_HOVER #fff;
+@define-color CATEGORY_BACK_HOVER rgb(114, 184, 255);
+@define-color CATEGORY_FORE_CHECKED @CATEGORY_FORE_HOVER;
+@define-color CATEGORY_BACK_CHECKED @HOVER_COLOR;
+
+@define-color MENU_TITLE_FORE #000;
+
+@define-color EMPTY_FORE #666;
+
+@define-color BUTTON_FORE #000;
+@define-color BUTTON_FORE_HOVER #fff;
+@define-color BUTTON_FORE_INDETERMINATE #888;
+
+@define-color MENU_BUTTON_BORDER alpha(@HOVER_COLOR, 0.5);
+@define-color AVATAR_TEXT_SHADOW #000;

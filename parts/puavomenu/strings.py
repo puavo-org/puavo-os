@@ -30,6 +30,11 @@ STRINGS = {
         'de': 'Leere Kategorie',
     },
 
+    'user_category': {
+        'fi': 'Omat ohjelmat',
+        'en': 'Your programs',
+    },
+
     # Development mode
     'menu_no_data_at_all_dev': {
         'fi': 'Ei valikkodataa? Tarkista tilanne!',

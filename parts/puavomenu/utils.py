@@ -129,6 +129,36 @@ def puavo_conf(name, default):
 
 
 def log_elapsed_time(title, start_ms, end_ms):
-    logging.info('%s: %s milliseconds',
+    logging.info('%s: %s ms',
                  title,
                  '{0:.1f}'.format((end_ms - start_ms) * 1000.0))
+
+
+# puavo-webwindow call wrapper. Remember to handle exceptions.
+def open_webwindow(url, title=None, width=None, height=None,
+                   enable_js=False, enable_plugins=False):
+
+    import subprocess
+
+    cmd = ['puavo-webwindow', '--url', str(url)]
+
+    if title:
+        cmd += ['--title', str(title)]
+
+    if width:
+        cmd += ['--width', str(width)]
+
+    if height:
+        cmd += ['--height', str(height)]
+
+    if enable_js:
+        cmd += ['--enable-js']
+
+    if enable_plugins:
+        cmd += ['--enable-plugins']
+
+    logging.info('Opening a webwindow: "%s"', cmd)
+
+    subprocess.Popen(cmd,
+                     stdout=subprocess.DEVNULL,
+                     stderr=subprocess.DEVNULL)

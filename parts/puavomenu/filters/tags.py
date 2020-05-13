@@ -1,15 +1,16 @@
 # For explicitly hiding (and showing) programs, menus, categories and more
-# through puavo-conf values.
+
+import re
+import logging
 
 
+# A single action that either shows or hides something
 class Action:
-    """A single action that either shows or hides something."""
-
     # What this action does?
     HIDE = 0
     SHOW = 1
 
-    # What this action targets?
+    # What type of object this action targets?
     TAG = 0
     PROGRAM = 1
     MENU = 2
@@ -27,49 +28,44 @@ class Action:
         CATEGORY: 'category'
     }
 
-    def __init__(self, action, target, name):
+
+    def __init__(self, action, target, name, original):
         self.action = action
         self.target = target
         self.name = name
+        self.original = original        # useful for logging purposes
+
 
     def __str__(self):
-        return '<Filter action: {0} {1} {2}>'.format(
+        return '<Filter action: {0} {1} "{2}">'.format(
             self.ACTIONS_FOR_LOGGER[self.action],
             self.TARGETS_FOR_LOGGER[self.target],
             self.name)
 
 
+# Zero or more actions that are applied to programs, menus,
+# categories and programs tagged with certain tags
 class Filter:
-    """Zero or more actions that are applied to programs, menus,
-    categories and programs tagged with certain tags."""
-
     def __init__(self, initial=None, strict_reject=True):
         self.actions = []
-        self.program_names = set()
-        self.menu_names = set()
-        self.category_names = set()
 
         if initial:
             self.parse_string(initial, strict_reject)
 
+
     def have_data(self):
         return len(self.actions) > 0
 
+
     def reset(self):
         self.actions = []
-        self.visible_tags = set()
-        self.program_names = set()
-        self.menu_names = set()
-        self.category_names = set()
 
-    def tag_visible(self, tag):
-        return tag in self.visible_tags
 
+    # If 'strict_reject' is True, the entire tag string is rejected
+    # if it contains even one error. If it's False, mistakes are
+    # simply ignored and the remaining parts are used.
     def parse_string(self, tag_string, strict_reject=True):
-        import re
-        import logging
-
-        logging.info('Parsing filter string: "%s"', str(tag_string))
+        logging.info('Filter::parse_string(): parsing "%s"', str(tag_string))
 
         tags = [tag.strip() for tag in re.split(r',|;|\ ', str(tag_string) if tag_string else '')]
         tags = filter(None, tags)
@@ -102,10 +98,15 @@ class Filter:
 
             if len(namespace) == 0 or len(tag) == 0:
                 if strict_reject:
-                    logging.error('Rejecting filter string "%s" because "%s" '
-                                  'is not a valid tag', tag_string, orig_tag)
+                    logging.error(
+                        'Filter::parse_string(): rejecting filter string "%s" because "%s" '
+                        'is not a valid tag', tag_string, orig_tag)
                     self.reset()
                     return
+                else:
+                    logging.warning(
+                        'Filter::parse_string(): "%s" is not a valid tag, ignoring it',
+                        orig_tag)
 
                 continue
 
@@ -113,42 +114,45 @@ class Filter:
             # with them
             if (tag.find('-') == 0) or (tag.find('+') == 0):
                 if strict_reject:
-                    logging.error('Rejecting filter string "%s" because "%s" '
-                                  'is not a valid tag', tag_string, orig_tag)
+                    logging.error(
+                        'Filter::parse_string(): rejecting filter string "%s" because "%s" '
+                        'is not a valid tag', tag_string, orig_tag)
                     self.reset()
                     return
+                else:
+                    logging.warning(
+                        'Filter::parse_string(): "%s" is not a valid tag, ignoring it',
+                        orig_tag)
+
                 continue
 
             if namespace in ('t', 'tag'):
                 target = Action.TAG
             elif namespace in ('p', 'prog', 'program'):
                 target = Action.PROGRAM
-                self.program_names.add(tag)
             elif namespace in ('m', 'menu'):
                 target = Action.MENU
-                self.menu_names.add(tag)
             elif namespace in ('c', 'cat', 'category'):
                 target = Action.CATEGORY
-                self.category_names.add(tag)
             else:
                 if strict_reject:
-                    logging.error('Rejecting filter string "%s" because "%s" '
-                                  'is not a valid tag namespace',
-                                  tag_string, namespace)
+                    logging.error(
+                        'Filter::parse_string(): rejecting filter string "%s" because "%s" '
+                        'is not a valid tag namespace',
+                        tag_string, namespace)
                     self.reset()
                     return
+                else:
+                    logging.warning(
+                        'Filter::parse_string(): "%s" is not a valid tag namespace, ignoring tag',
+                        orig_tag)
 
                 continue
 
-            self.actions.append(Action(action, target, tag))
-            logging.debug('Filter action: %s %s "%s"',
-                          Action.ACTIONS_FOR_LOGGER[action],
-                          Action.TARGETS_FOR_LOGGER[target],
-                          tag)
+            self.actions.append(Action(action, target, tag, orig_tag))
 
-            if target == Action.TAG:
-                if action == Action.SHOW:
-                    self.visible_tags.add(tag)
-                else:
-                    if tag in self.visible_tags:
-                        self.visible_tags.remove(tag)
+            logging.debug(
+                'Filter action: %s %s "%s"',
+                Action.ACTIONS_FOR_LOGGER[action],
+                Action.TARGETS_FOR_LOGGER[target],
+                tag)
