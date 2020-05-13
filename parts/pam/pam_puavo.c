@@ -40,6 +40,7 @@
 #include <time.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <glob.h>
 #include <stdio.h>
 #include <string.h>
 #include <syslog.h>
@@ -103,6 +104,80 @@ get_krb5cc_path_from_environment (pam_handle_t *pamh)
     return strdup(&krb5cc_envvalue[ sizeof("FILE:")-1 ]);
 
   return NULL;
+}
+
+static int
+lookup_existing_krb5cc_path(pam_handle_t *pamh, char **krb5cc_path,
+    const char *pam_user)
+{
+  struct passwd pwd;
+  struct passwd *result;
+  struct stat statbuf;
+  glob_t pglob;
+  char *buf, *krb5cc_glob, *new_krb5cc_path;
+  size_t bufsize, i;
+  int r, ret, s;
+
+  buf = NULL;
+  krb5cc_glob = NULL;
+  ret = -1;
+
+  bufsize = sysconf(_SC_GETPW_R_SIZE_MAX);
+  if (bufsize == -1)
+    bufsize = 16384;
+
+  if ((buf = malloc(bufsize)) == NULL) {
+    pam_syslog (pamh, LOG_WARNING, "malloc() error");
+    goto finish;
+  }
+
+  getpwnam_r(pam_user, &pwd, buf, bufsize, &result);
+  if (result == NULL) {
+    if (s == 0)
+      goto finish;
+    pam_syslog (pamh, LOG_WARNING, "getpwnam_r() error");
+  }
+
+  if (asprintf(&krb5cc_glob, "/tmp/krb5cc_%s_*", pam_user) < 0) {
+    pam_syslog (pamh, LOG_WARNING, "asprintf() error");
+    goto finish;
+  }
+
+  r = glob(krb5cc_glob, 0, NULL, &pglob);
+  if (r == GLOB_NOMATCH) {
+    goto finish;
+  } else if (r != 0) {
+    pam_syslog (pamh, LOG_WARNING, "glob() error");
+    goto finish;
+  }
+
+  for (i = 0; i < pglob.gl_pathc; i++) {
+    if ((new_krb5cc_path = strdup(pglob.gl_pathv[i])) == NULL) {
+      pam_syslog (pamh, LOG_WARNING, "strdup() error");
+      continue;
+    }
+
+    if (stat(new_krb5cc_path, &statbuf) == -1) {
+      pam_syslog (pamh, LOG_WARNING, "stat() error when checking %s",
+        new_krb5cc_path);
+      continue;
+    }
+
+    if (statbuf.st_uid != pwd.pw_uid)
+      continue;
+
+    *krb5cc_path = new_krb5cc_path;
+    ret = 0;
+    break;
+  }
+
+finish:
+  if (buf)
+    free(buf);
+  if (krb5cc_glob)
+    free(krb5cc_glob);
+
+  return ret;
 }
 
 static int
@@ -178,23 +253,25 @@ call_exec (const char *pam_type, pam_handle_t *pamh,
 	return PAM_SYSTEM_ERR;
       }
 
-    if (asprintf(&krb5cc_path, "/tmp/krb5cc_%s_XXXXXX", pam_user) < 0) {
-      if (!quiet) {
-	pam_error (pamh, "%s failed: could not create KRB5CCNAME path",
-	  argv[optargc]);
+    if (lookup_existing_krb5cc_path(pamh, &krb5cc_path, pam_user) != 0) {
+      if (asprintf(&krb5cc_path, "/tmp/krb5cc_%s_XXXXXX", pam_user) < 0) {
+        if (!quiet) {
+          pam_error (pamh, "%s failed: could not create KRB5CCNAME path",
+            argv[optargc]);
+        }
+        return PAM_SYSTEM_ERR;
       }
-      return PAM_SYSTEM_ERR;
-    }
 
-    if ((tmp_fd = mkstemp(krb5cc_path)) < 0) {
-      if (!quiet) {
-	pam_error (pamh, "%s failed: could not setup KRB5CCNAME temporary file",
-	  argv[optargc]);
+      if ((tmp_fd = mkstemp(krb5cc_path)) < 0) {
+        if (!quiet) {
+          pam_error (pamh, "%s failed: could not setup KRB5CCNAME temporary file",
+            argv[optargc]);
+        }
+        free(krb5cc_path);
+        return PAM_SYSTEM_ERR;
       }
-      free(krb5cc_path);
-      return PAM_SYSTEM_ERR;
+      (void) close(tmp_fd);
     }
-    (void) close(tmp_fd);
 
     if (asprintf(&krb5cc_envstr, "KRB5CCNAME=FILE:%s", krb5cc_path) < 0) {
       pam_error (pamh, "%s failed: could not setup KRB5CCNAME", argv[optargc]);
