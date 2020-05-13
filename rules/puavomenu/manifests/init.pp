@@ -20,20 +20,20 @@ class puavomenu {
     '/etc/puavomenu/conditions':
       ensure => directory;
 
-    '/etc/puavomenu/conditions/50-default.yml':
-      content => template('puavomenu/conditions/50-default.yml');
+    '/etc/puavomenu/conditions/50-default.json':
+      content => template('puavomenu/conditions/50-default.json');
 
     '/etc/puavomenu/menudata':
       ensure => directory;
 
-    '/etc/puavomenu/menudata/50-default.yml':
-      content => template('puavomenu/menudata/50-default.yml');
+    '/etc/puavomenu/menudata/50-default.json':
+      content => template('puavomenu/menudata/50-default.json');
 
-    '/etc/puavomenu/menudata/60-ktp.yml':
-      content => template('puavomenu/menudata/60-ktp.yml');
+    '/etc/puavomenu/menudata/60-ktp.json':
+      content => template('puavomenu/menudata/60-ktp.json');
 
-    '/etc/puavomenu/menudata/70-googleapps.yml':
-      content => template('puavomenu/menudata/70-googleapps.yml');
+    '/etc/puavomenu/menudata/70-googleapps.json':
+      content => template('puavomenu/menudata/70-googleapps.json');
 
     '/etc/X11/Xsession.d/48puavo-menu-show-my-school-users':
       source => 'puppet:///modules/puavomenu/48puavo-menu-show-my-school-users';
