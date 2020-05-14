@@ -1,0 +1,24 @@
+#!/bin/sh
+
+set -eu
+
+if [ "$PAM_TTY" = '/dev/tty1' ]; then
+  # if on tty1, local login not ok
+  exit 1
+fi
+
+days_limit=3
+
+# This is an inaccurate heuristic but should be good enough:
+# if we can find any ticket for this user that is less than four days old,
+# then we consider that user has an active kerberos ticket.
+krb5_tickets=$(
+  find /tmp -maxdepth 1 -name "krb5cc_${PAM_USER}_*" -type f \
+	  -user "$PAM_USER" ! -size 0 -mtime "-${days_limit}")
+
+# if we have an active ticket, we can do local login
+if [ -n "$krb5_tickets" ]; then
+  exit 0
+fi
+
+exit 1
