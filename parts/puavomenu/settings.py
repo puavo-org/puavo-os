@@ -178,18 +178,19 @@ class Settings:
             logging.error(str(e))
             self.user_type = 'student'
 
-        # Detect dark theme usage
-        # FIXME: Does not work in Buster. The setting still exists, but it
-        # doesn't seem to be used? Figure out where it is stored.
+        # Detect dark theme usage. Follow the shell theme, not
+        # the application theme.
         try:
-            name = os.path.join(os.path.expanduser('~'), '.config', 'gtk-3.0', 'settings.ini')
+            import gi
+            from gi.repository import Gio
 
-            config = configparser.ConfigParser()
-            config.read(name)
+            schema = 'org.gnome.shell.extensions.user-theme'
+            key = 'name'
 
-            if config.getboolean('Settings',
-                                 'gtk-application-prefer-dark-theme',
-                                 fallback=False):
+            gsettings = Gio.Settings.new(schema)
+            theme = gsettings.get_value(key).unpack()
+
+            if 'dark' in theme or 'Dark' in theme:
                 self.dark_theme = True
                 logging.info('detect_environment(): dark theme has been enabled')
         except Exception as exception:
