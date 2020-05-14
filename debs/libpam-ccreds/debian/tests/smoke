@@ -1,0 +1,16 @@
+#!/bin/sh
+
+set -e
+set -x
+
+TMPFILE=$(mktemp)
+
+cc_test -store any foo 1234 "${TMPFILE}"
+cc_test -store any bar 1234 "${TMPFILE}"
+cc_test -store any foo 12341234 "${TMPFILE}"
+cc_test -validate any foo 12341234 "${TMPFILE}"
+! cc_test -validate any foo 1234 "${TMPFILE}"
+
+cc_test -update any foo - "${TMPFILE}"
+cc_dump "${TMPFILE}" | grep " bar "
+cc_dump "${TMPFILE}"

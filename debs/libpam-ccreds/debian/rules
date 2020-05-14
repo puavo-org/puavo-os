@@ -1,0 +1,31 @@
+#!/usr/bin/make -f
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
+DEB_CONFIGURE_EXTRA_ARGS := \
+	--libdir=/lib/$(DEB_BUILD_GNU_TYPE) \
+	--sbindir=/sbin \
+	--enable-gcrypt \
+	$(NULL)
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	dh_auto_configure -- $(DEB_CONFIGURE_EXTRA_ARGS)
+
+override_dh_auto_install:
+	dh_auto_install
+	chown root:root debian/libpam-ccreds/sbin/ccreds_chkpwd
+	chmod 4755 debian/libpam-ccreds/sbin/ccreds_chkpwd
+
+	mkdir -p debian/libpam-ccreds/usr/share/pam-configs
+	install -m 0644 debian/libpam-ccreds.pam-auth-update.ccreds-save \
+		debian/libpam-ccreds/usr/share/pam-configs/ccreds-save
+	install -m 0644 debian/libpam-ccreds.pam-auth-update.ccreds-check \
+		debian/libpam-ccreds/usr/share/pam-configs/ccreds-check
+	rmdir debian/libpam-ccreds/lib/security
+
+override_dh_fixperms:
+	dh_fixperms -X/sbin/ccreds_chkpwd
+

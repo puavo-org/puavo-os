@@ -1,0 +1,16 @@
+diff -ruN libpam-ccreds.orig/cc_pam.c libpam-ccreds/cc_pam.c
+--- libpam-ccreds.orig/cc_pam.c	2009-04-03 04:39:32.000000000 +0300
++++ libpam-ccreds/cc_pam.c	2020-05-14 13:44:08.017917061 +0300
+@@ -176,12 +176,6 @@
+ 						      ((sm_flags & SM_FLAGS_SERVICE_SPECIFIC) != 0));
+ 	}
+ 
+-	if (rc == PAM_SUCCESS) {
+-		_pam_sm_display_message(pamh,
+-					"You have been logged on using cached credentials.",
+-					PAM_TEXT_INFO, flags);
+-	}
+-
+ 	pam_cc_end(&pamcch);
+ 
+ 	return rc;
