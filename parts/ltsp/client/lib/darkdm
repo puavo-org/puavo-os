@@ -40,7 +40,12 @@ darkdm_reboot()
 
 darkdm_install()
 {
-    /usr/sbin/puavo-install "$@" || return 1
+    if ! /usr/sbin/puavo-install "$@"; then
+      # give some time for users to read the error message, if there is any
+      echo
+      sleep 4
+      return 1
+    fi
 
     darkdm_reboot
 }
@@ -61,6 +66,7 @@ Commands:
   poweroff             - poweroff the system in 5 seconds
   preinstall           - install without registering
   preseed-install (pi) - install with a preseed
+  preseed-preinstall   - install without registering but with a preseed
   reboot               - reboot the system in 5 seconds
   restoredisk          - restore from bootserver (only on netboot devices)
   savedisk             - save to bootserver (only on netboot devices)
@@ -218,6 +224,9 @@ darkdm_menu()
 		;;
             preinstall)
 		darkdm_install preinstall
+		;;
+            preseed-preinstall)
+		darkdm_install preseed-preinstall
 		;;
             preseed-install|pi)
 		darkdm_install preseed-install

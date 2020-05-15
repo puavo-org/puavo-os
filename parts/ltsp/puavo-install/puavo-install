@@ -19,83 +19,71 @@ ask_install_target_hosttype() {
   echo "$puavo_install_target_hosttype"
 }
 
+get_preseed_variable() {
+  local chosen_preseed preseed_json preseed_var preseed_value
+  preseed_var=$1
+  chosen_preseed=$2
+  preseed_json=$3
+
+  preseed_value=$(
+    printf %s "$preseed_json" \
+      | jq --arg chosen_preseed "$chosen_preseed" \
+           --arg preseed_var "$preseed_var" '
+          if .preseeds[$chosen_preseed] | has($preseed_var) then
+            .preseeds[$chosen_preseed][$preseed_var]
+          else
+            .defaults[$preseed_var]
+          end
+        ')
+  if [ -z "$preseed_value" ]; then
+    echo "No preseed value for ${preseed_var}" >&2
+    return 1
+  fi
+
+  printf %s "$preseed_value"
+}
+
 ask_preseed() {
-  preseeds=$(ls -1 /usr/share/puavo-ltsp-install/preseeds | sort)
-  preseed_count=$(echo "${preseeds}" | wc -l)
+  if ! image_server=$(/usr/lib/puavo-ltsp-client/lookup-image-server-by-dns); then
+     echo 'Could not lookup image server, preseed not available.' >&2
+     return 1
+  fi
 
-  # Ask the preferred preseed if there are some available.
-  [ -n "${preseeds}" ] && while true; do
-    echo "Installer preseeds:"
-    # Print the list of preseeds.
-    echo "0\tNO PRESEEDING"
-    echo "${preseeds}" | awk '{printf "%d\tPre-customized installation for %s\n", NR, $0}'
+  preseed_url="https://${image_server}/preseeds/index.json"
+  if ! preseed_json=$(curl --cacert /etc/puavo-conf/rootca.pem --fail \
+                        --show-error --silent "$preseed_url"); then
+    echo "Could not fetch preseed from ${preseed_url}" >&2
+    return 1
+  fi
 
-    # The default preseed is the first item, number 0.
-    read -p "Select preseed number [0]: " preseed_nr
-    [ -n "${preseed_nr}" ] || preseed_nr=0
+  if ! preseed_choices=$(printf %s "$preseed_json" \
+                           | jq -r '.preseeds | keys | .[]') \
+    || [ -z "$preseed_choices" ]; then
+      echo "Could not get preseed choices" >&2
+      return 1
+  fi
 
-    # Ensure the value is a valid integer.
-    case "${preseed_nr}" in
-      ''|*[!0-9]*)
-        echo "E: invalid preseed number" >&2
-        continue
-        ;;
-      *)
-        ;;
-    esac
+  echo 'Choose a preseed:'
+  if ! chosen_preseed=$(printf %s "$preseed_choices" \
+                          | fzf --height=1 --layout=reverse-list) \
+    || [ -z "$chosen_preseed" ]; then
+      echo 'Problem when choosing preseed' >&2
+      return 1
+  fi
 
-    # Ensure the integer has a valid value.
-    if [ 0 -gt "${preseed_nr}" \
-           -o "${preseed_nr}" -gt "${preseed_count}" ]; then
-      echo "E: invalid preseed number" >&2
-      continue
-    fi
+  echo "your choice was $chosen_preseed"
 
-    # Preseed 0 always means no preseeding at all.
-    [ "${preseed_nr}" -eq 0 ] && break
+  preseed_admin_user=$(get_preseed_variable admin_user "$chosen_preseed" \
+                         "$preseed_json")
+  preseed_admin_password=$(get_preseed_variable admin_password \
+                             "$chosen_preseed" "$preseed_json")
 
-    # Apply preseeds and continue installation.
-    preseed=$(echo "${preseeds}" | sed -n "${preseed_nr}p")
-    puavo_preseed_register_args=$(cat "/usr/share/puavo-ltsp-install/preseeds/${preseed}/puavo_preseed_register_args")
-    puavo_preseed_setup_filesystems_args=$(cat "/usr/share/puavo-ltsp-install/preseeds/${preseed}/puavo_preseed_setup_filesystems_args")
+  echo 'preseed not yet supported...' >&2
+  return 1
 
-    break
-  done
-
-  ## Ask primary_user_uid and puavoHostname here before puavo-register
-  ## to avoid straying in the puavo-register question jungle; currently,
-  ## puavo-register forces the user to walk through all the
-  ## configuration options even if the user wants to modify just one
-  ## specific option.
-  while true; do
-      read -p "Primary user: " primary_user
-
-      echo "${primary_user}" | egrep -q '\s' && {
-          echo "E: primary user name cannot contain whitespace" >&2
-          continue
-      }
-
-      if [ -n "${primary_user}" ]; then
-          puavo_preseed_register_args="${puavo_preseed_register_args} --primary_user_uid ${primary_user}"
-      fi
-
-      break
-  done
-
-  while true; do
-      read -p "Hostname: " puavo_hostname
-
-      echo "${puavo_hostname}" | egrep -q '\s' && {
-          echo "E: hostname name cannot contain whitespace" >&2
-          continue
-      }
-
-      if [ -n "${puavo_hostname}" ]; then
-          puavo_preseed_register_args="${puavo_preseed_register_args} --puavoHostname ${puavo_hostname}"
-      fi
-
-      break
-  done
+  # XXX old stuff
+  # puavo_preseed_register_args=$(cat "/usr/share/puavo-ltsp-install/preseeds/${preseed}/puavo_preseed_register_args")
+  # puavo_preseed_setup_filesystems_args=$(cat "/usr/share/puavo-ltsp-install/preseeds/${preseed}/puavo_preseed_setup_filesystems_args")
 }
 
 bootserver_setup_ldapmaster_connection() {
@@ -384,16 +372,16 @@ puavo_preseed_setup_filesystems_args=
 install_mode=${1:-normal}
 
 case "$install_mode" in
+  preseed-*) ask_preseed ;;
+esac
+
+case "$install_mode" in
   normal)
     ;;
-  preinstall)
-    ask_preseed
+  *-preinstall|preinstall)
     do_preinstall "$puavo_install_hosttype" \
                   "$puavo_preseed_setup_filesystems_args"
     exit 0
-    ;;
-  preseed-install)
-    ask_preseed
     ;;
   *)
     echo "Unknown installation mode: '${install_mode}'" >&2
