@@ -43,7 +43,7 @@ darkdm_install()
     if ! /usr/sbin/puavo-install "$@"; then
       # give some time for users to read the error message, if there is any
       echo
-      sleep 4
+      sleep 2
       return 1
     fi
 
