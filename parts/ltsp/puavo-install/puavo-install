@@ -29,16 +29,16 @@ get_preseed_variable() {
     printf %s "$preseed_json" \
       | jq --arg chosen_preseed "$chosen_preseed" \
            --arg preseed_var "$preseed_var" '
-          if .preseeds[$chosen_preseed] | has($preseed_var) then
+          if (.preseeds[$chosen_preseed] | has($preseed_var)) then
             .preseeds[$chosen_preseed][$preseed_var]
+          elif (.preseeds[$chosen_preseed] | has("template"))
+            and (.templates[ .preseeds[$chosen_preseed].template ]
+                   | has($preseed_var)) then
+              .templates[ .preseeds[$chosen_preseed].template ][$preseed_var]
           else
-            .defaults[$preseed_var]
+            ""
           end
         ')
-  if [ -z "$preseed_value" ]; then
-    echo "No preseed value for ${preseed_var}" >&2
-    return 1
-  fi
 
   printf %s "$preseed_value"
 }
@@ -70,8 +70,6 @@ ask_preseed() {
       echo 'Problem when choosing preseed' >&2
       return 1
   fi
-
-  echo "your choice was $chosen_preseed"
 
   preseed_admin_user=$(get_preseed_variable admin_user "$chosen_preseed" \
                          "$preseed_json")
