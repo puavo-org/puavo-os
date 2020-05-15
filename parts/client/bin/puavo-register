@@ -8,9 +8,6 @@
 # * localization by user settings and by operating system default locale?
 # * how to ask device information that is not required
 #   (latitude, longitude, description etc.)?
-#
-# suggestion: run this as:
-#  sudo ruby puavo-register
 
 $VERBOSE = nil
 
