@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -eu
 
@@ -27,8 +27,8 @@ get_preseed_variable() {
 
   preseed_value=$(
     printf %s "$preseed_json" \
-      | jq --arg chosen_preseed "$chosen_preseed" \
-           --arg preseed_var "$preseed_var" '
+      | jq -r --arg chosen_preseed "$chosen_preseed" \
+              --arg preseed_var "$preseed_var" '
           if (.preseeds[$chosen_preseed] | has($preseed_var)) then
             .preseeds[$chosen_preseed][$preseed_var]
           elif (.preseeds[$chosen_preseed] | has("template"))
@@ -75,13 +75,22 @@ ask_preseed() {
                          "$preseed_json")
   preseed_admin_password=$(get_preseed_variable admin_password \
                              "$chosen_preseed" "$preseed_json")
+  preseed_puavo_server=$(get_preseed_variable puavo_server \
+                          "$chosen_preseed" "$preseed_json")
 
-  echo 'preseed not yet supported...' >&2
-  return 1
+  puavo_preseed_register_args=()
+  if [ -n "$preseed_admin_user" ]; then
+    puavo_preseed_register_args+=('--username' "$preseed_admin_user")
+  fi
+  if [ -n "$preseed_admin_password" ]; then
+    puavo_preseed_register_args+=('--password' "$preseed_admin_password")
+  fi
+  if [ -n "$preseed_admin_password" ]; then
+    puavo_preseed_register_args+=('--puavoserver' "$preseed_puavo_server")
+  fi
 
-  # XXX old stuff
-  # puavo_preseed_register_args=$(cat "/usr/share/puavo-ltsp-install/preseeds/${preseed}/puavo_preseed_register_args")
-  # puavo_preseed_setup_filesystems_args=$(cat "/usr/share/puavo-ltsp-install/preseeds/${preseed}/puavo_preseed_setup_filesystems_args")
+  # XXX setup this
+  # puavo_preseed_setup_filesystems_args+= ...
 }
 
 bootserver_setup_ldapmaster_connection() {
@@ -141,7 +150,6 @@ bootserver_setup_state() {
 
 do_preinstall() {
   puavo_install_hosttype=$1
-  puavo_preseed_setup_filesystems_args=$2
 
   if is_preinstalled "$puavo_install_hosttype"; then
     echo 'Can not do a preinstall from a preinstalled host' >&2
@@ -156,7 +164,7 @@ do_preinstall() {
 
   echo
   puavo-setup-filesystems --hosttype "$puavo_install_target_hosttype" \
-                          $puavo_preseed_setup_filesystems_args
+                          ${puavo_preseed_setup_filesystems_args[@]}
 
   # Grub needs to be installed before images, because grub
   # configuration is updated during image installation by
@@ -263,7 +271,6 @@ install_image() {
 install_localbootdevice() {
   puavo_hosttype=$1
   puavo_install_hosttype=$2
-  puavo_preseed_setup_filesystems_args=$3
 
   update_configuration_retstatus=0
 
@@ -275,7 +282,7 @@ install_localbootdevice() {
       return 1
     fi
   else
-    puavo-setup-filesystems $puavo_preseed_setup_filesystems_args
+    puavo-setup-filesystems ${puavo_preseed_setup_filesystems_args[@]}
   fi
 
   setup_state "$puavo_hosttype"
@@ -364,8 +371,8 @@ puavo_install_hosttype=$(get_install_hosttype)
 preinstall_only=false
 
 # these might be filled later by ask_preseed subroutine
-puavo_preseed_register_args=
-puavo_preseed_setup_filesystems_args=
+puavo_preseed_register_args=()
+puavo_preseed_setup_filesystems_args=()
 
 install_mode=${1:-normal}
 
@@ -374,11 +381,10 @@ case "$install_mode" in
 esac
 
 case "$install_mode" in
-  normal)
+  normal|preseed-install)
     ;;
   *-preinstall|preinstall)
-    do_preinstall "$puavo_install_hosttype" \
-                  "$puavo_preseed_setup_filesystems_args"
+    do_preinstall "$puavo_install_hosttype"
     exit 0
     ;;
   *)
@@ -390,15 +396,13 @@ esac
 accepted_hosttypes=$(get_accepted_hosttypes "$puavo_install_hosttype")
 
 puavo-register --accepted-devicetypes "$accepted_hosttypes" \
-               ${puavo_preseed_register_args}
+               ${puavo_preseed_register_args[@]}
 
 puavo_hosttype=$(cat /etc/puavo/hosttype)
 puavo-conf puavo.hosttype "$puavo_hosttype"
 
 case "$puavo_hosttype" in
   bootserver|laptop|wirelessaccesspoint)
-    install_localbootdevice "$puavo_hosttype"                       \
-                            "$puavo_install_hosttype"               \
-                            "$puavo_preseed_setup_filesystems_args"
+    install_localbootdevice "$puavo_hosttype" "$puavo_install_hosttype"
     ;;
 esac
