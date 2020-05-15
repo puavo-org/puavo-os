@@ -45,8 +45,6 @@ install : installdirs
 	$(INSTALL_DATA) -t $(DESTDIR)$(datarootdir)/dbus-1/system-services \
 		dbus-1/org.puavo.client.Daemon.service
 
-	cp -R preseeds $(DESTDIR)$(datarootdir)/puavo-ltsp-install/
-
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(libdir)/puavo-ltsp-install \
 		lib/is-update-available \
 		lib/ls-old-images-and-rdiffs \
