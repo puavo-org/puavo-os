@@ -1,6 +1,7 @@
 /var/log/shorewall.log {
         missingok
         daily
+        notifempty
         rotate 180
         compress
         sharedscripts
