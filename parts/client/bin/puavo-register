@@ -73,8 +73,7 @@ class CmdLine
                    | force
                    | install
                    | update
-                   | nocolor
-                   | noconfirm )$/x
+                   | nocolor )$/x
           params[$1] = true
         else
           if new_arg.nil?
@@ -101,8 +100,7 @@ class RegisterUserInterface
 
     @mode = {
       'accepted_devicetypes' =>
-        (@cmdline_params['accepted-devicetypes'] || '').split(','),
-      'noconfirm'            => @cmdline_params['noconfirm'],
+        (@cmdline_params['accepted-devicetypes'] || '').split(',')
     }
 
     @puavoserver     = @cmdline_params['puavoserver'] || default_puavoserver()
@@ -296,12 +294,38 @@ class RegisterUserInterface
 
     info = {}
 
+    option_list = \
+      [ 'all', 'device type', 'school', 'hostname', 'primary user', 'yes' ]
+
     loop do
       print_machine_info()
 
-      until @mode['noconfirm'] or agree('Is this information correct? (y/n) ')
-        ask_machine_info()
-        print_machine_info()
+      default_opt = 'hostname'
+
+      proceed = false
+      until proceed do
+        found = false
+        prompt = 'Change (a)ll / (d)evice type / (s)chool / (h)ostname /' \
+          + " (p)rimary user\n" \
+          + "  or register to Puavo with the above information? (y)es"
+        answer = ask_with_default(prompt, default_opt)
+        option_list.each do |option|
+          if option.start_with?(answer) then
+            Tools.goodmsg("calling ask_machine_info(#{ option })")
+            ask_machine_info()  # XXX this should pass option
+            print_machine_info()
+            default_opt = option
+            found = true
+            proceed = true if option == 'yes'
+            break
+          end
+        end
+
+        Tools.errmsg("Unknown option '#{ answer }'") unless found
+      end
+
+      while true do
+        agree('Is this information correct? (y/n) ')
       end
 
       HighLine.say 'Sending host information to puavo server...'
