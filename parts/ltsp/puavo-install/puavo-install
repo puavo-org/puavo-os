@@ -75,6 +75,8 @@ ask_preseed() {
                          "$preseed_json")
   preseed_admin_password=$(get_preseed_variable admin_password \
                              "$chosen_preseed" "$preseed_json")
+  preseed_devicetype=$(get_preseed_variable devicetype \
+                          "$chosen_preseed" "$preseed_json")
   preseed_puavo_server=$(get_preseed_variable puavo_server \
                           "$chosen_preseed" "$preseed_json")
 
@@ -84,6 +86,9 @@ ask_preseed() {
   fi
   if [ -n "$preseed_admin_password" ]; then
     puavo_preseed_register_args+=('--password' "$preseed_admin_password")
+  fi
+  if [ -n "$preseed_devicetype" ]; then
+    puavo_preseed_register_args+=('--devicetype' "$preseed_devicetype")
   fi
   if [ -n "$preseed_admin_password" ]; then
     puavo_preseed_register_args+=('--puavoserver' "$preseed_puavo_server")
