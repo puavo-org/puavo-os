@@ -1,2 +1,0 @@
-ACTION=="add", SUBSYSTEM=="ieee80211", TAG+="systemd", ENV{SYSTEMD_WANTS}="puavo-wlanap.service"
-SUBSYSTEM=="ieee80211", RUN+="/usr/sbin/puavo-wlanap-udev-action"

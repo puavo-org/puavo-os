@@ -1,0 +1,12 @@
+#!/bin/sh
+
+set -eu
+
+if [ "$(puavo-conf puavo.service.puavo-wlanap.enabled)" = 'true' ]; then
+  cat <<'EOF' > /lib/udev/rules.d/60-puavo-wlanap.rules
+ACTION=="add", SUBSYSTEM=="ieee80211", TAG+="systemd", ENV{SYSTEMD_WANTS}="puavo-wlanap.service"
+SUBSYSTEM=="ieee80211", RUN+="/usr/sbin/puavo-wlanap-udev-action"
+EOF
+else
+  rm -f /lib/udev/rules.d/60-puavo-wlanap.rules
+fi
