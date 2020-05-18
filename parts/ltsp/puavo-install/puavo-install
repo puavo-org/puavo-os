@@ -77,7 +77,7 @@ ask_preseed() {
                              "$chosen_preseed" "$preseed_json")
   preseed_devicetype=$(get_preseed_variable devicetype \
                           "$chosen_preseed" "$preseed_json")
-  preseed_puavo_server=$(get_preseed_variable puavo_server \
+  preseed_puavo_server=$(get_preseed_variable server \
                           "$chosen_preseed" "$preseed_json")
 
   puavo_preseed_register_args=()
@@ -93,6 +93,15 @@ ask_preseed() {
   if [ -n "$preseed_admin_password" ]; then
     puavo_preseed_register_args+=('--puavoserver' "$preseed_puavo_server")
   fi
+  puavo_preseed_puavo_key_list=$(
+    printf %s "$preseed_json" | jq -r --arg chosen_preseed "$chosen_preseed" \
+                                  '.preseeds[$chosen_preseed] | keys | .[]' \
+                              | grep '^puavo')
+  for puavo_preseed_key in $puavo_preseed_puavo_key_list; do
+    puavo_preseed_value=$(get_preseed_variable "$puavo_preseed_key" \
+                            "$chosen_preseed" "$preseed_json")
+    puavo_preseed_register_args+=("--${puavo_preseed_key}" "$puavo_preseed_value")
+  done
 
   # XXX setup this
   # puavo_preseed_setup_filesystems_args+= ...
