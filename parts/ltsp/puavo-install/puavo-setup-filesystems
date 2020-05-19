@@ -663,8 +663,8 @@ module UI
   UnpartitionedSpacePrompt,
   = *(1..5)
 
-  @accept_defaults = false
   @defaults = {}
+  @forced = {}
   @hosttype = nil
   @loopback_only = false
 
@@ -677,12 +677,17 @@ puavo-setup-filesystems [OPTIONS]
 
 -h, --help                        show help
 
-    --accept-defaults             accept all prompts with default values
-    --default-confirm-partitions  default value for confirm partitions prompt
-    --default-disk-device         default value for disk device prompt
-    --default-imageoverlay-size   default value for imageoverlay size prompt
-    --default-partition           default value for partition prompt
-    --default-unpartitioned-space default value for partitioned space prompt
+    --ask-confirm-partitions      ask with default value for confirm partitions
+    --ask-disk-device             ask with default value for disk device
+    --ask-imageoverlay-size       ask with default value for imageoverlay size
+    --ask-partition               ask with default value for partition
+    --ask-unpartitioned-space     ask with default value for unpartitioned space
+    --force-confirm-partitions    force value for confirm partitions
+    --force-disk-device           force value for disk device
+    --force-imageoverlay-size     force value for imageoverlay size
+    --force-partition             force value for partition
+    --force-unpartitioned-space   force value for unpartitioned space
+
     --loopback-only               use only loopback devices
 
 EOF
@@ -691,34 +696,51 @@ EOF
   def self.parse_args
     begin
       opts = GetoptLong.new(
-                            [ '--help', '-h'                 , GetoptLong::NO_ARGUMENT      ,],
-                            [ '--accept-defaults'            , GetoptLong::NO_ARGUMENT      ,],
-                            [ '--default-confirm-partitions' , GetoptLong::REQUIRED_ARGUMENT,],
-                            [ '--default-disk-device'        , GetoptLong::REQUIRED_ARGUMENT,],
-                            [ '--default-imageoverlay-size'  , GetoptLong::REQUIRED_ARGUMENT,],
-                            [ '--default-partition'          , GetoptLong::REQUIRED_ARGUMENT,],
-                            [ '--default-unpartitioned-space', GetoptLong::REQUIRED_ARGUMENT,],
-                            [ '--hosttype'                   , GetoptLong::REQUIRED_ARGUMENT,],
-                            [ '--loopback-only'              , GetoptLong::NO_ARGUMENT      ,],
-                            )
+        [ '--help', '-h'               , GetoptLong::NO_ARGUMENT      ],
+        [ '--ask-confirm-partitions'   , GetoptLong::REQUIRED_ARGUMENT],
+        [ '--ask-disk-device'          , GetoptLong::REQUIRED_ARGUMENT],
+        [ '--ask-imageoverlay-size'    , GetoptLong::REQUIRED_ARGUMENT],
+        [ '--ask-partition'            , GetoptLong::REQUIRED_ARGUMENT],
+        [ '--ask-unpartitioned-space'  , GetoptLong::REQUIRED_ARGUMENT],
+        [ '--force-confirm-partitions' , GetoptLong::REQUIRED_ARGUMENT],
+        [ '--force-disk-device'        , GetoptLong::REQUIRED_ARGUMENT],
+        [ '--force-imageoverlay-size'  , GetoptLong::REQUIRED_ARGUMENT],
+        [ '--force-partition'          , GetoptLong::REQUIRED_ARGUMENT],
+        [ '--force-unpartitioned-space', GetoptLong::REQUIRED_ARGUMENT],
+        [ '--hosttype'                 , GetoptLong::REQUIRED_ARGUMENT],
+        [ '--loopback-only'            , GetoptLong::NO_ARGUMENT      ]
+      )
 
       opts.each do |opt, arg|
         case opt
         when '--help'
           help_and_exit
           exit(0)
-        when '--accept-defaults'
-          @accept_defaults = true
-        when '--default-confirm-partitions'
+        when '--ask-confirm-partitions'
           @defaults[ConfirmPartitionsPrompt] = arg
-        when '--default-disk-device'
+        when '--ask-disk-device'
           @defaults[DiskDevicePrompt] = arg
-        when '--default-imageoverlay-size'
+        when '--ask-imageoverlay-size'
           @defaults[ImageoverlaySizePrompt] = arg
-        when '--default-partition'
+        when '--ask-partition'
           @defaults[PartitionPrompt] = arg
-        when '--default-unpartitioned-space'
+        when '--ask-unpartitioned-space'
           @defaults[UnpartitionedSpacePrompt] = arg
+        when '--force-confirm-partitions'
+          @defaults[ConfirmPartitionsPrompt] = arg
+          @forced[ConfirmPartitionsPrompt] = true
+        when '--force-disk-device'
+          @defaults[DiskDevicePrompt] = arg
+          @forced[DiskDevicePrompt] = true
+        when '--force-imageoverlay-size'
+          @defaults[ImageoverlaySizePrompt] = arg
+          @forced[ImageoverlaySizePrompt] = true
+        when '--force-partition'
+          @defaults[PartitionPrompt] = arg
+          @forced[PartitionPrompt] = true
+        when '--force-unpartitioned-space'
+          @defaults[UnpartitionedSpacePrompt] = arg
+          @forced[UnpartitionedSpacePrompt] = true
         when '--hosttype'
           @hosttype = arg
         when '--loopback-only'
@@ -735,9 +757,7 @@ EOF
     if @defaults.has_key?(prompt_key) then
       default = @defaults[prompt_key]
     end
-    if @accept_defaults then
-      return default
-    end
+    return default if @forced.has_key?(prompt_key)
     prompt = "#{ question } [#{ default }] "
     answer = HighLine.ask(prompt) { |q| q.whitespace = nil }
 

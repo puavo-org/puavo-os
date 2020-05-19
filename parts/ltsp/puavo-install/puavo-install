@@ -109,12 +109,15 @@ ask_preseed() {
     puavo_preseed_setup_filesystems_args+=('--accept-defaults')
   fi
 
-  for puavo_preseed_key in default-confirm-partitions \
-                           default-disk-device \
-                           default-imageoverlay-size \
-                           default-partition \
-                           default-unpartitioned-space; do
-    puavo_preseed_value=$(get_preseed_variable "fs-${puavo_preseed_key}" \
+  puavo_fs_setup_keys='
+    ask-confirm-partitions  force-confirm-partitions
+    ask-disk-device         force-disk-device
+    ask-imageoverlay-size   force-imageoverlay-size
+    ask-partition           force-partition
+    ask-unpartitioned-space force-unpartitioned-space
+  '
+  for puavo_preseed_key in $puavo_fs_setup_keys; do
+    puavo_preseed_value=$(get_preseed_variable "$puavo_preseed_key" \
                             "$chosen_preseed" "$preseed_json")
     if [ -n "$puavo_preseed_value" ]; then
       puavo_preseed_setup_filesystems_args+=("--${puavo_preseed_key}" "$puavo_preseed_value")
