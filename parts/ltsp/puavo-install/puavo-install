@@ -59,7 +59,7 @@ ask_preseed() {
   if ! preseed_choices=$(printf %s "$preseed_json" \
                            | jq -r '.preseeds | keys | .[]') \
     || [ -z "$preseed_choices" ]; then
-      echo "Could not get preseed choices" >&2
+      echo "Could not read preseed choices from json" >&2
       return 1
   fi
 
@@ -110,11 +110,13 @@ ask_preseed() {
   fi
 
   puavo_fs_setup_keys='
-    ask-confirm-partitions  force-confirm-partitions
-    ask-disk-device         force-disk-device
-    ask-imageoverlay-size   force-imageoverlay-size
-    ask-partition           force-partition
-    ask-unpartitioned-space force-unpartitioned-space
+    ask-disk-device          force-disk-device
+    ask-imageoverlay-size    force-imageoverlay-size
+    ask-install-without-raid force-install-without-raid
+    ask-partition            force-partition
+    ask-unpartitioned-space  force-unpartitioned-space
+    ask-wipe-partition       force-wipe-partition
+    ask-write-partitions     force-write-partitions
   '
   for puavo_preseed_key in $puavo_fs_setup_keys; do
     puavo_preseed_value=$(get_preseed_variable "$puavo_preseed_key" \
