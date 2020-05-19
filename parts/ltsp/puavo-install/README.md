@@ -36,3 +36,9 @@ to the bootserver path ``/images/preseeds/index.json``:
 ```
 
 Then when installing, choose "preseed-install".
+
+The parameters ``ask-disk-device``, ``ask-imageoverlay-size``,
+``ask-install-without-raid``, ``ask-partition``, ``ask-unpartitioned-space``,
+``ask-wipe-partition`` and ``ask-write-partitions`` can be used to set
+defaults for disk setup related questions, but all these have ``force-``
+equivalents in which case user is not prompted for the question.
