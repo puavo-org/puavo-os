@@ -2,6 +2,22 @@
 
 set -eu
 
+windows_license() {
+  local machine_build_id windows_product_key
+
+  windows_product_key=$(
+    strings /sys/firmware/acpi/tables/MSDM 2>/dev/null \
+      | awk '$1 ~ /^[0-9A-Z]{5}-[0-9A-Z]{5}-[0-9A-Z]{5}-[0-9A-Z]{5}-[0-9A-Z]{5}$/')
+  [ -z "$windows_product_key" ] && return 0
+  machine_build_id=$(strings /sys/firmware/dmi/tables/DMI 2>/dev/null \
+                       | grep '^BUILDID')
+  if [ -n "$machine_build_id" ]; then
+    machine_build_id=" (${machine_build_id})"
+  fi
+
+  printf %s "${windows_product_key}${machine_build_id}"
+}
+
 darkdm_systeminfo()
 {
   blockdevice_sda_size=$(facter blockdevice_sda_size \
@@ -20,6 +36,7 @@ memory:          $(facter memorysize)
 network:         IP $(facter ipaddress) / MAC $(facter macaddress)
 product:         $(facter manufacturer) / $(facter productname)
 serial numbers:  $(facter serialnumber) (machine) / $(facter boardserialnumber) (board)
+Windows license: $(windows_license)
 some pci devices:
 $(lspci | awk '$2 == "Network" || $2 == "VGA"' | sed 's/^/  /')
 EOF
