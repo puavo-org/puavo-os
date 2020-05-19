@@ -103,12 +103,6 @@ ask_preseed() {
     puavo_preseed_register_args+=("--${puavo_preseed_key}" "$puavo_preseed_value")
   done
 
-  preseed_fs_accept_defaults=$(get_preseed_variable fs-accept-defaults \
-                                 "$chosen_preseed" "$preseed_json")
-  if [ "$preseed_fs_accept_defaults" = 'true' ]; then
-    puavo_preseed_setup_filesystems_args+=('--accept-defaults')
-  fi
-
   puavo_fs_setup_keys='
     ask-disk-device          force-disk-device
     ask-imageoverlay-size    force-imageoverlay-size
