@@ -103,8 +103,23 @@ ask_preseed() {
     puavo_preseed_register_args+=("--${puavo_preseed_key}" "$puavo_preseed_value")
   done
 
-  # XXX setup this
-  # puavo_preseed_setup_filesystems_args+= ...
+  preseed_fs_accept_defaults=$(get_preseed_variable fs-accept-defaults \
+                                 "$chosen_preseed" "$preseed_json")
+  if [ "$preseed_fs_accept_defaults" = 'true' ]; then
+    puavo_preseed_setup_filesystems_args+=('--accept-defaults')
+  fi
+
+  for puavo_preseed_key in default-confirm-partitions \
+                           default-disk-device \
+                           default-imageoverlay-size \
+                           default-partition \
+                           default-unpartitioned-space; do
+    puavo_preseed_value=$(get_preseed_variable "fs-${puavo_preseed_key}" \
+                            "$chosen_preseed" "$preseed_json")
+    if [ -n "$puavo_preseed_value" ]; then
+      puavo_preseed_setup_filesystems_args+=("--${puavo_preseed_key}" "$puavo_preseed_value")
+    fi
+  done
 }
 
 bootserver_setup_ldapmaster_connection() {
