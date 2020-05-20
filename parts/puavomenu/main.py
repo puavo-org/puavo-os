@@ -108,30 +108,13 @@ class PuavoMenu(Gtk.Window):
         # this does, but it works.
         self.set_visual(self.get_screen().get_rgba_visual())
 
-        # CSS setup. There are multiple color definition files and one core
-        # style file. Load the appropriate color file, then concatenate the
-        # main style file at the end of it. GNOME CSS system has @import
-        # directive, but I can't get it to work. The only downside of this
-        # is that line numbers in possible CSS error messages get messed up.
+        # Setup custom CSS
+        css_file = os.path.join(self.__settings.res_dir, 'puavomenu.css')
 
-        css_color_file = 'puavomenu_light.css'
+        if os.path.isfile(css_file):
+            logging.info('CSS file "%s" exists, loading it', css_file)
 
-        if self.__settings.dark_theme:
-            css_color_file = 'puavomenu_dark.css'
-
-        css_color_file = os.path.join(self.__settings.res_dir, css_color_file)
-
-        css_core_file = os.path.join(self.__settings.res_dir, 'puavomenu.css')
-
-        if os.path.isfile(css_color_file) and os.path.isfile(css_core_file):
-            logging.info('CSS files "%s" and "%s" exists, loading them',
-                         css_color_file, css_core_file)
-
-            css = bytes(
-                utils.get_file_contents(css_color_file, '') +
-                utils.get_file_contents(css_core_file, ''),
-                'utf-8'
-            )
+            css = bytes(utils.get_file_contents(css_file, ''), 'utf-8')
 
             style_provider = Gtk.CssProvider()
             style_provider.load_from_data(css)
@@ -141,9 +124,6 @@ class PuavoMenu(Gtk.Window):
                 style_provider,
                 Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
             )
-        else:
-            logging.warning('Either "%s" or "%s" is missing, CSS not loaded',
-                            css_color_file, css_core_file)
 
         # Create the devtools popup menu
         if not self.__settings.prod_mode:

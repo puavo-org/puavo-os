@@ -1,19 +1,15 @@
 /*
 ================================================================================
                             PUAVOMENU WINDOW STYLES
-      All colors must be defined with variables! Do not hardcode anything!
+        Do not hardcode any colors! Use the variables defined in themes!
 ================================================================================
 */
 
 /* Main window */
 #root {
-    /*background: rgba(232, 232, 232, 0.95);*/
-    /*background: rgba(255, 255, 255, 0.95);*/
-    /*background: rgba(95, 197, 255, 0.95);*/
-    /*background: rgba(152, 218, 255, 0.95);*/
-
-    background: @MAIN_WINDOW;
+    background: alpha(@theme_bg_color, 0.95);
     border-radius: 0 10px 0 0;
+    border: 1px solid @borders;
 }
 
 /* Menu container (ie. "left side") */
@@ -30,7 +26,7 @@
 
 #category header {
     background: none;
-    border-bottom: 2px solid @HOVER_COLOR;
+    border-bottom: 2px solid @theme_selected_bg_color;
     box-shadow: none;
 }
 
@@ -47,17 +43,17 @@
     box-shadow: none;
     margin: 0 1px 0 0;
     padding: 5px 15px;
-    color: @CATEGORY_FORE;
+    color: @theme_text_color;
 }
 
 #category tab:hover {
-    background: @CATEGORY_BACK_HOVER;
-    color: @CATEGORY_FORE_HOVER;
+    background: shade(@theme_selected_bg_color, 1.2);
+    color: @theme_selected_fg_color;
 }
 
 #category tab:checked {
-    background: @HOVER_COLOR;
-    color: @CATEGORY_FORE_HOVER;
+    background: @theme_selected_bg_color;
+    color: @theme_selected_fg_color;
 }
 
 #category border {  /* Targets the "frame" element below the notebook widget */
@@ -73,12 +69,12 @@ entry {
 
 /* Title of the current menu */
 #menu_title {
-    color: @MENU_TITLE_FORE;
+    color: @theme_text_color;
 }
 
 /* The "empty" message, displayed when there's nothing to display */
 #empty {
-    color: @EMPTY_FORE;
+    color: @theme_unfocused_fg_color;
     font-size: 125%;
     font-style: italic;
 }
@@ -101,17 +97,13 @@ entry {
     box-shadow: none;
     border: none;
     border-radius: 0;
-    color: @BUTTON_FORE;
+    color: @theme_text_color;
     text-shadow: none;
 }
 
 .pm_button:hover {
-    color: @BUTTON_FORE_HOVER;
-}
-
-.pm_button:backdrop {
-    /* Used when the window is not focused */
-    color: @BUTTON_FORE_INDETERMINATE;
+    background: @theme_selected_bg_color;
+    color: @theme_selected_fg_color;
 }
 
 /* Program buttons */
@@ -119,19 +111,17 @@ entry {
 
 .button_program:hover {
     border-radius: 5px;
-    background: @HOVER_COLOR;
-    /*color: @BUTTON_FORE_HOVER;*/
 }
 
 /* Menu buttons */
 .button_menu {
-    border: 1px solid @MENU_BUTTON_BORDER;
+    border: 1px solid alpha(@theme_selected_bg_color, 0.5);
     font-style: italic;
 }
 
 .button_menu:hover {
     border: none;
-    background: @HOVER_COLOR;
+    background: @theme_selected_bg_color;
 }
 
 /* Extra stuff for frequently-used programs */
@@ -139,39 +129,20 @@ entry {
 
 /* Extra styles for puavo-pkg installer buttons */
 .installer {
-    color: #888;
+    color: @theme_unfocused_fg_color;
 }
 
 /* Sidebar buttons */
 .button_sidebar { }
-
-.button_sidebar:hover {
-    background: @HOVER_COLOR;
-    color: @BUTTON_FORE_HOVER;
-}
+.button_sidebar:hover { }
 
 /* User avatar button */
 .button_avatar {
-    text-shadow: 2px 2px 2px @AVATAR_TEXT_SHADOW, 0 0 2px @AVATAR_TEXT_SHADOW, 0 0 2px @AVATAR_TEXT_SHADOW;
-    color: @BUTTON_FORE_HOVER;
+    text-shadow: 2px 2px 2px #000, 0 0 2px #000, 0 0 2px #000;
+    color: @theme_selected_fg_color;
     font-size: 120%;
     font-weight: bold;
     border-radius: 0 5px 0 0;
 }
 
-.button_avatar:hover {
-    background: @HOVER_COLOR;
-    color: @BUTTON_FORE_HOVER;
-}
-
-#menu_indicator {
-    background: #f0f;
-    border: none;
-    box-shadow: none;
-    color: #fff;
-    border-radius: 5px;
-}
-
-#menu_indicator:hover {
-    background: #f00;
-}
+.button_avatar:hover {}
