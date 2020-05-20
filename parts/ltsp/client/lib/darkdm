@@ -2,6 +2,22 @@
 
 set -eu
 
+list_disks() {
+  local disk disk_devices disk_size_in_gb
+  disk_devices=$(facter --json disks | jq -r '.disks | keys | .[]' \
+                   | grep -E '^(mmcblk|nvme|sd|vd)')
+  for disk in $disk_devices; do
+    disk_size_in_gb=$(facter "blockdevice_${disk}_size" \
+                        | awk '$1 ~ /^[0-9]+$/ {
+                                 printf "%.0f GB\n", $1 / 1000000000
+                               }')
+    printf "disk %-12s%s / %s\n"                   \
+           "${disk}:"                              \
+           "$(facter "blockdevice_${disk}_model")" \
+           "$disk_size_in_gb"
+  done
+}
+
 windows_license() {
   local machine_build_id windows_product_key
 
@@ -20,8 +36,6 @@ windows_license() {
 
 darkdm_systeminfo()
 {
-  blockdevice_sda_size=$(facter blockdevice_sda_size \
-    | awk '$1 ~ /^[0-9]+$/ { printf "%.0f GB\n", $1 / 1000000000 }')
   this_image=$(cat /etc/puavo-image/name)
   this_release=$(cat /etc/puavo-image/release)
 
@@ -30,8 +44,8 @@ image:   ${this_image}
 release: ${this_release}
 
 bios:            $(facter bios_vendor) / $(facter bios_version)
-blockdevice sda: $(facter blockdevice_sda_model) / ${blockdevice_sda_size}
 cpu:             $(facter processorcount) CPUs / $(facter processor0)
+$(list_disks)
 memory:          $(facter memorysize)
 network:         IP $(facter ipaddress) / MAC $(facter macaddress)
 product:         $(facter manufacturer) / $(facter productname)
