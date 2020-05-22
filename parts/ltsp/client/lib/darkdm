@@ -35,6 +35,18 @@ list_disks() {
   done
 }
 
+list_networks() {
+  local netdev network_devices
+  network_devices=$(facter --json networking.interfaces \
+                      | jq -r '.["networking.interfaces"] | keys | .[]' \
+                      | grep -v lo | sort)
+  for netdev in $network_devices; do
+    printf "network %-9sIP %s / MAC %s\n" "${netdev}:"    \
+           "$(facter networking.interfaces.${netdev}.ip)" \
+           "$(facter networking.interfaces.${netdev}.mac)"
+  done
+}
+
 windows_license() {
   local machine_build_id windows_product_key
 
@@ -83,7 +95,7 @@ bios:            $(facter dmi.bios.vendor) / $(facter dmi.bios.version)
 cpu:             ${colorized_cpu}
 $(list_disks)
 memory:          ${colorized_memory}
-network:         IP $(facter ipaddress) / MAC $(facter macaddress)
+$(list_networks)
 product:         $(facter dmi.manufacturer) / $(facter dmi.product.name)
 serial numbers:  $(facter dmi.product.serial_number) (machine) / $(facter dmi.board.serial_number) (board)
 Windows license: $(windows_license)
