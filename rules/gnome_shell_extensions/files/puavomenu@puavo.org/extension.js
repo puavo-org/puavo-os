@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Opinsys Oy
+// Copyright (C) 2016-2020 Opinsys Oy
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -15,41 +15,42 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 const Main = imports.ui.main;
-const St   = imports.gi.St;
+const St = imports.gi.St;
 const Util = imports.misc.util;
 const Lang = imports.lang;
 
 let menu_button;
 
-function make_button(icon_name, icon_size, spawn_command, is_right) {
-    let button = new St.Bin({ can_focus:   true,
-			      reactive:    true,
-			      style_class: 'panel-button-puavomenu',
-			      track_hover: true,
-			      x_fill:      true,
-			      y_fill:      false });
-    let icon = new St.Icon({ icon_name:   icon_name,
-                             style_class: 'launcher-box-item-puavomenu',
-                             icon_size: icon_size});
+function make_button(icon_name, icon_size, spawn_command)
+{
+    let button = new St.Bin({
+        can_focus: true,
+        reactive: true,
+        style_class: 'panel-button-puavomenu',
+        track_hover: true,
+        x_fill: true,
+        y_fill: false
+    });
+
+    let icon = new St.Icon({
+        icon_name: icon_name,
+        style_class: 'launcher-box-item-puavomenu',
+        icon_size: icon_size
+    });
 
     button.set_child(icon);
 
     button.connect("button-press-event", Lang.bind(this, function() {
+        // The top-left corner of the panel button is the
+        // lower-right corner of the menu
         let [x, y] = button.get_transformed_position();
-
-        // align to the right edge
-        if (is_right)
-            x += button.get_transformed_size()[0];
 
         let finalCmd = spawn_command.slice();  // slice=a new copy of the array
 
-        if (!is_right) {
-            finalCmd.push("toggle");
-            finalCmd.push("corner");
-            finalCmd.push(Math.ceil(x).toString());
-            finalCmd.push(Math.ceil(y).toString());
-            finalCmd.push("--pos=" + Math.ceil(x) + "," + Math.ceil(y));
-        }
+        finalCmd.push("toggle");
+        finalCmd.push("corner");
+        finalCmd.push(Math.ceil(x).toString());
+        finalCmd.push(Math.ceil(y).toString());
 
         Util.spawn(finalCmd);
     }));
@@ -57,16 +58,20 @@ function make_button(icon_name, icon_size, spawn_command, is_right) {
     return button;
 }
 
-function init() {
-    menu_button = make_button('start-here-debian-symbolic',
-			      '28',
-			      [ '/opt/puavomenu/puavomenu-spawn' ], false);
+function init()
+{
+    menu_button = make_button(
+        'start-here-debian-symbolic', '28',
+        ['/opt/puavomenu/puavomenu-spawn' ]
+    );
 }
 
-function disable() {
+function disable()
+{
     Main.panel._leftBox.remove_child(menu_button);
 }
 
-function enable() {
+function enable()
+{
     Main.panel._leftBox.insert_child_at_index(menu_button, 0);
 }
