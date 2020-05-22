@@ -3,7 +3,6 @@ class packages {
   require ::apt::virtualbox
   include ::packages::backports
   include ::packages::compat_32bit
-  include ::packages::distribution_tweaks
   include ::packages::pinned
   include ::packages::purged
 
@@ -269,7 +268,6 @@ class packages {
     [ 'fontconfig'
     , 'fonts-ubuntu'
     , 'gnome-font-viewer'
-    , 'ttf-freefont'
     , 'xfonts-terminus'
     , 'xfonts-utils' ]:
       tag => [ 'tag_fonts', 'tag_debian_desktop', ];
@@ -420,7 +418,6 @@ class packages {
     [ 'adb'
     , 'aseba'
     , 'avr-libc'
-    , 'eclipse'
     , 'emacs'
     , 'eric'
     , 'eric-api-files'
@@ -778,7 +775,6 @@ class packages {
     , 'firmware-bnx2x'
     , 'firmware-brcm80211'
     , 'firmware-cavium'
-    , 'firmware-crystalhd'
     , 'firmware-intel-sound'
     , 'firmware-intelwimax'
     , 'firmware-ipw2x00'
