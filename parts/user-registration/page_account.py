@@ -140,7 +140,7 @@ class PageAccount(PageDefinition):
         self.user_email = ''
         self.user_password = ''
         self.user_password_confirm = ''
-        self.user_language = ''
+        self.user_language = 'fi_FI.UTF-8'
         self.user_phone = ''
 
         self.update_username_hint(True)
