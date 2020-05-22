@@ -1,6 +1,7 @@
 class themes {
   include ::dpkg
   include ::gdm
+  include ::puavo_conf
 
   ::dpkg::simpledivert {
     '/usr/share/themes/Arc/gnome-shell/gnome-shell.css':
@@ -26,6 +27,11 @@ class themes {
       recurse => true,
       require => File['/etc/gdm3/background.img'],
       source  => 'puppet:///modules/themes/Puavo';
+  }
+
+  ::puavo_conf::definition {
+    'puavo-themes.json':
+      source => 'puppet:///modules/themes/puavo-themes.json';
   }
 
   Package <| title == arc-theme |>
