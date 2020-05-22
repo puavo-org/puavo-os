@@ -6,20 +6,21 @@ _pkgs_builddeps := sblim-sfcc openwsman
 _pkgs_parts := puavo-ds puavo-os
 # XXX gvfs not added to build, because it is unclear
 # XXX if there is any benefit to do so
-_pkgs_ports := fmit          \
-               gnome-shell   \
-               grub2         \
-               incron        \
-               libmypaint    \
-               libpam-ccreds \
-               mutter        \
-               mypaint       \
-               nbd           \
-               openboard     \
-               openldap      \
-               pinta         \
-               vtun          \
-               wine          \
+_pkgs_ports := fmit                 \
+               gnome-control-center \
+               gnome-shell          \
+               grub2                \
+               incron               \
+               libmypaint           \
+               libpam-ccreds        \
+               mutter               \
+               mypaint              \
+               nbd                  \
+               openboard            \
+               openldap             \
+               pinta                \
+               vtun                 \
+               wine                 \
                wsmancli
 _pkgs_image     := $(_pkgs_builddeps) $(_pkgs_parts) $(_pkgs_ports)
 _pkgs_cloud     := krb5 openldap puavo-ds

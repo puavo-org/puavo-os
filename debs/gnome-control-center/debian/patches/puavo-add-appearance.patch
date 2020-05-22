@@ -1,0 +1,897 @@
+diff -ruN gnome-control-center-3.30.3.orig/panels/appearance/appearance.gresource.xml gnome-control-center-3.30.3/panels/appearance/appearance.gresource.xml
+--- gnome-control-center-3.30.3.orig/panels/appearance/appearance.gresource.xml	1970-01-01 02:00:00.000000000 +0200
++++ gnome-control-center-3.30.3/panels/appearance/appearance.gresource.xml	2020-05-22 10:44:41.715828921 +0300
+@@ -0,0 +1,6 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<gresources>
++  <gresource prefix="/org/gnome/control-center/appearance">
++    <file preprocess="xml-stripblanks">appearance.ui</file>
++  </gresource>
++</gresources>
+diff -ruN gnome-control-center-3.30.3.orig/panels/appearance/appearance.ui gnome-control-center-3.30.3/panels/appearance/appearance.ui
+--- gnome-control-center-3.30.3.orig/panels/appearance/appearance.ui	1970-01-01 02:00:00.000000000 +0200
++++ gnome-control-center-3.30.3/panels/appearance/appearance.ui	2020-05-22 12:18:18.219078785 +0300
+@@ -0,0 +1,235 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<!-- Generated with glade 3.22.1 -->
++<interface>
++  <requires lib="gtk+" version="3.20"/>
++  <object class="GtkBox" id="box_outer">
++    <property name="visible">True</property>
++    <property name="can_focus">False</property>
++    <property name="halign">center</property>
++    <property name="valign">start</property>
++    <property name="margin_top">20</property>
++    <property name="orientation">vertical</property>
++    <child>
++      <object class="GtkBox" id="box_dark_theme">
++        <property name="visible">True</property>
++        <property name="can_focus">False</property>
++        <property name="orientation">vertical</property>
++        <child>
++          <object class="GtkBox">
++            <property name="visible">True</property>
++            <property name="can_focus">False</property>
++            <child>
++              <object class="GtkLabel" id="label_dark_theme">
++                <property name="visible">True</property>
++                <property name="can_focus">False</property>
++                <property name="halign">center</property>
++                <property name="label" translatable="yes">Use a dark theme:</property>
++                <attributes>
++                  <attribute name="weight" value="bold"/>
++                </attributes>
++              </object>
++              <packing>
++                <property name="expand">False</property>
++                <property name="fill">True</property>
++                <property name="position">0</property>
++              </packing>
++            </child>
++            <child>
++              <object class="GtkSwitch" id="switch_dark_theme">
++                <property name="visible">True</property>
++                <property name="can_focus">True</property>
++                <property name="halign">end</property>
++                <signal name="activate" handler="on_switch_dark_theme_activate" swapped="no"/>
++              </object>
++              <packing>
++                <property name="expand">False</property>
++                <property name="fill">False</property>
++                <property name="pack_type">end</property>
++                <property name="position">1</property>
++              </packing>
++            </child>
++          </object>
++          <packing>
++            <property name="expand">False</property>
++            <property name="fill">False</property>
++            <property name="position">0</property>
++          </packing>
++        </child>
++        <child>
++          <object class="GtkLabel" id="label_dark_theme_explanation">
++            <property name="visible">True</property>
++            <property name="can_focus">False</property>
++            <property name="margin_top">10</property>
++            <property name="label" translatable="yes">All programs do not immediately react to this change.  You may need to restart them.  In some cases you might need to log out and log in back again to make this change effective.</property>
++            <property name="justify">center</property>
++          </object>
++          <packing>
++            <property name="expand">False</property>
++            <property name="fill">True</property>
++            <property name="position">1</property>
++          </packing>
++        </child>
++      </object>
++      <packing>
++        <property name="expand">False</property>
++        <property name="fill">False</property>
++        <property name="position">0</property>
++      </packing>
++    </child>
++    <child>
++      <object class="GtkBox" id="box_icon_theme">
++        <property name="visible">True</property>
++        <property name="can_focus">False</property>
++        <property name="margin_top">30</property>
++        <property name="orientation">vertical</property>
++        <child>
++          <object class="GtkBox">
++            <property name="visible">True</property>
++            <property name="can_focus">False</property>
++            <child>
++              <object class="GtkLabel" id="label_icon_theme">
++                <property name="visible">True</property>
++                <property name="can_focus">False</property>
++                <property name="margin_right">10</property>
++                <property name="label" translatable="yes">Icon theme:</property>
++                <attributes>
++                  <attribute name="weight" value="bold"/>
++                </attributes>
++              </object>
++              <packing>
++                <property name="expand">False</property>
++                <property name="fill">True</property>
++                <property name="position">0</property>
++              </packing>
++            </child>
++            <child>
++              <object class="GtkComboBoxText" id="combo_icon_theme">
++                <property name="visible">True</property>
++                <property name="can_focus">False</property>
++              </object>
++              <packing>
++                <property name="expand">False</property>
++                <property name="fill">True</property>
++                <property name="pack_type">end</property>
++                <property name="position">1</property>
++              </packing>
++            </child>
++          </object>
++          <packing>
++            <property name="expand">False</property>
++            <property name="fill">True</property>
++            <property name="position">0</property>
++          </packing>
++        </child>
++      </object>
++      <packing>
++        <property name="expand">False</property>
++        <property name="fill">True</property>
++        <property name="position">1</property>
++      </packing>
++    </child>
++    <child>
++      <object class="GtkBox" id="box_cursor_theme">
++        <property name="visible">True</property>
++        <property name="can_focus">False</property>
++        <property name="margin_top">30</property>
++        <property name="orientation">vertical</property>
++        <child>
++          <object class="GtkBox">
++            <property name="visible">True</property>
++            <property name="can_focus">False</property>
++            <child>
++              <object class="GtkLabel" id="label_cursor_theme">
++                <property name="visible">True</property>
++                <property name="can_focus">False</property>
++                <property name="margin_right">10</property>
++                <property name="label" translatable="yes">Pointer theme:</property>
++                <attributes>
++                  <attribute name="weight" value="bold"/>
++                </attributes>
++              </object>
++              <packing>
++                <property name="expand">False</property>
++                <property name="fill">True</property>
++                <property name="position">0</property>
++              </packing>
++            </child>
++            <child>
++              <object class="GtkComboBoxText" id="combo_cursor_theme">
++                <property name="visible">True</property>
++                <property name="can_focus">False</property>
++              </object>
++              <packing>
++                <property name="expand">False</property>
++                <property name="fill">True</property>
++                <property name="pack_type">end</property>
++                <property name="position">1</property>
++              </packing>
++            </child>
++          </object>
++          <packing>
++            <property name="expand">False</property>
++            <property name="fill">True</property>
++            <property name="position">0</property>
++          </packing>
++        </child>
++      </object>
++      <packing>
++        <property name="expand">False</property>
++        <property name="fill">True</property>
++        <property name="position">2</property>
++      </packing>
++    </child>
++    <child>
++      <object class="GtkBox" id="box_animations">
++        <property name="visible">True</property>
++        <property name="can_focus">False</property>
++        <property name="margin_top">30</property>
++        <property name="orientation">vertical</property>
++        <child>
++          <object class="GtkBox">
++            <property name="visible">True</property>
++            <property name="can_focus">False</property>
++            <child>
++              <object class="GtkLabel" id="label_animations">
++                <property name="visible">True</property>
++                <property name="can_focus">False</property>
++                <property name="label" translatable="yes">Use animations:</property>
++                <attributes>
++                  <attribute name="weight" value="bold"/>
++                </attributes>
++              </object>
++              <packing>
++                <property name="expand">False</property>
++                <property name="fill">True</property>
++                <property name="position">0</property>
++              </packing>
++            </child>
++            <child>
++              <object class="GtkSwitch" id="switch_animations">
++                <property name="visible">True</property>
++                <property name="can_focus">True</property>
++              </object>
++              <packing>
++                <property name="expand">False</property>
++                <property name="fill">True</property>
++                <property name="pack_type">end</property>
++                <property name="position">1</property>
++              </packing>
++            </child>
++          </object>
++          <packing>
++            <property name="expand">False</property>
++            <property name="fill">True</property>
++            <property name="position">0</property>
++          </packing>
++        </child>
++      </object>
++      <packing>
++        <property name="expand">False</property>
++        <property name="fill">True</property>
++        <property name="position">3</property>
++      </packing>
++    </child>
++  </object>
++</interface>
+diff -ruN gnome-control-center-3.30.3.orig/panels/appearance/cc-appearance-panel.c gnome-control-center-3.30.3/panels/appearance/cc-appearance-panel.c
+--- gnome-control-center-3.30.3.orig/panels/appearance/cc-appearance-panel.c	1970-01-01 02:00:00.000000000 +0200
++++ gnome-control-center-3.30.3/panels/appearance/cc-appearance-panel.c	2020-05-22 10:44:41.715828921 +0300
+@@ -0,0 +1,488 @@
++/*
++Custom "Appearance" gnome-control-center panel
++Probably completely incorrectly done, but there's no documentation
++
++Disclaimer: I haven't done raw string handling in C in years.
++*/
++
++#ifdef HAVE_CONFIG_H
++#include <config.h>
++#endif
++
++// I want asprintf() and I really don't care about HAVE_CONFIG_H mess. This thing
++// wasn't designed to be portable at all.
++#define _GNU_SOURCE
++#include <string.h>
++
++#include <glib/gi18n-lib.h>
++#include <shell/cc-shell.h>
++#include <shell/cc-object-storage.h>
++//#include <appearance-settings-widget.h>
++
++#include "cc-appearance-panel.h"
++#include "cc-appearance-resources.h"
++
++#include <gio/gio.h>
++
++// Our custom panel definition
++struct _CcAppearancePanel {
++    CcPanel parent_instance;
++
++    // two-element arrays (0=application theme name, 1=shell theme name)
++    gchar **light_theme_names,
++          **dark_theme_names;
++
++    // Themes listed in puavo-conf, or the built-in defaults. Must not be NULL.
++    gchar **allowed_icon_themes,
++          **allowed_cursor_themes;
++
++    // UI elements
++    GtkBuilder *builder;
++    GtkWidget *main;        // the main container widget
++    GtkSwitch *dark_theme;
++    GtkComboBoxText *icon_combo;
++    GtkComboBoxText *cursor_combo;
++    GtkSwitch *animations;
++};
++
++CC_PANEL_REGISTER(CcAppearancePanel, cc_appearance_panel)
++
++// -------------------------------------------------------------------------------------------------
++// -------------------------------------------------------------------------------------------------
++// UTILITY
++
++// Retrieves the specified key from the specified schema. The returned string
++// must be freed with g_free(). If 'schema' or 'key' points to a non-existent
++// value, the program SIGTRAPs. Why not just return a NULL?
++gchar *get_setting_string(const char *schema, const char *key)
++{
++    GSettings *settings = g_settings_new(schema);
++
++    return g_settings_get_string(settings, key);
++}
++
++gboolean get_setting_bool(const char *schema, const char *key)
++{
++    GSettings *settings = g_settings_new(schema);
++
++    return g_settings_get_boolean(settings, key);
++}
++
++static int exists(const char *name)
++{
++    if (!name)
++        return 0;
++
++    if (access(name, F_OK) != 0)
++        return 0;
++
++    if (access(name, R_OK) != 0)
++        return 0;
++
++    return 1;
++}
++
++// Return 1 to insert the item into the combo box, 0 to omit it
++typedef int (*fill_callback)(const gchar *item);
++
++static void fill_combobox(GtkComboBoxText *combo,
++                          gchar **items,
++                          const gchar *current,
++                          fill_callback callback)
++{
++    if (!combo || !items || !current || !callback)
++        return;
++
++    gchar **p = items;
++    gint position = 0,
++         active = -1;
++
++    while (*p) {
++        // the callback function chooses if this item should be on the list
++        if (callback(*p)) {
++            if (!strcmp(current, *p))
++                active = position;
++
++            gtk_combo_box_text_insert(combo, position, NULL, g_strdup(*p));
++            position++;
++        }
++
++        p++;
++    }
++
++    // In a way I admire how you can just cast the control to another type,
++    // but it still feels really icky
++    gtk_combo_box_set_active(GTK_COMBO_BOX(combo), active);
++    gtk_widget_set_sensitive(GTK_WIDGET(combo), (position > 0) ? TRUE : FALSE);
++}
++
++// -------------------------------------------------------------------------------------------------
++// -------------------------------------------------------------------------------------------------
++// KEYS
++
++#define APPLICATION_THEME_SCHEMA        "org.gnome.desktop.interface"
++#define APPLICATION_THEME_KEY           "gtk-theme"
++#define SHELL_THEME_SCHEMA              "org.gnome.shell.extensions.user-theme"
++#define SHELL_THEME_KEY                 "name"
++#define ICON_THEME_KEY                  "icon-theme"
++#define CURSOR_THEME_KEY                "cursor-theme"
++#define ANIMATIONS_KEY                  "enable-animations"
++
++#define THEMES_DIR                      "/usr/share/icons"
++
++// -------------------------------------------------------------------------------------------------
++// -------------------------------------------------------------------------------------------------
++// LIGHT/DARK THEME SELECTOR
++
++static int is_dark_theme_enabled(struct _CcAppearancePanel *self)
++{
++    gchar *application_theme = get_setting_string(APPLICATION_THEME_SCHEMA, APPLICATION_THEME_KEY),
++          *shell_theme = get_setting_string(SHELL_THEME_SCHEMA, SHELL_THEME_KEY);
++
++    int enabled = 0;
++
++    //printf("|%s| |%s|\n", *self->dark_theme_names, *(self->dark_theme_names + 1));
++
++    // Very elegant... not
++    if (!strcmp(application_theme, *self->dark_theme_names) &&
++        !strcmp(shell_theme, *(self->dark_theme_names + 1)))
++        enabled = 1;
++
++    g_free(application_theme);
++    g_free(shell_theme);
++
++    return enabled;
++}
++
++// 1=enable dark theme, 0=disable dark theme
++static void enable_dark_theme(struct _CcAppearancePanel *self, const int enabled)
++{
++    GSettings *app_scheme = g_settings_new(APPLICATION_THEME_SCHEMA),
++              *shell_scheme = g_settings_new(SHELL_THEME_SCHEMA);
++
++    g_settings_set_string(app_scheme, APPLICATION_THEME_KEY,
++                          *(enabled ? self->dark_theme_names : self->light_theme_names));
++
++    g_settings_set_string(shell_scheme, SHELL_THEME_KEY,
++                          *(enabled ? self->dark_theme_names + 1 : self->light_theme_names + 1));
++
++    g_settings_sync();
++}
++
++static void toggle_dark_theme(GtkSwitch *widget, GdkEvent *event, gpointer user_data)
++{
++    struct _CcAppearancePanel *self = (struct _CcAppearancePanel *)user_data;
++
++    if (gtk_switch_get_state(widget))
++        enable_dark_theme(self, 1);
++    else enable_dark_theme(self, 0);
++}
++
++static void setup_theme_selector(struct _CcAppearancePanel *self)
++{
++    self->dark_theme = GTK_SWITCH(gtk_builder_get_object(self->builder, "switch_dark_theme"));
++
++    if (is_dark_theme_enabled(self))
++        gtk_switch_set_state(self->dark_theme, 1);
++
++    g_signal_connect_object(self->dark_theme, "notify::active",
++                            G_CALLBACK(toggle_dark_theme), self, 0);
++}
++
++// -------------------------------------------------------------------------------------------------
++// -------------------------------------------------------------------------------------------------
++// ICON THEME SELECTOR
++
++static int icon_theme_checker(const gchar *item)
++{
++    // Check if index.theme exists in the icon theme directory
++    char *full = NULL;
++
++    if (asprintf(&full, "%s/%s/index.theme", THEMES_DIR, item) == -1) {
++        g_warning("Out of memory when doing string formatting");
++        return 0;
++    }
++
++    int ret = 0;
++
++    if (exists(full))
++        ret = 1;
++
++    free(full);
++    return ret;
++}
++
++static void fill_icon_theme_selector(GtkComboBoxText *combo, gchar **names, const gchar *current)
++{
++    fill_combobox(combo, names, current, icon_theme_checker);
++}
++
++static gchar *get_icon_theme_name(void)
++{
++    return get_setting_string(APPLICATION_THEME_SCHEMA, ICON_THEME_KEY);
++}
++
++static void set_icon_theme(gchar *name)
++{
++    GSettings *cursor_theme = g_settings_new(APPLICATION_THEME_SCHEMA);
++
++    g_settings_set_string(cursor_theme, ICON_THEME_KEY, name);
++    g_settings_sync();
++}
++
++static void icon_theme_changed(GtkComboBoxText *combo, GdkEvent *event, gpointer user_data)
++{
++    gchar *active = gtk_combo_box_text_get_active_text(combo);
++
++    set_icon_theme(active);
++    g_free(active);
++}
++
++static void setup_icon_theme_changer(struct _CcAppearancePanel *self)
++{
++    self->icon_combo = GTK_COMBO_BOX_TEXT(gtk_builder_get_object(self->builder, "combo_icon_theme"));
++
++    gchar *current_icon_theme = get_icon_theme_name();
++    fill_icon_theme_selector(self->icon_combo, self->allowed_icon_themes, current_icon_theme);
++    g_free(current_icon_theme);
++
++    g_signal_connect_object(self->icon_combo, "changed", G_CALLBACK(icon_theme_changed), self, 0);
++}
++
++// -------------------------------------------------------------------------------------------------
++// -------------------------------------------------------------------------------------------------
++// CURSOR THEME
++
++static int cursor_theme_checker(const gchar *item)
++{
++    // Check if index.theme exists in the icon theme directory
++    // FIXME: This isn't a reliable test at all!
++    char *full = NULL;
++
++    if (asprintf(&full, "%s/%s/index.theme", THEMES_DIR, item) == -1) {
++        g_warning("Out of memory when doing string formatting");
++        return 0;
++    }
++
++    int ret = 0;
++
++    if (exists(full))
++        ret = 1;
++
++    free(full);
++    return ret;
++}
++
++static void fill_cursor_theme_selector(GtkComboBoxText *combo, gchar **names, const gchar *current)
++{
++    fill_combobox(combo, names, current, cursor_theme_checker);
++}
++
++static gchar *get_cursor_theme_name(void)
++{
++    return get_setting_string(APPLICATION_THEME_SCHEMA, CURSOR_THEME_KEY);
++}
++
++static void set_cursor_theme(gchar *name)
++{
++    GSettings *cursor_theme = g_settings_new(APPLICATION_THEME_SCHEMA);
++
++    g_settings_set_string(cursor_theme, CURSOR_THEME_KEY, name);
++    g_settings_sync();
++}
++
++static void cursor_theme_changed(GtkComboBoxText *combo, GdkEvent *event, gpointer user_data)
++{
++    gchar *active = gtk_combo_box_text_get_active_text(combo);
++
++    set_cursor_theme(active);
++    g_free(active);
++}
++
++static void setup_cursor_theme_changer(struct _CcAppearancePanel *self)
++{
++    self->cursor_combo = GTK_COMBO_BOX_TEXT(gtk_builder_get_object(self->builder, "combo_cursor_theme"));
++
++    gchar *current_cursor_theme = get_cursor_theme_name();
++    fill_cursor_theme_selector(self->cursor_combo, self->allowed_cursor_themes, current_cursor_theme);
++    g_free(current_cursor_theme);
++
++    g_signal_connect_object(self->cursor_combo, "changed", G_CALLBACK(cursor_theme_changed), self, 0);
++}
++
++// -------------------------------------------------------------------------------------------------
++// -------------------------------------------------------------------------------------------------
++//  ANIMATIONS SWITCH
++
++static int are_animations_enabled(void)
++{
++    return get_setting_bool(APPLICATION_THEME_SCHEMA, ANIMATIONS_KEY) == TRUE ? 1 : 0;
++}
++
++// 1=enable, 0=disable
++static void enable_animations(const int enabled)
++{
++    GSettings *app_scheme = g_settings_new(APPLICATION_THEME_SCHEMA);
++
++    g_settings_set_boolean(app_scheme, ANIMATIONS_KEY, enabled ? TRUE : FALSE);
++
++    g_settings_sync();
++}
++
++static void toggle_animations(GtkSwitch *widget, GdkEvent *event, gpointer user_data)
++{
++    if (gtk_switch_get_state(widget))
++        enable_animations(1);
++    else enable_animations(0);
++}
++
++static void setup_animations(struct _CcAppearancePanel *self)
++{
++    self->animations = GTK_SWITCH(gtk_builder_get_object(self->builder, "switch_animations"));
++
++    if (are_animations_enabled())
++        gtk_switch_set_state(self->animations, 1);
++
++    g_signal_connect_object(self->animations, "notify::active",
++                            G_CALLBACK(toggle_animations), self, 0);
++}
++
++// -------------------------------------------------------------------------------------------------
++// -------------------------------------------------------------------------------------------------
++// PANEL
++
++static void cc_appearance_panel_finalize(GObject *object);
++static void cc_appearance_panel_constructed(GObject *object);
++
++static const char *cc_appearance_panel_get_help_uri(CcPanel *panel)
++{
++    return "help:gnome-help/appearance";
++}
++
++static void cc_appearance_panel_class_init(CcAppearancePanelClass *klass)
++{
++    GObjectClass *object_class = G_OBJECT_CLASS(klass);
++    CcPanelClass *panel_class = CC_PANEL_CLASS(klass);
++
++    object_class->constructed = cc_appearance_panel_constructed;
++    object_class->finalize = cc_appearance_panel_finalize;
++    panel_class->get_help_uri = cc_appearance_panel_get_help_uri;
++}
++
++static void cc_appearance_panel_finalize(GObject *object)
++{
++    CcAppearancePanel *self = CC_APPEARANCE_PANEL(object);
++
++    g_object_unref(self->builder);
++
++    g_strfreev(self->light_theme_names);
++    g_strfreev(self->dark_theme_names);
++    g_strfreev(self->allowed_icon_themes);
++    g_strfreev(self->allowed_cursor_themes);
++
++    G_OBJECT_CLASS(cc_appearance_panel_parent_class)->finalize(object);
++}
++
++static void cc_appearance_panel_constructed(GObject *object)
++{
++    //CcAppearancePanel *self = CC_APPEARANCE_PANEL(object);
++
++    G_OBJECT_CLASS(cc_appearance_panel_parent_class)->constructed(object);
++}
++
++static void panel_changed(GtkWidget *settings_widget,
++                          const char *panel,
++                          CcAppearancePanel *self)
++{
++    GError *error = NULL;
++    CcShell *shell = cc_panel_get_shell(CC_PANEL(self));
++
++    if (cc_shell_set_active_panel_from_id(shell, panel, NULL, &error) == FALSE) {
++        g_warning("Failed to activate '%s' panel: %s", panel, error->message);
++        g_error_free(error);
++    }
++}
++
++// Retrieves a value from puavo-conf, using the default if the call fails.
++// The return value is a string vector split from the original string.
++static gchar **get_puavoconf_with_default(const char *name, const char *def_value)
++{
++    char *cmd = NULL;
++
++    // this is very dangerous and stupid
++    if (asprintf(&cmd, "puavo-conf %s 2>&1", name) == -1)
++        return g_strsplit(def_value, ",", -1);
++
++    // run the command and grab the output
++    FILE *f = popen(cmd, "r");
++
++    if (!f) {
++        free(cmd);
++        return g_strsplit(def_value, ",", -1);
++    }
++
++    GString *output = g_string_new(NULL);
++    char line[4096];
++
++    while (fgets(line, sizeof(line), f) != NULL)  {
++        g_strchomp(line);
++        g_string_append(output, line);
++    }
++
++    // grab the exit status
++    const int ret = WEXITSTATUS(fclose(f));
++
++    free(cmd);
++
++    // Split either the output of the command or the default value,
++    // depending on successfull exit status. Treat empty puavo-conf
++    // return value as failed and use the default value.
++    const char *in = def_value;
++
++    if (ret == 0) {
++        printf("|%s|\n", output->str);
++
++        if (g_strcmp0(output->str, ""))
++            in = output->str;
++        else printf("empty output, using default\n");
++    }
++
++    gchar **out = g_strsplit(in, ",", -1);
++    g_string_free(output, TRUE);
++
++    return out;
++}
++
++static void cc_appearance_panel_init(CcAppearancePanel *self)
++{
++    GError *error = NULL;
++
++    g_resources_register(cc_appearance_get_resource());
++
++    self->builder = gtk_builder_new();
++    gtk_builder_set_translation_domain(self->builder, GETTEXT_PACKAGE);
++    gtk_builder_add_from_resource(self->builder, "/org/gnome/control-center/appearance/appearance.ui", &error);
++
++    if (error) {
++        g_warning("Could not load UI: %s", error->message);
++        g_error_free(error);
++        return;
++    }
++
++    self->main = GTK_WIDGET(gtk_builder_get_object(self->builder, "box_outer"));
++
++    self->light_theme_names = get_puavoconf_with_default("puavo.desktop.themes.desktop_themes.light", "Arc,Arc");
++    self->dark_theme_names = get_puavoconf_with_default("puavo.desktop.themes.desktop_themes.dark", "Arc-Dark,Arc-Dark");
++    self->allowed_icon_themes = get_puavoconf_with_default("puavo.desktop.themes.icon_themes", "Adwaita,breeze,breeze-dark,deepin,deepin-dark,default,default.kde4,ePapirus,Faenza,Faenza-Ambiance,Faenza-Dark,Faenza-Darker,Faenza-Darkest,Faenza-Radiance,gnome,hicolor,HighContrast,Obsidian,Obsidian-Amber,Obsidian-Amber-Light,Obsidian-Amber-SemiLight,Obsidian-Aqua,Obsidian-Aqua-Light,Obsidian-Aqua-SemiLight,Obsidian-Cyan,Obsidian-Cyan-Light,Obsidian-Cyan-SemiLight,Obsidian-Gray,Obsidian-Gray-Light,Obsidian-Gray-SemiLight,Obsidian-Green,Obsidian-Green-Light,Obsidian-Green-SemiLight,Obsidian-Light,Obsidian-Mint,Obsidian-Mint-Light,Obsidian-Mint-SemiLight,Obsidian-Red,Obsidian-Red-Light,Obsidian-Red-SemiLight,Obsidian-Sand,Obsidian-Sand-Light,Obsidian-Sand-SemiLight,Obsidian-SemiLight,oxygen,Papirus,Papirus-Dark,Papirus-Light,Sea,Tela,Tela-dark");
++    self->allowed_cursor_themes = get_puavoconf_with_default("puavo.desktop.themes.cursor_themes", "Adwaita,deepin,Obsidian");
++
++    // UI setup
++    setup_theme_selector(self);
++    setup_icon_theme_changer(self);
++    setup_cursor_theme_changer(self);
++    setup_animations(self);
++
++    gtk_container_add (GTK_CONTAINER(self), self->main);
++
++    //g_signal_connect(G_OBJECT(self->main), "panel-changed", G_CALLBACK(panel_changed), self);
++}
+diff -ruN gnome-control-center-3.30.3.orig/panels/appearance/cc-appearance-panel.h gnome-control-center-3.30.3/panels/appearance/cc-appearance-panel.h
+--- gnome-control-center-3.30.3.orig/panels/appearance/cc-appearance-panel.h	1970-01-01 02:00:00.000000000 +0200
++++ gnome-control-center-3.30.3/panels/appearance/cc-appearance-panel.h	2020-05-22 10:44:41.715828921 +0300
+@@ -0,0 +1,13 @@
++#ifndef _CC_APPEARANCE_PANEL_H
++#define _CC_APPEARANCE_PANEL_H
++
++#include <shell/cc-shell.h>
++
++G_BEGIN_DECLS
++
++#define CC_TYPE_APPEARANCE_PANEL (cc_appearance_panel_get_type ())
++G_DECLARE_FINAL_TYPE (CcAppearancePanel, cc_appearance_panel, CC, APPEARANCE_PANEL, CcPanel)
++
++G_END_DECLS
++
++#endif /* _CC_APPEARANCE_PANEL_H */
+diff -ruN gnome-control-center-3.30.3.orig/panels/appearance/gnome-appearance-panel.desktop.in.in gnome-control-center-3.30.3/panels/appearance/gnome-appearance-panel.desktop.in.in
+--- gnome-control-center-3.30.3.orig/panels/appearance/gnome-appearance-panel.desktop.in.in	1970-01-01 02:00:00.000000000 +0200
++++ gnome-control-center-3.30.3/panels/appearance/gnome-appearance-panel.desktop.in.in	2020-05-22 10:44:41.715828921 +0300
+@@ -0,0 +1,16 @@
++[Desktop Entry]
++Name[en]=Appearance
++Name[fi]=Ulkoasu
++Comment[en]=Set the GTK theme for puavo-os/opinsys-os
++Comment[fi]=Aseta puavo-os/opinsys-os:n työpöydän teema
++Exec=gnome-control-center appearance
++# Translators: Do NOT translate or transliterate this text (this is an icon file name)!
++Icon=preferences-desktop-theme
++Terminal=false
++Type=Application
++NoDisplay=true
++StartupNotify=true
++Categories=GNOME;GTK;Settings;DesktopSettings;X-GNOME-Settings-Panel;X-GNOME-PersonalizationSettings;
++OnlyShowIn=GNOME;
++# Translators: Search terms to find the Appearance panel. Do NOT translate or localize the semicolons! The list MUST also end with a semicolon!
++Keywords=Theme;Desktop;Screen;Appearance;
+diff -ruN gnome-control-center-3.30.3.orig/panels/appearance/meson.build gnome-control-center-3.30.3/panels/appearance/meson.build
+--- gnome-control-center-3.30.3.orig/panels/appearance/meson.build	1970-01-01 02:00:00.000000000 +0200
++++ gnome-control-center-3.30.3/panels/appearance/meson.build	2020-05-22 10:44:41.715828921 +0300
+@@ -0,0 +1,42 @@
++panels_list += cappletname
++desktop = 'gnome-@0@-panel.desktop'.format(cappletname)
++
++desktop_in = configure_file(
++  input: desktop + '.in.in',
++  output: desktop + '.in',
++  configuration: desktop_conf
++)
++
++i18n.merge_file(
++  desktop,
++  type: 'desktop',
++  input: desktop_in,
++  output: desktop,
++  po_dir: po_dir,
++  install: true,
++  install_dir: control_center_desktopdir
++)
++
++sources = files('cc-appearance-panel.c')
++
++resource_data = files('appearance.ui')
++
++sources += gnome.compile_resources(
++  'cc-' + cappletname + '-resources',
++  cappletname + '.gresource.xml',
++  c_name: 'cc_' + cappletname,
++  dependencies: resource_data,
++  export: true
++)
++
++deps = common_deps #+ [gnome_appearance_dep]
++
++cflags += '-DGNOMELOCALEDIR="@0@"'.format(control_center_localedir)
++
++panels_libs += static_library(
++  cappletname,
++  sources: sources,
++  include_directories: top_inc,
++  dependencies: deps,
++  c_args: cflags
++)
+diff -ruN gnome-control-center-3.30.3.orig/panels/meson.build gnome-control-center-3.30.3/panels/meson.build
+--- gnome-control-center-3.30.3.orig/panels/meson.build	2019-02-08 04:01:41.000000000 +0200
++++ gnome-control-center-3.30.3/panels/meson.build	2020-05-22 10:44:41.715828921 +0300
+@@ -1,6 +1,7 @@
+ subdir('common')
+ 
+ panels = [
++  'appearance',
+   'background',
+   'color',
+   'datetime',
+diff -ruN gnome-control-center-3.30.3.orig/po/fi.po gnome-control-center-3.30.3/po/fi.po
+--- gnome-control-center-3.30.3.orig/po/fi.po	2019-02-08 04:01:41.000000000 +0200
++++ gnome-control-center-3.30.3/po/fi.po	2020-05-22 12:23:15.208475834 +0300
+@@ -7763,6 +7763,28 @@
+ msgid "System Sounds"
+ msgstr "Järjestelmän äänet"
+ 
++msgid "Use a dark theme:"
++msgstr "Käytä tummaa teemaa:"
++
++msgid ""
++"All programs do not immediately react to this change."
++"  You may need to restart them.  In some cases you might need to log out"
++" and log in back again to make this change effective."
++msgstr ""
++"Kaikki ohjelmat eivät reagoi tämän asetuksen muuttoon heti."
++"  Saatat joutua käynnistämään ne uudelleen.  Joissain tapauksissa joudut"
++" kirjautumaan ulos ja takaisin, jotta asetus varmasti tulee käyttöön"
++" kaikissa ohjelmissa."
++
++msgid "Kuvaketeema:"
++msgstr "Icon theme:"
++
++msgid "Pointer theme:"
++msgstr "Kursoriteema:"
++
++msgid "Use animations:"
++msgstr "Käytä animaatioita:"
++
+ #~ msgid "_Verify New Password"
+ #~ msgstr "V_ahvista uusi salasana"
+ 
+diff -ruN gnome-control-center-3.30.3.orig/po/POTFILES.in gnome-control-center-3.30.3/po/POTFILES.in
+--- gnome-control-center-3.30.3.orig/po/POTFILES.in	2019-02-08 04:01:41.000000000 +0200
++++ gnome-control-center-3.30.3/po/POTFILES.in	2020-05-22 10:44:41.715828921 +0300
+@@ -1,5 +1,7 @@
+ # List of source files containing translatable strings.
+ # Please keep this file sorted alphabetically.
++panels/theme/appearance.ui
++panels/theme/appearance.c
+ panels/background/background.ui
+ panels/background/bg-colors-source.c
+ panels/background/cc-background-chooser-dialog.c
+diff -ruN gnome-control-center-3.30.3.orig/shell/cc-panel-loader.c gnome-control-center-3.30.3/shell/cc-panel-loader.c
+--- gnome-control-center-3.30.3.orig/shell/cc-panel-loader.c	2019-02-08 04:01:41.000000000 +0200
++++ gnome-control-center-3.30.3/shell/cc-panel-loader.c	2020-05-22 10:44:41.715828921 +0300
+@@ -30,6 +30,7 @@
+ #ifndef CC_PANEL_LOADER_NO_GTYPES
+ 
+ /* Extension points */
++extern GType cc_appearance_panel_get_type (void);
+ extern GType cc_background_panel_get_type (void);
+ #ifdef BUILD_BLUETOOTH
+ extern GType cc_bluetooth_panel_get_type (void);
+@@ -87,6 +88,7 @@
+   CcPanelStaticInitFunc static_init_func;
+ #endif
+ } all_panels[] = {
++  PANEL_TYPE("appearance",       cc_appearance_panel_get_type,           NULL),
+   PANEL_TYPE("background",       cc_background_panel_get_type,           NULL),
+ #ifdef BUILD_BLUETOOTH
+   PANEL_TYPE("bluetooth",        cc_bluetooth_panel_get_type,            NULL),
