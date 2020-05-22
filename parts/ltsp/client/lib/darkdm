@@ -2,19 +2,36 @@
 
 set -eu
 
+colorize() {
+  local yellow_limit grey_limit green_limit value text
+  yellow_limit=$1
+  grey_limit=$2
+  green_limit=$3
+  value=$4
+  text=$5
+
+  if [ "$value" -ge "$green_limit" ]; then
+    echo -e "\e[1;32m${text}\e[0m" # green
+  elif [ "$value" -ge "$grey_limit" ]; then
+    echo "$text"                   # grey
+  elif [ "$value" -ge "$yellow_limit" ]; then
+    echo -e "\e[1;33m${text}\e[0m" # yellow
+  else
+    echo -e "\e[1;31m${text}\e[0m" # red
+  fi
+}
+
 list_disks() {
-  local disk disk_devices disk_size_in_gb
+  local colorized_disk_info disk disk_label disk_devices disk_size_in_gb
   disk_devices=$(facter --json disks | jq -r '.disks | keys | .[]' \
                    | grep -E '^(mmcblk|nvme|sd|vd)')
   for disk in $disk_devices; do
-    disk_size_in_gb=$(facter "blockdevice_${disk}_size" \
-                        | awk '$1 ~ /^[0-9]+$/ {
-                                 printf "%.0f GB\n", $1 / 1000000000
-                               }')
-    printf "disk %-12s%s / %s\n"                   \
-           "${disk}:"                              \
-           "$(facter "blockdevice_${disk}_model")" \
-           "$disk_size_in_gb"
+    disk_label="$(facter "disks.${disk}.model") / $(facter disks.${disk}.size)"
+    colorized_disk_info=$(colorize 128000000000 256000000000 512000000000 \
+                                   "$(facter disks.${disk}.size_bytes)"   \
+                                   "$disk_label")
+
+    printf "disk %-12s%s\n" "${disk}:" "$colorized_disk_info"
   done
 }
 
@@ -34,22 +51,41 @@ windows_license() {
   printf %s "${windows_product_key}${machine_build_id}"
 }
 
+get_cpu_value() {
+  # XXX This is a very crude way of evaluating processor "goodness".
+  # XXX For example it does not consider AMD CPUs at all.
+  case "$1" in
+    *i3-*) echo 1 ;;
+    *i5-*) echo 2 ;;
+    *i7-*) echo 3 ;;
+    *)     echo 0 ;;
+  esac
+}
+
 darkdm_systeminfo()
 {
   this_image=$(cat /etc/puavo-image/name)
   this_release=$(cat /etc/puavo-image/release)
 
+  colorized_memory=$(colorize 4183116800 8366233600 16732467200     \
+                              "$(facter memory.system.total_bytes)" \
+                              "$(facter memory.system.total)")
+  cpu=$(facter processors.models.1)
+  cpu_text="$(facter processors.count) CPUs / ${cpu}"
+  colorized_cpu=$(colorize 1 2 3 "$(get_cpu_value "$cpu")" "$cpu_text")
+
+
   cat <<EOF
 image:   ${this_image}
 release: ${this_release}
 
-bios:            $(facter bios_vendor) / $(facter bios_version)
-cpu:             $(facter processorcount) CPUs / $(facter processor0)
+bios:            $(facter dmi.bios.vendor) / $(facter dmi.bios.version)
+cpu:             ${colorized_cpu}
 $(list_disks)
-memory:          $(facter memorysize)
+memory:          ${colorized_memory}
 network:         IP $(facter ipaddress) / MAC $(facter macaddress)
-product:         $(facter manufacturer) / $(facter productname)
-serial numbers:  $(facter serialnumber) (machine) / $(facter boardserialnumber) (board)
+product:         $(facter dmi.manufacturer) / $(facter dmi.product.name)
+serial numbers:  $(facter dmi.product.serial_number) (machine) / $(facter dmi.board.serial_number) (board)
 Windows license: $(windows_license)
 some pci devices:
 $(lspci | awk '$2 == "Network" || $2 == "VGA"' | sed 's/^/  /')
