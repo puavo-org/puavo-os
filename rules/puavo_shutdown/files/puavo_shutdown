@@ -2,6 +2,12 @@
 
 set -eu
 
+# It appears systemd does not run /etc/rc6.d/K01hwclock.sh
+# so we sync the hardware clock here, also in the netboot device
+# case (fatclients sync clock at every boot, but this might be
+# a laptop that has been booted from network for maintenance).
+hwclock --systohc || true
+
 if [ ! -e /run/puavo/nbd-server ]; then
   exec /lib/systemd/systemd-shutdown.distrib "$@"
 fi
