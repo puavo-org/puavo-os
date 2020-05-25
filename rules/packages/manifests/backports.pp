@@ -15,7 +15,6 @@ class packages::backports {
                   , 'firmware-bnx2x'
                   , 'firmware-brcm80211'
                   , 'firmware-cavium'
-                  , 'firmware-crystalhd'
                   , 'firmware-intel-sound'
                   , 'firmware-intelwimax'
                   , 'firmware-ipw2x00'
