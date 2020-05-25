@@ -152,7 +152,7 @@ THE NETWORK CONNECTIONS PAGE
 */
 
 .network_container {
-    padding: 50px 150px;
+    padding: 50px $(network_container_left);
 }
 
 .network_container .scrolled_window {

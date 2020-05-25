@@ -137,6 +137,8 @@ class NewUserRegistrationWindow:
                 'welcome_padding_left': '250px',
                 'welcome_padding_right': '50px',
 
+                'network_container_left': '150px',
+
                 'account_top_padding': '75px',
                 'account_left_padding': '500px',
 
@@ -157,6 +159,8 @@ class NewUserRegistrationWindow:
                 'welcome_padding_left': '250px',
                 'welcome_padding_right': '50px',
 
+                'network_container_left': '150px',
+
                 'account_top_padding': '50px',
                 'account_left_padding': '600px',
 
@@ -164,6 +168,27 @@ class NewUserRegistrationWindow:
                 'complete_left_padding': '250px',
 
                 'entry_font_size': '20px',
+            }
+        elif screen_width == 1024:
+            # A virtual machine?
+            css_variables = {
+                'gtk_dialog_font_scale': '100%',
+                'main_font_scale': '100%',
+                'background_image': 'background_1366.png',
+
+                'welcome_padding_top': '100px',
+                'welcome_padding_left': '100px',
+                'welcome_padding_right': '100px',
+
+                'network_container_left': '50px',
+
+                'account_top_padding': '50px',
+                'account_left_padding': '400px',
+
+                'complete_top_padding': '100px',
+                'complete_left_padding': '50px',
+
+                'entry_font_size': '15px',
             }
         else:
             css_variables = {
@@ -174,6 +199,8 @@ class NewUserRegistrationWindow:
                 'welcome_padding_top': '75px',
                 'welcome_padding_left': '250px',
                 'welcome_padding_right': '50px',
+
+                'network_container_left': '150px',
 
                 'account_top_padding': '25px',
                 'account_left_padding': '550px',
