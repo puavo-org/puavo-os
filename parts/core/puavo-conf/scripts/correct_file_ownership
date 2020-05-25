@@ -29,5 +29,6 @@ fix_recursively_if_exists www-data:adm              /state/var/log/nginx
 fix_recursively_if_exists ntp:ntp                   /state/var/log/ntpstats
 fix_recursively_if_exists root:adm                  /state/var/log/puavo
 fix_recursively_if_exists redis:redis               /state/var/log/redis
+fix_recursively_if_exists ulog:adm                  /state/var/log/ulog
 
 exit $status
