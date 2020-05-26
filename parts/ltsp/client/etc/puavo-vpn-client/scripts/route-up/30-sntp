@@ -1,0 +1,9 @@
+#!/bin/sh
+
+(
+  sleep 2
+  ntp_server=$(awk '$1 == "server" { print $2; exit(0) }' /etc/ntp.conf)
+  if [ -n "$ntp_server" ]; then
+    sntp -Ss -M 10000 "$ntp_server"
+  fi
+) &

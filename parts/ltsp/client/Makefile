@@ -85,7 +85,7 @@ install : installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/puavo-vpn-client/scripts/route-up \
 		etc/puavo-vpn-client/scripts/route-up/10-bootserver-dnsmasq \
 		etc/puavo-vpn-client/scripts/route-up/10-puavo-vpn-client-dnsmasq \
-		etc/puavo-vpn-client/scripts/route-up/30-ntpdate
+		etc/puavo-vpn-client/scripts/route-up/30-sntp
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sysconfdir)/NetworkManager/dispatcher.d \
 		etc/NetworkManager/dispatcher.d/dnssd-printers
