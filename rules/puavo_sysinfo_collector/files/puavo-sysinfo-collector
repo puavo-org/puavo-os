@@ -239,6 +239,16 @@ class SystemInfoCollector < DBus::Object
         rescue
         end
 
+        # Windows license information (not always available, so fail gracefully)
+        data[:windows_license] = nil
+
+        begin
+          if File.exists?('/sys/firmware/acpi/tables/MSDM')
+            data[:windows_license] = `strings /sys/firmware/acpi/tables/MSDM`
+          end
+        rescue
+        end
+
         # use pretty_generate because humans might read the file out of curiosity
         File.open('/run/puavo/puavo-sysinfo.json', 'w') do |f|
           f.write(JSON.pretty_generate(data))
