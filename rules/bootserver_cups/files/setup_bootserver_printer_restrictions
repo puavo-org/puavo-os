@@ -1,5 +1,8 @@
 #!/usr/bin/ruby
 
+Encoding.default_internal = Encoding::UTF_8
+Encoding.default_external = Encoding::UTF_8
+
 require 'fileutils'
 require 'puavo/conf'
 require 'puavo/etc'

@@ -1,11 +1,11 @@
 #!/usr/bin/ruby
 
+Encoding.default_internal = Encoding::UTF_8
+Encoding.default_external = Encoding::UTF_8
+
 require 'fileutils'
 require 'ipaddress'
 require 'puavo/conf'
-
-Encoding.default_internal = Encoding::UTF_8
-Encoding.default_external = Encoding::UTF_8
 
 def writeconf(path, data)
   File.open("#{ path }.tmp", 'w') { |f| f.write(data) }
