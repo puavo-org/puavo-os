@@ -37,6 +37,9 @@ class packages::backports {
                   , 'intel-microcode'
                   , 'iucode-tool'
 
+                  , 'wireless-regdb'    # needed by current kernel,
+                                        # and this is needed by puavo-wlanap
+
                   , 'musescore3'
                   , 'musescore3-common'
                   , 'musescore-general-soundfont' ]
