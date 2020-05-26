@@ -173,10 +173,10 @@ def set_state_message(widget, msg, current_state_class):
 
 def error_message(parent, message, secondary_message):
     dialog = Gtk.MessageDialog(parent=parent,
-                               flags=Gtk.DialogFlags.MODAL,
-                               type=Gtk.MessageType.ERROR,
+                               modal=True,
+                               message_type=Gtk.MessageType.ERROR,
                                buttons=Gtk.ButtonsType.OK,
-                               message_format=message)
+                               text=message)
 
     if secondary_message:
         dialog.format_secondary_markup(secondary_message)
@@ -385,7 +385,8 @@ class PuavoPkg:
         self.package_description = Gtk.Label()
         self.package_description.set_markup(desc_text)
         self.package_description.set_line_wrap(True)
-        self.package_description.set_alignment(0.0, 0.0)
+        self.package_description.set_xalign(0.0)
+        self.package_description.set_yalign(0.0)
         set_widget_class(self.package_description, 'package_description')
 
         # Buttons container
@@ -547,6 +548,8 @@ except BlockingIOError:
 # The package list can be very long on some machines, so try to use as much
 # space on the screen as possible, within limits
 try:
+    # TODO: this is deprecated, but the replacement (get_monitor_geometry())
+    # is *also* deprecated and no one seems to know its replacement.
     screen_height = Gdk.Screen.get_default().height()
 except:
     screen_height = 768
