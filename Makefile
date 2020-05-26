@@ -288,7 +288,13 @@ update: prepare /etc/puavo-conf/image.json /etc/puavo-conf/rootca.pem
 
 	$(_sudo) puavo-pkg gc-installations
 	$(_sudo) puavo-pkg gc-upstream-packs
-	$(_sudo) update-initramfs -u -k all
+
+	# Must not use "update-initramfs -u -k all" because otherwise
+	# our kernel symbolic links gets destroyed.
+	for vmlinuz in $$(find /boot -name 'vmlinuz-[0-9]*'); do \
+	    $(_sudo) update-initramfs -u -k "$${vmlinuz#/boot/vmlinuz-}"; \
+	done
+
 	$(_sudo) systemd-sysusers
 
 .PHONY: prepare
