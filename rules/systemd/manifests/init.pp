@@ -21,5 +21,14 @@ class systemd {
       force  => true;
   }
 
+  # We use ntpd.  Oddly enough, even though this should not
+  # affect ntpd, in some cases systemd-timesyncd can block it
+  # from starting up.
+  service {
+    'systemd-timesyncd':
+       enable  => false,
+       require => Package['systemd'];
+  }
+
   Package <| title == systemd |>
 }
