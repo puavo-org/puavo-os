@@ -540,9 +540,7 @@ try:
 except BlockingIOError:
     errmsg = ('"%s"' % _tr('Extra software installer')) \
                 + ' ' + _tr('is already running')
-    dialog = Gtk.MessageDialog(win, 0, Gtk.MessageType.ERROR,
-               Gtk.ButtonsType.CANCEL, errmsg)
-    dialog.run()
+    error_message(win, errmsg, None)
     sys.exit(1)
 
 # The package list can be very long on some machines, so try to use as much
