@@ -54,8 +54,6 @@ class SystemInfoCollector < DBus::Object
           :bios_vendor,
           :bios_version,
           :bios_release_date,
-          :blockdevice_sda_model,
-          :blockdevice_sda_size,
           :processorcount,
           :processor0,
           :memorysize_mb,
@@ -114,7 +112,41 @@ class SystemInfoCollector < DBus::Object
 
           data[:network_interfaces] = interfaces
 
+          # Hard drive size and model. Find the largest block device, assume
+          # it's the "main" storage device and store it under the "sda"
+          # moniker for backwards compatibility. Assume all fixed disks are
+          # named predictably, like "sda", or "nvme0n1" or even
+          # "mmcblk-something".
+          partitions = Facter.value(:blockdevices)
+          partitions = '' if partitions.nil?
+
+          size = -1
+          model = nil
+
+          partitions.split(',').each do |part|
+            next unless part.include?('sda') || part.include?('nvme') || part.include?('mmcblk')
+
+            this_size = Facter.value("blockdevice_#{part}_size").to_i
+            this_model = Facter.value("blockdevice_#{part}_model")
+
+            if this_size > size
+              size = this_size
+              model = this_model
+            end
+          end
+
+          if size == -1 && model.nil?
+            # no disks at all?
+            data[:blockdevice_sda_size] = 0
+            data[:blockdevice_sda_model] = ''
+          else
+            data[:blockdevice_sda_size] = size
+            data[:blockdevice_sda_model] = model
+          end
+
           # SSD or spinning platters?
+          # FIXME: this obviously fails with NVME disks and SD cards
+          # FIXME: why is this a string?
           data[:ssd] = IO.read('/sys/block/sda/queue/rotational').strip == '0' ? '1' : '0' rescue '-1'
 
           # detailed RAM info
