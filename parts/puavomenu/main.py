@@ -48,10 +48,10 @@ class PuavoMenu(Gtk.Window):
 
         dialog = Gtk.MessageDialog(
             parent=self,
-            flags=Gtk.DialogFlags.MODAL,
-            type=Gtk.MessageType.ERROR,
+            modal=True,
+            message_type=Gtk.MessageType.ERROR,
             buttons=Gtk.ButtonsType.OK,
-            message_format=message
+            text=message
         )
 
         if secondary_message:
@@ -190,7 +190,8 @@ class PuavoMenu(Gtk.Window):
         self.__menu_title.set_size_request(375, -1)
         self.__menu_title.set_ellipsize(Pango.EllipsizeMode.END)
         self.__menu_title.set_justify(Gtk.Justification.CENTER)
-        self.__menu_title.set_alignment(0.0, 0.0)
+        self.__menu_title.set_xalign(0.0)
+        self.__menu_title.set_yalign(0.5)
         self.__menu_title.set_use_markup(True)
 
         self.menu_fixed.put(
@@ -244,7 +245,8 @@ class PuavoMenu(Gtk.Window):
         self.__empty = Gtk.Label(name='empty')
         self.__empty.set_size_request(PROGRAMS_WIDTH, PROGRAMS_HEIGHT)
         self.__empty.set_justify(Gtk.Justification.CENTER)
-        self.__empty.set_alignment(0.5, 0.5)
+        self.__empty.set_xalign(0.5)
+        self.__empty.set_yalign(0.5)
         self.menu_fixed.put(self.__empty, 0, PROGRAMS_TOP)
 
         # Keep track of most frequently used programs

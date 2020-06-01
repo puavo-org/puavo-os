@@ -216,7 +216,8 @@ class Sidebar:
         hostname_label.set_size_request(SIDEBAR_WIDTH, HOSTINFO_LABEL_HEIGHT)
         hostname_label.set_ellipsize(Pango.EllipsizeMode.END)
         hostname_label.set_justify(Gtk.Justification.CENTER)
-        hostname_label.set_alignment(0.5, 0.5)
+        hostname_label.set_xalign(0.5)
+        hostname_label.set_yalign(0.5)
         hostname_label.set_use_markup(True)
 
         # FIXME: "big" and "small" are not good sizes, we need to be explicit
