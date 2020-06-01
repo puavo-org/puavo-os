@@ -94,12 +94,12 @@ screenshot='<Primary><Alt><Super>Print'
 
 [org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0]
 binding='<Super>space'
-command='/opt/puavomenu/puavomenu-spawn'
+command='/opt/puavomenu/puavomenu-spawn toggle'
 name='Puavomenu'
 
 [org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1]
 binding='<Alt>F1'
-command='/opt/puavomenu/puavomenu-spawn'
+command='/opt/puavomenu/puavomenu-spawn toggle'
 name='Puavomenu'
 
 [org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2]
