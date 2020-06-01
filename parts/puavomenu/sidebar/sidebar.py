@@ -351,20 +351,26 @@ class Sidebar:
 
     # Creates a sidebar button
     def __create_button(self, y, data):
-        button = buttons.sidebar.SidebarButton(
-            self,
-            self.__settings,
-            utils.localize(data['title'], self.__settings.language),
-            (self.__icons, self.__icons[data['icon']][0]),
-            utils.localize(data.get('description', ''), self.__settings.language),
-            data['command'])
+        try:
+            button = buttons.sidebar.SidebarButton(
+                self,
+                self.__settings,
+                utils.localize(data['title'], self.__settings.language),
+                (self.__icons, self.__icons[data['icon']][0]),
+                utils.localize(data.get('description', ''), self.__settings.language),
+                data['command'])
 
-        button.connect('clicked', self.__clicked_sidebar_button)
-        button.show()
-        self.container.put(button, 0, y)
+            button.connect('clicked', self.__clicked_sidebar_button)
+            button.show()
+            self.container.put(button, 0, y)
 
-        # the next available Y coordinate
-        return y + button.get_preferred_button_size()[1]
+            # the next available Y coordinate
+            return y + button.get_preferred_button_size()[1]
+
+        except BaseException as e:
+            logging.error('Cannot create a sidebar button!')
+            logging.error(e, exc_info=True)
+            return y
 
 
     # Creates a special sidebar separator
