@@ -5,6 +5,7 @@ import datetime
 import dbus
 import dbus.mainloop.glib
 import errno
+import fcntl
 import getpass
 import gettext
 import gi
@@ -774,6 +775,81 @@ class ImageUpdater(PuavoWidget):
     self.log_dialog.hide()
 
 
+class MonitorsUpdater(PuavoWidget):
+  def __init__(self, applet):
+    self.applet = applet
+
+    self.enabled = False
+    try:
+      if os.environ['PUAVO_PERSISTENT_DISPLAY_MANAGEMENT'] != 'true':
+        return
+    except KeyError:
+      return
+
+    self.enabled = True
+
+
+  def append_items_to_menu(self):
+    if not self.enabled:
+      return False
+
+    self.send_button = Gtk.MenuItem( _tr('Send display configuration') )
+    self.send_button.connect('activate', self.send_display_configuration)
+    self.send_button.show()
+    self.applet.menu.append(self.send_button)
+
+    return True
+
+
+  def send_display_configuration(self, widget):
+    # XXX should monitors-$(hostname -s).xml
+    monitors_xml_path = os.path.join(os.environ['HOME'],
+                                     '.config',
+                                     'monitors.xml')
+    if not os.path.exists(monitors_xml_path):
+      # XXX message icon and translation?
+      self.notify( _tr('Create display configuration first') )
+      subprocess.Popen([ '/usr/bin/gnome-control-center', 'displays' ],
+                       close_fds=True)
+      return
+
+
+    cmd = [ '/usr/bin/puavo-send-monitors-xml' ]
+    (pid, stdin, stdout, stderr) \
+       = GObject.spawn_async(cmd,
+                             flags=GObject.SPAWN_DO_NOT_REAP_CHILD|GObject.SPAWN_STDERR_TO_DEV_NULL,
+                             standard_output=True)
+
+    self.send_pid = pid
+
+    fl = fcntl.fcntl(stdout, fcntl.F_GETFL)
+    fcntl.fcntl(stdout, fcntl.F_SETFL, fl | os.O_NONBLOCK)
+    GObject.io_add_watch(stdout,
+                         GObject.IO_HUP|GObject.IO_IN,
+                         self.sdc_stdout_callback,
+                         os.fdopen(stdout))
+
+
+  def sdc_stdout_callback(self, fd, condition, channel):
+    if condition & GObject.IO_IN:
+      channel.readline()
+
+    if condition & GObject.IO_HUP:
+      channel.close()
+      (pid, status) = os.waitpid(self.send_pid, 0)
+      if status != 0:
+        # XXX message icon and translation?
+        self.notify(_tr('ERROR'),
+                    _tr('Could not send display configuration'))
+      else:
+        # XXX message icon and translation?
+        self.notify(_tr('Success'),
+                    _tr('Display configuration sent successfully'))
+      return False
+
+    return True
+
+
 class RemoteAssistance:
   def __init__(self, applet):
     self.applet = applet
@@ -1222,6 +1298,7 @@ class PuavoDesktopApplet:
     self.changelog_notifier = ChangelogNotifier(self)
     self.content_updates    = ContentUpdates(self)
     self.image_updater      = ImageUpdater(self)
+    self.monitors_updater   = MonitorsUpdater(self)
     self.remote_assistance  = RemoteAssistance(self)
     self.reset_dev_state    = ResetDevState(self)
 
@@ -1255,6 +1332,9 @@ class PuavoDesktopApplet:
     self.menu.append(separator)
 
     if self.remote_assistance.append_items_to_menu():
+      something_in_menu = True
+
+    if self.monitors_updater.append_items_to_menu():
       something_in_menu = True
 
     if something_in_menu:
