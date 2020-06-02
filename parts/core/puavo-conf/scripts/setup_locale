@@ -15,12 +15,6 @@ puavo_locale=$(puavo-conf puavo.l10n.locale)
       echo "DCONF_PROFILE=${puavo_dconf_profile}"
     fi
   fi
-
-  if [ "$(puavo-conf puavo.graphics.display_server)" = 'xorg' ]; then
-    # XXX Find a better place for this... we do not want gnome-shell/mutter
-    # XXX to mess up xrandr-settings in login screen.
-    echo MUTTER_ALLOW_CONFIGURATION=temporary
-  fi
 } > /etc/default/locale.tmp
 
 if [ -s /etc/default/locale.tmp ]; then
