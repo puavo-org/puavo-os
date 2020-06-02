@@ -484,7 +484,9 @@ def load(menudata_files,        # data source
     utils.log_elapsed_time('puavopkg state init time', start_time, end_time)
 
     # --------------------------------------------------------------------------
-    # Start tracking program, menu and category usage
+    # There could be programs that are defined, but not actually used in any
+    # menu or category. Mark all referenced programs as "used" and skip
+    # the unmarked programs when .desktop files are loaded.
 
     for cid, category in categories.items():
         category['flags'] |= CategoryFlags.USED
@@ -658,7 +660,33 @@ def load(menudata_files,        # data source
                 else:
                     cat['flags'] &= ~CategoryFlags.HIDDEN
 
-    # Remove missing, broken and hidden entries
+    # Then find all used programs again. We've processed tags and
+    # conditionals, so we know what menus and categories are actually
+    # visible. Mark all programs in these as "used" and then completely
+    # remove the unused programs.
+    for pid, program in programs.items():
+        program['flags'] &= ~ProgramFlags.USED
+
+    for cid, category in categories.items():
+        if category['flags'] & CategoryFlags.HIDDEN:
+            print('Category "%s" is not visible, skipping its programs' % (cid))
+            continue
+
+        if 'programs' in category:
+            for pid in category['programs']:
+                if pid in programs:
+                    programs[pid]['flags'] |= ProgramFlags.USED
+
+    for mid, menu in menus.items():
+        if menu['flags'] & MenuFlags.HIDDEN:
+            continue
+
+        if 'programs' in menu:
+            for pid in menu['programs']:
+                if pid in programs:
+                    programs[pid]['flags'] |= ProgramFlags.USED
+
+    # Remove everyhing that's unused, hidden or missing
     removed_programs = set()
     removed_menus = set()
     removed_categories = set()
