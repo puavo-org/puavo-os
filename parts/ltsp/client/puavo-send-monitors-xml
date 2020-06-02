@@ -1,0 +1,25 @@
+#!/bin/sh
+
+set -eu
+
+if ! this_hostname="$(hostname -s)" || [ -z "$this_hostname" ]; then
+  echo 'Could not determine hostname' >&2
+  exit 1
+fi
+
+monitors_xml_path=~/".config/monitors-${this_hostname}.xml"
+if ! monitors_xml=$(cat "$monitors_xml_path" 2>/dev/null); then
+  echo 'Could not read monitors.xml' >&2
+  exit 1
+fi
+
+if ! json=$(jq -n --arg monitors_xml "$monitors_xml" '.["monitors.xml"] = $monitors_xml'); then
+  echo 'Could not create json to send' >&2
+  exit 1
+fi
+
+url="/v3/devices/${this_hostname}/monitors"
+if ! puavo-rest-request "$url" --post --writable -- --data-binary "$json"; then
+  echo 'Error in sending monitors data to Puavo' >&2
+  exit 1
+fi
