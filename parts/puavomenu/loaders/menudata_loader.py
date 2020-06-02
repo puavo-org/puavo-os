@@ -669,7 +669,6 @@ def load(menudata_files,        # data source
 
     for cid, category in categories.items():
         if category['flags'] & CategoryFlags.HIDDEN:
-            print('Category "%s" is not visible, skipping its programs' % (cid))
             continue
 
         if 'programs' in category:
