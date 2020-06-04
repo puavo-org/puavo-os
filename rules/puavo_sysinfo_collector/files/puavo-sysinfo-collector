@@ -106,7 +106,8 @@ class SystemInfoCollector < DBus::Object
                 prefix: prefix
               }
             end
-          rescue
+          rescue StandardError => e
+            warn "could not list network interfaces: #{e}"
             interfaces = []
           end
 
@@ -117,22 +118,33 @@ class SystemInfoCollector < DBus::Object
           # moniker for backwards compatibility. Assume all fixed disks are
           # named predictably, like "sda", or "nvme0n1" or even
           # "mmcblk-something".
-          partitions = Facter.value(:blockdevices)
-          partitions = '' if partitions.nil?
+          begin
+            partitions = Facter.value(:blockdevices)
+            partitions = '' if partitions.nil?
+          rescue StandardError => e
+            warn "could not list partitions: #{e}"
+            partitions = ''
+          end
 
           size = -1
           model = nil
 
-          partitions.split(',').each do |part|
-            next unless part.include?('sda') || part.include?('nvme') || part.include?('mmcblk')
+          begin
+            partitions.split(',').each do |part|
+              next unless part.include?('sda') || part.include?('nvme') || part.include?('mmcblk')
 
-            this_size = Facter.value("blockdevice_#{part}_size").to_i
-            this_model = Facter.value("blockdevice_#{part}_model")
+              this_size = Facter.value("blockdevice_#{part}_size").to_i
+              this_model = Facter.value("blockdevice_#{part}_model")
 
-            if this_size > size
-              size = this_size
-              model = this_model
+              if this_size > size
+                size = this_size
+                model = this_model
+              end
             end
+          rescue StandardError => e
+            warn "could not parse partition info: #{e}"
+            size = -1
+            model = nil
           end
 
           if size == -1 && model.nil?
@@ -147,7 +159,14 @@ class SystemInfoCollector < DBus::Object
           # SSD or spinning platters?
           # FIXME: this obviously fails with NVME disks and SD cards
           # FIXME: why is this a string?
-          data[:ssd] = IO.read('/sys/block/sda/queue/rotational').strip == '0' ? '1' : '0' rescue '-1'
+          data[:ssd] = '-1'
+
+          begin
+            data[:ssd] = IO.read('/sys/block/sda/queue/rotational').strip == '0' ? '1' : '0'
+          rescue StandardError => e
+            warn "could not determine if the hard drive is an SSD: #{e}"
+            data[:ssd] = '-1'
+          end
 
           # detailed RAM slot info
           data[:memory] = []
@@ -155,7 +174,8 @@ class SystemInfoCollector < DBus::Object
           begin
             memory_json = `lshw -json 2>/dev/null`
             memory_data = JSON.parse(memory_json)
-          rescue
+          rescue StandardError => e
+            warn "could not parse lshw's output"
             memory_data = {}
           end
 
@@ -180,24 +200,42 @@ class SystemInfoCollector < DBus::Object
                 end
               end
             end
-          rescue
+          rescue StandardError => e
             # if the memory info fails, ensure a valid output still exists
+            warn "could not parse memory slot information: #{e}"
             data[:memory] = []
           end
 
           # some lspci values
           data[:lspci_values] = []
-          lspci_raw = `lspci | awk '$2 == "Network" || $2 == "VGA"' | sed 's/^/  /'`
-          lspci_raw.strip.split("\n").each { |i| data[:lspci_values] << i.strip }
+
+          begin
+            lspci_raw = `lspci | awk '$2 == "Network" || $2 == "VGA"' | sed 's/^/  /'`
+            lspci_raw.strip.split("\n").each { |i| data[:lspci_values] << i.strip }
+          rescue StandardError => e
+            warn "could not get lspci output: #{e}"
+            data[:lspci_values] = []
+          end
 
           # lsusb contents
           data[:lsusb_values] = []
-          lsusb_raw = `lsusb`
-          lsusb_raw.strip.split("\n").each { |i| data[:lsusb_values] << i.strip }
+
+          begin
+            lsusb_raw = `lsusb`
+            lsusb_raw.strip.split("\n").each { |i| data[:lsusb_values] << i.strip }
+          rescue StandardError => e
+            warn "could not get lsusb output: #{e}"
+            data[:lsusb_values] = []
+          end
 
           # wireless info (this needs to be improved)
-          x = `lspci -nnk | grep 0280 | cut -c 36-`
-          data[:wifi] = (x.strip.split("\n").first || '').strip
+          begin
+            x = `lspci -nnk | grep 0280 | cut -c 36-`
+            data[:wifi] = (x.strip.split("\n").first || '').strip
+          rescue StandardError => e
+            warn "could not wireless information: #{e}"
+            data[:wifi] = nil
+          end
 
           xrandr_output = nil
           begin
@@ -265,14 +303,19 @@ class SystemInfoCollector < DBus::Object
           end
           data[:extra_system_contents] = extra_system_contents
 
-          free_space = {}
-          fs_paths = %w(/home /imageoverlays /images /installimages /state /tmp)
-          fs_paths.each do |fs_path|
-            free_space_for_fs_path = lookup_free_space(fs_path)
-            free_space[fs_path] = free_space_for_fs_path \
-              if free_space_for_fs_path
+          begin
+            free_space = {}
+            fs_paths = %w(/home /imageoverlays /images /installimages /state /tmp)
+            fs_paths.each do |fs_path|
+              free_space_for_fs_path = lookup_free_space(fs_path)
+              free_space[fs_path] = free_space_for_fs_path \
+                if free_space_for_fs_path
+            end
+            data[:free_space] = free_space
+          rescue StandardError => e
+            warn "could not get disk free space information: #{e}"
+            data[:free_space] = {}
           end
-          data[:free_space] = free_space
         rescue
         end
 
@@ -283,7 +326,9 @@ class SystemInfoCollector < DBus::Object
           if File.exists?('/sys/firmware/acpi/tables/MSDM')
             data[:windows_license] = `strings /sys/firmware/acpi/tables/MSDM`
           end
-        rescue
+        rescue StandardError => e
+          warn "could not read the Windows license file: #{e}"
+          data[:windows_license] = nil
         end
 
         # use pretty_generate because humans might read the file out of curiosity
