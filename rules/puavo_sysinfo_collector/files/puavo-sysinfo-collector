@@ -172,34 +172,37 @@ class SystemInfoCollector < DBus::Object
           data[:memory] = []
 
           begin
-            memory_json = `lshw -json 2>/dev/null`
-            memory_data = JSON.parse(memory_json)
-          rescue StandardError => e
-            warn "could not parse lshw's output"
-            memory_data = {}
-          end
+            data[:memory] = []
+            slot_info = nil
 
-          begin
-            # TODO: we could replace Facter fully with this
-            # locate the "core" block...
-            memory_data['children'].each do |child1|
-              next if child1['id'] != 'core'
+            dmidata = `dmidecode --type 17`
 
-              # locate the "memory" block..
-              child1['children'].each do |child2|
-                next if child2['id'] != 'memory'
+            # parse dmidecode output
+            dmidata.split("\n").each do |line|
+              if line == 'Memory Device'
+                # store the current slot, if any, and start a new one
+                data[:memory] << slot_info if slot_info
+                slot_info = {}
+              elsif line[0] == "\t"
+                # parse info lines and store values for the current slot
+                parts = line.split(':').map(&:strip)
 
-                # iterate over the memory banks
-                child2['children'].each do |bank|
-                  data[:memory] << {
-                    size: bank['size'].to_i / (1024 * 1024),
-                    slot: bank['slot'],
-                    product: bank['product'],
-                    vendor: bank['vendor']
-                  }
+                if parts.size == 2
+                  if parts[0] == 'Size' && parts[1] != 'No Module Installed'
+                    slot_info[:size] = parts[1].to_i
+                  elsif parts[0] == 'Locator' && parts[1] != 'Not Specified'
+                    slot_info[:slot] = parts[1]
+                  elsif parts[0] == 'Part Number' && parts[1] != 'Not Specified'
+                    slot_info[:product] = parts[1]
+                  elsif parts[0] == 'Manufacturer' && parts[1] != 'Not Specified'
+                    slot_info[:vendor] = parts[1]
+                  end
                 end
               end
             end
+
+            # store the last slot
+            data[:memory] << slot_info if slot_info
           rescue StandardError => e
             # if the memory info fails, ensure a valid output still exists
             warn "could not parse memory slot information: #{e}"
