@@ -149,10 +149,15 @@ class SystemInfoCollector < DBus::Object
           # FIXME: why is this a string?
           data[:ssd] = IO.read('/sys/block/sda/queue/rotational').strip == '0' ? '1' : '0' rescue '-1'
 
-          # detailed RAM info
-          memory_json = `lshw -json 2>/dev/null`
-          memory_data = JSON.parse(memory_json)
+          # detailed RAM slot info
           data[:memory] = []
+
+          begin
+            memory_json = `lshw -json 2>/dev/null`
+            memory_data = JSON.parse(memory_json)
+          rescue
+            memory_data = {}
+          end
 
           begin
             # TODO: we could replace Facter fully with this
