@@ -9,6 +9,7 @@ import getpass
 import gettext
 import gi
 import json
+import lsb_release
 import os
 import re
 import signal
@@ -92,6 +93,8 @@ class ChangelogNotifier(PuavoWidget):
     self.image_series_name   = self.read_imageseries_name()
     self.system_release_name = self.read_system_release_name()
     self.system_version      = self.read_system_version()
+    self.lsb_codename        = lsb_release.get_distro_information()['CODENAME']
+    self.user_language       = os.environ['LANG'][0:2].lower()
     self.user_puavo_dir      = os.path.join(os.environ['HOME'], '.puavo')
     self.user_versions_path  = os.path.join(self.user_puavo_dir,
                                            'used_image_versions')
@@ -120,9 +123,12 @@ class ChangelogNotifier(PuavoWidget):
 
   def button_callback(self, widget):
     url = self.changelog_url \
-              .replace("%%IMAGERELEASE%%", self.system_release_name) \
-              .replace("%%IMAGESERIES%%",  self.image_series_name)   \
-              .replace("%%IMAGEVERSION%%", self.system_version)
+              .replace("%%IMAGESERIES%%",  self.image_series_name) \
+              .replace("%%IMAGEVERSION%%", self.system_version)    \
+              .replace("%%LANG%%",         self.user_language)     \
+              .replace("%%LSBCODENAME%%",  self.lsb_codename)
+
+    print("changelog url is %s" % url)
 
     if url.endswith(".img"):
         # remove the file extension so anchors on the page work

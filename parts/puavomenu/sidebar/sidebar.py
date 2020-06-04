@@ -1,6 +1,7 @@
 # The Sidebar: the user avatar, "system" buttons and the host info
 
 import logging
+import lsb_release
 import threading
 import getpass
 import os.path
@@ -27,10 +28,12 @@ from sidebar.avatar_downloader import AvatarDownloaderThread
 
 
 # Generates the full URL to the current image's changelog
-def get_changelog_url():
-    series = utils.get_file_contents('/etc/puavo-image/class', 'opinsys')
-    version = utils.get_file_contents('/etc/puavo-image/name', '')
+def get_changelog_url(lang):
+    series = utils.get_file_contents('/etc/puavo-image/class')
+    version = utils.get_file_contents('/etc/puavo-image/name')
+    lsb_codename = lsb_release.get_distro_information()['CODENAME']
 
+    logging.info('The current distribution codename is "%s"', lsb_codename)
     logging.info('The current image series is "%s"', series)
     logging.info('The current image version is "%s"', version)
 
@@ -39,10 +42,12 @@ def get_changelog_url():
         version = version[:-4]
 
     url = utils.puavo_conf('puavo.support.image_changelog_url',
-                           'http://changelog.opinsys.fi')
+                           'https://changelog.opinsys.fi')
 
-    url = url.replace('%%IMAGESERIES%%', series)
+    url = url.replace('%%IMAGESERIES%%',  series)
     url = url.replace('%%IMAGEVERSION%%', version)
+    url = url.replace('%%LANG%%',         lang)
+    url = url.replace('%%LSBCODENAME%%',  lsb_codename)
 
     logging.info('The final changelog URL is "%s"', url)
 
@@ -92,7 +97,7 @@ class Sidebar:
     def __get_variables(self):
         self.__variables = {}
         self.__variables['puavo_domain'] = \
-            utils.get_file_contents('/etc/puavo/domain', '?')
+            utils.get_file_contents('/etc/puavo/domain')
         self.__variables['user_name'] = getpass.getuser()
         self.__variables['user_language'] = self.__settings.language
 
@@ -264,8 +269,11 @@ class Sidebar:
     # Open the changelog
     def __clicked_changelog(self, *unused):
         try:
+            changelog_url = get_changelog_url(self.__settings.language) \
+                              + utils.expand_variables('&theme=$(user_theme)',
+                                                       self.__variables)
             utils.open_webwindow(
-                url=utils.expand_variables(get_changelog_url() + '&theme=$(user_theme)', self.__variables),
+                url=utils.expand_variables(changelog_url),
                 title=utils.localize(STRINGS['sb_changelog_window_title'], self.__settings.language),
                 width=1000,
                 height=650,
