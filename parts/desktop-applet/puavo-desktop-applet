@@ -128,8 +128,6 @@ class ChangelogNotifier(PuavoWidget):
               .replace("%%LANG%%",         self.user_language)     \
               .replace("%%LSBCODENAME%%",  self.lsb_codename)
 
-    print("changelog url is %s" % url)
-
     if url.endswith(".img"):
         # remove the file extension so anchors on the page work
         url = url[:-4]
