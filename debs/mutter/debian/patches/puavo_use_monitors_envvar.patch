@@ -36,3 +36,30 @@ diff -ruN mutter.0/src/backends/meta-monitor-config-migration.c mutter.5/src/bac
        g_clear_error (error);
      }
  
+diff -ruN mutter-3.30.2.build.0/src/backends/meta-monitor-config-store.c mutter-3.30.2.build.5/src/backends/meta-monitor-config-store.c
+--- mutter-3.30.2.build.0/src/backends/meta-monitor-config-store.c	2018-07-14 21:49:25.000000000 +0300
++++ mutter-3.30.2.build.5/src/backends/meta-monitor-config-store.c	2020-06-05 10:23:02.617069089 +0300
+@@ -24,6 +24,7 @@
+ #include "backends/meta-monitor-config-store.h"
+ 
+ #include <gio/gio.h>
++#include <stdlib.h>
+ #include <string.h>
+ 
+ #include "backends/meta-monitor-config-manager.h"
+@@ -1487,9 +1488,14 @@
+   MetaMonitorConfigStore *config_store = META_MONITOR_CONFIG_STORE (object);
+   char *user_file_path;
+   GError *error = NULL;
++  char *monitors_file_path;
++
++  monitors_file_path = getenv("MUTTER_MONITOR_FILENAME");
++  if (monitors_file_path == NULL)
++    monitors_file_path = "monitors.xml";
+ 
+   user_file_path = g_build_filename (g_get_user_config_dir (),
+-                                     "monitors.xml",
++                                     monitors_file_path,
+                                      NULL);
+   config_store->user_file = g_file_new_for_path (user_file_path);
+ 
