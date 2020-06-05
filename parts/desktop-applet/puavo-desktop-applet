@@ -806,18 +806,6 @@ class MonitorsUpdater(PuavoWidget):
 
 
   def send_display_configuration(self, widget):
-    # XXX should monitors-$(hostname -s).xml
-    monitors_xml_path = os.path.join(os.environ['HOME'],
-                                     '.config',
-                                     'monitors.xml')
-    if not os.path.exists(monitors_xml_path):
-      # XXX message icon and translation?
-      self.notify( _tr('Create display configuration first') )
-      subprocess.Popen([ '/usr/bin/gnome-control-center', 'displays' ],
-                       close_fds=True)
-      return
-
-
     cmd = [ '/usr/bin/puavo-send-monitors-xml' ]
     (pid, stdin, stdout, stderr) \
        = GLib.spawn_async(cmd,
@@ -842,13 +830,11 @@ class MonitorsUpdater(PuavoWidget):
       channel.close()
       (pid, status) = os.waitpid(self.send_pid, 0)
       if status != 0:
-        # XXX message icon and translation?
         self.notify(_tr('ERROR'),
-                    _tr('Could not send display configuration'))
+                    _tr('Could not send display configuration.'))
       else:
-        # XXX message icon and translation?
         self.notify(_tr('Success'),
-                    _tr('Display configuration sent successfully'))
+                    _tr('Display configuration sent successfully.'))
       return False
 
     return True
