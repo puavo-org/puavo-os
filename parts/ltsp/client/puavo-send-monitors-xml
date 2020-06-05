@@ -1,82 +1,105 @@
 #!/bin/sh
 
-# we support two cases:
-#   1. running from puavo-desktop-applet on the desktop
-#      with DISPLAY set and kerberos ticket available
-#   2. running as admin (with root through sudo), using device
-#      credentials for authentication
-
 set -eu
 
 usage() {
   echo "Usage: $(basename $0) [user_with_monitors_xml]"
 }
 
+call_gdbus() {
+  local user_with_monitors_xml
+  user_with_monitors_xml="$1"; shift
+
+  if [ "$user_with_monitors_xml" = "$(id -nu)" ]; then
+    "$@" >/dev/null || return 1
+  else
+    if ! user_id=$(id -u "$user_with_monitors_xml"); then
+      echo "Could not determine user id for ${user_with_monitors_xml}" >&2
+      return 1
+    fi
+    sudo -n -u "$user_with_monitors_xml" \
+      env "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/${user_id}/bus" "$@" \
+        >/dev/null || return 1
+  fi
+}
+
 user_with_monitors_xml=${1:-}
+if [ -z "$user_with_monitors_xml" -a -n "${DISPLAY:-}" ]; then
+  user_with_monitors_xml="$(id -nu)"
+fi
+
+# find out user from the current sessions
+if [ -z "$user_with_monitors_xml" ]; then
+  current_user_list=$(who | awk '$2 ~ /^:/ { print $1 }' | xargs -n 1)
+  current_user_count="$(printf "%s" "$current_user_list" | wc -w)"
+  if [ "$current_user_count" -eq 0 ]; then
+    echo 'No current display users' >&2
+    usage >&2
+    exit 1
+  elif [ "$current_user_count" -gt 1 ]; then
+    echo "Multiple current users, choose from: ${current_user_list}" >&2
+    usage >&2
+    exit 1
+  fi
+  user_with_monitors_xml="$current_user_list"
+fi
+
+# ask gnome-shell/mutter to write monitors.xml
+if ! call_gdbus "$user_with_monitors_xml" \
+       gdbus call --session \
+                  --dest=org.gnome.Mutter.DisplayConfig \
+                  --object-path /org/gnome/Mutter/DisplayConfig \
+                  --method org.gnome.Mutter.DisplayConfig.ApplyMonitorsConfig \
+                  0 3 '[]' '[]'; then
+  echo 'Error when running gdbus call' >&2
+  exit 1
+fi
+
+user_home=$(getent passwd | awk -F: -v user="$user_with_monitors_xml" '
+                              $1 == user { print $6 }
+                            ')
+if [ -z "$user_home" ]; then
+  echo "Could not determine user '$user_with_monitors_xml' home directory" >&2
+  exit 1
+fi
 
 if ! this_hostname="$(hostname -s)" || [ -z "$this_hostname" ]; then
   echo 'Could not determine hostname' >&2
   exit 1
 fi
-
-monitors_xml_path=''
-if [ -n "${DISPLAY:-}" ]; then
-  if klist > /dev/null 2>&1; then
-    # We have display connection and a kerberos ticket,
-    # we can use the current user monitors.xml.
-    monitors_xml_path=~/".config/monitors-${this_hostname}.xml"
-    prr_args='--user-krb'
-  else
-    echo 'No kerberos ticket, can not send monitors.xml' >&2
-    exit 1
-  fi
-else
-  if [ -r /etc/puavo/ldap/dn -a -r /etc/puavo/ldap/password ]; then
-    prr_args='--user-etc'
-  else
-    echo 'Can not find/read device credentials for sending monitors.xml' >&2
-    exit 1
-  fi
-
-  if [ -z "$user_with_monitors_xml" ]; then
-    # find out most recent monitors.xml for current users
-    current_user_list=$(who | awk '$2 ~ /^:/ { print $1 }' | xargs -n 1)
-    current_user_count="$(printf "%s" "$current_user_list" | wc -w)"
-    if [ "$current_user_count" -eq 0 ]; then
-      echo 'No current display users' >&2
-      usage >&2
-      exit 1
-    elif [ "$current_user_count" -gt 1 ]; then
-      echo "Multiple current users, choose from: ${current_user_list}" >&2
-      usage >&2
-      exit 1
-    fi
-    user_with_monitors_xml="$current_user_list"
-  fi
-
-  user_home=$(getent passwd | awk -F: -v user="$user_with_monitors_xml" '
-                                $1 == user { print $6 }
-                              ')
-  if [ -z "$user_home" ]; then
-    echo "Could not determine user '$user_with_monitors_xml' home directory" >&2
-    exit 1
-  fi
-  monitors_xml_path="${user_home}/.config/monitors-${this_hostname}.xml"
-fi
+monitors_xml_path="${user_home}/.config/monitors-${this_hostname}.xml"
 
 if ! monitors_xml=$(cat "$monitors_xml_path" 2>/dev/null); then
-  echo "Could not read monitors.xml from ${monitors_xml_path}" >&2
+  echo "Could not read monitor settings from ${monitors_xml_path}" >&2
+  echo 'Maybe try sudo?' >&2
   exit 1
 fi
 
-if ! json=$(jq -n --arg monitors_xml "$monitors_xml" '.["monitors.xml"] = $monitors_xml'); then
+if ! json=$(jq -n --arg monitors_xml "$monitors_xml" \
+              '.["monitors.xml"] = $monitors_xml'); then
   echo 'Could not create json to send' >&2
   exit 1
 fi
 
+if ! klist >/dev/null 2>&1; then
+  ticket_cache=$(mktemp /tmp/puavo-send-monitors-xml.krb5cc.XXXXXX)
+  if [ -z "${SUDO_USER:-}" ] \
+       || ! env KRB5CCNAME="FILE:${ticket_cache}" kinit -f "$SUDO_USER"; then
+    echo 'Could not get a kerberos ticket' >&2
+    rm -f "$ticket_cache"
+    exit 1
+  fi
+fi
+
+status=0
+
 url="/v3/devices/${this_hostname}/monitors"
-if ! puavo-rest-request "$url" --post --writable $prr_args \
+if ! puavo-rest-request "$url" --post --user-krb --writable \
                         -- --data-binary "$json"; then
   echo 'Error in sending monitors data to Puavo' >&2
-  exit 1
+  status=1
 fi
+
+[ -n "${ticket_cache:-}" ] && rm -f "$ticket_cache"
+
+exit $status
