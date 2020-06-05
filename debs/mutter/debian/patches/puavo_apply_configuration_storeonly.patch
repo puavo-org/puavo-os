@@ -1,0 +1,89 @@
+diff -ruN mutter-3.30.2.build.0/src/backends/meta-monitor-manager.c mutter-3.30.2.build.5/src/backends/meta-monitor-manager.c
+--- mutter-3.30.2.build.0/src/backends/meta-monitor-manager.c	2020-05-29 12:22:53.915016508 +0300
++++ mutter-3.30.2.build.5/src/backends/meta-monitor-manager.c	2020-06-04 14:43:16.618577072 +0300
+@@ -448,6 +448,7 @@
+     case META_MONITORS_CONFIG_METHOD_PERSISTENT:
+       meta_monitor_config_manager_set_current (manager->config_manager, config);
+       break;
++    case META_MONITORS_CONFIG_METHOD_STOREONLY:
+     case META_MONITORS_CONFIG_METHOD_VERIFY:
+       break;
+     }
+@@ -1253,8 +1254,9 @@
+ #define LOGICAL_MONITORS_FORMAT "a" LOGICAL_MONITOR_FORMAT
+ 
+ static gboolean
+-meta_monitor_manager_handle_get_current_state (MetaDBusDisplayConfig *skeleton,
+-                                               GDBusMethodInvocation *invocation)
++meta_monitor_manager_handle_current_state (MetaDBusDisplayConfig *skeleton,
++                                           GDBusMethodInvocation *invocation,
++                                           gboolean return_dbus_answer)
+ {
+   MetaMonitorManager *manager = META_MONITOR_MANAGER (skeleton);
+   MetaSettings *settings = meta_backend_get_settings (manager->backend);
+@@ -1469,17 +1471,26 @@
+                              g_variant_builder_end (&max_screen_size_builder));
+     }
+ 
+-  meta_dbus_display_config_complete_get_current_state (
+-    skeleton,
+-    invocation,
+-    manager->serial,
+-    g_variant_builder_end (&monitors_builder),
+-    g_variant_builder_end (&logical_monitors_builder),
+-    g_variant_builder_end (&properties_builder));
++  if (return_dbus_answer) {
++    meta_dbus_display_config_complete_get_current_state (
++      skeleton,
++      invocation,
++      manager->serial,
++      g_variant_builder_end (&monitors_builder),
++      g_variant_builder_end (&logical_monitors_builder),
++      g_variant_builder_end (&properties_builder));
++  }
+ 
+   return TRUE;
+ }
+ 
++static gboolean
++meta_monitor_manager_handle_get_current_state (MetaDBusDisplayConfig *skeleton,
++                                               GDBusMethodInvocation *invocation)
++{
++  return meta_monitor_manager_handle_current_state (skeleton, invocation, 1);
++}
++
+ #undef MODE_FORMAT
+ #undef MODES_FORMAT
+ #undef MONITOR_SPEC_FORMAT
+@@ -1911,6 +1922,18 @@
+   GList *logical_monitor_configs = NULL;
+   GError *error = NULL;
+ 
++  if (method == META_MONITORS_CONFIG_METHOD_STOREONLY) {
++    if (meta_monitor_manager_handle_current_state (skeleton, invocation, 0)) {
++      meta_monitor_config_manager_save_current (manager->config_manager);
++      g_dbus_method_invocation_return_value (invocation, g_variant_new ("()"));
++    } else {
++      g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
++                                             G_DBUS_ERROR_FAILED,
++                                             "Problem in saving the configuration");
++    }
++    return TRUE;
++  }
++
+   if (serial != manager->serial)
+     {
+       g_dbus_method_invocation_return_error (invocation, G_DBUS_ERROR,
+diff -ruN mutter-3.30.2.build.0/src/backends/meta-monitor-manager-private.h mutter-3.30.2.build.5/src/backends/meta-monitor-manager-private.h
+--- mutter-3.30.2.build.0/src/backends/meta-monitor-manager-private.h	2018-11-09 15:28:20.000000000 +0200
++++ mutter-3.30.2.build.5/src/backends/meta-monitor-manager-private.h	2020-06-04 14:26:39.334377675 +0300
+@@ -83,7 +83,8 @@
+ {
+   META_MONITORS_CONFIG_METHOD_VERIFY = 0,
+   META_MONITORS_CONFIG_METHOD_TEMPORARY = 1,
+-  META_MONITORS_CONFIG_METHOD_PERSISTENT = 2
++  META_MONITORS_CONFIG_METHOD_PERSISTENT = 2,
++  META_MONITORS_CONFIG_METHOD_STOREONLY = 3
+ } MetaMonitorsConfigMethod;
+ 
+ /* Equivalent to the 'layout-mode' enum in org.gnome.Mutter.DisplayConfig */
