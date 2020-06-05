@@ -42,7 +42,7 @@ fi
 temp_dir=$(mktemp -d -t thumbnailer-XXXXXXXX)
 echo "Using temporary directory \"$temp_dir\""
 
-find "$src_dir" -type f -iregex ".*\.\(gif\|png\|jpg\|jpeg\|svg\)" | while read -r i; do
+find -L "$src_dir" -type f -iregex ".*\.\(gif\|png\|jpg\|jpeg\|svg\)" | while read -r i; do
     echo "Thumbnailing \"$i\""
     out=$(XDG_CACHE_HOME="$temp_dir" thumb "$i")
     mv "$temp_dir/thumbnails/large/$out.png" "$dst_dir/$out.png"

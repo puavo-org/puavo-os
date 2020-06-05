@@ -1783,8 +1783,8 @@ StScrollBar {
 
 .framed-user-icon {
   background-size: contain;
-  border: 0px solid transparent;
-  color: #5c616c;
+  border: 2px solid transparent;
+  color: white;
   border-radius: 2px; }
   .framed-user-icon:hover {
     border-color: transparent;
@@ -1851,9 +1851,10 @@ StScrollBar {
       color: #BAC3CF; }
 
 .login-dialog-not-listed-label {
-  font-size: 9pt;
+  font-size: 11pt;
   font-weight: bold;
-  color: #62758e;
+  color: white;
+  text-shadow: rgba(0, 0, 0, 1) 2px 2px 1px;
   padding-top: 1em; }
 
 .login-dialog-user-list-view {
@@ -1864,7 +1865,7 @@ StScrollBar {
   padding: .2em;
   width: 23em; }
   .login-dialog-user-list:expanded .login-dialog-user-list-item:focus {
-    background-color: #5294e2;
+    background-color: rgba(255, 255, 255, 0.4);
     color: #ffffff; }
   .login-dialog-user-list:expanded .login-dialog-user-list-item:logged-in {
     border-right: 2px solid #5294e2; }
@@ -1889,10 +1890,11 @@ StScrollBar {
 
 .login-dialog-username,
 .user-widget-label {
-  color: #BAC3CF;
-  font-size: 12pt;
+  font-size: 16pt;
   font-weight: bold;
   text-align: left;
+  text-shadow: rgba(0, 0, 0, 1) 1px 1px 1px;
+  color: white;
   padding-left: 15px; }
 
 .user-widget-label:ltr {
@@ -1902,13 +1904,13 @@ StScrollBar {
   padding-right: 18px; }
 
 .login-dialog-prompt-layout {
-  padding-top: 4px;
+  padding-top: 20px;
   padding-bottom: 30px;
   spacing: 8px;
   width: 23em;
   padding-left:3em;
   padding-right:3em;
-  background-color: rgba(0,0,0,0.65);
+  background-color: rgba(0,0,0,0.45);
   border-radius: 5px;}
 
 .login-dialog-prompt-entry:insensitive {

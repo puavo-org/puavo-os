@@ -115,7 +115,7 @@ entry {
 
 /* Menu buttons */
 .button_menu {
-    border: 1px solid alpha(@theme_selected_bg_color, 0.5);
+    border: 0px solid alpha(@theme_selected_bg_color, 0.5);
     font-style: italic;
 }
 

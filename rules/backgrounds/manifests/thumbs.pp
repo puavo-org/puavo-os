@@ -11,8 +11,64 @@ class backgrounds::thumbs {
       'id'   => 'backgrounds'
     },
     {
-      'path' => '/usr/share/desktop-base',
-      'id'   => 'desktop-base'
+      'path' => '/usr/share/desktop-base/futureprototype-theme/login',
+      'id'   => 'desktop-base-futureprototype-login'
+    },
+    {
+      'path' => '/usr/share/desktop-base/futureprototype-theme/wallpaper',
+      'id'   => 'desktop-base-futureprototype-wallpaper'
+    },
+    {
+      'path' => '/usr/share/desktop-base/futureprototype-theme/wallpaper-withlogo',
+      'id'   => 'desktop-base-futureprototype-wallpaper-withlogo'
+    },
+    {
+      'path' => '/usr/share/desktop-base/joy-theme/login',
+      'id'   => 'desktop-base-joy-theme-login'
+    },
+    {
+      'path' => '/usr/share/desktop-base/joy-theme/wallpaper',
+      'id'   => 'desktop-base-joy-theme-wallpaper'
+    },
+    {
+      'path' => '/usr/share/desktop-base/lines-theme/login',
+      'id'   => 'desktop-base-lines-theme-login'
+    },
+    {
+      'path' => '/usr/share/desktop-base/lines-theme/wallpaper',
+      'id'   => 'desktop-base-lines-theme-wallpaper'
+    },
+    {
+      'path' => '/usr/share/desktop-base/lines-theme/lockscreen',
+      'id'   => 'desktop-base-lines-theme-lockscreen'
+    },
+    {
+      'path' => '/usr/share/desktop-base/moonlight-theme/login',
+      'id'   => 'desktop-base-moonlight-theme-login'
+    },
+    {
+      'path' => '/usr/share/desktop-base/moonlight-theme/wallpaper',
+      'id'   => 'desktop-base-moonlight-theme-wallpaper'
+    },
+    {
+      'path' => '/usr/share/desktop-base/moonlight-theme/lockscreen',
+      'id'   => 'desktop-base-moonlight-theme-lockscreen'
+    },
+    {
+      'path' => '/usr/share/desktop-base/softwaves-theme/login',
+      'id'   => 'desktop-base-softwaves-theme-login'
+    },
+    {
+      'path' => '/usr/share/desktop-base/softwaves-theme/wallpaper',
+      'id'   => 'desktop-base-softwaves-theme-wallpaper'
+    },
+    {
+      'path' => '/usr/share/desktop-base/softwaves-theme/lockscreen',
+      'id'   => 'desktop-base-softwaves-theme-lockscreen'
+    },
+    {
+      'path' => '/usr/share/desktop-base/spacefun-theme/login',
+      'id'   => 'desktop-base-spacefun-theme-login'
     }
   ]
 

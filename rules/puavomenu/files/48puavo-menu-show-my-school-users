@@ -2,7 +2,6 @@ case "$(jq -r .user.user_type "$PUAVO_SESSION_PATH")" in
   admin|staff|teacher)
     if [ "$(puavo-conf puavo.puavomenu.show_my_school_users)" = 'true' ]; then
       export PUAVO_MENU_SHOW_MY_SCHOOL_USERS=1
-      export PUAVO_WEBMENU_SHOW_MY_SCHOOL_USERS=1
     fi
   ;;
 esac
