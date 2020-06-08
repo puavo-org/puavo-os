@@ -11,6 +11,12 @@ require 'puavo/execute'
 
 
 organisation_name = ARGV.first
+
+if organisation_name.nil? || organisation_name.empty? then
+  warn "Usage: #{ $0 } organisation|--all"
+  exit 1
+end
+
 puts "******************************************************"
 puts "  Initialising organisation: #{organisation_name}"
 puts "******************************************************"
