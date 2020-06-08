@@ -7,7 +7,7 @@ if [ -n "${X2GO_SESSION:-}" ]; then
     fi
 fi
 
-if [ "$(jq -r .user.user_type "$PUAVO_SESSION_PATH")" = 'staff' ]; then
+if [ "$(jq -r .user.user_type "$PUAVO_SESSION_PATH")" = 'admin' ]; then
   export PUAVO_PERSISTENT_DISPLAY_MANAGEMENT=true
 fi
 
