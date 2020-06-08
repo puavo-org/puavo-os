@@ -45,9 +45,9 @@ def update_acls(suffix)
         }
       end
       ldap_search = true
-    rescue LDAP::ResultError
-      conn.perror("LDAP connection failed")
-      puts "LDAP connection failed, press enter to try again"
+    rescue LDAP::ResultError => e
+      warn "LDAP connection failed: #{ e.message }"
+      warn "Press enter to try again"
       STDIN.gets
     end
   end
@@ -103,9 +103,8 @@ if organisation_name.eql?("--all")
         }
       }
 
-      rescue LDAP::ResultError
-        conn.perror("LDAP connection failed")
-        puts "LDAP connection failed"
+      rescue LDAP::ResultError => e
+        warn "LDAP connection failed: #{ e.message }"
       end  
   end
 else
