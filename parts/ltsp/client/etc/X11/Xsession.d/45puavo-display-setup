@@ -9,6 +9,6 @@ fi
 
 if [ "$(jq -r .user.user_type "$PUAVO_SESSION_PATH")" = 'staff' ]; then
   export PUAVO_PERSISTENT_DISPLAY_MANAGEMENT=true
-esac
+fi
 
 export MUTTER_MONITOR_FILENAME="monitors-$(hostname).xml"
