@@ -12,3 +12,16 @@ if [ "$(jq -r .user.user_type "$PUAVO_SESSION_PATH")" = 'admin' ]; then
 fi
 
 export MUTTER_MONITOR_FILENAME="monitors-$(hostname).xml"
+
+if [ "$(puavo-conf puavo.displays.forced)" = 'true' ]; then
+  monitors_xml_path=~/".config/${MUTTER_MONITOR_FILENAME}"
+  monitors_xml=$(jq -r .monitors_xml /etc/puavo/device.json)
+  case "$monitors_xml" in
+    ''|null)
+      rm -f "$monitors_xml_path"
+      ;;
+    *)
+      printf "%s" "$monitors_xml" > "$monitors_xml_path"
+      ;;
+  esac
+fi
