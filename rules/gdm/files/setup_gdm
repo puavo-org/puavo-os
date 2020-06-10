@@ -2,7 +2,9 @@
 
 set -eu
 
-puavo-template /etc/gdm3/daemon.conf <<'EOF'
+status=0
+
+puavo-template /etc/gdm3/daemon.conf <<'EOF' || status=1
 # GDM configuration storage
 #
 # See /usr/share/gdm/gdm.schemas for a list of available options.
@@ -34,11 +36,10 @@ AutomaticLogin = guest{else}#  AutomaticLoginEnable = true
 #Enable=true
 EOF
 
-primary_user=$(puavo-conf puavo.admin.primary_user)
-
+primary_user=$(puavo-conf puavo.admin.primary_user) || status=1
 if [ -n "$primary_user" ]; then
   if [ ! -e "/var/lib/AccountsService/users/${primary_user}" ]; then
-    cat <<'EOF' > "/var/lib/AccountsService/users/${primary_user}"
+    cat <<'EOF' > "/var/lib/AccountsService/users/${primary_user}" || status=1
 [User]
 Language=
 XSession=
@@ -50,7 +51,7 @@ else
   disable_user_list=true
 fi
 
-puavo-template /etc/gdm3/greeter.dconf-defaults <<EOF
+puavo-template /etc/gdm3/greeter.dconf-defaults <<EOF || status=1
 # These are dconf-settings for gdm.
 # Some that work in a desktop session might not work here.
 
@@ -86,4 +87,18 @@ enabled-extensions=['appindicatorsupport@rgcjonas.gmail.com', 'bottompanel@tmoer
 name='Arc'
 EOF
 
-dconf compile /var/lib/gdm3/greeter-dconf-defaults /usr/share/gdm/dconf
+dconf compile /var/lib/gdm3/greeter-dconf-defaults /usr/share/gdm/dconf || status=1
+
+monitors_xml=$(jq -r .monitors_xml /etc/puavo/device.json) || status=1
+monitors_xml_path="/var/lib/gdm3/.config/monitors.xml"
+case "$monitors_xml" in
+  ''|null)
+    rm -f "$monitors_xml_path"
+    ;;
+  *)
+    install -o Debian-gdm -g Debian-gdm -m 644 /dev/null "$monitors_xml_path"
+    printf "%s" "$monitors_xml" > "$monitors_xml_path"
+    ;;
+esac
+
+exit $status
