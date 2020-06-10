@@ -28,9 +28,10 @@ if [ -z "$user_with_monitors_xml" -a -n "${DISPLAY:-}" ]; then
   user_with_monitors_xml="$(id -nu)"
 fi
 
+current_user_list=$(who | awk '$2 ~ /^:/ { print $1 }' | xargs -n 1)
+
 # find out user from the current sessions
 if [ -z "$user_with_monitors_xml" ]; then
-  current_user_list=$(who | awk '$2 ~ /^:/ { print $1 }' | xargs -n 1)
   current_user_count="$(printf "%s" "$current_user_list" | wc -w)"
   if [ "$current_user_count" -eq 0 ]; then
     echo 'No current display users' >&2
@@ -44,15 +45,17 @@ if [ -z "$user_with_monitors_xml" ]; then
   user_with_monitors_xml="$current_user_list"
 fi
 
-# ask gnome-shell/mutter to write monitors.xml
-if ! call_gdbus "$user_with_monitors_xml" \
-       gdbus call --session \
-                  --dest=org.gnome.Mutter.DisplayConfig \
-                  --object-path /org/gnome/Mutter/DisplayConfig \
-                  --method org.gnome.Mutter.DisplayConfig.ApplyMonitorsConfig \
-                  0 3 '[]' '[]'; then
-  echo 'Error when running gdbus call' >&2
-  exit 1
+if printf "%s" "$current_user_list" | grep -qw "$user_with_monitors_xml"; then
+  # if user has a session, ask gnome-shell/mutter to write monitors.xml
+  if ! call_gdbus "$user_with_monitors_xml" \
+         gdbus call --session \
+                    --dest=org.gnome.Mutter.DisplayConfig \
+                    --object-path /org/gnome/Mutter/DisplayConfig \
+                    --method org.gnome.Mutter.DisplayConfig.ApplyMonitorsConfig \
+                    0 3 '[]' '[]'; then
+    echo 'Error when running gdbus call' >&2
+    exit 1
+  fi
 fi
 
 user_home=$(getent passwd | awk -F: -v user="$user_with_monitors_xml" '
