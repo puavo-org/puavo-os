@@ -94,8 +94,8 @@ fi
 status=0
 
 url="/v3/devices/${this_hostname}/monitors"
-if ! puavo-rest-request "$url" --post --user-krb --writable \
-                        -- --data-binary "$json"; then
+if ! puavo-rest-request "$url" --post --user-krb --writable -- \
+       --data-binary "$json" -H 'Content-Type: application/json'; then
   echo 'Error in sending monitors data to Puavo' >&2
   status=1
 fi
