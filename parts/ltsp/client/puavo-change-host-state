@@ -1,0 +1,69 @@
+#!/usr/bin/ruby -T
+
+require 'fileutils'
+require 'getoptlong'
+require 'json'
+
+unless ENV['SUDO_USER'] then
+  warn 'Not run through sudo, exiting...'
+  exit 1
+end
+
+sudo_user = "#{ ENV['SUDO_USER'] }".untaint
+
+puavo_desktop_path = "/var/lib/puavo-desktop/users/#{ sudo_user }/puavo_session.json"
+
+begin
+  parsed = JSON.parse( IO.read(puavo_desktop_path) )
+rescue Errno::ENOENT => e
+  warn "#{ puavo_desktop_path } does not exist"
+  exit 1
+end
+
+unless parsed.has_key?('user') && parsed['user'].kind_of?(Hash) then
+  warn "No user key (hash) found in #{ puavo_desktop_path }"
+  exit 1
+end
+
+user = parsed['user']
+
+unless user.has_key?('user_type') && user['user_type'].kind_of?(String) then
+  warn "No user type (String) found in #{ puavo_desktop_path }"
+  exit 1
+end
+
+user_type = user['user_type']
+
+unless user_type == 'admin' then
+  warn 'You have no permission to run this tool'
+  exit 1
+end
+
+monitors_xml = nil
+
+opts = GetoptLong.new([ '--monitors-xml', GetoptLong::REQUIRED_ARGUMENT ])
+opts.each do |opt, arg|
+  case opt
+  when '--monitors-xml'
+    monitors_xml = arg
+  end
+end
+
+status = 0
+
+if monitors_xml then
+  monitors_xml_path = '/var/lib/gdm3/.config/monitors.xml'
+  begin
+    tmpfile_path = "#{ monitors_xml_path }.tmp"
+    File.open(tmpfile_path, 'w') do |f|
+      f.write(monitors_xml)
+      FileUtils.chown('Debian-gdm', 'Debian-gdm', tmpfile_path)
+    end
+    FileUtils.mv(tmpfile_path, monitors_xml_path)
+  rescue StandardError => e
+    warn "Problem in writing #{ monitors_xml_path }"
+    status = 1
+  end
+end
+
+exit(status)

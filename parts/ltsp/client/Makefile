@@ -29,6 +29,7 @@ installdirs :
 	mkdir -p $(DESTDIR)$(sysconfdir)/network/if-up.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/NetworkManager/dispatcher.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/ssh
+	mkdir -p $(DESTDIR)$(sysconfdir)/sudoers.d
 	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system
 	mkdir -p $(DESTDIR)$(sysconfdir)/systemd/system/multi-user.target.wants
 	mkdir -p $(DESTDIR)$(sysconfdir)/xdg/autostart
@@ -64,6 +65,7 @@ install : installdirs
 		xsessions/*
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(bindir) \
+		puavo-change-host-state \
 		puavo-pulseaudio-get-puavoconf \
 		puavo-pulseaudio-list \
 		puavo-pulseaudio-setup \
@@ -92,6 +94,9 @@ install : installdirs
 
 	$(INSTALL_DATA) -t $(DESTDIR)/lib/udev/rules.d \
 		udev/rules.d/80-puavo-printers.rules
+
+	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/sudoers.d \
+		etc/sudoers.d/puavo-ltsp-client
 
 	$(INSTALL_DATA) -t $(DESTDIR)$(sysconfdir)/X11/Xsession.d \
 		etc/X11/Xsession.d/*

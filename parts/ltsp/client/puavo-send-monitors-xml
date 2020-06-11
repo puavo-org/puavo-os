@@ -77,6 +77,8 @@ if ! monitors_xml=$(cat "$monitors_xml_path" 2>/dev/null); then
   echo 'Maybe try sudo?' >&2
   exit 1
 fi
+monitors_xml="${monitors_xml}
+"
 
 if ! json=$(jq -n --arg monitors_xml "$monitors_xml" \
               '.["monitors.xml"] = $monitors_xml'); then
@@ -101,6 +103,8 @@ if ! puavo-rest-request "$url" --post --user-krb --writable -- \
        --data-binary "$json" -H 'Content-Type: application/json'; then
   echo 'Error in sending monitors data to Puavo' >&2
   status=1
+else
+  sudo -n puavo-change-host-state --monitors-xml "$monitors_xml" || status=1
 fi
 
 [ -n "${ticket_cache:-}" ] && rm -f "$ticket_cache"
