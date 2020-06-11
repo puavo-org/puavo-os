@@ -4,39 +4,41 @@ require 'fileutils'
 require 'getoptlong'
 require 'json'
 
-unless ENV['SUDO_USER'] then
-  warn 'Not run through sudo, exiting...'
-  exit 1
+def check_permissions
+  unless ENV['SUDO_USER'] then
+    warn 'Not run through sudo'
+    return false
+  end
+
+  return true if ENV['SUDO_USER'] == 'root'
+
+  sudo_user = "#{ ENV['SUDO_USER'] }".untaint
+  puavo_desktop_path = "/var/lib/puavo-desktop/users/#{ sudo_user }/puavo_session.json"
+
+  begin
+    parsed = JSON.parse( IO.read(puavo_desktop_path) )
+  rescue Errno::ENOENT => e
+    warn "#{ puavo_desktop_path } does not exist"
+    return false
+  end
+
+  unless parsed.has_key?('user') && parsed['user'].kind_of?(Hash) then
+    warn "No user key (hash) found in #{ puavo_desktop_path }"
+    return false
+  end
+
+  user = parsed['user']
+  unless user.has_key?('user_type') && user['user_type'].kind_of?(String) then
+    warn "No user type (String) found in #{ puavo_desktop_path }"
+    return false
+  end
+
+  return (user['user_type'] == 'admin')
 end
 
-sudo_user = "#{ ENV['SUDO_USER'] }".untaint
-
-puavo_desktop_path = "/var/lib/puavo-desktop/users/#{ sudo_user }/puavo_session.json"
-
-begin
-  parsed = JSON.parse( IO.read(puavo_desktop_path) )
-rescue Errno::ENOENT => e
-  warn "#{ puavo_desktop_path } does not exist"
-  exit 1
-end
-
-unless parsed.has_key?('user') && parsed['user'].kind_of?(Hash) then
-  warn "No user key (hash) found in #{ puavo_desktop_path }"
-  exit 1
-end
-
-user = parsed['user']
-
-unless user.has_key?('user_type') && user['user_type'].kind_of?(String) then
-  warn "No user type (String) found in #{ puavo_desktop_path }"
-  exit 1
-end
-
-user_type = user['user_type']
-
-unless user_type == 'admin' then
+unless check_permissions() then
   warn 'You have no permission to run this tool'
-  exit 1
+  exit(1)
 end
 
 monitors_xml = nil
