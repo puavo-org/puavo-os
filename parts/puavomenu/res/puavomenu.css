@@ -8,19 +8,22 @@
 /* Main window */
 #root {
     background: alpha(@theme_bg_color, 0.95);
-    border-radius: 0 10px 0 0;
+    border-radius: 5px;
     border: 1px solid @borders;
 }
 
 /* Menu container (ie. "left side") */
-#menubox { }
+#menubox { 
+    background: alpha(@theme_bg_color, 1);
+    border-radius: 10px;
+    padding-left: 5px;
+}
 
 /* The category selector */
 #category {
     border: 0;
     background: none;
     box-shadow: none;
-    font-size: 110%;
     font-weight: normal;
 }
 
@@ -40,6 +43,7 @@
 
 #category tab {
     border: 0;
+    border-radius: 5px 5px 0px 0px;
     box-shadow: none;
     margin: 0 1px 0 0;
     padding: 5px 15px;
@@ -64,7 +68,6 @@
 
 /* The search box */
 entry {
-    border-radius: 0;
 }
 
 /* Title of the current menu */
@@ -89,7 +92,9 @@ entry {
 #sidebar { }
 
 /* The host info label */
-#hostinfo { }
+#hostinfo { 
+    font-size:0.9em;
+}
 
 /* Base menu button class */
 .pm_button {
@@ -115,7 +120,8 @@ entry {
 
 /* Menu buttons */
 .button_menu {
-    border: 0px solid alpha(@theme_selected_bg_color, 0.5);
+    background: alpha(@borders, 0.4);
+    border-radius: 20;
     font-style: italic;
 }
 
@@ -138,8 +144,6 @@ entry {
 
 /* User avatar button */
 .button_avatar {
-    text-shadow: 2px 2px 2px #000, 0 0 2px #000, 0 0 2px #000;
-    color: @theme_selected_fg_color;
     font-size: 120%;
     font-weight: bold;
     border-radius: 0 5px 0 0;
