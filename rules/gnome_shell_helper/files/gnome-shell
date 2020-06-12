@@ -26,6 +26,11 @@ until monitor_is_connected; do
   sleep 2
 done
 
+puavo_displays_setup=$(puavo-conf puavo.displays.setup)
+if [ -n "$puavo_displays_setup" ]; then
+  export MUTTER_DISPLAY_SETUP="$puavo_displays_setup"
+fi
+
 # Not using exec, because this "gnome-shell"
 # process must exist so that "adm-x" tool finds us.
 # XXX It pgreps the exact command-line arguments, so do not change shell

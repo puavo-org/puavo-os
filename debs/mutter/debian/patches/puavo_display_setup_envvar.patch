@@ -1,0 +1,31 @@
+diff -ruN mutter-3.30.2.orig/src/backends/meta-monitor-manager.c mutter-3.30.2/src/backends/meta-monitor-manager.c
+--- mutter-3.30.2.orig/src/backends/meta-monitor-manager.c	2020-06-12 09:17:59.000000000 +0300
++++ mutter-3.30.2/src/backends/meta-monitor-manager.c	2020-06-12 10:04:26.143001463 +0300
+@@ -487,6 +487,8 @@
+   MetaMonitorsConfigMethod method;
+   MetaMonitorsConfigMethod fallback_method =
+     META_MONITORS_CONFIG_METHOD_TEMPORARY;
++  MetaMonitorSwitchConfigType config_type;
++  char *display_setup;
+ 
+   use_stored_config = should_use_stored_config (manager);
+   if (use_stored_config)
+@@ -561,7 +563,17 @@
+       g_clear_object (&config);
+     }
+ 
+-  config = meta_monitor_config_manager_create_linear (manager->config_manager);
++  display_setup = getenv("MUTTER_DISPLAY_SETUP");
++  config_type =
++    display_setup
++      ? (strcmp(display_setup, "all-mirror") == 0 ? META_MONITOR_SWITCH_CONFIG_ALL_MIRROR :
++         strcmp(display_setup, "external"  ) == 0 ? META_MONITOR_SWITCH_CONFIG_EXTERNAL   :
++         strcmp(display_setup, "builtin"   ) == 0 ? META_MONITOR_SWITCH_CONFIG_BUILTIN    :
++                                                    META_MONITOR_SWITCH_CONFIG_ALL_LINEAR)
++      : META_MONITOR_SWITCH_CONFIG_ALL_LINEAR;
++
++  config = meta_monitor_config_manager_create_for_switch_config(
++    manager->config_manager, config_type);
+   if (config)
+     {
+       if (!meta_monitor_manager_apply_monitors_config (manager,
