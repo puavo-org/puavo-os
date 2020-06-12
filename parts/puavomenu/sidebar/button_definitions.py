@@ -9,7 +9,7 @@ SB_CHANGE_PASSWORD = {
 
     'title': STRINGS['sb_change_password'],
 
-    'icon': '/usr/share/icons/Faenza/emblems/96/emblem-readonly.png',
+    'icon': '/usr/share/icons/Tela/22/emblems/emblem-readonly.svg',
 
     'command': {
         'type': 'webwindow',
@@ -29,7 +29,7 @@ SB_SUPPORT = {
 
     'title': STRINGS['sb_support'],
 
-    'icon': '/usr/share/icons/Faenza/status/96/dialog-question.png',
+    'icon': '/usr/share/icons/Tela/22/emblems/emblem-question.svg',
 
     'command': {
         'type': 'url',
@@ -43,7 +43,7 @@ SB_LAPTOP_SETTINGS = {
 
     'title': STRINGS['sb_laptop_setup'],
 
-    'icon': '/usr/share/icons/Faenza/devices/96/drive-harddisk-system.png',
+    'icon': '/usr/share/icons/Tela/32/devices/computer-laptop.svg',
 
     'command': {
         'type': 'command',
@@ -56,7 +56,7 @@ SB_PUAVOPKG_INSTALLER = {
 
     'title': STRINGS['sb_puavopkg_installer'],
 
-    'icon': '/usr/share/icons/Faenza/apps/48/system-installer.png',
+    'icon': '/usr/share/icons/Tela/scalable/apps/system-software-install.svg',
 
     'command': {
         'type': 'command',
@@ -69,7 +69,7 @@ SB_SYSTEM_SETTINGS = {
 
     'title': STRINGS['sb_system_settings'],
 
-    'icon': '/usr/share/icons/Faenza/categories/96/applications-system.png',
+    'icon': '/usr/share/icons/Tela/scalable/apps/systemsettings.svg',
 
     'command': {
         'type': 'command',
@@ -82,7 +82,7 @@ SB_LOCK_SCREEN = {
 
     'title': STRINGS['sb_lock_screen'],
 
-    'icon': '/usr/share/icons/Faenza/actions/96/system-lock-screen.png',
+    'icon': '/usr/share/icons/Tela/scalable/apps/system-lock-screen.svg',
 
     'command': {
         'type': 'command',
@@ -101,7 +101,7 @@ SB_SLEEP_MODE = {
 
     'title': STRINGS['sb_hibernate'],
 
-    'icon': '/usr/share/icons/oxygen/base/32x32/actions/system-suspend-hibernate.png',
+    'icon': '/usr/share/icons/Tela/scalable/apps/system-suspend-hibernate.svg',
 
     'command': {
         'type': 'command',
@@ -122,7 +122,7 @@ SB_LOGOUT = {
 
     'title': STRINGS['sb_logout'],
 
-    'icon': '/usr/share/icons/gnome/32x32/actions/gnome-session-logout.png',
+    'icon': '/usr/share/icons/Papirus/64x64/apps/gnome-logout.svg',
 
     'command': {
         'type': 'command',
@@ -135,7 +135,7 @@ SB_RESTART = {
 
     'title': STRINGS['sb_restart'],
 
-    'icon': '/usr/share/icons/oxygen/base/32x32/actions/system-reboot.png',
+    'icon': '/usr/share/icons/Tela/scalable/apps/system-restart.svg',
 
     'command': {
         'type': 'command',
@@ -148,7 +148,7 @@ SB_SHUTDOWN = {
 
     'title': STRINGS['sb_shutdown'],
 
-    'icon': '/usr/share/icons/oxygen/base/32x32/actions/system-shutdown.png',
+    'icon': '/usr/share/icons/Tela/scalable/apps/system-shutdown.svg',
 
     'command': {
         'type': 'command',
