@@ -252,12 +252,10 @@ darkdm_live() {
 
 darkdm_menu()
 {
-    local command
-    local initial_command
-    local prompt
+    local command forced initial_command prompt
 
     initial_command=$1
-    shift
+    forced=$2
 
     while true; do
 	echo "$systeminfo"
@@ -269,13 +267,16 @@ darkdm_menu()
             prompt='> '
         fi
 
-	read -e -p "$prompt" command command_args || return 1
+        if [ "$forced" = '--force' ]; then
+          command="$initial_command"
+        else
+	  read -e -p "$prompt" command command_args || return 1
+          if [ -z "$command" -a -n "$initial_command" ]; then
+            command="$initial_command"
+          fi
+        fi
 
-	if [ -z "$command" -a -n "$initial_command" ]; then
-	    command="$initial_command"
-	fi
-
-	case "${command}" in
+	case "$command" in
 	    build)
 		darkdm_build
 		;;
@@ -332,8 +333,29 @@ darkdm_menu()
     done
 }
 
+check_forced_operation() {
+  local forced_operation image_server preseed_json
+
+  if ! image_server=$(/usr/lib/puavo-ltsp-client/lookup-image-server-by-dns); then
+    return 1
+  fi
+
+  preseed_url="https://${image_server}/preseeds/index.json"
+  if ! preseed_json=$(curl --cacert /etc/puavo-conf/rootca.pem --fail \
+                        --show-error --silent "$preseed_url"); then
+    return 1
+  fi
+
+  forced_operation=$(printf %s "$preseed_json" | jq -r '.["force-operation"]')
+  if [ "$forced_operation" = 'null']; then forced_operation=''; fi
+  if [ "$forced_operation" = '' ]; then return 1; fi
+
+  printf "%s" "$forced_operation"
+}
+
 darkdm_main()
 {
+    local forced
     local hosttype
     local initial_command
 
@@ -350,8 +372,15 @@ darkdm_main()
 	    ;;
     esac
 
-    darkdm_menu "${initial_command}"
+    forced=''
+    if forced_operation=$(check_forced_operation 2>/dev/null); then
+      initial_command="$forced_operation"
+      forced='--force'
+    fi
+
+    darkdm_menu "$initial_command" "$forced"
 }
+
 
 echo 'Gathering system information...'
 echo
