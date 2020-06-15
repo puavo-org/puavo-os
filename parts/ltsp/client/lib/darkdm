@@ -258,7 +258,7 @@ darkdm_menu()
 
   while true; do
     echo "$systeminfo"
-    darkdm_print_help
+    darkdm_print_help || return 1
 
     if [ -n "$initial_command" ]; then
       prompt="[${initial_command}]> "
@@ -277,53 +277,54 @@ darkdm_menu()
 
     case "$command" in
       build)
-        darkdm_build
+        darkdm_build || return 1
         ;;
       install)
-        darkdm_install
+        darkdm_install || return 1
         ;;
       kbd)
-        darkdm_kbd "$command_args"
+        darkdm_kbd "$command_args" || return 1
         ;;
       live)
-        darkdm_live
+        darkdm_live || return 1
         ;;
       make-install-disk)
-        puavo-make-install-disk
+        puavo-make-install-disk || return 1
         ;;
       nmtui)
         if [ ! -x /usr/bin/nmtui ]; then
           echo 'nmtui not available' >&2
+          return 1
         else
-          nmtui || true
+          nmtui || return 1
         fi
         ;;
       poweroff)
-        darkdm_poweroff
+        darkdm_poweroff || return 1
         ;;
       preinstall)
-        darkdm_install preinstall
+        darkdm_install preinstall || return 1
         ;;
       preseed-preinstall)
-        darkdm_install preseed-preinstall
+        darkdm_install preseed-preinstall || return 1
         ;;
       preseed-install|pi)
-        darkdm_install preseed-install
+        darkdm_install preseed-install || return 1
         ;;
       reboot)
-        darkdm_reboot
+        darkdm_reboot || return 1
         ;;
       restoredisk)
-        puavo-disk-clone restoredisk
+        puavo-disk-clone restoredisk || return 1
         ;;
       savedisk)
-        puavo-disk-clone savedisk
+        puavo-disk-clone savedisk || return 1
         ;;
       shell)
-        darkdm_shell
+        darkdm_shell || return 1
         ;;
       update)
-        darkdm_update
+        darkdm_update || return 1
         ;;
       *)
         echo "Error: Invalid command '${command}'." >&2
@@ -359,7 +360,7 @@ darkdm_main()
   local initial_command
 
   hosttype=$(cat /etc/puavo/hosttype)
-  case "${hosttype}" in
+  case "$hosttype" in
     laptop|wirelessaccesspoint)
       initial_command='update'
       ;;
@@ -377,7 +378,7 @@ darkdm_main()
     forced='--force'
   fi
 
-  darkdm_menu "$initial_command" "$forced"
+  darkdm_menu "$initial_command" "$forced" || return 1
 }
 
 
@@ -389,7 +390,7 @@ while true; do
   if darkdm_main; then
     echo 'Operation was a success.'
   else
-    echo "Operation failed with error code $?."
+    echo 'Operation failed.'
   fi
 
   echo 'Press ENTER to continue.'
