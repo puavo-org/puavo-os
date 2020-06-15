@@ -63,12 +63,34 @@ ask_preseed() {
       return 1
   fi
 
-  echo 'Choose a preseed:'
-  if ! chosen_preseed=$(printf %s "$preseed_choices" \
-                          | fzf --height=1 --layout=reverse-list) \
-    || [ -z "$chosen_preseed" ]; then
-      echo 'Problem when choosing preseed' >&2
-      return 1
+  if ! forced_preseed=$(printf %s "$preseed_json" \
+                          | jq -r '.["force-preseed"]'); then
+    echo "Could not read forced preseed from json" >&2
+    return 1
+  fi
+  if [ "$forced_preseed" = 'null' ]; then
+    forced_preseed=''
+  fi
+
+  echo
+  chosen_preseed=''
+  if [ -n "$forced_preseed" ]; then
+    if printf %s "$preseed_choices" | grep -qw "$forced_preseed"; then
+      echo -n "Forcing a preseed: '${forced_preseed}' "
+      sleep 1; echo -n .; sleep 1; echo -n .; sleep 1; echo -n .; echo ' GO!'
+      chosen_preseed="$forced_preseed"
+    else
+      echo "Could not force preseed '${forced_preseed}', it does not exist!" >&2
+    fi
+  fi
+  if [ -z "$chosen_preseed" ]; then
+    echo 'Choose a preseed:'
+    if ! chosen_preseed=$(printf %s "$preseed_choices" \
+                            | fzf --height=1 --layout=reverse-list) \
+      || [ -z "$chosen_preseed" ]; then
+        echo 'Problem when choosing preseed' >&2
+        return 1
+    fi
   fi
 
   preseed_admin_user=$(get_preseed_variable admin_user "$chosen_preseed" \
