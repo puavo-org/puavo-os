@@ -86,7 +86,6 @@ darkdm_systeminfo()
   cpu_text="$(facter processors.count) CPUs / ${cpu}"
   colorized_cpu=$(colorize 1 2 3 "$(get_cpu_value "$cpu")" "$cpu_text")
 
-
   cat <<EOF
 image:   ${this_image}
 release: ${this_release}
@@ -106,32 +105,32 @@ EOF
 
 darkdm_reboot()
 {
-    local i
+  local i
 
-    for i in $(seq 5 -1 1); do
-        echo -n -e "\rRebooting in ${i}s. (Press Ctrl-C to cancel)"
-        sleep 1 || return 1
-    done
-    echo -e "\rRebooting now!                              "
+  for i in $(seq 5 -1 1); do
+    echo -n -e "\rRebooting in ${i}s. (Press Ctrl-C to cancel)"
+    sleep 1 || return 1
+  done
+  echo -e "\rRebooting now!                              "
 
-    reboot
+  reboot
 }
 
 darkdm_install()
 {
-    if ! /usr/sbin/puavo-install "$@"; then
-      # give some time for users to read the error message, if there is any
-      echo
-      sleep 2
-      return 1
-    fi
+  if ! /usr/sbin/puavo-install "$@"; then
+    # give some time for users to read the error message, if there is any
+    echo
+    sleep 2
+    return 1
+  fi
 
-    darkdm_reboot
+  darkdm_reboot
 }
 
 darkdm_print_help()
 {
-    cat <<'EOF'
+  cat <<'EOF'
 
 Puavo OS Command Shell
 
@@ -156,181 +155,181 @@ EOF
 
 darkdm_shell()
 {
-    /bin/bash
+  /bin/bash
 }
 
 darkdm_update()
 {
-    local image_name update_status
+  local image_name update_status
 
-    update_status=0
+  update_status=0
 
-    if image_name=$(cat /etc/puavo-image/name 2>/dev/null); then
-      /usr/sbin/puavo-install-and-update-ltspimages \
-	--install-from-nbd /dev/nbd0 "$image_name" || update_status=1
-    else
-      update_status=1
-    fi
+  if image_name=$(cat /etc/puavo-image/name 2>/dev/null); then
+    /usr/sbin/puavo-install-and-update-ltspimages \
+      --install-from-nbd /dev/nbd0 "$image_name" || update_status=1
+  else
+    update_status=1
+  fi
 
-    if ! /usr/lib/puavo-ltsp-install/update-configuration >/dev/null 2>&1; then
-      echo 'Configuration update FAILED!' >&2
-      update_status=1
-    else
-      echo 'Configuration update OK.'
-    fi
+  if ! /usr/lib/puavo-ltsp-install/update-configuration >/dev/null 2>&1; then
+    echo 'Configuration update FAILED!' >&2
+    update_status=1
+  else
+    echo 'Configuration update OK.'
+  fi
 
-    if [ "$update_status" -ne 0 ]; then
-      return "$update_status"
-    fi
+  if [ "$update_status" -ne 0 ]; then
+    return "$update_status"
+  fi
 
-    darkdm_reboot
+  darkdm_reboot
 }
 
 darkdm_poweroff()
 {
-    local i
+  local i
 
-    for i in $(seq 5 -1 1); do
-        echo -n -e "\rPowering-off in ${i}s. (Press Ctrl-C to cancel)"
-        sleep 1 || return 1
-    done
-    echo -e "\rPowering-off now!                              "
+  for i in $(seq 5 -1 1); do
+    echo -n -e "\rPowering-off in ${i}s. (Press Ctrl-C to cancel)"
+    sleep 1 || return 1
+  done
+  echo -e "\rPowering-off now!                              "
 
-    poweroff
+  poweroff
 }
 
 darkdm_build()
 {
-    /usr/lib/puavo-ltsp-client/handle-image-build-request || return 1
+  /usr/lib/puavo-ltsp-client/handle-image-build-request || return 1
 
-    darkdm_poweroff
+  darkdm_poweroff
 }
 
 darkdm_kbd() {
-    new_layout=$1
+  new_layout=$1
 
-    current_layout=$(localectl status \
-                       | awk '/X11 Layout:/ { split($3, a, ","); print a[1] }')
+  current_layout=$(localectl status \
+                     | awk '/X11 Layout:/ { split($3, a, ","); print a[1] }')
 
-    if [ -z "$new_layout" ]; then
-        possible_layouts="$(localectl list-x11-keymap-layouts | xargs \
-                              | fmt -w 70 | sed 's/^/  /')"
+  if [ -z "$new_layout" ]; then
+    possible_layouts="$(localectl list-x11-keymap-layouts | xargs \
+                          | fmt -w 70 | sed 's/^/  /')"
 
-        cat <<EOF
+    cat <<EOF
 Current keyboard layout is: $current_layout
 Choose from layouts:
 $possible_layouts
 EOF
-        read -p 'Choose keyboard layout: ' new_layout
-    fi
+    read -p 'Choose keyboard layout: ' new_layout
+  fi
 
-    if [ -z "$new_layout" ]; then
-        echo 'Not changing keyboard layout'
-    elif localectl set-keymap "$new_layout"; then
-        echo "Changed keyboard layout to \"${new_layout}\""
-    else
-        echo "Could not change keyboard layout" >&2
-    fi
+  if [ -z "$new_layout" ]; then
+    echo 'Not changing keyboard layout'
+  elif localectl set-keymap "$new_layout"; then
+    echo "Changed keyboard layout to \"${new_layout}\""
+  else
+    echo "Could not change keyboard layout" >&2
+  fi
 
-    setupcon
+  setupcon
 
-    sleep 0.5
-    echo
+  sleep 0.5
+  echo
 }
 
 darkdm_live() {
-    echo -n 'switching to graphical mode'
-    # needed due to some bug in Buster:
-    service accounts-daemon start || true
-    echo -n .; sleep 1
-    echo -n .; sleep 1
-    echo -n .; sleep 1
+  echo -n 'switching to graphical mode'
+  # needed due to some bug in Buster:
+  service accounts-daemon start || true
+  echo -n .; sleep 1
+  echo -n .; sleep 1
+  echo -n .; sleep 1
 
-    # switch to GUI mode (should stop puavo-darkdm as a side effect)
-    systemctl isolate graphical.target
+  # switch to GUI mode (should stop puavo-darkdm as a side effect)
+  systemctl isolate graphical.target
 }
 
 darkdm_menu()
 {
-    local command forced initial_command prompt
+  local command forced initial_command prompt
 
-    initial_command=$1
-    forced=$2
+  initial_command=$1
+  forced=$2
 
-    while true; do
-	echo "$systeminfo"
-	darkdm_print_help
+  while true; do
+    echo "$systeminfo"
+    darkdm_print_help
 
-        if [ -n "$initial_command" ]; then
-            prompt="[${initial_command}]> "
+    if [ -n "$initial_command" ]; then
+      prompt="[${initial_command}]> "
+    else
+      prompt='> '
+    fi
+
+    if [ "$forced" = '--force' ]; then
+      command="$initial_command"
+    else
+      read -e -p "$prompt" command command_args || return 1
+      if [ -z "$command" -a -n "$initial_command" ]; then
+        command="$initial_command"
+      fi
+    fi
+
+    case "$command" in
+      build)
+        darkdm_build
+        ;;
+      install)
+        darkdm_install
+        ;;
+      kbd)
+        darkdm_kbd "$command_args"
+        ;;
+      live)
+        darkdm_live
+        ;;
+      make-install-disk)
+        puavo-make-install-disk
+        ;;
+      nmtui)
+        if [ ! -x /usr/bin/nmtui ]; then
+          echo 'nmtui not available' >&2
         else
-            prompt='> '
+          nmtui || true
         fi
-
-        if [ "$forced" = '--force' ]; then
-          command="$initial_command"
-        else
-	  read -e -p "$prompt" command command_args || return 1
-          if [ -z "$command" -a -n "$initial_command" ]; then
-            command="$initial_command"
-          fi
-        fi
-
-	case "$command" in
-	    build)
-		darkdm_build
-		;;
-	    install)
-		darkdm_install
-		;;
-	    kbd)
-		darkdm_kbd "$command_args"
-		;;
-	    live)
-		darkdm_live
-		;;
-	    make-install-disk)
-		puavo-make-install-disk
-		;;
-	    nmtui)
-		if [ ! -x /usr/bin/nmtui ]; then
-		    echo 'nmtui not available' >&2
-		else
-		    nmtui || true
-		fi
-		;;
-	    poweroff)
-		darkdm_poweroff
-		;;
-            preinstall)
-		darkdm_install preinstall
-		;;
-            preseed-preinstall)
-		darkdm_install preseed-preinstall
-		;;
-            preseed-install|pi)
-		darkdm_install preseed-install
-		;;
-	    reboot)
-		darkdm_reboot
-		;;
-	    restoredisk)
-                puavo-disk-clone restoredisk
-		;;
-	    savedisk)
-                puavo-disk-clone savedisk
-		;;
-	    shell)
-		darkdm_shell
-		;;
-	    update)
-		darkdm_update
-		;;
-	    *)
-		echo "Error: Invalid command '${command}'." >&2
-		;;
-	esac
-    done
+        ;;
+      poweroff)
+        darkdm_poweroff
+        ;;
+      preinstall)
+        darkdm_install preinstall
+        ;;
+      preseed-preinstall)
+        darkdm_install preseed-preinstall
+        ;;
+      preseed-install|pi)
+        darkdm_install preseed-install
+        ;;
+      reboot)
+        darkdm_reboot
+        ;;
+      restoredisk)
+        puavo-disk-clone restoredisk
+        ;;
+      savedisk)
+        puavo-disk-clone savedisk
+        ;;
+      shell)
+        darkdm_shell
+        ;;
+      update)
+        darkdm_update
+        ;;
+      *)
+        echo "Error: Invalid command '${command}'." >&2
+        ;;
+    esac
+  done
 }
 
 check_forced_operation() {
@@ -355,30 +354,30 @@ check_forced_operation() {
 
 darkdm_main()
 {
-    local forced
-    local hosttype
-    local initial_command
+  local forced
+  local hosttype
+  local initial_command
 
-    hosttype=$(cat /etc/puavo/hosttype)
-    case "${hosttype}" in
-	laptop|wirelessaccesspoint)
-	    initial_command='update'
-	    ;;
-	unregistered)
-	    initial_command='install'
-	    ;;
-	*)
-	    initial_command=
-	    ;;
-    esac
+  hosttype=$(cat /etc/puavo/hosttype)
+  case "${hosttype}" in
+    laptop|wirelessaccesspoint)
+      initial_command='update'
+      ;;
+    unregistered)
+      initial_command='install'
+      ;;
+    *)
+      initial_command=
+      ;;
+  esac
 
-    forced=''
-    if forced_operation=$(check_forced_operation 2>/dev/null); then
-      initial_command="$forced_operation"
-      forced='--force'
-    fi
+  forced=''
+  if forced_operation=$(check_forced_operation 2>/dev/null); then
+    initial_command="$forced_operation"
+    forced='--force'
+  fi
 
-    darkdm_menu "$initial_command" "$forced"
+  darkdm_menu "$initial_command" "$forced"
 }
 
 
@@ -387,12 +386,12 @@ echo
 systeminfo=$(darkdm_systeminfo 2>/dev/null || true)
 
 while true; do
-    if darkdm_main; then
-	echo 'Operation was a success.'
-    else
-	echo "Operation failed with error code $?."
-    fi
+  if darkdm_main; then
+    echo 'Operation was a success.'
+  else
+    echo "Operation failed with error code $?."
+  fi
 
-    echo 'Press ENTER to continue.'
-    read _
+  echo 'Press ENTER to continue.'
+  read _
 done
