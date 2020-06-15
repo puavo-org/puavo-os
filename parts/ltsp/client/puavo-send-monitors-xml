@@ -45,19 +45,6 @@ if [ -z "$user_with_monitors_xml" ]; then
   user_with_monitors_xml="$current_user_list"
 fi
 
-if printf "%s" "$current_user_list" | grep -qw "$user_with_monitors_xml"; then
-  # if user has a session, ask gnome-shell/mutter to write monitors.xml
-  if ! call_gdbus "$user_with_monitors_xml" \
-         gdbus call --session \
-                    --dest=org.gnome.Mutter.DisplayConfig \
-                    --object-path /org/gnome/Mutter/DisplayConfig \
-                    --method org.gnome.Mutter.DisplayConfig.ApplyMonitorsConfig \
-                    0 3 '[]' '[]'; then
-    echo 'Error when running gdbus call' >&2
-    exit 1
-  fi
-fi
-
 user_home=$(getent passwd | awk -F: -v user="$user_with_monitors_xml" '
                               $1 == user { print $6 }
                             ')
@@ -72,7 +59,33 @@ if ! this_hostname="$(hostname -s)" || [ -z "$this_hostname" ]; then
 fi
 monitors_xml_path="${user_home}/.config/monitors-${this_hostname}.xml"
 
-if ! monitors_xml=$(cat "$monitors_xml_path" 2>/dev/null); then
+if printf "%s" "$current_user_list" | grep -qw "$user_with_monitors_xml"; then
+  rm -f "$monitors_xml_path"
+  # if user has a session, ask gnome-shell/mutter to write monitors.xml
+  if ! call_gdbus "$user_with_monitors_xml" \
+         gdbus call --session \
+                    --dest=org.gnome.Mutter.DisplayConfig \
+                    --object-path /org/gnome/Mutter/DisplayConfig \
+                    --method org.gnome.Mutter.DisplayConfig.ApplyMonitorsConfig \
+                    0 3 '[]' '[]'; then
+    echo 'Error when running gdbus call' >&2
+    exit 1
+  fi
+fi
+
+# give a bit of time for monitors.xml to appear in the filesystem
+monitors_xml_written=false
+for i in $(seq 3); do
+  if [ -s "$monitors_xml_path" ]; then
+    sleep 1
+    monitors_xml_written=true
+    break
+  fi
+  sleep "$i"
+done
+
+if ! $monitors_xml_written \
+     || ! monitors_xml=$(cat "$monitors_xml_path" 2>/dev/null); then
   echo "Could not read monitor settings from ${monitors_xml_path}" >&2
   echo 'Maybe try sudo?' >&2
   exit 1
