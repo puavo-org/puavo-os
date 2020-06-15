@@ -117,7 +117,15 @@ if ! puavo-rest-request "$url" --post --user-krb --writable -- \
   echo 'Error in sending monitors data to Puavo' >&2
   status=1
 else
-  sudo -n puavo-change-host-state --monitors-xml "$monitors_xml" || status=1
+  # XXX The intention of puavo-change-host-state is to immediately change
+  # XXX the current (global) host state to use the new monitors.xml.
+  # XXX For new desktop sessions (for all users) this should work,
+  # XXX however gdm needs some wakeup call to read the new monitors.xml
+  # XXX and we yet do not know how.
+  sudo -n puavo-change-host-state --monitors-xml "$monitors_xml" || true
+  if mountpoint -q /state; then
+    puavo-update-client || true
+  fi
 fi
 
 [ -n "${ticket_cache:-}" ] && rm -f "$ticket_cache"
