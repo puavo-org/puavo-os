@@ -774,10 +774,15 @@ EOF
   end
 
   def self.ask_with_default(question, default, prompt_key=nil)
-    if @defaults.has_key?(prompt_key) then
+    if @defaults.has_key?(prompt_key) && @defaults[prompt_key] != 'default' then
       default = @defaults[prompt_key]
     end
-    return default if @forced.has_key?(prompt_key)
+    if @forced.has_key?(prompt_key) then
+      # Do not return forced twice... in case it did not work,
+      # we need user input.
+      @forced.delete(prompt_key)
+      return default
+    end
     prompt = "#{ question } [#{ default }] "
     answer = HighLine.ask(prompt) { |q| q.whitespace = nil }
 
