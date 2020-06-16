@@ -145,7 +145,7 @@
                 "sv": "Rosegarden-sekvenser",
                 "de": "Rosegarden Sequencer"
             },
-            "icon": "/usr/share/icons/hicolor/64x64/apps/rosegarden.png",
+            "icon": "rosegarden",
             "tags": "default, audio"
         },
         "cura-appimage": {
@@ -162,13 +162,6 @@
             "tags": "default"
         },
         "designer-qt4": {
-            "name": {
-                "fi": "Käyttöliittymä-suunnittelija",
-                "en": "Qt4 - graphical UI designer",
-                "sv": "Användargränssnitt-designer",
-                "de": "Qt4 - Grafischer UI Designer"
-            },
-            "icon": "/usr/share/icons/Faenza/apps/96/qtdesigner.png",
             "tags": "default"
         },
         "dia": {
@@ -269,7 +262,6 @@
             }
         },
         "eog": {
-            "icon": "/usr/share/icons/Faenza/apps/scalable/eog.svg",
             "tags": "default"
         },
         "eric6": {
@@ -301,7 +293,6 @@
                 "sv": "Stämmningsprogram",
                 "de": "Stimmprogramm"
             },
-            "icon": "/usr/share/icons/hicolor/scalable/apps/fmit.svg",
             "tags": "default, audio"
         },
         "freecad": {
@@ -311,7 +302,6 @@
             "tags": "default"
         },
         "fritzing": {
-            "icon": "/usr/share/pixmaps/fritzing_icon.png",
             "tags": "default"
         },
         "geany": {
@@ -321,7 +311,6 @@
                 "sv": "Geany - utvecklingsmiljö",
                 "de": "Geany - Textverarbeitung"
             },
-            "icon": "/usr/share/icons/hicolor/scalable/apps/geany.svg",
             "tags": "default"
         },
         "geogebra": {
@@ -340,7 +329,6 @@
             }
         },
         "gftp": {
-            "icon": "/usr/share/icons/gnome/48x48/places/gnome-fs-ftp.png",
             "tags": "default, network"
         },
         "gimp": {
@@ -389,7 +377,7 @@
         },
         "google-earth": {
             "name": "Google Earth",
-            "icon": "/usr/share/icons/Faenza/apps/48/googleearth.png",
+            "icon": "google-earth",
             "tags": "default",
             "puavopkg": {
                 "id": "google-earth"
@@ -417,11 +405,9 @@
             "tags": "default, audio"
         },
         "idle-python2.7": {
-            "icon": "/usr/share/icons/Faenza/mimetypes/96/text-x-python.png",
             "tags": "default"
         },
         "idle-python3.7": {
-            "icon": "/usr/share/icons/Faenza/mimetypes/96/text-x-python.png",
             "tags": "default"
         },
         "inkscape": {
@@ -457,11 +443,10 @@
             "url": "https://getkahoot.com/",
             "name": "Kahoot!",
             "description": "Kahoot",
-            "icon": "/usr/share/icons/Gion/48x48/categories/xfce-internet.png",
+            "icon": "x-office-presentation",
             "tags": "default, education"
         },
         "kamerka": {
-            "icon": "/usr/share/icons/Faenza/devices/96/camera-web.png",
             "tags": "default"
         },
         "kenavision": {
@@ -587,7 +572,8 @@
             "tags": "default, internet, education"
         },
         "mandelbulber2": {
-            "tags": "default, education, science"
+            "tags": "default, education, science",
+            "icon": "/usr/share/mandelbulber2/icons/mandelbulber.png"
         },
         "MarvinSketch": {
             "name": "MarvinSketch",
@@ -635,7 +621,6 @@
             "tags": "default, audio"
         },
         "mypaint": {
-            "icon": "/usr/share/icons/hicolor/48x48/apps/mypaint.png",
             "tags": "default, graphics"
         },
         "net.sourceforge.liferea": {
@@ -676,7 +661,7 @@
             "tags": "default"
         },
         "obs": {
-            "icon": "/usr/share/icons/hicolor/256x256/apps/obs.png",
+            "icon": "obs",
             "tags": "default"
         },
         "onboard": {
@@ -705,6 +690,7 @@
             "tags": "default"
         },
         "org.gnome.Calculator": {
+            "icon": "gnome-calculator",
             "tags": "default"
         },
         "org.gnome.Cheese": {
@@ -741,11 +727,9 @@
                 "sv": "Gedit-tekstredigerare",
                 "de": "Gedit-Texteditor"
             },
-            "icon": "/usr/share/icons/Faenza/apps/96/accessories-text-editor.png",
             "tags": "default, utility"
         },
         "org.gnome.Goobox": {
-            "icon": "/usr/share/icons/hicolor/48x48/apps/goobox.png",
             "tags": "default, audio"
         },
         "org.gnome.gThumb": {
@@ -755,11 +739,10 @@
                 "sv": "gThumb-bildvisare",
                 "de": "gThumb-Bildbetrachter"
             },
-            "icon": "/usr/share/icons/hicolor/scalable/apps/gthumb.svg",
             "tags": "default"
         },
         "org.gnome.Nautilus": {
-            "icon": "/usr/share/icons/Faenza/places/96/user-home.png",
+            "icon": "folder-home",
             "tags": "default, utility"
         },
         "org.gnome.Screenshot": {
@@ -792,7 +775,6 @@
                 "sv": "Periodsystem",
                 "de": "Periodensystem"
             },
-            "icon": "/usr/share/icons/hicolor/48x48/apps/kalzium.png",
             "tags": "default, education, science"
         },
         "org.kde.kbruch": {
@@ -819,7 +801,6 @@
                 "fi": "Hirsipuu",
                 "en": "KHangMan"
             },
-            "icon": "/usr/share/icons/hicolor/scalable/apps/khangman.svgz",
             "tags": "default, education"
         },
         "org.kde.kmplot": {
@@ -859,7 +840,6 @@
                 "sv": "Maskinskrivningsträning",
                 "de": "Schreibmaschinenkurs"
             },
-            "icon": "ktouch",
             "tags": "default, education"
         },
         "org.kde.kturtle": {
@@ -869,7 +849,6 @@
                 "sv": "KTurtle - logoprogrammering",
                 "de": "KTurtle - Programieren mit Logo"
             },
-            "icon": "/usr/share/icons/hicolor/64x64/apps/kturtle.png",
             "tags": "default, education"
         },
         "org.kde.kwordquiz": {
@@ -916,7 +895,6 @@
                 "sv": "Biblotek",
                 "de": "Tellico Sammlungs-Verwalter"
             },
-            "icon": "/usr/share/icons/hicolor/64x64/apps/tellico.png",
             "tags": "default, office",
             "keywords": "tellico"
         },
@@ -984,7 +962,6 @@
                 "sv": "Pinta",
                 "de": "Pinta"
             },
-            "icon": "/usr/share/icons/hicolor/scalable/apps/pinta.svg",
             "tags": "default, graphics"
         },
         "primusclient": {
@@ -1024,7 +1001,6 @@
         },
         "qjackctl": {
             "name": "JACK Control",
-            "icon": "/usr/share/icons/hicolor/32x32/apps/qjackctl.png",
             "tags": "default"
         },
         "qstopmotion": {
@@ -1032,7 +1008,6 @@
         },
         "qsynth": {
             "name": "FluidSynth GUI",
-            "icon": "/usr/share/icons/hicolor/32x32/apps/qsynth.png",
             "tags": "default"
         },
         "robboscratch2": {
@@ -1118,7 +1093,6 @@
                 "sv": "Enkelt scanningsverktyg",
                 "de": "Einfaches Scanner Werkzeug"
             },
-            "icon": "/usr/share/icons/Faenza/devices/96/scanner.png",
             "tags": "default, graphics"
         },
         "simplescreenrecorder": {
@@ -1139,7 +1113,6 @@
         },
         "skype": {
             "name": "Skype",
-            "icon": "/usr/share/icons/Faenza/apps/48/skype.png",
             "tags": "default, network",
             "puavopkg": {
                 "id": "skype"
@@ -1230,7 +1203,6 @@
             "tags": "default"
         },
         "system-config-printer": {
-            "icon": "/usr/share/icons/Faenza/devices/48/printer.png",
             "tags": "default, utility"
         },
         "t-lasku": {
@@ -1292,7 +1264,6 @@
                 "sv": "Noter för gitarr",
                 "de": "Tabulaturen für Gitarre"
             },
-            "icon": "/opt/puavomenu/icons/overlord59-tux-guitar-1434.png",
             "tags": "default, audio"
         },
         "tuxmath": {
@@ -1302,7 +1273,6 @@
                 "sv": "TuxMath-matematikspel",
                 "de": "Tuxmath Mathespiel"
             },
-            "icon": "/usr/share/pixmaps/tuxmath.svg",
             "tags": "default, education",
             "condition": "!personally_administered"
         },
@@ -1313,7 +1283,6 @@
                 "sv": "Tuxpaint",
                 "de": "Tuxpaint"
             },
-            "icon": "/usr/share/icons/hicolor/48x48/apps/tuxpaint.png",
             "tags": "default, graphics, education"
         },
         "unelmakoulu": {
@@ -1446,7 +1415,7 @@
                 "en": "Programs for Grading Environment",
                 "de": "Programme der Prüfungsumgebung"
             },
-            "icon": "/usr/share/icons/oxygen/base/48x48/categories/applications-education.png",
+            "icon": "/usr/share/puavo-art/puavomenu-icons/highschool.svg",
             "programs": [
                 "gimp",
                 "pinta",
@@ -1475,7 +1444,7 @@
                 "sv": "Verktyg",
                 "de": "Werkzeuge"
             },
-            "icon": "/usr/share/icons/Faenza/categories/48/applications-accessories.png",
+            "icon": "/usr/share/puavo-art/puavomenu-icons/accessories.svg",
             "programs": [
                 "org.gnome.Calculator",
                 "speedcrunch",
@@ -1506,7 +1475,7 @@
                 "en": "Arts",
                 "de": "Kunst"
             },
-            "icon": "/usr/share/icons/Faenza/apps/64/mypaint.png",
+            "icon": "/usr/share/puavo-art/puavomenu-icons/graphics.svg",
             "programs": [
                 "tuxpaint",
                 "org.kde.kolourpaint",
@@ -1529,7 +1498,7 @@
                 "sv": "Ljud och Video",
                 "de": "Audio und Video"
             },
-            "icon": "/usr/share/icons/Faenza/categories/48/applications-multimedia.png",
+            "icon": "/usr/share/puavo-art/puavomenu-icons/audiovideo.svg",
             "programs": [
                 "audacity",
                 "org.gnome.Goobox",
@@ -1652,7 +1621,7 @@
                 "sv": "Pedagogiska program",
                 "de": "Bildungs Programme"
             },
-            "icon": "/usr/share/icons/Faenza/categories/48/applications-games.png",
+            "icon": "/usr/share/puavo-art/puavomenu-icons/education.svg",
             "programs": [
                 "ekapeli",
                 "spelett",
@@ -1748,7 +1717,7 @@
                 "sv": "Spel",
                 "de": "Spiele"
             },
-            "icon": "/usr/share/icons/Faenza/categories/48/applications-cardgames.png",
+            "icon": "/usr/share/puavo-art/puavomenu-icons/games.svg",
             "condition": "!personally_administered",
             "programs": [
                 "gnome-klotski",
@@ -1770,7 +1739,7 @@
                 "sv": "Spel",
                 "de": "Spiele"
             },
-            "icon": "/usr/share/icons/Faenza/categories/48/applications-cardgames.png",
+            "icon": "/usr/share/puavo-art/puavomenu-icons/games.svg",
             "condition": "personally_administered",
             "programs": [
                 "gnome-klotski",
@@ -1823,7 +1792,7 @@
                 "sv": "Ritprogram",
                 "de": "Grafikprogramme"
             },
-            "icon": "/usr/share/icons/Faenza/categories/48/applications-painting.png",
+            "icon": "/usr/share/puavo-art/puavomenu-icons/graphics.svg",
             "programs": [
                 "org.kde.kolourpaint",
                 "org.kde.krita",
@@ -1883,7 +1852,7 @@
                 "sv": "Internet-program",
                 "de": "Internet Programme"
             },
-            "icon": "/usr/share/icons/Faenza/categories/48/applications-internet.png",
+            "icon": "/usr/share/puavo-art/puavomenu-icons/internet.svg",
             "programs": [
                 "firefox",
                 "chromium",
@@ -2007,7 +1976,7 @@
                 "sv": "Kontorsprogram",
                 "de": "Büroprogramme"
             },
-            "icon": "/usr/share/icons/Faenza/categories/48/applications-office.png",
+            "icon": "/usr/share/puavo-art/puavomenu-icons/office.svg",
             "programs": [
                 "libreoffice-writer",
                 "libreoffice-calc",
@@ -2057,7 +2026,7 @@
                 "fi": "Ohjelmointiympäristöjä",
                 "en": "Programming environments"
             },
-            "icon": "/usr/share/icons/Faenza/categories/48/gnome-devel.png",
+            "icon": "/usr/share/puavo-art/puavomenu-icons/programming.svg",
             "programs": [
                 "arduino",
                 "asebastudiothymio",
@@ -2144,7 +2113,7 @@
                 "sv": "Web applikationer",
                 "de": "Web Anwendungen"
             },
-            "icon": "/usr/share/icons/Gion/48x48/categories/xfce-internet.png",
+            "icon": "/usr/share/puavo-art/puavomenu-icons/webapps.svg",
             "programs": [
                 "youtube",
                 "wikipedia",
@@ -2169,7 +2138,7 @@
                 "sv": "Interaktiva tavlor",
                 "de": "Interaktive Tafeln"
             },
-            "icon": "/usr/share/icons/Faenza/categories/96/applications-science.png",
+            "icon": "/usr/share/puavo-art/puavomenu-icons/whiteboards.svg",
             "condition": "!personally_administered",
             "programs": [
                 "smarttech-notebook",
