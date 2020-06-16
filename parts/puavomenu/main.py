@@ -403,8 +403,8 @@ class PuavoMenu(Gtk.Window):
             icon_dirs = []
 
             try:
-                with open(dirs_file, 'r', encoding='utf-8') as dirs_file:
-                    dirs = json.load(dirs_file)
+                with open(dirs_file, 'r', encoding='utf-8') as df:
+                    dirs = json.load(df)
 
                 if 'desktop_dirs' in dirs:
                     self.__desktop_dirs = dirs['desktop_dirs']
