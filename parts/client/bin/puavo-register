@@ -71,6 +71,7 @@ class CmdLine
       case i
         when /^--(   authenticate-only
                    | force
+                   | force-defaults
                    | install
                    | update
                    | nocolor )$/x
@@ -135,24 +136,22 @@ class RegisterUserInterface
   end
 
   def ask_machine_info(option, errors={})
-    unhandled = errors.clone
-
     ask_devicetype() if [ 'all', 'devicetype' ].include?(option)
     if school_required? && [ 'all', 'school' ].include?(option) then
       ask_school(option == 'school')
     end
 
+    errors.each do |field, errmsgs|
+      Tools.errmsg("Server reported errors for #{ field }: " \
+                     + Array(errmsgs).join(' / '))
+    end
+
     @attributes.each do |attr|
       field = attr['id']
 
-      next unless option == field || option == 'all' || unhandled[field]
+      next unless option == field || option == 'all' || errors[field]
       next if attr['label'].empty?
       next if %(devicetype school).include?(field)
-
-      if unhandled[field] then
-        Tools.errmsg(unhandled[field])
-        unhandled.delete(field)
-      end
 
       question = attr['label'] + ':'
       @responses[field] = ask_with_default(question, @host[field])
@@ -160,10 +159,6 @@ class RegisterUserInterface
       set_host_attributes()
     end
 
-    unhandled.each do |field, errmsg|
-      Tools.errmsg("Server reported unhandled error for #{ field }: " \
-                   + errmsg)
-    end
   end
 
   def ask_school(explicit=false)
@@ -303,7 +298,8 @@ class RegisterUserInterface
       'yes'          => 'yes',
     }
 
-    default_opt = 'hostname'
+    default_opt = 'yes'
+    forced_defaults = @cmdline_params['force-defaults'] ? true : false
 
     loop do
       print_machine_info()
@@ -314,12 +310,13 @@ class RegisterUserInterface
         prompt = 'Change (a)ll / (d)evice type / (s)chool / (h)ostname /' \
           + " (p)rimary user\n" \
           + "  or register to Puavo with the above information? (y)es"
-        answer = ask_with_default(prompt, default_opt)
+        answer = forced_defaults \
+                   ? 'yes' \
+                   : ask_with_default(prompt, default_opt)
         options.each do |opt, attribute_name|
           if opt.start_with?(answer) then
             ask_machine_info(attribute_name)
             print_machine_info()
-            default_opt = opt
             found = true
             proceed_to_registration = true if opt == 'yes'
             break
@@ -337,6 +334,7 @@ class RegisterUserInterface
         break
       else
         ask_machine_info('errors-only', response_data['errors'])
+        forced_defaults = false
       end
     end
 

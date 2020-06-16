@@ -101,6 +101,8 @@ ask_preseed() {
                           "$chosen_preseed" "$preseed_json")
   preseed_puavo_server=$(get_preseed_variable server \
                           "$chosen_preseed" "$preseed_json")
+  preseed_force_reg_defaults=$(get_preseed_variable force-register-defaults \
+                                 "$chosen_preseed" "$preseed_json")
 
   puavo_preseed_register_args=()
   if [ -n "$preseed_admin_user" ]; then
@@ -114,6 +116,9 @@ ask_preseed() {
   fi
   if [ -n "$preseed_admin_password" ]; then
     puavo_preseed_register_args+=('--puavoserver' "$preseed_puavo_server")
+  fi
+  if [ "$preseed_force_reg_defaults" = 'true' ]; then
+    puavo_preseed_register_args+=('--force-defaults')
   fi
   puavo_preseed_puavo_key_list=$(
     printf %s "$preseed_json" | jq -r --arg chosen_preseed "$chosen_preseed" \
