@@ -61,6 +61,25 @@ class Filter:
         self.actions = []
 
 
+    # Checks if a specific filter action exists. 'name' can be (optionally)
+    # used to make the match even more exact.
+    def has_action_for(self, action, target, name=None):
+        for a in self.actions:
+            if a.action == action and a.target == target:
+                # Action and target matches. If the optional name is
+                # specified, match it too.
+                if name:
+                    if a.name == name:
+                        return True
+                    else:
+                        return False
+                else:
+                    # Action and target matches are enough
+                    return True
+
+        return False
+
+
     # If 'strict_reject' is True, the entire tag string is rejected
     # if it contains even one error. If it's False, mistakes are
     # simply ignored and the remaining parts are used.
