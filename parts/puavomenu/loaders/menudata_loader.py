@@ -338,7 +338,8 @@ def load_icons(programs, menus, icon_locator, icon_cache):
     # --------------------------------------------------------------------------
     # Load menu icons
 
-    # This is so much simpler, because menu icons must always be full paths
+    # Less stuff going on here, because menus don't have to remember
+    # the original icon name or anything like that.
     for menu_id, menu in menus.items():
         # No icons at all at first
         menu['icon_handle'] = None
@@ -348,14 +349,16 @@ def load_icons(programs, menus, icon_locator, icon_cache):
             num_missing_icons += 1
             continue
 
-        if not os.path.isfile(menu['icon']):
-            logging.error('Icon "%s" for menu "%s" does not exist',
-                          menu['icon'], menu_id)
+        icon_path, is_path = icon_locator.locate(menu['icon'])
+
+        if icon_path is None:
+            logging.warning("Can't find icon \"%s\" for menu \"%s\"",
+                            menu['icon'], menu_id)
             menu['icon'] = None
             num_missing_icons += 1
             continue
 
-        menu['icon_handle'], usable = icon_cache.load_icon(menu['icon'])
+        menu['icon_handle'], usable = icon_cache.load_icon(icon_path)
 
         if not usable:
             logging.warning('Found an icon "%s" for menu "%s", but '
