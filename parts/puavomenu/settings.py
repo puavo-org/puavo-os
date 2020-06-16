@@ -75,6 +75,9 @@ class Settings:
         # from these numbers.
         self.save_usage_counters = True
 
+        # If False, the user programs category will be disabled and hidden
+        self.show_user_programs = True
+
         # ----------------------------------------------------------------------
         # Per-user settings
 

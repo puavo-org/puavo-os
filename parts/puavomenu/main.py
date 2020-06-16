@@ -503,6 +503,15 @@ class PuavoMenu(Gtk.Window):
 
             utils.log_elapsed_time('Tag filter parsing time', start_time, end_time)
 
+            # Manually check the visibility of the user programs category.
+            # (The category is created manually, so menudata checks don't
+            # work with it.)
+            if tags.has_action_for(filters.tags.Action.HIDE,
+                                   filters.tags.Action.CATEGORY,
+                                   'category-user-programs'):
+                logging.info('The user programs category has been explicitly hidden/disabled')
+                self.__settings.show_user_programs = False
+
             # ------------------------------------------------------------------
             # Locate menudata files and load them
 
@@ -525,8 +534,9 @@ class PuavoMenu(Gtk.Window):
                 self.__icons)
 
             # (Re)load user programs
-            if not (self.__settings.is_guest or self.__settings.is_webkiosk):
-                self.__setup_user_programs()
+            if self.__settings.show_user_programs:
+                if not (self.__settings.is_guest or self.__settings.is_webkiosk):
+                    self.__setup_user_programs()
 
             total_end_time = time.perf_counter()
             utils.log_elapsed_time('Total load time',
@@ -674,6 +684,9 @@ class PuavoMenu(Gtk.Window):
 
     # Initial scan for user programs
     def __setup_user_programs(self):
+        if not self.__settings.show_user_programs:
+            return
+
         temp_category = menudata.Category()
 
         if user_programs.update(self.__settings.user_progs,
@@ -693,6 +706,9 @@ class PuavoMenu(Gtk.Window):
     # Recreates the current menu view if it's in user programs.
     # Call if user programs have changed since the last update.
     def __update_user_category_view(self):
+        if not self.__settings.show_user_programs:
+            return
+
         # Are we in search mode or normal menu view?
         search_text = self.__get_search_text()
 
@@ -1411,6 +1427,10 @@ class PuavoMenu(Gtk.Window):
 
 
     def __socket_reload_user_programs(self, data):
+        if not self.__settings.show_user_programs:
+            logging.warning('__socket_reload_user_programs(): user programs are disabled')
+            return
+
         # Called too early?
         if not self.menudata or not self.__user_programs_loaded:
             logging.warning(
