@@ -355,7 +355,7 @@ check_forced_operation() {
   fi
 
   forced_operation=$(printf %s "$preseed_json" | jq -r '.["force-operation"]')
-  if [ "$forced_operation" = 'null']; then forced_operation=''; fi
+  if [ "$forced_operation" = 'null' ]; then forced_operation=''; fi
   if [ "$forced_operation" = '' ]; then return 1; fi
 
   printf "%s" "$forced_operation"
