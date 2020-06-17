@@ -12,7 +12,7 @@ import cairo
 # Accepted extensions for icon files, in the order we prefer them. Some
 # .desktop file "Icon" entries specify full paths, some only "generic"
 # names, so to tell them apart, we check if the name has an extension.
-ICON_EXTENSIONS = frozenset(('.svg', '.svgz', '.png', '.xpm', '.jpg', '.jpeg'))
+ICON_EXTENSIONS = ('.svg', '.svgz', '.png', '.xpm', '.jpg', '.jpeg')
 
 
 # Tracks unused and usable cells in a single atlas
