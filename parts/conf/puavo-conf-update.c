@@ -1150,6 +1150,7 @@ add_cacheitem_to_puavo_conf(puavo_conf_t *conf, struct conf_cache *item,
 	struct puavo_conf_err err;
 	char *old_value;
 	int r;
+	bool haskey;
 
 	if (init) {
 		r = puavo_conf_add(conf, item->key, item->value, &err);
@@ -1163,6 +1164,24 @@ add_cacheitem_to_puavo_conf(puavo_conf_t *conf, struct conf_cache *item,
 			    " initialized puavo conf key %s --> %s\n",
 			    item->key, item->value);
 		}
+		return 0;
+	}
+
+	/* Ignore puavo-conf keys which have not been defined and initialized
+	 * to some value.  Display a warning on those, but those are not
+	 * serious errors.
+	 * (This could be done smarter by checking the error on
+	 * puavo_conf_get(), but in the dbus case this just provides us
+	 * PUAVO_CONF_ERRNUM_DBUS and not the relevant database level
+	 * puavo-conf error (PUAVO_CONF_ERRNUM_KEYNOTFOUND).) */
+	if (puavo_conf_has_key(conf, item->key, &haskey, &err) != 0) {
+		warnx("could not determine if puavo-conf has key '%s': %s",
+		    item->key, err.msg);
+		return 1;
+	}
+	if (!haskey) {
+		warnx("ignoring attempt to set uninitialized puavo-conf"
+			" key '%s' to value '%s'", item->key, item->value);
 		return 0;
 	}
 
