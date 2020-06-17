@@ -5,6 +5,8 @@ to the bootserver path ``/images/preseeds/index.json``:
 
 ```
 {
+  "force-operation_NO_HANDS_ON_THE_WHEEL": "preseed-install",
+  "force-preseed": "A more elaborate test",
   "templates": {
     "basic": {
       "admin_user": "iamadmin",
@@ -23,13 +25,14 @@ to the bootserver path ``/images/preseeds/index.json``:
       "server": "test.puavo.org",
       "puavoPersonallyAdministered": "true",
       "puavoSomeRandomVariable": "some-random-value",
-      "ask-disk-device": "sda",
       "ask-install-without-raid": "no",
+      "ask-write-partitions": "yes",
+      "force-disk-device": "default",
       "force-imageoverlay-size": "5G",
-      "force-partition": "whole",
+      "force-register-defaults": "true",
+      "force-partition": "default",
       "force-unpartitioned-space": "0G",
-      "force-wipe-partition": "no",
-      "force-write-partitions": "yes"
+      "force-wipe-partition": "no"
     }
   }
 }
@@ -37,9 +40,19 @@ to the bootserver path ``/images/preseeds/index.json``:
 
 Then when installing, choose "preseed-install".
 
+In case the ``force-preseed`` option is left out,
+an admin can pick up one of the preseed options.
+
 The parameters ``ask-disk-device``, ``ask-imageoverlay-size``,
 ``ask-install-without-raid`` (bootserver installation only),
 ``ask-partition``, ``ask-unpartitioned-space``, ``ask-wipe-partition``
 and ``ask-write-partitions`` can be used to set defaults for disk setup
 related questions, but all these have ``force-`` equivalents in which
-case user is not prompted for the question.
+case user is not prompted for the question.  Using the force equivalents,
+a value "default" can be used to pick the default value.
+
+If you really want to use the ``force-operation`` method, remove the
+``\_NO\_HANDS\_ON\_THE\_WHEEL`` from the key.  It is possible to fully
+automate an installation using the ``force-operation`` with
+other ``force-\*`` options, but this is of course potentially
+rather destructive.
