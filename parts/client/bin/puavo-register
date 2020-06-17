@@ -316,9 +316,12 @@ class RegisterUserInterface
         options.each do |opt, attribute_name|
           if opt.start_with?(answer) then
             ask_machine_info(attribute_name)
-            print_machine_info()
+            if opt == 'yes' then
+              proceed_to_registration = true
+            else
+              print_machine_info()
+            end
             found = true
-            proceed_to_registration = true if opt == 'yes'
             break
           end
         end
