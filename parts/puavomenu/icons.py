@@ -110,13 +110,13 @@ class IconCache:
 
     # Packs icon location in one 24-bit integer
     def pack_index(self, atlas, y, x):
-        return (atlas << 16) | (y << 8) | x
+        return ((atlas & 0xFF) << 16) | ((y & 0xFF) << 8) | (x & 0xFF)
 
 
     # Extracts icon location from a 24-bit integer
     def unpack_index(self, index):
         try:
-            return (index >> 16, (index >> 8) & 0xFF, index & 0xFF)
+            return ((index >> 16) & 0xFF, (index >> 8) & 0xFF, index & 0xFF)
         except BaseException as e:
             logging.error(str(e))
             logging.error(index)
@@ -163,6 +163,9 @@ class IconCache:
             atlas_num = len(self.atlases) - 1
             cell_y = 0
             cell_x = 0
+
+            if len(self.atlases) > 255:
+                raise RuntimeError('Created too many atlases. Increase the atlas bitmap size.')
         else:
             # Compute the X and Y coordinates of the free slot
             cell_y = cell_num // self.grid_size
