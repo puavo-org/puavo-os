@@ -432,11 +432,19 @@ puavo_preseed_setup_filesystems_args=()
 install_mode=${1:-normal}
 
 case "$install_mode" in
-  preseed-*) ask_preseed ;;
+  normal|preinstall)
+    puavo_preseed_setup_filesystems_args+=('--force-imageoverlay-size'   'default')
+    puavo_preseed_setup_filesystems_args+=('--force-partition'           'default')
+    puavo_preseed_setup_filesystems_args+=('--force-unpartitioned-space' 'default')
+    puavo_preseed_setup_filesystems_args+=('--force-wipe-partition'      'default')
+    ;;
+  preseed-*)
+    ask_preseed
+    ;;
 esac
 
 case "$install_mode" in
-  normal|preseed-install)
+  expert|expert-install|normal|preseed-install)
     ;;
   *-preinstall|preinstall)
     do_preinstall "$puavo_install_hosttype"

@@ -136,6 +136,8 @@ Puavo OS Command Shell
 
 Commands:
   build                - build Puavo OS image and poweroff
+  expert-install       - install Puavo OS with more detailed questions
+  expert-preinstall    - install without registering, expert mode
   install              - install Puavo OS to this device and reboot
   kbd [layout]         - set keyboard layout
   live                 - switch to graphical mode
@@ -278,6 +280,12 @@ darkdm_menu()
     case "$command" in
       build)
         darkdm_build || return 1
+        ;;
+      expert-install)
+        darkdm_install expert-install || return 1
+        ;;
+      expert-preinstall)
+        darkdm_install expert-preinstall || return 1
         ;;
       install)
         darkdm_install || return 1
