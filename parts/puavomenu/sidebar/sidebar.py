@@ -184,7 +184,11 @@ class Sidebar:
 
         if self.__settings.is_user_primary_user:
             y = self.__create_button(y, SB_LAPTOP_SETTINGS)
-            y = self.__create_button(y, SB_PUAVOPKG_INSTALLER)
+
+            # Hide the puavo-pkg package installer if there
+            # are no packages to install
+            if len(utils.puavo_conf('puavo.pkgs.ui.pkglist', '').strip()) > 0:
+                y = self.__create_button(y, SB_PUAVOPKG_INSTALLER)
 
         y = self.__create_separator(y)
 
