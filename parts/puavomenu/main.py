@@ -158,10 +158,8 @@ class PuavoMenu(Gtk.Window):
         # Is the first update on user programs done?
         self.__user_programs_loaded = False
 
-        # Desktop directories listed in dirs.json, from the last time
-        # we've (re)loaded all menu data. Used when doing puavopkg and
-        # user program updating.
-        self.__desktop_dirs = []
+        # Contents of dirs.json
+        self.__dirs_config = menudata.DirsConfig()
 
         # ----------------------------------------------------------------------
         # Start creating the UI. Menus/programs list first.
@@ -393,60 +391,47 @@ class PuavoMenu(Gtk.Window):
             utils.log_elapsed_time('puavopkg state detection', start_time, end_time)
 
             # ------------------------------------------------------------------
-            # Load dirs.json. It specifies icon and .desktop file search paths.
+            # Load dirs.json
 
             dirs_file = os.path.join(self.__settings.menu_dir, 'dirs.json')
-
             logging.info('Loading directory configuration file "%s"', dirs_file)
-
-            self.__desktop_dirs = []
-            icon_dirs = []
 
             try:
                 with open(dirs_file, 'r', encoding='utf-8') as df:
                     dirs = json.load(df)
 
-                if 'desktop_dirs' in dirs:
-                    self.__desktop_dirs = dirs['desktop_dirs']
+                self.__dirs_config.desktop_dirs = dirs.get('desktop_dirs', [])
+                icon_dirs = dirs.get('icon_dirs', {})
+                self.__dirs_config.theme_icon_dirs = icon_dirs.get('themes', {})
+                self.__dirs_config.generic_icon_dirs = icon_dirs.get('generic', [])
+            except BaseException as exc:
+                logging.fatal('Failed to load the directories config file "%s"',
+                              dirs_file)
+                logging.fatal(exc, exc_info=True)
+                self.__dirs_config.clear()
 
-                if 'icon_dirs' in dirs:
-                    icon_dirs = dirs['icon_dirs']
-            except Exception as exception:
-                logging.fatal('Failed to load the directories config file "%s": %s',
-                              dirs_file, str(exception))
+            icon_dirs = []
 
-            # ------------------------------------------------------------------
-            # Append local icon directories to the icon search paths
+            # Figure out the current icon theme name and prioritize it
+            # when loading icons
+            try:
+                gsettings = Gio.Settings.new('org.gnome.desktop.interface')
+                icon_theme = gsettings.get_value('icon-theme').get_string()
+            except BaseException as e:
+                logging.warning("Could not determine the name of the current icon theme: %s",
+                                str(e))
+                icon_theme = None
 
-            # User program icons can be stored in $HOME/.local/share/icons,
-            # so manually append it to the icon search directories.
-            # Unfortunately our icon locator cannot do recursive searches,
-            # so we must glob.
-            user_icons = os.path.join(os.path.expanduser('~'), '.local', 'share', 'icons')
+            logging.info('Current icon theme name: "%s"', icon_theme)
 
-            # Perform rudimentary sorting, based on size designations in
-            # directory names. Prioritize paths by icon sizes. If we have
-            # 32x32 and 64x64 icons, load the 64x64 icon to prevent blurry
-            # blotches of pixels. In contrast, the icon directories listed
-            # in dirs.json are manually sorted by preference.
-            number_extractor = re.compile(r'\d+')
-            user_icon_dirs = []
+            if icon_theme and icon_theme in self.__dirs_config.theme_icon_dirs:
+                icon_dirs += self.__dirs_config.theme_icon_dirs[icon_theme]
 
-            for dir_tuple in os.walk(user_icons):
-                name = dir_tuple[0]
+            icon_dirs += self.__dirs_config.generic_icon_dirs
 
-                try:
-                    # extract SIZE from ".local/share/icons/SIZExSIZE/..."
-                    size = int(number_extractor.search(name).group(0))
-                except:
-                    size = -1
-
-                user_icon_dirs.append((size, name))
-
-            user_icon_dirs.sort(key=lambda i: i[0], reverse=True)
-
-            for i in user_icon_dirs:
-                icon_dirs.append(i[1])
+            # Icons for user programs
+            for name in icons.get_user_icon_dirs():
+                icon_dirs.append(name[1])
 
             self.__icon_locator.set_directories(icon_dirs)
             self.__icon_locator.clear_cache()
@@ -527,7 +512,7 @@ class PuavoMenu(Gtk.Window):
 
             self.menudata = loaders.menudata_loader.load(
                 menudata_files, self.__settings.language,
-                self.__desktop_dirs,
+                self.__dirs_config.desktop_dirs,
                 tags, conditionals,
                 puavopkg_states,
                 self.__icon_locator,
@@ -621,7 +606,7 @@ class PuavoMenu(Gtk.Window):
         self.current_menu = None
 
         self.__user_programs_loaded = False
-        self.__desktop_dirs = []
+        self.__dirs_config.clear()
         self.__icons.clear()
 
 
@@ -1406,7 +1391,7 @@ class PuavoMenu(Gtk.Window):
             if puavopkg.reload_program(target_program,
                                        puavopkg_states,
                                        self.__settings.language,
-                                       self.__desktop_dirs,
+                                       self.__dirs_config.desktop_dirs,
                                        self.__icon_locator,
                                        self.__icons):
                 logging.info('__socket_update_puavopkg(): program updated, updating the UI')

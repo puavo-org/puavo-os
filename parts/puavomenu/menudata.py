@@ -36,6 +36,29 @@ class CategoryFlags(IntEnum):
     USER_CATEGORY = 0x04
 
 
+# Container for dirs.json
+class DirsConfig:
+    __slots__ = ('desktop_dirs', 'theme_icon_dirs', 'generic_icon_dirs')
+
+    def __init__(self):
+        # Directories where to look for .desktop files
+        self.desktop_dirs = []
+
+        # Zero or more theme-specific (theme names are their directory names
+        # in /usr/share/icons) icon directories.
+        self.theme_icon_dirs = {}
+
+        # Generic icon directories, used when no theme-specific
+        # icons could be found
+        self.generic_icon_dirs = []
+
+
+    def clear(self):
+        self.desktop_dirs = []
+        self.theme_icon_dirs = {}
+        self.generic_icon_dirs = []
+
+
 # Base class for all program types
 class ProgramBase:
     __slots__ = (
@@ -184,7 +207,8 @@ class WebLink(ProgramBase):
 
 # Groups zero or more programs
 class Menu:
-    __slots__ = ('menudata_id', 'name', 'description', 'icon', 'flags', 'program_ids')
+    __slots__ = ('menudata_id', 'name', 'description', 'icon', 'flags',
+                 'program_ids')
 
     def __init__(self,
                  name=None,
@@ -213,7 +237,8 @@ class Menu:
 
 # Groups zero or more menus and programs
 class Category:
-    __slots__ = ('menudata_id', 'name', 'position', 'flags', 'menu_ids', 'program_ids')
+    __slots__ = ('menudata_id', 'name', 'position', 'flags', 'menu_ids',
+                 'program_ids')
 
     def __init__(self,
                  name=None,
@@ -239,7 +264,7 @@ class Category:
         self.program_ids = program_ids or []
 
 
-# Wraps all of the above in a handy structure
+# Wraps (almost) all of the above in a handy structure
 class Menudata:
     __slots__ = ('programs', 'menus', 'categories', 'category_index')
 

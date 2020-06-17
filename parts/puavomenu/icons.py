@@ -1,6 +1,7 @@
 # Utility classes for locating and storing hundreds of icons efficiently.
 
 import os
+import re
 import logging
 import utils_gui
 
@@ -305,6 +306,38 @@ class IconCache:
             'num_icons': len(self.filenames),
             'num_atlases': len(self.atlases)
         }
+
+
+def get_user_icon_dirs():
+    # User program icons can be stored in $HOME/.local/share/icons. The icon
+    # locator class (see below) cannot do recursive searches, so we must glob.
+
+    # Perform rudimentary sorting, based on size designations in directory
+    # names. Prioritize paths by icon sizes. If we have 32x32 and 64x64 icons,
+    # load the 64x64 icon to prevent blurry blotches of pixels. In contrast,
+    # the icon directories listed in dirs.json are manually sorted by
+    # preference.
+
+    user_icons_root = os.path.join(
+        os.path.expanduser('~'), '.local', 'share', 'icons')
+
+    number_extractor = re.compile(r'\d+')
+    dirs = []
+
+    for dir_tuple in os.walk(user_icons_root):
+        name = dir_tuple[0]
+
+        try:
+            # extract SIZE from ".local/share/icons/SIZExSIZE/..."
+            size = int(number_extractor.search(name).group(0))
+        except:
+            logging.warning('list_user_icon_dirs(): could not extract icon size from "%s"',
+                            name)
+            size = -1
+
+        dirs.append((size, name))
+
+    return sorted(dirs, key=lambda i: i[0], reverse=True)
 
 
 # Turns icon names into actual filenames. Returns tuples of (filename,
