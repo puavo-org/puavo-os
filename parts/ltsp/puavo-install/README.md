@@ -52,7 +52,7 @@ case user is not prompted for the question.  Using the force equivalents,
 a value "default" can be used to pick the default value.
 
 If you really want to use the ``force-operation`` method, remove the
-``\_NO\_HANDS\_ON\_THE\_WHEEL`` from the key.  It is possible to fully
+``_NO_HANDS_ON_THE_WHEEL`` from the key.  It is possible to fully
 automate an installation using the ``force-operation`` with
 other ``force-\*`` options, but this is of course potentially
 rather destructive.
