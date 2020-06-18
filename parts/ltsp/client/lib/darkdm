@@ -262,6 +262,16 @@ darkdm_menu()
     echo "$systeminfo"
     darkdm_print_help || return 1
 
+    if [ "$forced" = '--show-unforced-warning' ]; then
+      cat <<-EOF >&2
+
+	  !! Attempted to force preseed installation operation even though !!
+	  !! this host already has a Puavo OS installation, unforced.      !!
+	  !! (You can still install with preseed by pressing ENTER.)       !!
+
+	EOF
+    fi
+
     if [ -n "$initial_command" ]; then
       prompt="[${initial_command}]> "
     else
@@ -384,6 +394,14 @@ darkdm_main()
   if forced_operation=$(check_forced_operation 2>/dev/null); then
     initial_command="$forced_operation"
     forced='--force'
+
+    case "$initial_command" in
+      preseed-install|preseed-preinstall)
+        if vgs puavo >/dev/null 2>&1; then
+          forced='--show-unforced-warning'
+        fi
+        ;;
+    esac
   fi
 
   darkdm_menu "$initial_command" "$forced" || return 1
