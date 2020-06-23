@@ -1,12 +1,11 @@
 #!/usr/bin/make -f
 
-# add DEB_* variables to the environment
-include /usr/share/dpkg/architecture.mk
-include /usr/share/dpkg/pkg-info.mk
-include /usr/share/dpkg/vendor.mk
+DEB_HOST_ARCH=$(shell dpkg-architecture -qDEB_HOST_ARCH)
+DEB_HOST_ARCH_OS=$(shell dpkg-architecture -qDEB_HOST_ARCH_OS)
+DEB_BUILD_ARCH_OS=$(shell dpkg-architecture -qDEB_BUILD_ARCH_OS)
+DEB_BUILD_ARCH_BITS=$(shell dpkg-architecture -qDEB_BUILD_ARCH_BITS)
 
-# determine whether this is a stable or development build
-VERSION=$(shell echo $(DEB_SOURCE) | sed s/wine//g)
+VERSION=$(shell dpkg-parsechangelog -S Source | sed s/wine//g)
 ifeq (x$(VERSION), x)
 DEBSUFFIX=-stable
 else
@@ -14,38 +13,30 @@ DEBSUFFIX=$(VERSION)
 endif
 export DEBSUFFIX
 
-# installation paths
 MANDIR=usr/share/man
 BINDIR=usr/lib/wine$(VERSION)
 DATDIR=usr/share/wine$(VERSION)
 INCDIR=usr/include/wine$(VERSION)
-LIBDIR=usr/lib/$(DEB_HOST_MULTIARCH)/wine$(VERSION)
+LIBDIR=usr/lib/$(shell dpkg-architecture -qDEB_HOST_MULTIARCH)/wine$(VERSION)
 
-# extra information to add to the version string
-export VENDOR=$(DEB_VENDOR) $(DEB_VERSION)
+export VENDOR=$(shell dpkg-vendor --query Vendor && dpkg-parsechangelog -S Version)
 
 # enable verbose build log
 export DH_VERBOSE=1
 
-# indicate that binary targets do not require root
-export DEB_RULES_REQUIRES_ROOT=no
-
-# enable hardening buildflags (fortify is not yet supported upstream)
-export DEB_BUILD_MAINT_OPTIONS=hardening=+all,-fortify
+# wine doesn't support fortify hardening and fails to build with pie
+export DEB_BUILD_MAINT_OPTIONS=hardening=+all,-pie,-fortify
 
 # linker options
 export DEB_LDFLAGS_MAINT_APPEND+=-Wl,-rpath,/$(LIBDIR)
 
-# ignore shift overflow warnings (currently only an issue on arm)
-export DEB_CFLAGS_MAINT_APPEND+=-Wno-shift-overflow
-
-# ignore warning about deprecated CUPS API for now
-export DEB_CFLAGS_MAINT_APPEND+=-Wno-deprecated-declarations
-
 # configure options
 CONFLAGS=--with-gnutls \
          --without-hal \
-         --without-netapi \
+         --without-v4l \
+         --without-sane \
+         --without-capi \
+         --without-gphoto \
          --disable-tests \
          --enable-maintainer-mode \
          --libdir=/$(LIBDIR) \
@@ -53,7 +44,7 @@ CONFLAGS=--with-gnutls \
          --mandir=/$(MANDIR) \
          --includedir=/$(INCDIR) \
          --datarootdir=/$(DATDIR) \
-         $(shell dpkg-buildflags --export=cmdline) \
+         $(shell dpkg-buildflags --export=configure) \
 
 # flags specific to kfreebsd
 ifeq ($(DEB_BUILD_ARCH_OS), kfreebsd)
@@ -72,20 +63,15 @@ endif
 
 # on armel build for armv5t
 ifeq ($(DEB_HOST_ARCH), armel)
-CONFLAGS+=--with-float-abi=soft
 export DEB_CFLAGS_MAINT_APPEND+=-march=armv5t
 export DEB_LDFLAGS_MAINT_APPEND+=-march=armv5t
 endif
 
-# on arm64 build using clang
-ifeq ($(DEB_HOST_ARCH), arm64)
-export CC=clang
-export CXX=clang++
-export DEB_CFLAGS_MAINT_APPEND+=-Wno-enum-conversion -Wno-absolute-value
-endif
+# override maintainer mode config
+export DEB_CFLAGS_MAINT_APPEND+=-Wno-error
 
 # use date of the latest changelog update as the build date
-export WIDL_TIME_OVERRIDE=$(SOURCE_DATE_EPOCH)
+export WIDL_TIME_OVERRIDE=$(shell date --date="$(dpkg-parsechangelog -S Date)" +%s)
 
 # additional files to generate
 INSTALLS=$(shell ls debian/*VERSION* | sed s/VERSION/$(VERSION)/) \
@@ -120,12 +106,9 @@ debian/bug-control: debian/bug-control.in
 	sed s/VERSION/$(VERSION)/g < $< > $@
 
 %:
-	dh $@ --parallel --with autoreconf
+	dh $@
 
 override_dh_auto_configure:
-	# output compiler information
-	$(CC) --version
-	# automatically generated files
 	./debian/scripts/generate libs/port/cptable.generated cpmap
 	./debian/scripts/generate server/trace.generated make_requests
 	./debian/scripts/generate server/request.generated make_requests
@@ -133,29 +116,8 @@ override_dh_auto_configure:
 	./tools/make_unicode
 	./tools/make_requests
 	cd dlls/opengl32 && ./make_opengl
-	# autotools files
-	ln -sf /usr/share/misc/config.sub tools
-	ln -sf /usr/share/misc/config.guess tools
-	# image files used to generate icons for parts of wine
-	ln -sf ../../dlls/user32/resources/oic_hand.svg dlls/display.drv16/oic_hand.svg
-	ln -sf ../../dlls/user32/resources/oic_bang.svg dlls/comctl32/idi_tt_warn_sm.svg
-	ln -sf ../../dlls/user32/resources/oic_note.svg dlls/comctl32/idi_tt_info_sm.svg
-	ln -sf ../../dlls/user32/resources/oic_hand.svg dlls/comctl32/idi_tt_error_sm.svg
-	ln -sf ../../dlls/shell32/resources/move.svg dlls/comctl32/idi_dragarrow.svg
-	ln -sf ../../dlls/shell32/resources/image.svg programs/regedit/bin.svg
-	ln -sf ../../dlls/shell32/resources/folder.svg programs/regedit/folder.svg
-	ln -sf ../../dlls/shell32/resources/document.svg programs/regedit/string.svg
-	ln -sf ../../dlls/shell32/resources/mycomputer.svg programs/regedit/computer.svg
-	ln -sf ../../dlls/shell32/resources/folder_open.svg programs/regedit/folderopen.svg
-	ln -sf ../../dlls/shell32/resources/window.svg programs/taskmgr/window.svg
-	ln -sf ../../dlls/shell32/resources/window.svg programs/taskmgr/windowsm.svg
-	ln -sf ../../dlls/shell32/resources/drive.svg dlls/comdlg32/hdisk.svg
-	ln -sf ../../dlls/shell32/resources/folder.svg dlls/comdlg32/folder.svg
-	ln -sf ../../dlls/shell32/resources/network.svg dlls/comdlg32/network.svg
-	ln -sf ../../dlls/shell32/resources/folder_open.svg dlls/comdlg32/folder2.svg
-	ln -sf ../../dlls/shell32/resources/disk_drive.svg dlls/comdlg32/floppy.svg
-	ln -sf ../../dlls/shell32/resources/optical_drive.svg dlls/comdlg32/cdrom.svg
-	# execute wine's configure script
+	ln -s /usr/share/misc/config.sub tools || true
+	ln -s /usr/share/misc/config.guess tools || true
 	./configure $(CONFLAGS)
 
 override_dh_auto_build-indep:
@@ -166,7 +128,7 @@ override_dh_auto_build-indep:
 
 override_dh_auto_install-indep: $(INSTALLS)
 	mkdir -p debian/tmp
-	cp ANNOUNCE debian/tmp/NEWS
+	cp ANNOUNCE debian/tmp/changelog
 	cp programs/winedbg/README debian/tmp/README.winedbg
 	sed "s|BINDIR|$(BINDIR)|g" debian/scripts/wineserver.in > debian/tmp/wineserver
 	chmod 755 debian/tmp/wineserver
@@ -189,7 +151,7 @@ override_dh_auto_install-indep: $(INSTALLS)
 
 override_dh_auto_install-arch: $(INSTALLS)
 	mkdir -p debian/tmp
-	cp ANNOUNCE debian/tmp/NEWS
+	cp ANNOUNCE debian/tmp/changelog
 	cp tools/winedump/README debian/tmp/README.winedump
 	cp server/wineserver debian/tmp/wineserver$(DEB_BUILD_ARCH_BITS)
 	sed "s|BINDIR|$(BINDIR)|g" debian/scripts/winegcc.in > debian/tmp/winegcc$(DEBSUFFIX)
@@ -201,6 +163,9 @@ override_dh_auto_install-arch: $(INSTALLS)
 	cp loader/wine.man debian/tmp/usr/share/man/man1/wine64$(DEBSUFFIX).1
 	test -f debian/tmp/$(BINDIR)/wine-preloader || \
 	    cp debian/scripts/wine-preloader debian/tmp/$(BINDIR)
+
+override_dh_strip:
+	dh_strip --dbgsym-migration='libwine$(VERSION)-dbg (<< 1.8-2~)'
 
 override_dh_shlibdeps:
 	mkdir -p debian/tmp

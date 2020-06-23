@@ -1,13 +1,9 @@
-description: generate automatically generated request code
+description: generate automatically generated request code 
 author: Michael Gilbert <mgilbert@debian.org>
 
 --- a/tools/make_requests
 +++ b/tools/make_requests
-@@ -266,16 +266,11 @@ sub PARSE_REQUESTS()
- }
- 
- ### Retrieve the server protocol version from the existing server_protocol.h file
-+# Modified by -1, see debian/scripts/import
+@@ -269,13 +269,7 @@ sub PARSE_REQUESTS()
  
  sub GET_PROTOCOL_VERSION()
  {
@@ -18,11 +14,11 @@ author: Michael Gilbert <mgilbert@debian.org>
 -        if (/^\#define SERVER_PROTOCOL_VERSION (\d+)/) { $protocol = $1; last; }
 -    }
 -    close SERVER_PROT;
-+    my $protocol = 570;
++    my $protocol = 523;
      return $protocol;
  }
  
-@@ -440,7 +435,7 @@ foreach my $err (sort keys %errors)
+@@ -436,7 +430,7 @@ foreach my $err (sort keys %errors)
  push @trace_lines, "    { NULL, 0 }\n";
  push @trace_lines, "};\n";
  
@@ -31,7 +27,7 @@ author: Michael Gilbert <mgilbert@debian.org>
                   "### make_requests begin ###",
                   "### make_requests end ###",
                   @trace_lines );
-@@ -467,7 +462,7 @@ foreach my $type (sort keys %formats)
+@@ -463,7 +457,7 @@ foreach my $type (sort keys %formats)
  push @request_lines, @asserts;
  push @request_lines, "\n#endif  /* WANT_REQUEST_HANDLERS */\n";
  
@@ -53,8 +49,8 @@ author: Michael Gilbert <mgilbert@debian.org>
 +/*
  
  DECL_HANDLER(new_process);
- DECL_HANDLER(exec_process);
-@@ -2407,9 +2407,8 @@ C_ASSERT( FIELD_OFFSET(struct terminate_
+ DECL_HANDLER(get_new_process_info);
+@@ -2367,9 +2367,8 @@ C_ASSERT( FIELD_OFFSET(struct terminate_
  C_ASSERT( FIELD_OFFSET(struct terminate_job_request, status) == 16 );
  C_ASSERT( sizeof(struct terminate_job_request) == 24 );
  
@@ -68,7 +64,7 @@ author: Michael Gilbert <mgilbert@debian.org>
  #endif  /* __WINE_SERVER_REQUEST_H */
 --- a/server/trace.c
 +++ b/server/trace.c
-@@ -1222,8 +1222,9 @@ static void dump_varargs_handle_infos( c
+@@ -1205,8 +1205,9 @@ static void dump_varargs_handle_infos( c
  
  typedef void (*dump_func)( const void *req );
  
@@ -80,7 +76,7 @@ author: Michael Gilbert <mgilbert@debian.org>
  
  static void dump_new_process_request( const struct new_process_request *req )
  {
-@@ -5595,8 +5596,7 @@ static const struct
+@@ -5437,8 +5438,7 @@ static const struct
      { NULL, 0 }
  };
  

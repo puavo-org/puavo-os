@@ -1,7 +1,6 @@
-Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Source: https://www.winehq.org
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0
+Source: http://www.winehq.org
 Files-Excluded:
- *.ico
  *.ttf
  configure
  tools/config.*
@@ -29,7 +28,6 @@ Files-Excluded:
  dlls/usp10/linebreak.c
  dlls/usp10/mirror.c
  dlls/usp10/shaping.c
- dlls/itss/tests/data.chm
  dlls/kernel32/nameprep.c
  dlls/opengl32/opengl_ext.c
  dlls/opengl32/opengl_norm.c
@@ -37,14 +35,14 @@ Files-Excluded:
 
 Files: *
 Copyright:
- Copyright (c) 1993-2018 Wine project authors (see AUTHORS file)
+ Copyright (c) 1993-2016 Wine project authors (see AUTHORS file)
 License: LGPL-2.1+
 
 Files: debian/*
 Copyright:
- Copyright (c) 2015-2018 Jens Reyer <jre.winesim@gmail.com>
+ Copyright (c) 2015-2016 Jens Reyer <jre.winesim@gmail.com>
  Copyright (c) 2014-2016 Stephen Kitt <skitt@debian.org>
- Copyright (c) 2012-2018 Michael Gilbert <mgilbert@debian.org>
+ Copyright (c) 2012-2016 Michael Gilbert <mgilbert@debian.org>
 License: LGPL-2.1+
 
 Files: debian/org.winehq.wine*.appdata.xml
@@ -59,7 +57,7 @@ License: Public-Domain
 
 Files: debian/unicode/*
 Copyright:
- Copyright (c) 1991-2002 Unicode, Inc.
+ Copyright (c) 1991-2015 Unicode, Inc.
 License: Unicode
 
 Files: debian/scripts/import*

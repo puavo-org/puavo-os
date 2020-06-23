@@ -1,44 +1,26 @@
-debianization/addons.patch
-debianization/makefile.patch
-debianization/winebuild.patch
-debianization/version-string.patch
-debianization/winemenubuilder.patch
-debianization/wineserver-persistence.patch
+version-string.patch
+manpages-wineserver-persistence.patch
 
 disable/tests.patch
-disable/line-wrapping.patch
 disable/addons-download.patch
-disable/po-modifications.patch
-disable/blacklist-extensions.patch
+disable/rerun-configure.patch
+disable/winemenubuilder-blacklist-extensions.patch
 
-generate/icons.patch
+generate/fonts.patch
 generate/opengl.patch
 generate/unicode.patch
 generate/request.patch
 
+debpaths/addons.patch
+debpaths/makefile.patch
+
+debsuffix/winemenubuilder.patch
+
 binary-indep/manpages.patch
 binary-indep/sfnt2fon.patch
 
-fixes/arm.patch
-fixes/arm64.patch
-fixes/gstbase.patch
-fixes/printer-resolution.patch
-fixes/temporary-directory.patch
-
-warnings/arm-messages.patch
-warnings/arm-longdouble.patch
-warnings/arm64-dword.patch
-warnings/arm64-array-bounds.patch
-warnings/arm64-excess-precision.patch
-warnings/arm64-unused-functions.patch
-warnings/arm64-uninitialized-variables.patch
-
-warnings/array-bounds.patch
-warnings/dword64-winmm.patch
-warnings/format-overflow.patch
-warnings/unused-functions.patch
-warnings/argument-promotion.patch
-warnings/discarded-qualifiers.patch
-warnings/uninitialized-variables.patch
+glu32.patch
+font-divbyzero.patch
+printer-resolution.patch
 
 puavo-support-ata-id.patch

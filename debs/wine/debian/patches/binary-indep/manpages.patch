@@ -3,32 +3,13 @@ author: Michael Gilbert <mgilbert@debian.org>
 
 --- a/tools/makedep.c
 +++ b/tools/makedep.c
-@@ -3756,6 +3756,7 @@ static void output_sources( struct makef
-             output_filenames_obj_dir( make, make->all_targets );
+@@ -3102,6 +3102,9 @@ static struct strarray output_sources( c
+             output_filenames_obj_dir( make, all_targets );
              output( "\n" );
          }
-+        output( "install-man:: $(shell echo ${MANPAGES} | sed s/\\\\.in//g)\n" );
-         output_install_rules( make, INSTALL_LIB, "install-lib" );
-         output_install_rules( make, INSTALL_DEV, "install-dev" );
-         output_uninstall_rules( make );
---- a/loader/Makefile.in
-+++ b/loader/Makefile.in
-@@ -3,13 +3,15 @@ SOURCES = \
- 	main.c \
- 	preloader.c \
- 	preloader_mac.c \
--	wine.de.UTF-8.man.in \
- 	wine.desktop \
--	wine.fr.UTF-8.man.in \
- 	wine.inf.in \
-+	wine_info.plist.in
 +
-+MANPAGES = \
- 	wine.man.in \
-+	wine.de.UTF-8.man.in \
-+	wine.fr.UTF-8.man.in \
- 	wine.pl.UTF-8.man.in \
--	wine_info.plist.in
- 
- PROGRAMS = $(WINELOADER_PROGRAMS)
- INSTALL_LIB = $(WINELOADER_PROGRAMS)
++        output( "install-man:: $(shell echo ${MANPAGES} | sed s/\\\\.in//g)\n" );
++
+         strarray_addall( &uninstall_files, output_install_rules( make, install_rules[INSTALL_LIB],
+                                                                  "install-lib", &phony_targets ));
+         strarray_addall( &uninstall_files, output_install_rules( make, install_rules[INSTALL_DEV],

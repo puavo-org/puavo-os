@@ -7,7 +7,7 @@ orig_tarball="../wine_${upstream_version}.orig.tar.xz"
 
 if [ ! -e "${orig_tarball}" ]; then
   wget -O "${orig_tarball}.tmp" \
-       "https://dl.winehq.org/wine/source/4.0/wine-${upstream_version}.tar.xz"
+       "https://dl.winehq.org/wine/source/2.0/wine-${upstream_version}.tar.xz"
   tar -Jxf "${orig_tarball}.tmp" --strip-components=1
   mv "${orig_tarball}.tmp" "${orig_tarball}"
 fi

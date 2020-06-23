@@ -1,7 +1,6 @@
-diff -ruN wine.orig/dlls/mountmgr.sys/device.c wine/dlls/mountmgr.sys/device.c
---- wine.orig/dlls/mountmgr.sys/device.c	2019-04-16 10:45:42.427748179 +0000
-+++ wine/dlls/mountmgr.sys/device.c	2019-04-16 10:44:41.995325224 +0000
-@@ -90,6 +90,51 @@
+--- wine-devel.orig/dlls/mountmgr.sys/device.c	2016-08-21 16:25:20.000000000 +0300
++++ wine-devel/dlls/mountmgr.sys/device.c	2016-08-29 12:44:39.820979251 +0300
+@@ -87,6 +87,51 @@
      struct mount_point   *mount;       /* DosDevices mount point */
  };
  
@@ -53,11 +52,12 @@ diff -ruN wine.orig/dlls/mountmgr.sys/device.c wine/dlls/mountmgr.sys/device.c
  static struct list drives_list = LIST_INIT(drives_list);
  static struct list volumes_list = LIST_INIT(volumes_list);
  
-@@ -951,6 +996,84 @@
- 
+@@ -957,6 +1002,86 @@
+         irp->IoStatus.u.Status = STATUS_SUCCESS;
          break;
      }
-+    case StorageDeviceSmartGetVersion:
++    /* SMART_GET_VERSION ? */
++    case 0x74080:
 +    {
 +	DWORD len = min(sizeof(GETVERSIONINPARAMS), irpsp->Parameters.DeviceIoControl.OutputBufferLength);
 +	GETVERSIONINPARAMS info;
@@ -80,7 +80,8 @@ diff -ruN wine.orig/dlls/mountmgr.sys/device.c wine/dlls/mountmgr.sys/device.c
 +	irp->IoStatus.u.Status = STATUS_SUCCESS;
 +	break;
 +    }
-+    case StorageDeviceSmartRcvDriveData:
++    /* SMART_RCV_DRIVE_DATA ? */
++    case 0x7c088:
 +    {
 +	DWORD len = min(sizeof(SENDCMDOUTPARAMS) - 1 + 512,
 +	    irpsp->Parameters.DeviceIoControl.OutputBufferLength);
@@ -136,19 +137,5 @@ diff -ruN wine.orig/dlls/mountmgr.sys/device.c wine/dlls/mountmgr.sys/device.c
 +	break;
 +    }
      default:
-         FIXME( "Unsupported property %#x\n", query->PropertyId );
-         irp->IoStatus.u.Status = STATUS_NOT_SUPPORTED;
-diff -ruN wine.orig/include/ntddstor.h wine/include/ntddstor.h
---- wine.orig/include/ntddstor.h	2019-01-22 21:25:59.000000000 +0000
-+++ wine/include/ntddstor.h	2019-04-16 10:44:37.983297147 +0000
-@@ -214,7 +214,9 @@
- 
- typedef enum _STORAGE_PROPERTY_ID {
-     StorageDeviceProperty = 0,
--    StorageAdapterProperty
-+    StorageAdapterProperty,
-+    StorageDeviceSmartGetVersion = 0x74080,
-+    StorageDeviceSmartRcvDriveData = 0x7c088,
- } STORAGE_PROPERTY_ID, *PSTORAGE_PROPERTY_ID;
- 
- typedef struct _STORAGE_PROPERTY_QUERY {
+     {
+         ULONG code = irpsp->Parameters.DeviceIoControl.IoControlCode;
