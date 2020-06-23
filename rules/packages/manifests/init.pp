@@ -259,6 +259,9 @@ class packages {
     , 'wine'
     , 'wine32'
     , 'wine64'
+    , 'wine-development'
+    , 'wine32-development'
+    , 'wine64-development'
     , 'winetricks' ]:
       tag => [ 'tag_emulation', 'tag_debian_desktop', ];
 
