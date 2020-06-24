@@ -20,7 +20,6 @@ _pkgs_ports := fmit                 \
                openldap             \
                pinta                \
                vtun                 \
-               wine                 \
                wsmancli
 _pkgs_image     := $(_pkgs_builddeps) $(_pkgs_parts) $(_pkgs_ports)
 _pkgs_cloud     := krb5 openldap puavo-ds

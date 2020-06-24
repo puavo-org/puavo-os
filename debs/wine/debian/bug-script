@@ -1,7 +1,0 @@
-#!/bin/sh
-
-if [ -e /usr/bin/wine ]; then
-    echo "/usr/bin/wine points to $(readlink -f /usr/bin/wine)." >&3
-else
-    echo "/usr/bin/wine does not exist." >&3
-fi
