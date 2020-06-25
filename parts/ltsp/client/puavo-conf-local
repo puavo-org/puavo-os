@@ -30,12 +30,21 @@ if [ $# -eq 1 ]; then
 fi
 
 if [ $# -ne 2 ]; then
-  echo "usage: $(basename $0) key value" >&2
+  cat <<EOF >&2
+usage: $(basename $0) key value         set a key to a value
+       $(basename $0) -u key            unset a local value for key
+EOF
   exit 1
 fi
 
-key=$1
-value=$2
+do_unset=false
+if [ "$1" = '-u' ]; then
+  do_unset=true
+  key=$2
+else
+  key=$1
+  value=$2
+fi
 
 case "$key" in
   puavo.abitti.version \
@@ -46,7 +55,11 @@ case "$key" in
   | puavo.xsessions.user_registration.enabled)
     ;;
   *)
-    echo "no permission to change puavo-conf '$key' --> '$value'" >&2
+    if $do_unset; then
+      echo "no permission to unset puavo-conf '$key'" >&2
+    else
+      echo "no permission to change puavo-conf '$key' --> '$value'" >&2
+    fi
     exit 1
     ;;
 esac
@@ -58,6 +71,17 @@ exec 3< "$puavo_conf_json_path"
 if ! flock -w 10 -x 3; then
   echo "could not get a lock on $puavo_conf_json_path" >&2
   exit 1
+fi
+
+if $do_unset; then
+  read_old_config | jq --arg key "$key" 'del(.[$key])' \
+    > "${puavo_conf_json_path}.tmp"
+  mv "${puavo_conf_json_path}.tmp" \
+     "$puavo_conf_json_path"
+  # We have to run puavo-conf-update so that the default value
+  # for $key gets set.
+  puavo-conf-update > /dev/null 2>&1
+  exit 0
 fi
 
 puavo-conf "$key" "$value"
