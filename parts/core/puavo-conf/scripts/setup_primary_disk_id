@@ -2,20 +2,31 @@
 
 set -eu
 
-[ -b /dev/sda ] || exit 0
-
 # This is needed by some wine software that need a unique
 # host identifier for applying license restrictions.
 
 primary_disk_id_path='/run/puavo/primary_disk_id'
 
-smartctl -i /dev/sda \
-  | awk '$1 == "Serial" && $2 == "Number:" { printf "%s", $3; exit(0) }' \
+for disk in /dev/sd[a-z] /dev/nvme[0-9]n[0-9] /dev/mmcblk[0-9] /dev/vd[a-z]; do
+  if [ ! -b "$disk" ]; then
+    continue
+  fi
+
+  smartctl -i "$disk" \
+    | awk '$1 == "Serial" && $2 == "Number:" { printf "%s", $3; exit(0) }' \
     > "${primary_disk_id_path}.tmp"
 
-if [ -s "${primary_disk_id_path}.tmp" ]; then
-  mv "${primary_disk_id_path}.tmp" "$primary_disk_id_path"
-else
-  rm -f "${primary_disk_id_path}.tmp"
-fi
+  if [ -s "${primary_disk_id_path}.tmp" ]; then
+    mv "${primary_disk_id_path}.tmp" "$primary_disk_id_path"
+  else
+    rm -f "${primary_disk_id_path}.tmp"
+    echo "Could not read serial number from ${disk}." >&2
+    exit 1
+  fi
 
+  exit 0
+done
+
+echo '(no disk devices found)'
+
+exit 0
