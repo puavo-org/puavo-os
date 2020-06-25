@@ -258,7 +258,6 @@ class packages {
     [ 'virtualbox-6.1'
     , 'wine'
     , 'wine32'
-    , 'wine64'
     , 'wine-development'
     , 'wine32-development'
     , 'wine64-development'
