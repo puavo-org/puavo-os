@@ -41,6 +41,8 @@ class PuavoLaptopSetup:
 
         self.abitti_version_latest_button \
           = builder.get_object('abitti_version_latest')
+        self.abitti_version_school_button \
+          = builder.get_object('abitti_version_school')
         self.abitti_version_any_button \
           = builder.get_object('abitti_version_any')
         self.abitti_version_entry = builder.get_object('abitti_version')
@@ -56,6 +58,8 @@ class PuavoLaptopSetup:
 
         self.abitti_version_latest_button.connect('toggled',
             self.abitti_version_latest_chosen)
+        self.abitti_version_school_button.connect('toggled',
+            self.abitti_version_school_chosen)
 
         self.abitti_version_any_button.connect('toggled',
                                                self.abitti_version_any_chosen)
@@ -84,21 +88,29 @@ class PuavoLaptopSetup:
         self.set_abitti_version('latest')
 
 
+    def abitti_version_school_chosen(self, widget):
+        if not widget.get_active():
+            return
+        widget.grab_focus()
+        self.set_abitti_version(None)
+
+
     def set_abitti_version(self, version):
-        version = version.strip()
-        if version == '':
-            version = 'latest'
-        elif version == 'latest':
-            pass
-        else:
-            try:
-                version_number = int(version)
-                version = 'abitti-v%d' % version_number
-            except ValueError:
-                error_msg =  _tr('should be a number')
-                self.abitti_version_entry_error.set_markup(
-                  '<span color="red"><b>%s</b></span>' % error_msg)
-                return
+        if version != None:
+              version = version.strip()
+              if version == '':
+                  version = 'latest'
+              elif version == 'latest':
+                  pass
+              else:
+                  try:
+                      version_number = int(version)
+                      version = 'abitti-v%d' % version_number
+                  except ValueError:
+                      error_msg =  _tr('should be a number')
+                      self.abitti_version_entry_error.set_markup(
+                        '<span color="red"><b>%s</b></span>' % error_msg)
+                      return
 
         self.abitti_version_entry_error.set_text('')
         self.puavo_conf['puavo.abitti.version'] = version
@@ -256,7 +268,10 @@ class PuavoLaptopSetup:
 
     def save_state_now(self):
         for key, value in self.puavo_conf.items():
-            cmd = [ 'sudo', '-n', 'puavo-conf-local', key, value ]
+            if value == None:
+                cmd = [ 'sudo', '-n', 'puavo-conf-local', '-u', key ]
+            else:
+                cmd = [ 'sudo', '-n', 'puavo-conf-local', key, value ]
             subprocess.check_call(cmd)
 
 
