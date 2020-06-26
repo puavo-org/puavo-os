@@ -74,7 +74,7 @@ if ! flock -w 10 -x 3; then
 fi
 
 if $do_unset; then
-  read_old_config | jq --arg key "$key" 'del(.[$key])' \
+  read_old_config | jq --arg key "$key" '.[$key] = null' \
     > "${puavo_conf_json_path}.tmp"
   mv "${puavo_conf_json_path}.tmp" \
      "$puavo_conf_json_path"
