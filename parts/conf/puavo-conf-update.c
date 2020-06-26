@@ -551,6 +551,11 @@ apply_one_profile(struct conf_cache **cache, const char *profile_path,
 	}
 
 	json_object_foreach(root, param_name, node_value) {
+		/* Allow null in profiles, which allows us to put null
+		 * in LOCAL_CONF_PATH as key, meaning it has been set
+		 * but should be ignored here. */
+		if (json_is_null(node_value))
+			continue;
 		if ((param_value = json_string_value(node_value)) == NULL) {
 			warnx("profile %s has a non-string value for key %s",
 			    profile_path, param_name);
