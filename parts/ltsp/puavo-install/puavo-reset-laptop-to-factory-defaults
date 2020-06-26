@@ -66,22 +66,9 @@ rm -f /state/etc/puavo/primary_user_override
 
 {
   echo starting...
-  puavo-pkg remove --all
+  find /images/puavo-pkg/ -mindepth 1 -print0 | xargs -0 rm -vrf
   echo done.
 } 2>&1 | sed 's|^|>>>>> Removing all puavo-pkgs - |'
-
-{
-  echo starting...
-  find /var/lib/puavo-desktop/users/ -mindepth 1 -print0 | xargs -0 rm -vrf
-  echo done.
-} 2>&1 | sed 's|^|>>>>> Cleaning up /var/lib/puavo-desktop/users/* - |'
-
-{
-  echo starting...
-  find /etc/NetworkManager/system-connections/ -mindepth 1 -print0 \
-    | xargs -0 rm -vrf
-  echo done.
-} 2>&1 | sed 's|^|>>>>> Removing network manager connections - |'
 
 {
   echo starting...
@@ -91,15 +78,21 @@ rm -f /state/etc/puavo/primary_user_override
 
 {
   echo starting...
-  find /var/lib/sss/db/ -mindepth 1 -print0 | xargs -0 rm -vrf
+  find /state/etc/puavo/local/ -mindepth 1 -print0 | xargs -0 rm -vrf
   echo done.
-} 2>&1 | sed 's|^|>>>>> Cleaning up sssd-cache - |'
+} 2>&1 | sed 's|^|>>>>> Removing local configurations (made by user) - |'
 
 {
   echo starting...
-  find /var/lib/extrausers/ -mindepth 1 -print0 | xargs -0 rm -vrf
+  find /state/var/cache/ -mindepth 1 -print0 | xargs -0 rm -vrf
   echo done.
-} 2>&1 | sed 's|^|>>>>> Removing user information - |'
+} 2>&1 | sed 's|^|>>>>> Cleaning up caches - |'
+
+{
+  echo starting...
+  find /state/var/lib/ -mindepth 1 -print0 | xargs -0 rm -vrf
+  echo done.
+} 2>&1 | sed 's|^|>>>>> Removing some system configurations - |'
 
 {
   echo starting...
@@ -107,10 +100,27 @@ rm -f /state/etc/puavo/primary_user_override
   echo done.
 } 2>&1 | sed 's|^|>>>>> Updating system configuration - |'
 
-echo '>>>>> Done!'
-echo
-echo 'Press ENTER to reboot.'
+{
+  echo starting...
+  find /imageoverlays/ -mindepth 1 -print0 | xargs -0 rm -vrf
+  echo done.
+} 2>&1 | sed 's|^|>>>>> Cleaning up /imageoverlays - |'
 
-read answer
+# do this last because it might break the network connection
+{
+  echo starting...
+  find /state/etc/NetworkManager/system-connections/ -mindepth 1 -print0 \
+    | xargs -0 rm -vrf
+  echo done.
+} 2>&1 | sed 's|^|>>>>> Removing network manager connections - |'
+
+i=5
+echo -n "rebooting in $i seconds..."
+while [ "$i" -gt 0 ]; do
+  i=$(($i - 1))
+  sleep 1
+  echo -n " $i"
+done
+echo .
 
 reboot
