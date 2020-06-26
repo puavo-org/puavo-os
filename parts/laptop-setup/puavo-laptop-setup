@@ -3,6 +3,7 @@
 import fcntl
 import gettext
 import gi
+import json
 import os
 import subprocess
 import sys
@@ -15,8 +16,17 @@ gettext.textdomain('puavo-laptop-setup')
 _tr = gettext.gettext
 
 def puavoconf_get(puavoconf_key):
-    return subprocess.check_output([ 'puavo-conf', puavoconf_key ]).rstrip() \
-                     .decode('utf-8')
+    try:
+        with open('/state/etc/puavo/local/puavo_conf.json') as file:
+            conf = json.load(file)
+            value = conf[puavoconf_key]
+    except:
+        # Fallback to looking up value from puavo-conf if local value
+        # for key can not be read.
+        value = subprocess.check_output([ 'puavo-conf', puavoconf_key ]) \
+                          .rstrip().decode('utf-8')
+    return value
+
 
 def we_have_windows():
     return os.path.exists('/images/boot/.puavo_windows_partition')
@@ -217,7 +227,10 @@ class PuavoLaptopSetup:
     def update_gui_state_from_puavoconf(self):
         for key, value in self.puavo_conf.items():
             if key == 'puavo.abitti.version':
-                if value == 'latest':
+                if value == None:
+                    self.abitti_version_school_button.set_active(True)
+                    self.abitti_version_entry.set_text('')
+                elif value == 'latest':
                     self.abitti_version_latest_button.set_active(True)
                     self.abitti_version_entry.set_text('')
                 else:
