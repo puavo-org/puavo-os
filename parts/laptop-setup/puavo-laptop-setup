@@ -16,15 +16,22 @@ gettext.textdomain('puavo-laptop-setup')
 _tr = gettext.gettext
 
 def puavoconf_get(puavoconf_key):
+    # We do this first to see if we get an error... if this puavo-conf
+    # key does not exist, this raises an exception.
+    default_value = subprocess.check_output([ 'puavo-conf', puavoconf_key ]) \
+                              .rstrip().decode('utf-8')
     try:
         with open('/state/etc/puavo/local/puavo_conf.json') as file:
             conf = json.load(file)
-            value = conf[puavoconf_key]
+        return conf[puavoconf_key]
     except:
-        # Fallback to looking up value from puavo-conf if local value
-        # for key can not be read.
-        value = subprocess.check_output([ 'puavo-conf', puavoconf_key ]) \
-                          .rstrip().decode('utf-8')
+        # Fallback value from puavo-conf if local value could not be read.
+        return default_value
+
+
+def strip_abitti_v(value):
+    if value.startswith('abitti-v'):
+        return value.replace('abitti-v', '')
     return value
 
 
@@ -49,6 +56,9 @@ class PuavoLaptopSetup:
     def prepare(self):
         self.puavo_conf_grid = builder.get_object('puavo_conf_grid')
 
+        self.abitti_latest_version = self.get_abitti_latest_version()
+        self.abitti_school_version = self.get_abitti_school_version()
+
         self.abitti_version_latest_button \
           = builder.get_object('abitti_version_latest')
         self.abitti_version_school_button \
@@ -58,6 +68,15 @@ class PuavoLaptopSetup:
         self.abitti_version_entry = builder.get_object('abitti_version')
         self.abitti_version_entry_error \
           = builder.get_object('abitti_version_error')
+
+        if self.abitti_latest_version:
+            self.abitti_version_latest_button.set_label('%s (%s)' \
+                % (self.abitti_version_latest_button.get_label(),
+                   self.abitti_latest_version))
+        if self.abitti_school_version:
+            self.abitti_version_school_button.set_label('%s (%s)' \
+                % (self.abitti_version_school_button.get_label(),
+                   self.abitti_school_version))
 
         self.boot_abitti_button   = builder.get_object('boot_abitti')
         self.boot_puavo_os_button = builder.get_object('boot_puavo_os')
@@ -89,6 +108,32 @@ class PuavoLaptopSetup:
 
         GLib.timeout_add(500, self.save_state)
         self.initializing_ui = False
+
+
+    def get_abitti_latest_version(self):
+        try:
+            with open('/state/abitti/abitti.json') as file:
+                abitti = json.load(file)
+            latest_version = abitti['latest']
+            if type(latest_version) != str:
+                raise Exception('latest version is not a string')
+            return strip_abitti_v(latest_version)
+        except:
+            return None
+
+
+    def get_abitti_school_version(self):
+        # The "school version" might also come from organisation or
+        # device-specific settings.
+        try:
+            with open('/state/etc/puavo/device.json') as file:
+                device = json.load(file)
+            school_version = device['conf']['puavo.abitti.version']
+            if type(school_version) != str:
+                raise Exception('school version is not a string')
+            return _tr( strip_abitti_v(school_version) )
+        except:
+            return None
 
 
     def abitti_version_latest_chosen(self, widget):
@@ -215,6 +260,14 @@ class PuavoLaptopSetup:
                     self.boot_abitti_button.destroy()
                     self.boot_abitti_button = None
 
+        if 'puavo.abitti.version' in self.puavo_conf \
+          and not self.abitti_school_version:
+            self.abitti_version_school_button.hide()
+            if not self.puavo_conf['puavo.abitti.version']:
+                # old configuration value was "school", yet we do not
+                # have a GUI element for that, so change to the 'latest'
+                self.puavo_conf['puavo.abitti.version'] = 'latest'
+
         if not self.boot_abitti_button and not self.boot_windows_button:
             del self.puavo_conf['puavo.grub.boot_default']
             remove_gui_elements['puavo.grub.boot_default'] = True
@@ -235,8 +288,7 @@ class PuavoLaptopSetup:
                     self.abitti_version_entry.set_text('')
                 else:
                     self.abitti_version_any_button.set_active(True)
-                    if value.startswith('abitti-v'):
-                        value = value.replace('abitti-v', '')
+                    value = strip_abitti_v(value)
                     self.abitti_version_entry.set_text(value)
             elif key == 'puavo.grub.boot_default':
                 if value == 'windows' and self.boot_windows_button:
@@ -320,6 +372,6 @@ laptop_setup = PuavoLaptopSetup(app_window, builder)
 laptop_setup.prepare()
 laptop_setup.save_state_flag = True
 
-app_window.show_all()
+app_window.show()
 
 Gtk.main()
