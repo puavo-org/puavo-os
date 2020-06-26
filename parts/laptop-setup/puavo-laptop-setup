@@ -8,7 +8,7 @@ import subprocess
 import sys
 
 gi.require_version('Gtk', '3.0')
-from gi.repository import GObject, Gtk
+from gi.repository import GLib, GObject, Gtk
 
 gettext.bindtextdomain('puavo-laptop-setup', '/usr/share/locale')
 gettext.textdomain('puavo-laptop-setup')
@@ -77,7 +77,7 @@ class PuavoLaptopSetup:
         self.remove_entries_without_puavoconf()
         self.update_gui_state_from_puavoconf()
 
-        GObject.timeout_add(500, self.save_state)
+        GLib.timeout_add(500, self.save_state)
         self.initializing_ui = False
 
 
