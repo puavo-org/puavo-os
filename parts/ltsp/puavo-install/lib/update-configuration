@@ -59,7 +59,7 @@ end
 def send_changed_primary_user_to_puavo(primary_user)
   log(Syslog::LOG_NOTICE,
       "Sending overridden primary user %s to Puavo\n",
-      primary_user)
+      primary_user ? primary_user : '(none)')
 
   cloud_restclient = PuavoRestClient.new(:auth    => :etc,
                                          :dns     => :no,
@@ -102,7 +102,10 @@ def update_device_json(restclient)
   primary_user_override \
     = IO.read('/state/etc/puavo/primary_user_override').chomp rescue nil
 
-  if primary_user_override && !primary_user_override.empty? then
+  if primary_user_override then
+    # If primary_user_override is set but an empty string,
+    # then we should unset it in Puavo (set to nil).
+    primary_user_override = nil if primary_user_override.empty?
     if primary_user_override == device['primary_user'] then
       # Remove override if we get the same information from Puavo
       # (we are sure to check against the info just received from Puavo,

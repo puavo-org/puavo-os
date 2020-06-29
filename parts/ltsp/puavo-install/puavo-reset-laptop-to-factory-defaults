@@ -59,10 +59,9 @@ done
 
 cd /
 
-# XXX The device primary user should probably be set to nil in Puavo,
-# XXX but puavo-rest does not permit this yet.  It should also be ensured that
-# XXX /state/etc/puavo/primary_user_override does not exist.
-rm -f /state/etc/puavo/primary_user_override
+# Remove primary user (so that we will send this information
+# to Puavo through update-configuration).
+cat /dev/null > /state/etc/puavo/primary_user_override
 
 {
   echo starting...
