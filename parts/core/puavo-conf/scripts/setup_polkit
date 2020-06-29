@@ -20,6 +20,7 @@ fi
 
 allow_modify_by_special_user_path='/etc/polkit-1/localauthority/50-local.d/10.org.freedesktop.networkmanager.allow_modify_by_special_user.pkla'
 
+primary_user=''
 user_for_system_network_permissions=''
 if [ "$(puavo-conf puavo.xsessions.user_registration.enabled)" = 'true' ]; then
   user_for_system_network_permissions='guest'
@@ -43,4 +44,16 @@ EOF
      "$allow_modify_by_special_user_path"
 else
   rm -f "$allow_modify_by_special_user_path"
+fi
+
+polkit_primary_user_path='/etc/polkit-1/localauthority.conf.d/52-puavo-primary-user.conf'
+if [ -n "$primary_user" ]; then
+  cat <<EOF > "${polkit_primary_user_path}.tmp"
+[Configuration]
+AdminIdentities=unix-user:${primary_user}
+EOF
+  mv "${polkit_primary_user_path}.tmp" \
+     "$polkit_primary_user_path"
+else
+  rm -f "$polkit_primary_user_path"
 fi

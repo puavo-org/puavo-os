@@ -39,6 +39,9 @@ class pam {
     '/etc/pam.d/i3lock':
       source => 'puppet:///modules/pam/i3lock';
 
+    '/etc/pam.d/polkit-1':
+      source => 'puppet:///modules/pam/polkit-1';
+
     '/etc/pam.d/puavo-cached-auth':
       source => 'puppet:///modules/pam/puavo-cached-auth';
 
