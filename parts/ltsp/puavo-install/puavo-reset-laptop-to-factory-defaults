@@ -33,7 +33,12 @@ if [ "$puavo_hosttype" != "laptop" ]; then
   exit 1
 fi
 
-while true; do
+request_confirmation=true
+if [ "${1:-}" = '--force' ]; then
+  request_confirmation=false
+fi
+
+while $request_confirmation; do
   cat <<'EOF'
 DANGER, WILL ROBINSON!  DANGER!
 
