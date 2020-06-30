@@ -85,6 +85,11 @@ class PuavoLaptopSetup:
         self.developer_mode_switch = builder.get_object('developer_mode_switch')
         self.use_windows_switch = builder.get_object('use_windows_switch')
 
+        self.reset_to_factory_settings \
+          = self.builder.get_object('reset_to_factory_settings')
+        self.reset_to_factory_settings.connect('clicked',
+          self.confirm_reset_to_factory_settings)
+
         self.abitti_version_latest_button.connect('toggled',
             self.abitti_version_latest_chosen)
         self.abitti_version_school_button.connect('toggled',
@@ -338,6 +343,36 @@ class PuavoLaptopSetup:
             else:
                 cmd = [ 'sudo', '-n', 'puavo-conf-local', key, value ]
             subprocess.check_call(cmd)
+
+
+    def confirm_reset_to_factory_settings(self, widget):
+        dialog = Gtk.MessageDialog(
+            parent=self.app_window,
+            modal=True,
+            destroy_with_parent=True,
+            message_type=Gtk.MessageType.WARNING,
+            buttons=Gtk.ButtonsType.OK_CANCEL,
+            text=_tr('DANGER! DANGER!'),
+            secondary_text=_tr(
+              'THIS PROCEDURE WILL RESET THIS COMPUTER TO FACTORY STATE!' \
+              + '  IT WILL DESTROY ALL YOUR DATA IN YOUR HOME DIRECTORY,' \
+              + ' AND MORE!  WHEN IN DOUBT, TURN OFF THE MACHINE, PANIC' \
+              + ' AND RUN AWAY!  (press OK and provide your password' \
+              + ' if you still want to do this.)')
+        )
+        response = dialog.run()
+        if response == Gtk.ResponseType.OK:
+          self.run_reset_to_factory_settings()
+        dialog.destroy()
+
+
+    def run_reset_to_factory_settings(self):
+        # how to handle error codes or anything?
+        # maybe some progress bar should be shown... ?
+        cmd = [ 'pkexec',
+                '/usr/sbin/puavo-reset-laptop-to-factory-defaults',
+                '--force' ]
+        subprocess.call(cmd)
 
 
 builder = Gtk.Builder()

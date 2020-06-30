@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.20.0 -->
+<!-- Generated with glade 3.22.1 -->
 <interface>
   <requires lib="gtk+" version="3.12"/>
   <object class="GtkApplicationWindow" id="app_window">
     <property name="can_focus">False</property>
     <property name="border_width">20</property>
     <property name="window_position">center-always</property>
+    <child>
+      <placeholder/>
+    </child>
     <child>
       <object class="GtkGrid" id="puavo_conf_grid">
         <property name="visible">True</property>
@@ -120,9 +123,6 @@
                 <property name="top_attach">2</property>
               </packing>
             </child>
-            <child>
-              <placeholder/>
-            </child>
           </object>
           <packing>
             <property name="left_attach">1</property>
@@ -218,6 +218,19 @@
           <packing>
             <property name="left_attach">1</property>
             <property name="top_attach">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="reset_to_factory_settings">
+            <property name="label" translatable="yes">DESTROY ALL USER DATA AND RESET LAPTOP TO FACTORY STATE (requires password)</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+          </object>
+          <packing>
+            <property name="left_attach">0</property>
+            <property name="top_attach">4</property>
+            <property name="width">2</property>
           </packing>
         </child>
       </object>
