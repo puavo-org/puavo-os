@@ -336,3 +336,35 @@ THE COMPLETE PAGE
     margin-top: 50px;
     padding: 10px 150px;
 }
+
+/*
+
+THE LOGIN PAGE
+
+*/
+.login {
+    padding-top: $(login_top_padding);
+    padding-left: $(account_left_padding);
+    font-size: 100%;
+}
+
+.login entry {
+    padding: 2px 5px;
+    border: 2px solid #888;
+    outline: none;
+    font-size: $(entry_font_size);
+    font-family: "Noto Sans";
+}
+
+.login entry:focus {
+    border: 2px solid #ddd;
+    outline: none;
+}
+
+.login .account_label {
+    color: #fff;
+    text-shadow: 1px 1px 0 #000;
+}
+
+.login .login_button_box {
+}

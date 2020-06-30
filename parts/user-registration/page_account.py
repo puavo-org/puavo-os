@@ -652,6 +652,10 @@ class PageAccount(PageDefinition):
                 'badly wrong.') + '  ' + _tr('Please contact support.'))
 
 
+    def enable_login_button(self):
+        return True
+
+
 class NetworkThread(threading.Thread):
     def __init__(self, json_data, event):
         super().__init__()

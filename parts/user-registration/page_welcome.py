@@ -29,8 +29,10 @@ class PageWelcome(PageDefinition):
             + _tr('In case you can not connect to a wireless network right now, '
                   'you can do that later and use this host temporarily in ' \
                   'guest-mode by clicking the') \
-            + '\n' + '<i>"' + _tr('Go to desktop') + '"</i>-' \
-            + _tr('button in the bottom corner.'))
+            + '<i>"' + _tr('Go to desktop') + '"</i>-' \
+            + _tr('button in the bottom corner.') \
+            + '  ' + _tr('If you already have an account, choose') \
+            + ' ' + '<i>"' + _tr('Login with existing account') + '"</i>.')
 
         self.builder.get_object('welcome_next').connect('clicked', self.welcome_next_clicked)
 

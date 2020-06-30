@@ -49,3 +49,8 @@ class PageDefinition:
     def enable_desktop_button(self):
         # Return False to hide the "Go to desktop" button
         return True
+
+
+    def enable_login_button(self):
+        # Return True to show the "Login with existing account" button
+        return False

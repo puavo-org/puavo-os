@@ -30,5 +30,9 @@ class PageComplete(PageDefinition):
         return False
 
 
+    def enable_login_button(self):
+        return False
+
+
     def reboot_clicked(self, *args):
         self.application.finish_registration()
