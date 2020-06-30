@@ -315,9 +315,9 @@ class NewUserRegistrationWindow:
 
 
     def go_to_desktop_clicked(self, *args):
-        dialog = Gtk.MessageDialog( \
-            self.main_window, 0, Gtk.MessageType.WARNING,
-            Gtk.ButtonsType.OK_CANCEL, _tr('Go to desktop?'))
+        dialog = Gtk.MessageDialog(parent=self.main_window,
+            message_type=Gtk.MessageType.WARNING,
+            buttons=Gtk.ButtonsType.OK_CANCEL, text=_tr('Go to desktop?'))
 
         dialog.format_secondary_text( \
             _tr('Are you sure you do not want to create a user account?  ' \

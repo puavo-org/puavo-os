@@ -10,10 +10,11 @@ def show_error_message(parent, message, secondary_message=None):
     """Show a modal error message box."""
 
     dialog = Gtk.MessageDialog(parent=parent,
-                               flags=Gtk.DialogFlags.MODAL,
-                               type=Gtk.MessageType.ERROR,
+                               modal=True,
+                               destroy_with_parent=True,
+                               message_type=Gtk.MessageType.ERROR,
                                buttons=Gtk.ButtonsType.OK,
-                               message_format=message)
+                               text=message)
 
     if secondary_message:
         dialog.format_secondary_markup(secondary_message)
@@ -26,10 +27,11 @@ def show_info_message(parent, message, secondary_message=None):
     """Show a modal information message box."""
 
     dialog = Gtk.MessageDialog(parent=parent,
-                               flags=Gtk.DialogFlags.MODAL,
-                               type=Gtk.MessageType.INFO,
+                               modal=True,
+                               destroy_with_parent=True,
+                               message_type=Gtk.MessageType.INFO,
                                buttons=Gtk.ButtonsType.OK,
-                               message_format=message)
+                               text=message)
 
     if secondary_message:
         dialog.format_secondary_markup(secondary_message)
