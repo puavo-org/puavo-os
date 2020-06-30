@@ -20,6 +20,18 @@ EOF
 	ln -fns "${upstream_dir}/usr/bin/mafynetti" /usr/bin/mafynetti
 	ln -fns "${upstream_dir}/usr/share/mafynetti" /usr/share/mafynetti
 	ln -fns "${upstream_dir}/usr/share/icons/hicolor/scalable/apps/mafynetti.svg" /usr/share/pixmaps/mafynetti.svg
+
+        # quick fix for Buster
+        if [  ! -e /usr/lib/x86_64-linux-gnu/libboost_filesystem.so.1.62.0 \
+             -a -e /usr/lib/x86_64-linux-gnu/libboost_filesystem.so.1.67.0 ]; then
+          ln -fns /usr/lib/x86_64-linux-gnu/libboost_filesystem.so.1.67.0 \
+                  /usr/lib/x86_64-linux-gnu/libboost_filesystem.so.1.62.0
+        fi
+        if [  ! -e /usr/lib/x86_64-linux-gnu/libboost_system.so.1.62.0 \
+             -a -e /usr/lib/x86_64-linux-gnu/libboost_system.so.1.67.0 ]; then
+          ln -fns /usr/lib/x86_64-linux-gnu/libboost_system.so.1.67.0 \
+                  /usr/lib/x86_64-linux-gnu/libboost_system.so.1.62.0
+        fi
 	;;
     unconfigure)
 	rm -rf /usr/bin/mafynetti /usr/share/mafynetti /usr/share/pixmaps/mafynetti.svg /usr/share/applications/mafynetti.desktop
