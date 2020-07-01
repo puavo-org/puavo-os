@@ -394,9 +394,12 @@ class NewUserRegistrationWindow:
 
 
     def login_locally_from_loginpage(self, username, password):
+        if password == '':
+            return
+        self.username = username
+        self.password = password
+
         try:
-            self.username = username
-            self.password = password
             login_ok = login_locally(username, password, self.prod_mode)
             if not login_ok:
                 utils.show_error_message(self.main_window, _tr('Error'),
@@ -406,7 +409,7 @@ class NewUserRegistrationWindow:
         except Exception as e:
             logging.warning('unexpected error in local login: %s' % str(e))
             utils.show_error_message(self.main_window, _tr('Error'),
-                _tr('Un unexpected error occurred'))
+                _tr('An unexpected error occurred'))
 
 
     # Returns the machine data needed on the accounts page, when sending
