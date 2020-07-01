@@ -104,12 +104,12 @@ class NewUserRegistrationWindow:
             (PageWelcome),
             (PageNetwork),
             (PageAccount),
-            (PageLogin),
             (PageComplete),
         ]
 
         self.all_pages = []
         self.current_page = None
+        self.current_page_num = None
 
         # Unfortunately, we're still plagued by the same problem
         # the previous version had: we have to adjust font sizes
@@ -308,16 +308,20 @@ class NewUserRegistrationWindow:
         # Build the child pages
         try:
             for ctor in self.page_definitions:
-                self.all_pages.append(ctor(self,
-                                           self.main_window,
-                                           middle_box,
-                                           self.data_dir))
+                page = ctor(self, self.main_window, middle_box, self.data_dir,
+                    self.main_builder)
+                self.all_pages.append(page)
+                if ctor == PageAccount:
+                    self.account_page = page
         except Exception as exc:
             logging.error(str(exc), exc_info=True)
             self.main_window.destroy()
         else:
             # Activate the initial page
-            self.goto_page(0)
+            self.goto_page_by_num(0)
+
+        self.login_page = PageLogin(self, self.main_window, middle_box,
+            self.data_dir, self.main_builder)
 
         self.main_window.show()
 
@@ -344,7 +348,7 @@ class NewUserRegistrationWindow:
 
 
     def login_with_existing_account_clicked(self, *args):
-        self.next_page()
+        self.login_page.swap_with(self.account_page)
         return
 
         # XXX try login locally, go back if it did not succeed
@@ -416,31 +420,31 @@ class NewUserRegistrationWindow:
             }
 
     def previous_page(self):
-        next_page = self.current_page - 1
+        next_page_num = self.current_page_num - 1
 
-        if next_page < 0:
-            next_page = len(self.page_definitions) - 1
+        if next_page_num < 0:
+            next_page_num = len(self.page_definitions) - 1
 
-        self.goto_page(next_page)
+        self.goto_page_by_num(next_page_num)
 
 
     def next_page(self):
-        next_page = (self.current_page + 1) % len(self.page_definitions)
-        self.goto_page(next_page)
+        next_page_num = (self.current_page_num + 1) % len(self.page_definitions)
+        self.goto_page_by_num(next_page_num)
 
 
-    def goto_page(self, page_num):
-        if page_num == self.current_page:
+    def goto_page(self, page):
+        if page == self.current_page:
             return
 
         # Hide the previous page first
         if self.current_page is not None:
-            self.all_pages[self.current_page].deactivate()
+            self.current_page.deactivate()
 
-        self.current_page = page_num
+        self.current_page = page
 
         # Update the main title
-        title = self.all_pages[self.current_page].get_main_title()
+        title = self.current_page.get_main_title()
 
         if title is None:
             self.main_title.hide()
@@ -449,11 +453,16 @@ class NewUserRegistrationWindow:
             self.main_title.show()
 
         # Some pages disable the "Go to desktop" button
-        self.desktop_button.set_sensitive(self.all_pages[self.current_page].enable_desktop_button())
-        self.login_button.set_sensitive(self.all_pages[self.current_page].enable_login_button())
+        self.desktop_button.set_sensitive(self.current_page.enable_desktop_button())
+        self.login_button.set_sensitive(self.current_page.enable_login_button())
 
         # Switch the page
-        self.all_pages[self.current_page].activate()
+        self.current_page.activate()
+
+
+    def goto_page_by_num(self, page_num):
+        self.goto_page(self.all_pages[page_num])
+        self.current_page_num = page_num
 
 
 class UserRegistrationApplication(Gtk.Application):

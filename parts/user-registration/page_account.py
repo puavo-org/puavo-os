@@ -80,8 +80,8 @@ FIELD_ERRORS = {
 
 
 class PageAccount(PageDefinition):
-    def __init__(self, application, parent_window, parent_container, data_dir):
-        super().__init__(application, parent_window, parent_container, data_dir)
+    def __init__(self, application, parent_window, parent_container, data_dir, main_builder):
+        super().__init__(application, parent_window, parent_container, data_dir, main_builder)
 
         self.load_file('account.glade', 'register_user')
 

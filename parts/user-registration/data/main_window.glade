@@ -74,24 +74,6 @@
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="login_with_existing_account">
-                <property name="label" translatable="yes">Login with existing account</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="valign">end</property>
-                <signal name="clicked" handler="login_with_existing_account_clicked" swapped="no"/>
-                <style>
-                  <class name="login_with_existing_account"/>
-                </style>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">1</property>
-              </packing>
-            </child>
-            <child>
               <object class="GtkButton" id="privacy_policy">
                 <property name="label" translatable="yes">Privacy policy</property>
                 <property name="can_focus">True</property>
@@ -101,6 +83,24 @@
                 <signal name="clicked" handler="privacy_policy_clicked" swapped="no"/>
                 <style>
                   <class name="privacy_policy"/>
+                </style>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="login_with_existing_account">
+                <property name="label" translatable="yes">Login with existing account</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="valign">end</property>
+                <signal name="clicked" handler="login_with_existing_account_clicked" swapped="no"/>
+                <style>
+                  <class name="login_with_existing_account"/>
                 </style>
               </object>
               <packing>

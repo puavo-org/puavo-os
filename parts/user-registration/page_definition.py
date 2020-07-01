@@ -9,11 +9,12 @@ from gi.repository import Gtk
 
 
 class PageDefinition:
-    def __init__(self, application, parent_window, parent_container, data_dir):
+    def __init__(self, application, parent_window, parent_container, data_dir, main_builder):
         self.application = application
         self.parent_window = parent_window
         self.parent_container = parent_container
         self.data_dir = data_dir
+        self.main_builder = main_builder
 
         # The Gtk.Builder object for this child
         self.builder = None
