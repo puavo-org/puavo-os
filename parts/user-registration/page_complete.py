@@ -21,7 +21,7 @@ class PageComplete(PageDefinition):
             _tr('Your user account has been created.') \
               + '  ' + _tr('Have a nice time with your studies!') +
             '\n\n' +
-            _tr('System must be rebooted, press OK when ready!'))
+            _tr('System must be rebooted.'))
 
         self.builder.get_object('complete_reboot').connect('clicked', self.reboot_clicked)
 
