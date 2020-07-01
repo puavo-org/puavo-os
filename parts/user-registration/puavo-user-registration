@@ -46,46 +46,31 @@ def disable_registration_window(is_production):
         subprocess.check_call(cmd)
 
 
-def login_locally(parent, username, password, is_production):
+def login_locally(username, password, is_production):
     if not is_production:
         logging.info('login_locally(): setting up local login, ' \
                      'username="%s", password="%s"', username, password)
-        return
+        return True
 
-    logging.info('login_locally(): setting up local login, username="%s"', username)
-
-    error_msg = None
+    logging.info('login_locally(): setting up local login, username="%s"',
+        username)
 
     if not (username and password):
-        error_msg = _tr('internal error: username and password missing')
+        raise Exception(_tr('internal error: username and password missing'))
 
-    if not error_msg:
-        try:
-            cmd = ['sudo', '-n',
-                   '/usr/lib/puavo-ltsp-client/firstlogin-to-account',
-                   username]
+    cmd = ['sudo', '-n', '/usr/lib/puavo-ltsp-client/firstlogin-to-account',
+           username]
 
-            proc = subprocess.Popen(cmd,
-                                    stdin=subprocess.PIPE,
-                                    stdout=subprocess.DEVNULL,
-                                    stderr=subprocess.DEVNULL)
+    proc = subprocess.Popen(cmd,
+                            stdin=subprocess.PIPE,
+                            stdout=subprocess.DEVNULL,
+                            stderr=subprocess.DEVNULL)
 
-            proc.stdin.write(password.encode())
-            proc.stdin.close()
-            proc.wait()
+    proc.stdin.write(password.encode())
+    proc.stdin.close()
+    proc.wait()
 
-            if proc.returncode != 0:
-                error_msg \
-                  = _tr('Could not do initial login with new user' \
-                        ' credentials.  Please remember your username' \
-                        ' "%s" for the first login.  Contact support if' \
-                        ' there are problems.') % username
-        except Exception as exc:
-            logging.fatal(str(exc), exc_info=True)
-            error_msg = _tr('Unknown login error:') + '\n\n' + str(exc)
-
-    if error_msg:
-        utils.show_error_message(parent, _tr('Error'), error_msg)
+    return proc.returncode == 0
 
 
 # ==============================================================================
@@ -349,13 +334,6 @@ class NewUserRegistrationWindow:
 
     def login_with_existing_account_clicked(self, *args):
         self.login_page.swap_with(self.account_page)
-        return
-
-        # XXX try login locally, go back if it did not succeed
-        login_status = login_locally(self.main_window,
-                                     self.username, self.password,
-                                     self.prod_mode)
-        print("login status was %s" % login_status)
 
 
     # Show the privacy policy dialog
@@ -382,9 +360,22 @@ class NewUserRegistrationWindow:
 
             disable_registration_window(self.prod_mode)
 
-            login_locally(self.main_window,
-                          self.username, self.password,
-                          self.prod_mode)
+            error_msg = ''
+            try:
+                login_ok = login_locally(self.username, self.password,
+                                         self.prod_mode)
+                if not login_ok:
+                    raise Exception('login failed after registration')
+            except Exception as exc:
+                logging.fatal(str(exc), exc_info=True)
+                error_msg \
+                  = _tr('Could not do initial login with new user' \
+                        ' credentials.  Please remember your username' \
+                        ' "%s" for the first login.  Contact support if' \
+                        ' there are problems.') % self.username
+            if error_msg:
+                utils.show_error_message(self.main_window, _tr('Error'),
+                    error_msg)
 
             logging.info('Rebooting now')
 
@@ -400,6 +391,22 @@ class NewUserRegistrationWindow:
                 self.main_window,
                 _tr('Fatal Error'),
                 _tr('Could not finish the registration process.  Please contact support.'))
+
+
+    def login_locally_from_loginpage(self, username, password):
+        try:
+            self.username = username
+            self.password = password
+            login_ok = login_locally(username, password, self.prod_mode)
+            if not login_ok:
+                utils.show_error_message(self.main_window, _tr('Error'),
+                                        _tr('Bad username and/or password'))
+            else:
+                self.next_page()
+        except Exception as e:
+            logging.warning('unexpected error in local login: %s' % str(e))
+            utils.show_error_message(self.main_window, _tr('Error'),
+                _tr('Un unexpected error occurred'))
 
 
     # Returns the machine data needed on the accounts page, when sending
@@ -418,6 +425,7 @@ class NewUserRegistrationWindow:
                 'password': self.machine_password,
                 'hostname': 'laptop1',
             }
+
 
     def previous_page(self):
         next_page_num = self.current_page_num - 1
@@ -461,8 +469,8 @@ class NewUserRegistrationWindow:
 
 
     def goto_page_by_num(self, page_num):
-        self.goto_page(self.all_pages[page_num])
         self.current_page_num = page_num
+        self.goto_page(self.all_pages[page_num])
 
 
 class UserRegistrationApplication(Gtk.Application):

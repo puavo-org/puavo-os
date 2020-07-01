@@ -19,6 +19,10 @@ class PageLogin(PageDefinition):
             'login_with_existing_account').get_label()
         self.we_are_active = False
 
+        # Setup event handling
+        handlers = { 'on_login_clicked': self.on_login_clicked }
+        self.builder.connect_signals(handlers)
+
 
     def get_main_title(self):
        return _tr('Login')
@@ -45,9 +49,10 @@ class PageLogin(PageDefinition):
             self.old_label_for_page_login)
 
 
-
-    def on_login_clicked(self, *args):
-        print("login clicked, yeah")
+    def on_login_clicked(self, widget):
+        username = self.builder.get_object('username').get_text().strip()
+        password = self.builder.get_object('password').get_text()
+        self.application.login_locally_from_loginpage(username, password)
 
 
     def enable_login_button(self):
