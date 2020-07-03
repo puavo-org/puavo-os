@@ -6,14 +6,19 @@ set -eu
 
 status=0
 
+scripts_to_run=$(puavo-conf puavo.desktop.run_once.scripts)
+
 run_once_dir=~/.puavo/run-once-on-desktop-session
 
 for script in /usr/local/share/puavo-run-once-on-desktop-session/*; do
   [ -x "$script" ] || continue
-
   script_filename=${script##*/}
-  run_once_path="${run_once_dir}/${script_filename}"
 
+  if ! printf %s "$scripts_to_run" | grep -qw "$script_filename"; then
+    continue
+  fi
+
+  run_once_path="${run_once_dir}/${script_filename}"
   if [ -e "$run_once_path" ]; then
     continue
   fi

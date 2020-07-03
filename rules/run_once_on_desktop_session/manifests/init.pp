@@ -1,5 +1,12 @@
 class run_once_on_desktop_session {
+  include ::puavo_conf
+
   $source_dir = '/usr/local/share/puavo-run-once-on-desktop-session'
+
+  ::puavo_conf::definition {
+    'puavo-run-once.json':
+      source => 'puppet:///modules/run_once_on_desktop_session/puavo-run-once.json';
+  }
 
   define script ($source) {
     $scriptname = $title
