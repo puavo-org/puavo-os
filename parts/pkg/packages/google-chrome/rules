@@ -5,6 +5,18 @@ set -eu
 command=$1
 shift
 
+add_desktop_file_fixer() {
+  cat <<'EOF' > /etc/X11/Xsession.d/70fix-chrome-desktop-files
+# Change all google-chrome .desktop files to run through
+# /usr/bin/google-chrome instead of the (changing) puavo-pkg path.
+if [ -d ~/.local/share/applications ]; then
+  find ~/.local/share/applications/ -name '*.desktop' -print0 \
+    | xargs -0 --no-run-if-empty \
+            sed -i '/^Exec=.*google-chrome /s/^Exec=.*\/google-chrome /Exec=\/usr\/bin\/google-chrome-stable /'
+fi
+EOF
+}
+
 write_startup_wrapper() {
   cat <<'EOF' > /usr/bin/google-chrome-stable.tmp
 #!/bin/sh
@@ -117,13 +129,15 @@ case "${command}" in
         ln -fns "${upstream_dir}/opt/google/chrome/google-chrome" \
             /usr/bin/google-chrome-stable.puavopkg
         write_startup_wrapper
+        add_desktop_file_fixer
 
         sed '/^MimeType=/a\
 StartupNotify=true' "${upstream_dir}/usr/share/applications/google-chrome.desktop" \
             > /usr/share/applications/google-chrome.desktop
         ;;
     unconfigure)
-        rm -f /usr/bin/google-chrome-stable                           \
+        rm -f /etc/X11/Xsession.d/70fix-chrome-desktop-files          \
+              /usr/bin/google-chrome-stable                           \
               /usr/bin/google-chrome-stable.puavopkg                  \
               /usr/share/applications/google-chrome.desktop           \
               /usr/share/man/man1/google-chrome.1                     \

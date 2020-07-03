@@ -34,6 +34,7 @@ class image::bundle::desktop {
   include ::polkit_printers
   include ::puavo_pkg::packages
   # include ::pycharm	                # XXX pycharm needs to be packaged
+  include ::run_once_on_desktop_session
   include ::supplementary_groups
   include ::tuxpaint
   include ::virtualbox
