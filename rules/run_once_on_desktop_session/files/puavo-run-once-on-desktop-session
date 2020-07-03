@@ -1,0 +1,30 @@
+#!/bin/sh
+
+set -eu
+
+[ "${GUEST_SESSION:-}" = 'true' ] && exit 0
+
+status=0
+
+run_once_dir=~/.puavo/run-once-on-desktop-session
+
+for script in /usr/local/share/puavo-run-once-on-desktop-session/*; do
+  [ -x "$script" ] || continue
+
+  script_filename=${script##*/}
+  run_once_path="${run_once_dir}/${script_filename}"
+
+  if [ -e "$run_once_path" ]; then
+    continue
+  fi
+
+  if $script; then
+    mkdir -p "$run_once_dir"
+    touch "$run_once_path"
+  else
+    echo "Problem running $script" >&2
+    status=1
+  fi
+done
+
+exit $status

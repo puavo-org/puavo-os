@@ -33,6 +33,7 @@ class image::bundle::desktop {
   include ::picaxe_udev_rules
   include ::polkit_printers
   # include ::pycharm	                # XXX pycharm needs to be packaged
+  include ::run_once_on_desktop_session
   include ::smartboard
   include ::supplementary_groups
   include ::ti_nspire_cx_cas
