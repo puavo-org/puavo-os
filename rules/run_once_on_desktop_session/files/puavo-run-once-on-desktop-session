@@ -4,9 +4,13 @@ set -eu
 
 [ "${GUEST_SESSION:-}" = 'true' ] && exit 0
 
-status=0
-
 scripts_to_run=$(puavo-conf puavo.desktop.run_once.scripts)
+
+if [ -z "$scripts_to_run" ]; then
+  exit 0
+fi
+
+status=0
 
 run_once_dir=~/.puavo/run-once-on-desktop-session
 
