@@ -72,7 +72,7 @@ struct conf_cache {
 
 static int	 add_cacheitem_to_puavo_conf(puavo_conf_t *,
     struct conf_cache *, int, int);
-static int	 apply_device_settings(struct conf_cache **, int);
+static int	 apply_device_settings(struct conf_cache **, const char *, int);
 static int	 apply_hosttype_profile(struct conf_cache **, int);
 static int	 apply_hwquirk_rule_parameters(struct conf_cache **, json_t *);
 static int	 apply_hwquirks(struct conf_cache **, int);
@@ -101,7 +101,7 @@ static int	 overwrite_value(struct conf_cache **, const char *,
     const char *);
 static json_t	*parse_json_file(const char *);
 static int	 update_dmi_table(struct dmi *, size_t);
-static int	 update_cache(struct conf_cache **, int);
+static int	 update_cache(struct conf_cache **, const char *, int);
 static int       write_to_puavo_conf(struct conf_cache **, int, int);
 static void	 usage(void);
 static struct conf_cache *make_cache_item(const char *, const char *);
@@ -110,7 +110,9 @@ int
 main(int argc, char *argv[])
 {
 	struct conf_cache *cache;
+	const char *devicejson_path;
 	static struct option long_options[] = {
+	    { "devicejson-path", required_argument, 0, 0 },
 	    { "help",            no_argument,       0, 0 },
 	    { "init",            no_argument,       0, 0 },
 	    { "verbose",         no_argument,       0, 0 },
@@ -122,6 +124,7 @@ main(int argc, char *argv[])
 	status = 0;
 	verbose = 0;
 	cache = NULL;
+	devicejson_path = DEVICEJSON_PATH;
 
 	for (;;) {
 		option_index = 0;
@@ -136,12 +139,15 @@ main(int argc, char *argv[])
 
 		switch (option_index) {
 		case 0:
+			devicejson_path = optarg;
+			break;
+		case 1:
 			usage();
 			return 0;
-		case 1:
+		case 2:
 			init = 1;
 			break;
-		case 2:
+		case 3:
 			verbose = 1;
 			break;
 		default:
@@ -160,7 +166,7 @@ main(int argc, char *argv[])
 		status = EXIT_FAILURE;
 	}
 
-	if (update_cache(&cache, verbose) != 0) {
+	if (update_cache(&cache, devicejson_path, verbose) != 0) {
 		warnx("problem in updating cache");
 		status = EXIT_FAILURE;
 	}
@@ -190,6 +196,7 @@ usage(void)
 	       "  6. kernel command line\n"
 	       "\n"
 	       "Options:\n"
+	       "  --devicejson-path         path for device.json (optional)\n"
 	       "  --help                    display this help and exit\n"
 	       "  --init                    initialize the database\n"
 	       "  --verbose                 verbose output\n"
@@ -316,7 +323,8 @@ check_file_exists(const char *pathname)
 }
 
 static int
-update_cache(struct conf_cache **cache, int verbose)
+update_cache(struct conf_cache **cache, const char *devicejson_path,
+    int verbose)
 {
 	int retvalue;
 
@@ -330,7 +338,7 @@ update_cache(struct conf_cache **cache, int verbose)
 
 	/* Also apply device settings now, because that might affect
 	 * puavo.hosttype and puavo.profiles.list. */
-	if (apply_device_settings(cache, verbose) != 0)
+	if (apply_device_settings(cache, devicejson_path, verbose) != 0)
 		retvalue = 1;
 
 	if (apply_one_profile(cache, IMAGE_CONF_PATH, verbose) != 0)
@@ -344,7 +352,7 @@ update_cache(struct conf_cache **cache, int verbose)
 
 	/* Apply device settings again, because those override
 	 * profiles and hwquirks. */
-	if (apply_device_settings(cache, verbose) != 0)
+	if (apply_device_settings(cache, devicejson_path, verbose) != 0)
 		retvalue = 1;
 
 	/* Apply possible local puavo-conf configurations. */
@@ -472,7 +480,8 @@ get_cmdline(void)
 }
 
 static int
-apply_device_settings(struct conf_cache **cache, int verbose)
+apply_device_settings(struct conf_cache **cache, const char *devicejson_path,
+    int verbose)
 {
 	json_t *root, *device_conf, *node_value;
 	const char *param_name, *param_value;
@@ -480,26 +489,26 @@ apply_device_settings(struct conf_cache **cache, int verbose)
 
 	if (verbose) {
 		(void) printf("puavo-conf-update: applying device settings"
-		    " from %s\n", DEVICEJSON_PATH);
+		    " from %s\n", devicejson_path);
 	}
 
 	retvalue = 0;
 
-	if ((root = parse_json_file(DEVICEJSON_PATH)) == NULL) {
-		warnx("parse_json_file() failed for %s", DEVICEJSON_PATH);
+	if ((root = parse_json_file(devicejson_path)) == NULL) {
+		warnx("parse_json_file() failed for %s", devicejson_path);
 		return 1;
 	}
 
 	if (!json_is_object(root)) {
 		warnx("device settings in %s are not in correct format",
-		    DEVICEJSON_PATH);
+		    devicejson_path);
 		retvalue = 1;
 		goto finish;
 	}
 
 	if ((device_conf = json_object_get(root, "conf")) == NULL) {
 		warnx("device settings in %s are lacking configuration values",
-		    DEVICEJSON_PATH);
+		    devicejson_path);
 		retvalue = 1;
 		goto finish;
 	}
@@ -507,7 +516,7 @@ apply_device_settings(struct conf_cache **cache, int verbose)
 	json_object_foreach(device_conf, param_name, node_value) {
 		if ((param_value = json_string_value(node_value)) == NULL) {
 			warnx("device settings in %s has a non-string value"
-			    " for key %s", DEVICEJSON_PATH, param_name);
+			    " for key %s", devicejson_path, param_name);
 			retvalue = 1;
 			continue;
 		}
