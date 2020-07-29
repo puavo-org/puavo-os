@@ -1,0 +1,34 @@
+To fuzz with afl, this patch is needed (it makes no sense this is needed,
+my guess is that afl instrumentation breaks it).
+
+Build with:
+  make CC=afl-gcc clean all && sudo make prefix=/usr sysconfdir=/etc install
+
+Test:
+  afl-fuzz -i in -o out /usr/sbin/puavo-conf-update --devicejson-path @@
+
+diff --git a/parts/conf/puavo-conf-update.c b/parts/conf/puavo-conf-update.c
+index 16f0fca78..2d19a21d1 100644
+--- a/puavo-conf-update.c
++++ b/puavo-conf-update.c
+@@ -1127,7 +1127,7 @@ finish:
+ static int
+ write_to_puavo_conf(struct conf_cache **cache, int init, int verbose)
+ {
+-	puavo_conf_t *conf;
++	puavo_conf_t *conf, *backup_conf;
+ 	struct puavo_conf_err err;
+ 	struct conf_cache *item, *tmp;
+ 	int ret, r;
+@@ -1139,8 +1139,11 @@ write_to_puavo_conf(struct conf_cache **cache, int init, int verbose)
+ 		return 1;
+ 	}
+ 
++	backup_conf = conf;
++
+ 	HASH_ITER(hh, *cache, item, tmp) {
+ 		r = add_cacheitem_to_puavo_conf(conf, item, init, verbose);
++		conf = backup_conf;
+ 		if (r != 0)
+ 			ret = 1;
+ 		HASH_DEL(*cache, item);
