@@ -100,11 +100,12 @@ if [ -n "$target_image" ]; then
 
   dd if=/dev/null "of=${target_image}" bs=1M \
      seek="$(calc_required_imagefile_gigabytes "$source_image")K"
-  loopdev=$(losetup --show -f "$target_image")
+  loopdev=$(losetup --show -P -f "$target_image")
 
-  puavo-setup-filesystems --accept-defaults \
-                          --default-confirm-partitions yes \
-                          --default-disk-device "${loopdev#/dev/}" \
+  puavo-setup-filesystems --force-disk-device "${loopdev#/dev/}" \
+                          --force-partition whole \
+                          --force-wipe-partition no \
+                          --force-write-partitions yes \
                           --hosttype diskinstaller \
                           --loopback-only
 else
