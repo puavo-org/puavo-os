@@ -237,7 +237,7 @@ prepare-for-squashfs:
 .PHONY: rootfs-install-image
 rootfs-install-image: rootfs-image $(install_image_dir)
 	puavo-make-install-disk --source-image '$(image_dir)/$(_image_file)' \
-	    --target-image '$(install_image_dir)/$(_image_file)' \
+	    --target-image '$(install_image_dir)/install-$(_image_file)' \
 	    --with-vdi
 
 .PHONY: rootfs-shell
