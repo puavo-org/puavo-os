@@ -788,8 +788,7 @@ class Image < SyncFileWithMetadata
       else
         all_ok = false
 	warning(level-1,
-		%Q{#{ cmd } returned error code #{ $?.exitstatus }},
-	        HighLine::RED)
+		%Q{#{ cmd } returned error code #{ $?.exitstatus }})
       end
     end
 
