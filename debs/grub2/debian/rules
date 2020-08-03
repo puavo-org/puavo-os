@@ -2,7 +2,7 @@
 SHELL		:= bash
 
 deb_withbuild_version	:= $(shell dpkg-parsechangelog | sed -ne "s/^Version: \(.*\)/\1/p")
-deb_version	        := $(shell echo $(deb_withbuild_version) | sed -E 's/\+build[0-9]+$$//')
+deb_version		:= $(shell echo $(deb_withbuild_version) | sed -E 's/\+build[0-9]+$$//')
 upstream_version	:= $(shell echo $(deb_version) | sed -e "s/-[^-]*$$//")
 
 package		:= grub2
@@ -220,7 +220,7 @@ debian/stamps/build-grub-efi-ia32 debian/stamps/build-grub-efi-amd64 debian/stam
 		obj/grub-$(COMMON_PLATFORM)/grub-mkimage \
 		obj/$(package)/grub-core \
 		obj/monolithic/$(package) \
-		$(SB_PLATFORM) $(SB_EFI_NAME) $(SB_EFI_VENDOR)
+		$(DEB_HOST_ARCH) $(SB_PLATFORM) $(SB_EFI_NAME) $(SB_EFI_VENDOR)
 	touch $@
 
 debian/stamps/build-grub-xen-host-i386: PVBOOT_ARCH := i386

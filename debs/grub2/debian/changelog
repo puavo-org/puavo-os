@@ -1,8 +1,105 @@
-grub2 (2.02+dfsg1-16.1+puavo1) buster; urgency=medium
+grub2 (2.02+dfsg1-20+deb10u2+puavo1) buster; urgency=medium
 
   * Build our own grub2 so we have grub-updates better in our control.
 
  -- Puavo Org <dev@opinsys.fi>  Tue, 16 Apr 2019 10:33:20 +0300
+
+grub2 (2.02+dfsg1-20+deb10u2) buster-security; urgency=high
+
+  * Fix a regression caused by "efi: fix some malformed device path
+    arithmetic errors" (thanks, Chris Coulson and Steve McIntyre; closes:
+    #966554).
+
+ -- Colin Watson <cjwatson@debian.org>  Thu, 30 Jul 2020 20:19:53 +0100
+
+grub2 (2.02+dfsg1-20+deb10u1) buster-security; urgency=high
+
+  * Backport security patch series from upstream:
+    - CVE-2020-10713: yylex: Make lexer fatal errors actually be fatal
+    - safemath: Add some arithmetic primitives that check for overflow
+    - calloc: Make sure we always have an overflow-checking calloc()
+      available
+    - CVE-2020-14308: calloc: Use calloc() at most places
+    - CVE-2020-14309, CVE-2020-14310, CVE-2020-14311: malloc: Use overflow
+      checking primitives where we do complex allocations
+    - iso9660: Don't leak memory on realloc() failures
+    - font: Do not load more than one NAME section
+    - gfxmenu: Fix double free in load_image()
+    - xnu: Fix double free in grub_xnu_devprop_add_property()
+    - lzma: Make sure we don't dereference past array
+    - term: Fix overflow on user inputs
+    - udf: Fix memory leak
+    - tftp: Do not use priority queue
+    - relocator: Protect grub_relocator_alloc_chunk_addr() input args
+      against integer underflow/overflow
+    - relocator: Protect grub_relocator_alloc_chunk_align() max_addr against
+      integer underflow
+    - script: Remove unused fields from grub_script_function struct
+    - CVE-2020-15706: script: Avoid a use-after-free when redefining a
+      function during execution
+    - relocator: Fix grub_relocator_alloc_chunk_align() top memory
+      allocation
+    - hfsplus: fix two more overflows
+    - lvm: fix two more potential data-dependent alloc overflows
+    - emu: make grub_free(NULL) safe
+    - efi: fix some malformed device path arithmetic errors
+    - update safemath with fallback code for gcc older than 5.1
+    - efi: Fix use-after-free in halt/reboot path
+    - linux loader: avoid overflow on initrd size calculation
+    - CVE-2020-15707: linux: Fix integer overflows in initrd size handling
+  * Apply overflow checking to allocations in Debian patches:
+    - CVE-2020-15707: efilinux: Fix integer overflows in grub_cmd_initrd
+    - bootp: Fix integer overflow in parse_dhcp6_option
+    - unix/config: Fix integer overflow in grub_util_load_config
+    - deviceiter: Fix integer overflow in grub_util_iterate_devices
+
+ -- Colin Watson <cjwatson@debian.org>  Sun, 26 Jul 2020 22:38:55 +0100
+
+grub2 (2.02+dfsg1-20) unstable; urgency=medium
+
+  [ Steve McIntyre ]
+  * Make all the signed EFI arches have a Recommends: from
+    grub-efi-ARCH-signed to shim-signed, not just amd64.
+    Closes: #931038
+  * Add myself to Uploaders
+
+ -- Steve McIntyre <93sam@debian.org>  Tue, 25 Jun 2019 10:11:12 +0100
+
+grub2 (2.02+dfsg1-19) unstable; urgency=medium
+
+  [ Colin Watson ]
+  * Fix format of debian/copyright.
+
+  [ Steve McIntyre ]
+  * Add the ntfs module to signed UEFI images. Closes: #923855
+  * Add the cpuid module to signed UEFI images. Closes: #928628
+  * Add the play module to signed UEFI images. Closes: #930290
+  * Add an extra di-specific version of the UEFI netboot image with a
+    different baked-in prefix value. Helps to fix #928750.
+  * Deal with --force-extra-removable with signed shim too. Closes: #930531
+
+ -- Colin Watson <cjwatson@debian.org>  Fri, 14 Jun 2019 19:04:01 +0100
+
+grub2 (2.02+dfsg1-18) unstable; urgency=medium
+
+  * Apply patches from Alexander Graf to fix grub-efi-arm crash (closes:
+    #927269):
+    - arm: Move trampolines into code section
+    - arm: Align section alignment with manual relocation offset code
+  * Make grub2-common Breaks+Replaces grub-cloud-amd64 (<< 0.0.4) to work
+    around that package shipping colliding configuration file names in
+    stretch-backports (closes: #919915).
+  * Apply patch from Peter Jones to forbid the "devicetree" command when
+    Secure Boot is enabled (closes: #927888).
+
+ -- Colin Watson <cjwatson@debian.org>  Sat, 04 May 2019 22:58:32 +0100
+
+grub2 (2.02+dfsg1-17) unstable; urgency=medium
+
+  * Make grub-efi-*-bin recommend efibootmgr.  We don't actually use it any
+    more, but it's helpful for debugging.
+
+ -- Colin Watson <cjwatson@debian.org>  Mon, 15 Apr 2019 18:38:30 +0100
 
 grub2 (2.02+dfsg1-16) unstable; urgency=medium
 
