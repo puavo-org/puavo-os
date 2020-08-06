@@ -222,7 +222,7 @@
         </child>
         <child>
           <object class="GtkButton" id="reset_to_factory_settings">
-            <property name="label" translatable="yes">DESTROY ALL USER DATA AND RESET LAPTOP TO FACTORY STATE (requires password)</property>
+            <property name="label" translatable="yes">Destroy all user data and reset laptop to factory state (requires password)</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
