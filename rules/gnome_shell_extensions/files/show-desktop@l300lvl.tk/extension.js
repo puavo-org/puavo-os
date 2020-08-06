@@ -1,23 +1,4 @@
-/*
-Modified by Jarmo Pietiläinen at Opinsys Oy, June 2017
-The icons that came with this extension didn't look good in our system,
-so I changed them. I also explicitly specify the icon size (32) now so
-it looks consistent with everything else. No other changes were made.
-
-The original extension is licensed under the GNU GPL 2, so this customized
-version falls under it too. See LICENSE for more information.
-
-Future TODO:
-  - disable the preferences dialog so the icon is always located next
-    to the Webmenu button?
-
-The original extension is available at:
-    https://extensions.gnome.org/extension/64/show-desktop-button/
-    https://github.com/l300lvl/Show-Desktop-Button
-*/
-
 /*much various credit to simonthechipmunk, mikechaberski, mathematicalcoffee, asan, spinus, Xes, gcampax, magcius, and every other dev i have burrowed code from over time. without gnu/gpl/foss nothing i code would ever be possible as i just wouldnt bother*/
-
 const St = imports.gi.St;
 const Gtk = imports.gi.Gtk;
 const Main = imports.ui.main;
