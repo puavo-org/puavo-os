@@ -194,10 +194,6 @@ $(image_dir):
 $(install_image_dir):
 	$(_sudo) mkdir -p '$(install_image_dir)'
 
-.PHONY: make-release-logos
-make-release-logos:
-	$(_sudo) /usr/lib/puavo-ltsp-client/make-release-logos
-
 .PHONY: update-mime-database
 update-mime-database:
 	$(_sudo) /usr/lib/puavo-ltsp-client/update-mime-database
@@ -218,7 +214,6 @@ rootfs-image: $(rootfs_dir) $(image_dir)
 	    '$(rootfs_dir).var_cache_backup/'
 	$(_sudo) .aux/set-image-release '$(rootfs_dir)' \
 	    '$(_image_file)' '$(release_name)'
-	$(_systemd_nspawn_cmd) $(MAKE) -C '/puavo-os' make-release-logos
 	$(_systemd_nspawn_cmd) $(MAKE) -C '/puavo-os' update-mime-database
 	$(_sudo) mksquashfs '$(rootfs_dir)' '$(image_dir)/$(_image_file).tmp'	\
 		-noappend -no-recovery -no-sparse -wildcards -comp lzo	\
