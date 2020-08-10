@@ -47,8 +47,11 @@ class PageNetwork(PageDefinition):
         self.connect_button = self.builder.get_object('network_connect_button')
         self.connect_button.connect('clicked', self.connect_to_wifi)
 
-        self.builder.get_object('network_go_to_account_page_button') \
-            .connect('clicked', self.go_to_account_setup)
+        self.button_to_account_page \
+            = self.builder.get_object('network_go_to_account_page_button')
+        self.button_to_account_page.set_sensitive(False)
+        self.button_to_account_page.connect('clicked',
+                                            self.go_to_account_setup)
 
 
     def get_main_title(self):
@@ -295,6 +298,7 @@ class PageNetwork(PageDefinition):
                 logging.info('Network connection successful!')
                 # TODO: automatically go to the next page here?
                 #self.application.next_page()
+                self.button_to_account_page.set_sensitive(True)
             else:
                 logging.info('Network connection failed')
                 self.connection_status.set_text(_tr('Connection failed'))
