@@ -18,23 +18,23 @@ fi
 case "$LANG" in
   de*)
     summary='AUTOMATISCHES LÖSCHEN VON DATEIEN'
-    body='Die Dateien auf dem Computer werden möglicherweise automatisch gelöscht, da der Computer nur über wenig Speicherplatz verfügt.'
+    body='Dateien auf diesem Computer werden möglicherweise automatisch gelöscht, wenn der verfügbare Speicherplatz knapp wird.'
     ;;
   fi*)
     summary='AUTOMAATTINEN TIEDOSTOJEN POISTO'
-    body='Tämän tietokoneen tiedostoja voidaan poistaa automaattisesti, koska koneessa on vain vähän levytilaa.'
+    body='Tämän tietokoneen tiedostoja voidaan poistaa automaattisesti, jos käytettävissä oleva levytila käy vähiin.'
     ;;
   fr*)
     summary='SUPPRESSION AUTOMATIQUE DES FICHIERS'
-    body="Les fichiers de l'ordinateur peuvent être supprimés automatiquement, car l'ordinateur ne dispose que d'une petite quantité d'espace disque."
+    body="Les fichiers sur cet ordinateur peuvent être supprimés automatiquement si l'espace disque disponible devient insuffisant."
     ;;
   sv*)
     summary='AUTOMATISK RADERING AV FILER'
-    body='Datorfiler kan raderas automatiskt eftersom det bara finns en liten mängd diskutrymme på datorn.'
+    body='Filer på den här datorn kan raderas automatiskt om det tillgängliga diskutrymmet blir lågt.'
     ;;
   *)
     summary='AUTOMATIC FILE DELETION'
-    body='The files in the computer may be deleted automatically, because the computer has only a small amount of diskspace.'
+    body='Files on this computer may be deleted automatically if the available disk space becomes low.'
     ;;
 esac
 
