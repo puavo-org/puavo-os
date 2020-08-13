@@ -105,14 +105,6 @@ EOF
 
 darkdm_reboot()
 {
-  local i
-
-  for i in $(seq 5 -1 1); do
-    echo -n -e "\rRebooting in ${i}s. (Press Ctrl-C to cancel)"
-    sleep 1 || return 1
-  done
-  echo -e "\rRebooting now!                              "
-
   reboot
 }
 
@@ -189,14 +181,6 @@ darkdm_update()
 
 darkdm_poweroff()
 {
-  local i
-
-  for i in $(seq 5 -1 1); do
-    echo -n -e "\rPowering-off in ${i}s. (Press Ctrl-C to cancel)"
-    sleep 1 || return 1
-  done
-  echo -e "\rPowering-off now!                              "
-
   poweroff
 }
 
