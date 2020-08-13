@@ -16,6 +16,7 @@ import shutil
 import signal
 import subprocess
 import sys
+import syslog
 import threading
 import time
 
@@ -46,6 +47,7 @@ EXAMS_UPCOMING_DIR = os.path.join(KTP_JAKO_DIR, 'Tulevat')
 def rm_f(path):
   try:
     os.unlink(path)
+    syslog.syslog(syslog.LOG_INFO, 'removed %s' % path)
   except OSError as e:
     if e.errno != errno.ENOENT:
       raise e
@@ -108,6 +110,8 @@ class PuavoErsApplet:
 
 
   def run_naksu(self):
+    syslog.syslog(syslog.LOG_NOTICE, 'starting up naksu')
+
     cmd = [ '/usr/bin/terminator', '-T', 'naksu terminal',
             '--working-directory=' + self.PUAVO_ERS_DIR,
             '-x', './naksu', '--self-update=enabled' ]
@@ -132,14 +136,16 @@ class PuavoErsApplet:
         channel.close()
         (pid, status) = os.waitpid(self.naksu_pid, 0)
         if status != 0:
-          print("naksu pid %d returned exit status %s" % (pid, status),
-                file=sys.stderr)
+          syslog.syslog(syslog.LOG_ERR,
+                        'naksu pid %d returned exit status %s' % (pid, status))
+        else:
+          syslog.syslog(syslog.LOG_NOTICE, 'naksu exited with success')
 
         time.sleep(3)
         self.run_naksu()
 
     except Exception as e:
-      print("error when handling naksu: %s" % e, file=sys.stderr)
+      syslog.syslog(syslog.LOG_ERR, 'error when handling naksu: %s' % e)
       return False
 
     return True
@@ -161,12 +167,14 @@ class PuavoErsApplet:
 
     if error:
       # XXX should user be notified?
-      print('error when updating passwords: %s' % error, file=sys.stderr)
+      syslog.syslog(syslog.LOG_ERR, 'error when updating passwords: %s' % error)
 
     return True
 
 
   def update_passwords_in_ui(self, new_exams):
+    syslog.syslog(syslog.LOG_INFO, 'updating passwords in UI')
+
     self.exams_by_widgets = {}
     for button in self.password_buttons:
       button.destroy()
@@ -174,8 +182,8 @@ class PuavoErsApplet:
     labels = {}
     for exam in new_exams:
       if not re.match('^exam_.*\.meb$', exam['file_name']):
-        print('not showing password for exam %s' % exam['file_name'],
-              file=sys.stderr)
+        syslog.syslog(syslog.LOG_WARNING,
+          'not showing password for exam %s' % exam['file_name'])
         continue
 
       # do not show passwords for old exams
@@ -202,6 +210,8 @@ class PuavoErsApplet:
 
 
   def copy_password_to_clipboard(self, widget):
+    syslog.syslog(syslog.LOG_INFO, 'copying password to clipboard')
+
     password = self.exams_by_widgets[widget]['decrypt_code']
     self.clipboard.set_text(password, -1)
     self.latest_chosen_password = password
@@ -235,6 +245,8 @@ class PuavoErsExamSync (threading.Thread):
     index_uri = 'https://%s/v1/schedules/query_exam_server_schedule' \
                    % self.exam_server_address
 
+    syslog.syslog(syslog.LOG_INFO, 'checking for new exams from %s' % index_uri)
+
     response = requests.get(index_uri,
                             auth=HTTPBasicAuth(self.ldap_dn,
                                                self.ldap_password),
@@ -244,8 +256,9 @@ class PuavoErsExamSync (threading.Thread):
                               'id':       self.id,
                             })
     if not response:
-      print('error when getting exam index from %s: %s' \
-              % (index_uri, response.status_code), file=sys.stderr)
+      syslog.syslog(syslog.LOG_ERR,
+        'error when getting exam index from %s: %s' \
+          % (index_uri, response.status_code))
       return
 
     exams_json = response.content.decode('utf-8')
@@ -266,7 +279,7 @@ class PuavoErsExamSync (threading.Thread):
         self.sync_one_exam(exam_file_name, exam)
         exam_name_list.append(exam_file_name)
       except Exception as e:
-        print('error in syncing one exam: %s' % e, file=sys.stderr)
+        syslog.syslog(syslog.LOG_ERR, 'error in syncing one exam: %s' % e)
 
     # clean up old exams that no longer belong to exams subdirectories
     for exam_path in glob.glob( os.path.join(EXAMS_DIR, 'exam_*.meb') ):
@@ -285,13 +298,16 @@ class PuavoErsExamSync (threading.Thread):
       os.rename(tmpfile, EXAMS_JSON_FILE)
     except Exception as e:
       # XXX should user be notified?
-      print('error in writing passwords to %s: %s' % (EXAMS_JSON_FILE, e))
+      syslog.syslog(syslog.LOG_CRIT,
+        'error in writing passwords to %s: %s' % (EXAMS_JSON_FILE, e))
 
 
   def sync_one_exam(self, exam_file_name, exam):
     exam_file_path = os.path.join(EXAMS_DIR, exam_file_name)
     if os.path.isfile(exam_file_path):
       return
+
+    syslog.syslog(syslog.LOG_NOTICE, 'syncing exam %s' % exam_file_name)
 
     exam_hash = exam['file_sha256']
     if not isinstance(exam_hash, str):
@@ -317,6 +333,8 @@ class PuavoErsExamSync (threading.Thread):
       f.write(response.content)
     os.rename(tmpfile, exam_file_path)
 
+    syslog.syslog(syslog.LOG_INFO, 'exam %s synced okay' % exam_file_name)
+
 
 class PuavoErsExamZipper (threading.Thread):
   def __init__(self):
@@ -330,7 +348,7 @@ class PuavoErsExamZipper (threading.Thread):
       try:
         self.sort_exams_to_dirs()
       except Exception as e:
-        print('some error when sorting exams: %s' % e, file=sys.stderr)
+        syslog.syslog(syslog.LOG_ERR, 'some error when sorting exams: %s' % e)
 
       time.sleep(10)
 
@@ -361,7 +379,7 @@ class PuavoErsExamZipper (threading.Thread):
           and self.current_time < exam_end_time:
             currently_running_exams.append(exam['file_name'])
       except Exception as e:
-        print('could not handle an exam: %s' % e, file=sys.stderr)
+        syslog.syslog(syslog.LOG_ERR, 'could not handle an exam: %s' % e)
 
     self.link_exams_to_dir(EXAMS_ARCHIVE_DIR, archived_exams,
                            remove_other=False)
@@ -380,6 +398,8 @@ class PuavoErsExamZipper (threading.Thread):
       try:
         os.link(os.path.join(EXAMS_DIR, exam_name),
                 os.path.join(linkdir, exam_name))
+        syslog.syslog(syslog.LOG_INFO,
+                      'exam %s linked to %s' % (exam_name, linkdir))
       except OSError as e:
         if e.errno != errno.EEXIST:
           raise e
@@ -399,11 +419,14 @@ class PuavoErsExamZipper (threading.Thread):
       or meb_files != self.previous_meb_files_in_all_zip:
         rm_f(current_all_zip_path)
         try:
+          syslog.syslog(syslog.LOG_INFO,
+            'zipping exams %s into %s' % (meb_files, current_all_zip_path))
           subprocess.check_output([ 'zip', '-j', current_all_zip_path ] \
                                     + meb_files)
         except Exception as e:
-          print('error when zipping exam files to %s: %s' \
-                  % (current_all_zip_path, meb_files), file=sys.stderr)
+          syslog.syslog(syslog.LOG_ERR,
+            'error when zipping exam files to %s: %s' \
+              % (current_all_zip_path, meb_files))
 
     self.previous_meb_files_in_all_zip = meb_files
 
@@ -412,6 +435,10 @@ class PuavoErsExamZipper (threading.Thread):
       if current_all_zip_path != zipfile:
         rm_f(zipfile)
 
+
+syslog.openlog('puavo-ers-applet')
+
+syslog.syslog(syslog.LOG_NOTICE, 'puavo-ers-applet starting up')
 
 applet = PuavoErsApplet()
 
@@ -425,3 +452,5 @@ for dir in [ KTP_JAKO_DIR, EXAMS_DIR, EXAMS_ARCHIVE_DIR, EXAMS_UPCOMING_DIR ]:
 if __name__ == '__main__':
   signal.signal(signal.SIGINT, signal.SIG_DFL)
   applet.main()
+
+syslog.closelog()

@@ -17,20 +17,25 @@ fi
 
 case "$LANG" in
   de*)
-    report='Die Dateien auf dem Computer werden möglicherweise automatisch gelöscht, da der Computer nur über wenig Speicherplatz verfügt.'
+    summary='AUTOMATISCHES LÖSCHEN VON DATEIEN'
+    body='Dateien auf diesem Computer werden möglicherweise automatisch gelöscht, wenn der verfügbare Speicherplatz knapp wird.'
     ;;
   fi*)
-    report='Tämän tietokoneen tiedostoja voidaan poistaa automaattisesti, koska koneessa on vain vähän levytilaa.'
+    summary='AUTOMAATTINEN TIEDOSTOJEN POISTO'
+    body='Tämän tietokoneen tiedostoja voidaan poistaa automaattisesti, jos käytettävissä oleva levytila käy vähiin.'
     ;;
   fr*)
-    report='Les fichiers de l'ordinateur peuvent être supprimés automatiquement, car l'ordinateur ne dispose que d'une petite quantité d'espace disque.'
+    summary='SUPPRESSION AUTOMATIQUE DES FICHIERS'
+    body="Les fichiers sur cet ordinateur peuvent être supprimés automatiquement si l'espace disque disponible devient insuffisant."
     ;;
   sv*)
-    report='Datorfiler kan raderas automatiskt eftersom det bara finns en liten mängd diskutrymme på datorn.'
+    summary='AUTOMATISK RADERING AV FILER'
+    body='Filer på den här datorn kan raderas automatiskt om det tillgängliga diskutrymmet blir lågt.'
     ;;
   *)
-    report='The files in the computer may be deleted automatically, because the computer has only a small amount of diskspace.'
+    summary='AUTOMATIC FILE DELETION'
+    body='Files on this computer may be deleted automatically if the available disk space becomes low.'
     ;;
 esac
 
-zenity --warning --text="$report"
+notify-send -i system-devices-panel-alert "$summary" "$body"
