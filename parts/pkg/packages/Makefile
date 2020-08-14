@@ -59,6 +59,7 @@ packagedirs += scratux
 packagedirs += shotcut
 packagedirs += skype
 packagedirs += smartboard
+packagedirs += sof-bin
 packagedirs += spotify-client
 packagedirs += teams
 packagedirs += teamviewer

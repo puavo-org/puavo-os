@@ -12,6 +12,7 @@ class puavo_pkg::packages {
   $buster_specific_packages  = [ 'celestia'
                                , 'eclipse'
                                , 'netbeans'
+                               , 'sof-bin'
                                , 'tela-icon-theme'
                                , 'ubuntu-wallpapers'
                                , 'vagrant' ]

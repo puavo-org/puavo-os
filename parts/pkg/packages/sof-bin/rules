@@ -1,0 +1,25 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "${command}" in
+    configure)
+	upstream_dir=$1
+        cd "${upstream_dir}/sof-bin-stable-v1.5" && ./go.sh
+	;;
+    unconfigure)
+        rm -rf /lib/firmware/intel/sof        \
+               /lib/firmware/intel/sof-tplg-* \
+               /lib/firmware/intel/sof-tplg
+	;;
+    unpack)
+	upstream_pack=$1
+	upstream_dir=$2
+	unzip -q -d "$upstream_dir" "$upstream_pack"
+	;;
+    *)
+	;;
+esac
