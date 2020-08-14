@@ -134,6 +134,7 @@ Commands:
   kbd [layout]         - set keyboard layout
   live                 - switch to graphical mode
   make-install-disk    - make a bootable usb flash drive or some such
+  mount                - mount puavo filesystems (if host is already installed)
   nmtui                - configure network (not available on netboot devices)
   poweroff             - poweroff the system in 5 seconds
   preinstall           - install without registering
@@ -152,26 +153,36 @@ darkdm_shell()
   /bin/bash
 }
 
+darkdm_mount()
+{
+  local old_puavo_hosttype puavo_hosttype
+
+  old_puavo_hosttype=$(puavo-conf puavo.hosttype)
+
+  if ! {
+    mkdir -p /state                                      \
+      && mount /dev/mapper/puavo-state /state            \
+      && read puavo_hosttype < /state/etc/puavo/hosttype \
+      && puavo-conf puavo.hosttype "$puavo_hosttype"     \
+      && /etc/puavo-conf/scripts/mount_local_partitions  \
+      && /etc/puavo-conf/scripts/setup_state_partition
+  }; then
+    echo 'Could not setup host state for an update' >&2
+    puavo-conf puavo.hosttype "$old_puavo_hosttype"
+    return 1
+  fi
+}
+
 darkdm_update()
 {
-  local image_name puavo_hosttype update_status
+  local image_name update_status
 
   update_status=0
 
   if [ ! -e /run/puavo/nbd-server ]; then
     # In case we are not on nbd, this should be either a diskinstaller
     # or preinstalled and we should do some preparations before continuing.
-    if ! {
-      mkdir -p /state \
-        && mount /dev/mapper/puavo-state /state \
-        && read puavo_hosttype < /state/etc/puavo/hosttype \
-        && puavo-conf puavo.hosttype "$puavo_hosttype" \
-        && /etc/puavo-conf/scripts/mount_local_partitions \
-        && /etc/puavo-conf/scripts/setup_state_partition
-    }; then
-      echo 'Could not setup host state for an update' >&2
-      return 1
-    fi
+    darkdm_mount
   fi
 
   if image_name=$(cat /etc/puavo-image/name 2>/dev/null); then
@@ -314,6 +325,9 @@ darkdm_menu()
         ;;
       make-install-disk)
         puavo-make-install-disk || return 1
+        ;;
+      mount)
+        darkdm_mount || return 1
         ;;
       nmtui)
         if [ ! -x /usr/bin/nmtui ]; then
