@@ -154,13 +154,35 @@ darkdm_shell()
 
 darkdm_update()
 {
-  local image_name update_status
+  local image_name puavo_hosttype update_status
 
   update_status=0
 
+  if [ ! -e /run/puavo/nbd-server ]; then
+    # In case we are not on nbd, this should be either a diskinstaller
+    # or preinstalled and we should do some preparations before continuing.
+    if ! {
+      mkdir -p /state \
+        && mount /dev/mapper/puavo-state /state \
+        && read puavo_hosttype < /state/etc/puavo/hosttype \
+        && puavo-conf puavo.hosttype "$puavo_hosttype" \
+        && /etc/puavo-conf/scripts/mount_local_partitions \
+        && /etc/puavo-conf/scripts/setup_state_partition
+    }; then
+      echo 'Could not setup host state for an update' >&2
+      return 1
+    fi
+  fi
+
   if image_name=$(cat /etc/puavo-image/name 2>/dev/null); then
-    /usr/sbin/puavo-install-and-update-ltspimages \
-      --install-from-nbd /dev/nbd0 "$image_name" || update_status=1
+    if [ -e /run/puavo/nbd-server ]; then
+      /usr/sbin/puavo-install-and-update-ltspimages \
+        --install-from-nbd /dev/nbd0 "$image_name" || update_status=1
+    else
+      /usr/sbin/puavo-install-and-update-ltspimages \
+        --install-from-file "/installimages/${image_name}" "$image_name" \
+          || update_status=1
+   fi
   else
     update_status=1
   fi
