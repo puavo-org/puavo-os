@@ -164,6 +164,7 @@ darkdm_mount()
       && mount /dev/mapper/puavo-state /state            \
       && read puavo_hosttype < /state/etc/puavo/hosttype \
       && puavo-conf puavo.hosttype "$puavo_hosttype"     \
+      && mount /dev/mapper/puavo-images /images          \
       && /etc/puavo-conf/scripts/mount_local_partitions  \
       && /etc/puavo-conf/scripts/setup_state_partition
   }; then
