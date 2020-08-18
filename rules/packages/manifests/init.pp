@@ -766,6 +766,8 @@ class packages {
 
     [ 'amd64-microcode'
     , 'b43-fwcutter'
+    , 'firmware-b43-installer'
+    , 'firmware-b43legacy-installer'
     , 'intel-microcode'
     , 'iucode-tool'
     , 'linux-firmware' ]:
