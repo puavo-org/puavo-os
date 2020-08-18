@@ -1,0 +1,2897 @@
+linux-firmware (1.187+puavo1) buster; urgency=medium
+
+  * Package for Puavo OS (from Ubuntu 20.04).
+
+ -- Puavo Org <dev@opinsys.fi>  Tue, 18 Aug 2020 13:16:48 +0300
+
+linux-firmware (1.187) focal; urgency=medium
+
+  * Sound doesn't work on Lenovo X1 Carbon 7th with 20.04 (LP: #1860697)
+    - SAUCE: update sof firmwares to v1.4.2
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
+    8eb0b281511d6455ca9151e52f694dc982193251 (LP: #1865130)
+    - check_whence: python3/utf-8 support
+    - Makefile: improve `make check` usefulness
+    - mediatek: Remove in-tree symlinks
+    - qca: Fix blueooth firmware name for QCA6174
+    - mediatek: move MT8173 VPU FW to subfolder
+    - linux-firmware: Update firmware file for Intel Bluetooth AX201
+    - qca: Add firmware files for BT chip wcn3991.
+    - nvidia: add TU116/117 signed firmware
+    - drm/amdgpu: update to latest 19.50 firmware for raven
+    - mediatek: update MT8173 VPU firmware to v1.1.4
+    - rtl_nic: update firmware for RTL8153A
+    - rtl_bt: Update RTL8822C BT FW to V0x0998_C2B4
+    - linux-firmware: add firmware for MT7622
+    - linux-firmware: add version 2 for MT7615E
+    - amdgpu: update to latest navi10 firmware from 19.50
+    - Revert "radeon: update oland rlc microcode from amdgpu"
+    - amlogic: update video decoder firmwares
+    - amdgpu: add renoir firmware for 19.50
+    - amdgpu: update raven2 firmware for 19.50
+    - nfp: update Agilio SmartNIC flower firmware to rev AOTC-2.12.A.13
+    - qca: update bluetooth firmware for QCA6174
+    - i915: add HuC firmware v7.0.12 for TGL
+    - i915: Add DMC firmware v2.06 for TGL
+    - rtl_bt: Add firmware and configuration files for RTL8822C BT UART chip
+    - amdgpu: update vega10 firmware from 19.50
+    - amdgpu: update vega12 firmware from 19.50
+    - amdgpu: update vega20 firmware from 19.50
+    - linux-firmware: Update firmware file for Intel Bluetooth 9260
+    - linux-firmware: Update firmware file for Intel Bluetooth 9560
+    - linux-firmware: Update firmware file for Intel Bluetooth AX201
+    - linux-firmware: Update firmware file for Intel Bluetooth AX200
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Thu, 19 Mar 2020 11:37:49 -0500
+
+linux-firmware (1.186) focal; urgency=medium
+
+  * Add Breaks: on linux-firmware-raspi2 <= 1.20190819-0ubuntu2
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Fri, 31 Jan 2020 09:47:18 -0600
+
+linux-firmware (1.185) focal; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
+    1eb2408c6feacccd10b02a49214745f15d1c6fb7
+    - i915: Add GuC firmware v33.0.4 for EHL
+    - i915: Add HuC firmware v9.0.0 for EHL
+    - i915: Add GuC firmware v35.2.0 for TGL
+    - i915: Add HuC firmware v7.0.3 for TGL
+    - amdgpu: update navi10 vcn firmware
+    - amdgpu: update navi14 vcn firmware
+    - linux-firmware: Update firmware file for Intel Bluetooth 9260
+    - linux-firmware: Update firmware file for Intel Bluetooth 9560
+    - linux-firmware: Update firmware file for Intel Bluetooth AX200
+    - linux-firmware: Update firmware file for Intel Bluetooth AX201
+    - linux-firmware: Update NXP Management Complex firmware to version 10.18.0
+    - rtl_nic: add firmware rtl8168fp-3
+    - qcom: Add SDM845 modem firmware
+    - qcom: Add SDM845 Audio DSP firmware
+    - qcom: Add SDM845 Compute DSP firmware
+    - brcm: Add BCM43455 NVRAM for Raspberry Pi 4 B
+    - cxgb4: Update firmware to revision 1.24.11.0
+    - qcom: update venus firmware files for v5.4
+    - WHENCE: Add raspberry-pi4 SDIO file
+    - inside-secure: add new "mini" firmware for the EIP197 driver
+    - linux-firmware: Update AMD cpu microcode
+    - ath10k: QCA6174 hw3.0: update board-2.bin
+    - ath10k: QCA9887 hw1.0: update firmware-5.bin to 10.2.4-1.0-00047
+    - ath10k: QCA9888 hw2.0: update firmware-5.bin to 10.4-3.9.0.2-00070
+    - ath10k: QCA988X hw2.0: update firmware-5.bin to 10.2.4-1.0-00047
+    - ath10k: QCA9984 hw1.0: update firmware-5.bin to 10.4-3.9.0.2-00070
+    - ath10k: WCN3990 hw1.0: add firmware WLAN.HL.2.0-01387-QCAHLSWMTPLZ-1
+    - linux-firmware: add NXP firmware licence file
+    - qcom: Switch SDM845 WLAN firmware
+    - Adjust WHENCE entry to check_whence doesn't complain
+    - qed: Add firmware 8.42.2.0
+    - amdgpu: add TA microcode for Raven asics
+    - amdgpu: update navi14 microcode for 19.50
+    - amdgpu: update navi10 microcode for 19.50
+    - amdgpu: update raven microcode for 19.50
+    - amdgpu: update raven2 microcode for 19.50
+    - amdgpu: update picasso microcode for 19.50
+    - amdgpu: update vega10 microcode for 19.50
+    - amdgpu: update vega12 microcode for 19.50
+    - amdgpu: update vega20 microcode for 19.50
+    - radeon: update oland rlc microcode from amdgpu
+    - Mellanox: Add new mlxsw_spectrum firmware xx.2000.2714
+    - mediatek: update MT8173 VPU firmware to v1.1.3
+    - amdgpu: Add navi10 TA ucode
+    - amdgpu: update navi10 firmware for 19.50
+    - nvidia: add TU102/TU104/TU106 signed firmware
+    - linux-firmware: Update firmware file for Intel Bluetooth 9260
+    - linux-firmware: Update firmware file for Intel Bluetooth 9560
+    - linux-firmware: Update firmware file for Intel Bluetooth AX201
+    - linux-firmware: Update firmware file for Intel Bluetooth AX200
+
+  * intel/sof: update the intel sof firmware to v1.3-0f73628 for cml and cnl
+    (LP: #1859387)
+    - Update cml and cnl sof firmware files to v1.3-0f73628
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Tue, 28 Jan 2020 15:14:26 -0600
+
+linux-firmware (1.184) focal; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
+    e8a0f4c9314754d8b2cbe9840357d88a861c438a (LP: #1850654) (LP: #1849598)
+    - qcom: add firmware files for Adreno a630
+    - drm/i915/firmware: Add v1.09 of DMC for ICL
+    - drm/i915/firmware: Add v2.04 of DMC for TGL
+    - drm/i915/firmware: Add v33 of GuC for CML
+    - drm/i915/firmware: Add v2.0.0 of HuC for Skylake
+    - drm/i915/firmware: Add v4.0.0 of HuC for Kabylake
+    - drm/i915/firmware: Add v2.0.0 of HuC for Broxton
+    - drm/i915/firmware: Add v4.0.0 of HuC for Geminilake
+    - drm/i915/firmware: Add v4.0.0 of HuC for Cometlake
+    - drm/i915/firmware: Add v9.0.0 of HuC for Icelake
+    - amdgpu: add initial navi10 firmware
+    - ice: Add package file for Intel E800 series driver
+    - amdgpu: add new raven rlc firmware
+    - amdgpu: update raven ucode for 19.30
+    - amdgpu: update raven2 ucode for 19.30
+    - amdgpu: update picasso ucode for 19.30
+    - amdgpu: update vega10 ucode for 19.30
+    - amdgpu: update vega12 ucode for 19.30
+    - amdgpu: update vega20 ucode for 19.30
+    - Make symlinks consistent
+    - copy-firmware: Create symlinks from WHENCE file
+    - Remove duplicate symlinks
+    - nvidia: Add XUSB firmware for Tegra194
+    - nvidia: Update Tegra210 XUSB firmware to v50.24
+    - ice: Fix up WHENCE entry and symlink
+    - rtlwifi: rtl8821ae: Add firmware for the RTL8812AE variant.
+    - amdgpu: add initial navi14 firmware form 19.30
+    - linux-firmware: Update firmware file for Intel Bluetooth 9260
+    - linux-firmware: Update firmware file for Intel Bluetooth 9560
+    - linux-firmware: Update firmware file for Intel Bluetooth AX201
+    - linux-firmware: Update firmware file for Intel Bluetooth AX200
+    - linux-firmware: Update AMD cpu microcode
+    - bnx2x: Add FW 7.13.15.0.
+    - rtl_bt: Update configuration file for BT part of RTL8822CU
+    - rtl_nic: add firmware files for RTL8153
+    - Mellanox: Add new mlxsw_spectrum firmware 13.2000.2308
+    - Mellanox: Add new mlxsw_spectrum2 firmware 29.2000.2308
+    - linux-firmware: Add firmware file for Intel Bluetooth AX201
+    - amdgpu: update raven firmware for 19.30
+    - amdgpu: update navi14 firmware for 19.30
+    - amdgpu: add new navi14 wks gfx firmware for 19.30
+    - qed: Add firmware 8.40.33.0
+    - rtw88: RTL8723D: add firmware file v48
+    - i915: Add GuC firmware v33.0.4 for EHL
+    - i915: Add HuC firmware v9.0.0 for EHL
+    - i915: Add GuC firmware v35.2.0 for TGL
+    - i915: Add HuC firmware v7.0.3 for TGL
+    - amdgpu: update navi10 vcn firmware
+    - amdgpu: update navi14 vcn firmware
+    - linux-firmware: Update firmware file for Intel Bluetooth 9260
+    - linux-firmware: Update firmware file for Intel Bluetooth 9560
+    - linux-firmware: Update firmware file for Intel Bluetooth AX200
+    - linux-firmware: Update firmware file for Intel Bluetooth AX201
+    - linux-firmware: Update NXP Management Complex firmware to version 10.18.0
+    - rtl_nic: add firmware rtl8168fp-3
+
+  * Revert the firmware update for sound/sof (LP: #1850739)
+    - Revert "UBUNTU: SAUCE: update firmware for sound sof driver to fix hang issues"
+
+  * Miscellaneous Ubuntu changes
+    - [Debian] Add script to identify missing firmware files
+    - rebase to upstream commit 11bdc578ec861c7797ec614d60737a0448b68195
+    - Fix File: entries in WHENCE.ubuntu
+    - SAUCE: Also install files from WHENCE.ubuntu
+    - [Debian] Use "make install" to install firmware
+    - [Debian] Move maintainer scripts to debian/scripts
+    - SAUCE: Remove IXP4xx NPE firmware files
+    - [Packaging] Update nic-firmwarelist for 5.4
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Wed, 04 Dec 2019 13:21:00 -0600
+
+linux-firmware (1.183) eoan; urgency=medium
+
+  * update firmware for sound sof driver to fix the hang issue on several
+    Dell machines (LP: #1847250)
+    - SAUCE: update firmware for sound sof driver to fix hang issues
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Tue, 08 Oct 2019 13:54:11 -0500
+
+linux-firmware (1.182) eoan; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
+    6c6918ad8ae0dfb2cb591484eba525409980c16f
+    - iwlwifi: update FWs for 3168, 7265D, 9000, 9260, 8000, 8265 and cc
+    - iwlwifi: update -48 FWs for Qu and cc
+    - linux-firmware: Update NXP Management Complex firmware to version 10.16.2
+    - nvidia: add missing entries in WHENCE
+    - nfp: update Agilio SmartNIC flower firmware to rev AOTC-2.10.A.38
+    - cxgb4: update firmware to revision 1.24.3.0
+    - ath10k: QCA4019 hw1.0: update board-2.bin
+    - ath10k: QCA6174 hw3.0: update firmware-6.bin to WLAN.RM.4.4.1-00140-QCARMSWPZ-1
+    - ath10k: QCA9887 hw1.0: update firmware-5.bin to 10.2.4-1.0-00045
+    - ath10k: QCA9888 hw2.0: update firmware-5.bin to 10.4-3.9.0.2-00040
+    - ath10k: QCA9888 hw2.0: update board-2.bin
+    - ath10k: QCA988X hw2.0: update firmware-5.bin to 10.2.4-1.0-00045
+    - ath10k: QCA9984 hw1.0: update firmware-5.bin to 10.4-3.9.0.2-00046
+    - ath10k: QCA9984 hw1.0: update board-2.bin
+    - rtw88: RTL8822C: update rtw8822c_fw.bin to v7.3
+    - rtw88: RTL8822C: add WoW firmware v7.3
+    - rtw88: add a README file
+    - Install only listed firmware files
+    - Mellanox: Add new mlxsw_spectrum firmware 13.2000.1886
+    - linux-firmware: Update firmware file for Intel Bluetooth 9260
+    - linux-firmware: Update firmware file for Intel Bluetooth 9560
+    - linux-firmware: Update firmware file for Intel Bluetooth AX201
+    - linux-firmware: Update firmware file for Intel Bluetooth AX200
+    - rtl_bt: Update RTL8822C BT FW to V0x098A_94A4
+    - check_whence: Add copy-firmware.sh to the list of ignored files
+    - iwlwifi: update FWs to core45-152 release
+    - brcm: Add 43340 based AP6234 NVRAM for the PoV TAB-P1006W-232 tablet
+    - brcm: Add 43455 based AP6255 NVRAM for the Minix Neo Z83-4 Mini PC
+    - Chelsio driver loads firmware configuration file to allow firmware to distribute resources before chip bring up. Chelsio NIC driver, cxgb4 searches for firmware config file at /lib/firmware/cxgb4/ directory.
+    - linux-firmware: Add firmware file for Intel Bluetooth AX201
+    - rtl_nic: add firmware rtl8125a-3
+    - rtl_bt: Update RTL8723D BT FW to 0x828A_96F1
+    - Add symlinks for Tegra VIC firmware binaries
+    - nvidia: Add XUSB firmware for Tegra186
+    - linux-firmware: Update firmware file for Intel Bluetooth AX201
+
+  * Update nic-firmware.lst for Linux 5.3
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Tue, 10 Sep 2019 11:31:52 +0100
+
+linux-firmware (1.181) eoan; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
+    bf13a71b18af229b4c900b321ef1f8443028ded8
+    - linux-firmware: Add firmware file for Intel Bluetooth AX201
+    - linux-firmware: rsi: add firmware image for redpine 9116 chipset
+    - drm/i915/firmware: Add v33 of GuC for BXT
+    - drm/i915/firmware: Add v33 of GuC for GLK
+    - drm/i915/firmware: Add v33 of GuC for SKL
+    - drm/i915/firmware: Add v33 of GuC for KBL
+    - drm/i915/firmware: Add v33 of GuC for ICL
+    - amdgpu: update picasso to latest 19.20 firmware
+    - amdgpu: update raven to latest 19.20 firmware
+    - amdgpu: update raven2 to latest 19.20 firmware
+    - amdgpu: update polaris12 to latest 19.20 firmware
+    - amdgpu: update vega10 to latest 19.20 firmware
+    - amdgpu: partially revert 2579167548be33afb1fe2a9a5c141561ee5a8bbe
+    - amdgpu: update vega12 to latest 19.20 firmware
+    - amdgpu: update tonga to latest 19.20 firmware
+    - amdgpu: update raven vcn firmware
+    - amdgpu: update picasso vcn firmware
+    - amdgpu: update vega10 VCE firmware
+    - linux-firmware: Update firmware file for Intel Bluetooth 9260
+    - linux-firmware: Update firmware file for Intel Bluetooth 9560
+    - linux-firmware: Update firmware file for Intel Bluetooth 22161
+    - linux-firmware: Update firmware file for Intel Bluetooth AX201
+
+  * Update udebs for Linux 5.2
+    - update list-udeb-updates for the linux-lts -> linux-hwe change
+    - update nic-firmware.lst for Linux 5.2
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Thu, 18 Jul 2019 15:39:40 -0500
+
+linux-firmware (1.180) eoan; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
+    7ae3a09dcc7581da3fcc6c578429b89e2764a684
+    - nfp: update Agilio SmartNIC flower firmware to rev AOTC-2.10.A.23
+    - linux-firmware: update Marvell 8797/8997 firmware images
+    - mediatek: update MT8173 VPU firmware to v1.1.2
+    - linux-firmware: add firmware for MT7615E
+    - linux-firmware: Update NXP Management Complex firmware to version 10.14.3
+    - cxgb4: update firmware to revision 1.23.4.0
+    - linux-firmware: Add firmware file for Intel Bluetooth 22161
+    - drm/i915/firmware: Add BXT GuC v32.0.3
+    - drm/i915/firmware: Add SKL GuC v32.0.3
+    - drm/i915/firmware: Add KBL GuC v32.0.3
+    - drm/i915/firmware: Add GLK GuC v32.0.3
+    - drm/i915/firmware: Add GLK HuC v03.01.2893
+    - drm/i915/firmware: Add ICL GuC v32.0.3
+    - drm/i915/firmware: Add ICL HuC v8.4.3238
+    - Mellanox: Add new mlxsw_spectrum firmware 13.2000.1122
+    - linux-firmware: update fw for qat devices
+    - amdgpu: update picasso to the latest 19.10 firmware
+    - amdgpu: update raven to the latest 19.10 firmware
+    - amdgpu: update raven2 to the latest 19.10 firmware
+    - amdgpu: update polaris10 to the latest 19.10 firmware
+    - amdgpu: update polaris11 to the latest 19.10 firmware
+    - amdgpu: update vega10 to the latest 19.10 firmware
+    - amdgpu: update vega12 to the latest 19.10 firmware
+    - amdgpu: update vega20 to the latest 19.10 firmware
+    - iwlwifi: add -46.ucode firmwares for 9000 series
+    - iwlwifi: add firmware for 22260 and update 9000 series -46 firmwares
+    - iwlwifi: update -46 firmwares for 22260 and 9000 series
+    - amlogic: add video decoder firmwares
+    - linux-firmware: Update firmware file for Intel Bluetooth 22161
+    - linux-firmware: Update firmware file for Intel Bluetooth 9560
+    - linux-firmware: Update firmware file for Intel Bluetooth 9260
+    - linux-firmware: Update firmware file for Intel Bluetooth 8265
+    - nvidia: update GP10[2467] SEC2 RTOS with the one already used on GP108
+    - imx: sdma: update firmware to v3.5/v4.5
+    - linux-firmware: rsi: update firmware images for Redpine 9113 chipset
+    - linux-firmware: update firmware for mhdp8546
+    - linux-firmware: update licence text for Marvell firmware
+    - linux-firmware: Update AMD SEV firmware
+    - linux-firmware: Update firmware file for Intel Bluetooth 9260
+    - linux-firmware: Update firmware file for Intel Bluetooth 9560
+    - linux-firmware: Update firmware file for Intel Bluetooth 22161
+    - cavium: Add firmware for CNN55XX crypto driver.
+    - iwlwifi: udpate -36 firmware for 8000 series
+    - iwlwifi: update Core45 FWs for 22260, 9000 and 9260
+    - iwlwifi: update FWs for 9000 series to Core45-96
+    - iwlwifi: update FW for 22000 to Core45-96
+    - iwlwifi: add new firmwares for integrated 22000 series
+
+  * add firmware and topology file for sound sof driver [cml/cnl]
+    (LP: #1833405)
+    - SAUCE: add firmware and topology for cml/cnl sof driver
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Mon, 24 Jun 2019 07:29:39 -0500
+
+linux-firmware (1.179) eoan; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
+    7bc246451318b3536d9bfd3c4e46d541a9831b33
+    - nfp: update Agilio SmartNIC flower firmware to rev AOTC-2.10.A.23
+    - linux-firmware: update Marvell 8797/8997 firmware images
+    - mediatek: update MT8173 VPU firmware to v1.1.2 [decoder] Enlarge struct vdec_pic_info to support more capture buffer plane and capture buffer format change.
+    - linux-firmware: add firmware for MT7615E
+    - linux-firmware: Update NXP Management Complex firmware to version 10.14.3
+    - cxgb4: update firmware to revision 1.23.4.0
+    - drm/i915/firmware: Add BXT GuC v32.0.3
+    - drm/i915/firmware: Add SKL GuC v32.0.3
+    - drm/i915/firmware: Add KBL GuC v32.0.3
+    - drm/i915/firmware: Add GLK GuC v32.0.3
+    - drm/i915/firmware: Add GLK HuC v03.01.2893
+    - drm/i915/firmware: Add ICL GuC v32.0.3
+    - drm/i915/firmware: Add ICL HuC v8.4.3238
+    - Mellanox: Add new mlxsw_spectrum firmware 13.2000.1122
+    - linux-firmware: update fw for qat devices
+    - amdgpu: update picasso to the latest 19.10 firmware
+    - amdgpu: update raven to the latest 19.10 firmware
+    - amdgpu: update raven2 to the latest 19.10 firmware
+    - amdgpu: update polaris10 to the latest 19.10 firmware
+    - amdgpu: update polaris11 to the latest 19.10 firmware
+    - amdgpu: update vega10 to the latest 19.10 firmware
+    - amdgpu: update vega12 to the latest 19.10 firmware
+    - amdgpu: update vega20 to the latest 19.10 firmware
+
+  * Bluetooth not working (Intel CyclonePeak) (LP: #1817518)
+    - linux-firmware: Add firmware file for Intel Bluetooth 22161
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Wed, 08 May 2019 08:02:08 -0500
+
+linux-firmware (1.178) disco; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
+    7bc246451318b3536d9bfd3c4e46d541a9831b33
+    - ath10k: QCA6174 hw3.0: update board-2.bin
+    - ath10k: QCA9888 hw2.0: update firmware-5.bin to 10.4-3.9.0.2-00024
+    - ath10k: QCA988X hw2.0: update firmware-5.bin to 10.2.4-1.0-00043
+    - ath10k: QCA9984 hw1.0: update firmware-5.bin to 10.4-3.9.0.2-00021
+    - linux-firmware: add Marvell SD8977 firmware image
+    - linux-firmware: update Marvell SD8897-B0 firmware image
+    - linux-firmware: update Marvell PCIe-USB8997 firmware image
+    - amdgpu: bump year on license
+    - amdgpu: add firmware for vega20 from 18.50
+    - bnx2x: Add FW 7.13.11.0.
+    - nvidia: add TU10x typec controller firmware
+    - qca: Add firmware files for BT chip wcn3990.
+    - linux-firmware: Update firmware file for Intel Bluetooth,9260
+    - linux-firmware: Update firmware file for Intel Bluetooth,9560
+    - amdgpu: drop raven2_sdma1.bin
+    - amdgpu: update raven2 rlc firmware
+    - WHENCE: Correct errant entries
+    - linux-firmware: Add AMD SEV firmware
+    - QCA: Add the fw files for BT Chip QCA6174.
+    - nfp: update Agilio SmartNIC firmware to rev 2.1.16.1
+    - linux-firmware: update Marvell 8897/8997 firmware images
+    - linux-firmware: update Marvell 8787/8801/8887 firmware images
+    - rtl_bt: Update firmware for BT part of RTL8822C
+    - rtw88: RTL8822C: update rtw8822c_fw.bin to v5.0
+    - drm/amdgpu: update vega20 to latest from 18.50 branch
+    - drm/amdgpu: update polaris12 to latest from 18.50 branch
+    - drm/amdgpu: update picasso to latest from 18.50 branch
+    - linux-firmware: Update firmware file for Intel Bluetooth 9560
+    - linux-firmware: Update firmware file for Intel Bluetooth 9260
+    - linux-firmware: Update firmware file for Intel Bluetooth 8265
+    - cxgb4: update firmware to revision 1.23.3.0
+
+  * Update nic-firmware.lst for 5.0
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Thu, 07 Mar 2019 09:53:28 -0600
+
+linux-firmware (1.177) disco; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
+    a8b75cac06f80dc1500ba385680ac5b5c1d1c4f8
+    - cxgb4: update firmware to revision 1.21.5.0
+    - nfp: update Agilio SmartNIC firmware to rev 2.1.16
+    - firmware/huc/bxt: Add huC Update for BXT
+    - linux-firmware: intel: Update Cannonlake audio firmware.
+    - microchip: add firmware for VSC8574 and VSC8584 Ethernet PHYs
+    - nfp: update Agilio SmartNIC flower firmware to rev AOTC-2.10.A.13
+    - linux-firmware: Update AMD cpu microcode
+    - amdgpu: Add new polaris SMC firmwares
+    - amdgpu: Add new polaris MC firmwares
+    - amdgpu: add firmware for vega12
+    - amdgpu: update polaris10 fw for 18.50 release
+    - amdgpu: update polaris11 fw for 18.50 release
+    - amdgpu: update raven fw for 18.50 release
+    - amdgpu: update vega10 fw for 18.50 release
+    - amdgpu: update vega12 fw for 18.50 release
+    - cavium: Update firmware for CNN55XX crypto driver
+    - Mellanox: Add new mlxsw_spectrum firmware 13.1910.622
+    - brcm: provide new firmwares for BCM4366 chipset
+    - iwlwifi: update -41.ucode for 9000 series
+    - iwlwifi: add -43.ucode for 9000 series
+    - iwlwifi: update firmwares for 8000 series
+    - rtl_bt: Add firmware and configuration files for the Bluetooth part of RTL8723BS
+    - check_whence.py: Add support for filenames with spaces in them
+    - WHENCE: Put quotes around brcmfmac NVRAM filenames
+    - brcm: Add 43362 based AP6210 NVRAM for the Cubietech Cubietruck
+    - brcm: Add brcmfmac43362-sdio.lemaker,bananapro.txt symlink
+    - brcm: Add 4356 based AP6356 NVRAM for the GPD win handheld
+    - brcm: Add 43430a0 based AP6212 NVRAM for the Onda V80 Plus tablet
+    - brcm: Add 43430a0 based AP6212 NVRAM for the Jumper EZpad mini 3 tablet
+    - brcm: Add 43340 based AP6234 NVRAM for the Meegopad T08 HDMI stick
+    - brcm: Add 43430 NVRAM for the Chuwi Vi8 Plus tablet
+    - brcm: Add 4330 NVRAM for the Prowise PT301 tablet
+    - Revert "amdgpu: update vega10 fw for 18.50 release"
+    - cxgb4: update firmware to revision 1.22.9.0
+    - iwlwifi: update firmwares for 9000 series
+    - linux-firmware: update Marvell USB8801 B0 firmware image
+    - brcm: Add BCM43455 NVRAM for Raspberry Pi 3 B+
+    - brcm: Add BCM43430 NVRAM for the Raspberry Pi 3 Model B
+    - linux-firmware: Update firmware file for Intel Bluetooth,9560
+    - linux-firmware: Update firmware file for Intel Bluetooth,9260
+    - linux-firmware: Update firmware patch for Intel Bluetooth 8260
+    - linux-firmware: Update firmware file for Intel Bluetooth,8265
+    - Revert "brcm: Add BCM43455 NVRAM for Raspberry Pi 3 B+"
+    - amdgpu: add picasso fw for 18.50 release
+    - amdgpu: add raven2 fw for 18.50 release
+    - brcm: Fix filename for BCM43430 NVRAM for the Raspberry Pi 3 Model B
+    - brcm: Add BCM43455 NVRAM for Raspberry Pi 3 B+
+
+  *  Add brcmfmac4366c-pcie.bin to nic-firmware.lst
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Thu, 31 Jan 2019 12:09:48 -0600
+
+linux-firmware (1.176) disco; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
+    1baa34868b2c0a004dc595b20678145e3fff83e7
+    - nvidia: switch GP10[2467] to newer scrubber/ACR firmware (from GP108)
+    - Mellanox: Add new mlxsw_spectrum firmware 13.1703.4
+    - rtl_bt: Add firmware and configuration files for the Bluetooth part of RTL8822CU
+    - Mellanox: Add new mlxsw_spectrum firmware 13.1703.4
+    - brcm: update firmware for bcm43362 sdio
+    - qca: update BT firmware files for QCA ROME chip.
+    - linux-firmware: add Marvell SD8997 firmware image
+    - firmware/icl/dmc: Add v1.07 of DMC for Icelake
+    - nvidia: add GV100 signed firmware
+    - linux-firmware: mediatek: add firmware for mt7668u Bluetooth
+    - ti-connectivity: add firmware for CC2560(A) Bluetooth
+    - nfp: update Agilio SmartNIC firmware to rev 2.1.13
+    - iwlwifi: update firmwares for 7000, 8000 and 9000 series
+    - iwlwifi: update firmwares for 9000 series
+    - iwlwifi: add -41.ucode firmwares for 9000 series
+    - nfp: update Agilio SmartNIC flower firmware to rev AOTC-2.9.A.37
+    - rtw88: Add firmware file for driver rtw88
+    - nfp: Add Agilio BPF firmware rev 2.0.6.124
+    - ath10k: QCA4019 hw1.0: update firmware-5.bin to 10.4-3.6-00140
+    - ath10k: QCA4019 hw1.0: update board-2.bin
+    - ath10k: QCA6174 hw3.0: update firmware-6.bin to RM.4.4.1.c2-00057-QCARMSWP-1
+    - ath10k: QCA9377 hw1.0: add firmware-6.bin to WLAN.TF.2.1-00021-QCARMSWP-1
+    - ath10k: QCA9887 hw1.0: update firmware-5.bin to 10.2.4-1.0-00041
+    - ath10k: QCA9888 hw2.0: update firmware-5.bin to 10.4-3.6-00140
+    - ath10k: QCA9888 hw2.0: update board-2.bin
+    - ath10k: QCA988X hw2.0: update firmware-5.bin to 10.2.4-1.0-00041
+    - ath10k: QCA9984 hw1.0: update firmware-5.bin to 10.4-3.6.0.1-00003
+    - ath10k: QCA9984 hw1.0: update board-2.bin
+    - Update Intel OPA hfi1 firmware
+    - linux-firmware: add firmware for mt7610e
+    - linux-firmware: Update firmware file for Intel Bluetooth,9560
+    - linux-firmware: Update firmware file for Intel Bluetooth,9260
+    - linux-firmware: Update firmware patch for Intel Bluetooth 8260
+    - linux-firmware: Update firmware file for Intel Bluetooth,8265
+    - linux-firmware: liquidio: fix GPL compliance issue
+    - linux-firmware: add MC firmware for NXP DPAA2 SoCs
+    - linux-firmware: add firmware for mt7650e
+    - amdgpu: update vega10 firmware to 18.40
+    - amdgpu: update polaris10 firmware to 18.40
+    - amdgpu: update carrizo firmware to 18.40
+    - amdgpu: update tonga firmware to 18.40
+    - amdgpu: update fiji firmware to 18.40
+    - amdgpu: update raven firmware to 18.40
+    - amdgpu: add raven dmcu firmware
+    - qed: Add 8.37.7.0 firmware image
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Tue, 06 Nov 2018 08:33:42 -0600
+
+linux-firmware (1.175) cosmic; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
+    fea76a04f25fd0a217c0d566ff5ff8f23ad3e648
+    - linux-firmware: liquidio: update firmware to v1.7.2
+    - nfp: update Agilio SmartNIC flower firmware to rev AOTC-2.9.A.16
+    - nfp: Add symlink for Agilio CX 1x40GbE flower firmware
+    - amdgpu: sync up raven firmware with 18.10 release
+    - amdgpu: sync up fiji firmware with 18.10 release
+    - amdgpu: sync up tonga firmware with 18.10 release
+    - amdgpu: sync up stoney firmware with 18.10 release
+    - amdgpu: sync up topaz firmware with 18.10 release
+    - amdgpu: sync up carrizo firmware with 18.10 release
+    - amdgpu: sync up vega10 firmware with 18.10 release
+    - amdgpu: sync up polaris10 firmware with 18.10 release
+    - amdgpu: sync up polaris11 firmware with 18.10 release
+    - amdgpu: sync up polaris12 firmware with 18.10 release
+    - linux-firmware: Update AMD cpu microcode
+    - linux-firmware: Update firmware file for Intel Bluetooth,9560
+    - linux-firmware:Update firmware patch for Intel Bluetooth 7265 (D1)
+    - linux-firmware: Update firmware file for Intel Bluetooth,9260
+    - linux-firmware: Update firmware patch for Intel Bluetooth 7260 (B3/B4)
+    - linux-firmware: Update firmware patch for Intel Bluetooth 7260 (B5/B6)
+    - linux-firmware: Update firmware file for Intel Bluetooth,8265
+    - linux-firmware: liquidio: update vswitch firmware to v1.7.2
+    - qed: Add firmware 8.37.2.0
+    - linux-firmware: Update firmware patch for Intel Bluetooth 8260
+    - Update AMD cpu microcode for family 15h
+    - qcom: add venus firmware files for v5.2
+    - linux-firmware:Update firmware patch for Intel Bluetooth 7265 (D1)
+    - linux-firmware: Update firmware patch for Intel Bluetooth 7265 (D0)
+    - amdgpu: update vega10 VCE firmware to version 55.3
+    - Update Cypress license termination clause
+    - brcm: update firmware for bcm43430 sdio
+    - brcm: update firmware for bcm43340 sdio
+    - brcm: update firmware for bcm43362 sdio
+    - brcm: update firmware for bcm4354 sdio
+    - brcm: update firmware for bcm4356 pcie
+    - cxgb4: update firmware to revision 1.20.8.0
+    - WHENCE: Fix typo Version
+    - amdgpu: sync up bonaire firmware with 18.20 release
+    - amdgpu: sync up hawaii firmware with 18.20 release
+    - amdgpu: sync up kabini firmware with 18.20 release
+    - amdgpu: sync up mullins firmware with 18.20 release
+    - amdgpu: sync up kaveri firmware with 18.20 release
+    - amdgpu: sync up hainan firmware with 18.20 release
+    - amdgpu: sync up oland firmware with 18.20 release
+    - amdgpu: sync up tahiti firmware with 18.20 release
+    - amdgpu: sync up pitcairn firmware with 18.20 release
+    - amdgpu: sync up verde firmware with 18.20 release
+    - amdgpu: sync up polaris10 firmware with 18.20 release
+    - amdgpu: sync up polaris11 firmware with 18.20 release
+    - amdgpu: sync up polaris12 firmware with 18.20 release
+    - amdgpu: sync up raven firmware with 18.20 release
+    - amdgpu: sync up vega10 firmware with 18.20 release
+    - amdgpu: add initial VegaM firmware
+    - amdgpu: update copyright date
+    - linux-firmware: update Marvell USB8801 B0 firmware image
+    - brcm: add 43430 based AP6212 and 1DX NVRAM
+    - linux-firmware: mediatek: add MT7622 Bluetooth firmwares and license file
+    - WHENCE: Remove reference to amdgpu/vegam_me_2.bin
+    - Mellanox: Add new mlxsw_spectrum firmware 13.1702.6
+    - wl18xx: update firmware file 8.9.0.0.79
+    - linux-firmware: add firmware for mt76x2u
+    - nfp: update Agilio SmartNIC flower firmware to rev AOTC-2.9.A.31
+    - qcom: update venus firmware files for v5.2
+    - linux-firmware: add firmware for mt76x0
+    - linux-firmware: Update firmware patch for Intel Bluetooth 8260
+    - linux-firmware: Update firmware file for Intel Bluetooth,8265
+    - linux-firmware: Update firmware file for Intel Bluetooth,9260
+    - linux-firmware: Update firmware file for Intel Bluetooth,9560
+    - linux-firmware:Update firmware patch for Intel Bluetooth 7265 (D1)
+    - qed: Add firmware 8.37.7.0
+    - linux-firmware: add firmware for mhdp8546
+    - amdgpu: sync up fiji firmware with 18.30 release
+    - amdgpu: sync up polaris11 firmware with 18.30 release
+    - amdgpu: sync up tonga firmware with 18.30 release
+    - amdgpu: sync up polaris12 firmware with 18.30 release
+    - amdgpu: sync up raven firmware with 18.30 release
+    - amdgpu: sync up vega10 firmware with 18.30 release
+    - amdgpu: sync up polaris10 firmware with 18.30 release
+
+  * Update nic-firmware.lst for 4.18 (LP: #1790006)
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Thu, 30 Aug 2018 16:32:09 -0500
+
+linux-firmware (1.174) cosmic; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
+    8fc2d4e55685bf73b6f7752383da9067404a74bb
+    - iwlwifi: update firmware version 34 for 9000 series
+    - qed: Add firmwares 8.20.0.0 8.18.9.0 and 8.14.6.0
+    - linux-firmware:Update firmware patch for Intel Bluetooth 7265 (D1)
+    - BCM-0bb4-0306: Cypress Bluetooth firmware for HTC Vive
+    - qed: Add firmware 8.33.11.0
+    - Mellanox: Add new mlxsw_spectrum firmware 13.1620.192
+    - linux-firmware: intel: Update Kabylake audio firmware
+    - BCM-0bb4-0306: Update to Cypress license in WHENCE
+    - linux-firmware: intel: Update Skylake audio firmware
+    - linux-firmware: intel: Update Broxton audio firmware
+    - linux-firmware: intel: Update Kabylake audio firmware
+    - linux-firmware: intel: Update Geminilake audio firmware
+    - cxgb4: update firmware to revision 1.18.9.0
+    - nfp: update Agilio SmartNIC firmware to rev 2.0.7
+    - linux-firmware: Update firmware patch for Intel Bluetooth 8260
+    - linux-firmware: Update firmware file for Intel Bluetooth,8265
+    - linux-firmware: Add firmware file for Intel Bluetooth,9260
+    - linux-firmware: Add firmware file for Intel Bluetooth,9560
+    - amdgpu: update vce firmware for Polaris
+    - iwlwifi: add some new FW versions and update older ones
+    - iwlwifi: update firmwares for 3160, 3168 and 7265
+    - linux-firmware: rsi: update firmware images for Redpine 9113 chipset
+    - linux-firmware: update wil6210 firmware to 5.2.0.18
+    - nfp: update Agilio SmartNIC flower firmware to rev 5701
+    - nfp: add symlink for mixed mode Agilio CX 2x25GbE cards
+    - cxgb4: update firmware to revision 1.19.1.0
+    - linux-firmware: Update firmware file for Intel Bluetooth,8265
+    - linux-firmware: Add firmware file for Intel Bluetooth,9260
+    - linux-firmware: Add firmware file for Intel Bluetooth,9560
+    - qed: Add firmware 8.33.12.0
+    - Update Intel OPA hfi1 firmware
+    - linux-firmware: update Marvell SD8897-B0 firmware image to add WPA2 vulnerability fix
+    - linux-firmware: update Marvell USB8997 firmware image to add WPA2 vulnerability fix
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Thu, 17 May 2018 11:49:13 -0500
+
+linux-firmware (1.173) bionic; urgency=medium
+
+  * missing bnx2 firmware (LP: #1756367)
+    - Revert "UBUNTU: Remove obsolete bnx2 firmware"
+    - Revert "UBUNTU: Remove obsolete bnx2 firmware"
+    - UBUNTU: Add additional files to nic-firmware.lst
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Fri, 16 Mar 2018 14:19:07 -0500
+
+linux-firmware (1.172) bionic; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
+    7344ec9e1df9e27d105ed48d2db99e22370236de
+    - nfp: update Agilio SmartNIC firmware to rev 2.0.4
+    - qed: Add firmwares 8.30.12.0 and 8.10.9.0
+    - rtl_bt: Add firmware and configuration files for the Bluetooth parts of RTL8821C and RTL8723D
+    - ath10k: QCA4019 hw1.0: update firmware-5.bin to 10.4-3.5.3-00053
+    - ath10k: QCA4019 hw1.0: update board-2.bin
+    - ath10k: QCA6174 hw3.0: update firmware-6.bin to WLAN.RM.4.4.1-00079-QCARMSWPZ-1
+    - ath10k: QCA6174 hw3.0: update board-2.bin
+    - ath10k: QCA9377 hw1.0: update firmware-5.bin to WLAN.TF.1.0-00002-QCATFSWPZ-5
+    - ath10k: QCA9887 hw1.0: update firmware-5.bin to 10.2.4-1.0-00037
+    - ath10k: QCA9888 hw2.0: update firmware-5.bin to 10.4-3.5.3-00053
+    - ath10k: QCA988X hw2.0: update firmware-5.bin to 10.2.4-1.0-00037
+    - ath10k: QCA9984 hw1.0: update firmware-5.bin to 10.4-3.5.3-00053
+
+  * Missing firmware in linux-image-4.15.0-10-generic (LP: #1751266)
+    - Restore firmware files previously duplicated in the kernel package
+    - Add restored firmware files to nic-firmware.lst and scsi-firmware.lst
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Thu, 01 Mar 2018 15:30:32 -0600
+
+linux-firmware (1.171) bionic; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
+    2aa2ac2e9c09f09b0cfb6fc320c1e2d281530fa0
+    - linux-firmware: update Marvell PCIe-USB8897-A2 firmware image
+    - linux-firmware: update Marvell PCIe-USB8997 firmware image
+    - linux-firmware/i915: Add Geminilake DMC version 1.04
+    - linux-firmware/i915: Add Cannonlake DMC version 1.06
+    - linux-firmware: GuC firmware for Skylake v9.33
+    - linux-firmware: GuC firmware for Broxton v9.29
+    - linux-firmware: GuC firmware for kabylake v9.39
+    - linux-firmware: update Marvell PCIe-USB8997 firmware image
+    - linux-firmware: DMC firmware for kabylake v1.04
+    - iwlwifi: update firmwares for 3160, 3168, 7265D, 8000C and 8265
+    - iwlwifi: update firmwares for 3160, 3168, 7260, 7265 and 7265D
+    - iwlwifi: add new firmware version 34 for 8000C and 8265
+    - iwlwifi: add firmware version 33 for new 9000 series
+    - linux-firmware: intel: Update Geminilake audio firmware
+    - linux-firmware: liquidio: update firmware to v1.7.0
+    - iwlwifi: add firmware version 34 for new 9000 series
+    - qcom: add firmware files for Adreno a530
+    - qcom: add venus firmware files for v4.2
+    - qed: Add firmware 8.33.1.0
+    - amdgpu: add new CP firmware for polaris chips
+    - s2255drv: f2255usb: firmware version 1.2.8
+    - WHENCE: Fix typo in entry for iwlwifi-8265-34.ucode
+    - WHENCE: Add missing entry for mlxsw_spectrum firmware
+    - Mellanox: Add new mlxsw_spectrum firmware 13.1530.152
+    - brcm: update firmware for bcm4339
+    - brcm: introduce firmware for bcm43430 revision 0
+    - brcm: update firmware for bcm4354
+    - brcm: update firmware for bcm4356
+    - brcm: update firmware for bcm4358
+    - linux-firmware: DMC firmware for skylake v1.27
+    - amdgpu: update vega10 vce firmware
+    - amdgpu: add firmware for Raven
+    - linux-firmware: Add firmware file for Intel Bluetooth 9560
+    - linux-firmware: Add firmware file for Intel Bluetooth 9260
+    - linux-firmware: Update firmware file for Intel Bluetooth 8265
+    - linux-firmware: Update firmware patch for Intel Bluetooth 8260
+    - nfp: update firmware for Agilio CX SmartNICs
+    - nfp: change firmware directory layout
+    - nfp: add firmware for tc-flower
+    - Revert commits a42f895, c113d33, 041aff8, 73d13b5
+    - linux-firmware: Add firmware file for Intel Bluetooth 9560
+    - linux-firmware: Add firmware file for Intel Bluetooth 9260
+    - linux-firmware: Update firmware file for Intel Bluetooth 8265
+    - linux-firmware: Update firmware patch for Intel Bluetooth 8260
+    - brcm: add CYW4373 firmwares and Cypress license file
+    - linux-firmware: liquidio: add v1.7.0 vswitch firmware
+    - nvidia: add GP108 signed firmware
+    - linux-firmware: DMC firmware for cannonlake v1.07
+    - rtlwifi: rtl8723de: Add firmware for new driver/device
+    - wl127x/wl128x: update firmwares
+    - wl18xx: update firmware file 8.9.0.0.76
+    - linux-firmware: intel: Update Geminilake audio firmware
+    - linux-firmware: update Marvell PCIe-USB8897/8997 firmware image to add WPA2 vulnerability fix
+    - cxgb4: update firmware to revision 1.17.14.0
+    - mediatek: update MT8173 VPU firmware to 1.0.8 [decoder h264] Fix h264 decoder output delay for some low latency bitstreams
+    - amdgpu: update vce and uvd firmware for Vega10
+    - amdgpu: update vcn firmware for raven
+    - amdgpu: update vce firmware for Fiji
+    - amdgpu: update uvd firmware for polaris asics
+    - linux-firmware: intel: Update Kabylake audio firmware
+    - wl127x/wl128x: update PLT firmwares
+    - linux-firmware: Update firmware file for Intel Bluetooth,8265
+    - linux-firmware: Add firmware file for Intel Bluetooth,9260
+    - linux-firmware: Add firmware file for Intel Bluetooth,9560
+
+  * UBUNTU: Update nic-firmware.lst for 4.14
+
+  * UBUNTU: Update nic-firmware.lst for 4.15
+
+  [ dann frazier ]
+  * nic-firmware: Add QLogic QED firmware (LP: #1743638)
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Fri, 09 Feb 2018 15:32:29 -0600
+
+linux-firmware (1.170) bionic; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
+    bf04291309d3169c0ad3b8db52564235bbd08e30
+    - cxgb4: update firmware to revision 1.16.63.0
+    - ath10k: QCA6174 hw3.0: update firmware-6.bin to WLAN.RM.4.4.1-00051-QCARMSWP-1
+    - ath10k: QCA6174 hw3.0: update board-2.bin
+    - Revert "ath10k: QCA988X hw2.0: update firmware to 10.2.4.70.63-2"
+    - WHENCE: Fix syntax error for iwlwifi-8265-31.ucode entry
+    - WHENCE: Add new radeon firmware
+    - WHENCE: Add new qed firmware
+
+  * CVE-2017-13080 and CVE-2017-13081 (LP: #1728762)
+    - iwlwifi: update firmwares for 3160, 3168, 7265D, 8000C and 8265
+    - iwlwifi: update firmwares for 3160, 3168, 7260, 7265 and 7265D
+
+  * a300_[pfp|pm4].fw clashes when installing linux-firmware (LP: #1728908)
+    - Add linux-firmware-snapdragon to Breaks: and Replaces:
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Wed, 15 Nov 2017 15:04:50 -0600
+
+linux-firmware (1.169) artful; urgency=medium
+
+  * [Feature] PXE boot with Intel Omni-Path (LP: #1712031)
+    - Add Intel Omni-Path firmware to nic-firmware.lst
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Wed, 04 Oct 2017 09:23:35 -0500
+
+linux-firmware (1.168) artful; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
+    a61ac5cf8374edbfe692d12f805a1b194f7fead2
+    - Update Intel OPA hfi1 firmware
+    - iwlwifi: update -27 firmware for 3168, 7265D, 8000C and 8265
+    - iwlwifi: add new firmware for 3168, 7265D, 8000C and 8265
+    - linux-firmware: intel: Add Kabylake IPU3 firmware
+    - linux-firmware: intel: Update Kabylake audio firmware
+    - linux-firmware: intel: remove old skylake firmware
+    - linux-firmware: intel: remove old broxton firmware
+    - linux-firmware: liquidio: update firmware to v1.6.1
+    - amdgpu: add initial vega10 firmware
+    - amdgpu: add initial uvd and vce firmware for vega10
+    - cavium: Add firmware for CNN55XX crypto driver.
+    - Update Intel OPA hfi1 firmware
+    - amdgpu: update psp and acg_smu firmware for vega10
+    - rtlwifi: rtl8822be: Add firmware for new driver/device
+    - qcom: add firmware files for Adreno A3xx
+
+  * [Packaging] Update to debhelper 9
+
+  * Update nic-firmware.lst for 4.13
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Mon, 11 Sep 2017 09:52:28 -0500
+
+linux-firmware (1.167) artful; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
+    7d2c913dcd1be083350d97a8cb1eba24cfacbc8a
+    - linux-firmware: liquidio: update firmware to v1.6.0
+    - qcom: add venus firmware files for v1.8
+    - linux-firmware: intel: Update Kabylake audio firmware
+    - qla2xxx: Update firmware version to 8.07.00
+    - firmware: tegra: Add VIC firmware
+    - imx: Add SDMA firmware for Freescale i.MX6/7 SoCs.
+    - linux-firmware: wilc1000: Add unified firmware for wilc1000 WLAN
+    - ath10k: QCA4019 hw1.0: update board-2.bin
+    - ath10k: QCA4019 hw1.0: update firmware to 10.4-3.4-00082
+    - ath10k: QCA6174 hw3.0: update board-2.bin
+    - ath10k: QCA6174 hw3.0: add WLAN.RM.4.4-00022-QCARMSWPZ-2
+    - ath10k: QCA9377 hw1.0: update board-2.bin
+    - ath10k: QCA9887 hw1.0: update firmware to 10.2.4-1.0-00029
+    - ath10k: QCA9888 hw2.0: update board-2.bin
+    - ath10k: QCA9888 hw2.0: update firmware to 10.4-3.5.1-00014
+    - ath10k: QCA988X hw2.0: update firmware to 10.2.4.70.63-2
+    - ath10k: QCA9984 hw1.0: update board-2.bin
+    - ath10k: QCA9984 hw1.0: update firmware to 10.4-3.4-00082
+    - ath10k: update year in license
+
+  * Revert Intel OPA firmware to 0.47 (LP: #1700772)
+    - SAUCE: Revert "Update Intel OPA hfi1 firmware"
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Tue, 27 Jun 2017 09:58:15 -0500
+
+linux-firmware (1.166) artful; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
+    37857004a430e96dc837db7f967b6d0279053de8
+    - cxgb4: update firmware to revision 1.16.43.0
+    - linux-firmware: add Marvell USB8997 firmware image
+    - iwlwifi: update -22 firmware for 3168
+    - qed: Add firmware 8.20.0.0
+    - Update Intel OPA hfi1 firmware
+    - linux-firmware: add wil6210 firmware 4.1.0.55
+    - cxgb4: update firmware to revision 1.16.45.0.
+    - Mellanox: Add firmware for mlxsw_spectrum
+    - linux-firmware: add firmware image for Redpine 9113 chipset
+
+  * Update nic-firmware udeb for 4.11
+    - UBUNTU: Update nic-firmware.lst based on linux 4.11.0-5.10 udebs
+
+  * Add audio topology firmware for Joule (LP: #1689497)
+    - UBUNTU: SAUCE: linux-firmware: audio topology binary for Joule
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Thu, 08 Jun 2017 11:36:34 -0500
+
+linux-firmware (1.165) artful; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
+    ade8332383e228cbdcfc605b5e5ef3aa51211401
+    - linux-firmware: liquidio: update firmware to v1.4.2
+    - iwlwifi: update -17 firmware for 3260, 7260 and 7265
+    - iwlwifi: update -22 firmware for 7265D and up
+    - iwlwifi: add -27 firmware for 3168, 7265D, 8000C and 8265
+    - linux-firmware/i915: Add HuC 1.07.1398 for SKL
+    - linux-firmware/i915: Add HuC 1.07.1398 for broxton
+    - linux-firmware/i915: HuC on 2.0.1810 for Kabylake
+    - linux-firmware/i915: GuC firmware for Broxton v8.7
+    - linux-firmware/i915: GuC firmware for Kabylake v9.14
+    - radeon/amdgpu: update license copyright dates
+    - radeon: add new firmware for SI chips
+    - rtlwifi: rtl8723bs: Add firmware for new driver
+    - qla2xxx: Update firmware version to 8.06.00
+    - amdgpu: add firmware for polaris12 asics
+    - amdgpu: update VI gfx/sdma firmware
+    - amdgpu: update VI smc/mc firmware
+    - update WHENCE for new amdgpu/polaris12_*.bin firmware
+    - linux-firmware: add firmware for mt76x2
+    - linux-firmware: update Marvell SD8897-B0 firmware image
+    - linux-firmware: update Marvell PCIe-USB8997 firmware image
+    - amdgpu: add smc firmware for new polaris variants
+    - Revert "amdgpu: update VI smc/mc firmware"
+    - Revert "amdgpu: update VI gfx/sdma firmware"
+    - linux-firmware/i915: Fix Corrupted GuC files.
+    - cxgb4: update firmware to revision 1.16.33.0
+    - nvidia: add GM20B PMU firmware
+    - nvidia: add GP102/GP104/GP106/GP107 signed firmware
+    - linux-firmware: intel: Add Geminilake audio firmware
+    - linux-firmware: Update firmware patch for Intel Bluetooth, 7265
+    - linux-firmware: Update firmware patch for Intel Bluetooth,8260
+    - linux-firmware: Update firmware file for Intel Bluetooth,8265
+    - brcm: update firmware for BCM43340/1 SDIO devices
+    - ath10k: QCA6174 hw3.0: update board-2.bin
+    - qed: Add firmware 8.15.3.0
+    - linux-firmware: update Marvell PCIe-USB8997 wifi-only firmware image
+    - linux-firmware: intel: Update Broxton audio firmware
+    - nfp: Add firmware 0.6.1
+    - mediatek: update MT8173 VPU firmware for unsupported VP9 profiles
+    - nvidia: add GP10B signed firmware
+    - nvidia: fix GP107 signed firmware
+    - linux-firmware: liquidio: update firmware to v1.5.1
+    - linux-firmware: update Marvell SD8887 firmware image
+    - linux-firmware: update Marvell SD8897-B0 firmware image
+    - rtl_bt: Update firmware for BT part of rtl8822be
+
+  * intel 8260 doesn't work with linux kernel 4.8+ when using ucode version 22
+    (LP: #1647826)
+    - UBUNTU: SAUCE: Remove iwlwifi-8000C-22.ucode
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Fri, 05 May 2017 08:43:13 -0500
+
+linux-firmware (1.164) zesty; urgency=medium
+
+  * Upstream firmware updates for zesty (LP: #1674413)
+    - Revert "UBUNTU: SAUCE: Remove iwlwifi-8000C-22.ucode"
+    - linux-firmware: liquidio: update firmware to v1.4.2
+    - iwlwifi: update -17 firmware for 3260, 7260 and 7265
+    - iwlwifi: update -22 firmware for 7265D and up
+    - linux-firmware/i915: GuC firmware for Broxton v8.7
+    - linux-firmware/i915: GuC firmware for Kabylake v9.14
+    - radeon/amdgpu: update license copyright dates
+    - radeon: add new firmware for SI chips
+    - qla2xxx: Update firmware version to 8.06.00
+    - amdgpu: add firmware for polaris12 asics
+    - update WHENCE for new amdgpu/polaris12_*.bin firmware
+    - linux-firmware: update Marvell SD8897-B0 firmware image
+    - linux-firmware: update Marvell PCIe-USB8997 firmware image
+    - amdgpu: add smc firmware for new polaris variants
+    - linux-firmware/i915: Fix Corrupted GuC files.
+    - cxgb4: update firmware to revision 1.16.33.0
+    - linux-firmware: Update firmware patch for Intel Bluetooth, 7265
+    - linux-firmware: Update firmware patch for Intel Bluetooth,8260
+    - linux-firmware: Update firmware file for Intel Bluetooth,8265
+    - brcm: update firmware for BCM43340/1 SDIO devices
+    - ath10k: QCA6174 hw3.0: update board-2.bin
+
+  * Update linux-firmware udebs in zesty (LP: #1674344)
+    - UBUNTU: Update nic-firmware.lst based on kernel udebs
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Mon, 20 Mar 2017 13:34:02 -0500
+
+linux-firmware (1.163) zesty; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
+    6d3bc8886517d171068fd1263176b8b5c51df204
+    - WHENCE: Add new amdgpu firmware
+    - WHENCE: Add new snd_intel_sst_core
+    - LICENCE.siano: Add copyright years
+    - linux-firmware: update firmware file for atusb
+    - Update Intel OPA hfi1 firmware
+    - cxgb4: Update firmware to revision 1.16.26.0.
+    - linux-firmware: intel: Update Skylake audio firmware
+    - linux-firmware: intel: Update Broxton audio firmware
+    - linux-firmware: Fix DDC file format for Intel Bluetooth 8260/8265
+    - brcm: add firmware for the BCM4356 SDIO device
+    - brcm: add firmware for the BCM4358 PCIe device.
+    - wl127x/wl128x: update firmwares
+    - atusb: Document that dfu-util needs to be run before device enters runtime mode
+    - Fix permissions on ti-connectivity firmware from 05e9fe59
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Mon, 13 Feb 2017 08:37:23 -0600
+
+linux-firmware (1.162) zesty; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
+    87941021a622c882b1921df85d6115940a4e568a
+    - Update Intel OPA hfi1 firmware file
+    - brcm: add firmware for BCM43430 802.11n chipset
+    - amdgpu: update tonga and fiji VCE firmware to 52.8.3
+    - Add a metadata consistency check script
+    - WHENCE: Correct filename of LICENCE.moxa
+    - Add copy of GPL v2 and references to the GPL-2 and GPL-3 files
+    - WHENCE: Specify source directories for cis, isci, and usbdux firmware
+    - WHENCE: Remove references to source for emi62 firmware
+    - WHENCE: Remove references to two nvidia firmware files that were never added
+    - Remove unused 'LICENCE.mwl8335'
+    - WHENCE: Adjust some licence file references to satisfy check_whence.py
+    - WHENCE: Fix metadata for snd-soc-skl firmware
+    - WHENCE: List new radeon CI and SI smc firmware
+    - WHENCE: List symlink 'qat_mmp.bin'
+    - WHENCE: Add reference to 'qca/NOTICE.txt'
+    - README: Say that files must be listed in WHENCE, and how to check it
+    - radeon: update SMC firmware for SI parts
+    - radeon: update SMC firmware for CI parts
+    - amdgpu: update SMC firmware for VI parts
+    - mediatek: update MT8173 VPU firmware for idle state
+    - amdgpu: add new smc firmware for newer tonga and iceland chips
+    - linux-firmware: rockchip: update dptx firmware to v3.1
+    - rockchip/dptx: update WHENCE to version 3.1
+    - linux-firmware: update BYT audio firmware
+    - rtlwifi: Add updates for RTL8723BE and RTL8821AE
+    - linux-firmware: Update firmware patch for Intel Bluetooth 7265 (C0)
+    - linux-firmware: Update firmware patch for Intel Bluetooth 7265 (D1)
+    - linux-firmware: Update firmware patch for Intel Bluetooth 7260 (B5/B6)
+    - linux-firmware: Update firmware file for Intel Bluetooth 8260
+    - linux-firmware: Update firmware file for Intel Bluetooth 8265
+
+  * Trigger update-initramfs following linux-firmware install (LP: #1646197)
+    - UBUNTU: Add postinst script to update initrds
+
+  * Don't install build scripts, and move GPL license files to the license
+    install directory.
+    - UBUNTU: Build and license file installation changes
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Wed, 30 Nov 2016 14:50:27 -0600
+
+linux-firmware (1.161) yakkety; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
+    36c7c78264fa79ed51697c59725840635708d5fd (LP: #1589905)
+    - linux-firmware: update Marvell 8897-B0 firmware images to 7.p66
+    - linux-firmware: update Marvell 8897-B0 firmware images to 7.p77
+    - linux-firmware/i915: Restore DMC 1.23
+    - linux-firmware: intel: Update Kabylake audio firmware
+    - linux-firmware: intel: Update Broxton audio firmware
+    - linux-firmware: rockchip: update dptx firmware to v2.9
+    - usb: host: xhci-rcar: update firmware for R-Car H3 and M3-W
+    - qed: Add firmware 8.10.10.0
+    - ath10k: QCA4019 hw1.0: add firmware and board files
+    - ath10k: QCA9887 hw1.0: add firmware and board files
+    - ath10k: QCA9888 hw2.0: add firmware and board files
+    - ath10k: QCA9984 hw1.0: add firmware and board files
+    - ath10k: QCA988X hw2.0: update firmware to 10.2.4.70.54
+    - ath10k: QCA6174: update board files
+    - rt2870sta: Update rt3071.bin to match rt2870.bin
+    - rtl_bt: Add firmware and config file for RTL8822BE
+    - mediatek: Update firmware for decoder and MDP
+    - linux-firmware: add Marvell PCIe8997 firmware images
+    - linux-firmware: update WHENCE file for Marvell firmware versions
+    - amdgpu: update UVD firmware for VI devices
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Wed, 14 Sep 2016 08:04:33 -0500
+
+linux-firmware (1.160) yakkety; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
+    c170c8d95794d6aedbaeea44674daaa96baf04f7
+    - linux-firmware: intel: Update Skylake audio firmware
+    - linux-firmware: update rt2860.bin, rt2800pci driver
+    - linux-firmware: update rt2870.bin, rt2800usb driver
+    - amdgpu: update firmware
+    - cxgb4: update firmware to revision 1.15.37.0
+    - qed: Add FW 8.10.5.0
+    - linux-firmware: intel: Add Broxton audio firmware
+    - linux-firmware: Update firmware patch for Intel Bluetooth 7260 (B3/B4)
+    - linux-firmware: Update firmware patch for Intel Bluetooth 7260 (B5/B6)
+    - linux-firmware: update audio firmware for Braswell platform
+    - radeon: add new CI smc firmware
+    - radeon: add new SI smc firmware
+    - linux-firmware: Update firmware patch for Intel Bluetooth 7265 (D1)
+    - linux-firmware: Update firmware patch for Intel Bluetooth 7265 (C0/D0)
+    - linux-firmware: Update firmware file for Intel Bluetooth 8260
+    - wl18xx: update firmware file
+    - linux-firmware: intel: Update Skylake audio firmware
+    - linux-firmware: Add firmware file for Intel Bluetooth 8265
+    - amdgpu: Update UVD firmware for Polaris
+    - amdgpu: update polaris ucode
+    - linux-firmware: intel: Update Broxton audio firmware
+    - linux-firmware: intel: Update Skylake audio firmware
+    - linux-firmware: New minor DMC release for Broxton - ver1_07
+    - linux-firmware: First DMC image for Kabylake.
+    - linux-firmware/i915: Step away from symbolic links and clean up repo.
+    - mediatek: Add mt8173 VPU firmware
+    - linux-firmware: Fix the filename for WsP to align with device HW_VARIANT
+    - nvidia: Add GP100 signed firmware
+    - iwlwifi: add new -17 firmware for iwlmvm devices
+    - iwlwifi: add new -22 firmware for 7265D and up
+    - amdgpu: update vce firmware for VI asics
+    - linux-firmware: intel: Add Kabylake audio firmware
+    - Add dptx firmware for rockchip rk3399
+    - usbdux: usbduxsigma: created matching binary of the firmware
+    - linux-firmware: rockchip: update dptx firmware to v2.6
+    - amdgpu: update stoney UVD firmware
+    - linux-firmware: intel: Update Skylake audio firmware
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Mon, 15 Aug 2016 07:20:40 -0500
+
+linux-firmware (1.159) yakkety; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
+    cccb6a0da98372bd66787710249727ad6b0aaf72 (LP: #1605276)
+    - linux-firmware: intel: Update Skylake audio firmware
+    - linux-firmware: update rt2860.bin, rt2800pci driver
+    - linux-firmware: update rt2870.bin, rt2800usb driver
+    - amdgpu: update firmware
+    - cxgb4: update firmware to revision 1.15.37.0
+    - qed: Add FW 8.10.5.0
+    - linux-firmware: intel: Add Broxton audio firmware
+    - linux-firmware: Update firmware patch for Intel Bluetooth 7260 (B3/B4)
+    - linux-firmware: Update firmware patch for Intel Bluetooth 7260 (B5/B6)
+    - linux-firmware: update audio firmware for Braswell platform
+    - radeon: add new CI smc firmware
+    - radeon: add new SI smc firmware
+    - linux-firmware: Update firmware patch for Intel Bluetooth 7265 (D1)
+    - linux-firmware: Update firmware patch for Intel Bluetooth 7265 (C0/D0)
+    - linux-firmware: Update firmware file for Intel Bluetooth 8260
+    - wl18xx: update firmware file
+    - linux-firmware: intel: Update Skylake audio firmware
+    - linux-firmware: Add firmware file for Intel Bluetooth 8265
+    - amdgpu: Update UVD firmware for Polaris
+    - amdgpu: update polaris ucode
+    - linux-firmware: intel: Update Broxton audio firmware
+    - linux-firmware: intel: Update Skylake audio firmware
+    - linux-firmware: New minor DMC release for Broxton - ver1_07
+    - linux-firmware: First DMC image for Kabylake.
+    - linux-firmware/i915: Step away from symbolic links and clean up repo.
+    - mediatek: Add mt8173 VPU firmware
+    - linux-firmware: Fix the filename for WsP to align with device HW_VARIANT
+    - nvidia: Add GP100 signed firmware
+    - iwlwifi: add new -17 firmware for iwlmvm devices
+    - iwlwifi: add new -22 firmware for 7265D and up
+    - amdgpu: update vce firmware for VI asics
+    - linux-firmware: intel: Add Kabylake audio firmware
+    - Add dptx firmware for rockchip rk3399
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Thu, 21 Jul 2016 09:55:19 -0500
+
+linux-firmware (1.158) yakkety; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git 8afadbe553017bec1e442b5a9fba859b54fd33fb
+    Update Intel OPA hfi1 firmware
+    nvidia: Add GM200, GM204 and GM206 signed firmware
+    nvidia: Add GM20B signed firmware
+    iwlwifi: add new -21.ucode for 7265D, 8260, 3168 and 8265 devices
+    wl18xx: update firmware file
+    iwlwifi: add -21.ucode to WHENCE
+    linux-firmware: intel: Update Skylake audio firmware
+    linux-firmware/i915: Major GuC release for Skylake - ver 6.1
+    linux-firmware: Update AMD microcode patch firmware
+    Update radeon ucode images
+    Update amdgpu ucode images
+    Add amdgpu ucode images for Polaris family asics
+    radeon: revert last kaveri mec ucode update
+    linux-firmware: Update firmware patch for Intel Bluetooth 7265 (D1)
+    usb: host: xhci-plat: add firmware for the R-Car M3-W xHCI controllers
+    amdgpu: update CZ to new UVD fw that supports 40 sessions
+    linux-firmware: Update firmware file for Intel Bluetooth 8265
+    radeon: update CIK UVD firmware
+    ath10k: QCA6174 hw2.1: update firmware-5.bin to SW_RM.1.1.1-00157-QCARMSWPZ-1
+    ath10k: QCA6174 hw2.1: add board-2.bin
+    ath10k: QCA6174 hw3.0: add board-2.bin
+    ath10k: QCA9377 hw1.0: add firmware and board files
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Fri, 06 May 2016 07:49:09 -0500
+
+linux-firmware (1.157) xenial; urgency=medium
+
+  * UBUNTU: Add script to identify candidate firmware for lts backport updates
+  * Update debian/nic-firmware.lst and debian/scsi-firmware.lst.
+    UBUNTU: Add script to help ease updating udeb lists
+    UBUNTU: Remove obsolete bnx2x firmware files
+    UBUNTU: Update nic-firmware.lst and scsi-firmware.lst based on kernel udebs
+    -LP: #1558135
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Wed, 16 Mar 2016 14:19:09 -0500
+
+linux-firmware (1.156) xenial; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git b2deae592adde46eadfc8fe1f7841d0f13f16ee5
+    linux-firmware: add Marvell SD/USB8801 B0 firmware images
+    linux-firmware: update Marvell 8897-B0 firmware images to 7.p18
+    linux-firmware: update Marvell 8897-B0 firmware images to 7.p53
+    linux-firmware: update Marvell USB8797-B0 firmware image
+    Update Intel OPA hfi1 firmware
+    iwlwifi: replace 7265D-10.ucode by 7265-10.ucode
+    moxa: Add firmware for Moxa 11x0 USB Serial devices
+    moxa: Refer to LICENCE.moxa for mxuport driver
+    linux-firmware: Update Skylake audio firmware
+    WHENCE: Add version information for hfi1
+    linux-firmware: add fw for new qat devices
+    add a symlink from qat_mmp.bin to its new file name
+    fix permissions on brcm/brcmfmac4371-pcie.bin
+    brcm: add firmware for BCM4350 rev 5
+    Clarified licensing terms for the current ath9k_htc firmware
+    qed: Add firmware 8.7.3.0.
+    rtlwifi: v35 firmware for rtl8723bu
+    linux-firmware: Update firmware patch for Intel Bluetooth 7265 (D1)
+    brcm: add firmware for bcm4366 device
+    linux-firmware: intel: add symbolic link and file versions
+    linux-firmware: Update firmware patch for Intel Bluetooth 7265 (C0/D0)
+    linux-firmware: Update firmware patch for Intel Bluetooth 7260 (B5/B6)
+    linux-firmware: Update firmware patch for Intel Bluetooth 7260 (B3/B4)
+    rtlwifi: v19 firmware for rtl8192eu
+    linux-firmware: intel: Update Skylake audio firmware
+    linux-firmware: New minor DMC release for Skylake - ver1_26
+    linux-firmware: Add AR3012 firmware
+  * debian: Update Vcs-Git to point to launchpad
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Tue, 16 Feb 2016 11:04:55 -0600
+
+linux-firmware (1.155) xenial; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git bbe4917c054eb0a73e250c6363341e3bf6725839
+    Add firmware for mt7601u. version 34.
+    WHENCE: use https://linuxtv.org for LinuxTV URLs
+  * UBUNTU: Added ql2500_fw.bin to scsi-firmware.lst
+    -LP: #1528688
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Wed, 06 Jan 2016 09:44:16 -0600
+
+linux-firmware (1.154) xenial; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git 2bf2280b4c3f83ebc61bdcbcd446e78b5a7f0780
+    brcm: add initial firmware for bcm4371 11ac wifi device
+    brcm: update firmware for bcm43602 device
+    WHENCE: Remove claim that qed and bfa/bna firmware came from kernel source
+    WHENCE: Correct filename of qed firmware
+    fix permissions on qed_init_values_zipped-8.4.2.0.bin
+    qla2xxx: Update firmware version to 8.03.00
+    bnx2x: Add FW 7.13.1.0.
+    Merge tag 'iwlwifi-fw-2015-11-18' of git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-firmware
+  * iwlwifi: add new -16 firmware for iwlmvm devices
+    -LP: #1518859
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Fri, 04 Dec 2015 15:21:20 -0600
+
+linux-firmware (1.153) xenial; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git 1406ec112423c8f70d503d3cd44c6f8e147f7ac3
+    linux-firmware: New minor DMC release for Skylake - ver1_23
+    linux-firmware/i915: Removing old Skylake DMC
+    brcm: adding firmware for BCM4350 PCIe device
+    brcm: update firmware for the BCM4356 PCIe device
+    ath10k: add notice.txt references to WHENCE
+    linux-firmware: add Skylake audio firmware
+    remove executable bit from some firmware
+    radeon/amdgpu: update to latest firmware
+    fix WHENCE, which for some reason became executable...
+    qed: Add FW 8.4.2.0.
+    linux-firmware: Update firmware patch for Intel Bluetooth 7265 (C0/D0)
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Fri, 20 Nov 2015 07:46:50 -0600
+
+linux-firmware (1.152) xenial; urgency=medium
+
+  * Fix typo in changelog for 1.151.
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Thu, 29 Oct 2015 09:03:47 -0500
+
+linux-firmware (1.151) xenial; urgency=medium
+
+  * Update i915 Skylake firmware to version 1.23
+    linux-firmware: New minor DMC release for Skylake - ver1_23
+    linux-firmware/i915: Removing old Skylake DMC
+    -LP: #1509103
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Wed, 28 Oct 2015 10:55:40 -0500
+
+linux-firmware (1.150) xenial; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git 66d3d8d7607c9a3a7d083f81990f6523f5842065
+    cxgb4: update firmware to revision 1.14.4.0
+    Merge branch 'for-upstream' of git://git.chelsio.net/pub/git/linux-firmware
+    linux-firmware: New minor DMC release for Skylake - ver1_19
+    linux-firmware: New minor DMC release for Broxton - ver1_05
+    linux-firmware: New minor DMC release for Skylake - ver1_20
+    linux-firmware: New minor DMC release for Skylake - ver1_21
+    linux-firmware: Clean up i915 by removing old skl dmc firmware.
+    linux-firmware: New major GuC release for Skylake.
+    linux-firmware: Add Intel OPA hfi1 firmware
+    ar3k: add to support AR3012 v2.1 firmware
+    Merge commit 'd1fa230a' of git://people.freedesktop.org/~vivijim/linux-firmware-i915
+    Merge branch 'master-hfi1-firmware-v2' of git://github.com/weiny2/linux-firmware
+    amdgpu: add firmware for VI asics
+    linux-firmware: New minor DMC release for Broxton - ver1_06
+    linux-firmware: New minor DMC release for Skylake - ver1_22
+    linux-firmware: Clean up i915 by removing old skl dmc firmware.
+    linux-firmware: Add qmss accumulator pdsp firmware for keystone SoCs
+    linux-firmware: Update firmware patch for Intel Bluetooth 7260 (B3/B4)
+    linux-firmware: Update firmware patch for Intel Bluetooth 7260 (B5/B6)
+    linux-firmware: Update firmware patch for Intel Bluetooth 7265 (C0/D0)
+    Merge 'c11384c' of git://people.freedesktop.org/~vivijim/linux-firmware-i915
+    usb: host: xhci-plat: add support for the R-Car H3 xHCI controllers
+    brcmfmac: firmware refresh for BCM43602 PCIE devices
+    linux-firmware: Add firmware patch for Intel Bluetooth 7265 (D1)
+    WHENCE: Remove listing of a nonexistent file
+    WHENCE: Expand file wildcard RTL8192E/*
+    WHENCE: Fix several licen[cs]e filenames
+    Add licence information for kaweth firmware
+    Add licence information for e100 microcode
+    Add licence information for qla1280 firmware
+    WHENCE: Summarise several more custom licences as 'Redistributable'
+    ath10k: QCA988X hw2.0: add board.bin
+    ath10k: QCA988X hw2.0: add firmware 10.2.4.70.9-2
+    ath10k: QCA6174 hw2.1: add firmware WLAN.RM.1.1-00141 and board.bin
+    ath10k: QCA6174 hw3.0: add WLAN.RM.2.0-00180-QCARMSWPZ-1
+    ath10k: QCA99X0 hw2.0: add firmware 10.4.1.00030-1 and board.bin
+    Add FW binary used by mwlwifi driver.
+  * Drop "UBUNTU: SAUCE: ath10k: Add firmware". This conflicts with upstream
+    ath10k firmware, and the files are for an older firmware API which has
+    been deprecated.
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Mon, 26 Oct 2015 10:23:03 -0500
+
+linux-firmware (1.149) wily; urgency=medium
+
+  [ Arend van Spriel ]
+
+  * UBUNTU: SAUCE: brcmfmac: firmware refresh for BCM43602 PCIE devices
+    -LP: #1487524
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Wed, 07 Oct 2015 09:18:44 -0500
+
+linux-firmware (1.148) wily; urgency=medium
+
+  * Update i915 Skylake firmware to upstream versions
+    linux-firmware: New minor DMC release for Skylake - ver1_20
+    linux-firmware: New minor DMC release for Skylake - ver1_21
+    linux-firmware: Clean up i915 by removing old skl dmc firmware.
+    -LP: #1497070
+  * Update amdgpu firmware to upstream versions
+    amdgpu: add firmware for VI asics
+    -LP: #1497284
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Fri, 18 Sep 2015 08:40:52 -0500
+
+linux-firmware (1.147) wily; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git 38358cfcf50436bf4462b3e45f5b30ab66bb63a6
+    firmware: tegra: Update XHCI firmware to v50.10 for T210
+    linux-firmware: wilc1000: add firmware for wilc1000 802.11n driver
+
+  [ Alberto Milone ]
+
+  * UBUNTU: Add firmware for amdgpu's Carrizo, Fiji, Tonga, and Topaz
+
+  [ Seth Forshee ]
+
+  * UBUNTU: Remove unused LICENCE.radeon_rlc
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Wed, 26 Aug 2015 07:37:48 -0500
+
+linux-firmware (1.146) wily; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git 75cc3ef8ba6712fd72c073b17a790282136cc743 
+    usbdux: usbduxsigma: fixed timing issues between ADC and DAC
+    usbdux: usbduxsigma: added digital IO read
+    usbdux: usbduxsigma: added soft interval mode in the firmware
+    usbdux: usbduxsigma: contact info updated
+    usbdux: usbduxsigma: changed firmware from ADC polling to IRQ processing
+    usbdux: Makefile_dux: as31 compile no longer needed
+    usbdux: usbduxsigma: Changed address and updated date
+    linux-firmware: Update to QAT dh895xxcc UOF firmware and a new QAT MMP FW
+    rtl_bt: correct RTL8723A firmware file
+    Makefile: usbdux is an empty dir
+    Makefile: use find instead of shell globs
+    Makefile: use correct dir for usbdux
+    bnx2x: Update to FW version 7.12.30
+    firmware: tegra: add GK20A FECS/GPCCS firmware
+    Remove patch conflict remains
+    linux-firmware: Add firmware file for Intel Bluetooth 8260
+    Add firmware for Cavium LiquidIO 210NV, 210SV, and 410NV cards
+    linux-firmware: update audio firmware for Braswell platform
+    qca: add BT firmware files to support QCA ROME chips
+    cxgb4: Add BT adapter PHY firmware
+    linux-firmware: add firmware for atusb driver
+    README: clarify redistribution requirements covering patents
+    radeon: add firmware for VCE1.0 hardware
+    linux-firmware: New minor DMC release for Skylake - ver1_18
+    iwlwifi: add new -13 firmware for iwlmvm devices
+    linux-firmware: New minor DMC release for Skylake.
+    linux-firmware: Add i915 DMC firmware for Broxton
+    linux-firmware: Add i915 GuC firmware
+    linux-firmware: Add i915 DMC firmware
+    linux-firmware: Update firmware patch for Intel Bluetooth 7260 (B3/B4)
+    linux-firmware: Update firmware patch for Intel Bluetooth 7260 (B5/B6)
+    Revert "linux-firmware: Update firmware patch for Intel Bluetooth 7260 (B3/B4)"
+    Revert "linux-firmware: Update firmware patch for Intel Bluetooth 7260 (B5/B6)"
+    linux-firmware: Update firmware patch for Intel Bluetooth 7265 (C0/D0)
+    Revert "linux-firmware: Update firmware patch for Intel Bluetooth 7265 (C0/D0)"
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Wed, 29 Jul 2015 10:07:25 -0500
+
+linux-firmware (1.145) wily; urgency=medium
+
+  [ Emmanuel Grumbach ]
+
+  * iwlwifi: add new -13 firmware for iwlmvm devices
+    cherry picked from git://git.kernel.org/pub/scm/linux/kernel/git/egrumbach/linux-firmware.git
+    This firmware also supports 3165. This is the first firmware release for
+    8000. Version number: 25.30.13.0
+
+  [ Rodrigo Vivi ]
+
+  * Add firmware files for i915 Skylake graphics:
+    cherry picked from git://people.freedesktop.org/~vivijim/linux-firmware-i915
+    linux-firmware: Add i915 DMC firmware
+    linux-firmware: New minor DMC release for Skylake.
+    linux-firmware: New minor DMC release for Skylake - ver1_18
+    linux-firmware: New minor DMC release for Skylake - ver1_19
+    -LP: #1441861
+
+  [ Seth Forshee ]
+
+  * Remove unused cxgb4/t4fw-1.12.25.0.bin and cxgb4/t5fw-1.12.25.0.bin
+    which were left in the last version by mistake.
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Fri, 10 Jul 2015 07:55:14 -0500
+
+linux-firmware (1.144) wily; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git 8e181320b11de501046cf75c8c30915cd09a1e39
+    Add v1.4.0 firmware for ath9k_htc.
+    ath9k_htc: update versions in WHENCE
+    firmware: tegra: Add XHCI firmware v45.46 for T124
+    iwlwifi: update -10.ucode for 3160 / 7260 / 7265 / 7265D
+    Revert these to ath9k-htc 1.3.1 - to keep backwards compatibility with older kernels.
+    ath9k_htc: revert versions in WHENCE to 1.3.1
+    Add v1.4.0 firmware for ath9k_htc.
+    ath10k: add firmware 10.2.4.45 as firmware-4.bin
+    radeon: Update Kaveri MEC firmware to #396
+    brcm: add firmware for BCM43242 USB device
+    brcm: add firmware for BCM4356 PCIe device
+    brcm: add firmware files for BCM43602 PCIe device
+    brcm: add firmware for BCM43455 SDIO device
+    brcm: add firmware for BCM4339 SDIO device
+    brcm: add firmware for BCM43340/1 SDIO devices
+    brcm: upgrade firmware for BCM4354 SDIO device
+    cxgb4: update firmware to revision 1.13.32.0 for T4 and T5
+    firmware: tegra: Add XHCI firmware v50.07 for T210
+    firmware: WHENCE: note nvidia xusb.bin firmware versions
+    ath3k: update AR3012 2.2.1 firmware with v.170
+    iwlwifi: update -12.ucode for 3160 / 7260 / 7265 / 7265D
+    brcm: add firmware for BCM43569 USB device
+    brcm: add firmware for BCM43570 PCIe device
+    brcm: replace non-working firmware for BCM4339
+    brcm: add firmware for BCM4324(1) B5 chipset
+    linux-firmware: Update firmware patch for Intel Bluetooth 7265 (C0/D0)
+    linux-firmware: Update firmware patch for Intel Bluetooth 7260 (B5/B6)
+    linux-firmware: Update firmware patch for Intel Bluetooth 7260 (B3/B4)
+    linux-firmware: Fix nvidia/tegra210/xusb.bin permissions
+    brcm: add brcmfmac43241b5-sdio.bin to WHENCE
+    linux-firmware: Add Realtek Bluetooth HCD firmware
+    wl18xx: update firmware file, remove conf file
+
+  [ Seth Forshee ]
+
+  * Remove DH_COMPAT definition from debian/rules
+  * Add ${misc:Depends} dependency for binary package
+  * Remove explicit gcc build dependency
+  * Bump Standards-Version to 3.9.6
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Fri, 08 May 2015 13:20:27 -0500
+
+linux-firmware (1.143) vivid; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git cef33368c4d3425f11306496f0250f8ef1cf3c1f
+    rtl_nic: update firmware for RTL8168H and RTL8107E
+    linux-firmware: Fix qat_895xcc.bin permissions
+    linux-firmware: Add QLogic BR Series Adapter Firmware
+    linux-firmware: Fix firmware files with executable permission set
+
+  [ Leann Ogasawara ]
+
+  * UBUNTU: Add bnx2x firmware to linux-firmware udeb
+    -LP: #1424884
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Wed, 04 Mar 2015 00:16:58 -0600
+
+linux-firmware (1.142) vivid; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git 17657c35869baa999b454e868cd3d5a7e1656425
+    linux-firmware: update Marvell USB8797-B0 firmware image
+    linux-firmware: update Marvell SD8897-B0 firmware combo image
+    linux-firmware: update Marvell PCIe/USB 8897-B0 firmware combo image
+    linux-firmware: add Marvell USB8897-B0 firmware combo image
+    linux-firmware: update Marvell 8897-B0 firmware images to p73
+    linux-firmware: update Marvell SD8787 firmware version p192
+    linux-firmware: update Marvell SD8787 firmware version p52
+    linux-firmware: update Marvell 8897-B0 firmware images to p103
+    linux-firmware: update WHENCE file for Marvell 8897 FW versions
+    linux-firmware: update Marvell USB8797-B0 firmware image
+    linux-firmware: add Marvell 8887-A2 firmware image
+    linux-firmware: add Marvell USB8766-A0 firmware combo image
+    linux-firmware: update Marvell 8897-B0 firmware images to p106
+    rtlwifi: rtl8192ee: New firmware from Realtek
+    linux-firmware: update Marvell 8897-B0 firmware images to p112
+    linux-firmware: update Marvell USB8797-B0 firmware image
+    linux-firmware: update Marvell SD8897-B0 firmware combo image
+    linux-firmware: update Marvell PCIe/USB 8897-B0 firmware combo image
+    linux-firmware: add Marvell USB8897-B0 firmware combo image
+    linux-firmware: update Marvell 8897-B0 firmware images to p73
+    linux-firmware: update Marvell SD8787 firmware version p192
+    linux-firmware: update Marvell SD8787 firmware version p52
+    linux-firmware: update Marvell 8897-B0 firmware images to p103
+    linux-firmware: update WHENCE file for Marvell 8897 FW versions
+    linux-firmware: update Marvell USB8797-B0 firmware image
+    linux-firmware: add Marvell 8887-A2 firmware image
+    linux-firmware: add Marvell USB8766-A0 firmware combo image
+    linux-firmware: update Marvell 8897-B0 firmware images to p106
+    linux-firmware: update Marvell 8897-B0 firmware images to p112
+    Merge branch 'marvell-mwifiex'
+    linux-firmware: update firmware for Intel Broadwell SST DSP
+    linux-firmware: add sst audio firmware for braswell platforms
+    Fix WHENCE entry for smsmdtv
+    iwlwifi: add new -12 firmware for 3160 / 7260 / 7265 / 7265D
+    linux-firmware: Update firmware patch for Intel Bluetooth 7260 (B3)
+    linux-firmware: Update firmware patch for Intel Bluetooth 7260 (B4)
+    linux-firmware: Update firmware patch for Intel Bluetooth 7260 (B5)
+    linux-firmware: Update firmware patch for Intel Bluetooth 7265 (C0)
+    linux-firmware: Update firmware patch for Intel Bluetooth 7260 (B6)
+    linux-firmware: Update firmware patch for Intel Bluetooth 7265 (D0)
+  * iwlwifi: update -10.ucode for 3160 / 7260 / 7265 / 7265D
+    -LP: #1354975
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Thu, 19 Feb 2015 10:14:41 -0600
+
+linux-firmware (1.141) vivid; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git 78535e88bfb95e2f50afb6f9e728df0fbec2cddc
+    cxgb4: Update firmware to revision 1.12.25.0
+    iwlwifi: update -10.ucode for 3160 / 7260 / 7265 / 7265D
+    radeon: add updated firmware for kaveri (radeon GPU)
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Sat, 10 Jan 2015 11:12:18 -0600
+
+linux-firmware (1.140) vivid; urgency=medium
+
+  * Revert "linux-firmware: Add firmware files for Siano DTV devices"
+    -LP: #1401711
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Fri, 12 Dec 2014 16:17:39 -0600
+
+linux-firmware (1.139) vivid; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git 8ac569dd3ca3ca685bd47ee86c1eeb6050864db3
+    linux-firmware: Update AMD microcode patch firmware files
+    linux-firmware: Add firmware files for Siano DTV devices
+    linux-firmware: add sst audio firmware for baytrail platforms
+    IntcSST2: Add firmware for Intel Broadwell SST DSP
+    iwlwifi: add new firmware for 3160 / 7260 / 7265 / 7265D
+    iwlwifi: update firmware for 3160 / 7260 / 7265
+  * Updated "UBUNTU: Remove amd64-microcode" during rebase to remove
+    files introduced by "linux-firmware: Update AMD microcode patch
+    firmware files."
+
+ -- Seth Forshee <seth.forshee@canonical.com>  Mon, 01 Dec 2014 12:45:33 -0600
+
+linux-firmware (1.138) utopic; urgency=medium
+
+  * Add bnx2x firmware to the NIC firmware udeb to support net booting as described
+    by the kernel MODULE_FIRMWARE statements:
+     debian.master/abi/3.16.0-23.31/fwinfo:firmware:       bnx2x/bnx2x-e1-7.8.19.0.fw
+     debian.master/abi/3.16.0-23.31/fwinfo:firmware:       bnx2x/bnx2x-e1h-7.8.19.0.fw
+     debian.master/abi/3.16.0-23.31/fwinfo:firmware:       bnx2x/bnx2x-e2-7.8.19.0.fw
+    -LP: #1378491
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Wed, 22 Oct 2014 09:08:00 -0400
+
+linux-firmware (1.137) utopic; urgency=medium
+
+  * Restore cxgb3/t3fw-7.12.0.bin which was accidentally dropped
+    when grooming for obsolete firmware.
+    -LP: #1382710
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Tue, 21 Oct 2014 14:41:52 -0400
+
+linux-firmware (1.136) utopic; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git 0e5f63771d0df6d7859f7c4100a74d737c62ac88 
+    Fix upstream mis-commit:
+      Revert "linux-firmware: Add firmware patch for Intel Bluetooth 7265 ROM-spin(D0)"
+      linux-firmware: Add firmware patch for Intel Bluetooth 7265 ROM-spin(D0)
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Tue, 14 Oct 2014 15:03:42 +0200
+
+linux-firmware (1.135) utopic; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git 935b5557b1485d839748b40f5721539b54d429e1
+    linux-firmware: Add firmware patch for Intel Bluetooth 7265 ROM-spin(D0)
+    rtl_nic: add firmware for RTL8168H and RTL8107E
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Wed, 08 Oct 2014 07:27:14 +0100
+
+linux-firmware (1.134) utopic; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git f66291398181d24856fd2d19454d246199abd5ea
+    Update firmware for rtl8821ae
+    Update firmware for rtl8192de
+    Update firmware for rtl8723be
+    Update firmware for rtl8192ce
+    iwlwifi: update firmware for 3160 / 7260 / 7265 
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Mon, 15 Sep 2014 07:51:33 -0600
+
+linux-firmware (1.133) utopic; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git 365e80cce17e033cc612ac6b3f74a28c2753f184
+    radeon: add new firmware for the UVD block on older asics
+    radeon: add updated firmware for radeon GPUs
+    linux-firmware: add firmware v3.25.0.0 for ITEtech IT9135 DVB-T USB dr
+    xc4000: add firmware for Xceive xc4000 tuner driver
+    xc5000: Add firmware for xc5000c variant
+    as102: add firmware for Abilis Systems Single DVB-T Receiver
+    Move metadata for intel/fw_sst_0f28.bin-48kHz_i2s_master into WHENCE
+    bnx2x: Add FW 7.10.51
+    cxgb4: Update firmware to revision 1.11.27.0
+    linux-firmware: Add Intel BT firmware for 3160
+    xhci-rcar: add firmware for R-Car H2/M2 USB 3.0 host controller
+    linux-firmware: Update firmware patch for Intel BT 7265
+    linux-firmware: Update firmware patch for Intel BT 7260
+    fw_sst_0f28: Add firmware for Intel Baytrail SST DSP
+    firmware: qat: QAT_dh895 - Removed unnecessary dma read.
+    wl18xx: add version 4 of the wl18xx firmware
+    qla2xxx: Update ql2{4,5}00_fw.bin to version 7.03.00
+    Move the s5p-mfc firmware out of its subdirectory
+  * linux-firmware: Updated firmware patch for Intel Bluetooth 7265
+    -LP: #1188096
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Fri, 29 Aug 2014 06:43:21 -0600
+
+linux-firmware (1.132) utopic; urgency=medium
+
+  * Remove amd64-microcode for licensing reasons.
+    The amd64 microcode is not suitable for packaging in main since
+    the license does not allow modification or disassembly. Install
+    the multiverse package amd64-microcode instead which also contains
+    initramfs hooks.
+    -LP: #1181145
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Wed, 25 Jun 2014 08:11:00 -0600
+
+linux-firmware (1.131) utopic; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git a4f3bc03f1e7b1f25cc52328981c2a35871e55a1
+    README: Update the submission address to linux-firmware@kernel.org
+    firmware: Added fw for qat_dh895xxcc hw crypto accelerator
+    s5p-mfc: Adding MFC v7 and v8 firmwares
+    s5p-mfc: Add s5p-mfc-v6-v2 firmware
+    radeon: add firmware for Mullins/Beema GPUs
+    radeon: add mc2 firmware for SI/CI GPUs
+    rtlwifi: rtl8723be: Add firmware
+    brcm: add firmware for BCM4354 2x2 11ac SDIO device
+    brcm: add firmware for BCM43143 2.4G 11n SDIO device
+    brcm: add firmware for BCM43143 2.4G 11n USB device
+    firmware: update Intel Bluetooth device firmware patch files
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Mon, 09 Jun 2014 06:41:24 -0600
+
+linux-firmware (1.130) utopic; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git 4a050f5524a09c35192273e3a5d741f63e7bf7d6
+    radeon: add vce ucode for CIK GPUs
+    linux-firmware: Add firmware patch file for Intel Bluetooth 7260 ROM-spin
+    linux-firmware: Add firmware patch file for Intel Bluetooth Device (7265)
+    linux-firmware: Update Intel BT devices firmware patch files (7260/3160)
+    Adding RSI 91x firmware.
+    iwlwifi: update firmware for 3160 / 7260 / 7265
+    iwlwifi: add new firmware for 3160 / 7260 / 7265
+    iwlwifi: add firmware for 7265
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Wed, 28 May 2014 08:50:08 +0200
+
+linux-firmware (1.129) utopic; urgency=low
+
+  [ Emmanuel Grumbach ]
+
+  * iwlwifi: add new firmware for 3160 / 7260 / 7265
+    cherry picked from git://git.kernel.org/pub/scm/linux/kernel/git/egrumbach/linux-firmware.git
+    Add a new firmware for 3160, 7260 and 7265.  This firmware has new APIs and
+    hence the file name changes.  Version number: 22.212.9.0
+    -LP: #1265436
+  * iwlwifi: add firmware for 7265
+    cherry picked from git://git.kernel.org/pub/scm/linux/kernel/git/egrumbach/linux-firmware.git
+    Add new firmware for a new device: 7265 version: 22.24.8.0
+    -LP: #1265436
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Wed, 30 Apr 2014 13:49:24 -0600
+
+linux-firmware (1.128) utopic; urgency=medium
+
+  * Add firmware file to support Intel 7265 (Stone Peak) for linux v3.13+
+    http://wireless.kernel.org/en/users/Drivers/iwlwifi?action=AttachFile&do=get&target=iwlwifi-7265-ucode-22.24.8.0.tgz
+    -LP: #1188092
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Mon, 28 Apr 2014 11:38:58 -0600
+
+linux-firmware (1.127) trusty; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git dec41bce44e0dff6a2c3358a958fadf22bf58858
+    brcm: add firmware for the BCM43362 WLAN device
+    iwlwifi: update firmware for 7260 / 3160 devices
+      (official upstream patch, replaces patch from 1.126)
+    WHENCE: Fix oddly capitalised instances of 'File'
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Mon, 17 Mar 2014 08:34:55 -0600
+
+linux-firmware (1.126) trusty; urgency=low
+
+  * Update firmware for 7260 / 3160 devices (Wilkins Peak)
+    https://bugs.launchpad.net/intel/+bug/1265436/comments/13
+    Quote from the release note:
+      "This firmware is supported starting 3.13 kernel.
+      We have a here quite a few bug fixes with a few new features.
+      Most of the improvements concern P2P client and GO modes."
+    -LP: #1265436
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Wed, 05 Mar 2014 08:34:45 -0700
+
+linux-firmware (1.125) trusty; urgency=medium
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git 343e46092a2b9c2ee24b88e66155226798bbec3f
+    wl18xx: add version 3 of the wl18xx firmware
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Wed, 19 Feb 2014 12:36:22 -0700
+
+linux-firmware (1.124) trusty; urgency=low
+
+  * Hmm, somehow managed to trash 1.123 that was already in the git repo and in the archive, but no big
+    deal since this is a straightforward rebase against upstream. No bits were lost in the making
+    of this package.
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Tue, 11 Feb 2014 07:28:26 -0700
+
+linux-firmware (1.123) trusty; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git 4164c23d2e3b4863ca42d72f40dc7cc5d9fb8c6c
+    rtlwifi: Add firmware for rtl8192ee
+    myri10ge: update firmware to 1.4.57
+    bnx2x: Update to FW 7.8.19
+    Remove executable permissions from firmware files
+    rtlwifi: Add firmware for rtl8821ae 
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Tue, 11 Feb 2014 06:45:53 -0700
+
+linux-firmware (1.122) trusty; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git 418320bd8b4243e51fe1cae8fa05ba2bfe290111
+    radeon: add ucode for HAWAII GPUs
+    rtlwifi: Add firmware for r8723au
+    iwlwifi: update firmware for 7260 / 3160 devices (replace cherry-pick from v1.119)
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Tue, 21 Jan 2014 08:17:02 -0700
+
+linux-firmware (1.121) trusty; urgency=low
+
+  * Forgot to remove aic94xx from debian/scsi-firmware.lst
+    Fixes FTBS 
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Fri, 10 Jan 2014 14:09:21 -0700
+
+linux-firmware (1.120) trusty; urgency=low
+
+  * Remove aic94xx-seq.fw and license. It has been pointed out
+    that this firmware is likely not redistributable.
+    -LP: #1101636
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Fri, 10 Jan 2014 13:47:41 -0700
+
+linux-firmware (1.119) trusty; urgency=low
+
+  * iwlwifi: update firmware for 7260 / 3160 devices
+    version: 22.15.8.0
+    Supported by kernel 3.13 and up. 
+    cherry-picked from git://git.kernel.org/pub/scm/linux/kernel/git/egrumbach/linux-firmware
+    http://www.spinics.net/lists/linux-wireless/msg116615.html
+    -LP: #1265436
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Fri, 03 Jan 2014 10:35:23 -0700
+
+linux-firmware (1.118) trusty; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git 52d77db9f133afe4d2b26aeccfd603745f45fda1
+    iwlwifi: update firmware for 7260 / 3160 devices
+    linux-firmware: 3.2.3.0 Firmware for Brocade Adapters
+    cxgb4: Updated T4 firmware, add T5 firmware
+    qla2xxx: Update ql2{4,5}00_fw.bin to version 7.01.00
+    linux-firmware: Update Intel Bluetooth devices firmware patch files
+    firmware: cw1200: Add firmware for the ST-E CW1200 WLAN chipset.
+    emi62: Provide the correct bitstream
+    linux-firmware: add Marvell SD8897-B0 firmware combo image
+    linux-firmware: update Marvell PCIe/USB 8897-B0 firmware combo image 
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Thu, 02 Jan 2014 07:55:19 -0700
+
+linux-firmware (1.117) trusty; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git 7d0c7a8cfd78388d90cc784a185b19dcbdbce824
+    rtlwifi: Add new firmware files for rtl8188eu
+    rtlwifi: Add new firmware files for rtl8192cu
+    brcm: add firmware file for the BCM4335 SDIO chipset
+    brcm: add firmware for newer version of BCM43241 SDIO chipset
+    brcm: add firmware file for BCM43241 SDIO chipset
+    brcm: rename firmware names expressing host interface type
+    ti-connectivity: add wl1251 firmware and license
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Mon, 21 Oct 2013 13:06:16 -0600
+
+linux-firmware (1.116) saucy; urgency=low
+
+  * UBUNTU: SAUCE: ath10k: Add firmware
+    Pulled from https://github.com/kvalo/ath10k until it
+    appears upstream. (LP: #1232990) 
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Tue, 01 Oct 2013 11:58:09 -0600
+
+linux-firmware (1.115) saucy; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git b8ac7c7e27dcd13fa3c843aaf62457e9c57ea4db
+    linux-firmware: Add Brocade FC/FCOE Adapter firmware files
+    radeon: add ucode for KAVERI GPUs (LP: #1218691)
+    radeon: add smc ucode for BONAIRE
+    linux-firmware: Add firmware patch file for Intel Bluetooth device(3160)
+    linux-firmware: add version information for Intel Bluetooth firmware
+    cw1200: Add SDD file for the Sagrad SG901-1091/1098 WLAN modules.
+    moxa: Fix firmware file names.
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Mon, 30 Sep 2013 08:33:18 -0600
+
+linux-firmware (1.114) saucy; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git 3fe01af27849c45c36c4c88eab8e24ddfeae307e
+    Fix filename for Intel Bluetooth firmware
+    linux-firmware: update Intel Bluetooth firmware patch file
+    -LP: #1011423
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Thu, 12 Sep 2013 13:36:30 +0000
+
+linux-firmware (1.113) saucy; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git 931e4469dc254df66a2c990ff1a8723685759eb4
+    radeon: add ucode for KABINI GPUs
+    radeon: add ucode for BONAIRE GPUs
+    radeon: add smc ucode for radeon GPUs
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Sun, 04 Aug 2013 05:47:09 -0600
+
+linux-firmware (1.112) saucy; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git 31f6b3076bab3c4b65f67fdb232f4579ed828b4f
+    linux-firmware: Update AMD microcode patch firmware files
+      This AMD ucode fixes some severe lockup issues on AMD family 15h CPUs when under high load.
+      The fix for erratum #759 being the most severe.
+    rtl_nic: add firmware rtl8411-2
+    ar3k: add Bluetooth support for QCA98XX/QCA24XX 
+    - LP: #1200533
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Fri, 12 Jul 2013 06:35:00 -0600
+
+linux-firmware (1.111) saucy; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git e982abf07f7986ca42b8cfdeb3374d009c18902a
+    iwlwifi: add firmware for 7260 / 3160 devices
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Wed, 10 Jul 2013 08:59:20 -0600
+
+linux-firmware (1.110) saucy; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git 2892af06dc38a764938f0583a2eac30595108799
+    List symlinks consistently in WHENCE
+    Add symlinks for old go7007 firmware filenames
+    Add go7007 firmware. 
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Thu, 27 Jun 2013 12:22:17 -0600
+
+linux-firmware (1.109) saucy; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git 94f39039688a53491f10130ac22dadb07e809764
+    rp2: Initial commit of Comtrol RocketPort 2 microcode
+    Merge branch 'master' of git://git.marvell.com/mwifiex-firmware
+    radeon: add ucode for SUN/HAINAN GPUs
+    linux-firmware: Add firmware files for mtk mt7630/mt7650 chipsets
+    linux-firmware: add Marvell PCIe8897-B0 WLAN firmware image
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Tue, 28 May 2013 12:55:13 -0600
+
+linux-firmware (1.108) saucy; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git 07ea598af5b9dde3acdf279846b062fa1b2987b8
+    rtl_nic: add firmware rtl8106e-2
+    rtl_nic: Add firmware rtl8168g-3
+    wl18xx: add default configuration binary
+    wl18xx: add version 2 of the wl18xx firmware
+    wl127x/wl128x: update firmwares
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Mon, 06 May 2013 08:56:31 -0600
+
+linux-firmware (1.107) saucy; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git 120a97ff309b6a20812f13d0f9da231eacc3311a
+    Add Intel Bluetooth firmware patch files
+    Fix formatting of LICENCE.ca0132
+    radeon: add updated ucode for UVD
+    radeon: add ucode for OLAND GPUs
+    linux-firmware: Add firmware files for Creative CA0132 HD-audio codec
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Thu, 02 May 2013 18:24:45 -0400
+
+linux-firmware (1.106) raring; urgency=low
+
+  * Restore rt3290.bin. It was originally removed as it was thought
+    superfluous (by mistake).
+    - LP: #1049466 
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Thu, 18 Apr 2013 06:27:19 -0600
+
+linux-firmware (1.105) raring; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git b584174fb7ca76645f9187d7f710c3d913529093
+    netxen_nic: Add FTP location of phanfw.bin in WHENCE file
+    netxen_nic: Update QLogic phanfw.bin to version 4.0.590
+    linux-firmware: Add firmware for mwl8k 8764 chip
+    tg3: Add EEE support firmware for 57766 cards
+    bnx2x: update fw to 7.8.17
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Wed, 10 Apr 2013 07:30:18 -0600
+
+linux-firmware (1.104) raring; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git c11f374afdd2a3ff0665c1cb0aab4ad0c6573ec7
+    cx231xx/cx23885: Remove incorrect Conexant CX23885 firmware
+    linux-firmware: Increment ap firmware API for mwl8k 8366 chip
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Sun, 10 Mar 2013 06:38:25 -0600
+
+linux-firmware (1.103) raring; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git f87c5b8dd547bcb434d5296ead3748241810c1d8
+    linux-firmware: update Marvell SD8797-B0 firmware image
+    linux-firmware: add Marvell SD8797-B0 firmware image
+      -LP: #1128810
+    rtl_nic: update firmware for RTL8168G
+    Move sd8688*.bin images into mrvl/ tree
+    rtlwifi/rtl8188ee: Add firmware for new driver
+    Revert "carl9170: Add checksum during installation, as preferred by the driver"
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Mon, 18 Feb 2013 07:05:35 -0700
+
+linux-firmware (1.102) raring; urgency=low
+
+  * Updated asihpi firmware from http://www.audioscience.com/internet/download/drivers/released/v4/08/00/hpklinux-4.08.00.tar.bz2
+    -LP: #1122377
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Tue, 12 Feb 2013 05:47:25 -0700
+
+linux-firmware (1.101) raring; urgency=low
+
+  * Add Conflicts/Replaces/Provides amd64-microcode
+    -LP: #1112423
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Wed, 06 Feb 2013 05:48:44 -0700
+
+linux-firmware (1.100) raring; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git 65a5163b8bb77bd7759efa3ca780867fcaed89b0
+    carl9170: Install binary in the parent directory, not /lib/firmware
+    carl9170: Add checksum during installation, as preferred by the driver
+    carl9170: Add and check SHA-256 sums for the toolchain tarballs
+    carl9170: Fix minimum CMake version
+    carl9170: Add full licence texts to BSD-licenced CMake files
+
+  * Add AMD microcode.
+    -LP: #1068299
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Tue, 29 Jan 2013 10:46:44 -0700
+
+linux-firmware (1.99) raring; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git 8cf14f0acad3c3d361c324474e889dc4ad939709
+    qla2xxx: Update qla2xxx firmware FTP site in WHENCE file.
+    qla2xxx: Update ql2500_fw.bin to version 5.08.00.
+    qla2xxx: Update ql2400_fw.bin to version 5.08.00.
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Fri, 04 Jan 2013 08:20:54 -0700
+
+linux-firmware (1.98) raring; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git bda53ca96deb3cacbef10a7a84bbaee2d09c7f34
+    brcm: new firmware version for brcmsmac
+    linux-firmware: add Marvell USB8797-B0 firmware image
+    s5p-mfc: Adding firmware files for Samsung MFC device driver
+    ar5523: Add firmware for new driver
+    Update patch and syscfg files for QCA9564.
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Mon, 03 Dec 2012 09:07:31 -0700
+
+linux-firmware (1.97) raring; urgency=low
+
+  * Remove conflicting firmware files in favor of atmel-firmware
+    atmel_at76c502.bin
+    atmel_at76c502_3com.bin
+    atmel_at76c502d.bin
+    atmel_at76c502e.bin
+    atmel_at76c504.bin
+    atmel_at76c506.bin 
+    -LP: #1069325
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Fri, 09 Nov 2012 12:08:24 -0700
+
+linux-firmware (1.96) raring; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git fae71211eb70eb4d50de72a9dd70ece21905af57
+    rtl_nic: update firmware for RTL8168G
+    cxgb4: update firmware to revision 1.6.2.0
+    bnx2x: update fw to 7.8.2
+    Update rampatch file for AR9462.
+    netxen_nic: Update QLogic phanfw.bin to version 4.0.588 Signed-
+    rtlwifi/rtl8723e: Add firmware for new driver
+    linux-firmware: ath6k: add firmware for AR6004 hw1.3
+    Marvell SD8787: update to v14.66.9.p96
+    Marvell SD8686: update to v9.70.20.p0
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Thu, 08 Nov 2012 10:19:34 -0700
+
+linux-firmware (1.95) quantal-proposed; urgency=low
+
+  * rtlwifi/rtl8712u Revert firmware
+    Although the newest firmware for the RTL8192SU, which is found in vendor
+    driver rtl8188C_8192C_8192D_usb_linux_v3.4.2_3727.20120404, works with most
+    devices, it causes drops of the wireless connection for the ASUS WL-167G V3
+    (USB ID 0b05:1791), the D-Link DWA131 (07d1:3303), and probably others.
+    Tests show that the firmware from vendor driver
+    rtl8712_8188_8191_8192SU_usb_linux_v7_0.20100831 works better.
+    This commerts reverts to that older firmware.
+    -LP: #1062827
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Fri, 12 Oct 2012 07:43:13 -0600
+
+linux-firmware (1.94) quantal-proposed; urgency=low
+
+  * Added iwlwifi-6000g2a-6.ucode to nic-firmware.lst
+    Stops the d-i installer from nagging about missing firmware.
+    -LP: #1055735
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Mon, 24 Sep 2012 13:43:06 -0600
+
+linux-firmware (1.93) quantal; urgency=low
+
+  * revert 'UBUNTU: Remove obsolete cx2341x firmware'
+    -LP: #1052580
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Tue, 18 Sep 2012 19:25:44 -0400
+
+linux-firmware (1.92) quantal; urgency=low
+
+  * Add zd1201.fw and zd1211/* to nic-firmware.lst
+    -LP: #1047092
+
+ -- Leann Ogasawara <leann.ogasawara@canonical.com>  Fri, 14 Sep 2012 06:22:04 -0700
+
+linux-firmware (1.91) quantal; urgency=low
+
+  * ti-connectivity: Restore nvs firmware
+    The kernel neglected to declare its use of the nvs files
+    via the MODULE_FIRMWARE statement.
+    -LP: #1042918
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Wed, 29 Aug 2012 08:54:01 -0600
+
+linux-firmware (1.90) quantal; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git bbede96f3d68ac056ae5d9f6ac56819b6462f4f5 
+    iwlwifi: update firmware for 6205
+    -LP: #1039856
+
+  * Revert "Revert "UBUNTU: Remove obsolete ti-connectivity firmware""
+    The ti-omap4 kernel is now based on 3.5, so dropping obsolete firmware
+    files should be OK.
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Wed, 22 Aug 2012 07:28:00 -0600
+
+linux-firmware (1.89) quantal; urgency=low
+
+  * Revert "UBUNTU: Remove obsolete ti-connectivity firmware"
+    This firmware is still in use by the 3.4 kernel in ti-omap4.
+    -LP: #1032779
+  * UBUNTU: Remove duplicate qlogic firmware 
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Wed, 15 Aug 2012 08:58:30 -0600
+
+linux-firmware (1.88) quantal; urgency=low
+
+  * Remove boot essential duplicated firmware files that
+    are also carried in the linux-image package.
+    UBUNTU: Remove duplicate tigon firmware
+    UBUNTU: Remove duplicate bnx2x firmware
+    UBUNTU: Remove duplicate bnx2 firmware
+    UBUNTU: Remove duplicate e100 firmware
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Fri, 03 Aug 2012 12:22:11 -0600
+
+linux-firmware (1.87) quantal; urgency=low
+
+  * Remove obsolete firmware files:
+    UBUNTU: Remove obsolete 3com firmware
+    UBUNTU: Remove obsolete ath3k firmware
+    UBUNTU: Remove obsolete ar7010 firmware
+    UBUNTU: Remove obsolete ar9170 firmware
+    UBUNTU: Remove obsolete asihpi firmware
+    UBUNTU: Remove obsolete bnx2x firmware
+    UBUNTU: Remove obsolete bnx2 firmware
+    UBUNTU: Remove obsolete brcm firmware
+    UBUNTU: Remove obsolete cxgb firmware
+    UBUNTU: Remove obsolete dabusb firmware
+    UBUNTU: Remove obsolete Computone firmware
+    UBUNTU: Remove obsolete libertas firmware
+    UBUNTU: Remove obsolete mwl8k firmware
+    UBUNTU: Remove obsolete myricom firmware
+    UBUNTU: Remove obsolete rt2x00 firmware
+    UBUNTU: Remove obsolete RTL8192SE firmware
+    UBUNTU: Remove obsolete sxg firmware
+    UBUNTU: Remove obsolete tda1004x firmware
+    UBUNTU: Remove obsolete ti-connectivity firmware
+    UBUNTU: Remove obsolete tr_smctr firmware
+    UBUNTU: Remove obsolete ueagle-atm firmware
+    UBUNTU: Remove obsolete zd1211 firmware
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Thu, 26 Jul 2012 14:46:20 -0600
+
+linux-firmware (1.86) quantal; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git 7560108a2c94a62056fa82d912282b901aa0904f
+    Add syscfg (different frequency) and patch for AR3002 2.2.1.
+    brcm: add bcm4334 firmware for brcmfmac
+    r8712u: Update to latest firmware
+    rtl_nic: update firmware for RTL8168G
+    Add syscfg and patch files for AR3002 2.2.1 
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Tue, 24 Jul 2012 10:02:29 -0600
+
+linux-firmware (1.85) quantal; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git f1f86bbaa02cc499ce625c93d8fad2055a0dd733
+    rtl_nic: add new firmware for RTL8168G
+    rtl_nic: add new firmware for RTL8106E
+    rtl_nic: update firmware for RTL8411
+    rtl_nic: update firmware for RTL8168F
+    ar3k: add patch and sysconfig for Qualcomm Atheros AR9462 
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Wed, 18 Jul 2012 13:27:03 -0600
+
+linux-firmware (1.84) quantal; urgency=low
+
+  * Add tigon/tg3_tso.bin to nic-firmware.lst
+    - LP: #1021747 
+
+ -- Leann Ogasawara <leann.ogasawara@canonical.com>  Fri, 13 Jul 2012 07:15:27 -0700
+
+linux-firmware (1.83) quantal; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git e0836e6ec3568f54b7fac24b9e17bbe8c46eb508
+    rtlwifi: rtl8192ce: rtl8192se: rtl8192de: Update to rtl_92ce_92se_92de_linux_mac80211_0004.0816.2011 driver
+    WHENCE: Move version strings from Info to Version fields
+    WHENCE: Move informational text from File to Info fields
+    wl18xx: add firmware for WiLink8 WLAN chips
+    wl127x/wl128x: add new firmware series as version 5
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Mon, 09 Jul 2012 09:08:34 -0600
+
+linux-firmware (1.82) quantal; urgency=low
+
+  * Update bnx2 firmware list to 3.5-rc3 MODULE_FIRMWARE() list 
+    -LP: #1016444
+  * Update bnx2x firmware list to 3.5-rc3 MODULE_FIRMWARE() list 
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git 5f9710a5770ad1f741caa67f7e97b824fb51ef2c
+    rt2800pci:Firmware update v1
+    cxgb4: update firmware to revision 1.4.23.0
+    build: Implement minimal GNOME Build API
+    ar3k: add patch and sysconfig for QCA9564(Aphrodite)
+    linux-firmware: add README
+    radeon: add new firmware for SI and TN
+    qla2xxx: Update ql2500_fw.bin to version 5.06.05.
+    qla2xxx: Update ql2400_fw.bin to version 5.06.05.
+    qla2xxx: Update ql2322_fw.bin to version 3.03.28.
+    qla2xxx: Update ql2300_fw.bin to version 3.03.28.
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Fri, 22 Jun 2012 11:28:06 -0600
+
+linux-firmware (1.81) quantal-proposed; urgency=low
+
+  * Add bnx2-mips-09-6.2.1b.fw to nic-firmware.lst
+    - LP: #1008749
+
+ -- Leann Ogasawara <leann.ogasawara@canonical.com>  Thu, 07 Jun 2012 08:58:39 -0700
+
+linux-firmware (1.80) quantal; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git f6480b142add3ff517389cca02cbef20671f8e14
+    bnx2x: adding fw 7.2.51
+    WHENCE: List each file on its own line
+    WHENCE: Add currently undocumented firmware files
+    Add missing : in WHENCE file
+    WHENCE: Delete ath6kl's references to directories and non-existent files
+    WHENCE: Fix ti-connectivity firmware filenames
+    linux-firmware: ath6k: add firmware for AR6004 hw1.2
+    linux-firmware: ath6k: add AR6003 hw2.1.1 firmware version 3.2.0.144
+
+    [ Tim Gardner ]
+
+  * Cleaned out more obsolete firmware files that are only relevant to kernels
+    prior to 3.4.
+    UBUNT: Remove obsolete ath6k firmware
+    UBUNTU: Remove obsolete slicoss firmware
+    UBUNTU: Remove obsolete cx2341x firmware
+    UBUNTU: Remove obsolete ath9k firmware
+    UBUNTU: Remove obsolete ar3k firmware
+    UBUNTU: Remove obsolete cxgb3 firmware
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Mon, 30 Apr 2012 09:18:09 -0600
+
+linux-firmware (1.79) precise; urgency=low
+
+  * Remove obsolete firmware files.
+    UBUNTU: Remove obsolete bnx2 firmware
+    UBUNTU: Remove obsolete bnx2x firmware files
+    UBUNTU: Remove obsolete iwlwifi ucode files 
+    LP: #979887
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Thu, 12 Apr 2012 09:54:35 -0600
+
+linux-firmware (1.78) precise; urgency=low
+
+  * make sure all current iwlwifi ucode is in nic-firmware.lst
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Tue, 03 Apr 2012 12:44:54 -0600
+
+linux-firmware (1.77) precise; urgency=low
+
+  * Added phanfw.bin to nic-firmware-lst
+    -LP: #969304
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Tue, 03 Apr 2012 08:40:31 -0600
+
+linux-firmware (1.76) precise; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git 8ccddee5ee23a0e192da38d98bcbbbb41bf385dd
+    rtl_nic: update firmware for RTL8411
+    rtl_nic: update firmware for RTL8111F
+    rtl_nic: update firmware for RTL8111E-VL
+    linux-firmware: ti-connectivity: update wl12xx firmwares
+    linux-firmware: ti-connectivity: change fw version info to
+    linux-firmware: update ti-connectivity licence
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Mon, 02 Apr 2012 13:52:00 -0600
+
+linux-firmware (1.75) precise; urgency=low
+
+  * Add bcm4329-fullmac-4.bin to nic-firmware.lst
+
+ -- Leann Ogasawara <leann.ogasawara@canonical.com>  Thu, 29 Mar 2012 10:03:03 -0700
+
+linux-firmware (1.74) precise; urgency=low
+
+  * Added isci/isci_firmware.bin to scsi-firmware.lst 
+    -LP: #963306
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Fri, 23 Mar 2012 11:47:09 -0600
+
+linux-firmware (1.73) precise; urgency=low
+
+  * Updated ath3k-1.fw
+    -LP: #714862
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Thu, 22 Mar 2012 05:59:22 -0600
+
+linux-firmware (1.72) precise; urgency=low
+
+  * Add bnx2x firmware to the NIC firmware udeb
+    -LP: #944108
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Wed, 21 Mar 2012 14:07:59 -0600
+
+linux-firmware (1.71) precise; urgency=low
+
+  * Update carl9170 to 1.9.4
+    Note that this version only works with 3.1 and newer kernels.
+    -LP: #939231
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Thu, 23 Feb 2012 12:19:48 -0700
+
+linux-firmware (1.70) precise; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git 09c949f6d3196a7199eb2c7015bfa5d34ed723b5
+    usbdux: Add usbduxsigma firmware
+    Remove execute permissions from various blobs
+    bnx2x: adding fw 7.2.16
+    cxgb4: Delete unused file cxgb4/t4fw-1.3.10.0.bin
+    linux-firmware: update cxgb3 driver firmware to revision 7.12.0
+    linux-firmware: add t4fw-1.4.16.0.bin firmware for cxgb4 driver.
+    linux-firmware: rename t4fw.bin
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Mon, 20 Feb 2012 07:15:29 -0700
+
+linux-firmware (1.69) precise; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git 38118a598df73d5a9fd72bf04910e8298db82a46 
+    linux-firmware: brcm: add firmware for bcm43236 usb device
+    linux-firmware: brcm: remove nvram file for bcm4329 development board
+    linux-firmware: brcm: add bcm4330 firmware for brcmfmac
+    linux-firmware: brcm: add new bcm4329 firmware for brcmfmac
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Mon, 13 Feb 2012 07:03:52 -0700
+
+linux-firmware (1.68) precise; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git a2995d38c234e3d767df7223d84a0f33a1a24997
+    firmware/isci: update to oem parameter format v1.3
+    cis: Add makefile for building CIS files from text format
+
+  * Add new iwlwifi ucode files
+    iwlwifi: add new firmware for 6000g2b devices
+    iwlwifi: add new firmware for 2030 devices
+    iwlwifi: add new firmware for 2000 devices
+    iwlwifi: add new firmware for 135 devcies
+    iwlwifi: add new firmware for 105 devices
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Mon, 23 Jan 2012 10:22:54 -0700
+
+linux-firmware (1.67) precise; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git de960e5045cce262dabfba7aee621ddf27b67bdb
+    isci: Add firmware blob and sources
+    linux-firmware: bnx2: Update mips firmware to fix iSCSI problems
+    bnx2x: Update firmware to 6.2.9
+    WHENCE: bnx2x: Add the version 6.x.y files
+    bnx2x: replace FW to 6.2.5
+    bnx2x: Add 57712 support
+    bnx2x, cnic, bnx2i: use new FW/HSI
+    keyspan_pda: Add makefile for building from source
+    keyspan_pda: Fix parse error with as31 version 2.3.1
+    dvb-ttpci: Add source code and makefile
+    dsp56k: Add makefile for building from source
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Fri, 30 Dec 2011 08:21:54 -0700
+
+linux-firmware (1.66) precise; urgency=low
+
+  * Rebase against new upstream repo
+    git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git 4969d2da0c2019df2419cbe9d3f8f9f8e44a0f7d
+    rtl_nic: add new firmware for RTL8402
+    rtl_nic: add new firmware for RTL8411
+    rtl_nic: add new firmware for RTL8111F
+    rtl_nic: update firmware for RTL8111E-VL
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Fri, 16 Dec 2011 09:12:32 -0700
+
+linux-firmware (1.65) precise; urgency=low
+
+  * rtl_nic: add new firmware for RTL8111F
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Thu, 15 Dec 2011 15:14:21 -0700
+
+linux-firmware (1.64) precise; urgency=low
+
+  * Add all rtl_nic firmware files to nic-firmware
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Thu, 15 Dec 2011 13:16:42 -0700
+
+linux-firmware (1.63) precise; urgency=low
+
+  * Add rtl8168d-2.fw to nic-firmware.  LP: #900750.
+
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Wed, 14 Dec 2011 15:21:51 -0800
+
+linux-firmware (1.62) precise; urgency=low
+
+  [ Colin Watson ]
+
+  * Make linux-firmware Multi-Arch: foreign
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Sun, 20 Nov 2011 16:39:07 -0700
+
+linux-firmware (1.61) precise; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/dwmw2/linux-firmware.git 15888a2eab052ac3d3f49334e4f6f05f347a516e
+    bnx2x: Adding FW 7.0.29.0
+    linux-firmware: Add new firmware image for ath6kl driver
+    Update QLogic phanfw.bin
+    linux-firmware: Update cxgb4 firmware
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Fri, 28 Oct 2011 09:01:52 -0600
+
+linux-firmware (1.60) oneiric; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/dwmw2/linux-firmware.git f8ddc05e13c4c6dd9d725bc376b287f307eb223a
+    linux-firmware: wl12xx: Updated STA & AP FW for wl12xx-fw-3
+    linux-firmware: wl12xx: Updated STA & AP FW for WL128x & wl127x
+    libertas: add OLPC libertas blobs
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Tue, 23 Aug 2011 07:16:12 -0600
+
+linux-firmware (1.59) oneiric; urgency=low
+
+  * The last patch added some invalid firmware file names. Fixes FTBS.
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Thu, 11 Aug 2011 14:43:13 +0100
+
+linux-firmware (1.58) oneiric; urgency=low
+
+  [ Colin Watson ]
+
+  * Add firmware for ath9k_htc, rt2800*, and iwlagn NIC drivers.
+    d-i now supports WPA in Oneiric.  While soliciting testing of this, I
+    heard from testers with Atheros, Ralink, and Intel AGN chipsets, none of
+    whom were able to test WPA support in d-i because the relevant drivers
+    weren't delivered to d-i. This patch adds firmware for these drivers to
+    nic-firmware.
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Thu, 11 Aug 2011 07:24:41 -0600
+
+linux-firmware (1.57) oneiric; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/dwmw2/linux-firmware.git 13f5008494268031d569f830d0955479bd5b9dfc
+    libertas: add cf8381 firmware v5.11.9p0
+    Add ene-ub6250 SD card reader firmware
+    linux-firmware: update firmware for Intel 6205 Series Wi-Fi Adapters
+    Qualcomm Atheros adds Bluetooth firmware for WiFi-BT combo module
+    Qualcomm Atheros updates firmware for WiFi-BT combo module
+    linux-firmware: Update patch and sysconfig files for AR3012
+    Add license for Terratec H5 DRX-K firmware
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Tue, 09 Aug 2011 13:05:01 -0600
+
+linux-firmware (1.56) oneiric; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/dwmw2/linux-firmware.git c8958f5de9a8a2fa590ab9e5641fe16ec044c200
+    bnx2x: Adding FW 7.0.23.0
+    -LP: #808884
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Mon, 11 Jul 2011 10:35:17 -0600
+
+linux-firmware (1.55) oneiric; urgency=low
+
+  * Update ath9k firmware to version 1.3
+    -LP: #800678
+
+  * update to iwlwifi-5000-ucode-8.83.5.1-1
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Thu, 23 Jun 2011 07:57:39 -0600
+
+linux-firmware (1.54) oneiric; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/dwmw2/linux-firmware.git 7522de5d09b434602389ea63058a1fe0cbac3b3f
+    iwlwifi: add updated firmware for 1000 devices
+    linux-firmware: update for Intel 6000 series Wi-Fi Adapters
+    firmware: add SUMO + SUMO2 firmwares for llano APUs.
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Tue, 07 Jun 2011 08:06:45 -0600
+
+linux-firmware (1.53) oneiric; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/dwmw2/linux-firmware.git ae524638c277301a83daf126aaaf880738e2474b
+    rt2870sta: Use latest firmware for RT3070 and RT3071
+    rt2860sta: Use latest firmware for RT3090
+    Add source and copyright notice for CIS files from pcmcia-cs
+    linux-firmware: bnx2: Update firmware and version
+    linux-firmware: add new firmware for RTL8168E-VL
+    linux-firmware: update firmware for RTL8111E
+    Update QLogic phanfw.bin
+    linux-firmware: update ap firmware for mwl8k 8366 chip
+    linux-firmware: add cxgb4 firmware
+    linux-firmware: Initial release for Bluetooth init script
+    linux-firmware: Add firmware for RTL8168/8111E
+    linux-firmware: Add firmware for RTL8105E
+    STMICROELECTRONICS TDA7706 FW for BC and CB revision
+    linux-firmware: wl12xx- New STA&AP FW support WL128x + Update STA&AP FW for wl127x
+    linux-firmware: add myri10ge firmware
+    s2255: updated firmware f2255usb.bin
+    Add new firmware for AR7010 devices.
+    Add new firmware for AR9271 devices.
+    linux-firmware: add APIv2 AP firmware for marvell 8388
+    linux-firmware: updated firmware for BCM4313, BCM43224, and BCM43225 chips
+    linux-firmware: Removed codeversion from brcm firmware filenames.
+    linux-firmware: Simplified license file for brcm firmware
+    linux-firmware: add ath6kl firmware
+    linux-firmware: update Atheros firmware license
+    linux-firmware: Add sysconfig file
+    linux-firmware: Add patch and sysconfig files
+    linux-firmware: rt2800pci: rt2800usb: Firmware update
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Thu, 26 May 2011 08:46:57 -0600
+
+linux-firmware (1.52) natty; urgency=low
+
+  * Update Broadcom firmware for 2.6.38 (which requires some file
+    name changes).
+    -LP: #730215
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Wed, 20 Apr 2011 14:43:43 -0600
+
+linux-firmware (1.51) natty; urgency=low
+
+  * Added carl9170.fw for Atheros wireless AR9170 based devices.
+    -LP: #713987
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Wed, 20 Apr 2011 13:19:12 -0600
+
+linux-firmware (1.50) natty; urgency=low
+
+  * Added iwlwifi-1000-5.ucode
+    -LP: #752829
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Wed, 06 Apr 2011 13:26:02 -0600
+
+linux-firmware (1.49) natty; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/dwmw2/linux-firmware.git 5d6e01c4db4e8115296895efcf1feb80be93b8c4
+    linux-firmware: Add Patch and sysconfig files for AR300x
+
+  [ Leann Ogasawara ]
+
+  * UBUNTU: Rename bcm43xx Broadcom Firmware Files
+    -LP: #728746
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Fri, 18 Mar 2011 14:29:50 -0600
+
+linux-firmware (1.48) natty; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/dwmw2/linux-firmware.git c2e530abf58116fbc4eb3baedeb5b3ed092b2c8a
+    linux-firmware: add cayman firmwares.
+    Update ar9271.fw
+    linux-firmware: wl12xx-Update AP Firmware
+    linux-firmware: Add patch and sysconfig files for AR3012.
+    linux-firmware: Remove ath3k-2.fw
+    linux-firmware: wl12xx-Update STA firmware
+    linux-firmware: wl12xx-update STA FW supports 11n BA sessions
+    iwlwifi: add updated firmware for 5000 devices
+    linux-firmware: add firmware files for Marvell 8366
+    linux-firmware: add Marvell SD8787 firmware image
+    linux-firmware: use single license file for Marvell firmwares
+    WHENCE: fix typos in "Realtek" and the filename containing its licence terms
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Thu, 03 Mar 2011 07:49:56 -0700
+
+linux-firmware (1.47) natty; urgency=low
+
+  * iwlwifi: Updated iwlwifi-6000g2a-5.ucode and iwlwifi-6000g2b-5.ucode to 17.168.5.2
+    17.168.5.2 fixes a showstopper issue that it can't connect to a 5G hidden SSID.
+    -LP: #716832
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/dwmw2/linux-firmware.git 2fab48391fda8a914b55c8ac265eb3b6ee10ace8
+    linux-firmware: Add firmware file for Realtek RTL8192DE
+    linux-firmware: bnx2: Update firmware and version
+    linux-firmware: bnx2: Update firmware to 6.0.x.
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Fri, 11 Feb 2011 07:01:23 -0700
+
+linux-firmware (1.46) natty; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/dwmw2/linux-firmware.git 39cd7bc45fc9301422bbf19077fd2079283e8a52
+  * linux-firmware: Add firmware file for Realtek RTL8192SE
+  * iwlwifi: add new firmware to 100 devices
+  * radeon: add new NI firmwares.
+  * Add firmware for VIA VT6656
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Mon, 24 Jan 2011 13:40:49 -0700
+
+linux-firmware (1.45) natty; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/dwmw2/linux-firmware.git 40c0f950be7040614dc45df54e25e54d00e3b73b
+    rtl_nic: Add firmware for RTL8111D(L)
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Mon, 03 Jan 2011 06:52:04 -0700
+
+linux-firmware (1.44) natty; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/dwmw2/linux-firmware.git eb0ad4ffc1e2fe02bccae2f7102e3ffc8101ac55
+    iwlwifi: add updated firmware for 6050 devices
+    iwlwifi: add new firmware for 6030 devices
+    iwlwifi: add new firmware for 6005 devices
+    vxge: update PXE firmware to version
+    ath3k-fw: Fix EEPROM radio table issue.
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Sun, 19 Dec 2010 16:27:16 -0700
+
+linux-firmware (1.43) natty; urgency=low
+
+  * iwlwifi: New 17.168.5.1 iwlwifi-6000g2b-5.ucode 
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Sun, 19 Dec 2010 15:57:19 +0000
+
+linux-firmware (1.42) natty; urgency=low
+
+  * Updated Intel iwlwifi firmware
+    iwlwifi: 17.168.5.1 iwlwifi-6000g2a-5.ucode
+    iwlwifi: 41.28.5.1 iwlwifi-6050-5.ucode
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Mon, 13 Dec 2010 18:55:52 -0700
+
+linux-firmware (1.41) natty; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/dwmw2/linux-firmware.git 4844fa169c8d8562289243b54e822a00a0a01082
+    linux-firmware: Add firmware file for RTL8192CU
+    linux-firmware: wl12xx-Add Access Point Firmware & NVS to the wl12xx Driver
+    radeon: add support for PALM/SUMO firmwares.
+    mwl8335: add duplex firmware for 88w8335 PCI-based parts
+    Update QLogic phanfw.bin
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Mon, 13 Dec 2010 07:05:02 -0700
+
+linux-firmware (1.40) natty; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/dwmw2/linux-firmware.git 0892c5ad053f226699cabbd1df42a352cf6f6fce
+    vxge: update firmware to version 1.8.1
+    linux-firmware: Add firmware files for Realtek RTL8712U and RTL8192CE
+    linux-firmware: wl12xx-Add Firmware and NVS files to support Texas Instruments WLAN driver
+    Add firmware for Telgent 2300 V4L/DVB driver
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Thu, 18 Nov 2010 14:16:09 -0700
+
+linux-firmware (1.39) natty; urgency=low
+
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/dwmw2/linux-firmware.git e9f9e3a9b7d780e93ae869c1b8502c843bfd93a4
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Wed, 20 Oct 2010 12:38:08 -0600
+
+linux-firmware (1.38) maverick; urgency=low
+
+  * rtl8192sfw.bin: Update to 0017.0507.2010
+    LP: #618765
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Mon, 16 Aug 2010 12:57:15 -0600
+
+linux-firmware (1.37) maverick; urgency=low
+
+  [ Upstream ]
+  * Rebase against git://git.kernel.org/pub/scm/linux/kernel/git/dwmw2/linux-firmware.git 370066f09b4cc399935b514cba0c1f3cb4f7b350
+  * Add firmware for Modems based on Eagle Chipset
+  * Add firmware for Intel Wireless WiFi Link 6250AGN Adapter
+
+  [ Tim Gardner ]
+  * Add iwlwifi-6000-4.ucode 9.221.4.1
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Mon, 21 Jun 2010 14:54:33 -0600
+
+linux-firmware (1.36) maverick; urgency=low
+
+  * Added iwlwifi-6050-4.ucode
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Fri, 04 Jun 2010 13:55:06 -0600
+
+linux-firmware (1.35) maverick; urgency=low
+
+  [ Chase Douglas ]
+
+  * Add AudioScience ASI series audio device firmware
+
+  [ Upstream ]
+
+  * Add RealTek RTL8192E firmware
+  * rebased against git://git.kernel.org/pub/scm/linux/kernel/git/dwmw2/linux-firmware.git 25813c5c5ce0e8ce080de7a7fbf69b2c858798d2
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Tue, 25 May 2010 11:32:39 -0600
+
+linux-firmware (1.34) lucid; urgency=low
+
+  [ Chase Douglas ]
+
+  * iwlwifi: updated iwlwifi-6000-4.ucode ucode to 9.193.4.1
+
+ -- Andy Whitcroft <apw@canonical.com>  Wed, 14 Apr 2010 11:37:50 +0100
+
+linux-firmware (1.33) lucid; urgency=low
+
+  [ Chase Douglas ]
+
+  * Added echoaudio firmware
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Wed, 17 Mar 2010 13:29:45 -0600
+
+linux-firmware (1.32) lucid; urgency=low
+
+  [ Manoj Iyer ]
+
+  * Added firmware for RealTek RTL8191/2SE or RTL8171 wireless MACs
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Thu, 04 Mar 2010 10:22:44 -0700
+
+linux-firmware (1.31) lucid; urgency=low
+
+  [ Chase Douglas ]
+
+  * Revert "firmware for prism54 kernel >=2.6.29"
+    The prism54 softmac firmware does not have a license statement, so the
+    firmware has been moved to linux-firmware-nonfree.
+    -LP: #524713
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Tue, 23 Feb 2010 11:31:46 -0700
+
+linux-firmware (1.30) lucid; urgency=low
+
+  * rebased against git://git.kernel.org/pub/scm/linux/kernel/git/dwmw2/linux-firmware.git d9076a54d74e371a11e1206b4a26e2e428045b9e
+  * Adds radeon firmware
+    -LP: #521737
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Fri, 19 Feb 2010 13:53:12 -0700
+
+linux-firmware (1.29) lucid; urgency=low
+
+  * Added firmware for prism54 kernel >=2.6.29
+    -LP: #509265
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Thu, 04 Feb 2010 13:18:25 -0700
+
+linux-firmware (1.28) lucid; urgency=low
+
+  * Exclude the debian directory when copying firmware.
+    -LP: #495431
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Wed, 16 Dec 2009 07:17:09 -0700
+
+linux-firmware (1.27) lucid; urgency=low
+
+  * Adopted git://git.kernel.org/pub/scm/linux/kernel/git/dwmw2/linux-firmware.git
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Mon, 30 Nov 2009 14:37:34 -0700
+
+linux-firmware (1.26) karmic-proposed; urgency=low
+
+  * Erroneously renamed BCM2033-MD.hex
+    -LP: #156133
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Mon, 23 Nov 2009 08:06:20 -0700
+
+linux-firmware (1.25) karmic-proposed; urgency=low
+
+  * Rename BCM2033 firmware files with lower case extension
+    -LP: #156133
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Sat, 07 Nov 2009 08:19:30 -0700
+
+linux-firmware (1.24) karmic; urgency=low
+
+  * iwlwifi: Added iwlwifi-6000-4.ucode
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Sat, 17 Oct 2009 09:45:16 -0600
+
+linux-firmware (1.23) karmic; urgency=low
+
+  * Added Intel WiMAX firmware
+    -LP: #396554
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Wed, 14 Oct 2009 20:19:28 -0600
+
+linux-firmware (1.22) karmic; urgency=low
+
+  * Added firmware for dib0700 USB bridge
+    -LP: #446454
+    https://lists.ubuntu.com/archives/kernel-team/2009-October/007462.html
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Tue, 13 Oct 2009 13:35:20 -0600
+
+linux-firmware (1.21) karmic; urgency=low
+
+  * ar9170: Added one stage firmware
+    -LP: #386403
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Tue, 06 Oct 2009 09:21:52 -0600
+
+linux-firmware (1.20) karmic; urgency=low
+
+  * p54: Use 2.13.1.0.arm.0 firmware version for isl3886 USB devices
+    -LP: #437515
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Wed, 30 Sep 2009 09:01:46 -0600
+
+linux-firmware (1.19) karmic; urgency=low
+
+  * Added xc5000 firmware
+    -LP: #403642
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Wed, 16 Sep 2009 13:32:41 -0600
+
+linux-firmware (1.18) karmic; urgency=low
+
+  * Added ar9170 firmware.
+    -LP: #386403
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Mon, 14 Sep 2009 14:40:57 -0600
+
+linux-firmware (1.17) karmic; urgency=low
+
+  * Dropped firmware/dvb bits because of lack of licensing.
+    They have been moved to linux-firmware-nonfree.
+    -LP: #223212
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Mon, 14 Sep 2009 08:30:32 -0600
+
+linux-firmware (1.16) karmic; urgency=low
+
+  * Added iwlwifi-1000-ucode-128.50.3.1
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Sun, 16 Aug 2009 20:26:34 -0600
+
+linux-firmware (1.15) karmic; urgency=low
+
+  * Updated iwlwifi 4965 ucode to 228.61.2.24
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Sun, 12 Jul 2009 15:19:45 -0600
+
+linux-firmware (1.14) karmic; urgency=low
+
+  * Updated firmware for ipw2200
+    - LP: #357968
+
+ -- Jamie Strandboge <jamie@ubuntu.com>  Fri, 10 Jul 2009 10:25:55 -0500
+
+linux-firmware (1.13) karmic; urgency=low
+
+  [ Florian Reinhard ]
+
+  * Updated firmware for prism54 chipsets
+    -LP: #339548
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Mon, 06 Jul 2009 07:17:59 -0600
+
+linux-firmware (1.12) karmic; urgency=low
+
+  * Updated iwlwifi 3945, 5000, and 5150 ucode
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Wed, 10 Jun 2009 07:46:51 -0400
+
+linux-firmware (1.11) jaunty; urgency=low
+
+  [ Pete Graner ]
+
+  * Added Hauppauge DVB-S2 PCI
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Thu, 02 Apr 2009 17:36:47 -0400
+
+linux-firmware (1.10) jaunty; urgency=low
+
+  [ Pete Graner ]
+
+  * Added firmware/ivtv BOM, v4l-cx23885-avcore-01.fw, and v4l-cx23885-enc.fw
+    LP: #321076
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Mon, 09 Mar 2009 16:18:37 -0700
+
+linux-firmware (1.9) jaunty; urgency=low
+
+  * Broadcom firmware file names must be upper case.
+    LP: #156133
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Fri, 20 Feb 2009 17:25:39 +0000
+
+linux-firmware (1.8) jaunty; urgency=low
+
+  * Collapsed all firmware/at76 files into firmware/ateml
+    Added licence and BOM files to iwlwifi, atmel, acx, aic94xx, zd1201
+    and zd1211.
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Fri, 20 Feb 2009 16:41:12 +0000
+
+linux-firmware (1.7) jaunty; urgency=low
+
+  * Make soft links for ixp4xx firmware file names. The driver wants to read
+    file names of the form NPE-B, not NPE-B.01020201.
+    LP: #330506
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Tue, 17 Feb 2009 13:23:11 +0000
+
+linux-firmware (1.6) jaunty; urgency=low
+
+  * Add ixp4xx microcode
+  * Added some notes to the rules file.
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Fri, 13 Feb 2009 21:53:28 +0000
+
+linux-firmware (1.5) jaunty; urgency=low
+
+  * Added firmware/dvb/dvb-usb-dib0700-1.20.fw 
+  * Added firmware/dvb/dvb-usb-af9015.fw
+  * Added firmware/libertas/lbtf_usb.bin and license.
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Thu, 22 Jan 2009 15:28:21 +0000
+
+linux-firmware (1.4) jaunty; urgency=low
+
+  * Added firmware for RT 2860/2870
+  * Copy license files.
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Wed, 21 Jan 2009 20:19:28 +0000
+
+linux-firmware (1.3) jaunty; urgency=low
+
+  * Updated iwlwifi 4965 firmware to version 228.57.2.23
+  * Updated iwlwifi 3945 firmware to version 15.28.2.8
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Fri, 26 Dec 2008 18:53:05 +0000
+
+linux-firmware (1.2) intrepid; urgency=low
+
+  * Update copyright file with Intel and Adaptec licenses. Further updates
+    will occur in jaunty. LP: #284405
+
+ -- Ben Collins <ben.collins@canonical.com>  Mon, 27 Oct 2008 00:46:52 -0400
+
+linux-firmware (1.1) intrepid; urgency=low
+
+  * Added scsi-firmware udeb with qla and aic firmware
+
+ -- Ben Collins <ben.collins@canonical.com>  Wed, 15 Oct 2008 10:45:39 -0400
+
+linux-firmware (1.0) intrepid; urgency=low
+
+  * Initial packaging
+
+ -- Ben Collins <ben.collins@canonical.com>  Mon, 16 Jun 2008 18:39:46 -0400

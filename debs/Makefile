@@ -6,14 +6,14 @@ _pkgs_builddeps := sblim-sfcc openwsman
 _pkgs_parts := puavo-ds puavo-os
 # XXX gvfs not added to build, because it is unclear
 # XXX if there is any benefit to do so
-_pkgs_ports := firmware-nonfree     \
-               fmit                 \
+_pkgs_ports := fmit                 \
                gnome-control-center \
                gnome-shell          \
                grub2                \
                incron               \
                libmypaint           \
                libpam-ccreds        \
+               linux-firmware       \
                mutter               \
                mypaint              \
                nbd                  \
