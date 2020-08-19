@@ -13,6 +13,7 @@ class puavo_pkg::packages {
                                , 'eclipse'
                                , 'netbeans'
                                , 'tela-icon-theme'
+                               , 'ubuntu-firmware'
                                , 'ubuntu-wallpapers'
                                , 'vagrant' ]
 
