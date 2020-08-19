@@ -14,6 +14,7 @@ class puavo_pkg::packages {
                                , 'netbeans'
                                , 'supertuxkart'
                                , 'tela-icon-theme'
+                               , 'ubuntu-firmware'
                                , 'ubuntu-wallpapers'
                                , 'vagrant' ]
 

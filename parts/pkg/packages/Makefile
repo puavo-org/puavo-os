@@ -67,6 +67,7 @@ packagedirs += teamviewer
 packagedirs += tela-icon-theme
 packagedirs += tilitin
 packagedirs += t-lasku
+packagedirs += ubuntu-firmware
 packagedirs += ubuntu-wallpapers
 packagedirs += unityhub-appimage
 packagedirs += vagrant

@@ -1,0 +1,37 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+ubuntu_firmware_files='
+  ./lib/firmware/intel/sof
+  ./lib/firmware/intel/sof-tplg
+  ./lib/firmware/rtw88
+  ./lib/firmware/rtl_bt/rtl8822cu_config.bin
+  ./lib/firmware/rtl_bt/rtl8822cu_fw.bin
+'
+
+case "$command" in
+  configure)
+    upstream_dir=$1
+    for f in $ubuntu_firmware_files; do
+      cp -RT "${upstream_dir}/${f}" "/${f}"
+    done
+    ;;
+
+  unconfigure)
+    (cd / && rm -rf $ubuntu_firmware_files)
+    ;;
+
+  unpack)
+    upstream_pack=$1
+    upstream_dir=$2
+    dpkg-deb --fsys-tarfile "$upstream_pack" \
+      | tar -C "$upstream_dir" -x $ubuntu_firmware_files
+    ;;
+
+  *)
+    ;;
+esac
