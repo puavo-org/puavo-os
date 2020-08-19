@@ -264,6 +264,9 @@ class packages {
     , 'winetricks' ]:
       tag => [ 'tag_emulation', 'tag_debian_desktop', ];
 
+    'firmware-linux-free':
+      tag => [ 'tag_firmware', 'tag_debian_desktop', ];
+
     [ 'fontconfig'
     , 'fonts-ubuntu'
     , 'gnome-font-viewer'
@@ -766,11 +769,34 @@ class packages {
 
     [ 'amd64-microcode'
     , 'b43-fwcutter'
+    , 'firmware-amd-graphics'
+    , 'firmware-atheros'
     , 'firmware-b43-installer'
     , 'firmware-b43legacy-installer'
+    , 'firmware-bnx2'
+    , 'firmware-bnx2x'
+    , 'firmware-brcm80211'
+    , 'firmware-cavium'
+    , 'firmware-intel-sound'
+    , 'firmware-intelwimax'
+    , 'firmware-ipw2x00'
+    , 'firmware-ivtv'
+    , 'firmware-iwlwifi'
+    , 'firmware-libertas'
+    , 'firmware-linux'
+    , 'firmware-linux-nonfree'
+    , 'firmware-misc-nonfree'
+    , 'firmware-myricom'
+    , 'firmware-netxen'
+    , 'firmware-qlogic'
+    , 'firmware-ralink'
+    , 'firmware-realtek'
+    , 'firmware-samsung'
+    , 'firmware-siano'
+    , 'firmware-ti-connectivity'
+    , 'firmware-zd1211'
     , 'intel-microcode'
-    , 'iucode-tool'
-    , 'linux-firmware' ]:
+    , 'iucode-tool' ]:
       ensure => present,
       tag    => [ 'tag_firmware', 'tag_debian_nonfree', ];
 

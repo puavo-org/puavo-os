@@ -13,7 +13,6 @@ _pkgs_ports := fmit                 \
                incron               \
                libmypaint           \
                libpam-ccreds        \
-               linux-firmware       \
                mutter               \
                mypaint              \
                nbd                  \
