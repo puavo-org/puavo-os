@@ -8,7 +8,7 @@ fi
 
 mode='--execute-only'
 
-if [ -e /run/puavo/nbd-server ]; then
+if [ -e /run/puavo/nbd-server ] && ! mountpoint -q /state; then
   mode='--fetch-and-execute'
 fi
 

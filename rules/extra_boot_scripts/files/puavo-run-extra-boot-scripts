@@ -170,7 +170,7 @@ fetch_extra_boot_scripts() {
 
   mkdir -p /state/ebs
 
-  if [ -e /run/puavo/nbd-server ]; then
+  if [ -e /run/puavo/nbd-server ] && ! mountpoint -q /state; then
     ebs_server=$(lookup_image_server_by_dns)
     gnupg_verify=false
   else
