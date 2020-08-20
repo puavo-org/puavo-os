@@ -1,0 +1,15 @@
+#!/bin/sh
+
+set -eu
+
+modules_load_filepath='/etc/modules-load.d/puavo-os.conf'
+
+puavo_modules_load=$(puavo-conf puavo.kernel.modules.load)
+
+if [ -z "$puavo_modules_load" ]; then
+  rm -f "$modules_load_filepath"
+  exit 0
+fi
+
+printf "%s\n" "$puavo_modules_load" | xargs -n 1 \
+  > "$modules_load_filepath"

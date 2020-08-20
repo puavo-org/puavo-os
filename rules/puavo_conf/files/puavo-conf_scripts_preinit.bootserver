@@ -26,6 +26,7 @@ setup_keyboard
 set_timezone
 setup_locale
 setup_ntp
+setup_modules
 manage_module_blacklist
 cleanup_crash_dumps
 setup_extra_environment
