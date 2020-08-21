@@ -152,7 +152,7 @@ fetch_extra_boot_scripts() {
 
   mkdir -p /state/ebs
 
-  if [ -e /run/puavo/nbd-server ]; then
+  if [ -e /run/puavo/nbd-server ] && ! mountpoint -q /state; then
     if ! ebs_server=$(/usr/lib/puavo-ltsp-client/lookup-image-server-by-dns); then
       echo 'failed to lookup image server from DNS' >&2
       return 2
