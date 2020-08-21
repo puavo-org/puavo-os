@@ -2,16 +2,15 @@
 
 set -eu
 
-# XXX get rid of hosttype handling
-puavo_hosttype=$(puavo-conf puavo.hosttype)
-
 read puavo_kerberos_realm < /etc/puavo/kerberos/realm
 
 krb5_config() {
-  hosttype=$1
-  masteronly=$2
+  local use_kerberos_master use_only_kerberos_master
 
-  if [ "$hosttype" = 'laptop' ] || $masteronly; then
+  use_kerberos_master=$1
+  use_only_kerberos_master=$2
+
+  if $use_kerberos_master; then
     dns_lookup_kdc=false
     dns_lookup_realm=false
 
@@ -32,15 +31,17 @@ EOF
     fi
 
     org_kdc_config=''
-    if ! $masteronly; then
+    if ! $use_only_kerberos_master; then
+      # Use a possible bootserver kerberos as the fallback server in case
+      # it can be found, but default to master server.
       org_kdc_config="kdc = kerberos.${puavo_domain}"
     fi
 
     realms=$(cat <<EOF)
 [realms]
         ${puavo_kerberos_realm} = {
-                ${org_kdc_config}
                 kdc = ${puavo_kerberos_master}
+                ${org_kdc_config}
                 default_domain = ${puavo_domain}
         }
 ${toprealm_config}
@@ -75,8 +76,14 @@ ${realms}
 EOF
 }
 
-krb5_config "$puavo_hosttype" false > /etc/krb5.conf.tmp
+use_master_kerberos=true
+if [ -e /run/puavo/nbd-server ]; then
+  # on networking clients, we can rely on bootserver dns and kerberos server
+  use_master_kerberos=false
+fi
+
+krb5_config "$use_master_kerberos" false > /etc/krb5.conf.tmp
 mv /etc/krb5.conf.tmp /etc/krb5.conf
 
-krb5_config "$puavo_hosttype" true > /etc/krb5.conf.masteronly.tmp
+krb5_config true true > /etc/krb5.conf.masteronly.tmp
 mv /etc/krb5.conf.masteronly.tmp /etc/krb5.conf.masteronly
