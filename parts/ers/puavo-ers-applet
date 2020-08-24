@@ -236,7 +236,11 @@ class PuavoErsExamSync (threading.Thread):
 
   def run(self):
      while True:
-       self.sync_exams()
+       try:
+         self.sync_exams()
+       except Exception as e:
+         syslog.syslog(syslog.LOG_ERR, 'some error when syncing exams: %s' % e)
+
        time.sleep(60)
 
 
