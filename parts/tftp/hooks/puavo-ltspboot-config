@@ -6,7 +6,7 @@
 #
 # eg. puavo-ltspboot-config pxelinux.cfg/01-78-e7-d1-d4-0f-5f
 
-set -e
+set -eu
 
 tftpbase="/var/lib/tftpboot/ltsp"
 
@@ -50,7 +50,10 @@ EOF
 }
 
 show_image_menu() {
+  local preferred_boot_image default_image_tftpdir_missing
+
   preferred_boot_image=$1
+  default_image_tftpdir_missing=$2
 
   available_images=$(echo ${tftpbase}/*/vmlinuz \
                         | xargs -n 1 dirname   \
@@ -68,14 +71,19 @@ menu title Choose a system
 prompt 0
 timeout 100
 
+HEADER_EOF
+
+  if ! $default_image_tftpdir_missing; then
+    cat <<DEFAULT_IMAGE_EOF
 label ltsp-NBD-${image}
-  menu label ${image}
+  menu label *${image}*
   menu default
   kernel ltsp/${image}/vmlinuz
   append ro initrd=ltsp/${image}/initrd.img init=/sbin/init-puavo puavo.hosttype=unregistered root=/dev/nbd0 nbdroot=dhcp,${image},nbd0
   ipappend 2
 
-HEADER_EOF
+DEFAULT_IMAGE_EOF
+  fi
 
   for image in $available_images; do
     test "$image" != "$preferred_boot_image" || continue
@@ -149,14 +157,18 @@ case "$hosttype" in
 esac
 
 tftpdir="${tftpbase}/${preferred_boot_image}"
-
+tftpdir_missing=false
 if [ ! -d "$tftpdir" ]; then
-  pxe_error "Missing ${preferred_boot_image}"
+  tftpdir_missing=true
 fi
 
 if [ "$hosttype" = "unregistered" ]; then
-  show_image_menu "${preferred_boot_image}"
+  show_image_menu "$preferred_boot_image" "$tftpdir_missing"
   exit 0
+fi
+
+if $tftpdir_missing; then
+  pxe_error "Missing ${preferred_boot_image}"
 fi
 
 #
@@ -220,7 +232,7 @@ default ltsp-NBD-ifcpu64
 ontimeout ltsp-NBD-ifcpu64
 HEADER_EOF
 )
-  else
+else
   boot_header=$(cat <<'HEADER_EOF'
 default ltsp-NBD
 ontimeout ltsp-NBD
