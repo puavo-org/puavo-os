@@ -73,10 +73,16 @@ timeout 100
 
 HEADER_EOF
 
-  if ! $default_image_tftpdir_missing; then
+  if $default_image_tftpdir_missing; then
+    cat <<DEFAULT_IMAGE_EOF
+label ltsp-default-image-notfound
+  menu label MISSING ${image}
+
+DEFAULT_IMAGE_EOF
+  else
     cat <<DEFAULT_IMAGE_EOF
 label ltsp-NBD-${image}
-  menu label *${image}*
+  menu label ${image}
   menu default
   kernel ltsp/${image}/vmlinuz
   append ro initrd=ltsp/${image}/initrd.img init=/sbin/init-puavo puavo.hosttype=unregistered root=/dev/nbd0 nbdroot=dhcp,${image},nbd0
