@@ -6,17 +6,17 @@ unpack_tar_from_github() {
   wget -O - "$1" | tar -zx
 }
 
-openboard_version=1.5.3
+openboard_version=1.5.4
 openboard_dir="openboard-${openboard_version}"
 
-openboard_commit=426b1f7a19f5b6d12f8ad8944a109f5a8aadfaab
+openboard_commit=85eb094ea9b876b559c8fd73e7fae1d7d9890903
 importer_commit=47927bda021b4f7f1540b794825fb0d601875e79
-thirdparty_commit=925f2d1949ef159c1efbe1e0a7fe23202de1d3a3
+thirdparty_commit=ac6489b61a33b2577d9e0674c169b88998dc7b14
 
 mkdir -p "$openboard_dir"
 cd "$openboard_dir"
 
-unpack_tar_from_github "https://github.com/puavo-org/OpenBoard/archive/${openboard_commit}.tar.gz"
+unpack_tar_from_github "https://github.com/OpenBoard-org/OpenBoard/archive/${openboard_commit}.tar.gz"
 mv "OpenBoard-${openboard_commit}" OpenBoard
 
 unpack_tar_from_github "https://github.com/OpenBoard-org/OpenBoard-Importer/archive/${importer_commit}.tar.gz"
