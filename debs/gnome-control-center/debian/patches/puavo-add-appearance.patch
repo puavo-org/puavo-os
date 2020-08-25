@@ -252,8 +252,8 @@ diff -ruN gnome-control-center-3.30.3.orig/panels/appearance/appearance.ui gnome
 +</interface>
 diff -ruN gnome-control-center-3.30.3.orig/panels/appearance/cc-appearance-panel.c gnome-control-center-3.30.3/panels/appearance/cc-appearance-panel.c
 --- gnome-control-center-3.30.3.orig/panels/appearance/cc-appearance-panel.c	1970-01-01 02:00:00.000000000 +0200
-+++ gnome-control-center-3.30.3/panels/appearance/cc-appearance-panel.c	2020-05-22 10:44:41.715828921 +0300
-@@ -0,0 +1,488 @@
++++ gnome-control-center-3.30.3/panels/appearance/cc-appearance-panel.c	2020-08-25 14:49:04.285878121 +0300
+@@ -0,0 +1,515 @@
 +/*
 +Custom "Appearance" gnome-control-center panel
 +Probably completely incorrectly done, but there's no documentation
@@ -292,16 +292,22 @@ diff -ruN gnome-control-center-3.30.3.orig/panels/appearance/cc-appearance-panel
 +    gchar **allowed_icon_themes,
 +          **allowed_cursor_themes;
 +
++    gchar *current_icon_theme;          // this should not the "dark"-variant
++
 +    // UI elements
 +    GtkBuilder *builder;
 +    GtkWidget *main;        // the main container widget
-+    GtkSwitch *dark_theme;
 +    GtkComboBoxText *icon_combo;
 +    GtkComboBoxText *cursor_combo;
 +    GtkSwitch *animations;
 +};
 +
 +CC_PANEL_REGISTER(CcAppearancePanel, cc_appearance_panel)
++
++// some necessary declarations
++static void      set_icon_theme(gchar *, struct _CcAppearancePanel *);
++gchar           *get_setting_string(const char *, const char *);
++gboolean         get_setting_bool(const char *, const char *);
 +
 +// -------------------------------------------------------------------------------------------------
 +// -------------------------------------------------------------------------------------------------
@@ -390,14 +396,34 @@ diff -ruN gnome-control-center-3.30.3.orig/panels/appearance/cc-appearance-panel
 +// -------------------------------------------------------------------------------------------------
 +// LIGHT/DARK THEME SELECTOR
 +
++// 1=enable dark theme, 0=disable dark theme
++static void enable_dark_theme(struct _CcAppearancePanel *self, const int enabled)
++{
++    GSettings *app_scheme, *shell_scheme;
++
++    app_scheme = g_settings_new(APPLICATION_THEME_SCHEMA);
++    shell_scheme = g_settings_new(SHELL_THEME_SCHEMA);
++
++    g_settings_set_string(app_scheme, APPLICATION_THEME_KEY,
++                          *(enabled ? self->dark_theme_names : self->light_theme_names));
++
++    g_settings_set_string(shell_scheme, SHELL_THEME_KEY,
++                          *(enabled ? self->dark_theme_names + 1 : self->light_theme_names + 1));
++
++    g_settings_sync();
++
++    set_icon_theme(NULL, self);
++}
++
 +static int is_dark_theme_enabled(struct _CcAppearancePanel *self)
 +{
-+    gchar *application_theme = get_setting_string(APPLICATION_THEME_SCHEMA, APPLICATION_THEME_KEY),
-+          *shell_theme = get_setting_string(SHELL_THEME_SCHEMA, SHELL_THEME_KEY);
++    gchar *application_theme, *shell_theme;
++    int enabled;
 +
-+    int enabled = 0;
++    application_theme = get_setting_string(APPLICATION_THEME_SCHEMA, APPLICATION_THEME_KEY);
++    shell_theme = get_setting_string(SHELL_THEME_SCHEMA, SHELL_THEME_KEY);
 +
-+    //printf("|%s| |%s|\n", *self->dark_theme_names, *(self->dark_theme_names + 1));
++    enabled = 0;
 +
 +    // Very elegant... not
 +    if (!strcmp(application_theme, *self->dark_theme_names) &&
@@ -410,38 +436,26 @@ diff -ruN gnome-control-center-3.30.3.orig/panels/appearance/cc-appearance-panel
 +    return enabled;
 +}
 +
-+// 1=enable dark theme, 0=disable dark theme
-+static void enable_dark_theme(struct _CcAppearancePanel *self, const int enabled)
-+{
-+    GSettings *app_scheme = g_settings_new(APPLICATION_THEME_SCHEMA),
-+              *shell_scheme = g_settings_new(SHELL_THEME_SCHEMA);
-+
-+    g_settings_set_string(app_scheme, APPLICATION_THEME_KEY,
-+                          *(enabled ? self->dark_theme_names : self->light_theme_names));
-+
-+    g_settings_set_string(shell_scheme, SHELL_THEME_KEY,
-+                          *(enabled ? self->dark_theme_names + 1 : self->light_theme_names + 1));
-+
-+    g_settings_sync();
-+}
-+
 +static void toggle_dark_theme(GtkSwitch *widget, GdkEvent *event, gpointer user_data)
 +{
 +    struct _CcAppearancePanel *self = (struct _CcAppearancePanel *)user_data;
 +
 +    if (gtk_switch_get_state(widget))
 +        enable_dark_theme(self, 1);
-+    else enable_dark_theme(self, 0);
++    else
++        enable_dark_theme(self, 0);
 +}
 +
 +static void setup_theme_selector(struct _CcAppearancePanel *self)
 +{
-+    self->dark_theme = GTK_SWITCH(gtk_builder_get_object(self->builder, "switch_dark_theme"));
++    GtkSwitch *dark_theme;
++
++    dark_theme = GTK_SWITCH(gtk_builder_get_object(self->builder, "switch_dark_theme"));
 +
 +    if (is_dark_theme_enabled(self))
-+        gtk_switch_set_state(self->dark_theme, 1);
++        gtk_switch_set_state(dark_theme, 1);
 +
-+    g_signal_connect_object(self->dark_theme, "notify::active",
++    g_signal_connect_object(dark_theme, "notify::active",
 +                            G_CALLBACK(toggle_dark_theme), self, 0);
 +}
 +
@@ -478,19 +492,50 @@ diff -ruN gnome-control-center-3.30.3.orig/panels/appearance/cc-appearance-panel
 +    return get_setting_string(APPLICATION_THEME_SCHEMA, ICON_THEME_KEY);
 +}
 +
-+static void set_icon_theme(gchar *name)
++static void set_icon_theme(gchar *name, struct _CcAppearancePanel *self)
 +{
-+    GSettings *cursor_theme = g_settings_new(APPLICATION_THEME_SCHEMA);
++    GSettings *icon_theme;
++    char *dark_icon_theme_name;
 +
-+    g_settings_set_string(cursor_theme, ICON_THEME_KEY, name);
++    if (name == NULL) {
++       name = self->current_icon_theme;
++    } else {
++       g_free(self->current_icon_theme);
++       self->current_icon_theme = g_strdup(name);
++    }
++
++    icon_theme = g_settings_new(APPLICATION_THEME_SCHEMA);
++    dark_icon_theme_name = NULL;
++
++    if (is_dark_theme_enabled(self)) {
++        if (asprintf(&dark_icon_theme_name, "%s-dark", name) == -1) {
++          g_warning("Out of memory when doing string formatting");
++        } else if (icon_theme_checker(dark_icon_theme_name)) {
++          name = dark_icon_theme_name;
++        } else {
++          free(dark_icon_theme_name);
++          if (asprintf(&dark_icon_theme_name, "%s-Dark", name) == -1) {
++            g_warning("Out of memory when doing string formatting");
++          } else if (icon_theme_checker(dark_icon_theme_name)) {
++            name = dark_icon_theme_name;
++          }
++        }
++    }
++
++    g_settings_set_string(icon_theme, ICON_THEME_KEY, name);
++
++    if (dark_icon_theme_name)
++        free(dark_icon_theme_name);
++
 +    g_settings_sync();
 +}
 +
-+static void icon_theme_changed(GtkComboBoxText *combo, GdkEvent *event, gpointer user_data)
++static void icon_theme_changed(GtkComboBoxText *combo, gpointer user_data)
 +{
 +    gchar *active = gtk_combo_box_text_get_active_text(combo);
++    struct _CcAppearancePanel *self = (struct _CcAppearancePanel *)user_data;
 +
-+    set_icon_theme(active);
++    set_icon_theme(active, self);
 +    g_free(active);
 +}
 +
@@ -498,9 +543,8 @@ diff -ruN gnome-control-center-3.30.3.orig/panels/appearance/cc-appearance-panel
 +{
 +    self->icon_combo = GTK_COMBO_BOX_TEXT(gtk_builder_get_object(self->builder, "combo_icon_theme"));
 +
-+    gchar *current_icon_theme = get_icon_theme_name();
-+    fill_icon_theme_selector(self->icon_combo, self->allowed_icon_themes, current_icon_theme);
-+    g_free(current_icon_theme);
++    self->current_icon_theme = get_icon_theme_name();
++    fill_icon_theme_selector(self->icon_combo, self->allowed_icon_themes, self->current_icon_theme);
 +
 +    g_signal_connect_object(self->icon_combo, "changed", G_CALLBACK(icon_theme_changed), self, 0);
 +}
@@ -641,22 +685,7 @@ diff -ruN gnome-control-center-3.30.3.orig/panels/appearance/cc-appearance-panel
 +
 +static void cc_appearance_panel_constructed(GObject *object)
 +{
-+    //CcAppearancePanel *self = CC_APPEARANCE_PANEL(object);
-+
 +    G_OBJECT_CLASS(cc_appearance_panel_parent_class)->constructed(object);
-+}
-+
-+static void panel_changed(GtkWidget *settings_widget,
-+                          const char *panel,
-+                          CcAppearancePanel *self)
-+{
-+    GError *error = NULL;
-+    CcShell *shell = cc_panel_get_shell(CC_PANEL(self));
-+
-+    if (cc_shell_set_active_panel_from_id(shell, panel, NULL, &error) == FALSE) {
-+        g_warning("Failed to activate '%s' panel: %s", panel, error->message);
-+        g_error_free(error);
-+    }
 +}
 +
 +// Retrieves a value from puavo-conf, using the default if the call fails.
@@ -729,7 +758,7 @@ diff -ruN gnome-control-center-3.30.3.orig/panels/appearance/cc-appearance-panel
 +
 +    self->light_theme_names = get_puavoconf_with_default("puavo.desktop.themes.desktop_themes.light", "Arc,Arc");
 +    self->dark_theme_names = get_puavoconf_with_default("puavo.desktop.themes.desktop_themes.dark", "Arc-Dark,Arc-Dark");
-+    self->allowed_icon_themes = get_puavoconf_with_default("puavo.desktop.themes.icon_themes", "Adwaita,breeze,breeze-dark,deepin,deepin-dark,default,default.kde4,ePapirus,Faenza,Faenza-Ambiance,Faenza-Dark,Faenza-Darker,Faenza-Darkest,Faenza-Radiance,gnome,hicolor,HighContrast,Obsidian,Obsidian-Amber,Obsidian-Amber-Light,Obsidian-Amber-SemiLight,Obsidian-Aqua,Obsidian-Aqua-Light,Obsidian-Aqua-SemiLight,Obsidian-Cyan,Obsidian-Cyan-Light,Obsidian-Cyan-SemiLight,Obsidian-Gray,Obsidian-Gray-Light,Obsidian-Gray-SemiLight,Obsidian-Green,Obsidian-Green-Light,Obsidian-Green-SemiLight,Obsidian-Light,Obsidian-Mint,Obsidian-Mint-Light,Obsidian-Mint-SemiLight,Obsidian-Red,Obsidian-Red-Light,Obsidian-Red-SemiLight,Obsidian-Sand,Obsidian-Sand-Light,Obsidian-Sand-SemiLight,Obsidian-SemiLight,oxygen,Papirus,Papirus-Dark,Papirus-Light,Sea,Tela,Tela-dark");
++    self->allowed_icon_themes = get_puavoconf_with_default("puavo.desktop.themes.icon_themes", "breeze,Faenza,Papirus,Tela");
 +    self->allowed_cursor_themes = get_puavoconf_with_default("puavo.desktop.themes.cursor_themes", "Adwaita,deepin,Obsidian");
 +
 +    // UI setup
@@ -739,8 +768,6 @@ diff -ruN gnome-control-center-3.30.3.orig/panels/appearance/cc-appearance-panel
 +    setup_animations(self);
 +
 +    gtk_container_add (GTK_CONTAINER(self), self->main);
-+
-+    //g_signal_connect(G_OBJECT(self->main), "panel-changed", G_CALLBACK(panel_changed), self);
 +}
 diff -ruN gnome-control-center-3.30.3.orig/panels/appearance/cc-appearance-panel.h gnome-control-center-3.30.3/panels/appearance/cc-appearance-panel.h
 --- gnome-control-center-3.30.3.orig/panels/appearance/cc-appearance-panel.h	1970-01-01 02:00:00.000000000 +0200
