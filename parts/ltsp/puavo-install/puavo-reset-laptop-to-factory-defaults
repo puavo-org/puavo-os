@@ -2,14 +2,34 @@
 
 set -eu
 
+request_confirmation=true
+use_secure_delete=false
+
 destroy_in_dir() {
-  local directory message
+  local delete_cmd directory message
 
   directory=$1
   message=$2
 
-  { find "$directory" -mindepth 1 -print0; } | { xargs -0 rm -vrf; } 2>&1 \
+  if $use_secure_delete; then
+    delete_cmd='srm -llrv'
+  else
+    delete_cmd='rm -vrf'
+  fi
+
+  { find "$directory" -mindepth 1 -maxdepth 1 -print0; } \
+    | { xargs -0 $delete_cmd; } 2>&1 \
     | wrap_msg "$message"
+}
+
+usage() {
+  cat <<EOF
+$(basename $0) [--force] [--secure-delete]
+
+  --force               no questions asked
+  --secure-delete       overwrite files before unlinking them (slow!)
+EOF
+  exit 1
 }
 
 wrap_msg() {
@@ -33,10 +53,21 @@ if [ "$puavo_hosttype" != "laptop" ]; then
   exit 1
 fi
 
-request_confirmation=true
-if [ "${1:-}" = '--force' ]; then
-  request_confirmation=false
+if ! args=$(getopt -n "$0" -o + -l 'force,secure-delete' -- "$@"); then
+  usage
 fi
+
+eval "set -- $args"
+while [ $# -ne 0 ]; do
+  case "$1" in
+    --force)            request_confirmation=false; shift ;;
+    --secure-delete)    use_secure_delete=true    ; shift ;;
+    --) shift; break ;;
+    *)  usage ;;
+  esac
+done
+
+[ $# -eq 0 ] || usage
 
 while $request_confirmation; do
   cat <<'EOF'
