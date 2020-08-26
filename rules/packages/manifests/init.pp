@@ -130,6 +130,7 @@ class packages {
     , 'read-edid'
     , 'rsyslog'
     , 'screen'
+    , 'secure-delete'
     , 'setserial'
     , 'smartmontools'
     , 'sshfs'
