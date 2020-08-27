@@ -1,0 +1,7 @@
+[Unit]
+BindTo=%i.device
+After=%i.device
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/puavo-ltsp-client/puavo-jetpipe usb /%I

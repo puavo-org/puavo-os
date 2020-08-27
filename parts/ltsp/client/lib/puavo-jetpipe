@@ -1,0 +1,25 @@
+#!/bin/sh
+
+set -eu
+
+is_enabled=$(puavo-conf puavo.printing.jetpipe.enabled)
+if [ "$is_enabled" != 'true' ]; then
+  exit 0
+fi
+
+device_type=$1
+device_path=$2
+
+if [ "$device_type" = 'usb' ]; then
+  port=9100
+else
+  # we should get $MINOR from here
+  eval $(udevadm info --query=env --export "$device_path")
+  if [ -z "${MINOR:-}" ]; then
+    echo 'could not determine device minor' >&2
+    exit 1
+  fi
+  port=$(( "$MINOR" + 9101 ))
+fi
+
+exec /usr/lib/puavo-ltsp-client/jetpipe "$device_path" "$port"

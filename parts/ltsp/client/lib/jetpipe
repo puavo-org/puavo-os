@@ -170,22 +170,16 @@ if __name__ == '__main__':
     devicename = args[0]
     port = args[1]
 
-    if not debug:
-        # Fork in background
-        pid = os.fork()
-        if pid:
-            sys.exit(0)
+    # Replace stdin
+    sys.stdin.close()
+    sys.stdin = open("/dev/null", "r")
 
-        # Replace stdin
-        sys.stdin.close()
-        sys.stdin = open("/dev/null", "r")
+    # Replace stdout
+    sys.stdout.close()
+    sys.stdout = open("/dev/null", "w")
 
-        # Replace stdout
-        sys.stdout.close()
-        sys.stdout = open("/dev/null", "w")
-
-        # Replace stderr
-        sys.stderr.close()
-        sys.stderr = open("/dev/null", "w")
+    # Replace stderr
+    sys.stderr.close()
+    sys.stderr = open("/dev/null", "w")
 
     run_server(devicename, port)
