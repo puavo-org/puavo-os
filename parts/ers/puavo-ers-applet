@@ -160,7 +160,7 @@ class PuavoErsApplet:
           self.update_passwords_in_ui(new_exams)
         self.old_exams = new_exams
     except OSError as e:
-      if e.errno != errno.EEXIST:
+      if e.errno != errno.ENOENT:
         error = e
     except Exception as e:
       error = e
@@ -236,7 +236,11 @@ class PuavoErsExamSync (threading.Thread):
 
   def run(self):
      while True:
-       self.sync_exams()
+       try:
+         self.sync_exams()
+       except Exception as e:
+         syslog.syslog(syslog.LOG_ERR, 'some error when syncing exams: %s' % e)
+
        time.sleep(60)
 
 
@@ -355,8 +359,13 @@ class PuavoErsExamZipper (threading.Thread):
 
   def sort_exams_to_dirs(self):
     self.current_time = datetime.datetime.now()
-    with open(EXAMS_JSON_FILE) as file:
-      current_exams = json.load(file)
+    try:
+      with open(EXAMS_JSON_FILE) as file:
+        current_exams = json.load(file)
+    except OSError as e:
+      if e.errno != errno.ENOENT:
+        raise e
+      return
 
     archived_exams          = []
     currently_running_exams = []
