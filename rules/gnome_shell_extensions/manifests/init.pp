@@ -1,6 +1,7 @@
 class gnome_shell_extensions {
   include ::dconf::schemas
   include ::packages
+  include ::themes
 
   define add_extension () {
     $extension = $title
@@ -16,9 +17,14 @@ class gnome_shell_extensions {
   ::gnome_shell_extensions::add_extension {
     'hide-panel-power-indicator@puavo.org':
       require => ::Dconf::Schemas::Schema['org.gnome.puavo.gschema.xml'];
-  }
 
-  ::gnome_shell_extensions::add_extension {
+    'quickoverview@kirby_33@hotmail.fr':
+      require => [ ::Themes::Iconlink['scalable/places/puavo-base-user-desktop.svg']
+                 , ::Themes::Iconlink['scalable/places/puavo-hover-user-desktop.svg' ] ];
+
+    'show-desktop@l300lvl.tk':
+      require => ::Themes::Iconlink['scalable/apps/puavo-multitasking-view.svg'];
+
     [ 'appindicatorsupport@rgcjonas.gmail.com'
     , 'audio-menu-modifier@puavo.org'
     , 'bottompanel@tmoer93'
@@ -31,8 +37,6 @@ class gnome_shell_extensions {
     , 'Move_Clock@rmy.pobox.com'
     , 'nohotcorner@azuri.free.fr'
     , 'puavomenu@puavo.org'
-    , 'quickoverview@kirby_33@hotmail.fr'
-    , 'show-desktop@l300lvl.tk'
     , 'TopIcons@phocean.net'
     , 'uparrows@puavo.org'
     , 'window-list-mod@puavo.org' ]:

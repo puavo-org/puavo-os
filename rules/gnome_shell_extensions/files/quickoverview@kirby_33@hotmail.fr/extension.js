@@ -12,7 +12,7 @@ const OverviewButton = new Lang.Class({
         this.parent(0.0,'QuickOverview');
         this.buttonIcon = new St.Icon({ style_class: 'system-status-icon', 'icon_size': 32 });
         this.actor.add_actor(this.buttonIcon);
-        this.buttonIcon.icon_name='deepin-multitasking-view';
+        this.buttonIcon.icon_name='puavo-multitasking-view';
         this.actor.connect('button-press-event', Lang.bind(this, this._refresh));
         this.original_speed = St.get_slow_down_factor();
         this.modified_speed = HIGHT_SPEED;
