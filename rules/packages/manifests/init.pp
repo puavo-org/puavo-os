@@ -472,6 +472,7 @@ class packages {
     , 'kstars'
     , 'mandelbulber'
     , 'marble-qt'
+    , 'pspp'
     , 'qgis'
     , 'stellarium'
     , 'step'
