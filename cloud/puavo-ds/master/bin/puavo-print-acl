@@ -4,6 +4,7 @@
 # GLOBAL VARIABLES
 #
 
+# XXX these should come from somewhere
 set ldapsuffix "dc=edu,dc=juhaerk,dc=net"
 set samba_domain "EDUJUHAERK"
 set rules [list]
@@ -61,18 +62,30 @@ proc puavoversion_set {version} {
 # some constants
 #
 
-set Devices       "ou=Devices,ou=Hosts"
-set Domain_Admins "cn=Domain Admins,ou=Groups"
-set Domain_Users  "cn=Domain Admins,ou=Groups"
-set Hosts         "ou=Hosts"
-set People        "ou=People"
-set Printers      "ou=People"
-set Roles         "ou=Roles"
-set Servers       "ou=Servers,ou=Hosts"
+set Applications    "ou=Applications,ou=Desktops"
+set Bookmarks       "ou=Bookmarks,ou=Desktops"
+set Classes         "ou=Classes,ou=Groups"
+set Desktops        "ou=Desktops"
+set Devices         "ou=Devices,ou=Hosts"
+set Domain_Admins   "cn=Domain Admins,ou=Groups"
+set Domain_Users    "cn=Domain Admins,ou=Groups"
+set Files           "ou=Files,ou=Desktops"
+set Firefox         "ou=Firefox,ou=Desktops"
+set Groups          "ou=Groups"
+set Hosts           "ou=Hosts"
+set People          "ou=People"
+set Printers        "ou=People"
+set Roles           "ou=Roles"
+set Schools         "ou=Schools,ou=Groups"
+set SchoolRoles     "ou=SchoolRoles,ou=Groups"
+set Servers         "ou=Servers,ou=Hosts"
+set Services        "ou=Services,ou=Desktops"
+set System_Accounts "ou=System Accounts"
+set System_Groups   "ou=System Groups"
 
 set org_owner "group/puavoEduOrg/owner=${ldapsuffix}"
 
-set ownerusers         [ldapset "owner* & user"]	; # XXX what does this mean?
+set ownerusers         [ldapset "owner* & user"]        ; # XXX what does this mean?
 set school_admins      [ldapset "user/puavoAdminOfSchool*"]
 set teachers           [person_affiliation_set teacher]
 set this_school_admins [ldapset "this/puavoSchool & user/puavoAdminOfSchool*"]
@@ -553,6 +566,466 @@ rule {
     [attrs memberUid]
       by $school_admins write
       by $ownerusers    write
+}
+
+rule {
+  [dn exact $Domain_Admins]
+    by $ownerusers read
+}
+
+rule {
+  [dn exact $Domain_Users]
+    by $school_admins read
+    by $ownerusers    read
+}
+
+rule {
+  [dn exact $Groups]
+    [attrs entry ou objectClass]
+      by $school_admins          read
+      by $ownerusers             read
+      by [puavo_dn puavo-ticket] read
+      by [dn children $People]   read
+      by [dn subtree $Hosts]     read
+      by [systemgroup getent]    read
+}
+
+rule {
+  [dn exact $Groups]
+    [attrs children]
+      by $school_admins          write
+      by $ownerusers             write
+      by [dn children $People]   read
+      by [dn subtree $Hosts]     read
+      by [systemgroup getent]    read
+      by [puavo_dn puavo-ticket] read
+}
+
+rule {
+  [dn exact $Schools]
+    [attrs entry ou objectClass]
+      by $school_admins          read
+      by $ownerusers             read
+      by [puavo_dn puavo-ticket] read
+      by [dn children $People]   read
+      by [dn subtree $Hosts]     read
+      by [systemgroup getent]    read
+}
+
+rule {
+  [dn exact $Schools]
+    [attrs children]
+      by $school_admins          write
+      by $ownerusers             write
+      by [dn children $People]   read
+      by [dn subtree $Hosts]     read
+      by [systemgroup getent]    read
+      by [puavo_dn puavo-ticket] read
+}
+
+rule {
+  [dn subtree $Schools]
+      by $ownerusers             write
+      by [dn children $People]   read
+      by [dn subtree $Hosts]     read
+      by [systemgroup getent]    read
+      by [puavo_dn puavo-ticket] read
+}
+
+rule {
+  [dn exact $Roles]
+    [attrs entry ou objectClass]
+      by $school_admins          read
+      by $ownerusers             read
+      by [puavo_dn puavo-ticket] read
+      by [dn children $People]   read
+      by [dn subtree $Hosts]     read
+      by [systemgroup getent]    read
+}
+
+rule {
+  [dn exact $Roles]
+    [attrs children]
+      by $school_admins          write
+      by $ownerusers             write
+      by [dn children $People]   read
+      by [dn subtree $Hosts]     read
+      by [systemgroup getent]    read
+      by [puavo_dn puavo-ticket] read
+}
+
+rule {
+  [dn subtree $Roles]
+    [attrs member memberUid]
+      by $org_owner              write
+      by $this_school_admins     write
+      by [dn children $People]   read
+      by [dn subtree $Hosts]     read
+      by [systemgroup getent]    read
+      by [puavo_dn puavo-ticket] read
+}
+
+rule {
+  [dn subtree $Roles]
+      by $ownerusers             write
+      by [dn children $People]   read
+      by [dn subtree $Hosts]     read
+      by [systemgroup getent]    read
+      by [puavo_dn puavo-ticket] read
+}
+
+rule {
+  [dn exact $SchoolRoles]
+    [attrs entry ou objectClass]
+      by $school_admins          read
+      by $ownerusers             read
+      by [puavo_dn puavo-ticket] read
+      by [dn children $People]   read
+      by [dn subtree $Hosts]     read
+      by [systemgroup getent]    read
+}
+
+rule {
+  [dn exact $SchoolRoles]
+    [attrs children]
+      by $school_admins          write
+      by $ownerusers             write
+      by [dn children $People]   read
+      by [dn subtree $Hosts]     read
+      by [systemgroup getent]    read
+      by [puavo_dn puavo-ticket] read
+}
+
+rule {
+  [dn subtree $SchoolRoles]
+    [attrs member memberUid]
+      by $org_owner              write
+      by $this_school_admins     write
+      by [dn children $People]   read
+      by [dn subtree $Hosts]     read
+      by [systemgroup getent]    read
+      by [puavo_dn puavo-ticket] read
+}
+
+rule {
+  [dn subtree $SchoolRoles]
+      by $ownerusers             write
+      by [dn children $People]   read
+      by [dn subtree $Hosts]     read
+      by [systemgroup getent]    read
+      by [puavo_dn puavo-ticket] read
+}
+
+rule {
+  [dn exact $Classes]
+    [attrs entry ou objectClass]
+      by $school_admins          read
+      by $ownerusers             read
+      by [puavo_dn puavo-ticket] read
+      by [dn children $People]   read
+      by [dn subtree $Hosts]     read
+      by [systemgroup getent]    read
+}
+
+rule {
+  [dn exact $Classes]
+    [attrs children]
+      by $school_admins          write
+      by $ownerusers             write
+      by [dn children $People]   read
+      by [dn subtree $Hosts]     read
+      by [systemgroup getent]    read
+      by [puavo_dn puavo-ticket] read
+}
+
+rule {
+  [dn subtree $Classes]
+    [attrs member memberUid]
+      by $org_owner              write
+      by $this_school_admins     write
+      by [dn children $People]   read
+      by [dn subtree $Hosts]     read
+      by [systemgroup getent]    read
+      by [puavo_dn puavo-ticket] read
+}
+
+rule {
+  [dn subtree $Classes]
+      by $org_owner              write
+      by $this_school_admins     write
+      by [dn children $People]   read
+      by [dn subtree $Hosts]     read
+      by [systemgroup getent]    read
+      by [puavo_dn puavo-ticket] read
+}
+
+rule {
+  [dn subtree $Groups]
+    filter=(objectClass=puavoEduGroup)
+    [attrs gidNumber cn puavoId objectClass]
+      by $org_owner              write
+      by $this_school_admins     write
+      by [dn children $People]   read
+      by [dn subtree $Hosts]     read
+      by [systemgroup getent]    read
+      by [puavo_dn puavo-ticket] read
+}
+
+rule {
+  [dn subtree $Groups]
+    filter=(objectClass=puavoSchool)
+    [attrs gidNumber cn puavoId objectClass]
+      by $ownerusers             +azrwsc
+      by $this_school_admins     +rwsc
+      by [dn children $People]   read
+      by [dn subtree $Hosts]     read
+      by [puavo_dn puavo]        read
+      by [puavo_dn puavo-ticket] read
+      by [systemgroup getent]    read break
+}
+
+rule {
+  [dn subtree $Groups]
+    filter=(objectClass=puavoEduGroup)
+      by $org_owner            write
+      by $this_school_admins   write
+      by [dn children $People] read
+      by [dn subtree $Hosts]   read
+      by [systemgroup getent]  read
+}
+
+rule {
+  [dn subtree $Groups]
+    filter=(objectClass=puavoSchool)
+    [attrs displayName puavoNamePrefix puavoSchoolHomePageURL description \
+           telephoneNumber facsimileTelephoneNumber l street postOfficeBox \
+           postalAddress postalCode st jpegPhoto preferredLanguage \
+           puavoLocale puavoDeviceImage puavoAllowGuest puavoPersonalDevice \
+           puavoPrinterQueue puavoWirelessPrinterQueue member memberUid \
+           puavoActiveService puavoDeviceAutoPowerOffMode \
+           puavoAutomaticImageUpdates puavoDeviceOffHour puavoDeviceOnHour \
+           puavoExternalFeed puavoMountpoint puavoTag puavoWlanChannel \
+           puavoWlanSSID]
+      by $this_school_admins     write
+      by [dn children $People]   read
+      by [dn subtree $Hosts]     read
+      by [puavo_dn puavo-ticket] read
+      by [systemgroup getent]    read break
+}
+
+rule {
+  [dn subtree $Groups]
+    filter=(objectClass=puavoSchool)
+      by $ownerusers             write
+      by $this_school_admins     +rscxd
+      by [dn children $People]   read
+      by [dn subtree $Hosts]     read
+      by [systemgroup getent]    read
+      by [puavo_dn puavo]        read
+      by [puavo_dn puavo-ticket] read
+}
+
+rule {
+  [dn exact $Desktops]
+    [attrs entry ou objectClass]
+      by $school_admins      read
+      by $ownerusers         read
+      by [dn subtree $Hosts] read
+}
+
+rule {
+  [dn exact $Desktops]
+    [attrs children]
+      by [dn children $People] read
+      by [dn subtree $Hosts]   read
+}
+
+rule {
+  [dn exact $Files]
+    [attrs entry ou objectClass]
+      by $school_admins      read
+      by $ownerusers         read
+      by [dn subtree $Hosts] read
+}
+
+rule {
+  [dn exact $Files]
+    [attrs children]
+      by $school_admins      write
+      by $ownerusers         write
+      by [dn subtree $Hosts] read
+}
+
+rule {
+  [dn children $Files]
+    by $school_admins      write
+    by $ownerusers         write
+    by [dn subtree $Hosts] read
+}
+
+rule {
+  [dn exact $Firefox]
+    [attrs entry ou objectClass]
+      by [dn children $People] read
+}
+
+rule {
+  [dn exact $Firefox]
+    [attrs children]
+      by $school_admins        write
+      by $ownerusers           write
+      by [dn children $People] read
+}
+
+rule {
+  [dn children $Firefox]
+    by $school_admins        write
+    by $ownerusers           write
+    by [dn children $People] read
+}
+
+rule {
+  [dn exact $Applications]
+    [attrs entry ou objectClass]
+      by [dn children $People] read
+}
+
+rule {
+  [dn exact $Applications]
+    [attrs children]
+      by $school_admins        write
+      by $ownerusers           write
+      by [dn children $People] read
+}
+
+rule {
+  [dn children $Applications]
+    by $school_admins        write
+    by $ownerusers           write
+    by [dn children $People] read
+}
+
+rule {
+  [dn exact $Bookmarks]
+    [attrs entry ou objectClass]
+      by [dn children $People] read
+}
+
+rule {
+  [dn exact $Bookmarks]
+    [attrs children]
+      by $school_admins        write
+      by $ownerusers           write
+      by [dn children $People] read
+}
+
+rule {
+  [dn children $Bookmarks]
+      by $school_admins        write
+      by $ownerusers           write
+      by [dn children $People] read
+}
+
+rule {
+  [dn exact $Services]
+    [attrs entry ou objectClass]
+      by [dn children $People] read
+}
+
+rule {
+  [dn exact $Services]
+    [attrs children]
+      by $school_admins        write
+      by $ownerusers           write
+      by [dn children $People] read
+}
+
+rule {
+  [dn children $Services]
+      by $school_admins        write
+      by $ownerusers           write
+      by [dn children $People] read
+}
+
+rule {
+  [dn exact sambaDomainName=${samba_domain}]
+    [attrs sambaSID sambaDomainName sambaNextUserRid sambaNextRid]
+      by [puavo_dn samba] write
+      by $school_admins   write
+      by $ownerusers      write
+}
+
+rule {
+  [dn exact sambaDomainName=${samba_domain}]
+      by $org_owner          write
+      by $this_school_admins write
+      by [puavo_dn samba]    write
+      by $school_admins      read
+      by $ownerusers         read
+}
+
+rule {
+  [dn subtree $System_Accounts]
+    [attrs userPassword]
+      by $org_owner          write
+      by $this_school_admins write
+      by anonymous           auth
+}
+
+rule {
+  [dn subtree $System_Accounts]
+      by $org_owner          write
+      by $this_school_admins write
+      by [puavo_dn puavo]    read
+}
+
+rule {
+  [dn subtree $System_Groups]
+    [attrs member]
+      by $org_owner          write
+      by $this_school_admins write
+}
+
+rule {
+  [dn subtree $System_Groups]
+      by $org_owner          read
+      by $this_school_admins read
+}
+
+rule {
+  dn="${ldapsuffix}"
+    [attrs entry]
+      by $school_admins          read
+      by $ownerusers             read
+      by [puavo_dn puavo]        read
+      by [puavo_dn puavo-ticket] read
+      by [puavo_dn kdc]          read
+      by [puavo_dn kadmin]       read
+      by [puavo_dn puppet]       read
+      by [puavo_dn monitor]      read
+      by [dn children $People]   read
+      by [dn subtree $Hosts]     read
+      by [systemgroup getent]    read
+      by [systemgroup orginfo]   read
+      by *                       +sxd
+}
+
+rule {
+  dn="${ldapsuffix}"
+    [attrs objectClass]
+      by $school_admins          read
+      by $ownerusers             read
+      by [puavo_dn puavo]        read
+      by [puavo_dn puavo-ticket] read
+      by [puavo_dn kdc]          read
+      by [puavo_dn kadmin]       read
+      by [puavo_dn puppet]       read
+      by [puavo_dn monitor]      read
+      by [dn children $People]   read
+      by [dn subtree $Hosts]     read
+      by [systemgroup getent]    read
+      by [systemgroup orginfo]   read
+      by *                       +sxd
 }
 
 #
