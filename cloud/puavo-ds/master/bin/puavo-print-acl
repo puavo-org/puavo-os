@@ -1,0 +1,244 @@
+#!/usr/bin/env tclsh
+
+#
+# GLOBAL VARIABLES
+#
+
+set ldapsuffix "dc=edu,dc=juhaerk,dc=net"
+set samba_domain "EDUJUHAERK"
+set rules [list]
+
+#
+# SUBROUTINES
+#
+
+proc dn {scope {_branch ""}} {
+  global ldapsuffix
+  set branch [expr { $_branch ne "" ? "${_branch}," : ""}]
+  format {dn.%s="%s%s"} $scope $branch $ldapsuffix
+}
+
+proc systemgroup {groupname} {
+  global ldapsuffix
+  format {group/puavoSystemGroup/member="cn=%s,ou=System Groups,%s"} \
+         $groupname $ldapsuffix
+}
+
+proc puavo_dn {name} {
+  format {dn.exact="uid=%s,o=puavo"} $name
+}
+
+proc rule {rulelines} {
+  global rules
+  set subst_rulelines [uplevel 1 [list subst $rulelines]]
+  set rule_elems [split $subst_rulelines]
+  set nonempty_rule_elems [lmap _ $rule_elems { expr { $_ ne "" ? $_ : [continue] } }]
+  lappend rules [join $nonempty_rule_elems " "]
+}
+
+proc _set {setspec} {
+  global ldapsuffix
+  format {set="[%s]/%s"} $ldapsuffix $setspec
+}
+
+proc set_devicetype {devtype} {
+  _set [format {user/puavoDeviceType & [%s]} $devtype]
+}
+
+proc set_owner_and_user    {} { _set "owner* & user" }
+proc set_school_admin      {} { _set "user/puavoAdminOfSchool*" }
+proc set_teacher           {} { _set "user/puavoEduPersonAffiliation & \[teacher\]" }
+proc set_this_school_admin {} { _set "this/puavoSchool & user/puavoAdminOfSchool*" }
+
+proc set_puavoversion {version} {
+  _set [format {puavoVersion & [%d]} $version]
+}
+
+#
+# some constants
+#
+
+set Devices  "ou=Devices,ou=Hosts"
+set Hosts    "ou=Hosts"
+set People   "ou=People"
+set Printers "ou=People"
+set Servers  "ou=Servers,ou=Hosts"
+
+set org_owner "group/puavoEduOrg/owner=${ldapsuffix}"
+
+#
+# RULES
+#
+
+# XXX why is this needed?
+rule {
+  [dn onelevel ou=Groups] filter="(objectClass=posixGroup)"
+    by [set_puavoversion 2]
+    none stop by * none break
+}
+
+# XXX why are these needed?
+foreach branch {Schools Roles SchoolRoles Classes} {
+  rule { [dn subtree ou=$branch,ou=Groups] by [set_puavoversion 2] none break }
+}
+
+# XXX why is this needed?
+rule {
+  [dn subtree ou=Samba,ou=Hosts]
+    by [dn children $Servers] write by * none break
+}
+
+# XXX why is this needed?
+rule {
+  [dn subtree $People] attrs="sambaNTPassword,userPassword,sambaAcctFlags"
+    by [dn children $Servers] write by * none break
+}
+
+# XXX why is this needed?
+rule {
+  [dn exact sambaDomainName=${samba_domain}] by [dn children $Servers] write by * none break
+}
+
+# XXX why is this needed?
+rule {
+  [dn exact ou=Idmap] by [dn children $Servers] write by * none break
+}
+
+# XXX why is this needed?
+# XXX comments inside rules might be useful
+rule {
+  [dn exact $Printers] attrs="ou,entry,objectClass"
+    by [dn children $Servers]
+      read by [puavo_dn slave]
+      read by [set_owner_and_user]
+      read by [dn children $People]
+      read by [systemgroup printerqueues]
+      read
+}
+
+rule {
+  [dn exact $Printers] attrs="children"
+    by [set_owner_and_user]
+    write by [dn children $Servers]
+    write by [dn children $People]
+    read by [puavo_dn slave]
+    read by [systemgroup printerqueues]
+    read
+}
+
+rule {
+  [dn children $Printers] by [set_owner_and_user]
+    write by [dn children $Servers]
+    write by [dn children $People]
+    read by [puavo_dn slave]
+    read by [systemgroup printerqueues]
+    read
+}
+
+rule {
+  [dn children $Servers] attrs="puavoDeviceCurrentImage,puavoDeviceAvailableImage"
+     by $org_owner
+     write by [set_this_school_admin]
+     write by self
+     write by [puavo_dn monitor]
+     read by [puavo_dn puavo-ticket]
+     read by [set_devicetype laptop]
+     read by [systemgroup devices]
+     read
+}
+
+rule {
+  [dn children $Devices] attrs="puavoDeviceHWInfo"
+    by [dn children $Servers]
+    write by self
+    write by $org_owner
+    read by [puavo_dn monitor]
+    read by [puavo_dn puavo-ticket]
+    read by [systemgroup devices]
+    read
+}
+
+rule {
+  [dn subtree]
+    by [dn children $Servers]
+    read by [puavo_dn slave]
+    read by * none break
+}
+
+rule {
+  [dn exact People] attrs="entry,ou,objectClass"
+    by [dn children $People]
+    read by [dn subtree $Hosts]
+    read by [systemgroup getent]
+    read by [systemgroup auth]
+    read by [puavo_dn pw-mgmt]
+    read by [puavo_dn puavo-ticket]
+    read by [puavo_dn puavo]
+    read by anonymous auth
+}
+
+rule {
+  [dn exact $People] attrs="children"
+    by [set_school_admin]
+    write by [set_owner_and_user]
+    write by [puavo_dn puavo]
+    read
+}
+
+rule {
+  [dn subtree $People] attrs="puavoAdminOfSchool"
+    by [set_owner_and_user]
+    write by users
+    read
+}
+
+rule {
+  [dn subtree $People] attrs="userPassword"
+    filter="(puavoEduPersonAffiliation=student)"
+    by [set_school_admin]
+    =azx by [set_owner_and_user]
+    =azx by [set_teacher]
+    =azx by * none break
+}
+
+rule {
+  [dn subtree $People] attrs="userPassword"
+    filter="(puavoLocked=TRUE)"
+    by $org_owner
+    =azx by [set_this_school_admin]
+    =azx by self
+    =azx
+}
+
+rule {
+  [dn subtree $People] attrs="userPassword"
+    by $org_owner
+    =azx by [set_this_school_admin]
+    =azx by [puavo_dn pw-mgmt]
+    =azx by self
+    =azx by anonymous auth
+}
+
+rule {
+  [dn subtree $People] attrs="sambaPwdLastSet,shadowLastChange"
+    filter="(puavoEduPersonAffiliation=student)"
+    by [set_school_admin]
+    write by [set_owner_and_user]
+    write by [set_teacher]
+    write by * none break
+}
+
+rule {
+
+}
+
+#
+# print rules
+#
+
+set rulenum 0
+foreach rule $rules {
+  set trimmed_rule [string trim "$rule"]
+  puts "{${rulenum}}to ${trimmed_rule}"
+  incr rulenum
+}
