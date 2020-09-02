@@ -100,12 +100,12 @@ set System_Groups   "ou=System Groups"
 
 set org_owner "group/puavoEduOrg/owner=${ldapsuffix}"
 
-set ownerusers         [ldapset_with_base "owner* & user"]        ; # XXX what does this mean?
-set schooladmins       [ldapset "user/puavoAdminOfSchool*"]
+set ownerusers                 [ldapset_with_base "owner* & user"]        ; # XXX what does this mean?
+set schooladmins               [ldapset "user/puavoAdminOfSchool*"]
 set schooladmins_or_ownerusers [ldapset [format {this/puavoSchoolAdmin* | [%s]/owner* & user} $ldapsuffix]]
-set schooladminusers   [ldapset "this/puavoSchoolAdmin* & user"]
-set teachers           [person_affiliation_set teacher]
-set this_school_admins [ldapset "this/puavoSchool & user/puavoAdminOfSchool*"]
+set schooladminusers           [ldapset "this/puavoSchoolAdmin* & user"]
+set teachers                   [person_affiliation_set teacher]
+set this_school_admins         [ldapset "this/puavoSchool & user/puavoAdminOfSchool*"]
 
 #
 # RULES
