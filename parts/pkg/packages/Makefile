@@ -46,6 +46,7 @@ packagedirs += msttcorefonts
 packagedirs += musescore-appimage
 packagedirs += netbeans
 packagedirs += nightcode
+packagedirs += novoconnect
 packagedirs += obsidian-icons
 packagedirs += ohjelmointi-opetuksessa
 packagedirs += openscad-nightly
