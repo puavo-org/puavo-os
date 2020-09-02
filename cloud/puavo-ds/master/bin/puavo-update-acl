@@ -4,6 +4,7 @@ require "erb"
 require 'readline'
 require 'ldap'
 require 'open3'
+require 'tempfile'
 require 'yaml'
 
 require 'puavo/etc'
@@ -71,10 +72,10 @@ def update_acls(suffix)
 
   Readline.readline('OK?', true)
 
-  File.open('/tmp/acl.ldif', 'w') {|f|
-    f.write "dn: #{dn}\n"
-    f.write "changetype: modify\n"
-    f.write "replace: olcAccess\n"
+  Tempfile.create do |tmpfile|
+    tmpfile.write "dn: #{ dn }\n"
+    tmpfile.write "changetype: modify\n"
+    tmpfile.write "replace: olcAccess\n"
 
     acls, stderr_str, status \
       = Open3.capture3('puavo-print-acls', suffix, samba_domain)
@@ -83,18 +84,19 @@ def update_acls(suffix)
                  + " with the following errors:\n#{ stderr_str }"
       raise errmsg
     end
-    f.write acls
-  }
+    tmpfile.write acls
+    tmpfile.close
 
-  Puavo::Execute.run(
-    [ "ldapmodify",
-      "-c",
-      "-h", PUAVO_ETC.ldap_master,
-      "-x",
-      "-D", PUAVO_ETC.ldap_dn,
-      "-Z",
-      "-w", @bindpw,
-      "-f", "/tmp/acl.ldif" ])
+    Puavo::Execute.run(
+      [ 'ldapmodify',
+        '-c',
+        '-h', PUAVO_ETC.ldap_master,
+        '-x',
+        '-D', PUAVO_ETC.ldap_dn,
+        '-Z',
+        '-w', @bindpw,
+        '-f', tmpfile.path ])
+  end
 end
 
 if organisation_name.eql?("--all")
