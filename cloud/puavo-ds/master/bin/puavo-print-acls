@@ -240,8 +240,8 @@ rule {
 
 rule {
   [dn subtree $People]
-    [attrs userPassword]
     filter="(puavoEduPersonAffiliation=student)"
+    [attrs userPassword]
       by $schooladmins  =azx
       by $ownerusers    =azx
       by $teachers      =azx
@@ -250,8 +250,8 @@ rule {
 
 rule {
   [dn subtree $People]
-    [attrs userPassword]
     filter="(puavoLocked=TRUE)"
+    [attrs userPassword]
       by $org_owner          =azx
       by $this_school_admins =azx
       by self                =azx
@@ -269,8 +269,8 @@ rule {
 
 rule {
   [dn subtree $People]
-    [attrs sambaPwdLastSet shadowLastChange]
     filter="(puavoEduPersonAffiliation=student)"
+    [attrs sambaPwdLastSet shadowLastChange]
       by $schooladmins  write
       by $ownerusers    write
       by $teachers      write
