@@ -24,6 +24,7 @@ install: install-dirs
 	install -m 744 -t $(DESTDIR)$(sbindir) bin/puavo-clone-master
 	install -m 744 -t $(DESTDIR)$(sbindir) bin/puavo-reset-kerberos-configurations
 	install -m 744 -t $(DESTDIR)$(sbindir) bin/puavo-init-ldap
+	install -m 744 -t $(DESTDIR)$(sbindir) bin/puavo-print-acls
 	install -m 744 -t $(DESTDIR)$(sbindir) bin/puavo-update-acl
 	install -m 744 -t $(DESTDIR)$(sbindir) bin/puavo-dump-all-databases
 	install -m 744 -t $(DESTDIR)$(sbindir) bin/puavo-restore-all-databases

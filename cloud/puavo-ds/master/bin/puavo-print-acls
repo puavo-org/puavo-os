@@ -1105,6 +1105,6 @@ rule {
 set rulenum 0
 foreach rule $rules {
   set trimmed_rule [string trim "$rule"]
-  puts "{${rulenum}}to ${trimmed_rule}"
+  puts "olcAccess: {${rulenum}}to ${trimmed_rule}"
   incr rulenum
 }

@@ -3,10 +3,10 @@
 require "erb"
 require 'readline'
 require 'ldap'
+require 'open3'
 require 'yaml'
 
 require 'puavo/etc'
-require 'puavo-ds/database_acl'
 require 'puavo/execute'
 
 
@@ -76,10 +76,14 @@ def update_acls(suffix)
     f.write "changetype: modify\n"
     f.write "replace: olcAccess\n"
 
-    acls = LdapAcl.generate_acls(suffix, samba_domain)
-    acls_with_olcAccess = acls.map { |s| s.sub(/^/, 'olcAccess: ') }
-    f.write acls_with_olcAccess.join('')
-
+    acls, stderr_str, status \
+      = Open3.capture3('puavo-print-acls', suffix, samba_domain)
+    unless status.success? then
+      errmsg = "puavo-print-acls returned status code #{ status.exitstatus }" \
+                 + " with the following errors:\n#{ stderr_str }"
+      raise errmsg
+    end
+    f.write acls
   }
 
   Puavo::Execute.run(
@@ -111,7 +115,7 @@ if organisation_name.eql?("--all")
 
       rescue LDAP::ResultError => e
         warn "LDAP connection failed: #{ e.message }"
-      end  
+      end
   end
 else
   # Suffix for single organisation is determined using template
