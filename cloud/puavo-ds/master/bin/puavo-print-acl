@@ -29,7 +29,11 @@ proc systemgroup {groupname} {
          $groupname $ldapsuffix
 }
 
+# XXX why sometimes exact, sometimes not?
 proc puavo_dn {name} {
+  format {dn="uid=%s,o=puavo"} $name
+}
+proc puavo_dn_exact {name} {
   format {dn.exact="uid=%s,o=puavo"} $name
 }
 
@@ -41,9 +45,13 @@ proc rule {rulelines} {
   lappend rules [join $nonempty_rule_elems " "]
 }
 
-proc ldapset {setspec} {
+proc ldapset_with_base {setspec} {
   global ldapsuffix
   format {set="[%s]/%s"} $ldapsuffix $setspec
+}
+
+proc ldapset {setspec} {
+  format {set="%s"} $setspec
 }
 
 proc devicetype_set {devtype} {
@@ -55,7 +63,7 @@ proc person_affiliation_set {affliation} {
 }
 
 proc puavoversion_set {version} {
-  ldapset [format {puavoVersion & [%d]} $version]
+  ldapset_with_base [format {puavoVersion & [%d]} $version]
 }
 
 #
@@ -68,14 +76,15 @@ set Classes         "ou=Classes,ou=Groups"
 set Desktops        "ou=Desktops"
 set Devices         "ou=Devices,ou=Hosts"
 set Domain_Admins   "cn=Domain Admins,ou=Groups"
-set Domain_Users    "cn=Domain Admins,ou=Groups"
+set Domain_Users    "cn=Domain Users,ou=Groups"
 set Files           "ou=Files,ou=Desktops"
 set Firefox         "ou=Firefox,ou=Desktops"
 set Groups          "ou=Groups"
 set Hosts           "ou=Hosts"
 set People          "ou=People"
-set Printers        "ou=People"
+set Printers        "ou=Printers"
 set Roles           "ou=Roles"
+set RolesGroups     "ou=Roles,ou=Groups"
 set Schools         "ou=Schools,ou=Groups"
 set SchoolRoles     "ou=SchoolRoles,ou=Groups"
 set Servers         "ou=Servers,ou=Hosts"
@@ -85,8 +94,10 @@ set System_Groups   "ou=System Groups"
 
 set org_owner "group/puavoEduOrg/owner=${ldapsuffix}"
 
-set ownerusers         [ldapset "owner* & user"]        ; # XXX what does this mean?
-set school_admins      [ldapset "user/puavoAdminOfSchool*"]
+set ownerusers         [ldapset_with_base "owner* & user"]        ; # XXX what does this mean?
+set schooladmins       [ldapset "user/puavoAdminOfSchool*"]
+set schooladmins_or_ownerusers [ldapset [format {this/puavoSchoolAdmin* | [%s]/owner* & user} $ldapsuffix]]
+set schooladminusers   [ldapset "this/puavoSchoolAdmin* & user"]
 set teachers           [person_affiliation_set teacher]
 set this_school_admins [ldapset "this/puavoSchool & user/puavoAdminOfSchool*"]
 
@@ -144,7 +155,7 @@ rule {
   [dn exact $Printers]
     [attrs ou entry objectClass]
       by [dn children $Servers]      read
-      by [puavo_dn slave]            read
+      by [puavo_dn_exact slave]      read
       by $ownerusers                 read
       by [dn children $People]       read
       by [systemgroup printerqueues] read
@@ -155,7 +166,7 @@ rule {
       by $ownerusers                 write
       by [dn children $Servers]      write
       by [dn children $People]       read
-      by [puavo_dn slave]            read
+      by [puavo_dn_exact slave]      read
       by [systemgroup printerqueues] read
 }
 
@@ -164,7 +175,7 @@ rule {
       by $ownerusers                 write
       by [dn children $Servers]      write
       by [dn children $People]       read
-      by [puavo_dn slave]            read
+      by [puavo_dn_exact slave]      read
       by [systemgroup printerqueues] read
 }
 
@@ -186,6 +197,7 @@ rule {
       by [dn children $Servers]  write
       by self                    write
       by $org_owner              read
+      by $this_school_admins     read
       by [puavo_dn monitor]      read
       by [puavo_dn puavo-ticket] read
       by [systemgroup devices]   read
@@ -194,12 +206,12 @@ rule {
 rule {
   [dn subtree]
       by [dn children $Servers] read
-      by [puavo_dn slave]       read
+      by [puavo_dn_exact slave] read
       by *                      none break
 }
 
 rule {
-  [dn exact People]
+  [dn exact $People]
     [attrs entry ou objectClass]
       by [dn children $People]   read
       by [dn subtree  $Hosts]    read
@@ -207,16 +219,16 @@ rule {
       by [systemgroup auth]      read
       by [puavo_dn pw-mgmt]      read
       by [puavo_dn puavo-ticket] read
-      by [puavo_dn puavo]        read
+      by [puavo_dn_exact puavo]  read
       by anonymous               auth
 }
 
 rule {
   [dn exact $People]
     [attrs children]
-      by $school_admins   write
-      by $ownerusers      write
-      by [puavo_dn puavo] read
+      by $schooladmins          write
+      by $ownerusers            write
+      by [puavo_dn_exact puavo] read
 }
 
 rule {
@@ -230,7 +242,7 @@ rule {
   [dn subtree $People]
     [attrs userPassword]
     filter="(puavoEduPersonAffiliation=student)"
-      by $school_admins =azx
+      by $schooladmins  =azx
       by $ownerusers    =azx
       by $teachers      =azx
       by *              none break
@@ -259,7 +271,7 @@ rule {
   [dn subtree $People]
     [attrs sambaPwdLastSet shadowLastChange]
     filter="(puavoEduPersonAffiliation=student)"
-      by $school_admins write
+      by $schooladmins  write
       by $ownerusers    write
       by $teachers      write
       by *              none break
@@ -310,7 +322,7 @@ rule {
       by $org_owner                write
       by $this_school_admins       write
       by self                      read
-      by $school_admins            read
+      by $schooladmins             read
       by $ownerusers               read
       by $teachers                 read
       by [systemgroup addressbook] read
@@ -340,13 +352,13 @@ rule {
 rule {
   [dn subtree $People]
     [attrs jpegPhoto mail preferredLanguage puavoLocale telephoneNumber]
-      by $org_owner               write
-      by $this_school_admins      write
-      by self                     write
-      by [systemgroup addresbook] read
-      by [puavo_dn pw-mgmt]       read
-      by [puavo_dn puavo]         read
-      by [puavo_dn puavo-ticket]  read
+      by $org_owner                write
+      by $this_school_admins       write
+      by self                      write
+      by [systemgroup addressbook] read
+      by [puavo_dn pw-mgmt]        read
+      by [puavo_dn_exact puavo]    read
+      by [puavo_dn puavo-ticket]   read
 }
 
 rule {
@@ -354,7 +366,7 @@ rule {
     [attrs puavoAcceptedTerms]
       by $org_owner              write
       by $this_school_admins     write
-      by [puavo_dn puavo]        read
+      by [puavo_dn_exact puavo]  read
       by [puavo_dn puavo-ticket] read
       by self                    write
 }
@@ -365,7 +377,7 @@ rule {
       by $org_owner              write
       by $this_school_admins     write
       by self                    read
-      by [puavo_dn puavo]        read
+      by [puavo_dn_exact puavo]  read
       by [puavo_dn puavo-ticket] read
       by [systemgroup getent]    read
 }
@@ -388,16 +400,16 @@ rule {
 rule {
   [dn exact $Roles]
     [attrs entry ou objectClass]
-      by $school_admins read
-      by $ownerusers    read
+      by $schooladmins read
+      by $ownerusers   read
 }
 
 
 rule {
   [dn exact $Roles]
     [attrs children]
-      by $school_admins write
-      by $ownerusers    write
+      by $schooladmins write
+      by $ownerusers   write
 }
 
 rule {
@@ -414,7 +426,7 @@ rule {
 
 rule {
   [dn exact $Hosts]
-      by $school_admins          read
+      by $schooladmins           read
       by $ownerusers             read
       by [puavo_dn puppet]       read
       by [puavo_dn monitor]      read
@@ -428,7 +440,7 @@ rule {
 rule {
   [dn exact $Devices]
     [attrs entry ou objectClass]
-      by $school_admins          read
+      by $schooladmins           read
       by $ownerusers             read
       by [puavo_dn puppet]       read
       by [puavo_dn monitor]      read
@@ -442,7 +454,7 @@ rule {
 rule {
   [dn exact $Devices]
     [attrs children]
-      by $school_admins          write
+      by $schooladmins           write
       by $ownerusers             write
       by [puavo_dn puppet]       read
       by [puavo_dn monitor]      read
@@ -492,7 +504,7 @@ rule {
       by [puavo_dn puppet]       read
       by [puavo_dn monitor]      read
       by [puavo_dn puavo-ticket] read
-      by [puavo_dn devices]      read
+      by [systemgroup devices]   read
       by self                    read
       by anonymous               auth
 }
@@ -504,7 +516,7 @@ rule {
       by [puavo_dn puppet]       read
       by [puavo_dn monitor]      read
       by [puavo_dn puavo-ticket] read
-      by $school_admins          read
+      by $schooladmins           read
       by [systemgroup servers]   read
       by anonymous               auth
 }
@@ -564,8 +576,8 @@ rule {
 rule {
   [dn exact $Domain_Users]
     [attrs memberUid]
-      by $school_admins write
-      by $ownerusers    write
+      by $schooladmins write
+      by $ownerusers   write
 }
 
 rule {
@@ -575,14 +587,14 @@ rule {
 
 rule {
   [dn exact $Domain_Users]
-    by $school_admins read
-    by $ownerusers    read
+    by $schooladmins read
+    by $ownerusers   read
 }
 
 rule {
   [dn exact $Groups]
     [attrs entry ou objectClass]
-      by $school_admins          read
+      by $schooladmins           read
       by $ownerusers             read
       by [puavo_dn puavo-ticket] read
       by [dn children $People]   read
@@ -593,7 +605,7 @@ rule {
 rule {
   [dn exact $Groups]
     [attrs children]
-      by $school_admins          write
+      by $schooladmins           write
       by $ownerusers             write
       by [dn children $People]   read
       by [dn subtree $Hosts]     read
@@ -604,7 +616,7 @@ rule {
 rule {
   [dn exact $Schools]
     [attrs entry ou objectClass]
-      by $school_admins          read
+      by $schooladmins           read
       by $ownerusers             read
       by [puavo_dn puavo-ticket] read
       by [dn children $People]   read
@@ -615,7 +627,7 @@ rule {
 rule {
   [dn exact $Schools]
     [attrs children]
-      by $school_admins          write
+      by $schooladmins           write
       by $ownerusers             write
       by [dn children $People]   read
       by [dn subtree $Hosts]     read
@@ -633,9 +645,9 @@ rule {
 }
 
 rule {
-  [dn exact $Roles]
+  [dn exact $RolesGroups]
     [attrs entry ou objectClass]
-      by $school_admins          read
+      by $schooladmins           read
       by $ownerusers             read
       by [puavo_dn puavo-ticket] read
       by [dn children $People]   read
@@ -644,9 +656,9 @@ rule {
 }
 
 rule {
-  [dn exact $Roles]
+  [dn exact $RolesGroups]
     [attrs children]
-      by $school_admins          write
+      by $schooladmins           write
       by $ownerusers             write
       by [dn children $People]   read
       by [dn subtree $Hosts]     read
@@ -655,7 +667,7 @@ rule {
 }
 
 rule {
-  [dn subtree $Roles]
+  [dn subtree $RolesGroups]
     [attrs member memberUid]
       by $org_owner              write
       by $this_school_admins     write
@@ -666,7 +678,7 @@ rule {
 }
 
 rule {
-  [dn subtree $Roles]
+  [dn subtree $RolesGroups]
       by $ownerusers             write
       by [dn children $People]   read
       by [dn subtree $Hosts]     read
@@ -677,7 +689,7 @@ rule {
 rule {
   [dn exact $SchoolRoles]
     [attrs entry ou objectClass]
-      by $school_admins          read
+      by $schooladmins           read
       by $ownerusers             read
       by [puavo_dn puavo-ticket] read
       by [dn children $People]   read
@@ -688,7 +700,7 @@ rule {
 rule {
   [dn exact $SchoolRoles]
     [attrs children]
-      by $school_admins          write
+      by $schooladmins           write
       by $ownerusers             write
       by [dn children $People]   read
       by [dn subtree $Hosts]     read
@@ -719,7 +731,7 @@ rule {
 rule {
   [dn exact $Classes]
     [attrs entry ou objectClass]
-      by $school_admins          read
+      by $schooladmins           read
       by $ownerusers             read
       by [puavo_dn puavo-ticket] read
       by [dn children $People]   read
@@ -730,7 +742,7 @@ rule {
 rule {
   [dn exact $Classes]
     [attrs children]
-      by $school_admins          write
+      by $schooladmins           write
       by $ownerusers             write
       by [dn children $People]   read
       by [dn subtree $Hosts]     read
@@ -776,10 +788,10 @@ rule {
     filter=(objectClass=puavoSchool)
     [attrs gidNumber cn puavoId objectClass]
       by $ownerusers             +azrwsc
-      by $this_school_admins     +rwsc
+      by $schooladminusers       +rwsc
       by [dn children $People]   read
       by [dn subtree $Hosts]     read
-      by [puavo_dn puavo]        read
+      by [puavo_dn_exact puavo]  read
       by [puavo_dn puavo-ticket] read
       by [systemgroup getent]    read break
 }
@@ -806,29 +818,29 @@ rule {
            puavoAutomaticImageUpdates puavoDeviceOffHour puavoDeviceOnHour \
            puavoExternalFeed puavoMountpoint puavoTag puavoWlanChannel \
            puavoWlanSSID]
-      by $this_school_admins     write
-      by [dn children $People]   read
-      by [dn subtree $Hosts]     read
-      by [puavo_dn puavo-ticket] read
-      by [systemgroup getent]    read break
+      by $schooladmins_or_ownerusers write
+      by [dn children $People]       read
+      by [dn subtree $Hosts]         read
+      by [puavo_dn puavo-ticket]     read
+      by [systemgroup getent]        read break
 }
 
 rule {
   [dn subtree $Groups]
     filter=(objectClass=puavoSchool)
       by $ownerusers             write
-      by $this_school_admins     +rscxd
+      by $schooladminusers       +rscxd
       by [dn children $People]   read
       by [dn subtree $Hosts]     read
       by [systemgroup getent]    read
-      by [puavo_dn puavo]        read
+      by [puavo_dn_exact puavo]  read
       by [puavo_dn puavo-ticket] read
 }
 
 rule {
   [dn exact $Desktops]
     [attrs entry ou objectClass]
-      by $school_admins      read
+      by $schooladmins       read
       by $ownerusers         read
       by [dn subtree $Hosts] read
 }
@@ -843,7 +855,7 @@ rule {
 rule {
   [dn exact $Files]
     [attrs entry ou objectClass]
-      by $school_admins      read
+      by $schooladmins       read
       by $ownerusers         read
       by [dn subtree $Hosts] read
 }
@@ -851,14 +863,14 @@ rule {
 rule {
   [dn exact $Files]
     [attrs children]
-      by $school_admins      write
+      by $schooladmins       write
       by $ownerusers         write
       by [dn subtree $Hosts] read
 }
 
 rule {
   [dn children $Files]
-    by $school_admins      write
+    by $schooladmins       write
     by $ownerusers         write
     by [dn subtree $Hosts] read
 }
@@ -872,14 +884,14 @@ rule {
 rule {
   [dn exact $Firefox]
     [attrs children]
-      by $school_admins        write
+      by $schooladmins         write
       by $ownerusers           write
       by [dn children $People] read
 }
 
 rule {
   [dn children $Firefox]
-    by $school_admins        write
+    by $schooladmins         write
     by $ownerusers           write
     by [dn children $People] read
 }
@@ -893,14 +905,14 @@ rule {
 rule {
   [dn exact $Applications]
     [attrs children]
-      by $school_admins        write
+      by $schooladmins         write
       by $ownerusers           write
       by [dn children $People] read
 }
 
 rule {
   [dn children $Applications]
-    by $school_admins        write
+    by $schooladmins         write
     by $ownerusers           write
     by [dn children $People] read
 }
@@ -914,14 +926,14 @@ rule {
 rule {
   [dn exact $Bookmarks]
     [attrs children]
-      by $school_admins        write
+      by $schooladmins         write
       by $ownerusers           write
       by [dn children $People] read
 }
 
 rule {
   [dn children $Bookmarks]
-      by $school_admins        write
+      by $schooladmins         write
       by $ownerusers           write
       by [dn children $People] read
 }
@@ -935,14 +947,14 @@ rule {
 rule {
   [dn exact $Services]
     [attrs children]
-      by $school_admins        write
+      by $schooladmins         write
       by $ownerusers           write
       by [dn children $People] read
 }
 
 rule {
   [dn children $Services]
-      by $school_admins        write
+      by $schooladmins         write
       by $ownerusers           write
       by [dn children $People] read
 }
@@ -951,7 +963,7 @@ rule {
   [dn exact sambaDomainName=${samba_domain}]
     [attrs sambaSID sambaDomainName sambaNextUserRid sambaNextRid]
       by [puavo_dn samba] write
-      by $school_admins   write
+      by $schooladmins    write
       by $ownerusers      write
 }
 
@@ -960,7 +972,7 @@ rule {
       by $org_owner          write
       by $this_school_admins write
       by [puavo_dn samba]    write
-      by $school_admins      read
+      by $schooladmins       read
       by $ownerusers         read
 }
 
@@ -974,9 +986,9 @@ rule {
 
 rule {
   [dn subtree $System_Accounts]
-      by $org_owner          write
-      by $this_school_admins write
-      by [puavo_dn puavo]    read
+      by $org_owner             write
+      by $this_school_admins    write
+      by [puavo_dn_exact puavo] read
 }
 
 rule {
@@ -995,12 +1007,12 @@ rule {
 rule {
   dn="${ldapsuffix}"
     [attrs entry]
-      by $school_admins          read
+      by $schooladmins           read
       by $ownerusers             read
-      by [puavo_dn puavo]        read
+      by [puavo_dn_exact puavo]  read
       by [puavo_dn puavo-ticket] read
-      by [puavo_dn kdc]          read
-      by [puavo_dn kadmin]       read
+      by [puavo_dn_exact kdc]    read
+      by [puavo_dn_exact kadmin] read
       by [puavo_dn puppet]       read
       by [puavo_dn monitor]      read
       by [dn children $People]   read
@@ -1013,18 +1025,62 @@ rule {
 rule {
   dn="${ldapsuffix}"
     [attrs objectClass]
-      by $school_admins          read
+      by $schooladmins           read
       by $ownerusers             read
-      by [puavo_dn puavo]        read
+      by [puavo_dn_exact puavo]  read
       by [puavo_dn puavo-ticket] read
-      by [puavo_dn kdc]          read
-      by [puavo_dn kadmin]       read
+      by [puavo_dn_exact kdc]    read
+      by [puavo_dn_exact kadmin] read
       by [puavo_dn puppet]       read
       by [puavo_dn monitor]      read
       by [dn children $People]   read
       by [dn subtree $Hosts]     read
       by [systemgroup getent]    read
       by [systemgroup orginfo]   read
+      by *                       +sxd
+}
+
+rule {
+  dn="${ldapsuffix}"
+    [attrs puavoEduOrgAbbreviation st l street postalCode postalAddress telephoneNumber postOfficeBox facsimileTelephoneNumber description preferredLanguage puavoLocale puavoTimezone puavoKeyboardLayout puavoKeyboardVariant eduOrgLegalName o owner eduOrgHomePageURI puavoWlanSSID puavoWlanChannel puavoDeviceImage puavoAllowGuest puavoPersonalDevice puavoActiveService puavoDeviceOnHour puavoDeviceOffHour puavoDeviceAutoPowerOffMode puavoImageSeriesSourceURL puavoAutomaticImageUpdates puavoConf]
+      by $ownerusers             write
+      by $schooladmins           read
+      by $ownerusers             read
+      by [puavo_dn_exact puavo]  read
+      by [puavo_dn puavo-ticket] read
+      by [puavo_dn_exact kdc]    read
+      by [puavo_dn_exact kadmin] read
+      by [puavo_dn puppet]       read
+      by [puavo_dn monitor]      read
+      by [dn children $People]   read
+      by [dn subtree $Hosts]     read
+      by [systemgroup getent]    read
+      by [systemgroup orginfo]   read
+      by * +sxd
+}
+
+rule {
+  dn="${ldapsuffix}"
+    [attrs owner puavoDomain puavoPuppetHost]
+       by $schooladmins           read
+       by $ownerusers             read
+       by [puavo_dn_exact puavo]  read
+       by [puavo_dn puavo-ticket] read
+       by [puavo_dn puppet]       read
+       by [puavo_dn monitor]      read
+       by [systemgroup orginfo]   read
+}
+
+rule {
+  dn="${ldapsuffix}"
+      by $schooladmins           read
+      by $ownerusers             read
+      by [puavo_dn_exact puavo]  read
+      by [puavo_dn puavo-ticket] read
+      by [puavo_dn_exact kdc]    read
+      by [puavo_dn_exact kadmin] read
+      by [puavo_dn puppet]       read
+      by [puavo_dn monitor]      read
       by *                       +sxd
 }
 
