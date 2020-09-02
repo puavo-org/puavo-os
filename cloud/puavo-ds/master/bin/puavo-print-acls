@@ -5,8 +5,14 @@
 #
 
 # XXX these should come from somewhere
-set ldapsuffix "dc=edu,dc=juhaerk,dc=net"
-set samba_domain "EDUJUHAERK"
+set ldapsuffix [lindex $argv 0]
+set samba_domain [lindex $argv 1]
+
+if {[llength $argv] != 2 || $ldapsuffix eq "" || $samba_domain eq ""} {
+  puts stderr "usage: puavo-print-acl ldapsuffix samba_domain"
+  exit 1
+}
+
 set rules [list]
 
 #
@@ -279,7 +285,7 @@ rule {
 
 rule {
   [dn subtree $People]
-    [attrs sambaPwdLastSet,shadowLastChange]
+    [attrs sambaPwdLastSet shadowLastChange]
       by $org_owner          write
       by $this_school_admins write
       by self                write
@@ -488,7 +494,8 @@ rule {
 
 rule {
   [dn children $Devices]
-    [attrs puavoDeviceCurrentImage puavoDeviceMonitorsXML puavoDevicePrimaryUser puavoDeviceAvailableImage]
+    [attrs puavoDeviceCurrentImage puavoDeviceMonitorsXML \
+           puavoDevicePrimaryUser puavoDeviceAvailableImage]
       by $org_owner              write
       by $this_school_admins     write
       by self                    write
@@ -1042,7 +1049,14 @@ rule {
 
 rule {
   dn="${ldapsuffix}"
-    [attrs puavoEduOrgAbbreviation st l street postalCode postalAddress telephoneNumber postOfficeBox facsimileTelephoneNumber description preferredLanguage puavoLocale puavoTimezone puavoKeyboardLayout puavoKeyboardVariant eduOrgLegalName o owner eduOrgHomePageURI puavoWlanSSID puavoWlanChannel puavoDeviceImage puavoAllowGuest puavoPersonalDevice puavoActiveService puavoDeviceOnHour puavoDeviceOffHour puavoDeviceAutoPowerOffMode puavoImageSeriesSourceURL puavoAutomaticImageUpdates puavoConf]
+    [attrs puavoEduOrgAbbreviation st l street postalCode postalAddress \
+           telephoneNumber postOfficeBox facsimileTelephoneNumber description \
+           preferredLanguage puavoLocale puavoTimezone puavoKeyboardLayout \
+           puavoKeyboardVariant eduOrgLegalName o owner eduOrgHomePageURI \
+           puavoWlanSSID puavoWlanChannel puavoDeviceImage puavoAllowGuest \
+           puavoPersonalDevice puavoActiveService puavoDeviceOnHour \
+           puavoDeviceOffHour puavoDeviceAutoPowerOffMode \
+           puavoImageSeriesSourceURL puavoAutomaticImageUpdates puavoConf]
       by $ownerusers             write
       by $schooladmins           read
       by $ownerusers             read
