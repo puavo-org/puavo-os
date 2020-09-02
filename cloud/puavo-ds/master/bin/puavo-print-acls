@@ -73,15 +73,12 @@ proc person_affiliation_set {affliation} {
 # some constants
 #
 
-set Applications    "ou=Applications,ou=Desktops"
-set Bookmarks       "ou=Bookmarks,ou=Desktops"
 set Classes         "ou=Classes,ou=Groups"
 set Desktops        "ou=Desktops"
 set Devices         "ou=Devices,ou=Hosts"
 set Domain_Admins   "cn=Domain Admins,ou=Groups"
 set Domain_Users    "cn=Domain Users,ou=Groups"
 set Files           "ou=Files,ou=Desktops"
-set Firefox         "ou=Firefox,ou=Desktops"
 set Groups          "ou=Groups"
 set Hosts           "ou=Hosts"
 set People          "ou=People"
@@ -91,7 +88,6 @@ set RolesGroups     "ou=Roles,ou=Groups"
 set Schools         "ou=Schools,ou=Groups"
 set SchoolRoles     "ou=SchoolRoles,ou=Groups"
 set Servers         "ou=Servers,ou=Hosts"
-set Services        "ou=Services,ou=Desktops"
 set System_Accounts "ou=System Accounts"
 set System_Groups   "ou=System Groups"
 
@@ -856,90 +852,6 @@ rule {
     by $schooladmins       write
     by $ownerusers         write
     by [dn subtree $Hosts] read
-}
-
-rule {
-  [dn exact $Firefox]
-    [attrs entry ou objectClass]
-      by [dn children $People] read
-}
-
-rule {
-  [dn exact $Firefox]
-    [attrs children]
-      by $schooladmins         write
-      by $ownerusers           write
-      by [dn children $People] read
-}
-
-rule {
-  [dn children $Firefox]
-    by $schooladmins         write
-    by $ownerusers           write
-    by [dn children $People] read
-}
-
-rule {
-  [dn exact $Applications]
-    [attrs entry ou objectClass]
-      by [dn children $People] read
-}
-
-rule {
-  [dn exact $Applications]
-    [attrs children]
-      by $schooladmins         write
-      by $ownerusers           write
-      by [dn children $People] read
-}
-
-rule {
-  [dn children $Applications]
-    by $schooladmins         write
-    by $ownerusers           write
-    by [dn children $People] read
-}
-
-rule {
-  [dn exact $Bookmarks]
-    [attrs entry ou objectClass]
-      by [dn children $People] read
-}
-
-rule {
-  [dn exact $Bookmarks]
-    [attrs children]
-      by $schooladmins         write
-      by $ownerusers           write
-      by [dn children $People] read
-}
-
-rule {
-  [dn children $Bookmarks]
-      by $schooladmins         write
-      by $ownerusers           write
-      by [dn children $People] read
-}
-
-rule {
-  [dn exact $Services]
-    [attrs entry ou objectClass]
-      by [dn children $People] read
-}
-
-rule {
-  [dn exact $Services]
-    [attrs children]
-      by $schooladmins         write
-      by $ownerusers           write
-      by [dn children $People] read
-}
-
-rule {
-  [dn children $Services]
-      by $schooladmins         write
-      by $ownerusers           write
-      by [dn children $People] read
 }
 
 rule {
