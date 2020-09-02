@@ -69,10 +69,6 @@ proc person_affiliation_set {affliation} {
   ldapset [format {user/puavoEduPersonAffiliation & [%s]} $affliation]
 }
 
-proc puavoversion_set {version} {
-  ldapset_with_base [format {puavoVersion & [%d]} $version]
-}
-
 #
 # some constants
 #
@@ -111,20 +107,6 @@ set this_school_admins         [ldapset "this/puavoSchool & user/puavoAdminOfSch
 #
 # RULES
 #
-
-rule {
-  [dn onelevel ou=Groups]
-    filter="(objectClass=posixGroup)"
-      by [puavoversion_set 2] none stop
-      by *                    none break
-}
-
-foreach branch {Schools Roles SchoolRoles Classes} {
-  rule {
-    [dn subtree ou=$branch,ou=Groups]
-        by [puavoversion_set 2] none break
-  }
-}
 
 rule {
   [dn subtree ou=Samba,ou=Hosts]
