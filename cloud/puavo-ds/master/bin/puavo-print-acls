@@ -45,7 +45,8 @@ proc puavo_dn_exact {name} {
 
 proc rule {rulelines} {
   global rules
-  set subst_rulelines [uplevel 1 [list subst $rulelines]]
+  set uncommented_rulelines [regsub -all -line {#.*$} $rulelines ""]
+  set subst_rulelines [uplevel 1 [list subst $uncommented_rulelines]]
   set rule_elems [split $subst_rulelines]
   set nonempty_rule_elems [lmap _ $rule_elems { expr { $_ ne "" ? $_ : [continue] } }]
   lappend rules [join $nonempty_rule_elems " "]
@@ -111,29 +112,26 @@ set this_school_admins         [ldapset "this/puavoSchool & user/puavoAdminOfSch
 # RULES
 #
 
-# XXX why is this needed?
 rule {
-  [dn onelevel ou=Groups] filter="(objectClass=posixGroup)"
-    by [puavoversion_set 2] none stop
-    by *                    none break
+  [dn onelevel ou=Groups]
+    filter="(objectClass=posixGroup)"
+      by [puavoversion_set 2] none stop
+      by *                    none break
 }
 
-# XXX why are these needed?
 foreach branch {Schools Roles SchoolRoles Classes} {
   rule {
     [dn subtree ou=$branch,ou=Groups]
-      by [puavoversion_set 2] none break
+        by [puavoversion_set 2] none break
   }
 }
 
-# XXX why is this needed?
 rule {
   [dn subtree ou=Samba,ou=Hosts]
-    by [dn children $Servers] write
-    by *                      none break
+      by [dn children $Servers] write
+      by *                      none break
 }
 
-# XXX why is this needed?
 rule {
   [dn subtree $People]
     [attrs sambaNTPassword userPassword sambaAcctFlags]
@@ -141,22 +139,18 @@ rule {
       by *                      none break
 }
 
-# XXX why is this needed?
 rule {
   [dn exact sambaDomainName=${samba_domain}]
       by [dn children $Servers] write
       by *                      none break
 }
 
-# XXX why is this needed?
 rule {
   [dn exact ou=Idmap]
       by [dn children $Servers] write
       by *                      none break
 }
 
-# XXX why is this needed?
-# XXX comments inside rules might be useful
 rule {
   [dn exact $Printers]
     [attrs ou entry objectClass]
