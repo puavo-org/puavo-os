@@ -87,6 +87,8 @@ Nm_config_directory = '/state/etc/NetworkManager/system-connections'
 Puavo_network_label = '# automatically generated from Puavo'
 
 class Network
+  attr_reader :id
+
   def initialize(id)
     raise "Network id is not set" if (id.nil? || id.empty?)
 
@@ -412,39 +414,40 @@ end
 
 puavo_networks = []
 
-networks.each do |network|
-  puavo_networks << network['ssid']
-
-  eap_network_fn = lambda do |wlan_class, network|
-                     wlan_class.new(network['ssid'],
-                                    network['identity'],
-                                    network['password'],
-                                    network['certs'],
-                                    network['phase2_auth'])
+networks.each do |network_spec|
+  eap_network_fn = lambda do |network_class, network_spec|
+                     network_class.new(network_spec['ssid'],
+                                       network_spec['identity'],
+                                       network_spec['password'],
+                                       network_spec['certs'],
+                                       network_spec['phase2_auth'])
                    end
 
   begin
-    wlan \
-      = case network['type']
+    network \
+      = case network_spec['type']
           when 'eap-peap'
-            eap_network_fn.call(Wlan::Eap::Peap, network)
+            eap_network_fn.call(Wlan::Eap::Peap, network_spec)
           when 'eap-tls'
-            eap_network_fn.call(Wlan::Eap::Tls, network)
+            eap_network_fn.call(Wlan::Eap::Tls, network_spec)
           when 'eap-ttls'
-            eap_network_fn.call(Wlan::Eap::Ttls, network)
+            eap_network_fn.call(Wlan::Eap::Ttls, network_spec)
           when 'gsm'
-            Gsm.new(network['id'], network['apn'], network['number'])
+            Gsm.new(network_spec['id'],
+                    network_spec['apn'],
+                    network_spec['number'])
           when 'open'
-            Wlan::Open.new(network['ssid'])
+            Wlan::Open.new(network_spec['ssid'])
           when 'psk'
-            Wlan::Psk.new(network['ssid'], network['password'])
+            Wlan::Psk.new(network_spec['ssid'], network_spec['password'])
           else
-            warn "Unsupported wlan type #{ network['type'] }"
+            warn "Unsupported wlan type #{ network_spec['type'] }"
             nil
         end
 
-    if wlan then
-      wlan.update_file
+    if network then
+      network.update_file
+      puavo_networks << network.id
     end
   rescue StandardError => e
     warn "Problem applying network settings: #{ e.message }"
@@ -456,18 +459,18 @@ end
 Dir.glob("#{ Nm_config_directory }/puavo-*") do |nm_conf_path|
   begin
     is_automatic = false
-    ssid = ''
+    id = ''
 
     File.readlines(nm_conf_path).each do |line|
       case line.chomp
         when Puavo_network_label
           is_automatic = true
-        when /^ssid=(.*)$/
-          ssid = $1
+        when /^id=(.*)$/
+          id = $1
       end
     end
 
-    if !puavo_networks.include?(ssid) && is_automatic then
+    if !puavo_networks.include?(id) && is_automatic then
       File.unlink(nm_conf_path)
     end
   rescue StandardError => e
