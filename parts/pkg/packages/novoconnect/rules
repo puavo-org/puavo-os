@@ -1,0 +1,34 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+novo_links='
+  /opt/novo/novoconnect_software
+  /usr/bin/novoconnect-software
+  /usr/share/appdata/novoconnect-software.appdata.xml
+  /usr/share/applications/novoconnect-software.desktop
+  /usr/share/icons/novoconnect-software-icon.png
+'
+
+case "${command}" in
+  configure)
+    upstream_dir=$1
+    for f in $novo_links; do
+      mkdir -p "$(dirname "$f")"
+      ln -fns -T "${upstream_dir}/${f}" "$f"
+    done
+    ;;
+  unconfigure)
+    rm -f $novo_links
+    ;;
+  unpack)
+    upstream_pack=$1
+    upstream_dir=$2
+    dpkg-deb -x "$upstream_pack" "$upstream_dir"
+    ;;
+  *)
+    ;;
+esac
