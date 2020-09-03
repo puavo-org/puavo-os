@@ -44,6 +44,12 @@
 #     "wlan_ap":  null,
 #     "identity": "Dumbledore",
 #     "password": "H0rcrux"
+#   },
+#   {
+#     "type":     "gsm",
+#     "id":       "DNA Postpaid (contract) public IP address",
+#     "apn":      "data.dna.fi",
+#     "number":   "*99#"
 #   }
 # ]
 #
@@ -78,21 +84,19 @@ require 'json'
 require 'uuidtools'
 
 Nm_config_directory = '/state/etc/NetworkManager/system-connections'
-Puavo_wlan_label = '# automatically generated from Puavo'
+Puavo_network_label = '# automatically generated from Puavo'
 
-class Wlan
-  def initialize(ssid)
-    raise "Wlan ssid is not set" if (ssid.nil? || ssid.empty?)
+class Network
+  def initialize(id)
+    raise "Network id is not set" if (id.nil? || id.empty?)
 
-    @id   = "puavo-#{ ssid.scan(/[[:alnum:]_-]/).join }"
-    @ssid = ssid
-
+    @id = "puavo-#{ id }"
     # try to read uuid from the old config file, or generate with uuidgen
     @uuid = read_uuid_from_config || uuidgen
   end
 
   def config(config_text)
-    Puavo_wlan_label + "\n" + config_text
+    Puavo_network_label + "\n" + config_text
   end
 
   def nm_config_path
@@ -136,6 +140,54 @@ class Wlan
 
   def uuidgen
     UUIDTools::UUID.random_create.to_s
+  end
+end
+
+class Gsm < Network
+  def initialize(id, apn, number)
+    super(id)
+
+    raise "Gsm network apn is not set"    if (apn.nil?    || apn.empty?)
+    raise "Gsm network number is not set" if (number.nil? || number.empty?)
+
+    @apn = apn
+    @number = number
+  end
+
+  def config
+    super(<<"EOF")
+[connection]
+id=#{ @id }
+uuid=#{ @uuid }
+type=gsm
+permissions=
+
+[gsm]
+apn=#{ @apn }
+number=#{ @number }
+
+[serial]
+baud=115200
+
+[ipv4]
+dns-search=
+method=auto
+
+[ipv6]
+addr-gen-mode=stable-privacy
+dns-search=
+method=ignore
+EOF
+  end
+end
+
+class Wlan < Network
+  def initialize(ssid)
+    raise "Wlan ssid is not set" if (ssid.nil? || ssid.empty?)
+
+    super(ssid.scan(/[[:alnum:]_-]/).join)
+
+    @ssid = ssid
   end
 end
 
@@ -313,7 +365,6 @@ end
 
 class Wlan::Psk < Wlan
   def initialize(ssid, psk)
-    raise "Wlan ssid is not set" if (ssid.nil? || ssid.empty?)
     raise "Wlan password is not set for ssid=#{ ssid }" \
       if (psk.nil? || psk.empty?)
     @psk = psk
@@ -381,12 +432,15 @@ networks.each do |network|
             eap_network_fn.call(Wlan::Eap::Tls, network)
           when 'eap-ttls'
             eap_network_fn.call(Wlan::Eap::Ttls, network)
+          when 'gsm'
+            Gsm.new(network['id'], network['apn'], network['number'])
           when 'open'
             Wlan::Open.new(network['ssid'])
           when 'psk'
             Wlan::Psk.new(network['ssid'], network['password'])
           else
             warn "Unsupported wlan type #{ network['type'] }"
+            nil
         end
 
     if wlan then
@@ -406,7 +460,7 @@ Dir.glob("#{ Nm_config_directory }/puavo-*") do |nm_conf_path|
 
     File.readlines(nm_conf_path).each do |line|
       case line.chomp
-        when Puavo_wlan_label
+        when Puavo_network_label
           is_automatic = true
         when /^ssid=(.*)$/
           ssid = $1
