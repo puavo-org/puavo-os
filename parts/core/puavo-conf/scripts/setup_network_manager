@@ -69,6 +69,9 @@ status = 0
 begin
   no_autoconnect_networks \
     = JSON.parse( puavoconf.get('puavo.wireless.nm.no_autoconnect_networks') )
+  raise 'puavo.wireless.nm.no_autoconnect_networks is in unsupported format' \
+    unless no_autoconnect_networks.kind_of?(Array) \
+             && no_autoconnect_networks.all? { |x| x.kind_of?(String) }
 rescue StandardError => e
   warn 'Problem parsing puavo.wireless.nm.no_autoconnect_networks:' \
          + " #{ e.message }"
@@ -482,20 +485,24 @@ end
 
 # Add autoconnect=false to network-connections as suggested by
 # puavo.wireless.nm.no_autoconnect_networks puavo-conf variable.
+# These might be some other networks than configured in Puavo.
+# This goes one way, networks are never marked as "autoconnect=true",
+# except for Puavo-networks (implicitly) which are created before
+# this gets executed.
 Dir.glob("#{ Nm_config_directory }/*") do |nm_conf_path|
   begin
-    add_autoconnect = false
+    add_autoconnect_false = false
 
     lines = File.readlines(nm_conf_path)
     lines.each do |line|
       match = line.chomp.match(/^ssid=(.*)$/)
       if match && no_autoconnect_networks.include?(match[1]) then
-        add_autoconnect = true
+        add_autoconnect_false = true
         break
       end
     end
 
-    next unless add_autoconnect
+    next unless add_autoconnect_false
 
     autoconnect_written = false
 
