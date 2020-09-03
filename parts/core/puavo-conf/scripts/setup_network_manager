@@ -467,10 +467,7 @@ Dir.glob("#{ Nm_config_directory }/puavo-*") do |nm_conf_path|
       end
     end
 
-    # XXX Add "&& is_automatic" later to the following test so that
-    # XXX user generated networks with "puavo-"-prefix can be allowed
-    # XXX (currently user can not have a network with "puavo-*"-ssid).
-    if !puavo_networks.include?(ssid) then
+    if !puavo_networks.include?(ssid) && is_automatic then
       File.unlink(nm_conf_path)
     end
   rescue StandardError => e
