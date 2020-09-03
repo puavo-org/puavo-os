@@ -1,3 +1,0 @@
-# HP hs3110 (Huawei MU736)
-ATTR{idVendor}=="03f0", ATTR{idProduct}=="521d", RUN+="usb_modeswitch '%b/%k'"
-ATTR{idVendor}=="03f0", ATTR{idProduct}=="521d", RUN+="/bin/bash -c 'modprobe option && echo 03f0 521d > /sys/bus/usb-serial/drivers/option1/new_id'"
