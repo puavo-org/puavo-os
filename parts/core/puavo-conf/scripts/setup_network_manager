@@ -48,8 +48,9 @@
 #   {
 #     "type":     "gsm",
 #     "id":       "DNA Postpaid (contract) public IP address",
-#     "apn":      "data.dna.fi",
-#     "number":   "*99#"
+#     "apn":      "data.dna.fi",        # optional
+#     "number":   "*99#",               # optional
+#     "pin":      "1234"                # optional
 #   }
 # ]
 #
