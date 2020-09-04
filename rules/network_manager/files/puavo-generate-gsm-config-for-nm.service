@@ -1,0 +1,10 @@
+[Unit]
+Description=Create configurations for gsm settings in NetworkManager
+After=ModemManager.service NetworkManager.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/lib/puavo-generate-gsm-config-for-nm
+
+[Install]
+WantedBy=multi-user.target

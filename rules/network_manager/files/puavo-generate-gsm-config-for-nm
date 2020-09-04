@@ -1,0 +1,43 @@
+#!/bin/sh
+
+set -eu
+
+check_for_gsm() {
+  nmcli device | awk 'BEGIN { status = 1 } $2 == "gsm" { status = 0 } END { exit(status) }'
+}
+
+localconf_dir='/state/etc/puavo/local'
+auto_gsm_path="${localconf_dir}/auto-gsm.json"
+
+# It takes a while before "nmcli device" reports that gsm is available
+# (if it is).  Check for a while and if positive, believe it right away.
+has_gsm=false
+for i in $(seq 8); do
+  if check_for_gsm; then
+    has_gsm=true
+    break
+  fi
+  sleep 15
+done
+
+if ! $has_gsm; then
+  rm -f "$auto_gsm_path"
+  exit 0
+fi
+
+mkdir -p "$localconf_dir"
+
+cat <<'EOF' > "${auto_gsm_path}.tmp"
+[
+  {
+    "type": "gsm",
+    "id": "automatic-gsm"
+  }
+]
+EOF
+
+if ! cmp "${auto_gsm_path}.tmp" "$auto_gsm_path" >/dev/null 2>&1; then
+  mv "${auto_gsm_path}.tmp" "$auto_gsm_path"
+else
+  rm -f "${auto_gsm_path}.tmp"
+fi

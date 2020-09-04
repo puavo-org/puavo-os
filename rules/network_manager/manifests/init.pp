@@ -1,4 +1,5 @@
 class network_manager {
+  include ::network_manager::automatic_gsm
   include ::packages
 
   # Use dns=dnsmasq option so that

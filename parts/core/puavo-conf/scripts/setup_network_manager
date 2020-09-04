@@ -176,10 +176,10 @@ class Gsm < Network
   end
 
   def config
-    gsm_section = ''
+    gsm_section = '# no gsm section'
 
     if @apn || @number || @pin then
-      gsm_section += "[gsm]\n"
+      gsm_section = "[gsm]\n"
       gsm_section += "apn=#{ @apn }"       if @apn
       gsm_section += "number=#{ @number }" if @number
       gsm_section += "pin=#{ @pin }"       if @pin
