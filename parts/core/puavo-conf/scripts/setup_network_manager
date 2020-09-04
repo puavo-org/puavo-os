@@ -79,6 +79,8 @@ rescue StandardError => e
   status = 1
 end
 
+auto_gsm = puavoconf.get('puavo.wireless.nm.gsm.automatic.enabled') == 'true'
+
 puavoconf.close
 
 require 'base64'
@@ -88,6 +90,21 @@ require 'uuidtools'
 
 Nm_config_directory = '/state/etc/NetworkManager/system-connections'
 Puavo_network_label = '# automatically generated from Puavo'
+
+def read_network_specs(config_path)
+  begin
+    network_specs = JSON.parse( IO.read(config_path) )
+    raise "bad network spec format in #{ config_path }" \
+      unless network_specs.kind_of?(Array) \
+               && network_specs.all? { |x| x.kind_of?(Hash) }
+    return network_specs
+  rescue Errno::ENOENT
+    return []
+  rescue StandardError => e
+    warn "Could not read and interpret #{ config_path }: #{ e.message }"
+    raise e
+  end
+end
 
 class Network
   attr_reader :id
@@ -411,18 +428,18 @@ EOF
   end
 end
 
-config_path = '/etc/puavo/wlan.json'
+automatic_gsm_config_path = '/etc/puavo/local/auto-gsm.json'
+local_config_path         = '/etc/puavo/local/wlan.json'
+config_path               = '/etc/puavo/wlan.json'
 
-begin
-  networks = JSON.parse(IO.read(config_path))
-rescue StandardError => e
-  warn "Could not read and interpret #{ config_path }: #{ e.message }."
-  exit(1)
-end
+networks_specs = []
+networks_specs += read_network_specs(automatic_gsm_config_path) if auto_gsm
+networks_specs += read_network_specs(config_path)
+networks_specs += read_network_specs(local_config_path)
 
 puavo_networks = []
 
-networks.each do |network_spec|
+networks_specs.each do |network_spec|
   eap_network_fn = lambda do |network_class, network_spec|
                      network_class.new(network_spec['ssid'],
                                        network_spec['identity'],
