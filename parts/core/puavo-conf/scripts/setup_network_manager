@@ -149,17 +149,24 @@ class Network
 end
 
 class Gsm < Network
-  def initialize(id, apn, number)
+  def initialize(id, apn, number, pin)
     super(id)
 
-    raise "Gsm network apn is not set"    if (apn.nil?    || apn.empty?)
-    raise "Gsm network number is not set" if (number.nil? || number.empty?)
-
-    @apn = apn
-    @number = number
+    @apn    = apn       # can be nil
+    @number = number    # can be nil
+    @pin    = pin       # can be nil
   end
 
   def config
+    gsm_section = ''
+
+    if @apn || @number || @pin then
+      gsm_section += "[gsm]\n"
+      gsm_section += "apn=#{ @apn }"       if @apn
+      gsm_section += "number=#{ @number }" if @number
+      gsm_section += "pin=#{ @pin }"       if @pin
+    end
+
     super(<<"EOF")
 [connection]
 id=#{ @id }
@@ -167,9 +174,7 @@ uuid=#{ @uuid }
 type=gsm
 permissions=
 
-[gsm]
-apn=#{ @apn }
-number=#{ @number }
+#{ gsm_section }
 
 [serial]
 baud=115200
@@ -438,7 +443,8 @@ networks.each do |network_spec|
           when 'gsm'
             Gsm.new(network_spec['id'],
                     network_spec['apn'],
-                    network_spec['number'])
+                    network_spec['number'],
+                    network_spec['pin'])
           when 'open'
             Wlan::Open.new(network_spec['ssid'])
           when 'psk'
