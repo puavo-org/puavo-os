@@ -7,7 +7,6 @@ shift
 
 novo_links='
   /opt/novo/novoconnect_software
-  /usr/bin/novoconnect-software
   /usr/share/appdata/novoconnect-software.appdata.xml
   /usr/share/applications/novoconnect-software.desktop
   /usr/share/icons/novoconnect-software-icon.png
@@ -20,9 +19,21 @@ case "${command}" in
       mkdir -p "$(dirname "$f")"
       ln -fns -T "${upstream_dir}/${f}" "$f"
     done
+    ln -fns "${upstream_dir}/usr/bin/novoconnect-software" \
+            /usr/bin/novoconnect-software.puavopkg
+    cat <<'EOF' > /usr/bin/novoconnect-software
+#!/bin/sh
+
+# NovoConnect has a bundled ssl-library that may not understand
+# openssl configuration (without this, segfaults on Buster).
+exec env OPENSSL_CONF=/dev/null /usr/bin/novoconnect-software.puavopkg "$@"
+EOF
+    chmod 755 /usr/bin/novoconnect-software
     ;;
   unconfigure)
-    rm -f $novo_links
+    rm -f $novo_links \
+          /usr/bin/novoconnect-software \
+          /usr/bin/novoconnect-software.puavopkg
     ;;
   unpack)
     upstream_pack=$1
