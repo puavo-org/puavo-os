@@ -73,7 +73,6 @@ proc person_affiliation_set {affliation} {
 # some constants
 #
 
-set Classes         "ou=Classes,ou=Groups"
 set Desktops        "ou=Desktops"
 set Devices         "ou=Devices,ou=Hosts"
 set Domain_Admins   "cn=Domain Admins,ou=Groups"
@@ -701,49 +700,6 @@ rule {
 rule {
   [dn subtree $SchoolRoles]
       by $ownerusers             write
-      by [dn children $People]   read
-      by [dn subtree $Hosts]     read
-      by [systemgroup getent]    read
-      by [puavo_dn puavo-ticket] read
-}
-
-rule {
-  [dn exact $Classes]
-    [attrs entry ou objectClass]
-      by $schooladmins           read
-      by $ownerusers             read
-      by [puavo_dn puavo-ticket] read
-      by [dn children $People]   read
-      by [dn subtree $Hosts]     read
-      by [systemgroup getent]    read
-}
-
-rule {
-  [dn exact $Classes]
-    [attrs children]
-      by $schooladmins           write
-      by $ownerusers             write
-      by [dn children $People]   read
-      by [dn subtree $Hosts]     read
-      by [systemgroup getent]    read
-      by [puavo_dn puavo-ticket] read
-}
-
-rule {
-  [dn subtree $Classes]
-    [attrs member memberUid]
-      by $org_owner              write
-      by $this_school_admins     write
-      by [dn children $People]   read
-      by [dn subtree $Hosts]     read
-      by [systemgroup getent]    read
-      by [puavo_dn puavo-ticket] read
-}
-
-rule {
-  [dn subtree $Classes]
-      by $org_owner              write
-      by $this_school_admins     write
       by [dn children $People]   read
       by [dn subtree $Hosts]     read
       by [systemgroup getent]    read
