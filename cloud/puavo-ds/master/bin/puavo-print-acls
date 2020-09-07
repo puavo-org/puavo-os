@@ -155,14 +155,15 @@ rule {
 
 rule {
   [dn children $Servers]
-     [attrs puavoDeviceCurrentImage puavoDeviceAvailableImage]
-       by self                    write
-       by $org_owners             write
-       by $this_school_admins     write
-       by [puavo_dn monitor]      read
-       by [puavo_dn puavo-ticket] read
-       by [devicetype_set laptop] read
-       by [systemgroup devices]   read
+    [attrs puavoDeviceCurrentImage puavoDeviceAvailableImage]
+      by self                    write
+      by $org_owners             write
+      by $this_school_admins     write
+      by [puavo_dn monitor]      read
+      by [puavo_dn puavo-ticket] read  # XXX to be removed later
+      by [puavo_dn statistics]   read
+      by [devicetype_set laptop] read
+      by [systemgroup devices]   read
 }
 
 rule {
@@ -171,7 +172,8 @@ rule {
       by self                    write
       by [dn children $Servers]  write
       by [puavo_dn monitor]      read
-      by [puavo_dn puavo-ticket] read
+      by [puavo_dn puavo-ticket] read  # XXX to be removed later
+      by [puavo_dn statistics]   read
       by $org_owners             read
       by $this_school_admins     read
       by [systemgroup devices]   read
@@ -188,7 +190,7 @@ rule {
   [dn exact $People]
     [attrs entry ou objectClass]
       by [puavo_dn puavo]        read
-      by [puavo_dn puavo-ticket] read
+      by [puavo_dn puavo-ticket] read  # XXX to be removed later
       by [puavo_dn pw-mgmt]      read
       by [dn children $People]   read
       by [dn subtree  $Hosts]    read
@@ -264,7 +266,7 @@ rule {
       by $org_owners             write
       by $this_school_admins     write
       by [puavo_dn puavo]        read
-      by [puavo_dn puavo-ticket] read
+      by [puavo_dn puavo-ticket] read  # XXX to be removed later
       by [puavo_dn pw-mgmt]      read
       by [dn children $People]   read
       by [dn subtree $Hosts]     read
@@ -280,7 +282,7 @@ rule {
       by $org_owners             write
       by $this_school_admins     write
       by [puavo_dn puavo]        read
-      by [puavo_dn puavo-ticket] read
+      by [puavo_dn puavo-ticket] read  # XXX to be removed later
       by [puavo_dn pw-mgmt]      read
       by [dn children $People]   read
       by [dn subtree $Hosts]     read
@@ -302,7 +304,7 @@ rule {
     [attrs givenName sn displayName puavoEduPersonReverseDisplayName]
       by $org_owners               write
       by $this_school_admins       write
-      by [puavo_dn puavo-ticket]   read
+      by [puavo_dn puavo-ticket]   read  # XXX to be removed later
       by [dn children $People]     read
       by [dn subtree $Hosts]       read
       by [systemgroup getent]      read
@@ -314,7 +316,7 @@ rule {
     [attrs puavoEduPersonPersonnelNumber]
       by $org_owners               write
       by $this_school_admins       write
-      by [puavo_dn puavo-ticket]   read
+      by [puavo_dn puavo-ticket]   read  # XXX to be removed later
       by [systemgroup addressbook] read
 }
 
@@ -325,7 +327,7 @@ rule {
       by $org_owners               write
       by $this_school_admins       write
       by [puavo_dn puavo]          read
-      by [puavo_dn puavo-ticket]   read
+      by [puavo_dn puavo-ticket]   read  # XXX to be removed later
       by [puavo_dn pw-mgmt]        read
       by [systemgroup addressbook] read
 }
@@ -337,7 +339,7 @@ rule {
       by $org_owners             write
       by $this_school_admins     write
       by [puavo_dn puavo]        read
-      by [puavo_dn puavo-ticket] read
+      by [puavo_dn puavo-ticket] read  # XXX to be removed later
 }
 
 rule {
@@ -347,7 +349,7 @@ rule {
       by $this_school_admins     write
       by self                    read
       by [puavo_dn puavo]        read
-      by [puavo_dn puavo-ticket] read
+      by [puavo_dn puavo-ticket] read  # XXX to be removed later
       by [systemgroup getent]    read
 }
 
@@ -374,7 +376,8 @@ rule {
 rule {
   [dn exact $Hosts]
       by [puavo_dn monitor]      read
-      by [puavo_dn puavo-ticket] read
+      by [puavo_dn puavo-ticket] read  # XXX to be removed later
+      by [puavo_dn statistics]   read
       by $org_owners             read
       by [dn subtree $Hosts]     read
       by [systemgroup devices]   read
@@ -386,7 +389,8 @@ rule {
   [dn exact $Devices]
     [attrs entry ou objectClass]
       by [puavo_dn monitor]      read
-      by [puavo_dn puavo-ticket] read
+      by [puavo_dn puavo-ticket] read  # XXX to be removed later
+      by [puavo_dn statistics]   read
       by $org_owners             read
       by [systemgroup devices]   read
       by [dn children $People]   read
@@ -399,7 +403,8 @@ rule {
     [attrs children]
       by $org_owners             write
       by [puavo_dn monitor]      read
-      by [puavo_dn puavo-ticket] read
+      by [puavo_dn puavo-ticket] read  # XXX to be removed later
+      by [puavo_dn statistics]   read
       by [systemgroup devices]   read
       by [dn children $People]   read
       by [dn subtree $Hosts]     read
@@ -412,7 +417,8 @@ rule {
       by $this_school_admins     write
       by self                    read
       by [puavo_dn monitor]      read
-      by [puavo_dn puavo-ticket] read
+      by [puavo_dn puavo-ticket] read  # XXX to be removed later
+      by [puavo_dn statistics]   read
       by [systemgroup devices]   read
       by [dn children $People]   read
       by anonymous               auth
@@ -434,7 +440,8 @@ rule {
       by $org_owners             write
       by $this_school_admins     write
       by [puavo_dn monitor]      read
-      by [puavo_dn puavo-ticket] read
+      by [puavo_dn puavo-ticket] read  # XXX to be removed later
+      by [puavo_dn statistics]   read
       by [systemgroup devices]   read
 }
 
@@ -444,7 +451,8 @@ rule {
       by $this_school_admins     write
       by self                    read
       by [puavo_dn monitor]      read
-      by [puavo_dn puavo-ticket] read
+      by [puavo_dn puavo-ticket] read  # XXX to be removed later
+      by [puavo_dn statistics]   read
       by [systemgroup devices]   read
       by anonymous               auth
 }
@@ -454,7 +462,8 @@ rule {
     [attrs entry ou objectClass]
       by $org_owners             read
       by [puavo_dn monitor]      read
-      by [puavo_dn puavo-ticket] read
+      by [puavo_dn puavo-ticket] read  # XXX to be removed later
+      by [puavo_dn statistics]   read
       by [systemgroup servers]   read
       by anonymous               auth
 }
@@ -464,7 +473,8 @@ rule {
     [attrs children]
       by $org_owners             write
       by [puavo_dn monitor]      read
-      by [puavo_dn puavo-ticket] read
+      by [puavo_dn puavo-ticket] read  # XXX to be removed later
+      by [puavo_dn statistics]   read
       by [systemgroup servers]   read
 }
 
@@ -472,7 +482,8 @@ rule {
   [dn children $Servers]
       by $org_owners             write
       by [puavo_dn monitor]      read
-      by [puavo_dn puavo-ticket] read
+      by [puavo_dn puavo-ticket] read  # XXX to be removed later
+      by [puavo_dn statistics]   read
       by [systemgroup servers]   read
       by [devicetype_set laptop] none break
       by $this_school_admins     none break
@@ -529,7 +540,7 @@ rule {
   [dn exact $Groups]
     [attrs entry ou objectClass]
       by $org_owners             read
-      by [puavo_dn puavo-ticket] read
+      by [puavo_dn puavo-ticket] read  # XXX to be removed later
       by [dn children $People]   read
       by [dn subtree $Hosts]     read
       by [systemgroup getent]    read
@@ -539,7 +550,7 @@ rule {
   [dn exact $Groups]
     [attrs children]
       by $org_owners             write
-      by [puavo_dn puavo-ticket] read
+      by [puavo_dn puavo-ticket] read  # XXX to be removed later
       by [dn children $People]   read
       by [dn subtree $Hosts]     read
       by [systemgroup getent]    read
@@ -549,7 +560,8 @@ rule {
   [dn exact $Schools]
     [attrs entry ou objectClass]
       by $org_owners             read
-      by [puavo_dn puavo-ticket] read
+      by [puavo_dn puavo-ticket] read  # XXX to be removed later
+      by [puavo_dn statistics]   read
       by [dn children $People]   read
       by [dn subtree $Hosts]     read
       by [systemgroup getent]    read
@@ -559,7 +571,8 @@ rule {
   [dn exact $Schools]
     [attrs children]
       by $org_owners             write
-      by [puavo_dn puavo-ticket] read
+      by [puavo_dn puavo-ticket] read  # XXX to be removed later
+      by [puavo_dn statistics]   read
       by [dn children $People]   read
       by [dn subtree $Hosts]     read
       by [systemgroup getent]    read
@@ -568,7 +581,8 @@ rule {
 rule {
   [dn subtree $Schools]
       by $org_owners             write
-      by [puavo_dn puavo-ticket] read
+      by [puavo_dn puavo-ticket] read  # XXX to be removed later
+      by [puavo_dn statistics]   read
       by [dn children $People]   read
       by [dn subtree $Hosts]     read
       by [systemgroup getent]    read
@@ -580,7 +594,7 @@ rule {
     [attrs gidNumber cn puavoId objectClass]
       by $org_owners             write
       by $this_school_admins     write
-      by [puavo_dn puavo-ticket] read
+      by [puavo_dn puavo-ticket] read  # XXX to be removed later
       by [dn children $People]   read
       by [dn subtree $Hosts]     read
       by [systemgroup getent]    read
@@ -593,7 +607,8 @@ rule {
       by $org_owners             +azrwsc
       by $schooladmins           +rwsc
       by [puavo_dn puavo]        read
-      by [puavo_dn puavo-ticket] read
+      by [puavo_dn puavo-ticket] read  # XXX to be removed later
+      by [puavo_dn statistics]   read
       by [dn children $People]   read
       by [dn subtree $Hosts]     read
       by [systemgroup getent]    read break
@@ -623,7 +638,8 @@ rule {
            puavoWlanSSID]
       by $org_owners             write
       by $schooladmins           write
-      by [puavo_dn puavo-ticket] read
+      by [puavo_dn puavo-ticket] read  # XXX to be removed later
+      by [puavo_dn statistics]   read
       by [dn children $People]   read
       by [dn subtree $Hosts]     read
       by [systemgroup getent]    read break
@@ -635,7 +651,8 @@ rule {
       by $org_owners             write
       by $schooladmins           +rscxd
       by [puavo_dn puavo]        read
-      by [puavo_dn puavo-ticket] read
+      by [puavo_dn puavo-ticket] read  # XXX to be removed later
+      by [puavo_dn statistics]   read
       by [dn children $People]   read
       by [dn subtree $Hosts]     read
       by [systemgroup getent]    read
@@ -724,7 +741,8 @@ rule {
       by [puavo_dn kdc]          read
       by [puavo_dn monitor]      read
       by [puavo_dn puavo]        read
-      by [puavo_dn puavo-ticket] read
+      by [puavo_dn puavo-ticket] read  # XXX to be removed later
+      by [puavo_dn statistics]   read
       by $org_owners             read
       by [dn children $People]   read
       by [dn subtree $Hosts]     read
@@ -740,7 +758,8 @@ rule {
       by [puavo_dn kdc]          read
       by [puavo_dn monitor]      read
       by [puavo_dn puavo]        read
-      by [puavo_dn puavo-ticket] read
+      by [puavo_dn puavo-ticket] read  # XXX to be removed later
+      by [puavo_dn statistics]   read
       by $org_owners             read
       by [dn children $People]   read
       by [dn subtree $Hosts]     read
@@ -764,7 +783,8 @@ rule {
       by [puavo_dn kdc]          read
       by [puavo_dn monitor]      read
       by [puavo_dn puavo]        read
-      by [puavo_dn puavo-ticket] read
+      by [puavo_dn puavo-ticket] read  # XXX to be removed later
+      by [puavo_dn statistics]   read
       by [dn children $People]   read
       by [dn subtree $Hosts]     read
       by [systemgroup getent]    read
@@ -775,11 +795,12 @@ rule {
 rule {
   [dn]
     [attrs owner puavoDomain puavoPuppetHost]
-       by [puavo_dn monitor]      read
-       by [puavo_dn puavo]        read
-       by [puavo_dn puavo-ticket] read
-       by [systemgroup orginfo]   read
-       by $org_owners             read
+      by [puavo_dn monitor]      read
+      by [puavo_dn puavo]        read
+      by [puavo_dn puavo-ticket] read  # XXX to be removed later
+      by [puavo_dn statistics]   read
+      by [systemgroup orginfo]   read
+      by $org_owners             read
 }
 
 rule {
@@ -788,7 +809,8 @@ rule {
       by [puavo_dn kdc]          read
       by [puavo_dn monitor]      read
       by [puavo_dn puavo]        read
-      by [puavo_dn puavo-ticket] read
+      by [puavo_dn puavo-ticket] read  # XXX to be removed later
+      by [puavo_dn statistics]   read
       by $org_owners             read
       by *                       +sxd
 }
