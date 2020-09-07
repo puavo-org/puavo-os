@@ -6,6 +6,10 @@ check_for_gsm() {
   nmcli device | awk 'BEGIN { status = 1 } $2 == "gsm" { status = 0 } END { exit(status) }'
 }
 
+if [ "$(puavo-conf puavo.service.NetworkManager.enabled)" != 'true' ]; then
+  exit 0
+fi
+
 localconf_dir='/state/etc/puavo/local'
 auto_gsm_path="${localconf_dir}/auto-gsm.json"
 
