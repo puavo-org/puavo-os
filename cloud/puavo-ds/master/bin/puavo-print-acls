@@ -180,20 +180,55 @@ rule {
       by [systemgroup printerqueues] read
 }
 
-#
+# rules for $Servers
+# (should be before $Hosts, because $Servers is more specific)
+
+rule {
+  [dn exact $Servers]
+    [attrs entry ou objectClass]
+      by $org_owners             read
+      by [puavo_dn monitor]      read
+      by [puavo_dn puavo-ticket] read  # XXX to be removed later
+      by [puavo_dn statistics]   read
+      by [systemgroup servers]   read
+      by anonymous               auth
+}
+
+rule {
+  [dn exact $Servers]
+    [attrs children]
+      by $org_owners             write
+      by [puavo_dn monitor]      read
+      by [puavo_dn puavo-ticket] read  # XXX to be removed later
+      by [puavo_dn statistics]   read
+      by [systemgroup servers]   read
+}
 
 rule {
   [dn children $Servers]
     [attrs puavoDeviceCurrentImage puavoDeviceAvailableImage]
-      by self                    write
+      by self write
+      by *    none break
+}
+
+rule {
+  [dn children $Servers]
+    [attrs entry puavoId puavoSchool ou objectClass puavoHostname]
+      by $this_school_admins read
+      by *                   none break
+}
+
+rule {
+  [dn children $Servers]
       by $org_owners             write
-      by $this_school_admins     write
       by [puavo_dn monitor]      read
       by [puavo_dn puavo-ticket] read  # XXX to be removed later
       by [puavo_dn statistics]   read
-      by [devicetype_set laptop] read
-      by [systemgroup devices]   read
+      by [systemgroup servers]   read
+      by anonymous               auth
 }
+
+#
 
 rule {
   [dn children $Devices]
@@ -477,46 +512,6 @@ rule {
       by [puavo_dn statistics]   read
       by [systemgroup devices]   read
       by anonymous               auth
-}
-
-rule {
-  [dn exact $Servers]
-    [attrs entry ou objectClass]
-      by $org_owners             read
-      by [puavo_dn monitor]      read
-      by [puavo_dn puavo-ticket] read  # XXX to be removed later
-      by [puavo_dn statistics]   read
-      by [systemgroup servers]   read
-      by anonymous               auth
-}
-
-rule {
-  [dn exact $Servers]
-    [attrs children]
-      by $org_owners             write
-      by [puavo_dn monitor]      read
-      by [puavo_dn puavo-ticket] read  # XXX to be removed later
-      by [puavo_dn statistics]   read
-      by [systemgroup servers]   read
-}
-
-rule {
-  [dn children $Servers]
-      by $org_owners             write
-      by [puavo_dn monitor]      read
-      by [puavo_dn puavo-ticket] read  # XXX to be removed later
-      by [puavo_dn statistics]   read
-      by [systemgroup servers]   read
-      by [devicetype_set laptop] none break
-      by $this_school_admins     none break
-      by anonymous               auth
-}
-
-rule {
-  [dn children $Servers]
-    [attrs entry puavoId puavoSchool ou objectClass puavoExport puavoHostname]
-      by [devicetype_set laptop] read
-      by $this_school_admins     read
 }
 
 rule {
