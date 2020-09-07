@@ -200,10 +200,24 @@ class PageAccount(PageDefinition):
         if len(self.user_password_confirm) == 0:
             state = False
 
+        if len(self.user_phone) > 0 and not self.__only_digits(self.user_phone):
+            state = False
+
         if self.user_password != self.user_password_confirm:
             state = False
 
         self.submit_button.set_sensitive(state)
+
+
+    # Python strings have a isdigit() method, but it accepts things
+    # like superscripts and Kharotshi numbers, which our database
+    # will reject because it does not consider them to be digits.
+    def __only_digits(self, s):
+        for c in s:
+            if not c in "0123456789":
+                return False
+
+        return True
 
 
     def __normalize_string(self, s):
