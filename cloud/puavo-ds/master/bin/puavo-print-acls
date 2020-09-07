@@ -119,18 +119,20 @@ rule {
       by [dn children $Servers] write
 }
 
-# XXX I suspect [dn children $Servers] should have permission to update
-# XXX sambaNextUserRid sambaNextRid
 rule {
   [dn exact sambaDomainName=${samba_domain}]
-    [attrs sambaSID sambaDomainName sambaNextUserRid sambaNextRid]
+    [attrs sambaSID sambaDomainName]
       by $org_owners write
 }
 
 rule {
   [dn exact sambaDomainName=${samba_domain}]
       by $org_owners            write
-      by $this_school_admins    write
+      by [dn children $Servers] write
+}
+
+rule {
+  [dn exact ou=Idmap]
       by [dn children $Servers] write
 }
 
@@ -139,12 +141,6 @@ rule {
 rule {
   [dn subtree $People]
     [attrs sambaNTPassword userPassword sambaAcctFlags]
-      by [dn children $Servers] write
-      by *                      none break
-}
-
-rule {
-  [dn exact ou=Idmap]
       by [dn children $Servers] write
       by *                      none break
 }
