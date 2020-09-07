@@ -88,9 +88,9 @@ set Servers         "ou=Servers,ou=Hosts"
 set System_Accounts "ou=System Accounts"
 set System_Groups   "ou=System Groups"
 
-set org_owners         [ldapset_with_base "owner & user"]
-set schooladmins       [ldapset "this & user/puavoAdminOfSchool"]
-set teachers           [person_affiliation_set teacher]
+set org_owners   [ldapset_with_base "owner & user"]
+set schooladmins [ldapset "this & user/puavoAdminOfSchool"]
+set teachers     [person_affiliation_set teacher]
 
 # this means: admins of the same school as
 # $this_thing (person, device, server) is in
@@ -375,7 +375,6 @@ rule {
   [dn exact $Hosts]
       by [puavo_dn monitor]      read
       by [puavo_dn puavo-ticket] read
-      by [puavo_dn puppet]       read
       by $org_owners             read
       by [dn subtree $Hosts]     read
       by [systemgroup devices]   read
@@ -388,7 +387,6 @@ rule {
     [attrs entry ou objectClass]
       by [puavo_dn monitor]      read
       by [puavo_dn puavo-ticket] read
-      by [puavo_dn puppet]       read
       by $org_owners             read
       by [systemgroup devices]   read
       by [dn children $People]   read
@@ -402,7 +400,6 @@ rule {
       by $org_owners             write
       by [puavo_dn monitor]      read
       by [puavo_dn puavo-ticket] read
-      by [puavo_dn puppet]       read
       by [systemgroup devices]   read
       by [dn children $People]   read
       by [dn subtree $Hosts]     read
@@ -416,7 +413,6 @@ rule {
       by self                    read
       by [puavo_dn monitor]      read
       by [puavo_dn puavo-ticket] read
-      by [puavo_dn puppet]       read
       by [systemgroup devices]   read
       by [dn children $People]   read
       by anonymous               auth
@@ -449,7 +445,6 @@ rule {
       by self                    read
       by [puavo_dn monitor]      read
       by [puavo_dn puavo-ticket] read
-      by [puavo_dn puppet]       read
       by [systemgroup devices]   read
       by anonymous               auth
 }
@@ -460,7 +455,6 @@ rule {
       by $org_owners             read
       by [puavo_dn monitor]      read
       by [puavo_dn puavo-ticket] read
-      by [puavo_dn puppet]       read
       by [systemgroup servers]   read
       by anonymous               auth
 }
@@ -471,7 +465,6 @@ rule {
       by $org_owners             write
       by [puavo_dn monitor]      read
       by [puavo_dn puavo-ticket] read
-      by [puavo_dn puppet]       read
       by [systemgroup servers]   read
 }
 
@@ -480,7 +473,6 @@ rule {
       by $org_owners             write
       by [puavo_dn monitor]      read
       by [puavo_dn puavo-ticket] read
-      by [puavo_dn puppet]       read
       by [systemgroup servers]   read
       by [devicetype_set laptop] none break
       by $this_school_admins     none break
@@ -733,7 +725,6 @@ rule {
       by [puavo_dn monitor]      read
       by [puavo_dn puavo]        read
       by [puavo_dn puavo-ticket] read
-      by [puavo_dn puppet]       read
       by $org_owners             read
       by [dn children $People]   read
       by [dn subtree $Hosts]     read
@@ -750,7 +741,6 @@ rule {
       by [puavo_dn monitor]      read
       by [puavo_dn puavo]        read
       by [puavo_dn puavo-ticket] read
-      by [puavo_dn puppet]       read
       by $org_owners             read
       by [dn children $People]   read
       by [dn subtree $Hosts]     read
@@ -775,7 +765,6 @@ rule {
       by [puavo_dn monitor]      read
       by [puavo_dn puavo]        read
       by [puavo_dn puavo-ticket] read
-      by [puavo_dn puppet]       read
       by [dn children $People]   read
       by [dn subtree $Hosts]     read
       by [systemgroup getent]    read
@@ -789,7 +778,6 @@ rule {
        by [puavo_dn monitor]      read
        by [puavo_dn puavo]        read
        by [puavo_dn puavo-ticket] read
-       by [puavo_dn puppet]       read
        by [systemgroup orginfo]   read
        by $org_owners             read
 }
@@ -801,7 +789,6 @@ rule {
       by [puavo_dn monitor]      read
       by [puavo_dn puavo]        read
       by [puavo_dn puavo-ticket] read
-      by [puavo_dn puppet]       read
       by $org_owners             read
       by *                       +sxd
 }
