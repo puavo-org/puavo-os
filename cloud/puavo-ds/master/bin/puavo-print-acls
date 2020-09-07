@@ -89,7 +89,7 @@ set System_Accounts "ou=System Accounts"
 set System_Groups   "ou=System Groups"
 
 set org_owners         [ldapset_with_base "owner & user"]
-set schooladminusers   [ldapset "this/puavoSchoolAdmin* & user"]
+set schooladmins       [ldapset "this & user/puavoAdminOfSchool"]
 set teachers           [person_affiliation_set teacher]
 set this_school_admins [ldapset "this/puavoSchool & user/puavoAdminOfSchool*"]
 
@@ -597,7 +597,7 @@ rule {
     filter=(objectClass=puavoSchool)
     [attrs gidNumber cn puavoId objectClass]
       by $org_owners             +azrwsc
-      by $schooladminusers       +rwsc
+      by $schooladmins           +rwsc
       by [dn children $People]   read
       by [dn subtree $Hosts]     read
       by [puavo_dn puavo]        read
@@ -628,7 +628,7 @@ rule {
            puavoExternalFeed puavoMountpoint puavoTag puavoWlanChannel \
            puavoWlanSSID]
       by $org_owners             write
-      by $schooladminusers       write
+      by $schooladmins           write
       by [dn children $People]   read
       by [dn subtree $Hosts]     read
       by [puavo_dn puavo-ticket] read
@@ -639,7 +639,7 @@ rule {
   [dn subtree $Groups]
     filter=(objectClass=puavoSchool)
       by $org_owners             write
-      by $schooladminusers       +rscxd
+      by $schooladmins           +rscxd
       by [dn children $People]   read
       by [dn subtree $Hosts]     read
       by [systemgroup getent]    read
