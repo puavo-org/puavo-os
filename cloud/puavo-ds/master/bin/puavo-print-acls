@@ -82,10 +82,7 @@ set Groups          "ou=Groups"
 set Hosts           "ou=Hosts"
 set People          "ou=People"
 set Printers        "ou=Printers"
-set Roles           "ou=Roles"
-set RolesGroups     "ou=Roles,ou=Groups"
 set Schools         "ou=Schools,ou=Groups"
-set SchoolRoles     "ou=SchoolRoles,ou=Groups"
 set Servers         "ou=Servers,ou=Hosts"
 set System_Accounts "ou=System Accounts"
 set System_Groups   "ou=System Groups"
@@ -375,27 +372,6 @@ rule {
 }
 
 rule {
-  [dn exact $Roles]
-    [attrs entry ou objectClass]
-      by $schooladmins read
-      by $ownerusers   read
-}
-
-
-rule {
-  [dn exact $Roles]
-    [attrs children]
-      by $schooladmins write
-      by $ownerusers   write
-}
-
-rule {
-  [dn children $Roles]
-      by $org_owner          write
-      by $this_school_admins write
-}
-
-rule {
   [dn subtree "ou=Kerberos Realms"]
       by [puavo_dn kadmin] write
       by [puavo_dn kdc]    read
@@ -615,90 +591,6 @@ rule {
 
 rule {
   [dn subtree $Schools]
-      by $ownerusers             write
-      by [dn children $People]   read
-      by [dn subtree $Hosts]     read
-      by [systemgroup getent]    read
-      by [puavo_dn puavo-ticket] read
-}
-
-rule {
-  [dn exact $RolesGroups]
-    [attrs entry ou objectClass]
-      by $schooladmins           read
-      by $ownerusers             read
-      by [puavo_dn puavo-ticket] read
-      by [dn children $People]   read
-      by [dn subtree $Hosts]     read
-      by [systemgroup getent]    read
-}
-
-rule {
-  [dn exact $RolesGroups]
-    [attrs children]
-      by $schooladmins           write
-      by $ownerusers             write
-      by [dn children $People]   read
-      by [dn subtree $Hosts]     read
-      by [systemgroup getent]    read
-      by [puavo_dn puavo-ticket] read
-}
-
-rule {
-  [dn subtree $RolesGroups]
-    [attrs member memberUid]
-      by $org_owner              write
-      by $this_school_admins     write
-      by [dn children $People]   read
-      by [dn subtree $Hosts]     read
-      by [systemgroup getent]    read
-      by [puavo_dn puavo-ticket] read
-}
-
-rule {
-  [dn subtree $RolesGroups]
-      by $ownerusers             write
-      by [dn children $People]   read
-      by [dn subtree $Hosts]     read
-      by [systemgroup getent]    read
-      by [puavo_dn puavo-ticket] read
-}
-
-rule {
-  [dn exact $SchoolRoles]
-    [attrs entry ou objectClass]
-      by $schooladmins           read
-      by $ownerusers             read
-      by [puavo_dn puavo-ticket] read
-      by [dn children $People]   read
-      by [dn subtree $Hosts]     read
-      by [systemgroup getent]    read
-}
-
-rule {
-  [dn exact $SchoolRoles]
-    [attrs children]
-      by $schooladmins           write
-      by $ownerusers             write
-      by [dn children $People]   read
-      by [dn subtree $Hosts]     read
-      by [systemgroup getent]    read
-      by [puavo_dn puavo-ticket] read
-}
-
-rule {
-  [dn subtree $SchoolRoles]
-    [attrs member memberUid]
-      by $org_owner              write
-      by $this_school_admins     write
-      by [dn children $People]   read
-      by [dn subtree $Hosts]     read
-      by [systemgroup getent]    read
-      by [puavo_dn puavo-ticket] read
-}
-
-rule {
-  [dn subtree $SchoolRoles]
       by $ownerusers             write
       by [dn children $People]   read
       by [dn subtree $Hosts]     read
