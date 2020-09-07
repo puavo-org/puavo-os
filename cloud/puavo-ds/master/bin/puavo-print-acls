@@ -136,14 +136,23 @@ rule {
       by [dn children $Servers] write
 }
 
-#
+# Samba-related rules under $People
 
 rule {
   [dn subtree $People]
-    [attrs sambaNTPassword userPassword sambaAcctFlags]
+    [attrs sambaNTPassword]
       by [dn children $Servers] write
-      by *                      none break
+      by $org_owners            =az
+      by $this_school_admins    =az
 }
+
+rule {
+  [dn subtree $People]
+    [attrs sambaAcctFlags]
+      by [dn children $Servers] write
+}
+
+#
 
 rule {
   [dn exact $Printers]
@@ -371,13 +380,6 @@ rule {
       by [puavo_dn puavo]        read
       by [puavo_dn puavo-ticket] read  # XXX to be removed later
       by [systemgroup getent]    read
-}
-
-rule {
-  [dn subtree $People]
-    [attrs sambaNTPassword]
-      by $org_owners         =az
-      by $this_school_admins =az
 }
 
 rule {
