@@ -91,6 +91,9 @@ set System_Groups   "ou=System Groups"
 set org_owners         [ldapset_with_base "owner & user"]
 set schooladmins       [ldapset "this & user/puavoAdminOfSchool"]
 set teachers           [person_affiliation_set teacher]
+
+# this means: admins of the same school as
+# $this_thing (person, device, server) is in
 set this_school_admins [ldapset "this/puavoSchool & user/puavoAdminOfSchool*"]
 
 #
@@ -125,9 +128,9 @@ rule {
 rule {
   [dn exact $Printers]
     [attrs ou entry objectClass]
+      by $org_owners                 read
       by [dn children $Servers]      read
       by [puavo_dn slave]            read
-      by $org_owners                 read
       by [dn children $People]       read
       by [systemgroup printerqueues] read
 }
@@ -357,10 +360,9 @@ rule {
 
 rule {
   [dn subtree $People]
-      by $org_owners
-      write by $this_school_admins
-      write by [dn subtree $Hosts]
-      read
+      by $org_owners         write
+      by $this_school_admins write
+      by [dn subtree $Hosts] read
 }
 
 rule {
@@ -523,12 +525,12 @@ rule {
 
 rule {
   [dn exact $Domain_Admins]
-    by $org_owners read
+      by $org_owners read
 }
 
 rule {
   [dn exact $Domain_Users]
-    by $org_owners read
+      by $org_owners read
 }
 
 rule {
@@ -677,8 +679,8 @@ rule {
 
 rule {
   [dn children $Files]
-    by $org_owners         write
-    by [dn subtree $Hosts] read
+      by $org_owners         write
+      by [dn subtree $Hosts] read
 }
 
 rule {
