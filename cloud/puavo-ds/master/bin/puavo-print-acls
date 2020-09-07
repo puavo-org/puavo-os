@@ -152,12 +152,11 @@ rule {
       by [dn children $Servers] write
 }
 
-#
+# rules for $Printers
 
 rule {
   [dn exact $Printers]
     [attrs ou entry objectClass]
-      by [puavo_dn slave]            read
       by $org_owners                 read
       by [dn children $Servers]      read
       by [dn children $People]       read
@@ -165,10 +164,10 @@ rule {
 }
 
 rule {
-  [dn exact $Printers] [attrs children]
+  [dn exact $Printers]
+    [attrs children]
       by $org_owners                 write
       by [dn children $Servers]      write
-      by [puavo_dn slave]            read
       by [dn children $People]       read
       by [systemgroup printerqueues] read
 }
@@ -177,10 +176,11 @@ rule {
   [dn children $Printers]
       by $org_owners                 write
       by [dn children $Servers]      write
-      by [puavo_dn slave]            read
       by [dn children $People]       read
       by [systemgroup printerqueues] read
 }
+
+#
 
 rule {
   [dn children $Servers]
