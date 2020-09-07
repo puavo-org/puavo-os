@@ -375,7 +375,7 @@ rule {
 
 rule {
   [dn subtree $People]
-    [attrs sambaNTPassword sambaLMPassword]
+    [attrs sambaNTPassword]
       by $org_owners         =az
       by $this_school_admins =az
 }
