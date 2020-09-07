@@ -88,11 +88,10 @@ set Servers         "ou=Servers,ou=Hosts"
 set System_Accounts "ou=System Accounts"
 set System_Groups   "ou=System Groups"
 
-set org_owners                 [ldapset_with_base "owner & user"]
-set schooladmins_or_ownerusers [ldapset [format {this/puavoSchoolAdmin* | [%s]/owner* & user} $ldapsuffix]]
-set schooladminusers           [ldapset "this/puavoSchoolAdmin* & user"]
-set teachers                   [person_affiliation_set teacher]
-set this_school_admins         [ldapset "this/puavoSchool & user/puavoAdminOfSchool*"]
+set org_owners         [ldapset_with_base "owner & user"]
+set schooladminusers   [ldapset "this/puavoSchoolAdmin* & user"]
+set teachers           [person_affiliation_set teacher]
+set this_school_admins [ldapset "this/puavoSchool & user/puavoAdminOfSchool*"]
 
 #
 # RULES
@@ -628,7 +627,8 @@ rule {
            puavoAutomaticImageUpdates puavoDeviceOffHour puavoDeviceOnHour \
            puavoExternalFeed puavoMountpoint puavoTag puavoWlanChannel \
            puavoWlanSSID]
-      by $schooladmins_or_ownerusers write
+      by $org_owners             write
+      by $schooladminusers       write
       by [dn children $People]   read
       by [dn subtree $Hosts]     read
       by [puavo_dn puavo-ticket] read
