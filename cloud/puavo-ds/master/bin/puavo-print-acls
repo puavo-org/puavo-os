@@ -222,34 +222,6 @@ rule {
       by [dn children $Servers] write
 }
 
-# rules for $Printers
-
-rule {
-  [dn exact $Printers]
-    [attrs ou entry objectClass]
-      by $org_owners                 read
-      by [dn children $Servers]      read
-      by [dn children $People]       read
-      by [systemgroup printerqueues] read
-}
-
-rule {
-  [dn exact $Printers]
-    [attrs children]
-      by $org_owners                 write
-      by [dn children $Servers]      write
-      by [dn children $People]       read
-      by [systemgroup printerqueues] read
-}
-
-rule {
-  [dn children $Printers]
-      by $org_owners                 write
-      by [dn children $Servers]      write
-      by [dn children $People]       read
-      by [systemgroup printerqueues] read
-}
-
 # rules for ou=Hosts
 
 # give wide read access to these device-related puavo DNs
@@ -299,7 +271,7 @@ rule {
 rule {
   [dn children $Devices]
     [attrs puavoDeviceAvailableImage puavoDeviceCurrentImage \
-           puavoDeviceHWInfo puavoDeviceMonitorsXML puavoDevicePrimaryUser ]
+           puavoDeviceHWInfo puavoDeviceMonitorsXML puavoDevicePrimaryUser]
       by self write
       by *    none break
 }
@@ -351,6 +323,34 @@ rule {
       by $org_owners             write
       by [systemgroup servers]   read
       by anonymous               auth
+}
+
+# rules for ou=Printers
+
+rule {
+  [dn exact $Printers]
+    [attrs ou entry objectClass]
+      by $org_owners                 read
+      by [dn children $Servers]      read
+      by [dn children $People]       read
+      by [systemgroup printerqueues] read
+}
+
+rule {
+  [dn exact $Printers]
+    [attrs children]
+      by $org_owners                 write
+      by [dn children $Servers]      write
+      by [dn children $People]       read
+      by [systemgroup printerqueues] read
+}
+
+rule {
+  [dn children $Printers]
+      by $org_owners                 write
+      by [dn children $Servers]      write
+      by [dn children $People]       read
+      by [systemgroup printerqueues] read
 }
 
 #
