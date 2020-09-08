@@ -83,7 +83,6 @@ set Groups          "ou=Groups"
 set Hosts           "ou=Hosts"
 set People          "ou=People"
 set Printers        "ou=Printers"
-set Schools         "ou=Schools,ou=Groups"
 set Servers         "ou=Servers,ou=Hosts"
 set System_Accounts "ou=System Accounts"
 set System_Groups   "ou=System Groups"
@@ -560,38 +559,6 @@ rule {
     [attrs children]
       by $org_owners             write
       by [puavo_dn puavo-ticket] read  # XXX to be removed later
-      by [dn children $People]   read
-      by [dn subtree $Hosts]     read
-      by [systemgroup getent]    read
-}
-
-rule {
-  [dn exact $Schools]
-    [attrs entry ou objectClass]
-      by $org_owners             read
-      by [puavo_dn puavo-ticket] read  # XXX to be removed later
-      by [puavo_dn statistics]   read
-      by [dn children $People]   read
-      by [dn subtree $Hosts]     read
-      by [systemgroup getent]    read
-}
-
-rule {
-  [dn exact $Schools]
-    [attrs children]
-      by $org_owners             write
-      by [puavo_dn puavo-ticket] read  # XXX to be removed later
-      by [puavo_dn statistics]   read
-      by [dn children $People]   read
-      by [dn subtree $Hosts]     read
-      by [systemgroup getent]    read
-}
-
-rule {
-  [dn subtree $Schools]
-      by $org_owners             write
-      by [puavo_dn puavo-ticket] read  # XXX to be removed later
-      by [puavo_dn statistics]   read
       by [dn children $People]   read
       by [dn subtree $Hosts]     read
       by [systemgroup getent]    read
