@@ -270,7 +270,10 @@ def load_icons(programs, menus, icon_locator, icon_cache):
         # Initially there are no icons
         program['icon_handle'] = None
 
-        if program['flags'] & menudata.ProgramFlags.BROKEN:
+        if program['flags'] & ProgramFlags.BROKEN:
+            continue
+
+        if not program['flags'] & ProgramFlags.USED:
             continue
 
         # ----------------------------------------------------------------------
@@ -577,7 +580,6 @@ def load(menudata_files,        # data source
                 if a.target == filters.tags.Action.TAG:
                     if a.name in program['tags']:
                         if a.action == filters.tags.Action.SHOW:
-                            #logging.debug('Tag "%s" shows program "%s"', a.original, name)
                             program['flags'] &= ~ProgramFlags.HIDDEN
                         else:
                             logging.debug('Tag "%s" hides program "%s"', a.original, name)
@@ -665,14 +667,23 @@ def load(menudata_files,        # data source
 
     # Then find all used programs again. We've processed tags and
     # conditionals, so we know what menus and categories are actually
-    # visible. Mark all programs in these as "used" and then completely
-    # remove the unused programs.
-    for pid, program in programs.items():
+    # visible. But because menus and programs cannot be visible without
+    # categories, go through all menus in every visible category and
+    # mark them as "used". Then propagate this flag down to programs.
+    for _, program in programs.items():
         program['flags'] &= ~ProgramFlags.USED
+
+    for _, menu in programs.items():
+        menu['flags'] &= ~MenuFlags.USED
 
     for cid, category in categories.items():
         if category['flags'] & CategoryFlags.HIDDEN:
             continue
+
+        if 'menus' in category:
+            for mid in category['menus']:
+                if mid in menus:
+                    menus[mid]['flags'] |= MenuFlags.USED
 
         if 'programs' in category:
             for pid in category['programs']:
@@ -681,6 +692,12 @@ def load(menudata_files,        # data source
 
     for mid, menu in menus.items():
         if menu['flags'] & MenuFlags.HIDDEN:
+            continue
+
+        # If a menu isn't used by any category, remove it
+        if not menu['flags'] & MenuFlags.USED:
+            logging.info('Menu "%s" is not actually used by any visible category',
+                         mid)
             continue
 
         if 'programs' in menu:
@@ -709,7 +726,9 @@ def load(menudata_files,        # data source
             continue
 
         # remove unused programs
-        if not (flags & ProgramFlags.USED):
+        if not flags & ProgramFlags.USED:
+            logging.info('Program "%s" is not actually used by any visible category or menu',
+                         pid)
             removed_programs.add(pid)
             continue
 
@@ -838,13 +857,22 @@ def load(menudata_files,        # data source
     md = menudata.Menudata()
 
     for pid, src in programs.items():
+        # No program that is hidden or unused should make it this far, because
+        # they're removed in the above loops. But if they somehow get here,
+        # this is the final "firewall" that makes them go away.
+        if src['flags'] & ProgramFlags.HIDDEN:
+            continue
+
+        if not src['flags'] & ProgramFlags.USED:
+            continue
+
         name = src.get('name', None)
         desc = src.get('description', None)
         icon = src.get('icon_handle', None)
 
         if name is None:
-            logging.error('Program "%s" has no name', i)
-            name = '<No name>'
+            logging.error('Program "%s" has no name, skipping', pid)
+            continue
 
         if src['type'] == 'desktop':
             if 'puavopkg' in src and src['puavopkg'] is not None:
@@ -883,6 +911,12 @@ def load(menudata_files,        # data source
         md.programs[pid] = dst
 
     for mid, src in menus.items():
+        if src['flags'] & MenuFlags.HIDDEN:
+            continue
+
+        if not src['flags'] & MenuFlags.USED:
+            continue
+
         dst = menudata.Menu(
             name=src.get('name', '<No name>'),
             description=src.get('description', None),
@@ -891,6 +925,12 @@ def load(menudata_files,        # data source
         md.menus[mid] = dst
 
     for cid, src in categories.items():
+        if src['flags'] & CategoryFlags.HIDDEN:
+            continue
+
+        if not src['flags'] & CategoryFlags.USED:
+            continue
+
         dst = menudata.Category(name=src.get('name', '<No name>'))
         dst.menu_ids = src.get('menus', [])
         dst.program_ids = src.get('programs', [])
