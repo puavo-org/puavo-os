@@ -363,6 +363,11 @@ class Sidebar:
 
     # Creates a sidebar button
     def __create_button(self, y, data):
+        if not 'title' in data or not 'command' in data:
+            logging.error('Cannot create a sidebar button (missing title/command):')
+            logging.error(data)
+            return y
+
         try:
             button = buttons.sidebar.SidebarButton(
                 self,

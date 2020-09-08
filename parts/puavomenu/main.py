@@ -113,16 +113,20 @@ class PuavoMenu(Gtk.Window):
         if os.path.isfile(css_file):
             logging.info('CSS file "%s" exists, loading it', css_file)
 
-            css = bytes(utils.get_file_contents(css_file, ''), 'utf-8')
+            try:
+                css = bytes(utils.get_file_contents(css_file, ''), 'utf-8')
 
-            style_provider = Gtk.CssProvider()
-            style_provider.load_from_data(css)
+                style_provider = Gtk.CssProvider()
+                style_provider.load_from_data(css)
 
-            Gtk.StyleContext.add_provider_for_screen(
-                Gdk.Screen.get_default(),
-                style_provider,
-                Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
-            )
+                Gtk.StyleContext.add_provider_for_screen(
+                    Gdk.Screen.get_default(),
+                    style_provider,
+                    Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+                )
+            except BaseException as e:
+                logging.error('CSS loading failed: %s', str(e))
+                logging.error('Custom styles disabled!')
 
         # Create the devtools popup menu
         if not self.__settings.prod_mode:
