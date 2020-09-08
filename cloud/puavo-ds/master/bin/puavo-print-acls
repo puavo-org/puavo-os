@@ -163,6 +163,23 @@ rule {
 }
 
 rule {
+  [dn subtree $People]
+    filter="(puavoEduPersonAffiliation=student)"
+    [attrs sambaPwdLastSet]
+      by $teachers write
+      by *         none break
+}
+
+rule {
+  [dn subtree $People]
+    [attrs sambaPwdLastSet]
+      by self                write
+      by [puavo_dn pw-mgmt]  write
+      by $org_owners         write
+      by $this_school_admins write
+}
+
+rule {
   [dn subtree $System_Accounts]
     [attrs userPassword]
       by $org_owners =axz
@@ -430,7 +447,14 @@ rule {
 
 rule {
   [dn exact $People]
-    [attrs entry ou objectClass]
+    [attrs children]
+      by $org_owners write
+      by *           none break
+}
+
+rule {
+  [dn exact $People]
+    [attrs children entry ou objectClass]
       by [puavo_dn puavo]      read
       by [puavo_dn pw-mgmt]    read
       by [dn children $People] read
@@ -441,35 +465,10 @@ rule {
 }
 
 rule {
-  [dn exact $People]
-    [attrs children]
-      by $org_owners      write
-      by [puavo_dn puavo] read
-}
-
-rule {
   [dn subtree $People]
     [attrs puavoAdminOfSchool]
       by $org_owners write
-      by users       read
-}
-
-rule {
-  [dn subtree $People]
-    filter="(puavoEduPersonAffiliation=student)"
-    [attrs sambaPwdLastSet shadowLastChange]
-      by $org_owners write
-      by $teachers   write
       by *           none break
-}
-
-rule {
-  [dn subtree $People]
-    [attrs sambaPwdLastSet shadowLastChange]
-      by self                write
-      by $org_owners         write
-      by $this_school_admins write
-      by anonymous           auth
 }
 
 rule {
@@ -517,8 +516,8 @@ rule {
       by $this_school_admins       write
       by [dn children $People]     read
       by [dn subtree $Hosts]       read
-      by [systemgroup getent]      read
       by [systemgroup addressbook] read
+      by [systemgroup getent]      read
 }
 
 rule {
