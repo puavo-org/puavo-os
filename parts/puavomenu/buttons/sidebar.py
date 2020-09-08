@@ -65,11 +65,3 @@ class SidebarButton(buttons.base.HoverIconButtonBase):
                              self.icon_pos[0], self.icon_pos[1],
                              self.icon_size, self.icon_size,
                              [1.0, 0.0, 0.0, 1.0])
-
-        if self.disabled:
-            # hack to make the icon look "grayed out"
-            # not a very good hack as the rectangle is quite visible
-            ctx.set_source_rgba(0.96, 0.96, 0.96, 0.75)
-            ctx.rectangle(self.icon_pos[0], self.icon_pos[1],
-                          self.icon_size, self.icon_size)
-            ctx.fill()

@@ -113,6 +113,10 @@ entry {
     color: @theme_selected_fg_color;
 }
 
+.pm_button:disabled {
+    color: @insensitive_fg_color;
+}
+
 /* Program buttons */
 .button_program { }
 

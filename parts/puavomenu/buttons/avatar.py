@@ -102,8 +102,3 @@ class AvatarButton(buttons.base.HoverIconButtonBase):
             logging.error('Could not load avatar image "%s": %s',
                           path, str(exception))
             self.icon = None
-
-
-    def disable(self):
-        self.disabled = True
-        # keep the normal label color

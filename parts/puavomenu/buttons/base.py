@@ -154,5 +154,5 @@ class HoverIconButtonBase(Gtk.Button):
     # Instead, you must call this method. At the moment, a button
     # that gets disabled cannot be re-enabled.
     def disable(self):
+        self.set_sensitive(False)
         self.disabled = True
-        self.label_color_normal = [0.5, 0.5, 0.5]
