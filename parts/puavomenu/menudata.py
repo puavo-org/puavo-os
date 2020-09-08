@@ -276,7 +276,7 @@ class Menudata:
 
 
     # Searches for programs, returns them sorted by their names
-    def search(self, key, skip_puavopkg_installers):
+    def search(self, key):
         matches = []
 
         for _, program in self.programs.items():

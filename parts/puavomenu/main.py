@@ -1108,8 +1108,7 @@ class PuavoMenu(Gtk.Window):
             self.__create_current_menu()
             return
 
-        matches = self.menudata.search(
-            key, skip_puavopkg_installers=self.__are_installers_hidden())
+        matches = self.menudata.search(key)
 
         if len(matches) > 0:
             self.__empty.hide()
