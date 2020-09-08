@@ -100,6 +100,18 @@ set this_school_admins [ldapset "this/puavoSchool & user/puavoAdminOfSchool*"]
 # RULES
 #
 
+# special wide rules
+
+# Give slave ldap servers and other servers read access to
+# everything (in the same organisation of course) so that ldap
+# synchronization works.
+rule {
+  [dn subtree]
+      by [puavo_dn slave]       read
+      by [dn children $Servers] read
+      by *                      none break
+}
+
 # Samba-related rules
 
 rule {
@@ -180,28 +192,92 @@ rule {
       by [systemgroup printerqueues] read
 }
 
+# rules for $Devices
+# (should be before $Hosts, because $Devices is in ou=Hosts subtree)
+
+rule {
+  [dn exact $Devices]
+    [attrs children]
+      by $org_owners write
+      by anonymous   none
+      by *           none break
+}
+
+rule {
+  [dn exact $Devices]
+    [attrs children entry ou objectClass]
+      by [puavo_dn monitor]      read
+      by [puavo_dn puavo-ticket] read  # XXX to be removed later
+      by [puavo_dn statistics]   read
+      by $org_owners             read
+      by [systemgroup devices]   read
+      by [dn children $People]   read
+      by [dn subtree $Hosts]     read
+      by anonymous               auth
+}
+
+rule {
+  [dn children $Devices]
+    [attrs userPassword]
+      by $org_owners         write
+      by $this_school_admins write
+      by anonymous           auth
+}
+
+rule {
+  [dn children $Devices]
+    [attrs entry objectClass puavoWlanChannel puavoHostname puavoTag]
+      by [dn children $People] read
+      by *                     none break
+}
+
+rule {
+  [dn children $Devices]
+    [attrs puavoDeviceHWInfo]
+      by [dn children $Servers] write
+      by *                      none break
+}
+
+rule {
+  [dn children $Devices]
+    [attrs puavoDeviceAvailableImage puavoDeviceCurrentImage \
+           puavoDeviceHWInfo puavoDeviceMonitorsXML puavoDevicePrimaryUser ]
+      by self write
+      by *    none break
+}
+
+rule {
+  [dn children $Devices]
+      by $org_owners             write
+      by $this_school_admins     write
+      by self                    read
+      by [puavo_dn monitor]      read
+      by [puavo_dn puavo-ticket] read  # XXX to be removed later
+      by [puavo_dn statistics]   read
+      by [systemgroup devices]   read
+      by anonymous               auth
+}
+
 # rules for $Servers
-# (should be before $Hosts, because $Servers is more specific)
+# (should be before $Hosts, because $Servers is in ou=Hosts subtree)
 
 rule {
   [dn exact $Servers]
-    [attrs entry ou objectClass]
+    [attrs children]
+      by $org_owners write
+      by anonymous   none
+      by *           none break
+}
+
+rule {
+  [dn exact $Servers]
+    [attrs children entry ou objectClass]
       by $org_owners             read
       by [puavo_dn monitor]      read
       by [puavo_dn puavo-ticket] read  # XXX to be removed later
       by [puavo_dn statistics]   read
       by [systemgroup servers]   read
       by anonymous               auth
-}
-
-rule {
-  [dn exact $Servers]
-    [attrs children]
-      by $org_owners             write
-      by [puavo_dn monitor]      read
-      by [puavo_dn puavo-ticket] read  # XXX to be removed later
-      by [puavo_dn statistics]   read
-      by [systemgroup servers]   read
 }
 
 rule {
@@ -229,26 +305,6 @@ rule {
 }
 
 #
-
-rule {
-  [dn children $Devices]
-    [attrs puavoDeviceHWInfo]
-      by self                    write
-      by [dn children $Servers]  write
-      by [puavo_dn monitor]      read
-      by [puavo_dn puavo-ticket] read  # XXX to be removed later
-      by [puavo_dn statistics]   read
-      by $org_owners             read
-      by $this_school_admins     read
-      by [systemgroup devices]   read
-}
-
-rule {
-  [dn subtree]
-      by [puavo_dn slave]       read
-      by [dn children $Servers] read
-      by *                      none break
-}
 
 rule {
   [dn exact $People]
@@ -440,78 +496,6 @@ rule {
       by [systemgroup devices]   read
       by [systemgroup servers]   read
       by [dn children $People]   read
-}
-
-rule {
-  [dn exact $Devices]
-    [attrs entry ou objectClass]
-      by [puavo_dn monitor]      read
-      by [puavo_dn puavo-ticket] read  # XXX to be removed later
-      by [puavo_dn statistics]   read
-      by $org_owners             read
-      by [systemgroup devices]   read
-      by [dn children $People]   read
-      by [dn subtree $Hosts]     read
-      by anonymous               auth
-}
-
-rule {
-  [dn exact $Devices]
-    [attrs children]
-      by $org_owners             write
-      by [puavo_dn monitor]      read
-      by [puavo_dn puavo-ticket] read  # XXX to be removed later
-      by [puavo_dn statistics]   read
-      by [systemgroup devices]   read
-      by [dn children $People]   read
-      by [dn subtree $Hosts]     read
-}
-
-rule {
-  [dn children $Devices]
-    [attrs entry objectClass puavoWlanChannel puavoHostname puavoTag]
-      by $org_owners             write
-      by $this_school_admins     write
-      by self                    read
-      by [puavo_dn monitor]      read
-      by [puavo_dn puavo-ticket] read  # XXX to be removed later
-      by [puavo_dn statistics]   read
-      by [systemgroup devices]   read
-      by [dn children $People]   read
-      by anonymous               auth
-}
-
-rule {
-  [dn children $Devices]
-    [attrs userPassword]
-      by $org_owners         write
-      by $this_school_admins write
-      by anonymous           auth
-}
-
-rule {
-  [dn children $Devices]
-    [attrs puavoDeviceCurrentImage puavoDeviceMonitorsXML \
-           puavoDevicePrimaryUser puavoDeviceAvailableImage]
-      by self                    write
-      by $org_owners             write
-      by $this_school_admins     write
-      by [puavo_dn monitor]      read
-      by [puavo_dn puavo-ticket] read  # XXX to be removed later
-      by [puavo_dn statistics]   read
-      by [systemgroup devices]   read
-}
-
-rule {
-  [dn children $Devices]
-      by $org_owners             write
-      by $this_school_admins     write
-      by self                    read
-      by [puavo_dn monitor]      read
-      by [puavo_dn puavo-ticket] read  # XXX to be removed later
-      by [puavo_dn statistics]   read
-      by [systemgroup devices]   read
-      by anonymous               auth
 }
 
 rule {
