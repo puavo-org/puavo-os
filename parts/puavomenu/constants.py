@@ -1,7 +1,5 @@
 # PuavoMenu constants
 
-import enum
-
 # ------------------------------------------------------------------------------
 # Changing these will change the main window size!
 
@@ -64,6 +62,7 @@ SEARCH_WIDTH = 150
 # Size of a program button
 PROGRAM_BUTTON_ICON_SIZE = 48
 
+# Size of the user avatar, in pixels
 USER_AVATAR_SIZE = 48
 
 # Height of the machine name and release info text

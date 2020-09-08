@@ -747,7 +747,7 @@ def load(menudata_files,        # data source
             continue
 
         # remove unused menus
-        if not (flags & MenuFlags.USED):
+        if not flags & MenuFlags.USED:
             removed_menus.add(mid)
             continue
 
@@ -766,7 +766,7 @@ def load(menudata_files,        # data source
             continue
 
         # remove unused categories
-        if not (flags & CategoryFlags.USED):
+        if not flags & CategoryFlags.USED:
             removed_categories.add(cid)
             continue
 

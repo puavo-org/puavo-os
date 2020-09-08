@@ -7,7 +7,7 @@ import gi
 gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
 from gi.repository import Gtk
 
-from constants import PROGRAM_BUTTON_WIDTH, PROGRAM_COL_PADDING, PROGRAMS_PER_ROW
+from constants import PROGRAM_BUTTON_WIDTH, PROGRAM_COL_PADDING
 
 import buttons.program
 
@@ -141,7 +141,7 @@ class FrequentProgramsList(Gtk.ScrolledWindow):
 
         x = 0
 
-        for index, item in enumerate(current_items):
+        for item in current_items:
             program = all_programs[item]
 
             # use self.__parent as the parent, so popup menu handlers

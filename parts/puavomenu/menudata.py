@@ -103,7 +103,7 @@ class ProgramBase:
 # between them is that desktop programs have automatic .desktop file
 # loading, but custom programs don't.
 class Program(ProgramBase):
-    __slots__ = ('command')
+    __slots__ = ['command']
 
     def __init__(self,
                  name=None,
@@ -179,7 +179,7 @@ class UserProgram(Program):
 
 
 class WebLink(ProgramBase):
-    __slots__ = ('url')
+    __slots__ = ['url']
 
     def __init__(self,
                  name=None,
