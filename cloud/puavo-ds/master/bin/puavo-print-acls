@@ -566,31 +566,19 @@ rule {
       by [dn subtree $Hosts] read
 }
 
-rule {
-  [dn exact $Desktops]
-    [attrs entry ou objectClass]
-      by $org_owners         read
-      by [dn subtree $Hosts] read
-}
-
-rule {
-  [dn exact $Desktops]
-    [attrs children]
-      by [dn children $People] read
-      by [dn subtree $Hosts]   read
-}
-
-rule {
-  [dn exact $Files]
-    [attrs entry ou objectClass]
-      by $org_owners         read
-      by [dn subtree $Hosts] read
-}
+# rules for ou=Desktops
 
 rule {
   [dn exact $Files]
     [attrs children]
-      by $org_owners         write
+      by $org_owners write
+      by *           none break
+}
+
+rule {
+  [dn exact $Files]
+    [attrs children entry ou objectClass]
+      by $org_owners         read
       by [dn subtree $Hosts] read
 }
 
@@ -599,6 +587,15 @@ rule {
       by $org_owners         write
       by [dn subtree $Hosts] read
 }
+
+rule {
+  [dn exact $Desktops]
+    [attrs children entry ou objectClass]
+      by $org_owners         read
+      by [dn subtree $Hosts] read
+}
+
+#
 
 rule {
   [dn subtree $System_Accounts]
