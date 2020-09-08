@@ -206,6 +206,36 @@ rule {
       by [dn children $Servers] write
 }
 
+rule {
+  [dn exact $Domain_Admins]
+    [attrs memberUid]
+      by $org_owners write
+}
+
+rule {
+  [dn exact $Domain_Admins]
+      by $org_owners read
+}
+
+rule {
+  [dn exact $Domain_Users]
+    [attrs memberUid]
+      by $org_owners write
+}
+
+rule {
+  [dn exact $Domain_Users]
+      by $org_owners read
+}
+
+# Kerberos Realms related rules
+
+rule {
+  [dn subtree "ou=Kerberos Realms"]
+      by [puavo_dn kadmin] write
+      by [puavo_dn kdc]    read
+}
+
 # Samba-related rules under $People
 
 rule {
@@ -502,40 +532,12 @@ rule {
 }
 
 rule {
-  [dn subtree "ou=Kerberos Realms"]
-      by [puavo_dn kadmin] write
-      by [puavo_dn kdc]    read
-}
-
-rule {
   [dn exact $Hosts]
       by $org_owners           read
       by [dn subtree $Hosts]   read
       by [systemgroup devices] read
       by [systemgroup servers] read
       by [dn children $People] read
-}
-
-rule {
-  [dn exact $Domain_Admins]
-    [attrs memberUid]
-      by $org_owners write
-}
-
-rule {
-  [dn exact $Domain_Users]
-    [attrs memberUid]
-      by $org_owners write
-}
-
-rule {
-  [dn exact $Domain_Admins]
-      by $org_owners read
-}
-
-rule {
-  [dn exact $Domain_Users]
-      by $org_owners read
 }
 
 rule {
