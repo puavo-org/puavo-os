@@ -96,6 +96,9 @@ set teachers     [person_affiliation_set teacher]
 # $this_thing (person, device, server) is in
 set this_school_admins [ldapset "this/puavoSchool & user/puavoAdminOfSchool*"]
 
+# XXX we probably need $this_school_teachers for some password change
+# XXX restrictions
+
 #
 # RULES
 #
@@ -110,6 +113,61 @@ rule {
       by [puavo_dn slave]       read
       by [dn children $Servers] read
       by *                      none break
+}
+
+# set some early rules for userPassword first so that later rules
+# do not accidentally grant rights to it
+# "=axz" means "add authenticate delete", which excludes reading
+# (simple "write" implies reading)
+rule {
+  [dn children $Devices]
+    [attrs userPassword]
+      by $org_owners         =axz
+      by $this_school_admins =axz
+      by anonymous           auth
+}
+
+rule {
+  [dn children $Servers]
+    [attrs userPassword]
+      by $org_owners =axz
+      by anonymous   auth
+}
+
+rule {
+  # allow teachers to change student passwords
+  # (NOTE: we do not check teacher school)
+  [dn subtree $People]
+    filter="(puavoEduPersonAffiliation=student)"
+    [attrs userPassword]
+      by $teachers =axz
+      by *         none break
+}
+
+rule {
+  # if an account is locked, deny authentication
+  [dn subtree $People]
+    filter="(puavoLocked=TRUE)"
+    [attrs userPassword]
+      by anonymous none
+      by *         none break
+}
+
+rule {
+  [dn subtree $People]
+    [attrs userPassword]
+      by self                =axz
+      by [puavo_dn pw-mgmt]  =axz
+      by $org_owners         =axz
+      by $this_school_admins =axz
+      by anonymous           auth
+}
+
+rule {
+  [dn subtree $System_Accounts]
+    [attrs userPassword]
+      by $org_owners =axz
+      by anonymous   auth
 }
 
 # Samba-related rules
@@ -194,18 +252,7 @@ rule {
 
 # rules for ou=Hosts
 
-# set rules for userPassword first that later rules do not accidentally
-# grant rights to it
-rule {
-  [dn children $Devices]
-    [attrs userPassword]
-      by $org_owners         write
-      by $this_school_admins write
-      by anonymous           auth
-}
-
-# Give wide read access to these device-related puavo DNs, except to the
-# device userPassword-attribute as set above.
+# give wide read access to these device-related puavo DNs
 rule {
   [dn subtree $Hosts]
       by [puavo_dn monitor]      read
@@ -338,34 +385,6 @@ rule {
 rule {
   [dn subtree $People]
     filter="(puavoEduPersonAffiliation=student)"
-    [attrs userPassword]
-      by $org_owners   =azx
-      by $teachers     =azx
-      by *             none break
-}
-
-rule {
-  [dn subtree $People]
-    filter="(puavoLocked=TRUE)"
-    [attrs userPassword]
-      by self                =azx
-      by $org_owners         =azx
-      by $this_school_admins =azx
-}
-
-rule {
-  [dn subtree $People]
-    [attrs userPassword]
-      by self                =azx
-      by [puavo_dn pw-mgmt]  =azx
-      by $org_owners         =azx
-      by $this_school_admins =azx
-      by anonymous           auth
-}
-
-rule {
-  [dn subtree $People]
-    filter="(puavoEduPersonAffiliation=student)"
     [attrs sambaPwdLastSet shadowLastChange]
       by $org_owners write
       by $teachers   write
@@ -490,11 +509,11 @@ rule {
 
 rule {
   [dn exact $Hosts]
-      by $org_owners             read
-      by [dn subtree $Hosts]     read
-      by [systemgroup devices]   read
-      by [systemgroup servers]   read
-      by [dn children $People]   read
+      by $org_owners           read
+      by [dn subtree $Hosts]   read
+      by [systemgroup devices] read
+      by [systemgroup servers] read
+      by [dn children $People] read
 }
 
 rule {
@@ -677,17 +696,8 @@ rule {
 
 rule {
   [dn subtree $System_Accounts]
-    [attrs userPassword]
-      by $org_owners         write
-      by $this_school_admins write
-      by anonymous           auth
-}
-
-rule {
-  [dn subtree $System_Accounts]
-      by $org_owners         write
-      by $this_school_admins write
-      by [puavo_dn puavo]    read
+      by $org_owners      write
+      by [puavo_dn puavo] read
 }
 
 rule {
