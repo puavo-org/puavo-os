@@ -458,7 +458,6 @@ rule {
       by [puavo_dn puavo]      read
       by [puavo_dn pw-mgmt]    read
       by [dn children $People] read
-      by [dn subtree  $Hosts]  read
       by [systemgroup getent]  read
       by [systemgroup auth]    read
       by anonymous             auth
@@ -480,7 +479,6 @@ rule {
       by [puavo_dn puavo]      read
       by [puavo_dn pw-mgmt]    read
       by [dn children $People] read
-      by [dn subtree $Hosts]   read
       by [systemgroup getent]  read
       by [systemgroup auth]    read
       by anonymous             auth
@@ -495,7 +493,6 @@ rule {
       by [puavo_dn puavo]      read
       by [puavo_dn pw-mgmt]    read
       by [dn children $People] read
-      by [dn subtree $Hosts]   read
       by [systemgroup getent]  read
 }
 
@@ -515,7 +512,6 @@ rule {
       by $org_owners               write
       by $this_school_admins       write
       by [dn children $People]     read
-      by [dn subtree $Hosts]       read
       by [systemgroup addressbook] read
       by [systemgroup getent]      read
 }
@@ -562,7 +558,6 @@ rule {
   [dn subtree $People]
       by $org_owners         write
       by $this_school_admins write
-      by [dn subtree $Hosts] read
 }
 
 # rules for ou=Desktops
