@@ -455,12 +455,11 @@ rule {
 rule {
   [dn exact $People]
     [attrs children entry ou objectClass]
-      by [puavo_dn puavo]      read
-      by [puavo_dn pw-mgmt]    read
-      by [dn children $People] read
-      by [systemgroup getent]  read
-      by [systemgroup auth]    read
-      by anonymous             auth
+      by [puavo_dn puavo]     read
+      by [puavo_dn pw-mgmt]   read
+      by [systemgroup getent] read
+      by [systemgroup auth]   read
+      by anonymous            auth
 }
 
 rule {
@@ -474,26 +473,24 @@ rule {
   [dn subtree $People]
     [attrs entry uid puavoId eduPersonPrincipalName objectClass \
            puavoEduPersonAffiliation puavoRemovalRequestTime]
-      by $org_owners           write
-      by $this_school_admins   write
-      by [puavo_dn puavo]      read
-      by [puavo_dn pw-mgmt]    read
-      by [dn children $People] read
-      by [systemgroup getent]  read
-      by [systemgroup auth]    read
-      by anonymous             auth
+      by $org_owners          write
+      by $this_school_admins  write
+      by [puavo_dn puavo]     read
+      by [puavo_dn pw-mgmt]   read
+      by [systemgroup getent] read
+      by [systemgroup auth]   read
+      by anonymous            auth
 }
 
 rule {
   [dn subtree $People]
     [attrs uidNumber gidNumber homeDirectory givenName sn \
            puavoPreferredDesktop loginShell]
-      by $org_owners           write
-      by $this_school_admins   write
-      by [puavo_dn puavo]      read
-      by [puavo_dn pw-mgmt]    read
-      by [dn children $People] read
-      by [systemgroup getent]  read
+      by $org_owners          write
+      by $this_school_admins  write
+      by [puavo_dn puavo]     read
+      by [puavo_dn pw-mgmt]   read
+      by [systemgroup getent] read
 }
 
 rule {
@@ -511,7 +508,6 @@ rule {
     [attrs givenName sn displayName puavoEduPersonReverseDisplayName]
       by $org_owners               write
       by $this_school_admins       write
-      by [dn children $People]     read
       by [systemgroup addressbook] read
       by [systemgroup getent]      read
 }
