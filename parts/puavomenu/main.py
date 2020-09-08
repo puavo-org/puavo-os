@@ -553,14 +553,13 @@ class PuavoMenu(Gtk.Window):
         self.__create_current_menu()
         self.__programs_container.show()
 
-        self.__program_launch_counts.load()
-        self.__update_frequent_programs_list()
-
-        self.__frequent_sep.show()
-        self.__frequent_list.show()
-
-        self.__search.show()
-        self.__search.grab_focus()
+        if self.menudata.category_index:
+            self.__program_launch_counts.load()
+            self.__update_frequent_programs_list()
+            self.__frequent_sep.show()
+            self.__frequent_list.show()
+            self.__search.show()
+            self.__search.grab_focus()
 
         logging.info('PuavoMenu::load_menu_data() ends');
         return True
