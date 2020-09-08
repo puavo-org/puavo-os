@@ -236,7 +236,7 @@ rule {
       by [puavo_dn kdc]    read
 }
 
-# Samba-related rules under $People
+# Samba-related rules under ou=People
 
 rule {
   [dn subtree $People]
@@ -252,9 +252,10 @@ rule {
       by [dn children $Servers] write
 }
 
-# rules for ou=Hosts
+# rules for ou=Hosts (and subtrees)
 
 # give wide read access to these device-related puavo DNs
+# (not that these can not look under ou=Samba,ou=Hosts)
 rule {
   [dn subtree $Hosts]
       by [puavo_dn monitor]      read
@@ -263,7 +264,7 @@ rule {
       by *                       none break
 }
 
-# rules for $Devices
+# rules for ou=Devices,ou=Hosts
 # (should be before $Hosts, because $Devices is in ou=Hosts subtree)
 
 rule {
@@ -315,7 +316,7 @@ rule {
       by anonymous             auth
 }
 
-# rules for $Servers
+# rules for ou=Servers,ou=Hosts
 # (should be before $Hosts, because $Servers is in ou=Hosts subtree)
 
 rule {
@@ -355,6 +356,17 @@ rule {
       by anonymous               auth
 }
 
+# rules for ou=Hosts specifically
+
+rule {
+  [dn exact $Hosts]
+      by $org_owners           read
+      by [dn subtree $Hosts]   read
+      by [systemgroup devices] read
+      by [systemgroup servers] read
+      by [dn children $People] read     # XXX why is this?
+}
+
 # rules for ou=Printers
 
 rule {
@@ -383,7 +395,7 @@ rule {
       by [systemgroup printerqueues] read
 }
 
-#
+# rules for ou=People
 
 rule {
   [dn exact $People]
@@ -531,14 +543,7 @@ rule {
       by [dn subtree $Hosts] read
 }
 
-rule {
-  [dn exact $Hosts]
-      by $org_owners           read
-      by [dn subtree $Hosts]   read
-      by [systemgroup devices] read
-      by [systemgroup servers] read
-      by [dn children $People] read
-}
+# Groups
 
 rule {
   [dn exact $Groups]
