@@ -9,7 +9,7 @@
 # GLOBAL VARIABLES
 #
 
-set ldapsuffix [lindex $argv 0]
+set ldapsuffix   [lindex $argv 0]
 set samba_domain [lindex $argv 1]
 
 if {[llength $argv] != 2 || $ldapsuffix eq "" || $samba_domain eq ""} {
@@ -60,10 +60,6 @@ proc ldapset_with_base {setspec} {
 
 proc ldapset {setspec} {
   format {set="%s"} $setspec
-}
-
-proc devicetype_set {devtype} {
-  ldapset [format {user/puavoDeviceType & [%s]} $devtype]
 }
 
 proc person_affiliation_set {affliation} {
@@ -438,8 +434,8 @@ rule {
     by $this_school_admins   write
     by [puavo_dn puavo]      read
     by [puavo_dn statistics] read
-    by [dn children $People] read
-    by [dn subtree $Hosts]   read
+    by [dn children $People] read   # XXX is this too wide?
+    by [dn subtree $Hosts]   read   # XXX is this too wide?
     by [systemgroup getent]  read
 }
 
@@ -587,7 +583,7 @@ rule {
       by [dn subtree $Hosts] read
 }
 
-#
+# rules for ou=System Accounts and ou=System Groups
 
 rule {
   [dn subtree $System_Accounts]
@@ -608,61 +604,57 @@ rule {
       by $this_school_admins read
 }
 
+# rules for the organisation entry
+# "+dsx" = "disclose search auth"
+
 rule {
   [dn]
-    [attrs entry]
-      by [puavo_dn kadmin]     read
-      by [puavo_dn kdc]        read
-      by [puavo_dn puavo]      read
-      by $org_owners           read
-      by [dn children $People] read
-      by [dn subtree $Hosts]   read
-      by [systemgroup getent]  read
-      by [systemgroup orginfo] read
-      by *                     +sxd
+    [attrs entry objectClass puavoDomain]
+      by $org_owners read
+      by *           none break
 }
 
 rule {
   [dn]
-    [attrs objectClass]
-      by [puavo_dn kadmin]     read
-      by [puavo_dn kdc]        read
-      by [puavo_dn puavo]      read
-      by $org_owners           read
-      by [dn children $People] read
-      by [dn subtree $Hosts]   read
-      by [systemgroup getent]  read
-      by [systemgroup orginfo] read
-      by *                     +sxd
-}
-
-rule {
-  [dn]
-    [attrs puavoEduOrgAbbreviation st l street postalCode postalAddress \
-           telephoneNumber postOfficeBox facsimileTelephoneNumber description \
-           preferredLanguage puavoLocale puavoTimezone puavoKeyboardLayout \
-           puavoKeyboardVariant eduOrgLegalName o owner eduOrgHomePageURI \
-           puavoWlanSSID puavoWlanChannel puavoDeviceImage puavoAllowGuest \
-           puavoPersonalDevice puavoActiveService puavoDeviceOnHour \
-           puavoDeviceOffHour puavoDeviceAutoPowerOffMode \
-           puavoImageSeriesSourceURL puavoAutomaticImageUpdates puavoConf]
+    [attrs description                 \
+           eduOrgHomePageURI           \
+           eduOrgLegalName             \
+           entry                       \
+           facsimileTelephoneNumber    \
+           l                           \
+           o                           \
+           objectClass                 \
+           owner                       \
+           postalAddress               \
+           postalCode                  \
+           postOfficeBox               \
+           preferredLanguage           \
+           puavoActiveService          \
+           puavoAllowGuest             \
+           puavoAutomaticImageUpdates  \
+           puavoConf                   \
+           puavoDeviceAutoPowerOffMode \
+           puavoDeviceImage            \
+           puavoDeviceOffHour          \
+           puavoDeviceOnHour           \
+           puavoEduOrgAbbreviation     \
+           puavoImageSeriesSourceURL   \
+           puavoKeyboardLayout         \
+           puavoKeyboardVariant        \
+           puavoLocale                 \
+           puavoPersonalDevice         \
+           puavoTimezone               \
+           puavoWlanChannel            \
+           puavoWlanSSID               \
+           st                          \
+           street                      \
+           telephoneNumber]
       by $org_owners           write
-      by [puavo_dn kadmin]     read
-      by [puavo_dn kdc]        read
-      by [puavo_dn puavo]      read
       by [dn children $People] read
       by [dn subtree $Hosts]   read
       by [systemgroup getent]  read
       by [systemgroup orginfo] read
-      by * +sxd
-}
-
-rule {
-  [dn]
-    [attrs owner puavoDomain]
-      by [puavo_dn puavo]      read
-      by [systemgroup orginfo] read
-      by $org_owners           read
+      by *                     +dsx
 }
 
 rule {
@@ -674,7 +666,7 @@ rule {
       by [puavo_dn puavo-ticket] read  # XXX to be removed later
       by [puavo_dn statistics]   read
       by $org_owners             read
-      by *                       +sxd
+      by *                       +dsx
 }
 
 #
