@@ -394,6 +394,90 @@ rule {
       by [systemgroup printerqueues] read
 }
 
+# rules for ou=Groups
+
+rule {
+  [dn exact $Groups]
+    [attrs children]
+      by $org_owners write
+      by *           none break
+}
+
+rule {
+  [dn exact $Groups]
+    [attrs children entry ou objectClass]
+      by $org_owners           read
+      by [dn children $People] read
+      by [dn subtree $Hosts]   read
+      by [systemgroup getent]  read
+}
+
+rule {
+  [dn subtree $Groups]
+    filter=(objectClass=puavoEduGroup)
+    [attrs gidNumber cn puavoId objectClass]
+      by $org_owners             write
+      by $this_school_admins     write
+      by [dn children $People]   read
+      by [dn subtree $Hosts]     read
+      by [systemgroup getent]    read
+}
+
+rule {
+  [dn subtree $Groups]
+    filter=(objectClass=puavoEduGroup)
+      by $org_owners           write
+      by $this_school_admins   write
+      by [dn children $People] read
+      by [dn subtree $Hosts]   read
+      by [systemgroup getent]  read
+}
+
+rule {
+  [dn subtree $Groups]
+    filter=(objectClass=puavoSchool)
+    [attrs gidNumber cn puavoId objectClass]
+      by $org_owners             +azrwsc
+      by $schooladmins           +rwsc
+      by [puavo_dn puavo]        read
+      by [puavo_dn statistics]   read
+      by [dn children $People]   read
+      by [dn subtree $Hosts]     read
+      by [systemgroup getent]    read break
+}
+
+rule {
+  [dn subtree $Groups]
+    filter=(objectClass=puavoSchool)
+    [attrs displayName puavoNamePrefix puavoSchoolHomePageURL description \
+           telephoneNumber facsimileTelephoneNumber l street postOfficeBox \
+           postalAddress postalCode st jpegPhoto preferredLanguage \
+           puavoLocale puavoDeviceImage puavoAllowGuest puavoPersonalDevice \
+           puavoPrinterQueue puavoWirelessPrinterQueue member memberUid \
+           puavoActiveService puavoDeviceAutoPowerOffMode \
+           puavoAutomaticImageUpdates puavoDeviceOffHour puavoDeviceOnHour \
+           puavoExternalFeed puavoMountpoint puavoTag puavoWlanChannel \
+           puavoWlanSSID]
+      by $org_owners             write
+      by $schooladmins           write
+      by [puavo_dn statistics]   read
+      by [dn children $People]   read
+      by [dn subtree $Hosts]     read
+      by [systemgroup getent]    read break
+}
+
+rule {
+  [dn subtree $Groups]
+    filter=(objectClass=puavoSchool)
+      by $org_owners             write
+      by $schooladmins           +rscxd
+      by [puavo_dn puavo]        read
+      by [puavo_dn statistics]   read
+      by [dn children $People]   read
+      by [dn subtree $Hosts]     read
+      by [systemgroup getent]    read
+}
+
 # rules for ou=People
 
 rule {
@@ -532,92 +616,6 @@ rule {
       by $org_owners         write
       by $this_school_admins write
       by [dn subtree $Hosts] read
-}
-
-# Groups
-
-rule {
-  [dn exact $Groups]
-    [attrs entry ou objectClass]
-      by $org_owners             read
-      by [dn children $People]   read
-      by [dn subtree $Hosts]     read
-      by [systemgroup getent]    read
-}
-
-rule {
-  [dn exact $Groups]
-    [attrs children]
-      by $org_owners             write
-      by [dn children $People]   read
-      by [dn subtree $Hosts]     read
-      by [systemgroup getent]    read
-}
-
-rule {
-  [dn subtree $Groups]
-    filter=(objectClass=puavoEduGroup)
-    [attrs gidNumber cn puavoId objectClass]
-      by $org_owners             write
-      by $this_school_admins     write
-      by [dn children $People]   read
-      by [dn subtree $Hosts]     read
-      by [systemgroup getent]    read
-}
-
-rule {
-  [dn subtree $Groups]
-    filter=(objectClass=puavoSchool)
-    [attrs gidNumber cn puavoId objectClass]
-      by $org_owners             +azrwsc
-      by $schooladmins           +rwsc
-      by [puavo_dn puavo]        read
-      by [puavo_dn statistics]   read
-      by [dn children $People]   read
-      by [dn subtree $Hosts]     read
-      by [systemgroup getent]    read break
-}
-
-rule {
-  [dn subtree $Groups]
-    filter=(objectClass=puavoEduGroup)
-      by $org_owners           write
-      by $this_school_admins   write
-      by [dn children $People] read
-      by [dn subtree $Hosts]   read
-      by [systemgroup getent]  read
-}
-
-rule {
-  [dn subtree $Groups]
-    filter=(objectClass=puavoSchool)
-    [attrs displayName puavoNamePrefix puavoSchoolHomePageURL description \
-           telephoneNumber facsimileTelephoneNumber l street postOfficeBox \
-           postalAddress postalCode st jpegPhoto preferredLanguage \
-           puavoLocale puavoDeviceImage puavoAllowGuest puavoPersonalDevice \
-           puavoPrinterQueue puavoWirelessPrinterQueue member memberUid \
-           puavoActiveService puavoDeviceAutoPowerOffMode \
-           puavoAutomaticImageUpdates puavoDeviceOffHour puavoDeviceOnHour \
-           puavoExternalFeed puavoMountpoint puavoTag puavoWlanChannel \
-           puavoWlanSSID]
-      by $org_owners             write
-      by $schooladmins           write
-      by [puavo_dn statistics]   read
-      by [dn children $People]   read
-      by [dn subtree $Hosts]     read
-      by [systemgroup getent]    read break
-}
-
-rule {
-  [dn subtree $Groups]
-    filter=(objectClass=puavoSchool)
-      by $org_owners             write
-      by $schooladmins           +rscxd
-      by [puavo_dn puavo]        read
-      by [puavo_dn statistics]   read
-      by [dn children $People]   read
-      by [dn subtree $Hosts]     read
-      by [systemgroup getent]    read
 }
 
 rule {
