@@ -13,21 +13,25 @@
 }
 
 /* Menu container (ie. "left side") */
-#menubox { 
+#menubox {
     background: alpha(@theme_bg_color, 1);
-    border-radius: 10px;
-    padding-left: 5px;
+    border-radius: 5px;
+    padding: 5px;
 }
 
 /* The category selector */
 #category {
     border: 0;
+    margin: 0;
+    padding: 0;
     background: none;
     box-shadow: none;
     font-weight: normal;
 }
 
 #category header {
+    margin: 0;
+    padding: 0;
     background: none;
     border-bottom: 2px solid @theme_selected_bg_color;
     box-shadow: none;
@@ -37,15 +41,13 @@
     border: none;
     background: none;
     box-shadow: none;
-    margin: 0;
-    padding: 0;
 }
 
 #category tab {
     border: 0;
     border-radius: 5px 5px 0px 0px;
     box-shadow: none;
-    margin: 0 1px 0 0;
+    margin: 0 5px 0 0;
     padding: 5px 15px;
     color: @theme_text_color;
 }
@@ -92,7 +94,7 @@ entry {
 #sidebar { }
 
 /* The host info label */
-#hostinfo { 
+#hostinfo {
     font-size:0.9em;
 }
 

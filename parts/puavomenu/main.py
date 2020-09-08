@@ -318,13 +318,6 @@ class PuavoMenu(Gtk.Window):
 
         self.__main_container.put(self.menu_box, MAIN_PADDING, MAIN_PADDING)
 
-        utils_gui.create_separator(container=self.__main_container,
-                                   x=SIDEBAR_LEFT - MAIN_PADDING,
-                                   y=MAIN_PADDING,
-                                   w=1,
-                                   h=WINDOW_HEIGHT - (MAIN_PADDING * 2),
-                                   orientation=Gtk.Orientation.VERTICAL)
-
         self.__main_container.put(self.sidebar_box, SIDEBAR_LEFT, SIDEBAR_TOP)
 
         self.add(self.__main_container)
