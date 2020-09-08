@@ -670,7 +670,7 @@ rule {
 
 rule {
   [dn]
-    [attrs owner puavoDomain puavoPuppetHost]
+    [attrs owner puavoDomain]
       by [puavo_dn puavo]      read
       by [systemgroup orginfo] read
       by $org_owners           read
