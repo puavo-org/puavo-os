@@ -864,8 +864,14 @@ def load(menudata_files,        # data source
             dst = menudata.Program(name, desc, icon)
             dst.command = src.get('command', None)
         elif src['type'] == 'web':
-            dst = menudata.WebLink(name, desc, icon)
+            dst = menudata.WebLink(name, icon=icon)
             dst.url = src.get('url', None)
+
+            # For web links, show the URL in the description tooltip
+            if desc is not None:
+                dst.description = f'{desc}\n({dst.url})'
+            else:
+                dst.description = dst.url
 
         dst.menudata_id = pid
         dst.keywords = frozenset(src.get('keywords', ()))
