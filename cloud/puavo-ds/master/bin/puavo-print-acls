@@ -132,7 +132,7 @@ rule {
 rule {
   # allow teachers to change student passwords
   # (NOTE: we do not check teacher school)
-  [dn subtree $People]
+  [dn children $People]
     filter="(puavoEduPersonAffiliation=student)"
     [attrs userPassword]
       by $teachers =axz
@@ -141,7 +141,7 @@ rule {
 
 rule {
   # if an account is locked, deny authentication
-  [dn subtree $People]
+  [dn children $People]
     filter="(puavoLocked=TRUE)"
     [attrs userPassword]
       by anonymous none
@@ -149,7 +149,7 @@ rule {
 }
 
 rule {
-  [dn subtree $People]
+  [dn children $People]
     [attrs userPassword]
       by self                =axz
       by [puavo_dn pw-mgmt]  =axz
@@ -159,7 +159,7 @@ rule {
 }
 
 rule {
-  [dn subtree $People]
+  [dn children $People]
     filter="(puavoEduPersonAffiliation=student)"
     [attrs sambaPwdLastSet]
       by $teachers write
@@ -167,7 +167,7 @@ rule {
 }
 
 rule {
-  [dn subtree $People]
+  [dn children $People]
     [attrs sambaPwdLastSet]
       by self                write
       by [puavo_dn pw-mgmt]  write
@@ -176,7 +176,7 @@ rule {
 }
 
 rule {
-  [dn subtree $System_Accounts]
+  [dn children $System_Accounts]
     [attrs userPassword]
       by $org_owners =axz
       by anonymous   auth
@@ -251,7 +251,7 @@ rule {
 # Samba-related rules under ou=People
 
 rule {
-  [dn subtree $People]
+  [dn children $People]
     [attrs sambaNTPassword]
       by [dn children $Servers] write
       by $org_owners            =az
@@ -259,7 +259,7 @@ rule {
 }
 
 rule {
-  [dn subtree $People]
+  [dn children $People]
     [attrs sambaAcctFlags]
       by [dn children $Servers] write
 }
@@ -293,7 +293,7 @@ rule {
       by $org_owners           read
       by [systemgroup devices] read
       by [dn children $People] read
-      by [dn subtree $Hosts]   read
+      by [dn children $Hosts]  read
       by anonymous             auth
 }
 
@@ -376,7 +376,7 @@ rule {
 rule {
   [dn exact $Hosts]
       by $org_owners           read
-      by [dn subtree $Hosts]   read
+      by [dn children $Hosts]  read
       by [systemgroup devices] read
       by [systemgroup servers] read
       by [dn children $People] read     # XXX why is this?
@@ -424,7 +424,7 @@ rule {
     [attrs children entry ou objectClass]
       by $org_owners           read
       by [dn children $People] read
-      by [dn subtree $Hosts]   read
+      by [dn children $Hosts]  read
       by [systemgroup getent]  read
 }
 
@@ -435,7 +435,7 @@ rule {
     by [puavo_dn puavo]      read
     by [puavo_dn statistics] read
     by [dn children $People] read   # XXX is this too wide?
-    by [dn subtree $Hosts]   read   # XXX is this too wide?
+    by [dn children $Hosts]  read   # XXX is this too wide?
     by [systemgroup getent]  read
 }
 
@@ -566,21 +566,21 @@ rule {
 rule {
   [dn exact $Files]
     [attrs children entry ou objectClass]
-      by $org_owners         read
-      by [dn subtree $Hosts] read
+      by $org_owners          read
+      by [dn children $Hosts] read
 }
 
 rule {
   [dn children $Files]
-      by $org_owners         write
-      by [dn subtree $Hosts] read
+      by $org_owners          write
+      by [dn children $Hosts] read
 }
 
 rule {
   [dn exact $Desktops]
     [attrs children entry ou objectClass]
-      by $org_owners         read
-      by [dn subtree $Hosts] read
+      by $org_owners          read
+      by [dn children $Hosts] read
 }
 
 # rules for ou=System Accounts and ou=System Groups
@@ -651,7 +651,7 @@ rule {
            telephoneNumber]
       by $org_owners           write
       by [dn children $People] read
-      by [dn subtree $Hosts]   read
+      by [dn children $Hosts]  read
       by [systemgroup getent]  read
       by [systemgroup orginfo] read
       by *                     +dsx
