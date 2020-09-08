@@ -428,15 +428,29 @@ rule {
       by [systemgroup getent]  read
 }
 
+# Do not allow read access to People and Hosts to group membership
+# lists.  We do not want ordinary people to be able to list all usernames
+# in an organisation (but for teachers this is okay).
 rule {
   [dn subtree $Groups]
-    by $org_owners           write
-    by $this_school_admins   write
-    by [puavo_dn puavo]      read
-    by [puavo_dn statistics] read
-    by [dn children $People] read   # XXX is this too wide?
-    by [dn children $Hosts]  read   # XXX is this too wide?
-    by [systemgroup getent]  read
+    [attrs memberUid member]
+      by $org_owners            write
+      by $this_school_admins    write
+      by $teachers              read
+      by [dn children $People]  none
+      by [dn children $Devices] none
+      by *                      none break
+}
+
+rule {
+  [dn subtree $Groups]
+      by $org_owners           write
+      by $this_school_admins   write
+      by [puavo_dn puavo]      read
+      by [puavo_dn statistics] read
+      by [dn children $People] read
+      by [dn children $Hosts]  read
+      by [systemgroup getent]  read
 }
 
 # rules for ou=People
