@@ -455,105 +455,107 @@ rule {
 rule {
   [dn exact $People]
     [attrs children entry ou objectClass]
-      by [puavo_dn puavo]     read
-      by [puavo_dn pw-mgmt]   read
-      by [systemgroup getent] read
-      by [systemgroup auth]   read
-      by anonymous            auth
-}
-
-rule {
-  [dn subtree $People]
-    [attrs puavoAdminOfSchool]
-      by $org_owners write
-      by *           none break
-}
-
-rule {
-  [dn subtree $People]
-    [attrs entry uid puavoId eduPersonPrincipalName objectClass \
-           puavoEduPersonAffiliation puavoRemovalRequestTime]
-      by $org_owners          write
-      by $this_school_admins  write
-      by [puavo_dn puavo]     read
-      by [puavo_dn pw-mgmt]   read
-      by [systemgroup getent] read
-      by [systemgroup auth]   read
-      by anonymous            auth
-}
-
-rule {
-  [dn subtree $People]
-    [attrs uidNumber gidNumber homeDirectory givenName sn \
-           puavoPreferredDesktop loginShell]
-      by $org_owners          write
-      by $this_school_admins  write
-      by [puavo_dn puavo]     read
-      by [puavo_dn pw-mgmt]   read
-      by [systemgroup getent] read
-}
-
-rule {
-  [dn subtree $People]
-    [attrs puavoExternalId]
-      by $org_owners               write
-      by $this_school_admins       write
-      by self                      read
-      by $teachers                 read
-      by [systemgroup addressbook] read
-}
-
-rule {
-  [dn subtree $People]
-    [attrs givenName sn displayName puavoEduPersonReverseDisplayName]
-      by $org_owners               write
-      by $this_school_admins       write
-      by [systemgroup addressbook] read
-      by [systemgroup getent]      read
-}
-
-rule {
-  [dn subtree $People]
-    [attrs puavoEduPersonPersonnelNumber]
-      by $org_owners               write
-      by $this_school_admins       write
-      by [systemgroup addressbook] read
-}
-
-rule {
-  [dn subtree $People]
-    [attrs jpegPhoto mail preferredLanguage puavoLocale telephoneNumber]
-      by self                      write
-      by $org_owners               write
-      by $this_school_admins       write
       by [puavo_dn puavo]          read
       by [puavo_dn pw-mgmt]        read
       by [systemgroup addressbook] read
+      by [systemgroup auth]        read
+      by [systemgroup getent]      read
+      by anonymous                 auth
 }
 
 rule {
   [dn subtree $People]
-    [attrs puavoAcceptedTerms]
-      by self                write
-      by $org_owners         write
-      by $this_school_admins write
-      by [puavo_dn puavo]    read
+    [attrs entry uid objectClass]
+      by anonymous auth
+      by *         none break
 }
 
+# some permissions to "addressbook"
 rule {
   [dn subtree $People]
-    [attrs puavoSchool puavoLocked]
-      by $org_owners          write
-      by $this_school_admins  write
-      by self                 read
-      by [puavo_dn puavo]     read
+    [attrs displayName                      \
+           givenName                        \
+           jpegPhoto                        \
+           mail                             \
+           preferredLanguage                \
+           puavoEduPersonPersonnelNumber    \
+           puavoEduPersonReverseDisplayName \
+           puavoExternalId                  \
+           puavoLocale                      \
+           sn                               \
+           telephoneNumber                  \
+           uid]
+      by [systemgroup addressbook] read
+      by *                         none break
+}
+
+# some permissions to "auth"
+rule {
+  [dn subtree $People]
+    [attrs eduPersonPrincipalName    \
+           puavoEduPersonAffiliation \
+           puavoRemovalRequestTime   \
+           uid]
+      by [systemgroup auth] read
+      by *                  none break
+}
+
+# some permissions to service "getent"
+# XXX do we need still this?  If still in use, should the name be changed?
+rule {
+  [dn subtree $People]
+    [attrs displayName                      \
+           eduPersonPrincipalName           \
+           gidNumber                        \
+           givenName                        \
+           homeDirectory                    \
+           loginShell                       \
+           puavoEduPersonAffiliation        \
+           puavoEduPersonReverseDisplayName \
+           puavoId                          \
+           puavoLocked                      \
+           puavoPreferredDesktop            \
+           puavoRemovalRequestTime          \
+           puavoSchool                      \
+           sn                               \
+           uid                              \
+           uidNumber]
       by [systemgroup getent] read
+      by *                    none break
+}
+
+rule {
+  [dn subtree $People]
+    [attrs gidNumber             \
+           givenName             \
+           homeDirectory         \
+           loginShell            \
+           puavoPreferredDesktop \
+           sn                    \
+           uidNumber]
+      by [puavo_dn puavo]   read
+      by [puavo_dn pw-mgmt] read
+      by *                  none break
+}
+
+# allow users to change some of their own information
+rule {
+  [dn subtree $People]
+    [attrs jpegPhoto          \
+           mail               \
+           preferredLanguage  \
+           puavoAcceptedTerms \
+           puavoLocale        \
+           telephoneNumber]
+      by self write
+      by *    none break
 }
 
 rule {
   [dn subtree $People]
       by $org_owners         write
       by $this_school_admins write
+      by self                read
 }
 
 # rules for ou=Desktops
