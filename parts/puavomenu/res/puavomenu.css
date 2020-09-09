@@ -127,7 +127,7 @@ entry {
 /* Menu buttons */
 .button_menu {
     background: alpha(@borders, 0.4);
-    border-radius: 20;
+    border-radius: 20px;
     font-style: italic;
 }
 
