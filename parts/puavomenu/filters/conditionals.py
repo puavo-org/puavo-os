@@ -1,6 +1,7 @@
 # Conditional evaluators
 
 import os
+import re
 import subprocess
 import logging
 
@@ -14,11 +15,13 @@ def __validate_common_params(name, data):
 
     params = data['params']
 
-    if not isinstance(params, dict) or len(params) == 0:
+    if not params or not isinstance(params, dict):
         logging.error('Conditional "%s" has invalid or empty params block', name)
         return None
 
-    if 'name' not in params or not isinstance(params['name'], str) or utils.is_empty(params['name']):
+    if 'name' not in params or \
+       not isinstance(params['name'], str) or \
+       utils.is_empty(params['name']):
         logging.error('Conditional "%s" has a missing, invalid or empty "name" parameter', name)
         return None
 
@@ -47,10 +50,7 @@ def __do_env_var(name, data):
     if check_name is None:
         # No value has been specified, the environment variable
         # simply needs to exist
-        if target_value is None:
-            return False
-        else:
-            return True
+        return target_value is not None
 
     # But if there is a value, then it must be a string. It can be empty.
     if not isinstance(params[check_name], str):
@@ -63,12 +63,9 @@ def __do_env_var(name, data):
         return False
 
     if regexp:
-        if re.search(params['regexp_value'], target_value) is None:
-            return False
-        else:
-            return True
-    else:
-        return params['value'] == target_value
+        return re.search(params['regexp_value'], target_value) is not None
+
+    return params['value'] == target_value
 
 
 def __do_puavoconf(name, data):
@@ -123,12 +120,9 @@ def __do_puavoconf(name, data):
         return False
 
     if regexp:
-        if re.search(params['regexp_value'], target_value) is None:
-            return False
-        else:
-            return True
-    else:
-        return params['value'] == target_value
+        return re.search(params['regexp_value'], target_value) is not None
+
+    return params['value'] == target_value
 
 
 def __do_constant(name, data):
@@ -138,7 +132,7 @@ def __do_constant(name, data):
 
     params = data['params']
 
-    if not isinstance(params, dict) or len(params) == 0:
+    if not isinstance(params, dict) or not params:
         logging.error('Conditional "%s" has invalid or empty params block', name)
         return None
 
@@ -221,7 +215,7 @@ def evaluate(conditionals):
                 name, function)
             ret = False
 
-        if ret == None:
+        if ret is None:
             logging.error(
                 'Cannot determine the value for conditional \"%s\", assuming it\'s false',
                 name)
@@ -245,7 +239,6 @@ def is_hidden(conditionals, cond_string, name, item_type):
     # to True. Equivalent to "foo && bar && baz", with optional negation
     # specified like this: "foo && !bar && baz".
     for cond in cond_string.strip().split(', '):
-        original = cond
         wanted = True
 
         if not utils.is_empty(cond) and cond[0] == '!':

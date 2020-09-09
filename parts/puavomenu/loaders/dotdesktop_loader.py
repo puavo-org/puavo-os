@@ -18,13 +18,13 @@ def load(filename):
         for line in inf.readlines():
             line = line.strip()
 
-            if len(line) == 0 or line[0] == '#':
+            if not line or line[0] == '#':
                 continue
 
             if line[0] == '[' and line[-1] == ']':  # [section name]
                 sect_name = line[1:-1].strip()
 
-                if len(sect_name) == 0:
+                if not sect_name:
                     # Nothing in the spec says that empty section names are
                     # invalid, but what on Earth would we do with them?
                     logging.warning('Desktop file "%s" contains an empty '
@@ -49,7 +49,7 @@ def load(filename):
                     # The spec says nothing about empty keys and values, but I
                     # guess it's reasonable to allow empty values but not empty
                     # keys
-                    if len(key) == 0:
+                    if not key:
                         continue
 
                     # pylint: disable=unsupported-membership-test
@@ -61,7 +61,7 @@ def load(filename):
                                         filename, key)
                         continue
 
-                    # pylint: disable=unsubscriptable-object
+                    # pylint: disable=unsupported-assignment-operation
                     section[key] = value
 
     return data

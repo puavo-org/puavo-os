@@ -5,9 +5,6 @@ import logging
 import gi
 from gi.repository import Pango
 
-gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
-from gi.repository import Gtk
-
 from constants import SIDEBAR_WIDTH
 import utils_gui
 
@@ -44,8 +41,7 @@ class AvatarButton(buttons.base.HoverIconButtonBase):
             self.icon = None
 
         self.label_layout.set_alignment(Pango.Alignment.LEFT)
-        self.label_layout.set_width(
-            (SIDEBAR_WIDTH - self.ICON_SIZE - 8) * Pango.SCALE)
+        self.label_layout.set_width((SIDEBAR_WIDTH - self.ICON_SIZE - 8) * Pango.SCALE)
         self.label_layout.set_ellipsize(Pango.EllipsizeMode.END)
 
         self.compute_elements()

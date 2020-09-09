@@ -69,13 +69,10 @@ class Filter:
                 # Action and target matches. If the optional name is
                 # specified, match it too.
                 if name:
-                    if a.name == name:
-                        return True
-                    else:
-                        return False
-                else:
-                    # Action and target matches are enough
-                    return True
+                    return a.name == name
+
+                # Action and target matches are enough
+                return True
 
         return False
 
@@ -115,18 +112,17 @@ class Filter:
                 namespace = tag[:sep]
                 tag = tag[sep+1:]
 
-            if len(namespace) == 0 or len(tag) == 0:
+            if not namespace or not tag:
                 if strict_reject:
                     logging.error(
                         'Filter::parse_string(): rejecting filter string "%s" because "%s" '
                         'is not a valid tag', tag_string, orig_tag)
                     self.reset()
                     return
-                else:
-                    logging.warning(
-                        'Filter::parse_string(): "%s" is not a valid tag, ignoring it',
-                        orig_tag)
 
+                logging.warning(
+                    'Filter::parse_string(): "%s" is not a valid tag, ignoring it',
+                    orig_tag)
                 continue
 
             # The tag can contain + and - characters, but it can't start
@@ -138,11 +134,10 @@ class Filter:
                         'is not a valid tag', tag_string, orig_tag)
                     self.reset()
                     return
-                else:
-                    logging.warning(
-                        'Filter::parse_string(): "%s" is not a valid tag, ignoring it',
-                        orig_tag)
 
+                logging.warning(
+                    'Filter::parse_string(): "%s" is not a valid tag, ignoring it',
+                    orig_tag)
                 continue
 
             if namespace in ('t', 'tag'):
@@ -161,11 +156,10 @@ class Filter:
                         tag_string, namespace)
                     self.reset()
                     return
-                else:
-                    logging.warning(
-                        'Filter::parse_string(): "%s" is not a valid tag namespace, ignoring tag',
-                        orig_tag)
 
+                logging.warning(
+                    'Filter::parse_string(): "%s" is not a valid tag namespace, ignoring tag',
+                    orig_tag)
                 continue
 
             self.actions.append(Action(action, target, tag, orig_tag))

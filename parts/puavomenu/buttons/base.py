@@ -4,8 +4,7 @@ import logging
 
 import gi
 gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
-gi.require_version('PangoCairo', '1.0')
-from gi.repository import Gtk, Pango, PangoCairo
+from gi.repository import Gtk, Pango
 
 import utils_gui
 

@@ -58,7 +58,7 @@ class AvatarDownloaderThread(threading.Thread):
                 end_time = time.perf_counter()
 
                 logging.info('Downloaded %d bytes of avatar image data in %s ms',
-                    len(image), '{0:.1f}'.format((end_time - start_time) * 1000.0))
+                             len(image), '{0:.1f}'.format((end_time - start_time) * 1000.0))
 
                 # Wrap this in its own exception handler, so if it fails,
                 # we just return instead of redownloading the image

@@ -201,10 +201,10 @@ def merge_json_and_desktop_data(json_data, desktop_data, language):
         for raw_cat in filter(None, desktop_data['Categories'].split(';')):
             cat = raw_cat.strip()
 
-            if len(cat) > 0:
+            if cat:
                 tags.add(cat.lower())
 
-        if len(tags) > 0:
+        if tags:
             if 'tags' in json_data:
                 json_data['tags'].update(tags)
             else:
@@ -570,7 +570,7 @@ def load(menudata_files,        # data source
                 continue
 
             # No tags -> program is always hidden, no matter what
-            if 'tags' not in program or len(program['tags']) == 0:
+            if 'tags' not in program or not program['tags']:
                 logging.warning('Program "%s" has no tags, forcibly hiding it', name)
                 program['flags'] |= ProgramFlags.HIDDEN
                 continue
@@ -631,7 +631,7 @@ def load(menudata_files,        # data source
 
     # Apply conditionals. They can override tags, to allow per-user
     # customisations (we have no per-user puavoconf).
-    if len(conditionals) > 0:
+    if conditionals:
         for name, program in programs.items():
             if program['flags'] & ProgramFlags.BROKEN:
                 continue

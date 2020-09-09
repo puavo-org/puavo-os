@@ -1,10 +1,9 @@
 # The Sidebar: the user avatar, "system" buttons and the host info
 
 import logging
-import lsb_release
-import threading
 import getpass
 import os.path
+import lsb_release
 
 import gi
 gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
@@ -12,7 +11,7 @@ from gi.repository import Gtk
 from gi.repository import Pango
 from gi.repository import Gio
 
-from constants import WINDOW_HEIGHT, MAIN_PADDING, SIDEBAR_WIDTH, SIDEBAR_HEIGHT, \
+from constants import MAIN_PADDING, SIDEBAR_WIDTH, SIDEBAR_HEIGHT, \
                       USER_AVATAR_SIZE, HOSTINFO_LABEL_HEIGHT, SEPARATOR_SIZE
 
 import utils
@@ -44,10 +43,10 @@ def get_changelog_url(lang):
     url = utils.puavo_conf('puavo.support.image_changelog_url',
                            'https://changelog.opinsys.fi')
 
-    url = url.replace('%%IMAGESERIES%%',  series)
+    url = url.replace('%%IMAGESERIES%%', series)
     url = url.replace('%%IMAGEVERSION%%', version)
-    url = url.replace('%%LANG%%',         lang)
-    url = url.replace('%%LSBCODENAME%%',  lsb_codename)
+    url = url.replace('%%LANG%%', lang)
+    url = url.replace('%%LSBCODENAME%%', lsb_codename)
 
     logging.info('The final changelog URL is "%s"', url)
 
@@ -145,10 +144,10 @@ class Sidebar:
                 utils.localize(STRINGS['sb_avatar_hover'], self.__settings.language)
 
         self.__avatar = buttons.avatar.AvatarButton(self,
-                                             self.__settings,
-                                             self.__variables['user_name'],
-                                             avatar_image,
-                                             avatar_tooltip)
+                                                    self.__settings,
+                                                    self.__variables['user_name'],
+                                                    avatar_image,
+                                                    avatar_tooltip)
 
         # No profile editing for guest users
         if self.__settings.is_guest or self.__settings.is_webkiosk:
@@ -187,7 +186,7 @@ class Sidebar:
 
             # Hide the puavo-pkg package installer if there
             # are no packages to install
-            if len(utils.puavo_conf('puavo.pkgs.ui.pkglist', '').strip()) > 0:
+            if utils.puavo_conf('puavo.pkgs.ui.pkglist', '').strip():
                 y = self.__create_button(y, SB_PUAVOPKG_INSTALLER)
 
         y = self.__create_separator(y)
@@ -301,7 +300,7 @@ class Sidebar:
             if isinstance(arguments, list):
                 arguments = ' '.join(arguments).strip()
 
-            if len(arguments) == 0:
+            if not arguments:
                 logging.error('Sidebar button without a command!')
                 self.__parent.error_message(
                     'Nothing to do',

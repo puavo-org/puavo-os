@@ -159,11 +159,10 @@ class ProgramButton(buttons.base.HoverIconButtonBase):
         return False
 
 
+    # Track the "..." indicator hover state changes
     def __hover_check(self, mouse_x, mouse_y):
-        new_state = (mouse_x >= self.__indicator_x1) and \
-                    (mouse_x <= self.__indicator_x2) and \
-                    (mouse_y >= self.__indicator_y1) and \
-                    (mouse_y <= self.__indicator_y2)
+        new_state = self.__indicator_x1 < mouse_x <= self.__indicator_x2 and \
+                    self.__indicator_y1 < mouse_y <= self.__indicator_y2
 
         if new_state != self.__popup_hover:
             # Only redraw when the hover state actually changes
@@ -247,10 +246,10 @@ class ProgramButton(buttons.base.HoverIconButtonBase):
     # Create and display the popup menu
     def open_menu(self, widget, event):
         if self.disabled:
-            return
+            return False
 
         if not event.button in (1, 2, 3):
-            return
+            return False
 
         # Clicked the popup menu indicator
         if self.__enable_popup and self.__popup_hover:

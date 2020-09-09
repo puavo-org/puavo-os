@@ -5,6 +5,8 @@ from gi.repository import Pango
 
 from constants import SIDEBAR_WIDTH
 
+import utils_gui
+
 import buttons.base
 
 
