@@ -317,7 +317,7 @@ const HostInfoButton = new Lang.Class(
 
                     var text = "";
 
-                    if (size == 0)
+                    if (size === undefined || size == 0)
                         text = "<empty>";
                     else {
                         text += "Size: " + size + " MiB; ";
