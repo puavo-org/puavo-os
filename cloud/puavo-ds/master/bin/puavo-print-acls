@@ -470,6 +470,7 @@ rule {
       by [systemgroup addressbook] read
       by [systemgroup auth]        read
       by [systemgroup getent]      read
+      by [dn children $People]     read
       by anonymous                 auth
 }
 
