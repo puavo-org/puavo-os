@@ -172,14 +172,13 @@ def create_panel_link(program):
         # create it manually.
         from os import environ
         from os.path import join as path_join
-        import menudata
 
         name = path_join(
             environ['HOME'], '.local', 'share', 'applications', desktop_name)
 
         if os.path.exists(name):
             logging.info('Local .desktop file for "%s" ("%s") already exists',
-                          program.name, name)
+                         program.name, name)
         else:
             logging.info('Creating a local .desktop file for "%s", '
                          'name="%s"', program.name, name)

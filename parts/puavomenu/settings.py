@@ -184,7 +184,7 @@ class Settings:
         # Detect dark theme usage. Follow the application theme, not the shell
         # theme. We're technically part of the shell, but at the moment, the
         # dark theme flag is only used to pass information about the theme to
-        # puavo-web forms (which ignores then (my bad)), which tehnically are
+        # puavo-web forms (which ignores them (my bad)), which tehnically are
         # applications. Of course, this setting won't be updated at runtime,
         # so if the theme changes, it points to the old state :-(
         try:
@@ -205,8 +205,6 @@ class Settings:
             # okay then, no dark theme for you
             logging.error('detect_environment(): dark theme check failed')
             logging.error(str(exception))
-
-        #self.dark_theme = False
 
         # Load the per-user config file, if it exists
         if not (self.is_guest or self.is_webkiosk):

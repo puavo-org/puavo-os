@@ -3,11 +3,12 @@
 import os
 import re
 import logging
-import utils_gui
 
 import gi
 gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
 import cairo
+
+import utils_gui
 
 
 # Accepted extensions for icon files, in the order we prefer them. Some
@@ -155,7 +156,7 @@ class IconCache:
 
         if atlas_num == -1:
             # All atlas grids are full, create a new
-            if len(self.atlases) > 0:
+            if self.atlases:
                 self.atlases[-1].full = True
 
             self.atlases.append(Atlas(self.grid_size, self.grid_size, self.bitmap_size))
@@ -225,7 +226,7 @@ class IconCache:
     # very efficient. Returns None if nothing found.
     def index_to_filename(self, index):
         if index is None:
-            return
+            return None
 
         for name, lookup in self.filenames.items():
             if lookup.grid_index == index:
@@ -330,9 +331,10 @@ def get_user_icon_dirs():
         try:
             # extract SIZE from ".local/share/icons/SIZExSIZE/..."
             size = int(number_extractor.search(name).group(0))
-        except:
-            logging.warning('list_user_icon_dirs(): could not extract icon size from "%s"',
-                            name)
+        except BaseException as e:
+            logging.warning(
+                'list_user_icon_dirs(): could not extract icon size from "%s": %s',
+                name, str(e))
             size = -1
 
         dirs.append((size, name))
@@ -391,7 +393,7 @@ class IconLocator:
         # icon names contain an extension (ie. "name.png") that confuses our
         # autodetection. Unless the icon name really is a full path + filename,
         # try to locate the correct image.
-        if len(os.path.dirname(icon_name)) > 0:
+        if os.path.dirname(icon_name):
             return (None, False)
 
         # ----------------------------------------------------------------------

@@ -15,7 +15,8 @@ def localize(where, lang):
     if isinstance(where, str):
         # just one string, nothing to localize, use it as-is
         return where
-    elif isinstance(where, list):
+
+    if isinstance(where, list):
         # a list of dicts, merge them
         where = {k: v for p in where for k, v in p.items()}
 
@@ -92,7 +93,7 @@ def expand_variables(string, variables=None):
         # expand the token if possible
         token = string[pos+2:end]
 
-        if len(token) == 0 or token not in variables:
+        if not token or token not in variables:
             out += string[pos:end+1]
         else:
             out += variables[token]

@@ -3,6 +3,7 @@
 # Parse the command line, figure out program settings and then launch the menu.
 
 import os
+import os.path
 import argparse
 import time
 
@@ -161,10 +162,6 @@ else:
 # ------------------------------------------------------------------------------
 # Create settings and detect the environment
 
-import os
-import os.path
-import stat
-
 import settings
 
 settings = settings.Settings()
@@ -259,7 +256,7 @@ except Exception as exception:
 
     syslog.syslog(syslog.LOG_CRIT,
                   'PuavoMenu IPC socket "{0}" creation failed: {1}'.format(
-                  settings.socket, str(exception)))
+                      settings.socket, str(exception)))
 
     syslog.syslog(syslog.LOG_CRIT,
                   'PuavoMenu stops here. Contact Opinsys support.')
