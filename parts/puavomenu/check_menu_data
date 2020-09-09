@@ -8,12 +8,17 @@ import time
 import json
 import argparse
 
-import utils
+import gi
+gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
+from gi.repository import Gio
+
 import filters.tags
 import filters.conditionals
+import menudata
 import loaders.json_loader
 import loaders.menudata_loader
-import icon_cache
+import icons
+import utils
 
 
 # Parse the command-line arguments
@@ -52,48 +57,67 @@ logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s',
                     level=logging.DEBUG)
 
 logging.addLevelName(
-    logging.WARNING, '\033[1;33m%s\033[0m' % logging.getLevelName(logging.WARNING))
+    logging.WARNING, '\033[1;93m%s\033[0m' % logging.getLevelName(logging.WARNING))
 logging.addLevelName(
-    logging.ERROR, '\033[1;31m%s\033[0m' % logging.getLevelName(logging.ERROR))
+    logging.ERROR, '\033[1;91m%s\033[0m' % logging.getLevelName(logging.ERROR))
 logging.addLevelName(
     logging.CRITICAL, '\033[1;93;101m%s\033[0m' % logging.getLevelName(logging.CRITICAL))
 
+start_time = time.perf_counter()
 
 dirs_file = os.path.join(args.base_dir, 'dirs.json')
-
 logging.info('Loading directory configuration file "%s"', dirs_file)
 
 desktop_dirs = []
-icon_dirs = []
+dirs_config = menudata.DirsConfig()
 
 try:
-    with open(dirs_file, 'r', encoding='utf-8') as dirs_file:
-        dirs = json.load(dirs_file)
+    with open(dirs_file, 'r', encoding='utf-8') as df:
+        dirs = json.load(df)
 
-    if 'desktop_dirs' in dirs:
-        desktop_dirs = dirs['desktop_dirs']
+    dirs_config.desktop_dirs = dirs.get('desktop_dirs', [])
+    icon_dirs = dirs.get('icon_dirs', {})
+    dirs_config.theme_icon_dirs = icon_dirs.get('themes', {})
+    dirs_config.generic_icon_dirs = icon_dirs.get('generic', [])
+except BaseException as exc:
+    logging.fatal('Failed to load the directories config file "%s"',
+                  dirs_file)
+    logging.error(exc, exc_info=True)
+    logging.info('Exiting due to errors')
+    exit(1)
 
-    if 'icon_dirs' in dirs:
-        icon_dirs = dirs['icon_dirs']
-except Exception as exception:
-    logging.fatal('Failed to load the directories config file "%s": %s',
-                  dirs_file, str(exception))
+icon_dirs = []
 
+# Figure out the current icon theme name and prioritize it
+# when loading icons
+try:
+    gsettings = Gio.Settings.new('org.gnome.desktop.interface')
+    icon_theme = gsettings.get_value('icon-theme').get_string()
+except BaseException as e:
+    logging.warning("Could not determine the name of the current icon theme: %s",
+                    str(e))
+    icon_theme = None
 
-conditional_dirs = [os.path.join(args.base_dir, 'conditions')]
-menudata_dirs = [os.path.join(args.base_dir, 'menudata')]
+logging.info('Current icon theme name: "%s"', icon_theme)
 
-start_time = time.perf_counter()
+if icon_theme and icon_theme in dirs_config.theme_icon_dirs:
+    icon_dirs += dirs_config.theme_icon_dirs[icon_theme]
 
-# Scan for conditional files and sort them
-raw_condition_files = []
+icon_dirs += dirs_config.generic_icon_dirs
 
-for n in conditional_dirs:
-    raw_condition_files += loaders.menudata_loader.find_menu_files(n)
+icon_locator = icons.IconLocator(icon_dirs)
+icon_locator.clear_cache()
 
-conditional_files = loaders.menudata_loader.sort_menu_files(raw_condition_files)
+icons = icons.IconCache(1024, 48)
 
-# Load all conditional files, merging them in one
+logging.info('Icon search directories: %s', ', '.join(icon_dirs))
+
+# Locate and parse conditionals
+raw_conditional_files = loaders.menudata_loader.find_menu_files(
+    os.path.join(args.base_dir, 'conditions'))
+
+conditional_files = loaders.menudata_loader.sort_menu_files(raw_conditional_files)
+
 raw_conditionals = {}
 
 for name in conditional_files:
@@ -103,8 +127,9 @@ for name in conditional_files:
         with open(name, 'r', encoding='utf-8') as f:
             contents = f.read()
 
-            if len(contents.strip()) == 0:
-                # empty strings are invalid JSON, so manually "fix" empty files
+            if not contents:
+                # empty strings are invalid JSON,
+                # so manually "fix" empty files
                 contents = '{}'
 
             data = json.loads(contents)
@@ -118,30 +143,25 @@ for name in conditional_files:
     if conds:
         raw_conditionals.update(conds)
 
-# Evaluate the conditionals
 conditionals = filters.conditionals.evaluate(raw_conditionals)
 
-icon_cache = icon_cache.IconCache(1024, 48)
-
-# Parse tags
+# Load tags
 tags = filters.tags.Filter(args.tags)
 
-# Locate and load menudata files
-raw_menu_files = []
-
-for n in menudata_dirs:
-    raw_menu_files += loaders.menudata_loader.find_menu_files(n)
+# Locate and load raw menudataf iles
+raw_menu_files = loaders.menudata_loader.find_menu_files(
+    os.path.join(args.base_dir, 'menudata'))
 
 menudata_files = loaders.menudata_loader.sort_menu_files(raw_menu_files)
 
-# Load!
-menudata = loaders.menudata_loader.load(
+# Load menudata
+loaders.menudata_loader.load(
     menudata_files, args.lang,
-    desktop_dirs, icon_dirs,
+    dirs_config.desktop_dirs,
     tags, conditionals,
-    {},     # no puavo-pkg states here
-    icon_cache)
+    {},     # no puavopkg program states
+    icon_locator,
+    icons)
 
 end_time = time.perf_counter()
-
 utils.log_elapsed_time('Total load time', start_time, end_time)
