@@ -49,7 +49,9 @@ proc rule {rulelines} {
   set uncommented_rulelines [regsub -all -line {#.*$} $rulelines ""]
   set subst_rulelines [uplevel 1 [list subst $uncommented_rulelines]]
   set rule_elems [split $subst_rulelines]
-  set nonempty_rule_elems [lmap _ $rule_elems { expr { $_ ne "" ? $_ : [continue] } }]
+  set nonempty_rule_elems [
+    lmap _ $rule_elems { expr { $_ ne "" ? $_ : [continue] } }
+  ]
   lappend rules [join $nonempty_rule_elems " "]
 }
 
@@ -89,7 +91,8 @@ set this_school_admins [ldapset "this/puavoSchool & user/puavoAdminOfSchool"]
 # this means: target/what and actor/who must be in the same school
 # and actor/who must also be a teacher
 set this_school_teachers [ldapset \
-  {([teacher,] + this/puavoSchool) & (user/puavoEduPersonAffiliation + [,] + user/puavoSchool)}]
+  {([teacher,] + this/puavoSchool)
+     & (user/puavoEduPersonAffiliation + [,] + user/puavoSchool)}]
 
 #
 # RULES
