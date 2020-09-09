@@ -53,17 +53,12 @@ proc rule {rulelines} {
   lappend rules [join $nonempty_rule_elems " "]
 }
 
-proc ldapset_with_base {setspec} {
-  global ldapsuffix
-  format {set="[%s]/%s"} $ldapsuffix $setspec
-}
-
 proc ldapset {setspec} {
   format {set="%s"} $setspec
 }
 
-proc person_affiliation_set {affliation} {
-  ldapset [format {user/puavoEduPersonAffiliation & [%s]} $affliation]
+proc person_affiliation {affliation} {
+  format {user/puavoEduPersonAffiliation & [%s]} $affliation
 }
 
 #
@@ -83,16 +78,18 @@ set Servers         "ou=Servers,ou=Hosts"
 set System_Accounts "ou=System Accounts"
 set System_Groups   "ou=System Groups"
 
-set org_owners   [ldapset_with_base "owner & user"]
+set org_owners   [ldapset [format {[%s]/owner & user} $ldapsuffix]]
 set schooladmins [ldapset "this & user/puavoAdminOfSchool"]
-set teachers     [person_affiliation_set teacher]
+set teachers     [ldapset [person_affiliation teacher]]
 
 # this means: admins of the same school as
 # $this_thing (person, device, server) is in
-set this_school_admins [ldapset "this/puavoSchool & user/puavoAdminOfSchool*"]
+set this_school_admins [ldapset "this/puavoSchool & user/puavoAdminOfSchool"]
 
-# XXX we probably need $this_school_teachers for some password change
-# XXX restrictions
+# this means: target/what and actor/who must be in the same school
+# and actor/who must also be a teacher
+set this_school_teachers [ldapset \
+  {([teacher,] + this/puavoSchool) & (user/puavoEduPersonAffiliation + [,] + user/puavoSchool)}]
 
 #
 # RULES
@@ -135,8 +132,8 @@ rule {
   [dn children $People]
     filter="(puavoEduPersonAffiliation=student)"
     [attrs userPassword]
-      by $teachers =axz
-      by *         none break
+      by $this_school_teachers =axz
+      by *                     none break
 }
 
 rule {
@@ -162,8 +159,8 @@ rule {
   [dn children $People]
     filter="(puavoEduPersonAffiliation=student)"
     [attrs sambaPwdLastSet]
-      by $teachers write
-      by *         none break
+      by $this_school_teachers write
+      by *                     none break
 }
 
 rule {
