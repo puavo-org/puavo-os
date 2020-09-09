@@ -843,7 +843,11 @@ def load(menudata_files,        # data source
 
     start_time = time.perf_counter()
 
-    load_icons(programs, menus, icon_locator, icon_cache)
+    try:
+        load_icons(programs, menus, icon_locator, icon_cache)
+    except BaseException as e:
+        logging.error('Unable to load program icons!')
+        logging.error(e, exc_info=True)
 
     end_time = time.perf_counter()
     utils.log_elapsed_time('Icon loading time', start_time, end_time)

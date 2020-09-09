@@ -72,7 +72,14 @@ def __load_user_program(program,            # a UserProgram instance
 
     # Set the new icon
     if icon_file:
-        program.icon, usable = icon_cache.load_icon(icon_file)
+        try:
+            program.icon, usable = icon_cache.load_icon(icon_file)
+        except BaseException as e:
+            logging.error(
+                'User program icon not loaded, load_icon() threw an exception: %s',
+                str(e))
+            program.icon = None
+            usable = False
 
         if not usable:
             logging.warning('Found icon "%s" for user program "%s" (file "%s"), ' \

@@ -368,11 +368,17 @@ class Sidebar:
             return y
 
         try:
+            icons = (self.__icons, self.__icons[data['icon']][0])
+        except BaseException as e:
+            logging.error('Unable to load a sidebar button icon: %s', str(e))
+            icons = None
+
+        try:
             button = buttons.sidebar.SidebarButton(
                 self,
                 self.__settings,
                 utils.localize(data['title'], self.__settings.language),
-                (self.__icons, self.__icons[data['icon']][0]),
+                icons,
                 utils.localize(data.get('description', ''), self.__settings.language),
                 data['command'])
 
@@ -382,7 +388,6 @@ class Sidebar:
 
             # the next available Y coordinate
             return y + button.get_preferred_button_size()[1]
-
         except BaseException as e:
             logging.error('Cannot create a sidebar button!')
             logging.error(e, exc_info=True)
