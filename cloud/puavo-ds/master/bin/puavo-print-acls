@@ -186,7 +186,7 @@ rule {
 
 rule {
   [dn exact ou=Samba,ou=Hosts]
-    [attrs entry ou objectClass]
+    [attrs entry objectClass ou]
       by [dn children $Servers] read
 }
 
@@ -289,7 +289,7 @@ rule {
 
 rule {
   [dn exact $Devices]
-    [attrs children entry ou objectClass]
+    [attrs children entry objectClass ou]
       by $org_owners           read
       by [systemgroup devices] read
       by [dn children $People] read
@@ -299,7 +299,7 @@ rule {
 
 rule {
   [dn children $Devices]
-    [attrs entry objectClass puavoWlanChannel puavoHostname puavoTag]
+    [attrs entry objectClass puavoHostname puavoTag puavoWlanChannel]
       by [dn children $People] read
       by *                     none break
 }
@@ -344,7 +344,7 @@ rule {
 
 rule {
   [dn exact $Servers]
-    [attrs children entry ou objectClass]
+    [attrs children entry objectClass ou]
       by $org_owners           read
       by [systemgroup servers] read
       by anonymous             auth
@@ -359,7 +359,7 @@ rule {
 
 rule {
   [dn children $Servers]
-    [attrs entry puavoId puavoSchool ou objectClass puavoHostname]
+    [attrs entry objectClass ou puavoId puavoHostname puavoSchool]
       by $this_school_admins read
       by *                   none break
 }
@@ -386,7 +386,7 @@ rule {
 
 rule {
   [dn exact $Printers]
-    [attrs ou entry objectClass]
+    [attrs entry objectClass ou]
       by $org_owners                 read
       by [dn children $Servers]      read
       by [dn children $People]       read
@@ -421,7 +421,7 @@ rule {
 
 rule {
   [dn exact $Groups]
-    [attrs children entry ou objectClass]
+    [attrs children entry objectClass ou]
       by $org_owners           read
       by [dn children $People] read
       by [dn children $Hosts]  read
@@ -585,7 +585,7 @@ rule {
 
 rule {
   [dn exact $Files]
-    [attrs children entry ou objectClass]
+    [attrs children entry objectClass ou]
       by $org_owners          read
       by [dn children $Hosts] read
 }
@@ -598,7 +598,7 @@ rule {
 
 rule {
   [dn exact $Desktops]
-    [attrs children entry ou objectClass]
+    [attrs children entry objectClass ou]
       by $org_owners          read
       by [dn children $Hosts] read
 }
