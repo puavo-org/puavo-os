@@ -567,6 +567,19 @@ rule {
       by *    none break
 }
 
+# Give hosts access to owner information (so that org.json can contain
+# admin users).
+# XXX Note that while the need is for owners, this checks the admin status
+# XXX instead.  In general it is wrong to have owners who are not admins,
+# and Puavo enforces this to some extent, but not on database level.
+rule {
+  [dn subtree $People]
+    filter="(puavoEduPersonAffiliation=admin)"
+      by [dn children $Hosts] read
+      by *                    none break
+
+}
+
 rule {
   [dn subtree $People]
       by $org_owners         write
