@@ -464,19 +464,24 @@ rule {
 
 rule {
   [dn exact $People]
-    [attrs children entry ou objectClass]
+    [attrs children entry objectClass ou]
       by [puavo_dn puavo]          read
       by [puavo_dn pw-mgmt]        read
       by [systemgroup addressbook] read
       by [systemgroup auth]        read
       by [systemgroup getent]      read
       by [dn children $People]     read
+      by [dn children $Hosts]      read
       by anonymous                 auth
 }
 
 rule {
   [dn subtree $People]
-    [attrs entry uid objectClass]
+    [attrs entry objectClass uid]
+      # hosts should be able to read information on the user who is
+      # the puavoDevicePrimaryUser (at least to know their username)
+      by [ldapset "this & user/puavoDevicePrimaryUser"] read
+
       by anonymous auth
       by *         none break
 }
