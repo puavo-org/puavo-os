@@ -277,7 +277,6 @@ class packages {
 
     [ 'aisleriot'
     , 'dosbox'
-    , 'extremetuxracer'
     , 'freeciv-client-gtk'
     , 'gcompris-qt'
     , 'gnome-games'
