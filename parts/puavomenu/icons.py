@@ -346,87 +346,249 @@ def get_user_icon_dirs():
 # path indicator), where path indicator is True if the icon name originally
 # was a full path+filename to the icon and not just an icon name.
 # This information is needed when we create desktop and panel links.
+# This class does not even try to duplicate the full icon searching algorithm
+# documented at https://specifications.freedesktop.org/icon-theme-spec/icon-
+# theme-spec-latest.html, but instead does something that suits our needs.
+# It creates a list of zero or more subdirectories under the specified
+# theme "root" directory and sorts them by icon size. When an icon is requested,
+# these directories are scanned to find the matching icon. You can specify
+# a preferred pixel size and if an icon of that exact size exists, it will be
+# returned. Otherwise, the biggest matching icon is returned (it can be an
+# SVG file). Future work includes optional support for theme.index cache
+# files (I briefly looked at them but haven't written a parser for them yet).
 class IconLocator:
-    def __init__(self, icon_dirs):
-        self.icon_dirs = icon_dirs
+    # Icon size limits. Too large icons are slow to load, but too small will
+    # be too blurry. The highest we accept is 64x64, but set the maximum size
+    # to 65 and use it for SVG images to prioritize them.
+    MAX_ACCEPTED_SIZE = 65
+    MIN_ACCEPTED_SIZE = 24
 
-        # Multiple programs can use the same generic icon name. The IconCache
-        # class keeps track of filenames, so it won't load the same file more
-        # than once. But that won't work with generic icon names, so another
-        # layer of caching is used for them.
-        self.generic_cache = {}
+    # Avoid too deep recursive scans. We follow symlinks, so things can go
+    # badly wrong.
+    MAX_SCAN_DEPTH = 5
+
+    # Some icon themes contain all sorts of stuff we don't care about. We want
+    # programs to use program icons, not emojis. So we skip all directories
+    # that are on this list.
+    IGNORE_LIST = frozenset([
+        'actions', 'animations', 'applets', 'emblems', 'categories',
+        'emotes'
+    ])
+
+    ICON_EXTENSIONS = ('.svg', '.svgz', '.png', '.xpm', '.jpg', '.jpeg')
+
+    number_extractor = re.compile(r'\d+')
 
 
-    def set_directories(self, icon_dirs):
-        self.icon_dirs = icon_dirs
+    # Recursively scans directories for possible icon search directories
+    def __scanner(self, level, directory, out):
+        if level > self.MAX_SCAN_DEPTH:
+            return
+
+        # Find subdirectories in this directory
+        subdirs = []
+
+        try:
+            for d in os.scandir(directory):
+                if not d.is_dir() or '@' in d.name:
+                    continue
+
+                if d.name in self.IGNORE_LIST:
+                    continue
+
+                full_path = os.path.join(directory, d.name)
+
+                # Store this directory for later recursal
+                subdirs.append((d.name, full_path))
+
+                # Then update the actual icon paths list. If the path
+                # contains a number (ie. an icon size), find that number.
+                size = self.number_extractor.search(full_path)
+
+                if size:
+                    try:
+                        size = int(size.group(0), 10)
+                    except:
+                        continue
+                elif 'scalable' in full_path:
+                    # Prioritize SVG (scalable) directories
+                    size = self.MAX_ACCEPTED_SIZE
+                else:
+                    continue
+
+                # If the size is good, accept it as a possible icon
+                # search path
+                if self.MIN_ACCEPTED_SIZE <= size <= self.MAX_ACCEPTED_SIZE:
+                    out.append((size, full_path))
+
+        except BaseException as e:
+            logging.error('Unable to scan directory "%s": %s',
+                          directory, str(e))
+            return
+
+        # Precache apps directories
+        if 'apps' in directory:
+            self.__cache_directory_contents(directory)
+
+        # Recurse
+        for d in subdirs:
+            self.__scanner(level + 1, d[1], out)
 
 
-    def clear_cache(self):
-        self.generic_cache = {}
+    def __sorter(self, item):
+        # If this is an "applications" directory, prioritize it higher, even
+        # higher than non-application scalable directories. This way we check
+        # all apps directories (of all sizes) first.
+        if 'apps' in item[1]:
+            return item[0] * 99999
+
+        # Otherwise just sort by icon pixel size
+        return item[0]
 
 
-    # Searches the filesystem for the icon
-    def locate(self, icon_name):
-        if icon_name is None:
-            # No icon defined at all. This is an error, but it does happen.
+    # Lists and caches the filenames in the given directory
+    def __cache_directory_contents(self, path):
+        names = []
+
+        try:
+            with os.scandir(path) as it:
+                for d in it:
+                    if not d.is_dir():
+                        names.append(d.name)
+        except BaseException as e:
+            logging.warning('Could not scan directory "%s": %s',
+                            path, str(e))
+            names = []
+
+        self.dircache[path] = frozenset(names)
+
+
+    def __init__(self):
+        # What we scan
+        self.theme_base_dirs = []
+        self.generic_dirs = []
+
+        # Where the output of the scan is stored
+        self.theme_dirs = []
+
+        # Lookup caches
+        self.cache = {}
+        self.dircache = {}
+
+
+    def set_generic_dirs(self, generic_dirs):
+        self.generic_dirs = generic_dirs
+
+
+    def set_theme_base_dirs(self, theme_base_dirs):
+        if isinstance(theme_base_dirs, list):
+            self.theme_base_dirs = theme_base_dirs
+        else:
+            self.theme_base_dirs = [theme_base_dirs]
+
+
+    def clear(self):
+        self.theme_dirs = []
+        self.cache = {}
+
+
+    def scan_directories(self):
+        if not self.theme_base_dirs:
+            raise RuntimeError('IconLocator::scan_directories(): theme base dir not set')
+
+        self.clear()
+
+        # Scan each theme directory
+        for d in self.theme_base_dirs:
+            out = []
+            logging.info('IconLocator::scan_directories(): scanning "%s"', d)
+            self.__scanner(1, d, out)
+            self.theme_dirs += out
+
+        # Sort the directories
+        self.theme_dirs = sorted(self.theme_dirs, key=self.__sorter, reverse=True)
+
+
+    def locate_icon(self, name, preferred_size=-1):
+        if name is None:
             return (None, False)
 
-        # Is the icon name a full path to an image file, or just
-        # a generic name?
-        _, ext = os.path.splitext(icon_name)
-        icon_name_is_path = ext in ICON_EXTENSIONS
+        # Already cached?
+        if name in self.cache:
+            return self.cache[name]
 
-        # Cache generic icon names, so we have to search for them only once
-        if (not icon_name_is_path) and (icon_name in self.generic_cache):
-            # Reuse a cached generic icon
-            icon_name = self.generic_cache[icon_name]
-            icon_name_is_path = True
+        # If the icon name is already a full path, use it as-is
+        if os.path.isfile(name):
+            self.cache[name] = (name, True)
+            return (name, True)
 
         # ----------------------------------------------------------------------
-        # The easiest case: it's a full path + name to an image file
 
-        if icon_name_is_path:
-            if os.path.isfile(icon_name):
-                return (icon_name, True)
+        def __check_dir(directory, name):
+            if directory not in self.dircache:
+                self.__cache_directory_contents(directory)
 
-        # An icon file was specified, but it could not be loaded. Sometimes
-        # icon names contain an extension (ie. "name.png") that confuses our
-        # autodetection. Unless the icon name really is a full path + filename,
-        # try to locate the correct image.
-        if os.path.dirname(icon_name):
-            return (None, False)
-
-        # ----------------------------------------------------------------------
-        # The icon is a generic icon. Try to locate the matching file.
-
-        icon_path = None
-
-        for dir_name in self.icon_dirs:
             # Try the name as-is first (some icon names are just "name.ext"
             # without a path)
-            candidate = os.path.join(dir_name, icon_name)
+            candidate = os.path.join(directory, name)
 
             if os.path.isfile(candidate):
-                return (candidate, True)
+                return candidate
+
+            names = self.dircache[directory]
+
+            if name in names:
+                return os.path.join(directory, name)
 
             # Try the different file extensions
-            for ext in ICON_EXTENSIONS:
-                candidate = os.path.join(dir_name, icon_name + ext)
+            for ext in self.ICON_EXTENSIONS:
+                candidate = name + ext
 
-                if os.path.isfile(candidate):
-                    icon_path = candidate
-                    break
+                if candidate in names:
+                    return os.path.join(directory, name + ext)
 
-            if icon_path:
-                break
+            return None
 
-        if not icon_path:
-            # The icon simply could not be found
-            return (None, False)
+        # ----------------------------------------------------------------------
+        # First check the theme directories for exact size matches
 
-        if not icon_name_is_path:
-            # Cache the icon file name, so we don't have to repeatedly
-            # search the filesystem
-            self.generic_cache[icon_name] = icon_path
+        if preferred_size != -1:
+            for th_dir in self.theme_dirs:
+                if th_dir[0] != preferred_size:
+                    continue
 
-        return (icon_path, icon_name_is_path)
+                candidate = __check_dir(th_dir[1], name)
+
+                if candidate:
+                    self.cache[name] = (candidate, False)
+                    return (candidate, False)
+
+        # ----------------------------------------------------------------------
+        # An exact size match was not found. Check the other theme
+        # directories.
+
+        for th_dir in self.theme_dirs:
+            if th_dir[0] == preferred_size:
+                continue
+
+            candidate = __check_dir(th_dir[1], name)
+
+            if candidate:
+                self.cache[name] = (candidate, False)
+                return (candidate, False)
+
+        # ----------------------------------------------------------------------
+        # Finally check the generic directories
+
+        for gen_dir in self.generic_dirs:
+            candidate = __check_dir(gen_dir, name)
+
+            if candidate:
+                self.cache[name] = (candidate, False)
+                return (candidate, False)
+
+        # ----------------------------------------------------------------------
+        # Nothing found
+
+        self.cache[name] = (None, False)
+        return (None, False)
