@@ -1193,7 +1193,10 @@
             "tags": "default, graphics"
         },
         "supertuxkart": {
-            "tags": "default"
+            "tags": "default",
+            "puavopkg": {
+                "id": "supertuxkart"
+            }
         },
         "system-config-printer": {
             "tags": "default, utility"

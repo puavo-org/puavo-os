@@ -293,8 +293,7 @@ class packages {
     , 'openttd'
     , 'qml-module-qtquick-dialogs'	        # needed by teamviewer
     , 'qml-module-qtquick-privatewidgets'	# needed by teamviewer
-    , 'qml-module-qtmultimedia'		# required by khangman
-    , 'supertuxkart'
+    , 'qml-module-qtmultimedia'	                # required by khangman
     , 'tuxmath'
     , 'tuxpaint'
     , 'tuxpaint-stamps-default'
