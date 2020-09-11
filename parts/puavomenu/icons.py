@@ -504,9 +504,6 @@ class IconLocator:
 
 
     def scan_directories(self):
-        if not self.theme_base_dirs:
-            raise RuntimeError('IconLocator::scan_directories(): theme base dir not set')
-
         self.clear()
 
         # Scan each theme directory
