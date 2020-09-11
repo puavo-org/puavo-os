@@ -71,18 +71,7 @@ logging.info('Loading directory configuration file "%s"', dirs_file)
 desktop_dirs = []
 dirs_config = menudata.DirsConfig()
 
-try:
-    with open(dirs_file, 'r', encoding='utf-8') as df:
-        dirs = json.load(df)
-
-    dirs_config.desktop_dirs = dirs.get('desktop_dirs', [])
-    icon_dirs = dirs.get('icon_dirs', {})
-    dirs_config.theme_icon_dirs = icon_dirs.get('themes', {})
-    dirs_config.generic_icon_dirs = icon_dirs.get('generic', [])
-except BaseException as exc:
-    logging.fatal('Failed to load the directories config file "%s"',
-                  dirs_file)
-    logging.error(exc, exc_info=True)
+if not dirs_config.load_config(dirs_file):
     logging.info('Exiting due to errors')
     exit(1)
 

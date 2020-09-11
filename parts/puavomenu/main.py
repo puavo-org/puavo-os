@@ -388,24 +388,11 @@ class PuavoMenu(Gtk.Window):
             # ------------------------------------------------------------------
             # Load dirs.json
 
+            start_time = time.perf_counter()
+
             dirs_file = os.path.join(self.__settings.menu_dir, 'dirs.json')
             logging.info('Loading directory configuration file "%s"', dirs_file)
-
-            try:
-                with open(dirs_file, 'r', encoding='utf-8') as df:
-                    dirs = json.load(df)
-
-                self.__dirs_config.desktop_dirs = dirs.get('desktop_dirs', [])
-                icon_dirs = dirs.get('icon_dirs', {})
-                self.__dirs_config.theme_icon_dirs = icon_dirs.get('themes', {})
-                self.__dirs_config.generic_icon_dirs = icon_dirs.get('generic', [])
-            except BaseException as exc:
-                logging.fatal('Failed to load the directories config file "%s"',
-                              dirs_file)
-                logging.fatal(exc, exc_info=True)
-                self.__dirs_config.clear()
-
-            start_time = time.perf_counter()
+            self.__dirs_config.load_config(dirs_file)
 
             # Figure out the current icon theme name and prioritize it
             # when loading icons

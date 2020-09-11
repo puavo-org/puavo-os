@@ -59,6 +59,26 @@ class DirsConfig:
         self.generic_icon_dirs = []
 
 
+    def load_config(self, name):
+        try:
+            import logging
+            import json
+
+            with open(name, 'r', encoding='utf-8') as df:
+                dirs = json.load(df)
+
+                self.desktop_dirs = dirs.get('desktop_dirs', [])
+                icon_dirs = dirs.get('icon_dirs', {})
+                self.theme_icon_dirs = icon_dirs.get('themes', {})
+                self.generic_icon_dirs = icon_dirs.get('generic', [])
+                return True
+        except BaseException as exc:
+            logging.fatal('Failed to load the directories config file "%s": %s',
+                          name, str(exc))
+            self.clear()
+            return False
+
+
 # Base class for all program types
 class ProgramBase:
     __slots__ = (
