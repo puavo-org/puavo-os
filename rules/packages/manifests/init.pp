@@ -437,6 +437,7 @@ class packages {
     , 'python-jsonpickle' # a dependency for
                           # http://meetedison.com/robot-programming-software/
     , 'python3-pip'
+    , 'pylint3'
     , 'python-pip'
     , 'python-pygame'
     , 'pythontracer'
