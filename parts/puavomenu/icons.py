@@ -6,6 +6,7 @@ import logging
 
 import gi
 gi.require_version('Gtk', '3.0')        # explicitly require Gtk3, not Gtk2
+from gi.repository import Gio
 import cairo
 
 import utils_gui
@@ -340,6 +341,16 @@ def get_user_icon_dirs():
         dirs.append((size, name))
 
     return sorted(dirs, key=lambda i: i[0], reverse=True)
+
+
+def detect_current_icon_theme_name():
+    try:
+        gsettings = Gio.Settings.new('org.gnome.desktop.interface')
+        return gsettings.get_value('icon-theme').get_string()
+    except BaseException as e:
+        logging.warning('Could not determine the name of the current icon theme: %s',
+                        str(e))
+        return None
 
 
 # Turns icon names into actual filenames. Returns tuples of (filename,
