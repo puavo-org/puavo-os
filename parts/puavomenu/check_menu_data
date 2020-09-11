@@ -86,31 +86,23 @@ except BaseException as exc:
     logging.info('Exiting due to errors')
     exit(1)
 
-icon_dirs = []
-
 # Figure out the current icon theme name and prioritize it
 # when loading icons
-try:
-    gsettings = Gio.Settings.new('org.gnome.desktop.interface')
-    icon_theme = gsettings.get_value('icon-theme').get_string()
-except BaseException as e:
-    logging.warning("Could not determine the name of the current icon theme: %s",
-                    str(e))
-    icon_theme = None
+icon_theme = icons.detect_current_icon_theme_name()
 
-logging.info('Current icon theme name: "%s"', icon_theme)
+if icon_theme:
+    logging.info('Current icon theme name: "%s"', icon_theme)
+
+icon_locator = icons.IconLocator()
+
+icon_locator.set_generic_dirs(dirs_config.generic_icon_dirs)
 
 if icon_theme and icon_theme in dirs_config.theme_icon_dirs:
-    icon_dirs += dirs_config.theme_icon_dirs[icon_theme]
+    icon_locator.set_theme_base_dirs(dirs_config.theme_icon_dirs[icon_theme])
 
-icon_dirs += dirs_config.generic_icon_dirs
-
-icon_locator = icons.IconLocator(icon_dirs)
-icon_locator.clear_cache()
+icon_locator.scan_directories()
 
 icons = icons.IconCache(1024, 48)
-
-logging.info('Icon search directories: %s', ', '.join(icon_dirs))
 
 # Locate and parse conditionals
 raw_conditional_files = loaders.menudata_loader.find_menu_files(

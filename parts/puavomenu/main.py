@@ -156,7 +156,7 @@ class PuavoMenu(Gtk.Window):
 
         # General-purpose "icon locator" system. Figuring out which icon
         # files to actually load is complicated.
-        self.__icon_locator = icons.IconLocator(icon_dirs=[])
+        self.__icon_locator = icons.IconLocator()
 
         # Is the first update on user programs done?
         self.__user_programs_loaded = False
@@ -405,31 +405,32 @@ class PuavoMenu(Gtk.Window):
                 logging.fatal(exc, exc_info=True)
                 self.__dirs_config.clear()
 
-            icon_dirs = []
+            start_time = time.perf_counter()
 
             # Figure out the current icon theme name and prioritize it
             # when loading icons
-            try:
-                gsettings = Gio.Settings.new('org.gnome.desktop.interface')
-                icon_theme = gsettings.get_value('icon-theme').get_string()
-            except BaseException as e:
-                logging.warning("Could not determine the name of the current icon theme: %s",
-                                str(e))
-                icon_theme = None
+            icon_theme = icons.detect_current_icon_theme_name()
 
-            logging.info('Current icon theme name: "%s"', icon_theme)
+            if icon_theme:
+                logging.info('Current icon theme name: "%s"', icon_theme)
 
             if icon_theme and icon_theme in self.__dirs_config.theme_icon_dirs:
-                icon_dirs += self.__dirs_config.theme_icon_dirs[icon_theme]
+                self.__icon_locator.set_theme_base_dirs(self.__dirs_config.theme_icon_dirs[icon_theme])
 
-            icon_dirs += self.__dirs_config.generic_icon_dirs
+            generic_dirs = self.__dirs_config.generic_icon_dirs
 
             # Icons for user programs
             for name in icons.get_user_icon_dirs():
-                icon_dirs.append(name[1])
+                generic_dirs.append(name[1])
 
-            self.__icon_locator.set_directories(icon_dirs)
-            self.__icon_locator.clear_cache()
+            self.__icon_locator.set_generic_dirs(generic_dirs)
+            self.__icon_locator.clear()
+
+            # Make a list of directories where to find icons from
+            self.__icon_locator.scan_directories()
+
+            end_time = time.perf_counter()
+            utils.log_elapsed_time('Theme icon dirs scanning time', start_time, end_time)
 
             # ------------------------------------------------------------------
             # Load and evaluate conditionals
@@ -519,7 +520,7 @@ class PuavoMenu(Gtk.Window):
                     self.__setup_user_programs()
 
             total_end_time = time.perf_counter()
-            utils.log_elapsed_time('Total load time',
+            utils.log_elapsed_time('Total menudata load time',
                                    total_start_time, total_end_time)
 
             cache_stats = self.__icons.stats()

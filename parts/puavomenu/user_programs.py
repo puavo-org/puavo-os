@@ -60,7 +60,7 @@ def __load_user_program(program,            # a UserProgram instance
 
     # Locate the icon file
     icon_name = final_data.get('icon', None)
-    icon_file, _ = icon_locator.locate(icon_name)
+    icon_file, _ = icon_locator.locate_icon(icon_name)
 
     if program.original_icon_name:
         if program.original_icon_name == icon_file:

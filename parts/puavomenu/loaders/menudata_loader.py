@@ -312,7 +312,7 @@ def load_icons(programs, menus, icon_locator, icon_cache):
         # ----------------------------------------------------------------------
         # Locate the icon file
 
-        icon_path, is_path = icon_locator.locate(program['icon'])
+        icon_path, is_path = icon_locator.locate_icon(program['icon'], 48)
 
         if icon_path is None:
             logging.warning("Can't find icon \"%s\" for program \"%s\"",
@@ -352,7 +352,7 @@ def load_icons(programs, menus, icon_locator, icon_cache):
             num_missing_icons += 1
             continue
 
-        icon_path, is_path = icon_locator.locate(menu['icon'])
+        icon_path, is_path = icon_locator.locate_icon(menu['icon'], 48)
 
         if icon_path is None:
             logging.warning("Can't find icon \"%s\" for menu \"%s\"",
