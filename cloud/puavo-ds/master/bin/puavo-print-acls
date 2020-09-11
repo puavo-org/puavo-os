@@ -131,7 +131,6 @@ rule {
 
 rule {
   # allow teachers to change student passwords
-  # (NOTE: we do not check teacher school)
   [dn children $People]
     filter="(puavoEduPersonAffiliation=student)"
     [attrs userPassword]
