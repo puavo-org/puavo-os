@@ -48,6 +48,9 @@ panel-main-menu=['']
 switch-input-source=['']
 switch-input-source-backward=['']
 
+[org/gnome/mutter]
+dynamic-workspaces=true
+
 [org/gnome/nautilus/desktop]
 computer-icon-name='Tietokone'
 computer-icon-visible=false
