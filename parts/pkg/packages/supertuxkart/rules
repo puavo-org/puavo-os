@@ -1,0 +1,41 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "${command}" in
+  configure)
+    upstream_dir=$1
+    ln -fns "${upstream_dir}/SuperTuxKart-1.2-linux" /opt/supertuxkart
+    cat <<'EOF' > /usr/share/applications/supertuxkart.desktop
+[Desktop Entry]
+Name=SuperTuxKart
+Icon=supertuxkart
+GenericName=A kart racing game
+GenericName[da]=Et kart racerspil
+GenericName[de]=Ein Kart-Rennspiel
+GenericName[fr]=Un jeu de karting
+GenericName[gl]=Xogo de carreiras con karts
+GenericName[pl]=Wyścigi gokartów
+GenericName[ro]=Un joc de curse cu carturi
+Exec=/opt/supertuxkart/run_game.sh
+Terminal=false
+StartupNotify=false
+Type=Application
+Categories=Game;ArcadeGame;
+Keywords=tux;game;race;
+EOF
+    ;;
+  unconfigure)
+    rm -f /opt/supertuxkart /usr/share/applications/supertuxkart.desktop
+    ;;
+  unpack)
+    upstream_pack=$1
+    upstream_dir=$2
+    tar --no-same-owner -J -x -f "$upstream_pack" -C "$upstream_dir"
+    ;;
+  *)
+    ;;
+esac
