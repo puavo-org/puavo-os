@@ -305,13 +305,6 @@ rule {
 
 rule {
   [dn children $Devices]
-    [attrs entry objectClass puavoHostname puavoTag puavoWlanChannel]
-      by [dn children $People] read
-      by *                     none break
-}
-
-rule {
-  [dn children $Devices]
     [attrs puavoDeviceHWInfo]
       by [dn children $Servers] write
       by *                      none break
@@ -385,7 +378,6 @@ rule {
       by [dn children $Hosts]  read
       by [systemgroup devices] read
       by [systemgroup servers] read
-      by [dn children $People] read     # XXX why is this?
 }
 
 # rules for ou=Printers
