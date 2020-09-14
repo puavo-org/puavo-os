@@ -132,7 +132,7 @@ rule {
 rule {
   [dn children $Servers]
     [attrs userPassword]
-      by $org_owners =axz
+      by $org_owners write
       by anonymous   auth
 }
 
