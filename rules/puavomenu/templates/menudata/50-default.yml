@@ -565,6 +565,8 @@ programs:
         tags: default
   - nextcloud:
         tags: default
+  - novoconnect-software:
+        tags: default
   - novo_desktop_streamer:
         type: custom
         name: Novo Desktop Streamer
@@ -1189,6 +1191,7 @@ menus:
             - org.gnome.Screenshot
             - simplescreenrecorder
             - airtame
+            - novoconnect-software
             - novo-launcher
             - novo_desktop_streamer
 
