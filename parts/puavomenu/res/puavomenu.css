@@ -128,7 +128,6 @@ entry {
 .button_menu {
     background: alpha(@borders, 0.4);
     border-radius: 20px;
-    font-style: italic;
 }
 
 .button_menu:hover {
