@@ -117,8 +117,15 @@ rule {
 rule {
   [dn children $Devices]
     [attrs userPassword]
-      by $org_owners         =axz
-      by $this_school_admins =axz
+      # This must be "write", not "=axz" as below with People's passwords.
+      # This is because devices belong to "simpleSecurityObject"-objectClass,
+      # which requires that each time these objects are updated,
+      # "userPassword"-attribute must also be set (?!?), and it can not
+      # be set unless admins also can read it.  (This is not perfect but
+      # this access is for admins only and the password is hashed anyway).
+      by $org_owners         write
+      by $this_school_admins write
+
       by anonymous           auth
 }
 
