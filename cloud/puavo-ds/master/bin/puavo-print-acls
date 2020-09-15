@@ -528,7 +528,6 @@ rule {
            puavoEduPersonReverseDisplayName \
            puavoId                          \
            puavoLocked                      \
-           puavoPreferredDesktop            \
            puavoRemovalRequestTime          \
            puavoSchool                      \
            sn                               \
@@ -540,12 +539,11 @@ rule {
 
 rule {
   [dn subtree $People]
-    [attrs gidNumber             \
-           givenName             \
-           homeDirectory         \
-           loginShell            \
-           puavoPreferredDesktop \
-           sn                    \
+    [attrs gidNumber     \
+           givenName     \
+           homeDirectory \
+           loginShell    \
+           sn            \
            uidNumber]
       by [puavo_dn puavo]   read
       by [puavo_dn pw-mgmt] read
