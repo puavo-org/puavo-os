@@ -132,7 +132,7 @@ rule {
 rule {
   [dn children $Servers]
     [attrs userPassword]
-      by $org_owners write
+      by $org_owners write      # the same as above
       by anonymous   auth
 }
 
@@ -640,64 +640,19 @@ rule {
 
 rule {
   [dn]
-    [attrs entry objectClass puavoDomain]
+    [attrs entry objectClass puavoDomain puavoKerberosRealm sambaDomainName]
       by $org_owners read
       by *           none break
 }
 
 rule {
   [dn]
-    [attrs description                 \
-           eduOrgHomePageURI           \
-           eduOrgLegalName             \
-           entry                       \
-           facsimileTelephoneNumber    \
-           l                           \
-           o                           \
-           objectClass                 \
-           owner                       \
-           postalAddress               \
-           postalCode                  \
-           postOfficeBox               \
-           preferredLanguage           \
-           puavoActiveService          \
-           puavoAllowGuest             \
-           puavoAutomaticImageUpdates  \
-           puavoConf                   \
-           puavoDeviceAutoPowerOffMode \
-           puavoDeviceImage            \
-           puavoDeviceOffHour          \
-           puavoDeviceOnHour           \
-           puavoEduOrgAbbreviation     \
-           puavoImageSeriesSourceURL   \
-           puavoKeyboardLayout         \
-           puavoKeyboardVariant        \
-           puavoLocale                 \
-           puavoPersonalDevice         \
-           puavoTimezone               \
-           puavoWlanChannel            \
-           puavoWlanSSID               \
-           st                          \
-           street                      \
-           telephoneNumber]
       by $org_owners           write
       by [dn children $People] read
       by [dn children $Hosts]  read
       by [systemgroup getent]  read
       by [systemgroup orginfo] read
       by *                     +dsx
-}
-
-rule {
-  [dn]
-      by [puavo_dn kadmin]       read
-      by [puavo_dn kdc]          read
-      by [puavo_dn monitor]      read
-      by [puavo_dn puavo]        read
-      by [puavo_dn puavo-ticket] read  # XXX to be removed later
-      by [puavo_dn statistics]   read
-      by $org_owners             read
-      by *                       +dsx
 }
 
 #
