@@ -184,7 +184,7 @@ rule {
 rule {
   [dn children $System_Accounts]
     [attrs userPassword]
-      by $org_owners =axz
+      by $org_owners write      # see comment about "write" some rules above
       by anonymous   auth
 }
 
