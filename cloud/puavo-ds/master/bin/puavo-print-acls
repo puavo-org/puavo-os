@@ -82,6 +82,7 @@ set System_Groups   "ou=System Groups"
 
 set org_owners   [ldapset [format {[%s]/owner & user} $ldapsuffix]]
 set schooladmins [ldapset "this & user/puavoAdminOfSchool"]
+set all_admins   [ldapset [person_affiliation admins]]
 set teachers     [ldapset [person_affiliation teacher]]
 
 # this means: admins of the same school as
@@ -433,7 +434,7 @@ rule {
   [dn subtree $Groups]
     [attrs memberUid member]
       by $org_owners            write
-      by $this_school_admins    write
+      by $all_admins            write	# XXX maybe this_school_admins instead?
       by $teachers              read
       by [dn children $People]  none
       by [dn children $Devices] none
@@ -443,7 +444,7 @@ rule {
 rule {
   [dn subtree $Groups]
       by $org_owners           write
-      by $this_school_admins   write
+      by $all_admins           write	# XXX maybe this_school_admins instead?
       by [puavo_dn puavo]      read
       by [puavo_dn statistics] read
       by [dn children $People] read
