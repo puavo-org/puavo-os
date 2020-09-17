@@ -481,8 +481,9 @@ rule {
       # the puavoDevicePrimaryUser (at least to know their username)
       by [ldapset "this & user/puavoDevicePrimaryUser"] read
 
-      by anonymous auth
-      by *         none break
+      by [puavo_dn pw-mgmt] read
+      by anonymous          auth
+      by *                  none break
 }
 
 # some permissions to "addressbook"
