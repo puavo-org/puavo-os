@@ -481,8 +481,15 @@ rule {
       # the puavoDevicePrimaryUser (at least to know their username)
       by [ldapset "this & user/puavoDevicePrimaryUser"] read
 
+      by anonymous auth
+      by *         none break
+}
+
+# rules needed by pw-mgmt (password management user)
+rule {
+  [dn subtree $People]
+    [attrs entry objectClass mail uid]
       by [puavo_dn pw-mgmt] read
-      by anonymous          auth
       by *                  none break
 }
 
