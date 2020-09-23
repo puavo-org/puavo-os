@@ -249,25 +249,15 @@ school = School.create( :displayName => school_name,
                         :cn => school_name.downcase.gsub(/[^a-z0-9]/, "") )
 school.save
 
-# Role
-puts "Create new role"
-role_name = "Maintenance"
-puts "Role name: #{role_name}"
-role = Role.create( :displayName => role_name,
-                    :puavoSchool => school.dn )
-role.save
-
 # Group
 puts "Create new group"
 group_name = "Maintenance"
 puts "Group name: #{group_name}"
-group = Group.create( :displayName => group_name,
-                      :cn => group_name.downcase.gsub(/[^a-z0-9]/, ""),
-                      :puavoSchool => school.dn )
+group = Group.create(:cn => group_name.downcase.gsub(/[^a-z0-9]/, ""),
+                     :displayName => group_name,
+                     :puavoEduGroupType => 'administrative group',
+                     :puavoSchool => school.dn)
 group.save
-
-# Added association
-role.groups << group
 
 kerberos_masterpw = KerberosSettings.generate_new_password(20)
 puts "\nInitializing kerberos realm with master key: #{kerberos_masterpw}\n"
@@ -300,7 +290,6 @@ user.sn = surname
 user.uid = username
 user.new_password = password
 user.new_password_confirmation = password
-user.role_name = role.displayName
 user.puavoSchool = school.dn
 user.puavoEduPersonAffiliation = "admin"
 user_save = false
@@ -319,6 +308,10 @@ while user_save != true
     end
   end
 end
+
+group.member = [ user.dn.to_s ]
+group.memberUid = [ user.uid ]
+group.save!
 
 domain_admin = SambaGroup.find("Domain Admins")
 domain_admin.memberUid = user.uid
