@@ -28,12 +28,14 @@ class ProgramFlags(IntEnum):
 class MenuFlags(IntEnum):
     HIDDEN = 0x01
     USED = 0x02
+    BROKEN = 0x04
 
 
 class CategoryFlags(IntEnum):
     HIDDEN = 0x01
     USED = 0x02
-    USER_CATEGORY = 0x04
+    BROKEN = 0x04
+    USER_CATEGORY = 0x08
 
 
 # Container for dirs.json

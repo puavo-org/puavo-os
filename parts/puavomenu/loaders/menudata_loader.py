@@ -414,6 +414,13 @@ def sort_categories(categories):
     temp_index = []
 
     for cid, category in categories.items():
+        if category['flags'] & MenuFlags.BROKEN or \
+           category['flags'] & MenuFlags.HIDDEN:
+            continue
+
+        if not category['flags'] & MenuFlags.USED:
+            continue
+
         position = 0
 
         if 'position' in category:
@@ -605,6 +612,9 @@ def load(menudata_files,        # data source
 
             menu = menus[a.name]
 
+            if menu['flags'] & MenuFlags.BROKEN:
+                continue
+
             if a.action == filters.tags.Action.SHOW:
                 logging.debug('Tag "%s" shows menu "%s"', a.original, a.name)
                 menu['flags'] &= ~MenuFlags.HIDDEN
@@ -621,6 +631,9 @@ def load(menudata_files,        # data source
                 continue
 
             cat = categories[a.name]
+
+            if cat['flags'] & CategoryFlags.BROKEN:
+                continue
 
             if a.action == filters.tags.Action.SHOW:
                 logging.debug('Tag "%s" shows category "%s"', a.original, a.name)
@@ -646,6 +659,9 @@ def load(menudata_files,        # data source
                     program['flags'] &= ~ProgramFlags.HIDDEN
 
         for name, menu in menus.items():
+            if menu['flags'] & MenuFlags.BROKEN:
+                continue
+
             if 'condition' in menu:
                 if filters.conditionals.is_hidden(conditionals,
                                                   menu['condition'],
@@ -656,6 +672,9 @@ def load(menudata_files,        # data source
                     menu['flags'] &= ~MenuFlags.HIDDEN
 
         for name, cat in categories.items():
+            if cat['flags'] & CategoryFlags.BROKEN:
+                continue
+
             if 'condition' in cat:
                 if filters.conditionals.is_hidden(conditionals,
                                                   cat['condition'],
@@ -677,7 +696,8 @@ def load(menudata_files,        # data source
         menu['flags'] &= ~MenuFlags.USED
 
     for cid, category in categories.items():
-        if category['flags'] & CategoryFlags.HIDDEN:
+        if category['flags'] & CategoryFlags.BROKEN or \
+           category['flags'] & CategoryFlags.HIDDEN:
             continue
 
         if 'menus' in category:
@@ -691,12 +711,13 @@ def load(menudata_files,        # data source
                     programs[pid]['flags'] |= ProgramFlags.USED
 
     for mid, menu in menus.items():
-        if menu['flags'] & MenuFlags.HIDDEN:
+        if menu['flags'] & MenuFlags.BROKEN or \
+           menu['flags'] & MenuFlags.HIDDEN:
             continue
 
         # If a menu isn't used by any category, remove it
         if not menu['flags'] & MenuFlags.USED:
-            logging.info('Menu "%s" is not actually used by any visible category',
+            logging.info('Menu "%s" is not actually used in any visible category',
                          mid)
             continue
 
@@ -727,7 +748,7 @@ def load(menudata_files,        # data source
 
         # remove unused programs
         if not flags & ProgramFlags.USED:
-            logging.info('Program "%s" is not actually used by any visible category or menu',
+            logging.info('Program "%s" is not actually used in any visible category or menu',
                          pid)
             removed_programs.add(pid)
             continue
@@ -740,6 +761,11 @@ def load(menudata_files,        # data source
 
     for mid, menu in menus.items():
         flags = menu['flags']
+
+        # remove broken menus
+        if menu['flags'] & MenuFlags.BROKEN:
+            removed_menus.add(mid)
+            continue
 
         # remove hidden menus
         if flags & MenuFlags.HIDDEN:
@@ -759,6 +785,11 @@ def load(menudata_files,        # data source
 
     for cid, cat in categories.items():
         flags = cat['flags']
+
+        # remove broken categories
+        if category['flags'] & CategoryFlags.BROKEN:
+            removed_categories.add(cid)
+            continue
 
         # remove hidden categories
         if flags & CategoryFlags.HIDDEN:
@@ -864,7 +895,8 @@ def load(menudata_files,        # data source
         # No program that is hidden or unused should make it this far, because
         # they're removed in the above loops. But if they somehow get here,
         # this is the final "firewall" that makes them go away.
-        if src['flags'] & ProgramFlags.HIDDEN:
+        if src['flags'] & ProgramFlags.BROKEN or \
+           src['flags'] & ProgramFlags.HIDDEN:
             continue
 
         if not src['flags'] & ProgramFlags.USED:
@@ -915,7 +947,8 @@ def load(menudata_files,        # data source
         md.programs[pid] = dst
 
     for mid, src in menus.items():
-        if src['flags'] & MenuFlags.HIDDEN:
+        if src['flags'] & MenuFlags.BROKEN or \
+           src['flags'] & MenuFlags.HIDDEN:
             continue
 
         if not src['flags'] & MenuFlags.USED:
@@ -925,11 +958,13 @@ def load(menudata_files,        # data source
             name=src.get('name', '<No name>'),
             description=src.get('description', None),
             icon=src.get('icon_handle', None))
+
         dst.program_ids = src.get('programs', [])
         md.menus[mid] = dst
 
     for cid, src in categories.items():
-        if src['flags'] & CategoryFlags.HIDDEN:
+        if src['flags'] & CategoryFlags.BROKEN or \
+           src['flags'] & CategoryFlags.HIDDEN:
             continue
 
         if not src['flags'] & CategoryFlags.USED:
