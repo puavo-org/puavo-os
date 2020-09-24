@@ -884,7 +884,7 @@ def load(menudata_files,        # data source
 
     category_index = sort_categories(categories)
 
-    logging.debug('Final category order: %s', category_index)
+    logging.debug('Final category order: %s', ', '.join(category_index))
 
     # --------------------------------------------------------------------------
     # Locate and load icons for programs and menus. This is one of the
