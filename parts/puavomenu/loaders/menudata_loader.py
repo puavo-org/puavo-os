@@ -542,6 +542,27 @@ def load(menudata_files,        # data source
     utils.log_elapsed_time('.desktop file loading time', start_time, end_time)
 
     # --------------------------------------------------------------------------
+    # Find nameless entries
+
+    for pid, program in programs.items():
+        if program.get('name', None) is None:
+            logging.error('Program "%s" has no name, skipping', pid)
+            program['flags'] |= ProgramFlags.BROKEN
+            continue
+
+    for mid, menu in menus.items():
+        if menu.get('name', None) is None:
+            logging.error('Menu "%s" has no name, skipping', mid)
+            menu['flags'] |= MenuFlags.BROKEN
+            continue
+
+    for cid, category in categories.items():
+        if category.get('name', None) is None:
+            logging.error('Category "%s" has no name, skipping', cid)
+            category['flags'] |= CategoryFlags.BROKEN
+            continue
+
+    # --------------------------------------------------------------------------
     # Apply tags and conditionals and do visibility filtering
 
     # This cannot be done earlier, because .desktop files can contain
@@ -905,10 +926,6 @@ def load(menudata_files,        # data source
         name = src.get('name', None)
         desc = src.get('description', None)
         icon = src.get('icon_handle', None)
-
-        if name is None:
-            logging.error('Program "%s" has no name, skipping', pid)
-            continue
 
         if src['type'] == 'desktop':
             if 'puavopkg' in src and src['puavopkg'] is not None:
