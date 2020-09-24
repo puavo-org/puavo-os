@@ -142,22 +142,26 @@ class FrequentProgramsList(Gtk.ScrolledWindow):
         x = 0
 
         for item in current_items:
-            program = all_programs[item]
+            try:
+                program = all_programs[item]
 
-            # use self.__parent as the parent, so popup menu handlers
-            # will call the correct methods from the main window class
-            button = buttons.program.ProgramButton(
-                self.__parent,
-                settings,
-                program.name,
-                (icon_cache, program.icon),
-                program.description,
-                data=program,
-                is_fave=True)
+                # use self.__parent as the parent, so popup menu handlers
+                # will call the correct methods from the main window class
+                button = buttons.program.ProgramButton(
+                    self.__parent,
+                    settings,
+                    program.name,
+                    (icon_cache, program.icon),
+                    program.description,
+                    data=program,
+                    is_fave=True)
 
-            button.connect('clicked', self.__parent.clicked_program_button)
-            self.__buttons.append(button)
-            self.__container.put(button, x, 0)
-            x += PROGRAM_BUTTON_WIDTH + PROGRAM_COL_PADDING
+                button.connect('clicked', self.__parent.clicked_program_button)
+                self.__buttons.append(button)
+                self.__container.put(button, x, 0)
+                x += PROGRAM_BUTTON_WIDTH + PROGRAM_COL_PADDING
+            except Exception as ex:
+                logging.error("Can't create a frequently-used program button: %s",
+                              str(ex))
 
         self.__container.show_all()
