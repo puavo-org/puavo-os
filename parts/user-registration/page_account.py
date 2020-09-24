@@ -200,7 +200,7 @@ class PageAccount(PageDefinition):
         if len(self.user_password_confirm) == 0:
             state = False
 
-        if len(self.user_phone) > 0 and not self.__only_digits(self.user_phone):
+        if len(self.user_phone) > 0 and not self.__is_valid_phone_number(self.user_phone):
             state = False
 
         if self.user_password != self.user_password_confirm:
@@ -212,9 +212,19 @@ class PageAccount(PageDefinition):
     # Python strings have a isdigit() method, but it accepts things
     # like superscripts and Kharotshi numbers, which our database
     # will reject because it does not consider them to be digits.
-    def __only_digits(self, s):
+    # Also permit + and -.
+    def __is_valid_phone_number(self, s):
         for c in s:
-            if not c in "0123456789":
+            if not c in "0123456789+-":
+                return False
+
+        if '+' in s:
+            if s[0] != '+':
+                # the + sign must be the first if it's used
+                return False
+
+            if s.count('+') != 1:
+                # more than one plus sign
                 return False
 
         return True
