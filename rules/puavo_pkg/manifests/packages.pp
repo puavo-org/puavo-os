@@ -49,6 +49,7 @@ class puavo_pkg::packages {
 			, 'mattermost-desktop'
 			, 'msttcorefonts'
 			, 'nightcode'
+			, 'novoconnect'
 			, 'ohjelmointi-opetuksessa'
 			, 'openscad-nightly'
 			, 'processing'
