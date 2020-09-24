@@ -215,9 +215,6 @@ def merge_json_and_desktop_data(json_data, desktop_data, language):
 # puavo-pkg programs)
 def load_desktop_files(programs, desktop_dirs, language):
     for pid, program in programs.items():
-        if not program['flags'] & menudata.ProgramFlags.USED:
-            continue
-
         if program['type'] != 'desktop':
             continue
 
