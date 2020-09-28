@@ -29,7 +29,7 @@ class gnome_shell_extensions {
     , 'audio-menu-modifier@puavo.org'
     , 'bottompanel@tmoer93'
     , 'dash-to-panel@jderose9.github.com'
-    , 'desktop-icons@csoriano'
+    , 'ding@rastersoft.com'
     , 'hide-activities-button@gnome-shell-extensions.bookmarkd.xyz'
     , 'hide-overview-search-entry@puavo.org'
     , 'hostinfo@puavo.org'
@@ -42,6 +42,14 @@ class gnome_shell_extensions {
     , 'window-list-mod@puavo.org' ]:
       ;
   }
+
+  file {
+    [ '/usr/share/gnome-shell/extensions/ding@rastersoft.com/ding.js'
+    , '/usr/share/gnome-shell/extensions/ding@rastersoft.com/createThumbnail.js' ]:
+      mode    => '0755',
+      require => ::Gnome_shell_extensions::Add_extension['ding@rastersoft.com'];
+  }
+
 
   Package <| title == gnome-shell-extensions |>
 }
