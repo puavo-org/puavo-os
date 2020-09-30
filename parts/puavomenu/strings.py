@@ -15,30 +15,36 @@ STRINGS = {
     'search_no_results': {
         'fi': 'Ei osumia',
         'en': 'No hits',
+        'sv': 'Inga resultat',
         'de': 'Keine Resultate',
     },
 
     'menu_empty_menu': {
         'fi': 'Tyhjä valikko',
         'en': 'Empty menu',
+        'sv': 'Tom meny',
         'de': 'Leeres Menu',
     },
 
     'menu_empty_category': {
         'fi': 'Tyhjä kategoria',
         'en': 'Empty category',
+        'sv': 'Tom kategori',
         'de': 'Leere Kategorie',
     },
 
     'user_category': {
         'fi': 'Omat ohjelmat',
         'en': 'Your programs',
+        'sv': 'Egna program',
+        'de': 'Eigene Programme',
     },
 
     # Development mode
     'menu_no_data_at_all_dev': {
         'fi': 'Ei valikkodataa? Tarkista tilanne!',
         'en': 'No menu data? Check the situation!',
+        'sv': 'Inga menydata',
         'de': 'Kein Menu? Was ist hier los!',
     },
 
