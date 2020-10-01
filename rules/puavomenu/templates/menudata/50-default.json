@@ -645,6 +645,13 @@
                 "id": "nightcode"
             }
         },
+        "novoconnect-software": {
+            "name": "NovoConnect Software",
+            "tags": "default",
+            "puavopkg": {
+                "id": "novoconnect"
+            }
+        },
         "novo-launcher": {
             "name": "LauncherOne",
             "tags": "default",
@@ -1448,6 +1455,7 @@
                 "org.gnome.Screenshot",
                 "simplescreenrecorder",
                 "airtame",
+                "novoconnect-software",
                 "novo-launcher",
                 "novo_desktop_streamer"
             ]
