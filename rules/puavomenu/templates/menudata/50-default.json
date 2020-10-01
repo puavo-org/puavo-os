@@ -17,6 +17,14 @@
                 "id": "airtame"
             }
         },
+       "anton": {
+            "type": "web",
+            "url": "https://anton.app/de/",
+            "name": "Anton",
+            "description": "Anton App",
+            "icon": "www",
+            "tags": "german"
+        },
         "amme": {
             "type": "web",
             "url": "https://www11.edu.fi/materiaali/index.php?id=2",
@@ -1614,6 +1622,7 @@
             },
             "icon": "/usr/share/puavo-art/puavomenu-icons/education.svg",
             "programs": [
+                "anton",
                 "ekapeli",
                 "spelett",
                 "ekapeli-maahanmuuttaja",
