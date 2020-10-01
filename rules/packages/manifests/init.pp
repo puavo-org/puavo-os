@@ -324,6 +324,7 @@ class packages {
     , 'kino'
     , 'kolourpaint4'
     , 'krita'
+    , 'krita-l10n'
     , 'libsane'
     , 'mjpegtools'
     , 'mypaint'
