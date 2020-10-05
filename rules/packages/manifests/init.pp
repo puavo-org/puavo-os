@@ -238,6 +238,7 @@ class packages {
     , 'libgl1-mesa-glx'
     , 'nvidia-settings'
     , 'update-glx'
+    , 'xserver-xorg-input-all'
     , 'xserver-xorg-input-evdev'
     , 'xserver-xorg-video-all' ]:
       tag => [ 'tag_drivers', 'tag_debian_desktop', ];
