@@ -36,6 +36,16 @@ cleanup() {
 
 trap cleanup 0 INT TERM
 
+block_interrupts() {
+  inhibit_list='shutdown:sleep:idle:handle-power-key:handle-suspend-key:handle-hibernate-key:handle-lid-switch'
+
+  systemd-inhibit "--what=${inhibit_list}"  \
+                  --who=puavo-image-preinst \
+                  '--why=Updating Grub'     \
+                  --mode=block              \
+                  "$@"
+}
+
 update_grub() {
   # puavo-install-grub updates /images/boot/grub/version
   old_grub_version="$(cat /images/boot/grub/version 2>/dev/null || true)"
@@ -48,9 +58,10 @@ update_grub() {
 
   if [ -z "$old_grub_version" ] \
     || dpkg --compare-versions "$old_grub_version" lt "$new_grub_version"; then
-      chroot "$new_mnt" /usr/sbin/puavo-install-grub "$@"
+      block_interrupts chroot "$new_mnt" /usr/sbin/puavo-install-grub "$@"
   else
-    chroot "$new_mnt" /usr/sbin/puavo-install-grub --only-update-config "$@"
+    block_interrupts chroot "$new_mnt" \
+      /usr/sbin/puavo-install-grub --only-update-config "$@"
   fi
 }
 
