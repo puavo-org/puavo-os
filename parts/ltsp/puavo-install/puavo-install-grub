@@ -6,6 +6,32 @@ set -eu
 # /images is writable!  (and some other pseudo-filesystems such as /dev and
 # /proc are accessible as well).
 
+flush_caches() {
+  # We have got some weird spurious grub errors of the sort (at first boot):
+  # "error: ELF header smaller than expected", so we play it safe
+  # and try weird tricks to flush all caches to actual, physical disk.
+  # But we are not quite sure yet this will actually work (the problem is
+  # difficult to reproduce).
+  flush_status=0
+
+  sync || flush_status=1
+  echo 3 > /proc/sys/vm/drop_caches || flush_status=1
+
+  for grubdev in "$@"; do
+    blockdev --flushbufs "$grubdev" || flush_status=1
+  done
+
+  for grubdev in "$@"; do
+    case "$grubdev" in
+      /dev/[sv]d*)
+	hdparm -qF "$grubdev" || flush_status=1
+	;;
+    esac
+  done
+
+  return $flush_status
+}
+
 get_grub_efi_arguments() {
   echo '--target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=debian'
   if [ "$(puavo-conf puavo.grub.efi.force_extra_removable)" = 'true' ]; then
@@ -447,6 +473,8 @@ mount_efi_partition() {
   mount "$efi_devpath" /boot/efi || return 1
 }
 
+grub_install_done=false
+
 if ! $only_update_config; then
   for grubdev in $grub_target_devices; do
     efi_devpath=$(get_efi_devpath "$grubdev")
@@ -468,6 +496,12 @@ if ! $only_update_config; then
       umount /boot/efi || true
     fi
   done
+
+  grub_install_done=true
+
+  if ! flush_caches; then
+    echo 'Error in flushing caches after grub installation' >&2
+  fi
 
   grub-install --version | awk '{ print $3 }' > "${boot_dir}/grub/version.tmp"
   if [ ! -s "${boot_dir}/grub/version.tmp" ]; then
@@ -513,31 +547,19 @@ EOF
   fi
 fi
 
-
 if cmp "$grub_cfg_path" "$tmp_grub_cfg_path" >/dev/null 2>&1; then
   rm -f "$tmp_grub_cfg_path"
 else
   mv "$tmp_grub_cfg_path" "$grub_cfg_path"
+  if ! flush_caches; then
+    echo 'Error in flushing caches after updating grub configuration' >&2
+  fi
 fi
 
-# We have got some weird spurious grub errors of the sort (at first boot):
-# "error: ELF header smaller than expected", so we play it safe
-# and try weird tricks to flush all caches to actual, physical disk.
-# But we are not quite sure yet this will actually work (the problem is
-# difficult to reproduce).
-sync
-echo 3 > /proc/sys/vm/drop_caches
-
-for grubdev in $grub_target_devices; do
-  blockdev --flushbufs "$grubdev"
-done
-
-for grubdev in $grub_target_devices; do
-  case "$grubdev" in
-    /dev/[sv]d*)
-      hdparm -qF "$grubdev"
-      ;;
-  esac
-done
+if $grub_install_done; then
+  # Do an extra sleep in case we really installed grub (and have not only
+  # updated the configuration), in case cache flushing was not adequate.
+  sleep 5
+fi
 
 exit $exitstatus
