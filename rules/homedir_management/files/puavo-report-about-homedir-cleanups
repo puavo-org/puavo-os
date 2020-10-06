@@ -21,8 +21,8 @@ case "$LANG" in
     body='Dateien auf diesem Computer werden möglicherweise automatisch gelöscht, wenn der verfügbare Speicherplatz knapp wird.'
     ;;
   fi*)
-    summary='AUTOMAATTINEN TIEDOSTOJEN POISTO'
-    body='Tämän tietokoneen tiedostoja voidaan poistaa automaattisesti, jos käytettävissä oleva levytila käy vähiin.'
+    summary='AUTOMAATTINEN TALLENNUSTILAN HALLINTA'
+    body='Tämän tietokoneen tiedostoja voidaan tarvittaessa poistaa automaattisesti, jos käytettävissä oleva levytila käy vähiin.'
     ;;
   fr*)
     summary='SUPPRESSION AUTOMATIQUE DES FICHIERS'
