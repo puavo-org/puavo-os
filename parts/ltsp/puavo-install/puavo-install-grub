@@ -6,6 +6,15 @@ set -eu
 # /images is writable!  (and some other pseudo-filesystems such as /dev and
 # /proc are accessible as well).
 
+log() {
+  priority=$1
+  message=$2
+
+  printf "> %s\n" "$message" >&2
+
+  logger -p "$priority" -t puavo-install-grub "$message" || true
+}
+
 flush_caches() {
   # We have got some weird spurious grub errors of the sort (at first boot):
   # "error: ELF header smaller than expected", so we play it safe
@@ -368,6 +377,8 @@ EOF
   exit 1
 }
 
+log notice 'starting to update Grub'
+
 exitstatus=0
 
 hosttype=$(cat /etc/puavo/hosttype 2>/dev/null || true)
@@ -396,12 +407,12 @@ done
 [ $# -eq 0 ] || usage
 
 if [ ! -d "$images_dir" ]; then
-  echo "'$images_dir' is not a directory" >&2
+  log err "'${images_dir}' is not a directory"
   exit 1
 fi
 
 if [ -z "$hosttype" ]; then
-  echo 'Hosttype is not set' >&2
+  log err 'hosttype is not set'
   exit 1
 fi
 
@@ -420,7 +431,7 @@ diskdev=$(pvs 3>&- 4>&- 5>&-                                            \
               ')
 
 if [ -z "$diskdev" ]; then
-  echo "Could not find the disk device where volume group '${vgname}' is" >&2
+  log err "could not find the disk device where volume group '${vgname}' is"
   exit 1
 fi
 
@@ -428,7 +439,7 @@ case "$diskdev" in
   /dev/md*)
     grub_target_devices=$(find_grub_target_devices_on_raid "$diskdev")
     if [ -z "$grub_target_devices" ]; then
-      echo 'Could not find grub target devices on RAID configuration' >&2
+      log err 'could not find grub target devices on RAID configuration'
       exit 1
     fi
     possible_windows_disk_dev=''
@@ -458,7 +469,7 @@ case "$hosttype" in
     puavo_kernel_arguments="quiet splash ${common_kernel_arguments}"
     ;;
   *)
-    echo "Hosttype '$hosttype' is not supported" > /dev/stderr
+    log err "hosttype '${hosttype}' is not supported"
     exit 1
     ;;
 esac
@@ -475,23 +486,28 @@ mount_efi_partition() {
 
 grub_install_done=false
 
-if ! $only_update_config; then
+if $only_update_config; then
+  log info 'only updating Grub configuration'
+else
   for grubdev in $grub_target_devices; do
+    log info "installing grub to ${grubdev}"
+
     efi_devpath=$(get_efi_devpath "$grubdev")
 
     grub_efi_arguments=''
     if [ -n "$efi_devpath" ]; then
       if ! mount_efi_partition "$efi_devpath"; then
-        echo "Could not mount /boot/efi from $efi_devpath" >&2
+        log err "could not mount /boot/efi from ${efi_devpath}"
         exit 1
       fi
       grub_efi_arguments=$(get_grub_efi_arguments)
     fi
     if ! grub_msg=$(grub-install --boot-directory="$boot_dir" \
                       $grub_efi_arguments "$grubdev" 3>&- 4>&- 5>&- 2>&1); then
-      echo "Grub installation to $grubdev failed: $grub_msg" >&2
+      log err "Grub installation to ${grubdev} failed: ${grub_msg}"
       exit 1
     fi
+    log info "Grub installation to ${grubdev} was successful"
     if [ -n "$efi_devpath" ]; then
       umount /boot/efi || true
     fi
@@ -500,17 +516,17 @@ if ! $only_update_config; then
   grub_install_done=true
 
   if ! flush_caches; then
-    echo 'Error in flushing caches after grub installation' >&2
+    log warn 'error in flushing caches after grub installation'
   fi
 
-  grub-install --version | awk '{ print $3 }' > "${boot_dir}/grub/version.tmp"
-  if [ ! -s "${boot_dir}/grub/version.tmp" ]; then
-    echo 'Could not determine new grub version' >&2
-    rm -f "${boot_dir}/grub/version.tmp"
+  new_grub_version=$(grub-install --version | awk '{ print $3 }')
+  if [ -z "$new_grub_version" ]; then
+    log err 'could not determine new grub version'
     exitstatus=1
   else
+    printf "%s\n" "$new_grub_version" > "${boot_dir}/grub/version.tmp"
     mv "${boot_dir}/grub/version.tmp" "${boot_dir}/grub/version"
-    echo "Grub has been installed to: $(echo $grub_target_devices)."
+    log notice "Grub version ${new_grub_version} has been installed to: $(printf %s "$grub_target_devices")"
   fi
 fi
 
@@ -548,11 +564,13 @@ EOF
 fi
 
 if cmp "$grub_cfg_path" "$tmp_grub_cfg_path" >/dev/null 2>&1; then
+  log info 'no changes to Grub configuration'
   rm -f "$tmp_grub_cfg_path"
 else
   mv "$tmp_grub_cfg_path" "$grub_cfg_path"
+  log notice 'new Grub configuration has been installed'
   if ! flush_caches; then
-    echo 'Error in flushing caches after updating grub configuration' >&2
+    log warn 'error in flushing caches after updating grub configuration'
   fi
 fi
 
