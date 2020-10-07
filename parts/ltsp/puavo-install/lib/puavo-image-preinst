@@ -37,13 +37,21 @@ cleanup() {
 trap cleanup 0 INT TERM
 
 block_interrupts() {
-  inhibit_list='shutdown:sleep:idle:handle-power-key:handle-suspend-key:handle-hibernate-key:handle-lid-switch'
+  if ! which systemd-inhibit >/dev/null; then
+    # In case we are on a system that lacks systemd-inhibit, we just try
+    # without it.  (This can happen with updates from Ubuntu Trusty
+    # to Debian Buster, and even though that should not happen much,
+    # we do not want to break those either).
+    "$@"
+  else
+    inhibit_list='shutdown:sleep:idle:handle-power-key:handle-suspend-key:handle-hibernate-key:handle-lid-switch'
 
-  systemd-inhibit "--what=${inhibit_list}"  \
-                  --who=puavo-image-preinst \
-                  '--why=Updating Grub'     \
-                  --mode=block              \
-                  "$@"
+    systemd-inhibit "--what=${inhibit_list}"  \
+                    --who=puavo-image-preinst \
+                    '--why=Updating Grub'     \
+                    --mode=block              \
+                    "$@"
+  fi
 }
 
 update_grub() {
