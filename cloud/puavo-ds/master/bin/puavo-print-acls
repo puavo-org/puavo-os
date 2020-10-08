@@ -1,0 +1,688 @@
+#!/usr/bin/env tclsh
+
+#
+# see https://www.openldap.org/doc/admin24/access-control.html
+# and the manual page slapd.access(5) for documentation
+#
+
+#
+# GLOBAL VARIABLES
+#
+
+set ldapsuffix   [lindex $argv 0]
+set samba_domain [lindex $argv 1]
+
+if {[llength $argv] != 2 || $ldapsuffix eq "" || $samba_domain eq ""} {
+  puts stderr "usage: puavo-print-acl ldapsuffix samba_domain"
+  exit 1
+}
+
+set rules [list]
+
+#
+# SUBROUTINES
+#
+
+proc attrs {args} {
+  format {attrs="%s"} [join $args ","]
+}
+
+proc devicetype_set {devtype} {
+  ldapset [format {user/puavoDeviceType & [%s]} $devtype]
+}
+
+proc dn {{_scope ""} {_branch ""}} {
+  global ldapsuffix
+  set branch [expr { $_branch ne "" ? "${_branch}," : ""}]
+  set scope  [expr { $_scope  ne "" ? ".${_scope}"  : ""}]
+  format {dn%s="%s%s"} $scope $branch $ldapsuffix
+}
+
+proc ldapset {setspec} {
+  format {set="%s"} $setspec
+}
+
+proc person_affiliation {affliation} {
+  format {user/puavoEduPersonAffiliation & [%s]} $affliation
+}
+
+proc puavo_dn {name} {
+  format {dn.exact="uid=%s,o=puavo"} $name
+}
+
+proc rule {rulelines} {
+  global rules
+  set uncommented_rulelines [regsub -all -line {#.*$} $rulelines ""]
+  set subst_rulelines [uplevel 1 [list subst $uncommented_rulelines]]
+  set rule_elems [split $subst_rulelines]
+  set nonempty_rule_elems [
+    lmap _ $rule_elems { expr { $_ ne "" ? $_ : [continue] } }
+  ]
+  lappend rules [join $nonempty_rule_elems " "]
+}
+
+proc systemgroup {groupname} {
+  global ldapsuffix
+  format {group/puavoSystemGroup/member="cn=%s,ou=System Groups,%s"} \
+         $groupname $ldapsuffix
+}
+
+#
+# some constants
+#
+
+set Desktops        "ou=Desktops"
+set Devices         "ou=Devices,ou=Hosts"
+set Domain_Admins   "cn=Domain Admins,ou=Groups"
+set Domain_Users    "cn=Domain Users,ou=Groups"
+set Files           "ou=Files,ou=Desktops"
+set Groups          "ou=Groups"
+set Hosts           "ou=Hosts"
+set People          "ou=People"
+set Printers        "ou=Printers"
+set Servers         "ou=Servers,ou=Hosts"
+set System_Accounts "ou=System Accounts"
+set System_Groups   "ou=System Groups"
+
+set org_owners   [ldapset [format {[%s]/owner & user} $ldapsuffix]]
+set schooladmins [ldapset "this & user/puavoAdminOfSchool"]
+set all_admins   [ldapset [person_affiliation admins]]
+set teachers     [ldapset [person_affiliation teacher]]
+
+# this means: admins of the same school as
+# $this_thing (person, device, server) is in
+set this_school_admins [ldapset "this/puavoSchool & user/puavoAdminOfSchool"]
+
+# this means: target/what and actor/who must be in the same school
+# and actor/who must also be a teacher
+set this_school_teachers [ldapset \
+  {([teacher,] + this/puavoSchool)
+     & (user/puavoEduPersonAffiliation + [,] + user/puavoSchool)}]
+
+#
+# RULES
+#
+
+# special wide rules
+
+# Give slave ldap servers and other servers read access to
+# everything (in the same organisation of course) so that ldap
+# synchronization works.
+rule {
+  [dn subtree]
+      by [puavo_dn slave]       read
+      by [dn children $Servers] read
+      by *                      none break
+}
+
+# set some early rules for userPassword first so that later rules
+# do not accidentally grant rights to it
+# "=axz" means "add authenticate delete", which excludes reading
+# (simple "write" implies reading)
+rule {
+  [dn children $Devices]
+    [attrs userPassword]
+      # This must be "write", not "=axz" as below with People's passwords.
+      # This is because devices belong to "simpleSecurityObject"-objectClass,
+      # which requires that each time these objects are updated,
+      # "userPassword"-attribute must also be set (?!?), and it can not
+      # be set unless admins also can read it.  (This is not perfect but
+      # this access is for admins only and the password is hashed anyway).
+      by $org_owners         write
+      by $this_school_admins write
+
+      by anonymous           auth
+}
+
+rule {
+  [dn children $Servers]
+    [attrs userPassword]
+      by $org_owners write      # the same as above
+      by anonymous   auth
+}
+
+rule {
+  # allow teachers to change student passwords
+  [dn children $People]
+    filter="(puavoEduPersonAffiliation=student)"
+    [attrs userPassword]
+      by $this_school_teachers =axz
+      by *                     none break
+}
+
+rule {
+  # if an account is locked, deny authentication
+  [dn children $People]
+    filter="(puavoLocked=TRUE)"
+    [attrs userPassword]
+      by anonymous none
+      by *         none break
+}
+
+rule {
+  [dn children $People]
+    [attrs userPassword]
+      by self                =axz
+      by [puavo_dn pw-mgmt]  =axz
+      by $org_owners         =axz
+      by $this_school_admins =axz
+      by anonymous           auth
+}
+
+rule {
+  [dn children $People]
+    filter="(puavoEduPersonAffiliation=student)"
+    [attrs sambaPwdLastSet]
+      by $this_school_teachers write
+      by *                     none break
+}
+
+rule {
+  [dn children $People]
+    [attrs sambaPwdLastSet]
+      by self                write
+      by [puavo_dn pw-mgmt]  write
+      by $org_owners         write
+      by $this_school_admins write
+}
+
+rule {
+  [dn children $System_Accounts]
+    [attrs userPassword]
+      by $org_owners write      # see comment about "write" some rules above
+      by anonymous   auth
+}
+
+# Samba-related rules
+
+rule {
+  [dn exact ou=Samba,ou=Hosts]
+    [attrs entry objectClass ou]
+      by [dn children $Servers] read
+}
+
+rule {
+  [dn exact ou=Samba,ou=Hosts]
+    [attrs children]
+      by [dn children $Servers] write
+}
+
+rule {
+  [dn children ou=Samba,ou=Hosts]
+      by [dn children $Servers] write
+}
+
+rule {
+  [dn exact sambaDomainName=${samba_domain}]
+    [attrs sambaSID sambaDomainName]
+      by $org_owners write
+}
+
+rule {
+  [dn exact sambaDomainName=${samba_domain}]
+      by $org_owners            write
+      by [dn children $Servers] write
+}
+
+rule {
+  [dn exact ou=Idmap]
+      by [dn children $Servers] write
+}
+
+rule {
+  [dn exact $Domain_Admins]
+    [attrs memberUid]
+      by $org_owners write
+}
+
+rule {
+  [dn exact $Domain_Admins]
+      by $org_owners read
+}
+
+rule {
+  [dn exact $Domain_Users]
+    [attrs memberUid]
+      by $org_owners write
+}
+
+rule {
+  [dn exact $Domain_Users]
+      by $org_owners read
+}
+
+# Kerberos Realms related rules
+
+rule {
+  [dn subtree "ou=Kerberos Realms"]
+      by [puavo_dn kadmin] write
+      by [puavo_dn kdc]    read
+}
+
+# Samba-related rules under ou=People
+
+rule {
+  [dn children $People]
+    [attrs sambaNTPassword]
+      by [dn children $Servers] write
+      by $org_owners            =az
+      by $this_school_admins    =az
+}
+
+rule {
+  [dn children $People]
+    [attrs sambaAcctFlags]
+      by [dn children $Servers] write
+}
+
+# rules for ou=Hosts (and subtrees)
+
+# give wide read access to these device-related puavo DNs
+# (not that these can not look under ou=Samba,ou=Hosts)
+rule {
+  [dn subtree $Hosts]
+      by [puavo_dn monitor]      read
+      by [puavo_dn puavo-ticket] read  # XXX to be removed later
+      by [puavo_dn statistics]   read
+      by *                       none break
+}
+
+# rules for ou=Devices,ou=Hosts
+# (should be before $Hosts, because $Devices is in ou=Hosts subtree)
+
+rule {
+  [dn exact $Devices]
+    [attrs children]
+      by $org_owners write
+      by anonymous   none
+      by *           none break
+}
+
+rule {
+  [dn exact $Devices]
+    [attrs children entry objectClass ou]
+      by $org_owners           read
+      by [systemgroup devices] read
+      by [dn children $People] read
+      by [dn children $Hosts]  read
+      by anonymous             auth
+}
+
+rule {
+  [dn children $Devices]
+    [attrs puavoDeviceHWInfo]
+      by [dn children $Servers] write
+      by *                      none break
+}
+
+rule {
+  [dn children $Devices]
+    [attrs puavoDeviceAvailableImage \
+           puavoDeviceCurrentImage   \
+           puavoDeviceHWInfo         \
+           puavoDeviceMonitorsXML    \
+           puavoDevicePrimaryUser]
+      by self write
+      by *    none break
+}
+
+rule {
+  [dn children $Devices]
+      by $org_owners           write
+      by $this_school_admins   write
+      by self                  read
+      by [systemgroup devices] read
+      by anonymous             auth
+}
+
+# rules for ou=Servers,ou=Hosts
+# (should be before $Hosts, because $Servers is in ou=Hosts subtree)
+
+rule {
+  [dn exact $Servers]
+    [attrs children]
+      by $org_owners write
+      by anonymous   none
+      by *           none break
+}
+
+rule {
+  [dn exact $Servers]
+    [attrs children entry objectClass ou]
+      by $org_owners           read
+      by [systemgroup servers] read
+      by anonymous             auth
+}
+
+rule {
+  [dn children $Servers]
+    [attrs puavoDeviceCurrentImage puavoDeviceAvailableImage puavoDeviceHWInfo]
+      by self write
+      by *    none break
+}
+
+rule {
+  [dn children $Servers]
+    [attrs entry objectClass ou puavoExport puavoHostname puavoId puavoSchool]
+      by $this_school_admins read
+
+      # XXX This is needed by /v3/sessions printer queues server information.
+      # XXX It is unclear if this is needed in the real world, but old ACLs
+      # XXX have this and some session tests break without this.
+      # XXX If this is actually needed maybe the attribute list could
+      # XXX be made shorter.
+      by [devicetype_set laptop] read
+
+      by * none break
+}
+
+rule {
+  [dn children $Servers]
+      by $org_owners           write
+      by [systemgroup servers] read
+      by anonymous             auth
+}
+
+# rules for ou=Hosts specifically
+
+rule {
+  [dn exact $Hosts]
+      by $org_owners           read
+      by [dn children $Hosts]  read
+      by [systemgroup devices] read
+      by [systemgroup servers] read
+}
+
+# rules for ou=Printers
+
+rule {
+  [dn exact $Printers]
+    [attrs entry objectClass ou]
+      by $org_owners                 read
+      by [dn children $Servers]      read
+      by [dn children $People]       read
+      by [systemgroup printerqueues] read
+}
+
+rule {
+  [dn exact $Printers]
+    [attrs children]
+      by $org_owners                 write
+      by [dn children $Servers]      write
+      by [dn children $People]       read
+      by [systemgroup printerqueues] read
+}
+
+rule {
+  [dn children $Printers]
+      by $org_owners                 write
+      by [dn children $Servers]      write
+      by [dn children $People]       read
+      by [systemgroup printerqueues] read
+}
+
+# rules for ou=Groups
+
+rule {
+  [dn exact $Groups]
+    [attrs children]
+      by $org_owners write
+      by *           none break
+}
+
+rule {
+  [dn exact $Groups]
+    [attrs children entry objectClass ou]
+      by $org_owners           read
+      by [dn children $People] read
+      by [dn children $Hosts]  read
+      by [systemgroup getent]  read
+}
+
+# Do not allow read access to People and Hosts to group membership
+# lists.  We do not want ordinary people to be able to list all usernames
+# in an organisation (but for teachers this is okay).
+rule {
+  [dn subtree $Groups]
+    [attrs member memberUid]
+      by $org_owners            write
+      by $all_admins            write	# XXX maybe this_school_admins instead?
+      by $teachers              read
+      by [dn children $People]  none
+      by [dn children $Devices] none
+      by *                      none break
+}
+
+rule {
+  [dn subtree $Groups]
+      by $org_owners           write
+      by $all_admins           write	# XXX maybe this_school_admins instead?
+      by [puavo_dn puavo]      read
+      by [puavo_dn statistics] read
+      by [dn children $People] read
+      by [dn children $Hosts]  read
+      by [systemgroup getent]  read
+}
+
+# rules for ou=People
+
+rule {
+  [dn exact $People]
+    [attrs children]
+      by $org_owners write
+      by *           none break
+}
+
+rule {
+  [dn exact $People]
+    [attrs children entry objectClass ou]
+      by [puavo_dn puavo]          read
+      by [puavo_dn pw-mgmt]        read
+      by [systemgroup addressbook] read
+      by [systemgroup auth]        read
+      by [systemgroup getent]      read
+      by [dn children $People]     read
+      by [dn children $Hosts]      read
+      by anonymous                 auth
+}
+
+rule {
+  [dn subtree $People]
+    [attrs entry objectClass uid]
+      # hosts should be able to read information on the user who is
+      # the puavoDevicePrimaryUser (at least to know their username)
+      by [ldapset "this & user/puavoDevicePrimaryUser"] read
+
+      by anonymous auth
+      by *         none break
+}
+
+# rules needed by pw-mgmt (password management user)
+rule {
+  [dn subtree $People]
+    [attrs entry objectClass mail uid]
+      by [puavo_dn pw-mgmt] read
+      by *                  none break
+}
+
+# some permissions to "addressbook"
+rule {
+  [dn subtree $People]
+    [attrs displayName                      \
+           givenName                        \
+           jpegPhoto                        \
+           mail                             \
+           preferredLanguage                \
+           puavoEduPersonPersonnelNumber    \
+           puavoEduPersonReverseDisplayName \
+           puavoExternalId                  \
+           puavoLocale                      \
+           sn                               \
+           telephoneNumber                  \
+           uid]
+      by [systemgroup addressbook] read
+      by *                         none break
+}
+
+# some permissions to "auth"
+rule {
+  [dn subtree $People]
+    [attrs eduPersonPrincipalName    \
+           puavoEduPersonAffiliation \
+           puavoRemovalRequestTime   \
+           uid]
+      by [systemgroup auth] read
+      by *                  none break
+}
+
+# some permissions to service "getent"
+# XXX do we need still this?  If still in use, should the name be changed?
+rule {
+  [dn subtree $People]
+    [attrs displayName                      \
+           eduPersonPrincipalName           \
+           gidNumber                        \
+           givenName                        \
+           homeDirectory                    \
+           loginShell                       \
+           puavoEduPersonAffiliation        \
+           puavoEduPersonReverseDisplayName \
+           puavoId                          \
+           puavoLocked                      \
+           puavoRemovalRequestTime          \
+           puavoSchool                      \
+           sn                               \
+           uid                              \
+           uidNumber]
+      by [systemgroup getent] read
+      by *                    none break
+}
+
+rule {
+  [dn subtree $People]
+    [attrs gidNumber     \
+           givenName     \
+           homeDirectory \
+           loginShell    \
+           sn            \
+           uidNumber]
+      by [puavo_dn puavo]   read
+      by [puavo_dn pw-mgmt] read
+      by *                  none break
+}
+
+# allow users to change some of their own information
+rule {
+  [dn subtree $People]
+    [attrs jpegPhoto          \
+           mail               \
+           preferredLanguage  \
+           puavoAcceptedTerms \
+           puavoLocale        \
+           telephoneNumber]
+      by self write
+      by *    none break
+}
+
+# Give hosts access to owner information (so that org.json can contain
+# admin users).
+# XXX Note that while the need is for owners, this checks the admin status
+# XXX instead.  In general it is wrong to have owners who are not admins,
+# and Puavo enforces this to some extent, but not on database level.
+rule {
+  [dn subtree $People]
+    filter="(puavoEduPersonAffiliation=admin)"
+      by [dn children $Hosts] read
+      by *                    none break
+
+}
+
+rule {
+  [dn subtree $People]
+      by $org_owners         write
+      by $this_school_admins write
+      by $all_admins         read	# /v3/my_school_users requires this
+      by $teachers           read	# /v3/my_school_users requires this
+      by self                read
+}
+
+# rules for ou=Desktops
+
+rule {
+  [dn exact $Files]
+    [attrs children]
+      by $org_owners write
+      by *           none break
+}
+
+rule {
+  [dn exact $Files]
+    [attrs children entry objectClass ou]
+      by $org_owners          read
+      by [dn children $Hosts] read
+}
+
+rule {
+  [dn children $Files]
+      by $org_owners          write
+      by [dn children $Hosts] read
+}
+
+rule {
+  [dn exact $Desktops]
+    [attrs children entry objectClass ou]
+      by $org_owners          read
+      by [dn children $Hosts] read
+}
+
+# rules for ou=System Accounts and ou=System Groups
+
+rule {
+  [dn subtree $System_Accounts]
+      by $org_owners      write
+      by [puavo_dn puavo] read
+}
+
+rule {
+  [dn subtree $System_Groups]
+    [attrs member]
+      by $org_owners         write
+      by $this_school_admins write
+}
+
+rule {
+  [dn subtree $System_Groups]
+      by $org_owners         read
+      by $this_school_admins read
+}
+
+# rules for the organisation entry
+# "+dsx" = "disclose search auth"
+
+rule {
+  [dn]
+    [attrs entry objectClass puavoDomain puavoKerberosRealm sambaDomainName]
+      by $org_owners read
+      by *           none break
+}
+
+rule {
+  [dn]
+      by $org_owners           write
+      by [dn children $People] read
+      by [dn children $Hosts]  read
+      by [systemgroup getent]  read
+      by [systemgroup orginfo] read
+      by *                     +dsx
+}
+
+#
+# print rules
+#
+
+set rulenum 0
+foreach rule $rules {
+  set trimmed_rule [string trim "$rule"]
+  puts "olcAccess: {${rulenum}}to ${trimmed_rule}"
+  incr rulenum
+}
