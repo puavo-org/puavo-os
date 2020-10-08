@@ -6,6 +6,7 @@ require 'readline'
 require 'tempfile'
 
 require 'puavo/etc'
+require 'puavo-ds/database_acl'
 
 ldap_suffix_arg = ARGV.first
 
@@ -68,18 +69,13 @@ def update_acls(suffix)
 
   Readline.readline('OK? (the only way out is CTRL-C) ', true)
 
+  acls = LdapAcl.generate_acls(suffix, samba_domain) \
+                .map { |s| "olcAccess: #{ s }\n" }.join('')
+
   Tempfile.create do |tmpfile|
     tmpfile.write "dn: #{ dn }\n"
     tmpfile.write "changetype: modify\n"
     tmpfile.write "replace: olcAccess\n"
-
-    acls, stderr_str, status \
-      = Open3.capture3('puavo-print-acls', suffix, samba_domain)
-    unless status.success? then
-      errmsg = "puavo-print-acls returned status code #{ status.exitstatus }" \
-                 + " with the following errors:\n#{ stderr_str }"
-      raise errmsg
-    end
     tmpfile.write acls
     tmpfile.close
 
