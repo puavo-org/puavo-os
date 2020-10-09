@@ -86,7 +86,7 @@ set System_Groups   "ou=System Groups"
 
 set org_owners   [ldapset [format {[%s]/owner & user} $ldapsuffix]]
 set schooladmins [ldapset "this & user/puavoAdminOfSchool"]
-set all_admins   [ldapset [person_affiliation admins]]
+set all_admins   [ldapset [person_affiliation admin]]
 set teachers     [ldapset [person_affiliation teacher]]
 
 # this means: admins of the same school as
