@@ -445,9 +445,15 @@ rule {
 rule {
   [dn subtree $Groups]
     [attrs member memberUid]
-      by $org_owners            write
-      by $all_admins            write	# XXX maybe this_school_admins instead?
-      by $teachers              read
+      by $org_owners write
+      by $all_admins write	# XXX maybe this_school_admins instead?
+      by $teachers   read
+
+      # Users must be able to check if they belong to a particular group.
+      # This allows users to read the DNs of other users that belong to the
+      # same group, but not usernames or other such user information.
+      by set="this/member & user" read
+
       by [dn children $People]  none
       by [dn children $Devices] none
       by *                      none break
