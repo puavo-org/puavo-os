@@ -86,7 +86,8 @@ set System_Groups   "ou=System Groups"
 
 set org_owners   [ldapset [format {[%s]/owner & user} $ldapsuffix]]
 set schooladmins [ldapset "this & user/puavoAdminOfSchool"]
-set all_admins   [ldapset [person_affiliation admin]]
+set admins       [ldapset [person_affiliation admin]]
+set staff        [ldapset [person_affiliation staff]]
 set teachers     [ldapset [person_affiliation teacher]]
 
 # this means: admins of the same school as
@@ -294,6 +295,8 @@ rule {
   [dn exact $Devices]
     [attrs children]
       by $org_owners write
+      by $admins     write
+      by $staff      write	# XXX maybe just remove this?
       by anonymous   none
       by *           none break
 }
@@ -446,7 +449,8 @@ rule {
   [dn subtree $Groups]
     [attrs member memberUid]
       by $org_owners write
-      by $all_admins write	# XXX maybe this_school_admins instead?
+      by $admins     write	# XXX maybe this_school_admins instead?
+      by $staff      write	# XXX maybe just remove this?
       by $teachers   read
 
       # Users must be able to check if they belong to a particular group.
@@ -462,7 +466,8 @@ rule {
 rule {
   [dn subtree $Groups]
       by $org_owners           write
-      by $all_admins           write	# XXX maybe this_school_admins instead?
+      by $admins               write	# XXX maybe this_school_admins instead?
+      by $staff                write	# XXX maybe just remove this?
       by [puavo_dn puavo]      read
       by [puavo_dn statistics] read
       by [dn children $People] read
@@ -607,7 +612,8 @@ rule {
   [dn subtree $People]
       by $org_owners         write
       by $this_school_admins write
-      by $all_admins         read	# /v3/my_school_users requires this
+      by $admins             read	# /v3/my_school_users requires this
+      by $staff              read	# /v3/my_school_users requires this
       by $teachers           read	# /v3/my_school_users requires this
       by self                read
 }
