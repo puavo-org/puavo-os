@@ -42,7 +42,6 @@ class backgrounds {
     , 'Night_lights_by_Alberto_Salvia_Novella.jpg'
     , 'Redes_de_hilo_by_Juan_Pablo_Lauriente.jpg'
     , 'Reflections_by_Trenton_Fox.jpg'
-    , 'Sea_Fury_by_Ian_Worrall.jpg'
     , 'Some_Light_Reading_by_Brandilyn_Carpenter.jpg'
     , 'TCP118v1_by_Tiziano_Consonni.jpg'
     , 'Tenerife_Roques_de_Anaga_by_Frederik_Schulz.jpg'
