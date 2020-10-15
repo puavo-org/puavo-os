@@ -351,6 +351,8 @@ rule {
   [dn exact $Servers]
     [attrs children]
       by $org_owners write
+      by $admins     read
+      by $staff      read		# XXX maybe just remove this?
       by anonymous   none
       by *           none break
 }
@@ -359,6 +361,8 @@ rule {
   [dn exact $Servers]
     [attrs children entry objectClass ou]
       by $org_owners           read
+      by $admins               read
+      by $staff                read	# XXX maybe just remove this?
       by [systemgroup servers] read
       by anonymous             auth
 }
@@ -374,6 +378,7 @@ rule {
   [dn children $Servers]
     [attrs entry objectClass ou puavoExport puavoHostname puavoId puavoSchool]
       by $this_school_admins read
+      by $staff              read	# XXX maybe just remove this?
 
       # XXX This is needed by /v3/sessions printer queues server information.
       # XXX It is unclear if this is needed in the real world, but old ACLs
@@ -388,6 +393,8 @@ rule {
 rule {
   [dn children $Servers]
       by $org_owners           write
+      by $admins               read
+      by $staff                read	# XXX maybe just remove this?
       by [systemgroup servers] read
       by anonymous             auth
 }
