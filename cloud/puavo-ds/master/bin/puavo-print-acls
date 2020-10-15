@@ -541,14 +541,6 @@ rule {
       by *         none break
 }
 
-# rules needed by pw-mgmt (password management user)
-rule {
-  [dn subtree $People]
-    [attrs entry objectClass mail uid]
-      by [puavo_dn pw-mgmt] read
-      by *                  none break
-}
-
 # some permissions to "addressbook"
 rule {
   [dn subtree $People]
@@ -602,13 +594,30 @@ rule {
       by *                    none break
 }
 
+
+# rules needed by puavo and pw-mgmt (password management user)
+# XXX Not sure why these are needed or if puavo and pw-mgmt need a
+# XXX matching set of attributes, but ACL tests explicitly tests for
+# XXX most of these.
 rule {
   [dn subtree $People]
-    [attrs gidNumber     \
-           givenName     \
-           homeDirectory \
-           loginShell    \
-           sn            \
+    [attrs entry                     \
+           eduPersonPrincipalName    \
+           gidNumber                 \
+           givenName                 \
+           homeDirectory             \
+           jpegPhoto                 \
+           loginShell                \
+           mail                      \
+           objectClass               \
+           preferredLanguage         \
+           puavoAcceptedTerms        \
+           puavoEduPersonAffiliation \
+           puavoId                   \
+           puavoLocale               \
+           sn                        \
+           telephoneNumber           \
+           uid                       \
            uidNumber]
       by [puavo_dn puavo]   read
       by [puavo_dn pw-mgmt] read
