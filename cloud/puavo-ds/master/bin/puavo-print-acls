@@ -245,17 +245,23 @@ rule {
 rule {
   [dn exact $Domain_Admins]
       by $org_owners read
+      by $admins     read
+      by $staff      read	# XXX maybe just remove this?
 }
 
 rule {
   [dn exact $Domain_Users]
     [attrs memberUid]
       by $org_owners write
+      by $admins     write
+      by $staff      write	# XXX maybe just remove this?
 }
 
 rule {
   [dn exact $Domain_Users]
       by $org_owners read
+      by $admins     read
+      by $staff      read	# XXX maybe just remove this?
 }
 
 # Kerberos Realms related rules
@@ -496,6 +502,8 @@ rule {
   [dn exact $People]
     [attrs children]
       by $org_owners write
+      by $admins     write
+      by $staff      write	# XXX maybe just remove this?
       by *           none break
 }
 
