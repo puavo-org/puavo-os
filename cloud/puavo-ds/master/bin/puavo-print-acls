@@ -400,8 +400,6 @@ rule {
 rule {
   [dn children $Servers]
       by $org_owners           write
-      by $admins               read
-      by $staff                read	# XXX maybe just remove this?
       by [systemgroup servers] read
       by anonymous             auth
 }
