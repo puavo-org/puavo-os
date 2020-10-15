@@ -464,6 +464,17 @@ rule {
       by [systemgroup getent]  read
 }
 
+# deny $admins and $staff write access to some school attributes
+rule {
+  [dn subtree $Groups]
+    filter="(objectClass=puavoSchool)"
+    [attrs puavoBillingInfo puavoSchoolAdmin]
+      by $org_owners write	# must be explicit here, org_owners are admins
+      by $admins     read
+      by $staff      read	# XXX maybe just remove this?
+      by *           none break
+}
+
 # Do not allow read access to People and Hosts to group membership
 # lists.  We do not want ordinary people to be able to list all usernames
 # in an organisation (but for teachers this is okay).
