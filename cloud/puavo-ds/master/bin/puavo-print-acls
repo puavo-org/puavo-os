@@ -86,7 +86,8 @@ set System_Groups   "ou=System Groups"
 
 set org_owners   [ldapset [format {[%s]/owner & user} $ldapsuffix]]
 set schooladmins [ldapset "this & user/puavoAdminOfSchool"]
-set all_admins   [ldapset [person_affiliation admins]]
+set admins       [ldapset [person_affiliation admin]]
+set staff        [ldapset [person_affiliation staff]]
 set teachers     [ldapset [person_affiliation teacher]]
 
 # this means: admins of the same school as
@@ -214,14 +215,20 @@ rule {
 
 rule {
   [dn exact sambaDomainName=${samba_domain}]
-    [attrs sambaSID sambaDomainName]
-      by $org_owners write
+    [attrs sambaNextRid]
+      by $org_owners            write
+      by $admins                write
+      by $staff                 write	# XXX maybe just remove this?
+      by [dn children $Servers] write
+      by *                      none break
 }
 
 rule {
   [dn exact sambaDomainName=${samba_domain}]
       by $org_owners            write
-      by [dn children $Servers] write
+      by $admins                read
+      by $staff                 read	# XXX maybe just remove this?
+      by [dn children $Servers] read
 }
 
 rule {
@@ -238,17 +245,23 @@ rule {
 rule {
   [dn exact $Domain_Admins]
       by $org_owners read
+      by $admins     read
+      by $staff      read	# XXX maybe just remove this?
 }
 
 rule {
   [dn exact $Domain_Users]
     [attrs memberUid]
       by $org_owners write
+      by $admins     write
+      by $staff      write	# XXX maybe just remove this?
 }
 
 rule {
   [dn exact $Domain_Users]
       by $org_owners read
+      by $admins     read
+      by $staff      read	# XXX maybe just remove this?
 }
 
 # Kerberos Realms related rules
@@ -273,6 +286,7 @@ rule {
   [dn children $People]
     [attrs sambaAcctFlags]
       by [dn children $Servers] write
+      by *                      none break
 }
 
 # rules for ou=Hosts (and subtrees)
@@ -294,6 +308,8 @@ rule {
   [dn exact $Devices]
     [attrs children]
       by $org_owners write
+      by $admins     write
+      by $staff      write	# XXX maybe just remove this?
       by anonymous   none
       by *           none break
 }
@@ -342,6 +358,8 @@ rule {
   [dn exact $Servers]
     [attrs children]
       by $org_owners write
+      by $admins     read
+      by $staff      read		# XXX maybe just remove this?
       by anonymous   none
       by *           none break
 }
@@ -350,6 +368,8 @@ rule {
   [dn exact $Servers]
     [attrs children entry objectClass ou]
       by $org_owners           read
+      by $admins               read
+      by $staff                read	# XXX maybe just remove this?
       by [systemgroup servers] read
       by anonymous             auth
 }
@@ -365,6 +385,7 @@ rule {
   [dn children $Servers]
     [attrs entry objectClass ou puavoExport puavoHostname puavoId puavoSchool]
       by $this_school_admins read
+      by $staff              read	# XXX maybe just remove this?
 
       # XXX This is needed by /v3/sessions printer queues server information.
       # XXX It is unclear if this is needed in the real world, but old ACLs
@@ -427,6 +448,8 @@ rule {
   [dn exact $Groups]
     [attrs children]
       by $org_owners write
+      by $admins     write
+      by $staff      write	# XXX maybe just remove this?
       by *           none break
 }
 
@@ -439,15 +462,33 @@ rule {
       by [systemgroup getent]  read
 }
 
+# deny $admins and $staff write access to some school attributes
+rule {
+  [dn subtree $Groups]
+    filter="(objectClass=puavoSchool)"
+    [attrs puavoBillingInfo puavoSchoolAdmin]
+      by $org_owners write	# must be explicit here, org_owners are admins
+      by $admins     read
+      by $staff      read	# XXX maybe just remove this?
+      by *           none break
+}
+
 # Do not allow read access to People and Hosts to group membership
 # lists.  We do not want ordinary people to be able to list all usernames
 # in an organisation (but for teachers this is okay).
 rule {
   [dn subtree $Groups]
     [attrs member memberUid]
-      by $org_owners            write
-      by $all_admins            write	# XXX maybe this_school_admins instead?
-      by $teachers              read
+      by $org_owners write
+      by $admins     write	# XXX maybe this_school_admins instead?
+      by $staff      write	# XXX maybe just remove this?
+      by $teachers   read
+
+      # Users must be able to check if they belong to a particular group.
+      # This allows users to read the DNs of other users that belong to the
+      # same group, but not usernames or other such user information.
+      by set="this/member & user" read
+
       by [dn children $People]  none
       by [dn children $Devices] none
       by *                      none break
@@ -456,7 +497,8 @@ rule {
 rule {
   [dn subtree $Groups]
       by $org_owners           write
-      by $all_admins           write	# XXX maybe this_school_admins instead?
+      by $admins               write	# XXX maybe this_school_admins instead?
+      by $staff                write	# XXX maybe just remove this?
       by [puavo_dn puavo]      read
       by [puavo_dn statistics] read
       by [dn children $People] read
@@ -470,6 +512,8 @@ rule {
   [dn exact $People]
     [attrs children]
       by $org_owners write
+      by $admins     write
+      by $staff      write	# XXX maybe just remove this?
       by *           none break
 }
 
@@ -497,21 +541,15 @@ rule {
       by *         none break
 }
 
-# rules needed by pw-mgmt (password management user)
-rule {
-  [dn subtree $People]
-    [attrs entry objectClass mail uid]
-      by [puavo_dn pw-mgmt] read
-      by *                  none break
-}
-
 # some permissions to "addressbook"
 rule {
   [dn subtree $People]
     [attrs displayName                      \
+           entry                            \
            givenName                        \
            jpegPhoto                        \
            mail                             \
+           objectClass                      \
            preferredLanguage                \
            puavoEduPersonPersonnelNumber    \
            puavoEduPersonReverseDisplayName \
@@ -528,6 +566,8 @@ rule {
 rule {
   [dn subtree $People]
     [attrs eduPersonPrincipalName    \
+           entry                     \
+           objectClass               \
            puavoEduPersonAffiliation \
            puavoRemovalRequestTime   \
            uid]
@@ -541,10 +581,12 @@ rule {
   [dn subtree $People]
     [attrs displayName                      \
            eduPersonPrincipalName           \
+           entry                            \
            gidNumber                        \
            givenName                        \
            homeDirectory                    \
            loginShell                       \
+           objectClass                      \
            puavoEduPersonAffiliation        \
            puavoEduPersonReverseDisplayName \
            puavoId                          \
@@ -558,13 +600,30 @@ rule {
       by *                    none break
 }
 
+
+# rules needed by puavo and pw-mgmt (password management user)
+# XXX Not sure why these are needed or if puavo and pw-mgmt need a
+# XXX matching set of attributes, but ACL tests explicitly tests for
+# XXX most of these.
 rule {
   [dn subtree $People]
-    [attrs gidNumber     \
-           givenName     \
-           homeDirectory \
-           loginShell    \
-           sn            \
+    [attrs eduPersonPrincipalName    \
+           entry                     \
+           gidNumber                 \
+           givenName                 \
+           homeDirectory             \
+           jpegPhoto                 \
+           loginShell                \
+           mail                      \
+           objectClass               \
+           preferredLanguage         \
+           puavoAcceptedTerms        \
+           puavoEduPersonAffiliation \
+           puavoId                   \
+           puavoLocale               \
+           sn                        \
+           telephoneNumber           \
+           uid                       \
            uidNumber]
       by [puavo_dn puavo]   read
       by [puavo_dn pw-mgmt] read
@@ -601,7 +660,8 @@ rule {
   [dn subtree $People]
       by $org_owners         write
       by $this_school_admins write
-      by $all_admins         read	# /v3/my_school_users requires this
+      by $admins             read	# /v3/my_school_users requires this
+      by $staff              read	# /v3/my_school_users requires this
       by $teachers           read	# /v3/my_school_users requires this
       by self                read
 }
@@ -661,7 +721,14 @@ rule {
 
 rule {
   [dn]
-    [attrs entry objectClass puavoDomain puavoKerberosRealm sambaDomainName]
+    [attrs entry                        \
+           objectClass                  \
+           puavoDomain                  \
+           puavoKadminPort              \
+           puavoKerberosRealm           \
+           puavoRemoteDesktopPrivateKey \
+           puavoRemoteDesktopPublicKey  \
+           sambaDomainName]
       by $org_owners read
       by *           none break
 }
