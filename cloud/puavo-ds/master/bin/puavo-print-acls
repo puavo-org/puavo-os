@@ -545,9 +545,11 @@ rule {
 rule {
   [dn subtree $People]
     [attrs displayName                      \
+           entry                            \
            givenName                        \
            jpegPhoto                        \
            mail                             \
+           objectClass                      \
            preferredLanguage                \
            puavoEduPersonPersonnelNumber    \
            puavoEduPersonReverseDisplayName \
@@ -564,6 +566,8 @@ rule {
 rule {
   [dn subtree $People]
     [attrs eduPersonPrincipalName    \
+           entry                     \
+           objectClass               \
            puavoEduPersonAffiliation \
            puavoRemovalRequestTime   \
            uid]
@@ -577,10 +581,12 @@ rule {
   [dn subtree $People]
     [attrs displayName                      \
            eduPersonPrincipalName           \
+           entry                            \
            gidNumber                        \
            givenName                        \
            homeDirectory                    \
            loginShell                       \
+           objectClass                      \
            puavoEduPersonAffiliation        \
            puavoEduPersonReverseDisplayName \
            puavoId                          \
@@ -601,8 +607,8 @@ rule {
 # XXX most of these.
 rule {
   [dn subtree $People]
-    [attrs entry                     \
-           eduPersonPrincipalName    \
+    [attrs eduPersonPrincipalName    \
+           entry                     \
            gidNumber                 \
            givenName                 \
            homeDirectory             \
