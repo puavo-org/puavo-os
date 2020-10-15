@@ -697,10 +697,15 @@ rule {
 
 rule {
   [dn]
-    [attrs entry objectClass puavoDomain puavoKerberosRealm sambaDomainName]
+    [attrs entry                        \
+           objectClass                  \
+           puavoDomain                  \
+           puavoKadminPort              \
+           puavoKerberosRealm           \
+           puavoRemoteDesktopPrivateKey \
+           puavoRemoteDesktopPublicKey  \
+           sambaDomainName]
       by $org_owners read
-      by $admins     read
-      by $staff      read	# XXX maybe just remove this?
       by *           none break
 }
 
