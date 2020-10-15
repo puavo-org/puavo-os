@@ -286,6 +286,7 @@ rule {
   [dn children $People]
     [attrs sambaAcctFlags]
       by [dn children $Servers] write
+      by *                      none break
 }
 
 # rules for ou=Hosts (and subtrees)
