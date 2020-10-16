@@ -281,10 +281,12 @@ rule {
   # Changes to "sambaNTPassword", "sambaPwdLastSet", "sambaPwdMustChange"
   # and "sambaPwdCanChange" happen regardless of the ACLs, through
   # smbkrb5pwd (and is thus controlled by ACLs to "userPassword").
-  # XXX Why is this needed, though?
   [dn children $People]
     [attrs sambaNTPassword]
-      by [dn children $Servers] write
+      by [dn children $Servers] write   # XXX why is this needed?
+
+      # be explicit that nobody should have permissions to this
+      by * none
 }
 
 rule {
