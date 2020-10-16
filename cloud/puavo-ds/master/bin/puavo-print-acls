@@ -181,26 +181,6 @@ rule {
 }
 
 rule {
-  # Allow teachers who are in the same school to change student passwords.
-  [dn children $People]
-    filter="(puavoEduPersonAffiliation=student)"
-    [attrs sambaPwdLastSet]
-      by $this_school_teachers write
-      by *                     none break
-}
-
-rule {
-  # This must go together with password change rights to update the
-  # information on the latest password update.
-  [dn children $People]
-    [attrs sambaPwdLastSet]
-      by self                write
-      by [puavo_dn pw-mgmt]  write
-      by $org_owners         write
-      by $this_school_admins write
-}
-
-rule {
   # Organisation owners can change system account passwords.
   [dn children $System_Accounts]
     [attrs userPassword]
@@ -298,17 +278,13 @@ rule {
 # Samba-related rules under ou=People
 
 rule {
-  # XXX Err ... what about teachers who change student passwords?
-  # XXX It is likely that changes to "sambaNTPassword", "sambaPwdLastSet",
-  # XXX "sambaPwdMustChange" and "sambaPwdCanChange" happen regardless of
-  # XXX of ACLs through smbkrb5pwd (and is thus controlled by ACLs to
-  # XXX "userPassword") ... if this is the case, ACLs regarding these
-  # XXX attributes could be removed.
+  # Changes to "sambaNTPassword", "sambaPwdLastSet", "sambaPwdMustChange"
+  # and "sambaPwdCanChange" happen regardless of the ACLs, through
+  # smbkrb5pwd (and is thus controlled by ACLs to "userPassword").
+  # XXX Why is this needed, though?
   [dn children $People]
     [attrs sambaNTPassword]
       by [dn children $Servers] write
-      by $org_owners            =az
-      by $this_school_admins    =az
 }
 
 rule {
