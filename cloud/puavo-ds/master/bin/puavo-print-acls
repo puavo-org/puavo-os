@@ -104,12 +104,18 @@ set this_school_teachers [ldapset \
 # RULES
 #
 
+# XXX I do not think "staff" should have special rules, but historically
+# XXX this has been the case.  This is why "maybe just remove this?"-comment
+# XXX is there on the staff rules.  Perhaps on the early stages of Puavo
+# XXX "staff" was pretty much the same as "admin"?  "staff" could be made
+# XXX the same as "teacher" with equivalent permissions.
+
 # special wide rules
 
-# Give slave ldap servers and other servers read access to
-# everything (in the same organisation of course) so that ldap
-# synchronization works.
 rule {
+  # Give slave ldap servers and other servers read access to
+  # everything (in the same organisation of course) so that ldap
+  # synchronization works.
   [dn subtree]
       by [puavo_dn slave]       read
       by [dn children $Servers] read
@@ -143,7 +149,8 @@ rule {
 }
 
 rule {
-  # allow teachers to change student passwords
+  # Allow teachers to change student passwords, but only if they belong
+  # to the same school.
   [dn children $People]
     filter="(puavoEduPersonAffiliation=student)"
     [attrs userPassword]
@@ -152,7 +159,7 @@ rule {
 }
 
 rule {
-  # if an account is locked, deny authentication
+  # If an account is locked, deny authentication.
   [dn children $People]
     filter="(puavoLocked=TRUE)"
     [attrs userPassword]
@@ -161,6 +168,9 @@ rule {
 }
 
 rule {
+  # Allow some privileged folks to change other peoples' passwords.
+  # Note that if admins were added to the same school where organisation
+  # owners are, then they could change organisation owner passwords.
   [dn children $People]
     [attrs userPassword]
       by self                =axz
@@ -171,23 +181,7 @@ rule {
 }
 
 rule {
-  [dn children $People]
-    filter="(puavoEduPersonAffiliation=student)"
-    [attrs sambaPwdLastSet]
-      by $this_school_teachers write
-      by *                     none break
-}
-
-rule {
-  [dn children $People]
-    [attrs sambaPwdLastSet]
-      by self                write
-      by [puavo_dn pw-mgmt]  write
-      by $org_owners         write
-      by $this_school_admins write
-}
-
-rule {
+  # Organisation owners can change system account passwords.
   [dn children $System_Accounts]
     [attrs userPassword]
       by $org_owners write      # see comment about "write" some rules above
@@ -195,6 +189,8 @@ rule {
 }
 
 # Samba-related rules
+
+# Servers need write to samba-related stuff for Samba to work correctly.
 
 rule {
   [dn exact ou=Samba,ou=Hosts]
@@ -214,6 +210,8 @@ rule {
 }
 
 rule {
+  # This is needed for all who need to create users,
+  # plus Samba in case of Windows compatibility.
   [dn exact sambaDomainName=${samba_domain}]
     [attrs sambaNextRid]
       by $org_owners            write
@@ -232,17 +230,20 @@ rule {
 }
 
 rule {
+  # This is probably needed by Samba (?).
   [dn exact ou=Idmap]
       by [dn children $Servers] write
 }
 
 rule {
+  # Needed by those who can create/remove admin users.
   [dn exact $Domain_Admins]
     [attrs memberUid]
       by $org_owners write
 }
 
 rule {
+  # For those who can manage users.
   [dn exact $Domain_Admins]
       by $org_owners read
       by $admins     read
@@ -250,6 +251,7 @@ rule {
 }
 
 rule {
+  # Needed by those who can create/remove users.
   [dn exact $Domain_Users]
     [attrs memberUid]
       by $org_owners write
@@ -258,6 +260,7 @@ rule {
 }
 
 rule {
+  # For those who can manage users.
   [dn exact $Domain_Users]
       by $org_owners read
       by $admins     read
@@ -275,11 +278,15 @@ rule {
 # Samba-related rules under ou=People
 
 rule {
+  # Changes to "sambaNTPassword", "sambaPwdLastSet", "sambaPwdMustChange"
+  # and "sambaPwdCanChange" happen regardless of the ACLs, through
+  # smbkrb5pwd (and is thus controlled by ACLs to "userPassword").
   [dn children $People]
     [attrs sambaNTPassword]
-      by [dn children $Servers] write
-      by $org_owners            =az
-      by $this_school_admins    =az
+      by [dn children $Servers] write   # XXX why is this needed?
+
+      # be explicit that nobody should have permissions to this
+      by * none
 }
 
 rule {
@@ -302,9 +309,11 @@ rule {
 }
 
 # rules for ou=Devices,ou=Hosts
-# (should be before $Hosts, because $Devices is in ou=Hosts subtree)
+# (should be before specific $Hosts ACLs, because $Devices is in
+# ou=Hosts subtree)
 
 rule {
+  # For those who need to register new devices and modify device settings.
   [dn exact $Devices]
     [attrs children]
       by $org_owners write
@@ -325,13 +334,17 @@ rule {
 }
 
 rule {
+  # Allow servers to write "puavoDeviceHWInfo" to all netbooting devices.
+  # This is because they can act as proxies for fatclients.
   [dn children $Devices]
+    filter="(objectClass=puavoNetbootDevice)"
     [attrs puavoDeviceHWInfo]
       by [dn children $Servers] write
       by *                      none break
 }
 
 rule {
+  # Allow devices to write to write their own "puavoDeviceHWInfo".
   [dn children $Devices]
     [attrs puavoDeviceAvailableImage \
            puavoDeviceCurrentImage   \
@@ -343,6 +356,8 @@ rule {
 }
 
 rule {
+  # Allow changing device settings for organisation owners and admins
+  # who are in the same school as the device.
   [dn children $Devices]
       by $org_owners           write
       by $this_school_admins   write
@@ -353,6 +368,10 @@ rule {
 
 # rules for ou=Servers,ou=Hosts
 # (should be before $Hosts, because $Servers is in ou=Hosts subtree)
+
+# Only organisation owners can create new servers, but other should be
+# able to read some information on them, for example to access printing
+# permissions.
 
 rule {
   [dn exact $Servers]
@@ -429,7 +448,7 @@ rule {
   [dn exact $Printers]
     [attrs children]
       by $org_owners                 write
-      by [dn children $Servers]      write
+      by [dn children $Servers]      write	# for puavo-sync-printers
       by [dn children $People]       read
       by [systemgroup printerqueues] read
 }
@@ -437,7 +456,7 @@ rule {
 rule {
   [dn children $Printers]
       by $org_owners                 write
-      by [dn children $Servers]      write
+      by [dn children $Servers]      write	# for puavo-sync-printers
       by [dn children $People]       read
       by [systemgroup printerqueues] read
 }
@@ -445,6 +464,7 @@ rule {
 # rules for ou=Groups
 
 rule {
+  # For those who can manage users.
   [dn exact $Groups]
     [attrs children]
       by $org_owners write
@@ -495,6 +515,7 @@ rule {
 }
 
 rule {
+  # Write permissions for those who can manage users.
   [dn subtree $Groups]
       by $org_owners           write
       by $admins               write	# XXX maybe this_school_admins instead?
@@ -509,6 +530,7 @@ rule {
 # rules for ou=People
 
 rule {
+  # Write permissions for those who can manage users.
   [dn exact $People]
     [attrs children]
       by $org_owners write
@@ -657,6 +679,8 @@ rule {
 }
 
 rule {
+  # Allow organisation owners and admins in the same school to
+  # change peoples' information.
   [dn subtree $People]
       by $org_owners         write
       by $this_school_admins write
@@ -667,6 +691,10 @@ rule {
 }
 
 # rules for ou=Desktops
+
+# We used to have some other branches here, but only ou=Files,ou=Desktops
+# ended up in permanent use, and this contains the external files.
+# Organisation owners can write these, hosts can read.
 
 rule {
   [dn exact $Files]
@@ -720,6 +748,8 @@ rule {
 # "+dsx" = "disclose search auth"
 
 rule {
+  # Do not allow organisation owners to change some organisational
+  # attributes which are meant to be set once only.
   [dn]
     [attrs entry                        \
            objectClass                  \
@@ -734,6 +764,8 @@ rule {
 }
 
 rule {
+  # Allow organisation owners to change many organisation settings,
+  # and most other entities to read them.
   [dn]
       by $org_owners           write
       by [dn children $People] read
