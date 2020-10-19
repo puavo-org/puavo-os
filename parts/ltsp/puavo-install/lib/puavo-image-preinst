@@ -46,6 +46,12 @@ block_interrupts() {
   else
     inhibit_list='shutdown:sleep:idle:handle-power-key:handle-suspend-key:handle-hibernate-key:handle-lid-switch'
 
+    # XXX We use "block" to ensure safe(r) updates from Stretch to Buster.
+    # XXX Using "delay" is problematic with Stretch, because Stretch has
+    # XXX logind.conf InhibitDelayMaxSec=5 and this may be too short for
+    # XXX grub updates.  Our Buster has InhibitDelayMaxSec=60 and we thus
+    # XXX we could change --mode=delay for Bullseye, that would probably
+    # XXX be better (note that $inhibit_list should also change).
     systemd-inhibit "--what=${inhibit_list}"  \
                     --who=puavo-image-preinst \
                     '--why=Updating Grub'     \
