@@ -11,7 +11,6 @@ class packages::compat_32bit {
       , 'libatk1.0-0:i386'              # needed by mimio-studio
       , 'libatkmm-1.6-1v5:i386'         # needed by mimio-studio
       , 'libbluetooth3:i386'
-      , 'libbotan-2-9:i386'          # needed by mimio-studio
       , 'libc6:i386'
       , 'libcairo2:i386'                # needed by mimio-studio
       , 'libcanberra-gtk-module:i386'   # needed by mimio-studio
