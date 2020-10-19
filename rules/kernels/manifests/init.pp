@@ -28,8 +28,8 @@ class kernels {
     }
   }
 
-  $default_kernel = '4.19.0-10-amd64'
-  $current_kernel = '5.7.0-0.bpo.2-amd64'
+  $default_kernel = '4.19.0-11-amd64'
+  $current_kernel = '5.8.0-0.bpo.2-amd64'
 
   ::kernels::all_kernel_links {
     'default': kernel => $default_kernel;
