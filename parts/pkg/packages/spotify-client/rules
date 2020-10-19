@@ -32,7 +32,7 @@ case "${command}" in
         ;;
 
     download)
-        # tested with 1.0.37.152.gc83ea995-42
+        # tested with 1.1.42.622.gbd112320-37
 
         upstream_pack=$1
         baseurl="http://repository-origin.spotify.com"
