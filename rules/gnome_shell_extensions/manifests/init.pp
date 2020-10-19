@@ -44,10 +44,15 @@ class gnome_shell_extensions {
   }
 
   file {
-    [ '/usr/share/gnome-shell/extensions/ding@rastersoft.com/ding.js'
-    , '/usr/share/gnome-shell/extensions/ding@rastersoft.com/createThumbnail.js' ]:
+    '/usr/share/gnome-shell/extensions/ding@rastersoft.com/createThumbnail.js':
       mode    => '0755',
-      require => ::Gnome_shell_extensions::Add_extension['ding@rastersoft.com'];
+      require => ::Gnome_shell_extensions::Add_extension['ding@rastersoft.com'],
+      source  => 'puppet:///modules/gnome_shell_extensions/ding@rastersoft.com/createThumbnail.js';
+
+    '/usr/share/gnome-shell/extensions/ding@rastersoft.com/ding.js':
+      mode    => '0755',
+      require => ::Gnome_shell_extensions::Add_extension['ding@rastersoft.com'],
+      source  => 'puppet:///modules/gnome_shell_extensions/ding@rastersoft.com/ding.js';
   }
 
 
