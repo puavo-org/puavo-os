@@ -183,6 +183,21 @@ setup_puavopkg_for_netboot_devices() {
   configure_latest_from "$remote_rootdir" .prepared
 }
 
+remove_puavopkgs() {
+  # Some folks do not want some packages, even including ones we may have
+  # in the image.  Provide a way to make those "mostly disappear" by
+  # configuring with puavo-conf, including both fatclients and laptops.
+  puavopkgs_to_remove=$(puavo-conf \
+                          | awk '$1 ~ /^puavo.pkg./ && $2 == "remove" {
+                                   sub(/^puavo.pkg./, "", $1); print $1
+                                 }')
+  for pkg_name in $puavopkgs_to_remove; do
+    if [ -e "/var/lib/puavo-pkg/installed/${pkg_name}" ]; then
+      puavo-pkg remove "$pkg_name" || status=1
+    fi
+  done
+}
+
 # Then setup puavo-pkg configuration to include possible packages from
 # bootserver or locally installed puavo-pkg images.  (Note that this does
 # not install or update the puavo-pkg packages, only sets them up at boottime).
@@ -191,5 +206,7 @@ if [ -e /run/puavo/nbd-server ]; then
 else
   setup_puavopkg_for_localboot_devices
 fi
+
+remove_puavopkgs
 
 exit $status
