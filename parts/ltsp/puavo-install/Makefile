@@ -30,6 +30,7 @@ installdirs :
 .PHONY : install
 install : installdirs
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
+		puavo-bios-config \
 		puavo-client-daemon \
 		puavo-disk-clone \
 		puavo-install \

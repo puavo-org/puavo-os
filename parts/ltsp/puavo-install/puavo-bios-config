@@ -1,0 +1,48 @@
+#!/bin/sh
+
+set -eu
+
+prepare_hp_utils() {
+  puavo-conf puavo.pkg.hp-bios-utils latest
+  puavo-pkg-update hp-bios-utils
+}
+
+use_hp_utils() {
+  prepare_hp_utils
+
+  export PATH="/opt/hp/hp-flash:${PATH}"
+  hp_utils_dir='/opt/hp/hp-flash'
+  cat <<EOF
+> Running Bash for you, the current working directory is "${hp_utils_dir}".
+> It has "hp-flash" and "hp-repsetup".
+> PATH is $PATH
+> Exit Bash when done.
+EOF
+  (cd "$hp_utils_dir" && bash)
+}
+
+ask_choice() {
+  choices=$(cat <<'EOF')
+use HP BIOS utilities
+exit
+EOF
+  printf "%s" "$choices" | fzf --height=1 --layout=reverse-list
+}
+
+printf "\n"
+printf ">>> Welcome to puavo-bios-config!\n"
+printf ">>> What do you want to do?\n\n"
+while ! chosen=$(ask_choice) || [ -z "$chosen" ]; do
+  :
+done
+
+printf ">> You chose '${chosen}'\n"
+
+case "$chosen" in
+  exit)
+    exit 0
+    ;;
+  'use HP BIOS utilities')
+    use_hp_utils
+    ;;
+esac

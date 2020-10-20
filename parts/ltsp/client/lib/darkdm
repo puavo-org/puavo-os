@@ -127,6 +127,7 @@ darkdm_print_help()
 Puavo OS Command Shell
 
 Commands:
+  bios                 - configure BIOS (only on some supported machines)
   expert-install       - install Puavo OS with more detailed questions
   expert-preinstall    - install without registering, expert mode
   install              - install Puavo OS to this device and reboot
@@ -298,6 +299,9 @@ darkdm_menu()
     fi
 
     case "$command" in
+      bios)
+        puavo-bios-config || return 1
+        ;;
       expert-install)
         darkdm_install expert-install || return 1
         ;;
