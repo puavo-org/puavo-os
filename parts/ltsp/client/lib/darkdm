@@ -127,7 +127,6 @@ darkdm_print_help()
 Puavo OS Command Shell
 
 Commands:
-  build                - build Puavo OS image and poweroff
   expert-install       - install Puavo OS with more detailed questions
   expert-preinstall    - install without registering, expert mode
   install              - install Puavo OS to this device and reboot
@@ -218,13 +217,6 @@ darkdm_poweroff()
   poweroff
 }
 
-darkdm_build()
-{
-  /usr/lib/puavo-ltsp-client/handle-image-build-request || return 1
-
-  darkdm_poweroff
-}
-
 darkdm_kbd() {
   new_layout=$1
 
@@ -306,9 +298,6 @@ darkdm_menu()
     fi
 
     case "$command" in
-      build)
-        darkdm_build || return 1
-        ;;
       expert-install)
         darkdm_install expert-install || return 1
         ;;
