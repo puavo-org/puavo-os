@@ -35,6 +35,7 @@ packagedirs += geogebra6
 packagedirs += globilab
 packagedirs += google-chrome
 packagedirs += google-earth
+packagedirs += hp-bios-utils
 packagedirs += idid
 packagedirs += kdenlive-appimage
 packagedirs += kojo

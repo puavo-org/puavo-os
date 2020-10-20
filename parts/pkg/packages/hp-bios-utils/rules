@@ -1,0 +1,35 @@
+#!/bin/sh
+
+set -eu
+
+command=$1
+shift
+
+case "${command}" in
+  configure)
+    upstream_dir=$1
+    make -C "${upstream_dir}/non-rpms/hpuefi-mod-3.02" default install
+    (cd "${upstream_dir}/non-rpms/hp-flash-3.20_x86_64/" && ./install.sh)
+    ;;
+  unconfigure)
+    rm -rf /opt/hp/hp-flash
+    rmdir --ignore-fail-on-non-empty /opt/hp
+    rm -rf /lib/modules/*/kernel/drivers/hpuefi
+    ;;
+  unpack)
+    upstream_pack=$1
+    upstream_dir=$2
+
+    tar --no-same-owner -z -x -f "$upstream_pack" -C "$upstream_dir"
+    mkdir -p "${upstream_dir}/non-rpms/hp-flash" \
+             "${upstream_dir}/non-rpms/hpuefi-mod"
+    tar --no-same-owner -z -x \
+        -f "${upstream_dir}/non-rpms/hp-flash-3.20_x86_64.tgz" \
+        -C "${upstream_dir}/non-rpms"
+    tar --no-same-owner -z -x \
+        -f "${upstream_dir}/non-rpms/hpuefi-mod-3.02.tgz" \
+        -C "${upstream_dir}/non-rpms"
+    ;;
+  *)
+    ;;
+esac
