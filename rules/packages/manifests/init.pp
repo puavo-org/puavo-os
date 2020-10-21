@@ -731,7 +731,6 @@ class packages {
                       , $nvidia_dkms_390_module
                       , $nvidia_dkms_410_module
 		      , $r8168_module ]
-                      # XXX buster , $virtualbox_module ]
 
   packages::kernels::kernel_package {
     '4.19.0-11-amd64':
@@ -739,7 +738,7 @@ class packages {
       package_name => 'linux-image-4.19.0-11-amd64';
 
     '5.8.0-0.bpo.2-amd64':
-      dkms_modules => [], # XXX these should be tested
+      dkms_modules => [ $broadcom_sta_dkms_module ],
       package_name => 'linux-image-5.8.0-0.bpo.2-amd64';
   }
 
