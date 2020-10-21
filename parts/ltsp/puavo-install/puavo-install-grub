@@ -113,8 +113,7 @@ function ltsp_image_entry {
     set kernel_version=''
     # --- remove "#" from the following if you need another kernel ---
     # set kernel_version='default'
-    # set kernel_version='legacy'
-    # set kernel_version='fresh'
+    # set kernel_version='current'
 
     set imagefile="$2"
     set imagepath="$3"
