@@ -2,7 +2,10 @@
 
 set -eu
 
+#
 # duplicate code with initramfs-tools/scripts/init-top/puavo
+#
+
 puavo_wireless_broadcom_driver=$(puavo-conf puavo.wireless.broadcom.driver)
 case "$puavo_wireless_broadcom_driver" in
   b43)       blacklist_broadcom_modules='    b43legacy b44 brcmsmac wl' ;;
@@ -16,18 +19,34 @@ for broadcom_module in $blacklist_broadcom_modules; do
   echo "blacklist $broadcom_module"
 done > /etc/modprobe.d/broadcom-sta-dkms.conf
 
+r8169_blacklisted=false
+for x in $(cat /proc/cmdline); do
+  case "$x" in
+    modprobe.blacklist=r8169) r8169_blacklisted=true ;;
+  esac
+done
+
 blacklist_filepath='/etc/modprobe.d/blacklist-by-puavo-conf.conf'
-
 puavo_blacklist=$(puavo-conf puavo.kernel.modules.blacklist)
-
 if [ -z "$puavo_blacklist" ]; then
   rm -f "$blacklist_filepath"
-  exit 0
+else
+  cat /dev/null > "$blacklist_filepath"
+
+  IFS=','
+  for module in $puavo_blacklist; do
+    echo "blacklist $module" >> "$blacklist_filepath"
+    if [ "$module" = 'r8169' ]; then
+      r8169_blacklisted=true
+    fi
+  done
 fi
 
-cat /dev/null > "$blacklist_filepath"
-
-IFS=','
-for module in $puavo_blacklist; do
-  echo "blacklist $module" >> "$blacklist_filepath"
-done
+if $r8169_blacklisted; then
+  cat <<'EOF' > /etc/modprobe.d/r8168-dkms.conf
+alias   pci:v00001186d00004300sv00001186sd00004B10bc*sc*i*      r8168
+alias   pci:v000010ECd00008168sv*sd*bc*sc*i*                    r8168
+EOF
+else
+  rm -f /etc/modprobe.d/r8168-dkms.conf
+fi

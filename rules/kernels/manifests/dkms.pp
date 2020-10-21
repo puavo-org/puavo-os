@@ -1,4 +1,5 @@
 class kernels::dkms {
+  include ::kernels::dkms::r8168
   include ::packages
 
   define install_dkms_module_for_kernel ($kernel_packages, $kernel_version) {

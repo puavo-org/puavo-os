@@ -84,12 +84,18 @@ fi
 
 # Set kernel module blacklists.
 # This is similar to /etc/puavo-conf/scripts/manage_module_blacklist.
+
+r8169_blacklisted=false
+
 puavo_blacklist=$(puavo-conf puavo.kernel.modules.blacklist)
 if [ -n "$puavo_blacklist" ]; then
   OLDIFS="$IFS"
   IFS=','
   for module in $puavo_blacklist; do
     echo "blacklist $module" >> /etc/modprobe.d/blacklist-by-puavo-conf.conf
+    if [ "$module" = 'r8169' ]; then
+      r8169_blacklisted=true
+    fi
   done
   IFS="$OLDIFS"
 fi
@@ -118,5 +124,18 @@ if [ -n "$plymouth_theme" ]; then
   cat <<EOF > /etc/plymouth/plymouthd.conf
 [Daemon]
 Theme=${plymouth_theme}
+EOF
+fi
+
+for x in $(cat /proc/cmdline); do
+  case "$x" in
+    modprobe.blacklist=r8169) r8169_blacklisted=true ;;
+  esac
+done
+
+if $r8169_blacklisted; then
+  cat <<'EOF' > /etc/modprobe.d/r8168-dkms.conf
+alias   pci:v00001186d00004300sv00001186sd00004B10bc*sc*i*      r8168
+alias   pci:v000010ECd00008168sv*sd*bc*sc*i*                    r8168
 EOF
 fi

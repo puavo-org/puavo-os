@@ -71,3 +71,6 @@ if [ -d /etc/nvidia ]; then
   mkdir -p ${DESTDIR}/etc/nvidia
   cp -LR -t ${DESTDIR}/etc/nvidia /etc/nvidia/*
 fi
+
+# r8168-dkms
+rm -f ${DESTDIR}/etc/modprobe.d/r8168-dkms.conf
