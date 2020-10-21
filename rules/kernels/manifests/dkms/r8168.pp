@@ -6,7 +6,7 @@ class kernels::dkms::r8168 {
   # a kernel parameter or puavo-conf.
   file {
     '/etc/modprobe.d/r8168-dkms.conf':
-      ensure  => absent,
+      content => "blacklist r8168\n",
       require => Package['r8168-dkms'];
   }
 

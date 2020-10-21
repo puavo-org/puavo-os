@@ -48,5 +48,7 @@ alias   pci:v00001186d00004300sv00001186sd00004B10bc*sc*i*      r8168
 alias   pci:v000010ECd00008168sv*sd*bc*sc*i*                    r8168
 EOF
 else
-  rm -f /etc/modprobe.d/r8168-dkms.conf
+  cat <<'EOF' > /etc/modprobe.d/r8168-dkms.conf
+blacklist r8168
+EOF
 fi
