@@ -109,6 +109,7 @@ class packages {
     , 'initramfs-tools'
     , 'initramfs-tools-core'
     , 'inotify-tools'
+    , 'iotop'
     , 'iperf'
     , 'libstdc++5'
     , 'lm-sensors'
@@ -149,6 +150,7 @@ class packages {
     , 'vrms'
     , 'w3m'
     , 'wakeonlan'
+    , 'wavemon'
     , 'whois'
     , 'wsmancli'
     , 'x11vnc'
@@ -156,7 +158,8 @@ class packages {
     , 'xinput-calibrator' ]:
       tag => [ 'tag_admin', 'tag_debian_desktop', ];
 
-    [ 'libasound2-plugins'
+    [ 'espeak-ng'
+    , 'libasound2-plugins'
     , 'linphone'
     , 'mumble'
     , 'pavucontrol'
