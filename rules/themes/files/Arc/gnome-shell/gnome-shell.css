@@ -1795,11 +1795,13 @@ StScrollBar {
   max-width: 23em; }
 
 .login-dialog {
+  font-size:13pt;
   border: none;
   background-color: transparent; }
   .login-dialog .modal-dialog-button-box {
     spacing: 3px; }
   .login-dialog .modal-dialog-button {
+    font-size:12pt;
     padding: 3px 18px; }
     .login-dialog .modal-dialog-button:default {
       text-shadow: 0 1px rgba(255, 255, 255, 0);
@@ -1920,8 +1922,8 @@ StScrollBar {
 
 .login-dialog-prompt-label {
   color: white;
-  text-shadow: 1px 1px 0 #7A7A7A;
-  font-size: 13pt;
+  text-shadow: rgba(0, 0, 0, 1) 2px 2px 1px;
+  font-size: 15pt;
   padding-top: 1em; }
 
 .login-dialog-session-list-button StIcon {
