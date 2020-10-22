@@ -12,7 +12,6 @@ class puavo_pkg::packages {
   $buster_specific_packages  = [ 'celestia'
                                , 'eclipse'
                                , 'netbeans'
-                               , 'supertuxkart'
                                , 'tela-icon-theme'
                                , 'ubuntu-firmware'
                                , 'ubuntu-wallpapers'
@@ -76,8 +75,10 @@ class puavo_pkg::packages {
   $other_available_packages = [ 'canon-cque'
                               , 'dragonbox_koulu1'
                               , 'dragonbox_koulu2'
+                              , 'hp-bios-utils'
                               , 'kdenlive-appimage'
                               , 'promethean'
+                              , 'supertuxkart'
                               , 'teamviewer' ]
 
   @puavo_pkg::install { $available_packages: ; }
