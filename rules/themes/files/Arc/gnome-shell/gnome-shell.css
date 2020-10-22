@@ -1824,8 +1824,8 @@ StScrollBar {
       .login-dialog .modal-dialog-button:default:insensitive {
         text-shadow: 0 1px rgba(255, 255, 255, 0);
         color: rgba(92, 97, 108, 0.55);
-        border: 1px solid rgba(207, 214, 230, 0.2);
-        background-color: rgba(251, 251, 252, 0.2);
+        border: 1px solid rgba(207, 214, 230, 0.1);
+        background-color: rgba(251, 251, 252, 0.1);
         box-shadow: inset 0 1px rgba(251, 251, 252, 0.05); }
 
 .login-dialog-logo-bin {
