@@ -9,6 +9,7 @@ class supplementary_groups {
             , 'plugdev'
             , 'puavodesktop'
             , 'scanner'
+            , 'vboxusers'
             , 'video' ]
 
   #
