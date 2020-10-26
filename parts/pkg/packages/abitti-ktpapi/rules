@@ -5,13 +5,18 @@ set -eu
 command=$1
 shift
 
+ktpdir='/opt/abitti-ktpapi'
+
 case "${command}" in
   configure)
     upstream_dir=$1
-    cp -Rs ${upstream_dir}/jonilehtola-ktpapi-*/dist /opt/ktpapi
+    mkdir -p "$ktpdir"
+    for install_script in ${upstream_dir}/jonilehtola-ktpapi-*/dist/*; do
+      ln -fns "$install_script" "$ktpdir"
+    done
     ;;
   unconfigure)
-    rm -rf /opt/ktpapi
+    rm -rf "$ktpdir"
     ;;
   unpack)
     upstream_pack=$1
