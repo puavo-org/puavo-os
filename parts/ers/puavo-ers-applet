@@ -44,10 +44,11 @@ EXAMS_DIR          = os.path.join(KTP_JAKO_DIR, '.exams')
 EXAMS_JSON_FILE    = os.path.join(KTP_JAKO_DIR, '.exams.json')
 EXAMS_UPCOMING_DIR = os.path.join(KTP_JAKO_DIR, 'Tulevat')
 
-def rm_f(path):
+def rm_f(path, with_logging=True):
   try:
     os.unlink(path)
-    syslog.syslog(syslog.LOG_INFO, 'removed %s' % path)
+    if with_logging:
+      syslog.syslog(syslog.LOG_INFO, 'removed %s' % path)
   except OSError as e:
     if e.errno != errno.ENOENT:
       raise e
@@ -102,6 +103,9 @@ class PuavoErsApplet:
 
     self.exams_server_helper = PuavoErsServerHelper()
     self.exams_server_helper.start()
+
+    self.exams_scheduler = PuavoErsExamScheduler()
+    self.exams_scheduler.start()
 
     if not os.path.exists(self.NAKSU_BIN_PATH):
       shutil.copy2(self.NAKSU_ORIGIN_PATH, self.NAKSU_BIN_PATH)
@@ -178,6 +182,9 @@ class PuavoErsApplet:
 
 
   def update_passwords_in_file(self, passwords_list):
+    # XXX Maybe do a comparison and log about updates only if something has
+    # XXX changed!  (similar thing could be done in update_passwords_in_ui()
+    # XXX as well.
     syslog.syslog(syslog.LOG_INFO,
                   'updating passwords in %s' % self.DECRYPT_CODES_PATH)
 
@@ -498,6 +505,84 @@ class PuavoErsServerHelper (threading.Thread):
                       'some error when managing exams dir: %s' % e)
 
       time.sleep(60)
+
+
+class PuavoErsExamScheduler (threading.Thread):
+  COMM_DIR = os.path.join(KTP_JAKO_DIR, '.opinsys')
+
+  CMD_PATH          = os.path.join(COMM_DIR, 'cmd')
+  CMD_RESULT_PATH   = os.path.join(COMM_DIR, 'cmd-result')
+  CMD_STAMP_PATH    = os.path.join(COMM_DIR, 'cmd-stamp')
+  DEBUG_OUTPUT_PATH = os.path.join(COMM_DIR, 'debug-output')
+  EXAMS_PATH        = os.path.join(COMM_DIR, 'exams')
+  OUTPUT_PATH       = os.path.join(COMM_DIR, 'output')
+  STATS_PATH        = os.path.join(COMM_DIR, 'stats')
+
+  def __init__(self):
+    threading.Thread.__init__(self)
+
+    self.comm_ok = False
+
+    # XXX These should be somehow synced from PuavoErsExamSync I think.
+    # XXX Note that PuavoErsExamZipper has its own pace, perhaps it should
+    # XXX be tied to PuavoErsExamSync ?  (so that actions here can be sure
+    # XXX the zip is in place when needed)
+    self.exams = []
+
+
+  def ping(self):
+    return self.server_cmd('ping')
+
+
+  def run(self):
+    while True:
+      try:
+        if not self.comm_ok:
+          output = self.ping()
+          if output:
+            syslog.syslog(syslog.LOG_NOTICE,
+                          'got ping response, communication works')
+            self.comm_ok = True
+          else:
+            self.comm_ok = False
+
+        if self.comm_ok:
+          self.schedule_exams()
+
+      except Exception as e:
+        syslog.syslog(syslog.LOG_ERR,
+                      'some error when scheduling exams: %s' % e)
+
+      time.sleep(60)
+
+
+  def schedule_exams(self):
+    return # XXX use self.exams to schedule exams, somehow
+
+
+  def server_cmd(self, cmd):
+    syslog.syslog(syslog.LOG_INFO, 'sending command %s' % cmd)
+    output_paths = [ self.CMD_RESULT_PATH, self.DEBUG_OUTPUT_PATH,
+                     self.EXAMS_PATH, self.OUTPUT_PATH, self.STATS_PATH ]
+    for path in output_paths:
+      rm_f(path, False)
+
+    with open(self.CMD_PATH, 'w') as f:
+      f.write("%s\n" % cmd)
+
+    output = None
+    for i in range(20):
+      try:
+        with open(self.OUTPUT_PATH) as f:
+          output = f.read()
+          break
+      except OSError as e:
+        if e.errno != errno.ENOENT:
+          raise e
+
+      time.sleep(1)
+
+    return output
 
 
 syslog.openlog('puavo-ers-applet')
