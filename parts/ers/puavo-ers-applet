@@ -59,6 +59,7 @@ def puavoconf_get(puavoconf_key):
 
 
 class PuavoErsApplet:
+  DECRYPT_CODES_PATH = os.path.join(KTP_JAKO_DIR, 'PURKUKOODIT.TXT')
   NAKSU_ORIGIN_PATH = '/opt/abitti-naksu/naksu'
   PUAVO_ERS_DIR = os.path.join(os.environ['HOME'], '.puavo', 'puavo-ers')
   NAKSU_BIN_PATH = os.path.join(PUAVO_ERS_DIR, 'naksu')
@@ -160,7 +161,8 @@ class PuavoErsApplet:
       with open(EXAMS_JSON_FILE) as file:
         new_exams = json.load(file)
         if (force_update or self.old_exams != new_exams):
-          self.update_passwords_in_ui(new_exams)
+          passwords_list = self.update_passwords_in_ui(new_exams)
+          self.update_passwords_in_file(passwords_list)
         self.old_exams = new_exams
     except OSError as e:
       if e.errno != errno.ENOENT:
@@ -175,8 +177,21 @@ class PuavoErsApplet:
     return True
 
 
+  def update_passwords_in_file(self, passwords_list):
+    syslog.syslog(syslog.LOG_INFO,
+                  'updating passwords in %s' % self.DECRYPT_CODES_PATH)
+
+    tmpfile = '%s.tmp' % self.DECRYPT_CODES_PATH
+    with open(tmpfile, 'w') as f:
+      for password in passwords_list:
+        f.write("%s\n" % password)
+    os.rename(tmpfile, self.DECRYPT_CODES_PATH)
+
+
   def update_passwords_in_ui(self, new_exams):
     syslog.syslog(syslog.LOG_INFO, 'updating passwords in UI')
+
+    passwords_list = []
 
     self.exams_by_widgets = {}
     for button in self.password_buttons:
@@ -201,6 +216,8 @@ class PuavoErsApplet:
         continue
       labels[label] = 1
 
+      passwords_list.append(exam['decrypt_code'])
+
       if exam['decrypt_code'] == self.latest_chosen_password:
         label = '***** %s *****' % label
 
@@ -210,6 +227,8 @@ class PuavoErsApplet:
       button.show()
       self.menu.append(button)
       self.password_buttons.append(button)
+
+    return passwords_list
 
 
   def copy_password_to_clipboard(self, widget):
