@@ -99,6 +99,9 @@ class PuavoErsApplet:
     self.exam_zipper = PuavoErsExamZipper()
     self.exam_zipper.start()
 
+    self.exams_dir_manager = PuavoErsManageExamsDir()
+    self.exams_dir_manager.start()
+
     if not os.path.exists(self.NAKSU_BIN_PATH):
       shutil.copy2(self.NAKSU_ORIGIN_PATH, self.NAKSU_BIN_PATH)
 
@@ -443,6 +446,39 @@ class PuavoErsExamZipper (threading.Thread):
     for zipfile in all_zip_files:
       if current_all_zip_path != zipfile:
         rm_f(zipfile)
+
+
+class PuavoErsManageExamsDir (threading.Thread):
+  MGMT_INSTALL_SOURCE_PATH = '/opt/abitti-ktpapi/install'
+  MGMT_INSTALL_TARGET_PATH = os.path.join(KTP_JAKO_DIR, 'ktpapi-install')
+
+  def run(self):
+     while True:
+       try:
+         update = False
+         try:
+           if os.path.exists(self.MGMT_INSTALL_SOURCE_PATH):
+             if not filecmp.cmp(self.MGMT_INSTALL_SOURCE_PATH,
+                                self.MGMT_INSTALL_TARGET_PATH):
+               update = True
+         except OSError as e:
+           if e.errno != errno.ENOENT:
+             raise e
+           update = True
+
+         if update:
+           syslog.syslog(syslog.LOG_NOTICE,
+                         'copying/updating %s to %s' \
+                           % (self.MGMT_INSTALL_SOURCE_PATH,
+                              self.MGMT_INSTALL_TARGET_PATH))
+           shutil.copy2(self.MGMT_INSTALL_SOURCE_PATH,
+                        self.MGMT_INSTALL_TARGET_PATH)
+
+       except Exception as e:
+         syslog.syslog(syslog.LOG_ERR,
+                       'some error when managing exams dir: %s' % e)
+
+       time.sleep(60)
 
 
 syslog.openlog('puavo-ers-applet')
