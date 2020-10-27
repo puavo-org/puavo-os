@@ -98,8 +98,8 @@ class PuavoErsApplet:
     self.exam_sync = PuavoErsExamSync()
     self.exam_sync.start()
 
-    self.exam_zipper = PuavoErsExamZipper()
-    self.exam_zipper.start()
+    self.exam_sorter = PuavoErsExamSorter()
+    self.exam_sorter.start()
 
     self.exams_server_helper = PuavoErsServerHelper()
     self.exams_server_helper.start()
@@ -369,7 +369,7 @@ class PuavoErsExamSync (threading.Thread):
     syslog.syslog(syslog.LOG_INFO, 'exam %s synced okay' % exam_file_name)
 
 
-class PuavoErsExamZipper (threading.Thread):
+class PuavoErsExamSorter (threading.Thread):
   def __init__(self):
     threading.Thread.__init__(self)
 
@@ -524,7 +524,7 @@ class PuavoErsExamScheduler (threading.Thread):
     self.comm_ok = False
 
     # XXX These should be somehow synced from PuavoErsExamSync I think.
-    # XXX Note that PuavoErsExamZipper has its own pace, perhaps it should
+    # XXX Note that PuavoErsExamSorter has its own pace, perhaps it should
     # XXX be tied to PuavoErsExamSync ?  (so that actions here can be sure
     # XXX the zip is in place when needed)
     self.exams = []
