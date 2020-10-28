@@ -45,7 +45,7 @@ EXAMS_JSON_FILE    = os.path.join(KTP_JAKO_DIR, '.exams.json')
 EXAMS_UPCOMING_DIR = os.path.join(KTP_JAKO_DIR, 'Tulevat')
 
 exam_scheduler_lock = threading.Lock()
-currently_running_exams = []
+current_exams = []
 current_zip_name = None
 
 
@@ -365,7 +365,8 @@ class PuavoErsExamSorter (threading.Thread):
   def __init__(self):
     threading.Thread.__init__(self)
 
-    self.previous_meb_files_in_all_zip = []
+    self.previous_current_exams = []
+    self.previous_todays_exams  = []
 
 
   def run(self):
@@ -380,51 +381,58 @@ class PuavoErsExamSorter (threading.Thread):
 
 
   def sort_exams_to_dirs(self):
-    global currently_running_exams, current_zip_name
+    global current_exams
 
-    current_time = datetime.datetime.now()
-    current_zip_name = 'Kaikki-%s.zip' % current_time.strftime('%Y-%m-%d')
+    self.current_day = datetime.date.today()
+    current_time     = datetime.datetime.now()
 
     try:
       with open(EXAMS_JSON_FILE) as file:
-        current_exams = json.load(file)
+        all_exams = json.load(file)
     except OSError as e:
       if e.errno != errno.ENOENT:
         raise e
       return
 
-    archived_exams          = []
-    currently_running_exams = []
-    upcoming_exams          = []
+    archived_exams = []
+    current_exams  = []
+    todays_exams   = []
+    upcoming_exams = []
 
     decrypt_codes_list = []
 
-    for exam in current_exams:
+    for exam in all_exams:
       try:
         if not re.match('^exam_.*\.meb$', exam['file_name']):
           raise Exception('ignoring exam with a file name %s' \
                             % exam['file_name'])
 
+        exam_start_day  = datetime.date.fromtimestamp(exam['start_time'])
         exam_start_time = datetime.datetime.fromtimestamp(exam['start_time'])
+
+        exam_end_day    = datetime.date.fromtimestamp(exam['end_time'])
         exam_end_time   = datetime.datetime.fromtimestamp(exam['end_time'])
 
-        if exam_end_time < current_time:
+        if exam_end_day < self.current_day:
           archived_exams.append(exam['file_name'])
-        elif current_time < exam_start_time:
+        elif self.current_day < exam_start_day:
           upcoming_exams.append(exam['file_name'])
-        elif exam_start_time <= current_time \
-          and current_time < exam_end_time:
-            currently_running_exams.append(exam['file_name'])
-            decrypt_codes_list.append(exam['decrypt_code'])
+        else:
+          todays_exams.append(exam['file_name'])
+
+        if exam_start_time <= current_time and current_time < exam_end_time:
+          current_exams.append(exam['file_name'])
+          decrypt_codes_list.append(exam['decrypt_code'])
+
       except Exception as e:
         syslog.syslog(syslog.LOG_ERR, 'could not handle an exam: %s' % e)
 
     self.link_exams_to_dir(EXAMS_ARCHIVE_DIR, archived_exams,
                            remove_other=False)
-    self.link_exams_to_dir(KTP_JAKO_DIR, currently_running_exams)
+    self.link_exams_to_dir(KTP_JAKO_DIR, todays_exams)
     self.link_exams_to_dir(EXAMS_UPCOMING_DIR, upcoming_exams)
 
-    self.zip_todays_exams(decrypt_codes_list)
+    self.zip_exams(current_exams, todays_exams, decrypt_codes_list)
 
 
   def link_exams_to_dir(self, linkdir, exam_names_list, remove_other=True):
@@ -444,36 +452,48 @@ class PuavoErsExamSorter (threading.Thread):
           raise e
 
 
-  def zip_todays_exams(self, decrypt_codes_list):
+  def zip_exams(self, current_exams, todays_exams, decrypt_codes_list):
     global current_zip_name
 
-    meb_files = glob.glob( os.path.join(KTP_JAKO_DIR, 'exam_*.meb') )
-    meb_files.sort()
+    current_zip_name = 'Menossa-%s.zip' % self.current_day
+    todays_zip_name  = 'Kaikki-%s.zip'  % self.current_day
 
-    current_all_zip_path = os.path.join(KTP_JAKO_DIR, current_zip_name)
+    current_exams.sort()
+    todays_exams.sort()
 
-    if len(meb_files) == 0:
-      rm_f(current_all_zip_path)
-      self.previous_meb_files_in_all_zip = meb_files
-    elif not os.path.exists(current_all_zip_path) \
-      or meb_files != self.previous_meb_files_in_all_zip:
-        rm_f(current_all_zip_path)
-        try:
-          syslog.syslog(syslog.LOG_INFO,
-            'zipping exams %s into %s' % (meb_files, current_all_zip_path))
-          subprocess.check_output([ 'zip', '-j', current_all_zip_path ] \
-                                    + meb_files)
-          self.update_decrypt_codes_in_file(decrypt_codes_list)
-          self.previous_meb_files_in_all_zip = meb_files
-        except Exception as e:
-          syslog.syslog(syslog.LOG_ERR,
-            'error when zipping exam files (or updating decrypt codes): %s' \
-              % (current_all_zip_path, meb_files))
+    current_zip_path = os.path.join(KTP_JAKO_DIR, current_zip_name)
+    todays_zip_path  = os.path.join(KTP_JAKO_DIR, todays_zip_name)
 
-    all_zip_files = glob.glob( os.path.join(KTP_JAKO_DIR, 'Kaikki-*.zip') )
-    for zipfile in all_zip_files:
-      if current_all_zip_path != zipfile:
+    try:
+      if current_exams != self.previous_current_exams:
+        self.zip_an_exam_set(current_exams, current_zip_path)
+        self.update_decrypt_codes_in_file(decrypt_codes_list)
+        self.previous_current_exams = current_exams
+    except Exception as e:
+      syslog.syslog(syslog.LOG_ERR,
+        'error when zipping current exams (or updating decrypt codes): %s' % e)
+
+    try:
+      if todays_exams != self.previous_todays_exams:
+        self.zip_an_exam_set(todays_exams, todays_zip_path)
+        self.previous_todays_exams = todays_exams
+    except Exception as e:
+      syslog.syslog(syslog.LOG_ERR, 'error when zipping todays exams: %s' % e)
+
+    current_zip_files = glob.glob( os.path.join(KTP_JAKO_DIR, 'Menossa-*.zip') )
+    todays_zip_files  = glob.glob( os.path.join(KTP_JAKO_DIR, 'Kaikki-*.zip') )
+    for zipfile in (current_zip_files + todays_zip_files):
+      if not zipfile in [ current_zip_path, todays_zip_path ]:
         rm_f(zipfile)
+
+
+  def zip_an_exam_set(self, exams, zip_path):
+    rm_f(zip_path)
+    if len(exams) > 0:
+      exam_paths = [ os.path.join(KTP_JAKO_DIR, p) for p in exams ]
+      syslog.syslog(syslog.LOG_INFO,
+                    'zipping exams %s into %s' % (exams, zip_path))
+      subprocess.check_output([ 'zip', '-j', zip_path ] + exam_paths)
 
 
   def update_decrypt_codes_in_file(self, decrypt_codes_list):
@@ -596,8 +616,6 @@ class PuavoErsExamScheduler (threading.Thread):
       # XXX what if someone does something in the server?
       # XXX what about manual control?  this should first actually check out
       # XXX what is running, and add what is missing (not remove others)
-      syslog.syslog(syslog.LOG_INFO,
-                    'no changes to exams, not scheduling these: %s' % currently_running_exams)
       return
 
     syslog.syslog(syslog.LOG_INFO,
