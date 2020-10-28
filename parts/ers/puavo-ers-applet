@@ -609,25 +609,24 @@ class PuavoErsExamScheduler (threading.Thread):
 
 
   def schedule_exams(self):
-    global currently_running_exams
+    global current_exams
 
-    currently_running_exams.sort()
-    if self.exams == currently_running_exams:
+    current_exams.sort()
+    if self.exams == current_exams:
       # XXX what if someone does something in the server?
       # XXX what about manual control?  this should first actually check out
       # XXX what is running, and add what is missing (not remove others)
       return
 
     syslog.syslog(syslog.LOG_INFO,
-                  'must ensure that exams %s are running' \
-                    % currently_running_exams)
+                  'must ensure that exams %s are running' % current_exams)
 
     # XXX how to know if this is successful?  an exception should be raised
     # XXX in case of failure?
     try:
       output = self.load_exams()
       syslog.syslog(syslog.LOG_INFO, 'load exams returned %s' % output)
-      self.exams = currently_running_exams
+      self.exams = current_exams
     except CurrentZipNotReady as e:
       syslog.syslog(syslog.LOG_INFO,
                     'exam scheduler is waiting for zip file to be ready')
