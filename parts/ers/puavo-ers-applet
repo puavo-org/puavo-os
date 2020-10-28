@@ -69,7 +69,6 @@ class CurrentZipNotReady(Exception):
 
 
 class PuavoErsApplet:
-  DECRYPT_CODES_PATH = os.path.join(KTP_JAKO_DIR, 'PURKUKOODIT.TXT')
   NAKSU_ORIGIN_PATH = '/opt/abitti-naksu/naksu'
   PUAVO_ERS_DIR = os.path.join(os.environ['HOME'], '.puavo', 'puavo-ers')
   NAKSU_BIN_PATH = os.path.join(PUAVO_ERS_DIR, 'naksu')
@@ -122,7 +121,7 @@ class PuavoErsApplet:
 
   def main(self):
     self.run_naksu()
-    GObject.timeout_add_seconds(1, self.update_passwords)
+    GObject.timeout_add_seconds(1, self.update_decrypt_codes)
     Gtk.main()
 
 
@@ -168,14 +167,13 @@ class PuavoErsApplet:
     return True
 
 
-  def update_passwords(self, force_update=False):
+  def update_decrypt_codes(self, force_update=False):
     error = None
     try:
       with open(EXAMS_JSON_FILE) as file:
         new_exams = json.load(file)
         if (force_update or self.old_exams != new_exams):
-          passwords_list = self.update_passwords_in_ui(new_exams)
-          self.update_passwords_in_file(passwords_list)
+          self.update_decrypt_codes_in_ui(new_exams)
         self.old_exams = new_exams
     except OSError as e:
       if e.errno != errno.ENOENT:
@@ -185,36 +183,18 @@ class PuavoErsApplet:
 
     if error:
       # XXX should user be notified?
-      syslog.syslog(syslog.LOG_ERR, 'error when updating passwords: %s' % error)
+      syslog.syslog(syslog.LOG_ERR,
+                    'error when updating decrypt codes: %s' % error)
 
     return True
 
 
-  # XXX passwords here should match exactly with what is in Kaikki-*.zip
-  def update_passwords_in_file(self, passwords_list):
-    syslog.syslog(syslog.LOG_INFO,
-                  'updating passwords in %s' % self.DECRYPT_CODES_PATH)
-
-    tmpfile = '%s.tmp' % self.DECRYPT_CODES_PATH
-    with open(tmpfile, 'w') as f:
-      passwords_list.sort()
-      for password in passwords_list:
-        f.write("%s\n" % password)
-
-    # XXX Do a file comparison here and update/log only if something has
-    # XXX changed!  (similar thing could be done in update_passwords_in_ui()
-    # XXX as well.
-    os.rename(tmpfile, self.DECRYPT_CODES_PATH)
-
-
-  def update_passwords_in_ui(self, new_exams):
+  def update_decrypt_codes_in_ui(self, new_exams):
     # We can show decrypt codes for future exams as well, in case user
     # wants to try those out manually.  Showing them for old exams is probably
     # just a distraction.
 
-    syslog.syslog(syslog.LOG_INFO, 'updating passwords in UI')
-
-    passwords_list = []
+    syslog.syslog(syslog.LOG_INFO, 'updating decrypt codes in UI')
 
     self.exams_by_widgets = {}
     for button in self.password_buttons:
@@ -239,8 +219,6 @@ class PuavoErsApplet:
         continue
       labels[label] = 1
 
-      passwords_list.append(exam['decrypt_code'])
-
       if exam['decrypt_code'] == self.latest_chosen_password:
         label = '***** %s *****' % label
 
@@ -251,8 +229,6 @@ class PuavoErsApplet:
       self.menu.append(button)
       self.password_buttons.append(button)
 
-    return passwords_list
-
 
   def copy_password_to_clipboard(self, widget):
     syslog.syslog(syslog.LOG_INFO, 'copying password to clipboard')
@@ -260,7 +236,7 @@ class PuavoErsApplet:
     password = self.exams_by_widgets[widget]['decrypt_code']
     self.clipboard.set_text(password, -1)
     self.latest_chosen_password = password
-    self.update_passwords(True)
+    self.update_decrypt_codes(True)
 
 
 class PuavoErsExamSync (threading.Thread):
@@ -348,7 +324,7 @@ class PuavoErsExamSync (threading.Thread):
     except Exception as e:
       # XXX should user be notified?
       syslog.syslog(syslog.LOG_CRIT,
-        'error in writing passwords to %s: %s' % (EXAMS_JSON_FILE, e))
+        'error in writing exams (json) to %s: %s' % (EXAMS_JSON_FILE, e))
 
 
   def sync_one_exam(self, exam_file_name, exam):
@@ -421,6 +397,8 @@ class PuavoErsExamSorter (threading.Thread):
     currently_running_exams = []
     upcoming_exams          = []
 
+    decrypt_codes_list = []
+
     for exam in current_exams:
       try:
         if not re.match('^exam_.*\.meb$', exam['file_name']):
@@ -437,14 +415,16 @@ class PuavoErsExamSorter (threading.Thread):
         elif exam_start_time <= current_time \
           and current_time < exam_end_time:
             currently_running_exams.append(exam['file_name'])
+            decrypt_codes_list.append(exam['decrypt_code'])
       except Exception as e:
         syslog.syslog(syslog.LOG_ERR, 'could not handle an exam: %s' % e)
 
     self.link_exams_to_dir(EXAMS_ARCHIVE_DIR, archived_exams,
                            remove_other=False)
     self.link_exams_to_dir(KTP_JAKO_DIR, currently_running_exams)
-    self.zip_todays_exams()
     self.link_exams_to_dir(EXAMS_UPCOMING_DIR, upcoming_exams)
+
+    self.zip_todays_exams(decrypt_codes_list)
 
 
   def link_exams_to_dir(self, linkdir, exam_names_list, remove_other=True):
@@ -464,7 +444,7 @@ class PuavoErsExamSorter (threading.Thread):
           raise e
 
 
-  def zip_todays_exams(self):
+  def zip_todays_exams(self, decrypt_codes_list):
     global current_zip_name
 
     meb_files = glob.glob( os.path.join(KTP_JAKO_DIR, 'exam_*.meb') )
@@ -474,6 +454,7 @@ class PuavoErsExamSorter (threading.Thread):
 
     if len(meb_files) == 0:
       rm_f(current_all_zip_path)
+      self.previous_meb_files_in_all_zip = meb_files
     elif not os.path.exists(current_all_zip_path) \
       or meb_files != self.previous_meb_files_in_all_zip:
         rm_f(current_all_zip_path)
@@ -482,17 +463,31 @@ class PuavoErsExamSorter (threading.Thread):
             'zipping exams %s into %s' % (meb_files, current_all_zip_path))
           subprocess.check_output([ 'zip', '-j', current_all_zip_path ] \
                                     + meb_files)
+          self.update_decrypt_codes_in_file(decrypt_codes_list)
+          self.previous_meb_files_in_all_zip = meb_files
         except Exception as e:
           syslog.syslog(syslog.LOG_ERR,
-            'error when zipping exam files to %s: %s' \
+            'error when zipping exam files (or updating decrypt codes): %s' \
               % (current_all_zip_path, meb_files))
-
-    self.previous_meb_files_in_all_zip = meb_files
 
     all_zip_files = glob.glob( os.path.join(KTP_JAKO_DIR, 'Kaikki-*.zip') )
     for zipfile in all_zip_files:
       if current_all_zip_path != zipfile:
         rm_f(zipfile)
+
+
+  def update_decrypt_codes_in_file(self, decrypt_codes_list):
+    DECRYPT_CODES_PATH = os.path.join(KTP_JAKO_DIR, 'PURKUKOODIT.TXT')
+
+    syslog.syslog(syslog.LOG_INFO,
+                  'updating decrypt codes in %s' % DECRYPT_CODES_PATH)
+
+    tmpfile = '%s.tmp' % DECRYPT_CODES_PATH
+    with open(tmpfile, 'w') as f:
+      decrypt_codes_list.sort()
+      for decrypt_code in decrypt_codes_list:
+        f.write("%s\n" % decrypt_code)
+    os.rename(tmpfile, DECRYPT_CODES_PATH)
 
 
 class PuavoErsServerHelper (threading.Thread):
