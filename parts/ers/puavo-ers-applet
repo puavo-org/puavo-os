@@ -44,6 +44,9 @@ EXAMS_DIR          = os.path.join(KTP_JAKO_DIR, '.exams')
 EXAMS_JSON_FILE    = os.path.join(KTP_JAKO_DIR, '.exams.json')
 EXAMS_UPCOMING_DIR = os.path.join(KTP_JAKO_DIR, 'Tulevat')
 
+currently_running_exams = []
+currently_running_exams_lock = threading.Lock()
+
 def rm_f(path, with_logging=True):
   try:
     os.unlink(path)
@@ -98,11 +101,11 @@ class PuavoErsApplet:
     self.exam_sync = PuavoErsExamSync()
     self.exam_sync.start()
 
-    self.exam_sorter = PuavoErsExamSorter()
-    self.exam_sorter.start()
-
     self.exams_server_helper = PuavoErsServerHelper()
     self.exams_server_helper.start()
+
+    self.exam_sorter = PuavoErsExamSorter()
+    self.exam_sorter.start()
 
     self.exams_scheduler = PuavoErsExamScheduler()
     self.exams_scheduler.start()
@@ -182,16 +185,18 @@ class PuavoErsApplet:
 
 
   def update_passwords_in_file(self, passwords_list):
-    # XXX Maybe do a comparison and log about updates only if something has
-    # XXX changed!  (similar thing could be done in update_passwords_in_ui()
-    # XXX as well.
     syslog.syslog(syslog.LOG_INFO,
                   'updating passwords in %s' % self.DECRYPT_CODES_PATH)
 
     tmpfile = '%s.tmp' % self.DECRYPT_CODES_PATH
     with open(tmpfile, 'w') as f:
+      passwords_list.sort()
       for password in passwords_list:
         f.write("%s\n" % password)
+
+    # XXX Do a file comparison here and update/log only if something has
+    # XXX changed!  (similar thing could be done in update_passwords_in_ui()
+    # XXX as well.
     os.rename(tmpfile, self.DECRYPT_CODES_PATH)
 
 
@@ -379,7 +384,8 @@ class PuavoErsExamSorter (threading.Thread):
   def run(self):
     while True:
       try:
-        self.sort_exams_to_dirs()
+        with currently_running_exams_lock:
+          self.sort_exams_to_dirs()
       except Exception as e:
         syslog.syslog(syslog.LOG_ERR, 'some error when sorting exams: %s' % e)
 
@@ -387,6 +393,8 @@ class PuavoErsExamSorter (threading.Thread):
 
 
   def sort_exams_to_dirs(self):
+    global currently_running_exams
+
     self.current_time = datetime.datetime.now()
     try:
       with open(EXAMS_JSON_FILE) as file:
@@ -521,12 +529,6 @@ class PuavoErsExamScheduler (threading.Thread):
   def __init__(self):
     threading.Thread.__init__(self)
 
-    self.comm_ok = False
-
-    # XXX These should be somehow synced from PuavoErsExamSync I think.
-    # XXX Note that PuavoErsExamSorter has its own pace, perhaps it should
-    # XXX be tied to PuavoErsExamSync ?  (so that actions here can be sure
-    # XXX the zip is in place when needed)
     self.exams = []
 
 
@@ -535,29 +537,51 @@ class PuavoErsExamScheduler (threading.Thread):
 
 
   def run(self):
+    comm_ok = False
+    old_comm_state = None
+
     while True:
       try:
-        if not self.comm_ok:
+        if not comm_ok:
           output = self.ping()
           if output:
-            syslog.syslog(syslog.LOG_NOTICE,
-                          'got ping response, communication works')
-            self.comm_ok = True
+            comm_ok = True
+            if old_comm_state != comm_ok:
+              syslog.syslog(syslog.LOG_NOTICE,
+                            'communication link to exam server is ok')
           else:
-            self.comm_ok = False
+            comm_ok = False
+            if old_comm_state != comm_ok:
+              syslog.syslog(syslog.LOG_INFO,
+                            'no communication link to exam server')
 
-        if self.comm_ok:
-          self.schedule_exams()
+        old_comm_state = comm_ok
+
+        if comm_ok:
+          # XXX in case of errors this should set comm_ok = False
+          with currently_running_exams_lock:
+            self.schedule_exams()
 
       except Exception as e:
         syslog.syslog(syslog.LOG_ERR,
                       'some error when scheduling exams: %s' % e)
 
-      time.sleep(60)
+      time.sleep(20)
 
 
   def schedule_exams(self):
-    return # XXX use self.exams to schedule exams, somehow
+    global currently_running_exams
+
+    currently_running_exams.sort()
+    if self.exams == currently_running_exams:
+      return
+
+    syslog.syslog(syslog.LOG_INFO,
+                  'must ensure that exams %s are running' \
+                    % currently_running_exams)
+
+    # XXX if scheduling is successful:
+    # self.exams = currently_running_exams
 
 
   def server_cmd(self, cmd):
