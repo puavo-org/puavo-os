@@ -44,8 +44,15 @@ EXAMS_DIR          = os.path.join(KTP_JAKO_DIR, '.exams')
 EXAMS_JSON_FILE    = os.path.join(KTP_JAKO_DIR, '.exams.json')
 EXAMS_UPCOMING_DIR = os.path.join(KTP_JAKO_DIR, 'Tulevat')
 
+exam_scheduler_lock = threading.Lock()
 currently_running_exams = []
-currently_running_exams_lock = threading.Lock()
+current_zip_name = None
+
+
+def puavoconf_get(puavoconf_key):
+  return subprocess.check_output([ 'puavo-conf', puavoconf_key ]).rstrip() \
+                   .decode('utf-8')
+
 
 def rm_f(path, with_logging=True):
   try:
@@ -57,9 +64,8 @@ def rm_f(path, with_logging=True):
       raise e
 
 
-def puavoconf_get(puavoconf_key):
-  return subprocess.check_output([ 'puavo-conf', puavoconf_key ]).rstrip() \
-                   .decode('utf-8')
+class CurrentZipNotReady(Exception):
+  pass
 
 
 class PuavoErsApplet:
@@ -184,6 +190,7 @@ class PuavoErsApplet:
     return True
 
 
+  # XXX passwords here should match exactly with what is in Kaikki-*.zip
   def update_passwords_in_file(self, passwords_list):
     syslog.syslog(syslog.LOG_INFO,
                   'updating passwords in %s' % self.DECRYPT_CODES_PATH)
@@ -201,6 +208,10 @@ class PuavoErsApplet:
 
 
   def update_passwords_in_ui(self, new_exams):
+    # We can show decrypt codes for future exams as well, in case user
+    # wants to try those out manually.  Showing them for old exams is probably
+    # just a distraction.
+
     syslog.syslog(syslog.LOG_INFO, 'updating passwords in UI')
 
     passwords_list = []
@@ -384,7 +395,7 @@ class PuavoErsExamSorter (threading.Thread):
   def run(self):
     while True:
       try:
-        with currently_running_exams_lock:
+        with exam_scheduler_lock:
           self.sort_exams_to_dirs()
       except Exception as e:
         syslog.syslog(syslog.LOG_ERR, 'some error when sorting exams: %s' % e)
@@ -393,9 +404,11 @@ class PuavoErsExamSorter (threading.Thread):
 
 
   def sort_exams_to_dirs(self):
-    global currently_running_exams
+    global currently_running_exams, current_zip_name
 
-    self.current_time = datetime.datetime.now()
+    current_time = datetime.datetime.now()
+    current_zip_name = 'Kaikki-%s.zip' % current_time.strftime('%Y-%m-%d')
+
     try:
       with open(EXAMS_JSON_FILE) as file:
         current_exams = json.load(file)
@@ -417,12 +430,12 @@ class PuavoErsExamSorter (threading.Thread):
         exam_start_time = datetime.datetime.fromtimestamp(exam['start_time'])
         exam_end_time   = datetime.datetime.fromtimestamp(exam['end_time'])
 
-        if exam_end_time < self.current_time:
+        if exam_end_time < current_time:
           archived_exams.append(exam['file_name'])
-        elif self.current_time < exam_start_time:
+        elif current_time < exam_start_time:
           upcoming_exams.append(exam['file_name'])
-        elif exam_start_time <= self.current_time \
-          and self.current_time < exam_end_time:
+        elif exam_start_time <= current_time \
+          and current_time < exam_end_time:
             currently_running_exams.append(exam['file_name'])
       except Exception as e:
         syslog.syslog(syslog.LOG_ERR, 'could not handle an exam: %s' % e)
@@ -452,12 +465,12 @@ class PuavoErsExamSorter (threading.Thread):
 
 
   def zip_todays_exams(self):
+    global current_zip_name
+
     meb_files = glob.glob( os.path.join(KTP_JAKO_DIR, 'exam_*.meb') )
     meb_files.sort()
 
-    current_date = self.current_time.strftime('%Y-%m-%d')
-    current_all_zip_path = os.path.join(KTP_JAKO_DIR,
-                                        'Kaikki-%s.zip' % current_date)
+    current_all_zip_path = os.path.join(KTP_JAKO_DIR, current_zip_name)
 
     if len(meb_files) == 0:
       rm_f(current_all_zip_path)
@@ -529,7 +542,18 @@ class PuavoErsExamScheduler (threading.Thread):
   def __init__(self):
     threading.Thread.__init__(self)
 
+    # XXX this is perhaps useless
     self.exams = []
+
+
+  def load_exams(self):
+    global current_zip_name
+
+    if current_zip_name == None:
+      raise CurrentZipNotReady
+
+    cmd = 'load-exam %s %s' % (current_zip_name, 'PURKUKOODIT.TXT')
+    return self.server_cmd(cmd)
 
 
   def ping(self):
@@ -558,11 +582,11 @@ class PuavoErsExamScheduler (threading.Thread):
         old_comm_state = comm_ok
 
         if comm_ok:
-          # XXX in case of errors this should set comm_ok = False
-          with currently_running_exams_lock:
+          with exam_scheduler_lock:
             self.schedule_exams()
 
       except Exception as e:
+        comm_ok = False
         syslog.syslog(syslog.LOG_ERR,
                       'some error when scheduling exams: %s' % e)
 
@@ -574,18 +598,30 @@ class PuavoErsExamScheduler (threading.Thread):
 
     currently_running_exams.sort()
     if self.exams == currently_running_exams:
+      # XXX what if someone does something in the server?
+      # XXX what about manual control?  this should first actually check out
+      # XXX what is running, and add what is missing (not remove others)
+      syslog.syslog(syslog.LOG_INFO,
+                    'no changes to exams, not scheduling these: %s' % currently_running_exams)
       return
 
     syslog.syslog(syslog.LOG_INFO,
                   'must ensure that exams %s are running' \
                     % currently_running_exams)
 
-    # XXX if scheduling is successful:
-    # self.exams = currently_running_exams
+    # XXX how to know if this is successful?  an exception should be raised
+    # XXX in case of failure?
+    try:
+      output = self.load_exams()
+      syslog.syslog(syslog.LOG_INFO, 'load exams returned %s' % output)
+      self.exams = currently_running_exams
+    except CurrentZipNotReady as e:
+      syslog.syslog(syslog.LOG_INFO,
+                    'exam scheduler is waiting for zip file to be ready')
 
 
   def server_cmd(self, cmd):
-    syslog.syslog(syslog.LOG_INFO, 'sending command %s' % cmd)
+    syslog.syslog(syslog.LOG_INFO, 'sending command to exam server: %s' % cmd)
     output_paths = [ self.CMD_RESULT_PATH, self.DEBUG_OUTPUT_PATH,
                      self.EXAMS_PATH, self.OUTPUT_PATH, self.STATS_PATH ]
     for path in output_paths:
