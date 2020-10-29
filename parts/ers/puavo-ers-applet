@@ -557,8 +557,9 @@ class PuavoErsExamScheduler (threading.Thread):
   def __init__(self):
     threading.Thread.__init__(self)
 
-    # XXX this is perhaps useless
-    self.exams = []
+
+  def get_exams(self):
+    return self.server_cmd('get-exam')
 
 
   def load_exams(self):
@@ -611,12 +612,20 @@ class PuavoErsExamScheduler (threading.Thread):
   def schedule_exams(self):
     global current_exams
 
-    current_exams.sort()
-    if self.exams == current_exams:
-      # XXX what if someone does something in the server?
-      # XXX what about manual control?  this should first actually check out
-      # XXX what is running, and add what is missing (not remove others)
-      return
+    get_exams_output = self.get_exams()
+    syslog.syslog(syslog.LOG_INFO, 'get-exam returned %s' % get_exams_output)
+
+    # XXX This is currently broken, output is not valid json so can not check
+    # XXX the current exams.
+    parsed_response = json.loads(get_exams_output)
+    syslog.syslog(syslog.LOG_INFO, 'got response: %s' % parsed_response)
+
+    # XXX get currently loaded exams from parsed_response,
+    # XXX if some exam is missing, then load new exams
+
+    # XXX what if someone does something in the server?
+    # XXX what about manual control?  this should first actually check out
+    # XXX what is running, and add what is missing (not remove others)
 
     syslog.syslog(syslog.LOG_INFO,
                   'must ensure that exams %s are running' % current_exams)
@@ -624,9 +633,8 @@ class PuavoErsExamScheduler (threading.Thread):
     # XXX how to know if this is successful?  an exception should be raised
     # XXX in case of failure?
     try:
-      output = self.load_exams()
+      load_exams_output = self.load_exams()
       syslog.syslog(syslog.LOG_INFO, 'load exams returned %s' % output)
-      self.exams = current_exams
     except CurrentZipNotReady as e:
       syslog.syslog(syslog.LOG_INFO,
                     'exam scheduler is waiting for zip file to be ready')
