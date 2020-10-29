@@ -89,16 +89,9 @@ class PuavoErsApplet:
 
     self.menu = Gtk.Menu()
     self.old_exams = []
-    self.password_buttons = []
+    self.menuitems = []
 
     self.indicator.set_menu(self.menu)
-
-    instructions = Gtk.MenuItem(
-                     _tr('click passphrase below put it into clipboard'))
-    instructions.set_sensitive(False)
-    self.menu.append(instructions)
-    separator = Gtk.SeparatorMenuItem()
-    self.menu.append(separator)
     self.latest_chosen_password = None
 
     self.menu.show_all()
@@ -199,10 +192,12 @@ class PuavoErsApplet:
     syslog.syslog(syslog.LOG_INFO, 'updating decrypt codes in UI')
 
     self.exams_by_widgets = {}
-    for button in self.password_buttons:
+    for button in self.menuitems:
       button.destroy()
 
-    labels = {}
+    labels_and_exams_list = []
+    labels_table = {}
+
     for exam in new_exams:
       if not re.match('^exam_.*\.meb$', exam['file_name']):
         syslog.syslog(syslog.LOG_WARNING,
@@ -216,29 +211,101 @@ class PuavoErsApplet:
 
       label = "%s (%s)" % (exam['decrypt_code'], exam['file_name'])
       # Exams may have duplicates, in case there is one exam with multiple
-      # start_time/end_times.  Weed out duplicates based on labels.
-      if label in labels:
+      # start_time/end_times.  Weed out duplicates based on labels_table.
+      if label in labels_table:
         continue
-      labels[label] = 1
+      labels_table[label] = 1
 
       if exam['decrypt_code'] == self.latest_chosen_password:
         label = '***** %s *****' % label
 
-      button = Gtk.MenuItem(label)
-      self.exams_by_widgets[button] = exam
-      button.connect('activate', self.copy_password_to_clipboard)
+      labels_and_exams_list.append({ 'exam': exam, 'label': label })
+
+    if len(labels_and_exams_list) > 24:
+      # we can not fit too many labels on the applet menu,
+      # so open a new window in case we have very many exams
+      button = Gtk.MenuItem( _tr('Open decrypt codes window') )
+      decrypt_codes_window = DecryptCodesWindow(self, labels_and_exams_list)
+      button.connect('activate', decrypt_codes_window.open)
       button.show()
       self.menu.append(button)
-      self.password_buttons.append(button)
+      self.menuitems.append(button)
+    else:
+      instructions = Gtk.MenuItem(
+                       _tr('Click passphrase below put it into clipboard'))
+      instructions.set_sensitive(False)
+      instructions.show()
+      self.menuitems.append(instructions)
+      self.menu.append(instructions)
+
+      separator = Gtk.SeparatorMenuItem()
+      separator.show()
+      self.menuitems.append(separator)
+      self.menu.append(separator)
+
+      for le in labels_and_exams_list:
+        button = Gtk.MenuItem(le['label'])
+        self.exams_by_widgets[button] = le['exam']
+        button.connect('activate', self.password_triggered)
+        button.show()
+        self.menu.append(button)
+        self.menuitems.append(button)
 
 
-  def copy_password_to_clipboard(self, widget):
+  def password_triggered(self, widget):
+    password = self.exams_by_widgets[widget]['decrypt_code']
+    self.copy_password_to_clipboard(password)
+
+
+  def copy_password_to_clipboard(self, password):
     syslog.syslog(syslog.LOG_INFO, 'copying password to clipboard')
 
-    password = self.exams_by_widgets[widget]['decrypt_code']
     self.clipboard.set_text(password, -1)
     self.latest_chosen_password = password
     self.update_decrypt_codes(True)
+
+
+# This is an alternative window for cases where all the exam decrypt
+# codes do not fit into the panel.
+class DecryptCodesWindow:
+  def __init__(self, applet, labels_and_exams_list):
+    self.applet = applet
+    self.exams_by_widgets = {}
+    self.labels_and_exams_list = labels_and_exams_list
+    self.win = None
+
+
+  def open(self, widget):
+    if self.win:
+      self.win.present()
+      return
+
+    self.win = Gtk.Window(title=_tr('Decrypt codes'))
+    box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+    self.win.add(box)
+
+    instructions = Gtk.Label(
+                     _tr('Click passphrase below put it into clipboard'))
+    box.pack_start(instructions, True, True, 0)
+
+    for le in self.labels_and_exams_list:
+      button = Gtk.Button.new_with_label(le['label'])
+      self.exams_by_widgets[button] = le['exam']
+      button.connect('clicked', self.password_triggered)
+      button.show()
+      box.pack_start(button, True, True, 0)
+
+    self.win.connect('destroy', self.window_closed)
+    self.win.show_all()
+
+
+  def password_triggered(self, widget):
+    password = self.exams_by_widgets[widget]['decrypt_code']
+    self.applet.copy_password_to_clipboard(password)
+
+
+  def window_closed(self, widget):
+    self.win = None
 
 
 class PuavoErsExamSync (threading.Thread):
