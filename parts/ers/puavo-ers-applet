@@ -112,8 +112,10 @@ class PuavoErsApplet:
     self.exam_sorter = PuavoErsExamSorter()
     self.exam_sorter.start()
 
-    self.exams_scheduler = PuavoErsExamScheduler()
-    self.exams_scheduler.start()
+    # XXX Disabled for now, this needs fixing, but the KTPAPI mechanism
+    # XXX running in exam server needs fixing first.
+    # self.exams_scheduler = PuavoErsExamScheduler()
+    # self.exams_scheduler.start()
 
     if not os.path.exists(self.NAKSU_BIN_PATH):
       shutil.copy2(self.NAKSU_ORIGIN_PATH, self.NAKSU_BIN_PATH)
