@@ -192,8 +192,8 @@ class PuavoErsApplet:
     syslog.syslog(syslog.LOG_INFO, 'updating decrypt codes in UI')
 
     self.exams_by_widgets = {}
-    for button in self.menuitems:
-      button.destroy()
+    for menuitem in self.menuitems:
+      menuitem.destroy()
 
     labels_and_exams_list = []
     labels_table = {}
@@ -281,8 +281,11 @@ class DecryptCodesWindow:
       return
 
     self.win = Gtk.Window(title=_tr('Decrypt codes'))
+    self.win.set_default_size(400, 700)
+    scrolled_window = Gtk.ScrolledWindow()
     box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-    self.win.add(box)
+    scrolled_window.add(box)
+    self.win.add(scrolled_window)
 
     instructions = Gtk.Label(
                      _tr('Click passphrase below put it into clipboard'))
