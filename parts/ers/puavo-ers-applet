@@ -538,18 +538,23 @@ class PuavoErsExamSorter (threading.Thread):
 
   def link_exams_to_dir(self, linkdir, exam_filenames):
     for exam_name in exam_filenames:
+      exam_path = os.path.join(EXAMS_DIR, exam_name)
       try:
         target_path = os.path.join(linkdir, exam_name)
-        os.link(os.path.join(EXAMS_DIR, exam_name), target_path)
+        os.link(exam_path, target_path)
         syslog.syslog(syslog.LOG_INFO,
-                      'exam %s linked to %s' % (exam_name, linkdir))
+                      'exam %s linked to %s' % (exam_path, linkdir))
 
         # updates access time only when link has been made
         st = os.stat(target_path)
         os.utime(target_path,
                  (datetime.datetime.now().timestamp(), st.st_mtime))
       except OSError as e:
-        if e.errno != errno.EEXIST:
+        if e.errno == errno.EEXIST:
+          pass
+        elif e.errno == errno.ENOENT:
+          syslog.syslog(syslog.LOG_ERR, 'could not find exam %s' % exam_path)
+        else:
           raise e
 
 
