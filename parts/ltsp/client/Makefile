@@ -70,7 +70,8 @@ install : installdirs
 		puavo-pulseaudio-list \
 		puavo-pulseaudio-setup \
 		puavo-rest-request \
-		puavo-send-monitors-xml
+		puavo-send-monitors-xml \
+		puavo-tv-display
 
 	$(INSTALL_PROGRAM) -t $(DESTDIR)$(sbindir) \
 		puavo-conf-local \

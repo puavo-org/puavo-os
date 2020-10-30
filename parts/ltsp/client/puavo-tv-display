@@ -1,0 +1,26 @@
+#!/bin/sh
+
+set -eu
+
+export DISPLAY=:0
+
+mode=${1:-}
+
+case "$mode" in
+  off)
+    xset dpms force standby
+    ;;
+  on)
+    xset s reset
+    xset s 0 0
+    xset s off
+    xset s noblank
+    xset dpms 0 0 0
+    xset -dpms
+    xset dpms force on
+    ;;
+  *)
+    echo 'Usage: puavo-tv-display on|off' >&2
+    exit 1
+    ;;
+esac

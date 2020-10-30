@@ -4,7 +4,8 @@ datarootdir = $(prefix)/share
 INSTALL = install
 INSTALL_DATA = $(INSTALL) -m 644
 
-packagedirs  = abitti-naksu
+packagedirs  = abitti-ktpapi
+packagedirs += abitti-naksu
 packagedirs += adobe-flashplugin
 packagedirs += adobe-pepperflashplugin
 packagedirs += adobe-reader
