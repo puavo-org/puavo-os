@@ -67,13 +67,13 @@ cron_infotv_display_control() {
   end_hour=$(  get_hour puavo.autopoweroff.daytime_end_hour)
 
   if [ -n "$start_hour" ]; then
-    display_on_line="0 $start_hour * * 1-7 root iivari-display_on >/dev/null 2>&1"
+    display_on_line="0 $start_hour * * 1-7 root puavo-tv-display on >/dev/null 2>&1"
   else
     display_on_line=''
   fi
 
   if [ -n "$end_hour" ]; then
-    display_off_line="0 $end_hour * * 1-7 root iivari-display_off >/dev/null 2>&1"
+    display_off_line="0 $end_hour * * 1-7 root puavo-tv-display off >/dev/null 2>&1"
   else
     display_off_line=''
   fi
