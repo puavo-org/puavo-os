@@ -42,8 +42,13 @@ flush_caches() {
 }
 
 get_grub_efi_arguments() {
+  local vgname
+  vgname=$1
+
   echo '--target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=debian'
-  if [ "$(puavo-conf puavo.grub.efi.force_extra_removable)" = 'true' ]; then
+  if [ "$vgname" = 'puavoinstaller' ]; then
+    echo '--removable'
+  elif [ "$(puavo-conf puavo.grub.efi.force_extra_removable)" = 'true' ]; then
     echo '--force-extra-removable'
   fi
 }
@@ -499,7 +504,7 @@ else
         log err "could not mount /boot/efi from ${efi_devpath}"
         exit 1
       fi
-      grub_efi_arguments=$(get_grub_efi_arguments)
+      grub_efi_arguments=$(get_grub_efi_arguments "$vgname")
     fi
     if ! grub_msg=$(grub-install --boot-directory="$boot_dir" \
                       $grub_efi_arguments "$grubdev" 3>&- 4>&- 5>&- 2>&1); then
