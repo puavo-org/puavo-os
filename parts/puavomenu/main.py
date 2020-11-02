@@ -230,6 +230,9 @@ class PuavoMenu(Gtk.Window):
                                              Gtk.PolicyType.AUTOMATIC)
         self.__programs_container.set_shadow_type(Gtk.ShadowType.NONE)
 
+        # Always show the scrollbar
+        self.__programs_container.set_overlay_scrolling(False)
+
         # Program icons. They're placed on a fixed grid, as their positions
         # can be computed exactly and are known in advance.
         self.__programs_icons = Gtk.Fixed()
